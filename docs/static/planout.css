@@ -1,0 +1,319 @@
+/* mobile first */
+
+* {
+    padding: 0;
+    margin: 0;
+}
+
+html {
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    background-color: #fefefd;
+}
+
+body {
+    font-family: 'Helvetica Neue', Helvetica, Arial, 'lucida grande', tahoma, verdana, arial, sans-serif;
+    color: #444;
+    margin: 0;
+    line-height: 1.5em;
+}
+
+h1, h2, h3, h4 {
+    font-weight: normal;
+    margin: 1em 0 0.2em;
+    line-height: 1.2em;
+}
+
+h1:first-child, h2:first-child, h3:first-child, h4:first-child {
+    margin-top: 0;
+}
+
+h1 {
+    font-size: 1.7em;
+}
+
+h2 {
+    font-size: 1.5em;
+}
+
+h3 {
+    font-size: 1.3em;
+}
+
+h4 {
+    font-size: 1.1em;
+}
+
+p, pre, ul {
+    margin:  0 0 1em 0;
+}
+
+pre {
+    border: 1px solid #ccc;
+    padding: 0.5em 1em;
+    overflow-x: scroll;
+    background: #fff;
+    border-radius: 2px;
+    line-height: 1.5em;
+}
+
+code {
+    background: #fff;
+    letter-spacing: 0.02em;
+}
+
+ul {
+ list-style-position: outside;
+ margin-left: 1em;
+ padding-left: 1em;
+}
+
+
+a {
+    text-decoration: none;
+    color: #bb2910;
+}
+
+a.active {
+  font-weight: bold;
+}
+
+a.hash-link {
+    color: #ccc;
+}
+
+a.hash-link:hover {
+    color: #bb2910;
+}
+
+.width {
+    margin: 0 auto !important;
+    padding: 0 20px !important;
+}
+
+header:after, section.content:after, footer:after {
+    clear: both;
+    content: ".";
+    display: block;
+    font-size: 0;
+    height: 0;
+    line-height: 0;
+    visibility: hidden;
+}
+
+header.topbar {
+    background: #021440;
+    padding: 0px 0;
+}
+
+
+header.topbar h1 {
+    background-image: url(flow.png);
+    background-size: 74px 40px;
+    background-position: 0% 50%;
+    background-repeat: no-repeat;
+    color: #fff;
+    float: left;
+    font-size: 30px;
+    line-height: 60px;
+    margin: 0;
+    overflow: hidden;
+    text-indent: 80px;
+    white-space: nowrap;
+    width: 200px;
+}
+
+header.topbar nav ul {
+    float: right;
+    text-align: right;
+    margin: 0 0 0 10px;
+    padding: 0;
+}
+
+header.topbar nav ul li {
+    display: inline;
+    text-transform: uppercase;
+}
+
+header.topbar nav ul li a {
+    color: #fff;
+    font-size: 12px;
+    margin: 0 0 0 10px;
+    text-decoration: none;
+    line-height: 60px;
+    font-weight: normal;
+}
+
+header.topbar nav ul li a.active {
+    color: #cd4e34;
+}
+
+header.hero {
+    background: #ffffff;
+    padding: 20px 0;
+}
+
+header.hero .width {
+    text-align: center;
+}
+
+header.hero h1 {
+    font-size: 4em;
+    font-weight: normal;
+    color: #bb2910;
+    margin: 0;
+    line-height: 1.5em;
+}
+
+header.hero p {
+    margin: 0 0 .5em;
+    text-transform: uppercase;
+}
+
+header.hero a.button {
+    background: #bb2910;
+    color: #ffffff;
+    font-weight: bold;
+    text-transform: uppercase;
+    padding: 10px 20px;
+    border-radius: 2px;
+    display: inline-block;
+    margin: 1em;
+    box-shadow: 0px 2px 4px rgba(0,0,0,0.3);
+}
+
+header.subhero {
+    background: #fff;
+    padding: 10px 0;
+    border-bottom: 4px solid #CCCCCC;
+}
+
+section.content {
+    padding: 20px 0;
+}
+
+section.content article ul li {
+  margin-bottom: 1em;
+}
+
+
+section.content article img {
+    display: block;
+    margin: 1em auto;
+}
+
+section.content article blockquote {
+    padding: 0px 20px;
+    margin: 0 0 20px;
+    border-left: 5px solid #eee;
+}
+
+section.content article blockquote p {
+    font-style: italic;
+}
+
+section.content article blockquote small:before {
+    content: '\2014 \00A0';
+}
+
+section.content aside .fb-like {
+    top: 4px;
+    left: 4px;
+}
+
+nav.toc {
+    font-size: 14px;
+    line-height: 18px;
+    margin-bottom: 20px;
+}
+
+nav.toc h3 {
+    margin: 0.5em 0;
+    padding-top: 0.5em;
+    border-top: 1px solid #ccc;
+}
+
+nav.toc section:first-child h3 {
+    border-top: none;
+    margin-top: 0;
+    padding-top: 0;
+}
+
+nav.toc ul {
+   list-style: none;
+   margin: 0;
+   padding-left: 1em;
+
+}
+
+footer {
+    background: #021440;
+    padding: 5px 0;
+    color: #fff;
+    font-size: 13px;
+}
+
+.right {
+    float: right;
+}
+
+.right a {
+    color: #cd4e34;
+    padding: 0 5px;
+}
+
+
+/* tabletish */
+
+@media (min-width: 480px) {
+
+    header.topbar nav ul li a {
+        letter-spacing: 0.1em;
+        margin-left: 20px;
+    }
+
+}
+
+/* desktopish */
+
+@media (min-width: 1000px) {
+
+    header.topbar nav ul li a {
+        font-size: 15px;
+        margin-left: 10px;
+    }
+
+    .width {
+        width: 960px;
+        /* make columns add to <880 for 60 gutter */
+    }
+
+    .panel3 {
+        width: 29%;
+        margin: 1em 2% 0;
+        display:inline-block;
+        vertical-align: top;
+        text-align: justify;
+        font-size: 14px;
+    }
+
+    section.content article {
+        margin: 0 auto;
+        width: 660px;
+    }
+
+    section.content nav.toc {
+        float: left;
+    }
+
+
+    section.content article.withtoc {
+        float: right;
+    }
+
+    section.content aside {
+        float: left;
+        width: 220px;
+    }
+
+}

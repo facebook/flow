@@ -1,0 +1,12 @@
+---
+baseurl: /flow
+url: http://facebook.github.io
+name: Flow
+relative_permalinks: false
+markdown: redcarpet
+description: A static type checker for JavaScript
+timezone: America/Los_Angeles
+
+safe: true
+lsi: false
+highlighter: pygments

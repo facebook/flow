@@ -1,0 +1,16 @@
+{% include header.html %}
+
+{% if page.hero %}
+  {% include hero.html %}
+{% endif %}
+
+<section class='content'><div class='width'>
+
+<article>
+
+{{ content }}
+
+</article>
+
+</div></section>
+{% include footer.html %}
