@@ -18,8 +18,6 @@
     title: Classes
   - id: objects
     title: Objects
-  - id: enums-and-records
-    title: Enums and Records
   - id: nullable-types
     title: Nullable Types
   - id: functions
