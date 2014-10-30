@@ -29,7 +29,7 @@ through static analysis and type annotations.
 Type annotations are generally prefixed by `:`. And they can be placed on 
 function parameters, function return types and variable declarations. e.g.,
 
-```
+```javascript
 function foo(a: mixed, b: number): void {...}
 var x: boolean;
 class Bar {
@@ -40,12 +40,10 @@ class Bar {
 ## Simple Example
 
 We can easily take this code and make it //Flow aware// by adding a simple
-annotation:
+annotation `@flow` at the top in a comment block:
 
 ```javascript
-/**
- * @flow
- */
+/* @flow */
 function add(num1, num2) {
   return num1 + num2;
 }
@@ -58,9 +56,7 @@ operator is perfectly acceptable on `number`s and `string`s, and we didn't
 specify that the parameters to `add` must be `number`s.
 
 ```javascript
-/**
- * @flow
- */
+/* @flow */
 function add(num1: number, num2: number): number {
   return num1 + num2;
 }
@@ -84,10 +80,8 @@ all that is strictly required to make your JavaScript file //Flow aware// is
 the `@flow` annotation. And this annotation by itself can be enough for Flow to
 deduce all that is necessary to type check your code.
 
-```
-/**
- * @flow
- */
+```javascript
+/* @flow */
 function multPI(num1, num2) {
   return Math.PI * num1 * num2;
 }
