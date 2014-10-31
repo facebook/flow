@@ -20,7 +20,11 @@
     title: Objects
   - id: nullable-types
     title: Nullable Types
+  - id: primitives
+    title: Primitives
   - id: functions
     title: Functions
   - id: operators
     title: Operators
+  - id: dynamic-type-tests
+    title: Dynamic Type Tests
