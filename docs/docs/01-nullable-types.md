@@ -4,7 +4,7 @@ title: Nullable Types
 layout: docs
 permalink: /docs/nullable-types.html
 prev: objects.html
-next: functions.html
+next: primitives.html
 ---
 
 In JavaScript, `null` implicitly converts to all the primitive types; it is 
