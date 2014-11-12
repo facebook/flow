@@ -60,3 +60,5 @@ that it could be `number`, in which case it would be incompatible with the
 ## Exporting Arrays
 
 When an array is exported, its element type must be specified. This effectively "seals" the element type.
+
+## TODO: Tuples
