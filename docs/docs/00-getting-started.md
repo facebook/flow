@@ -38,6 +38,8 @@ These are due to global references in your code, and possibly also due to typos.
 declare var Foo: <type>
 ```
 
+Alternatively, if you want to have a common set of global declarations so that they are available to multiple files at once, create a directory (say `globals_lib`), put a file in there (say `globals.js`), and do the declaration there. Then rerun Flow with option `--lib globals_lib` so that Flow knows where to find them.
+
 ## What to do if there are too many errors
 
 
