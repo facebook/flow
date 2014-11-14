@@ -36,7 +36,6 @@ The best strategy with Flow is to try cutting down the number of errors to 0 as 
 These errors are due to global references in your code, and possibly also due to typos. If the former, you can declare them if you know that they are going to be available when you run the code.
 
 ```javascript
-/* @flow */
 declare var foo: <type>
 ```
 
@@ -55,7 +54,6 @@ These errors are due to `require(...)` statements in your code that don't resolv
 Alternatively, you may not have the code available for those modules, or otherwise want to specify declarations for them. In that case, put another file under `globals_lib` (say `modules.js`), and declare the module interface there.
 
 ```javascript
-/* @flow */
 declare module Bar {
   ...
 }  
@@ -75,6 +73,13 @@ The general way to get around this problem is to store the value in a local vari
 // var result = foo().bar
 var x = foo();
 var result = (x != null) ? x.bar : ...
+```
+
+You can try other variations of this basic pattern.
+
+```javascript
+// foo.bar()
+foo && foo.bar()
 ```
 
 ### Function call with too few arguments
@@ -108,6 +113,7 @@ function foo(x=0) {
 foo();
 ```
 
+### 
 
 ## What to do if there are too many errors
 
