@@ -72,10 +72,40 @@ Flow considers types to be incompatible with `null` / `undefined` in general (th
 The general way to get around this problem is to store the value in a local variable, and guard the operation with a dynamic check on the local variable.
 
 ```javascript
-// var result = foo().x
-var o = foo();
-var result = o != null ? o.x : ...
-}  
+// var result = foo().bar
+var x = foo();
+var result = (x != null) ? x.bar : ...
+```
+
+### Function call with too few arguments
+
+In JavaScript, function calls can pass too many or too few arguments: additional arguments are dropped, and missing arguments are initialized with `undefined`. Flow admits the former pattern because it is mostly harmless; but it complains about the latter.
+
+The usual way to fix these errors is to add optional parameter markers to the function being called.
+
+```javascript
+function foo(x?) { ... }
+foo();
+```
+
+Doing this might shift the problem to the function definition, where `x` now has a maybe type. So operations on `x` may require to be guarded by dynamic checks.
+
+```javascript
+function foo(x?) {
+  if (x != undefined) { 
+    // operation on x 
+  }
+}
+foo();
+```
+
+Alternatively, we may provide a default value to `x`, in which case the dynamic check is not required.
+
+```javascript
+function foo(x=0) {
+  // operation on x 
+}
+foo();
 ```
 
 
