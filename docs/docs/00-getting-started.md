@@ -29,9 +29,20 @@ The best strategy with Flow is to try cutting down the number of errors to 0 as 
 
 ## Common errors and how to fix them
 
-### Global not found errors
+### Global not found
 
-These are due to global references in your code, and possibly also due to typos. If the former, you can declare them if you know that they are going to be available when you run the code.
+These errors are due to global references in your code, and possibly also due to typos. If the former, you can declare them if you know that they are going to be available when you run the code.
+
+```javascript
+/* @flow */
+declare var Foo: <type>
+```
+
+Alternatively, if you want to have a common set of global declarations so that they are available to multiple files at once, create a directory (say `globals_lib`), put a file in there (say `globals.js`), and do the declaration there. Then rerun Flow with option `--lib globals_lib` so that Flow knows where to find them.
+
+### Required module not found
+
+These errors are due to `require(...)` statements in your code, and possibly also due to typos. If the former, you can declare them if you know that they are going to be available when you run the code.
 
 ```javascript
 /* @flow */
