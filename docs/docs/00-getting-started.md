@@ -65,6 +65,20 @@ If you don't know what the module interface should be, you can try to find it at
 
 Note that if both an implementation and a declaration is found for a module, Flow will choose the implementation if it has been opted-in, the declaration otherwise.
 
+### Operation not allowed on `null` / `undefined`
+
+Flow considers types to be incompatible with `null` / `undefined` in general (the only compatible types are maybe types, denoted `?<type>`. Thus, it will complain if it finds than an operation may happen on `null` / `undefined`.
+
+The general way to get around this problem is to store the value in a local variable, and guard the operation with a dynamic check on the local variable.
+
+```javascript
+// var result = foo().x
+var o = foo();
+var result = o != null ? o.x : ...
+}  
+```
+
+
 ## What to do if there are too many errors
 
 
