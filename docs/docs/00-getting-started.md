@@ -61,6 +61,8 @@ declare module Bar {
 }  
 ```
 
+If you don't know what the module interface should be, you can try to find it at [[https://github.com/borisyankov/DefinitelyTyped | DefinitelyTyped]], which hosts a bunch of TypeScript interface declarations for popular modules, and try to run it through our convertion tool **[TODO]**.
+
 Note that if both an implementation and a declaration is found for a module, Flow will choose the implementation if it has been opted-in, the declaration otherwise.
 
 ## What to do if there are too many errors
