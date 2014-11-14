@@ -61,6 +61,8 @@ declare module Bar {
 }  
 ```
 
+Note that if both an implementation and a declaration is found for a module, Flow will choose the implementation if it has been opted-in, the declaration otherwise.
+
 ## What to do if there are too many errors
 
 
