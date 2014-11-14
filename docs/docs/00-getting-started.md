@@ -113,8 +113,11 @@ function foo(x=0) {
 foo();
 ```
 
-### 
+### Other type confusions
 
+Some operations only make sense when they're performed on particular set of values. (They may still work on other values, but may have unintended consequences.) For example, multiplication should be performed only on numbers even though they may still work when you pass strings to them (they're usually converted to `NaN`). For-in loops should be performed only on objects even though they may still work on arrays (the keys are converted to strings, and other properties are also included). Non-strict equality should be performed only on values that have the same type (otherwise, some sequence of type conversions are tried). Flow complains about many of these operations. Usually, there is a workaround: either there is a better way to do these operations (e.g., use `Array.forEach` and strict equality for the latter two), or a simple workaround (e.g., explicitly convert a string to a number using `Number(...)`).
+
+ 
 ## What to do if there are too many errors
 
 
