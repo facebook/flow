@@ -106,8 +106,8 @@ a.hash-link:hover {
 }
 
 .width {
-    margin: 0 auto !important;
-    padding: 0 20px !important;
+    margin: 0 auto;
+    padding: 0 20px;
 }
 
 header:after, section.content:after, footer:after {
@@ -161,6 +161,8 @@ header.topbar nav ul {
     float: right;
     text-align: right;
     padding: 0;
+    margin: 0;
+    font-size: 0;
 }
 
 header.topbar nav ul li {
@@ -302,12 +304,6 @@ footer {
 }
 
 
-/* tabletish */
-
-@media (min-width: 480px) {
-
-}
-
 /* desktopish */
 
 @media (min-width: 1000px) {
@@ -345,3 +341,20 @@ footer {
     }
 
 }
+
+/* phoneish */
+
+@media (max-width: 480px) {
+    header.topbar .width {
+        padding: 0 5px;
+    }
+
+    header.topbar nav ul li a {
+        padding: 0 4px;
+        padding-top: 6px;
+        margin: 0;
+        font-size: 12px;
+    }
+
+}
+
