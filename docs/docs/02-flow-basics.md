@@ -6,7 +6,9 @@ permalink: /docs/flow-basics.html
 next: getting-started.html
 ---
 
-## Background
+## Command list
+
+## Type checking basics
 
 Learn about the [type system](01-type-annotations.md). You should have a basic idea of what kinds of type annotatations are available in the syntax, and what they mean (i.e., which sets of values they represent, and which kinds of operations are admitted on such sets of values by the typechecker).
 
