@@ -136,18 +136,6 @@ header.topbar .logo {
     margin-top: 7px;
 }
 
-header.topbar h1 {
-    color: #fad54a;
-    float: left;
-    font-size: 30px;
-    line-height: 60px;
-    margin: 0;
-    overflow: hidden;
-    text-indent: 80px;
-    white-space: nowrap;
-    width: 200px;
-}
-
 div.flow-header {
     background-image: url(logo_full_transparent.png);
     background-size: contain;
@@ -178,6 +166,7 @@ header.topbar nav ul li a {
     display: inline-block;
     height: 50px;
     color: #AAA;
+    font-size: 15px;
 }
 
 header.topbar nav ul li a.active {
