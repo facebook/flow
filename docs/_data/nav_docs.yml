@@ -2,8 +2,20 @@
   items:
   - id: about-flow
     title: About Flow
+  - id: installing-flow
+    title: Installing Flow
   - id: getting-started
-    title: Getting Started
+    title: Getting Started (=> Tutorial)
+- title: User's Guide
+  items:
+  - id: flow-basics
+    title: Flow Basics
+  - id: troubleshooting
+    title: Troubleshooting
+  - id: new-project
+    title: New Project
+  - id: library
+    title: Library
 - title: Language Reference
   items:
   - id: type-annotations
