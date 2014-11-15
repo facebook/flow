@@ -15,7 +15,6 @@ html {
 }
 
 body {
-
     font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
     font-family: proxima-nova, "Helvetica Neue", Helvetica, Arial, sans-serif;
     font-weight: 300;
@@ -36,7 +35,8 @@ h1:first-child, h2:first-child, h3:first-child, h4:first-child {
 }
 
 h1 {
-    font-size: 1.7em;
+    font-size: 2em;
+    font-weight: bold;
 }
 
 h2 {
@@ -84,14 +84,14 @@ ul {
 
 a {
     text-decoration: none;
-    color: #D65D00;
+    color: #C7590F;
 }
 
 nav.toc a {
     color: #444;
 }
 nav.toc a.active {
-    color: #D65D00;
+    color: #C7590F;
 }
 
 a.hash-link {
@@ -261,7 +261,10 @@ nav.toc {
 nav.toc h3 {
     margin: 0.5em 0;
     padding-top: 0.5em;
-    border-top: 1px solid #ccc;
+    font-size: 14px;
+    font-weight: bold;
+    text-transform: uppercase;
+    line-height: 40px;
 }
 
 nav.toc section:first-child h3 {
@@ -273,8 +276,11 @@ nav.toc section:first-child h3 {
 nav.toc ul {
    list-style: none;
    margin: 0;
-   padding-left: 1em;
+   padding-left: 0;
+}
 
+nav.toc ul li {
+    line-height: 20px;
 }
 
 footer {
