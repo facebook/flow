@@ -73,6 +73,9 @@ pre code {
 code {
     background: hsla(0, 0%, 0%, 0.04);
     letter-spacing: 0.02em;
+    padding-right: 2px;
+    padding-left: 4px;
+    border-radius: 3px;
 }
 
 ul {

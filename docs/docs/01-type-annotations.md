@@ -15,11 +15,11 @@ JavaScript code:
 function add(num1, num2) {
   return num1 + num2;
 }
-var x = add(3, "0");
+var x = add(3, '0');
 console.log(x);
 ```
 
-What is the value of `x`? 3? 30? Undefined? The answer is 30, and, in most
+What is the value of `x`? `3`? `30`? `undefined`? The answer is `30`, and, in most
 cases, this probably not the behavior you would prefer.
 
 Flow helps mitgate these sort of subtle bugs by trying to keep your code sane
@@ -48,7 +48,7 @@ annotation `@flow` at the top in a comment block:
 function add(num1, num2) {
   return num1 + num2;
 }
-var x = add(3, "0");
+var x = add(3, '0');
 console.log(x);
 ```
 
@@ -61,7 +61,7 @@ specify that the parameters to `add` must be `number`s.
 function add(num1: number, num2: number): number {
   return num1 + num2;
 }
-var x: number = add(3, "0");
+var x: number = add(3, '0');
 console.log(x);
 ```
 
@@ -86,7 +86,7 @@ deduce all that is necessary to type check your code.
 function multPI(num1, num2) {
   return Math.PI * num1 * num2;
 }
-var x = multPI(3, "0");
+var x = multPI(3, '0');
 console.log(x);
 ```
 
@@ -107,7 +107,6 @@ Flow's inference engine stops there.
 ```javascript
 /**
  * Size.js
- *
  * @flow
  */
 function size(input: string): number {
@@ -120,7 +119,6 @@ module.exports = size;
 ```javascript
 /**
  * UseSize.js
- *
  * @flow
  */
 var size = require("./Size");

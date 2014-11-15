@@ -18,7 +18,7 @@ var a = [1, 2, 3];
 var b: Array<number> = a.map(function (x) { return x + 1; })
 ```
 
-In this code, we create an array with the literal [1,2,3], and call a method map on it, getting another array whose type we annotate as Array<number>.
+In this code, we create an array with the literal `[1, 2, 3]`, and call a method map on it, getting another array whose type we annotate as `Array<number>`.
 
 ## Array Elements
 
