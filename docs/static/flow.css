@@ -12,10 +12,14 @@ html {
 }
 
 body {
-    font-family: 'Helvetica Neue', Helvetica, Arial, 'lucida grande', tahoma, verdana, arial, sans-serif;
+
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-family: proxima-nova, "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-weight: 300;
     color: #444;
     margin: 0;
-    line-height: 1.5em;
+    line-height: 1.28;
+    padding-top: 50px;
 }
 
 h1, h2, h3, h4 {
@@ -102,10 +106,20 @@ header:after, section.content:after, footer:after {
 }
 
 header.topbar {
-    background: #021440;
-    padding: 0px 0;
+    background: #3B3738;
+    color: #FAFAFA;
+    position: fixed;
+    top: 0;
+    height: 50px;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+    width: 100%;
+    z-index: 100;
 }
 
+header.topbar .logo {
+    height: 30px;
+    margin-top: 7px;
+}
 
 header.topbar h1 {
     color: #fad54a;
@@ -131,7 +145,7 @@ div.flow-header {
 header.topbar nav ul {
     float: right;
     text-align: right;
-    margin: 0 0 0 10px;
+    margin: -4px 0 0 10px;
     padding: 0;
 }
 
@@ -190,7 +204,6 @@ header.hero a.button {
 header.subhero {
     background: #fff;
     padding: 10px 0;
-    border-bottom: 4px solid #CCCCCC;
 }
 
 section.content {
@@ -252,10 +265,9 @@ nav.toc ul {
 }
 
 footer {
-    background: #021440;
     padding: 5px 0;
-    color: #fff;
     font-size: 13px;
+    text-align: right;
 }
 
 .right {
