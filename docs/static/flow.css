@@ -120,11 +120,12 @@ header.topbar h1 {
 }
 
 div.flow-header {
-    background-image: url(flow.png);
-    background-size: 611px 250px;
+    background-image: url(logo_full_transparent.png);
+    background-size: contain;
     background-position: 50% 50%;
     background-repeat: no-repeat;
-    height: 290px;
+    height: 150px;
+    margin-bottom: 15px;
 }
 
 header.topbar nav ul {
