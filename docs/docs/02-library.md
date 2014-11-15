@@ -7,3 +7,5 @@ next: library.html
 ---
 
 ## Weak mode
+
+## Declarations
