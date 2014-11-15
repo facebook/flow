@@ -50,7 +50,7 @@ The general way to get around this problem is to store the value in a local vari
 ```javascript
 // var result = foo().bar
 var x = foo();
-var result = (x != null) ? x.bar : ...
+var result = x != null ? x.bar : ...
 ```
 
 You can try other variations of this basic pattern.
@@ -85,7 +85,7 @@ foo();
 Alternatively, we may provide a default value to `x`, in which case the dynamic check is not required.
 
 ```javascript
-function foo(x=0) {
+function foo(x = 0) {
   // operation on x
 }
 foo();
