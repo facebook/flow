@@ -3,12 +3,15 @@
 * {
     padding: 0;
     margin: 0;
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
 }
 
 html {
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
-    background-color: #fefefd;
+    background-color: #FFF9F5;
 }
 
 body {
@@ -53,16 +56,22 @@ p, pre, ul {
 }
 
 pre {
-    border: 1px solid #ccc;
-    padding: 0.5em 1em;
-    overflow-x: scroll;
-    background: #fff;
-    border-radius: 2px;
-    line-height: 1.5em;
+    white-space: pre-wrap;
+    font-family: 'source-code-pro', Menlo, 'Courier New', Consolas, monospace;
+    font-size: 13px;
+    line-height: 20px;
+    border-left: 4px solid #D68B00;
+    padding: 5px 10px;
+    margin-left: 20px;
+    background-color: hsla(31, 75%, 54%, 0.1);
+}
+
+pre code {
+    background: none;
 }
 
 code {
-    background: #fff;
+    background: hsla(0, 0%, 0%, 0.04);
     letter-spacing: 0.02em;
 }
 
@@ -75,11 +84,14 @@ ul {
 
 a {
     text-decoration: none;
-    color: #bb2910;
+    color: #D65D00;
 }
 
-a.active {
-  font-weight: bold;
+nav.toc a {
+    color: #444;
+}
+nav.toc a.active {
+    color: #D65D00;
 }
 
 a.hash-link {
@@ -145,7 +157,6 @@ div.flow-header {
 header.topbar nav ul {
     float: right;
     text-align: right;
-    margin: -4px 0 0 10px;
     padding: 0;
 }
 
@@ -155,20 +166,23 @@ header.topbar nav ul li {
 }
 
 header.topbar nav ul li a {
-    color: #fff;
-    font-size: 12px;
-    margin: 0 0 0 10px;
-    text-decoration: none;
-    line-height: 60px;
-    font-weight: normal;
+    padding: 0 8px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    line-height: 50px;
+    display: inline-block;
+    height: 50px;
+    color: #AAA;
 }
 
 header.topbar nav ul li a.active {
-    color: #cd4e34;
+    color: #FAFAFA;
+    border-bottom: 3px solid #D68B00;
+    background: #333;
 }
 
 header.hero {
-    background: #eeeeee;
+    background: #FFEAD1;
     padding: 20px 0;
 }
 
@@ -202,7 +216,6 @@ header.hero a.button {
 }
 
 header.subhero {
-    background: #fff;
     padding: 10px 0;
 }
 
@@ -284,21 +297,11 @@ footer {
 
 @media (min-width: 480px) {
 
-    header.topbar nav ul li a {
-        letter-spacing: 0.1em;
-        margin-left: 20px;
-    }
-
 }
 
 /* desktopish */
 
 @media (min-width: 1000px) {
-
-    header.topbar nav ul li a {
-        font-size: 15px;
-        margin-left: 10px;
-    }
 
     .width {
         width: 960px;
@@ -310,7 +313,6 @@ footer {
         margin: 1em 2% 0;
         display:inline-block;
         vertical-align: top;
-        text-align: justify;
         font-size: 14px;
     }
 
