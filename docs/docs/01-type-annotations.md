@@ -121,7 +121,7 @@ module.exports = size;
  * UseSize.js
  * @flow
  */
-var size = require("./Size");
+var size = require('./Size');
 var result = size(null);
 ```
 
