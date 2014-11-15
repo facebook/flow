@@ -108,11 +108,7 @@ header.topbar {
 
 
 header.topbar h1 {
-    background-image: url(flow.png);
-    background-size: 74px 40px;
-    background-position: 0% 50%;
-    background-repeat: no-repeat;
-    color: #fff;
+    color: #fad54a;
     float: left;
     font-size: 30px;
     line-height: 60px;
@@ -121,6 +117,14 @@ header.topbar h1 {
     text-indent: 80px;
     white-space: nowrap;
     width: 200px;
+}
+
+div.flow-header {
+    background-image: url(flow.png);
+    background-size: 611px 250px;
+    background-position: 50% 50%;
+    background-repeat: no-repeat;
+    height: 290px;
 }
 
 header.topbar nav ul {
@@ -149,7 +153,7 @@ header.topbar nav ul li a.active {
 }
 
 header.hero {
-    background: #ffffff;
+    background: #eeeeee;
     padding: 20px 0;
 }
 
@@ -176,7 +180,7 @@ header.hero a.button {
     font-weight: bold;
     text-transform: uppercase;
     padding: 10px 20px;
-    border-radius: 2px;
+    border-radius: 4px;
     display: inline-block;
     margin: 1em;
     box-shadow: 0px 2px 4px rgba(0,0,0,0.3);
