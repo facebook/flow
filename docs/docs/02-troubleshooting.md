@@ -3,7 +3,8 @@ id: troubleshooting
 title: Troubleshooting
 layout: docs
 permalink: /docs/troubleshooting.html
-next: getting-started.html
+prev: flow-basics.html
+next: new-project.html
 ---
 
 ## Common errors and how to fix them
@@ -33,7 +34,7 @@ Alternatively, you may not have the code available for those modules, or otherwi
 ```javascript
 declare module Bar {
   ...
-}  
+}
 ```
 
 If you don't know what the module interface should be, you can try to find it at [DefinitelyTyped](https://github.com/borisyankov/DefinitelyTyped), which hosts a bunch of TypeScript interface declarations for popular modules, and try to run it through our convertion tool **[TODO]**.
@@ -74,8 +75,8 @@ Doing this might shift the problem to the function definition, where `x` now has
 
 ```javascript
 function foo(x?) {
-  if (x != undefined) { 
-    // operation on x 
+  if (x != undefined) {
+    // operation on x
   }
 }
 foo();
@@ -85,7 +86,7 @@ Alternatively, we may provide a default value to `x`, in which case the dynamic 
 
 ```javascript
 function foo(x=0) {
-  // operation on x 
+  // operation on x
 }
 foo();
 ```
@@ -94,6 +95,6 @@ foo();
 
 Some operations only make sense when they're performed on particular set of values. (They may still work on other values, but may have unintended consequences.) For example, multiplication should be performed only on numbers even though they may still work when you pass strings to them (they're usually converted to `NaN`). Iteration using `for-in` should be performed only on objects even though they may still work on arrays (the keys are converted to strings, and other properties are also included). Non-strict equality `==` should be performed only on values that have the same type (otherwise, some sequence of type conversions are tried). Flow complains about many of these operations. Usually, there is a workaround: either there is a better way to do these operations (e.g., use `Array.forEach` and `==` in the latter two cases, respectively), or a simple workaround (e.g., use `Number(...)` in the former case).
 
- 
+
 ## What to do if there are too many errors
 

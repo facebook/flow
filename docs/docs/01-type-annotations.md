@@ -3,6 +3,7 @@ id: type-annotations
 title: Type Annotations
 layout: docs
 permalink: /docs/type-annotations.html
+prev: library.html
 next: base-types.html
 ---
 
@@ -26,14 +27,14 @@ through static analysis and type annotations.
 
 ## Type Annotations
 
-Type annotations are generally prefixed by `:`. And they can be placed on 
+Type annotations are generally prefixed by `:`. And they can be placed on
 function parameters, function return types and variable declarations. e.g.,
 
 ```javascript
 function foo(a: mixed, b: number): void {...}
 var x: boolean;
 class Bar {
-  y: string;    
+  y: string;
 }
 ```
 
@@ -64,7 +65,7 @@ var x: number = add(3, "0");
 console.log(x);
 ```
 
-Running the type checker against the above code //will// yield type errors 
+Running the type checker against the above code //will// yield type errors
 since we have explicitly typed all parameters and variables.
 
 ```
@@ -142,9 +143,9 @@ This type is incompatible with
 `any` can flow to any other type, and vice-versa. `any` is basically the "get
 out of my way, I know what I am doing" annotation. Use it when Flow is getting
 in your way, but you know your program is correct.
- 
+
 ## Bottom Line
 
-You can type annotate all your code. That would be the most expressive and 
+You can type annotate all your code. That would be the most expressive and
 self-documenting approach. However, type annotations are only required across
 module boundaries as the Flow type inference engine is inner-module aware only.

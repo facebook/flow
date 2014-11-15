@@ -3,10 +3,11 @@ id: getting-started
 title: Getting Started with Flow
 layout: docs
 permalink: /docs/getting-started.html
-prev: about-flow.html
+prev: installing-flow.html
+next: flow-basics.html
 ---
 
-Please follow the [installation instructions](00-installing-flow.md). This should put a binary called `flow` in your path. 
+Please follow the [installation instructions](00-installing-flow.md). This should put a binary called `flow` in your path.
 
 The simplest way to get started is to run `cd <root>; touch .flowconfig; flow check` on the command line. This performs a one-time check of all files under `<root>` and exits; since at this point none of those files are opted-in, ideally this should give you no errors. (If you do get errors, see the [troubleshooting instructions](02-troubleshooting.md).)
 
