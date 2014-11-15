@@ -14,7 +14,7 @@ Functions are ubiquitous in JavaScript. As expected, Flow propagates types throu
 ```javascript
 /* @flow */
 function foo(x: string): string { return x; }
-var x: number = foo("");
+var x: number = foo('');
 ```
 
 Running Flow produces the following error:
@@ -63,7 +63,7 @@ are checked as expected. For example, the following code typechecks:
 function foo(x, y = false) { }
 function bar(z, ...w) { }
 foo(0);
-bar("h", "e", "l", "l", "o");
+bar('h', 'e', 'l', 'l', 'o');
 ```
 
 Calls are matched against function signatures following the usual rules of
@@ -81,7 +81,7 @@ prescribed.
 
 Since functions are first-class values in JavaScript (meaning they can be
 passed around, like numbers), type annotations may include function types. A
-function type is of the form `(P1:T1, .., Pn:Tn) => U` where each `Ti` is a
+function type is of the form `(P1: T1, .., Pn: Tn) => U` where each `Ti` is a
 parameter type, `U` is the return type, and each `Pi` is one of the following:
 
 - an identifier `x`, suggesting a name for a regular parameter
@@ -94,7 +94,7 @@ optional parameters must follow regular parameters.
 Furthermore, function expressions and function definitions may have parts of
 their types annotated inline, as seen above. For example, we may have:
 
-`function foo (P1:T1, .., Pn:Tn): U { .. }`
+`function foo (P1: T1, .., Pn: Tn): U { .. }`
 
 ## Polymorphic functions
 Functions can be polymorphic, just like polymorphic classes.
@@ -104,7 +104,7 @@ Functions can be polymorphic, just like polymorphic classes.
 function foo<X>(x: X): X { return x; }
 
 var x: number = foo(0);
-var y: string = foo("");
+var y: string = foo('');
 ```
 
 Furthermore, you may have polymorphic methods in polymorphic classes. For
@@ -114,13 +114,13 @@ example, you may define a List class with a map method:
 /* @flow */
 class List<T> {
   ...
-  map<U>(f: (x:T)=>U): List<U> { ... }
+  map<U>(f: (x: T) => U): List<U> { ... }
 }
 ```
 
 This means that for every instantiation of `T`, there is a polymorphic method
 for objects of type `List<T>` that, for any instantiation of `U`, takes a
-function of type `(x:T)=>U` and returns an object of type `List<U>`.
+function of type `(x: T) => U` and returns an object of type `List<U>`.
 
 ## Overloading
 
@@ -135,7 +135,7 @@ others, based on the types of its arguments.
 
 To express such signatures, Flow provides a syntax for union types:
 
-`$Either<T1,..,Tn>`
+`$Either<T1, .., Tn>`
 
 is the union of types `Ti`. Union types are available for general use. (The
 syntax is designed to reuse existing machinery in the parser; a better syntax

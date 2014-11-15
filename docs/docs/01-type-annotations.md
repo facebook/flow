@@ -104,7 +104,7 @@ This type is incompatible with
 However, explicit type annotations are required at all module boundaries.
 Flow's inference engine stops there.
 
-```
+```javascript
 /**
  * Size.js
  *
@@ -117,7 +117,7 @@ function size(input: string): number {
 module.exports = size;
 ```
 
-```
+```javascript
 /**
  * UseSize.js
  *
