@@ -5,7 +5,7 @@
   - id: installing-flow
     title: Installing Flow
   - id: getting-started
-    title: Getting Started (=> Tutorial)
+    title: Getting Started
 - title: User Guide
   items:
   - id: flow-basics
