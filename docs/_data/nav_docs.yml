@@ -8,14 +8,14 @@
     title: Getting Started
 - title: User Guide
   items:
-  - id: troubleshooting
-    title: Troubleshooting
   - id: new-project
     title: Running Flow on a new project
   - id: library
     title: Running Flow on a Library
   - id: transpiler
-    title: Transpiler
+    title: Running Flow code
+  - id: troubleshooting
+    title: Troubleshooting
 - title: Language Reference
   items:
   - id: type-annotations
