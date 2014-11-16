@@ -1,4 +1,3 @@
-found 6 errors
 
 union.js:7:5,5: number
 This type is incompatible with
@@ -23,3 +22,5 @@ This type is incompatible with
 union.js:21:22,22: number
 This type is incompatible with
   union.js:18:12,17: string
+
+Found 6 errors

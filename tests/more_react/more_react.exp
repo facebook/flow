@@ -1,4 +1,3 @@
-found 5 errors
 
 App.react.js:7:13,28: React
 Required module not found
@@ -15,3 +14,5 @@ Missing annotation
 
 JSX.js:4:13,28: React
 Required module not found
+
+Found 5 errors

@@ -1,4 +1,3 @@
-found 2 errors
 
 cli2.js:5:3,7: string
 This type is incompatible with
@@ -7,3 +6,5 @@ This type is incompatible with
 lib.js:7:14,19: number
 This type is incompatible with
   lib.js:3:14,19: string
+
+Found 2 errors

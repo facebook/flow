@@ -1,2 +1,0 @@
-<?hh
-class Foo {}

@@ -1,9 +1,0 @@
-Parse Error:
-File "$filename/compound_error1.php", line 2, characters 7-9:
-Expected ; (Parsing[1002])
-Conversion Error:
-File "$filename/compound_error2.php", line 2, characters 16-18:
-async is currently not supported. (Other[0])
-Conversion Error:
-File "$filename/compound_error2.php", line 5, characters 10-11:
-Collection initializers in instance variables are currently not supported. (Other[0])

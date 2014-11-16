@@ -1,5 +1,6 @@
-found 1 errors
 
 Condition.js:47:5,9: call of method x
 Function cannot be called on
   Condition.js:45:16,16: number
+
+Found 1 errors

@@ -46,6 +46,7 @@ type options = {
   opt_console : bool;
   opt_json : bool;
   opt_quiet : bool;
+  opt_profile : bool;
   opt_strip_root : bool;
   opt_module: string;
   opt_lib: string option;
@@ -61,6 +62,7 @@ let init_modes opts =
   modes.console <- opts.opt_console;
   modes.json <- opts.opt_json;
   modes.quiet <- opts.opt_quiet;
+  modes.profile <- opts.opt_profile;
   (* TODO: confirm that only master uses strip_root, otherwise set it! *)
   Module_js.init (opts.opt_module);
   Files_js.init (opts.opt_lib)
@@ -138,7 +140,7 @@ let collate_errors workers files =
   all_errors := all
 
 let wraptime opts pred msg f =
-  if opts.opt_quiet then f () else (
+  if opts.opt_quiet || not opts.opt_profile then f () else (
     let start = Unix.gettimeofday () in
     let ret = f () in
     let elap = (Unix.gettimeofday ()) -. start in
@@ -635,8 +637,9 @@ let print_errors ?root flow_opts =
   if flow_opts.opt_json
   then Errors_js.print_errorl true errors stdout
   else (
-    print_endline (spf "found %d errors" (List.length errors));
-    List.iter Errors_js.print_error_color errors
+    List.iter Errors_js.print_error_color errors;
+    print_newline ();
+    print_endline (spf "Found %d errors" (List.length errors))
   )
 
 (* initialize flow server state, including full check *)

@@ -1,4 +1,3 @@
-found 3 errors
 
 encaps.js:3:14,16: property x
 Property not found in
@@ -11,3 +10,5 @@ This type is incompatible with
 encaps.js:9:10,22: string
 This type is incompatible with
   encaps.js:6:11,16: number
+
+Found 3 errors

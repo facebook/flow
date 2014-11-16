@@ -741,6 +741,16 @@ module.exports = {
         ],
       }
     },
+    'var identity: <T>(x: T) => T': {
+      'body.0.declarations.0.id.typeAnnotation.typeAnnotation': {
+        'type': 'FunctionTypeAnnotation',
+        'typeParameters.params': [
+          {
+            'name': 'T',
+          },
+        ],
+      },
+    }
   },
   'Tuples': {
     'var a : [] = [];': {
@@ -1476,6 +1486,65 @@ module.exports = {
     'declare module {}': {
       'errors': {
         '0.message': 'Unexpected token {',
+      }
+    },
+  },
+  'Call Properties': {
+    'var a : { (): number }': {
+      'body.0.declarations.0.id.typeAnnotation.typeAnnotation.callProperties': [
+        {
+          'type': 'FunctionTypeAnnotation',
+          'params': [],
+          'returnType.type': 'NumberTypeAnnotation',
+          'typeParameters': null,
+        }
+      ],
+    },
+    'var a : { (): number; }': {},
+    'var a : { (): number; y: string; (x: string): string }': {
+      'body.0.declarations.0.id.typeAnnotation.typeAnnotation.callProperties': [
+        {
+          'type': 'FunctionTypeAnnotation',
+          'params': [],
+          'returnType.type': 'NumberTypeAnnotation',
+        },
+        {
+          'type': 'FunctionTypeAnnotation',
+          'params': [{
+            'type': 'FunctionTypeParam',
+            'name.name': 'x',
+            'typeAnnotation.type': 'StringTypeAnnotation',
+          }],
+          'returnType.type': 'StringTypeAnnotation',
+        },
+      ],
+    },
+    'var a : { <T>(x: T): number; }': {
+      'body.0.declarations.0.id.typeAnnotation.typeAnnotation.callProperties': [
+        {
+          'typeParameters.params': [
+            {
+              'name': 'T',
+            }
+          ],
+        }
+      ],
+    },
+    'interface A { (): number; }': {
+      'body.0.body.callProperties': [
+        {
+          'type': 'FunctionTypeAnnotation',
+          'params': [],
+          'returnType.type': 'NumberTypeAnnotation',
+          'typeParameters': null,
+        }
+      ]
+    }
+  },
+  'Invalid Call Properties': {
+    'var a : { () }': {
+      'errors': {
+        '0.message': 'Unexpected token }',
       }
     },
   }

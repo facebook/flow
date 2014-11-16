@@ -17,7 +17,6 @@ type reason = {
   derivable: bool;
   desc: string;
   pos: Pos.t;
-  salt: string;
 }
 
 let lexpos file line col = {
@@ -93,18 +92,10 @@ let string_of_pos pos =
       spf "File \"%s\", line %d, characters %d-%d"
         (Relative_path.to_absolute file) line start end_
 
-(* Note that reasons are tied to AST positions. Sometimes we want to visit the
-   same AST multiple times, generating different reasons for the same AST
-   positions (see generate_tests for typechecking polymorphic definitions). We
-   can do this by adding some salt to the reason descriptor. *)
-
-let salt = ref ""
-
 let new_reason s pos = {
   derivable = false;
   desc = s;
   pos = pos;
-  salt = !salt;
 }
 
 let reason_of_string s =

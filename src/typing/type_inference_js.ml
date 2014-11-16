@@ -536,7 +536,9 @@ let rec convert cx map = Ast.Type.(function
     in
     if (typeparams = []) then ft else PolyT(typeparams, ft)
 
-  | loc, Object { Object.properties; indexers; } ->
+  | loc, Object { Object.properties; indexers; callProperties; } ->
+    if callProperties <> []
+    then failwith "Unsupported call properties in object type";
     let map = List.fold_left (fun map_ ->
       Object.Property.(fun (loc, { key; value; optional; }) ->
         (match key with
@@ -1349,9 +1351,11 @@ and statement cx = Ast.Statement.(
   | (loc, InterfaceDeclaration {
       Interface.id;
       typeParameters;
-      body = (_, { Ast.Type.Object.properties; indexers });
+      body = (_, { Ast.Type.Object.properties; indexers; callProperties });
       extends;
     }) ->
+    if callProperties <> []
+    then failwith "Unsupported call properties in object type";
     let _, { Ast.Identifier.name = iname; _ } = id in
     let reason = mk_reason iname loc in
     let typeparams, imap, map = mk_type_param_declarations cx typeParameters in
@@ -1760,7 +1764,7 @@ and expression_ cx loc = Ast.Expression.(function
         let tup, elts = List.fold_left (fun (tup, elts) elem ->
           match elem with
           | Some (Expression e) -> (tup, expression cx e :: elts)
-          | Some (Spread (_, { SpreadElement.argument})) ->
+          | Some (Spread (_, { SpreadElement.argument })) ->
               (false, spread cx argument :: elts)
           | None -> (tup, (UndefT.at loc) :: elts)
         ) (true, []) elements in
@@ -3197,7 +3201,7 @@ and mk_nominal_type cx reason map (e, targs) =
   match targs with
   | Some ts ->
       let tparams = List.map (convert cx map) ts in
-      Flow_js.mk_annot cx reason (TypeAppT (c, tparams))
+      TypeAppT (c, tparams)
   | None ->
       Flow_js.mk_annot cx reason c
 
@@ -3289,8 +3293,8 @@ and mk_class_elements cx this super method_sigs body = Ast.Statement.Class.(
       let save_return_exn = Abnormal.swap Abnormal.Return false in
       generate_tests reason typeparams (fun map_ ->
         let param_types_map =
-          param_types_map |> SMap.map (Flow_js.subst_ cx map_) in
-        let ret = Flow_js.subst_ cx map_ ret in
+          param_types_map |> SMap.map (Flow_js.subst cx map_) in
+        let ret = Flow_js.subst cx map_ ret in
 
         mk_body cx param_types_map param_loc_map ret body this super;
       );
@@ -3348,18 +3352,18 @@ and mk_class cx reason_c type_params extends body =
   let super = mk_extends cx reason_c type_params_map extends in
 
   generate_tests reason_c typeparams (fun map_ ->
-    let super = Flow_js.subst_ cx map_ super in
+    let super = Flow_js.subst cx map_ super in
 
-    let fields = fields |> SMap.map (Flow_js.subst_ cx map_) in
+    let fields = fields |> SMap.map (Flow_js.subst cx map_) in
 
     let methods_ = methods_ |> SMap.map
         (fun (typeparams,type_params_map,
              (params,pnames,ret,param_types_map,param_loc_map)) ->
 
-          let params = List.map (Flow_js.subst_ cx map_) params in
-          let ret = Flow_js.subst_ cx map_ ret in
+          let params = List.map (Flow_js.subst cx map_) params in
+          let ret = Flow_js.subst cx map_ ret in
           let param_types_map =
-            SMap.map (Flow_js.subst_ cx map_) param_types_map in
+            SMap.map (Flow_js.subst cx map_) param_types_map in
           (typeparams,type_params_map,
            (params, Some pnames, ret, param_types_map, param_loc_map))
         )
@@ -3367,7 +3371,7 @@ and mk_class cx reason_c type_params extends body =
     let methods = methods_ |> SMap.map (mk_methodtype reason_c) in
     let instance = {
       class_id = id;
-      type_args = type_args_map |> IMap.map (Flow_js.subst_ cx map_);
+      type_args = type_args_map |> IMap.map (Flow_js.subst cx map_);
       fields_tmap = fields;
       methods_tmap = methods;
     } in
@@ -3467,8 +3471,8 @@ and function_decl cx (reason:reason) type_params params ret body this super =
   let save_return_exn = Abnormal.swap Abnormal.Return false in
   generate_tests reason typeparams (fun map_ ->
     let param_types_map =
-      param_types_map |> SMap.map (Flow_js.subst_ cx map_) in
-    let ret = Flow_js.subst_ cx map_ ret in
+      param_types_map |> SMap.map (Flow_js.subst cx map_) in
+    let ret = Flow_js.subst cx map_ ret in
 
     mk_body cx param_types_map param_types_loc ret body this super;
   );
@@ -3599,8 +3603,10 @@ and mk_params_ret cx map_ params (body_loc, ret_type_opt) =
         | loc, _ ->
             let reason = mk_reason "destructuring" loc in
             let t = type_of_pattern param |> mk_type_annotation_ cx map_ reason in
-            let (tmap, lmap) = destructuring_map cx t param in
-            t :: tlist, "_" :: pnames, tmap, lmap
+            let (des_tmap, des_lmap) = destructuring_map cx t param in
+            t :: tlist, "_" :: pnames,
+            SMap.union tmap des_tmap,
+            SMap.union lmap des_lmap
         )
     ) ([], [], SMap.empty, SMap.empty) params defaults
   in
@@ -3640,7 +3646,6 @@ and mk_params_ret cx map_ params (body_loc, ret_type_opt) =
    causes different reasons to be generated. *)
 
 and generate_tests reason typeparams each =
-  let salt_ = !Reason_js.salt in
   typeparams
   |> List.fold_left (fun list {id; name; _ } ->
     let xreason = replace_reason name reason in
@@ -3655,10 +3660,8 @@ and generate_tests reason typeparams each =
       (list |> List.map (IMap.add id bot))
   ) [IMap.empty]
   |> List.iteri (fun i map_ ->
-       Reason_js.salt := spf "%s$%d" !Reason_js.salt i;
        each map_;
-     );
-  Reason_js.salt := salt_
+     )
 
 (* take a list of types appearing in AST as type params,
    do semantic checking and create tvars for them. *)

@@ -612,12 +612,6 @@ let check_lower_bound cx id f =
   let bounds = find_graph cx id in
   bounds.lower |> ExistsTypeMap.exists f
 
-let check_annotation cx id =
-  check_upper_bound cx id (function
-    | AnnotT _ -> true
-    | _ -> false
-  )
-
 let blame_map = ref IMap.empty
 
 let is_required cx id =
@@ -712,9 +706,8 @@ let rec assert_ground ?(infer=false) cx ids = function
   | OptionalT (t) -> assert_ground cx ids t
 
   | TypeAppT(c,ts) ->
-      let f = assert_ground cx ids in
-      f c;
-      List.iter f ts
+      assert_ground ~infer:true cx ids c;
+      List.iter (assert_ground cx ids) ts
 
   | MaybeT(t) -> assert_ground cx ids t
 
@@ -845,16 +838,6 @@ let debug_flow (l,u) =
   spf "%s ~> %s" (string_of_ctor l) (string_of_ctor u)
 
 module Cache = struct
-  (* Instantiation cache: maps pairs of (polymorphic type, reason for
-     instantation) to pairs of (type substitution, instantiated type). This
-     ensures that polymorphic types are only instantiated once per reason for
-     instantiation. *)
-  module I = struct
-    let cache = Hashtbl.create 0
-    let find = Hashtbl.find cache
-    let add = Hashtbl.add cache
-  end
-
   (* Flow cache: maps pairs of (hash deftype, hash usetype) to hits. This
      ensures that flows between deftype and usetype are only processed once. *)
   module F = struct
@@ -872,7 +855,6 @@ module Cache = struct
   end
 
   let clear () =
-    Hashtbl.clear I.cache;
     Hashtbl.clear F.cache
 end
 
@@ -1015,23 +997,6 @@ let rec flow cx (l,u) trace =
     | (_, BoolT _) -> ()
 
     | (l, NumT _) when numeric l -> ()
-
-    (** Some values, such as classes and functions, may be used as types, in
-        particular as annotations. Such an annotation is represented as a type
-        variable, derived by a TypeT constraint we generate alongside the
-        value. In addition, we generate an AnnotT constraint alongside the type
-        variable recording the value that derives it. This is useful not only to
-        quickly distinguish type variables that are annotations (as opposed to
-        those than are inferred), but also to substitute such type variables
-        correctly: by substituting the values that derive them, and replacing
-        the type variables with new type variables that represent annotations
-        derived from the new values. **)
-
-    (*****************************************)
-    (* annotation predicates have no effects *)
-    (*****************************************)
-
-    | (_, AnnotT _) -> ()
 
     (**************************************)
     (* some properties are always defined *)
@@ -1191,62 +1156,30 @@ let rec flow cx (l,u) trace =
     (* generic function may be specialized *)
     (***************************************)
 
-    (* Note that without a guard, a polymorphic type may be instantiated an
-       unbounded number of times, stamping out distinct monomorphic types with
-       fresh type variables at every iteration. This may happen, e.g., in the
-       following code:
-
-       var a = []; function f() { a = a.map(...); }
-
-       To avoid this problem, we enforce that a particular use of a polymorphic
-       definition in the code (identified by the reason of the type of that use)
-       can only instantiate the polymorphic definition in one way. For this
-       strategy to work, much care is needed to ensure that reasons are
-       sufficiently unique across use sites in code, and that the reasons
-       associated with those use sites continue to be reflected in constraints
-       as they are propagated. *)
-
     | (PolyT (ids,t), SpecializeT(reason,ts,tvar)) ->
-      let t_ =
-        try
-          let ts_, t_ = Cache.I.find (l,reason) in
-          List.iter2 (fun t1 t2 ->
-            unify cx t1 t2
-          )
-            ts_ ts;
-          t_
-        with _ ->
-          let ts, t_ = instantiate_poly_ cx reason (ids,t) ts in
-          Cache.I.add (l,reason) (ts, t_);
-          t_
-      in
+      let ts, t_ = instantiate_poly_ cx reason (ids,t) ts in
       select_flow cx (t_, tvar)
         trace InstantiatePoly
 
     | (TypeAppT(c,ts), _) ->
       let reason = reason_of_t u in
-      let t = try Cache.I.find (l,reason) |> snd
-        with _ ->
-          let t = mk_tvar cx reason in
-          Cache.I.add (l,reason) (ts, t);
-          t
-      in
+      let t = mk_tvar cx reason in
       select_flow cx (c, SpecializeT(reason,ts,t))
         trace InstantiatePoly;
-      select_flow cx
-        (t, u)
-        trace InstantiatePoly
+      unit_flow cx (mk_annot cx reason t, u)
+
+    | (_, TypeAppT(c,ts)) ->
+      let reason = reason_of_t l in
+      let t = mk_tvar cx reason in
+      select_flow cx (c, SpecializeT(reason,ts,t))
+        trace InstantiatePoly;
+      unit_flow cx (l, mk_annot cx reason t)
 
     | (PolyT _, PolyT _) -> () (* TODO *)
 
     | (PolyT (ids,t), _) ->
       let reason = reason_of_t u in
-      let t_ = try Cache.I.find (l,reason) |> snd
-        with _ ->
-          let ts, t_ = instantiate_poly cx reason (ids,t) in
-          Cache.I.add (l,reason) (ts, t_);
-          t_
-      in
+      let ts, t_ = instantiate_poly cx reason (ids,t) in
       select_flow cx (t_, u)
         trace InstantiatePoly
 
@@ -1281,6 +1214,9 @@ let rec flow cx (l,u) trace =
     | (ObjT (reason1, {props_tmap = flds1; proto_t; _ }),
        ObjT (reason2, {props_tmap = flds2; proto_t = u_; _ }))
       ->
+      (* if inflowing type is literal (thus guaranteed to be
+         unaliased), propertywise subtyping is sound *)
+      let lit = (desc_of_reason reason1) = "object literal" in
       iter_props_ cx flds2
         (fun s -> fun t2 ->
           if (not(has_prop cx flds1 s))
@@ -1289,7 +1225,7 @@ let rec flow cx (l,u) trace =
             unit_flow cx (proto_t, LookupT (reason2, Some reason1, s, t2))
           else
             let t1 = read_prop cx flds1 s in
-            unify cx t1 t2
+            flow_to_mutable_child cx lit t1 t2
         );
         unit_flow cx (l, u_)
 
@@ -1325,8 +1261,9 @@ let rec flow cx (l,u) trace =
     (* array types deconstruct into their parts *)
     (********************************************)
 
-    | (ArrT (reason1, t1, ts1), ArrT (reason2, t2, ts2)) ->
-      array_flow cx trace (ts1,t1, ts2,t2)
+    | ArrT (r1, t1, ts1), ArrT (r2, t2, ts2) ->
+        let lit = (desc_of_reason r1) = "array literal" in
+        array_flow cx trace lit (ts1, t1, ts2, t2)
 
     (**************************************************)
     (* instances of classes follow declared hierarchy *)
@@ -2173,7 +2110,6 @@ and err_operation = function
   (* unreachable use-types *)
   | AdderT _
   | PredicateT _
-  | AnnotT _
   | UnifyT _
   (* def-types *)
   | _
@@ -2283,7 +2219,7 @@ and ancestor cx (old, old_map) (young, young_map) =
     (let parents = IMap.find_unsafe young cx.parents in
      let result = ref false in
      parents |> IMap.iter (fun parent parent_map ->
-       let parent_map = IMap.map (subst_ cx young_map) parent_map in
+       let parent_map = IMap.map (subst cx young_map) parent_map in
        result := !result || ancestor cx (old, old_map) (parent, parent_map)
      );
      !result
@@ -2306,33 +2242,14 @@ and mk_strict sealed reason_o reason_op =
 
 (* need to consider only "def" types *)
 
-(* Substitutions are mostly straightforward, except for nominal types, which are
-   represented indirectly via type variables. Such a type variable X is
-   guaranteed to have an upper bound Annot(C) where C denotes the runtime type
-   corresponding to the nominal type. Thus, it suffices to substitute X by
-   substituting C and making an instance of it. Substitution also carries a
-   reason describing the original site of substitution, and uses it as the
-   reason of that instance, so that blame can be maintained for instantiation
-   caching (see rules involving PolyT _). *)
-
-and subst cx reason_ map t = match t with
+and subst cx map t =
+  if IMap.is_empty map then t else match t with
   | BoundT typeparam ->
     (match IMap.get typeparam.id map with
     | None -> t
     | Some t -> t)
 
-  | OpenT (_,i) ->
-    let bounds = find_graph cx i in
-    let tref = ref t in
-    bounds.upper |> ExistsTypeMap.exists (function
-    | AnnotT c ->
-      let c_ = subst cx reason_ map c in
-      if c_ <> c then tref := mk_annot cx reason_ c_;
-      true
-    | _ -> false
-    ) |> ignore;
-    !tref
-
+  | OpenT _
   | NumT _
   | StrT _
   | BoolT _
@@ -2351,15 +2268,17 @@ and subst cx reason_ map t = match t with
     return_t = ret;
     closure_t = j;
   }) ->
-    FunT (reason, subst cx reason_ map static, subst cx reason_ map proto, {
-      this_t = subst cx reason_ map this;
-      params_tlist = List.map (subst cx reason_ map) params;
+    FunT (reason, subst cx map static, subst cx map proto, {
+      this_t = subst cx map this;
+      params_tlist = List.map (subst cx map) params;
       params_names = names;
-      return_t = subst cx reason_ map ret;
+      return_t = subst cx map ret;
       closure_t = j;
     })
 
-  | PolyT (xs,t) -> PolyT (xs, subst cx reason_ map t)
+  | PolyT (xs,t) ->
+      let map = IMap.filter (fun id _ -> not (is_typeparam id xs)) map in
+      PolyT (xs, subst cx map t)
 
   | ObjT (reason, {
     sealed;
@@ -2370,77 +2289,72 @@ and subst cx reason_ map t = match t with
     let pmap = IMap.find_unsafe id cx.property_maps in
     ObjT (reason, {
       sealed;
-      dict_t = (subst cx reason_ map key, subst cx reason_ map value);
-      props_tmap = mk_propmap cx (pmap |> SMap.map (subst cx reason_ map));
-      proto_t = subst cx reason_ map proto
+      dict_t = (subst cx map key, subst cx map value);
+      props_tmap = mk_propmap cx (pmap |> SMap.map (subst cx map));
+      proto_t = subst cx map proto
     })
 
   | ArrT (reason, t, ts) ->
     ArrT (reason,
-          subst cx reason_ map t,
-          ts |> List.map (subst cx reason_ map))
+          subst cx map t,
+          ts |> List.map (subst cx map))
 
-  | ClassT t -> ClassT (subst cx reason_ map t)
+  | ClassT t -> ClassT (subst cx map t)
 
   | TypeT (reason, t) ->
     TypeT (reason,
-           subst cx reason_ map t)
+           subst cx map t)
 
   | CustomClassT (name,ts,t) ->
     CustomClassT (
       name,
-      List.map (subst cx reason_ map) ts,
-      subst cx reason_ map t)
+      List.map (subst cx map) ts,
+      subst cx map t)
 
   | InstanceT (reason, static, super, instance) ->
     InstanceT (
       reason,
-      subst cx reason_ map static,
-      subst cx reason_ map super,
+      subst cx map static,
+      subst cx map super,
       { class_id = instance.class_id;
-        type_args = instance.type_args |> IMap.map (subst cx reason_ map);
-        fields_tmap = instance.fields_tmap |> SMap.map (subst cx reason_ map);
-        methods_tmap = instance.methods_tmap |> SMap.map (subst cx reason_ map)
+        type_args = instance.type_args |> IMap.map (subst cx map);
+        fields_tmap = instance.fields_tmap |> SMap.map (subst cx map);
+        methods_tmap = instance.methods_tmap |> SMap.map (subst cx map)
       }
     )
 
-  | RestT (t) -> RestT (subst cx reason_ map t)
+  | RestT (t) -> RestT (subst cx map t)
 
-  | OptionalT (t) -> OptionalT (subst cx reason_ map t)
+  | OptionalT (t) -> OptionalT (subst cx map t)
 
   | TypeAppT(c,ts) ->
-    TypeAppT(subst cx reason_ map c,List.map (subst cx reason_ map) ts)
+    TypeAppT(subst cx map c,List.map (subst cx map) ts)
 
   | MaybeT(t) ->
-    MaybeT(subst cx reason_ map t)
+    MaybeT(subst cx map t)
 
   | IntersectionT(reason, ts) ->
-    IntersectionT(reason, List.map (subst cx reason_ map) ts)
+    IntersectionT(reason, List.map (subst cx map) ts)
 
   | UnionT(reason, ts) ->
-    UnionT(reason, List.map (subst cx reason_ map) ts)
+    UnionT(reason, List.map (subst cx map) ts)
 
   | UpperBoundT(t) ->
-    UpperBoundT(subst cx reason_ map t)
+    UpperBoundT(subst cx map t)
 
   | LowerBoundT(t) ->
-    LowerBoundT(subst cx reason_ map t)
+    LowerBoundT(subst cx map t)
 
   | EnumT(reason, t) ->
-    EnumT(reason, subst cx reason_ map t)
+    EnumT(reason, subst cx map t)
 
   | RecordT(reason, t) ->
-    RecordT(reason, subst cx reason_ map t)
+    RecordT(reason, subst cx map t)
 
   | _ -> assert false (** TODO **)
 
-(* Tricky hack! Publicly, the substitution function is always called inside a
-   generate_tests context. To force substitution to occur under polymorphic
-   annotations, we need to avoid the instantiation cache (the polymorphic
-   annotations themselves come into existence by filling the cache). So we
-   ensure that the reasons for such substitution are unique, by exploiting the
-   unique Reason_js.salt generated for every test. *)
-and subst_ cx map t = subst cx (prefix_reason "" (reason_of_t t)) map t
+and is_typeparam idx xs =
+  List.exists (fun { id; _ } -> id = idx) xs
 
 and instantiate_poly_ cx reason_ (xs,t) ts =
   let len_xs = List.length xs in
@@ -2457,7 +2371,7 @@ and instantiate_poly_ cx reason_ (xs,t) ts =
         )
         IMap.empty xs ts
     in
-    ts, subst cx reason_ map t
+    ts, subst cx map t
 
 and instantiate_poly cx reason_ (xs,t) =
   let ts = xs |> List.map (fun {reason=reason_id; _} ->
@@ -2996,12 +2910,45 @@ and unify cx t1 t2 =
   | (OpenT (_, id), t) | (t, OpenT (_, id)) ->
     resolve_id cx id t
 
+  | (ArrT (_, t1, ts1), ArrT (_, t2, ts2)) ->
+    array_unify cx (ts1,t1, ts2,t2)
+
+  | (ObjT (reason1, {props_tmap = flds1; _}), ObjT (reason2, {props_tmap = flds2; _})) ->
+    let pmap1, pmap2 =
+      IMap.find_unsafe flds1 cx.property_maps,
+      IMap.find_unsafe flds2 cx.property_maps
+    in
+    let error_ref = ref false in
+    SMap.iter (fun x t ->
+      match SMap.get x pmap2 with
+      | Some t_ -> unify cx t t_
+      | None -> error_ref := true
+    ) pmap1;
+    if !error_ref || (SMap.cardinal pmap2 > SMap.cardinal pmap1)
+    then
+      let message_list = [
+        reason1, spf "%s\n%s" (desc_of_reason reason1) "Objects do not have the same properties";
+        reason2, desc_of_reason reason2
+      ] in
+      add_warning cx message_list
+
   | _ ->
     naive_unify cx t1 t2
 
-(* array helper *)
-and array_flow cx trace = function
+(* mutable sites on parent values (i.e. object properties,
+   array elements) must be typed invariantly when a value
+   flows to the parent, unless the incoming value is fresh,
+   in which case covariant typing is sound (since no alias
+   will break if the subtyped child value is replaced by a
+   non-subtyped value *)
+and flow_to_mutable_child cx fresh t1 t2 =
+  if fresh
+  then unit_flow cx (t1, t2)
+  else unify cx t1 t2
+
+and array_flow cx trace lit = function
   | ([],e1, _,e2) -> (* general element1 = general element2 *)
+    (* empty array flows in: always unify *)
     unify cx e1 e2
 
   | (ts1,_, [],e2) -> (* specific element1 < general element2 *)
@@ -3010,11 +2957,26 @@ and array_flow cx trace = function
     ) ts1
 
   | ([t1],_, t2::_,_) -> (* specific element1 = specific element2 *)
-    unify cx t1 t2
+    flow_to_mutable_child cx lit t1 t2
+
+  | (t1::ts1,e1, t2::ts2,e2) -> (* specific element1 = specific element2 *)
+    flow_to_mutable_child cx lit t1 t2;
+    array_flow cx trace lit (ts1,e1, ts2,e2)
+
+(* array helper *)
+and array_unify cx = function
+  | ([],e1, [],e2) -> (* general element1 = general element2 *)
+    unify cx e1 e2
+
+  | (ts1,_, [],e2)
+  | ([],e2, ts1,_) -> (* specific element1 < general element2 *)
+    List.iter (fun t1 ->
+      unify cx t1 e2;
+    ) ts1
 
   | (t1::ts1,e1, t2::ts2,e2) -> (* specific element1 = specific element2 *)
     unify cx t1 t2;
-    array_flow cx trace (ts1,e1, ts2,e2)
+    array_unify cx (ts1,e1, ts2,e2)
 
 
 (*******************************************************************)
@@ -3083,12 +3045,10 @@ and mk_instance cx instance_reason c =
 
 and mk_typeapp_instance cx reason x ts =
   TypeAppT(get_builtin cx x reason, ts)
-    |> mk_instance cx reason
 
 and mk_annot cx instance_reason c =
   mk_tvar_derivable_where cx instance_reason (fun t ->
-    unit_flow cx (c, TypeT(instance_reason,t));
-    unit_flow cx (t, AnnotT(c))
+    unit_flow cx (c, TypeT(instance_reason,t))
   )
 
 and get_builtin_type cx reason x =
@@ -3102,7 +3062,7 @@ and instantiate_poly_t cx t types =
       let subst_map = List.fold_left2 (fun acc {id; _} type_ ->
         IMap.add id type_ acc
       ) IMap.empty type_params types in
-      subst_ cx subst_map t_
+      subst cx subst_map t_
     with _ ->
       prerr_endline "Instantiating poly type failed";
       t
@@ -3568,6 +3528,7 @@ let rec extract_members cx this_t =
       SMap.union prot_members members
   | TypeAppT (c, ts) ->
       let inst_t = instantiate_poly_t cx c ts in
+      let inst_t = instantiate_type inst_t in
       extract_members cx inst_t
   | PolyT (type_params, sub_type) ->
       (* TODO: replace type parameters with stable/proper names? *)

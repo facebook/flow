@@ -1,4 +1,3 @@
-found 19 errors
 
 destructuring.js:4:22,22: number
 This type is incompatible with
@@ -48,26 +47,18 @@ destructuring.js:28:13,44: property z
 Property not found in
   destructuring.js:28:48,63: object literal
 
-destructuring.js:30:20,25: number
-This type is incompatible with
-  destructuring.js:31:8,9: string
-
 destructuring.js:31:8,9: string
 This type is incompatible with
   destructuring.js:30:20,25: number
-
-destructuring.js:32:24,29: string
-This type is incompatible with
-  destructuring.js:33:10,10: number
 
 destructuring.js:33:10,10: number
 This type is incompatible with
   destructuring.js:32:24,29: string
 
-destructuring.js:35:13,18: number
-This type is incompatible with
-  destructuring.js:35:27,28: string
-
 destructuring.js:35:27,28: string
 This type is incompatible with
   destructuring.js:35:13,18: number
+
+destructuring_param.js:5:17,17: Strict mode function may not have duplicate parameter names
+
+Found 17 errors

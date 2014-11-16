@@ -2,8 +2,6 @@ open Spider_monkey_ast (* Loc *)
 
 type reason
 
-val salt: string ref
-
 val lexpos: string -> int -> int -> Lexing.position
 
 (* reason constructors *)

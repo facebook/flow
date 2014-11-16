@@ -1,4 +1,3 @@
-found 4 errors
 
 proto.js:8:7,11: string
 This type is incompatible with
@@ -15,3 +14,5 @@ This type is incompatible with
 sealed.js:3:1,7: assignment of property z
 Property not found in
   proto.js:12:15,24: object type
+
+Found 4 errors

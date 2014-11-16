@@ -143,8 +143,12 @@ module Impl = struct
     | ServerProt.ERRORS e ->
       if args.output_json || args.from <> ""
       then Errors_js.print_errorl args.output_json e stdout
-      else List.iter Errors_js.print_error_color e;
-      exit 2
+      else (
+        List.iter Errors_js.print_error_color e;
+        print_newline ();
+        Printf.printf "Found %d errors\n" (List.length e);
+        exit 2
+      )
     | ServerProt.NO_ERRORS ->
       Errors_js.print_errorl args.output_json [] stdout;
       exit 0

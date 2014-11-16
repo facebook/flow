@@ -95,8 +95,6 @@ module Type :
 
       | LookupT of reason * reason option * string * t
 
-      | AnnotT of t
-
       | MarkupT of reason * t * t
 
       | ObjAssignT of reason * t * t

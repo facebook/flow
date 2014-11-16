@@ -1,4 +1,3 @@
-found 4 errors
 
 array_lib.js:3:10,10: number
 This type is incompatible with
@@ -15,3 +14,5 @@ This type is incompatible with
 array_lib.js:9:13,18: string
 This type is incompatible with
   array_lib.js:3:10,10: number
+
+Found 4 errors

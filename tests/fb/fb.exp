@@ -1,8 +1,11 @@
-found 8 errors
 
 E.js:9:1,12: call of method getQuery
 Too few arguments (expected default/rest parameters in function)
   [LIB] react.js:90:9,41: function type
+
+dlite.js:11:15,25: call of method qux
+Property not found in
+  dlite.js:8:9,12:2: React component
 
 dlite.js:14:7,11: string
 This type is incompatible with
@@ -31,3 +34,5 @@ This type is incompatible with
 mixin.js:5:16,18: undefined
 This type is incompatible with
   mixin.js:5:9,14: string
+
+Found 9 errors

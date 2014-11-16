@@ -148,9 +148,6 @@ module Type = struct
   (* operation on prototypes *)
   | LookupT of reason * reason option * string * t
 
-  (* operation specifying type annotation *)
-  | AnnotT of t
-
   (* JSX *)
   | MarkupT of reason * t * t
 
@@ -543,7 +540,6 @@ let is_use = function
   | EqT _
   | SpecializeT _
   | LookupT _
-  | AnnotT _
   | MarkupT _
   | ObjAssignT _
   | ObjRestT _
@@ -603,7 +599,6 @@ let string_of_ctor = function
   | UnionT _ -> "UnionT"
   | LookupT _ -> "LookupT"
   | UnifyT _ -> "UnifyT"
-  | AnnotT _ -> "AnnotT"
   | ObjAssignT _ -> "ObjAssignT"
   | ObjRestT _ -> "ObjRestT"
   | ObjExtendT _ -> "ObjExtendT"
@@ -692,7 +687,7 @@ let rec reason_of_t = function
       -> reason
 
   | TypeAppT(t,_)
-      -> reason_of_t t
+      -> prefix_reason "type application of " (reason_of_t t)
 
   | MaybeT t ->
       prefix_reason "?" (reason_of_t t)
@@ -707,9 +702,6 @@ let rec reason_of_t = function
       reason
 
   | UnifyT(_,t) ->
-      reason_of_t t
-
-  | AnnotT t ->
       reason_of_t t
 
   | ObjAssignT (reason, _, _)

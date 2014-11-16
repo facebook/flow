@@ -1,4 +1,3 @@
-found 7 errors
 
 namespace.js:2:13,18: number
 This type is incompatible with
@@ -20,10 +19,8 @@ namespace.js:17:29,34: number
 This type is incompatible with
   client.js:3:10,15: string
 
-namespace.js:17:29,34: number
-This type is incompatible with
-  namespace.js:18:25,26: string
-
 namespace.js:18:25,26: string
 This type is incompatible with
   namespace.js:17:29,34: number
+
+Found 6 errors

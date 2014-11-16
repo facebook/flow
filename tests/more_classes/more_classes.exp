@@ -1,4 +1,3 @@
-found 4 errors
 
 Bar.js:14:26,31: string
 This type is incompatible with
@@ -13,3 +12,5 @@ Missing annotation
 
 Qux.js:7:8,8: return
 Missing annotation
+
+Found 4 errors

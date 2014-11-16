@@ -1,5 +1,6 @@
-found 1 errors
 
 Arrays.js:7:8,8: number
 This type is incompatible with
   Arrays.js:4:16,21: string
+
+Found 1 errors

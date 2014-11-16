@@ -1,4 +1,3 @@
-found 3 errors
 
 B.js:7:12,16: string
 This type is incompatible with
@@ -11,3 +10,5 @@ This type is incompatible with
 E.js:8:6,10: boolean
 This type is incompatible with
   E.js:4:14,19: number
+
+Found 3 errors

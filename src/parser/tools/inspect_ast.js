@@ -1,5 +1,5 @@
 #! /opt/local/bin/node
-var flow = require("../flow.js");
+var flow = require("../flow_parser.js");
 var util = require("util");
 var fs = require("fs");
 var argv = require("minimist")(process.argv.slice(2));

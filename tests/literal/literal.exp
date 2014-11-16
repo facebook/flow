@@ -1,4 +1,3 @@
-found 4 errors
 
 enum.js:3:11,16: string literal name
 Property not found in
@@ -15,3 +14,5 @@ This type is incompatible with
 enum_client.js:20:14,15: number
 This type is incompatible with
   enum_client.js:21:9,14: string
+
+Found 4 errors

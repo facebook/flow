@@ -1,5 +1,6 @@
-found 1 errors
 
 arrows.js:7:37,59: string
 This type is incompatible with
   [LIB] core.js:103:38,43: number
+
+Found 1 errors

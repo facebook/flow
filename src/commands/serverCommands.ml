@@ -38,6 +38,7 @@ module OptionParser(Config : CONFIG) : Server.OPTION_PARSER = struct
       let console = ref false in
       let json = ref false in
       let quiet = ref false in
+      let profile = ref false in
       let strip_root = ref false in
       let module_ = ref "haste" in
       let lib = ref None in
@@ -45,6 +46,8 @@ module OptionParser(Config : CONFIG) : Server.OPTION_PARSER = struct
       | Check -> [
         "--json", CommandUtils.arg_set_unit json,
           " Output errors in JSON format";
+        "--profile", CommandUtils.arg_set_unit profile,
+          " Output profiling information";
         "--quiet", CommandUtils.arg_set_unit quiet,
           " Suppress info messages to stdout (included in --json)"; ]
       | _ -> [] in
@@ -105,6 +108,7 @@ module OptionParser(Config : CONFIG) : Server.OPTION_PARSER = struct
         Types_js.opt_console = !console;
         Types_js.opt_json = !json;
         Types_js.opt_quiet = !quiet || !json;
+        Types_js.opt_profile = !profile;
         Types_js.opt_strip_root = !strip_root;
         Types_js.opt_module = !module_;
         Types_js.opt_lib = !lib;

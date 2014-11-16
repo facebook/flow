@@ -1,4 +1,3 @@
-found 2 errors
 
 Arith.js:13:7,9: string
 This type is incompatible with
@@ -7,3 +6,5 @@ This type is incompatible with
 Arith.js:15:7,9: number
 This type is incompatible with
   Arith.js:6:16,21: string
+
+Found 2 errors

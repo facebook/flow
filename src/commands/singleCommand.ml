@@ -30,6 +30,7 @@ let parse_args () =
   let debug = ref false in
   let json = ref false in
   let quiet = ref false in
+  let profile = ref false in
   let newtraces = ref false in
   let traces = ref false in
   let module_ = ref "haste" in
@@ -43,6 +44,8 @@ let parse_args () =
       " Print verbose debug info during typecheck";
     "--json", CommandUtils.arg_set_unit json,
       " Output errors in JSON format";
+    "--profile", CommandUtils.arg_set_unit profile,
+      " Output profiling information";
     "--quiet", CommandUtils.arg_set_unit quiet,
       " Suppress info messages to stdout (included in --json)";
     "--module", CommandUtils.arg_set_enum
@@ -65,6 +68,7 @@ let parse_args () =
       Types_js.opt_traces = !traces;
       Types_js.opt_json = !json;
       Types_js.opt_quiet = !quiet || !json;
+      Types_js.opt_profile = !profile;
       Types_js.opt_strip_root = false;
       Types_js.opt_module = !module_;
       Types_js.opt_lib = !lib;

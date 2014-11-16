@@ -1,4 +1,3 @@
-found 7 errors
 
 nullable.js:1:32,35: null
 This type is incompatible with
@@ -27,3 +26,5 @@ This type is incompatible with
 simple_nullable.js:4:5,9: string
 This type is incompatible with
   simple_nullable.js:2:17,22: number
+
+Found 7 errors

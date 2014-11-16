@@ -26,6 +26,7 @@ type options = {
   opt_console : bool;
   opt_json : bool;
   opt_quiet : bool;
+  opt_profile : bool;
   opt_strip_root : bool;
   opt_module: string;
   opt_lib: string option;

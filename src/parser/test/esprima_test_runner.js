@@ -1,5 +1,5 @@
 /**
- * Compares the output of flow.js with esprima
+ * Compares the output of flow_parser.js with esprima
  */
 
 var esprima = require("/var/www/scripts/third_party/esprima-fb/esprima.js");
@@ -79,16 +79,6 @@ function handleSpecialObjectCompare(esprima, flow, env) {
     esprima.typeAnnotation = null;
   }
 
-  if (esprima.hasOwnProperty("parametricType")) {
-    esprima.typeParameters = esprima.parametricType;
-    delete esprima.parametricType;
-  }
-
-  if (esprima.hasOwnProperty("superParametricType")) {
-    esprima.superTypeParameters = esprima.superParametricType;
-    delete esprima.superParametricType;
-  }
-
   // Root object
   if (env.path_level() == 1) {
     // Ignore the errors property on flow
@@ -119,14 +109,19 @@ function handleSpecialObjectCompare(esprima, flow, env) {
       }
       break;
     case 'Identifier':
-      // Esprima is missing support for optional identifiers
-      esprima.optional = false;
+      if (esprima.optional === undefined) {
+        esprima.optional = false;
+      }
       break;
     case 'FunctionDeclaration':
     case 'FunctionExpression':
       // Some more type annotation stuff missing from esprima
-      esprima.typeParameters = null;
-      esprima.returnType = null;
+      if (esprima.typeParameters === undefined) {
+        esprima.typeParameters = null;
+      }
+      if (esprima.returnType === undefined) {
+        esprima.returnType = null;
+      }
       break;
     case 'XJSEmptyExpression':
       // The location for the empty XJS expression doesn't really matter. I'm
@@ -164,23 +159,26 @@ function handleSpecialObjectCompare(esprima, flow, env) {
       if (esprima.id === undefined) {
         esprima.id = null;
       }
-      if (!esprima.hasOwnProperty("superParametricType")) {
-        esprima.superTypeParameters = null;
-      }
-      if (esprima.typeParameters == undefined) {
+      if (esprima.typeParameters === undefined) {
         esprima.typeParameters = null;
       }
-      // Esprima doesn't support implements
-      delete flow.implements;
+      if (esprima.superTypeParameters === undefined) {
+        esprima.superTypeParameters = null;
+      }
+      if (esprima.implements === undefined) {
+        esprima.implements = [];
+      }
       break;
     case "ClassDeclaration":
-      if (!esprima.hasOwnProperty("superParametricType")) {
-        esprima.superTypeParameters = null;
-      }
-      if (esprima.typeParameters == undefined) {
+      if (esprima.typeParameters === undefined) {
         esprima.typeParameters = null;
       }
-      delete flow.implements;
+      if (esprima.superTypeParameters === undefined) {
+        esprima.superTypeParameters = null;
+      }
+      if (esprima.implements === undefined) {
+        esprima.implements = [];
+      }
       break;
     case 'ArrayPattern':
       // Esprima has the wrong node type for spread elements in an array pattern
@@ -193,6 +191,30 @@ function handleSpecialObjectCompare(esprima, flow, env) {
         esprima.typeAnnotation = null;
       }
       break;
+    case 'ObjectTypeAnnotation':
+      if (esprima.indexer == null) {
+        esprima.indexers = [];
+      } else {
+        esprima.indexers = [esprima.indexer];
+      }
+      if (esprima.callProperties == null) {
+        esprima.callProperties = [];
+      }
+      delete esprima.indexer;
+      break;
+  }
+
+  switch (esprima.type) {
+    case 'FunctionDeclaration':
+    case 'FunctionExpression':
+    case 'ArrowFunction':
+      if (Array.isArray(esprima.defaults)) {
+        for (var i = 0; i < esprima.defaults.length; i++) {
+          if (esprima.defaults[i] === undefined) {
+            esprima.defaults[i] = null;
+          }
+        }
+      }
   }
 
   if (flow && flow.type) {
@@ -224,7 +246,6 @@ function compare(esprima, flow, env) {
   }
 
   if (esprima_type != flow_type) {
-    console.log("\n", esprima, flow);
     env.diff("Wrong type", esprima_type, flow_type);
     return;
   }

@@ -425,6 +425,7 @@ end = struct
     and primary env =
       let loc = Peek.loc env in
       match Peek.token env with
+      | T_LESS_THAN -> _function env
       | T_LPAREN -> function_or_group env
       | T_LCURLY ->
           let loc, o = _object env in
@@ -582,7 +583,7 @@ end = struct
       | ParamList (rest, params) ->
         Expect.token env T_ARROW;
         let returnType = _type env in
-        let end_loc = Peek.loc env in
+        let end_loc = fst returnType in
         Loc.btwn start_loc end_loc, Type.(Function Function.({
           params;
           returnType;
@@ -591,24 +592,45 @@ end = struct
         }))
       | Type _type -> _type
 
+    and _function env =
+      let start_loc = Peek.loc env in
+      let typeParameters = type_parameter_declaration env in
+      let rest, params = function_param_list env in
+      Expect.token env T_ARROW;
+      let returnType = _type env in
+      let end_loc = fst returnType in
+      Loc.btwn start_loc end_loc, Type.(Function Function.({
+        params;
+        returnType;
+        rest;
+        typeParameters;
+      }))
+
     and _object =
-      let method_property env start_loc key =
+      let methodish env start_loc =
         let typeParameters = type_parameter_declaration env in
         let rest, params = function_param_list env in
         Expect.token env T_COLON;
         let returnType = _type env in
         let loc = Loc.btwn start_loc (fst returnType) in
-        let value = loc, Type.(Function Function.({
+        loc, Type.Function.({
           params;
           returnType;
           rest;
           typeParameters;
-        })) in
-        Loc.btwn start_loc (fst value), Type.Object.Property.({
+        })
+
+      in let method_property env start_loc key =
+        let value = methodish env start_loc in
+        let value = fst value, Type.Function (snd value) in
+        fst value, Type.Object.Property.({
           key;
           value;
           optional = false;
         })
+
+      in let call_property env =
+        methodish env (Peek.loc env)
 
       in let property env start_loc key =
         let optional = Expect.maybe env T_PLING in
@@ -639,14 +661,19 @@ end = struct
         if Peek.token env <> T_RCURLY
         then Expect.token env T_SEMICOLON
 
-      in let rec properties env (acc, indexers) =
+      in let rec properties env (acc, indexers, callProperties) =
         match Peek.token env with
         | T_EOF
-        | T_RCURLY -> List.rev acc, List.rev indexers
+        | T_RCURLY -> List.rev acc, List.rev indexers, List.rev callProperties
         | T_LBRACKET ->
           let indexer = indexer_property env in
           semicolon env;
-          properties env (acc, indexer::indexers)
+          properties env (acc, indexer::indexers, callProperties)
+        | T_LESS_THAN
+        | T_LPAREN ->
+          let call_prop = call_property env in
+          semicolon env;
+          properties env (acc, indexers, call_prop::callProperties)
         | _ ->
           let start_loc, key = Parse.object_key env in
           let property = match Peek.token env with
@@ -654,17 +681,18 @@ end = struct
           | T_LPAREN -> method_property env start_loc key
           | _ -> property env start_loc key in
           semicolon env;
-          properties env (property::acc, indexers)
+          properties env (property::acc, indexers, callProperties)
 
       in fun env ->
         let start_loc = Peek.loc env in
         Expect.token env T_LCURLY;
-        let properties, indexers = properties env ([], []) in
+        let properties, indexers, callProperties = properties env ([], [], []) in
         let end_loc = Peek.loc env in
         Expect.token env T_RCURLY;
         Loc.btwn start_loc end_loc, Type.Object.({
           properties;
           indexers;
+          callProperties;
         })
 
     and type_parameter_declaration =
@@ -2858,7 +2886,9 @@ end = struct
         then begin
           (* Class property with annotation *)
           let typeAnnotation = Type.annotation env in
-          let loc = Loc.btwn start_loc (fst typeAnnotation) in
+          let end_loc = Peek.loc env in
+          Expect.token env T_SEMICOLON;
+          let loc = Loc.btwn start_loc end_loc in
           Ast.Statement.Class.(Body.Property (loc, Property.({
             key;
             typeAnnotation;

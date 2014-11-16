@@ -1,4 +1,3 @@
-found 4 errors
 
 Traces.js:4:4,4: number
 This type is incompatible with
@@ -15,3 +14,5 @@ This type is incompatible with
 Traces.js:17:22,27: string
 This type is incompatible with
   Traces.js:19:29,33: number
+
+Found 4 errors

@@ -1,4 +1,3 @@
-found 13 errors
 
 refinements.js:2:16,16: number
 This type is incompatible with
@@ -51,3 +50,5 @@ This type is incompatible with
 refinements.js:50:13,17: boolean
 This type is incompatible with
   refinements.js:54:11,16: number
+
+Found 13 errors

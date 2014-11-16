@@ -1,5 +1,6 @@
-found 1 errors
 
 logical.js:18:12,20: boolean
 This type is incompatible with
   logical.js:16:19,24: number
+
+Found 1 errors

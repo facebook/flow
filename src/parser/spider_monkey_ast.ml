@@ -154,6 +154,7 @@ and Type : sig
     type t = {
       properties: Property.t list;
       indexers: Indexer.t list;
+      callProperties: (Loc.t * Function.t) list;
     }
   end
 

@@ -1,4 +1,3 @@
-found 3 errors
 
 array.js:2:38,38: number
 This type is incompatible with
@@ -11,3 +10,5 @@ This type is incompatible with
 array.js:14:45,49: string
 This type is incompatible with
   array.js:15:11,16: number
+
+Found 3 errors

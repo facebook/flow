@@ -1,4 +1,3 @@
-found 5 errors
 
 promise.js:6:17,17: number
 This type is incompatible with
@@ -19,3 +18,5 @@ This type is incompatible with
 promise.js:11:30,31: string
 This type is incompatible with
   [LIB] core.js:279:1,291:1: Promise
+
+Found 5 errors

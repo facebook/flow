@@ -1,4 +1,3 @@
-found 10 errors
 
 Fun.js:8:14,17: parameter fold
 Missing annotation
@@ -36,3 +35,5 @@ This type is incompatible with
 Ycombinator.js:14:28,33: string
 This type is incompatible with
   Ycombinator.js:10:28,33: number
+
+Found 10 errors

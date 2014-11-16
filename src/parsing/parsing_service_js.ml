@@ -99,7 +99,7 @@ let parse workers next init_modes =
     ~merge: merge
     ~next: next in
 
-  if not Modes_js.(modes.quiet) then
+  if Modes_js.(modes.profile) && not Modes_js.(modes.quiet) then
     let t2 = Unix.gettimeofday () in
     prerr_endline (spf "parsed %d + %d files in %f"
       (SSet.cardinal ok) (List.length fail) (t2 -. t))

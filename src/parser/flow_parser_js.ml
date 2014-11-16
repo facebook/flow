@@ -664,7 +664,7 @@ module Translate = struct
     | String -> string_type loc
     | Boolean -> boolean_type loc
     | Nullable t -> nullable_type loc t
-    | Function fn -> function_type loc fn
+    | Function fn -> function_type (loc, fn)
     | Object o -> object_type (loc, o)
     | Array t -> array_type loc t
     | Generic g -> generic_type (loc, g)
@@ -690,7 +690,7 @@ module Translate = struct
     Js.Unsafe.set ret "typeAnnotation" (_type t);
     ret
 
-  and function_type loc fn = Type.Function.(
+  and function_type (loc, fn) = Type.Function.(
     let ret = node "FunctionTypeAnnotation" loc in
     Js.Unsafe.set ret "params" (array function_type_param fn.params);
     Js.Unsafe.set ret "returnType" (_type fn.returnType);
@@ -711,6 +711,7 @@ module Translate = struct
     let ret = node "ObjectTypeAnnotation" loc in
     Js.Unsafe.set ret "properties" (array object_type_property o.properties);
     Js.Unsafe.set ret "indexers" (array object_type_indexer o.indexers);
+    Js.Unsafe.set ret "callProperties" (array function_type o.callProperties);
     ret
   )
 

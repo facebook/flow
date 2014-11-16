@@ -8,6 +8,7 @@ type modes = {
   mutable console: bool;
   mutable json: bool;
   mutable quiet : bool;
+  mutable profile : bool;
 }
 
 let modes = {
@@ -20,6 +21,7 @@ let modes = {
   console = false;
   json = false;
   quiet = true;
+  profile = false;
 }
 
 let debug_string f = if modes.debug then prerr_endline (f ()) else ()

@@ -1,4 +1,3 @@
-found 5 errors
 
 overload.js:1:27,27: number
 This type is incompatible with
@@ -19,3 +18,5 @@ This type is incompatible with
 [LIB] core.js:138:62,67: string
 This type is incompatible with
   overload.js:4:9,14: number
+
+Found 5 errors

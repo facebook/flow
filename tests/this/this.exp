@@ -1,4 +1,3 @@
-found 9 errors
 
 This.js:3:25,25: number
 This type is incompatible with
@@ -32,3 +31,5 @@ Property cannot be accessed on global object
 This.js:54:24,25: string
 This type is incompatible with
   This.js:47:17,22: number
+
+Found 9 errors

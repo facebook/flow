@@ -1,4 +1,3 @@
-found 6 errors
 
 locals.js:1:7,12: string
 This type is incompatible with
@@ -23,3 +22,5 @@ This type is incompatible with
 locals.js:12:16,19: boolean
 This type is incompatible with
   locals.js:10:25,30: string
+
+Found 6 errors

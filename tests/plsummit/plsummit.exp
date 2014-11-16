@@ -1,4 +1,3 @@
-found 4 errors
 
 generics.js:4:1,45: some instantiation (e.g., mixed) of X
 This type is incompatible with
@@ -15,3 +14,5 @@ This type is incompatible with
 objects.js:9:14,15: string
 This type is incompatible with
   objects.js:13:8,13: number
+
+Found 4 errors

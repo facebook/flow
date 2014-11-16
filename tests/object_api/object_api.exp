@@ -1,4 +1,3 @@
-found 4 errors
 
 c.js:5:1,7: call of method foo
 Property not found in
@@ -13,3 +12,5 @@ Missing annotation
 object_assign.js:7:19,40: property bar
 Property not found in
   object_assign.js:7:58,59: object literal
+
+Found 4 errors
