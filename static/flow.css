@@ -270,6 +270,10 @@ section.content article blockquote small:before {
     content: '\2014 \00A0';
 }
 
+section.content article.withtoc {
+    position: relative;
+}
+
 section.content aside .fb-like {
     top: 4px;
     left: 4px;
@@ -381,7 +385,7 @@ div.CodeMirror-lines {
 }
 
 
-#content {
+#\_ {
     display: none;
 }
 
@@ -426,7 +430,6 @@ div.CodeMirror-lines {
 
 }
 
-
 /* phoneish */
 
 @media (max-width: 480px) {
@@ -451,8 +454,11 @@ div.CodeMirror-lines {
         margin-left: 0;
     }
 
-    #content {
+    #\_ {
         display: block;
+        position: absolute;
+        top: -60px;
+        left: 0;
     }
 
 }
