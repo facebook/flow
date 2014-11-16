@@ -18,15 +18,15 @@ body {
     font-weight: 300;
     color: #444;
     margin: 0;
-    line-height: 1.28;
+    line-height: 1.6em;
     padding-top: 50px;
     padding-bottom: 10px;
 }
 
 h1, h2, h3, h4 {
     font-weight: normal;
-    margin: 1em 0 0.2em;
-    line-height: 1.2em;
+    margin: 1.3em 0 0.2em;
+    line-height: 1.4em;
 }
 
 h1:first-child, h2:first-child, h3:first-child, h4:first-child {
@@ -73,29 +73,39 @@ p, pre, ul {
     margin-right: auto;
 }
 
-.highlight pre {
-    white-space: pre-wrap;
-    font-family: 'source-code-pro', Menlo, 'Courier New', Consolas, monospace;
-    font-size: 13px;
-    line-height: 20px;
-    border-left: 4px solid #D68B00;
-    padding: 5px 10px;
-    margin-left: 20px;
-    background-color: hsla(31, 75%, 54%, 0.1);
-}
-
-.highlight pre code {
-    background: none;
-    padding: 0;
-}
-
 code {
-    background: hsla(0, 0%, 0%, 0.04);
     letter-spacing: 0.02em;
     padding-right: 2px;
     padding-left: 4px;
     border-radius: 3px;
 }
+
+.highlight pre {
+    white-space: pre-wrap;
+    font-family: 'source-code-pro', Menlo, 'Courier New', Consolas, monospace;
+    font-size: 13px;
+    line-height: 20px;
+}
+
+.highlight pre code {
+    display: block;
+    padding: 0;
+    border-left: 4px solid rgb(214, 139, 0);
+    padding: 5px 10px;
+    margin-left: 20px;
+    border-radius: 0;
+    background-color: rgba(226, 141, 49, 0.1);
+}
+
+.lineno {
+  color: rgb(214, 139, 0);
+}
+
+.highlight pre code.language-text {
+    border-color: rgb(30, 130, 30);
+    background-color: rgba(30, 130, 30, 0.1);
+}
+
 
 ul {
  list-style-position: outside;
@@ -217,15 +227,14 @@ header.hero p {
 }
 
 header.hero a.button {
-    background: #bb2910;
+    background: rgb(214, 139, 0);
     color: #ffffff;
     font-weight: bold;
     text-transform: uppercase;
     padding: 10px 20px;
-    border-radius: 4px;
     display: inline-block;
     margin: 1em;
-    box-shadow: 0px 2px 4px rgba(0,0,0,0.3);
+    box-shadow: 0px 1px 2px rgba(0,0,0,0.3);
 }
 
 header.subhero {

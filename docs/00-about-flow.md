@@ -6,7 +6,7 @@ permalink: /docs/about-flow.html
 next: getting-started.html
 ---
 
-Flow is a static type checker for JavaScript. It can be used to catch common bugs in JavaScript programs (e.g., silent type conversions, null dereferences), often without requiring any changes to your code. It also adds type syntax to JavaScript, so that developers can express invariants about their code and have them maintained automatically.
+Flow is a static type checker for JavaScript. It can be used to catch common bugs in JavaScript programs - such as silent type conversions, null dereferences and so on - often without requiring any changes to your code. It also adds type syntax to JavaScript, so that developers can express invariants about their code and have them maintained automatically.
 
 Flow's type checking is **opt-in**: files are not type checked unless you ask it to. This means that you can gradually convert your JavaScript codebase to Flow while reaping incremental benefits. When you do opt-in a file, Flow tries to type check the code automatically by performing type inference, reporting errors without further manual guidance. This simple workflow is usually sufficient when your codebase is broken down into small files, each defining a module that exports a well-defined interface. However, for some files (e.g., monolithic libraries), the analysis Flow performs might turn out to be too imprecise, causing lots of spurious errors to be reported. In such cases, the developer can either try to manually guide Flow with type annotations, or switch to a weaker mode with limited type inference to reduce noise.
 

@@ -41,7 +41,7 @@ This type is incompatible with
 
 Looking at the example itself it's easy to see why:
 
-```javascript
+{% highlight javascript linenos %}
 /* @flow */
 
 function foo(x) {
@@ -49,15 +49,15 @@ function foo(x) {
 }
 
 foo('Hello, world!');
-```
+{% endhighlight %}
 
 We're calling a function that clearly expects a number with a string. Flow detects that and returns an error. To fix this example, you can call `foo` with an integer instead. Running `flow check` should no longer find an error. A possible fix is in the `answer` directory. Throughout this tutorial, you will find solutions in the `answer` directory each time.
 
 You may have noticed this header line in the example file:
 
-```javascript
+{% highlight javascript linenos %}
 /* @flow */
-```
+{% endhighlight %}
 
 This is important: it tells Flow that this file should be typechecked. Flow will ignore any files that don't have this header, so you can start converting your project one file at a time.
 
@@ -67,7 +67,7 @@ Flow infers type within a file, so you don't have to annotate every function to 
 
 The second example (`02_TypeAnnotations`) shows basic type annotations in Flow:
 
-```javascript
+{% highlight javascript linenos %}
 /* @flow */
 
 function foo(x: string, y: number): string {
@@ -75,7 +75,7 @@ function foo(x: string, y: number): string {
 }
 
 foo('Hello', 42);
-```
+{% endhighlight %}
 
 Again, running `flow check` gives an error. In this case it is the return type of `foo` that is wrong - we've declared it to be a `string` even though the function is returning a `number`. Flow flags that, and you can fix it by changing the return type.
 
@@ -83,7 +83,7 @@ Again, running `flow check` gives an error. In this case it is the return type o
 
 Flow handles `null` differently than most type systems. Most type systems ignore `null`, meaning that your program can be type correct but crash because they access `null`. In Flow, doing this is an error, as shown by our third example (`03_Null`):
 
-```javascript
+{% highlight javascript linenos %}
 /* @flow */
 
 function length(x) {
@@ -91,13 +91,13 @@ function length(x) {
 }
 
 var total = length('Hello') + length(null);
-```
+{% endhighlight %}
 
 This program would crash at runtime, with a `TypeError` when it tries to read the property `length` on `null`. Running `flow check` will detect that.
 
 The file in the `answer` directory fixes both the code and the type error:
 
-```javascript
+{% highlight javascript linenos %}
 /* @flow */
 
 function length(x) {
@@ -109,7 +109,7 @@ function length(x) {
 }
 
 var total = length('Hello') + length(null);
-```
+{% endhighlight %}
 
 Because we've checked that `x` is not `null`, Flow knows this is safe and doesn't emit a type error.
 
@@ -117,7 +117,7 @@ Because we've checked that `x` is not `null`, Flow knows this is safe and doesn'
 
 Flow is of course not limited to simple types like numbers and strings. For example, `04_Arrays` illustrates the support for annotating functions on arrays:
 
-```javascript
+{% highlight javascript linenos %}
 /* @flow */
 
 function total(numbers: Array<number>) {
@@ -129,7 +129,7 @@ function total(numbers: Array<number>) {
 }
 
 total([1, 2, 3, 'Hello']);
-```
+{% endhighlight %}
 
 Flow will flag the call to `total` as an error, since the array it passes does not only consist of numbers.
 

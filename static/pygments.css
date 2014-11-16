@@ -3,10 +3,10 @@
 .err { color: #a61717; background-color: #e3d2d2 } /* Error */
 .k { color: #000000; font-weight: bold } /* Keyword */
 .o { color: #000000; } /* Operator */
-.cm { color: #999988; font-style: italic } /* Comment.Multiline */
-.cp { color: #999999; font-weight: bold; font-style: italic } /* Comment.Preproc */
-.c1 { color: #999988; font-style: italic } /* Comment.Single */
-.cs { color: #999999; font-weight: bold; font-style: italic } /* Comment.Special */
+.cm { color: #666666; font-weight: bold; font-style: italic } /* Comment.Multiline */
+.cp { color: #666666; font-weight: bold; font-style: italic } /* Comment.Preproc */
+.c1 { color: #666666; font-weight: bold; font-style: italic } /* Comment.Single */
+.cs { color: #666666; font-weight: bold; font-style: italic } /* Comment.Special */
 .gd { color: #000000; background-color: #ffdddd } /* Generic.Deleted */
 .ge { color: #000000; font-style: italic } /* Generic.Emph */
 .gr { color: #aa0000 } /* Generic.Error */
