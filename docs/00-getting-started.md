@@ -17,7 +17,7 @@ You can find pre-built binaries for Flow below, depending on your operating syst
 Flow is packaged as a zip file. To install flow simply unpack it:
 
 ```
-unzip flow.zip
+$> unzip flow.zip
 ```
 
 This creates a directory called `flow` containing the flow binary. It's recommended you add this directory to your PATH so that you can simply invoke `flow` from anywhere.
@@ -27,8 +27,8 @@ This creates a directory called `flow` containing the flow binary. It's recommen
 Under `flow` you'll find an `examples` directory. This contains the examples for this tutorial. To get a feel for Flow let's look at the first one:
 
 ```
-cd flow/examples/01_HelloWorld
-flow check
+$> cd flow/examples/01_HelloWorld
+$> flow check
 ```
 
 You should see an error a little like this:

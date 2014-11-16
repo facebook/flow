@@ -102,8 +102,8 @@ code {
 }
 
 .highlight pre code.language-text {
-    border-color: rgb(30, 130, 30);
-    background-color: rgba(30, 130, 30, 0.1);
+    border-color: hsl(0, 0%, 31%);
+    background-color: hsla(0, 0%, 31%, 0.1);
 }
 
 
