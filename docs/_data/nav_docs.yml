@@ -2,8 +2,6 @@
   items:
   - id: about-flow
     title: About Flow
-  - id: installing-flow
-    title: Installing Flow
   - id: getting-started
     title: Getting Started
 - title: User Guide
