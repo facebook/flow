@@ -19,7 +19,10 @@ In order to improve the debugging experience, all the type annotations are repla
 <script type="text/javascript" src="http://facebook.github.io/react/js/codemirror.js"></script>
 <script type="text/javascript" src="http://facebook.github.io/react/js/javascript.js"></script>
 <script type="text/javascript" src="http://facebook.github.io/react/js/react.js"></script>
-<script type="text/javascript" src="http://facebook.github.io/react/js/JSXTransformer.js"></script>
+<!-- Right now JSXTransformer on the React website is too old. So I built
+it from master on the React repo and copy/pasted it here. Whenever we ship
+the next version of React we can just use it and remove the local one -->
+<script type="text/javascript" src="/flow/static/JSXTransformer.js"></script>
 <script type="text/javascript" src="http://facebook.github.io/react/js/live_editor.js"></script>
 <script type="text/javascript" src="http://facebook.github.io/react/js/showdown.js"></script>
 <link rel="stylesheet" href="http://facebook.github.io/react/css/syntax.css" />

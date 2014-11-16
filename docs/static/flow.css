@@ -325,6 +325,10 @@ ul li {
     margin: 0;
 }
 
+body a:hover {
+    text-decoration: none;
+}
+
 /* desktopish */
 
 @media (min-width: 1000px) {
