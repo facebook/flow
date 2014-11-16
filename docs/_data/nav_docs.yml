@@ -16,6 +16,8 @@
     title: New Project
   - id: library
     title: Library
+  - id: transpiler
+    title: Transpiler
 - title: Language Reference
   items:
   - id: type-annotations

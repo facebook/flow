@@ -1,5 +1,3 @@
-/* mobile first */
-
 * {
     padding: 0;
     margin: 0;
@@ -8,7 +6,7 @@
     box-sizing: border-box;
 }
 
-html {
+body {
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
     background-color: #FFF9F5;
@@ -24,7 +22,7 @@ body {
     padding-top: 50px;
 }
 
-h1, h2, h3, h4 {
+body h1, body h2, body h3, body h4 {
     font-weight: normal;
     margin: 1em 0 0.2em;
     line-height: 1.2em;
@@ -34,20 +32,20 @@ h1:first-child, h2:first-child, h3:first-child, h4:first-child {
     margin-top: 0;
 }
 
-h1 {
+body h1 {
     font-size: 2em;
     font-weight: bold;
 }
 
-h2 {
+body h2 {
     font-size: 1.5em;
 }
 
-h3 {
+body h3 {
     font-size: 1.3em;
 }
 
-h4 {
+body h4 {
     font-size: 1.1em;
 }
 
@@ -293,6 +291,39 @@ footer {
     padding: 0 5px;
 }
 
+/**
+ * Note(vjeux): we import the CSS from react website so we need to override
+ * some things. This is clearly not the best design but it works :)
+ */
+
+div.playgroundCode, div.playgroundPreview, div.cm-s-solarized-light {
+    padding: 0;
+    float: none;
+    width: auto;
+    background-color: transparent;
+}
+
+div.playgroundCode, div.playgroundPreview {
+    border-left: 4px solid #D68B00;
+    margin-left: 20px;
+    background-color: rgba(226, 141, 50, 0.1);;
+}
+
+div.playgroundError {
+    padding: 10px;
+}
+
+div.playgroundPreview {
+    margin-top: 10px;
+}
+
+div.playground > :first-child {
+    display: none;
+}
+
+ul li {
+    margin: 0;
+}
 
 /* desktopish */
 
