@@ -38,7 +38,7 @@ function foo(x) {
 foo("Hello, world!");
 ```
 
-We're calling a function that clearly expects a number with a string. Flow detects that and returns an error. To fix this example, you can call `foo` with an integer instead. Running `flow check` should no longer find an error. 
+We're calling a function that clearly expects a number with a string. Flow detects that and returns an error. To fix this example, you can call `foo` with an integer instead. Running `flow check` should no longer find an error. A possible fix is in the `answer` directory. Throughout this tutorial, you will find solutions in the `answer` directory each time.
 
 You may have noticed this header line in the example file:
 
@@ -82,7 +82,7 @@ var total = length("Hello") + length(null);
 
 This program would crash at runtime, with a `TypeError` when it tries to read the property `length` on `null`. Running `flow check` will detect that.
 
-In the same directory you'll see a fixed version of this file that Flow accepts without error:
+The file in the `answer` directory fixes both the code and the type error:
 
 ```javascript
 /* @flow */
