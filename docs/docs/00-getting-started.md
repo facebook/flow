@@ -7,23 +7,61 @@ prev: installing-flow.html
 next: flow-basics.html
 ---
 
-Please follow the [installation instructions](installing-flow.html). This should put a binary called `flow` in your path.
+Please follow the [installation instructions](installing-flow.html). This should create a directory called `flow`, and a `flow` binary on your path.
 
-The simplest way to get started is to run `cd <root>; touch .flowconfig; flow check` on the command line. This performs a one-time check of all files under `<root>` and exits; since at this point none of those files are opted-in, ideally this should give you no errors. (If you do get errors, see the [troubleshooting instructions](troubleshooting.html)).
+## First Steps
 
-Next, run `flow start`. This again performs a one-time check of all files under `<root>`, but this time, it starts up a server in the background that monitors all files under `<root>`.
+Under `flow` you'll find an `examples` directory. This contains the examples for this tutorial. To get a feel for Flow let's look at the first one:
 
-Next, pick a file (typically, one of the entry points) and add the phrase `@flow` somewhere in its header in comments, e.g. like so:
+```
+cd flow/examples/01_HelloWorld
+flow check
+```
+
+You should see an error a little like this:
+
+```
+01_HelloWorld/hello.js:7:5,17: string
+This type is incompatible with
+  01_HelloWorld/hello.js:4:10,13: number
+```
+
+Looking at the example itself it's easy to see why:
 
 ```javascript
 /* @flow */
-...
+
+function foo(x) {
+  return x*10;
+}
+
+foo("Hello, world!");
 ```
 
-Flow will perform type checking of this file in the background. To view the results, run `flow status`. This may show you a bunch of type errors.
+We're calling a function that clearly expects a number with a string. Flow detects that and returns an error. To fix this example, you can call `foo` with an integer instead. Running `flow check` should no longer find an error. 
 
-The full set of `flow` commands and how to use them effectively is explained in the [user guide](flow-basics.html).
+You may have noticed this header line in the example file:
 
-## Tutorial
+```javascript
+/* @flow */
+```
 
-## More examples
+This is important: it tells Flow that this file should be typechecked. Flow will ignore any files that don't have this header, so you can start converting your project one file at a time. 
+
+## Adding typehints
+
+Flow infers type within a file, so you don't have to annotate every function to get typechecking. However you can always add annotations, and in fact Flow requires them for functions that are exported (defined in one file and used in another). 
+
+The second example (`02_TypeAnnotations`) shows basic type annotations in Flow:
+
+```javascript
+/* @flow */
+
+function foo(x: string, y: number): string {
+  return x.length * y;
+}
+
+foo("Hello", 42);
+```
+
+Again, running `flow check` gives an error. In this case it is the return type of `foo` that is wrong - we've declared it to be a `string` even though the function is returning a `number`. Flow flags that, and you can fix it by changing the return type.
