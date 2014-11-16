@@ -1,0 +1,25 @@
+found 6 errors
+
+union.js:7:5,5: number
+This type is incompatible with
+  union.js:6:28,33: string
+
+union.js:7:5,5: number
+This type is incompatible with
+  [LIB] dom.js:165:1,223:1: Document
+
+union.js:9:7,7: C
+This type is incompatible with
+  union.js:10:7,7: D
+
+union.js:10:7,7: D
+This type is incompatible with
+  union.js:9:7,7: C
+
+union.js:21:17,18: string
+This type is incompatible with
+  union.js:17:12,17: number
+
+union.js:21:22,22: number
+This type is incompatible with
+  union.js:18:12,17: string

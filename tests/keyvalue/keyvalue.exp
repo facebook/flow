@@ -1,0 +1,9 @@
+found 2 errors
+
+keyvalue.js:2:23,24: string
+This type is incompatible with
+  [LIB] dom.js:43:13,18: number
+
+[LIB] dom.js:35:1,38:1: File
+This type is incompatible with
+  keyvalue.js:2:8,13: number

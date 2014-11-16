@@ -1,0 +1,7 @@
+found 3 errors
+
+fail-flow.js:3:1,1: Unexpected token .
+
+fail.js:1:1,1: Unexpected token .
+
+no_parse_error.js:9:17,17: Unexpected token ,

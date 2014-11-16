@@ -1,0 +1,45 @@
+found 11 errors
+
+break.js:2:23,27: boolean
+This type is incompatible with
+  break.js:6:15,20: number
+
+break.js:3:9,9: undefined
+This type is incompatible with
+  break.js:8:11,16: number
+
+break.js:5:30,31: string
+This type is incompatible with
+  break.js:8:11,16: number
+
+break.js:12:17,20: null
+This type is incompatible with
+  break.js:23:11,16: number
+
+break.js:12:23,27: boolean
+This type is incompatible with
+  break.js:16:15,20: number
+
+break.js:12:23,27: boolean
+This type is incompatible with
+  break.js:19:15,20: number
+
+break.js:12:23,27: boolean
+This type is incompatible with
+  break.js:23:11,16: number
+
+break.js:17:13,14: string
+This type is incompatible with
+  break.js:19:15,20: number
+
+break.js:17:13,14: string
+This type is incompatible with
+  break.js:23:11,16: number
+
+break.js:30:22,23: string
+This type is incompatible with
+  break.js:29:15,20: number
+
+break.js:30:22,23: string
+This type is incompatible with
+  break.js:33:11,16: number

@@ -1,0 +1,9 @@
+found 2 errors
+
+iter.js:1:9,20: array literal
+This type is incompatible with
+  iter.js:7:1,9:1: iteration expected on object
+
+iter.js:8:9,12: element get
+This type is incompatible with
+  iter.js:7:10,10: string

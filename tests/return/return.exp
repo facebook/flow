@@ -1,0 +1,4 @@
+found 1 errors
+
+function_return.js:4:17,17: return
+Missing annotation

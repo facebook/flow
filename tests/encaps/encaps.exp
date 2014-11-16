@@ -1,0 +1,13 @@
+found 3 errors
+
+encaps.js:3:14,16: property x
+Property x not found in object:
+  encaps.js:1:7,7: A
+
+encaps.js:6:11,16: number
+This type is incompatible with
+  encaps.js:9:10,22: string
+
+encaps.js:9:10,22: string
+This type is incompatible with
+  encaps.js:6:11,16: number

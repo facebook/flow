@@ -1,0 +1,5 @@
+found 1 errors
+
+[LIB] core.js:170:16,21: number
+This type is incompatible with
+  date.js:2:7,12: string

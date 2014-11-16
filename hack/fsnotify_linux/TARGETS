@@ -1,0 +1,10 @@
+ocaml_library(
+  name='fsnotify',
+  srcs=[
+    'fsnotify.ml',
+    'fsnotify.mli',
+  ],
+  deps=[
+    '@/hphp/hack/src/inotify',
+  ]
+)

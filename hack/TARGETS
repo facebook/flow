@@ -1,0 +1,213 @@
+import os
+
+ocaml_binary(
+  name='hh_server_preembed',
+  srcs=[
+    'hh_server.ml',
+  ],
+  deps=[
+    '@/hphp/hack/src/facebook/build',
+    '@/hphp/hack/src/facebook/logging',
+    '@/hphp/hack/src/facebook/prolog',
+    '@/hphp/hack/src/heap',
+    '@/hphp/hack/src/naming',
+    '@/hphp/hack/src/server',
+    '@/hphp/hack/src/server:server_functors',
+    '@/hphp/hack/src/socket',
+    '@/hphp/hack/src/typing',
+    '@/hphp/hack/src/utils',
+  ],
+  external_deps=[
+    ('ocaml', None, 'unix'),
+  ],
+  warnings_flags='-27',
+)
+
+custom_rule(
+  name='hh_server',
+  deps=[
+    ':hh_server_preembed',
+    '@/hphp/hack:archive_hhi',
+  ],
+  output_gen_files=['hh_server'],
+  deployable=True,
+  build_script='facebook/embed_hhi.sh',
+  build_args=' '.join([
+    '$(FBMAKE_BIN_ROOT)/hphp/hack/hhi.tar.gz',
+    '$(FBMAKE_BIN_ROOT)/hphp/hack/src/hh_server_preembed',
+  ]),
+)
+
+ocaml_binary(
+  name='hh_client',
+  srcs=[
+    'hh_client.ml',
+  ],
+  deps=[
+    '@/hphp/hack/src/client',
+    '@/hphp/hack/src/client:client_log_command',
+    '@/hphp/hack/src/facebook/logging',
+  ],
+)
+
+ocaml_binary(
+  name='hh_single_type_check',
+  srcs=[
+    'hh_single_type_check.ml',
+  ],
+  deps=[
+    '@/hphp/hack/src/client',
+    '@/hphp/hack/src/deps',
+    '@/hphp/hack/src/heap',
+    '@/hphp/hack/src/hhi',
+    '@/hphp/hack/src/naming',
+    '@/hphp/hack/src/parsing',
+    '@/hphp/hack/src/server',
+    '@/hphp/hack/src/typing',
+    '@/hphp/hack/src/utils',
+  ],
+  warnings_flags='-27',
+  supports_coverage=True,
+)
+
+# We only need about 2/3 of the Hack files, and we swap out some of the bits at
+# the core, e.g,. utils.ml. In an ideal world, each subdir would have its own
+# "for js_of_ocaml" library, or something like that (in a really ideal world
+# ocaml would let you use the same build artifacts too). But sadly that's not
+# the way the ocaml compiler and ocamldep think about the world -- they think in
+# terms of compiling single files and including entire directories of existing
+# build artifacts, so there is, for example, no way to explain that you really
+# want utils/foo.ml to refer to js/utils.ml and not utils/utils.ml. So instead
+# we just copy all the files we want into their own directory and go build that,
+# and then maybe go to the bar and drink away our troubles, if you're into that
+# sort of thing.
+js_files=[
+  'client/colorFile.ml',
+  'deps/fileInfo.ml',
+  'globals/autocomplete.ml',
+  'globals/find_refs.ml',
+  'globals/ide.ml',
+  'heap/prefix.ml',
+  'heap/value.ml',
+  'naming/naming.ml',
+  'naming/naming_ast_helpers.ml',
+  'naming/naming_heap.ml',
+  'naming/naming_hooks.ml',
+  'naming/naming_special_names.ml',
+  'naming/nast.ml',
+  'naming/nastVisitor.ml',
+  'parsing/ast.ml',
+  'parsing/format_hack.ml',
+  'parsing/lexer_hack.mll',
+  'parsing/lexing_modes.ml',
+  'parsing/namespace_env.ml',
+  'parsing/namespaces.ml',
+  'parsing/parser_hack.ml',
+  'parsing/parser_heap.ml',
+  'server/argumentInfoService.ml',
+  'server/autocompleteService.ml',
+  'server/fileOutline.ml',
+  'typing/coverage_level.ml',
+  'typing/nastCheck.ml',
+  'typing/nastInitCheck.ml',
+  'typing/nast_terminality.ml',
+  'typing/typeVisitor.ml',
+  'typing/typing.ml',
+  'typing/typingEqualityCheck.ml',
+  'typing/typing_alias.ml',
+  'typing/typing_async.ml',
+  'typing/typing_decl.ml',
+  'typing/typing_defs.ml',
+  'typing/typing_dynamic_yield.ml',
+  'typing/typing_enum.ml',
+  'typing/typing_env.ml',
+  'typing/typing_expand.ml',
+  'typing/typing_extends.ml',
+  'typing/typing_exts.ml',
+  'typing/typing_generic.ml',
+  'typing/typing_hint.ml',
+  'typing/typing_hooks.ml',
+  'typing/typing_inherit.ml',
+  'typing/typing_instantiate.ml',
+  'typing/typing_lenv.ml',
+  'typing/typing_ops.ml',
+  'typing/typing_print.ml',
+  'typing/typing_reason.ml',
+  'typing/typing_subtype.ml',
+  'typing/typing_suggest.ml',
+  'typing/typing_tdef.ml',
+  'typing/typing_unification_env.ml',
+  'typing/typing_unify.ml',
+  'typing/typing_utils.ml',
+  'typing/typing_variance.ml',
+  'utils/errors.ml',
+  'utils/pos.ml',
+  'utils/relative_path.ml',
+  'utils/utils.ml',
+]
+
+js_files_out = map(lambda x: "js/" + os.path.basename(x), js_files)
+
+custom_rule(
+  name='js_copy_hacks',
+  srcs=js_files,
+  output_gen_files=js_files_out,
+  build_script = 'facebook/dumb_file_copy.py',
+  build_args="--prefix js " + " ".join(js_files),
+)
+
+ocaml_binary(
+  name='hh_ide',
+  native=False,
+  srcs=js_files_out + [
+    'js/hh_ide.ml',
+    'js/hh_json.ml',
+    'js/hhi.ml',
+    'js/ident.ml',
+    'js/path.ml',
+    'js/pp.ml',
+    'js/sharedMem.ml',
+    'js/sys_utils.ml',
+    'js/typing_deps.ml',
+  ],
+  deps=[
+    ':js_copy_hacks',
+  ],
+  external_deps=[
+    ('js_of_ocaml', None, 'js_of_ocaml'),
+  ],
+  warnings_flags='-7-21-27-32-45',
+)
+
+custom_rule(
+  name='hh_ide.js',
+  output_gen_files=['hh_ide.js'],
+  deps=[
+    ':hh_ide',
+  ],
+  tools={
+    'js_of_ocaml': None,
+  },
+  deployable=True,
+  build_script='facebook/build_hh_ide_js.py',
+  build_args='$(FBMAKE_BIN_ROOT)/hphp/hack/src/hh_ide.bc',
+)
+
+ocaml_binary(
+  name='hh_format',
+  srcs=[
+    'hh_format.ml',
+  ],
+  deps=[
+    '@/hphp/hack/src/client',
+    '@/hphp/hack/src/globals',
+    '@/hphp/hack/src/heap',
+    '@/hphp/hack/src/parsing',
+    '@/hphp/hack/src/procs',
+    '@/hphp/hack/src/server',
+    '@/hphp/hack/src/utils',
+  ],
+  external_deps=[
+    ('ocaml', None, 'unix'),
+  ],
+)

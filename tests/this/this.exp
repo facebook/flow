@@ -1,0 +1,37 @@
+found 9 errors
+
+This.js:3:25,25: number
+This type is incompatible with
+  This.js:6:16,21: string
+
+This.js:4:39,39: number
+This type is incompatible with
+  This.js:6:16,21: string
+
+This.js:28:17,22: number
+This type is incompatible with
+  This.js:33:12,17: string
+
+This.js:29:10,15: property x
+This type is incompatible with
+global object
+
+This.js:34:24,25: string
+This type is incompatible with
+  This.js:28:17,22: number
+
+This.js:41:10,15: property x
+This type is incompatible with
+global object
+
+This.js:47:17,22: number
+This type is incompatible with
+  This.js:53:12,17: string
+
+This.js:48:29,34: property x
+This type is incompatible with
+global object
+
+This.js:54:24,25: string
+This type is incompatible with
+  This.js:47:17,22: number

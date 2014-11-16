@@ -1,0 +1,29 @@
+found 7 errors
+
+nullable.js:1:32,35: null
+This type is incompatible with
+  nullable.js:1:16,21: string
+
+nullable.js:3:17,22: ?string
+This type is incompatible with
+  nullable.js:5:16,21: string
+
+nullable.js:3:17,22: null
+This type is incompatible with
+  nullable.js:5:16,21: string
+
+nullable.js:3:17,22: undefined
+This type is incompatible with
+  nullable.js:5:16,21: string
+
+nullable.js:3:17,22: string
+This type is incompatible with
+  nullable.js:7:18,23: number
+
+nullable.js:13:25,28: null
+This type is incompatible with
+  nullable.js:5:16,21: string
+
+simple_nullable.js:4:5,9: string
+This type is incompatible with
+  simple_nullable.js:2:17,22: number

@@ -1,0 +1,23 @@
+ocaml_library(
+  name='naming',
+  srcs=[
+    'naming.ml',
+    'naming.mli',
+    'naming_ast_helpers.ml',
+    'naming_heap.ml',
+    'naming_hooks.ml',
+    'naming_special_names.ml',
+    'nast.ml',
+    'nastVisitor.ml',
+  ],
+  deps=[
+    '@/hphp/hack/src/deps',
+    '@/hphp/hack/src/globals',
+    '@/hphp/hack/src/heap',
+    '@/hphp/hack/src/hhi',
+    '@/hphp/hack/src/parsing',
+    '@/hphp/hack/src/utils',
+  ],
+  warnings_flags='-7-27-32-34-45',
+  supports_coverage=True,
+)

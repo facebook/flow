@@ -1,0 +1,2 @@
+{ "name": "bar_lib",
+  "main": "./bar.js" }

@@ -1,0 +1,17 @@
+found 4 errors
+
+poly.js:3:1,39: some instantiation (e.g., mixed) of T
+This type is incompatible with
+  poly.js:3:1,39: another instantiation (e.g., undefined) of S
+
+poly.js:10:1,41: some instantiation (e.g., mixed) of T
+This type is incompatible with
+  poly.js:10:1,41: another instantiation (e.g., undefined) of T
+
+poly.js:10:20,27: array type
+This type is incompatible with
+  poly.js:20:1,42: another instantiation (e.g., undefined) of R
+
+poly.js:24:3,5: function call
+This type is incompatible with
+  poly.js:22:1,26:1: some instantiation (e.g., mixed) of U

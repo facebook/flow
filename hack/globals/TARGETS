@@ -1,0 +1,12 @@
+ocaml_library(
+  name='globals',
+  srcs=[
+    'autocomplete.ml',
+    'find_refs.ml',
+    'ide.ml',
+    'serverConfig.ml',
+  ],
+  deps=[
+    '@/hphp/hack/src/utils',
+  ],
+)

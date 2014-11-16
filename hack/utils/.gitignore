@@ -1,0 +1,2 @@
+# CMake/Makefile codegen file
+get_build_id.gen.c

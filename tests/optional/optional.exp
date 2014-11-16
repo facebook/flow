@@ -1,0 +1,23 @@
+found 6 errors
+
+optional.js:1:14,15: undefined
+This type is incompatible with
+  optional.js:1:23,27: number
+
+optional.js:7:14,14: parameter x
+Missing annotation
+
+optional.js:7:16,22: string
+This type is incompatible with
+  optional.js:4:13,18: number
+
+optional.js:7:27,27: element of rest parameter y
+Missing annotation
+
+optional.js:9:7,7: number
+This type is incompatible with
+  optional.js:7:30,35: string
+
+optional.js:10:14,15: number
+This type is incompatible with
+  optional.js:7:30,35: string

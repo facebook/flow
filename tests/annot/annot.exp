@@ -1,0 +1,29 @@
+found 7 errors
+
+annot.js:1:36,41: string
+This type is incompatible with
+  annot.js:6:42,47: number
+
+annot.js:4:15,20: number
+This type is incompatible with
+  annot.js:1:18,23: string
+
+annot.js:8:10,42: object type
+Property j not found in object:
+  annot.js:8:46,77: object literal
+
+annot.js:8:25,30: number
+This type is incompatible with
+  annot.js:8:62,66: string
+
+annot.js:8:62,66: string
+This type is incompatible with
+  annot.js:8:25,30: number
+
+annot.js:10:31,35: string
+This type is incompatible with
+  annot.js:10:16,21: number
+
+annot.js:13:28,32: string
+This type is incompatible with
+  annot.js:13:12,17: number

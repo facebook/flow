@@ -1,0 +1,13 @@
+found 3 errors
+
+A.js:2:9,14: number
+This type is incompatible with
+  C.js:4:9,14: string
+
+C.js:4:9,14: string
+This type is incompatible with
+  A.js:2:9,14: number
+
+D.js:3:1,9: property x
+Property x not found in object:
+  D.js:2:7,7: E

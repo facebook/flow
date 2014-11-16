@@ -1,0 +1,17 @@
+found 5 errors
+
+App.react.js:7:13,28: React
+Required module not found
+
+App.react.js:19:15,15: number
+This type is incompatible with
+  App.react.js:10:16,21: string
+
+App.react.js:22:21,25: parameter event
+Missing annotation
+
+App.react.js:26:21,21: return
+Missing annotation
+
+JSX.js:4:13,28: React
+Required module not found

@@ -1,0 +1,13 @@
+ocaml_library(
+  name='inotify',
+  srcs=[
+    'inotify.ml',
+    'inotify.mli',
+    'inotify_stubs.c',
+  ],
+  deps=[
+  ],
+  external_deps=[
+    ('ocaml', None, 'unix'),
+  ],
+)

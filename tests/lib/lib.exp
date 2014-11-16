@@ -1,0 +1,17 @@
+found 4 errors
+
+[LIB] core.js:5:18,23: number
+This type is incompatible with
+  libtest.js:1:7,12: string
+
+[LIB] core.js:8:60,65: number
+This type is incompatible with
+  libtest.js:4:7,12: string
+
+[LIB] core.js:56:20,25: number
+This type is incompatible with
+  libtest.js:2:7,12: string
+
+[LIB] core.js:216:11,16: string
+This type is incompatible with
+  libtest.js:3:7,12: number

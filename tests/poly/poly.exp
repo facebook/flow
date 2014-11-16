@@ -1,0 +1,13 @@
+found 3 errors
+
+poly.js:16:19,19: number
+This type is incompatible with
+  poly.js:17:7,12: string
+
+poly.js:18:11,16: number
+This type is incompatible with
+  poly.js:17:7,12: string
+
+poly.js:18:31,32: string
+This type is incompatible with
+  poly.js:18:11,16: number

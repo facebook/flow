@@ -1,0 +1,5 @@
+found 1 errors
+
+obj_annot.js:4:12,19: property id
+Property id not found in object:
+  obj_annot.js:3:21,37: object type

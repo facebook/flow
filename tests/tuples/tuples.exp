@@ -1,0 +1,9 @@
+found 2 errors
+
+tuples.js:6:17,22: string
+This type is incompatible with
+  tuples.js:6:33,35: number
+
+tuples.js:6:33,35: number
+This type is incompatible with
+  tuples.js:6:17,22: string

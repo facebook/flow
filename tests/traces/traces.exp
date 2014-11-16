@@ -1,0 +1,17 @@
+found 4 errors
+
+Traces.js:4:4,4: number
+This type is incompatible with
+  Traces.js:2:15,20: string
+
+Traces.js:9:11,11: number
+This type is incompatible with
+  Traces.js:7:25,30: string
+
+Traces.js:12:22,27: string
+This type is incompatible with
+  Traces.js:14:25,29: number
+
+Traces.js:17:22,27: string
+This type is incompatible with
+  Traces.js:19:29,33: number

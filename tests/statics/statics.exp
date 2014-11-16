@@ -1,0 +1,13 @@
+found 3 errors
+
+class_statics.js:5:18,23: string
+This type is incompatible with
+  class_statics.js:2:14,19: number
+
+class_statics.js:6:5,5: number
+This type is incompatible with
+  class_statics.js:5:18,23: string
+
+funstatics.js:2:41,41: number
+This type is incompatible with
+  funstatics.js:5:7,12: string

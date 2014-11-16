@@ -1,0 +1,78 @@
+found 25 errors
+
+ErrorSignal.js:7:19,40: AsyncSignal
+Required module not found
+
+ErrorSignal.js:8:25,52: ErrorSignalConfig
+Required module not found
+
+ErrorSignal.js:9:18,38: ScriptPath
+Required module not found
+
+ErrorSignal.js:10:16,34: SiteData
+Required module not found
+
+ErrorSignal.js:12:50,55: unknown global name: object
+
+HasteModuleLoader.js:20:25,55: CoverageCollector
+Required module not found
+
+HasteModuleLoader.js:21:10,31: graceful-fs
+Required module not found
+
+HasteModuleLoader.js:22:20,52: loaders
+Required module not found
+
+HasteModuleLoader.js:23:20,49: moduleMocker
+Required module not found
+
+HasteModuleLoader.js:24:17,47: Haste
+Required module not found
+
+HasteModuleLoader.js:25:10,22: os
+Required module not found
+
+HasteModuleLoader.js:26:12,26: path
+Required module not found
+
+HasteModuleLoader.js:27:9,20: q
+Required module not found
+
+HasteModuleLoader.js:28:15,32: resolve
+Required module not found
+
+HasteModuleLoader.js:29:13,35: utils
+Required module not found
+
+HasteModuleLoader.js:114:17,22: parameter config
+Missing annotation
+
+HasteModuleLoader.js:114:25,35: parameter environment
+Missing annotation
+
+HasteModuleLoader.js:114:38,48: parameter resourceMap
+Missing annotation
+
+XUIFixedDataTableExampleData.js:34027:2,9: string
+This type is incompatible with
+  XUIFixedDataTableExampleData.js:34037:5,24: number
+
+XUIFixedDataTableExampleData.js:34028:2,9: string
+This type is incompatible with
+  XUIFixedDataTableExampleData.js:34037:5,24: number
+
+XUIFixedDataTableExampleData.js:34029:2,10: string
+This type is incompatible with
+  XUIFixedDataTableExampleData.js:34037:5,24: number
+
+test-data.js:1:1,9: unknown global name: railsGems
+
+test-data.js:8426:1,11: unknown global name: sinatraGems
+
+[LIB] core.js:97:31,36: string
+This type is incompatible with
+  XUIFixedDataTableExampleData.js:34034:5,13: number
+
+[LIB] core.js:97:31,36: string
+This type is incompatible with
+  XUIFixedDataTableExampleData.js:34037:5,24: number

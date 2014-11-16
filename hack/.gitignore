@@ -1,0 +1,3 @@
+*.bc
+*.opt
+!Makefile

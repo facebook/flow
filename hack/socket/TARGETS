@@ -1,0 +1,12 @@
+ocaml_library(
+  name='socket',
+  srcs=[
+    'socket.ml',
+  ],
+  deps=[
+    '@/hphp/hack/src/utils',
+  ],
+  external_deps=[
+    ('ocaml', None, 'unix'),
+  ],
+)

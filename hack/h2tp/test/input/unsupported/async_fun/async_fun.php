@@ -1,0 +1,2 @@
+<?hh
+async function foo() {}

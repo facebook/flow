@@ -1,0 +1,17 @@
+found 4 errors
+
+proto.js:8:7,11: string
+This type is incompatible with
+  proto.js:3:7,12: number
+
+proto.js:8:7,11: string
+This type is incompatible with
+  proto.js:7:7,12: number
+
+proto.js:10:42,46: boolean
+This type is incompatible with
+  proto.js:7:7,12: number
+
+sealed.js:3:1,7: assignment of property z
+Cannot extend sealed object with property z
+  proto.js:12:15,24: object type

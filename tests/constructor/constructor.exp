@@ -1,0 +1,5 @@
+found 1 errors
+
+constructor.js:6:19,24: number
+This type is incompatible with
+undefined

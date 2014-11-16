@@ -1,0 +1,17 @@
+found 4 errors
+
+array_lib.js:3:10,10: number
+This type is incompatible with
+  array_lib.js:1:16,21: string
+
+array_lib.js:3:10,10: number
+This type is incompatible with
+  array_lib.js:9:13,18: string
+
+array_lib.js:4:45,50: string
+This type is incompatible with
+  array_lib.js:7:8,13: number
+
+array_lib.js:9:13,18: string
+This type is incompatible with
+  array_lib.js:3:10,10: number

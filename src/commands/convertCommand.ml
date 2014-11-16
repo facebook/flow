@@ -1,0 +1,135 @@
+(**
+ *  Copyright 2014 Facebook.
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *)
+
+open Utils
+
+(* conversion *)
+
+let dts_ext = ".d.ts"
+
+let convert_file outpath file =
+  let base = Filename.chop_suffix (Filename.basename file) dts_ext in
+  let outpath = match outpath with
+    | None -> Filename.dirname file | Some p -> p in
+  let outfile = Filename.concat outpath base ^ ".js" in
+  Printf.printf "converting %S -> %S\n%!" file outfile;
+  let content = cat file in
+  let _, errors = Parser_dts.program_file ~fail:false content file in
+  if errors = []
+  then (
+    Printf.printf "...no errors!\n%!"; 0
+  ) else (
+    let n = List.length errors in
+    Printf.printf "%d errors:\n" n;
+    List.iter (fun e ->
+      let e = Errors_js.parse_error_to_hack_error e in
+      Errors_js.print_error_color e
+    ) errors;
+    n
+  )
+
+  (* Printer_dts.program *)
+
+let find_files_recursive path =
+  let ic = Unix.open_process_in ("find " ^ path) in
+  let res = ref [] in
+  (try
+    while true do
+      let f = input_line ic in
+      if Filename.check_suffix f dts_ext then
+        res := f :: !res
+    done
+  with End_of_file ->
+    (try ignore (Unix.close_process_in ic) with _ -> ())
+  );
+  List.rev !res
+
+let find_files path =
+  Array.fold_left (fun acc f ->
+    if Filename.check_suffix f dts_ext
+    then (Filename.concat path f) :: acc
+    else acc
+  ) [] (Sys.readdir path)
+
+let sum f = List.fold_left (fun n i -> n + f i) 0
+
+let convert_dir outpath path recurse =
+  let dts_files = if recurse
+    then find_files_recursive path
+    else find_files path in
+  (* List.fold_left (convert_file outpath) dts_files *)
+  sum (convert_file outpath) dts_files
+
+let convert path recurse outpath =
+  let nerrs = if Filename.check_suffix path dts_ext then (
+    let outpath = match outpath with
+      | None -> Some (Filename.dirname path)
+      | _ -> outpath
+    in
+    convert_file outpath path
+  ) else (
+    if recurse && outpath != None then
+      failwith "output path not available when recursive";
+    convert_dir outpath path recurse
+  ) in
+  Printf.printf "%d total errors\n%!" nerrs
+
+(* command wiring *)
+
+type env = {
+  path : string;
+  recurse : bool;
+  outpath : string option;
+}
+
+let parse_args () =
+  let outpath = ref None in
+  let recurse = ref false in
+  let options = CommandUtils.sort_opts [
+    "--output", Arg.String (fun s -> outpath := Some s),
+      " Output path (not available when recursive)";
+    "--r", CommandUtils.arg_set_unit recurse,
+      " Recurse into subdirectories";
+  ] in
+  let usage = Printf.sprintf "Usage: %s convert [DIR]\n\n\
+  Convert *.d.ts in DIR if supplied, or current directory.\n\
+  foo.d.ts is written to foo.js" Sys.argv.(0) in
+  let args = ClientArgs.parse_without_command options usage "convert" in
+  let path = match args with
+    | [] -> "."
+    | [path] -> path
+    | _ ->
+      Arg.usage options usage;
+      exit 2
+  in
+  { path; recurse = !recurse; outpath = !outpath }
+
+let die str =
+  let oc = stderr in
+  output_string oc str;
+  close_out oc;
+  exit 2
+
+let main { path; recurse; outpath; } =
+  if ! Sys.interactive
+  then ()
+  else
+    SharedMem.init();
+    Errors.try_
+      (fun () -> convert path recurse outpath)
+      (fun l -> die (Errors.to_string (Errors.to_absolute l)))
+
+let run () = main (parse_args ())

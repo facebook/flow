@@ -1,0 +1,21 @@
+found 5 errors
+
+promise.js:6:17,17: number
+This type is incompatible with
+  promise.js:10:30,35: string
+
+promise.js:10:30,35: string
+This type is incompatible with
+  promise.js:14:30,35: number
+
+promise.js:10:30,35: string
+This type is incompatible with
+  [LIB] core.js:279:1,291:1: Promise
+
+promise.js:11:30,31: string
+This type is incompatible with
+  promise.js:14:30,35: number
+
+promise.js:11:30,31: string
+This type is incompatible with
+  [LIB] core.js:279:1,291:1: Promise

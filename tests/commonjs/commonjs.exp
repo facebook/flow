@@ -1,0 +1,5 @@
+found 1 errors
+
+Rel.js:4:3,3: number
+This type is incompatible with
+  Abs.js:2:14,19: string

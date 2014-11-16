@@ -1,0 +1,13 @@
+found 3 errors
+
+super.js:8:17,22: string
+This type is incompatible with
+  super.js:3:17,22: number
+
+super.js:12:13,13: number
+This type is incompatible with
+  super.js:4:7,12: string
+
+super.js:13:18,18: property g
+Property g not found in object:
+  super.js:2:7,7: A

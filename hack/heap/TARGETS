@@ -1,0 +1,17 @@
+ocaml_library(
+  name='heap',
+  srcs=[
+    'globalStorage.ml',
+    'hh_shared.c',
+    'prefix.ml',
+    'prefix.mli',
+    'sharedMem.ml',
+    'sharedMem.mli',
+    'value.ml',
+    'value.mli',
+  ],
+  deps=[
+    '@/hphp/hack/src/utils',
+  ],
+  warnings_flags='-27-32-34',
+)

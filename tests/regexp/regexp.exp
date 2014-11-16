@@ -1,0 +1,5 @@
+found 1 errors
+
+[LIB] core.js:154:27,33: boolean
+This type is incompatible with
+  regexp.js:2:11,16: number

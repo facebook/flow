@@ -1,0 +1,3 @@
+hhi.cmi : ../utils/path.cmi
+hhi.cmo : ../utils/utils.cmo ../utils/tmp.cmo ../utils/path.cmi hhi.cmi
+hhi.cmx : ../utils/utils.cmx ../utils/tmp.cmx ../utils/path.cmx hhi.cmi

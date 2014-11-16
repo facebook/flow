@@ -1,0 +1,5 @@
+found 1 errors
+
+object.js:1:21,22: string
+This type is incompatible with
+  client_object.js:3:7,12: number
