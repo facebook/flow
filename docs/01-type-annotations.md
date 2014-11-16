@@ -40,7 +40,7 @@ class Bar {
 
 ## Simple Example
 
-We can easily take this code and make it //Flow aware// by adding a simple
+We can easily take this code and make it Flow aware by adding a simple
 annotation `@flow` at the top in a comment block:
 
 ```javascript
@@ -65,7 +65,7 @@ var x: number = add(3, '0');
 console.log(x);
 ```
 
-Running the type checker against the above code //will// yield type errors
+Running the type checker against the above code will yield type errors
 since we have explicitly typed all parameters and variables.
 
 ```
@@ -77,7 +77,7 @@ This type is incompatible with
 ## Type Annotation Requirements
 
 Type annotations are not always strictly necessary to use Flow. As shown above,
-all that is strictly required to make your JavaScript file //Flow aware// is
+all that is strictly required to make your JavaScript file Flow aware is
 the `@flow` annotation. And this annotation by itself can be enough for Flow to
 deduce all that is necessary to type check your code.
 
