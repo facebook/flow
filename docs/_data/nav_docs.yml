@@ -9,7 +9,7 @@
   - id: new-project
     title: Running Flow on a new project
   - id: library
-    title: Running Flow on a Library
+    title: Running Flow on a library
   - id: transpiler
     title: Running Flow code
   - id: troubleshooting

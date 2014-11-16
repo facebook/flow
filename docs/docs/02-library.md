@@ -1,10 +1,10 @@
 ---
 id: library
-title: Library
+title: Running Flow on a library
 layout: docs
 permalink: /docs/library.html
 prev: new-project.html
-next: type-annotations.html
+next: transpiler.html
 ---
 
 ## Weak mode

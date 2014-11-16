@@ -3,8 +3,8 @@ id: getting-started
 title: Getting Started with Flow
 layout: docs
 permalink: /docs/getting-started.html
-prev: installing-flow.html
-next: flow-basics.html
+prev: about-flow.html
+next: new-project.html
 ---
 
 ## Installing Flow
@@ -59,11 +59,11 @@ You may have noticed this header line in the example file:
 /* @flow */
 ```
 
-This is important: it tells Flow that this file should be typechecked. Flow will ignore any files that don't have this header, so you can start converting your project one file at a time. 
+This is important: it tells Flow that this file should be typechecked. Flow will ignore any files that don't have this header, so you can start converting your project one file at a time.
 
 ## Adding typehints
 
-Flow infers type within a file, so you don't have to annotate every function to get typechecking. However you can always add annotations, and in fact Flow requires them for functions that are exported (defined in one file and used in another). 
+Flow infers type within a file, so you don't have to annotate every function to get typechecking. However you can always add annotations, and in fact Flow requires them for functions that are exported (defined in one file and used in another).
 
 The second example (`02_TypeAnnotations`) shows basic type annotations in Flow:
 
@@ -111,7 +111,7 @@ function length(x) {
 var total = length('Hello') + length(null);
 ```
 
-Because we've checked that `x` is not `null`, Flow knows this is safe and doesn't emit a type error. 
+Because we've checked that `x` is not `null`, Flow knows this is safe and doesn't emit a type error.
 
 ## Arrays
 
@@ -135,4 +135,4 @@ Flow will flag the call to `total` as an error, since the array it passes does n
 
 ## Next Steps
 
-These simple examples just scratch the surface. You're now ready to [start a new project with Flow](new-project.html). You may also want to check out our much bigger [React example](react-example.html) to see Flow in action. 
+These simple examples just scratch the surface. You're now ready to [start a new project with Flow](new-project.html). You may also want to check out our much bigger [React example](react-example.html) to see Flow in action.

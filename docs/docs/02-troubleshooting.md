@@ -3,8 +3,8 @@ id: troubleshooting
 title: Troubleshooting
 layout: docs
 permalink: /docs/troubleshooting.html
-prev: flow-basics.html
-next: new-project.html
+prev: transpiler.html
+next: type-annotations.html
 ---
 
 ## Common errors and how to fix them

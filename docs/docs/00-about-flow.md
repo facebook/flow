@@ -3,7 +3,7 @@ id: about-flow
 title: About Flow
 layout: docs
 permalink: /docs/about-flow.html
-next: installing-flow.html
+next: getting-started.html
 ---
 
 Flow is a static type checker for JavaScript. It can be used to catch common bugs in JavaScript programs (e.g., silent type conversions, null dereferences), often without requiring any changes to your code. It also adds type syntax to JavaScript, so that developers can express invariants about their code and have them maintained automatically.

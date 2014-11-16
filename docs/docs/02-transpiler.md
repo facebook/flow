@@ -4,7 +4,7 @@ title: Transpiler
 layout: docs
 permalink: /docs/transpiler.html
 prev: library.html
-next: type-annotations.html
+next: troubleshooting.html
 ---
 
 Since types are not part of the JavaScript specification, we need to strip them out before sending the file to the user. There are two ways to do so:

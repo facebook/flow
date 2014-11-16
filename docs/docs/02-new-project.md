@@ -1,9 +1,9 @@
 ---
 id: new-project
-title: Creating a project using Flow
+title: Running Flow on a new project
 layout: docs
 permalink: /docs/new-project.html
-prev: troubleshooting.html
+prev: getting-started.html
 next: library.html
 ---
 
@@ -29,16 +29,16 @@ flow status  # List all type errors with your latest changes
 
 ## Typechecking your files
 
-As with all the examples in the Flow tutorial, you need to add 
+As with all the examples in the Flow tutorial, you need to add
 
 ```
 /* @flow */
 ```
 
-at the top of each file you'd like Flow to typecheck. You don't have to do this for all files at once, since Flow will just ignore files that do not have this comment. That way you can convert one file at a time and get the benefit of typing gradually without too much upfront effort. 
+at the top of each file you'd like Flow to typecheck. You don't have to do this for all files at once, since Flow will just ignore files that do not have this comment. That way you can convert one file at a time and get the benefit of typing gradually without too much upfront effort.
 
 ## Common Issues
 
-As Flow starts to typecheck your files you may run into type errors. Check out the [Troubleshooting](troubleshooting.html) section for common errors and how to resolve them. The goal is to get the number of errors down to zero as fast as possible. 
+As Flow starts to typecheck your files you may run into type errors. Check out the [Troubleshooting](troubleshooting.html) section for common errors and how to resolve them. The goal is to get the number of errors down to zero as fast as possible.
 
 In some cases, errors may be due to inherent imprecision of the analysis - it won't always get it right, and can give errors that are false positives. In those cases you can either try to refactor your code to help Flow understand it, or use the `any` type to explicitly tell Flow about values that should not be checked.
