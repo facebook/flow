@@ -1,1 +1,1 @@
-Flow is a static type-checker for JavaScript
+Flow is a static type-checker for JavaScript.
