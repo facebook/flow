@@ -62,6 +62,11 @@ p, pre, ul {
     padding-right: 20px
 }
 
+.subhero .wrap {
+    width: auto;
+    max-width: 960px;
+}
+
 .home-section {
     width: 500px;
     margin-left: auto;
@@ -361,13 +366,21 @@ div.CodeMirror-lines {
     padding: 5px 0;
 }
 
+
+#content {
+    display: none;
+}
+
 /* desktopish */
 
-@media (min-width: 1000px) {
+@media (min-width: 480px) {
 
     .width {
-        width: 960px;
+        max-width: 960px;
         /* make columns add to <880 for 60 gutter */
+    }
+    .content .width {
+        width: 960px;
     }
 
     .panel3 {
@@ -399,14 +412,33 @@ div.CodeMirror-lines {
 
 }
 
+
 /* phoneish */
 
 @media (max-width: 480px) {
-    .wrap, .home-section {
+    .wrap, .content .width, .home-section, section.content article {
         width: auto;
     }
+
     header.topbar .width {
         padding: 0 5px;
+    }
+
+    .left, .right {
+        font-size: 20px;
+    }
+
+    .highlight pre code {
+        font-size: 10px;
+        line-height: 13px;
+    }
+
+    .highlight pre {
+        margin-left: 0;
+    }
+
+    #content {
+        display: block;
     }
 
 }
