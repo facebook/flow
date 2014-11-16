@@ -65,3 +65,37 @@ foo("Hello", 42);
 ```
 
 Again, running `flow check` gives an error. In this case it is the return type of `foo` that is wrong - we've declared it to be a `string` even though the function is returning a `number`. Flow flags that, and you can fix it by changing the return type.
+
+## Nullable types
+
+Flow handles `null` differently than most type systems. Most type systems ignore `null`, meaning that your program can be type correct but crash because they access `null`. In Flow, doing this is an error, as shown by our third example (`03_Null`):
+
+```javascript
+/* @flow */
+
+function length(x) {
+  return x.length;
+}
+
+var total = length("Hello") + length(null);
+```
+
+This program would crash at runtime, with a `TypeError` when it tries to read the property `length` on `null`. Running `flow check` will detect that.
+
+In the same directory you'll see a fixed version of this file that Flow accepts without error:
+
+```javascript
+/* @flow */
+
+function length(x) {
+  if (x !== null) {
+    return x.length;
+  } else {
+    return 0;
+  }
+}
+
+var total = length("Hello") + length(null);
+```
+
+Because we've checked that `x` is not `null`, Flow knows this is safe and doesn't emit a type error. 
