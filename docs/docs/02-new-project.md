@@ -36,3 +36,7 @@ As with all the examples in the Flow tutorial, you need to add
 ```
 
 at the top of each file you'd like Flow to typecheck. You don't have to do this for all files at once, since Flow will just ignore files that do not have this comment. That way you can convert one file at a time and get the benefit of typing gradually without too much upfront effort. 
+
+## Common Issues
+
+As Flow starts to typecheck your files you may run into type errors. Check out the [Troubleshooting](troubleshooting.html) section for common errors and how to resolve them. 
