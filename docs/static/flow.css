@@ -6,7 +6,7 @@
     box-sizing: border-box;
 }
 
-body {
+html {
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
     background-color: #FFF9F5;
@@ -22,7 +22,7 @@ body {
     padding-top: 50px;
 }
 
-body h1, body h2, body h3, body h4 {
+h1, h2, h3, h4 {
     font-weight: normal;
     margin: 1em 0 0.2em;
     line-height: 1.2em;
@@ -32,20 +32,20 @@ h1:first-child, h2:first-child, h3:first-child, h4:first-child {
     margin-top: 0;
 }
 
-body h1 {
+h1 {
     font-size: 2em;
     font-weight: bold;
 }
 
-body h2 {
+h2 {
     font-size: 1.5em;
 }
 
-body h3 {
+h3 {
     font-size: 1.3em;
 }
 
-body h4 {
+h4 {
     font-size: 1.1em;
 }
 
@@ -53,7 +53,7 @@ p, pre, ul {
     margin:  0 0 1em 0;
 }
 
-pre {
+.highlight pre {
     white-space: pre-wrap;
     font-family: 'source-code-pro', Menlo, 'Courier New', Consolas, monospace;
     font-size: 13px;
@@ -64,7 +64,7 @@ pre {
     background-color: hsla(31, 75%, 54%, 0.1);
 }
 
-pre code {
+.highlight pre code {
     background: none;
     padding: 0;
 }
@@ -135,7 +135,7 @@ header.topbar .logo {
     margin-top: 7px;
 }
 
-div.flow-header {
+.flow-header {
     background-image: url(logo_full_transparent.png);
     background-size: contain;
     background-position: 50% 50%;
@@ -291,42 +291,35 @@ footer {
     padding: 0 5px;
 }
 
-/**
- * Note(vjeux): we import the CSS from react website so we need to override
- * some things. This is clearly not the best design but it works :)
- */
-
-div.playgroundCode, div.playgroundPreview, div.cm-s-solarized-light {
-    padding: 0;
-    float: none;
-    width: auto;
-    background-color: transparent;
-}
-
-div.playgroundCode, div.playgroundPreview {
+.playgroundCode, .playgroundPreview {
     border-left: 4px solid #D68B00;
     margin-left: 20px;
     background-color: rgba(226, 141, 50, 0.1);;
 }
 
-div.playgroundError {
+.playgroundError {
     padding: 10px;
 }
 
-div.playgroundPreview {
+.playgroundPreview {
     margin-top: 10px;
+    margin-bottom: 20px;
 }
 
-div.playground > :first-child {
+.playground > :first-child {
     display: none;
 }
 
-ul li {
-    margin: 0;
+.cm-keyword, .cm-atom {
+    font-weight: bold;
 }
 
-body a:hover {
-    text-decoration: none;
+.cm-number {
+    color: #099;
+}
+
+div.CodeMirror-lines {
+    padding: 5px 0;
 }
 
 /* desktopish */

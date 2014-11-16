@@ -23,7 +23,7 @@ npm install -g react-tools
 You can then simply run the transpiler in the background using the `jsx` command:
 
 ```
-jsx --watch src/ build/
+jsx --strip-types --harmony --watch src/ build/
 ```
 
 This will run in the background, pick up any changes to files in `src/`, and create their pure Javascript version in `build/`.
@@ -34,12 +34,15 @@ This is **not** recommended for production, because it is not as performant as t
 
 All you have to do is include the JSX transformer in your document, and use a special MIME type for your Flow scripts:
 
-```
+```html
 <head>
   <script src="build/JSXTransformer.js"></script>
 </head>
 <body>
-  <script type="text/jsx;stripTypes=true;harmony=true">...</script>
+  <script type="text/jsx;stripTypes=true;harmony=true">
+  /* @flow */
+  // ...
+  </script>
 </body>
 ```
 
@@ -47,7 +50,7 @@ Your script will then be transformed to plain Javascript when it is loaded by th
 
 ## Transpiler in action
 
-You can try out the live Flow transpiler below: just edit the Flow script in the top window, and the transformed Javascript will update in the second window. 
+You can try out the live Flow transpiler below: just edit the Flow script in the top window, and the transformed Javascript will update in the second window.
 
 <!--[if lte IE 8]>
 <script type="text/javascript" src="http://facebook.github.io/react/js/html5shiv.min.js"></script>
@@ -63,9 +66,7 @@ the next version of React we can just use it and remove the local one -->
 <script type="text/javascript" src="/flow/static/JSXTransformer.js"></script>
 <script type="text/javascript" src="http://facebook.github.io/react/js/live_editor.js"></script>
 <script type="text/javascript" src="http://facebook.github.io/react/js/showdown.js"></script>
-<link rel="stylesheet" href="http://facebook.github.io/react/css/syntax.css" />
 <link rel="stylesheet" href="http://facebook.github.io/react/css/codemirror.css" />
-<link rel="stylesheet" href="http://facebook.github.io/react/css/react.css" />
 
 <div id="jsxCompiler"></div>
 <script src="/flow/static/transformer.js"></script>
