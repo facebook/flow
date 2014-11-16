@@ -7,9 +7,47 @@ prev: library.html
 next: type-annotations.html
 ---
 
-Since types are not part of the JavaScript specification, we need to strip them out before sending the file to the user. You can use the JSX tool in order to do so.
+Since types are not part of the JavaScript specification, we need to strip them out before sending the file to the user. There are two ways to do so:
 
-In order to improve the debugging experience, all the type annotations are replaced by spaces, this way you line and column numbers are preserved.
+* You can use the JSX transform tool (part of the React tools) to translate your files to plain Javascript
+* For quick prototyping, you can run the transforms directly in the browser
+
+## Using the offline transform tool
+
+This is the recommended workflow for production. First, you need to install the React tools:
+
+```
+npm install -g react-tools
+```
+
+You can then simply run the transpiler in the background using the `jsx` command:
+
+```
+jsx --watch src/ build/
+```
+
+This will run in the background, pick up any changes to files in `src/`, and create their pure Javascript version in `build/`.
+
+## Using the in-browser transform
+
+This is **not** recommended for production, because it is not as performant as the offline transform tool. However it is a good way to get started with quick prototyping.
+
+All you have to do is include the JSX transformer in your document, and use a special MIME type for your Flow scripts:
+
+```
+<head>
+  <script src="build/JSXTransformer.js"></script>
+</head>
+<body>
+  <script type="text/jsx;stripTypes=true;harmony=true">...</script>
+</body>
+```
+
+Your script will then be transformed to plain Javascript when it is loaded by the browser.
+
+## Transpiler in action
+
+You can try out the live Flow transpiler below: just edit the Flow script in the top window, and the transformed Javascript will update in the second window. 
 
 <!--[if lte IE 8]>
 <script type="text/javascript" src="http://facebook.github.io/react/js/html5shiv.min.js"></script>
