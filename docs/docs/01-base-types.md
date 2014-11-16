@@ -7,7 +7,7 @@ prev: type-annotations.html
 next: variables.html
 ---
 
-There are six (6) base types used by Flow for type annotations.
+There are six base types used by Flow for type annotations.
 
 ## JavaScript Base Types
 
