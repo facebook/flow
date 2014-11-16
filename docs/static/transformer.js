@@ -1,6 +1,7 @@
 var TEXT = "\
+/* @flow */\n\
 var x: number = 0;\n\
-var f = function(a: Array<number>, b): boolean {\n\
+var f = function(a: Array<string | number>): boolean {\n\
   return false;\n\
 }\
 ";

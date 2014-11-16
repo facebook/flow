@@ -318,6 +318,21 @@ footer {
     color: #099;
 }
 
+.cm-string {
+    color: #D01040;
+}
+
+.cm-comment {
+    color: #998;
+    font-style: italic;
+}
+
+.CodeMirror-code {
+    line-height: 20px;
+}
+.CodeMirror-cursor {
+    margin-top: 4px;
+}
 div.CodeMirror-lines {
     padding: 5px 0;
 }
