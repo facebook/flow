@@ -9,32 +9,37 @@
 </div></header>
 
 
-<header class='subhero'><div class='width'>
-    <section class="panel3">
-      <h3>Strict</h3>
+<header class='subhero'><div class='wrap'>
+    <section class="home-section">
+      <h2>What is Flow?</h2>
       <p>
-      Flow is gradual in the sense that it has a dynamic type (any) that
-      provides an "escape hatch" for code that cannot be statically typed.
+	Flow is a static type checker for Javascript. It is designed to find type errors in existing Javascript programs, and to let you gradually evolve Javascript code into typed code. Flow code transforms down to regular Javascript, so it runs anywhere.
+      </p>
+      <p>
+	Flow is still in early stages. It is used within Facebook, and we hope it will be just as useful for many other Javascript projects. Try it out and give us feedback! 
+      </p>
 
-      However, a gradual type system can still aim to provide some guarantees
-      for statically typed code, by carefully localizing the effects of
-      unsoundness to code that is explicitly typed with any. Such guarantees are crucial for safety and the soundness of compiler transformations for refactoring and performance optimization. Flow is designed to provide such guarantees.
-     </p>
-    </section>
-    <section class="panel3">
-      <h3>Expressive</h3>
+      <h2>Why Flow?</h2>
       <p>
-      Flow precisely tracks the types of variables as they flow through the
-      program. It supports nullable types, adjusting the types of local
-      variables accordingly. Flow supports dynamic type tests. Flow also
-      supports tracking the dynamic initialization of objects.
+	The goal of Flow is to find errors in Javascript code with little programmer effort. Flow relies heavily on <strong>type inference</strong> to find type errors even when the program has not been annotated - it precisely tracks the types of variables as they flow through the program. At the same time, Flow is a <strong>gradual</strong> type system. Any parts of your program that are dynamic in nature can easily bypass the type checker, so you can mix statically typed code with dynamic code.
+      </p>
+      <p>
+	Flow also supports a highly <strong>expressive</strong> type language. Flow types can express much more fine-grained distinctions than traditional type systems. For example, Flow helps you catch errors involving null, unlike most type systems. 
+      </p>
+      <p>
+	For more information about Flow, check out this video from <a href="https://www.facebook.com/atscale2014">@Scale</a>:
+      </p>
+      <p>
+	<iframe frameborder="0" allowfullscreen width="100%" height="320" src="http://www.youtube.com/embed/M8x0bc81smU?start=768">
+	</iframe>
+      </p>
+
+      <h2>
+	Using Flow
+      </h2>
+      <p>
+	Follow our <a href="/flow/docs/getting-started.html">Getting Started</a> guide to download and try Flow. 
       </p>
     </section>
-    <section class="panel3">
-      <h3>Performance</h3>
-      <p>
-      Flow performs instantaneous type checking on new changes to both small and
-      large code bases.
-      </p>
-    </section>
+
 <div/></header>

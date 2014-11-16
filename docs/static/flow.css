@@ -54,6 +54,20 @@ p, pre, ul {
     margin:  0 0 1em 0;
 }
 
+.wrap {
+    width: 960px;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 20px;
+    padding-right: 20px
+}
+
+.home-section {
+    width: 500px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
 .highlight pre {
     white-space: pre-wrap;
     font-family: 'source-code-pro', Menlo, 'Courier New', Consolas, monospace;
