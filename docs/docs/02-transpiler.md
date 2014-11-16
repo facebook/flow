@@ -52,6 +52,7 @@ Your script will then be transformed to plain Javascript when it is loaded by th
 
 You can try out the live Flow transpiler below: just edit the Flow script in the top window, and the transformed Javascript will update in the second window.
 
+<script>var ___tm = window.setTimeout; window.setTimeout = function(fn) { ___tm(fn, 0)}; // remove the stupid setTimeout in JSX live editor</script>
 <!--[if lte IE 8]>
 <script type="text/javascript" src="http://facebook.github.io/react/js/html5shiv.min.js"></script>
 <script type="text/javascript" src="http://facebook.github.io/react/js/es5-shim.min.js"></script>

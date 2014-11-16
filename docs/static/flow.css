@@ -20,6 +20,7 @@ body {
     margin: 0;
     line-height: 1.28;
     padding-top: 50px;
+    padding-bottom: 10px;
 }
 
 h1, h2, h3, h4 {
@@ -303,7 +304,7 @@ footer {
 
 .playgroundPreview {
     margin-top: 10px;
-    margin-bottom: 20px;
+    margin-bottom: 200px;
 }
 
 .playground > :first-child {
