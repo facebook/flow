@@ -32,10 +32,10 @@ Looking at the example itself it's easy to see why:
 /* @flow */
 
 function foo(x) {
-  return x*10;
+  return x * 10;
 }
 
-foo("Hello, world!");
+foo('Hello, world!');
 ```
 
 We're calling a function that clearly expects a number with a string. Flow detects that and returns an error. To fix this example, you can call `foo` with an integer instead. Running `flow check` should no longer find an error. A possible fix is in the `answer` directory. Throughout this tutorial, you will find solutions in the `answer` directory each time.
@@ -61,7 +61,7 @@ function foo(x: string, y: number): string {
   return x.length * y;
 }
 
-foo("Hello", 42);
+foo('Hello', 42);
 ```
 
 Again, running `flow check` gives an error. In this case it is the return type of `foo` that is wrong - we've declared it to be a `string` even though the function is returning a `number`. Flow flags that, and you can fix it by changing the return type.
@@ -77,7 +77,7 @@ function length(x) {
   return x.length;
 }
 
-var total = length("Hello") + length(null);
+var total = length('Hello') + length(null);
 ```
 
 This program would crash at runtime, with a `TypeError` when it tries to read the property `length` on `null`. Running `flow check` will detect that.
@@ -95,7 +95,7 @@ function length(x) {
   }
 }
 
-var total = length("Hello") + length(null);
+var total = length('Hello') + length(null);
 ```
 
 Because we've checked that `x` is not `null`, Flow knows this is safe and doesn't emit a type error. 
@@ -115,7 +115,7 @@ function total(numbers: Array<number>) {
   return result;
 }
 
-total([1, 2, 3, "Hello"]);
+total([1, 2, 3, 'Hello']);
 ```
 
 Flow will flag the call to `total` as an error, since the array it passes does not only consist of numbers.
