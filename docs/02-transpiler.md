@@ -64,10 +64,10 @@ You can try out the live Flow transpiler below: just edit the Flow script in the
 <!-- Right now JSXTransformer on the React website is too old. So I built
 it from master on the React repo and copy/pasted it here. Whenever we ship
 the next version of React we can just use it and remove the local one -->
-<script type="text/javascript" src="/flow/static/JSXTransformer.js"></script>
+<script type="text/javascript" src="/static/JSXTransformer.js"></script>
 <script type="text/javascript" src="http://facebook.github.io/react/js/live_editor.js"></script>
 <script type="text/javascript" src="http://facebook.github.io/react/js/showdown.js"></script>
 <link rel="stylesheet" href="http://facebook.github.io/react/css/codemirror.css" />
 
 <div id="jsxCompiler"></div>
-<script src="/flow/static/transformer.js"></script>
+<script src="/static/transformer.js"></script>
