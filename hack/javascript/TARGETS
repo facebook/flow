@@ -1,8 +1,0 @@
-ocaml_library(
-  name='javascript',
-  srcs=[
-    'jsGen.ml',
-  ],
-  deps=[
-  ],
-)
