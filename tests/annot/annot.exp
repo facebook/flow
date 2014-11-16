@@ -8,8 +8,8 @@ annot.js:4:15,20: number
 This type is incompatible with
   annot.js:1:18,23: string
 
-annot.js:8:10,42: object type
-Property j not found in object:
+annot.js:8:10,42: property j
+Property not found in
   annot.js:8:46,77: object literal
 
 annot.js:8:25,30: number

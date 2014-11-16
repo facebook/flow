@@ -1,26 +1,26 @@
 found 12 errors
 
-new_react.js:1:9,23:2: props of React class
-Property x not found in object:
+new_react.js:1:9,23:2: property x
+Property not found in
   new_react.js:7:25,27: object type
 
-new_react.js:1:9,23:2: props of React class
-Property y not found in object:
+new_react.js:1:9,23:2: property y
+Property not found in
   new_react.js:7:25,27: object type
 
-new_react.js:1:9,23:2: props of React class
-Property z not found in object:
+new_react.js:1:9,23:2: property z
+Property not found in
   new_react.js:7:25,27: object type
 
-new_react.js:1:9,23:2: state of React class
-This type is incompatible with
+new_react.js:1:9,23:2: state of React component
+Expected object instead of
   new_react.js:12:32,32: number
 
-new_react.js:1:9,23:2: state of React class
+new_react.js:1:9,23:2: state of React component
 This type is incompatible with
   new_react.js:14:18,23: string
 
-new_react.js:1:9,23:2: props of React class
+new_react.js:1:9,23:2: props of React component
 This type is incompatible with
   new_react.js:15:18,23: string
 
@@ -32,8 +32,8 @@ new_react.js:5:12,33: number
 This type is incompatible with
   new_react.js:16:18,23: string
 
-new_react.js:18:9,23: element get
-This type is incompatible with
+new_react.js:18:9,23: access of computed property/element
+Computed property/element cannot be accessed on possibly null or undefined value
   new_react.js:4:12,32: ?array
 
 new_react.js:25:23,23: number
@@ -41,7 +41,7 @@ This type is incompatible with
   new_react.js:3:12,33: string
 
 state.js:17:18,35: property qux
-This type is incompatible with
+Property cannot be accessed on possibly null or undefined value
   state.js:4:11,26: ?object type
 
 [LIB] react.js:7:18,23: string

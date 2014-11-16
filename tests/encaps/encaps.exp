@@ -1,7 +1,7 @@
 found 3 errors
 
 encaps.js:3:14,16: property x
-Property x not found in object:
+Property not found in
   encaps.js:1:7,7: A
 
 encaps.js:6:11,16: number

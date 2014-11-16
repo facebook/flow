@@ -18,7 +18,8 @@ unsupported destructuring
 destructuring.js:11:6,10: 
 unsupported destructuring
 
-destructuring.js:15:9,9: unknown global name: z
+destructuring.js:15:9,9: identifier z
+Unknown global name
 
 destructuring.js:18:8,8: number
 This type is incompatible with
@@ -39,12 +40,12 @@ destructuring.js:20:20,23: boolean
 This type is incompatible with
   destructuring.js:2:15,20: string
 
-destructuring.js:23:11,33: object type
-Property x not found in object:
+destructuring.js:23:11,33: property x
+Property not found in
   destructuring.js:22:14,22: object pattern
 
-destructuring.js:28:13,44: object type
-Property z not found in object:
+destructuring.js:28:13,44: property z
+Property not found in
   destructuring.js:28:48,63: object literal
 
 destructuring.js:30:20,25: number

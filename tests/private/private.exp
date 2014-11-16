@@ -1,5 +1,5 @@
 found 1 errors
 
 private.js:8:25,31: property _x
-Property _x not found in object:
+Property not found in
   private.js:5:7,7: B

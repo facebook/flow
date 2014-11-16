@@ -1,12 +1,8 @@
-found 4 errors
+found 3 errors
 
-B.js:7:3,16: assignment of property b
-Cannot extend sealed object with property b
-  C.js:8:11,17: constructor call
-
-B.js:10:30,35: property b
-Property b not found in object:
-  C.js:8:11,17: constructor call
+B.js:7:12,16: string
+This type is incompatible with
+  B.js:10:14,19: number
 
 D.js:9:7,10: boolean
 This type is incompatible with

@@ -1,1 +1,5 @@
-found 0 errors
+found 1 errors
+
+equals.js:2:10,16: non-strict equality comparison
+Non-strict equality comparison with string may involve unintended type conversions (use strict equality test instead)
+  equals.js:2:10,10: number

@@ -1,7 +1,7 @@
 found 8 errors
 
 E.js:9:1,12: call of method getQuery
-Too few arguments
+Too few arguments (expected default/rest parameters in function)
   [LIB] react.js:90:9,41: function type
 
 dlite.js:14:7,11: string
@@ -13,11 +13,11 @@ This type is incompatible with
   dlite.js:4:18,23: number
 
 dlite.js:21:1,15: call of method queryParams
-Property queryParams not found in object:
+Property not found in
   [LIB] react.js:39:1,44:1: ReactElement
 
 dlite.js:22:1,7: call of method bar
-Property bar not found in object:
+Property not found in
   [LIB] react.js:39:1,44:1: ReactElement
 
 mixin.js:2:16,18: undefined

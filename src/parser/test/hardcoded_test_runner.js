@@ -1,4 +1,4 @@
-var flow = require("./../flow.js");
+var flow = require("./../flow_parser.js");
 var util = require("util");
 var ast_types = require("ast-types");
 

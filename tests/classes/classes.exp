@@ -9,5 +9,5 @@ This type is incompatible with
   A.js:2:9,14: number
 
 D.js:3:1,9: property x
-Property x not found in object:
+Property not found in
   D.js:2:7,7: E

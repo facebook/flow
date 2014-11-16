@@ -9,5 +9,5 @@ This type is incompatible with
   super.js:4:7,12: string
 
 super.js:13:18,18: property g
-Property g not found in object:
+Property not found in
   super.js:2:7,7: A

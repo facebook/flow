@@ -89,7 +89,7 @@ module Type :
       | ComparatorT of reason * t
 
       | PredicateT of predicate * t
-      | EqT of t
+      | EqT of reason * t
 
       | SpecializeT of reason * t list * t
 

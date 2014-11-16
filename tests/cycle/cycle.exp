@@ -1,3 +1,4 @@
 found 1 errors
 
-B.js:5:18,18: unknown global name: B
+B.js:5:18,18: identifier B
+Unknown global name

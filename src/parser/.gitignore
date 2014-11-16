@@ -1,6 +1,6 @@
 lex_test
 parse_test
 lexer_flow.ml
-flow.js
+flow_parser.js
 perf_test
 pfff_test

@@ -140,7 +140,7 @@ module Type = struct
   | PredicateT of predicate * t
 
   (* == *)
-  | EqT of t
+  | EqT of reason * t
 
   (* operation on polymorphic types *)
   | SpecializeT of reason * t list * t
@@ -677,14 +677,14 @@ let rec reason_of_t = function
       prefix_reason "optional of " (reason_of_t t)
 
   | RestT t ->
-      prefix_reason "rest of " (reason_of_t t)
+      prefix_reason "rest array of " (reason_of_t t)
 
   | PredicateT (pred,t) -> prefix_reason
       ((string_of_predicate pred) ^ " # ")
       (reason_of_t t)
 
-  | EqT t ->
-      prefix_reason "non-strict (in)equality comparison with " (reason_of_t t)
+  | EqT (reason, t) ->
+      reason
 
   | MarkupT(reason,_,_)
 

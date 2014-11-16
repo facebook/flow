@@ -13,5 +13,5 @@ This type is incompatible with
   poly.js:20:1,42: another instantiation (e.g., undefined) of R
 
 poly.js:24:3,5: function call
-This type is incompatible with
+Function cannot be called on
   poly.js:22:1,26:1: some instantiation (e.g., mixed) of U

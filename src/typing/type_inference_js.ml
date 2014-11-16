@@ -185,7 +185,7 @@ and type_of_pattern = Ast.Pattern.(function
 (* instantiate pattern visitor for assignments *)
 let destructuring_assignment cx t =
   destructuring cx t (fun cx loc name t ->
-    let reason = mk_reason (spf "assign %s" name) loc in
+    let reason = mk_reason (spf "assignment of identifier %s" name) loc in
     Env_js.set_var cx name t reason
   )
 
@@ -454,6 +454,24 @@ let rec convert cx map = Ast.Type.(function
           error_type cx loc "Unsupported annotation"
         )
 
+      | "Function" | "function" ->
+        let reason = mk_reason "function type" loc in
+        FunT (
+          reason,
+          AnyT.at loc,
+          AnyT.at loc,
+          {
+            this_t = AnyT.at loc;
+            params_tlist = [RestT (AnyT.at loc)];
+            params_names = None;
+            return_t = AnyT.at loc;
+            closure_t = 0
+          })
+
+      | "Object" ->
+        let reason = mk_reason "object type" loc in
+        Flow_js.mk_object_with_proto cx reason (AnyT.at loc)
+
       (* Custom classes *)
       | "ReactClass" ->
         let reason = mk_reason "ReactClass" loc in
@@ -506,10 +524,10 @@ let rec convert cx map = Ast.Type.(function
     let ft =
       FunT (
         mk_reason "function type" loc,
-        MixedT (mk_reason "no statics" loc),
-        Flow_js.mk_tvar cx (mk_reason "unknown prototype" loc),
+        Flow_js.dummy_static,
+        Flow_js.mk_tvar cx (mk_reason "prototype" loc),
         {
-          this_t = Flow_js.mk_tvar cx (mk_reason "unknown this" loc);
+          this_t = Flow_js.mk_tvar cx (mk_reason "this" loc);
           params_tlist = (List.rev rev_params_tlist);
           params_names = Some (List.rev rev_params_names);
           return_t = convert cx map returnType;
@@ -1653,7 +1671,7 @@ and expression_ cx loc = Ast.Expression.(function
       property = Member.PropertyExpression index;
       _
     } ->
-      let reason = mk_reason "element get" loc in
+      let reason = mk_reason "access of computed property/element" loc in
       let tobj = expression cx _object in
       let tind = expression cx index in
       Flow_js.mk_tvar_where cx reason (fun t ->
@@ -2156,8 +2174,11 @@ and unary cx loc = Ast.Expression.Unary.(function
       Flow_js.unit_flow cx (expression cx argument, t);
       t
 
+  | { operator = Plus; argument; _ } ->
+      ignore (expression cx argument);
+      AnyT.at loc
+
   | { operator = Minus; argument; _ }
-  | { operator = Plus; argument; _ }
   | { operator = BitNot; argument; _ } ->
       let t = NumT.at loc in
       Flow_js.unit_flow cx (expression cx argument, t);
@@ -2203,10 +2224,10 @@ and update cx loc = Ast.Expression.Update.(function
 and binary cx loc = Ast.Expression.Binary.(function
   | { operator = Equal; left; right }
   | { operator = NotEqual; left; right } ->
+      let reason = mk_reason "non-strict equality comparison" loc in
       let t1 = expression cx left in
       let t2 = expression cx right in
-      Flow_js.unit_flow cx (t1, EqT t2);
-      Flow_js.unit_flow cx (t2, EqT t1);
+      Flow_js.unit_flow cx (t1, EqT (reason,t2));
       BoolT.at loc
 
   | { operator = StrictEqual; left; right }
@@ -2221,11 +2242,10 @@ and binary cx loc = Ast.Expression.Binary.(function
   | { operator = LessThanEqual; left; right }
   | { operator = GreaterThan; left; right }
   | { operator = GreaterThanEqual; left; right } ->
-      let reason = mk_reason "comparison" loc in
+      let reason = mk_reason "relational comparison" loc in
       let t1 = expression cx left in
       let t2 = expression cx right in
-      Flow_js.unit_flow cx (t1, ComparatorT (reason, t2));
-      Flow_js.unit_flow cx (t2, ComparatorT (reason, t1));
+      Flow_js.unit_flow cx (t1, ComparatorT (reason,t2));
       BoolT.at loc
 
   | { operator = LShift; left; right }
@@ -2249,7 +2269,6 @@ and binary cx loc = Ast.Expression.Binary.(function
       let t2 = expression cx right in
       Flow_js.mk_tvar_where cx reason (fun t ->
         Flow_js.unit_flow cx (t1, AdderT (reason, t2, t));
-        Flow_js.unit_flow cx (t2, AdderT (reason, t1, t));
       )
 )
 
@@ -2302,7 +2321,7 @@ and assignment cx loc = Ast.Expression.(function
               { Ast.Identifier.name = "exports"; _ });
             _
           }) ->
-            let reason = mk_reason "assign module.exports" loc in
+            let reason = mk_reason "assignment of module.exports" loc in
             set_module_exports cx reason t
 
         | _, Ast.Pattern.Expression (_, Member {
@@ -2335,7 +2354,7 @@ and assignment cx loc = Ast.Expression.(function
             property = Member.PropertyExpression index;
             _
           }) ->
-            let reason = mk_reason "element set" loc in
+            let reason = mk_reason "assignment of computed property/element" loc in
             let a = expression cx _object in
             let i = expression cx index in
             Flow_js.unit_flow cx (a, SetElemT (reason, i, t))
@@ -2720,14 +2739,14 @@ and static_method_call_React cx loc m args_ = Ast.Expression.(
       let reason_component = mk_reason "React component" loc in
       let this = Flow_js.mk_tvar cx reason_component in
       let mixins = ref [] in
-      let static_reason = prefix_reason "static of " reason_class in
+      let static_reason = prefix_reason "statics of " reason_class in
       let static = ref (mk_object cx static_reason) in
-      let attributes_reason = prefix_reason "required props of " reason_class in
+      let attributes_reason = prefix_reason "required props of " reason_component in
       let attributes = ref (mk_object cx attributes_reason) in
-      let default_reason = prefix_reason "default props of " reason_class in
+      let default_reason = prefix_reason "default props of " reason_component in
       let default = ref (mk_object cx default_reason) in
       let ref_omap = ref SMap.empty in
-      let reason_state = prefix_reason "state of " reason_class in
+      let reason_state = prefix_reason "state of " reason_component in
       let state = ref (mk_object cx reason_state) in
       let (fmap, mmap) =
         List.fold_left Ast.Expression.Object.(fun (fmap, mmap) -> function
@@ -2855,7 +2874,7 @@ and static_method_call_React cx loc m args_ = Ast.Expression.(
         Flow_js.unit_flow cx
           (!default, ObjExtendT(default_reason, !ref_omap, t))
       ) in
-      let props_reason = prefix_reason "props of " reason_class in
+      let props_reason = prefix_reason "props of " reason_component in
       let props = mk_object cx props_reason in
       Flow_js.unit_flow cx
         (!attributes, ObjAssignT(props_reason, props, AnyT.t));
@@ -3234,10 +3253,11 @@ and mk_signature cx c_type_params_map body = Ast.Statement.Class.(
         (params, defaults, rest) (body_loc body, returnType) in
       let params_ret = if name = "constructor"
         then (
-            let params, pnames, ret, params_map, params_loc = params_ret in
-            Flow_js.unit_flow cx (ret, VoidT.t);
-            params, pnames, VoidT.t, params_map, params_loc
-          )
+          let params, pnames, ret, params_map, params_loc = params_ret in
+          let return_void = VoidT (mk_reason "return undefined" loc) in
+          Flow_js.unit_flow cx (ret, return_void);
+          params, pnames, return_void, params_map, params_loc
+        )
         else params_ret
       in
       (fields,
@@ -3275,7 +3295,7 @@ and mk_class_elements cx this super method_sigs body = Ast.Statement.Class.(
         mk_body cx param_types_map param_loc_map ret body this super;
       );
       if not (Abnormal.swap Abnormal.Return save_return_exn)
-      then Flow_js.unit_flow cx (VoidT.t, ret)
+      then Flow_js.unit_flow cx (VoidT (mk_reason "return undefined" loc), ret)
 
     | _ -> ()
   ) elements
@@ -3322,7 +3342,7 @@ and mk_class cx reason_c type_params extends body =
 
   let id = Flow_js.mk_nominal cx in
 
-  let static_reason = replace_reason "static" reason_c in
+  let static_reason = prefix_reason "statics of " reason_c in
   let static = mk_object cx static_reason in
 
   let super = mk_extends cx reason_c type_params_map extends in
@@ -3351,8 +3371,8 @@ and mk_class cx reason_c type_params extends body =
       fields_tmap = fields;
       methods_tmap = methods;
     } in
-    Flow_js.unit_flow cx
-      (super, SuperT(replace_reason "extends" reason_c, instance));
+    let super_reason = prefix_reason "super of " reason_c in
+    Flow_js.unit_flow cx (super, SuperT(super_reason, instance));
 
     let this = InstanceT (reason_c,static,super,instance) in
     mk_class_elements cx this super methods_ body;
@@ -3378,9 +3398,9 @@ and mk_class cx reason_c type_params extends body =
     fields_tmap = fields;
     methods_tmap = methods;
   } in
+  let super_reason = prefix_reason "super of " reason_c in
   let this = InstanceT (reason_c, static, super, instance) in
-  Flow_js.unit_flow cx
-    (super, ParentT(replace_reason "extends" reason_c, instance));
+  Flow_js.unit_flow cx (super, ParentT(super_reason, instance));
 
   if (typeparams = [])
   then
@@ -3415,7 +3435,7 @@ and mk_interface cx reason typeparams imap map (fmap, mmap) extends =
     fields_tmap = fmap;
     methods_tmap = mmap;
   } in
-  let reason_super = Reason_js.replace_reason "extends" reason in
+  let reason_super = Reason_js.prefix_reason "super of " reason in
   Flow_js.unit_flow cx (super, ParentT(reason_super, instance));
   Flow_js.unit_flow cx (super, SuperT(reason_super, instance));
 
@@ -3676,13 +3696,13 @@ and mk_function cx reason type_params params ret body this =
 
   let (typeparams,params,pnames,ret) =
     function_decl cx reason type_params params ret
-      body this (MixedT (replace_reason "super" reason))
+      body this (MixedT (replace_reason "empty super object" reason))
   in
 
   (* prepare type *)
   let proto_reason = replace_reason "prototype" reason in
   let prototype = mk_object cx proto_reason in
-  let static = mk_object cx (replace_reason "static" reason) in
+  let static = mk_object cx (prefix_reason "statics of " reason) in
 
   let funtype = {
     this_t = this;

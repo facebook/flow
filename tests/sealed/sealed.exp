@@ -13,5 +13,5 @@ This type is incompatible with
   proto.js:7:7,12: number
 
 sealed.js:3:1,7: assignment of property z
-Cannot extend sealed object with property z
+Property not found in
   proto.js:12:15,24: object type

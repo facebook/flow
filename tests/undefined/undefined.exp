@@ -1,5 +1,5 @@
 found 1 errors
 
 undefined.js:3:5,11: call of method foo
-Method call on possibly undefined value:
+Method cannot be called on possibly undefined value
   undefined.js:2:9,9: undefined

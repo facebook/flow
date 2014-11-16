@@ -12,7 +12,8 @@ Required module not found
 ErrorSignal.js:10:16,34: SiteData
 Required module not found
 
-ErrorSignal.js:12:50,55: unknown global name: object
+ErrorSignal.js:12:50,55: identifier object
+Unknown global name
 
 HasteModuleLoader.js:20:25,55: CoverageCollector
 Required module not found
@@ -65,9 +66,11 @@ XUIFixedDataTableExampleData.js:34029:2,10: string
 This type is incompatible with
   XUIFixedDataTableExampleData.js:34037:5,24: number
 
-test-data.js:1:1,9: unknown global name: railsGems
+test-data.js:1:1,9: assignment of identifier railsGems
+Unknown global name
 
-test-data.js:8426:1,11: unknown global name: sinatraGems
+test-data.js:8426:1,11: assignment of identifier sinatraGems
+Unknown global name
 
 [LIB] core.js:97:31,36: string
 This type is incompatible with
