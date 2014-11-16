@@ -7,7 +7,20 @@ prev: installing-flow.html
 next: flow-basics.html
 ---
 
-Please follow the [installation instructions](installing-flow.html). This should create a directory called `flow`, and a `flow` binary on your path.
+## Installing Flow
+
+You can find pre-built binaries for Flow below, depending on your operating system:
+
+  * [Linux](http://example.com) TODO ADD REAL LINK
+  * [Mac OS X](http://example.com) TODO ADD REAL LINK
+
+Flow is packaged as a zip file. To install flow simply unpack it:
+
+```
+unzip flow.zip
+```
+
+This creates a directory called `flow` containing the flow binary. It's recommended you add this directory to your PATH so that you can simply invoke `flow` from anywhere.
 
 ## First Steps
 
