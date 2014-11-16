@@ -11,8 +11,8 @@ next: new-project.html
 
 You can find pre-built binaries for Flow below, depending on your operating system:
 
-  * [Linux](http://example.com) TODO ADD REAL LINK
-  * [Mac OS X](http://example.com) TODO ADD REAL LINK
+  * [Linux](/downloads/flow-debian-latest.zip)
+  * [Mac OS X](/downloads/flow-osx-latest.zip)
 
 Flow is packaged as a zip file. To install flow simply unpack it:
 
