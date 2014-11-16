@@ -4,6 +4,16 @@
     title: About Flow
   - id: getting-started
     title: Getting Started
+- title: User Guide
+  items:
+  - id: new-project
+    title: Running Flow on a new project
+  - id: library
+    title: Running Flow on a library
+  - id: transpiler
+    title: Running Flow code
+  - id: troubleshooting
+    title: Troubleshooting
 - title: Language Reference
   items:
   - id: type-annotations

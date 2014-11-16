@@ -3,6 +3,7 @@ id: type-annotations
 title: Type Annotations
 layout: docs
 permalink: /docs/type-annotations.html
+prev: troubleshooting.html
 next: base-types.html
 ---
 
@@ -14,11 +15,11 @@ JavaScript code:
 function add(num1, num2) {
   return num1 + num2;
 }
-var x = add(3, "0");
+var x = add(3, '0');
 console.log(x);
 ```
 
-What is the value of `x`? 3? 30? Undefined? The answer is 30, and, in most
+What is the value of `x`? `3`? `30`? `undefined`? The answer is `30`, and, in most
 cases, this probably not the behavior you would prefer.
 
 Flow helps mitgate these sort of subtle bugs by trying to keep your code sane
@@ -26,14 +27,14 @@ through static analysis and type annotations.
 
 ## Type Annotations
 
-Type annotations are generally prefixed by `:`. And they can be placed on 
+Type annotations are generally prefixed by `:`. And they can be placed on
 function parameters, function return types and variable declarations. e.g.,
 
 ```javascript
 function foo(a: mixed, b: number): void {...}
 var x: boolean;
 class Bar {
-  y: string;    
+  y: string;
 }
 ```
 
@@ -47,7 +48,7 @@ annotation `@flow` at the top in a comment block:
 function add(num1, num2) {
   return num1 + num2;
 }
-var x = add(3, "0");
+var x = add(3, '0');
 console.log(x);
 ```
 
@@ -60,11 +61,11 @@ specify that the parameters to `add` must be `number`s.
 function add(num1: number, num2: number): number {
   return num1 + num2;
 }
-var x: number = add(3, "0");
+var x: number = add(3, '0');
 console.log(x);
 ```
 
-Running the type checker against the above code //will// yield type errors 
+Running the type checker against the above code //will// yield type errors
 since we have explicitly typed all parameters and variables.
 
 ```
@@ -85,7 +86,7 @@ deduce all that is necessary to type check your code.
 function multPI(num1, num2) {
   return Math.PI * num1 * num2;
 }
-var x = multPI(3, "0");
+var x = multPI(3, '0');
 console.log(x);
 ```
 
@@ -103,10 +104,9 @@ This type is incompatible with
 However, explicit type annotations are required at all module boundaries.
 Flow's inference engine stops there.
 
-```
+```javascript
 /**
  * Size.js
- *
  * @flow
  */
 function size(input: string): number {
@@ -116,13 +116,12 @@ function size(input: string): number {
 module.exports = size;
 ```
 
-```
+```javascript
 /**
  * UseSize.js
- *
  * @flow
  */
-var size = require("./Size");
+var size = require('./Size');
 var result = size(null);
 ```
 
@@ -142,9 +141,9 @@ This type is incompatible with
 `any` can flow to any other type, and vice-versa. `any` is basically the "get
 out of my way, I know what I am doing" annotation. Use it when Flow is getting
 in your way, but you know your program is correct.
- 
+
 ## Bottom Line
 
-You can type annotate all your code. That would be the most expressive and 
+You can type annotate all your code. That would be the most expressive and
 self-documenting approach. However, type annotations are only required across
 module boundaries as the Flow type inference engine is inner-module aware only.

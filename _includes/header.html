@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html prefix="og: http://ogp.me/ns#">
+<head>
+    <meta charset='utf-8'>
+    <title>Flow | {{ page.title }}</title>
+    <link rel='stylesheet' href='/static/flow.css' type='text/css'/>
+    <link rel="stylesheet" href='/static/pygments.css' type='text/css'/>
+    <link rel='shortcut icon' href='/static/favicon.ico'>
+    <meta name='viewport' content='width=480'>
+    <meta property='og:type' content='website'>
+    <meta property="og:title" content="Flow | {{ page.title }}" />
+    <meta property='og:description' content='Flow is a static type checker for
+    JavaScript.'>
+    <meta property='og:image' content='/static/flow-og-image.png'>
+
+    <script type="text/javascript" src="//use.typekit.net/vqa1hcx.js"></script>
+    <script type="text/javascript">{'try{Typekit.load();}catch(e){}'}</script>
+</head>
+<body>
+
+<header class='topbar'><nav class='width'>
+<a href='/index.html'>
+  <img src="/static/logo_flatcolor_transparent_white.png" class="logo">
+</a>
+    <ul>
+      <li><a href="/docs/getting-started.html"
+          {% if (page.id != 'about-flow') and (page.sectionid == 'docs') %}
+          class="active" {% endif %}>
+          Docs
+      </a></li>
+      <li><a href="/docs/about-flow.html"
+          {% if (page.id == 'about-flow') %} class="active" {% endif %}>
+          About
+      </a></li>
+      <li><a href="/support.html"
+          {% if (page.id == 'support') %} class="active" {% endif %}>
+          Support
+      </a></li>
+      <li><a href="http://github.com/facebook/flow">GitHub</a>
+    </ul>
+</nav></header>

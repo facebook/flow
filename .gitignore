@@ -1,4 +1,4 @@
 .DS_STORE
-docs/_site/
+_site/
 Gemfile
 Gemfile.lock
