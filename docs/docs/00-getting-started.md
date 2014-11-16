@@ -99,3 +99,27 @@ var total = length("Hello") + length(null);
 ```
 
 Because we've checked that `x` is not `null`, Flow knows this is safe and doesn't emit a type error. 
+
+## Arrays
+
+Flow is of course not limited to simple types like numbers and strings. For example, `04_Arrays` illustrates the support for annotating functions on arrays:
+
+```javascript
+/* @flow */
+
+function total(numbers: Array<number>) {
+  var result = 0;
+  for (var i = 0; i < numbers.length; i++) {
+    result += numbers[i];
+  }
+  return result;
+}
+
+total([1, 2, 3, "Hello"]);
+```
+
+Flow will flag the call to `total` as an error, since the array it passes does not only consist of numbers.
+
+## Next Steps
+
+These simple examples just scratch the surface. You're now ready to [start a new project with Flow](new-project.html). You may also want to check out our much bigger [React example](react-example.html) to see Flow in action. 
