@@ -402,15 +402,11 @@ div.CodeMirror-lines {
 /* phoneish */
 
 @media (max-width: 480px) {
+    .wrap, .home-section {
+        width: auto;
+    }
     header.topbar .width {
         padding: 0 5px;
-    }
-
-    header.topbar nav ul li a {
-        padding: 0 4px;
-        padding-top: 6px;
-        margin: 0;
-        font-size: 12px;
     }
 
 }
