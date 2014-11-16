@@ -34,15 +34,15 @@ number
 
 ## Constructor Functions and Prototype Objects
 
-Another way of creating objects in JavaScript is by using `new` on //
-constructor functions//. A constructor function is typically an open method
+Another way of creating objects in JavaScript is by using `new` on 
+constructor functions. A constructor function is typically an open method
 that "initializes" some properties of `this`; and a `new` operation on such a
 function calls it on a freshly created object before returning it.
 
 Additionally, a constructor function may set various properties on its
 `prototype` object. These properties are typically methods, and are inherited
 by all objects created from that constructor function by a process known as
-//prototype chaining//.
+prototype chaining.
 
 ```javascript
 /* @flow */
@@ -86,7 +86,7 @@ Flow cannot guarantee the existence of that property at a particular property
 access operation; it can only check that its writes and reads are type-
 consistent. Providing such guarantees for dynamic objects would significantly
 complicate the analysis; this is a well-known fact (in technical terms, Flow's
-analysis is //heap-insensitive for strong updates//).
+analysis is heap-insensitive for strong updates).
 
 For example, the following code typechecks:
 
@@ -139,8 +139,8 @@ boundaries).
 ## Objects as Maps
 
 An object can be viewed as a map from `string` to some value type by setting
-and getting its properties via //bracket notation// (i.e. dynamic accessors),
-instead of //dot notation//. Flow infers a precise value type for the map: in
+and getting its properties via bracket notation (i.e. dynamic accessors),
+instead of dot notation. Flow infers a precise value type for the map: in
 other words, if you only write `number` values to a map, you will read `number`values back (rather than, say, `any`).
 
 Such a map can be given a type of the form `{ ..., $_: T }` where `T` is the
