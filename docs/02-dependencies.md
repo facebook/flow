@@ -50,9 +50,7 @@ In `02_HandWrittenInterface` you can see a minimalist interface for the portion 
 
 {% highlight javascript linenos %}
 declare class UnderscoreStatic {
-
   findWhere<T>(list: Array<T>, properties: {}): T;
-
 }
 
 declare var _: UnderscoreStatic;
