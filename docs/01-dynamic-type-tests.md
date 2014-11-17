@@ -7,7 +7,7 @@ prev: operators.html
 ---
 
 In addition to `null` checks, there are several other dynamic type tests
-(//predicates//) on local variables that Flow recognizes and uses to refine
+(*predicates*) on local variables that Flow recognizes and uses to refine
 types. Refining a type with a predicate means narrowing the original type with
 the type satisfied by values satisfying the predicate. Some of these
 predicates are:
