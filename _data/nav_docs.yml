@@ -33,7 +33,7 @@
   - id: variables
     title: Variables
   - id: arrays
-    title: Arrays
+    title: Arrays and Tuples
   - id: classes
     title: Classes
   - id: objects
@@ -44,7 +44,13 @@
     title: Primitives
   - id: functions
     title: Functions
+  - id: union-intersection-types
+    title: Union and Intersection Types
+  - id: type-aliases
+    title: Type Aliases
   - id: operators
     title: Operators
   - id: dynamic-type-tests
     title: Dynamic Type Tests
+  - id: declarations
+    title: Declarations
