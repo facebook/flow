@@ -14,6 +14,7 @@ Most real JavaScript programs depend on third-party libraries. This guide shows 
 Flow support *interface files* for this purpose. These files define the interface to a library, including types, separately from the actual code of the library. You never need to change library code to use interface files, but your code will be typechecked against the types declared in the interface file.
 
 The workflow for dealing with library code is:
+
 * Do not change the library files or add `@flow` to them
 * Add one or more interface files for your libraries in a special directory in your project - for example `interfaces`
 * Point Flow at those interface files by starting it with `flow start --lib  <path to your interface files>`
