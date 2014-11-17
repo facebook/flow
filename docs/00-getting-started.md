@@ -20,7 +20,13 @@ Flow is packaged as a zip file. To install, simply unzip it:
 $> unzip flow.zip
 ```
 
-This creates a directory called `flow` containing the executable binary (also called `flow`) and a folder of five examples. It's recommended you add this directory to your path so that you can simply run `flow` from anywhere on your system.
+This creates a directory called `flow` containing the executable binary (also called `flow`) and a folder of five examples. It's recommended you add this directory to your path so that you can simply run `flow` from anywhere on your system:
+
+```bash
+$> unzip flow.zip
+$> cd flow
+$> echo "PATH=\"\$PATH:$(pwd)/\"" >> ~/.bashrc && source ~/.bashrc
+```
 
 To see what Flow can do, let's take a quick look at the [five examples](five-simple-examples.html) in the installation:
 
