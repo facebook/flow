@@ -181,7 +181,7 @@ total([1, 2, 3, 4]);
 
 ## 5. Dynamic code
 
-In our final example, we haven't annotated the function, but we're passing in two different types of argument:
+In our final example, `05_DynamicCode`, we haven't annotated the function, but we are passing in two different types of argument:
 
 {% highlight javascript linenos %}
 /* @flow */

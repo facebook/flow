@@ -19,7 +19,7 @@ $> cd new_project
 $> flow init
 ```
 
-All this actually does is create a magic file `.flowconfig` at the root of the folder. You might have noticed that this file was already present in each of the examples we looked at earlier.
+All this actually does is create a hidden file `.flowconfig` at the root of the folder. You might have noticed that this file was already present in each of the examples we looked at earlier.
 
 Once the `.flowconfig` file is present, you can run ad-hoc checks on the code within it and its subfolders:
 
