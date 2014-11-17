@@ -129,7 +129,7 @@ Type annotations are required in `Size.js` because `UseSize.js` is calling the
 `size()` function from outside the module and that crosses the inference
 boundary.
 
-```
+```bbcode
 testcode/flow/UseSize.js:7:19,22: null
 This type is incompatible with
   testcode/flow/Size.js:5:22,27: string

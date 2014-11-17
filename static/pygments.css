@@ -26,7 +26,7 @@
 .m { color: #009999 } /* Literal.Number */
 .s { color: #d01040 } /* Literal.String */
 .na { color: #008080 } /* Name.Attribute */
-.nb { color: #0086B3 } /* Name.Builtin */
+.nb { } /* Name.Builtin */
 .nc { color: #445588; font-weight: bold } /* Name.Class */
 .no { color: #008080 } /* Name.Constant */
 .nd { color: #3c5d5d; font-weight: bold } /* Name.Decorator */

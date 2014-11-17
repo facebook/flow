@@ -16,13 +16,13 @@ Since types are not part of the JavaScript specification, we need to strip them 
 
 This is the recommended workflow for production. First, you need to install the React tools:
 
-```
+```bash
 $> npm install -g react-tools
 ```
 
 You can then simply run the transpiler in the background using the `jsx` command:
 
-```
+```bash
 $> jsx --strip-types --harmony --watch src/ build/
 ```
 

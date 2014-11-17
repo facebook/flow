@@ -16,7 +16,7 @@ We provide pre-built binaries for Flow, depending on your operating system:
 
 Flow is packaged as a zip file. To install, simply unzip it:
 
-```
+```bash
 $> unzip flow.zip
 ```
 
@@ -26,14 +26,14 @@ This creates a directory called `flow` containing the executable binary (also ca
 
 Inside the installed folder you'll find an `examples` directory. This contains the examples for this tutorial. To get a feel for Flow, let's look at the first one:
 
-```
+```bash
 $> cd flow/examples/01_HelloWorld
 $> flow check
 ```
 
 You should see an error a little like this:
 
-```
+```bbcode
 01_HelloWorld/hello.js:7:5,17: string
 This type is incompatible with
   01_HelloWorld/hello.js:4:10,13: number

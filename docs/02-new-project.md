@@ -11,14 +11,14 @@ next: dependencies.html
 
 To set up a new project using Flow, all you need to do is create a magic file `.flowconfig` to tell Flow to start typechecking files in your project:
 
-```
+```bash
 $> touch .flowconfig
 $> flow check
 ```
 
 This works but is not the most efficient way to use Flow. As you're changing files in your project you only want Flow to recheck the files that have changed. To achieve this, Flow is built as a client/server architecture: you can start a Flow server that will run in the background and type check files as they change. To do this simply run:
 
-```
+```bash
 $> flow start   # This starts a server and returns
 
 $> flow status  # This will list all current type errors

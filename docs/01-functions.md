@@ -19,7 +19,7 @@ var x: number = foo('');
 
 Running Flow produces the following error:
 
-```
+```bbcode
 File "example.js", line 3, character 20-21:
 string
 is incompatible with
@@ -42,7 +42,7 @@ var o = { x: 42, f: foo };
 var x: string = o.f();
 ```
 
-```
+```bbcode
 testcode/flow/openMethods.js:3:14,15: number
 This type is incompatible with
   testcode/flow/openMethods.js:4:8,13: string

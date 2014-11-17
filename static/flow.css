@@ -50,7 +50,7 @@ h4 {
     font-size: 1.1em;
 }
 
-p, pre, ul {
+p, ul {
     margin:  0 0 1em 0;
 }
 
@@ -93,6 +93,7 @@ code {
     border-left: 4px solid rgb(214, 139, 0);
     padding: 5px 10px;
     margin-left: 20px;
+    margin-bottom: 1em;
     border-radius: 0;
     background-color: rgba(226, 141, 49, 0.1);
 }
@@ -101,9 +102,18 @@ code {
   color: rgb(214, 139, 0);
 }
 
-.highlight pre code.language-text {
-    border-color: hsl(0, 0%, 31%);
-    background-color: hsla(0, 0%, 31%, 0.1);
+.highlight pre code.language-bash {
+    border-left: 4px solid hsl(19, 0%, 42%);
+    background-color: hsla(8, 0%, 54%, 0.1);
+}
+
+.highlight pre code.language-bbcode {
+    border-left: 4px solid hsl(19, 100%, 42%);
+    background-color: hsla(8, 75%, 54%, 0.1);
+}
+
+.highlight + .highlight + .highlight {
+    margin-top: -13px;
 }
 
 

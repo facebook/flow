@@ -17,12 +17,15 @@ function foo(x) {
 foo('Hello, world!');
 {% endhighlight %}
 
-{% highlight text %}
+```bash
 $> flow
+```
+
+```bbcode
 hello.js:5:5,19: string
 This type is incompatible with
   hello.js:3:10,15: number
-{% endhighlight %}
+```
 
 Flow also lets you gradually evolve Javascript code into typed code:
 
@@ -34,12 +37,15 @@ function foo(x: string, y: number): string {
 foo('Hello', 42);
 {% endhighlight %}
 
-{% highlight text %}
+```bash
 $> flow
+```
+
+```bbcode
 hello.js:3:10,21: number
 This type is incompatible with
   hello.js:2:37,42: string
-{% endhighlight %}
+```
 
 Typed Flow code easily transforms down to regular Javascript, so it runs anywhere.
 

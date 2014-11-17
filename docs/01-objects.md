@@ -24,7 +24,7 @@ initialized with a `number`. The method call `foo()` on the object writes
 `string` to that property. As expected, running Flow produces the following
 error:
 
-```
+```bbcode
 File "example.js", line 6, characters 7-13:
 string
 is incompatible with
@@ -34,7 +34,7 @@ number
 
 ## Constructor Functions and Prototype Objects
 
-Another way of creating objects in JavaScript is by using `new` on 
+Another way of creating objects in JavaScript is by using `new` on
 constructor functions. A constructor function is typically an open method
 that "initializes" some properties of `this`; and a `new` operation on such a
 function calls it on a freshly created object before returning it.
