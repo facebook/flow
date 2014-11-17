@@ -65,3 +65,5 @@ that it could be `number`, in which case it would be incompatible with the
 When an array is exported, its element type must be specified. This effectively "seals" the element type.
 
 ## TODO: Tuples
+
+TODO: (NOTES: big arrays are arrays, empty arrays are arrays, but small arrays length (1-8) are tuples. Their type can be expressed by the syntax [<type1>, <type2>, ...]. You can use number indexes to get back exact types for particular positions in tuples. This is a very useful idiom.)
