@@ -150,6 +150,7 @@ code {
     background-color: hsla(8, 75%, 54%, 0.1);
 }
 
+.highlight + .highlight + .highlight,
 .highlighttable + .highlight + .highlight {
     margin-top: -20px;
 }
