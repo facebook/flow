@@ -256,6 +256,7 @@ type context = {
   file: string;
   _module: string;
   mutable checked: bool;
+  mutable weak: bool;
   mutable required: SSet.t;
   mutable require_loc: Spider_monkey_ast.Loc.t SMap.t;
 

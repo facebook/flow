@@ -1,7 +1,7 @@
 type modes = {
   mutable debug: bool;
   mutable all: bool;
-  mutable weak: bool;
+  mutable weak_by_default: bool;
   mutable traces_enabled: bool;
   mutable newtraces_enabled: bool;
   mutable strict: bool;
@@ -14,7 +14,7 @@ type modes = {
 let modes = {
   debug = false;
   all = false;
-  weak = false;
+  weak_by_default = false;
   traces_enabled = false;
   newtraces_enabled = false;
   strict = false;

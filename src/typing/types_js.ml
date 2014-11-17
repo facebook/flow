@@ -55,7 +55,7 @@ type options = {
 let init_modes opts =
   modes.debug <- opts.opt_debug;
   modes.all <- opts.opt_all;
-  modes.weak <- opts.opt_weak;
+  modes.weak_by_default <- opts.opt_weak;
   modes.traces_enabled <- opts.opt_traces;
   modes.newtraces_enabled <- opts.opt_newtraces;
   modes.strict <- opts.opt_strict;

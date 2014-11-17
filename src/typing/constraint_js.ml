@@ -481,6 +481,7 @@ type context = {
   file: string;
   _module: string;
   mutable checked: bool;
+  mutable weak: bool;
   mutable required: SSet.t;
   mutable require_loc: Ast.Loc.t SMap.t;
 
@@ -503,6 +504,7 @@ let new_context file _module = {
   file = file;
   _module = _module;
   checked = false;
+  weak = false;
   required = SSet.empty;
   require_loc = SMap.empty;
 

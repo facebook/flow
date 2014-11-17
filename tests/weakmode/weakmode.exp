@@ -1,0 +1,6 @@
+
+should_fail_without_weak.js:5:10,16: string
+This type is incompatible with
+  should_fail_without_weak.js:9:10,32: number
+
+Found 1 errors

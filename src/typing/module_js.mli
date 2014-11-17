@@ -25,7 +25,9 @@ type info = {
   checked: bool;            (* in flow? *)
 }
 
-val parse_flow: Spider_monkey_ast.Comment.t list -> bool
+type mode = ModuleMode_Checked | ModuleMode_Weak | ModuleMode_Unchecked
+
+val parse_flow: Spider_monkey_ast.Comment.t list -> mode
 
 (* initialize to a module system, given the name of the module system *)
 val init: string -> unit

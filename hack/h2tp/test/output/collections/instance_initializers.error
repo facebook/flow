@@ -1,0 +1,3 @@
+Conversion Error:
+File "$filename/instance_initializers.php", line 6, characters 12-13:
+Collection initializers in instance variables are currently not supported. (Other[0])

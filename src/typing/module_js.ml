@@ -25,6 +25,8 @@ type info = {
   checked: bool;            (* in flow? *)
 }
 
+type mode = ModuleMode_Checked | ModuleMode_Weak | ModuleMode_Unchecked
+
 (****************** shared dependency map *********************)
 
 (* map from module name to filename *)
@@ -55,13 +57,14 @@ let parse_header f default = Ast.Comment.(function
 
 (****************** @flow parser *********************)
 
-let rec parse_attributes_flow default_check = function
-    | "@flow" :: _ -> true
-    | _ :: xs -> parse_attributes_flow default_check xs
-    | [] -> default_check
+let rec parse_attributes_flow default_mode = function
+    | "@flow" :: "weak" :: _ -> ModuleMode_Weak
+    | "@flow" :: _ -> ModuleMode_Checked
+    | _ :: xs -> parse_attributes_flow default_mode xs
+    | [] -> default_mode
 
 let parse_flow comments =
-  parse_header parse_attributes_flow false comments
+  parse_header parse_attributes_flow ModuleMode_Unchecked comments
 
 (** module systems **)
 

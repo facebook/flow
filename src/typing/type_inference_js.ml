@@ -587,7 +587,7 @@ and mk_type cx reason = mk_type_ cx SMap.empty reason
 and mk_type_ cx map reason = function
   | None ->
       let t =
-        if modes.weak
+        if cx.weak
         then AnyT.why reason
         else Flow_js.mk_tvar cx reason
       in
@@ -3831,12 +3831,24 @@ let infer_ast ast file m force_check =
 
   let (loc, statements, comments) = ast in
 
-  let check = force_check || Module_js.parse_flow comments in
+  let mode = Module_js.parse_flow comments in
+
+  let check = (match mode with
+    | Module_js.ModuleMode_Unchecked -> force_check
+    | _ -> true
+  ) in
+
+  let weak = (match mode with
+    | Module_js.ModuleMode_Weak -> true
+    | _ -> modes.weak_by_default
+  ) in
 
   let cx = new_context file m in
 
   (* add types for pervasive builtins *)
   add_builtins cx;
+
+  cx.weak <- weak;
 
   let reason_exports_module = reason_of_string (spf "exports of module %s" m) in
   let block = ref
