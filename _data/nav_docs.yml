@@ -38,12 +38,10 @@
     title: Classes
   - id: objects
     title: Objects
-  - id: nullable-types
-    title: Nullable Types
-  - id: primitives
-    title: Primitives
   - id: functions
     title: Functions
+  - id: nullable-types
+    title: Nullable Types
   - id: union-intersection-types
     title: Union and Intersection Types
   - id: type-aliases
@@ -52,5 +50,7 @@
     title: Operators
   - id: dynamic-type-tests
     title: Dynamic Type Tests
+  - id: primitives
+    title: Primitives
   - id: declarations
     title: Declarations
