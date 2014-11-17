@@ -20,12 +20,9 @@ body {
     color: #444;
     margin: 0;
     padding-top: 50px;
-}
-
-p {
     line-height: 22px;
-}
 
+}
 
 h1, h2, h3, h4 {
     font-weight: normal;
