@@ -19,7 +19,7 @@ The workflow for dealing with library code is:
 * Add one or more interface files for your libraries in a special directory in your project - for example `interfaces`
 * Point Flow at those interface files by starting it with `flow start --lib  <path to your interface files>`
 
-It is possible to write interface files yourself, but fortunately that is rarely necessary. [DefinitelyTyped](http://definitelytyped.org/) provides TypeScript definition files for many open-source libraries, and Flow can convert those definition files to Flow interface files using the `flow convert` command. 
+It is possible to write interface files yourself, but fortunately that is rarely necessary. [DefinitelyTyped](http://definitelytyped.org/) provides TypeScript definition files for many open-source libraries, and Flow can convert those definition files to Flow interface files using the `flow convert` command.
 
 ## Example
 
@@ -29,10 +29,10 @@ To illustrate this workflow, we'll pick the [*Underscore*](http://underscorejs.o
 /* @flow */
 
 var pizzas = [
-  { title: "Margherita", vegetarian: true },
-  { title: "Pepperoni", vegetarian: false },
-  { title: "Four cheese", vegetarian: true },
-  { title: "Hawaiian", vegetarian: false },
+  { title: 'Margherita', vegetarian: true },
+  { title: 'Pepperoni', vegetarian: false },
+  { title: 'Four cheese', vegetarian: true },
+  { title: 'Hawaiian', vegetarian: false },
 ];
 
 function vegetarianPizzas() {
@@ -51,11 +51,11 @@ This is because Flow doesn't know anything about the `_` variable. To fix this w
 We can now use `flow convert` to turn it into a Flow interface file:
 
 ```bash
-cd flow/examples/dependencies
-mkdir interfaces
-cd interfaces
+$> cd flow/examples/dependencies
+$> mkdir interfaces
+$> cd interfaces
 # Download underscore.d.ts here
-flow convert underscore.d.ts
+$> flow convert underscore.d.ts
 # This creates a file called underscore.js
 # You can now delete underscore.d.ts
 ```
@@ -63,7 +63,7 @@ flow convert underscore.d.ts
 This takes a TypeScript definition file and creates a Flow interface file from it. The next step is to tell Flow where our interface files are located, by calling it with the `--lib` option:
 
 ```bash
-flow --lib interfaces
+$> flow --lib interfaces
 ```
 
 TODO
