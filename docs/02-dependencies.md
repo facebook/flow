@@ -58,7 +58,7 @@ Found 0 errors
 
 If you modify the code you can verify that it's being checked against this interface file - errors in the use of this very small slice of Underscore would be caught.
 
-## Generating Interface Files
+## Experimental: Generating Interface Files
 
 > NOTE
 >
