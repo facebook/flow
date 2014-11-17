@@ -24,7 +24,7 @@ This type is incompatible with
   01_HelloWorld/hello.js:4:10,13: number
 ```
 
-Looking at the example itself it's easy to see why:
+Looking at the `hello.js` example file, it's easy to see why:
 
 {% highlight javascript linenos=table %}
 /* @flow */
@@ -36,7 +36,7 @@ function foo(x) {
 foo('Hello, world!');
 {% endhighlight %}
 
-We're calling a function that clearly expects a number with a string. Flow detects that and returns an error. To fix this example, you can call `foo` with an integer instead. Running `flow check` should no longer find an error. A possible fix is in the `answer` directory:
+We're calling a function that clearly expects a number with a string. Flow detects that and returns an error. One fix for this example would be to call `foo` with an integer instead: 
 
 {% highlight javascript linenos=table %}
 /* @flow */
@@ -49,7 +49,7 @@ function foo(x) {
 foo(10);
 {% endhighlight %}
 
-Throughout this tutorial, you will find solutions in the `answer` directory each time.
+Throughout this tutorial, you will find solutions for each example in the example's `answer` directory.
 
 You may have noticed this header line in the example file:
 
@@ -57,11 +57,11 @@ You may have noticed this header line in the example file:
 /* @flow */
 {% endhighlight %}
 
-This is important: it tells Flow that this file should be typechecked. Flow will ignore any files that don't have this header, so you can start converting your project one file at a time.
+This is important: it tells Flow that this file should be typechecked. Flow will ignore any files that don't have this header. This allows you to convert and/or type-check a JS project one file at a time.
 
 ## 2. Adding type annotations
 
-Flow infers type within a file, so you don't have to annotate every function to get typechecking. However you can always add annotations, and in fact Flow requires them for functions that are exported (defined in one file and used in another).
+Flow can infer the type of most things within a file, so you don't always have to annotate every function and variable to get typechecking. However, even if Flow can infer a type, you can still add annotations to be explicit. In fact, Flow requires that you add type annotations for functions that are exported from a module (defined in one file and used in another).
 
 The second example (`02_TypeAnnotations`) shows basic type annotations in Flow:
 
@@ -83,7 +83,7 @@ This type is incompatible with
   02_TypeAnnotations/type_annotations.js:3:37,42: string
 ```
 
-In this case it is the return type of `foo` that is wrong - we've declared it to be a `string` even though the function is returning a `number`. Flow flags that, and you can fix it by changing the return type:
+In this case it is the return type of `foo` that is wrong - we've declared it to be a `string` even though the function is actually returning a `number`. Flow flags that, and you can fix it by changing the return type:
 
 {% highlight javascript linenos=table %}
 /* @flow */
@@ -98,7 +98,7 @@ foo('Hello', 42);
 
 ## 3. Nullable types
 
-Flow handles `null` differently than most type systems. Most type systems ignore `null`, meaning that your program can be type correct but crash because they access `null`. In Flow, doing this is an error, as shown by our third example (`03_Null`):
+Flow handles `null` differently than most type systems - which ignore `null`. When a type system ignores `null`, that means your program can type check as correct but still crash when `null` is accessed in an unsafe way. In Flow, doing this is an error as shown by our third example (`03_Null`):
 
 {% highlight javascript linenos=table %}
 /* @flow */
