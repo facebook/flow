@@ -196,6 +196,12 @@ caught during development time.
 
 ### Missing Parameters
 
+{% highlight javascript linenos=table %}
+ChatWebAPIUtils.createMessage(message);
+// ...
+createMessage: function(message: Message, optThreadName: string) {
+{% endhighlight %}
+
 ```bbcode
 js/actions/ChatMessageActionCreators.js:30:5,42: call of method createMessage
 Too few arguments
