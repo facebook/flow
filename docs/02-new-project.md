@@ -21,11 +21,13 @@ This works but is not the most efficient way to use Flow. As you're changing fil
 ```bash
 $> flow start   # This starts a server and returns
 
-$> flow status  # This will list all current type errors
+$> flow         # This will list all current type errors
 
 ... <change some files> ...
 
-$> flow status  # List all type errors with your latest changes
+$> flow          # List all type errors with your latest changes
+
+$> flow stop     # When you are done, you can stop the server
 ```
 
 ## Typechecking your files
