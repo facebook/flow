@@ -10,7 +10,7 @@
 html {
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
-    background-color: #FFF9F5;
+    background-color: #EEE;
 }
 
 body {
@@ -167,14 +167,14 @@ ul, ol {
 
 a {
     text-decoration: none;
-    color: #C7590F;
+    color: #CC2E39;
 }
 
 nav.toc a {
     color: #444;
 }
 nav.toc a.active {
-    color: #C7590F;
+    color: #CC2E39;
 }
 
 a.hash-link {
@@ -182,7 +182,7 @@ a.hash-link {
 }
 
 a.hash-link:hover {
-    color: #bb2910;
+    color: #CC2E39;
 }
 
 .width {
@@ -201,8 +201,8 @@ header:after, section.content:after, footer:after {
 }
 
 header.topbar {
-    background: #3B3738;
-    color: #FAFAFA;
+    background: #353331;
+    color: #EEE;
     position: fixed;
     top: 0;
     height: 50px;
@@ -245,18 +245,22 @@ header.topbar nav ul li a {
     line-height: 50px;
     display: inline-block;
     height: 50px;
-    color: #AAA;
+    color: #EEE;
     font-size: 15px;
 }
 
 header.topbar nav ul li a.active {
-    color: #FAFAFA;
-    border-bottom: 3px solid #D68B00;
+    color: #FFF;
+    border-bottom: 3px solid #FBE178;
     background: #333;
 }
 
+header.topbar nav ul li a:hover {
+    background: #FBE178;
+    color: #353331;
+}
+
 header.hero {
-    background: #FFEAD1;
     padding: 20px 0;
 }
 
@@ -278,7 +282,7 @@ header.hero p {
 }
 
 header.hero a.button {
-    background: rgb(214, 139, 0);
+    background: #CC2E39;
     color: #ffffff;
     font-weight: bold;
     text-transform: uppercase;
