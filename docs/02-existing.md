@@ -13,7 +13,7 @@ Making existing code typecheck with Flow is not for the faint of heart - and mos
 
 Why is typechecking existing code so hard? Libraries not written with types in mind often contain complex, highly dynamic code that confuse analyses such as Flow. The code may also have been written in a style that Flow deliberately chooses not to support in order to give the programmer more help. Some typical examples are:
 
-* Operations on primitive values: while Javascript allows operations such as `true + 3`, Flow considers it a type error. This is by design, and is done to provide the programmer with more safety. While that's easily avoided for new code, it can be a lot of effort to eliminate such patterns from existing code.
+* Operations on primitive values: while JavaScript allows operations such as `true + 3`, Flow considers it a type error. This is by design, and is done to provide the programmer with more safety. While that's easily avoided for new code, it can be a lot of effort to eliminate such patterns from existing code.
 * Nullability: Flow protects you against accessing properties on `null` by tracking null or undefined values throughout the program. In large existing codebases though this can require inserting some extra null checks in places where a value appears null but isn't at runtime.
 
 It is typically a much larger effort, and requires much more programmer annotation, to get such code to typecheck. On the other hand, if you own a library and would like to benefit from Flow typechecking within the library itself, this guide is for you.

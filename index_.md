@@ -7,7 +7,7 @@ hero: true
 
 ##What is Flow?
 
-Flow is a static type checker for Javascript. It is designed to find type errors in existing Javascript programs:
+Flow is a static type checker for JavaScript. It is designed to find type errors in existing JavaScript programs:
 
 {% highlight javascript linenos %}
 /* @flow */
@@ -26,7 +26,7 @@ This type is incompatible with
   hello.js:3:10,15: number
 ```
 
-Flow also lets you gradually evolve Javascript code into typed code:
+Flow also lets you gradually evolve JavaScript code into typed code:
 
 {% highlight javascript linenos %}
 /* @flow */
@@ -46,11 +46,11 @@ This type is incompatible with
   hello.js:2:37,42: string
 ```
 
-Typed Flow code easily transforms down to regular Javascript, so it runs anywhere.
+Typed Flow code easily transforms down to regular JavaScript, so it runs anywhere.
 
 ##Why Flow?
 
-The goal of Flow is to find errors in Javascript code with little programmer effort. Flow relies heavily on <strong>type inference</strong> to find type errors even when the program has not been annotated - it precisely tracks the types of variables as they flow through the program.
+The goal of Flow is to find errors in JavaScript code with little programmer effort. Flow relies heavily on <strong>type inference</strong> to find type errors even when the program has not been annotated - it precisely tracks the types of variables as they flow through the program.
 
 At the same time, Flow is a <strong>gradual</strong> type system. Any parts of your program that are dynamic in nature can easily bypass the type checker, so you can mix statically typed code with dynamic code.
 
@@ -64,4 +64,4 @@ We first introduced Flow at the <a href="https://www.facebook.com/atscale2014">@
 
 Start with our <a href="/docs/getting-started.html">Getting Started</a> guide to download and try Flow yourself. Flow is open-source, so you can also start with the code on the <a href="https://github.com/facebook/flow">GitHub repo</a>.
 
-Flow is still evolving: it is already used within Facebook, and we want to continue develop it in the open. We hope it will be useful for other Javascript projects, so please try it out, join the community and give us feedback!
+Flow is still evolving: it is already used within Facebook, and we want to continue develop it in the open. We hope it will be useful for other JavaScript projects, so please try it out, join the community and give us feedback!

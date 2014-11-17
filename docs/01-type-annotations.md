@@ -7,7 +7,7 @@ prev: underscore.html
 next: base-types.html
 ---
 
-Javascript is inherently a dynamically-typed language. As such, explicitly
+JavaScript is inherently a dynamically-typed language. As such, explicitly
 typing your code is not part of the JavaScript lexicon. This is normal
 JavaScript code:
 
