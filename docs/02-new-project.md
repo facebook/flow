@@ -46,7 +46,7 @@ $> flow         # This will list all current type errors
 And once you've changed some files, you can quickly run it again:
 
 ```bash
-$> flow status  # List all type errors with your latest changes
+$> flow         # List all type errors with your latest changes
 ```
 
 This reduces the overhead of starting up the check each time and allows for a much faster incremental workflow - not to mention a better integration with IDEs and other tools.
