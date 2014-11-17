@@ -64,7 +64,7 @@ var MessageSection = require('./MessageSection.react');
 ### Flow Server
 
 After all files have been annotated with `@flow`, we are ready to start our 
-Flow server which watches over the now Flow-aware Javascript files and any 
+Flow server which watches over the now Flow-aware JavaScript files and any 
 changes to them. From the root directory (i.e., the one with the 
 `.flowconfig` file)
 
