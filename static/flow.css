@@ -26,6 +26,7 @@ h1, h2, h3, h4 {
     font-weight: normal;
     margin: 1.3em 0 0.2em;
     line-height: 1.4em;
+    position: relative;
 }
 
 h1:first-child, h2:first-child, h3:first-child, h4:first-child {
@@ -411,6 +412,21 @@ div.CodeMirror-lines {
 
 #\_ {
     display: none;
+}
+
+.hash {
+    margin-left: 3px;
+    visibility: hidden;
+}
+
+*:hover > .hash {
+    visibility: visible;
+}
+
+.hashref {
+    position: absolute;
+    top: -60px;
+    left: 0;
 }
 
 /* desktopish */
