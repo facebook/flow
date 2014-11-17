@@ -103,6 +103,12 @@ As you will see, the
 [list of errors](https://gist.github.com/JoelMarcey/8817aff7637cec1024a3)
 has been reduced.
 
+```bash
+$> flow
+Found 32 errors
+```
+
+
 ## Annotating Module Exports
 
 Flow requires the annotation of objects that a module exports. Forcing these
@@ -129,15 +135,24 @@ If you now look at the current
 [list of errors](https://gist.github.com/JoelMarcey/a41d15d5b8c72b73c23a)
 , you will notice some relating to our test file `UnreadThreadStore-test.js`.
 For now, we are going to only
-[weakly check the test file using `@flow-weak`](https://github.com/facebook/flow/commit/297d371662106d118b5798cc013f1da2cf8aec3d)
-.
+[weakly check the test file using `@flow-weak`](https://github.com/facebook/flow/commit/297d371662106d118b5798cc013f1da2cf8aec3d).
 
-### Less Errors
+{% highlight javascript linenos=table %}
+/**
+ * @flow weak
+ */
+{% endhighlight %}
 
 After this module annotation step, the
 [list of errors](https://gist.github.com/JoelMarcey/96b64f42860dd60227fc)
 will be much more manageable, and, more importantly, will be the errors we
 actually care about with respect to types in our React project.
+
+```bash
+$> flow
+Found 11 errors
+```
+
 
 ## The Real Work
 
@@ -168,6 +183,12 @@ This is one of those errors that will cause us pain at runtime. Since Flow finds
 The fix is to copy the `removeChangeListener` implementation of one
 of the two other store implementations.
 
+{% highlight javascript linenos=table %}
+removeChangeListener: function(callback) {
+  this.removeListener(CHANGE_EVENT, callback);
+},
+{% endhighlight %}
+
 Interestingly enough, this error was actually [caught before the release
 of Flow](https://github.com/facebook/flux/commit/f828ecae10cdf15ed1ba2fd1210dcf671365bbe4)
 ; however, with Flow, this mistake need not be made again as it will be
@@ -185,8 +206,14 @@ In vanilla JavaScript, missing parameters are undefined. This can lead to
 unexpected behavior or crashes. Flow will not allow code to skip parameters
 unless they are specifically marked as optional with `?`. In this case, we
 have
-[one instance that requires optional](https://github.com/facebook/flow/commit/3a86ad46132907ab2f5320a5e162f2e1fcfcb9a8)
-.
+[one instance that requires optional](https://github.com/facebook/flow/commit/3a86ad46132907ab2f5320a5e162f2e1fcfcb9a8).
+
+
+{% highlight javascript linenos=table %}
+createMessage: function(message: Message, optThreadName?: string) {
+  var threadName = optThreadName || 'New Conversation';
+{% endhighlight %}
+
 
 ### Property Use
 
@@ -228,9 +255,9 @@ message: ReactPropTypes.shape({
 {% endhighlight %}
 
 If you are familiar with React, you might be under the impression that React
-will be able to check this too. However, React does this at //runtime//, and
-only in development mode. Flow will catch these errors at //development
-time//.  As a result, if some client would do something like
+will be able to check this too. However, React does this at *runtime*, and
+only in development mode. Flow will catch these errors at *development
+time*.  As a result, if some client would do something like
 `<MessageListItem />`, Flow will discover the missing message property when checking your source. By using `shape` flow will also assure that all
 properties of `message` are actually specified. Thankfully, our example
 code always passed a correct message property.
