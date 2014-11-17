@@ -154,11 +154,3 @@ has an interesting effect: since type signatures reflect the truth about
 implementations, it often turns out that a set of overloaded signatures can be
 simplified to a single signature using a union type for some parameters.
 
-## Recursive Union Types
-
-Flow does not yet understand recursive union types, i.e., the "cases" of a
-union type cannot refer back to the union type. Recursive union types can be
-used to succinctly model recursive data structures such as lists and trees,
-which are quite useful to describe things like queries, UI nodes, etc. It
-shouldn't be too hard to add this feature to Flow if there is enough demand
-for it.
