@@ -4,6 +4,8 @@
     title: About Flow
   - id: getting-started
     title: Getting started with Flow
+  - id: five-simple-examples
+    title: Five simple examples
 - title: User Guide
   items:
   - id: new-project
@@ -21,7 +23,7 @@
   - id: react-example
     title: A Flux & React demo
   - id: underscore
-    title: Using Flow with Underscore
+    title: Flow, meet Underscore
 - title: Language Reference
   items:
   - id: type-annotations

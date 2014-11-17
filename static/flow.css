@@ -50,7 +50,7 @@ h4 {
     font-size: 1.1em;
 }
 
-p, ul {
+p, ul, ol {
     margin:  0 0 1em 0;
 }
 
@@ -118,7 +118,7 @@ code {
 }
 
 
-ul {
+ul, ol {
  list-style-position: outside;
  margin-left: 1em;
  padding-left: 1em;
@@ -257,8 +257,9 @@ section.content {
     padding: 20px 0;
 }
 
-section.content article ul li {
-  margin-bottom: 1em;
+section.content article ul li,
+section.content article ol li {
+  margin-bottom: 0.5em;
 }
 
 

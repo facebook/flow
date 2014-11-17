@@ -1,6 +1,6 @@
 ---
 id: underscore
-title: Using Flow with Underscore
+title: Flow, meet Underscore
 layout: docs
 permalink: /docs/underscore.html
 prev: react-example.html

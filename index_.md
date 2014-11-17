@@ -20,7 +20,6 @@ foo('Hello, world!');
 ```bash
 $> flow
 ```
-
 ```bbcode
 hello.js:5:5,19: string
 This type is incompatible with
@@ -66,4 +65,3 @@ We first introduced Flow at the <a href="https://www.facebook.com/atscale2014">@
 Start with our <a href="/docs/getting-started.html">Getting Started</a> guide to download and try Flow yourself. Flow is open-source, so you can also start with the code on the <a href="https://github.com/facebook/flow">GitHub repo</a>.
 
 Flow is still evolving: it is already used within Facebook, and we want to continue develop it in the open. We hope it will be useful for other Javascript projects, so please try it out, join the community and give us feedback!
-

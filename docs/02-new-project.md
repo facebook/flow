@@ -3,7 +3,7 @@ id: new-project
 title: Starting a new Flow project
 layout: docs
 permalink: /docs/new-project.html
-prev: getting-started.html
+prev: five-simple-examples.html
 next: existing.html
 ---
 
