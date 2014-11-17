@@ -4,7 +4,7 @@ title: Using external dependencies
 layout: docs
 permalink: /docs/dependencies.html
 prev: new-project.html
-next: library.html
+next: react-example.html
 ---
 
 Most real JavaScript programs depend on third-party libraries. This guide shows how to use Flow in a project with external dependencies, without having to typecheck library code.
