@@ -10,6 +10,8 @@
     title: Running Flow on a new project
   - id: dependencies
     title: External dependencies
+  - id: react-example
+    title: An example using React
   - id: library
     title: Running Flow on a library
   - id: transpiler
