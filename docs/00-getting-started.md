@@ -216,7 +216,7 @@ Property not found in
   /lib/core.js:50:1,62:1: Number
 ```
 
-One fix is to simply detect what the type is at run time. And Flow will detect that is the case:
+One fix is to simply detect what the type is within the function. Flow is able to detect that this will avoid any potential failures at run time, and will give you a clean bill of health:
 
 {% highlight javascript linenos %}
 /* @flow */
