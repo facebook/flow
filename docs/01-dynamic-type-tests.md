@@ -22,7 +22,7 @@ predicates are:
 
 For example, the following code typechecks:
 
-```javascript
+{% highlight javascript linenos=table %}
 /* @flow */
 function foo(b) { if (b) { return 21; } else { return ''; } }
 function bar(b): number {
@@ -31,7 +31,7 @@ function bar(b): number {
   if (typeof x == 'number' && typeof y == 'number') { return x + y; }
   return 0;
 }
-```
+{% endhighlight %}
 
 In this code, the return type of `foo` can be `number` or `string`.
 However, the use of `+` is guaranteed to return `number` since both of its

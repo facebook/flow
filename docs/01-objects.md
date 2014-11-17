@@ -10,14 +10,14 @@ next: nullable-types.html
 Objects can be created with object literals. The types of properties are fixed
 based on their initializers.
 
-```javascript
+{% highlight javascript linenos=table %}
 /* @flow */
 var o = {
   x: 42,
   foo(x) { this.x = x; }
 };
 o.foo('hello');
-```
+{% endhighlight %}
 
 Flow infers the type of property `x` of the object to be number since it is
 initialized with a `number`. The method call `foo()` on the object writes
@@ -42,14 +42,14 @@ Additionally, a constructor function may set various properties on its
 by all objects created from that constructor function by a process known as
 prototype chaining.
 
-```javascript
+{% highlight javascript linenos=table %}
 /* @flow */
 function Foo(x) { this.x = x; }
 Foo.prototype.f = function() { return this.x; }
 
 var o = new Foo(42);
 var x: number = o.f();
-```
+{% endhighlight %}
 
 In this code, a `new` object is created by `new Foo(42)`; this object has a
 property `x` initialized by `Foo` with the `number` passed to it. The object
@@ -61,10 +61,10 @@ Furthermore, Flow ensures that an object's type can always be viewed as a
 subtype of its constructor's `prototype type`. (This is analogous to subtyping
 based on class inheritance.) This means that the following code typechecks:
 
-```javascript
+{% highlight javascript linenos=table %}
 ...
 var o: Foo = new Foo(42);
-```
+{% endhighlight %}
 
 ## Adding properties
 
@@ -87,7 +87,7 @@ analysis is heap-insensitive for strong updates).
 
 For example, the following code typechecks:
 
-```javascript
+{% highlight javascript linenos=table %}
 /* @flow */
 function foo(p) { p.x = 42; }
 function bar(q) { q.f(); }
@@ -96,14 +96,14 @@ var o = { f() { return this.x; } };
 
 bar(o);
 foo(o);
-```
+{% endhighlight %}
 
 In this code, when `bar(o)` is called, `o.x` is undefined; only later is it
 initialized by `foo(o)`, but it is hard to track this fact statically.
 
 Fortunately, though, the following code does not typecheck:
 
-```javascript
+{% highlight javascript linenos=table %}
 /* @flow */
 function foo(p) { p.x = 42; }
 function bar(q) { q.f(); }
@@ -112,7 +112,7 @@ var o = { f() { return this.x; } };
 
 foo(o);
 var x: string = bar(o);
-```
+{% endhighlight %}
 
 ```bbcode
 file.js:3:16,16: undefined

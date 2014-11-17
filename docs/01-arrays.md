@@ -12,11 +12,11 @@ the type `Array<T>` describes arrays whose elements are of type `T`.
 
 ## Type Annotating Arrays
 
-```javascript
+{% highlight javascript linenos=table %}
 /* @flow */
 var a = [1, 2, 3];
 var b: Array<number> = a.map(function(x) { return x + 1; });
-```
+{% endhighlight %}
 
 In this code, we create an array with the literal `[1, 2, 3]`, and call a method map on it, getting another array whose type we annotate as `Array<number>`.
 
@@ -28,7 +28,7 @@ classes, array types are invariant in their element types.
 
 For example:
 
-```javascript
+{% highlight javascript linenos=table %}
 /* @flow */
 var a = [];
 for (var i = 0; i < 10; ++i) {
@@ -40,7 +40,7 @@ for (var i = 0; i < 10; ++i) {
 }
 
 function foo(i): string { return a[i]; }
-```
+{% endhighlight %}
 
 Running Flow produces the following error:
 

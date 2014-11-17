@@ -13,7 +13,7 @@ Classes were introduced in JavaScript (ES6) to formalize the common practice of 
 
 A class may be defined using ES6 syntax extended with field type declarations.
 
-```javascript
+{% highlight javascript linenos=table %}
 /* @flow */
 class C {
   x: number;
@@ -29,7 +29,7 @@ class D extends C {
 
   static qux() { return new D(); }
 }
-```
+{% endhighlight %}
 
 In the code above, `C` has a field `x` typed number, and a few methods; `D` overrides one of those methods, and also has a static method.
 
@@ -38,10 +38,10 @@ overridden method in a superclass (e.g., `bar` in `C`) matches the type of an
 overriding method (e.g., `bar` in `D`). This ensures that subclassing implies
 subtyping, i.e., the following code type checks:
 
-```javascript
+{% highlight javascript linenos=table %}
 ...
 var c: C = new D();
-```
+{% endhighlight %}
 
 ## Propagation
 
@@ -49,12 +49,12 @@ Types are propagated through method calls and field accesses. For example,
 based on the example above, the following does not typecheck:
 
 
-```javascript
+{% highlight javascript linenos=table %}
 ...
 var c: C = D.qux();
 c.foo(0);
 var x: string = c.bar();
-```
+{% endhighlight %}
 
 ```bbcode
 file.js:3:6,11: number
@@ -73,7 +73,7 @@ its methods with types.
 
 Taking the above example:
 
-```javascript
+{% highlight javascript linenos=table %}
 /* @flow */
 class C {
   x: number;
@@ -91,7 +91,7 @@ class D extends C {
 }
 module.exports.C = C;
 module.exports.D = D;
-```
+{% endhighlight %}
 
 ## Polymorphic classes
 
@@ -101,7 +101,7 @@ type parameters.
 
 Consider a polymorphic version of the class above:
 
-```javascript
+{% highlight javascript linenos=table %}
 /* @flow */
 class C<X> {
   x: X;
@@ -119,7 +119,7 @@ class D extends C<number> {
 
 module.exports.C = C;
 module.exports.D = D;
-```
+{% endhighlight %}
 
 The class `C` is polymorphic in the type parameter `X`. Flow checks that the
 type signatures for its methods `foo()` and `bar()`, which refer to `X`, are

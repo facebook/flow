@@ -11,11 +11,11 @@ Functions are ubiquitous in JavaScript. As expected, Flow propagates types throu
 
 ## Type Annotating Functions
 
-```javascript
+{% highlight javascript linenos=table %}
 /* @flow */
 function foo(x: string): string { return x; }
 var x: number = foo('');
-```
+{% endhighlight %}
 
 Running Flow produces the following error:
 
@@ -33,12 +33,12 @@ properties: the `this` parameter is bound to whatever object the method is
 called on. Flow understands such behavior and propagates types through `this`
 as well. For example, the following code does not typecheck:
 
-```javascript
+{% highlight javascript linenos=table %}
 /* @flow */
 function foo(x) { return this.x; }
 var o = { x: 42, f: foo };
 var x: string = o.f();
-```
+{% endhighlight %}
 
 ```bbcode
 file.js:3:14,15: number
@@ -56,13 +56,13 @@ Too few arguments (expected default/rest parameters in function)
 Functions can take optional and rest parameters, and calls to such functions
 are checked as expected. For example, the following code typechecks:
 
-```javascript
+{% highlight javascript linenos=table %}
 /* @flow */
 function foo(x, y = false) { }
 function bar(z, ...w) { }
 foo(0);
 bar('h', 'e', 'l', 'l', 'o');
-```
+{% endhighlight %}
 
 Calls are matched against function signatures following the usual rules of
 argument matching while taking into account optional/rest parameters.
@@ -97,24 +97,24 @@ their types annotated inline, as seen above. For example, we may have:
 ## Polymorphic functions
 Functions can be polymorphic, just like polymorphic classes.
 
-```javascript
+{% highlight javascript linenos=table %}
 /* @flow */
 function foo<X>(x: X): X { return x; }
 
 var x: number = foo(0);
 var y: string = foo('');
-```
+{% endhighlight %}
 
 Furthermore, you may have polymorphic methods in polymorphic classes. For
 example, you may define a List class with a map method:
 
-```javascript
+{% highlight javascript linenos=table %}
 /* @flow */
 class List<T> {
   ...
   map<U>(f: (x: T) => U): List<U> { ... }
 }
-```
+{% endhighlight %}
 
 This means that for every instantiation of `T`, there is a polymorphic method
 for objects of type `List<T>` that, for any instantiation of `U`, takes a

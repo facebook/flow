@@ -13,9 +13,9 @@ next: react-example.html
 
 These errors are due to global references in your code, and possibly also due to typos. If the former, you can declare them if you know that they are going to be available when you run the code.
 
-```javascript
+{% highlight javascript linenos=table %}
 declare var foo: <type>
-```
+{% endhighlight %}
 
 Alternatively, if you want to have a common set of global declarations so that they are available to multiple files at once, create a directory (say `globals_lib`), put a file in there (say `globals.js`), and do the declaration there. Then rerun Flow with option `--lib globals_lib` so that Flow knows where to find them.
 
@@ -23,19 +23,19 @@ Alternatively, if you want to have a common set of global declarations so that t
 
 These errors are due to `require(...)` statements in your code that don't resolve to the set of modules exported by files under `<root>`. To specify additional code directories to Flow, add the following lines to `.flowconfig` under `<root>`.
 
-```javascript
+```
 [include]
-<path1>
-<path2>
+../node_modules/
+../lib/
 ```
 
 Alternatively, you may not have the code available for those modules, or otherwise want to specify declarations for them. In that case, put another file under `globals_lib` (say `modules.js`), and declare the module interface there.
 
-```javascript
+{% highlight javascript linenos=table %}
 declare module Bar {
   ...
 }
-```
+{% endhighlight %}
 
 If you don't know what the module interface should be, you can try to find it at [DefinitelyTyped](https://github.com/borisyankov/DefinitelyTyped), which hosts a bunch of TypeScript interface declarations for popular modules, and try to run it through our convertion tool **[TODO]**.
 
@@ -47,18 +47,18 @@ Flow considers types to be incompatible with `null` / `undefined` in general (th
 
 The general way to get around this problem is to store the value in a local variable, and guard the operation with a dynamic check on the local variable.
 
-```javascript
+{% highlight javascript linenos=table %}
 // var result = foo().bar
 var x = foo();
 var result = x != null ? x.bar : ...
-```
+{% endhighlight %}
 
 You can try other variations of this basic pattern.
 
-```javascript
+{% highlight javascript linenos=table %}
 // foo.bar()
 foo && foo.bar()
-```
+{% endhighlight %}
 
 ### Function call with too few arguments
 
@@ -66,30 +66,30 @@ In JavaScript, function calls can pass too many or too few arguments: additional
 
 The usual way to fix these errors is to add optional parameter markers to the function being called.
 
-```javascript
+{% highlight javascript linenos=table %}
 function foo(x?) { ... }
 foo();
-```
+{% endhighlight %}
 
 Doing this might shift the problem to the function definition, where `x` now has a maybe type. So operations on `x` may require to be guarded by dynamic checks.
 
-```javascript
+{% highlight javascript linenos=table %}
 function foo(x?) {
   if (x != undefined) {
     // operation on x
   }
 }
 foo();
-```
+{% endhighlight %}
 
 Alternatively, we may provide a default value to `x`, in which case the dynamic check is not required.
 
-```javascript
+{% highlight javascript linenos=table %}
 function foo(x = 0) {
   // operation on x
 }
 foo();
-```
+{% endhighlight %}
 
 ### Other type confusions
 

@@ -78,10 +78,10 @@ Property cannot be assigned on global object
 
 We can easily mitigate Flow's warnings about the `_` property on this object by declaring that the `root` variable is of type `any`:
 
-```javascript
+{% highlight javascript linenos=table %}
 // ...`window` in the browser, or `exports` on the server.
 var root: any = this;
-```
+{% endhighlight %}
 
 The final error message, where Underscore is trying to see if RequireJS is present fails similarly:
 
@@ -91,12 +91,12 @@ Unknown global name: define
 
 We can add a declaration at the top of the file to show that this too is of type `any`:
 
-```javascript
+{% highlight javascript linenos=table %}
 declare var define: any;
 
 (function() {
   ...
-```
+{% endhighlight %}
 
 Three errors down already.
 
@@ -112,15 +112,15 @@ Property not found in
 
 This is brought about by the use of class names without `new` instantiation. We simply update lines like:
 
-```javascript
+{% highlight javascript linenos=table %}
   results = Array(length),
-```
+{% endhighlight %}
 
 to
 
-```javascript
+{% highlight javascript linenos=table %}
   results = new Array(length),
-```
+{% endhighlight %}
 
 This brings our error count down considerably!
 

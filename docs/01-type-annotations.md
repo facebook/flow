@@ -11,13 +11,13 @@ JavaScript is inherently a dynamically-typed language. As such, explicitly
 typing your code is not part of the JavaScript lexicon. This is normal
 JavaScript code:
 
-```javascript
+{% highlight javascript linenos=table %}
 function add(num1, num2) {
   return num1 + num2;
 }
 var x = add(3, '0');
 console.log(x);
-```
+{% endhighlight %}
 
 What is the value of `x`? `3`? `30`? `undefined`? The answer is `30`, and, in most
 cases, this probably not the behavior you would prefer.
@@ -30,40 +30,40 @@ through static analysis and type annotations.
 Type annotations are generally prefixed by `:`. And they can be placed on
 function parameters, function return types and variable declarations. e.g.,
 
-```javascript
-function foo(a: mixed, b: number): void {...}
+{% highlight javascript linenos=table %}
+function foo(a: mixed, b: number): void { ... }
 var x: boolean;
 class Bar {
   y: string;
 }
-```
+{% endhighlight %}
 
 ## Simple Example
 
 We can easily take this code and make it Flow aware by adding a simple
 annotation `@flow` at the top in a comment block:
 
-```javascript
+{% highlight javascript linenos=table %}
 /* @flow */
 function add(num1, num2) {
   return num1 + num2;
 }
 var x = add(3, '0');
 console.log(x);
-```
+{% endhighlight %}
 
 However, Flow will find no errors with the above code. That's because the `+`
 operator is perfectly acceptable on `number`s and `string`s, and we didn't
 specify that the parameters to `add` must be `number`s.
 
-```javascript
+{% highlight javascript linenos=table %}
 /* @flow */
 function add(num1: number, num2: number): number {
   return num1 + num2;
 }
 var x: number = add(3, '0');
 console.log(x);
-```
+{% endhighlight %}
 
 Running the type checker against the above code will yield type errors
 since we have explicitly typed all parameters and variables.
@@ -81,14 +81,14 @@ all that is strictly required to make your JavaScript file Flow aware is
 the `@flow` annotation. And this annotation by itself can be enough for Flow to
 deduce all that is necessary to type check your code.
 
-```javascript
+{% highlight javascript linenos=table %}
 /* @flow */
 function multPI(num1, num2) {
   return Math.PI * num1 * num2;
 }
 var x = multPI(3, '0');
 console.log(x);
-```
+{% endhighlight %}
 
 Since the multiplication operator makes no real sense on a string, Flow is
 smart enough to deduce a problem here without explicit type annotations.
@@ -104,7 +104,7 @@ This type is incompatible with
 However, explicit type annotations are required at all module boundaries.
 Flow's inference engine stops there.
 
-```javascript
+{% highlight javascript linenos=table %}
 /**
  * Size.js
  * @flow
@@ -114,16 +114,16 @@ function size(input: string): number {
 }
 
 module.exports = size;
-```
+{% endhighlight %}
 
-```javascript
+{% highlight javascript linenos=table %}
 /**
  * UseSize.js
  * @flow
  */
 var size = require('./Size');
 var result = size(null);
-```
+{% endhighlight %}
 
 Type annotations are required in `Size.js` because `UseSize.js` is calling the
 `size()` function from outside the module and that crosses the inference
@@ -145,5 +145,5 @@ in your way, but you know your program is correct.
 ## Bottom Line
 
 You can type annotate all your code. That would be the most expressive and
-self-documenting approach. However, Flow does a lot of type inference inside 
+self-documenting approach. However, Flow does a lot of type inference inside
 modules. It only requires type annotations across module boundaries.
