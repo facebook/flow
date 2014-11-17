@@ -213,7 +213,7 @@ no Flow errors left in our code.
 
 > NOTE
 >
-> This error may not currently be in your list of errors do to a fix that
+> This error may not currently be in your list of errors due to a fix that
 > has already been applied.
 
 Take the following error:
