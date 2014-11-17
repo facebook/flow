@@ -3,7 +3,7 @@ id: library
 title: Running Flow on a library
 layout: docs
 permalink: /docs/library.html
-prev: dependencies.html
+prev: react-example.html
 next: transpiler.html
 ---
 
