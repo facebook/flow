@@ -99,6 +99,24 @@ Many of these errors are related to
 Also, the [`object-assign` module must be replaced by direct calls to
 `Object.assign`](https://github.com/facebook/flow/commit/5da7bf10a3ce3493a03da0a516e36d1de93fc920) in order to make Flow work correctly with this usage pattern.
 
+For example in `ChatAppDispatcher.js`, we went from:
+
+{% highlight javascript linenos=table %}
+// ...
+var assign = require('object-assign');
+// ...
+var ChatAppDispatcher = assign(new Dispatcher(), {
+// ...
+{% endhighlight %}
+
+to:
+
+{% highlight javascript linenos=table %}
+// ...
+var ChatAppDispatcher = Object.assign({}, new Dispatcher(), {
+// ...
+{% endhighlight %}
+
 As you will see, the
 [list of errors](https://gist.github.com/JoelMarcey/8817aff7637cec1024a3)
 has been reduced.
@@ -124,7 +142,35 @@ counter-intuitive, doing this will allow us to get a better picture of the
 actual errors hidden in our project (as we will soon see).
 
 Our first pass is to basically start annotating. We will skip those that
-we are unable to annotate. After this first pass, we will go through the
+we are unable to annotate. 
+
+Modules such as `MessageStore.js` had functions that returned a message given 
+a string id.
+
+{% highlight javascript linenos=table %}
+get: function(id) {
+  return _messages[id];
+},
+{% endhighlight %}
+
+What type is `id`? What exactly is a `message`? Flow helps us create higher quality code.
+
+{% highlight javascript linenos=table %}
+type Message = {
+  id: string;
+  threadID: string;
+  authorName: string;
+  date: Date;
+  text: string;
+  isRead: boolean;
+};
+// ...
+get: function(id: string): ?Message {
+  return _messages[id];
+},
+{% endhighlight %}
+
+After this first pass through the modules, we will go through the
 modules again, taking into account the type information we learned from other
 modules. Rinse and repeat this pass until we get a [fully annotated interface
 for all modules](https://github.com/facebook/flow/commit/c4ed17c637da554e1975198920d971fc17fd10f0).
@@ -280,6 +326,14 @@ to make Flow happy with no errors.
 
 ### Property Access
 
+In `ThreadsStore.js`,
+
+{% highlight javascript linenos=table %}
+// ...
+if (thread && thread.lastTimestamp > message.timestamp) {
+// ...
+{% endhighlight %}
+
 ```bbcode
 js/stores/ThreadStore.js:62:21,40: property lastTimestamp
 Property lastTimestamp not found in object:
@@ -289,7 +343,21 @@ Property lastTimestamp not found in object:
 We have code that tries to access a property which does not exist in a given
 object. We fix this by using an existing property instead.
 
+{% highlight javascript linenos=table %}
+// ...
+if (thread && thread.lastMessage.date.getTime() > message.timestamp) {
+// ...
+{% endhighlight %}
+
 ### Null Variable
+
+In `MessageSection.js`,
+
+{% highlight javascript linenos=table %}
+// ...
+ <h3 className="message-thread-heading">{this.state.thread.name}</h3>
+// ...
+{% endhighlight %}
 
 ```bbcode
 js/components/MessageSection.react.js:78:49,70: property name
@@ -299,6 +367,18 @@ This type is incompatible with
 
 Here we try to access a variable that could possibly be `null`. In this case,
 you check for the variable being `null` and add special handling for that case.
+
+{% highlight javascript linenos=table %}
+//...
+render: function(): any {
+  var thread = this.state.thread;
+  var name = thread ? thread.name : "";
+  var messageListItems = this.state.messages.map(getMessageListItem);
+  return (
+    <div className="message-section">
+    <h3 className="message-thread-heading">{name}</h3>
+//...
+{% endhighlight %}
 
 ### The Final Two Errors
 
