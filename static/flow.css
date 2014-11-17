@@ -93,7 +93,7 @@ code {
     border-left: 4px solid rgb(214, 139, 0);
     padding: 5px 10px;
     margin-left: 20px;
-    margin-bottom: 1em;
+    margin-bottom: 10px;
     border-radius: 0;
     background-color: rgba(226, 141, 49, 0.1);
 }
@@ -113,7 +113,7 @@ code {
 }
 
 .highlight + .highlight + .highlight {
-    margin-top: -13px;
+    margin-top: -10px;
 }
 
 
