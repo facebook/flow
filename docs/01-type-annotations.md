@@ -145,5 +145,5 @@ in your way, but you know your program is correct.
 ## Bottom Line
 
 You can type annotate all your code. That would be the most expressive and
-self-documenting approach. However, type annotations are only required across
-module boundaries as the Flow type inference engine is inner-module aware only.
+self-documenting approach. However, Flow does a lot of type inference inside 
+modules. It only requires type annotations across module boundaries.
