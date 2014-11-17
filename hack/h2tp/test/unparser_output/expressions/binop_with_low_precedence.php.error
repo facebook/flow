@@ -1,3 +1,0 @@
-Parse Error:
-File "${filename}", line 5, characters 12-14:
-Do not use "xor", it has surprising precedence. Cast to bool and use "^" instead (Parsing[1002])

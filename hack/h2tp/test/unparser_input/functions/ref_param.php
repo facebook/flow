@@ -1,2 +1,0 @@
-<?hh
-  function foo(&$x) {}
