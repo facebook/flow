@@ -108,7 +108,7 @@ function foo(x: string, y: number): number {
   return x.length * y;
 }
 
-foo("Hello", 42);
+foo('Hello', 42);
 {% endhighlight %}
 
 ## 3. Nullable types
@@ -205,7 +205,7 @@ function foo(x) {
   return x.length;
 }
 
-var res = foo("Hello") + foo(42);
+var res = foo('Hello') + foo(42);
 {% endhighlight %}
 
 In this case, Flow detects that the second time the function is called (with a number), the `length` property will fail:
@@ -229,7 +229,7 @@ function foo(x) {
   }
 }
 
-var res = foo("Hello") + foo(42);
+var res = foo('Hello') + foo(42);
 {% endhighlight %}
 
 ## Next Steps
