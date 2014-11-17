@@ -36,9 +36,9 @@ signals to the Flow type-checker where to begin type checking your code.
 ### `@flow`
 
 Next, each JavaScript implementation file in the root and below must be 
-annotated with `@flow` inside the first comment block of the file. For 
-example, in 
-[`js/components/ChatApp.react.js`](https://github.com/facebook/flux/blob/a9724ae9dedd25daa5f0127ee54343353c5cbfd6/examples/flux-chat/js/components/ChatApp.react.js):
+[annotated with `@flow` inside the first comment block of the file](https://github.com/facebook/flow/commit/d2c099065ac58fb78b5f3951d7ac912de5e5a58c)
+. For example, in 
+[`js/components/ChatApp.react.js`](https://github.com/facebook/flow/blob/d2c099065ac58fb78b5f3951d7ac912de5e5a58c/js/components/ChatApp.react.js):
 
 ```
 /**
@@ -78,9 +78,22 @@ Now the moment of first truth arrives. You can call `flow status` to query the F
 
 .... and [there will be many](https://gist.github.com/JoelMarcey/1629e39f3afc789b0f0e).
 
-Many of these errors are related to [missing NodeJS modules](....). Also, 
-the [`object-assign` module must be replaced by direct calls to 
-`Object.assign`](....) in order to make Flow work correctly with this usage pattern.
+> Note that throughout this walk-through, your error list may be slightly
+> different than shown here. 
+
+Many of these errors are related to 
+[missing NodeJS modules](https://github.com/facebook/flow/commit/f618cde8b0d9324819faf381004ca6f1fc93bab1)
+. 
+
+> For simplicity, we just stubbed out the necessary module files. Obviously, 
+> you will want to use real module code.
+
+Also, the [`object-assign` module must be replaced by direct calls to 
+`Object.assign`](https://github.com/facebook/flow/commit/5da7bf10a3ce3493a03da0a516e36d1de93fc920) in order to make Flow work correctly with this usage pattern.
+
+As you will see, the 
+[list of errors](https://gist.github.com/JoelMarcey/8817aff7637cec1024a3) 
+has been reduced.
 
 ## Annotating Module Exports
 
@@ -100,13 +113,23 @@ Our first pass is to basically start annotating. We will skip those that
 we are unable to annotate. After this first pass, we will go through the 
 modules again, taking into account the type information we learned from other 
 modules. Rinse and repeat this pass until we get a [fully annotated interface 
-for all modules](....).
+for all modules](https://github.com/facebook/flow/commit/c4ed17c637da554e1975198920d971fc17fd10f0).
+
+### Tests
+
+If you now look at the current 
+[list of errors](https://gist.github.com/JoelMarcey/a41d15d5b8c72b73c23a) 
+, you will notice some relating to our test file `UnreadThreadStore-test.js`. 
+For now, we are going to only 
+[weakly check the test file using `@flow-weak`](https://github.com/facebook/flow/commit/297d371662106d118b5798cc013f1da2cf8aec3d)
+.
 
 ### Less Errors
 
-After this module annotation step, the [list of errors](....) will be much
-more manageable, and, more importantly, will be the errors we actually 
-care about with respect to types in our React project.
+After this module annotation step, the 
+[list of errors](https://gist.github.com/JoelMarcey/96b64f42860dd60227fc) 
+will be much more manageable, and, more importantly, will be the errors we 
+actually care about with respect to types in our React project.
 
 ## The Real Work
 
@@ -119,6 +142,9 @@ no Flow errors left in our code.
 
 ### Preventing Calls to a Missing Method
 
+> This error may not currently be in your list of errors do to a fix that
+> has already been applied.
+
 Take the following error:
 
 ```
@@ -129,7 +155,7 @@ Property removeChangeListener not found in object:
 
 This is one of those errors that will cause us pain at runtime. Since Flow finds this error before our code runs, we can be reduce this pain point.
 
-The fix is to [copy the `removeChangeListener` implementation](...) of one 
+The fix is to copy the `removeChangeListener` implementation of one 
 of the two other store implementations.
 
 Interestingly enough, this error was actually [caught before the release 
@@ -148,7 +174,9 @@ Too few arguments
 In vanilla JavaScript, missing parameters are undefined. This can lead to 
 unexpected behavior or crashes. Flow will not allow code to skip parameters 
 unless they are specifically marked as optional with `?`. In this case, we 
-have [one instance that requires optional](...).
+have 
+[one instance that requires optional](https://github.com/facebook/flow/commit/3a86ad46132907ab2f5320a5e162f2e1fcfcb9a8)
+.
 
 ### Property Use
 
@@ -170,8 +198,9 @@ This type is incompatible with
   js/components/MessageListItem.react.js:22:14,34: ?any
 ```
 
-As the [source of `MessageListItem`](...) shows, the `message` property 
-is annotated through 
+As the 
+[source of `MessageListItem`](https://github.com/facebook/flow/blob/flux-chat-example/js/components/MessageListItem.react.js) 
+shows, the `message` property is annotated through 
 [React's `propType` feature](http://facebook.github.io/react/docs/reusable-components.html)
 . However, it is specified as `message:ReactPropTypes.object`, which, in React 
 means that message is an **optional** property. Thus, the property might not
@@ -197,11 +226,14 @@ properties of `message` are actually specified. Thankfully, our example
 code always passed a correct message property.
 
 We also adapt other components' `propTypes` to property reflect the expected 
-types. All the changes for this step are found [here](....).
+types. All the changes for this step are found 
+[here](https://github.com/facebook/flow/commit/a9208f94abb48d6300a4cc848e66ea4edfaa2816).
 
 ## Other Errors
 
-Now let's fix the other errors to make Flow happy with no errors.
+Now let's fix the 
+[other errors](https://gist.github.com/JoelMarcey/2e039d8062d5ccb65cec) 
+to make Flow happy with no errors.
 
 ### Property Access
 
@@ -226,6 +258,10 @@ Here we try to access a variable that could possibly be `null`. In this case,
 you check for the variable being `null` and add special handling for that case.
 
 ### The Final Two Errors
+
+> These errors may not be in your list of errors depending on how you 
+> annotated the code above, but just in case, this is how these type of 
+> errors can be resolved.
 
 Here are the final two errors:
 
@@ -253,4 +289,12 @@ right now. Thus, we will take an escape hatch and make Flow not complain about
 it anymore. We do this by simply annotating message with the type `any`. Flow 
 will then assume `message` can be assigned to any type. 
 
-The whole changes for this part can be found [here](...).
+The whole changes for this part of the walk-through can be found 
+[here](https://github.com/facebook/flow/commit/1ba269c2f5ec53e34f0d61800feb217a86e839f1)
+.
+
+## NO ERRORS
+
+If all went according to plan, 
+[this](https://gist.github.com/JoelMarcey/30145418434c0b0a25ea) 
+is what you should see when running `flow status` for the final time.
