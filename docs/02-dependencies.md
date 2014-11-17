@@ -21,7 +21,7 @@ The workflow for dealing with library code is:
 
 ## Example
 
-To illustrate this workflow, we'll pick the [Underscore](http://underscorejs.org/) library. You can find the example in `flow/examples/dependencies/01_WithoutInterface` in the Flow installation directory. This contains the simple file:
+To illustrate this workflow, we'll pick the [Underscore](http://underscorejs.org/) library. You can find the example in `flow/examples/dependencies/``01_WithoutInterface` in the Flow installation directory. This contains the simple file:
 
 {% highlight javascript linenos %}
 /* @flow */
@@ -44,7 +44,7 @@ Running `flow check` will unsurprisingly produce an error:
 underscore_example.js:11:10,10: unknown global name: _
 ```
 
-This is because Flow doesn't know anything about the `_` variable. To fix this we need to bring in an interface file for Underscore. 
+This is because Flow doesn't know anything about the `_` variable. To fix this we need to bring in an interface file for Underscore.
 
 In `02_HandWrittenInterface` you can see a minimalist interface for the portion of Underscore this example uses. This is only a small part of the Underscore library, so the interface file was quick to write (it does not need to document the whole library). In fact for this minimalist example the entire interface file fits below:
 
@@ -56,7 +56,7 @@ declare class UnderscoreStatic {
 declare var _: UnderscoreStatic;
 {% endhighlight %}
 
-This only describes (part of) the interface for Underscore, eliding all implementation details - so Flow never has to understand Underscore itself. 
+This only describes (part of) the interface for Underscore, eliding all implementation details - so Flow never has to understand Underscore itself.
 
 Running with this interface file makes the error go away:
 
