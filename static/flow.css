@@ -80,13 +80,15 @@ code {
 }
 
 .highlight pre {
-    white-space: pre-wrap;
     font-family: 'source-code-pro', Menlo, 'Courier New', Consolas, monospace;
     font-size: 13px;
     line-height: 20px;
 }
 
 .highlight pre code {
+    white-space: pre;
+    width: 100%;
+    overflow-x: scroll;
     display: block;
     padding: 0;
     border-left: 4px solid rgb(214, 139, 0);
@@ -445,6 +447,8 @@ div.CodeMirror-lines {
 @media (max-width: 480px) {
     .wrap, .content .width, .home-section, section.content article {
         width: auto;
+        max-width:100%;
+        overflow-x: scroll;
     }
 
     header.topbar .width {
