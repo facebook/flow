@@ -4,7 +4,7 @@ title: Running Flow on a new project
 layout: docs
 permalink: /docs/new-project.html
 prev: getting-started.html
-next: library.html
+next: dependencies.html
 ---
 
 ## Setting up your project
