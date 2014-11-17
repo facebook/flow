@@ -4,7 +4,7 @@ title: Starting a new Flow project
 layout: docs
 permalink: /docs/new-project.html
 prev: getting-started.html
-next: dependencies.html
+next: existing.html
 ---
 
 One of the most powerful ways to use Flow is to have it checking your code from the first line you write. This allows you to ensure type safety from the very beginning and reduce the likelihood of errors, even while prototyping.
@@ -42,7 +42,6 @@ You can then check the status of the server:
 ```bash
 $> flow         # This will list all current type errors
 ```
->>>>>>> more docs
 
 And once you've changed some files, you can quickly run it again:
 

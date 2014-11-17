@@ -3,21 +3,25 @@
   - id: about-flow
     title: About Flow
   - id: getting-started
-    title: Getting Started
+    title: Getting started with Flow
 - title: User Guide
   items:
   - id: new-project
-    title: Running Flow on a new project
-  - id: dependencies
-    title: External dependencies
-  - id: react-example
-    title: An example using React
-  - id: library
-    title: Running Flow on a library
-  - id: transpiler
+    title: Starting a new Flow project
+  - id: existing
+    title: Running Flow on existing code
+  - id: third-party
+    title: Testing third-party code
+  - id: running
     title: Running Flow code
   - id: troubleshooting
     title: Troubleshooting
+- title: Walkthroughs
+  items:
+  - id: react-example
+    title: A Flux & React demo
+  - id: underscore
+    title: Using Flow with Underscore
 - title: Language Reference
   items:
   - id: type-annotations

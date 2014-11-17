@@ -3,7 +3,7 @@ id: type-annotations
 title: Type Annotations
 layout: docs
 permalink: /docs/type-annotations.html
-prev: troubleshooting.html
+prev: underscore.html
 next: base-types.html
 ---
 

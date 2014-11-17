@@ -3,8 +3,8 @@ id: troubleshooting
 title: Troubleshooting
 layout: docs
 permalink: /docs/troubleshooting.html
-prev: transpiler.html
-next: type-annotations.html
+prev: running.html
+next: react-example.html
 ---
 
 ## Common errors and how to fix them
@@ -97,4 +97,3 @@ Some operations only make sense when they're performed on particular set of valu
 
 
 ## What to do if there are too many errors
-

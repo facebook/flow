@@ -1,19 +1,19 @@
 ---
-id: library
-title: Running Flow on a library
+id: existing
+title: Running Flow on existing code
 layout: docs
-permalink: /docs/library.html
-prev: react-example.html
-next: transpiler.html
+permalink: /docs/existing.html
+prev: new-project.html
+next: third-party.html
 ---
 
 ## A word of warning
 
-Making existing libraries typecheck with Flow is not for the faint of heart - and most of the time you don't need to do it. If your project just depends on a library, check out our [guide](dependencies.html) on using Flow with external dependencies. Flow supports *interface files* so you can use libraries in a typed way without having to run Flow on them at all.
+Making existing code typecheck with Flow is not for the faint of heart - and most of the time you don't need to do it. If your project just depends on a library, check out our [guide](dependencies.html) on using Flow with external dependencies. Flow supports *interface files* so you can use libraries in a typed way without having to run Flow on them at all.
 
-Why is typechecking existing libraries so hard? Libraries not written with types in mind often contain complex, highly dynamic code that confuse analyses such as Flow. The code may also have been written in a style that Flow deliberately chooses not to support in order to give the programmer more help. Some typical examples are:
+Why is typechecking existing code so hard? Libraries not written with types in mind often contain complex, highly dynamic code that confuse analyses such as Flow. The code may also have been written in a style that Flow deliberately chooses not to support in order to give the programmer more help. Some typical examples are:
 
-* Operations on primitive values: while Javascript allows operations such as `true + 3`, Flow considers it a type error. This is by design, and is done to provide the programmer with more safety. While that's easily avoided for new code, it can be a lot of effort to eliminate such patterns from existign code.
+* Operations on primitive values: while Javascript allows operations such as `true + 3`, Flow considers it a type error. This is by design, and is done to provide the programmer with more safety. While that's easily avoided for new code, it can be a lot of effort to eliminate such patterns from existing code.
 * Nullability: Flow protects you against accessing properties on `null` by tracking null or undefined values throughout the program. In large existing codebases though this can require inserting some extra null checks in places where a value appears null but isn't at runtime.
 
 It is typically a much larger effort, and requires much more programmer annotation, to get such code to typecheck. On the other hand, if you own a library and would like to benefit from Flow typechecking within the library itself, this guide is for you.

@@ -1,9 +1,9 @@
 ---
-id: transpiler
-title: Transpiler
+id: running
+title: Running Flow code
 layout: docs
-permalink: /docs/transpiler.html
-prev: library.html
+permalink: /docs/running.html
+prev: third-party.html
 next: troubleshooting.html
 ---
 

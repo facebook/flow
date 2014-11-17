@@ -1,10 +1,10 @@
 ---
-id: dependencies
-title: Using external dependencies
+id: third-party
+title: Using third-party code
 layout: docs
-permalink: /docs/dependencies.html
-prev: new-project.html
-next: react-example.html
+permalink: /docs/third-party.html
+prev: existing.html
+next: running.html
 ---
 
 Most real JavaScript programs depend on third-party libraries. This guide shows how to use Flow in a project with external dependencies, without having to typecheck library code.
