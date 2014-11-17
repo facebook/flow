@@ -92,7 +92,7 @@ foo('Hello', 42);
 
 Again, running `flow check` gives an error:
 
-```
+```bbcode
 02_TypeAnnotations/type_annotations.js:4:10,21: number
 This type is incompatible with
   02_TypeAnnotations/type_annotations.js:3:37,42: string
@@ -127,7 +127,7 @@ var total = length('Hello') + length(null);
 
 This program would fail at runtime, with a `TypeError` when it tries to read the property `length` on `null`. Running `flow check` will detect that:
 
-```
+```bbcode
 03_Null/nulls.js:4:10,17: property length
 Property cannot be accessed on possibly null value
   03_Null/nulls.js:7:38,41: null
@@ -171,7 +171,7 @@ total([1, 2, 3, 'Hello']);
 
 Flow will flag the call to `total` as an error, since that function needs an array of numbers, and one of the items of the array passed in is a string:
 
-```
+```bbcode
 04_Arrays/arrays.js:11:17,23: string
 This type is incompatible with
   04_Arrays/arrays.js:3:31,36: number
@@ -210,7 +210,7 @@ var res = foo("Hello") + foo(42);
 
 In this case, Flow detects that the second time the function is called (with a number), the `length` property will fail:
 
-```
+```bbcode
 05_DynamicCode/dynamic.js:4:10,17: property length
 Property not found in
   /lib/core.js:50:1,62:1: Number

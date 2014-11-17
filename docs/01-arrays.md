@@ -32,8 +32,11 @@ For example:
 /* @flow */
 var a = [];
 for (var i = 0; i < 10; ++i) {
-  if (i % 2 == 0) { a[i] = 0; }
-  else { a[i] = ''; };
+  if (i % 2 == 0) {
+    a[i] = 0;
+  } else {
+    a[i] = '';
+  };
 }
 
 function foo(i): string { return a[i]; }
@@ -41,7 +44,7 @@ function foo(i): string { return a[i]; }
 
 Running Flow produces the following error:
 
-```
+```bbcode
 File "example.js", line 4, character 36:
 number
 is incompatible with
