@@ -207,7 +207,7 @@ One fix is to simply detect what the type is within the function:
 /* @flow */
 
 function foo(x) {
-  if (typeof(x) === 'string') {
+  if (typeof x === 'string') {
     return x.length;
   } else {
     return x;
