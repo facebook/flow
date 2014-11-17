@@ -20,7 +20,6 @@ body {
     margin: 0;
     line-height: 1.6em;
     padding-top: 50px;
-    padding-bottom: 10px;
 }
 
 h1, h2, h3, h4 {
@@ -335,6 +334,7 @@ nav.toc ul li {
 
 footer {
     padding: 5px 0;
+    padding-bottom: 10px;
     font-size: 13px;
     text-align: right;
 }
