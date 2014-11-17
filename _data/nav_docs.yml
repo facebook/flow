@@ -8,6 +8,8 @@
   items:
   - id: new-project
     title: Running Flow on a new project
+  - id: dependencies
+    title: External dependencies
   - id: library
     title: Running Flow on a library
   - id: transpiler
