@@ -20,11 +20,9 @@ var x: number = foo('');
 Running Flow produces the following error:
 
 ```bbcode
-File "example.js", line 3, character 20-21:
-string
-is incompatible with
-File "example.js", line 3, characters 7-12:
-number
+file.js:2:26,31: string
+This type is incompatible with
+  file.js:3:8,13: number
 ```
 
 ## Open methods
@@ -43,13 +41,13 @@ var x: string = o.f();
 ```
 
 ```bbcode
-testcode/flow/openMethods.js:3:14,15: number
+file.js:3:14,15: number
 This type is incompatible with
-  testcode/flow/openMethods.js:4:8,13: string
+  file.js:4:8,13: string
 
-testcode/flow/openMethods.js:4:17,21: call of method f
-Too few arguments
-  testcode/flow/openMethods.js:2:1,34: function
+file.js:4:17,21: call of method f
+Too few arguments (expected default/rest parameters in function)
+  file.js:2:1,34: function
 ```
 
 

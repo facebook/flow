@@ -25,11 +25,9 @@ initialized with a `number`. The method call `foo()` on the object writes
 error:
 
 ```bbcode
-File "example.js", line 6, characters 7-13:
-string
-is incompatible with
-File "example.js", line 3, characters 8-9:
-number
+file.js:6:7,13: string
+This type is incompatible with
+  file.js:3:6,7: number
 ```
 
 ## Constructor Functions and Prototype Objects
@@ -46,7 +44,6 @@ prototype chaining.
 
 ```javascript
 /* @flow */
-
 function Foo(x) { this.x = x; }
 Foo.prototype.f = function() { return this.x; }
 
@@ -114,7 +111,13 @@ function bar(q) { q.f(); }
 var o = { f() { return this.x; } };
 
 foo(o);
-var x:string = bar(o);
+var x: string = bar(o);
+```
+
+```bbcode
+file.js:3:16,16: undefined
+This type is incompatible with
+  file.js:8:7,12: string
 ```
 
 In other words, Flow knows enough to infer that whenever the `x` property of
@@ -153,44 +156,4 @@ for such an object, the value type of the map does not interfere with the
 types of the properties of the record. This is a potentially unsound, but we
 admit it because a sound design would necessarily lead to severe imprecision
 in the types of properties.
-
-## Objects as Enums
-
-Given an object type `O`, the type `$Enum<O>` denotes the set of property
-names of the object. For example:
-
-```javascript
-/* @flow */
-function foo(color: $Enum<{R: number; G: number; B: number}>) { ... }
-foo('R');
-foo('G');
-foo('B');
-```
-
-## Objects as Records
-
-Given an object type `O` and a value type `T`, the type `$Record<O, T>`
-denotes objects whose property names are in `$Enum<O>` and properties are of
-type `T`.
-
-```javascript
-/* @flow */
-function bar<X>(colors: X, labels: $Record<X, string>) { ... }
-bar({R: 0; G: 1; B: 2}, {R: 'RED'; G: 'GREEN'; B: 'BLUE'});
-```
-
-## Object-based Type Annotations
-An object type is of the form `{ P1; ..; Pn }` where each `Pi` is in one of
-the following forms:
-
-- `x: T`, indicating a field `x` of type `T`
-- `f(..): T`, indicating a method `f` with return type `T` and parameter types
-  elided (following the same syntax as for function signatures)
-
-### Sealed
-
-Object type annotations are sealed, which means that accessing unknown
-properties on objects with such types does not type check. This also prevents
-adding properties dynamically, and provides a way to limit the general problem
-of missing typographical errors when supporting dynamically added properties.
 

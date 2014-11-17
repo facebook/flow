@@ -38,7 +38,7 @@ overridden method in a superclass (e.g., `bar` in `C`) matches the type of an
 overriding method (e.g., `bar` in `D`). This ensures that subclassing implies
 subtyping, i.e., the following code type checks:
 
-```
+```javascript
 ...
 var c: C = new D();
 ```
@@ -49,14 +49,21 @@ Types are propagated through method calls and field accesses. For example,
 based on the example above, the following does not typecheck:
 
 
-```
+```javascript
 ...
 var c: C = D.qux();
 c.foo(0);
 var x: string = c.bar();
 ```
 
+```bbcode
+file.js:3:6,11: number
+This type is incompatible with
+  file.js:21:8,13: string
+```
+
 `c.bar()` returns a `number`, which cannot be stored into a `string`.
+
 
 ## Exported Classes
 

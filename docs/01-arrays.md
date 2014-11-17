@@ -15,7 +15,7 @@ the type `Array<T>` describes arrays whose elements are of type `T`.
 ```javascript
 /* @flow */
 var a = [1, 2, 3];
-var b: Array<number> = a.map(function (x) { return x + 1; })
+var b: Array<number> = a.map(function(x) { return x + 1; });
 ```
 
 In this code, we create an array with the literal `[1, 2, 3]`, and call a method map on it, getting another array whose type we annotate as `Array<number>`.

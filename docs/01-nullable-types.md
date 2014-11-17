@@ -19,14 +19,27 @@ var o = null;
 print(o.x);
 ```
 
+```bbcode
+file.js:3:7,9: property x
+Property cannot be accessed on possibly null value
+  file.js:2:9,12: null
+```
+
 ## Type Annotating Null
 
-Any type `T` can be made //nullable// by writing `?T`: the latter type
+Any type `T` can be made nullable by writing `?T`: the latter type
 describes `null` or the set of values of `T`.
 
 ```javascript
+/* @flow */
 var o: ?string = null;
-print(o.x);
+print(o.length);
+```
+
+```bbcode
+file.js:3:7,14: property length
+Property cannot be accessed on possibly null or undefined value
+  file.js:2:9,14: ?string
 ```
 
 Making a type nullable makes it a valid annotation for any location that may
@@ -37,8 +50,10 @@ as follows:
 ```javascript
 /* @flow */
 var o: ?string = null;
-if (o == null) { o = { x: 'hello' }; };
-print(o.x);
+if (o == null) {
+  o = 'hello';
+}
+print(o.length);
 ```
 
 In this code, after the `if`-statement Flow infers that `o` is not `null` (it

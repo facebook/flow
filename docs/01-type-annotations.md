@@ -68,10 +68,10 @@ console.log(x);
 Running the type checker against the above code will yield type errors
 since we have explicitly typed all parameters and variables.
 
-```
-testcode/flow/easyflow.js:7:24,26: string
+```bbcode
+file.js:5:24,26: string
 This type is incompatible with
-  testcode/flow/easyflow.js:4:34,39: number
+  file.js:2:34,39: number
 ```
 
 ## Type Annotation Requirements
@@ -93,10 +93,10 @@ console.log(x);
 Since the multiplication operator makes no real sense on a string, Flow is
 smart enough to deduce a problem here without explicit type annotations.
 
-```
-testcode/flow/makeflow.js:7:19,21: string
+```bbcode
+file.js:5:19,21: string
 This type is incompatible with
-  testcode/flow/makeflow.js:5:10,30: number
+  file.js:3:10,30: number
 ```
 
 ### Module Boundaries
@@ -130,9 +130,9 @@ Type annotations are required in `Size.js` because `UseSize.js` is calling the
 boundary.
 
 ```bbcode
-testcode/flow/UseSize.js:7:19,22: null
+UseSize.js:6:19,22: null
 This type is incompatible with
-  testcode/flow/Size.js:5:22,27: string
+  Size.js:5:22,27: string
 ```
 
 ## `any`
