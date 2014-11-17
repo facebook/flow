@@ -26,7 +26,7 @@ This type is incompatible with
 
 Looking at the example itself it's easy to see why:
 
-{% highlight javascript linenos %}
+{% highlight javascript linenos=table %}
 /* @flow */
 
 function foo(x) {
@@ -38,7 +38,7 @@ foo('Hello, world!');
 
 We're calling a function that clearly expects a number with a string. Flow detects that and returns an error. To fix this example, you can call `foo` with an integer instead. Running `flow check` should no longer find an error. A possible fix is in the `answer` directory:
 
-{% highlight javascript linenos %}
+{% highlight javascript linenos=table %}
 /* @flow */
 
 function foo(x) {
@@ -53,7 +53,7 @@ Throughout this tutorial, you will find solutions in the `answer` directory each
 
 You may have noticed this header line in the example file:
 
-{% highlight javascript linenos %}
+{% highlight javascript linenos=table %}
 /* @flow */
 {% endhighlight %}
 
@@ -65,7 +65,7 @@ Flow infers type within a file, so you don't have to annotate every function to 
 
 The second example (`02_TypeAnnotations`) shows basic type annotations in Flow:
 
-{% highlight javascript linenos %}
+{% highlight javascript linenos=table %}
 /* @flow */
 
 function foo(x: string, y: number): string {
@@ -85,7 +85,7 @@ This type is incompatible with
 
 In this case it is the return type of `foo` that is wrong - we've declared it to be a `string` even though the function is returning a `number`. Flow flags that, and you can fix it by changing the return type:
 
-{% highlight javascript linenos %}
+{% highlight javascript linenos=table %}
 /* @flow */
 
 // Changing the return type to number fixes the error
@@ -100,7 +100,7 @@ foo('Hello', 42);
 
 Flow handles `null` differently than most type systems. Most type systems ignore `null`, meaning that your program can be type correct but crash because they access `null`. In Flow, doing this is an error, as shown by our third example (`03_Null`):
 
-{% highlight javascript linenos %}
+{% highlight javascript linenos=table %}
 /* @flow */
 
 function length(x) {
@@ -120,7 +120,7 @@ Property cannot be accessed on possibly null value
 
 The file in the `answer` directory fixes both the code and the type error:
 
-{% highlight javascript linenos %}
+{% highlight javascript linenos=table %}
 /* @flow */
 
 function length(x) {
@@ -140,7 +140,7 @@ Because we've checked that `x` is not `null`, Flow knows this is safe and doesn'
 
 Flow is of course not limited to simple types like numbers and strings. For example, `04_Arrays` illustrates the support for annotating functions on arrays:
 
-{% highlight javascript linenos %}
+{% highlight javascript linenos=table %}
 /* @flow */
 
 function total(numbers: Array<number>) {
@@ -164,7 +164,7 @@ This type is incompatible with
 
 This, however, will pass:
 
-{% highlight javascript linenos %}
+{% highlight javascript linenos=table %}
 /* @flow */
 
 function total(numbers: Array<number>) {
@@ -183,7 +183,7 @@ total([1, 2, 3, 4]);
 
 In our final example, `05_DynamicCode`, we haven't annotated the function, but we are passing in two different types of argument:
 
-{% highlight javascript linenos %}
+{% highlight javascript linenos=table %}
 /* @flow */
 
 function foo(x) {
@@ -203,7 +203,7 @@ Property not found in
 
 One fix is to simply detect what the type is within the function:
 
-{% highlight javascript linenos %}
+{% highlight javascript linenos=table %}
 /* @flow */
 
 function foo(x) {

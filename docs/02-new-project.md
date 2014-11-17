@@ -61,7 +61,7 @@ $> flow stop
 
 As with all the examples in the Flow tutorial, you need to add
 
-{% highlight javascript linenos %}
+{% highlight javascript linenos=table %}
 /* @flow */
 {% endhighlight %}
 

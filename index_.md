@@ -9,7 +9,7 @@ hero: true
 
 Flow is a static type checker for JavaScript. It is designed to find type errors in existing JavaScript programs:
 
-{% highlight javascript linenos %}
+{% highlight javascript linenos=table %}
 /* @flow */
 function foo(x) {
   return x * 10;
@@ -28,7 +28,7 @@ This type is incompatible with
 
 Flow also lets you gradually evolve JavaScript code into typed code:
 
-{% highlight javascript linenos %}
+{% highlight javascript linenos=table %}
 /* @flow */
 function foo(x: string, y: number): string {
   return x.length * y;

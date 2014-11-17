@@ -23,7 +23,7 @@ The workflow for dealing with library code is:
 
 To illustrate this workflow, we'll pick the [Underscore](http://underscorejs.org/) library. You can find the example in `flow/examples/dependencies/``01_WithoutInterface` in the Flow installation directory. This contains the simple file:
 
-{% highlight javascript linenos %}
+{% highlight javascript linenos=table %}
 /* @flow */
 
 var pizzas = [
@@ -48,7 +48,7 @@ This is because Flow doesn't know anything about the `_` variable. To fix this w
 
 In `02_HandWrittenInterface` you can see a minimalist interface for the portion of Underscore this example uses. This is only a small part of the Underscore library, so the interface file was quick to write (it does not need to document the whole library). In fact for this minimalist example the entire interface file fits below:
 
-{% highlight javascript linenos %}
+{% highlight javascript linenos=table %}
 declare class UnderscoreStatic {
   findWhere<T>(list: Array<T>, properties: {}): T;
 }

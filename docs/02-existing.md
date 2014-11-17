@@ -24,7 +24,7 @@ Flow has a special mode, known as *weak mode*, to get started with complex libra
 
 The first step towards typechecking existing library code is to use weak mode, rather than regular mode. Simply change the header declaration in the file you want to typecheck:
 
-{% highlight javascript linenos %}
+{% highlight javascript linenos=table %}
 /* @flow weak */
 {% endhighlight %}
 
@@ -42,7 +42,7 @@ Once your code typechecks with Flow's weak mode, you can start adding type annot
 
 Once your code has more type annotations, you can consider switching it over to regular flow mode by switching the comment at the top of the file to
 
-{% highlight javascript linenos %}
+{% highlight javascript linenos=table %}
 /* @flow */
 {% endhighlight %}
 

@@ -4,6 +4,7 @@
     -webkit-box-sizing: border-box;
     -moz-box-sizing: border-box;
     box-sizing: border-box;
+    -webkit-text-size-adjust: 100%;
 }
 
 html {
@@ -18,15 +19,23 @@ body {
     font-weight: 300;
     color: #444;
     margin: 0;
-    line-height: 1.6em;
     padding-top: 50px;
 }
+
+p {
+    line-height: 22px;
+}
+
 
 h1, h2, h3, h4 {
     font-weight: normal;
     margin: 1.3em 0 0.2em;
     line-height: 1.4em;
     position: relative;
+}
+
+td {
+    vertical-align: top;
 }
 
 h1:first-child, h2:first-child, h3:first-child, h4:first-child {
@@ -81,27 +90,58 @@ code {
 }
 
 .highlight pre {
-    font-family: 'source-code-pro', Menlo, 'Courier New', Consolas, monospace;
     font-size: 13px;
     line-height: 20px;
     padding: 0 0 20px 20px;
 }
 
-.highlight pre code {
+.highlighttable {
+    margin-left: 20px;
+    margin-bottom: 20px;
+}
+
+.highlighttable .highlight pre {
+    padding: 0;
+}
+
+.highlighttable code {
+    padding-right: 10px;
+    margin: 0;
+    padding-left: 2px;
+    font-size: 12px;
+    display: block;
+    line-height: 20px;
     white-space: pre;
-    width: 100%;
+    color: hsl(39, 100%, 42%);
+}
+
+.highlight pre code, .highlighttable {
     overflow-x: scroll;
     display: block;
     padding: 0;
+    font-size: 13px;
     border-left: 4px solid rgb(214, 139, 0);
     padding: 5px 10px;
+    box-sizing: border-box;
     border-radius: 0;
     background-color: rgba(226, 141, 49, 0.1);
 }
 
-.lineno {
-  color: rgb(214, 139, 0);
+.highlight pre code {
+    width: 100%;
+    white-space: pre;
 }
+
+
+.lineno {
+    color: rgb(214, 139, 0);
+}
+
+.lineno::after {
+    content: ';';
+    font-size: 0;
+}
+
 
 .highlight pre code.language-bash {
     border-left: 4px solid hsl(19, 0%, 42%);
@@ -113,15 +153,15 @@ code {
     background-color: hsla(8, 75%, 54%, 0.1);
 }
 
-.highlight + .highlight + .highlight {
+.highlighttable + .highlight + .highlight {
     margin-top: -20px;
 }
 
 
 ul, ol {
- list-style-position: outside;
- margin-left: 1em;
- padding-left: 1em;
+    list-style-position: outside;
+    margin-left: 1em;
+    padding-left: 1em;
 }
 
 
@@ -475,7 +515,7 @@ div.CodeMirror-lines {
 @media (max-width: 480px) {
     .wrap, .content .width, .home-section, section.content article {
         width: auto;
-        max-width:100%;
+        max-width: 100%;
         overflow-x: scroll;
     }
 
@@ -483,17 +523,14 @@ div.CodeMirror-lines {
         padding: 0 5px;
     }
 
-    .left, .right {
-        font-size: 20px;
-    }
-
-    .highlight pre code {
-        font-size: 10px;
-        line-height: 13px;
-    }
-
-    .highlight pre code {
+    .highlighttable, section.content article blockquote {
         margin-left: 0;
+    }
+    .highlight pre {
+        padding-left: 0;
+    }
+    body {
+        padding-bottom: 20px;
     }
 
     #\_ {
