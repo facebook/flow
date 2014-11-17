@@ -21,7 +21,7 @@ The workflow for dealing with library code is:
 
 ## Example
 
-To illustrate this workflow, we'll pick the [*Underscore*](http://underscorejs.org/) library. You can find the example in `flow/examples/dependencies/01_WithoutInterface` in the Flow installation directory. This contains the simple file:
+To illustrate this workflow, we'll pick the [Underscore](http://underscorejs.org/) library. You can find the example in `flow/examples/dependencies/01_WithoutInterface` in the Flow installation directory. This contains the simple file:
 
 {% highlight javascript linenos %}
 /* @flow */
