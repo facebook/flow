@@ -13,7 +13,7 @@
   - id: existing
     title: Running Flow on existing code
   - id: third-party
-    title: Testing third-party code
+    title: Checking third-party code
   - id: running
     title: Running Flow code
   - id: troubleshooting

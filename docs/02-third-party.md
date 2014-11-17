@@ -1,6 +1,6 @@
 ---
 id: third-party
-title: Using third-party code
+title: Checking third-party code
 layout: docs
 permalink: /docs/third-party.html
 prev: existing.html
