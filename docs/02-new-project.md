@@ -31,7 +31,7 @@ Although this works, it is not the most efficient way to use Flow: the check is 
 
 ## Using the Flow server
 
-For a large project, you probably only want Flow to recheck the files that have changed each time. Flow uses a client/server architecture, and you are able to start a Flow server that will run in the background and type check files as they change. To do this simply run:
+For a large project, you probably only want Flow to recheck files automatically when they change. Flow uses a client/server architecture, and you are able to start a Flow server that will run in the background and type check files as they change. To do this simply run:
 
 ```bash
 $> flow start   # This starts a server and returns
