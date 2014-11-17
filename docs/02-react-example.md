@@ -102,7 +102,6 @@ Also, the [`object-assign` module must be replaced by direct calls to
 For example in `ChatAppDispatcher.js`, we went from:
 
 {% highlight javascript linenos=table %}
-// ...
 var assign = require('object-assign');
 // ...
 var ChatAppDispatcher = assign(new Dispatcher(), {
@@ -112,7 +111,6 @@ var ChatAppDispatcher = assign(new Dispatcher(), {
 to:
 
 {% highlight javascript linenos=table %}
-// ...
 var ChatAppDispatcher = Object.assign({}, new Dispatcher(), {
 // ...
 {% endhighlight %}
@@ -329,7 +327,6 @@ to make Flow happy with no errors.
 In `ThreadsStore.js`,
 
 {% highlight javascript linenos=table %}
-// ...
 if (thread && thread.lastTimestamp > message.timestamp) {
 // ...
 {% endhighlight %}
@@ -344,7 +341,6 @@ We have code that tries to access a property which does not exist in a given
 object. We fix this by using an existing property instead.
 
 {% highlight javascript linenos=table %}
-// ...
 if (thread && thread.lastMessage.date.getTime() > message.timestamp) {
 // ...
 {% endhighlight %}
@@ -354,7 +350,6 @@ if (thread && thread.lastMessage.date.getTime() > message.timestamp) {
 In `MessageSection.js`,
 
 {% highlight javascript linenos=table %}
-// ...
  <h3 className="message-thread-heading">{this.state.thread.name}</h3>
 // ...
 {% endhighlight %}
@@ -369,7 +364,6 @@ Here we try to access a variable that could possibly be `null`. In this case,
 you check for the variable being `null` and add special handling for that case.
 
 {% highlight javascript linenos=table %}
-//...
 render: function(): any {
   var thread = this.state.thread;
   var name = thread ? thread.name : "";
@@ -377,7 +371,7 @@ render: function(): any {
   return (
     <div className="message-section">
     <h3 className="message-thread-heading">{name}</h3>
-//...
+// ...
 {% endhighlight %}
 
 ### The Final Two Errors
