@@ -401,7 +401,7 @@ div.CodeMirror-lines {
 
 /* desktopish */
 
-@media (min-width: 480px) {
+@media (min-width: 481px) {
 
     .width {
         max-width: 960px;
@@ -460,7 +460,7 @@ div.CodeMirror-lines {
         line-height: 13px;
     }
 
-    .highlight pre {
+    .highlight pre code {
         margin-left: 0;
     }
 

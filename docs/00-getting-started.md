@@ -93,9 +93,9 @@ foo('Hello', 42);
 Again, running `flow check` gives an error:
 
 ```bbcode
-02_TypeAnnotations/type_annotations.js:4:10,21: number
+02_TypeAnnotations/ type_annotations.js:4:10,21: number
 This type is incompatible with
-  02_TypeAnnotations/type_annotations.js:3:37,42: string
+  02_TypeAnnotations/ type_annotations.js:3:37,42: string
 ```
 
 In this case it is the return type of `foo` that is wrong - we've declared it to be a `string` even though the function is returning a `number`. Flow flags that, and you can fix it by changing the return type:
