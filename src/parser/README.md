@@ -9,7 +9,7 @@ Building the Flow Parser requires OCaml. Compiling to JavaScript requires js_of_
 ### Initial set up
 
 * [Install opam](https://opam.ocaml.org/doc/Install.html)
-* opam install js_of_ocaml
+* `opam install js_of_ocaml`
 
 ### Building the OCaml Flow Parser library
 
