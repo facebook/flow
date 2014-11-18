@@ -107,20 +107,16 @@ Property not found in
 While this is not currently the most clear error message, a glimpse at the lines mentioned make it clear it is about the instantiation of classes without the `new` keyword. We simply update lines like:
 
 {% highlight javascript %}
-...
 results = Array(length),
-...
 {% endhighlight %}
 
 to
 
 {% highlight javascript %}
-...
 results = new Array(length),
-...
 {% endhighlight %}
 
-At the time of writing, Underscore contains seven such instatations. When updated, this brings our error count down considerably.
+At the time of writing, Underscore contains seven `Array` instantations and a `TypeError`. When updated, this brings our error count down considerably.
 
 ## Type inference in conditions
 
@@ -131,7 +127,6 @@ var keys = obj.length !== +obj.length && _.keys(obj),
     length = (keys || obj).length,
     ...
   currentKey = keys ? keys[index] : index;
-  ...
 ```
 
 Here, the variable `keys` could be a boolean (if the first part of the condition is false), or it could be an array. At run time in the former case, the `length` variable will then take its value from `obj` - which is fine - and in the latter case, from `keys`, which is also fine (since that variable is an array in that case). The later `currentKey` assignment here is also relying on `keys` being either falsy or an array.
@@ -152,7 +147,6 @@ var useKeys = obj.length !== +obj.length,
     length = useKeys ? keys.length : obj.length,
     ...
   currentKey = useKeys ? keys[index] : index;
-  ...
 ```
 
 Another is to demonstrate that we are paying more attention to the type at run time by using the type itself in the subsequent ternary conditions:
@@ -162,34 +156,165 @@ var keys = obj.length !== +obj.length && _.keys(obj),
     length = (keys instanceof Array) ? keys.length : obj.length,
     ...
   currentKey = (keys instanceof Array) ? keys[index] : index;
-  ...
 ```
 
-If either of those seem like too much work, we can also just tell Flow that we know this local variable can be of multiple types and that it shouldn't check the validity of any properties accessed on it. To do this, annotate the variable's first declaration to be `any`:
+Suffice to say, when making changes like this, it's worth checking the unit tests to make sure you've updated the behavior correctly.
+
+If rewriting this logic seems like too much work, we can also just tell Flow that we know this local variable can be of multiple types and that it shouldn't check the validity of any properties accessed on it. To do this, simply annotate the variable's first declaration to be `any`:
 
 ```javascript
 var keys: any = obj.length !== +obj.length && _.keys(obj),
-    ...
 ```
 
-At the time of writing, there are five examples of this pattern. Fixing them brings down our error count to just four outstanding issues.
+At the time of writing, there are five examples of this pattern in use. Fixing them brings down our error count to just three outstanding issues.
 
+## Final nits
 
-## TDOD
-flow check --strip-root
+One of our remaining issues is this simple error:
 
-underscore.js:674:36,81: function call
-Unknown global name
-
-underscore.js:677:33,37: identifier bound
-Unknown global name
-
+```bbcode
 underscore.js:851:16,42: call of method apply
 Method cannot be called on possibly null value
   underscore.js:853:30,33: null
+```
+
+This is a simple case of needing to ensure that a function is can be called, by turning:
+
+```javascript
+if (--times > 0) {
+  memo = func.apply(this, arguments);
+}
+```
+
+into
+
+```javascript
+if (--times > 0 && func instanceof Function) {
+  memo = func.apply(this, arguments);
+}
+```
+
+Similarly this error is alerting us to calling a variable that may not represent a function. Underscore's author's do indeed check as much in this case, but Flow is not able to determine that that is what the `_.isFunction` is doing.
 
 underscore.js:1310:34,51: call of method call
 Method cannot be called on possibly undefined value
   underscore.js:1306:34,39: undefined
 
-Found 4 errors
+To placate Flow, we can be explicit and just turn:
+
+```javascript
+return _.isFunction(value) ? value.call(object) : value;
+```
+
+into
+
+```javascript
+return (value instanceof Function) ? value.call(object) : value;
+```
+
+One to go. The final error is:
+
+```bbcode
+underscore.js:677:33,37: identifier bound
+Unknown global name
+```
+
+This is actually a known issue with Flow, caused by a returned function being given a name and the innards of the function not recognizing that variable. This takes place in `_.bind`:
+
+```javascript
+return function bound() {
+  return executeBound(func, bound, context, this, args.concat(slice.call(arguments)));
+};
+```
+
+For now, this is easily fixed by assigning the function to a variable more explicitly:
+
+```javascript
+var bound = function () {
+  return executeBound(func, bound, context, this, args.concat(slice.call(arguments)));
+};
+return bound;
+```
+
+(The same pattern is used in `_.partial` too.)
+
+## All done
+
+With those small changes, we now have a clean bill of health in weak mode:
+
+```bbcode
+Found 0 errors
+```
+
+It is tempting to remove the `weak` declaration and start to work on some of the additional type issues that Flow asserts. It is important to understand though that will appear a somewhat daunting task until you actually start adding annotations on both the arguments and return types of Underscore's many functions.
+
+In the meantime, hopefully this article has provided an insight into the sort of things that Flow is checking for, and some of the idioms used in popular JavaScript libraries that Flow finds harder to type check. And over time, as Flow improves, the nature of the issues reported will also change. Good luck!
+
+## Appendix
+
+For reference, here is the diff for the changes made in this walkthough.
+
+```diff
+@@ -0,0 +1 @@
++// @flow weak
+@@ -12 +13 @@
+-  var root = this;
++  var root: any = this;
+@@ -120 +121 @@
+-    var keys = obj.length !== +obj.length && _.keys(obj),
++    var keys: any = obj.length !== +obj.length && _.keys(obj),
+@@ -122 +123 @@
+-        results = Array(length),
++        results = new Array(length),
+@@ -138 +139 @@
+-    var keys = obj.length !== +obj.length && _.keys(obj),
++    var keys: any = obj.length !== +obj.length && _.keys(obj),
+@@ -156 +157 @@
+-    var keys = obj.length !== + obj.length && _.keys(obj),
++    var keys: any = obj.length !== + obj.length && _.keys(obj),
+@@ -203 +204 @@
+-    var keys = obj.length !== +obj.length && _.keys(obj),
++    var keys: any = obj.length !== +obj.length && _.keys(obj),
+@@ -218 +219 @@
+-    var keys = obj.length !== +obj.length && _.keys(obj),
++    var keys: any = obj.length !== +obj.length && _.keys(obj),
+@@ -317 +318 @@
+-    var shuffled = Array(length);
++    var shuffled = new Array(length);
+@@ -566 +567 @@
+-    var results = Array(length);
++    var results = new Array(length);
+@@ -641 +642 @@
+-    var range = Array(length);
++    var range = new Array(length);
+@@ -673 +674 @@
+-    if (!_.isFunction(func)) throw TypeError('Bind must be called on a function');
++    if (!_.isFunction(func)) throw new TypeError('Bind must be called on a function');
+@@ -675 +676 @@
+-    return function bound() {
++    var bound = function () {
+@@ -677,0 +679 @@
++    return bound;
+@@ -685 +687 @@
+-    return function bound() {
++    var bound = function () {
+@@ -693,0 +696 @@
++    return bound;
+@@ -849 +852 @@
+-      if (--times > 0) {
++      if (--times > 0 && func instanceof Function) {
+@@ -908 +911 @@
+-    var values = Array(length);
++    var values = new Array(length);
+@@ -919 +922 @@
+-    var pairs = Array(length);
++    var pairs = new Array(length);
+@@ -1254 +1257 @@
+-    var accum = Array(Math.max(0, n));
++    var accum = new Array(Math.max(0, n));
+@@ -1309 +1312 @@
+-    return _.isFunction(value) ? value.call(object) : value;
++    return (value instanceof Function) ? value.call(object) : value;
+@@ -1473,0 +1477 @@
++  declare var define: any;
+```
