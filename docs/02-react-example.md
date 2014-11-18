@@ -134,9 +134,10 @@ var ChatAppDispatcher = {
 
 > IMPORTANT: 
 > 
-> Currently there is a bug in Flow which makes it think that class instances 
-> have their methods as own properties. This makes Flow think that the 
-> following would extend a `Dispatcher` instance, even though it doesn't:
+> Currently there is a bug in Flow which makes it think that Object.assign 
+> copies all properties visible on an object, and not just own properties. 
+> Thus, Flow thinks that the following would extend a `Dispatcher` instance, 
+> even though it doesn't:
 > 
 > `var ChatAppDispatcher = Object.assign({}, new Dispatcher(), /*...*/);`
 
@@ -230,6 +231,7 @@ var ChatAppDispatcher = {
 {% endhighlight %}
 
 > NOTE
+>
 > Unfortunately, it is currently not possible to use syntax like new 
 > `Dispatcher<PayloadType>()`.
 
