@@ -64,9 +64,7 @@ var MessageSection = require('./MessageSection.react');
 
 > CODE CHECK
 > 
-> Here is a 
-> [diff](https://github.com/facebook/flow/commit/d2c099065ac58fb78b5f3951d7ac912de5e5a58c) 
-> of the changes made in this section. 
+> [Here is a diff of the changes made in this section](https://github.com/facebook/flow/commit/d2c099065ac58fb78b5f3951d7ac912de5e5a58c). 
 > 
 
 ### Flow Server
@@ -150,13 +148,8 @@ result, we disabled Flow for the files importing these two modules. While we dis
 
 > CODE CHECK
 > 
-> Here is a diff of the changes for this section.
-> 
-> https://github.com/facebook/flow/commit/4a4f3aaf512eb619e5f8d9a82432b61b75710927
-> 
-> and here is the updated error output
-> 
-> https://gist.github.com/JoelMarcey/76d1d5aaf2717ffb32f0
+> [Here is a diff of the changes for this section](https://github.com/facebook/flow/commit/4a4f3aaf512eb619e5f8d9a82432b61b75710927) 
+> and [here is the updated error output](https://gist.github.com/JoelMarcey/76d1d5aaf2717ffb32f0).
 
 
 ```bash
@@ -267,13 +260,8 @@ This does not give us type checking guarantees on the use of action. However, it
 
 > CODE CHECK
 > 
-> Here is a diff of the changes for this section.
-> 
-> https://github.com/facebook/flow/commit/0bac302617bd8fad694badda3c9d57d858d41c46
-> 
-> and here is the updated error output
-> 
-> https://gist.github.com/JoelMarcey/266d8696fa30268c2d04
+> [Here is a diff of the changes for this section](https://github.com/facebook/flow/commit/0bac302617bd8fad694badda3c9d57d858d41c46) 
+> and [here is the updated error output](https://gist.github.com/JoelMarcey/266d8696fa30268c2d04).
 
 
 ```bash
@@ -296,13 +284,8 @@ For now, we are going to only weakly check the test file using `@flow-weak`.
 
 > CODE CHECK
 > 
-> Here is a diff of the changes for this section.
-> 
-> https://github.com/facebook/flow/commit/64ed64ede9f9b3dfe45f0f3f272d4cf7fc4e81c9
-> 
-> and here is the updated error output
-> 
-> https://gist.github.com/JoelMarcey/81813064b07fe6892cc1
+> [Here is a diff of the changes for this section](https://github.com/facebook/flow/commit/64ed64ede9f9b3dfe45f0f3f272d4cf7fc4e81c9) 
+> and [and here is the updated error output](https://gist.github.com/JoelMarcey/81813064b07fe6892cc1).
 
 
 ```bash
@@ -378,13 +361,8 @@ createMessage: function(message: Message, optThreadName?: string) {
 
 > CODE CHECK
 > 
-> Here is a diff of the changes for this section.
-> 
-> https://github.com/facebook/flow/commit/b0fbafe0df3112c5e3915fe7cf66ea1082892a30
-> 
-> and here is the updated error output
-> 
-> https://gist.github.com/JoelMarcey/bd2cd831f8a593b66ddf
+> [Here is a diff of the changes for this section](https://github.com/facebook/flow/commit/b0fbafe0df3112c5e3915fe7cf66ea1082892a30) 
+> and [here is the updated error output](https://gist.github.com/JoelMarcey/bd2cd831f8a593b66ddf)
 
 
 ```bash
@@ -444,13 +422,8 @@ types.
 
 > CODE CHECK
 > 
-> Here is a diff of the changes for this section.
-> 
-> https://github.com/facebook/flow/commit/620a1e25052cbc10fdb88513c0cf45bcdbeffe57
-> 
-> and here is the updated error output
-> 
-> https://gist.github.com/JoelMarcey/591a2e4d1e7942d524c3
+> [Here is a diff of the changes for this section](https://github.com/facebook/flow/commit/620a1e25052cbc10fdb88513c0cf45bcdbeffe57) 
+> and [here is the updated error output](https://gist.github.com/JoelMarcey/591a2e4d1e7942d524c3).
 
 
 ```bash
@@ -550,9 +523,7 @@ will then assume `message` can be assigned to any type.
 
 > CODE CHECK
 > 
-> Here is a diff of the changes for this section.
-> 
-> https://github.com/facebook/flow/commit/f7a05406f2a4fa0f7f3145a6e3acfc98d3922dde
+> [Here is a diff of the changes for this section](https://github.com/facebook/flow/commit/f7a05406f2a4fa0f7f3145a6e3acfc98d3922dde).
 
 
 ```bash
@@ -574,16 +545,12 @@ No errors!
 
 ## Stripping Annotations
 
-Finally, we need to adapt the building process to strip type annotations.
-For this we need to update the `reactify` dependency in `package.json` to 0.17.0.
-Starting from this version `reactify` allows to strip type annotations. The
-changes needed are trivial. We only need to set the `stripTypes` to `true`.
-Afterwards, we do the following to start the automated building process:
-
-```bash
-npm install
-npm start
-```
+Finally, we need to adapt the building process to strip type annotations. 
+Since reactify 0.16.0 does not support stripping type annotations, we need to 
+use JSX from `react-tools` 0.12.1. This makes the build process more manual, 
+since now we have to call `npm start` every time we change something. However, 
+we hope that reactify will catch up soon, so we can make this change less 
+intrusive.
 
 Now we can start a http server and check our results in the browser:
 
