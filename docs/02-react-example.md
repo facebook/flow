@@ -232,8 +232,7 @@ var ChatAppDispatcher = {
 
 > NOTE
 >
-> Unfortunately, it is currently not possible to use syntax like new 
-> `Dispatcher<PayloadType>()`.
+> It is currently not possible to use syntax like new `Dispatcher<PayloadType>()`.
 
 ### Narrowing Union Types
 
