@@ -4,3 +4,7 @@ lexer_flow.ml
 flow_parser.js
 perf_test
 pfff_test
+node_modules/.bin
+node_modules/colors
+node_modules/minimist
+node_modules/esprima-fb

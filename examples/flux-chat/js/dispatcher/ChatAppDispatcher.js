@@ -58,9 +58,18 @@ type PayloadType = {
 
 var PayloadSources = ChatConstants.PayloadSources;
 
-var dispatcherInstance: Dispatcher<PayloadType> = new Dispatcher();
+var _dispatcherInstance: Dispatcher<PayloadType> = new Dispatcher();
 
-var ChatAppDispatcher = Object.assign({}, dispatcherInstance, {
+var ChatAppDispatcher = {
+
+  // WORKAROUND: flow prevents extension of class instances on run-time. Thus,
+  // we cannot use Object.assign to extend a Dispatcher instance. Instead, we
+  // work around this by simply wrapping all Dispatcher methods on our own.
+  register: _dispatcherInstance.register.bind(_dispatcherInstance),
+  unregister: _dispatcherInstance.unregister.bind(_dispatcherInstance),
+  waitFor: _dispatcherInstance.waitFor.bind(_dispatcherInstance),
+  dispatch: _dispatcherInstance.dispatch.bind(_dispatcherInstance),
+  isDispatching: _dispatcherInstance.isDispatching.bind(_dispatcherInstance),
 
   /**
    * @param {object} action The details of the action, including the action's
@@ -86,6 +95,6 @@ var ChatAppDispatcher = Object.assign({}, dispatcherInstance, {
     this.dispatch(payload);
   }
 
-});
+};
 
 module.exports = ChatAppDispatcher;

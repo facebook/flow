@@ -1,3 +1,12 @@
+(**
+ * Copyright (c) 2014, Facebook, Inc.
+ * All rights reserved.
+ *
+ * This source code is licensed under the BSD-style license found in the
+ * LICENSE file in the "flow" directory of this source tree. An additional grant
+ * of patent rights can be found in the PATENTS file in the same directory.
+ *
+ *)
 
 (* This module is the entry point of the typechecker. It sets up subtyping
    constraints for every expression, statement, and declaration form in a
@@ -207,7 +216,7 @@ let module_system_table =
   Hashtbl.add table "haste" (module Haste: MODULE_SYSTEM);
   table
 
-let module_system = ref (module Haste: MODULE_SYSTEM)
+let module_system = ref (module Node: MODULE_SYSTEM)
 
 let init specifier =
   module_system := Hashtbl.find module_system_table specifier

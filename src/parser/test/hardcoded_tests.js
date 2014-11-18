@@ -463,6 +463,14 @@ module.exports = {
         }
       ],
     },
+    'class Foo { static prop: number; }': {
+      'body.0.body.body': [
+        {
+          'key.name': 'prop',
+          'static': true,
+        }
+      ]
+    },
     'class Foo { "prop1":string; }': {
       'body.0.body.body': [
         {
@@ -476,6 +484,7 @@ module.exports = {
     'class Foo { 123:string; }': {
       'body.0.body.body': [
         {
+          'type': 'ClassProperty',
           'key.type': 'Literal',
           'key.value': 123,
           'typeAnnotation.typeAnnotation.type': 'StringTypeAnnotation',
@@ -1040,110 +1049,78 @@ module.exports = {
   },
   'Declare Statements': {
     'declare var foo': {
-      'body.0': {
-        'type': 'VariableDeclaration',
-        'kind': 'var',
+      'body': [{
+        'type': 'DeclareVariable',
         'loc.start.column': 0,
         'loc.end.column': 15,
-        'declarations': [
-          {
-            'type': 'VariableDeclarator',
-            'id.name': 'foo',
-            'loc.start.column': 12,
-            'loc.end.column': 15,
-          },
-        ],
-      },
+        'id.name': 'foo',
+        'id.typeAnnotation': null,
+      }],
     },
     'declare var foo;': {
-      'body.0': {
-        'type': 'VariableDeclaration',
-        'kind': 'var',
+      'body': [{
+        'type': 'DeclareVariable',
         'loc.start.column': 0,
         'loc.end.column': 16,
-        'declarations': [
-          {
-            'type': 'VariableDeclarator',
-            'id.name': 'foo',
-            'loc.start.column': 12,
-            'loc.end.column': 15,
-          },
-        ],
-      },
+        'id.name': 'foo',
+        'id.typeAnnotation': null,
+      }],
     },
     'declare function foo(): void': {
-      'body.0': {
-        'type': 'VariableDeclaration',
-        'kind': 'var',
+      'body': [{
+        'type': 'DeclareFunction',
         'loc.start.column': 0,
         'loc.end.column': 28,
-        'declarations': [
-          {
-            'type': 'VariableDeclarator',
-            'id': {
-              'name': 'foo',
-              'typeAnnotation.typeAnnotation': {
-                'type': 'FunctionTypeAnnotation',
-                'params': [],
-                'returnType.type': 'VoidTypeAnnotation',
-              },
-            },
-            'loc.start.column': 17,
-            'loc.end.column': 28,
-          },
-        ],
-      },
-    },
-    'declare function foo(): void;': {
-      'body.0': {
-        'type': 'VariableDeclaration',
-        'kind': 'var',
-        'loc.start.column': 0,
-        'loc.end.column': 29,
-        'declarations': [
-          {
-            'type': 'VariableDeclarator',
-            'id': {
-              'name': 'foo',
-              'typeAnnotation.typeAnnotation': {
-                'type': 'FunctionTypeAnnotation',
-                'params': [],
-                'returnType.type': 'VoidTypeAnnotation',
-              },
-            },
-            'loc.start.column': 17,
-            'loc.end.column': 28,
-          },
-        ],
-      },
-    },
-    'declare function foo(x: number, y: string): void;': {
-      'body.0.declarations': [
-        {
-          'type': 'VariableDeclarator',
-          'id': {
-            'name': 'foo',
-            'typeAnnotation.typeAnnotation': {
-              'type': 'FunctionTypeAnnotation',
-              'params': [
-                {
-                  'name.name': 'x',
-                  'typeAnnotation.type': 'NumberTypeAnnotation',
-                },
-                {
-                  'name.name': 'y',
-                  'typeAnnotation.type': 'StringTypeAnnotation',
-                },
-              ],
-              'returnType.type': 'VoidTypeAnnotation',
-            },
+        'id': {
+          'name': 'foo',
+          'typeAnnotation.typeAnnotation': {
+            'type': 'FunctionTypeAnnotation',
+            'params': [],
+            'returnType.type': 'VoidTypeAnnotation',
           },
         },
-      ],
+      }],
+    },
+    'declare function foo(): void;': {
+      'body': [{
+        'type': 'DeclareFunction',
+        'loc.start.column': 0,
+        'loc.end.column': 29,
+        'id': {
+          'name': 'foo',
+          'typeAnnotation.typeAnnotation': {
+            'type': 'FunctionTypeAnnotation',
+            'params': [],
+            'returnType.type': 'VoidTypeAnnotation',
+          },
+        },
+      }],
+    },
+    'declare function foo(x: number, y: string): void;': {
+      'body.0': {
+        'type': 'DeclareFunction',
+        'id': {
+          'name': 'foo',
+          'typeAnnotation.typeAnnotation': {
+            'type': 'FunctionTypeAnnotation',
+            'params': [
+              {
+                'name.name': 'x',
+                'typeAnnotation.type': 'NumberTypeAnnotation',
+              },
+              {
+                'name.name': 'y',
+                'typeAnnotation.type': 'StringTypeAnnotation',
+              },
+            ],
+            'returnType.type': 'VoidTypeAnnotation',
+          },
+        },
+      },
     },
     'declare class A {}': {
       'body.0': {
-        'type': 'InterfaceDeclaration',
+        'type': 'DeclareClass',
         'id.name': 'A',
         'typeParameters': null,
         'body.type': 'ObjectTypeAnnotation',
@@ -1155,7 +1132,7 @@ module.exports = {
     },
     'declare class A<T> extends B<T> { x: number }': {
       'body.0': {
-        'type': 'InterfaceDeclaration',
+        'type': 'DeclareClass',
         'id.name': 'A',
         'typeParameters.params': [
           {
@@ -1177,10 +1154,31 @@ module.exports = {
         ],
       },
     },
-    'declare class A { static foo(): number; static x : string; static : number }': {
+    'declare class A { static foo(): number; static x : string; }': {
       'body.0.body.properties.0.static': true,
       'body.0.body.properties.1.static': true,
-      'body.0.body.properties.2.static': false
+    },
+    'declare class A { static () : number }': {
+      'body.0.body': {
+        'properties': [],
+        'callProperties': [
+          {
+            'static': true,
+          }
+        ],
+        'indexers': [],
+      }
+    },
+    'declare class A { static [ indexer: number]: string }': {
+      'body.0.body': {
+        'properties': [],
+        'callProperties': [],
+        'indexers': [
+          {
+            'static': true,
+          }
+        ]
+      }
     },
   },
   'Invalid Declaration Statements': {
@@ -1201,6 +1199,14 @@ module.exports = {
           'loc.start.column': 22,
         },
       },
+    },
+    'declare class A { static : number }': {
+      'body.0.body.properties.0.static': false,
+      'errors': [
+        {
+          'message': 'Use of future reserved word in strict mode',
+        }
+      ]
     },
   },
   'Invalid syntax': {
@@ -1473,17 +1479,11 @@ module.exports = {
         'body.body': [],
       }
     },
-    'declare module A { declare module B {} }': {
-      'body.0.body.body': [
-        {
-          'type': 'DeclareModule',
-          'id.name': 'B',
-          'body.body': []
-        },
-      ]
-    },
-    'declare module A { export default function foo() {} }': {
-      'body.0.body.body.0.type': 'ExportDeclaration',
+    'declare module "./a/b.js" {}': {
+      'body.0.id': {
+        'type': 'Literal',
+        'value': './a/b.js',
+      }
     }
   },
   'Invalid Declare Module': {
@@ -1497,15 +1497,29 @@ module.exports = {
         '0.message': 'Unexpected token {',
       }
     },
+    'declare module A { declare module B {} }': {
+      'errors': {
+        '0.message': 'Unexpected identifier',
+      }
+    },
+    'declare module A { export default function foo() {} }': {
+      'errors': {
+        '0.message': 'Unexpected reserved word',
+      }
+    },
   },
   'Call Properties': {
     'var a : { (): number }': {
       'body.0.declarations.0.id.typeAnnotation.typeAnnotation.callProperties': [
         {
-          'type': 'FunctionTypeAnnotation',
-          'params': [],
-          'returnType.type': 'NumberTypeAnnotation',
-          'typeParameters': null,
+          'type': 'ObjectTypeCallProperty',
+          'value': {
+            'type': 'FunctionTypeAnnotation',
+            'params': [],
+            'returnType.type': 'NumberTypeAnnotation',
+            'typeParameters': null,
+          },
+          'static': false,
         }
       ],
     },
@@ -1513,25 +1527,33 @@ module.exports = {
     'var a : { (): number; y: string; (x: string): string }': {
       'body.0.declarations.0.id.typeAnnotation.typeAnnotation.callProperties': [
         {
-          'type': 'FunctionTypeAnnotation',
-          'params': [],
-          'returnType.type': 'NumberTypeAnnotation',
+          'type': 'ObjectTypeCallProperty',
+          'value': {
+            'type': 'FunctionTypeAnnotation',
+            'params': [],
+            'returnType.type': 'NumberTypeAnnotation',
+          },
+          'static': false,
         },
         {
-          'type': 'FunctionTypeAnnotation',
-          'params': [{
-            'type': 'FunctionTypeParam',
-            'name.name': 'x',
-            'typeAnnotation.type': 'StringTypeAnnotation',
-          }],
-          'returnType.type': 'StringTypeAnnotation',
+          'type': 'ObjectTypeCallProperty',
+          'value': {
+            'type': 'FunctionTypeAnnotation',
+            'params': [{
+              'type': 'FunctionTypeParam',
+              'name.name': 'x',
+              'typeAnnotation.type': 'StringTypeAnnotation',
+            }],
+            'returnType.type': 'StringTypeAnnotation',
+          },
+          'static': false,
         },
       ],
     },
     'var a : { <T>(x: T): number; }': {
       'body.0.declarations.0.id.typeAnnotation.typeAnnotation.callProperties': [
         {
-          'typeParameters.params': [
+          'value.typeParameters.params': [
             {
               'name': 'T',
             }
@@ -1542,11 +1564,15 @@ module.exports = {
     'interface A { (): number; }': {
       'body.0.body.callProperties': [
         {
-          'type': 'FunctionTypeAnnotation',
-          'params': [],
-          'returnType.type': 'NumberTypeAnnotation',
-          'typeParameters': null,
-        }
+          'type': 'ObjectTypeCallProperty',
+          'value': {
+            'type': 'FunctionTypeAnnotation',
+            'params': [],
+            'returnType.type': 'NumberTypeAnnotation',
+            'typeParameters': null,
+          },
+          'static': false,
+        },
       ]
     }
   },

@@ -15,7 +15,7 @@ if (argv._.length != 1 || argv.help) {
 } else {
   var content = argv._[0];
   if (fs.existsSync(content)) {
-    content = fs.readFileSync(content);
+    content = fs.readFileSync(content).toString();
   }
   console.log(util.inspect(flow.parse(content), {showHidden: false, depth: null}));
 }

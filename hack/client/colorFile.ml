@@ -10,8 +10,6 @@
 
 open Utils
 
-module CL = Coverage_level
-
 (*****************************************************************************)
 (* Module comparing positions (to sort them later)
  * This assumes that all positions are either nested or disjoint,

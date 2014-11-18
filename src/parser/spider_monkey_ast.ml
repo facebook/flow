@@ -1,17 +1,11 @@
 (**
- *  Copyright 2012-2014 Facebook.
+ * Copyright (c) 2014, Facebook, Inc.
+ * All rights reserved.
  *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
+ * This source code is licensed under the BSD-style license found in the
+ * LICENSE file in the "flow" directory of this source tree. An additional grant
+ * of patent rights can be found in the PATENTS file in the same directory.
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
  *)
 
 (*
@@ -149,13 +143,21 @@ and Type : sig
         id: Identifier.t;
         key: Type.t;
         value: Type.t;
+        static: bool;
       }
       and t = Loc.t * t'
+    end
+    module CallProperty: sig
+      type t = Loc.t * t'
+      and t' = {
+        value: Loc.t * Function.t;
+        static: bool;
+      }
     end
     type t = {
       properties: Property.t list;
       indexers: Indexer.t list;
-      callProperties: (Loc.t * Function.t) list;
+      callProperties: CallProperty.t list;
     }
   end
 
@@ -404,6 +406,7 @@ and Statement : sig
       and t' = {
         key: Expression.Object.Property.key;
         typeAnnotation: Type.annotation;
+        static: bool;
       }
     end
     module Implements : sig
@@ -446,9 +449,22 @@ and Statement : sig
       extends: Extends.t list;
     }
   end
-  module DeclareModule : sig
+  module DeclareVariable : sig
     type t = {
       id: Identifier.t;
+    }
+  end
+  module DeclareFunction : sig
+    type t = {
+      id: Identifier.t;
+    }
+  end
+  module DeclareModule : sig
+    type id =
+      | Identifier of Identifier.t
+      | Literal of (Loc.t * Literal.t)
+    type t = {
+      id: id;
       body: Loc.t * Block.t;
     }
   end
@@ -522,6 +538,9 @@ and Statement : sig
     | VariableDeclaration of VariableDeclaration.t
     | ClassDeclaration of Class.t
     | InterfaceDeclaration of Interface.t
+    | DeclareVariable of DeclareVariable.t
+    | DeclareFunction of DeclareFunction.t
+    | DeclareClass of Interface.t
     | DeclareModule of DeclareModule.t
     | ExportDeclaration of ExportDeclaration.t
     | ImportDeclaration of ImportDeclaration.t

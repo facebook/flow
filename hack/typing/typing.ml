@@ -714,8 +714,7 @@ and raw_expr in_cond env e =
   let env, ty = expr_ in_cond false env e in
   if !accumulate_types
   then begin
-    type_acc :=
-      Pos.Map.add (fst e) (Typing_expand.fully_expand env ty) !type_acc;
+    type_acc := (fst e, Typing_expand.fully_expand env ty) :: !type_acc
   end;
   TUtils.save_infer env (fst e) ty;
   env, ty

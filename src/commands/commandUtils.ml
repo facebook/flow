@@ -1,18 +1,15 @@
 (**
- *  Copyright 2014 Facebook.
+ * Copyright (c) 2014, Facebook, Inc.
+ * All rights reserved.
  *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
+ * This source code is licensed under the BSD-style license found in the
+ * LICENSE file in the "flow" directory of this source tree. An additional grant
+ * of patent rights can be found in the PATENTS file in the same directory.
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
  *)
+
+let print_version () =
+  print_endline "Flow, a static type checker for Javascript, version 0.1.0"
 
 (* line split/transform utils *)
 module Line : sig
@@ -64,22 +61,30 @@ let sort_opts opts =
   List.sort cmp opts
 
 type command_params = {
+  version : bool ref;
   json : bool ref;
   from : string ref;
+  show_all_errors : bool ref;
   retries : int ref;
   retry_if_init : bool ref;
 }
 
 let create_command_options accepts_json =
   let command_values = {
+    version = ref false;
     json = ref false;
     from = ref "";
+    show_all_errors = ref false;
     retries = ref 3;
     retry_if_init = ref true;
   } in
   let command_list = [
+    "--version", arg_set_unit command_values.version,
+      " Print version number and exit";
     "--from", Arg.Set_string command_values.from,
-      " Specify client";
+      " Specify client (for use by editor plugins)";
+    "--show-all-errors", arg_set_unit command_values.show_all_errors,
+      " Print all errors (the default is to truncate after 50 errors)";
     "--retries", Arg.Set_int command_values.retries,
       " Set the number of retries. (default: 3)";
     "--retry-if-init", Arg.Bool (fun x -> command_values.retry_if_init := x),
@@ -96,7 +101,7 @@ let start_flow_server root =
     (Path.string_of_path root);
   let flow_server = Printf.sprintf "%s start %s 1>&2"
     (Sys.argv.(0))
-    (Path.string_of_path root) in
+    (Shell.escape_string_for_shell (Path.string_of_path root)) in
   match Unix.system flow_server with
     | Unix.WEXITED 0 -> ()
     | _ -> (Printf.fprintf stderr "Could not start flow server!\n"; exit 77)

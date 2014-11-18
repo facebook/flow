@@ -1,14 +1,22 @@
 
-class_statics.js:5:32,32: string
+class_statics.js:3:12,17: string
+This type is incompatible with
+  class_statics.js:9:7,12: number
+
+class_statics.js:6:32,32: string
 This type is incompatible with
   class_statics.js:2:14,19: number
 
-class_statics.js:6:5,5: number
+class_statics.js:7:5,5: number
 This type is incompatible with
-  class_statics.js:5:18,23: string
+  class_statics.js:6:18,23: string
+
+class_statics.js:10:7,7: number
+This type is incompatible with
+  class_statics.js:3:12,17: string
 
 funstatics.js:2:41,41: number
 This type is incompatible with
   funstatics.js:5:7,12: string
 
-Found 3 errors
+Found 5 errors

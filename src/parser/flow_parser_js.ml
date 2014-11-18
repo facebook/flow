@@ -1,3 +1,13 @@
+(**
+ * Copyright (c) 2014, Facebook, Inc.
+ * All rights reserved.
+ *
+ * This source code is licensed under the BSD-style license found in the
+ * LICENSE file in the "flow" directory of this source tree. An additional grant
+ * of patent rights can be found in the PATENTS file in the same directory.
+ *
+ *)
+
 module Translate = struct
   module Ast = Spider_monkey_ast
   open Ast
@@ -182,9 +192,25 @@ module Translate = struct
       Js.Unsafe.set ret "typeParameters" (option type_parameter_declaration fn.typeParameters);
       ret
     )
+    | loc, DeclareVariable d -> DeclareVariable.(
+        let ret = node "DeclareVariable" loc in
+        Js.Unsafe.set ret "id" (identifier d.id);
+        ret
+    )
+    | loc, DeclareFunction d -> DeclareFunction.(
+        let ret = node "DeclareFunction" loc in
+        Js.Unsafe.set ret "id" (identifier d.id);
+        ret
+    )
+    | loc, DeclareClass d ->
+        let ret = interface_declaration (loc, d) in
+        Js.Unsafe.set ret "type" (string "DeclareClass");
+        ret
     | loc, DeclareModule m -> DeclareModule.(
         let ret = node "DeclareModule" loc in
-        Js.Unsafe.set ret "id" (identifier m.id);
+        Js.Unsafe.set ret "id" (match m.id with
+        | Literal lit -> literal lit
+        | Identifier id -> identifier id);
         Js.Unsafe.set ret "body" (block m.body);
         ret
       )
@@ -506,6 +532,7 @@ module Translate = struct
     Js.Unsafe.set ret "key" key;
     Js.Unsafe.set ret "typeAnnotation" (type_annotation prop.typeAnnotation);
     Js.Unsafe.set ret "computed" (bool computed);
+    Js.Unsafe.set ret "static" (bool prop.static);
     ret
   )
 
@@ -741,7 +768,7 @@ module Translate = struct
     let ret = node "ObjectTypeAnnotation" loc in
     Js.Unsafe.set ret "properties" (array object_type_property o.properties);
     Js.Unsafe.set ret "indexers" (array object_type_indexer o.indexers);
-    Js.Unsafe.set ret "callProperties" (array function_type o.callProperties);
+    Js.Unsafe.set ret "callProperties" (array object_type_call_property o.callProperties);
     ret
   )
 
@@ -764,6 +791,14 @@ module Translate = struct
     Js.Unsafe.set ret "id" (identifier indexer.id);
     Js.Unsafe.set ret "key" (_type indexer.key);
     Js.Unsafe.set ret "value" (_type indexer.value);
+    Js.Unsafe.set ret "static" (bool indexer.static);
+    ret
+  )
+
+  and object_type_call_property (loc, callProperty) = Type.Object.CallProperty.(
+    let ret = node "ObjectTypeCallProperty" loc in
+    Js.Unsafe.set ret "value" (function_type callProperty.value);
+    Js.Unsafe.set ret "static" (bool callProperty.static);
     ret
   )
 

@@ -8,13 +8,14 @@
  *
  *)
 
-(*****************************************************************************)
-(* Section defining the colors we are going to use *)
-(*****************************************************************************)
+open Coverage_level
 
 module C = Tty
 module Json = Hh_json
-module CL = Coverage_level
+
+(*****************************************************************************)
+(* Section defining the colors we are going to use *)
+(*****************************************************************************)
 
 let err_clr       = C.Bold C.Red       (* Unchecked code *)
 let checked_clr   = C.Normal C.Green   (* Checked code *)
@@ -23,9 +24,9 @@ let default_color = C.Normal C.Default (* All the rest *)
 
 let replace_color input =
   match input with
-  | (Some CL.Unchecked, str) -> (err_clr, str)
-  | (Some CL.Checked, str) -> (checked_clr, str)
-  | (Some CL.Partial, str) -> (partial_clr, str)
+  | (Some Unchecked, str) -> (err_clr, str)
+  | (Some Checked, str) -> (checked_clr, str)
+  | (Some Partial, str) -> (partial_clr, str)
   | (None, str) -> (default_color, str)
 
 let replace_colors input =
@@ -34,7 +35,7 @@ let replace_colors input =
 let to_json input =
   let entries = List.map (fun (clr, text) ->
                           let color_string = match clr with
-                          | Some lvl -> CL.string lvl
+                          | Some lvl -> string_of_level lvl
                           | None -> "default" in
                           Json.JAssoc [ "color", Json.JString color_string;
                                         "text",  Json.JString text;

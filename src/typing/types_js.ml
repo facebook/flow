@@ -1,17 +1,11 @@
 (**
- *  Copyright 2014 Facebook.
+ * Copyright (c) 2014, Facebook, Inc.
+ * All rights reserved.
  *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
+ * This source code is licensed under the BSD-style license found in the
+ * LICENSE file in the "flow" directory of this source tree. An additional grant
+ * of patent rights can be found in the PATENTS file in the same directory.
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
  *)
 
 (* This module drives the type checker. Currently the typechecker is hooked up
@@ -45,6 +39,7 @@ type options = {
   opt_strict : bool;
   opt_console : bool;
   opt_json : bool;
+  opt_show_all_errors : bool;
   opt_quiet : bool;
   opt_profile : bool;
   opt_strip_root : bool;
@@ -61,6 +56,7 @@ let init_modes opts =
   modes.strict <- opts.opt_strict;
   modes.console <- opts.opt_console;
   modes.json <- opts.opt_json;
+  modes.show_all_errors <- opts.opt_show_all_errors;
   modes.quiet <- opts.opt_quiet;
   modes.profile <- opts.opt_profile;
   (* TODO: confirm that only master uses strip_root, otherwise set it! *)
@@ -652,11 +648,10 @@ let print_errors ?root flow_opts =
 
   if flow_opts.opt_json
   then Errors_js.print_errorl true errors stdout
-  else (
-    List.iter Errors_js.print_error_color errors;
-    print_newline ();
-    print_endline (spf "Found %d errors" (List.length errors))
-  )
+  else
+    Errors_js.print_error_summary
+      (not Modes_js.modes.show_all_errors)
+      errors
 
 (* initialize flow server state, including full check *)
 let server_init genv env flow_opts =

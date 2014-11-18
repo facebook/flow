@@ -1,3 +1,12 @@
+(**
+ * Copyright (c) 2014, Facebook, Inc.
+ * All rights reserved.
+ *
+ * This source code is licensed under the BSD-style license found in the
+ * LICENSE file in the "flow" directory of this source tree. An additional grant
+ * of patent rights can be found in the PATENTS file in the same directory.
+ *
+ *)
 type modes = {
   mutable debug: bool;
   mutable all: bool;
@@ -7,6 +16,7 @@ type modes = {
   mutable strict: bool;
   mutable console: bool;
   mutable json: bool;
+  mutable show_all_errors: bool;
   mutable quiet : bool;
   mutable profile : bool;
 }
@@ -20,6 +30,7 @@ let modes = {
   strict = false;
   console = false;
   json = false;
+  show_all_errors = false;
   quiet = true;
   profile = false;
 }

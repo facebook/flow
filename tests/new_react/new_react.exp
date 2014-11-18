@@ -47,7 +47,7 @@ state.js:17:18,35: property qux
 Property cannot be accessed on possibly null value
   state.js:9:23,26: null
 
-[LIB] react.js:7:18,23: string
+[LIB] react.js:16:18,23: string
 This type is incompatible with
   new_react.js:27:8,13: number
 

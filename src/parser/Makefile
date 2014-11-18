@@ -10,14 +10,14 @@ clean:
 build-parser: 
 	ocamlbuild -no-links parser_flow.cmxa
 
-parserjs: 
+js: 
 	ocamlbuild -use-ocamlfind -pkgs js_of_ocaml flow_parser_js.byte
 	js_of_ocaml -opt 3 -o flow_parser.js flow_parser_js.byte
 	rm flow_parser_js.byte
 
-test: build-parser parserjs 
-	./test/run_esprima_tests.js
-	./test/run_hardcoded_tests.js
+test: build-parser js 
+	node test/run_esprima_tests.js
+	node test/run_hardcoded_tests.js
 
 tools: native_test_files
 

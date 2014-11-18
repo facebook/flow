@@ -1,17 +1,11 @@
 (**
- *  Copyright 2014 Facebook.
+ * Copyright (c) 2014, Facebook, Inc.
+ * All rights reserved.
  *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
+ * This source code is licensed under the BSD-style license found in the
+ * LICENSE file in the "flow" directory of this source tree. An additional grant
+ * of patent rights can be found in the PATENTS file in the same directory.
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
  *)
 
 module C = Tty
@@ -202,3 +196,21 @@ let print_errorl use_json el oc =
       end sl
   end;
   flush oc
+
+(* Human readable output *)
+let print_error_summary truncate errors =
+  let print_error_if_not_truncated curr e =
+    (if not(truncate) || curr < 50 then print_error_color e);
+    curr + 1
+  in
+  let total =
+    List.fold_left print_error_if_not_truncated 0 errors
+  in
+  print_newline ();
+  if truncate && total > 50 then (
+    Printf.printf
+      "... %d more errors (only 50 out of %d errors displayed)\n"
+      (total - 50) total;
+    print_endline "To see all errors, re-run Flow with --show-all-errors"
+  ) else
+    Printf.printf "Found %d errors\n" total

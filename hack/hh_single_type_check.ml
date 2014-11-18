@@ -8,9 +8,8 @@
  *
  *)
 
+open Coverage_level
 open Utils
-
-module CL = Coverage_level
 
 (*****************************************************************************)
 (* Types, constants *)
@@ -208,15 +207,14 @@ let collect_defs ast =
 (* Make readable test output *)
 let replace_color input =
   match input with
-  | (Some CL.Unchecked, str) -> "<unchecked>"^str^"</unchecked>"
-  | (Some CL.Checked, str) -> "<checked>"^str^"</checked>"
-  | (Some CL.Partial, str) -> "<partial>"^str^"</partial>"
+  | (Some Unchecked, str) -> "<unchecked>"^str^"</unchecked>"
+  | (Some Checked, str) -> "<checked>"^str^"</checked>"
+  | (Some Partial, str) -> "<partial>"^str^"</partial>"
   | (None, str) -> str
 
 let print_colored fn =
   let content = cat (Relative_path.to_absolute fn) in
-  let pos_level_m = CL.mk_level_map (Some fn) !Typing_defs.type_acc in
-  let pos_level_l = Pos.Map.elements pos_level_m in
+  let pos_level_l = mk_level_list (Some fn) !Typing_defs.type_acc in
   let raw_level_l =
     rev_rev_map (fun (p, cl) -> Pos.info_raw p, cl) pos_level_l in
   let results = ColorFile.go content raw_level_l in
@@ -225,13 +223,8 @@ let print_colored fn =
   else print_string (List.map replace_color results |> String.concat "")
 
 let print_coverage fn =
-  let module CLMap = ServerCoverageMetric.CL.CLMap in
   let counts = ServerCoverageMetric.count_exprs fn !Typing_defs.type_acc in
-  let score = ServerCoverageMetric.calc_percentage counts in
-  Printf.printf "Unchecked: %d\n" (CLMap.find_unsafe CL.Unchecked counts);
-  Printf.printf "Partial: %d\n" (CLMap.find_unsafe CL.Partial counts);
-  Printf.printf "Checked: %d\n" (CLMap.find_unsafe CL.Checked counts);
-  Printf.printf "Score: %f\n" score
+  ClientCoverageMetric.go false (Some (Leaf counts))
 
 (*****************************************************************************)
 (* Main entry point *)

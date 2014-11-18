@@ -1,17 +1,11 @@
 (**
- *  Copyright 2014 Facebook.
+ * Copyright (c) 2014, Facebook, Inc.
+ * All rights reserved.
  *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
+ * This source code is licensed under the BSD-style license found in the
+ * LICENSE file in the "flow" directory of this source tree. An additional grant
+ * of patent rights can be found in the PATENTS file in the same directory.
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
  *)
 
 (***********************************************************************)
@@ -37,15 +31,18 @@ module OptionParser(Config : CONFIG) : Server.OPTION_PARSER = struct
       let newtraces = ref false in
       let console = ref false in
       let json = ref false in
+      let show_all_errors = ref false in
       let quiet = ref false in
       let profile = ref false in
       let strip_root = ref false in
-      let module_ = ref "haste" in
+      let module_ = ref "node" in
       let lib = ref None in
       let variant_opts = match Config.mode with
       | Check -> [
         "--json", CommandUtils.arg_set_unit json,
           " Output errors in JSON format";
+        "--show-all-errors", CommandUtils.arg_set_unit show_all_errors,
+          " Print all errors (the default is to truncate after 50 errors)";
         "--profile", CommandUtils.arg_set_unit profile,
           " Output profiling information";
         "--quiet", CommandUtils.arg_set_unit quiet,
@@ -107,6 +104,7 @@ module OptionParser(Config : CONFIG) : Server.OPTION_PARSER = struct
         Types_js.opt_strict = true;
         Types_js.opt_console = !console;
         Types_js.opt_json = !json;
+        Types_js.opt_show_all_errors = !show_all_errors;
         Types_js.opt_quiet = !quiet || !json;
         Types_js.opt_profile = !profile;
         Types_js.opt_strip_root = !strip_root;

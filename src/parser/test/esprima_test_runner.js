@@ -2,7 +2,7 @@
  * Compares the output of flow_parser.js with esprima
  */
 
-var esprima = require("/var/www/scripts/third_party/esprima-fb/esprima.js");
+var esprima = require("esprima-fb");
 var flow = require("../flow_parser.js");
 var util = require("util");
 var ast_types = require("ast-types");
@@ -191,18 +191,10 @@ function handleSpecialObjectCompare(esprima, flow, env) {
         esprima.typeAnnotation = null;
       }
       break;
-    case 'ObjectTypeAnnotation':
-      if (esprima.indexer == null) {
-        esprima.indexers = [];
-      } else {
-        esprima.indexers = [esprima.indexer];
-      }
-      if (esprima.callProperties == null) {
-        esprima.callProperties = [];
-      }
-      delete esprima.indexer;
-      break;
     case 'ObjectTypeProperty':
+    case 'ObjectTypeIndexer':
+    case 'ObjectTypeCallProperty':
+    case 'ClassProperty':
       esprima.static = esprima.static || false;
       break;
   }

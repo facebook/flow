@@ -3612,6 +3612,7 @@ module.exports = {
         'class Foo { "prop1":string; }',
         'class Foo { [prop1]: string; }' ,
         'class Foo { prop1:string; prop2:number; }',
+        'class Foo { static prop1:string; prop2:number; }',
         'class Foo {set fooProp(value:number){}}',
         'class Foo<T> {}',
         'class Foo<T> { bar<U>():number { return 42; }}',
@@ -3752,5 +3753,50 @@ module.exports = {
       'import defaultbinding, {x,y} from "MyModule";',
       'import defaultbinding, {x as z} from "MyModule";',
       'import defaultbinding, {x, y as z} from "MyModule";',
+    ],
+    'Declare Statements': [
+      'declare var foo',
+      'declare var foo;',
+      'declare var foo: number;',
+      'declare function foo(): void',
+      'declare function foo(): void;',
+      'declare function foo<T>(): void;',
+      'declare function foo(x: number, y: string): void;',
+      'declare class A {}',
+      'declare class A<T> extends B<T> { x: number }',
+      'declare class A { static foo(): number; static x : string }',
+      'declare class A { static [ indexer: number]: string }',
+      'declare class A { static () : number }',
+    ],
+    'Invalid Declare Statements': [
+      'declare class A { "static" foo(): number }',
+      'declare class A { static : number }',
+      'declare function foo();',
+      'declare function foo(x): void',
+    ],
+    'Declare Module': [
+      'declare module A {}',
+      'declare module "./a/b.js" {}',
+      'declare module A { declare var x: number; }',
+      'declare module A { declare function foo(): number; }',
+      'declare module A { declare class B { foo(): number; } }',
+    ],
+    'Invalid Declare Module': [
+      'declare Module A {}',
+      'declare module {}',
+      '"use strict"; declare module "\\01" {}',
+      {
+        content: 'declare module A { declare module B {} }',
+        explanation: "We realize the error as soon as we hit the second "+
+          "module keyword",
+        expected_differences: {
+          'root.errors.0.column': {
+            type: 'Wrong error column',
+            expected: 19,
+            actual: '27-33'
+          }
+        }
+      },
+      'declare module A { export default 1 +1; }',
     ],
 };

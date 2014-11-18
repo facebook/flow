@@ -1,9 +1,9 @@
 
 keyvalue.js:2:23,24: string
 This type is incompatible with
-  [LIB] dom.js:43:13,18: number
+  [LIB] dom.js:52:13,18: number
 
-[LIB] dom.js:43:22,25: File
+[LIB] dom.js:52:22,25: File
 This type is incompatible with
   keyvalue.js:2:8,13: number
 

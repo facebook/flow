@@ -1,3 +1,12 @@
+(**
+ * Copyright (c) 2014, Facebook, Inc.
+ * All rights reserved.
+ *
+ * This source code is licensed under the BSD-style license found in the
+ * LICENSE file in the "flow" directory of this source tree. An additional grant
+ * of patent rights can be found in the PATENTS file in the same directory.
+ *
+ *)
 
 (* This module is the entry point of the typechecker. It sets up subtyping
    constraints for every expression, statement, and declaration form in a
@@ -549,9 +558,12 @@ let rec convert cx map = Ast.Type.(function
     in
     let map_ = match callProperties with
       | [] -> map_
-      | [loc, ft] -> SMap.add "$call" (convert cx map (loc, Ast.Type.Function ft)) map_
+      | [loc, { Object.CallProperty.value = (_, ft); _; }] -> SMap.add "$call" (convert cx map (loc, Ast.Type.Function ft)) map_
       | fts ->
-        let fts = List.map (fun (loc, ft) -> convert cx map (loc, Ast.Type.Function ft)) fts in
+          let fts = List.map
+            (fun (loc, { Object.CallProperty.value = (_, ft); _; }) ->
+                convert cx map (loc, Ast.Type.Function ft))
+            fts in
         SMap.add "$call" (IntersectionT (mk_reason "object type" loc, fts)) map_
     in
     (* Seal an object type unless it specifies an indexer. *)
@@ -761,6 +773,14 @@ and statement_decl cx = Ast.Statement.(
       let tvar = Flow_js.mk_tvar cx r in
       Env_js.init_env cx name (create_env_entry tvar tvar (Some loc))
 
+  | (loc, DeclareVariable { DeclareVariable.id; })
+  | (loc, DeclareFunction { DeclareFunction.id; }) ->
+      let _, { Ast.Identifier.name; typeAnnotation; _; } = id in
+      let r = mk_reason (spf "declare %s" name) loc in
+      let t = mk_type_annotation cx r typeAnnotation in
+      Hashtbl.replace cx.type_table loc t;
+      Env_js.init_env cx name (create_env_entry t t (Some loc))
+
   | (loc, VariableDeclaration decl) ->
       variable_declaration cx loc decl
 
@@ -770,13 +790,20 @@ and statement_decl cx = Ast.Statement.(
       let tvar = Flow_js.mk_tvar cx r in
       Env_js.init_env cx name (create_env_entry tvar tvar (Some loc))
 
+  | (loc, DeclareClass { Interface.id; _ })
   | (loc, InterfaceDeclaration { Interface.id; _ }) ->
       let _, { Ast.Identifier.name; _ } = id in
       let r = mk_reason (spf "class %s" name) loc in
       let tvar = Flow_js.mk_tvar cx r in
       Env_js.init_env cx name (create_env_entry tvar tvar (Some loc))
   | (loc, DeclareModule { DeclareModule.id; _ }) ->
-      let _, { Ast.Identifier.name; _ } = id in
+      let name = match id with
+      | DeclareModule.Identifier (_, id) -> id.Ast.Identifier.name
+      | DeclareModule.Literal (_, { Ast.Literal.value = Ast.Literal.String str; _; }) ->
+          str
+      | _ ->
+          (* The only literals that we should see as module names are strings *)
+          assert false in
       let r = mk_reason (spf "module %s" name) loc in
       let t = mk_object cx r in
       Hashtbl.replace cx.type_table loc t;
@@ -860,7 +887,7 @@ and statement cx = Ast.Statement.(
   *)
   | (loc, If { If.test; consequent; alternate }) ->
       let reason = mk_reason "if" loc in
-      let _, pred, not_pred = predicate_of_condition cx test in
+      let _, pred, not_pred, xts = predicate_of_condition cx test in
       let ctx = !Env_js.env in
       let oldset = Env_js.swap_changeset (fun _ -> SSet.empty) in
 
@@ -868,14 +895,15 @@ and statement cx = Ast.Statement.(
 
       let then_ctx = Env_js.clone_env ctx in
       Env_js.update_frame cx then_ctx;
-      Env_js.refine_with_pred cx reason pred;
+      Env_js.refine_with_pred cx reason pred xts;
+
       mark_exception_handler
         (fun () -> statement cx consequent)
         exception_then;
 
       let else_ctx = Env_js.clone_env ctx in
       Env_js.update_frame cx else_ctx;
-      Env_js.refine_with_pred cx reason not_pred;
+      Env_js.refine_with_pred cx reason not_pred xts;
       (match alternate with
         | None -> ()
         | Some st ->
@@ -888,7 +916,8 @@ and statement cx = Ast.Statement.(
       Env_js.merge_env cx reason (ctx, then_ctx, else_ctx) newset;
       Env_js.update_frame cx ctx;
 
-      raise_and_exception !exception_then !exception_else
+      raise_and_exception !exception_then !exception_else;
+
 
   | (loc, Labeled { Labeled.label = _, { Ast.Identifier.name; _ }; body }) ->
       (match body with
@@ -1104,7 +1133,7 @@ and statement cx = Ast.Statement.(
       Env_js.update_frame cx do_ctx;
       (* do_ctx = Pre' *)
       (* ENV = [do_ctx] *)
-      let _, pred, not_pred =
+      let _, pred, not_pred, xtypes =
         predicate_of_condition cx test in
 
       let body_ctx = Env_js.clone_env do_ctx in
@@ -1112,7 +1141,7 @@ and statement cx = Ast.Statement.(
       (* body_ctx = Pre' *)
       (* ENV = [body_ctx] *)
 
-      Env_js.refine_with_pred cx reason pred;
+      Env_js.refine_with_pred cx reason pred xtypes;
       (* body_ctx = Pre' & c *)
 
       let exception_ = ref None in
@@ -1130,7 +1159,7 @@ and statement cx = Ast.Statement.(
       (* Pre' > Post' *)
 
       Env_js.update_frame cx do_ctx;
-      Env_js.refine_with_pred cx reason not_pred;
+      Env_js.refine_with_pred cx reason not_pred xtypes;
       if Abnormal.swap (Abnormal.Break None) save_break_exn
       then Env_js.havoc_env2 newset;
       (* ENV = [ctx] *)
@@ -1174,14 +1203,14 @@ and statement cx = Ast.Statement.(
       if Abnormal.swap (Abnormal.Continue None) save_continue_exn
       then Env_js.havoc_env2 !Env_js.changeset;
 
-      let _, pred, not_pred =
+      let _, pred, not_pred, xtypes =
         predicate_of_condition cx test in
       (* body_ctx = Post' *)
 
       let done_ctx = Env_js.clone_env body_ctx in
       (* done_ctx = Post' *)
 
-      Env_js.refine_with_pred cx reason pred;
+      Env_js.refine_with_pred cx reason pred xtypes;
       (* body_ctx = Post' & c *)
 
       let newset = Env_js.swap_changeset (SSet.union oldset) in
@@ -1189,7 +1218,7 @@ and statement cx = Ast.Statement.(
       (* Pre' > Post' & c *)
 
       Env_js.update_frame cx done_ctx;
-      Env_js.refine_with_pred cx reason not_pred;
+      Env_js.refine_with_pred cx reason not_pred xtypes;
       if Abnormal.swap (Abnormal.Break None) save_break_exn
       then Env_js.havoc_env2 newset;
       (* ENV = [done_ctx] *)
@@ -1229,16 +1258,16 @@ and statement cx = Ast.Statement.(
       let do_ctx = Env_js.clone_env ctx in
       Env_js.update_frame cx do_ctx;
 
-      let _, pred, not_pred = match test with
+      let _, pred, not_pred, xtypes = match test with
         | None ->
-            UndefT.t, SMap.empty, SMap.empty (* TODO: prune the "not" case *)
+            UndefT.t, SMap.empty, SMap.empty, SMap.empty (* TODO: prune the "not" case *)
         | Some expr ->
             predicate_of_condition cx expr
       in
 
       let body_ctx = Env_js.clone_env do_ctx in
       Env_js.update_frame cx body_ctx;
-      Env_js.refine_with_pred cx reason pred;
+      Env_js.refine_with_pred cx reason pred xtypes;
 
       let exception_ = ref None in
       ignore_break_continue_exception_handler
@@ -1259,7 +1288,7 @@ and statement cx = Ast.Statement.(
       Env_js.copy_env cx reason (ctx,body_ctx) newset;
 
       Env_js.update_frame cx do_ctx;
-      Env_js.refine_with_pred cx reason not_pred;
+      Env_js.refine_with_pred cx reason not_pred xtypes;
       if Abnormal.swap (Abnormal.Break None) save_break_exn
       then Env_js.havoc_env2 newset;
 
@@ -1352,11 +1381,14 @@ and statement cx = Ast.Statement.(
     }) ->
       let reason = mk_reason "function" loc in
       let this = Flow_js.mk_tvar cx (replace_reason "this" reason) in
-      let fn_type = mk_function cx reason typeParameters
+      let fn_type = mk_function None cx reason typeParameters
         (params, defaults, rest) returnType body this
       in
       Hashtbl.replace cx.type_table loc fn_type;
       Env_js.set_var cx name fn_type reason
+
+  | (loc, DeclareVariable { DeclareVariable.id; })
+  | (loc, DeclareFunction { DeclareFunction.id; }) -> ()
 
   | (loc, VariableDeclaration decl) ->
       variables cx loc decl
@@ -1374,6 +1406,12 @@ and statement cx = Ast.Statement.(
       Hashtbl.replace cx.type_table loc cls_type;
       Env_js.set_var cx name cls_type reason
 
+  | (loc, DeclareClass {
+      Interface.id;
+      typeParameters;
+      body = (_, { Ast.Type.Object.properties; indexers; callProperties });
+      extends;
+    })
   | (loc, InterfaceDeclaration {
       Interface.id;
       typeParameters;
@@ -1383,16 +1421,18 @@ and statement cx = Ast.Statement.(
     let _, { Ast.Identifier.name = iname; _ } = id in
     let reason = mk_reason iname loc in
     let typeparams, imap, map = mk_type_param_declarations cx typeParameters in
-    let fmap, mmap = List.fold_left Ast.Type.Object.Property.(
-      fun (fmap_, mmap_) (loc, { key; value; _; }) ->
+    let sfmap, smmap, fmap, mmap = List.fold_left Ast.Type.Object.Property.(
+      fun (sfmap_, smmap_, fmap_, mmap_) (loc, { key; value; static; _ }) ->
         Ast.Expression.Object.Property.(match key with
         | Literal (loc, _)
         | Computed (loc, _) ->
             let msg = "illegal name" in
             Flow_js.add_error cx [Reason_js.mk_reason "" loc, msg];
-            (fmap_, mmap_)
+            (sfmap_, smmap_, fmap_, mmap_)
 
         | Identifier (loc, { Ast.Identifier.name; _ }) ->
+          if static
+          then
             let t = convert cx map value in
             let t = match SMap.get name mmap_ with
               | None -> t
@@ -1402,10 +1442,23 @@ and statement cx = Ast.Statement.(
                   IntersectionT (Reason_js.mk_reason iname loc, [t; t0])
             in
             match value with
-              | _, Ast.Type.Function _ -> (fmap_, SMap.add name t mmap_)
-              | _ -> (SMap.add name t fmap_, mmap_)
+              | _, Ast.Type.Function _ -> (sfmap_, SMap.add name t smmap_,
+          fmap_, mmap_)
+              | _ -> (SMap.add name t sfmap_, smmap_, fmap_, mmap_)
+          else
+            let t = convert cx map value in
+            let t = match SMap.get name mmap_ with
+              | None -> t
+              | Some (IntersectionT (reason, ts)) ->
+                  IntersectionT (reason, ts @ [t])
+              | Some t0 ->
+                  IntersectionT (Reason_js.mk_reason iname loc, [t; t0])
+            in
+            match value with
+              | _, Ast.Type.Function _ -> (sfmap_, smmap_, fmap_, SMap.add name t mmap_)
+              | _ -> (sfmap_, smmap_, SMap.add name t fmap_, mmap_)
         )
-    ) (SMap.empty, SMap.empty) properties
+    ) (SMap.empty, SMap.empty, SMap.empty, SMap.empty) properties
     in
     let fmap = Ast.Type.Object.Indexer.(match indexers with
     | [] -> fmap
@@ -1416,12 +1469,24 @@ and statement cx = Ast.Statement.(
     (* TODO *)
     | _ -> failwith "Unimplemented: multiple indexers")
     in
-    let mmap = match callProperties with
+    let calls = callProperties |> List.map (function
+      | loc, { Ast.Type.Object.CallProperty.value = (_, ft); static; } ->
+        (static, convert cx map (loc, Ast.Type.Function ft))
+    ) in
+    let scalls, calls = List.partition fst calls in
+    let smmap = match scalls with
+      | [] -> smmap
+      | [_,t] -> SMap.add "$call" t smmap
+      | _ -> let scalls = List.map snd scalls in
+             SMap.add "$call" (IntersectionT (mk_reason iname loc,
+                                              scalls)) smmap
+    in
+    let mmap = match calls with
       | [] -> mmap
-      | [loc, ft] -> SMap.add "$call" (convert cx map (loc, Ast.Type.Function ft)) mmap
-      | fts ->
-        let fts = List.map (fun (loc, ft) -> convert cx map (loc, Ast.Type.Function ft)) fts in
-        SMap.add "$call" (IntersectionT (mk_reason iname loc, fts)) mmap
+      | [_,t] -> SMap.add "$call" t mmap
+      | _ -> let calls = List.map snd calls in
+             SMap.add "$call" (IntersectionT (mk_reason iname loc,
+                                              calls)) mmap
     in
     let mmap = match SMap.get "constructor" mmap with
       | None ->
@@ -1434,11 +1499,17 @@ and statement cx = Ast.Statement.(
       | Some _ ->
         mmap
     in
-    let i = mk_interface cx reason typeparams imap map (fmap, mmap) extends in
+    let i = mk_interface cx reason typeparams imap map (sfmap, smmap, fmap, mmap) extends in
     Hashtbl.replace cx.type_table loc i;
     Env_js.set_var cx iname i reason
   | (loc, DeclareModule { DeclareModule.id; body; }) ->
-    let _, { Ast.Identifier.name; _ } = id in
+    let name = match id with
+    | DeclareModule.Identifier (_, id) -> id.Ast.Identifier.name
+    | DeclareModule.Literal (_, { Ast.Literal.value = Ast.Literal.String str; _; }) ->
+        str
+    | _ ->
+        (* The only literals that we should see as module names are strings *)
+        assert false in
     let _, { Ast.Statement.Block.body = elements } = body in
 
     let reason = mk_reason (spf "module %s" name) loc in
@@ -1509,11 +1580,11 @@ and object_ cx props = Ast.Expression.Object.(
                        _ }) ->
         Ast.Expression.Function.(
           let { params; defaults; rest; body;
-                returnType; typeParameters; _ } = func
+                returnType; typeParameters; id; _ } = func
           in
           let reason = mk_reason "function" vloc in
           let this = Flow_js.mk_tvar cx (replace_reason "this" reason) in
-          let ft = mk_function cx reason typeParameters
+          let ft = mk_function id cx reason typeParameters
             (params, defaults, rest) returnType body this
           in
           Hashtbl.replace cx.type_table vloc ft;
@@ -1700,9 +1771,11 @@ and expression_ cx loc = Ast.Expression.(function
           let void = void_ loc in
           let reason = reason_of_t void in
           UnionT (reason, [void; Flow_js.mk_tvar cx reason])
-        else
+        else (
           let reason = mk_reason (spf "identifier %s" name) loc in
-          Env_js.var_ref cx name reason
+          let t = Env_js.var_ref cx name reason in
+          t
+        )
       )
 
   | This ->
@@ -1774,15 +1847,21 @@ and expression_ cx loc = Ast.Expression.(function
       _
     } -> (
       let reason = mk_reason (spf "property %s" name) loc in
-      let tobj = expression cx _object in
-      if Type_inference_hooks_js.dispatch_member_hook cx name ploc tobj
-      then AnyT.at ploc
-      else (
-        Flow_js.mk_tvar_where cx reason (fun t ->
-          Flow_js.unit_flow cx (tobj, GetT (reason, name, t))
+      let refined = match _object with
+      | _, Identifier (_, { Ast.Identifier.name = oname; _ }) ->
+          Env_js.get_lookup_refinement cx oname name reason
+      | _ -> None
+      in match refined with
+      | Some t -> t
+      | None ->
+        let tobj = expression cx _object in
+        if Type_inference_hooks_js.dispatch_member_hook cx name ploc tobj
+        then AnyT.at ploc
+        else (
+          Flow_js.mk_tvar_where cx reason (fun t ->
+            Flow_js.unit_flow cx (tobj, GetT (reason, name, t)))
         )
       )
-    )
 
   | Object { Object.properties } ->
     let reason = mk_reason "object literal" loc in
@@ -1954,6 +2033,7 @@ and expression_ cx loc = Ast.Expression.(function
       let argts = List.map (expression_or_spread cx) arguments in
       let reason = mk_reason (spf "call of method %s" name) loc in
       Type_inference_hooks_js.dispatch_call_hook cx name ploc ot;
+      Env_js.havoc_heap_refinements ();
       Flow_js.mk_tvar_where cx reason (fun t ->
         Flow_js.unit_flow cx
           (ot, MethodT(reason, name, ot, argts, t, List.hd !Flow_js.frames))
@@ -1983,8 +2063,8 @@ and expression_ cx loc = Ast.Expression.(function
       let reason = mk_reason "invariant" loc in
       (match arguments with
       | [ Expression cond ] ->
-        let _, pred, not_pred = predicate_of_condition cx cond in
-        Env_js.refine_with_pred cx reason pred
+        let _, pred, not_pred, xtypes = predicate_of_condition cx cond in
+        Env_js.refine_with_pred cx reason pred xtypes
       | _ ->
         let msg = "unsupported arguments in call to invariant()" in
         Flow_js.add_error cx [mk_reason "" loc, msg]
@@ -2061,6 +2141,7 @@ and expression_ cx loc = Ast.Expression.(function
       let f = expression cx callee in
       let reason = mk_reason "function call" loc in
       let argts = List.map (expression_or_spread cx) arguments in
+      Env_js.havoc_heap_refinements ();
       Flow_js.mk_tvar_where cx reason (fun t ->
         let app =
           Flow_js.mk_functiontype2 argts None t (List.hd !Flow_js.frames) in
@@ -2069,18 +2150,18 @@ and expression_ cx loc = Ast.Expression.(function
 
   | Conditional { Conditional.test; consequent; alternate } ->
       let reason = mk_reason "conditional" loc in
-      let _, pred, not_pred = predicate_of_condition cx test in
+      let _, pred, not_pred, xtypes = predicate_of_condition cx test in
       let ctx = !Env_js.env in
       let oldset = Env_js.swap_changeset (fun _ -> SSet.empty) in
 
       let then_ctx = Env_js.clone_env ctx in
       Env_js.update_frame cx then_ctx;
-      Env_js.refine_with_pred cx reason pred;
+      Env_js.refine_with_pred cx reason pred xtypes;
       let t1 = expression cx consequent in
 
       let else_ctx = Env_js.clone_env ctx in
       Env_js.update_frame cx else_ctx;
-      Env_js.refine_with_pred cx reason not_pred;
+      Env_js.refine_with_pred cx reason not_pred xtypes;
       let t2 = expression cx alternate in
 
       let newset = Env_js.swap_changeset (SSet.union oldset) in
@@ -2108,7 +2189,7 @@ and expression_ cx loc = Ast.Expression.(function
     } ->
       let reason = mk_reason "function" loc in
       let this = Flow_js.mk_tvar cx (replace_reason "this" reason) in
-      mk_function cx reason
+      mk_function id cx reason
         typeParameters (params, defaults, rest) returnType body this
 
   (* TODO: unsupported generators *)
@@ -2333,20 +2414,20 @@ and refine_type cx reason t p =
 
 and logical cx loc = Ast.Expression.Logical.(function
   | { operator = Or; left; right } ->
-      let t1, _, not_map = predicate_of_condition cx left in
+      let t1, _, not_map, xtypes = predicate_of_condition cx left in
       let reason = mk_reason "||" loc in
       let t = refine_type cx reason (expression cx left) ExistsP in
-      let t2 = Env_js.refine_env cx reason not_map
+      let t2 = Env_js.refine_env cx reason not_map xtypes
         (fun () -> expression cx right)
       in
       Flow_js.unit_flow cx (t2, t);
       t
 
   | { operator = And; left; right } ->
-      let t1, map, _ = predicate_of_condition cx left in
+      let t1, map, _, xtypes = predicate_of_condition cx left in
       let reason = mk_reason "&&" loc in
       let t = refine_type cx reason (expression cx left) (NotP ExistsP) in
-      let t2 = Env_js.refine_env cx reason map
+      let t2 = Env_js.refine_env cx reason map xtypes
         (fun () -> expression cx right)
       in
       Flow_js.unit_flow cx (t2, t);
@@ -3008,8 +3089,9 @@ and static_method_call_React cx loc m args_ = Ast.Expression.(
         (mk_reason (spf "React.%s" m) loc) m argts
 )
 
-and predicate_of_condition cx = Ast.Expression.(function
+and predicate_of_condition cx e = Ast.Expression.(match e with
 
+  (* x instanceof t *)
   | _, Binary { Binary.operator = Binary.Instanceof;
       left = _, Identifier (_, { Ast.Identifier.name; _ });
       right
@@ -3018,9 +3100,31 @@ and predicate_of_condition cx = Ast.Expression.(function
       (
         BoolT.t,
         SMap.singleton name (InstanceofP t),
-        SMap.singleton name (NotP (InstanceofP t))
+        SMap.singleton name (NotP (InstanceofP t)),
+        SMap.empty
       )
 
+  (* o.p instanceof t *)
+  | _, Binary { Binary.operator = Binary.Instanceof;
+     left = _, Member {
+         Member._object = _, Identifier (_,
+           { Ast.Identifier.name = oname; _ });
+         property = Member.PropertyIdentifier (ploc,
+           { Ast.Identifier.name = pname; _ });
+         _ } as left;
+      right
+    } ->
+      let name = Env_js.prop_lookup_name oname pname in
+      let lt = expression cx left in
+      let rt = expression cx right in
+      (
+        BoolT.t,
+        SMap.singleton name (InstanceofP rt),
+        SMap.singleton name (NotP (InstanceofP rt)),
+        SMap.singleton name lt
+      )
+
+  (* x == null *)
   | _, Binary { Binary.operator = Binary.Equal;
       left = _, Identifier (_, { Ast.Identifier.name; _ });
       right = _, Literal { Ast.Literal.value = Ast.Literal.Null; _; }
@@ -3028,9 +3132,30 @@ and predicate_of_condition cx = Ast.Expression.(function
       (
         BoolT.t,
         SMap.singleton name (IsP "maybe"),
-        SMap.singleton name (NotP (IsP "maybe"))
+        SMap.singleton name (NotP (IsP "maybe")),
+        SMap.empty
       )
 
+  (* o.p == null *)
+  | _, Binary { Binary.operator = Binary.Equal;
+     left = _, Member {
+         Member._object = _, Identifier (_,
+           { Ast.Identifier.name = oname; _ });
+         property = Member.PropertyIdentifier (ploc,
+           { Ast.Identifier.name = pname; _ });
+         _ } as left;
+     right = _, Literal { Ast.Literal.value = Ast.Literal.Null; _; }
+   } ->
+      let name = Env_js.prop_lookup_name oname pname in
+      let t = expression cx left in
+      (
+        BoolT.t,
+        SMap.singleton name (IsP "maybe"),
+        SMap.singleton name (NotP (IsP "maybe")),
+        SMap.singleton name t
+      )
+
+  (* x != null *)
   | _, Binary { Binary.operator = Binary.NotEqual;
       left = _, Identifier (_, { Ast.Identifier.name; _ });
       right = _, Literal { Ast.Literal.value = Ast.Literal.Null; _; }
@@ -3038,9 +3163,30 @@ and predicate_of_condition cx = Ast.Expression.(function
       (
         BoolT.t,
         SMap.singleton name (NotP (IsP "maybe")),
-        SMap.singleton name (IsP "maybe")
+        SMap.singleton name (IsP "maybe"),
+        SMap.empty
       )
 
+  (* o.p != null *)
+  | _, Binary { Binary.operator = Binary.NotEqual;
+     left = _, Member {
+         Member._object = _, Identifier (_,
+           { Ast.Identifier.name = oname; _ });
+         property = Member.PropertyIdentifier (ploc,
+           { Ast.Identifier.name = pname; _ });
+         _ } as left;
+     right = _, Literal { Ast.Literal.value = Ast.Literal.Null; _; }
+   } ->
+     let name = Env_js.prop_lookup_name oname pname in
+     let t = expression cx left in
+     (
+       BoolT.t,
+       SMap.singleton name (NotP (IsP "maybe")),
+       SMap.singleton name (IsP "maybe"),
+       SMap.singleton name t
+     )
+
+  (* x === null *)
   | _, Binary { Binary.operator = Binary.StrictEqual;
       left = _, Identifier (_, { Ast.Identifier.name; _ });
       right = _, Literal { Ast.Literal.value = Ast.Literal.Null; _; }
@@ -3048,7 +3194,27 @@ and predicate_of_condition cx = Ast.Expression.(function
       (
         BoolT.t,
         SMap.singleton name (IsP "null"),
-        SMap.singleton name (NotP (IsP "null"))
+        SMap.singleton name (NotP (IsP "null")),
+        SMap.empty
+      )
+
+  (* o.p === null *)
+  | _, Binary { Binary.operator = Binary.StrictEqual;
+     left = _, Member {
+         Member._object = _, Identifier (_,
+           { Ast.Identifier.name = oname; _ });
+         property = Member.PropertyIdentifier (ploc,
+           { Ast.Identifier.name = pname; _ });
+         _ } as left;
+     right = _, Literal { Ast.Literal.value = Ast.Literal.Null; _; }
+   } ->
+      let name = Env_js.prop_lookup_name oname pname in
+      let t = expression cx left in
+      (
+        BoolT.t,
+        SMap.singleton name (IsP "null"),
+        SMap.singleton name (NotP (IsP "null")),
+        SMap.singleton name t
       )
 
   | _, Binary { Binary.operator = Binary.StrictNotEqual;
@@ -3058,17 +3224,55 @@ and predicate_of_condition cx = Ast.Expression.(function
       (
         BoolT.t,
         SMap.singleton name (NotP (IsP "null")),
-        SMap.singleton name (IsP "null")
+        SMap.singleton name (IsP "null"),
+        SMap.empty
+      )
+
+  (* o.p !== null *)
+  | _, Binary { Binary.operator = Binary.StrictNotEqual;
+     left = _, Member {
+         Member._object = _, Identifier (_,
+           { Ast.Identifier.name = oname; _ });
+         property = Member.PropertyIdentifier (ploc,
+           { Ast.Identifier.name = pname; _ });
+         _ } as left;
+     right = _, Literal { Ast.Literal.value = Ast.Literal.Null; _; }
+   } ->
+      let name = Env_js.prop_lookup_name oname pname in
+      let t = expression cx left in
+      (
+        BoolT.t,
+        SMap.singleton name (NotP (IsP "null")),
+        SMap.singleton name (IsP "null"),
+        SMap.singleton name t
       )
 
   (* TODO: (strict) equality of undefined *)
 
+  (* x *)
   | loc, Identifier (_, { Ast.Identifier.name; _ }) ->
       let reason = mk_reason name loc in
       (
         Env_js.get_var cx name reason,
         SMap.singleton name ExistsP,
-        SMap.singleton name (NotP ExistsP)
+        SMap.singleton name (NotP ExistsP),
+        SMap.empty
+      )
+
+  (* o.p *)
+  | loc, Member {
+         Member._object = _, Identifier (_,
+           { Ast.Identifier.name = oname; _ });
+         property = Member.PropertyIdentifier (ploc,
+           { Ast.Identifier.name = pname; _ });
+         _ } as expr ->
+      let name = Env_js.prop_lookup_name oname pname in
+      let t = expression cx expr in
+      (
+        t,
+        SMap.singleton name ExistsP,
+        SMap.singleton name (NotP ExistsP),
+        SMap.singleton name t
       )
 
   | _, Binary { Binary.operator = Binary.Equal | Binary.StrictEqual;
@@ -3079,9 +3283,11 @@ and predicate_of_condition cx = Ast.Expression.(function
       (
         BoolT.t,
         SMap.singleton name (IsP s),
-        SMap.singleton name (NotP (IsP s))
+        SMap.singleton name (NotP (IsP s)),
+        SMap.empty
       )
 
+  (* Array.isArray(x) *)
   | _, Call {
       Call.callee = _, Member {
         Member._object = _, Identifier (_,
@@ -3096,43 +3302,72 @@ and predicate_of_condition cx = Ast.Expression.(function
       (
         BoolT.t,
         SMap.singleton name (IsP "array"),
-        SMap.singleton name (NotP (IsP "array"))
+        SMap.singleton name (NotP (IsP "array")),
+        SMap.empty
+      )
+
+  (* Array.isArray(o.p) *)
+  | _, Call {
+      Call.callee = _, Member {
+        Member._object = _, Identifier (_,
+          { Ast.Identifier.name = "Array"; _ });
+        property = Member.PropertyIdentifier (_,
+          { Ast.Identifier.name = "isArray"; _ });
+        _
+      };
+      arguments = [Expression (_, Member {
+         Member._object = _, Identifier (_,
+           { Ast.Identifier.name = oname; _ });
+         property = Member.PropertyIdentifier (ploc,
+           { Ast.Identifier.name = pname; _ });
+         _ } as expr
+      )]
+    } ->
+      let name = Env_js.prop_lookup_name oname pname in
+      let t = expression cx expr in
+      (
+        BoolT.t,
+        SMap.singleton name (IsP "array"),
+        SMap.singleton name (NotP (IsP "array")),
+        SMap.singleton name t
       )
 
   | loc, Logical { Logical.operator = Logical.And; left; right } ->
       let reason = mk_reason "&&" loc in
-      let t1, map1, not_map1 = predicate_of_condition cx left in
+      let t1, map1, not_map1, xts1 = predicate_of_condition cx left in
       let t = refine_type cx reason t1 (NotP ExistsP) in
-      let t2, map2, not_map2 = Env_js.refine_env cx reason map1
+      let t2, map2, not_map2, xts2 = Env_js.refine_env cx reason map1 xts1
         (fun () -> predicate_of_condition cx right)
       in
       Flow_js.unit_flow cx (t2, t);
       (
         t,
         mk_and map1 map2,
-        mk_or not_map1 not_map2
+        mk_or not_map1 not_map2,
+        SMap.union xts1 xts2
       )
 
   | loc, Logical { Logical.operator = Logical.Or; left; right } ->
       let reason = mk_reason "||" loc in
-      let t1,map1,not_map1 = predicate_of_condition cx left in
+      let t1, map1, not_map1, xts1 = predicate_of_condition cx left in
       let t = refine_type cx reason t1 ExistsP in
-      let t2,map2,not_map2 = Env_js.refine_env cx reason not_map1
+      let t2, map2, not_map2, xts2 = Env_js.refine_env cx reason not_map1 xts1
         (fun () -> predicate_of_condition cx right)
       in
       Flow_js.unit_flow cx (t2,t);
       (
         t,
         mk_or map1 map2,
-        mk_and not_map1 not_map2
+        mk_and not_map1 not_map2,
+        SMap.union xts1 xts2
       )
 
   | _, Unary { Unary.operator = Unary.Not; argument; _ } ->
-      let (t, map, not_map) = predicate_of_condition cx argument in
-      (t, not_map, map)
+      let (t, map, not_map, xts) = predicate_of_condition cx argument in
+      (t, not_map, map, xts)
 
   | e ->
-      (expression cx e, SMap.empty, SMap.empty)
+      (expression cx e, SMap.empty, SMap.empty, SMap.empty)
 )
 
 and mk_and map1 map2 = SMap.merge
@@ -3273,14 +3508,10 @@ and mk_signature cx c_type_params_map body = Ast.Statement.Class.(
         Property.key = Ast.Expression.Object.Property.Identifier
           (_, { Ast.Identifier.name; _ });
         typeAnnotation = (_, typeAnnotation);
+        static = false;
       }) ->
         let t = convert cx c_type_params_map typeAnnotation in
         SMap.add name t fields
-
-    | Body.Property (loc, _) ->
-          let msg = "invalid/unsupported class property" in
-          Flow_js.add_error cx [mk_reason "" loc, msg];
-          fields
 
     | _ -> fields
 
@@ -3343,14 +3574,14 @@ and mk_class_elements cx this super method_sigs body = Ast.Statement.Class.(
            (_, _, ret, param_types_map, param_loc_map)) =
         SMap.find_unsafe name method_sigs in
 
-      let reason = mk_reason "class elements" loc in
+      let reason = mk_reason (spf "method %s" name) loc in
       let save_return_exn = Abnormal.swap Abnormal.Return false in
       generate_tests reason typeparams (fun map_ ->
         let param_types_map =
           param_types_map |> SMap.map (Flow_js.subst cx map_) in
         let ret = Flow_js.subst cx map_ ret in
 
-        mk_body cx param_types_map param_loc_map ret body this super;
+        mk_body None cx param_types_map param_loc_map ret body this super;
       );
       if not (Abnormal.swap Abnormal.Return save_return_exn)
       then Flow_js.unit_flow cx (VoidT (mk_reason "return undefined" loc), ret)
@@ -3359,10 +3590,10 @@ and mk_class_elements cx this super method_sigs body = Ast.Statement.Class.(
   ) elements
 )
 
-and mk_static_methods cx static body = Ast.Statement.Class.(
+and mk_static_fields_methods cx super_static static body = Ast.Statement.Class.(
   let _, { Body.body = elements } = body in
 
-  List.iter (function
+  let map = List.fold_left (fun map -> function
 
     | Body.Method (loc, {
         Method.key = Ast.Expression.Object.Property.Identifier (_,
@@ -3372,14 +3603,29 @@ and mk_static_methods cx static body = Ast.Statement.Class.(
         kind = Ast.Expression.Object.Property.Init;
         static = true
       }) ->
-      let reason = mk_reason "function" loc in
+      let reason = mk_reason (spf "function %s" name) loc in
       let this = Flow_js.mk_tvar cx (replace_reason "this" reason) in
-      let meth = mk_function cx reason
+      let meth = mk_function None cx reason
         typeParameters (params, defaults, rest) returnType body this
       in
-      Flow_js.unit_flow cx (static, SetT (reason, name, meth))
-    | _ -> ()
-  ) elements
+      SMap.add name meth map
+
+    | Body.Property (loc, {
+        Property.key = Ast.Expression.Object.Property.Identifier
+          (_, { Ast.Identifier.name; _ });
+        typeAnnotation = (_, typeAnnotation);
+        static = true;
+      }) ->
+        let t = convert cx SMap.empty typeAnnotation in
+        SMap.add name t map
+
+    | _ -> map
+  ) SMap.empty elements in
+
+  Flow_js.unit_flow cx (
+    Flow_js.mk_object_with_map_proto cx (reason_of_t static) map super_static,
+    static
+  )
 )
 
 (* TODO: why reason_c? *)
@@ -3406,7 +3652,7 @@ and mk_class cx reason_c type_params extends body =
   let super_static = Flow_js.mk_tvar_where cx static_reason (fun t ->
     Flow_js.unit_flow cx (super, GetT(static_reason, "statics", t));
   ) in
-  let static = Flow_js.mk_object_with_map_proto cx static_reason SMap.empty super_static in
+  let static = Flow_js.mk_tvar cx static_reason in
 
   generate_tests reason_c typeparams (fun map_ ->
     let super = Flow_js.subst cx map_ super in
@@ -3439,7 +3685,7 @@ and mk_class cx reason_c type_params extends body =
     mk_class_elements cx this super methods_ body;
   );
 
-  mk_static_methods cx static body;
+  mk_static_fields_methods cx super_static static body;
 
   let methods = methods_ |> SMap.map (
     fun (typeparams, type_params_map, (params,pnames,ret,params_map,params_loc)) ->
@@ -3469,7 +3715,7 @@ and mk_class cx reason_c type_params extends body =
   else
     PolyT(typeparams, ClassT this)
 
-and mk_interface cx reason typeparams imap map (fmap, mmap) extends =
+and mk_interface cx reason typeparams imap map (sfmap, smmap, fmap, mmap) extends =
   let id = Flow_js.mk_nominal cx in
   let extends =
     match extends with
@@ -3484,7 +3730,10 @@ and mk_interface cx reason typeparams imap map (fmap, mmap) extends =
   let static_reason = prefix_reason "statics of " reason in
   let static, fmap =
     match SMap.get "statics" fmap with
-    | None -> mk_object cx static_reason, fmap
+    | None ->
+      Flow_js.mk_object_with_map_proto cx static_reason
+        (SMap.union sfmap smmap) (MixedT (reason_of_string "Object")),
+      fmap
     | Some t -> t, SMap.remove "statics" fmap
   in
 
@@ -3523,7 +3772,7 @@ and mk_interface cx reason typeparams imap map (fmap, mmap) extends =
   then c
   else PolyT (typeparams, c)
 
-and function_decl cx (reason:reason) type_params params ret body this super =
+and function_decl id cx (reason:reason) type_params params ret body this super =
   let typeparams,_,type_params_map = mk_type_param_declarations cx type_params in
 
   let (params, pnames, ret, param_types_map, param_types_loc) =
@@ -3535,7 +3784,7 @@ and function_decl cx (reason:reason) type_params params ret body this super =
       param_types_map |> SMap.map (Flow_js.subst cx map_) in
     let ret = Flow_js.subst cx map_ ret in
 
-    mk_body cx param_types_map param_types_loc ret body this super;
+    mk_body id cx param_types_map param_types_loc ret body this super;
   );
 
   if not (Abnormal.swap Abnormal.Return save_return_exn)
@@ -3568,15 +3817,22 @@ and mk_upper_bound cx locs name t =
   in
   create_env_entry t tvar loc
 
-and mk_body cx param_types_map param_types_loc ret body this super =
+and mk_body id cx param_types_map param_types_loc ret body this super =
   let ctx = !Env_js.env in
   let new_ctx = Env_js.clone_env ctx in
   Env_js.update_frame cx new_ctx;
   Env_js.havoc_env();
-
+  let add_rec map =
+    match id with
+    | None -> map
+    | Some (loc, { Ast.Identifier.name; _ }) ->
+        map |> SMap.add name
+          (create_env_entry (AnyT.at loc) (AnyT.at loc) None)
+  in
   let block = ref (
       param_types_map
       |> SMap.mapi (mk_upper_bound cx param_types_loc)
+      |> add_rec
       |> SMap.add
           (internal_name "super")
           (create_env_entry super super None)
@@ -3756,10 +4012,10 @@ and extract_type_param_instantiations = function
   | None -> []
   | Some (_, typeParameters) -> typeParameters.Ast.Type.ParameterInstantiation.params
 
-and mk_function cx reason type_params params ret body this =
+and mk_function id cx reason type_params params ret body this =
 
   let (typeparams,params,pnames,ret) =
-    function_decl cx reason type_params params ret
+    function_decl id cx reason type_params params ret
       body this (MixedT (replace_reason "empty super object" reason))
   in
 
@@ -3784,7 +4040,7 @@ and mk_function cx reason type_params params ret body this =
 
 and mk_method cx reason params ret body this super =
   let (_,params,pnames,ret) =
-    function_decl cx reason None params ret body this super
+    function_decl None cx reason None params ret body this super
   in
   FunT (reason, Flow_js.dummy_static, Flow_js.dummy_prototype,
         Flow_js.mk_functiontype2

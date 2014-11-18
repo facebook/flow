@@ -1,0 +1,54 @@
+
+heap.js:4:17,22: ?string
+This type is incompatible with
+  heap.js:5:13,18: string
+
+heap.js:30:17,22: ?string
+This type is incompatible with
+  heap.js:33:15,20: string
+
+heap.js:30:17,22: null
+This type is incompatible with
+  heap.js:33:15,20: string
+
+heap.js:30:17,22: undefined
+This type is incompatible with
+  heap.js:33:15,20: string
+
+heap.js:38:17,22: ?string
+This type is incompatible with
+  heap.js:40:13,18: string
+
+heap.js:44:17,22: null
+This type is incompatible with
+  heap.js:47:15,20: string
+
+heap.js:44:17,22: undefined
+This type is incompatible with
+  heap.js:47:15,20: string
+
+local.js:5:22,22: ?string
+This type is incompatible with
+  local.js:5:13,18: string
+
+local.js:38:14,19: null
+This type is incompatible with
+  local.js:40:13,18: string
+
+local.js:38:14,19: undefined
+This type is incompatible with
+  local.js:40:13,18: string
+
+local.js:44:14,19: null
+This type is incompatible with
+  local.js:47:15,20: string
+
+local.js:44:14,19: undefined
+This type is incompatible with
+  local.js:47:15,20: string
+
+local.js:62:14,19: ?string
+This type is incompatible with
+  local.js:66:15,20: string
+
+Found 13 errors

@@ -1,3 +1,12 @@
+(**
+ * Copyright (c) 2014, Facebook, Inc.
+ * All rights reserved.
+ *
+ * This source code is licensed under the BSD-style license found in the
+ * LICENSE file in the "flow" directory of this source tree. An additional grant
+ * of patent rights can be found in the PATENTS file in the same directory.
+ *
+ *)
 
 (* This module describes the representation of lexical environments and defines
    various operations on them, including "stack" operations to push/pop scopes,
@@ -8,6 +17,15 @@ open Utils
 open Reason_js
 open Constraint_js
 open Type
+
+(* helpers *)
+
+(* prop lookups encoding *)
+let prop_lookup_name oname pname =
+  "$PGET " ^ oname ^ " " ^ pname
+
+let is_prop_lookup name =
+    (String.length name) >= 5 && (String.sub name 0 5) = "$PGET"
 
 (****************)
 (* Environments *)
@@ -138,6 +156,16 @@ let var_ref cx x reason =
   let p = pos_of_reason reason in
   mod_reason_of_t (repos_reason p) t
 
+let get_lookup_refinement cx x p r =
+  let name = prop_lookup_name x p in
+  let block = peek_env () in
+  match exists_block name block with
+  | Some { specific; _ } ->
+      let p = pos_of_reason r in
+      let t = mod_reason_of_t (repos_reason p) specific in
+      Some t
+  | None -> None
+
 let set_var cx x s reason =
   changeset := !changeset |> SSet.add x;
   let t = (read_env cx x reason).general in
@@ -241,6 +269,15 @@ let rec havoc_env2_ x = function
 let havoc_env2 xs =
   SSet.iter (fun x -> havoc_env2_ x !env) xs
 
+let havoc_heap_refinements () =
+  List.iter (fun block ->
+    block := SMap.mapi (fun x ({general;def_loc;_} as entry) ->
+      if is_prop_lookup x
+      then create_env_entry general general def_loc
+      else entry
+    ) !block
+ ) !env
+
 let clear_env reason =
   let block = List.hd !env in
   block := !block |> SMap.mapi (fun x {specific;general;def_loc;} ->
@@ -250,28 +287,34 @@ let clear_env reason =
     else create_env_entry (UndefT reason) general def_loc
   )
 
-(* The following pair of functions are used to narrow the type of variables
+(* The following functions are used to narrow the type of variables
    based on dynamic checks. *)
 
-let refine_with_pred cx reason pred =
+let refine_with_pred cx reason pred xtypes =
   SMap.iter (fun x predx ->
-    let (is_global,tx) = get_var_ cx x (replace_reason (spf "identifier %s" x) reason) in
+    (if is_prop_lookup x then
+      let t = SMap.find_unsafe x xtypes in
+      init_env cx x (create_env_entry t t None));
+    let (is_global,tx) = get_var_ cx x
+      (replace_reason (spf "identifier %s" x) reason)
+    in
     if is_global then ()
     else
       let rstr = spf "identifier %s when %s" x (string_of_predicate predx) in
       let reason = replace_reason rstr reason in
       let t = Flow_js.mk_tvar cx reason in
-      Flow_js.unit_flow cx (tx, mk_predicate (predx,t));
-      set_var cx x t reason
+      let rt = mk_predicate (predx, t) in
+      Flow_js.unit_flow cx (tx, rt);
+      set_var cx x t reason;
   )
     pred
 
-let refine_env cx reason pred f =
+let refine_env cx reason pred xtypes f =
   let ctx = !env in
   let new_ctx = clone_env ctx in
   update_frame cx new_ctx;
   let oldset = swap_changeset (fun _ -> SSet.empty) in
-  refine_with_pred cx reason pred;
+  refine_with_pred cx reason pred xtypes;
   let result = f() in
   let newset = swap_changeset (SSet.union oldset) in
   merge_env cx reason (ctx,new_ctx,ctx) newset;

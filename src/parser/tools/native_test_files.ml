@@ -1,3 +1,12 @@
+(**
+ * Copyright (c) 2014, Facebook, Inc.
+ * All rights reserved.
+ *
+ * This source code is licensed under the BSD-style license found in the
+ * LICENSE file in the "flow" directory of this source tree. An additional grant
+ * of patent rights can be found in the PATENTS file in the same directory.
+ *
+ *)
 (*
  * This is basically the same thing as js_test_files.js but instead of running
  * the js version of the parser this runs the fast native version. It doesn't

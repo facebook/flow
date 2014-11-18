@@ -65,8 +65,9 @@ let call_before_sleeping = Periodical.check
 let file_heater (root:Path.path) () =
   Printf.printf "Running the heater\n"; flush stdout;
   Hhi.touch ();
+  let root_path = Shell.escape_string_for_shell ((Path.string_of_path root)^"/") in
   let cmd =
-    "find "^Path.string_of_path root^"/ -name \"*.php\" | xargs cat > /tmp/files 2> /dev/null"
+    "find "^root_path^" -name \"*.php\" | xargs cat > /tmp/files 2> /dev/null"
   in
   let heater_ic = Unix.open_process_in cmd in
   try ignore (Unix.close_process_in heater_ic) with _ -> ()
@@ -108,4 +109,3 @@ let init (root_dir:Path.path) =
     Periodical.one_day  , exit_if_unused;
   ] in
   List.iter (fun (period, cb) -> Periodical.register_callback period cb) jobs
-

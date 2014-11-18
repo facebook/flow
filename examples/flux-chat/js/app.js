@@ -14,6 +14,7 @@
 
 // This file bootstraps the entire application.
 
+require('./object-assign');
 var ChatApp = require('./components/ChatApp.react');
 var ChatExampleData = require('./ChatExampleData');
 var ChatWebAPIUtils = require('./utils/ChatWebAPIUtils');

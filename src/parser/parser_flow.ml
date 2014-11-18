@@ -1,17 +1,11 @@
 (**
- *  Copyright 2012-2014 Facebook.
+ * Copyright (c) 2014, Facebook, Inc.
+ * All rights reserved.
  *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
+ * This source code is licensed under the BSD-style license found in the
+ * LICENSE file in the "flow" directory of this source tree. An additional grant
+ * of patent rights can be found in the PATENTS file in the same directory.
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
  *)
 
 open Lexer_flow
@@ -635,8 +629,12 @@ end = struct
           static;
         })
 
-      in let call_property env =
-        methodish env (Peek.loc env)
+      in let call_property env start_loc static =
+        let value = methodish env (Peek.loc env) in
+        Loc.btwn start_loc (fst value), Type.Object.CallProperty.({
+          value;
+          static;
+        })
 
       in let property env start_loc static key =
         let optional = Expect.maybe env T_PLING in
@@ -649,8 +647,7 @@ end = struct
           static;
         })
 
-      in let indexer_property env =
-        let start_loc = Peek.loc env in
+      in let indexer_property env start_loc static =
         Expect.token env T_LBRACKET;
         let id = Parse.identifier env in
         Expect.token env T_COLON;
@@ -662,6 +659,7 @@ end = struct
           id;
           key;
           value;
+          static;
         })
 
       in let semicolon env =
@@ -669,29 +667,33 @@ end = struct
         then Expect.token env T_SEMICOLON
 
       in let rec properties ~allow_static env (acc, indexers, callProperties) =
+        let start_loc = Peek.loc env in
+        let static = allow_static && Expect.maybe env T_STATIC in
         match Peek.token env with
         | T_EOF
         | T_RCURLY -> List.rev acc, List.rev indexers, List.rev callProperties
         | T_LBRACKET ->
-          let indexer = indexer_property env in
+          let indexer = indexer_property env start_loc static in
           semicolon env;
           properties allow_static env (acc, indexer::indexers, callProperties)
         | T_LESS_THAN
         | T_LPAREN ->
-          let call_prop = call_property env in
+          let call_prop = call_property env start_loc static in
           semicolon env;
           properties allow_static env (acc, indexers, call_prop::callProperties)
         | _ ->
-          let start_loc, key = Parse.object_key env in
-          let static, key = if allow_static
-            then match Peek.token env, key with
-            | T_COLON, _ -> false, key
-            | _, Expression.Object.Property.Identifier (_, {
-              Identifier.name = "static";
-              _;
-            }) -> true, snd (Parse.object_key env)
-            | _ -> false, key
-            else false, key in
+          let static, (_, key) = match static, Peek.token env with
+          | true, T_COLON ->
+              strict_error_at env (start_loc, Error.StrictReservedWord);
+              let static_key =
+                start_loc, Expression.Object.Property.Identifier ( start_loc, {
+                  Identifier.name = "static";
+                  optional = false;
+                  typeAnnotation = None;
+                }) in
+              false, static_key
+          | true, _ -> true, Parse.object_key env
+          | false, _ -> false, Parse.object_key env in
           let property = match Peek.token env with
           | T_LESS_THAN
           | T_LPAREN -> method_property env start_loc static key
@@ -1554,6 +1556,7 @@ end = struct
           | _ -> List.rev acc
 
         in fun env start_loc ->
+          let env = { env with strict = true; } in
           Expect.token env T_CLASS;
           let id = Parse.identifier env in
           let typeParameters = Type.type_parameter_declaration env in
@@ -1564,7 +1567,7 @@ end = struct
             end else [] in
           let body = Type._object ~allow_static:true env in
           let loc = Loc.btwn start_loc (fst body) in
-          loc, Statement.(InterfaceDeclaration Interface.({
+          loc, Statement.(DeclareClass Interface.({
             id;
             typeParameters;
             body;
@@ -1596,55 +1599,49 @@ end = struct
         | None -> end_loc
         | Some end_loc -> end_loc in
         Eat.semicolon env;
-        Loc.btwn start_loc end_loc,
-        Statement.(VariableDeclaration VariableDeclaration.({
-          kind = Var;
-          declarations = [
-            fst id, VariableDeclaration.Declarator.({
-              id = fst id, Pattern.Identifier id;
-              init = None;
-            })];
-        })) in
+        let loc = Loc.btwn start_loc end_loc in
+        loc, Statement.(DeclareFunction DeclareFunction.({ id; })) in
 
       let declare_var env start_loc =
         Expect.token env T_VAR;
         let id = Parse.identifier_with_type env Error.StrictVarName in
-        (* use optional to indicate that an initializer is not required *)
-        let id = fst id, {(snd id) with Identifier.optional = true; } in
         let end_loc = match Peek.semicolon_loc env with
         | None -> fst id
         | Some loc -> loc in
         let loc = Loc.btwn start_loc end_loc in
         Eat.semicolon env;
-        loc, Statement.(VariableDeclaration VariableDeclaration.({
-          kind = Var;
-          declarations = [
-            fst id, VariableDeclaration.Declarator.({
-              id = fst id, Pattern.Identifier id;
-              init = None;
-            })];
-        })) in
+        loc, Statement.(DeclareVariable DeclareVariable.({ id; })) in
 
-      let module_block_body env =
-        let start_loc = Peek.loc env in
-        Expect.token env T_LCURLY;
-        let term_fn = fun t -> t = T_RCURLY in
-        let body = Parse.module_body ~term_fn env in
-        let end_loc = Peek.loc env in
-        Expect.token env T_RCURLY;
-        Loc.btwn start_loc end_loc, { Ast.Statement.Block.body; } in
+      let declare_module =
+        let rec module_items env acc =
+          match Peek.token env with
+          | T_EOF
+          | T_RCURLY -> List.rev acc
+          | _ -> module_items env (declare ~in_module:true env::acc)
 
-      let declare_module env start_loc =
-        if Peek.value env <> "module" then error_unexpected env;
-        Expect.token env T_IDENTIFIER;
-        let id = Parse.identifier env in
-        let body = module_block_body env in
-        Loc.btwn start_loc (fst body), Statement.(DeclareModule DeclareModule.({
-          id;
-          body;
-        })) in
+        in fun env start_loc ->
+          Expect.contextual env "module";
+          let id = match Peek.token env with
+          | T_STRING (loc, value, raw, octal) ->
+              if octal then strict_error env Error.StrictOctalLiteral;
+              Expect.token env (T_STRING (loc, value, raw, octal));
+              let value = Literal.String value in
+              Statement.DeclareModule.Literal (loc, { Literal.value; raw; })
+          | _ ->
+              Statement.DeclareModule.Identifier (Parse.identifier env) in
+          let body_start_loc = Peek.loc env in
+          Expect.token env T_LCURLY;
+          let body = module_items env [] in
+          Expect.token env T_RCURLY;
+          let body_end_loc = Peek.loc env in
+          let body_loc = Loc.btwn body_start_loc body_end_loc in
+          let body = body_loc, { Statement.Block.body; } in
+          Loc.btwn start_loc (fst body), Statement.(DeclareModule DeclareModule.({
+            id;
+            body;
+          })) in
 
-      function env ->
+      fun ?(in_module=false) env ->
         let start_loc = Peek.loc env in
         Expect.token env T_DECLARE;
         (* eventually, just emit a wrapper AST node *)
@@ -1652,7 +1649,12 @@ end = struct
         | T_CLASS -> declare_class env start_loc
         | T_FUNCTION -> declare_function env start_loc
         | T_VAR -> declare_var env start_loc
-        | T_IDENTIFIER when Peek.value env = "module" -> declare_module env start_loc
+        | T_IDENTIFIER when not in_module && Peek.value env = "module" ->
+            declare_module env start_loc
+        | _ when in_module ->
+            (* Oh boy, found some bad stuff in a declare module. Let's just
+             * pretend it's a declare var (arbitrary choice) *)
+            declare_var env start_loc
         | _ ->
           Eat.vomit env;
           expression env)
@@ -3134,7 +3136,7 @@ end = struct
         })))
 
       in let init env start_loc key generator static =
-        if not generator && not static && Peek.token env = T_COLON
+        if not generator && Peek.token env = T_COLON
         then begin
           (* Class property with annotation *)
           let typeAnnotation = Type.annotation env in
@@ -3144,6 +3146,7 @@ end = struct
           Ast.Statement.Class.(Body.Property (loc, Property.({
             key;
             typeAnnotation;
+            static;
           })))
         end else begin
           let typeParameters = Type.type_parameter_declaration env in

@@ -1,17 +1,11 @@
 (**
- *  Copyright 2014 Facebook.
+ * Copyright (c) 2014, Facebook, Inc.
+ * All rights reserved.
  *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
+ * This source code is licensed under the BSD-style license found in the
+ * LICENSE file in the "flow" directory of this source tree. An additional grant
+ * of patent rights can be found in the PATENTS file in the same directory.
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
  *)
 
 (***********************************************************************)
@@ -21,6 +15,10 @@
 module Impl = struct
   (* explicit == called with "flow status ..."
      rather than simply "flow ..." *)
+  type extra_args = {
+    show_all_errors: bool
+  }
+
   let parse explicit =
     let option_values, options = CommandUtils.create_command_options true in
     let options = CommandUtils.sort_opts options in
@@ -85,6 +83,10 @@ module Impl = struct
           Arg.parse (Arg.align options) (fun x -> args := x::!args) usage;
           List.rev !args
     in
+    if !(option_values.CommandUtils.version) then (
+      CommandUtils.print_version ();
+      exit 0
+    );
     let root = match args with
       | [] -> None
       | [x] -> Some x
@@ -103,13 +105,16 @@ module Impl = struct
       ClientEnv.timeout = None;
       ClientEnv.autostart = true;
       ClientEnv.server_options_cmd = None;
+    },
+    {
+      show_all_errors = !(option_values.CommandUtils.show_all_errors)
     }
 
   open ClientEnv
 
   type env = client_check_env
 
-  let check_status connect (args:env) =
+  let check_status connect (args:env) extra_args =
     Sys.set_signal Sys.sigalrm (Sys.Signal_handle
       (fun _ -> raise ClientExceptions.Server_busy)
     );
@@ -144,9 +149,7 @@ module Impl = struct
       if args.output_json || args.from <> ""
       then Errors_js.print_errorl args.output_json e stdout
       else (
-        List.iter Errors_js.print_error_color e;
-        print_newline ();
-        Printf.printf "Found %d errors\n" (List.length e);
+        Errors_js.print_error_summary extra_args.show_all_errors e;
         exit 2
       )
     | ServerProt.NO_ERRORS ->
@@ -166,41 +169,42 @@ module Impl = struct
       flush stdout;
       raise ClientExceptions.Server_missing
 
-  let rec main env =
+  let rec main (env, extra_args) =
     try
       (* TODO: This code should really use commandUtils's connect utilities to
          avoid code duplication *)
       check_status
         (fun env -> ClientUtils.connect env.root)
         env
+        extra_args
     with
     | ClientExceptions.Server_initializing ->
         if env.ClientEnv.retry_if_init
         then (
           Printf.fprintf stderr "Flow server still initializing\n%!";
           Unix.sleep 1;
-          main env
+          main (env, extra_args)
         ) else (
           prerr_endline "Flow server still initializing, giving up!";
           exit 2
         )
     | ClientExceptions.Server_cant_connect ->
-        retry env 1 "Error: could not connect to flow server"
+        retry (env, extra_args) 1 "Error: could not connect to flow server"
     | ClientExceptions.Server_busy ->
-        retry env 1 "Error: flow server is busy"
+        retry (env, extra_args) 1 "Error: flow server is busy"
     | ClientExceptions.Server_missing ->
-        retry env 3 "The flow server will be ready in a moment"
+        retry (env, extra_args) 3 "The flow server will be ready in a moment"
     | _ ->
         Printf.fprintf stderr "Something went wrong :(\n%!";
         exit 2
 
-  and retry env sleep msg =
+  and retry (env, extra_args) sleep msg =
     if env.retries > 0
     then begin
       Printf.fprintf stderr "%s\n%!" msg;
       Unix.sleep sleep;
       let retries = env.ClientEnv.retries - 1 in
-      main { env with ClientEnv.retries }
+      main ({ env with ClientEnv.retries }, extra_args)
     end else begin
       Printf.fprintf stderr "Out of retries, exiting!\n%!";
       exit 2

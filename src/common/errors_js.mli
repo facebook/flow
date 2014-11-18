@@ -1,19 +1,12 @@
 (**
- *  Copyright 2014 Facebook.
+ * Copyright (c) 2014, Facebook, Inc.
+ * All rights reserved.
  *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
+ * This source code is licensed under the BSD-style license found in the
+ * LICENSE file in the "flow" directory of this source tree. An additional grant
+ * of patent rights can be found in the PATENTS file in the same directory.
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
  *)
-
 
 val pos_range : Pos.t -> int * int * int * int
 
@@ -52,3 +45,6 @@ val parse_error_to_hack_error :
 (******* Error output functionality working on Hack's error *******)
 
 val print_errorl : bool -> Errors.error list -> out_channel -> unit
+
+(* Human readable output *)
+val print_error_summary : bool -> Errors.error list -> unit

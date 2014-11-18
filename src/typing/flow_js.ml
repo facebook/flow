@@ -1,3 +1,12 @@
+(**
+ * Copyright (c) 2014, Facebook, Inc.
+ * All rights reserved.
+ *
+ * This source code is licensed under the BSD-style license found in the
+ * LICENSE file in the "flow" directory of this source tree. An additional grant
+ * of patent rights can be found in the PATENTS file in the same directory.
+ *
+ *)
 
 (* This module describes the subtyping algorithm that forms the core of
    typechecking. The algorithm (in its basic form) is described in Francois
@@ -166,10 +175,10 @@ let rec havoc_ctx cx i j =
   if (i = 0 || j = 0) then () else
     let (stack2,_) = IMap.find_unsafe i cx.closures in
     let (stack1,blocks) = IMap.find_unsafe j cx.closures in
-    havoc_ctx_ (List.rev blocks,List.rev stack1,List.rev stack2)
+    havoc_ctx_ (List.rev blocks, List.rev stack1, List.rev stack2)
 
 and havoc_ctx_ = function
-  | (block::blocks_,x1::stack1_,x2::stack2_) when x1 = x2 ->
+  | (block::blocks_, x1::stack1_, x2::stack2_) when x1 = x2 ->
       (if modes.debug then prerr_endline (spf "HAVOC::%d" x1));
       block := SMap.mapi (fun x {specific;general;def_loc;} ->
         (* internal names (.this, .super, .return, .exports) are read-only *)
@@ -1543,12 +1552,12 @@ let rec flow cx (l,u) trace =
     (** o.x = ... has the additional effect of o[_] = ... **)
 
     | (ObjT (reason_o, {
-      sealed;
-      props_tmap = mapr;
-      proto_t = proto;
-      dict_t = (key,value);
-    }),
-       SetT(reason_op,x,tin))
+        sealed;
+        props_tmap = mapr;
+        proto_t = proto;
+        dict_t = (key,value);
+      }),
+      SetT(reason_op,x,tin))
       ->
       let strict = mk_strict sealed reason_o reason_op in
       let t = ensure_prop_ cx trace strict mapr x proto reason_o reason_op
@@ -1567,11 +1576,11 @@ let rec flow cx (l,u) trace =
         trace ObjProto
 
     | (ObjT (reason_o, {
-      sealed;
-      props_tmap = mapr;
-      proto_t = proto;
-      dict_t = (key,value);
-    }),
+          sealed;
+          props_tmap = mapr;
+          proto_t = proto;
+          dict_t = (key,value);
+        }),
        GetT(reason_op,x,tout))
       ->
       let strict = mk_strict sealed reason_o reason_op in
@@ -1584,11 +1593,11 @@ let rec flow cx (l,u) trace =
     (********************************)
 
     | (ObjT (reason_o, {
-      sealed;
-      props_tmap = mapr;
-      proto_t = proto;
-      dict_t = (key,value);
-    }),
+          sealed;
+          props_tmap = mapr;
+          proto_t = proto;
+          dict_t = (key,value);
+        }),
        MethodT(reason_op,x,this,tins,tout,j))
       ->
       let strict = mk_strict sealed reason_o reason_op in
@@ -1640,7 +1649,7 @@ let rec flow cx (l,u) trace =
       unit_flow cx (num, ElemT(reason_op, l, LowerBoundT tout));
       unit_flow cx (key, num)
 
-    | (ArrT _, GetElemT(reason_op, key,tout))
+     | (ArrT _, GetElemT(reason_op, key,tout))
       ->
       unit_flow cx (key, ElemT(reason_op, l, LowerBoundT tout))
 
@@ -1661,7 +1670,7 @@ let rec flow cx (l,u) trace =
 
     | (_, ElemT(_, ObjT(_, {dict_t = (key,value); _}), t))
       ->
-        unit_flow cx (l, key);
+      unit_flow cx (l, key);
         unit_flow cx (value,t);
         unit_flow cx (t,value)
 
@@ -1879,7 +1888,7 @@ let rec flow cx (l,u) trace =
     (**************************************)
 
     | (_, PredicateT(p,t)) ->
-      predicate cx trace t (l,p)
+        predicate cx trace t (l,p)
 
     (***********************************************************************)
     (* types may be compared with unstrict (in)equality iff they intersect *)
@@ -2084,7 +2093,7 @@ let rec flow cx (l,u) trace =
         ] in
         add_warning cx message_list
       else
-        let msg =
+       let msg =
           if x = "$call"
           then "Callable signature not found in"
           else if x = "$key" || x = "$value"
@@ -2307,18 +2316,18 @@ and subst cx map t =
       PolyT (xs, subst cx map t)
 
   | ObjT (reason, {
-    sealed;
-    dict_t = (key,value);
-    props_tmap = id;
-    proto_t = proto
-  }) ->
-    let pmap = IMap.find_unsafe id cx.property_maps in
-    ObjT (reason, {
       sealed;
-      dict_t = (subst cx map key, subst cx map value);
-      props_tmap = mk_propmap cx (pmap |> SMap.map (subst cx map));
-      proto_t = subst cx map proto
-    })
+      dict_t = (key,value);
+      props_tmap = id;
+      proto_t = proto
+    }) ->
+      let pmap = IMap.find_unsafe id cx.property_maps in
+      ObjT (reason, {
+        sealed;
+        dict_t = (subst cx map key, subst cx map value);
+        props_tmap = mk_propmap cx (pmap |> SMap.map (subst cx map));
+        proto_t = subst cx map proto
+      })
 
   | ArrT (reason, t, ts) ->
     ArrT (reason,
