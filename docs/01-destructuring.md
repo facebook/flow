@@ -30,6 +30,8 @@ Flow can verify that any destructuring in your code is type-safe.
 {% highlight javascript linenos=table %}
 /* @flow */
 var arr = [1, '', 'Hello', true];
+// If you only care about some of the return values, you can skip some
+// elements with , ,
 var [a, b, ,c] = arr;
 // a: number (1), b: string (''), c : boolean (true)
 var z: number = a * c;
