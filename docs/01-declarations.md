@@ -30,25 +30,29 @@ Unknown global name
 
 ## Declarations
 
-Flow supports declarations via the `declare` keyword to allow code to defined 
-and then used in modules and other JavaScript code.
+Flow supports 
+[declarations](third-party.html#example) 
+via the `declare` keyword to allow the interface of code to be defined and 
+then used in modules and other JavaScript code.
 
 {% highlight javascript linenos=table %}
 declare class C {
   x: string;
 }
 declare module M {
-  declare function foo(c: C):void;
+  declare function foo(c: C): void;
 }
 {% endhighlight %}
 
-`C` and `M` can be declared in any file you choose, as long as they can be 
-seen by Flow.
+`C` and `M` are interfaces. The implementation details of `foo()`, for 
+example, does does not need to be known by Flow. Just the types it exposes. 
+
+The interfaces can be declared in any file you choose, as long as they can be seen by Flow.
 
 To use code in declared files, tell the Flow server about it. Assume the code above is defined in `/lib/flow/`
 
 ```bbcode
-flow start --module node --lib /lib/flow/
+flow start --lib /lib/flow/
 ```
 
 Now Flow knows to check `/lib/flow/` for any code that is not immediately 
