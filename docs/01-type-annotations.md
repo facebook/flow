@@ -22,7 +22,7 @@ console.log(x);
 What is the value of `x`? `3`? `30`? `undefined`? The answer is `30`, and, in most
 cases, this probably not the behavior you would prefer.
 
-Flow helps mitgate these sort of subtle bugs by trying to keep your code sane
+Flow helps mitigate these sort of subtle bugs by trying to keep your code sane
 through static analysis and type annotations.
 
 ## Type Annotations
