@@ -176,8 +176,10 @@ cross-module and module internal errors for now. While this may seem
 counter-intuitive, doing this will allow us to get a better picture of the
 actual errors hidden in our project (as we will soon see).
 
+### General Annotation Strategy
+
 Our first pass is to basically start annotating. We will skip those that
-we are unable to annotate. 
+we are unable to annotate.
 
 Modules such as `MessageStore.js` had functions that returned a message given 
 a string id.
@@ -207,16 +209,69 @@ get: function(id: string): ?Message {
 
 After this first pass through the modules, we will go through the
 modules again, taking into account the type information we learned from other
-modules. Rinse and repeat this pass until we get a [fully annotated interface
-for all modules](https://github.com/facebook/flow/commit/c4ed17c637da554e1975198920d971fc17fd10f0).
+modules. Rinse and repeat this pass until we get a fully annotated interface
+for all modules.
+
+### Using Instances of Polymorphic Types
+
+Instances of polymorphic types can be used with arbitrary types by client 
+code. Thus, if one wants to force a specific type, one needs to manually 
+specify it for an instance. An example, where we need to do this is in `js/
+dispatcher/ChatAppDispatcher.js`. This file exports an extended instance of 
+Flux's `Dispatcher` class. We type `Dispatcher` as a polymorphic class and 
+only want to allow values of specific types to be passed through it. To limit 
+the payloads the dispatcher accepts we type the instance explicitly:
+
+{% highlight javascript linenos=table %}
+var _dispatcherInstance: Dispatcher<PayloadType> = new Dispatcher();
+
+var ChatAppDispatcher = {
+// [...]
+{% highlight javascript linenos=table %}
+
+> NOTE
+> Unfortunately, it is currently not possible to use syntax like new 
+> `Dispatcher<PayloadType>()`.
+
+### Narrowing Union Types
+
+We typed `ChatAppDispatcher`'s actual payload data as a big union over different types of data. The listeners then need to decide what type the data actually is. For this, the following pattern is used:
+
+{% highlight javascript linenos=table %}
+switch(action.type) {
+case ActionTypes.CLICK_THREAD:
+  // Handle action as ViewClickThreadAction
+  break;
+
+case ActionTypes.RECEIVE_RAW_MESSAGES:
+  // Handle action as ServerRecieveRawMessagesAction
+  break;
+
+// [...]
+}
+{% endhighlight %}
+
+Ideally, we would want to narrow down the type of action inside the individual cases. However, this is currently not possible with Flow. Not all hope is lost though. Flow supports `any` as type. 
+
+> WARNING
+> 
+> Try to limit `any` use to places you hit limitations of Flow. In the latter 
+> case, check whether the issue is known. If it is not, we ask you to report 
+> it to us. Then, we can decide if and how we can improve Flow.
+
+This does not give us type checking guarantees on the use of action. However, it will allow you to still take advantage of Flow in the rest of your code base.
+
+> CODE CHECK
+> 
+> Here is a diff of the changes for this section.
+> 
 
 ### Tests
 
 If you now look at the current
 [list of errors](https://gist.github.com/JoelMarcey/a41d15d5b8c72b73c23a)
 , you will notice some relating to our test file `UnreadThreadStore-test.js`.
-For now, we are going to only
-[weakly check the test file using `@flow-weak`](https://github.com/facebook/flow/commit/297d371662106d118b5798cc013f1da2cf8aec3d).
+For now, we are going to only weakly check the test file using `@flow-weak`.
 
 {% highlight javascript linenos=table %}
 /**
@@ -234,6 +289,11 @@ $> flow
 Found 11 errors
 ```
 
+
+> CODE CHECK
+> 
+> Here is a diff of the changes for this section.
+> 
 
 ## The Real Work
 
@@ -292,8 +352,7 @@ Too few arguments
 In vanilla JavaScript, missing parameters are undefined. This can lead to
 unexpected behavior or crashes. Flow will not allow code to skip parameters
 unless they are specifically marked as optional with `?`. In this case, we
-have
-[one instance that requires optional](https://github.com/facebook/flow/commit/3a86ad46132907ab2f5320a5e162f2e1fcfcb9a8).
+have one instance that requires optional.
 
 
 {% highlight javascript linenos=table %}
@@ -350,14 +409,17 @@ properties of `message` are actually specified. Thankfully, our example
 code always passed a correct message property.
 
 We also adapt other components' `propTypes` to property reflect the expected
-types. All the changes for this step are found
-[here](https://github.com/facebook/flow/commit/a9208f94abb48d6300a4cc848e66ea4edfaa2816).
+types. 
+
+> CODE CHECK
+> 
+> Here is a diff of the changes for this section.
+> 
+
 
 ## Other Errors
 
-Now let's fix the
-[other errors](https://gist.github.com/JoelMarcey/2e039d8062d5ccb65cec)
-to make Flow happy with no errors.
+Now let's fix the other errors to make Flow happy with no errors.
 
 ### Property Access
 
@@ -445,9 +507,11 @@ right now. Thus, we will take an escape hatch and make Flow not complain about
 it anymore. We do this by simply annotating message with the type `any`. Flow
 will then assume `message` can be assigned to any type.
 
-The whole changes for this part of the walk-through can be found
-[here](https://github.com/facebook/flow/commit/1ba269c2f5ec53e34f0d61800feb217a86e839f1)
-.
+> CODE CHECK
+> 
+> Here is a diff of the changes for this section.
+> 
+
 
 ## No Errors!
 
@@ -459,3 +523,25 @@ is what you should see when running `flow` for the final time.
 $> flow
 No errors!
 ```
+
+## Stripping Annotations
+
+Finally, we need to adapt the building process to strip type annotations. 
+Since reactify 0.16.0 does not support stripping type annotations, we need to 
+use JSX from `react-tools` 0.12.1. This makes the build process more manual, 
+since now we have to call `npm start` every time we change something. However, 
+we hope that reactify will catch up soon, so we can make this change less 
+intrusive.
+
+Now we can start a http server and check our results in the browser:
+
+```bash
+pyhton -m SimpleHTTPServer
+```
+
+and then navigate to `localhost:8000`.
+
+> CODE CHECK
+> 
+> Here is a diff of the changes for this section.
+> 
