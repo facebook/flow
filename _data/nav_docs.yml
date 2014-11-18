@@ -42,6 +42,8 @@
     title: Functions
   - id: nullable-types
     title: Nullable Types
+  - id: destructuring
+    title: Destructuring
   - id: union-intersection-types
     title: Union and Intersection Types
   - id: type-aliases
