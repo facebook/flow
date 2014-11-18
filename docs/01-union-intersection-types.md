@@ -24,6 +24,12 @@ declare var f: ((x: number) => void) & ((x: string) => void);
 f('');
 {% endhighlight %}
 
+> NOTE
+> 
+> Parenthesis are important. Flow will not type-check correctly if you leave 
+> out the outer parenthesis on each of the function declarations on `f`.
+
+
 We are intersecting `function` here. A call to `f` has to be with a `number` 
 or `string`. Intersections are well-suited to mimic function overloading.
 
@@ -32,10 +38,6 @@ or `string`. Intersections are well-suited to mimic function overloading.
 > `var x: number & string` is not supported as there is no valid type 
 > supported by Flow that can be both of those types.
 
-> NOTE
-> 
-> Parenthesis are important. Flow will not type-check correctly if you leave 
-> out the outer parenthesis on each of the function declarations on `f`.
 
 ## Syntax
 
