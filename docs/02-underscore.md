@@ -99,7 +99,7 @@ We're three errors down already.
 Another common type of error reported is this:
 
 ```bbcode
-underscore.js:673:19,31: function call
+underscore.js:140:25,47: function call
 Callable signature not found in
   [LIB] core.js:235:1,236:1: statics of TypeError
 ```
@@ -107,16 +107,16 @@ Callable signature not found in
 A glimpse at the lines mentioned make it clear it is about the instantiation of classes without the `new` keyword. We simply update lines like:
 
 {% highlight javascript %}
-if (!_.isFunction(func)) throw TypeError('Bind must be called on a function');
+if (!length) throw TypeError(reduceError);
 {% endhighlight %}
 
 to
 
 {% highlight javascript %}
-if (!_.isFunction(func)) throw new TypeError('Bind must be called on a function');
+if (!length) throw new TypeError(reduceError);
 {% endhighlight %}
 
-At the time of writing, Underscore contains seven `Array` instantations and a `TypeError`. When updated, this brings our error count down considerably.
+At the time of writing, Underscore contains seven `Array` instantations and a `TypeError` instantiation that Flow complains about. When updated, this brings our error count down considerably.
 
 ## Type inference in conditions
 
