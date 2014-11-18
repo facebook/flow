@@ -49,10 +49,10 @@ understands this behavior and allows it. For example, any expression can be
 used as a conditional in an `if`-statement, or as an operand of the `&&`
 operation.
 - The addition `+` operator works on `number`s **and** `string`s. In the case
-of a using the operator on a `number` and `string`, the `number` is implictly
+of a using the operator on a `number` and `string`, the `number` is implicitly
 converted to a `string` via `toString()` and a concatenation takes place. Flow
 recognizes and allows this behavior.
-- `Date` objects implicitly convert to `number` whenused in arithmetic operations. 
+- `Date` objects implicitly convert to `number` when used in arithmetic operations.
 Flow supports this behavior.
 -  Use `void` to annotate a function return when it returns nothing, but do 
 not use it for anything else! The only values that have type `void` are 

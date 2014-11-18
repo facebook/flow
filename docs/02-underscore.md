@@ -246,7 +246,7 @@ With those small changes, we now have a clean bill of health in weak mode:
 ```bbcode
 Found 0 errors
 ```
-For reference, here is the relatively small diff for all the changes made in this walkthough.
+For reference, here is the relatively small diff for all the changes made in this walkthrough.
 
 ```diff
 @@ -0,0 +1 @@

@@ -243,7 +243,7 @@ case ActionTypes.CLICK_THREAD:
   break;
 
 case ActionTypes.RECEIVE_RAW_MESSAGES:
-  // Handle action as ServerRecieveRawMessagesAction
+  // Handle action as ServerReceiveRawMessagesAction
   break;
 
 // [...]
@@ -567,7 +567,7 @@ npm start
 Now we can start a http server and check our results in the browser:
 
 ```bash
-pyhton -m SimpleHTTPServer
+python -m SimpleHTTPServer
 ```
 
 and then navigate to `localhost:8000`.
