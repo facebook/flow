@@ -15,6 +15,6 @@ type T = number
 var x:T = 0;
   
 type F<U,V> = (x:U) => V
-function foo<X,Y>(f: F<X,Y>, x:X): Y { return f(); }
+function foo<X,Y>(f: F<X,Y>, x:X): Y { return f(x); }
 var result: number = foo (function(x) { return x }, 0)
 {% endhighlight %}
