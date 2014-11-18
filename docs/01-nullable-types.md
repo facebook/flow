@@ -83,6 +83,7 @@ Undefined values, just like `null`, can cause issues too. Unfortunately,
 undefined values are ubiquitous in JavaScript and it is hard to avoid them
 without severely affecting the usability of the language. For example, arrays
 can have holes for elements; object properties can be dynamically added and
-removed. If Flow did not allow undefined values to be part of all types, you
-would have to do undefined checks (like `null` checks) on each dereference of
+removed. Flow makes a tradeoff in this case: it detects `undefined` local variables
+and return values, but ignores the possibility of `undefined` resulting from object property and array element
+accesses. Being stricter would force the programmer to do undefined checks (like `null` checks) on each dereference of
 an array element or object property to get anything useful done.
