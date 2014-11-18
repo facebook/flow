@@ -1,6 +1,6 @@
 # Flow
 
-Flow is a static typechecker for Javascript. To find out more about Flow, check out [flowtype.org](http://flowtype.org/).
+Flow is a static typechecker for JavaScript. To find out more about Flow, check out [flowtype.org](http://flowtype.org/).
 
 ## Requirements
 
