@@ -227,7 +227,7 @@ var _dispatcherInstance: Dispatcher<PayloadType> = new Dispatcher();
 
 var ChatAppDispatcher = {
 // [...]
-{% highlight javascript linenos=table %}
+{% endhighlight %}
 
 > NOTE
 > Unfortunately, it is currently not possible to use syntax like new 
