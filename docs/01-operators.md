@@ -25,4 +25,8 @@ incompatible base types, or a value of a base type with a value of non-base
 type. JavaScript specifies an elaborate sequence of implicit conversions to 
 base types in these cases, which may cause weird errors. The alternative is to 
 use `===` and `!==` instead, which perform direct checks without implicit 
-conversions.
+conversions. The only exception to this rule is that `null` and `undefined`
+should be compared to other types with `==` and `!=`, instead of `===` and `!==`,
+since the non-strict equality considers `null` and `undefined` to be the same,
+and distinct from all other values. Such checks are therefore useful to 
+narrow down maybe types.
