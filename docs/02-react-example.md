@@ -262,8 +262,9 @@ This does not give us type checking guarantees on the use of action. However, it
 
 > CODE CHECK
 > 
-> [Here is a diff of the changes for this section](https://github.com/facebook/flow/commit/0bac302617bd8fad694badda3c9d57d858d41c46) 
-> and [here is the updated error output](https://gist.github.com/JoelMarcey/266d8696fa30268c2d04).
+> Here is a [diff](https://github.com/facebook/flow/commit/0bac302617bd8fad694badda3c9d57d858d41c46) 
+> of the changes for this section and here is the updated 
+> [error output](https://gist.github.com/JoelMarcey/266d8696fa30268c2d04).
 
 
 ```bash
@@ -286,8 +287,9 @@ For now, we are going to only weakly check the test file using `@flow-weak`.
 
 > CODE CHECK
 > 
-> [Here is a diff of the changes for this section](https://github.com/facebook/flow/commit/64ed64ede9f9b3dfe45f0f3f272d4cf7fc4e81c9) 
-> and [and here is the updated error output](https://gist.github.com/JoelMarcey/81813064b07fe6892cc1).
+> Here is a [diff](https://github.com/facebook/flow/commit/64ed64ede9f9b3dfe45f0f3f272d4cf7fc4e81c9) 
+> of the changes for this section and here is the updated 
+> [error output](https://gist.github.com/JoelMarcey/81813064b07fe6892cc1).
 
 
 ```bash
@@ -363,8 +365,9 @@ createMessage: function(message: Message, optThreadName?: string) {
 
 > CODE CHECK
 > 
-> [Here is a diff of the changes for this section](https://github.com/facebook/flow/commit/b0fbafe0df3112c5e3915fe7cf66ea1082892a30) 
-> and [here is the updated error output](https://gist.github.com/JoelMarcey/bd2cd831f8a593b66ddf)
+> Here is a [diff](https://github.com/facebook/flow/commit/b0fbafe0df3112c5e3915fe7cf66ea1082892a30) 
+> of the changes for this section and here is the updated 
+> [error output](https://gist.github.com/JoelMarcey/bd2cd831f8a593b66ddf).
 
 
 ```bash
@@ -424,8 +427,9 @@ types.
 
 > CODE CHECK
 > 
-> [Here is a diff of the changes for this section](https://github.com/facebook/flow/commit/620a1e25052cbc10fdb88513c0cf45bcdbeffe57) 
-> and [here is the updated error output](https://gist.github.com/JoelMarcey/591a2e4d1e7942d524c3).
+> Here is a [diff](https://github.com/facebook/flow/commit/620a1e25052cbc10fdb88513c0cf45bcdbeffe57) 
+> of the changes for this section] and here is the updated 
+> [error output](https://gist.github.com/JoelMarcey/591a2e4d1e7942d524c3).
 
 
 ```bash
@@ -525,7 +529,8 @@ will then assume `message` can be assigned to any type.
 
 > CODE CHECK
 > 
-> [Here is a diff of the changes for this section](https://github.com/facebook/flow/commit/f7a05406f2a4fa0f7f3145a6e3acfc98d3922dde).
+> Here is a [diff](https://github.com/facebook/flow/commit/f7a05406f2a4fa0f7f3145a6e3acfc98d3922dde) 
+> of the changes for this section.
 
 
 ```bash
