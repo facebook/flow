@@ -69,6 +69,8 @@ our type aliasing.
 //   // return some value compatible with that assigned to V
 // }
 type F<U, V> = (x: U) => V;
+
+// The function foo applies a given function f to a given argument x
 function foo<X, Y>(f: F<X, Y>, x: X): Y { return f(x); }
 var b: boolean = true;
 var result: string = foo (function(x) { return b; }, 0);
