@@ -14,7 +14,7 @@ data type of an expression. Here is a simple example:
 /* @flow */
 var index: number = 10;
 var result: string = typeof index;
-// result: "number"
+// result: 'number'
 {% endhighlight %}
 
 You can use the `typeof` operator on more complicated expressions:

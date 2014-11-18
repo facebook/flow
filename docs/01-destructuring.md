@@ -12,9 +12,9 @@ you to extract data from structured values. Here is a simple example:
 
 {% highlight javascript linenos=table %}
 /* @flow */
-var arr = [1, "", true];
+var arr = [1, '', true];
 var [a, b, c] = arr;
-// a: number (1), b: string (""), c : boolean (true)
+// a: number (1), b: string (''), c : boolean (true)
 {% endhighlight %}
 
 The canonical example of destructuring is swapping:
@@ -29,9 +29,9 @@ Flow can verify that any destructuring in your code is type-safe.
 
 {% highlight javascript linenos=table %}
 /* @flow */
-var arr = [1, "", "Hello", true];
+var arr = [1, '', 'Hello', true];
 var [a, b, ,c] = arr;
-// a: number (1), b: string (""), c : boolean (true)
+// a: number (1), b: string (''), c : boolean (true)
 var z: number = a * c;
 {% endhighlight %} 
 
@@ -40,12 +40,12 @@ var z: number = a * c;
 This type is incompatible with
   /tmp/flow/f.js:5:17,21: number
 
-Found 1 errors
+Found 1 error
 ```
 
 {% highlight javascript linenos=table %}
 /* @flow */
-var {x, y, o} = {x: "", y: 3, o: {z: false} }
+var {x, y, o} = {x: '', y: 3, o: {z: false} }
 // x: string, y: number, o: {z: boolean}
 var z: number = o;
 {% endhighlight %}
