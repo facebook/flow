@@ -3,8 +3,8 @@ id: primitives
 title: Primitives
 layout: docs
 permalink: /docs/primitives.html
-prev: nullable-types.html
-next: functions.html
+prev: dynamic-type-tests.html
+next: declarations.html
 ---
 
 Primitives are global definitions (e.g., `Array`) that are automatically in 

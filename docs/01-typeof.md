@@ -3,8 +3,8 @@ id: arrays
 title: Typeof
 layout: docs
 permalink: /docs/typeof.html
-prev: variables.html
-next: classes.html
+prev: type-aliases.html
+next: operators.html
 ---
 
 In vanilla JavaScript, the `typeof` operator returns a `string` specifying the 

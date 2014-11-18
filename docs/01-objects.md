@@ -4,7 +4,7 @@ title: Objects
 layout: docs
 permalink: /docs/objects.html
 prev: classes.html
-next: nullable-types.html
+next: functions.html
 ---
 
 Objects can be created with object literals. The types of properties are fixed

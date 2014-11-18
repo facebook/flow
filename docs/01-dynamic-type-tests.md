@@ -4,6 +4,7 @@ title: Dynamic Type Tests
 layout: docs
 permalink: /docs/dynamic-type-tests.html
 prev: operators.html
+next: primitives.html
 ---
 
 In addition to `null` checks, there are several other dynamic type tests
