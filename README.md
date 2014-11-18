@@ -23,6 +23,8 @@ make
 
 This produces a `bin` folder containing the `flow` binary. 
 
+*Note: at this time, the OCaml dependency prevents us from adding Flow to [npm](http://npmjs.org).*
+
 ## Installing Flow
 
 Flow is simple to install: all you need is the `flow` binary on your PATH and you're good to go. 
