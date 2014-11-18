@@ -32,7 +32,7 @@ Check out http://flowtype.org for documentation and examples.
 ## Join the Flow community
 * Website: [http://flowtype.org/](http://flowtype.org/)
 * irc: #flowtype on Freenode
-* Twitter: @flowtype
+* Twitter: @flowtype and #flowtype to keep up with the latest Flow news.
 
 ## License
 Flow is BSD-licensed. We also provide an additional patent grant.
