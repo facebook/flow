@@ -310,37 +310,6 @@ benefits of Flow as it shows real problems with our project code.
 We start with the low-hanging fruit and move our ways upwards until we have
 no Flow errors left in our code.
 
-### Preventing Calls to a Missing Method
-
-> NOTE
->
-> This error may not currently be in your list of errors due to a fix that
-> has already been applied.
-
-Take the following error:
-
-```bbcode
-js/components/MessageSection.react.js:70:5,53: call of method removeChangeListener
-Property removeChangeListener not found in object:
-  js/stores/MessageStore.js:60:34,35: object literal
-```
-
-This is one of those errors that will cause us pain at runtime. Since Flow finds this error before our code runs, we can be reduce this pain point.
-
-The fix is to copy the `removeChangeListener` implementation of one
-of the two other store implementations.
-
-{% highlight javascript linenos=table %}
-removeChangeListener: function(callback) {
-  this.removeListener(CHANGE_EVENT, callback);
-},
-{% endhighlight %}
-
-Interestingly enough, this error was actually [caught before the release
-of Flow](https://github.com/facebook/flux/commit/f828ecae10cdf15ed1ba2fd1210dcf671365bbe4)
-; however, with Flow, this mistake need not be made again as it will be
-caught during development time.
-
 ### Missing Parameters
 
 {% highlight javascript linenos=table %}
