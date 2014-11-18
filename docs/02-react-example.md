@@ -14,10 +14,7 @@ Flow be able to successfully type check its code. While it will not be an
 automatic, run the Flow type-checker only one time win, we will show that it
 does not need to be painful to use Flow on your existing projects.
 
-## Getting Started - The React Source
-
-> DOWNLOAD BELOW!
-> 
+## Getting Started - Download Flux Chat
 
 We will be using
 [Flux Chat](https://github.com/facebook/flux/tree/a9724ae9dedd25daa5f0127ee54343353c5cbfd6/examples/flux-chat)
