@@ -285,7 +285,7 @@ Hopefully this article has provided an insight into the sort of things that Flow
 
 ### Epilogue
 
-At this point you ar probably tempted to remove the `weak` declaration and start to work on some of the more detailed type issues that Flow asserts with a full type check. It is important to understand though that this will appear a somewhat daunting task until you actually start adding annotations on both the arguments and return types of Underscore's many functions.
+At this point you are probably tempted to remove the `weak` declaration and start to work on some of the more detailed type issues that Flow asserts with a full type check. It is important to understand though that this will appear a somewhat daunting task until you actually start adding annotations on both the arguments and return types of Underscore's many functions.
 
 But to give you a hint the meantime, here is another diff that shows how to get the error count down to zero errors after turning off weak mode. You may notice a number of Flow features in use in this diff, including type aliases, function types, object types, union types, tuple types, and generics.
 
