@@ -64,7 +64,8 @@ var MessageSection = require('./MessageSection.react');
 
 > CODE CHECK
 > 
-> [Here is a diff of the changes made in this section](https://github.com/facebook/flow/commit/d2c099065ac58fb78b5f3951d7ac912de5e5a58c). 
+> Here is a [diff](https://github.com/facebook/flow/commit/d2c099065ac58fb78b5f3951d7ac912de5e5a58c) 
+> of the changes made in this section. 
 > 
 
 ### Flow Server
@@ -148,8 +149,9 @@ result, we disabled Flow for the files importing these two modules. While we dis
 
 > CODE CHECK
 > 
-> [Here is a diff of the changes for this section](https://github.com/facebook/flow/commit/4a4f3aaf512eb619e5f8d9a82432b61b75710927) 
-> and [here is the updated error output](https://gist.github.com/JoelMarcey/76d1d5aaf2717ffb32f0).
+> Here is a [diff](https://github.com/facebook/flow/commit/4a4f3aaf512eb619e5f8d9a82432b61b75710927) 
+> of the changes for this section and here is the updated 
+> [error output](https://gist.github.com/JoelMarcey/76d1d5aaf2717ffb32f0).
 
 
 ```bash
@@ -545,12 +547,17 @@ No errors!
 
 ## Stripping Annotations
 
-Finally, we need to adapt the building process to strip type annotations. 
-Since reactify 0.16.0 does not support stripping type annotations, we need to 
-use JSX from `react-tools` 0.12.1. This makes the build process more manual, 
-since now we have to call `npm start` every time we change something. However, 
-we hope that reactify will catch up soon, so we can make this change less 
-intrusive.
+Finally, we need to adapt the building process to strip type annotations.
+For this we need to update the `reactify` dependency in `package.json` to 
+0.17.0. Starting from this version `reactify` allows to strip type 
+annotations. The changes needed are trivial. We only need to set the 
+`stripTypes` to `true`. Afterwards, we do the following to start the automated 
+building process:
+
+```bash
+npm install
+npm start
+```
 
 Now we can start a http server and check our results in the browser:
 
@@ -559,8 +566,3 @@ pyhton -m SimpleHTTPServer
 ```
 
 and then navigate to `localhost:8000`.
-
-> CODE CHECK
-> 
-> Here is a diff of the changes for this section.
-> 
