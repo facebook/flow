@@ -9,7 +9,7 @@ next: third-party.html
 
 ## A word of warning
 
-Making existing code typecheck with Flow is not for the faint of heart - and often it may not be worth the effort in the short term. If your project just depends on a library, check out our [guide](dependencies.html) on using Flow with external dependencies. Flow supports *interface files* so you can use libraries in a typed way without having to run Flow on them at all.
+Making existing code typecheck with Flow is not for the faint of heart - and often it may not be worth the effort in the short term. If your project just depends on a library, check out our [guide](third-party.html) on using Flow with external dependencies. Flow supports *interface files* so you can use libraries in a typed way without having to run Flow on them at all.
 
 Why is typechecking existing code so hard? Libraries not written with types in mind often contain complex, highly dynamic code that confuses analyses such as Flow. The code may also have been written in a style that Flow deliberately chooses not to support in order to give the programmer more help. Some typical examples are:
 
