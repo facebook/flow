@@ -173,7 +173,7 @@ let guess_root dir_or_file =
   match ClientArgs.guess_root ".flowconfig" (Path.mk_path dir) 50 with
   | Some root -> root
   | None -> Printf.fprintf stderr "Could not find a .flowconfig in %s or any \
-      of its parent directories\n%!" dir; exit 2
+      of its parent directories\nsee \"flow init --help\" for more info\n%!" dir; exit 2
 
 (* convert 1,1 based line/column to 1,0 for internal use *)
 let convert_input_pos (line, column) =
