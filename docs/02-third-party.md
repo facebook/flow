@@ -21,7 +21,7 @@ The workflow for dealing with library code is:
 
 ## Example
 
-To illustrate this workflow, we'll pick the [Underscore](http://underscorejs.org/) library. Let' say we have this simple file using Underscore:
+To illustrate this workflow, we'll pick the [Underscore](http://underscorejs.org/) library. Let's say we have this simple file using Underscore:
 
 {% highlight javascript linenos=table %}
 /* @flow */
