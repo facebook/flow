@@ -196,9 +196,11 @@ if (--times > 0 && func instanceof Function) {
 
 Similarly this error is alerting us to calling a variable that may not represent a function. Underscore's author's do indeed check as much in this case, but Flow is not able to determine that that is what the `_.isFunction` is doing.
 
+```bbcode
 underscore.js:1310:34,51: call of method call
 Method cannot be called on possibly undefined value
   underscore.js:1306:34,39: undefined
+```
 
 To placate Flow, we can be explicit and just turn:
 
