@@ -321,6 +321,8 @@ For reference, here is the diff for the changes made in this walkthough.
 +  declare var define: any;
 ```
 
+### Epilogue
+
 For the truly adventurous, here is another diff that shows where one may end up with 0 errors after turning off weak mode. You may notice a lot of Flow features in use in this diff, including type aliases, function types, object types, union types, tuple types, and generics.
 
 ```diff
