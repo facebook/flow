@@ -50,19 +50,14 @@ Opt the file in to be weakly checked with the declaration:
 ...
 {% endhighlight %}
 
-Now when we run Flow again, we get a small number of errors:
+Now when we run Flow again, we get a small page of errors:
 
 ```bbcode
-underscore.js:16:28,33: property _
-Property cannot be accessed on global object
-
-underscore.js:51:5,14: assignment of property _
-Property cannot be assigned on global object
 ...
 Found 26 errors
 ```
 
-Quite manageable. Let's look at each of these in turn and modify the file as required. (Note that the line numbers in this article may not match your own results as Underscore itself may have been updated since it was written)
+This seems quite manageable. Let's look at each of these errors in turn and modify the file as required. (Note that the line numbers in this article may not match your own results as Underscore itself may have been updated since it was written).
 
 ## Global objects
 
@@ -78,114 +73,123 @@ Property cannot be assigned on global object
 
 We can easily mitigate Flow's warnings about the `_` property on this object by declaring that the `root` variable is of type `any`:
 
-{% highlight javascript linenos=table %}
+{% highlight javascript %}
 // ...`window` in the browser, or `exports` on the server.
 var root: any = this;
 {% endhighlight %}
 
-The final error message, where Underscore is trying to see if RequireJS is present fails similarly:
+The final error message (where Underscore is trying to see if RequireJS is present) fails similarly:
 
 ```bbcode
 Unknown global name: define
 ```
 
-We can add a declaration at the top of the file to show that this too is of type `any`:
+We can add a declaration just ahead of the usage to show that this too is of type `any`:
 
-{% highlight javascript linenos=table %}
+{% highlight javascript %}
 declare var define: any;
-
-(function() {
+if (typeof define === 'function' && define.amd) {
   ...
 {% endhighlight %}
 
-Three errors down already.
+We're three errors down already.
 
 ## Instantiation
 
 Another common type of error reported is this:
 
 ```bbcode
-underscore.js:1255:17,37: function call
+underscore.js:123:19,31: function call
 Property not found in
   [LIB] core.js:118:14,120:5: object type
 ```
 
-This is brought about by the use of class names without `new` instantiation. We simply update lines like:
+While this is not currently the most clear error message, a glimpse at the lines mentioned make it clear it is about the instantiation of classes without the `new` keyword. We simply update lines like:
 
-{% highlight javascript linenos=table %}
-  results = Array(length),
+{% highlight javascript %}
+...
+results = Array(length),
+...
 {% endhighlight %}
 
 to
 
-{% highlight javascript linenos=table %}
-  results = new Array(length),
+{% highlight javascript %}
+...
+results = new Array(length),
+...
 {% endhighlight %}
 
-This brings our error count down considerably!
+At the time of writing, Underscore contains seven such instatations. When updated, this brings our error count down considerably.
 
-## TODO:
+## Type inference in conditions
+
+Another type of common issue reported by Flow on Underscore (and indeed many concisely-written JavaScript libraries) is that encountered when a variable is both used as, and assigned in, conditions. In these instances a variable's type is typically deduced to be either a boolean `false` or an assigned value of another type. Subsequent code then assumes this hybrid type. For example, in several places in Underscore, Flow encounters code like this:
+
+```javascript
+var keys = obj.length !== +obj.length && _.keys(obj),
+    length = (keys || obj).length,
+    ...
+  currentKey = keys ? keys[index] : index;
+  ...
+```
+
+Here, the variable `keys` could be a boolean (if the first part of the condition is false), or it could be an array. At run time in the former case, the `length` variable will then take its value from `obj` - which is fine - and in the latter case, from `keys`, which is also fine (since that variable is an array in that case). The later `currentKey` assignment here is also relying on `keys` being either falsy or an array.
+
+Unfortunately Flow is not currently able to deduce the type of `keys` in complex situations like this, and will report that the `length` condition is not available on booleans.
 
 ```bbcode
 underscore.js:124:19,37: property length
 Property not found in
   [LIB] core.js:47:1,65: Boolean
-
-underscore.js:128:27,37: access of computed property/element
-Computed property/element cannot be accessed on
-  underscore.js:123:16,41: boolean
-
-underscore.js:142:19,37: property length
-Property not found in
-  [LIB] core.js:47:1,65: Boolean
-
-underscore.js:146:25,37: access of computed property/element
-Computed property/element cannot be accessed on
-  underscore.js:141:16,41: boolean
-
-underscore.js:149:27,37: access of computed property/element
-Computed property/element cannot be accessed on
-  underscore.js:141:16,41: boolean
-
-underscore.js:160:18,36: property length
-Property not found in
-  [LIB] core.js:47:1,65: Boolean
-
-underscore.js:164:25,37: access of computed property/element
-Computed property/element cannot be accessed on
-  underscore.js:159:16,42: boolean
-
-underscore.js:167:27,37: access of computed property/element
-Computed property/element cannot be accessed on
-  underscore.js:159:16,42: boolean
-
-underscore.js:207:19,37: property length
-Property not found in
-  [LIB] core.js:47:1,65: Boolean
-
-underscore.js:210:27,37: access of computed property/element
-Computed property/element cannot be accessed on
-  underscore.js:206:16,41: boolean
-
-underscore.js:222:19,37: property length
-Property not found in
-  [LIB] core.js:47:1,65: Boolean
-
-underscore.js:225:27,37: access of computed property/element
-Computed property/element cannot be accessed on
-  underscore.js:221:16,41: boolean
-
-underscore.js:676:36,81: function call
-Unknown global name
-
-underscore.js:679:33,37: identifier bound
-Unknown global name
-
-underscore.js:853:16,42: call of method apply
-Method cannot be called on possibly null value
-  underscore.js:855:30,33: null
-
-underscore.js:1312:34,51: call of method call
-Method cannot be called on possibly undefined value
-  underscore.js:1308:34,39: undefined
 ```
+
+To resolve this, we have a few options. We can rework this logic to be more explicit, so that Flow can correctly infer the types in play. This is one alternative:
+
+```javascript
+var useKeys = obj.length !== +obj.length,
+    keys = useKeys ? _.keys(obj) : [],
+    length = useKeys ? keys.length : obj.length,
+    ...
+  currentKey = useKeys ? keys[index] : index;
+  ...
+```
+
+Another is to demonstrate that we are paying more attention to the type at run time by using the type itself in the subsequent ternary conditions:
+
+```javascript
+var keys = obj.length !== +obj.length && _.keys(obj),
+    length = (keys instanceof Array) ? keys.length : obj.length,
+    ...
+  currentKey = (keys instanceof Array) ? keys[index] : index;
+  ...
+```
+
+If either of those seem like too much work, we can also just tell Flow that we know this local variable can be of multiple types and that it shouldn't check the validity of any properties accessed on it. To do this, annotate the variable's first declaration to be `any`:
+
+```javascript
+var keys: any = obj.length !== +obj.length && _.keys(obj),
+    ...
+```
+
+At the time of writing, there are five examples of this pattern. Fixing them brings down our error count to just four outstanding issues.
+
+
+## TDOD
+flow check --strip-root
+
+underscore.js:674:36,81: function call
+Unknown global name
+
+underscore.js:677:33,37: identifier bound
+Unknown global name
+
+underscore.js:851:16,42: call of method apply
+Method cannot be called on possibly null value
+  underscore.js:853:30,33: null
+
+underscore.js:1310:34,51: call of method call
+Method cannot be called on possibly undefined value
+  underscore.js:1306:34,39: undefined
+
+Found 4 errors
