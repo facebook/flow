@@ -35,8 +35,8 @@ or `string`. Intersections are well-suited to mimic function overloading.
 
 > NOTE
 > 
-> `var x: number & string` is not supported as there is no valid type 
-> supported by Flow that can be both of those types.
+> Not all intersection types make sense. For example, no value has type 
+`number & string` since there is no value that can have both of those types.
 
 
 ## Syntax
