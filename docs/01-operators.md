@@ -14,9 +14,9 @@ banning others that are common causes of errors.
 Some of the interesting restrictions that Flow imposes are:
 
 - `+` either takes two `number`s and gives back a `number`, or takes a `string`
-  and anything else and gives back a `string`. JavaScript specifies a more
-  elaborate sequence of implicit conversions (e.g., `Date` objects and 
-  `boolean`s may be converted to `number`s), but Flow doesn't support them.
+  and anything else and gives back a `string`. In addition, JavaScript specifies 
+some implicit conversions that happen as part of this operation (e.g., `Date` objects and 
+  `boolean`s may be converted to `number`s), which Flow understands.
 
 - `==` and `!=` take either two values of the same base type (modulo subtyping 
 with `mixed`, `void`, and `any`), or two values of non-base types, and give 
