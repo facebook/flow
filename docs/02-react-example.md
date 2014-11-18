@@ -104,7 +104,7 @@ Found 50 errors
 At this stage we have already hit some limitations of Flow. Flow does not know 
 about the module `object-assign`. However, it understands what `Object.assign` does. Thus, we will replace any `object-assign` usage by `Object.assign`. 
 
-However, since `Object.assign` is not supported right now, we still need to provide `Object.assign` on our own. We will simply patch this in a file outside of Flow's knowledge (i.e., in a file *without* `/* @flow */`) like this:
+However, since `Object.assign` may not be implemented by all JavaScript engines, we still need to "polyfill" it. We will do so by putting it in a file outside of Flow's knowledge (i.e., in a file *without* `/* @flow */`) like this:
 
 {% highlight javascript linenos=table %}
 if (!Object.assign) {
