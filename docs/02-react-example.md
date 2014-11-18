@@ -528,12 +528,16 @@ No errors!
 
 ## Stripping Annotations
 
-Finally, we need to adapt the building process to strip type annotations. 
-Since reactify 0.16.0 does not support stripping type annotations, we need to 
-use JSX from `react-tools` 0.12.1. This makes the build process more manual, 
-since now we have to call `npm start` every time we change something. However, 
-we hope that reactify will catch up soon, so we can make this change less 
-intrusive.
+Finally, we need to adapt the building process to strip type annotations.
+For this we need to update the `reactify` dependency in `package.json` to 0.17.0.
+Starting from this version `reactify` allows to strip type annotations. The
+changes needed are trivial. We only need to set the `stripTypes` to `true`.
+Afterwards, we do the following to start the automated building process:
+
+```bash
+npm install
+npm start
+```
 
 Now we can start a http server and check our results in the browser:
 
