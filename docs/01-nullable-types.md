@@ -64,11 +64,16 @@ This illustrates an interesting feature of Flow: it understands the effects of
 some dynamic type tests and can adjust the types of local variables
 accordingly (in technical terms, Flow's analysis is path-sensitive).
 
-## Nullable and Objects
+## Maybe and Objects
 
-While Flow can adjust types of local variables, it cannot adjust types of
-objects for reasons mentioned above. In particular, don't expect a nullable
-field to be recognized as non-`null` in some method because a `null` check is
+In addition to being able to adjust types of local variables, Flow can sometimes
+also adjust types of object properties, especially when there are no intermediate
+operations between a check and a use. In general, though, aliasing of objects 
+limits the scope of this form of reasoning, since a check on an object property
+may be invalidated by a write to that property through an alias, and 
+it is difficult for a static analysis to track aliases precisely. 
+
+In particular, don't expect a nullable field to be recognized as non-`null` in some method because a `null` check is
 performed in some other method in your code, even when it is clear to you that
 the `null` check is sufficient for safety at run time (say, because you know
 that calls to the former method always follow calls to the latter method). On
