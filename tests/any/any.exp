@@ -3,4 +3,4 @@ any.js:2:21,25: mixed
 This type is incompatible with
   any.js:6:7,12: string
 
-Found 1 errors
+Found 1 error

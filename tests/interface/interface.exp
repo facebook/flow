@@ -3,4 +3,4 @@ interface.js:1:22,27: number
 This type is incompatible with
   interface.js:3:8,13: string
 
-Found 1 errors
+Found 1 error

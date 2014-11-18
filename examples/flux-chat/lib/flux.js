@@ -16,4 +16,4 @@ declare module flux {
     dispatch(payload: P): void;
     isDispatching(): boolean;
   }
-};
+}

@@ -40,4 +40,4 @@ declare module react {
 
     declare function isValidElement(element: any): boolean;
     declare function withContext(context: any, callback: () => void): any;
-};
+}

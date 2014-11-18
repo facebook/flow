@@ -3,4 +3,4 @@ tuples.js:6:33,35: number
 This type is incompatible with
   tuples.js:6:17,22: string
 
-Found 1 errors
+Found 1 error

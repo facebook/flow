@@ -3,4 +3,4 @@ arrows.js:7:37,59: string
 This type is incompatible with
   [LIB] core.js:110:38,43: number
 
-Found 1 errors
+Found 1 error

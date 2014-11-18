@@ -3,4 +3,4 @@ object.js:1:21,22: string
 This type is incompatible with
   client_object.js:3:7,12: number
 
-Found 1 errors
+Found 1 error

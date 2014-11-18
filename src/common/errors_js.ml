@@ -199,6 +199,7 @@ let print_errorl use_json el oc =
 
 (* Human readable output *)
 let print_error_summary truncate errors =
+  let error_or_errors n = if n != 1 then "errors" else "error" in
   let print_error_if_not_truncated curr e =
     (if not(truncate) || curr < 50 then print_error_color e);
     curr + 1
@@ -209,8 +210,8 @@ let print_error_summary truncate errors =
   print_newline ();
   if truncate && total > 50 then (
     Printf.printf
-      "... %d more errors (only 50 out of %d errors displayed)\n"
-      (total - 50) total;
+      "... %d more %s (only 50 out of %d errors displayed)\n"
+      (total - 50) (error_or_errors (total - 50)) total;
     print_endline "To see all errors, re-run Flow with --show-all-errors"
   ) else
-    Printf.printf "Found %d errors\n" total
+    Printf.printf "Found %d %s\n" total (error_or_errors total)

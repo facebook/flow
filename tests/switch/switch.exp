@@ -3,4 +3,4 @@ switch.js:23:19,20: string
 This type is incompatible with
   switch.js:28:13,15: number
 
-Found 1 errors
+Found 1 error

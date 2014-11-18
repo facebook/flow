@@ -10,9 +10,7 @@
 
 declare module events {
   declare class EventEmitter {
-    statics: {
-      listenerCount(emitter: EventEmitter, event: string): number;
-    };
+    static listenerCount(emitter: EventEmitter, event: string): number;
 
     addListener(event: string, listener: Function): EventEmitter;
     on(event: string, listener: Function): EventEmitter;
@@ -22,5 +20,5 @@ declare module events {
     setMaxListeners(n: number): void;
     listeners(event: string): Function[];
     emit(event: string, ...args: any[]): boolean;
-  };
-};
+  }
+}
