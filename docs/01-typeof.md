@@ -21,29 +21,29 @@ You can use the `typeof` operator on more complicated expressions:
 
 {% highlight javascript linenos=table %}
 /* @flow */
-class _C { }
-// Create a typed instance of C via typeof and assignment
-var M: { C : typeof _C } = { C: _C };
-// This works
-new M.C();
+class Foo { }
+// b ends up being a Foo type, since f evaluates to Foo
+var b: { f : typeof Foo } = { f : Foo };
+// Since f is Foo, and b is of a Foo type, we can instantiate b as Foo 
+new b.f();
 {% endhighlight %}
 
 Let's see an example where we use `typeof` and Flow will catch a typing error:
 
 {% highlight javascript linenos=table %}
 /* @flow */
-class _C { }
-class _D { }
-// Create a typed instance of C via typeof and assignment
-var M: { C : typeof _C } = { C: _C };
-// This works
-new M.D();
+class Foo { }
+class Bar { }
+var b: { f : typeof Foo } = { f : Foo };
+var c: { g : typeof Bar } = { g : Bar };
+// b is of type Foo, not of type Bar (g is a Bar )
+new b.g();
 {% endhighlight %}
 
 ```bbcode
-/tmp/flow/f.js:7:5,7: property D
+/tmp/flow/f.js:6:5,7: property g
 Property not found in
-  /tmp/flow/f.js:7:5,5: object type
+  /tmp/flow/f.js:6:5,5: object type
 
-Found 1 errors
+Found 1 error
 ```
