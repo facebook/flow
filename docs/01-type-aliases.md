@@ -64,8 +64,8 @@ our type aliasing.
 
 {% highlight javascript linenos=table %}
 /* @flow */
-// This is equivalent to:
-// type F<U, V> = function(x: U) { 
+// Let F<U, V> describe the type of functions of the form
+// function(x: U) { 
 //   // return some value compatible with that assigned to V
 // }
 type F<U, V> = (x: U) => V;
