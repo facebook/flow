@@ -48,6 +48,8 @@
     title: Union and Intersection Types
   - id: type-aliases
     title: Type Aliases
+  - id: typeof
+    title: Typeof types
   - id: operators
     title: Operators
   - id: dynamic-type-tests
