@@ -7,4 +7,10 @@ prev: classes.html
 next: nullable-types.html
 ---
 
-TODO
+{% highlight javascript linenos=table %}
+/* @flow */
+var x: number | string = 0;
+
+declare var f: (x:number) => void & (x:string) => void;
+f("");
+{% endhighlight %}
