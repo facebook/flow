@@ -151,15 +151,17 @@ result, we disabled Flow for the files importing these two modules. While we dis
 > CODE CHECK
 > 
 > Here is a diff of the changes for this section.
+> 
+> https://github.com/facebook/flow/commit/4a4f3aaf512eb619e5f8d9a82432b61b75710927
+> 
+> and here is the updated error output
+> 
+> https://gist.github.com/JoelMarcey/76d1d5aaf2717ffb32f0
 
-
-As you will see, the
-[list of errors](https://gist.github.com/JoelMarcey/8817aff7637cec1024a3)
-has been reduced.
 
 ```bash
 $> flow
-Found 32 errors
+Found 29 errors
 ```
 
 
@@ -267,8 +269,19 @@ This does not give us type checking guarantees on the use of action. However, it
 > 
 > Here is a diff of the changes for this section.
 > 
+> https://github.com/facebook/flow/commit/0bac302617bd8fad694badda3c9d57d858d41c46
+> 
+> and here is the updated error output
+> 
+> https://gist.github.com/JoelMarcey/266d8696fa30268c2d04
 
-### Tests
+
+```bash
+$> flow
+Found 17 errors
+```
+
+## Tests
 
 If you now look at the current
 [list of errors](https://gist.github.com/JoelMarcey/a41d15d5b8c72b73c23a)
@@ -281,21 +294,22 @@ For now, we are going to only weakly check the test file using `@flow-weak`.
  */
 {% endhighlight %}
 
-After this module annotation step, the
-[list of errors](https://gist.github.com/JoelMarcey/96b64f42860dd60227fc)
-will be much more manageable, and, more importantly, will be the errors we
-actually care about with respect to types in our React project.
-
-```bash
-$> flow
-Found 11 errors
-```
-
-
 > CODE CHECK
 > 
 > Here is a diff of the changes for this section.
 > 
+> https://github.com/facebook/flow/commit/64ed64ede9f9b3dfe45f0f3f272d4cf7fc4e81c9
+> 
+> and here is the updated error output
+> 
+> https://gist.github.com/JoelMarcey/81813064b07fe6892cc1
+
+
+```bash
+$> flow
+Found 8 errors
+```
+
 
 ## The Real Work
 
@@ -362,6 +376,21 @@ createMessage: function(message: Message, optThreadName?: string) {
   var threadName = optThreadName || 'New Conversation';
 {% endhighlight %}
 
+> CODE CHECK
+> 
+> Here is a diff of the changes for this section.
+> 
+> https://github.com/facebook/flow/commit/b0fbafe0df3112c5e3915fe7cf66ea1082892a30
+> 
+> and here is the updated error output
+> 
+> https://gist.github.com/JoelMarcey/bd2cd831f8a593b66ddf
+
+
+```bash
+$> flow
+Found 7 errors
+```
 
 ### Property Use
 
@@ -417,7 +446,17 @@ types.
 > 
 > Here is a diff of the changes for this section.
 > 
+> https://github.com/facebook/flow/commit/620a1e25052cbc10fdb88513c0cf45bcdbeffe57
+> 
+> and here is the updated error output
+> 
+> https://gist.github.com/JoelMarcey/591a2e4d1e7942d524c3
 
+
+```bash
+$> flow
+Found 4 errors
+```
 
 ## Other Errors
 
@@ -513,6 +552,13 @@ will then assume `message` can be assigned to any type.
 > 
 > Here is a diff of the changes for this section.
 > 
+> https://github.com/facebook/flow/commit/f7a05406f2a4fa0f7f3145a6e3acfc98d3922dde
+
+
+```bash
+$> flow
+Found 4 errors
+```
 
 
 ## No Errors!
