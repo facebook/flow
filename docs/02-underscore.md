@@ -54,7 +54,7 @@ Now when we run Flow again, we get a small page of errors:
 
 ```bbcode
 ...
-Found 26 errors
+Found 18 errors
 ```
 
 This seems quite manageable. Let's look at each of these errors in turn and modify the file as required. (Note that the line numbers in this article may not match your own results as Underscore itself may have been updated since it was written).
@@ -81,7 +81,8 @@ var root: any = this;
 The final error message (where Underscore is trying to see if RequireJS is present) fails similarly:
 
 ```bbcode
-Unknown global name: define
+underscore.js:1475:7,48: identifier define
+Unknown global name
 ```
 
 We can add a declaration just ahead of the usage to show that this too is of type `any`:
@@ -99,12 +100,12 @@ We're three errors down already.
 Another common type of error reported is this:
 
 ```bbcode
-underscore.js:140:25,47: function call
+underscore.js:674:36,81: function call
 Callable signature not found in
   [LIB] core.js:235:1,236:1: statics of TypeError
 ```
 
-A glimpse at the lines mentioned make it clear it is about the instantiation of classes without the `new` keyword. We simply update lines like:
+This is simply the instantiation of the TypeError class without the `new` keyword. We simply update from:
 
 {% highlight javascript %}
 if (!length) throw TypeError(reduceError);
@@ -115,8 +116,6 @@ to
 {% highlight javascript %}
 if (!length) throw new TypeError(reduceError);
 {% endhighlight %}
-
-At the time of writing, Underscore contains seven `Array` instantations and a `TypeError` instantiation that Flow complains about. When updated, this brings our error count down considerably.
 
 ## Type inference in conditions
 
@@ -166,7 +165,7 @@ If rewriting this logic seems like too much work, we can also just tell Flow tha
 var keys: any = obj.length !== +obj.length && _.keys(obj),
 ```
 
-At the time of writing, there are five examples of this pattern in use. Fixing them brings down our error count to just three outstanding issues.
+At the time of writing, there are five examples of this pattern in use. Fixing them brings down our error count to just two outstanding issues.
 
 ## Final nits
 
@@ -194,7 +193,7 @@ if (--times > 0 && func instanceof Function) {
 }
 ```
 
-Similarly this error is alerting us to calling a variable that may not represent a function. Underscore's author's do indeed check as much in this case, but Flow is not able to determine that that is what the `_.isFunction` is doing.
+Similarly this final error is alerting us to calling a variable that may not represent a function. Underscore's author's do indeed check as much in this case, but Flow is not able to determine that that is what the `_.isFunction` is doing.
 
 ```bbcode
 underscore.js:1310:34,51: call of method call
@@ -247,14 +246,7 @@ With those small changes, we now have a clean bill of health in weak mode:
 ```bbcode
 Found 0 errors
 ```
-
-It is tempting to remove the `weak` declaration and start to work on some of the additional type issues that Flow asserts. It is important to understand though that will appear a somewhat daunting task until you actually start adding annotations on both the arguments and return types of Underscore's many functions.
-
-In the meantime, hopefully this article has provided an insight into the sort of things that Flow is checking for, and some of the idioms used in popular JavaScript libraries that Flow finds harder to type check. And over time, as Flow improves, the nature of the issues reported will also change. Good luck!
-
-## Appendix
-
-For reference, here is the diff for the changes made in this walkthough.
+For reference, here is the relatively small diff for all the changes made in this walkthough.
 
 ```diff
 @@ -0,0 +1 @@
@@ -265,9 +257,6 @@ For reference, here is the diff for the changes made in this walkthough.
 @@ -120 +121 @@
 -    var keys = obj.length !== +obj.length && _.keys(obj),
 +    var keys: any = obj.length !== +obj.length && _.keys(obj),
-@@ -122 +123 @@
--        results = Array(length),
-+        results = new Array(length),
 @@ -138 +139 @@
 -    var keys = obj.length !== +obj.length && _.keys(obj),
 +    var keys: any = obj.length !== +obj.length && _.keys(obj),
@@ -280,50 +269,25 @@ For reference, here is the diff for the changes made in this walkthough.
 @@ -218 +219 @@
 -    var keys = obj.length !== +obj.length && _.keys(obj),
 +    var keys: any = obj.length !== +obj.length && _.keys(obj),
-@@ -317 +318 @@
--    var shuffled = Array(length);
-+    var shuffled = new Array(length);
-@@ -566 +567 @@
--    var results = Array(length);
-+    var results = new Array(length);
-@@ -641 +642 @@
--    var range = Array(length);
-+    var range = new Array(length);
 @@ -673 +674 @@
 -    if (!_.isFunction(func)) throw TypeError('Bind must be called on a function');
 +    if (!_.isFunction(func)) throw new TypeError('Bind must be called on a function');
-@@ -675 +676 @@
--    return function bound() {
-+    var bound = function () {
-@@ -677,0 +679 @@
-+    return bound;
-@@ -685 +687 @@
--    return function bound() {
-+    var bound = function () {
-@@ -693,0 +696 @@
-+    return bound;
-@@ -849 +852 @@
+@@ -849 +850 @@
 -      if (--times > 0) {
 +      if (--times > 0 && func instanceof Function) {
-@@ -908 +911 @@
--    var values = Array(length);
-+    var values = new Array(length);
-@@ -919 +922 @@
--    var pairs = Array(length);
-+    var pairs = new Array(length);
-@@ -1254 +1257 @@
--    var accum = Array(Math.max(0, n));
-+    var accum = new Array(Math.max(0, n));
-@@ -1309 +1312 @@
+@@ -1309 +1310 @@
 -    return _.isFunction(value) ? value.call(object) : value;
 +    return (value instanceof Function) ? value.call(object) : value;
-@@ -1473,0 +1477 @@
+@@ -1473,0 +1475 @@
 +  declare var define: any;
 ```
+Hopefully this article has provided an insight into the sort of things that Flow is checking for, and some of the idioms used in popular JavaScript libraries that Flow finds harder to type check. Good luck!
 
 ### Epilogue
 
-For the truly adventurous, here is another diff that shows where one may end up with 0 errors after turning off weak mode. You may notice a lot of Flow features in use in this diff, including type aliases, function types, object types, union types, tuple types, and generics.
+At this point you ar probably tempted to remove the `weak` declaration and start to work on some of the more detailed type issues that Flow asserts with a full type check. It is important to understand though that this will appear a somewhat daunting task until you actually start adding annotations on both the arguments and return types of Underscore's many functions.
+
+But to give you a hint the meantime, here is another diff that shows how to get the error count down to zero errors after turning off weak mode. You may notice a number of Flow features in use in this diff, including type aliases, function types, object types, union types, tuple types, and generics.
 
 ```diff
 @@ -1,7 +1,11 @@
