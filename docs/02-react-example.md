@@ -14,7 +14,10 @@ Flow be able to successfully type check its code. While it will not be an
 automatic, run the Flow type-checker only one time win, we will show that it
 does not need to be painful to use Flow on your existing projects.
 
-## The React Source
+## Getting Started - The React Source
+
+> DOWNLOAD BELOW!
+> 
 
 We will be using
 [Flux Chat](https://github.com/facebook/flux/tree/a9724ae9dedd25daa5f0127ee54343353c5cbfd6/examples/flux-chat)
@@ -262,7 +265,7 @@ This does not give us type checking guarantees on the use of action. However, it
 
 > CODE CHECK
 > 
-> Here is a [diff](https://github.com/facebook/flow/commit/0bac302617bd8fad694badda3c9d57d858d41c46) 
+> Here is a [diff](https://github.com/facebook/flow/commit/c85f06b9f555cf3f95fc4d9ef0b8f683260fec40) 
 > of the changes for this section and here is the updated 
 > [error output](https://gist.github.com/JoelMarcey/266d8696fa30268c2d04).
 
@@ -287,7 +290,7 @@ For now, we are going to only weakly check the test file using `@flow-weak`.
 
 > CODE CHECK
 > 
-> Here is a [diff](https://github.com/facebook/flow/commit/64ed64ede9f9b3dfe45f0f3f272d4cf7fc4e81c9) 
+> Here is a [diff](https://github.com/facebook/flow/commit/8325417064a21bd9cd819bfd0e00466df6387594) 
 > of the changes for this section and here is the updated 
 > [error output](https://gist.github.com/JoelMarcey/81813064b07fe6892cc1).
 
@@ -365,7 +368,7 @@ createMessage: function(message: Message, optThreadName?: string) {
 
 > CODE CHECK
 > 
-> Here is a [diff](https://github.com/facebook/flow/commit/b0fbafe0df3112c5e3915fe7cf66ea1082892a30) 
+> Here is a [diff](https://github.com/facebook/flow/commit/62cef6dd10be00bbb96f9cdd8ae4fb0a059e6014) 
 > of the changes for this section and here is the updated 
 > [error output](https://gist.github.com/JoelMarcey/bd2cd831f8a593b66ddf).
 
@@ -427,7 +430,7 @@ types.
 
 > CODE CHECK
 > 
-> Here is a [diff](https://github.com/facebook/flow/commit/620a1e25052cbc10fdb88513c0cf45bcdbeffe57) 
+> Here is a [diff](https://github.com/facebook/flow/commit/22eb39e8bc48a598ae5518db564deb1959ed6740) 
 > of the changes for this section] and here is the updated 
 > [error output](https://gist.github.com/JoelMarcey/591a2e4d1e7942d524c3).
 
@@ -529,7 +532,7 @@ will then assume `message` can be assigned to any type.
 
 > CODE CHECK
 > 
-> Here is a [diff](https://github.com/facebook/flow/commit/f7a05406f2a4fa0f7f3145a6e3acfc98d3922dde) 
+> Here is a [diff](https://github.com/facebook/flow/commit/564b2dd26d71c7cd300052fb831e0104e24b5292) 
 > of the changes for this section.
 
 
@@ -571,3 +574,8 @@ pyhton -m SimpleHTTPServer
 ```
 
 and then navigate to `localhost:8000`.
+
+> CODE CHECK
+> 
+> Here is a [diff](https://github.com/facebook/flow/commit/8e19ceca38e96cff3b372347e1c356c09fd02b7c) 
+> of the changes for this section.
