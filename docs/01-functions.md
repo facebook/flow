@@ -133,11 +133,9 @@ others, based on the types of its arguments.
 
 To express such signatures, Flow provides a syntax for union types:
 
-`$Either<T1, .., Tn>`
+`T1 | .. | Tn`
 
-is the union of types `Ti`. Union types are available for general use. (The
-syntax is designed to reuse existing machinery in the parser; a better syntax
-for union types may be adopted in the future.)
+is the union of types `Ti`. Union types are available for general use.
 
 As specific cases, the overloaded signatures of both `replace()` in `String` and `then()` in `Promise` have been rewritten to use union types, thereby compressing a combinatorial number of signatures into one. In general this is possible whenever return types do not depend on the specific choice and combination of argument types, which is often the case in JavaScript due to lack of overloading support at run time.
 
@@ -153,4 +151,3 @@ does a series of dynamic type tests in its body to dispatch accordingly. This
 has an interesting effect: since type signatures reflect the truth about
 implementations, it often turns out that a set of overloaded signatures can be
 simplified to a single signature using a union type for some parameters.
-
