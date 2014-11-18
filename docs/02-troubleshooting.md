@@ -29,7 +29,7 @@ These errors are due to `require(...)` statements in your code that don't resolv
 ../lib/
 ```
 
-Alternatively, you may not have the code available for those modules, or otherwise want to specify declarations for them. In that case, put another file under `globals_lib` (say `modules.js`), and declare the module interface there.
+Alternatively, you may not have the code available for those modules, or otherwise want to specify declarations for them. In that case, as in the 'global not found' case above you need to add an interface file, and run Flow with the `--lib` option to point Flow to them. For example, use `--lib globals_lib`, put another file under the `globals_lib` directory (say `modules.js`), and declare the module interface there.
 
 {% highlight javascript linenos=table %}
 declare module Bar {
@@ -37,9 +37,7 @@ declare module Bar {
 }
 {% endhighlight %}
 
-If you don't know what the module interface should be, you can try to find it at [DefinitelyTyped](https://github.com/borisyankov/DefinitelyTyped), which hosts a bunch of TypeScript interface declarations for popular modules, and try to run it through our convertion tool **[TODO]**.
-
-Note that if both an implementation and a declaration is found for a module, Flow will choose the implementation if it has been opted-in, the declaration otherwise.
+For more information about writing interface files, see [this guide](third-party.html) Note that if both an implementation and a declaration is found for a module, Flow will choose the implementation if it has been opted-in, the declaration otherwise.
 
 ### Operation not allowed on `null` / `undefined`
 
@@ -94,6 +92,3 @@ foo();
 ### Other type confusions
 
 Some operations only make sense when they're performed on particular set of values. (They may still work on other values, but may have unintended consequences.) For example, multiplication should be performed only on numbers even though they may still work when you pass strings to them (they're usually converted to `NaN`). Iteration using `for-in` should be performed only on objects even though they may still work on arrays (the keys are converted to strings, and other properties are also included). Non-strict equality `==` should be performed only on values that have the same type (otherwise, some sequence of type conversions are tried). Flow complains about many of these operations. Usually, there is a workaround: either there is a better way to do these operations (e.g., use `Array.forEach` and `==` in the latter two cases, respectively), or a simple workaround (e.g., use `Number(...)` in the former case).
-
-
-## What to do if there are too many errors
