@@ -94,30 +94,6 @@ if (typeof define === 'function' && define.amd) {
 
 We're three errors down already.
 
-## Instantiation
-
-Another common type of error reported is this:
-
-```bbcode
-underscore.js:123:19,31: function call
-Property not found in
-  [LIB] core.js:118:14,120:5: object type
-```
-
-While this is not currently the most clear error message, a glimpse at the lines mentioned make it clear it is about the instantiation of classes without the `new` keyword. We simply update lines like:
-
-{% highlight javascript %}
-results = Array(length),
-{% endhighlight %}
-
-to
-
-{% highlight javascript %}
-results = new Array(length),
-{% endhighlight %}
-
-At the time of writing, Underscore contains seven `Array` instantations and a `TypeError`. When updated, this brings our error count down considerably.
-
 ## Type inference in conditions
 
 Another type of common issue reported by Flow on Underscore (and indeed many concisely-written JavaScript libraries) is that encountered when a variable is both used as, and assigned in, conditions. In these instances a variable's type is typically deduced to be either a boolean `false` or an assigned value of another type. Subsequent code then assumes this hybrid type. For example, in several places in Underscore, Flow encounters code like this:
