@@ -13,7 +13,7 @@ There are binary distributions for Mac OS X and many variants of Linux; you can 
 
 ## Building Flow
 
-Flow is written in OCaml (OCaml 4.x is required) and (on Linux) requires libelf. You can install OCaml on Mac OS X and Linux by following the instructions at [ocaml.org](https://ocaml.org/docs/install.html). 
+Flow is written in OCaml (OCaml 4.01.0 or higher is required) and (on Linux) requires libelf. You can install OCaml on Mac OS X and Linux by following the instructions at [ocaml.org](https://ocaml.org/docs/install.html). 
 
 Once you have these dependencies, building Flow just requires running
 
@@ -26,6 +26,23 @@ This produces a `bin` folder containing the `flow` binary.
 ## Installing Flow
 
 Flow is simple to install: all you need is the `flow` binary on your PATH and you're good to go. 
+
+## Using OPAM
+
+You can also build and install flow via the OCaml [OPAM](https://opam.ocaml.org) package manager with one command:
+
+```
+opam install flowtype
+```
+
+If you don't have a new enough version of OCaml to compile Flow, you can also use OPAM to bootstrap a modern version.  Install OPAM via the [binary packages](http://opam.ocaml.org/doc/Install.html#InstallOPAMin2minutes) for your operating system and run:
+
+```
+opam init --comp=4.01.0
+opam install flowtype
+eval `opam config env`
+flow --help
+```
 
 ## Documentation
 
