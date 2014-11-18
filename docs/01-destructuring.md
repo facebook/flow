@@ -25,6 +25,8 @@ var a = 1, b = 2;
 // a = 2, b = 1
 {% endhighlight %}
 
+## Destructuring and Type Checks
+
 Flow can verify that any destructuring in your code is type-safe.
 
 {% highlight javascript linenos=table %}
@@ -37,6 +39,12 @@ var [a, b, ,c] = arr;
 var z: number = a * c;
 {% endhighlight %} 
 
+Above we have a four (4) element array `arr` (actually a 
+[`tuple`](http://flowtype.org/docs/arrays.html#tuples))
+. And then we destructure that array into three (3) variables, `a`, `b`,  `c`. 
+However, we then try to multiply `a` (a `number`), and `c` (a `boolean`). Flow 
+catches this.
+
 ```bbcode
 /tmp/flow/f.js:2:28,31: boolean
 This type is incompatible with
@@ -45,9 +53,11 @@ This type is incompatible with
 Found 1 error
 ```
 
+## Another Example 
+
 {% highlight javascript linenos=table %}
 /* @flow */
-var {x, y, o} = {x: '', y: 3, o: {z: false} }
+var {x, y, ...o} = {x: '', y: 3, o: {z: false} }
 // x: string, y: number, o: {z: boolean}
 var z: number = o;
 {% endhighlight %}
@@ -59,3 +69,6 @@ This type is incompatible with
 
 Found 1 errors
 ```
+
+`o` has been destructed as an object that contains a boolean value. That 
+cannot be assigned to a number.
