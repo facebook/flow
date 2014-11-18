@@ -8,9 +8,10 @@ next: nullable-types.html
 ---
 
 Flow supports a new language feature called type aliasing. Type aliasing 
-provides a way to redefine existing types as new type names. Type aliases 
-are similar to `typedef`s in C or type abbreviations in OCaml. Here is a 
-simple example: 
+provides a way to redefine existing types as new type names. For example, 
+type aliases may be used to define names for object types, effectively modeling
+interface types. Type aliases are similar to `typedef`s in C or type abbreviations in OCaml. 
+Here is a simple example: 
 
 {% highlight javascript linenos=table %}
 /* @flow */
