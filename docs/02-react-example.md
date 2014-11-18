@@ -62,6 +62,13 @@ Next, each JavaScript implementation file in the root and below must be
 var MessageSection = require('./MessageSection.react');
 {% endhighlight %}
 
+> CODE CHECK
+> 
+> Here is a 
+> [diff](https://github.com/facebook/flow/commit/d2c099065ac58fb78b5f3951d7ac912de5e5a58c) 
+> of the changes made in this section. 
+> 
+
 ### Flow Server
 
 After all files have been annotated with `@flow`, we are ready to start our
@@ -70,8 +77,11 @@ changes to them. From the root directory (i.e., the one with the
 `.flowconfig` file)
 
 ```bash
-$> flow start
+$> flow start --lib lib
 ```
+
+The `--lib` specifies that any [declarations](declarations.html) that are 
+needed will be placed in that directory.
 
 ### Type Checking
 
@@ -84,36 +94,63 @@ Found 50 errors
 
 > NOTE
 >
-> throughout this walk-through, your error list may be slightly
+> Throughout this walk-through, your error list may be slightly
 > different than shown here.
 
-Many of these errors are related to
-[missing NodeJS modules](https://github.com/facebook/flow/commit/f618cde8b0d9324819faf381004ca6f1fc93bab1)
-.
+## Working Around Current Flow Limitations
 
-> NOTE
->
-> For simplicity, we just stubbed out the necessary module files. Obviously,
-> you will want to use real module code.
+### `object-assign`
 
-Also, the [`object-assign` module must be replaced by direct calls to
-`Object.assign`](https://github.com/facebook/flow/commit/5da7bf10a3ce3493a03da0a516e36d1de93fc920) in order to make Flow work correctly with this usage pattern.
+At this stage we have already hit some limitations of Flow. Flow does not know 
+about the module `object-assign`. However, it understands what `Object.assign` does. Thus, we will replace any `object-assign` usage by `Object.assign`. 
 
-For example in `ChatAppDispatcher.js`, we went from:
+However, since `Object.assign` is not supported right now, we still need to provide `Object.assign` on our own. We will simply patch this in a file outside of Flow's knowledge (i.e., in a file *without* `/* @flow */`) like this:
 
 {% highlight javascript linenos=table %}
-var assign = require('object-assign');
-// ...
-var ChatAppDispatcher = assign(new Dispatcher(), {
-// ...
+if (!Object.assign) {
+  Object.assign = require('object-assign');
+}
 {% endhighlight %}
 
-to:
+### Class Inheritance
+
+Flow does not allow class instances to be extended at runtime. Thus, the following code will not work:
 
 {% highlight javascript linenos=table %}
-var ChatAppDispatcher = Object.assign({}, new Dispatcher(), {
-// ...
+var ChatAppDispatcher = Object.assign(new Dispatcher(), /*...*/);
 {% endhighlight %}
+
+Instead, we need to work around this by exporting the `Dispatcher` interface 
+by hand. This results in somewhat ugly code, but is the only way to get around explicit class inheritance for now. This is what it roughly looks like:
+
+{% highlight javascript linenos=table %}
+var _dispatcherInstance = new Dispatcher();
+
+var ChatAppDispatcher = {
+  register: _dispatcherInstance.register.bind(_dispatcherInstance),
+  /*...*/
+};
+{% endhighlight %}
+
+> IMPORTANT: 
+> 
+> Currently there is a bug in Flow which makes it think that class instances 
+> have their methods as own properties. This makes Flow think that the 
+> following would extend a `Dispatcher` instance, even though it doesn't:
+> 
+> `var ChatAppDispatcher = Object.assign({}, new Dispatcher(), /*...*/);`
+
+### Module Files
+
+Finally regarding Flow limitations, we currently cannot create interface 
+declaration files for the modules `react/lib/keyMirror` and `react/lib/cx`. 
+This results in missing module errors that we need to work around. As a 
+result, we disabled Flow for the files importing these two modules. While we disabled flow in these files, we did annotate and perform other Flow-aware changes so we can be error free once we do enable Flow. 
+
+> CODE CHECK
+> 
+> Here is a diff of the changes for this section.
+
 
 As you will see, the
 [list of errors](https://gist.github.com/JoelMarcey/8817aff7637cec1024a3)
