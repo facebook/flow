@@ -41,7 +41,7 @@
   - id: functions
     title: Functions
   - id: nullable-types
-    title: Nullable Types
+    title: Maybe Types
   - id: destructuring
     title: Destructuring
   - id: union-intersection-types
