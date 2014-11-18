@@ -1,6 +1,6 @@
 ---
 id: nullable-types
-title: Nullable Types
+title: Maybe Types
 layout: docs
 permalink: /docs/nullable-types.html
 prev: objects.html
@@ -27,8 +27,8 @@ Property cannot be accessed on possibly null value
 
 ## Type Annotating Null
 
-Any type `T` can be made nullable by writing `?T`: the latter type
-describes `null` or the set of values of `T`.
+Any type `T` can be made to include `null` (and the related value `undefined`) by writing `?T`: the latter type
+is a maybe type that describes `null` (or `undefined`) or the set of values of `T`.
 
 {% highlight javascript linenos=table %}
 /* @flow */
