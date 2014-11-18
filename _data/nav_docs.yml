@@ -24,6 +24,10 @@
     title: A Flux & React demo
   - id: underscore
     title: Flow, meet Underscore
+- title: Coming Soon
+  items:
+  - id: coming-soon
+    title: Future plans
 - title: Language Reference
   items:
   - id: type-annotations
