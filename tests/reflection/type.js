@@ -1,5 +1,5 @@
 declare var a: number;
-var b: $typeof<a> = "...";
+var b: typeof a = "...";
 var c: typeof a = "...";
 
 type T = number;

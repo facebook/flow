@@ -1,5 +1,5 @@
 
-generics.js:4:1,45: some instantiation (e.g., mixed) of X
+generics.js:4:32,32: some instantiation (e.g., mixed) of X
 This type is incompatible with
   generics.js:3:8,13: number
 

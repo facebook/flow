@@ -108,6 +108,7 @@ val do_gc: context -> Type.t list -> Type.t list -> unit
 
 val builtins: Type.t
 val get_builtin: context -> string -> reason -> Type.t
+val lookup_builtin: context -> string -> reason -> reason option -> Type.t -> unit
 val get_builtin_type: context -> reason -> string -> Type.t
 val resolve_builtin_class: context -> Type.t -> Type.t
 val set_builtin: context -> string -> Type.t -> unit

@@ -1,9 +1,9 @@
 
 encaps.js:3:14,16: property x
 Property not found in
-  encaps.js:1:7,7: A
+  encaps.js:2:13,13: A
 
-encaps.js:6:11,16: number
+encaps.js:7:12,12: number
 This type is incompatible with
   encaps.js:9:10,22: string
 

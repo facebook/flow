@@ -9,11 +9,23 @@ This type is incompatible with
 
 union.js:9:7,7: C
 This type is incompatible with
-  union.js:10:7,7: D
+  union.js:11:14,14: D
 
-union.js:10:7,7: D
+union.js:9:7,7: C
+This type is incompatible with
+  union.js:13:21,26: string
+
+union.js:11:9,9: C
+This type is incompatible with
+  union.js:11:14,14: D
+
+union.js:11:14,14: D
 This type is incompatible with
   union.js:9:7,7: C
+
+union.js:11:14,14: D
+This type is incompatible with
+  union.js:11:9,9: C
 
 union.js:21:17,18: string
 This type is incompatible with
@@ -23,4 +35,4 @@ union.js:21:22,22: number
 This type is incompatible with
   union.js:18:12,17: string
 
-Found 6 errors
+Found 9 errors

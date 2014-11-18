@@ -2517,7 +2517,7 @@ and expr_binop env bop ast_bop e1 =
 and expr_arrow env e1 tok =
   reduce env e1 tok begin fun e1 env ->
     let e2 =
-      match L.token env.file env.lb with
+      match L.varname env.lb with
       | Tword ->
           let name = Lexing.lexeme env.lb in
           let pos = Pos.make env.file env.lb in

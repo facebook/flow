@@ -1624,11 +1624,23 @@ let rec flow cx (l,u) trace =
       ->
       unit_flow cx (key, ElemT(reason_op, l, LowerBoundT tout))
 
-    | (ArrT _, SetElemT(reason_op,key,tin))
+    | (ArrT (_, _, []), SetElemT(reason_op, key,tin))
+      ->
+      let num = NumT.why reason_op in
+      unit_flow cx (num, ElemT(reason_op, l, UpperBoundT tin));
+      unit_flow cx (key, num)
+
+    | (ArrT _, SetElemT(reason_op, key,tin))
       ->
       unit_flow cx (key, ElemT(reason_op, l, UpperBoundT tin))
 
-    | (ArrT _, GetElemT(reason_op,key,tout))
+    | (ArrT (_, _, []), GetElemT(reason_op, key,tout))
+      ->
+      let num = NumT.why reason_op in
+      unit_flow cx (num, ElemT(reason_op, l, LowerBoundT tout));
+      unit_flow cx (key, num)
+
+    | (ArrT _, GetElemT(reason_op, key,tout))
       ->
       unit_flow cx (key, ElemT(reason_op, l, LowerBoundT tout))
 
@@ -1649,7 +1661,7 @@ let rec flow cx (l,u) trace =
 
     | (_, ElemT(_, ObjT(_, {dict_t = (key,value); _}), t))
       ->
-      unit_flow cx (l, key);
+        unit_flow cx (l, key);
         unit_flow cx (value,t);
         unit_flow cx (t,value)
 
@@ -2062,19 +2074,33 @@ let rec flow cx (l,u) trace =
       if (Files_js.is_lib_file (reason |> pos_of_reason |> Pos.filename |>
           Relative_path.to_absolute))
       then
+        let msg =
+            if Str.string_match (Str.regexp "\\$module__\\(.*\\)") x 0
+            then "Required module not found"
+            else "Unknown global name"
+        in
         let message_list = [
-          reason_op, "Unknown global name"
+          reason_op, msg
         ] in
         add_warning cx message_list
       else
+        let msg =
+          if x = "$call"
+          then "Callable signature not found in"
+          else if x = "$key" || x = "$value"
+          then "Indexable signature not found in"
+          else "Property not found in"
+        in
         prmsg_flow cx
           Errors_js.ERROR
           trace
-          "Property not found in"
+          msg
           (reason_op, reason_o)
 
     (* LookupT is a latent lookup, never fired *)
     | (MixedT _, LookupT _) -> ()
+
+    | (MixedT _, GetT(_, "statics", _)) -> ()
 
     | _ ->
       prerr_flow cx trace (err_msg l u) l u
@@ -3039,6 +3065,9 @@ and get_builtin cx x reason =
   mk_tvar_where cx reason (fun builtin ->
     unit_flow cx (builtins, GetT(reason,x,builtin))
   )
+
+and lookup_builtin cx x reason strict builtin =
+  unit_flow cx (builtins, LookupT(reason,strict,x,builtin))
 
 and mk_instance cx instance_reason c =
   mk_annot cx instance_reason c

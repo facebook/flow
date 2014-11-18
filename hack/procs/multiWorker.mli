@@ -14,8 +14,6 @@
 type 'a nextlist = 
   unit -> 'a list
 
-val make_bucket: 'a list -> ('b -> 'a list)
-
 val call :
   Worker.t list option ->
   job:('b -> 'a list -> 'b) ->

@@ -25,20 +25,27 @@
  *    read-only mode with all the workers.
  *    The master stores, the workers read.
  *    Only concurrent reads allowed. No concurrent write/read and write/write.
+ *    There are a few different OCaml modules that act as interfaces to this
+ *    global storage. They all use the same area of memory, so only one can be
+ *    active at any one time. The caller is responsible for zeroing out the
+ *    memory when it is done.
  *
  * II) The dependency table. It's a hashtable that contains all the
  *    dependencies between Hack objects. It is filled concurrently by
  *    the workers. The dependency table is made of 2 hashtables, one that
  *    can is used to quickly answer if a dependency exists. The other one
  *    to retrieve the list of dependencies associated with an object.
+ *    Only the hashes of the objects are stored, so this uses relatively
+ *    little memory. No dynamic allocation is required.
  *
- * III) The Hashtable.
+ * III) The Hashtable that maps string keys to string values. (The strings
+ *    are really serialized / marshalled representations of OCaml structures.)
  *    Key observation of the table is that data with the same key are
  *    considered equivalent, and so you can arbitrarily get any copy of it;
  *    furthermore if data is missing it can be recomputed, so incorrectly
  *    saying data is missing when it is being written is only a potential perf
  *    loss. Note that "equivalent" doesn't necessarily mean "identical", e.g.,
- *    two alpha-converted types are "equivalent" though not litterally byte-
+ *    two alpha-converted types are "equivalent" though not literally byte-
  *    identical. (That said, I'm pretty sure the Hack typechecker actually does
  *    always write identical data, but the hashtable doesn't need quite that
  *    strong of an invariant.)
@@ -60,6 +67,11 @@
  *    -) Concurrent removes: NOT SUPPORTED
  *       Only the master can remove, and can only do so if there are no other
  *       concurrent operations (reads or writes).
+ *
+ *    Since the values are variably sized and can get quite large, they are
+ *    stored separately from the hashes in a garbage-collected heap.
+ *
+ * Both II and III resolve hash collisions via linear probing.
  */
 /*****************************************************************************/
 
@@ -174,6 +186,12 @@ static char* heap_init;
 /* The size of the heap after initialization of the server */
 /* This should only be used by the master */
 static size_t heap_init_size = 0;
+
+/* For debugging */
+value hh_heap_size() {
+  CAMLparam0();
+  CAMLreturn(Val_long(*heap - heap_init));
+}
 
 /*****************************************************************************/
 /* Given a pointer to the shared memory address space, initializes all

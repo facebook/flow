@@ -202,6 +202,9 @@ function handleSpecialObjectCompare(esprima, flow, env) {
       }
       delete esprima.indexer;
       break;
+    case 'ObjectTypeProperty':
+      esprima.static = esprima.static || false;
+      break;
   }
 
   switch (esprima.type) {

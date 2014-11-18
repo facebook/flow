@@ -306,6 +306,10 @@ module Expect = struct
       true
     end else false
 
+  let contextual env str =
+    if Peek.value env <> str
+    then error_unexpected env;
+    Eat.token env
 end
 
 module rec Parse : sig
@@ -314,6 +318,7 @@ module rec Parse : sig
   val statement_list_item : env -> Ast.Statement.t
   val statement_list : term_fn:(token->bool) -> env -> Ast.Statement.t list
   val statement_list_with_directives : term_fn:(token->bool) -> env -> Ast.Statement.t list * bool
+  val module_body : term_fn:(token->bool) -> env -> Ast.Statement.t list
   val expression : env -> Ast.Expression.t
   val assignment : env -> Ast.Expression.t
   val object_initializer : env -> Ast.Loc.t * Ast.Expression.Object.t
@@ -336,7 +341,7 @@ end = struct
     val type_parameter_declaration : env -> Ast.Type.ParameterDeclaration.t option
     val type_parameter_instantiation : env -> Ast.Type.ParameterInstantiation.t option
     val return_type : env -> Ast.Type.annotation option
-    val _object : env -> Loc.t * Type.Object.t
+    val _object : ?allow_static:bool -> env -> Loc.t * Type.Object.t
     val function_param_list : env -> Type.Function.Param.t option * Type.Function.Param.t list
     val annotation : env -> Ast.Type.annotation
   end = struct
@@ -620,19 +625,20 @@ end = struct
           typeParameters;
         })
 
-      in let method_property env start_loc key =
+      in let method_property env start_loc static key =
         let value = methodish env start_loc in
         let value = fst value, Type.Function (snd value) in
         fst value, Type.Object.Property.({
           key;
           value;
           optional = false;
+          static;
         })
 
       in let call_property env =
         methodish env (Peek.loc env)
 
-      in let property env start_loc key =
+      in let property env start_loc static key =
         let optional = Expect.maybe env T_PLING in
         Expect.token env T_COLON;
         let value = _type env in
@@ -640,6 +646,7 @@ end = struct
           key;
           value;
           optional;
+          static;
         })
 
       in let indexer_property env =
@@ -661,32 +668,41 @@ end = struct
         if Peek.token env <> T_RCURLY
         then Expect.token env T_SEMICOLON
 
-      in let rec properties env (acc, indexers, callProperties) =
+      in let rec properties ~allow_static env (acc, indexers, callProperties) =
         match Peek.token env with
         | T_EOF
         | T_RCURLY -> List.rev acc, List.rev indexers, List.rev callProperties
         | T_LBRACKET ->
           let indexer = indexer_property env in
           semicolon env;
-          properties env (acc, indexer::indexers, callProperties)
+          properties allow_static env (acc, indexer::indexers, callProperties)
         | T_LESS_THAN
         | T_LPAREN ->
           let call_prop = call_property env in
           semicolon env;
-          properties env (acc, indexers, call_prop::callProperties)
+          properties allow_static env (acc, indexers, call_prop::callProperties)
         | _ ->
           let start_loc, key = Parse.object_key env in
+          let static, key = if allow_static
+            then match Peek.token env, key with
+            | T_COLON, _ -> false, key
+            | _, Expression.Object.Property.Identifier (_, {
+              Identifier.name = "static";
+              _;
+            }) -> true, snd (Parse.object_key env)
+            | _ -> false, key
+            else false, key in
           let property = match Peek.token env with
           | T_LESS_THAN
-          | T_LPAREN -> method_property env start_loc key
-          | _ -> property env start_loc key in
+          | T_LPAREN -> method_property env start_loc static key
+          | _ -> property env start_loc static key in
           semicolon env;
-          properties env (property::acc, indexers, callProperties)
+          properties allow_static env (property::acc, indexers, callProperties)
 
-      in fun env ->
+      in fun ?(allow_static=false) env ->
         let start_loc = Peek.loc env in
         Expect.token env T_LCURLY;
-        let properties, indexers, callProperties = properties env ([], [], []) in
+        let properties, indexers, callProperties = properties ~allow_static env ([], [], []) in
         let end_loc = Peek.loc env in
         Expect.token env T_RCURLY;
         Loc.btwn start_loc end_loc, Type.Object.({
@@ -784,7 +800,7 @@ end = struct
     let type_parameter_declaration = wrap type_parameter_declaration
     let type_parameter_instantiation = wrap type_parameter_instantiation
     let return_type = wrap return_type
-    let _object = wrap _object
+    let _object ?(allow_static=false) env = wrap (_object ~allow_static) env
     let function_param_list = wrap function_param_list
     let annotation = wrap annotation
   end
@@ -1546,7 +1562,7 @@ end = struct
               Expect.token env T_EXTENDS;
               extends env []
             end else [] in
-          let body = Type._object env in
+          let body = Type._object ~allow_static:true env in
           let loc = Loc.btwn start_loc (fst body) in
           loc, Statement.(InterfaceDeclaration Interface.({
             id;
@@ -1609,11 +1625,20 @@ end = struct
             })];
         })) in
 
+      let module_block_body env =
+        let start_loc = Peek.loc env in
+        Expect.token env T_LCURLY;
+        let term_fn = fun t -> t = T_RCURLY in
+        let body = Parse.module_body ~term_fn env in
+        let end_loc = Peek.loc env in
+        Expect.token env T_RCURLY;
+        Loc.btwn start_loc end_loc, { Ast.Statement.Block.body; } in
+
       let declare_module env start_loc =
         if Peek.value env <> "module" then error_unexpected env;
         Expect.token env T_IDENTIFIER;
         let id = Parse.identifier env in
-        let body = Parse.block_body env in
+        let body = module_block_body env in
         Loc.btwn start_loc (fst body), Statement.(DeclareModule DeclareModule.({
           id;
           body;
@@ -1631,6 +1656,233 @@ end = struct
         | _ ->
           Eat.vomit env;
           expression env)
+
+      let export_declaration =
+        let source env =
+          Expect.contextual env "from";
+          match Peek.token env with
+          | T_STRING (loc, value, raw, octal) ->
+              if octal then strict_error env Error.StrictOctalLiteral;
+              Expect.token env (T_STRING (loc, value, raw, octal));
+              let value = Literal.String value in
+              loc, { Literal.value; raw; }
+          | _ ->
+              (* Just make up a string for the error case *)
+              let raw = Peek.value env in
+              let value = Literal.String raw in
+              let ret = Peek.loc env, Literal.({ value; raw; }) in
+              error_unexpected env;
+              ret
+
+        in let rec specifiers env acc =
+          match Peek.token env with
+          | T_EOF
+          | T_RCURLY ->
+              List.rev acc
+          | _ ->
+              let id = Parse.identifier env in
+              let name, end_loc = if Peek.value env = "as"
+              then begin
+                Expect.contextual env "as";
+                let name = Parse.identifier env in
+                Some name, fst name
+              end else None, fst id in
+              let loc = Loc.btwn (fst id) end_loc in
+              let specifier = loc, {
+                Statement.ExportDeclaration.Specifier.id;
+                name;
+              } in
+              if Peek.token env = T_COMMA
+              then Expect.token env T_COMMA;
+              specifiers env (specifier::acc)
+
+        in fun env ->
+          let env = { env with strict = true; } in
+          let start_loc = Peek.loc env in
+          Expect.token env T_EXPORT;
+          Statement.ExportDeclaration.(match Peek.token env with
+          | T_DEFAULT ->
+              (* export default ... *)
+              Expect.token env T_DEFAULT;
+              let end_loc, declaration = match Peek.token env with
+              | T_FUNCTION ->
+                  (* export default function foo (...) { ... } *)
+                  let fn = Declaration._function env in
+                  fst fn, Some (Declaration fn)
+              | _ ->
+                  (* export default [assignment expression]; *)
+                  let expr = Parse.assignment env in
+                  let end_loc = match Peek.semicolon_loc env with
+                  | Some loc -> loc
+                  | None -> fst expr in
+                  Eat.semicolon env;
+                  end_loc, Some (Expression expr)
+               in
+              Loc.btwn start_loc end_loc, Statement.ExportDeclaration {
+                default = true;
+                declaration;
+                specifiers = None;
+                source = None;
+              }
+          | T_LET
+          | T_CONST
+          | T_VAR
+          | T_CLASS
+          | T_FUNCTION ->
+              let stmt = Parse.statement_list_item env in
+              let declaration = Some (Declaration stmt) in
+              Loc.btwn start_loc (fst stmt), Statement.ExportDeclaration {
+                default = false;
+                declaration;
+                specifiers = None;
+                source = None;
+              }
+          | T_MULT ->
+              let loc = Peek.loc env in
+              let specifiers = Some (ExportBatchSpecifier loc) in
+              Expect.token env T_MULT;
+              let source = source env in
+              let end_loc = match Peek.semicolon_loc env with
+              | Some loc -> loc
+              | None -> fst source in
+              let source = Some source in
+              Eat.semicolon env;
+              Loc.btwn start_loc end_loc, Statement.ExportDeclaration {
+                default = false;
+                declaration = None;
+                specifiers;
+                source;
+              }
+          | _ ->
+              Expect.token env T_LCURLY;
+              let specifiers = Some (ExportSpecifiers (specifiers env [])) in
+              let end_loc = Peek.loc env in
+              Expect.token env T_RCURLY;
+              let source = if Peek.value env = "from"
+              then Some (source env)
+              else None in
+              let end_loc = match Peek.semicolon_loc env with
+              | Some loc -> loc
+              | None ->
+                  (match source with
+                  | Some source -> fst source
+                  | None -> end_loc) in
+              Eat.semicolon env;
+              Loc.btwn start_loc end_loc, Statement.ExportDeclaration {
+                default = false;
+                declaration = None;
+                specifiers;
+                source;
+              }
+          )
+
+      and import_declaration =
+        let source env =
+          Expect.contextual env "from";
+          match Peek.token env with
+          | T_STRING (loc, value, raw, octal) ->
+              if octal then strict_error env Error.StrictOctalLiteral;
+              Expect.token env (T_STRING (loc, value, raw, octal));
+              let value = Literal.String value in
+              loc, { Literal.value; raw; }
+          | _ ->
+              (* Just make up a string for the error case *)
+              let raw = Peek.value env in
+              let value = Literal.String raw in
+              let ret = Peek.loc env, Literal.({ value; raw; }) in
+              error_unexpected env;
+              ret
+
+        in let rec specifier_list env acc =
+          match Peek.token env with
+          | T_EOF
+          | T_RCURLY -> List.rev acc
+          | _ ->
+              let id = Parse.identifier env in
+              let end_loc, name = if Peek.value env = "as"
+              then begin
+                Expect.contextual env "as";
+                let name = Parse.identifier env in
+                fst name, Some name
+              end else fst id, None in
+              let loc = Loc.btwn (fst id) end_loc in
+              let specifier =
+                loc, Statement.ImportDeclaration.NamedSpecifier.({
+                  id;
+                  name;
+                }) in
+              if Peek.token env = T_COMMA
+              then Expect.token env T_COMMA;
+              specifier_list env (specifier::acc)
+
+        in let specifier env =
+          let start_loc = Peek.loc env in
+          match Peek.token env with
+          | T_MULT ->
+              Expect.token env T_MULT;
+              Expect.contextual env "as";
+              let id = Parse.identifier env in
+              Statement.ImportDeclaration.NameSpace (Loc.btwn start_loc (fst id), id)
+          | _ ->
+              Expect.token env T_LCURLY;
+              let specifiers = specifier_list env [] in
+              let end_loc = Peek.loc env in
+              Expect.token env T_RCURLY;
+              Statement.ImportDeclaration.Named (Loc.btwn start_loc end_loc, specifiers)
+
+        in fun env ->
+          let env = { env with strict = true; } in
+          let start_loc = Peek.loc env in
+          Expect.token env T_IMPORT;
+          Statement.ImportDeclaration.(match Peek.token env with
+            | T_STRING (str_loc, value, raw, octal) ->
+                (* import "ModuleSpecifier"; *)
+                if octal then strict_error env Error.StrictOctalLiteral;
+                Expect.token env (T_STRING (str_loc, value, raw, octal));
+                let value = Literal.String value in
+                let source = Some (str_loc, { Literal.value; raw; }) in
+                let end_loc = match Peek.semicolon_loc env with
+                | Some loc -> loc
+                | None -> str_loc in
+                Eat.semicolon env;
+                Loc.btwn start_loc end_loc, Statement.ImportDeclaration {
+                  default = None;
+                  specifier = None;
+                  source;
+                }
+            | T_IDENTIFIER ->
+                (* import defaultspecifier ... *)
+                let default = Some (Parse.identifier env) in
+                let specifier = (match Peek.token env with
+                | T_COMMA ->
+                    Expect.token env T_COMMA;
+                    Some (specifier env)
+                | _ -> None) in
+                let source = source env in
+                let end_loc = match Peek.semicolon_loc env with
+                | Some loc -> loc
+                | None -> fst source in
+                let source = Some source in
+                Eat.semicolon env;
+                Loc.btwn start_loc end_loc, Statement.ImportDeclaration {
+                  default;
+                  specifier;
+                  source;
+                }
+            | _ ->
+                let specifier = Some (specifier env) in
+                let source = source env in
+                let end_loc = match Peek.semicolon_loc env with
+                | Some loc -> loc
+                | None -> fst source in
+                let source = Some source in
+                Eat.semicolon env;
+                Loc.btwn start_loc end_loc, Statement.ImportDeclaration {
+                  default = None;
+                  specifier;
+                  source;
+                }
+          )
   end
 
   module Expression = struct
@@ -3289,13 +3541,83 @@ end = struct
   end
 
   let rec program env =
-    let stmts, _ = statement_list_with_directives ~term_fn:(fun _ -> false) env in
+    let stmts = module_body_with_directives env (fun _ -> false) in
     let loc = match stmts with
     | [] -> Loc.from_lb env.lb
     | _ -> Loc.btwn (fst (List.hd stmts)) (fst (List.hd (List.rev stmts))) in
     Expect.eof env;
     let comments = List.rev !(env.comments) in
     loc, stmts, comments
+
+  and directives =
+      let check env (loc, token) =
+        match token with
+        | T_STRING (_, _, _, octal) ->
+            if octal then strict_error_at env (loc, Error.StrictOctalLiteral)
+        | _ -> failwith ("Nooo: "^(token_to_string token)^"\n")
+
+      in let rec statement_list env term_fn item_fn (string_tokens, stmts) =
+        match Peek.token env with
+        | T_EOF -> env, string_tokens, stmts
+        | t when term_fn t -> env, string_tokens, stmts
+        | _ ->
+            let string_token = Peek.loc env, Peek.token env in
+            let possible_directive = item_fn env in
+            let stmts = possible_directive::stmts in
+            (match possible_directive with
+            | _, Ast.Statement.Expression {
+                Ast.Statement.Expression.expression = loc, Ast.Expression.Literal {
+                  Ast.Literal.value = Ast.Literal.String str;
+                  _;
+                }
+              } ->
+                (* 14.1.1 says that it has to be "use strict" without any
+                  * escapes, so "use\x20strict" is disallowed. We could in theory
+                  * keep the raw string around, but that's a pain. This is a hack
+                  * that actually seems to work pretty well (make sure the string
+                  * has the right length)
+                  *)
+                let len = Ast.Loc.(loc._end.column - loc.start.column) in
+                let strict = env.strict || (str = "use strict" && len = 12) in
+                let string_tokens = string_token::string_tokens in
+                statement_list { env with strict; } term_fn item_fn (string_tokens, stmts)
+            | _ ->
+                env, string_tokens, stmts)
+
+      in fun env term_fn item_fn ->
+        let env, string_tokens, stmts = statement_list env term_fn item_fn ([], []) in
+        List.iter (check env) (List.rev string_tokens);
+        env, stmts
+
+  (* 15.2 *)
+  and module_item env =
+    match Peek.token env with
+    | T_EXPORT -> Statement.export_declaration env
+    | T_IMPORT -> Statement.import_declaration env
+    | _ -> statement_list_item env
+
+  and module_body_with_directives env term_fn =
+    let env, directives = directives env term_fn module_item in
+    let stmts = module_body ~term_fn env in
+    (* Prepend the directives *)
+    List.fold_left (fun acc stmt -> stmt::acc) stmts directives
+
+  and module_body =
+    let rec module_item_list env term_fn acc =
+      match Peek.token env with
+      | T_EOF -> List.rev acc
+      | t when term_fn t -> List.rev acc
+      | _ -> module_item_list env term_fn (module_item env::acc)
+
+    in fun ~term_fn env ->
+      module_item_list env term_fn []
+
+  and statement_list_with_directives ~term_fn env =
+    let env, directives = directives env term_fn statement_list_item in
+    let stmts = statement_list ~term_fn env in
+    (* Prepend the directives *)
+    let stmts = List.fold_left (fun acc stmt -> stmt::acc) stmts directives in
+    stmts, env.strict
 
   and statement_list =
     let rec statements env term_fn acc =
@@ -3306,53 +3628,6 @@ end = struct
 
     in fun ~term_fn env -> statements env term_fn []
 
-  and statement_list_with_directives =
-    let directives =
-      let check env (loc, token) =
-        match token with
-        | T_STRING (_, _, _, octal) ->
-            if octal then strict_error_at env (loc, Error.StrictOctalLiteral)
-        | _ -> failwith ("Nooo: "^(token_to_string token)^"\n")
-
-      in let rec statement_list env term_fn (string_tokens, stmts) =
-        match Peek.token env with
-        | T_EOF -> env, string_tokens, stmts
-        | t when term_fn t -> env, string_tokens, stmts
-        | _ ->
-            let string_token = Peek.loc env, Peek.token env in
-            let possible_directive = statement_list_item env in
-            let stmts = possible_directive::stmts in
-            (match possible_directive with
-            | _, Ast.Statement.Expression {
-                Ast.Statement.Expression.expression = loc, Ast.Expression.Literal {
-                  Ast.Literal.value = Ast.Literal.String str;
-                  _;
-                }
-              } ->
-                (* 14.1.1 says that it has to be "use strict" without any
-                 * escapes, so "use\x20strict" is disallowed. We could in theory
-                 * keep the raw string around, but that's a pain. This is a hack
-                 * that actually seems to work pretty well (make sure the string
-                 * has the right length)
-                 *)
-                let len = Ast.Loc.(loc._end.column - loc.start.column) in
-                let strict = env.strict || (str = "use strict" && len = 12) in
-                let string_tokens = string_token::string_tokens in
-                statement_list { env with strict; } term_fn (string_tokens, stmts)
-            | _ ->
-                env, string_tokens, stmts)
-
-      in fun env term_fn ->
-        let env, string_tokens, stmts = statement_list env term_fn ([], []) in
-        List.iter (check env) (List.rev string_tokens);
-        env, stmts
-
-    in fun ~term_fn env ->
-      let env, directives = directives env term_fn in
-      let stmts = statement_list term_fn env in
-      (* Prepend the directives *)
-      let stmts = List.fold_left (fun acc stmt -> stmt::acc) stmts directives in
-      stmts, env.strict
 
   and statement_list_item env =
     Statement.(match Peek.token env with

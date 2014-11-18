@@ -926,7 +926,7 @@ let explain_constraint pos name (error: error) =
 let overflow p =
   add Typing.overflow p "Value is too large"
 
-let format_string  pos snippet s class_pos fname class_suggest =
+let format_string pos snippet s class_pos fname class_suggest =
   add_list Typing.format_string [
   (pos, "I don't understand the format string " ^ snippet ^ " in " ^ s);
   (class_pos,

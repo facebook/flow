@@ -286,6 +286,8 @@ val new_context: string -> string -> context
 
 val reason_of_t : Type.t -> reason
 
+val mod_reason_of_t : (reason -> reason) -> Type.t -> Type.t
+
 val string_of_t : context -> Type.t -> string
 
 val string_of_ctor : Type.t -> string

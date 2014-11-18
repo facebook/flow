@@ -146,7 +146,7 @@ module Node: MODULE_SYSTEM = struct
     in
     match opt_module_name with
     | Some r -> r
-    | _ -> spf "'%s'" r
+    | _ -> r
 end
 
 (****************** Haste module system *********************)

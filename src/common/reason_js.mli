@@ -45,6 +45,8 @@ val prefix_reason : string -> reason -> reason
    simple replacements of the original *)
 val replace_reason : string -> reason -> reason
 
+val repos_reason : Pos.t -> reason -> reason
+
 val compare : reason -> reason -> int
 
 val do_patch : string list -> (int * int * string) list -> string

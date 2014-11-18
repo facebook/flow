@@ -76,7 +76,6 @@ let fresh_tvars (env:Env.env) (ts:tparam list) (ps:fun_params) (uniq:int) : Env.
   let ts' = List.map (fun (x, y, z) -> x, map_snd rename_str y, z) ts in
   env, ps', ts'
 
-
 let lookup_magic_type (env:Env.env) (class_:ty) (fname:string) (uniq:int) :
     Env.env * (fun_params * tparam list * ty option) option =
   match class_ with
@@ -131,7 +130,6 @@ let parse_printf_string (env:Env.env) (s:string) (pos:Pos.t) (class_:ty) : Env.e
              | env, xs, ys -> env, add_reason xs, ys)
   in
     read_text env 0
-
 
 type ('a, 'b) either = Left of 'a | Right of 'b
 

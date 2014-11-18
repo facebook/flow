@@ -3695,4 +3695,62 @@ module.exports = {
       '(() => number)[]',
       'typeof A[]',
     ],
+    'Export': [
+      'export * from "foo";',
+      'export * from "foo"',
+      /* This should be supported...
+      'export {} from "foo";',
+      */
+      'export { bar } from "foo";',
+      'export { bar } from "foo"',
+      'export { bar, baz } from "foo";',
+      'export { bar };',
+      /* Esprima should support trailing comma
+      'export { bar, }',
+      */
+      'export { bar, baz };',
+      'export var x, y',
+      'export var y = 12',
+      'export let x, y',
+      'export let y = 12',
+      'export const x, y',
+      'export const y = 12',
+      'export function foo() {}',
+      'export class A {}',
+      'export default 1 + 1;',
+      'export default 1 + 1',
+      /* Esprima parses default exports wrong
+      'export default function foo() {}',
+      'export default function *foo() {}',
+      'export default class {};',
+      'export default class A {};',
+      */
+    ],
+    'Invalid Exports': [
+      'export class {}',
+      'export function {}',
+      /* Esprima parses default exports wrong
+      'export default function() {}',
+      'export default class A {}',
+      */
+    ],
+    'Import': [
+      'import defaultbinding from "MyModule";',
+      'import * as namespace from "MyModule";',
+      /* TODO Esprima should support these
+      'import {} from "MyModule";',
+      'import {x,} from "MyModule";',
+      'import defaultbinding, {} from "MyModule";',
+      'import defaultbinding, {x,} from "MyModule";',
+      */
+      'import {x} from "MyModule";',
+      'import {x,y} from "MyModule";',
+      'import {x as z} from "MyModule";',
+      'import {x, y as z} from "MyModule";',
+      'import defaultbinding, * as namespace from "MyModule";',
+      'import defaultbinding, {x} from "MyModule";',
+      'import defaultbinding, {x,y} from "MyModule";',
+      'import defaultbinding, {x as z} from "MyModule";',
+      'import defaultbinding, {x, y as z} from "MyModule";',
+    ],
 };

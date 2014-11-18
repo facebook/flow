@@ -1166,6 +1166,7 @@ module.exports = {
           {
             'key.name': 'x',
             'value.type': 'NumberTypeAnnotation',
+            'static': false,
           },
         ],
         'extends': [
@@ -1175,6 +1176,11 @@ module.exports = {
           },
         ],
       },
+    },
+    'declare class A { static foo(): number; static x : string; static : number }': {
+      'body.0.body.properties.0.static': true,
+      'body.0.body.properties.1.static': true,
+      'body.0.body.properties.2.static': false
     },
   },
   'Invalid Declaration Statements': {
@@ -1476,6 +1482,9 @@ module.exports = {
         },
       ]
     },
+    'declare module A { export default function foo() {} }': {
+      'body.0.body.body.0.type': 'ExportDeclaration',
+    }
   },
   'Invalid Declare Module': {
     'declare Module A {}': {

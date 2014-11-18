@@ -13,6 +13,6 @@ This type is incompatible with
 
 sealed.js:3:1,7: assignment of property z
 Property not found in
-  proto.js:12:15,24: object type
+  proto.js:14:18,25: object type
 
 Found 4 errors

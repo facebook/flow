@@ -145,7 +145,13 @@ MessageStore.dispatchToken = ChatAppDispatcher.register(function(payload: any) {
       break;
 
     case ActionTypes.CREATE_MESSAGE:
-      var message = MessageStore.getCreatedMessageData(action.text);
+      // WORKAROUND: getCreatedMessageData could create a message object
+      // with threadID being null. This seems like a potentially serious
+      // issue. However, fixing this issue would require a major refactoring
+      // on threadID assignment to be consistent. Since in the example setup
+      // null never appears in this spot, we simply silence flow's errors
+      // about it.
+      var message: any = MessageStore.getCreatedMessageData(action.text);
       _messages[message.id] = message;
       MessageStore.emitChange();
       break;

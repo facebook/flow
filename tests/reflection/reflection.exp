@@ -1,5 +1,5 @@
 
-type.js:2:21,25: string
+type.js:2:19,23: string
 This type is incompatible with
   type.js:1:16,21: number
 

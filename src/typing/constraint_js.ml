@@ -776,6 +776,93 @@ and get_typeparam_names xs tnames =
     IMap.add param.id param.name tnames
   ) tnames xs
 
+(* TODO make a type visitor *)
+let rec mod_reason_of_t f = function
+
+  | OpenT (reason, t) -> OpenT (f reason, t)
+  | NumT (reason, t) -> NumT (f reason, t)
+  | StrT (reason, t) -> StrT (f reason, t)
+  | BoolT reason -> BoolT (f reason)
+  | UndefT reason -> UndefT (f reason)
+  | MixedT reason -> MixedT (f reason)
+  | AnyT reason -> AnyT (f reason)
+  | NullT reason -> NullT (f reason)
+  | VoidT reason -> VoidT (f reason)
+
+  | FunT (reason, s, p, ft) -> FunT (f reason, s, p, ft)
+  | PolyT (plist, t) -> PolyT (plist, mod_reason_of_t f t)
+  | BoundT { reason; id; name } -> BoundT { reason = f reason; id; name }
+  | ObjT (reason, ot) -> ObjT (f reason, ot)
+  | ArrT (reason, t, ts) -> ArrT (f reason, t, ts)
+
+  | ClassT t -> ClassT (mod_reason_of_t f t)
+  | InstanceT (reason, st, su, inst) -> InstanceT (f reason, st, su, inst)
+  | SuperT (reason, inst) -> SuperT (f reason, inst)
+  | ParentT (reason, inst) -> ParentT (f reason, inst)
+
+  | CallT (reason, ft) -> CallT (f reason, ft)
+
+  | MethodT (reason, name, s, ts, t, n) -> MethodT(f reason, name, s, ts, t, n)
+  | SetT (reason, n, t) -> SetT (f reason, n, t)
+  | GetT (reason, n, t) -> GetT (f reason, n, t)
+
+  | SetElemT (reason, it, et) -> SetElemT (f reason, it, et)
+  | GetElemT (reason, it, et) -> GetElemT (f reason, it, et)
+
+  | ConstructorT (reason, ts, t) -> ConstructorT (f reason, ts, t)
+
+  | AdderT (reason, rt, lt) -> AdderT (f reason, rt, lt)
+  | ComparatorT (reason, t) -> ComparatorT (f reason, t)
+
+  | TypeT (reason, t) -> TypeT (f reason, t)
+
+  | OptionalT t -> OptionalT (mod_reason_of_t f t)
+
+  | RestT t -> RestT (mod_reason_of_t f t)
+
+  | PredicateT (pred, t) -> PredicateT (pred, mod_reason_of_t f t)
+
+  | EqT (reason, t) -> EqT (f reason, t)
+
+  | MarkupT(reason, t, t2) -> MarkupT (f reason, t, t2)
+
+  | SpecializeT(reason, ts, t) -> SpecializeT (f reason, ts, t)
+
+  | TypeAppT (t, ts) -> TypeAppT (mod_reason_of_t f t, ts)
+
+  | MaybeT t -> MaybeT (mod_reason_of_t f t)
+
+  | IntersectionT (reason, ts) -> IntersectionT (f reason, ts)
+
+  | UnionT (reason, ts) -> UnionT (f reason, ts)
+
+  | LookupT (reason, r2, x, t) -> LookupT (f reason, r2, x, t)
+
+  | UnifyT (t, t2) -> UnifyT (mod_reason_of_t f t, mod_reason_of_t f t2)
+
+  | ObjAssignT (reason, t, t2) -> ObjAssignT (f reason, t, t2)
+  | ObjRestT (reason, t, t2) -> ObjRestT (f reason, t, t2)
+  | ObjExtendT (reason, t, t2) -> ObjExtendT (f reason, t, t2)
+
+  | UpperBoundT t -> UpperBoundT (mod_reason_of_t f t)
+  | LowerBoundT t -> LowerBoundT (mod_reason_of_t f t)
+
+  | EnumT (reason, t) -> EnumT (f reason, t)
+  | RecordT (reason, t) -> RecordT (f reason, t)
+
+  | KeyT (reason, t) -> KeyT (f reason, t)
+  | HasT (reason, t) -> HasT (f reason, t)
+
+  | ElemT (reason, t, t2) -> ElemT (f reason, t, t2)
+
+  | ConcretizeT (reason, ts, t, t2) -> ConcretizeT (f reason, ts, t, t2)
+  | ConcreteT t -> ConcreteT (mod_reason_of_t f t)
+
+  | SummarizeT (reason, t) -> SummarizeT (f reason, t)
+
+  | CustomClassT (name, ts, t) ->
+      CustomClassT (name, ts, mod_reason_of_t f t)
+
 let name_prefix_of_t = function
   | RestT _ -> "..."
   | _ -> ""

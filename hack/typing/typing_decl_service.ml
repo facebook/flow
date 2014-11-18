@@ -13,7 +13,6 @@
 (* Module declaring the types in parallel *)
 (*****************************************************************************)
 open Utils
-module PHeap = Parser_heap.ParserHeap
 
 (* filename => functions defined, classes defined *)
 type fast = (SSet.t * SSet.t * SSet.t * SSet.t) SMap.t

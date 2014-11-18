@@ -3,12 +3,12 @@ Bar.js:14:26,31: string
 This type is incompatible with
   Foo.js:13:19,24: number
 
-Foo.js:13:9,14: string
-This type is incompatible with
-  Bar.js:9:17,22: number
-
 Foo.js:13:16,16: parameter z
 Missing annotation
+
+Foo.js:16:21,21: string
+This type is incompatible with
+  Bar.js:9:17,22: number
 
 Qux.js:7:8,8: return
 Missing annotation

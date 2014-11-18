@@ -28,10 +28,8 @@ let compute_deps_neutral = ISet.empty, ISet.empty
 (* This is the place where we are going to put everything necessary for
  * the redeclaration. We could "pass" the values directly to the workers,
  * but it gives too much work to the master and slows things downn.
- * So what we do instead is:
- * Set the value of "data_storage", which means that one of the data nodes
- * has this value.
- * Let each worker pool the data from "data_storage".
+ * So what we do instead is pass the data through shared memory via
+ * OnTheFlyStore.
  * I tried replicating the data to speed things up but it had no effect.
  *)
 (*****************************************************************************)
@@ -46,7 +44,7 @@ end)
 (* Re-declaring the types in a file *)
 (*****************************************************************************)
 
-let on_the_fly_decl_file nenv all_classes fast (errors, failed) fn =
+let on_the_fly_decl_file nenv all_classes (errors, failed) fn =
   let decl_errors, () = Errors.do_
     begin fun () ->
     (* We start "recording" dependencies. 
@@ -170,16 +168,16 @@ let update_positions classes to_update =
  *)
 (*****************************************************************************)
 
-let redeclare_files nenv all_classes fast filel =
+let redeclare_files nenv all_classes filel =
   List.fold_left
-    (on_the_fly_decl_file nenv all_classes fast)
+    (on_the_fly_decl_file nenv all_classes)
     ([], Relative_path.Set.empty)
     filel
 
-let otf_decl_files nenv all_classes fast filel =
+let otf_decl_files nenv all_classes filel =
   SharedMem.invalidate_caches();
   (* Redeclaring the files *)
-  let errors, failed = redeclare_files nenv all_classes fast filel in
+  let errors, failed = redeclare_files nenv all_classes filel in
   errors, failed
 
 let compute_deps ~update_pos nenv fast filel =
@@ -215,7 +213,7 @@ let compute_deps ~update_pos nenv fast filel =
 let load_and_otf_decl_files acc filel =
   try
     let nenv, all_classes, fast = OnTheFlyStore.load() in
-    otf_decl_files nenv all_classes fast filel
+    otf_decl_files nenv all_classes filel
   with e ->
     Printf.printf "Error: %s\n" (Printexc.to_string e);
     flush stdout;
@@ -296,23 +294,19 @@ let get_defs fast =
   end fast FileInfo.empty_names
 
 (*****************************************************************************)
-(* The main entry points *)
+(* The main entry point *)
 (*****************************************************************************)
 
-let init workers fast =
-  let fnl = Relative_path.Map.fold (fun x _ y -> x :: y) fast [] in
-  let all_classes = Typing_decl_service.get_classes fast in
-  all_classes, fnl
-
 let redo_type_decl ~update_pos workers nenv fast =
-  let all_classes, fnl = init workers fast in
+  let fnl = Relative_path.Map.keys fast in
+  let all_classes = Typing_decl_service.get_classes fast in
   let defs = get_defs fast in
   invalidate_heap defs;
   (* If there aren't enough files, let's do this ourselves ... it's faster! *)
   let result =
     if List.length fnl < 10
     then
-      let errors, failed = otf_decl_files nenv all_classes fast fnl in
+      let errors, failed = otf_decl_files nenv all_classes fnl in
       let to_redecl, to_recheck = compute_deps ~update_pos nenv fast fnl in
       errors, failed, to_redecl, to_recheck
     else parallel_otf_decl ~update_pos workers nenv all_classes fast fnl

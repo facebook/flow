@@ -36,6 +36,8 @@ val get_var : context -> string -> reason -> Type.t
 
 val get_var_in_scope : context -> string -> reason -> Type.t
 
+val var_ref : context -> string -> reason -> Type.t
+
 val set_var : context -> string -> Type.t -> reason -> unit
 
 val init_env : context -> string -> block_entry -> unit

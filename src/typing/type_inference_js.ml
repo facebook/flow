@@ -105,10 +105,10 @@ let module_t cx m reason =
         cx.modulemap <- cx.modulemap |> SMap.add m t;
       )
 
-let require cx m loc =
+let require cx m m_name loc =
   cx.required <- SSet.add m cx.required;
   cx.require_loc <- SMap.add m loc cx.require_loc;
-  module_t cx m (mk_reason (spf "require %s" m) loc)
+  module_t cx m (mk_reason m_name loc)
 
 let exports cx m =
   module_t cx m (Reason_js.new_reason "exports" (Pos.make_from
@@ -338,18 +338,15 @@ let rec convert cx map = Ast.Type.(function
       let ts = List.map (convert cx map) ts in
       IntersectionT (mk_reason "intersection type" loc, ts)
 
-  | loc, Typeof t ->
-      (match t with
+  | loc, Typeof x ->
+      (match x with
       | (loc, Generic {
-          Generic.id = Generic.Identifier.Unqualified (_, { Ast.Identifier.name = c; _ });
+          Generic.id = qualification;
           typeParameters = None
         }) ->
-          let reason = mk_reason (spf "typeof %s" c) loc in
-          Env_js.get_var_in_scope cx c reason
-      | (_, Generic { Generic.id = Generic.Identifier.Qualified _; _ }) ->
-          (* TODO *)
-          failwith "Unimplemented: Generic with unqualified identifiers"
-      | _ -> error_type cx loc "Unsupported annotation")
+          convert_qualification cx qualification
+      | _ ->
+        error_type cx loc "Unexpected typeof expression")
 
   | loc, Tuple ts ->
       let elts = List.map (convert cx map) ts in
@@ -366,19 +363,34 @@ let rec convert cx map = Ast.Type.(function
       let t = convert cx map t in
       ArrT (r, t, [])
 
-  (* TODO *)
-  | loc, StringLiteral s -> failwith "Unimplemented"
+  | loc, StringLiteral { StringLiteral.value; _ }  ->
+    let reason = mk_reason "string literal type" loc in
+      EnumT
+        (reason,
+         Flow_js.mk_object_with_map_proto cx reason
+           (SMap.singleton value AnyT.t) (MixedT reason))
 
   (* TODO *)
-  | loc, Generic { Generic.id = Generic.Identifier.Qualified _; _ } ->
-      failwith "Unimplemented: Generics with qualified identifiers"
+  | loc, Generic { Generic.id = Generic.Identifier.Qualified (_,
+         { Generic.Identifier.qualification; id; }); typeParameters } ->
+
+    let m = convert_qualification cx qualification in
+    let _, { Ast.Identifier.name; _ } = id in
+    let reason = mk_reason name loc in
+    let t = Flow_js.mk_tvar_where cx reason (fun t ->
+      Flow_js.unit_flow cx (m, GetT (reason, name, t));
+    ) in
+    let typeParameters = extract_type_param_instantiations typeParameters in
+    let params = if typeParameters = []
+      then None else Some typeParameters in
+    mk_nominal_type_ cx reason map (t, params)
 
   (* type applications: name < params > *)
   | loc, Generic {
-      Generic.id = Generic.Identifier.Unqualified ((_, { Ast.Identifier.name; _ }) as id);
+      Generic.id = Generic.Identifier.Unqualified (id);
       typeParameters
     } ->
-
+    let _, { Ast.Identifier.name; _ } = id in
     let typeParameters = extract_type_param_instantiations typeParameters in
 
     (match name with
@@ -435,23 +447,6 @@ let rec convert cx map = Ast.Type.(function
         check_type_param_arity cx loc typeParameters 1 (fun () ->
           let t = convert cx map (List.hd typeParameters) in
           RecordT (mk_reason "record type" loc, t)
-        )
-
-      (* $typeof(x) is the type of x *)
-      | "$typeof" ->
-        (match typeParameters with
-        | [ loc, Generic {
-              Generic.id = Generic.Identifier.Unqualified (_, { Ast.Identifier.name = c; _ });
-              typeParameters = None
-            }
-          ] ->
-          let reason = mk_reason (spf "$typeof(%s)" c) loc in
-          Env_js.get_var_in_scope cx c reason
-        | [ (_, Generic { Generic.id = Generic.Identifier.Qualified _; _ }) ] ->
-            (* TODO *)
-            failwith "Unimplemented: Generic with unqualified identifiers"
-        | _ ->
-          error_type cx loc "Unsupported annotation"
         )
 
       | "Function" | "function" ->
@@ -537,10 +532,8 @@ let rec convert cx map = Ast.Type.(function
     if (typeparams = []) then ft else PolyT(typeparams, ft)
 
   | loc, Object { Object.properties; indexers; callProperties; } ->
-    if callProperties <> []
-    then failwith "Unsupported call properties in object type";
-    let map = List.fold_left (fun map_ ->
-      Object.Property.(fun (loc, { key; value; optional; }) ->
+    let map_ = List.fold_left (fun map_ ->
+      Object.Property.(fun (loc, { key; value; optional; static; }) ->
         (match key with
           | Ast.Expression.Object.Property.Identifier
               (_, { Ast.Identifier.name; _ }) when not optional ->
@@ -554,6 +547,13 @@ let rec convert cx map = Ast.Type.(function
       )
     ) SMap.empty properties
     in
+    let map_ = match callProperties with
+      | [] -> map_
+      | [loc, ft] -> SMap.add "$call" (convert cx map (loc, Ast.Type.Function ft)) map_
+      | fts ->
+        let fts = List.map (fun (loc, ft) -> convert cx map (loc, Ast.Type.Function ft)) fts in
+        SMap.add "$call" (IntersectionT (mk_reason "object type" loc, fts)) map_
+    in
     (* Seal an object type unless it specifies an indexer. *)
     let sealed, key, value = Object.Indexer.(
       match indexers with
@@ -566,11 +566,28 @@ let rec convert cx map = Ast.Type.(function
       (* TODO *)
       | _ -> failwith "Unimplemented: multiple indexers"
     ) in
-    let pmap = Flow_js.mk_propmap cx map in
+    let pmap = Flow_js.mk_propmap cx map_ in
     let proto = MixedT (reason_of_string "Object") in
     ObjT (mk_reason "object type" loc,
       Flow_js.mk_objecttype ~sealed (key, value) pmap proto)
   )
+
+and convert_qualification cx = Ast.Type.Generic.Identifier.(function
+  | Qualified (loc, { qualification; id; }) ->
+
+    let m = convert_qualification cx qualification in
+    let _, { Ast.Identifier.name; _ } = id in
+    let reason = mk_reason name loc in
+    Flow_js.mk_tvar_where cx reason (fun t ->
+      Flow_js.unit_flow cx (m, GetT (reason, name, t));
+    )
+
+  | Unqualified (id) ->
+
+    let loc, { Ast.Identifier.name; _ } = id in
+    let reason = mk_reason name loc in
+    Env_js.get_var cx name reason
+)
 
 and mk_rest cx = function
   | ArrT(_, t, []) -> RestT t
@@ -758,9 +775,18 @@ and statement_decl cx = Ast.Statement.(
       let r = mk_reason (spf "class %s" name) loc in
       let tvar = Flow_js.mk_tvar cx r in
       Env_js.init_env cx name (create_env_entry tvar tvar (Some loc))
-  | (_, DeclareModule _) ->
+  | (loc, DeclareModule { DeclareModule.id; _ }) ->
+      let _, { Ast.Identifier.name; _ } = id in
+      let r = mk_reason (spf "module %s" name) loc in
+      let t = mk_object cx r in
+      Hashtbl.replace cx.type_table loc t;
+      Env_js.init_env cx (spf "$module__%s" name) (create_env_entry t t (Some loc))
+  | (_, ExportDeclaration _) ->
       (* TODO *)
-      failwith "Unimplemented: DeclareModule"
+      failwith "Unimplemented: ExportDeclaration"
+  | (_, ImportDeclaration _) ->
+      (* TODO *)
+      failwith "Unimplemented: ImportDeclaration"
 )
 
 and toplevels cx stmts =
@@ -1354,8 +1380,6 @@ and statement cx = Ast.Statement.(
       body = (_, { Ast.Type.Object.properties; indexers; callProperties });
       extends;
     }) ->
-    if callProperties <> []
-    then failwith "Unsupported call properties in object type";
     let _, { Ast.Identifier.name = iname; _ } = id in
     let reason = mk_reason iname loc in
     let typeparams, imap, map = mk_type_param_declarations cx typeParameters in
@@ -1390,7 +1414,14 @@ and statement cx = Ast.Statement.(
         let valuet = convert cx map value in
         fmap |> SMap.add "$key" keyt |> SMap.add "$value" valuet
     (* TODO *)
-    | _ -> failwith "Unimplemented: multiple indexers in an interface")
+    | _ -> failwith "Unimplemented: multiple indexers")
+    in
+    let mmap = match callProperties with
+      | [] -> mmap
+      | [loc, ft] -> SMap.add "$call" (convert cx map (loc, Ast.Type.Function ft)) mmap
+      | fts ->
+        let fts = List.map (fun (loc, ft) -> convert cx map (loc, Ast.Type.Function ft)) fts in
+        SMap.add "$call" (IntersectionT (mk_reason iname loc, fts)) mmap
     in
     let mmap = match SMap.get "constructor" mmap with
       | None ->
@@ -1406,10 +1437,29 @@ and statement cx = Ast.Statement.(
     let i = mk_interface cx reason typeparams imap map (fmap, mmap) extends in
     Hashtbl.replace cx.type_table loc i;
     Env_js.set_var cx iname i reason
-  | (_, DeclareModule _) ->
-      (* TODO *)
-      failwith "Unimplemented: DeclareModule"
+  | (loc, DeclareModule { DeclareModule.id; body; }) ->
+    let _, { Ast.Identifier.name; _ } = id in
+    let _, { Ast.Statement.Block.body = elements } = body in
 
+    let reason = mk_reason (spf "module %s" name) loc in
+    let o = Env_js.get_var_in_scope cx (spf "$module__%s" name) reason in
+    let block = ref SMap.empty in
+    Env_js.push_env block;
+
+    List.iter (statement_decl cx) elements;
+    toplevels cx elements;
+
+    Env_js.pop_env();
+
+    !block |> SMap.iter (fun x {specific=t;_} ->
+      Flow_js.unit_flow cx (o, SetT(replace_reason (spf "%s.%s" name x) reason, x, t)
+    ));
+  | (_, ExportDeclaration _) ->
+      (* TODO *)
+      failwith "Unimplemented: ExportDeclaration"
+  | (_, ImportDeclaration _) ->
+      (* TODO *)
+      failwith "Unimplemented: ImportDeclaration"
 )
 
 and save_handler mark exn = mark := Some exn
@@ -1652,7 +1702,7 @@ and expression_ cx loc = Ast.Expression.(function
           UnionT (reason, [void; Flow_js.mk_tvar cx reason])
         else
           let reason = mk_reason (spf "identifier %s" name) loc in
-          Env_js.get_var cx name reason
+          Env_js.var_ref cx name reason
       )
 
   | This ->
@@ -1798,10 +1848,10 @@ and expression_ cx loc = Ast.Expression.(function
     } -> (
       match arguments with
       | [ Expression (_, Literal {
-          Ast.Literal.value = Ast.Literal.String m; _;
+          Ast.Literal.value = Ast.Literal.String m_name; _;
         }) ] ->
-        let m_name = Module_js.imported_module cx.file m in
-        require cx m_name loc
+        let m = Module_js.imported_module cx.file m_name in
+        require cx m m_name loc
       | _ ->
         (*
         let msg = "require(...) supported only on strings" in
@@ -2276,12 +2326,16 @@ and binary cx loc = Ast.Expression.Binary.(function
       )
 )
 
+and refine_type cx reason t p =
+  Flow_js.mk_tvar_where cx reason (fun tvar ->
+    Flow_js.unit_flow cx (t, mk_predicate (p, tvar))
+  )
+
 and logical cx loc = Ast.Expression.Logical.(function
   | { operator = Or; left; right } ->
       let t1, _, not_map = predicate_of_condition cx left in
       let reason = mk_reason "||" loc in
-      let t = Flow_js.mk_tvar cx reason in
-      Flow_js.unit_flow cx (expression cx left, mk_predicate (ExistsP, t));
+      let t = refine_type cx reason (expression cx left) ExistsP in
       let t2 = Env_js.refine_env cx reason not_map
         (fun () -> expression cx right)
       in
@@ -2291,8 +2345,7 @@ and logical cx loc = Ast.Expression.Logical.(function
   | { operator = And; left; right } ->
       let t1, map, _ = predicate_of_condition cx left in
       let reason = mk_reason "&&" loc in
-      let t = Flow_js.mk_tvar cx reason in
-      Flow_js.unit_flow cx (expression cx left, mk_predicate (NotP ExistsP, t));
+      let t = refine_type cx reason (expression cx left) (NotP ExistsP) in
       let t2 = Env_js.refine_env cx reason map
         (fun () -> expression cx right)
       in
@@ -3011,7 +3064,7 @@ and predicate_of_condition cx = Ast.Expression.(function
   (* TODO: (strict) equality of undefined *)
 
   | loc, Identifier (_, { Ast.Identifier.name; _ }) ->
-      let reason = mk_reason (spf "predicate of %s" name) loc in
+      let reason = mk_reason name loc in
       (
         Env_js.get_var cx name reason,
         SMap.singleton name ExistsP,
@@ -3049,8 +3102,7 @@ and predicate_of_condition cx = Ast.Expression.(function
   | loc, Logical { Logical.operator = Logical.And; left; right } ->
       let reason = mk_reason "&&" loc in
       let t1, map1, not_map1 = predicate_of_condition cx left in
-      let t = Flow_js.mk_tvar cx reason in
-      Flow_js.unit_flow cx (t1, mk_predicate (NotP ExistsP, t));
+      let t = refine_type cx reason t1 (NotP ExistsP) in
       let t2, map2, not_map2 = Env_js.refine_env cx reason map1
         (fun () -> predicate_of_condition cx right)
       in
@@ -3064,8 +3116,7 @@ and predicate_of_condition cx = Ast.Expression.(function
   | loc, Logical { Logical.operator = Logical.Or; left; right } ->
       let reason = mk_reason "||" loc in
       let t1,map1,not_map1 = predicate_of_condition cx left in
-      let t = Flow_js.mk_tvar cx reason in
-      Flow_js.unit_flow cx (t1, mk_predicate (ExistsP, t));
+      let t = refine_type cx reason t1 ExistsP in
       let t2,map2,not_map2 = Env_js.refine_env cx reason not_map1
         (fun () -> predicate_of_condition cx right)
       in
@@ -3198,6 +3249,9 @@ and mk_extends cx reason_c map = function
 
 and mk_nominal_type cx reason map (e, targs) =
   let c = expression cx e in
+  mk_nominal_type_ cx reason map (c, targs)
+
+and mk_nominal_type_ cx reason map (c, targs) =
   match targs with
   | Some ts ->
       let tparams = List.map (convert cx map) ts in
@@ -3346,10 +3400,13 @@ and mk_class cx reason_c type_params extends body =
 
   let id = Flow_js.mk_nominal cx in
 
-  let static_reason = prefix_reason "statics of " reason_c in
-  let static = mk_object cx static_reason in
-
   let super = mk_extends cx reason_c type_params_map extends in
+
+  let static_reason = prefix_reason "statics of " reason_c in
+  let super_static = Flow_js.mk_tvar_where cx static_reason (fun t ->
+    Flow_js.unit_flow cx (super, GetT(static_reason, "statics", t));
+  ) in
+  let static = Flow_js.mk_object_with_map_proto cx static_reason SMap.empty super_static in
 
   generate_tests reason_c typeparams (fun map_ ->
     let super = Flow_js.subst cx map_ super in
@@ -3414,11 +3471,6 @@ and mk_class cx reason_c type_params extends body =
 
 and mk_interface cx reason typeparams imap map (fmap, mmap) extends =
   let id = Flow_js.mk_nominal cx in
-  let (static,fmap) =
-    match SMap.get "statics" fmap with
-    | None -> (mk_object cx reason, fmap)
-    | Some t -> (t, SMap.remove "statics" fmap)
-  in
   let extends =
     match extends with
     | [] -> (None,None)
@@ -3426,35 +3478,44 @@ and mk_interface cx reason typeparams imap map (fmap, mmap) extends =
         (* TODO: multiple extends *)
         Some (loc,Ast.Expression.Identifier id), typeParameters
   in
-  let super = mk_extends cx reason map extends in
+  let super_reason = prefix_reason "super of " reason in
+  let super = mk_extends cx super_reason map extends in
+
+  let static_reason = prefix_reason "statics of " reason in
+  let static, fmap =
+    match SMap.get "statics" fmap with
+    | None -> mk_object cx static_reason, fmap
+    | Some t -> t, SMap.remove "statics" fmap
+  in
+
   let (imixins,fmap) =
     match SMap.get "mixins" fmap with
     | None -> ([], fmap)
     | Some (ArrT(_,_,ts)) -> (ts, SMap.remove "mixins" fmap)
     | _ -> assert false
   in
+
   let instance = {
     class_id = id;
     type_args = imap;
     fields_tmap = fmap;
     methods_tmap = mmap;
   } in
-  let reason_super = Reason_js.prefix_reason "super of " reason in
-  Flow_js.unit_flow cx (super, ParentT(reason_super, instance));
-  Flow_js.unit_flow cx (super, SuperT(reason_super, instance));
+  Flow_js.unit_flow cx (super, ParentT(super_reason, instance));
+  Flow_js.unit_flow cx (super, SuperT(super_reason, instance));
 
   (* mixins' statics are copied into static to inherit static properties *)
 
   imixins |> List.iter (fun imixin ->
-    Flow_js.unit_flow cx (ClassT(imixin), ObjAssignT(reason, static, AnyT.t));
-    Flow_js.unit_flow cx (imixin, SuperT(reason_super, instance));
+    Flow_js.unit_flow cx (ClassT(imixin), ObjAssignT(static_reason, static, AnyT.t));
+    Flow_js.unit_flow cx (imixin, SuperT(super_reason, instance));
   );
 
   (* mixins are added to super to inherit instance properties *)
   let super =
     if imixins = [] then super
     else
-      IntersectionT (reason, super::imixins)
+      IntersectionT (super_reason, super::imixins)
   in
   (* TODO: check that super is SuperT *)
   let c = ClassT(InstanceT (reason, static, super, instance)) in
@@ -4029,6 +4090,14 @@ let explicit_require_strict cx cx_from cx_to =
   let to_t = lookup_module cx_to m in
   Flow_js.unit_flow cx (from_t, to_t)
 
+let declaration_require_strict cx m cx_to =
+  let to_t = lookup_module cx_to m in
+  let m_name = reason_of_t to_t |> desc_of_reason in
+  let reason = reason_of_string m_name in
+  let from_t = Flow_js.mk_tvar cx reason in
+  Flow_js.lookup_builtin cx (spf "$module__%s" m_name) reason None from_t;
+  Flow_js.unit_flow cx (from_t, to_t)
+
 (* Merge context of module with contexts of its implicit requires and explicit
    requires. The implicit requires are those defined in lib.js (master_cx). For
    the explicit requires, we need to merge the entire dependency graph: this
@@ -4036,7 +4105,7 @@ let explicit_require_strict cx cx_from cx_to =
    really need is "substitution" of known types for unknown type variables. This
    operation is simulated by the more general procedure of copying and linking
    graphs. *)
-let merge_module_strict cx cxs links master_cx =
+let merge_module_strict cx cxs links declarations master_cx =
   Flow_js.Cache.clear();
 
   copy_context_strict cx master_cx;
@@ -4047,6 +4116,9 @@ let merge_module_strict cx cxs links master_cx =
   );
   links |> List.iter (function cx_from, cx_to ->
     explicit_require_strict cx cx_from cx_to
+  );
+  declarations |> List.iter (function cx_to, r ->
+    declaration_require_strict cx r cx_to
   )
 
 (* merge all modules at a dependency level, then do xmgc *)

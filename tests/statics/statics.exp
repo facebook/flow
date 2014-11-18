@@ -1,5 +1,5 @@
 
-class_statics.js:5:18,23: string
+class_statics.js:5:32,32: string
 This type is incompatible with
   class_statics.js:2:14,19: number
 

@@ -133,6 +133,11 @@ let get_var_ cx x reason =
   let block = find_env cx x reason in
   (block = global_block, (get_block x block).specific)
 
+let var_ref cx x reason =
+  let t = (read_env cx x reason).specific in
+  let p = pos_of_reason reason in
+  mod_reason_of_t (repos_reason p) t
+
 let set_var cx x s reason =
   changeset := !changeset |> SSet.add x;
   let t = (read_env cx x reason).general in
@@ -250,12 +255,10 @@ let clear_env reason =
 
 let refine_with_pred cx reason pred =
   SMap.iter (fun x predx ->
-    let (is_global,tx) = get_var_ cx x reason in
+    let (is_global,tx) = get_var_ cx x (replace_reason (spf "identifier %s" x) reason) in
     if is_global then ()
     else
-      let rstr = "refinement of " ^ x ^ " with " ^
-        (string_of_predicate predx)
-      in
+      let rstr = spf "identifier %s when %s" x (string_of_predicate predx) in
       let reason = replace_reason rstr reason in
       let t = Flow_js.mk_tvar cx reason in
       Flow_js.unit_flow cx (tx, mk_predicate (predx,t));

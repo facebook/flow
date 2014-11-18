@@ -12,8 +12,15 @@ open ServerEnv
 
 (* Initialization of the server *)
 let init_hack genv env get_next =
+  let t = Unix.gettimeofday() in
+
   let files_info, errorl1, failed1 =
     Parsing_service.go genv.workers ~get_next in
+
+  let t2 = Unix.gettimeofday() in
+  Printf.printf "Parsing: %f\n%!" (t2 -. t);
+  Printf.printf "Heap size: %d\n%!" (SharedMem.heap_size ());
+  let t = t2 in
 
   let is_check_mode =
     ServerArgs.check_mode genv.options &&
@@ -31,10 +38,23 @@ let init_hack genv env get_next =
     Relative_path.Map.fold
       Naming.ndecl_file files_info ([], Relative_path.Set.empty, nenv) in
 
+  let t2 = Unix.gettimeofday() in
+  Printf.printf "Naming: %f\n%!" (t2 -. t);
+  let t = t2 in
+
   let fast = FileInfo.simplify_fast files_info in
   let fast = Relative_path.Set.fold Relative_path.Map.remove failed2 fast in
   let errorl3, failed3 = Typing_decl_service.go genv.workers nenv fast in
+
+  let t2 = Unix.gettimeofday() in
+  Printf.printf "Type-decl: %f\n%!" (t2 -. t);
+  Printf.printf "Heap size: %d\n%!" (SharedMem.heap_size ());
+  let t = t2 in
+
   let errorl4, failed4 = Typing_check_service.go genv.workers fast in
+
+  let t2 = Unix.gettimeofday() in
+  Printf.printf "Type-check: %f\n%!" (t2 -. t);
 
   let failed =
     List.fold_right Relative_path.Set.union

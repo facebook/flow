@@ -1,7 +1,7 @@
 var APIKeys = require('./enum');
 // object that maps "AGE" to "age", "NAME" to "name"
 
-function foo(x: $Enum<$typeof<APIKeys> >) { }
+function foo(x: $Enum<typeof APIKeys>) { }
 foo("AGE");
 foo("LOCATION"); // error
 

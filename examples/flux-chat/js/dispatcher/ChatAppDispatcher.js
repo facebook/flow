@@ -50,7 +50,10 @@ type ViewAction = ViewCreateMessageAction | ViewClickThreadAction;
 
 type PayloadType = {
   source: any;
-  action: any/*ServerAction | ViewAction*/;
+  action: ViewCreateMessageAction
+        | ViewClickThreadAction
+        | ServerReceiveRawMessagesAction
+        | ServerReceiveRawCreatedMessageAction;
 };
 
 var PayloadSources = ChatConstants.PayloadSources;

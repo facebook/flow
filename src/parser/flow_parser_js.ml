@@ -188,6 +188,36 @@ module Translate = struct
         Js.Unsafe.set ret "body" (block m.body);
         ret
       )
+    | loc, ExportDeclaration export -> ExportDeclaration.(
+        let ret = node "ExportDeclaration" loc in
+        Js.Unsafe.set ret "default" (bool export.default);
+        Js.Unsafe.set ret "declaration" (match export.declaration with
+        | Some (Declaration stmt) -> statement stmt
+        | Some (ExportDeclaration.Expression expr) -> expression expr
+        | None -> Js.null);
+        Js.Unsafe.set ret "specifiers" (match export.specifiers with
+        | Some (ExportSpecifiers specifiers) ->
+            array export_specifier specifiers
+        | Some (ExportBatchSpecifier loc) ->
+            Js.array (Array.of_list [node "ExportBatchSpecifier" loc])
+        | None ->
+            Js.array (Array.of_list []));
+        Js.Unsafe.set ret "source" (option module_specifier export.source);
+        ret
+      )
+    | loc, ImportDeclaration import -> ImportDeclaration.(
+        let ret = node "ImportDeclaration" loc in
+        let specifiers = (match import.default with
+        | None -> []
+        | Some default -> [import_default_specifier default]) in
+        let specifiers = (match import.specifier with
+        | Some (NameSpace ns) -> import_namespace_specifier ns :: specifiers
+        | Some (Named (_, sl)) -> (List.rev (List.map import_specifier sl)) @ specifiers
+        | None -> specifiers) in
+        Js.Unsafe.set ret "specifiers" (Js.array (Array.of_list (List.rev specifiers)));
+        Js.Unsafe.set ret "source" (option module_specifier import.source);
+        ret
+    )
   )
 
   and expression = Expression.(function
@@ -725,6 +755,7 @@ module Translate = struct
     );
     Js.Unsafe.set ret "value" (_type prop.value);
     Js.Unsafe.set ret "optional" (bool prop.optional);
+    Js.Unsafe.set ret "static" (bool prop.static);
     ret
   )
 
@@ -903,6 +934,35 @@ module Translate = struct
   and xjs_identifier (loc, id) = XJS.Identifier.(
     let ret = node "XJSIdentifier" loc in
     Js.Unsafe.set ret "name" (string id.name);
+    ret
+  )
+
+  and module_specifier lit =
+    let ret = literal lit in
+    Js.Unsafe.set ret "type" (string "ModuleSpecifier");
+    ret
+
+  and export_specifier (loc, specifier) = Statement.ExportDeclaration.Specifier.(
+    let ret = node "ExportSpecifier" loc in
+    Js.Unsafe.set ret "id" (identifier specifier.id);
+    Js.Unsafe.set ret "name" (option identifier specifier.name);
+    ret
+  )
+
+  and import_default_specifier id =
+    let ret = node "ImportDefaultSpecifier" (fst id) in
+    Js.Unsafe.set ret "id" (identifier id);
+    ret
+
+  and import_namespace_specifier (loc, id) =
+    let ret = node "ImportNamespaceSpecifier" loc in
+    Js.Unsafe.set ret "id" (identifier id);
+    ret
+
+  and import_specifier (loc, specifier) = Statement.ImportDeclaration.NamedSpecifier.(
+    let ret = node "ImportSpecifier" loc in
+    Js.Unsafe.set ret "id" (identifier specifier.id);
+    Js.Unsafe.set ret "name" (option identifier specifier.name);
     ret
   )
 

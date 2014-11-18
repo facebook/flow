@@ -31,7 +31,7 @@ refinements.js:27:13,19: string
 This type is incompatible with
   refinements.js:33:15,20: number
 
-refinements.js:34:13,14: number
+refinements.js:36:20,20: number
 This type is incompatible with
   refinements.js:36:11,16: string
 

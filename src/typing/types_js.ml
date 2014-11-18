@@ -202,21 +202,29 @@ let infer workers files opts =
       files
     )
 
+let checked m = Module.(
+  let info = m |> get_module_file |> unsafe_opt |> get_module_info in
+  info.checked
+)
+
 (* warns on missing required modules
    TODO maybe make this suppressable
  *)
 let check_requires cx =
   SSet.iter (fun req ->
-    if not (Module.module_exists req) then
-      let msg = "Required module not found" in
+    if not (Module.module_exists req)
+    then
       let loc = SMap.find_unsafe req cx.require_loc in
       let req =
         if Filename.is_relative req
         then req
         else Filename.basename req
       in
-      let reason = Reason_js.mk_reason req loc in
-      Flow_js.add_warning cx [reason, msg]
+      let m_name = req in
+      let reason = Reason_js.mk_reason m_name loc in
+      let tvar = Flow_js.mk_tvar cx reason in
+      Flow_js.lookup_builtin cx (spf "$module__%s" m_name)
+        reason (Some (Reason_js.builtin_reason m_name)) tvar;
   ) cx.required
 
 (* It would be nice to cache the results of merging requires. However, the naive
@@ -242,23 +250,31 @@ let cached_infer_context file =
    interesting property of this procedure is that it gracefully handles cycles;
    by delaying the actual substitutions, it can detect cycles via caching. *)
 let rec merge_requires cx rs =
-  SSet.fold (fun r (cxs,links) ->
-    if Module.module_exists r
-    then
-      let file = Module.get_file r in
-      try
-        let cx_ = Hashtbl.find cached_infer_contexts file in
+  SSet.fold (fun r (cxs,links,declarations) ->
+    if Module.module_exists r then
+      if checked r then
+        let file = Module.get_file r in
+        try
+          let cx_ = Hashtbl.find cached_infer_contexts file in
+          cxs,
+          (cx_,cx)::links,
+          declarations
+        with _ ->
+          let cx_ = ContextHeap.find_unsafe file in
+          Hashtbl.add cached_infer_contexts file cx_;
+          let (cxs_, links_, declarations_) = merge_requires cx_ cx_.strict_required in
+          List.rev_append cxs_ (cx_::cxs),
+          List.rev_append links_ ((cx_,cx)::links),
+          List.rev_append declarations_ declarations
+      else
         cxs,
-        (cx_,cx)::links
-      with _ ->
-        let cx_ = ContextHeap.find_unsafe file in
-        Hashtbl.add cached_infer_contexts file cx_;
-        let (cxs_, links_) = merge_requires cx_ cx_.strict_required in
-        List.rev_append cxs_ (cx_::cxs),
-        List.rev_append links_ ((cx_,cx)::links)
+        links,
+        (cx,r)::declarations
     else
-      (cxs,links)
-  ) rs ([],[])
+      cxs,
+      links,
+      (cx,r)::declarations
+  ) rs ([],[],[])
 
 (* To merge results for a context, check for the existence of its requires,
    compute the dependency graph (via merge_requires), and then compute
@@ -272,8 +288,8 @@ let merge_strict_context cx cache_function =
 
     let master_cx = ContextHeap.find_unsafe (Files_js.get_flowlib_root ()) in
 
-    let cxs, links = merge_requires cx cx.required in
-    TI.merge_module_strict cx cxs links master_cx;
+    let cxs, links, declarations = merge_requires cx cx.required in
+    TI.merge_module_strict cx cxs links declarations master_cx;
   ) else (
     (* do nothing on unchecked files *)
   );

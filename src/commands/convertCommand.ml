@@ -27,10 +27,14 @@ let convert_file outpath file =
   let outfile = Filename.concat outpath base ^ ".js" in
   Printf.printf "converting %S -> %S\n%!" file outfile;
   let content = cat file in
-  let _, errors = Parser_dts.program_file ~fail:false content file in
+  let ast, errors = Parser_dts.program_file ~fail:false content file in
   if errors = []
   then (
-    Printf.printf "...no errors!\n%!"; 0
+    Printf.printf "...no errors!\n%!";
+    let oc = open_out outfile in
+    Printer_dts.program (Format.formatter_of_out_channel oc) ast;
+    close_out oc;
+    0
   ) else (
     let n = List.length errors in
     Printf.printf "%d errors:\n" n;

@@ -5,6 +5,6 @@ This type is incompatible with
 
 iter.js:8:9,12: access of computed property/element
 Element cannot be accessed with
-  iter.js:7:10,10: string
+  iter.js:8:11,11: string
 
 Found 2 errors

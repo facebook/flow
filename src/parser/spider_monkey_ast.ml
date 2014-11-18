@@ -140,6 +140,7 @@ and Type : sig
         key: Expression.Object.Property.key;
         value: Type.t;
         optional: bool;
+        static: bool;
       }
       type t = Loc.t * t'
     end
@@ -445,15 +446,53 @@ and Statement : sig
       extends: Extends.t list;
     }
   end
-  module Expression : sig
-    type t = {
-      expression: Expression.t;
-    }
-  end
   module DeclareModule : sig
     type t = {
       id: Identifier.t;
       body: Loc.t * Block.t;
+    }
+  end
+  module ExportDeclaration : sig
+    module Specifier : sig
+      type t = Loc.t * t'
+      and t' = {
+        id: Identifier.t;
+        name: Identifier.t option;
+      }
+    end
+    type declaration =
+      | Declaration of Statement.t
+      | Expression of Expression.t
+    type specifier =
+      | ExportSpecifiers of Specifier.t list
+      | ExportBatchSpecifier of Loc.t
+    type t = {
+      default: bool;
+      declaration: declaration option;
+      specifiers: specifier option;
+      source: (Loc.t * Literal.t) option; (* This will always be a string *)
+    }
+  end
+  module ImportDeclaration : sig
+    module NamedSpecifier : sig
+      type t = Loc.t * t'
+      and t' = {
+        id: Identifier.t;
+        name: Identifier.t option;
+      }
+    end
+    type specifier =
+      | Named of Loc.t * (NamedSpecifier.t list)
+      | NameSpace of (Loc.t * Identifier.t)
+    type t = {
+      default: Identifier.t option;
+      specifier: specifier option;
+      source: (Loc.t * Literal.t ) option (* String literal *)
+    }
+  end
+  module Expression : sig
+    type t = {
+      expression: Expression.t;
     }
   end
 
@@ -484,6 +523,8 @@ and Statement : sig
     | ClassDeclaration of Class.t
     | InterfaceDeclaration of Interface.t
     | DeclareModule of DeclareModule.t
+    | ExportDeclaration of ExportDeclaration.t
+    | ImportDeclaration of ImportDeclaration.t
 end = Statement
 
 and Expression : sig

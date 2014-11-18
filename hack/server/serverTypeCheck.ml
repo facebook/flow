@@ -217,7 +217,7 @@ let type_check genv env =
   let t = Unix.gettimeofday() in
   let fast_parsed, errorl, failed_parsing = parsing genv env in
   let t2 = Unix.gettimeofday() in
-  Printf.printf "Parsing: %f\n" (t2 -. t); flush stdout;
+  Printf.printf "Parsing: %f\n%!" (t2 -. t);
   let t = t2 in
 
   (* UPDATE FILE INFO *)
@@ -237,14 +237,14 @@ let type_check genv env =
   let fast = add_old_decls env.files_info fast in
 
   let t2 = Unix.gettimeofday() in
-  Printf.printf "Naming: %f\n" (t2 -. t); flush stdout;
+  Printf.printf "Naming: %f\n%!" (t2 -. t);
   let t = t2 in
 
   let _, _, to_redecl_phase2, to_recheck1 =
     Typing_redecl_service.redo_type_decl
       ~update_pos:true genv.workers nenv fast in
   let t2 = Unix.gettimeofday() in
-  Printf.printf "Determining changes: %f\n" (t2 -. t); flush stdout;
+  Printf.printf "Determining changes: %f\n%!" (t2 -. t);
   let t = t2 in
 
   let to_redecl_phase2 = Typing_deps.get_files to_redecl_phase2 in
@@ -258,7 +258,7 @@ let type_check genv env =
       ~update_pos:false genv.workers nenv fast_redecl_phase2 in
 
   let t2 = Unix.gettimeofday() in
-  Printf.printf "Type-decl: %f\n" (t2 -. t); flush stdout;
+  Printf.printf "Type-decl: %f\n%!" (t2 -. t);
   let t = t2 in
 
   let errorl = List.rev_append errorl' errorl in
@@ -279,7 +279,7 @@ let type_check genv env =
   let errorl = List.rev (List.rev_append errorl' errorl) in
 
   let t2 = Unix.gettimeofday() in
-  Printf.printf "Type-check: %f\n" (t2 -. t); flush stdout;
+  Printf.printf "Type-check: %f\n%!" (t2 -. t);
 
   (* Done, that's the new environment *)
   { files_info = files_info;

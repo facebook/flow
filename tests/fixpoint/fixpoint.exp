@@ -20,20 +20,20 @@ This type is incompatible with
 Ycombinator.js:4:12,12: parameter f
 Missing annotation
 
-Ycombinator.js:10:20,25: number
-This type is incompatible with
-  Ycombinator.js:14:20,25: string
-
 Ycombinator.js:10:28,33: number
 This type is incompatible with
   Ycombinator.js:14:28,33: string
 
-Ycombinator.js:14:20,25: string
+Ycombinator.js:10:46,46: number
 This type is incompatible with
-  Ycombinator.js:10:20,25: number
+  Ycombinator.js:14:20,25: string
 
 Ycombinator.js:14:28,33: string
 This type is incompatible with
   Ycombinator.js:10:28,33: number
+
+Ycombinator.js:14:46,46: string
+This type is incompatible with
+  Ycombinator.js:10:20,25: number
 
 Found 10 errors

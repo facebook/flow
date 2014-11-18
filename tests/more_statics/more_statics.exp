@@ -1,0 +1,10 @@
+
+class_static.js:2:19,24: string
+This type is incompatible with
+  class_static.js:10:8,13: number
+
+class_static.js:6:19,24: string
+This type is incompatible with
+  class_static.js:9:8,13: number
+
+Found 2 errors

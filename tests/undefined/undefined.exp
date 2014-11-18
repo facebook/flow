@@ -1,6 +1,6 @@
 
 undefined.js:3:5,11: call of method foo
 Method cannot be called on possibly undefined value
-  undefined.js:2:9,9: undefined
+  undefined.js:3:5,5: undefined
 
 Found 1 errors

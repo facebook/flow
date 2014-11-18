@@ -272,9 +272,7 @@ let xhpname = ('%')? letter (alphanumeric | ':' [^':''>'] | '-')*
 let otag = '<' ['a'-'z''A'-'Z'] (alphanumeric | ':' | '-')*
 let ctag = '<' '/' (alphanumeric | ':' | '-')+ '>'
 let lvar = '$' varname
-let reflvar = '&' '$' varname
 let ws = [' ' '\t' '\r' '\x0c']
-let wsnl = [' ' '\t' '\r' '\x0c''\n']
 let hex = digit | ['a'-'f''A'-'F']
 let hex_number = '0' 'x' hex+
 let bin_number = '0' 'b' ['0'-'1']+
@@ -698,3 +696,11 @@ and format_xhptoken = parse
   | "<!--"             { Topen_xhp_comment  }
   | "-->"              { Tclose_xhp_comment }
   | _                  { Terror             }
+
+(* Normally you can just use "token" and get back Tlvar, but specifically for
+ * member variable accesses, the part to the right of the "->" isn't a word
+ * (cannot contain '-' for example) but doesn't start with '$' so isn't an lvar
+ * either. *)
+and varname = parse
+  | varname            { Tword  }
+  | _                  { Terror }

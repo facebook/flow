@@ -1,0 +1,9 @@
+
+errors.js:1:5,46: identifier define
+Unknown global name
+
+errors.js:3:1,9: function call
+Callable signature not found in
+  [LIB] core.js:19:14,34:5: object type
+
+Found 2 errors

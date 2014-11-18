@@ -144,6 +144,9 @@ let prefix_reason prefix reason =
 let replace_reason replacement reason =
   new_reason replacement (pos_of_reason reason)
 
+let repos_reason pos reason =
+  new_reason (desc_of_reason reason) pos
+
 let internal_name name =
   spf ".%s" name
 

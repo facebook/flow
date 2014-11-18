@@ -1,5 +1,5 @@
 
-generics.js:7:7,7: some instantiation (e.g., mixed) of T
+generics.js:11:11,11: some instantiation (e.g., mixed) of T
 This type is incompatible with
   generics.js:20:7,12: number
 

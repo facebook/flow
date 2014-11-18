@@ -32,7 +32,7 @@ module SN = Naming_special_names
  * a worker needs to know if the type of a class is ready or if it needs to
  * be recomputed. When ClassStatus.mem *class-name* returns true, we know
  * the class has already been recomputed by a different worker.
- * TypedefStatus is a similar mechanism for typedefs.
+ * TypedefHeap is a similar mechanism for typedefs.
  *)
 (*****************************************************************************)
 

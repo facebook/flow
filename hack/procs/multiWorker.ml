@@ -11,20 +11,6 @@
 type 'a nextlist = 
   unit -> 'a list
 
-let rec make_bucket n acc l =
-  match l with
-  | _ when n <= 0 -> acc, l
-  | [] -> acc, l
-  | x :: rl ->
-      make_bucket (n-1) (x :: acc) rl
-
-let make_bucket l = 
-  let x = ref l in
-  fun _ ->
-    let res, next = make_bucket 1000 [] l in
-    x := next;
-    res
-
 let single_threaded_call job merge neutral next =
   let x = ref (next()) in
   let acc = ref neutral in

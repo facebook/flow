@@ -41,6 +41,11 @@ external save: string -> unit = "hh_save"
 external load: string -> unit = "hh_load"
 
 (*****************************************************************************)
+(* The size of the dynamically allocated shared memory section *)
+(*****************************************************************************)
+external heap_size: unit -> int = "hh_heap_size"
+
+(*****************************************************************************)
 (* Module returning the MD5 of the key. It's because the code in C land
  * expects this format. I prefer to make it an abstract type to make sure
  * we don't forget to give the MD5 instead of the key itself.
