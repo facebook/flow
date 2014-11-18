@@ -42,7 +42,7 @@ Property cannot be accessed on possibly null or undefined value
   file.js:2:9,14: ?string
 ```
 
-Making a type nullable makes it a valid annotation for any location that may
+Relaxing a type into a maybe type makes it a valid annotation for any location that may
 contain `null`, but it still does not allow useful operations to be performed
 on it (as shown by the code above). To do so, we must perform a `null` check,
 as follows:
