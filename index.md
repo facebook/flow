@@ -7,7 +7,7 @@ hero: true
 
 ##What is Flow?
 
-Flow is a static type checker for JavaScript. It is designed to find type errors in existing JavaScript programs:
+Flow is a static type checker, designed to find type errors in JavaScript programs:
 
 {% highlight javascript linenos=table %}
 /* @flow */
