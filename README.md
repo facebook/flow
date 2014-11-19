@@ -7,8 +7,10 @@ For a background on the project, please read our [launch blog post](https://code
 ## Requirements
 
 Flow works with:
+
 * Mac OS X
 * Linux (64-bit)
+
 There are binary distributions for Mac OS X and many variants of Linux; you can also build it from source on almost any 64-bit Linux variant.
 
 ## Building Flow
