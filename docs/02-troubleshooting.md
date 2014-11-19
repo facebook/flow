@@ -4,7 +4,7 @@ title: Troubleshooting
 layout: docs
 permalink: /docs/troubleshooting.html
 prev: running.html
-next: react-example.html
+next: advanced-configuration.html
 ---
 
 ## Common errors and how to fix them

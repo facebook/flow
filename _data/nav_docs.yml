@@ -18,6 +18,8 @@
     title: Running Flow code
   - id: troubleshooting
     title: Troubleshooting
+  - id: advanced-configuration
+    title: Advanced Configuration
 - title: Walkthroughs
   items:
   - id: react-example
