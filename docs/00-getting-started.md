@@ -23,7 +23,6 @@ $> unzip flow.zip
 This creates a directory called `flow` containing the executable binary (also called `flow`) and a folder of five examples. It's recommended you add this directory to your path so that you can simply run `flow` from anywhere on your system:
 
 ```bash
-$> unzip flow.zip
 $> cd flow
 $> echo "PATH=\"\$PATH:$(pwd)/\"" >> ~/.bashrc && source ~/.bashrc
 ```
