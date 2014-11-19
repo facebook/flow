@@ -13,7 +13,7 @@ Flow is still in early stages, and we're iterating fast. Here's a (partial) list
 
 * ES6 module support
 
-* Compiling the Flow checker to JavaScript using js__of__ocaml
+* Compiling the Flow checker to JavaScript using js\_of\_ocaml
 
 * Powerful types to precisely express framework APIs that make heavy internal use of common reflection patterns
 
