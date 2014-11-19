@@ -30,6 +30,37 @@ This type is incompatible with
   file.js:3:6,7: number
 ```
 
+## Object Types
+
+Object types are of the form:
+
+{% highlight javascript linenos=table %}
+{ x1: T1; x2: T2; ... x3: T3;}
+{% endhighlight %}
+
+Here is an example of declaring an object type:
+
+{% highlight javascript linenos=table %}
+/* @flow */
+class Foo {}
+var obj: {a: boolean; b: string; c: Foo} = {a: true, b: "Hi", c: new Foo()}
+{% endhighlight %}
+
+Here is an example of Flow catching a problem with your object type:
+
+{% highlight javascript linenos=table %}
+/* @flow */
+class Foo {}
+class Bar {}
+var obj: {a: boolean; b: string; c: Foo} = {a: true, b: "Hi", c: new Bar()}
+{% endhighlight %}
+
+```bbcode
+/tmp/flow/f.js:4:70,72: Bar
+This type is incompatible with
+  /tmp/flow/f.js:2:7,9: Foo
+```
+
 ## Constructor Functions and Prototype Objects
 
 Another way of creating objects in JavaScript is by using `new` on
