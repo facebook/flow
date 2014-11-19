@@ -26,6 +26,17 @@ This creates a directory called `flow` containing the executable binary (also ca
 $> cd flow
 $> echo "PATH=\"\$PATH:$(pwd)/\"" >> ~/.bashrc && source ~/.bashrc
 ```
+### Brew on OSX
+
+Alternatively, and more simply, you can install via [brew](http://brew.sh/) on OSX:
+
+```bash
+brew install flow
+```
+
+Brew adds flow to your path as part of the install.
+
+### Next steps
 
 To see what Flow can do, let's take a quick look at the [five examples](five-simple-examples.html) in the installation:
 
