@@ -1,7 +1,7 @@
 /* @flow */
 
 function length(x) {
-  if (x !== null) {
+  if (x) {
     return x.length;
   } else {
     return 0;
