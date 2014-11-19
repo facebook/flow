@@ -52,7 +52,8 @@
   "fill types"
   (interactive)
   (let ((file (buffer-file-name))
-        (region (string-of-region)))
+        (region (string-of-region))
+        (buffer (current-buffer)))
     (switch-to-buffer-other-window "*Shell Command Output*")
     (shell-command
      (format "%s suggest %s%s"
