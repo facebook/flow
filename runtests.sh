@@ -14,7 +14,13 @@ do
     then
         echo "Testing directory: ${name}"
         out_file="${name}.out"
-        $FLOW check . --all --strip-root --module haste 1> $out_file
+        if [ -d "node_modules" ]
+        then
+            module=node
+        else
+            module=haste
+        fi
+        $FLOW check . --all --strip-root --module $module 1> $out_file
         diff_file="${name}.diff"
         diff $out_file $exp_file > $diff_file
         if [ -s $diff_file ]

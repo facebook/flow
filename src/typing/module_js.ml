@@ -102,6 +102,9 @@ module Node: MODULE_SYSTEM = struct
     if Sys.file_exists path then Some path
     else None
 
+  let path_is_file path =
+    Sys.file_exists path && not (Sys.is_directory path)
+
   (* quick-n-dirty search for "main" : file, assuming well-formed JSON *)
   let parse_main package =
     let json = cat package in
@@ -116,8 +119,8 @@ module Node: MODULE_SYSTEM = struct
 
   let resolve_relative dir r =
     let path = Files_js.normalize_path dir r in
-    if Filename.check_suffix path ".js"
-    then path_if_exists path
+    if Filename.check_suffix path ".js" && path_is_file path
+    then Some path
     else seq
       (fun () ->
         let path = spf "%s.js" path in
