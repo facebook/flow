@@ -1,5 +1,5 @@
 ---
-id: arrays
+id: typeof
 title: Typeof
 layout: docs
 permalink: /docs/typeof.html
