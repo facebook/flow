@@ -20,7 +20,6 @@ the result of most arithmetic and bitwise operations.
 - **`boolean`**: the type representing `true` and `false`. This type will be
 result of most logical operations.
 - **`void`**: the type representing `undefined`.
-- **`function`**: the type of any function.
 
 ## Constructor Names
 
@@ -42,8 +41,7 @@ rather than base values, and, as such, are incomparable to the base types
 `number`, `string`, and `boolean`. The methods of the class types are available
 to the base types by default, however.
 - The classes `Object` and `Function` can be also used as type annotations 
-(just like other classes). `Function` means the same thing as `function`.
-There is no corresponding type named `object`. 
+(just like other classes). These respectively mean "any object" and "any function."
 - There are many implicit conversions to `boolean` in JavaScript. Flow
 understands this behavior and allows it. For example, any expression can be
 used as a conditional in an `if`-statement, or as an operand of the `&&`
