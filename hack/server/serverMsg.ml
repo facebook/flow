@@ -35,6 +35,7 @@ type build_opts = {
   clean_before_build: bool; (* when true, do a clean build *)
   clean: bool; (* when true just clean all generated files *)
   is_push: bool; (* for push builds *)
+  incremental: bool; (* for incremental build *)
   verbose: bool;
 }
 

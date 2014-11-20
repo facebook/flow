@@ -9,7 +9,7 @@
  *)
 
 let print_version () =
-  print_endline "Flow, a static type checker for Javascript, version 0.1.0"
+  print_endline "Flow, a static type checker for Javascript, version 0.1.1"
 
 (* line split/transform utils *)
 module Line : sig
@@ -51,6 +51,29 @@ let arg_set_enum list r = Arg.Symbol (list, (fun e -> r := e))
 
 let arg_set_string r = Arg.String (fun s -> r := Some s)
 
+let global_kill_time = ref None
+
+let set_timeout max_wait_time_seconds =
+  global_kill_time := Some (Sys.time() +. (float_of_int max_wait_time_seconds))
+
+let timeout_go_boom () =
+  print_endline "Timeout exceeded, exiting";
+  exit 3
+
+let check_timeout () =
+  match !global_kill_time with
+    | None -> ()
+    | Some kill_time ->
+        if Sys.time () > kill_time then timeout_go_boom ()
+
+let sleep seconds =
+  match !global_kill_time with
+    | None -> Unix.sleep seconds
+    | Some kill_time ->
+        if int_of_float (ceil (kill_time -. Sys.time ())) <= seconds
+        then timeout_go_boom ()
+        else Unix.sleep seconds
+
 let no_dashes opt =
   if opt.[0] != '-' then opt
   else if opt.[1] != '-' then String.sub opt 1 ((String.length opt) - 1)
@@ -67,6 +90,8 @@ type command_params = {
   show_all_errors : bool ref;
   retries : int ref;
   retry_if_init : bool ref;
+  timeout : int ref;
+  no_auto_start : bool ref;
 }
 
 let create_command_options accepts_json =
@@ -77,10 +102,14 @@ let create_command_options accepts_json =
     show_all_errors = ref false;
     retries = ref 3;
     retry_if_init = ref true;
+    timeout = ref 0;
+    no_auto_start = ref false;
   } in
   let command_list = [
     "--version", arg_set_unit command_values.version,
       " Print version number and exit";
+    "--timeout", Arg.Set_int command_values.timeout,
+      " Maximum time to wait, in seconds";
     "--from", Arg.Set_string command_values.from,
       " Specify client (for use by editor plugins)";
     "--show-all-errors", arg_set_unit command_values.show_all_errors,
@@ -89,6 +118,8 @@ let create_command_options accepts_json =
       " Set the number of retries. (default: 3)";
     "--retry-if-init", Arg.Bool (fun x -> command_values.retry_if_init := x),
       " retry if the server is initializing (default: true)";
+    "--no-auto-start", arg_set_unit command_values.no_auto_start,
+      " If the server if it is not running, do not start it; just exit";
   ] in
   command_values,
   if accepts_json
@@ -107,6 +138,7 @@ let start_flow_server root =
     | _ -> (Printf.fprintf stderr "Could not start flow server!\n"; exit 77)
 
 let rec connect_helper autostart retries retry_if_init root =
+  check_timeout ();
   try
     if not (ClientUtils.server_exists root)
     then raise ClientExceptions.Server_missing;
@@ -118,7 +150,7 @@ let rec connect_helper autostart retries retry_if_init root =
       if retry_if_init
       then (
         Printf.fprintf stderr "%s Retrying... %s\r%!" init_msg (Tty.spinner());
-        Unix.sleep 1;
+        sleep 1;
         connect_helper autostart retries retry_if_init root
       ) else (
         Printf.fprintf stderr "%s Try again...\n%!" init_msg;
@@ -145,10 +177,11 @@ let rec connect_helper autostart retries retry_if_init root =
   | _ -> Printf.fprintf stderr "Something went wrong :(\n%!"; exit 2
 
 and retry autostart retries retry_if_init root delay message =
+  check_timeout ();
   if retries > 0
   then (
     prerr_endline message;
-    Unix.sleep delay;
+    sleep delay;
     let retries = retries - 1 in
     connect_helper autostart retries retry_if_init root
   ) else (
@@ -157,10 +190,10 @@ and retry autostart retries retry_if_init root delay message =
   )
 
 let connect_with_autostart command_values =
-  connect_helper true !(command_values.retries) !(command_values.retry_if_init)
-
-let connect command_values =
-  connect_helper false !(command_values.retries) !(command_values.retry_if_init)
+  connect_helper
+    (not !(command_values.no_auto_start))
+    !(command_values.retries)
+    !(command_values.retry_if_init)
 
 (* Given a file or directory, find a valid flow root directory *)
 let guess_root dir_or_file =

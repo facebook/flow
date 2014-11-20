@@ -1,0 +1,6 @@
+
+foo.js:2:5,8: number
+This type is incompatible with
+  bar.jsx:1:31,36: string
+
+Found 1 error

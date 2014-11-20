@@ -94,9 +94,16 @@ module Node: MODULE_SYSTEM = struct
   let exported_module file comments = file
 
   let seq f g =
-    match f() with
+    match f () with
     | Some x -> Some x
     | None -> g ()
+
+  let rec seqf f = function
+    | x :: xs ->
+        (match f x with
+        | Some v -> Some v
+        | None -> seqf f xs)
+    | [] -> None
 
   let path_if_exists path =
     if Sys.file_exists path then Some path
@@ -119,12 +126,13 @@ module Node: MODULE_SYSTEM = struct
 
   let resolve_relative dir r =
     let path = Files_js.normalize_path dir r in
-    if Filename.check_suffix path ".js" && path_is_file path
-    then Some path
+    if Files_js.is_flow_file path && path_is_file path
+    then path_if_exists path
     else seq
       (fun () ->
-        let path = spf "%s.js" path in
-        path_if_exists path
+        seqf
+          (fun ext -> path_if_exists (path ^ ext))
+          Files_js.flow_extensions
       )
       (fun () ->
         let package = Filename.concat path "package.json" in

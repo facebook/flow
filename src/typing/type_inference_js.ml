@@ -255,17 +255,6 @@ and ground_exports rs exports t =
   ground_exported_type exports t
 *)
 
-let type_supported = function
-  | ClassT _
-  | CustomClassT _
-  | RestT _
-  | OptionalT _
-  | PolyT _
-  | UndefT _
-  | NullT _
-  | VoidT _ -> false
-  | _ -> true
-
 let query_type cx pos =
   let result = ref (Pos.none, None, []) in
   let diff = ref (max_int, max_int) in
@@ -278,7 +267,7 @@ let query_type cx pos =
         Flow_js.suggested_type_cache := IMap.empty;
         let ground_t = Flow_js.ground_type cx ISet.empty t in
         let possible_ts = Flow_js.possible_types_of_type cx t in
-        result := if type_supported ground_t
+        result := if is_printed_type_parsable cx ground_t
           then (Reason_js.pos_of_loc range, Some ground_t, possible_ts)
           else (Reason_js.pos_of_loc range, None, possible_ts)
       )
@@ -295,7 +284,7 @@ let fill_types cx =
   Hashtbl.fold (fun pos t list ->
     let line, start, end_ = Pos.info_pos pos in
     let t = Flow_js.ground_type cx ISet.empty t in
-    if type_supported t then
+    if is_printed_type_parsable cx t then
       (line, end_, spf ": %s" (string_of_t cx t))::list
     else list
   ) cx.annot_table []

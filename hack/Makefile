@@ -88,7 +88,8 @@ EXTRA_CC_OPTS=$(foreach opt, $(EXTRA_CC_FLAGS),-ccopt $(opt))
 EXTRA_LIB_OPTS=$(foreach dir, $(EXTRA_LIB_PATHS),-cclib -L$(dir))
 FRAMEWORK_OPTS=$(foreach framework, $(FRAMEWORKS),-cclib -framework -cclib $(framework))
 
-LINKER_FLAGS=$(NATIVE_OBJECT_FILES) $(NATIVE_LIB_OPTS) $(EXTRA_LIB_OPTS) $(FRAMEWORK_OPTS) $(SECTCREATE)
+LINKER_FLAGS=$(NATIVE_OBJECT_FILES) $(NATIVE_LIB_OPTS) $(EXTRA_LIB_OPTS) \
+	     $(FRAMEWORK_OPTS) $(SECTCREATE) $(EXTRA_NATIVE_LIB_PATHS)
 
 all: build-hhi-archive build-hack copy-hack-files
 
@@ -101,7 +102,9 @@ build-hack: build-hack-native-deps build-hhi-archive
 	ocamlbuild -no-links  $(INCLUDE_OPTS) $(LIB_OPTS) -lflags "$(LINKER_FLAGS)" hh_server.native hh_client.native hh_single_type_check.native h2tp.native test_unparser.native
 
 build-hack-native-deps: build-hack-stubs
-	ocamlbuild -cflags "$(EXTRA_INCLUDE_OPTS) $(EXTRA_CC_OPTS)" $(NATIVE_OBJECT_FILES)
+	# ocamlbuild before 4.00 does not pass thru cflags when building native C
+	# objects, because they're not important, right? So use this super ugly hack.
+	ocamlbuild -ocamlc "ocamlc.opt $(EXTRA_INCLUDE_OPTS) $(EXTRA_CC_OPTS)" $(NATIVE_OBJECT_FILES)
 
 build-hack-stubs:
 	echo 'const char* const BuildInfo_kRevision = "${SHA}";' > utils/get_build_id.gen.c

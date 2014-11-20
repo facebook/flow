@@ -236,18 +236,28 @@ module Program : Server.SERVER_PROGRAM = struct
         ServerConvert.go genv env dirname;
         exit 0
 
-  let filter_update _genv _env update =
-    Find.is_php_path (Relative_path.suffix update) ||
-    Find.is_js_path (Relative_path.suffix update)
+  (* We won't filter more rigorously until later so the hooks can stay up to
+   * date on filesystem changes *)
+  let filter_update _genv _env _update = true
+
+  let filter_typecheck_update update =
+    Find.is_php_path (Relative_path.suffix update)
 
   let recheck genv env updates =
-    let diff = updates in
-    if Relative_path.Set.is_empty diff
-    then env
+    let php_diff = Relative_path.Set.filter filter_typecheck_update updates in
+    BuildMain.incremental_update genv env updates;
+    if Relative_path.Set.is_empty php_diff
+    then
+      begin
+        BuildMain.incremental_update genv env updates;
+        env
+      end
     else
-      let failed_parsing = Relative_path.Set.union diff env.failed_parsing in
+      let failed_parsing = Relative_path.Set.union php_diff env.failed_parsing in
       let check_env = { env with failed_parsing = failed_parsing } in
-      ServerTypeCheck.check genv check_env
+      let env = ServerTypeCheck.check genv check_env in
+      BuildMain.incremental_update genv env updates;
+      env
 
   let parse_options = ServerArgs.parse_options
 

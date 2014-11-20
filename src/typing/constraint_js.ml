@@ -878,9 +878,12 @@ let rec pretty_type_printer cx in_union in_intersect is_param t =
   | MixedT _
   | AnyT _
   | NullT _
-  | VoidT _
     ->
       desc_of_reason (reason_of_t t)
+
+  (* reasons for VoidT use "undefined" for more understandable error output.
+     For parsable types we need to use "void" though, thus overwrite it. *)
+  | VoidT _ -> "void"
 
   | FunT (_,_,_,{params_tlist = ts; params_names = pns; return_t = t; _}) ->
       let pns =
@@ -981,6 +984,60 @@ let rec pretty_type_printer cx in_union in_intersect is_param t =
   | t -> assert_false (string_of_ctor t)
 
 let string_of_t cx t = pretty_type_printer cx false false false t
+
+let rec is_printed_type_parsable_impl
+          cx in_function_args in_function_ret = function
+  (* Base cases *)
+  | BoundT _
+  | NumT _
+  | StrT _
+  | BoolT _
+  | AnyT _
+    ->
+      true
+
+  | VoidT _ -> in_function_ret
+
+  (* Composed types *)
+  | ArrT (_, t, _)
+  | MaybeT t
+  | TypeT (_, t)
+    ->
+      is_printed_type_parsable_impl cx false false t
+
+  | RestT t
+  | OptionalT t
+    ->
+      in_function_args &&
+      is_printed_type_parsable_impl cx false false t
+
+  | FunT (_, _, _, { params_tlist; return_t; _ }) ->
+      (is_printed_type_parsable_impl cx false true return_t) &&
+      List.fold_left (fun acc t ->
+          (is_printed_type_parsable_impl cx true false t) && acc
+        ) true params_tlist
+
+  | ObjT (_, { props_tmap; _ }) ->
+      let prop_map = IMap.find_unsafe props_tmap cx.property_maps in
+      SMap.fold (fun _ t acc ->
+          (is_printed_type_parsable_impl cx false false t) && acc
+        ) prop_map true
+
+  | InstanceT _ ->
+      true
+
+  | IntersectionT (_, ts)
+  | UnionT (_, ts)
+    ->
+      List.fold_left (fun acc t ->
+          (is_printed_type_parsable_impl cx false false t) && acc
+        ) true ts
+
+  | _ ->
+      false
+
+let is_printed_type_parsable cx t =
+  is_printed_type_parsable_impl cx false false t
 
 (* ------------- *)
 

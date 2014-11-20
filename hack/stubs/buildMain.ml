@@ -9,3 +9,4 @@
  *)
 
 let go _ _ _ _ _ _ = ()
+let incremental_update _ _ _ = ()

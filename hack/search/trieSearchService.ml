@@ -28,8 +28,16 @@ module Make(S : SearchUtils.Searchable) = struct
     let prefix = Prefix.make()
   end)
 
+  let cut_str_after cut_char str =
+    try
+      let i = String.index str cut_char in
+      String.sub str 0 i
+    with Not_found ->
+      str
+
   (* function that shortens the keys stored in the trie to make things faster *)
   let simplify_key key =
+    let key = String.lowercase key in
     let key =
       try
         (* Testing showed this max length gave us some indexing time back
@@ -38,13 +46,12 @@ module Make(S : SearchUtils.Searchable) = struct
       with Invalid_argument _ ->
         key
     in
-    try
-      (* stuff after the colon is class members and they're all probably
-       * in the same file anyways *)
-      let i = String.index key ':' in
-      String.sub key 0 i
-    with Not_found ->
-      key
+    (* stuff after the dot is class members and they're all probably
+     * in the same file anyways (JS) *)
+    let key = cut_str_after '.' key in
+    (* stuff after the colon is class members and they're all probably
+     * in the same file anyways (PHP) *)
+    cut_str_after ':' key
 
   module WorkerApi = struct
     let process_term key name pos type_ trie_acc =
@@ -53,6 +60,7 @@ module Make(S : SearchUtils.Searchable) = struct
                     name        = name;
                     result_type = type_
                   } in
+       let key = String.lowercase key in
        (key, res) :: trie_acc
 
     let update fn trie_defs =

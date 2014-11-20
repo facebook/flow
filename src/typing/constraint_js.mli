@@ -284,6 +284,8 @@ val mod_reason_of_t : (reason -> reason) -> Type.t -> Type.t
 
 val string_of_t : context -> Type.t -> string
 
+val is_printed_type_parsable : context -> Type.t -> bool
+
 val string_of_ctor : Type.t -> string
 
 (* TEMP *)

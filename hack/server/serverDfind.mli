@@ -16,5 +16,5 @@ val dfind_init:
   Path.path -> unit
 
 (* new set of php and js files *)  
-val get_updates: ServerEnv.genv -> Path.path -> SSet.t
+val get_updates: Path.path -> SSet.t
 

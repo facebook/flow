@@ -103,7 +103,7 @@ end = struct
       ServerHealth.check();
       ServerPeriodical.call_before_sleeping();
       let has_client = sleep_and_check socket in
-      let updates = ServerDfind.get_updates genv root in
+      let updates = ServerDfind.get_updates root in
       let updates = Relative_path.relativize_set Relative_path.Root updates in
       let updates = Relative_path.Set.filter (Program.filter_update genv !env) updates in
       env := Program.recheck genv !env updates;

@@ -8,6 +8,12 @@
  *
  *)
 
+(* utilities for supported filenames *)
+
+val flow_extensions: string list
+
+val is_flow_file: string -> bool
+
 (* name of library directory defining builtins *)
 val init: string option -> unit
 

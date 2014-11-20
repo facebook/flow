@@ -15,10 +15,6 @@
 module Impl = struct
   (* explicit == called with "flow status ..."
      rather than simply "flow ..." *)
-  type extra_args = {
-    show_all_errors: bool
-  }
-
   let parse explicit =
     let option_values, options = CommandUtils.create_command_options true in
     let options = CommandUtils.sort_opts options in
@@ -95,6 +91,8 @@ module Impl = struct
           exit 2
     in
     let root = CommandUtils.guess_root root in
+    let timeout_arg = !(option_values.CommandUtils.timeout) in
+    if timeout_arg > 0 then CommandUtils.set_timeout timeout_arg;
     {
       ClientEnv.mode = ClientEnv.MODE_STATUS;
       ClientEnv.root = root;
@@ -102,19 +100,17 @@ module Impl = struct
       ClientEnv.output_json = !(option_values.CommandUtils.json);
       ClientEnv.retry_if_init = !(option_values.CommandUtils.retry_if_init);
       ClientEnv.retries = !(option_values.CommandUtils.retries);
-      ClientEnv.timeout = None;
+      ClientEnv.timeout = !CommandUtils.global_kill_time;
       ClientEnv.autostart = true;
       ClientEnv.server_options_cmd = None;
     },
-    {
-      show_all_errors = !(option_values.CommandUtils.show_all_errors)
-    }
+    option_values
 
   open ClientEnv
 
   type env = client_check_env
 
-  let check_status connect (args:env) extra_args =
+  let check_status connect (args:env) option_values =
     Sys.set_signal Sys.sigalrm (Sys.Signal_handle
       (fun _ -> raise ClientExceptions.Server_busy)
     );
@@ -122,18 +118,7 @@ module Impl = struct
 
     let name = "flow" in
 
-    (* Check if a server is up *)
-    if not (ClientUtils.server_exists args.root)
-    then begin
-      ignore (Unix.alarm 0);
-      if args.autostart
-      then
-        (* fork the server and raise an exception *)
-        CommandUtils.start_flow_server args.root;
-      raise ClientExceptions.Server_missing
-    end;
-
-    let ic, oc = connect args in
+    let ic, oc = CommandUtils.connect_with_autostart option_values args.root in
     ServerProt.cmd_to_channel oc (ServerProt.STATUS args.root);
     let response = ServerProt.response_from_channel ic in
     ignore (Unix.alarm 0);
@@ -149,7 +134,8 @@ module Impl = struct
       if args.output_json || args.from <> ""
       then Errors_js.print_errorl args.output_json e stdout
       else (
-        Errors_js.print_error_summary extra_args.show_all_errors e;
+        let show_all = !(option_values.CommandUtils.show_all_errors) in
+        Errors_js.print_error_summary (not show_all) e;
         exit 2
       )
     | ServerProt.NO_ERRORS ->
@@ -169,42 +155,44 @@ module Impl = struct
       flush stdout;
       raise ClientExceptions.Server_missing
 
-  let rec main (env, extra_args) =
+  let rec main (env, option_values) =
+    CommandUtils.check_timeout ();
     try
       (* TODO: This code should really use commandUtils's connect utilities to
          avoid code duplication *)
       check_status
         (fun env -> ClientUtils.connect env.root)
         env
-        extra_args
+        option_values
     with
     | ClientExceptions.Server_initializing ->
         if env.ClientEnv.retry_if_init
         then (
           Printf.fprintf stderr "Flow server still initializing\n%!";
-          Unix.sleep 1;
-          main (env, extra_args)
+          CommandUtils.sleep 1;
+          main (env, option_values)
         ) else (
           prerr_endline "Flow server still initializing, giving up!";
           exit 2
         )
     | ClientExceptions.Server_cant_connect ->
-        retry (env, extra_args) 1 "Error: could not connect to flow server"
+        retry (env, option_values) 1 "Error: could not connect to flow server"
     | ClientExceptions.Server_busy ->
-        retry (env, extra_args) 1 "Error: flow server is busy"
+        retry (env, option_values) 1 "Error: flow server is busy"
     | ClientExceptions.Server_missing ->
-        retry (env, extra_args) 3 "The flow server will be ready in a moment"
+        retry (env, option_values) 3 "The flow server will be ready in a moment"
     | _ ->
         Printf.fprintf stderr "Something went wrong :(\n%!";
         exit 2
 
-  and retry (env, extra_args) sleep msg =
+  and retry (env, option_values) sleep msg =
+    CommandUtils.check_timeout ();
     if env.retries > 0
     then begin
       Printf.fprintf stderr "%s\n%!" msg;
-      Unix.sleep sleep;
+      CommandUtils.sleep sleep;
       let retries = env.ClientEnv.retries - 1 in
-      main ({ env with ClientEnv.retries }, extra_args)
+      main ({ env with ClientEnv.retries }, option_values)
     end else begin
       Printf.fprintf stderr "Out of retries, exiting!\n%!";
       exit 2

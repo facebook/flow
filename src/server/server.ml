@@ -37,7 +37,10 @@ struct
     let env = Types_js.server_init genv env flow_options in
     env
 
-  let run_once_and_exit genv env = exit 0
+  let run_once_and_exit genv env =
+    match env.ServerEnv.errorl with
+      | [] -> exit 0
+      | _ -> exit 2
 
   let marshal _ = ()
 
@@ -409,7 +412,7 @@ struct
   let filter_update genv _env update =
     let flowconfig_path =
       FlowConfig.fullpath (ServerArgs.root genv.ServerEnv.options) in
-    Find.is_js_path (Relative_path.to_absolute update)
+    Files_js.is_flow_file (Relative_path.to_absolute update)
       || Relative_path.to_absolute update = flowconfig_path
 
   (* on notification, execute client commands or recheck files *)

@@ -674,9 +674,12 @@ let server_init genv env flow_opts =
   SharedMem.init_done();
 
   if ServerArgs.check_mode genv.ServerEnv.options
-  then print_errors ~root flow_opts;
-
-  env
+  then (
+    print_errors ~root flow_opts;
+    { env with ServerEnv.errorl = get_errors () }
+  ) else (
+    env
+  )
 
 (* single command entry point: takes a list of paths,
  * parses and checks serially, prints errs to stdout.
