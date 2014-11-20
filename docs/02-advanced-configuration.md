@@ -26,7 +26,14 @@ specified files or directories when type checking your code.
 
 ### `[ignore]`
 
-Conversely, the `[ignore]` heading in a `.flowconfig` file tells `flow` to ignore the specified files or directories when type checking your code.
+Conversely, the `[ignore]` heading in a `.flowconfig` file tells `flow` to ignore files matching the specified regular expressions when type checking your code.
+
+> WARNING
+> 
+> The specified regular expressions in the [ignore] section apply to absolute paths, 
+> so make sure you use repeated wildcards `.*` at the beginning if you're specifying relative paths. 
+> Also, relative paths that begin with `.` or `..` won't work, since the regular expression parser
+> would confuse them with wildcards.
 
 ### Example
 
@@ -58,14 +65,8 @@ Here is an example of how you could use the `.flowconfig` directives.
 /home/otherdir/src
 
 [ignore]
-/mydir/build
+.*/build/.*
 ```
 
 Now `flow` will include a directory outside the `.flowconfig` path in its 
 check and ignore the `build` directory.
-
-> WARNING
-> 
-> It is best to use absolute paths in your `.flowconfig` files since, as of 
-> now, regular expressions are used in the parsing and characters like `.`, 
-> etc. could confuse the regex parser.
