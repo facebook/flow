@@ -62,7 +62,7 @@ x[2] = "Hi";
 
 ## A More Complicated Example
 
-Let's take a look at a more involved example where we are arrow functions in 
+Let's take a look at a more involved example where we use arrow functions in
 our type aliasing.
 
 {% highlight javascript linenos=table %}
