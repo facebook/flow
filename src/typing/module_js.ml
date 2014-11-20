@@ -118,7 +118,12 @@ module Node: MODULE_SYSTEM = struct
     let rec f = function
       | "main" :: file :: _ ->
           let path = Files_js.normalize_path (Filename.dirname package) file in
-          path_if_exists path
+          if Sys.file_exists path
+          then Some path
+          else
+            let path = path ^ ".js" in
+            if Sys.file_exists path then Some path
+            else None
       | word :: words -> f words
       | [] ->
           let path = Files_js.normalize_path (Filename.dirname package) "index.js" in
@@ -142,7 +147,11 @@ module Node: MODULE_SYSTEM = struct
         then parse_main package
         else (
           let path = Filename.concat path "index.js" in
-          path_if_exists path
+          if path_is_file path
+          then path_if_exists path
+          else
+            let path = (Filename.dirname path) ^ ".js" in
+            path_if_exists path
         )
       )
 
