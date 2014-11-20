@@ -15,7 +15,7 @@ The [GitHub issues](https://github.com/facebook/flow/issues) page is a good plac
 
 ## IRC
 
-Many developers and users idle on Freenode.net's IRC network in [#flowtype on freenode](irc://chat.freenode.net/flowtype).
+Many developers and users idle on Freenode.net's IRC network in the [#flowtype](irc://chat.freenode.net/flowtype) channel.
 
 ## Twitter
 
