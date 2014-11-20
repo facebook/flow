@@ -120,7 +120,9 @@ module Node: MODULE_SYSTEM = struct
           let path = Files_js.normalize_path (Filename.dirname package) file in
           path_if_exists path
       | word :: words -> f words
-      | [] -> None
+      | [] ->
+          let path = Files_js.normalize_path (Filename.dirname package) "index.js" in
+          path_if_exists path
     in
     f (Str.split (Str.regexp "[ \n\t:\",{}]+") (String.trim json))
 
