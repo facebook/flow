@@ -19,6 +19,6 @@ Many developers and users idle on Freenode.net's IRC network in [#flowtype on fr
 
 ## Twitter
 
-[#flowtype hash tag on Twitter](https://twitter.com/search?q=%23flowtype) is used to keep up with the latest Flow news.
+[@flowtype](https://twitter.com/flowtype) and [#flowtype](https://twitter.com/search?q=%23flowtype) on Twitter are used to keep up with the latest Flow news.
 
 <div><a class="twitter-timeline" data-dnt="true" data-chrome="nofooter noheader transparent" href="https://twitter.com/search?q=%23flowtype" data-widget-id="533713158771183616"></a></div>
