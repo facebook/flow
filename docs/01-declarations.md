@@ -43,10 +43,13 @@ declare module M {
 }
 {% endhighlight %}
 
-`C` and `M` are interfaces. The implementation details of `foo()`, for 
-example, does does not need to be known by Flow. Just the types it exposes. 
+`C` is declared as a global variable, and `M` is declared as a module. 
+Declarations can be thought of as interfaces.
+The implementation details of `foo()`, for 
+example, does does not need to be known by Flow: just the types it exposes is enough. 
 
-The interfaces can be declared in any file you choose, as long as they can be seen by Flow.
+The interfaces can be declared in any file you choose, as long as they are in a directory 
+outside the paths monitored by `.flowconfig`.
 
 To use code in declared files, tell the Flow server about it. Assume the code above is defined in `/lib/flow/`
 
@@ -67,3 +70,19 @@ M.foo(new C());
 ```bbcode
 No errors!
 ```
+
+## Paths
+
+A module declaration can also use a string literal to describe the path used to refer to that module in `require` statements.
+Thus, when you have:
+{% highlight javascript linenos=table %}
+var M = require('path/to/M');
+...
+{% endhighlight %}
+
+Use a declaration of the form:
+{% highlight javascript linenos=table %}
+declare module "path/to/M" {
+  ...
+}
+{% endhighlight %}
