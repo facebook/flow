@@ -9,9 +9,9 @@ permalink: /support.html
 
 **Flow** is worked on full-time by Facebook's developer infrastructure team. They're often around and available for questions.
 
-## Google Groups mailing list
+## GitHub issues
 
-The [flowtype Google Group](https://groups.google.com/forum/#!forum/flowtype) is a good place to ask questions and find answers.
+The [GitHub issues](https://github.com/facebook/flow/issues) page is a good place to ask questions, find answers, and report issues.
 
 ## IRC
 
