@@ -50,7 +50,9 @@ Declarations can be thought of as interfaces.
 The implementation details of `foo()`, for 
 example, does does not need to be known by Flow: just the types it exposes is enough. 
 
-The interfaces can be declared in any file you choose, as long as they are in a directory 
+> NOTE
+>
+> The interfaces can be declared in any file you choose, as long as they are in a directory 
 outside the paths monitored by `.flowconfig`.
 
 To use code in declared files, tell the Flow server about it. Assume the code above is defined in `/lib/flow/`
