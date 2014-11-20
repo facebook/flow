@@ -45,18 +45,16 @@ function foo(i): string { return a[i]; }
 Running Flow produces the following error:
 
 ```bbcode
-File "example.js", line 4, character 36:
-number
-is incompatible with
-File "example.js", line 8, characters 17-22:
-string
+example.js:5:14,14: number
+This type is incompatible with
+ example.js:11:18,23: string
 ```
 
 The type of a is not pinned to `Array<number>` by the element write `a[i] = 0`
 at line 4: if it did, Flow would report an error for an incompatible element
 write `a[i] = ''` at line 5. Instead, based on lines 4 and 5, the type of a
 becomes `Array<T>` where `T` is `number` or `string`. Since it is impossible
-to know which element is read on line 8, Flow must account for the possibility
+to know which element is read on line 11, Flow must account for the possibility
 that it could be `number`, in which case it would be incompatible with the
 `string` annotation, as reported.
 
