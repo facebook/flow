@@ -43,7 +43,9 @@ declare module M {
 }
 {% endhighlight %}
 
-`C` is declared as a global variable, and `M` is declared as a module. 
+The declarations for `C` and `M` have global scope. This means that the name `C` can be referenced
+directly in any file, and the module `M` can be required in any file.
+
 Declarations can be thought of as interfaces.
 The implementation details of `foo()`, for 
 example, does does not need to be known by Flow: just the types it exposes is enough. 
