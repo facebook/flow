@@ -1,0 +1,17 @@
+v0.1.1
+
+- [Issue #4] Typecheck .jsx files
+- [Issue #22] Return a nonzero exit code from 'flow check' if there are errors
+- [IRC report] Autostart the Flow server on all commands
+- Improve the printing of types in 'flow suggest'
+- Add a --timeout option to all commands
+- [PR #27] Clearer error message when 'flow init' hasn't been run
+- [PR #39] Fix to Emacs bindings
+- [PR #53] Support node modules that end in .js
+- [PR #59] Fix example
+- [PR #65] Fix dependencies in flux-chat example
+- [PR #66] Add type definitions for HTMLCanvasElement
+
+v0.1.0
+
+Initial release
