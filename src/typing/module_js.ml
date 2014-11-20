@@ -118,12 +118,9 @@ module Node: MODULE_SYSTEM = struct
     let rec f = function
       | "main" :: file :: _ ->
           let path = Files_js.normalize_path (Filename.dirname package) file in
-          if Sys.file_exists path
-          then Some path
-          else
-            let path = path ^ ".js" in
-            if Sys.file_exists path then Some path
-            else None
+          seq
+            (fun () -> path_if_exists path)
+            (fun () -> seqf (fun ext -> path_if_exists (path ^ ext)) Files_js.flow_extensions)
       | word :: words -> f words
       | [] ->
           let path = Files_js.normalize_path (Filename.dirname package) "index.js" in
