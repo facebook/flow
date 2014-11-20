@@ -25,7 +25,7 @@ make
 
 This produces a `bin` folder containing the `flow` binary. 
 
-*Note: at this time, the OCaml dependency prevents us from adding Flow to [npm](http://npmjs.org).*
+*Note: at this time, the OCaml dependency prevents us from adding Flow to [npm](http://npmjs.org). Try [flow-bin](https://www.npmjs.org/package/flow-bin) if you need a npm binary wrapper.*
 
 ## Installing Flow
 
