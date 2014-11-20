@@ -79,23 +79,21 @@
 /* define CAML_NAME_SPACE to ensure all the caml imports are prefixed with
  * 'caml_' */
 #define CAML_NAME_SPACE
-#include <assert.h>
 #include <caml/memory.h>
 #include <caml/alloc.h>
-#include <fcntl.h>
-#include <lz4.h>
-#include <lz4hc.h>
-#include <signal.h>
-#include <stdint.h>
-#include <stdio.h>
 #include <string.h>
-#include <sys/errno.h>
-#include <sys/mman.h>
-#include <sys/resource.h>
+#include <stdio.h>
 #include <sys/stat.h>
-#include <sys/syscall.h>
+#include <fcntl.h>
+#include <sys/mman.h>
+#include <assert.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <sys/errno.h>
+#include <stdint.h>
+#include <sys/resource.h>
+#include <signal.h>
+#include <sys/syscall.h>
 
 #define GIG (1024l * 1024l * 1024l)
 
@@ -354,36 +352,9 @@ void hh_save(value out_filename) {
 
   fwrite_no_fail(&heap_init_size, sizeof heap_init_size, 1, fp);
 
-  /*
-   * Format of the compressed shared memory:
-   * LZ4 can only work in chunks of 2GB, so we compress each chunk individually,
-   * and write out each one as
-   * [compressed size of chunk][uncompressed size of chunk][chunk]
-   * A compressed size of zero indicates the end of the compressed section.
-   */
-  char* chunk_start = (char*)SAVE_START;
-  int compressed_size = 0;
-  while (chunk_start < *heap) {
-    uintptr_t remaining = *heap - chunk_start;
-    uintptr_t chunk_size = LZ4_MAX_INPUT_SIZE < remaining ?
-      LZ4_MAX_INPUT_SIZE : remaining;
-
-    char* compressed = malloc(chunk_size * sizeof(char));
-    assert(compressed != NULL);
-
-    compressed_size = LZ4_compressHC(chunk_start, compressed,
-      chunk_size);
-    assert(compressed_size > 0);
-
-    fwrite_no_fail(&compressed_size, sizeof compressed_size, 1, fp);
-    fwrite_no_fail(&chunk_size, sizeof chunk_size, 1, fp);
-    fwrite_no_fail((void*)compressed, 1, compressed_size, fp);
-
-    chunk_start += chunk_size;
-    free(compressed);
-  }
-  compressed_size = 0;
-  fwrite_no_fail(&compressed_size, sizeof compressed_size, 1, fp);
+  uintptr_t save_size = (uintptr_t)*heap - (uintptr_t)SAVE_START;
+  fwrite_no_fail(&save_size, sizeof save_size, 1, fp);
+  fwrite_no_fail((void*)SAVE_START, 1, save_size, fp);
 
   fclose(fp);
   CAMLreturn0;
@@ -419,22 +390,10 @@ void hh_load(value in_filename) {
 
   read_all(fileno(fp), (void*)&heap_init_size, sizeof heap_init_size);
 
-  int compressed_size = 0;
-  read_all(fileno(fp), (void*)&compressed_size, sizeof compressed_size);
-  char* chunk_start = (char*)SAVE_START;
-
-  // see hh_save for a description of what we are parsing here.
-  while (compressed_size > 0) {
-    char* compressed = malloc(compressed_size * sizeof(char));
-    assert(compressed != NULL);
-    uintptr_t chunk_size = 0;
-    read_all(fileno(fp), (void*)&chunk_size, sizeof chunk_size);
-    read_all(fileno(fp), compressed, compressed_size * sizeof(char));
-    LZ4_decompress_fast(compressed, chunk_start, chunk_size);
-    free(compressed);
-    chunk_start += chunk_size;
-    read_all(fileno(fp), (void*)&compressed_size, sizeof compressed_size);
-  }
+  uintptr_t save_size = 0;
+  read_all(fileno(fp), (void*)&save_size, sizeof save_size);
+  read_all(fileno(fp), (void*)SAVE_START, save_size * sizeof(char));
+  assert(*heap == (char*)(SAVE_START + save_size));
 
   fclose(fp);
   CAMLreturn0;
