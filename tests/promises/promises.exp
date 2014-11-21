@@ -9,7 +9,7 @@ This type is incompatible with
 
 promise.js:10:54,54: string
 This type is incompatible with
-  [LIB] core.js:279:1,288:1: Promise
+  [LIB] core.js:296:1,305:1: Promise
 
 promise.js:11:30,31: string
 This type is incompatible with
@@ -17,6 +17,6 @@ This type is incompatible with
 
 promise.js:11:30,31: string
 This type is incompatible with
-  [LIB] core.js:279:1,288:1: Promise
+  [LIB] core.js:296:1,305:1: Promise
 
 Found 5 errors
