@@ -144,11 +144,7 @@ module Node: MODULE_SYSTEM = struct
         then parse_main package
         else (
           let path = Filename.concat path "index.js" in
-          if path_is_file path
-          then path_if_exists path
-          else
-            let path = (Filename.dirname path) ^ ".js" in
-            path_if_exists path
+          path_if_exists path
         )
       )
 
