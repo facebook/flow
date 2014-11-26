@@ -118,9 +118,13 @@ module Node: MODULE_SYSTEM = struct
     let rec f = function
       | "main" :: file :: _ ->
           let path = Files_js.normalize_path (Filename.dirname package) file in
-          path_if_exists path
+          seq
+            (fun () -> path_if_exists path)
+            (fun () -> seqf (fun ext -> path_if_exists (path ^ ext)) Files_js.flow_extensions)
       | word :: words -> f words
-      | [] -> None
+      | [] ->
+          let path = Files_js.normalize_path (Filename.dirname package) "index.js" in
+          path_if_exists path
     in
     f (Str.split (Str.regexp "[ \n\t:\",{}]+") (String.trim json))
 
