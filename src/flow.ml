@@ -26,6 +26,7 @@ end = struct
   type command =
     | AUTOCOMPLETE
     | CHECK
+    | CHECK_CONTENTS
     | CONFIG_INIT
     | CONVERT
     | FIND_MODULE
@@ -47,46 +48,48 @@ end = struct
       if Array.length Sys.argv < 2
       then DEFAULT
       else match String.lowercase Sys.argv.(1) with
-      | "autocomplete"  -> AUTOCOMPLETE
-      | "check"         -> CHECK
-      | "convert"       -> CONVERT
-      | "find-module"   -> FIND_MODULE
-      | "get-def"       -> GET_DEF
-      | "get-importers" -> GET_IMPORTERS
-      | "get-imports"   -> GET_IMPORTS
-      | "init"          -> CONFIG_INIT
-      | "port"          -> PORT
-      | "server"        -> SERVER
-      | "single"        -> SINGLE
-      | "start"         -> START
-      | "status"        -> STATUS
-      | "stop"          -> STOP
-      | "suggest"       -> SUGGEST
-      | "type-at-pos"   -> TYPE_AT_POS
-      | _               -> DEFAULT in
+      | "autocomplete"   -> AUTOCOMPLETE
+      | "check"          -> CHECK
+      | "check-contents" -> CHECK_CONTENTS
+      | "convert"        -> CONVERT
+      | "find-module"    -> FIND_MODULE
+      | "get-def"        -> GET_DEF
+      | "get-importers"  -> GET_IMPORTERS
+      | "get-imports"    -> GET_IMPORTS
+      | "init"           -> CONFIG_INIT
+      | "port"           -> PORT
+      | "server"         -> SERVER
+      | "single"         -> SINGLE
+      | "start"          -> START
+      | "status"         -> STATUS
+      | "stop"           -> STOP
+      | "suggest"        -> SUGGEST
+      | "type-at-pos"    -> TYPE_AT_POS
+      | _                -> DEFAULT in
     let command_string =
       if command = DEFAULT
       then "default"
       else String.lowercase Sys.argv.(1) in
     FlowEventLogger.init command_string;
     match command with
-    | AUTOCOMPLETE  -> (module AutocompleteCommand)
-    | CHECK         -> (module ServerCommands.Check)
-    | CONVERT       -> (module ConvertCommand)
-    | FIND_MODULE   -> (module FindModuleCommand)
-    | GET_DEF       -> (module GetDefCommand)
-    | GET_IMPORTERS -> (module GetImportersCommand)
-    | GET_IMPORTS   -> (module GetImportsCommand)
-    | CONFIG_INIT   -> (module ConfigCommands.Init)
-    | PORT          -> (module PortCommand)
-    | SERVER        -> (module ServerCommands.Server)
-    | SINGLE        -> (module SingleCommand)
-    | START         -> (module ServerCommands.Start)
-    | STATUS        -> (module StatusCommands.Status)
-    | STOP          -> (module StopCommand)
-    | SUGGEST       -> (module SuggestCommand)
-    | TYPE_AT_POS   -> (module TypeAtPosCommand)
-    | DEFAULT       -> (module StatusCommands.Default)
+    | AUTOCOMPLETE   -> (module AutocompleteCommand)
+    | CHECK          -> (module ServerCommands.Check)
+    | CHECK_CONTENTS -> (module CheckContentsCommand)
+    | CONVERT        -> (module ConvertCommand)
+    | FIND_MODULE    -> (module FindModuleCommand)
+    | GET_DEF        -> (module GetDefCommand)
+    | GET_IMPORTERS  -> (module GetImportersCommand)
+    | GET_IMPORTS    -> (module GetImportsCommand)
+    | CONFIG_INIT    -> (module ConfigCommands.Init)
+    | PORT           -> (module PortCommand)
+    | SERVER         -> (module ServerCommands.Server)
+    | SINGLE         -> (module SingleCommand)
+    | START          -> (module ServerCommands.Start)
+    | STATUS         -> (module StatusCommands.Status)
+    | STOP           -> (module StopCommand)
+    | SUGGEST        -> (module SuggestCommand)
+    | TYPE_AT_POS    -> (module TypeAtPosCommand)
+    | DEFAULT        -> (module StatusCommands.Default)
 
   let main () =
     Sys.set_signal Sys.sigpipe Sys.Signal_ignore;

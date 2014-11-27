@@ -42,6 +42,8 @@ val parse_error_to_flow_error :
 val parse_error_to_hack_error :
   (Spider_monkey_ast.Loc.t * Parse_error.t) -> Errors.error
 
+val to_list : ErrorSet.t -> Errors.error list
+
 (******* Error output functionality working on Hack's error *******)
 
 val print_errorl : bool -> Errors.error list -> out_channel -> unit

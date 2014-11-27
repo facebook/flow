@@ -27,5 +27,5 @@
   | LCStop of Path.path
   | LCRestart of Path.path
   | LCStatus of Path.path option
-  | LCBuild of Path.path
+  | LCBuild of Path.path * (* incremental *) bool
   | LCProlog of Path.path

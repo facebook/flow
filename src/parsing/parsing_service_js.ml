@@ -27,18 +27,20 @@ module ParserHeap = SharedMem.WithCache (String) (struct
     let prefix = Prefix.make()
   end)
 
-let is_flow contents =
-  contents
-  |> split_lines
-  |> List.exists (fun line -> Str.string_match (Str.regexp ".*@flow") line 0)
+(* . matches any character except the newline, so this is a little more
+ * complicated than one might think *)
+let flow_check_regexp = (Str.regexp "\\(.\\|\n\\)*@flow")
 
-let match_flow file =
-  (Files_js.is_lib_file file) || is_flow (cat file)
+let is_flow content =
+  Str.string_match flow_check_regexp content 0
 
-let in_flow file =
-  Modes_js.(modes.all) || match_flow file
+let match_flow content file =
+  (Files_js.is_lib_file file) || is_flow content
 
-let do_parse content file =
+let in_flow content file =
+  Modes_js.(modes.all) || match_flow content file
+
+let do_parse ?(keep_errors=false) content file =
   try (
     let ast, parse_errors = Parser_flow.program_file content file in
     assert (parse_errors = []);
@@ -46,14 +48,14 @@ let do_parse content file =
   )
   with
   | Parse_error.Error parse_errors ->
-    if in_flow file then
+    if keep_errors || in_flow content file then
       let converted = List.fold_left (fun acc err ->
         Errors.(ErrorSet.add (parse_error_to_flow_error err) acc)
       ) Errors.ErrorSet.empty parse_errors in
       None, Some converted
     else None, None
   | e ->
-    if in_flow file then
+    if keep_errors || in_flow content file then
       let s = Printexc.to_string e in
       let msg = spf "unexpected parsing exception: %s" s in
       let reason = Reason.new_reason "" (Pos.make_from

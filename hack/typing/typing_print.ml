@@ -404,6 +404,27 @@ module PrintFun = struct
     ""
 end
 
+module PrintTypedef = struct
+
+  let tenv = PrintClass.tenv
+
+  let typedef = function
+    | Typing_env.Typedef.Error -> "[Error]"
+    | Typing_env.Typedef.Ok (_vis, tparaml, constr_opt, ty, pos) ->
+      let tparaml_s = PrintClass.tparam_list tparaml in
+      let constr_s = match constr_opt with
+        | None -> "[None]"
+        | Some constr -> Full.to_string tenv constr in
+      let ty_s = Full.to_string tenv ty in
+      let pos_s = PrintClass.pos pos in
+      "ty: "^ty_s^"\n"^
+      "tparaml: "^tparaml_s^"\n"^
+      "constraint: "^constr_s^"\n"^
+      "pos: "^pos_s^"\n"^
+      ""
+
+end
+
 (*****************************************************************************)
 (* User API *)
 (*****************************************************************************)
@@ -413,4 +434,6 @@ let suggest ty = Suggest.type_ ty
 let full env ty = Full.to_string env ty
 let full_strip_ns env ty = Full.to_string_strip_ns env ty
 let class_ c = PrintClass.class_type c
+let gconst gc = Full.to_string PrintClass.tenv gc
 let fun_ f = PrintFun.fun_type f
+let typedef td = PrintTypedef.typedef td

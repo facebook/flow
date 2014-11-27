@@ -33,36 +33,39 @@ module Impl = struct
         "Usage: %s [COMMAND] \n\n\
         Valid values for COMMAND:\n\
           \ \ autocomplete\
-            \tQueries autocompletion information\n\
+            \t\tQueries autocompletion information\n\
           \ \ check\
-            \t\tDoes a full Flow check and prints the results\n\
+            \t\t\tDoes a full Flow check and prints the results\n\
+          \ \ check-contents\
+            \tRun typechecker on contents from stdin\n\
           \ \ find-module\
-            \tShows filenames for one or more modules\n\
+            \t\tShows filenames for one or more modules\n\
           \ \ get-def\
-            \tGets the definition location of a variable or property\n\
+            \t\tGets the definition location of a variable or property\n\
           \ \ get-importers\
-            \tGets a list of all importers for one or more given modules\n\
+            \t\tGets a list of all importers for one or more given modules\n\
           \ \ get-imports\
-            \tGet names of all modules imported by one or more given\
+            \t\tGet names of all modules imported by one or more given\
             \ modules\n\
           \ \ init\
-            \t\tInitializes a directory to be used as a flow root directory\n\
+            \t\t\tInitializes a directory to be used as a flow root directory\n\
           \ \ port\
-            \t\tShows ported type annotations for given files\n\
+            \t\t\tShows ported type annotations for given files\n\
           \ \ server\
-            \tRuns a Flow server (not normally invoked from the command line)\n\
+            \t\tRuns a Flow server (not normally invoked from the command\
+            \ line)\n\
           \ \ single\
-            \tDoes a single-threaded check (testing)\n\
+            \t\tDoes a single-threaded check (testing)\n\
           \ \ start\
-            \t\tStarts a Flow server\n\
+            \t\t\tStarts a Flow server\n\
           \ \ status\
-            \t(default) Shows current Flow errors by asking the Flow server\n\
+            \t\t(default) Shows current Flow errors by asking the Flow server\n\
           \ \ stop\
-            \t\tStops a Flow server\n\
+            \t\t\tStops a Flow server\n\
           \ \ suggest\
-            \tShows type annotation suggestions for given files\n\
+            \t\tShows type annotation suggestions for given files\n\
           \ \ type-at-pos\
-            \tShows the type at a given file and position\n\
+            \t\tShows the type at a given file and position\n\
         \n\
         Default values if unspecified:\n\
           \ \ COMMAND\

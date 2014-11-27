@@ -24,7 +24,7 @@ type options = {
   opt_profile : bool;
   opt_strip_root : bool;
   opt_module: string;
-  opt_lib: string option;
+  opt_libs: Path.path list;
 }
 
 (* incremental typecheck entry point *)
@@ -44,5 +44,4 @@ val merge_strict_file: string -> Constraint_js.context
 val typecheck_contents:
   string ->               (* contents *)
   string ->               (* fake file-/module name *)
-  bool ->                 (* process autocomplete *)
   Constraint_js.context option * Errors_js.ErrorSet.t

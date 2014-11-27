@@ -44,7 +44,7 @@ type options = {
   opt_profile : bool;
   opt_strip_root : bool;
   opt_module: string;
-  opt_lib: string option;
+  opt_libs: Path.path list;
 }
 
 let init_modes opts =
@@ -61,7 +61,7 @@ let init_modes opts =
   modes.profile <- opts.opt_profile;
   (* TODO: confirm that only master uses strip_root, otherwise set it! *)
   Module_js.init (opts.opt_module);
-  Files_js.init (opts.opt_lib)
+  Files_js.init (opts.opt_libs)
 
 (****************** shared context heap *********************)
 
@@ -296,8 +296,8 @@ let merge_strict_file file =
   let cx = ContextHeap.find_unsafe file in
   merge_strict_context cx (fun () -> Hashtbl.add cached_infer_contexts file cx)
 
-let typecheck_contents contents filename autocomplete =
-  match Parsing_service_js.do_parse contents filename with
+let typecheck_contents contents filename =
+  match Parsing_service_js.do_parse ~keep_errors:true contents filename with
   | Some ast, None ->
       let cx = TI.infer_ast ast filename "-" true in
       Some (merge_strict_context cx (fun () -> ())), cx.errors

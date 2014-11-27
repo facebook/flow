@@ -112,7 +112,7 @@ let autocomplete_member cx this =
   let result_map = autocomplete_filter_members result_map in
   let result_map = SMap.mapi (fun name t ->
       let pos = pos_of_t t in
-      let gt = Flow_js.get_ground_type cx t in
+      let gt = Flow_js.printified_type cx t in
       autocomplete_create_result cx name gt pos
     ) result_map in
   List.rev (SMap.values result_map)
@@ -135,7 +135,7 @@ let autocomplete_id cx env =
           | None -> Pos.none
         in
 
-        let type_ = Flow_js.get_ground_type cx value.specific in
+        let type_ = Flow_js.printified_type cx value.specific in
         let result =
           autocomplete_create_result cx name type_ pos in
         result :: acc

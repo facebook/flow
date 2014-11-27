@@ -25,10 +25,6 @@ type options = {
 
 let builtins_filename = "builtins.hhi"
 let builtins = "<?hh // decl\n"^
-  "class Object {\n"^
-  "  public function get_class(): string {} \n"^
-  "  public function get_parent_class(): ?string {} \n"^
-  "}\n"^
   "interface Traversable<Tv> {}\n"^
   "interface Container<Tv> extends Traversable<Tv> {}\n"^
   "interface Iterator<Tv> extends Traversable<Tv> {}\n"^

@@ -265,7 +265,7 @@ let query_type cx pos =
       if d < !diff then (
         diff := d;
         Flow_js.suggested_type_cache := IMap.empty;
-        let ground_t = Flow_js.ground_type cx ISet.empty t in
+        let ground_t = Flow_js.printified_type cx t in
         let possible_ts = Flow_js.possible_types_of_type cx t in
         result := if is_printed_type_parsable cx ground_t
           then (Reason_js.pos_of_loc range, Some ground_t, possible_ts)
@@ -283,7 +283,7 @@ let fill_types cx =
   Flow_js.suggested_type_cache := IMap.empty;
   Hashtbl.fold (fun pos t list ->
     let line, start, end_ = Pos.info_pos pos in
-    let t = Flow_js.ground_type cx ISet.empty t in
+    let t = Flow_js.printified_type cx t in
     if is_printed_type_parsable cx t then
       (line, end_, spf ": %s" (string_of_t cx t))::list
     else list
@@ -547,7 +547,8 @@ let rec convert cx map = Ast.Type.(function
     in
     let map_ = match callProperties with
       | [] -> map_
-      | [loc, { Object.CallProperty.value = (_, ft); _; }] -> SMap.add "$call" (convert cx map (loc, Ast.Type.Function ft)) map_
+      | [loc, { Object.CallProperty.value = (_, ft); _; }] ->
+          SMap.add "$call" (convert cx map (loc, Ast.Type.Function ft)) map_
       | fts ->
           let fts = List.map
             (fun (loc, { Object.CallProperty.value = (_, ft); _; }) ->
@@ -556,21 +557,28 @@ let rec convert cx map = Ast.Type.(function
         SMap.add "$call" (IntersectionT (mk_reason "object type" loc, fts)) map_
     in
     (* Seal an object type unless it specifies an indexer. *)
-    let sealed, key, value = Object.Indexer.(
+    let sealed, dict_name, key, value = Object.Indexer.(
       match indexers with
-      | [(_, { key; value; _; })] ->
+      | [(_, { id = (_, { Ast.Identifier.name; _ }); key; value; _; })] ->
           let keyt = convert cx map key in
           let valuet = convert cx map value in
-          false, keyt, valuet
+          false,
+          Some name,
+          keyt,
+          valuet
       | [] ->
-          true, MixedT (mk_reason "key" loc), MixedT (mk_reason "value" loc)
+          true,
+          None,
+          MixedT (mk_reason "key" loc),
+          MixedT (mk_reason "value" loc)
       (* TODO *)
       | _ -> failwith "Unimplemented: multiple indexers"
     ) in
     let pmap = Flow_js.mk_propmap cx map_ in
     let proto = MixedT (reason_of_string "Object") in
+    let dict = { dict_name; key; value } in
     ObjT (mk_reason "object type" loc,
-      Flow_js.mk_objecttype ~sealed (key, value) pmap proto)
+      Flow_js.mk_objecttype ~sealed dict pmap proto)
   )
 
 and convert_qualification cx = Ast.Type.Generic.Identifier.(function
@@ -2051,7 +2059,7 @@ and expression_ cx loc = Ast.Expression.(function
       (* TODO: require *)
       let reason = mk_reason "invariant" loc in
       (match arguments with
-      | [ Expression cond ] ->
+      | (Expression cond)::_ ->
         let _, pred, not_pred, xtypes = predicate_of_condition cx cond in
         Env_js.refine_with_pred cx reason pred xtypes
       | _ ->
@@ -4159,9 +4167,10 @@ let infer_ast ast file m force_check =
   let reason_exports_module = reason_of_string (spf "exports of module %s" m) in
   let block = ref
     (SMap.singleton "exports"
-       (create_env_entry
-          (UndefT (reason_of_string "undefined exports"))
-          (Flow_js.mk_tvar cx reason_exports_module)
+       (let exports = Flow_js.mk_tvar cx reason_exports_module in
+        create_env_entry
+          exports
+          exports
           None
        ) |>
      SMap.add (internal_name "exports")

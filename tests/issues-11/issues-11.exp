@@ -1,0 +1,10 @@
+
+export.js:2:13,13: number
+This type is incompatible with
+  import.js:3:8,13: string
+
+export.js:3:13,14: string
+This type is incompatible with
+  import.js:4:8,13: number
+
+Found 2 errors

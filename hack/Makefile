@@ -74,7 +74,8 @@ OCAML_LIBRARIES=\
   str
 
 NATIVE_LIBRARIES=\
-  $(ELF)
+  $(ELF)\
+  pthread
 
 ################################################################################
 #                                    Rules                                     #
@@ -83,12 +84,14 @@ NATIVE_LIBRARIES=\
 INCLUDE_OPTS=$(foreach dir,$(MODULES),-I $(dir))
 LIB_OPTS=$(foreach lib,$(OCAML_LIBRARIES),-lib $(lib))
 NATIVE_LIB_OPTS=$(foreach lib, $(NATIVE_LIBRARIES),-cclib -l$(lib))
+EXTRA_NATIVE_LIB_OPTS=$(foreach lib, $(EXTRA_NATIVE_LIBRARIES),-cclib -l$(lib))
 EXTRA_INCLUDE_OPTS=$(foreach dir, $(EXTRA_INCLUDE_PATHS),-ccopt -I$(dir))
 EXTRA_CC_OPTS=$(foreach opt, $(EXTRA_CC_FLAGS),-ccopt $(opt))
 EXTRA_LIB_OPTS=$(foreach dir, $(EXTRA_LIB_PATHS),-cclib -L$(dir))
 FRAMEWORK_OPTS=$(foreach framework, $(FRAMEWORKS),-cclib -framework -cclib $(framework))
 
-LINKER_FLAGS=$(NATIVE_OBJECT_FILES) $(NATIVE_LIB_OPTS) $(EXTRA_LIB_OPTS) $(FRAMEWORK_OPTS) $(SECTCREATE)
+LINKER_FLAGS=$(NATIVE_OBJECT_FILES) $(NATIVE_LIB_OPTS) $(EXTRA_LIB_OPTS) \
+	     $(EXTRA_NATIVE_LIB_OPTS) $(FRAMEWORK_OPTS) $(SECTCREATE)
 
 all: build-hhi-archive build-hack copy-hack-files
 

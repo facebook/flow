@@ -80,7 +80,7 @@ val mk_functiontype2 : Type.t list -> string list option -> Type.t ->
 val dummy_static : Type.t
 val dummy_prototype : Type.t
 
-val mk_objecttype : ?sealed:bool -> (Type.t * Type.t) -> int -> Type.t ->
+val mk_objecttype : ?sealed:bool -> Type.dicttype -> int -> Type.t ->
   Type.objtype
 
 val mk_object_with_proto : context -> reason -> Type.t -> Type.t
@@ -114,11 +114,15 @@ val check_lower_bound: context -> ident -> (Type.t -> bool) -> bool
 val enforce_strict: context -> ident -> bounds -> unit
 val suggested_type_cache: Type.t IMap.t ref
 val merge_type: context -> (Type.t * Type.t) -> Type.t
-val ground_type: context -> ISet.t ->
-  Type.t -> Type.t
-val get_ground_type: context -> Type.t -> Type.t
 val resolve_type: context -> Type.t -> Type.t
 val possible_types_of_type: context -> Type.t -> Type.t list
+
+val ground_type: context -> Type.t -> Type.t
+val normalize_type: context -> Type.t -> Type.t
+(* this optimizes a normalized type for printability *)
+val printify_type: context -> Type.t -> Type.t
+(* returns a grounded(, normalized) and printified version of the type *)
+val printified_type: context -> Type.t -> Type.t
 
 (* class/ojc *)
 val extract_members: context -> Type.t -> Type.t SMap.t

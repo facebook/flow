@@ -8,7 +8,6 @@
  *
  *)
 
-
 (** Module "naming" a program.
  *
  * The naming phase consists in several things

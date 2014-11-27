@@ -214,7 +214,8 @@ let type_check genv env =
     (Relative_path.Set.cardinal env.failed_parsing);
   flush stdout;
   (* PARSING *)
-  let t = Unix.gettimeofday() in
+  let start_t = Unix.gettimeofday() in
+  let t = start_t in
   let fast_parsed, errorl, failed_parsing = parsing genv env in
   let t2 = Unix.gettimeofday() in
   Printf.printf "Parsing: %f\n%!" (t2 -. t);
@@ -280,6 +281,8 @@ let type_check genv env =
 
   let t2 = Unix.gettimeofday() in
   Printf.printf "Type-check: %f\n%!" (t2 -. t);
+
+  Printf.printf "Total: %f\n%!" (t2 -. start_t);
 
   (* Done, that's the new environment *)
   { files_info = files_info;

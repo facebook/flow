@@ -114,17 +114,22 @@ module Type :
     and literal = string option
 
     and funtype = {
-      this_t : t;
-      params_tlist : t list;
-      params_names : string list option;
-      return_t : t;
-      closure_t : int;
+      this_t: t;
+      params_tlist: t list;
+      params_names: string list option;
+      return_t: t;
+      closure_t: int;
     }
     and objtype = {
       sealed: bool;
-      dict_t : t * t;
-      props_tmap : int;
-      proto_t : prototype;
+      dict_t: dicttype;
+      props_tmap: int;
+      proto_t: prototype;
+    }
+    and dicttype = {
+      dict_name: string option;
+      key: t;
+      value: t;
     }
     and insttype = {
       class_id: ident;

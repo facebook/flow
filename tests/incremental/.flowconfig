@@ -1,2 +1,5 @@
 [ignore]
 .*dup.*
+[options]
+module.system=haste
+

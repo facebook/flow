@@ -1,2 +1,5 @@
 [include]
 ../lib
+[options]
+module.system=haste
+

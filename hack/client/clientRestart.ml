@@ -10,8 +10,7 @@
 
 let main env =
   if ClientUtils.server_exists env.ClientStart.root
-  then begin
-    HackClientStop.kill_server env.ClientStart.root;
-    ClientStart.start_server env
-  end else Printf.fprintf stderr "Error: no server to restart for %s\n%!"
-    (Path.string_of_path env.ClientStart.root)
+  then HackClientStop.kill_server env.ClientStart.root
+  else Printf.fprintf stderr "Warning: no server to restart for %s\n%!"
+    (Path.string_of_path env.ClientStart.root);
+  ClientStart.start_server env

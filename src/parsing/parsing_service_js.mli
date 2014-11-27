@@ -40,6 +40,7 @@ val remove_asts: SSet.t -> unit
 
 (* parse contents of a file *)
 val do_parse:
+  ?keep_errors:bool ->      (* force to keep parsing errors *)
   string ->                 (* contents of the file *)
   string ->                 (* filename *)
   (Spider_monkey_ast.program option * Errors_js.ErrorSet.t option)

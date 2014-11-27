@@ -93,35 +93,57 @@ module Program : Server.SERVER_PROGRAM = struct
         flush oc
     | ServerMsg.SHOW name ->
         output_string oc "starting\n";
-        output_string oc "class:\n";
         SharedMem.invalidate_caches();
-        let qual_name = if name.[0] = '\\' then name
-          else ("\\"^name) in
+        let qual_name = if name.[0] = '\\' then name else ("\\"^name) in
         let nenv = env.nenv in
+        output_string oc "class:\n";
         (match SMap.get (Naming.canon_key qual_name) (snd nenv.Naming.iclasses) with
-          | None -> output_string oc "Missing from nenv\n"
+          | None -> output_string oc "Missing from naming env\n"
           | Some canon ->
             let p, _ = SMap.find_unsafe canon (fst nenv.Naming.iclasses) in
             output_string oc ((Pos.string (Pos.to_absolute p))^"\n")
         );
         let class_ = Typing_env.Classes.get qual_name in
         (match class_ with
-        | None -> output_string oc "Missing from Typing_env\n"
+        | None -> output_string oc "Missing from typing env\n"
         | Some c ->
             let class_str = Typing_print.class_ c in
             output_string oc (class_str^"\n")
         );
-        output_string oc "function:\n";
+        output_string oc "\nfunction:\n";
         (match SMap.get qual_name nenv.Naming.ifuns with
         | Some (p, _) -> output_string oc (Pos.string (Pos.to_absolute p)^"\n")
-        | None -> output_string oc "Missing from nenv\n");
+        | None -> output_string oc "Missing from naming env\n");
         let fun_ = Typing_env.Funs.get qual_name in
         (match fun_ with
         | None ->
-            output_string oc "Missing from Typing_env\n"
+            output_string oc "Missing from typing env\n"
         | Some f ->
             let fun_str = Typing_print.fun_ f in
             output_string oc (fun_str^"\n")
+        );
+        output_string oc "\nglobal const:\n";
+        (match SMap.get qual_name nenv.Naming.iconsts with
+        | Some (p, _) -> output_string oc (Pos.string (Pos.to_absolute p)^"\n")
+        | None -> output_string oc "Missing from naming env\n");
+        let gconst_ty = Typing_env.GConsts.get qual_name in
+        (match gconst_ty with
+        | None -> output_string oc "Missing from typing env\n"
+        | Some gc ->
+            let gconst_str = Typing_print.gconst gc in
+            output_string oc ("ty: "^gconst_str^"\n")
+        );
+        output_string oc "typedef:\n";
+        (match SMap.get qual_name nenv.Naming.itypedefs with
+        | Some (p, _) -> output_string oc (Pos.string (Pos.to_absolute p)^"\n")
+        | None -> output_string oc "Missing from naming env\n");
+        let tdef = Typing_env.Typedefs.get qual_name in
+        (match tdef with
+        | None ->
+            output_string oc "Missing from typing env\n"
+        | Some td ->
+            let td_str = Typing_print.typedef td in
+            output_string oc (td_str^"\n")
         );
         flush oc
     | ServerMsg.KILL -> die_nicely oc

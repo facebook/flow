@@ -364,45 +364,8 @@ let rec list_map2 f ts1 ts2 = match (ts1,ts2) with
 
 module TypeSet = Set.Make(Type)
 
-let rec collect_union_members ts =
-  List.fold_left (fun acc x ->
-      match x with
-      | UnionT (_, ts) ->
-          TypeSet.union acc (collect_union_members ts)
-      | _ ->
-          TypeSet.add x acc
-    ) TypeSet.empty ts
-
-let unionize ts =
-  let ts = collect_union_members ts in
-  let ts = TypeSet.elements ts in
-  match ts with
-  | [t] -> t
-  | _ ->
-    UnionT (
-      reason_of_string "union",
-      ts
-    )
-
-let rec collect_intersection_members ts =
-  List.fold_left (fun acc x ->
-      match x with
-      | IntersectionT (_, ts) ->
-          TypeSet.union acc (collect_intersection_members ts)
-      | _ ->
-          TypeSet.add x acc
-    ) TypeSet.empty ts
-
-let intersect ts =
-  let ts = collect_intersection_members ts in
-  let ts = TypeSet.elements ts in
-  match ts with
-  | [t] -> t
-  | _ ->
-    IntersectionT (
-      reason_of_string "intersection",
-      ts
-    )
+let create_union ts =
+  UnionT (reason_of_string "union", ts)
 
 let rec merge_type cx = function
   | (NumT _, (NumT _ as t))
@@ -439,9 +402,11 @@ let rec merge_type cx = function
       )
 
   | (ObjT (_,ot1), ObjT (_,ot2)) ->
+      (* TODO: How to merge indexer names? *)
       let dict =
-        merge_type cx (fst ot1.dict_t, fst ot2.dict_t),
-        merge_type cx (snd ot1.dict_t, snd ot2.dict_t)
+        { dict_name = Some "_";
+          key = merge_type cx (ot1.dict_t.key, ot2.dict_t.key);
+          value = merge_type cx (ot1.dict_t.value, ot2.dict_t.value); }
       in
       let pmap =
         let map1 = IMap.find_unsafe ot1.props_tmap cx.property_maps in
@@ -476,16 +441,19 @@ let rec merge_type cx = function
       MaybeT (merge_type cx (t1, t2))
 
   | (UnionT (_, ts1), UnionT (_, ts2)) ->
-      unionize (List.rev_append ts1 ts2)
+      create_union (List.rev_append ts1 ts2)
 
   | (UnionT (_, ts), t)
   | (t, UnionT (_, ts)) ->
-      unionize (t :: ts)
+      create_union (t :: ts)
 
   | (t1, t2) ->
-      unionize [t1; t2]
+      create_union [t1; t2]
 
-and ground_type cx ids t = match t with
+(* This function does not only resolve every OpenT recursively, but also
+   replaces the reasons of types with a uniform ones. It is a left-over bit
+   from the old ground_type behavior. *)
+and ground_type_impl cx ids t = match t with
   | BoundT _ -> t
   | OpenT (reason, id) ->
       lookup_type cx ids id
@@ -499,21 +467,24 @@ and ground_type cx ids t = match t with
   | MixedT _ -> MixedT.t
   | AnyT _ -> AnyT.t
 
-  | FunT (_,_,_,ft) ->
-      let tins = List.map (ground_type cx ids) ft.params_tlist in
+  | FunT (_, _, _, ft) ->
+      let tins = List.map (ground_type_impl cx ids) ft.params_tlist in
       let params_names = ft.params_names in
-      let tout = ground_type cx ids ft.return_t in
+      let tout = ground_type_impl cx ids ft.return_t in
       FunT (
         reason_of_string "function",
         dummy_static, dummy_prototype,
         mk_functiontype tins params_names tout
       )
 
-  | ObjT (_,ot) ->
-      let dict = (MixedT.t, MixedT.t) in
+  | ObjT (_, ot) ->
+      let dict =
+        { dict_name = ot.dict_t.dict_name;
+          key = (ground_type_impl cx ids ot.dict_t.key);
+          value = (ground_type_impl cx ids ot.dict_t.value); } in
       let pmap =
         IMap.find_unsafe ot.props_tmap cx.property_maps
-        |> SMap.map (ground_type cx ids)
+        |> SMap.map (ground_type_impl cx ids)
         |> mk_propmap cx
       in
       let proto = AnyT.t in
@@ -524,57 +495,55 @@ and ground_type cx ids t = match t with
 
   | ArrT (_, t, ts) ->
       ArrT (reason_of_string "array",
-            ground_type cx ids t,
-            ts |> List.map (ground_type cx ids))
+            ground_type_impl cx ids t,
+            ts |> List.map (ground_type_impl cx ids))
 
   | MaybeT t ->
-      MaybeT (ground_type cx ids t)
+      MaybeT (ground_type_impl cx ids t)
 
-  | PolyT (xs,t) ->
-      PolyT (xs, ground_type cx ids t)
+  | PolyT (xs, t) ->
+      PolyT (xs, ground_type_impl cx ids t)
 
   | ClassT t ->
-      ClassT (ground_type cx ids t)
+      ClassT (ground_type_impl cx ids t)
 
-  | TypeT (_,t) ->
+  | TypeT (_, t) ->
       TypeT (reason_of_string "type",
-             ground_type cx ids t)
+             ground_type_impl cx ids t)
 
-  | CustomClassT (n,ts,t) ->
+  | CustomClassT (n, ts, t) ->
       CustomClassT
         (n,
-         List.map (ground_type cx ids) ts,
-         ground_type cx ids t)
+         List.map (ground_type_impl cx ids) ts,
+         ground_type_impl cx ids t)
 
   | InstanceT (_, static, super, it) ->
       t (* nominal type *)
 
   | RestT t ->
-      RestT (ground_type cx ids t)
+      RestT (ground_type_impl cx ids t)
 
   | OptionalT t ->
-      OptionalT (ground_type cx ids t)
+      OptionalT (ground_type_impl cx ids t)
 
-  | TypeAppT(c,ts) ->
-      let c = ground_type cx ids c in
-      let ts = List.map (ground_type cx ids) ts in
+  | TypeAppT (c, ts) ->
+      let c = ground_type_impl cx ids c in
+      let ts = List.map (ground_type_impl cx ids) ts in
       TypeAppT (
         c,
         ts
       )
 
   | IntersectionT (_, ts) ->
-      let ts = List.map (ground_type cx ids) ts in
-      intersect ts
+      IntersectionT (
+        reason_of_string "intersection",
+        List.map (ground_type_impl cx ids) ts
+      )
 
   | UnionT (_, ts) ->
-      let ts = List.map (ground_type cx ids) ts in
-      unionize ts
+      create_union (List.map (ground_type_impl cx ids) ts)
 
   | _ -> assert false (** TODO **)
-
-and get_ground_type cx type_ =
-  ground_type cx ISet.empty type_
 
 and lookup_type_ cx ids id =
   if ISet.mem id ids then assert false
@@ -584,7 +553,7 @@ and lookup_type_ cx ids id =
     try
       UndefT.t
       |> TypeMap.fold
-          (fun t _ -> fun u -> merge_type cx (ground_type cx ids t, u))
+          (fun t _ -> fun u -> merge_type cx (ground_type_impl cx ids t, u))
           bounds.lower
     with _ ->
       AnyT.t
@@ -604,6 +573,222 @@ and resolve_type cx = function
         merge_type cx (t, u)
       ) UndefT.t ts
   | t -> t
+
+let rec normalize_type cx t =
+  match t with
+  | FunT (r, static, proto, ft) ->
+      let ft =
+        { ft with
+          return_t = normalize_type cx ft.return_t;
+          params_tlist = List.map (normalize_type cx) ft.params_tlist; } in
+      FunT (r,
+        normalize_type cx static,
+        normalize_type cx proto,
+        ft)
+
+  | ObjT (r, ot) ->
+      let pmap =
+        IMap.find_unsafe ot.props_tmap cx.property_maps
+        |> SMap.map (normalize_type cx)
+        |> mk_propmap cx
+      in
+      ObjT (r,
+        { ot with
+          dict_t = { ot.dict_t with
+                     key = normalize_type cx ot.dict_t.key;
+                     value = normalize_type cx ot.dict_t.value; };
+          proto_t = normalize_type cx ot.proto_t;
+          props_tmap = pmap; })
+
+  | UnionT (r, ts) ->
+      normalize_union cx r ts
+
+  | IntersectionT (r, ts) ->
+      normalize_intersection cx r ts
+
+  | MaybeT t ->
+      let t = normalize_type cx t in
+      (match t with
+      | MaybeT _ -> t
+      | _ -> MaybeT t)
+
+  | OptionalT t ->
+      OptionalT (normalize_type cx t)
+
+  | RestT t ->
+      RestT (normalize_type cx t)
+
+  | ArrT (r, t, ts) ->
+      ArrT (r, normalize_type cx t, List.map (normalize_type cx) ts)
+
+  | PolyT (xs, t) ->
+      PolyT (xs, normalize_type cx t)
+
+  | TypeAppT (c, ts) ->
+      TypeAppT (normalize_type cx c, List.map (normalize_type cx) ts)
+
+  | CustomClassT (n, ts, t) ->
+      CustomClassT (n, List.map (normalize_type cx) ts, normalize_type cx t)
+
+  | t -> t
+
+(* TODO: This is not an exhaustive list of normalization steps for unions.
+   For example, we might want to get rid of AnyT in the union similar to how
+   merge_type gets rid of AnyT. Decide on rules like these and implement them
+   if required. *)
+and normalize_union cx r ts =
+  let ts = List.map (normalize_type cx) ts in
+  let ts = collect_union_members ts in
+  let (ts, has_void, has_null) =
+    TypeSet.fold (fun t (ts, has_void, has_null) ->
+      match t with
+      | MaybeT (UnionT (_, tlist)) ->
+          let ts = List.fold_left (fun acc t -> TypeSet.add t acc) ts tlist in
+          (ts, true, true)
+      | MaybeT t -> (TypeSet.add t ts, true, true)
+      | VoidT _ -> (ts, true, has_null)
+      | NullT _ -> (ts, has_void, true)
+      (* TODO: We should only get UndefT here when a completely open type
+         variable has been in the union before grounding it. This happens when
+         "null" is passed to a function parameter. We throw this out because
+         it gives no information at all. merge_type also ignores UndefT. *)
+      | UndefT _ -> (ts, has_void, has_null)
+      | _ -> (TypeSet.add t ts, has_void, has_null)
+    ) ts (TypeSet.empty, false, false) in
+  let ts =
+    match (has_void, has_null) with
+    | (true, false) -> TypeSet.add VoidT.t ts
+    | (false, true) -> TypeSet.add NullT.t ts
+    | _ ->
+        (* We should never get an empty set at this point but better safe than
+           sorry. Stripping out UndefT above might be unsafe. *)
+        if TypeSet.is_empty ts
+        then TypeSet.singleton UndefT.t
+        else ts
+  in
+  let ts = TypeSet.elements ts in
+  let t =
+    match ts with
+    | [t] -> t
+    | _ -> UnionT (r, ts)
+  in
+  if has_void && has_null
+  then MaybeT t
+  else t
+
+and collect_union_members ts =
+  List.fold_left (fun acc x ->
+      match x with
+      | UnionT (_, ts) -> TypeSet.union (collect_union_members ts) acc
+      | _ -> TypeSet.add x acc
+    ) TypeSet.empty ts
+
+(* TODO: This does not do any real normalization yet, it only flattens the
+   intesection. Think about normalization rules and implement them when there
+   is need for that. *)
+and normalize_intersection cx r ts =
+  let ts = List.map (normalize_type cx) ts in
+  let ts = collect_intersection_members ts in
+  let ts = TypeSet.elements ts in
+  match ts with
+  | [t] -> t
+  | _ -> IntersectionT (r, ts)
+
+and collect_intersection_members ts =
+  List.fold_left (fun acc x ->
+      match x with
+      | IntersectionT (_, ts) ->
+          TypeSet.union acc (collect_intersection_members ts)
+      | _ ->
+          TypeSet.add x acc
+    ) TypeSet.empty ts
+
+let ground_type cx type_ =
+  ground_type_impl cx ISet.empty type_
+
+let rec printify_type cx t =
+  match t with
+  | FunT (r, static, proto, ft) ->
+      let ft =
+        { ft with
+          return_t = printify_type cx ft.return_t;
+          params_tlist = List.map (printify_type cx) ft.params_tlist; } in
+      FunT (r,
+        printify_type cx static,
+        printify_type cx proto,
+        ft)
+
+  | ObjT (r, ot) ->
+      let pmap =
+        IMap.find_unsafe ot.props_tmap cx.property_maps
+        |> SMap.map (printify_type cx)
+        |> mk_propmap cx
+      in
+      ObjT (r,
+        { ot with
+          dict_t = { ot.dict_t with
+                     key = printify_type cx ot.dict_t.key;
+                     value = printify_type cx ot.dict_t.value; };
+          proto_t = printify_type cx ot.proto_t;
+          props_tmap = pmap; })
+
+  | UnionT (r, ts) ->
+      let (ts, add_maybe) =
+        List.fold_left (fun (ts, add_maybe) t ->
+            let t = printify_type cx t in
+            match t with
+            | NullT _ -> (ts, true)
+            | _ -> (t :: ts, add_maybe)
+          ) ([], false) ts
+      in
+      (* strictly speaking this is a combination of normalization and
+         transformation for printability, but it allows us to get rid of
+         another normalize_type call. *)
+      let t =
+        match ts with
+        | [t] -> t
+        | _ -> UnionT (r, ts)
+      in
+      if add_maybe
+      then MaybeT t
+      else t
+
+  | IntersectionT (r, ts) ->
+      IntersectionT (r, List.map (printify_type cx) ts)
+
+  | MaybeT t ->
+      (* strictly speaking this is a combination of normalization and
+         transformation for printability, but it allows us to get rid of
+         another normalize_type call. *)
+      let t = printify_type cx t in
+      (match t with
+      | MaybeT _ -> t
+      | _ -> MaybeT t)
+
+  | OptionalT t ->
+      OptionalT (printify_type cx t)
+
+  | RestT t ->
+      RestT (printify_type cx t)
+
+  | ArrT (r, t, ts) ->
+      ArrT (r, printify_type cx t, List.map (printify_type cx) ts)
+
+  | PolyT (xs, t) ->
+      PolyT (xs, printify_type cx t)
+
+  | TypeAppT (c, ts) ->
+      TypeAppT (printify_type cx c, List.map (printify_type cx) ts)
+
+  | CustomClassT (n, ts, t) ->
+      CustomClassT (n, List.map (printify_type cx) ts, printify_type cx t)
+
+  | t -> t
+
+let printified_type cx t =
+  let t = ground_type cx t in
+  let t = normalize_type cx t in
+  printify_type cx t
 
 module Exists(M: MapSig) =
   struct
@@ -1555,7 +1740,7 @@ let rec flow cx (l,u) trace =
         sealed;
         props_tmap = mapr;
         proto_t = proto;
-        dict_t = (key,value);
+        dict_t = { key; value; _ };
       }),
       SetT(reason_op,x,tin))
       ->
@@ -1579,7 +1764,7 @@ let rec flow cx (l,u) trace =
           sealed;
           props_tmap = mapr;
           proto_t = proto;
-          dict_t = (key,value);
+          dict_t = { key; value; _ };
         }),
        GetT(reason_op,x,tout))
       ->
@@ -1596,7 +1781,7 @@ let rec flow cx (l,u) trace =
           sealed;
           props_tmap = mapr;
           proto_t = proto;
-          dict_t = (key,value);
+          dict_t = { key; value; _ };
         }),
        MethodT(reason_op,x,this,tins,tout,j))
       ->
@@ -1654,7 +1839,7 @@ let rec flow cx (l,u) trace =
       unit_flow cx (key, ElemT(reason_op, l, LowerBoundT tout))
 
     | (StrT (reason_s, literal),
-       ElemT(reason_op, (ObjT(_, {dict_t = (key,value); _}) as o), t))
+       ElemT(reason_op, (ObjT(_, {dict_t = { key; value; _ }; _}) as o), t))
       ->
       (match literal with
       | Some x ->
@@ -1668,7 +1853,7 @@ let rec flow cx (l,u) trace =
         unit_flow cx (t,value)
       )
 
-    | (_, ElemT(_, ObjT(_, {dict_t = (key,value); _}), t))
+    | (_, ElemT(_, ObjT(_, {dict_t = { key; value; _ }; _}), t))
       ->
       unit_flow cx (l, key);
         unit_flow cx (value,t);
@@ -2317,14 +2502,16 @@ and subst cx map t =
 
   | ObjT (reason, {
       sealed;
-      dict_t = (key,value);
+      dict_t = { dict_name; key; value; };
       props_tmap = id;
       proto_t = proto
     }) ->
       let pmap = IMap.find_unsafe id cx.property_maps in
       ObjT (reason, {
         sealed;
-        dict_t = (subst cx map key, subst cx map value);
+        dict_t = { dict_name;
+                   key = subst cx map key;
+                   value = subst cx map value; };
         props_tmap = mk_propmap cx (pmap |> SMap.map (subst cx map));
         proto_t = subst cx map proto
       })
@@ -2420,9 +2607,10 @@ and mk_object_with_proto cx reason proto =
   mk_object_with_map_proto cx reason SMap.empty proto
 
 and mk_object_with_map_proto cx reason map proto =
-  let dict =
-    AnyT.t (*mk_tvar cx (replace_reason "key" reason)*),
-    AnyT.t (*mk_tvar cx (replace_reason "value" reason)*)
+  let dict = {
+    dict_name = None;
+    key = AnyT.t (*mk_tvar cx (replace_reason "key" reason)*);
+    value = AnyT.t (*mk_tvar cx (replace_reason "value" reason)*); }
   in
   let pmap = mk_propmap cx map in
   ObjT (reason, mk_objecttype dict pmap proto)
@@ -3119,8 +3307,8 @@ and static_method_call cx name reason m argts =
     unit_flow cx (cls, MethodT(reason, m, cls, argts, tvar, 0));
   )
 
-(** TODO: this should rather be moved close to ground_type/resolve_type etc.
-    but Ocaml name resolution rules make that require a lot more moving
+(** TODO: this should rather be moved close to ground_type_impl/resolve_type
+    etc. but Ocaml name resolution rules make that require a lot more moving
     code around. **)
 and resolve_builtin_class cx = function
   | BoolT reason ->
@@ -3199,8 +3387,8 @@ let rec gc cx polarity = function
       let id = objtype.props_tmap in
       gc_state.objs <- gc_state.objs |> ISet.add id;
       iter_props cx id (fun _ -> gc_undirected cx);
-      gc_undirected cx (fst objtype.dict_t);
-      gc_undirected cx (snd objtype.dict_t);
+      gc_undirected cx objtype.dict_t.key;
+      gc_undirected cx objtype.dict_t.value;
       gc_undirected cx objtype.proto_t
 
   | MethodT(_, _, this, params, ret, _) ->
@@ -3327,8 +3515,8 @@ and gc_undirected cx = function
       let id = objtype.props_tmap in
       gc_state.objs <- gc_state.objs |> ISet.add id;
       iter_props cx id (fun _ -> gc_undirected cx);
-      gc_undirected cx (fst objtype.dict_t);
-      gc_undirected cx (snd objtype.dict_t);
+      gc_undirected cx objtype.dict_t.key;
+      gc_undirected cx objtype.dict_t.value;
       gc_undirected cx objtype.proto_t
 
   | MethodT(_, _, this, params, ret, _) ->

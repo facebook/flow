@@ -53,6 +53,9 @@ let parse_args () =
   ] in
   let usage = Printf.sprintf "Usage: %s single ROOT" Sys.argv.(0) in
   let args = ClientArgs.parse_without_command options usage "single" in
+  let opt_libs = match !lib with
+  | None -> []
+  | Some lib -> [Path.mk_path lib] in
   match args with
   | [filename] ->
     let options = {
@@ -69,7 +72,7 @@ let parse_args () =
       Types_js.opt_profile = !profile;
       Types_js.opt_strip_root = false;
       Types_js.opt_module = !module_;
-      Types_js.opt_lib = !lib;
+      Types_js.opt_libs;
     } in
     { filename; options; }
   | _ ->

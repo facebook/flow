@@ -86,6 +86,8 @@ FILES_TO_COPY=\
 #                                    Rules                                     #
 ################################################################################
 
+CC_FLAGS=-DNO_LZ4
+CC_OPTS=$(foreach flag, $(CC_FLAGS), -ccopt $(flag))
 INCLUDE_OPTS=$(foreach dir,$(MODULES),-I $(dir))
 LIB_OPTS=$(foreach lib,$(OCAML_LIBRARIES),-lib $(lib))
 NATIVE_LIB_OPTS=$(foreach lib, $(NATIVE_LIBRARIES),-cclib -l -cclib $(lib))
@@ -107,7 +109,8 @@ build-flow: build-flow-native-deps build-flowlib-archive
 	ocamlbuild  -no-links  $(INCLUDE_OPTS) $(LIB_OPTS) -lflags "$(LINKER_FLAGS)" src/flow.native
 
 build-flow-native-deps: build-flow-stubs
-	ocamlbuild  -cflags "$(EXTRA_INCLUDE_OPTS)" $(NATIVE_OBJECT_FILES)
+	ocamlbuild -ocamlc "ocamlc.opt $(EXTRA_INCLUDE_OPTS) $(CC_OPTS)"\
+		$(NATIVE_OBJECT_FILES)
 
 build-flow-stubs:
 	echo 'const char* const BuildInfo_kRevision = "${SHA}";' > hack/utils/get_build_id.gen.c

@@ -28,6 +28,7 @@ let file_input_get_content = function
 
 type command =
 | AUTOCOMPLETE of file_input
+| CHECK_FILE of file_input
 | ERROR_OUT_OF_DATE
 | FIND_MODULES of string list
 | GET_DEF of file_input * int * int (* filename, line, char *)

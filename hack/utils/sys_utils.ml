@@ -62,3 +62,8 @@ let exec_read cmd =
   assert (result <> "");
   assert (Unix.close_process_in ic = Unix.WEXITED 0);
   result
+
+let restart () =
+  let cmd = Sys.argv.(0) in
+  let argv = Sys.argv in
+  Unix.execv cmd argv

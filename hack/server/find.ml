@@ -48,7 +48,7 @@ let is_js_path path =
 (*****************************************************************************)
 
 let make_next_files_with_find filter ?(others=[]) root =
-  let path_to_argument p = Shell.escape_string_for_shell (Path.string_of_path p) in
+  let path_to_argument p = Shell.escape_spaces (Path.string_of_path p) in
   let paths = String.concat " " (List.map path_to_argument (root::others)) in
   let ic = Unix.open_process_in ("find "^paths) in
   let done_ = ref false in

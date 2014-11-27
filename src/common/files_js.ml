@@ -49,15 +49,16 @@ let get_flowlib_root () =
       flowlib_root := Some root;
       root
 
-let init = function
-  | None ->
-      lib_files := read_dir (get_flowlib_root () )
-  | Some path ->
-      lib_files := (read_dir (get_flowlib_root ())) @
-        let path = Path.(path |> mk_path |> string_of_path) in
-        if Sys.is_directory path
-        then (read_dir path)
-        else [path]
+let init =
+  let lib_to_files files lib =
+    let path = Path.string_of_path lib in
+    if Sys.is_directory path
+    then (read_dir path) @ files
+    else path :: files
+
+  in fun libs ->
+    let default_files = read_dir (get_flowlib_root ()) in
+    lib_files := List.fold_left lib_to_files default_files libs
 
 let is_lib_file p =
   List.mem p ((get_flowlib_root ()) :: !lib_files)
@@ -73,7 +74,9 @@ let match_regexp s r =
 
 let wanted config =
   let list = List.map snd config.FlowConfig.excludes in
-  fun file -> not (List.exists (match_regexp file) list)
+  fun file ->
+    not (List.exists (match_regexp file) list) &&
+      not (List.mem file !lib_files)
 
 let make_next_files root =
   let config = FlowConfig.get root in

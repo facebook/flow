@@ -12,10 +12,12 @@
 
 val flow_extensions: string list
 
+val is_directory: string -> bool
+
 val is_flow_file: string -> bool
 
 (* name of library directory defining builtins *)
-val init: string option -> unit
+val init: Path.path list -> unit
 
 val get_flowlib_root: unit -> string
 

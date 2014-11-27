@@ -12,6 +12,8 @@
 (* File parsing the arguments on the command line *)
 (*****************************************************************************)
 
+open Utils
+
 (*****************************************************************************)
 (* The options from the command line *)
 (*****************************************************************************)
@@ -92,8 +94,12 @@ let populate_options () =
     let arg_l       = Str.split (Str.regexp " +") s in
     match arg_l with
     | [] -> raise (Invalid_argument "--load needs at least one argument")
-    | filename :: to_recheck ->
+    | [filename] ->
+        load_save_opt := Some (Load { filename; to_recheck = [] })
+    | [filename; recheck_fn] ->
+        let to_recheck = cat recheck_fn |> Str.split (Str.regexp "\n") in
         load_save_opt := Some (Load { filename; to_recheck; })
+    | _ -> raise (Invalid_argument "--load takes at most 2 arguments")
   in
   let options =
     ["--debug"         , arg debug         , Messages.debug;

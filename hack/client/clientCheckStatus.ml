@@ -9,6 +9,7 @@
  *)
 open ClientEnv
 open ClientExceptions
+open Utils
 
 module C = Tty
 
@@ -52,15 +53,10 @@ let print_error_color e =
   List.iter (print_reason_color ~first:false ~code) (List.tl msg_list)
 
 let check_status connect (args:client_check_env) =
-  Sys.set_signal Sys.sigalrm (Sys.Signal_handle (fun _ -> raise Server_busy));
-  ignore(Unix.alarm 6);
-
   let name = "hh_server" in
-
   (* Check if a server is up *)
   if not (ClientUtils.server_exists args.root)
   then begin
-    ignore (Unix.alarm 0);
     if args.autostart
     then
       (* fork the server and raise an exception *)
@@ -71,10 +67,18 @@ let check_status connect (args:client_check_env) =
       };
     raise Server_missing
   end;
-  let ic, oc = connect args in
-  ServerMsg.cmd_to_channel oc (ServerMsg.STATUS args.root);
-  let response = ServerMsg.response_from_channel ic in
-  ignore (Unix.alarm 0);
+  let response = with_context
+    ~enter:(fun () ->
+      Sys.set_signal Sys.sigalrm (Sys.Signal_handle (fun _ ->
+        raise Server_busy));
+      ignore (Unix.alarm 6))
+    ~exit:(fun () ->
+      ignore (Unix.alarm 0);
+      Sys.set_signal Sys.sigalrm Sys.Signal_default)
+    ~do_:(fun () ->
+      let ic, oc = connect args in
+      ServerMsg.cmd_to_channel oc (ServerMsg.STATUS args.root);
+      ServerMsg.response_from_channel ic) in
   match response with
   | ServerMsg.SERVER_OUT_OF_DATE ->
     if args.autostart

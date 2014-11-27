@@ -35,7 +35,6 @@ module OptionParser(Config : CONFIG) : Server.OPTION_PARSER = struct
       let quiet = ref false in
       let profile = ref false in
       let strip_root = ref false in
-      let module_ = ref "node" in
       let lib = ref None in
       let variant_opts = match Config.mode with
       | Check -> [
@@ -59,11 +58,8 @@ module OptionParser(Config : CONFIG) : Server.OPTION_PARSER = struct
           " Outline an error path";
         "--strip-root", CommandUtils.arg_set_unit strip_root,
           " Print paths without the root";
-        "--module", CommandUtils.arg_set_enum
-            ["node";"haste"] module_,
-          " Specify a module system";
         "--lib", CommandUtils.arg_set_string lib,
-          " Specify a library path";
+          " Specify one or more library paths, comma separated";
       ]) in
       let cmdname = match Config.mode with
         | Check -> "check" | Normal -> "server" | Detach -> "start"
@@ -85,6 +81,19 @@ module OptionParser(Config : CONFIG) : Server.OPTION_PARSER = struct
       | [] -> CommandUtils.guess_root None
       | [x] -> CommandUtils.guess_root (Some x)
       | _ -> Arg.usage options usage; exit 2 in
+      let flowconfig = FlowConfig.get root in
+      let opt_module = FlowConfig.(match flowconfig.options.moduleSystem with
+      | Node -> "node"
+      | Haste -> "haste") in
+      let opt_libs = FlowConfig.(match !lib with
+      | None -> flowconfig.libs
+      | Some libs ->
+          let libs = libs
+          |> Str.split (Str.regexp ",")
+          |> List.map Path.mk_path in
+          libs @ flowconfig.libs
+      ) in
+
       (* hack opts and flow opts: latter extends the former *)
       let ret = ({
         ServerArgs.check_mode    = Config.(mode = Check);
@@ -108,8 +117,8 @@ module OptionParser(Config : CONFIG) : Server.OPTION_PARSER = struct
         Types_js.opt_quiet = !quiet || !json;
         Types_js.opt_profile = !profile;
         Types_js.opt_strip_root = !strip_root;
-        Types_js.opt_module = !module_;
-        Types_js.opt_lib = !lib;
+        Types_js.opt_module;
+        Types_js.opt_libs;
       }) in
       result := Some ret;
       ret

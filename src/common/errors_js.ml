@@ -129,6 +129,14 @@ let parse_error_to_flow_error (loc, err) =
 let parse_error_to_hack_error parse_err =
   flow_error_to_hack_error (parse_error_to_flow_error parse_err)
 
+let to_list errors =
+  let revlist =
+    ErrorSet.fold (fun flow_err ret ->
+        (flow_error_to_hack_error flow_err) :: ret
+      ) errors []
+  in
+  List.rev revlist
+
 (******* Error output functionality working on Hack's error *******)
 
 (* adapted from Errors.to_json to output multi-line errors properly *)

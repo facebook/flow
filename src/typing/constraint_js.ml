@@ -189,9 +189,15 @@ module Type = struct
 
   and objtype = {
     sealed: bool;
-    dict_t: t * t;
+    dict_t: dicttype;
     props_tmap: int;
-    proto_t: prototype
+    proto_t: prototype;
+  }
+
+  and dicttype = {
+    dict_name: string option;
+    key: t;
+    value: t;
   }
 
   and insttype = {
@@ -865,7 +871,20 @@ let name_suffix_of_t = function
   | OptionalT _ -> "?"
   | _ -> ""
 
-let rec pretty_type_printer cx in_union in_intersect is_param t =
+type enclosure_t =
+    EnclosureNone
+  | EnclosureUnion
+  | EnclosureIntersect
+  | EnclosureParam
+  | EnclosureMaybe
+  | EnclosureRet
+
+let parenthesize t_str enclosure triggers =
+  if List.mem enclosure triggers
+  then "(" ^ t_str ^ ")"
+  else t_str
+
+let rec pretty_type_printer cx enclosure t =
   match t with
   | BoundT typeparam -> typeparam.name
 
@@ -893,85 +912,61 @@ let rec pretty_type_printer cx in_union in_intersect is_param t =
       let type_s = spf "(%s) => %s"
         (List.map2 (fun n t ->
             let n = (name_prefix_of_t t) ^ n ^ (name_suffix_of_t t) in
-            n ^ ": " ^ (pretty_type_printer cx false false true t)
+            n ^
+            ": "
+            ^ (pretty_type_printer cx EnclosureParam t)
           ) pns ts
          |> String.concat ", "
         )
-        (pretty_type_printer cx false false false t) in
-      if in_union || in_intersect
-      then "(" ^ type_s ^ ")"
-      else type_s
+        (pretty_type_printer cx EnclosureNone t) in
+      parenthesize type_s enclosure [EnclosureUnion; EnclosureIntersect]
 
-  | ObjT (_, {props_tmap = flds; _}) ->
-      spf "{%s}"
-        (IMap.find_unsafe flds cx.property_maps
+  | ObjT (_, {props_tmap = flds; dict_t; _}) ->
+      let props =
+        IMap.find_unsafe flds cx.property_maps
          |> SMap.elements
          |> List.rev
          |> List.map (fun (x,t) ->
               x ^ ": " ^
-              (pretty_type_printer cx false false false t) ^
+              (pretty_type_printer cx EnclosureNone t) ^
               ";"
             )
          |> String.concat " "
-        )
+      in
+      let indexer =
+        (match dict_t.dict_name with
+        | Some name ->
+            let indexer_prefix =
+              if props <> ""
+              then " "
+              else ""
+            in
+            (spf "%s[%s: %s]: %s;"
+              indexer_prefix
+              name
+              (pretty_type_printer cx EnclosureNone dict_t.key)
+              (pretty_type_printer cx EnclosureNone dict_t.value)
+            )
+        | None -> "")
+      in
+      spf "{%s%s}" props indexer
 
   | ArrT (_, t, _) ->
-      spf "Array<%s>" (pretty_type_printer cx false false false t)
+      spf "Array<%s>" (pretty_type_printer cx EnclosureNone t)
 
   | InstanceT (reason,static,super,instance) ->
       desc_of_reason reason (* nominal type *)
 
   | TypeAppT (c,ts) ->
       spf "%s <%s>"
-        (pretty_type_printer cx false false false c)
+        (pretty_type_printer cx EnclosureNone c)
         (ts
-         |> List.map (pretty_type_printer cx false false false)
+         |> List.map (pretty_type_printer cx EnclosureNone)
          |> String.concat ", "
         )
 
   | MaybeT t ->
-      spf "?%s" (pretty_type_printer cx false false false t)
-
-(* The following types are not syntax-supported in all cases *)
-  | RestT t ->
-      let type_s =
-        spf "Array<%s>" (pretty_type_printer cx false false false t) in
-      if is_param
-      then type_s
-      else "..." ^ type_s
-
-  | OptionalT t ->
-      let type_s = pretty_type_printer cx false false false t in
-      if is_param
-      then type_s
-      else "=" ^ type_s
-
-  | IntersectionT (_, ts) ->
-      let type_s =
-        (ts
-          |> List.map (pretty_type_printer cx false true false)
-          |> String.concat " & "
-        ) in
-      if in_union
-      then "(" ^ type_s ^ ")"
-      else type_s
-
-  | UnionT (_, ts) ->
-      let type_s =
-        (ts
-          |> List.map (pretty_type_printer cx true false false)
-          |> String.concat " | "
-        ) in
-      if in_intersect
-      then "(" ^ type_s ^ ")"
-      else type_s
-
-(* The following types are not syntax-supported *)
-  | ClassT t ->
-      spf "[class: %s]" (pretty_type_printer cx false false false t)
-
-  | TypeT (_, t) ->
-      spf "[type: %s]" (pretty_type_printer cx false false false t)
+      spf "?%s" (pretty_type_printer cx EnclosureMaybe t)
 
   | PolyT (xs,t) ->
       spf "<%s> %s"
@@ -979,14 +974,50 @@ let rec pretty_type_printer cx in_union in_intersect is_param t =
          |> List.map (fun param -> param.name)
          |> String.concat ", "
         )
-        (pretty_type_printer cx false false false t)
+        (pretty_type_printer cx EnclosureNone t)
+
+  | IntersectionT (_, ts) ->
+      let type_s =
+        (ts
+          |> List.map (pretty_type_printer cx EnclosureIntersect)
+          |> String.concat " & "
+        ) in
+      parenthesize type_s enclosure [EnclosureUnion; EnclosureMaybe]
+
+  | UnionT (_, ts) ->
+      let type_s =
+        (ts
+          |> List.map (pretty_type_printer cx EnclosureUnion)
+          |> String.concat " | "
+        ) in
+      parenthesize type_s enclosure [EnclosureIntersect; EnclosureMaybe]
+
+(* The following types are not syntax-supported in all cases *)
+  | RestT t ->
+      let type_s =
+        spf "Array<%s>" (pretty_type_printer cx EnclosureNone t) in
+      if enclosure == EnclosureParam
+      then type_s
+      else "..." ^ type_s
+
+  | OptionalT t ->
+      let type_s = pretty_type_printer cx EnclosureNone t in
+      if enclosure == EnclosureParam
+      then type_s
+      else "=" ^ type_s
+
+(* The following types are not syntax-supported *)
+  | ClassT t ->
+      spf "[class: %s]" (pretty_type_printer cx EnclosureNone t)
+
+  | TypeT (_, t) ->
+      spf "[type: %s]" (pretty_type_printer cx EnclosureNone t)
 
   | t -> assert_false (string_of_ctor t)
 
-let string_of_t cx t = pretty_type_printer cx false false false t
+let string_of_t cx t = pretty_type_printer cx EnclosureNone t
 
-let rec is_printed_type_parsable_impl
-          cx in_function_args in_function_ret = function
+let rec is_printed_type_parsable_impl cx enclosure = function
   (* Base cases *)
   | BoundT _
   | NumT _
@@ -996,32 +1027,38 @@ let rec is_printed_type_parsable_impl
     ->
       true
 
-  | VoidT _ -> in_function_ret
+  | VoidT _ -> enclosure == EnclosureRet
 
   (* Composed types *)
   | ArrT (_, t, _)
   | MaybeT t
-  | TypeT (_, t)
     ->
-      is_printed_type_parsable_impl cx false false t
+      is_printed_type_parsable_impl cx EnclosureNone t
 
   | RestT t
   | OptionalT t
     ->
-      in_function_args &&
-      is_printed_type_parsable_impl cx false false t
+      (enclosure == EnclosureParam) &&
+      is_printed_type_parsable_impl cx EnclosureNone t
 
   | FunT (_, _, _, { params_tlist; return_t; _ }) ->
-      (is_printed_type_parsable_impl cx false true return_t) &&
+      (is_printed_type_parsable_impl cx EnclosureRet return_t) &&
       List.fold_left (fun acc t ->
-          (is_printed_type_parsable_impl cx true false t) && acc
+          (is_printed_type_parsable_impl cx EnclosureParam t) && acc
         ) true params_tlist
 
-  | ObjT (_, { props_tmap; _ }) ->
+  | ObjT (_, { props_tmap; dict_t; _ }) ->
+      let is_printable =
+        match dict_t.dict_name with
+        | Some _ ->
+            (is_printed_type_parsable_impl cx EnclosureNone dict_t.key) &&
+            (is_printed_type_parsable_impl cx EnclosureNone dict_t.value)
+        | None -> true
+      in
       let prop_map = IMap.find_unsafe props_tmap cx.property_maps in
       SMap.fold (fun _ t acc ->
-          (is_printed_type_parsable_impl cx false false t) && acc
-        ) prop_map true
+          (is_printed_type_parsable_impl cx EnclosureNone t) && acc
+        ) prop_map is_printable
 
   | InstanceT _ ->
       true
@@ -1030,14 +1067,17 @@ let rec is_printed_type_parsable_impl
   | UnionT (_, ts)
     ->
       List.fold_left (fun acc t ->
-          (is_printed_type_parsable_impl cx false false t) && acc
+          (is_printed_type_parsable_impl cx EnclosureNone t) && acc
         ) true ts
+
+  | PolyT (_, t) ->
+      is_printed_type_parsable_impl cx EnclosureNone t
 
   | _ ->
       false
 
 let is_printed_type_parsable cx t =
-  is_printed_type_parsable_impl cx false false t
+  is_printed_type_parsable_impl cx EnclosureNone t
 
 (* ------------- *)
 

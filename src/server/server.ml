@@ -112,8 +112,7 @@ struct
     let state = Autocomplete_js.autocomplete_set_hooks () in
     let results =
       try
-        let cx = (match Types_js.typecheck_contents
-                                 content path true with
+        let cx = (match Types_js.typecheck_contents content path with
           | Some cx, _ -> cx
           | _, errors  -> failwith "Couldn't parse file")
         in
@@ -129,6 +128,16 @@ struct
     Marshal.to_channel oc results [];
     flush oc
 
+  let check_file file_input oc =
+    let file = ServerProt.file_input_get_filename file_input in
+    let errors = match file_input with
+    | ServerProt.FileName _ -> failwith "Not implemented"
+    | ServerProt.FileContent (_, content) ->
+        (match Types_js.typecheck_contents content file with
+        | _, errors -> errors)
+    in
+    send_errorl (Errors_js.to_list errors) oc
+
   (* our infer implementation uses a different type for file_input, we stub
      the (unused) public interface to avoid issues *)
   let infer (file_input, line, col) oc =
@@ -142,8 +151,7 @@ struct
         | ServerProt.FileName file ->
             Types_js.merge_strict_file file
         | ServerProt.FileContent (_, content) ->
-            (match Types_js.typecheck_contents
-                            content file false with
+            (match Types_js.typecheck_contents content file with
             | Some cx, _ -> cx
             | _, errors  -> failwith "Couldn't parse file") in
       let file = cx.Constraint_js.file in
@@ -296,8 +304,7 @@ struct
     let state = GetDef_js.getdef_set_hooks pos in
     (try
       let content = ServerProt.file_input_get_content file_input in
-      let cx = match Types_js.typecheck_contents
-                       content file true with
+      let cx = match Types_js.typecheck_contents content file with
         | Some cx, _ -> cx
         | _, errors  -> failwith "Couldn't parse file"
       in
@@ -362,6 +369,8 @@ struct
     match msg with
     | ServerProt.AUTOCOMPLETE fn ->
         autocomplete fn oc
+    | ServerProt.CHECK_FILE fn ->
+        check_file fn oc
     | ServerProt.ERROR_OUT_OF_DATE ->
         incorrect_hash oc
     | ServerProt.FIND_MODULES module_names ->
@@ -426,10 +435,11 @@ struct
       let root = ServerArgs.root genv.ServerEnv.options in
       if SSet.mem (FlowConfig.fullpath root) diff_js
       then begin
-        (* TODO: Restart in a cross platform way *)
-        Printf.printf     "Status: Error\n";
-        Printf.printf     ".flowconfig modified. %s is out of date. Exiting.\n" name;
-        exit 4
+        Printf.printf "Status: Error\n%!";
+        Printf.printf
+          ".flowconfig modified. %s is out of date. Restarting.\n%!"
+          name;
+        Sys_utils.restart ()
       end;
       let options = OptionParser.get_flow_options () in
 

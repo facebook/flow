@@ -77,8 +77,8 @@ let rec main_ env retries =
   | ServerMsg.PONG -> (* successful case *)
     begin
       let exit_code = ref 0 in
-      EventLogger.client_begin_work (
-        ClientLogCommand.LCBuild env.root);
+      EventLogger.client_begin_work (ClientLogCommand.LCBuild
+        (env.root, env.build_opts.ServerMsg.incremental));
       try
         while true do
           let line:ServerMsg.build_progress = Marshal.from_channel ic in
@@ -87,7 +87,9 @@ let rec main_ env retries =
           | ServerMsg.BUILD_ERROR s -> exit_code := 2; print_endline s
         done
       with End_of_file ->
-        exit (!exit_code)
+        if !exit_code = 0
+        then ()
+        else exit (!exit_code)
     end
   | resp -> Printf.printf "Unexpected server response %s.\n%!"
     (ServerMsg.response_to_string resp)

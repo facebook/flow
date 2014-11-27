@@ -372,3 +372,11 @@ let fold_fun_list acc fl =
   List.fold_left (|>) acc fl
 
 let compose f g x = f (g x)
+
+let with_context ~enter ~exit ~do_ =
+  enter ();
+  let result = try do_ () with e ->
+    exit ();
+    raise e in
+  exit ();
+  result

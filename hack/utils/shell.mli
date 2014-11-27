@@ -9,3 +9,4 @@
  *)
 
 val escape_string_for_shell: string -> string
+val escape_spaces: string -> string

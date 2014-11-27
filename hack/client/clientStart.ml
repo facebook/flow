@@ -9,6 +9,7 @@
  *)
 
 open ClientExceptions
+open Utils
 
 let get_hhserver () =
   let server_next_to_client = (Filename.dirname Sys.argv.(0)) ^ "/hh_server" in
@@ -44,7 +45,10 @@ let start_server env =
       let cmd = Printf.sprintf "%s %s %s" cmd
         (Shell.escape_string_for_shell (Path.string_of_path env.root))
         (Shell.escape_string_for_shell Build_id.build_id_ohai) in
-      (try Utils.exec_read cmd with _ -> "")
+      (try Utils.exec_read cmd with e ->
+        prerr_endline (Printexc.to_string e);
+        Printexc.print_backtrace stderr;
+        "")
     | None -> "" in
   let hh_server = Printf.sprintf "%s -d %s %s"
     (get_hhserver())
@@ -52,9 +56,9 @@ let start_server env =
     server_options in
   Printf.fprintf stderr "Server launched with the following command:\n\t%s\n%!"
     hh_server;
-  match Unix.system hh_server with
+  let () = match Unix.system hh_server with
     | Unix.WEXITED 0 -> ()
-    | _ -> (Printf.fprintf stderr "Could not start hh_server!\n"; exit 77);
+    | _ -> Printf.fprintf stderr "Could not start hh_server!\n"; exit 77 in
   if env.wait then wait env;
   ()
 
@@ -63,12 +67,18 @@ let should_start env =
   then begin
     try
       (* Let's ping the server to make sure it's up and not out of date *)
-      Sys.set_signal Sys.sigalrm (Sys.Signal_handle (fun _ -> raise Server_busy));
-      ignore(Unix.alarm 6);
-      let ic, oc = ClientUtils.connect env.root in
-      ServerMsg.cmd_to_channel oc ServerMsg.PING;
-      let response = ServerMsg.response_from_channel ic in
-      ignore (Unix.alarm 0);
+      let response = with_context
+        ~enter:(fun () ->
+          Sys.set_signal Sys.sigalrm (Sys.Signal_handle (fun _ ->
+            raise Server_busy));
+          ignore (Unix.alarm 6))
+        ~exit:(fun () ->
+          ignore (Unix.alarm 0);
+          Sys.set_signal Sys.sigalrm Sys.Signal_default)
+        ~do_:(fun () ->
+          let ic, oc = ClientUtils.connect env.root in
+          ServerMsg.cmd_to_channel oc ServerMsg.PING;
+          ServerMsg.response_from_channel ic) in
       match response with
       | ServerMsg.PONG -> false
       | ServerMsg.SERVER_OUT_OF_DATE ->

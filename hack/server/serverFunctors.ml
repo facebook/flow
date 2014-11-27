@@ -130,8 +130,9 @@ end = struct
         Program.unmarshal chan;
         close_in_no_fail filename chan;
         SharedMem.load (filename^".sharedmem");
+        EventLogger.load_read_end filename;
         let to_recheck =
-          rev_rev_map (Relative_path.create Relative_path.Root) to_recheck
+          rev_rev_map (Relative_path.concat Relative_path.Root) to_recheck
         in
         let updates = List.fold_left
           (fun acc update -> Relative_path.Set.add update acc)
@@ -139,7 +140,9 @@ end = struct
           to_recheck in
         let updates =
           Relative_path.Set.filter (Program.filter_update genv env) updates in
-        Program.recheck genv env updates
+        let env = Program.recheck genv env updates in
+        EventLogger.load_recheck_end ();
+        env
 
   (* The main entry point of the daemon
   * the only trick to understand here, is that env.modified is the set
@@ -169,11 +172,7 @@ end = struct
     else
       let env = MainInit.go root program_init in
       let socket = Socket.init_unix_socket root in
-      let load_file = match ServerArgs.load_save_opt genv.options with
-        | Some (ServerArgs.Load { ServerArgs.filename; _ }) ->
-          Some (Filename.basename filename)
-        | _ -> None in
-      EventLogger.init_done load_file;
+      EventLogger.init_done ();
       serve genv env socket
 
   let get_log_file root =

@@ -14,3 +14,5 @@
 let escape_string_for_shell str =
   let escaped = Str.global_replace (Str.regexp "'") "'\"'\"'" str in
   "'" ^ escaped ^ "'"
+
+let escape_spaces str = Str.global_replace (Str.regexp " ") "\\ " str
