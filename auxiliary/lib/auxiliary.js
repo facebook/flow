@@ -1,4 +1,4 @@
-declare var XXX: string;
+declare var XXXX: string;
 declare module Foo {
     declare var x: string;
 }
