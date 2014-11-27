@@ -109,7 +109,7 @@ build-flow: build-flow-native-deps build-flowlib-archive
 	ocamlbuild  -no-links  $(INCLUDE_OPTS) $(LIB_OPTS) -lflags "$(LINKER_FLAGS)" src/flow.native
 
 build-flow-native-deps: build-flow-stubs
-	ocamlbuild -ocamlc "ocamlc.opt $(EXTRA_INCLUDE_OPTS) $(CC_OPTS)"\
+	ocamlbuild -ocamlc "ocamlopt $(EXTRA_INCLUDE_OPTS) $(CC_OPTS)"\
 		$(NATIVE_OBJECT_FILES)
 
 build-flow-stubs:
