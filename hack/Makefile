@@ -106,7 +106,7 @@ build-hack: build-hack-native-deps build-hhi-archive
 build-hack-native-deps: build-hack-stubs
 	# ocamlbuild before 4.00 does not pass thru cflags when building native C
 	# objects, because they're not important, right? So use this super ugly hack.
-	ocamlbuild -ocamlc "ocamlc.opt $(EXTRA_INCLUDE_OPTS) $(EXTRA_CC_OPTS)" $(NATIVE_OBJECT_FILES)
+	ocamlbuild -ocamlc "ocamlopt $(EXTRA_INCLUDE_OPTS) $(EXTRA_CC_OPTS)" $(NATIVE_OBJECT_FILES)
 
 build-hack-stubs:
 	echo 'const char* const BuildInfo_kRevision = "${SHA}";' > utils/get_build_id.gen.c
