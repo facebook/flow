@@ -1,3 +1,19 @@
+v0.1.2
+
+- [#78] Fallback to index.js if no main attribute in package.json
+- [#82] Added ES6 functions to the Math object
+- [#94] Start a node stdlib interface file
+- [#98] Declare optional parameters according to HTML standard
+- [#108] Add buffer class to node.js interface
+- [#115] Some more node std libs
+- The module system can now be specified in the .flowconfig file
+- Libraries can now be specified in the .flowconfig file
+- Multiple library paths can be specified
+- Added a command to typecheck a file passed on standard input (for IDEs)
+- Added HTMLInputElement to the standard library
+- Improvements to type printing in flow suggest and other commands
+- Fixes to various issues where parser errors were being suppressed
+
 v0.1.1
 
 - [Issue #4] Typecheck .jsx files
