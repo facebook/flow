@@ -35,6 +35,15 @@ Conversely, the `[ignore]` heading in a `.flowconfig` file tells `flow` to ignor
 > Also, relative paths that begin with `.` or `..` won't work, since the regular expression parser
 > would confuse them with wildcards.
 
+### `[libs]`
+
+The `[libs]` heading in a `.flowconfig` file tells `flow` to include the 
+specified [declarations](http://flowtype.org/docs/declarations.html) when type checking your code. Multiple libraries can be specified.
+
+### `[options]`
+
+The `[options]` heading in a `.flowconfig` file tells `flow` lets you specify the module system via `module.system=haste` or `module.system=node`.
+
 ### Example
 
 Say you have the following directory structure, with your `.flowconfig` in 
@@ -66,7 +75,10 @@ Here is an example of how you could use the `.flowconfig` directives.
 
 [ignore]
 .*/build/.*
+
+[libs]
+./lib
 ```
 
 Now `flow` will include a directory outside the `.flowconfig` path in its 
-check and ignore the `build` directory.
+check, ignore the `build` directory and use the declarations in  `lib`.
