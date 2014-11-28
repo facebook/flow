@@ -61,6 +61,23 @@ This type is incompatible with
   /tmp/flow/f.js:2:7,9: Foo
 ```
 
+## Reusable Object Types
+
+Object types can be made reusable through the use of
+[type aliases](type-aliases.html):
+
+{% highlight javascript linenos=table %}
+/* @flow */
+type MyType = {message: string; isAwesome: boolean};
+function sayHello(data: MyType) {
+  console.log(data.message);
+}
+
+var mySampleData: MyType = {message: 'Hello World', isAwesome: true};
+sayHello(mySampleData);
+sayHello({message: 'Hi', isAwesome: false});
+{% endhighlight %}
+
 ## Constructor Functions and Prototype Objects
 
 Another way of creating objects in JavaScript is by using `new` on
