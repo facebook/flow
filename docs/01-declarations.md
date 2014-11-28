@@ -61,6 +61,9 @@ To use code in declared files, tell the Flow server about it. Assume the code ab
 flow start --lib /lib/flow/
 ```
 
+It is also possible to specify multiple library paths, separated by comma.
+Furthermore, you can specify the libs in `.flowconfig` with the `[libs]` option.
+
 Now Flow knows to check `/lib/flow/` for any code that is not immediately 
 available in the file on which it is checking.
 
