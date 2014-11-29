@@ -3,3 +3,4 @@ _build
 .DS_STORE
 docs/_site/
 bin
+*.diff
