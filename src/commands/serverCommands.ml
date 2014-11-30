@@ -36,6 +36,7 @@ module OptionParser(Config : CONFIG) : Server.OPTION_PARSER = struct
       let profile = ref false in
       let strip_root = ref false in
       let lib = ref None in
+      let no_flowlib = ref false in
       let variant_opts = match Config.mode with
       | Check -> [
         "--json", CommandUtils.arg_set_unit json,
@@ -60,6 +61,8 @@ module OptionParser(Config : CONFIG) : Server.OPTION_PARSER = struct
           " Print paths without the root";
         "--lib", CommandUtils.arg_set_string lib,
           " Specify one or more library paths, comma separated";
+        "--no-flowlib", CommandUtils.arg_set_unit no_flowlib,
+          " Do not include embedded declarations";
       ]) in
       let cmdname = match Config.mode with
         | Check -> "check" | Normal -> "server" | Detach -> "start"
@@ -119,6 +122,7 @@ module OptionParser(Config : CONFIG) : Server.OPTION_PARSER = struct
         Types_js.opt_strip_root = !strip_root;
         Types_js.opt_module;
         Types_js.opt_libs;
+        Types_js.opt_no_flowlib = !no_flowlib;
       }) in
       result := Some ret;
       ret

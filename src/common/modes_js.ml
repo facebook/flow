@@ -19,6 +19,7 @@ type modes = {
   mutable show_all_errors: bool;
   mutable quiet : bool;
   mutable profile : bool;
+  mutable no_flowlib: bool;
 }
 
 let modes = {
@@ -33,6 +34,7 @@ let modes = {
   show_all_errors = false;
   quiet = true;
   profile = false;
+  no_flowlib = false;
 }
 
 let debug_string f = if modes.debug then prerr_endline (f ()) else ()

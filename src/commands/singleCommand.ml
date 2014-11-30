@@ -30,6 +30,7 @@ let parse_args () =
   let traces = ref false in
   let module_ = ref "node" in
   let lib = ref None in
+  let no_flowlib = ref false in
   let options = CommandUtils.sort_opts [
     "--all", CommandUtils.arg_set_unit all,
       " Typecheck all files, not just @flow";
@@ -50,6 +51,8 @@ let parse_args () =
       " Specify a module system";
     "--lib", CommandUtils.arg_set_string lib,
       " Specify a library path";
+    "--no-flowlib", CommandUtils.arg_set_unit no_flowlib,
+      " Do not include embedded declarations";
   ] in
   let usage = Printf.sprintf "Usage: %s single ROOT" Sys.argv.(0) in
   let args = ClientArgs.parse_without_command options usage "single" in
@@ -73,6 +76,7 @@ let parse_args () =
       Types_js.opt_strip_root = false;
       Types_js.opt_module = !module_;
       Types_js.opt_libs;
+      Types_js.opt_no_flowlib = !no_flowlib;
     } in
     { filename; options; }
   | _ ->
