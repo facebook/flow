@@ -194,7 +194,7 @@ and getting its properties via bracket notation (i.e. dynamic accessors),
 instead of dot notation. Flow infers a precise value type for the map: in
 other words, if you only write `number` values to a map, you will read `number`values back (rather than, say, `any`).
 
-Such a map can be given a type of the form `{ ..., [key:string]: number }` where `string` is the key type and `number` is the
+Such a map can be given a type of the form `{ [key:string]: number }` where `string` is the key type and `number` is the
 value type of the map.
 
 ### Maps as Records
