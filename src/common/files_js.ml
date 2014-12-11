@@ -11,6 +11,7 @@
 (************** file filter utils ***************)
 
 open Utils
+open Modes_js
 
 let flow_extensions = [
     ".js"  ;      (* Standard JavaScript files *)
@@ -57,7 +58,10 @@ let init =
     else path :: files
 
   in fun libs ->
-    let default_files = read_dir (get_flowlib_root ()) in
+    let default_files =
+      match Modes_js.modes.no_flowlib with
+      | true -> []
+      | false -> read_dir (get_flowlib_root ()) in
     lib_files := List.fold_left lib_to_files default_files libs
 
 let is_lib_file p =

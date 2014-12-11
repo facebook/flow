@@ -25,6 +25,7 @@ type options = {
   opt_strip_root : bool;
   opt_module: string;
   opt_libs: Path.path list;
+  opt_no_flowlib: bool;
 }
 
 (* incremental typecheck entry point *)

@@ -45,6 +45,7 @@ type options = {
   opt_strip_root : bool;
   opt_module: string;
   opt_libs: Path.path list;
+  opt_no_flowlib: bool;
 }
 
 let init_modes opts =
@@ -59,6 +60,7 @@ let init_modes opts =
   modes.show_all_errors <- opts.opt_show_all_errors;
   modes.quiet <- opts.opt_quiet;
   modes.profile <- opts.opt_profile;
+  modes.no_flowlib <- opts.opt_no_flowlib;
   (* TODO: confirm that only master uses strip_root, otherwise set it! *)
   Module_js.init (opts.opt_module);
   Files_js.init (opts.opt_libs)
