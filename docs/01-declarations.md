@@ -62,7 +62,7 @@ flow start --lib /lib/flow/
 ```
 
 It is also possible to specify multiple library paths, separated by commas.
-Furthermore, you can specify the libs in `.flowconfig` with the `[libs]` option. Within the specified folders, Flow will treat any file ending in `.js` as an interface, although the search is shallow (i.e., sub-directories are not supported).
+Furthermore, you can specify the libs in `.flowconfig` with the `[libs]` option. Within the specified folders, Flow will treat any file ending in `.js` as an interface.
 
 Now Flow knows to check `/lib/flow/` for any code that is not immediately 
 available in the file on which it is checking.
