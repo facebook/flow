@@ -29,11 +29,15 @@ let is_flow_file path =
   List.exists (Filename.check_suffix path) flow_extensions &&
   not (is_directory path)
 
-let read_dir dir =
+let rec read_dir dir =
   Sys.readdir dir
-  |> Array.to_list
-  |> List.filter (fun file -> Filename.check_suffix file ".js")
-  |> List.map (fun file -> Filename.concat dir file)
+    |> Array.to_list
+    |> List.map (fun file -> Filename.concat dir file)
+    |> List.map (fun file_or_dir -> match Sys.is_directory file_or_dir with
+                                    | true -> read_dir file_or_dir
+                                    | _ -> [file_or_dir])
+    |> List.concat
+    |> List.filter (fun file -> Filename.check_suffix file ".js")
 
 let lib_files = ref []
 
