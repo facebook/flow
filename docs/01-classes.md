@@ -16,8 +16,10 @@ A class may be defined using ES6 syntax extended with field type declarations.
 {% highlight javascript linenos=table %}
 /* @flow */
 class C {
-  x: number;
-  foo(x) { this.x = x; }
+  x: string;
+  y: number;
+  constructor(x) { this.x = x; }
+  foo(y) { this.y = y; }
   bar() { return this.x; }
 }
 
@@ -31,7 +33,7 @@ class D extends C {
 }
 {% endhighlight %}
 
-In the code above, `C` has a field `x` typed number, and a few methods; `D` overrides one of those methods, and also has a static method.
+In the code above, `C` has two fields `x` typed string and `y` typed number, a constructor, and a few methods; `D` overrides one of those methods, and also has a static method.
 
 Just like other languages with classes, Flow enforces that the type of an
 overridden method in a superclass (e.g., `bar` in `C`) matches the type of an
