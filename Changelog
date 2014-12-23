@@ -1,3 +1,43 @@
+v0.1.3
+
+- Handle strict undefined checks.
+- Add theoretical support to print tuple types properly.
+- Relax the callback type in Array.prototype.forEach
+- Add basic autocomplete support for React classes.
+- [Hack] Kill shell.ml entirely.
+- Handle spread attributes in JSX syntax.
+- [Parser] Allow most keywords as types
+- Add Array.from to lib file
+- [#161]: String literal keys for object type aliases
+- Generalize mock module handling under Haste a bit.
+- Improve autocomplete type printing
+- misc cleanup
+- [Parser] Improve type keywords
+- [Parser] Stop vendoring in ast-types
+- Add an ocaml wrapper for find path1 ... pathN -name pattern
+- Restart if a known lib file changes
+- Add ProgressEvent definition and update two onprogress types
+- [Hack] Add client time to server start time.
+- Improve control flow type refinements
+- [Hack] Reduce dependencies on ParserHeap.
+- Exit server on config change for now rather than restart to avoid some bugs
+- [Parser] ArrowFunction object & array patterns must be wrapped with parens
+- Properly functorize logging code too
+- [Hack] Make GC parameters configurable.
+- Refinements on method calls
+- [Hack] Log whether we are loading from a saved state in INIT_END.
+- [Hack] Improve error handling for saved states.
+- [PR #137] from sverrejoh/master
+- [PR #150] from unknownexception/fix/dom.js
+- [PR #146] from k-bx/master
+- [PR #151] from unknownexception/feature/no_flowlib
+- [PR #144] from rsolomo/node-assert
+- [PR #191] from Shraymonks/HTMLBaseElement
+- [PR #145] from rsolomo/node-util
+- [PR #192] from Shraymonks/HTMLScriptElement
+- Add ES6 String.prototype.contains
+- Add Promise.prototype.done() to Flow lib
+
 v0.1.2
 
 - [#78] Fallback to index.js if no main attribute in package.json
