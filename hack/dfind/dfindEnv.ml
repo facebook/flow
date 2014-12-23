@@ -90,25 +90,6 @@ type t = {
   }
 
 (*****************************************************************************)
-(* The environment variable containing what we want to skip *)
-(*****************************************************************************)
-
-let skip_var = "DFIND_SKIP"
-
-(* The files we want to skip *)
-let get_skip_var log =
-  try
-    let skip_pattern = Sys.getenv skip_var in
-    match skip_pattern with
-    | "NOTHING" -> None
-    | _ ->
-        (* It could be useful to log what we are skipping *)
-        Printf.fprintf log "%s = \"%s\"\n" skip_var skip_pattern;
-        flush log;
-        Some (Str.regexp skip_pattern)
-  with Not_found -> Some (Str.regexp ".*/wiki/images/.*")
-
-(*****************************************************************************)
 (* Functions used to update handles *)
 (*****************************************************************************)
 
@@ -147,7 +128,7 @@ let get_clients env = env.clientl
 (*****************************************************************************)
 
 let make root =
-  let user = Sys.getenv "USER" in
+  let user = Sys_utils.logname in
   let log = open_out ("/tmp/dfind_"^user^".log") in
   let fsnotify = Fsnotify.init root log in
   {

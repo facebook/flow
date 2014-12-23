@@ -1,0 +1,6 @@
+
+libtest.js:2:5,7: number
+This type is incompatible with
+  [LIB] libB.js:1:25,30: string
+
+Found 1 error

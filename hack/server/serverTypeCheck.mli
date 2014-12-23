@@ -14,3 +14,11 @@ val type_check: ServerEnv.genv -> ServerEnv.env -> ServerEnv.env
 val check: ServerEnv.genv -> ServerEnv.env -> ServerEnv.env
 
 val hook_after_parsing: (ServerEnv.genv -> ServerEnv.env -> unit) ref
+
+(****************************************************************************)
+(* Debugging: Declared here to stop ocamlc yelling at us for unused defs *)
+(****************************************************************************)
+
+val print_defs: string -> ('a * string) list -> unit
+val print_fast_pos: (('a * string) list * ('b * string) list) Utils.SMap.t -> unit
+val print_fast: (Utils.SSet.t * Utils.SSet.t) Utils.SMap.t -> unit

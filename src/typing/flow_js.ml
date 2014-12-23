@@ -543,6 +543,18 @@ and ground_type_impl cx ids t = match t with
   | UnionT (_, ts) ->
       create_union (List.map (ground_type_impl cx ids) ts)
 
+  | LowerBoundT t ->
+      LowerBoundT (ground_type_impl cx ids t)
+
+  | UpperBoundT t ->
+      UpperBoundT (ground_type_impl cx ids t)
+
+  | RecordT (_, t) ->
+      RecordT (
+        reason_of_string "record",
+        ground_type_impl cx ids t
+      )
+
   | _ -> assert false (** TODO **)
 
 and lookup_type_ cx ids id =
@@ -630,6 +642,16 @@ let rec normalize_type cx t =
   | CustomClassT (n, ts, t) ->
       CustomClassT (n, List.map (normalize_type cx) ts, normalize_type cx t)
 
+  | LowerBoundT t ->
+      LowerBoundT (normalize_type cx t)
+
+  | UpperBoundT t ->
+      UpperBoundT (normalize_type cx t)
+
+  | RecordT (r, t) ->
+      RecordT (r, normalize_type cx t)
+
+  (* TODO: Normalize all types? *)
   | t -> t
 
 (* TODO: This is not an exhaustive list of normalization steps for unions.
@@ -782,6 +804,15 @@ let rec printify_type cx t =
 
   | CustomClassT (n, ts, t) ->
       CustomClassT (n, List.map (printify_type cx) ts, printify_type cx t)
+
+  | LowerBoundT t ->
+      LowerBoundT (printify_type cx t)
+
+  | UpperBoundT t ->
+      UpperBoundT (printify_type cx t)
+
+  | RecordT (r, t) ->
+      RecordT (r, printify_type cx t)
 
   | t -> t
 
@@ -2265,7 +2296,7 @@ let rec flow cx (l,u) trace =
 
     | (MixedT reason, LookupT (reason_op,Some reason_o,x,_)) ->
 
-      if (Files_js.is_lib_file (reason |> pos_of_reason |> Pos.filename |>
+      if (Files_js.is_lib_file_or_flowlib_root (reason |> pos_of_reason |> Pos.filename |>
           Relative_path.to_absolute))
       then
         let msg =
@@ -3753,6 +3784,7 @@ let rec extract_members cx this_t =
       let members = IMap.find_unsafe flds cx.property_maps in
       SMap.union prot_members members
   | TypeAppT (c, ts) ->
+      let c = resolve_type cx c in
       let inst_t = instantiate_poly_t cx c ts in
       let inst_t = instantiate_type inst_t in
       extract_members cx inst_t

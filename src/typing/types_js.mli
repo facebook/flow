@@ -28,6 +28,8 @@ type options = {
   opt_no_flowlib: bool;
 }
 
+val init_modes: options -> unit
+
 (* incremental typecheck entry point *)
 val recheck: ServerEnv.genv -> ServerEnv.env -> SSet.t -> options ->
   ServerEnv.env

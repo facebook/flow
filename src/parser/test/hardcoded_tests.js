@@ -12,6 +12,10 @@ module.exports = {
         },
       ]
     },
+    'function foo(a: function, b: switch){}': {
+      'body.0.params.0.typeAnnotation.typeAnnotation.id.name': 'function',
+      'body.0.params.1.typeAnnotation.typeAnnotation.id.name': 'switch',
+    },
     'function foo(numVal: number, strVal: string){}': {
       'body.0': {
         'params': {
@@ -759,7 +763,9 @@ module.exports = {
           },
         ],
       },
-    }
+    },
+    'var a: (number: any, void: any, string: any, any: any, type: any, static: any) => any;': {},
+    'var a: {[type: any]: any}': {},
   },
   'Tuples': {
     'var a : [] = [];': {
@@ -1268,6 +1274,20 @@ module.exports = {
         }
       ]
     },
+    "[x, y] => 123": {
+      'errors': {
+        '0': {
+          'message': 'Unexpected token =>',
+        }
+      },
+    },
+    "({a: x, b: y} => 123)": {
+      'errors': {
+        '0': {
+          'message': 'Unexpected token =>',
+        }
+      },
+    },
     'try {} catch (-x) {} ': {
       'errors': {
         '0': {
@@ -1471,6 +1491,43 @@ module.exports = {
       }
     }
   },
+  'Arrow Function': {
+    '(x => 123)': {
+      'body.0.expression.params': [
+        {
+          'type': 'Identifier',
+        }
+      ]
+    },
+    '((x) => 123)': {
+      'body.0.expression.params': [
+        {
+          'type': 'Identifier',
+        }
+      ]
+    },
+    '(([x]) => 123)': {
+      'body.0.expression.params': [
+        {
+          'type': 'ArrayPattern',
+        }
+      ]
+    },
+    '(({x}) => 123)': {
+      'body.0.expression.params': [
+        {
+          'type': 'ObjectPattern',
+        }
+      ]
+    },
+    '(({x: y}) => 123)': {
+      'body.0.expression.params': [
+        {
+          'type': 'ObjectPattern',
+        }
+      ]
+    },
+  },
   'Declare Module': {
     'declare module A {}': {
       'body.0': {
@@ -1582,5 +1639,17 @@ module.exports = {
         '0.message': 'Unexpected token }',
       }
     },
-  }
+  },
+  'Invalid type keywords': {
+    'type string = number;': {
+      'errors': {
+        '0.message': 'Unexpected token string',
+      }
+    },
+    'type foo<number> = number': {
+      'errors': {
+        '0.message': 'Unexpected token number',
+      }
+    },
+  },
 };

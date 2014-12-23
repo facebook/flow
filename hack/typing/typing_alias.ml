@@ -59,10 +59,10 @@ module Dep = struct
     | Some kl -> kl
 
   let visitor local =
-    object(this)
+    object
       inherit [string list SMap.t] NastVisitor.nast_visitor as parent
 
-      method on_expr acc (_, e_ as e) =
+      method! on_expr acc (_, e_ as e) =
         match e_ with
         | Lvar (_, x) ->
             add local (Ident.to_string x) acc
@@ -106,7 +106,7 @@ end = struct
     object(this)
       inherit [string list SMap.t] NastVisitor.nast_visitor as parent
 
-      method on_expr acc (_, e_ as e) =
+      method! on_expr acc (_, e_ as e) =
         match e_ with
         | Binop (Ast.Eq _, (p, List el), x2) ->
             List.fold_left begin fun acc e ->
@@ -143,7 +143,7 @@ module Depth: sig
   val get: AliasMap.t -> int
 end = struct
 
-  let rec fold aliases visited =
+  let rec fold aliases =
     SMap.fold begin fun k _ (visited, current_max) ->
       let visited, n = key aliases visited k in
       visited, max n current_max
@@ -159,7 +159,7 @@ end = struct
       let my_depth = 1 + List.fold_left max 0 depth_l in
       SMap.add k my_depth visited, my_depth
 
-  let get aliases = snd (fold aliases SMap.empty)
+  let get aliases = snd (fold aliases)
 
 end
 

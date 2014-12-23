@@ -136,6 +136,7 @@ module ElaborateDefs = struct
 
   let class_def nsenv = function
     | ClassUse h -> ClassUse (hint nsenv h)
+    | XhpAttrUse h -> XhpAttrUse (hint nsenv h)
     | other -> other
 
   let rec def nsenv = function

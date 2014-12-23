@@ -70,7 +70,7 @@ end = struct
       if command = DEFAULT
       then "default"
       else String.lowercase Sys.argv.(1) in
-    FlowEventLogger.init command_string;
+    FlowEventLogger.init_flow_command command_string;
     match command with
     | AUTOCOMPLETE   -> (module AutocompleteCommand)
     | CHECK          -> (module ServerCommands.Check)

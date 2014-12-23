@@ -48,7 +48,7 @@ let rec is_option env ty =
       List.exists (is_option env) tyl
   | _, (Tany | Tmixed | Tarray (_, _) | Tprim _ | Tgeneric (_, _) | Tvar _
     | Tabstract (_, _, _) | Tapply (_, _) | Ttuple _ | Tanon (_, _) | Tfun _
-    | Tobject | Tshape _) -> false
+    | Tobject | Tshape _ | Taccess (_, _, _)) -> false
 
 (*****************************************************************************)
 (* Unification error *)
@@ -62,7 +62,9 @@ let uerror r1 ty1 r2 ty2 =
 
 let process_static_find_ref cid mid =
   match cid with
-  | Nast.CI c -> Find_refs.process_class_ref (fst c) (snd c) (Some (snd mid))
+  | Nast.CI c ->
+    Typing_hooks.dispatch_class_id_hook c (Some mid);
+    Find_refs.process_class_ref (fst c) (snd c) (Some (snd mid))
   | _ -> ()
 
 (*****************************************************************************)
@@ -199,7 +201,7 @@ let is_array_as_tuple env ty =
       )
   | _, (Tany | Tmixed | Tarray (_, _) | Tprim _ | Tgeneric (_, _) | Toption _
     | Tvar _ | Tabstract (_, _, _) | Tapply (_, _) | Ttuple _ | Tanon (_, _)
-    | Tfun _ | Tunresolved _ | Tobject | Tshape _) -> false
+    | Tfun _ | Tunresolved _ | Tobject | Tshape _ | Taccess (_, _, _)) -> false
 
 (*****************************************************************************)
 (* Adds a new field to all the shapes found in a given type.

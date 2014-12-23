@@ -7,7 +7,6 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  *)
-open Utils
 
 (*****************************************************************************)
 (* Find local references mode *)
@@ -42,26 +41,7 @@ let is_find_method_target pos =
       let l, start, end_ = Pos.info_pos pos in
       l = line && start <= char_pos && char_pos - 1 <= end_
 
-(*****************************************************************************)
-(* Find method references mode *)
-(*****************************************************************************)
-
-let (find_refs_class_name: (SSet.t option) ref) = ref None
-let (find_refs_method_name: string option ref) = ref None
-let find_refs_results = ref Pos.Map.empty
-
-let process_class_ref p class_name called_method_opt =
-  (match !find_refs_class_name, !find_refs_method_name with
-   | Some c_names, None ->
-       if (SSet.mem class_name c_names)
-       then begin
-         let class_name = match called_method_opt with
-         | None -> class_name
-         | Some n -> class_name^"::"^n in
-         find_refs_results := Pos.Map.add p class_name !find_refs_results
-       end;
-      ()
-  | _ -> ());
+let process_class_ref p class_name _ =
   if is_find_method_target p
   then begin
     find_method_at_cursor_result := Some { name  = class_name;
@@ -71,19 +51,6 @@ let process_class_ref p class_name called_method_opt =
   end
 
 let process_find_refs class_name method_name p =
-  (match (!find_refs_class_name, !find_refs_method_name, class_name) with
-   | (Some c_names, Some m_name, Some class_name) ->
-       if m_name = method_name && (SSet.mem class_name c_names) then
-         find_refs_results := Pos.Map.add p (class_name ^ "::" ^ method_name)
-             !find_refs_results;
-       ()
-   | (None, Some m_name, None) ->
-       if m_name = method_name then
-         find_refs_results := Pos.Map.add p method_name
-             !find_refs_results;
-       ()
-   | _ -> ()
-  );
   if is_find_method_target p
   then begin
     match class_name with
@@ -99,7 +66,7 @@ let process_find_refs class_name method_name p =
                                                pos   = p
                                              }
   end
-  
+
 let process_var_ref p name =
   if is_find_method_target p
   then begin

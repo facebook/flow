@@ -99,8 +99,6 @@ let rec add_file links env path =
   | false when not (SSet.mem path env.new_files) -> add_new_file links env path
   | _ -> return ()
 
-and ignore_add_watch links env path = ignore (add_watch links env path)
-
 and add_watch links env path =
   call (add_fsnotify_watch env) path >>= function
   | None -> return ()

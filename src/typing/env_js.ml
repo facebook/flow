@@ -20,12 +20,12 @@ open Type
 
 (* helpers *)
 
-(* prop lookups encoding *)
-let prop_lookup_name oname pname =
-  "$PGET " ^ oname ^ " " ^ pname
+(* refinement keys *)
+let refinement_key names =
+  "$REFI " ^ (String.concat "." names)
 
-let is_prop_lookup name =
-    (String.length name) >= 5 && (String.sub name 0 5) = "$PGET"
+let is_refinement name =
+  (String.length name) >= 5 && (String.sub name 0 5) = "$REFI"
 
 (****************)
 (* Environments *)
@@ -156,15 +156,15 @@ let var_ref cx x reason =
   let p = pos_of_reason reason in
   mod_reason_of_t (repos_reason p) t
 
-let get_lookup_refinement cx x p r =
-  let name = prop_lookup_name x p in
+let get_refinement cx key r =
   let block = peek_env () in
-  match exists_block name block with
+  match exists_block key block with
   | Some { specific; _ } ->
-      let p = pos_of_reason r in
-      let t = mod_reason_of_t (repos_reason p) specific in
+      let pos = pos_of_reason r in
+      let t = mod_reason_of_t (repos_reason pos) specific in
       Some t
-  | None -> None
+  | None ->
+      None
 
 let set_var cx x s reason =
   changeset := !changeset |> SSet.add x;
@@ -272,7 +272,7 @@ let havoc_env2 xs =
 let havoc_heap_refinements () =
   List.iter (fun block ->
     block := SMap.mapi (fun x ({general;def_loc;_} as entry) ->
-      if is_prop_lookup x
+      if is_refinement x
       then create_env_entry general general def_loc
       else entry
     ) !block
@@ -292,7 +292,7 @@ let clear_env reason =
 
 let refine_with_pred cx reason pred xtypes =
   SMap.iter (fun x predx ->
-    (if is_prop_lookup x then
+    (if is_refinement x then
       let t = SMap.find_unsafe x xtypes in
       init_env cx x (create_env_entry t t None));
     let (is_global,tx) = get_var_ cx x

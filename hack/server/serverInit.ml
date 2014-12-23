@@ -12,7 +12,8 @@ open ServerEnv
 
 (* Initialization of the server *)
 let init_hack genv env get_next =
-  let t = Unix.gettimeofday() in
+  let start_t = Unix.gettimeofday() in
+  let t = start_t in
 
   let files_info, errorl1, failed1 =
     Parsing_service.go genv.workers ~get_next in
@@ -55,6 +56,8 @@ let init_hack genv env get_next =
 
   let t2 = Unix.gettimeofday() in
   Printf.printf "Type-check: %f\n%!" (t2 -. t);
+
+  Printf.printf "Total: %f\n%!" (t2 -. start_t);
 
   let failed =
     List.fold_right Relative_path.Set.union

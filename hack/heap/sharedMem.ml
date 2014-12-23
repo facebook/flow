@@ -136,7 +136,6 @@ end
 (*****************************************************************************)
 module Raw (Key: Key) (Value: sig type t end) = struct
 
-  external hh_shared_init : unit -> unit               = "hh_shared_init"
   external hh_add         : Key.md5 -> Value.t -> unit = "hh_add"
   external hh_mem         : Key.md5 -> bool            = "hh_mem"
   external hh_get         : Key.md5 -> Value.t         = "hh_get"
@@ -152,7 +151,7 @@ end
  * The "old" representation is the value that was bound to that key in the
  * last round of type-checking.
  * Despite the fact that the same storage is used under the hood, it's good
- * to seperate the two interfaces to make sure we never mix old and new
+ * to separate the two interfaces to make sure we never mix old and new
  * values.
  *)
 (*****************************************************************************)
@@ -216,7 +215,6 @@ end
 module Old : functor (Key : Key) -> functor (Value : Value.Type) -> sig
 
   val get         : Key.old -> Value.t option
-  val find_unsafe : Key.old -> Value.t
   val remove      : Key.old -> unit
   val mem         : Key.old -> bool
 
@@ -241,11 +239,6 @@ end = functor (Key : Key) -> functor (Value: Value.Type) -> struct
   let remove key = 
     if mem key
     then Raw.hh_remove (Key.md5_old key)
-
-  let find_unsafe key = 
-    match get key with 
-    | None -> raise Not_found
-    | Some x -> x
 
   let revive key =
     if mem key
@@ -388,13 +381,12 @@ end
 (*****************************************************************************)
       
 module type CacheType = sig
+  type key
   type value
-  module Key : Key
 
-  val add: Key.t -> value -> unit
-  val get: Key.t -> value option
-  val find: Key.t -> value
-  val remove: Key.t -> unit
+  val add: key -> value -> unit
+  val get: key -> value option
+  val remove: key -> unit
   val clear: unit -> unit
 end
 
@@ -402,7 +394,8 @@ end
 (* Cache keeping the objects the most frequently used. *)
 (*****************************************************************************)
       
-module FreqCache (Key : Key) (Config:ConfigType) = struct
+module FreqCache (Key : Key) (Config:ConfigType) :
+  CacheType with type key := Key.t and type value := Config.value = struct
 
   type value = Config.value
 
@@ -473,11 +466,9 @@ end
 (* An ordered cache keeps the most recently used objects *)
 (*****************************************************************************)
 
-module OrderedCache (Key : Key) (Config:ConfigType) = struct
-  
-  type value = Config.value
+module OrderedCache (Key : Key) (Config:ConfigType):
+  CacheType with type key := Key.t and type value := Config.value = struct
 
-  let iorder = ref 0
   let (cache: (Key.t, Config.value) Hashtbl.t) =
     Hashtbl.create Config.capacity
 
@@ -532,7 +523,6 @@ let invalidate_caches () =
  * much time. The caches keep a deserialized version of the types.
  *)
 (*****************************************************************************)        
-
 module WithCache (UserKeyType : UserKeyType) (Value:Value.Type) = struct
 
   type key = UserKeyType.t
@@ -563,10 +553,6 @@ module WithCache (UserKeyType : UserKeyType) (Value:Value.Type) = struct
     L2.add x y;
     New.add x y
 
-  let force_get = function
-    | Some x -> x
-    | None -> raise Not_found
-        
   let get x = 
     let x = Key.make Value.prefix x in
     match L1.get x with

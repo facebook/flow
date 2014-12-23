@@ -44,10 +44,7 @@ val already_bound : Pos.t -> string -> unit
 val unexpected_typedef : Pos.t -> Pos.t -> unit
 val fd_name_already_bound : Pos.t -> unit
 val primitive_toplevel : Pos.t -> unit
-val integer_instead_of_int : Pos.t -> unit
-val boolean_instead_of_bool : Pos.t -> unit
-val double_instead_of_float : Pos.t -> unit
-val real_instead_of_float : Pos.t -> unit
+val primitive_invalid_alias : Pos.t -> string -> string -> unit
 val shape_typehint : Pos.t -> unit
 val dynamic_new_in_strict_mode : Pos.t -> unit
 val void_cast: Pos.t -> unit
@@ -125,19 +122,15 @@ val parent_outside_class : Pos.t -> unit
 val parent_abstract_call : string -> Pos.t -> Pos.t -> unit
 val isset_empty_unset_in_strict : Pos.t -> string -> unit
 val array_get_arity : Pos.t -> string -> Pos.t -> unit
-val static_overflow : Pos.t -> unit
 val typing_error : Pos.t -> string -> unit
 val typing_error_l : error -> unit
 val undefined_field : Pos.t -> string -> unit
 val array_access : Pos.t -> Pos.t -> string -> unit
 val array_append : Pos.t -> Pos.t -> string -> unit
 val const_mutation : Pos.t -> Pos.t -> string -> unit
-val negative_tuple_index : Pos.t -> unit
-val tuple_index_too_large : Pos.t -> unit
-val expected_static_int : Pos.t -> unit
 val expected_class : Pos.t -> unit
 val smember_not_found :
-  [< `class_constant | `class_variable | `static_method ] ->
+  [< `class_constant | `class_variable | `static_method | `class_typeconst] ->
   Pos.t ->
   Pos.t * string ->
   string ->
@@ -252,6 +245,10 @@ val trivial_strict_eq : Pos.t -> string -> (Pos.t * string) list
   -> (Pos.t * string) list -> Pos.t list -> Pos.t list -> unit
 val void_usage : Pos.t -> (Pos.t * string) list -> unit
 val generic_at_runtime : Pos.t -> unit
+val not_abstract_without_typeconst : (Pos.t * string) -> unit
+val typeconst_depends_on_external_tparam : Pos.t -> Pos.t -> string -> unit
+val typeconst_assigned_tparam : Pos.t -> string -> unit
+val invalid_type_access_root : (Pos.t * string) -> unit
 
 val to_json : Pos.absolute error_ -> Hh_json.json
 val to_string : Pos.absolute error_ -> string

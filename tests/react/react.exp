@@ -1,0 +1,6 @@
+
+jsx_spread.js:9:19,20: number
+This type is incompatible with
+  jsx_spread.js:5:10,31: string
+
+Found 1 error

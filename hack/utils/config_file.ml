@@ -29,6 +29,6 @@ let parse fn =
     else
       let parts = Str.bounded_split (Str.regexp "=") line 2 in
       match parts with
-      | [k; v] -> SMap.add (trim k) v acc
+      | [k; v] -> SMap.add (trim k) (trim v) acc
       | _ -> raise (Failure ("failed to parse config file "^fn));
   ) SMap.empty lines

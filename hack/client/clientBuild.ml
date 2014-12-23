@@ -19,6 +19,8 @@ type env = {
   server_options_cmd : string option;
 }
 
+let should_retry env tries = env.build_opts.ServerMsg.wait || tries > 0
+
 let rec connect env retries =
   try
     let result = ClientUtils.connect env.root in
@@ -27,22 +29,25 @@ let rec connect env retries =
   with
   | ClientExceptions.Server_cant_connect ->
     Printf.printf "Can't connect to server yet, retrying.\n%!";
-    if retries > 0
+    if should_retry env retries
     then begin
       Unix.sleep 1;
       connect env (retries - 1)
     end
     else exit 2
   | ClientExceptions.Server_initializing ->
+     let wait_msg = if env.build_opts.ServerMsg.wait
+                    then Printf.sprintf "will wait forever due to --wait option, have waited %d seconds" (num_build_retries - retries)
+                    else Printf.sprintf "will wait %d more seconds" retries in
     Printf.printf
       (* This extra space before the \r is here to erase the spinner
          when the length of this line decreases (but by at most 1!) as
          it ticks down. We don't want to rely on Tty.print_clear_line
          --- it would emit newlines when stdout is not a tty, and
          obviate the effect of the \r. *)
-      "Hack server still initializing. (will wait %d more seconds) %s \r%!"
-      retries (Tty.spinner());
-    if retries > 0
+      "Hack server still initializing. (%s) %s \r%!"
+      wait_msg (Tty.spinner());
+    if should_retry env retries
     then begin
       Unix.sleep 1;
       connect env (retries - 1)

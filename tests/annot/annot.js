@@ -22,3 +22,6 @@ var array_of_nullable: (?number)[] = [null, 3];
 
 var array_of_tuple: [number, string][] = [[0, "foo"], [1, "bar"]];
 var array_of_tuple_parens: ([number, string])[] = array_of_tuple;
+
+type ObjType = { 'bar-foo': string; 'foo-bar': number; };
+var test_obj: ObjType = { 'bar-foo': '23' };

@@ -213,6 +213,58 @@ let pattern_decl cx t =
     Env_js.init_env cx name (create_env_entry t t (Some loc))
   )
 
+(* type refinements on expressions - wraps Env_js API *)
+module Refinement : sig
+
+  (* if expression is syntactically eligible for type refinement,
+     return Some (access key), otherwise None.
+     Eligible expressions are simple ids and chains of property lookups
+     from an id base *)
+  val key : Ast.Expression.t -> string option
+
+  (* get type refinement for expression, if it exists *)
+  val get : context -> Ast.Expression.t -> reason -> Type.t option
+
+end = struct
+  type expr = Id of string | Chain of string list | Other
+
+  (* get id or chain of property names from conforming expressions *)
+  let rec prop_chain = Ast.Expression.(function
+  | _, This ->
+      (* treat this as a property chain, in terms of refinement lifetime *)
+      Chain [internal_name "this"]
+  | _, Identifier (_, { Ast.Identifier.name; _ })
+      when name != "undefined" ->
+      (* treat super as a property chain, in terms of refinement lifetime *)
+      (match name with
+        | "super" -> Chain [internal_name "super"]
+        | _ -> Id name
+      )
+  | _, Member { Member._object;
+     property = Member.PropertyIdentifier (_ , { Ast.Identifier.name; _ });
+     _ } -> (
+      match prop_chain _object with
+        | Id base -> Chain [name; base]
+        | Chain names -> Chain (name :: names)
+        | Other -> Other
+      )
+  | _ ->
+      Other
+  )
+
+  let key e =
+    match prop_chain e with
+      | Id name -> Some name
+      | Chain names -> Some (Env_js.refinement_key (List.rev names))
+      | Other -> None
+
+  let get cx e r =
+    match key e with
+    | Some k -> Env_js.get_refinement cx k r
+    | None -> None
+
+end
+
 (**************)
 (* Query/Fill *)
 (**************)
@@ -533,8 +585,11 @@ let rec convert cx map = Ast.Type.(function
     let map_ = List.fold_left (fun map_ ->
       Object.Property.(fun (loc, { key; value; optional; static; }) ->
         (match key with
+          | Ast.Expression.Object.Property.Literal
+              (_, { Ast.Literal.value = Ast.Literal.String name; _ })
           | Ast.Expression.Object.Property.Identifier
-              (_, { Ast.Identifier.name; _ }) when not optional ->
+              (_, { Ast.Identifier.name; _ })
+              when not optional ->
             let t = convert cx map value in
             SMap.add name t map_
           | _ ->
@@ -1724,8 +1779,11 @@ and expression cx (loc, e) =
   Hashtbl.replace cx.type_table loc t;
   t
 
-and this_ cx reason =
-  Env_js.get_var cx (internal_name "this") reason
+and this_ cx r = Ast.Expression.(
+  match Refinement.get cx (loc_of_reason r, This) r with
+  | Some t -> t
+  | None -> Env_js.get_var cx (internal_name "this") r
+)
 
 and super_ cx reason =
   Env_js.get_var cx (internal_name "super") reason
@@ -1754,7 +1812,7 @@ and void_ loc =
 and null_ loc =
   NullT.at loc
 
-and expression_ cx loc = Ast.Expression.(function
+and expression_ cx loc e = Ast.Expression.(match e with
 
   | Literal lit ->
       literal cx loc lit
@@ -1830,12 +1888,16 @@ and expression_ cx loc = Ast.Expression.(function
       _
     } ->
       let reason = mk_reason (spf "property %s" name) ploc in
-      let super = super_ cx reason in
-      if Type_inference_hooks_js.dispatch_member_hook cx name ploc super
-      then AnyT.at ploc
-      else (
-        Flow_js.mk_tvar_where cx reason (fun tvar ->
-          Flow_js.unit_flow cx (super, GetT(reason, name, tvar)))
+      (match Refinement.get cx (loc, e) reason with
+      | Some t -> t
+      | None ->
+        let super = super_ cx reason in
+        if Type_inference_hooks_js.dispatch_member_hook cx name ploc super
+        then AnyT.at ploc
+        else (
+          Flow_js.mk_tvar_where cx reason (fun tvar ->
+            Flow_js.unit_flow cx (super, GetT(reason, name, tvar)))
+        )
       )
 
   | Member {
@@ -1844,11 +1906,7 @@ and expression_ cx loc = Ast.Expression.(function
       _
     } -> (
       let reason = mk_reason (spf "property %s" name) loc in
-      let refined = match _object with
-      | _, Identifier (_, { Ast.Identifier.name = oname; _ }) ->
-          Env_js.get_lookup_refinement cx oname name reason
-      | _ -> None
-      in match refined with
+      match Refinement.get cx (loc, e) reason with
       | Some t -> t
       | None ->
         let tobj = expression cx _object in
@@ -2018,22 +2076,39 @@ and expression_ cx loc = Ast.Expression.(function
       )
 
   | Call {
-      Call.callee = _, Member {
+      Call.callee = (_, Member {
         Member._object;
         property = Member.PropertyIdentifier (ploc,
           { Ast.Identifier.name; _ });
         _
-      };
+      }) as callee;
       arguments
     } ->
-      let ot = expression cx _object in
+      (* method call *)
       let argts = List.map (expression_or_spread cx) arguments in
       let reason = mk_reason (spf "call of method %s" name) loc in
+      let ot = expression cx _object in
       Type_inference_hooks_js.dispatch_call_hook cx name ploc ot;
-      Env_js.havoc_heap_refinements ();
-      Flow_js.mk_tvar_where cx reason (fun t ->
-        Flow_js.unit_flow cx
-          (ot, MethodT(reason, name, ot, argts, t, List.hd !Flow_js.frames))
+      (match Refinement.get cx callee reason with
+      | Some f ->
+          (* note: the current state of affairs is that we understand
+             member expressions as having refined types, rather than
+             understanding receiver objects as carrying refined properties.
+             generalizing this properly is a todo, and will deliver goodness.
+             meanwhile, here we must hijack the property selection normally
+             performed by the flow algorithm itself. *)
+          Env_js.havoc_heap_refinements ();
+          Flow_js.mk_tvar_where cx reason (fun t ->
+            let frame = List.hd !Flow_js.frames in
+            let app = Flow_js.mk_methodtype2 ot argts None t frame in
+            Flow_js.unit_flow cx (f, CallT (reason, app));
+          )
+      | None ->
+          Env_js.havoc_heap_refinements ();
+          Flow_js.mk_tvar_where cx reason (fun t ->
+            Flow_js.unit_flow cx
+              (ot, MethodT(reason, name, ot, argts, t, List.hd !Flow_js.frames))
+          )
       )
 
   | Call {
@@ -2603,7 +2678,9 @@ and jsx_title cx openingElement children = Ast.XJS.(
             () (* TODO: attributes with namespaced names *)
 
         | Opening.SpreadAttribute (aloc, { SpreadAttribute.argument }) ->
-            () (* TODO: spread attributes *)
+            let ex_t = expression cx argument in
+            let reason_prop = prefix_reason "spread of " (reason_of_t ex_t) in
+            ignore (extend_object cx reason_prop o (Some ex_t))
       );
 
       let reason_children = prefix_reason "children of " reason_props in
@@ -3086,249 +3163,210 @@ and static_method_call_React cx loc m args_ = Ast.Expression.(
         (mk_reason (spf "React.%s" m) loc) m argts
 )
 
-and predicate_of_condition cx e = Ast.Expression.(match e with
+(* given an expression found in a test position, notices certain
+   type refinements which follow from the test's success or failure,
+   and returns a quad:
+   - result type of the test (not always bool)
+   - map (lookup key -> type) of refinements which hold if
+   the test is true
+   - map of refinements which hold if the test is false
+   - map of unrefined types for lvalues found in refinement maps
+ *)
+and predicate_of_condition cx e = Ast.(Expression.(
 
-  (* x instanceof t *)
-  | _, Binary { Binary.operator = Binary.Instanceof;
-      left = _, Identifier (_, { Ast.Identifier.name; _ });
+  (* refinement key if expr is eligible, along with unrefined type *)
+  let refinable_lvalue e =
+    Refinement.key e, expression cx e
+  in
+
+  (* package result quad from test type, refi key, unrefined type,
+     predicate, and predicate's truth sense *)
+  let result test_t key unrefined_t pred sense =
+    let p, notp = if sense
+      then pred, NotP pred
+      else NotP pred, pred
+    in
+    (test_t,
+      SMap.singleton key p,
+      SMap.singleton key notp,
+      SMap.singleton key unrefined_t)
+  in
+
+  (* package empty result (no refinements derived) from test type *)
+  let empty_result test_t =
+    (test_t, SMap.empty, SMap.empty, SMap.empty)
+  in
+
+  (* inspect a null equality test *)
+  let null_test op e =
+    let refinement = match refinable_lvalue e with
+    | None, t -> None
+    | Some name, t ->
+        match op with
+        | Binary.Equal | Binary.NotEqual ->
+            Some (name, t, IsP "maybe", op = Binary.Equal)
+        | Binary.StrictEqual | Binary.StrictNotEqual ->
+            Some (name, t, IsP "null", op = Binary.StrictEqual)
+        | _ -> None
+    in
+    match refinement with
+    | Some (name, t, p, sense) -> result BoolT.t name t p sense
+    | None -> empty_result BoolT.t
+  in
+
+  (* inspect an undefined equality test *)
+  (* TODO: non-strict equality of undefined? *)
+  let undef_test op e =
+    let refinement = match refinable_lvalue e with
+    | None, t -> None
+    | Some name, t ->
+        match op with
+        | Binary.StrictEqual | Binary.StrictNotEqual ->
+            Some (name, t, IsP "undefined", op = Binary.StrictEqual)
+        | _ -> None
+    in
+    match refinement with
+    | Some (name, t, p, sense) -> result BoolT.t name t p sense
+    | None -> empty_result BoolT.t
+  in
+
+  (* inspect a typeof equality test *)
+  let typeof_test sense arg typename =
+    match refinable_lvalue arg with
+    | Some name, t -> result BoolT.t name t (IsP typename) sense
+    | None, t -> empty_result BoolT.t
+  in
+
+  let mk_and map1 map2 = SMap.merge
+    (fun x -> fun p1 p2 -> match (p1,p2) with
+      | (None, None) -> None
+      | (Some p, None)
+      | (None, Some p) -> Some p
+      | (Some p1, Some p2) -> Some (AndP(p1,p2))
+    )
+    map1 map2
+  in
+
+  let mk_or map1 map2 = SMap.merge
+    (fun x -> fun p1 p2 -> match (p1,p2) with
+      | (None, None) -> None
+      | (Some p, None)
+      | (None, Some p) -> None
+      | (Some p1, Some p2) -> Some (OrP(p1,p2))
+    )
+    map1 map2
+  in
+
+  (* main *)
+  match e with
+
+  (* ids, member expressions *)
+  | _, Identifier _
+  | _, Member _ -> (
+      match refinable_lvalue e with
+      | Some name, t -> result t name t ExistsP true
+      | None, t -> empty_result t
+    )
+
+  (* expr instanceof t *)
+  | _, Binary { Binary.operator = Binary.Instanceof; left; right } -> (
+      match refinable_lvalue left with
+      | Some name, t ->
+          result BoolT.t name t (InstanceofP (expression cx right)) true
+      | None, t ->
+          empty_result BoolT.t
+    )
+
+  (* expr op null *)
+  | _, Binary { Binary.operator;
+      left;
+      right = _, Literal { Literal.value = Literal.Null; _ }
+    } ->
+      null_test operator left
+
+  (* null op expr *)
+  | _, Binary { Binary.operator;
+      left = _, Literal { Literal.value = Literal.Null; _ };
       right
     } ->
-      let t = expression cx right in
-      (
-        BoolT.t,
-        SMap.singleton name (InstanceofP t),
-        SMap.singleton name (NotP (InstanceofP t)),
-        SMap.empty
-      )
+      null_test operator right
 
-  (* o.p instanceof t *)
-  | _, Binary { Binary.operator = Binary.Instanceof;
-     left = _, Member {
-         Member._object = _, Identifier (_,
-           { Ast.Identifier.name = oname; _ });
-         property = Member.PropertyIdentifier (ploc,
-           { Ast.Identifier.name = pname; _ });
-         _ } as left;
+  (* expr op undefined *)
+  | _, Binary { Binary.operator;
+      left;
+      right = _, Identifier (_, { Identifier.name = "undefined"; _ })
+    } ->
+      undef_test operator left
+
+  (* undefined op expr *)
+  | _, Binary { Binary.operator;
+      left = _, Identifier (_, { Identifier.name = "undefined"; _ });
       right
     } ->
-      let name = Env_js.prop_lookup_name oname pname in
-      let lt = expression cx left in
-      let rt = expression cx right in
-      (
-        BoolT.t,
-        SMap.singleton name (InstanceofP rt),
-        SMap.singleton name (NotP (InstanceofP rt)),
-        SMap.singleton name lt
-      )
+      undef_test operator right
 
-  (* x == null *)
-  | _, Binary { Binary.operator = Binary.Equal;
-      left = _, Identifier (_, { Ast.Identifier.name; _ });
-      right = _, Literal { Ast.Literal.value = Ast.Literal.Null; _; }
+  (* expr op void(...) *)
+  | _, Binary { Binary.operator;
+      left;
+      right = _, Unary ({ Unary.operator = Unary.Void; _ }) as void_arg
     } ->
-      (
-        BoolT.t,
-        SMap.singleton name (IsP "maybe"),
-        SMap.singleton name (NotP (IsP "maybe")),
-        SMap.empty
-      )
+      ignore (expression cx void_arg);
+      undef_test operator left
 
-  (* o.p == null *)
-  | _, Binary { Binary.operator = Binary.Equal;
-     left = _, Member {
-         Member._object = _, Identifier (_,
-           { Ast.Identifier.name = oname; _ });
-         property = Member.PropertyIdentifier (ploc,
-           { Ast.Identifier.name = pname; _ });
-         _ } as left;
-     right = _, Literal { Ast.Literal.value = Ast.Literal.Null; _; }
-   } ->
-      let name = Env_js.prop_lookup_name oname pname in
-      let t = expression cx left in
-      (
-        BoolT.t,
-        SMap.singleton name (IsP "maybe"),
-        SMap.singleton name (NotP (IsP "maybe")),
-        SMap.singleton name t
-      )
-
-  (* x != null *)
-  | _, Binary { Binary.operator = Binary.NotEqual;
-      left = _, Identifier (_, { Ast.Identifier.name; _ });
-      right = _, Literal { Ast.Literal.value = Ast.Literal.Null; _; }
+  (* void(...) op expr *)
+  | _, Binary { Binary.operator;
+      left = _, Unary ({ Unary.operator = Unary.Void; _ }) as void_arg;
+      right
     } ->
-      (
-        BoolT.t,
-        SMap.singleton name (NotP (IsP "maybe")),
-        SMap.singleton name (IsP "maybe"),
-        SMap.empty
-      )
+      ignore (expression cx void_arg);
+      undef_test operator right
 
-  (* o.p != null *)
-  | _, Binary { Binary.operator = Binary.NotEqual;
-     left = _, Member {
-         Member._object = _, Identifier (_,
-           { Ast.Identifier.name = oname; _ });
-         property = Member.PropertyIdentifier (ploc,
-           { Ast.Identifier.name = pname; _ });
-         _ } as left;
-     right = _, Literal { Ast.Literal.value = Ast.Literal.Null; _; }
-   } ->
-     let name = Env_js.prop_lookup_name oname pname in
-     let t = expression cx left in
-     (
-       BoolT.t,
-       SMap.singleton name (NotP (IsP "maybe")),
-       SMap.singleton name (IsP "maybe"),
-       SMap.singleton name t
-     )
-
-  (* x === null *)
-  | _, Binary { Binary.operator = Binary.StrictEqual;
-      left = _, Identifier (_, { Ast.Identifier.name; _ });
-      right = _, Literal { Ast.Literal.value = Ast.Literal.Null; _; }
-    } ->
-      (
-        BoolT.t,
-        SMap.singleton name (IsP "null"),
-        SMap.singleton name (NotP (IsP "null")),
-        SMap.empty
-      )
-
-  (* o.p === null *)
-  | _, Binary { Binary.operator = Binary.StrictEqual;
-     left = _, Member {
-         Member._object = _, Identifier (_,
-           { Ast.Identifier.name = oname; _ });
-         property = Member.PropertyIdentifier (ploc,
-           { Ast.Identifier.name = pname; _ });
-         _ } as left;
-     right = _, Literal { Ast.Literal.value = Ast.Literal.Null; _; }
-   } ->
-      let name = Env_js.prop_lookup_name oname pname in
-      let t = expression cx left in
-      (
-        BoolT.t,
-        SMap.singleton name (IsP "null"),
-        SMap.singleton name (NotP (IsP "null")),
-        SMap.singleton name t
-      )
-
-  | _, Binary { Binary.operator = Binary.StrictNotEqual;
-      left = _, Identifier (_, { Ast.Identifier.name; _ });
-      right = _, Literal { Ast.Literal.value = Ast.Literal.Null; _; }
-    } ->
-      (
-        BoolT.t,
-        SMap.singleton name (NotP (IsP "null")),
-        SMap.singleton name (IsP "null"),
-        SMap.empty
-      )
-
-  (* o.p !== null *)
-  | _, Binary { Binary.operator = Binary.StrictNotEqual;
-     left = _, Member {
-         Member._object = _, Identifier (_,
-           { Ast.Identifier.name = oname; _ });
-         property = Member.PropertyIdentifier (ploc,
-           { Ast.Identifier.name = pname; _ });
-         _ } as left;
-     right = _, Literal { Ast.Literal.value = Ast.Literal.Null; _; }
-   } ->
-      let name = Env_js.prop_lookup_name oname pname in
-      let t = expression cx left in
-      (
-        BoolT.t,
-        SMap.singleton name (NotP (IsP "null")),
-        SMap.singleton name (IsP "null"),
-        SMap.singleton name t
-      )
-
-  (* TODO: (strict) equality of undefined *)
-
-  (* x *)
-  | loc, Identifier (_, { Ast.Identifier.name; _ }) ->
-      let reason = mk_reason name loc in
-      (
-        Env_js.get_var cx name reason,
-        SMap.singleton name ExistsP,
-        SMap.singleton name (NotP ExistsP),
-        SMap.empty
-      )
-
-  (* o.p *)
-  | loc, Member {
-         Member._object = _, Identifier (_,
-           { Ast.Identifier.name = oname; _ });
-         property = Member.PropertyIdentifier (ploc,
-           { Ast.Identifier.name = pname; _ });
-         _ } as expr ->
-      let name = Env_js.prop_lookup_name oname pname in
-      let t = expression cx expr in
-      (
-        t,
-        SMap.singleton name ExistsP,
-        SMap.singleton name (NotP ExistsP),
-        SMap.singleton name t
-      )
-
+  (* typeof expr ==/=== string *)
   | _, Binary { Binary.operator = Binary.Equal | Binary.StrictEqual;
-      left = _, Unary { Unary.operator = Unary.Typeof;
-        argument = _, Identifier (_, { Ast.Identifier.name; _ }); _ };
-      right = _, Literal { Ast.Literal.value = Ast.Literal.String s; _; }
+      left = _, Unary { Unary.operator = Unary.Typeof; argument; _ };
+      right = _, Literal { Literal.value = Literal.String s; _ }
     } ->
-      (
-        BoolT.t,
-        SMap.singleton name (IsP s),
-        SMap.singleton name (NotP (IsP s)),
-        SMap.empty
-      )
+      typeof_test true argument s
 
-  (* Array.isArray(x) *)
+  (* typeof expr !=/!== string *)
+  | _, Binary { Binary.operator = Binary.NotEqual | Binary.StrictNotEqual;
+      left = _, Unary { Unary.operator = Unary.Typeof; argument; _ };
+      right = _, Literal { Literal.value = Literal.String s; _ }
+    } ->
+      typeof_test false argument s
+
+  (* string ==/=== typeof expr *)
+  | _, Binary { Binary.operator = Binary.Equal | Binary.StrictEqual;
+      left = _, Literal { Literal.value = Literal.String s; _ };
+      right = _, Unary { Unary.operator = Unary.Typeof; argument; _ }
+    } ->
+      typeof_test true argument s
+
+  (* string !=/!== typeof expr *)
+  | _, Binary { Binary.operator = Binary.NotEqual | Binary.StrictNotEqual;
+      left = _, Literal { Literal.value = Literal.String s; _ };
+      right = _, Unary { Unary.operator = Unary.Typeof; argument; _ }
+    } ->
+      typeof_test false argument s
+
+  (* Array.isArray(expr) *)
   | _, Call {
       Call.callee = _, Member {
         Member._object = _, Identifier (_,
-          { Ast.Identifier.name = "Array"; _ });
+          { Identifier.name = "Array"; _ });
         property = Member.PropertyIdentifier (_,
-          { Ast.Identifier.name = "isArray"; _ });
-        _
-      };
-      arguments = [Expression (_, Identifier (_,
-          { Ast.Identifier.name; _ }))]
-    } ->
-      (
-        BoolT.t,
-        SMap.singleton name (IsP "array"),
-        SMap.singleton name (NotP (IsP "array")),
-        SMap.empty
-      )
+          { Identifier.name = "isArray"; _ });
+        _ };
+      arguments = [Expression arg]
+    } -> (
+      match refinable_lvalue arg with
+      | Some name, t ->
+          result BoolT.t name t (IsP "array") true
+      | None, t ->
+          empty_result BoolT.t
+    )
 
-  (* Array.isArray(o.p) *)
-  | _, Call {
-      Call.callee = _, Member {
-        Member._object = _, Identifier (_,
-          { Ast.Identifier.name = "Array"; _ });
-        property = Member.PropertyIdentifier (_,
-          { Ast.Identifier.name = "isArray"; _ });
-        _
-      };
-      arguments = [Expression (_, Member {
-         Member._object = _, Identifier (_,
-           { Ast.Identifier.name = oname; _ });
-         property = Member.PropertyIdentifier (ploc,
-           { Ast.Identifier.name = pname; _ });
-         _ } as expr
-      )]
-    } ->
-      let name = Env_js.prop_lookup_name oname pname in
-      let t = expression cx expr in
-      (
-        BoolT.t,
-        SMap.singleton name (IsP "array"),
-        SMap.singleton name (NotP (IsP "array")),
-        SMap.singleton name t
-      )
-
+  (* test1 && test2 *)
   | loc, Logical { Logical.operator = Logical.And; left; right } ->
       let reason = mk_reason "&&" loc in
       let t1, map1, not_map1, xts1 = predicate_of_condition cx left in
@@ -3344,6 +3382,7 @@ and predicate_of_condition cx e = Ast.Expression.(match e with
         SMap.union xts1 xts2
       )
 
+  (* test1 || test2 *)
   | loc, Logical { Logical.operator = Logical.Or; left; right } ->
       let reason = mk_reason "||" loc in
       let t1, map1, not_map1, xts1 = predicate_of_condition cx left in
@@ -3359,31 +3398,15 @@ and predicate_of_condition cx e = Ast.Expression.(match e with
         SMap.union xts1 xts2
       )
 
+  (* !test *)
   | _, Unary { Unary.operator = Unary.Not; argument; _ } ->
       let (t, map, not_map, xts) = predicate_of_condition cx argument in
       (t, not_map, map, xts)
 
+  (* fallthrough case: evaluate test expr, no refinements *)
   | e ->
-      (expression cx e, SMap.empty, SMap.empty, SMap.empty)
-)
-
-and mk_and map1 map2 = SMap.merge
-  (fun x -> fun p1 p2 -> match (p1,p2) with
-    | (None, None) -> None
-    | (Some p, None)
-    | (None, Some p) -> Some p
-    | (Some p1, Some p2) -> Some (AndP(p1,p2))
-  )
-  map1 map2
-
-and mk_or map1 map2 = SMap.merge
-  (fun x -> fun p1 p2 -> match (p1,p2) with
-    | (None, None) -> None
-    | (Some p, None)
-    | (None, Some p) -> None
-    | (Some p1, Some p2) -> Some (OrP(p1,p2))
-  )
-  map1 map2
+      empty_result (expression cx e)
+))
 
 (* TODO: switch to TypeScript specification of Object *)
 and static_method_call_Object cx loc m args_ = Ast.Expression.(

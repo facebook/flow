@@ -115,7 +115,7 @@ let debug_directory dir =
   let next = compose
     (rev_rev_map (Relative_path.create Relative_path.Root))
     (Find.make_next_files_php path) in
-  let workers = Worker.make ServerConfig.nbr_procs in
+  let workers = Worker.make ServerConfig.nbr_procs ServerConfig.gc_control in
   MultiWorker.call
     (Some workers)
     ~job:debug
@@ -196,7 +196,7 @@ let directory dir =
   let next = compose
     (rev_rev_map (Relative_path.create Relative_path.Root))
     (Find.make_next_files_php path) in
-  let workers = Worker.make ServerConfig.nbr_procs in
+  let workers = Worker.make ServerConfig.nbr_procs ServerConfig.gc_control in
   let messages =
     MultiWorker.call
       (Some workers)

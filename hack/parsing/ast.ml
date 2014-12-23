@@ -84,19 +84,19 @@ and typedef_kind =
   | NewType of hint
 
 and class_ = {
-  c_mode: mode;
-  c_user_attributes: user_attribute SMap.t;
-  c_final: bool;
-  c_kind: class_kind;
-  c_is_xhp: bool;
-  c_name: id;
-  c_tparams: tparam list;
-  c_extends: hint list;
-  c_implements: hint list;
-  c_body: class_elt list;
-  c_namespace: Namespace_env.env;
-  c_enum: enum_ option;
-}
+    c_mode: mode;
+    c_user_attributes: user_attribute SMap.t;
+    c_final: bool;
+    c_kind: class_kind;
+    c_is_xhp: bool;
+    c_name: id;
+    c_tparams: tparam list;
+    c_extends: hint list;
+    c_implements: hint list;
+    c_body: class_elt list;
+    c_namespace: Namespace_env.env;
+    c_enum: enum_ option;
+  }
 
 and enum_ = {
   e_base       : hint;
@@ -120,9 +120,13 @@ and trait_req_kind =
 and class_elt =
   | Const of hint option * (id * expr) list
   | Attributes of class_attr list
+  | TypeConst of typeconst
   | ClassUse of hint
+  | XhpAttrUse of hint
   | ClassTraitRequire of trait_req_kind * hint
   | ClassVars of kind list * hint option * class_var list
+  | XhpAttr of kind list * hint option * class_var list * bool *
+               ((Pos.t * expr list) option)
   | Method of method_
 
 and class_attr =
@@ -167,6 +171,12 @@ and method_ = {
   m_fun_kind: fun_kind;
 }
 
+and typeconst = {
+  tconst_kind: kind list;
+  tconst_name: id;
+  tconst_type: hint option;
+}
+
 and is_reference = bool
 and is_variadic = bool
 
@@ -209,6 +219,20 @@ and hint_ =
   | Htuple of hint list
   | Happly of id * hint list
   | Hshape of shape_field list
+ (* This represents the use of a type const. Type consts are accessed like
+  * regular consts in Hack, i.e.
+  *
+  * Class::TypeConst
+  *
+  * Type const access can be chained such as
+  *
+  * Class::TC1::TC2::TC3
+  *
+  * This will result in the following representation
+  *
+  * Haccess ("Class", "TC1", ["TC2", "TC3"])
+  *)
+  | Haccess of id * id * id list
 
 and shape_field_name =
   | SFlit of pstring

@@ -17,7 +17,7 @@ external get_embedded_hhi_data : string -> string option =
 let root = ref None
 
 let touch_root r =
-  let r = Shell.escape_string_for_shell (Path.string_of_path r) in
+  let r = Filename.quote (Path.string_of_path r) in
   ignore (Unix.system ("find " ^ r ^ " -name *.hhi -exec touch '{}' ';'"))
 
 let touch () =

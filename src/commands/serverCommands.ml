@@ -106,6 +106,8 @@ module OptionParser(Config : CONFIG) : Server.OPTION_PARSER = struct
         ServerArgs.convert       = None;
         ServerArgs.load_save_opt = None;
         ServerArgs.version       = false;
+        ServerArgs.start_time    = Unix.time ();
+        ServerArgs.gc_control    = Gc.get ();
       },
       {
         Types_js.opt_debug = !debug;

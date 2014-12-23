@@ -18,3 +18,11 @@ let nbr_procs = nproc ()
 
 let freq_cache_capacity = 1000
 let ordered_cache_capacity = 1000
+
+(* Configures only the workers. Workers can have more relaxed GC configs as
+ * they are short-lived processes *)
+let gc_control =
+  let control = Gc.get () in
+  { control with
+    Gc.minor_heap_size = 8_000_000;
+  }

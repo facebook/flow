@@ -26,7 +26,11 @@ type options = {
     convert          : Path.path option;
     load_save_opt    : env_store_action option;
     version          : bool;
-  }
+    start_time       : float;
+    (* Configures only the workers. Workers can have more relaxed GC configs as
+     * they are short-lived processes *)
+    gc_control       : Gc.control;
+}
 
 and env_store_action =
   | Load of load_info
@@ -41,10 +45,6 @@ and load_info = {
 (* Usage code *)
 (*****************************************************************************)
 let usage = Printf.sprintf "Usage: %s [WWW DIRECTORY]\n" Sys.argv.(0)
-
-let print_usage_and_exit () =
-  Printf.fprintf stderr "%s" usage;
-  exit 1
 
 (*****************************************************************************)
 (* Options *)
@@ -76,7 +76,20 @@ end
 
 let arg x = Arg.Unit (fun () -> x := true)
 
-let populate_options () =
+let make_gc_control config =
+  let minor_heap_size = match SMap.get "gc_minor_heap_size" config with
+    | Some s -> int_of_string s
+    | None -> ServerConfig.gc_control.Gc.minor_heap_size in
+  let space_overhead = match SMap.get "gc_space_overhead" config with
+    | Some s -> int_of_string s
+    | None -> ServerConfig.gc_control.Gc.space_overhead in
+  { ServerConfig.gc_control with Gc.minor_heap_size; Gc.space_overhead; }
+
+(*****************************************************************************)
+(* The main entry point *)
+(*****************************************************************************)
+
+let parse_options () =
   let root          = ref "" in
   let from_vim      = ref false in
   let from_emacs    = ref false in
@@ -88,6 +101,7 @@ let populate_options () =
   let convert_dir   = ref None  in
   let load_save_opt = ref None  in
   let version       = ref false in
+  let start_time    = ref (Unix.time ()) in
   let cdir          = fun s -> convert_dir := Some s in
   let save          = fun s -> load_save_opt := Some (Save s) in
   let load          = fun s ->
@@ -114,6 +128,7 @@ let populate_options () =
      "--save"          , Arg.String save   , Messages.save;
      "--load"          , Arg.String load   , Messages.load;
      "--version"       , arg version       , "";
+     "--start-time"    , Arg.Set_float start_time, "";
     ] in
   let options = Arg.align options in
   Arg.parse options (fun s -> root := s) usage;
@@ -127,13 +142,19 @@ let populate_options () =
       Printf.fprintf stderr "You must specify a root directory!\n";
       exit 2
   | _ -> ());
+  let root_path = Path.mk_path !root in
+  Wwwroot.assert_www_directory root_path;
+  let hhconfig = Path.string_of_path (Path.concat root_path ".hhconfig") in
+  let config = Config_file.parse hhconfig in
   { json_mode     = !json_mode;
     check_mode    = check_mode;
-    root          = Path.mk_path !root;
+    root          = root_path;
     should_detach = !should_detach;
     convert       = convert;
     load_save_opt = !load_save_opt;
     version       = !version;
+    start_time    = !start_time;
+    gc_control    = make_gc_control config;
   }
 
 (* useful in testing code *)
@@ -146,27 +167,15 @@ let default_options ~root =
   convert = None;
   load_save_opt = None;
   version = false;
+  start_time = Unix.time ();
+  gc_control = ServerConfig.gc_control;
 }
 
-(*****************************************************************************)
-(* Code checking that the options passed are correct.
- * Pretty minimalistic for now.
- *)
-(*****************************************************************************)
-
-let check_options options =
-  let root = options.root in
-  Wwwroot.assert_www_directory root;
-  ()
-
-(*****************************************************************************)
-(* The main entry point *)
-(*****************************************************************************)
-
-let parse_options () =
-  let options = populate_options () in
-  check_options options;
-  options
+(* useful for logging *)
+let string_of_init_type = function
+  | Some (Load _) -> "load"
+  | Some (Save _) -> "save"
+  | None -> "fresh"
 
 (*****************************************************************************)
 (* Accessors *)
@@ -178,3 +187,5 @@ let root options = options.root
 let should_detach options = options.should_detach
 let convert options = options.convert
 let load_save_opt options = options.load_save_opt
+let start_time options = options.start_time
+let gc_control options = options.gc_control

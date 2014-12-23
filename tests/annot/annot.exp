@@ -23,4 +23,8 @@ annot.js:13:28,32: string
 This type is incompatible with
   annot.js:13:12,17: number
 
-Found 6 errors
+annot.js:26:16,56: property foo-bar
+Property not found in
+  annot.js:27:25,43: object literal
+
+Found 7 errors

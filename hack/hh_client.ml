@@ -46,7 +46,7 @@ let () =
   begin match command with
     | ClientCommand.CCheck check_env ->
         ClientCheck.main check_env check_env.ClientEnv.retries;
-    | ClientCommand.CStart env ->  ClientStart.main env
+    | ClientCommand.CStart env -> ClientStart.main env
     | ClientCommand.CStop env -> HackClientStop.main env
     | ClientCommand.CRestart env -> ClientRestart.main env
     | ClientCommand.CStatus env -> ClientStatus.main env

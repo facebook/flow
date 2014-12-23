@@ -1,5 +1,5 @@
 
-[LIB] core.js:174:27,33: boolean
+[LIB] core.js:176:27,33: boolean
 This type is incompatible with
   regexp.js:2:11,16: number
 

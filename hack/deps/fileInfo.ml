@@ -78,7 +78,7 @@ let merge_names t_names1 t_names2 =
    n_classes = SSet.union n_classes t_names2.n_classes;
    n_types   = SSet.union n_types t_names2.n_types;
    n_consts  = SSet.union n_consts t_names2.n_consts;
- }
+  }
 
 let simplify_fast fast =
   Relative_path.Map.map simplify fast

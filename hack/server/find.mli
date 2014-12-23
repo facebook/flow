@@ -22,3 +22,5 @@ val make_next_files_js:
   filter:(string -> bool) ->
   ?others: Path.path list (* includes *) -> Path.path (* root directory *) ->
   string MultiWorker.nextlist
+
+val find_with_name : Path.path list -> string -> string list

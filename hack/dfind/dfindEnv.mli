@@ -120,13 +120,7 @@ val get_clients: t -> client list
 val make: string -> t
 
 (*****************************************************************************)
-(* The environment variable containing the pattern we want to skip *)
-(*****************************************************************************)
-
-val skip_var: string
-
-(*****************************************************************************)
-(* Outputing *)
+(* Output *)
 (*****************************************************************************)
 
 val add_output: t -> close: bool -> Unix.file_descr -> SSet.t -> unit

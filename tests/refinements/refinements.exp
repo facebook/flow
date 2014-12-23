@@ -51,4 +51,58 @@ refinements.js:50:13,17: boolean
 This type is incompatible with
   refinements.js:54:11,16: number
 
-Found 13 errors
+undef.js:29:29,34: null
+This type is incompatible with
+  undef.js:31:13,20: number
+
+undef.js:35:33,38: null
+This type is incompatible with
+  undef.js:38:13,20: number
+
+undef.js:42:35,40: null
+This type is incompatible with
+  undef.js:44:13,22: number
+
+undef.js:48:39,44: null
+This type is incompatible with
+  undef.js:51:13,22: number
+
+void.js:29:28,33: null
+This type is incompatible with
+  void.js:31:13,20: number
+
+void.js:35:32,37: null
+This type is incompatible with
+  void.js:38:13,20: number
+
+void.js:42:33,38: null
+This type is incompatible with
+  void.js:44:13,22: number
+
+void.js:48:37,42: null
+This type is incompatible with
+  void.js:51:13,22: number
+
+void.js:55:35,40: undefined
+This type is incompatible with
+  void.js:56:32,39: number
+
+void.js:61:39,44: undefined
+This type is incompatible with
+  void.js:62:32,39: number
+
+void.js:68:41,46: undefined
+This type is incompatible with
+  void.js:69:36,45: number
+
+void.js:69:36,45: number
+This type is incompatible with undefined
+
+void.js:74:45,50: undefined
+This type is incompatible with
+  void.js:75:36,45: number
+
+void.js:75:36,45: number
+This type is incompatible with undefined
+
+Found 27 errors

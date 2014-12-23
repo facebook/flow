@@ -106,6 +106,9 @@ and ty_ =
   (* Tuple, with ordered list of the types of the elements of the tuple. *)
   | Ttuple        of ty list
 
+  (* Name of class, name of type const, remaining names of type consts *)
+  | Taccess       of static_class_id * Nast.sid * Nast.sid list
+
   (* An anonymous function, including the fun arity, and the identifier to
    * type the body of the function. (The actual closure is stored in
    * Typing_env.env.genv.anons) *)
@@ -138,7 +141,7 @@ and ty_ =
    * which case we can just throw away the type.
    *
    * Note that this is *not* really a union type -- most notably, it's allowed
-   * to grow as inference goes on, which intersection types don't. For example:
+   * to grow as inference goes on, which union types don't. For example:
    *
    * function f(): Vector<num> {
    *   $v = Vector {};
@@ -160,17 +163,22 @@ and ty_ =
   | Tunresolved        of ty list
 
   (* Tobject is an object type compatible with all objects. This type is also
-   * compatible with some string operations (since a class might implement __toString), but
-   * not with string type hints. In a similar way, Tobject is compatible with some
-   * array operations (since a class might implement ArrayAccess), but not with
-   * array type hints.
+   * compatible with some string operations (since a class might implement
+   * __toString), but not with string type hints. In a similar way, Tobject
+   * is compatible with some array operations (since a class might implement
+   * ArrayAccess), but not with array type hints.
    *
-   * Tobject is currently used to type code like: ../test/typecheck/return_unknown_class.php
+   * Tobject is currently used to type code like:
+   *   ../test/typecheck/return_unknown_class.php
    *)
   | Tobject
 
   (* Shape and types of each of the arms. *)
   | Tshape of ty Nast.ShapeMap.t
+
+and static_class_id =
+  | SCI of Nast.sid
+  | SCIstatic
 
 (* The type of a function AND a method.
  * A function has a min and max arity because of optional arguments *)
@@ -184,7 +192,7 @@ and fun_type = {
   ft_ret       : ty              ;
 }
 
-(* Arity informaton for a fun_type; indicating the minimum number of
+(* Arity information for a fun_type; indicating the minimum number of
  * args expected by the function and the maximum number of args for
  * standard, non-variadic functions or the type of variadic argument taken *)
 and fun_arity =
@@ -200,6 +208,7 @@ and fun_params = fun_param list
 
 and class_elt = {
   ce_final       : bool;
+  ce_is_xhp_attr : bool;
   ce_override    : bool;
   (* true if this elt arose from require-extends or other mechanisms
      of hack "synthesizing" methods that were not written by the
@@ -228,6 +237,7 @@ and class_type = {
   tc_pos                 : Pos.t ;
   tc_tparams             : tparam list   ;
   tc_consts              : class_elt SMap.t;
+  tc_typeconsts          : class_elt SMap.t;
   tc_cvars               : class_elt SMap.t;
   tc_scvars              : class_elt SMap.t;
   tc_methods             : class_elt SMap.t;

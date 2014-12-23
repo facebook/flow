@@ -12,6 +12,7 @@ let num_build_retries = 60
 
 type env = {
   root: Path.path;
+  server_options_cmd: string option;
 }
 
 let rec connect env retries =
@@ -21,10 +22,17 @@ let rec connect env retries =
     result
   with
   | ClientExceptions.Server_cant_connect ->
-    Printf.printf
-      "Can't connect to the server\n\
-      Try 'hh start your_directory'\n";
-    exit 2
+    if retries > 0
+    then begin
+      Printf.printf "Can't connect to server yet, retrying.\n%!";
+      Unix.sleep 1;
+      connect env (retries - 1)
+    end
+    else begin
+      Printf.fprintf stderr
+        "Error: could not connect to hh_server, giving up!\n%!";
+      exit 2
+    end
   | ClientExceptions.Server_initializing ->
     Printf.printf "Server still initializing. %s\r%!" (Tty.spinner());
     if retries > 0
@@ -35,6 +43,12 @@ let rec connect env retries =
     else exit 2
 
 let main env =
+  if not (ClientUtils.server_exists env.root)
+  then ClientStart.start_server { ClientStart.
+    root = env.root;
+    wait = false;
+    server_options_cmd = env.server_options_cmd;
+  };
   let ic, oc = connect env num_build_retries in
   ServerMsg.cmd_to_channel oc ServerMsg.PROLOG;
   try

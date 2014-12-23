@@ -120,7 +120,7 @@ let declare_file fn content =
       SSet.iter begin fun cname ->
         match Naming_heap.ClassHeap.get cname with
         | None -> ()
-        | Some c -> Typing_decl.class_decl c
+        | Some c -> Typing_decl.class_decl nenv c
       end sub_classes
     end
     else Hashtbl.replace globals fn (false, [], [])
@@ -200,7 +200,7 @@ let hh_auto_complete fn =
             let nenv = Naming.empty in
             let tenv = Typing_env.empty fn in
             let c = Naming.class_ nenv c in
-            Typing_decl.class_decl c;
+            Typing_decl.class_decl nenv c;
             let res = Typing.class_def tenv (snd c.Nast.c_name) c in
             res
         | _ -> ()
@@ -517,6 +517,7 @@ let js_wrap_string_2 func =
   Js.wrap_callback f
 
 let () =
+  Relative_path.set_path_prefix Relative_path.Root "/";
   Js.Unsafe.set Js.Unsafe.global "hh_check_file" (js_wrap_string_1 hh_check);
   Js.Unsafe.set Js.Unsafe.global "hh_add_file" (js_wrap_string_2 hh_add_file);
   Js.Unsafe.set Js.Unsafe.global "hh_add_dep" (js_wrap_string_2 hh_add_dep);

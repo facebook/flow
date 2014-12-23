@@ -8,15 +8,14 @@
  *
  *)
 
-open Utils
 open Typing_defs
 
 (*****************************************************************************)
 (* Types *)
 (*****************************************************************************)
 
-type env   = Typing_env.env
-type subst = ty SMap.t
+type env = Typing_env.env
+type subst
 
 (*****************************************************************************)
 (* Builds a substitution out of a list of type parameters and a list of types.

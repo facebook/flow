@@ -43,13 +43,32 @@ let is_js_path path =
   Filename.check_suffix path ".js" &&
   not (is_directory path)
 
+let escape_spaces = Str.global_replace (Str.regexp " ") "\\ "
+
+let paths_to_path_string paths =
+  let stringed_paths = List.map Path.string_of_path paths in
+  let escaped_paths =  List.map escape_spaces stringed_paths in
+  String.concat " " escaped_paths
+
+let find_with_name paths pattern =
+  let paths = paths_to_path_string paths in
+  let cmd = Utils.spf "find %s -name \"%s\"" paths pattern in
+  let ic = Unix.open_process_in cmd in
+  let buf = Buffer.create 16 in
+  (try
+    while true do
+      Buffer.add_channel buf ic 1
+    done
+  with End_of_file -> ());
+  (try ignore (Unix.close_process_in ic) with _ -> ());
+  Str.split (Str.regexp "\n") (Buffer.contents buf)
+
 (*****************************************************************************)
 (* Main entry point *)
 (*****************************************************************************)
 
 let make_next_files_with_find filter ?(others=[]) root =
-  let path_to_argument p = Shell.escape_spaces (Path.string_of_path p) in
-  let paths = String.concat " " (List.map path_to_argument (root::others)) in
+  let paths = paths_to_path_string (root::others) in
   let ic = Unix.open_process_in ("find "^paths) in
   let done_ = ref false in
   (* This is subtle, but to optimize latency, we open the process and

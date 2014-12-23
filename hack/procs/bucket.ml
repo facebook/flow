@@ -8,12 +8,15 @@
  *
  *)
 
-(*****************************************************************************)
+(****************************************************************************)
 (* Moduling Making buckets.
  * When we parallelize, we need to create "buckets" of tasks for the
  * workers.
- *)
-(*****************************************************************************)
+ * Given a list of files, we want to split it up into buckets such that
+ * every worker is busy long enough. If the bucket is too big, it hurts
+ * load balancing, if it is too small, the overhead in synchronization time
+ * hurts *)
+(****************************************************************************)
 
 let make nbr_procs bucket_size jobs =
   let i = ref 0 in

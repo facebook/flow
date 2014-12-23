@@ -397,8 +397,8 @@ end = struct
   let visitor =
     object
       inherit [bool] nast_visitor
-      method on_expr acc _ = acc
-      method on_return _ _ _ = true
+      method! on_expr acc _ = acc
+      method! on_return _ _ _ = true
     end
 
   let block b = visitor#on_block false b
@@ -412,12 +412,12 @@ end
 class loop_visitor =
   object
     inherit [bool] nast_visitor
-    method on_expr acc _ = acc
-    method on_for acc _ _ _ _ = acc
-    method on_foreach acc _ _ _ = acc
-    method on_do acc _ _ = acc
-    method on_while acc _ _ = acc
-    method on_switch acc _ _ = acc
+    method! on_expr acc _ = acc
+    method! on_for acc _ _ _ _ = acc
+    method! on_foreach acc _ _ _ = acc
+    method! on_do acc _ _ = acc
+    method! on_while acc _ _ = acc
+    method! on_switch acc _ _ = acc
   end
 
 (*****************************************************************************)
@@ -439,7 +439,7 @@ end = struct
   let visitor =
     object
       inherit loop_visitor
-      method on_continue _ _ = true
+      method! on_continue _ _ = true
     end
 
   let block b = visitor#on_block false b
@@ -459,7 +459,7 @@ end = struct
   let visitor =
     object
       inherit loop_visitor
-      method on_break _ _ = true
+      method! on_break _ _ = true
     end
 
   let block b = visitor#on_block false b

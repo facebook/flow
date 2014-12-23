@@ -13,6 +13,7 @@ open Utils
 (* conversion *)
 
 let dts_ext = ".d.ts"
+let dts_ext_find_pattern = "*.d.ts"
 
 let convert_file outpath file =
   let base = Filename.chop_suffix (Filename.basename file) dts_ext in
@@ -42,18 +43,7 @@ let convert_file outpath file =
   (* Printer_dts.program *)
 
 let find_files_recursive path =
-  let ic = Unix.open_process_in ("find " ^ path) in
-  let res = ref [] in
-  (try
-    while true do
-      let f = input_line ic in
-      if Filename.check_suffix f dts_ext then
-        res := f :: !res
-    done
-  with End_of_file ->
-    (try ignore (Unix.close_process_in ic) with _ -> ())
-  );
-  List.rev !res
+  Find.find_with_name [Path.mk_path path] dts_ext_find_pattern
 
 let find_files path =
   Array.fold_left (fun acc f ->

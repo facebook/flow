@@ -1,4 +1,4 @@
-var tests =
+var paths =
 [
   function() {
     var x : ?string = "xxx";

@@ -5,7 +5,7 @@ This type is incompatible with
 
 union.js:7:5,5: number
 This type is incompatible with
-  [LIB] dom.js:174:1,232:1: Document
+  [LIB] dom.js:198:1,256:1: Document
 
 union.js:9:7,7: C
 This type is incompatible with

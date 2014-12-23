@@ -14,9 +14,6 @@
 (*****************************************************************************)
 open Utils
 
-(* filename => functions defined, classes defined *)
-type fast = (SSet.t * SSet.t * SSet.t * SSet.t) SMap.t
-
 (* The set of files that failed *)
 type failed = Relative_path.Set.t
 
@@ -84,18 +81,6 @@ let get_classes fast =
       SMap.add c_name files acc
     end classes acc
   end fast SMap.empty
-
-(*****************************************************************************)
-(* The bucket size, given a list of files, give me a sublist such as
- * every worker is busy long enough. If the bucket is too big, it hurts
- * load balancing, if it is too small, the overhead in synchronization time
- * hurts *)
-(*****************************************************************************)
-
-(* The bucket size at initialization, we want high throughput and we don't
- * care about the latency
-*)
-let init_bucket_size = 1000
 
 (*****************************************************************************)
 (* Let's go! That's where the action is *)

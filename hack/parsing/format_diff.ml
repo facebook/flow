@@ -69,9 +69,7 @@ end = struct
     let env = { file = None; modified = []; line = 0; result = [] } in
     let lines = split_lines content in
     start env lines;
-    match List.rev env.result with
-    | [] -> []
-    | _ :: results -> results
+    List.rev env.result
 
   (* Skip the text before the first +++ (to make things work with git show) *)
   and start env = function

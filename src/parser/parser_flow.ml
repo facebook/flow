@@ -318,6 +318,7 @@ module rec Parse : sig
   val object_initializer : env -> Ast.Loc.t * Ast.Expression.Object.t
   val array_initializer : env -> Ast.Loc.t * Ast.Expression.Array.t
   val identifier : ?restricted_error:Error.t -> env -> Ast.Identifier.t
+  val identifier_or_reserved_keyword : env -> Ast.Identifier.t
   val identifier_with_type : env -> Error.t -> Ast.Identifier.t
   val block_body : env -> Ast.Loc.t * Ast.Statement.Block.t
   val function_block_body : env -> Ast.Loc.t * Ast.Statement.Block.t * bool
@@ -429,21 +430,13 @@ end = struct
       | T_LCURLY ->
           let loc, o = _object env in
           loc, Type.Object o
-      | T_VOID ->
-            Expect.token env T_VOID;
-            loc, Type.Void
       | T_TYPEOF ->
           let start_loc = Peek.loc env in
           Expect.token env T_TYPEOF;
           let t = primary env in
           Loc.btwn start_loc (fst t), Type.Typeof t
       | T_LBRACKET -> tuple env
-      | T_IDENTIFIER ->
-        (match type_of_identifier (Peek.value env) with
-        | Some t ->
-            Expect.token env T_IDENTIFIER;
-            loc, t
-        | None -> generic env)
+      | T_IDENTIFIER -> generic env
       | T_STRING (loc, value, raw, octal)  ->
           if octal then strict_error env Error.StrictOctalLiteral;
           Expect.token env (T_STRING (loc, value, raw, octal));
@@ -451,18 +444,22 @@ end = struct
             value;
             raw;
           }))
-      | _ ->
-          error_unexpected env;
-          loc, Type.Any
+      | token ->
+          match primitive token with
+          | Some t ->
+              Expect.token env token;
+              loc, t
+          | None ->
+              error_unexpected env;
+              loc, Type.Any
 
-    and type_of_identifier = Type.(function
-      | "any" -> Some Any
-      | "bool"
-      | "boolean" -> Some Boolean
-      | "number" -> Some Number
-      | "string" -> Some String
+    and primitive = function
+      | T_ANY_TYPE     -> Some Type.Any
+      | T_BOOLEAN_TYPE -> Some Type.Boolean
+      | T_NUMBER_TYPE  -> Some Type.Number
+      | T_STRING_TYPE  -> Some Type.String
+      | T_VOID_TYPE    -> Some Type.Void
       | _ -> None
-    )
 
     and tuple =
       let rec types env acc =
@@ -488,7 +485,7 @@ end = struct
 
     and function_param_list_without_parens =
       let param env =
-        let name = Parse.identifier env in
+        let name = Parse.identifier_or_reserved_keyword env in
         let optional = Expect.maybe env T_PLING in
         Expect.token env T_COLON;
         let typeAnnotation = _type env in
@@ -534,44 +531,46 @@ end = struct
           (* () or is definitely a param list *)
           ParamList (None, [])
       | T_IDENTIFIER ->
-        (match (type_of_identifier (Peek.value env)) with
-        | None ->
-            (* Ok, this is definitely a function type parameter *)
-            ParamList (function_param_list_without_parens env [])
-        | Some t ->
-            (* Don't know if this is (number) or (number: number) (the first is
-             * a type the second is a param) *)
-          let name = Parse.identifier env in
-          match Peek.token env with
-          | T_PLING
-          | T_COLON ->
-              (* Ok this is definitely a parameter *)
-              let optional = Expect.maybe env T_PLING in
-              Expect.token env T_COLON;
-              let typeAnnotation = _type env in
-              let param = Loc.btwn (fst name) (fst typeAnnotation), Type.Function.Param.({
-                name;
-                typeAnnotation;
-                optional;
-              }) in
-              ParamList (function_param_list_without_parens env [param])
-          | _ ->
-              (* Ok this is definitely a type *)
-              (* Note; what we really want here (absent 2-token LA :) is
-                  Eat.vomit env;
-                  Type (_type env)
-                 ...but currently there's bad interaction between Eat.vomit,
-                 Expect.tok, and possibly mode switching. See e.g. Type
-                 Grouping test failures when the above is used.
-               *)
-              Type
-                (union_with env
-                  (intersection_with env
-                    (postfix_with env (fst name, t)))
-              ))
-      | _ ->
-          (* All params start with an identifier or ... *)
-          Type (_type env)
+          (* Ok, this is definitely a function type parameter *)
+          ParamList (function_param_list_without_parens env [])
+      | token ->
+          (match primitive token with
+          | None ->
+              (* All params start with an identifier or ... *)
+              Type (_type env)
+          | Some t ->
+              (* Don't know if this is (number) or (number: number) (the first is
+              * a type the second is a param) *)
+            let name = Parse.identifier_or_reserved_keyword env in
+            match Peek.token env with
+            | T_PLING
+            | T_COLON ->
+                (* Ok this is definitely a parameter *)
+                let optional = Expect.maybe env T_PLING in
+                Expect.token env T_COLON;
+                let typeAnnotation = _type env in
+                if Peek.token env <> T_RPAREN
+                then Expect.token env T_COMMA;
+                let param = Loc.btwn (fst name) (fst typeAnnotation), Type.Function.Param.({
+                  name;
+                  typeAnnotation;
+                  optional;
+                }) in
+                ParamList (function_param_list_without_parens env [param])
+            | _ ->
+                (* Ok this is definitely a type *)
+                (* Note; what we really want here (absent 2-token LA :) is
+                    Eat.vomit env;
+                    Type (_type env)
+                  ...but currently there's bad interaction between Eat.vomit,
+                  Expect.tok, and possibly mode switching. See e.g. Type
+                  Grouping test failures when the above is used.
+                *)
+                Type
+                  (union_with env
+                    (intersection_with env
+                      (postfix_with env (fst name, t)))
+                ))
       in
       Expect.token env T_RPAREN;
       ret
@@ -649,7 +648,7 @@ end = struct
 
       in let indexer_property env start_loc static =
         Expect.token env T_LBRACKET;
-        let id = Parse.identifier env in
+        let id = Parse.identifier_or_reserved_keyword env in
         Expect.token env T_COLON;
         let key = _type env in
         Expect.token env T_RBRACKET;
@@ -1472,6 +1471,7 @@ end = struct
       Expect.token env T_TYPE;
       if Peek.identifier env
       then begin
+        Eat.push_lex_mode env TYPE_LEX;
         let id = Parse.identifier env in
         let typeParameters = Type.type_parameter_declaration env in
         Expect.token env T_ASSIGN;
@@ -1480,6 +1480,7 @@ end = struct
         | None -> fst right
         | Some end_loc -> end_loc in
         Eat.semicolon env;
+        Eat.pop_lex_mode env;
         Loc.btwn start_loc end_loc, Statement.(TypeAlias TypeAlias.({
           id;
           typeParameters;
@@ -1929,12 +1930,13 @@ end = struct
 
     (* We'll say that () and anything with rest params (x, y, ...z) are
      * definitely arrow function params *)
-    let is_arrow_params env = function
+    let is_arrow_params env ~starts_with_paren = function
       | ArrowParams (_, [], _)
       | ArrowParams (_, _, Some _) -> true
       (* Depends on whether the next token is an => *)
       | ArrowParams _
-      | Expr _ -> Peek.token env = T_ARROW
+      | Expr (_, Expression.Identifier _) -> Peek.token env = T_ARROW
+      | Expr _ -> Peek.token env = T_ARROW && starts_with_paren
       | NotArrowParams _ -> false
 
     (* AssignmentExpression :
@@ -1954,12 +1956,13 @@ end = struct
       if Peek.token env = T_YIELD && env.allow_yield
       then yield env
       else begin
+        let starts_with_paren = Peek.token env = T_LPAREN in
         let start_loc = Peek.loc env in
         let expr = conditional { env with no_arrow_parens = false; } in
         let end_loc = match last_loc env with
         | None -> start_loc
         | Some loc -> loc in
-        if is_arrow_params env expr
+        if is_arrow_params env ~starts_with_paren expr
         then
           let params = expr in
           arrow_function env (Loc.btwn start_loc end_loc) params
@@ -2075,8 +2078,9 @@ end = struct
       op
 
     and conditional env =
+      let starts_with_paren = Peek.token env = T_LPAREN in
       let expr = logical env in
-      if not (is_arrow_params env expr) && Peek.token env = T_PLING
+      if not (is_arrow_params env ~starts_with_paren expr) && Peek.token env = T_PLING
       then begin
         Expect.token env T_PLING;
         (* no_in is ignored for the consequent *)
@@ -2175,9 +2179,10 @@ end = struct
             collapse_stack (make_binary left right lop) rest
 
       in let rec helper env stack : expr_or_arrow_params =
+        let starts_with_paren = Peek.token env = T_LPAREN in
         let right = unary { env with no_in = false; } in
         let env = { env with no_arrow_parens = true; } in
-        let op = if is_arrow_params env right
+        let op = if is_arrow_params env ~starts_with_paren right
           then None
           else begin
             if Peek.token env = T_LESS_THAN
@@ -2817,6 +2822,11 @@ end = struct
         | T_PUBLIC
         | T_YIELD
         | T_TYPE
+        | T_ANY_TYPE
+        | T_BOOLEAN_TYPE
+        | T_NUMBER_TYPE
+        | T_STRING_TYPE
+        | T_VOID_TYPE
         | T_DEBUGGER -> ()
         | _ ->
             error_unexpected env);
@@ -3740,6 +3750,8 @@ end = struct
       typeAnnotation = None;
       optional = false;
     })
+
+  and identifier_or_reserved_keyword = Expression.identifier_or_reserved_keyword
 
   and identifier_with_type env restricted_error =
     let loc, id = identifier ~restricted_error env in

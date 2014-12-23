@@ -35,6 +35,7 @@ class type ['a] hint_visitor_type = object
   method on_fun    : 'a -> Nast.hint list -> bool -> Nast.hint -> 'a
   method on_apply  : 'a -> Nast.sid -> Nast.hint list -> 'a
   method on_shape  : 'a -> Nast.hint ShapeMap.t -> 'a
+  method on_access : 'a -> Nast.class_id -> Nast.sid -> Nast.sid list -> 'a
 end
 
 (*****************************************************************************)
@@ -43,7 +44,7 @@ end
 
 class virtual ['a] hint_visitor: ['a] hint_visitor_type = object(this)
 
-  method on_hint acc (p, h) = this#on_hint_ acc h
+  method on_hint acc (_, h) = this#on_hint_ acc h
 
   method on_hint_ acc h = match h with
     | Hany                  -> this#on_any    acc
@@ -56,13 +57,14 @@ class virtual ['a] hint_visitor: ['a] hint_visitor_type = object(this)
     | Hfun (hl, b, h)       -> this#on_fun    acc hl b h
     | Happly (i, hl)        -> this#on_apply  acc i hl
     | Hshape hm             -> this#on_shape  acc hm
+    | Haccess (i1, i2, il)  -> this#on_access acc i1 i2 il
 
   method on_any acc = acc
   method on_mixed acc = acc
   method on_tuple acc hl =
     List.fold_left this#on_hint acc (hl:Nast.hint list)
 
-  method on_abstr acc s hopt =
+  method on_abstr acc _ hopt =
     match hopt with
       | None -> acc
       | Some h -> this#on_hint acc h
@@ -78,16 +80,16 @@ class virtual ['a] hint_visitor: ['a] hint_visitor_type = object(this)
     in
     acc
 
-  method on_prim acc p = acc
+  method on_prim acc _ = acc
 
   method on_option acc h = this#on_hint acc h
 
-  method on_fun acc hl b h =
+  method on_fun acc hl _ h =
     let acc = List.fold_left this#on_hint acc hl in
     let acc = this#on_hint acc h in
     acc
 
-  method on_apply acc id (hl:Nast.hint list) =
+  method on_apply acc _ (hl:Nast.hint list) =
     let acc = List.fold_left this#on_hint acc hl in
     acc
 
@@ -96,6 +98,8 @@ class virtual ['a] hint_visitor: ['a] hint_visitor_type = object(this)
       let acc = this#on_hint acc h in
       acc
     end hm acc
+
+  method on_access acc _ _ _ = acc
 
 end
 
@@ -109,7 +113,7 @@ module CheckInstantiability = struct
   object(this)
     inherit [Env.env] hint_visitor
 
-    method on_apply env (usage_pos, n) hl =
+    method! on_apply env (usage_pos, n) hl =
       let () = (match Naming_heap.ClassHeap.get n with
         | Some {c_kind = Ast.Cabstract; c_final = true;
                 c_name = (decl_pos, decl_name); _}
@@ -119,7 +123,7 @@ module CheckInstantiability = struct
       let env = List.fold_left this#on_hint env hl in
       env
 
-    method on_abstr env s hopt =
+    method! on_abstr env _ _ =
         (* there should be no need to descend into abstract params, as
          * the necessary param checks happen on the declaration of the
          * constraint *)
@@ -204,9 +208,26 @@ and hint_ p env = function
       env, Tany
   | Happly (((p, c) as id), argl) ->
       Find_refs.process_class_ref p c None;
-      let env = Env.add_wclass env c in
+      Typing_hooks.dispatch_class_id_hook id None;
+      Env.add_wclass env c;
       let env, argl = lfold hint env argl in
       env, Tapply (id, argl)
+  | Haccess (root, id, ids) ->
+      let root = match root with
+        | CIstatic -> Some SCIstatic
+        | CI (pos, class_) ->
+            Find_refs.process_class_ref pos class_ None;
+            Typing_hooks.dispatch_class_id_hook id None;
+            Env.add_wclass env class_;
+            Some (SCI (pos, class_))
+        | CIparent ->
+            Errors.unbound_name_typing p "parent";
+            None
+        (* These should be stripped out earlier *)
+        | CIself | CIvar _ ->
+            assert false;
+      in
+      opt_map_default (fun r -> env, Taccess (r, id, ids)) (env, Tany) root
   | Htuple hl ->
       let env, tyl = lfold hint env hl in
       env, Ttuple tyl

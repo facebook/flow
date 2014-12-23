@@ -1,5 +1,5 @@
 
-errors.js:1:5,46: identifier define
+errors.js:1:12,17: identifier define
 Unknown global name
 
 errors.js:3:1,9: function call

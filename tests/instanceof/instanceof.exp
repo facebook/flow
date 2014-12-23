@@ -1,2 +1,14 @@
 
-Found 0 errors
+instanceof.js:17:34,39: string
+This type is incompatible with
+  instanceof.js:4:17,22: number
+
+instanceof.js:34:42,47: string
+This type is incompatible with
+  instanceof.js:4:17,22: number
+
+instanceof.js:51:50,55: string
+This type is incompatible with
+  instanceof.js:4:17,22: number
+
+Found 3 errors

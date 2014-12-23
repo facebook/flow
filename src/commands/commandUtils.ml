@@ -9,7 +9,7 @@
  *)
 
 let print_version () =
-  print_endline "Flow, a static type checker for Javascript, version 0.1.2"
+  print_endline "Flow, a static type checker for Javascript, version 0.1.3"
 
 (* line split/transform utils *)
 module Line : sig
@@ -132,7 +132,7 @@ let start_flow_server root =
     (Path.string_of_path root);
   let flow_server = Printf.sprintf "%s start %s 1>&2"
     (Sys.argv.(0))
-    (Shell.escape_string_for_shell (Path.string_of_path root)) in
+    (Filename.quote (Path.string_of_path root)) in
   match Unix.system flow_server with
     | Unix.WEXITED 0 -> ()
     | _ -> (Printf.fprintf stderr "Could not start flow server!\n"; exit 77)

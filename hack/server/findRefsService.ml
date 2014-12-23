@@ -10,6 +10,49 @@
 
 open Utils
 
+let process_fun_id results_acc target_fun id =
+  if target_fun = (snd id)
+  then results_acc := Pos.Map.add (fst id) (snd id) !results_acc
+
+let process_method_id results_acc target_classes target_method class_ id _ _ =
+  let class_name = class_.Typing_defs.tc_name in
+  if target_method = (snd id) && (SSet.mem class_name target_classes)
+  then
+    results_acc :=
+      Pos.Map.add (fst id) (class_name ^ "::" ^ (snd id)) !results_acc
+
+let process_constructor results_acc target_classes target_method class_ _ p =
+  process_method_id
+    results_acc target_classes target_method class_ (p, "__construct") () ()
+
+let process_class_id results_acc target_classes cid mid_option =
+   if (SSet.mem (snd cid) target_classes)
+   then begin
+     let class_name = match mid_option with
+     | None -> snd cid
+     | Some n -> (snd cid)^"::"^(snd n) in
+     results_acc := Pos.Map.add (fst cid) class_name !results_acc
+   end
+
+let attach_hooks results_acc target_classes target_fun =
+  match target_classes, target_fun with
+    | Some classes, Some method_name ->
+      let process_method_id =
+        process_method_id results_acc classes method_name
+      in
+      Typing_hooks.attach_cmethod_hook process_method_id;
+      Typing_hooks.attach_smethod_hook process_method_id;
+      Typing_hooks.attach_constructor_hook
+        (process_constructor results_acc classes method_name);
+    | None, Some fun_name ->
+      Typing_hooks.attach_fun_id_hook (process_fun_id results_acc fun_name)
+    | Some classes, None ->
+      Typing_hooks.attach_class_id_hook (process_class_id results_acc classes)
+    | _ -> assert false
+
+let detach_hooks () =
+  Typing_hooks.remove_all_hooks ()
+
 let check_if_extends_class target_class_name class_name acc =
   let class_ = Typing_env.Classes.get class_name in
   match class_ with
@@ -38,7 +81,8 @@ let get_child_classes_files workers files_info class_name =
     let cid = snd class_.Nast.c_name in
     let cid_hash = Typing_deps.Dep.make (Typing_deps.Dep.Class cid) in
     let extend_deps =
-        Typing_compare.get_extend_deps cid_hash (ISet.singleton cid_hash)
+      Typing_compare.get_extend_deps cid_hash
+        (Typing_deps.DepSet.singleton cid_hash)
     in
     Typing_deps.get_files extend_deps
   | _ ->
@@ -69,26 +113,22 @@ let get_deps_set_function f_name =
     Relative_path.Set.add fn files
   with Not_found -> Relative_path.Set.empty
 
-let find_refs target_classes target_method acc file_names =
-  Find_refs.find_refs_class_name := target_classes;
-  Find_refs.find_refs_method_name := target_method;
-  Find_refs.find_refs_results := Pos.Map.empty;
-  ServerIdeUtils.recheck file_names;
-  let result = !Find_refs.find_refs_results in
-  Find_refs.find_refs_class_name := None;
-  Find_refs.find_refs_method_name := None;
-  Find_refs.find_refs_results := Pos.Map.empty;
+let find_refs target_classes target_method acc fileinfo_l =
+  let results_acc = ref Pos.Map.empty in
+  attach_hooks results_acc target_classes target_method;
+  ServerIdeUtils.recheck fileinfo_l;
+  detach_hooks ();
   Pos.Map.fold begin fun p str acc ->
     (str, p) :: acc
-  end result []
+  end !results_acc []
 
-let parallel_find_refs workers files target_classes target_method =
+let parallel_find_refs workers fileinfo_l target_classes target_method =
   MultiWorker.call
     workers
     ~job:(find_refs target_classes target_method)
     ~neutral:([])
     ~merge:(List.rev_append)
-    ~next:(Bucket.make files)
+    ~next:(Bucket.make fileinfo_l)
 
 let get_definitions target_classes target_method =
   match target_classes, target_method with
@@ -122,12 +162,17 @@ let get_definitions target_classes target_method =
       end
   | None, None -> []
 
-let find_references workers target_classes target_method include_defs file_list =
+let find_references workers target_classes target_method include_defs
+    files_info files =
+  let fileinfo_l = Relative_path.Set.fold (fun fn acc ->
+    match Relative_path.Map.get fn files_info with
+    | Some fi -> fi :: acc
+    | None -> acc) files [] in
   let results =
-    if List.length file_list < 10 then
-      find_refs target_classes target_method [] file_list
+    if List.length fileinfo_l < 10 then
+      find_refs target_classes target_method [] fileinfo_l
     else
-      parallel_find_refs workers file_list target_classes target_method
+      parallel_find_refs workers fileinfo_l target_classes target_method
     in
   if include_defs then
     let defs = get_definitions target_classes target_method in

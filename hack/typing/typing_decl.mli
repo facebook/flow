@@ -12,7 +12,7 @@ open Utils
 val remove_classes: SSet.t -> unit
 
 (*
- * This function works by side effects. It is adding in the 
+ * This function works by side effects. It is adding in the
  * Naming_heap the nast produced from the ast passed as a parameter
  * (the SharedMem must thus have been initialized via SharedMem.init()
  * prior to calling this function). It also assumes the Parser_heap
@@ -29,4 +29,4 @@ val make_env:
   Naming.env -> Relative_path.Set.t SMap.t -> Relative_path.t -> unit
 
 val class_decl:
-  Nast.class_ -> unit
+  Naming.env -> Nast.class_ -> unit

@@ -8,4 +8,14 @@
  *
  *)
 
-let init _ = ()
+let check_response _ = ()
+let init _ _ = ()
+let init_done _ = ()
+let init_flow_command _ = ()
+let killed _ = ()
+let load_failed _ = ()
+let load_read_end _ = ()
+let load_recheck_end _ = ()
+let lock_lost _ _ = ()
+let lock_stolen _ _ = ()
+let out_of_date _ = ()

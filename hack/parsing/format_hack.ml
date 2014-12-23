@@ -681,6 +681,11 @@ and comment_loop env =
   | Teof -> ()
   | Tclose_comment ->
       last_token env;
+  | Tstarstar ->
+    last_token env;
+    (match token env with
+      | Tslash -> last_token env
+      | _ -> comment_loop env)
   | Tnewline ->
       newline env;
       skip_spaces env;
@@ -967,6 +972,7 @@ let rec preserve_nl_space env =
       while is_empty_line env do
         ignore (empty_line env)
       done;
+      back env;
       force_nl env;
   | _ ->
       back env
@@ -1270,13 +1276,13 @@ end
 and hint_parameter env = wrap env begin function
   | Tlt ->
       last_token env;
-      hint_list env;
+      hint_list ~trailing:false env;
       expect ">" env
   | _ -> back env
 end
 
-and hint_list env =
-  list_comma hint env
+and hint_list ?(trailing=true) env =
+  list_comma ~trailing:trailing hint env
 
 (*****************************************************************************)
 (* Functions *)
@@ -1455,7 +1461,8 @@ and class_element_word env = function
   | "require" ->
       seq env [last_token; space; class_extends; semi_colon]
   | "use" ->
-      seq env [last_token; space; hint_list; semi_colon; newline]
+      seq env
+        [last_token; space; hint_list ~trailing:false; semi_colon; newline]
   | "category" ->
       seq env [last_token; xhp_category; semi_colon]
   | "attribute" ->

@@ -10,3 +10,4 @@
 
 let cat _ = failwith "Not implemented in JS"
 let cat_no_fail _ = failwith "Not implemented in JS"
+let logname = "jsuser"

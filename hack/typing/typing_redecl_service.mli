@@ -8,11 +8,17 @@
  *
  *)
 
-open Utils
+open Typing_deps
 
 val redo_type_decl :
   update_pos:bool ->
   Worker.t list option ->
   Naming.env ->
   FileInfo.names Relative_path.Map.t ->
-  Errors.error list * Relative_path.Set.t * ISet.t * ISet.t
+  Errors.error list * Relative_path.Set.t * DepSet.t * DepSet.t
+
+(*
+ * XXX UNUSED: Position substitution has been disabled for now, but we're
+ * leaving the code in to minimize bitrot
+ *)
+val update_positions: Utils.SSet.t -> 'a -> unit

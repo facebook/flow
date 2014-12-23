@@ -54,26 +54,32 @@ end)
 
 (****************** header parse utils *********************)
 
-let parse_comment f comment =
-  let words = Str.split (Str.regexp "[ \t\n\\*/]+") comment in
-  f words
-
-let parse_header f default = Ast.Comment.(function
-  | (loc, Block s) :: _
-  | (loc, Line s) :: _ -> parse_comment (f default) s
-  | _ -> default
-)
+(* scan the first node in an AST comment list, using the given
+   word-list parser and default result. default is returned if
+   parser returns nothing, or comment list is empty.
+   Note: 'header' is a bit of a misnomer. we simply call this
+   on the comment list returned from the parser, which makes no
+   guarantees that the first comment appears before anything else *)
+let parse_header wordlist_parser default =
+  let words = Str.regexp "[ \t\n\\*/]+"
+  in Ast.Comment.(function
+    | [] -> default
+    | (loc, Block s) :: _
+    | (loc, Line s) :: _ ->
+        match wordlist_parser (Str.split words s) with
+        | Some x -> x
+        | None -> default
+  )
 
 (****************** @flow parser *********************)
 
-let rec parse_attributes_flow default_mode = function
-    | "@flow" :: "weak" :: _ -> ModuleMode_Weak
-    | "@flow" :: _ -> ModuleMode_Checked
-    | _ :: xs -> parse_attributes_flow default_mode xs
-    | [] -> default_mode
+let rec parse_attributes_flow = function
+  | "@flow" :: "weak" :: _ -> Some ModuleMode_Weak
+  | "@flow" :: _ -> Some ModuleMode_Checked
+  | _ :: xs -> parse_attributes_flow xs
+  | [] -> None
 
-let parse_flow comments =
-  parse_header parse_attributes_flow ModuleMode_Unchecked comments
+let parse_flow = parse_header parse_attributes_flow ModuleMode_Unchecked
 
 (** module systems **)
 
@@ -86,6 +92,18 @@ module type MODULE_SYSTEM = sig
   (* Given a file and a reference in it to an imported module, make the name of
      the module it refers to. *)
   val imported_module: string -> string -> string
+
+(* for a given module name, choose a provider from among a set of
+   files with that exported name. also check for duplicates and
+   generate warnings, as dictated by module system rules. *)
+val choose_provider:
+  string ->   (* module name *)
+  SSet.t ->   (* set of candidate provider files *)
+  (* parallel lists of error files and error sets (accumulator) *)
+  (string list * ErrorSet.t list) ->
+  (* file, parallel lists of error files and error sets (additive) *)
+  (string * (string list * ErrorSet.t list))
+
 end
 
 (****************** Node module system *********************)
@@ -171,6 +189,19 @@ module Node: MODULE_SYSTEM = struct
     match opt_module_name with
     | Some r -> r
     | _ -> r
+
+(* in node, file names are module names, as guaranteed by
+   our implementation of exported_name, so anything but a
+   singleton provider set is craziness. *)
+let choose_provider m files errs =
+  match SSet.elements files with
+  | [] ->
+      failwith (spf "internal error: empty provider set for module %S" m)
+  | [f] ->
+      f, errs
+  | files ->
+      failwith (spf "internal error: multiple providers for module %S" m)
+
 end
 
 (****************** Haste module system *********************)
@@ -185,31 +216,23 @@ module Haste: MODULE_SYSTEM = struct
   let short_module_name_of file =
     Filename.basename file |> Filename.chop_extension
 
-  type module_kind = Normal | Generated | Mock
+  let rec parse_attributes_module_name = function
+    | "@providesModule" :: m :: _ -> Some m
+    | _ :: xs -> parse_attributes_module_name xs
+    | [] -> None
 
-  let get_module_kind =
-    (* note: (not gen) && mock -> Mock *)
-    let gen = Str.regexp ".*/flib.*/js/.*" in
-    let mock = Str.regexp ".*/__mocks__/.*" in
-    (fun file ->
-      if Str.string_match gen file 0 then Generated
-      else if Str.string_match mock file 0 then Mock
-      else Normal
-    )
+  let parse_module_name = parse_header parse_attributes_module_name
 
-  let rec parse_attributes_module_name default_module_name = function
-    | "@providesModule" :: m :: _ -> m
-    | _ :: xs -> parse_attributes_module_name default_module_name xs
-    | [] -> default_module_name
+  let is_mock =
+    let mock_path = Str.regexp ".*/__mocks__/.*" in
+    fun file -> Str.string_match mock_path file 0
 
   let exported_module file comments =
-    match get_module_kind file with
-    | Normal ->
-      parse_header parse_attributes_module_name (module_name_of file) comments
-    | Generated ->
-      short_module_name_of file
-    | Mock ->
-      module_name_of file
+    if is_mock file
+    then short_module_name_of file
+    else
+      let default = module_name_of file in
+      parse_module_name default comments
 
   let imported_module file r =
     if (String.contains r '/')
@@ -218,6 +241,37 @@ module Haste: MODULE_SYSTEM = struct
       Files_js.normalize_path dir r
     else
       r
+
+(* in haste, many files may provide the same module. here we're also
+   supporting the notion of mock modules - allowed duplicates used as
+   fallbacks. we prefer the non-mock if it exists, otherwise choose an
+   arbitrary mock, if any exist. if multiple non-mock providers exist,
+   we pick one arbitrarily and issue duplicate module warnings for the
+   rest. *)
+let choose_provider m files (errfiles, errsets) =
+  match SSet.elements files with
+  | [] ->
+      failwith (spf "internal error: empty provider set for module %S" m)
+  | [f] ->
+      f, (errfiles, errsets)
+  | files ->
+      let mocks, non_mocks = List.partition is_mock files in
+      match non_mocks with
+      | [] -> List.hd mocks, (errfiles, errsets)
+      | [f] -> f, (errfiles, errsets)
+      | h :: t ->
+          let errfiles, errsets = List.fold_left (fun (errfiles, errsets) f ->
+            let w = Flow.new_warning [
+              Reason.new_reason m (Pos.make_from
+                (Relative_path.create Relative_path.Dummy f)),
+                "Duplicate module provider";
+              Reason.new_reason "current provider"
+                (Pos.make_from (Relative_path.create Relative_path.Dummy h)),
+                ""] in
+            f :: errfiles, (ErrorSet.singleton w) :: errsets
+          ) (errfiles, errsets) t in
+          h, (errfiles, errsets)
+
 end
 
 (****************** module system switch *********************)
@@ -243,6 +297,10 @@ let exported_module file comments =
 let imported_module file r =
   let module M = (val !module_system) in
   M.imported_module file r
+
+let choose_provider m files errs =
+  let module M = (val !module_system) in
+  M.choose_provider m files errs
 
 (****************** reverse import utils *********************)
 
@@ -371,29 +429,6 @@ let remove_provider f m =
 
 let get_providers = Hashtbl.find all_providers
 
-(* choose a provider file for a module.
-   also check for duplicates and generate warnings.
-   note that all files are present in the returned list, not
-   just those with errors. *)
-let choose_provider m provs (files, errsets) =
-  match SSet.elements provs with
-  | [] ->
-      failwith (spf "internal error: empty provider set for module %S" m)
-  | [f] ->
-      f, (f :: files, ErrorSet.empty :: errsets)
-  | h :: t ->
-      let files, errsets = List.fold_left (fun (files, errsets) f ->
-        let w = Flow.new_warning [
-          Reason.new_reason m (Pos.make_from
-            (Relative_path.create Relative_path.Dummy f)),
-            "Duplicate module provider";
-          Reason.new_reason "current provider"
-            (Pos.make_from (Relative_path.create Relative_path.Dummy h)),
-            ""] in
-        f :: files, (ErrorSet.singleton w) :: errsets
-      ) (files, errsets) t in
-      h, (h :: files, ErrorSet.empty :: errsets)
-
 (* inferred is a list of inferred file names.
    removed is a set of removed module names.
    modules provided by inferred files may or may not have a provider.
@@ -445,7 +480,7 @@ let commit_modules inferred removed =
         Modes.debug_string (fun () -> spf
           "no remaining providers: %S" m);
         (SSet.add m rem), rep, errs
-    | _ as ps ->
+    | ps ->
       let p, errs = choose_provider m ps errs in
       match NameHeap.get m with
       | Some f when f = p ->

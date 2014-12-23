@@ -22,6 +22,7 @@ type env = Typing_env.env
 type inherited = {
   ih_cstr     : class_elt option * bool;
   ih_consts   : class_elt SMap.t ;
+  ih_typeconsts : class_elt SMap.t ;
   ih_cvars    : class_elt SMap.t ;
   ih_scvars   : class_elt SMap.t ;
   ih_methods  : class_elt SMap.t ;

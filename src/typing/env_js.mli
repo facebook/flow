@@ -74,8 +74,6 @@ val clear_env : Reason_js.reason -> unit
 val changeset: SSet.t ref
 val swap_changeset: (SSet.t -> SSet.t) -> SSet.t
 
-val prop_lookup_name: string -> string -> string
+val refinement_key : string list -> string
+val get_refinement: context -> string -> reason -> Type.t option
 
-(* val is_prop_lookup: string -> bool *)
-val get_lookup_refinement:
-  context -> string -> string -> reason -> Type.t option

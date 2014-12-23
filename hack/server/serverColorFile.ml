@@ -12,10 +12,10 @@ open Utils
 
 type result = ((int * int) * Coverage_level.level) list
 
-let go f_in oc =
+let go env f_in oc =
   assert (!Typing_defs.type_acc = []);
   Typing_defs.accumulate_types := true;
-  ServerIdeUtils.check_file_input f_in;
+  ServerIdeUtils.check_file_input env.ServerEnv.files_info f_in;
   Typing_defs.accumulate_types := false;
   let fn_opt = match f_in with
     | ServerMsg.FileContent _ -> None

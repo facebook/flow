@@ -32,6 +32,7 @@ function success(e) {
 
 function parse_file(filename, data) {
   var result;
+    var ast = flow.parse(data);
   try {
     process.stdout.write(filename + " : ... ");
     var ast = flow.parse(data);
@@ -90,6 +91,6 @@ if (argv.help || argv._.length == 0) {
 }
 
 for (var i = 0; i < argv._.length; i++) {
-  var data = fs.readFileSync(argv._[i] + "");
+  var data = fs.readFileSync(argv._[i] + "").toString();
   parse_file(argv._[i], data);
 }

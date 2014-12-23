@@ -137,17 +137,17 @@ module MakeWorker = struct
   (* The current amount of "live" workers *)
   let current_workers = ref 0
 
-  let rec make: ('a, 'b) acc -> int -> ('a, 'b) acc =
-  fun acc n ->
+  let rec make: ('a, 'b) acc -> int -> Gc.control -> ('a, 'b) acc =
+  fun acc n gc_control ->
     incr current_workers;
     if !current_workers > max_workers
     then failwith "Too many workers"
     else if n <= 0
     then acc
-    else make_ acc n
+    else make_ acc n gc_control
 
-  and make_: ('a, 'b) acc -> int -> ('a, 'b) acc =
-  fun acc n ->
+  and make_: ('a, 'b) acc -> int -> Gc.control -> ('a, 'b) acc =
+  fun acc n gc_control ->
     (* Initializing a bidirectional pipe *)
     let pipe_parent_reads_child_sends = make_pipe() in
     let pipe_parent_sends_child_reads = make_pipe() in
@@ -178,6 +178,7 @@ module MakeWorker = struct
          * we close all the ones we don't need anymore.
          *)
         hh_worker_init();
+        Gc.set gc_control;
         close_parent descr_parent_reads descr_parent_sends acc;
         (* And now start the daemon worker *)
         start_worker descr_child_reads child_reads_task child_sends_result
@@ -192,7 +193,7 @@ module MakeWorker = struct
           descr_send = descr_parent_sends;
         } in
         let acc = worker :: acc in
-        make acc (n-1)
+        make acc (n-1) gc_control
 
   and close_parent: Unix.file_descr -> Unix.file_descr -> ('a, 'b) acc
     -> unit =
@@ -214,12 +215,6 @@ module MakeWorker = struct
   fun descr_in child_reads_task child_sends_result ->
     (* Daemon *)
     try
-      (* Let's virtually turn off the GC, it can still be
-       * triggered in extreme cases, but should not most
-       * of the time.
-       *)
-      let gc = Gc.get() in
-      Gc.set { gc with Gc.minor_heap_size = 8_000_000 };
       while true do
         (* This is a trick to use less memory and to be faster.
          * If we fork now, the heap is very small, because no job
@@ -286,7 +281,7 @@ end
 let get_pid proc = (Obj.magic proc).pid
 let call proc f x = proc.send_task ({ job = f; arg = x })
 let get_result proc _ = proc.recv_result()
-let make heap = Obj.magic (MakeWorker.make [] heap)
+let make heap gc_control = Obj.magic (MakeWorker.make [] heap gc_control)
 let call proc = Obj.magic (call (Obj.magic proc))
 let select procl = Obj.magic (select (Obj.magic procl))
 let get_result proc = get_result (Obj.magic proc)

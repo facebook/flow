@@ -442,6 +442,10 @@ void hh_load(value in_filename) {
   CAMLparam1(in_filename);
   FILE* fp = fopen(String_val(in_filename), "rb");
 
+  if (fp == NULL) {
+    caml_failwith("Failed to open file");
+  }
+
   uint64_t magic = 0;
   read_all(fileno(fp), (void*)&magic, sizeof magic);
   assert(magic == MAGIC_CONSTANT);

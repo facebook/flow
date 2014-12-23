@@ -8,8 +8,6 @@
  *
  *)
 
-
-
 (* The reason why something is expected to have a certain type *)
 type t =
   | Rnone
@@ -102,7 +100,7 @@ let rec to_string prefix r =
   | Ryield_send      _ -> [(p, prefix ^ " ($generator->send() can always send a null back to a \"yield\")")]
   | Rvar_param       _ -> [(p, prefix ^ " (variadic argument)")]
   | Runpack_param    _ -> [(p, prefix ^ " (it is unpacked with '...')")]
-  | Rcoerced     (p1, p2, s)  ->
+  | Rcoerced     (_, p2, s)  ->
       [
         (p, prefix);
         (p2, "It was implicitly typed as "^s^" during this operation")

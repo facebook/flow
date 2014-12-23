@@ -164,6 +164,8 @@ module HintCycle = struct
         hintl stack params hl
     | Hshape l ->
         List.iter (fun (_, x) -> hint stack params x) l
+    (* do we need to do anything here? probably when we add type params *)
+    | Haccess (_, _, _) -> ()
 
   and hintl stack params l = List.iter (hint stack params) l
 

@@ -22,9 +22,10 @@ val init: Path.path list -> unit
 val get_flowlib_root: unit -> string
 
 (* names of library files defining builtins *)
-val lib_files: string list ref
+val get_lib_files: unit -> Utils.SSet.t
 
 val is_lib_file: string -> bool
+val is_lib_file_or_flowlib_root: string -> bool
 val lib_module: string
 
 (* regexp for Filename constants *)

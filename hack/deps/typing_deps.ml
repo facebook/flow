@@ -9,8 +9,6 @@
  *)
 
 
-open Utils
-
 (**********************************)
 (* Handling dependencies *)
 (**********************************)
@@ -61,15 +59,32 @@ module Dep = struct
   let is_class x = x land 1 = 1
   let extends_of_class x = x lxor 1
 
-  let compare x y = x - y
+  let compare = (-)
 
+end
+
+module DepSet = Set.Make (Dep)
+
+(****************************************************************************)
+(* Module for a compact graph. *)
+(* Please consult hh_shared.c for the underlying representation. *)
+(****************************************************************************)
+module Graph = struct
+  external hh_add_dep: int -> unit     = "hh_add_dep"
+  external hh_get_dep: int -> int list = "hh_get_dep"
+
+  let add x y = hh_add_dep ((x lsl 31) lor y)
+
+  let get x =
+    let l = hh_get_dep x in
+    List.fold_left begin fun acc node ->
+      DepSet.add node acc
+    end DepSet.empty l
 end
 
 (*****************************************************************************)
 (* Module keeping track of what object depends on what. *)
 (*****************************************************************************)
-module Graph = Typing_graph
-
 let trace = ref true
 
 let add_idep root obj =
@@ -104,7 +119,7 @@ let get_bazooka x =
   | Dep.FunName fid -> get_ideps (Dep.FunName fid)
   | Dep.GConst cid -> get_ideps (Dep.GConst cid)
   | Dep.GConstName cid -> get_ideps (Dep.GConstName cid)
-  | Dep.Injectable -> ISet.empty
+  | Dep.Injectable -> DepSet.empty
 
 (*****************************************************************************)
 (* Module keeping track which files contain the toplevel definitions. *)
@@ -112,8 +127,12 @@ let get_bazooka x =
 
 let (ifiles: (int, Relative_path.Set.t) Hashtbl.t ref) = ref (Hashtbl.create 23)
 
+let marshal chan = Marshal.to_channel chan !ifiles []
+
+let unmarshal chan = ifiles := Marshal.from_channel chan
+
 let get_files deps =
-  ISet.fold begin fun dep acc ->
+  DepSet.fold begin fun dep acc ->
     try
       let files = Hashtbl.find !ifiles dep in
       Relative_path.Set.union files acc
@@ -128,16 +147,16 @@ let update_files fast =
          consider_names_just_for_autoload = _;
         } = info in
     let funs = List.fold_left begin fun acc (_, fun_id) ->
-      ISet.add (Dep.make (Dep.Fun fun_id)) acc
-    end ISet.empty funs in
+      DepSet.add (Dep.make (Dep.Fun fun_id)) acc
+    end DepSet.empty funs in
     let classes = List.fold_left begin fun acc (_, class_id) ->
-      ISet.add (Dep.make (Dep.Class class_id)) acc
-    end ISet.empty classes in
+      DepSet.add (Dep.make (Dep.Class class_id)) acc
+    end DepSet.empty classes in
     let classes = List.fold_left begin fun acc (_, type_id) ->
-      ISet.add (Dep.make (Dep.Class type_id)) acc
+      DepSet.add (Dep.make (Dep.Class type_id)) acc
     end classes types in
-    let defs = ISet.union funs classes in
-    ISet.iter begin fun def ->
+    let defs = DepSet.union funs classes in
+    DepSet.iter begin fun def ->
       let previous =
         try Hashtbl.find !ifiles def with Not_found -> Relative_path.Set.empty
       in

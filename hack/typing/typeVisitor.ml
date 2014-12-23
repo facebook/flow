@@ -1,3 +1,13 @@
+(**
+ * Copyright (c) 2014, Facebook, Inc.
+ * All rights reserved.
+ *
+ * This source code is licensed under the BSD-style license found in the
+ * LICENSE file in the "hack" directory of this source tree. An additional grant
+ * of patent rights can be found in the PATENTS file in the same directory.
+ *
+ *)
+
 open Utils
 open Typing_defs
 
@@ -18,6 +28,7 @@ class type ['a] type_visitor_type = object
   method on_tunresolved : 'a -> ty list -> 'a
   method on_tobject : 'a -> 'a
   method on_tshape : 'a -> ty Nast.ShapeMap.t -> 'a
+  method on_taccess : 'a -> static_class_id -> Nast.sid -> Nast.sid list -> 'a
 end
 
 class virtual ['a] type_visitor : ['a] type_visitor_type = object(this)
@@ -36,17 +47,18 @@ class virtual ['a] type_visitor : ['a] type_visitor_type = object(this)
     let tparams = List.map thd3 ft_tparams in
     let acc = List.fold_left (opt_fold_left this#on_type) acc tparams in
     this#on_type acc ft_ret
-  method on_tabstract acc s tyl ty_opt =
+  method on_tabstract acc _ tyl ty_opt =
     let acc = List.fold_left this#on_type acc tyl in
     let acc = opt_fold_left this#on_type acc ty_opt in
     acc
-  method on_tapply acc s tyl = List.fold_left this#on_type acc tyl
+  method on_tapply acc _ tyl = List.fold_left this#on_type acc tyl
+  method on_taccess acc _ _id _ids = acc
   method on_ttuple acc tyl = List.fold_left this#on_type acc tyl
-  method on_tanon acc arity id = acc
+  method on_tanon acc _ _ = acc
   method on_tunresolved acc tyl = List.fold_left this#on_type acc tyl
   method on_tobject acc = acc
   method on_tshape acc fdm =
-    let f k v acc = this#on_type acc v in
+    let f _ v acc = this#on_type acc v in
     Nast.ShapeMap.fold f fdm acc
   method on_type acc = function
     | _, Tany -> this#on_tany acc
@@ -60,6 +72,7 @@ class virtual ['a] type_visitor : ['a] type_visitor_type = object(this)
     | _, Tfun fty -> this#on_tfun acc fty
     | _, Tabstract (s, tyl, ty_opt) -> this#on_tabstract acc s tyl ty_opt
     | _, Tapply (s, tyl) -> this#on_tapply acc s tyl
+    | _, Taccess (root, id, ids) -> this#on_taccess acc root id ids
     | _, Ttuple tyl -> this#on_ttuple acc tyl
     | _, Tanon (arity, id) -> this#on_tanon acc arity id
     | _, Tunresolved tyl -> this#on_tunresolved acc tyl

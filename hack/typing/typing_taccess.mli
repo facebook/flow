@@ -8,7 +8,5 @@
  *
  *)
 
-
-
-val parallel: int -> (string -> 'b -> 'b) -> string list -> 'b ->
-  ('b -> 'b -> 'b) -> 'b
+(* Expands all Taccess types present in the given type *)
+val expand: Typing_env.env -> Typing_defs.ty -> Typing_env.env * Typing_defs.ty

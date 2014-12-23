@@ -289,7 +289,11 @@ val mod_reason_of_t : (reason -> reason) -> Type.t -> Type.t
 
 val string_of_t : context -> Type.t -> string
 
-val is_printed_type_parsable : context -> Type.t -> bool
+val parameter_name : context -> string -> Type.t -> string
+val string_of_param_t : context -> Type.t -> string
+
+val is_printed_type_parsable : ?weak:bool -> context -> Type.t -> bool
+val is_printed_param_type_parsable : ?weak:bool -> context -> Type.t -> bool
 
 val string_of_ctor : Type.t -> string
 

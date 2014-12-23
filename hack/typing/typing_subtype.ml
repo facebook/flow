@@ -20,10 +20,12 @@ module TUtils = Typing_utils
 module TUEnv = Typing_unification_env
 module ShapeMap = Nast.ShapeMap
 module SN = Naming_special_names
+module TAccess = Typing_taccess
 
 (* This function checks that the method ft_sub can be used to replace
  * (is a subtype of) ft_super *)
-let rec subtype_funs_generic ~check_return env r_super ft_super r_sub orig_ft_sub =
+let rec subtype_funs_generic ~check_return env r_super ft_super r_sub
+    orig_ft_sub =
   let p_sub = Reason.to_pos r_sub in
   let p_super = Reason.to_pos r_super in
   let env, ft_sub = Inst.instantiate_ft env orig_ft_sub in
@@ -107,12 +109,17 @@ and sub_type_with_uenv env (uenv_super, ty_super) (uenv_sub, ty_sub) =
   let env, ety_super = Env.expand_type env ty_super in
   let env, ety_sub = Env.expand_type env ty_sub in
   match ety_super, ety_sub with
-  | (r, Tapply ((_, x), argl)), _ when Typing_env.is_typedef env x ->
+  | (r, Tapply ((_, x), argl)), _ when Typing_env.is_typedef x ->
       let env, ty_super = TDef.expand_typedef env r x argl in
       sub_type_with_uenv env (uenv_super, ty_super) (uenv_sub, ty_sub)
-  | _, (r, Tapply ((_, x), argl)) when Typing_env.is_typedef env x ->
+  | _, (r, Tapply ((_, x), argl)) when Typing_env.is_typedef x ->
       let env, ty_sub = TDef.expand_typedef env r x argl in
       sub_type_with_uenv env (uenv_super, ty_super) (uenv_sub, ty_sub)
+  | _, (_, Taccess _)
+  | (_, Taccess _), _ ->
+      let env, ety_super = TAccess.expand env ety_super in
+      let env, ety_sub = TAccess.expand env ety_sub in
+        sub_type_with_uenv env (uenv_super, ety_super) (uenv_sub, ety_sub)
   | (_, Tunresolved _), (_, Tunresolved _) ->
       let env, _ =
         Unify.unify_with_uenv env (uenv_super, ty_super) (uenv_sub, ty_sub) in
@@ -210,13 +217,12 @@ and sub_type_with_uenv env (uenv_super, ty_super) (uenv_sub, ty_sub) =
       env
   | (p_super, (Tapply (x_super, tyl_super) as ty_super_)),
       (p_sub, (Tapply (x_sub, tyl_sub) as ty_sub_))
-      when Typing_env.get_enum_constraint env (snd x_sub) = None  ->
+      when Typing_env.get_enum_constraint (snd x_sub) = None  ->
     let cid_super, cid_sub = (snd x_super), (snd x_sub) in
     if cid_super = cid_sub then
       if tyl_super <> [] && List.length tyl_super = List.length tyl_sub
       then
-        let env, c = Env.get_class env cid_super in
-        match c with
+        match Env.get_class env cid_super with
         | None -> fst (Unify.unify env ety_super ety_sub)
         | Some { tc_tparams; _} ->
             let variancel =
@@ -225,7 +231,7 @@ and sub_type_with_uenv env (uenv_super, ty_super) (uenv_sub, ty_sub) =
             subtype_tparams env variancel tyl_super tyl_sub
       else fst (Unify.unify env ety_super ety_sub)
     else begin
-      let env, class_ = Env.get_class env cid_sub in
+      let class_ = Env.get_class env cid_sub in
       (match class_ with
         | None -> env
         | Some class_ ->
@@ -347,7 +353,7 @@ and sub_type_with_uenv env (uenv_super, ty_super) (uenv_sub, ty_sub) =
   | (_, Tabstract ((_, name_super), tyl_super, _)),
       (_, Tabstract ((_, name_sub), tyl_sub, _))
     when name_super = name_sub ->
-      let env, td = Env.get_typedef env name_super in
+      let td = Env.get_typedef env name_super in
       (match td with
       | Some (Env.Typedef.Ok (_, tparams, _, _, _)) ->
           let variancel =
@@ -362,8 +368,8 @@ and sub_type_with_uenv env (uenv_super, ty_super) (uenv_sub, ty_sub) =
          (fun _ -> sub_type_with_uenv env (uenv_super, ty_super) (uenv_sub, x))
   (* Handle enums with subtyping constraints. *)
   | _, (p_sub, (Tapply ((_, x), [])))
-    when Typing_env.get_enum_constraint env x <> None ->
-    (match Typing_env.get_enum_constraint env x with
+    when Typing_env.get_enum_constraint x <> None ->
+    (match Typing_env.get_enum_constraint x with
       | Some base ->
         (* Handling is the same as abstracts with as *)
         Errors.try_
@@ -391,11 +397,14 @@ and sub_string p env ty2 =
   | (_, Tabstract (_, _, Some ty))
   | (_, Tgeneric (_, Some ty)) ->
       sub_string p env ty
-  | (r2, Tapply ((_, x), argl)) when Typing_env.is_typedef env x ->
+  | (_, Taccess _) ->
+      let env, ety2 = TAccess.expand env ety2 in
+      sub_string p env ety2
+  | (r2, Tapply ((_, x), argl)) when Typing_env.is_typedef x ->
       let env, ty2 = Typing_tdef.expand_typedef env r2 x argl in
       sub_string p env ty2
   | (r2, Tapply (x, _)) ->
-      let env, class_ = Env.get_class env (snd x) in
+      let class_ = Env.get_class env (snd x) in
       (match class_ with
       | None -> env
       | Some tc

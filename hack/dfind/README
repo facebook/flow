@@ -13,7 +13,7 @@ Note that you can do: dfind -f, if you want to get the differences incrementally
 
 What happens under the hood:
 If you are the first one to call dfind, it forks, and creates a server.
-The dfind server is shared accross all the users of the machine.
+The dfind server is shared across all the users of the machine.
 You can find the log in /tmp/dfind.log and the pid in /tmp/dfind.pid
 
 NOTE: dfind is very dumb, and very conservative. It can give you MORE files that what has actually changed. But it will never give you less (unless there is a bug). The idea is to use dfind to narrow down the results, not to give and accurate view of the current state of the world.

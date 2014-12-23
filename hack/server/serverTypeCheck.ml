@@ -106,20 +106,6 @@ let reparse fast files_info additional_files =
     | Some _ -> acc
   end additional_files fast
 
-(* The version with the definitions + their position *)
-let reparse_with_pos fast files_info additional_files =
-  SSet.fold (
-  fun x acc ->
-    match SMap.get x fast with
-    | None ->
-        (try
-          let info = SMap.find_unsafe x files_info in
-          SMap.add x info acc
-        with Not_found ->
-          acc)
-    | Some _ -> acc
- ) additional_files fast
-
 (*****************************************************************************)
 (* Removes the names that were defined in the files *)
 (*****************************************************************************)

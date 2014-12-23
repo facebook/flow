@@ -11,9 +11,11 @@
 open Coverage_level
 open Utils
 
-module SE = ServerEnv
-
 type result = level_counts trie option
+
+module FileInfoStore = GlobalStorage.Make(struct
+  type t = FileInfo.t Relative_path.Map.t
+end)
 
 (* Count the number of expressions of each kind of Coverage_level. *)
 let count_exprs fn pos_ty_m =
@@ -25,12 +27,13 @@ let count_exprs fn pos_ty_m =
 let get_coverage neutral fnl =
   SharedMem.invalidate_caches();
   Typing_defs.accumulate_types := true;
+  let files_info = FileInfoStore.load () in
   let file_counts = List.map begin fun fn ->
-    match Parser_heap.ParserHeap.get fn with
+    match Relative_path.Map.get fn files_info with
     | None -> None
     | Some defs ->
         assert (!Typing_defs.type_acc = []);
-        List.iter ServerIdeUtils.check_def defs;
+        ServerIdeUtils.check_defs defs;
         let counts = count_exprs fn !Typing_defs.type_acc in
         Typing_defs.type_acc := [];
         Some (fn, counts)
@@ -88,7 +91,7 @@ let relativize root path =
     Some (String.sub path root_len (String.length path - root_len))
   else None
 
-let go_ fn genv =
+let go_ fn genv env =
   let path = Path.mk_path fn in
   let root = Path.parent path in
   let module RP = Relative_path in
@@ -96,22 +99,24 @@ let go_ fn genv =
     (rev_rev_map (RP.create RP.Root))
     (Find.make_next_files_php path)
   in
+  FileInfoStore.store env.ServerEnv.files_info;
   let result =
     MultiWorker.call
-      genv.SE.workers
+      genv.ServerEnv.workers
       ~job:get_coverage
       ~neutral:[]
       ~merge:(@)
       ~next:next_files
   in
+  FileInfoStore.clear ();
   let relativize_list = List.map (fun (p, c) ->
     (relativize root (Relative_path.to_absolute p) |> unsafe_opt, c)) in
   let result = List.map relativize_list result in
   List.fold_left mk_trie None result
 
-let go fn genv oc =
+let go fn genv env oc =
   let result =
-    try go_ fn genv
+    try go_ fn genv env
     with Failure _ | Invalid_argument _ ->
       print_string "Coverage collection failed!";
       None

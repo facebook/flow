@@ -81,9 +81,9 @@ let lookup_magic_type (env:Env.env) (class_:ty) (fname:string) (uniq:int) :
   match class_ with
     | (why, Tapply ((_, className), [])) ->
         (match Env.get_class env className with
-           | env, Some c ->
+           | Some c ->
                (match Env.get_member true env c fname with
-                  | env, Some {
+                  | Some {
                       ce_type = (_, Tfun {
                                    ft_tparams = tpars;
                                    ft_params = pars;
@@ -97,8 +97,8 @@ let lookup_magic_type (env:Env.env) (class_:ty) (fname:string) (uniq:int) :
                                     (match ty with
                                        | (_, Tprim Nast.Tstring) -> None
                                        | x -> Some ty))
-                  | env, _ -> env, None)
-           | env, None -> env, None)
+                  | _ -> env, None)
+           | None -> env, None)
     | _ -> env, None
 
 let get_char s i =

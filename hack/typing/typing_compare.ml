@@ -45,7 +45,7 @@ module CompareTypes = struct
 
   type result = (Pos.t * Pos.t) list * bool
 
-  let default = [], false
+  let default : result = [], false
 
   let string_id (subst, same) (p1, s1) (p2, s2) =
     if s1 <> s2
@@ -118,6 +118,15 @@ module CompareTypes = struct
         let acc = string_id acc sid1 sid2 in
         let acc = tyl acc tyl1 tyl2 in
         acc
+    | Taccess (rt1, id1, ids1), Taccess (rt2, id2, ids2)
+      when List.length ids1 = List.length ids2 ->
+        let acc =
+          match rt1, rt2 with
+          | SCIstatic, SCIstatic -> acc
+          | SCI rt1_id, SCI rt2_id -> string_id acc rt1_id rt2_id
+          | SCIstatic, _ | SCI _, _ -> default
+        in
+        List.fold_left2 string_id acc (id1 :: ids1) (id2 :: ids2)
     | Tunresolved tyl1, Tunresolved tyl2
     | Ttuple tyl1, Ttuple tyl2 ->
         tyl acc tyl1 tyl2
@@ -130,9 +139,9 @@ module CompareTypes = struct
           | Some v2 ->
               ty acc v1 v2
         end fdm1 acc
-    | (Tanon _ | Tany | Tmixed | Tarray (_, _) | Tshape _ |
-      Tgeneric (_, _)|Toption _|Tprim _|Tvar _| Tabstract _ |
-      Tfun _|Tapply (_, _)|Ttuple _|Tunresolved _|Tobject), _ -> default
+    | (Tanon _ | Tany | Tmixed | Tarray (_, _) | Tshape _ | Taccess (_, _, _) |
+      Tgeneric (_, _)| Toption _| Tprim _| Tvar _| Tabstract _ |
+      Tfun _| Tapply (_, _) | Ttuple _| Tunresolved _| Tobject), _ -> default
 
   and tyl acc tyl1 tyl2 =
     if List.length tyl1 <> List.length tyl2
@@ -192,6 +201,7 @@ module CompareTypes = struct
   and class_elt (subst, same) celt1 celt2 =
     let same = same && celt1.ce_visibility = celt2.ce_visibility in
     let same = same && celt1.ce_final = celt2.ce_final in
+    let same = same && celt1.ce_is_xhp_attr = celt2.ce_is_xhp_attr in
     let same = same && celt1.ce_override = celt2.ce_override in
     let same = same && celt1.ce_synthesized = celt2.ce_synthesized in
     ty (subst, same) celt1.ce_type celt2.ce_type
@@ -231,6 +241,7 @@ module CompareTypes = struct
     let acc = members acc c1.tc_scvars c2.tc_scvars in
     let acc = members acc c1.tc_methods c2.tc_methods in
     let acc = members acc c1.tc_smethods c2.tc_smethods in
+    let acc = members acc c1.tc_typeconsts c2.tc_typeconsts in
     let acc = constructor acc c1.tc_construct c2.tc_construct in
     let acc = ancestry acc c1.tc_req_ancestors c2.tc_req_ancestors in
     let acc = ancestry acc c1.tc_ancestors c2.tc_ancestors in
@@ -319,6 +330,13 @@ module TraversePos(ImplementPos: sig val pos: Pos.t -> Pos.t end) = struct
     | Toption x            -> Toption (ty x)
     | Tfun ft              -> Tfun (fun_type ft)
     | Tapply (sid, xl)     -> Tapply (string_id sid, List.map (ty) xl)
+    | Taccess (root, id, ids) ->
+        let new_root =
+          match root with
+          | SCIstatic -> root
+          | SCI sid -> SCI (string_id sid)
+        in
+        Taccess (new_root, string_id id, List.map string_id ids)
     | Tabstract (sid, xl, x) ->
         Tabstract (string_id sid, List.map (ty) xl, ty_opt x)
     | Tobject as x         -> x
@@ -338,6 +356,7 @@ module TraversePos(ImplementPos: sig val pos: Pos.t -> Pos.t end) = struct
 
   and class_elt ce =
     { ce_final       = ce.ce_final      ;
+      ce_is_xhp_attr = ce.ce_is_xhp_attr;
       ce_override    = ce.ce_override   ;
       ce_synthesized = ce.ce_synthesized;
       ce_visibility  = ce.ce_visibility ;
@@ -362,6 +381,7 @@ module TraversePos(ImplementPos: sig val pos: Pos.t -> Pos.t end) = struct
       tc_req_ancestors_extends = tc.tc_req_ancestors_extends          ;
       tc_tparams               = List.map type_param tc.tc_tparams    ;
       tc_consts                = SMap.map class_elt tc.tc_consts      ;
+      tc_typeconsts            = SMap.map class_elt tc.tc_typeconsts  ;
       tc_cvars                 = SMap.map class_elt tc.tc_cvars       ;
       tc_scvars                = SMap.map class_elt tc.tc_scvars      ;
       tc_methods               = SMap.map class_elt tc.tc_methods     ;
@@ -414,15 +434,6 @@ end
 (*****************************************************************************)
 module ClassDiff = struct
 
-  type t = {
-      consts   : SSet.t ;
-      cvars    : SSet.t ;
-      scvars   : SSet.t ;
-      methods  : SSet.t ;
-      smethods : SSet.t ;
-      cstr     : bool   ;
-    }
-
   let smap_left s1 s2 =
     SMap.fold begin fun x ty1 diff ->
       let ty2 = SMap.get x s2 in
@@ -438,13 +449,13 @@ module ClassDiff = struct
     SSet.union (smap_left s1 s2) (smap_left s2 s1)
 
   let add_inverted_dep build_obj x acc =
-    ISet.union (Typing_deps.get_ideps (build_obj x)) acc
+    DepSet.union (Typing_deps.get_ideps (build_obj x)) acc
 
   let add_inverted_deps acc build_obj xset =
     SSet.fold (add_inverted_dep build_obj) xset acc
 
   let compare cid class1 class2 =
-    let acc = ISet.empty in
+    let acc = DepSet.empty in
     let is_unchanged = true in
 
     (* compare class constants *)
@@ -476,7 +487,13 @@ module ClassDiff = struct
     let cstr_diff = class1.tc_construct <> class2.tc_construct in
     let is_unchanged = is_unchanged && not cstr_diff in
     let cstr_ideps = Typing_deps.get_ideps (Dep.Cstr cid) in
-    let acc = if cstr_diff then ISet.union acc cstr_ideps else acc in
+    let acc = if cstr_diff then DepSet.union acc cstr_ideps else acc in
+
+    (* compare class type constants *)
+    let typeconsts_diff = smap class1.tc_typeconsts class2.tc_typeconsts in
+    let is_unchanged = is_unchanged && SSet.is_empty typeconsts_diff in
+    let acc =
+      add_inverted_deps acc (fun x -> Dep.Class (cid^"::"^x)) typeconsts_diff in
 
     acc, is_unchanged
 
@@ -505,7 +522,11 @@ let class_big_diff class1 class2 =
   SMap.compare class1.tc_req_ancestors class2.tc_req_ancestors <> 0 ||
   SSet.compare class1.tc_req_ancestors_extends class2.tc_req_ancestors_extends <> 0 ||
   SSet.compare class1.tc_extends class2.tc_extends <> 0 ||
-  class1.tc_enum_type <> class2.tc_enum_type
+  class1.tc_enum_type <> class2.tc_enum_type ||
+  (* due to, e.g. switch exhaustiveness checks, a change in an enum's
+   * constant set is a "big" difference *)
+    (class1.tc_enum_type <> None &&
+       not (SSet.is_empty (ClassDiff.smap class1.tc_consts class2.tc_consts)))
 
 (*****************************************************************************)
 (* Given a class name adds all the subclasses, we need a "trace" to follow
@@ -513,16 +534,16 @@ let class_big_diff class1 class2 =
  *)
 (*****************************************************************************)
 let rec get_extend_deps_ trace cid_hash to_redecl =
-  if ISet.mem cid_hash !trace
+  if DepSet.mem cid_hash !trace
   then to_redecl
   else begin
-    trace := ISet.add cid_hash !trace;
+    trace := DepSet.add cid_hash !trace;
     let cid_hash = Typing_deps.Dep.extends_of_class cid_hash in
     let ideps = Typing_deps.get_ideps_from_hash cid_hash in
-    ISet.fold begin fun obj acc ->
+    DepSet.fold begin fun obj acc ->
       if Typing_deps.Dep.is_class obj
       then
-        let to_redecl = ISet.add obj acc in
+        let to_redecl = DepSet.add obj acc in
         get_extend_deps_ trace obj to_redecl
     else to_redecl
   end ideps to_redecl
@@ -537,14 +558,14 @@ let rec get_extend_deps_ trace cid_hash to_redecl =
 (*****************************************************************************)
 and get_all_dependencies trace cid (to_redecl, to_recheck) =
   let bazooka = Typing_deps.get_bazooka (Dep.Class cid) in
-  let to_redecl = ISet.union bazooka to_redecl in
-  let to_recheck = ISet.union bazooka to_recheck in
+  let to_redecl = DepSet.union bazooka to_redecl in
+  let to_recheck = DepSet.union bazooka to_recheck in
   let cid_hash = Typing_deps.Dep.make (Dep.Class cid) in
   let to_redecl = get_extend_deps_ trace cid_hash to_redecl in
   to_redecl, to_recheck
 
 let get_extend_deps cid_hash to_redecl =
-  get_extend_deps_ (ref ISet.empty) cid_hash to_redecl
+  get_extend_deps_ (ref DepSet.empty) cid_hash to_redecl
 
 (*****************************************************************************)
 (* Determine which functions/classes have to be rechecked after comparing
@@ -557,9 +578,9 @@ let get_fun_deps old_funs fid (to_redecl, to_recheck) =
       to_redecl, to_recheck
   | None, _ | _, None ->
       let where_fun_is_used = Typing_deps.get_bazooka (Dep.Fun fid) in
-      let to_recheck = ISet.union where_fun_is_used to_recheck in
+      let to_recheck = DepSet.union where_fun_is_used to_recheck in
       let fun_name = Typing_deps.get_bazooka (Dep.FunName fid) in
-      ISet.union fun_name to_redecl, ISet.union fun_name to_recheck
+      DepSet.union fun_name to_redecl, DepSet.union fun_name to_recheck
   | Some fty1, Some fty2 ->
       let fty1 = NormalizeSig.fun_type fty1 in
       let fty2 = NormalizeSig.fun_type fty2 in
@@ -570,10 +591,10 @@ let get_fun_deps old_funs fid (to_redecl, to_recheck) =
         (* No need to add Dep.FunName stuff here -- we found a function with the
          * right name already otherwise we'd be in the None case above. *)
         let where_fun_is_used = Typing_deps.get_bazooka (Dep.Fun fid) in
-        to_redecl, ISet.union where_fun_is_used to_recheck
+        to_redecl, DepSet.union where_fun_is_used to_recheck
 
 let get_funs_deps old_funs funs =
-  SSet.fold (get_fun_deps old_funs) funs (ISet.empty, ISet.empty)
+  SSet.fold (get_fun_deps old_funs) funs (DepSet.empty, DepSet.empty)
 
 (*****************************************************************************)
 (* Determine which functions/classes have to be rechecked after comparing
@@ -586,7 +607,7 @@ let get_type_deps old_types tid to_recheck =
       to_recheck
   | None, _ | _, None ->
       let bazooka = Typing_deps.get_bazooka (Dep.Class tid) in
-      ISet.union bazooka to_recheck
+      DepSet.union bazooka to_recheck
   | Some tdef1, Some tdef2 ->
       let tdef1 = NormalizeSig.typedef tdef1 in
       let tdef2 = NormalizeSig.typedef tdef2 in
@@ -595,11 +616,11 @@ let get_type_deps old_types tid to_recheck =
       then to_recheck
       else
         let where_type_is_used = Typing_deps.get_ideps (Dep.Class tid) in
-        let to_recheck = ISet.union where_type_is_used to_recheck in
+        let to_recheck = DepSet.union where_type_is_used to_recheck in
         to_recheck
 
 let get_types_deps old_types types =
-  SSet.fold (get_type_deps old_types) types ISet.empty
+  SSet.fold (get_type_deps old_types) types DepSet.empty
 
 (*****************************************************************************)
 (* Determine which top level definitions have to be rechecked if the constant
@@ -612,20 +633,20 @@ let get_gconst_deps old_gconsts cst_id (to_redecl, to_recheck) =
       to_redecl, to_recheck
   | None, _ | _, None ->
       let where_const_is_used = Typing_deps.get_bazooka (Dep.GConst cst_id) in
-      let to_recheck = ISet.union where_const_is_used to_recheck in
+      let to_recheck = DepSet.union where_const_is_used to_recheck in
       let const_name = Typing_deps.get_bazooka (Dep.GConstName cst_id) in
-      ISet.union const_name to_redecl, ISet.union const_name to_recheck
+      DepSet.union const_name to_redecl, DepSet.union const_name to_recheck
   | Some cst1, Some cst2 ->
       let is_same_signature = cst1 = cst2 in
       if is_same_signature
       then to_redecl, to_recheck
       else
         let where_type_is_used = Typing_deps.get_ideps (Dep.GConst cst_id) in
-        let to_recheck = ISet.union where_type_is_used to_recheck in
+        let to_recheck = DepSet.union where_type_is_used to_recheck in
         to_redecl, to_recheck
 
 let get_gconsts_deps old_gconsts gconsts =
-  SSet.fold (get_gconst_deps old_gconsts) gconsts (ISet.empty, ISet.empty)
+  SSet.fold (get_gconst_deps old_gconsts) gconsts (DepSet.empty, DepSet.empty)
 
 (*****************************************************************************)
 (* Determine which functions/classes have to be rechecked after comparing
@@ -659,14 +680,14 @@ let get_class_deps old_classes new_classes trace cid (to_redecl, to_recheck) =
           to_redecl, to_recheck
       else
         let to_redecl = get_extend_deps_ trace cid_hash to_redecl in
-        let to_recheck = ISet.union to_redecl to_recheck in
-        ISet.union deps to_redecl, ISet.union deps to_recheck
+        let to_recheck = DepSet.union to_redecl to_recheck in
+        DepSet.union deps to_redecl, DepSet.union deps to_recheck
 
 let get_classes_deps old_classes new_classes classes =
   SSet.fold
-    (get_class_deps old_classes new_classes (ref ISet.empty))
+    (get_class_deps old_classes new_classes (ref DepSet.empty))
     classes
-    (ISet.empty, ISet.empty)
+    (DepSet.empty, DepSet.empty)
 
 (*****************************************************************************)
 (* When the type of a class didn't change, returns a substitution from

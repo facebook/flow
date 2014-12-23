@@ -26,7 +26,8 @@ module Reason = Reason_js
 module TI = Type_inference_js
 
 let parse_lib () =
-  !Files_js.lib_files
+  Files_js.get_lib_files ()
+  |> SSet.elements
   |> List.map (fun lib_file ->
     try (
       let lib_content = cat lib_file in

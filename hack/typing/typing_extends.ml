@@ -67,8 +67,35 @@ let check_members_implemented parent_reason reason parent_members members =
     | _ -> ()
   end parent_members
 
+(* When a type constant is overridden we need to check if the new assigned
+ * type is compatible with the previous type defined in the parent.
+ *
+ * Essentially the rules are:
+ *
+ *   1) If parent's type constant is abstract without a constraint, then it can
+ *      be overridden by any type.
+ *   2) If the parent and child type constants are abstract, then the constraint
+ *      on the child type must be a sub type of the constraint on the parent.
+ *   3) If the parent is abstract, but not the child, then the child's type
+ *      must satisfy the constraint (in other words is a sub type)
+ *   4) Otherwise the types need to unify
+ *
+ * Note that we determine if a type constant is abstract by seeing if it is a
+ * Tgeneric.
+ *
+ *)
+let check_types_for_tconst env parent_type class_type =
+  match (snd parent_type, snd class_type) with
+    | Tgeneric (_, None), _ -> ()
+    | Tgeneric (_, Some fty_parent), Tgeneric (_, Some fty_child) ->
+      ignore (TUtils.sub_type env fty_parent fty_child)
+    | Tgeneric (_, Some fty_parent), _ ->
+      ignore (TUtils.sub_type env fty_parent class_type)
+    | (_, _) ->
+      ignore (TUtils.unify env parent_type class_type)
+
 (* Check that overriding is correct *)
-let check_override env ?(ignore_fun_return = false)
+let check_override env ?(ignore_fun_return = false) ?(check_for_tconst = false)
     parent_class class_ parent_class_elt class_elt =
   let class_known = if use_parent_for_known then parent_class.tc_members_fully_known
     else class_.tc_members_fully_known in
@@ -82,7 +109,9 @@ let check_override env ?(ignore_fun_return = false)
     let this_ty = fst self, Tgeneric ("this", Some self) in
     let env, parent_ce_type =
       Inst.instantiate_this env parent_class_elt.ce_type this_ty in
-    match parent_ce_type, class_elt.ce_type with
+    if check_for_tconst
+    then check_types_for_tconst env parent_ce_type class_elt.ce_type
+    else match parent_ce_type, class_elt.ce_type with
       | (r_parent, Tfun ft_parent), (r_child, Tfun ft_child) ->
         let subtype_funs =
           if (not ignore_fun_return) &&
@@ -148,6 +177,7 @@ let default_constructor_ce class_ =
              ft_ret      = r, Tprim Nast.Tvoid;
            }
   in { ce_final       = false;
+       ce_is_xhp_attr = false;
        ce_override    = false;
        ce_synthesized = true;
        ce_visibility  = Vpublic;
@@ -179,7 +209,28 @@ let check_constructors env parent_class class_ psubst subst =
       | None, _ -> ()
   ) else ()
 
+(* For type constants we need to check that a child respects the constraints
+ * specified by its parent.
+ *)
+let check_tconsts env parent_class class_ =
+  let parent_pos, parent_class, parent_tparaml = parent_class in
+  let pos, class_, tparaml = class_ in
+  let psubst = Inst.make_subst parent_class.tc_tparams parent_tparaml in
+  let subst = Inst.make_subst class_.tc_tparams tparaml in
+  let ptypeconsts = parent_class.tc_typeconsts in
+  let typeconsts = class_.tc_typeconsts in
+  let env, ptypeconsts = instantiate_members psubst env ptypeconsts in
+  let env, typeconsts = instantiate_members subst env typeconsts in
+  check_members_implemented parent_pos pos ptypeconsts typeconsts;
+  SMap.iter begin fun tconst_name parent_tconst ->
+    match SMap.get tconst_name class_.tc_typeconsts with
+    | Some tconst ->
+      check_override env ~check_for_tconst:true parent_class class_ parent_tconst tconst
+    | None -> ()
+ end (filter_privates parent_class.tc_typeconsts)
+
 let check_class_implements env parent_class class_ =
+  check_tconsts env parent_class class_;
   let parent_pos, parent_class, parent_tparaml = parent_class in
   let pos, class_, tparaml = class_ in
   let fully_known = class_.tc_members_fully_known in
@@ -206,8 +257,8 @@ let open_class_hint = function
 let check_implements env parent_type type_ =
   let parent_pos, parent_name, parent_tparaml = open_class_hint parent_type in
   let pos, name, tparaml = open_class_hint type_ in
-  let env, parent_class = Env.get_class env (snd parent_name) in
-  let env, class_ = Env.get_class env (snd name) in
+  let parent_class = Env.get_class env (snd parent_name) in
+  let class_ = Env.get_class env (snd name) in
   match parent_class, class_ with
   | None, _ | _, None -> ()
   | Some parent_class, Some class_ ->

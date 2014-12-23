@@ -47,11 +47,11 @@ let check_valid_array_key_type f_fail ~allow_any:allow_any env p t =
   (match t' with
     | Tprim Tint | Tprim Tstring -> ()
     (* Enums have to be valid array keys *)
-    | Tapply ((_, x), _) when Typing_env.is_enum env x -> ()
+    | Tapply ((_, x), _) when Typing_env.is_enum x -> ()
     | Tany when allow_any -> ()
     | Tany | Tmixed | Tarray (_, _) | Tprim _ | Tgeneric (_, _) | Toption _
       | Tvar _ | Tabstract (_, _, _) | Tapply (_, _) | Ttuple _ | Tanon (_, _)
-      | Tfun _ | Tunresolved _ | Tobject | Tshape _ ->
+      | Tfun _ | Tunresolved _ | Tobject | Tshape _ | Taccess (_, _, _) ->
         f_fail p (Reason.to_pos r) (Typing_print.error t') trail);
   env
 
@@ -89,14 +89,14 @@ let enum_class_check env tc consts const_types =
           | Tmixed -> ()
           | Tprim Tint | Tprim Tstring -> ()
           (* Allow enums in terms of other enums *)
-          | Tapply ((_, x), _) when Typing_env.is_enum env x -> ()
+          | Tapply ((_, x), _) when Typing_env.is_enum x -> ()
           (* Don't tell anyone, but we allow type params too, since there are
            * Enum subclasses that need to do that *)
           | Tgeneric _ -> ()
           | Tany | Tarray (_, _) | Tprim _ | Toption _ | Tvar _
             | Tabstract (_, _, _) | Tapply (_, _) | Ttuple _ | Tanon (_, _)
-            | Tunresolved _ | Tobject
-            | Tfun _ | Tshape _ -> Errors.enum_type_bad (Reason.to_pos r)
+            | Tunresolved _ | Tobject | Tfun _ | Tshape _
+            | Taccess (_, _, _) -> Errors.enum_type_bad (Reason.to_pos r)
                    (Typing_print.error ty_exp') trail);
 
         (* Make sure that if a constraint was given that the base type is

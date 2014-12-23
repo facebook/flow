@@ -27,10 +27,7 @@ module Reason = Typing_reason
  *)
 let intersect_fake fake1 fake2 =
   let valid = SSet.inter fake1.Env.valid fake2.Env.valid in
-  let fake_members = {
-    fake1 with
-                      Env.valid = valid;
-                    } in
+  let fake_members = { fake1 with Env.valid = valid } in
   fake_members
 
 (* Used when we want the new local environment to be the intersection

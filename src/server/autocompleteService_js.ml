@@ -58,6 +58,11 @@ let autocomplete_result_to_json result =
     (Errors_js.pos_to_json pos)
   )
 
+let print_type cx type_ =
+  if is_printed_type_parsable ~weak:true cx type_
+  then string_of_t cx type_
+  else ""
+
 let rec autocomplete_create_result cx name type_ pos =
   Type.(match type_ with
   | FunT (_, _, _, {params_tlist = params;
@@ -68,25 +73,31 @@ let rec autocomplete_create_result cx name type_ pos =
         | Some pnames -> pnames
         | None -> List.map (fun _ -> "_") params in
       let params = List.map2 (fun name type_ ->
-        { param_name = name; param_ty = (string_of_t cx type_) }
+        let param_name = parameter_name cx name type_ in
+        let param_ty =
+          if is_printed_param_type_parsable ~weak:true cx type_
+          then string_of_param_t cx type_
+          else ""
+        in
+        { param_name; param_ty }
       ) pnames params in
-      let return = string_of_t cx return in
+      let return = print_type cx return in
       { res_pos = pos;
         res_name = name;
-        res_ty = (string_of_t cx type_);
+        res_ty = (print_type cx type_);
         func_details = Some { params; return_ty = return } }
   | PolyT (type_params, sub_type) ->
       let result = autocomplete_create_result cx name sub_type pos in
       (* This is not exactly pretty but we need to replace the type to
-         be sure to use the same format for poly types as string_of_t_ *)
+         be sure to use the same format for poly types as print_type *)
       { res_pos = result.res_pos;
         res_name = result.res_name;
-        res_ty = (string_of_t cx type_);
+        res_ty = (print_type cx type_);
         func_details = result.func_details; }
   | _ ->
       { res_pos = pos;
         res_name = name;
-        res_ty = (string_of_t cx type_);
+        res_ty = (print_type cx type_);
         func_details = None }
   )
 
@@ -119,15 +130,18 @@ let autocomplete_member cx this =
 
 let autocomplete_id cx env =
   Utils.SMap.fold (fun key value acc ->
-      (* filter out internal return variable *)
-      if key = (Reason_js.internal_name "return")
+      (* Filter out internal environment variables except for this and
+         super. *)
+      let is_this = key = (Reason_js.internal_name "this") in
+      let is_super = key = (Reason_js.internal_name "super") in
+      if not (is_this || is_super) && Reason_js.is_internal_name key
       then acc
       else (
         let (loc, name) =
           (* renaming of this/super *)
-          if key = (Reason_js.internal_name "this")
+          if is_this
           then (None, "this")
-          else if key = (Reason_js.internal_name "super")
+          else if is_super
           then (None, "super")
           else (value.def_loc, key) in
         let pos = match loc with

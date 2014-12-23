@@ -21,6 +21,8 @@ struct
   open Utils
   open ServerEnv
 
+  module EventLogger = FlowEventLogger
+
   let name = "flow server"
 
   let parse_options = OptionParser.parse
@@ -28,6 +30,11 @@ struct
   let get_errors _ = Types_js.get_errors ()
 
   let preinit () =
+    (* Do some initialization before creating workers, so that each worker is
+     * forked with this information already available. Finding lib files is one
+     * example *)
+    let flow_options = OptionParser.get_flow_options () in
+    Types_js.init_modes flow_options;
     (* Force flowlib files to be extracted and their location saved before workers
      * fork, so everyone can know about the same flowlib path. *)
     ignore (Flowlib.get_flowlib_root ())
@@ -140,7 +147,7 @@ struct
 
   (* our infer implementation uses a different type for file_input, we stub
      the (unused) public interface to avoid issues *)
-  let infer (file_input, line, col) oc =
+  let infer env (file_input, line, col) oc =
     ()
 
   let infer_type (file_input, line, col) oc =
@@ -433,13 +440,25 @@ struct
       let diff_js = Relative_path.Set.fold (fun x a ->
         SSet.add (Relative_path.to_absolute x) a) diff_js SSet.empty in
       let root = ServerArgs.root genv.ServerEnv.options in
+      (* if flowconfig changes, stop the server *)
       if SSet.mem (FlowConfig.fullpath root) diff_js
       then begin
         Printf.printf "Status: Error\n%!";
         Printf.printf
-          ".flowconfig modified. %s is out of date. Restarting.\n%!"
+          ".flowconfig modified. %s is out of date. Exiting.\n%!"
           name;
-        Sys_utils.restart ()
+        exit 4
+      end;
+      (* TEMP: if library files change, stop the server *)
+      let modified_lib_files = SSet.inter diff_js (Files_js.get_lib_files ()) in
+      if not (SSet.is_empty modified_lib_files)
+      then begin
+        Printf.printf "Status: Error\n%!";
+        SSet.iter (Printf.printf "Modified lib file: %s\n%!") modified_lib_files;
+        Printf.printf
+          "%s is out of date. Exiting.\n%!"
+          name;
+        exit 4
       end;
       let options = OptionParser.get_flow_options () in
 

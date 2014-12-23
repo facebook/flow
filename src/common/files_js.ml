@@ -29,13 +29,13 @@ let is_flow_file path =
   List.exists (Filename.check_suffix path) flow_extensions &&
   not (is_directory path)
 
-let read_dir dir =
-  Sys.readdir dir
-  |> Array.to_list
-  |> List.filter (fun file -> Filename.check_suffix file ".js")
-  |> List.map (fun file -> Filename.concat dir file)
+(* This is initialized early, before we work all the workers, so that each
+ * worker isn't forced to find all the lib files themselves *)
+let lib_files = ref None
 
-let lib_files = ref []
+let get_lib_files () = match !lib_files with
+| None -> SSet.empty
+| Some files -> files
 
 let flowlib_root = ref None
 
@@ -50,22 +50,21 @@ let get_flowlib_root () =
       flowlib_root := Some root;
       root
 
-let init =
-  let lib_to_files files lib =
-    let path = Path.string_of_path lib in
-    if Sys.is_directory path
-    then (read_dir path) @ files
-    else path :: files
-
-  in fun libs ->
-    let default_files =
-      match Modes_js.modes.no_flowlib with
-      | true -> []
-      | false -> read_dir (get_flowlib_root ()) in
-    lib_files := List.fold_left lib_to_files default_files libs
+let init libs =
+  if !lib_files = None
+  then
+    let libs = if Modes_js.modes.no_flowlib
+      then libs
+      else (Path.mk_path (get_flowlib_root ()))::libs in
+    let libs = (Find.find_with_name libs "*.js")
+      |> List.fold_left (fun set x -> SSet.add x set) SSet.empty in
+    lib_files := Some libs
 
 let is_lib_file p =
-  List.mem p ((get_flowlib_root ()) :: !lib_files)
+  SSet.mem p (get_lib_files ())
+
+let is_lib_file_or_flowlib_root p =
+  p = get_flowlib_root () || is_lib_file p
 
 let lib_module = ""
 
@@ -80,7 +79,7 @@ let wanted config =
   let list = List.map snd config.FlowConfig.excludes in
   fun file ->
     not (List.exists (match_regexp file) list) &&
-      not (List.mem file !lib_files)
+      not (SSet.mem file (get_lib_files ()))
 
 let make_next_files root =
   let config = FlowConfig.get root in

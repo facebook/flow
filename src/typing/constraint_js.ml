@@ -871,12 +871,16 @@ let name_suffix_of_t = function
   | OptionalT _ -> "?"
   | _ -> ""
 
+let parameter_name cx n t =
+  (name_prefix_of_t t) ^ n ^ (name_suffix_of_t t)
+
 type enclosure_t =
     EnclosureNone
   | EnclosureUnion
   | EnclosureIntersect
   | EnclosureParam
   | EnclosureMaybe
+  | EnclosureAppT
   | EnclosureRet
 
 let parenthesize t_str enclosure triggers =
@@ -911,10 +915,9 @@ let rec pretty_type_printer cx enclosure t =
         | None -> List.map (fun _ -> "_") ts in
       let type_s = spf "(%s) => %s"
         (List.map2 (fun n t ->
-            let n = (name_prefix_of_t t) ^ n ^ (name_suffix_of_t t) in
-            n ^
+            (parameter_name cx n t) ^
             ": "
-            ^ (pretty_type_printer cx EnclosureParam t)
+            ^ (string_of_param_t cx t)
           ) pns ts
          |> String.concat ", "
         )
@@ -925,6 +928,7 @@ let rec pretty_type_printer cx enclosure t =
       let props =
         IMap.find_unsafe flds cx.property_maps
          |> SMap.elements
+         |> List.filter (fun (x,_) -> not (Reason_js.is_internal_name x))
          |> List.rev
          |> List.map (fun (x,t) ->
               x ^ ": " ^
@@ -951,30 +955,41 @@ let rec pretty_type_printer cx enclosure t =
       in
       spf "{%s%s}" props indexer
 
-  | ArrT (_, t, _) ->
-      spf "Array<%s>" (pretty_type_printer cx EnclosureNone t)
+  | ArrT (_, t, ts) ->
+      (*(match ts with
+      | [] -> *)spf "Array<%s>" (pretty_type_printer cx EnclosureNone t)
+      (*| _ -> spf "[%s]"
+                (ts
+                  |> List.map (pretty_type_printer cx EnclosureNone)
+                  |> String.concat ", "))*)
 
   | InstanceT (reason,static,super,instance) ->
       desc_of_reason reason (* nominal type *)
 
   | TypeAppT (c,ts) ->
-      spf "%s <%s>"
-        (pretty_type_printer cx EnclosureNone c)
-        (ts
-         |> List.map (pretty_type_printer cx EnclosureNone)
-         |> String.concat ", "
-        )
+      let type_s =
+        spf "%s <%s>"
+          (pretty_type_printer cx EnclosureAppT c)
+          (ts
+            |> List.map (pretty_type_printer cx EnclosureNone)
+            |> String.concat ", "
+          )
+      in
+      parenthesize type_s enclosure [EnclosureMaybe]
 
   | MaybeT t ->
       spf "?%s" (pretty_type_printer cx EnclosureMaybe t)
 
   | PolyT (xs,t) ->
-      spf "<%s> %s"
-        (xs
-         |> List.map (fun param -> param.name)
-         |> String.concat ", "
-        )
-        (pretty_type_printer cx EnclosureNone t)
+      let type_s =
+        spf "<%s> %s"
+          (xs
+            |> List.map (fun param -> param.name)
+            |> String.concat ", "
+          )
+          (pretty_type_printer cx EnclosureNone t)
+      in
+      parenthesize type_s enclosure [EnclosureAppT; EnclosureMaybe]
 
   | IntersectionT (_, ts) ->
       let type_s =
@@ -1013,11 +1028,32 @@ let rec pretty_type_printer cx enclosure t =
   | TypeT (_, t) ->
       spf "[type: %s]" (pretty_type_printer cx EnclosureNone t)
 
+  | CustomClassT (name, ts, inst) ->
+      spf "%s<%s>" name
+        (ts
+         |> List.map (pretty_type_printer cx EnclosureNone)
+         |> String.concat ", "
+        )
+
+  | LowerBoundT t ->
+      spf "$Subtype<%s>"
+        (pretty_type_printer cx EnclosureNone t)
+
+  | UpperBoundT t ->
+      spf "$Supertype<%s>"
+        (pretty_type_printer cx EnclosureNone t)
+
+  | RecordT (_, t) ->
+      spf "$Record<%s>"
+        (pretty_type_printer cx EnclosureNone t)
+
   | t -> assert_false (string_of_ctor t)
+
+and string_of_param_t cx t = pretty_type_printer cx EnclosureParam t
 
 let string_of_t cx t = pretty_type_printer cx EnclosureNone t
 
-let rec is_printed_type_parsable_impl cx enclosure = function
+let rec is_printed_type_parsable_impl weak cx enclosure = function
   (* Base cases *)
   | BoundT _
   | NumT _
@@ -1027,57 +1063,116 @@ let rec is_printed_type_parsable_impl cx enclosure = function
     ->
       true
 
-  | VoidT _ -> enclosure == EnclosureRet
+  | VoidT _
+    when (enclosure == EnclosureRet)
+    ->
+      true
 
   (* Composed types *)
-  | ArrT (_, t, _)
   | MaybeT t
     ->
-      is_printed_type_parsable_impl cx EnclosureNone t
+      is_printed_type_parsable_impl weak cx EnclosureMaybe t
+
+  | ArrT (_, t, ts)
+    ->
+      (*(match ts with
+      | [] -> *)is_printed_type_parsable_impl weak cx EnclosureNone t
+      (*| _ ->
+          is_printed_type_list_parsable weak cx EnclosureNone t*)
 
   | RestT t
   | OptionalT t
+    when (enclosure == EnclosureParam)
     ->
-      (enclosure == EnclosureParam) &&
-      is_printed_type_parsable_impl cx EnclosureNone t
+      is_printed_type_parsable_impl weak cx EnclosureNone t
 
-  | FunT (_, _, _, { params_tlist; return_t; _ }) ->
-      (is_printed_type_parsable_impl cx EnclosureRet return_t) &&
-      List.fold_left (fun acc t ->
-          (is_printed_type_parsable_impl cx EnclosureParam t) && acc
-        ) true params_tlist
+  | FunT (_, _, _, { params_tlist; return_t; _ })
+    ->
+      (is_printed_type_parsable_impl weak cx EnclosureRet return_t) &&
+      (is_printed_type_list_parsable weak cx EnclosureParam params_tlist)
 
-  | ObjT (_, { props_tmap; dict_t; _ }) ->
+  | ObjT (_, { props_tmap; dict_t; _ })
+    ->
       let is_printable =
         match dict_t.dict_name with
         | Some _ ->
-            (is_printed_type_parsable_impl cx EnclosureNone dict_t.key) &&
-            (is_printed_type_parsable_impl cx EnclosureNone dict_t.value)
+            (is_printed_type_parsable_impl weak cx EnclosureNone dict_t.key) &&
+            (is_printed_type_parsable_impl weak cx EnclosureNone dict_t.value)
         | None -> true
       in
       let prop_map = IMap.find_unsafe props_tmap cx.property_maps in
-      SMap.fold (fun _ t acc ->
-          (is_printed_type_parsable_impl cx EnclosureNone t) && acc
+      SMap.fold (fun name t acc ->
+          acc && (
+            (* We don't print internal properties, thus we do not care whether
+               their type is printable or not *)
+            (Reason_js.is_internal_name name) ||
+            (is_printed_type_parsable_impl weak cx EnclosureNone t)
+          )
         ) prop_map is_printable
 
-  | InstanceT _ ->
+  | InstanceT _
+    ->
       true
 
   | IntersectionT (_, ts)
+    ->
+      is_printed_type_list_parsable weak cx EnclosureIntersect ts
+
   | UnionT (_, ts)
     ->
-      List.fold_left (fun acc t ->
-          (is_printed_type_parsable_impl cx EnclosureNone t) && acc
-        ) true ts
+      is_printed_type_list_parsable weak cx EnclosureUnion ts
 
-  | PolyT (_, t) ->
-      is_printed_type_parsable_impl cx EnclosureNone t
+  | PolyT (_, t)
+    ->
+      is_printed_type_parsable_impl weak cx EnclosureNone t
 
-  | _ ->
+  (* weak mode *)
+
+  (* these are types which are not really parsable, but they make sense to a
+     human user in cases of autocompletion *)
+  | OptionalT t
+  | RestT t
+  | TypeT (_, t)
+  | LowerBoundT t
+  | UpperBoundT t
+  | RecordT (_, t)
+  | ClassT t
+    when weak
+    ->
+      is_printed_type_parsable_impl weak cx EnclosureNone t
+
+  | CustomClassT (_, ts, _)
+    when weak
+    ->
+      is_printed_type_list_parsable weak cx EnclosureNone ts
+
+  | VoidT _
+    when weak
+    ->
+      true
+
+  (* This gives really ugly output, but would need to figure out a better way
+     to print these types otherwise, maybe substitute on printing? *)
+  | TypeAppT (t, ts)
+    when weak
+    ->
+      (is_printed_type_parsable_impl weak cx EnclosureAppT t) &&
+      (is_printed_type_list_parsable weak cx EnclosureNone ts)
+
+  | _
+    ->
       false
 
-let is_printed_type_parsable cx t =
-  is_printed_type_parsable_impl cx EnclosureNone t
+and is_printed_type_list_parsable weak cx enclosure ts =
+  List.fold_left (fun acc t ->
+      acc && (is_printed_type_parsable_impl weak cx enclosure t)
+    ) true ts
+
+let is_printed_type_parsable ?(weak=false) cx t =
+  is_printed_type_parsable_impl weak cx EnclosureNone t
+
+let is_printed_param_type_parsable ?(weak=false) cx t =
+  is_printed_type_parsable_impl weak cx EnclosureParam t
 
 (* ------------- *)
 

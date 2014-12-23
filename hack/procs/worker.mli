@@ -33,9 +33,9 @@ type t
 type 'a handle
 
 (* Creates a worker *)
-val make: int -> t list
+val make: int -> Gc.control -> t list
 
-(* Call in a sub-process (CAREFULL, GLOBALS ARE COPIED) *)
+(* Call in a sub-process (CAREFUL, GLOBALS ARE COPIED) *)
 val call: t -> ('a -> 'b) -> 'a -> 'b handle
 
 (* Retrieves the result (once the worker is done) hangs otherwise *)

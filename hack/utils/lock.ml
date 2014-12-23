@@ -22,7 +22,7 @@ let lock_fds = ref SMap.empty
 
 let lock_name ?user:(user=None) root file =
     let tmp_dir = Tmp.get_dir ~user () in
-    let user = (match user with None -> Sys.getenv "USER" | Some u -> u) in
+    let user = (match user with None -> Sys_utils.logname | Some u -> u) in
     let root_part = Path.slash_escaped_string_of_path root in
     Printf.sprintf "%s/%s-%s.%s" tmp_dir user root_part file
 

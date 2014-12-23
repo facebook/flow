@@ -19,10 +19,9 @@ let strip_ns results =
   List.map begin fun (s, p) -> ((Utils.strip_ns s), p) end results
 
 let search class_names method_name include_defs files genv env =
-  let files_list = Relative_path.Set.fold (fun x y -> x :: y) files [] in
   (* Get all the references to the provided method name and classes in the files *)
   let res = FindRefsService.find_references genv.ServerEnv.workers class_names
-      method_name include_defs files_list in
+      method_name include_defs env.ServerEnv.files_info files in
   strip_ns res
 
 let search_function function_name include_defs genv env =

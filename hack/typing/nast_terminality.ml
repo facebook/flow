@@ -38,7 +38,7 @@ end = struct
         terminal inside_case b2)
     | Switch (_, cl) ->
       terminal_cl cl
-    | Try (b, catch_list, fb) ->
+    | Try (b, catch_list, _) ->
       (* Note: return inside a finally block is allowed in PHP and
        * overrides any return in try or catch. It is an error in <?hh,
        * however. The only way that a finally block can thus be
@@ -123,9 +123,9 @@ end = struct
         terminal b2)
     | Switch (_, cl) ->
       terminal_cl cl
-    | Try (b, catches, fb) ->
-      (* NOTE: contents of fb are not executed in normal flow, so they
-       * cannot contribute to terminality *)
+    | Try (b, catches, _) ->
+      (* NOTE: contents of finally block are not executed in normal flow, so
+       * they cannot contribute to terminality *)
       (try terminal b; () with Exit -> terminal_catchl catches)
     | Do _
     | While _

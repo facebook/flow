@@ -30,7 +30,7 @@ end = struct
   and ty_ = function
     | Tgeneric ("this", ty) -> ty_opt ty
     | Tgeneric (x, _) -> raise (Found x)
-    | Tanon _
+    | Tanon _ | Taccess _
     | Tany | Tmixed | Tprim _ -> ()
     | Tarray (ty1, ty2) ->
         ty_opt ty1; ty_opt ty2
@@ -103,6 +103,7 @@ let rename env old_name new_name ty_to_rename =
     | Tapply (id, l) ->
         let env, l = tyl env l in
         env, (r, Tapply(id, l))
+    | Taccess (_, _, _) as x -> env, (r, x)
     | Ttuple l ->
         let env, l = tyl env l in
         env, (r, Ttuple l)

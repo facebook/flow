@@ -131,6 +131,12 @@
     (* XJS *)
     | T_XJS_IDENTIFIER
     | T_XJS_TEXT of (Ast.Loc.t * string * string) (* loc, value, raw *)
+    (* Type primitives *)
+    | T_ANY_TYPE
+    | T_BOOLEAN_TYPE
+    | T_NUMBER_TYPE
+    | T_STRING_TYPE
+    | T_VOID_TYPE
 
   and number_type =
     | OCTAL
@@ -270,6 +276,12 @@
     | T_EOF -> "EOF"
     | T_XJS_IDENTIFIER -> "XJS IDENTIFIER"
     | T_XJS_TEXT _ -> "XJS TEXT"
+    (* Type primitives *)
+    | T_ANY_TYPE -> "any"
+    | T_BOOLEAN_TYPE -> "bool"
+    | T_NUMBER_TYPE -> "number"
+    | T_STRING_TYPE -> "string"
+    | T_VOID_TYPE -> "void"
 
 (*****************************************************************************)
 (* Errors *)
@@ -416,6 +428,7 @@
     T_TEMPLATE_PART (Ast.Loc.btwn start _end, part)
 
   let keywords = Hashtbl.create 53
+  let type_keywords = Hashtbl.create 53
   let _ = List.iter (fun (key, token) -> Hashtbl.add keywords key token)
     [
       "function", T_FUNCTION;
@@ -465,6 +478,17 @@
       "debugger", T_DEBUGGER;
       "declare", T_DECLARE;
       "type", T_TYPE;
+    ]
+  let _ = List.iter (fun (key, token) -> Hashtbl.add type_keywords key token)
+    [
+      "static",  T_STATIC;
+      "typeof",  T_TYPEOF;
+      "any",     T_ANY_TYPE;
+      "bool",    T_BOOLEAN_TYPE;
+      "boolean", T_BOOLEAN_TYPE;
+      "number",  T_NUMBER_TYPE;
+      "string",  T_STRING_TYPE;
+      "void",    T_VOID_TYPE;
     ]
 }
 
@@ -672,7 +696,7 @@ and type_token = parse
   (* Keyword or Identifier *)
   | word as word       {
                          unicode_fix_cols lexbuf;
-                         try Hashtbl.find keywords word
+                         try Hashtbl.find type_keywords word
                          with Not_found -> T_IDENTIFIER
                        }
   (* Syntax *)
@@ -704,6 +728,8 @@ and type_token = parse
   | "typeof"           { T_TYPEOF }
   (* Function type *)
   | "=>"               { T_ARROW }
+  (* Type alias *)
+  | '='               { T_ASSIGN }
   (* Others *)
   | eof                { T_EOF }
   | _                  { T_ERROR }

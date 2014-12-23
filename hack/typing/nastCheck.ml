@@ -269,7 +269,7 @@ and hint env (p, h) =
   hint_ env p h
 
 and hint_ env p = function
-  | Hany  | Hmixed  | Habstr _ | Hprim _ ->
+  | Hany  | Hmixed  | Habstr _ | Hprim _  | Haccess _ ->
       ()
   | Harray (ty1, ty2) ->
       maybe hint env ty1;
@@ -281,7 +281,7 @@ and hint_ env p = function
       List.iter (hint env) hl;
       hint env h;
       ()
-  | Happly ((_, x), hl) when Typing_env.is_typedef env.tenv x ->
+  | Happly ((_, x), hl) when Typing_env.is_typedef x ->
       let tdef = Typing_env.Typedefs.find_unsafe x in
       let params =
         match tdef with
@@ -290,8 +290,7 @@ and hint_ env p = function
       in
       check_params env p x params hl
   | Happly ((_, x), hl) ->
-      let _, class_ = Env.get_class env.tenv x in
-      (match class_ with
+      (match Env.get_class env.tenv x with
       | None -> ()
       | Some class_ ->
           check_params env p x class_.tc_tparams hl
@@ -330,6 +329,7 @@ and class_ tenv c =
   liter hint env c.c_extends;
   liter hint env c.c_implements;
   liter class_const env c.c_consts;
+  liter typeconst (env, c.c_tparams) c.c_typeconsts;
   liter class_var env c.c_static_vars;
   liter class_var env c.c_vars;
   liter method_ (env, true) c.c_static_methods;
@@ -345,8 +345,7 @@ and class_ tenv c =
 and check_is_interface (env, error_verb) (x : hint) =
   match (snd x) with
     | Happly (id, _) ->
-      let _, class_ = Env.get_class env.tenv (snd id) in
-      (match class_ with
+      (match Env.get_class env.tenv (snd id) with
         | None ->
           (* in partial mode, we can fail to find the class if it's
              defined in PHP. *)
@@ -363,8 +362,7 @@ and check_is_interface (env, error_verb) (x : hint) =
 and check_is_class env (x : hint) =
   match (snd x) with
     | Happly (id, _) ->
-      let _, class_ = Env.get_class env.tenv (snd id) in
-      (match class_ with
+      (match Env.get_class env.tenv (snd id) with
         | None ->
           (* in partial mode, we can fail to find the class if it's
              defined in PHP. *)
@@ -389,7 +387,7 @@ and check_is_trait env (h : hint) =
   (* do not care about at this time *)
   | Happly (pos_and_name, _) ->
     (* Env.get_class will get the type info associated with the name *)
-    let _, type_info = Env.get_class env.tenv (snd pos_and_name) in
+    let type_info = Env.get_class env.tenv (snd pos_and_name) in
     (match type_info with
       (* in partial mode, it's possible to not find the trait, because the *)
       (* trait may live in PHP land. In strict mode, we catch the unknown *)
@@ -433,8 +431,52 @@ and class_const env (h, _, e) =
   maybe hint env h;
   expr env e
 
+and typeconst (env, class_tparams) tconst =
+  maybe hint env tconst.c_tconst_type;
+  (* need to ensure that tconst.c_tconst_type is not Habstr *)
+  maybe check_no_class_tparams class_tparams tconst.c_tconst_type
+
+(* Check to make sure we are not using class type params for type const decls *)
+and check_no_class_tparams class_tparams (pos, ty)  =
+  let check_tparams = check_no_class_tparams class_tparams in
+  let maybe_check_tparams = maybe check_no_class_tparams class_tparams in
+  let matches_class_tparam tp_name =
+    List.iter begin fun (_, (c_tp_pos, c_tp_name), _) ->
+      if c_tp_name = tp_name
+      then Errors.typeconst_depends_on_external_tparam pos c_tp_pos c_tp_name
+    end class_tparams in
+  match ty with
+    | Hany | Hmixed | Hprim _ -> ()
+    (* We have found a type parameter. Make sure its name does not match
+     * a name in class_tparams *)
+    | Habstr (tparam_name, ty_) ->
+        maybe_check_tparams ty_;
+        matches_class_tparam tparam_name
+    | Harray (ty1, ty2) ->
+        maybe_check_tparams ty1;
+        maybe_check_tparams ty2
+    | Htuple tyl -> List.iter check_tparams tyl
+    | Hoption ty_ -> check_tparams ty_
+    | Hfun (tyl, _, ty_) ->
+        List.iter check_tparams tyl;
+        check_tparams ty_
+    | Happly (_, tyl) -> List.iter check_tparams tyl
+    | Hshape fdl -> ShapeMap.iter (fun _ v -> check_tparams v) fdl
+    | Haccess (root, _, _) ->
+        let root_name = class_id_to_str root in
+        matches_class_tparam root_name
+
 and class_var env cv =
-  maybe hint env cv.cv_type;
+  let hint_env =
+    (* If this is an XHP attribute and we're in strict mode,
+       relax to partial mode to allow the use of generic
+       classes without specifying type parameters. This is
+       a temporary hack to support existing code for now. *)
+    (* Task #5815945: Get rid of this Hack *)
+    if cv.cv_is_xhp && (Typing_env.is_strict env.tenv)
+      then { env with tenv = Typing_env.set_mode env.tenv Ast.Mpartial }
+      else env in
+  maybe hint hint_env cv.cv_type;
   maybe expr env cv.cv_expr;
   ()
 

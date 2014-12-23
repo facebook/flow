@@ -85,7 +85,7 @@ let declare content =
                   (fst method_.Nast.m_name)
             | None -> ());
             declared_classes := SSet.add cname !declared_classes;
-            Typing_decl.class_decl c;
+            Typing_decl.class_decl nenv c;
             ()
         | _ -> ()
       end ast;
@@ -121,37 +121,27 @@ with e ->
   report_error e;
   ()
 
-let check_def = function
-  | Ast.Fun f ->
-      (try Typing_check_service.type_fun (snd f.Ast.f_name)
-      with _ -> ())
-  | Ast.Class c ->
-      (try Typing_check_service.type_class (snd c.Ast.c_name)
-      with _ -> ())
-  | Ast.Stmt _ -> ()
-  | Ast.Typedef { Ast.t_id = (_, tname); _ } ->
-      (try Typing_check_service.check_typedef tname
-      with _ -> ()
-      )
-  | Ast.Constant _ -> ()
-  | Ast.Namespace _
-  | Ast.NamespaceUse _ -> assert false
+let check_defs {FileInfo.funs; classes; types; _} =
+  Errors.ignore_ (fun () ->
+    List.iter (fun (_, x) -> Typing_check_service.type_fun x) funs;
+    List.iter (fun (_, x) -> Typing_check_service.type_class x) classes;
+    List.iter (fun (_, x) -> Typing_check_service.check_typedef x) types;
+  )
 
-let recheck file_names =
+let recheck fileinfo_l =
   SharedMem.invalidate_caches();
   Errors.ignore_ begin fun () ->
-    List.iter begin fun fn ->
-      match Parser_heap.ParserHeap.get fn with
-      | None -> ()
-      | Some defs -> List.iter check_def defs
-    end file_names
+    List.iter check_defs fileinfo_l
   end
 
-let check_file_input fi =
+let check_file_input files_info fi =
   match fi with
-    | ServerMsg.FileContent content ->
-        let funs, classes = declare content in
-        fix_file_and_def content;
-        revive funs classes;
-    | ServerMsg.FileName fn ->
-        recheck [Relative_path.create Relative_path.Root fn];
+  | ServerMsg.FileContent content ->
+      let funs, classes = declare content in
+      fix_file_and_def content;
+      revive funs classes;
+  | ServerMsg.FileName fn ->
+      let path = Relative_path.create Relative_path.Root fn in
+      match Relative_path.Map.get path files_info with
+      | Some fileinfo -> recheck [fileinfo]
+      | None -> ()

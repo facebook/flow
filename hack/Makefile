@@ -109,7 +109,7 @@ build-hack-native-deps: build-hack-stubs
 	ocamlbuild -ocamlc "ocamlopt $(EXTRA_INCLUDE_OPTS) $(EXTRA_CC_OPTS)" $(NATIVE_OBJECT_FILES)
 
 build-hack-stubs:
-	echo 'const char* const BuildInfo_kRevision = "${SHA}";' > utils/get_build_id.gen.c
+	echo "const char* const BuildInfo_kRevision = \"$$(git rev-parse HEAD)\";" > utils/get_build_id.gen.c
 
 build-hhi-archive:
 	mkdir -p ../bin

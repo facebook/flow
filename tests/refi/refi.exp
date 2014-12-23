@@ -51,4 +51,16 @@ local.js:62:14,19: ?string
 This type is incompatible with
   local.js:66:15,20: string
 
-Found 13 errors
+null_tests.js:137:15,15: property s
+Property not found in
+  null_tests.js:133:17,17: C
+
+null_tests.js:144:15,15: property s
+Property not found in
+  null_tests.js:133:17,17: C
+
+null_tests.js:151:15,15: property s
+Property not found in
+  null_tests.js:133:17,17: C
+
+Found 16 errors

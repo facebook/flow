@@ -187,7 +187,7 @@ let should_complete_class completion_type class_kind =
 let should_complete_fun completion_type =
   completion_type=Some Autocomplete.Acid
 
-let get_constructor_ty c env =
+let get_constructor_ty c =
   let pos = c.Typing_defs.tc_pos in
   let reason = Typing_reason.Rwitness pos in
   let return_ty = reason, Typing_defs.Tapply ((pos, c.Typing_defs.tc_name), []) in
@@ -203,7 +203,7 @@ let get_constructor_ty c env =
         end
     | None ->
         (* Nothing defined, so we need to fake the entire constructor *)
-      reason, Typing_defs.Tfun (Typing_env.make_ft env pos [] return_ty)
+      reason, Typing_defs.Tfun (Typing_env.make_ft pos [] return_ty)
 
 let compute_complete_global funs classes =
   let completion_type = !Autocomplete.argument_global_type in
@@ -222,8 +222,8 @@ let compute_complete_global funs classes =
             incr result_count;
             let s = Utils.strip_ns name in
             (match !ac_env with
-              | Some env when completion_type=Some Autocomplete.Acnew ->
-                  add_result s (get_constructor_ty c env)
+              | Some _env when completion_type=Some Autocomplete.Acnew ->
+                  add_result s (get_constructor_ty c)
               | _ ->
                   let desc = match c.Typing_defs.tc_kind with
                     | Ast.Cabstract -> "abstract class"

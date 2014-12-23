@@ -94,4 +94,3 @@ let full x =
 
 let set_name x y = 
   trace := IMap.add x y !trace
-

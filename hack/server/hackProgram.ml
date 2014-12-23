@@ -14,6 +14,8 @@ open ServerEnv
 module Server = ServerFunctors
 
 module Program : Server.SERVER_PROGRAM = struct
+  module EventLogger = EventLogger
+
   let name = "hh_server"
 
   let get_errors env = env.errorl
@@ -72,9 +74,9 @@ module Program : Server.SERVER_PROGRAM = struct
     let _, oc = client in
     match msg with
     | ServerMsg.ERROR_OUT_OF_DATE -> incorrect_hash oc
-    | ServerMsg.PRINT_COVERAGE_LEVELS fn -> ServerColorFile.go fn oc
+    | ServerMsg.PRINT_COVERAGE_LEVELS fn -> ServerColorFile.go env fn oc
     | ServerMsg.INFER_TYPE (fn, line, char) ->
-        infer (fn, line, char) oc
+        infer env (fn, line, char) oc
     | ServerMsg.SUGGEST (files) -> suggest files oc
     | ServerMsg.STATUS client_root -> print_status genv env client_root oc
     | ServerMsg.LIST_FILES    -> ServerEnv.list_files env oc
@@ -86,11 +88,6 @@ module Program : Server.SERVER_PROGRAM = struct
         ServerFileOutline.go content oc
     | ServerMsg.METHOD_JUMP (class_, find_children) ->
         ServerMethodJumps.go class_ find_children env genv oc
-    | ServerMsg.SAVE_STATE filename ->
-        let dump = ServerSign.dump_state env genv in
-        let status = ServerSign.save dump filename in
-        output_string oc (status^"\n");
-        flush oc
     | ServerMsg.SHOW name ->
         output_string oc "starting\n";
         SharedMem.invalidate_caches();
@@ -183,7 +180,7 @@ module Program : Server.SERVER_PROGRAM = struct
     | ServerMsg.SEARCH (query, type_) ->
         ServerSearch.go query type_ oc
     | ServerMsg.CALC_COVERAGE path ->
-        ServerCoverageMetric.go path genv oc
+        ServerCoverageMetric.go path genv env oc
 
   let handle_connection_ genv env socket =
     let cli, _ = Unix.accept socket in
@@ -284,10 +281,10 @@ module Program : Server.SERVER_PROGRAM = struct
   let parse_options = ServerArgs.parse_options
 
   let marshal chan =
-    Marshal.to_channel chan !Typing_deps.ifiles [];
+    Typing_deps.marshal chan;
     HackSearchService.SS.MasterApi.marshal chan
 
   let unmarshal chan =
-    Typing_deps.ifiles := Marshal.from_channel chan;
+    Typing_deps.unmarshal chan;
     HackSearchService.SS.MasterApi.unmarshal chan
 end

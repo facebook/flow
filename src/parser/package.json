@@ -9,6 +9,7 @@
     "private": true
   },
   "devDependencies": {
+    "ast-types": ">=0.6.6",
     "colors": ">=0.6.2",
     "esprima-fb": ">=8001.1.0-dev-harmony-fb",
     "minimist": ">=0.2.0"

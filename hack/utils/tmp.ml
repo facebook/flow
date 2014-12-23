@@ -19,7 +19,7 @@ let temp_dir_name =
 
 let get_dir ?user:(user=None) () =
   let user = match user with
-    | None -> Sys.getenv "USER"
+    | None -> Sys_utils.logname
     | Some user -> user in
   let tmp_dir = temp_dir_name ^ SysConfig.temp_base ^ "_" ^ user in
   if not (Sys.file_exists tmp_dir)

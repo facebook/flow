@@ -8,5 +8,4 @@
  *
  *)
 
-val escape_string_for_shell: string -> string
-val escape_spaces: string -> string
+let facts_of_defs _ _ _ _ _ = []
