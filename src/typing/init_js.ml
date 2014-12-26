@@ -31,8 +31,9 @@ let parse_lib () =
   |> List.map (fun lib_file ->
     try (
       let lib_content = cat lib_file in
-      match fst (Parsing_service_js.do_parse lib_content lib_file) with
-      | Some ast -> lib_file, ast
+      match (Parsing_service_js.do_parse ~keep_errors:true lib_content lib_file) with
+      | Some ast, _ -> lib_file, ast
+      | _, Some err -> Errors.print_error_summary true (Errors.to_list err); assert false
       | _ -> assert false
     )
     with _ ->
