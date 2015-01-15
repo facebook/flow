@@ -31,7 +31,8 @@ $> echo "PATH=\"\$PATH:$(pwd)/\"" >> ~/.bashrc && source ~/.bashrc
 Alternatively, and more simply, you can install via [brew](http://brew.sh/) on OSX:
 
 ```bash
-brew install flow
+$> brew update
+$> brew install flow
 ```
 
 Brew adds flow to your path as part of the install.
