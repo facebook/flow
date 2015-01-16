@@ -1,6 +1,6 @@
 {
   "name": "flow-parser",
-  "description": "Javascript parser written in OCaml. Produces SpiderMonkey AST",
+  "description": "JavaScript parser written in OCaml. Produces SpiderMonkey AST",
   "author": {
     "name": "Gabe Levi",
     "email": "gabe@fb.com"

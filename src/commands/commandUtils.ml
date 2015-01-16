@@ -9,7 +9,7 @@
  *)
 
 let print_version () =
-  print_endline "Flow, a static type checker for Javascript, version 0.1.3"
+  print_endline "Flow, a static type checker for JavaScript, version 0.1.3"
 
 (* line split/transform utils *)
 module Line : sig

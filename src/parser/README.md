@@ -15,7 +15,7 @@ Building the Flow Parser requires OCaml. Compiling to JavaScript requires js_of_
 
     make
     
-### Compiling the Flow Parser to Javascript
+### Compiling the Flow Parser to JavaScript
 
     make js
 
