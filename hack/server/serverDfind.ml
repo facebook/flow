@@ -33,15 +33,13 @@ let dfind_pid = ref None
 
 let dfind_init root =
   let proc, pid = DfindLib.start (Path.string_of_path root) in
-  PidLog.log ~reason:(Some "dfind") pid;
+  PidLog.log ~reason:"dfind" pid;
   dfind_proc := Some proc;
   dfind_pid := Some pid
 
-let dfind (root:Path.path) retries =
-  (match !dfind_proc with
+let dfind (root:Path.path) retries = match !dfind_proc with
   | None -> assert false
-  | Some x ->
-      DfindEnv.SSet.fold SSet.add (DfindLib.get_changes x) SSet.empty)
+  | Some x -> DfindLib.get_changes x
 
 let dfind root = dfind root 20
 

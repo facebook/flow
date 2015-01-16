@@ -151,7 +151,7 @@ let rec gen_array_rec env p ty =
   | r, Tarray (kty, Some vty) ->
     let env, vty = is_array env vty in
     env, (r, Tarray (kty, Some vty))
-  | r, Ttuple tyl -> gen_array_va_rec env p tyl
+  | _, Ttuple tyl -> gen_array_va_rec env p tyl
   | _, (Tany | Tmixed | Tarray (_, _) | Tprim _ | Tgeneric (_, _) | Toption _
     | Tvar _ | Tfun _ | Tabstract (_, _, _) | Tapply (_, _)
     | Tanon (_, _) | Tunresolved _ | Tobject | Tshape _

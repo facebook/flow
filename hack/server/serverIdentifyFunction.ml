@@ -8,23 +8,15 @@
  *
  *)
 
-let setup line char =
-  Find_refs.find_method_at_cursor_result := None;
-  Find_refs.find_method_at_cursor_target := Some (line, char)
-  
-let restore() =
-  Find_refs.find_method_at_cursor_result := None;
-  Find_refs.find_method_at_cursor_target := None
-
 let identify content line char =
-  setup line char;
-  let funs, classes = ServerIdeUtils.declare content in
-  ServerIdeUtils.fix_file_and_def content;
-  let result = !Find_refs.find_method_at_cursor_result in
-  restore();
+  let result = ref None in
+  IdentifySymbolService.attach_hooks result line char;
+  let funs, classes = ServerIdeUtils.declare Relative_path.default content in
+  ServerIdeUtils.fix_file_and_def Relative_path.default content;
   ServerIdeUtils.revive funs classes;
-  match result with
-  | Some result -> Utils.strip_ns result.Find_refs.name
+  IdentifySymbolService.detach_hooks ();
+  match !result with
+  | Some result -> Utils.strip_ns result.IdentifySymbolService.name
   | _ -> ""
 
 let go content line char oc =

@@ -64,24 +64,7 @@ let process_static_find_ref cid mid =
   match cid with
   | Nast.CI c ->
     Typing_hooks.dispatch_class_id_hook c (Some mid);
-    Find_refs.process_class_ref (fst c) (snd c) (Some (snd mid))
   | _ -> ()
-
-(*****************************************************************************)
-(* Adding an inferred type *)
-(*****************************************************************************)
-
-(* Remember (when we care) the type found at a position *)
-let save_infer env pos ty =
-  match !infer_target with
-  | None -> ()
-  | Some (line, char_pos) ->
-      if Pos.inside pos line char_pos && !infer_type = None
-      then begin
-        infer_type := Some (Typing_print.full_strip_ns env ty);
-        infer_pos := Some (Reason.to_pos (fst ty));
-      end
-      else ()
 
 (* Find the first defined position in a list of types *)
 let rec find_pos p_default tyl =
@@ -189,12 +172,11 @@ let unresolved env ty =
 
 let is_array_as_tuple env ty =
   let env, ety = Env.expand_type env ty in
-  let env, ty = fold_unresolved env ty in
+  let env, ety = fold_unresolved env ety in
   match ety with
-  | r, Tunresolved [_, Tarray (Some elt_type, None)]
-  | r, Tarray (Some elt_type, None) ->
+  | _, Tarray (Some elt_type, None) ->
       let env, normalized_elt_ty = Env.expand_type env elt_type in
-      let env, normalized_elt_ty = fold_unresolved env normalized_elt_ty in
+      let _env, normalized_elt_ty = fold_unresolved env normalized_elt_ty in
       (match normalized_elt_ty with
       | _, Tunresolved _ -> true
       | _ -> false

@@ -51,7 +51,7 @@ let rec subtype_funs_generic ~check_return env r_super ft_super r_sub
   (* However, if we are polymorphic in the upper-class we have to be
    * polymorphic in the subclass. *)
   let env, var_opt = match ft_sub.ft_arity, ft_super.ft_arity with
-    | Fvariadic (_, (n_super, var_super)), Fvariadic (_, (n_sub, var_sub)) ->
+    | Fvariadic (_, (n_super, var_super)), Fvariadic (_, (_, var_sub)) ->
       let env, var = Unify.unify env var_super var_sub in
       env, Some (n_super, var)
     | _ -> env, None
@@ -124,7 +124,7 @@ and sub_type_with_uenv env (uenv_super, ty_super) (uenv_sub, ty_sub) =
       let env, _ =
         Unify.unify_with_uenv env (uenv_super, ty_super) (uenv_sub, ty_sub) in
       env
-  | (_, Tunresolved tyl), (r_sub, _) ->
+  | (_, Tunresolved _), (r_sub, _) ->
       let ty_sub = (r_sub, Tunresolved [ty_sub]) in
       let env, _ =
         Unify.unify_with_uenv env (uenv_super, ty_super) (uenv_sub, ty_sub) in
@@ -150,7 +150,7 @@ and sub_type_with_uenv env (uenv_super, ty_super) (uenv_sub, ty_sub) =
          (fun () -> sub_type_with_uenv env (uenv_super, ty_super) (uenv_sub, ty_sub))
          (fun l -> Reason.explain_generic_constraint r_sub x l; env)
       )
-  | (r_super, Tgeneric ("this", Some ty_super)), (r_sub, Tgeneric ("this", Some ty_sub)) ->
+  | (_, Tgeneric ("this", Some ty_super)), (_, Tgeneric ("this", Some ty_sub)) ->
       sub_type env ty_super ty_sub
   | (_, Tgeneric (x_super, _)), (r_sub, Tgeneric (x_sub, Some ty_sub)) ->
       if x_super = x_sub then env else
@@ -173,12 +173,8 @@ and sub_type_with_uenv env (uenv_super, ty_super) (uenv_sub, ty_sub) =
        || name_super = SN.Collections.cContainer
        || name_super = SN.Collections.cIterable
        || name_super = SN.Collections.cIterator
-       || name_super = SN.Collections.cConstCollection
-       || name_super = SN.Collections.cConstVector
-       || name_super = SN.Collections.cConstSet
        || name_super = SN.Collections.cImmVector
        || name_super = SN.Collections.cImmSet
-       || name_super = SN.FB.cPrivacyPolicyBase
        || name_super = SN.FB.cDataTypeImplProvider) ->
       sub_type env ty_super ty_sub
   | (_, (Tapply ((_, name_super), [tk_super; tv_super]))),
@@ -240,7 +236,7 @@ and sub_type_with_uenv env (uenv_super, ty_super) (uenv_sub, ty_sub) =
               (* a trait is never the runtime type, but it can be used
                * as a constraint if it has requirements for its using
                * classes *)
-              let env, ret = SMap.fold begin fun elt elt_type acc ->
+              let _, ret = SMap.fold begin fun _ elt_type acc ->
                 match acc with
                   | _, Some _ -> acc
                   | env, None ->
@@ -280,14 +276,14 @@ and sub_type_with_uenv env (uenv_super, ty_super) (uenv_sub, ty_sub) =
   | (_, Tmixed), _ -> env
   | (_, Tprim Nast.Tnum), (_, Tprim (Nast.Tint | Nast.Tfloat)) -> env
   | (_, Tprim Nast.Tarraykey), (_, Tprim (Nast.Tint | Nast.Tstring)) -> env
-  | (_, Tapply ((_, coll), [tv_super])), (r, Tarray (ty3, ty4))
+  | (_, Tapply ((_, coll), [tv_super])), (_, Tarray (ty3, ty4))
     when (coll = SN.Collections.cTraversable ||
         coll = SN.Collections.cContainer) ->
       (match ty3, ty4 with
       | None, _ -> env
       | Some ty3, None ->
           sub_type env tv_super ty3
-      | Some ty3, Some ty4 ->
+      | Some _ty3, Some ty4 ->
           sub_type env tv_super ty4
       )
   | (_, Tapply ((_, coll), [tk_super; tv_super])), (r, Tarray (ty3, ty4))
@@ -367,7 +363,7 @@ and sub_type_with_uenv env (uenv_super, ty_super) (uenv_sub, ty_sub) =
          (fun () -> fst (Unify.unify_with_uenv env (uenv_super, ty_super) (uenv_sub, ty_sub)))
          (fun _ -> sub_type_with_uenv env (uenv_super, ty_super) (uenv_sub, x))
   (* Handle enums with subtyping constraints. *)
-  | _, (p_sub, (Tapply ((_, x), [])))
+  | _, (_, (Tapply ((_, x), [])))
     when Typing_env.get_enum_constraint x <> None ->
     (match Typing_env.get_enum_constraint x with
       | Some base ->

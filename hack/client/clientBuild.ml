@@ -16,7 +16,6 @@ let num_build_retries = 800
 type env = {
   root : Path.path;
   build_opts : ServerMsg.build_opts;
-  server_options_cmd : string option;
 }
 
 let should_retry env tries = env.build_opts.ServerMsg.wait || tries > 0
@@ -36,9 +35,9 @@ let rec connect env retries =
     end
     else exit 2
   | ClientExceptions.Server_initializing ->
-     let wait_msg = if env.build_opts.ServerMsg.wait
-                    then Printf.sprintf "will wait forever due to --wait option, have waited %d seconds" (num_build_retries - retries)
-                    else Printf.sprintf "will wait %d more seconds" retries in
+    let wait_msg = if env.build_opts.ServerMsg.wait
+                   then Printf.sprintf "will wait forever due to --wait option, have waited %d seconds" (num_build_retries - retries)
+                   else Printf.sprintf "will wait %d more seconds" retries in
     Printf.printf
       (* This extra space before the \r is here to erase the spinner
          when the length of this line decreases (but by at most 1!) as
@@ -68,11 +67,17 @@ let rec main_ env retries =
   then ClientStart.start_server { ClientStart.
     root = env.root;
     wait = false;
-    server_options_cmd = env.server_options_cmd;
+    no_load = false;
   };
   let ic, oc = connect env retries in
   ServerMsg.cmd_to_channel oc (ServerMsg.BUILD env.build_opts);
-  let response = ServerMsg.response_from_channel ic in
+  let response =
+    try ServerMsg.response_from_channel ic
+    with End_of_file ->
+      prerr_string "Server disconnected or crashed. Try `hh_client restart`\n";
+      flush stderr;
+      exit 1
+  in
   match response with
   | ServerMsg.SERVER_OUT_OF_DATE ->
     Printf.printf
@@ -81,6 +86,7 @@ let rec main_ env retries =
     main_ env (retries - 1)
   | ServerMsg.PONG -> (* successful case *)
     begin
+      let finished = ref false in
       let exit_code = ref 0 in
       EventLogger.client_begin_work (ClientLogCommand.LCBuild
         (env.root, env.build_opts.ServerMsg.incremental));
@@ -90,8 +96,14 @@ let rec main_ env retries =
           match line with
           | ServerMsg.BUILD_PROGRESS s -> print_endline s
           | ServerMsg.BUILD_ERROR s -> exit_code := 2; print_endline s
+          | ServerMsg.BUILD_FINISHED -> finished := true
         done
       with End_of_file ->
+        if not !finished then begin
+          Printf.fprintf stderr ("Build unexpectedly terminated! "^^
+            "You may need to do `hh_client restart`.\n");
+          exit 1
+        end;
         if !exit_code = 0
         then ()
         else exit (!exit_code)

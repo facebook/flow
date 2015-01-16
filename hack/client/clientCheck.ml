@@ -83,7 +83,7 @@ let rec main args retries =
         ServerMsg.cmd_to_channel oc command;
         let counts_opt : ServerCoverageMetric.result =
           Marshal.from_channel ic in
-        ClientCoverageMetric.go args.output_json counts_opt;
+        ClientCoverageMetric.go ~json:args.output_json counts_opt;
         exit 0
     | MODE_FIND_CLASS_REFS name ->
         let ic, oc = connect args in
@@ -291,7 +291,9 @@ let rec main args retries =
         Unix.sleep(1);
         main args (retries-1)
       end else begin
-        Printf.fprintf stderr "Error: hh_server disconnected or crashed, giving up!\n";
+        prerr_string
+          ("Error: hh_server disconnected or crashed, giving up!\n"^
+          "Server may have entered a bad state: Try `hh_client restart`\n");
         flush stderr;
         exit 5;
       end

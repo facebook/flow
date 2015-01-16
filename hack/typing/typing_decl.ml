@@ -62,7 +62,7 @@ let xhp_is_not_strict = true
  *)
 (*****************************************************************************)
 
-let check_extend_kind env parent_pos parent_kind child_pos child_kind c =
+let check_extend_kind env parent_pos parent_kind child_pos child_kind =
   match parent_kind, child_kind with
     (* What is allowed *)
   | (Ast.Cabstract | Ast.Cnormal), (Ast.Cabstract | Ast.Cnormal)
@@ -116,7 +116,7 @@ let add_grand_parents_or_traits parent_pos class_nast acc parent_type =
   let class_pos = fst class_nast.c_name in
   let class_kind = class_nast.c_kind in
   if not is_trait
-  then check_extend_kind env parent_pos parent_type.tc_kind class_pos class_kind class_nast;
+  then check_extend_kind env parent_pos parent_type.tc_kind class_pos class_kind;
   let extends = SSet.union extends parent_type.tc_extends in
   env, extends, parent_type.tc_members_fully_known && is_complete, is_trait
 
@@ -150,7 +150,7 @@ let get_class_parents_and_traits env class_nast =
     List.fold_left (get_class_parent_or_trait class_nast) acc class_nast.c_xhp_attr_uses in
   env, parents, is_complete
 
-let merge_single_req req_name env subst inc_req_ty existing_req_opt
+let merge_single_req env subst inc_req_ty existing_req_opt
     incoming_pos =
   match existing_req_opt with
     | Some ex_req_ty ->
@@ -214,7 +214,7 @@ let merge_parent_class_reqs class_nast impls
             SMap.fold (begin fun req_name added_req_ty acc ->
               let env, existing_reqs = acc in
               let ex_ty_opt = SMap.get req_name existing_reqs in
-              let env, merged_ty = (merge_single_req req_name env subst
+              let env, merged_ty = (merge_single_req env subst
                 added_req_ty ex_ty_opt parent_pos) in
               env, SMap.add req_name merged_ty existing_reqs
             end) parent_type.tc_req_ancestors acc
@@ -227,7 +227,7 @@ let merge_parent_class_reqs class_nast impls
 let declared_class_req class_nast impls (env, requirements, req_extends) hint =
   let env, req_ty = Typing_hint.hint env hint in
   let req_pos, req_name, req_params = desugar_class_hint hint in
-  let env, req_params = lfold Typing_hint.hint env req_params in
+  let env, _ = lfold Typing_hint.hint env req_params in
   let req_type = Env.get_class_dep env req_name in
 
   (* for concrete classes, check required ancestors against actual
@@ -260,7 +260,7 @@ let declared_class_req class_nast impls (env, requirements, req_extends) hint =
        * going to be this class's <T> *)
       let subst = Inst.make_subst [] [] in
       let ex_ty_opt = SMap.get req_name requirements in
-      let env, merged = merge_single_req req_name env subst
+      let env, merged = merge_single_req env subst
         req_ty ex_ty_opt req_pos in
       let requirements = SMap.add req_name merged requirements in
 
@@ -334,7 +334,7 @@ let rec class_decl_if_missing_opt class_env = function
   | Some c -> class_decl_if_missing class_env c
 
 and class_decl_if_missing class_env c =
-  let pos, cid as c_name = c.Ast.c_name in
+  let _, cid as c_name = c.Ast.c_name in
   if check_if_cyclic class_env c_name
   then ()
   else begin
@@ -379,7 +379,7 @@ and class_parents_decl class_env c =
 
 and class_hint_decl class_env hint =
   match hint with
-    | _, Happly ((p, cid), _)
+    | _, Happly ((_, cid), _)
       when SMap.mem cid class_env.all_classes && not (is_class_ready cid) ->
       (* We are supposed to redeclare the class *)
       let files = SMap.find_unsafe cid class_env.all_classes in
@@ -480,7 +480,6 @@ and class_decl nenv c =
     then SMap.fold SMap.add self_dimpl dimpl
     else dimpl
   in
-  let env = Typing_hint.check_tparams_instantiable env c.c_tparams in
   let env, tparams = lfold Typing.type_param env c.c_tparams in
   let env, enum = match c.c_enum with
     | None -> env, None
@@ -533,11 +532,11 @@ and class_decl nenv c =
 
 and trait_exists env acc trait =
   match trait with
-    | (_, Happly ((p2, trait), _)) ->
+    | (_, Happly ((_, trait), _)) ->
       let class_ = Env.get_class_dep env trait in
       (match class_ with
         | None -> false
-        | Some class_ -> acc
+        | Some _class -> acc
       )
     | _ -> false
 
@@ -567,7 +566,7 @@ and constructor_decl env (pcstr, pconsist) class_ =
       env, (cstr, cconsist || mconsist || pconsist)
 
 and build_constructor env class_ method_ =
-  let env, ty = method_decl class_ env method_ in
+  let env, ty = method_decl env method_ in
   let _, class_name = class_.c_name in
   let vis = visibility class_name method_.m_visibility in
   let mconsist = method_.m_final || class_.c_kind == Ast.Cinterface in
@@ -654,35 +653,37 @@ and class_class_decl class_id =
   }
 
 and class_var_decl c (env, acc) cv =
-  let env, ty =
-    match cv.cv_type with
-      | None -> env, (Reason.Rwitness (fst cv.cv_id), Tany)
-      | Some ty' ->
-          (* If this is an XHP attribute and we're in strict mode,
-             relax to partial mode to allow the use of the "array"
-             annotation without specifying type parameters. Until
-             recently HHVM did not allow "array" with type parameters
-             in XHP attribute declarations, so this is a temporary
-             hack to support existing code for now. *)
-          (* Task #5815945: Get rid of this Hack *)
-          let env = if cv.cv_is_xhp && (Env.is_strict env)
-            then Env.set_mode env Ast.Mpartial
-            else env in
-          Typing_hint.hint ~ensure_instantiable:true env ty'
+  let env, ty = match cv.cv_type with
+    | None -> env, (Reason.Rwitness (fst cv.cv_id), Tany)
+    | Some ty' when cv.cv_is_xhp ->
+      (* If this is an XHP attribute and we're in strict mode,
+         relax to partial mode to allow the use of the "array"
+         annotation without specifying type parameters. Until
+         recently HHVM did not allow "array" with type parameters
+         in XHP attribute declarations, so this is a temporary
+         hack to support existing code for now. *)
+      (* Task #5815945: Get rid of this Hack *)
+      let env = if (Env.is_strict env)
+        then Env.set_mode env Ast.Mpartial
+        else env
+      in
+      Typing_hint.hint env ty'
+    | Some ty' -> Typing_hint.hint env ty'
   in
   let id = snd cv.cv_id in
   let vis = visibility (snd c.c_name) cv.cv_visibility in
-  let ce = { ce_final = true; ce_is_xhp_attr = cv.cv_is_xhp; ce_override = false;
-             ce_synthesized = false; ce_visibility = vis; ce_type = ty;
-             ce_origin = (snd c.c_name);
-           } in
+  let ce = {
+    ce_final = true; ce_is_xhp_attr = cv.cv_is_xhp; ce_override = false;
+    ce_synthesized = false; ce_visibility = vis; ce_type = ty;
+    ce_origin = (snd c.c_name);
+  } in
   let acc = SMap.add id ce acc in
   env, acc
 
 and static_class_var_decl c (env, acc) cv =
   let env, ty = match cv.cv_type with
     | None -> env, (Reason.Rwitness (fst cv.cv_id), Tany)
-    | Some ty -> Typing_hint.hint ~ensure_instantiable:true env ty in
+    | Some ty -> Typing_hint.hint env ty in
   let id = snd cv.cv_id in
   let vis = visibility (snd c.c_name) cv.cv_visibility in
   let ce = { ce_final = true; ce_is_xhp_attr = cv.cv_is_xhp; ce_override = false;
@@ -756,7 +757,7 @@ and typeconst_decl nenv c (env, acc) typeconst =
   *   Since we are fabricating this type def we need to also add the type def
   *   in Parsing_service.get_defs otherwise incremental mode will not work.
   *)
-and typeconst_typedef_decl nenv c typeconst =
+and typeconst_typedef_decl _ c typeconst =
   (* make name unique by combining with class name, i.e. Class::Typeconst *)
   let typedef_name =
     (snd (c.c_name)) ^ "::" ^ (snd (typeconst.c_tconst_name)) in
@@ -768,12 +769,12 @@ and typeconst_typedef_decl nenv c typeconst =
         then Errors.missing_assign (fst tid);
         fst tid, Hany
     | Some x -> x in
-  let decl = false, params, concrete_type in
+  let decl = params, None, concrete_type in
   let filename = Pos.filename (fst tid) in
   let env = Typing_env.empty filename in
   let env = Typing_env.set_mode env c.c_mode in
   let env = Env.set_root env (Typing_deps.Dep.Class (snd tid)) in
-  let env, concrete_type = Typing_hint.hint env concrete_type in
+  let _, concrete_type = Typing_hint.hint env concrete_type in
   let visibility = Env.Typedef.Public in
   let type_constraint = None in
   let tdecl = visibility, params, type_constraint, concrete_type, (fst tid) in
@@ -781,7 +782,7 @@ and typeconst_typedef_decl nenv c typeconst =
   Naming_heap.TypedefHeap.add (snd tid) decl;
   typedef_name
 
-and method_decl c env m =
+and method_decl env m =
   let env, arity_min, params = Typing.make_params env true 0 m.m_params in
   let env, ret =
     match m.m_ret, m.m_fun_kind with
@@ -818,7 +819,7 @@ and method_decl c env m =
 
 and method_check_override c m acc =
   let pos, id = m.m_name in
-  let class_pos, class_id = c.c_name in
+  let _, class_id = c.c_name in
   let override = SMap.mem SN.UserAttributes.uaOverride m.m_user_attributes in
   if m.m_visibility = Private && override then
     Errors.private_override pos class_id id;
@@ -835,7 +836,7 @@ and method_check_override c m acc =
 
 and method_decl_acc c (env, acc) m =
   let check_override = method_check_override c m acc in
-  let env, ty = method_decl c env m in
+  let env, ty = method_decl env m in
   let _, id = m.m_name in
   let vis =
     match SMap.get id acc, m.m_visibility with
@@ -861,7 +862,7 @@ and method_check_trait_overrides c id method_ce =
 (*****************************************************************************)
 
 let rec type_typedef_decl_if_missing nenv typedef =
-  let pos, tid = typedef.Ast.t_id in
+  let _, tid = typedef.Ast.t_id in
   if Naming_heap.TypedefHeap.mem tid
   then ()
   else
@@ -871,24 +872,21 @@ and type_typedef_naming_and_decl nenv tdef =
   let pos, tid = tdef.Ast.t_id in
   let is_abstract =
     match tdef.Ast.t_kind with
-    | Ast.Alias x -> false
-    | Ast.NewType x -> true
+    | Ast.Alias _ -> false
+    | Ast.NewType _ -> true
   in
-  let (params, tcstr, concrete_type) = Naming.typedef nenv tdef in
-  let decl = is_abstract, params, concrete_type in
+  let params, tcstr, concrete_type as decl = Naming.typedef nenv tdef in
   let filename = Pos.filename pos in
   let env = Typing_env.empty filename in
   let env = Typing_env.set_mode env tdef.Ast.t_mode in
   let env = Env.set_root env (Typing_deps.Dep.Class tid) in
   let env, params = lfold Typing.type_param env params in
-  let env, concrete_type =
-    Typing_hint.hint ~ensure_instantiable:true env concrete_type in
-  let env, tcstr =
+  let env, concrete_type = Typing_hint.hint env concrete_type in
+  let _env, tcstr =
     match tcstr with
     | None -> env, None
     | Some constraint_type ->
-      let env, constraint_type =
-        Typing_hint.hint ~ensure_instantiable:true env constraint_type in
+      let env, constraint_type = Typing_hint.hint env constraint_type in
       let sub_type = Typing_ops.sub_type pos Reason.URnewtype_cstr in
       let env = sub_type env constraint_type concrete_type in
       env, Some constraint_type

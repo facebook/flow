@@ -10,6 +10,8 @@
 
 open Nast
 
+module SN = Naming_special_names
+
 (* Module coded with an exception, if we find a terminal statement we
  * throw the exception Exit.
 *)
@@ -32,7 +34,12 @@ end = struct
             AE_assert (_, False) |
             AE_invariant ((_, False), _, _) |
             AE_invariant_violation _))
-    | Expr (_, Call (Cnormal, (_, Id (_, "\\exit")), _, _)) -> raise Exit
+      -> raise Exit
+    | Expr (_, Call (Cnormal, (_, Id (_, fun_name)), _, _))
+        when
+        (fun_name = SN.PseudoFunctions.exit_ ||
+         fun_name = SN.PseudoFunctions.die)
+        -> raise Exit
     | If (_, b1, b2) ->
       (try terminal inside_case b1; () with Exit ->
         terminal inside_case b2)

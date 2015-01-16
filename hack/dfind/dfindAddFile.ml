@@ -14,6 +14,7 @@
 (*****************************************************************************)
 open DfindEnv
 open DfindMaybe
+open Utils
 
 (*****************************************************************************)
 (* helpers *)
@@ -127,12 +128,12 @@ and add_new_file links env path =
       SSet.iter (fun x -> ignore (add_file links env x)) files;
       (try Unix.closedir dir_handle with _ -> ());
       let prev_files = 
-        try SMap.find path env.dirs 
+        try SMap.find_unsafe path env.dirs
         with Not_found -> SSet.empty in
       let prev_files = SSet.union files prev_files in
       let files = SSet.fold begin fun file all_files ->
         try
-          let sub_dir = SMap.find file env.dirs in
+          let sub_dir = SMap.find_unsafe file env.dirs in
           SSet.union sub_dir all_files
         with Not_found -> 
           SSet.add file all_files

@@ -59,6 +59,7 @@ let autoimport_classes = [
   "GenArrayWaitHandle";
   "GenMapWaitHandle";
   "GenVectorWaitHandle";
+  "ConditionWaitHandle";
   "RescheduleWaitHandle";
   "SleepWaitHandle";
   "ExternalThreadEventWaitHandle"

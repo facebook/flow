@@ -98,14 +98,14 @@ let intersect env parent_lenv (fake1, locals1) (fake2, locals2) =
  * local environment where $x is of type Tunresolved[int, string].
  * The conservative local environment is built with fully_integrate.
  *)
-let integrate env (parent_fake, parent_locals) (child_fake, child_locals) =
+let integrate env (_parent_fake, parent_locals) (child_fake, child_locals) =
   let locals =
     IMap.fold begin fun local_id (child_all_types, child_ty) locals ->
       match IMap.get local_id locals with
       | None -> IMap.add local_id (child_all_types, child_ty) locals
       | Some (parent_all_types, _) when child_all_types == parent_all_types ->
           IMap.add local_id (child_all_types, child_ty) locals
-      | Some (parent_all_types, parent_ty) ->
+      | Some (parent_all_types, _) ->
           let all_types = List.fold_left begin fun all_types ty ->
             if List.exists ((=) ty) all_types then all_types else ty::all_types
           end child_all_types parent_all_types in

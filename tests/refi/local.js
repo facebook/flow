@@ -21,6 +21,13 @@ var paths =
 
   function() {
     var x : ?string = "xxx";
+    if (x == null)
+      return;
+    var y : string = x;  // ok
+  },
+
+  function() {
+    var x : ?string = "xxx";
     if (!(x != null)) {} else {
       var y : string = x;  // ok
     }
@@ -59,7 +66,7 @@ var paths =
   },
 
   function() {
-    var x : ?string = "xxx";
+    var x : string | string[] = ["xxx"];
     if (Array.isArray(x)) {
       var y : string[] = x; // ok
     } else {

@@ -19,4 +19,4 @@ val path: DfindEnv.t -> string -> unit
 (* Find all the files in a directory *)
 (*****************************************************************************)
 
-val get_files: string -> Unix.dir_handle -> DfindEnv.SSet.t
+val get_files: string -> Unix.dir_handle -> Utils.SSet.t

@@ -120,7 +120,7 @@ let remove_decls env fast_parsed =
       | Some {FileInfo.
               funs = funl;
               classes = classel;
-              types = typel;
+              typedefs = typel;
               consts = constl;
               comments;
               consider_names_just_for_autoload} ->

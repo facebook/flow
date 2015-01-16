@@ -270,14 +270,6 @@ let arity_min ft_arity : int = match ft_arity with
   | Fstandard (min, _) | Fvariadic (min, _) | Fellipsis min -> min
 
 (*****************************************************************************)
-(* Infer-type-at-point mode *)
-(*****************************************************************************)
-
-let (infer_target: (int * int) option ref) = ref None
-let (infer_type: string option ref) = ref None
-let (infer_pos: Pos.t option ref) = ref None
-
-(*****************************************************************************)
 (* Accumulate method calls mode *)
 (*****************************************************************************)
 
@@ -290,9 +282,3 @@ let (accumulate_method_calls_result: (Pos.t * string) list ref) = ref []
 
 (* Set to true when we are trying to infer the missing type hints. *)
 let is_suggest_mode = ref false
-
-(*****************************************************************************)
-(* Print types mode *)
-(*****************************************************************************)
-let accumulate_types = ref false
-let (type_acc: (Pos.t * ty) list ref) = ref []

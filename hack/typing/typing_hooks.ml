@@ -34,6 +34,9 @@ let (constructor_hooks: (Typing_defs.class_type ->
 let (class_id_hooks: (Pos.t * string ->
                       (Pos.t * string) option -> unit) list ref) = ref []
 
+let (infer_ty_hooks: (Typing_defs.ty -> Pos.t ->
+                      Typing_env.env -> unit) list ref) = ref []
+
 let attach_smethod_hook hook =
   smethod_hooks := hook :: !smethod_hooks
 
@@ -60,6 +63,9 @@ let attach_constructor_hook hook =
 
 let attach_class_id_hook hook =
   class_id_hooks := hook :: !class_id_hooks
+
+let attach_infer_ty_hook hook =
+  infer_ty_hooks := hook :: !infer_ty_hooks
 
 let dispatch_id_hook id env =
   List.iter begin fun hook -> hook id env end !id_hooks
@@ -88,6 +94,9 @@ let dispatch_constructor_hook c env p =
 let dispatch_class_id_hook c_id m_id_optional =
   List.iter begin fun hook -> hook c_id m_id_optional end !class_id_hooks
 
+let dispatch_infer_ty_hook ty pos env =
+  List.iter begin fun hook -> hook ty pos env end !infer_ty_hooks
+
 let remove_all_hooks () =
   id_hooks := [];
   cmethod_hooks := [];
@@ -97,4 +106,5 @@ let remove_all_hooks () =
   new_id_hooks := [];
   fun_id_hooks := [];
   constructor_hooks := [];
-  class_id_hooks := []
+  class_id_hooks := [];
+  infer_ty_hooks := []

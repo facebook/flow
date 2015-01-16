@@ -110,8 +110,7 @@ class C {
   ensure1(): string {
     if (this.p == null)
       return "";
-    else
-      return this.p;
+    return this.p;
   }
 
   ensure2(): string | void {
@@ -124,33 +123,31 @@ class C {
   ensure3(): string | void {
     if (this.p === null)
       return "";
-    else
-      return this.p;
+    return this.p;
   }
 }
 
 // super.p op null
 class D extends C {
-  s2: ?string;
 
   ensure100(): string {
-    if (super.s != null)
-      return super.s;
+    if (super.p != null)
+      return super.p;
     else
       return "";
   }
 
   ensure101(): string {
-    if (super.s == null)
+    if (super.p == null)
       return "";
     else
-      return super.s;
+      return super.p;
   }
 
   ensure103(): string {
-    if (super.s != null) {
+    if (super.p != null) {
       alert("");
-      return super.s;  // not ok
+      return super.p;  // not ok
     }
     return "";
   }

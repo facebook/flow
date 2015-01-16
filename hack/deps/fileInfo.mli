@@ -29,7 +29,7 @@ type id = Pos.t * string
 type t = {
   funs : id list;
   classes : id list;
-  types : id list;
+  typedefs : id list;
   consts : id list;
   comments : (Pos.t * string) list;
   consider_names_just_for_autoload: bool;

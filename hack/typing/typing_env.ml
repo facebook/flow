@@ -78,9 +78,10 @@ type env = {
   pos     : Pos.t      ;
   tenv    : ty  IMap.t ;
   subst   : int IMap.t ;
-  lenv    : local_env ;
+  lenv    : local_env  ;
   genv    : genv       ;
   todo    : tfun list  ;
+  in_loop : bool       ;
 }
 
 and genv = {
@@ -275,6 +276,7 @@ let empty file = {
   subst   = IMap.empty;
   lenv    = empty_local;
   todo    = [];
+  in_loop = false;
   genv    = {
     mode    = Ast.Mstrict;
     return  = fresh_type();
@@ -332,7 +334,7 @@ let add_wclass env x =
 let fresh_tenv env f =
   let genv = env.genv in
   let genv = { genv with allow_null_as_void = false } in
-  f { env with todo = []; tenv = IMap.empty; genv = genv }
+  f { env with todo = []; tenv = IMap.empty; genv = genv; in_loop = false }
 
 let get_class env x =
   add_wclass env x;
@@ -732,3 +734,9 @@ let anon anon_lenv env f =
   let env = set_return env old_return in
   let env = set_fn_kind env outer_fun_kind in
   env, result
+
+let in_loop env f =
+  let old_in_loop = env.in_loop in
+  let env = { env with in_loop = true } in
+  let env = f env in
+  { env with in_loop = old_in_loop }

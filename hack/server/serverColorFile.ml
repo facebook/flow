@@ -8,21 +8,20 @@
  *
  *)
 
-open Utils
-
 type result = ((int * int) * Coverage_level.level) list
 
+let get_level_list check =
+  let type_acc = Hashtbl.create 0 in
+  let fn = Typing.with_expr_hook
+    (fun (p, _) ty -> Hashtbl.replace type_acc p ty) check in
+  let level_of_type = Coverage_level.level_of_type_mapper fn in
+  let result = Hashtbl.fold (fun p ty xs ->
+    (Pos.info_raw p, level_of_type (p, ty)) :: xs) type_acc [] in
+  result
+
 let go env f_in oc =
-  assert (!Typing_defs.type_acc = []);
-  Typing_defs.accumulate_types := true;
-  ServerIdeUtils.check_file_input env.ServerEnv.files_info f_in;
-  Typing_defs.accumulate_types := false;
-  let fn_opt = match f_in with
-    | ServerMsg.FileContent _ -> None
-    | ServerMsg.FileName fn -> Some (Relative_path.create Relative_path.Root fn)
-  in
-  let result = Coverage_level.mk_level_list fn_opt !Typing_defs.type_acc in
-  Typing_defs.type_acc := [];
-  let result = rev_rev_map (fun (p, cl) -> Pos.info_raw p, cl) result in
+  let result = get_level_list (fun () ->
+    ServerIdeUtils.check_file_input env.ServerEnv.files_info f_in
+  ) in
   Marshal.to_channel oc (result : result) [];
   flush oc

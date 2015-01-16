@@ -118,7 +118,7 @@ and expand_ env (reason, type_) static =
               | Taccess (_, _, _) | Tanon (_, _) | Tunresolved _ | Tobject
               | Tshape _
               )
-            ), rest ->
+            ), _ ->
               raise (RootInvalidType (tconst_ty))
         end
     | Tany | Tmixed | Tarray (_, _) | Tgeneric (_, _) | Toption _ | Tprim _

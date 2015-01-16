@@ -10,7 +10,7 @@
 (*****************************************************************************)
 (* Library code *)
 (*****************************************************************************)
-open DfindEnv
+open Utils
 
 let start root = 
   let msg_out, result_in, pid = DfindServer.fork_in_pipe root in

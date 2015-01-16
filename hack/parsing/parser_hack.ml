@@ -756,7 +756,9 @@ and class_ ~attr ~final ~kind env =
   let cname       = identifier env in
   let is_xhp      = (snd cname).[0] = ':' in
   let tparams     = class_params env in
-  let cextends    = class_extends env in
+  let cextends    =
+    if kind = Ctrait then []
+    else class_extends ~single:(kind <> Cinterface) env in
   let cimplements = class_implements env in
   let cbody       = class_body env in
   let result =
@@ -836,11 +838,11 @@ and enum_defs env =
 (* Extends/Implements *)
 (*****************************************************************************)
 
-and class_extends env =
+and class_extends ~single env =
   match L.token env.file env.lb with
   | Tword ->
       (match Lexing.lexeme env.lb with
-      | "extends" -> class_extends_list env
+      | "extends" -> if single then [class_hint env] else class_extends_list env
       | "implements" -> L.back env.lb; []
       | s -> error env ("Expected: extends; Got: "^s); []
       )
@@ -1290,25 +1292,9 @@ and class_use_list env =
   | Tcomma ->
       if !(env.errors) != error_state
       then [cst]
-      else cst :: class_use_list_remain env
+      else cst :: class_use_list env
   | _ ->
       error_expect env ";"; [cst]
-
-and class_use_list_remain env =
-  match L.token env.file env.lb with
-  | Tsc -> []
-  | _ ->
-      L.back env.lb;
-      let error_state = !(env.errors) in
-      let cst = ClassUse (class_hint env) in
-      match L.token env.file env.lb with
-      | Tsc ->
-          [cst]
-      | Tcomma ->
-          if !(env.errors) != error_state
-          then [cst]
-          else cst :: class_use_list_remain env
-      | _ -> error_expect env ";"; [cst]
 
 and trait_require env =
   match L.token env.file env.lb with
@@ -2285,7 +2271,7 @@ and parameter_default env =
 (*****************************************************************************)
 
 and expr env =
-  let e1 = expr_atomic env in
+  let e1 = expr_atomic ~allow_class:false ~class_const:false env in
   let e2 = expr_remain env e1 in
   e2
 
@@ -2546,7 +2532,7 @@ and try_xhp_enum_hint env =
 (* Expressions *)
 (*****************************************************************************)
 
-and expr_atomic ?(allow_class=false) env =
+and expr_atomic ~allow_class ~class_const env =
   let tok = L.token env.file env.lb in
   let pos = Pos.make env.file env.lb in
   match tok with
@@ -2579,7 +2565,7 @@ and expr_atomic ?(allow_class=false) env =
       with_priority env Tat expr
   | Tword ->
       let word = Lexing.lexeme env.lb in
-      expr_atomic_word ~allow_class env pos word
+      expr_atomic_word ~allow_class ~class_const env pos word
   | Tlp ->
       (match try_short_lambda env with
       | None ->
@@ -2611,18 +2597,18 @@ and expr_atomic ?(allow_class=false) env =
       error_expect env "expression";
       pos, Null
 
-and expr_atomic_word ~allow_class env pos = function
+and expr_atomic_word ~allow_class ~class_const env pos = function
   | "class" when not allow_class ->
       error_expect env "expression";
       pos, Null
   | "final" | "abstract" | "interface" | "trait" ->
       error_expect env "expression";
       pos, Null
-  | "true"  ->
+  | "true" when not class_const ->
       pos, True
-  | "false" ->
+  | "false" when not class_const ->
       pos, False
-  | "null"  ->
+  | "null" when not class_const ->
       pos, Null
   | "array" ->
       expr_array env pos
@@ -2651,6 +2637,14 @@ and expr_atomic_word ~allow_class env pos = function
           ("Parse error: "^r^" is supported only as a toplevel "^
           "declaration");
       expr_import r env pos
+  | x when not class_const && String.lowercase x = "true" ->
+      pos, True
+  | x when not class_const && String.lowercase x = "false" ->
+      pos, False
+  | x when not class_const && String.lowercase x = "null" ->
+      pos, Null
+  | x when String.lowercase x = "array" ->
+      expr_array env pos
   | x ->
       pos, Id (pos, x)
 
@@ -2727,7 +2721,7 @@ and expr_colcol env e1 =
   end
 
 and expr_colcol_remain ~allow_class env e1 cname =
-  match expr_atomic env ~allow_class with
+  match expr_atomic env ~allow_class ~class_const:true with
   | _, Lvar x ->
       btw e1 x, Class_get (cname, x)
   | _, Id x ->
@@ -2906,6 +2900,10 @@ and expr_anon_async env pos =
       let ret = hint_return_opt env in
       expect env Tlambda;
       pos, lambda_body env param_list ret ~sync:FAsync
+  | Tlcb -> (* async { ... } *)
+      L.back env.lb;
+      let lambda = pos, lambda_body env [] None ~sync:FAsync in
+      pos, Call (lambda, [], [])
   | _ ->
       L.back env.lb;
       pos, Id (pos, "async")
@@ -3389,13 +3387,13 @@ and shape_field env =
   let value = expr { env with priority = 0 } in
   name, value
 
- and shape_field_name env =
-   let pos, e = expr env in
-   match e with
-   | String p -> SFlit p
-   | Class_const (id, ps) -> SFclass_const (id, ps)
-   | _ -> error_expect env "string literal or class constant";
-     SFlit (pos, "")
+and shape_field_name env =
+  let pos, e = expr env in
+  match e with
+  | String p -> SFlit p
+  | Class_const (id, ps) -> SFclass_const (id, ps)
+  | _ -> error_expect env "string literal or class constant";
+    SFlit (pos, "")
 
 
 (*****************************************************************************)

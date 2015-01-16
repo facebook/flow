@@ -13,16 +13,10 @@ open Utils
 type result = Pos.absolute option * string option
 
 let go env (fn, line, char) oc =
-  let clean () =
-    Typing_defs.infer_type := None;
-    Typing_defs.infer_target := None;
-    Typing_defs.infer_pos := None;
-  in
-  clean ();
-  Typing_defs.infer_target := Some (line, char);
-  ServerIdeUtils.check_file_input env.ServerEnv.files_info fn;
-  let pos = opt_map Pos.to_absolute !Typing_defs.infer_pos in
-  let ty = !Typing_defs.infer_type in
-  clean ();
+  let get_result = InferAtPosService.attach_hooks line char in
+  ignore (ServerIdeUtils.check_file_input env.ServerEnv.files_info fn);
+  let pos, ty = get_result () in
+  let pos = opt_map Pos.to_absolute pos in
+  InferAtPosService.detach_hooks ();
   Marshal.to_channel oc ((pos, ty) : result) [];
   flush oc

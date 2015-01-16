@@ -120,6 +120,8 @@ end = struct
         if is_local e1
         then Dep.expr (local_to_string e1) acc e2
         else acc
+
+      method! on_efun acc _ _ = acc
     end
 
   let make st = visitor#on_stmt SMap.empty st

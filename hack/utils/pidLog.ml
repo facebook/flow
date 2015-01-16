@@ -14,7 +14,7 @@ let init root =
   assert (!log_oc = None);
   log_oc := Some (open_out (Lock.lock_name root "pids"))
 
-let log ?reason:(reason=None) pid =
+let log ?reason pid =
   let reason = match reason with 
     | None -> "unknown"
     | Some s -> s in

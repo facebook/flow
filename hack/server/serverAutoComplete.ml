@@ -16,11 +16,12 @@ open Utils
 
 let auto_complete env content oc =
   AutocompleteService.attach_hooks();
-  let funs, classes = ServerIdeUtils.declare content in
+  let funs, classes = ServerIdeUtils.declare Relative_path.default content in
   let nenv = env.ServerEnv.nenv in
   let dummy_pos = Pos.none, Ident.foo in
   let ifuns =
-    SSet.fold begin fun x acc -> SMap.add x dummy_pos acc
+    SSet.fold begin fun x (funmap, canon_names) ->
+      SMap.add x dummy_pos funmap, SMap.add (Naming.canon_key x) x canon_names
     end funs nenv.Naming.ifuns
   in
   let iclasses =
@@ -29,9 +30,9 @@ let auto_complete env content oc =
     end classes nenv.Naming.iclasses
   in
   let nenv = { nenv with Naming.ifuns = ifuns; Naming.iclasses = iclasses } in
-  ServerIdeUtils.fix_file_and_def content;
-  let fun_names = SMap.keys nenv.Naming.ifuns in
-  let class_names = SMap.keys nenv.Naming.ifuns in
+  ServerIdeUtils.fix_file_and_def Relative_path.default content;
+  let fun_names = SMap.keys (fst nenv.Naming.ifuns) in
+  let class_names = SMap.keys (fst nenv.Naming.iclasses) in
   let result = AutocompleteService.get_results fun_names class_names in
   ServerIdeUtils.revive funs classes;
   Printf.printf "Auto-complete\n"; flush stdout;

@@ -104,7 +104,7 @@ module Suggest = struct
   let rec type_ (_, ty) =
     match ty with
     | Tarray _               -> "array"
-    | Tunresolved tyl        -> "..."
+    | Tunresolved _          -> "..."
     | Ttuple (l)             -> "("^list l^")"
     | Tany                   -> "..."
     | Tmixed                 -> "mixed"
@@ -206,7 +206,7 @@ module Full = struct
     | Tanon _ -> o "[fun]"
     | Tunresolved tyl -> list_sep o "& " k tyl
     | Tobject -> o "object"
-    | Tshape fdm -> o "[shape]"
+    | Tshape _ -> o "[shape]"
 
   and prim o x =
     o (match x with

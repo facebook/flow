@@ -11,34 +11,52 @@
 open Coverage_level
 open Utils
 
-type result = level_counts trie option
-
 module FileInfoStore = GlobalStorage.Make(struct
   type t = FileInfo.t Relative_path.Map.t
 end)
 
+type result = level_counts SMap.t trie option
+
 (* Count the number of expressions of each kind of Coverage_level. *)
-let count_exprs fn pos_ty_m =
-  let pos_level_l = mk_level_list (Some fn) pos_ty_m in
-  List.fold_left (fun c (_, lvl) -> incr_counter lvl c)
-            empty_counter pos_level_l
+let count_exprs fn type_acc =
+  let level_of_type = level_of_type_mapper fn in
+  Hashtbl.fold (fun (p, kind) ty acc ->
+    let lvl = level_of_type (p, ty) in
+    let counter = match SMap.get kind acc with
+      | Some counter -> counter
+      | None -> empty_counter in
+    SMap.add kind (incr_counter lvl counter) acc
+  ) type_acc SMap.empty
+
+let accumulate_types defs =
+  let type_acc = Hashtbl.create 0 in
+  Typing.with_expr_hook (fun (p, e) ty ->
+    let expr_kind_opt = match e with
+      | Nast.Array_get _ -> Some "array_get"
+      | Nast.Call _ -> Some "call"
+      | Nast.Class_get _ -> Some "class_get"
+      | Nast.Class_const _ -> Some "class_const"
+      | Nast.Lvar _ -> Some "lvar"
+      | Nast.New _ -> Some "new"
+      | Nast.Obj_get _ -> Some "obj_get"
+      | _ -> None in
+    ignore (opt_map (fun kind ->
+      Hashtbl.replace type_acc (p, kind) ty) expr_kind_opt))
+    (fun () -> ignore (ServerIdeUtils.check_defs defs));
+  type_acc
 
 (* Returns a list of (file_name, assoc list of counts) *)
 let get_coverage neutral fnl =
   SharedMem.invalidate_caches();
-  Typing_defs.accumulate_types := true;
   let files_info = FileInfoStore.load () in
   let file_counts = List.map begin fun fn ->
     match Relative_path.Map.get fn files_info with
     | None -> None
     | Some defs ->
-        assert (!Typing_defs.type_acc = []);
-        ServerIdeUtils.check_defs defs;
-        let counts = count_exprs fn !Typing_defs.type_acc in
-        Typing_defs.type_acc := [];
+        let type_acc = accumulate_types defs in
+        let counts = count_exprs fn type_acc in
         Some (fn, counts)
   end fnl |> cat_opts in
-  Typing_defs.accumulate_types := false;
   file_counts :: neutral
 
 (* Inserts value v into a trie with the key path_l. At each existing node with
@@ -67,13 +85,12 @@ let rec insert combine path_l v trie_opt =
  * merge_trie function, but the actual typecheck / type accumulation step
  * dominates the runtime, so there's not much improvement to be had here. *)
 let mk_trie acc fn_counts_l =
-  let combine v1 v2 = CLMap.merge (fun k a b ->
-    let c = match a, b with
-    | Some c1, Some c2 -> c1 + c2
-    | _ -> assert false
-    in Some c
-    ) v1 v2
-  in
+  let combine v1 v2 = SMap.merge (fun _ cs1 cs2 ->
+    match cs1, cs2 with
+    | Some cs1, Some cs2 -> Some (merge_and_sum cs1 cs2)
+    | Some cs, None -> Some cs
+    | None, Some cs -> Some cs
+    | None, None -> None) v1 v2 in
   List.fold_left
     (fun acc (fn, counts) ->
       let path_l = Str.split (Str.regexp "/") fn in

@@ -197,7 +197,7 @@ and constructor env cstr =
         | NamedBody b -> toplevel env SSet.empty b
         | UnnamedBody _ -> (* FIXME FIXME *) SSet.empty
 
-and assign env acc x =
+and assign _env acc x =
   SSet.add x acc
 
 and assign_expr env acc e1 =
@@ -214,18 +214,18 @@ and stmt env acc st =
   let catch = catch env in
   let case = case env in
   match st with
-    | Expr (_, Call (Cnormal, (_, Class_const (CIparent, (_, m))), el, uel)) ->
+    | Expr (_, Call (Cnormal, (_, Class_const (CIparent, _)), el, _uel)) ->
       let acc = List.fold_left expr acc el in
       assign env acc parent_init_cvar
     | Expr e -> expr acc e
     | Break _ -> acc
     | Continue _ -> acc
     | Throw (_, e) -> expr acc e
-    | Return (p, None) ->
+    | Return (_, None) ->
       if are_all_init env acc
       then acc
       else raise (InitReturn acc)
-    | Return (p, Some x) ->
+    | Return (_, Some x) ->
       let acc = expr acc x in
       if are_all_init env acc
       then acc
@@ -341,7 +341,7 @@ and expr_ env acc p e =
             method_ := Done;
             (match b with
               | NamedBody b -> toplevel env acc b
-              | UnnamedBody b -> (* FIXME *) acc
+              | UnnamedBody _b -> (* FIXME *) acc
             )
           )
       )

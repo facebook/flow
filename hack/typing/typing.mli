@@ -9,6 +9,9 @@
  *)
 open Utils
 
+val with_expr_hook:
+  (Nast.expr -> Typing_defs.ty -> unit) -> (unit -> 'a) -> 'a
+
 val debug_print_last_pos:
   'a -> unit
 
@@ -23,7 +26,7 @@ val fun_def:
 val class_def:
   Typing_env.env -> 'a -> Nast.class_ -> unit
 val typedef_def:
-  Typing_env.env -> string -> (bool * Nast.tparam list * Nast.hint) -> unit
+  Typing_env.env -> string -> Nast.typedef -> unit
 
 val expr:
   Typing_env.env -> Nast.expr -> Typing_env.env * Typing_defs.ty

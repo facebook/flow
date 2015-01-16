@@ -601,11 +601,29 @@ and look_for_open_cb = parse
   | '{'                { () }
   | _                  { look_for_open_cb lexbuf }
 
+(* Normally you can just use "token" and get back Tlvar, but specifically for
+ * member variable accesses, the part to the right of the "->" isn't a word
+ * (cannot contain '-' for example) but doesn't start with '$' so isn't an lvar
+ * either. *)
+and varname = parse
+  | varname            { Tword  }
+  | _                  { Terror }
+
+(****************************************************************************)
+(* hh_format tokenizers. *)
+(****************************************************************************)
+
+and format_comment = parse
+  | [' '  '\t']        { Tspace         }
+  | '\n'               { Tnewline       }
+  | eof                { Teof           }
+  | "*/"               { Tclose_comment }
+  | _                  { Tany           }
+
 and format_token = parse
-  | ' '                { Tspace        }
+  | [' '  '\t']        { Tspace        }
   | '\n'               { Tnewline      }
   | "/*"               { Topen_comment }
-  | "*/"               { Tclose_comment }
   | "//"               { Tline_comment }
   | "#"                { Tline_comment }
   | '\"'               { Tdquote       }
@@ -696,11 +714,3 @@ and format_xhptoken = parse
   | "<!--"             { Topen_xhp_comment  }
   | "-->"              { Tclose_xhp_comment }
   | _                  { Terror             }
-
-(* Normally you can just use "token" and get back Tlvar, but specifically for
- * member variable accesses, the part to the right of the "->" isn't a word
- * (cannot contain '-' for example) but doesn't start with '$' so isn't an lvar
- * either. *)
-and varname = parse
-  | varname            { Tword  }
-  | _                  { Terror }

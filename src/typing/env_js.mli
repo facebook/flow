@@ -76,4 +76,3 @@ val swap_changeset: (SSet.t -> SSet.t) -> SSet.t
 
 val refinement_key : string list -> string
 val get_refinement: context -> string -> reason -> Type.t option
-

@@ -204,7 +204,7 @@ and unify_ env r1 ty1 r2 ty2 =
           );
           env, Tany
         )
-  | _, Tgeneric ("this", Some (_, Tapply ((_, x), _))) ->
+  | _, Tgeneric ("this", Some (_, Tapply _)) ->
       unify_ env r2 ty2 r1 ty1
   | (Ttuple _ as ty), Tarray (None, None)
   | Tarray (None, None), (Ttuple _ as ty) ->
@@ -297,7 +297,7 @@ and unify_funs env r1 ft1 r2 ft2 =
     | Fvariadic (_, (n1, var_ty1)), Fvariadic (min, (_n2, var_ty2)) ->
       let env, var = unify env var_ty1 var_ty2 in
       env, Some (n1, var), Fvariadic (min, (n1, var))
-    | ar1, ar2 ->
+    | ar1, _ar2 ->
       env, None, ar1
   in
   let env, params = unify_params env ft1.ft_params ft2.ft_params var_opt in

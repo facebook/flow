@@ -12,8 +12,8 @@ type result = int * (string option * string) list
 
 let go genv env oc content line char =
   ArgumentInfoService.attach_hooks (line, char);
-  let funs, classes = ServerIdeUtils.declare content in
-  ServerIdeUtils.fix_file_and_def content;
+  let funs, classes = ServerIdeUtils.declare Relative_path.default content in
+  ServerIdeUtils.fix_file_and_def Relative_path.default content;
   let pos, expected =
     match ArgumentInfoService.get_result() with
     | Some (pos, expected) -> pos, expected

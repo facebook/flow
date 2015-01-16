@@ -94,13 +94,16 @@ module Program : Server.SERVER_PROGRAM = struct
         let qual_name = if name.[0] = '\\' then name else ("\\"^name) in
         let nenv = env.nenv in
         output_string oc "class:\n";
-        (match SMap.get (Naming.canon_key qual_name) (snd nenv.Naming.iclasses) with
-          | None -> output_string oc "Missing from naming env\n"
+        let class_name = (
+          match SMap.get (Naming.canon_key qual_name) (snd nenv.Naming.iclasses) with
+          | None ->
+            let () = output_string oc "Missing from naming env\n" in qual_name
           | Some canon ->
             let p, _ = SMap.find_unsafe canon (fst nenv.Naming.iclasses) in
-            output_string oc ((Pos.string (Pos.to_absolute p))^"\n")
-        );
-        let class_ = Typing_env.Classes.get qual_name in
+            let () = output_string oc ((Pos.string (Pos.to_absolute p))^"\n") in
+            canon
+        ) in
+        let class_ = Typing_env.Classes.get class_name in
         (match class_ with
         | None -> output_string oc "Missing from typing env\n"
         | Some c ->
@@ -108,10 +111,16 @@ module Program : Server.SERVER_PROGRAM = struct
             output_string oc (class_str^"\n")
         );
         output_string oc "\nfunction:\n";
-        (match SMap.get qual_name nenv.Naming.ifuns with
-        | Some (p, _) -> output_string oc (Pos.string (Pos.to_absolute p)^"\n")
-        | None -> output_string oc "Missing from naming env\n");
-        let fun_ = Typing_env.Funs.get qual_name in
+        let fun_name =
+        (match SMap.get (Naming.canon_key qual_name) (snd nenv.Naming.ifuns) with
+          | None ->
+            let () = output_string oc "Missing from naming env\n" in qual_name
+          | Some canon ->
+            let p, _ = SMap.find_unsafe canon (fst nenv.Naming.ifuns) in
+            let () = output_string oc ((Pos.string (Pos.to_absolute p))^"\n") in
+            canon
+        ) in
+        let fun_ = Typing_env.Funs.get fun_name in
         (match fun_ with
         | None ->
             output_string oc "Missing from typing env\n"
@@ -149,15 +158,19 @@ module Program : Server.SERVER_PROGRAM = struct
       let build_hook = BuildMain.go build_opts genv env oc in
       ServerTypeCheck.hook_after_parsing := begin fun genv env ->
         (* subtle: an exception there (such as writing on a closed pipe)
-         * will not be catched by handle_connection() because
+         * will not be caught by handle_connection() because
          * we have already returned from handle_connection(), hence
          * this additional try.
          *)
         (try
-           build_hook genv env;
-           close_out oc;
+          with_context
+            ~enter:(fun () -> ())
+            ~exit:(fun () -> close_out oc)
+            ~do_:(fun () -> build_hook genv env);
         with exn ->
-          Printf.printf "Exn in build_hook: %s" (Printexc.to_string exn);
+          let msg = Printexc.to_string exn in
+          Printf.printf "Exn in build_hook: %s" msg;
+          EventLogger.master_exception msg;
         );
         ServerTypeCheck.hook_after_parsing := (fun _ _ -> ())
       end
@@ -184,23 +197,27 @@ module Program : Server.SERVER_PROGRAM = struct
 
   let handle_connection_ genv env socket =
     let cli, _ = Unix.accept socket in
-    let ic = Unix.in_channel_of_descr cli in
-    let oc = Unix.out_channel_of_descr cli in
-    let client = ic, oc in
-    let msg = ServerMsg.cmd_from_channel ic in
-    let finished, _, _ = Unix.select [cli] [] [] 0.0 in
-    if finished <> [] then () else begin
-      ServerPeriodical.stamp_connection();
-      match msg with
-      | ServerMsg.BUILD _ ->
-        (* The build step is special. It closes the socket itself. *)
-        respond genv env ~client ~msg
-      | _ ->
-        respond genv env ~client ~msg;
-        (try Unix.close cli with e ->
-          Printf.fprintf stderr "Error: %s\n" (Printexc.to_string e);
-          flush stderr);
-    end
+    try
+      let ic = Unix.in_channel_of_descr cli in
+      let oc = Unix.out_channel_of_descr cli in
+      let client = ic, oc in
+      let msg = ServerMsg.cmd_from_channel ic in
+      let finished, _, _ = Unix.select [cli] [] [] 0.0 in
+      if finished <> [] then () else begin
+        ServerPeriodical.stamp_connection();
+        match msg with
+        | ServerMsg.BUILD _ ->
+          (* The build step is special. It closes the socket itself. *)
+          respond genv env ~client ~msg
+        | _ ->
+          respond genv env ~client ~msg;
+          Unix.close cli
+      end
+    with e ->
+      let msg = Printexc.to_string e in
+      EventLogger.master_exception msg;
+      Printf.fprintf stderr "Error: %s\n%!" msg;
+      Unix.close cli
 
   let handle_connection genv env socket =
     try handle_connection_ genv env socket

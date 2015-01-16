@@ -103,35 +103,33 @@ class virtual ['a] hint_visitor: ['a] hint_visitor_type = object(this)
 
 end
 
-(* For checking whether hint refers to a construct that cannot ever
- * have instances. To avoid race conditions with typing, only look up
- * class info in the naming heap (and run only after the naming heap is
- * complete) *)
+(* For checking whether hint refers to a construct that cannot ever have
+ * instances. To avoid race conditions, only look up class info after the decl
+ * phase is complete. *)
 module CheckInstantiability = struct
 
   let visitor =
-  object(this)
-    inherit [Env.env] hint_visitor
+  object
+    inherit [Env.env] hint_visitor as super
 
     method! on_apply env (usage_pos, n) hl =
-      let () = (match Naming_heap.ClassHeap.get n with
-        | Some {c_kind = Ast.Cabstract; c_final = true;
-                c_name = (decl_pos, decl_name); _}
-        | Some {c_kind = Ast.Ctrait; c_name = (decl_pos, decl_name); _} ->
-          Errors.uninstantiable_class usage_pos decl_pos decl_name
+      let () = (match Typing_env.Classes.get n with
+        | Some {tc_kind = Ast.Cabstract; tc_final = true;
+                tc_name; tc_pos; _}
+        | Some {tc_kind = Ast.Ctrait; tc_name; tc_pos; _} ->
+          Errors.uninstantiable_class usage_pos tc_pos tc_name
         | _ -> ()) in
-      let env = List.fold_left this#on_hint env hl in
-      env
+      super#on_apply env (usage_pos, n) hl
 
-    method! on_abstr env _ _ =
+    method! on_abstr _env _ _ =
         (* there should be no need to descend into abstract params, as
          * the necessary param checks happen on the declaration of the
          * constraint *)
-      env
+      _env
 
   end
 
-let check env h : Env.env = visitor#on_hint env h
+  let check env h : Env.env = visitor#on_hint env h
 
 end
 
@@ -154,6 +152,7 @@ let check_tparams_instantiable (env:Env.env) (tparams:Nast.tparam list) =
 
 (* Unpacking a hint for typing *)
 
+(* ensure_instantiable should only be set after the decl phase is done *)
 let rec hint ?(ensure_instantiable=false) env (p, h) =
   let env = if not ensure_instantiable then env
     else check_instantiable env (p, h) in
@@ -206,8 +205,7 @@ and hint_ p env = function
   | Happly ((p, "\\tuple"), _) ->
       Errors.tuple_syntax p;
       env, Tany
-  | Happly (((p, c) as id), argl) ->
-      Find_refs.process_class_ref p c None;
+  | Happly (((_p, c) as id), argl) ->
       Typing_hooks.dispatch_class_id_hook id None;
       Env.add_wclass env c;
       let env, argl = lfold hint env argl in
@@ -216,7 +214,6 @@ and hint_ p env = function
       let root = match root with
         | CIstatic -> Some SCIstatic
         | CI (pos, class_) ->
-            Find_refs.process_class_ref pos class_ None;
             Typing_hooks.dispatch_class_id_hook id None;
             Env.add_wclass env class_;
             Some (SCI (pos, class_))

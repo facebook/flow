@@ -60,7 +60,7 @@ let add_type env pos k type_ =
 let save_type hint_kind env x arg =
   if !is_suggest_mode then begin
     match Typing_expand.fully_expand env x with
-    | r, Tany ->
+    | _, Tany ->
         let earg = Typing_expand.fully_expand env arg in
         (match earg with
         | _, Tany -> ()
@@ -158,7 +158,7 @@ and normalize_ = function
   | Tunresolved [x] -> snd (normalize x)
   | Tunresolved tyl
     when List.exists (function _, Toption _ -> true | _ -> false) tyl ->
-      let tyl = List.map (function r, Toption ty -> ty | x -> x) tyl in
+      let tyl = List.map (function _, Toption ty -> ty | x -> x) tyl in
       normalize_ (Toption (Reason.Rnone, Tunresolved tyl))
   | Tunresolved tyl
     when List.exists (function _, (Tany | Tunresolved []) -> true | _ -> false) tyl ->
@@ -170,7 +170,7 @@ and normalize_ = function
           | Taccess (_, _, _)) -> true
       end tyl in
       normalize_ (Tunresolved tyl)
-  | Tunresolved ((r, Tapply (x, [])) :: rl) ->
+  | Tunresolved ((_, Tapply (x, [])) :: rl) ->
       (* If we have A & B & C where all the elements are classes
        * we try to find a unique common ancestor.
        *)

@@ -169,7 +169,7 @@ module MakeWorker = struct
       pipe_descr_out = descr_parent_sends;
       pipe_fout = parent_sends_task;
     } = pipe_parent_sends_child_reads in
-    match Fork.fork ~reason:(Some "worker") () with
+    match Fork.fork ~reason:"worker" () with
     | -1 ->
         failwith "Could not create process"
     | 0 ->
@@ -180,6 +180,11 @@ module MakeWorker = struct
         hh_worker_init();
         Gc.set gc_control;
         close_parent descr_parent_reads descr_parent_sends acc;
+        if !Utils.profile
+        then begin
+          let f = open_out (string_of_int (Unix.getpid ())^".log") in
+          Utils.log := (fun s -> Printf.fprintf f "%s\n" s)
+        end;
         (* And now start the daemon worker *)
         start_worker descr_child_reads child_reads_task child_sends_result
     | pid ->
@@ -238,7 +243,9 @@ module MakeWorker = struct
             | End_of_file ->
                 exit 1
             | e ->
-                Printf.printf "Exception: %s\n" (Printexc.to_string e);
+                let e_str = Printexc.to_string e in
+                Printf.printf "Exception: %s\n" e_str;
+                EventLogger.worker_exception e_str;
                 print_endline "Potential backtrace:";
                 Printexc.print_backtrace stdout;
                 exit 2
@@ -254,7 +261,7 @@ module MakeWorker = struct
                 raise End_of_file
             | Unix.WSIGNALED x ->
                 let sig_str = PrintSignal.string_of_signal x in
-                Printf.printf "Worker interruped with signal: %s\n" sig_str;
+                Printf.printf "Worker interrupted with signal: %s\n" sig_str;
                 exit 2
             | Unix.WSTOPPED x ->
                 Printf.printf "Worker stopped with signal: %d\n" x;

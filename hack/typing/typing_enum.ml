@@ -39,6 +39,30 @@ let is_enum name enum ancestors =
       Some (enum.te_base, (fst enum.te_base, Tapply (name, [])),
             enum.te_constraint)
 
+let member_type env member_ce =
+  let default_result = member_ce.ce_type in
+  if not member_ce.ce_is_xhp_attr then default_result
+  else match default_result with
+    | _, Tapply (enum_id, _)->
+      (* XHP attribute type transform is necessary to account for
+       * non-first class Enums:
+
+       * attribute MyEnum x; // declaration: MyEnum
+       * $this->:x;          // usage: MyEnumType
+       *)
+      let maybe_enum = Typing_env.get_class env (snd enum_id) in
+      (match maybe_enum with
+        | None -> default_result
+        | Some tc ->
+          (match is_enum (tc.tc_pos, tc.tc_name)
+              tc.tc_enum_type tc.tc_ancestors with
+                | None -> default_result
+                | Some (_base, (_, enum_ty), _constraint) ->
+                  let ty = (fst default_result), enum_ty in
+                  ty
+          ))
+    | _ -> default_result
+
 (* Check that a type is something that can be used as an array index
  * (int or string), blowing through typedefs to do it. Takes a function
  * to call to report the error if it isn't. *)
@@ -142,7 +166,7 @@ let get_constant tc (seen, has_default) = function
     Errors.enum_switch_not_const pos;
     (seen, has_default)
 
-let check_enum_exhaustiveness env pos tc caselist =
+let check_enum_exhaustiveness pos tc caselist =
   let (seen, has_default) =
     List.fold_left (get_constant tc) (SMap.empty, false) caselist in
   let consts = SMap.remove SN.Members.mClass tc.tc_consts in

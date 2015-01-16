@@ -12,7 +12,6 @@ let num_build_retries = 60
 
 type env = {
   root: Path.path;
-  server_options_cmd: string option;
 }
 
 let rec connect env retries =
@@ -47,7 +46,7 @@ let main env =
   then ClientStart.start_server { ClientStart.
     root = env.root;
     wait = false;
-    server_options_cmd = env.server_options_cmd;
+    no_load = false;
   };
   let ic, oc = connect env num_build_retries in
   ServerMsg.cmd_to_channel oc ServerMsg.PROLOG;

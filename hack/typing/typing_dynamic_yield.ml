@@ -156,7 +156,7 @@ let method_def env name hret =
   match class_, parse_yield_name (snd name) with
     | None, _
     | _, None -> env
-    | Some c, Some base_name ->
+    | Some c, Some _ ->
       if contains_dynamic_yield c.tc_extends
       then fst (check_yield_types env (fst name) hret)
       else env
@@ -164,7 +164,7 @@ let method_def env name hret =
 let check_yield_visibility env c =
   let uses_dy_directly = List.exists begin fun trait ->
     match trait with
-      | (_, Happly ((pos, name), _)) -> begin
+      | (_, Happly ((_, name), _)) -> begin
           (* Either you directly use DynamicYield, or something you directly
            * use itself uses DynamicYield. *)
           is_dynamic_yield name || match Env.get_class_dep env name with

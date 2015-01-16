@@ -46,6 +46,17 @@ let debug_last_pos = ref Pos.none
 let debug_print_last_pos _ = print_endline (Pos.string (Pos.to_absolute
   !debug_last_pos))
 
+(****************************************************************************)
+(* Hooks *)
+(****************************************************************************)
+
+let expr_hook = ref None
+
+let with_expr_hook hook f = with_context
+  ~enter: (fun () -> expr_hook := Some hook)
+  ~exit: (fun () -> expr_hook := None)
+  ~do_: f
+
 (*****************************************************************************)
 (* Helpers *)
 (*****************************************************************************)
@@ -90,15 +101,15 @@ let unbound_name env (pos, name)=
 (*****************************************************************************)
 
 let gconst_decl cst =
-   let env = Typing_env.empty (Pos.filename (fst cst.cst_name)) in
+   let env = Env.empty (Pos.filename (fst cst.cst_name)) in
    let env = Env.set_mode env cst.cst_mode in
    let env = Env.set_root env (Dep.GConst (snd cst.cst_name)) in
-   let env, hint_ty =
+   let _, hint_ty =
      match cst.cst_type with
      | None -> env, (Reason.Rnone, Tany)
      | Some h -> Typing_hint.hint env h
    in
-   Typing_env.GConsts.add (snd cst.cst_name) hint_ty
+   Env.GConsts.add (snd cst.cst_name) hint_ty
 
 (*****************************************************************************)
 (* Handling function/method arguments *)
@@ -116,7 +127,7 @@ let rec wfold_left_default f (env, def1) l1 l2 =
     wfold_left_default f (env, def1) rl1 rl2
 
 let rec fun_decl f =
-  let env = Typing_env.empty (Pos.filename (fst f.f_name)) in
+  let env = Env.empty (Pos.filename (fst f.f_name)) in
   let env = Env.set_mode env f.f_mode in
   let env = Env.set_root env (Dep.Fun (snd f.f_name)) in
   let _, ft = fun_decl_in_env env f in
@@ -244,19 +255,19 @@ and make_param_type_ ~for_body default env param =
           | Some _ | None -> Typing_hint.hint env x
   in
   let ty = match ty with
-    | r, t when param.param_is_variadic && for_body ->
+    | _, t when param.param_is_variadic && for_body ->
       (* when checking the body of a function with a variadic
        * argument, "f(C ...$args)", $args is an array<C> ... *)
       let r = Reason.Rvar_param param_pos in
       let arr_values = r, t in
       r, Tarray (Some arr_values, None)
-    | r, t when param.param_is_variadic ->
+    | _, t when param.param_is_variadic ->
       (* ... but when checking a call to such a function: "f($a, $b)",
        * both $a and $b must be of type C *)
       Reason.Rvar_param param_pos, t
     | x -> x
   in
-  TUtils.save_infer env param_pos ty;
+  Typing_hooks.dispatch_infer_ty_hook ty param_pos env;
   env, (Some param.param_name, ty)
 
 (* In strict mode, we force you to give a type declaration on a parameter *)
@@ -304,7 +315,7 @@ and fun_def env _ f =
         let env, params =
           lfold (make_param_type_ ~for_body:true Env.fresh_type) env f_params in
         let env = List.fold_left2 bind_param env params f_params in
-        let env = fun_ env f.f_unsafe (f.f_ret <> None) hret (fst f.f_name) f.f_body f.f_fun_kind in
+        let env = fun_ env f.f_unsafe hret (fst f.f_name) f.f_body f.f_fun_kind in
         let env = fold_fun_list env env.Env.todo in
         if Env.is_strict env then begin
           List.iter2 (check_param env) f_params params;
@@ -319,7 +330,7 @@ and fun_def env _ f =
 (* function used to type closures, functions and methods *)
 (*****************************************************************************)
 
-and fun_ ?(abstract=false) env unsafe has_ret hret pos b fun_type =
+and fun_ ?(abstract=false) env unsafe hret pos b fun_type =
   Env.with_return env begin fun env ->
     debug_last_pos := pos;
     let env = Env.set_return env hret in
@@ -397,11 +408,11 @@ and stmt env = function
        * subexpression of the statement "return foo();". *)
        (match snd e with
          | Nast.Binop (Ast.Eq _, _, _) -> ()
-         | _ -> Typing_async.enforce_not_awaitable env (fst e) ty);
+         | _ -> Async.enforce_not_awaitable env (fst e) ty);
       env
   | If (e, b1, b2)  ->
       let env, ty = expr env e in
-      Typing_async.enforce_not_awaitable env (fst e) ty;
+      Async.enforce_not_awaitable env (fst e) ty;
       let parent_lenv = env.Env.lenv in
       let env   = condition env true e in
       let env   = block env b1 in
@@ -478,12 +489,15 @@ and stmt env = function
       let env = block env b in
       let (env, _) = expr env e in
       let after_block = env.Env.lenv in
-      let alias_depth = Typing_alias.get_depth st in
-      let env = iter_n_acc alias_depth begin fun env ->
-        let env = condition env true e in
-        let env = block env b in
-        env
-      end env in
+      let alias_depth =
+        if env.Env.in_loop then 1 else Typing_alias.get_depth st in
+      let env = Env.in_loop env begin
+        iter_n_acc alias_depth begin fun env ->
+          let env = condition env true e in
+          let env = block env b in
+          env
+        end
+      end in
       let env =
         if NastVisitor.HasContinue.block b
         then LEnv.fully_integrate env parent_lenv
@@ -497,12 +511,15 @@ and stmt env = function
       let (env, _) = expr env e in
       let parent_lenv = env.Env.lenv in
       let env = Env.freeze_local_env env in
-      let alias_depth = Typing_alias.get_depth st in
-      let env = iter_n_acc alias_depth begin fun env ->
-        let env = condition env true e in
-        let env = block env b in
-        env
-      end env in
+      let alias_depth =
+        if env.Env.in_loop then 1 else Typing_alias.get_depth st in
+      let env = Env.in_loop env begin
+        iter_n_acc alias_depth begin fun env ->
+          let env = condition env true e in
+          let env = block env b in
+          env
+        end
+      end in
       let env = LEnv.fully_integrate env parent_lenv in
       condition env false e
   | For (e1, e2, e3, b) as st ->
@@ -513,18 +530,22 @@ and stmt env = function
       let (env, _) = expr env e2 in
       let parent_lenv = env.Env.lenv in
       let env = Env.freeze_local_env env in
-      let alias_depth = Typing_alias.get_depth st in
-      let env = iter_n_acc alias_depth begin fun env ->
-        let env = condition env true e2 in (* iteration 0 *)
-        let env = block env b in
-        let (env, _) = expr env e3 in
-        env
-      end env in
+      let alias_depth =
+        if env.Env.in_loop then 1 else Typing_alias.get_depth st in
+      let env = Env.in_loop env begin
+        iter_n_acc alias_depth begin fun env ->
+          let env = condition env true e2 in (* iteration 0 *)
+          let env = block env b in
+          let (env, _) = expr env e3 in
+          env
+        end
+      end in
       let env = LEnv.fully_integrate env parent_lenv in
       condition env false e2
   | Switch (e, cl) ->
       Nast_terminality.SafeCase.check (fst e) cl;
-      let denv, ty = expr env e in
+      (* XXX why is this env discarded? *)
+      let _denv, ty = expr env e in
       let env = check_exhaustiveness env (fst e) ty cl in
       let parent_lenv = env.Env.lenv in
       let env, cl = case_list parent_lenv ty env cl in
@@ -537,13 +558,16 @@ and stmt env = function
       let parent_lenv = env.Env.lenv in
       let env = Env.freeze_local_env env in
       let env, ty2 = as_expr env (fst e1) e2 in
-      let env = Type.sub_type (fst e1) Reason.URforeach env ty2 ty1 in
-      let alias_depth = Typing_alias.get_depth st in
-      let env = iter_n_acc alias_depth begin fun env ->
-        let env = bind_as_expr env ty2 e2 in
-        let env = block env b in
-        env
-      end env in
+      let env = Type.sub_type (fst e1) Reason.URforeach env ty2 ety1 in
+      let alias_depth =
+        if env.Env.in_loop then 1 else Typing_alias.get_depth st in
+      let env = Env.in_loop env begin
+        iter_n_acc alias_depth begin fun env ->
+          let env = bind_as_expr env ty2 e2 in
+          let env = block env b in
+          env
+        end
+      end in
       let env = LEnv.fully_integrate env parent_lenv in
       env
   | Try (tb, cl, fb) ->
@@ -575,13 +599,13 @@ and check_exhaustiveness env pos ty caselist =
       List.fold_left begin fun env ty ->
         check_exhaustiveness env pos ty caselist
       end env tyl
-    | Tapply ((_, x), argl) when Typing_env.is_typedef x ->
+    | Tapply ((_, x), argl) when Env.is_typedef x ->
       let env, ty = Typing_tdef.expand_typedef env r x argl in
       check_exhaustiveness env pos ty caselist
 
     | Tapply ((_, id), _) ->
-      (match Typing_env.get_enum id with
-        | Some tc -> Typing_enum.check_enum_exhaustiveness env pos tc caselist
+      (match Env.get_enum id with
+        | Some tc -> Typing_enum.check_enum_exhaustiveness pos tc caselist
         | None -> ());
       env
     | Taccess (_, _, _) ->
@@ -652,7 +676,7 @@ and catch parent_lenv after_try env (ety, exn, b) =
   let env = { env with Env.lenv = after_try } in
   let env = LEnv.fully_integrate env parent_lenv in
   let cid = CI ety in
-  instantiable_cid (fst ety) env cid;
+  let env = instantiable_cid (fst ety) env cid in
   let env, ety = static_class_id (fst ety) env cid in
   let env = Env.set_local env (snd exn) ety in
   let env = block env b in
@@ -660,11 +684,11 @@ and catch parent_lenv after_try env (ety, exn, b) =
   env, env.Env.lenv
 
 and as_expr env pe = function
-  | As_v e ->
+  | As_v _ ->
       let ty = Env.fresh_type() in
       let tvector = Tapply ((pe, SN.Collections.cTraversable), [ty]) in
       env, (Reason.Rforeach pe, tvector)
-  | As_kv (e1, e2) ->
+  | As_kv _ ->
       let ty1 = Env.fresh_type() in
       let ty2 = Env.fresh_type() in
       let tmap = Tapply ((pe, SN.Collections.cKeyedTraversable), [ty1; ty2]) in
@@ -682,7 +706,7 @@ and as_expr env pe = function
 and bind_as_expr env ty aexpr =
   let env, ety = Env.expand_type env ty in
   match ety with
-  | _, Tapply ((p, class_id), [ty2]) ->
+  | _, Tapply ((p, _), [ty2]) ->
       (match aexpr with
       | As_v ev
       | Await_as_v (_, ev) -> fst (assign p env ev ty2)
@@ -693,7 +717,7 @@ and bind_as_expr env ty aexpr =
       | _ -> (* TODO Probably impossible, should check that *)
           env
       )
-  | _, Tapply ((p, class_id), [ty1; ty2]) ->
+  | _, Tapply ((p, _), [ty1; ty2]) ->
       (match aexpr with
       | As_v ev
       | Await_as_v (_, ev) -> fst (assign p env ev ty2)
@@ -715,11 +739,10 @@ and expr env e =
 and raw_expr in_cond env e =
   debug_last_pos := fst e;
   let env, ty = expr_ in_cond false env e in
-  if !accumulate_types
-  then begin
-    type_acc := (fst e, Typing_expand.fully_expand env ty) :: !type_acc
-  end;
-  TUtils.save_infer env (fst e) ty;
+  let () = match !expr_hook with
+    | Some f -> f e (Typing_expand.fully_expand env ty)
+    | None -> () in
+  Typing_hooks.dispatch_infer_ty_hook ty (fst e) env;
   env, ty
 
 and lvalue env e =
@@ -800,7 +823,7 @@ and expr_ in_cond is_lvalue env (p, e) =
       let env, _ = lfold expr env el in
       let env, ty = expr env e in
       let string = Reason.Rwitness (fst e), Tprim Tstring in
-      let env, k = Type.unify (fst e) Reason.URparam env ty string in
+      let env, _ = Type.unify (fst e) Reason.URparam env ty string in
       env, (Reason.Rwitness p, Tprim Tvoid)
   | Assert (AE_invariant (e1, e2, el)) ->
       let env, _ = lfold expr env el in
@@ -808,7 +831,7 @@ and expr_ in_cond is_lvalue env (p, e) =
       let env = condition env true e1 in
       let env, ty = expr env e2 in
       let string = Reason.Rwitness (fst e2), Tprim Tstring in
-      let env, k = Type.unify (fst e2) Reason.URparam env ty string in
+      let env, _ = Type.unify (fst e2) Reason.URparam env ty string in
       env, (Reason.Rwitness p, Tprim Tvoid)
   | True
   | False ->
@@ -875,7 +898,7 @@ and expr_ in_cond is_lvalue env (p, e) =
     (match class_ with
     | None -> unbound_name env pos_cname
     | Some class_ ->
-        let env, params = lfold begin fun env x ->
+        let env, params = lfold begin fun env _ ->
           TUtils.in_var env (Reason.Rwitness p, Tunresolved [])
         end env class_.tc_tparams in
         let obj_type = Reason.Rwitness p, Tapply (pos_cname, params) in
@@ -907,7 +930,7 @@ and expr_ in_cond is_lvalue env (p, e) =
               ft_ret = fty.ft_ret;
             } in
             env, (reason, Tfun caller)
-        | x ->
+        | _ ->
             (* This can happen if the method lives in PHP *)
             env, (Reason.Rwitness pos, Tany)
         )
@@ -928,7 +951,7 @@ and expr_ in_cond is_lvalue env (p, e) =
       let smethod = Env.get_static_member true env class_ (snd meth) in
       (match smethod with
       | None -> (* The static method wasn't found. *)
-        smember_not_found p ~is_const:false ~is_method:true env class_ (snd meth);
+        smember_not_found p ~is_const:false ~is_method:true class_ (snd meth);
         env, (Reason.Rnone, Tany)
       | Some smethod ->
         (match smethod.ce_type, smethod.ce_visibility with
@@ -977,7 +1000,7 @@ and expr_ in_cond is_lvalue env (p, e) =
       let env, ty = expr env x in
       Env.debug env ty;
       env, Env.fresh_type()
-  | Call (call_type, (_, fun_expr as e), el, uel) ->
+  | Call (call_type, e, el, uel) ->
       let env, result = dispatch_call p env call_type e el uel in
       let env = Env.forget_members env p in
       env, result
@@ -991,9 +1014,9 @@ and expr_ in_cond is_lvalue env (p, e) =
   | Binop ((Ast.AMpamp | Ast.BArbar as c), e1, e2) ->
       let c = c = Ast.AMpamp in
       let lenv = env.Env.lenv in
-      let env, ty1 = expr env e1 in
+      let env, _ = expr env e1 in
       let env = condition env c e1 in
-      let env, ty2 = raw_expr in_cond env e2 in
+      let env, _ = raw_expr in_cond env e2 in
       let env = { env with Env.lenv = lenv } in
       env, (Reason.Rlogic_ret p, Tprim Tbool)
   | Binop (bop, e1, e2) ->
@@ -1006,7 +1029,7 @@ and expr_ in_cond is_lvalue env (p, e) =
       unop p env uop ty
   | Eif (c, e1, e2) ->
       let env, tyc = raw_expr in_cond env c in
-      Typing_async.enforce_not_awaitable env (fst c) tyc;
+      Async.enforce_not_awaitable env (fst c) tyc;
       let lenv = env.Env.lenv in
       let env  = condition env true c in
       let env, ty1 = match e1 with
@@ -1031,7 +1054,7 @@ and expr_ in_cond is_lvalue env (p, e) =
         let local = p, Lvar (p, local) in
         expr env local
   | Class_get (cid, mid) ->
-      Typing_utils.process_static_find_ref cid mid;
+      TUtils.process_static_find_ref cid mid;
       let env, cty = static_class_id p env cid in
       let env, cty = Env.expand_type env cty in
       let env, ty = class_get ~is_method:false ~is_const:false env cty mid cid in
@@ -1054,7 +1077,7 @@ and expr_ in_cond is_lvalue env (p, e) =
         ) in
       let env, ty1 = expr env e1 in
       let env, result =
-        obj_get ~is_method:false ~nullsafe:nullsafe env ty1 m (fun x -> x) in
+        obj_get ~is_method:false ~nullsafe env ty1 m (fun x -> x) in
       let has_lost_info = Env.FakeMembers.is_invalid env e1 (snd m) in
       if has_lost_info
       then
@@ -1089,7 +1112,7 @@ and expr_ in_cond is_lvalue env (p, e) =
   | Special_func func -> special_func env p func
   | New (c, el, uel) ->
       Typing_hooks.dispatch_new_id_hook c env;
-      Typing_utils.process_static_find_ref c (p, SN.Members.__construct);
+      TUtils.process_static_find_ref c (p, SN.Members.__construct);
       let check_not_abstract = true in
       let env, ty = new_object ~check_not_abstract p env c el uel in
       let env = Env.forget_members env p in
@@ -1103,7 +1126,7 @@ and expr_ in_cond is_lvalue env (p, e) =
   | InstanceOf (e1, e2) ->
     let env = instanceof_in_env p env e1 e2 in
     env, (Reason.Rwitness p, Tprim Tbool)
-  | Efun (f, idl) ->
+  | Efun (f, _idl) ->
       NastCheck.fun_ env f (Nast.assert_named_body f.f_body);
       let env, ft = fun_decl_in_env env f in
       (* check for recursive function calls *)
@@ -1113,8 +1136,8 @@ and expr_ in_cond is_lvalue env (p, e) =
       env, (Reason.Rwitness p, Tanon (ft.ft_arity, anon_id))
   | Xml (sid, attrl, el) ->
       let env, obj = expr env (fst sid, New (CI sid, [], [])) in
-      let env, attr_tyl = lfold expr env (List.map snd attrl) in
-      let env, body = lfold expr env el in
+      let env, _attr_tyl = lfold expr env (List.map snd attrl) in
+      let env, _body = lfold expr env el in
       (* We don't perform any check on XHP body right now, because
        * it is unclear, what is allowed ...
        * I keep the code here, because one day, we might want to be
@@ -1142,7 +1165,7 @@ and class_const env p = function
       let env, cty = static_class_id p env CIparent in
       obj_get ~is_method:false ~nullsafe:None env cty mid (fun x -> x)
   | (cid, mid) ->
-      Typing_utils.process_static_find_ref cid mid;
+      TUtils.process_static_find_ref cid mid;
       let env, cty = static_class_id p env cid in
       let env, cty = Env.expand_type env cty in
       class_get ~is_method:false ~is_const:true env cty mid cid
@@ -1261,7 +1284,7 @@ and new_object ~check_not_abstract p env c el uel =
   | Some (cname, class_) ->
       if check_not_abstract && class_.tc_abstract && c <> CIstatic
       then Errors.uninstantiable_class p class_.tc_pos class_.tc_name;
-      let env, params = lfold begin fun env x ->
+      let env, params = lfold begin fun env _ ->
         TUtils.in_var env (Reason.Rnone, Tunresolved [])
       end env class_.tc_tparams in
       let env =
@@ -1293,7 +1316,7 @@ and instanceof_naming = function
       | x when x = SN.Classes.cStatic -> CIstatic
       | _ -> CI (pos_c, name_c)
     in Some cid
-  | (_, Lvar var) as e ->
+  | (_, Lvar _) as e ->
     let cid = CIvar e in
     Some cid
   | _ -> None
@@ -1302,8 +1325,7 @@ and instanceof_in_env p (env:Env.env) (e1:Nast.expr) (e2:Nast.expr) =
   let env, _ = expr env e1 in
   match instanceof_naming e2 with
     | Some cid ->
-      let () = instantiable_cid p env cid in
-      env
+      instantiable_cid p env cid
     | None ->
       let env, _ = expr env e2 in
       env
@@ -1313,12 +1335,12 @@ and instantiable_cid p env cid =
   (match class_ with
     | Some ((pos, name), class_) when class_.tc_kind = Ast.Ctrait ->
       (match cid with
-        | CI _ -> Errors.uninstantiable_class pos class_.tc_pos name
-        | CIstatic | CIparent | CIself -> ()
-        | CIvar _ -> ())
+        | CI _ -> Errors.uninstantiable_class pos class_.tc_pos name; env
+        | CIstatic | CIparent | CIself -> env
+        | CIvar _ -> env)
     | Some ((pos, name), class_) when class_.tc_kind = Ast.Cabstract && class_.tc_final ->
-      Errors.uninstantiable_class pos class_.tc_pos name
-    | None | Some _ -> ())
+        Errors.uninstantiable_class pos class_.tc_pos name; env
+    | None | Some _ -> env)
 
 (* While converting code from PHP to Hack, some arrays are used
  * as tuples. Example: array('', 0). Since the elements have
@@ -1331,7 +1353,7 @@ and instantiable_cid p env cid =
  * source code too, so this may be a nice small test case for our upcoming
  * migration/upgrade strategy.
  *)
-and convert_array_as_tuple p env ty2 =
+and convert_array_as_tuple env ty2 =
   let r2 = fst ty2 in
   if not (Env.is_strict env) && TUtils.is_array_as_tuple env ty2
   then env, (r2, Tany)
@@ -1397,7 +1419,7 @@ and check_shape_keys_validity env pos keys =
         List.fold_left (check_field pos info) env rest_keys
 
 and assign p env e1 ty2 =
-  let env, ty2 = convert_array_as_tuple p env ty2 in
+  let env, ty2 = convert_array_as_tuple env ty2 in
   match e1 with
   | (_, Lvar (_, x)) ->
       let env = Env.set_local env x ty2 in
@@ -1409,16 +1431,16 @@ and assign p env e1 ty2 =
       | _, Taccess (_, _, _) ->
           let env, ty2 = TAccess.expand env folded_ety2 in
           assign p env e1 ty2
-      | r, Tapply ((_, x), argl) when Typing_env.is_typedef x ->
+      | r, Tapply ((_, x), argl) when Env.is_typedef x ->
           let env, ty2 = Typing_tdef.expand_typedef env r x argl in
           assign p env e1 ty2
-      | r, Tapply ((_, x), [elt_type])
+      | _, Tapply ((_, x), [elt_type])
         when x = SN.Collections.cVector || x = SN.Collections.cImmVector ->
           let env, _ = lfold begin fun env e ->
             assign (fst e) env e elt_type
           end env el in
           env, ty2
-      | r, Tarray (Some elt_type, None) ->
+      | _, Tarray (Some elt_type, None) ->
           let env, _ = lfold begin fun env e ->
             assign (fst e) env e elt_type
           end env el in
@@ -1461,20 +1483,18 @@ and assign p env e1 ty2 =
       )
   | _, Class_get _
   | _, Obj_get _ ->
-      let env, ty1 = lvalue env e1 in
-      let env, ety1 = Env.expand_type env ty1 in
-      let fake_members, locals as lenv = env.Env.lenv in
+      let _, locals as lenv = env.Env.lenv in
       let no_fakes = Env.empty_fake_members, locals in
       (* In this section, we check that the assignment is compatible with
        * the real type of a member. Remember that members can change
        * type (cf fake_members). But when we assign a value to $this->x,
        * we want to make sure that the type assign to $this->x is compatible
        * with the actual type hint. In this portion of the code, type-check
-       * the assignment in an envrionment without fakes, and therefore
+       * the assignment in an environment without fakes, and therefore
        * check that the assignment is compatible with the type of
        * the member.
        *)
-      let env, real_type = expr { env with Env.lenv = no_fakes } e1 in
+      let env, real_type = lvalue { env with Env.lenv = no_fakes } e1 in
       let env, exp_real_type = Env.expand_type env real_type in
       let env = { env with Env.lenv = lenv } in
       let env, ety2 = Env.expand_type env ty2 in
@@ -1567,7 +1587,7 @@ and check_parent_construct pos env el uel env_parent =
 and call_parent_construct pos env el uel =
   let parent = Env.get_parent env in
   match parent with
-    | _, Tapply (_, params) ->
+    | _, Tapply _ ->
       check_parent_construct pos env el uel parent
     | _, (Tany | Tmixed | Tarray (_, _) | Tgeneric (_, _) | Toption _ | Tprim _
       | Tvar _ | Tfun _ | Tabstract (_, _, _) | Ttuple _ | Tanon _
@@ -1577,11 +1597,11 @@ and call_parent_construct pos env el uel =
       match Env.get_self env with
         | _, Tapply ((_, self), _) ->
           (match Env.get_class env self with
-            | Some ({tc_kind = Ast.Ctrait; tc_req_ancestors ; tc_name; _}
+            | Some ({tc_kind = Ast.Ctrait; _}
                        as trait) ->
               (match trait_most_concrete_req_class trait env with
                 | None -> Errors.parent_in_trait pos; default
-                | Some (tc_parent, parent_ty) ->
+                | Some (_, parent_ty) ->
                   check_parent_construct pos env el uel parent_ty
               )
             | Some self_tc ->
@@ -1630,7 +1650,7 @@ and dispatch_call p env call_type (fpos, fun_expr as e) el uel =
         Errors.isset_empty_unset_in_strict p pseudo_func;
       env, (Reason.Rwitness p, Tprim Tvoid)
   | Id (_, x) when SSet.mem x Naming.predef_tests ->
-      let env, ty = expr env (List.hd el) in
+      let env, _ = expr env (List.hd el) in
       env, (Reason.Rwitness p, Tprim Tbool)
   | Id ((_, array_filter) as id)
       when array_filter = SN.StdlibFunctions.array_filter && el <> [] && uel = [] ->
@@ -1650,7 +1670,7 @@ and dispatch_call p env call_type (fpos, fun_expr as e) el uel =
       let rec get_array_filter_return_type env ty =
         let env, ety = Env.expand_type env ty in
         (match ety with
-        | (r, Tarray (None, None)) as array_type ->
+        | (_, Tarray (None, None)) as array_type ->
             env, array_type
         | (r, Tarray (Some tv, None)) ->
             let env, tv = get_value_type env tv in
@@ -1871,7 +1891,7 @@ and dispatch_call p env call_type (fpos, fun_expr as e) el uel =
              * defined on the parent class, but $this is still the child class.
              * We can deal with this by hijacking the continuation that
              * calculates the SN.Typehints.this type *)
-            let k_lhs ty =
+            let k_lhs _ =
               Reason.Rwitness fpos, Tgeneric (SN.Typehints.this, Some (Env.get_self env))
             in
             let env, method_, _ =
@@ -1895,7 +1915,7 @@ and dispatch_call p env call_type (fpos, fun_expr as e) el uel =
         )
       end
   | Class_const(e1, m) ->
-      Typing_utils.process_static_find_ref e1 m;
+      TUtils.process_static_find_ref e1 m;
       let env, ty1 = static_class_id p env e1 in
       let env, fty = class_get ~is_method:true ~is_const:false env ty1 m e1 in
       let env, fty = Env.expand_type env fty in
@@ -1914,13 +1934,17 @@ and dispatch_call p env call_type (fpos, fun_expr as e) el uel =
         let env, fty = Inst.instantiate_fun env fty el in (* ignore uel ; el for FormatString *)
         let env, method_ = call p env fty el uel in
         env, method_, None) in
-      (if nullflavor == OG_nullsafe && not (type_could_be_null env ty1) then
-        let env, (r, _) = Env.expand_type env ty1 in
-        Errors.nullsafe_not_needed p
-          (Reason.to_string
-           "This is what makes me believe it cannot be null"
-           r));
-      obj_get ~is_method:is_method ~nullsafe:nullsafe env ty1 m fn
+      let env =
+        if nullflavor == OG_nullsafe && not (type_could_be_null env ty1)
+        then begin
+          let env, (r, _) = Env.expand_type env ty1 in
+          Errors.nullsafe_not_needed p
+            (Reason.to_string
+             "This is what makes me believe it cannot be null"
+             r);
+          env
+        end else env in
+      obj_get ~is_method ~nullsafe env ty1 m fn
   | Fun_id x
   | Id x ->
       Typing_hooks.dispatch_id_hook x env;
@@ -1936,7 +1960,6 @@ and dispatch_call p env call_type (fpos, fun_expr as e) el uel =
 
 and fun_type_of_id env x =
   Typing_hooks.dispatch_fun_id_hook x;
-  Find_refs.process_find_refs None (snd x) (fst x);
   let env, fty =
     match Env.get_fun env (snd x) with
     | None -> unbound_name env x
@@ -1958,7 +1981,7 @@ and array_get is_lvalue p env ty1 ety1 e2 ty2 =
    * type parameter list is admitted). Basically the "omit type parameter"
    * hole was for compatibility with certain interfaces like ArrayAccess, not
    * for collections! But it's hard to go back on now, so since we've always
-   * errored (with an inscruitable error message) when you try to actually use
+   * errored (with an inscrutable error message) when you try to actually use
    * a collection with omitted type parameters, we can continue to error and
    * give a more useful error message. *)
   let arity_error (_, name) =
@@ -2020,7 +2043,8 @@ and array_get is_lvalue p env ty1 ety1 e2 ty2 =
     error_const_mutation env p ety1
   | Tgeneric (_, Some (_, Tapply ((_, cn) as id, argl)))
   | Tapply ((_, cn) as id, argl)
-      when cn = SN.Collections.cIndexish ->
+      when (cn = SN.Collections.cIndexish
+           || cn = SN.Collections.cKeyedContainer) ->
       let (k, v) = match argl with
         | [k; v] -> (k, v)
         | _ ->
@@ -2126,7 +2150,7 @@ and array_get is_lvalue p env ty1 ety1 e2 ty2 =
       if Env.is_strict env
       then error_array env p ety1
       else env, (Reason.Rnone, Tany)
-  | Tapply ((_, x), argl) when Typing_env.is_typedef x ->
+  | Tapply ((_, x), argl) when Env.is_typedef x ->
       let env, ty1 = Typing_tdef.expand_typedef env (fst ety1) x argl in
       let env, ety1 = Env.expand_type env ty1 in
       array_get is_lvalue p env ty1 ety1 e2 ty2
@@ -2152,16 +2176,25 @@ and array_append is_lvalue p env ty1 =
   | Tapply ((_, n), [ty])
       when n = SN.Collections.cVector || n = SN.Collections.cSet ->
       env, ty
+  | Tapply ((_, n), [])
+      when n = SN.Collections.cVector || n = SN.Collections.cSet ->
+      (* Handle the case where "Vector" or "Set" was used as a typehint
+         without type parameters *)
+      env, (Reason.Rnone, Tany)
   | Tapply ((_, n), [tkey; tvalue]) when n = SN.Collections.cMap ->
       (* You can append a pair to a map *)
       env, (Reason.Rmap_append p, Tapply ((p, SN.Collections.cPair), [tkey; tvalue]))
+  | Tapply ((_, n), []) when n = SN.Collections.cMap ->
+      (* Handle the case where "Map" was used as a typehint without
+         type parameters *)
+      env, (Reason.Rmap_append p, Tapply ((p, SN.Collections.cPair), []))
   | Tarray (Some ty, None) ->
       env, ty
   | Tobject ->
       if Env.is_strict env
       then error_array_append env p ety1
       else env, (Reason.Rnone, Tany)
-  | Tapply ((_, x), argl) when Typing_env.is_typedef x ->
+  | Tapply ((_, x), argl) when Env.is_typedef x ->
       let env, ty1 = Typing_tdef.expand_typedef env (fst ety1) x argl in
       array_append is_lvalue p env ty1
   | Taccess (_, _, _) ->
@@ -2193,10 +2226,10 @@ and error_const_mutation env p (r, ty) =
  *
  * We could refactor this + class_get
  *)
-and class_contains_smethod env cty (p, mid) =
+and class_contains_smethod env cty (_pos, mid) =
   match cty with
-  | _, Tgeneric (_, Some (_, Tapply ((_, c), paraml)))
-  | _, Tapply ((_, c), paraml) ->
+  | _, Tgeneric (_, Some (_, Tapply ((_, c), _)))
+  | _, Tapply ((_, c), _) ->
       let class_ = Env.get_class env c in
       (match class_ with
       | None -> None
@@ -2214,7 +2247,7 @@ and class_get ~is_method ~is_const env cty (p, mid) cid =
 
 and class_get_ ~is_method ~is_const env cty (p, mid) cid =
   match cty with
-  | r, Tapply ((_, x), argl) when Typing_env.is_typedef x ->
+  | r, Tapply ((_, x), argl) when Env.is_typedef x ->
       let env, cty = Typing_tdef.expand_typedef env r x argl in
       class_get_ ~is_method ~is_const env cty (p, mid) cid
   | _, Taccess (_, _, _) ->
@@ -2234,13 +2267,12 @@ and class_get_ ~is_method ~is_const env cty (p, mid) cid =
             Typing_defs.accumulate_method_calls_result :=
                 (p, (class_.tc_name^"::"^mid)) ::
                     !Typing_defs.accumulate_method_calls_result;
-          Find_refs.process_find_refs (Some class_.tc_name) mid p;
           Typing_hooks.dispatch_smethod_hook class_ (p, mid) env (Some cid);
           (match smethod with
           | None ->
             (match Env.get_static_member is_method env class_ SN.Members.__callStatic with
               | None ->
-                smember_not_found p ~is_const ~is_method env class_ mid;
+                smember_not_found p ~is_const ~is_method class_ mid;
                 env, (Reason.Rnone, Tany)
               | Some {ce_visibility = vis; ce_type = (r, Tfun ft); _} ->
                 check_visibility p env (Reason.to_pos r, vis) (Some cid);
@@ -2272,7 +2304,7 @@ and class_get_ ~is_method ~is_const env cty (p, mid) cid =
       Errors.expected_class p;
       env, (Reason.Rnone, Tany)
 
-and smember_not_found pos ~is_const ~is_method env class_ member_name =
+and smember_not_found pos ~is_const ~is_method class_ member_name =
   let kind =
     if is_const then `class_constant
     else if is_method then `static_method
@@ -2296,11 +2328,14 @@ and smember_not_found pos ~is_const ~is_method env class_ member_name =
   | Some (pos2, v) ->
       error (`did_you_mean (pos2, v))
 
-and member_not_found pos ~is_method env class_ member_name class_name =
+and member_not_found pos ~is_method class_ member_name r =
   let kind = if is_method then `method_ else `member in
-  let error hint =
-    Errors.member_not_found kind pos class_name member_name hint
+  let cid = class_.tc_pos, class_.tc_name in
+  let reason = Reason.to_string
+    ("This is why I think it is an object of type "^strip_ns class_.tc_name) r
   in
+  let error hint =
+    Errors.member_not_found kind pos cid member_name hint reason in
   match Env.suggest_member is_method class_ member_name with
     | None ->
       (match Env.suggest_static_member is_method class_ member_name with
@@ -2316,17 +2351,16 @@ and member_not_found pos ~is_method env class_ member_name class_name =
     | Some (def_pos, v) ->
         error (`did_you_mean (def_pos, v))
 
-and obj_get ~is_method:is_method ~nullsafe:nullsafe env ty1 id k =
+and obj_get ~is_method ~nullsafe env ty1 id k =
   let env, method_, _ =
-    obj_get_with_visibility ~is_method:is_method ~nullsafe:nullsafe env ty1
-                            id k in
+    obj_get_with_visibility ~is_method ~nullsafe env ty1 id k in
   env, method_
 
-and obj_get_with_visibility ~is_method:is_method ~nullsafe:nullsafe env ty1
-                            (p, s as id) k =
-  obj_get_ ~is_method:is_method ~nullsafe:nullsafe env ty1 id k (fun ty -> ty)
+and obj_get_with_visibility ~is_method ~nullsafe env ty1
+                            id k =
+  obj_get_ ~is_method ~nullsafe env ty1 id k (fun ty -> ty)
 
-and obj_get_ ~is_method:is_method ~nullsafe:nullsafe env ty1 (p, s as id)
+and obj_get_ ~is_method ~nullsafe env ty1 (p, s as id)
              k k_lhs =
   let env, ety1 = Env.expand_type env ty1 in
   match ety1 with
@@ -2335,8 +2369,7 @@ and obj_get_ ~is_method:is_method ~nullsafe:nullsafe env ty1 (p, s as id)
         lfold
           (fun (env, vis) ty ->
             let env, ty, vis' =
-              obj_get_ ~is_method:is_method ~nullsafe:nullsafe env ty id
-                       k k_lhs in
+              obj_get_ ~is_method ~nullsafe env ty id k k_lhs in
             (* There is one special case where we need to expose the
              * visibility outside of obj_get (checkout inst_meth special
              * function).
@@ -2352,14 +2385,14 @@ and obj_get_ ~is_method:is_method ~nullsafe:nullsafe env ty1 (p, s as id)
       env, method_, vis
   | p, Tgeneric (x, Some ty) ->
       let k_lhs' ty = k_lhs (p, Tgeneric (x, Some ty)) in
-      obj_get_ ~is_method:is_method ~nullsafe:nullsafe env ty id k k_lhs'
-  | p, Tapply ((_, x) as c, argl) when Typing_env.is_typedef x ->
+      obj_get_ ~is_method ~nullsafe env ty id k k_lhs'
+  | p, Tapply ((_, x) as c, argl) when Env.is_typedef x ->
       let env, ty1 = Typing_tdef.expand_typedef env (fst ety1) x argl in
-      let k_lhs' ty = k_lhs (p, Tapply (c, argl)) in
-      obj_get_ ~is_method:is_method ~nullsafe:nullsafe env ty1 id k k_lhs'
+      let k_lhs' _ty = k_lhs (p, Tapply (c, argl)) in
+      obj_get_ ~is_method ~nullsafe env ty1 id k k_lhs'
   | _, Taccess (_, _, _) ->
       let env, ty1 = TAccess.expand env ety1 in
-      obj_get_ ~is_method:is_method ~nullsafe:nullsafe env ty1 id k k_lhs
+      obj_get_ ~is_method ~nullsafe env ty1 id k k_lhs
   | _, Toption ty -> begin match nullsafe with
     | Some p1 ->
         let k' (env, fty, x) = begin
@@ -2367,7 +2400,7 @@ and obj_get_ ~is_method:is_method ~nullsafe:nullsafe env ty1 (p, s as id)
           let env, method_ = non_null env method_ in
           env, (Reason.Rwitness p1, Toption method_), x
         end in
-        obj_get_ ~is_method:is_method ~nullsafe:nullsafe env ty id k' k_lhs
+        obj_get_ ~is_method ~nullsafe env ty id k' k_lhs
     | None ->
         Errors.null_member s p
           (Reason.to_string
@@ -2378,9 +2411,10 @@ and obj_get_ ~is_method:is_method ~nullsafe:nullsafe env ty1 (p, s as id)
     end
   | _, (Tany | Tmixed | Tarray (_, _) | Tgeneric (_,_) | Tprim _ | Tvar _
     | Tfun _ | Tabstract (_, _, _) | Tapply (_, _) | Ttuple _ | Tanon (_, _)
-    | Tobject | Tshape _) -> k begin match snd ety1 with
-    | Tgeneric (_, Some (_, Tapply (x, paraml)))
-    | Tapply (x, paraml) ->
+    | Tobject | Tshape _) -> k begin
+    match snd ety1 with
+      | Tgeneric (_, Some (_, Tapply (x, paraml)))
+      | Tapply (x, paraml) ->
         let class_ = Env.get_class env (snd x) in
         (match class_ with
           | None ->
@@ -2394,22 +2428,24 @@ and obj_get_ ~is_method:is_method ~nullsafe:nullsafe env ty1 (p, s as id)
               then List.map (fun _ -> Reason.Rwitness p, Tany) class_.tc_tparams
               else paraml
             in
-            let method_ = Env.get_member is_method env class_ s in
+            let member_ = Env.get_member is_method env class_ s in
             if !Typing_defs.accumulate_method_calls then
               Typing_defs.accumulate_method_calls_result :=
                 (p, (class_.tc_name^"::"^s)) ::
                 !Typing_defs.accumulate_method_calls_result;
-            Find_refs.process_find_refs (Some class_.tc_name) s p;
             Typing_hooks.dispatch_cmethod_hook class_ (p, s) env None;
-            (match method_ with
+            (match member_ with
+              | None when not is_method ->
+                member_not_found p ~is_method class_ s (fst ety1);
+                env, (Reason.Rnone, Tany), None
               | None ->
                 (match Env.get_member is_method env class_ SN.Members.__call with
                   | None ->
-                    member_not_found p ~is_method env class_ s x;
+                    member_not_found p ~is_method class_ s (fst ety1);
                     env, (Reason.Rnone, Tany), None
                   | Some {ce_visibility = vis; ce_type = (r, Tfun ft); _}  ->
-                    let meth_pos = Reason.to_pos r in
-                    check_visibility p env (meth_pos, vis) None;
+                    let mem_pos = Reason.to_pos r in
+                    check_visibility p env (mem_pos, vis) None;
                     let new_name = "alpha_varied_this" in
 
                     let env, paraml = alpha_this ~new_name env paraml in
@@ -2423,7 +2459,7 @@ and obj_get_ ~is_method:is_method ~nullsafe:nullsafe env ty1 (p, s as id)
                     (* we change the params of the underlying
                      * declaration to act as a variadic function
                      * ... this transform cannot be done when
-                     * processing the declaratation of call because
+                     * processing the declaration of call because
                      * direct calls to $inst->__call are also
                      * valid.  *)
                     let ft = {ft with
@@ -2431,14 +2467,15 @@ and obj_get_ ~is_method:is_method ~nullsafe:nullsafe env ty1 (p, s as id)
                       ft_tparams = []; ft_params = [];
                       ft_ret = ft_ret;
                     } in
-                    let env, method_ = Typing_generic.rename env new_name
+                    let env, member_ = TGen.rename env new_name
                       SN.Typehints.this (r, Tfun ft) in
-                    env, method_, Some (meth_pos, vis)
+                    env, member_, Some (mem_pos, vis)
                   | _ -> assert false
                 )
-              | Some {ce_visibility = vis; ce_type = method_; _} ->
-                let meth_pos = Reason.to_pos (fst method_) in
-                check_visibility p env (meth_pos, vis) None;
+              | Some ({ce_visibility = vis; ce_type = member_; _ } as member_ce) ->
+                let mem_pos = Reason.to_pos (fst member_) in
+                check_visibility p env (mem_pos, vis) None;
+                let member_ = Typing_enum.member_type env member_ce in
                 let new_name = "alpha_varied_this" in
                 (* Since a paraml member might include a SN.Typehints.this type,
                  * let's alpha vary all the SN.Typehints.this types in the
@@ -2446,7 +2483,7 @@ and obj_get_ ~is_method:is_method ~nullsafe:nullsafe env ty1 (p, s as id)
                 let env, paraml = alpha_this ~new_name env paraml in
 
                 let subst = Inst.make_subst class_.tc_tparams paraml in
-                let env, method_ = Inst.instantiate subst env method_ in
+                let env, member_ = Inst.instantiate subst env member_ in
 
                 (* We must substitute out the this types separately
                  * from when the method is instantiated with its type
@@ -2455,29 +2492,29 @@ and obj_get_ ~is_method:is_method ~nullsafe:nullsafe env ty1 (p, s as id)
                  * T. We don't want to substitute SN.Typehints.this for T and
                  * then replace that SN.Typehints.this with Vector<this>. *)
                 let this_ty = k_lhs ety1 in
-                let env, method_ = Inst.instantiate_this env method_ this_ty in
+                let env, member_ = Inst.instantiate_this env member_ this_ty in
 
                 (* Now this has been substituted, we can de-alpha-vary *)
-                let env, method_ =
-                  Typing_generic.rename env new_name SN.Typehints.this method_ in
-                env, method_, Some (meth_pos, vis)
+                let env, member_ =
+                  TGen.rename env new_name SN.Typehints.this member_ in
+                env, member_, Some (mem_pos, vis)
             )
         )
-    | Tobject
-    | Tany -> env, (fst ety1, Tany), None
-    | (Tmixed | Tarray (_, _) | Tprim _ | Tgeneric (_, _) | Toption _
-      | Tvar _ | Tabstract (_, _, _) | Ttuple _ | Tanon (_, _)
-      | Tfun _ | Tunresolved _ | Tshape _ | Taccess (_, _, _)) as ty ->
-      Errors.non_object_member
+      | Tobject
+      | Tany -> env, (fst ety1, Tany), None
+      | (Tmixed | Tarray (_, _) | Tprim _ | Tgeneric (_, _) | Toption _
+            | Tvar _ | Tabstract (_, _, _) | Ttuple _ | Tanon (_, _)
+            | Tfun _ | Tunresolved _ | Tshape _ | Taccess (_, _, _)) as ty ->
+        Errors.non_object_member
           s p (Typing_print.error ty) (Reason.to_pos (fst ety1));
-      env, (fst ety1, Tany), None
+        env, (fst ety1, Tany), None
   end
 
 and type_could_be_null env ty1 =
   let env, ety1 = Env.expand_type env ty1 in
   match (snd ety1) with
-  | Tgeneric (x, Some ty) -> type_could_be_null env ty
-  | Tapply ((_, x), argl) when Typing_env.is_typedef x ->
+  | Tgeneric (_, Some ty) -> type_could_be_null env ty
+  | Tapply ((_, x), argl) when Env.is_typedef x ->
       let env, ty = Typing_tdef.expand_typedef env (fst ety1) x argl in
       type_could_be_null env ty
   | Taccess _ ->
@@ -2493,7 +2530,7 @@ and alpha_this ~new_name env paraml =
    * all the SN.Typehints.this types in the params*)
   List.fold_right
     (fun param (env, paraml) ->
-      let env, param = Typing_generic.rename env SN.Typehints.this new_name param in
+      let env, param = TGen.rename env SN.Typehints.this new_name param in
       env, param::paraml)
     paraml
     (env, [])
@@ -2548,16 +2585,16 @@ and trait_most_concrete_req_class trait env =
 and static_class_id p env = function
   | CIparent ->
     (match Env.get_self env with
-      | _, Tapply ((self_pos, self), _) ->
+      | _, Tapply ((_, self), _) ->
         (match Env.get_class env self with
           | Some (
-            {tc_kind = Ast.Ctrait; tc_req_ancestors ; tc_name; _}
+            {tc_kind = Ast.Ctrait; _}
               as trait) ->
             (match trait_most_concrete_req_class trait env with
               | None ->
                 Errors.parent_in_trait p;
                 env, (Reason.Rwitness p, Tany)
-              | Some (tc_parent, parent_ty) ->
+              | Some (_, parent_ty) ->
                 (* inside a trait, parent is SN.Typehints.this, but with the
                  * type of the most concrete class that the trait has
                  * "require extend"-ed *)
@@ -2593,7 +2630,7 @@ and static_class_id p env = function
     (match class_ with
       | None -> env, (Reason.Rnone, Tany) (* Tobject *)
       | Some class_ ->
-        let env, params = lfold begin fun env x ->
+        let env, params = lfold begin fun env _ ->
           TUtils.in_var env (Reason.Rnone, Tunresolved [])
         end env class_.tc_tparams in
         env, (Reason.Rwitness p, Tapply (c, params))
@@ -2618,7 +2655,6 @@ and call_construct p env class_ params el uel =
   let cstr = Env.get_construct env class_ in
   let mode = Env.get_mode env in
   Typing_hooks.dispatch_constructor_hook class_ env p;
-  Find_refs.process_find_refs (Some class_.tc_name) SN.Members.__construct p;
   match (fst cstr) with
     | None ->
       if el <> [] &&
@@ -2760,7 +2796,7 @@ and unpack_expr env e =
 and call_ pos env fty el uel =
   let env, efty = Env.expand_type env fty in
   (match efty with
-  | r, Tapply ((_, x), argl) when Typing_env.is_typedef x ->
+  | r, Tapply ((_, x), argl) when Env.is_typedef x ->
       let env, fty = Typing_tdef.expand_typedef env r x argl in
       call_ pos env fty el uel
   | _, (Tany | Tunresolved []) ->
@@ -2835,8 +2871,8 @@ and bad_call p ty =
 and unop p env uop ty =
   match uop with
   | Ast.Unot ->
+      Async.enforce_not_awaitable env p ty;
       (* !$x (logical not) works with any type, so we just return Tbool *)
-      Typing_async.enforce_not_awaitable env p ty;
       env, (Reason.Rlogic_ret p, Tprim Tbool)
   | Ast.Utild ->
       (* ~$x (bitwise not) only works with int *)
@@ -2928,8 +2964,8 @@ and binop in_cond p env bop p1 ty1 p2 ty2 =
         ), _ -> env, (Reason.Rarith_ret p, Tprim Tnum)
       )
   | Ast.Percent ->
-      let env, ty1 = Type.unify p Reason.URnone env ty1 (Reason.Rarith p1, Tprim Tint) in
-      let env, ty2 = Type.unify p Reason.URnone env ty2 (Reason.Rarith p1, Tprim Tint) in
+      let env, _ = Type.unify p Reason.URnone env ty1 (Reason.Rarith p1, Tprim Tint) in
+      let env, _ = Type.unify p Reason.URnone env ty2 (Reason.Rarith p1, Tprim Tint) in
       env, (Reason.Rarith_ret p, Tprim Tint)
   | Ast.Xor ->
       let env, ty1 = TUtils.fold_unresolved env ty1 in
@@ -2938,16 +2974,16 @@ and binop in_cond p env bop p1 ty1 p2 ty2 =
       let env, ety2 = Env.expand_type env ty2 in
       (match ety1, ety2 with
       | (_, Tprim Tbool), _ | _, (_, Tprim Tbool) ->
-          let env, ty1 = Type.unify p Reason.URnone env ty1 (Reason.Rlogic_ret p1, Tprim Tbool) in
-          let env, ty2 = Type.unify p Reason.URnone env ty2 (Reason.Rlogic_ret p1, Tprim Tbool) in
+          let env, _ = Type.unify p Reason.URnone env ty1 (Reason.Rlogic_ret p1, Tprim Tbool) in
+          let env, _ = Type.unify p Reason.URnone env ty2 (Reason.Rlogic_ret p1, Tprim Tbool) in
           env, (Reason.Rlogic_ret p, Tprim Tbool)
       | (_, (Tany | Tmixed | Tarray (_, _) | Tgeneric (_,_) | Toption _
         | Tprim _ | Tvar _ | Tfun _ | Tabstract (_, _, _) | Tapply (_, _)
         | Ttuple _ | Tanon (_, _) | Tunresolved _ | Tobject | Tshape _
         | Taccess (_, _, _))
         ), _ ->
-          let env, ty1 = Type.unify p Reason.URnone env ty1 (Reason.Rarith p1, Tprim Tint) in
-          let env, ty2 = Type.unify p Reason.URnone env ty2 (Reason.Rarith p1, Tprim Tint) in
+          let env, _ = Type.unify p Reason.URnone env ty1 (Reason.Rarith p1, Tprim Tint) in
+          let env, _ = Type.unify p Reason.URnone env ty2 (Reason.Rarith p1, Tprim Tint) in
           env, (Reason.Rarith_ret p, Tprim Tint)
       )
   | Ast.Eqeq  | Ast.Diff  ->
@@ -2966,7 +3002,7 @@ and binop in_cond p env bop p1 ty1 p2 ty2 =
       else
         (* TODO this is questionable; PHP's semantics for conversions with "<"
          * are pretty crazy and we may want to just disallow this? *)
-        let env, ty = Type.unify p Reason.URnone env ty1 ty2 in
+        let env, _ = Type.unify p Reason.URnone env ty1 ty2 in
         env, (Reason.Rcomp p, Tprim Tbool)
   | Ast.Dot ->
       let env = SubType.sub_string p1 env ty1 in
@@ -3004,7 +3040,7 @@ and non_null ?expanded:(expanded=ISet.empty) env ty =
         | x -> x :: tyl
       end tyl [] in
       env, (r, Tunresolved tyl)
-  | r, Tapply ((_, x), argl) when Typing_env.is_typedef x ->
+  | r, Tapply ((_, x), argl) when Env.is_typedef x ->
       let env, ty = Typing_tdef.expand_typedef env r x argl in
       non_null ~expanded env ty
   | _, Taccess (_, _, _) ->
@@ -3019,7 +3055,7 @@ and non_null ?expanded:(expanded=ISet.empty) env ty =
       env, ty
 
 and condition_var_non_null env = function
-  | _, Lvar (p, x) ->
+  | _, Lvar (_, x) ->
       let env, x_ty = Env.get_local env x in
       let env, x_ty = Env.expand_type env x_ty in
       let env, x_ty = non_null env x_ty in
@@ -3070,8 +3106,8 @@ and condition env tparamet =
               e, (_, Null)) when not tparamet ->
                 let env, x_ty = expr env e in
                 let env, x_ty = Env.expand_type env x_ty in
-                if bop == Ast.Eqeq
-                then check_null_wtf env r x_ty;
+                let env =
+                  if bop == Ast.Eqeq then check_null_wtf env r x_ty else env in
                 condition_var_non_null env e
   | (p, (Lvar _ | Obj_get _ | Class_get _) as e) ->
       let env, ty = expr env e in
@@ -3087,10 +3123,10 @@ and condition env tparamet =
   | r, Binop (Ast.Eq None, var, e) when tparamet ->
       let env, e_ty = expr env e in
       let env, e_ty = Env.expand_type env e_ty in
-      check_null_wtf env r e_ty;
+      let env = check_null_wtf env r e_ty in
       condition_var_non_null env var
   | p1, Binop (Ast.Eq None, (_, (Lvar _ | Obj_get _) as lv), (p2, _)) ->
-      let env, ty = expr env (p1, Binop (Ast.Eq None, lv, (p2, Null))) in
+      let env, _ = expr env (p1, Binop (Ast.Eq None, lv, (p2, Null))) in
       condition env tparamet lv
   | p, Binop ((Ast.Diff | Ast.Diff2 as op), e1, e2) ->
       let op = if op = Ast.Diff then Ast.Eqeq else Ast.EQeqeq in
@@ -3142,7 +3178,7 @@ and condition env tparamet =
               let class_ = Env.get_class env cid in
               (match class_ with
                 | None -> Env.set_local env x (Reason.Rwitness p, Tobject)
-                | Some class_ ->
+                | Some _class ->
                   if SubType.is_sub_type env obj_ty x_ty
                   then
                     (* If the right side of the `instanceof` object is
@@ -3193,7 +3229,7 @@ and get_instance_var env = function
   | _ -> failwith "Should only be called when is_instance_var is true"
 
 and check_null_wtf env p ty =
-  if Env.is_strict env then
+  if not (Env.is_strict env) then env else
     match ty with
       | _, Toption ty ->
         let env, ty = Env.expand_type env ty in
@@ -3205,10 +3241,11 @@ and check_null_wtf env p ty =
             Errors.sketchy_null_check_primitive p
           | _, (Tarray (_, _) | Tgeneric (_,_) | Toption _ | Tvar _ | Tfun _
             | Tabstract (_, _, _) | Tapply (_, _) | Ttuple _ | Tanon (_, _)
-            | Tunresolved _ | Tobject | Tshape _ | Taccess (_, _, _)) -> ())
+        | Tunresolved _ | Tobject | Tshape _ | Taccess (_, _, _)) -> ());
+        env
       | _, (Tany | Tmixed | Tarray (_, _) | Tgeneric (_,_) | Tprim _ | Tvar _
         | Tfun _ | Tabstract (_, _, _) | Tapply (_, _) | Ttuple _ | Tanon (_, _)
-        | Tunresolved _ | Tobject | Tshape _ | Taccess (_, _, _)) -> ()
+        | Tunresolved _ | Tobject | Tshape _ | Taccess (_, _, _)) -> env
 
 and is_type env e tprim =
   match e with
@@ -3242,7 +3279,7 @@ and string2 env idl =
     env
  ) env idl
 
-and get_implements ~with_checks ~this (env: Typing_env.env) ht =
+and get_implements ~with_checks ~this (env: Env.env) ht =
   let env, ht = Typing_hint.hint env ht in
   match ht with
   | _, Tapply ((p, c), paraml) ->
@@ -3258,7 +3295,7 @@ and get_implements ~with_checks ~this (env: Typing_env.env) ht =
           let this_ty = fst this, Tgeneric (SN.Typehints.this, Some this) in
           let subst =
             Inst.make_subst_with_this ~this:this_ty class_.tc_tparams paraml in
-          iter2_shortest begin fun (_, (p, x), cstr) ty ->
+          iter2_shortest begin fun (_, (p, _), cstr) ty ->
             if with_checks
             then match cstr with
             | None -> ()
@@ -3296,7 +3333,7 @@ and class_def_parent env class_def class_type =
   | (_, Happly ((_, x), _) as parent_ty) :: _ ->
       let parent_type = Env.get_class_dep env x in
       (match parent_type with
-      | Some parent_type -> check_parent env class_def class_type parent_type
+      | Some parent_type -> check_parent class_def class_type parent_type
       | None -> ());
       let env, parent_ty = Typing_hint.hint env parent_ty in
       env, parent_ty
@@ -3306,7 +3343,7 @@ and class_def_parent env class_def class_type =
   | _ :: _
   | _ -> env, (Reason.Rnone, Tany)
 
-and check_parent env class_def class_type parent_type =
+and check_parent class_def class_type parent_type =
   let position = fst class_def.c_name in
   (* Are all the parents in Hack? Do we know all their methods?
    * If so, let's check that the abstract methods have been implemented.
@@ -3348,7 +3385,7 @@ and class_def env_up _ c =
   end
 
 and get_self_from_c env c =
-  let env, tparams = lfold type_param env c.c_tparams in
+  let _, tparams = lfold type_param env c.c_tparams in
   let tparams = List.map begin fun (_, (p, s), param) ->
     Reason.Rwitness p, Tgeneric (s, param)
   end tparams in
@@ -3360,8 +3397,9 @@ and class_def_ env_up c tc =
   let env = Env.set_self_id env_up (snd c.c_name) in
   let env = Env.set_mode env c.c_mode in
   let env = Env.set_root env (Dep.Class (snd c.c_name)) in
-  let pc, cid = c.c_name in
+  let pc, _ = c.c_name in
   let impl = c.c_extends @ c.c_implements @ c.c_uses in
+  let env = Typing_hint.check_tparams_instantiable env c.c_tparams in
   let self = get_self_from_c env c in
   let env, impl_dimpl =
     lfold (get_implements ~with_checks:true ~this:self) env impl in
@@ -3486,8 +3524,9 @@ and class_var_def env is_static c cv =
         if cv.cv_is_xhp && (Env.is_strict env)
           then Env.set_mode env Ast.Mpartial
           else env in
-      let env, cty = Typing_hint.hint env cty in
-      let _ = Type.sub_type p Reason.URhint env cty ty in ()
+      let env, cty = Typing_hint.hint ~ensure_instantiable:true env cty in
+      let _ = Type.sub_type p Reason.URhint env cty ty in
+      ()
 
 and method_def env m =
   let env = { env with Env.lenv = Env.empty_local } in
@@ -3508,7 +3547,7 @@ and method_def env m =
     List.iter2 (check_param env) m_params params;
   end;
   let env = List.fold_left2 bind_param env params m_params in
-  let env = fun_ ~abstract:m.m_abstract env m.m_unsafe (m.m_ret <> None)
+  let env = fun_ ~abstract:m.m_abstract env m.m_unsafe
       ret (fst m.m_name) m.m_body m.m_fun_kind in
   let env = List.fold_left (fun env f -> f env) env (Env.get_todo env) in
   match m.m_ret with
@@ -3521,8 +3560,12 @@ and method_def env m =
     | Some _ -> ()
 
 and typedef_def env_up x typedef =
-  NastCheck.typedef env_up x typedef;
-  match typedef with
-    | _, _, (pos, Hshape fdm) ->
-      ignore (check_shape_keys_validity env_up pos (ShapeMap.keys fdm))
-    | _ -> ()
+  NastCheck.typedef env_up typedef;
+  let _, tcstr, hint = typedef in
+  let tenv, ty = Typing_hint.hint ~ensure_instantiable:true env_up hint in
+  Typing_tdef.check_typedef x tenv ty;
+  ignore (opt_map (Typing_hint.check_instantiable env_up) tcstr);
+  match hint with
+  | pos, Hshape fdm ->
+    ignore (check_shape_keys_validity env_up pos (ShapeMap.keys fdm))
+  | _ -> ()

@@ -143,19 +143,19 @@ let parse_args() =
      "--to", Arg.Int (fun x -> to_ := x),
      "[int] stop after character position";
 
-     "-i", Arg.Unit (fun () -> in_place := true),
+     "-i", Arg.Set in_place,
      "modify the files in place";
 
-     "--in-place", Arg.Unit (fun () -> in_place := true),
+     "--in-place", Arg.Set in_place,
      "modify the files in place";
 
-     "--diff", Arg.Unit (fun () -> diff := true),
+     "--diff", Arg.Set diff,
      "formats a diff in place (example: git diff | hh_format --diff)";
 
      "--root", Arg.String (fun x -> root := Some x),
      "specifies a root directory (useful in diff mode)";
 
-     "--debug", Arg.Unit (fun () -> debug := true), ""
+     "--debug", Arg.Set debug, ""
    ]
     (fun file -> files := file :: !files)
     (Printf.sprintf "Usage: %s (filename|directory)" Sys.argv.(0));

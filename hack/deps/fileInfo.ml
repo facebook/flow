@@ -29,7 +29,7 @@ type id = Pos.t * string
 type t = {
   funs : id list;
   classes : id list;
-  types : id list;
+  typedefs : id list;
   consts : id list;
   comments : (Pos.t * string) list;
   consider_names_just_for_autoload: bool;
@@ -63,11 +63,11 @@ let name_set_of_idl idl =
   List.fold_left (fun acc (_, x) -> SSet.add x acc) SSet.empty idl
 
 let simplify info =
-  let {funs; classes; types; consts; comments = _;
+  let {funs; classes; typedefs; consts; comments = _;
        consider_names_just_for_autoload = _ } = info in
   let n_funs    = name_set_of_idl funs in
   let n_classes = name_set_of_idl classes in
-  let n_types   = name_set_of_idl types in
+  let n_types   = name_set_of_idl typedefs in
   let n_consts  = name_set_of_idl consts in
   {n_funs; n_classes; n_types; n_consts}
 

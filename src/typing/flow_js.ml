@@ -1524,8 +1524,7 @@ let rec flow cx (l,u) trace =
       select_flow cx (t, prototype) trace FunProto
 
     | (TypeT(_,l), TypeT(_,u)) ->
-      unit_flow cx (l, u);
-      unit_flow cx (u, l)
+      unify cx l u
 
     | (ClassT(l), ClassT(u)) ->
       unify cx l u

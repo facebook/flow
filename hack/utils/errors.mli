@@ -145,6 +145,7 @@ val member_not_found :
   Pos.t * string ->
   string ->
   [< `closest of Pos.t * string | `did_you_mean of Pos.t * string | `no_hint ] ->
+  (Pos.t * string) list ->
   unit
 val parent_in_trait : Pos.t -> unit
 val parent_undefined : Pos.t -> unit

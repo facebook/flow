@@ -58,15 +58,15 @@ MODULES=\
   hack/search\
   hack/hhi\
   hack/dfind\
-  hack/avl\
-  hack/$(INOTIFY)\
+  hack/third-party/avl\
+  hack/third-party/$(INOTIFY)\
   hack/$(FSNOTIFY)
 
 NATIVE_OBJECT_FILES=\
   src/embedded/flowlib_elf.o\
   hack/heap/hh_shared.o\
   hack/utils/realpath.o\
-  hack/$(INOTIFY)/$(INOTIFY)_stubs.o\
+  hack/third-party/$(INOTIFY)/$(INOTIFY)_stubs.o\
   hack/utils/nproc.o\
   hack/hhi/hhi_elf.o\
   hack/utils/get_build_id.gen.o\

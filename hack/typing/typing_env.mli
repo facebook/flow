@@ -46,6 +46,7 @@ type env = {
   lenv : local_env;
   genv : genv;
   todo : tfun list;
+  in_loop : bool;
 }
 and genv
 and anon = env -> fun_params -> env * ty
@@ -138,3 +139,4 @@ val set_local : env -> Ident.t -> ty -> env
 val get_local : env -> Ident.t -> env * ty
 val freeze_local_env : env -> env
 val anon : local_env -> env -> (env -> env * ty) -> env * ty
+val in_loop : env -> (env -> env) -> env

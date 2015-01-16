@@ -75,7 +75,7 @@ end = struct
   and start env = function
     | [] -> ()
     | line :: lines
-      when String.length line > 4 && String.sub line 0 3 = "+++" ->
+      when Utils.str_starts_with line "+++" ->
         header env line;
         modified env 0 lines
     | _ :: lines -> start env lines
@@ -124,7 +124,7 @@ end = struct
         modified env (nbr+1) lines
 
   and add_file env =
-    (* Given a list of modifies lines => returns a list of intervals *)
+    (* Given a list of modified lines => returns a list of intervals *)
     let lines_modified = List.rev_map (fun x -> (x, x)) env.modified in
     let lines_modified = normalize_intervals [] lines_modified in
     (* Adds the file to the list of results *)
@@ -162,8 +162,13 @@ end
  *
  * The interesting case is the third one (3, 4, "$y = 1;\n"). It means that
  * we should consider the lines [3;4] as an indivisible block. In other words,
- * if we want to replace any line between 3 and 4, we whould replace the
+ * if we want to replace any line between 3 and 4, we would replace the
  * entire block.
+ *
+ * The formatted blocks will be interleaved with the existing code at line
+ * boundaries, so it is important that the starts and ends of these blocks
+ * line up with newlines in the original source (to avoid duplicated / missing
+ * tokens). Format_hack.add_block_tag ensures this.
  *)
 (*****************************************************************************)
 
@@ -204,9 +209,9 @@ end = struct
 
   let rec make_token_list text source_info acc i =
     match source_info with
-    | [] -> List.rev (Text (String.sub text i (String.length text-i)) :: acc)
+    | [] -> List.rev (Text (String.sub text i (String.length text - i)) :: acc)
     | (char_pos, tag) :: source_info ->
-        let acc = Text (String.sub text i (char_pos-i)) :: acc in
+        let acc = Text (String.sub text i (char_pos - i)) :: acc in
         let acc =
           (match tag with
           | Format_hack.Block -> Block
@@ -250,7 +255,6 @@ end = struct
         let line_end = nbr in
         loop line_start line_end buffer acc next
 
-
 end
 
 (*****************************************************************************)
@@ -261,7 +265,9 @@ end
  * intervals = [(1, 3); (4; 4)] should be read as: the lines 1 to 3 and the
  * line 4 have been modified (cf ParseDiff module above).
  *
- * 'blocks' is the list of indivible blocks produced by TextBlocks.
+ * 'blocks' is the list of indivisible blocks produced by TextBlocks.
+ *
+ * A block is selected if any of the intervals overlap with it.
  *)
 (*****************************************************************************)
 

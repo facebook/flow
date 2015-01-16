@@ -35,7 +35,7 @@ module FunHeap = SharedMem.NoCache (String) (struct
 end)
 
 module TypedefHeap = SharedMem.NoCache (String) (struct
-  type t = (bool * Nast.tparam list * Nast.hint)
+  type t = Nast.typedef
   let prefix = Prefix.make()
 end)
 

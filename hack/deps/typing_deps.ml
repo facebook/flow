@@ -125,7 +125,7 @@ let get_bazooka x =
 (* Module keeping track which files contain the toplevel definitions. *)
 (*****************************************************************************)
 
-let (ifiles: (int, Relative_path.Set.t) Hashtbl.t ref) = ref (Hashtbl.create 23)
+let (ifiles: (Dep.t, Relative_path.Set.t) Hashtbl.t ref) = ref (Hashtbl.create 23)
 
 let marshal chan = Marshal.to_channel chan !ifiles []
 
@@ -141,7 +141,7 @@ let get_files deps =
 
 let update_files fast =
   Relative_path.Map.iter begin fun filename info ->
-    let {FileInfo.funs; classes; types;
+    let {FileInfo.funs; classes; typedefs;
          consts = _ (* TODO probably a bug #3844332 *);
          comments = _;
          consider_names_just_for_autoload = _;
@@ -154,7 +154,7 @@ let update_files fast =
     end DepSet.empty classes in
     let classes = List.fold_left begin fun acc (_, type_id) ->
       DepSet.add (Dep.make (Dep.Class type_id)) acc
-    end classes types in
+    end classes typedefs in
     let defs = DepSet.union funs classes in
     DepSet.iter begin fun def ->
       let previous =

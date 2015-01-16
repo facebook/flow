@@ -1,0 +1,10 @@
+
+test.js:12:5,7: function call
+Function cannot be called on
+  test.js:5:13,14: string
+
+test.js:13:5,7: function call
+Function cannot be called on
+  test.js:13:5,5: object literal
+
+Found 2 errors

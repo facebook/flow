@@ -23,7 +23,7 @@ let make_genv ~multicore options =
     not check_mode || ServerArgs.convert options <> None ||
     ServerArgs.load_save_opt options <> None;
   let nbr_procs    = ServerConfig.nbr_procs in
-  let workers = 
+  let workers =
     if multicore then Some (Worker.make nbr_procs gc_control) else None
   in
   if not check_mode
@@ -40,7 +40,10 @@ let make_genv ~multicore options =
   }
 
 let make_env options =
-  { nenv           = Naming.empty;
+  let nenv = Naming.empty in
+  let iassume_php = ServerArgs.assume_php options in
+  let nenv = { nenv with Naming.iassume_php = iassume_php} in
+  { nenv;
     files_info     = Relative_path.Map.empty;
     errorl         = [];
     failed_parsing = Relative_path.Set.empty;

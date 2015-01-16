@@ -112,6 +112,7 @@ type response =
 type build_progress =
 | BUILD_PROGRESS of string
 | BUILD_ERROR of string
+| BUILD_FINISHED
 
 let response_to_string = function
   | SERVER_OUT_OF_DATE -> "Server Out of Date"

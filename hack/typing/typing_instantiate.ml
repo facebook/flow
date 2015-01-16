@@ -145,11 +145,10 @@ and instantiate subst env (r, ty) =
   | Tany | Tmixed | Tarray (_, _) | Tprim _ | Toption _ | Tvar _
   | Tabstract (_, _, _) | Tapply (_, _) | Ttuple _ | Tanon (_, _) | Tfun _
   | Tunresolved _ | Tobject | Tshape _ | Taccess (_, _, _) ->
-      let p = Reason.to_pos r in
-      let env, ty = instantiate_ p subst env ty in
+      let env, ty = instantiate_ subst env ty in
       env, (r, ty)
 
-and instantiate_ p subst env = function
+and instantiate_ subst env = function
   | Tgeneric _ -> assert false
   (* IMPORTANT: We cannot expand Taccess during instantiation because this can
    * be called before all type consts have been declared and inherited

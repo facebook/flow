@@ -245,7 +245,7 @@ let compose (pos, param_descr) from to_ =
       let reason = pos, param_descr, Pcovariant in
       Vcontravariant (reason :: stack_from)
   | (Vinvariant _ as x), _ -> x
-  | _, Vinvariant (co, contra) ->
+  | _, Vinvariant (_co, _contra) ->
       let reason = pos, param_descr, Pinvariant in
       Vinvariant ([reason], [reason])
   | Vboth, x | x, Vboth -> x

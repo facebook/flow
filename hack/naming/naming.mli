@@ -22,8 +22,9 @@ open Utils
  * mapped here in ifuns to a freshly created unique integer identifier.
  *)
 type env = {
+  iassume_php : bool;
   iclasses  : ((Pos.t * Ident.t) SMap.t) * (String.t SMap.t);
-  ifuns     : (Pos.t * Ident.t) SMap.t;
+  ifuns     : ((Pos.t * Ident.t) SMap.t) * (String.t SMap.t);
   itypedefs : (Pos.t * Ident.t) SMap.t;
   iconsts   : (Pos.t * Ident.t) SMap.t;
 }

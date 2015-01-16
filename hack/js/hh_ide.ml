@@ -229,10 +229,10 @@ let hh_auto_complete fn =
                         ])
 
 let hh_get_method_at_position fn line char =
-  Find_refs.find_method_at_cursor_result := None;
   Autocomplete.auto_complete := false;
-  Find_refs.find_method_at_cursor_target := Some (line, char);
   let fn = Relative_path.create Relative_path.Root fn in
+  let result = ref None in
+  IdentifySymbolService.attach_hooks result line char;
   try
     let ast = Parser_heap.ParserHeap.find_unsafe fn in
     Errors.ignore_ begin fun () ->
@@ -242,56 +242,36 @@ let hh_get_method_at_position fn line char =
             let nenv = Naming.empty in
             let tenv = Typing_env.empty fn in
             let f = Naming.fun_ nenv f in
-            Find_refs.process_find_refs None
-                (snd f.Nast.f_name) (fst f.Nast.f_name);
             Typing.fun_def tenv (snd f.Nast.f_name) f
         | Ast.Class c ->
             let nenv = Naming.empty in
             let tenv = Typing_env.empty fn in
             let c = Naming.class_ nenv c in
-            if !Find_refs.find_method_at_cursor_target <> None
-            then begin
-              Find_refs.process_class_ref (fst c.Nast.c_name)
-                (snd c.Nast.c_name) None
-            end;
-            let all_methods = c.Nast.c_methods @ c.Nast.c_static_methods in
-            List.iter begin fun method_ ->
-              Find_refs.process_find_refs (Some (snd c.Nast.c_name))
-                (snd method_.Nast.m_name) (fst method_.Nast.m_name)
-            end all_methods;
-            (match c.Nast.c_constructor with
-            | None -> ()
-            | Some method_ ->
-              Find_refs.process_find_refs
-                (Some (snd c.Nast.c_name))
-                Naming_special_names.Members.__construct
-                (fst method_.Nast.m_name)
-            );
             let res = Typing.class_def tenv (snd c.Nast.c_name) c in
             res
         | _ -> ()
       end ast;
     end;
+    IdentifySymbolService.detach_hooks ();
     let result =
-      match !Find_refs.find_method_at_cursor_result with
+      match !result with
       | Some res ->
           let result_type =
-            match res.Find_refs.type_ with
-            | Find_refs.Class -> "class"
-            | Find_refs.Method -> "method"
-            | Find_refs.Function -> "function"
-            | Find_refs.LocalVar -> "local" in
-          JAssoc [ "name",           JString res.Find_refs.name;
+            match res.IdentifySymbolService.type_ with
+            | IdentifySymbolService.Class -> "class"
+            | IdentifySymbolService.Method -> "method"
+            | IdentifySymbolService.Function -> "function"
+            | IdentifySymbolService.LocalVar -> "local" in
+          JAssoc [ "name",           JString res.IdentifySymbolService.name;
                    "result_type",    JString result_type;
-                   "pos",            Pos.json (Pos.to_absolute res.Find_refs.pos);
+                   "pos",            Pos.json (Pos.to_absolute res.IdentifySymbolService.pos);
                    "internal_error", JBool false;
                  ]
       | _ -> JAssoc [ "internal_error", JBool false;
                     ] in
-    Find_refs.find_method_at_cursor_target := None;
     to_js_object result
   with _ ->
-    Find_refs.find_method_at_cursor_target := None;
+    IdentifySymbolService.detach_hooks ();
     to_js_object (JAssoc [ "internal_error", JBool true;
                         ])
 
@@ -327,32 +307,19 @@ let hh_get_deps =
                         ])
 
 let infer_at_pos file line char =
-  let clean() =
-    Typing_defs.infer_type := None;
-    Typing_defs.infer_target := None;
-    Typing_defs.infer_pos := None;
-  in
   try
-    clean();
-    Typing_defs.infer_target := Some (line, char);
+    let get_result = InferAtPosService.attach_hooks line char in
     ignore (hh_check file);
-    let ty = !Typing_defs.infer_type in
-    let pos = !Typing_defs.infer_pos in
-    clean();
-    pos, ty
+    InferAtPosService.detach_hooks ();
+    get_result ()
   with _ ->
-    clean();
+    InferAtPosService.detach_hooks ();
     None, None
 
 let hh_find_lvar_refs file line char =
   let file = Relative_path.create Relative_path.Root file in
-  let clean() =
-    Find_refs.find_refs_target := None;
-    Find_refs.find_refs_result := [];
-  in
   try
-    clean();
-    Find_refs.find_refs_target := Some (line, char);
+    let get_result = FindLocalsService.attach_hooks line char in
     let ast = Parser_heap.ParserHeap.find_unsafe file in
     Errors.ignore_ begin fun () ->
       (* We only need to name to find references to locals *)
@@ -369,14 +336,14 @@ let hh_find_lvar_refs file line char =
         | _ -> ()
       end ast;
     end;
+    FindLocalsService.detach_hooks ();
     let res_list =
-      List.map (compose Pos.json Pos.to_absolute) !Find_refs.find_refs_result in
-    clean();
+      List.map (compose Pos.json Pos.to_absolute) (get_result ()) in
     to_js_object (JAssoc [ "positions",      JList res_list;
                           "internal_error", JBool false;
                         ])
   with _ ->
-    clean();
+    FindLocalsService.detach_hooks ();
     to_js_object (JAssoc [ "internal_error", JBool true;
                         ])
 
@@ -421,13 +388,14 @@ let hh_file_summary fn =
                         ])
 
 let hh_hack_coloring fn =
-  Typing_defs.accumulate_types := true;
-  ignore (hh_check fn);
+  let type_acc = Hashtbl.create 0 in
+  Typing.with_expr_hook
+    (fun (p, _) ty -> Hashtbl.replace type_acc p ty)
+    (fun () -> ignore (hh_check fn));
   let fn = Relative_path.create Relative_path.Root fn in
-  let result = mk_level_list (Some fn) !Typing_defs.type_acc in
-  Typing_defs.accumulate_types := false;
-  Typing_defs.type_acc := [];
-  let result = rev_rev_map (fun (p, cl) -> Pos.info_raw p, cl) result in
+  let level_of_type = Coverage_level.level_of_type_mapper fn in
+  let result = Hashtbl.fold (fun p ty xs ->
+    (Pos.info_raw p, level_of_type (p, ty)) :: xs) type_acc [] in
   let result = ColorFile.go (Hashtbl.find files fn) result in
   let result = List.map (fun input ->
                         match input with

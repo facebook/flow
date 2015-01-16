@@ -105,7 +105,7 @@ module Impl = struct
       ClientEnv.retries = !(option_values.CommandUtils.retries);
       ClientEnv.timeout = !CommandUtils.global_kill_time;
       ClientEnv.autostart = true;
-      ClientEnv.server_options_cmd = None;
+      ClientEnv.no_load = true;
     },
     option_values
 

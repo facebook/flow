@@ -21,6 +21,13 @@ var tests =
 
   function() {
     var x : {p:?string} = {p:"xxx"};
+    if (x.p == null)
+      return;
+    var y : string = x.p;  // ok
+  },
+
+  function() {
+    var x : {p:?string} = {p:"xxx"};
     if (!(x.p != null)) {} else {
       var y : string = x.p;  // ok
     }
@@ -30,6 +37,14 @@ var tests =
     var x : {p:?string} = {p:"xxx"};
     if (x.p != null) {
       alert("");
+      var y : string = x.p;  // not ok
+    }
+  },
+
+  function () {
+    var x : {p:?string} = {p:"xxx"};
+    if (x.p != null) {
+      x.p = null;
       var y : string = x.p;  // not ok
     }
   },

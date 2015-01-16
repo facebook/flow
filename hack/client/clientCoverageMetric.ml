@@ -12,8 +12,11 @@ open Coverage_level
 open Hh_json
 open Utils
 
-let result_to_json r = JAssoc (CLMap.elements r |>
-    List.map (fun (k, v) -> string_of_level k, JInt v))
+let result_to_json r = JAssoc (SMap.elements r |>
+  List.map (fun (kind, counts) ->
+    let counts = JAssoc (CLMap.elements counts |>
+      List.map (fun (k, v) -> string_of_level k, JInt v)) in
+    kind, counts))
 
 let rec entry_to_json = function
   | Leaf r -> JAssoc [
@@ -48,18 +51,32 @@ let calc_percentage partial_weight ctr =
   then 1.0
   else score /. float_of_int total
 
+let print_counts counts =
+  CLMap.iter (fun k v ->
+    let level_name = String.capitalize (string_of_level k) in
+    Printf.printf "%s: %d\n" level_name v) counts;
+  Printf.printf "Checked / Total: %f\n" (calc_percentage 0.0 counts);
+  Printf.printf "(Checked + Partial * 0.5) / Total: %f\n"
+    (calc_percentage 0.5 counts)
+
 let print_pretty_entry = function
   | Leaf r
   | Node (r, _) ->
-      CLMap.iter (fun k v ->
-        Printf.printf "%s: %d\n" (String.capitalize (string_of_level k)) v) r;
-      Printf.printf "Checked / Total: %f\n" (calc_percentage 0.0 r);
-      Printf.printf "(Checked + Partial * 0.5) / Total: %f\n"
-        (calc_percentage 0.5 r);
-      flush stdout
+      if r = SMap.empty
+      then Printf.printf "No relevant expressions found!\n%!"
+      else begin
+        SMap.iter (fun kind counts ->
+          Printf.printf "== %s ==\n" kind;
+          print_counts counts) r;
+        let total_counts = SMap.fold (fun _ counts acc ->
+          merge_and_sum counts acc) r empty_counter in
+        Printf.printf "== total ==\n";
+        print_counts total_counts;
+        flush stdout
+      end
 
 let print_pretty = function
   | None -> Printf.fprintf stderr "Internal error\n%!"
   | Some e -> print_pretty_entry e
 
-let go json = if json then print_json else print_pretty
+let go ~json = if json then print_json else print_pretty

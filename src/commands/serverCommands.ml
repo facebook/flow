@@ -105,9 +105,8 @@ module OptionParser(Config : CONFIG) : Server.OPTION_PARSER = struct
         ServerArgs.should_detach = Config.(mode = Detach);
         ServerArgs.convert       = None;
         ServerArgs.load_save_opt = None;
-        ServerArgs.version       = false;
-        ServerArgs.start_time    = Unix.time ();
         ServerArgs.gc_control    = Gc.get ();
+        ServerArgs.assume_php    = false;
       },
       {
         Types_js.opt_debug = !debug;

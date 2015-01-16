@@ -35,6 +35,7 @@ type env = block list ref
 let env: env = ref []
 
 let changeset = ref SSet.empty
+
 let swap_changeset f =
   let oldset = !changeset in
   let newset = f oldset in
@@ -181,15 +182,20 @@ let update_frame cx ctx =
   cx.closures <- IMap.add current_frame (stack,ctx) cx.closures;
   env := ctx
 
-(* The following function takes a triple (c1,c2,c3), merging the information
-   carried for every variable in c2 and c3 into c1. Callers maintain the
-   invariant that c1, c2, c3 describe the same scope, so have the same shape. *)
-
-let rec merge_env_ cx reason x = function
+(* The following function takes a set of variable names
+   and a triple of environments (c1,c2,c3), and merges the information
+   carried for changeset variables in c2 and c3 into c1. Assumptions:
+   - c1, c2, c3 describe the same scope chain, so have the same depth
+   - variables in changeset have been collected from this scope chain
+ *)
+let rec merge_env cx reason (ctx, ctx1, ctx2) changeset =
+  if SSet.cardinal changeset > 0 then
+  match (ctx, ctx1, ctx2) with
   | ([],[],[]) -> ()
   | (block::ctx, block1::ctx1, block2::ctx2) ->
-      let vars = !block in
-      (match SMap.get x vars with
+      (* merge block, block1, block2 *)
+      let not_found = SSet.fold (fun x not_found ->
+        match SMap.get x !block with
         | Some {specific;general;def_loc;} ->
             let s1 = (SMap.find_unsafe x !block1).specific in
             let s2 = (SMap.find_unsafe x !block2).specific in
@@ -206,13 +212,14 @@ let rec merge_env_ cx reason x = function
                 Flow_js.unit_flow cx (tvar,general);
                 (tvar,general)
             in
-            block := vars |> SMap.add x (create_env_entry s g def_loc)
-        | None -> merge_env_ cx reason x (ctx,ctx1,ctx2)
-      )
+            block := SMap.add x (create_env_entry s g def_loc) !block;
+            not_found
+        | None ->
+            SSet.add x not_found
+      ) changeset SSet.empty in
+      (* look for the rest of changeset in outer blocks *)
+      merge_env cx reason (ctx, ctx1, ctx2) not_found
   | _ -> assert false
-
-let merge_env cx reason (ctx,ctx1,ctx2) =
-  SSet.iter (fun x -> merge_env_ cx reason x (ctx,ctx1,ctx2))
 
 let widen_env cx reason =
   let block = List.hd !env in
@@ -290,24 +297,25 @@ let clear_env reason =
 (* The following functions are used to narrow the type of variables
    based on dynamic checks. *)
 
+let install_refinement cx x xtypes =
+  if exists_block x (peek_env ()) = None then
+    let t = SMap.find_unsafe x xtypes in
+    init_env cx x (create_env_entry t t None)
+
 let refine_with_pred cx reason pred xtypes =
   SMap.iter (fun x predx ->
-    (if is_refinement x then
-      let t = SMap.find_unsafe x xtypes in
-      init_env cx x (create_env_entry t t None));
-    let (is_global,tx) = get_var_ cx x
-      (replace_reason (spf "identifier %s" x) reason)
-    in
-    if is_global then ()
-    else
+    if is_refinement x then install_refinement cx x xtypes;
+    let reason' = replace_reason (spf "identifier %s" x) reason in
+    let (is_global, tx) = get_var_ cx x reason' in
+    if not is_global then (
       let rstr = spf "identifier %s when %s" x (string_of_predicate predx) in
       let reason = replace_reason rstr reason in
       let t = Flow_js.mk_tvar cx reason in
       let rt = mk_predicate (predx, t) in
       Flow_js.unit_flow cx (tx, rt);
-      set_var cx x t reason;
-  )
-    pred
+      set_var cx x t reason
+    ))
+  pred
 
 let refine_env cx reason pred xtypes f =
   let ctx = !env in
