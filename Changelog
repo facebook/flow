@@ -1,3 +1,15 @@
+v0.1.4
+
+- Bump Flow version to 0.1.4
+- [Flow] Unbreak the open source build
+- [PR #200] from fmahnke/node_http_interface
+- [PR #203] from rsolomo/node-net-isip
+- [PR #201] from unknownexception/patch-1
+- [Flow] Fill out Map definition
+- try-catch
+- missing annotation errors for type aliases
+- Type refinement fixes for early return
+
 v0.1.3
 
 - Handle strict undefined checks.
