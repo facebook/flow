@@ -1,5 +1,9 @@
 #!/bin/bash
-FLOW=$(readlink -f $1)
+if [[ "$OSTYPE" == "darwin"* ]]; then
+  FLOW=$(pwd -P)/$1
+else
+  FLOW=$(readlink -f $1)
+fi
 cd "$(dirname "${BASH_SOURCE[0]}")"
 passed=0
 failed=0
