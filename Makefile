@@ -15,7 +15,8 @@ EXTRA_LIB_PATHS=
 OS=$(shell uname -s)
 
 ifeq ($(OS), Linux)
-  INOTIFY=inotify
+  INOTIFY=third-party/inotify
+  INOTIFY_STUBS=$(INOTIFY)/inotify_stubs.o
   FSNOTIFY=fsnotify_linux
   ELF=elf
   FRAMEWORKS=
@@ -23,6 +24,7 @@ ifeq ($(OS), Linux)
 endif
 ifeq ($(OS), Darwin)
   INOTIFY=fsevents
+  INOTIFY_STUBS=$(INOTIFY)/fsevents_stubs.o
   FSNOTIFY=fsnotify_darwin
   ELF=
   FRAMEWORKS=CoreServices CoreFoundation
@@ -59,14 +61,14 @@ MODULES=\
   hack/hhi\
   hack/dfind\
   hack/third-party/avl\
-  hack/third-party/$(INOTIFY)\
+  hack/$(INOTIFY)\
   hack/$(FSNOTIFY)
 
 NATIVE_OBJECT_FILES=\
   src/embedded/flowlib_elf.o\
   hack/heap/hh_shared.o\
   hack/utils/realpath.o\
-  hack/third-party/$(INOTIFY)/$(INOTIFY)_stubs.o\
+  hack/$(INOTIFY_STUBS)\
   hack/utils/nproc.o\
   hack/hhi/hhi_elf.o\
   hack/utils/get_build_id.gen.o\
