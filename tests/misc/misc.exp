@@ -11,4 +11,16 @@ E.js:8:6,10: boolean
 This type is incompatible with
   E.js:4:14,19: number
 
-Found 3 errors
+F.js:2:14,17: string
+This type is incompatible with
+  F.js:1:26,37: number
+
+G.js:2:12,14: number
+This type is incompatible with
+  G.js:1:19,24: string
+
+G.js:3:1,10: call of method length
+Function cannot be called on
+  G.js:1:19,24: string
+
+Found 6 errors
