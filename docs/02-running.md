@@ -32,7 +32,7 @@ This will run in the background, pick up any changes to files in `src/`, and cre
 
 This is **not** recommended for production, because it is not as performant as the offline transform tool. However it is a good way to get started with quick prototyping.
 
-All you have to do is include the JSX transformer in your document, and use a special MIME type for your Flow scripts:
+All you have to do is include the JSX transformer in your document (version 0.12.2 or later), and use a special MIME type for your Flow scripts:
 
 ```html
 <head>
