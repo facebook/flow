@@ -1262,12 +1262,6 @@ let rec flow cx (l,u) trace =
     | (_,
        (GetT(_,"toLocaleString",_) | SetT(_,"toLocaleString",_))) -> ()
 
-    | ((ObjT _ | ArrT _), GetT(reason_op,"length",tout)) ->
-      unit_flow cx (NumT.why reason_op, tout)
-
-    | ((ObjT _ | ArrT _),
-       (SetT(_,"length",_) | MethodT(_,"length",_,_,_,_))) -> ()
-
     | ((ObjT _ | ArrT _), GetT(reason_op,"constructor",tout)) ->
       unit_flow cx (AnyT.why reason_op, tout)
 
