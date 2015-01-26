@@ -1,9 +1,5 @@
 OPAM_DEPENDS=
          
-os:
-- linux
-- osx
-
 setup_linux () {
   case "$OCAML_VERSION,$OPAM_VERSION" in
   4.02.1,1.2.0) ppa=avsm/ocaml42+opam12 ;;
@@ -26,6 +22,8 @@ setup_linux () {
 setup_osx () {
   brew install opam
   opam init -a -y --comp $OCAML_VERSION
+  # TODO: Install js_of_ocaml and test the parser
+  # opam install ${OPAM_DEPENDS}
   eval `opam config env`
 }
 
