@@ -29,6 +29,7 @@ setup_osx () {
   4.01.0) 
     brew install ocaml ;;
   *) echo Unknown $OCAML_VERSION; exit 1 ;;
+  esac
 
   # TODO: Figure out how to get opam to run in travis.
   # 1.2.0 fails due to https://github.com/ocaml/opam/issues/1853
