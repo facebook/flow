@@ -22,15 +22,13 @@ setup_linux () {
 }
 
 setup_osx () {
-  if [[ ${OCAML_VERSION} == 4.01.0 ]]; then
-    brew install ocaml
-  fi
-
-  brew update
-
-  if [[ ${OCAML_VERSION} == 4.02.1 ]]; then
-    brew install ocaml
-  fi
+  case $OCAML_VERSION in
+  4.02.1)
+    brew update
+    brew install ocaml ;;
+  4.01.0) 
+    brew install ocaml ;;
+  *) echo Unknown $OCAML_VERSION; exit 1 ;;
 
   # TODO: Figure out how to get opam to run in travis.
   # 1.2.0 fails due to https://github.com/ocaml/opam/issues/1853
