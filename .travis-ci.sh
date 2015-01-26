@@ -23,7 +23,10 @@ setup_linux () {
 
 setup_osx () {
   brew update
-  brew install opam
+  # The bottled version of opam is giving the following error on opam init:
+  # Illegal instruction: 4
+  # See https://github.com/ocaml/opam/issues/1853
+  brew install --build-from-source opam
   # We could in theory tell opam to init with a particular version of ocaml,
   # but this is much slower than using the one installed by brew
   opam init -a -y
