@@ -25,24 +25,19 @@ setup_osx () {
   if [[ ${OCAML_VERSION} == 4.01.0 ]]; then
     brew install ocaml
   fi
-  if [[ ${OPAM_VERSION} == 1.1.0 ]]; then
-    brew install opam
-  fi
 
   brew update
 
   if [[ ${OCAML_VERSION} == 4.02.1 ]]; then
     brew install ocaml
   fi
-  if [[ ${OPAM_VERSION} == 1.2.0 ]]; then
-    brew install opam
-  fi
-  # We could in theory tell opam to init with a particular version of ocaml,
-  # but this is much slower than using the one installed by brew
-  opam init -a -y
-  # TODO: Install js_of_ocaml and test the parser
-  # opam install ${OPAM_DEPENDS}
-  eval `opam config env`
+
+  # TODO: Figure out how to get opam to run in travis.
+  # 1.2.0 fails due to https://github.com/ocaml/opam/issues/1853
+  # 1.1.0 fails due to :
+  #  'opam init -a -y' failed.
+  #  Fatal error:
+  #  Sys_error("/Users/travis/.opam/repo/default/packages/ott/ott.0.21.2/opam: Too many open files")
 }
 
 case $TRAVIS_OS_NAME in
