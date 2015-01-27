@@ -1,3 +1,25 @@
+v0.1.5
+- Bump version to 0.1.5
+- [PR #223] from commonlisp/master
+- [PR #221] from teppeis/Javascript-to-JavaScript
+- Better types for React.PropTypes
+- Make React a module
+- Check PropTypes as a normal object too
+- Better support for object call properties
+- Add range/offset information to Ast.Loc.t
+- ignored react attributes key & ref passed in spread properties
+- ignored react attributes key & ref
+- Add some checks when upper bound object type has indexer
+- fix type arg arity exception
+- add traces to .flowconfig
+- fix error message when undeclared prop is set by jsx
+- [Parser] Actually test ArrayTypeAnnotation
+- Fix problem with returns in catch
+- JSX with spread attributes
+- Incremental mode fix
+- Add missing constructors to TypedArray declarations
+- [Parser] Update Flow's test suite to match updated esprima
+
 v0.1.4
 
 - Bump Flow version to 0.1.4
