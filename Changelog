@@ -1,3 +1,17 @@
+v0.2.0
+
+- Bump version to 0.2.0
+- Fix refinement of optional nullable types
+- Typecast expressions (warning - not added to strip out transform yet)
+- treat throw as similar to return
+- Switch from React to react (React still included until https://github.com/facebook/react/pull/3031)
+- Fix types for sessionStorage and Storage
+- tighter type for undefined values
+- no lib paths fix
+- Fix exporting types for builtin modules
+- Add Number.isNaN and Number.isSafeInteger type annotations
+- Optional properties in objects & optional type revamp
+
 v0.1.6
 
 - Bump version to 0.1.6
