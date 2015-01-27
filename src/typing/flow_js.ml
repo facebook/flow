@@ -549,6 +549,9 @@ and ground_type_impl cx ids t = match t with
   | UpperBoundT t ->
       UpperBoundT (ground_type_impl cx ids t)
 
+  | ShapeT t ->
+      ShapeT (ground_type_impl cx ids t)
+
   | RecordT (_, t) ->
       RecordT (
         reason_of_string "record",
@@ -647,6 +650,9 @@ let rec normalize_type cx t =
 
   | UpperBoundT t ->
       UpperBoundT (normalize_type cx t)
+
+  | ShapeT t ->
+      ShapeT (normalize_type cx t)
 
   | RecordT (r, t) ->
       RecordT (r, normalize_type cx t)
@@ -811,6 +817,9 @@ let rec printify_type cx t =
   | UpperBoundT t ->
       UpperBoundT (printify_type cx t)
 
+  | ShapeT t ->
+      ShapeT (printify_type cx t)
+
   | RecordT (r, t) ->
       RecordT (r, printify_type cx t)
 
@@ -946,6 +955,9 @@ let rec assert_ground ?(infer=false) cx ids = function
       assert_ground cx ids t
 
   | LowerBoundT(t) ->
+      assert_ground cx ids t
+
+  | ShapeT(t) ->
       assert_ground cx ids t
 
   | EnumT(reason,t) ->
@@ -1431,7 +1443,7 @@ let rec flow cx (l,u) trace =
     (*********************************************)
 
     | (ObjT (reason1, {props_tmap = flds1; proto_t; _ }),
-       ObjT (reason2, {props_tmap = flds2; proto_t = u_; _ }))
+       ObjT (reason2, {props_tmap = flds2; proto_t = u_; dict_t; _ }))
       ->
       (* if inflowing type is literal (thus guaranteed to be
          unaliased), propertywise subtyping is sound *)
@@ -1444,9 +1456,21 @@ let rec flow cx (l,u) trace =
             unit_flow cx (proto_t, LookupT (reason2, Some reason1, s, t2))
           else
             let t1 = read_prop cx flds1 s in
-            flow_to_mutable_child cx lit t1 t2
+            flow_to_mutable_child cx lit t1 t2);
+      (* Any properties in l but not u must match indexer *)
+      iter_props_ cx flds1
+        (fun s -> fun t1 ->
+          if (not(has_prop cx flds2 s))
+          then begin
+            let prop = read_prop cx flds1 s in
+            let key_reason = replace_reason StrT.desc (reason_of_t prop) in
+            let key_reason =
+              prefix_reason (spf "property %s's key is a " s) key_reason in
+            unit_flow cx (StrT (key_reason, None), dict_t.key);
+            unit_flow cx (prop, dict_t.value)
+          end
         );
-        unit_flow cx (l, u_)
+      unit_flow cx (l, u_)
 
     | (InstanceT (reason1, _, super, { fields_tmap; methods_tmap; _ }),
        ObjT (reason2, {props_tmap = flds2; proto_t = u_; _ }))
@@ -1475,6 +1499,26 @@ let rec flow cx (l,u) trace =
             unit_flow cx (l, LookupT (reason2, Some reason1, s, t2))
           );
       unit_flow cx (l, super)
+
+    (****************************************)
+    (* You can cast an object to a function *)
+    (****************************************)
+    | (ObjT _, (FunT _ | CallT _)) ->
+        let reason = reason_of_t u in
+        let tvar = mk_tvar cx reason in
+        lookup_prop cx l reason (Some (reason_of_t l)) "$call" tvar;
+        unit_flow cx (tvar, u)
+
+    (******************************)
+    (* matching shapes of objects *)
+    (******************************)
+
+    | (_, ShapeT (o2))
+      ->
+        unit_flow cx (l, ObjAssignT(reason_of_t o2, o2, AnyT.t))
+
+    | (ShapeT (o1), _) ->
+        unit_flow cx (o1, u)
 
     (********************************************)
     (* array types deconstruct into their parts *)
@@ -1528,7 +1572,9 @@ let rec flow cx (l,u) trace =
       unify cx prototype u_
 
     | (CustomClassT(n1,ts1,_), CustomClassT(n2,ts2,_)) when n1 = n2 ->
-      List.iter2 (unify cx) ts1 ts2
+      if List.length ts1 = List.length ts2
+      then List.iter2 (unify cx) ts1 ts2
+      else prerr_flow cx trace "Number of type arguments differs from" l u
 
     (*********************************************************)
     (* class types derive instance types (with constructors) *)
@@ -1658,6 +1704,10 @@ let rec flow cx (l,u) trace =
         as well as sets (and due to indirection, the new property types become
         immediately available to aliases).
 
+        Looking up properties of an object, e.g. for the purposes of copying,
+        when it is not fully initialized is prone to races, and requires careful
+        manual reasoning about escape to avoid surprising results.
+
         Prototypes cause further complications. In JavaScript, objects inherit
         properties of their prototypes, and may override those properties. (This
         is similar to subclasses inheriting and overriding methods of
@@ -1691,12 +1741,13 @@ let rec flow cx (l,u) trace =
     | (_, UnifyT(t,t_other)) ->
       unify cx t t_other
 
-    (***************************)
-    (* objects can be assigned *)
-    (***************************)
+    (**********************************************************************)
+    (* objects can be assigned, i.e., their properties can be set in bulk *)
+    (**********************************************************************)
 
     | (ObjT (_, { props_tmap = mapr; _ }), ObjAssignT (reason, proto, t)) ->
       iter_props cx mapr (fun x t ->
+        let reason = prefix_reason (spf "prop %s of " x) reason in
         unit_flow cx (proto, SetT (reason, x, t));
       );
       unit_flow cx (proto, t)
@@ -1716,9 +1767,9 @@ let rec flow cx (l,u) trace =
     | (MixedT _, ObjAssignT (_, proto, t)) ->
       unit_flow cx (proto, t)
 
-    (***************************)
-    (* objects can be narrowed *)
-    (***************************)
+    (*************************)
+    (* objects can be copied *)
+    (*************************)
 
     | (ObjT (_, { props_tmap = mapr; _ }), ObjRestT (reason, xs, t)) ->
       let map = IMap.find_unsafe mapr cx.property_maps in
@@ -1726,9 +1777,9 @@ let rec flow cx (l,u) trace =
       let o = mk_object_with_map_proto cx reason map (MixedT reason) in
       unit_flow cx (o, t)
 
-    (***************************)
-    (* objects can be extended *)
-    (***************************)
+    (*************************)
+    (* objects can be merged *)
+    (*************************)
 
     | (ObjT (_, { props_tmap = mapr; _ }), ObjExtendT (reason, opt_map, t)) ->
       let default_map = IMap.find_unsafe mapr cx.property_maps in
@@ -1971,6 +2022,18 @@ let rec flow cx (l,u) trace =
           tout2)
           trace (LibMethod "Function")
 
+    (***********************************************)
+    (* You can use a function as a callable object *)
+    (***********************************************)
+    | (FunT (reason, statics, proto, _) , ObjT _) ->
+        let map = SMap.add "$call" l SMap.empty in
+        let function_proto = get_builtin_type cx reason "Function" in
+        let obj = mk_object_with_map_proto cx reason map function_proto in
+        let t = mk_tvar_where cx reason (fun t ->
+          unit_flow cx (statics, ObjAssignT (reason, obj, t))
+        ) in
+        unit_flow cx (t, u)
+
     (*********************************************************************)
     (* class A is a base class of class B iff                            *)
     (* properties in B that override properties in A or its base classes *)
@@ -2084,9 +2147,11 @@ let rec flow cx (l,u) trace =
     (*******)
 
     | (CustomClassT("ReactClass", _, _), MarkupT(reason_op,o,t)) ->
-      unit_flow cx
-        (static_method_call cx "React" reason_op "createElement" [l;o],
-         t)
+        let react = module_t cx "React" reason_op in
+        let x = mk_tvar_where cx reason_op (fun tvar ->
+          unit_flow cx (react, MethodT(reason_op, "createElement", react, [l;o], tvar, 0));
+        ) in
+        unit_flow cx (x, t)
 
     | (FunT _, MarkupT _) ->
 
@@ -2591,6 +2656,9 @@ and subst cx map t =
   | LowerBoundT(t) ->
     LowerBoundT(subst cx map t)
 
+  | ShapeT(t) ->
+    ShapeT(subst cx map t)
+
   | EnumT(reason, t) ->
     EnumT(reason, subst cx map t)
 
@@ -2621,7 +2689,9 @@ and instantiate_poly_ cx reason_ (xs,t) ts =
 
 and instantiate_poly cx reason_ (xs,t) =
   let ts = xs |> List.map (fun {reason=reason_id; _} ->
-    let reason = prefix_reason (desc_of_reason reason_id ^ "# ") reason_ in
+    let reason = prefix_reason (
+      spf "type parameter %s of " (desc_of_reason reason_id)
+    ) reason_ in
     mk_tvar cx reason
   )
   in
@@ -3361,6 +3431,14 @@ and select_flow cx (t1, t2) trace rule =
 
 and unit_flow cx (t1, t2) =
   flow cx (t1, t2) (unit_trace t1 t2)
+
+and module_t cx m reason =
+  match SMap.get m cx.modulemap with
+  | Some t -> t
+  | None ->
+      mk_tvar_where cx reason (fun t ->
+        cx.modulemap <- cx.modulemap |> SMap.add m t;
+      )
 
 type gc_state = {
   mutable positive: ISet.t;

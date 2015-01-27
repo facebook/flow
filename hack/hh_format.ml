@@ -27,6 +27,7 @@ open Utils
 exception Format_error
 
 let debug () fnl =
+  let modes = [Some Ast.Mstrict; Some Ast.Mpartial] in
   List.fold_left begin fun () filepath ->
     let filename = Relative_path.to_absolute filepath in
     try
@@ -36,7 +37,7 @@ let debug () fnl =
       let parsing_errors1, parser_output1 = Errors.do_ begin fun () ->
         Parser_hack.program filepath content
       end in
-      if not parser_output1.Parser_hack.is_hh_file || parsing_errors1 <> []
+      if parser_output1.Parser_hack.file_mode = None || parsing_errors1 <> []
       then raise Exit;
 
       if parsing_errors1 <> []
@@ -47,11 +48,11 @@ let debug () fnl =
         flush stdout
       end;
 
-      let content = Format_hack.program filepath content in
+      let content = Format_hack.program modes filepath content in
       let content =
         match content with
         | Format_hack.Success content -> content
-        | Format_hack.Php_or_decl ->
+        | Format_hack.Disabled_mode ->
             raise Exit
         | Format_hack.Parsing_error _ ->
             Printf.printf "Parsing: %s\n" filename; flush stdout;
@@ -62,7 +63,7 @@ let debug () fnl =
       in
 
       (* Checking for idempotence *)
-      let content2 = Format_hack.program filepath content in
+      let content2 = Format_hack.program modes filepath content in
       let content2 =
         match content2 with
         | Format_hack.Success content2 -> content2
@@ -133,6 +134,7 @@ let parse_args() =
   let files = ref [] in
   let in_place = ref false in
   let diff = ref false in
+  let modes = ref [Some Ast.Mstrict; Some Ast.Mpartial] in
   let root = ref None in
   let debug = ref false in
   Arg.parse
@@ -152,6 +154,10 @@ let parse_args() =
      "--diff", Arg.Set diff,
      "formats a diff in place (example: git diff | hh_format --diff)";
 
+     "--yolo", Arg.Unit (fun () -> modes := [Some Ast.Mdecl; None (* PHP *)]),
+     "Formats *only* PHP and decl-mode files. Results may be unreliable; "^
+     "you should *always* inspect the formatted output before committing it!";
+
      "--root", Arg.String (fun x -> root := Some x),
      "specifies a root directory (useful in diff mode)";
 
@@ -159,15 +165,15 @@ let parse_args() =
    ]
     (fun file -> files := file :: !files)
     (Printf.sprintf "Usage: %s (filename|directory)" Sys.argv.(0));
-  !files, !from, !to_, !in_place, !debug, !diff, !root
+  !files, !from, !to_, !in_place, !debug, !diff, !modes, !root
 
 (*****************************************************************************)
 (* Formats a file in place *)
 (*****************************************************************************)
 
-let format_in_place filepath =
+let format_in_place modes filepath =
   let filename = Relative_path.to_absolute filepath in
-  match Format_hack.program filepath (Utils.cat filename) with
+  match Format_hack.program modes filepath (Utils.cat filename) with
   | Format_hack.Success result ->
       let oc = open_out filename in
       output_string oc result;
@@ -177,21 +183,21 @@ let format_in_place filepath =
       Some "Internal error\n"
   | Format_hack.Parsing_error errorl ->
       Some (Errors.to_string (Errors.to_absolute (List.hd errorl)))
-  | Format_hack.Php_or_decl ->
+  | Format_hack.Disabled_mode ->
       None
 
 (*****************************************************************************)
 (* Formats all the hack files in a directory (in place) *)
 (*****************************************************************************)
 
-let job_in_place acc fnl =
+let job_in_place modes acc fnl =
   List.fold_left begin fun acc filename ->
-    match format_in_place filename with
+    match format_in_place modes filename with
     | None -> acc
     | Some err -> err :: acc
   end acc fnl
 
-let directory dir =
+let directory modes dir =
   let path = Path.mk_path dir in
   let next = compose
     (rev_rev_map (Relative_path.create Relative_path.Root))
@@ -200,7 +206,7 @@ let directory dir =
   let messages =
     MultiWorker.call
       (Some workers)
-      ~job:job_in_place
+      ~job:(job_in_place modes)
       ~neutral:[]
       ~merge:List.rev_append
       ~next
@@ -211,8 +217,8 @@ let directory dir =
 (* Applies the formatter directly to a string. *)
 (*****************************************************************************)
 
-let format_string file from to_ content =
-  match Format_hack.region file from to_ content with
+let format_string modes file from to_ content =
+  match Format_hack.region modes file from to_ content with
   | Format_hack.Success content ->
       output_string stdout content
   | Format_hack.Internal_error ->
@@ -222,7 +228,7 @@ let format_string file from to_ content =
       Printf.fprintf stderr "Parsing error\n%s\n"
         (Errors.to_string (Errors.to_absolute (List.hd error)));
       exit 2
-  | Format_hack.Php_or_decl ->
+  | Format_hack.Disabled_mode ->
       exit 0
 
 (*****************************************************************************)
@@ -240,9 +246,9 @@ let read_stdin () =
   with End_of_file ->
     Buffer.contents buf
 
-let format_stdin from to_ =
+let format_stdin modes from to_ =
   let content = read_stdin () in
-  format_string Relative_path.default from to_ content
+  format_string modes Relative_path.default from to_ content
 
 (*****************************************************************************)
 (* The main entry point. *)
@@ -251,7 +257,7 @@ let format_stdin from to_ =
 let () =
   SharedMem.init();
   PidLog.log_oc := Some (open_out "/dev/null");
-  let files, from, to_, in_place, debug, diff, root = parse_args() in
+  let files, from, to_, in_place, debug, diff, modes, root = parse_args() in
   let root =
     match root with
     | None ->
@@ -263,34 +269,33 @@ let () =
     | Some root -> Path.string_of_path (Path.mk_path root)
   in
   Relative_path.set_path_prefix Relative_path.Root root;
-  let in_place = in_place || diff in
   match files with
   | [] when diff ->
       let diff = read_stdin () in
       let file_and_modified_lines = Format_diff.parse_diff diff in
-      Format_diff.apply ~diff:file_and_modified_lines
+      Format_diff.apply modes ~diff:file_and_modified_lines
   | _ when diff ->
       Printf.fprintf stderr "--diff mode expects no files\n";
       exit 2
   | [] when in_place ->
       Printf.fprintf stderr "Cannot modify stdin in-place\n";
       exit 2
-  | [] -> format_stdin from to_
+  | [] -> format_stdin modes from to_
   | [dir] when Sys.is_directory dir ->
       if debug
       then debug_directory dir
-      else directory dir
+      else directory modes dir
   | [filename] ->
       let filename = Path.string_of_path (Path.mk_path filename) in
       let filepath = Relative_path.create Relative_path.Root filename in
       if in_place
       then
-        match format_in_place filepath with
+        match format_in_place modes filepath with
         | None -> ()
         | Some error ->
             Printf.fprintf stderr "Error: %s\n" error;
             exit 2
-      else format_string filepath from to_ (Utils.cat filename)
+      else format_string modes filepath from to_ (Utils.cat filename)
   | _ ->
       Printf.fprintf stderr "More than one file given\n";
       exit 2

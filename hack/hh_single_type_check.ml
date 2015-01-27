@@ -195,13 +195,13 @@ let parse_file file =
     List.fold_right begin fun (sub_fn, content) ast ->
       let file =
         Relative_path.create Relative_path.Dummy (abs_fn^"--"^sub_fn) in
-      let {Parser_hack.is_hh_file; comments; ast = ast'} =
+      let {Parser_hack.file_mode; comments; ast = ast'} =
         Parser_hack.program file content
       in
       ast' @ ast
     end files []
   else begin
-    let {Parser_hack.is_hh_file; comments; ast} =
+    let {Parser_hack.file_mode; comments; ast} =
       Parser_hack.program file content
     in
     ast
@@ -260,7 +260,7 @@ let main_hack { filename; suggest; color; coverage; prolog; _ } =
   let filename = Relative_path.create Relative_path.Dummy filename in
   let errors, fileinfo =
     Errors.do_ begin fun () ->
-      let {Parser_hack.is_hh_file; comments; ast = ast_builtins} =
+      let {Parser_hack.file_mode; comments; ast = ast_builtins} =
         Parser_hack.program builtins_filename builtins
       in
       let ast_file = parse_file filename in

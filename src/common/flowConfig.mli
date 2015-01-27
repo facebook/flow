@@ -11,6 +11,7 @@ type moduleSystem = Node | Haste
 
 type options = {
   moduleSystem: moduleSystem;
+  traces: bool;
 }
 
 type config = {

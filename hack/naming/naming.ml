@@ -329,7 +329,9 @@ module Env = struct
     match v with
     | None ->
       (match genv.in_mode with
-        | Ast.Mstrict -> Errors.unbound_name p x
+        | Ast.Mstrict -> Errors.unbound_name p x `const
+        | Ast.Mpartial | Ast.Mdecl when not genv.assume_php ->
+          Errors.unbound_name p x `const
         | Ast.Mdecl | Ast.Mpartial -> ()
       );
       p, Ident.make x
@@ -342,7 +344,7 @@ module Env = struct
     if List.mem name tparaml then Errors.generic_at_runtime p;
     ()
 
-  let canonicalize genv env_and_names (p, name) =
+  let canonicalize genv env_and_names (p, name) kind =
     let env, canon_names = !env_and_names in
     if SMap.mem name env then (p, name)
     else (
@@ -358,8 +360,8 @@ module Env = struct
           (match genv.in_mode with
             | Ast.Mpartial | Ast.Mdecl
                 when genv.assume_php || name = SN.Classes.cUnknown -> ()
-            | Ast.Mstrict -> Errors.unbound_name p name
-            | Ast.Mpartial | Ast.Mdecl -> Errors.unbound_name p name
+            | Ast.Mstrict -> Errors.unbound_name p name kind
+            | Ast.Mpartial | Ast.Mdecl -> Errors.unbound_name p name kind
           );
           p, name
     )
@@ -494,16 +496,16 @@ module Env = struct
       let mem (_, nm) = SMap.mem (canon_key nm) (canon_map) in
       match mem fq_x, mem global_x with
       | true, _ -> (* Found in the current namespace *)
-        let fq_x = canonicalize genv genv_sect fq_x in
+        let fq_x = canonicalize genv genv_sect fq_x `func in
         get_name genv pos_map fq_x
       | _, true -> (* Found in the global namespace *)
-        let global_x = canonicalize genv genv_sect global_x in
+        let global_x = canonicalize genv genv_sect global_x `func in
         get_name genv pos_map global_x
       | false, false ->
         (* Not found. Pick the more specific one to error on. *)
         get_name genv pos_map fq_x
     end else
-      let fq_x = canonicalize genv genv_sect fq_x in
+      let fq_x = canonicalize genv genv_sect fq_x `func in
       get_name genv pos_map fq_x
 
   let global_const (genv, env) x  =
@@ -518,7 +520,7 @@ module Env = struct
     (* Generic names are not allowed to shadow class names *)
     check_no_runtime_generic genv x;
     let x = Namespaces.elaborate_id genv.namespace x in
-    let pos, name = canonicalize genv genv.classes x in
+    let pos, name = canonicalize genv genv.classes x `cls in
     (* Don't let people use strictly internal classes
      * (except when they are being declared in .hhi files) *)
     if name = SN.Classes.cHH_BuiltinEnum &&
@@ -1098,6 +1100,7 @@ and class_use env x acc =
   match x with
   | Attributes _ -> acc
   | Const _ -> acc
+  | AbsConst _ -> acc
   | ClassUse h ->
     hint_no_typedef env h;
     hint ~allow_this:true env h :: acc
@@ -1112,6 +1115,7 @@ and xhp_attr_use env x acc =
   match x with
   | Attributes _ -> acc
   | Const _ -> acc
+  | AbsConst _ -> acc
   | ClassUse _ -> acc
   | XhpAttrUse h ->
     hint_no_typedef env h;
@@ -1126,6 +1130,7 @@ and class_require env c_kind x acc =
   match x with
   | Attributes _ -> acc
   | Const _ -> acc
+  | AbsConst _ -> acc
   | ClassUse _ -> acc
   | XhpAttrUse _ -> acc
   | ClassTraitRequire (MustExtend, h)
@@ -1151,6 +1156,7 @@ and class_require env c_kind x acc =
 and constructor env acc = function
   | Attributes _ -> acc
   | Const _ -> acc
+  | AbsConst _ -> acc
   | ClassUse _ -> acc
   | XhpAttrUse _ -> acc
   | ClassTraitRequire _ -> acc
@@ -1169,6 +1175,7 @@ and class_const env x acc =
   match x with
   | Attributes _ -> acc
   | Const (h, l) -> const_defl h env l @ acc
+  | AbsConst _ -> (* fixme *) acc
   | ClassUse _ -> acc
   | XhpAttrUse _ -> acc
   | ClassTraitRequire _ -> acc
@@ -1184,6 +1191,7 @@ and class_var_static env x acc =
   | XhpAttrUse _ -> acc
   | ClassTraitRequire _ -> acc
   | Const _ -> acc
+  | AbsConst _ -> acc
   | ClassVars (kl, h, cvl) when List.mem Static kl ->
     let h = opt_map (hint ~is_static_var:true env) h in
     let cvl = List.map (class_var_ env) cvl in
@@ -1201,6 +1209,7 @@ and class_var env x acc =
   | XhpAttrUse _ -> acc
   | ClassTraitRequire _ -> acc
   | Const _ -> acc
+  | AbsConst _ -> acc
   | ClassVars (kl, h, cvl) when not (List.mem Static kl) ->
     (* there are no covariance issues with private members *)
     let allow_this = (List.mem Private kl) in
@@ -1268,6 +1277,7 @@ and class_static_method env x acc =
   | XhpAttrUse _ -> acc
   | ClassTraitRequire _ -> acc
   | Const _ -> acc
+  | AbsConst _ -> acc
   | ClassVars _ -> acc
   | XhpAttr _ -> acc
   | Method m when snd m.m_name = SN.Members.__construct -> acc
@@ -1282,6 +1292,7 @@ and class_method env sids cv_ids x acc =
   | XhpAttrUse _ -> acc
   | ClassTraitRequire _ -> acc
   | Const _ -> acc
+  | AbsConst _ -> acc
   | ClassVars _ -> acc
   | XhpAttr _ -> acc
   | Method m when snd m.m_name = SN.Members.__construct -> acc
@@ -1296,6 +1307,7 @@ and class_typeconst env x acc =
   match x with
   | Attributes _ -> acc
   | Const _ -> acc
+  | AbsConst _ -> acc
   | ClassUse _ -> acc
   | XhpAttrUse _ -> acc
   | ClassTraitRequire _ -> acc
@@ -1384,26 +1396,15 @@ and fill_cvar kl ty x =
  ) x kl
 
 and typeconst env t =
-  let genv, lenv = env in
   (* We use the same namespace as constants within the class so we cannot have
    * a const and type const with the same name
    *)
   let name = Env.new_const env t.tconst_name in
-  (* if a typeconst is declared in an interface without an assigned type it is
-   * implicitly treated as abstract i.e.
-   *
-   * interface Foo { type const Bar;}
-   *
-   *  is the same as
-   * interface Foo { abstract type const Bar;}
-   *)
-  let abstract = match genv.cclass with
-    | Some {c_kind = Ast.Cinterface; _ } when t.tconst_type = None -> true
-    | _ -> List.mem Abstract t.tconst_kind in
+  let constr = opt_map (hint env) t.tconst_constraint in
   let type_ = opt_map (hint env) t.tconst_type in
-  N.({ c_tconst_abstract = abstract;
+  N.({ c_tconst_abstract = t.tconst_abstract;
        c_tconst_name = name;
-       c_tconst_type = type_;
+       c_tconst_type = if type_ <> None then type_ else constr;
      })
 
 and fun_kind env ft =

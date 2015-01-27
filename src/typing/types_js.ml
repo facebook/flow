@@ -249,25 +249,21 @@ let cached_infer_context file =
    by delaying the actual substitutions, it can detect cycles via caching. *)
 let rec merge_requires cx rs =
   SSet.fold (fun r (cxs,links,declarations) ->
-    if Module.module_exists r then
-      if checked r then
-        let file = Module.get_file r in
-        try
-          let cx_ = Hashtbl.find cached_infer_contexts file in
-          cxs,
-          (cx_,cx)::links,
-          declarations
-        with _ ->
-          let cx_ = ContextHeap.find_unsafe file in
-          Hashtbl.add cached_infer_contexts file cx_;
-          let (cxs_, links_, declarations_) = merge_requires cx_ cx_.strict_required in
-          List.rev_append cxs_ (cx_::cxs),
-          List.rev_append links_ ((cx_,cx)::links),
-          List.rev_append declarations_ declarations
-      else
+    if Module.module_exists r && checked r then
+      let file = Module.get_file r in
+      try
+        let cx_ = Hashtbl.find cached_infer_contexts file in
         cxs,
-        links,
-        (cx,r)::declarations
+        (cx_,cx)::links,
+        declarations
+      with _ ->
+        let cx_ = ContextHeap.find_unsafe file in
+        Hashtbl.add cached_infer_contexts file cx_;
+        let (cxs_, links_, declarations_) =
+          merge_requires cx_ cx_.strict_required in
+        List.rev_append cxs_ (cx_::cxs),
+        List.rev_append links_ ((cx_,cx)::links),
+        List.rev_append declarations_ declarations
     else
       cxs,
       links,
@@ -459,26 +455,37 @@ let typecheck workers files removed opts make_merge_input =
         perform substitution of r.export into m.g, producing m.g'
 *)
 
-(* does `file` immediately require some module in `required_modules`? *)
-let requires_any file required_modules =
-  let { Module.required = req; _ } = Module.get_module_info file in
-  SSet.exists (fun r -> SSet.mem r required_modules) req
+(* given a module M,
+  - required(M) is the set of all modules required by M
+  - strict_required(M) is the subset of required(M) which contribute
+    items to M's signature (the name is legacy)
+  - sig(M) is M plus the closure of strict_required(M), i.e.
+    all modules which might contribute to M's signature, directly
+    or indirectly
+  Given a module M and a set of modules S,
+  - M's signature depends on S if any module in sig(M) is in S
+  - M depends on S if M is in S, or if the signature of any module
+    in required(M) depends on S.
+ *)
+let rec file_depends_on memo modules f =
+  let { Module._module; required; _ } = Module.get_module_info f in
+  SSet.mem _module modules ||
+    SSet.exists (sig_depends_on memo modules) required
 
-(* does `file` recursively strictly-require some module in `required_modules`?
-   `stack` detects cyclic strict dependencies
-*)
-let rec strict_requires_any file required_modules stack =
-  not (SSet.mem file !stack) && (
-    stack := SSet.add file !stack;
-    let { Module.strict_required; _ } = Module.get_module_info file in
-    strict_required |> SSet.exists (fun r ->
-      transitive_mem r required_modules stack
-    )
-  )
-and transitive_mem r required_modules stack =
-  (SSet.mem r required_modules) ||
-    (Module.module_exists r &&
-      strict_requires_any (Module.get_file r) required_modules stack)
+and sig_depends_on memo modules m =
+  match SMap.get m !memo with
+  | Some b -> b
+  | None ->
+    let b = SSet.mem m modules || (
+      Module.module_exists m && (
+        let f = Module.get_file m in
+        let { Module.strict_required; _ } = Module.get_module_info f in
+        memo := SMap.add m false !memo;
+        SSet.exists (sig_depends_on memo modules) strict_required
+      )
+    ) in
+    memo := SMap.add m b !memo;
+    b
 
 (* The following computation is likely inefficient; it tries to narrow down
    a potentially large set of unmodified files to a potentially small set of
@@ -496,11 +503,9 @@ let deps unmodified inferred_files removed_modules =
   let touched_modules = SSet.fold (fun file mods ->
     SSet.add (Module.get_module_name file) mods
   ) inferred_files removed_modules in
-  (* now, add any that required or strict-required these *)
-  SSet.filter (fun f ->
-    requires_any f touched_modules
-    || strict_requires_any f touched_modules (ref SSet.empty)
-  ) unmodified
+  (* now, add any untouched files that depend on these *)
+  let memo = ref SMap.empty in
+  SSet.filter (file_depends_on memo touched_modules) unmodified
 
 (* We maintain the following invariant across rechecks: The keyset of
    `files_info` contains files that parsed successfully in the previous
@@ -564,6 +569,12 @@ let recheck genv env modified opts =
       (* need to merge the closure of inferred files and their deps *)
       let inferred_set = set_of_list inferred in
       let unmod_deps = deps unmodified_parsed inferred_set removed_modules in
+
+      let n = SSet.cardinal unmod_deps in
+      prerr_endline (spf "remerge %d dependent files:" n);
+      let _ = SSet.fold (fun f i ->
+        prerr_endline (spf "%d/%d: %s" i n f); i + 1) unmod_deps 1 in
+
       SSet.elements (SSet.union unmod_deps inferred_set)
     ) |> ignore;
 

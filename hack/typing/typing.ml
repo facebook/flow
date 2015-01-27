@@ -1160,15 +1160,11 @@ and expr_ in_cond is_lvalue env (p, e) =
       let env = check_shape_keys_validity env p (ShapeMap.keys fdm) in
       env, (Reason.Rwitness p, Tshape fdm)
 
-and class_const env p = function
-  | (CIparent, mid) ->
-      let env, cty = static_class_id p env CIparent in
-      obj_get ~is_method:false ~nullsafe:None env cty mid (fun x -> x)
-  | (cid, mid) ->
-      TUtils.process_static_find_ref cid mid;
-      let env, cty = static_class_id p env cid in
-      let env, cty = Env.expand_type env cty in
-      class_get ~is_method:false ~is_const:true env cty mid cid
+and class_const env p (cid, mid) =
+  TUtils.process_static_find_ref cid mid;
+  let env, cty = static_class_id p env cid in
+  let env, cty = Env.expand_type env cty in
+  class_get ~is_method:false ~is_const:true env cty mid cid
 
 (*****************************************************************************)
 (* Anonymous functions. *)
@@ -2269,6 +2265,9 @@ and class_get_ ~is_method ~is_const env cty (p, mid) cid =
                     !Typing_defs.accumulate_method_calls_result;
           Typing_hooks.dispatch_smethod_hook class_ (p, mid) env (Some cid);
           (match smethod with
+          | None when not is_method ->
+            smember_not_found p ~is_const ~is_method class_ mid;
+            env, (Reason.Rnone, Tany)
           | None ->
             (match Env.get_static_member is_method env class_ SN.Members.__callStatic with
               | None ->
@@ -2964,8 +2963,8 @@ and binop in_cond p env bop p1 ty1 p2 ty2 =
         ), _ -> env, (Reason.Rarith_ret p, Tprim Tnum)
       )
   | Ast.Percent ->
-      let env, _ = Type.unify p Reason.URnone env ty1 (Reason.Rarith p1, Tprim Tint) in
-      let env, _ = Type.unify p Reason.URnone env ty2 (Reason.Rarith p1, Tprim Tint) in
+      let env = Type.sub_type p Reason.URnone env (Reason.Rarith p1, Tprim Tint) ty1 in
+      let env = Type.sub_type p Reason.URnone env (Reason.Rarith p1, Tprim Tint) ty2 in
       env, (Reason.Rarith_ret p, Tprim Tint)
   | Ast.Xor ->
       let env, ty1 = TUtils.fold_unresolved env ty1 in

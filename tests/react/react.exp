@@ -1,6 +1,10 @@
 
-jsx_spread.js:9:19,20: number
-This type is incompatible with
-  jsx_spread.js:5:10,31: string
+ArityError.react.js:6:37,46: any
+Number of type arguments differs from
+  [LIB] react.js:96:49,65: any
 
-Found 1 error
+jsx_spread.js:10:19,20: number
+This type is incompatible with
+  jsx_spread.js:6:10,31: string
+
+Found 2 errors

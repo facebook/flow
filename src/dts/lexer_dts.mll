@@ -822,11 +822,11 @@ and comment buf = parse
 and line_comment buf = parse
   | eof                { lb_to_loc lexbuf }
   | '\n'               { Ast.Loc.(
-                           let { source; start; _end = { line; column } }
+                           let { source; start; _end = { line; column; offset } }
                              = lb_to_loc lexbuf in
                            Lexing.new_line lexbuf;
                            { source; start; _end
-                             = { line; column = column - 1 } }
+                             = { line; column = column - 1; offset = offset - 1; } }
                        ) }
   | _ as c             { Buffer.add_char buf c;
                          line_comment buf lexbuf }

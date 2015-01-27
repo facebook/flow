@@ -34,11 +34,10 @@ let init_env file lb = {
 }
 
 type parser_return = {
-    (* True if we are dealing with a hack file *)
-    is_hh_file : bool;
-    comments   : (Pos.t * string) list;
-    ast        : Ast.program;
-  }
+  file_mode  : Ast.mode option; (* None if PHP *)
+  comments   : (Pos.t * string) list;
+  ast        : Ast.program;
+}
 
 (*****************************************************************************)
 (* Lexer (with backtracking) *)
@@ -115,6 +114,13 @@ let peek env =
   restore_lexbuf_state env.lb saved;
   ret
 
+(* Checks if the next token matches a given word without updating lexer state*)
+let peek_check_word env word =
+  let saved = save_lexbuf_state env.lb in
+  let ret = L.token env.file env.lb = Tword && Lexing.lexeme env.lb = word in
+  restore_lexbuf_state env.lb saved;
+  ret
+
 (* Drop the next token unconditionally *)
 let drop (env : env) : unit = match L.token env.file env.lb with _ -> ()
 
@@ -135,10 +141,13 @@ let error_continue env =
     "Yeah...we're not going to support continue/break N. \
     It makes static analysis tricky and it's not really essential"
 
-let error_expect env expect =
+let error_back env msg =
   let pos = Pos.make env.file env.lb in
   L.back env.lb;
-  env.errors := (pos, "Expected "^expect) :: !(env.errors)
+  error_at env pos msg
+
+let error_expect env expect =
+  error_back env ("Expected "^expect)
 
 let expect env x =
   if L.token env.file env.lb = x
@@ -149,7 +158,7 @@ let expect_word env name =
   let tok = L.token env.file env.lb in
   let value = Lexing.lexeme env.lb in
   if tok <> Tword || value <> name
-  then error_expect env ("Was expecting: '"^name^ "' (not '"^value^"')");
+  then error_expect env ("'"^name^ "' (not '"^value^"')");
   ()
 
 (*****************************************************************************)
@@ -204,11 +213,6 @@ let check_modifiers env pos l =
 let check_not_final env pos modifiers =
   if List.exists (function Final -> true | _ -> false) modifiers
   then error_at env pos "class variable cannot be final";
-  ()
-
-let tc_check_not_static env pos modifiers =
-  if List.exists (function Static -> true | _ -> false) modifiers
-  then error_at env pos "type constant cannot be static";
   ()
 
 let check_toplevel env pos =
@@ -416,7 +420,7 @@ let rec program ?(elaborate_namespaces = true) file content =
   L.fixmes := Utils.IMap.empty;
   let lb = Lexing.from_string content in
   let env = init_env file lb in
-  let ast, is_hh_file = header env in
+  let ast, file_mode = header env in
   let comments = !L.comment_list in
   let fixmes = !L.fixmes in
   L.comment_list := [];
@@ -427,7 +431,7 @@ let rec program ?(elaborate_namespaces = true) file content =
   let ast = if elaborate_namespaces
     then Namespaces.elaborate_defs ast
     else ast in
-  {is_hh_file; comments; ast}
+  {file_mode; comments; ast}
 
 (*****************************************************************************)
 (* Hack headers (strict, decl, partial) *)
@@ -442,14 +446,13 @@ and header env =
       let attr = SMap.empty in
       let result = ignore_toplevel ~attr [] env (fun x -> x = Teof) in
       expect env Teof;
-      let is_hh_file = head = Some Ast.Mdecl in
-      result, is_hh_file
+      result, head
   | _, Some mode ->
       let result = toplevel [] { env with mode = mode } (fun x -> x = Teof) in
       expect env Teof;
-      result, true
+      result, head
   | _ ->
-      [], false
+      [], head
 
 and get_header env =
   match L.header env.file env.lb with
@@ -1231,7 +1234,10 @@ and class_toplevel_word env word =
       class_defs env
   | "const" ->
       let error_state = !(env.errors) in
-      let def = class_const_def env in
+      let def =
+        if peek_check_word env "type"
+        then (drop env; TypeConst (typeconst_def env ~is_abstract:false))
+        else class_const_def env in
       if !(env.errors) != error_state
       then [def]
       else def :: class_defs env
@@ -1248,18 +1254,25 @@ and class_toplevel_word env word =
       if !(env.errors) != error_state
       then look_for_next_method start env;
       m @ class_defs env
-  | "abstract" | "public" | "protected" | "private" | "final" | "static"  ->
-      (* variable | method | type const*)
-      L.back env.lb;
-      let start = Pos.make env.file env.lb in
-      let error_state = !(env.errors) in
-      let m = class_member_def env in
-      if !(env.errors) != error_state
-      then look_for_next_method start env;
-      m :: class_defs env
+  | "abstract" ->
+    (match try_abstract_const env with
+      | Some ac -> ac :: class_defs env
+      | None -> on_class_member_word env)
+  | "public" | "protected" | "private" | "final" | "static"  ->
+    on_class_member_word env
   | _ ->
       error_expect env "modifier";
       []
+
+and on_class_member_word env =
+  (* variable | method | type const*)
+  L.back env.lb;
+  let start = Pos.make env.file env.lb in
+  let error_state = !(env.errors) in
+  let m = class_member_def env in
+  if !(env.errors) != error_state
+  then look_for_next_method start env;
+  m :: class_defs env
 
 and look_for_next_method previous_pos env =
   match L.token env.file env.lb with
@@ -1267,8 +1280,8 @@ and look_for_next_method previous_pos env =
   | Trcb -> ()
   | Tword ->
       (match Lexing.lexeme env.lb with
-      | "abstract" | "public" | "protected"
-      | "private" | "final" | "static" ->
+      | "abstract"| "public" | "protected"
+      | "private" | "final" | "static" when not (peek_check_word env "const") ->
           let pos = Pos.make env.file env.lb in
           if Pos.compare pos previous_pos = 0
           then (* we are stuck in a circle *)
@@ -1286,6 +1299,7 @@ and look_for_next_method previous_pos env =
 and class_use_list env =
   let error_state = !(env.errors) in
   let cst = ClassUse (class_hint env) in
+
   match L.token env.file env.lb with
   | Tsc ->
       [cst]
@@ -1346,6 +1360,23 @@ and xhp_format env =
  *)
 (*****************************************************************************)
 
+(* Is "abstract" followed by "const"?
+   abstract const _ X; *)
+and try_abstract_const env =
+    try_parse env begin fun env ->
+      match L.token env.file env.lb with
+        | Tword when Lexing.lexeme env.lb = "const"
+          && peek_check_word env "type" ->
+            drop env;
+            Some (TypeConst (typeconst_def env ~is_abstract:true))
+        | Tword when Lexing.lexeme env.lb = "const" ->
+            let h = class_const_hint env in
+            let id = identifier env in
+            expect env Tsc;
+            Some (AbsConst (h, id))
+        | _ -> None
+    end
+
 (* const_hint const_name1 = value1, ..., const_name_n = value_n; *)
 and class_const_def env =
   let h = class_const_hint env in
@@ -1364,8 +1395,9 @@ and class_const_has_hint env =
     match L.token env.file env.lb with
     (* const_name = ... | hint_name const_name = ... *)
     | Tword ->
-        (* If we see 'name =', there is no type hint *)
-        L.token env.file env.lb <> Teq
+      (* If we see 'name =' or 'name;', there is no type hint *)
+      let tok = L.token env.file env.lb in
+      (tok <> Teq && tok <> Tsc)
     | _ -> true
   end
 
@@ -1475,11 +1507,10 @@ and class_member_def env =
       ClassVars (modifiers, None, cvars)
   | Tword ->
       let word = Lexing.lexeme env.lb in
-      if word = "type"
-      then tc_check_not_static env modifier_pos modifiers;
       class_member_word env ~modifiers ~attrs word
   | _ ->
       L.back env.lb;
+      check_visibility env modifier_pos modifiers;
       check_not_final env modifier_pos modifiers;
       let h = hint env in
       let cvars = class_var_list env in
@@ -1572,7 +1603,7 @@ and xhp_attr_list_remain env =
   | _ -> error_expect env ";"; []
 
 (*****************************************************************************)
-(* Methods | Typeconst *)
+(* Methods *)
 (*
  *  within a class body -->
  *    modifier_list async function ...
@@ -1581,11 +1612,6 @@ and xhp_attr_list_remain env =
 (*****************************************************************************)
 
 and class_member_word env ~attrs ~modifiers = function
-  | "type" ->
-      expect_word env "const";
-      let type_name = identifier env in
-      let typeconst = typeconst env ~modifiers ~attrs type_name in
-      TypeConst typeconst
   | "async" ->
       expect_word env "function";
       let is_ref = ref_opt env in
@@ -1613,14 +1639,17 @@ and class_member_word env ~attrs ~modifiers = function
         | _ -> L.back env.lb; class_var_list env
       in ClassVars (modifiers, Some h, cvars)
 
-and typeconst env ~modifiers ~attrs pname =
+and typeconst_def env ~is_abstract =
+  let pname = identifier env in
+  let constr = typedef_constraint env in
   let type_ = match L.token env.file env.lb with
     | Teq -> Some (hint env)
     | _ -> L.back env.lb; None
   in
   expect env Tsc;
-  { tconst_kind = modifiers;
+  { tconst_abstract = is_abstract;
     tconst_name = pname;
+    tconst_constraint = constr;
     tconst_type = type_;
   }
 
@@ -2439,6 +2468,19 @@ and reduce_ env e1 op make =
 (*****************************************************************************)
 
 and lambda_expr_body : env -> block = fun env ->
+  (* check for an async block *)
+  let tok = L.token env.file env.lb in
+  let value = Lexing.lexeme env.lb in
+  let () =
+    if tok <> Tword || value <> "async"
+    then L.back env.lb
+    else
+      (* in sync lambda: just transform into an async lambda *)
+      (* in async lambda: be explicit about the Awaitable<Awaitable<X>> return
+       * type with a return statement *)
+      error_back env "Unexpected use of async {...} as lambda expression"
+  in
+
   let (p, e1) = expr env in
   [Return (p, (Some (p, e1)))]
 
@@ -3227,7 +3269,7 @@ and encapsed_expr_reduce_left start env e1 =
              *)
             let pid = Pos.make env.file env.lb in
             let id = Lexing.lexeme env.lb in
-            pid, (Id (pid, id))
+            pid, (String (pid, id))
         | _ ->
             L.back env.lb;
             expr { env with priority = 0 }

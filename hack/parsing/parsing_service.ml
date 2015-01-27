@@ -40,7 +40,7 @@ module AddDeps = struct
     | ClassUse h -> hint root h
     | XhpAttrUse h -> hint root h
     | ClassTraitRequire (_, h) -> hint root h
-    | Attributes _  | Const _ | ClassVars _ | XhpAttr _ | Method _
+    | Attributes _  | Const _ | AbsConst _ | ClassVars _ | XhpAttr _ | Method _
     | TypeConst _ -> ()
 
   and hint root (_, h) =
@@ -110,13 +110,13 @@ let legacy_php_file_info = ref (fun fn ->
  * error_files is Relative_path.Set.t of files that we failed to parse
  *)
 let parse (acc, errorl, error_files, php_files) fn =
-  let errorl', {Parser_hack.is_hh_file; comments; ast} =
+  let errorl', {Parser_hack.file_mode; comments; ast} =
     Errors.do_ begin fun () ->
       Parser_hack.from_file fn
     end
   in
   Parsing_hooks.dispatch_file_parsed_hook fn ast;
-  if is_hh_file then begin
+  if file_mode <> None then begin
     AddDeps.program ast;
     let funs, classes, typedefs, consts = get_defs ast in
     Parser_heap.ParserHeap.add fn ast;

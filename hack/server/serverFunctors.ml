@@ -11,6 +11,8 @@
 open Utils
 open ServerEnv
 
+exception State_not_found
+
 module type SERVER_PROGRAM = sig
   module EventLogger : sig
     val init: Path.path -> float -> unit
@@ -149,32 +151,38 @@ end = struct
         (Filename.quote Build_id.build_id_ohai) in
       Printf.fprintf stderr "Running load script: %s\n%!" cmd;
       let ic = Unix.open_process_in cmd in
-      let output = ref [] in
-      (try while true do output := input_line ic :: !output done
-      with End_of_file -> ());
+      let state_fn = begin
+        try input_line ic
+        with End_of_file -> raise State_not_found
+      end in
+      let to_recheck = ref [] in
+      begin
+        try while true do to_recheck := input_line ic :: !to_recheck done
+        with End_of_file -> ()
+      end;
       assert (Unix.close_process_in ic = Unix.WEXITED 0);
-      match !output with
-      | filename :: to_recheck ->
-          Printf.fprintf stderr
-            "Load state found at %s. %d files to recheck\n%!"
-            filename (List.length to_recheck);
-          let env = load genv filename to_recheck in
-          Program.EventLogger.init_done "load";
-          env
-      | [] ->
-          Printf.fprintf stderr "Load state not found!\n";
-          Printf.fprintf stderr "Starting from a fresh state instead...\n%!";
-          let env = Program.init genv env in
-          Program.EventLogger.init_done "load_state_unavailable";
-          env
-    with e ->
-      let msg = Printexc.to_string e in
-      Printf.fprintf stderr "Load error: %s\n%!" msg;
-      Printf.fprintf stderr "Starting from a fresh state instead...\n%!";
-      Program.EventLogger.load_failed msg;
-      let env = Program.init genv env in
-      Program.EventLogger.init_done "load_error";
+      Printf.fprintf stderr
+        "Load state found at %s. %d files to recheck\n%!"
+        state_fn (List.length !to_recheck);
+      let env = load genv state_fn !to_recheck in
+      Program.EventLogger.init_done "load";
       env
+    with
+    | State_not_found ->
+        Printf.fprintf stderr "Load state not found!\n";
+        Printf.fprintf stderr "Starting from a fresh state instead...\n%!";
+        let env = Program.init genv env in
+        Program.EventLogger.init_done "load_state_not_found";
+        env
+    | e ->
+        let msg = Printexc.to_string e in
+        Printf.fprintf stderr "Load error: %s\n%!" msg;
+        Printexc.print_backtrace stderr;
+        Printf.fprintf stderr "Starting from a fresh state instead...\n%!";
+        Program.EventLogger.load_failed msg;
+        let env = Program.init genv env in
+        Program.EventLogger.init_done "load_error";
+        env
 
   let create_program_init genv env = fun () ->
     match ServerArgs.load_save_opt genv.options with

@@ -485,6 +485,12 @@ let rec convert cx map = Ast.Type.(function
           LowerBoundT (convert cx map (List.hd typeParameters))
         )
 
+      (* $Shape<T> matches the shape of T *)
+      | "$Shape" ->
+        check_type_param_arity cx loc typeParameters 1 (fun () ->
+          ShapeT (convert cx map (List.hd typeParameters))
+        )
+
       (* $Enum<T> is the set of keys of T *)
       | "$Enum" ->
         check_type_param_arity cx loc typeParameters 1 (fun () ->
@@ -1193,8 +1199,7 @@ and statement cx = Ast.Statement.(
   | (loc, Try { Try.block = (_, b); handler; guardedHandlers; finalizer }) ->
       let reason = mk_reason "try" loc in
       let oldset = Env_js.swap_changeset (fun _ -> SSet.empty) in
-      let exception_try, exception_catch, exception_finally = ref None, ref
-     None, ref None in
+      let exception_try, exception_finally = ref None, ref None in
 
       mark_exception_handler
         (fun () -> toplevels cx b.Block.body)
@@ -1212,9 +1217,8 @@ and statement cx = Ast.Statement.(
         | Some (_, h) ->
             (* havoc environment, since the try block may exit anywhere *)
             Env_js.havoc_env2 !Env_js.changeset;
-            mark_exception_handler
-              (fun () -> catch_clause cx h)
-              exception_catch;
+            ignore_exception_handler
+              (fun () -> catch_clause cx h);
 
             (* merge end of catch to start of finally *)
             Env_js.merge_env cx reason
@@ -1249,12 +1253,12 @@ and statement cx = Ast.Statement.(
       ignore newset;
 
       (* Raise whatever finally raises. If finally doesn't raise, raise whatever
-         try raises or whatever catch raises, in that order. Recall that raising
-         includes only breaks, continues, and returns (not throws), so control
-         flows from try to finally or from catch to finally, in that order. *)
+         try raises, since control would flow from try to finally, and ignore
+         any raises by catch. (Recall that raising includes only breaks,
+         continues, and returns (not throws), in which cases control flows from
+         try to finally without going through catch.) *)
       raise_exception !exception_finally;
-      raise_exception !exception_try;
-      raise_exception !exception_catch
+      raise_exception !exception_try
 
   (***************************************************************************)
   (* Refinements for `while` are derived by the following Hoare logic rule:
@@ -2146,12 +2150,12 @@ and expression_ cx loc e = Ast.Expression.(match e with
         Member._object = _, Identifier (_,
           { Ast.Identifier.name = "React"; _ });
         property = Member.PropertyIdentifier (_,
-          { Ast.Identifier.name; _ });
+          { Ast.Identifier.name = "createClass"; _ });
         _
       };
-      arguments
+      arguments = [ Expression (_, Object { Object.properties = class_props }) ]
     } ->
-      static_method_call_React cx loc name arguments
+      react_create_class cx loc class_props
 
   | Call {
       Call.callee = _, Member {
@@ -2725,11 +2729,14 @@ and chain_objects cx reason this those =
 and spread_objects cx reason those =
   chain_objects cx reason (mk_object cx reason) those
 
-and clone_object cx reason this that =
+and clone_object_with_excludes cx reason this that excludes =
   Flow_js.mk_tvar_where cx reason (fun tvar ->
     Flow_js.unit_flow cx
-      (that, ObjAssignT(reason, this, ObjRestT(reason, [], tvar)))
+      (that, ObjAssignT(reason, this, ObjRestT(reason, excludes, tvar)))
   )
+
+and clone_object cx reason this that =
+  clone_object_with_excludes cx reason this that []
 
 and chain_objects_lazy cx reason this those =
   let result = ref this in
@@ -2739,6 +2746,11 @@ and chain_objects_lazy cx reason this those =
     )
   ) those;
   !result
+
+and react_ignored_attributes = [ "key"; "ref"; ]
+
+and react_ignore_attribute aname =
+  List.mem aname react_ignored_attributes
 
 and jsx cx = Ast.XJS.(function { openingElement; closingElement; children } ->
   jsx_title cx openingElement (List.map (jsx_body cx) children)
@@ -2751,9 +2763,8 @@ and jsx_title cx openingElement children = Ast.XJS.(
   | Identifier (_, { Identifier.name }) when name = String.capitalize name ->
       let reason = mk_reason (spf "React element: %s" name) eloc in
       let c = Env_js.get_var cx name reason in
-      let reason_props = prefix_reason "props of " reason in
-      let o = Flow_js.mk_object_with_proto cx reason_props (MixedT reason_props) in
-
+      let map = ref SMap.empty in
+      let spread = ref None in
       attributes |> List.iter (function
         | Opening.Attribute (aloc, { Attribute.
               name = Attribute.Identifier (_, { Identifier.name = aname });
@@ -2770,31 +2781,29 @@ and jsx_title cx openingElement children = Ast.XJS.(
                   (* empty or nonexistent attribute values *)
                   UndefT.at aloc
             ) in
-            let desc = spf "property %s of " aname in
-            let reason_prop = prefix_reason desc reason_props in
-            Flow_js.unit_flow cx (o, SetT(reason_prop, aname, atype))
+
+            if not (react_ignore_attribute aname)
+            then map := !map |> SMap.add aname atype
 
         | Opening.Attribute _ ->
             () (* TODO: attributes with namespaced names *)
 
         | Opening.SpreadAttribute (aloc, { SpreadAttribute.argument }) ->
             let ex_t = expression cx argument in
-            let reason_prop = prefix_reason "spread of " (reason_of_t ex_t) in
-            ignore (extend_object cx reason_prop o (Some ex_t))
+            spread := Some (ex_t)
       );
 
-      let reason_children = prefix_reason "children of " reason_props in
-      let t = Flow_js.mk_tvar cx reason_children in
-      children |> List.iter (
-        fun child -> Flow_js.unit_flow cx (child, t)
-      );
-      let children =
-        match List.length children with
-        | 0 -> UndefT.t
-        | 1 -> t
-        | _ -> ArrT(reason_children, t, []) (* TODO: tuples *)
+      let reason_props = prefix_reason "props of " reason in
+      let o = Flow_js.mk_object_with_map_proto cx reason_props
+        !map (MixedT reason_props)
       in
-      Flow_js.unit_flow cx (o, SetT(reason_children, "children", children));
+      let o = match !spread with
+        | None -> o
+        | Some ex_t ->
+            let reason_prop = prefix_reason "spread of " (reason_of_t ex_t) in
+            clone_object_with_excludes cx reason_prop o ex_t react_ignored_attributes
+      in
+      (* TODO: children *)
       Flow_js.mk_tvar_where cx reason (fun tvar ->
         Flow_js.unit_flow cx (c, MarkupT(reason, o, tvar));
       )
@@ -3041,226 +3050,217 @@ and mk_proptypes cx props = Ast.Expression.Object.(
   ) (SMap.empty, SMap.empty) props
 )
 
-and static_method_call_React cx loc m args_ = Ast.Expression.(
-  match (m, args_) with
+and react_create_class cx loc class_props = Ast.Expression.(
+  let reason_class = mk_reason "React class" loc in
+  let reason_component = mk_reason "React component" loc in
+  let this = Flow_js.mk_tvar cx reason_component in
+  let mixins = ref [] in
+  let static_reason = prefix_reason "statics of " reason_class in
+  let static = ref (mk_object cx static_reason) in
+  let attr_reason = prefix_reason "required props of " reason_component in
+  let attributes = ref (mk_object cx attr_reason) in
+  let default_reason = prefix_reason "default props of " reason_component in
+  let default = mk_object cx default_reason in
+  let ref_omap = ref SMap.empty in
+  let reason_state = prefix_reason "state of " reason_component in
+  let state = mk_object cx reason_state in
+  let (fmap, mmap) =
+    List.fold_left Ast.Expression.Object.(fun (fmap, mmap) -> function
 
-  | "createClass", [ Expression (_,
-        Object { Object.properties = class_props }
-      ) ] ->
-      let reason_class = mk_reason "React class" loc in
-      let reason_component = mk_reason "React component" loc in
-      let this = Flow_js.mk_tvar cx reason_component in
-      let mixins = ref [] in
-      let static_reason = prefix_reason "statics of " reason_class in
-      let static = ref (mk_object cx static_reason) in
-      let attributes_reason = prefix_reason "required props of " reason_component in
-      let attributes = ref (mk_object cx attributes_reason) in
-      let default_reason = prefix_reason "default props of " reason_component in
-      let default = ref (mk_object cx default_reason) in
-      let ref_omap = ref SMap.empty in
-      let reason_state = prefix_reason "state of " reason_component in
-      let state = ref (mk_object cx reason_state) in
-      let (fmap, mmap) =
-        List.fold_left Ast.Expression.Object.(fun (fmap, mmap) -> function
+      (* mixins *)
+      | Property (loc, { Property.kind = Property.Init;
+          key =
+            Property.Identifier (_, { Ast.Identifier.name = "mixins"; _ });
+          value = aloc, Array { Array.elements };
+          _ }) ->
+        mixins := List.map (array_element cx aloc) elements;
+        fmap, mmap
 
-          (* mixins *)
-          | Property (loc, { Property.kind = Property.Init;
-              key =
-                Property.Identifier (_, { Ast.Identifier.name = "mixins"; _ });
-              value = aloc, Array { Array.elements };
-              _ }) ->
-            mixins := List.map (array_element cx aloc) elements;
-            fmap, mmap
+      (* statics *)
+      | Property (loc, { Property.kind = Property.Init;
+            key = Property.Identifier (nloc, {
+            Ast.Identifier.name = "statics"; _ });
+          value = _, Object { Object.properties };
+          _ }) ->
+        let reason = mk_reason "statics" nloc in
+        let map, spread = object_ cx properties in
+        static :=
+          extend_object cx reason
+          (Flow_js.mk_object_with_map_proto cx reason map (MixedT reason))
+          spread;
+        fmap, mmap
 
-          (* statics *)
-          | Property (loc, { Property.kind = Property.Init;
-               key = Property.Identifier (nloc, {
-                Ast.Identifier.name = "statics"; _ });
-              value = _, Object { Object.properties };
-              _ }) ->
-            let reason = mk_reason "statics" nloc in
-            let map, spread = object_ cx properties in
-            static :=
-              extend_object cx reason
-              (Flow_js.mk_object_with_map_proto cx reason map (MixedT reason))
-              spread;
-            fmap, mmap
+      (* propTypes *)
+      | Property (loc, { Property.kind = Property.Init;
+          key = Property.Identifier (nloc, {
+            Ast.Identifier.name = "propTypes"; _ });
+          value = _, Object { Object.properties } as value;
+          _ }) ->
+        ignore (expression cx value);
+        let reason = mk_reason "propTypes" nloc in
+        let amap, omap = mk_proptypes cx properties in
+        ref_omap := omap;
+        attributes :=
+          Flow_js.mk_object_with_map_proto cx reason amap (MixedT reason);
+        fmap, mmap
 
-          (* propTypes *)
-          | Property (loc, { Property.kind = Property.Init;
-              key = Property.Identifier (nloc, {
-                Ast.Identifier.name = "propTypes"; _ });
-              value = _, Object { Object.properties };
-              _ }) ->
-            let reason = mk_reason "propTypes" nloc in
-            let amap, omap = mk_proptypes cx properties in
-            ref_omap := omap;
-            attributes :=
-              Flow_js.mk_object_with_map_proto cx reason amap (MixedT reason);
-            fmap, mmap
-
-          (* getDefaultProps *)
-          | Property (loc, { Property.kind = Property.Init;
-              key = Property.Identifier (_, {
-                Ast.Identifier.name = "getDefaultProps"; _ });
-              value = (vloc, Ast.Expression.Function func);
-              _ }) ->
-            Ast.Expression.Function.(
-              let { params; defaults; rest; body;
-                returnType; typeParameters; _ } = func
-              in
-              let reason = mk_reason "defaultProps" vloc in
-              let t = mk_method cx reason (params, defaults, rest)
-                returnType body this (MixedT reason)
-              in
-              let override_default =
-                ObjAssignT(default_reason, !default, AnyT.t)
-              in
-              Flow_js.unit_flow cx (t,
-                CallT (reason,
-                  Flow_js.mk_functiontype [] None override_default));
-              fmap, mmap
-            )
-
-          (* getInitialState *)
-          | Property (loc, { Property.kind = Property.Init;
-              key = Property.Identifier (_, {
-                Ast.Identifier.name = "getInitialState"; _ });
-              value = (vloc, Ast.Expression.Function func);
-              _ }) ->
-            Ast.Expression.Function.(
-              let { params; defaults; rest; body;
-                returnType; typeParameters; _ } = func
-              in
-              let reason = mk_reason "initialState" vloc in
-              let t = mk_method cx reason (params, defaults, rest)
-                returnType body this (MixedT reason)
-              in
-              let override_state =
-                ObjAssignT(reason_state, !state, AnyT.t)
-              in
-              Flow_js.unit_flow cx (t,
-                CallT (reason,
-                  Flow_js.mk_functiontype [] None override_state));
-              fmap, mmap
-            )
-
-          (* name = function expr *)
-          | Property (loc, { Property.kind = Property.Init;
-              key = Property.Identifier (_, {
-                Ast.Identifier.name; _ });
-              value = (vloc, Ast.Expression.Function func);
-              _ }) ->
-            Ast.Expression.Function.(
-              let { params; defaults; rest; body;
-                returnType; typeParameters; _ } = func
-              in
-              let reason = mk_reason "function" vloc in
-              let t = mk_method cx reason (params, defaults, rest)
-                returnType body this (MixedT reason)
-              in
-              fmap, SMap.add name t mmap
-            )
-
-          (* name = non-function expr *)
-          | Property (loc, { Property.kind = Property.Init;
-              key =
-                Property.Identifier (_, { Ast.Identifier.name; _ }) |
-                Property.Literal (_, {
-                  Ast.Literal.value = Ast.Literal.String name; _;
-                });
-              value = v;
-              _ }) ->
-            let t = expression cx v in
-            SMap.add name t fmap, mmap
-
-          | _ ->
-            let msg = "unsupported property specification in createClass" in
-            Flow_js.add_error cx [mk_reason "" loc, msg];
-            fmap, mmap
-
-        ) (SMap.empty, SMap.empty) class_props in
-
-
-      let default_tvar = Flow_js.mk_tvar_where cx default_reason (fun t ->
-        Flow_js.unit_flow cx
-          (!default, ObjExtendT(default_reason, !ref_omap, t))
-      ) in
-      let props_reason = prefix_reason "props of " reason_component in
-      let props = mk_object cx props_reason in
-      Flow_js.unit_flow cx
-        (!attributes, ObjAssignT(props_reason, props, AnyT.t));
-      Flow_js.unit_flow cx
-        (default_tvar, ObjAssignT(props_reason, props, AnyT.t));
-
-      let type_args = [!attributes; props; !state] in
-      let super_reason = prefix_reason "super of " reason_component in
-      let super =
-        Flow_js.mk_typeapp_instance cx super_reason
-          "ReactComponent" type_args
-      in
-
-      let extract_map (from_map,to_map) name =
-        match SMap.get name from_map with
-        | Some t -> SMap.remove name from_map, SMap.add name t to_map
-        | None -> from_map, to_map
-      in
-      let fmap, smap =
-        List.fold_left extract_map (fmap, SMap.empty)
-          ["contextTypes";"childContextTypes";"displayName"]
-      in
-      let override_statics =
-        Flow_js.mk_object_with_map_proto cx
-          static_reason smap (MixedT static_reason)
-      in
-
-      let react_class = Flow_js.mk_typeapp_instance cx reason_class
-        "ReactClass" type_args
-      in
-      Flow_js.unit_flow cx (react_class, override_statics);
-      static := clone_object cx static_reason !static react_class;
-
-      (* TODO: Mixins are assumed to be classes. Instead, they should simply be
-         objects containing fields/methods, with an optional `statics` property
-         which is an object containing fields/methods, and an optional `mixins`
-         property which is an array containing mixins. *)
-
-      (* mixins' statics are copied into static to inherit static properties *)
-      !mixins |> List.iter (fun mixin ->
-        static := clone_object cx static_reason !static mixin;
-      );
-      let id = Flow_js.mk_nominal cx in
-      let itype = {
-        class_id = id;
-        type_args = IMap.empty;
-        fields_tmap = fmap;
-        methods_tmap = mmap
-      } in
-      Flow_js.unit_flow cx (super, SuperT (super_reason, itype));
-      Flow_js.unit_flow cx (super, ParentT (super_reason, itype));
-
-      let mixin_reason = prefix_reason "mixins of " reason_class in
-      (* mixins are added to super to inherit instance properties *)
-      let super =
-        if !mixins = [] then super
-        else
-          let imixins =
-            !mixins |> List.map (Flow_js.mk_annot cx mixin_reason)
+      (* getDefaultProps *)
+      | Property (loc, { Property.kind = Property.Init;
+          key = Property.Identifier (_, {
+            Ast.Identifier.name = "getDefaultProps"; _ });
+          value = (vloc, Ast.Expression.Function func);
+          _ }) ->
+        Ast.Expression.Function.(
+          let { params; defaults; rest; body;
+            returnType; typeParameters; _ } = func
           in
-          imixins |> List.iter (fun imixin ->
-            Flow_js.unit_flow cx (imixin, SuperT (mixin_reason, itype))
-          );
-          IntersectionT (super_reason, super::imixins)
+          let reason = mk_reason "defaultProps" vloc in
+          let t = mk_method cx reason (params, defaults, rest)
+            returnType body this (MixedT reason)
+          in
+          let override_default =
+            ObjAssignT(default_reason, default, AnyT.t)
+          in
+          Flow_js.unit_flow cx (t,
+            CallT (reason,
+              Flow_js.mk_functiontype [] None override_default));
+          fmap, mmap
+        )
+
+      (* getInitialState *)
+      | Property (loc, { Property.kind = Property.Init;
+          key = Property.Identifier (_, {
+            Ast.Identifier.name = "getInitialState"; _ });
+          value = (vloc, Ast.Expression.Function func);
+          _ }) ->
+        Ast.Expression.Function.(
+          let { params; defaults; rest; body;
+            returnType; typeParameters; _ } = func
+          in
+          let reason = mk_reason "initialState" vloc in
+          let t = mk_method cx reason (params, defaults, rest)
+            returnType body this (MixedT reason)
+          in
+          let override_state =
+            ObjAssignT(reason_state, state, AnyT.t)
+          in
+          Flow_js.unit_flow cx (t,
+            CallT (reason,
+              Flow_js.mk_functiontype [] None override_state));
+          fmap, mmap
+        )
+
+      (* name = function expr *)
+      | Property (loc, { Property.kind = Property.Init;
+          key = Property.Identifier (_, {
+            Ast.Identifier.name; _ });
+          value = (vloc, Ast.Expression.Function func);
+          _ }) ->
+        Ast.Expression.Function.(
+          let { params; defaults; rest; body;
+            returnType; typeParameters; _ } = func
+          in
+          let reason = mk_reason "function" vloc in
+          let t = mk_method cx reason (params, defaults, rest)
+            returnType body this (MixedT reason)
+          in
+          fmap, SMap.add name t mmap
+        )
+
+      (* name = non-function expr *)
+      | Property (loc, { Property.kind = Property.Init;
+          key =
+            Property.Identifier (_, { Ast.Identifier.name; _ }) |
+            Property.Literal (_, {
+              Ast.Literal.value = Ast.Literal.String name; _;
+            });
+          value = v;
+          _ }) ->
+        let t = expression cx v in
+        SMap.add name t fmap, mmap
+
+      | _ ->
+        let msg = "unsupported property specification in createClass" in
+        Flow_js.add_error cx [mk_reason "" loc, msg];
+        fmap, mmap
+
+    ) (SMap.empty, SMap.empty) class_props in
+
+
+  let default_tvar = Flow_js.mk_tvar_where cx default_reason (fun t ->
+    Flow_js.unit_flow cx
+      (default, ObjExtendT(default_reason, !ref_omap, t))
+  ) in
+  let props_reason = prefix_reason "props of " reason_component in
+  let props = mk_object cx props_reason in
+  Flow_js.unit_flow cx
+    (!attributes, ObjAssignT(props_reason, props, AnyT.t));
+  Flow_js.unit_flow cx
+    (default_tvar, ObjAssignT(props_reason, props, AnyT.t));
+
+  let type_args = [!attributes; props; state] in
+  let super_reason = prefix_reason "super of " reason_component in
+  let super =
+    Flow_js.mk_typeapp_instance cx super_reason
+      "ReactComponent" type_args
+  in
+
+  let extract_map (from_map,to_map) name =
+    match SMap.get name from_map with
+    | Some t -> SMap.remove name from_map, SMap.add name t to_map
+    | None -> from_map, to_map
+  in
+  let fmap, smap =
+    List.fold_left extract_map (fmap, SMap.empty)
+      ["contextTypes";"childContextTypes";"displayName"]
+  in
+  let override_statics =
+    Flow_js.mk_object_with_map_proto cx
+      static_reason smap (MixedT static_reason)
+  in
+
+  let react_class = Flow_js.mk_typeapp_instance cx reason_class
+    "ReactClass" type_args
+  in
+  Flow_js.unit_flow cx (react_class, override_statics);
+  static := clone_object cx static_reason !static react_class;
+
+  (* TODO: Mixins are assumed to be classes. Instead, they should simply be
+      objects containing fields/methods, with an optional `statics` property
+      which is an object containing fields/methods, and an optional `mixins`
+      property which is an array containing mixins. *)
+
+  (* mixins' statics are copied into static to inherit static properties *)
+  !mixins |> List.iter (fun mixin ->
+    static := clone_object cx static_reason !static mixin;
+  );
+  let id = Flow_js.mk_nominal cx in
+  let itype = {
+    class_id = id;
+    type_args = IMap.empty;
+    fields_tmap = fmap;
+    methods_tmap = mmap
+  } in
+  Flow_js.unit_flow cx (super, SuperT (super_reason, itype));
+  Flow_js.unit_flow cx (super, ParentT (super_reason, itype));
+
+  let mixin_reason = prefix_reason "mixins of " reason_class in
+  (* mixins are added to super to inherit instance properties *)
+  let super =
+    if !mixins = [] then super
+    else
+      let imixins =
+        !mixins |> List.map (Flow_js.mk_annot cx mixin_reason)
       in
-      let instance = InstanceT (reason_component,!static,super,itype) in
-      Flow_js.unit_flow cx (instance, this);
+      imixins |> List.iter (fun imixin ->
+        Flow_js.unit_flow cx (imixin, SuperT (mixin_reason, itype))
+      );
+      IntersectionT (super_reason, super::imixins)
+  in
+  let instance = InstanceT (reason_component,!static,super,itype) in
+  Flow_js.unit_flow cx (instance, this);
 
-      CustomClassT("ReactClass", type_args, instance)
-
-  | _, args ->
-      let argts = List.map (expression_or_spread cx) args in
-      Flow_js.static_method_call cx "React"
-        (mk_reason (spf "React.%s" m) loc) m argts
+  CustomClassT("ReactClass", type_args, instance)
 )
 
 (* given an expression found in a test position, notices certain
@@ -3990,9 +3990,10 @@ and before_pos loc =
   Ast.Loc.(
     let line = loc.start.line in
     let column = loc.start.column in
+    let offset = loc.start.offset in
     { loc with
-        start = { line = line; column = column - 1 };
-        _end = { line = line; column = column }
+        start = { line = line; column = column - 1; offset = offset - 1; };
+        _end = { line = line; column = column; offset = offset; }
     }
   )
 

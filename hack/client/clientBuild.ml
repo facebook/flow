@@ -61,6 +61,31 @@ let rec connect env retries =
       exit 2
     end
 
+let rec wait_for_response ic =
+  try Utils.with_context
+    ~enter:(fun () ->
+      Sys.set_signal Sys.sigalrm (Sys.Signal_handle (fun _ ->
+        raise ClientExceptions.Server_busy));
+      ignore (Unix.alarm 1))
+    ~exit:(fun () ->
+      ignore (Unix.alarm 0);
+      Sys.set_signal Sys.sigalrm Sys.Signal_default)
+    ~do_:(fun () ->
+      let response = ServerMsg.response_from_channel ic in
+      if Tty.spinner_used() then Tty.print_clear_line stdout;
+      response)
+  with
+  | End_of_file ->
+     prerr_string "Server disconnected or crashed. Try `hh_client restart`\n";
+     flush stderr;
+     exit 1
+  | ClientExceptions.Server_busy ->
+     (* We timed out waiting for response from hh_server, update message *)
+     Printf.printf
+       "Awaiting response from hh_server, hh_server typechecking... %s \r%!"
+       (Tty.spinner());
+     wait_for_response ic
+
 let rec main_ env retries =
   (* Check if a server is up *)
   if not (ClientUtils.server_exists env.root)
@@ -71,13 +96,7 @@ let rec main_ env retries =
   };
   let ic, oc = connect env retries in
   ServerMsg.cmd_to_channel oc (ServerMsg.BUILD env.build_opts);
-  let response =
-    try ServerMsg.response_from_channel ic
-    with End_of_file ->
-      prerr_string "Server disconnected or crashed. Try `hh_client restart`\n";
-      flush stderr;
-      exit 1
-  in
+  let response = wait_for_response ic in
   match response with
   | ServerMsg.SERVER_OUT_OF_DATE ->
     Printf.printf

@@ -28,7 +28,6 @@ module OptionParser(Config : CONFIG) : Server.OPTION_PARSER = struct
       let all = ref false in
       let weak = ref false in
       let traces = ref false in
-      let newtraces = ref false in
       let console = ref false in
       let json = ref false in
       let show_all_errors = ref false in
@@ -96,6 +95,7 @@ module OptionParser(Config : CONFIG) : Server.OPTION_PARSER = struct
           |> List.map Path.mk_path in
           libs @ flowconfig.libs
       ) in
+      let opt_traces = !traces || FlowConfig.(flowconfig.options.traces) in
 
       (* hack opts and flow opts: latter extends the former *)
       let ret = ({
@@ -112,8 +112,8 @@ module OptionParser(Config : CONFIG) : Server.OPTION_PARSER = struct
         Types_js.opt_debug = !debug;
         Types_js.opt_all = !all;
         Types_js.opt_weak = !weak;
-        Types_js.opt_traces = !traces;
-        Types_js.opt_newtraces = !newtraces;
+        Types_js.opt_traces;
+        Types_js.opt_newtraces = false;
         Types_js.opt_strict = true;
         Types_js.opt_console = !console;
         Types_js.opt_json = !json;

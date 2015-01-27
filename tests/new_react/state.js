@@ -1,5 +1,7 @@
 /* @flow */
 
+var React = require('React');
+
 type State = {
     bar: ?{ qux: string; };
 };

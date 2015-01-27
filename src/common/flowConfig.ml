@@ -14,6 +14,7 @@ type moduleSystem = Node | Haste
 
 type options = {
   moduleSystem: moduleSystem;
+  traces: bool;
 }
 
 type config = {
@@ -26,6 +27,7 @@ type config = {
 
 let default_options = {
   moduleSystem = Node;
+  traces = false;
 }
 
 module Pp : sig
@@ -177,7 +179,9 @@ end
 
 let options_parser = OptionsParser.configure [
   "module.system", OptionsParser.enum (["node", Node; "haste", Haste]) (fun
-    options moduleSystem -> { moduleSystem });
+    options moduleSystem -> { options with moduleSystem });
+  "traces", OptionsParser.enum (["true", true; "false", false]) (fun
+    options traces -> { options with traces });
 ]
 
 let parse_options config lines =

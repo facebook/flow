@@ -36,10 +36,15 @@ module Translate = struct
     Js.Unsafe.set ret "end" (position location.Loc._end);
     ret
 
+  let range location = Loc.(
+    Js.array (Array.of_list [location.start.offset; location._end.offset;])
+  )
+
   let node _type location =
     let ret = Js.Unsafe.obj [||] in
     Js.Unsafe.set ret "type" (string _type);
     Js.Unsafe.set ret "loc" (loc location);
+    Js.Unsafe.set ret "range" (range location);
     ret
 
   let errors l =

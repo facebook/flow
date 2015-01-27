@@ -119,6 +119,7 @@ and trait_req_kind =
 
 and class_elt =
   | Const of hint option * (id * expr) list
+  | AbsConst of hint option * id
   | Attributes of class_attr list
   | TypeConst of typeconst
   | ClassUse of hint
@@ -172,8 +173,9 @@ and method_ = {
 }
 
 and typeconst = {
-  tconst_kind: kind list;
+  tconst_abstract: bool;
   tconst_name: id;
+  tconst_constraint: hint option;
   tconst_type: hint option;
 }
 

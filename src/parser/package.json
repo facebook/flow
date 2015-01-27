@@ -1,5 +1,6 @@
 {
   "name": "flow-parser",
+  "version": "0.0.0",
   "description": "JavaScript parser written in OCaml. Produces SpiderMonkey AST",
   "author": {
     "name": "Gabe Levi",
@@ -9,9 +10,9 @@
     "private": true
   },
   "devDependencies": {
-    "ast-types": ">=0.6.6",
+    "ast-types": ">=0.6.10",
     "colors": ">=0.6.2",
-    "esprima-fb": ">=8001.1.0-dev-harmony-fb",
+    "esprima-fb": "10001.1.0-dev-harmony-fb",
     "minimist": ">=0.2.0"
   },
   "engines": {

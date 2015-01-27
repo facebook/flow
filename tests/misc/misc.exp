@@ -23,4 +23,16 @@ G.js:3:1,10: call of method length
 Function cannot be called on
   G.js:1:19,24: string
 
-Found 6 errors
+G.js:6:12,17: string
+This type is incompatible with
+  [LIB] core.js:141:13,18: number
+
+G.js:7:1,10: call of method length
+Function cannot be called on
+  [LIB] core.js:141:13,18: number
+
+[LIB] core.js:141:13,18: number
+This type is incompatible with
+  F.js:4:33,38: string
+
+Found 9 errors

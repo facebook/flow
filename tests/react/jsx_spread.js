@@ -1,5 +1,6 @@
 /* @flow */
 
+var React = require('React');
 var Foo = React.createClass({
   propTypes: {
     bar: React.PropTypes.string.isRequired,

@@ -56,6 +56,8 @@ module Type :
       | UpperBoundT of t
       | LowerBoundT of t
 
+      | ShapeT of t
+
       | EnumT of reason * t
       | RecordT of reason * t
 

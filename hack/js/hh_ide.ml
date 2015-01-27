@@ -102,12 +102,12 @@ let declare_file fn content =
   end old_classes;
   try
     Autocomplete.auto_complete := false;
-    let {Parser_hack.is_hh_file; comments; ast} =
+    let {Parser_hack.file_mode; comments; ast} =
       Parser_hack.program fn content
     in
-    let is_php = not is_hh_file in
+    let is_php = file_mode = None in
     Parser_heap.ParserHeap.add fn ast;
-    if is_hh_file
+    if not is_php
     then begin
       let funs, classes, typedefs, consts = make_funs_classes ast in
       Hashtbl.replace globals fn (is_php, funs, classes);
@@ -456,9 +456,11 @@ let hh_arg_info fn line char =
   to_js_object (JAssoc json_res)
 
 let hh_format contents start end_ =
-  let result = Format_hack.region Relative_path.default start end_ contents in
+  let modes = [Some Ast.Mstrict; Some Ast.Mpartial] in
+  let result =
+    Format_hack.region modes Relative_path.default start end_ contents in
   let error, result, internal_error = match result with
-    | Format_hack.Php_or_decl -> "Php_or_decl", "", false
+    | Format_hack.Disabled_mode -> "Php_or_decl", "", false
     | Format_hack.Parsing_error _ -> "Parsing_error", "", false
     | Format_hack.Internal_error -> "", "", true
     | Format_hack.Success s -> "", s, false

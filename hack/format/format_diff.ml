@@ -350,20 +350,22 @@ and show_change start_block end_block old_content new_content =
 let parse_diff diff_text =
   ParseDiff.go diff_text
 
-let rec apply ~diff:file_and_lines_modified =
+let rec apply modes ~diff:file_and_lines_modified =
   List.iter begin fun (filepath, modified_lines) ->
     let filename = Relative_path.to_absolute filepath in
     Printf.printf "File: %s\n" filename;
     let file_content = Utils.cat filename in
-    apply_file filepath file_content modified_lines
+    apply_file modes filepath file_content modified_lines
   end file_and_lines_modified
 
-and apply_file filepath file_content modified_lines =
+and apply_file modes filepath file_content modified_lines =
   let filename = Relative_path.to_absolute filepath in
-  match Format_hack.program_with_source_metadata filepath file_content with
+  let result =
+    Format_hack.program_with_source_metadata modes filepath file_content in
+  match result with
   | Format_hack.Success formatted_content ->
       apply_formatted filepath formatted_content file_content modified_lines
-  | Format_hack.Php_or_decl ->
+  | Format_hack.Disabled_mode ->
       Printf.printf "PHP FILE: skipping\n"
   | Format_hack.Parsing_error _ ->
       Printf.fprintf stderr "Parsing error: %s\n" filename

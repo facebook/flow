@@ -8,23 +8,38 @@ module.exports = {
           explanation: "Esprima is counting the first paren's location in " +
             "the location. Flow ignores all parens",
           expected_differences: {
-          'root.loc.start.column': {
-            type: 'Wrong number',
-            expected: 0,
-            actual: 1
-          },
-          'root.body.0.loc.start.column': {
-            type: 'Wrong number',
-            expected: 0,
-            actual: 1
-          },
-          'root.body.0.expression.loc.start.column': {
-            type: 'Wrong number',
-            expected: 0,
-            actual: 1
-          },
+            'root.loc.start.column': {
+              type: 'Wrong number',
+              expected: 0,
+              actual: 1
+            },
+            'root.body.0.loc.start.column': {
+              type: 'Wrong number',
+              expected: 0,
+              actual: 1
+            },
+            'root.body.0.expression.loc.start.column': {
+              type: 'Wrong number',
+              expected: 0,
+              actual: 1
+            },
+            'root.range.0': {
+              type: 'Wrong number',
+              expected: 0,
+              actual: 1
+            },
+            'root.body.0.range.0': {
+              type: 'Wrong number',
+              expected: 0,
+              actual: 1
+            },
+            'root.body.0.expression.range.0': {
+              type: 'Wrong number',
+              expected: 0,
+              actual: 1
+            },
+          }
         }
-      }
     ],
 
     'Grouping Operator': [
@@ -58,7 +73,32 @@ module.exports = {
               type: 'Wrong number',
               expected: 11,
               actual: 8
-            }
+            },
+            'root.range.0': {
+              type: 'Wrong number',
+              expected: 0,
+              actual: 1
+            },
+            'root.body.0.range.0': {
+              type: 'Wrong number',
+              expected: 0,
+              actual: 1
+            },
+            'root.body.0.expression.range.0': {
+              type: 'Wrong number',
+              expected: 0,
+              actual: 1
+            },
+            'root.body.0.expression.left.range.0': {
+              type: 'Wrong number',
+              expected: 0,
+              actual: 1
+            },
+            'root.body.0.expression.left.range.1': {
+              type: 'Wrong number',
+              expected: 11,
+              actual: 8
+            },
           }
         },
         {
@@ -77,6 +117,21 @@ module.exports = {
               actual: 11
             },
             'root.body.0.expression.loc.end.column': {
+              type: 'Wrong number',
+              expected: 12,
+              actual: 11
+            },
+            'root.range.1': {
+              type: 'Wrong number',
+              expected: 12,
+              actual: 11
+            },
+            'root.body.0.range.1': {
+              type: 'Wrong number',
+              expected: 12,
+              actual: 11
+            },
+            'root.body.0.expression.range.1': {
               type: 'Wrong number',
               expected: 12,
               actual: 11
@@ -141,7 +196,12 @@ module.exports = {
               type: 'Wrong number',
               expected: 35,
               actual: 34
-            }
+            },
+            'root.body.0.expression.right.properties.0.value.body.body.0.range.1': {
+              type: 'Wrong number',
+              expected: 35,
+              actual: 34
+            },
           }
         },
         'x = { get undef() {} }',
@@ -160,7 +220,12 @@ module.exports = {
               type: 'Wrong number',
               expected: 33,
               actual: 32
-            }
+            },
+            'root.body.0.expression.right.properties.0.value.body.body.0.range.1': {
+              type: 'Wrong number',
+              expected: 33,
+              actual: 32
+            },
           }
         },
         {
@@ -172,7 +237,12 @@ module.exports = {
               type: 'Wrong number',
               expected: 27,
               actual: 26
-            }
+            },
+            'root.body.0.expression.right.properties.0.value.body.body.0.range.1': {
+              type: 'Wrong number',
+              expected: 27,
+              actual: 26
+            },
           }
         },
         {
@@ -184,7 +254,12 @@ module.exports = {
               type: 'Wrong number',
               expected: 31,
               actual: 30
-            }
+            },
+            'root.body.0.expression.right.properties.0.value.body.body.0.range.1': {
+              type: 'Wrong number',
+              expected: 31,
+              actual: 30
+            },
           }
         },
         {
@@ -196,7 +271,12 @@ module.exports = {
               type: 'Wrong number',
               expected: 33,
               actual: 32
-            }
+            },
+            'root.body.0.expression.right.properties.0.value.body.body.0.range.1': {
+              type: 'Wrong number',
+              expected: 33,
+              actual: 32
+            },
           }
         },
         {
@@ -208,7 +288,12 @@ module.exports = {
               type: 'Wrong number',
               expected: 31,
               actual: 30
-            }
+            },
+            'root.body.0.expression.right.properties.0.value.body.body.0.range.1': {
+              type: 'Wrong number',
+              expected: 31,
+              actual: 30
+            },
           }
         },
         {
@@ -220,7 +305,12 @@ module.exports = {
               type: 'Wrong number',
               expected: 33,
               actual: 32
-            }
+            },
+            'root.body.0.expression.right.properties.0.value.body.body.0.range.1': {
+              type: 'Wrong number',
+              expected: 33,
+              actual: 32
+            },
           }
         },
         {
@@ -232,7 +322,12 @@ module.exports = {
               type: 'Wrong number',
               expected: 29,
               actual: 28
-            }
+            },
+            'root.body.0.expression.right.properties.0.value.body.body.0.range.1': {
+              type: 'Wrong number',
+              expected: 29,
+              actual: 28
+            },
           }
         },
         'x = { get: 42 }',
@@ -248,7 +343,12 @@ module.exports = {
               type: 'Wrong number',
               expected: 35,
               actual: 34
-            }
+            },
+            'root.body.0.expression.right.properties.0.value.body.body.0.range.1': {
+              type: 'Wrong number',
+              expected: 35,
+              actual: 34
+            },
           }
         },
 
@@ -267,6 +367,16 @@ module.exports = {
               actual: 2
             },
             'root.loc.end.column': {
+              type: 'Wrong number',
+              expected: 46,
+              actual: 2
+            },
+            'root.body.0.range.1': {
+              type: 'Wrong number',
+              expected: 46,
+              actual: 2
+            },
+            'root.range.1': {
               type: 'Wrong number',
               expected: 46,
               actual: 2
@@ -294,6 +404,21 @@ module.exports = {
               expected: 0,
               actual: 1
             },
+            'root.body.0.expression.range.0': {
+              type: 'Wrong number',
+              expected: 0,
+              actual: 1
+            },
+            'root.body.0.range.0': {
+              type: 'Wrong number',
+              expected: 0,
+              actual: 1
+            },
+            'root.range.0': {
+              type: 'Wrong number',
+              expected: 0,
+              actual: 1
+            },
           }
         },
         '/* assignmenr */\n a = b',
@@ -307,6 +432,16 @@ module.exports = {
               actual: 2
             },
             'root.loc.end.column': {
+              type: 'Wrong number',
+              expected: 21,
+              actual: 2
+            },
+            'root.body.0.range.1': {
+              type: 'Wrong number',
+              expected: 21,
+              actual: 2
+            },
+            'root.range.1': {
               type: 'Wrong number',
               expected: 21,
               actual: 2
@@ -327,6 +462,16 @@ module.exports = {
               expected: 21,
               actual: 2
             },
+            'root.body.0.range.1': {
+              type: 'Wrong number',
+              expected: 21,
+              actual: 2
+            },
+            'root.range.1': {
+              type: 'Wrong number',
+              expected: 21,
+              actual: 2
+            },
           }
         },
         {
@@ -343,13 +488,33 @@ module.exports = {
               expected: 21,
               actual: 2
             },
+            'root.body.0.range.1': {
+              type: 'Wrong number',
+              expected: 21,
+              actual: 2
+            },
+            'root.range.1': {
+              type: 'Wrong number',
+              expected: 21,
+              actual: 2
+            },
           }
         },
         {
           content: '42 /* The * answer */',
           explanation: "Esprima counts comments in its loc, Flow doesn't",
           expected_differences: {
+            'root.body.0.range.1': {
+              type: 'Wrong number',
+              expected: 21,
+              actual: 2
+            },
             'root.body.0.loc.end.column': {
+              type: 'Wrong number',
+              expected: 21,
+              actual: 2
+            },
+            'root.range.1': {
               type: 'Wrong number',
               expected: 21,
               actual: 2
@@ -382,6 +547,16 @@ module.exports = {
               expected: 18,
               actual: 2
             },
+            'root.body.0.range.1': {
+              type: 'Wrong number',
+              expected: 18,
+              actual: 2
+            },
+            'root.range.1': {
+              type: 'Wrong number',
+              expected: 18,
+              actual: 2
+            },
           }
         },
         '// Hello, world!\n42',
@@ -405,6 +580,16 @@ module.exports = {
               expected: 6,
               actual: 2
             },
+            'root.body.0.range.1': {
+              type: 'Wrong number',
+              expected: 6,
+              actual: 2
+            },
+            'root.range.1': {
+              type: 'Wrong number',
+              expected: 6,
+              actual: 2
+            },
           }
         },
         '// Hello, world!\n\n//   Another hello\n42',
@@ -419,6 +604,11 @@ module.exports = {
               expected: 37,
               actual: 36
             },
+            'root.body.0.consequent.body.0.range.1': {
+              type: 'Wrong number',
+              expected: 37,
+              actual: 36
+            },
           }
         },
         {
@@ -426,6 +616,11 @@ module.exports = {
           explanation: "Esprima counts comments in its loc, Flow doesn't",
           expected_differences: {
             'root.body.0.consequent.body.0.loc.end.column': {
+              type: 'Wrong number',
+              expected: 37,
+              actual: 17
+            },
+            'root.body.0.consequent.body.0.range.1': {
               type: 'Wrong number',
               expected: 37,
               actual: 17
@@ -446,6 +641,16 @@ module.exports = {
               expected: 49,
               actual: 48
             },
+            'root.body.0.cases.0.consequent.0.range.1': {
+              type: 'Wrong number',
+              expected: 49,
+              actual: 48
+            },
+            'root.body.0.cases.0.range.1': {
+              type: 'Wrong number',
+              expected: 49,
+              actual: 48
+            },
           }
         },
         {
@@ -458,6 +663,16 @@ module.exports = {
               actual: 34
             },
             'root.body.0.cases.0.loc.end.column': {
+              type: 'Wrong number',
+              expected: 49,
+              actual: 34
+            },
+            'root.body.0.cases.0.consequent.0.range.1': {
+              type: 'Wrong number',
+              expected: 49,
+              actual: 34
+            },
+            'root.body.0.cases.0.range.1': {
               type: 'Wrong number',
               expected: 49,
               actual: 34
@@ -488,6 +703,26 @@ module.exports = {
               expected: 13,
               actual: 14
             },
+            'root.body.0.expression.callee.range.0': {
+              type: 'Wrong number',
+              expected: 13,
+              actual: 14
+            },
+            'root.body.0.expression.range.0': {
+              type: 'Wrong number',
+              expected: 13,
+              actual: 14
+            },
+            'root.body.0.range.0': {
+              type: 'Wrong number',
+              expected: 13,
+              actual: 14
+            },
+            'root.range.0': {
+              type: 'Wrong number',
+              expected: 13,
+              actual: 14
+            },
           }
         },
         {
@@ -510,6 +745,26 @@ module.exports = {
               actual: 1
             },
             'root.loc.start.column': {
+              type: 'Wrong number',
+              expected: 0,
+              actual: 1
+            },
+            'root.body.0.expression.callee.range.0': {
+              type: 'Wrong number',
+              expected: 0,
+              actual: 1
+            },
+            'root.body.0.expression.range.0': {
+              type: 'Wrong number',
+              expected: 0,
+              actual: 1
+            },
+            'root.body.0.range.0': {
+              type: 'Wrong number',
+              expected: 0,
+              actual: 1
+            },
+            'root.range.0': {
               type: 'Wrong number',
               expected: 0,
               actual: 1
@@ -556,6 +811,16 @@ module.exports = {
               actual: 6,
             },
             'root.body.0.loc.end.column' : {
+              type: 'Wrong number',
+              expected: 7,
+              actual: 6,
+            },
+            'root.range.1': {
+              type: 'Wrong number',
+              expected: 7,
+              actual: 6,
+            },
+            'root.body.0.range.1': {
               type: 'Wrong number',
               expected: 7,
               actual: 6,
@@ -667,6 +932,26 @@ module.exports = {
               expected: 0,
               actual: 2
             },
+            'root.range.0': {
+              type: 'Wrong number',
+              expected: 0,
+              actual: 2
+            },
+            'root.body.0.range.0': {
+              type: 'Wrong number',
+              expected: 0,
+              actual: 2
+            },
+            'root.body.0.expression.range.0': {
+              type: 'Wrong number',
+              expected: 0,
+              actual: 2
+            },
+            'root.body.0.expression.callee.range.0': {
+              type: 'Wrong number',
+              expected: 0,
+              actual: 2
+            },
           }
         },
         'foo(bar, baz)',
@@ -685,6 +970,21 @@ module.exports = {
               actual: 5
             },
             'root.body.0.expression.loc.start.column': {
+              type: 'Wrong number',
+              expected: 0,
+              actual: 5
+            },
+            'root.range.0': {
+              type: 'Wrong number',
+              expected: 0,
+              actual: 5
+            },
+            'root.body.0.range.0': {
+              type: 'Wrong number',
+              expected: 0,
+              actual: 5
+            },
+            'root.body.0.expression.range.0': {
               type: 'Wrong number',
               expected: 0,
               actual: 5
@@ -837,7 +1137,12 @@ module.exports = {
               type: 'Wrong number',
               expected: 4,
               actual: 5
-            }
+            },
+            'root.body.0.expression.right.range.0': {
+              type: 'Wrong number',
+              expected: 4,
+              actual: 5
+            },
           }
         }
     ],
@@ -868,6 +1173,21 @@ module.exports = {
               expected: 23,
               actual: 22
             },
+            'root.range.1': {
+              type: 'Wrong number',
+              expected: 23,
+              actual: 22
+            },
+            'root.body.0.range.1': {
+              type: 'Wrong number',
+              expected: 23,
+              actual: 22
+            },
+            'root.body.0.expression.range.1': {
+              type: 'Wrong number',
+              expected: 23,
+              actual: 22
+            },
           }
         },
         // Not an object!
@@ -882,6 +1202,16 @@ module.exports = {
               actual: 16
             },
             'root.body.0.expression.body.body.0.body.loc.end.column': {
+              type: 'Wrong number',
+              expected: 17,
+              actual: 16
+            },
+            'root.body.0.expression.body.body.0.range.1': {
+              type: 'Wrong number',
+              expected: 17,
+              actual: 16
+            },
+            'root.body.0.expression.body.body.0.body.range.1': {
               type: 'Wrong number',
               expected: 17,
               actual: 16
@@ -926,6 +1256,26 @@ module.exports = {
               expected: 8,
               actual: 7
             },
+            'root.range.0': {
+              type: 'Wrong number',
+              expected: 0,
+              actual: 1
+            },
+            'root.range.1': {
+              type: 'Wrong number',
+              expected: 8,
+              actual: 7
+            },
+            'root.body.0.range.0': {
+              type: 'Wrong number',
+              expected: 0,
+              actual: 1
+            },
+            'root.body.0.range.1': {
+              type: 'Wrong number',
+              expected: 8,
+              actual: 7
+            },
           }
         },
         'x => y => 42',
@@ -953,6 +1303,27 @@ module.exports = {
               expected: 27,
               actual: 26
             },
+
+            'root.range.1': {
+              type: 'Wrong number',
+              expected: 28,
+              actual: 26
+            },
+            'root.body.0.range.1': {
+              type: 'Wrong number',
+              expected: 28,
+              actual: 26
+            },
+            'root.body.0.expression.range.1': {
+              type: 'Wrong number',
+              expected: 28,
+              actual: 26
+            },
+            'root.body.0.expression.body.range.1': {
+              type: 'Wrong number',
+              expected: 27,
+              actual: 26
+            },
           }
         },
         'foo(() => {})',
@@ -970,6 +1341,8 @@ module.exports = {
             },
           }
         },
+        '([...a]) => 42',
+        '({...a}) => 42',
     ],
 
     'Assignment Operators': [
@@ -1009,6 +1382,11 @@ module.exports = {
               type: 'Wrong number',
               expected: 6,
               actual: 5
+            },
+            'root.body.0.body.0.range.1': {
+              type: 'Wrong number',
+              expected: 6,
+              actual: 5
             }
           }
         },
@@ -1039,7 +1417,12 @@ module.exports = {
               type: 'Wrong number',
               expected: 8,
               actual: 7
-            }
+            },
+            'root.body.0.body.0.range.1': {
+              type: 'Wrong number',
+              expected: 8,
+              actual: 7
+            },
           }
         },
         {
@@ -1051,7 +1434,12 @@ module.exports = {
               type: 'Wrong number',
               expected: 13,
               actual: 12
-            }
+            },
+            'root.body.0.body.0.range.1': {
+              type: 'Wrong number',
+              expected: 13,
+              actual: 12
+            },
           }
         },
         {
@@ -1063,7 +1451,12 @@ module.exports = {
               type: 'Wrong number',
               expected: 30,
               actual: 29
-            }
+            },
+            'root.body.0.body.0.range.1': {
+              type: 'Wrong number',
+              expected: 30,
+              actual: 29
+            },
           }
         },
         {
@@ -1091,7 +1484,12 @@ module.exports = {
               type: 'Wrong number',
               expected: 15,
               actual: 14
-            }
+            },
+            'root.body.0.body.0.range.1': {
+              type: 'Wrong number',
+              expected: 15,
+              actual: 14
+            },
           }
         },
         {
@@ -1103,7 +1501,12 @@ module.exports = {
               type: 'Wrong number',
               expected: 32,
               actual: 31
-            }
+            },
+            'root.body.0.body.0.range.1': {
+              type: 'Wrong number',
+              expected: 32,
+              actual: 31
+            },
           }
         },
     ],
@@ -1152,6 +1555,26 @@ module.exports = {
               expected: 27,
               actual: 26
             } ,
+            'root.range.1': {
+              type: 'Wrong number',
+              expected: 27,
+              actual: 26
+            } ,
+            'root.body.0.range.1': {
+              type: 'Wrong number',
+              expected: 27,
+              actual: 26
+            } ,
+            'root.body.0.consequent.range.0': {
+              type: 'Wrong number',
+              expected: 13,
+              actual: 14
+            } ,
+            'root.body.0.consequent.range.1': {
+              type: 'Wrong number',
+              expected: 27,
+              actual: 26
+            } ,
           }
         },
         'if (morning) var x = 0;',
@@ -1178,7 +1601,12 @@ module.exports = {
               type: 'Wrong number',
               expected: 29,
               actual: 28
-            }
+            },
+            'root.body.0.body.1.range.1': {
+              type: 'Wrong number',
+              expected: 29,
+              actual: 28
+            },
           }
         },
         'do that();while (true)',
@@ -1263,7 +1691,12 @@ module.exports = {
               type: 'Wrong number',
               expected: 24,
               actual: 23
-            }
+            },
+            'root.body.0.body.body.0.range.1': {
+              type: 'Wrong number',
+              expected: 24,
+              actual: 23
+            },
           }
         },
         {
@@ -1275,7 +1708,12 @@ module.exports = {
               type: 'Wrong number',
               expected: 35,
               actual: 34
-            }
+            },
+            'root.body.0.body.body.body.0.range.1': {
+              type: 'Wrong number',
+              expected: 35,
+              actual: 34
+            },
           }
         },
         'done: while (true) { continue done; }',
@@ -1293,7 +1731,12 @@ module.exports = {
               type: 'Wrong number',
               expected: 21,
               actual: 20
-            }
+            },
+            'root.body.0.body.body.0.range.1': {
+              type: 'Wrong number',
+              expected: 21,
+              actual: 20
+            },
           }
         },
         {
@@ -1305,7 +1748,12 @@ module.exports = {
               type: 'Wrong number',
               expected: 32,
               actual: 31
-            }
+            },
+            'root.body.0.body.body.body.0.range.1': {
+              type: 'Wrong number',
+              expected: 32,
+              actual: 31
+            },
           }
         },
         'done: while (true) { break done; }',
@@ -1344,6 +1792,31 @@ module.exports = {
               expected: 20,
               actual: 19
             },
+            'root.range.0': {
+              type: 'Wrong number',
+              expected: 0,
+              actual: 1
+            },
+            'root.range.1': {
+              type: 'Wrong number',
+              expected: 22,
+              actual: 21
+            },
+            'root.body.0.range.0': {
+              type: 'Wrong number',
+              expected: 0,
+              actual: 1
+            },
+            'root.body.0.range.1': {
+              type: 'Wrong number',
+              expected: 22,
+              actual: 21
+            },
+            'root.body.0.expression.body.body.0.range.1': {
+              type: 'Wrong number',
+              expected: 20,
+              actual: 19
+            },
           }
         },
         {
@@ -1370,6 +1843,26 @@ module.exports = {
               expected: 23,
               actual: 22
             },
+            'root.range.0': {
+              type: 'Wrong number',
+              expected: 0,
+              actual: 1
+            },
+            'root.range.1': {
+              type: 'Wrong number',
+              expected: 23,
+              actual: 22
+            },
+            'root.body.0.range.0': {
+              type: 'Wrong number',
+              expected: 0,
+              actual: 1
+            },
+            'root.body.0.range.1': {
+              type: 'Wrong number',
+              expected: 23,
+              actual: 22
+            },
           }
         },
         {
@@ -1392,6 +1885,26 @@ module.exports = {
               actual: 1
             },
             'root.body.0.loc.end.column': {
+              type: 'Wrong number',
+              expected: 25,
+              actual: 24
+            },
+            'root.range.0': {
+              type: 'Wrong number',
+              expected: 0,
+              actual: 1
+            },
+            'root.range.1': {
+              type: 'Wrong number',
+              expected: 25,
+              actual: 24
+            },
+            'root.body.0.range.0': {
+              type: 'Wrong number',
+              expected: 0,
+              actual: 1
+            },
+            'root.body.0.range.1': {
               type: 'Wrong number',
               expected: 25,
               actual: 24
@@ -1428,6 +1941,31 @@ module.exports = {
               expected: 26,
               actual: 25
             },
+            'root.range.0': {
+              type: 'Wrong number',
+              expected: 0,
+              actual: 1
+            },
+            'root.range.1': {
+              type: 'Wrong number',
+              expected: 28,
+              actual: 27
+            },
+            'root.body.0.range.0': {
+              type: 'Wrong number',
+              expected: 0,
+              actual: 1
+            },
+            'root.body.0.range.1': {
+              type: 'Wrong number',
+              expected: 28,
+              actual: 27
+            },
+            'root.body.0.expression.body.body.0.range.1': {
+              type: 'Wrong number',
+              expected: 26,
+              actual: 25
+            },
           }
         },
     ],
@@ -1445,7 +1983,12 @@ module.exports = {
               type: 'Wrong number',
               expected: 21,
               actual: 20
-            }
+            },
+            'root.body.0.body.body.0.range.1': {
+              type: 'Wrong number',
+              expected: 21,
+              actual: 20
+            },
           }
         }
     ],
@@ -1465,6 +2008,16 @@ module.exports = {
               actual: 54
             },
             'root.body.0.cases.1.consequent.0.loc.end.column': {
+              type: 'Wrong number',
+              expected: 55,
+              actual: 54
+            },
+            'root.body.0.cases.1.range.1': {
+              type: 'Wrong number',
+              expected: 55,
+              actual: 54
+            },
+            'root.body.0.cases.1.consequent.0.range.1': {
               type: 'Wrong number',
               expected: 55,
               actual: 54
@@ -1502,6 +2055,11 @@ module.exports = {
               expected: 27,
               actual: 26
             },
+            'root.body.0.handlers.0.body.body.0.range.1': {
+              type: 'Wrong number',
+              expected: 27,
+              actual: 26
+            },
           }
         },
         {
@@ -1514,6 +2072,11 @@ module.exports = {
               expected: 33,
               actual: 32
             },
+            'root.body.0.finalizer.body.0.range.1': {
+              type: 'Wrong number',
+              expected: 33,
+              actual: 32
+            },
           }
         },
         {
@@ -1522,6 +2085,11 @@ module.exports = {
             "semicolon in its loc. Flow doesn't",
           expected_differences: {
             'root.body.0.handlers.0.body.body.0.loc.end.column': {
+              type: 'Wrong number',
+              expected: 37,
+              actual: 36
+            },
+            'root.body.0.handlers.0.body.body.0.range.1': {
               type: 'Wrong number',
               expected: 37,
               actual: 36
@@ -1539,6 +2107,16 @@ module.exports = {
               actual: 36
             },
             'root.body.0.finalizer.body.0.loc.end.column': {
+              type: 'Wrong number',
+              expected: 64,
+              actual: 63
+            },
+            'root.body.0.handlers.0.body.body.0.range.1': {
+              type: 'Wrong number',
+              expected: 37,
+              actual: 36
+            },
+            'root.body.0.finalizer.body.0.range.1': {
               type: 'Wrong number',
               expected: 64,
               actual: 63
@@ -1578,6 +2156,26 @@ module.exports = {
               expected: 16,
               actual: 15
             },
+            'root.body.0.range.0': {
+              type: 'Wrong number',
+              expected: 0,
+              actual: 1
+            },
+            'root.body.0.range.1': {
+              type: 'Wrong number',
+              expected: 16,
+              actual: 15
+            },
+            'root.range.0': {
+              type: 'Wrong number',
+              expected: 0,
+              actual: 1
+            },
+            'root.range.1': {
+              type: 'Wrong number',
+              expected: 16,
+              actual: 15
+            },
         }
       },
       'var x = function(){}.bind(this)',
@@ -1613,6 +2211,26 @@ module.exports = {
               expected: 25,
               actual: 24
             },
+            'root.range.0': {
+              type: 'Wrong number',
+              expected: 0,
+              actual: 1
+            },
+            'root.range.1': {
+              type: 'Wrong number',
+              expected: 25,
+              actual: 24
+            },
+            'root.body.0.range.0': {
+              type: 'Wrong number',
+              expected: 0,
+              actual: 1
+            },
+            'root.body.0.range.1': {
+              type: 'Wrong number',
+              expected: 25,
+              actual: 24
+            },
           }
         },
         {
@@ -1621,6 +2239,11 @@ module.exports = {
             "Flow doesn't",
           expected_differences: {
             'root.body.0.body.body.0.body.body.0.loc.end.column': {
+              type: 'Wrong number',
+              expected: 50,
+              actual: 49
+            },
+            'root.body.0.body.body.0.body.body.0.range.1': {
               type: 'Wrong number',
               expected: 50,
               actual: 49
@@ -1639,6 +2262,11 @@ module.exports = {
               expected: 30,
               actual: 29
             },
+            'root.body.0.declarations.0.init.body.body.0.range.1': {
+              type: 'Wrong number',
+              expected: 30,
+              actual: 29
+            },
           }
         },
         'var hi = function eval() { };',
@@ -1649,6 +2277,11 @@ module.exports = {
             "Flow doesn't",
           expected_differences: {
             'root.body.0.declarations.0.init.body.body.0.loc.end.column': {
+              type: 'Wrong number',
+              expected: 36,
+              actual: 35
+            },
+            'root.body.0.declarations.0.init.body.body.0.range.1': {
               type: 'Wrong number',
               expected: 36,
               actual: 35
@@ -1679,6 +2312,26 @@ module.exports = {
               expected: 14,
               actual: 13
             },
+            'root.range.0': {
+              type: 'Wrong number',
+              expected: 0,
+              actual: 1
+            },
+            'root.range.1': {
+              type: 'Wrong number',
+              expected: 14,
+              actual: 13
+            },
+            'root.body.0.range.0': {
+              type: 'Wrong number',
+              expected: 0,
+              actual: 1
+            },
+            'root.body.0.range.1': {
+              type: 'Wrong number',
+              expected: 14,
+              actual: 13
+            },
           }
         },
         'function universe(__proto__) { }',
@@ -1704,6 +2357,11 @@ module.exports = {
               expected: 4,
               actual: 3
             },
+            'root.body.0.body.1.range.1': {
+              type: 'Wrong number',
+              expected: 8,
+              actual: 7
+            },
           }
         },
         {
@@ -1715,6 +2373,11 @@ module.exports = {
               type: 'Wrong number',
               expected: 4,
               actual: 3
+            },
+            'root.body.0.body.1.range.1': {
+              type: 'Wrong number',
+              expected: 8,
+              actual: 7
             },
           }
         },
@@ -1751,6 +2414,26 @@ module.exports = {
               expected: 5,
               actual: 4
             },
+            'root.range.0': {
+              type: 'Wrong number',
+              expected: 0,
+              actual: 1
+            },
+            'root.range.1': {
+              type: 'Wrong number',
+              expected: 25,
+              actual: 24
+            },
+            'root.body.0.range.0': {
+              type: 'Wrong number',
+              expected: 0,
+              actual: 1
+            },
+            'root.body.0.range.1': {
+              type: 'Wrong number',
+              expected: 25,
+              actual: 24
+            },
           }
         },
         {
@@ -1777,6 +2460,46 @@ module.exports = {
               expected: 5,
               actual: 4
             },
+            'root.range.0': {
+              type: 'Wrong number',
+              expected: 0,
+              actual: 1
+            },
+            'root.range.1': {
+              type: 'Wrong number',
+              expected: 5,
+              actual: 4
+            },
+            'root.body.0.range.0': {
+              type: 'Wrong number',
+              expected: 0,
+              actual: 1
+            },
+            'root.body.0.range.1': {
+              type: 'Wrong number',
+              expected: 5,
+              actual: 4
+            },
+            'root.range.0': {
+              type: 'Wrong number',
+              expected: 0,
+              actual: 1
+            },
+            'root.range.1': {
+              type: 'Wrong number',
+              expected: 36,
+              actual: 35
+            },
+            'root.body.0.range.0': {
+              type: 'Wrong number',
+              expected: 0,
+              actual: 1
+            },
+            'root.body.0.range.1': {
+              type: 'Wrong number',
+              expected: 36,
+              actual: 35
+            },
           }
         },
         {
@@ -1802,6 +2525,26 @@ module.exports = {
               type: 'Wrong number',
               expected: 15,
               actual: 14
+            },
+            'root.range.0': {
+              type: 'Wrong number',
+              expected: 0,
+              actual: 1
+            },
+            'root.body.0.range.0': {
+              type: 'Wrong number',
+              expected: 0,
+              actual: 1
+            },
+            'root.range.1': {
+              type: 'Wrong number',
+              expected: 47,
+              actual: 46
+            },
+            'root.body.0.range.1': {
+              type: 'Wrong number',
+              expected: 47,
+              actual: 46
             },
           }
         },
@@ -1836,6 +2579,26 @@ module.exports = {
               expected: 46,
               actual: 45
             },
+            'root.body.0.range.0': {
+              type: 'Wrong number',
+              expected: 0,
+              actual: 1
+            },
+            'root.body.0.range.1': {
+              type: 'Wrong number',
+              expected: 46,
+              actual: 45
+            },
+            'root.range.0': {
+              type: 'Wrong number',
+              expected: 0,
+              actual: 1
+            },
+            'root.range.1': {
+              type: 'Wrong number',
+              expected: 46,
+              actual: 45
+            },
           }
         },
         {
@@ -1858,6 +2621,26 @@ module.exports = {
               actual: 1
             },
             'root.loc.end.column': {
+              type: 'Wrong number',
+              expected: 44,
+              actual: 43
+            },
+            'root.body.0.range.0': {
+              type: 'Wrong number',
+              expected: 0,
+              actual: 1
+            },
+            'root.body.0.range.1': {
+              type: 'Wrong number',
+              expected: 44,
+              actual: 43
+            },
+            'root.range.0': {
+              type: 'Wrong number',
+              expected: 0,
+              actual: 1
+            },
+            'root.range.1': {
               type: 'Wrong number',
               expected: 44,
               actual: 43
@@ -1905,6 +2688,16 @@ module.exports = {
               actual: 15 }
             ,
             'root.body.0.expression.left.right.loc.end.column': {
+              type: 'Wrong number',
+              expected: 16,
+              actual: 15
+            },
+            'root.body.0.expression.left.range.1': {
+              type: 'Wrong number',
+              expected: 17,
+              actual: 15 }
+            ,
+            'root.body.0.expression.left.right.range.1': {
               type: 'Wrong number',
               expected: 16,
               actual: 15
@@ -2561,8 +3354,38 @@ module.exports = {
         */
         '<AbC-def\n  test="&#x0026;&#38;">\nbar\nbaz\n</AbC-def>',
         '<a b={x ? <c /> : <d />} />',
-        '<a>{}</a>',
-        '<a>{/* this is a comment */}</a>',
+        {
+          content: '<a>{}</a>',
+          explanation: 'Esprima counts the curly-braces in its loc, flow does not. FIXME',
+          expected_differences: {
+            'root.body.0.expression.children.0.expression.range.0': {
+              type: 'Wrong number',
+              expected: '4',
+              actual: '3'
+            },
+            'root.body.0.expression.children.0.expression.range.1': {
+              type: 'Wrong number',
+              expected: '4',
+              actual: '5'
+            },
+          }
+        },
+        {
+          content: '<a>{/* this is a comment */}</a>',
+          explanation: 'Esprima counts the curly-braces in its loc, flow does not. FIXME',
+          expected_differences: {
+            'root.body.0.expression.children.0.expression.range.0': {
+              type: 'Wrong number',
+              expected: '4',
+              actual: '3'
+            },
+            'root.body.0.expression.children.0.expression.range.1': {
+              type: 'Wrong number',
+              expected: '27',
+              actual: '28'
+            },
+          }
+        },
         '<div>@test content</div>',
         '<div><br />7x invalid-js-identifier</div>',
         '<a.b></a.b>',
@@ -2682,6 +3505,21 @@ module.exports = {
               expected: 23,
               actual: 22
             },
+            'root.body.0.expression.range.1': {
+              type: 'Wrong number',
+              expected: 23,
+              actual: 22
+            },
+            'root.body.0.range.1': {
+              type: 'Wrong number',
+              expected: 23,
+              actual: 22
+            },
+            'root.range.1': {
+              type: 'Wrong number',
+              expected: 23,
+              actual: 22
+            },
           }
         },
         // Not an object!
@@ -2700,11 +3538,32 @@ module.exports = {
               expected: 17,
               actual: 16
             },
+            'root.body.0.expression.body.body.0.body.range.1': {
+              type: 'Wrong number',
+              expected: 17,
+              actual: 16
+            },
+            'root.body.0.expression.body.body.0.range.1': {
+              type: 'Wrong number',
+              expected: 17,
+              actual: 16
+            },
           }
         },
         '(a, b) => { 42; }',
         '([a, , b]) => 42',
-        '([a.a]) => 42',
+        {
+          content: '([a.a]) => 42',
+          explanation: 'Esprima has the wrong location because it is ' +
+            'doing the check after-the-fact, once the => is reached',
+          expected_differences: {
+            'root.errors.0.column': {
+              type: 'Wrong error column',
+              expected: 7,
+              actual: '2-5'
+            },
+          },
+        },
         '(x=1) => x * x',
         // not strict mode, using eval
         'eval => 42',
@@ -2742,6 +3601,26 @@ module.exports = {
               expected: 8,
               actual: 7
             },
+            'root.body.0.range.0': {
+              type: 'Wrong number',
+              expected: 0,
+              actual: 1
+            },
+            'root.body.0.range.1': {
+              type: 'Wrong number',
+              expected: 8,
+              actual: 7
+            },
+            'root.range.0': {
+              type: 'Wrong number',
+              expected: 0,
+              actual: 1
+            },
+            'root.range.1': {
+              type: 'Wrong number',
+              expected: 8,
+              actual: 7
+            },
           }
         },
         'x => y => 42',
@@ -2765,6 +3644,26 @@ module.exports = {
               actual: 26
             },
             'root.loc.end.column': {
+              type: 'Wrong number',
+              expected: 28,
+              actual: 26
+            },
+            'root.body.0.expression.body.range.1': {
+              type: 'Wrong number',
+              expected: 27,
+              actual: 26
+            },
+            'root.body.0.expression.range.1': {
+              type: 'Wrong number',
+              expected: 28,
+              actual: 26
+            },
+            'root.body.0.range.1': {
+              type: 'Wrong number',
+              expected: 28,
+              actual: 26
+            },
+            'root.range.1': {
               type: 'Wrong number',
               expected: 28,
               actual: 26
@@ -2820,6 +3719,21 @@ module.exports = {
               actual: 1
             },
             'root.loc.start.column': {
+              type: 'Wrong number',
+              expected: 0,
+              actual: 1
+            },
+            'root.body.0.expression.range.0': {
+              type: 'Wrong number',
+              expected: 0,
+              actual: 1
+            },
+            'root.body.0.range.0': {
+              type: 'Wrong number',
+              expected: 0,
+              actual: 1
+            },
+            'root.range.0': {
               type: 'Wrong number',
               expected: 0,
               actual: 1
@@ -2916,6 +3830,31 @@ module.exports = {
               expected: 26,
               actual: 25
             },
+            'root.body.0.expression.body.body.0.range.1': {
+              type: 'Wrong number',
+              expected: 24,
+              actual: 23
+            },
+            'root.body.0.range.0': {
+              type: 'Wrong number',
+              expected: 0,
+              actual: 1
+            },
+            'root.body.0.range.1': {
+              type: 'Wrong number',
+              expected: 26,
+              actual: 25
+            },
+            'root.range.0': {
+              type: 'Wrong number',
+              expected: 0,
+              actual: 1
+            },
+            'root.range.1': {
+              type: 'Wrong number',
+              expected: 26,
+              actual: 25
+            },
           }
         },
         {
@@ -2948,6 +3887,31 @@ module.exports = {
               expected: 27,
               actual: 26
             },
+            'root.body.0.expression.body.body.0.range.1': {
+              type: 'Wrong number',
+              expected: 25,
+              actual: 24
+            },
+            'root.body.0.range.0': {
+              type: 'Wrong number',
+              expected: 0,
+              actual: 1
+            },
+            'root.body.0.range.1': {
+              type: 'Wrong number',
+              expected: 27,
+              actual: 26
+            },
+            'root.range.0': {
+              type: 'Wrong number',
+              expected: 0,
+              actual: 1
+            },
+            'root.range.1': {
+              type: 'Wrong number',
+              expected: 27,
+              actual: 26
+            },
           }
         },
         {
@@ -2960,6 +3924,11 @@ module.exports = {
               expected: 29,
               actual: 28
             },
+            'root.body.0.body.body.0.range.1': {
+              type: 'Wrong number',
+              expected: 29,
+              actual: 28
+            },
           }
         },
         {
@@ -2968,6 +3937,11 @@ module.exports = {
             "doesn't",
           expected_differences: {
             'root.body.0.declarations.0.init.properties.0.value.body.body.0.loc.end.column': {
+              type: 'Wrong number',
+              expected: 30,
+              actual: 29
+            },
+            'root.body.0.declarations.0.init.properties.0.value.body.body.0.range.1': {
               type: 'Wrong number',
               expected: 30,
               actual: 29
@@ -3001,6 +3975,31 @@ module.exports = {
               actual: 1
             },
             'root.loc.end.column': {
+              type: 'Wrong number',
+              expected: 33,
+              actual: 32
+            },
+            'root.body.0.expression.body.body.0.range.1': {
+              type: 'Wrong number',
+              expected: 31,
+              actual: 30
+            },
+            'root.body.0.range.0': {
+              type: 'Wrong number',
+              expected: 0,
+              actual: 1
+            },
+            'root.body.0.range.1': {
+              type: 'Wrong number',
+              expected: 33,
+              actual: 32
+            },
+            'root.range.0': {
+              type: 'Wrong number',
+              expected: 0,
+              actual: 1
+            },
+            'root.range.1': {
               type: 'Wrong number',
               expected: 33,
               actual: 32
@@ -3062,6 +4061,26 @@ module.exports = {
               expected: 51,
               actual: 50
             },
+            'root.body.1.expression.body.body.0.value.body.body.0.range.1': {
+              type: 'Wrong number',
+              expected: 48,
+              actual: 47
+            },
+            'root.body.1.range.0': {
+              type: 'Wrong number',
+              expected: 14,
+              actual: 15
+            },
+            'root.body.1.range.1': {
+              type: 'Wrong number',
+              expected: 51,
+              actual: 50
+            },
+            'root.range.1': {
+              type: 'Wrong number',
+              expected: 51,
+              actual: 50
+            },
           }
         },
         'class A {static foo() {}}',
@@ -3087,6 +4106,26 @@ module.exports = {
               actual: 58
             },
             'root.loc.end.column': {
+              type: 'Wrong number',
+              expected: 59,
+              actual: 58
+            },
+            'root.body.1.expression.body.body.0.value.body.body.0.range.1': {
+              type: 'Wrong number',
+              expected: 56,
+              actual: 55
+            },
+            'root.body.1.range.0': {
+              type: 'Wrong number',
+              expected: 14,
+              actual: 15
+            },
+            'root.body.1.range.1': {
+              type: 'Wrong number',
+              expected: 59,
+              actual: 58
+            },
+            'root.range.1': {
               type: 'Wrong number',
               expected: 59,
               actual: 58
@@ -3139,6 +4178,26 @@ module.exports = {
               expected: 11,
               actual: 10
             },
+            'root.body.0.range.0': {
+              type: 'Wrong number',
+              expected: 0,
+              actual: 1
+            },
+            'root.body.0.range.1': {
+              type: 'Wrong number',
+              expected: 11,
+              actual: 10
+            },
+            'root.range.0': {
+              type: 'Wrong number',
+              expected: 0,
+              actual: 1
+            },
+            'root.range.1': {
+              type: 'Wrong number',
+              expected: 11,
+              actual: 10
+            },
           }
         },
         {
@@ -3161,6 +4220,26 @@ module.exports = {
               actual: 1
             },
             'root.loc.end.column': {
+              type: 'Wrong number',
+              expected: 19,
+              actual: 18
+            },
+            'root.body.0.range.0': {
+              type: 'Wrong number',
+              expected: 0,
+              actual: 1
+            },
+            'root.body.0.range.1': {
+              type: 'Wrong number',
+              expected: 19,
+              actual: 18
+            },
+            'root.range.0': {
+              type: 'Wrong number',
+              expected: 0,
+              actual: 1
+            },
+            'root.range.1': {
               type: 'Wrong number',
               expected: 19,
               actual: 18
@@ -3191,6 +4270,26 @@ module.exports = {
               expected: 22,
               actual: 21
             },
+            'root.body.0.range.0': {
+              type: 'Wrong number',
+              expected: 0,
+              actual: 1
+            },
+            'root.body.0.range.1': {
+              type: 'Wrong number',
+              expected: 22,
+              actual: 21
+            },
+            'root.range.0': {
+              type: 'Wrong number',
+              expected: 0,
+              actual: 1
+            },
+            'root.range.1': {
+              type: 'Wrong number',
+              expected: 22,
+              actual: 21
+            },
           }
         },
         {
@@ -3213,6 +4312,26 @@ module.exports = {
               actual: 1
             },
             'root.loc.end.column': {
+              type: 'Wrong number',
+              expected: 18,
+              actual: 17
+            },
+            'root.body.0.range.0': {
+              type: 'Wrong number',
+              expected: 0,
+              actual: 1
+            },
+            'root.body.0.range.1': {
+              type: 'Wrong number',
+              expected: 18,
+              actual: 17
+            },
+            'root.range.0': {
+              type: 'Wrong number',
+              expected: 0,
+              actual: 1
+            },
+            'root.range.1': {
               type: 'Wrong number',
               expected: 18,
               actual: 17
@@ -3243,6 +4362,26 @@ module.exports = {
               expected: 31,
               actual: 30
             },
+            'root.body.0.range.0': {
+              type: 'Wrong number',
+              expected: 0,
+              actual: 1
+            },
+            'root.body.0.range.1': {
+              type: 'Wrong number',
+              expected: 31,
+              actual: 30
+            },
+            'root.range.0': {
+              type: 'Wrong number',
+              expected: 0,
+              actual: 1
+            },
+            'root.range.1': {
+              type: 'Wrong number',
+              expected: 31,
+              actual: 30
+            },
           }
         },
         {
@@ -3269,6 +4408,26 @@ module.exports = {
               expected: 12,
               actual: 11
             },
+            'root.body.0.range.0': {
+              type: 'Wrong number',
+              expected: 0,
+              actual: 1
+            },
+            'root.body.0.range.1': {
+              type: 'Wrong number',
+              expected: 12,
+              actual: 11
+            },
+            'root.range.0': {
+              type: 'Wrong number',
+              expected: 0,
+              actual: 1
+            },
+            'root.range.1': {
+              type: 'Wrong number',
+              expected: 12,
+              actual: 11
+            },
           }
         },
         'var {[x]: y} = {y}',
@@ -3289,7 +4448,17 @@ module.exports = {
               expected: 0,
               actual: 1
             },
+            'root.body.0.range.0': {
+              type: 'Wrong number',
+              expected: 0,
+              actual: 1
+            },
             'root.body.0.loc.end.column': {
+              type: 'Wrong number',
+              expected: 33,
+              actual: 32
+            },
+            'root.body.0.range.1': {
               type: 'Wrong number',
               expected: 33,
               actual: 32
@@ -3299,7 +4468,17 @@ module.exports = {
               expected: 0,
               actual: 1
             },
+            'root.range.0': {
+              type: 'Wrong number',
+              expected: 0,
+              actual: 1
+            },
             'root.loc.end.column': {
+              type: 'Wrong number',
+              expected: 33,
+              actual: 32
+            },
+            'root.range.1': {
               type: 'Wrong number',
               expected: 33,
               actual: 32
@@ -3315,7 +4494,17 @@ module.exports = {
               expected: 0,
               actual: 1
             },
+            'root.body.0.range.0': {
+              type: 'Wrong number',
+              expected: 0,
+              actual: 1
+            },
             'root.body.0.loc.end.column': {
+              type: 'Wrong number',
+              expected: 23,
+              actual: 22
+            },
+            'root.body.0.range.1': {
               type: 'Wrong number',
               expected: 23,
               actual: 22
@@ -3325,7 +4514,17 @@ module.exports = {
               expected: 0,
               actual: 1
             },
+            'root.range.0': {
+              type: 'Wrong number',
+              expected: 0,
+              actual: 1
+            },
             'root.loc.end.column': {
+              type: 'Wrong number',
+              expected: 23,
+              actual: 22
+            },
+            'root.range.1': {
               type: 'Wrong number',
               expected: 23,
               actual: 22
@@ -3341,7 +4540,17 @@ module.exports = {
               expected: 0,
               actual: 1
             },
+            'root.body.0.range.0': {
+              type: 'Wrong number',
+              expected: 0,
+              actual: 1
+            },
             'root.body.0.loc.end.column': {
+              type: 'Wrong number',
+              expected: 29,
+              actual: 28
+            },
+            'root.body.0.range.1': {
               type: 'Wrong number',
               expected: 29,
               actual: 28
@@ -3351,7 +4560,17 @@ module.exports = {
               expected: 0,
               actual: 1
             },
+            'root.range.0': {
+              type: 'Wrong number',
+              expected: 0,
+              actual: 1
+            },
             'root.loc.end.column': {
+              type: 'Wrong number',
+              expected: 29,
+              actual: 28
+            },
+            'root.range.1': {
               type: 'Wrong number',
               expected: 29,
               actual: 28
@@ -3367,7 +4586,17 @@ module.exports = {
               expected: 0,
               actual: 1
             },
+            'root.body.0.range.0': {
+              type: 'Wrong number',
+              expected: 0,
+              actual: 1
+            },
             'root.body.0.loc.end.column': {
+              type: 'Wrong number',
+              expected: 23,
+              actual: 22
+            },
+            'root.body.0.range.1': {
               type: 'Wrong number',
               expected: 23,
               actual: 22
@@ -3377,7 +4606,17 @@ module.exports = {
               expected: 0,
               actual: 1
             },
+            'root.range.0': {
+              type: 'Wrong number',
+              expected: 0,
+              actual: 1
+            },
             'root.loc.end.column': {
+              type: 'Wrong number',
+              expected: 23,
+              actual: 22
+            },
+            'root.range.1': {
               type: 'Wrong number',
               expected: 23,
               actual: 22
@@ -3463,7 +4702,17 @@ module.exports = {
               expected: 0,
               actual: 1
             },
+            'root.body.0.range.0': {
+              type: 'Wrong number',
+              expected: 0,
+              actual: 1
+            },
             'root.body.0.loc.end.column': {
+              type: 'Wrong number',
+              expected: 23,
+              actual: 22
+            },
+            'root.body.0.range.1': {
               type: 'Wrong number',
               expected: 23,
               actual: 22
@@ -3473,7 +4722,17 @@ module.exports = {
               expected: 0,
               actual: 1
             },
+            'root.range.0': {
+              type: 'Wrong number',
+              expected: 0,
+              actual: 1
+            },
             'root.loc.end.column': {
+              type: 'Wrong number',
+              expected: 23,
+              actual: 22
+            },
+            'root.range.1': {
               type: 'Wrong number',
               expected: 23,
               actual: 22
@@ -3689,71 +4948,110 @@ module.exports = {
       'class Foo extends class Bar implements Bat {} implements Man {}',
     ],
     'Array Types': [
-      'number[]',
-      '?number[]',
-      '(?number)[]',
-      '() => number[]',
-      '(() => number)[]',
-      'typeof A[]',
+      'var x: number[];',
+      'var x: ?number[];',
+      {
+        content: 'var x: (?number)[];',
+        explanation: 'Flow does not count parens in its locs',
+        expected_differences: {
+          'root.body.0.declarations.0.id.typeAnnotation.typeAnnotation.loc.start.column': {
+            type: 'Wrong number',
+            expected: 7,
+            actual: 8,
+          },
+          'root.body.0.declarations.0.id.typeAnnotation.typeAnnotation.range.0': {
+            type: 'Wrong number',
+            expected: 7,
+            actual: 8,
+          }
+        }
+      },
+      'var x: () => number[];',
+      {
+        content: 'var x: (() => number)[];',
+        explanation: 'Flow does not count parens in its locs',
+        expected_differences: {
+          'root.body.0.declarations.0.id.typeAnnotation.typeAnnotation.loc.start.column': {
+            type: 'Wrong number',
+            expected: 7,
+            actual: 8,
+          },
+          'root.body.0.declarations.0.id.typeAnnotation.typeAnnotation.range.0': {
+            type: 'Wrong number',
+            expected: 7,
+            actual: 8,
+          }
+        }
+      },
+      'var x: typeof A[];',
     ],
-    'Export': [
-      'export * from "foo";',
-      'export * from "foo"',
-      /* This should be supported...
-      'export {} from "foo";',
-      */
-      'export { bar } from "foo";',
-      'export { bar } from "foo"',
-      'export { bar, baz } from "foo";',
-      'export { bar };',
-      /* Esprima should support trailing comma
-      'export { bar, }',
-      */
-      'export { bar, baz };',
-      'export var x, y',
-      'export var y = 12',
-      'export let x, y',
-      'export let y = 12',
-      'export const x, y',
-      'export const y = 12',
-      'export function foo() {}',
-      'export class A {}',
-      'export default 1 + 1;',
-      'export default 1 + 1',
-      /* Esprima parses default exports wrong
-      'export default function foo() {}',
-      'export default function *foo() {}',
-      'export default class {};',
-      'export default class A {};',
-      */
-    ],
-    'Invalid Exports': [
-      'export class {}',
-      'export function {}',
-      /* Esprima parses default exports wrong
-      'export default function() {}',
-      'export default class A {}',
-      */
-    ],
-    'Import': [
-      'import defaultbinding from "MyModule";',
-      'import * as namespace from "MyModule";',
-      /* TODO Esprima should support these
-      'import {} from "MyModule";',
-      'import {x,} from "MyModule";',
-      'import defaultbinding, {} from "MyModule";',
-      'import defaultbinding, {x,} from "MyModule";',
-      */
-      'import {x} from "MyModule";',
-      'import {x,y} from "MyModule";',
-      'import {x as z} from "MyModule";',
-      'import {x, y as z} from "MyModule";',
-      'import defaultbinding, * as namespace from "MyModule";',
-      'import defaultbinding, {x} from "MyModule";',
-      'import defaultbinding, {x,y} from "MyModule";',
-      'import defaultbinding, {x as z} from "MyModule";',
-      'import defaultbinding, {x, y as z} from "MyModule";',
-    ],
+    'Export': {
+      'esprima_opts': { sourceType: "module" },
+      'tests': [
+        'export * from "foo";',
+        'export * from "foo"',
+        /* This should be supported...
+        'export {} from "foo";',
+        */
+        'export { bar } from "foo";',
+        'export { bar } from "foo"',
+        'export { bar, baz } from "foo";',
+        'export { bar };',
+        /* Esprima should support trailing comma
+        'export { bar, }',
+        */
+        'export { bar, baz };',
+        'export var x, y',
+        'export var y = 12',
+        'export let x, y',
+        'export let y = 12',
+        'export const x, y',
+        'export const y = 12',
+        'export function foo() {}',
+        'export class A {}',
+        'export default 1 + 1;',
+        'export default 1 + 1',
+        /* Esprima parses default exports wrong
+        'export default function foo() {}',
+        'export default function *foo() {}',
+        'export default class {};',
+        'export default class A {};',
+        */
+      ]
+    },
+    'Invalid Exports': {
+      'esprima_opts': { sourceType: "module" },
+      'tests': [
+        'export class {}',
+        'export function {}',
+        /* Esprima parses default exports wrong
+        'export default function() {}',
+        'export default class A {}',
+        */
+      ],
+    },
+    'Import': {
+      'esprima_opts': { sourceType: "module" },
+      'tests': [
+        'import defaultbinding from "MyModule";',
+        'import * as namespace from "MyModule";',
+        /* TODO Esprima should support these
+        'import {} from "MyModule";',
+        'import {x,} from "MyModule";',
+        'import defaultbinding, {} from "MyModule";',
+        'import defaultbinding, {x,} from "MyModule";',
+        */
+        'import {x} from "MyModule";',
+        'import {x,y} from "MyModule";',
+        'import {x as z} from "MyModule";',
+        'import {x, y as z} from "MyModule";',
+        'import defaultbinding, * as namespace from "MyModule";',
+        'import defaultbinding, {x} from "MyModule";',
+        'import defaultbinding, {x,y} from "MyModule";',
+        'import defaultbinding, {x as z} from "MyModule";',
+        'import defaultbinding, {x, y as z} from "MyModule";',
+      ],
+    },
     'Declare Statements': [
       'declare var foo',
       'declare var foo;',

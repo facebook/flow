@@ -43,7 +43,7 @@ let declare path content =
   let declared_classes = ref SSet.empty in
   try
     Errors.ignore_ begin fun () ->
-      let {Parser_hack.is_hh_file; comments; ast} =
+      let {Parser_hack.file_mode; comments; ast} =
         Parser_hack.program path content
       in
       let funs, classes = List.fold_left begin fun (funs, classes) def ->
@@ -79,7 +79,7 @@ let declare path content =
 
 let fix_file_and_def path content = try
   Errors.ignore_ begin fun () ->
-    let {Parser_hack.is_hh_file; comments; ast} =
+    let {Parser_hack.file_mode; comments; ast} =
       Parser_hack.program path content in
     List.iter begin fun def ->
       match def with

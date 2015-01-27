@@ -35,7 +35,7 @@ val unterminated_xhp_comment : Pos.t -> unit
 val name_already_bound : string -> Pos.t -> Pos.t -> unit
 val method_name_already_bound : Pos.t -> string -> unit
 val error_name_already_bound : string -> string -> Pos.t -> Pos.t -> unit
-val unbound_name : Pos.t -> string -> unit
+val unbound_name : Pos.t -> string -> [< `cls | `func | `const ] -> unit
 val different_scope : Pos.t -> string -> Pos.t -> unit
 val undefined : Pos.t -> string -> unit
 val this_reserved : Pos.t -> unit

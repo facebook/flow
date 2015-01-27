@@ -1,3 +1,4 @@
+var React = require('React');
 var C = React.createClass({
     propTypes: {
         x: React.PropTypes.string.isRequired,

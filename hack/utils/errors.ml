@@ -403,10 +403,14 @@ let error_name_already_bound name name_prev p p_prev =
     else errs in
   add_list Naming.error_name_already_bound errs
 
-let unbound_name pos name =
-  add Naming.unbound_name pos (
-  "Unbound name: "^(strip_ns name)
- )
+let unbound_name pos name kind =
+  let kind_str = match kind with
+    | `cls -> "an object type"
+    | `func -> "a global function"
+    | `const -> "a global constant"
+  in
+  add Naming.unbound_name pos
+    ("Unbound name: "^(strip_ns name)^" ("^kind_str^")")
 
 let different_scope pos var_name pos' =
   add_list Naming.different_scope [
@@ -415,9 +419,7 @@ let different_scope pos var_name pos' =
 ]
 
 let undefined pos var_name =
-  add Naming.undefined pos (
-  "Undefined variable: "^var_name
- )
+  add Naming.undefined pos ("Undefined variable: "^var_name)
 
 let this_reserved pos =
   add Naming.this_reserved pos
@@ -428,9 +430,7 @@ let start_with_T pos =
     "Please make your type parameter start with the letter T (capital)"
 
 let already_bound pos name =
-  add Naming.name_already_bound pos (
-  "Argument already bound: "^name
- )
+  add Naming.name_already_bound pos ("Argument already bound: "^name)
 
 let unexpected_typedef pos def_pos =
   add_list Naming.unexpected_typedef [
@@ -992,7 +992,7 @@ let field_kinds pos1 pos2 =
 
 let unbound_name_typing pos name =
   add Typing.unbound_name_typing pos
-    ("Unbound name, Typing: "^(strip_ns name))
+    ("Unbound name (typing): "^(strip_ns name))
 
 let previous_default p =
   add Typing.previous_default p

@@ -23,6 +23,7 @@ type t =
   | UnterminatedRegExp
   | InvalidLHSInAssignment
   | InvalidLHSInForIn
+  | InvalidLHSInFormalsList
   | MultipleDefaultsInSwitch
   | NoCatchOrFinally
   | UnknownLabel of string
@@ -74,6 +75,7 @@ module PP =
       | UnterminatedRegExp ->  "Invalid regular expression: missing /"
       | InvalidLHSInAssignment ->  "Invalid left-hand side in assignment"
       | InvalidLHSInForIn ->  "Invalid left-hand side in for-in"
+      | InvalidLHSInFormalsList -> "Invalid left-hand side in formals list"
       | MultipleDefaultsInSwitch -> "More than one default clause in switch statement"
       | NoCatchOrFinally ->  "Missing catch or finally after try"
       | UnknownLabel label -> "Undefined label '"^label^"'"

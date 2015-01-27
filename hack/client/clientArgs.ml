@@ -163,7 +163,7 @@ let parse_check_args cmd =
       " output json for machine consumption. (default: false)";
     "--retries", Arg.Set_int retries,
       " set the number of retries. (default: 3)";
-    "--retry-if-init", Arg.Set retry_if_init,
+    "--retry-if-init", Arg.Bool (fun x -> retry_if_init := x),
       " retry if the server is initializing (default: true)";
     "--no-load", Arg.Set no_load,
       " start from a fresh state";
@@ -171,7 +171,7 @@ let parse_check_args cmd =
       " set this so we know who is calling hh_client";
     "--timeout",  Arg.Float (fun x -> timeout := Some (Unix.time() +. x)),
       " set the timeout in seconds (default: no timeout)";
-    "--autostart-server", Arg.Set autostart,
+    "--autostart-server", Arg.Bool (fun x -> autostart := x),
       " automatically start hh_server if it's not running (default: true)\n";
 
     (* deprecated *)

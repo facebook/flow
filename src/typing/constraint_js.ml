@@ -53,6 +53,7 @@ type name = string
 
 module Type = struct
   type t =
+  (* open type variable *)
   | OpenT of reason * ident
 
   (*************)
@@ -74,30 +75,48 @@ module Type = struct
   | ObjT of reason * objtype
   | ArrT of reason * t * t list
 
+  (* type of a class *)
   | ClassT of t
+  (* type of an instance of a class *)
   | InstanceT of reason * static * super * insttype
 
+  (* type of an optional parameter *)
   | OptionalT of t
+  (* type of a rest parameter *)
   | RestT of t
 
+  (* polymorphic type *)
   | PolyT of typeparam list * t
+  (* type application *)
   | TypeAppT of t * t list
+  (* bound type variable *)
   | BoundT of typeparam
 
+  (* ? types *)
   | MaybeT of t
 
+  (* & types *)
   | IntersectionT of reason * t list
 
+  (* | types *)
   | UnionT of reason * t list
 
-  | UpperBoundT of t
-  | LowerBoundT of t
+  (* generalizations of AnyT *)
+  | UpperBoundT of t (* any upper bound of t *)
+  | LowerBoundT of t (* any lower bound of t *)
 
+  (* constrains some properties of an object *)
+  | ShapeT of t
+
+  (* collects the keys of an object *)
   | EnumT of reason * t
+  (* constrains the keys of an object *)
   | RecordT of reason * t
 
+  (* type of a custom class, e.g., a React class *)
   | CustomClassT of name * t list * t
 
+  (* type aliases *)
   | TypeT of reason * t
 
   (* forcing a list of types to be concretized *)
@@ -606,6 +625,7 @@ let string_of_ctor = function
   | ObjExtendT _ -> "ObjExtendT"
   | UpperBoundT _ -> "UpperBoundT"
   | LowerBoundT _ -> "LowerBoundT"
+  | ShapeT _ -> "ShapeT"
   | EnumT _ -> "EnumT"
   | RecordT _ -> "RecordT"
   | KeyT _ -> "KeyT"
@@ -714,6 +734,9 @@ let rec reason_of_t = function
 
   | UpperBoundT (t)
   | LowerBoundT (t)
+      -> reason_of_t t
+
+  | ShapeT (t)
       -> reason_of_t t
 
   | EnumT (reason, _)
@@ -846,6 +869,7 @@ let rec mod_reason_of_t f = function
 
   | UpperBoundT t -> UpperBoundT (mod_reason_of_t f t)
   | LowerBoundT t -> LowerBoundT (mod_reason_of_t f t)
+  | ShapeT t -> ShapeT (mod_reason_of_t f t)
 
   | EnumT (reason, t) -> EnumT (f reason, t)
   | RecordT (reason, t) -> RecordT (f reason, t)

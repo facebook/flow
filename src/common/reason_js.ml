@@ -132,8 +132,16 @@ let loc_of_reason r =
     source =
       if p.pos_file = Relative_path.default then None
       else Some (Relative_path.to_absolute p.pos_file);
-    start = { line = p.pos_start.pos_lnum; column = p.pos_start.pos_cnum };
-    _end = { line = p.pos_end.pos_lnum; column = p.pos_end.pos_cnum }
+    start = {
+      line = p.pos_start.pos_lnum;
+      column = p.pos_start.pos_cnum - p.pos_start.pos_bol;
+      offset = p.pos_start.pos_cnum;
+    };
+    _end = {
+      line = p.pos_end.pos_lnum;
+      column = p.pos_end.pos_cnum - p.pos_end.pos_bol;
+      offset = p.pos_end.pos_cnum;
+    }
   })))
 
 let desc_of_reason r =

@@ -17,6 +17,7 @@ module Loc = struct
   type position = {
     line: int;
     column: int;
+    offset: int;
   }
 
   type t = {
@@ -27,8 +28,8 @@ module Loc = struct
 
   let none = {
     source = None;
-    start = { line = 0; column = 0; };
-    _end = { line = 0; column = 0; };
+    start = { line = 0; column = 0; offset = 0; };
+    _end = { line = 0; column = 0; offset = 0; };
   }
 
   let from_lb_p start _end = Lexing.(
@@ -39,10 +40,12 @@ module Loc = struct
       start = {
         line = start.pos_lnum;
         column = start.pos_cnum - start.pos_bol;
+        offset = start.pos_cnum;
       };
       _end = {
         line = _end.pos_lnum;
         column = max 0 (_end.pos_cnum - _end.pos_bol);
+        offset = _end.pos_cnum;
       }
     }
   )

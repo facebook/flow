@@ -40,11 +40,17 @@ function escape_content(content) {
 
 function test_section(section) {
   console.log("===%s===".bold, section);
-  for (var i = 0; i < tests[section].length; i++) {
+  var sectionTests = tests[section];
+  var esprima_opts = {};
+  if (!Array.isArray(sectionTests)) {
+    esprima_opts = sectionTests.esprima_opts;
+    sectionTests = sectionTests.tests;
+  }
+  for (var i = 0; i < sectionTests.length; i++) {
     if (num_successes + num_failures >= (argv.numTests || 100000)) {
       break;
     }
-    var test = tests[section][i];
+    var test = sectionTests[i];
     if (typeof test == "string") {
       test = { content: test };
     }
@@ -53,7 +59,7 @@ function test_section(section) {
     test.showDifferences = argv.showDifferences;
     var name = escape_content(test.content);
     process.stdout.write("RUNNING".yellow + " " + name + "\r");
-    var result = runTest(test);
+    var result = runTest(test, esprima_opts);
     if (result.passed) {
       console.log('%s: "%s"', 'PASSED'.green, name);
       num_successes++;
@@ -67,23 +73,33 @@ function test_section(section) {
   }
 }
 
+function filter_sections(fn) {
+  for (prop in tests) {
+    if (tests.hasOwnProperty(prop)) {
+      var tests_to_filter =
+        Array.isArray(tests[prop]) ? tests[prop] : tests[prop].tests;
+      var tests_post_filter = tests_to_filter.filter(fn);
+      if (tests_post_filter.length == 0) {
+        delete tests[prop];
+      } else if (Array.isArray(tests[prop])) {
+        tests[prop] = tests_post_filter;
+      } else {
+        tests[prop].tests = tests_post_filter;
+      }
+    }
+  }
+}
+
 function go() {
   if (typeof argv.filter == "string") {
     var regex = new RegExp(argv.filter);
-    for (prop in tests) {
-      if (tests.hasOwnProperty(prop)) {
-        tests[prop] = tests[prop].filter(function (s) {
-          if (typeof s == "object") {
-            return s.content.match(regex);
-          } else {
-            return s.match(regex);
-          }
-        });
-        if (tests[prop].length == 0) {
-          delete tests[prop];
-        }
+    filter_sections(function (s) {
+      if (typeof s == "object") {
+        return s.content.match(regex);
+      } else {
+        return s.match(regex);
       }
-    }
+    });
   } else if (typeof argv.filter != "undefined") {
     console.log("Filter must be a string, given %s", typeof argv.filter);
     return usage();
@@ -97,7 +113,8 @@ function go() {
     var num_tests = 0;
     for (prop in tests) {
       if (tests.hasOwnProperty(prop)) {
-        num_tests += tests[prop].length;
+        num_tests +=
+          (Array.isArray(tests[prop]) ? tests[prop] : tests[prop].tests).length;
       }
     }
     if (num_tests > 20 && ((argv.numTests || 100) > 20)) {
@@ -110,16 +127,9 @@ function go() {
     }
   }
   if (argv.showDifferences) {
-    for (prop in tests) {
-      if (tests.hasOwnProperty(prop)) {
-        tests[prop] = tests[prop].filter(function (test) {
-          return typeof test == "object" && typeof test.expected_differences != "undefined";
-        });
-      }
-      if (tests[prop].length == 0) {
-        delete tests[prop];
-      }
-    }
+    filter_sections(function (test) {
+      return typeof test == "object" && typeof test.expected_differences != "undefined";
+    });
   }
 
   var section_filter = new RegExp(argv.filterSection || '');

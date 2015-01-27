@@ -1,5 +1,7 @@
 // @flow
 
+var React = require('React');
+
 type FooState = {
     key: ?Object;
 };

@@ -135,12 +135,19 @@ function handleSpecialObjectCompare(esprima, flow, env) {
       // contain a lot of fields that don't make sense in a pattern
       for (var i = 0; i < esprima.properties.length; i++) {
         var prop = esprima.properties[i];
-        prop.type = "PropertyPattern";
-        prop.pattern = prop.value;
-        delete prop.value;
-        delete prop.kind;
-        delete prop.method;
-        delete prop.shorthand;
+        switch (prop.type) {
+          case 'SpreadProperty':
+            prop.type = 'SpreadPropertyPattern';
+            break;
+          case 'Property':
+            prop.type = 'PropertyPattern';
+            prop.pattern = prop.value;
+            delete prop.value;
+            delete prop.kind;
+            delete prop.method;
+            delete prop.shorthand;
+            break;
+        }
       }
       if (!esprima.hasOwnProperty('typeAnnotation')) {
         esprima.typeAnnotation = null;
@@ -151,8 +158,6 @@ function handleSpecialObjectCompare(esprima, flow, env) {
       if (esprima.kind == "") {
         esprima.kind = "init";
       }
-      // Esprima doesn't track whether a method definition is computed
-      delete flow.computed;
       break;
     case 'ClassExpression':
       // Should use null for missing node
@@ -310,7 +315,7 @@ function compare(esprima, flow, env) {
   }
 }
 
-function runTest(test) {
+function runTest(test, esprima_opts) {
   var env = new_env();
   var comparing_errors = false;
   var result = {
@@ -331,7 +336,11 @@ function runTest(test) {
     return result;
   }
   try {
-    var esprima_ast = esprima.parse(test.content, { loc: true, comment: true });
+    var options = { loc: true, comment: true, range: true };
+    for (opt in esprima_opts) {
+      options[opt] = esprima_opts[opt];
+    }
+    var esprima_ast = esprima.parse(test.content, options);
   } catch (e) {
     comparing_errors = true;
     if (test.dumpAst) {

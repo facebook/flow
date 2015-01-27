@@ -9,8 +9,7 @@
  *)
 
 type parser_return = {
-    (* True if we are dealing with a hack file *)
-    is_hh_file : bool;
+    file_mode  : Ast.mode option; (* None if PHP *)
     comments   : (Pos.t * string) list;
     ast        : Ast.program;
   }

@@ -415,8 +415,8 @@ end = struct
     and postfix_with env t =
       if Expect.maybe env T_LBRACKET
       then begin
-        Expect.token env T_RBRACKET;
         let end_loc = Peek.loc env in
+        Expect.token env T_RBRACKET;
         let loc = Loc.btwn (fst t) end_loc in
         let t = loc, Type.Array t in
         postfix_with env t
@@ -2722,6 +2722,35 @@ end = struct
           | None, _ -> [], [], None)
         | NotArrowParams _ -> assert false
 
+      (* There are certain patterns that you can't have as function parameters.
+       * For parsing functions it's not a problem, since we know we're parsing
+       * a function and can check. However, when we're reinterpreting
+       * expressions as function parameters, we need to go back and make sure
+       * we don't have any patterns that shouldn't be in a formals list. This
+       * helps prevent expressions like (a.b) => 123 since a.b is a valid
+       * expression and a valid pattern, but not valid in a formals list  *)
+      in let check_formals =
+        let rec pattern env = Pattern.(function
+        | _, Object { Object.properties; _ } ->
+            List.iter (object_property env) properties
+        | _, Array { Array.elements; _ } ->
+            List.iter (array_element env) elements
+        | loc, Expression _ ->
+            error_at env (loc, Error.InvalidLHSInFormalsList)
+        | _, Identifier _ -> ())
+
+        and object_property env = Pattern.Object.(function
+          | Property (_, prop) ->
+              pattern env prop.Property.pattern
+          | SpreadProperty _ -> ())
+
+        and array_element env = Pattern.Array.(function
+          | None -> ()
+          | Some (Element p) -> pattern env p
+          | Some (Spread _) -> ())
+
+        in pattern
+
       in fun env start_loc raw_params ->
         let params, defaults, rest = params env raw_params in
         if Peek.line_terminator env
@@ -2735,6 +2764,7 @@ end = struct
          * they should already have been thrown. By setting this to false, we
          * remove that deduping detection *)
         Declaration.strict_post_check { env with strict=false; } ~strict ~simple None params;
+        List.iter (check_formals env) params;
         let end_loc, expression = Ast.Statement.FunctionDeclaration.(
           match body with
           | BodyBlock (loc, _) -> loc, false

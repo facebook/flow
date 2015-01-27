@@ -237,7 +237,7 @@ let save_env env =
         char_size; silent; one_line;
         last_str; last_out; keep_source_pos; source_pos_l;
         break_on; line; failed; try_depth; spaces;
-        report_fit; in_attr; stop; from; to_; no_trailing_commas} = env in
+        report_fit; in_attr; stop; from; to_; no_trailing_commas } = env in
   { sv_margin = !margin;
     sv_last = !last;
     sv_buffer = env.buffer;
@@ -1139,40 +1139,41 @@ let semi_colon env =
 (*****************************************************************************)
 
 type 'a return =
-  | Php_or_decl
+  | Disabled_mode
   | Parsing_error of Errors.error list
   | Internal_error
   | Success of 'a
 
-let rec entry ~keep_source_metadata ~no_trailing_commas
+let rec entry ~keep_source_metadata ~no_trailing_commas ~modes
     file from to_ content k =
-  let errorl, () = Errors.do_ begin fun () ->
-    let _ = Parser_hack.program file content in
-    ()
-  end in
-  if errorl <> []
-  then Parsing_error errorl
-  else try
-    let lb = Lexing.from_string content in
-    let env = empty file lb from to_ keep_source_metadata no_trailing_commas in
-    header env;
-    Success (k env)
+  try
+    let errorl, () = Errors.do_ begin fun () ->
+      let {Parser_hack.file_mode; _} = Parser_hack.program file content in
+      if not (List.mem file_mode modes) then raise PHP;
+    end in
+    if errorl <> []
+    then Parsing_error errorl
+    else begin
+      let lb = Lexing.from_string content in
+      let env = empty file lb from to_ keep_source_metadata no_trailing_commas in
+      header env;
+      Success (k env)
+    end
   with
-  | PHP -> Php_or_decl
-  | _ ->
-      Printexc.print_backtrace stderr;
-      Internal_error
+    | PHP -> Disabled_mode
+    | _ ->
+        Printexc.print_backtrace stderr;
+        Internal_error
 
 (*****************************************************************************)
 (* Hack header <?hh *)
 (*****************************************************************************)
 
 and header env = wrap env begin function
-  | Thh ->
+  | Thh | Tphp ->
       seq env [last_token; mode; newline];
       stmt_list ~is_toplevel:true env
-  | _ ->
-      raise PHP
+  | _ -> assert false
 end
 
 and mode env =
@@ -1180,8 +1181,6 @@ and mode env =
   | Tspace -> mode env
   | Tline_comment ->
       space env; last_token env;
-      if next_token_str env = "decl"
-      then raise PHP;
       line_comment env;
       newline env
   | _ -> back env
@@ -1241,6 +1240,16 @@ and const env =
   else (space env; hint env);
   class_members env;
   newline env
+
+and abs_const env =
+  last_token env;
+  if attempt env begin fun env ->
+    name env;
+    next_token env = Tsc
+  end
+  then ()
+  else (space env; hint env);
+  seq env [space ; name ; expect ";"]
 
 (*****************************************************************************)
 (* Type hints. *)
@@ -1537,6 +1546,8 @@ and use env = try_word env "use" begin fun env ->
 end
 
 and after_modifier env = wrap env begin function
+  | Tword when !(env.last_str) = "const" ->
+      abs_const env
   | Tword when !(env.last_str) = "function" ->
       seq env [last_token; space; fun_]
   | _ ->
@@ -2606,19 +2617,20 @@ and arrow_opt env =
 (* The outside API *)
 (*****************************************************************************)
 
-let region file ~start ~end_ content =
+let region modes file ~start ~end_ content =
   entry ~keep_source_metadata:false file start end_ content
-    ~no_trailing_commas:false
+    ~no_trailing_commas:false ~modes
     (fun env -> Buffer.contents env.buffer)
 
-let program ?no_trailing_commas:(no_trailing_commas = false) file content =
+let program ?no_trailing_commas:(no_trailing_commas = false) modes file
+    content =
   entry ~keep_source_metadata:false file 0 max_int content
-    ~no_trailing_commas:no_trailing_commas
+    ~no_trailing_commas:no_trailing_commas ~modes
     (fun env -> Buffer.contents env.buffer)
 
-let program_with_source_metadata file content =
+let program_with_source_metadata modes file content =
   entry ~keep_source_metadata:true file 0 max_int content
-    ~no_trailing_commas:false begin
+    ~no_trailing_commas:false ~modes begin
     fun env ->
       Buffer.contents env.buffer, List.rev !(env.source_pos_l)
   end
