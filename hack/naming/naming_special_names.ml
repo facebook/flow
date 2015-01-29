@@ -85,7 +85,8 @@ module UserAttributes = struct
 
   let uaOverride            = "__Override"
   let uaConsistentConstruct = "__ConsistentConstruct"
-  let uaUnsafeConstruct    = "__UNSAFE_Construct"
+  let uaUnsafeConstruct     = "__UNSAFE_Construct"
+  let uaDeprecated          = "__Deprecated"
 
 end
 

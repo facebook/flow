@@ -10,7 +10,6 @@
 open Lexer_hack
 open Ast
 
-module SMap = Utils.SMap
 module L = Lexer_hack
 
 (*****************************************************************************)
@@ -443,7 +442,7 @@ and header env =
   | Ast.PhpFile, _
   | _, Some Ast.Mdecl ->
       let env = { env with mode = Ast.Mdecl } in
-      let attr = SMap.empty in
+      let attr = [] in
       let result = ignore_toplevel ~attr [] env (fun x -> x = Teof) in
       expect env Teof;
       result, head
@@ -484,7 +483,7 @@ and ignore_toplevel ~attr acc env terminate =
       acc
   | Tltlt ->
       (* Parsing attribute << .. >> *)
-      let attr = attribute_remain env SMap.empty in
+      let attr = attribute_remain env in
       ignore_toplevel ~attr acc env terminate
   | Tlcb ->
       let acc = ignore_toplevel ~attr acc env terminate in
@@ -511,14 +510,14 @@ and ignore_toplevel ~attr acc env terminate =
           | Tword ->
               L.back env.lb;
               let def = toplevel_word ~attr env "function" in
-              ignore_toplevel ~attr:SMap.empty (def @ acc) env terminate
+              ignore_toplevel ~attr:[] (def @ acc) env terminate
           (* function &foo(...), we still want them in decl mode *)
           | Tamp ->
             (match L.token env.file env.lb with
             | Tword ->
                 L.back env.lb;
                 let def = toplevel_word ~attr env "function" in
-                ignore_toplevel ~attr:SMap.empty (def @ acc) env terminate
+                ignore_toplevel ~attr:[] (def @ acc) env terminate
             | _ ->
               ignore_toplevel ~attr acc env terminate
             )
@@ -531,7 +530,7 @@ and ignore_toplevel ~attr acc env terminate =
       | "async" | "newtype"| "type"| "const" ->
           (* Parsing toplevel declarations (class, function etc ...) *)
           let def = toplevel_word ~attr env (Lexing.lexeme env.lb) in
-          ignore_toplevel ~attr:SMap.empty (def @ acc) env terminate
+          ignore_toplevel ~attr:[] (def @ acc) env terminate
       | _ -> ignore_toplevel ~attr acc env terminate
       )
   | Tclose_php ->
@@ -554,14 +553,13 @@ and toplevel acc env terminate =
       toplevel acc env terminate
   | Tltlt ->
       (* Parsing attribute << .. >> *)
-      let attr = attribute_remain env SMap.empty in
+      let attr = attribute_remain env in
       let _ = L.token env.file env.lb in
       let def = toplevel_word ~attr env (Lexing.lexeme env.lb) in
       toplevel (def @ acc) env terminate
   | Tword ->
       (* Parsing toplevel declarations (class, function etc ...) *)
-      let attr = SMap.empty in
-      let def = toplevel_word ~attr env (Lexing.lexeme env.lb) in
+      let def = toplevel_word ~attr:[] env (Lexing.lexeme env.lb) in
       toplevel (def @ acc) env terminate
   | Tclose_php ->
       error env "Hack does not allow the closing ?> tag";
@@ -574,7 +572,7 @@ and toplevel acc env terminate =
       let stmt = Stmt (statement env) in
       check_toplevel env pos;
       if error_state != !(env.errors)
-      then ignore_toplevel ~attr:SMap.empty (stmt :: acc) env terminate
+      then ignore_toplevel ~attr:[] (stmt :: acc) env terminate
       else toplevel (stmt :: acc) env terminate
 
 and toplevel_word ~attr env = function
@@ -679,16 +677,15 @@ and define_or_stmt env = function
 
 (* <<_>> *)
 and attribute env =
-  let acc = SMap.empty in
   if look_ahead env (fun env -> L.token env.file env.lb = Tltlt)
   then begin
     expect env Tltlt;
-    attribute_remain env acc;
+    attribute_remain env;
   end
-  else acc
+  else []
 
 (* _>> *)
-and attribute_remain env acc =
+and attribute_remain env =
   match L.token env.file env.lb with
   | Tword ->
       (* Temporary backwards compat for renaming these attributes.
@@ -698,32 +695,29 @@ and attribute_remain env acc =
         | "Override" -> "__Override"
         | "UNSAFE_Construct" -> "__UNSAFE_Construct"
         | x -> x in
-      let attr_name = attr_compat (Lexing.lexeme env.lb) in
-      let acc = attribute_parameter attr_name acc env in
-      attribute_list_remain acc env
+      let pos = Pos.make env.file env.lb in
+      let ua_name = pos, attr_compat (Lexing.lexeme env.lb) in
+      let ua_params = attribute_parameters env in
+      let attr = { ua_name; ua_params } in
+      attr :: attribute_list_remain env
   | _ ->
       error_expect env "attribute name";
-      acc
+      []
 
 (* empty | (parameter_list) *)
-and attribute_parameter attr_name acc env =
+and attribute_parameters env =
   match L.token env.file env.lb with
-  | Tlp ->
-      let el = expr_list_remain env in
-      SMap.add attr_name el acc
-  | _ ->
-      let acc = SMap.add attr_name [] acc in
-      L.back env.lb;
-      acc
+  | Tlp -> expr_list_remain env
+  | _ -> L.back env.lb; []
 
 (* ,_,>> *)
-and attribute_list_remain acc env =
+and attribute_list_remain env =
   match L.token env.file env.lb with
-  | Tgtgt -> acc
-  | Tcomma -> attribute_remain env acc
+  | Tgtgt -> []
+  | Tcomma -> attribute_remain env
   | _ ->
       error_expect env ">>";
-      acc
+      []
 
 (*****************************************************************************)
 (* Functions *)
@@ -1325,7 +1319,7 @@ and trait_require env =
   | _ -> error env "Expected: implements or extends"; []
 
 (*****************************************************************************)
-(* Class xhp_fromat *)
+(* Class xhp_format *)
 (*
  * within a class body -->
  *    children ...;
@@ -1846,7 +1840,7 @@ and statement_word env = function
   | "async" | "abstract" | "final" ->
       error env
           "Parse error: declarations are not supported outside global scope";
-      ignore (ignore_toplevel SMap.empty [] env (fun _ -> true));
+      ignore (ignore_toplevel ~attr:[] [] env (fun _ -> true));
       Noop
   | x ->
       L.back env.lb;
@@ -2236,7 +2230,7 @@ and make_param_ellipsis pos =
     param_id = (pos, "...");
     param_expr = None;
     param_modifier = None;
-    param_user_attributes = SMap.empty;
+    param_user_attributes = [];
   }
 
 and param ~variadic env =
@@ -2497,7 +2491,7 @@ and lambda_body env params ret ~sync =
     f_ret = ret;
     f_ret_by_ref = false;
     f_body = body;
-    f_user_attributes = Utils.SMap.empty;
+    f_user_attributes = [];
     f_fun_kind = sync;
     f_mode = env.mode;
     f_mtime = 0.0;
@@ -2513,7 +2507,7 @@ and make_lambda_param : id -> fun_param = fun var_id ->
     param_id = var_id;
     param_expr = None;
     param_modifier = None;
-    param_user_attributes = Utils.SMap.empty;
+    param_user_attributes = [];
   }
 
 and lambda_single_arg env var_id ~sync =
@@ -2963,7 +2957,7 @@ and expr_anon_fun env pos ~sync =
     f_ret = ret;
     f_ret_by_ref = false;
     f_body = body;
-    f_user_attributes = Utils.SMap.empty;
+    f_user_attributes = [];
     f_fun_kind = sync;
     f_mode = env.mode;
     f_mtime = 0.0;
@@ -3666,7 +3660,7 @@ and namespace env =
    * that we like. So every time we recurse we'll consume at least one token,
    * so we can't get stuck in an infinite loop. *)
   let tl = match env.mode with
-    | Ast.Mdecl -> ignore_toplevel ~attr:SMap.empty
+    | Ast.Mdecl -> ignore_toplevel ~attr:[]
     | _ -> toplevel in
   (* The name for a namespace is actually optional, so we need to check for
    * the name first. Setting the name to an empty string if there's no

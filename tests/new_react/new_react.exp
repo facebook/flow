@@ -49,7 +49,7 @@ Computed property/element cannot be accessed on possibly null or undefined value
 
 new_react.js:20:26,44: property length
 Property not found in
-  [LIB] core.js:58:1,69:1: Number
+  [LIB] core.js:59:1,72:1: Number
 
 new_react.js:26:23,23: number
 This type is incompatible with

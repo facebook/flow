@@ -1,6 +1,6 @@
 
 arrows.js:7:37,59: string
 This type is incompatible with
-  [LIB] core.js:127:38,43: number
+  [LIB] core.js:130:38,43: number
 
 Found 1 error

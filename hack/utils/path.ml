@@ -14,8 +14,6 @@ type path = {
   path: string;
 }
 
-external realpath: string -> string option = "hh_realpath"
-
 let dummy_path: path = { is_normalized = true; path = ""; }
 
 (**
@@ -51,7 +49,7 @@ let expanduser (path : string) : string =
  *   the current directory (in absolute)
  *)
 let mk_path (path : string) : path =
-  match realpath (expanduser path) with
+  match Sys_utils.realpath (expanduser path) with
   | Some path ->
     {
       is_normalized=true;

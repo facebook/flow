@@ -35,7 +35,7 @@ class type ['a] hint_visitor_type = object
   method on_fun    : 'a -> Nast.hint list -> bool -> Nast.hint -> 'a
   method on_apply  : 'a -> Nast.sid -> Nast.hint list -> 'a
   method on_shape  : 'a -> Nast.hint ShapeMap.t -> 'a
-  method on_access : 'a -> Nast.class_id -> Nast.sid -> Nast.sid list -> 'a
+  method on_access : 'a -> Nast.hint -> Nast.sid list -> 'a
 end
 
 (*****************************************************************************)
@@ -57,7 +57,7 @@ class virtual ['a] hint_visitor: ['a] hint_visitor_type = object(this)
     | Hfun (hl, b, h)       -> this#on_fun    acc hl b h
     | Happly (i, hl)        -> this#on_apply  acc i hl
     | Hshape hm             -> this#on_shape  acc hm
-    | Haccess (i1, i2, il)  -> this#on_access acc i1 i2 il
+    | Haccess (h, il)       -> this#on_access acc h il
 
   method on_any acc = acc
   method on_mixed acc = acc
@@ -99,7 +99,8 @@ class virtual ['a] hint_visitor: ['a] hint_visitor_type = object(this)
       acc
     end hm acc
 
-  method on_access acc _ _ _ = acc
+  method on_access acc h _ =
+    this#on_hint acc h
 
 end
 
@@ -195,6 +196,7 @@ and hint_ p env = function
       env, Tfun {
         ft_pos = p;
         ft_unsafe = false;
+        ft_deprecated = None;
         ft_abstract = false;
         ft_arity = arity;
         ft_tparams = [];
@@ -210,21 +212,9 @@ and hint_ p env = function
       Env.add_wclass env c;
       let env, argl = lfold hint env argl in
       env, Tapply (id, argl)
-  | Haccess (root, id, ids) ->
-      let root = match root with
-        | CIstatic -> Some SCIstatic
-        | CI (pos, class_) ->
-            Typing_hooks.dispatch_class_id_hook id None;
-            Env.add_wclass env class_;
-            Some (SCI (pos, class_))
-        | CIparent ->
-            Errors.unbound_name_typing p "parent";
-            None
-        (* These should be stripped out earlier *)
-        | CIself | CIvar _ ->
-            assert false;
-      in
-      opt_map_default (fun r -> env, Taccess (r, id, ids)) (env, Tany) root
+  | Haccess (root_ty, ids) ->
+      let env, root_ty = hint env root_ty in
+      env, Taccess (root_ty, ids)
   | Htuple hl ->
       let env, tyl = lfold hint env hl in
       env, Ttuple tyl

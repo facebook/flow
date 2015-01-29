@@ -9,14 +9,13 @@
  *)
 
 open Typing_defs
+open Utils
 
 module TUtils = Typing_utils
 module Reason = Typing_reason
 module Env = Typing_env
-
-exception RootClassNotFound of Pos.t * string
-exception RootInvalidType of ty
-exception TypeConstNotFound of Pos.t * class_type * string
+module Inst = Typing_instantiate
+module SN = Naming_special_names
 
 (* During expansion we do not have to worry about the "self" reference. "self"
  * is resolved in Naming and does not exist during the typing phase. "static"
@@ -41,125 +40,75 @@ exception TypeConstNotFound of Pos.t * class_type * string
  * ensure the type stored is "static::SomeTypeConst" and not
  * "SomeClass::SomeTypeConst". This will indicate we resolved "static" too soon.
  *)
-let rec expand_with_static env fty static =
-  try expand_ env fty static with
-  (* TODO(dreeves): improve error messages, these are placeholders *)
-  | RootClassNotFound (pos, str) ->
+
+let rec expand_ env root_ty ids =
+  let root_pos = Reason.to_pos (fst root_ty) in
+  match ids with
+  | [] ->
+      env, root_ty
+  | (pos, tconst) :: rest ->
+      let abstract_name, class_name = resolve_to_class_name env root_ty ids in
+      let root_class =
+        match Env.get_class env class_name with
+        | None ->
+            Errors.unbound_name_typing (root_pos) class_name;
+            raise Exit
+        | Some c -> c
+      in
+      let typeconst =
+        match SMap.get tconst root_class.tc_typeconsts with
+        | None ->
+            Errors.smember_not_found
+              `class_typeconst pos (root_pos, class_name) tconst `no_hint;
+            raise Exit
+        | Some tc -> tc
+      in
+      let tconst_ty =
+        match abstract_name, typeconst with
+        | _, {ttc_type = Some ty; ttc_constraint = None; _} -> ty
+        | None, {ttc_type = Some ty; _} -> ty
+        | Some root_name, {ttc_constraint = ty; _} ->
+            Reason.Rnone, Tgeneric (root_name^"::"^tconst, ty)
+        | None, {ttc_constraint = ty; _} ->
+            Reason.Rnone, Tgeneric (class_name^"::"^tconst, ty)
+      in
+      let this_ty = make_this root_class in
+      let env, tconst_ty = Inst.instantiate_this env tconst_ty this_ty in
+      let tconst_ty = Reason.Rwitness (Pos.btw root_pos pos), snd tconst_ty in
+      expand_ env tconst_ty rest
+
+and make_this class_ =
+  let tparams = List.map begin fun (_, (p, s), param) ->
+    Reason.Rwitness p, Tgeneric (s, param)
+  end class_.tc_tparams in
+  let sid = class_.tc_pos, class_.tc_name in
+  Reason.Rwitness class_.tc_pos, Tapply (sid, tparams)
+
+and resolve_to_class_name env (r, ty) ids =
+  let resolve env type_ = resolve_to_class_name env type_ ids in
+  match ty with
+  | Tapply ((_, tdef), tyl) when Env.is_typedef tdef ->
+      let env, ty = TUtils.expand_typedef env r tdef tyl in
+      resolve env ty
+  | Tapply ((_, class_name), _) -> None, class_name
+  | Taccess (root, ids) ->
+      let env, fty = expand_ env root ids in
+      resolve env fty
+  | Toption ty ->
+      resolve env ty
+  | Tabstract ((_, x), _, Some ty) | Tgeneric (x, Some ty) ->
+      let _, class_name = resolve env ty in
+      Some x, class_name
+  | Tany -> raise Exit
+  | Tvar _ | Tunresolved _
+  | Tanon _ | Tobject | Tmixed | Tprim _ | Tshape _ | Ttuple _
+  | Tarray (_, _) | Tfun _ | Tabstract (_, _, _) | Tgeneric (_, _) ->
+      let pos = Reason.to_pos r in
+      let str = Typing_print.full env (r, ty) in
       Errors.unbound_name_typing pos str;
+      raise Exit
+
+let expand env (root, ids) =
+  try expand_ env root ids with
+  | Exit ->
       env, (Reason.none, Tany)
-  | RootInvalidType ty ->
-      let pos = Reason.to_pos (fst ty) in
-      let str = Typing_print.full env ty in
-      Errors.unbound_name_typing pos str;
-      env, (Reason.none, Tany)
-  | TypeConstNotFound (pos, class_, tconst) ->
-      let class_pname = (class_.tc_pos, class_.tc_name) in
-      Errors.smember_not_found `class_typeconst pos class_pname tconst `no_hint;
-      env, (Reason.none, Tany)
-
-and expand_ env (reason, type_) static =
-  match type_ with
-    | Taccess (root, (tconst_pos, tconst), rest) ->
-        let pos = Reason.to_pos reason in
-        let root_id =
-          match root with
-          | SCI root_id -> root_id
-          | SCIstatic -> pos, static
-        in
-        let root_type = reason, Tapply (root_id, []) in
-        let env, class_ = get_class_from_type env root_type static in
-        let tconst_ty =
-          match Env.get_typeconst_type env class_ tconst with
-          | None -> raise (TypeConstNotFound (tconst_pos, class_, tconst))
-          | Some tc -> tc
-        in
-        begin
-          match tconst_ty, rest with
-          | (_,
-              ( Tapply (new_root, _)
-              | Tgeneric (_, Some (_, Tapply (new_root, _)))
-              | Tabstract (_, _, Some (_, Tapply (new_root, _)))
-              )
-            ), hd :: tail ->
-              let new_root_cid = SCI new_root in
-              let new_ty = reason, Taccess (new_root_cid, hd, tail) in
-              (* NOTE: that we switch the meaning of "static" to be the name
-               * of the class we accessed the type const from. Initially this
-               * is set to 'Env.get_self_id env', but must change after each
-               * access to ensure that "static" will be resolved correctly
-               *)
-              expand_ env new_ty class_.tc_name
-          (* If we encounter one of the special type defs used to back type
-           * constants then we have to continue expanding. To see why consider
-           * the following.
-           *
-           * class D {
-           *   type TC = int;
-           *   type Foo = static::TC;
-           * }
-           *
-           * class C { type Bar = D }
-           *
-           * Expanding "C::Bar::Foo" yields Tapply ("D::Foo"). If we stop here
-           * then when we later expand the type def we will have "static::TC"
-           * and we no longer have enough context to properly resolve "static".
-           *)
-          | (r, Tapply ((_, tdef), [])), [] when Env.is_typedef tdef
-            && has_double_colon tdef ->
-              let env, ty = TUtils.expand_typedef env r tdef [] in
-              (* See the [NOTE] above that explains why we need to pass in
-               * 'class_.tc_name'
-               *)
-              expand_ env ty class_.tc_name
-          | tconst_ty, [] -> env, tconst_ty
-          | (_,
-              ( Tany | Tmixed | Tarray (_, _) | Tgeneric (_, _) | Toption _
-              | Tprim _ | Tvar _ | Tfun _ | Tabstract (_, _, _) | Ttuple _
-              | Taccess (_, _, _) | Tanon (_, _) | Tunresolved _ | Tobject
-              | Tshape _
-              )
-            ), _ ->
-              raise (RootInvalidType (tconst_ty))
-        end
-    | Tany | Tmixed | Tarray (_, _) | Tgeneric (_, _) | Toption _ | Tprim _
-    | Tvar _ | Tfun _ | Tabstract (_, _, _) | Ttuple _ | Tapply (_, _)
-    | Tanon (_, _) | Tunresolved _ | Tobject | Tshape _ ->
-        env, (reason, type_)
-
-and has_double_colon str =
-  try
-    let idx = String.index str ':' in
-    str.[idx + 1] = ':'
-  with
-  | Invalid_argument _ | Not_found -> false
-
-(* Retrieves the class name for a given type. This is recursive because if
- * we have a name that refers to a typedef then we will need expand the typedef.
- * For example:
- *
- * class Foo {};
- * type Bar = Foo;
- *)
-and get_class_from_type env (reason, type_) static =
-  let pos = Reason.to_pos reason in
-  match type_ with
-    | Tapply ((_, name), argl) when Env.is_typedef name ->
-        let env, ty = TUtils.expand_typedef env reason name argl in
-        get_class_from_type env ty static
-    | Tapply ((_, class_name), _) ->
-        env, begin
-          match Env.get_class env class_name with
-          | None -> raise (RootClassNotFound (pos, class_name))
-          | Some class_ -> class_
-        end
-    | Tabstract (_, _, Some constraint_type) ->
-        get_class_from_type env constraint_type static
-    | Taccess (_, _, _) ->
-        let env, ty = expand_with_static env (reason, type_) static in
-        get_class_from_type env ty static
-    | Tany | Tmixed | Tarray (_, _) | Tgeneric (_, _) | Toption _ | Tprim _
-    | Tvar _ | Tfun _ | Tabstract (_, _, _) | Ttuple _
-    | Tanon (_, _) | Tunresolved _ | Tobject | Tshape _ ->
-        raise (RootInvalidType (reason, type_))
-
-and expand env fty = expand_with_static env fty (Env.get_self_id env)

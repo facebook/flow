@@ -23,6 +23,7 @@ module Env = Typing_env
 module DynamicYield = Typing_dynamic_yield
 module Reason = Typing_reason
 module Inst = Typing_instantiate
+module Attrs = Attributes
 
 module SN = Naming_special_names
 
@@ -346,7 +347,7 @@ and class_naming_and_decl class_env cid c =
   let class_env = { class_env with stack = SSet.add cid class_env.stack } in
   let c = Naming.class_ class_env.nenv c in
   class_parents_decl class_env c;
-  class_decl class_env.nenv c;
+  class_decl c;
   (* It is important to add the "named" ast (nast.ml) only
    * AFTER we are done declaring the type type of the class.
    * Otherwise there is a subtle race condition.
@@ -396,7 +397,7 @@ and class_is_abstract c =
     | Ast.Cabstract | Ast.Cinterface | Ast.Ctrait | Ast.Cenum -> true
     | _ -> false
 
-and class_decl nenv c =
+and class_decl c =
   let is_abstract = class_is_abstract c in
   let cls_pos, cls_name = c.c_name in
   let env = Typing_env.empty (Pos.filename cls_pos) in
@@ -414,7 +415,7 @@ and class_decl nenv c =
   let consts = SMap.add SN.Members.mClass (class_class_decl c.c_name) consts in
   let typeconsts = inherited.Typing_inherit.ih_typeconsts in
   let env, typeconsts =
-    List.fold_left (typeconst_decl nenv c) (env, typeconsts) c.c_typeconsts in
+    List.fold_left (typeconst_decl c) (env, typeconsts) c.c_typeconsts in
   let sclass_var = static_class_var_decl c in
   let scvars = inherited.Typing_inherit.ih_scvars in
   let env, scvars = List.fold_left sclass_var (env, scvars) c.c_static_vars in
@@ -552,9 +553,10 @@ and check_static_method obj method_name { ce_type = (reason_for_type, _); _ } =
 
 and constructor_decl env (pcstr, pconsist) class_ =
   (* constructors in children of class_ must be consistent? *)
-  let cconsist =
-    class_.c_final ||
-      SMap.mem SN.UserAttributes.uaConsistentConstruct class_.c_user_attributes in
+  let cconsist = class_.c_final ||
+    Attrs.mem
+      SN.UserAttributes.uaConsistentConstruct
+      class_.c_user_attributes in
   match class_.c_constructor, pcstr with
     | None, _ -> env, (pcstr, cconsist || pconsist)
     | Some method_, Some {ce_final = true; ce_type = (r, _); _ } ->
@@ -581,7 +583,7 @@ and build_constructor env class_ method_ =
    * 'new static()' UNSAFE, potentially impacting the safety of a large
    * type hierarchy. *)
   let consist_override =
-    SMap.mem SN.UserAttributes.uaUnsafeConstruct method_.m_user_attributes in
+    Attrs.mem SN.UserAttributes.uaUnsafeConstruct method_.m_user_attributes in
   let cstr = {
     ce_final = method_.m_final;
     ce_is_xhp_attr = false;
@@ -594,9 +596,15 @@ and build_constructor env class_ method_ =
   env, (Some cstr, mconsist)
 
 and class_const_decl c (env, acc) (h, id, e) =
+  let c_name = (snd c.c_name) in
   let env, ty =
-    match h with
-      | None -> begin
+    match h, e with
+      | Some h, Some _ -> Typing_hint.hint env h
+      | Some h, None ->
+        let env, h_ty = Typing_hint.hint env h in
+        let pos, name = id in
+        env, (Reason.Rwitness pos, Tgeneric (c_name^"::"^name, Some h_ty))
+      | None, Some e -> begin
         let rec infer_const e = match snd e with
           | String _
           | String2 ([], _)
@@ -628,11 +636,16 @@ and class_const_decl c (env, acc) (h, id, e) =
         in
         (env, infer_const e)
       end
-      | Some h -> Typing_hint.hint env h
+      | None, None ->
+        let pos, name = id in
+        if c.c_mode = Ast.Mstrict then Errors.missing_typehint pos;
+        let r = Reason.Rwitness pos in
+        let const_ty = r, Tgeneric (c_name^"::"^name, Some (r, Tany)) in
+        env, const_ty
   in
   let ce = { ce_final = true; ce_is_xhp_attr = false; ce_override = false;
              ce_synthesized = false; ce_visibility = Vpublic; ce_type = ty;
-             ce_origin = (snd c.c_name);
+             ce_origin = c_name;
            } in
   let acc = SMap.add (snd id) ce acc in
   env, acc
@@ -705,7 +718,7 @@ and visibility cid = function
   | Protected -> Vprotected cid
   | Private   -> Vprivate cid
 
-and typeconst_decl nenv c (env, acc) typeconst =
+and typeconst_decl c (env, acc) typeconst =
   match c.c_kind with
   | Ast.Cinterface | Ast.Ctrait | Ast.Cenum ->
       let kind = match c.c_kind with
@@ -716,71 +729,17 @@ and typeconst_decl nenv c (env, acc) typeconst =
       Errors.requires_non_class (fst c.c_name) (snd c.c_name) kind;
       env, acc
   | Ast.Cabstract | Ast.Cnormal ->
-      let pos, name = typeconst.c_tconst_name in
-      let typedef_name = typeconst_typedef_decl nenv c typeconst in
-      let reason = Reason.Rwitness pos in
-      let typedef_type = reason, Tapply ((pos, typedef_name), []) in
-      let ty =
-        if typeconst.c_tconst_abstract
-        then Reason.Rwitness pos, Tgeneric (name, Some typedef_type)
-        else typedef_type
-      in
-      let ce = {
-        ce_final = not typeconst.c_tconst_abstract;
-        ce_is_xhp_attr = false;
-        ce_override = false;
-        ce_synthesized = false;
-        ce_visibility = Vpublic;
-        ce_type = ty;
-        ce_origin = snd (c.c_name);
+      let name = snd typeconst.c_tconst_name in
+      let env, constr =
+        opt Typing_hint.hint env typeconst.c_tconst_constraint in
+      let env, ty = opt Typing_hint.hint env typeconst.c_tconst_type in
+      let tc = {
+        ttc_name = typeconst.c_tconst_name;
+        ttc_constraint = constr;
+        ttc_type = ty;
       } in
-      let acc = SMap.add name ce acc in
+      let acc = SMap.add name tc acc in
       env, acc
-
- (* Every Type Const is backed by a typedef. For instance:
-  *
-  * class C { type const tc = int; }
-  *
-  * Is translated too
-  *
-  * type C::tc = int;
-  *
-  * The identifier "C::tc" is not something that can be written in user land
-  * because of the "::", so we know that "C::tc" will be a unique name for a
-  * typedef.
-  *
-  * Another thing to note is we explicitly choose to use type instead of newtype
-  * because we want this to serve as an alias.
-  *
-  * IMPORTANT:
-  *
-  *   Since we are fabricating this type def we need to also add the type def
-  *   in Parsing_service.get_defs otherwise incremental mode will not work.
-  *)
-and typeconst_typedef_decl _ c typeconst =
-  (* make name unique by combining with class name, i.e. Class::Typeconst *)
-  let typedef_name =
-    (snd (c.c_name)) ^ "::" ^ (snd (typeconst.c_tconst_name)) in
-  let tid = fst (typeconst.c_tconst_name), typedef_name in
-  let params = [] in
-  let concrete_type = match typeconst.c_tconst_type with
-    | None ->
-        if not typeconst.c_tconst_abstract
-        then Errors.missing_assign (fst tid);
-        fst tid, Hany
-    | Some x -> x in
-  let decl = params, None, concrete_type in
-  let filename = Pos.filename (fst tid) in
-  let env = Typing_env.empty filename in
-  let env = Typing_env.set_mode env c.c_mode in
-  let env = Env.set_root env (Typing_deps.Dep.Class (snd tid)) in
-  let _, concrete_type = Typing_hint.hint env concrete_type in
-  let visibility = Env.Typedef.Public in
-  let type_constraint = None in
-  let tdecl = visibility, params, type_constraint, concrete_type, (fst tid) in
-  Env.add_typedef (snd tid) tdecl;
-  Naming_heap.TypedefHeap.add (snd tid) decl;
-  typedef_name
 
 and method_decl env m =
   let env, arity_min, params = Typing.make_params env true 0 m.m_params in
@@ -808,6 +767,8 @@ and method_decl env m =
   let ft = {
     ft_pos      = fst m.m_name;
     ft_unsafe   = m.m_unsafe;
+    ft_deprecated =
+      Attrs.deprecated ~kind:"method" m.m_name m.m_user_attributes;
     ft_abstract = m.m_abstract;
     ft_arity    = arity;
     ft_tparams  = tparams;
@@ -820,7 +781,7 @@ and method_decl env m =
 and method_check_override c m acc =
   let pos, id = m.m_name in
   let _, class_id = c.c_name in
-  let override = SMap.mem SN.UserAttributes.uaOverride m.m_user_attributes in
+  let override = Attrs.mem SN.UserAttributes.uaOverride m.m_user_attributes in
   if m.m_visibility = Private && override then
     Errors.private_override pos class_id id;
   match SMap.get id acc with

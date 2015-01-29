@@ -25,13 +25,13 @@ Function cannot be called on
 
 G.js:6:12,17: string
 This type is incompatible with
-  [LIB] core.js:141:13,18: number
+  [LIB] core.js:144:13,18: number
 
 G.js:7:1,10: call of method length
 Function cannot be called on
-  [LIB] core.js:141:13,18: number
+  [LIB] core.js:144:13,18: number
 
-[LIB] core.js:141:13,18: number
+[LIB] core.js:144:13,18: number
 This type is incompatible with
   F.js:4:33,38: string
 

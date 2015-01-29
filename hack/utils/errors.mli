@@ -77,6 +77,7 @@ val gen_array_rec_arity : Pos.t -> unit
 val gen_array_va_rec_arity : Pos.t -> unit
 val dynamic_class : Pos.t -> unit
 val uninstantiable_class : Pos.t -> Pos.t -> string -> unit
+val abstract_const_usage: Pos.t -> Pos.t -> string -> unit
 val typedef_constraint : Pos.t -> unit
 val add_a_typehint : Pos.t -> unit
 val local_const : Pos.t -> unit
@@ -161,7 +162,7 @@ val extend_final : Pos.t -> Pos.t -> string -> unit
 val read_before_write : Pos.t * string -> unit
 val interface_final : Pos.t -> unit
 val trait_final : Pos.t -> unit
-val implement_abstract : Pos.t -> Pos.t -> string -> unit
+val implement_abstract : Pos.t -> Pos.t -> string -> string -> unit
 val generic_static : Pos.t -> string -> unit
 val fun_too_many_args : Pos.t -> Pos.t -> unit
 val fun_too_few_args : Pos.t -> Pos.t -> unit
@@ -250,6 +251,11 @@ val not_abstract_without_typeconst : (Pos.t * string) -> unit
 val typeconst_depends_on_external_tparam : Pos.t -> Pos.t -> string -> unit
 val typeconst_assigned_tparam : Pos.t -> string -> unit
 val invalid_type_access_root : (Pos.t * string) -> unit
+val duplicate_user_attribute : (Pos.t * string) -> Pos.t -> unit
+val attribute_arity : Pos.t -> string -> int -> unit
+val attribute_param_type : Pos.t -> string -> unit
+val deprecated_use : Pos.t -> Pos.t -> string -> unit
+val abstract_with_typeconst : (Pos.t * string) -> unit
 
 val to_json : Pos.absolute error_ -> Hh_json.json
 val to_string : Pos.absolute error_ -> string

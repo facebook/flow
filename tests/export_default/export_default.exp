@@ -1,0 +1,12 @@
+
+test.js: inconsistent use of library definitions
+  [LIB] lib.js:2:41,46: string
+This type is incompatible with
+  [LIB] lib.js:5:20,25: number
+
+test.js: inconsistent use of library definitions
+  [LIB] lib.js:5:20,25: number
+This type is incompatible with
+  [LIB] lib.js:2:32,37: string
+
+Found 2 errors

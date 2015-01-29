@@ -41,6 +41,8 @@ val make_subst_with_this: this:ty -> tparam list -> ty list -> subst
 
 val instantiate     : subst -> env -> ty -> env * ty
 val instantiate_ce  : subst -> env -> class_elt -> env * class_elt
+val instantiate_typeconst :
+  subst -> env -> typeconst_type -> env * typeconst_type
 
 val instantiate_ft  : env -> fun_type -> env * fun_type
 val instantiate_fun : env -> ty -> Nast.expr list -> env * ty

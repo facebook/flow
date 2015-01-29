@@ -31,7 +31,7 @@ type env = Env.env
 type inherited = {
   ih_cstr     : class_elt option * bool (* consistency required *);
   ih_consts   : class_elt SMap.t ;
-  ih_typeconsts : class_elt SMap.t ;
+  ih_typeconsts : typeconst_type SMap.t ;
   ih_cvars    : class_elt SMap.t ;
   ih_scvars   : class_elt SMap.t ;
   ih_methods  : class_elt SMap.t ;
@@ -95,10 +95,7 @@ let add_methods methods' acc =
 let add_members members acc =
   SMap.fold SMap.add members acc
 
-let is_abstract_typeconst x =
-  match x.ce_type with
-  | _, Tgeneric _ -> true
-  | _ ->  false
+let is_abstract_typeconst x = x.ttc_type = None
 
 let add_typeconst name sig_ typeconsts =
   match SMap.get name typeconsts with
@@ -122,7 +119,7 @@ let add_typeconst name sig_ typeconsts =
    * automagically during typing_extends since we attempt to fold all parent
    * members into the child class.
    *)
-  | _ -> SMap.add name {sig_ with ce_override = false} typeconsts
+  | _ -> SMap.add name sig_ typeconsts
 
 let add_constructor (cstr, cstr_consist) (acc, acc_consist) =
   let ce = match cstr, acc with
@@ -175,7 +172,7 @@ let constructor env subst (cstr, consistent) = match cstr with
 let map_inherited f inh =
   {
     ih_cstr     = (opt_map f (fst inh.ih_cstr)), (snd inh.ih_cstr);
-    ih_typeconsts = SMap.map f inh.ih_typeconsts;
+    ih_typeconsts = inh.ih_typeconsts;
     ih_consts   = SMap.map f inh.ih_consts;
     ih_cvars    = SMap.map f inh.ih_cvars;
     ih_scvars   = SMap.map f inh.ih_scvars;
@@ -203,7 +200,7 @@ let chown_private owner =
 let apply_fn_to_class_elts fn class_type = {
   class_type with
   tc_consts = fn class_type.tc_consts;
-  tc_typeconsts = fn class_type.tc_typeconsts;
+  tc_typeconsts = class_type.tc_typeconsts;
   tc_cvars = fn class_type.tc_cvars;
   tc_scvars = fn class_type.tc_scvars;
   tc_methods = fn class_type.tc_methods;
@@ -230,7 +227,8 @@ let inherit_hack_class c env p class_name class_type argl =
         filter_privates class_type
     | Ast.Cenum -> class_type
   in
-  let env, typeconsts = instantiate env class_type.tc_typeconsts in
+  let env, typeconsts = SMap.map_env (Inst.instantiate_typeconst subst)
+    env class_type.tc_typeconsts in
   let env, consts   = instantiate env class_type.tc_consts in
   let env, cvars    = instantiate env class_type.tc_cvars in
   let env, scvars   = instantiate env class_type.tc_scvars in

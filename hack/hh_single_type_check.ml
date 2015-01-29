@@ -254,7 +254,7 @@ let print_prolog { FileInfo.funs; classes; typedefs; consts; _ } =
 let main_hack { filename; suggest; color; coverage; prolog; _ } =
   ignore (Sys.signal Sys.sigusr1 (Sys.Signal_handle Typing.debug_print_last_pos));
   SharedMem.init();
-  Hhi.set_hhi_root_for_unit_test (Path.mk_path "/tmp/hhi");
+  Hhi.set_hhi_root_for_unit_test "/tmp/hhi";
   let builtins_filename =
     Relative_path.create Relative_path.Dummy builtins_filename in
   let filename = Relative_path.create Relative_path.Dummy filename in

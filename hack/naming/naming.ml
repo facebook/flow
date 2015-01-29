@@ -724,37 +724,34 @@ and hint_ ~allow_this is_static_var p env x =
   | Hoption h -> N.Hoption (hint env h)
   | Hfun (hl, opt, h) -> N.Hfun (List.map (hint env) hl, opt, hint env h)
   | Happly ((_, x) as id, hl) -> hint_id ~allow_this env is_static_var id hl
-  | Haccess (root_id, id, ids) ->
-    let genv, _ = env in
-    let class_id = make_class_id ~allow_typedef:true env root_id in
-    let class_id = match class_id with
-      | N.CI cid ->
-          (* Checks that the cid is a valid hint id *)
-          let cid =
-            match hint_id ~allow_this env is_static_var root_id [] with
-            | N.Happly (class_id, _) -> class_id
-            | _ ->
-                Errors.invalid_type_access_root root_id;
-                fst root_id, SN.Classes.cUnknown
-          in
-          N.CI cid
-      (* At this point we can resolve the "self" class id to the current class
-       * we are naming.
-       *)
-      | N.CIself ->
-          begin match genv.cclass with
-          | Some class_ ->
-              N.CI (p, snd class_.c_name)
+  | Haccess ((pos, root_id) as root, id, ids) ->
+    let root_ty =
+      match root_id with
+      | x when x = SN.Classes.cSelf ->
+          (match (fst env).cclass with
           | None ->
-              Errors.static_outside_class p;
-              N.CI (fst root_id, SN.Classes.cUnknown)
-          end
-      (* "static" is resolved later at two places, Paritially during
-       * Typing_instantiate, the remainder during Typing_taccess.
-       *)
-      | N.CIparent | N.CIstatic | N.CIvar _ -> class_id
+              Errors.self_outside_class pos;
+              N.Hany
+          | Some class_ ->
+              N.Happly (class_.c_name, [])
+          )
+      | x when x = SN.Classes.cStatic ->
+          (match (fst env).cclass with
+          | None ->
+              Errors.self_outside_class pos;
+              N.Hany
+          | Some class_ ->
+              let this = hint_id ~allow_this:true env is_static_var
+                (pos, SN.Typehints.this) [] in
+              N.Habstr (SN.Classes.cStatic, Some (pos, this))
+          )
+      | _ ->
+          (match hint_id ~allow_this env is_static_var root [] with
+          | N.Happly _ as h -> h
+          | _ -> Errors.invalid_type_access_root root; N.Hany
+          )
     in
-    N.Haccess (class_id, id, ids)
+    N.Haccess ((pos, root_ty), id :: ids)
   | Hshape fdl -> N.Hshape
     begin
       List.fold_left begin fun fdm (pname, h) ->
@@ -917,27 +914,6 @@ and get_constraint env tparam =
 
 and hintl ~allow_this env l = List.map (hint ~allow_this env) l
 
-and make_class_id ?(allow_typedef=false) env (p, x as cid) =
-  if not allow_typedef then no_typedef env cid;
-  match x with
-    | x when x = SN.Classes.cParent ->
-      if (fst env).cclass = None then
-        let () = Errors.parent_outside_class p in
-        N.CI (p, SN.Classes.cUnknown)
-      else N.CIparent
-    | x when x = SN.Classes.cSelf ->
-      if (fst env).cclass = None then
-        let () = Errors.self_outside_class p in
-        N.CI (p, SN.Classes.cUnknown)
-      else N.CIself
-    | x when x = SN.Classes.cStatic -> if (fst env).cclass = None then
-        let () = Errors.static_outside_class p in
-        N.CI (p, SN.Classes.cUnknown)
-      else N.CIstatic
-    | x when x = "$this" -> N.CIvar (p, N.This)
-    | x when x.[0] = '$' -> N.CIvar (p, N.Lvar (Env.lvar env cid))
-    | _ -> N.CI (Env.class_name env cid)
-
 (*****************************************************************************)
 (* All the methods and static methods of an interface are "implicitely"
  * declared as abstract
@@ -1068,12 +1044,22 @@ and class_ genv c =
       N.c_constructor    = constructor;
       N.c_static_methods = smethods;
       N.c_methods        = methods;
-      N.c_user_attributes = c.c_user_attributes;
+      N.c_user_attributes = user_attributes c.c_user_attributes;
       N.c_enum           = enum
     }
   in
   Naming_hooks.dispatch_class_named_hook named_class;
   named_class
+
+and user_attributes attrl =
+  let seen = Hashtbl.create 0 in
+  List.iter (fun { ua_name = (pos, name) as ua_name; _ } ->
+    let existing_attr_pos =
+      try Some (Hashtbl.find seen name) with Not_found -> None in
+    match existing_attr_pos with
+    | Some p -> Errors.duplicate_user_attribute ua_name p
+    | None -> Hashtbl.add seen name pos) attrl;
+  attrl
 
 and enum_ env e =
   { N.e_base       = hint env e.e_base;
@@ -1175,7 +1161,7 @@ and class_const env x acc =
   match x with
   | Attributes _ -> acc
   | Const (h, l) -> const_defl h env l @ acc
-  | AbsConst _ -> (* fixme *) acc
+  | AbsConst (h, x) -> abs_const_def env h x :: acc
   | ClassUse _ -> acc
   | XhpAttrUse _ -> acc
   | ClassTraitRequire _ -> acc
@@ -1348,10 +1334,15 @@ and const_def h env (x, e) =
   | Ast.Mstrict
   | Ast.Mpartial ->
       let h = opt_map (hint env) h in
-      h, new_const, expr env e
+      h, new_const, Some (expr env e)
   | Ast.Mdecl ->
       let h = opt_map (hint env) h in
-      h, new_const, (fst e, N.Any)
+      h, new_const, Some (fst e, N.Any)
+
+and abs_const_def env h x =
+  let new_const = Env.new_const env x in
+  let h = opt_map (hint env) h in
+  h, new_const, None
 
 and class_var_ env (x, e) =
   let id = Env.new_const env x in
@@ -1401,10 +1392,20 @@ and typeconst env t =
    *)
   let name = Env.new_const env t.tconst_name in
   let constr = opt_map (hint env) t.tconst_constraint in
-  let type_ = opt_map (hint env) t.tconst_type in
-  N.({ c_tconst_abstract = t.tconst_abstract;
-       c_tconst_name = name;
-       c_tconst_type = if type_ <> None then type_ else constr;
+  let hint_ =
+    match t.tconst_type with
+    | None when not t.tconst_abstract ->
+        Errors.not_abstract_without_typeconst name;
+        t.tconst_constraint
+    | Some h when t.tconst_abstract ->
+        Errors.abstract_with_typeconst name;
+        None
+    | h -> h
+  in
+  let type_ = opt_map (hint env) hint_ in
+  N.({ c_tconst_name = name;
+       c_tconst_constraint = constr;
+       c_tconst_type = type_;
      })
 
 and fun_kind env ft =
@@ -1437,7 +1438,7 @@ and method_ env m =
   (* let body = N.UnnamedBody m.m_body in *)
   (* ... and don't forget that fun_kind (generators) and unsafe
    * both depend upon the processing of the unnamed ast *)
-  let attrs = m.m_user_attributes in
+  let attrs = user_attributes m.m_user_attributes in
   let method_type = fun_kind env m.m_fun_kind in
   let ret = opt_map (hint ~allow_this:true env) m.m_ret in
   N.({ m_unsafe     = unsafe ;
@@ -1554,6 +1555,7 @@ and fun_ genv f =
       f_body = body;
       f_variadic = variadicity;
       f_fun_kind = kind;
+      f_user_attributes = user_attributes f.f_user_attributes;
     }
   in
   Naming_hooks.dispatch_fun_named_hook named_fun;
@@ -2107,7 +2109,29 @@ and expr_lambda env f =
     f_body = body;
     f_variadic = variadicity;
     f_fun_kind = f_kind;
+    f_user_attributes = user_attributes f.f_user_attributes;
   }
+
+and make_class_id env (p, x as cid) =
+  no_typedef env cid;
+  match x with
+    | x when x = SN.Classes.cParent ->
+      if (fst env).cclass = None then
+        let () = Errors.parent_outside_class p in
+        N.CI (p, SN.Classes.cUnknown)
+      else N.CIparent
+    | x when x = SN.Classes.cSelf ->
+      if (fst env).cclass = None then
+        let () = Errors.self_outside_class p in
+        N.CI (p, SN.Classes.cUnknown)
+      else N.CIself
+    | x when x = SN.Classes.cStatic -> if (fst env).cclass = None then
+        let () = Errors.static_outside_class p in
+        N.CI (p, SN.Classes.cUnknown)
+      else N.CIstatic
+    | x when x = "$this" -> N.CIvar (p, N.This)
+    | x when x.[0] = '$' -> N.CIvar (p, N.Lvar (Env.lvar env cid))
+    | _ -> N.CI (Env.class_name env cid)
 
 and casel env l =
   lfold (case env) SMap.empty l

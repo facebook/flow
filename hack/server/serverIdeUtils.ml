@@ -67,7 +67,7 @@ let declare path content =
             let c = Naming.class_ nenv c in
             let cname = snd c.Nast.c_name in
             declared_classes := SSet.add cname !declared_classes;
-            Typing_decl.class_decl nenv c;
+            Typing_decl.class_decl c;
             ()
         | _ -> ()
       end ast;

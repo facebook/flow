@@ -118,15 +118,10 @@ module CompareTypes = struct
         let acc = string_id acc sid1 sid2 in
         let acc = tyl acc tyl1 tyl2 in
         acc
-    | Taccess (rt1, id1, ids1), Taccess (rt2, id2, ids2)
+    | Taccess (root_ty1, ids1), Taccess (root_ty2, ids2)
       when List.length ids1 = List.length ids2 ->
-        let acc =
-          match rt1, rt2 with
-          | SCIstatic, SCIstatic -> acc
-          | SCI rt1_id, SCI rt2_id -> string_id acc rt1_id rt2_id
-          | SCIstatic, _ | SCI _, _ -> default
-        in
-        List.fold_left2 string_id acc (id1 :: ids1) (id2 :: ids2)
+        let acc = ty acc root_ty1 root_ty2 in
+        List.fold_left2 string_id acc ids1 ids2
     | Tunresolved tyl1, Tunresolved tyl2
     | Ttuple tyl1, Ttuple tyl2 ->
         tyl acc tyl1 tyl2
@@ -139,7 +134,7 @@ module CompareTypes = struct
           | Some v2 ->
               ty acc v1 v2
         end fdm1 acc
-    | (Tanon _ | Tany | Tmixed | Tarray (_, _) | Tshape _ | Taccess (_, _, _) |
+    | (Tanon _ | Tany | Tmixed | Tarray (_, _) | Tshape _ | Taccess (_, _) |
       Tgeneric (_, _)| Toption _| Tprim _| Tvar _| Tabstract _ |
       Tfun _| Tapply (_, _) | Ttuple _| Tunresolved _| Tobject), _ -> default
 
@@ -208,6 +203,17 @@ module CompareTypes = struct
 
   and members acc m1 m2 = smap class_elt acc m1 m2
 
+  and typeconst acc tc1 {
+    ttc_name = tc2_ttc_name;
+    ttc_constraint = tc2_ttc_constraint;
+    ttc_type = tc2_ttc_type;
+  } =
+    let acc = string_id acc tc1.ttc_name tc2_ttc_name in
+    let acc = ty_opt acc tc1.ttc_constraint tc2_ttc_constraint in
+    ty_opt acc tc1.ttc_type tc2_ttc_type
+
+  and typeconsts acc tc1 tc2 = smap typeconst acc tc1 tc2
+
   and constructor acc c1 c2 =
     let subst, same = match (fst c1), (fst c2) with
       | Some x1, Some x2 -> class_elt acc x1 x2
@@ -241,7 +247,7 @@ module CompareTypes = struct
     let acc = members acc c1.tc_scvars c2.tc_scvars in
     let acc = members acc c1.tc_methods c2.tc_methods in
     let acc = members acc c1.tc_smethods c2.tc_smethods in
-    let acc = members acc c1.tc_typeconsts c2.tc_typeconsts in
+    let acc = typeconsts acc c1.tc_typeconsts c2.tc_typeconsts in
     let acc = constructor acc c1.tc_construct c2.tc_construct in
     let acc = ancestry acc c1.tc_req_ancestors c2.tc_req_ancestors in
     let acc = ancestry acc c1.tc_ancestors c2.tc_ancestors in
@@ -318,8 +324,8 @@ module TraversePos(ImplementPos: sig val pos: Pos.t -> Pos.t end) = struct
     reason p, ty_ x
 
   and ty_ = function
-    | Tanon _
-    | Tvar _               -> failwith "Internal error"
+    | Tanon _              -> failwith "TraversePos: Unexpected Tanon"
+    | Tvar _               -> failwith "TraversePos: Unexpected Tvar"
     | Tany
     | Tmixed as x          -> x
     | Tarray (ty1, ty2)    -> Tarray (ty_opt ty1, ty_opt ty2)
@@ -330,13 +336,8 @@ module TraversePos(ImplementPos: sig val pos: Pos.t -> Pos.t end) = struct
     | Toption x            -> Toption (ty x)
     | Tfun ft              -> Tfun (fun_type ft)
     | Tapply (sid, xl)     -> Tapply (string_id sid, List.map (ty) xl)
-    | Taccess (root, id, ids) ->
-        let new_root =
-          match root with
-          | SCIstatic -> root
-          | SCI sid -> SCI (string_id sid)
-        in
-        Taccess (new_root, string_id id, List.map string_id ids)
+    | Taccess (root_ty, ids) ->
+        Taccess (ty root_ty, List.map string_id ids)
     | Tabstract (sid, xl, x) ->
         Tabstract (string_id sid, List.map (ty) xl, ty_opt x)
     | Tobject as x         -> x
@@ -364,6 +365,12 @@ module TraversePos(ImplementPos: sig val pos: Pos.t -> Pos.t end) = struct
       ce_origin      = ce.ce_origin     ;
     }
 
+  and typeconst tc =
+    { ttc_name = string_id tc.ttc_name;
+      ttc_constraint = ty_opt tc.ttc_constraint;
+      ttc_type = ty_opt tc.ttc_type;
+    }
+
   and type_param (variance, sid, y) =
     variance, string_id sid, ty_opt y
 
@@ -381,7 +388,7 @@ module TraversePos(ImplementPos: sig val pos: Pos.t -> Pos.t end) = struct
       tc_req_ancestors_extends = tc.tc_req_ancestors_extends          ;
       tc_tparams               = List.map type_param tc.tc_tparams    ;
       tc_consts                = SMap.map class_elt tc.tc_consts      ;
-      tc_typeconsts            = SMap.map class_elt tc.tc_typeconsts  ;
+      tc_typeconsts            = SMap.map typeconst tc.tc_typeconsts  ;
       tc_cvars                 = SMap.map class_elt tc.tc_cvars       ;
       tc_scvars                = SMap.map class_elt tc.tc_scvars      ;
       tc_methods               = SMap.map class_elt tc.tc_methods     ;

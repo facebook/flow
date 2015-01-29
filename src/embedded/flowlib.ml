@@ -38,7 +38,7 @@ let extract_embedded () =
  * support debugging binaries that don't have the section embedded, such as
  * bytecode builds. *)
 let extract_external () =
-  let path = (Filename.dirname Sys.executable_name) ^ "/../flowlib.tar.gz" in
+  let path = (Filename.dirname Sys.executable_name) ^ "/flowlib.tar.gz" in
   if Sys.file_exists path then Some (extract (Utils.cat path)) else None
 
 let get_flowlib_root_impl () =

@@ -350,7 +350,10 @@ end = struct
       let start_loc = Peek.loc env in
       Expect.token env T_COLON;
       let typeAnnotation = _type env in
-      Loc.btwn start_loc (fst typeAnnotation), typeAnnotation
+      let end_loc = match last_loc env with
+      | Some loc -> loc
+      | None -> assert false in
+      Loc.btwn start_loc end_loc, typeAnnotation
 
     and rev_nonempty_acc acc =
       let end_loc = match acc with
@@ -483,17 +486,20 @@ end = struct
         Expect.token env T_RBRACKET;
         Loc.btwn start_loc end_loc, Type.Tuple tl
 
+    and function_param_with_id env name =
+      let optional = Expect.maybe env T_PLING in
+      Expect.token env T_COLON;
+      let typeAnnotation = _type env in
+      Loc.btwn (fst name) (fst typeAnnotation), Type.Function.Param.({
+        name;
+        typeAnnotation;
+        optional;
+      })
+
     and function_param_list_without_parens =
       let param env =
         let name = Parse.identifier_or_reserved_keyword env in
-        let optional = Expect.maybe env T_PLING in
-        Expect.token env T_COLON;
-        let typeAnnotation = _type env in
-        Loc.btwn (fst name) (fst typeAnnotation), Type.Function.Param.({
-          name;
-          typeAnnotation;
-          optional;
-        })
+        function_param_with_id env name
 
       in let rec param_list env acc =
         match Peek.token env with
@@ -531,8 +537,8 @@ end = struct
           (* () or is definitely a param list *)
           ParamList (None, [])
       | T_IDENTIFIER ->
-          (* Ok, this is definitely a function type parameter *)
-          ParamList (function_param_list_without_parens env [])
+          (* This could be a function parameter or a generic type *)
+          function_param_or_generic_type env
       | token ->
           (match primitive token with
           | None ->
@@ -574,6 +580,20 @@ end = struct
       in
       Expect.token env T_RPAREN;
       ret
+
+    and function_param_or_generic_type env =
+      let id = Parse.identifier env in
+      match Peek.token env with
+      | T_PLING (* optional param *)
+      | T_COLON ->
+          let param = function_param_with_id env id in
+          ignore (Expect.maybe env T_COMMA);
+          ParamList (function_param_list_without_parens env [param])
+      | _ ->
+          Type (union_with env
+                  (intersection_with env
+                    (postfix_with env (generic_with_identifier env id)))
+                )
 
     and function_or_group env =
       let start_loc = Peek.loc env in
@@ -758,7 +778,9 @@ end = struct
             }))
           end else None
 
-    and generic =
+    and generic env = generic_with_identifier env (Parse.identifier env)
+
+    and generic_with_identifier =
       let rec identifier env (q_loc, qualification) =
         if Peek.token env = T_PERIOD
         then begin
@@ -772,8 +794,7 @@ end = struct
           identifier env (loc, qualification)
         end else (q_loc, qualification)
 
-      in fun env ->
-        let id = Parse.identifier env in
+      in fun env id ->
         let id = fst id, Type.Generic.Identifier.Unqualified id in
         let id_loc, id = identifier env id in
         let typeParameters = type_parameter_instantiation env in

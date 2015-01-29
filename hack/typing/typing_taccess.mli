@@ -8,5 +8,7 @@
  *
  *)
 
-(* Expands all Taccess types present in the given type *)
-val expand: Typing_env.env -> Typing_defs.ty -> Typing_env.env * Typing_defs.ty
+open Typing_defs
+
+(* Expands a type access to underlying type *)
+val expand: Typing_env.env -> taccess_type -> Typing_env.env * ty

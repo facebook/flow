@@ -17,26 +17,25 @@ external get_embedded_hhi_data : string -> string option =
 let root = ref None
 
 let touch_root r =
-  let r = Filename.quote (Path.string_of_path r) in
+  let r = Filename.quote r in
   ignore (Unix.system ("find " ^ r ^ " -name *.hhi -exec touch '{}' ';'"))
 
 let touch () =
   match !root with
-  | Some (Some r) -> touch_root r
+  | Some r -> touch_root r
   | _ -> ()
 
 (* There are several verify-use race conditions here (and in Hack's file
  * handling in general, really). Running the server as root is likely to be a
  * security risk. Be careful. *)
 let extract data =
-  let tmpdir = Tmp.temp_dir "hhi" in
-  let path = Path.mk_path tmpdir in
-  let oc = Unix.open_process_out ("tar xzC " ^ (Path.string_of_path path)) in
+  let tmpdir = unsafe_opt (realpath (Tmp.temp_dir "hhi")) in
+  let oc = Unix.open_process_out ("tar xzC " ^ tmpdir) in
   output_string oc data;
   flush oc;
   ignore (Unix.close_process_out oc);
-  touch_root path;
-  path
+  touch_root tmpdir;
+  tmpdir
 
 let extract_embedded () =
   Utils.opt_map extract (get_embedded_hhi_data Sys.executable_name)
@@ -61,13 +60,18 @@ let get_hhi_root () =
   | Some r -> r
   | None ->
       let r = get_hhi_root_impl () in
-      root := Some r;
-      (* TODO(jezng) refactor this ugliness *)
-      Relative_path.set_path_prefix
-        Relative_path.Hhi
-        (Path.string_of_path (unsafe_opt r));
-      r
+      match r with
+      | None ->
+          print_endline "Could not locate hhi files";
+          exit 1
+      | Some r ->
+          root := Some r;
+          Relative_path.set_path_prefix Relative_path.Hhi r;
+          r
 
 let set_hhi_root_for_unit_test dir =
-  root := Some (Some dir);
-  Relative_path.set_path_prefix Relative_path.Hhi (Path.string_of_path dir)
+  (* no need to call realpath() on this; we never extract the hhi files for our
+   * unit tests, so this is just a dummy value and does not need to be a real
+   * path*)
+  root := Some dir;
+  Relative_path.set_path_prefix Relative_path.Hhi dir

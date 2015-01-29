@@ -76,22 +76,7 @@ let get_defs ast =
   List.fold_left begin fun (acc1, acc2, acc3, acc4) def ->
     match def with
     | Ast.Fun f -> f.Ast.f_name :: acc1, acc2, acc3, acc4
-    | Ast.Class c ->
-        (* Every type const is backed by a type def. We need to add the
-         * name of the type def we create here otherwise incremental mode
-         * WILL BE BROKEN. For a type const
-         *
-         *   class C { type const Bar = int }
-         *
-         * The name of the type def will be "C::Bar"
-         *)
-        let acc3 = List.fold_left begin fun acc class_elt ->
-          match class_elt with
-          | Ast.TypeConst { Ast.tconst_name = (pos, id); _ } ->
-              (pos, (snd c.Ast.c_name)^"::"^id) :: acc
-          | _ -> acc
-        end acc3 c.Ast.c_body in
-        acc1, c.Ast.c_name :: acc2, acc3, acc4
+    | Ast.Class c -> acc1, c.Ast.c_name :: acc2, acc3, acc4
     | Ast.Typedef t -> acc1, acc2, t.Ast.t_id :: acc3, acc4
     | Ast.Constant cst -> acc1, acc2, acc3, cst.Ast.cst_name :: acc4
     | Ast.Namespace _

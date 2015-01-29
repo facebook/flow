@@ -172,6 +172,7 @@ let make_ft p params ret_ty =
   {
     ft_pos      = p;
     ft_unsafe   = false;
+    ft_deprecated = None;
     ft_abstract = false;
     ft_arity    = Fstandard (arity, arity);
     ft_tparams  = [];
@@ -200,16 +201,9 @@ let rec debug stack env (r, ty) =
       Printf.printf "App %s" (snd x);
       o "<"; List.iter (fun x -> debug stack env x; o ", ") argl;
       o ">"
-  | Taccess (root, id, ids) ->
-      let root_str =
-        match root with
-        | SCI (_, class_id) -> class_id
-        | SCIstatic -> "static"
-      in
-      let idl = id :: ids in
-      let str =
-        List.fold_left (fun acc (_, sid) -> acc ^ "::" ^ sid) root_str idl in
-      o str;
+  | Taccess (root_ty, ids) ->
+      debug stack env root_ty;
+      o (List.fold_left (fun acc (_, sid) -> acc ^ "::" ^ sid) "" ids)
   | Tany -> o "X"
   | Tanon _ -> o "anonymous"
   | Tfun ft ->
@@ -230,6 +224,7 @@ let rec debug stack env (r, ty) =
       | Tarraykey -> o "Tarraykey"
       )
   | Tgeneric (s, x) ->
+      o "generic ";
       o s;
       (match x with
       | None -> ()
@@ -364,10 +359,6 @@ let get_const env class_ mid =
   let dep = Dep.Const (class_.tc_name, mid) in
   Typing_deps.add_idep env.genv.droot dep;
   SMap.get mid class_.tc_consts
-
-let get_typeconst_type _ class_ typeconst_name =
-  let tconst_opt = SMap.get typeconst_name class_.tc_typeconsts in
-  opt_map (fun tc -> tc.ce_type) tconst_opt
 
 (* Used to access "global constants". That is constants that were
  * introduced with "const X = ...;" at topelevel, or "define('X', ...);"

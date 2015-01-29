@@ -103,7 +103,7 @@ let rename env old_name new_name ty_to_rename =
     | Tapply (id, l) ->
         let env, l = tyl env l in
         env, (r, Tapply(id, l))
-    | Taccess (_, _, _) as x -> env, (r, x)
+    | Taccess (_, _) as x -> env, (r, x)
     | Ttuple l ->
         let env, l = tyl env l in
         env, (r, Ttuple l)

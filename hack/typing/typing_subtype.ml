@@ -115,11 +115,12 @@ and sub_type_with_uenv env (uenv_super, ty_super) (uenv_sub, ty_sub) =
   | _, (r, Tapply ((_, x), argl)) when Typing_env.is_typedef x ->
       let env, ty_sub = TDef.expand_typedef env r x argl in
       sub_type_with_uenv env (uenv_super, ty_super) (uenv_sub, ty_sub)
-  | _, (_, Taccess _)
-  | (_, Taccess _), _ ->
-      let env, ety_super = TAccess.expand env ety_super in
-      let env, ety_sub = TAccess.expand env ety_sub in
-        sub_type_with_uenv env (uenv_super, ety_super) (uenv_sub, ety_sub)
+  | _, (_, Taccess taccess) ->
+      let env, ty_sub = TAccess.expand env taccess in
+      sub_type_with_uenv env (uenv_super, ty_super) (uenv_sub, ty_sub)
+  | (_, Taccess taccess), _ ->
+      let env, ty_super = TAccess.expand env taccess in
+      sub_type_with_uenv env (uenv_super, ty_super) (uenv_sub, ty_sub)
   | (_, Tunresolved _), (_, Tunresolved _) ->
       let env, _ =
         Unify.unify_with_uenv env (uenv_super, ty_super) (uenv_sub, ty_sub) in
@@ -393,8 +394,8 @@ and sub_string p env ty2 =
   | (_, Tabstract (_, _, Some ty))
   | (_, Tgeneric (_, Some ty)) ->
       sub_string p env ty
-  | (_, Taccess _) ->
-      let env, ety2 = TAccess.expand env ety2 in
+  | (_, Taccess taccess) ->
+      let env, ety2 = TAccess.expand env taccess in
       sub_string p env ety2
   | (r2, Tapply ((_, x), argl)) when Typing_env.is_typedef x ->
       let env, ty2 = Typing_tdef.expand_typedef env r2 x argl in

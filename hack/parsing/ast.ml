@@ -8,8 +8,6 @@
  *
  *)
 
-open Utils
-
 (*****************************************************************************)
 (* Parsing modes *)
 (*****************************************************************************)
@@ -85,7 +83,7 @@ and typedef_kind =
 
 and class_ = {
     c_mode: mode;
-    c_user_attributes: user_attribute SMap.t;
+    c_user_attributes: user_attribute list;
     c_final: bool;
     c_kind: class_kind;
     c_is_xhp: bool;
@@ -103,8 +101,10 @@ and enum_ = {
   e_constraint : hint option;
 }
 
-and user_attribute =
-  expr list (* user attributes are restricted to scalar values *)
+and user_attribute = {
+  ua_name: id;
+  ua_params: expr list (* user attributes are restricted to scalar values *)
+}
 
 and class_kind =
   | Cabstract
@@ -166,7 +166,7 @@ and method_ = {
   m_name: id;
   m_params: fun_param list;
   m_body: block;
-  m_user_attributes : user_attribute SMap.t;
+  m_user_attributes : user_attribute list;
   m_ret: hint option;
   m_ret_by_ref: bool;
   m_fun_kind: fun_kind;
@@ -193,7 +193,7 @@ and fun_param = {
    * can be only Public or Protected or Private.
    *)
   param_modifier: kind option;
-  param_user_attributes: user_attribute SMap.t;
+  param_user_attributes: user_attribute list;
 }
 
 and fun_ = {
@@ -204,7 +204,7 @@ and fun_ = {
   f_name            : id;
   f_params          : fun_param list;
   f_body            : block;
-  f_user_attributes : user_attribute SMap.t;
+  f_user_attributes : user_attribute list;
   f_mtime           : float;
   f_fun_kind        : fun_kind;
   f_namespace       : Namespace_env.env;

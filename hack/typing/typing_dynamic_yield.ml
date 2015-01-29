@@ -38,7 +38,7 @@ let rec decl env methods =
           | _, (Tany | Tmixed | Tarray (_, _) | Tprim _ | Tgeneric (_, _)
             | Toption _ | Tvar _ | Tabstract (_, _, _) | Tapply (_, _)
             | Ttuple _ | Tanon (_, _) | Tunresolved _ | Tobject | Tshape _
-            | Taccess (_, _, _)) ->
+            | Taccess (_, _)) ->
               assert false in
         let r = fst ft.ft_ret in
         let p = Reason.to_pos r in
@@ -75,7 +75,7 @@ let rec decl env methods =
                 | _, (Tany | Tmixed | Tarray (_, _) | Tprim _ | Tgeneric (_, _)
                   | Toption _ | Tvar _ | Tabstract (_, _, _) | Tapply (_, _)
                   | Ttuple _ | Tanon (_, _) | Tunresolved _ | Tobject
-                  | Tshape _ | Taccess (_, _, _)) -> assert false in
+                  | Tshape _ | Taccess (_, _)) -> assert false in
               let p = Reason.to_pos (fst ft.ft_ret) in
               let gen_r = Reason.Rdynamic_yield (p, ft.ft_pos, gen_name, name) in
               let gen_ty = ce_r, Tfun {ft with

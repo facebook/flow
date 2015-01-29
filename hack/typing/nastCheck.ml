@@ -99,9 +99,9 @@ module CheckFunctionType = struct
     expr_ p f_type e
 
   and expr2 f_type (e1, e2) =
-  expr f_type e1;
-  expr f_type e2;
-  ()
+    expr f_type e1;
+    expr f_type e2;
+    ()
 
   and expr_ p f_type exp = match f_type, exp with
     | _, Any -> ()
@@ -432,7 +432,8 @@ and interface c =
 
 and class_const env (h, _, e) =
   maybe hint env h;
-  expr env e
+  maybe expr env e;
+  ()
 
 and typeconst (env, class_tparams) tconst =
   maybe hint env tconst.c_tconst_type;
@@ -465,9 +466,8 @@ and check_no_class_tparams class_tparams (pos, ty)  =
         check_tparams ty_
     | Happly (_, tyl) -> List.iter check_tparams tyl
     | Hshape fdl -> ShapeMap.iter (fun _ v -> check_tparams v) fdl
-    | Haccess (root, _, _) ->
-        let root_name = class_id_to_str root in
-        matches_class_tparam root_name
+    | Haccess (root_ty, _) ->
+        check_tparams root_ty
 
 and class_var env cv =
   let hint_env =

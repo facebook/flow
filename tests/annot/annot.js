@@ -25,3 +25,29 @@ var array_of_tuple_parens: ([number, string])[] = array_of_tuple;
 
 type ObjType = { 'bar-foo': string; 'foo-bar': number; };
 var test_obj: ObjType = { 'bar-foo': '23' };
+
+// param type annos are strict UBs like var type annos
+function param_anno(n:number):void {
+  n = "hey"; // error
+}
+
+// another error on param UB, more typical of www (mis)use-cases
+// this one cribbed from API.atlas.js
+function param_anno2(
+    batchRequests: Array<{method: string; path: string; params: ?Object}>,
+  ): void {
+
+    // error below, since we're assigning elements to batchRequests
+    // which lack a path property.
+    // just assign result to new var instead of reassigning to param.
+
+    // Transform the requests to the format the Graph API expects.
+    batchRequests = batchRequests.map((request) => {
+      return {
+        method: request.method,
+        params: request.params,
+        relative_url: request.path,
+      };
+    });
+    // ...
+  }

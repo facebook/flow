@@ -48,7 +48,7 @@ let rec is_option env ty =
       List.exists (is_option env) tyl
   | _, (Tany | Tmixed | Tarray (_, _) | Tprim _ | Tgeneric (_, _) | Tvar _
     | Tabstract (_, _, _) | Tapply (_, _) | Ttuple _ | Tanon (_, _) | Tfun _
-    | Tobject | Tshape _ | Taccess (_, _, _)) -> false
+    | Tobject | Tshape _ | Taccess (_, _)) -> false
 
 (*****************************************************************************)
 (* Unification error *)
@@ -183,7 +183,7 @@ let is_array_as_tuple env ty =
       )
   | _, (Tany | Tmixed | Tarray (_, _) | Tprim _ | Tgeneric (_, _) | Toption _
     | Tvar _ | Tabstract (_, _, _) | Tapply (_, _) | Ttuple _ | Tanon (_, _)
-    | Tfun _ | Tunresolved _ | Tobject | Tshape _ | Taccess (_, _, _)) -> false
+    | Tfun _ | Tunresolved _ | Tobject | Tshape _ | Taccess (_, _)) -> false
 
 (*****************************************************************************)
 (* Adds a new field to all the shapes found in a given type.

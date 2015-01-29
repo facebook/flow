@@ -155,6 +155,7 @@ module Naming                               = struct
   let shape_typehint                        = 2059 (* DONT MODIFY!!!! *)
   let dynamic_new_in_strict_mode            = 2060 (* DONT MODIFY!!!! *)
   let invalid_type_access_root              = 2061 (* DONT MODIFY!!!! *)
+  let duplicate_user_attribute              = 2062 (* DONT MODIFY!!!! *)
 
   (* EXTEND HERE WITH NEW VALUES IF NEEDED *)
 end
@@ -188,6 +189,7 @@ module NastCheck                            = struct
   let not_abstract_without_typeconst        = 3026 (* DONT MODIFY!!!! *)
   let typeconst_depends_on_external_tparam  = 3027 (* DONT MODIFY!!!! *)
   let typeconst_assigned_tparam             = 3028 (* DONT MODIFY!!!! *)
+  let abstract_with_typeconst               = 3029 (* DONT MODIFY!!!! *)
 
   (* EXTEND HERE WITH NEW VALUES IF NEEDED *)
 end
@@ -311,10 +313,14 @@ module Typing                               = struct
   let void_usage                            = 4119 (* DONT MODIFY!!!! *)
   let declared_covariant                    = 4120 (* DONT MODIFY!!!! *)
   let declared_contravariant                = 4121 (* DONT MODIFY!!!! *)
-  (* let unset_in_strict                    = 4122 Deprecated! *)
+  (* DEPRECATED unset_in_strict             = 4122 *)
   let strict_members_not_known              = 4123 (* DONT MODIFY!!!! *)
   let generic_at_runtime                    = 4124 (* DONT MODIFY!!!! *)
   let dynamic_class                         = 4125 (* DONT MODIFY!!!! *)
+  let attribute_arity                       = 4126 (* DONT MODIFY!!!! *)
+  let attribute_param_type                  = 4127 (* DONT MODIFY!!!! *)
+  let deprecated_use                        = 4128 (* DONT MODIFY!!!! *)
+  let abstract_const_usage                  = 4129 (* DONT MODIFY!!!! *)
 
   (* EXTEND HERE WITH NEW VALUES IF NEEDED *)
 end
@@ -467,6 +473,12 @@ let invalid_type_access_root (pos, id) =
   add Naming.invalid_type_access_root pos
   (id ^ " must be an identifier for a class")
 
+let duplicate_user_attribute (pos, name) existing_attr_pos =
+  add_list Naming.duplicate_user_attribute [
+    pos, "You cannot reuse the attribute "^name;
+    existing_attr_pos, name^" was already used here";
+  ]
+
 let this_no_argument pos =
   add Naming.this_no_argument pos "\"this\" expects no arguments"
 
@@ -602,9 +614,16 @@ let dynamic_class pos =
     "Don't use dynamic classes"
 
 let uninstantiable_class usage_pos decl_pos name =
-  let name = (strip_ns name) in
+  let name = strip_ns name in
   add_list Typing.uninstantiable_class [
     usage_pos, (name^" is uninstantiable");
+    decl_pos, "Declaration is here"
+  ]
+
+let abstract_const_usage usage_pos decl_pos name =
+  let name = strip_ns name in
+  add_list Typing.abstract_const_usage [
+    usage_pos, ("Cannot reference abstract constant "^name^" directly");
     decl_pos, "Declaration is here"
   ]
 
@@ -703,6 +722,10 @@ let not_abstract_without_typeconst (p, _) =
   add NastCheck.not_abstract_without_typeconst p
     ("This type constant is not declared as abstract, it must have"^
      " an assigned type")
+
+let abstract_with_typeconst (p, _) =
+  add NastCheck.abstract_with_typeconst p
+    ("This type constant is declared as abstract, it cannot be assigned a type")
 
 let typeconst_depends_on_external_tparam pos ext_pos ext_name =
   add_list NastCheck.typeconst_depends_on_external_tparam [
@@ -924,10 +947,11 @@ let missing_field pos1 pos2 name =
 
 let explain_constraint pos name (error: error) =
   let code, msgl = error in
+  let name = Utils.strip_ns name in
   add_list code (
-  msgl @
-  [pos, "Considering the constraint on the type '"^name^"'"]
-)
+    msgl @
+      [pos, "Considering the constraint on '"^name^"'"]
+  )
 
 let overflow p =
   add Typing.overflow p "Value is too large"
@@ -1254,12 +1278,12 @@ let trait_final pos =
   add Typing.trait_final pos
     "Traits cannot be final"
 
-let implement_abstract pos1 pos2 x =
-  let s_meth = "abstract method "^x in
+let implement_abstract pos1 pos2 kind x =
+  let s_meth = "abstract "^kind^" "^x in
   add_list Typing.implement_abstract [
-  pos1, "This class must provide an implementation for the "^s_meth;
-  pos2, "The "^s_meth^" is defined here";
-]
+    pos1, "This class must provide an implementation for the "^s_meth;
+    pos2, "The "^s_meth^" is defined here";
+  ]
 
 let generic_static pos x =
   add Typing.generic_static pos (
@@ -1484,6 +1508,23 @@ let trivial_strict_eq p b left right left_trail right_trail =
 let void_usage p reason =
   let msg = "You are attempting to use the return value of a void function" in
   add_list Typing.void_usage ((p, msg) :: reason)
+
+let attribute_arity pos x n =
+  let n = string_of_int n in
+  add Typing.attribute_arity pos (
+    "The attribute "^x^" expects "^n^" parameters"
+  )
+
+let attribute_param_type pos x =
+  add Typing.attribute_param_type pos (
+    "This attribute parameter should be "^x
+  )
+
+let deprecated_use pos pos_def msg =
+  add_list Typing.deprecated_use [
+    pos, msg;
+    pos_def, "Definition is here";
+  ]
 
 (*****************************************************************************)
 (* Convert relative paths to absolute. *)

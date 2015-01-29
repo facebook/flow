@@ -29,4 +29,4 @@ val make_env:
   Naming.env -> Relative_path.Set.t SMap.t -> Relative_path.t -> unit
 
 val class_decl:
-  Naming.env -> Nast.class_ -> unit
+  Nast.class_ -> unit

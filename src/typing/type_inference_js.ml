@@ -87,8 +87,9 @@ let mk_object cx reason =
 let extend_object cx reason o = function
   | None -> o
   | Some other ->
-      Flow_js.unit_flow cx (other, ObjAssignT (reason, o, AnyT.t));
-      o
+      Flow_js.mk_tvar_where cx reason (fun t ->
+        Flow_js.unit_flow cx (other, ObjAssignT (reason, o, t))
+      )
 
 let summarize cx t = match t with
   | OpenT _ ->
@@ -863,7 +864,7 @@ and statement_decl cx = Ast.Statement.(
           (* The only literals that we should see as module names are strings *)
           assert false in
       let r = mk_reason (spf "module %s" name) loc in
-      let t = mk_object cx r in
+      let t = Flow_js.mk_tvar cx r in
       Hashtbl.replace cx.type_table loc t;
       Env_js.init_env cx (spf "$module__%s" name) (create_env_entry t t (Some loc))
   | (_, ExportDeclaration _) ->
@@ -1666,7 +1667,7 @@ and statement cx = Ast.Statement.(
     let _, { Ast.Statement.Block.body = elements } = body in
 
     let reason = mk_reason (spf "module %s" name) loc in
-    let o = Env_js.get_var_in_scope cx (spf "$module__%s" name) reason in
+    let t = Env_js.get_var_in_scope cx (spf "$module__%s" name) reason in
     let block = ref SMap.empty in
     Env_js.push_env block;
 
@@ -1675,9 +1676,16 @@ and statement cx = Ast.Statement.(
 
     Env_js.pop_env();
 
-    !block |> SMap.iter (fun x {specific=t;_} ->
-      Flow_js.unit_flow cx (o, SetT(replace_reason (spf "%s.%s" name x) reason, x, t)
-    ));
+    let exports = match SMap.get "exports" !block with
+      | Some {specific=exports;_} ->
+          (* TODO: what happens when other things are also declared? *)
+          exports
+      | None ->
+          let map = SMap.map (fun {specific=export;_} -> export) !block in
+          Flow_js.mk_object_with_map_proto cx reason map (MixedT reason)
+    in
+    Flow_js.unify cx exports t
+
   | (_, ExportDeclaration _) ->
       (* TODO *)
       failwith "Unimplemented: ExportDeclaration"
@@ -3924,18 +3932,7 @@ and is_void cx = function
   | _ -> false
 
 and mk_upper_bound cx locs name t =
-  let reason =
-    reason_of_t t
-    |> prefix_reason "upper bound of "
-  in
-  let tvar = Flow_js.mk_tvar cx reason in
-  Flow_js.unit_flow cx (t,tvar);
-  let loc =
-    if SMap.mem name locs
-    then Some (SMap.find_unsafe name locs)
-    else None
-  in
-  create_env_entry t tvar loc
+  create_env_entry t t (SMap.get name locs)
 
 and mk_body id cx param_types_map param_types_loc ret body this super =
   let ctx = !Env_js.env in

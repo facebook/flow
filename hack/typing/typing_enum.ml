@@ -75,7 +75,7 @@ let check_valid_array_key_type f_fail ~allow_any:allow_any env p t =
     | Tany when allow_any -> ()
     | Tany | Tmixed | Tarray (_, _) | Tprim _ | Tgeneric (_, _) | Toption _
       | Tvar _ | Tabstract (_, _, _) | Tapply (_, _) | Ttuple _ | Tanon (_, _)
-      | Tfun _ | Tunresolved _ | Tobject | Tshape _ | Taccess (_, _, _) ->
+      | Tfun _ | Tunresolved _ | Tobject | Tshape _ | Taccess (_, _) ->
         f_fail p (Reason.to_pos r) (Typing_print.error t') trail);
   env
 
@@ -120,7 +120,7 @@ let enum_class_check env tc consts const_types =
           | Tany | Tarray (_, _) | Tprim _ | Toption _ | Tvar _
             | Tabstract (_, _, _) | Tapply (_, _) | Ttuple _ | Tanon (_, _)
             | Tunresolved _ | Tobject | Tfun _ | Tshape _
-            | Taccess (_, _, _) -> Errors.enum_type_bad (Reason.to_pos r)
+            | Taccess (_, _) -> Errors.enum_type_bad (Reason.to_pos r)
                    (Typing_print.error ty_exp') trail);
 
         (* Make sure that if a constraint was given that the base type is

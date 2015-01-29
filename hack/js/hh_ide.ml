@@ -120,7 +120,7 @@ let declare_file fn content =
       SSet.iter begin fun cname ->
         match Naming_heap.ClassHeap.get cname with
         | None -> ()
-        | Some c -> Typing_decl.class_decl nenv c
+        | Some c -> Typing_decl.class_decl c
       end sub_classes
     end
     else Hashtbl.replace globals fn (false, [], [])
@@ -200,7 +200,7 @@ let hh_auto_complete fn =
             let nenv = Naming.empty in
             let tenv = Typing_env.empty fn in
             let c = Naming.class_ nenv c in
-            Typing_decl.class_decl nenv c;
+            Typing_decl.class_decl c;
             let res = Typing.class_def tenv (snd c.Nast.c_name) c in
             res
         | _ -> ()

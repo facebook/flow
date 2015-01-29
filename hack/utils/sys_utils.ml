@@ -8,6 +8,7 @@
  *
  *)
 
+external realpath: string -> string option = "hh_realpath"
 
 let open_in_no_fail fn = 
   try open_in fn

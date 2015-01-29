@@ -248,11 +248,9 @@ module Program : Server.SERVER_PROGRAM = struct
   let init genv env =
     let module RP = Relative_path in
     let root = ServerArgs.root genv.options in
+    let hhi_root = Path.mk_path (Hhi.get_hhi_root ()) in
     let next_files_hhi =
-      match Hhi.get_hhi_root () with
-      | Some hhi_root ->
-          compose (rev_rev_map (RP.create RP.Hhi)) (make_next_files hhi_root)
-      | None -> print_endline "Could not locate hhi files"; exit 1 in
+      compose (rev_rev_map (RP.create RP.Hhi)) (make_next_files hhi_root) in
     let next_files_root = compose
       (rev_rev_map (RP.create RP.Root)) (make_next_files root)
     in

@@ -73,7 +73,7 @@ let rec instantiate_fun env fty el =
       instantiate_fun env fty el
   | _, (Tany | Tmixed | Tarray (_, _) | Tprim _ | Tgeneric (_, _) | Toption _
     | Tvar _ | Tabstract (_, _, _) | Tapply (_, _) | Ttuple _ | Tanon (_, _)
-    | Tunresolved _ | Tobject | Tshape _ | Taccess (_, _, _)) -> env, fty
+    | Tunresolved _ | Tobject | Tshape _ | Taccess (_, _)) -> env, fty
 
 and instantiate_ft env ft =
   let env, tvarl = List.fold_left begin fun (env, vars) (_, (pos, _), _) ->
@@ -144,7 +144,7 @@ and instantiate subst env (r, ty) =
       )
   | Tany | Tmixed | Tarray (_, _) | Tprim _ | Toption _ | Tvar _
   | Tabstract (_, _, _) | Tapply (_, _) | Ttuple _ | Tanon (_, _) | Tfun _
-  | Tunresolved _ | Tobject | Tshape _ | Taccess (_, _, _) ->
+  | Tunresolved _ | Tobject | Tshape _ | Taccess (_, _) ->
       let env, ty = instantiate_ subst env ty in
       env, (r, ty)
 
@@ -153,32 +153,9 @@ and instantiate_ subst env = function
   (* IMPORTANT: We cannot expand Taccess during instantiation because this can
    * be called before all type consts have been declared and inherited
    *)
-  | Taccess (rt, id, idl) ->
-      (* We resolve static with the "this" type if it is available. This is
-       * necessary because the type may appear outside the context of a class
-       * such as
-       *
-       * class A { type Foo = int; function getFoo(): static::Foo {}}
-       *
-       * function foo(A $x): A::Foo { return $x->getFoo(); }
-       *
-       * Without doing this, $x->getFoo() would have type "static::Foo" which
-       * cannot be resolved. However when $x is instantiated "this" will be
-       * substitued for "A" and we can use this to resolve "static::Foo" to
-       * "A::Foo".
-       *
-       * Note: This does not handle all cases where we need to resolve "static".
-       * This serves only as a way of boot strapping Taccess expansion when we
-       * need to resolve "static" outside the scope of the class where the type
-       * was declared. See Typing_taccess for how we resolve "static" in other
-       * cases.
-       *)
-      let rt =
-        match SMap.get "this" subst with
-        | Some (_, Tapply(static, _)) when rt = SCIstatic -> SCI static
-        | _ -> rt
-      in
-      env, Taccess(rt, id, idl)
+  | Taccess (ty, ids) ->
+      let env, ty = instantiate subst env ty in
+      env, Taccess (ty, ids)
   | Tanon _ as x -> env, x
   | Tarray (ty1, ty2) ->
       let env, ty1 = opt (instantiate subst) env ty1 in
@@ -243,6 +220,12 @@ and instantiate_ subst env = function
 and instantiate_ce subst env ({ ce_type = x; _ } as ce) =
   let env, x = instantiate subst env x in
   env, { ce with ce_type = x }
+
+and instantiate_typeconst subst env (
+  { ttc_constraint = x; ttc_type = y; _ } as tc) =
+    let env, x = opt (instantiate subst) env x in
+    let env, y = opt (instantiate subst) env y in
+    env, { tc with ttc_constraint = x; ttc_type = y }
 
 let instantiate_this env ty this_ty =
   let subst = make_subst_with_this this_ty [] [] in

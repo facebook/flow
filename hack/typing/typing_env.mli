@@ -85,7 +85,6 @@ val class_exists : Classes.key -> bool
 val add_extends_dependency : env -> string -> unit
 val get_class_dep : env -> Classes.key -> Classes.t option
 val get_const : env -> class_type -> string -> class_elt option
-val get_typeconst_type : env -> class_type -> string -> ty option
 val get_gconst : env -> GConsts.key -> GConsts.t option
 val get_static_member : bool -> env -> class_type -> string -> class_elt option
 val suggest_static_member :

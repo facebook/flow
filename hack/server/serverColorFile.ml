@@ -17,7 +17,7 @@ let get_level_list check =
   let level_of_type = Coverage_level.level_of_type_mapper fn in
   let result = Hashtbl.fold (fun p ty xs ->
     (Pos.info_raw p, level_of_type (p, ty)) :: xs) type_acc [] in
-  List.rev result
+  result
 
 let go env f_in oc =
   let result = get_level_list (fun () ->
