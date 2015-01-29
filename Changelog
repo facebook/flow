@@ -1,4 +1,17 @@
+v0.1.6
+
+- Bump version to 0.1.6
+- declare modules that redefine exports instead of exporting multiple things
+- Object spread race condition fix
+- Fix fallback path to flowlib.tar.gz
+- [Parser] Type grouping bug fix
+- Add Object.is
+- uncomment `delete` method signatures
+- Add MAX_SAFE_INTEGER and MIN_SAFE_INTEGER to Number
+- make param annotations strict upper bounds 
+
 v0.1.5
+
 - Bump version to 0.1.5
 - [PR #223] from commonlisp/master
 - [PR #221] from teppeis/Javascript-to-JavaScript
