@@ -1,0 +1,14 @@
+
+[LIB] A.js: module A
+This type is incompatible with
+  D.js:6:11,16: string
+
+[LIB] A.js: module A
+This type is incompatible with
+  D.js:7:11,16: string
+
+[LIB] A.js: module A
+This type is incompatible with
+  D.js:8:11,16: string
+
+Found 3 errors

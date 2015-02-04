@@ -51,9 +51,6 @@ type t = {
 
     (* The directories (and the files they contain) *)
     mutable dirs      : SSet.t SMap.t                         ;
-
-    (* The output channel where we want to log errors (/tmp/dfind_{user}.log) *)
-            log       : out_channel                           ;
   }
 
 (*****************************************************************************)
@@ -63,13 +60,10 @@ type t = {
 (*****************************************************************************)
 
 let make root =
-  let user = Sys_utils.logname in
-  let log = open_out ("/tmp/dfind_"^user^".log") in
-  let fsnotify = Fsnotify.init root log in
+  let fsnotify = Fsnotify.init root in
   {
     fsnotify  = fsnotify          ;
     files     = TimeFiles.empty   ;
     new_files = SSet.empty        ;
     dirs      = SMap.empty        ;
-    log       = log               ;
   }

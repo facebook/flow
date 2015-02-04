@@ -21,7 +21,7 @@ type event = {
   wpath : string; (* The watched path that triggered this event *)
 }
 
-val init : string -> out_channel -> env
+val init : string -> env
 
 (* Returns None if we're already watching that path and Some watch otherwise *)
 val add_watch : env -> string -> watch option

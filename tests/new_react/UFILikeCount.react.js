@@ -7,7 +7,7 @@
 
 'use strict';
 
-var React = require('React');
+var React = require('react');
 
 var UFILikeCount = React.createClass({
   propTypes: {

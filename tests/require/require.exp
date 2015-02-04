@@ -1,8 +1,14 @@
 
-require.js:4:1,15: C.js
+require.js:4:1,17: ./C.js
 Required module not found
 
-require.js:5:1,12: D
+require.js:5:1,14: ./D
 Required module not found
 
-Found 2 errors
+require.js:9:1,21: ./E.js
+Required module not found
+
+require.js:10:1,18: ./F
+Required module not found
+
+Found 4 errors

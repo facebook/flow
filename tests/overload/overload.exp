@@ -1,21 +1,21 @@
 
 overload.js:1:27,27: number
 This type is incompatible with
-  [LIB] core.js:158:19,24: string
+  [LIB] core.js:160:19,24: string
 
 overload.js:1:27,27: number
 This type is incompatible with
-  [LIB] core.js:176:1,186:1: RegExp
+  [LIB] core.js:178:1,188:1: RegExp
 
-[LIB] core.js:158:43,48: string
+[LIB] core.js:160:43,48: string
 This type is incompatible with
   overload.js:1:9,14: number
 
-[LIB] core.js:158:43,48: string
+[LIB] core.js:160:43,48: string
 This type is incompatible with
   overload.js:2:9,14: number
 
-[LIB] core.js:163:62,67: string
+[LIB] core.js:165:62,67: string
 This type is incompatible with
   overload.js:4:9,14: number
 

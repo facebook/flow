@@ -605,31 +605,23 @@ and class_const_decl c (env, acc) (h, id, e) =
         let pos, name = id in
         env, (Reason.Rwitness pos, Tgeneric (c_name^"::"^name, Some h_ty))
       | None, Some e -> begin
-        let rec infer_const e = match snd e with
+        let rec infer_const (p, expr_) = match expr_ with
           | String _
-          | String2 ([], _)
+          | String2 ([], _) -> Reason.Rwitness p, Tprim Tstring
           | True
-          | False
-          | Int _
-          | Float _
-          | Array _ ->
-            (* We don't want to keep the environment of the inference
-             * CAREFUL, right now, array is just Tarray, with no
-             * type variable, if we were to add parameters array<T>,
-             * we would have to: make a full expansion, that is,
-             * replace all the type variables in ty by their "true" type,
-             * because this feature doesn't exist, this isn't necessary
-             * right now. I am adding this tag "array", because I know
-             * I would search for it if I was changing the way arrays are
-             * typed.
-             *)
-            snd (Typing.expr env e)
-          | Unop ((Ast.Uminus | Ast.Uplus), e2) ->
+          | False -> Reason.Rwitness p, Tprim Tbool
+          | Int _ -> Reason.Rwitness p, Tprim Tint
+          | Float _ -> Reason.Rwitness p, Tprim Tfloat
+          | Unop ((Ast.Uminus | Ast.Uplus | Ast.Utild | Ast.Unot), e2) ->
             infer_const e2
           | _ ->
             (* We can't infer the type of everything here. Notably, if you
              * define a const in terms of another const, we need an annotation,
-             * since the other const may not have been declared yet. *)
+             * since the other const may not have been declared yet.
+             *
+             * Also note that a number of expressions are considered invalid
+             * as constant initializers, even if we can infer their type; see
+             * Naming.check_constant_expr. *)
             if c.c_mode = Ast.Mstrict && c.c_kind <> Ast.Cenum
             then Errors.missing_typehint (fst id);
             Reason.Rwitness (fst id), Tany

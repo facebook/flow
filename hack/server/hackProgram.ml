@@ -165,7 +165,10 @@ module Program : Server.SERVER_PROGRAM = struct
         (try
           with_context
             ~enter:(fun () -> ())
-            ~exit:(fun () -> close_out oc)
+            ~exit:(fun () ->
+                   Unix.shutdown (Unix.descr_of_out_channel oc)
+                                 Unix.SHUTDOWN_SEND;
+                   close_out oc)
             ~do_:(fun () -> build_hook genv env);
         with exn ->
           let msg = Printexc.to_string exn in

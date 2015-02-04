@@ -383,7 +383,6 @@ let rec merge_type cx = function
   | (NullT _, (MaybeT _ as t)) | ((MaybeT _ as t), NullT _)
   | (VoidT _, (MaybeT _ as t)) | ((MaybeT _ as t), VoidT _) ->
       t
-  (* TODO: Null, Void | Void, Null  *)
 
   | (FunT (_,_,_,ft1), FunT (_,_,_,ft2)) ->
       let tins =
@@ -446,6 +445,9 @@ let rec merge_type cx = function
   | (UnionT (_, ts), t)
   | (t, UnionT (_, ts)) ->
       create_union (t :: ts)
+
+  (* TODO: do we need to do anything special for merging Null with Void,
+     Optional with other types, etc.? *)
 
   | (t1, t2) ->
       create_union [t1; t2]
@@ -1289,6 +1291,19 @@ let rec flow cx (l,u) trace =
     | (MaybeT(t1), MaybeT(t2)) ->
       select_flow cx (t1,t2) trace DecomposeNullable
 
+    (******************)
+    (* optional types *)
+    (******************)
+
+    (** The type optional(T) is not the same as undefined | T. In particular, we
+        don't have a rule that lets undefined be a subtype of optional(T): this
+        prevents undefined values from flowing to locations typed
+        optional(T). On the other hand, optional(T) can be refined to T with
+        the same dynamic checks that would rule out undefined values. *)
+
+    | (OptionalT(t1), OptionalT(t2)) ->
+        unit_flow cx (t1, t2)
+
     (*****************************)
     (* upper and lower any types *)
     (*****************************)
@@ -1352,8 +1367,16 @@ let rec flow cx (l,u) trace =
     | (UnionT(_,ts), _) ->
       ts |> List.iter (fun t -> unit_flow cx (t,u))
 
+    | (OptionalT(t1), MaybeT(t2)) ->
+      (* You can't unwrap the maybe yet in case this is an
+       * OptionalT(MaybeT(t)) *)
+      unit_flow cx (t1, u)
+
     | (t1, MaybeT(t2)) ->
       unit_flow cx (t1,t2)
+
+    | (t1, OptionalT(t2)) ->
+      unit_flow cx (t1, t2)
 
     | (ConcreteT l, UnionT(r,ts)) ->
       speculative_match cx ts (fun t ->
@@ -1442,7 +1465,7 @@ let rec flow cx (l,u) trace =
     (* object types deconstruct into their parts *)
     (*********************************************)
 
-    | (ObjT (reason1, {props_tmap = flds1; proto_t; _ }),
+    | (ObjT (reason1, {props_tmap = flds1; proto_t; sealed; _ }),
        ObjT (reason2, {props_tmap = flds2; proto_t = u_; dict_t; _ }))
       ->
       (* if inflowing type is literal (thus guaranteed to be
@@ -1452,8 +1475,19 @@ let rec flow cx (l,u) trace =
         (fun s -> fun t2 ->
           if (not(has_prop cx flds1 s))
           then
+          (* property doesn't exist in inflowing type *)
             let reason2 = replace_reason (spf "property %s" s) reason2 in
-            unit_flow cx (proto_t, LookupT (reason2, Some reason1, s, t2))
+            match t2 with
+            | OptionalT t1 when not sealed ->
+                (* if property is marked optional or otherwise has a maybe type,
+                   and if inflowing type is not sealed (in particular, it is not
+                   an annotation), then it is ok to relax the requirement that
+                   the property be found immediately; instead, we constrain
+                   future lookups of the property in inflowing type *)
+                unit_flow cx (l, LookupT (reason2, None, s, t1))
+            | _ ->
+                (* otherwise, we do strict lookup of property in prototype *)
+                unit_flow cx (proto_t, LookupT (reason2, Some reason1, s, t2))
           else
             let t1 = read_prop cx flds1 s in
             flow_to_mutable_child cx lit t1 t2);
@@ -1761,7 +1795,7 @@ let rec flow cx (l,u) trace =
       unit_flow cx (proto, t)
 
     (* Object.assign semantics *)
-    | (MaybeT t1, ObjAssignT _) ->
+    | ((MaybeT t1 | OptionalT t1), ObjAssignT _) ->
       unit_flow cx (t1, u)
 
     | (MixedT _, ObjAssignT (_, proto, t)) ->
@@ -2147,7 +2181,7 @@ let rec flow cx (l,u) trace =
     (*******)
 
     | (CustomClassT("ReactClass", _, _), MarkupT(reason_op,o,t)) ->
-        let react = module_t cx "React" reason_op in
+        let react = module_t cx "react" reason_op in
         let x = mk_tvar_where cx reason_op (fun tvar ->
           unit_flow cx (react, MethodT(reason_op, "createElement", react, [l;o], tvar, 0));
         ) in
@@ -2850,19 +2884,27 @@ and not_ pred x = not(pred x)
 
 and filter_exists = function
   | MaybeT t -> t
+  | OptionalT t -> filter_exists t
   | NullT r | VoidT r -> UndefT r
   | t -> t
 
+(* There is no type (yet) that contains only truthy values: every type contains
+   either both truthy and falsy values, or only falsy values. So filtering out
+   falsy values in a type never leaves a narrower type. *)
 and filter_not_exists t = t
 
 and filter_maybe = function
   | MaybeT t ->
-    let reason = reason_of_t t in
-    UnionT (reason, [NullT.why reason; VoidT.why reason])
+      let reason = reason_of_t t in
+      UnionT (reason, [NullT.why reason; VoidT.why reason])
   | NullT r -> NullT r
   | VoidT r -> VoidT r
+  (* NOTE: it is tempting to refine optional(T) to undefined, but we don't
+     because the latter is not a subtype of the former. *)
   | t -> UndefT.t
 
+(* There is no type (yet), which contains only falsy values, that is not
+   eliminated with a maybe check. *)
 and filter_not_maybe t = filter_exists t
 
 and filter_null = function
@@ -2872,20 +2914,23 @@ and filter_null = function
 
 and filter_not_null = function
   | MaybeT t ->
-    let reason = reason_of_t t in
-    UnionT (reason, [VoidT.why reason; t])
+      let reason = reason_of_t t in
+      UnionT (reason, [VoidT.why reason; t])
   | NullT r -> UndefT r
   | t -> t
 
 and filter_undefined = function
   | MaybeT t -> VoidT.t
   | VoidT r -> VoidT r
+  (* NOTE: it is tempting to refine optional(T) to undefined, but we don't
+     because the latter is not a subtype of the former. *)
   | t -> UndefT.t
 
 and filter_not_undefined = function
   | MaybeT t ->
-    let reason = reason_of_t t in
-    UnionT (reason, [NullT.why reason; t])
+      let reason = reason_of_t t in
+      UnionT (reason, [NullT.why reason; t])
+  | OptionalT t -> filter_not_undefined t
   | VoidT r -> UndefT r
   | t -> t
 

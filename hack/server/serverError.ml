@@ -58,6 +58,9 @@ let send_errorl el oc =
   then
     ServerMsg.response_to_channel oc ServerMsg.NO_ERRORS
   else begin
+    let el = List.sort begin fun x y ->
+      Pos.compare (Errors.get_pos x) (Errors.get_pos y)
+    end el in
     let el = rev_rev_map Errors.to_absolute el in
     ServerMsg.response_to_channel oc (ServerMsg.ERRORS el);
   end;

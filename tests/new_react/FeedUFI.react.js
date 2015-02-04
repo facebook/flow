@@ -8,7 +8,7 @@
 'use strict';
 
 var UFILikeCount = require('UFILikeCount.react');
-var React = require('React');
+var React = require('react');
 
 var FeedUFI = React.createClass({
   _renderLikeCount: function(

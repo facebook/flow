@@ -808,6 +808,12 @@ and Expression : sig
       implements: Statement.Class.Implements.t list;
     }
   end
+  module TypeCast : sig
+    type t = {
+      expression: Expression.t;
+      typeAnnotation: Type.annotation;
+    }
+  end
 
   type t = Loc.t * t'
   and t' =
@@ -836,6 +842,7 @@ and Expression : sig
     | TaggedTemplate of TaggedTemplate.t
     | XJSElement of XJS.element
     | Class of Expression.Class.t
+    | TypeCast of TypeCast.t
 end = Expression
 
 and XJS : sig

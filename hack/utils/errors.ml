@@ -471,7 +471,7 @@ let dynamic_new_in_strict_mode pos =
 
 let invalid_type_access_root (pos, id) =
   add Naming.invalid_type_access_root pos
-  (id ^ " must be an identifier for a class")
+  (id^" must be an identifier for a class, \"self\", or \"this\"")
 
 let duplicate_user_attribute (pos, name) existing_attr_pos =
   add_list Naming.duplicate_user_attribute [
@@ -850,7 +850,7 @@ let override parent_pos parent_name pos name (error: error) =
   let msg1 = pos, ("This object is of type "^(strip_ns name)) in
   let msg2 = parent_pos,
     ("It is incompatible with this object of type "^(strip_ns parent_name)^
-     "\nbecause some of their methods are incompatible."^
+     "\nbecause some declarations are incompatible."^
      "\nRead the following to see why:"
     ) in
   (* This is a cascading error message *)
@@ -1279,10 +1279,10 @@ let trait_final pos =
     "Traits cannot be final"
 
 let implement_abstract pos1 pos2 kind x =
-  let s_meth = "abstract "^kind^" "^x in
+  let name = "abstract "^kind^" '"^x^"'" in
   add_list Typing.implement_abstract [
-    pos1, "This class must provide an implementation for the "^s_meth;
-    pos2, "The "^s_meth^" is defined here";
+    pos1, "This class must be declared abstract, or provide an implementation for the "^name;
+    pos2, "Declaration is here";
   ]
 
 let generic_static pos x =

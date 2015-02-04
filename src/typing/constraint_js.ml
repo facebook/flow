@@ -691,7 +691,7 @@ let rec reason_of_t = function
       -> reason
 
   | OptionalT t ->
-      prefix_reason "optional of " (reason_of_t t)
+      prefix_reason "optional " (reason_of_t t)
 
   | RestT t ->
       prefix_reason "rest array of " (reason_of_t t)

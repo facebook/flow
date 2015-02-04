@@ -595,10 +595,15 @@ let rec convert cx map = Ast.Type.(function
           | Ast.Expression.Object.Property.Literal
               (_, { Ast.Literal.value = Ast.Literal.String name; _ })
           | Ast.Expression.Object.Property.Identifier
-              (_, { Ast.Identifier.name; _ })
-              when not optional ->
-            let t = convert cx map value in
-            SMap.add name t map_
+              (_, { Ast.Identifier.name; _ }) ->
+              let t = convert cx map value in
+              if optional
+              then
+                (* wrap types of optional properties, just like we do for
+                   optional parameters *)
+                SMap.add name (OptionalT t) map_
+              else
+                SMap.add name t map_
           | _ ->
             let msg = "Unsupported key in object type" in
             Flow_js.add_error cx [mk_reason "" loc, msg];
@@ -885,15 +890,17 @@ and toplevels cx stmts =
   Abnormal.exception_handler (fun () ->
     stmts |> List.iter (fun stmt ->
       statement cx stmt;
-      incr n
+      incr n (* n is bumped whenever stmt doesn't exit abnormally *)
     )
   )
     (fun exn ->
-      if !n < List.length stmts - 1
+      (* !n is the index of the statement that exits abnormally, so !n+1 is the
+         index of possibly unreachable code. *)
+      let uc = !n+1 in
+      if uc < List.length stmts
       then (
-        (* !n+1 is the location of unreachable code *)
         let msg = "unreachable code" in
-        let (loc, _) = List.nth stmts !n in
+        let (loc, _) = List.nth stmts uc in
         Flow_js.add_warning cx [mk_reason "" loc, msg]
       );
       Abnormal.raise_exn exn
@@ -1142,7 +1149,8 @@ and statement cx = Ast.Statement.(
   | (loc, Throw { Throw.argument }) ->
       let reason = mk_reason "throw" loc in
       ignore (expression cx argument);
-      Env_js.clear_env reason
+      Env_js.clear_env reason;
+      Abnormal.set Abnormal.Return
 
   (***************************************************************************)
   (* Try-catch-finally statements have a lot of control flow possibilities. (To
@@ -1216,6 +1224,9 @@ and statement cx = Ast.Statement.(
             ()
 
         | Some (_, h) ->
+            (* reset any exception in try block *)
+            exception_try := None;
+
             (* havoc environment, since the try block may exit anywhere *)
             Env_js.havoc_env2 !Env_js.changeset;
             ignore_exception_handler
@@ -1254,10 +1265,8 @@ and statement cx = Ast.Statement.(
       ignore newset;
 
       (* Raise whatever finally raises. If finally doesn't raise, raise whatever
-         try raises, since control would flow from try to finally, and ignore
-         any raises by catch. (Recall that raising includes only breaks,
-         continues, and returns (not throws), in which cases control flows from
-         try to finally without going through catch.) *)
+         try raises (unless there is catch), since control would flow from try
+         to finally without catch; and ignore any raises by catch. *)
       raise_exception !exception_finally;
       raise_exception !exception_try
 
@@ -1931,10 +1940,7 @@ and expression_ cx loc e = Ast.Expression.(match e with
       then AnyT.at loc
       else (
         if name = "undefined"
-        then
-          let void = void_ loc in
-          let reason = reason_of_t void in
-          UnionT (reason, [void; Flow_js.mk_tvar cx reason])
+        then void_ loc
         else (
           let reason = mk_reason (spf "identifier %s" name) loc in
           let t = Env_js.var_ref cx name reason in
@@ -1956,6 +1962,16 @@ and expression_ cx loc e = Ast.Expression.(match e with
 
   | Logical l ->
       logical cx loc l
+
+  | TypeCast {
+        TypeCast.expression = eloc, expr;
+        typeAnnotation } ->
+      let r = mk_reason "typecast" loc in
+      let t = mk_type_annotation cx r (Some typeAnnotation) in
+      Hashtbl.replace cx.type_table loc t;
+      let infer_t = expression_ cx eloc expr in
+      Flow_js.unit_flow cx (infer_t, t);
+      t
 
   | Member {
       Member._object;
@@ -2086,7 +2102,10 @@ and expression_ cx loc e = Ast.Expression.(match e with
     )
 
   | Call {
-      Call.callee = _, Identifier (_, { Ast.Identifier.name = "require"; _ });
+      Call.callee = _, Identifier (_, {
+        Ast.Identifier.name = ("require" | "requireType");
+        _
+      });
       arguments
     } -> (
       match arguments with
@@ -4015,16 +4034,14 @@ and mk_params_ret cx map_ params (body_loc, ret_type_opt) =
             let t = mk_type_annotation_ cx map_ reason typeAnnotation in
             (match default with
               | None ->
-                  let external_t, internal_t =
+                  let t =
                     if optional
-                    then
-                      let reason = reason_of_t t in
-                      OptionalT t, UnionT (reason, [VoidT.why reason; t])
-                    else t, t
+                    then OptionalT t
+                    else t
                   in
-                  external_t :: tlist,
+                  t :: tlist,
                   name :: pnames,
-                  SMap.add name internal_t tmap,
+                  SMap.add name t tmap,
                   SMap.add name loc lmap
               | Some expr ->
                   (* TODO: assert (not optional) *)
@@ -4241,7 +4258,10 @@ let force_annotations cx =
   let after = Errors_js.ErrorSet.cardinal cx.errors in
   let ground_bounds = new_bounds id reason in
   if (after = before)
-  then ground_bounds.lower <- bounds.lower;
+  then (
+    ground_bounds.lower <- bounds.lower;
+    ground_bounds.lowertvars <- bounds.lowertvars
+  );
   cx.graph <- IMap.add id ground_bounds cx.graph
 
 (* core inference, assuming setup and teardown happens elsewhere *)

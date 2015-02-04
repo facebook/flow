@@ -1,4 +1,4 @@
-var React = require('React');
+var React = require('react');
 var TestProps = React.createClass({
     // Do something illegal inside of propTypes and make sure Flow notices
     propTypes: {

@@ -12,3 +12,9 @@ open Typing_defs
 
 (* Expands a type access to underlying type *)
 val expand: Typing_env.env -> taccess_type -> Typing_env.env * ty
+
+val fill_with_class_id:
+  Typing_env.env -> Nast.class_id -> ty -> ty -> Typing_env.env * ty
+
+val fill_with_expr:
+  Typing_env.env -> Nast.expr -> ty -> ty -> Typing_env.env * ty

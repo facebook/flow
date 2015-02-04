@@ -7,4 +7,7 @@ test.js:13:5,7: function call
 Callable signature not found in
   test.js:13:5,5: object literal
 
-Found 2 errors
+test.js:34:5,8: 
+unreachable code
+
+Found 3 errors

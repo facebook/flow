@@ -323,6 +323,13 @@ module Translate = struct
         Js.Unsafe.set ret "right" (expression binary.right);
         ret
       )
+    | loc, TypeCast typecast -> TypeCast.(
+        let ret = node "TypeCastExpression" loc in
+        Js.Unsafe.set ret "expression" (expression typecast.expression);
+        Js.Unsafe.set ret "typeAnnotation"
+          (type_annotation typecast.typeAnnotation);
+        ret
+      )
     | loc, Assignment assignment -> Assignment.(
         let ret = node "AssignmentExpression" loc in
         Js.Unsafe.set ret "operator" (string (match assignment.operator with

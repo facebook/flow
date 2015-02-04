@@ -1,5 +1,5 @@
 
-optional.js:1:14,15: undefined
+optional.js:1:23,23: optional parameter x
 This type is incompatible with
   optional.js:1:23,27: number
 
@@ -21,4 +21,20 @@ optional.js:10:14,15: number
 This type is incompatible with
   optional.js:7:30,35: string
 
-Found 6 errors
+undefined.js:8:12,17: property duck
+Property cannot be accessed on possibly undefined value
+  undefined.js:1:5,5: undefined
+
+undefined.js:8:12,17: property duck
+Property cannot be accessed on possibly undefined value
+  undefined.js:3:21,29: undefined
+
+undefined2.js:8:12,17: property duck
+Property cannot be accessed on possibly undefined value
+  undefined2.js:1:5,5: undefined
+
+undefined2.js:8:12,17: property duck
+Property cannot be accessed on
+  undefined2.js:4:9,11: optional parameter bar
+
+Found 10 errors

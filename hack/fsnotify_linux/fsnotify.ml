@@ -29,7 +29,6 @@ module WMap = Map.Make(struct type t = watch let compare = compare end)
 
 type env = {
           fd     : Unix.file_descr;
-          log    : out_channel;
   mutable wpaths : string WMap.t;
 }
 
@@ -38,9 +37,8 @@ type event = {
   wpath : string; (* The watched path that triggered this event *)
 }
 
-let init _root log = {
+let init _root = {
   fd     = wrap (Inotify.init) ();
-  log    = log;
   wpaths = WMap.empty;
 }
 
@@ -60,7 +58,7 @@ let add_watch env path =
     Some watch
   end
 
-let check_event_type env = function
+let check_event_type = function
   | Inotify.Access
   | Inotify.Attrib
   | Inotify.Close_write
@@ -76,20 +74,17 @@ let check_event_type env = function
   | Inotify.Modify
   | Inotify.Isdir -> ()
   | Inotify.Q_overflow ->
-      Printf.fprintf env.log "INOTIFY OVERFLOW!!!\n";
-      flush env.log;
+      Printf.printf "INOTIFY OVERFLOW!!!\n";
       exit 5
   | Inotify.Unmount ->
-      Printf.fprintf env.log "UNMOUNT EVENT!!!\n";
-      flush env.log;
+      Printf.printf "UNMOUNT EVENT!!!\n";
       exit 5
 
 let process_event env events event =
-(*      Printf.fprintf env.log "Event: %s\n" (_string_of event); flush env.log; *)
   match event with
   | _, _, _, None -> events
   | watch, type_list, _, Some filename -> 
-      List.iter (check_event_type env) type_list;
+      List.iter check_event_type type_list;
       let wpath = try WMap.find watch env.wpaths with _ -> assert false in
       let path = wpath ^ "/" ^ filename in
       { path; wpath; }::events

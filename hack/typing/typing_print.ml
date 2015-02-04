@@ -16,6 +16,8 @@
 open Utils
 open Typing_defs
 
+module SN = Naming_special_names
+
 (*****************************************************************************)
 (* Computes the string representing a type in an error message.
  * We generally don't want to show the whole type. If an error was due

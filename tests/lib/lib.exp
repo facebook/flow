@@ -7,11 +7,11 @@ This type is incompatible with
 This type is incompatible with
   libtest.js:4:7,12: string
 
-[LIB] core.js:66:23,28: number
+[LIB] core.js:68:23,28: number
 This type is incompatible with
   libtest.js:2:7,12: string
 
-[LIB] core.js:240:11,16: string
+[LIB] core.js:242:11,16: string
 This type is incompatible with
   libtest.js:3:7,12: number
 

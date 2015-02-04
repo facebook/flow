@@ -67,8 +67,28 @@ let check_members_implemented parent_reason reason parent_members members =
     | _ -> ()
   end parent_members
 
+(* When constant is overridden we need to check if the type is
+ * compatible with the previous type defined in the parent.
+ *
+ * Note that we determine if a constant is abstract by seeing if it is
+ * a Tgeneric.
+ *)
+let check_types_for_const env parent_type class_type =
+  match (snd parent_type, snd class_type) with
+    | Tgeneric (_, None), _ -> ()
+    (* parent abstract constant; no constraints *)
+    | Tgeneric (_, Some fty_parent), Tgeneric (_, Some fty_child) ->
+      (* redeclaration of an abstract constant *)
+      ignore (TUtils.sub_type env fty_parent fty_child)
+    | Tgeneric (_, Some fty_parent), _ ->
+      (* const definition constrained by parent abstract const *)
+      ignore (TUtils.sub_type env fty_parent class_type)
+    | (_, _) ->
+      (* types should be the same *)
+      ignore (TUtils.unify env parent_type class_type)
+
 (* Check that overriding is correct *)
-let check_override env ?(ignore_fun_return = false)
+let check_override env ?(ignore_fun_return = false) ?(check_for_const = false)
     parent_class class_ parent_class_elt class_elt =
   let class_known = if use_parent_for_known then parent_class.tc_members_fully_known
     else class_.tc_members_fully_known in
@@ -82,7 +102,9 @@ let check_override env ?(ignore_fun_return = false)
     let this_ty = fst self, Tgeneric ("this", Some self) in
     let env, parent_ce_type =
       Inst.instantiate_this env parent_class_elt.ce_type this_ty in
-    match parent_ce_type, class_elt.ce_type with
+    if check_for_const
+    then check_types_for_const env parent_ce_type class_elt.ce_type
+    else match parent_ce_type, class_elt.ce_type with
       | (r_parent, Tfun ft_parent), (r_child, Tfun ft_child) ->
         let subtype_funs =
           if (not ignore_fun_return) &&
@@ -121,10 +143,7 @@ let check_members env parent_class class_ parent_members members =
 let instantiate_members subst env members =
   SMap.map_env (Inst.instantiate_ce subst) env members
 
-(* TODO constant inheritance is broken. We don't inherit constants that
- * come from interfaces. *)
 let make_all_members class_ = [
-(* class_.tc_consts; *)
   class_.tc_cvars;
   class_.tc_scvars;
   class_.tc_methods;
@@ -183,21 +202,18 @@ let check_constructors env parent_class class_ psubst subst =
 
 let tconst_subsumption this_ty env parent_typeconst child_typeconst =
   match parent_typeconst, child_typeconst with
-  | { ttc_constraint = Some parent_cstr; _}, (
-      { ttc_type = Some child_ty; _ }
-      | { ttc_constraint = Some child_ty; _ }
-    ) ->
-      let env, parent_cstr = Inst.instantiate_this env parent_cstr this_ty in
-      ignore (TUtils.sub_type env parent_cstr child_ty)
+  | { ttc_constraint = Some parent_cstr; _},
+      ({ ttc_type = Some child_ty; _ } | { ttc_constraint = Some child_ty; _ }) ->
+    let env, parent_cstr = Inst.instantiate_this env parent_cstr this_ty in
+    ignore (TUtils.sub_type env parent_cstr child_ty)
   | { ttc_type = Some parent_ty; _ }, { ttc_type = Some child_ty; _ } ->
-      let env, parent_ty = Inst.instantiate_this env parent_ty this_ty in
-      ignore (TUtils.unify env parent_ty child_ty)
+    let env, parent_ty = Inst.instantiate_this env parent_ty this_ty in
+    ignore (TUtils.unify env parent_ty child_ty)
   | _, _ -> ()
 
-(* For type constants we need to check that a child respects the constraints
- * specified by its parent.
- *)
-let check_tconsts env parent_class class_ =
+(* For type constants we need to check that a child respects the
+ * constraints specified by its parent.  *)
+let check_typeconsts env parent_class class_ =
   let self = Env.get_self env in
   let this_ty = fst self, Tgeneric ("this", Some self) in
   let parent_pos, parent_class, _ = parent_class in
@@ -206,20 +222,35 @@ let check_tconsts env parent_class class_ =
   let typeconsts = class_.tc_typeconsts in
   SMap.iter begin fun tconst_name parent_tconst ->
     match SMap.get tconst_name typeconsts with
-    | Some tconst ->
-        tconst_subsumption this_ty env parent_tconst tconst
-    | None ->
+      | Some tconst -> tconst_subsumption this_ty env parent_tconst tconst
+      | None ->
         Errors.member_not_implemented
           tconst_name parent_pos pos (fst parent_tconst.ttc_name)
- end ptypeconsts
+  end ptypeconsts
+
+let check_consts env parent_class class_ psubst subst =
+  let pconsts, consts = parent_class.tc_consts, class_.tc_consts in
+  let env, pconsts = instantiate_members psubst env pconsts in
+  let env, consts = instantiate_members subst env consts in
+  let check_const_override = check_override env ~check_for_const:true parent_class class_ in
+  SMap.iter begin fun const_name parent_const ->
+    match SMap.get const_name consts with
+      | Some const -> check_const_override parent_const const
+      | None ->
+        let parent_pos = Reason.to_pos (fst parent_const.ce_type) in
+        Errors.member_not_implemented const_name parent_pos
+          class_.tc_pos parent_class.tc_pos
+  end pconsts;
+  ()
 
 let check_class_implements env parent_class class_ =
-  check_tconsts env parent_class class_;
+  check_typeconsts env parent_class class_;
   let parent_pos, parent_class, parent_tparaml = parent_class in
   let pos, class_, tparaml = class_ in
   let fully_known = class_.tc_members_fully_known in
   let psubst = Inst.make_subst parent_class.tc_tparams parent_tparaml in
   let subst = Inst.make_subst class_.tc_tparams tparaml in
+  check_consts env parent_class class_ psubst subst;
   let pmemberl = make_all_members parent_class in
   let memberl = make_all_members class_ in
   check_constructors env parent_class class_ psubst subst;

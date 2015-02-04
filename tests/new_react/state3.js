@@ -1,4 +1,4 @@
-var React = require('React');
+var React = require('react');
 var TestState = React.createClass({
 
     getInitialState: function(): { x: string; } {

@@ -58,14 +58,12 @@ let (process_fsnotify_event:
 (*****************************************************************************)
 
 let daemon_from_pipe env message_in result_out =
-  let env = { env with log = stdout; } in
   let acc = ref SSet.empty in
   while true do
     let fsnotify_callback events = 
       acc := List.fold_left (process_fsnotify_event env) !acc events
     in let message_in_callback () = 
       let ic = Unix.in_channel_of_descr message_in in
-      flush env.log;
       let msg = Marshal.from_channel ic in
       assert (msg = "Go");
       let result_out = Unix.out_channel_of_descr result_out in

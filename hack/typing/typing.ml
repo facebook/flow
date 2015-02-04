@@ -851,7 +851,12 @@ and expr_ in_cond is_lvalue env (p, e) =
       env, (Reason.Rwitness p, Tprim Tstring)
   | Fun_id x ->
       Typing_hooks.dispatch_id_hook x env;
-      fun_type_of_id env x
+      let env, fty = fun_type_of_id env x in
+      begin match fty with
+      | _, Tfun fty -> check_deprecated (fst x) fty;
+      | _ -> ()
+      end;
+      env, fty
   | Id ((cst_pos, cst_name) as id) ->
       Typing_hooks.dispatch_id_hook id env;
       (match Env.get_gconst env cst_name with
@@ -874,6 +879,7 @@ and expr_ in_cond is_lvalue env (p, e) =
     let env, result, vis =
       obj_get_with_visibility ~is_method:true ~nullsafe:None env ty1
                               meth (fun x -> x) in
+    let env, result = TAccess.fill_with_expr env instance ty1 result in
     let has_lost_info = Env.FakeMembers.is_invalid env instance (snd meth) in
     if has_lost_info
     then
@@ -912,6 +918,8 @@ and expr_ in_cond is_lvalue env (p, e) =
         let env, fty =
           obj_get ~is_method:true ~nullsafe:None env obj_type
                   meth_name (fun x -> x) in
+        let env, fty = TAccess.fill_with_class_id env
+          (CI (pos, class_name)) obj_type fty in
         (match fty with
         | reason, Tfun fty ->
             check_deprecated p fty;
@@ -1087,6 +1095,7 @@ and expr_ in_cond is_lvalue env (p, e) =
       let env, ty1 = expr env e1 in
       let env, result =
         obj_get ~is_method:false ~nullsafe env ty1 m (fun x -> x) in
+      let env, result = TAccess.fill_with_expr env e1 ty1 result in
       let has_lost_info = Env.FakeMembers.is_invalid env e1 (snd m) in
       if has_lost_info
       then
@@ -1302,7 +1311,7 @@ and new_object ~check_not_abstract p env c el uel =
       end env class_.tc_tparams in
       let env =
         if SSet.mem "XHP" class_.tc_extends then env else
-        let env = call_construct p env class_ params el uel in
+        let env = call_construct p env class_ params el uel c in
         env
       in
       let obj_type = Reason.Rwitness p, Tapply (cname, params) in
@@ -1914,6 +1923,8 @@ and dispatch_call p env call_type (fpos, fun_expr as e) el uel =
               begin fun (env, fty, _) ->
                 let env, fty = Env.expand_type env fty in
                 let env, fty = Inst.instantiate_fun env fty el in (* ignore uel ; el for FormatString *)
+                let env, fty = TAccess.fill_with_class_id
+                  env CIparent (k_lhs()) fty in
                 let fty = check_abstract_parent_meth (snd m) p fty in
                 let env, method_ = call p env fty el uel in
                 env, method_, None
@@ -1947,6 +1958,7 @@ and dispatch_call p env call_type (fpos, fun_expr as e) el uel =
       let fn = (fun (env, fty, _) ->
         let env, fty = Env.expand_type env fty in
         let env, fty = Inst.instantiate_fun env fty el in (* ignore uel ; el for FormatString *)
+        let env, fty = TAccess.fill_with_expr env e1 ty1 fty in
         let env, method_ = call p env fty el uel in
         env, method_, None) in
       let env =
@@ -1979,7 +1991,6 @@ and fun_type_of_id env x =
     match Env.get_fun env (snd x) with
     | None -> unbound_name env x
     | Some fty ->
-        check_deprecated (fst x) fty;
         let env, fty = Inst.instantiate_ft env fty in
         env, (Reason.Rwitness fty.ft_pos, Tfun fty)
   in
@@ -2259,7 +2270,8 @@ and class_contains_smethod env cty (_pos, mid) =
 and class_get ~is_method ~is_const env cty (p, mid) cid =
   let env, ty = class_get_ ~is_method ~is_const env cty (p, mid) cid in
   (* Replace the SN.Typehints.this type in the resulting type *)
-  Inst.instantiate_this env ty cty
+  let env, ty = Inst.instantiate_this env ty cty in
+  TAccess.fill_with_class_id env cid cty ty
 
 and class_get_ ~is_method ~is_const env cty (p, mid) cid =
   match cty with
@@ -2670,7 +2682,7 @@ and static_class_id p env = function
             Reason.Rnone, Tany
       in env, ty
 
-and call_construct p env class_ params el uel =
+and call_construct p env class_ params el uel cid =
   let cstr = Env.get_construct env class_ in
   let mode = Env.get_mode env in
   Typing_hooks.dispatch_constructor_hook class_ env p;
@@ -2685,6 +2697,8 @@ and call_construct p env class_ params el uel =
       check_visibility p env (Reason.to_pos (fst m), vis) None;
       let subst = Inst.make_subst class_.tc_tparams params in
       let env, m = Inst.instantiate subst env m in
+      let env, cid_ty = static_class_id p env cid in
+      let env, m = TAccess.fill_with_class_id env cid cid_ty m in
       fst (call p env m el uel)
 
 and check_visibility p env (p_vis, vis) cid =
@@ -3581,6 +3595,41 @@ and method_def env m =
   let env = Typing_hint.check_tparams_instantiable env m.m_tparams in
   let env, params =
     lfold (make_param_type_ ~for_body:true Env.fresh_type) env m_params in
+  (* For params we want to resolve to "static" or "$this" depending on the
+   * context. Even though we are passing in CIstatic, resolve_with_class_id
+   * is smart enough to know what to do. Why do this? Consider the following
+   *
+   * abstract class C {
+   *   abstract const type T;
+   *
+   *   private this::T $val;
+   *
+   *   final public function __construct(this::T $x) {
+   *     $this->val = $x;
+   *   }
+   *
+   *   public static function create(this::T $x): this {
+   *     return new static($x);
+   *   }
+   * }
+   *
+   * class D extends C { const type T = int; }
+   *
+   * In __construct() we want to be able to assign $x to $this->val. The type of
+   * $this->val will expand to '$this::T', so we need $x to also be '$this::T'.
+   * We can do this soundly because when we construct a new class such as,
+   * 'new D(0)' we can determine the late static bound type (D) and resolve
+   * 'this::T' to 'D::T' which is int.
+   *
+   * A similar line of reasoning is applied for the static method create.
+   *)
+  let env, cid_ty = static_class_id (fst m.m_name) env CIstatic in
+  let env, params =
+      lfold (fun env (x, ty) ->
+        let env, ty = TAccess.fill_with_class_id env CIstatic cid_ty ty in
+        env, (x, ty)
+      ) env params
+  in
   if Env.is_strict env then begin
     List.iter2 (check_param env) m_params params;
   end;

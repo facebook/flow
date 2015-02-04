@@ -818,6 +818,61 @@ module.exports = {
       },
     },
   },
+  'Typecasts': {
+    '(xxx: number)': {
+      'body.0.expression': {
+        'type': 'TypeCastExpression',
+        'expression.type': 'Identifier',
+        'typeAnnotation.typeAnnotation.type': 'NumberTypeAnnotation'
+      }
+    },
+    '({xxx: 0, yyy: "hey"}: {xxx: number; yyy: string})': {
+      'body.0.expression': {
+        'type': 'TypeCastExpression',
+        'expression.type': 'ObjectExpression',
+        'typeAnnotation.typeAnnotation.type': 'ObjectTypeAnnotation'
+      }
+    },
+    // distinguish between function type params and typecasts
+    '((xxx) => xxx + 1: (xxx: number) => number)': {
+      'body.0.expression': {
+        'type': 'TypeCastExpression',
+        'expression.type': 'ArrowFunctionExpression',
+        'typeAnnotation.typeAnnotation': {
+          'type': 'FunctionTypeAnnotation',
+          'params.0.name.name': 'xxx'
+        }
+      }
+    },
+    // parens disambiguate groups from casts
+    '((xxx: number), (yyy: string))': {
+      'body.0.expression': {
+        'type': 'SequenceExpression',
+        'expressions.0.type': 'TypeCastExpression',
+        'expressions.1.type': 'TypeCastExpression',
+      }
+    },
+  },
+  'Invalid Typecasts': {
+    // Must be parenthesized
+    'var x: number = 0: number;': {
+      'errors': {
+        '0': {
+          'message': 'Unexpected token :',
+          'loc.start.column': 17,
+        }
+      }
+    },
+    // ...even within groups
+    '(xxx: number, yyy: string)': {
+      'errors': {
+        '0': {
+          'message': 'Unexpected token ,',
+          'loc.start.column': 12,
+        }
+      }
+    }
+  },
   'Type Aliases': {
     'type FBID = number;': {
       'body': [

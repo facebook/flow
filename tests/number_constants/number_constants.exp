@@ -1,25 +1,25 @@
 
-[LIB] core.js:64:21,26: number
+[LIB] core.js:66:21,26: number
 This type is incompatible with
   number_constants.js:12:8,13: string
 
-[LIB] core.js:65:30,35: number
+[LIB] core.js:67:30,35: number
 This type is incompatible with
   number_constants.js:2:8,13: string
 
-[LIB] core.js:66:23,28: number
+[LIB] core.js:68:23,28: number
 This type is incompatible with
   number_constants.js:6:8,13: string
 
-[LIB] core.js:67:30,35: number
+[LIB] core.js:69:30,35: number
 This type is incompatible with
   number_constants.js:4:8,13: string
 
-[LIB] core.js:68:23,28: number
+[LIB] core.js:70:23,28: number
 This type is incompatible with
   number_constants.js:8:8,13: string
 
-[LIB] core.js:69:17,22: number
+[LIB] core.js:71:17,22: number
 This type is incompatible with
   number_constants.js:10:8,13: string
 

@@ -146,6 +146,11 @@ module Typehints = struct
   let mixed    = "mixed"
   let this     = "this"
 
+  (* Place holder type that will be filled later. This is used for implementing
+   * the path dependent type for type accesses
+   *)
+  let type_hole = "[unknown]"
+
   let int     = "int"
   let bool    = "bool"
   let float   = "float"

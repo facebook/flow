@@ -13,7 +13,6 @@ exception Error of string * int
 
 type watch = string
 type env = {
-          log      : out_channel;
           fsevents : Fsevents.env;
   mutable wpaths   : SSet.t;
 }
@@ -34,9 +33,8 @@ let add_watch env path =
     Some path 
   end
 
-let init root log = 
+let init root =
   let env = {
-    log      = log;
     fsevents = Fsevents.init ();
     wpaths   = SSet.empty;
   } in

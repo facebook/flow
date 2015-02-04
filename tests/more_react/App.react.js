@@ -4,7 +4,7 @@
  * @jsx React.DOM
  */
 
-var React = require('React');
+var React = require('react');
 
 // expect args to be strings
 function foo(p:string,q:string):string { return p+q; }

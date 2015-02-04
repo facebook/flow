@@ -2050,7 +2050,8 @@ end = struct
       | _, ArrowFunction _
       | _, Yield _
       | _, XJSElement _
-      | _, Let _ -> false)
+      | _, Let _
+      | _, TypeCast _ -> false)
 
     and is_assignable_lhs = Expression.(function
       | _, Array _
@@ -2077,7 +2078,8 @@ end = struct
       | _, ArrowFunction _
       | _, Yield _
       | _, XJSElement _
-      | _, Let _ -> false)
+      | _, Let _
+      | _, TypeCast _ -> false)
 
 
     and assignment_op env =
@@ -2607,7 +2609,18 @@ end = struct
       let ret = match Peek.token env, env.no_arrow_parens with
       | T_RPAREN, false ->
           ArrowParams ((Loc.btwn start_loc (Peek.loc env)), [], None)
-      | _ -> sequence_or_arrow_params env start_loc [] in
+      | _ ->
+          let ret = sequence_or_arrow_params env start_loc [] in
+          match Peek.token env with
+          | T_COLON ->
+              let expr = extract_expr env ret in
+              let anno = Type.annotation env in
+              Expr Expression.(Loc.btwn (fst expr) (fst anno),
+                TypeCast TypeCast.({
+                  expression = expr; typeAnnotation = anno
+                }))
+          | _ -> ret
+      in
       Expect.token env T_RPAREN;
       ret
 

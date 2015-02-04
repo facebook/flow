@@ -103,15 +103,17 @@ let enum_class_check env tc consts const_types =
         let env, (r, ty_exp'), trail =
           Typing_tdef.force_expand_typedef env ty_exp in
         (match ty_exp' with
-          (* We disallow first-class enums from being mixed *)
-          | Tmixed when tc.tc_enum_type <> None ->
+          (* We disallow first-class enums from being non-exact types, because
+           * a switch on such an enum can lead to very unexpected results,
+           * since switch uses == equality. *)
+          | Tmixed | Tprim Tarraykey when tc.tc_enum_type <> None ->
               Errors.enum_type_bad (Reason.to_pos r)
                 (Typing_print.error ty_exp') trail
           (* We disallow typedefs that point to mixed *)
           | Tmixed when snd ty_exp <> Tmixed ->
               Errors.enum_type_typedef_mixed (Reason.to_pos r)
           | Tmixed -> ()
-          | Tprim Tint | Tprim Tstring -> ()
+          | Tprim Tint | Tprim Tstring | Tprim Tarraykey -> ()
           (* Allow enums in terms of other enums *)
           | Tapply ((_, x), _) when Typing_env.is_enum x -> ()
           (* Don't tell anyone, but we allow type params too, since there are
@@ -134,19 +136,19 @@ let enum_class_check env tc consts const_types =
 
     | None -> env
 
-(* If a class is an Enum, we give all of the constants in the class
- * the type of the Enum. We don't do this for Enum<mixed>, since that
- * could *lose* type information.
+(* If a class is an Enum, we give all of the constants in the class the type
+ * of the Enum. We don't do this for Enum<mixed> and Enum<arraykey>, since
+ * that could *lose* type information.
  *)
 let enum_class_decl_rewrite env name enum ancestors consts =
   if Typing_env.is_decl env then consts else
     match is_enum name enum ancestors with
       | None
-      | Some (_, (_, Tmixed), _) -> consts
+      | Some (_, (_, (Tmixed | Tprim Tarraykey)), _) -> consts
       | Some (_, ty, _) ->
       (* A special constant called "class" gets added, and we don't
        * want to rewrite its type. *)
-      SMap.mapi (function k -> function c ->
+      SMap.mapi (fun k c ->
                  if k = SN.Members.mClass then c else {c with ce_type = ty})
         consts
 

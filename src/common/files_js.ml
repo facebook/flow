@@ -51,14 +51,20 @@ let get_flowlib_root () =
       root
 
 let init libs =
-  if !lib_files = None
-  then
+  match !lib_files with
+  | Some libs -> ()
+  | None -> (
     let libs = if Modes_js.modes.no_flowlib
       then libs
-      else (Path.mk_path (get_flowlib_root ()))::libs in
-    let libs = (Find.find_with_name libs "*.js")
-      |> List.fold_left (fun set x -> SSet.add x set) SSet.empty in
+      else (Path.mk_path (get_flowlib_root ()))::libs
+    in
+    let libs = if libs = []
+      then SSet.empty
+      else (Find.find_with_name libs "*.js")
+        |> List.fold_left (fun set x -> SSet.add x set) SSet.empty
+    in
     lib_files := Some libs
+  )
 
 let is_lib_file p =
   SSet.mem p (get_lib_files ())

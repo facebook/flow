@@ -49,9 +49,6 @@ type t = {
 
     (* The directories (and the files they contain) *)
     mutable dirs      : SSet.t SMap.t                         ;
-
-    (* The output channel where we want to log errors (/tmp/dfind_{user}.log) *)
-            log       : out_channel                           ;
   }
 
 (*****************************************************************************)

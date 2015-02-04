@@ -725,6 +725,15 @@ and hint_ ~allow_this is_static_var p env x =
   | Hfun (hl, opt, h) -> N.Hfun (List.map (hint env) hl, opt, hint env h)
   | Happly ((_, x) as id, hl) -> hint_id ~allow_this env is_static_var id hl
   | Haccess ((pos, root_id) as root, id, ids) ->
+    (* Using a thunk to avoid computing this_ty in cases when we do not need it
+     *)
+    let this_ty () = hint_id ~allow_this:true env is_static_var
+        (pos, SN.Typehints.this) [] in
+    let self_ty () =
+      match this_ty() with
+      | N.Habstr (x, Some self) when x = SN.Typehints.this -> snd self
+      | _ -> N.Hany
+    in
     let root_ty =
       match root_id with
       | x when x = SN.Classes.cSelf ->
@@ -733,18 +742,13 @@ and hint_ ~allow_this is_static_var p env x =
               Errors.self_outside_class pos;
               N.Hany
           | Some class_ ->
-              N.Happly (class_.c_name, [])
+              self_ty()
           )
-      | x when x = SN.Classes.cStatic ->
-          (match (fst env).cclass with
-          | None ->
-              Errors.self_outside_class pos;
-              N.Hany
-          | Some class_ ->
-              let this = hint_id ~allow_this:true env is_static_var
-                (pos, SN.Typehints.this) [] in
-              N.Habstr (SN.Classes.cStatic, Some (pos, this))
-          )
+      | x when x = SN.Classes.cStatic || x = SN.Classes.cParent ->
+          Errors.invalid_type_access_root root; N.Hany
+      (* Create a type hole that we will fill during the local typing *)
+      | x when x = SN.Typehints.this ->
+          N.Habstr (SN.Typehints.type_hole, Some (pos, self_ty()))
       | _ ->
           (match hint_id ~allow_this env is_static_var root [] with
           | N.Happly _ as h -> h

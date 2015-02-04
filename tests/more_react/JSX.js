@@ -1,7 +1,7 @@
 
 /* @providesModule JSX */
 
-var React = require('React');
+var React = require('react');
 var App = require('App.react');
 
 var app =

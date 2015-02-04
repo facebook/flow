@@ -217,7 +217,7 @@ and class_elt = {
   ce_synthesized : bool;
   ce_visibility  : visibility;
   ce_type        : ty;
-  (* classname where this elt originates from *)
+  (* identifies the class from which this elt originates *)
   ce_origin      : string;
 }
 
