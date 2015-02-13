@@ -207,17 +207,6 @@ let parse_file file =
     ast
   end
 
-(* collect definition names from parsed ast *)
-let collect_defs ast =
-  List.fold_right begin fun def (funs, classes, typedefs, consts) ->
-    match def with
-    | Ast.Fun f -> f.Ast.f_name :: funs, classes, typedefs, consts
-    | Ast.Class c -> funs, c.Ast.c_name :: classes, typedefs, consts
-    | Ast.Typedef td -> funs, classes, td.Ast.t_id :: typedefs, consts
-    | Ast.Constant cst -> funs, classes, typedefs, cst.Ast.cst_name :: consts
-    | _ -> funs, classes, typedefs, consts
-  end ast ([], [], [], [])
-
 (* Make readable test output *)
 let replace_color input =
   match input with
@@ -266,7 +255,7 @@ let main_hack { filename; suggest; color; coverage; prolog; _ } =
       let ast_file = parse_file filename in
       let ast = ast_builtins @ ast_file in
       Parser_heap.ParserHeap.add filename ast;
-      let funs, classes, typedefs, consts = collect_defs ast in
+      let funs, classes, typedefs, consts = Ast_utils.get_defs ast in
       let nenv = Naming.make_env Naming.empty ~funs ~classes ~typedefs ~consts in
       let all_classes = List.fold_right begin fun (_, cname) acc ->
         SMap.add cname (Relative_path.Set.singleton filename) acc

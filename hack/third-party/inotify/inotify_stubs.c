@@ -75,6 +75,9 @@ value stub_inotify_init(value unit)
         int fd;
 
         fd = inotify_init();
+        if (fd == -1)
+                raise_inotify_error("init");
+
         CAMLreturn(Val_int(fd));
 }
 

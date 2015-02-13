@@ -27,7 +27,6 @@ let parse_command () =
   | "start" -> CKStart
   | "stop" -> CKStop
   | "restart" -> CKRestart
-  | "status" -> CKStatus
   | "build" -> CKBuild
   | "prolog" -> CKProlog
   | _ -> CKNone
@@ -92,8 +91,6 @@ let parse_check_args cmd =
           \t\tStops a Hack server\n\
         \trestart\
           \t\tRestarts a Hack server\n\
-        \tstatus\
-          \t\tLists running Hack servers\n\
       \n\
       Default values if unspecified:\n\
         \tCOMMAND\
@@ -267,28 +264,6 @@ let parse_stop_args () =
         exit 1
   in CStop {ClientStop.root = root}
 
-let parse_status_args () =
-  let usage =
-    Printf.sprintf
-      "Usage: %s status [OPTION]...\n\
-      List running servers\n"
-      Sys.argv.(0) in
-  let root = ref None in
-  let user = ref None in
-  let output_json = ref false in
-  let options = [
-    "--root", Arg.String (fun x -> root := Some (Path.mk_path x)),
-    " --root /some/path/www only shows servers for /some/path/www";
-    "--user", Arg.String (fun x -> user := Some x),
-    " --user billy only shows servers for the user \"billy\"";
-    "--json", Arg.Set output_json,
-      " output json for machine consumption. (default: false)";
-  ] in
-  let _ = parse_without_command options usage "status" in
-  CStatus {ClientStatus.root = !root;
-           ClientStatus.user = !user;
-           ClientStatus.output_json = !output_json }
-
 let parse_build_args () =
   let usage =
     Printf.sprintf
@@ -388,6 +363,5 @@ let parse_args () =
     | CKStart -> parse_start_args ()
     | CKStop -> parse_stop_args ()
     | CKRestart -> parse_restart_args ()
-    | CKStatus -> parse_status_args ()
     | CKBuild -> parse_build_args ()
     | CKProlog -> parse_prolog_args ()

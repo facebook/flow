@@ -1707,4 +1707,11 @@ module.exports = {
       }
     },
   },
+  'Invalid Import Types': {
+    'import type "MyModule"': {
+      'errors': {
+        '0.message': 'Unexpected string',
+      }
+    }
+  },
 };

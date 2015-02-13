@@ -211,7 +211,7 @@ module Typing                               = struct
   let cyclic_typedef                        = 4014 (* DONT MODIFY!!!! *)
   let discarded_awaitable                   = 4015 (* DONT MODIFY!!!! *)
   let isset_empty_unset_in_strict           = 4016 (* DONT MODIFY!!!! *)
-  let dynamic_yield_private                 = 4017 (* DONT MODIFY!!!! *)
+  (* DEPRECATED dynamic_yield_private       = 4017 *)
   let enum_constant_type_bad                = 4018 (* DONT MODIFY!!!! *)
   let enum_switch_nonexhaustive             = 4019 (* DONT MODIFY!!!! *)
   let enum_switch_not_const                 = 4020 (* DONT MODIFY!!!! *)
@@ -321,6 +321,8 @@ module Typing                               = struct
   let attribute_param_type                  = 4127 (* DONT MODIFY!!!! *)
   let deprecated_use                        = 4128 (* DONT MODIFY!!!! *)
   let abstract_const_usage                  = 4129 (* DONT MODIFY!!!! *)
+  let cannot_declare_constant               = 4130 (* DONT MODIFY!!!! *)
+  let cyclic_typeconst                      = 4131 (* DONT MODIFY!!!! *)
 
   (* EXTEND HERE WITH NEW VALUES IF NEEDED *)
 end
@@ -953,6 +955,10 @@ let explain_constraint pos name (error: error) =
       [pos, "Considering the constraint on '"^name^"'"]
   )
 
+let explain_type_constant reason_msgl (error: error) =
+  let code, msgl = error in
+  add_list code (msgl @ reason_msgl)
+
 let overflow p =
   add Typing.overflow p "Value is too large"
 
@@ -989,10 +995,6 @@ let class_arity usage_pos class_pos class_name arity =
     [usage_pos, ("The class "^(Utils.strip_ns class_name)^" expects "^
                     soi arity^" arguments");
      class_pos, "Definition is here"]
-
-let dynamic_yield_private pos =
-  add_list Typing.dynamic_yield_private
-    [pos, "DynamicYield cannot see private methods in subclasses"]
 
 let expecting_type_hint p =
   add Typing.expecting_type_hint p "Was expecting a type hint"
@@ -1439,6 +1441,10 @@ let declared_contravariant pos1 pos2 emsg =
  ] @ emsg
  )
 
+let cyclic_typeconst pos sl =
+  add Typing.cyclic_typeconst pos
+    ("Cyclic type constant:\n  "^String.concat " -> " sl)
+
 (*****************************************************************************)
 (* Typing decl errors *)
 (*****************************************************************************)
@@ -1526,6 +1532,25 @@ let deprecated_use pos pos_def msg =
     pos_def, "Definition is here";
   ]
 
+let cannot_declare_constant kind pos (class_pos, class_name) =
+  let kind_str =
+    match kind with
+    | `enum -> "an enum"
+    | `trait -> "a trait"
+  in
+  add_list Typing.cannot_declare_constant [
+    pos, "Cannot declare a constant in "^kind_str;
+    class_pos, (strip_ns class_name)^" was defined as "^kind_str^" here";
+  ]
+
+let ambiguous_inheritance pos class_ origin (error: error) =
+  let origin = strip_ns origin in
+  let class_ = strip_ns class_ in
+  let message = "This declaration was inherited from an object of type "^origin^
+    ". Redeclare this member in "^class_^" with a compatible signature." in
+  let code, msgl = error in
+  add_list code (msgl @ [pos, message])
+
 (*****************************************************************************)
 (* Convert relative paths to absolute. *)
 (*****************************************************************************)
@@ -1595,6 +1620,9 @@ let try_add_err pos err f1 f2 =
     add_list error_code ((pos, err) :: l);
     f2()
   end
+
+let has_no_errors f =
+  try_ (fun () -> f(); true) (fun _ -> false)
 
 (*****************************************************************************)
 (* Do. *)

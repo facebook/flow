@@ -73,35 +73,3 @@ let fd_of root file : int =
  *)
 let check ?user:(user=None) root file : bool =
   _operations ~user root Unix.F_TEST file
-
-let find_all_locks file : (string * Path.path) list =
-  let cmd = Printf.sprintf "find \
-    `find /tmp/ -type d -name '%s_*' 2> /dev/null` \
-    -name '*.%s'" SysConfig.temp_base file in
-  let in_ = Unix.open_process_in cmd in
-  let results = ref [] in
-  begin try
-    while true do
-      results := (input_line in_)::!results
-    done;
-  with End_of_file -> () end;
-  let results = !results in
-  let parse_result acc result =
-    let regexp_str = Printf.sprintf "^%s/%s_\\([^/]*\\)/.*"
-      Tmp.temp_dir_name SysConfig.temp_base in
-    if Str.string_match (Str.regexp regexp_str) result 0
-    then
-      let user = Str.matched_group 1 result in
-      let regexp_str = Printf.sprintf "^%s/%s-\\(.*\\).%s"
-        (Tmp.get_dir ~user:(Some user) ())
-        user
-        file in
-      if Str.string_match (Str.regexp regexp_str) result 0
-      then
-        let escaped_root = Str.matched_group 1 result in
-        let root = Path.path_of_slash_escaped_string escaped_root in
-        (user, root)::acc
-      else acc
-    else acc
-  in
-  List.fold_left parse_result [] results

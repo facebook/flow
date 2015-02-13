@@ -460,14 +460,18 @@ type block_entry = {
   specific: Type.t;
   general: Type.t;
   def_loc: Spider_monkey_ast.Loc.t option;
+  for_type: bool;
 }
 type block = block_entry SMap.t ref
 type stack = int list
 
-let create_env_entry specific general loc =
-  { specific;
+let create_env_entry ?(for_type=false) specific general loc =
+  {
+    specific;
     general;
-    def_loc = loc; }
+    def_loc = loc;
+    for_type;
+  }
 
 (* type context *)
 

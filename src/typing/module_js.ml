@@ -240,7 +240,7 @@ module Haste: MODULE_SYSTEM = struct
       let dir = Filename.dirname (module_name_of file) in
       Files_js.normalize_path dir r
     else
-      r
+      Haste_module_preprocessor.preprocess_name r
 
 (* in haste, many files may provide the same module. here we're also
    supporting the notion of mock modules - allowed duplicates used as

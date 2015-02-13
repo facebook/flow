@@ -42,7 +42,7 @@ let debug () fnl =
 
       if parsing_errors1 <> []
       then begin
-        Printf.printf
+        Printf.fprintf stderr
           "The file had a syntax error before we even started: %s\n"
           filename;
         flush stdout
@@ -55,10 +55,10 @@ let debug () fnl =
         | Format_hack.Disabled_mode ->
             raise Exit
         | Format_hack.Parsing_error _ ->
-            Printf.printf "Parsing: %s\n" filename; flush stdout;
+            Printf.fprintf stderr "Parsing: %s\n" filename; flush stdout;
             ""
         | Format_hack.Internal_error ->
-            Printf.printf "Internal: %s\n" filename; flush stdout;
+            Printf.fprintf stderr "Internal: %s\n" filename; flush stdout;
             ""
       in
 
@@ -71,7 +71,7 @@ let debug () fnl =
       in
       if content <> content2
       then begin
-        Printf.printf
+        Printf.fprintf stderr
           "Applying the formatter twice lead to different results: %s\n"
           filename; flush stdout;
         let () = Random.self_init() in
@@ -96,7 +96,7 @@ let debug () fnl =
       end in
       if parsing_errors2 <> []
       then begin
-        Printf.printf
+        Printf.fprintf stderr
           "The output of the formatter could not be parsed: %s\n"
           filename;
         flush stdout
@@ -105,7 +105,7 @@ let debug () fnl =
       ()
     with
     | Format_error ->
-        Printf.printf "Format error: %s\n" filename;
+        Printf.fprintf stderr "Format error: %s\n" filename;
         flush stdout
     | Exit ->
         ()
@@ -152,7 +152,8 @@ let parse_args() =
      "modify the files in place";
 
      "--diff", Arg.Set diff,
-     "formats a diff in place (example: git diff | hh_format --diff)";
+     "formats the changed lines in a diff "^
+     "(example: git diff | hh_format --diff)";
 
      "--yolo", Arg.Unit (fun () -> modes := [Some Ast.Mdecl; None (* PHP *)]),
      "Formats *only* PHP and decl-mode files. Results may be unreliable; "^
@@ -222,10 +223,10 @@ let format_string modes file from to_ content =
   | Format_hack.Success content ->
       output_string stdout content
   | Format_hack.Internal_error ->
-      Printf.fprintf stderr "Internal error\n";
+      Printf.fprintf stderr "Internal error\n%!";
       exit 2
   | Format_hack.Parsing_error error ->
-      Printf.fprintf stderr "Parsing error\n%s\n"
+      Printf.fprintf stderr "Parsing error\n%s\n%!"
         (Errors.to_string (Errors.to_absolute (List.hd error)));
       exit 2
   | Format_hack.Disabled_mode ->
@@ -261,10 +262,10 @@ let () =
   let root =
     match root with
     | None ->
-        Printf.printf "No root specified, trying to guess one\n";
+        Printf.fprintf stderr "No root specified, trying to guess one\n";
         let root = ClientArgs.get_root None in
         let root = Path.string_of_path root in
-        Printf.printf "Guessed root: %s\n" root;
+        Printf.fprintf stderr "Guessed root: %s\n%!" root;
         root
     | Some root -> Path.string_of_path (Path.mk_path root)
   in
@@ -273,7 +274,7 @@ let () =
   | [] when diff ->
       let diff = read_stdin () in
       let file_and_modified_lines = Format_diff.parse_diff diff in
-      Format_diff.apply modes ~diff:file_and_modified_lines
+      Format_diff.apply modes in_place ~diff:file_and_modified_lines
   | _ when diff ->
       Printf.fprintf stderr "--diff mode expects no files\n";
       exit 2

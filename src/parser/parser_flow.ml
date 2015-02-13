@@ -1858,8 +1858,14 @@ end = struct
           let env = { env with strict = true; } in
           let start_loc = Peek.loc env in
           Expect.token env T_IMPORT;
+          (* It might turn out that we need to treat this "type" token as an
+           * identifier, like import type from "module" *)
+          let isType, type_ident = match Peek.token env with
+          | T_TYPE ->
+              true, Some (Parse.identifier env)
+          | _ -> false, None in
           Statement.ImportDeclaration.(match Peek.token env with
-            | T_STRING (str_loc, value, raw, octal) ->
+            | T_STRING (str_loc, value, raw, octal) when isType = false ->
                 (* import "ModuleSpecifier"; *)
                 if octal then strict_error env Error.StrictOctalLiteral;
                 Expect.token env (T_STRING (str_loc, value, raw, octal));
@@ -1873,26 +1879,38 @@ end = struct
                   default = None;
                   specifier = None;
                   source;
+                  isType = false;
                 }
+            | T_COMMA
             | T_IDENTIFIER ->
                 (* import defaultspecifier ... *)
-                let default = Some (Parse.identifier env) in
+                let isType, default = (match type_ident, Peek.token env, Peek.value env with
+                  | Some _, T_COMMA, _
+                  | Some _, T_IDENTIFIER, "from" ->
+                      (* import type, ... *)
+                      (* import type from ... *)
+                      false, type_ident
+                  | _ ->
+                      (* import type foo ...
+                      * import foo ... *)
+                      isType, Some (Parse.identifier env)) in
                 let specifier = (match Peek.token env with
-                | T_COMMA ->
-                    Expect.token env T_COMMA;
-                    Some (specifier env)
-                | _ -> None) in
-                let source = source env in
-                let end_loc = match Peek.semicolon_loc env with
-                | Some loc -> loc
-                | None -> fst source in
-                let source = Some source in
-                Eat.semicolon env;
-                Loc.btwn start_loc end_loc, Statement.ImportDeclaration {
-                  default;
-                  specifier;
-                  source;
-                }
+                  | T_COMMA ->
+                      Expect.token env T_COMMA;
+                      Some (specifier env)
+                  | _ -> None) in
+                  let source = source env in
+                  let end_loc = match Peek.semicolon_loc env with
+                  | Some loc -> loc
+                  | None -> fst source in
+                  let source = Some source in
+                  Eat.semicolon env;
+                  Loc.btwn start_loc end_loc, Statement.ImportDeclaration {
+                    default;
+                    specifier;
+                    source;
+                    isType;
+                  }
             | _ ->
                 let specifier = Some (specifier env) in
                 let source = source env in
@@ -1905,6 +1923,7 @@ end = struct
                   default = None;
                   specifier;
                   source;
+                  isType;
                 }
           )
   end

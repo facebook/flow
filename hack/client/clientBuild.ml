@@ -18,6 +18,18 @@ type env = {
   build_opts : ServerMsg.build_opts;
 }
 
+let build_kind_of build_opts =
+  let module LC = ClientLogCommand in
+  let {ServerMsg.steps; no_steps; is_push; incremental; _} = build_opts in
+  if steps <> None || no_steps <> None then
+    LC.Steps
+  else if is_push then
+    LC.Push
+  else if incremental then
+    LC.Incremental
+  else
+    LC.Full
+
 let should_retry env tries = env.build_opts.ServerMsg.wait || tries > 0
 
 let rec connect env retries =
@@ -86,6 +98,19 @@ let rec wait_for_response ic =
        (Tty.spinner());
      wait_for_response ic
 
+let wait_on_server_restart ic =
+  try
+    while true do
+      let _ = input_char ic in
+      ()
+    done
+  with
+  | End_of_file
+  | Sys_error _ ->
+     (* Server has exited and hung up on us *)
+     Printf.printf "Old server has exited\n%!";
+     ()
+
 let rec main_ env retries =
   (* Check if a server is up *)
   if not (ClientUtils.server_exists env.root)
@@ -96,19 +121,46 @@ let rec main_ env retries =
   };
   let ic, oc = connect env retries in
   ServerMsg.cmd_to_channel oc (ServerMsg.BUILD env.build_opts);
-  let response = wait_for_response ic in
+  try
+    let response = wait_for_response ic in
+    handle_response response env retries ic
+  with
+  | ClientExceptions.Server_out_of_date ->
+     (* The server is out of date and is going to exit. Subsequent calls to
+      * connect on the Unix Domain Socket might succeed, connecting to the
+      * server that is about to die, and eventually we will be hung up on
+      * while trying to read from our end.
+      *
+      * To avoid that fate, when we know the server is about to exit, we wait
+      * for the connection to be closed, signaling that the server has exited
+      * and the OS has cleaned up after it, then we try again.
+      *)
+     Printf.printf "%s%s%!"
+                   "Hack server is an old version, waiting for it to exit,"
+                   " then will start the new server\n";
+     wait_on_server_restart ic;
+     close_in_noerr ic;
+     main_ env (retries - 1)
+  | Sys_error _ ->
+     (* Connection reset, handle gracefully and try again *)
+     close_in_noerr ic;
+     if should_retry env retries then
+       (Printf.printf "Connection hung up, trying again \n%!";
+        main_ env (retries - 1))
+     else
+       (Printf.printf "Error: Client failed to connect to server!!\n%!";
+        exit 2)
+
+and handle_response response env retries ic =
   match response with
   | ServerMsg.SERVER_OUT_OF_DATE ->
-    Printf.printf
-      "Hack server is an old version, trying again.\n%!";
-    Unix.sleep 2;
-    main_ env (retries - 1)
+    raise ClientExceptions.Server_out_of_date;
   | ServerMsg.PONG -> (* successful case *)
     begin
       let finished = ref false in
       let exit_code = ref 0 in
       EventLogger.client_begin_work (ClientLogCommand.LCBuild
-        (env.root, env.build_opts.ServerMsg.incremental));
+        (env.root, build_kind_of env.build_opts));
       try
         while true do
           let line:ServerMsg.build_progress = Marshal.from_channel ic in

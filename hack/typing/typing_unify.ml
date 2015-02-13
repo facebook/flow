@@ -80,11 +80,11 @@ and unify_with_uenv env (uenv1, ty1) (uenv2, ty2) =
   | ty2, (r, Tapply ((_, x), argl)) when Typing_env.is_typedef x ->
       let env, ty1 = TDef.expand_typedef env r x argl in
       unify_with_uenv env (uenv1, ty1) (uenv2, ty2)
-  | (_, Taccess taccess), _ ->
-      let env, ty1 = TAccess.expand env taccess in
+  | (r, Taccess taccess), _ ->
+      let env, ty1 = TAccess.expand env r taccess in
       unify_with_uenv env (uenv1, ty1) (uenv2, ty2)
-  | _, (_, Taccess taccess) ->
-      let env, ty2 = TAccess.expand env taccess in
+  | _, (r, Taccess taccess) ->
+      let env, ty2 = TAccess.expand env r taccess in
       unify_with_uenv env (uenv1, ty1) (uenv2, ty2)
   | (r1, ty1), (r2, ty2) ->
       let r = unify_reason r1 r2 in
@@ -252,7 +252,7 @@ and unify_ env r1 ty1 r2 ty2 =
       let env = TUtils.apply_shape ~f env (r2, fdm2) (r1, fdm1) in
       env, Tshape fdm1
   | Taccess taccess, _ ->
-      let env, fty1 = TAccess.expand env taccess in
+      let env, fty1 = TAccess.expand env r1 taccess in
       let env, fty = unify env fty1 (r2, ty2) in
       env, snd fty
   | _, Taccess _ ->

@@ -13,7 +13,6 @@ type command =
   | CStart of ClientStart.env
   | CStop of ClientStop.env
   | CRestart of ClientStart.env
-  | CStatus of ClientStatus.env
   | CBuild of ClientBuild.env
   | CProlog of ClientProlog.env
 
@@ -22,7 +21,6 @@ type command_keyword =
   | CKStart
   | CKStop
   | CKRestart
-  | CKStatus
   | CKBuild
   | CKProlog
   | CKNone

@@ -541,10 +541,10 @@ let rec convert cx map = Ast.Type.(function
       (* other applications with id as head expr *)
       | _ ->
         let reason = mk_reason name loc in
-        let id_expr = fst id, Ast.Expression.Identifier id in
         let params = if typeParameters = []
           then None else Some typeParameters in
-        mk_nominal_type cx reason map (id_expr, params)
+        let c = identifier ~for_type:true cx name loc in
+        mk_nominal_type_ cx reason map (c, params)
     )
 
   (* TODO: unsupported generators *)
@@ -662,7 +662,7 @@ and convert_qualification cx = Ast.Type.Generic.Identifier.(function
 
     let loc, { Ast.Identifier.name; _ } = id in
     let reason = mk_reason name loc in
-    Env_js.get_var cx name reason
+    Env_js.get_var ~for_type:true cx name reason
 )
 
 and mk_rest cx = function
@@ -770,7 +770,7 @@ and statement_decl cx = Ast.Statement.(
       let _, { Ast.Identifier.name; _ } = id in
       let r = mk_reason (spf "type %s" name) loc in
       let tvar = Flow_js.mk_tvar cx r in
-      Env_js.init_env cx name (create_env_entry tvar tvar (Some loc))
+      Env_js.init_env cx name (create_env_entry ~for_type:true tvar tvar (Some loc))
 
   | (loc, Switch { Switch.discriminant; cases; lexical }) ->
       (* TODO: ensure that default is last *)
@@ -875,6 +875,36 @@ and statement_decl cx = Ast.Statement.(
   | (_, ExportDeclaration _) ->
       (* TODO *)
       failwith "Unimplemented: ExportDeclaration"
+  | (_, ImportDeclaration {
+      ImportDeclaration.isType = true;
+      default = None; (* TODO - when we have default type exports *)
+      source = Some (source_loc, { Ast.Literal.value = Ast.Literal.String m_name; _; });
+      specifier;
+    }) ->
+      (match specifier with
+      | Some (ImportDeclaration.NameSpace (_, (loc, namespace))) ->
+          let namespace = namespace.Ast.Identifier.name in
+          let reason = mk_reason (spf "import type * as %s" namespace) loc in
+          let tvar = Flow_js.mk_tvar cx reason in
+          Env_js.init_env cx namespace (create_env_entry ~for_type:true tvar tvar (Some loc));
+      | Some (ImportDeclaration.Named (_, specifiers)) ->
+          List.iter (fun (loc, {
+            ImportDeclaration.NamedSpecifier.id;
+            name;
+          }) ->
+            (* { id as name, ... } *)
+            let id = (snd id).Ast.Identifier.name in
+            let name, reason = (match name with
+            | None ->
+                id, mk_reason (spf "import type { %s }" id) loc
+            | Some (_, { Ast.Identifier.name; _; }) ->
+                name, mk_reason (spf "import type { %s as %s }" id name) loc) in
+            let tvar = Flow_js.mk_tvar cx reason in
+            Env_js.init_env cx name (create_env_entry ~for_type:true tvar tvar (Some loc));
+          ) specifiers
+      | None ->
+          failwith "Unimplemented: ImportDeclaration ImportedDefaultBinding"
+      )
   | (_, ImportDeclaration _) ->
       (* TODO *)
       failwith "Unimplemented: ImportDeclaration"
@@ -1073,7 +1103,7 @@ and statement cx = Ast.Statement.(
         else PolyT(typeparams, TypeT (r, t))
       in
       Hashtbl.replace cx.type_table loc type_;
-      Env_js.set_var cx name type_ r
+      Env_js.set_var ~for_type:true cx name type_ r
 
   | (loc, Switch { Switch.discriminant; cases; lexical }) ->
 
@@ -1698,6 +1728,39 @@ and statement cx = Ast.Statement.(
   | (_, ExportDeclaration _) ->
       (* TODO *)
       failwith "Unimplemented: ExportDeclaration"
+  | (_, ImportDeclaration {
+      ImportDeclaration.isType = true;
+      default = None; (* TODO - when we have default type exports *)
+      source = Some (source_loc, { Ast.Literal.value = Ast.Literal.String m_name; _; });
+      specifier;
+    }) ->
+      let module_ = Module_js.imported_module cx.file m_name in
+      let module_type = require cx module_ m_name source_loc in
+      (match specifier with
+      | Some (ImportDeclaration.NameSpace (_, (loc, namespace))) ->
+          let namespace = namespace.Ast.Identifier.name in
+          let reason = mk_reason (spf "import type * as %s" namespace) loc in
+          Env_js.set_var ~for_type:true cx namespace module_type reason
+      | Some (ImportDeclaration.Named (_, specifiers)) ->
+          List.iter (fun (loc, {
+            ImportDeclaration.NamedSpecifier.id;
+            name;
+          }) ->
+            (* { id as name, ... } *)
+            let id = (snd id).Ast.Identifier.name in
+            let name, reason = (match name with
+            | None ->
+                id, mk_reason (spf "import type { %s }" id) loc
+            | Some (_, { Ast.Identifier.name; _; }) ->
+                name, mk_reason (spf "import type { %s as %s }" id name) loc) in
+            let specifier_type = Flow_js.mk_tvar_where cx reason (fun t ->
+              Flow_js.unit_flow cx (module_type, GetT (reason, id, t))
+            ) in
+            Env_js.set_var ~for_type:true cx name specifier_type reason
+          ) specifiers
+      | None ->
+          failwith "Unimplemented: ImportDeclaration ImportedDefaultBinding"
+      )
   | (_, ImportDeclaration _) ->
       (* TODO *)
       failwith "Unimplemented: ImportDeclaration"
@@ -1930,23 +1993,25 @@ and void_ loc =
 and null_ loc =
   NullT.at loc
 
+and identifier ?(for_type=false) cx name loc =
+  if Type_inference_hooks_js.dispatch_id_hook cx name loc
+  then AnyT.at loc
+  else (
+    if name = "undefined"
+    then void_ loc
+    else (
+      let reason = mk_reason (spf "identifier %s" name) loc in
+      let t = Env_js.var_ref ~for_type cx name reason in
+      t
+    )
+  )
+
 and expression_ cx loc e = Ast.Expression.(match e with
 
   | Literal lit ->
       literal cx loc lit
 
-  | Identifier (_, { Ast.Identifier.name; _ }) ->
-      if Type_inference_hooks_js.dispatch_id_hook cx name loc
-      then AnyT.at loc
-      else (
-        if name = "undefined"
-        then void_ loc
-        else (
-          let reason = mk_reason (spf "identifier %s" name) loc in
-          let t = Env_js.var_ref cx name reason in
-          t
-        )
-      )
+  | Identifier (_, { Ast.Identifier.name; _ }) -> identifier cx name loc
 
   | This ->
       this_ cx (mk_reason "this" loc)
@@ -1997,7 +2062,7 @@ and expression_ cx loc e = Ast.Expression.(match e with
 
   | Member {
       Member._object = _, Identifier (_,
-        { Ast.Identifier.name = "ReactGraphQL"; _ });
+        { Ast.Identifier.name = "ReactGraphQL" | "ReactGraphQLLegacy"; _ });
       property = Member.PropertyIdentifier (_,
         { Ast.Identifier.name = "Mixin"; _ });
       _
@@ -2103,17 +2168,17 @@ and expression_ cx loc e = Ast.Expression.(match e with
 
   | Call {
       Call.callee = _, Identifier (_, {
-        Ast.Identifier.name = ("require" | "requireType");
+        Ast.Identifier.name = "require";
         _
       });
       arguments
     } -> (
       match arguments with
       | [ Expression (_, Literal {
-          Ast.Literal.value = Ast.Literal.String m_name; _;
+          Ast.Literal.value = Ast.Literal.String module_name; _;
         }) ] ->
-        let m = Module_js.imported_module cx.file m_name in
-        require cx m m_name loc
+        let m = Module_js.imported_module cx.file module_name in
+        require cx m module_name loc
       | _ ->
         (*
         let msg = "require(...) supported only on strings" in

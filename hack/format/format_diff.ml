@@ -9,15 +9,19 @@
  *)
 
 (*****************************************************************************)
-(* Helper function, splits the content of a file in a list of lines.  *)
+(* Helper function, splits the content of a file into a list of lines.  *)
 (*****************************************************************************)
 
-let split_lines =
+let split_lines content =
   let re = Str.regexp "[\n]" in
-  fun content -> Str.split re content
+  let lines = Str.split_delim re content in
+  (* don't create a list entry for the line after a trailing newline *)
+  match List.rev lines with
+  | "" :: rest -> List.rev rest
+  | _ -> lines
 
 (*****************************************************************************)
-(* Section buiding a list of intervals per file for a given diff.
+(* Section building a list of intervals per file for a given diff.
  *
  * Typically, the output of git/hg looks like:
  * --- a/path/filename
@@ -237,9 +241,6 @@ end = struct
     match next() with
     | Eof -> List.rev acc
     | Block ->
-        let line_start =
-          if line_start > line_end then line_end else line_start
-        in
         let content = Buffer.contents buffer in
         if content = ""
         then loop line_start line_end buffer acc next
@@ -282,19 +283,27 @@ let rec matching_blocks acc intervals blocks =
       then matching_blocks acc intervals rest_blocks
       else matching_blocks (block :: acc) intervals rest_blocks
 
-(*****************************************************************************)
-(* Skips lines in a list of lines.
- * Returns a string containing the lines skipped and the remaining lines.
+(*
+ * Diff output helpers
  *)
-(*****************************************************************************)
 
-let rec cut_lines buffer line_number end_block = function
-  | [] -> Buffer.contents buffer, []
-  | line :: lines when line_number <= end_block ->
-      Buffer.add_string buffer line;
-      Buffer.add_char buffer '\n';
-      cut_lines buffer (line_number+1) end_block lines
-  | lines -> Buffer.contents buffer, lines
+let mk_time_string {Unix.tm_sec; tm_min; tm_hour; tm_mday; tm_mon; tm_year; _} =
+  Printf.sprintf "%d-%02d-%02d %02d:%02d:%02d +0000"
+    (1900 + tm_year) tm_mon tm_mday tm_hour tm_min tm_sec
+
+let print_file_header filename =
+  let mtime = Unix.gmtime ((Unix.stat filename).Unix.st_mtime) in
+  let now = Unix.gmtime (Unix.time ()) in
+  Printf.printf "--- %s\t%s\n" filename (mk_time_string mtime);
+  Printf.printf "+++ %s\t%s\n" filename (mk_time_string now)
+
+let print_hunk (old_start_line, new_start_line, old_lines, new_lines) =
+  let old_range = List.length old_lines in
+  let new_range = List.length new_lines in
+  Printf.printf "@@ -%d,%d +%d,%d @@\n"
+    old_start_line old_range new_start_line new_range;
+  List.iter (Printf.printf "-%s\n") old_lines;
+  List.iter (Printf.printf "+%s\n") new_lines
 
 (*****************************************************************************)
 (* Applies the changes to a list of lines:
@@ -306,42 +315,40 @@ let rec cut_lines buffer line_number end_block = function
  *)
 (*****************************************************************************)
 
-let rec apply_blocks outc line_number blocks lines =
-  match blocks, lines with
-  (* We reached the end of the input file. *)
-  | _, [] -> ()
+let apply_blocks outc blocks lines =
+  let rec loop acc old_lineno new_lineno blocks lines =
+    match blocks, lines with
+    (* We reached the end of the input file. *)
+    | _, [] -> acc
 
-  (* We have no more modifications for that file. *)
-  | [], line :: lines ->
-      output_string outc line;
-      output_char outc '\n';
-      apply_blocks outc (line_number+1) blocks lines
+    (* We have no more modifications for that file. *)
+    | [], line :: lines ->
+        output_string outc line;
+        output_char outc '\n';
+        loop acc (old_lineno + 1) (new_lineno + 1) blocks lines
 
-  (* We have not reached the beginning of the block yet. *)
-  | (start_block, _, _) :: _, line :: lines when line_number < start_block ->
-      output_string outc line;
-      output_char outc '\n';
-      apply_blocks outc (line_number+1) blocks lines
+    (* We have not reached the beginning of the block yet. *)
+    | (start_block, _, _) :: _, line :: lines when old_lineno < start_block ->
+        output_string outc line;
+        output_char outc '\n';
+        loop acc (old_lineno + 1) (new_lineno + 1) blocks lines
 
-  (* We found a block that must be replaced! *)
-  | (start_block, end_block, new_content) :: blocks, lines ->
-      (* First, cut the old content. *)
-      let buf = Buffer.create 256 in
-      let old_content, lines = cut_lines buf line_number end_block lines in
-      (* Show what changed *)
-      if old_content <> new_content
-      then show_change start_block end_block old_content new_content;
-      (* Output the change. *)
-      output_string outc new_content;
-      (* Carry on with the rest of the file. *)
-      apply_blocks outc (end_block+1) blocks lines
-
-and show_change start_block end_block old_content new_content =
-  Printf.printf "Replacing: %d-%d\n" start_block end_block;
-  let old_lines = split_lines old_content in
-  let new_lines = split_lines new_content in
-  List.iter (Printf.printf "-%s\n") old_lines;
-  List.iter (Printf.printf "+%s\n") new_lines
+    (* We found a block that must be replaced! *)
+    | (start_block, end_block, new_content) :: blocks, lines ->
+        output_string outc new_content;
+        (* Cut the old content. *)
+        let old_lines, lines =
+          Core_list.split_n lines (end_block - start_block + 1) in
+        let new_lines = split_lines new_content in
+        let acc =
+          (* only add a hunk if it is nonempty *)
+          if old_lines <> new_lines
+          then (start_block, new_lineno, old_lines, new_lines) :: acc
+          else acc in
+        let new_lineno = new_lineno + (List.length new_lines) in
+        loop acc (end_block + 1) new_lineno blocks lines
+  in
+  List.rev (loop [] 1 1 blocks lines)
 
 (*****************************************************************************)
 (* Formats a diff (in place) *)
@@ -350,36 +357,40 @@ and show_change start_block end_block old_content new_content =
 let parse_diff diff_text =
   ParseDiff.go diff_text
 
-let rec apply modes ~diff:file_and_lines_modified =
+let rec apply modes in_place ~diff:file_and_lines_modified =
   List.iter begin fun (filepath, modified_lines) ->
     let filename = Relative_path.to_absolute filepath in
-    Printf.printf "File: %s\n" filename;
     let file_content = Utils.cat filename in
-    apply_file modes filepath file_content modified_lines
+    apply_file modes in_place filepath file_content modified_lines
   end file_and_lines_modified
 
-and apply_file modes filepath file_content modified_lines =
+and apply_file modes in_place filepath file_content modified_lines =
   let filename = Relative_path.to_absolute filepath in
   let result =
     Format_hack.program_with_source_metadata modes filepath file_content in
   match result with
   | Format_hack.Success formatted_content ->
-      apply_formatted filepath formatted_content file_content modified_lines
+      apply_formatted in_place filename formatted_content file_content
+        modified_lines
   | Format_hack.Disabled_mode ->
-      Printf.printf "PHP FILE: skipping\n"
+      Printf.fprintf stderr "PHP FILE: skipping %s\n" filename
   | Format_hack.Parsing_error _ ->
       Printf.fprintf stderr "Parsing error: %s\n" filename
   | Format_hack.Internal_error ->
       Printf.fprintf stderr "*** PANIC *** Internal error!: %s\n" filename
 
-and apply_formatted filepath formatted_content file_content modified_lines =
-  let filename = Relative_path.to_absolute filepath in
+and apply_formatted in_place filename formatted_content file_content
+    modified_lines =
   let blocks = TextBlocks.make formatted_content in
   let blocks = matching_blocks [] modified_lines blocks in
   let lines = split_lines file_content in
   try
-    let outc = open_out filename in
-    apply_blocks outc 1 blocks lines;
-    close_out outc
-  with _ ->
+    let outc = open_out (if in_place then filename else "/dev/null") in
+    let hunks = apply_blocks outc blocks lines in
+    close_out outc;
+    if List.length hunks <> 0 then begin
+      print_file_header filename;
+      List.iter print_hunk hunks;
+    end;
+  with Sys_error _ ->
     Printf.fprintf stderr "Error: could not modify file %s\n" filename

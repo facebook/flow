@@ -14,7 +14,6 @@
 (*****************************************************************************)
 
 module Periodical: sig
-  val one_hour: float
   val one_day: float
   val one_week: float
 
@@ -30,7 +29,6 @@ module Periodical: sig
   val register_callback: seconds:float -> job:(unit -> unit) -> unit
 
 end = struct
-  let one_hour = 3600.0
   let one_day = 86400.0
   let one_week = 604800.0
 
@@ -56,21 +54,6 @@ end = struct
 end
 
 let call_before_sleeping = Periodical.check
-
-(*****************************************************************************)
-(* Loading the files in cache every hour (Hacky, but works) *)
-(*****************************************************************************)
-
-(* A little file heater *)
-let file_heater (root:Path.path) () =
-  Printf.printf "Running the heater\n"; flush stdout;
-  Hhi.touch ();
-  let root_path = Filename.quote ((Path.string_of_path root)^"/") in
-  let cmd =
-    "find "^root_path^" -name \"*.php\" | xargs cat > /tmp/files 2> /dev/null"
-  in
-  let heater_ic = Unix.open_process_in cmd in
-  try ignore (Unix.close_process_in heater_ic) with _ -> ()
 
 (*****************************************************************************)
 (*
@@ -105,7 +88,7 @@ let exit_if_unused() =
 (*****************************************************************************)
 let init (root_dir:Path.path) =
   let jobs = [
-    Periodical.one_hour , file_heater root_dir;
     Periodical.one_day  , exit_if_unused;
+    Periodical.one_day  , Hhi.touch;
   ] in
   List.iter (fun (period, cb) -> Periodical.register_callback period cb) jobs

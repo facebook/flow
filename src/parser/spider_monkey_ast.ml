@@ -506,7 +506,8 @@ and Statement : sig
     type t = {
       default: Identifier.t option;
       specifier: specifier option;
-      source: (Loc.t * Literal.t ) option (* String literal *)
+      source: (Loc.t * Literal.t ) option; (* String literal *)
+      isType: bool;
     }
   end
   module Expression : sig

@@ -26,13 +26,13 @@ val flat_env :
   unit ->
   block_entry Utils.SMap.t
 
-val get_var : context -> string -> reason -> Type.t
+val get_var : ?for_type:bool -> context -> string -> reason -> Type.t
 
 val get_var_in_scope : context -> string -> reason -> Type.t
 
-val var_ref : context -> string -> reason -> Type.t
+val var_ref : ?for_type:bool -> context -> string -> reason -> Type.t
 
-val set_var : context -> string -> Type.t -> reason -> unit
+val set_var : ?for_type:bool -> context -> string -> Type.t -> reason -> unit
 
 val init_env : context -> string -> block_entry -> unit
 

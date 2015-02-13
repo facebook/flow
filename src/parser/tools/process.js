@@ -1,4 +1,4 @@
-#!/opt/local/bin/node
+#!/usr/bin/env node
 var fs = require('fs');
 var http = require('http');
 //var data = fs.readFileSync('UnicodeData.txt');

@@ -6,19 +6,26 @@
     "name": "Gabe Levi",
     "email": "gabe@fb.com"
   },
+  "bin": {
+    "flowparse": "tools/inspect_ast.js",
+    "flowvalidate": "tools/js_test_files.js"
+  },
   "repository": {
     "private": true
   },
   "devDependencies": {
-    "ast-types": ">=0.6.10",
+    "esprima-fb": "12001.1.0-dev-harmony-fb"
+  },
+  "dependencies": {
+    "ast-types": ">=0.6.11",
     "colors": ">=0.6.2",
-    "esprima-fb": "10001.1.0-dev-harmony-fb",
     "minimist": ">=0.2.0"
   },
   "engines": {
       "node": ">=0.4.0"
   },
   "scripts": {
-    "test": "node test/run_esprima_tests.js; node test/run_hardcoded_tests.js"
+    "test": "node test/run_esprima_tests.js; node test/run_hardcoded_tests.js",
+    "prepublish": "make js"
   }
 }

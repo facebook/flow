@@ -55,7 +55,7 @@ type genv = {
   in_try: bool;
 
   (* are we in the body of a non-static member function? *)
-  in_member_fun: bool;
+  in_non_static_method: bool;
 
   (* In function foo<T1, ..., Tn> or class<T1, ..., Tn>, the field
    * type_params knows T1 .. Tn. It is able to find out about the
@@ -219,7 +219,7 @@ module Env = struct
     in_mode       = Ast.Mstrict;
     assume_php    = nenv.iassume_php;
     in_try        = false;
-    in_member_fun = false;
+    in_non_static_method = false;
     type_params   = SMap.empty;
     type_paraml   = [];
     classes       = ref nenv.iclasses;
@@ -236,7 +236,7 @@ module Env = struct
       (if !Autocomplete.auto_complete then Ast.Mpartial else c.c_mode);
     assume_php    = nenv.iassume_php;
     in_try        = false;
-    in_member_fun = false;
+    in_non_static_method = false;
     type_params   = params;
     type_paraml   = List.map (fun (_, x, _) -> x) c.c_tparams;
     classes       = ref nenv.iclasses;
@@ -258,7 +258,7 @@ module Env = struct
     in_mode       = (if !Ide.is_ide_mode then Ast.Mpartial else Ast.Mstrict);
     assume_php    = nenv.iassume_php;
     in_try        = false;
-    in_member_fun = false;
+    in_non_static_method = false;
     type_params   = cstrs;
     type_paraml   = List.map (fun (_, x, _) -> x) tdef.t_tparams;
     classes       = ref nenv.iclasses;
@@ -280,7 +280,7 @@ module Env = struct
     in_mode       = f.f_mode;
     assume_php    = nenv.iassume_php;
     in_try        = false;
-    in_member_fun = false;
+    in_non_static_method = false;
     type_params   = params;
     type_paraml   = [];
     classes       = ref nenv.iclasses;
@@ -296,7 +296,7 @@ module Env = struct
     in_mode       = cst.cst_mode;
     assume_php    = nenv.iassume_php;
     in_try        = false;
-    in_member_fun = false;
+    in_non_static_method = false;
     type_params   = SMap.empty;
     type_paraml   = [];
     classes       = ref nenv.iclasses;
@@ -727,7 +727,7 @@ and hint_ ~allow_this is_static_var p env x =
   | Haccess ((pos, root_id) as root, id, ids) ->
     (* Using a thunk to avoid computing this_ty in cases when we do not need it
      *)
-    let this_ty () = hint_id ~allow_this:true env is_static_var
+    let this_ty () = hint_id ~allow_this env is_static_var
         (pos, SN.Typehints.this) [] in
     let self_ty () =
       match this_ty() with
@@ -742,12 +742,12 @@ and hint_ ~allow_this is_static_var p env x =
               Errors.self_outside_class pos;
               N.Hany
           | Some class_ ->
-              self_ty()
+              N.Happly (class_.c_name, [])
           )
       | x when x = SN.Classes.cStatic || x = SN.Classes.cParent ->
           Errors.invalid_type_access_root root; N.Hany
       (* Create a type hole that we will fill during the local typing *)
-      | x when x = SN.Typehints.this ->
+      | x when x = SN.Typehints.this && allow_this ->
           N.Habstr (SN.Typehints.type_hole, Some (pos, self_ty()))
       | _ ->
           (match hint_id ~allow_this env is_static_var root [] with
@@ -1153,8 +1153,6 @@ and constructor env acc = function
   | ClassVars _ -> acc
   | XhpAttr _ -> acc
   | Method ({ m_name = (p, name); _ } as m) when name = SN.Members.__construct ->
-      let genv, lenv = env in
-      let env = ({ genv with in_member_fun = true}, lenv) in
       (match acc with
       | None -> Some (method_ env m)
       | Some _ -> Errors.method_name_already_bound p name; acc)
@@ -1231,13 +1229,6 @@ and class_var env x acc =
              ints and strings, then fallback to mixed *)
           Some (pos, Happly ((pos, "mixed"), []))
       | _ -> h) in
-    (* If the typehint was "string", convert to "Stringish" for now *)
-    let h = if maybe_enum <> None
-      then h
-      else (match h with
-        | Some (pos1, Happly ((pos2, "string"), [])) ->
-            Some (pos1, Happly ((pos2, "Stringish"), []))
-        | x -> x) in
     let h = (match h with
       | Some (p, ((Hoption _) as x)) -> Some (p, x)
       | Some (p, ((Happly ((_, "mixed"), [])) as x)) -> Some (p, x)
@@ -1288,7 +1279,7 @@ and class_method env sids cv_ids x acc =
   | Method m when snd m.m_name = SN.Members.__construct -> acc
   | Method m when not (List.mem Static m.m_kind) ->
       let genv, lenv = env in
-      let env = ({ genv with in_member_fun = true}, lenv) in
+      let env = ({ genv with in_non_static_method = true}, lenv) in
       method_ env m :: acc
   | Method _ -> acc
   | TypeConst _ -> acc
@@ -1337,15 +1328,15 @@ and const_def h env (x, e) =
   match (fst env).in_mode with
   | Ast.Mstrict
   | Ast.Mpartial ->
-      let h = opt_map (hint env) h in
+      let h = opt_map (hint ~allow_this:true env) h in
       h, new_const, Some (expr env e)
   | Ast.Mdecl ->
-      let h = opt_map (hint env) h in
+      let h = opt_map (hint ~allow_this:true env) h in
       h, new_const, Some (fst e, N.Any)
 
 and abs_const_def env h x =
   let new_const = Env.new_const env x in
-  let h = opt_map (hint env) h in
+  let h = opt_map (hint ~allow_this:true env) h in
   h, new_const, None
 
 and class_var_ env (x, e) =
@@ -1406,7 +1397,7 @@ and typeconst env t =
         None
     | h -> h
   in
-  let type_ = opt_map (hint env) hint_ in
+  let type_ = opt_map (hint ~allow_this:true env) hint_ in
   N.({ c_tconst_name = name;
        c_tconst_constraint = constr;
        c_tconst_type = type_;
@@ -1424,7 +1415,10 @@ and method_ env m =
   let lenv = Env.empty_local() in
   let genv = extend_params genv m.m_tparams in
   let env = genv, lenv in
-  let variadicity, paraml = fun_paraml env m.m_params in
+  (* Cannot use 'this' if it is a public instance method *)
+  let allow_this = not genv.in_non_static_method ||
+    not (List.mem Public m.m_kind) in
+  let variadicity, paraml = fun_paraml ~allow_this env m.m_params in
   let name = Env.new_const env m.m_name in
   let acc = false, false, N.Public in
   let final, abs, vis = List.fold_left kind acc m.m_kind in
@@ -1467,10 +1461,10 @@ and kind (final, abs, vis) = function
   | Public -> final, abs, N.Public
   | Protected -> final, abs, N.Protected
 
-and fun_paraml env l =
+and fun_paraml ?(allow_this=false) env l =
   let _names = List.fold_left check_repetition SSet.empty l in
   let variadicity, l = determine_variadicity env l in
-  variadicity, List.map (fun_param env) l
+  variadicity, List.map (fun_param ~allow_this env) l
 
 and determine_variadicity env l =
   match l with
@@ -1486,10 +1480,10 @@ and determine_variadicity env l =
       let variadicity, rl = determine_variadicity env rl in
       variadicity, x :: rl
 
-and fun_param env param =
+and fun_param ?(allow_this=false) env param =
   let x = Env.new_lvar env param.param_id in
   let eopt = opt_map (expr env) param.param_expr in
-  let ty = opt_map (hint env) param.param_hint in
+  let ty = opt_map (hint ~allow_this env) param.param_hint in
   { N.param_hint = ty;
     param_is_reference = param.param_is_reference;
     param_is_variadic = param.param_is_variadic;

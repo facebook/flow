@@ -71,20 +71,6 @@ let empty_file_info : FileInfo.t = {
   consider_names_just_for_autoload = false;
 }
 
-(* Given a Ast.program, give me the list of entities it defines *)
-let get_defs ast =
-  List.fold_left begin fun (acc1, acc2, acc3, acc4) def ->
-    match def with
-    | Ast.Fun f -> f.Ast.f_name :: acc1, acc2, acc3, acc4
-    | Ast.Class c -> acc1, c.Ast.c_name :: acc2, acc3, acc4
-    | Ast.Typedef t -> acc1, acc2, t.Ast.t_id :: acc3, acc4
-    | Ast.Constant cst -> acc1, acc2, acc3, cst.Ast.cst_name :: acc4
-    | Ast.Namespace _
-    | Ast.NamespaceUse _ -> assert false
-     (* toplevel statements are ignored *)
-    | Ast.Stmt _ -> acc1, acc2, acc3, acc4
-  end ([], [], [], []) ast
-
 let legacy_php_file_info = ref (fun fn ->
   empty_file_info
 )
@@ -103,7 +89,7 @@ let parse (acc, errorl, error_files, php_files) fn =
   Parsing_hooks.dispatch_file_parsed_hook fn ast;
   if file_mode <> None then begin
     AddDeps.program ast;
-    let funs, classes, typedefs, consts = get_defs ast in
+    let funs, classes, typedefs, consts = Ast_utils.get_defs ast in
     Parser_heap.ParserHeap.add fn ast;
     let defs =
       {FileInfo.funs; classes; typedefs; consts; comments;

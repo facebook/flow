@@ -58,6 +58,7 @@ MODULES=\
   h2tp/test\
   h2tp\
   third-party/avl\
+  third-party/core\
   $(INOTIFY)\
   $(FSNOTIFY)
 

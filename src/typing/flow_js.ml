@@ -180,11 +180,11 @@ let rec havoc_ctx cx i j =
 and havoc_ctx_ = function
   | (block::blocks_, x1::stack1_, x2::stack2_) when x1 = x2 ->
       (if modes.debug then prerr_endline (spf "HAVOC::%d" x1));
-      block := SMap.mapi (fun x {specific;general;def_loc;} ->
+      block := SMap.mapi (fun x {specific;general;def_loc;for_type} ->
         (* internal names (.this, .super, .return, .exports) are read-only *)
         if is_internal_name x
-        then create_env_entry specific general def_loc
-        else create_env_entry general general def_loc
+        then create_env_entry ~for_type specific general def_loc
+        else create_env_entry ~for_type general general def_loc
       ) !block;
       havoc_ctx_ (blocks_,stack1_,stack2_)
   | _ -> ()

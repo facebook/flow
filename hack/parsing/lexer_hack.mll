@@ -615,14 +615,14 @@ and varname = parse
 
 and format_comment = parse
   | [' '  '\t']        { Tspace         }
-  | '\n'               { Tnewline       }
+  | ws* '\n'           { Tnewline       } (* eat up trailing spaces *)
   | eof                { Teof           }
   | "*/"               { Tclose_comment }
   | _                  { Tany           }
 
 and format_token = parse
   | [' '  '\t']        { Tspace        }
-  | '\n'               { Tnewline      }
+  | ws* '\n'           { Tnewline      } (* eat up trailing spaces *)
   | "/*"               { Topen_comment }
   | "//"               { Tline_comment }
   | "#"                { Tline_comment }
@@ -699,7 +699,7 @@ and format_token = parse
 
 and format_xhptoken = parse
   | eof                { Teof        }
-  | '\n'               { Tnewline    }
+  | ws* '\n'           { Tnewline    } (* eat up trailing spaces *)
   | ' '                { Tspace      }
   | '<'                { Tlt         }
   | '>'                { Tgt         }

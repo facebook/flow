@@ -97,29 +97,53 @@ let add_members members acc =
 
 let is_abstract_typeconst x = x.ttc_type = None
 
+let can_override_typeconst x =
+  (is_abstract_typeconst x) || x.ttc_constraint <> None
+
 let add_typeconst name sig_ typeconsts =
   match SMap.get name typeconsts with
   | None ->
       (* The type constant didn't exist so far, let's add it *)
       SMap.add name sig_ typeconsts
+  (* This covers the following case
+   *
+   * interface I1 { abstract const type T; }
+   * interface I2 { const type T = int; }
+   *
+   * class C implements I1, I2 {}
+   *
+   * Then C::T == I2::T since I2::T is not abstract
+   *)
   | Some old_sig
     when not (is_abstract_typeconst old_sig) && (is_abstract_typeconst sig_) ->
+      typeconsts
+  (* This covers the following case
+   *
+   * abstract P { const type T as arraykey = arraykey; }
+   * interface I { const type T = int; }
+   *
+   * class C extends P implements I {}
+   *
+   * Then C::T == I::T since P::T has a constraint and thus can be overridden
+   * by it's child, while I::T cannot be overridden.
+   *)
+  | Some old_sig
+    when not (can_override_typeconst old_sig) && (can_override_typeconst sig_) ->
       typeconsts
   (* When a type constant is declared in multiple parents we need to make a
    * subtle choice of what type we inherit. For example in:
    *
-   * interface I1 { abstract type const t = Container<int>; }
-   * interface I2 { abstract type const t = KeyedContainer<int, int>; }
+   * interface I1 { abstract const type t as Container<int>; }
+   * interface I2 { abstract const type t as KeyedContainer<int, int>; }
    * abstract class C implements I1, I2 {}
    *
-   * What is the type of C::t? Does C::t == I1::t or C::t == I2::t?
-   * For now we are not allowing interfaces or traits to declare type consts to
-   * avoid this issue but when we do add support we will need to decide what to
-   * do here. As implemented this choice is arbitrary. Compatibility is checked
-   * automagically during typing_extends since we attempt to fold all parent
-   * members into the child class.
+   * Depending on the order the interfaces are declared, we may report an error.
+   * Since this could be confusing there is special logic in Typing_extends that
+   * checks for this potentially ambiguous situation and warns the programmer to
+   * explicitly declare T in C.
    *)
-  | _ -> SMap.add name sig_ typeconsts
+  | _ ->
+      SMap.add name sig_ typeconsts
 
 let add_constructor (cstr, cstr_consist) (acc, acc_consist) =
   let ce = match cstr, acc with
@@ -252,8 +276,11 @@ let inherit_hack_class_constants_only env p class_name class_type argl =
   let subst = make_substitution p class_name class_type argl in
   let instantiate = SMap.map_env (Inst.instantiate_ce subst) in
   let env, consts  = instantiate env class_type.tc_consts in
+  let env, typeconsts = SMap.map_env (Inst.instantiate_typeconst subst)
+    env class_type.tc_typeconsts in
   let result = { empty with
     ih_consts   = consts;
+    ih_typeconsts = typeconsts;
   } in
   env, result
 

@@ -1,7 +1,9 @@
 let fold_count fold t ~f = fold t ~init:0 ~f:(fun n a -> if f a then n + 1 else n)
+(* XXX Not compatible with 3.12
 let fold_sum (type a) (module M : Commutative_group.S with type t = a) fold t ~f =
   fold t ~init:M.zero ~f:(fun n a -> M.(+) n (f a))
 ;;
+*)
 
 let fold_min fold t ~cmp =
   fold t ~init:None ~f:(fun acc elt ->

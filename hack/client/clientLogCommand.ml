@@ -21,11 +21,16 @@
   * ClientCommand.command where the data carried by each branch is only
   * the data required for logging. *)
 
+type build_kind =
+  | Push
+  | Full
+  | Incremental
+  | Steps
+
  type log_command =
   | LCCheck of Path.path * string
   | LCStart of Path.path
   | LCStop of Path.path
   | LCRestart of Path.path
-  | LCStatus of Path.path option
-  | LCBuild of Path.path * (* incremental *) bool
+  | LCBuild of Path.path * build_kind
   | LCProlog of Path.path

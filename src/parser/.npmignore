@@ -1,0 +1,10 @@
+*.ml
+*.mll
+TARGETS
+Makefile
+_build/
+facebook/
+lex_test
+parse_test
+perf_test
+pfff_test

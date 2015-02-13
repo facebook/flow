@@ -87,6 +87,33 @@ let check_types_for_const env parent_type class_type =
       (* types should be the same *)
       ignore (TUtils.unify env parent_type class_type)
 
+(* An abstract member can be declared in multiple ancestors. Sometimes these
+ * declarations can be different, but yet compatible depending on which ancestor
+ * we inherit the member from. For example:
+ *
+ * interface I1 { abstract public function foo(): int; }
+ * interface I2 { abstract public function foo(): mixed; }
+ *
+ * abstract class C implements I1, I2 {}
+ *
+ * I1::foo() is compatible with I2::foo(), but not vice versa. Hack chooses the
+ * signature for C::foo() arbitrarily and can report an error if we make a
+ * "wrong" choice. We check for this case and emit an extra line in the error
+ * instructing the programmer to redeclare the member to remove the ambiguity.
+ *
+ * Note: We could detect this case and make the correct choice for the user, but
+ * this would require invalidating the current entry we have in the typing heap
+ * for this class. We cannot make this choice earlier during typing_decl because
+ * a class we depend on during the subtyping may not have been declared yet.
+ *)
+let check_ambiguous_inheritance f parent child pos class_ origin =
+    Errors.try_when
+      (f parent child)
+      ~when_: (fun () -> class_.tc_name <> origin &&
+        Errors.has_no_errors (f child parent))
+      ~do_: (fun error ->
+        Errors.ambiguous_inheritance pos class_.tc_name origin error)
+
 (* Check that overriding is correct *)
 let check_override env ?(ignore_fun_return = false) ?(check_for_const = false)
     parent_class class_ parent_class_elt class_elt =
@@ -111,7 +138,9 @@ let check_override env ?(ignore_fun_return = false) ?(check_for_const = false)
             (class_known || check_partially_known_method_returns) then
             SubType.subtype_funs
           else SubType.subtype_funs_no_return in
-        ignore (subtype_funs env r_parent ft_parent r_child ft_child)
+        let check (r1, ft1) (r2, ft2) () = ignore(subtype_funs env r1 ft1 r2 ft2) in
+        check_ambiguous_inheritance check (r_parent, ft_parent) (r_child, ft_child)
+          (Reason.to_pos r_child) class_ class_elt.ce_origin
       | fty_parent, fty_child ->
         let pos = Reason.to_pos (fst fty_child) in
         ignore (unify pos Typing_reason.URnone env fty_parent fty_child)
@@ -220,9 +249,13 @@ let check_typeconsts env parent_class class_ =
   let pos, class_, _ = class_ in
   let ptypeconsts = parent_class.tc_typeconsts in
   let typeconsts = class_.tc_typeconsts in
+  let tconst_check parent_tconst tconst () =
+    tconst_subsumption this_ty env parent_tconst tconst in
   SMap.iter begin fun tconst_name parent_tconst ->
     match SMap.get tconst_name typeconsts with
-      | Some tconst -> tconst_subsumption this_ty env parent_tconst tconst
+      | Some tconst ->
+          check_ambiguous_inheritance tconst_check parent_tconst tconst
+            (fst tconst.ttc_name) class_ tconst.ttc_origin
       | None ->
         Errors.member_not_implemented
           tconst_name parent_pos pos (fst parent_tconst.ttc_name)

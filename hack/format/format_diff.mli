@@ -20,4 +20,4 @@ type interval = int * int
 type file_diff = filename * interval list
 
 val parse_diff: string -> file_diff list
-val apply: Ast.mode option list -> diff:(file_diff list) -> unit
+val apply: Ast.mode option list -> bool -> diff:(file_diff list) -> unit

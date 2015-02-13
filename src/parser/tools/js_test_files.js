@@ -1,4 +1,4 @@
-#! /opt/local/bin/node
+#!/usr/bin/env node
 var flow = require("../flow_parser.js");
 var colors = require("colors");
 var util = require("util");

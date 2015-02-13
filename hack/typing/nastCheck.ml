@@ -437,8 +437,10 @@ and class_const env (h, _, e) =
 
 and typeconst (env, class_tparams) tconst =
   maybe hint env tconst.c_tconst_type;
+  maybe hint env tconst.c_tconst_constraint;
   (* need to ensure that tconst.c_tconst_type is not Habstr *)
-  maybe check_no_class_tparams class_tparams tconst.c_tconst_type
+  maybe check_no_class_tparams class_tparams tconst.c_tconst_type;
+  maybe check_no_class_tparams class_tparams tconst.c_tconst_constraint
 
 (* Check to make sure we are not using class type params for type const decls *)
 and check_no_class_tparams class_tparams (pos, ty)  =

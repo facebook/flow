@@ -1,0 +1,13 @@
+
+named_imports.js:15:21,23: identifier Bar
+Unknown global name
+
+namespace_imports.js:19:2,4: number
+This type is incompatible with
+  A.js:8:18,18: A
+
+namespace_imports.js:20:2,4: number
+This type is incompatible with
+  B.js:13:8,10: Bar
+
+Found 3 errors

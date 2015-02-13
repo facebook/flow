@@ -49,7 +49,6 @@ let () =
     | ClientCommand.CStart env -> ClientStart.main env
     | ClientCommand.CStop env -> HackClientStop.main env
     | ClientCommand.CRestart env -> ClientRestart.main env
-    | ClientCommand.CStatus env -> ClientStatus.main env
     | ClientCommand.CBuild env -> ClientBuild.main env
     | ClientCommand.CProlog env -> ClientProlog.main env
   end;

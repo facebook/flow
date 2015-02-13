@@ -467,7 +467,12 @@ and class_decl c =
        || DynamicYield.contains_dynamic_yield_interface req_ancestors_extends
        || DynamicYield.contains_dynamic_yield req_ancestors_extends)
   in
-  let env, m = if dy_check then DynamicYield.decl env m else env, m in
+  let env, m = if dy_check
+    then
+      (* let () = Printf.printf "DynamicYield.decl %s\n" cls_name in  *)
+      DynamicYield.decl env m
+    else env, m
+  in
   let ext_strict = List.fold_left (trait_exists env) ext_strict c.c_uses in
   let not_strict_because_xhp = xhp_is_not_strict && c.c_is_xhp in
   if not ext_strict && not not_strict_because_xhp && (Env.is_strict env) then
@@ -710,25 +715,27 @@ and visibility cid = function
   | Protected -> Vprotected cid
   | Private   -> Vprivate cid
 
-and typeconst_decl c (env, acc) typeconst =
+and typeconst_decl c (env, acc) {
+  c_tconst_name = (pos, name);
+  c_tconst_constraint = constr;
+  c_tconst_type = type_;
+} =
   match c.c_kind with
-  | Ast.Cinterface | Ast.Ctrait | Ast.Cenum ->
+  | Ast.Ctrait | Ast.Cenum ->
       let kind = match c.c_kind with
-        | Ast.Cinterface -> "an interface"
-        | Ast.Ctrait -> "a trait"
-        | Ast.Cenum -> "an enum"
+        | Ast.Ctrait -> `trait
+        | Ast.Cenum -> `enum
         | _ -> assert false in
-      Errors.requires_non_class (fst c.c_name) (snd c.c_name) kind;
+      Errors.cannot_declare_constant kind pos c.c_name;
       env, acc
-  | Ast.Cabstract | Ast.Cnormal ->
-      let name = snd typeconst.c_tconst_name in
-      let env, constr =
-        opt Typing_hint.hint env typeconst.c_tconst_constraint in
-      let env, ty = opt Typing_hint.hint env typeconst.c_tconst_type in
+  | Ast.Cinterface | Ast.Cabstract | Ast.Cnormal ->
+      let env, constr = opt Typing_hint.hint env constr in
+      let env, ty = opt Typing_hint.hint env type_ in
       let tc = {
-        ttc_name = typeconst.c_tconst_name;
+        ttc_name = (pos, name);
         ttc_constraint = constr;
         ttc_type = ty;
+        ttc_origin = snd c.c_name;
       } in
       let acc = SMap.add name tc acc in
       env, acc

@@ -5033,12 +5033,13 @@ module.exports = {
     'Import': {
       'esprima_opts': { sourceType: "module" },
       'tests': [
+        'import "MyModule";',
         'import defaultbinding from "MyModule";',
         'import * as namespace from "MyModule";',
-        /* TODO Esprima should support these
         'import {} from "MyModule";',
-        'import {x,} from "MyModule";',
         'import defaultbinding, {} from "MyModule";',
+        /* TODO Esprima should support these
+        'import {x,} from "MyModule";',
         'import defaultbinding, {x,} from "MyModule";',
         */
         'import {x} from "MyModule";',
@@ -5050,6 +5051,33 @@ module.exports = {
         'import defaultbinding, {x,y} from "MyModule";',
         'import defaultbinding, {x as z} from "MyModule";',
         'import defaultbinding, {x, y as z} from "MyModule";',
+
+        // These aren't import types
+        'import type from "MyModule"',
+        'import type, {} from "MyModule"',
+        'import type, * as namespace from "MyModule"',
+      ],
+    },
+    'Import Type': {
+      'esprima_opts': { sourceType: "module" },
+      'tests': [
+        'import type defaultbinding from "MyModule";',
+        'import type * as namespace from "MyModule";',
+        'import type {} from "MyModule";',
+        'import type defaultbinding, {} from "MyModule";',
+        /* TODO Esprima should support these
+        'import type {x,} from "MyModule";',
+        'import type defaultbinding, {x,} from "MyModule";',
+        */
+        'import type {x} from "MyModule";',
+        'import type {x,y} from "MyModule";',
+        'import type {x as z} from "MyModule";',
+        'import type {x, y as z} from "MyModule";',
+        'import type defaultbinding, * as namespace from "MyModule";',
+        'import type defaultbinding, {x} from "MyModule";',
+        'import type defaultbinding, {x,y} from "MyModule";',
+        'import type defaultbinding, {x as z} from "MyModule";',
+        'import type defaultbinding, {x, y as z} from "MyModule";',
       ],
     },
     'Declare Statements': [
@@ -5140,5 +5168,219 @@ module.exports = {
       'var a: (A<T>)',
       'var a: (A | B)',
       'var a: (A & B)',
+    ],
+    'Typecasts': [
+      {
+        content: '(xxx: number)',
+        explanation: 'Esprima counts the parens in its locs',
+        expected_differences: {
+          'root.body.0.range.0': {
+            type: 'Wrong number',
+            expected: 0,
+            actual: 1
+          },
+          'root.body.0.range.1': {
+            type: 'Wrong number',
+            expected: 13,
+            actual: 12
+          },
+          'root.body.0.loc.start.column': {
+            type: 'Wrong number',
+            expected: 0,
+            actual: 1
+          },
+          'root.body.0.loc.end.column': {
+            type: 'Wrong number',
+            expected: 13,
+            actual: 12
+          },
+          'root.range.0': {
+            type: 'Wrong number',
+            expected: 0,
+            actual: 1
+          },
+          'root.range.1': {
+            type: 'Wrong number',
+            expected: 13,
+            actual: 12
+          },
+          'root.loc.start.column': {
+            type: 'Wrong number',
+            expected: 0,
+            actual: 1
+          },
+          'root.loc.end.column': {
+            type: 'Wrong number',
+            expected: 13,
+            actual: 12
+          },
+        }
+      },
+      {
+        content: '({xxx: 0, yyy: "hey"}: {xxx: number; yyy: string})',
+        explanation:  'Esprima counts the parens in its locs',
+        expected_differences: {
+          'root.body.0.range.0': {
+            type: 'Wrong number',
+            expected: 0,
+            actual: 1
+          },
+          'root.body.0.range.1': {
+            type: 'Wrong number',
+            expected: 50,
+            actual: 49
+          },
+          'root.body.0.loc.start.column': {
+            type: 'Wrong number',
+            expected: 0,
+            actual: 1
+          },
+          'root.body.0.loc.end.column': {
+            type: 'Wrong number',
+            expected: 50,
+            actual: 49
+          },
+          'root.range.0': {
+            type: 'Wrong number',
+            expected: 0,
+            actual: 1
+          },
+          'root.range.1': {
+            type: 'Wrong number',
+            expected: 50,
+            actual: 49
+          },
+          'root.loc.start.column': {
+            type: 'Wrong number',
+            expected: 0,
+            actual: 1
+          },
+          'root.loc.end.column': {
+            type: 'Wrong number',
+            expected: 50,
+            actual: 49
+          },
+        }
+      },
+      // distinguish between function type params and typecasts
+      {
+        content: '((xxx) => xxx + 1: (xxx: number) => number)',
+        explanation:  'Esprima counts the parens in its locs',
+        expected_differences: {
+          'root.body.0.range.0': {
+            type: 'Wrong number',
+            expected: 0,
+            actual: 1
+          },
+          'root.body.0.range.1': {
+            type: 'Wrong number',
+            expected: 43,
+            actual: 42
+          },
+          'root.body.0.loc.start.column': {
+            type: 'Wrong number',
+            expected: 0,
+            actual: 1
+          },
+          'root.body.0.loc.end.column': {
+            type: 'Wrong number',
+            expected: 43,
+            actual: 42
+          },
+          'root.range.0': {
+            type: 'Wrong number',
+            expected: 0,
+            actual: 1
+          },
+          'root.range.1': {
+            type: 'Wrong number',
+            expected: 43,
+            actual: 42
+          },
+          'root.loc.start.column': {
+            type: 'Wrong number',
+            expected: 0,
+            actual: 1
+          },
+          'root.loc.end.column': {
+            type: 'Wrong number',
+            expected: 43,
+            actual: 42
+          },
+        }
+      },
+      // parens disambiguate groups from casts
+      {
+        content: '((xxx: number), (yyy: string))',
+        explanation:  'Esprima counts the parens in its locs',
+        expected_differences: {
+          'root.body.0.expression.range.0': {
+            type: 'Wrong number',
+            expected: 1,
+            actual: 2
+          },
+          'root.body.0.expression.range.1': {
+            type: 'Wrong number',
+            expected: 29,
+            actual: 28
+          },
+          'root.body.0.expression.loc.start.column': {
+            type: 'Wrong number',
+            expected: 1,
+            actual: 2
+          },
+          'root.body.0.expression.loc.end.column': {
+            type: 'Wrong number',
+            expected: 29,
+            actual: 28
+          },
+          'root.body.0.range.0': {
+            type: 'Wrong number',
+            expected: 0,
+            actual: 2
+          },
+          'root.body.0.range.1': {
+            type: 'Wrong number',
+            expected: 30,
+            actual: 28
+          },
+          'root.body.0.loc.start.column': {
+            type: 'Wrong number',
+            expected: 0,
+            actual: 2
+          },
+          'root.body.0.loc.end.column': {
+            type: 'Wrong number',
+            expected: 30,
+            actual: 28
+          },
+          'root.range.0': {
+            type: 'Wrong number',
+            expected: 0,
+            actual: 2
+          },
+          'root.range.1': {
+            type: 'Wrong number',
+            expected: 30,
+            actual: 28
+          },
+          'root.loc.start.column': {
+            type: 'Wrong number',
+            expected: 0,
+            actual: 2
+          },
+          'root.loc.end.column': {
+            type: 'Wrong number',
+            expected: 30,
+            actual: 28
+          },
+        }
+      },
+    ],
+    'Invalid Typecasts': [
+      // Must be parenthesized
+      'var x: number = 0: number;',
+      // ...even within groups
+      '(xxx: number, yyy: string)'
     ],
 };

@@ -100,18 +100,23 @@ let group_into_sections lines =
     ) (SSet.empty, [], ((0, ""), [])) lines in
   List.rev (section::sections)
 
+let make_path_absolute config path =
+  if Filename.is_relative path
+  then Path.concat config.root path
+  else Path.mk_path path
+
 let parse_includes config lines =
   let includes = lines
   |> List.map (fun (ln, line) -> String.trim line)
   |> List.filter (fun s -> s <> "")
-  |> List.map (Path.concat config.root) in
+  |> List.map (make_path_absolute config) in
   { config with includes; }
 
 let parse_libs config lines =
   let libs = lines
   |> List.map (fun (ln, line) -> String.trim line)
   |> List.filter (fun s -> s <> "")
-  |> List.map (Path.concat config.root) in
+  |> List.map (make_path_absolute config) in
   { config with libs; }
 
 let parse_excludes config lines =

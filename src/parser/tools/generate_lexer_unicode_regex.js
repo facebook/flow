@@ -1,4 +1,4 @@
-#!/opt/local/bin/node
+#!/usr/bin/env node
 /**
  * So let's say we wanted to produce a regular expression of all the unicode
  * that could be valid identifier characters. This is a little easier in

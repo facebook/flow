@@ -203,11 +203,13 @@ module CompareTypes = struct
 
   and members acc m1 m2 = smap class_elt acc m1 m2
 
-  and typeconst acc tc1 {
+  and typeconst (subst, same) tc1 {
     ttc_name = tc2_ttc_name;
     ttc_constraint = tc2_ttc_constraint;
     ttc_type = tc2_ttc_type;
+    ttc_origin = tc2_ttc_origin;
   } =
+    let acc = subst, same && tc1.ttc_origin = tc2_ttc_origin in
     let acc = string_id acc tc1.ttc_name tc2_ttc_name in
     let acc = ty_opt acc tc1.ttc_constraint tc2_ttc_constraint in
     ty_opt acc tc1.ttc_type tc2_ttc_type
@@ -317,6 +319,8 @@ module TraversePos(ImplementPos: sig val pos: Pos.t -> Pos.t end) = struct
     | Runpack_param p        -> Runpack_param (pos p)
     | Rinstantiate (r1,x,r2) -> Rinstantiate (reason r1, x, reason r2)
     | Rarray_filter (p, r)   -> Rarray_filter (pos p, reason r)
+    | Rtype_access (r1, x, y, r2) -> Rtype_access (reason r1, x, y, reason r2)
+    | Rexpr_dep_type (r, p, n) -> Rexpr_dep_type (reason r, pos p, n)
 
   let string_id (p, x) = pos p, x
 
@@ -369,6 +373,7 @@ module TraversePos(ImplementPos: sig val pos: Pos.t -> Pos.t end) = struct
     { ttc_name = string_id tc.ttc_name;
       ttc_constraint = ty_opt tc.ttc_constraint;
       ttc_type = ty_opt tc.ttc_type;
+      ttc_origin = tc.ttc_origin;
     }
 
   and type_param (variance, sid, y) =

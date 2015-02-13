@@ -56,6 +56,8 @@ type t =
   | Runpack_param    of Pos.t
   | Rinstantiate     of t * string * t
   | Rarray_filter    of Pos.t * t
+  | Rtype_access     of t * string * string list * t
+  | Rexpr_dep_type   of t * Pos.t * string
 
 (* Translate a reason to a (pos, string) list, suitable for error_l. This
  * previously returned a string, however the need to return multiple lines with
@@ -139,7 +141,18 @@ let rec to_string prefix r =
       [(p, "array_filter converts KeyedContainer<Tk, Tv> to \
       array<Tk, Tv>, and Container<Tv> to array<arraykey, Tv>. \
       Single argument calls additionally remove nullability from Tv.")]
-
+  | Rtype_access (r_orig, ty, expansions, r_expanded) ->
+      (to_string prefix r_orig) @
+      (to_string
+        ("  resulting from expanding "^ty
+        ^" as follows:\n    "^String.concat " -> " expansions)
+        r_expanded
+      )
+  | Rexpr_dep_type (r, p, n) ->
+      let l = (to_string prefix r) in
+      List.hd l
+        :: (p, "  where '"^n^"' is a reference to this expression")
+        :: List.tl l
 
 and to_pos = function
   | Rnone     -> Pos.none
@@ -188,6 +201,8 @@ and to_pos = function
   | Runpack_param p -> p
   | Rinstantiate (_, _, r) -> to_pos r
   | Rarray_filter (p, _) -> p
+  | Rtype_access (r, _, _, _) -> to_pos r
+  | Rexpr_dep_type (r, _, _) -> to_pos r
 
 type ureason =
   | URnone
@@ -288,5 +303,11 @@ let none = Rnone
 (*****************************************************************************)
 
 let explain_generic_constraint reason name error =
-  let pos = to_pos reason in
-  Errors.explain_constraint pos name error
+  match reason with
+  | Rtype_access _ | Rexpr_dep_type _ ->
+      let msgl =
+        to_string ("Considering the constraint on '"^name^"'") reason in
+      Errors.explain_type_constant msgl error
+  | _ ->
+      let pos = to_pos reason in
+      Errors.explain_constraint pos name error

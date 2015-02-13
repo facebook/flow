@@ -259,6 +259,7 @@ and typeconst_type = {
   ttc_name        : Nast.sid;
   ttc_constraint  : ty option;
   ttc_type        : ty option;
+  ttc_origin      : string;
 }
 
 and enum_type = {

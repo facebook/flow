@@ -144,8 +144,8 @@ let rec force_expand_typedef_ trail env = function
     let env, t, pos = expand_typedef_ ~force_expand:true x env r x argl in
     (* We need to keep expanding until we hit something that isn't a typedef *)
     force_expand_typedef_ (pos::trail) env t
-  | _, Taccess taccess ->
-      let env, ty = TAccess.expand env taccess in
+  | r, Taccess taccess ->
+      let env, ty = TAccess.expand env r taccess in
       force_expand_typedef_ trail env ty
   | r, t -> env, (r, t), List.rev trail
 let force_expand_typedef = force_expand_typedef_ []

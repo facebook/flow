@@ -149,7 +149,7 @@ module Typehints = struct
   (* Place holder type that will be filled later. This is used for implementing
    * the path dependent type for type accesses
    *)
-  let type_hole = "[unknown]"
+  let type_hole = "<this>"
 
   let int     = "int"
   let bool    = "bool"

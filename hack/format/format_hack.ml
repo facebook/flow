@@ -1678,7 +1678,7 @@ and xhp_multi env =
     end;
   wrap_xhp env begin function
     | Tslash ->
-        space env;
+        newline env;
         last_token env;
         expect_xhp ">" env;
     | _ ->

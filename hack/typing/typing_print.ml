@@ -55,16 +55,8 @@ module ErrorString = struct
     | Tapply ((_, x), _) -> "an object of type "^(strip_ns x)
     | Tobject            -> "an object"
     | Tshape _           -> "a shape"
-    | Taccess (root_ty, ids) ->
-        (match snd root_ty with
-        | Tgeneric (x, _)
-        | Tapply ((_, x), _)
-        | Tabstract ((_, x), _, _) ->
-            List.fold_left (fun acc (_, sid) -> acc^"::"^sid)
-              ("a value of type"^(strip_ns x)) ids
-        | _ ->
-            "an undefined value"
-        )
+    | Taccess (root_ty, ids) -> tconst root_ty ids
+
 
   and array = function
     | None, None     -> "an array"
@@ -73,8 +65,22 @@ module ErrorString = struct
     | _              -> assert false
 
   and generic = function
+    (* special generic for the 'this' type *)
     | "this", Some x ->
-        type_ (snd x)^" (compatible with the type 'this')"
+        "the type 'this'\n  that is compatible with "^type_ (snd x)
+    (* expression dependent types are generics starting with '<SOME_ID>' *)
+    | s, Some x when String.contains s '<' ->
+        "the expression dependent type "^s^"\n  that is compatible with "^type_ (snd x)
+    (* abstract type constants are generic types containing a '::', i.e. 'C::T' *)
+    | s, x when String.contains s ':' ->
+        let base = "the abstract type constant " in
+        let sub =
+          match x with
+          | None -> ""
+          | Some x -> "\n  that is compatible with "^type_ (snd x)
+        in
+        base^s^sub
+    (* standard, user land generics *)
     | s, _ -> "a value of generic type "^s
 
   and unresolved l =
@@ -88,6 +94,24 @@ module ErrorString = struct
     | []      -> "an undefined value"
     | [x]     -> x
     | x :: rl -> x^" or "^unresolved_ rl
+
+  and tconst root_ty ids =
+    match snd root_ty with
+    | Tgeneric (x, _)
+    | Tapply ((_, x), _)
+    | Tabstract ((_, x), _, _) ->
+        let x =
+          if String.contains x '<'
+          then "this"
+          else x
+        in
+        List.fold_left (fun acc (_, sid) -> acc^"::"^sid)
+          ("the type constant "^strip_ns x) ids
+    | Taccess _ as x ->
+        List.fold_left (fun acc (_, sid) -> acc^"::"^sid)
+          (type_ x) ids
+     | _ ->
+         "a type constant"
 
 end
 
@@ -320,6 +344,7 @@ module PrintClass = struct
     ttc_name = tc_name;
     ttc_constraint = tc_constraint;
     ttc_type = tc_type;
+    ttc_origin = origin;
   } =
     let name = snd tc_name in
     let ty x = Full.to_string tenv x in
@@ -333,7 +358,7 @@ module PrintClass = struct
       | None -> ""
       | Some x -> " = "^ty x
     in
-    name^constraint_^type_
+    name^constraint_^type_^" (origin:"^origin^")"
 
   let typeconst_smap m =
     SMap.fold begin fun _ v acc ->

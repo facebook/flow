@@ -22,8 +22,8 @@ let get_dir ?user:(user=None) () =
     | None -> Sys_utils.logname
     | Some user -> user in
   let tmp_dir = temp_dir_name ^ SysConfig.temp_base ^ "_" ^ user in
-  if not (Sys.file_exists tmp_dir)
-  then Unix.mkdir tmp_dir 0o755;
+  (* Emulate "mkdir -p", i.e., no error if already exists. *)
+  (try Unix.mkdir tmp_dir 0o755 with Unix.Unix_error (Unix.EEXIST, _, _) -> ());
   tmp_dir
 
 (* The missing counterpart to Filename.temp_file. Put in a random location

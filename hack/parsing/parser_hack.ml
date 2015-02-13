@@ -1028,7 +1028,10 @@ and hint_apply_or_access_remainder env id_list =
               let params = class_hint_params env in
               let id = List.hd id_list in
               fst id, Happly (id, params)
-          | id1 :: id2 :: ids -> fst id1, Haccess (id1, id2, ids)
+          | id1 :: id2 :: ids ->
+              let pos1 = fst id1 in
+              let pos2 = List.fold_left (fun _acc (p, _) -> p) (fst id2) ids in
+              Pos.btw pos1 pos2, Haccess (id1, id2, ids)
           | [] ->
               error_expect env "identifier";
               let pos = Pos.make env.file env.lb in
@@ -1229,9 +1232,10 @@ and class_toplevel_word env word =
   | "const" ->
       let error_state = !(env.errors) in
       let def =
-        if peek_check_word env "type"
-        then (drop env; TypeConst (typeconst_def env ~is_abstract:false))
-        else class_const_def env in
+        match try_typeconst_def env ~is_abstract:false with
+        | Some tconst -> tconst
+        | None -> class_const_def env
+      in
       if !(env.errors) != error_state
       then [def]
       else def :: class_defs env
@@ -1359,17 +1363,25 @@ and xhp_format env =
 and try_abstract_const env =
     try_parse env begin fun env ->
       match L.token env.file env.lb with
-        | Tword when Lexing.lexeme env.lb = "const"
-          && peek_check_word env "type" ->
-            drop env;
-            Some (TypeConst (typeconst_def env ~is_abstract:true))
         | Tword when Lexing.lexeme env.lb = "const" ->
-            let h = class_const_hint env in
-            let id = identifier env in
-            expect env Tsc;
-            Some (AbsConst (h, id))
+            (match try_typeconst_def env ~is_abstract:true with
+            | Some tconst -> Some tconst
+            | None ->
+                let h = class_const_hint env in
+                let id = identifier env in
+                expect env Tsc;
+                Some (AbsConst (h, id))
+            )
         | _ -> None
     end
+
+and try_typeconst_def env ~is_abstract =
+  try_parse env begin fun env ->
+    match L.token env.file env.lb with
+    | Tword when Lexing.lexeme env.lb = "type" && (peek env) = Tword ->
+        Some (TypeConst (typeconst_def env ~is_abstract))
+    | _ -> None
+  end
 
 (* const_hint const_name1 = value1, ..., const_name_n = value_n; *)
 and class_const_def env =
