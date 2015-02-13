@@ -1,3 +1,26 @@
+v0.4.0
+
+** Flow comments should be ready for use **
+
+- Bump version to 0.4.0
+- [PR #259] Add declaration for Document.execCommand()
+- [PR #265] flow status --json should exit 2 on errors
+- Fix issue with switch statement breaks
+- abnormal exit effects of fall-through cases in switch
+- Let AnyObjT flow to KeyT
+- invariant(false, ...) always throws
+- Improve the "Object" annotations
+- sealed object literals
+- fix return types which could be undefined
+- Support type annotations in comments
+- [PR #263] disable colors when TERM=dumb
+- Add lint checks for TRUE / FALSE / NULL
+- class subtyping
+- array literal inference
+- Add unsafe_xhp typechecker option
+- work around false positive conflict markers
+- Better dumping types for debugging
+
 v0.3.0
 
 ** Type casts and import type should be ready for use **
