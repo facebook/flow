@@ -1,3 +1,19 @@
+v0.3.0
+
+** Type casts and import type should be ready for use **
+
+- Bump version to 0.3.0
+- Move haste module name preprocessing into module_js
+- [PR #260] Add SyntheticEvent to lib/react.js
+- Add import type to Flow
+- [Parser] Add esprima tests for typecasts
+- Add support for a module name preprocessor that can re-write require()d module names
+- [Parser] Support import types
+- Allow absolute paths for [libs] and [include]
+- prepare flow-parser to be published to npm
+- [PR #247] Resubmit #113 this fixes #155
+- [PR #246] Fixes #195
+
 v0.2.0
 
 - Bump version to 0.2.0
