@@ -7,11 +7,18 @@
     <link rel="stylesheet" href='/static/pygments.css' type='text/css'/>
     <link rel='shortcut icon' href='/static/favicon.png'>
     <meta name='viewport' content='width=480'>
-    <meta property='og:type' content='website'>
-    <meta property="og:title" content="Flow | {{ page.title }}" />
+    <meta property="og:title" content="{{ page.title }}" />
+    <meta property="og:site_name" content="flowtype">
     <meta property='og:description' content='Flow is a static type checker for
     JavaScript.'>
     <meta property='og:image' content='http://flowtype.org/static/flow-og-image.png'>
+    <meta property='og:url' content="http://flowtype.org{{ page.url }}">
+    {% if (page.is_post) %}
+    <meta property='og:type' content='article'>
+    <meta property='article:author' content="{{ author.facebook }}">
+    {% else %}
+    <meta property='og:type' content='website'>
+    {% endif %}
     <script type="text/javascript" src="//use.typekit.net/vqa1hcx.js"></script>
     <script type="text/javascript">{'try{Typekit.load();}catch(e){}'}</script>
     <script>
@@ -42,6 +49,12 @@
       <li><a href="/support.html"
           {% if (page.id == 'support') %} class="active" {% endif %}>
           Support
+      </a></li>
+      <li><a href="/blog"
+          {% if (page.id == 'blog' or page.id == 'all' or page.is_post) %} 
+            class="active" 
+          {% endif %}>
+          Blog
       </a></li>
       <li><a href="http://github.com/facebook/flow">GitHub</a>
     </ul>

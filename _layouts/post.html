@@ -2,6 +2,8 @@
 sectionid: blog
 ---
 
+{% assign author = site.data.authors[page.author] %}
+
 {% include header.html %}
 
 <section class='content'><div class='width'>
@@ -9,11 +11,15 @@ sectionid: blog
 {% include nav_blog.html %}
 
 <article class='withtoc'>
-    <h1>{{ page.title }}</h1>
-    <p class="meta">{{ page.date | date: "%B %e, %Y" }} by {{ page.author }}</p>
+    <h1>
+      {{ page.title }}
+      <a class="edit-page-link" href="https://github.com/facebook/flow/tree/gh-pages/{{ page.path }}" target="_blank">Edit on GitHub</a>
+    </h1>
+    <p class="meta">{{ page.date | date: "%B %e, %Y" }} by {{ author.display_name }}</p>
 
     {{ content }}
 
+    {% include social_plugins.html %}
 </article>
 
 </div></section>
