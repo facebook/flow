@@ -340,6 +340,16 @@ section.content article.withtoc {
     position: relative;
 }
 
+section.content article .read-more {
+  font-weight: bold;
+  text-align: right;
+}
+
+section.content article hr.blogpostend {
+  margin-bottom: 20px;
+  margin-top: 20px;
+}
+
 section.content aside .fb-like {
     top: 4px;
     left: 4px;

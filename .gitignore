@@ -2,3 +2,5 @@
 _site/
 Gemfile
 Gemfile.lock
+*.swo
+*.swp
