@@ -47,7 +47,7 @@ let print_reason_color ~(first:bool) ((p, s): Pos.t * string) = Pos.(
   ] in
 
   if not first then Printf.printf "  " else Printf.printf "\n";
-  if Unix.isatty Unix.stdout
+  if Unix.isatty Unix.stdout && Sys.getenv "TERM" <> "dumb"
   then
     C.print to_print
   else
