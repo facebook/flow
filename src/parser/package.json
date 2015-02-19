@@ -10,6 +10,7 @@
     "flowparse": "tools/inspect_ast.js",
     "flowvalidate": "tools/js_test_files.js"
   },
+  "main": "flow_parser.js",
   "repository": {
     "private": true
   },
