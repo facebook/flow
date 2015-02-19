@@ -138,9 +138,9 @@ module Impl = struct
       then Errors_js.print_errorl args.output_json e stdout
       else (
         let show_all = !(option_values.CommandUtils.show_all_errors) in
-        Errors_js.print_error_summary (not show_all) e;
-        exit 2
-      )
+        Errors_js.print_error_summary (not show_all) e
+      );
+      exit 2
     | ServerProt.NO_ERRORS ->
       Errors_js.print_errorl args.output_json [] stdout;
       exit 0
