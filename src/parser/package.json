@@ -26,7 +26,7 @@
   },
   "scripts": {
     "test": "node test/run_esprima_tests.js; node test/run_hardcoded_tests.js",
-    "prepublish": "make js && mv README.md github-README.md && cp README-npm.md README.md",
+    "prepublish": "make js && mv README.md github-README.md && cp npm-README.md README.md",
     "postpublish": "mv github-README.md README.md"
   }
 }
