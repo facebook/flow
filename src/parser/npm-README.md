@@ -8,7 +8,7 @@ See [flowtype.org](http://flowtype.org/). The code for the Flow parser [lives on
 
 # What is the Flow Parser
 
-The Flow Parser is a JavaScript parser written in OCaml. It produces an AST that conforms to [SpiderMonkey's Parser API](https://developer.mozilla.org/en-US/docs/Mozilla/Projects/SpiderMonkey/Parser_API) and that mostly matches what [esprima](http://esprima.org/) produces. The Flow Parser can be compiled to native code or can be compiled to JavaScript using [js_of_ocaml](http://ocsigen.org/js_of_ocaml/). This npm package contains the Flow parser compiled to JavaScript
+The Flow Parser is a JavaScript parser written in OCaml. It produces an AST that conforms to the [ESTree spec](https://github.com/estree/estree) and that mostly matches what [esprima](http://esprima.org/) produces. The Flow Parser can be compiled to native code or can be compiled to JavaScript using [js_of_ocaml](http://ocsigen.org/js_of_ocaml/). This npm package contains the Flow parser compiled to JavaScript.
 
 # Usage
 
