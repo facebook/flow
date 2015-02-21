@@ -1714,4 +1714,177 @@ module.exports = {
       }
     }
   },
+  'Type Annotations In Comments': {
+    'function foo(numVal/*: number*/, x/* : number*/){}': {
+      'body.0.params': [
+        {
+          'name': 'numVal',
+          'typeAnnotation.typeAnnotation.type': 'NumberTypeAnnotation',
+        },
+        {
+          'name': 'x',
+          'typeAnnotation.typeAnnotation.type': 'NumberTypeAnnotation',
+        },
+      ]
+    },
+    'function foo(a/* :function*/, b/*  : switch*/){}': {
+      'body.0.params.0.typeAnnotation.typeAnnotation.id.name': 'function',
+      'body.0.params.1.typeAnnotation.typeAnnotation.id.name': 'switch',
+    },
+    'function foo(numVal/*::: number*/, strVal/*:: :string*/){}': {
+      'body.0': {
+        'params': {
+          '0.typeAnnotation.typeAnnotation.type': 'NumberTypeAnnotation',
+          '1.typeAnnotation.typeAnnotation.type': 'StringTypeAnnotation'
+        },
+        'returnType': null,
+        'typeParameters': null,
+      }
+    },
+    'function foo(numVal/*  :: : number*/, untypedVal){}': {
+      'body.0.params.0.typeAnnotation.typeAnnotation.type': 'NumberTypeAnnotation',
+      'body.0.params.1.typeAnnotation': null
+    },
+    'function foo(untypedVal, numVal/*flow-include: number*/){}': {
+      'body.0.params.0.typeAnnotation': null,
+      'body.0.params.1.typeAnnotation.typeAnnotation.type': 'NumberTypeAnnotation'
+    },
+    'function foo(nullableNum/*flow-include : ?number*/){}': {
+      'body.0.params.0.typeAnnotation.typeAnnotation': {
+        'type': 'NullableTypeAnnotation',
+        'typeAnnotation.type': 'NumberTypeAnnotation'
+      }
+    },
+    'function foo(callback/* flow-include : () => void*/){}': {
+      'body.0.params.0.typeAnnotation.typeAnnotation': {
+        'type': 'FunctionTypeAnnotation',
+        'params': [],
+        'returnType.type': 'VoidTypeAnnotation',
+      }
+    },
+    'function foo(callback/*: () => number*/){}': {
+      'body.0.params.0.typeAnnotation.typeAnnotation': {
+        'type': 'FunctionTypeAnnotation',
+        'params': [],
+        'returnType.type': 'NumberTypeAnnotation',
+      }
+    },
+    'function foo(callback/*: (_:bool) => number*/){}': {
+      'body.0.params.0.typeAnnotation.typeAnnotation': {
+        'type': 'FunctionTypeAnnotation',
+        'params.0': {
+          'type': 'FunctionTypeParam',
+          'name.name': '_',
+          'typeAnnotation.type': 'BooleanTypeAnnotation'
+        },
+        'returnType.type': 'NumberTypeAnnotation'
+      }
+    },
+    'function foo(callback/*: (_1:bool, _2:string) => number*/){}': {
+      'body.0.params.0.typeAnnotation.typeAnnotation': {
+        'type': 'FunctionTypeAnnotation',
+        'params': [
+          {
+            'name.name': '_1',
+            'typeAnnotation.type': 'BooleanTypeAnnotation'
+          },
+          {
+            'name.name': '_2',
+            'typeAnnotation.type': 'StringTypeAnnotation'
+          },
+        ],
+        'returnType.type': 'NumberTypeAnnotation'
+      }
+    },
+    'function foo()/*:number*/{}': {
+      'body.0.returnType.typeAnnotation.type': 'NumberTypeAnnotation',
+    },
+    'function foo()/*:() => void*/{}': {
+      'body.0.returnType.typeAnnotation': {
+        'type': "FunctionTypeAnnotation",
+        'params': [],
+        'returnType.type': 'VoidTypeAnnotation',
+      }
+    },
+    "/*::\ntype duck = {\n  quack(): string;\n};\n*/": {
+      'body': [
+        {
+          'type': 'TypeAlias',
+          'id.name': 'duck',
+          'typeParameters': null,
+          'right': {
+            'type': 'ObjectTypeAnnotation',
+          },
+        },
+      ],
+    },
+    "/*flow-include\ntype duck = {\n  quack(): string;\n};\n*/": {
+      'body': [
+        {
+          'type': 'TypeAlias',
+          'id.name': 'duck',
+          'typeParameters': null,
+          'right': {
+            'type': 'ObjectTypeAnnotation',
+          },
+        },
+      ],
+    },
+    '/*:: */': {
+      'body': [],
+    },
+    '/*flow-include */': {
+      'body': [],
+    },
+    'function foo/*:: <T> */(x /*: T */)/*: T */ { return x; }': {
+      'body.0.typeParameters.params': [
+        {
+          'type': 'Identifier',
+          'name': 'T',
+        }
+      ]
+    }
+  },
+  'Invalid Type Annotations In Comments': {
+    '/*: */': {
+      'errors': {
+        '0.message': 'Unexpected token /*:',
+      }
+    },
+    '/*:: /* */': {
+      'errors': {
+        '0.message': 'Unexpected token /*',
+      }
+    },
+    '/*:: /*: */': {
+      'errors': {
+        '0.message': 'Unexpected token /*:',
+      }
+    },
+    '/*:: /* : */': {
+      'errors': {
+        '0.message': 'Unexpected token /* :',
+      }
+    },
+    '/*:: /*:: */': {
+      'errors': {
+        '0.message': 'Unexpected token /*::',
+      }
+    },
+    '/*:: /*flow-include */': {
+      'errors': {
+        '0.message': 'Unexpected token /*flow-include',
+      }
+    },
+    '*/': {
+      'errors': {
+        '0.message': 'Unexpected token */',
+      }
+    },
+    '/*::': {
+      'errors': {
+        '0.message': 'Unexpected end of input',
+      }
+    }
+  },
 };

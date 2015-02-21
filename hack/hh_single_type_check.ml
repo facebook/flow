@@ -21,6 +21,7 @@ type options = {
   color : bool;
   coverage : bool;
   prolog : bool;
+  lint : bool;
   rest : string list
 }
 
@@ -110,7 +111,7 @@ let die str =
   close_out oc;
   exit 2
 
-let error l = die (Errors.to_string (Errors.to_absolute l))
+let error l = output_string stderr (Errors.to_string (Errors.to_absolute l))
 
 let parse_options () =
   let fn_ref = ref None in
@@ -118,6 +119,7 @@ let parse_options () =
   let color = ref false in
   let coverage = ref false in
   let prolog = ref false in
+  let lint = ref false in
   let rest_options = ref [] in
   let rest x = rest_options := x :: !rest_options in
   let usage = Printf.sprintf "Usage: %s filename\n" Sys.argv.(0) in
@@ -134,6 +136,9 @@ let parse_options () =
     "--prolog",
       Arg.Set prolog,
       "Produce prolog facts";
+    "--lint",
+      Arg.Set lint,
+      "Produce lint errors";
     "--",
       Arg.Rest rest,
       "";
@@ -147,6 +152,7 @@ let parse_options () =
     color = !color;
     coverage = !coverage;
     prolog = !prolog;
+    lint = !lint;
     rest = !rest_options;
   }
 
@@ -240,30 +246,33 @@ let print_prolog { FileInfo.funs; classes; typedefs; consts; _ } =
  * a given file. You can then inspect this typing environment, e.g.
  * with 'Typing_env.Classes.get "Foo";;'
  *)
-let main_hack { filename; suggest; color; coverage; prolog; _ } =
+let main_hack { filename; suggest; color; coverage; prolog; lint; _ } =
   ignore (Sys.signal Sys.sigusr1 (Sys.Signal_handle Typing.debug_print_last_pos));
   SharedMem.init();
   Hhi.set_hhi_root_for_unit_test "/tmp/hhi";
   let builtins_filename =
     Relative_path.create Relative_path.Dummy builtins_filename in
   let filename = Relative_path.create Relative_path.Dummy filename in
-  let errors, fileinfo =
-    Errors.do_ begin fun () ->
-      let {Parser_hack.file_mode; comments; ast = ast_builtins} =
-        Parser_hack.program builtins_filename builtins
-      in
-      let ast_file = parse_file filename in
-      let ast = ast_builtins @ ast_file in
-      Parser_heap.ParserHeap.add filename ast;
-      let funs, classes, typedefs, consts = Ast_utils.get_defs ast in
-      let nenv = Naming.make_env Naming.empty ~funs ~classes ~typedefs ~consts in
-      let all_classes = List.fold_right begin fun (_, cname) acc ->
-        SMap.add cname (Relative_path.Set.singleton filename) acc
-      end classes SMap.empty in
-      Typing_decl.make_env nenv all_classes filename;
-      { FileInfo.
-        funs; classes; typedefs; consts; comments;
-        consider_names_just_for_autoload = false }
+  let lint_errors, (errors, fileinfo) =
+    Lint.do_ begin fun () ->
+      Errors.do_ begin fun () ->
+        let {Parser_hack.file_mode; comments; ast = ast_builtins} =
+          Parser_hack.program builtins_filename builtins
+        in
+        let ast_file = parse_file filename in
+        let ast = ast_builtins @ ast_file in
+        Parser_heap.ParserHeap.add filename ast;
+        let funs, classes, typedefs, consts = Ast_utils.get_defs ast in
+        let nenv =
+          Naming.make_env Naming.empty ~funs ~classes ~typedefs ~consts in
+        let all_classes = List.fold_right begin fun (_, cname) acc ->
+          SMap.add cname (Relative_path.Set.singleton filename) acc
+        end classes SMap.empty in
+        Typing_decl.make_env nenv all_classes filename;
+        { FileInfo.
+          file_mode; funs; classes; typedefs; consts; comments;
+          consider_names_just_for_autoload = false }
+      end
     end in
   if color then
     let result = ServerColorFile.get_level_list
@@ -274,12 +283,23 @@ let main_hack { filename; suggest; color; coverage; prolog; _ } =
     print_coverage filename type_acc;
   else if prolog then
     print_prolog fileinfo
+  else if lint then
+    let lint_errors = lint_errors @ fst (Lint.do_ begin fun () ->
+      Linter.lint filename fileinfo
+    end) in
+    if lint_errors <> []
+    then begin
+      let lint_errors = List.map Lint.to_absolute lint_errors in
+      ServerLint.output_text stdout lint_errors;
+      exit 2
+    end
+    else Printf.printf "No lint errors\n"
   else begin
     let errors = errors @ ServerIdeUtils.check_defs fileinfo in
     if suggest
     then suggest_and_print filename fileinfo;
     if errors <> []
-    then error (List.hd errors)
+    then (error (List.hd errors); exit 2)
     else Printf.printf "No errors\n"
   end
 

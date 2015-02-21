@@ -16,7 +16,10 @@ open Reason_js
 
 let assert_false s =
   let callstack = Printexc.(get_callstack 10 |> raw_backtrace_to_string) in
-  prerr_endline (spf "<<<<<<<<<\n%s:\n%s>>>>>>>>>" s callstack);
+  prerr_endline (spf "%s%s\n%s:\n%s%s%s"
+    (* this clowny shit is to evade hg's conflict marker detection *)
+    "<<<<" "<<<<" s callstack ">>>>" ">>>>"
+  );
   failwith s
 
 let __DEBUG__ ?(s="") f =
@@ -105,6 +108,9 @@ module Type = struct
   | UpperBoundT of t (* any upper bound of t *)
   | LowerBoundT of t (* any lower bound of t *)
 
+  (* specializations of AnyT *)
+  | AnyObjT of reason (* any object *)
+
   (* constrains some properties of an object *)
   | ShapeT of t
 
@@ -142,7 +148,7 @@ module Type = struct
   (* operations on runtime types, such as classes and functions *)
   | ConstructorT of reason * t list * t
   | SuperT of reason * insttype
-  | ParentT of reason * insttype
+  | ExtendsT of t * t
 
   (* overloaded +, could be subsumed by general overloading *)
   | AdderT of reason * t * t
@@ -207,10 +213,15 @@ module Type = struct
   }
 
   and objtype = {
-    sealed: bool;
+    flags: flags;
     dict_t: dicttype;
     props_tmap: int;
     proto_t: prototype;
+  }
+
+  and flags = {
+    sealed: bool;
+    exact: bool;
   }
 
   and dicttype = {
@@ -509,7 +520,6 @@ type context = {
   mutable require_loc: Ast.Loc.t SMap.t;
 
   mutable graph: bounds IMap.t;
-  mutable parents: Type.t IMap.t IMap.t IMap.t;
   mutable closures: (stack * block list) IMap.t;
   mutable property_maps: Type.t SMap.t IMap.t;
   mutable modulemap: Type.t SMap.t;
@@ -532,7 +542,6 @@ let new_context file _module = {
   require_loc = SMap.empty;
 
   graph = IMap.empty;
-  parents = IMap.empty;
   closures = IMap.empty;
   property_maps = IMap.empty;
   modulemap = SMap.empty;
@@ -558,7 +567,7 @@ let is_use = function
   | GetElemT _
   | ConstructorT _
   | SuperT _
-  | ParentT _
+  | ExtendsT _
   | AdderT _
   | ComparatorT _
   | PredicateT _
@@ -601,7 +610,7 @@ let string_of_ctor = function
   | InstanceT _ -> "InstanceT"
   | SummarizeT _ -> "SummarizeT"
   | SuperT _ -> "SuperT"
-  | ParentT _ -> "ParentT"
+  | ExtendsT _ -> "ExtendsT"
   | CallT _ -> "CallT"
   | MethodT _ -> "MethodT"
   | SetT _ -> "SetT"
@@ -629,6 +638,7 @@ let string_of_ctor = function
   | ObjExtendT _ -> "ObjExtendT"
   | UpperBoundT _ -> "UpperBoundT"
   | LowerBoundT _ -> "LowerBoundT"
+  | AnyObjT _ -> "AnyObjT"
   | ShapeT _ -> "ShapeT"
   | EnumT _ -> "EnumT"
   | RecordT _ -> "RecordT"
@@ -675,7 +685,6 @@ let rec reason_of_t = function
 
   | InstanceT (reason,_,_,_)
   | SuperT (reason,_)
-  | ParentT (reason,_)
 
   | CallT (reason, _)
 
@@ -693,6 +702,9 @@ let rec reason_of_t = function
 
   | TypeT (reason,_)
       -> reason
+
+  | ExtendsT (_,t) ->
+      prefix_reason "extends " (reason_of_t t)
 
   | OptionalT t ->
       prefix_reason "optional " (reason_of_t t)
@@ -739,6 +751,9 @@ let rec reason_of_t = function
   | UpperBoundT (t)
   | LowerBoundT (t)
       -> reason_of_t t
+
+  | AnyObjT reason ->
+      reason
 
   | ShapeT (t)
       -> reason_of_t t
@@ -825,7 +840,7 @@ let rec mod_reason_of_t f = function
   | ClassT t -> ClassT (mod_reason_of_t f t)
   | InstanceT (reason, st, su, inst) -> InstanceT (f reason, st, su, inst)
   | SuperT (reason, inst) -> SuperT (f reason, inst)
-  | ParentT (reason, inst) -> ParentT (f reason, inst)
+  | ExtendsT (t, tc) -> ExtendsT (t, mod_reason_of_t f tc)
 
   | CallT (reason, ft) -> CallT (f reason, ft)
 
@@ -873,6 +888,9 @@ let rec mod_reason_of_t f = function
 
   | UpperBoundT t -> UpperBoundT (mod_reason_of_t f t)
   | LowerBoundT t -> LowerBoundT (mod_reason_of_t f t)
+
+  | AnyObjT reason -> AnyObjT (f reason)
+
   | ShapeT t -> ShapeT (mod_reason_of_t f t)
 
   | EnumT (reason, t) -> EnumT (f reason, t)
@@ -890,6 +908,15 @@ let rec mod_reason_of_t f = function
 
   | CustomClassT (name, ts, t) ->
       CustomClassT (name, ts, mod_reason_of_t f t)
+
+(* replace a type's reason in its entirety *)
+let swap_reason t r =
+  mod_reason_of_t (fun _ -> r) t
+
+(* type comparison mod reason *)
+let reasonless_compare t t' =
+  (* inefficient but concise! *)
+  Pervasives.compare t (swap_reason t' (reason_of_t t))
 
 let name_prefix_of_t = function
   | RestT _ -> "..."
@@ -916,170 +943,308 @@ let parenthesize t_str enclosure triggers =
   then "(" ^ t_str ^ ")"
   else t_str
 
-let rec pretty_type_printer cx enclosure t =
-  match t with
-  | BoundT typeparam -> typeparam.name
+(* general-purpose type printer. not the cleanest visitor in the world,
+   but reasonably general. override gets a chance to print the incoming
+   type first. if it passes, the bulk of printable types are formatted
+   in a reasonable way. fallback is sent the rest. enclosure drives
+   delimiter choice. see e.g. dump_t and string_of_t for callers.
+ *)
+let rec type_printer override fallback enclosure cx t =
+  let pp = type_printer override fallback in
+  match override cx t with
+  | Some s -> s
+  | None ->
+    match t with
+    | BoundT typeparam -> typeparam.name
 
-  | OpenT (_, id) -> spf "TYPE_%d" id
+    (* reasons for VoidT use "undefined" for more understandable error output.
+       For parsable types we need to use "void" though, thus overwrite it. *)
+    | VoidT _ -> "void"
 
-  | NumT _
-  | StrT _
-  | BoolT _
-  | UndefT _
-  | MixedT _
-  | AnyT _
-  | NullT _
-    ->
-      desc_of_reason (reason_of_t t)
+    | FunT (_,_,_,{params_tlist = ts; params_names = pns; return_t = t; _}) ->
+        let pns =
+          match pns with
+          | Some pns -> pns
+          | None -> List.map (fun _ -> "_") ts in
+        let type_s = spf "(%s) => %s"
+          (List.map2 (fun n t ->
+              (parameter_name cx n t) ^
+              ": "
+              ^ (pp EnclosureParam cx t)
+            ) pns ts
+           |> String.concat ", "
+          )
+          (pp EnclosureNone cx t) in
+        parenthesize type_s enclosure [EnclosureUnion; EnclosureIntersect]
 
-  (* reasons for VoidT use "undefined" for more understandable error output.
-     For parsable types we need to use "void" though, thus overwrite it. *)
-  | VoidT _ -> "void"
+    | ObjT (_, {props_tmap = flds; dict_t; _}) ->
+        let props =
+          IMap.find_unsafe flds cx.property_maps
+           |> SMap.elements
+           |> List.filter (fun (x,_) -> not (Reason_js.is_internal_name x))
+           |> List.rev
+           |> List.map (fun (x,t) -> x ^ ": " ^ (pp EnclosureNone cx t) ^ ";")
+           |> String.concat " "
+        in
+        let indexer =
+          (match dict_t.dict_name with
+          | Some name ->
+              let indexer_prefix =
+                if props <> ""
+                then " "
+                else ""
+              in
+              (spf "%s[%s: %s]: %s;"
+                indexer_prefix
+                name
+                (pp EnclosureNone cx dict_t.key)
+                (pp EnclosureNone cx dict_t.value)
+              )
+          | None -> "")
+        in
+        spf "{%s%s}" props indexer
 
-  | FunT (_,_,_,{params_tlist = ts; params_names = pns; return_t = t; _}) ->
-      let pns =
-        match pns with
-        | Some pns -> pns
-        | None -> List.map (fun _ -> "_") ts in
-      let type_s = spf "(%s) => %s"
-        (List.map2 (fun n t ->
-            (parameter_name cx n t) ^
-            ": "
-            ^ (string_of_param_t cx t)
-          ) pns ts
-         |> String.concat ", "
-        )
-        (pretty_type_printer cx EnclosureNone t) in
-      parenthesize type_s enclosure [EnclosureUnion; EnclosureIntersect]
+    | ArrT (_, t, ts) ->
+        (*(match ts with
+        | [] -> *)spf "Array<%s>" (pp EnclosureNone cx t)
+        (*| _ -> spf "[%s]"
+                  (ts
+                    |> List.map (pp cx EnclosureNone)
+                    |> String.concat ", "))*)
 
-  | ObjT (_, {props_tmap = flds; dict_t; _}) ->
-      let props =
-        IMap.find_unsafe flds cx.property_maps
-         |> SMap.elements
-         |> List.filter (fun (x,_) -> not (Reason_js.is_internal_name x))
-         |> List.rev
-         |> List.map (fun (x,t) ->
-              x ^ ": " ^
-              (pretty_type_printer cx EnclosureNone t) ^
-              ";"
+    | InstanceT (reason,static,super,instance) ->
+        desc_of_reason reason (* nominal type *)
+
+    | TypeAppT (c,ts) ->
+        let type_s =
+          spf "%s <%s>"
+            (pp EnclosureAppT cx c)
+            (ts
+              |> List.map (pp EnclosureNone cx)
+              |> String.concat ", "
             )
-         |> String.concat " "
-      in
-      let indexer =
-        (match dict_t.dict_name with
-        | Some name ->
-            let indexer_prefix =
-              if props <> ""
-              then " "
-              else ""
-            in
-            (spf "%s[%s: %s]: %s;"
-              indexer_prefix
-              name
-              (pretty_type_printer cx EnclosureNone dict_t.key)
-              (pretty_type_printer cx EnclosureNone dict_t.value)
+        in
+        parenthesize type_s enclosure [EnclosureMaybe]
+
+    | MaybeT t ->
+        spf "?%s" (pp EnclosureMaybe cx t)
+
+    | PolyT (xs,t) ->
+        let type_s =
+          spf "<%s> %s"
+            (xs
+              |> List.map (fun param -> param.name)
+              |> String.concat ", "
             )
-        | None -> "")
-      in
-      spf "{%s%s}" props indexer
+            (pp EnclosureNone cx t)
+        in
+        parenthesize type_s enclosure [EnclosureAppT; EnclosureMaybe]
 
-  | ArrT (_, t, ts) ->
-      (*(match ts with
-      | [] -> *)spf "Array<%s>" (pretty_type_printer cx EnclosureNone t)
-      (*| _ -> spf "[%s]"
-                (ts
-                  |> List.map (pretty_type_printer cx EnclosureNone)
-                  |> String.concat ", "))*)
-
-  | InstanceT (reason,static,super,instance) ->
-      desc_of_reason reason (* nominal type *)
-
-  | TypeAppT (c,ts) ->
-      let type_s =
-        spf "%s <%s>"
-          (pretty_type_printer cx EnclosureAppT c)
+    | IntersectionT (_, ts) ->
+        let type_s =
           (ts
-            |> List.map (pretty_type_printer cx EnclosureNone)
-            |> String.concat ", "
+            |> List.map (pp EnclosureIntersect cx)
+            |> String.concat " & "
+          ) in
+        parenthesize type_s enclosure [EnclosureUnion; EnclosureMaybe]
+
+    | UnionT (_, ts) ->
+        let type_s =
+          (ts
+            |> List.map (pp EnclosureUnion cx)
+            |> String.concat " | "
+          ) in
+        parenthesize type_s enclosure [EnclosureIntersect; EnclosureMaybe]
+
+    (* The following types are not syntax-supported in all cases *)
+    | RestT t ->
+        let type_s =
+          spf "Array<%s>" (pp EnclosureNone cx t) in
+        if enclosure == EnclosureParam
+        then type_s
+        else "..." ^ type_s
+
+    | OptionalT t ->
+        let type_s = pp EnclosureNone cx t in
+        if enclosure == EnclosureParam
+        then type_s
+        else "=" ^ type_s
+
+    (* The following types are not syntax-supported *)
+    | ClassT t ->
+        spf "[class: %s]" (pp EnclosureNone cx t)
+
+    | TypeT (_, t) ->
+        spf "[type: %s]" (pp EnclosureNone cx t)
+
+    | CustomClassT (name, ts, inst) ->
+        spf "%s<%s>" name
+          (ts
+           |> List.map (pp EnclosureNone cx)
+           |> String.concat ", "
           )
-      in
-      parenthesize type_s enclosure [EnclosureMaybe]
 
-  | MaybeT t ->
-      spf "?%s" (pretty_type_printer cx EnclosureMaybe t)
+    | LowerBoundT t ->
+        spf "$Subtype<%s>" (pp EnclosureNone cx t)
 
-  | PolyT (xs,t) ->
-      let type_s =
-        spf "<%s> %s"
-          (xs
-            |> List.map (fun param -> param.name)
-            |> String.concat ", "
-          )
-          (pretty_type_printer cx EnclosureNone t)
-      in
-      parenthesize type_s enclosure [EnclosureAppT; EnclosureMaybe]
+    | UpperBoundT t ->
+        spf "$Supertype<%s>" (pp EnclosureNone cx t)
 
-  | IntersectionT (_, ts) ->
-      let type_s =
-        (ts
-          |> List.map (pretty_type_printer cx EnclosureIntersect)
-          |> String.concat " & "
-        ) in
-      parenthesize type_s enclosure [EnclosureUnion; EnclosureMaybe]
+    | AnyObjT _ ->
+        "Object"
 
-  | UnionT (_, ts) ->
-      let type_s =
-        (ts
-          |> List.map (pretty_type_printer cx EnclosureUnion)
-          |> String.concat " | "
-        ) in
-      parenthesize type_s enclosure [EnclosureIntersect; EnclosureMaybe]
+    | RecordT (_, t) ->
+        spf "$Record<%s>" (pp EnclosureNone cx t)
 
-(* The following types are not syntax-supported in all cases *)
-  | RestT t ->
-      let type_s =
-        spf "Array<%s>" (pretty_type_printer cx EnclosureNone t) in
-      if enclosure == EnclosureParam
-      then type_s
-      else "..." ^ type_s
+    | t ->
+        fallback t
 
-  | OptionalT t ->
-      let type_s = pretty_type_printer cx EnclosureNone t in
-      if enclosure == EnclosureParam
-      then type_s
-      else "=" ^ type_s
+(* pretty printer *)
+let string_of_t_ =
+  let override cx t = match t with
+    | OpenT (r, id) -> Some (spf "TYPE_%d" id)
+    | NumT _
+    | StrT _
+    | BoolT _
+    | UndefT _
+    | MixedT _
+    | AnyT _
+    | NullT _ -> Some (desc_of_reason (reason_of_t t))
+    | _ -> None
+  in
+  let fallback t = assert_false (string_of_ctor t) in
+  fun enclosure cx t ->
+    type_printer override fallback enclosure cx t
 
-(* The following types are not syntax-supported *)
-  | ClassT t ->
-      spf "[class: %s]" (pretty_type_printer cx EnclosureNone t)
+let string_of_t =
+  string_of_t_ EnclosureNone
 
-  | TypeT (_, t) ->
-      spf "[type: %s]" (pretty_type_printer cx EnclosureNone t)
+let string_of_param_t =
+  string_of_t_ EnclosureParam
 
-  | CustomClassT (name, ts, inst) ->
-      spf "%s<%s>" name
-        (ts
-         |> List.map (pretty_type_printer cx EnclosureNone)
-         |> String.concat ", "
-        )
+(* debug printer *)
+let rec dump_t cx t =
+  dump_t_ ISet.empty cx t
 
-  | LowerBoundT t ->
-      spf "$Subtype<%s>"
-        (pretty_type_printer cx EnclosureNone t)
+and dump_t_ =
+  (* we'll want to add more here *)
+  let override stack cx t = match t with
+    | OpenT (r, id) -> Some (dump_tvar stack cx r id)
+    | NumT (r, c) -> Some (match c with
+        | Some n -> spf "NumT(%s)" n
+        | None -> "NumT")
+    | StrT (r, c) -> Some (match c with
+        | Some s -> spf "StrT(%S)" s
+        | None -> "StrT")
+    | BoolT r ->
+        Some "BoolT"
+    | UndefT _
+    | MixedT _
+    | AnyT _
+    | NullT _ -> Some (string_of_ctor t)
+    | SetT (_, n, t) ->
+        Some (spf "SetT(%s: %s)" n (dump_t_ stack cx t))
+    | GetT (_, n, t) ->
+        Some (spf "GetT(%s: %s)" n (dump_t_ stack cx t))
+    | LookupT (_, _, n, t) ->
+        Some (spf "LookupT(%s: %s)" n (dump_t_ stack cx t))
+    | PredicateT (p, t) -> Some (spf "PredicateT(%s | %s)"
+        (string_of_predicate p) (dump_t_ stack cx t))
+    | _ -> None
+  in
+  fun stack cx t ->
+    type_printer (override stack) string_of_ctor EnclosureNone cx t
 
-  | UpperBoundT t ->
-      spf "$Supertype<%s>"
-        (pretty_type_printer cx EnclosureNone t)
+(* type variable dumper. abbreviates a few simple cases for readability.
+   note: if we turn the tvar record into a datatype, these will give a
+   sense of some of the obvious data constructors *)
+and dump_tvar stack cx r id =
+  let sbounds = if ISet.mem id stack then "(...)" else (
+  let stack = ISet.add id stack in
+  match IMap.find_unsafe id cx.graph with
+  | { lower; upper; lowertvars; uppertvars;
+      unifier = None; solution = None }
+      when lower = TypeMap.empty && upper = TypeMap.empty
+      && IMap.cardinal lowertvars = 1 && IMap.cardinal uppertvars = 1 ->
+      (* no inflows or outflows *)
+      "(free)"
+  | { lower; upper; lowertvars; uppertvars;
+      unifier = None; solution = None }
+      when upper = TypeMap.empty
+      && IMap.cardinal lowertvars = 1 && IMap.cardinal uppertvars = 1 ->
+      (* only concrete inflows *)
+      spf "L %s" (dump_tkeys stack cx lower)
+  | { lower; upper; lowertvars; uppertvars;
+      unifier = None; solution = None }
+      when lower = TypeMap.empty && upper = TypeMap.empty
+      && IMap.cardinal uppertvars = 1 ->
+      (* only tvar inflows *)
+      spf "LV %s" (dump_tvarkeys cx id lowertvars)
+  | { lower; upper; lowertvars; uppertvars;
+      unifier = None; solution = None }
+      when lower = TypeMap.empty
+      && IMap.cardinal lowertvars = 1 && IMap.cardinal uppertvars = 1 ->
+      (* only concrete outflows *)
+      spf "U %s" (dump_tkeys stack cx upper)
+  | { lower; upper; lowertvars; uppertvars;
+      unifier = None; solution = None }
+      when lower = TypeMap.empty && upper = TypeMap.empty
+      && IMap.cardinal lowertvars = 1 ->
+      (* only tvar outflows *)
+      spf "UV %s" (dump_tvarkeys cx id uppertvars)
+  | { lower; upper; lowertvars; uppertvars;
+      unifier = None; solution = None }
+      when IMap.cardinal lowertvars = 1 && IMap.cardinal uppertvars = 1 ->
+      (* only concrete inflows/outflows *)
+      let l = dump_tkeys stack cx lower in
+      let u = dump_tkeys stack cx upper in
+      if l = u then "= " ^ l
+      else "L " ^ l ^ " U " ^ u
+  | { lower; upper; lowertvars; uppertvars; unifier; solution } ->
+    let slower = if lower = TypeMap.empty then "" else
+      spf " lower = %s;" (dump_tkeys stack cx lower) in
+    let supper = if upper = TypeMap.empty then "" else
+      spf " upper = %s;" (dump_tkeys stack cx upper) in
+    let sltvars = if IMap.cardinal lowertvars <= 1 then "" else
+      spf " lowertvars = %s;" (dump_tvarkeys cx id lowertvars) in
+    let sutvars = if IMap.cardinal uppertvars <= 1 then "" else
+      spf " uppertvars = %s;" (dump_tvarkeys cx id uppertvars) in
+    let sunifier = match unifier with None -> ""
+    | Some u -> " unifier = " ^ (match u with
+        | Goto id -> spf "Goto TYPE_%d;" id
+        | Rank i -> spf "Rank %d" i
+      ) ^ ";" in
+    let ssolution = match solution with None -> ""
+    | Some t -> " solution = " ^ dump_t cx t  ^ ";"
+    in
+    "{" ^ slower ^ supper ^ sltvars ^ sutvars ^ sunifier ^ ssolution ^ " }"
+  ) in
+  (spf "TYPE_%d " id) ^ sbounds
 
-  | RecordT (_, t) ->
-      spf "$Record<%s>"
-        (pretty_type_printer cx EnclosureNone t)
+(* dump the keys of a type map as a list *)
+and dump_tkeys stack cx tmap =
+  "[" ^ (
+    String.concat "," (
+      List.rev (
+        TypeMap.fold (
+          fun t _ acc -> dump_t_ stack cx t :: acc
+        ) tmap []
+      )
+    )
+  ) ^ "]"
 
-  | t -> assert_false (string_of_ctor t)
-
-and string_of_param_t cx t = pretty_type_printer cx EnclosureParam t
-
-let string_of_t cx t = pretty_type_printer cx EnclosureNone t
+(* dump the keys of a tvar map as a list *)
+and dump_tvarkeys cx self imap =
+  "[" ^ (
+    String.concat "," (
+      List.rev (
+        IMap.fold (
+          fun id _ acc ->
+            if id = self then acc else spf "TYPE_%d" id :: acc
+        ) imap []
+      )
+    )
+  ) ^ "]"
 
 let rec is_printed_type_parsable_impl weak cx enclosure = function
   (* Base cases *)
@@ -1153,6 +1318,8 @@ let rec is_printed_type_parsable_impl weak cx enclosure = function
   | PolyT (_, t)
     ->
       is_printed_type_parsable_impl weak cx EnclosureNone t
+
+  | AnyObjT _ -> true
 
   (* weak mode *)
 

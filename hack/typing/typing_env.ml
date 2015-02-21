@@ -85,7 +85,7 @@ type env = {
 }
 
 and genv = {
-  mode    : Ast.mode;
+  mode    : FileInfo.mode;
   return  : ty         ;
   parent  : ty         ;
   self_id : string     ;
@@ -273,7 +273,7 @@ let empty file = {
   todo    = [];
   in_loop = false;
   genv    = {
-    mode    = Ast.Mstrict;
+    mode    = FileInfo.Mstrict;
     return  = fresh_type();
     self_id = "";
     self    = Reason.none, Tany;
@@ -495,8 +495,8 @@ let set_root env root =
 
 let get_mode env = env.genv.mode
 
-let is_strict env = get_mode env = Ast.Mstrict
-let is_decl env = get_mode env = Ast.Mdecl
+let is_strict env = get_mode env = FileInfo.Mstrict
+let is_decl env = get_mode env = FileInfo.Mdecl
 
 (*
 let debug_env env =

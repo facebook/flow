@@ -9,20 +9,6 @@
  *)
 
 (*****************************************************************************)
-(* Parsing modes *)
-(*****************************************************************************)
-
-type file_type =
-  | PhpFile
-  | HhFile
-
-type mode =
-  | Mdecl    (* just declare signatures, don't check anything *)
-  | Mstrict  (* check everthing! *)
-  | Mpartial (* Don't fail if you see a function/class you don't know *)
- (* with tarzan *)
-
-(*****************************************************************************)
 (* Constants *)
 (*****************************************************************************)
 
@@ -61,11 +47,11 @@ and typedef = {
     t_constraint: tconstraint;
     t_kind: typedef_kind;
     t_namespace: Namespace_env.env;
-    t_mode: mode;
+    t_mode: FileInfo.mode;
 }
 
 and gconst = {
-    cst_mode: mode;
+    cst_mode: FileInfo.mode;
     cst_kind: cst_kind;
     cst_name: id;
     cst_type: hint option;
@@ -82,7 +68,7 @@ and typedef_kind =
   | NewType of hint
 
 and class_ = {
-    c_mode: mode;
+    c_mode: FileInfo.mode;
     c_user_attributes: user_attribute list;
     c_final: bool;
     c_kind: class_kind;
@@ -197,7 +183,7 @@ and fun_param = {
 }
 
 and fun_ = {
-  f_mode            : mode;
+  f_mode            : FileInfo.mode;
   f_tparams         : tparam list;
   f_ret             : hint option;
   f_ret_by_ref      : bool;

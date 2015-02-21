@@ -385,7 +385,7 @@ module PrintClass = struct
     end m ""
 
   let user_attribute_list xs =
-    List.fold_left begin fun acc { Ast.ua_name; _ } ->
+    List.fold_left begin fun acc { Nast.ua_name; _ } ->
       acc^"("^snd ua_name^": expr) "
     end "" xs
 

@@ -21,6 +21,7 @@ type options = {
   load_save_opt    : env_store_action option;
   gc_control       : Gc.control; (* configures only the workers *)
   assume_php       : bool;
+  unsafe_xhp       : bool;
 }
 
 and env_store_action =
@@ -42,3 +43,4 @@ val convert       : options -> Path.path option
 val load_save_opt : options -> env_store_action option
 val gc_control    : options -> Gc.control
 val assume_php    : options -> bool
+val unsafe_xhp    : options -> bool

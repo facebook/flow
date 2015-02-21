@@ -26,7 +26,8 @@ val name_and_declare_types_program:
   Ast.program -> unit
 
 val make_env:
-  Naming.env -> Relative_path.Set.t SMap.t -> Relative_path.t -> unit
+  Naming.env -> Relative_path.Set.t SMap.t ->
+  Relative_path.t -> unit
 
 val class_decl:
-  Nast.class_ -> unit
+  TypecheckerOptions.t -> Nast.class_ -> unit

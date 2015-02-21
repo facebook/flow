@@ -11,6 +11,7 @@
 
 type client_mode =
 | MODE_LIST_FILES
+| MODE_LIST_MODES
 | MODE_TYPE_AT_POS of string
 | MODE_AUTO_COMPLETE
 | MODE_STATUS
@@ -29,6 +30,8 @@ type client_mode =
 | MODE_ARGUMENT_INFO of string
 (* TODO figure out why we can't reference FuzzySearchService from here *)
 | MODE_SEARCH of string * string
+| MODE_LINT of string list
+| MODE_LINT_ALL of int
 
 type client_check_env = {
   mode: client_mode;

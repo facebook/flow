@@ -62,6 +62,13 @@ let rec main args retries =
     | MODE_LIST_FILES ->
       let infol = get_list_files args in
       List.iter (Printf.printf "%s\n") infol
+    | MODE_LIST_MODES -> begin
+        let ic, oc = connect args in
+        ServerMsg.cmd_to_channel oc ServerMsg.LIST_MODES;
+        try
+          while true do print_endline (input_line ic) done;
+        with End_of_file -> ()
+      end
     | MODE_COLORING file ->
         let ic, oc = connect args in
         let file_input = match file with
@@ -207,6 +214,18 @@ let rec main args retries =
         ServerMsg.cmd_to_channel oc (ServerMsg.SEARCH (query, type_));
         let results : ServerSearch.result = Marshal.from_channel ic in
         ClientSearch.go results args.output_json;
+        exit 0
+    | MODE_LINT fnl ->
+        let ic, oc = connect args in
+        ServerMsg.cmd_to_channel oc (ServerMsg.LINT fnl);
+        let results : ServerLint.result = Marshal.from_channel ic in
+        ClientLint.go results args.output_json;
+        exit 0
+    | MODE_LINT_ALL code ->
+        let ic, oc = connect args in
+        ServerMsg.cmd_to_channel oc (ServerMsg.LINT_ALL code);
+        let results : ServerLint.result = Marshal.from_channel ic in
+        ClientLint.go results args.output_json;
         exit 0
     | MODE_UNSPECIFIED -> assert false
   with

@@ -41,8 +41,11 @@ let make_genv ~multicore options =
 
 let make_env options =
   let nenv = Naming.empty in
-  let iassume_php = ServerArgs.assume_php options in
-  let nenv = { nenv with Naming.iassume_php = iassume_php} in
+  let tcopt = {
+    TypecheckerOptions.assume_php = ServerArgs.assume_php options;
+    TypecheckerOptions.unsafe_xhp = ServerArgs.unsafe_xhp options;
+  } in
+  let nenv = { nenv with Naming.itcopt = tcopt } in
   { nenv;
     files_info     = Relative_path.Map.empty;
     errorl         = [];

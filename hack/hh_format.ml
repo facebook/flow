@@ -27,7 +27,7 @@ open Utils
 exception Format_error
 
 let debug () fnl =
-  let modes = [Some Ast.Mstrict; Some Ast.Mpartial] in
+  let modes = [Some FileInfo.Mstrict; Some FileInfo.Mpartial] in
   List.fold_left begin fun () filepath ->
     let filename = Relative_path.to_absolute filepath in
     try
@@ -134,7 +134,7 @@ let parse_args() =
   let files = ref [] in
   let in_place = ref false in
   let diff = ref false in
-  let modes = ref [Some Ast.Mstrict; Some Ast.Mpartial] in
+  let modes = ref [Some FileInfo.Mstrict; Some FileInfo.Mpartial] in
   let root = ref None in
   let debug = ref false in
   Arg.parse
@@ -155,7 +155,8 @@ let parse_args() =
      "formats the changed lines in a diff "^
      "(example: git diff | hh_format --diff)";
 
-     "--yolo", Arg.Unit (fun () -> modes := [Some Ast.Mdecl; None (* PHP *)]),
+     "--yolo", Arg.Unit (fun () ->
+       modes := [Some FileInfo.Mdecl; None (* PHP *)]),
      "Formats *only* PHP and decl-mode files. Results may be unreliable; "^
      "you should *always* inspect the formatted output before committing it!";
 

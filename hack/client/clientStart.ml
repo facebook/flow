@@ -9,7 +9,6 @@
  *)
 
 open ClientExceptions
-open Utils
 
 let get_hhserver () =
   let server_next_to_client = (Filename.dirname Sys.argv.(0)) ^ "/hh_server" in
@@ -57,14 +56,8 @@ let should_start env =
   then begin
     try
       (* Let's ping the server to make sure it's up and not out of date *)
-      let response = with_context
-        ~enter:(fun () ->
-          Sys.set_signal Sys.sigalrm (Sys.Signal_handle (fun _ ->
-            raise Server_busy));
-          ignore (Unix.alarm 6))
-        ~exit:(fun () ->
-          ignore (Unix.alarm 0);
-          Sys.set_signal Sys.sigalrm Sys.Signal_default)
+      let response = ServerMsg.with_timeout 6
+        ~on_timeout:(fun _ -> raise Server_busy)
         ~do_:(fun () ->
           let ic, oc = ClientUtils.connect env.root in
           ServerMsg.cmd_to_channel oc ServerMsg.PING;

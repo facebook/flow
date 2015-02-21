@@ -18,7 +18,7 @@ module L = Lexer_hack
 
 type env = {
     file      : Relative_path.t;
-    mode      : Ast.mode;
+    mode      : FileInfo.mode;
     priority  : int;
     lb        : Lexing.lexbuf;
     errors    : (Pos.t * string) list ref;
@@ -26,14 +26,14 @@ type env = {
 
 let init_env file lb = {
   file     = file;
-  mode     = Ast.Mpartial;
+  mode     = FileInfo.Mpartial;
   priority = 0;
   lb       = lb;
   errors   = ref [];
 }
 
 type parser_return = {
-  file_mode  : Ast.mode option; (* None if PHP *)
+  file_mode  : FileInfo.mode option; (* None if PHP *)
   comments   : (Pos.t * string) list;
   ast        : Ast.program;
 }
@@ -215,7 +215,7 @@ let check_not_final env pos modifiers =
   ()
 
 let check_toplevel env pos =
-  if env.mode = Ast.Mstrict
+  if env.mode = FileInfo.Mstrict
   then error_at env pos "Remove all toplevel statements except for requires"
 
 (*****************************************************************************)
@@ -351,7 +351,7 @@ let with_base_priority env f =
 
 let ref_opt env =
   match L.token env.file env.lb with
-  | Tamp when env.mode = Ast.Mstrict ->
+  | Tamp when env.mode = FileInfo.Mstrict ->
       error env "Don't use references!";
       true
   | Tamp ->
@@ -439,9 +439,9 @@ let rec program ?(elaborate_namespaces = true) file content =
 and header env =
   let file_type, head = get_header env in
   match file_type, head with
-  | Ast.PhpFile, _
-  | _, Some Ast.Mdecl ->
-      let env = { env with mode = Ast.Mdecl } in
+  | FileInfo.PhpFile, _
+  | _, Some FileInfo.Mdecl ->
+      let env = { env with mode = FileInfo.Mdecl } in
       let attr = [] in
       let result = ignore_toplevel ~attr [] env (fun x -> x = Teof) in
       expect env Teof;
@@ -455,21 +455,22 @@ and header env =
 
 and get_header env =
   match L.header env.file env.lb with
-  | `error -> Ast.HhFile, None
-  | `default_mode -> Ast.HhFile, Some Ast.Mpartial
-  | `php_decl_mode -> Ast.PhpFile, Some Ast.Mdecl
-  | `php_mode -> Ast.PhpFile, None
+  | `error -> FileInfo.HhFile, None
+  | `default_mode -> FileInfo.HhFile, Some FileInfo.Mpartial
+  | `php_decl_mode -> FileInfo.PhpFile, Some FileInfo.Mdecl
+  | `php_mode -> FileInfo.PhpFile, None
   | `explicit_mode ->
       let _token = L.token env.file env.lb in
       (match Lexing.lexeme env.lb with
-      | "strict" when !(Ide.is_ide_mode) -> Ast.HhFile, Some Ast.Mpartial
-      | "strict" -> Ast.HhFile, Some Ast.Mstrict
-      | ("decl"|"only-headers") -> Ast.HhFile, Some Ast.Mdecl
-      | "partial" -> Ast.HhFile, Some Ast.Mpartial
+      | "strict" when !(Ide.is_ide_mode) ->
+          FileInfo.HhFile, Some FileInfo.Mpartial
+      | "strict" -> FileInfo.HhFile, Some FileInfo.Mstrict
+      | ("decl"|"only-headers") -> FileInfo.HhFile, Some FileInfo.Mdecl
+      | "partial" -> FileInfo.HhFile, Some FileInfo.Mpartial
       | _ ->
           error env
  "Incorrect comment; possible values include strict, decl, partial or empty";
-          Ast.HhFile, Some Ast.Mdecl
+          FileInfo.HhFile, Some FileInfo.Mdecl
       )
 
 (*****************************************************************************)
@@ -1747,7 +1748,7 @@ and function_body env =
   | Tsc -> []
   | Tlcb ->
       (match env.mode with
-      | Mdecl ->
+      | FileInfo.Mdecl ->
           ignore_body env;
           (* This is a hack for the type-checker to make a distinction
            * Between function foo(); and function foo() {}
@@ -2679,17 +2680,20 @@ and expr_atomic_word ~allow_class ~class_const env pos = function
   | "list" ->
       expr_php_list env pos
   | r when is_import r ->
-      if env.mode = Ast.Mstrict
+      if env.mode = FileInfo.Mstrict
       then
         error env
           ("Parse error: "^r^" is supported only as a toplevel "^
           "declaration");
       expr_import r env pos
   | x when not class_const && String.lowercase x = "true" ->
+      Lint.lowercase_constant pos x;
       pos, True
   | x when not class_const && String.lowercase x = "false" ->
+      Lint.lowercase_constant pos x;
       pos, False
   | x when not class_const && String.lowercase x = "null" ->
+      Lint.lowercase_constant pos x;
       pos, Null
   | x when String.lowercase x = "array" ->
       expr_array env pos
@@ -3175,7 +3179,7 @@ and encapsed_nested start env =
   | Teof ->
       error_at env start "string not properly closed";
       []
-  | Tlcb when env.mode = Ast.Mdecl ->
+  | Tlcb when env.mode = FileInfo.Mdecl ->
       encapsed_nested start env
   | Tlcb ->
       (match L.string2 env.file env.lb with
@@ -3202,7 +3206,7 @@ and encapsed_nested start env =
   | Tdollar ->
       (match L.string2 env.file env.lb with
       | Tlcb ->
-          if env.mode = Ast.Mstrict
+          if env.mode = FileInfo.Mstrict
           then error env "${ not supported";
           let error_state = !(env.errors) in
           let result = (match L.string2 env.file env.lb with
@@ -3235,7 +3239,7 @@ and encapsed_nested start env =
 
 and encapsed_expr env =
   match L.string2 env.file env.lb with
-  | Tlcb when env.mode = Ast.Mdecl ->
+  | Tlcb when env.mode = FileInfo.Mdecl ->
       Pos.make env.file env.lb, Null
   | Tquote ->
       let pos = Pos.make env.file env.lb in
@@ -3530,7 +3534,7 @@ and xhp_attributes env =
 
 and xhp_attribute_value env =
   match L.xhpattr env.file env.lb with
-  | Tlcb when env.mode = Ast.Mdecl ->
+  | Tlcb when env.mode = FileInfo.Mdecl ->
       ignore_body env;
       Pos.none, Null
   | Tlcb ->
@@ -3561,7 +3565,7 @@ and xhp_attribute_string env start abs_start =
 
 and xhp_body pos name env =
   match L.xhptoken env.file env.lb with
-  | Tlcb when env.mode = Ast.Mdecl ->
+  | Tlcb when env.mode = FileInfo.Mdecl ->
       ignore_body env;
       xhp_body pos name env
   | Tlcb ->
@@ -3672,7 +3676,7 @@ and namespace env =
    * that we like. So every time we recurse we'll consume at least one token,
    * so we can't get stuck in an infinite loop. *)
   let tl = match env.mode with
-    | Ast.Mdecl -> ignore_toplevel ~attr:[]
+    | FileInfo.Mdecl -> ignore_toplevel ~attr:[]
     | _ -> toplevel in
   (* The name for a namespace is actually optional, so we need to check for
    * the name first. Setting the name to an empty string if there's no

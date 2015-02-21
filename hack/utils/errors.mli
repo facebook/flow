@@ -16,7 +16,7 @@ val is_hh_fixme : (Pos.t -> int -> bool) ref
 val to_list : 'a error_ -> ('a * string) list
 val get_code : 'a error_ -> int
 val get_pos : error -> Pos.t
-val make_error : (Pos.t * string) list -> error
+val make_error : int -> (Pos.t * string) list -> error
 
 val error_code_to_string : int -> string
 
@@ -271,5 +271,4 @@ val ignore_ : (unit -> 'a) -> 'a
 val try_when :
   (unit -> unit) -> when_:(unit -> bool) -> do_:(error -> unit) -> unit
 val has_no_errors : (unit -> 'a) -> bool
-
 val to_absolute : error -> Pos.absolute error_

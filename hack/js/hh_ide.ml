@@ -120,7 +120,7 @@ let declare_file fn content =
       SSet.iter begin fun cname ->
         match Naming_heap.ClassHeap.get cname with
         | None -> ()
-        | Some c -> Typing_decl.class_decl c
+        | Some c -> Typing_decl.class_decl TypecheckerOptions.empty c
       end sub_classes
     end
     else Hashtbl.replace globals fn (false, [], [])
@@ -200,7 +200,7 @@ let hh_auto_complete fn =
             let nenv = Naming.empty in
             let tenv = Typing_env.empty fn in
             let c = Naming.class_ nenv c in
-            Typing_decl.class_decl c;
+            Typing_decl.class_decl TypecheckerOptions.empty c;
             let res = Typing.class_def tenv (snd c.Nast.c_name) c in
             res
         | _ -> ()
@@ -456,7 +456,7 @@ let hh_arg_info fn line char =
   to_js_object (JAssoc json_res)
 
 let hh_format contents start end_ =
-  let modes = [Some Ast.Mstrict; Some Ast.Mpartial] in
+  let modes = [Some FileInfo.Mstrict; Some FileInfo.Mpartial] in
   let result =
     Format_hack.region modes Relative_path.default start end_ contents in
   let error, result, internal_error = match result with

@@ -205,7 +205,7 @@ let compute_deps ~update_pos fast filel =
   let compare_classes = compute_classes_deps old_classes new_classes in
   let (to_redecl, to_recheck) = compare_classes acc n_classes in
   if update_pos then ();
-(* TODO: DEACTIVATING THE CODE FOR NOW BECAUSE OF A BUG  
+(* TODO: DEACTIVATING THE CODE FOR NOW BECAUSE OF A BUG
   then update_positions classes (SSet.diff to_redecl to_recheck);
   let to_redecl = SSet.inter to_redecl to_recheck in
 *)
@@ -264,7 +264,7 @@ let parallel_otf_decl ~update_pos workers nenv all_classes fast fnl =
       ~neutral:compute_deps_neutral
       ~merge:merge_compute_deps
       ~next:(Bucket.make fnl)
-  in    
+  in
   OnTheFlyStore.clear();
   errors, failed, to_redecl, to_recheck
 

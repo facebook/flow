@@ -119,7 +119,7 @@ let flow_error_to_hack_error flow_err =
   let message_list = List.map (fun (reason, message) ->
     Reason_js.pos_of_reason reason, message
   ) messages in
-  Errors.make_error message_list
+  Errors.make_error 0 message_list
 
 let parse_error_to_flow_error (loc, err) =
   let reason = Reason_js.mk_reason "" loc in

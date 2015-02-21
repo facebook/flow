@@ -3,7 +3,7 @@
 
 module.exports = {};
 
-var A = {x:true};
+var A = {x:true, ...{}};
 module.exports.cls = A;
 
 function f(x:boolean) { }

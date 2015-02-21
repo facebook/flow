@@ -2,4 +2,12 @@
 function_return.js:4:17,17: return
 Missing annotation
 
-Found 1 error
+function_return.js:7:22,22: return undefined
+This type is incompatible with
+  function_return.js:7:16,21: number
+
+function_return.js:23:3,9: undefined
+This type is incompatible with
+  function_return.js:19:16,21: number
+
+Found 3 errors

@@ -462,7 +462,8 @@ let rec aligned last_tok count lexbuf =
   | _ ->
       let tok = Lexing.lexeme lexbuf in
       if last_tok = ")" && tok = "->" then -100 else
-      let count = if last_tok = tok then count + 1 else count in
+      let count = if last_tok = tok && last_tok = "->"
+        then count + 1 else count in
       aligned_look_for_newline tok count lexbuf
 
 and aligned_look_for_newline last_tok count lexbuf =
@@ -1148,7 +1149,8 @@ let rec entry ~keep_source_metadata ~no_trailing_commas ~modes
     file from to_ content k =
   try
     let errorl, () = Errors.do_ begin fun () ->
-      let {Parser_hack.file_mode; _} = Parser_hack.program file content in
+      let {Parser_hack.file_mode; _} =
+        Parser_hack.program file content in
       if not (List.mem file_mode modes) then raise PHP;
     end in
     if errorl <> []

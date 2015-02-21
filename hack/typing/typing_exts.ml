@@ -166,10 +166,10 @@ let retype_magic_func (env:Env.env) (ft:fun_type) (el:Nast.expr list) : Env.env 
   let rec f env param_types args : Env.env * (fun_params * tparam list) option =
     (match param_types, args with
       | [(_,    (_,   Toption (_, Tapply ((_, fs), [_       ]))))], [(_, Nast.Null)]
-        when fs = SN.Classes.cFormatString -> env,None
+        when SN.Classes.is_format_string fs -> env,None
       | [(name, (why, Toption (_, Tapply ((_, fs), [type_arg]))))], (arg :: _)
       | [(name, (why,             Tapply ((_, fs), [type_arg] )))], (arg :: _)
-        when fs = SN.Classes.cFormatString ->
+        when SN.Classes.is_format_string fs ->
           (match const_string_of env arg with
              |  env, Right str ->
                   let env, argl, targl = parse_printf_string env str (fst arg) type_arg in

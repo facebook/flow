@@ -84,7 +84,7 @@ module Env = struct
       | _ -> cvars
 
   let parent tenv cvars c =
-    if c.c_mode = Ast.Mdecl then cvars
+    if c.c_mode = FileInfo.Mdecl then cvars
     else
       if c.c_kind = Ast.Ctrait
       then List.fold_left (add_parent_construct c tenv) cvars c.c_req_extends
@@ -156,7 +156,7 @@ let rec class_decl tenv c =
   else SSet.empty
 
 and class_ tenv c =
-  if c.c_mode = Ast.Mdecl then () else begin
+  if c.c_mode = FileInfo.Mdecl then () else begin
   match c.c_constructor with
   | _ when c.c_kind = Ast.Cinterface -> ()
   | Some { m_unsafe = true; _ } -> ()

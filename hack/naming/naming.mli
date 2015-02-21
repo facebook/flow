@@ -22,7 +22,7 @@ open Utils
  * mapped here in ifuns to a freshly created unique integer identifier.
  *)
 type env = {
-  iassume_php : bool;
+  itcopt    : TypecheckerOptions.t;
   iclasses  : ((Pos.t * Ident.t) SMap.t) * (String.t SMap.t);
   ifuns     : ((Pos.t * Ident.t) SMap.t) * (String.t SMap.t);
   itypedefs : (Pos.t * Ident.t) SMap.t;
@@ -48,6 +48,9 @@ val make_env:
       classes:Ast.id list ->
       typedefs:Ast.id list ->
       consts:Ast.id list -> env
+
+(* Access the typechecker options from the env *)
+val typechecker_options: env -> TypecheckerOptions.t
 
 (* Solves the local names within a function *)
 val fun_: env -> Ast.fun_ -> Nast.fun_

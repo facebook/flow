@@ -78,6 +78,12 @@ end
 (* Utilities *)
 (*************)
 
+(* type exemplar set - reasons are not considered in compare *)
+module TypeExSet = Set.Make(struct
+  include Type
+  let compare = reasonless_compare
+end)
+
 (* composition *)
 let (>>) f g = fun x -> g (f (x))
 
@@ -521,8 +527,13 @@ let rec convert cx map = Ast.Type.(function
           })
 
       | "Object" ->
-        let reason = mk_reason "object type" loc in
-        Flow_js.mk_object_with_proto cx reason (AnyT.at loc)
+        let reason = mk_reason "any object type" loc in
+        AnyObjT reason
+      (* TODO: presumably some existing uses of AnyT can benefit from AnyObjT
+         as well: e.g., where AnyT is used to model prototypes and statics we
+         don't care about; but then again, some of these uses may be internal,
+         so while using AnyObjT may offer some sanity checking it might not
+         reveal user-facing errors. *)
 
       (* Custom classes *)
       | "ReactClass" ->
@@ -624,6 +635,7 @@ let rec convert cx map = Ast.Type.(function
         SMap.add "$call" (IntersectionT (mk_reason "object type" loc, fts)) map_
     in
     (* Seal an object type unless it specifies an indexer. *)
+    (* TODO: also consider sealing the object if it is non-empty *)
     let sealed, dict_name, key, value = Object.Indexer.(
       match indexers with
       | [(_, { id = (_, { Ast.Identifier.name; _ }); key; value; _; })] ->
@@ -644,8 +656,9 @@ let rec convert cx map = Ast.Type.(function
     let pmap = Flow_js.mk_propmap cx map_ in
     let proto = MixedT (reason_of_string "Object") in
     let dict = { dict_name; key; value } in
+    let flags = { sealed; exact = not sealed } in
     ObjT (mk_reason "object type" loc,
-      Flow_js.mk_objecttype ~sealed dict pmap proto)
+      Flow_js.mk_objecttype ~flags dict pmap proto)
   )
 
 and convert_qualification cx = Ast.Type.Generic.Identifier.(function
@@ -1125,7 +1138,7 @@ and statement cx = Ast.Statement.(
 
           let exception_ = ref None in
           mark_exception_handler (fun () ->
-            ignore_break_exception_handler Ast.Statement.Switch.Case.(fun () ->
+            Ast.Statement.Switch.Case.(
               match case.test with
               | None ->
                   default := true;
@@ -1133,7 +1146,7 @@ and statement cx = Ast.Statement.(
               | Some expr ->
                   ignore (expression cx expr);
                   toplevels cx case.consequent
-            ) None
+            )
           ) exception_;
           last_ctx := case_ctx;
           !exception_
@@ -1142,6 +1155,8 @@ and statement cx = Ast.Statement.(
       in
 
       let newset = Env_js.swap_changeset (SSet.union oldset) in
+
+      (* if there's no default clause, pretend there is and it's empty *)
       if not !default
       then (
         let default_ctx = Env_js.clone_env ctx in
@@ -1153,14 +1168,17 @@ and statement cx = Ast.Statement.(
       if Abnormal.swap (Abnormal.Break None) save_break_exn
       then Env_js.havoc_env2 newset;
 
+      (* if the default clause exits abnormally and other cases either fall
+         through or exit abnormally the same way, then the switch exits
+         abnormally that way *)
       if !default
       then (
         match List.hd exceptions with
-        | Some exn
-            when List.for_all (fun exc -> exc = Some exn) (List.tl exceptions)
-            -> Abnormal.raise_exn exn
-        | _
-            -> ()
+        | Some (Abnormal.Break None) | None -> ()
+        | Some exn ->
+            if List.for_all
+              (fun exc -> exc = None || exc = Some exn) (List.tl exceptions)
+            then Abnormal.raise_exn exn
       )
 
   | (loc, Return { Return.argument }) ->
@@ -1775,11 +1793,13 @@ and mark_exception_handler main exception_ =
 and ignore_exception_handler main =
   Abnormal.exception_handler main (fun exn -> ())
 
-and ignore_return_exception_handler main =
+and has_return_exception_handler main =
+  let has_return = ref false in
   Abnormal.exception_handler main (function
-    | Abnormal.Return -> ()
+    | Abnormal.Return -> has_return := true; ()
     | exn -> Abnormal.raise_exn exn
-  )
+  );
+  !has_return
 
 and ignore_break_exception_handler main l1 =
   Abnormal.exception_handler main (function
@@ -2111,59 +2131,45 @@ and expression_ cx loc e = Ast.Expression.(match e with
   | Object { Object.properties } ->
     let reason = mk_reason "object literal" loc in
     let map, spread = object_ cx properties in
+    let sealed = (spread = None && not (SMap.is_empty map)) in
     extend_object
       cx reason
-      (Flow_js.mk_object_with_map_proto cx reason map (MixedT reason))
+      (Flow_js.mk_object_with_map_proto cx reason ~sealed map (MixedT reason))
       spread
 
-  | Array { Array.elements } ->
+  | Array { Array.elements } -> (
     let reason = mk_reason "array literal" loc in
-    if elements = [] then
-      (* empty array, analogous to object with implicit properties *)
-      let element_reason = mk_reason "array element" loc in
-      let tx = Flow_js.mk_tvar cx element_reason in
-      ArrT (reason, tx, [])
-
-    else if List.length elements >= 8 then (
-      (* big array literal: we assume / assert that it must be homogenous *)
-        let t = summarize cx (array_element cx loc (List.hd elements)) in
-        List.iter (fun e ->
-          Flow_js.unify cx t (array_element cx loc e)
-        ) (List.tl elements);
-        ArrT (reason, t, [])
-    )
-    else (
-      (* small array literal: if no spreads, we model it as a tuple with a
-         backing array *)
-        let tup, elts = List.fold_left (fun (tup, elts) elem ->
-          match elem with
-          | Some (Expression e) -> (tup, expression cx e :: elts)
+    let element_reason = mk_reason "array element" loc in
+    match elements with
+    | [] ->
+        (* empty array, analogous to object with implicit properties *)
+        let elemt = Flow_js.mk_tvar cx element_reason in
+        ArrT (reason, elemt, [])
+    | elems ->
+        (* tup is true if <= 8 elems and no spreads *)
+        (* tset is set of distinct (mod reason) elem types *)
+        (* tlist is reverse list of element types if tup, else [] *)
+        let tup, tset, tlist = List.fold_left (fun (tup, tset, tlist) elem ->
+          let tup, elemt = match elem with
+          | Some (Expression e) ->
+              tup, expression cx e
           | Some (Spread (_, { SpreadElement.argument })) ->
-              (false, spread cx argument :: elts)
-          | None -> (tup, (UndefT.at loc) :: elts)
-        ) (true, []) elements in
-        let elts = List.rev elts in
-
-        if tup then
-          (* NOTE: We still pin down the element type rather than
-             leave it open, just like we do for object literals with
-             explicit properties.
-             Indeed, tuples may still be subject to massive unification,
-             e.g. whenthey are part of big array literals, which may
-             blow up constraints by copying them over and over again *)
-          let element_reason = mk_reason "array element" loc in
-          let elts_ = List.map (summarize cx) elts in
-          let tx = match elts_ with
-            | [elt] -> elt
-            | _ -> UnionT (element_reason, elts_)
+              false, spread cx argument
+          | None ->
+              tup, UndefT.at loc
           in
-          ArrT (reason, tx, elts)
-
-        else
-          (* spreads wreck positions, treat as homogenous *)
-          let t = summarize cx (List.hd elts) in
-          List.iter (fun tx -> Flow_js.unit_flow cx (tx, t)) (List.tl elts);
-          ArrT (reason, t, [])
+          let elemt = if tup then elemt else summarize cx elemt in
+          tup,
+          TypeExSet.add elemt tset,
+          if tup && List.length tlist < 8 then elemt :: tlist else []
+        ) (List.length elems < 8, TypeExSet.empty, []) elems
+        in
+        (* composite elem type is union *)
+        let elemt = match TypeExSet.elements tset with
+        | [t] -> t
+        | list -> UnionT (element_reason, list)
+        in
+        ArrT (reason, elemt, List.rev tlist)
     )
 
   | Call {
@@ -2327,7 +2333,15 @@ and expression_ cx loc e = Ast.Expression.(match e with
       (* TODO: require *)
       let reason = mk_reason "invariant" loc in
       (match arguments with
-      | (Expression cond)::_ ->
+      | (Expression (_, Literal {
+          Ast.Literal.value = Ast.Literal.Boolean false; _;
+        }))::arguments ->
+        (* invariant(false, ...) is treated like a throw *)
+        ignore (List.map (expression_or_spread cx) arguments);
+        Env_js.clear_env reason;
+        Abnormal.set Abnormal.Return
+      | (Expression cond)::arguments ->
+        ignore (List.map (expression_or_spread cx) arguments);
         let _, pred, not_pred, xtypes = predicate_of_condition cx cond in
         Env_js.refine_with_pred cx reason pred xtypes
       | _ ->
@@ -3334,7 +3348,6 @@ and react_create_class cx loc class_props = Ast.Expression.(
     methods_tmap = mmap
   } in
   Flow_js.unit_flow cx (super, SuperT (super_reason, itype));
-  Flow_js.unit_flow cx (super, ParentT (super_reason, itype));
 
   let mixin_reason = prefix_reason "mixins of " reason_class in
   (* mixins are added to super to inherit instance properties *)
@@ -3795,8 +3808,8 @@ and mk_class_elements cx this super method_sigs body = Ast.Statement.Class.(
 
         mk_body None cx param_types_map param_loc_map ret body this super;
       );
-      if not (Abnormal.swap Abnormal.Return save_return_exn)
-      then Flow_js.unit_flow cx (VoidT (mk_reason "return undefined" loc), ret)
+      let _ = Abnormal.swap Abnormal.Return save_return_exn in
+      ()
 
     | _ -> ()
   ) elements
@@ -3917,9 +3930,7 @@ and mk_class cx reason_c type_params extends body =
     fields_tmap = fields;
     methods_tmap = methods;
   } in
-  let super_reason = prefix_reason "super of " reason_c in
   let this = InstanceT (reason_c, static, super, instance) in
-  Flow_js.unit_flow cx (super, ParentT(super_reason, instance));
 
   if (typeparams = [])
   then
@@ -3962,7 +3973,6 @@ and mk_interface cx reason typeparams imap map (sfmap, smmap, fmap, mmap) extend
     fields_tmap = fmap;
     methods_tmap = mmap;
   } in
-  Flow_js.unit_flow cx (super, ParentT(super_reason, instance));
   Flow_js.unit_flow cx (super, SuperT(super_reason, instance));
 
   (* mixins' statics are copied into static to inherit static properties *)
@@ -3999,8 +4009,7 @@ and function_decl id cx (reason:reason) type_params params ret body this super =
     mk_body id cx param_types_map param_types_loc ret body this super;
   );
 
-  if not (Abnormal.swap Abnormal.Return save_return_exn)
-  then Flow_js.unit_flow cx (VoidT.why reason, ret);
+  let _ = Abnormal.swap Abnormal.Return save_return_exn in
 
   let ret =
     if (is_void cx ret)
@@ -4057,8 +4066,12 @@ and mk_body id cx param_types_map param_types_loc ret body this super =
   ) in
 
   List.iter (statement_decl cx) stmts;
-  ignore_return_exception_handler (fun () ->
-    toplevels cx stmts
+
+  if not (has_return_exception_handler (fun () -> toplevels cx stmts))
+  then (
+    let phantom_return_loc = before_pos (body_loc body) in
+    Flow_js.unit_flow cx
+      (VoidT (mk_reason "return undefined" phantom_return_loc), ret)
   );
 
   Flow_js.frames := List.tl !Flow_js.frames;
@@ -4438,13 +4451,6 @@ let infer_module file =
 (* helper for merge_module *)
 let aggregate_context_data cx =
   let master_cx = Flow_js.master_cx in
-  (* PARENTS *)
-  let old_mast = IMap.cardinal master_cx.parents in
-  let old_mod = IMap.cardinal cx.parents in
-  master_cx.parents <-
-    IMap.union cx.parents master_cx.parents;
-  let new_mast = IMap.cardinal master_cx.parents in
-  assert (old_mast + old_mod = new_mast);
   (* CLOSURES *)
   let old_mast = IMap.cardinal master_cx.closures in
   let old_mod = IMap.cardinal cx.closures in
@@ -4517,8 +4523,6 @@ let merge_module cx =
 (* helper for merge_module_strict *)
 let copy_context_strict cx cx_other =
   (* aggregate context data *)
-  cx.parents <-
-    IMap.union cx_other.parents cx.parents;
   cx.closures <-
     IMap.union cx_other.closures cx.closures;
   cx.property_maps <- IMap.union

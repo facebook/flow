@@ -140,17 +140,16 @@ let enum_class_check env tc consts const_types =
  * of the Enum. We don't do this for Enum<mixed> and Enum<arraykey>, since
  * that could *lose* type information.
  *)
-let enum_class_decl_rewrite env name enum ancestors consts =
-  if Typing_env.is_decl env then consts else
-    match is_enum name enum ancestors with
-      | None
-      | Some (_, (_, (Tmixed | Tprim Tarraykey)), _) -> consts
-      | Some (_, ty, _) ->
-      (* A special constant called "class" gets added, and we don't
-       * want to rewrite its type. *)
-      SMap.mapi (fun k c ->
-                 if k = SN.Members.mClass then c else {c with ce_type = ty})
-        consts
+let enum_class_decl_rewrite name enum ancestors consts =
+  match is_enum name enum ancestors with
+    | None
+    | Some (_, (_, (Tmixed | Tprim Tarraykey)), _) -> consts
+    | Some (_, ty, _) ->
+    (* A special constant called "class" gets added, and we don't
+     * want to rewrite its type. *)
+    SMap.mapi (fun k c ->
+               if k = SN.Members.mClass then c else {c with ce_type = ty})
+      consts
 
 let get_constant tc (seen, has_default) = function
   | Default _ -> (seen, true)

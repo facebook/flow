@@ -87,7 +87,7 @@ and tprim =
   | Tarraykey
 
 and class_ = {
-  c_mode           : Ast.mode         ;
+  c_mode           : FileInfo.mode    ;
   c_final          : bool             ;
   c_is_xhp         : bool;
   c_kind           : Ast.class_kind   ;
@@ -107,13 +107,18 @@ and class_ = {
   c_constructor    : method_ option   ;
   c_static_methods : method_ list     ;
   c_methods        : method_ list     ;
-  c_user_attributes : Ast.user_attribute list;
+  c_user_attributes : user_attribute list;
   c_enum           : enum_ option     ;
 }
 
 and enum_ = {
   e_base       : hint;
   e_constraint : hint option;
+}
+
+and user_attribute = {
+  ua_name: sid;
+  ua_params: expr list (* user attributes are restricted to scalar values *)
 }
 
 and tparam = Ast.variance * sid * hint option
@@ -152,7 +157,7 @@ and method_ = {
   m_variadic        : fun_variadicity           ;
   m_params          : fun_param list            ;
   m_body            : body_block                ;
-  m_user_attributes : Ast.user_attribute list   ;
+  m_user_attributes : user_attribute list   ;
   m_ret             : hint option               ;
   m_fun_kind        : fun_kind                  ;
 }
@@ -189,7 +194,7 @@ and fun_variadicity = (* does function take varying number of args? *)
   | FVnonVariadic (* standard non variadic function *)
 
 and fun_ = {
-  f_mode     : Ast.mode;
+  f_mode     : FileInfo.mode;
   f_unsafe   : bool;
   f_ret      : hint option;
   f_name     : sid;
@@ -198,13 +203,13 @@ and fun_ = {
   f_params   : fun_param list;
   f_body     : body_block;
   f_fun_kind : fun_kind;
-  f_user_attributes : Ast.user_attribute list;
+  f_user_attributes : user_attribute list;
 }
 
 and typedef = tparam list * hint option * hint
 
 and gconst = {
-  cst_mode: Ast.mode;
+  cst_mode: FileInfo.mode;
   cst_name: Ast.id;
   cst_type: hint option;
   cst_value: expr option;

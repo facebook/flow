@@ -112,6 +112,8 @@ let parse_check_args cmd =
       "";
     "--list-files", Arg.Unit (set_mode MODE_LIST_FILES),
       " (mode) list files with errors";
+    "--list-modes", Arg.Unit (set_mode MODE_LIST_MODES),
+      " (mode) list all files with their associated hack modes";
     "--auto-complete", Arg.Unit (set_mode MODE_AUTO_COMPLETE),
       " (mode) auto-completes the text on stdin";
     "--color", Arg.String (fun x -> set_mode (MODE_COLORING x) ()),
@@ -152,7 +154,16 @@ let parse_check_args cmd =
       " (mode) prints a list of all related classes or methods to the given class";
     "--show", Arg.String (fun x -> set_mode (MODE_SHOW x) ()),
       " (mode) show human-readable type info for the given name; output is not meant for machine parsing";
-     "--version", Arg.Unit (set_mode MODE_VERSION),
+    "--lint", Arg.Rest begin fun fn ->
+        mode := match !mode with
+          | MODE_UNSPECIFIED -> MODE_LINT [fn]
+          | MODE_LINT fnl -> MODE_LINT (fn :: fnl)
+          | _ -> raise (Arg.Bad "only a single mode should be specified")
+      end,
+      " (mode) lint the given list of files";
+    "--lint-all", Arg.Int (fun x -> set_mode (MODE_LINT_ALL x) ()),
+      " (mode) find all occurrences of lint with the given error code";
+    "--version", Arg.Unit (set_mode MODE_VERSION),
       " (mode) show version and exit\n";
 
     (* flags *)

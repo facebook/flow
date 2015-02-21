@@ -28,10 +28,10 @@ var e = new E();
 var x:string = e.set(0);
 
 class F<X> { }
-class G<X> extends F<Array<X>/* dummy token separator: pfff bug */> { }
-class H<X> extends G<Array<X>/* dummy token separator: pfff bug */> {
-    x:X;
-    foo(x:X) { this.x = x; }
+class G<Y> extends F<Array<Y>> {}
+class H<Z> extends G<Array<Z>> {
+    x:Z;
+    foo(x:Z) { this.x = x; }
 }
 
 var h1 = new H();

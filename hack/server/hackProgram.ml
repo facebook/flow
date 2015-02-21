@@ -56,8 +56,10 @@ module Program : Server.SERVER_PROGRAM = struct
     (* TODO: check status.directory *)
     status_log env;
     let errors = get_errors env in
-    EventLogger.check_response errors;
-    ServerError.send_errorl errors oc
+    ServerError.send_errorl errors oc;
+    (* check_response takes a while, so do it last. We don't want the client to
+     * time out waiting for our response. *)
+    EventLogger.check_response errors
 
   let die_nicely oc =
     ServerMsg.response_to_channel oc ServerMsg.SERVER_DYING;
@@ -79,7 +81,19 @@ module Program : Server.SERVER_PROGRAM = struct
         infer env (fn, line, char) oc
     | ServerMsg.SUGGEST (files) -> suggest files oc
     | ServerMsg.STATUS client_root -> print_status genv env client_root oc
-    | ServerMsg.LIST_FILES    -> ServerEnv.list_files env oc
+    | ServerMsg.LIST_FILES -> ServerEnv.list_files env oc
+    | ServerMsg.LIST_MODES ->
+        Relative_path.Map.iter begin fun fn fileinfo ->
+          match Relative_path.prefix fn with
+          | Relative_path.Root ->
+            let mode = match fileinfo.FileInfo.file_mode with
+              | None -> "php"
+              | Some FileInfo.Mdecl -> "decl"
+              | Some FileInfo.Mpartial -> "partial"
+              | Some FileInfo.Mstrict -> "strict" in
+            Printf.fprintf oc "%s\t%s\n%!" mode (Relative_path.to_absolute fn)
+          | _ -> ()
+        end env.ServerEnv.files_info
     | ServerMsg.AUTOCOMPLETE content ->
         ServerAutoComplete.auto_complete env content oc
     | ServerMsg.IDENTIFY_FUNCTION (content, line, char) ->
@@ -197,6 +211,10 @@ module Program : Server.SERVER_PROGRAM = struct
         ServerSearch.go query type_ oc
     | ServerMsg.CALC_COVERAGE path ->
         ServerCoverageMetric.go path genv env oc
+    | ServerMsg.LINT fnl ->
+        ServerLint.go genv fnl oc
+    | ServerMsg.LINT_ALL code ->
+        ServerLint.lint_all genv code oc
 
   let handle_connection_ genv env socket =
     let cli, _ = Unix.accept socket in

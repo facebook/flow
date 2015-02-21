@@ -8,8 +8,6 @@
  *
  *)
 
-open Utils
-
 exception FailedToKill
 
 type env = {
@@ -37,14 +35,8 @@ module StopCommand (Config : STOP_CONFIG) : STOP_COMMAND = struct
     let root = env.root in
     Printf.fprintf stderr "Attempting to nicely kill server for %s\n%!"
       (Path.string_of_path root);
-    let response = with_context
-      ~enter:(fun () ->
-        Sys.set_signal Sys.sigalrm (Sys.Signal_handle (fun _ ->
-          raise ClientExceptions.Server_busy));
-        ignore (Unix.alarm 6))
-      ~exit:(fun () ->
-        ignore (Unix.alarm 0);
-        Sys.set_signal Sys.sigalrm Sys.Signal_default)
+    let response = ServerMsg.with_timeout 6
+      ~on_timeout: (fun _ -> raise ClientExceptions.Server_busy)
       ~do_:(fun () ->
         try
           let ic, oc = ClientUtils.connect root in

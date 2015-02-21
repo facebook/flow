@@ -1,0 +1,10 @@
+
+test2.js:7:18,18: C
+This type is incompatible with
+  test.js:5:23,23: B
+
+test3.js:2:35,38: boolean
+This type is incompatible with
+  test3.js:6:26,36: array type
+
+Found 2 errors

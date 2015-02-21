@@ -51,10 +51,15 @@ let add_list code pos_msg_l =
   if !is_hh_fixme pos code then () else
   add_error (code, pos_msg_l)
 
+(*****************************************************************************)
+(* Accessors. *)
+(*****************************************************************************)
+
 let get_code (error: 'a error_) = ((fst error): error_code)
 let get_pos (error : error) = fst (List.hd (snd error))
 let to_list (error : 'a error_) = snd error
-let make_error (x: (Pos.t * string) list) = ((0, x): error)
+
+let make_error code (x: (Pos.t * string) list) = ((code, x): error)
 
 (*****************************************************************************)
 (* Error code printing. *)
@@ -66,6 +71,7 @@ let error_kind error_code =
   | 2 -> "Naming"
   | 3 -> "NastCheck"
   | 4 -> "Typing"
+  | 5 -> "Lint"
   | _ -> "Other"
 
 let error_code_to_string error_code =

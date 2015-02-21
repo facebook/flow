@@ -122,6 +122,7 @@ let remove_decls env fast_parsed =
               classes = classel;
               typedefs = typel;
               consts = constl;
+              file_mode;
               comments;
               consider_names_just_for_autoload} ->
         let funs = set_of_idl funl in

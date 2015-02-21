@@ -87,9 +87,9 @@ let check_consistent_fields x l =
 
 let unbound_name env (pos, name)=
   (match Env.get_mode env with
-  | Ast.Mstrict ->
+  | FileInfo.Mstrict ->
       Errors.unbound_name_typing pos name
-  | Ast.Mdecl | Ast.Mpartial ->
+  | FileInfo.Mdecl | FileInfo.Mpartial ->
       ()
   );
   env, (Reason.Rnone, Tany)
@@ -292,7 +292,7 @@ and bind_param env (_, ty1) param =
 (* Now we are actually checking stuff! *)
 (*****************************************************************************)
 and fun_def env _ f =
-  if f.f_mode = Ast.Mdecl then () else begin
+  if f.f_mode = FileInfo.Mdecl then () else begin
     NastCheck.fun_ env f (Nast.assert_named_body f.f_body);
     (* Fresh type environment is actually unnecessary, but I prefer to
      * have a guarantee that we are using a clean typing environment. *)
@@ -2324,8 +2324,8 @@ and class_get_ ~is_method ~is_const env cty (p, mid) cid =
       )
   | _, Tany ->
       (match Env.get_mode env with
-      | Ast.Mstrict -> Errors.expected_class p
-      | Ast.Mdecl | Ast.Mpartial -> ()
+      | FileInfo.Mstrict -> Errors.expected_class p
+      | FileInfo.Mdecl | FileInfo.Mpartial -> ()
       );
       env, (Reason.Rnone, Tany)
   | _, (Tmixed | Tarray (_, _) | Tgeneric (_,_) | Toption _ | Tprim _ | Tvar _
@@ -2676,7 +2676,7 @@ and static_class_id p env = function
           | Tprim _ | Tvar _ | Tfun _ | Tabstract (_, _, _) | Ttuple _
           | Tanon (_, _) | Tunresolved _ | Tobject | Tshape _
           | Taccess (_, _)) ->
-            if Env.get_mode env = Ast.Mstrict
+            if Env.get_mode env = FileInfo.Mstrict
             then Errors.dynamic_class p;
             Reason.Rnone, Tany
       in env, ty
@@ -2688,7 +2688,7 @@ and call_construct p env class_ params el uel cid =
   match (fst cstr) with
     | None ->
       if el <> [] &&
-        (mode = Ast.Mstrict || mode = Ast.Mpartial) &&
+        (mode = FileInfo.Mstrict || mode = FileInfo.Mpartial) &&
         class_.tc_members_fully_known
       then Errors.constructor_no_args p;
       fst (lfold expr env el)
@@ -2794,7 +2794,7 @@ and check_arity ?(check_min=true) env pos pos_def (arity:int)
     Errors.typing_too_few_args pos pos_def;
   match exp_arity with
     | Fstandard (_, exp_max) ->
-      if (arity > exp_max) && (Env.get_mode env <> Ast.Mdecl)
+      if (arity > exp_max) && (Env.get_mode env <> FileInfo.Mdecl)
       then Errors.typing_too_many_args pos pos_def;
     | Fvariadic _ | Fellipsis _ -> ()
 
@@ -3403,7 +3403,7 @@ and check_parent_abstract position parent_type class_type =
   end else ()
 
 and class_def env_up _ c =
-  if c.c_mode = Ast.Mdecl
+  if c.c_mode = FileInfo.Mdecl
   then ()
   else begin
     if not !auto_complete
@@ -3566,7 +3566,7 @@ and class_var_def env is_static c cv =
            hack to support existing code for now. *)
         (* Task #5815945: Get rid of this Hack *)
         if cv.cv_is_xhp && (Env.is_strict env)
-          then Env.set_mode env Ast.Mpartial
+          then Env.set_mode env FileInfo.Mpartial
           else env in
       let env, cty = Typing_hint.hint ~ensure_instantiable:true env cty in
       let _ = Type.sub_type p Reason.URhint env cty ty in

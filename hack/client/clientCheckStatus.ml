@@ -9,7 +9,6 @@
  *)
 open ClientEnv
 open ClientExceptions
-open Utils
 
 module C = Tty
 
@@ -67,14 +66,8 @@ let check_status connect (args:client_check_env) =
       };
     raise Server_missing
   end;
-  let response = with_context
-    ~enter:(fun () ->
-      Sys.set_signal Sys.sigalrm (Sys.Signal_handle (fun _ ->
-        raise Server_busy));
-      ignore (Unix.alarm 6))
-    ~exit:(fun () ->
-      ignore (Unix.alarm 0);
-      Sys.set_signal Sys.sigalrm Sys.Signal_default)
+  let response = ServerMsg.with_timeout 6
+    ~on_timeout:(fun _ -> raise Server_busy)
     ~do_:(fun () ->
       let ic, oc = connect args in
       ServerMsg.cmd_to_channel oc (ServerMsg.STATUS args.root);

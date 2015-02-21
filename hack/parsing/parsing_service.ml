@@ -63,6 +63,7 @@ let neutral = (
   )
 
 let empty_file_info : FileInfo.t = {
+  file_mode = None;
   FileInfo.funs = [];
   classes = [];
   typedefs = [];
@@ -92,7 +93,7 @@ let parse (acc, errorl, error_files, php_files) fn =
     let funs, classes, typedefs, consts = Ast_utils.get_defs ast in
     Parser_heap.ParserHeap.add fn ast;
     let defs =
-      {FileInfo.funs; classes; typedefs; consts; comments;
+      {FileInfo.funs; classes; typedefs; consts; comments; file_mode;
        consider_names_just_for_autoload = false}
     in
     let acc = Relative_path.Map.add fn defs acc in

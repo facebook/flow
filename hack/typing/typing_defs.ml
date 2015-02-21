@@ -251,7 +251,7 @@ and class_type = {
   tc_req_ancestors       : ty SMap.t;
   tc_req_ancestors_extends : SSet.t; (* the extends of req_ancestors *)
   tc_extends             : SSet.t;
-  tc_user_attributes     : Ast.user_attribute list;
+  tc_user_attributes     : Nast.user_attribute list;
   tc_enum_type           : enum_type option;
 }
 

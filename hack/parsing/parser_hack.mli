@@ -9,7 +9,7 @@
  *)
 
 type parser_return = {
-    file_mode  : Ast.mode option; (* None if PHP *)
+    file_mode  : FileInfo.mode option; (* None if PHP *)
     comments   : (Pos.t * string) list;
     ast        : Ast.program;
   }

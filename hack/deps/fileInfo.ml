@@ -21,12 +21,26 @@
 open Utils
 
 (*****************************************************************************)
+(* Parsing modes *)
+(*****************************************************************************)
+
+type file_type =
+  | PhpFile
+  | HhFile
+
+type mode =
+  | Mdecl    (* just declare signatures, don't check anything *)
+  | Mstrict  (* check everthing! *)
+  | Mpartial (* Don't fail if you see a function/class you don't know *)
+
+(*****************************************************************************)
 (* The record produced by the parsing phase. *)
 (*****************************************************************************)
 
 type id = Pos.t * string
 
 type t = {
+  file_mode : mode option;
   funs : id list;
   classes : id list;
   typedefs : id list;
@@ -63,7 +77,7 @@ let name_set_of_idl idl =
   List.fold_left (fun acc (_, x) -> SSet.add x acc) SSet.empty idl
 
 let simplify info =
-  let {funs; classes; typedefs; consts; comments = _;
+  let {funs; classes; typedefs; consts; file_mode = _; comments = _;
        consider_names_just_for_autoload = _ } = info in
   let n_funs    = name_set_of_idl funs in
   let n_classes = name_set_of_idl classes in

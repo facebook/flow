@@ -22,7 +22,11 @@ module Classes = struct
   let cWaitHandle = "\\WaitHandle"
   let cGenerator = "\\Generator"
   let cAsyncGenerator = "\\AsyncGenerator"
-  let cFormatString = "\\FormatString"
+  let cFormatString = "\\FormatString" (* deprecated - defined in user code *)
+  let cHackFormatString = "\\HH\\FormatString" (* Same thing, but in core HHI *)
+  let is_format_string x = match x with
+    "\\FormatString" | "\\HH\\FormatString" -> true
+    | _ -> false
 
   let cHH_BuiltinEnum = "\\HH\\BuiltinEnum"
 

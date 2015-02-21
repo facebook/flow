@@ -114,9 +114,9 @@ val set_self_id : env -> string -> env
 val set_self : env -> ty -> env
 val set_parent : env -> ty -> env
 val set_static : env -> env
-val set_mode : env -> Ast.mode -> env
+val set_mode : env -> FileInfo.mode -> env
 val set_root : env -> Typing_deps.Dep.variant -> env
-val get_mode : env -> Ast.mode
+val get_mode : env -> FileInfo.mode
 val is_strict : env -> bool
 val is_decl : env -> bool
 val get_last_call : env -> Pos.t

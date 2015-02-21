@@ -56,6 +56,8 @@ module Type :
       | UpperBoundT of t
       | LowerBoundT of t
 
+      | AnyObjT of reason
+
       | ShapeT of t
 
       | EnumT of reason * t
@@ -79,7 +81,7 @@ module Type :
 
       | ConstructorT of reason * t list * t
       | SuperT of reason * insttype
-      | ParentT of reason * insttype
+      | ExtendsT of t * t
 
       | AdderT of reason * t * t
       | ComparatorT of reason * t
@@ -123,10 +125,14 @@ module Type :
       closure_t: int;
     }
     and objtype = {
-      sealed: bool;
+      flags: flags;
       dict_t: dicttype;
       props_tmap: int;
       proto_t: prototype;
+    }
+    and flags = {
+      sealed: bool;
+      exact: bool;
     }
     and dicttype = {
       dict_name: string option;
@@ -264,7 +270,6 @@ type context = {
   mutable require_loc: Spider_monkey_ast.Loc.t SMap.t;
 
   mutable graph: bounds IMap.t;
-  mutable parents: Type.t IMap.t IMap.t IMap.t;
   mutable closures: (stack * block list) IMap.t;
   mutable property_maps: Type.t SMap.t IMap.t;
   mutable modulemap: Type.t SMap.t;
@@ -284,14 +289,14 @@ val new_context: string -> string -> context
 
 (* printing *)
 
-(* commenting this function out, since it is not used anywhere *)
-(* val string_of_t : context -> Type.t -> string *)
-
 val reason_of_t : Type.t -> reason
 
 val mod_reason_of_t : (reason -> reason) -> Type.t -> Type.t
 
+val reasonless_compare : Type.t -> Type.t -> int
+
 val string_of_t : context -> Type.t -> string
+val dump_t : context -> Type.t -> string
 
 val parameter_name : context -> string -> Type.t -> string
 val string_of_param_t : context -> Type.t -> string

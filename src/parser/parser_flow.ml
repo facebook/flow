@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) 2014, Facebook, Inc.
  * All rights reserved.
  *
@@ -30,11 +30,11 @@ let mode_to_string = function
   | XJS_TAG -> "XJS TAG"
   | XJS_CHILD -> "XJS CHILD"
 
-let lex lb = function
-  | NORMAL_LEX -> token lb
-  | TYPE_LEX -> type_token lb
-  | XJS_TAG -> lex_xjs_tag lb
-  | XJS_CHILD -> lex_xjs_child lb
+let lex lex_env = function
+  | NORMAL_LEX -> token lex_env
+  | TYPE_LEX -> type_token lex_env
+  | XJS_TAG -> lex_xjs_tag lex_env
+  | XJS_CHILD -> lex_xjs_child lex_env
 
 type env = {
   errors          : (Loc.t * Error.t) list ref;
@@ -42,7 +42,7 @@ type env = {
   labels          : SSet.t;
   lb              : Lexing.lexbuf;
   lookahead       : lex_result ref;
-  last            : lex_result option ref;
+  last            : (lex_env * lex_result) option ref;
   priority        : int;
   strict          : bool;
   in_loop         : bool;
@@ -55,32 +55,42 @@ type env = {
   (* Use this to indicate that the "()" as in "() => 123" is not allowed in
    * this expression *)
   no_arrow_parens : bool;
-  lex_mode_stack : lex_mode list ref;
+  lex_mode_stack  : lex_mode list ref;
+  lex_env         : lex_env ref;
 }
 
-let init_env lb = {
-  errors          = ref [];
-  comments        = ref [];
-  labels          = SSet.empty;
-  lb              = lb;
-  lookahead       = ref (lex lb NORMAL_LEX);
-  last            = ref None;
-  priority        = 0;
-  strict          = false;
-  in_loop         = false;
-  in_switch       = false;
-  in_function     = false;
-  no_in           = false;
-  no_call         = false;
-  no_let          = false;
-  allow_yield     = true;
-  no_arrow_parens = true;
-  lex_mode_stack  = ref [NORMAL_LEX];
-}
+let init_env lb =
+  let lex_env = new_lex_env lb in
+  let lex_env, lookahead = lex lex_env NORMAL_LEX in
+  {
+    errors          = ref [];
+    comments        = ref [];
+    labels          = SSet.empty;
+    lb              = lb;
+    lookahead       = ref lookahead;
+    last            = ref None;
+    priority        = 0;
+    strict          = false;
+    in_loop         = false;
+    in_switch       = false;
+    in_function     = false;
+    no_in           = false;
+    no_call         = false;
+    no_let          = false;
+    allow_yield     = true;
+    no_arrow_parens = true;
+    lex_mode_stack  = ref [NORMAL_LEX];
+    lex_env         = ref lex_env;
+  }
+
+let lex env mode =
+  let lex_env, lex_result = lex !(env.lex_env) mode in
+  env.lex_env := lex_env;
+  lex_result
 
 let last_opt env fn = match !(env.last) with
   | None -> None
-  | Some result -> Some (fn result)
+  | Some (_, result) -> Some (fn result)
 let last env = last_opt env (fun result -> result.lex_token)
 let last_value env = last_opt env (fun result -> result.lex_value)
 let last_loc env = last_opt env (fun result -> result.lex_loc)
@@ -196,7 +206,7 @@ let error_unexpected env =
 
 (* Consume zero or more tokens *)
 module Eat : sig
-  val advance : env -> lex_result -> lex_result -> unit
+  val advance : env -> lex_env * lex_result -> lex_result -> unit
   val token : env -> unit
   val vomit : env -> unit
   val push_lex_mode : env -> lex_mode -> unit
@@ -204,17 +214,17 @@ module Eat : sig
   val double_pop_lex_mode : env -> unit
   val semicolon : env -> unit
 end = struct
-  let advance env lex_result next_lex_result =
+  let advance env (lex_env, lex_result) next_lex_result =
     error_list env lex_result.lex_errors;
     comment_list env lex_result.lex_comments;
-    env.last := Some lex_result;
+    env.last := Some (lex_env, lex_result);
     env.lookahead := next_lex_result
 
   (* Consume a single token *)
   let token env =
-    let lex_result = !(env.lookahead) in
-    let next_lex_result = lex env.lb (List.hd !(env.lex_mode_stack)) in
-    advance env lex_result next_lex_result
+    let last = !(env.lex_env), !(env.lookahead) in
+    let next_lex_result = lex env (List.hd !(env.lex_mode_stack)) in
+    advance env last next_lex_result
 
   (* Back up a single token *)
   let vomit env =
@@ -236,7 +246,8 @@ end = struct
           lex_comments = [];
           lex_lb_curr_p = none_curr_p;
         }
-    | Some result ->
+    | Some (lex_env, result) ->
+        env.lex_env := lex_env;
         let bytes = env.lb.lex_curr_p.pos_cnum - result.lex_lb_curr_p.pos_cnum in
         env.lb.lex_curr_pos <- env.lb.lex_curr_pos - bytes;
         env.lb.lex_curr_p <- result.lex_lb_curr_p;
@@ -247,7 +258,7 @@ end = struct
    * lookahead token *)
   let update_lookahead env =
     vomit env;
-    env.lookahead := lex env.lb (List.hd !(env.lex_mode_stack))
+    env.lookahead := lex env (List.hd !(env.lex_mode_stack))
 
   let push_lex_mode env mode =
     env.lex_mode_stack := mode::!(env.lex_mode_stack);
@@ -289,7 +300,7 @@ module Expect = struct
     let eof_lex_result = !(env.lookahead) in
     (* There's no next token, so we don't lex, we just pretend that the EOF is
      * next *)
-    Eat.advance env eof_lex_result eof_lex_result
+    Eat.advance env (!(env.lex_env), eof_lex_result) eof_lex_result
 
   (* If the next token is t, then eat it and return true
    * else return false *)
@@ -2579,9 +2590,10 @@ end = struct
         let expressions = expr::expressions in
         match Peek.token env with
         | T_RCURLY ->
-            let lex_result = lex_template_part env.lb in
-            let next_lex_result = lex env.lb NORMAL_LEX in
-            Eat.advance env lex_result next_lex_result;
+            let lex_env, lex_result = lex_template_part !(env.lex_env) in
+            env.lex_env := lex_env;
+            let next_lex_result = lex env NORMAL_LEX in
+            Eat.advance env (lex_env, lex_result) next_lex_result;
             let loc, part = match lex_result.lex_token with
             | T_TEMPLATE_PART (loc, part) -> loc, part
             | _ -> assert false in
@@ -2724,9 +2736,10 @@ end = struct
         })
 
     and regexp env prefix =
-      let lex_result = lex_regexp env.lb prefix in
-      let next_lex_result = lex env.lb NORMAL_LEX in
-      Eat.advance env lex_result next_lex_result;
+      let lex_env, lex_result = lex_regexp !(env.lex_env) prefix in
+      env.lex_env := lex_env;
+      let next_lex_result = lex env NORMAL_LEX in
+      Eat.advance env (lex_env, lex_result) next_lex_result;
       let pattern, raw_flags = match lex_result.lex_token with
         | T_REGEXP (_, pattern, flags) -> pattern, flags
         | _ -> assert false in

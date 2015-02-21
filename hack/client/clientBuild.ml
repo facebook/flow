@@ -74,18 +74,13 @@ let rec connect env retries =
     end
 
 let rec wait_for_response ic =
-  try Utils.with_context
-    ~enter:(fun () ->
-      Sys.set_signal Sys.sigalrm (Sys.Signal_handle (fun _ ->
-        raise ClientExceptions.Server_busy));
-      ignore (Unix.alarm 1))
-    ~exit:(fun () ->
-      ignore (Unix.alarm 0);
-      Sys.set_signal Sys.sigalrm Sys.Signal_default)
-    ~do_:(fun () ->
-      let response = ServerMsg.response_from_channel ic in
-      if Tty.spinner_used() then Tty.print_clear_line stdout;
-      response)
+  try
+    ServerMsg.with_timeout 1
+      ~on_timeout:(fun _ -> raise ClientExceptions.Server_busy)
+      ~do_:(fun () ->
+        let response = ServerMsg.response_from_channel ic in
+        if Tty.spinner_used() then Tty.print_clear_line stdout;
+        response)
   with
   | End_of_file ->
      prerr_string "Server disconnected or crashed. Try `hh_client restart`\n";
@@ -169,7 +164,8 @@ and handle_response response env retries ic =
           | ServerMsg.BUILD_ERROR s -> exit_code := 2; print_endline s
           | ServerMsg.BUILD_FINISHED -> finished := true
         done
-      with End_of_file ->
+      with
+      | End_of_file ->
         if not !finished then begin
           Printf.fprintf stderr ("Build unexpectedly terminated! "^^
             "You may need to do `hh_client restart`.\n");
@@ -178,6 +174,16 @@ and handle_response response env retries ic =
         if !exit_code = 0
         then ()
         else exit (!exit_code)
+      | Failure _ as e ->
+        (* We are seeing Failure "input value: bad object" which can
+         * realistically only happen from Marshal.from_channel ic.
+         * This admittedly won't help us root cause this, but at least
+         * this will help us identify where it is occurring
+         *)
+        let backtrace = Printexc.get_backtrace () in
+        let e_str = Printexc.to_string e in
+        Printf.fprintf stderr "Unexpected error: %s\n%s%!" e_str backtrace;
+        raise e
     end
   | resp -> Printf.printf "Unexpected server response %s.\n%!"
     (ServerMsg.response_to_string resp)

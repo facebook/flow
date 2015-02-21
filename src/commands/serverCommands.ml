@@ -107,6 +107,7 @@ module OptionParser(Config : CONFIG) : Server.OPTION_PARSER = struct
         ServerArgs.load_save_opt = None;
         ServerArgs.gc_control    = Gc.get ();
         ServerArgs.assume_php    = false;
+        ServerArgs.unsafe_xhp    = false;
       },
       {
         Types_js.opt_debug = !debug;

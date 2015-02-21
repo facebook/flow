@@ -29,6 +29,7 @@ type options = {
    * they are short-lived processes *)
   gc_control       : Gc.control;
   assume_php       : bool;
+  unsafe_xhp       : bool;
 }
 
 and env_store_action =
@@ -79,6 +80,11 @@ let config_assume_php config =
   match SMap.get "assume_php" config with
     | Some s -> bool_of_string s
     | None -> true
+
+let config_unsafe_xhp config =
+  match SMap.get "unsafe_xhp" config with
+    | Some s -> bool_of_string s
+    | None -> false
 
 (*****************************************************************************)
 (* The main entry point *)
@@ -152,6 +158,7 @@ let parse_options () =
     load_save_opt = load_save_opt;
     gc_control    = make_gc_control config;
     assume_php    = config_assume_php config;
+    unsafe_xhp    = config_unsafe_xhp config;
   }
 
 (* useful in testing code *)
@@ -164,6 +171,7 @@ let default_options ~root = {
   load_save_opt = None;
   gc_control = ServerConfig.gc_control;
   assume_php = true;
+  unsafe_xhp = false;
 }
 
 (*****************************************************************************)
@@ -178,3 +186,4 @@ let convert options = options.convert
 let load_save_opt options = options.load_save_opt
 let gc_control options = options.gc_control
 let assume_php options = options.assume_php
+let unsafe_xhp options = options.unsafe_xhp

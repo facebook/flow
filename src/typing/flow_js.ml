@@ -73,8 +73,20 @@ let mk_functiontype2 tins pnames tout j = {
   closure_t = j
 }
 
-let mk_objecttype ?(sealed=false) dict map proto = {
-  sealed;
+(* An object type has two flags, sealed and exact. A sealed object type cannot
+   be extended. An exact object type accurately describes objects without
+   "forgeting" any properties: so to extend an object type with optional
+   properties, the object type must be exact. Thus, as an invariant, "not exact"
+   logically implies "sealed" (and by contrapositive, "not sealed" implies
+   "exact"; in other words, exact and sealed cannot both be false).
+
+   Types of object literals are exact, but can be sealed or unsealed. Object
+   type annotations are sealed but not exact. *)
+
+let default_flags = { sealed = false; exact = true; }
+
+let mk_objecttype ?(flags=default_flags) dict map proto = {
+  flags;
   dict_t = dict;
   props_tmap = map;
   proto_t = proto
@@ -551,6 +563,8 @@ and ground_type_impl cx ids t = match t with
   | UpperBoundT t ->
       UpperBoundT (ground_type_impl cx ids t)
 
+  | AnyObjT _ -> AnyObjT (reason_of_string "any object")
+
   | ShapeT t ->
       ShapeT (ground_type_impl cx ids t)
 
@@ -959,6 +973,8 @@ let rec assert_ground ?(infer=false) cx ids = function
   | LowerBoundT(t) ->
       assert_ground cx ids t
 
+  | AnyObjT _ -> ()
+
   | ShapeT(t) ->
       assert_ground cx ids t
 
@@ -1081,7 +1097,7 @@ module Cache = struct
      ensures that flows between deftype and usetype are only processed once. *)
   module F = struct
     let cache = Hashtbl.create 0
-    let hash = Hashtbl.hash_param 20 100
+    let hash = Hashtbl.hash_param 50 100
     let mem (l,u) =
       let types = hash l, hash u in
       try
@@ -1235,7 +1251,10 @@ let rec flow cx (l,u) trace =
 
     | (_, BoolT _) -> ()
 
-    | (l, NumT _) when numeric l -> ()
+    | (_, NumT _) when numeric l -> ()
+
+    | (_, AnyObjT _) when object_like l -> ()
+    | (AnyObjT _, _) when object_like u || object_like_op u -> ()
 
     (**************************************)
     (* some properties are always defined *)
@@ -1465,7 +1484,7 @@ let rec flow cx (l,u) trace =
     (* object types deconstruct into their parts *)
     (*********************************************)
 
-    | (ObjT (reason1, {props_tmap = flds1; proto_t; sealed; _ }),
+    | (ObjT (reason1, {props_tmap = flds1; proto_t; flags; _ }),
        ObjT (reason2, {props_tmap = flds2; proto_t = u_; dict_t; _ }))
       ->
       (* if inflowing type is literal (thus guaranteed to be
@@ -1478,16 +1497,18 @@ let rec flow cx (l,u) trace =
           (* property doesn't exist in inflowing type *)
             let reason2 = replace_reason (spf "property %s" s) reason2 in
             match t2 with
-            | OptionalT t1 when not sealed ->
+            | OptionalT t1 when flags.exact ->
                 (* if property is marked optional or otherwise has a maybe type,
-                   and if inflowing type is not sealed (in particular, it is not
-                   an annotation), then it is ok to relax the requirement that
-                   the property be found immediately; instead, we constrain
-                   future lookups of the property in inflowing type *)
+                   and if inflowing type is exact (i.e., it is not an
+                   annotation), then it is ok to relax the requirement that the
+                   property be found immediately; instead, we constrain future
+                   lookups of the property in inflowing type *)
                 unit_flow cx (l, LookupT (reason2, None, s, t1))
             | _ ->
                 (* otherwise, we do strict lookup of property in prototype *)
                 unit_flow cx (proto_t, LookupT (reason2, Some reason1, s, t2))
+          (* TODO: instead, consider extending inflowing type with s:t2 when it
+             is not sealed *)
           else
             let t1 = read_prop cx flds1 s in
             flow_to_mutable_child cx lit t1 t2);
@@ -1496,12 +1517,11 @@ let rec flow cx (l,u) trace =
         (fun s -> fun t1 ->
           if (not(has_prop cx flds2 s))
           then begin
-            let prop = read_prop cx flds1 s in
-            let key_reason = replace_reason StrT.desc (reason_of_t prop) in
+            let key_reason = replace_reason StrT.desc (reason_of_t t1) in
             let key_reason =
               prefix_reason (spf "property %s's key is a " s) key_reason in
             unit_flow cx (StrT (key_reason, None), dict_t.key);
-            unit_flow cx (prop, dict_t.value)
+            unit_flow cx (t1, dict_t.value)
           end
         );
       unit_flow cx (l, u_)
@@ -1566,22 +1586,17 @@ let rec flow cx (l,u) trace =
     (* instances of classes follow declared hierarchy *)
     (**************************************************)
 
-    | (InstanceT (_,_,_,instance),
-       InstanceT (_,_,_,instance_super))
-        (* TODO:
-           This is possibly racy, since the ancestor edge is set up separately
-           by another constraint of the form:
-           RunTimeT(InstanceT(..)) ~> SuperT(..)
-           Instead, we should record the expectation of an ancestor edge and
-           report an error when it is clear that expectation will not be met,
-           i.e., when the derived class declares a different super class.
-        *)
-        when
-          (ancestor cx
-             (instance_super.class_id, instance_super.type_args)
-             (instance.class_id, instance.type_args))
-          ->
-      ()
+    | (InstanceT _, InstanceT _) ->
+        unit_flow cx (l, ExtendsT(l,u))
+
+    | (InstanceT (_,_,super,instance),
+       ExtendsT(_, InstanceT (_,_,_,instance_super))) ->
+
+      if instance.class_id = instance_super.class_id
+      then
+        unify_map cx instance.type_args instance_super.type_args
+      else
+        unit_flow cx (super, u)
 
     (********************************************************)
     (* runtime types derive static types through annotation *)
@@ -1846,14 +1861,14 @@ let rec flow cx (l,u) trace =
     (** o.x = ... has the additional effect of o[_] = ... **)
 
     | (ObjT (reason_o, {
-        sealed;
+        flags;
         props_tmap = mapr;
         proto_t = proto;
         dict_t = { key; value; _ };
       }),
       SetT(reason_op,x,tin))
       ->
-      let strict = mk_strict sealed reason_o reason_op in
+      let strict = mk_strict flags.sealed reason_o reason_op in
       let t = ensure_prop_ cx trace strict mapr x proto reason_o reason_op
         trace in
       unit_flow cx (StrT.t,key);
@@ -1870,14 +1885,14 @@ let rec flow cx (l,u) trace =
         trace ObjProto
 
     | (ObjT (reason_o, {
-          sealed;
+          flags;
           props_tmap = mapr;
           proto_t = proto;
           dict_t = { key; value; _ };
         }),
        GetT(reason_op,x,tout))
       ->
-      let strict = mk_strict sealed reason_o reason_op in
+      let strict = mk_strict flags.sealed reason_o reason_op in
       let t = ensure_prop cx strict mapr x proto reason_o reason_op trace in
       unit_flow cx (StrT.t,key);
       select_flow cx (t, tout) trace (ObjProp x)
@@ -1887,14 +1902,14 @@ let rec flow cx (l,u) trace =
     (********************************)
 
     | (ObjT (reason_o, {
-          sealed;
+          flags;
           props_tmap = mapr;
           proto_t = proto;
           dict_t = { key; value; _ };
         }),
        MethodT(reason_op,x,this,tins,tout,j))
       ->
-      let strict = mk_strict sealed reason_o reason_op in
+      let strict = mk_strict flags.sealed reason_o reason_op in
       let t = ensure_prop cx strict mapr x proto reason_o reason_op trace in
       let callt = CallT (reason_op, mk_methodtype2 this tins None tout j) in
       select_flow cx (t, callt) trace (ObjProp x)
@@ -2102,25 +2117,11 @@ let rec flow cx (l,u) trace =
             select_flow cx (l, LookupT(reason,None,x,t)) trace ObjProto
         )
 
-    (** The purpose of ParentT is to establish a nominal subtyping relation. It
-        only makes sense for class instances, not plain objects. **)
-
-    | (InstanceT (_,_,_,instance_super),
-       ParentT (reason,instance))
-      ->
-      add_parent cx instance instance_super
-
-    | (ObjT _,
-       ParentT _)
-      ->
-      ()
-
     (********************************)
     (* mixed acts as the root class *)
     (********************************)
 
     | (MixedT _, SuperT _) -> ()
-    | (MixedT _, ParentT _) -> ()
 
     (*********************************************************)
     (* addition typechecks iff either of the following hold: *)
@@ -2317,11 +2318,7 @@ let rec flow cx (l,u) trace =
     (* functions statics *)
     (*********************)
 
-    | (FunT (_,static,_,_),
-       (SetT _ | GetT _ | MethodT _ | LookupT _ |
-           ObjAssignT _ | ObjRestT _ |
-               SetElemT _ | GetElemT _ ))
-      ->
+    | (FunT (_,static,_,_), _) when object_like_op u ->
       select_flow cx (static, u)
         trace FunStatics
 
@@ -2329,11 +2326,7 @@ let rec flow cx (l,u) trace =
     (* class statics *)
     (*****************)
 
-    | (ClassT instance,
-       (SetT _ | GetT _ | MethodT _ | LookupT _ |
-           ObjAssignT _ |  ObjRestT _ |
-               SetElemT _ | GetElemT _ ))
-      ->
+    | (ClassT instance, _) when object_like_op u ->
       let reason = reason_of_t u in
       let tvar = mk_tvar cx reason in
       unit_flow cx (instance, GetT(reason,"statics",tvar));
@@ -2414,6 +2407,14 @@ let rec flow cx (l,u) trace =
           msg
           (reason_op, reason_o)
 
+    | (MixedT _, ExtendsT (t, tc)) ->
+       let msg = "This type is incompatible with" in
+        prmsg_flow cx
+          Errors_js.ERROR
+          trace
+          msg
+          (reason_of_t t, reason_of_t tc)
+
     (* LookupT is a latent lookup, never fired *)
     | (MixedT _, LookupT _) -> ()
 
@@ -2441,7 +2442,6 @@ and err_operation = function
   | ObjRestT _ -> "Expected object instead of"
   | ObjExtendT _ -> "Expected object instead of"
   | SuperT _ -> "Cannot inherit"
-  | ParentT _ -> "Cannot inherit"
   | EqT (_, t) -> spf "Non-strict equality comparison with %s may involve unintended type conversions (use strict equality test instead)" (desc_of_t t)
   | ComparatorT (_, t) -> spf "Relational comparison with %s may involve unintended type conversions" (desc_of_t t)
   | SpecializeT _ -> "Expected polymorphic type instead of"
@@ -2501,6 +2501,18 @@ and numeric = function
 
   | _ -> false
 
+and object_like = function
+  | ObjT _ | InstanceT _ | RecordT _ -> true
+  | _ -> false
+
+and object_like_op = function
+  | SetT _ | GetT _ | MethodT _ | LookupT _
+  | KeyT _
+  | ObjAssignT _ | ObjRestT _
+  | SetElemT _ | GetElemT _
+  | AnyObjT _ -> true
+  | _ -> false
+
 and equatable cx trace = function
 
   | (NumT _,NumT _)
@@ -2532,41 +2544,15 @@ and equatable cx trace = function
 
 and mk_nominal cx =
   let nominal = mk_var cx in
-  let parents = cx.parents in
-  cx.parents <- parents |> IMap.add nominal IMap.empty;
   (if modes.debug then prerr_endline
-      (spf "NOM %d (%d) %s" nominal (IMap.cardinal parents) cx.file));
+      (spf "NOM %d %s" nominal cx.file));
   nominal
-
-and add_parent cx instance instance_super =
-  let young = instance.class_id in
-  let parent = instance_super.class_id in
-  try
-    let parents_ = IMap.find_unsafe young cx.parents in
-    cx.parents <- cx.parents |> IMap.add young
-        (IMap.add parent instance_super.type_args parents_)
-  with exc ->
-    let msg = spf
-      "internal error in add_parent: parents of %d not found in %s"
-      young cx.file in
-    failwith msg
 
 and unify_map cx tmap1 tmap2 =
   tmap1 |> IMap.iter (fun x t1 ->
     let t2 = IMap.find_unsafe x tmap2 in
     unify cx t1 t2
   )
-
-and ancestor cx (old, old_map) (young, young_map) =
-  (old = young && (unify_map cx old_map young_map; true)) ||
-    (let parents = IMap.find_unsafe young cx.parents in
-     let result = ref false in
-     parents |> IMap.iter (fun parent parent_map ->
-       let parent_map = IMap.map (subst cx young_map) parent_map in
-       result := !result || ancestor cx (old, old_map) (parent, parent_map)
-     );
-     !result
-    )
 
 (* Indicate whether property checking should be strict for a given object and an
    operation on it. Strictness is enforced when the object is sealed (e.g., it
@@ -2624,14 +2610,14 @@ and subst cx map t =
       PolyT (xs, subst cx map t)
 
   | ObjT (reason, {
-      sealed;
+      flags;
       dict_t = { dict_name; key; value; };
       props_tmap = id;
       proto_t = proto
     }) ->
       let pmap = IMap.find_unsafe id cx.property_maps in
       ObjT (reason, {
-        sealed;
+        flags;
         dict_t = { dict_name;
                    key = subst cx map key;
                    value = subst cx map value; };
@@ -2690,6 +2676,8 @@ and subst cx map t =
   | LowerBoundT(t) ->
     LowerBoundT(subst cx map t)
 
+  | AnyObjT _ -> t
+
   | ShapeT(t) ->
     ShapeT(subst cx map t)
 
@@ -2734,14 +2722,15 @@ and instantiate_poly cx reason_ (xs,t) =
 and mk_object_with_proto cx reason proto =
   mk_object_with_map_proto cx reason SMap.empty proto
 
-and mk_object_with_map_proto cx reason map proto =
+and mk_object_with_map_proto cx reason ?(sealed=false) map proto =
+  let flags = { default_flags with sealed } in
   let dict = {
     dict_name = None;
-    key = AnyT.t (*mk_tvar cx (replace_reason "key" reason)*);
-    value = AnyT.t (*mk_tvar cx (replace_reason "value" reason)*); }
-  in
+    key = AnyT.t;
+    value = AnyT.t;
+  } in
   let pmap = mk_propmap cx map in
-  ObjT (reason, mk_objecttype dict pmap proto)
+  ObjT (reason, mk_objecttype ~flags dict pmap proto)
 
 (* Speculatively match types *)
 and speculative_flow cx l u =
@@ -3059,44 +3048,76 @@ and predicate cx trace t (l,p) = match (l,p) with
    (* (careful: this is backwards)                              *)
    (*************************************************************)
 
+  (** An object is considered `instanceof` a function F when it is constructed
+      by F. Note that this is incomplete with respect to the runtime semantics,
+      where instanceof is transitive: if F.prototype `instanceof` G, then the
+      object is `instanceof` G. There is nothing fundamentally difficult in
+      modeling the complete semantics, but we haven't found a need to do it. **)
   | (FunT (_,_,proto1,_),
      ConstructorP (ObjT (_,{proto_t = proto2; _}) as u))
       when proto1 = proto2 ->
 
-    flow cx (u,t) trace
+      flow cx (u,t) trace
 
-  | (ClassT(InstanceT (reason,_,_,instance)),
-     ConstructorP (InstanceT (_,_,_,instance_c)))
-    -> (* TODO: intersection *)
+  | (ClassT(InstanceT _ as l),
+     ConstructorP (InstanceT _ as u)) ->
 
-    if (ancestor cx
-          (instance_c.class_id, instance_c.type_args)
-          (instance.class_id, instance.type_args))
-    then
-      flow cx (mk_instance cx reason l, t) trace
-    else
+      predicate cx trace t (ClassT(ExtendsT(u,l)),p)
+
+  (** Is an instance x of C `instanceof` class A? This depends on whether C is a
+      subclass of A. If it is, then the type of x is refined to C. Otherwise, do
+      nothing, i.e., consider this check to fail. (Note that this is somewhat
+      unsound, since C may be a superclass of the runtime class of x, so x may
+      still be an instance of A; the sound alternative is to let C & A be the
+      type of x, but that's hard to compute.) **)
+  | (ClassT(ExtendsT(orig, InstanceT (_,static,super,instance))),
+     ConstructorP (InstanceT (_,_,super_c,instance_c)))
+      -> (* TODO: intersection *)
+
+      if instance.class_id = instance_c.class_id
+      then flow cx (orig, t) trace
+      else flow cx (super_c, PredicateT(InstanceofP(l), t)) trace
+
+  | (ClassT(ExtendsT _),
+     ConstructorP (MixedT _)) ->
       ()
 
+  (** Prune the type when any other `instanceof` check succeeds (since this is
+      impossible). *)
   | (_, ConstructorP _) ->
-    ()
+      ()
 
   | (FunT (_,_,proto1,_),
      NotP(ConstructorP (ObjT (_,{proto_t = proto2; _}))))
       when proto1 = proto2 ->
-    ()
+      ()
 
-  | (ClassT(InstanceT (_,_,_,instance)),
-     NotP(ConstructorP (InstanceT (_,_,_,instance_c))))
-      when ancestor cx
-        (instance.class_id, instance.type_args)
-        (instance_c.class_id, instance.type_args)
-        ->
-        (* TODO: intersection *)
-    ()
+  | (ClassT(InstanceT _ as l),
+     NotP(ConstructorP (InstanceT _ as u))) ->
 
+      predicate cx trace t (ClassT(ExtendsT(u,l)),p)
+
+  (** Is an instance x of C not `instanceof` class A? Again, this depends on
+      whether C is a subclass of A. If it is, then do nothing, since this check
+      cannot succeed. Otherwise, don't refine the type of x. **)
+  | (ClassT(ExtendsT(orig, InstanceT (reason,static,super,instance))),
+     NotP(ConstructorP (InstanceT (reason_c,static_c,super_c,instance_c))))
+      -> (* TODO: intersection *)
+
+      if instance.class_id = instance_c.class_id
+      then ()
+      else flow cx (super_c, PredicateT(NotP(InstanceofP(l)), t)) trace
+
+  | (ClassT(ExtendsT(orig, _)),
+     NotP(ConstructorP (MixedT _))) ->
+
+      flow cx (orig,t) trace
+
+  (** Don't refine the type when any other `instanceof` check fails. **)
   | (_, NotP(ConstructorP u)) ->
-    flow cx (u,t) trace
+      flow cx (u,t) trace
 
+  (* unknown predicate *)
   | _ ->
     prerr_flow cx trace "Unsatisfied predicate" l (PredicateT(p,t))
 
@@ -3275,7 +3296,8 @@ and unify cx t1 t2 =
   | (ArrT (_, t1, ts1), ArrT (_, t2, ts2)) ->
     array_unify cx (ts1,t1, ts2,t2)
 
-  | (ObjT (reason1, {props_tmap = flds1; _}), ObjT (reason2, {props_tmap = flds2; _})) ->
+  | (ObjT (reason1, {props_tmap = flds1; _}),
+     ObjT (reason2, {props_tmap = flds2; _})) ->
     let pmap1, pmap2 =
       IMap.find_unsafe flds1 cx.property_maps,
       IMap.find_unsafe flds2 cx.property_maps
@@ -3289,8 +3311,8 @@ and unify cx t1 t2 =
     if !error_ref || (SMap.cardinal pmap2 > SMap.cardinal pmap1)
     then
       let message_list = [
-        reason1, spf "%s\n%s" (desc_of_reason reason1) "Objects do not have the same properties";
-        reason2, desc_of_reason reason2
+        reason1, "Objects do not have the same properties";
+        reason2, ""
       ] in
       add_warning cx message_list
 

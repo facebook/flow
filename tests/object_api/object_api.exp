@@ -1,7 +1,7 @@
 
 c.js:5:1,7: call of method foo
 Property not found in
-  b.js:4:23,34: object literal
+  b.js:4:23,41: object literal
 
 object_assign.js:4:19,23: parameter param
 Missing annotation

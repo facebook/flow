@@ -67,6 +67,7 @@ type command =
 | ERROR_OUT_OF_DATE
 | STATUS of Path.path
 | LIST_FILES
+| LIST_MODES
 | AUTOCOMPLETE of string
 | SHOW of string
 | KILL
@@ -84,6 +85,8 @@ type command =
 | ARGUMENT_INFO of string * int * int
 | CALC_COVERAGE of string
 | PRINT_COVERAGE_LEVELS of file_input
+| LINT of string list
+| LINT_ALL of int
 
 let cmd_to_channel (oc:out_channel) (cmd:command): unit =
   Printf.fprintf oc "%s\n" Build_id.build_id_ohai;
@@ -122,8 +125,22 @@ let response_to_string = function
   | SERVER_DYING -> "Server Dying"
   | PONG -> "Pong"
 
+let with_timeout timeout ~on_timeout ~do_ =
+  let old_handler = ref Sys.Signal_default in
+  let old_timeout = ref 0 in
+  Utils.with_context
+    ~enter:(fun () ->
+      old_handler := Sys.signal Sys.sigalrm (Sys.Signal_handle on_timeout);
+      old_timeout := Unix.alarm timeout)
+    ~exit:(fun () ->
+      ignore (Unix.alarm !old_timeout);
+      Sys.set_signal Sys.sigalrm !old_handler)
+    ~do_
+
 let response_to_channel (oc:out_channel) (cmd:response): unit =
-  Printf.fprintf oc "%s\n" Build_id.build_id_ohai;
+  (* flush immediately so that the client knows we're not hung; see
+   * response_from_channel below *)
+  Printf.fprintf oc "%s\n%!" Build_id.build_id_ohai;
   Marshal.to_channel oc cmd [];
   flush oc
 
@@ -131,4 +148,10 @@ let response_from_channel (ic:in_channel): response =
   let s = input_line ic in
   if s <> Build_id.build_id_ohai
   then SERVER_OUT_OF_DATE
-  else Marshal.from_channel ic
+  (* there may be a lot of data returned, so (un)marshalling may take a while;
+   * suspend any active timeouts for now. Since we've already received the
+   * build id, we know that the server has finished computing the data it wants
+   * to send us (i.e. it has not hung) *)
+  else with_timeout 0
+    ~on_timeout:(fun _ -> ())
+    ~do_:(fun () -> Marshal.from_channel ic)

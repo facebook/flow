@@ -651,7 +651,7 @@ let print_errors ?root flow_opts =
             if flow_opts.opt_strip_root
             then List.map (fun (p,s) -> (strip_root p path, s)) list
             else list in
-          let e = Errors.make_error list in
+          let e = Errors.make_error 0 list in
           ae.(i) <- e
         ) ae;
         Array.to_list ae

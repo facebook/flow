@@ -245,7 +245,7 @@ let is_magic =
     Hashtbl.mem h s
 
 let rec fun_ tenv f named_body =
-  if f.f_mode = Ast.Mdecl || !auto_complete then ()
+  if f.f_mode = FileInfo.Mdecl || !auto_complete then ()
   else begin
     let tenv = Typing_env.set_root tenv (Dep.Fun (snd f.f_name)) in
     let env = { t_is_finally = false;
@@ -314,7 +314,7 @@ and check_arity env p tname arity size =
   Errors.type_arity p tname nargs
 
 and class_ tenv c =
-  if c.c_mode = Ast.Mdecl || !auto_complete then () else begin
+  if c.c_mode = FileInfo.Mdecl || !auto_complete then () else begin
   let cname = Some (snd c.c_name) in
   let tenv = Typing_env.set_root tenv (Dep.Class (snd c.c_name)) in
   let env = { t_is_finally = false;
@@ -479,7 +479,7 @@ and class_var env cv =
        a temporary hack to support existing code for now. *)
     (* Task #5815945: Get rid of this Hack *)
     if cv.cv_is_xhp && (Typing_env.is_strict env.tenv)
-      then { env with tenv = Typing_env.set_mode env.tenv Ast.Mpartial }
+      then { env with tenv = Typing_env.set_mode env.tenv FileInfo.Mpartial }
       else env in
   maybe hint hint_env cv.cv_type;
   maybe expr env cv.cv_expr;

@@ -51,10 +51,6 @@ let report_class_ready class_name =
 let remove_classes class_set =
   ClassStatus.remove_batch class_set
 
-(* For somewhat silly historical reasons having to do with the lack of
- * .hhi's for fairly core XHP classes, we unfortunately mark all XHP
- * classes as not having their members fully known *)
-let xhp_is_not_strict = true
 
 (*****************************************************************************)
 (* Checking that the kind of a class is compatible with its parent
@@ -343,11 +339,11 @@ and class_decl_if_missing class_env c =
       class_naming_and_decl class_env cid c
   end
 
-and class_naming_and_decl class_env cid c =
+and class_naming_and_decl (class_env:class_env) cid c =
   let class_env = { class_env with stack = SSet.add cid class_env.stack } in
   let c = Naming.class_ class_env.nenv c in
   class_parents_decl class_env c;
-  class_decl c;
+  class_decl (Naming.typechecker_options class_env.nenv) c;
   (* It is important to add the "named" ast (nast.ml) only
    * AFTER we are done declaring the type type of the class.
    * Otherwise there is a subtle race condition.
@@ -397,7 +393,7 @@ and class_is_abstract c =
     | Ast.Cabstract | Ast.Cinterface | Ast.Ctrait | Ast.Cenum -> true
     | _ -> false
 
-and class_decl c =
+and class_decl tcopt c =
   let is_abstract = class_is_abstract c in
   let cls_pos, cls_name = c.c_name in
   let env = Typing_env.empty (Pos.filename cls_pos) in
@@ -474,7 +470,8 @@ and class_decl c =
     else env, m
   in
   let ext_strict = List.fold_left (trait_exists env) ext_strict c.c_uses in
-  let not_strict_because_xhp = xhp_is_not_strict && c.c_is_xhp in
+  let unsafe_xhp = TypecheckerOptions.unsafe_xhp tcopt in
+  let not_strict_because_xhp = unsafe_xhp && c.c_is_xhp in
   if not ext_strict && not not_strict_because_xhp && (Env.is_strict env) then
     let p, name = c.c_name in
     Errors.strict_members_not_known p name
@@ -495,8 +492,7 @@ and class_decl c =
       env, Some
         { te_base       = base_hint;
           te_constraint = constraint_hint } in
-  let consts = Typing_enum.enum_class_decl_rewrite
-    env c.c_name enum impl consts in
+  let consts = Typing_enum.enum_class_decl_rewrite c.c_name enum impl consts in
   let tc = {
     tc_final = c.c_final;
     tc_abstract = is_abstract;
@@ -627,7 +623,7 @@ and class_const_decl c (env, acc) (h, id, e) =
              * Also note that a number of expressions are considered invalid
              * as constant initializers, even if we can infer their type; see
              * Naming.check_constant_expr. *)
-            if c.c_mode = Ast.Mstrict && c.c_kind <> Ast.Cenum
+            if c.c_mode = FileInfo.Mstrict && c.c_kind <> Ast.Cenum
             then Errors.missing_typehint (fst id);
             Reason.Rwitness (fst id), Tany
         in
@@ -635,7 +631,7 @@ and class_const_decl c (env, acc) (h, id, e) =
       end
       | None, None ->
         let pos, name = id in
-        if c.c_mode = Ast.Mstrict then Errors.missing_typehint pos;
+        if c.c_mode = FileInfo.Mstrict then Errors.missing_typehint pos;
         let r = Reason.Rwitness pos in
         let const_ty = r, Tgeneric (c_name^"::"^name, Some (r, Tany)) in
         env, const_ty
@@ -674,7 +670,7 @@ and class_var_decl c (env, acc) cv =
          hack to support existing code for now. *)
       (* Task #5815945: Get rid of this Hack *)
       let env = if (Env.is_strict env)
-        then Env.set_mode env Ast.Mpartial
+        then Env.set_mode env FileInfo.Mpartial
         else env
       in
       Typing_hint.hint env ty'
@@ -701,7 +697,7 @@ and static_class_var_decl c (env, acc) cv =
              ce_origin = (snd c.c_name);
            } in
   let acc = SMap.add ("$"^id) ce acc in
-  if cv.cv_expr = None && (c.c_mode = Ast.Mstrict || c.c_mode = Ast.Mpartial)
+  if cv.cv_expr = None && FileInfo.(c.c_mode = Mstrict || c.c_mode = Mpartial)
   then begin match cv.cv_type with
     | None
     | Some (_, Hmixed)
