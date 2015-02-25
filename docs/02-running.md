@@ -9,7 +9,7 @@ next: troubleshooting.html
 
 Since types are not part of the JavaScript specification, we need to strip them out before sending the file to the user. There are two ways to do so:
 
-* You can use the JSX transform tool (part of the React tools) to translate your files to plain JavaScript
+* You can use the JSX transform tool (part of the React tools), or a  [third party transform tool](https://github.com/facebook/flow/wiki/3rd-party-tools#transformers), to translate your files to plain JavaScript.
 * For quick prototyping, you can run the transforms directly in the browser
 
 ## Using the offline transform tool
