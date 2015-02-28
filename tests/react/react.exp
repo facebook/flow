@@ -3,8 +3,8 @@ ArityError.react.js:6:37,46: any
 Number of type arguments differs from
   [LIB] react.js:96:49,65: any
 
-jsx_spread.js:10:19,20: number
+jsx_spread.js:11:31,32: number
 This type is incompatible with
-  jsx_spread.js:6:10,31: string
+  jsx_spread.js:7:10,31: string
 
 Found 2 errors
