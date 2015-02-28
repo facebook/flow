@@ -3,7 +3,7 @@
 var React = require('react');
 var Foo = React.createClass({
   propTypes: {
-    foo: React.PropTypes.oneOf(["foo"]),
+    foo: React.PropTypes.oneOf(["foo"]).isRequired,
     bar: React.PropTypes.string.isRequired,
   },
 });

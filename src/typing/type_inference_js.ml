@@ -3065,6 +3065,32 @@ and mk_proptype cx = Ast.Expression.(function
           (_, {Ast.Identifier.name = "oneOf"; _ });
          _
       };
+      arguments = [Expression (_, Array { Array.
+        elements = es
+      })];
+    } ->
+      let rec mk_one_of es t = match (es, t) with
+        | Some (Expression (loc, Literal {
+            Ast.Literal.value = Ast.Literal.String value
+          })) :: tl,
+          UnionT (r, ts) ->
+            let reason = mk_reason "string literal type" loc in
+            let string_literal = EnumT
+              (reason,
+               Flow_js.mk_object_with_map_proto cx reason
+                 (SMap.singleton value AnyT.t) (MixedT reason)) in
+            mk_one_of tl (UnionT (r, string_literal :: ts))
+        | [], _ -> t
+        | _  -> AnyT.at vloc in
+      let reason = mk_reason "oneOf" vloc in
+      mk_one_of es (UnionT (reason, []))
+
+  | vloc, Call { Call.
+      callee = _, Member { Member.
+         property = Member.PropertyIdentifier
+          (_, {Ast.Identifier.name = "oneOf"; _ });
+         _
+      };
       arguments = es;
     } ->
       AnyT.at vloc (* TODO *)
