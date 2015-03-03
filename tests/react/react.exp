@@ -3,12 +3,12 @@ ArityError.react.js:6:37,46: any
 Number of type arguments differs from
   [LIB] react.js:96:49,65: any
 
-jsx_spread.js:11:19,23: string literal bar
-Property not found in
-  jsx_spread.js:6:10,39: oneOf
-
-jsx_spread.js:11:31,32: number
+jsx_spread.js:10:19,20: number
 This type is incompatible with
-  jsx_spread.js:7:10,31: string
+  jsx_spread.js:6:10,31: string
+
+proptype_oneOf.js:11:28,32: string literal bar
+Property not found in
+  proptype_oneOf.js:6:14,43: oneOf
 
 Found 3 errors
