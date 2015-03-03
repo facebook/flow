@@ -421,11 +421,8 @@ let rec convert cx map = Ast.Type.(function
       ArrT (r, t, [])
 
   | loc, StringLiteral { StringLiteral.value; _ }  ->
-    let reason = mk_reason "string literal type" loc in
-      EnumT
-        (reason,
-         Flow_js.mk_object_with_map_proto cx reason
-           (SMap.singleton value AnyT.t) (MixedT reason))
+      let reason = mk_reason "string literal type" loc in
+      mk_enum_type cx reason [value]
 
   (* TODO *)
   | loc, Generic { Generic.id = Generic.Identifier.Qualified (_,
@@ -708,6 +705,12 @@ and mk_type_annotation cx reason = mk_type_annotation_ cx SMap.empty reason
 and mk_type_annotation_ cx map reason = function
   | None -> mk_type_ cx map reason None
   | Some (loc, typeAnnotation) -> mk_type_ cx map reason (Some typeAnnotation)
+
+and mk_enum_type cx reason keys =
+  let map = List.fold_left (fun map key ->
+    SMap.add key AnyT.t map
+  ) SMap.empty keys in
+  EnumT (reason, Flow_js.mk_object_with_map_proto cx reason map (MixedT reason))
 
 (************)
 (* Visitors *)
@@ -3069,21 +3072,18 @@ and mk_proptype cx = Ast.Expression.(function
         elements = es
       })];
     } ->
-      let rec mk_one_of es t = match (es, t) with
-        | Some (Expression (loc, Literal {
-            Ast.Literal.value = Ast.Literal.String value
+      let rec string_literals es res = match (es, res) with
+        | Some (Expression (loc, Literal { Ast.Literal.
+            value = Ast.Literal.String lit
           })) :: tl,
-          UnionT (r, ts) ->
-            let reason = mk_reason "string literal type" loc in
-            let string_literal = EnumT
-              (reason,
-               Flow_js.mk_object_with_map_proto cx reason
-                 (SMap.singleton value AnyT.t) (MixedT reason)) in
-            mk_one_of tl (UnionT (r, string_literal :: ts))
-        | [], _ -> t
-        | _  -> AnyT.at vloc in
-      let reason = mk_reason "oneOf" vloc in
-      mk_one_of es (UnionT (reason, []))
+          Some (lits) -> string_literals tl (Some (lit :: lits))
+        | [], _ -> res
+        | _  -> None in
+      (match string_literals es (Some []) with
+        | Some lits ->
+            let reason = mk_reason "oneOf" vloc in
+            mk_enum_type cx reason lits
+        | None -> AnyT.at vloc)
 
   | vloc, Call { Call.
       callee = _, Member { Member.

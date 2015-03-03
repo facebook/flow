@@ -5,7 +5,7 @@ Number of type arguments differs from
 
 jsx_spread.js:11:19,23: string literal bar
 Property not found in
-  jsx_spread.js:6:33,37: string literal type
+  jsx_spread.js:6:10,39: oneOf
 
 jsx_spread.js:11:31,32: number
 This type is incompatible with
