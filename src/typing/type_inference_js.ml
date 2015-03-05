@@ -3072,14 +3072,14 @@ and mk_proptype cx = Ast.Expression.(function
         elements = es
       })];
     } ->
-      let rec string_literals es res = match (es, res) with
+      let rec string_literals lits es = match (es) with
         | Some (Expression (loc, Literal { Ast.Literal.
             value = Ast.Literal.String lit
-          })) :: tl,
-          Some (lits) -> string_literals tl (Some (lit :: lits))
-        | [], _ -> res
+          })) :: tl ->
+            string_literals (lit :: lits) tl
+        | [] -> Some lits
         | _  -> None in
-      (match string_literals es (Some []) with
+      (match string_literals [] es with
         | Some lits ->
             let reason = mk_reason "oneOf" vloc in
             mk_enum_type cx reason lits
