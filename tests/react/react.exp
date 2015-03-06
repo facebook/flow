@@ -7,4 +7,8 @@ jsx_spread.js:10:19,20: number
 This type is incompatible with
   jsx_spread.js:6:10,31: string
 
-Found 2 errors
+proptype_oneOf.js:11:28,32: string literal bar
+Property not found in
+  proptype_oneOf.js:6:14,43: oneOf
+
+Found 3 errors
