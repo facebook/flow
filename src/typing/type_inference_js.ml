@@ -3042,7 +3042,7 @@ and mk_proptype cx = Ast.Expression.(function
         (_, {Ast.Identifier.name = "object"; _ });
       _
     } ->
-      AnyT.at vloc (* TODO *)
+      AnyObjT (mk_reason "object" vloc)
 
   | vloc, Member { Member.
       property = Member.PropertyIdentifier
