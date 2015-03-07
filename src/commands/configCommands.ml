@@ -18,10 +18,10 @@ module Init = struct
        or %s init --options \"optionA=123;optionB=456\"\n\n\
        If the root is not specified it is assumed to be the current working directory\n\n\
        This command will create and initialize /path/to/root/.flowconfig"
-       Sys.argv.(0)
-       Sys.argv.(0)
-       Sys.argv.(0)
-       Sys.argv.(0) in
+       CommandUtils.exe_name
+       CommandUtils.exe_name
+       CommandUtils.exe_name
+       CommandUtils.exe_name in
     let args = ClientArgs.parse_without_command options usage "init" in
     let root = match args with
     | [] -> Sys.getcwd () |> Path.mk_path
@@ -35,5 +35,7 @@ module Init = struct
   let main env =
     FlowConfig.init env.root env.configOptions
 
+  let name = "init"
+  let doc = "Initializes a directory to be used as a flow root directory"
   let run () = main (parse_args ())
 end

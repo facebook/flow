@@ -27,8 +27,8 @@ let parse_args () =
     Shows filenames for one or more modules\n\n\
     Example usage:\n\
     \t%s find-module FirstModule SecondModule"
-    Sys.argv.(0)
-    Sys.argv.(0) in
+    CommandUtils.exe_name
+    CommandUtils.exe_name in
   let modules = ClientArgs.parse_without_command options usage "find-module" in
   match modules with
   | [] ->
@@ -68,4 +68,6 @@ let main { modules; option_values; } =
     flush stdout
   )
 
+let name = "find-module"
+let doc = "Shows filenames for one or more modules"
 let run () = main (parse_args ())

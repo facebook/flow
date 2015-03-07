@@ -67,7 +67,7 @@ module OptionParser(Config : CONFIG) : Server.OPTION_PARSER = struct
         | Check -> "check" | Normal -> "server" | Detach -> "start"
       in
       let usage = (Printf.sprintf "Usage: %s %s [OPTION]... [ROOT]\n"
-        Sys.argv.(0) cmdname)
+        CommandUtils.exe_name cmdname)
       ^
       (match Config.mode with
       | Check -> "Does a full Flow check and prints the results\n\n"
@@ -106,8 +106,7 @@ module OptionParser(Config : CONFIG) : Server.OPTION_PARSER = struct
         ServerArgs.convert       = None;
         ServerArgs.load_save_opt = None;
         ServerArgs.gc_control    = Gc.get ();
-        ServerArgs.assume_php    = false;
-        ServerArgs.unsafe_xhp    = false;
+        ServerArgs.tc_options    = TypecheckerOptions.empty;
       },
       {
         Types_js.opt_debug = !debug;
@@ -138,15 +137,21 @@ module Main (Config : CONFIG) =
 
 module Check = struct
   module Main = Main (struct let mode = Check end)
+  let name = "check"
+  let doc = "Does a full Flow check and prints the results"
   let run = Main.start
 end
 
 module Server = struct
   module Main = Main (struct let mode = Normal end)
+  let name = "server"
+  let doc = "Runs a Flow server (not normally invoked from the command line)"
   let run = Main.start
 end
 
 module Start = struct
   module Main = Main (struct let mode = Detach end)
+  let name = "start"
+  let doc = "Starts a Flow server"
   let run = Main.start
 end

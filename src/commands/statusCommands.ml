@@ -8,11 +8,14 @@
  *
  *)
 
+open CommandInfo
+
 (***********************************************************************)
 (* flow status (report current error set) command impl *)
 (***********************************************************************)
 
-module Impl = struct
+module Impl (CommandList : COMMAND_LIST) = struct
+
   (* explicit == called with "flow status ..."
      rather than simply "flow ..." *)
   let parse explicit =
@@ -25,54 +28,38 @@ module Impl = struct
         Shows current Flow errors by asking the Flow server.\n\n\
         Flow will search upward for a .flowconfig file, beginning at ROOT.\n\
         ROOT is assumed to be the current directory if unspecified.\n\
-        A server will be started if none is running over ROOT."
-        Sys.argv.(0)
+        A server will be started if none is running over ROOT.\n\
+        \n\
+        Status command options:"
+        CommandUtils.exe_name
     | false ->
-      (* NOTE: new commands must be added manually here, currently *)
+      let command_info = CommandList.commands
+        |> List.map (fun (the_module) ->
+          let module Command = (val the_module : COMMAND) in
+          (Command.name, Command.doc)
+        )
+        |> List.filter (fun (cmd, doc) -> cmd <> "" && doc <> "")
+        |> List.sort (fun (a, _) (b, _) -> String.compare a b)
+      in
+
+      let col_width = List.fold_left
+        (fun acc (cmd, _) -> max acc (String.length cmd)) 0 command_info in
+      let cmd_usage = command_info
+        |> List.map (fun (cmd, doc) ->
+              Utils.spf "  %-*s  %s" col_width cmd doc
+           )
+        |> String.concat "\n"
+      in
       Printf.sprintf
         "Usage: %s [COMMAND] \n\n\
-        Valid values for COMMAND:\n\
-          \ \ autocomplete\
-            \t\tQueries autocompletion information\n\
-          \ \ check\
-            \t\t\tDoes a full Flow check and prints the results\n\
-          \ \ check-contents\
-            \tRun typechecker on contents from stdin\n\
-          \ \ find-module\
-            \t\tShows filenames for one or more modules\n\
-          \ \ get-def\
-            \t\tGets the definition location of a variable or property\n\
-          \ \ get-importers\
-            \t\tGets a list of all importers for one or more given modules\n\
-          \ \ get-imports\
-            \t\tGet names of all modules imported by one or more given\
-            \ modules\n\
-          \ \ init\
-            \t\t\tInitializes a directory to be used as a flow root directory\n\
-          \ \ port\
-            \t\t\tShows ported type annotations for given files\n\
-          \ \ server\
-            \t\tRuns a Flow server (not normally invoked from the command\
-            \ line)\n\
-          \ \ single\
-            \t\tDoes a single-threaded check (testing)\n\
-          \ \ start\
-            \t\t\tStarts a Flow server\n\
-          \ \ status\
-            \t\t(default) Shows current Flow errors by asking the Flow server\n\
-          \ \ stop\
-            \t\t\tStops a Flow server\n\
-          \ \ suggest\
-            \t\tShows type annotation suggestions for given files\n\
-          \ \ type-at-pos\
-            \t\tShows the type at a given file and position\n\
-        \n\
+        Valid values for COMMAND:\n%s\n\n\
         Default values if unspecified:\n\
           \ \ COMMAND\
             \tstatus\n\
         \n\
         Status command options:"
-        Sys.argv.(0)
+        CommandUtils.exe_name
+        cmd_usage
     in
     let args = match explicit with
       | true ->
@@ -202,12 +189,18 @@ module Impl = struct
     end
 end
 
-module Status = struct
-  open Impl
-  let run () = main (parse true)
+module Status(CommandList : COMMAND_LIST) : COMMAND = struct
+  module Main = Impl (CommandList)
+
+  let name = "status"
+  let doc = "(default) Shows current Flow errors by asking the Flow server"
+  let run () = Main.main (Main.parse true)
 end
 
-module Default = struct
-  open Impl
-  let run () = main (parse false)
+module Default(CommandList : COMMAND_LIST) : COMMAND = struct
+  module Main = Impl (CommandList)
+
+  let name = ""
+  let doc = ""
+  let run () = Main.main (Main.parse false)
 end

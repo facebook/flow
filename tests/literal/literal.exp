@@ -1,11 +1,11 @@
 
-enum.js:3:11,16: string literal name
-Property not found in
-  enum_client.js:8:23,35: object type
-
 enum_client.js:6:5,14: string literal LOCATION
 Property not found in
   enum.js:6:18,24: object literal
+
+enum_client.js:10:5,16: string literal name
+Property not found in
+  enum_client.js:8:23,35: object type
 
 enum_client.js:14:24,28: string
 This type is incompatible with

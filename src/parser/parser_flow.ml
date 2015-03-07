@@ -21,20 +21,20 @@ module SMap = Map.Make(String)
 type lex_mode =
   | NORMAL_LEX
   | TYPE_LEX
-  | XJS_TAG
-  | XJS_CHILD
+  | JSX_TAG
+  | JSX_CHILD
 
 let mode_to_string = function
   | NORMAL_LEX -> "NORMAL"
   | TYPE_LEX -> "TYPE"
-  | XJS_TAG -> "XJS TAG"
-  | XJS_CHILD -> "XJS CHILD"
+  | JSX_TAG -> "JSX TAG"
+  | JSX_CHILD -> "JSX CHILD"
 
 let lex lex_env = function
   | NORMAL_LEX -> token lex_env
   | TYPE_LEX -> type_token lex_env
-  | XJS_TAG -> lex_xjs_tag lex_env
-  | XJS_CHILD -> lex_xjs_child lex_env
+  | JSX_TAG -> lex_jsx_tag lex_env
+  | JSX_CHILD -> lex_jsx_child lex_env
 
 type env = {
   errors          : (Loc.t * Error.t) list ref;
@@ -197,7 +197,7 @@ let error_unexpected env =
   error env (match lookahead.lex_token, lookahead.lex_value with
   | T_EOF, _ -> Error.UnexpectedEOS
   | T_NUMBER _, _ -> Error.UnexpectedNumber
-  | T_XJS_TEXT _, _
+  | T_JSX_TEXT _, _
   | T_STRING _, _ -> Error.UnexpectedString
   | T_IDENTIFIER, _ -> Error.UnexpectedIdentifier
   | _, word when is_future_reserved word -> Error.UnexpectedReserved
@@ -333,7 +333,7 @@ module rec Parse : sig
   val identifier_with_type : env -> Error.t -> Ast.Identifier.t
   val block_body : env -> Ast.Loc.t * Ast.Statement.Block.t
   val function_block_body : env -> Ast.Loc.t * Ast.Statement.Block.t * bool
-  val xjs_element : env -> Ast.Loc.t * Ast.XJS.element
+  val jsx_element : env -> Ast.Loc.t * Ast.JSX.element
   val pattern : env -> Ast.Expression.t -> Ast.Pattern.t
   val object_pattern_with_type : env -> (Ast.Loc.t * Ast.Expression.Object.t) -> Ast.Pattern.t
   val array_pattern_with_type : env -> (Ast.Loc.t * Ast.Expression.Array.t) -> Ast.Pattern.t
@@ -745,7 +745,7 @@ end = struct
 
     and type_parameter_declaration =
       let rec params env acc =
-        let acc = (Parse.identifier env)::acc in
+        let acc = (Parse.identifier_with_type env Error.StrictParamName)::acc in
         match Peek.token env with
         | T_EOF
         | T_GREATER_THAN -> List.rev acc
@@ -2079,7 +2079,7 @@ end = struct
       | _, Update _
       | _, ArrowFunction _
       | _, Yield _
-      | _, XJSElement _
+      | _, JSXElement _
       | _, Let _
       | _, TypeCast _ -> false)
 
@@ -2107,7 +2107,7 @@ end = struct
       | _, Update _
       | _, ArrowFunction _
       | _, Yield _
-      | _, XJSElement _
+      | _, JSXElement _
       | _, Let _
       | _, TypeCast _ -> false)
 
@@ -2241,9 +2241,9 @@ end = struct
             if Peek.token env = T_LESS_THAN
             then begin
               match right with
-              | Expr (_, Expression.XJSElement _)
-              | NotArrowParams (_, Expression.XJSElement _) ->
-                  error env Error.AdjacentXJSElements
+              | Expr (_, Expression.JSXElement _)
+              | NotArrowParams (_, Expression.JSXElement _) ->
+                  error env Error.AdjacentJSXElements
               | _ -> ()
             end;
             binary_op env
@@ -2552,8 +2552,8 @@ end = struct
       | T_DIV -> Expr (regexp env "")
       | T_DIV_ASSIGN -> Expr (regexp env "=")
       | T_LESS_THAN ->
-          let loc, element = Parse.xjs_element env in
-          Expr (loc, Expression.XJSElement element)
+          let loc, element = Parse.jsx_element env in
+          Expr (loc, Expression.JSXElement element)
       | T_TEMPLATE_PART part ->
           let loc, template = template_literal env part in
           Expr (loc, Expression.(TemplateLiteral template))
@@ -3412,7 +3412,7 @@ end = struct
       | expr -> loc, Pattern.Expression (loc, expr))
   end
 
-  module XJS = struct
+  module JSX = struct
     let spread_attribute env =
       Eat.push_lex_mode env NORMAL_LEX;
       let start_loc = Peek.loc env in
@@ -3422,7 +3422,7 @@ end = struct
       let end_loc = Peek.loc env in
       Expect.token env T_RCURLY;
       Eat.pop_lex_mode env;
-      Loc.btwn start_loc end_loc, XJS.SpreadAttribute.({
+      Loc.btwn start_loc end_loc, JSX.SpreadAttribute.({
         argument;
       })
 
@@ -3436,25 +3436,25 @@ end = struct
       let end_loc = Peek.loc env in
       Expect.token env T_RCURLY;
       Eat.pop_lex_mode env;
-      Loc.btwn start_loc end_loc, XJS.ExpressionContainer.({
+      Loc.btwn start_loc end_loc, JSX.ExpressionContainer.({
         expression;
       })
 
     let identifier env =
       let loc = Peek.loc env in
       let name = Peek.value env in
-      Expect.token env T_XJS_IDENTIFIER;
-      loc, XJS.Identifier.({ name; })
+      Expect.token env T_JSX_IDENTIFIER;
+      loc, JSX.Identifier.({ name; })
 
     let name =
       let rec member_expression env member =
         match Peek.token env with
         | T_PERIOD ->
-            let _object = XJS.MemberExpression.MemberExpression member in
+            let _object = JSX.MemberExpression.MemberExpression member in
             Expect.token env T_PERIOD;
             let property = identifier env in
             let loc = Loc.btwn (fst member) (fst property) in
-            let member = loc, XJS.MemberExpression.({
+            let member = loc, JSX.MemberExpression.({
               _object;
               property;
             }) in
@@ -3469,21 +3469,21 @@ end = struct
             Expect.token env T_COLON;
             let name = identifier env in
             let loc = Loc.btwn (fst namespace) (fst name) in
-            XJS.NamespacedName (loc, XJS.NamespacedName.({
+            JSX.NamespacedName (loc, JSX.NamespacedName.({
               namespace;
               name;
             }))
         | T_PERIOD ->
-            let _object = XJS.MemberExpression.Identifier name in
+            let _object = JSX.MemberExpression.Identifier name in
             Expect.token env T_PERIOD;
             let property = identifier env in
             let loc = Loc.btwn (fst name) (fst property) in
-            let member = loc, XJS.MemberExpression.({
+            let member = loc, JSX.MemberExpression.({
               _object;
               property;
             }) in
-            XJS.MemberExpression (member_expression env member)
-        | _ -> XJS.Identifier name
+            JSX.MemberExpression (member_expression env member)
+        | _ -> JSX.Identifier name
 
 
     let attribute env =
@@ -3496,11 +3496,11 @@ end = struct
           let namespace = name in
           let name = identifier env in
           let loc = Loc.btwn (fst namespace) (fst name) in
-          loc, XJS.Attribute.NamespacedName (loc, XJS.NamespacedName.({
+          loc, JSX.Attribute.NamespacedName (loc, JSX.NamespacedName.({
             namespace;
             name;
           }))
-        end else fst name, XJS.Attribute.Identifier name in
+        end else fst name, JSX.Attribute.Identifier name in
       let end_loc, value =
         if Peek.token env = T_ASSIGN
         then begin
@@ -3508,21 +3508,21 @@ end = struct
           match Peek.token env with
           | T_LCURLY ->
               let loc, expression_container = expression_container env in
-              if expression_container.XJS.ExpressionContainer.expression = None
-              then error env Error.XJSAttributeValueEmptyExpression;
-              loc, Some (XJS.Attribute.ExpressionContainer (loc, expression_container))
-          | T_XJS_TEXT (loc, value, raw) as token ->
+              if expression_container.JSX.ExpressionContainer.expression = None
+              then error env Error.JSXAttributeValueEmptyExpression;
+              loc, Some (JSX.Attribute.ExpressionContainer (loc, expression_container))
+          | T_JSX_TEXT (loc, value, raw) as token ->
               Expect.token env token;
               let value = Ast.Literal.String value in
-              loc, Some (XJS.Attribute.Literal (loc, { Ast.Literal.value; raw;}))
+              loc, Some (JSX.Attribute.Literal (loc, { Ast.Literal.value; raw;}))
           | _ ->
-              error env Error.InvalidXJSAttributeValue;
+              error env Error.InvalidJSXAttributeValue;
               let loc = Peek.loc env in
               let raw = "" in
               let value = Ast.Literal.String "" in
-              loc, Some (XJS.Attribute.Literal (loc, { Ast.Literal.value; raw;}))
+              loc, Some (JSX.Attribute.Literal (loc, { Ast.Literal.value; raw;}))
         end else end_loc, None in
-      Loc.btwn start_loc end_loc, XJS.Attribute.({
+      Loc.btwn start_loc end_loc, JSX.Attribute.({
         name;
         value;
       })
@@ -3534,10 +3534,10 @@ end = struct
           | T_DIV
           | T_GREATER_THAN -> List.rev acc
           | T_LCURLY ->
-              let attribute = XJS.Opening.SpreadAttribute (spread_attribute env) in
+              let attribute = JSX.Opening.SpreadAttribute (spread_attribute env) in
               attributes env (attribute::acc)
           | _ ->
-              let attribute = XJS.Opening.Attribute (attribute env) in
+              let attribute = JSX.Opening.Attribute (attribute env) in
               attributes env (attribute::acc)
 
         in fun env start_loc ->
@@ -3548,7 +3548,7 @@ end = struct
           let end_loc = Peek.loc env in
           Expect.token env T_GREATER_THAN;
           Eat.pop_lex_mode env;
-          Loc.btwn start_loc end_loc, XJS.Opening.({
+          Loc.btwn start_loc end_loc, JSX.Opening.({
             name;
             selfClosing;
             attributes;
@@ -3562,30 +3562,30 @@ end = struct
         (* We double pop to avoid going back to childmode and re-lexing the
          * lookahead *)
         Eat.double_pop_lex_mode env;
-        Loc.btwn start_loc end_loc, XJS.Closing.({
+        Loc.btwn start_loc end_loc, JSX.Closing.({
           name;
         })
 
       type element_or_closing =
-        | Closing of XJS.Closing.t
-        | ChildElement of (Loc.t * XJS.element)
+        | Closing of JSX.Closing.t
+        | ChildElement of (Loc.t * JSX.element)
 
 
       let rec child env =
         match Peek.token env with
         | T_LCURLY ->
             let expression_container = expression_container env in
-            fst expression_container, XJS.ExpressionContainer (snd expression_container)
-        | T_XJS_TEXT (loc, value, raw) as token ->
+            fst expression_container, JSX.ExpressionContainer (snd expression_container)
+        | T_JSX_TEXT (loc, value, raw) as token ->
             Expect.token env token;
-            loc, XJS.Text { XJS.Text.value; raw; }
+            loc, JSX.Text { JSX.Text.value; raw; }
         | _ ->
             let element = element env in
-            fst element, XJS.Element (snd element)
+            fst element, JSX.Element (snd element)
 
       and element_without_lt =
         let element_or_closing env =
-          Eat.push_lex_mode env XJS_TAG;
+          Eat.push_lex_mode env JSX_TAG;
           let start_loc = Peek.loc env in
           Expect.token env T_LESS_THAN;
           match Peek.token env with
@@ -3600,7 +3600,7 @@ end = struct
               | Closing closingElement ->
                   List.rev acc, Some closingElement
               | ChildElement element ->
-                  let element = fst element, XJS.Element (snd element) in
+                  let element = fst element, JSX.Element (snd element) in
                   children_and_closing env (element::acc))
           | T_EOF ->
               error_unexpected env;
@@ -3608,35 +3608,35 @@ end = struct
           | _ ->
               children_and_closing env ((child env)::acc)
 
-        in let rec normalize name = XJS.(match name with
+        in let rec normalize name = JSX.(match name with
           | Identifier (_, { Identifier.name }) -> name
           | NamespacedName (_, { NamespacedName.namespace; name; }) ->
               (snd namespace).Identifier.name ^ ":" ^ (snd name).Identifier.name
           | MemberExpression (_, { MemberExpression._object; property; }) ->
               let _object = match _object with
               | MemberExpression.Identifier id -> (snd id).Identifier.name
-              | MemberExpression.MemberExpression e -> normalize (XJS.MemberExpression e) in
+              | MemberExpression.MemberExpression e -> normalize (JSX.MemberExpression e) in
               _object ^ "." ^ (snd property).Identifier.name
         )
 
         in fun env start_loc ->
           let openingElement = opening_element_without_lt env start_loc in
           let children, closingElement =
-            if (snd openingElement).XJS.Opening.selfClosing
+            if (snd openingElement).JSX.Opening.selfClosing
             then [], None
             else begin
-              Eat.push_lex_mode env XJS_CHILD;
+              Eat.push_lex_mode env JSX_CHILD;
               let ret = children_and_closing env [] in
               ret
             end in
           let end_loc = match closingElement with
-          | Some (loc, { XJS.Closing.name }) ->
-              let opening_name = normalize (snd openingElement).XJS.Opening.name in
+          | Some (loc, { JSX.Closing.name }) ->
+              let opening_name = normalize (snd openingElement).JSX.Opening.name in
               if normalize name <> opening_name
-              then error env (Error.ExpectedXJSClosingTag opening_name);
+              then error env (Error.ExpectedJSXClosingTag opening_name);
               loc
           | _ -> fst openingElement in
-          Loc.btwn (fst openingElement) end_loc, XJS.({
+          Loc.btwn (fst openingElement) end_loc, JSX.({
             openingElement;
             closingElement;
             children;
@@ -3644,7 +3644,7 @@ end = struct
 
       and element env =
         let start_loc = Peek.loc env in
-        Eat.push_lex_mode env XJS_TAG;
+        Eat.push_lex_mode env JSX_TAG;
         Expect.token env T_LESS_THAN;
         element_without_lt env start_loc
   end
@@ -3884,7 +3884,7 @@ end = struct
     Expect.token env T_RCURLY;
     Loc.btwn start_loc end_loc, { Ast.Statement.Block.body; }, strict
 
-  and xjs_element = XJS.element
+  and jsx_element = JSX.element
 
   and pattern = Pattern.pattern
   and object_pattern_with_type = Pattern._object ~with_type:true

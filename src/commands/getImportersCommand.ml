@@ -27,8 +27,8 @@ let parse_args () =
     Gets a list of all importers for one or more given modules\n\n\
     Example usage:\n\
     \t%s get-importers FirstModule SecondModule"
-    Sys.argv.(0)
-    Sys.argv.(0) in
+    CommandUtils.exe_name
+    CommandUtils.exe_name in
   let modules =
     ClientArgs.parse_without_command options usage "get-importers" in
   match modules with
@@ -76,4 +76,6 @@ let main { modules; option_values; } =
     flush stdout
   )
 
+let name = "get-importers"
+let doc = "Gets a list of all importers for one or more given modules"
 let run () = main (parse_args ())

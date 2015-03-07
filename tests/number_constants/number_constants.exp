@@ -1,26 +1,26 @@
 
-[LIB] core.js:66:21,26: number
-This type is incompatible with
-  number_constants.js:12:8,13: string
-
-[LIB] core.js:67:30,35: number
+number_constants.js:2:17,39: number
 This type is incompatible with
   number_constants.js:2:8,13: string
 
-[LIB] core.js:68:23,28: number
-This type is incompatible with
-  number_constants.js:6:8,13: string
-
-[LIB] core.js:69:30,35: number
+number_constants.js:4:17,39: number
 This type is incompatible with
   number_constants.js:4:8,13: string
 
-[LIB] core.js:70:23,28: number
+number_constants.js:6:17,32: number
+This type is incompatible with
+  number_constants.js:6:8,13: string
+
+number_constants.js:8:17,32: number
 This type is incompatible with
   number_constants.js:8:8,13: string
 
-[LIB] core.js:71:17,22: number
+number_constants.js:10:17,26: number
 This type is incompatible with
   number_constants.js:10:8,13: string
+
+number_constants.js:12:17,30: number
+This type is incompatible with
+  number_constants.js:12:8,13: string
 
 Found 6 errors

@@ -1,4 +1,20 @@
 
+nullable.js:16:9,11: null
+This type is incompatible with
+  nullable.js:17:5,9: number
+
+nullable.js:22:9,11: null
+This type is incompatible with
+  nullable.js:23:5,9: number
+
+nullable.js:28:7,9: null
+This type is incompatible with
+  nullable.js:29:5,9: number
+
+nullable.js:34:7,9: null
+This type is incompatible with
+  nullable.js:35:5,9: number
+
 optional.js:1:23,23: optional parameter x
 This type is incompatible with
   optional.js:1:23,27: number
@@ -37,4 +53,4 @@ undefined2.js:8:12,17: property duck
 Property cannot be accessed on
   undefined2.js:4:9,11: optional parameter bar
 
-Found 10 errors
+Found 14 errors

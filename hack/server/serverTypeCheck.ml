@@ -188,7 +188,7 @@ let declare_names env files_info fast_parsed =
 (* Function called after parsing, does nothing by default. *)
 (*****************************************************************************)
 
-let hook_after_parsing = ref (fun _ _ -> ())
+let hook_after_parsing = ref (fun _ _ _ _ -> ())
 
 (*****************************************************************************)
 (* Where the action is! *)
@@ -209,10 +209,12 @@ let type_check genv env =
   let t = t2 in
 
   (* UPDATE FILE INFO *)
+  let old_env = env in
+  let updates = old_env.failed_parsing in
   let files_info = update_file_info env fast_parsed in
 
   (* BUILDING AUTOLOADMAP *)
-  !hook_after_parsing genv { env with files_info };
+  !hook_after_parsing genv old_env { env with files_info } updates;
 
   (* NAMING *)
   let env, errorl', failed_naming, fast =

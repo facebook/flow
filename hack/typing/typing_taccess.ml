@@ -19,204 +19,304 @@ module Inst = Typing_instantiate
 module SN = Naming_special_names
 module TGen = Typing_generic
 
-let fill_type_hole env ty hole_ty =
+type env = {
+  tenv : Env.env;
+  (* Keeps track of all the expansions that occur when expanding a Taccess.
+   * This is necessary to check for potential cycles while expanding, as well
+   * as providing detailed information in the Reason.t of the resulting type.
+   *)
+  expansions : string list;
+  (* Original reason for the Taccess. This will contain a Pos.t to the place
+   * where the Taccess is declared
+   *)
+  orig_reason : Reason.t;
+  (* Whether or not we are expanding a generic type such as "this::T".
+   * If we are expanding a generic then when choosing the type of a
+   * type constant we use the constraint type rather than the assigned type.
+   *)
+  is_generic : bool;
+  (* Keep track of any Tvars we see to check for potential recursive Tvars *)
+  seen_tvar : ISet.t;
+  (* This is used when expanding generics so we know what ids need to
+   * be appended for the new generic that we derive. See expand_generic for
+   * a more detailed example.
+   *)
+  ids : string list;
+}
+
+let empty_env env reason = {
+  tenv = env;
+  expansions = [];
+  orig_reason = reason;
+  is_generic = false;
+  seen_tvar = ISet.empty;
+  ids = [];
+}
+
+let fill_type_hole_ env ty hole_ty =
   let subst = Inst.make_subst
     [Ast.Invariant, (Pos.none, SN.Typehints.type_hole), None]
     [hole_ty] in
   Inst.instantiate subst env ty
 
 let rec expand env reason (root, ids) =
-  try
-    let env, (r, ty_), seen = expand_ env [] root ids in
-    let ty_str = Typing_print.error (Taccess (root, ids)) in
-    let reason = Reason.Rtype_access (reason, ty_str, List.rev seen, r) in
-    let reason =
-      match snd root with
-      (* If it is a expression dependent type we want to explain what expression
-       * it was derived from. When we substitute an expression dependent type
-       * it will be a Tabstract. Since all other Tabstract we create are from
-       * newtype defs, if it isn't a typedef then we know it has to be an
-       * expression dependent type
-       *)
-      | Tabstract ((p, x), [], Some _) when not (Env.is_typedef x) ->
-          Reason.Rexpr_dep_type (reason, p, x)
-      | _ -> reason
-    in
-    (* check for potential cycles *)
-    Errors.try_with_error
-      (fun () ->
-        check_tconst seen env (reason, ty_);
-        env, (reason, ty_)
-      )
-      (fun () -> env, (r, Tany))
-  with
-  | Exit ->
-      env, (reason, Tany)
-
-and expand_ env seen root_ty ids =
-  match ids with
-  | [] ->
-      env, root_ty, seen
-  | _ ->
-      let generic_names, (class_pos, class_name), (root_ty, ids) =
-        root_to_class_name env root_ty (root_ty, ids) in
-      let (pos, tconst), rest = List.hd ids, List.tl ids in
-      let root_class =
-        match Env.get_class env class_name with
-        | None ->
-            Errors.unbound_name_typing class_pos class_name;
-            raise Exit
-        | Some c -> c
-      in
-      let typeconst =
-        match SMap.get tconst root_class.tc_typeconsts with
-        | None ->
-            Errors.smember_not_found `class_typeconst
-              pos (root_class.tc_pos, class_name) tconst `no_hint;
-            raise Exit
-        | Some tc -> tc
-      in
-      let type_ n ty =
-        let name = (strip_ns n)^"::"^tconst in
-        Reason.Rwitness (fst typeconst.ttc_name), Tgeneric (name, ty)
-      in
-      let tconst_ty =
-        match generic_names, typeconst with
-        | _, {ttc_type = Some ty; ttc_constraint = None; _}
-        | [], {ttc_type = Some ty; _} -> ty
-        | names, {ttc_constraint = ty; _} ->
-            List.fold_right (fun n acc -> type_ n (Some acc))
-              names (type_ class_name ty)
-      in
-      let env, tconst_ty = fill_type_hole env tconst_ty root_ty in
-      (* check for cycles before expanding further *)
-      let seen =
-        let cur_tconst = List.fold_left (fun acc (_, s) -> acc^"::"^s)
-          (strip_ns class_name) ids in
-        if List.mem cur_tconst seen
-        then (
-          let seen = List.rev (cur_tconst :: seen) in
-          Errors.cyclic_typeconst (fst typeconst.ttc_name) seen;
-          raise Exit
-        )
-        else cur_tconst :: seen
-      in
-      expand_ env seen tconst_ty rest
+  let expand_env = empty_env env reason in
+  let expand_env, ty = expand_ expand_env root ids in
+  expand_env.tenv, ty
 
 (* The root of a type access is a type. When expanding a type access this type
  * needs to resolve to the name of a class so we can look up if a given type
  * constant is defined in the class.
  *
- * We also need to track the name of the generics we stumble across. This is
- * so we do not expand different generics to the same type. For instance if we
- * have the following type accesses:
- *
- *   Taccess (Tgeneric ("this", Some( Tapply "C")), ["T"])
- *   Taccess (Tgeneric ("X", Some( Tapply "C")), ["T"])
- *
- * resolve_to_class_name will yield:
- *
- *  (["this"], "C")
- *  (["X"], "C")
- *
- * And will ultimately expand to:
- *
- *  Tgeneric ("this::T", Some(Tgeneric "C::T"))
- *  Tgeneric ("X::T", Some(Tgeneric "C::T"))
+ * We also need to track additional information in the enviornment as we expand.
+ * See the declaration of the type "env" above for all the information we need.
  *)
- and root_to_class_name env (r, ty) (root_ty, ids) =
-  let root_to_cname env type_ = root_to_class_name env type_ (root_ty, ids) in
-  match ty with
-  | Tapply ((_, tdef), tyl) when Env.is_typedef tdef ->
-      let env, ty = TUtils.expand_typedef env r tdef tyl in
-      root_to_cname env ty
-  | Tapply (x, _) -> [], x, (root_ty, ids)
-  (* instead of expanding this Taccess, we update the root and ids that we
-   * are working on and pass it down to the caller
-   *)
-  | Taccess (root, ids2) ->
-      root_to_class_name env root (root, ids2 @ ids)
-  | Toption ty ->
-      root_to_cname env ty
-  (* If we haven't filled the type hole at this point we fill it with self *)
-  | Tgeneric (x, _) when x = SN.Typehints.type_hole ->
-      let names, class_name, taccess = root_to_cname env (Env.get_self env) in
-      SN.Typehints.this::names, class_name, taccess
-  | Tabstract ((_, x), _, Some ty) | Tgeneric (x, Some ty) ->
-      let names, class_name, taccess = root_to_cname env ty in
-      x::names, class_name, taccess
-  | Tany
-  | Tvar _ | Tunresolved _
-  | Tanon _ | Tobject | Tmixed | Tprim _ | Tshape _ | Ttuple _
-  | Tarray (_, _) | Tfun _ | Tabstract (_, _, _) | Tgeneric (_, _) ->
-      let pos, tconst = List.hd ids in
-      let ty = Typing_print.error ty in
-      Errors.non_object_member tconst (Reason.to_pos r) ty pos;
-      raise Exit
+and expand_ env root_ty ids =
+  match ids with
+  | [] ->
+      (* check for potential cycles *)
+      Errors.try_with_error
+      (fun () ->
+        check_tconst env root_ty;
+        let reason = Reason.Rtype_access(
+          env.orig_reason,
+          List.rev env.expansions,
+          fst root_ty
+        ) in
+        env, (reason, snd root_ty)
+      )
+      (fun () -> env, (Reason.none, Tany))
+  | head :: tail -> begin
+      match snd root_ty with
+      | Tany ->
+          env, root_ty
+      | Taccess (root, ids2) ->
+          expand_ env root (ids2 @ ids)
+      | Toption ty ->
+          expand_ env ty ids
+      | Tapply ((_, tdef), tyl) when Env.is_typedef tdef ->
+          let tenv, ty =
+            TUtils.expand_typedef env.tenv (fst root_ty) tdef tyl in
+          let env = { env with
+            tenv = tenv;
+            expansions = List.fold_left (fun acc (_, s) -> acc^"::"^s) tdef ids
+              :: env.expansions;
+          } in
+          expand_ env ty ids
+      | Tapply ((class_pos, class_name), _) ->
+          begin
+            try
+              let env, ty = create_root_from_type_constant
+                env class_pos class_name root_ty head in
+              (* check for cycles before expanding further *)
+              let seen =
+                let cur_tconst = List.fold_left (fun acc (_, s) -> acc^"::"^s)
+                  (strip_ns class_name) ids in
+                if List.mem cur_tconst env.expansions
+                then (
+                  let seen = List.rev (cur_tconst :: env.expansions) in
+                  Errors.cyclic_typeconst (Reason.to_pos (fst ty)) seen;
+                  raise Exit
+                )
+                else cur_tconst :: env.expansions in
+              expand_ { env with expansions = seen } ty tail
+            with
+              Exit -> env, (Reason.none, Tany)
+          end
+      | Tabstract ((p, x), _, Some ty) ->
+          let env, ty = expand_generic env x ty ids in
+          (* If it is a expression dependent type we want to explain what
+           * expression it was derived from. When we substitute an expression
+           * dependent type it will be a Tabstract. Since all other Tabstract
+           * we create are from newtype defs, if it isn't a typedef then we
+           * know it has to be an expression dependent type
+           *)
+          if Env.is_typedef x
+          then
+            env, ty
+          else
+            env, (Reason.Rexpr_dep_type (fst ty, p ,x), snd ty)
+      | Tgeneric (x, Some ty) ->
+          (* If we haven't filled the type hole at this point we fill
+           * it with self
+           *)
+          let ty, x =
+            if x = SN.Typehints.type_hole
+            then Env.get_self env.tenv, SN.Typehints.this
+            else ty, x in
+          expand_generic env x ty ids
+      | Tunresolved tyl ->
+          let tyl =
+            List.map begin fun ty ->
+              snd (expand_ env ty ids)
+            end tyl in
+          env, (env.orig_reason, Tunresolved tyl)
+      | Tvar n ->
+          if ISet.mem n env.seen_tvar
+          then env, (Reason.none, Tany)
+          else (
+            let tenv, ty = Env.expand_type env.tenv root_ty in
+            let env = { env with
+              tenv = tenv;
+              seen_tvar = ISet.add n env.seen_tvar;
+            } in
+            expand_ env ty ids
+          )
+      | Tanon _ | Tobject | Tmixed | Tprim _ | Tshape _ | Ttuple _
+      | Tarray (_, _) | Tfun _ | Tabstract (_, _, _) | Tgeneric (_, _) ->
+          let pos, tconst = head in
+          let ty = Typing_print.error (snd root_ty) in
+          Errors.non_object_member tconst (Reason.to_pos (fst root_ty)) ty pos;
+          env, (Reason.none, Tany)
+  end
+
+(* When expanding the constraint of a Tgeneric or Tabstract we need to modify
+ * the environment. While expanding a generic we will always choose the
+ * constraint of a type constant (the "as" defined type) over the assigned type
+ * (the "=" defined type). This is because the type constant could've been
+ * overridden by a subclass so we only have the gurantee that the constraint is
+ * satisified.
+ *
+ * We also need to do extra bookkeeping as well. Each time we use the constraint
+ * of a type constant we add it to the list "env.ids". This is to ensure we
+ * construct the correct generic result. For example:
+ *
+ * interface I {
+ *   const type TnoGeneric = I;
+ *   abstract const type TGeneric as I;
+ *
+ *   public function f(): this::TnoGeneric;
+ *   public function g(): this::TGeneric;
+ * }
+ *
+ * When expanding "this::TnoGeneric" the root will be a generic "this as I".
+ * We will call 'expand_generic env "this" Tapply "I" ["TnoGeneric"]'. We will
+ * continue expanding "I::TnoGeneric". When we look up the type constant we
+ * will use the assigned type since there is no constraint. The resulting type
+ * will be "I" after expansion is complete.
+ *
+ * However when expanding "this::TGeneric" there is a constraint on the type
+ * constant "I::TGeneric". Since we are in a generic context we must use the
+ * constraint type and also store "TGeneric" in "env.ids". When we get back to
+ * expand_generic we see that "env.ids" is non-empty so we construct a new
+ * generic type by appending the ids in "env.ids" to the name of generic.
+ * The resulting type should be
+ *
+ *    this::TGeneric as I::TGeneric as I
+ *)
+and expand_generic env name root ids =
+  let env = { env with
+    is_generic = true;
+    expansions = List.fold_left (fun acc (_, s) -> acc^"::"^s) name ids
+      :: env.expansions;
+  } in
+  let env, ty = expand_ env root ids in
+  if env.ids = []
+  then env, ty
+  else env, (
+    fst ty,
+    Tgeneric ((String.concat "::" (name :: (List.rev env.ids))), Some ty)
+  )
+
+(* The function takes a "step" forward in the expansion. We look up the type
+ * constant associated with the given class_name and create a new root type.
+ * A type constant has both a constraint type and assigned type. The constraint
+ * type is always used if env.is_generic is true, otherwise we use the assigned
+ * type if one exists.
+ *)
+and create_root_from_type_constant env class_pos class_name root_ty (pos, tconst) =
+  let class_ =
+    match Env.get_class env.tenv class_name with
+    | None ->
+        Errors.unbound_name_typing class_pos class_name;
+        raise Exit
+    | Some c -> c in
+  let typeconst =
+    match SMap.get tconst class_.tc_typeconsts with
+    | None ->
+        Errors.smember_not_found `class_typeconst
+          pos (class_.tc_pos, class_name) tconst `no_hint;
+        raise Exit
+    | Some tc -> tc in
+  let env, tconst_ty =
+    match typeconst with
+    | { ttc_type = Some ty; _ }
+      when typeconst.ttc_constraint = None || (not env.is_generic) ->
+        (* It is important to clear the fields in the environment so we don't
+         * accidently wrap this into a generic type in expand_generic
+         *)
+        { env with ids = []; is_generic = false }, ty
+    | {ttc_constraint = ty; _} ->
+        { env with ids = tconst :: env.ids }, (
+          Reason.Rwitness (fst typeconst.ttc_name),
+          Tgeneric (strip_ns class_name^"::"^tconst, ty)
+        ) in
+  let tenv, tconst_ty = fill_type_hole_ env.tenv tconst_ty root_ty in
+  { env with tenv = tenv }, tconst_ty
 
 (* Following code checks for cycles that may occur when expanding a Taccess.
  * This is mainly copy-pasta from Typing_tdef.ml. We should see if its possible
  * to provide a more generic cycle detection utility function.
  * *)
-and check_tconst seen env (r, t) =
-  match t with
+and check_tconst env (r, ty) =
+  match ty with
   | Tany -> ()
   | Tmixed -> ()
   | Tarray (ty1, ty2) ->
-      check_tconst_opt seen env ty1;
-      check_tconst_opt seen env ty2;
+      check_tconst_opt env ty1;
+      check_tconst_opt env ty2;
       ()
   | Tgeneric (_, ty) ->
-      check_tconst_opt seen env ty
-  | Toption ty -> check_tconst seen env ty
+      check_tconst_opt env ty
+  | Toption ty -> check_tconst env ty
   | Tprim _ -> ()
   | Tvar _ -> ()
-  | Tfun fty -> check_fun_tconst seen env fty
+  | Tfun fty -> check_fun_tconst env fty
   | Tapply ((_, tdef), tyl) when Typing_env.is_typedef tdef ->
-      let env, ty = TUtils.expand_typedef env r tdef tyl in
-      check_tconst seen env ty
+      let tenv, ty = TUtils.expand_typedef env.tenv r tdef tyl in
+      check_tconst { env with tenv = tenv } ty
   | Tabstract (_, tyl, cstr) ->
-      check_tconst_list seen env tyl;
-      check_tconst_opt seen env cstr
+      check_tconst_list env tyl;
+      check_tconst_opt env cstr
+  | Tunresolved tyl
   | Tapply (_, tyl)
   | Ttuple tyl ->
-      check_tconst_list seen env tyl
+      check_tconst_list env tyl
   | Taccess (root, ids) ->
-      let env, ty, seen = expand_ env seen root ids in
-      check_tconst seen env ty
+      let env, ty = expand_ env root ids in
+      check_tconst env ty
   | Tanon _ -> assert false
-  | Tunresolved _ -> assert false
   | Tobject -> ()
   | Tshape tym ->
-      Nast.ShapeMap.iter (fun _ v -> check_tconst seen env v) tym
+      Nast.ShapeMap.iter (fun _ v -> check_tconst env v) tym
 
-and check_tconst_list seen env x =
-  List.iter (check_tconst seen env) x
+and check_tconst_list env x =
+  List.iter (check_tconst env) x
 
-and check_fun_tconst seen env ft =
-  check_tconst_tparam_list seen env ft.ft_tparams;
-  check_tconst_fun_param_list seen env ft.ft_params;
+and check_fun_tconst env ft =
+  check_tconst_tparam_list env ft.ft_tparams;
+  check_tconst_fun_param_list env ft.ft_params;
   (match ft.ft_arity with
-    | Fvariadic (_, p) -> check_tconst_fun_param seen env p
+    | Fvariadic (_, p) -> check_tconst_fun_param env p
     | _ -> ());
-  check_tconst seen env ft.ft_ret;
+  check_tconst env ft.ft_ret;
   ()
 
-and check_tconst_fun_param_list seen env x =
-  List.iter (check_tconst_fun_param seen env) x
+and check_tconst_fun_param_list env x =
+  List.iter (check_tconst_fun_param env) x
 
-and check_tconst_fun_param seen env (_, ty) =
-  check_tconst seen env ty
+and check_tconst_fun_param env (_, ty) =
+  check_tconst env ty
 
-and check_tconst_tparam_list seen env x =
-  List.iter (check_tconst_tparam seen env) x
+and check_tconst_tparam_list env x =
+  List.iter (check_tconst_tparam env) x
 
-and check_tconst_tparam seen env (_, _, x) =
-  check_tconst_opt seen env x
+and check_tconst_tparam env (_, _, x) =
+  check_tconst_opt env x
 
-and check_tconst_opt seen env = function
+and check_tconst_opt env = function
   | None -> ()
-  | Some x -> check_tconst seen env x
+  | Some x -> check_tconst env x
 
 (* A type access "this::T" is translated to "<this>::T" during the
  * naming phase. While typing a body, "<this>" is a type hole that needs to
@@ -235,7 +335,7 @@ and check_tconst_opt seen env = function
  *
  * More specific details are explained inline
  *)
-let fill_with_class_id env cid cid_ty ty =
+let fill_type_hole env cid cid_ty ty =
   (* we use <.*> to indicate an expression dependent type *)
   let fill_name n = "<"^n^">" in
   let pos = Reason.to_pos (fst cid_ty) in
@@ -272,8 +372,4 @@ let fill_with_class_id env cid cid_ty ty =
       let name = class_id_to_str cid in
       Reason.Rwitness pos, Tabstract ((pos, fill_name name), [], Some cid_ty)
   in
-  fill_type_hole env ty filling_ty
-
-let fill_with_expr env expr expr_ty ty =
-  let cid = CIvar expr in
-  fill_with_class_id env cid expr_ty ty
+  fill_type_hole_ env ty filling_ty

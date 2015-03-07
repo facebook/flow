@@ -1,11 +1,11 @@
 
-annot.js:1:36,41: string
-This type is incompatible with
-  annot.js:6:42,47: number
-
 annot.js:4:15,20: number
 This type is incompatible with
   annot.js:1:18,23: string
+
+annot.js:6:58,67: string
+This type is incompatible with
+  annot.js:6:42,47: number
 
 annot.js:8:10,42: property j
 Property not found in

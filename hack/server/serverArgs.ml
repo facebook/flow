@@ -28,8 +28,7 @@ type options = {
   (* Configures only the workers. Workers can have more relaxed GC configs as
    * they are short-lived processes *)
   gc_control       : Gc.control;
-  assume_php       : bool;
-  unsafe_xhp       : bool;
+  tc_options       : TypecheckerOptions.t;
 }
 
 and env_store_action =
@@ -85,6 +84,15 @@ let config_unsafe_xhp config =
   match SMap.get "unsafe_xhp" config with
     | Some s -> bool_of_string s
     | None -> false
+
+let config_list_regexp = (Str.regexp "[, \t]+")
+
+let config_user_attributes config =
+  match SMap.get "user_attributes" config with
+    | None -> None
+    | Some s ->
+      let custom_attrs = Str.split config_list_regexp s in
+      Some (List.fold_right SSet.add custom_attrs SSet.empty)
 
 (*****************************************************************************)
 (* The main entry point *)
@@ -150,15 +158,20 @@ let parse_options () =
             Some (Load cmd)
       end
     | s -> Some (Save s) in
-  { json_mode     = !json_mode;
+  let tcopts = {
+    TypecheckerOptions.tco_assume_php = config_assume_php config;
+    tco_unsafe_xhp = config_unsafe_xhp config;
+    tco_user_attrs = config_user_attributes config;
+  } in
+  {
+    json_mode     = !json_mode;
     check_mode    = check_mode;
     root          = root_path;
     should_detach = !should_detach;
     convert       = convert;
     load_save_opt = load_save_opt;
     gc_control    = make_gc_control config;
-    assume_php    = config_assume_php config;
-    unsafe_xhp    = config_unsafe_xhp config;
+    tc_options    = tcopts;
   }
 
 (* useful in testing code *)
@@ -170,8 +183,7 @@ let default_options ~root = {
   convert = None;
   load_save_opt = None;
   gc_control = ServerConfig.gc_control;
-  assume_php = true;
-  unsafe_xhp = false;
+  tc_options = TypecheckerOptions.empty;
 }
 
 (*****************************************************************************)
@@ -185,5 +197,4 @@ let should_detach options = options.should_detach
 let convert options = options.convert
 let load_save_opt options = options.load_save_opt
 let gc_control options = options.gc_control
-let assume_php options = options.assume_php
-let unsafe_xhp options = options.unsafe_xhp
+let typechecker_options options = options.tc_options

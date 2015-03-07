@@ -20,17 +20,17 @@ This type is incompatible with
 Ycombinator.js:4:12,12: parameter f
 Missing annotation
 
-Ycombinator.js:10:28,33: number
+Ycombinator.js:10:44,47: string
 This type is incompatible with
-  Ycombinator.js:14:28,33: string
+  Ycombinator.js:10:28,33: number
 
 Ycombinator.js:10:46,46: number
 This type is incompatible with
   Ycombinator.js:14:20,25: string
 
-Ycombinator.js:14:28,33: string
+Ycombinator.js:14:44,47: number
 This type is incompatible with
-  Ycombinator.js:10:28,33: number
+  Ycombinator.js:14:28,33: string
 
 Ycombinator.js:14:46,46: string
 This type is incompatible with

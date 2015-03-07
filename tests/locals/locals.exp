@@ -23,4 +23,12 @@ locals.js:12:16,19: boolean
 This type is incompatible with
   locals.js:10:25,30: string
 
-Found 6 errors
+locals.js:12:23,26: boolean
+This type is incompatible with
+  locals.js:10:16,21: number
+
+locals.js:12:23,26: boolean
+This type is incompatible with
+  locals.js:10:25,30: string
+
+Found 8 errors

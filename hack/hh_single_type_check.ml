@@ -15,17 +15,22 @@ open Utils
 (* Types, constants *)
 (*****************************************************************************)
 
+type mode =
+  | Suggest
+  | Color
+  | Coverage
+  | Prolog
+  | Lint
+  | Errors
+
 type options = {
   filename : string;
-  suggest : bool;
-  color : bool;
-  coverage : bool;
-  prolog : bool;
-  lint : bool;
-  rest : string list
+  mode : mode;
 }
 
-let builtins_filename = "builtins.hhi"
+let builtins_filename =
+  Relative_path.create Relative_path.Dummy "builtins.hhi"
+
 let builtins = "<?hh // decl\n"^
   "interface Traversable<Tv> {}\n"^
   "interface Container<Tv> extends Traversable<Tv> {}\n"^
@@ -54,15 +59,25 @@ let builtins = "<?hh // decl\n"^
   "  public function add(Tv $value): Vector<Tv>;"^
   "  public function addAll(?Traversable<Tv> $it): Vector<Tv>;"^
   "}\n"^
-  "final class ImmVector<Tv> implements ConstVector<Tv> {}\n"^
+  "final class ImmVector<Tv> implements ConstVector<Tv> {"^
+  "  public function map<Tu>((function(Tv): Tu) $callback): ImmVector<Tu>;"^
+  "}\n"^
   "final class Map<Tk, Tv> implements ConstMap<Tk, Tv> {"^
+  "  /* HH_FIXME[3007]: This is intentional; not a constructor */"^
   "  public function map<Tu>((function(Tv): Tu) $callback): Map<Tk, Tu>;"^
+  "  public function mapWithKey<Tu>((function(Tk, Tv): Tu) $fn): Map<Tk, Tu>;"^
   "  public function contains(Tk $k): bool;"^
   "}\n"^
-  "final class ImmMap<Tk, Tv> implements ConstMap<Tk, Tv>{}\n"^
-  "final class StableMap<Tk, Tv> implements ConstMap<Tk, Tv> {}\n"^
-  "final class Set<Tv> extends ConstSet<Tv> {}\n"^
-  "final class ImmSet<Tv> extends ConstSet<Tv> {}\n"^
+  "final class ImmMap<Tk, Tv> implements ConstMap<Tk, Tv>{"^
+  "  public function map<Tu>((function(Tv): Tu) $callback): ImmMap<Tk, Tu>;"^
+  "  public function mapWithKey<Tu>((function(Tk, Tv): Tu) $fn): ImmMap<Tk, Tu>;"^
+  "}\n"^
+  "final class StableMap<Tk, Tv> implements ConstMap<Tk, Tv> {"^
+  "  public function map<Tu>((function(Tv): Tu) $callback): StableMap<Tk, Tu>;"^
+  "  public function mapWithKey<Tu>((function(Tk, Tv): Tu) $fn): StableMap<Tk, Tu>;"^
+  "}\n"^
+  "final class Set<Tv> implements ConstSet<Tv> {}\n"^
+  "final class ImmSet<Tv> implements ConstSet<Tv> {}\n"^
   "class Exception { public function __construct(string $x) {} }\n"^
   "class Generator<Tk, Tv, Ts> implements KeyedIterator<Tk, Tv> {\n"^
   "  public function next(): void;\n"^
@@ -72,7 +87,7 @@ let builtins = "<?hh // decl\n"^
   "  public function valid(): bool;\n"^
   "  public function send(?Ts $v): void;\n"^
   "}\n"^
-  "final class Pair<Tk, Tv> extends KeyedContainer<int,mixed> {public function isEmpty(): bool {}}\n"^
+  "final class Pair<Tk, Tv> implements KeyedContainer<int,mixed> {public function isEmpty(): bool {}}\n"^
   "interface Stringish {public function __toString(): string {}}\n"^
   "interface XHPChild {}\n"^
   "function hh_show($val) {}\n"^
@@ -115,45 +130,36 @@ let error l = output_string stderr (Errors.to_string (Errors.to_absolute l))
 
 let parse_options () =
   let fn_ref = ref None in
-  let suggest = ref false in
-  let color = ref false in
-  let coverage = ref false in
-  let prolog = ref false in
-  let lint = ref false in
-  let rest_options = ref [] in
-  let rest x = rest_options := x :: !rest_options in
   let usage = Printf.sprintf "Usage: %s filename\n" Sys.argv.(0) in
+  let mode = ref Errors in
+  let set_mode x () =
+    if !mode <> Errors
+    then raise (Arg.Bad "only a single mode should be specified")
+    else mode := x
+  in
   let options = [
     "--suggest",
-      Arg.Set suggest,
+      Arg.Unit (set_mode Suggest),
       "Suggest missing typehints";
     "--color",
-      Arg.Set color,
+      Arg.Unit (set_mode Color),
       "Produce color output";
     "--coverage",
-      Arg.Set coverage,
+      Arg.Unit (set_mode Coverage),
       "Produce coverage output";
     "--prolog",
-      Arg.Set prolog,
+      Arg.Unit (set_mode Prolog),
       "Produce prolog facts";
     "--lint",
-      Arg.Set lint,
+      Arg.Unit (set_mode Lint),
       "Produce lint errors";
-    "--",
-      Arg.Rest rest,
-      "";
   ] in
   Arg.parse options (fun fn -> fn_ref := Some fn) usage;
   let fn = match !fn_ref with
     | Some fn -> fn
     | None -> die usage in
   { filename = fn;
-    suggest = !suggest;
-    color = !color;
-    coverage = !coverage;
-    prolog = !prolog;
-    lint = !lint;
-    rest = !rest_options;
+    mode = !mode;
   }
 
 let suggest_and_print fn { FileInfo.funs; classes; typedefs; consts; _ } =
@@ -198,20 +204,13 @@ let parse_file file =
   then
     let contentl = Str.full_split delim content in
     let files = make_files contentl in
-    List.fold_right begin fun (sub_fn, content) ast ->
+    List.fold_left begin fun acc (sub_fn, content) ->
       let file =
         Relative_path.create Relative_path.Dummy (abs_fn^"--"^sub_fn) in
-      let {Parser_hack.file_mode; comments; ast = ast'} =
-        Parser_hack.program file content
-      in
-      ast' @ ast
-    end files []
-  else begin
-    let {Parser_hack.file_mode; comments; ast} =
-      Parser_hack.program file content
-    in
-    ast
-  end
+      Relative_path.Map.add file (Parser_hack.program file content) acc
+    end Relative_path.Map.empty files
+  else
+    Relative_path.Map.singleton file (Parser_hack.program file content)
 
 (* Make readable test output *)
 let replace_color input =
@@ -232,76 +231,106 @@ let print_coverage fn type_acc =
   let counts = ServerCoverageMetric.count_exprs fn type_acc in
   ClientCoverageMetric.go ~json:false (Some (Leaf counts))
 
-let print_prolog { FileInfo.funs; classes; typedefs; consts; _ } =
-  let facts = Prolog.facts_of_defs [] funs classes typedefs consts in
+let print_prolog files_info =
+  let facts = Relative_path.Map.fold begin fun _ file_info acc ->
+    let { FileInfo.funs; classes; typedefs; consts; _ } = file_info in
+    Prolog.facts_of_defs acc funs classes typedefs consts
+  end files_info [] in
   PrologMain.output_facts stdout facts
+
+let handle_mode mode files_info errors lint_errors =
+  match mode with
+  | Color ->
+      Relative_path.Map.iter begin fun fn fileinfo ->
+        if fn = builtins_filename then () else begin
+          let result = ServerColorFile.get_level_list
+            (fun () -> ignore (ServerIdeUtils.check_defs fileinfo); fn) in
+          print_colored fn result;
+        end
+      end files_info
+  | Coverage ->
+      Relative_path.Map.iter begin fun fn fileinfo ->
+        if fn = builtins_filename then () else begin
+          let type_acc = ServerCoverageMetric.accumulate_types fileinfo in
+          print_coverage fn type_acc;
+        end
+      end files_info
+  | Prolog ->
+      print_prolog files_info
+  | Lint ->
+      let lint_errors =
+        Relative_path.Map.fold begin fun fn fileinfo lint_errors ->
+          lint_errors @ fst (Lint.do_ begin fun () ->
+            Linting_service.lint fn fileinfo
+          end)
+        end files_info lint_errors in
+      if lint_errors <> []
+      then begin
+        let lint_errors = List.map Lint.to_absolute lint_errors in
+        ServerLint.output_text stdout lint_errors;
+        exit 2
+      end
+      else Printf.printf "No lint errors\n"
+  | Suggest
+  | Errors ->
+      let errors = Relative_path.Map.fold begin fun _ fileinfo errors ->
+        errors @ ServerIdeUtils.check_defs fileinfo
+      end files_info errors in
+      if mode = Suggest
+      then Relative_path.Map.iter suggest_and_print files_info;
+      if errors <> []
+      then (error (List.hd errors); exit 2)
+      else Printf.printf "No errors\n"
 
 (*****************************************************************************)
 (* Main entry point *)
 (*****************************************************************************)
 
-(* This was the original main ... before there was a daemon.
- * This function can also be called interactively from top_single to
- * populate the global typing environment (see typing_env.ml) for
- * a given file. You can then inspect this typing environment, e.g.
- * with 'Typing_env.Classes.get "Foo";;'
- *)
-let main_hack { filename; suggest; color; coverage; prolog; lint; _ } =
+let main_hack { filename; mode; } =
   ignore (Sys.signal Sys.sigusr1 (Sys.Signal_handle Typing.debug_print_last_pos));
   SharedMem.init();
   Hhi.set_hhi_root_for_unit_test "/tmp/hhi";
-  let builtins_filename =
-    Relative_path.create Relative_path.Dummy builtins_filename in
   let filename = Relative_path.create Relative_path.Dummy filename in
-  let lint_errors, (errors, fileinfo) =
+  let lint_errors, (errors, files_info) =
     Lint.do_ begin fun () ->
       Errors.do_ begin fun () ->
-        let {Parser_hack.file_mode; comments; ast = ast_builtins} =
-          Parser_hack.program builtins_filename builtins
+        let parsed_files = parse_file filename in
+        let parsed_builtins = Parser_hack.program builtins_filename builtins in
+        let parsed_files =
+          Relative_path.Map.add builtins_filename parsed_builtins parsed_files
         in
-        let ast_file = parse_file filename in
-        let ast = ast_builtins @ ast_file in
-        Parser_heap.ParserHeap.add filename ast;
-        let funs, classes, typedefs, consts = Ast_utils.get_defs ast in
-        let nenv =
-          Naming.make_env Naming.empty ~funs ~classes ~typedefs ~consts in
-        let all_classes = List.fold_right begin fun (_, cname) acc ->
-          SMap.add cname (Relative_path.Set.singleton filename) acc
-        end classes SMap.empty in
-        Typing_decl.make_env nenv all_classes filename;
-        { FileInfo.
-          file_mode; funs; classes; typedefs; consts; comments;
-          consider_names_just_for_autoload = false }
+
+        let files_info =
+          Relative_path.Map.mapi begin fun fn parsed_file ->
+            let {Parser_hack.file_mode; comments; ast} = parsed_file in
+            Parser_heap.ParserHeap.add fn ast;
+            let funs, classes, typedefs, consts = Ast_utils.get_defs ast in
+            { FileInfo.
+              file_mode; funs; classes; typedefs; consts; comments;
+              consider_names_just_for_autoload = false }
+          end parsed_files in
+
+        (* Note that nenv.Naming.itcopt remains TypecheckerOptions.empty *)
+        let nenv = Relative_path.Map.fold begin fun fn fileinfo nenv ->
+          let {FileInfo.funs; classes; typedefs; consts; _} = fileinfo in
+          Naming.make_env nenv ~funs ~classes ~typedefs ~consts
+        end files_info Naming.empty in
+
+        let all_classes =
+          Relative_path.Map.fold begin fun fn {FileInfo.classes; _} acc ->
+            List.fold_left begin fun acc (_, cname) ->
+              SMap.add cname (Relative_path.Set.singleton fn) acc
+            end acc classes
+          end files_info SMap.empty in
+
+        Relative_path.Map.iter begin fun fn _ ->
+          Typing_decl.make_env nenv all_classes fn
+        end files_info;
+
+        files_info
       end
     end in
-  if color then
-    let result = ServerColorFile.get_level_list
-      (fun () -> ignore (ServerIdeUtils.check_defs fileinfo); filename) in
-    print_colored filename result;
-  else if coverage then
-    let type_acc = ServerCoverageMetric.accumulate_types fileinfo in
-    print_coverage filename type_acc;
-  else if prolog then
-    print_prolog fileinfo
-  else if lint then
-    let lint_errors = lint_errors @ fst (Lint.do_ begin fun () ->
-      Linter.lint filename fileinfo
-    end) in
-    if lint_errors <> []
-    then begin
-      let lint_errors = List.map Lint.to_absolute lint_errors in
-      ServerLint.output_text stdout lint_errors;
-      exit 2
-    end
-    else Printf.printf "No lint errors\n"
-  else begin
-    let errors = errors @ ServerIdeUtils.check_defs fileinfo in
-    if suggest
-    then suggest_and_print filename fileinfo;
-    if errors <> []
-    then (error (List.hd errors); exit 2)
-    else Printf.printf "No errors\n"
-  end
+  handle_mode mode files_info errors lint_errors
 
 (* command line driver *)
 let _ =

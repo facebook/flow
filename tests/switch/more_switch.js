@@ -1,3 +1,5 @@
+/* @flow */
+
 function foo(x): number {
     switch (x) {
       case 0:

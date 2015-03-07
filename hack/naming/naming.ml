@@ -921,7 +921,7 @@ and get_constraint env tparam =
 and hintl ~allow_this env l = List.map (hint ~allow_this env) l
 
 (*****************************************************************************)
-(* All the methods and static methods of an interface are "implicitely"
+(* All the methods and static methods of an interface are "implicitly"
  * declared as abstract
  *)
 (*****************************************************************************)
@@ -1059,18 +1059,34 @@ and class_ genv c =
 
 and user_attributes env attrl =
   let seen = Hashtbl.create 0 in
-  List.fold_left begin fun acc {ua_name = (pos, name) as ua_name; ua_params} ->
+  let tc_options = (fst env).tcopt in
+  let validate_seen = begin fun ua_name ->
+    let pos, name = ua_name in
     let existing_attr_pos =
-      try Some (Hashtbl.find seen name) with Not_found -> None in
-    match existing_attr_pos with
-    | Some p -> Errors.duplicate_user_attribute ua_name p; acc
-    | None ->
-        Hashtbl.add seen name pos;
-        let attr = {
-          N.ua_name = ua_name;
-          N.ua_params = List.map (expr env) ua_params
-        } in
-        attr :: acc
+      try Some (Hashtbl.find seen name)
+      with Not_found -> None
+    in (match existing_attr_pos with
+      | Some p -> Errors.duplicate_user_attribute ua_name p; false
+      | None -> Hashtbl.add seen name pos; true
+    )
+  end in
+  let validate_name = begin fun ua_name ->
+    (validate_seen ua_name) && begin
+      let pos, name = ua_name in
+      let valid = if str_starts_with name "__"
+        then SSet.mem name SN.UserAttributes.as_set
+        else (TypecheckerOptions.allowed_attribute tc_options name)
+      in if not valid then Errors.unbound_attribute_name pos name;
+      valid
+    end
+  end in
+  List.fold_left begin fun acc {ua_name; ua_params} ->
+    if not (validate_name ua_name) then acc
+    else let attr = {
+           N.ua_name = ua_name;
+           N.ua_params = List.map (expr env) ua_params
+         } in
+         attr :: acc
   end [] attrl
 
 and enum_ env e =
@@ -1511,7 +1527,7 @@ and extend_params genv paraml =
   end paraml genv.type_params in
   { genv with type_params = params }
 
-and typechecker_options env = env.itcopt
+and typechecker_options env : TypecheckerOptions.t = env.itcopt
 
 and uselist_lambda f =
   (* semantic duplication: This is copied from the implementation of the
@@ -1955,14 +1971,6 @@ and expr_ env = function
       | [e] -> N.Special_func (N.Gen_array_rec (expr env e))
       | _ -> Errors.gen_array_rec_arity p; N.Any
       )
-  | Call ((p, Id (_, cn)), el, uel) when cn = SN.FB.fgen_array_va_rec_DEPRECATED ->
-      splat_unexpected uel ;
-      if List.length el < 1
-      then begin
-        Errors.gen_array_va_rec_arity p;
-        N.Any
-      end
-      else N.Special_func (N.Gen_array_va_rec (exprl env el))
   | Call ((p, Id f), el, uel) ->
       N.Call (N.Cnormal, (p, N.Id (Env.fun_id env f)),
               exprl env el, exprl env uel)

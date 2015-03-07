@@ -9,7 +9,7 @@
  *)
 
 let print_version () =
-  print_endline "Flow, a static type checker for JavaScript, version 0.4.0"
+  print_endline "Flow, a static type checker for JavaScript, version 0.5.0"
 
 (* line split/transform utils *)
 module Line : sig
@@ -227,3 +227,5 @@ let get_path_of_file file =
     let file = Files_js.normalize_path (Sys.getcwd()) file in
     let path = Path.mk_path file in
     Path.string_of_path path
+
+let exe_name = Filename.basename Sys.executable_name

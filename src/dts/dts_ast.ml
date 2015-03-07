@@ -708,11 +708,11 @@ and Expression : sig
     | Literal of Literal.t
     | TemplateLiteral of TemplateLiteral.t
     | TaggedTemplate of TaggedTemplate.t
-    | XJSElement of XJS.element
+    | JSXElement of JSX.element
     | Class of Expression.Class.t
 end = Expression
 
-and XJS : sig
+and JSX : sig
   module Identifier : sig
     type t = Loc.t * t'
     and t' = {
@@ -810,7 +810,7 @@ and XJS : sig
     closingElement: Closing.t option;
     children: child list
   }
-end = XJS
+end = JSX
 
 and Pattern : sig
   module Object : sig

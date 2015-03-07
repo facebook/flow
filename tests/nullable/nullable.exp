@@ -3,19 +3,19 @@ nullable.js:1:32,35: null
 This type is incompatible with
   nullable.js:1:16,21: string
 
-nullable.js:3:17,22: ?string
+nullable.js:9:9,13: ?string
 This type is incompatible with
   nullable.js:5:16,21: string
 
-nullable.js:3:17,22: null
+nullable.js:9:9,13: null
 This type is incompatible with
   nullable.js:5:16,21: string
 
-nullable.js:3:17,22: undefined
+nullable.js:9:9,13: undefined
 This type is incompatible with
   nullable.js:5:16,21: string
 
-nullable.js:3:17,22: string
+nullable.js:9:9,13: string
 This type is incompatible with
   nullable.js:7:18,23: number
 

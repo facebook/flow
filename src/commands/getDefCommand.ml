@@ -35,9 +35,9 @@ let parse_args () =
     "Usage: %s get-def [OPTION]... [FILE] LINE COLUMN\n\n\
       e.g. %s get-def foo.js 12 3\n\
       or   %s get-def 12 3 < foo.js\n\n"
-      Sys.argv.(0)
-      Sys.argv.(0)
-      Sys.argv.(0) in
+      CommandUtils.exe_name
+      CommandUtils.exe_name
+      CommandUtils.exe_name in
   let args = ClientArgs.parse_without_command options usage "get-def" in
   let (file, line, column) = match args with
   | [file; line; column] ->
@@ -75,4 +75,6 @@ let main {file; line; column; option_values;} =
     print_endline (Utils.spf "%s:%d:%d,%d:%d" file l0 c0 l1 c1)
   )
 
+let name = "get-def"
+let doc = "Gets the definition location of a variable or property"
 let run () = main (parse_args ())

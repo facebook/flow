@@ -59,7 +59,7 @@ let remove_classes class_set =
  *)
 (*****************************************************************************)
 
-let check_extend_kind env parent_pos parent_kind child_pos child_kind =
+let check_extend_kind parent_pos parent_kind child_pos child_kind =
   match parent_kind, child_kind with
     (* What is allowed *)
   | (Ast.Cabstract | Ast.Cnormal), (Ast.Cabstract | Ast.Cnormal)
@@ -67,13 +67,11 @@ let check_extend_kind env parent_pos parent_kind child_pos child_kind =
   | Ast.Ctrait, Ast.Ctrait
   | Ast.Cinterface, Ast.Cinterface ->
       ()
-  | _ when not (Env.is_decl env) (* Don't check in decl mode *) ->
-      (* What is dissallowed *)
+  | _ ->
+      (* What is disallowed *)
       let parent = Ast.string_of_class_kind parent_kind in
       let child  = Ast.string_of_class_kind child_kind in
       Errors.wrong_extend_kind child_pos child parent_pos parent
-  | _ -> ()
-
 
 (*****************************************************************************)
 (* Functions used retrieve everything implemented in parent classes
@@ -113,7 +111,7 @@ let add_grand_parents_or_traits parent_pos class_nast acc parent_type =
   let class_pos = fst class_nast.c_name in
   let class_kind = class_nast.c_kind in
   if not is_trait
-  then check_extend_kind env parent_pos parent_type.tc_kind class_pos class_kind;
+  then check_extend_kind parent_pos parent_type.tc_kind class_pos class_kind;
   let extends = SSet.union extends parent_type.tc_extends in
   env, extends, parent_type.tc_members_fully_known && is_complete, is_trait
 

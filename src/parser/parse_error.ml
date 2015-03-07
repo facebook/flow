@@ -47,13 +47,13 @@ type t =
   | StrictLHSPostfix
   | StrictLHSPrefix
   | StrictReservedWord
-  | XJSAttributeValueEmptyExpression
-  | InvalidXJSAttributeValue
-  | ExpectedXJSClosingTag of string
+  | JSXAttributeValueEmptyExpression
+  | InvalidJSXAttributeValue
+  | ExpectedJSXClosingTag of string
   | NoUnintializedConst
   | NewlineBeforeArrow
   | StrictFunctionStatement
-  | AdjacentXJSElements
+  | AdjacentJSXElements
 
 exception Error of (Ast.Loc.t * t) list
 
@@ -99,13 +99,13 @@ module PP =
       | StrictLHSPostfix ->  "Postfix increment/decrement may not have eval or arguments operand in strict mode"
       | StrictLHSPrefix ->  "Prefix increment/decrement may not have eval or arguments operand in strict mode"
       | StrictReservedWord ->  "Use of future reserved word in strict mode"
-      | XJSAttributeValueEmptyExpression -> "XJS attributes must only be assigned a non-empty expression"
-      | InvalidXJSAttributeValue -> "XJS value should be either an expression or a quoted XJS text"
-      | ExpectedXJSClosingTag name -> "Expected corresponding XJS closing tag for "^name
+      | JSXAttributeValueEmptyExpression -> "JSX attributes must only be assigned a non-empty expression"
+      | InvalidJSXAttributeValue -> "JSX value should be either an expression or a quoted JSX text"
+      | ExpectedJSXClosingTag name -> "Expected corresponding JSX closing tag for "^name
       | NoUnintializedConst -> "Const must be initialized"
       | NewlineBeforeArrow ->  "Illegal newline before arrow"
       | StrictFunctionStatement -> "In strict mode code, functions can only be"^
           " declared at top level or immediately within another function."
-      | AdjacentXJSElements -> "Unexpected token <. Remember, adjacent XJS "^
+      | AdjacentJSXElements -> "Unexpected token <. Remember, adjacent JSX "^
           "elements must be wrapped in an enclosing parent tag"
   end

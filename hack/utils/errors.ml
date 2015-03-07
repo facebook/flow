@@ -116,7 +116,7 @@ module Naming                               = struct
   let expected_variable                     = 2014 (* DONT MODIFY!!!! *)
   let fd_name_already_bound                 = 2015 (* DONT MODIFY!!!! *)
   let gen_array_rec_arity                   = 2016 (* DONT MODIFY!!!! *)
-  let gen_array_va_rec_arity                = 2017 (* DONT MODIFY!!!! *)
+  (* let gen_array_va_rec_arity             = 2017 *)
   let gena_arity                            = 2018 (* DONT MODIFY!!!! *)
   let generic_class_var                     = 2019 (* DONT MODIFY!!!! *)
   let genva_arity                           = 2020 (* DONT MODIFY!!!! *)
@@ -487,6 +487,13 @@ let duplicate_user_attribute (pos, name) existing_attr_pos =
     existing_attr_pos, name^" was already used here";
   ]
 
+let unbound_attribute_name pos name =
+  let reason = if (str_starts_with name "__")
+    then "starts with __ but is not a standard attribute"
+    else "is not listed in .hhconfig"
+  in add Naming.unbound_name pos
+    ("Unrecognized user attribute: "^name^" "^reason)
+
 let this_no_argument pos =
   add Naming.this_no_argument pos "\"this\" expects no arguments"
 
@@ -612,10 +619,6 @@ let genva_arity pos =
 let gen_array_rec_arity pos =
   add Naming.gen_array_rec_arity pos
     "gen_array_rec() expects exactly 1 argument"
-
-let gen_array_va_rec_arity pos =
-  add Naming.gen_array_va_rec_arity pos
-    "gen_array_va_rec_DEPRECATED() expects at least 1 argument"
 
 let dynamic_class pos =
   add Typing.dynamic_class pos

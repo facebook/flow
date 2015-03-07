@@ -83,6 +83,56 @@ let parse_flow = parse_header parse_attributes_flow ModuleMode_Unchecked
 
 (** module systems **)
 
+(* shared heap for package.json tokens by filename *)
+module PackageHeap = SharedMem.WithCache (String) (struct
+    type t = Spider_monkey_ast.Expression.t SMap.t
+    let prefix = Prefix.make()
+  end)
+
+(* shared heap for package.json directories by package name *)
+module ReversePackageHeap = SharedMem.WithCache (String) (struct
+    type t = string
+    let prefix = Prefix.make()
+  end)
+
+let get_key key tokens = Spider_monkey_ast.(
+  match SMap.get (spf "\"%s\"" key) tokens with
+  | Some (_, Expression.Literal { Literal.value = Literal.String name; _ }) ->
+      Some name
+  | _ -> None
+)
+
+(* basic parse of JSON as a JS expression; throws on parse failure *)
+let parse_json json file =
+  let js = spf "(%s)" json in
+  let ast, errors = Parsing_service_js.do_parse ~keep_errors:true js file in
+  Spider_monkey_ast.(match ast with
+    | Some (_, [_, Statement.Expression ({
+        Statement.Expression.expression = _, Expression.Object {
+          Expression.Object.properties = ps
+        }
+      })], _) ->
+        List.fold_left Expression.Object.(fun map -> function
+          | Property (_, {
+              Property.key = Property.Literal (_, { Literal.raw; _ });
+              value;
+              _
+            }) -> SMap.add raw value map
+          | _ -> map
+        ) SMap.empty ps
+    | _ -> SMap.empty
+  ), errors
+
+let add_package package =
+  let json = cat package in
+  let tokens, errors = parse_json json package in
+  PackageHeap.add package tokens;
+  (match get_key "name" tokens with
+  | Some name ->
+    ReversePackageHeap.add name (Filename.dirname package)
+  | None -> ());
+  errors
+
 (* Specification of a module system. Currently this signature is sufficient to
    model both Haste and Node, but should be further generalized. *)
 module type MODULE_SYSTEM = sig
@@ -108,20 +158,20 @@ end
 
 (****************** Node module system *********************)
 
-module Node: MODULE_SYSTEM = struct
+let seq f g =
+  match f () with
+  | Some x -> Some x
+  | None -> g ()
+
+let rec seqf f = function
+  | x :: xs ->
+    (match f x with
+    | Some v -> Some v
+    | None -> seqf f xs)
+  | [] -> None
+
+module Node = struct
   let exported_module file comments = file
-
-  let seq f g =
-    match f () with
-    | Some x -> Some x
-    | None -> g ()
-
-  let rec seqf f = function
-    | x :: xs ->
-        (match f x with
-        | Some v -> Some v
-        | None -> seqf f xs)
-    | [] -> None
 
   let path_if_exists path =
     if Sys.file_exists path then Some path
@@ -130,21 +180,25 @@ module Node: MODULE_SYSTEM = struct
   let path_is_file path =
     Sys.file_exists path && not (Sys.is_directory path)
 
-  (* quick-n-dirty search for "main" : file, assuming well-formed JSON *)
   let parse_main package =
-    let json = cat package in
-    let rec f = function
-      | "main" :: file :: _ ->
-          let path = Files_js.normalize_path (Filename.dirname package) file in
-          seq
-            (fun () -> path_if_exists path)
-            (fun () -> seqf (fun ext -> path_if_exists (path ^ ext)) Files_js.flow_extensions)
-      | word :: words -> f words
-      | [] ->
-          let path = Files_js.normalize_path (Filename.dirname package) "index.js" in
-          path_if_exists path
-    in
-    f (Str.split (Str.regexp "[ \n\t:\",{}]+") (String.trim json))
+    if not (Sys.file_exists package) then None
+    else
+      let tokens = package |> PackageHeap.find_unsafe in
+      let dir = Filename.dirname package in
+      match get_key "main" tokens with
+      | None -> None
+      | Some file ->
+          let path = Files_js.normalize_path dir file in
+          if path_is_file path
+          then Some path
+          else seq
+            (fun () ->
+              seqf
+                (fun ext -> path_if_exists (path ^ ext))
+                Files_js.flow_extensions)
+            (fun () ->
+              let path = Filename.concat path "index.js" in
+              path_if_exists path)
 
   let resolve_relative dir r =
     let path = Files_js.normalize_path dir r in
@@ -156,14 +210,14 @@ module Node: MODULE_SYSTEM = struct
           (fun ext -> path_if_exists (path ^ ext))
           Files_js.flow_extensions
       )
-      (fun () ->
-        let package = Filename.concat path "package.json" in
-        if Sys.file_exists package
-        then parse_main package
-        else (
-          let path = Filename.concat path "index.js" in
-          path_if_exists path
-        )
+      (fun () -> seq
+          (fun () ->
+            let package = Filename.concat path "package.json" in
+            parse_main package)
+          (fun () ->
+            let path = Filename.concat path "index.js" in
+            path_if_exists path
+          )
       )
 
   let rec node_module dir r = seq
@@ -179,13 +233,14 @@ module Node: MODULE_SYSTEM = struct
     || Str.string_match Files_js.current_dir_name r 0
     || Str.string_match Files_js.parent_dir_name r 0
 
-  let imported_module file r =
+  let resolve_import file r =
     let dir = Filename.dirname file in
-    let opt_module_name =
-      if relative r
-      then resolve_relative dir r
-      else node_module dir r
-    in
+    if relative r
+    then resolve_relative dir r
+    else node_module dir r
+
+  let imported_module file r =
+    let opt_module_name = resolve_import file r in
     match opt_module_name with
     | Some r -> r
     | _ -> r
@@ -231,16 +286,30 @@ module Haste: MODULE_SYSTEM = struct
     if is_mock file
     then short_module_name_of file
     else
-      let default = module_name_of file in
-      parse_module_name default comments
+      parse_module_name file comments
+
+  let expanded_name r =
+    match Str.split_delim Files_js.dir_sep r with
+    | [] -> None
+    | package_name::rest ->
+        ReversePackageHeap.get package_name |> opt_map (fun package ->
+          Files_js.construct_path package rest
+        )
+
+  (* similar to Node resolution, with possible special cases *)
+  let resolve_import file r =
+    seq
+      (fun () -> Node.resolve_import file r)
+      (fun () ->
+        match expanded_name r with
+        | Some r -> Node.resolve_relative (Filename.dirname file) r
+        | None -> None
+      )
 
   let imported_module file r =
-    if (String.contains r '/')
-    then
-      let dir = Filename.dirname (module_name_of file) in
-      Files_js.normalize_path dir r
-    else
-      Haste_module_preprocessor.preprocess_name r
+    match resolve_import file r with
+    | Some r -> r
+    | None -> Haste_module_preprocessor.preprocess_name r
 
 (* in haste, many files may provide the same module. here we're also
    supporting the notion of mock modules - allowed duplicates used as
@@ -411,6 +480,29 @@ let add_module_info cx =
   let info = info_of cx in
   InfoHeap.add info.file info
 
+(* Note that the module provided by a file is always accessible via its full
+   path, so that it may be imported by specifying (a part of) that path in any
+   module system. So, e.g., a file whose full path is /foo/bar.js is considered
+   to export a module by that name, so that it is always possible to import it
+   from any other file in the file system by using a relative path or some other
+   file system navigation convention. The Node module system relies on this
+   basic setup.
+
+   In addition, a file may or may not export its module by another name: this
+   name is typically shorter, but can be used unambiguously throughout the file
+   system to import the module, and this access mechanism is somewhat robust to
+   moving files around in the file system. Thus, /foo/bar.js may also export its
+   module by the name Bar, using a custom module system like Haste, either
+   explicitly (by mentioning Bar in the file) or implicitly (following some
+   convention), so that it can be imported from any other file in the file
+   system by the name Bar. Other combinations are possible: e.g., all files in a
+   directory may export their modules via paths relative to a package name, and
+   files elsewhere in the file system can import those modules by providing
+   paths relative to that package name. So, e.g., /foo/bar.js may export its
+   module via the name Foo/bar.js, with the name Foo may be specified in a
+   config file under /foo, and other files may still be able to import it by
+   that name when the /foo directory is moved to, say, /qux/foo. *)
+
 (* hash table from module names to all known provider files.
    maintained and used by commit_modules and remove_files *)
 let all_providers = Hashtbl.create 0
@@ -470,8 +562,8 @@ let commit_modules inferred removed =
   (* all modules provided by newly inferred files must be repicked *)
   let repick = List.fold_left (fun acc f ->
     let { _module = m; _ } = get_module_info f in
-    add_provider f m;
-    SSet.add m acc
+    add_provider f m; add_provider f f;
+    acc |> SSet.add m |> SSet.add f
   ) removed inferred in
   (* prep for registering new mappings in NameHeap *)
   let remove, replace, errs = SSet.fold (fun m (rem, rep, errs) ->
@@ -499,7 +591,7 @@ let commit_modules inferred removed =
   (* update NameHeap *)
   NameHeap.remove_batch remove;
   SharedMem.collect ();
-  List.iter (fun (m, p) -> NameHeap.add m p) replace;
+  List.iter (fun (m, p) -> NameHeap.add m p; NameHeap.add p p) replace;
   (* now that providers are updated, update reverse dependency info *)
   add_reverse_imports inferred;
   Modes.debug_string (fun () -> "*** done committing modules ***");
@@ -540,7 +632,7 @@ let remove_files files =
                   then reverse_imports_clear name
               | None -> ()
               );
-              SSet.add name names
+              names |> SSet.add name |> SSet.add file
           | _ ->
               names
         )

@@ -1389,11 +1389,11 @@ module.exports = {
       }
     },
   },
-  'Invalid XJS Syntax': {
+  'Invalid JSX Syntax': {
     '(<div />) < x;': {
       'errors': {
         '0': {
-          'message': 'Unexpected token <. Remember, adjacent XJS elements '+
+          'message': 'Unexpected token <. Remember, adjacent JSX elements '+
               'must be wrapped in an enclosing parent tag',
           'loc': {
             'start.column': 10,
@@ -1405,7 +1405,7 @@ module.exports = {
     'var x = <div>one</div><div>two</div>;': {
       'errors': {
         '0': {
-          'message': 'Unexpected token <. Remember, adjacent XJS elements '+
+          'message': 'Unexpected token <. Remember, adjacent JSX elements '+
               'must be wrapped in an enclosing parent tag',
           'loc': {
             'start.column': 22,
@@ -1417,7 +1417,7 @@ module.exports = {
     'var x = <div>one</div> /* intervening comment */ <div>two</div>;': {
       'errors': {
         '0': {
-          'message': 'Unexpected token <. Remember, adjacent XJS elements '+
+          'message': 'Unexpected token <. Remember, adjacent JSX elements '+
               'must be wrapped in an enclosing parent tag',
           'loc': {
             'start.column': 49,

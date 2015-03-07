@@ -54,5 +54,7 @@ end
 
 module FlowStopCommand = ClientStop.StopCommand (FlowConfig)
 
+let name = "stop"
+let doc = "Stops a Flow server"
 let run () =
   FlowStopCommand.main (parse_args ())

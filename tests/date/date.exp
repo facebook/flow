@@ -1,5 +1,5 @@
 
-[LIB] core.js:198:16,21: number
+date.js:2:16,26: number
 This type is incompatible with
   date.js:2:7,12: string
 

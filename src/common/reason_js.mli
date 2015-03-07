@@ -39,6 +39,7 @@ val is_derivable_reason : reason -> bool
 val builtin_reason : string -> reason
 
 val string_of_reason : reason -> string
+val dump_reason : reason -> string
 
 (* accessors *)
 val loc_of_reason : reason -> Loc.t

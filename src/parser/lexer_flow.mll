@@ -128,9 +128,9 @@
     | T_VIRTUAL_SEMICOLON
     | T_ERROR
     | T_EOF
-    (* XJS *)
-    | T_XJS_IDENTIFIER
-    | T_XJS_TEXT of (Ast.Loc.t * string * string) (* loc, value, raw *)
+    (* JSX *)
+    | T_JSX_IDENTIFIER
+    | T_JSX_TEXT of (Ast.Loc.t * string * string) (* loc, value, raw *)
     (* Type primitives *)
     | T_ANY_TYPE
     | T_BOOLEAN_TYPE
@@ -274,8 +274,8 @@
     | T_ERROR -> "ERROR"
     | T_VIRTUAL_SEMICOLON -> ";"
     | T_EOF -> "EOF"
-    | T_XJS_IDENTIFIER -> "XJS IDENTIFIER"
-    | T_XJS_TEXT _ -> "XJS TEXT"
+    | T_JSX_IDENTIFIER -> "JSX IDENTIFIER"
+    | T_JSX_TEXT _ -> "JSX TEXT"
     (* Type primitives *)
     | T_ANY_TYPE -> "any"
     | T_BOOLEAN_TYPE -> "bool"
@@ -325,7 +325,7 @@
     let (lex_loc, lex_value) = match lex_token with
     | T_STRING (loc, _, raw, _) ->
         loc, raw
-    | T_XJS_TEXT (loc, _, raw) -> loc, raw
+    | T_JSX_TEXT (loc, _, raw) -> loc, raw
     | T_TEMPLATE_PART (loc, part) ->
         loc, Ast.Expression.TemplateLiteral.Element.(part.value.raw)
     | T_REGEXP (loc, pattern, flags) -> loc, "/" ^ pattern ^ "/" ^ flags
@@ -421,10 +421,10 @@
         Char.chr code;
       ]
 
-  type xjs_text_mode =
-    | XJS_SINGLE_QUOTED_TEXT
-    | XJS_DOUBLE_QUOTED_TEXT
-    | XJS_CHILD_TEXT
+  type jsx_text_mode =
+    | JSX_SINGLE_QUOTED_TEXT
+    | JSX_DOUBLE_QUOTED_TEXT
+    | JSX_CHILD_TEXT
 
   let lex_template_part env template_part =
     let start = lb_to_loc env.lex_lb in
@@ -936,23 +936,23 @@ and regexp_class buf = parse
   | _ as c            { Buffer.add_char buf c;
                         regexp_class buf lexbuf }
 
-and lex_xjs_tag env = parse
+and lex_jsx_tag env = parse
   | eof               { env, T_EOF }
   | line_terminator_sequence
                       { Lexing.new_line lexbuf;
-                        lex_xjs_tag env lexbuf }
+                        lex_jsx_tag env lexbuf }
   | whitespace+       { unicode_fix_cols lexbuf;
-                        lex_xjs_tag env lexbuf }
+                        lex_jsx_tag env lexbuf }
   | "//"              { let start = lb_to_loc lexbuf in
                         let buf = Buffer.create 127 in
                         let _end = line_comment env buf lexbuf in
                         save_comment env start _end buf true;
-                        lex_xjs_tag env lexbuf }
+                        lex_jsx_tag env lexbuf }
   | "/*"              { let start = lb_to_loc lexbuf in
                         let buf = Buffer.create 127 in
                         let _end = comment env buf lexbuf in
                         save_comment env start _end buf true;
-                        lex_xjs_tag env lexbuf }
+                        lex_jsx_tag env lexbuf }
   | '<'               { env, T_LESS_THAN }
   | '/'               { env, T_DIV }
   | '>'               { env, T_GREATER_THAN }
@@ -962,7 +962,7 @@ and lex_xjs_tag env = parse
   | '='               { env, T_ASSIGN }
   | letter ('-' | alphanumeric)*
                       { unicode_fix_cols lexbuf;
-                        env, T_XJS_IDENTIFIER }
+                        env, T_JSX_IDENTIFIER }
   | ('\''|'"') as quote
                       {
                         let start= lb_to_loc lexbuf in
@@ -970,57 +970,57 @@ and lex_xjs_tag env = parse
                         let raw = Buffer.create 127 in
                         Buffer.add_char raw quote;
                         let mode = if quote = '\''
-                          then XJS_SINGLE_QUOTED_TEXT
-                          else XJS_DOUBLE_QUOTED_TEXT in
-                        let _end = xjs_text env mode buf raw lexbuf in
+                          then JSX_SINGLE_QUOTED_TEXT
+                          else JSX_DOUBLE_QUOTED_TEXT in
+                        let _end = jsx_text env mode buf raw lexbuf in
                         Buffer.add_char raw quote;
                         let value = Buffer.contents buf in
                         let raw = Buffer.contents raw in
-                        env, T_XJS_TEXT (Ast.Loc.btwn start _end, value, raw)
+                        env, T_JSX_TEXT (Ast.Loc.btwn start _end, value, raw)
                       }
   | _                 { env, T_ERROR }
 
-and lex_xjs_child env start buf raw = parse
+and lex_jsx_child env start buf raw = parse
 (*
   | whitespace+ as ws { Buffer.add_string buf ws;
-                        lex_xjs_child env start buf lexbuf
+                        lex_jsx_child env start buf lexbuf
                       }
 *)
   | line_terminator_sequence as lt
                       { Buffer.add_string raw lt;
                         Buffer.add_string buf lt;
                         Lexing.new_line lexbuf;
-                        let _end = xjs_text env XJS_CHILD_TEXT buf raw lexbuf in
+                        let _end = jsx_text env JSX_CHILD_TEXT buf raw lexbuf in
                         let value = Buffer.contents buf in
                         let raw = Buffer.contents raw in
-                        env, T_XJS_TEXT (Ast.Loc.btwn start _end, value, raw)
+                        env, T_JSX_TEXT (Ast.Loc.btwn start _end, value, raw)
                       }
   | eof               { env, T_EOF }
   | '<'               { env, T_LESS_THAN }
   | '{'               { env, T_LCURLY }
   | _ as c            { Buffer.add_char raw c;
                         Buffer.add_char buf c;
-                        let _end = xjs_text env XJS_CHILD_TEXT buf raw lexbuf in
+                        let _end = jsx_text env JSX_CHILD_TEXT buf raw lexbuf in
                         let value = Buffer.contents buf in
                         let raw = Buffer.contents raw in
-                        env, T_XJS_TEXT (Ast.Loc.btwn start _end, value, raw)
+                        env, T_JSX_TEXT (Ast.Loc.btwn start _end, value, raw)
                       }
 
-and xjs_text env mode buf raw = parse
+and jsx_text env mode buf raw = parse
   | ("'"|'"'|'<'|'{') as c
                       { match mode, c with
-                        | XJS_SINGLE_QUOTED_TEXT, '\''
-                        | XJS_DOUBLE_QUOTED_TEXT, '"' ->
+                        | JSX_SINGLE_QUOTED_TEXT, '\''
+                        | JSX_DOUBLE_QUOTED_TEXT, '"' ->
                             lb_to_loc lexbuf
-                        | XJS_CHILD_TEXT, ('<' | '{') ->
+                        | JSX_CHILD_TEXT, ('<' | '{') ->
                             (* Don't actually want to consume these guys
-                             * yet...they're not part of the XJS text *)
+                             * yet...they're not part of the JSX text *)
                             back lexbuf;
                             lb_to_loc lexbuf
                         | _ ->
                             Buffer.add_char raw c;
                             Buffer.add_char buf c;
-                            xjs_text env mode buf raw lexbuf
+                            jsx_text env mode buf raw lexbuf
                       }
   | eof               { illegal env (lb_to_loc lexbuf);
                         lb_to_loc lexbuf
@@ -1029,19 +1029,19 @@ and xjs_text env mode buf raw = parse
                       { Buffer.add_string raw lt;
                         Buffer.add_string buf lt;
                         Lexing.new_line lexbuf;
-                        xjs_text env mode buf raw lexbuf
+                        jsx_text env mode buf raw lexbuf
                       }
   | "&#x" (hex+ as n) ';' as s
                       { Buffer.add_string raw s;
                         let code = int_of_string ("0x" ^ n) in
                         List.iter (Buffer.add_char buf) (utf16to8 code);
-                        xjs_text env mode buf raw lexbuf
+                        jsx_text env mode buf raw lexbuf
                       }
   | "&#" (digit+ as n) ';' as s
                       { Buffer.add_string raw s;
                         let code = int_of_string n in
                         List.iter (Buffer.add_char buf) (utf16to8 code);
-                        xjs_text env mode buf raw lexbuf
+                        jsx_text env mode buf raw lexbuf
                       }
   | "&" (htmlentity as entity) ';' as s
                       {
@@ -1304,11 +1304,11 @@ and xjs_text env mode buf raw = parse
                         (match code with
                         | Some code -> List.iter (Buffer.add_char buf) (utf16to8 code)
                         | None -> Buffer.add_string buf ("&" ^ entity ^";"));
-                        xjs_text env mode buf raw lexbuf
+                        jsx_text env mode buf raw lexbuf
                       }
   | _ as c            { Buffer.add_char raw c;
                         Buffer.add_char buf c;
-                        xjs_text env mode buf raw lexbuf }
+                        jsx_text env mode buf raw lexbuf }
 
 and template_part env cooked raw = parse
   | eof               { illegal env (lb_to_loc lexbuf);
@@ -1351,17 +1351,17 @@ and template_part env cooked raw = parse
       T_REGEXP (Ast.Loc.btwn start _end, Buffer.contents buf, flags) in
     get_result_and_clear_state (env, regexp)
 
-  (* Lexing XJS children requires a string buffer to keep track of whitespace
+  (* Lexing JSX children requires a string buffer to keep track of whitespace
    * *)
-  let lex_xjs_child env =
+  let lex_jsx_child env =
     let start = Ast.Loc.from_curr_lb env.lex_lb in
     let buf = Buffer.create 127 in
     let raw = Buffer.create 127 in
-    let env, child = lex_xjs_child env start buf raw env.lex_lb in
+    let env, child = lex_jsx_child env start buf raw env.lex_lb in
     get_result_and_clear_state (env, child)
 
-  let lex_xjs_tag env =
-    get_result_and_clear_state (lex_xjs_tag env env.lex_lb)
+  let lex_jsx_tag env =
+    get_result_and_clear_state (lex_jsx_tag env env.lex_lb)
 
   let lex_template_part env =
     let env, part = lex_template_part env template_part in

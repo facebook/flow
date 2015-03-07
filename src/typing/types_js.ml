@@ -669,6 +669,15 @@ let print_errors ?root flow_opts =
 (* initialize flow server state, including full check *)
 let server_init genv env flow_opts =
   let root = ServerArgs.root genv.ServerEnv.options in
+
+  Files_js.package_json root |> List.iter (fun package ->
+    let errors = Module_js.add_package package in
+    match errors with
+    | None -> ()
+    | Some error ->
+      save_errors infer_errors [package] [error]
+  );
+
   let get_next = Files_js.make_next_files root in
   let (parsed, checked) =
     full_check genv.ServerEnv.workers get_next flow_opts in

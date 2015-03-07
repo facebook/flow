@@ -67,7 +67,7 @@ module Type = struct
 
   | NumT of reason * literal
   | StrT of reason * literal
-  | BoolT of reason
+  | BoolT of reason * bool option
   | UndefT of reason
   | MixedT of reason
   | AnyT of reason
@@ -161,6 +161,10 @@ module Type = struct
   (* == *)
   | EqT of reason * t
 
+  (* logical operators *)
+  | AndT of reason * t * t
+  | OrT of reason * t * t
+
   (* operation on polymorphic types *)
   | SpecializeT of reason * t list * t
 
@@ -232,15 +236,15 @@ module Type = struct
 
   and insttype = {
     class_id: ident;
-    type_args: t IMap.t;
+    type_args: t SMap.t;
     fields_tmap: fields;
     methods_tmap: methods
   }
 
   and typeparam = {
     reason: reason;
-    id: ident;
     name: string;
+    bound: t;
   }
 
   and prototype = t
@@ -409,7 +413,7 @@ end)
 
 module BoolT = Primitive (struct
   let desc = "boolean"
-  let make r = BoolT r
+  let make r = BoolT (r, None)
 end)
 
 module MixedT = Primitive (struct
@@ -569,6 +573,8 @@ let is_use = function
   | SuperT _
   | ExtendsT _
   | AdderT _
+  | AndT _
+  | OrT _
   | ComparatorT _
   | PredicateT _
   | EqT _
@@ -625,6 +631,8 @@ let string_of_ctor = function
   | RestT _ -> "RestT"
   | PredicateT _ -> "PredicateT"
   | EqT _ -> "EqT"
+  | AndT _ -> "AndT"
+  | OrT _ -> "OrT"
   | MarkupT _ -> "MarkupT"
   | SpecializeT _ -> "SpecializeT"
   | TypeAppT _ -> "TypeAppT"
@@ -661,7 +669,7 @@ let rec reason_of_t = function
 
   | NumT (reason, _)
   | StrT (reason, _)
-  | BoolT reason
+  | BoolT (reason, _)
   | UndefT reason
   | MixedT reason
   | AnyT reason
@@ -699,6 +707,9 @@ let rec reason_of_t = function
 
   | AdderT (reason,_,_)
   | ComparatorT (reason,_)
+
+  | AndT (reason, _, _)
+  | OrT (reason, _, _)
 
   | TypeT (reason,_)
       -> reason
@@ -813,18 +824,13 @@ and pos_of_t t = pos_of_reason (reason_of_t t)
 
 and loc_of_t t = loc_of_reason (reason_of_t t)
 
-and get_typeparam_names xs tnames =
-  List.fold_left (fun tnames param ->
-    IMap.add param.id param.name tnames
-  ) tnames xs
-
 (* TODO make a type visitor *)
 let rec mod_reason_of_t f = function
 
   | OpenT (reason, t) -> OpenT (f reason, t)
   | NumT (reason, t) -> NumT (f reason, t)
   | StrT (reason, t) -> StrT (f reason, t)
-  | BoolT reason -> BoolT (f reason)
+  | BoolT (reason, t) -> BoolT (f reason, t)
   | UndefT reason -> UndefT (f reason)
   | MixedT reason -> MixedT (f reason)
   | AnyT reason -> AnyT (f reason)
@@ -833,7 +839,7 @@ let rec mod_reason_of_t f = function
 
   | FunT (reason, s, p, ft) -> FunT (f reason, s, p, ft)
   | PolyT (plist, t) -> PolyT (plist, mod_reason_of_t f t)
-  | BoundT { reason; id; name } -> BoundT { reason = f reason; id; name }
+  | BoundT { reason; name; bound } -> BoundT { reason = f reason; name; bound }
   | ObjT (reason, ot) -> ObjT (f reason, ot)
   | ArrT (reason, t, ts) -> ArrT (f reason, t, ts)
 
@@ -865,6 +871,9 @@ let rec mod_reason_of_t f = function
   | PredicateT (pred, t) -> PredicateT (pred, mod_reason_of_t f t)
 
   | EqT (reason, t) -> EqT (f reason, t)
+
+  | AndT (reason, t1, t2) -> AndT (f reason, t1, t2)
+  | OrT (reason, t1, t2) -> OrT (f reason, t1, t2)
 
   | MarkupT(reason, t, t2) -> MarkupT (f reason, t, t2)
 
@@ -909,13 +918,24 @@ let rec mod_reason_of_t f = function
   | CustomClassT (name, ts, t) ->
       CustomClassT (name, ts, mod_reason_of_t f t)
 
+(* replace a type's pos with one taken from a reason *)
+let repos_t_from_reason r t =
+  mod_reason_of_t (repos_reason (pos_of_reason r)) t
+
+(* return a type copy with reason modified using second, operational reason *)
+let to_op_reason op_reason t =
+  mod_reason_of_t (fun r ->
+    let d = spf "%s (%s)" (desc_of_reason r) (desc_of_reason op_reason) in
+    new_reason d (pos_of_reason op_reason)
+  ) t
+
 (* replace a type's reason in its entirety *)
 let swap_reason t r =
   mod_reason_of_t (fun _ -> r) t
 
 (* type comparison mod reason *)
 let reasonless_compare t t' =
-  (* inefficient but concise! *)
+  if t == t' then 0 else
   Pervasives.compare t (swap_reason t' (reason_of_t t))
 
 let name_prefix_of_t = function
@@ -1136,8 +1156,9 @@ and dump_t_ =
     | StrT (r, c) -> Some (match c with
         | Some s -> spf "StrT(%S)" s
         | None -> "StrT")
-    | BoolT r ->
-        Some "BoolT"
+    | BoolT (r, c) -> Some (match c with
+        | Some b -> spf "BoolT(%B)" b
+        | None -> "BoolT")
     | UndefT _
     | MixedT _
     | AnyT _

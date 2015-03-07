@@ -99,11 +99,21 @@ let rec normalize_path dir file =
 
 and normalize_path_ dir names =
   match names with
-  | ""::names ->
-      List.fold_left Filename.concat "" names
   | dot::names when dot = Filename.current_dir_name ->
+      (* ./<names> => dir/names *)
       normalize_path_ dir names
   | dots::names when dots = Filename.parent_dir_name ->
+      (* ../<names> => parent(dir)/<names> *)
       normalize_path_ (Filename.dirname dir) names
+  | ""::names when names <> [] ->
+      (* /<names> => /<names> *)
+      construct_path Filename.dir_sep names
   | _ ->
-      List.fold_left Filename.concat dir names
+      (* <names> => dir/<names> *)
+      construct_path dir names
+
+and construct_path = List.fold_left Filename.concat
+
+let package_json root =
+  let config = FlowConfig.get root in
+  List.filter (wanted config) (Find.find_with_name [root] "package.json")

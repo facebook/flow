@@ -381,7 +381,9 @@ let identifier env =
       let name = Lexing.lexeme env.lb in
       pos, name
   | Tcolon ->
-      xhp_identifier env
+      let start = Pos.make env.file env.lb in
+      let end_, name = xhp_identifier env in
+      Pos.btw start end_, name
   | _ ->
       error_expect env "identifier";
       Pos.make env.file env.lb, "*Unknown*"

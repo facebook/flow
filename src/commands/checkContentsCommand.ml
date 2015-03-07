@@ -27,8 +27,8 @@ let parse_args () =
   let usage = Printf.sprintf
     "Usage: %s check-contents [OPTION]... [FILE]\n\n\
       e.g. %s check-contents < foo.js\n\n"
-      Sys.argv.(0)
-      Sys.argv.(0) in
+      CommandUtils.exe_name
+      CommandUtils.exe_name in
   let args = ClientArgs.parse_without_command options usage "check-contents" in
   let file = match args with
     | [] ->
@@ -64,4 +64,6 @@ let main {file; option_values;} =
       prerr_endline "Unexpected server response!";
       exit (-1)
 
+let name = "check-contents"
+let doc = "Run typechecker on contents from stdin"
 let run () = main (parse_args ())

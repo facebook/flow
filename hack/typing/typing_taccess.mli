@@ -14,8 +14,5 @@ open Typing_defs
 val expand:
   Typing_env.env -> Typing_reason.t -> taccess_type -> Typing_env.env * ty
 
-val fill_with_class_id:
+val fill_type_hole:
   Typing_env.env -> Nast.class_id -> ty -> ty -> Typing_env.env * ty
-
-val fill_with_expr:
-  Typing_env.env -> Nast.expr -> ty -> ty -> Typing_env.env * ty

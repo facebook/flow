@@ -7,6 +7,18 @@ FeedUFI.react.js:25:7,30:8: prop className of type parameter P of React element:
 Property not found in
   UFILikeCount.react.js:12:20,21:2: props of React component
 
+classes.js:3:19,33: prop y_ of type parameter S of Foo
+Property not found in
+  classes.js:13:24,36: object type
+
+classes.js:10:25,36: number
+This type is incompatible with
+  classes.js:10:16,21: string
+
+classes.js:17:17,30: property y_
+Property not found in
+  classes.js:13:24,36: object type
+
 new_react.js:2:9,24:2: property x
 Property not found in
   new_react.js:8:25,27: object type
@@ -119,4 +131,8 @@ This type is incompatible with
 This type is incompatible with
   new_react.js:28:8,13: number
 
-Found 30 errors
+[LIB] react.js:41:5,49: function type
+Too few arguments (expected default/rest parameters in function)
+  classes.js:3:7,9: Foo
+
+Found 34 errors

@@ -9,17 +9,27 @@
  *)
 
 type t = {
-  assume_php : bool;
-  (* For somewhat silly historical reasons having to do with the lack of
-   * .hhi's for fairly core XHP classes, we unfortunately mark all XHP
-   * classes as not having their members fully known *)
-  unsafe_xhp : bool;
+  (* When we encounter an unknown class|function|constant name outside
+   * of strict mode, is that an error? *)
+  tco_assume_php : bool;
+  (* For somewhat silly historical reasons having to do with the lack
+   * of .hhi's for fairly core XHP classes, we unfortunately mark all
+   * XHP classes as not having their members fully known *)
+  tco_unsafe_xhp : bool;
+
+  (* List of <<UserAttribute>> names expected in the codebase *)
+  tco_user_attrs : Utils.SSet.t option;
 }
 
 let empty = {
-  assume_php = true;
-  unsafe_xhp = false;
+  tco_assume_php = true;
+  tco_unsafe_xhp = false;
+  tco_user_attrs = None;
 }
 
-let assume_php t = t.assume_php
-let unsafe_xhp t = t.unsafe_xhp
+let assume_php t = t.tco_assume_php
+let unsafe_xhp t = t.tco_unsafe_xhp
+let user_attrs t = t.tco_user_attrs
+let allowed_attribute t name = match t.tco_user_attrs with
+  | None -> true
+  | Some attr_names -> Utils.SSet.mem name attr_names

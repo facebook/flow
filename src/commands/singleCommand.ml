@@ -54,7 +54,7 @@ let parse_args () =
     "--no-flowlib", CommandUtils.arg_set_unit no_flowlib,
       " Do not include embedded declarations";
   ] in
-  let usage = Printf.sprintf "Usage: %s single ROOT" Sys.argv.(0) in
+  let usage = Printf.sprintf "Usage: %s single ROOT" CommandUtils.exe_name in
   let args = ClientArgs.parse_without_command options usage "single" in
   let opt_libs = match !lib with
   | None -> []
@@ -98,4 +98,6 @@ let main { filename; options; } =
       (fun () -> Types_js.single_main [filename] options)
       (fun l -> die (Errors.to_string (Errors.to_absolute l)))
 
+let name = "single"
+let doc = "Does a single-threaded check (testing)"
 let run () = main (parse_args ())

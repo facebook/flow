@@ -44,10 +44,10 @@ let parse_args () =
     \t%s autocomplete < foo.js\n\
     \t%s autocomplete path/to/foo.js < foo.js
     \t%s autocomplete 12 35 < foo.js"
-    Sys.argv.(0)
-    Sys.argv.(0)
-    Sys.argv.(0)
-    Sys.argv.(0) in
+    CommandUtils.exe_name
+    CommandUtils.exe_name
+    CommandUtils.exe_name
+    CommandUtils.exe_name in
   let args = ClientArgs.parse_without_command options usage "autocomplete" in
   let file = match args with
   | [] ->
@@ -95,4 +95,6 @@ let main { file; option_values; } =
     ) completions
   )
 
+let name = "autocomplete"
+let doc = "Queries autocompletion information"
 let run () = main (parse_args ())

@@ -15,10 +15,10 @@
     "private": true
   },
   "devDependencies": {
-    "esprima-fb": "12001.1.0-dev-harmony-fb"
+    "esprima-fb": "13001.1001.0-dev-harmony-fb"
   },
   "dependencies": {
-    "ast-types": ">=0.6.11",
+    "ast-types": "0.7.0",
     "colors": ">=0.6.2",
     "minimist": ">=0.2.0"
   },

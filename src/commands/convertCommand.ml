@@ -94,7 +94,7 @@ let parse_args () =
   ] in
   let usage = Printf.sprintf "Usage: %s convert [DIR]\n\n\
   Convert *.d.ts in DIR if supplied, or current directory.\n\
-  foo.d.ts is written to foo.js" Sys.argv.(0) in
+  foo.d.ts is written to foo.js" CommandUtils.exe_name in
   let args = ClientArgs.parse_without_command options usage "convert" in
   let path = match args with
     | [] -> "."
@@ -120,4 +120,6 @@ let main { path; recurse; outpath; } =
       (fun () -> convert path recurse outpath)
       (fun l -> die (Errors.to_string (Errors.to_absolute l)))
 
+let name = "convert"
+let doc = ""
 let run () = main (parse_args ())

@@ -13,7 +13,8 @@ val type_check: ServerEnv.genv -> ServerEnv.env -> ServerEnv.env
 (* just add also some debugging information on stdout *)
 val check: ServerEnv.genv -> ServerEnv.env -> ServerEnv.env
 
-val hook_after_parsing: (ServerEnv.genv -> ServerEnv.env -> unit) ref
+val hook_after_parsing: (ServerEnv.genv -> (* old *) ServerEnv.env ->
+    (* new *) ServerEnv.env -> Relative_path.Set.t -> unit) ref
 
 (****************************************************************************)
 (* Debugging: Declared here to stop ocamlc yelling at us for unused defs *)

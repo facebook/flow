@@ -1999,7 +1999,7 @@ end = struct
       | _, Update _
       | _, ArrowFunction _
       | _, Yield _
-      | _, XJSElement _
+      | _, JSXElement _
       | _, Let _ -> false)
 
     and is_assignable_lhs = Expression.(function
@@ -2026,7 +2026,7 @@ end = struct
       | _, Update _
       | _, ArrowFunction _
       | _, Yield _
-      | _, XJSElement _
+      | _, JSXElement _
       | _, Let _ -> false)
 
     and assignment_op env =

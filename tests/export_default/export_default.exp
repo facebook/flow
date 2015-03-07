@@ -1,11 +1,9 @@
 
-test.js: inconsistent use of library definitions
-  [LIB] lib.js:2:41,46: string
+test.js:3:7,12: string
 This type is incompatible with
   [LIB] lib.js:5:20,25: number
 
-test.js: inconsistent use of library definitions
-  [LIB] lib.js:5:20,25: number
+test.js:3:9,11: number
 This type is incompatible with
   [LIB] lib.js:2:32,37: string
 

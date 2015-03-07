@@ -51,7 +51,7 @@ let lint _acc fnl =
           let fi =
             {FileInfo.file_mode; funs; classes; typedefs; consts; comments;
              consider_names_just_for_autoload = false} in
-          Linter.lint fn fi
+          Linting_service.lint fn fi
         end
       end in
     errs @ acc

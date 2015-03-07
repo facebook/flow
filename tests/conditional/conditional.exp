@@ -1,0 +1,10 @@
+
+conditional.js:22:11,16: number
+This type is incompatible with
+  conditional.js:20:15,20: string
+
+conditional.js:23:29,37: boolean
+This type is incompatible with
+  conditional.js:20:15,20: string
+
+Found 2 errors

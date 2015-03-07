@@ -1,15 +1,15 @@
 
-[LIB] core.js:14:18,23: number
+../lib/libtest.js:2:16,31: number
 This type is incompatible with
-  ../lib/libtest.js:1:7,12: string
+  ../lib/libtest.js:2:7,12: string
 
-[LIB] core.js:17:60,65: number
+../lib/libtest.js:4:16,30: number
 This type is incompatible with
   ../lib/libtest.js:4:7,12: string
 
-[LIB] core.js:68:23,28: number
+[LIB] core.js:14:18,23: number
 This type is incompatible with
-  ../lib/libtest.js:2:7,12: string
+  ../lib/libtest.js:1:7,12: string
 
 [LIB] core.js:243:11,16: string
 This type is incompatible with

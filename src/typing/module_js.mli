@@ -62,3 +62,5 @@ val add_module_info: Constraint_js.context -> unit
    returns the set of modules removed
 *)
 val remove_files: SSet.t -> SSet.t
+
+val add_package: string -> Errors_js.ErrorSet.t option

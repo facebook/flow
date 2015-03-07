@@ -1,6 +1,106 @@
 
-logical.js:18:12,20: boolean
+logical.js:8:12,12: boolean
 This type is incompatible with
-  logical.js:16:19,24: number
+  logical.js:6:23,28: number
 
-Found 1 error
+logical.js:23:12,16: boolean
+This type is incompatible with
+  logical.js:22:23,28: number
+
+logical.js:66:12,20: boolean
+This type is incompatible with
+  logical.js:64:23,28: string
+
+logical.js:66:25,30: boolean
+This type is incompatible with
+  logical.js:64:23,28: string
+
+logical.js:74:12,20: boolean
+This type is incompatible with
+  logical.js:72:23,28: number
+
+logical.js:82:12,25: boolean
+This type is incompatible with
+  logical.js:80:24,29: number
+
+logical.js:89:12,12: boolean
+This type is incompatible with
+  logical.js:88:32,37: string
+
+logical.js:113:12,12: boolean
+This type is incompatible with
+  logical.js:111:23,28: string
+
+logical.js:141:12,15: boolean
+This type is incompatible with
+  logical.js:140:23,28: number
+
+logical.js:246:12,12: boolean
+This type is incompatible with
+  logical.js:244:23,28: string
+
+logical.js:256:22,26: boolean
+This type is incompatible with
+  logical.js:255:4,9: number
+
+logical.js:256:22,26: boolean
+This type is incompatible with
+  logical.js:255:13,18: string
+
+logical.js:280:22,26: boolean
+This type is incompatible with
+  logical.js:279:4,9: number
+
+logical.js:280:22,26: boolean
+This type is incompatible with
+  logical.js:279:13,18: string
+
+logical.js:287:12,16: boolean
+This type is incompatible with
+  logical.js:286:44,53: array type
+
+logical.js:294:12,12: number
+This type is incompatible with
+  logical.js:293:44,53: array type
+
+logical.js:294:17,21: boolean
+This type is incompatible with
+  logical.js:293:44,53: array type
+
+logical.js:313:18,21: boolean
+This type is incompatible with
+  logical.js:311:24,29: number
+
+logical.js:326:13,17: boolean
+This type is incompatible with
+  logical.js:321:24,29: number
+
+logical.js:336:18,21: boolean
+This type is incompatible with
+  logical.js:334:24,29: number
+
+logical.js:346:13,13: number
+This type is incompatible with
+  logical.js:344:42,47: string
+
+logical.js:348:21,25: boolean
+This type is incompatible with
+  logical.js:344:42,47: string
+
+logical.js:349:13,17: boolean
+This type is incompatible with
+  logical.js:344:42,47: string
+
+logical.js:362:13,13: number
+This type is incompatible with
+  logical.js:360:42,47: string
+
+logical.js:364:22,25: boolean
+This type is incompatible with
+  logical.js:360:42,47: string
+
+logical.js:365:13,16: boolean
+This type is incompatible with
+  logical.js:360:42,47: string
+
+Found 26 errors

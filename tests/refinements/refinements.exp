@@ -59,11 +59,11 @@ undef.js:35:33,38: null
 This type is incompatible with
   undef.js:38:13,20: number
 
-undef.js:42:35,40: null
+undef.js:43:7,9: null
 This type is incompatible with
   undef.js:44:13,22: number
 
-undef.js:48:39,44: null
+undef.js:49:7,9: null
 This type is incompatible with
   undef.js:51:13,22: number
 
@@ -75,11 +75,11 @@ void.js:35:32,37: null
 This type is incompatible with
   void.js:38:13,20: number
 
-void.js:42:33,38: null
+void.js:43:7,9: null
 This type is incompatible with
   void.js:44:13,22: number
 
-void.js:48:37,42: null
+void.js:49:7,9: null
 This type is incompatible with
   void.js:51:13,22: number
 
@@ -91,18 +91,12 @@ void.js:61:39,44: undefined
 This type is incompatible with
   void.js:62:32,39: number
 
-void.js:68:41,46: undefined
+void.js:69:7,9: undefined
 This type is incompatible with
   void.js:69:36,45: number
 
-void.js:69:36,45: number
-This type is incompatible with undefined
-
-void.js:74:45,50: undefined
+void.js:75:7,9: undefined
 This type is incompatible with
   void.js:75:36,45: number
 
-void.js:75:36,45: number
-This type is incompatible with undefined
-
-Found 27 errors
+Found 25 errors

@@ -24,8 +24,8 @@ let parse_args () =
     Ports types in one or more files\n\n\
     Example usage:\n\
     \t%s port file1 file2"
-    Sys.argv.(0)
-    Sys.argv.(0) in
+    CommandUtils.exe_name
+    CommandUtils.exe_name in
   let files = ClientArgs.parse_without_command options usage "port" in
   match files with
   | [] ->
@@ -49,4 +49,6 @@ let main { files; option_values; } =
   ) patch_map;
   flush stdout
 
+let name = "port"
+let doc = "Shows ported type annotations for given files"
 let run () = main (parse_args ())

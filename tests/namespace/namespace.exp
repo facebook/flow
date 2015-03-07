@@ -1,4 +1,8 @@
 
+client.js:3:19,24: number
+This type is incompatible with
+  client.js:3:10,15: string
+
 namespace.js:2:13,18: number
 This type is incompatible with
   namespace.js:3:23,28: string
@@ -14,10 +18,6 @@ This type is incompatible with
 namespace.js:15:16,17: string
 This type is incompatible with
   namespace.js:13:21,30: array type
-
-namespace.js:17:29,34: number
-This type is incompatible with
-  client.js:3:10,15: string
 
 namespace.js:18:25,26: string
 This type is incompatible with

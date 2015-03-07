@@ -1,9 +1,9 @@
 
-destructuring.js:4:22,22: number
+destructuring.js:4:2,10: number
 This type is incompatible with
   destructuring.js:1:15,20: string
 
-destructuring.js:4:27,27: number
+destructuring.js:4:2,10: number
 This type is incompatible with
   destructuring.js:2:15,20: string
 
@@ -17,12 +17,12 @@ unsupported destructuring
 destructuring.js:11:6,10: 
 unsupported destructuring
 
-destructuring.js:15:9,9: identifier z
-Unknown global name
-
-destructuring.js:18:8,8: number
+destructuring.js:13:14,23: number
 This type is incompatible with
   destructuring.js:1:15,20: string
+
+destructuring.js:15:9,9: identifier z
+Unknown global name
 
 destructuring.js:18:14,14: number
 This type is incompatible with

@@ -8,6 +8,6 @@ This type is incompatible with
 
 namespace_imports.js:20:2,4: number
 This type is incompatible with
-  B.js:13:8,10: Bar
+  namespace_imports.js:20:7,11: Bar
 
 Found 3 errors

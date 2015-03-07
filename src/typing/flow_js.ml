@@ -101,6 +101,12 @@ let silent_warnings = false
 exception FlowError of (reason * string) list
 
 let add_output cx level message_list =
+  if modes.debug then
+    prerr_endline (spf "\nadd_output\n%s" (
+      String.concat "\n" (
+        List.map (fun (r, s) -> spf "r: [%s] s = %S" (dump_reason r) s)
+          message_list)));
+
   if !throw_on_error then raise (FlowError message_list)
   else
     let error = level, message_list in
@@ -231,7 +237,7 @@ let fmt_trace trace =
   else "")
 
 let reorder l u =
-  if (is_use u || pos_of_t l = Pos.none) then (u,l) else (l,u)
+  if is_use u || pos_of_t l = Pos.none then u, l else l, u
 
 let ordered_reasons l u =
   let (t1,t2) = reorder l u in
@@ -1011,6 +1017,8 @@ let rec assume_ground cx ids = function
   | ConstructorT(_,_,t)
   | TypeT(_, t)
   | AdderT(_,_,t)
+  | AndT(_,_,t)
+  | OrT(_,_,t)
   | PredicateT(_,t)
   | SpecializeT(_,_,t)
   | MarkupT(_,_,t)
@@ -1124,7 +1132,9 @@ let rec flow cx (l,u) trace =
 
     (if modes.debug
      then prerr_endline
-        (spf "\n#### %s ~> %s\n" (streason_of_t l) (streason_of_t u)));
+        (spf "\n# %s ~>\n# %s"
+          (dump_reason (reason_of_t l))
+          (dump_reason (reason_of_t u))));
 
     if ground_subtype (l,u) then () else match (l,u) with
 
@@ -1323,6 +1333,52 @@ let rec flow cx (l,u) trace =
     | (OptionalT(t1), OptionalT(t2)) ->
         unit_flow cx (t1, t2)
 
+    (*****************)
+    (* logical types *)
+    (*****************)
+
+    | (left, AndT(reason, right, u)) ->
+      (* a falsy && b ~> a
+         a truthy && b ~> b
+         a && b ~> a falsy | b *)
+      let op = Op "&&" in
+      let truthy_left = filter_exists left in
+      (match truthy_left with
+      | UndefT _ ->
+        (* falsy *)
+        select_flow cx (left, mk_predicate (NotP ExistsP, u)) trace op
+      | _ ->
+        (match filter_not_exists left with
+        | UndefT _ -> (* truthy *) select_flow cx (right, u) trace op
+        | _ ->
+          select_flow cx (left, mk_predicate (NotP ExistsP, u)) trace op;
+          (match truthy_left with
+          | UndefT _ -> ()
+          | _ -> select_flow cx (right, u) trace op)
+        )
+      )
+
+    | (left, OrT(reason, right, u)) ->
+      (* a truthy || b ~> a
+         a falsy || b ~> b
+         a || b ~> a truthy | b *)
+      let op = Op "||" in
+      let falsy_left = filter_not_exists left in
+      (match falsy_left with
+      | UndefT _ ->
+        (* truthy *)
+        select_flow cx (left, mk_predicate (ExistsP, u)) trace op
+      | _ ->
+        (match filter_exists left with
+        | UndefT _ -> (* falsy *) select_flow cx (right, u) trace op
+        | _ ->
+          select_flow cx (left, mk_predicate (ExistsP, u)) trace op;
+          (match falsy_left with
+          | UndefT _ -> ()
+          | _ -> select_flow cx (right, u) trace op)
+        )
+      )
+
     (*****************************)
     (* upper and lower any types *)
     (*****************************)
@@ -1465,7 +1521,7 @@ let rec flow cx (l,u) trace =
        FunT (reason2,_,_,
              {this_t = o2; params_tlist = tins2; return_t = t2; closure_t = j; _}))
       ->
-      select_flow cx (o2,o1) trace FunThis;
+        select_flow cx (o2,o1) trace FunThis;
         multiflow cx trace (u, l) true (tins2,tins1) |> ignore;
         select_flow cx (t1,t2) trace FunRet;
         havoc_ctx cx i j
@@ -1475,8 +1531,10 @@ let rec flow cx (l,u) trace =
        CallT (reason2,
               {this_t = o2; params_tlist = tins2; return_t = t2; closure_t = j; _}))
       ->
-      select_flow cx (o2,o1) trace FunThis;
+        select_flow cx (o2,o1) trace FunThis;
         multiflow cx trace (u, l) true (tins2,tins1) |> ignore;
+        (* relocate the function's return type at the call site *)
+        let t1 = repos_t_from_reason reason2 t1 in
         select_flow cx (t1,t2) trace FunRet;
         havoc_ctx cx i j
 
@@ -1895,6 +1953,8 @@ let rec flow cx (l,u) trace =
       let strict = mk_strict flags.sealed reason_o reason_op in
       let t = ensure_prop cx strict mapr x proto reason_o reason_op trace in
       unit_flow cx (StrT.t,key);
+      (* move property type to read site *)
+      let t = repos_t_from_reason reason_op t in
       select_flow cx (t, tout) trace (ObjProp x)
 
     (********************************)
@@ -2242,7 +2302,7 @@ let rec flow cx (l,u) trace =
     (* Boolean library call *)
     (***********************)
 
-    | (BoolT reason, (GetT _ | MethodT _)) ->
+    | (BoolT (reason, _), (GetT _ | MethodT _)) ->
       select_flow cx (get_builtin_type cx reason "Boolean",u)
         trace (LibMethod "Boolean")
 
@@ -2452,6 +2512,8 @@ and err_operation = function
 
   (* unreachable use-types *)
   | AdderT _
+  | AndT _
+  | OrT _
   | PredicateT _
   | UnifyT _
   (* def-types *)
@@ -2549,8 +2611,8 @@ and mk_nominal cx =
   nominal
 
 and unify_map cx tmap1 tmap2 =
-  tmap1 |> IMap.iter (fun x t1 ->
-    let t2 = IMap.find_unsafe x tmap2 in
+  tmap1 |> SMap.iter (fun x t1 ->
+    let t2 = SMap.find_unsafe x tmap2 in
     unify cx t1 t2
   )
 
@@ -2571,10 +2633,10 @@ and mk_strict sealed reason_o reason_op =
 
 (* need to consider only "def" types *)
 
-and subst cx map t =
-  if IMap.is_empty map then t else match t with
+and subst cx (map: Type.t SMap.t) t =
+  if SMap.is_empty map then t else match t with
   | BoundT typeparam ->
-    (match IMap.get typeparam.id map with
+    (match SMap.get typeparam.name map with
     | None -> t
     | Some t -> t)
 
@@ -2606,8 +2668,11 @@ and subst cx map t =
     })
 
   | PolyT (xs,t) ->
-      let map = IMap.filter (fun id _ -> not (is_typeparam id xs)) map in
-      PolyT (xs, subst cx map t)
+      let xs, map = List.fold_left (fun (xs, map) typeparam ->
+        { typeparam with bound = subst cx map typeparam.bound }::xs,
+        SMap.remove typeparam.name map
+      ) ([], map) xs in
+      PolyT (List.rev xs, subst cx map t)
 
   | ObjT (reason, {
       flags;
@@ -2648,7 +2713,7 @@ and subst cx map t =
       subst cx map static,
       subst cx map super,
       { class_id = instance.class_id;
-        type_args = instance.type_args |> IMap.map (subst cx map);
+        type_args = instance.type_args |> SMap.map (subst cx map);
         fields_tmap = instance.fields_tmap |> SMap.map (subst cx map);
         methods_tmap = instance.methods_tmap |> SMap.map (subst cx map)
       }
@@ -2689,9 +2754,6 @@ and subst cx map t =
 
   | _ -> assert false (** TODO **)
 
-and is_typeparam idx xs =
-  List.exists (fun { id; _ } -> id = idx) xs
-
 and instantiate_poly_ cx reason_ (xs,t) ts =
   let len_xs = List.length xs in
   if len_xs <> List.length ts
@@ -2702,10 +2764,11 @@ and instantiate_poly_ cx reason_ (xs,t) ts =
   else
     let map =
       List.fold_left2
-        (fun map {reason; id; _} t ->
-          IMap.add id t map
+        (fun map {reason; name; bound} t ->
+          unit_flow cx (t, subst cx map bound);
+          SMap.add name t map
         )
-        IMap.empty xs ts
+        SMap.empty xs ts
     in
     ts, subst cx map t
 
@@ -2871,16 +2934,58 @@ and is_array = function ArrT _ -> true | _ -> false
 
 and not_ pred x = not(pred x)
 
+and recurse_into_union filter_fn (r, ts) =
+  let new_ts = ts |> List.filter (fun t ->
+    match filter_fn t with
+    | UndefT _ -> false
+    | _ -> true
+  ) in
+  match new_ts with
+  | [] -> UndefT r
+  | [t] -> t
+  | _ -> UnionT (r, new_ts)
+
 and filter_exists = function
+  (* falsy things get removed *)
+  | NullT r
+  | VoidT r
+  | BoolT (r, Some false)
+  | StrT (r, Some "")
+  | NumT (r, Some "0") -> UndefT r
+
+  (* unknown things become truthy *)
   | MaybeT t -> t
   | OptionalT t -> filter_exists t
-  | NullT r | VoidT r -> UndefT r
+  | BoolT (r, None) -> BoolT (r, Some true)
+  | StrT (r, None) -> StrT (r, Some "truthy") (* hmmmm *)
+  | NumT (r, None) -> NumT (r, Some "truthy") (* hmmmm *)
+
+  (* truthy things pass through *)
   | t -> t
 
-(* There is no type (yet) that contains only truthy values: every type contains
-   either both truthy and falsy values, or only falsy values. So filtering out
-   falsy values in a type never leaves a narrower type. *)
-and filter_not_exists t = t
+and filter_not_exists t = match t with
+  (* falsy things pass through *)
+  | NullT _
+  | VoidT _
+  | BoolT (_, Some false)
+  | StrT (_, Some "")
+  | NumT (_, Some "0") -> t
+
+  (* truthy things get removed *)
+  | BoolT (r, Some _)
+  | StrT (r, Some _)
+  | NumT (r, Some _) -> UndefT r
+
+  (* unknown boolies become falsy *)
+  | MaybeT t ->
+      let reason = reason_of_t t in
+      UnionT (reason, [NullT.why reason; VoidT.why reason])
+  | BoolT (r, None) -> BoolT (r, Some false)
+  | StrT (r, None) -> StrT (r, Some "")
+  | NumT (r, None) -> NumT (r, Some "0")
+
+  (* things that don't track truthiness pass through *)
+  | t -> t
 
 and filter_maybe = function
   | MaybeT t ->
@@ -2892,12 +2997,15 @@ and filter_maybe = function
      because the latter is not a subtype of the former. *)
   | t -> UndefT.t
 
-(* There is no type (yet), which contains only falsy values, that is not
-   eliminated with a maybe check. *)
-and filter_not_maybe t = filter_exists t
+and filter_not_maybe = function
+  | MaybeT t -> t
+  | OptionalT t -> filter_not_maybe t
+  | NullT r | VoidT r -> UndefT r
+  | t -> t
 
 and filter_null = function
-  | MaybeT t -> NullT.t
+  | OptionalT (MaybeT t)
+  | MaybeT t -> NullT.why (reason_of_t t)
   | NullT r -> NullT r
   | t -> UndefT.t
 
@@ -2905,11 +3013,13 @@ and filter_not_null = function
   | MaybeT t ->
       let reason = reason_of_t t in
       UnionT (reason, [VoidT.why reason; t])
+  | OptionalT t -> OptionalT (filter_not_null t)
+  | UnionT (r, ts) -> recurse_into_union filter_not_null (r, ts)
   | NullT r -> UndefT r
   | t -> t
 
 and filter_undefined = function
-  | MaybeT t -> VoidT.t
+  | MaybeT t -> VoidT.why (reason_of_t t)
   | VoidT r -> VoidT r
   (* NOTE: it is tempting to refine optional(T) to undefined, but we don't
      because the latter is not a subtype of the former. *)
@@ -2920,6 +3030,7 @@ and filter_not_undefined = function
       let reason = reason_of_t t in
       UnionT (reason, [NullT.why reason; t])
   | OptionalT t -> filter_not_undefined t
+  | UnionT (r, ts) -> recurse_into_union filter_not_undefined (r, ts)
   | VoidT r -> UndefT r
   | t -> t
 
@@ -3446,9 +3557,9 @@ and instantiate_poly_t cx t types =
   match t with
   | PolyT (type_params, t_) -> (
     try
-      let subst_map = List.fold_left2 (fun acc {id; _} type_ ->
-        IMap.add id type_ acc
-      ) IMap.empty type_params types in
+      let subst_map = List.fold_left2 (fun acc {name; _} type_ ->
+        SMap.add name type_ acc
+      ) SMap.empty type_params types in
       subst cx subst_map t_
     with _ ->
       prerr_endline "Instantiating poly type failed";
@@ -3472,7 +3583,7 @@ and static_method_call cx name reason m argts =
     etc. but Ocaml name resolution rules make that require a lot more moving
     code around. **)
 and resolve_builtin_class cx = function
-  | BoolT reason ->
+  | BoolT (reason, _) ->
     let bool_t = get_builtin_type cx reason "Boolean" in
     resolve_type cx bool_t
   | NumT (reason, _) ->

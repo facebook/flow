@@ -11,7 +11,7 @@ E.js:8:6,10: boolean
 This type is incompatible with
   E.js:4:14,19: number
 
-F.js:2:14,17: string
+F.js:1:26,33: string
 This type is incompatible with
   F.js:1:26,37: number
 

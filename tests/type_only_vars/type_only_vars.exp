@@ -3,11 +3,11 @@ A.js:11:18,14:1: object literal
 This type is incompatible with
   bad_shadowing.js:13:8,13: string
 
-A.js:12:8,10: class type: Foo
+bad_shadowing.js:6:14,16: class type: Foo
 This type is incompatible with
   bad_shadowing.js:14:10,15: string
 
-A.js:13:8,10: class type: Bar
+bad_shadowing.js:6:19,28: class type: Bar
 This type is incompatible with
   bad_shadowing.js:15:10,15: string
 

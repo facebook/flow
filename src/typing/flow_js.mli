@@ -49,7 +49,7 @@ val havoc_ctx : context -> int -> int -> unit
 
 (* polymorphism *)
 
-val subst: context -> (Type.t IMap.t) -> Type.t -> Type.t
+val subst: context -> (Type.t SMap.t) -> Type.t -> Type.t
 
 (* property maps *)
 

@@ -24,8 +24,8 @@ let parse_args () =
     Suggests types in one or more files\n\n\
     Example usage:\n\
     \t%s suggest file1 file2"
-    Sys.argv.(0)
-    Sys.argv.(0) in
+    CommandUtils.exe_name
+    CommandUtils.exe_name in
   let files = ClientArgs.parse_without_command options usage "suggest" in
   match files with
   | [] ->
@@ -58,4 +58,6 @@ let main { files; option_values; } =
   ) suggestion_map;
   flush stdout
 
+let name = "suggest"
+let doc = "Shows type annotation suggestions for given files"
 let run () = main (parse_args ())

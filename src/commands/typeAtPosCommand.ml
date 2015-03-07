@@ -35,9 +35,9 @@ let parse_args () =
     "Usage: %s type-at-pos [OPTION]... [FILE] LINE COLUMN\n\n\
       e.g. %s type-at-pos foo.js 12 3\n\
       or   %s type-at-pos 12 3 < foo.js\n\n"
-      Sys.argv.(0)
-      Sys.argv.(0)
-      Sys.argv.(0) in
+      CommandUtils.exe_name
+      CommandUtils.exe_name
+      CommandUtils.exe_name in
   let args = ClientArgs.parse_without_command options usage "type-at-pos" in
   let (file, line, column) = match args with
   | [file; line; column] ->
@@ -105,4 +105,6 @@ let main {file; line; column; option_values;} =
   );
   flush stdout
 
+let name = "type-at-pos"
+let doc = "Shows the type at a given file and position"
 let run () = main (parse_args ())

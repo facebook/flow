@@ -26,7 +26,7 @@ module Type :
 
       | NumT of reason * literal
       | StrT of reason * literal
-      | BoolT of reason
+      | BoolT of reason * bool option
       | UndefT of reason
       | MixedT of reason
       | AnyT of reason
@@ -88,6 +88,8 @@ module Type :
 
       | PredicateT of predicate * t
       | EqT of reason * t
+      | AndT of reason * t * t
+      | OrT of reason * t * t
 
       | SpecializeT of reason * t list * t
 
@@ -141,14 +143,14 @@ module Type :
     }
     and insttype = {
       class_id: ident;
-      type_args: t IMap.t;
+      type_args: t SMap.t;
       fields_tmap: fields;
       methods_tmap: methods
     }
     and typeparam = {
       reason: reason;
-      id: ident;
       name: string;
+      bound: t;
     }
     and prototype = t
     and static = t
@@ -292,6 +294,10 @@ val new_context: string -> string -> context
 val reason_of_t : Type.t -> reason
 
 val mod_reason_of_t : (reason -> reason) -> Type.t -> Type.t
+
+val to_op_reason : reason -> Type.t -> Type.t
+
+val repos_t_from_reason : reason -> Type.t -> Type.t
 
 val reasonless_compare : Type.t -> Type.t -> int
 

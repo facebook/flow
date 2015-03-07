@@ -8,13 +8,7 @@
  *
  *)
 
-(***********************************************************************)
-(* command module type *)
-(***********************************************************************)
-
-module type COMMAND = sig
-  val run : unit -> unit
-end
+open CommandInfo
 
 (***********************************************************************)
 (* flow shell is just a simple command-dispatching main *)
@@ -43,57 +37,49 @@ end = struct
     | TYPE_AT_POS
     | DEFAULT
 
-  let parse_command () : (module COMMAND) =
-    let command =
-      if Array.length Sys.argv < 2
-      then DEFAULT
-      else match String.lowercase Sys.argv.(1) with
-      | "autocomplete"   -> AUTOCOMPLETE
-      | "check"          -> CHECK
-      | "check-contents" -> CHECK_CONTENTS
-      | "convert"        -> CONVERT
-      | "find-module"    -> FIND_MODULE
-      | "get-def"        -> GET_DEF
-      | "get-importers"  -> GET_IMPORTERS
-      | "get-imports"    -> GET_IMPORTS
-      | "init"           -> CONFIG_INIT
-      | "port"           -> PORT
-      | "server"         -> SERVER
-      | "single"         -> SINGLE
-      | "start"          -> START
-      | "status"         -> STATUS
-      | "stop"           -> STOP
-      | "suggest"        -> SUGGEST
-      | "type-at-pos"    -> TYPE_AT_POS
-      | _                -> DEFAULT in
-    let command_string =
-      if command = DEFAULT
-      then "default"
-      else String.lowercase Sys.argv.(1) in
-    FlowEventLogger.init_flow_command command_string;
-    match command with
-    | AUTOCOMPLETE   -> (module AutocompleteCommand)
-    | CHECK          -> (module ServerCommands.Check)
-    | CHECK_CONTENTS -> (module CheckContentsCommand)
-    | CONVERT        -> (module ConvertCommand)
-    | FIND_MODULE    -> (module FindModuleCommand)
-    | GET_DEF        -> (module GetDefCommand)
-    | GET_IMPORTERS  -> (module GetImportersCommand)
-    | GET_IMPORTS    -> (module GetImportsCommand)
-    | CONFIG_INIT    -> (module ConfigCommands.Init)
-    | PORT           -> (module PortCommand)
-    | SERVER         -> (module ServerCommands.Server)
-    | SINGLE         -> (module SingleCommand)
-    | START          -> (module ServerCommands.Start)
-    | STATUS         -> (module StatusCommands.Status)
-    | STOP           -> (module StopCommand)
-    | SUGGEST        -> (module SuggestCommand)
-    | TYPE_AT_POS    -> (module TypeAtPosCommand)
-    | DEFAULT        -> (module StatusCommands.Default)
+  (* normal commands *)
+  let commands = [
+    AUTOCOMPLETE,   (module AutocompleteCommand : COMMAND);
+    CHECK,          (module ServerCommands.Check);
+    CHECK_CONTENTS, (module CheckContentsCommand);
+    CONVERT,        (module ConvertCommand);
+    FIND_MODULE,    (module FindModuleCommand);
+    GET_DEF,        (module GetDefCommand);
+    GET_IMPORTERS,  (module GetImportersCommand);
+    GET_IMPORTS,    (module GetImportsCommand);
+    CONFIG_INIT,    (module ConfigCommands.Init);
+    PORT,           (module PortCommand);
+    SERVER,         (module ServerCommands.Server);
+    SINGLE,         (module SingleCommand);
+    START,          (module ServerCommands.Start);
+    STOP,           (module StopCommand);
+    SUGGEST,        (module SuggestCommand);
+    TYPE_AT_POS,    (module TypeAtPosCommand);
+  ]
+
+  (* status commands, which need a list of other commands *)
+  let commands =
+    (STATUS, (
+      module StatusCommands.Status(struct
+        let commands = mk_list commands
+      end) : COMMAND
+    )) :: commands
+
+  let commands =
+    (DEFAULT, (
+      module StatusCommands.Default(struct
+        let commands = mk_list commands
+      end) : COMMAND)
+    ) :: commands
+
 
   let main () =
     Sys.set_signal Sys.sigpipe Sys.Signal_ignore;
-    let module Command = (val parse_command ()) in
+    let (command, command_string) = parse_command commands in
+    let command = (match command with None -> DEFAULT | Some cmd -> cmd) in
+    FlowEventLogger.init_flow_command command_string;
+    let the_module = get_command_module commands command in
+    let module Command = (val the_module : COMMAND) in
     Command.run ()
 
 end

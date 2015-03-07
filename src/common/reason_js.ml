@@ -124,6 +124,9 @@ let string_of_reason r =
     else spf "%s:\n%s" spos desc
   )
 
+let dump_reason r =
+  spf "[%s] %S" (string_of_pos r.pos) r.desc
+
 let pos_of_reason r =
   r.pos
 

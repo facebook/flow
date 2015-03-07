@@ -425,7 +425,7 @@ module Translate = struct
     | loc, TemplateLiteral lit -> template_literal (loc, lit)
     | loc, TaggedTemplate tagged -> tagged_template (loc, tagged)
     | loc, Class c -> class_expression (loc, c)
-    | loc, XJSElement element -> xjs_element (loc, element))
+    | loc, JSXElement element -> jsx_element (loc, element))
 
   and function_expression (loc, _function) = Expression.Function.(
     let ret = node "FunctionExpression" loc in
@@ -882,105 +882,105 @@ module Translate = struct
     ret
   )
 
-  and xjs_element (loc, (element: XJS.element)) = XJS.(
-    let ret = node "XJSElement" loc in
-    Js.Unsafe.set ret "openingElement" (xjs_opening element.openingElement);
-    Js.Unsafe.set ret "closingElement" (option xjs_closing element.closingElement);
-    Js.Unsafe.set ret "children" (array xjs_child element.children);
+  and jsx_element (loc, (element: JSX.element)) = JSX.(
+    let ret = node "JSXElement" loc in
+    Js.Unsafe.set ret "openingElement" (jsx_opening element.openingElement);
+    Js.Unsafe.set ret "closingElement" (option jsx_closing element.closingElement);
+    Js.Unsafe.set ret "children" (array jsx_child element.children);
     ret
   )
 
-  and xjs_opening (loc, opening) = XJS.Opening.(
-    let ret = node "XJSOpeningElement" loc in
-    Js.Unsafe.set ret "name" (xjs_name opening.name);
-    Js.Unsafe.set ret "attributes" (array xjs_opening_attribute opening.attributes);
+  and jsx_opening (loc, opening) = JSX.Opening.(
+    let ret = node "JSXOpeningElement" loc in
+    Js.Unsafe.set ret "name" (jsx_name opening.name);
+    Js.Unsafe.set ret "attributes" (array jsx_opening_attribute opening.attributes);
     Js.Unsafe.set ret "selfClosing" (bool opening.selfClosing);
     ret
   )
 
-  and xjs_opening_attribute = XJS.Opening.(function
-    | Attribute attribute -> xjs_attribute attribute
-    | SpreadAttribute attribute -> xjs_spread_attribute attribute
+  and jsx_opening_attribute = JSX.Opening.(function
+    | Attribute attribute -> jsx_attribute attribute
+    | SpreadAttribute attribute -> jsx_spread_attribute attribute
   )
 
-  and xjs_closing (loc, closing) = XJS.Closing.(
-    let ret = node "XJSClosingElement" loc in
-    Js.Unsafe.set ret "name" (xjs_name closing.name);
+  and jsx_closing (loc, closing) = JSX.Closing.(
+    let ret = node "JSXClosingElement" loc in
+    Js.Unsafe.set ret "name" (jsx_name closing.name);
     ret
   )
 
-  and xjs_child = XJS.(function
-    | loc, Element element -> xjs_element (loc, element)
-    | loc, ExpressionContainer expr -> xjs_expression_container (loc, expr)
-    | loc, Text str -> xjs_text (loc, str)
+  and jsx_child = JSX.(function
+    | loc, Element element -> jsx_element (loc, element)
+    | loc, ExpressionContainer expr -> jsx_expression_container (loc, expr)
+    | loc, Text str -> jsx_text (loc, str)
   )
 
-  and xjs_name = XJS.(function
-    | Identifier id -> xjs_identifier id
-    | NamespacedName namespaced_name -> xjs_namespaced_name namespaced_name
-    | MemberExpression member -> xjs_member_expression member
+  and jsx_name = JSX.(function
+    | Identifier id -> jsx_identifier id
+    | NamespacedName namespaced_name -> jsx_namespaced_name namespaced_name
+    | MemberExpression member -> jsx_member_expression member
   )
 
-  and xjs_attribute (loc, attribute) = XJS.Attribute.(
-    let ret = node "XJSAttribute" loc in
+  and jsx_attribute (loc, attribute) = JSX.Attribute.(
+    let ret = node "JSXAttribute" loc in
     Js.Unsafe.set ret "name" ((match attribute.name with
-    | Identifier id -> xjs_identifier id
-    | NamespacedName namespaced_name -> xjs_namespaced_name namespaced_name));
-    Js.Unsafe.set ret "value" (option xjs_attribute_value attribute.value);
+    | Identifier id -> jsx_identifier id
+    | NamespacedName namespaced_name -> jsx_namespaced_name namespaced_name));
+    Js.Unsafe.set ret "value" (option jsx_attribute_value attribute.value);
     ret
   )
 
-  and xjs_attribute_value = XJS.Attribute.(function
+  and jsx_attribute_value = JSX.Attribute.(function
     | Literal (loc, value) -> literal (loc, value)
-    | ExpressionContainer (loc, expr) -> xjs_expression_container (loc, expr)
+    | ExpressionContainer (loc, expr) -> jsx_expression_container (loc, expr)
   )
 
-  and xjs_spread_attribute (loc, attribute) = XJS.SpreadAttribute.(
-    let ret = node "XJSSpreadAttribute" loc in
+  and jsx_spread_attribute (loc, attribute) = JSX.SpreadAttribute.(
+    let ret = node "JSXSpreadAttribute" loc in
     Js.Unsafe.set ret "argument" (expression attribute.argument);
     ret
   )
 
-  and xjs_expression_container (loc, expr) = XJS.ExpressionContainer.(
-    let ret = node "XJSExpressionContainer" loc in
+  and jsx_expression_container (loc, expr) = JSX.ExpressionContainer.(
+    let ret = node "JSXExpressionContainer" loc in
     Js.Unsafe.set ret "expression" ((match expr.expression with
       | Some expr -> expression expr
       | None ->
-          (* I think the XJSEmptyExpression is a little stupid...I think null
+          (* I think the JSXEmptyExpression is a little stupid...I think null
            * would be a better choice but oh well. Anyway, the location for an
            * empty expression doesn't really make sense, so this is as good a
            * choice as any *)
-          node "XJSEmptyExpression" loc));
+          node "JSXEmptyExpression" loc));
     ret
   )
 
-  and xjs_text (loc, text) = XJS.Text.(
+  and jsx_text (loc, text) = JSX.Text.(
     let { value; raw; } = text in
-    let ret = node "XJSText" loc in
+    let ret = node "JSXText" loc in
     Js.Unsafe.set ret "value" (string value);
     Js.Unsafe.set ret "raw" (string raw);
     ret
   )
 
-  and xjs_member_expression (loc, member_expression) = XJS.MemberExpression.(
-    let ret = node "XJSMemberExpression" loc in
+  and jsx_member_expression (loc, member_expression) = JSX.MemberExpression.(
+    let ret = node "JSXMemberExpression" loc in
     let _object = match member_expression._object with
-    | Identifier id -> xjs_identifier id
-    | MemberExpression member -> xjs_member_expression member in
+    | Identifier id -> jsx_identifier id
+    | MemberExpression member -> jsx_member_expression member in
     Js.Unsafe.set ret "object" _object;
-    Js.Unsafe.set ret "property" (xjs_identifier member_expression.property);
+    Js.Unsafe.set ret "property" (jsx_identifier member_expression.property);
     ret
   )
 
-  and xjs_namespaced_name (loc, namespaced_name) = XJS.NamespacedName.(
-    let ret = node "XJSNamespacedName" loc in
-    Js.Unsafe.set ret "namespace" (xjs_identifier namespaced_name.namespace);
-    Js.Unsafe.set ret "name" (xjs_identifier namespaced_name.name);
+  and jsx_namespaced_name (loc, namespaced_name) = JSX.NamespacedName.(
+    let ret = node "JSXNamespacedName" loc in
+    Js.Unsafe.set ret "namespace" (jsx_identifier namespaced_name.namespace);
+    Js.Unsafe.set ret "name" (jsx_identifier namespaced_name.name);
     ret
   )
 
-  and xjs_identifier (loc, id) = XJS.Identifier.(
-    let ret = node "XJSIdentifier" loc in
+  and jsx_identifier (loc, id) = JSX.Identifier.(
+    let ret = node "JSXIdentifier" loc in
     Js.Unsafe.set ret "name" (string id.name);
     ret
   )

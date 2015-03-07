@@ -36,6 +36,7 @@ module Abnormal : sig
   val set: abnormal -> unit
   val raise_exn: abnormal -> 'a
   val exception_handler: (unit -> 'a) -> (abnormal -> 'a) -> 'a
+  val string: abnormal -> string
 
 end = struct
 
@@ -69,6 +70,13 @@ end = struct
     let oldv = try check abnormal with _ -> false in
     Hashtbl.replace abnormals abnormal newv;
     oldv
+
+  let string = function
+    | Return -> "return"
+    | Break (Some lbl) -> spf "break %s" lbl
+    | Break None -> "break"
+    | Continue (Some lbl) -> spf "continue %s" lbl
+    | Continue None -> "continue"
 
 end
 
@@ -557,7 +565,7 @@ let rec convert cx map = Ast.Type.(function
 
   (* TODO: unsupported generators *)
   | loc, Function { Function.params; returnType; rest; typeParameters } ->
-    let typeparams, _, map_ = mk_type_param_declarations cx typeParameters in
+    let typeparams, map_ = mk_type_param_declarations cx ~map typeParameters in
     let map = SMap.fold SMap.add map_ map in
 
     let rev_params_tlist, rev_params_names =
@@ -1106,7 +1114,7 @@ and statement cx = Ast.Statement.(
   | (loc, TypeAlias { TypeAlias.id; typeParameters; right; } ) ->
       let _, { Ast.Identifier.name; _ } = id in
       let r = mk_reason (spf "type %s" name) loc in
-      let typeparams, _, type_params_map =
+      let typeparams, type_params_map =
         mk_type_param_declarations cx typeParameters in
       let t = convert cx type_params_map right in
 
@@ -1607,6 +1615,27 @@ and statement cx = Ast.Statement.(
   | (loc, VariableDeclaration decl) ->
       variables cx loc decl
 
+  | (loc, ClassDeclaration { Class.id; body;
+      superClass = Some (_, Ast.Expression.Member {
+        Ast.Expression.Member._object = _, Ast.Expression.Identifier (_,
+          { Ast.Identifier.name = "React"; _ });
+        property = Ast.Expression.Member.PropertyIdentifier (_,
+          { Ast.Identifier.name = "Component"; _ });
+        _
+      }) as superClass;
+      typeParameters; superTypeParameters; implements }) ->
+      if implements <> [] then
+        let msg = "implements not supported" in
+        Flow_js.add_error cx [mk_reason "" loc, msg]
+      else ();
+      let nloc, { Ast.Identifier.name; _ } = id in
+      let reason = mk_reason name nloc in
+      let extends = superClass, superTypeParameters in
+      let _ = mk_class cx reason typeParameters extends body in
+      let cls_type = CustomClassT("ReactClass", [], AnyT.why reason) in
+      Hashtbl.replace cx.type_table loc cls_type;
+      Env_js.set_var cx name cls_type reason
+
   | (loc, ClassDeclaration { Class.id; body; superClass;
       typeParameters; superTypeParameters; implements }) ->
       if implements <> [] then
@@ -1634,7 +1663,7 @@ and statement cx = Ast.Statement.(
     }) ->
     let _, { Ast.Identifier.name = iname; _ } = id in
     let reason = mk_reason iname loc in
-    let typeparams, imap, map = mk_type_param_declarations cx typeParameters in
+    let typeparams, map = mk_type_param_declarations cx typeParameters in
     let sfmap, smmap, fmap, mmap = List.fold_left Ast.Type.Object.Property.(
       fun (sfmap_, smmap_, fmap_, mmap_) (loc, { key; value; static; _ }) ->
         Ast.Expression.Object.Property.(match key with
@@ -1713,7 +1742,7 @@ and statement cx = Ast.Statement.(
       | Some _ ->
         mmap
     in
-    let i = mk_interface cx reason typeparams imap map (sfmap, smmap, fmap, mmap) extends in
+    let i = mk_interface cx reason typeparams map (sfmap, smmap, fmap, mmap) extends in
     Hashtbl.replace cx.type_table loc i;
     Env_js.set_var cx iname i reason
   | (loc, DeclareModule { DeclareModule.id; body; }) ->
@@ -2519,7 +2548,7 @@ and expression_ cx loc e = Ast.Expression.(match e with
       List.iter (fun e -> ignore (expression cx e)) expressions;
       StrT.at loc
 
-  | XJSElement e ->
+  | JSXElement e ->
       jsx cx e
 
   (* TODO *)
@@ -2571,7 +2600,7 @@ and literal cx loc lit = Ast.Literal.(match lit.value with
       StrT (mk_reason "string" loc, lit)
 
   | Boolean b ->
-      BoolT.at loc
+      BoolT (mk_reason "boolean" loc, Some b)
 
   | Null ->
       let null = null_ loc in
@@ -2689,31 +2718,26 @@ and binary cx loc = Ast.Expression.Binary.(function
       )
 )
 
-and refine_type cx reason t p =
-  Flow_js.mk_tvar_where cx reason (fun tvar ->
-    Flow_js.unit_flow cx (t, mk_predicate (p, tvar))
-  )
-
 and logical cx loc = Ast.Expression.Logical.(function
   | { operator = Or; left; right } ->
       let t1, _, not_map, xtypes = predicate_of_condition cx left in
       let reason = mk_reason "||" loc in
-      let t = refine_type cx reason (expression cx left) ExistsP in
       let t2 = Env_js.refine_env cx reason not_map xtypes
         (fun () -> expression cx right)
       in
-      Flow_js.unit_flow cx (t2, t);
-      t
+      Flow_js.mk_tvar_where cx reason (fun t ->
+        Flow_js.unit_flow cx (t1, OrT (reason, t2, t));
+      )
 
   | { operator = And; left; right } ->
       let t1, map, _, xtypes = predicate_of_condition cx left in
       let reason = mk_reason "&&" loc in
-      let t = refine_type cx reason (expression cx left) (NotP ExistsP) in
       let t2 = Env_js.refine_env cx reason map xtypes
         (fun () -> expression cx right)
       in
-      Flow_js.unit_flow cx (t2, t);
-      t
+      Flow_js.mk_tvar_where cx reason (fun t ->
+        Flow_js.unit_flow cx (t1, AndT (reason, t2, t));
+      )
 )
 
 and assignment_lhs cx = Ast.Pattern.(function
@@ -2861,11 +2885,11 @@ and react_ignored_attributes = [ "key"; "ref"; ]
 and react_ignore_attribute aname =
   List.mem aname react_ignored_attributes
 
-and jsx cx = Ast.XJS.(function { openingElement; closingElement; children } ->
+and jsx cx = Ast.JSX.(function { openingElement; closingElement; children } ->
   jsx_title cx openingElement (List.map (jsx_body cx) children)
 )
 
-and jsx_title cx openingElement children = Ast.XJS.(
+and jsx_title cx openingElement children = Ast.JSX.(
   let eloc, { Opening.name; attributes; _ } = openingElement in
   match name with
 
@@ -2949,7 +2973,7 @@ and jsx_title cx openingElement children = Ast.XJS.(
       AnyT.at eloc
 )
 
-and jsx_body cx = Ast.XJS.(function
+and jsx_body cx = Ast.JSX.(function
   | loc, Element e -> jsx cx e
   | loc, ExpressionContainer ec -> (
       let { ExpressionContainer.expression = ex } = ec in
@@ -3074,7 +3098,7 @@ and mk_proptype cx = Ast.Expression.(function
     } ->
       let rec string_literals lits es = match (es) with
         | Some (Expression (loc, Literal { Ast.Literal.
-            value = Ast.Literal.String lit
+            value = Ast.Literal.String lit; _
           })) :: tl ->
             string_literals (lit :: lits) tl
         | [] -> Some lits
@@ -3369,7 +3393,7 @@ and react_create_class cx loc class_props = Ast.Expression.(
   let id = Flow_js.mk_nominal cx in
   let itype = {
     class_id = id;
-    type_args = IMap.empty;
+    type_args = SMap.empty;
     fields_tmap = fmap;
     methods_tmap = mmap
   } in
@@ -3429,7 +3453,7 @@ and predicate_of_condition cx e = Ast.(Expression.(
   in
 
   (* inspect a null equality test *)
-  let null_test op e =
+  let null_test loc op e =
     let refinement = match refinable_lvalue e with
     | None, t -> None
     | Some name, t ->
@@ -3441,13 +3465,13 @@ and predicate_of_condition cx e = Ast.(Expression.(
         | _ -> None
     in
     match refinement with
-    | Some (name, t, p, sense) -> result BoolT.t name t p sense
-    | None -> empty_result BoolT.t
+    | Some (name, t, p, sense) -> result (BoolT.at loc) name t p sense
+    | None -> empty_result (BoolT.at loc)
   in
 
   (* inspect an undefined equality test *)
   (* TODO: non-strict equality of undefined? *)
-  let undef_test op e =
+  let undef_test loc op e =
     let refinement = match refinable_lvalue e with
     | None, t -> None
     | Some name, t ->
@@ -3457,8 +3481,8 @@ and predicate_of_condition cx e = Ast.(Expression.(
         | _ -> None
     in
     match refinement with
-    | Some (name, t, p, sense) -> result BoolT.t name t p sense
-    | None -> empty_result BoolT.t
+    | Some (name, t, p, sense) -> result (BoolT.at loc) name t p sense
+    | None -> empty_result (BoolT.at loc)
   in
 
   (* inspect a typeof equality test *)
@@ -3509,48 +3533,48 @@ and predicate_of_condition cx e = Ast.(Expression.(
     )
 
   (* expr op null *)
-  | _, Binary { Binary.operator;
+  | loc, Binary { Binary.operator;
       left;
       right = _, Literal { Literal.value = Literal.Null; _ }
     } ->
-      null_test operator left
+      null_test loc operator left
 
   (* null op expr *)
-  | _, Binary { Binary.operator;
+  | loc, Binary { Binary.operator;
       left = _, Literal { Literal.value = Literal.Null; _ };
       right
     } ->
-      null_test operator right
+      null_test loc operator right
 
   (* expr op undefined *)
-  | _, Binary { Binary.operator;
+  | loc, Binary { Binary.operator;
       left;
       right = _, Identifier (_, { Identifier.name = "undefined"; _ })
     } ->
-      undef_test operator left
+      undef_test loc operator left
 
   (* undefined op expr *)
-  | _, Binary { Binary.operator;
+  | loc, Binary { Binary.operator;
       left = _, Identifier (_, { Identifier.name = "undefined"; _ });
       right
     } ->
-      undef_test operator right
+      undef_test loc operator right
 
   (* expr op void(...) *)
-  | _, Binary { Binary.operator;
+  | loc, Binary { Binary.operator;
       left;
       right = _, Unary ({ Unary.operator = Unary.Void; _ }) as void_arg
     } ->
       ignore (expression cx void_arg);
-      undef_test operator left
+      undef_test loc operator left
 
   (* void(...) op expr *)
-  | _, Binary { Binary.operator;
+  | loc, Binary { Binary.operator;
       left = _, Unary ({ Unary.operator = Unary.Void; _ }) as void_arg;
       right
     } ->
       ignore (expression cx void_arg);
-      undef_test operator right
+      undef_test loc operator right
 
   (* typeof expr ==/=== string *)
   | _, Binary { Binary.operator = Binary.Equal | Binary.StrictEqual;
@@ -3601,13 +3625,13 @@ and predicate_of_condition cx e = Ast.(Expression.(
   | loc, Logical { Logical.operator = Logical.And; left; right } ->
       let reason = mk_reason "&&" loc in
       let t1, map1, not_map1, xts1 = predicate_of_condition cx left in
-      let t = refine_type cx reason t1 (NotP ExistsP) in
       let t2, map2, not_map2, xts2 = Env_js.refine_env cx reason map1 xts1
         (fun () -> predicate_of_condition cx right)
       in
-      Flow_js.unit_flow cx (t2, t);
       (
-        t,
+        Flow_js.mk_tvar_where cx reason (fun t ->
+          Flow_js.unit_flow cx (t1, AndT (reason, t2, t));
+        ),
         mk_and map1 map2,
         mk_or not_map1 not_map2,
         SMap.union xts1 xts2
@@ -3617,13 +3641,13 @@ and predicate_of_condition cx e = Ast.(Expression.(
   | loc, Logical { Logical.operator = Logical.Or; left; right } ->
       let reason = mk_reason "||" loc in
       let t1, map1, not_map1, xts1 = predicate_of_condition cx left in
-      let t = refine_type cx reason t1 ExistsP in
       let t2, map2, not_map2, xts2 = Env_js.refine_env cx reason not_map1 xts1
         (fun () -> predicate_of_condition cx right)
       in
-      Flow_js.unit_flow cx (t2,t);
       (
-        t,
+        Flow_js.mk_tvar_where cx reason (fun t ->
+          Flow_js.unit_flow cx (t1, OrT (reason, t2, t));
+        ),
         mk_or map1 map2,
         mk_and not_map1 not_map2,
         SMap.union xts1 xts2
@@ -3786,9 +3810,12 @@ and mk_signature cx c_type_params_map body = Ast.Statement.Class.(
       let fields = if name = "constructor"
         then mine_fields cx body fields
         else fields in
-      let typeparams, imap, f_type_params_map =
-        mk_type_param_declarations cx typeParameters in
+
+      let typeparams, f_type_params_map =
+        mk_type_param_declarations cx ~map:c_type_params_map typeParameters in
+
       let map = SMap.fold SMap.add f_type_params_map c_type_params_map in
+
       let params_ret = mk_params_ret cx map
         (params, defaults, rest) (body_loc body, returnType) in
       let params_ret = if name = "constructor"
@@ -3800,6 +3827,7 @@ and mk_signature cx c_type_params_map body = Ast.Statement.Class.(
         )
         else params_ret
       in
+
       (fields,
        SMap.add name (typeparams, f_type_params_map, params_ret) methods
       )
@@ -3827,7 +3855,7 @@ and mk_class_elements cx this super method_sigs body = Ast.Statement.Class.(
 
       let reason = mk_reason (spf "method %s" name) loc in
       let save_return_exn = Abnormal.swap Abnormal.Return false in
-      generate_tests reason typeparams (fun map_ ->
+      generate_tests cx reason typeparams (fun map_ ->
         let param_types_map =
           param_types_map |> SMap.map (Flow_js.subst cx map_) in
         let ret = Flow_js.subst cx map_ ret in
@@ -3890,13 +3918,20 @@ and mk_methodtype reason_c (typeparams,_,(params,pnames,ret,_,_)) =
     PolyT (typeparams, ft)
 
 and mk_class cx reason_c type_params extends body =
-  let typeparams, type_args_map, type_params_map =
+  (* As a running example, let's say the class declaration is:
+     class C<X> extends D<X> { f: X; m<Y: X>(x: Y): X { ... } }
+  *)
+
+  (* type parameters: <X> *)
+  let typeparams, type_params_map =
     mk_type_param_declarations cx type_params in
 
+  (* fields: { f: X }, methods_: { m<Y: X>(x: Y): X } *)
   let (fields, methods_) = mk_signature cx type_params_map body in
 
   let id = Flow_js.mk_nominal cx in
 
+  (* super: D<X> *)
   let super = mk_extends cx reason_c type_params_map extends in
 
   let static_reason = prefix_reason "statics of " reason_c in
@@ -3905,19 +3940,32 @@ and mk_class cx reason_c type_params extends body =
   ) in
   let static = Flow_js.mk_tvar cx static_reason in
 
-  generate_tests reason_c typeparams (fun map_ ->
+  generate_tests cx reason_c typeparams (fun map_ ->
+    (* map_: [X := T] where T = mixed, _|_ *)
+
+    (* super: D<T> *)
     let super = Flow_js.subst cx map_ super in
 
+    (* fields: { f: T } *)
     let fields = fields |> SMap.map (Flow_js.subst cx map_) in
 
+    (* methods: { m<Y: X>(x: Y): T } *)
     let methods_ = methods_ |> SMap.map
         (fun (typeparams,type_params_map,
              (params,pnames,ret,param_types_map,param_loc_map)) ->
 
+          (* typeparams = <Y: X> *)
+          let typeparams = List.map (fun typeparam ->
+            { typeparam with bound = Flow_js.subst cx map_ typeparam.bound }
+          ) typeparams in
+          let type_params_map = SMap.map (Flow_js.subst cx map_) type_params_map in
+
+          (* params = (x: Y), ret = T *)
           let params = List.map (Flow_js.subst cx map_) params in
           let ret = Flow_js.subst cx map_ ret in
           let param_types_map =
             SMap.map (Flow_js.subst cx map_) param_types_map in
+
           (typeparams,type_params_map,
            (params, Some pnames, ret, param_types_map, param_loc_map))
         )
@@ -3925,7 +3973,7 @@ and mk_class cx reason_c type_params extends body =
     let methods = methods_ |> SMap.map (mk_methodtype reason_c) in
     let instance = {
       class_id = id;
-      type_args = type_args_map |> IMap.map (Flow_js.subst cx map_);
+      type_args = type_params_map |> SMap.map (Flow_js.subst cx map_);
       fields_tmap = fields;
       methods_tmap = methods;
     } in
@@ -3952,7 +4000,7 @@ and mk_class cx reason_c type_params extends body =
 
   let instance = {
     class_id = id;
-    type_args = type_args_map;
+    type_args = type_params_map;
     fields_tmap = fields;
     methods_tmap = methods;
   } in
@@ -3964,7 +4012,7 @@ and mk_class cx reason_c type_params extends body =
   else
     PolyT(typeparams, ClassT this)
 
-and mk_interface cx reason typeparams imap map (sfmap, smmap, fmap, mmap) extends =
+and mk_interface cx reason typeparams map (sfmap, smmap, fmap, mmap) extends =
   let id = Flow_js.mk_nominal cx in
   let extends =
     match extends with
@@ -3995,7 +4043,7 @@ and mk_interface cx reason typeparams imap map (sfmap, smmap, fmap, mmap) extend
 
   let instance = {
     class_id = id;
-    type_args = imap;
+    type_args = map;
     fields_tmap = fmap;
     methods_tmap = mmap;
   } in
@@ -4021,13 +4069,13 @@ and mk_interface cx reason typeparams imap map (sfmap, smmap, fmap, mmap) extend
   else PolyT (typeparams, c)
 
 and function_decl id cx (reason:reason) type_params params ret body this super =
-  let typeparams,_,type_params_map = mk_type_param_declarations cx type_params in
+  let typeparams, type_params_map = mk_type_param_declarations cx type_params in
 
   let (params, pnames, ret, param_types_map, param_types_loc) =
     mk_params_ret cx type_params_map params (body_loc body, ret) in
 
   let save_return_exn = Abnormal.swap Abnormal.Return false in
-  generate_tests reason typeparams (fun map_ ->
+  generate_tests cx reason typeparams (fun map_ ->
     let param_types_map =
       param_types_map |> SMap.map (Flow_js.subst cx map_) in
     let ret = Flow_js.subst cx map_ ret in
@@ -4196,52 +4244,50 @@ and mk_params_ret cx map_ params (body_loc, ret_type_opt) =
    param_types_loc)
 
 (* Generate for every type parameter a pair of tests, instantiating that type
-   parameter with Top and Bottom. Run a closure that takes these instantiations,
-   each one in turn, and does something with it. We modify the salt for every
-   instantiation so that re-analyzing the same AST with different instantiations
-   causes different reasons to be generated. *)
+   parameter with its bound and Bottom. Run a closure that takes these
+   instantiations, each one in turn, and does something with it. We modify the
+   salt for every instantiation so that re-analyzing the same AST with different
+   instantiations causes different reasons to be generated. *)
 
-and generate_tests reason typeparams each =
+and generate_tests cx reason typeparams each =
   typeparams
-  |> List.fold_left (fun list {id; name; _ } ->
+  |> List.fold_left (fun list {name; bound; _ } ->
     let xreason = replace_reason name reason in
-    let top = MixedT (
-      prefix_reason "some instantiation (e.g., mixed) of " xreason
-    ) in
     let bot = UndefT (
-      prefix_reason "another instantiation (e.g., undefined) of " xreason
+      prefix_reason "some incompatible instantiation of " xreason
     ) in
     List.rev_append
-      (list |> List.map (IMap.add id top))
-      (list |> List.map (IMap.add id bot))
-  ) [IMap.empty]
+      (list |> List.map (fun map ->
+        SMap.add name (Flow_js.subst cx map bound) map)
+      )
+      (list |> List.map (SMap.add name bot))
+  ) [SMap.empty]
   |> List.iteri (fun i map_ ->
        each map_;
      )
 
 (* take a list of types appearing in AST as type params,
    do semantic checking and create tvars for them. *)
-and mk_type_params cx (types: Ast.Identifier.t list) =
-  let mk_type_param (typeparams, imap, smap) (loc, t) =
+and mk_type_params cx ?(map=SMap.empty) (types: Ast.Identifier.t list) =
+  let mk_type_param (typeparams, smap) (loc, t) =
     let name = t.Ast.Identifier.name in
     let reason = mk_reason name loc in
+    let bound = match t.Ast.Identifier.typeAnnotation with
+      | None -> MixedT reason
+      | Some (_, u) -> mk_type_ cx (SMap.union smap map) reason (Some u)
+    in
 
-    (* TODO: Can we get rid of typeparam.id?  What will be the implications on
-       shadowing? Investigate! *)
-    let id = Flow_js.mk_var cx in
-
-    let typeparam = { reason; id; name; } in
+    let typeparam = { reason; name; bound } in
     (typeparam :: typeparams,
-     IMap.add id (BoundT typeparam) imap,
      SMap.add name (BoundT typeparam) smap)
   in
-  let typeparams, imap, map =
-    List.fold_left mk_type_param ([], IMap.empty, SMap.empty) types
+  let typeparams, smap =
+    List.fold_left mk_type_param ([], SMap.empty) types
   in
-  List.rev typeparams, imap, map
+  List.rev typeparams, smap
 
-and mk_type_param_declarations cx typeParameters =
-  mk_type_params cx (extract_type_param_declarations typeParameters)
+and mk_type_param_declarations cx ?(map=SMap.empty) typeParameters =
+  mk_type_params cx ~map (extract_type_param_declarations typeParameters)
 
 and extract_type_param_declarations = function
   | None -> []
@@ -4577,7 +4623,12 @@ let implicit_require_strict cx master_cx =
 let explicit_require_strict cx cx_from cx_to =
   let m = cx_from._module in
   let from_t = lookup_module cx_from m in
-  let to_t = lookup_module cx_to m in
+  let to_t =
+    try lookup_module cx_to m
+    with _ ->
+      (* The module exported by cx_from may be imported by path in cx_to *)
+      lookup_module cx_to cx_from.file
+  in
   Flow_js.unit_flow cx (from_t, to_t)
 
 let declaration_require_strict cx m cx_to =

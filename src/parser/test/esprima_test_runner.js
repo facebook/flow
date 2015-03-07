@@ -123,8 +123,8 @@ function handleSpecialObjectCompare(esprima, flow, env) {
         esprima.returnType = null;
       }
       break;
-    case 'XJSEmptyExpression':
-      // The location for the empty XJS expression doesn't really matter. I'm
+    case 'JSXEmptyExpression':
+      // The location for the empty JSX expression doesn't really matter. I'm
       // arbitrarily using the location of the {}, and esprima is arbitrarily
       // using the single column location immediately after the {}
       esprima.loc = flow.loc;
@@ -219,8 +219,8 @@ function handleSpecialObjectCompare(esprima, flow, env) {
 
   if (flow && flow.type) {
     switch (flow.type) {
-      case "XJSText":
-        // Esprima represents XJS children string literals as Literal nodes
+      case "JSXText":
+        // Esprima represents JSX children string literals as Literal nodes
         flow.type = "Literal";
         break;
     }

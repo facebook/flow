@@ -170,7 +170,7 @@ module Program : Server.SERVER_PROGRAM = struct
     | ServerMsg.PING -> ServerMsg.response_to_channel oc ServerMsg.PONG
     | ServerMsg.BUILD build_opts ->
       let build_hook = BuildMain.go build_opts genv env oc in
-      ServerTypeCheck.hook_after_parsing := begin fun genv env ->
+      ServerTypeCheck.hook_after_parsing := (fun genv old_env env updates ->
         (* subtle: an exception there (such as writing on a closed pipe)
          * will not be caught by handle_connection() because
          * we have already returned from handle_connection(), hence
@@ -183,14 +183,14 @@ module Program : Server.SERVER_PROGRAM = struct
                    Unix.shutdown (Unix.descr_of_out_channel oc)
                                  Unix.SHUTDOWN_SEND;
                    close_out oc)
-            ~do_:(fun () -> build_hook genv env);
+            ~do_:(fun () -> build_hook genv old_env env updates);
         with exn ->
           let msg = Printexc.to_string exn in
           Printf.printf "Exn in build_hook: %s" msg;
           EventLogger.master_exception msg;
         );
-        ServerTypeCheck.hook_after_parsing := (fun _ _ -> ())
-      end
+        ServerTypeCheck.hook_after_parsing := (fun _ _ _ _ -> ())
+      )
     | ServerMsg.FIND_REFS find_refs_action ->
         ServerFindRefs.go find_refs_action genv env oc
     | ServerMsg.REFACTOR refactor_action ->
@@ -298,21 +298,20 @@ module Program : Server.SERVER_PROGRAM = struct
   let filter_typecheck_update update =
     Find.is_php_path (Relative_path.suffix update)
 
-  let recheck genv env updates =
+  let recheck genv old_env updates =
     let php_diff = Relative_path.Set.filter filter_typecheck_update updates in
-    BuildMain.incremental_update genv env updates;
     if Relative_path.Set.is_empty php_diff
     then
       begin
-        BuildMain.incremental_update genv env updates;
-        env
+        BuildMain.incremental_update genv old_env old_env updates;
+        old_env
       end
     else
-      let failed_parsing = Relative_path.Set.union php_diff env.failed_parsing in
-      let check_env = { env with failed_parsing = failed_parsing } in
-      let env = ServerTypeCheck.check genv check_env in
-      BuildMain.incremental_update genv env updates;
-      env
+      let failed_parsing = Relative_path.Set.union php_diff old_env.failed_parsing in
+      let check_env = { old_env with failed_parsing = failed_parsing } in
+      let new_env = ServerTypeCheck.check genv check_env in
+      BuildMain.incremental_update genv old_env new_env updates;
+      new_env
 
   let parse_options = ServerArgs.parse_options
 

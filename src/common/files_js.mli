@@ -41,3 +41,8 @@ val make_next_files: Path.path -> unit -> string list
 
 (* given a base directory and a relative path, return an absolute path *)
 val normalize_path: string -> string -> string
+
+(* given a base directory and a relative path, return an absolute path *)
+val construct_path: string -> string list -> string
+
+val package_json: Path.path -> string list
