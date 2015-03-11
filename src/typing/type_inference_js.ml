@@ -519,17 +519,7 @@ let rec convert cx map = Ast.Type.(function
 
       | "Function" | "function" ->
         let reason = mk_reason "function type" loc in
-        FunT (
-          reason,
-          AnyT.at loc,
-          AnyT.at loc,
-          {
-            this_t = AnyT.at loc;
-            params_tlist = [RestT (AnyT.at loc)];
-            params_names = None;
-            return_t = AnyT.at loc;
-            closure_t = 0
-          })
+        mk_any_function reason loc
 
       | "Object" ->
         let reason = mk_reason "any object type" loc in
@@ -719,6 +709,19 @@ and mk_enum_type cx reason keys =
     SMap.add key AnyT.t map
   ) SMap.empty keys in
   EnumT (reason, Flow_js.mk_object_with_map_proto cx reason map (MixedT reason))
+
+and mk_any_function reason loc =
+  FunT (
+    reason,
+    AnyT.at loc,
+    AnyT.at loc,
+    {
+      this_t = AnyT.at loc;
+      params_tlist = [RestT (AnyT.at loc)];
+      params_names = None;
+      return_t = AnyT.at loc;
+      closure_t = 0
+    })
 
 (************)
 (* Visitors *)
@@ -3032,14 +3035,14 @@ and mk_proptype cx = Ast.Expression.(function
         (_, {Ast.Identifier.name = "func"; _ });
       _
     } ->
-      AnyT.at vloc (* TODO *)
+      mk_any_function (mk_reason "func" vloc) vloc
 
   | vloc, Member { Member.
       property = Member.PropertyIdentifier
         (_, {Ast.Identifier.name = "object"; _ });
       _
     } ->
-      AnyT.at vloc (* TODO *)
+      AnyObjT (mk_reason "object" vloc)
 
   | vloc, Member { Member.
       property = Member.PropertyIdentifier
@@ -3084,7 +3087,18 @@ and mk_proptype cx = Ast.Expression.(function
       };
       arguments = [Expression e];
     } ->
-      AnyT.at vloc (* TODO *)
+      let flags = {
+        sealed = false;
+        exact = true
+      } in
+      let dict = {
+        dict_name = None;
+        key = AnyT.t;
+        value = mk_proptype cx e
+      } in
+      let pmap = Flow_js.mk_propmap cx SMap.empty in
+      let proto = MixedT (reason_of_string "Object") in
+      ObjT (mk_reason "objectOf" vloc, Flow_js.mk_objecttype ~flags dict pmap proto)
 
   | vloc, Call { Call.
       callee = _, Member { Member.

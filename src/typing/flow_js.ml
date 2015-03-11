@@ -1547,7 +1547,12 @@ let rec flow cx (l,u) trace =
       ->
       (* if inflowing type is literal (thus guaranteed to be
          unaliased), propertywise subtyping is sound *)
-      let lit = (desc_of_reason reason1) = "object literal" in
+      let lit =
+        let desc = (desc_of_reason reason1) in
+        let is_prefix a b = String.(
+          let n = length b in
+          length a >= n && sub a 0 n = b) in
+        desc = "object literal" || is_prefix desc "props of React element" in
       iter_props_ cx flds2
         (fun s -> fun t2 ->
           if (not(has_prop cx flds1 s))
