@@ -1549,11 +1549,9 @@ let rec flow cx (l,u) trace =
          unaliased), propertywise subtyping is sound *)
       let lit =
         let desc = (desc_of_reason reason1) in
-        let is_prefix a b =
-          let a_len = String.length a in
-          let b_len = String.length b in
-          let rec loop i = i = b_len || a.[i] = b.[i] && loop (i + 1) in
-          a_len >= b_len && loop 0 in
+        let is_prefix a b = String.(
+          let n = length b in
+          length a >= n && sub a 0 n = b) in
         desc = "object literal" || is_prefix desc "props of React element" in
       iter_props_ cx flds2
         (fun s -> fun t2 ->
