@@ -23,8 +23,16 @@ proptype_object.js:13:38,38: number
 This type is incompatible with
   proptype_object.js:6:13,34: object
 
+proptype_objectOf.js:13:37,37: number
+This type is incompatible with
+  proptype_objectOf.js:6:10,57: objectOf
+
+proptype_objectOf.js:14:47,51: string
+This type is incompatible with
+  proptype_objectOf.js:6:35,56: number
+
 proptype_oneOf.js:11:28,32: string literal bar
 Property not found in
   proptype_oneOf.js:6:14,43: oneOf
 
-Found 7 errors
+Found 9 errors

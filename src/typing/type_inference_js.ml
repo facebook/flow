@@ -3087,7 +3087,18 @@ and mk_proptype cx = Ast.Expression.(function
       };
       arguments = [Expression e];
     } ->
-      AnyT.at vloc (* TODO *)
+      let flags = {
+        sealed = false;
+        exact = true
+      } in
+      let dict = {
+        dict_name = None;
+        key = AnyT.t;
+        value = mk_proptype cx e
+      } in
+      let pmap = Flow_js.mk_propmap cx SMap.empty in
+      let proto = MixedT (reason_of_string "Object") in
+      ObjT (mk_reason "objectOf" vloc, Flow_js.mk_objecttype ~flags dict pmap proto)
 
   | vloc, Call { Call.
       callee = _, Member { Member.
