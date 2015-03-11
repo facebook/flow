@@ -47,10 +47,6 @@ new_react.js:4:12,33: string
 This type is incompatible with
   new_react.js:18:15,20: number
 
-new_react.js:4:12,33: string
-This type is incompatible with
-  new_react.js:26:23,23: number
-
 new_react.js:6:12,33: number
 This type is incompatible with
   new_react.js:17:18,23: string
@@ -135,4 +131,4 @@ This type is incompatible with
 Too few arguments (expected default/rest parameters in function)
   classes.js:3:7,9: Foo
 
-Found 34 errors
+Found 33 errors

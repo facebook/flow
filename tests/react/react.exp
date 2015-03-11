@@ -7,14 +7,6 @@ jsx_spread.js:10:19,20: number
 This type is incompatible with
   jsx_spread.js:6:10,31: string
 
-proptype_arrayOf.js:6:10,56: arrayOf
-This type is incompatible with
-  proptype_arrayOf.js:13:36,36: number
-
-proptype_arrayOf.js:6:34,55: number
-This type is incompatible with
-  proptype_arrayOf.js:14:45,49: string
-
 proptype_arrayOf.js:13:36,36: number
 This type is incompatible with
   proptype_arrayOf.js:6:10,56: arrayOf
@@ -23,17 +15,9 @@ proptype_arrayOf.js:14:45,49: string
 This type is incompatible with
   proptype_arrayOf.js:6:34,55: number
 
-proptype_func.js:6:11,30: func
-This type is incompatible with
-  proptype_func.js:14:36,36: number
-
 proptype_func.js:14:36,36: number
 This type is incompatible with
   proptype_func.js:6:11,30: func
-
-proptype_object.js:6:13,34: object
-This type is incompatible with
-  proptype_object.js:13:38,38: number
 
 proptype_object.js:13:38,38: number
 This type is incompatible with
@@ -43,4 +27,4 @@ proptype_oneOf.js:11:28,32: string literal bar
 Property not found in
   proptype_oneOf.js:6:14,43: oneOf
 
-Found 11 errors
+Found 7 errors
