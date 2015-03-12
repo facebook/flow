@@ -3115,6 +3115,11 @@ and mk_proptype cx = Ast.Expression.(function
             value = Ast.Literal.String lit; _
           })) :: tl ->
             string_literals (lit :: lits) tl
+        | Some (Expression (loc, Identifier (_, { Ast.Identifier.name; _ }))) :: tl ->
+            (match (Env_js.get_var cx name (mk_reason "identifier" loc)) with
+              | StrT (_, Some lit) ->
+                  string_literals (lit :: lits) tl
+              | _ -> None)
         | [] -> Some lits
         | _  -> None in
       (match string_literals [] es with

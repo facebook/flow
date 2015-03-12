@@ -31,8 +31,12 @@ proptype_objectOf.js:14:47,51: string
 This type is incompatible with
   proptype_objectOf.js:6:35,56: number
 
-proptype_oneOf.js:11:28,32: string literal bar
+proptype_oneOf.js:16:44,46: string literal bar
 Property not found in
-  proptype_oneOf.js:6:14,43: oneOf
+  proptype_oneOf.js:9:14,43: oneOf
 
-Found 9 errors
+proptype_oneOf.js:17:56,58: string literal bar
+Property not found in
+  proptype_oneOf.js:10:13,40: oneOf
+
+Found 10 errors
