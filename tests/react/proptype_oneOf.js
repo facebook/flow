@@ -1,11 +1,17 @@
 /* @flow */
 
+var foo = "foo";
+var bar = "bar";
+
 var React = require('react');
 var Example = React.createClass({
   propTypes: {
-    literal: React.PropTypes.oneOf(["foo"]).isRequired
+    literal: React.PropTypes.oneOf(["foo"]).isRequired,
+    string: React.PropTypes.oneOf([foo]).isRequired
   },
 });
 
-var ex1 = <Example literal="foo" />;
-var ex2 = <Example literal="bar" />;
+var ok = <Example literal={foo} string={foo} />;
+
+var fail_wrong_literal = <Example literal={bar} string={foo} />;
+var fail_wrong_string = <Example literal={foo} string={bar} />;
