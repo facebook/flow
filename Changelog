@@ -1,23 +1,36 @@
+v0.6.0
+
+- Bump version to 0.6.0
+- Also watch for changes in include paths
+- Fix the Function type to be any function
+- Add Symbol global name to libs
+- Support trailing commas in parser
+- Make methods immutable
+- Remove tuple array length limit
+- [PR #315] Implement more PropTypes
+- Update componentWillReceive spec
+- Unsuppress library errors
+
 v0.5.0
 
-Bump version to 0.5.0
-Add HTMLAnchorElement
-[PR #295] Add one of proptype
-Update the parser to work with the new esprima-fb & ast-types
-[PR #299] Declare prompt function (fixes #204)
-[PR #303] Add String.prototype.endsWith()
-quick fix for react/es6 notation
-extend scope of type params to following bounds
-reasonless shortcut
-Add React.findDOMNode to lib/react.js
-move command documentation into each command
-fix path in --help usage example
-fix predicate filtering of null and undefined
-[PR #292] Types for React synthetic events
-basic support for bounded polymorphism
-infer falsiness
-node haste module support
-add Abnormal.string
+- Bump version to 0.5.0
+- Add HTMLAnchorElement
+- [PR #295] Add one of proptype
+- Update the parser to work with the new esprima-fb & ast-types
+- [PR #299] Declare prompt function (fixes #204)
+- [PR #303] Add String.prototype.endsWith()
+- quick fix for react/es6 notation
+- extend scope of type params to following bounds
+- reasonless shortcut
+- Add React.findDOMNode to lib/react.js
+- move command documentation into each command
+- fix path in --help usage example
+- fix predicate filtering of null and undefined
+- [PR #292] Types for React synthetic events
+- basic support for bounded polymorphism
+- infer falsiness
+- node haste module support
+- add Abnormal.string
 
 v0.4.0
 
