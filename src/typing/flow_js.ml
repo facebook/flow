@@ -570,6 +570,7 @@ and ground_type_impl cx ids t = match t with
       UpperBoundT (ground_type_impl cx ids t)
 
   | AnyObjT _ -> AnyObjT (reason_of_string "any object")
+  | AnyFunT _ -> AnyFunT (reason_of_string "any function")
 
   | ShapeT t ->
       ShapeT (ground_type_impl cx ids t)
@@ -980,6 +981,7 @@ let rec assert_ground ?(infer=false) cx ids = function
       assert_ground cx ids t
 
   | AnyObjT _ -> ()
+  | AnyFunT _ -> ()
 
   | ShapeT(t) ->
       assert_ground cx ids t
@@ -1265,6 +1267,9 @@ let rec flow cx (l,u) trace =
 
     | (_, AnyObjT _) when object_like l -> ()
     | (AnyObjT _, _) when object_like u || object_like_op u -> ()
+
+    | (_, AnyFunT _) when function_like l -> ()
+    | (AnyFunT _, _) when function_like u || function_like_op u -> ()
 
     (**************************************)
     (* some properties are always defined *)
@@ -1744,7 +1749,22 @@ let rec flow cx (l,u) trace =
     | (InstanceT(reason,_,super,instance),
        LookupT (_,strict,x, t))
       ->
-      let pmap = SMap.union instance.fields_tmap instance.methods_tmap in
+      let pmap = match strict, t with
+        (* t = UpperBoundT _ means that the lookup is trying to write t, rather
+           than read t. Existing places that play a role here are set_prop and
+           get_prop, which use UpperBoundT and LowerBoundT, respectively. The
+           general pattern has been used previously, e.g. to distinguish element
+           writes from reads.
+
+           strict = Some _ means that we want to throw errors when x is not
+           found. Some lookups are non-strict (e.g. when we want to enforce
+           consistency between properties if they exist higher up in the
+           inheritance chain), and for methods, we want the consistency to be
+           one-way, so we use UpperBoundT _, and we don't want methods to be
+           excluded from the lookup in that case, obviously. *)
+        | Some _, UpperBoundT _ -> instance.fields_tmap
+        | _ -> SMap.union instance.fields_tmap instance.methods_tmap
+      in
       (match SMap.get x pmap with
       | None ->
         unit_flow cx (super, u)
@@ -1759,7 +1779,8 @@ let rec flow cx (l,u) trace =
     | (InstanceT (reason_c,static,super,instance),
        SetT(reason_op,x,tin))
       ->
-      let fields = SMap.union instance.fields_tmap instance.methods_tmap in
+      (* methods are immutable, so we hide them from property set operations *)
+      let fields = instance.fields_tmap in
       set_prop cx reason_op reason_c super x fields tin
 
     (*****************************)
@@ -2165,10 +2186,11 @@ let rec flow cx (l,u) trace =
       instance.fields_tmap |> SMap.iter (fun x -> fun t ->
         lookup_prop cx l reason None x t
       );
-        (* TODO: method lookup should be covariant instead of invariant *)
         instance.methods_tmap |> SMap.iter (fun x -> fun t ->
           if (x <> "constructor") then
-            lookup_prop cx l reason None x t
+            (* we're able to do supertype compatibility in super methods because
+               they're immutable *)
+            lookup_prop cx l reason None x (UpperBoundT t)
         )
 
     | (ObjT _,
@@ -2570,7 +2592,7 @@ and numeric = function
 
 and object_like = function
   | ObjT _ | InstanceT _ | RecordT _ -> true
-  | _ -> false
+  | t -> function_like t
 
 and object_like_op = function
   | SetT _ | GetT _ | MethodT _ | LookupT _
@@ -2579,6 +2601,18 @@ and object_like_op = function
   | SetElemT _ | GetElemT _
   | AnyObjT _ -> true
   | _ -> false
+
+and function_like = function
+  | ClassT _
+  | FunT _ -> true
+  | _ -> false
+
+and function_like_op = function
+  | CallT _ | TypeT _
+  | ConstructorT _
+  | MarkupT _
+  | AnyFunT _ -> true
+  | t -> object_like_op t
 
 and equatable cx trace = function
 
@@ -2747,6 +2781,7 @@ and subst cx (map: Type.t SMap.t) t =
     LowerBoundT(subst cx map t)
 
   | AnyObjT _ -> t
+  | AnyFunT _ -> t
 
   | ShapeT(t) ->
     ShapeT(subst cx map t)

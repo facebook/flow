@@ -104,9 +104,8 @@ module OptionParser(Config : CONFIG) : Server.OPTION_PARSER = struct
         ServerArgs.root          = root;
         ServerArgs.should_detach = Config.(mode = Detach);
         ServerArgs.convert       = None;
-        ServerArgs.load_save_opt = None;
-        ServerArgs.gc_control    = Gc.get ();
-        ServerArgs.tc_options    = TypecheckerOptions.empty;
+        ServerArgs.no_load       = false;
+        ServerArgs.save_filename = None;
       },
       {
         Types_js.opt_debug = !debug;

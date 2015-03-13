@@ -8,4 +8,4 @@
  *
  *)
 
-val fork_in_pipe: string -> Unix.file_descr * Unix.file_descr * int
+val fork_in_pipe: string list -> Unix.file_descr * Unix.file_descr * int

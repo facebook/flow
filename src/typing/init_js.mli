@@ -8,4 +8,9 @@
  *
  *)
 
-val init : unit -> unit
+(* called to initialize library code on initial full pass.
+   param is a function to save errors from this process:
+   circular deps in Ocaml prevent direct calls from here
+   to Types_js, where error management stuff lives.
+ *)
+val init : (string -> Errors_js.ErrorSet.t -> unit) -> unit

@@ -519,7 +519,7 @@ let rec convert cx map = Ast.Type.(function
 
       | "Function" | "function" ->
         let reason = mk_reason "function type" loc in
-        mk_any_function reason loc
+        AnyFunT reason
 
       | "Object" ->
         let reason = mk_reason "any object type" loc in
@@ -596,7 +596,7 @@ let rec convert cx map = Ast.Type.(function
 
   | loc, Object { Object.properties; indexers; callProperties; } ->
     let map_ = List.fold_left (fun map_ ->
-      Object.Property.(fun (loc, { key; value; optional; static; }) ->
+      Object.Property.(fun (loc, { key; value; optional; _ }) ->
         (match key with
           | Ast.Expression.Object.Property.Literal
               (_, { Ast.Literal.value = Ast.Literal.String name; _ })
@@ -709,19 +709,6 @@ and mk_enum_type cx reason keys =
     SMap.add key AnyT.t map
   ) SMap.empty keys in
   EnumT (reason, Flow_js.mk_object_with_map_proto cx reason map (MixedT reason))
-
-and mk_any_function reason loc =
-  FunT (
-    reason,
-    AnyT.at loc,
-    AnyT.at loc,
-    {
-      this_t = AnyT.at loc;
-      params_tlist = [RestT (AnyT.at loc)];
-      params_names = None;
-      return_t = AnyT.at loc;
-      closure_t = 0
-    })
 
 (************)
 (* Visitors *)
@@ -1668,7 +1655,8 @@ and statement cx = Ast.Statement.(
     let reason = mk_reason iname loc in
     let typeparams, map = mk_type_param_declarations cx typeParameters in
     let sfmap, smmap, fmap, mmap = List.fold_left Ast.Type.Object.Property.(
-      fun (sfmap_, smmap_, fmap_, mmap_) (loc, { key; value; static; _ }) ->
+      fun (sfmap_, smmap_, fmap_, mmap_)
+        (loc, { key; value; static; _method; _ }) -> (* TODO: optional *)
         Ast.Expression.Object.Property.(match key with
         | Literal (loc, _)
         | Computed (loc, _) ->
@@ -1677,8 +1665,6 @@ and statement cx = Ast.Statement.(
             (sfmap_, smmap_, fmap_, mmap_)
 
         | Identifier (loc, { Ast.Identifier.name; _ }) ->
-          if static
-          then
             let t = convert cx map value in
             let t = match SMap.get name mmap_ with
               | None -> t
@@ -1687,22 +1673,12 @@ and statement cx = Ast.Statement.(
               | Some t0 ->
                   IntersectionT (Reason_js.mk_reason iname loc, [t; t0])
             in
-            match value with
-              | _, Ast.Type.Function _ -> (sfmap_, SMap.add name t smmap_,
-          fmap_, mmap_)
-              | _ -> (SMap.add name t sfmap_, smmap_, fmap_, mmap_)
-          else
-            let t = convert cx map value in
-            let t = match SMap.get name mmap_ with
-              | None -> t
-              | Some (IntersectionT (reason, ts)) ->
-                  IntersectionT (reason, ts @ [t])
-              | Some t0 ->
-                  IntersectionT (Reason_js.mk_reason iname loc, [t; t0])
-            in
-            match value with
-              | _, Ast.Type.Function _ -> (sfmap_, smmap_, fmap_, SMap.add name t mmap_)
-              | _ -> (sfmap_, smmap_, SMap.add name t fmap_, mmap_)
+          (match static, _method with
+          | true, true ->  (sfmap_, SMap.add name t smmap_, fmap_, mmap_)
+          | true, false -> (SMap.add name t sfmap_, smmap_, fmap_, mmap_)
+          | false, true -> (sfmap_, smmap_, fmap_, SMap.add name t mmap_)
+          | false, false -> (sfmap_, smmap_, SMap.add name t fmap_, mmap_)
+          )
         )
     ) (SMap.empty, SMap.empty, SMap.empty, SMap.empty) properties
     in
@@ -2181,7 +2157,7 @@ and expression_ cx loc e = Ast.Expression.(match e with
         let elemt = Flow_js.mk_tvar cx element_reason in
         ArrT (reason, elemt, [])
     | elems ->
-        (* tup is true if <= 8 elems and no spreads *)
+        (* tup is true if no spreads *)
         (* tset is set of distinct (mod reason) elem types *)
         (* tlist is reverse list of element types if tup, else [] *)
         let tup, tset, tlist = List.fold_left (fun (tup, tset, tlist) elem ->
@@ -2196,8 +2172,8 @@ and expression_ cx loc e = Ast.Expression.(match e with
           let elemt = if tup then elemt else summarize cx elemt in
           tup,
           TypeExSet.add elemt tset,
-          if tup && List.length tlist < 8 then elemt :: tlist else []
-        ) (List.length elems < 8, TypeExSet.empty, []) elems
+          if tup then elemt :: tlist else []
+        ) (true, TypeExSet.empty, []) elems
         in
         (* composite elem type is union *)
         let elemt = match TypeExSet.elements tset with
@@ -3035,7 +3011,7 @@ and mk_proptype cx = Ast.Expression.(function
         (_, {Ast.Identifier.name = "func"; _ });
       _
     } ->
-      mk_any_function (mk_reason "func" vloc) vloc
+      AnyFunT (mk_reason "func" vloc)
 
   | vloc, Member { Member.
       property = Member.PropertyIdentifier
@@ -4690,7 +4666,7 @@ let merge_module_list cx_list =
   ()
 
 (* variation of infer + merge for lib definitions *)
-let init file statements =
+let init file statements save_errors =
   Env_js.global_block := SMap.empty;
   Flow_js.Cache.clear();
 
@@ -4711,4 +4687,8 @@ let init file statements =
   );
 
   aggregate_context_data cx;
-  update_graph cx
+  update_graph cx;
+
+  let errs = cx.errors in
+  cx.errors <- Errors_js.ErrorSet.empty;
+  save_errors errs

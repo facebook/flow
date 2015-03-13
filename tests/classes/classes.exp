@@ -3,12 +3,8 @@ A.js:2:9,14: number
 This type is incompatible with
   C.js:4:9,14: string
 
-C.js:4:9,14: string
-This type is incompatible with
-  A.js:2:9,14: number
-
 D.js:3:1,9: property x
 Property not found in
   D.js:3:5,5: E
 
-Found 3 errors
+Found 2 errors

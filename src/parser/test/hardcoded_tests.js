@@ -1887,4 +1887,39 @@ module.exports = {
       }
     }
   },
+  'Trailing commas': {
+    'Math.max(a, b, c,)': {},
+    'var exp = function(a, b,) { return a + b; };': {},
+    'function dec(a, b,) { return a + b; }': {},
+    'class Test { constructor(x, y,) {} }': {},
+    '(x,) => x * x': {},
+    '(x,y,) => Math.pow(x,y,)': {},
+    '(function foo(x = 5,) {})': {},
+    'foo(a, ...b,)': {},
+    'var x = [1, 2, 3,];': {},
+    'var x = [1, 2, ...y,];': {},
+    'var x = [1, 2, ...y, 4,];': {},
+  },
+  'Invalid trailing commas': {
+    'foo(a, (b,))': {
+      'errors': {
+        '0.message': 'Unexpected token )',
+      }
+    },
+    'function foo(a, ...b,) { return b.concat(a); }': {
+      'errors': {
+        '0.message': 'Rest parameter must be final parameter of an argument list',
+      }
+    },
+    'var f = function(a, ...b,) { return b.concat(a); }': {
+      'errors': {
+        '0.message': 'Rest parameter must be final parameter of an argument list',
+      }
+    },
+    'var f = (a, ...b,) => b.concat(a);': {
+      'errors': {
+        '0.message': 'Rest parameter must be final parameter of an argument list',
+      }
+    },
+  },
 };

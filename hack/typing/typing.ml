@@ -1669,7 +1669,13 @@ and dispatch_call p env call_type (fpos, fun_expr as e) el uel =
   | Id (_, pseudo_func) when pseudo_func = SN.PseudoFunctions.unset ->
       if Env.is_strict env then
         Errors.isset_empty_unset_in_strict p pseudo_func;
-      env, (Reason.Rwitness p, Tprim Tvoid)
+      (match el with
+        | [(p, Obj_get (_, _, OG_nullsafe))] ->
+          begin
+            Errors.nullsafe_property_write_context p;
+            env, (Reason.Rwitness p, Tany)
+          end;
+        | _ -> env, (Reason.Rwitness p, Tprim Tvoid))
   | Id (_, x) when SSet.mem x Naming.predef_tests ->
       let env, _ = expr env (List.hd el) in
       env, (Reason.Rwitness p, Tprim Tbool)
@@ -2425,7 +2431,7 @@ and obj_get_ ~is_method ~nullsafe env ty1 cid (p, s as id)
         let k' (env, fty, x) = begin
           let env, method_, x = k (env, fty, x) in
           let env, method_ = non_null env method_ in
-          env, (Reason.Rwitness p1, Toption method_), x
+          env, (Reason.Rnullsafe_op p1, Toption method_), x
         end in
         obj_get_ ~is_method ~nullsafe env ty cid id k' k_lhs
     | None ->

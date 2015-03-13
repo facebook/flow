@@ -223,10 +223,10 @@ let check_toplevel env pos =
 (*****************************************************************************)
 
 let rec check_lvalue env = function
-  | pos, Obj_get (_, (_, Id (_, name)), _) ->
-      if (String.sub name 0 1) = ":"
-        then error_at env pos "->: syntax is not supported for lvalues"
-        else ()
+  | pos, Obj_get (_, (_, Id (_, name)), OG_nullsafe) ->
+      error_at env pos "?-> syntax is not supported for lvalues"
+  | pos, Obj_get (_, (_, Id (_, name)), _) when name.[0] = ':' ->
+      error_at env pos "->: syntax is not supported for lvalues"
   | _, (Lvar _ | Obj_get _ | Array_get _ | Class_get _ | Unsafeexpr _) -> ()
   | pos, Call ((_, Id (_, "tuple")), _, _) ->
       error_at env pos

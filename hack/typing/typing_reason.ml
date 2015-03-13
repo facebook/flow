@@ -58,6 +58,7 @@ type t =
   | Rarray_filter    of Pos.t * t
   | Rtype_access     of t * string list * t
   | Rexpr_dep_type   of t * Pos.t * string
+  | Rnullsafe_op     of Pos.t (* ?-> operator is used *)
 
 (* Translate a reason to a (pos, string) list, suitable for error_l. This
  * previously returned a string, however the need to return multiple lines with
@@ -102,6 +103,7 @@ let rec to_string prefix r =
   | Ryield_send      _ -> [(p, prefix ^ " ($generator->send() can always send a null back to a \"yield\")")]
   | Rvar_param       _ -> [(p, prefix ^ " (variadic argument)")]
   | Runpack_param    _ -> [(p, prefix ^ " (it is unpacked with '...')")]
+  | Rnullsafe_op     _ -> [(p, prefix ^ " (use of ?-> operator)")]
   | Rcoerced     (_, p2, s)  ->
       [
         (p, prefix);
@@ -203,6 +205,7 @@ and to_pos = function
   | Rarray_filter (p, _) -> p
   | Rtype_access (r, _, _) -> to_pos r
   | Rexpr_dep_type (r, _, _) -> to_pos r
+  | Rnullsafe_op p -> p
 
 type ureason =
   | URnone

@@ -12,9 +12,9 @@ open Utils
 
 val dfind_pid: int option ref
 
-val dfind_init: 
-  Path.path -> unit
+val dfind_init:
+  Path.path list -> unit
 
-(* new set of php and js files *)  
-val get_updates: Path.path -> SSet.t
+(* new set of php and js files *)
+val get_updates: unit -> SSet.t
 

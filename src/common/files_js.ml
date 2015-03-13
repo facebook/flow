@@ -90,9 +90,13 @@ let wanted config =
 let make_next_files root =
   let config = FlowConfig.get root in
   let filter = wanted config in
-  let others = config.FlowConfig.includes in
-  Find.make_next_files_with_find
-    (fun p -> is_flow_file p && filter p) ~others root
+  let others = config.FlowConfig.include_stems in
+  let sroot = Path.string_of_path root in
+  Find.make_next_files_with_find (fun p ->
+    (str_starts_with p sroot || FlowConfig.is_included config p)
+    && is_flow_file p
+    && filter p
+  ) ~others root
 
 let rec normalize_path dir file =
   normalize_path_ dir (Str.split_delim dir_sep file)

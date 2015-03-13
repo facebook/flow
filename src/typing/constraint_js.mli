@@ -57,6 +57,7 @@ module Type :
       | LowerBoundT of t
 
       | AnyObjT of reason
+      | AnyFunT of reason
 
       | ShapeT of t
 

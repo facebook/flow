@@ -657,6 +657,7 @@ end = struct
           value;
           optional = false;
           static;
+          _method = true;
         })
 
       in let call_property env start_loc static =
@@ -675,6 +676,7 @@ end = struct
           value;
           optional;
           static;
+          _method = false;
         })
 
       in let indexer_property env start_loc static =
@@ -936,6 +938,8 @@ end = struct
               Expect.token env T_ELLIPSIS;
               Some (Parse.identifier_with_type env Error.StrictParamName)
             end else None in
+            if Peek.token env <> T_RPAREN
+            then error env Error.ParameterAfterRestParameter;
             List.rev params, (if has_default then List.rev defaults else []), rest
         | _ ->
             let param, default = param env in
@@ -2430,17 +2434,16 @@ end = struct
         | T_EOF
         | T_RPAREN -> List.rev acc
         | _ ->
-          Expect.token env T_COMMA;
-          arguments' env ((argument env)::acc)
+            let acc = (argument env)::acc in
+            if Peek.token env <> T_RPAREN
+            then Expect.token env T_COMMA;
+            arguments' env acc
 
       in fun env ->
         let start_loc = Peek.loc env in
         Expect.token env T_LPAREN;
 
-        let args =
-          if Peek.token env = T_RPAREN
-          then []
-          else arguments' env [argument env]
+        let args = arguments' env []
 
         in let end_loc = Peek.loc env in
         Expect.token env T_RPAREN;
@@ -2676,6 +2679,8 @@ end = struct
         | T_ELLIPSIS, false ->
             Expect.token env T_ELLIPSIS;
             let id = Parse.identifier env in
+            if Peek.token env <> T_RPAREN
+            then error env Error.ParameterAfterRestParameter;
             ArrowParams ((Loc.btwn start_loc (fst id)), List.rev acc, Some id)
         | _ ->
             let definitely_not_arrow_param, expr = possible_arrow_param env in
@@ -2688,8 +2693,13 @@ end = struct
               | _ -> sequence env acc)
             else (match Peek.token env, acc with
             | T_COMMA, _ ->
+                let end_loc = Peek.loc env in
                 Expect.token env T_COMMA;
-                sequence_or_arrow_params env start_loc acc
+                if Peek.token env  = T_RPAREN
+                then
+                  (* Trailing comma means arrow function *)
+                  ArrowParams ((Loc.btwn start_loc end_loc), List.rev acc, None)
+                else sequence_or_arrow_params env start_loc acc
             | _, [expr] -> Expr expr
             | _ ->
                 let last_loc = (match acc with

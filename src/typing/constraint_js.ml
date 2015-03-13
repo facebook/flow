@@ -110,6 +110,7 @@ module Type = struct
 
   (* specializations of AnyT *)
   | AnyObjT of reason (* any object *)
+  | AnyFunT of reason (* any function *)
 
   (* constrains some properties of an object *)
   | ShapeT of t
@@ -647,6 +648,7 @@ let string_of_ctor = function
   | UpperBoundT _ -> "UpperBoundT"
   | LowerBoundT _ -> "LowerBoundT"
   | AnyObjT _ -> "AnyObjT"
+  | AnyFunT _ -> "AnyFunT"
   | ShapeT _ -> "ShapeT"
   | EnumT _ -> "EnumT"
   | RecordT _ -> "RecordT"
@@ -764,6 +766,8 @@ let rec reason_of_t = function
       -> reason_of_t t
 
   | AnyObjT reason ->
+      reason
+  | AnyFunT reason ->
       reason
 
   | ShapeT (t)
@@ -899,6 +903,7 @@ let rec mod_reason_of_t f = function
   | LowerBoundT t -> LowerBoundT (mod_reason_of_t f t)
 
   | AnyObjT reason -> AnyObjT (f reason)
+  | AnyFunT reason -> AnyFunT (f reason)
 
   | ShapeT t -> ShapeT (mod_reason_of_t f t)
 
@@ -1112,6 +1117,9 @@ let rec type_printer override fallback enclosure cx t =
 
     | AnyObjT _ ->
         "Object"
+
+    | AnyFunT _ ->
+        "Function"
 
     | RecordT (_, t) ->
         spf "$Record<%s>" (pp EnclosureNone cx t)
@@ -1341,6 +1349,7 @@ let rec is_printed_type_parsable_impl weak cx enclosure = function
       is_printed_type_parsable_impl weak cx EnclosureNone t
 
   | AnyObjT _ -> true
+  | AnyFunT _ -> true
 
   (* weak mode *)
 

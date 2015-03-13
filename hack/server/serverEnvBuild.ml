@@ -14,15 +14,14 @@
 (*****************************************************************************)
 open ServerEnv
 
-let make_genv ~multicore options =
+let make_genv ~multicore options config =
   let root         = ServerArgs.root options in
   let check_mode   = ServerArgs.check_mode options in
-  let gc_control   = ServerArgs.gc_control options in
-  Relative_path.set_path_prefix Relative_path.Root (Path.string_of_path root);
+  let gc_control   = ServerConfig.gc_control config in
   Typing_deps.trace :=
     not check_mode || ServerArgs.convert options <> None ||
-    ServerArgs.load_save_opt options <> None;
-  let nbr_procs    = ServerConfig.nbr_procs in
+    ServerArgs.save_filename options <> None;
+  let nbr_procs    = GlobalConfig.nbr_procs in
   let workers =
     if multicore then Some (Worker.make nbr_procs gc_control) else None
   in
@@ -36,12 +35,13 @@ let make_genv ~multicore options =
     ()
   end;
   { options      = options;
+    config       = config;
     workers      = workers;
   }
 
-let make_env options =
+let make_env options config =
   let nenv = { Naming.empty with
-    Naming.itcopt = ServerArgs.typechecker_options options;
+    Naming.itcopt = ServerConfig.typechecker_options config;
   } in
   { nenv;
     files_info     = Relative_path.Map.empty;

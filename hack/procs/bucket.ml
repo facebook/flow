@@ -30,7 +30,7 @@ let max_bucket_size = 500
 
 let make jobs = 
   let jobs = Array.of_list jobs in
-  let nbr_procs = ServerConfig.nbr_procs in
+  let nbr_procs = GlobalConfig.nbr_procs in
   let bucket_size =
     if Array.length jobs < nbr_procs * max_bucket_size
     then max 1 (1 + ((Array.length jobs) / nbr_procs))

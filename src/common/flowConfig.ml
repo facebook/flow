@@ -17,11 +17,27 @@ type options = {
   traces: bool;
 }
 
+module PathMap : MapSig with type key = Path.path
+= MyMap(struct
+  type t = Path.path
+  let compare p1 p2 =
+    String.compare (Path.string_of_path p1) (Path.string_of_path p2)
+end)
+
 type config = {
+  (* file blacklist *)
   excludes: (string * Str.regexp) list;
+  (* non-root include paths. may contain wildcards *)
   includes: Path.path list;
+  (* stems extracted from includes *)
+  include_stems: Path.path list;
+  (* map from include_stems to list of (original path, regexified path) *)
+  include_map: ((string * Str.regexp) list) PathMap.t;
+  (* library paths. no wildcards *)
   libs: Path.path list;
+  (* config options *)
   options: options;
+  (* root path *)
   root: Path.path;
 }
 
@@ -75,6 +91,8 @@ end
 let empty_config root = {
   excludes = [];
   includes = [];
+  include_stems = [];
+  include_map = PathMap.empty;
   libs = [];
   options = default_options;
   root;
@@ -100,17 +118,108 @@ let group_into_sections lines =
     ) (SSet.empty, [], ((0, ""), [])) lines in
   List.rev (section::sections)
 
+(* given a path, return the max prefix not containing a wildcard *)
+let path_stem =
+  let wc = Str.regexp "^[^*?]*[*?]" in
+  (fun path ->
+    let path_str = Path.string_of_path path in
+    let stem = if Str.string_match wc path_str 0
+    then Filename.dirname (Str.matched_string path_str)
+    else path_str in
+    Path.mk_path stem)
+
+let dir_sep = Str.regexp_string Filename.dir_sep
+
+(* translate a path with wildcards into a regex *)
+let path_patt =
+  let star = Str.regexp_string "*" in
+  let star2 = Str.regexp_string "**" in
+  let qmark = Str.regexp_string "?" in
+  fun path ->
+    let str = Path.string_of_path path in
+    (* because we accept both * and **, convert in 2 steps *)
+    let results = Str.full_split star2 str in
+    let results = List.map (fun r -> match r with
+      | Str.Text s ->
+          (* note: unix path specifiers only *)
+          let s = Str.global_replace star "[^/]*" s in
+          Str.global_replace qmark "." s
+      | Str.Delim _ -> ".*") results in
+    let str = String.concat "" results in
+    Str.regexp str
+
+(* helper - eliminate noncanonical entries where possible.
+   no other normalization is done *)
+let fixup_path p = if Path.is_normalized p then p else
+  let s = Path.string_of_path p in
+  let abs = not (Filename.is_relative s) in
+  let entries = Str.split_delim dir_sep s in
+  let rec loop revbase entries =
+    match entries with
+    | h :: t when h = Filename.current_dir_name ->
+        loop revbase t
+    | h :: t when h = Filename.parent_dir_name -> (
+        match revbase with
+        | rh :: rt -> loop rt t
+        | _ -> loop (h :: revbase) t
+      )
+    | h :: t -> loop (h :: revbase) t
+    | [] -> List.rev revbase
+  in
+  let entries = loop [] entries in
+  let s = List.fold_left Filename.concat "" entries in
+  let s = if abs then Filename.dir_sep ^ s else s in
+  Path.mk_path s
+
 let make_path_absolute config path =
   if Filename.is_relative path
   then Path.concat config.root path
   else Path.mk_path path
 
+(* parse include lines and set config's
+   includes (a list of path specs) and
+   include_map (a map from stems to (spec, regex) pairs *)
 let parse_includes config lines =
   let includes = lines
-  |> List.map (fun (ln, line) -> String.trim line)
-  |> List.filter (fun s -> s <> "")
-  |> List.map (make_path_absolute config) in
-  { config with includes; }
+    |> List.map (fun (ln, line) -> String.trim line)
+    |> List.filter (fun s -> s <> "")
+    |> List.map (make_path_absolute config)
+    |> List.map fixup_path
+  in
+  let include_stems, include_map = List.fold_left (fun (stems, map) path ->
+    let stem = path_stem path in
+    let patt = path_patt path in
+    let pstr = Path.string_of_path path in
+    match PathMap.get stem map with
+      | None ->
+          let map = PathMap.add stem [pstr, patt] map in
+          (stem :: stems), map
+      | Some entries ->
+          let map = PathMap.add stem ((pstr, patt) :: entries) map in
+          stems, map
+  ) ([], PathMap.empty) includes
+  in
+  { config with includes; include_stems; include_map; }
+
+(* find a prefix for f in a list of paths, or none *)
+let rec find_prefix f = function
+| [] -> None
+| h :: _ when str_starts_with f (Path.string_of_path h) -> Some h
+| h :: t -> find_prefix f t
+
+(* find a match for f in a list of patterns, or none *)
+let rec match_patt f = function
+| [] -> None
+| (path, patt) :: _ when Str.string_match patt f 0 -> Some path
+| (path, patt) :: t -> match_patt f t
+
+(* try to find a match for f in our include paths *)
+let is_included config f =
+  match find_prefix f config.include_stems with
+  | None -> false
+  | Some stem ->
+      let patts = PathMap.find_unsafe stem config.include_map in
+      match_patt f patts != None
 
 let parse_libs config lines =
   let libs = lines
@@ -243,4 +352,6 @@ let get root =
       let config = read root in
       cache := Some config;
       config
-  | Some config -> config
+  | Some config ->
+      assert (root = config.root);
+      config

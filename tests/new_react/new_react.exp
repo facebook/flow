@@ -7,10 +7,6 @@ FeedUFI.react.js:25:7,30:8: prop className of type parameter P of React element:
 Property not found in
   UFILikeCount.react.js:12:20,21:2: props of React component
 
-classes.js:3:19,33: prop y_ of type parameter S of Foo
-Property not found in
-  classes.js:13:24,36: object type
-
 classes.js:10:25,36: number
 This type is incompatible with
   classes.js:10:16,21: string
@@ -18,18 +14,6 @@ This type is incompatible with
 classes.js:17:17,30: property y_
 Property not found in
   classes.js:13:24,36: object type
-
-new_react.js:2:9,24:2: property x
-Property not found in
-  new_react.js:8:25,27: object type
-
-new_react.js:2:9,24:2: property y
-Property not found in
-  new_react.js:8:25,27: object type
-
-new_react.js:2:9,24:2: property z
-Property not found in
-  new_react.js:8:25,27: object type
 
 new_react.js:2:9,24:2: state of React component
 Expected object instead of
@@ -57,7 +41,7 @@ Computed property/element cannot be accessed on possibly null or undefined value
 
 new_react.js:20:26,44: property length
 Property not found in
-  [LIB] core.js:59:1,74:1: Number
+  [LIB] core.js:63:1,78:1: Number
 
 new_react.js:26:23,23: number
 This type is incompatible with
@@ -127,8 +111,4 @@ This type is incompatible with
 This type is incompatible with
   new_react.js:28:8,13: number
 
-[LIB] react.js:41:5,49: function type
-Too few arguments (expected default/rest parameters in function)
-  classes.js:3:7,9: Foo
-
-Found 33 errors
+Found 28 errors

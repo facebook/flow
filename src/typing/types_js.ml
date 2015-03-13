@@ -367,7 +367,7 @@ let merge_nonstrict partition opts =
           acc
       ) ([], []) partition in
       (* typecheck intrinsics--temp code *)
-      Init_js.init ();
+      Init_js.init (fun file errs -> ());
       (* collect master context errors *)
       let (files, errsets) = (
         Flow_js.master_cx.file :: files,
@@ -605,7 +605,8 @@ let full_check workers parse_next opts =
 
   let files = SSet.elements parsed in
   let checked = typecheck workers files SSet.empty opts (fun x ->
-    Init_js.init ();
+    Init_js.init (fun file errs ->
+      save_errors infer_errors [file] [errs]);
     x
   ) in
 

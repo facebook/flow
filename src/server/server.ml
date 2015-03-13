@@ -25,6 +25,20 @@ struct
 
   let name = "flow server"
 
+  (* to support multiple roots, all relative paths in flow
+     are absolute paths with a dummy prefix  *)
+  let config_filename () = Relative_path.(
+    let relp = concat Root ".flowconfig" in
+    let s = to_absolute relp in
+    create Dummy s)
+
+  let load_config () = ServerConfig.default_config
+
+  (* This determines whether the current config file is compatible with the
+   * config that this server was initialized with. Returning false means
+   * that any change in .flowconfig results in a server restart. *)
+  let validate_config _config = false
+
   let parse_options = OptionParser.parse
 
   let get_errors _ = Types_js.get_errors ()
@@ -416,7 +430,6 @@ struct
         flush stderr);
     end)
 
-
   let handle_connection genv env socket =
     try handle_connection_ genv env socket
     with
@@ -425,11 +438,37 @@ struct
     | e ->
         flush stdout
 
+  (* Note: this single-file entry point is only called by
+     ServerMain.load currently, which Flow doesn't support.
+     so we ignore include paths here for now. *)
   let filter_update genv _env update =
     let flowconfig_path =
       FlowConfig.fullpath (ServerArgs.root genv.ServerEnv.options) in
-    Files_js.is_flow_file (Relative_path.to_absolute update)
-      || Relative_path.to_absolute update = flowconfig_path
+    let abs = Relative_path.to_absolute update in
+    Files_js.is_flow_file abs || abs = flowconfig_path
+
+  let get_watch_paths options =
+    let config = FlowConfig.get (ServerArgs.root options) in
+    config.FlowConfig.include_stems
+
+  (* filter a set of updates coming from dfind and return
+     a Relative_path.Set. updates may be coming in from
+     the root, or an include path. *)
+  let process_updates genv env updates =
+    let root = ServerArgs.root (genv.ServerEnv.options) in
+    let is_flow_file =
+      let config_path = FlowConfig.fullpath root in
+      fun f -> Files_js.is_flow_file f || f = config_path
+    in
+    let config = FlowConfig.get root in
+    let sroot = Path.string_of_path root in
+    SSet.fold (fun f acc ->
+      if is_flow_file f &&
+        (* note: is_included may be expensive. check in-root match first. *)
+        (str_starts_with f sroot || FlowConfig.is_included config f)
+      then Relative_path.(Set.add (create Dummy f) acc)
+      else acc
+    ) updates Relative_path.Set.empty
 
   (* on notification, execute client commands or recheck files *)
   let recheck genv env updates =
@@ -439,16 +478,6 @@ struct
     else
       let diff_js = Relative_path.Set.fold (fun x a ->
         SSet.add (Relative_path.to_absolute x) a) diff_js SSet.empty in
-      let root = ServerArgs.root genv.ServerEnv.options in
-      (* if flowconfig changes, stop the server *)
-      if SSet.mem (FlowConfig.fullpath root) diff_js
-      then begin
-        Printf.printf "Status: Error\n%!";
-        Printf.printf
-          ".flowconfig modified. %s is out of date. Exiting.\n%!"
-          name;
-        exit 4
-      end;
       (* TEMP: if library files change, stop the server *)
       let modified_lib_files = SSet.inter diff_js (Files_js.get_lib_files ()) in
       if not (SSet.is_empty modified_lib_files)

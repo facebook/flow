@@ -31,26 +31,27 @@ open Utils
 let dfind_proc = ref None
 let dfind_pid = ref None
 
-let dfind_init root =
-  let proc, pid = DfindLib.start (Path.string_of_path root) in
+let dfind_init roots =
+  let paths = List.map Path.string_of_path roots in
+  let proc, pid = DfindLib.start paths in
   PidLog.log ~reason:"dfind" pid;
   dfind_proc := Some proc;
   dfind_pid := Some pid
 
-let dfind (root:Path.path) retries = match !dfind_proc with
+let dfind retries = match !dfind_proc with
   | None -> assert false
   | Some x -> DfindLib.get_changes x
 
-let dfind root = dfind root 20
+let dfind () = dfind 20
 
-let rec get_updates_ acc root =
-  let diff = dfind root in
+let rec get_updates_ acc =
+  let diff = dfind () in
   if SSet.is_empty diff
   then acc
   else begin
     let acc = SSet.union diff acc in
-    get_updates_ acc root
+    get_updates_ acc
   end
 
-let get_updates root =
-  get_updates_ SSet.empty root
+let get_updates () =
+  get_updates_ SSet.empty

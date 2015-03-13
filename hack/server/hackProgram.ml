@@ -18,6 +18,20 @@ module Program : Server.SERVER_PROGRAM = struct
 
   let name = "hh_server"
 
+  let config_filename_ =
+    Relative_path.concat Relative_path.Root ".hhconfig"
+
+  let config_filename () = config_filename_
+
+  let load_config () = ServerConfig.load config_filename_
+
+  let validate_config genv =
+    let new_config = load_config () in
+    (* This comparison can eventually be made more complex; we may not always
+     * need to restart hh_server, e.g. changing the path to the load script
+     * is immaterial*)
+    genv.config = new_config
+
   let get_errors env = env.errorl
 
   let infer = ServerInferType.go
@@ -295,6 +309,9 @@ module Program : Server.SERVER_PROGRAM = struct
    * date on filesystem changes *)
   let filter_update _genv _env _update = true
 
+  let process_updates _genv _env updates =
+    Relative_path.relativize_set Relative_path.Root updates
+
   let filter_typecheck_update update =
     Find.is_php_path (Relative_path.suffix update)
 
@@ -314,6 +331,8 @@ module Program : Server.SERVER_PROGRAM = struct
       new_env
 
   let parse_options = ServerArgs.parse_options
+
+  let get_watch_paths _options = []
 
   let marshal chan =
     Typing_deps.marshal chan;

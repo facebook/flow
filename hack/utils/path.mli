@@ -17,6 +17,7 @@ val string_of_path: path -> string
 val equal: path -> path -> bool
 val file_exists: path -> bool
 val is_directory: path -> bool
+val is_normalized: path -> bool
 val concat: path -> string -> path
 val remove: path -> unit
 val parent: path -> path

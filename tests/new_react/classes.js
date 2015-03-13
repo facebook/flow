@@ -22,7 +22,7 @@ class Foo extends React.Component {
 
     componentWillReceiveProps(
         nextProps: Object,
-        nextContext: Object // nextContext?: Object
+        nextContext: any
     ): void {
         this.qux();
     }

@@ -60,9 +60,9 @@ let (process_fsnotify_event:
 let daemon_from_pipe env message_in result_out =
   let acc = ref SSet.empty in
   while true do
-    let fsnotify_callback events = 
+    let fsnotify_callback events =
       acc := List.fold_left (process_fsnotify_event env) !acc events
-    in let message_in_callback () = 
+    in let message_in_callback () =
       let ic = Unix.in_channel_of_descr message_in in
       let msg = Marshal.from_channel ic in
       assert (msg = "Go");
@@ -75,7 +75,7 @@ let daemon_from_pipe env message_in result_out =
     Fsnotify.select env.fsnotify ~read_fdl ~timeout fsnotify_callback
   done
 
-let fork_in_pipe root =
+let fork_in_pipe roots =
   let msg_in, msg_out = Unix.pipe() in
   let result_in, result_out = Unix.pipe() in
   match Unix.fork() with
@@ -83,8 +83,8 @@ let fork_in_pipe root =
   | 0 ->
       Unix.close msg_out;
       Unix.close result_in;
-      let env = DfindEnv.make root in
-      DfindAddFile.path env root;
+      let env = DfindEnv.make roots in
+      List.iter (DfindAddFile.path env) roots;
       daemon_from_pipe env msg_in result_out;
       assert false
   | pid ->

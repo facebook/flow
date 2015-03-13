@@ -156,7 +156,7 @@ module Naming                               = struct
   let void_cast                             = 2054 (* DONT MODIFY!!!! *)
   let object_cast                           = 2055 (* DONT MODIFY!!!! *)
   let unset_cast                            = 2056 (* DONT MODIFY!!!! *)
-  let nullsafe_property_access              = 2057 (* DONT MODIFY!!!! *)
+  (* DEPRECATED let nullsafe_property_access = 2057 *)
   let illegal_TRAIT                         = 2058 (* DONT MODIFY!!!! *)
   let shape_typehint                        = 2059 (* DONT MODIFY!!!! *)
   let dynamic_new_in_strict_mode            = 2060 (* DONT MODIFY!!!! *)
@@ -329,6 +329,7 @@ module Typing                               = struct
   let abstract_const_usage                  = 4129 (* DONT MODIFY!!!! *)
   let cannot_declare_constant               = 4130 (* DONT MODIFY!!!! *)
   let cyclic_typeconst                      = 4131 (* DONT MODIFY!!!! *)
+  let nullsafe_property_write_context       = 4132 (* DONT MODIFY!!!! *)
 
   (* EXTEND HERE WITH NEW VALUES IF NEEDED *)
 end
@@ -568,9 +569,9 @@ let dynamic_method_call pos =
   add Naming.dynamic_method_call pos
     "Dynamic method call"
 
-let nullsafe_property_access pos =
-  add Naming.nullsafe_property_access pos
-  "The ?-> operator is not supported for property access"
+let nullsafe_property_write_context pos =
+  add Typing.nullsafe_property_write_context pos
+  "?-> syntax not supported here, this function effectively does a write"
 
 let illegal_fun pos =
   let msg = "The argument to fun() must be a single-quoted, constant "^

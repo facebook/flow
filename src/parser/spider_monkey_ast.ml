@@ -138,6 +138,7 @@ and Type : sig
         value: Type.t;
         optional: bool;
         static: bool;
+        _method: bool;
       }
       type t = Loc.t * t'
     end

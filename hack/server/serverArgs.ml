@@ -9,12 +9,6 @@
  *)
 
 (*****************************************************************************)
-(* File parsing the arguments on the command line *)
-(*****************************************************************************)
-
-open Utils
-
-(*****************************************************************************)
 (* The options from the command line *)
 (*****************************************************************************)
 
@@ -24,16 +18,9 @@ type options = {
   root             : Path.path;
   should_detach    : bool;
   convert          : Path.path option;
-  load_save_opt    : env_store_action option;
-  (* Configures only the workers. Workers can have more relaxed GC configs as
-   * they are short-lived processes *)
-  gc_control       : Gc.control;
-  tc_options       : TypecheckerOptions.t;
+  no_load          : bool;
+  save_filename    : string option;
 }
-
-and env_store_action =
-  | Load of string
-  | Save of string
 
 (*****************************************************************************)
 (* Usage code *)
@@ -57,7 +44,6 @@ module Messages = struct
   let no_load       = " don't load from a saved state"
 end
 
-
 (*****************************************************************************)
 (* CAREFUL!!!!!!! *)
 (*****************************************************************************)
@@ -65,34 +51,6 @@ end
    format -- don't change it in an incompatible way!
 *)
 (*****************************************************************************)
-
-let make_gc_control config =
-  let minor_heap_size = match SMap.get "gc_minor_heap_size" config with
-    | Some s -> int_of_string s
-    | None -> ServerConfig.gc_control.Gc.minor_heap_size in
-  let space_overhead = match SMap.get "gc_space_overhead" config with
-    | Some s -> int_of_string s
-    | None -> ServerConfig.gc_control.Gc.space_overhead in
-  { ServerConfig.gc_control with Gc.minor_heap_size; Gc.space_overhead; }
-
-let config_assume_php config =
-  match SMap.get "assume_php" config with
-    | Some s -> bool_of_string s
-    | None -> true
-
-let config_unsafe_xhp config =
-  match SMap.get "unsafe_xhp" config with
-    | Some s -> bool_of_string s
-    | None -> false
-
-let config_list_regexp = (Str.regexp "[, \t]+")
-
-let config_user_attributes config =
-  match SMap.get "user_attributes" config with
-    | None -> None
-    | Some s ->
-      let custom_attrs = Str.split config_list_regexp s in
-      Some (List.fold_right SSet.add custom_attrs SSet.empty)
 
 (*****************************************************************************)
 (* The main entry point *)
@@ -108,10 +66,11 @@ let parse_options () =
   let json_mode     = ref false in
   let should_detach = ref false in
   let convert_dir   = ref None  in
-  let save          = ref "" in
+  let save          = ref None in
   let no_load       = ref false in
   let version       = ref false in
   let cdir          = fun s -> convert_dir := Some s in
+  let set_save      = fun s -> save := Some s in
   let options =
     ["--debug"         , Arg.Set debug         , Messages.debug;
      "--check"         , Arg.Set check_mode    , Messages.check;
@@ -122,7 +81,7 @@ let parse_options () =
      "--from-emacs"    , Arg.Set from_emacs    , Messages.from_emacs;
      "--from-hhclient" , Arg.Set from_hhclient , Messages.from_hhclient;
      "--convert"       , Arg.String cdir       , Messages.convert;
-     "--save"          , Arg.Set_string save   , Messages.save;
+     "--save"          , Arg.String set_save   , Messages.save;
      "--no-load"       , Arg.Set no_load       , Messages.no_load;
      "--version"       , Arg.Set version       , "";
     ] in
@@ -132,8 +91,8 @@ let parse_options () =
     print_string Build_id.build_id_ohai;
     exit 0
   end;
-  (* json implies check *)
-  let check_mode = !check_mode || !json_mode; in
+  (* --json and --save both imply check *)
+  let check_mode = !check_mode || !json_mode || !save <> None; in
   (* Conversion mode implies check *)
   let check_mode = check_mode || !convert_dir <> None in
   let convert = Utils.opt_map Path.mk_path (!convert_dir) in
@@ -144,34 +103,14 @@ let parse_options () =
   | _ -> ());
   let root_path = Path.mk_path !root in
   Wwwroot.assert_www_directory root_path;
-  let hhconfig = Path.string_of_path (Path.concat root_path ".hhconfig") in
-  let config = Config_file.parse hhconfig in
-  let load_save_opt = match !save with
-    | "" -> begin
-      if !no_load then None
-      else
-        match SMap.get "load_script" config with
-        | None -> None
-        | Some cmd ->
-            let cmd =
-              if Filename.is_relative cmd then (!root)^"/"^cmd else cmd in
-            Some (Load cmd)
-      end
-    | s -> Some (Save s) in
-  let tcopts = {
-    TypecheckerOptions.tco_assume_php = config_assume_php config;
-    tco_unsafe_xhp = config_unsafe_xhp config;
-    tco_user_attrs = config_user_attributes config;
-  } in
   {
     json_mode     = !json_mode;
     check_mode    = check_mode;
     root          = root_path;
     should_detach = !should_detach;
     convert       = convert;
-    load_save_opt = load_save_opt;
-    gc_control    = make_gc_control config;
-    tc_options    = tcopts;
+    no_load       = !no_load;
+    save_filename = !save;
   }
 
 (* useful in testing code *)
@@ -181,9 +120,8 @@ let default_options ~root = {
   root = Path.mk_path root;
   should_detach = false;
   convert = None;
-  load_save_opt = None;
-  gc_control = ServerConfig.gc_control;
-  tc_options = TypecheckerOptions.empty;
+  no_load = true;
+  save_filename = None;
 }
 
 (*****************************************************************************)
@@ -195,6 +133,5 @@ let json_mode options = options.json_mode
 let root options = options.root
 let should_detach options = options.should_detach
 let convert options = options.convert
-let load_save_opt options = options.load_save_opt
-let gc_control options = options.gc_control
-let typechecker_options options = options.tc_options
+let no_load options = options.no_load
+let save_filename options = options.save_filename

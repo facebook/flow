@@ -35,4 +35,8 @@ val query_type: context -> Pos.t -> Pos.t * Type.t option * Type.t list
 
 val fill_types: context -> (int * int * string) list
 
-val init: string -> Spider_monkey_ast.Statement.t list -> unit
+val init:
+  string ->
+  Spider_monkey_ast.Statement.t list ->
+  (Errors_js.ErrorSet.t -> unit) ->
+  unit

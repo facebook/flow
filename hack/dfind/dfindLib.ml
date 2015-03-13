@@ -12,8 +12,8 @@
 (*****************************************************************************)
 open Utils
 
-let start root = 
-  let msg_out, result_in, pid = DfindServer.fork_in_pipe root in
+let start roots =
+  let msg_out, result_in, pid = DfindServer.fork_in_pipe roots in
   (Unix.out_channel_of_descr msg_out,
   Unix.in_channel_of_descr result_in),
   pid

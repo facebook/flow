@@ -54,6 +54,7 @@ type t =
   | NewlineBeforeArrow
   | StrictFunctionStatement
   | AdjacentJSXElements
+  | ParameterAfterRestParameter
 
 exception Error of (Ast.Loc.t * t) list
 
@@ -108,4 +109,6 @@ module PP =
           " declared at top level or immediately within another function."
       | AdjacentJSXElements -> "Unexpected token <. Remember, adjacent JSX "^
           "elements must be wrapped in an enclosing parent tag"
+      | ParameterAfterRestParameter ->
+          "Rest parameter must be final parameter of an argument list"
   end

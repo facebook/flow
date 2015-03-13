@@ -9,8 +9,8 @@
  *)
 
 exception Error of string * int
-let wrap f () = 
-  try 
+let wrap f () =
+  try
     f ()
   with
   | Inotify.Error (reason, err) -> raise (Error (reason, err))
@@ -37,7 +37,7 @@ type event = {
   wpath : string; (* The watched path that triggered this event *)
 }
 
-let init _root = {
+let init _roots = {
   fd     = wrap (Inotify.init) ();
   wpaths = WMap.empty;
 }
@@ -49,8 +49,8 @@ let select_events = Inotify.(
   ])
 
 (* Returns None if we're already watching that path and Some watch otherwise *)
-let add_watch env path = 
-  let watch = wrap (fun () -> Inotify.add_watch env.fd path select_events) () in 
+let add_watch env path =
+  let watch = wrap (fun () -> Inotify.add_watch env.fd path select_events) () in
   if WMap.mem watch env.wpaths && WMap.find watch env.wpaths = path
   then None
   else begin
@@ -83,13 +83,13 @@ let check_event_type = function
 let process_event env events event =
   match event with
   | _, _, _, None -> events
-  | watch, type_list, _, Some filename -> 
+  | watch, type_list, _, Some filename ->
       List.iter check_event_type type_list;
       let wpath = try WMap.find watch env.wpaths with _ -> assert false in
       let path = wpath ^ "/" ^ filename in
       { path; wpath; }::events
 
-let read env = 
+let read env =
   let inotify_events = wrap (fun () -> Inotify.read env.fd) () in
   List.fold_left (process_event env) [] inotify_events
 
@@ -104,9 +104,9 @@ let select env ?(read_fdl=[]) ?(write_fdl=[]) ~timeout callback =
   let read_fdl = (env.fd, callback) :: read_fdl in
   let read_callbacks = List.fold_left make_callback FDMap.empty read_fdl in
   let write_callbacks = List.fold_left make_callback FDMap.empty write_fdl in
-  let read_ready, write_ready, _ = 
+  let read_ready, write_ready, _ =
     Unix.select (List.map fst read_fdl) (List.map fst write_fdl) [] timeout
-  in 
+  in
   List.iter (invoke_callback write_callbacks) write_ready;
   List.iter (invoke_callback read_callbacks) read_ready
 
@@ -115,7 +115,7 @@ let select env ?(read_fdl=[]) ?(write_fdl=[]) ~timeout callback =
 let _string_of inotify_ev =
   let wd, mask, cookie, s = inotify_ev in
   let mask = String.concat ":" (List.map Inotify.string_of_event mask) in
-  let s = match s with 
-  | Some s -> s 
+  let s = match s with
+  | Some s -> s
   | None -> "\"\"" in
   Printf.sprintf "wd [%u] mask[%s] cookie[%ld] %s" (Inotify.int_of_wd wd) mask cookie s

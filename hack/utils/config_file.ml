@@ -10,6 +10,8 @@
 
 open Utils
 
+type t = string SMap.t
+
 (* OCaml 4.0.0 defines this for us, but we still need to support 3.12 *)
 let trim s =
   let s = Str.replace_first (Str.regexp "^ *") "" s in

@@ -59,8 +59,8 @@ type t = {
  *)
 (*****************************************************************************)
 
-let make root =
-  let fsnotify = Fsnotify.init root in
+let make roots =
+  let fsnotify = Fsnotify.init roots in
   {
     fsnotify  = fsnotify          ;
     files     = TimeFiles.empty   ;

@@ -14,14 +14,30 @@ type options = {
   traces: bool;
 }
 
+module PathMap : Utils.MapSig with type key = Path.path
+
 type config = {
+  (* file blacklist *)
   excludes: (string * Str.regexp) list;
+  (* user-specified non-root include paths. may contain wildcards *)
   includes: Path.path list;
+  (* stems extracted from includes *)
+  include_stems: Path.path list;
+  (* map from include_stems to list of (original path, regexified path) *)
+  include_map: ((string * Str.regexp) list) PathMap.t;
+  (* library paths. no wildcards *)
   libs: Path.path list;
+  (* config options *)
   options: options;
+  (* root path *)
   root: Path.path;
 }
 val get: Path.path -> config
 val fullpath: Path.path -> string
 
 val init: Path.path -> string list -> unit
+
+
+
+(* true if a file path matches an include path in config *)
+val is_included: config -> string -> bool

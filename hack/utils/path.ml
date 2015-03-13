@@ -76,6 +76,9 @@ let is_directory (path : path) : bool =
   let file = string_of_path path in
   Sys.is_directory file
 
+let is_normalized (path : path) : bool =
+  path.is_normalized
+
 let concat (path : path) (more : string) : path =
   let path = string_of_path path in
   let path = Printf.sprintf "%s/%s" path more in

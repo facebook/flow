@@ -1837,7 +1837,7 @@ and expr_ env = function
          is being used for instance property access; see the case below for
          handling nullsafe instance method calls to see how this works *)
       let nullsafe = match nullsafe with
-        | OG_nullsafe -> Errors.nullsafe_property_access p; N.OG_nullsafe
+        | OG_nullsafe -> N.OG_nullsafe
         | OG_nullthrows -> N.OG_nullthrows
       in
       N.Obj_get (expr env e1, expr_obj_get_name env e2, nullsafe)
