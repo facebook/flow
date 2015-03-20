@@ -1,3 +1,14 @@
+v0.7.0
+- Bump version to 0.7.0
+- Initial support for ES6 import/export (with CommonJS interop)
+- Updates to CSS/CSSOM interface definitions
+- propTypes in React components now dictate the concrete type signature for this.props
+- Show errors in type-at-pos output
+- Flow now watches include paths specified in .flowconfig for file changes
+- Interpret `x != undefined` and `x != null` as the same refinement
+- Use Object.prototype.hasOwnProperty() calls as a refinement
+- Updates to Element and HTMLElement interface definitions
+
 v0.6.0
 
 - Bump version to 0.6.0
