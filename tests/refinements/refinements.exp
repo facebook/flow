@@ -1,4 +1,12 @@
 
+hasOwnProperty.js:4:3,7: call of method y
+Function cannot be called on possibly undefined value
+  hasOwnProperty.js:3:20,29: undefined
+
+hasOwnProperty.js:8:7,22: property z
+Property not found in
+  hasOwnProperty.js:8:7,7: object type
+
 refinements.js:2:16,16: number
 This type is incompatible with
   refinements.js:4:15,20: string
@@ -67,6 +75,14 @@ undef.js:49:7,9: null
 This type is incompatible with
   undef.js:51:13,22: number
 
+undef.js:64:46,51: null
+This type is incompatible with
+  undef.js:69:13,20: number
+
+undef.js:64:46,51: undefined
+This type is incompatible with
+  undef.js:69:13,20: number
+
 void.js:29:28,33: null
 This type is incompatible with
   void.js:31:13,20: number
@@ -99,4 +115,4 @@ void.js:75:7,9: undefined
 This type is incompatible with
   void.js:75:36,45: number
 
-Found 25 errors
+Found 29 errors

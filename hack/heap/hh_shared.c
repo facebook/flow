@@ -323,6 +323,14 @@ void hh_shared_init() {
     exit(2);
   }
 
+#ifdef MADV_DONTDUMP
+  // We are unlikely to get much useful information out of the shared heap in
+  // a core file. Moreover, it can be HUGE, and the extensive work done dumping
+  // it once for each CPU can mean that the user will reboot their machine
+  // before the much more useful stack gets dumped!
+  madvise(shared_mem, page_size + SHARED_MEM_SIZE, MADV_DONTDUMP);
+#endif
+
   // Keeping the pids around to make asserts.
   master_pid = getpid();
   my_pid = master_pid;

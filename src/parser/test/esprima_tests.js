@@ -5122,10 +5122,12 @@ module.exports = {
     'Invalid Exports': {
       'esprima_opts': { sourceType: "module" },
       'tests': [
+        /* Esprima doesn't parse nameless exported classes yet
         'export class {}',
+        */
         'export function {}',
-        /* Esprima parses default exports wrong
         'export default function() {}',
+        /* Esprima parses default exports wrong
         'export default class A {}',
         */
       ],

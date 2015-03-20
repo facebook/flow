@@ -51,3 +51,21 @@ function undef_prop_fail_rev(x: { x: ?number }) {
     var y = x.x * 1000;
   }
 }
+
+function undef_unreachable(x: number) {
+  if (x === undefined) {
+    var y = x * 1000; // unreachable
+  }
+  if (x == undefined) {
+    var z = x * 1000; // unreachable
+  }
+}
+
+function undef_var_nonstrict(x: ?number, y: ?number) {
+  if (x != undefined) {
+    var a = x * 1000;
+  }
+  if (y == undefined){
+    var b = y * 1000; // error
+  }
+}

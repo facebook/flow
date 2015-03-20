@@ -209,6 +209,16 @@ let parse_file file =
         Relative_path.create Relative_path.Dummy (abs_fn^"--"^sub_fn) in
       Relative_path.Map.add file (Parser_hack.program file content) acc
     end Relative_path.Map.empty files
+  else if str_starts_with content "// @directory " then
+    let contentl = Str.split (Str.regexp "\n") content in
+    let first_line = List.hd contentl in
+    let regexp = Str.regexp "^// @directory *\\([^ ]*\\)" in
+    let has_match = Str.string_match regexp first_line 0 in
+    assert has_match;
+    let dir = Str.matched_group 1 first_line in
+    let file = Relative_path.create Relative_path.Dummy (dir ^ abs_fn) in
+    let content = String.concat "\n" (List.tl contentl) in
+    Relative_path.Map.singleton file (Parser_hack.program file content)
   else
     Relative_path.Map.singleton file (Parser_hack.program file content)
 

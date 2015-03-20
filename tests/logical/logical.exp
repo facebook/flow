@@ -41,19 +41,11 @@ This type is incompatible with
 
 logical.js:256:22,26: boolean
 This type is incompatible with
-  logical.js:255:4,9: number
-
-logical.js:256:22,26: boolean
-This type is incompatible with
-  logical.js:255:13,18: string
+  logical.js:255:4,18: union type
 
 logical.js:280:22,26: boolean
 This type is incompatible with
-  logical.js:279:4,9: number
-
-logical.js:280:22,26: boolean
-This type is incompatible with
-  logical.js:279:13,18: string
+  logical.js:279:4,18: union type
 
 logical.js:287:12,16: boolean
 This type is incompatible with
@@ -103,4 +95,4 @@ logical.js:365:13,16: boolean
 This type is incompatible with
   logical.js:360:42,47: string
 
-Found 26 errors
+Found 24 errors

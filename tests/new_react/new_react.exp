@@ -1,79 +1,79 @@
 
-FeedUFI.react.js:23:19,45: prop className of type parameter P of React element: UFILikeCount
-Property not found in
-  UFILikeCount.react.js:12:20,21:2: props of React component
-
-FeedUFI.react.js:25:7,30:8: prop className of type parameter P of React element: UFILikeCount
-Property not found in
-  UFILikeCount.react.js:12:20,21:2: props of React component
-
-classes.js:10:25,36: number
+classes.js:6:17,22: number
 This type is incompatible with
-  classes.js:10:16,21: string
+  classes.js:14:29,34: string
 
-classes.js:17:17,30: property y_
+classes.js:11:25,36: number
+This type is incompatible with
+  classes.js:11:16,21: string
+
+classes.js:14:29,34: string
+This type is incompatible with
+  classes.js:6:17,22: number
+
+classes.js:18:17,30: property y_
 Property not found in
-  classes.js:13:24,36: object type
+  classes.js:6:12,24: object type
 
-new_react.js:2:9,24:2: state of React component
+new_react.js:3:9,27:2: state of React component
 Expected object instead of
-  new_react.js:13:32,32: number
+  new_react.js:15:32,32: number
 
-new_react.js:2:9,24:2: state of React component
-This type is incompatible with
-  new_react.js:15:18,23: string
-
-new_react.js:2:9,24:2: props of React component
-This type is incompatible with
-  new_react.js:16:18,23: string
-
-new_react.js:4:12,33: string
-This type is incompatible with
-  new_react.js:18:15,20: number
-
-new_react.js:6:12,33: number
+new_react.js:3:9,27:2: state of React component
 This type is incompatible with
   new_react.js:17:18,23: string
 
-new_react.js:19:9,23: access of computed property/element
-Computed property/element cannot be accessed on possibly null or undefined value
-  new_react.js:5:12,32: ?array
-
-new_react.js:20:26,44: property length
-Property not found in
-  [LIB] core.js:63:1,78:1: Number
-
-new_react.js:26:23,23: number
+new_react.js:5:5,13: propTypes
 This type is incompatible with
-  new_react.js:4:12,33: string
+  new_react.js:18:18,23: string
 
-props.js:5:12,33: string
+new_react.js:19:27,38: number
+This type is incompatible with
+  new_react.js:19:18,23: string
+
+new_react.js:19:27,38: undefined
+This type is incompatible with
+  new_react.js:19:18,23: string
+
+new_react.js:20:24,35: string
+This type is incompatible with
+  new_react.js:20:15,20: number
+
+new_react.js:21:9,23: access of computed property/element
+Computed property/element cannot be accessed on possibly undefined value
+  new_react.js:21:9,20: undefined
+
+new_react.js:29:23,23: number
+This type is incompatible with
+  new_react.js:6:12,33: string
+
+props.js:14:25,36: string
 This type is incompatible with
   props.js:14:16,21: number
 
-props.js:6:12,33: ?number
+props.js:14:25,36: undefined
+This type is incompatible with
+  props.js:14:16,21: number
+
+props.js:16:25,36: number
 This type is incompatible with
   props.js:16:16,21: string
 
-props.js:10:27,27: number
+props.js:16:25,36: undefined
 This type is incompatible with
-  props.js:15:16,21: string
+  props.js:16:16,21: string
 
 props.js:20:29,33: boolean
 This type is incompatible with
-  props.js:14:16,21: number
+  props.js:10:20,21: string
 
 props.js:20:39,43: boolean
 This type is incompatible with
-  props.js:15:16,21: string
+  props.js:10:27,27: number
 
 props.js:20:49,53: boolean
 This type is incompatible with
-  props.js:16:16,21: string
-
-props2.js:4:14,35: string
-This type is incompatible with
-  props2.js:15:42,42: number
+  props.js:6:12,33: number
 
 props2.js:9:41,46: number
 This type is incompatible with
@@ -96,8 +96,12 @@ Property not found in
   [LIB] react.js:62:39,65:1: object type
 
 state.js:19:18,35: property qux
-Property cannot be accessed on possibly null or undefined value
-  state.js:6:11,26: ?object type
+Property cannot be accessed on possibly null value
+  state.js:6:11,26: null
+
+state.js:19:18,35: property qux
+Property cannot be accessed on possibly undefined value
+  state.js:6:11,26: undefined
 
 state3.js:4:39,44: string
 This type is incompatible with
@@ -109,6 +113,6 @@ This type is incompatible with
 
 [LIB] react.js:16:18,23: string
 This type is incompatible with
-  new_react.js:28:8,13: number
+  new_react.js:31:8,13: number
 
-Found 28 errors
+Found 29 errors

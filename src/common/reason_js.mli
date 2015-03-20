@@ -46,7 +46,6 @@ val loc_of_reason : reason -> Loc.t
 val pos_of_reason : reason -> Pos.t
 
 val desc_of_reason : reason -> string
-val desc_of_reason2 : reason -> string
 
 (* simple way to get derived reasons whose descriptions are
    simple prefix-extensions of the original *)

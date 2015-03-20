@@ -316,7 +316,7 @@ and Statement : sig
       | BodyBlock of (Loc.t * Block.t)
       | BodyExpression of Expression.t
     and t = {
-      id: Identifier.t;
+      id: Identifier.t option;
       params: Pattern.t list;
       defaults: Expression.t option list;
       rest: Identifier.t option;
@@ -430,7 +430,7 @@ and Statement : sig
       }
     end
     type t = {
-      id: Identifier.t;
+      id: Identifier.t option;
       body: Body.t;
       superClass: Expression.t option;
       typeParameters: Type.ParameterDeclaration.t option;
@@ -507,7 +507,7 @@ and Statement : sig
     type t = {
       default: Identifier.t option;
       specifier: specifier option;
-      source: (Loc.t * Literal.t ) option; (* String literal *)
+      source: (Loc.t * Literal.t ); (* String literal *)
       isType: bool;
     }
   end

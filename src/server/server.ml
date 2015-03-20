@@ -164,9 +164,17 @@ struct
   let infer env (file_input, line, col) oc =
     ()
 
+  let mk_pos file line col =
+    {
+      Pos.
+      pos_file = Relative_path.create Relative_path.Dummy file;
+      pos_start = Reason_js.lexpos file line col;
+      pos_end = Reason_js.lexpos file line (col+1);
+    }
+
   let infer_type (file_input, line, col) oc =
     let file = ServerProt.file_input_get_filename file_input in
-    let (pos, t, reasons) =
+    let (err, resp) =
     (try
       let cx = match file_input with
         | ServerProt.FileName file ->
@@ -176,13 +184,7 @@ struct
             | Some cx, _ -> cx
             | _, errors  -> failwith "Couldn't parse file") in
       let file = cx.Constraint_js.file in
-      let pos = {
-        Pos.
-        pos_file = Relative_path.create Relative_path.Dummy file;
-        pos_start = Reason_js.lexpos file line col;
-        pos_end = Reason_js.lexpos file line (col+1);
-      }
-      in
+      let pos = mk_pos file line col in
       let (pos, ground_t, possible_ts) = TI.query_type cx pos in
       let ty = match ground_t with
         | None -> None
@@ -192,16 +194,13 @@ struct
         possible_ts
         |> List.map Constraint_js.reason_of_t
       in
-      (pos, ty, reasons)
+      (None, Some (pos, ty, reasons))
     with exn ->
-      prerr_endline
-        (spf "Could not show type for %s:%d:%d\n%s"
-            file line col
-            (Printexc.to_string exn)
-        );
-      (Pos.none, None, [])
+      let pos = mk_pos file line col in
+      let err = (pos, Printexc.to_string exn) in
+      (Some err, None)
     ); in
-    Marshal.to_channel oc (pos, t, reasons) [];
+    Marshal.to_channel oc (err, resp) [];
     flush oc
 
   let write_file file str =
@@ -316,12 +315,7 @@ struct
 
   let get_def (file_input, line, col) oc =
     let file = ServerProt.file_input_get_filename file_input in
-    let pos = {
-      Pos.
-      pos_file = Relative_path.create Relative_path.Dummy file;
-      pos_start = Reason_js.lexpos file line col;
-      pos_end = Reason_js.lexpos file line (col+1);
-    } in
+    let pos = mk_pos file line col in
     let state = GetDef_js.getdef_set_hooks pos in
     (try
       let content = ServerProt.file_input_get_content file_input in

@@ -58,13 +58,7 @@ let parse_args () =
   let (line, column) = convert_input_pos (line, column) in
   { file; line; column; option_values; }
 
-let main {file; line; column; option_values;} =
-  let root = guess_root (ServerProt.path_of_input file) in
-  let ic, oc = connect_with_autostart option_values root in
-  ServerProt.cmd_to_channel oc
-    (ServerProt.INFER_TYPE (file, line, column));
-  let (pos, t, reasons) = Marshal.from_channel ic in
-
+let handle_response (pos, t, reasons) option_values =
   let ty = match t with
     | None -> "(unknown)"
     | Some str -> str
@@ -104,6 +98,28 @@ let main {file; line; column; option_values;} =
     output_string stdout (ty^range^pty^"\n")
   );
   flush stdout
+
+let handle_error (pos, err) option_values =
+  if !(option_values.json)
+  then (
+    let pos = Errors_js.pos_to_json pos in
+    let json = Json.JAssoc (("error", Json.JString err) :: pos) in
+    output_string stderr ((Json.json_to_string json)^"\n");
+  ) else (
+    let pos = Reason_js.string_of_pos pos in
+    output_string stderr (Utils.spf "%s:\n%s\n" pos err);
+  );
+  flush stderr
+
+let main {file; line; column; option_values;} =
+  let root = guess_root (ServerProt.path_of_input file) in
+  let ic, oc = connect_with_autostart option_values root in
+  ServerProt.cmd_to_channel oc
+    (ServerProt.INFER_TYPE (file, line, column));
+  match (Marshal.from_channel ic) with
+  | (Some err, None) -> handle_error err option_values
+  | (None, Some resp) -> handle_response resp option_values
+  | (_, _) -> failwith "Oops"
 
 let name = "type-at-pos"
 let doc = "Shows the type at a given file and position"

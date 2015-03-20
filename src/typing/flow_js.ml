@@ -251,7 +251,7 @@ let lib_reason r =
 
 let prmsg_flow cx level trace msg (r1, r2) =
   let reasons_trace =
-    reasons_of_trace trace |> List.map (fun r -> r, desc_of_reason2 r)
+    reasons_of_trace trace |> List.map (fun r -> r, desc_of_reason r)
   in
   let info =
     if lib_reason r1 && lib_reason r2
@@ -264,11 +264,11 @@ let prmsg_flow cx level trace msg (r1, r2) =
   let message_list =
     if (pos_of_reason r2 = Pos.none)
     then [
-      r1, spf "%s\n%s %s" (desc_of_reason2 r1) msg (desc_of_reason2 r2);
+      r1, spf "%s\n%s %s" (desc_of_reason r1) msg (desc_of_reason r2);
     ]
     else [
-      r1, spf "%s\n%s" (desc_of_reason2 r1) msg;
-      r2, (desc_of_reason2 r2) ^
+      r1, spf "%s\n%s" (desc_of_reason r1) msg;
+      r2, (desc_of_reason r2) ^
         (if reasons_trace = [] then ""
        else "\nError path:");
     ]
@@ -291,7 +291,7 @@ let prwarn_flow cx trace msg l u =
 
 let tweak_output list =
   List.map (fun (reason, msg) ->
-    let desc = desc_of_reason2 reason in
+    let desc = desc_of_reason reason in
     let dmsg = if msg = "" then desc else spf "%s\n%s" desc msg in
     reason, dmsg
   ) list
@@ -366,7 +366,7 @@ let possible_types_of_type cx = function
 let distinct_possible_types cx id =
   let bounds = find_graph cx id in
   TypeMap.fold (fun t _ map ->
-    let desc = desc_of_reason2 (reason_of_t t) in
+    let desc = desc_of_reason (reason_of_t t) in
     let info = match SMap.get desc map with
       | Some (t0, count) -> (t0, count + 1)
       | None -> (t, 1)
@@ -574,6 +574,8 @@ and ground_type_impl cx ids t = match t with
 
   | ShapeT t ->
       ShapeT (ground_type_impl cx ids t)
+  | DiffT (t1, t2) ->
+      DiffT (ground_type_impl cx ids t1, ground_type_impl cx ids t2)
 
   | RecordT (_, t) ->
       RecordT (
@@ -676,6 +678,8 @@ let rec normalize_type cx t =
 
   | ShapeT t ->
       ShapeT (normalize_type cx t)
+  | DiffT (t1, t2) ->
+      DiffT (normalize_type cx t1, normalize_type cx t2)
 
   | RecordT (r, t) ->
       RecordT (r, normalize_type cx t)
@@ -842,6 +846,8 @@ let rec printify_type cx t =
 
   | ShapeT t ->
       ShapeT (printify_type cx t)
+  | DiffT (t1, t2) ->
+      DiffT (printify_type cx t1, printify_type cx t2)
 
   | RecordT (r, t) ->
       RecordT (r, printify_type cx t)
@@ -916,7 +922,7 @@ let rec assert_ground ?(infer=false) cx ids = function
             then "Missing annotation"
             else "Missing annotation. Possible values:" in
           let message_list = [
-            reason_open, spf "%s\n%s" (desc_of_reason2 reason_open) msg;
+            reason_open, spf "%s\n%s" (desc_of_reason reason_open) msg;
           ] @ possible_types in
           add_output cx Errors_js.WARNING message_list
 
@@ -985,12 +991,18 @@ let rec assert_ground ?(infer=false) cx ids = function
 
   | ShapeT(t) ->
       assert_ground cx ids t
+  | DiffT(t1, t2) ->
+      assert_ground cx ids t1;
+      assert_ground cx ids t2
 
   | EnumT(reason,t) ->
       assert_ground cx ids t
 
   | RecordT(reason,t) ->
       assert_ground cx ids t
+
+  | CJSExportDefaultT (reason,t) ->
+      assert_ground ~infer:true cx ids t
 
   | t -> failwith (streason_of_t t) (** TODO **)
 
@@ -1024,10 +1036,10 @@ let rec assume_ground cx ids = function
   | PredicateT(_,t)
   | SpecializeT(_,_,t)
   | MarkupT(_,_,t)
-  | ObjAssignT(_,_,t)
+  | ObjAssignT(_,_,t,_)
   | ObjRestT(_,_,t)
-  | ObjExtendT(_,_,t)
   | KeyT(_,t)
+  | ImportModuleNsT(_,t)
 
       -> assume_ground cx ids t
 
@@ -1135,8 +1147,8 @@ let rec flow cx (l,u) trace =
     (if modes.debug
      then prerr_endline
         (spf "\n# %s ~>\n# %s"
-          (dump_reason (reason_of_t l))
-          (dump_reason (reason_of_t u))));
+           (dump_reason (reason_of_t l))
+           (dump_reason (reason_of_t u))));
 
     if ground_subtype (l,u) then () else match (l,u) with
 
@@ -1144,6 +1156,32 @@ let rec flow cx (l,u) trace =
     | (OpenT(reason1,tvar1),OpenT(_,tvar2))
         when exists_link cx (tvar1,tvar2)
           -> ()
+
+    (**********************************************************************)
+    (* Unpack CommonJS exports early to guarantee that bounds are checked *)
+    (* on the exports data rather than on the CJSExportDefaultT wrapper.  *)
+    (**********************************************************************)
+    | (CJSExportDefaultT(_, exported_t), ImportModuleNsT(reason, t)) ->
+      (* Copy the exports into a new object, skipping any "default" keys *)
+      let ns_obj = mk_object_with_proto cx reason (MixedT reason) in
+      let ns_obj = mk_tvar_where cx reason (fun t ->
+        let skip_default = SSet.singleton "default" in
+        unit_flow cx (exported_t, ObjAssignT(reason, ns_obj, t, skip_default))
+      ) in
+
+      (* Set the 'default' property on the new object to point at the exports *)
+      unit_flow cx (ns_obj, SetT(reason, "default", exported_t));
+
+      let ns_obj_sealed = mk_tvar_where cx reason (fun t ->
+        unit_flow cx (ns_obj, ObjSealT(reason, t))
+      ) in
+      unit_flow cx (ns_obj_sealed, t);
+
+    | (ObjT(reason_o, {props_tmap = mapr; _;}), ExportDefaultT(reason, t)) ->
+        let exported_props = IMap.find_unsafe mapr cx.property_maps in
+        let exported_props = SMap.add "default" t exported_props in
+        cx.property_maps <- IMap.add mapr exported_props cx.property_maps;
+        unit_flow cx (l, SetT(reason, "default", t))
 
     (******************)
     (* process X ~> Y *)
@@ -1160,11 +1198,11 @@ let rec flow cx (l,u) trace =
         let f2 = (fun trace_u -> concat_trace[trace_l;trace;trace_u]) in
         let bounds = find_graph cx tvar in
 
-          (* final: X -> Y#, X -> Y'#, X' -> Y#, X' -> Y'# *)
+        (* final: X -> Y#, X -> Y'#, X' -> Y#, X' -> Y'# *)
         bounds.uppertvars <-
           UnionIMap.union f2 bounds2.uppertvars bounds.uppertvars;
 
-          (* final: X => U#, X' => U# *)
+        (* final: X => U#, X' => U# *)
         bounds.upper <-
           UnionTypeMap.union f2 bounds2.upper bounds.upper
       );
@@ -1172,14 +1210,14 @@ let rec flow cx (l,u) trace =
         let f1 = (fun trace_l -> concat_trace[trace_l;trace;trace_u]) in
         let bounds = find_graph cx tvar in
 
-          (* final: X# -> Y, X'# -> Y, X# -> Y', X'# -> Y' *)
+        (* final: X# -> Y, X'# -> Y, X# -> Y', X'# -> Y' *)
         bounds.lowertvars <-
           UnionIMap.union f1 bounds1.lowertvars bounds.lowertvars;
-          (* final: L# => Y, L# => Y' *)
+        (* final: L# => Y, L# => Y' *)
         bounds.lower <-
           UnionTypeMap.union f1 bounds1.lower bounds.lower
       );
-        (* final: process L ~> U *)
+      (* final: process L ~> U *)
       bounds1.lower |> TypeMap.iter
           (fun l trace_l -> bounds2.upper |> TypeMap.iter
               (fun u trace_u ->
@@ -1201,12 +1239,12 @@ let rec flow cx (l,u) trace =
       bounds.lowertvars |> IMap.iter (fun tvar trace_l ->
         let bounds = find_graph cx tvar in
 
-          (* final: Y => U, Y' => U *)
+        (* final: Y => U, Y' => U *)
         bounds.upper <-
           TypeMap.add t (concat_trace [trace_l;trace]) bounds.upper
       );
 
-        (* final: process L ~> U *)
+      (* final: process L ~> U *)
       bounds.lower |> TypeMap.iter (fun l trace_l ->
         flow cx (l,t) (concat_trace [trace_l;trace])
       )
@@ -1227,15 +1265,43 @@ let rec flow cx (l,u) trace =
       bounds.uppertvars |> IMap.iter (fun tvar trace_u ->
         let bounds = find_graph cx tvar in
 
-          (* final: L => X, L => X' *)
+        (* final: L => X, L => X' *)
         bounds.lower <-
           TypeMap.add t (concat_trace [trace;trace_u]) bounds.lower
       );
 
-        (* final: process L ~> U *)
+      (* final: process L ~> U *)
       bounds.upper |> TypeMap.iter (fun u trace_u ->
         flow cx (t,u) (concat_trace [trace;trace_u])
       )
+
+    (************************************************************************)
+    (* Non-CommonJS export objects flow to imported ModuleNamespace objects *)
+    (* directly.                                                            *)
+    (************************************************************************)
+    | (_, ImportModuleNsT(reason, t)) ->
+      unit_flow cx (l, t)
+
+    (**************************************************************************)
+    (* Unwrap any CommonJS export objects that are flowing to something other *)
+    (* than a ImportModuleNsT.                                                *)
+    (**************************************************************************)
+    | (CJSExportDefaultT(_, t), _) ->
+      unit_flow cx (t, u)
+
+    (***********************)
+    (* guarded unification *)
+    (***********************)
+
+    (** Utility to unify a pair of types based on a trigger. Triggers are
+        commonly type variables that are set up to record when certain
+        operations have been processed: until then, they remain latent. For
+        example, we can respond to events such as "a property is added," "a
+        refinement succeeds," etc., by setting up unification constraints that
+        are processed only when the corresponding triggers fire. *)
+
+    | (_, UnifyT(t,t_other)) ->
+      unify cx t t_other
 
     (************************************************)
     (* bound variables are equal only to themselves *)
@@ -1320,23 +1386,28 @@ let rec flow cx (l,u) trace =
     (* maybe types *)
     (***************)
 
+    (** The type maybe(T) is the same as null | undefined | T *)
+
     | ((NullT _ | VoidT _), MaybeT _) -> ()
 
-    | (MaybeT(t1), MaybeT(t2)) ->
-      select_flow cx (t1,t2) trace DecomposeNullable
+    | (MaybeT(t), _) ->
+      let reason = reason_of_t t in
+      unit_flow cx (NullT.why reason, u);
+      unit_flow cx (VoidT.why reason, u);
+      unit_flow cx (t, u)
 
     (******************)
     (* optional types *)
     (******************)
 
-    (** The type optional(T) is not the same as undefined | T. In particular, we
-        don't have a rule that lets undefined be a subtype of optional(T): this
-        prevents undefined values from flowing to locations typed
-        optional(T). On the other hand, optional(T) can be refined to T with
-        the same dynamic checks that would rule out undefined values. *)
+    (** The type optional(T) is the same as undefined | T *)
 
-    | (OptionalT(t1), OptionalT(t2)) ->
-        unit_flow cx (t1, t2)
+    | (VoidT _, OptionalT _) -> ()
+
+    | (OptionalT(t), _) ->
+      let reason = reason_of_t t in
+      unit_flow cx (VoidT.why reason, u);
+      unit_flow cx (t, u)
 
     (*****************)
     (* logical types *)
@@ -1416,30 +1487,6 @@ let rec flow cx (l,u) trace =
         errors produced). This is useful to typecheck union types and
         intersection types: see below. **)
 
-    | (_, ConcretizeT (r, ls, tl, tu)) -> (
-      concretize_upper_ cx r l;
-      match ls with
-      | [] ->
-            (* Done: trigger flow from l to u *)
-        unit_flow cx (tl, tu)
-      | _ ->
-            (* Not done: recurse *)
-        concretize_lower cx r ls tl tu
-    )
-
-    | (ConcretizeT _, _) when is_use u ->
-      ()
-
-    | (ConcretizeT (r, us, tl, tu), _) -> (
-      match us with
-      | [] ->
-            (* Done: trigger flow from l to u *)
-        unit_flow cx (tl, tu)
-      | _ ->
-            (* Not done: recurse *)
-        concretize_upper cx r us tl tu
-    )
-
     (***************)
     (* union types *)
     (***************)
@@ -1447,24 +1494,28 @@ let rec flow cx (l,u) trace =
     | (UnionT(_,ts), _) ->
       ts |> List.iter (fun t -> unit_flow cx (t,u))
 
-    | (OptionalT(t1), MaybeT(t2)) ->
-      (* You can't unwrap the maybe yet in case this is an
-       * OptionalT(MaybeT(t)) *)
-      unit_flow cx (t1, u)
+    (** To check that the concrete type l may flow to some type in ts, we try
+        each type in ts in turn. The types in ts may be type variables, but by
+        routing them through SpeculativeMatchFailureT, we ensure that they are
+        tried only when their concrete uses are available. The different
+        branches of unions are assumed to be disjoint at the top level, so that
+        it is always sound to pick the first type in ts that matches the type
+        l. *)
+
+    | (SpeculativeMatchFailureT(r,t1,t), t2) ->
+      (* Reached when trying to match t1 with t2|t. We speculatively match t1
+         with t2, and on failure, (recursively) try to match t1 with t. *)
+      if speculative_flow_error cx t1 t2
+      then unit_flow cx (t1, t)
+
+    | (_, UnionT(r,ts)) ->
+      try_union cx l r ts
 
     | (t1, MaybeT(t2)) ->
       unit_flow cx (t1,t2)
 
     | (t1, OptionalT(t2)) ->
       unit_flow cx (t1, t2)
-
-    | (ConcreteT l, UnionT(r,ts)) ->
-      speculative_match cx ts (fun t ->
-        speculative_flow cx l t
-      )
-
-    | (_, UnionT(r,ts)) ->
-      concretize_upper cx r ts (ConcreteT l) u
 
     (**********************)
     (* intersection types *)
@@ -1473,18 +1524,30 @@ let rec flow cx (l,u) trace =
     | (_, IntersectionT(_,ts)) ->
       ts |> List.iter (fun t -> unit_flow cx (l,t))
 
-    | (IntersectionT (_, ts), ConcreteT u)
-      ->
-      speculative_match cx ts (fun t ->
-        speculative_flow cx t u
-      )
+    (** To check that some type in ts may flow to the concrete type u, we try
+        each type in ts in turn. The types in ts may be type variables, but by
+        routing them through SpeculativeMatchFailureT, we ensure that they are
+        tried only when their concrete definitionss are available. Note that
+        unlike unions, the different branches of intersections are usually not
+        distinct at the top level (e.g., they may all be function types, or
+        object types): instead, they are assumed to be disjoint in their parts,
+        so we must suffiently concretize parts of u to make the disjointness
+        evident when the different branches are tried; see below. *)
 
-    | (IntersectionT (r,ts), _)
-      ->
-        (* Concretize the args of the call site, then match the overloaded
-           functions in the intersection with the transformed call site *)
-      concretize_lower_ cx r u;
-        concretize_lower cx r ts l (ConcreteT u)
+    | (t1, SpeculativeMatchFailureT(r,t,t2)) ->
+      (* Reached when trying to match t1&t with t2. We speculatively match t1
+         with t2, and on failure, (recursively) try to match t with t2. *)
+      if speculative_flow_error cx t1 t2
+      then unit_flow cx (t, t2)
+
+    | (IntersectionT (r,ts), ConcreteT u) ->
+      try_intersection cx u r ts
+
+    | (t, ConcretizeT (l, ts1, ts2, u)) ->
+      concretize_parts cx l ts1 (t::ts2) u
+
+    | (IntersectionT (r,ts), _) ->
+      concretize_parts cx l (parts_to_concretize cx u) [] u
 
     (***************************************)
     (* generic function may be specialized *)
@@ -1526,7 +1589,7 @@ let rec flow cx (l,u) trace =
        FunT (reason2,_,_,
              {this_t = o2; params_tlist = tins2; return_t = t2; closure_t = j; _}))
       ->
-        select_flow cx (o2,o1) trace FunThis;
+      select_flow cx (o2,o1) trace FunThis;
         multiflow cx trace (u, l) true (tins2,tins1) |> ignore;
         select_flow cx (t1,t2) trace FunRet;
         havoc_ctx cx i j
@@ -1536,7 +1599,7 @@ let rec flow cx (l,u) trace =
        CallT (reason2,
               {this_t = o2; params_tlist = tins2; return_t = t2; closure_t = j; _}))
       ->
-        select_flow cx (o2,o1) trace FunThis;
+      select_flow cx (o2,o1) trace FunThis;
         multiflow cx trace (u, l) true (tins2,tins1) |> ignore;
         (* relocate the function's return type at the call site *)
         let t1 = repos_t_from_reason reason2 t1 in
@@ -1552,29 +1615,28 @@ let rec flow cx (l,u) trace =
       ->
       (* if inflowing type is literal (thus guaranteed to be
          unaliased), propertywise subtyping is sound *)
+      let desc1 = (desc_of_reason reason1) in
       let lit =
-        let desc = (desc_of_reason reason1) in
-        let is_prefix a b = String.(
-          let n = length b in
-          length a >= n && sub a 0 n = b) in
-        desc = "object literal" || is_prefix desc "props of React element" in
+        (desc1 = "object literal")
+        || (Str.string_match (Str.regexp ".*React") desc1 0)
+      in
       iter_props_ cx flds2
         (fun s -> fun t2 ->
           if (not(has_prop cx flds1 s))
           then
-          (* property doesn't exist in inflowing type *)
+            (* property doesn't exist in inflowing type *)
             let reason2 = replace_reason (spf "property %s" s) reason2 in
             match t2 with
             | OptionalT t1 when flags.exact ->
-                (* if property is marked optional or otherwise has a maybe type,
-                   and if inflowing type is exact (i.e., it is not an
-                   annotation), then it is ok to relax the requirement that the
-                   property be found immediately; instead, we constrain future
-                   lookups of the property in inflowing type *)
-                unit_flow cx (l, LookupT (reason2, None, s, t1))
+              (* if property is marked optional or otherwise has a maybe type,
+                 and if inflowing type is exact (i.e., it is not an
+                 annotation), then it is ok to relax the requirement that the
+                 property be found immediately; instead, we constrain future
+                 lookups of the property in inflowing type *)
+              unit_flow cx (l, LookupT (reason2, None, s, t1))
             | _ ->
-                (* otherwise, we do strict lookup of property in prototype *)
-                unit_flow cx (proto_t, LookupT (reason2, Some reason1, s, t2))
+              (* otherwise, we do strict lookup of property in prototype *)
+              unit_flow cx (proto_t, LookupT (reason2, Some reason1, s, t2))
           (* TODO: instead, consider extending inflowing type with s:t2 when it
              is not sealed *)
           else
@@ -1626,10 +1688,10 @@ let rec flow cx (l,u) trace =
     (* You can cast an object to a function *)
     (****************************************)
     | (ObjT _, (FunT _ | CallT _)) ->
-        let reason = reason_of_t u in
-        let tvar = mk_tvar cx reason in
-        lookup_prop cx l reason (Some (reason_of_t l)) "$call" tvar;
-        unit_flow cx (tvar, u)
+      let reason = reason_of_t u in
+      let tvar = mk_tvar cx reason in
+      lookup_prop cx l reason (Some (reason_of_t l)) "$call" tvar;
+      unit_flow cx (tvar, u)
 
     (******************************)
     (* matching shapes of objects *)
@@ -1637,25 +1699,32 @@ let rec flow cx (l,u) trace =
 
     | (_, ShapeT (o2))
       ->
-        unit_flow cx (l, ObjAssignT(reason_of_t o2, o2, AnyT.t))
+        unit_flow cx (l, ObjAssignT(reason_of_t o2, o2, AnyT.t,SSet.empty))
 
     | (ShapeT (o1), _) ->
-        unit_flow cx (o1, u)
+      unit_flow cx (o1, u)
+
+    | (_, DiffT (o1, o2))
+      ->
+        let reason = reason_of_t o2 in
+        let t2 = mk_tvar cx reason in
+        unit_flow cx (o2, ObjRestT (reason, [], t2));
+        unit_flow cx (l, ObjAssignT(reason, t2, o1, SSet.empty))
 
     (********************************************)
     (* array types deconstruct into their parts *)
     (********************************************)
 
     | ArrT (r1, t1, ts1), ArrT (r2, t2, ts2) ->
-        let lit = (desc_of_reason r1) = "array literal" in
-        array_flow cx trace lit (ts1, t1, ts2, t2)
+      let lit = (desc_of_reason r1) = "array literal" in
+      array_flow cx trace lit (ts1, t1, ts2, t2)
 
     (**************************************************)
     (* instances of classes follow declared hierarchy *)
     (**************************************************)
 
     | (InstanceT _, InstanceT _) ->
-        unit_flow cx (l, ExtendsT(l,u))
+      unit_flow cx (l, ExtendsT(l,u))
 
     | (InstanceT (_,_,super,instance),
        ExtendsT(_, InstanceT (_,_,_,instance_super))) ->
@@ -1749,6 +1818,7 @@ let rec flow cx (l,u) trace =
     | (InstanceT(reason,_,super,instance),
        LookupT (_,strict,x, t))
       ->
+      let strict = if instance.mixins then None else strict in
       let pmap = match strict, t with
         (* t = UpperBoundT _ means that the lookup is trying to write t, rather
            than read t. Existing places that play a role here are set_prop and
@@ -1796,7 +1866,8 @@ let rec flow cx (l,u) trace =
        GetT(reason_op,x,tout)) ->
 
       let fields = SMap.union instance.fields_tmap instance.methods_tmap in
-      get_prop cx reason_op reason_c super x fields tout
+      let strict = if instance.mixins then None else Some reason_c in
+      get_prop cx reason_op strict super x fields tout
 
     (********************************)
     (* ... and their methods called *)
@@ -1808,7 +1879,8 @@ let rec flow cx (l,u) trace =
 
       let methods = SMap.union instance.fields_tmap instance.methods_tmap in
       let funt = mk_tvar cx reason_op in
-      get_prop cx reason_op reason_c super x methods funt;
+      let strict = if instance.mixins then None else Some reason_c in
+      get_prop cx reason_op strict super x methods funt;
       let callt = CallT (reason_op, mk_methodtype2 this tins2 None tout2 j) in
       select_flow cx (funt, callt)
         trace (InstanceProp x)
@@ -1867,37 +1939,34 @@ let rec flow cx (l,u) trace =
 
     **)
 
-    (***********************)
-    (* guarded unification *)
-    (***********************)
-
-    | (_, UnifyT(t,t_other)) ->
-      unify cx t t_other
-
     (**********************************************************************)
     (* objects can be assigned, i.e., their properties can be set in bulk *)
     (**********************************************************************)
 
-    | (ObjT (_, { props_tmap = mapr; _ }), ObjAssignT (reason, proto, t)) ->
+    | (ObjT (_, { props_tmap = mapr; _ }),
+       ObjAssignT (reason, proto, t, props_to_skip)) ->
       iter_props cx mapr (fun x t ->
-        let reason = prefix_reason (spf "prop %s of " x) reason in
-        unit_flow cx (proto, SetT (reason, x, t));
+        if not (SSet.mem x props_to_skip) then (
+          let reason = prefix_reason (spf "prop %s of " x) reason in
+          unit_flow cx (proto, SetT (reason, x, t));
+        );
       );
       unit_flow cx (proto, t)
 
     | (InstanceT (_, _, _, { fields_tmap; methods_tmap; _ }),
-       ObjAssignT (reason, proto, t)) ->
+       ObjAssignT (reason, proto, t, props_to_skip)) ->
       let map = SMap.union fields_tmap methods_tmap in
       map |> SMap.iter (fun x t ->
-        unit_flow cx (proto, SetT (reason, x, t));
+        if not (SSet.mem x props_to_skip) then (
+          unit_flow cx (proto, SetT (reason, x, t));
+        );
       );
       unit_flow cx (proto, t)
 
     (* Object.assign semantics *)
-    | ((MaybeT t1 | OptionalT t1), ObjAssignT _) ->
-      unit_flow cx (t1, u)
+    | ((NullT _ | VoidT _), ObjAssignT _) -> ()
 
-    | (MixedT _, ObjAssignT (_, proto, t)) ->
+    | (MixedT _, ObjAssignT (_, proto, t, _)) ->
       unit_flow cx (proto, t)
 
     (*************************)
@@ -1910,19 +1979,15 @@ let rec flow cx (l,u) trace =
       let o = mk_object_with_map_proto cx reason map (MixedT reason) in
       unit_flow cx (o, t)
 
-    (*************************)
-    (* objects can be merged *)
-    (*************************)
-
-    | (ObjT (_, { props_tmap = mapr; _ }), ObjExtendT (reason, opt_map, t)) ->
-      let default_map = IMap.find_unsafe mapr cx.property_maps in
-      let ext_map = SMap.fold (fun x t ext_map ->
-        match SMap.get x default_map with
-        | Some t_ -> unify cx t t_; ext_map
-        | None -> SMap.add x (MaybeT t) ext_map
-      ) opt_map default_map in
-      let o = mk_object_with_map_proto cx reason ext_map (MixedT reason) in
-      unit_flow cx (o, t)
+    (*************************************)
+    (* objects can be copied-then-sealed *)
+    (*************************************)
+    | (ObjT (_, { props_tmap = mapr; _ }), ObjSealT (reason, t)) ->
+      let src_props = IMap.find_unsafe mapr cx.property_maps in
+      let new_obj =
+        mk_object_with_map_proto cx reason ~sealed:true src_props l
+      in
+      unit_flow cx (new_obj, t)
 
     (*******************************************)
     (* objects may have their fields looked up *)
@@ -1945,12 +2010,12 @@ let rec flow cx (l,u) trace =
     (** o.x = ... has the additional effect of o[_] = ... **)
 
     | (ObjT (reason_o, {
-        flags;
-        props_tmap = mapr;
-        proto_t = proto;
-        dict_t = { key; value; _ };
-      }),
-      SetT(reason_op,x,tin))
+      flags;
+      props_tmap = mapr;
+      proto_t = proto;
+      dict_t = { key; value; _ };
+    }),
+       SetT(reason_op,x,tin))
       ->
       let strict = mk_strict flags.sealed reason_o reason_op in
       let t = ensure_prop_ cx trace strict mapr x proto reason_o reason_op
@@ -1969,11 +2034,11 @@ let rec flow cx (l,u) trace =
         trace ObjProto
 
     | (ObjT (reason_o, {
-          flags;
-          props_tmap = mapr;
-          proto_t = proto;
-          dict_t = { key; value; _ };
-        }),
+      flags;
+      props_tmap = mapr;
+      proto_t = proto;
+      dict_t = { key; value; _ };
+    }),
        GetT(reason_op,x,tout))
       ->
       let strict = mk_strict flags.sealed reason_o reason_op in
@@ -1988,11 +2053,11 @@ let rec flow cx (l,u) trace =
     (********************************)
 
     | (ObjT (reason_o, {
-          flags;
-          props_tmap = mapr;
-          proto_t = proto;
-          dict_t = { key; value; _ };
-        }),
+      flags;
+      props_tmap = mapr;
+      proto_t = proto;
+      dict_t = { key; value; _ };
+    }),
        MethodT(reason_op,x,this,tins,tout,j))
       ->
       let strict = mk_strict flags.sealed reason_o reason_op in
@@ -2044,7 +2109,7 @@ let rec flow cx (l,u) trace =
       unit_flow cx (num, ElemT(reason_op, l, LowerBoundT tout));
       unit_flow cx (key, num)
 
-     | (ArrT _, GetElemT(reason_op, key,tout))
+    | (ArrT _, GetElemT(reason_op, key,tout))
       ->
       unit_flow cx (key, ElemT(reason_op, l, LowerBoundT tout))
 
@@ -2093,7 +2158,7 @@ let rec flow cx (l,u) trace =
     | (FunT (reason_f,_,t,_),
        SetT(reason_op,"prototype",tin))
       ->
-      unit_flow cx (tin, ObjAssignT(reason_op,t,AnyT.t))
+      unit_flow cx (tin, ObjAssignT(reason_op,t,AnyT.t,SSet.empty))
 
     (*********************************)
     (* ... and their prototypes read *)
@@ -2165,7 +2230,7 @@ let rec flow cx (l,u) trace =
         let function_proto = get_builtin_type cx reason "Function" in
         let obj = mk_object_with_map_proto cx reason map function_proto in
         let t = mk_tvar_where cx reason (fun t ->
-          unit_flow cx (statics, ObjAssignT (reason, obj, t))
+          unit_flow cx (statics, ObjAssignT (reason, obj, t, SSet.empty))
         ) in
         unit_flow cx (t, u)
 
@@ -2252,7 +2317,7 @@ let rec flow cx (l,u) trace =
     (***********************************************************)
 
     | (_, ComparatorT(reason, ((OpenT _ | UnionT _) as u_))) ->
-       unit_flow cx (u_, ComparatorT (reason, l))
+      unit_flow cx (u_, ComparatorT (reason, l))
 
     | (StrT _, ComparatorT(reason,t)) ->
 
@@ -2269,11 +2334,11 @@ let rec flow cx (l,u) trace =
     (*******)
 
     | (CustomClassT("ReactClass", _, _), MarkupT(reason_op,o,t)) ->
-        let react = module_t cx "react" reason_op in
-        let x = mk_tvar_where cx reason_op (fun tvar ->
-          unit_flow cx (react, MethodT(reason_op, "createElement", react, [l;o], tvar, 0));
-        ) in
-        unit_flow cx (x, t)
+      let react = module_t cx "react" reason_op in
+      let x = mk_tvar_where cx reason_op (fun tvar ->
+        unit_flow cx (react, MethodT(reason_op, "createElement", react, [l;o], tvar, 0));
+      ) in
+      unit_flow cx (x, t)
 
     | (FunT _, MarkupT _) ->
 
@@ -2284,7 +2349,7 @@ let rec flow cx (l,u) trace =
     (**************************************)
 
     | (_, PredicateT(p,t)) ->
-        predicate cx trace t (l,p)
+      predicate cx trace t (l,p)
 
     (***********************************************************************)
     (* types may be compared with unstrict (in)equality iff they intersect *)
@@ -2472,16 +2537,16 @@ let rec flow cx (l,u) trace =
           Relative_path.to_absolute))
       then
         let msg =
-            if Str.string_match (Str.regexp "\\$module__\\(.*\\)") x 0
-            then "Required module not found"
-            else "Unknown global name"
+          if Str.string_match (Str.regexp "\\$module__\\(.*\\)") x 0
+          then "Required module not found"
+          else "Unknown global name"
         in
         let message_list = [
           reason_op, msg
         ] in
         add_warning cx message_list
       else
-       let msg =
+        let msg =
           if x = "$call"
           then "Callable signature not found in"
           else if x = "$key" || x = "$value"
@@ -2495,12 +2560,12 @@ let rec flow cx (l,u) trace =
           (reason_op, reason_o)
 
     | (MixedT _, ExtendsT (t, tc)) ->
-       let msg = "This type is incompatible with" in
-        prmsg_flow cx
-          Errors_js.ERROR
-          trace
-          msg
-          (reason_of_t t, reason_of_t tc)
+      let msg = "This type is incompatible with" in
+      prmsg_flow cx
+        Errors_js.ERROR
+        trace
+        msg
+        (reason_of_t t, reason_of_t tc)
 
     (* LookupT is a latent lookup, never fired *)
     | (MixedT _, LookupT _) -> ()
@@ -2527,10 +2592,9 @@ and err_operation = function
   | ElemT (_, ArrT _, UpperBoundT _) -> "Element cannot be assigned with"
   | ObjAssignT _ -> "Expected object instead of"
   | ObjRestT _ -> "Expected object instead of"
-  | ObjExtendT _ -> "Expected object instead of"
   | SuperT _ -> "Cannot inherit"
-  | EqT (_, t) -> spf "Non-strict equality comparison with %s may involve unintended type conversions (use strict equality test instead)" (desc_of_t t)
-  | ComparatorT (_, t) -> spf "Relational comparison with %s may involve unintended type conversions" (desc_of_t t)
+  | EqT (_, t) -> spf "Non-strict equality comparison with %s may involve unintended type conversions of" (desc_of_t t)
+  | ComparatorT (_, t) -> spf "Relational comparison with %s may involve unintended type conversions of" (desc_of_t t)
   | SpecializeT _ -> "Expected polymorphic type instead of"
   | LookupT _ -> "Property not found in"
   | MarkupT _ -> "Expected React class instead of"
@@ -2707,27 +2771,27 @@ and subst cx (map: Type.t SMap.t) t =
     })
 
   | PolyT (xs,t) ->
-      let xs, map = List.fold_left (fun (xs, map) typeparam ->
-        { typeparam with bound = subst cx map typeparam.bound }::xs,
-        SMap.remove typeparam.name map
-      ) ([], map) xs in
-      PolyT (List.rev xs, subst cx map t)
+    let xs, map = List.fold_left (fun (xs, map) typeparam ->
+      { typeparam with bound = subst cx map typeparam.bound }::xs,
+      SMap.remove typeparam.name map
+    ) ([], map) xs in
+    PolyT (List.rev xs, subst cx map t)
 
   | ObjT (reason, {
+    flags;
+    dict_t = { dict_name; key; value; };
+    props_tmap = id;
+    proto_t = proto
+  }) ->
+    let pmap = IMap.find_unsafe id cx.property_maps in
+    ObjT (reason, {
       flags;
-      dict_t = { dict_name; key; value; };
-      props_tmap = id;
-      proto_t = proto
-    }) ->
-      let pmap = IMap.find_unsafe id cx.property_maps in
-      ObjT (reason, {
-        flags;
-        dict_t = { dict_name;
-                   key = subst cx map key;
-                   value = subst cx map value; };
-        props_tmap = mk_propmap cx (pmap |> SMap.map (subst cx map));
-        proto_t = subst cx map proto
-      })
+      dict_t = { dict_name;
+                 key = subst cx map key;
+                 value = subst cx map value; };
+      props_tmap = mk_propmap cx (pmap |> SMap.map (subst cx map));
+      proto_t = subst cx map proto
+    })
 
   | ArrT (reason, t, ts) ->
     ArrT (reason,
@@ -2751,7 +2815,7 @@ and subst cx (map: Type.t SMap.t) t =
       reason,
       subst cx map static,
       subst cx map super,
-      { class_id = instance.class_id;
+      { instance with
         type_args = instance.type_args |> SMap.map (subst cx map);
         fields_tmap = instance.fields_tmap |> SMap.map (subst cx map);
         methods_tmap = instance.methods_tmap |> SMap.map (subst cx map)
@@ -2785,12 +2849,17 @@ and subst cx (map: Type.t SMap.t) t =
 
   | ShapeT(t) ->
     ShapeT(subst cx map t)
+  | DiffT(t1, t2) ->
+    DiffT(subst cx map t1, subst cx map t2)
 
   | EnumT(reason, t) ->
     EnumT(reason, subst cx map t)
 
   | RecordT(reason, t) ->
     RecordT(reason, subst cx map t)
+
+  | ObjAssignT(reason, t1, t2, xs) ->
+    ObjAssignT(reason, subst cx map t1, subst cx map t2, xs)
 
   | _ -> assert false (** TODO **)
 
@@ -2835,58 +2904,68 @@ and mk_object_with_map_proto cx reason ?(sealed=false) map proto =
   let pmap = mk_propmap cx map in
   ObjT (reason, mk_objecttype ~flags dict pmap proto)
 
-(* Speculatively match types *)
-and speculative_flow cx l u =
+(* Speculatively match types, returning whether the match fails. *)
+and speculative_flow_error cx l u =
   throw_on_error := true;
   let result =
-    try unit_flow cx (l, u); None
+    try unit_flow cx (l, u); false
     with
-    | FlowError msgs -> Some msgs
+    | FlowError msgs -> true
     | exn -> raise exn
   in
   throw_on_error := false;
   result
 
-and speculative_match cx ts f =
-  let errors = ref [] in
-  let matched = ts |> List.exists (fun t ->
-    match f t with
-    | None -> true
-    | Some error -> errors := error :: !errors; false
-  ) in
-  if not matched then
-    !errors |> List.iter (fun msgs ->
-      add_output cx Errors_js.ERROR msgs
-    )
+(* try each branch of a union in turn *)
+and try_union cx l reason = function
+  | [] -> (* fail: bottom is the unit of unions *)
+    unit_flow cx (l, UndefT reason)
+  | t::ts ->
+    unit_flow cx
+      (SpeculativeMatchFailureT(reason, l, UnionT(reason, ts)),
+       t)
 
-(* Force types in `ls` to be concretized. When done, the concrete types show up
-   in `stack'; these then flow to types in `us`.
-   Invariant: |List.rev stack| + |ls| = |us|
-*)
-and concretize_lower cx reason ls tl tu =
-  unit_flow cx (List.hd ls, ConcretizeT(reason, List.tl ls, tl, tu))
+(* try each branch of an intersection in turn *)
+and try_intersection cx u reason = function
+  | [] -> (* fail: top is the unit of intersections *)
+    unit_flow cx (MixedT reason, u)
+  | t::ts ->
+    unit_flow cx
+      (t,
+       SpeculativeMatchFailureT(reason, IntersectionT(reason, ts), u))
 
-and concretize_lower_ cx reason u =
-  let ls = sufficiently_concretize cx u in
-  if ls <> [] then
-    concretize_lower cx reason ls AnyT.t AnyT.t
+(* Some types need their parts to be concretized (i.e., type variables may need
+   to be replaced by concrete types) so that speculation has a chance to fail
+   early (and other branches are tried): otherwise, those failures may remain
+   latent, and cause spurious errors to be reported. *)
 
-(* Force types in `us` to be concretized. When done, the concrete types show up
-   in `stack'; types in `ls` then flow to these.
-   Invariant: |ls| = |List.rev stack| + |us|
-*)
-and concretize_upper cx reason us tl tu =
-  unit_flow cx (ConcretizeT(reason, List.tl us, tl, tu), List.hd us)
+(** The set of type patterns that currently need to be concretized appear
+    below. This set needs to be kept in sync across parts_to_concretize and
+    replace_with_concrete parts. **)
 
-and concretize_upper_ cx reason l =
-  let us = sufficiently_concretize cx l in
-  if us <> [] then
-    concretize_upper cx reason us AnyT.t AnyT.t
-
-and sufficiently_concretize cx = function
-  | FunT (reason, _, _, callt) -> callt.params_tlist
+and parts_to_concretize cx = function
+  (* call of overloaded function *)
   | CallT (reason, callt) -> callt.params_tlist
+  (* selection of overloaded function *)
+  | FunT (reason, _, _, callt) -> callt.params_tlist
   | u -> []
+
+and replace_with_concrete_parts ts = function
+  | CallT (reason, callt) ->
+      CallT (reason, { callt with params_tlist = ts })
+  | FunT (reason, static, prototype, callt) ->
+      FunT (reason, static, prototype, { callt with params_tlist = ts })
+  | u -> u
+
+(* Take a todo_list of types and recursively concretize them, moving the
+   concretized types to a done_list. Types in the todo_list, e.g. t, may be type
+   variables, and here we simply set up the requirement that they be
+   concretized; when they hit the rule for ConcretizeT, they are concrete, and
+   therefore ready to be moved to the done_list. *)
+and concretize_parts cx l todo_list done_list u =
+  match todo_list with
+  | [] -> unit_flow cx (l, ConcreteT(replace_with_concrete_parts done_list u))
+  | t::todo_list -> unit_flow cx (t, ConcretizeT(l, todo_list, done_list, u))
 
 and ensure_prop cx strict mapr x proto reason_obj reason_op trace =
   if has_prop cx mapr x
@@ -2931,12 +3010,12 @@ and lookup_prop cx l reason strict x t =
   in
   unit_flow cx (l, LookupT (reason, strict, x, t))
 
-and get_prop cx reason_op reason_c super x map tout =
+and get_prop cx reason_op strict super x map tout =
   if SMap.mem x map
   then
     unit_flow cx (SMap.find_unsafe x map, tout)
   else
-    lookup_prop cx super reason_op (Some reason_c) x (LowerBoundT tout)
+    lookup_prop cx super reason_op strict x (LowerBoundT tout)
 
 and set_prop cx reason_op reason_c super x map tin =
   if SMap.mem x map
@@ -3018,8 +3097,8 @@ and filter_not_exists t = match t with
 
   (* unknown boolies become falsy *)
   | MaybeT t ->
-      let reason = reason_of_t t in
-      UnionT (reason, [NullT.why reason; VoidT.why reason])
+    let reason = reason_of_t t in
+    UnionT (reason, [NullT.why reason; VoidT.why reason])
   | BoolT (r, None) -> BoolT (r, Some false)
   | StrT (r, None) -> StrT (r, Some "")
   | NumT (r, None) -> NumT (r, Some "0")
@@ -3029,12 +3108,13 @@ and filter_not_exists t = match t with
 
 and filter_maybe = function
   | MaybeT t ->
-      let reason = reason_of_t t in
-      UnionT (reason, [NullT.why reason; VoidT.why reason])
+    let reason = reason_of_t t in
+    UnionT (reason, [NullT.why reason; VoidT.why reason])
   | NullT r -> NullT r
   | VoidT r -> VoidT r
-  (* NOTE: it is tempting to refine optional(T) to undefined, but we don't
-     because the latter is not a subtype of the former. *)
+  | OptionalT t ->
+    let reason = reason_of_t t in
+    VoidT.why reason
   | t -> UndefT.t
 
 and filter_not_maybe = function
@@ -3051,8 +3131,8 @@ and filter_null = function
 
 and filter_not_null = function
   | MaybeT t ->
-      let reason = reason_of_t t in
-      UnionT (reason, [VoidT.why reason; t])
+    let reason = reason_of_t t in
+    UnionT (reason, [VoidT.why reason; t])
   | OptionalT t -> OptionalT (filter_not_null t)
   | UnionT (r, ts) -> recurse_into_union filter_not_null (r, ts)
   | NullT r -> UndefT r
@@ -3061,14 +3141,15 @@ and filter_not_null = function
 and filter_undefined = function
   | MaybeT t -> VoidT.why (reason_of_t t)
   | VoidT r -> VoidT r
-  (* NOTE: it is tempting to refine optional(T) to undefined, but we don't
-     because the latter is not a subtype of the former. *)
+  | OptionalT t ->
+    let reason = reason_of_t t in
+    VoidT.why reason
   | t -> UndefT.t
 
 and filter_not_undefined = function
   | MaybeT t ->
-      let reason = reason_of_t t in
-      UnionT (reason, [NullT.why reason; t])
+    let reason = reason_of_t t in
+    UnionT (reason, [NullT.why reason; t])
   | OptionalT t -> filter_not_undefined t
   | UnionT (r, ts) -> recurse_into_union filter_not_undefined (r, ts)
   | VoidT r -> UndefT r
@@ -3076,9 +3157,9 @@ and filter_not_undefined = function
 
 and predicate cx trace t (l,p) = match (l,p) with
 
-   (************************)
-   (* deconstruction of && *)
-   (************************)
+  (************************)
+  (* deconstruction of && *)
+  (************************)
 
   | (_, AndP(p1,p2)) ->
     let reason = new_reason "and" (pos_of_predicate p1) in
@@ -3086,17 +3167,17 @@ and predicate cx trace t (l,p) = match (l,p) with
     flow cx (l,PredicateT(p1,tvar)) trace;
     flow cx (tvar,PredicateT(p2,t)) trace
 
-   (************************)
-   (* deconstruction of || *)
-   (************************)
+  (************************)
+  (* deconstruction of || *)
+  (************************)
 
   | (_, OrP(p1,p2)) ->
     flow cx (l,PredicateT(p1,t)) trace;
     flow cx (l,PredicateT(p2,t)) trace
 
-   (***********************)
-   (* typeof _ ~ "string" *)
-   (***********************)
+  (***********************)
+  (* typeof _ ~ "string" *)
+  (***********************)
 
   | (_, IsP "string") ->
     filter cx trace t l is_string
@@ -3104,9 +3185,9 @@ and predicate cx trace t (l,p) = match (l,p) with
   | (_, NotP(IsP "string")) ->
     filter cx trace t l (not_ is_string)
 
-   (***********************)
-   (* typeof _ ~ "number" *)
-   (***********************)
+  (***********************)
+  (* typeof _ ~ "number" *)
+  (***********************)
 
   | (_, IsP "number") ->
     filter cx trace t l is_number
@@ -3114,9 +3195,9 @@ and predicate cx trace t (l,p) = match (l,p) with
   | (_, NotP(IsP "number")) ->
     filter cx trace t l (not_ is_number)
 
-   (***********************)
-   (* typeof _ ~ "function" *)
-   (***********************)
+  (***********************)
+  (* typeof _ ~ "function" *)
+  (***********************)
 
   | (_, IsP "function") ->
     filter cx trace t l is_function
@@ -3124,9 +3205,9 @@ and predicate cx trace t (l,p) = match (l,p) with
   | (_, NotP(IsP "function")) ->
     filter cx trace t l (not_ is_function)
 
-   (***********************)
-   (* typeof _ ~ "object" *)
-   (***********************)
+  (***********************)
+  (* typeof _ ~ "object" *)
+  (***********************)
 
   | (_, IsP "object") ->
     filter cx trace t l is_object
@@ -3134,9 +3215,9 @@ and predicate cx trace t (l,p) = match (l,p) with
   | (_, NotP(IsP "object")) ->
     filter cx trace t l (not_ is_object)
 
-   (*******************)
-   (* Array.isArray _ *)
-   (*******************)
+  (*******************)
+  (* Array.isArray _ *)
+  (*******************)
 
   | (_, IsP "array") ->
     filter cx trace t l is_array
@@ -3144,9 +3225,9 @@ and predicate cx trace t (l,p) = match (l,p) with
   | (_, NotP(IsP "array")) ->
     filter cx trace t l (not_ is_array)
 
-   (***********************)
-   (* typeof _ ~ "undefined" *)
-   (***********************)
+  (***********************)
+  (* typeof _ ~ "undefined" *)
+  (***********************)
 
   | (_, IsP "undefined") ->
     flow cx (filter_undefined l, t) trace
@@ -3154,9 +3235,9 @@ and predicate cx trace t (l,p) = match (l,p) with
   | (_, NotP(IsP "undefined")) ->
     flow cx (filter_not_undefined l, t) trace
 
-   (********)
-   (* null *)
-   (********)
+  (********)
+  (* null *)
+  (********)
 
   | (_, IsP "null") ->
     flow cx (filter_null l, t) trace
@@ -3164,9 +3245,9 @@ and predicate cx trace t (l,p) = match (l,p) with
   | (_, NotP(IsP "null")) ->
     flow cx (filter_not_null l, t) trace
 
-   (*********)
-   (* maybe *)
-   (*********)
+  (*********)
+  (* maybe *)
+  (*********)
 
   | (_, IsP "maybe") ->
     flow cx (filter_maybe l, t) trace
@@ -3174,9 +3255,9 @@ and predicate cx trace t (l,p) = match (l,p) with
   | (_, NotP(IsP "maybe")) ->
     flow cx (filter_not_maybe l, t) trace
 
-   (************************)
-   (* truthyness *)
-   (************************)
+  (************************)
+  (* truthyness *)
+  (************************)
 
   | (_, ExistsP) ->
     flow cx (filter_exists l, t) trace
@@ -3184,9 +3265,9 @@ and predicate cx trace t (l,p) = match (l,p) with
   | (_, NotP(ExistsP)) ->
     flow cx (filter_not_exists l, t) trace
 
-   (*************************************************************)
-   (* instanceof: resolve the constructor, pushing the instance *)
-   (*************************************************************)
+  (*************************************************************)
+  (* instanceof: resolve the constructor, pushing the instance *)
+  (*************************************************************)
 
   | (_, InstanceofP (c)) ->
     flow cx (c, PredicateT(ConstructorP(l),t)) trace
@@ -3194,10 +3275,10 @@ and predicate cx trace t (l,p) = match (l,p) with
   | (_, NotP(InstanceofP (c))) ->
     flow cx (c, PredicateT(NotP(ConstructorP(l)),t)) trace
 
-   (*************************************************************)
-   (* ... and refine the instance with the resolved constructor *)
-   (* (careful: this is backwards)                              *)
-   (*************************************************************)
+  (*************************************************************)
+  (* ... and refine the instance with the resolved constructor *)
+  (* (careful: this is backwards)                              *)
+  (*************************************************************)
 
   (** An object is considered `instanceof` a function F when it is constructed
       by F. Note that this is incomplete with respect to the runtime semantics,
@@ -3208,12 +3289,12 @@ and predicate cx trace t (l,p) = match (l,p) with
      ConstructorP (ObjT (_,{proto_t = proto2; _}) as u))
       when proto1 = proto2 ->
 
-      flow cx (u,t) trace
+    flow cx (u,t) trace
 
   | (ClassT(InstanceT _ as l),
      ConstructorP (InstanceT _ as u)) ->
 
-      predicate cx trace t (ClassT(ExtendsT(u,l)),p)
+    predicate cx trace t (ClassT(ExtendsT(u,l)),p)
 
   (** Is an instance x of C `instanceof` class A? This depends on whether C is a
       subclass of A. If it is, then the type of x is refined to C. Otherwise, do
@@ -3223,50 +3304,50 @@ and predicate cx trace t (l,p) = match (l,p) with
       type of x, but that's hard to compute.) **)
   | (ClassT(ExtendsT(orig, InstanceT (_,static,super,instance))),
      ConstructorP (InstanceT (_,_,super_c,instance_c)))
-      -> (* TODO: intersection *)
+    -> (* TODO: intersection *)
 
-      if instance.class_id = instance_c.class_id
-      then flow cx (orig, t) trace
-      else flow cx (super_c, PredicateT(InstanceofP(l), t)) trace
+    if instance.class_id = instance_c.class_id
+    then flow cx (orig, t) trace
+    else flow cx (super_c, PredicateT(InstanceofP(l), t)) trace
 
   | (ClassT(ExtendsT _),
      ConstructorP (MixedT _)) ->
-      ()
+    ()
 
   (** Prune the type when any other `instanceof` check succeeds (since this is
       impossible). *)
   | (_, ConstructorP _) ->
-      ()
+    ()
 
   | (FunT (_,_,proto1,_),
      NotP(ConstructorP (ObjT (_,{proto_t = proto2; _}))))
       when proto1 = proto2 ->
-      ()
+    ()
 
   | (ClassT(InstanceT _ as l),
      NotP(ConstructorP (InstanceT _ as u))) ->
 
-      predicate cx trace t (ClassT(ExtendsT(u,l)),p)
+    predicate cx trace t (ClassT(ExtendsT(u,l)),p)
 
   (** Is an instance x of C not `instanceof` class A? Again, this depends on
       whether C is a subclass of A. If it is, then do nothing, since this check
       cannot succeed. Otherwise, don't refine the type of x. **)
   | (ClassT(ExtendsT(orig, InstanceT (reason,static,super,instance))),
      NotP(ConstructorP (InstanceT (reason_c,static_c,super_c,instance_c))))
-      -> (* TODO: intersection *)
+    -> (* TODO: intersection *)
 
-      if instance.class_id = instance_c.class_id
-      then ()
-      else flow cx (super_c, PredicateT(NotP(InstanceofP(l)), t)) trace
+    if instance.class_id = instance_c.class_id
+    then ()
+    else flow cx (super_c, PredicateT(NotP(InstanceofP(l)), t)) trace
 
   | (ClassT(ExtendsT(orig, _)),
      NotP(ConstructorP (MixedT _))) ->
 
-      flow cx (orig,t) trace
+    flow cx (orig,t) trace
 
   (** Don't refine the type when any other `instanceof` check fails. **)
   | (_, NotP(ConstructorP u)) ->
-      flow cx (u,t) trace
+    flow cx (u,t) trace
 
   (* unknown predicate *)
   | _ ->
@@ -3483,13 +3564,15 @@ and flow_to_mutable_child cx fresh t1 t2 =
 
 and array_flow cx trace lit = function
   | ([],e1, _,e2) -> (* general element1 = general element2 *)
-    (* empty array flows in: always unify *)
-    unify cx e1 e2
+    flow_to_mutable_child cx lit e1 e2
 
-  | (ts1,_, [],e2) -> (* specific element1 < general element2 *)
+  | (_,e1, [],e2) -> (* specific element1 < general element2 *)
+    unit_flow cx (e1, e2)
+  (*
     List.iter (fun t1 ->
-      select_flow cx (t1,e2) trace ArrElem;
+    select_flow cx (t1,e2) trace ArrElem;
     ) ts1
+  *)
 
   | ([t1],_, t2::_,_) -> (* specific element1 = specific element2 *)
     flow_to_mutable_child cx lit t1 t2
@@ -3654,9 +3737,9 @@ and module_t cx m reason =
   match SMap.get m cx.modulemap with
   | Some t -> t
   | None ->
-      mk_tvar_where cx reason (fun t ->
-        cx.modulemap <- cx.modulemap |> SMap.add m t;
-      )
+    mk_tvar_where cx reason (fun t ->
+      cx.modulemap <- cx.modulemap |> SMap.add m t;
+    )
 
 type gc_state = {
   mutable positive: ISet.t;

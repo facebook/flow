@@ -1,11 +1,7 @@
 
 overload.js:1:27,27: number
 This type is incompatible with
-  [LIB] core.js:164:19,24: string
-
-overload.js:1:27,27: number
-This type is incompatible with
-  [LIB] core.js:183:1,193:1: RegExp
+  [LIB] core.js:164:19,33: union type
 
 [LIB] core.js:164:43,48: string
 This type is incompatible with
@@ -19,4 +15,4 @@ This type is incompatible with
 This type is incompatible with
   overload.js:4:9,14: number
 
-Found 5 errors
+Found 4 errors

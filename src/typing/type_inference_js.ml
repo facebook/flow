@@ -102,7 +102,7 @@ let extend_object cx reason o = function
   | None -> o
   | Some other ->
       Flow_js.mk_tvar_where cx reason (fun t ->
-        Flow_js.unit_flow cx (other, ObjAssignT (reason, o, t))
+        Flow_js.unit_flow cx (other, ObjAssignT (reason, o, t, SSet.empty))
       )
 
 let summarize cx t = match t with
@@ -134,11 +134,88 @@ let require cx m m_name loc =
   cx.require_loc <- SMap.add m loc cx.require_loc;
   module_t cx m (mk_reason m_name loc)
 
+let import_ns cx reason module_name loc =
+  let module_ = Module_js.imported_module cx.file module_name in
+  let module_type = require cx module_ module_name loc in
+  Flow_js.mk_tvar_where cx reason (fun t ->
+    Flow_js.unit_flow cx (module_type, ImportModuleNsT(reason, t))
+  )
+
 let exports cx m =
   module_t cx m (Reason_js.new_reason "exports" (Pos.make_from
     (Relative_path.create Relative_path.Dummy cx.file)))
 
 let lookup_module cx m = SMap.find_unsafe m cx.modulemap
+
+(**
+ * Given an exported default declaration, identify nameless declarations and
+ * name them with a special internal name that can be used to reference them
+ * when assigning the export value.
+ *)
+let nameify_default_export_decl decl = Ast.Statement.(
+  match decl with
+  | loc, FunctionDeclaration(func_decl) ->
+    if func_decl.FunctionDeclaration.id <> None then decl else
+      loc, FunctionDeclaration(FunctionDeclaration.({
+        func_decl with
+          id = Some(Ast.Identifier.(loc, {
+            name = internal_name "*default*";
+            typeAnnotation = None;
+            optional = false;
+          }));
+      }))
+
+  | loc, ClassDeclaration(class_decl) ->
+    if class_decl.Class.id <> None then decl else
+      loc, ClassDeclaration(Class.({
+        class_decl with
+          id = Some(Ast.Identifier.(loc, {
+            name = internal_name "*default*";
+            typeAnnotation = None;
+            optional = false;
+          }));
+      }))
+
+  | _ -> decl
+)
+
+(**
+ * Given a LHS destructuring pattern, extract a list of (loc, identifier-name)
+ * tuples from the pattern that represent new bindings. This is primarily useful
+ * for exporting a destructuring variable declaration.
+ *)
+let rec extract_destructured_bindings accum pattern = Ast.Pattern.(
+  match pattern with
+  | Identifier(loc, n) ->
+    let name = n.Ast.Identifier.name in
+    (loc, name)::accum
+
+  | Object(n) ->
+    let props = n.Object.properties in
+    List.fold_left extract_obj_prop_pattern_bindings accum props
+
+  | Array(n) ->
+    let elems = n.Array.elements in
+    List.fold_left extract_arr_elem_pattern_bindings accum elems
+
+  | Expression(_) ->
+    failwith "Parser Error: Expression patterns don't exist in JS."
+) and extract_obj_prop_pattern_bindings accum = Ast.Pattern.(function
+  | Object.Property(_, prop) ->
+    let (_, rhs_pattern) = prop.Object.Property.pattern in
+    extract_destructured_bindings accum rhs_pattern
+
+  | Object.SpreadProperty(_) ->
+    failwith "Unsupported: Destructuring object spread properties"
+) and extract_arr_elem_pattern_bindings accum = Ast.Pattern.(function
+  | Some(Array.Element(_, pattern)) ->
+    extract_destructured_bindings accum pattern
+
+  | Some(Array.Spread(_, {Array.SpreadElement.argument = (_, pattern)})) ->
+    extract_destructured_bindings accum pattern
+
+  | None -> accum
+)
 
 (* Destructuring visitor for tree-shaped patterns, parameteric over an action f
    to perform at the leaves. A type for the pattern is passed, which is taken
@@ -503,6 +580,14 @@ let rec convert cx map = Ast.Type.(function
           ShapeT (convert cx map (List.hd typeParameters))
         )
 
+      (* $Diff<T,S> *)
+      | "$Diff" ->
+        check_type_param_arity cx loc typeParameters 2 (fun () ->
+          let t1 = typeParameters |> List.hd |> convert cx map in
+          let t2 = typeParameters |> List.tl |> List.hd |> convert cx map in
+          DiffT (t1, t2)
+        )
+
       (* $Enum<T> is the set of keys of T *)
       | "$Enum" ->
         check_type_param_arity cx loc typeParameters 1 (fun () ->
@@ -522,7 +607,7 @@ let rec convert cx map = Ast.Type.(function
         AnyFunT reason
 
       | "Object" ->
-        let reason = mk_reason "any object type" loc in
+        let reason = mk_reason "object type" loc in
         AnyObjT reason
       (* TODO: presumably some existing uses of AnyT can benefit from AnyObjT
          as well: e.g., where AnyT is used to model prototypes and statics we
@@ -627,7 +712,8 @@ let rec convert cx map = Ast.Type.(function
             (fun (loc, { Object.CallProperty.value = (_, ft); _; }) ->
                 convert cx map (loc, Ast.Type.Function ft))
             fts in
-        SMap.add "$call" (IntersectionT (mk_reason "object type" loc, fts)) map_
+          let callable_reason = mk_reason "callable object type" loc in
+          SMap.add "$call" (IntersectionT (callable_reason, fts)) map_
     in
     (* Seal an object type unless it specifies an indexer. *)
     (* TODO: also consider sealing the object if it is non-empty *)
@@ -845,11 +931,18 @@ and statement_decl cx = Ast.Statement.(
 
   | (loc, Debugger) -> ()
 
-  | (loc, FunctionDeclaration { FunctionDeclaration.id; _ }) ->
-      let _, { Ast.Identifier.name; _ } = id in
-      let r = mk_reason (spf "function %s" name) loc in
-      let tvar = Flow_js.mk_tvar cx r in
-      Env_js.init_env cx name (create_env_entry tvar tvar (Some loc))
+  | (loc, FunctionDeclaration { FunctionDeclaration.id; _ }) -> (
+      match id with
+      | Some(id) ->
+        let _, { Ast.Identifier.name; _ } = id in
+        let r = mk_reason (spf "function %s" name) loc in
+        let tvar = Flow_js.mk_tvar cx r in
+        Env_js.init_env cx name (create_env_entry tvar tvar (Some loc))
+      | None -> failwith (
+          "Flow Error: Nameless function declarations should always be given " ^
+          "an implicit name before they get hoisted!"
+        )
+    )
 
   | (loc, DeclareVariable { DeclareVariable.id; })
   | (loc, DeclareFunction { DeclareFunction.id; }) ->
@@ -862,11 +955,15 @@ and statement_decl cx = Ast.Statement.(
   | (loc, VariableDeclaration decl) ->
       variable_declaration cx loc decl
 
-  | (loc, ClassDeclaration { Class.id; _ }) ->
-      let _, { Ast.Identifier.name; _ } = id in
-      let r = mk_reason (spf "class %s" name) loc in
-      let tvar = Flow_js.mk_tvar cx r in
-      Env_js.init_env cx name (create_env_entry tvar tvar (Some loc))
+  | (loc, ClassDeclaration { Class.id; _ }) -> (
+      match id with
+      | Some(id) ->
+        let _, { Ast.Identifier.name; _ } = id in
+        let r = mk_reason (spf "class %s" name) loc in
+        let tvar = Flow_js.mk_tvar cx r in
+        Env_js.init_env cx name (create_env_entry tvar tvar (Some loc))
+      | None -> ()
+    )
 
   | (loc, DeclareClass { Interface.id; _ })
   | (loc, InterfaceDeclaration { Interface.id; _ }) ->
@@ -886,42 +983,92 @@ and statement_decl cx = Ast.Statement.(
       let t = Flow_js.mk_tvar cx r in
       Hashtbl.replace cx.type_table loc t;
       Env_js.init_env cx (spf "$module__%s" name) (create_env_entry t t (Some loc))
-  | (_, ExportDeclaration _) ->
-      (* TODO *)
-      failwith "Unimplemented: ExportDeclaration"
-  | (_, ImportDeclaration {
-      ImportDeclaration.isType = true;
-      default = None; (* TODO - when we have default type exports *)
-      source = Some (source_loc, { Ast.Literal.value = Ast.Literal.String m_name; _; });
-      specifier;
+  | (_, ExportDeclaration {
+      ExportDeclaration.default;
+      ExportDeclaration.declaration;
+      ExportDeclaration.specifiers;
+      ExportDeclaration.source;
+    }) -> (
+      match declaration with
+      | Some(ExportDeclaration.Declaration(stmt)) ->
+        let stmt = if default then nameify_default_export_decl stmt else stmt in
+        statement_decl cx stmt
+      | Some(ExportDeclaration.Expression(_)) -> ()
+      | None -> if not default then () else failwith (
+          "Parser Error: Default exports must always have an associated " ^
+          "declaration or expression!"
+        )
+    )
+  | (loc, ImportDeclaration {
+      ImportDeclaration.default;
+      ImportDeclaration.isType;
+      ImportDeclaration.source;
+      ImportDeclaration.specifier;
     }) ->
-      (match specifier with
-      | Some (ImportDeclaration.NameSpace (_, (loc, namespace))) ->
-          let namespace = namespace.Ast.Identifier.name in
-          let reason = mk_reason (spf "import type * as %s" namespace) loc in
+      let (source_loc, source_literal) = source in
+      let module_name = (
+        match source_literal.Ast.Literal.value with
+        | Ast.Literal.String(value) -> value
+        | _ -> failwith  (
+            "Parser error: Invalid source type! Must be a string literal."
+          )
+      ) in
+      let import_str = if isType then "import type" else "import" in
+      (
+        match default with
+        | Some(_, local_ident) ->
+          let local_name = local_ident.Ast.Identifier.name in
+          let reason_str =
+            (spf "%s %s from \"%s\"" import_str local_name module_name)
+          in
+          let reason = mk_reason reason_str loc in
           let tvar = Flow_js.mk_tvar cx reason in
-          Env_js.init_env cx namespace (create_env_entry ~for_type:true tvar tvar (Some loc));
-      | Some (ImportDeclaration.Named (_, specifiers)) ->
-          List.iter (fun (loc, {
-            ImportDeclaration.NamedSpecifier.id;
-            name;
-          }) ->
-            (* { id as name, ... } *)
-            let id = (snd id).Ast.Identifier.name in
-            let name, reason = (match name with
-            | None ->
-                id, mk_reason (spf "import type { %s }" id) loc
-            | Some (_, { Ast.Identifier.name; _; }) ->
-                name, mk_reason (spf "import type { %s as %s }" id name) loc) in
+          let env_entry =
+            (create_env_entry ~for_type:isType tvar tvar (Some loc))
+          in
+          Env_js.init_env cx local_name env_entry;
+        | None -> (
+          match specifier with
+          | Some(ImportDeclaration.Named(_, named_specifiers)) ->
+            let init_specifier (specifier_loc, specifier) = (
+              let (loc, remote_ident) =
+                specifier.ImportDeclaration.NamedSpecifier.id
+              in
+              let remote_name = remote_ident.Ast.Identifier.name in
+              let (local_name, reason) = (
+                match specifier.ImportDeclaration.NamedSpecifier.name with
+                | Some(_, { Ast.Identifier.name = local_name; _; }) ->
+                  let reason_str =
+                    spf "%s { %s as %s }" import_str remote_name local_name
+                  in
+                  (local_name, (mk_reason reason_str loc))
+                | None ->
+                  let reason_str = spf "%s { %s }" import_str remote_name in
+                  (remote_name, (mk_reason reason_str loc))
+              ) in
+              let tvar = Flow_js.mk_tvar cx reason in
+              let env_entry =
+                create_env_entry ~for_type:isType tvar tvar (Some specifier_loc)
+              in
+              Env_js.init_env cx local_name env_entry;
+            ) in
+            List.iter init_specifier named_specifiers
+          | Some(ImportDeclaration.NameSpace(_, (loc, local_ident))) ->
+            let local_name = local_ident.Ast.Identifier.name in
+            let reason =
+              mk_reason (spf "%s * as %s" import_str local_name) loc
+            in
             let tvar = Flow_js.mk_tvar cx reason in
-            Env_js.init_env cx name (create_env_entry ~for_type:true tvar tvar (Some loc));
-          ) specifiers
-      | None ->
-          failwith "Unimplemented: ImportDeclaration ImportedDefaultBinding"
+            let env_entry =
+              create_env_entry ~for_type:isType tvar tvar (Some loc)
+            in
+            Env_js.init_env cx local_name env_entry
+          | None -> failwith (
+            "Parser error: Non-default imports must always have a " ^
+            "specifier!"
+          )
+        )
       )
-  | (_, ImportDeclaration _) ->
-      (* TODO *)
-      failwith "Unimplemented: ImportDeclaration"
 )
 
 and toplevels cx stmts =
@@ -1584,7 +1731,7 @@ and statement cx = Ast.Statement.(
 
   (* TODO: unsupported generators *)
   | (loc, FunctionDeclaration {
-      FunctionDeclaration.id = _, { Ast.Identifier.name; typeAnnotation; _ };
+      FunctionDeclaration.id;
       params; defaults; rest;
       body;
       returnType;
@@ -1597,7 +1744,10 @@ and statement cx = Ast.Statement.(
         (params, defaults, rest) returnType body this
       in
       Hashtbl.replace cx.type_table loc fn_type;
-      Env_js.set_var cx name fn_type reason
+      (match id with
+      | Some(_, {Ast.Identifier.name; _ }) ->
+        Env_js.set_var cx name fn_type reason
+      | None -> ())
 
   | (loc, DeclareVariable { DeclareVariable.id; })
   | (loc, DeclareFunction { DeclareFunction.id; }) -> ()
@@ -1618,6 +1768,9 @@ and statement cx = Ast.Statement.(
         let msg = "implements not supported" in
         Flow_js.add_error cx [mk_reason "" loc, msg]
       else ();
+      let id = match id with Some(id) -> id | None -> failwith (
+        "Unimplemented: Anonymous React class expressions"
+      ) in
       let nloc, { Ast.Identifier.name; _ } = id in
       let reason = mk_reason name nloc in
       let extends = superClass, superTypeParameters in
@@ -1632,7 +1785,11 @@ and statement cx = Ast.Statement.(
         let msg = "implements not supported" in
         Flow_js.add_error cx [mk_reason "" loc, msg]
       else ();
-      let nloc, { Ast.Identifier.name; _ } = id in
+      let (nloc, name) = (
+        match id with
+        | Some(nloc, { Ast.Identifier.name; _ }) -> nloc, name
+        | None -> loc, "<<anonymous class>>"
+      ) in
       let reason = mk_reason name nloc in
       let extends = superClass, superTypeParameters in
       let cls_type = mk_class cx reason typeParameters extends body in
@@ -1753,46 +1910,262 @@ and statement cx = Ast.Statement.(
           Flow_js.mk_object_with_map_proto cx reason map (MixedT reason)
     in
     Flow_js.unify cx exports t
+  | (loc, ExportDeclaration {
+      ExportDeclaration.default;
+      ExportDeclaration.declaration;
+      ExportDeclaration.specifiers;
+      ExportDeclaration.source;
+    }) -> (
+      let extract_export_info_from_decl = (function
+        | loc, FunctionDeclaration({FunctionDeclaration.id=None; _;}) ->
+          if default then
+            [("function() {}", loc, internal_name "*default*")]
+          else failwith (
+            "Parser Error: Immediate exports of nameless functions can " ^
+            "only exist for default exports!"
+          )
+        | loc, FunctionDeclaration({FunctionDeclaration.id=Some(_, id); _;}) ->
+          let name = id.Ast.Identifier.name in
+          [(spf "function %s() {}" name, loc, name)]
+        | loc, ClassDeclaration({Class.id=None; _;}) ->
+          if default then
+            [("class {}", loc, internal_name "*default*")]
+          else failwith (
+            "Parser Error: Immediate exports of nameless classes can " ^
+            "only exist for default exports"
+          )
+        | loc, ClassDeclaration({Class.id=Some(_, id); _;}) ->
+          let name = id.Ast.Identifier.name in
+          [(spf "class %s() {}" name, loc, name)]
+        | _, VariableDeclaration({VariableDeclaration.declarations; _; }) ->
+          let decl_to_bindings accum (loc, decl) =
+            let id = snd decl.VariableDeclaration.Declarator.id in
+            List.rev (extract_destructured_bindings accum id)
+          in
+          let bound_names = List.fold_left decl_to_bindings [] declarations in
+          bound_names |> List.map (fun (loc, name) ->
+            (spf "var %s" name, loc, name)
+          )
+        | _ -> failwith "Parser Error: Invalid export-declaration type!"
+      ) in
 
-  | (_, ExportDeclaration _) ->
-      (* TODO *)
-      failwith "Unimplemented: ExportDeclaration"
-  | (_, ImportDeclaration {
-      ImportDeclaration.isType = true;
-      default = None; (* TODO - when we have default type exports *)
-      source = Some (source_loc, { Ast.Literal.value = Ast.Literal.String m_name; _; });
-      specifier;
-    }) ->
-      let module_ = Module_js.imported_module cx.file m_name in
-      let module_type = require cx module_ m_name source_loc in
-      (match specifier with
-      | Some (ImportDeclaration.NameSpace (_, (loc, namespace))) ->
-          let namespace = namespace.Ast.Identifier.name in
-          let reason = mk_reason (spf "import type * as %s" namespace) loc in
-          Env_js.set_var ~for_type:true cx namespace module_type reason
-      | Some (ImportDeclaration.Named (_, specifiers)) ->
-          List.iter (fun (loc, {
-            ImportDeclaration.NamedSpecifier.id;
-            name;
-          }) ->
-            (* { id as name, ... } *)
-            let id = (snd id).Ast.Identifier.name in
-            let name, reason = (match name with
-            | None ->
-                id, mk_reason (spf "import type { %s }" id) loc
-            | Some (_, { Ast.Identifier.name; _; }) ->
-                name, mk_reason (spf "import type { %s as %s }" id name) loc) in
-            let specifier_type = Flow_js.mk_tvar_where cx reason (fun t ->
-              Flow_js.unit_flow cx (module_type, GetT (reason, id, t))
-            ) in
-            Env_js.set_var ~for_type:true cx name specifier_type reason
-          ) specifiers
+      let export_reason_start =
+        if default then "export default" else "export"
+      in
+
+      match declaration with
+      | Some(ExportDeclaration.Declaration(decl)) ->
+        let decl = if default then nameify_default_export_decl decl else decl in
+        statement cx decl;
+
+        let export_from_local (export_reason, loc, local_name) = (
+          let reason =
+            mk_reason (spf "%s %s" export_reason_start export_reason) loc
+          in
+          let local_tvar = Env_js.var_ref cx local_name reason in
+          let exports_obj = get_module_exports cx reason in
+          let relation =
+            if default then
+              (exports_obj, ExportDefaultT(reason, local_tvar))
+            else
+              (exports_obj, SetT(reason, local_name, local_tvar))
+          in
+          Flow_js.unit_flow cx relation
+        ) in
+
+        (**
+         * Export each declared binding. Some declarations export multiple
+         * bindings, like a multi-declarator variable declaration.
+         *)
+        List.iter export_from_local (extract_export_info_from_decl decl)
+      | Some(ExportDeclaration.Expression(expr)) ->
+        if default then (
+          let expr_t = expression cx expr in
+          let reason =
+            mk_reason (spf "%s <<expression>>" export_reason_start) loc
+          in
+          let exports_obj = get_module_exports cx reason in
+          let relation = (exports_obj, ExportDefaultT(reason, expr_t)) in
+          Flow_js.unit_flow cx relation
+        ) else failwith (
+          "Parser Error: Exporting an expression is only possible for " ^
+          "`export default`!"
+        )
       | None ->
-          failwith "Unimplemented: ImportDeclaration ImportedDefaultBinding"
+        if default then failwith (
+          "Parser Error: Default exports must always have an associated " ^
+          "declaration or expression!"
+        ) else (
+          match specifiers with
+          (* export {foo, bar} *)
+          | Some(ExportDeclaration.ExportSpecifiers(specifiers)) ->
+            let export_specifier specifier = ExportDeclaration.Specifier.(
+              let (reason, local_name, remote_name) = (
+                match specifier with
+                | loc, {id = (_, {Ast.Identifier.name=id; _;}); name=None;} ->
+                  let reason = mk_reason (spf "export {%s}" id) loc in
+                  (reason, id, id)
+                | loc, {id=(_, {Ast.Identifier.name=id; _;});
+                        name=Some(_, {Ast.Identifier.name; _;})} ->
+                  let reason =
+                    mk_reason (spf "export {%s as %s}" id name) loc
+                  in
+                  (reason, id, name)
+              ) in
+
+              (**
+               * Determine if we're dealing with the `export {} from` form
+               * (and if so, retrieve the ModuleNamespaceObject tvar for the
+               *  source module)
+               *)
+              let source_module_tvar = (
+                match source with
+                | Some(src_loc, {
+                    Ast.Literal.value = Ast.Literal.String(module_name);
+                    _;
+                  }) ->
+                    let reason =
+                      mk_reason "ModuleNamespace for export {} from" src_loc
+                    in
+                    Some(import_ns cx reason module_name src_loc)
+                | Some(_) -> failwith (
+                    "Parser Error: `export ... from` must specify a string " ^
+                    "literal for the source module name!"
+                  )
+                | None -> None
+              ) in
+
+              let local_tvar = (
+                match source_module_tvar with
+                | Some(tvar) ->
+                  Flow_js.mk_tvar_where cx reason (fun t ->
+                    Flow_js.unit_flow cx (tvar, GetT(reason, local_name, t))
+                  )
+                | None ->
+                  Env_js.var_ref cx local_name reason
+              ) in
+
+              Flow_js.unit_flow cx (
+                get_module_exports cx reason,
+                SetT(reason, remote_name, local_tvar)
+              )
+            ) in
+            List.iter export_specifier specifiers
+
+          (* export * from "Source"; *)
+          | Some(ExportDeclaration.ExportBatchSpecifier(_)) ->
+              let source_tvar = (
+                match source with
+                | Some(src_loc, {
+                    Ast.Literal.value = Ast.Literal.String(module_name);
+                    _;
+                  }) ->
+                    let reason_str =
+                      spf "ModuleNamespaceObject for export * from \"%s\""
+                        module_name
+                    in
+                    let reason = mk_reason reason_str src_loc in
+                    import_ns cx reason module_name src_loc
+                | Some(_)
+                | None
+                  -> failwith (
+                    "Parser Error: `export * from` must specify a string " ^
+                    "literal for the source module name!"
+                  )
+              ) in
+
+              let reason = mk_reason "export * from \"%s\"" loc in
+              set_module_exports cx reason source_tvar
+
+          | None -> failwith (
+              "Parser Error: Non-default export must either have associated " ^
+              "declarations or a list of specifiers!"
+            )
+        )
+    )
+  | (loc, ImportDeclaration({
+      ImportDeclaration.default;
+      ImportDeclaration.isType;
+      ImportDeclaration.source;
+      ImportDeclaration.specifier;
+    })) ->
+      let (source_loc, source_literal) = source in
+      let module_name = (
+        match source_literal.Ast.Literal.value with
+        | Ast.Literal.String(value) -> value
+        | _ -> failwith  (
+            "Parser error: Invalid source type! Must be a string literal."
+          )
+      ) in
+      let import_str = if isType then "import type" else "import" in
+      (match default with
+        | Some(_, local_ident) ->
+          let local_name = local_ident.Ast.Identifier.name in
+          let reason =
+            mk_reason "Extract `default` property from ModuleNamespace obj" loc
+          in
+          let module_ns_tvar = import_ns cx reason module_name source_loc in
+          let local_t = Flow_js.mk_tvar_where cx reason (fun t ->
+            Flow_js.unit_flow cx (module_ns_tvar, GetT(reason, "default", t))
+          ) in
+          let reason =
+            mk_reason (spf "%s %s from \"%s\"" import_str local_name module_name) loc
+          in
+          Env_js.set_var cx ~for_type:isType local_name local_t reason
+        | None -> (
+          match specifier with
+          | Some(ImportDeclaration.Named(_, named_specifiers)) ->
+            let import_specifier (_, specifier) = (
+              let (loc, remote_ident) =
+                specifier.ImportDeclaration.NamedSpecifier.id
+              in
+              let remote_name = remote_ident.Ast.Identifier.name in
+              let (local_name, reason) = (
+                match specifier.ImportDeclaration.NamedSpecifier.name with
+                | Some(_, { Ast.Identifier.name = local_name; _; }) ->
+                  let reason_str =
+                    spf "%s { %s as %s }" import_str remote_name local_name
+                  in
+                  (local_name, (mk_reason reason_str loc))
+                | None ->
+                  let reason_str = spf "%s { %s }" import_str remote_name in
+                  (remote_name, (mk_reason reason_str loc))
+              ) in
+              let module_ns_tvar = import_ns cx reason module_name source_loc in
+              let local_t = Flow_js.mk_tvar_where cx reason (fun t ->
+                Flow_js.unit_flow cx (module_ns_tvar, GetT(reason, remote_name, t))
+              ) in
+              Env_js.set_var cx ~for_type:isType local_name local_t reason
+            ) in
+            List.iter import_specifier named_specifiers
+          | Some(ImportDeclaration.NameSpace(_, (ident_loc, local_ident))) ->
+            let local_name = local_ident.Ast.Identifier.name in
+            let reason =
+              mk_reason (spf "%s * as %s" import_str local_name) ident_loc
+            in
+            if isType then (
+              (**
+               * TODO: `import type * as` really doesn't make much sense with
+               *        our current CommonJS interop table. Here we support
+               *        this in the same way we treat import-default as a
+               *        temporary means of transitioning our old interop table
+               *        to the new one. Once the transition is finished, we
+               *        should make `import type * as` a hard error.
+               *)
+              let module_ = Module_js.imported_module cx.file module_name in
+              let module_type = require cx module_ module_name source_loc in
+              Env_js.set_var ~for_type:true cx local_name module_type reason
+            ) else (
+              let module_ns_tvar = import_ns cx reason module_name source_loc in
+              Env_js.set_var cx local_name module_ns_tvar reason
+            )
+          | None ->
+            failwith (
+              "Parser error: Non-default imports must always have a " ^
+              "specifier!"
+            )
+        )
       )
-  | (_, ImportDeclaration _) ->
-      (* TODO *)
-      failwith "Unimplemented: ImportDeclaration"
 )
 
 and save_handler mark exn = mark := Some exn
@@ -2155,7 +2528,7 @@ and expression_ cx loc e = Ast.Expression.(match e with
     | [] ->
         (* empty array, analogous to object with implicit properties *)
         let elemt = Flow_js.mk_tvar cx element_reason in
-        ArrT (reason, elemt, [])
+        ArrT (prefix_reason "empty " reason, elemt, [])
     | elems ->
         (* tup is true if no spreads *)
         (* tset is set of distinct (mod reason) elem types *)
@@ -2201,6 +2574,63 @@ and expression_ cx loc e = Ast.Expression.(match e with
         let msg = "require(...) supported only on strings" in
         Flow_js.add_error cx [mk_reason "" loc, msg];
         *)
+        AnyT.at loc
+    )
+
+  | Call {
+      Call.callee = _, Identifier (_, {
+        Ast.Identifier.name = "requireLazy";
+        _
+      });
+      arguments
+    } -> (
+      match arguments with
+      | [Expression(_, Array({Array.elements;})); Expression(callback_expr);] ->
+        (**
+         * From a static perspective (and as long as side-effects aren't
+         * considered in Flow), a requireLazy call can be viewed as an immediate
+         * call to require() for each of the modules, and then an immediate call
+         * to the requireLazy() callback with the results of each of the prior
+         * calls to require().
+         *
+         * TODO: requireLazy() is FB-specific. Let's find a way to either
+         *       generalize or toggle this only for the FB environment.
+         *)
+
+        let element_to_module_tvar tvars = (function
+          | Some(Expression(_, Literal({
+              Ast.Literal.value = Ast.Literal.String module_name;
+              _;
+            }))) ->
+              let m = Module_js.imported_module cx.file module_name in
+              let module_tvar = require cx m module_name loc in
+              module_tvar::tvars
+          | _ ->
+              let msg =
+                "The first arg to requireLazy() must be a literal array of " ^
+                "string literals!"
+              in
+              Flow_js.add_error cx [mk_reason "" loc, msg];
+              tvars
+        ) in
+        let module_tvars = List.fold_left element_to_module_tvar [] elements in
+        let module_tvars = List.rev module_tvars in
+
+        let callback_expr_t = expression cx callback_expr in
+        let reason = mk_reason "requireLazy() callback" loc in
+        let _ = func_call cx reason callback_expr_t module_tvars in
+
+        let null = null_ loc in
+        let reason = reason_of_t null in
+        UnionT(reason, [null; Flow_js.mk_tvar cx reason])
+
+      | _ ->
+        let msg =
+          "The first arg to requireLazy() must be a literal array of " ^
+          "string literals!"
+        in
+        Flow_js.add_error cx [mk_reason "" loc, msg];
+
         AnyT.at loc
     )
 
@@ -2422,6 +2852,7 @@ and expression_ cx loc e = Ast.Expression.(match e with
       arguments
     } ->
       (* TODO: require *)
+      (* TODO: This needs to be fixed. *)
       let argts = List.map (expression_or_spread cx) arguments in
       Flow_js.mk_tvar_where cx (mk_reason "class" loc) (fun t ->
         List.iter (fun argt -> Flow_js.unit_flow cx (argt, t)) argts
@@ -2431,12 +2862,7 @@ and expression_ cx loc e = Ast.Expression.(match e with
       let f = expression cx callee in
       let reason = mk_reason "function call" loc in
       let argts = List.map (expression_or_spread cx) arguments in
-      Env_js.havoc_heap_refinements ();
-      Flow_js.mk_tvar_where cx reason (fun t ->
-        let app =
-          Flow_js.mk_functiontype2 argts None t (List.hd !Flow_js.frames) in
-        Flow_js.unit_flow cx (f, CallT (reason, app));
-      )
+      func_call cx reason f argts
 
   | Conditional { Conditional.test; consequent; alternate } ->
       let reason = mk_reason "conditional" loc in
@@ -2550,6 +2976,15 @@ and new_call cx tok class_ argts =
   let reason = mk_reason "constructor call" tok in
   Flow_js.mk_tvar_where cx reason (fun t ->
     Flow_js.unit_flow cx (class_, ConstructorT (reason, argts, t));
+  )
+
+and func_call cx reason func_t argts =
+  Env_js.havoc_heap_refinements ();
+  Flow_js.mk_tvar_where cx reason (fun t ->
+    let app =
+      Flow_js.mk_functiontype2 argts None t (List.hd !Flow_js.frames)
+    in
+    Flow_js.unit_flow cx (func_t, CallT(reason, app))
   )
 
 and reflective s =
@@ -2745,7 +3180,7 @@ and assignment cx loc = Ast.Expression.(function
             _
           }) ->
             let reason = mk_reason "assignment of module.exports" loc in
-            set_module_exports cx reason t
+            set_module_exports cx reason (CJSExportDefaultT(reason, t));
 
         | _, Ast.Pattern.Expression (_, Member {
             Member._object = _, Identifier (_,
@@ -2834,7 +3269,7 @@ and assignment cx loc = Ast.Expression.(function
 and chain_objects cx reason this those =
   those |> List.iter (fun that ->
     Flow_js.unit_flow cx
-      (that, ObjAssignT(reason, this, AnyT.t))
+      (that, ObjAssignT(reason, this, AnyT.t, SSet.empty))
   );
   this
 
@@ -2843,8 +3278,10 @@ and spread_objects cx reason those =
 
 and clone_object_with_excludes cx reason this that excludes =
   Flow_js.mk_tvar_where cx reason (fun tvar ->
-    Flow_js.unit_flow cx
-      (that, ObjAssignT(reason, this, ObjRestT(reason, excludes, tvar)))
+    Flow_js.unit_flow cx (
+      that,
+      ObjAssignT(reason, this, ObjRestT(reason, excludes, tvar), SSet.empty)
+    )
   )
 
 and clone_object cx reason this that =
@@ -2854,7 +3291,7 @@ and chain_objects_lazy cx reason this those =
   let result = ref this in
   List.iter (fun that ->
     result := Flow_js.mk_tvar_where cx reason (fun t ->
-      Flow_js.unit_flow cx (that, ObjAssignT(reason, !result, t));
+      Flow_js.unit_flow cx (that, ObjAssignT(reason, !result, t, SSet.empty));
     )
   ) those;
   !result
@@ -3203,13 +3640,14 @@ and react_create_class cx loc class_props = Ast.Expression.(
   let mixins = ref [] in
   let static_reason = prefix_reason "statics of " reason_class in
   let static = ref (mk_object cx static_reason) in
-  let attr_reason = prefix_reason "required props of " reason_component in
-  let attributes = ref (mk_object cx attr_reason) in
   let default_reason = prefix_reason "default props of " reason_component in
-  let default = mk_object cx default_reason in
-  let ref_omap = ref SMap.empty in
+  let default = ref (mk_object cx default_reason) in
   let reason_state = prefix_reason "state of " reason_component in
   let state = mk_object cx reason_state in
+
+  let props_reason = prefix_reason "props of " reason_component in
+  let props = ref (mk_object cx props_reason) in
+
   let (fmap, mmap) =
     List.fold_left Ast.Expression.Object.(fun (fmap, mmap) -> function
 
@@ -3245,9 +3683,9 @@ and react_create_class cx loc class_props = Ast.Expression.(
         ignore (expression cx value);
         let reason = mk_reason "propTypes" nloc in
         let amap, omap = mk_proptypes cx properties in
-        ref_omap := omap;
-        attributes :=
-          Flow_js.mk_object_with_map_proto cx reason amap (MixedT reason);
+        let map = SMap.fold (fun k v map -> SMap.add k (OptionalT v) map) omap amap in
+        props :=
+          Flow_js.mk_object_with_map_proto cx reason map (MixedT reason);
         fmap, mmap
 
       (* getDefaultProps *)
@@ -3264,12 +3702,10 @@ and react_create_class cx loc class_props = Ast.Expression.(
           let t = mk_method cx reason (params, defaults, rest)
             returnType body this (MixedT reason)
           in
-          let override_default =
-            ObjAssignT(default_reason, default, AnyT.t)
-          in
-          Flow_js.unit_flow cx (t,
-            CallT (reason,
-              Flow_js.mk_functiontype [] None override_default));
+          (match t with
+          | FunT (_, _, _, { params_tlist = []; return_t; _ }) ->
+              default := return_t
+          | _ -> ());
           fmap, mmap
         )
 
@@ -3288,7 +3724,7 @@ and react_create_class cx loc class_props = Ast.Expression.(
             returnType body this (MixedT reason)
           in
           let override_state =
-            ObjAssignT(reason_state, state, AnyT.t)
+            ObjAssignT(reason_state, state, AnyT.t, SSet.empty)
           in
           Flow_js.unit_flow cx (t,
             CallT (reason,
@@ -3332,19 +3768,7 @@ and react_create_class cx loc class_props = Ast.Expression.(
 
     ) (SMap.empty, SMap.empty) class_props in
 
-
-  let default_tvar = Flow_js.mk_tvar_where cx default_reason (fun t ->
-    Flow_js.unit_flow cx
-      (default, ObjExtendT(default_reason, !ref_omap, t))
-  ) in
-  let props_reason = prefix_reason "props of " reason_component in
-  let props = mk_object cx props_reason in
-  Flow_js.unit_flow cx
-    (!attributes, ObjAssignT(props_reason, props, AnyT.t));
-  Flow_js.unit_flow cx
-    (default_tvar, ObjAssignT(props_reason, props, AnyT.t));
-
-  let type_args = [!attributes; props; state] in
+  let type_args = [!default; !props; state] in
   let super_reason = prefix_reason "super of " reason_component in
   let super =
     Flow_js.mk_typeapp_instance cx super_reason
@@ -3371,37 +3795,24 @@ and react_create_class cx loc class_props = Ast.Expression.(
   Flow_js.unit_flow cx (react_class, override_statics);
   static := clone_object cx static_reason !static react_class;
 
-  (* TODO: Mixins are assumed to be classes. Instead, they should simply be
-      objects containing fields/methods, with an optional `statics` property
-      which is an object containing fields/methods, and an optional `mixins`
-      property which is an array containing mixins. *)
-
-  (* mixins' statics are copied into static to inherit static properties *)
-  !mixins |> List.iter (fun mixin ->
-    static := clone_object cx static_reason !static mixin;
-  );
   let id = Flow_js.mk_nominal cx in
   let itype = {
     class_id = id;
     type_args = SMap.empty;
     fields_tmap = fmap;
-    methods_tmap = mmap
+    methods_tmap = mmap;
+    mixins = !mixins <> [];
   } in
   Flow_js.unit_flow cx (super, SuperT (super_reason, itype));
 
-  let mixin_reason = prefix_reason "mixins of " reason_class in
-  (* mixins are added to super to inherit instance properties *)
-  let super =
-    if !mixins = [] then super
-    else
-      let imixins =
-        !mixins |> List.map (Flow_js.mk_annot cx mixin_reason)
-      in
-      imixins |> List.iter (fun imixin ->
-        Flow_js.unit_flow cx (imixin, SuperT (mixin_reason, itype))
-      );
-      IntersectionT (super_reason, super::imixins)
-  in
+  (* TODO: Mixins are handled quite superficially. *)
+  (* mixins' statics are copied into static to inherit static properties *)
+  (* mixins must be consistent with instance properties *)
+  !mixins |> List.iter (fun mixin ->
+    static := clone_object cx static_reason !static mixin;
+    Flow_js.unit_flow cx (mixin, SuperT (super_reason, itype))
+  );
+
   let instance = InstanceT (reason_component,!static,super,itype) in
   Flow_js.unit_flow cx (instance, this);
 
@@ -3460,12 +3871,13 @@ and predicate_of_condition cx e = Ast.(Expression.(
   in
 
   (* inspect an undefined equality test *)
-  (* TODO: non-strict equality of undefined? *)
   let undef_test loc op e =
     let refinement = match refinable_lvalue e with
     | None, t -> None
     | Some name, t ->
         match op with
+        | Binary.Equal | Binary.NotEqual ->
+            Some (name, t, IsP "maybe", op = Binary.Equal)
         | Binary.StrictEqual | Binary.StrictNotEqual ->
             Some (name, t, IsP "undefined", op = Binary.StrictEqual)
         | _ -> None
@@ -3609,6 +4021,36 @@ and predicate_of_condition cx e = Ast.(Expression.(
           result BoolT.t name t (IsP "array") true
       | None, t ->
           empty_result BoolT.t
+    )
+
+  (* obj.hasOwnProperty('x') *)
+  | loc, Call {
+      Call.callee = callee_loc, Member {
+        Member._object;
+        property = Member.PropertyIdentifier (_,
+          { Identifier.name = "hasOwnProperty"; _});
+        _ };
+      arguments = [Expression (_, Literal
+        { Ast.Literal.value = Ast.Literal.String x; _ }
+      )]
+    } -> (
+      (* obj.x *)
+      let fake_ast = callee_loc, Ast.Expression.Member {
+        Member._object;
+        property = Member.PropertyIdentifier (
+          Ast.Loc.none, {
+            Identifier.name = x;
+            typeAnnotation = None;
+            optional = false;
+          }
+        );
+        computed = false;
+      } in
+      match refinable_lvalue fake_ast with
+      | Some name, t ->
+          result (BoolT.at loc) name t (IsP "undefined") false
+      | None, t ->
+          empty_result (BoolT.at loc)
     )
 
   (* test1 && test2 *)
@@ -3966,6 +4408,7 @@ and mk_class cx reason_c type_params extends body =
       type_args = type_params_map |> SMap.map (Flow_js.subst cx map_);
       fields_tmap = fields;
       methods_tmap = methods;
+      mixins = false;
     } in
     let super_reason = prefix_reason "super of " reason_c in
     Flow_js.unit_flow cx (super, SuperT(super_reason, instance));
@@ -3993,6 +4436,7 @@ and mk_class cx reason_c type_params extends body =
     type_args = type_params_map;
     fields_tmap = fields;
     methods_tmap = methods;
+    mixins = false;
   } in
   let this = InstanceT (reason_c, static, super, instance) in
 
@@ -4036,23 +4480,21 @@ and mk_interface cx reason typeparams map (sfmap, smmap, fmap, mmap) extends =
     type_args = map;
     fields_tmap = fmap;
     methods_tmap = mmap;
+    mixins = imixins <> [];
   } in
   Flow_js.unit_flow cx (super, SuperT(super_reason, instance));
 
+  (* TODO: Mixins are handled quite superficially. *)
   (* mixins' statics are copied into static to inherit static properties *)
-
+  (* mixins must be consistent with instance properties *)
   imixins |> List.iter (fun imixin ->
-    Flow_js.unit_flow cx (ClassT(imixin), ObjAssignT(static_reason, static, AnyT.t));
+    Flow_js.unit_flow cx (
+      ClassT(imixin),
+      ObjAssignT(static_reason, static, AnyT.t, SSet.empty)
+    );
     Flow_js.unit_flow cx (imixin, SuperT(super_reason, instance));
   );
 
-  (* mixins are added to super to inherit instance properties *)
-  let super =
-    if imixins = [] then super
-    else
-      IntersectionT (super_reason, super::imixins)
-  in
-  (* TODO: check that super is SuperT *)
   let c = ClassT(InstanceT (reason, static, super, instance)) in
   if typeparams = []
   then c
@@ -4470,19 +4912,21 @@ let infer_ast ast file m force_check =
     (Relative_path.create Relative_path.Dummy cx.file)) in
 
   if check then (
-    set_module_exports cx reason (mk_object cx reason);
+    let init_exports = mk_object cx reason in
+    set_module_exports cx reason init_exports;
+    Flow_js.unit_flow cx (init_exports, SetT(reason, "default", init_exports));
     infer_core cx statements;
   );
 
   cx.checked <- check;
 
-  let exports_ = Env_js.get_var_in_scope cx "exports" reason in
+  let exports_var_in_scope = Env_js.get_var_in_scope cx "exports" reason in
   Flow_js.unit_flow cx (
     get_module_exports cx reason,
-    exports_
+    exports_var_in_scope
   );
   Flow_js.unit_flow cx (
-    exports_,
+    exports_var_in_scope,
     exports cx m);
 
   let ins = (Flow_js.builtins)::(

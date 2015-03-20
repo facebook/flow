@@ -1,19 +1,23 @@
 
-union.js:7:5,5: number
+issue-198.js:5:16,28: string
 This type is incompatible with
-  union.js:6:28,33: string
+  [LIB] core.js:328:39,52: union type
+
+issue-324.js:3:7,9: Bar
+This type is incompatible with
+  issue-324.js:5:13,24: union type
+
+issue-324.js:6:32,34: Bar
+This type is incompatible with
+  issue-324.js:5:13,24: union type
 
 union.js:7:5,5: number
 This type is incompatible with
-  [LIB] dom.js:198:1,257:1: Document
+  union.js:6:17,33: union type
 
 union.js:9:7,7: C
 This type is incompatible with
-  union.js:11:14,14: D
-
-union.js:9:7,7: C
-This type is incompatible with
-  union.js:13:21,26: string
+  union.js:13:17,26: union type
 
 union.js:11:9,9: C
 This type is incompatible with
@@ -27,12 +31,4 @@ union.js:11:14,14: D
 This type is incompatible with
   union.js:11:9,9: C
 
-union.js:21:17,18: string
-This type is incompatible with
-  union.js:17:12,17: number
-
-union.js:21:22,22: number
-This type is incompatible with
-  union.js:18:12,17: string
-
-Found 9 errors
+Found 8 errors

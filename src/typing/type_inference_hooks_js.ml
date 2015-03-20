@@ -56,11 +56,11 @@ let set_call_hook hook =
 let reset_hooks () =
   hook_state := nop_hook_state
 
-let dispatch_id_hook name loc =
-  !hook_state.id_hook name loc
+let dispatch_id_hook cx name loc =
+  !hook_state.id_hook cx name loc
 
-let dispatch_member_hook name loc this_t =
-  !hook_state.member_hook name loc this_t
+let dispatch_member_hook cx name loc this_t =
+  !hook_state.member_hook cx name loc this_t
 
-let dispatch_call_hook name loc this_t =
-  !hook_state.call_hook name loc this_t
+let dispatch_call_hook cx name loc this_t =
+  !hook_state.call_hook cx name loc this_t

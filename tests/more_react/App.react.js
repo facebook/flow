@@ -11,7 +11,7 @@ function foo(p:string,q:string):string { return p+q; }
 
 var App = React.createClass({
 
-  getDefaultProps: function() {
+  getDefaultProps: function(): { y: string } {
     return {y:""}; // infer props.y: string
   },
 

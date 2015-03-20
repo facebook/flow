@@ -1108,6 +1108,23 @@ module.exports = {
       }
     }
   },
+  'ES6: Modules': {
+    'export class {}': {
+      'body.0.declaration': {
+        'type': 'ClassExpression'
+      }
+    },
+    'export default class {}': {
+      'body.0.declaration': {
+        'type': 'ClassExpression'
+      }
+    },
+    'export default class A {}': {
+      'body.0.declaration': {
+        'type': 'ClassExpression'
+      }
+    }
+  },
   'Declare Statements': {
     'declare var foo': {
       'body': [{

@@ -182,8 +182,16 @@ module Translate = struct
   | loc, InterfaceDeclaration i -> interface_declaration (loc, i)
   | loc, VariableDeclaration var ->  variable_declaration (loc, var)
   | loc, FunctionDeclaration fn ->  Statement.FunctionDeclaration.(
-      let ret = node "FunctionDeclaration" loc in
-      Js.Unsafe.set ret "id" (identifier fn.id);
+      (* esprima/estree hasn't come around to the idea that function decls can
+       * have optional ids :( *)
+      let (node_type, node_value) = (
+        match fn.id with
+        | Some(id) -> "FunctionDeclaration", identifier id
+        | None -> "FunctionExpression", Js.null
+      ) in
+
+      let ret = node node_type loc in
+      Js.Unsafe.set ret "id" node_value;
       Js.Unsafe.set ret "params" (array pattern fn.params);
       Js.Unsafe.set ret "defaults" (array (option expression) fn.defaults);
       Js.Unsafe.set ret "rest" (option identifier fn.rest);
@@ -246,7 +254,7 @@ module Translate = struct
         | Some (Named (_, sl)) -> (List.rev (List.map import_specifier sl)) @ specifiers
         | None -> specifiers) in
         Js.Unsafe.set ret "specifiers" (Js.array (Array.of_list (List.rev specifiers)));
-        Js.Unsafe.set ret "source" (option module_specifier import.source);
+        Js.Unsafe.set ret "source" (module_specifier import.source);
         Js.Unsafe.set ret "isType" (bool import.isType);
         ret
     )
@@ -479,8 +487,16 @@ module Translate = struct
   )
 
   and class_declaration (loc, c) = Statement.Class.(
-    let ret = node "ClassDeclaration" loc in
-    Js.Unsafe.set ret "id" (identifier c.id);
+    (* esprima/estree hasn't come around to the idea that class decls can have
+     * optional ids :( *)
+    let (node_type, node_value) = (
+      match c.id with
+      | Some(id) -> "ClassDeclaration", identifier id
+      | None -> "ClassExpression", Js.null
+    ) in
+
+    let ret = node node_type loc in
+    Js.Unsafe.set ret "id" node_value;
     Js.Unsafe.set ret "body" (class_body c.body);
     Js.Unsafe.set ret "superClass" (option expression c.superClass);
     Js.Unsafe.set ret "typeParameters" (option type_parameter_declaration c.typeParameters);

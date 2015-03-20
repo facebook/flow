@@ -45,6 +45,7 @@ type env = {
   last            : (lex_env * lex_result) option ref;
   priority        : int;
   strict          : bool;
+  in_export       : bool;
   in_loop         : bool;
   in_switch       : bool;
   in_function     : bool;
@@ -71,6 +72,7 @@ let init_env lb =
     last            = ref None;
     priority        = 0;
     strict          = false;
+    in_export       = false;
     in_loop         = false;
     in_switch       = false;
     in_function     = false;
@@ -988,14 +990,20 @@ end = struct
       let start_loc = Peek.loc env in
       Expect.token env T_FUNCTION;
       let generator = generator env in
-      let id = Parse.identifier ~restricted_error:Error.StrictFunctionName env in
+      let id = (
+        match env.in_export, Peek.token env with
+        | true, T_LPAREN -> None
+        | _ -> Some(
+            Parse.identifier ~restricted_error:Error.StrictFunctionName env
+          )
+      ) in
       let typeParameters = Type.type_parameter_declaration env in
       let params, defaults, rest = function_params env in
       let returnType = Type.return_type env in
       let _, body, strict =
         function_body { env with allow_yield = generator; } in
       let simple = is_simple_function_params params defaults rest in
-      strict_post_check env ~strict ~simple (Some id) params;
+      strict_post_check env ~strict ~simple id params;
       let end_loc, expression = Ast.Statement.FunctionDeclaration.(
         match body with
         | BodyBlock (loc, _) -> loc, false
@@ -1736,7 +1744,7 @@ end = struct
               specifiers env (specifier::acc)
 
         in fun env ->
-          let env = { env with strict = true; } in
+          let env = { env with strict = true; in_export = true; } in
           let start_loc = Peek.loc env in
           Expect.token env T_EXPORT;
           Statement.ExportDeclaration.(match Peek.token env with
@@ -1885,7 +1893,7 @@ end = struct
                 if octal then strict_error env Error.StrictOctalLiteral;
                 Expect.token env (T_STRING (str_loc, value, raw, octal));
                 let value = Literal.String value in
-                let source = Some (str_loc, { Literal.value; raw; }) in
+                let source = (str_loc, { Literal.value; raw; }) in
                 let end_loc = match Peek.semicolon_loc env with
                 | Some loc -> loc
                 | None -> str_loc in
@@ -1918,7 +1926,7 @@ end = struct
                   let end_loc = match Peek.semicolon_loc env with
                   | Some loc -> loc
                   | None -> fst source in
-                  let source = Some source in
+                  let source = source in
                   Eat.semicolon env;
                   Loc.btwn start_loc end_loc, Statement.ImportDeclaration {
                     default;
@@ -1932,7 +1940,7 @@ end = struct
                 let end_loc = match Peek.semicolon_loc env with
                 | Some loc -> loc
                 | None -> fst source in
-                let source = Some source in
+                let source = source in
                 Eat.semicolon env;
                 Loc.btwn start_loc end_loc, Statement.ImportDeclaration {
                   default = None;
@@ -3317,7 +3325,12 @@ end = struct
       let env = { env with strict = true; } in
       let start_loc = Peek.loc env in
       Expect.token env T_CLASS;
-      let id = Parse.identifier { env with no_let = true; } in
+      let tmp_env = { env with no_let = true; } in
+      let id = (
+        match env.in_export, Peek.identifier tmp_env with
+        | true, false -> None
+        | _ -> Some(Parse.identifier tmp_env)
+      ) in
       let typeParameters = Type.type_parameter_declaration env in
       let body, superClass, superTypeParameters, implements = _class env in
       let loc = Loc.btwn start_loc (fst body) in

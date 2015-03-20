@@ -3,6 +3,7 @@ var React = require('React');
 class Foo extends React.Component {
     is_mounted: boolean;
     props: { x: number };
+    state: { y: number };
 
     static bar(): void {}
 
@@ -28,5 +29,7 @@ class Foo extends React.Component {
     }
 }
 
+Foo.defaultProps = 0;
 var foo = <Foo/>;
+
 Foo.bar();

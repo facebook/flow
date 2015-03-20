@@ -114,6 +114,7 @@ module Type = struct
 
   (* constrains some properties of an object *)
   | ShapeT of t
+  | DiffT of t * t
 
   (* collects the keys of an object *)
   | EnumT of reason * t
@@ -126,10 +127,11 @@ module Type = struct
   (* type aliases *)
   | TypeT of reason * t
 
-  (* forcing a list of types to be concretized *)
-  | ConcretizeT of reason * t list * t * t
-  (* sufficiently concrete type *)
-  | ConcreteT of t
+  (* failure case for speculative matching *)
+  | SpeculativeMatchFailureT of reason * t * t
+
+  (* special wrapper for commonjs default exports (AKA `module.exports =`) *)
+  | CJSExportDefaultT of reason * t
 
   (*************)
   (* use types *)
@@ -176,13 +178,18 @@ module Type = struct
   | MarkupT of reason * t * t
 
   (* operations on objects *)
-  | ObjAssignT of reason * t * t
+  | ObjAssignT of reason * t * t * SSet.t
   | ObjRestT of reason * string list * t
-  | ObjExtendT of reason * t SMap.t * t
+  | ObjSealT of reason * t
 
   (* Guarded unification (bidirectional).
      Remodel as unidirectional GuardT(l,u)? *)
   | UnifyT of t * t
+
+  (* manage a worklist of types to be concretized *)
+  | ConcretizeT of t * t list * t list * t
+  (* sufficiently concrete type *)
+  | ConcreteT of t
 
   (* Keys *)
   | KeyT of reason * t
@@ -190,6 +197,10 @@ module Type = struct
 
   (* Element access *)
   | ElemT of reason * t * t
+
+  (* Special ES6 module import/export handling *)
+  | ImportModuleNsT of reason * t
+  | ExportDefaultT of reason * t
 
   and predicate =
   | AndP of predicate * predicate
@@ -239,7 +250,8 @@ module Type = struct
     class_id: ident;
     type_args: t SMap.t;
     fields_tmap: fields;
-    methods_tmap: methods
+    methods_tmap: methods;
+    mixins: bool;
   }
 
   and typeparam = {
@@ -584,11 +596,15 @@ let is_use = function
   | MarkupT _
   | ObjAssignT _
   | ObjRestT _
-  | ObjExtendT _
+  | ObjSealT _
   | UnifyT _
   | KeyT _
   | HasT _
   | ElemT _
+  | ImportModuleNsT _
+  | ExportDefaultT _
+  | ConcreteT _
+  | ConcretizeT _
     -> true
 
   | _ -> false
@@ -644,12 +660,13 @@ let string_of_ctor = function
   | UnifyT _ -> "UnifyT"
   | ObjAssignT _ -> "ObjAssignT"
   | ObjRestT _ -> "ObjRestT"
-  | ObjExtendT _ -> "ObjExtendT"
+  | ObjSealT _ -> "ObjSealT"
   | UpperBoundT _ -> "UpperBoundT"
   | LowerBoundT _ -> "LowerBoundT"
   | AnyObjT _ -> "AnyObjT"
   | AnyFunT _ -> "AnyFunT"
   | ShapeT _ -> "ShapeT"
+  | DiffT _ -> "DiffT"
   | EnumT _ -> "EnumT"
   | RecordT _ -> "RecordT"
   | KeyT _ -> "KeyT"
@@ -657,7 +674,11 @@ let string_of_ctor = function
   | ElemT _ -> "ElemT"
   | ConcretizeT _ -> "ConcretizeT"
   | ConcreteT _ -> "ConcreteT"
+  | SpeculativeMatchFailureT _ -> "SpeculativeMatchFailureT"
   | CustomClassT _ -> "CustomClassT"
+  | CJSExportDefaultT _ -> "CJSExportDefaultT"
+  | ImportModuleNsT _ -> "ImportModuleNsT"
+  | ExportDefaultT _ -> "ExportDefaultT"
 
 (* Usually types carry enough information about the "reason" for their
    existence (e.g., position in code, introduction/elimination rules in
@@ -755,9 +776,9 @@ let rec reason_of_t = function
   | UnifyT(_,t) ->
       reason_of_t t
 
-  | ObjAssignT (reason, _, _)
+  | ObjAssignT (reason, _, _, _)
   | ObjRestT (reason, _, _)
-  | ObjExtendT (reason, _, _)
+  | ObjSealT (reason, _)
     ->
       reason
 
@@ -772,6 +793,8 @@ let rec reason_of_t = function
 
   | ShapeT (t)
       -> reason_of_t t
+  | DiffT (t, _)
+      -> reason_of_t t
 
   | EnumT (reason, _)
   | RecordT (reason, _)
@@ -783,12 +806,19 @@ let rec reason_of_t = function
 
   | ElemT (reason, _, _) -> reason
 
-  | ConcretizeT (reason, _, _, _) -> reason
+  | ConcretizeT (t, _, _, _) -> reason_of_t t
   | ConcreteT (t) -> reason_of_t t
+
+  | SpeculativeMatchFailureT (reason, _, _) -> reason
 
   | SummarizeT (reason, t) -> reason
 
   | CustomClassT (_, _, t) -> reason_of_t t
+
+  | CJSExportDefaultT (reason, _) -> reason
+
+  | ImportModuleNsT (reason, _) -> reason
+  | ExportDefaultT (reason, _) -> reason
 
 and string_of_predicate = function
   | AndP (p1,p2) ->
@@ -895,9 +925,9 @@ let rec mod_reason_of_t f = function
 
   | UnifyT (t, t2) -> UnifyT (mod_reason_of_t f t, mod_reason_of_t f t2)
 
-  | ObjAssignT (reason, t, t2) -> ObjAssignT (f reason, t, t2)
+  | ObjAssignT (reason, t, t2, filter) -> ObjAssignT (f reason, t, t2, filter)
   | ObjRestT (reason, t, t2) -> ObjRestT (f reason, t, t2)
-  | ObjExtendT (reason, t, t2) -> ObjExtendT (f reason, t, t2)
+  | ObjSealT (reason, t) -> ObjSealT (f reason, t)
 
   | UpperBoundT t -> UpperBoundT (mod_reason_of_t f t)
   | LowerBoundT t -> LowerBoundT (mod_reason_of_t f t)
@@ -906,6 +936,7 @@ let rec mod_reason_of_t f = function
   | AnyFunT reason -> AnyFunT (f reason)
 
   | ShapeT t -> ShapeT (mod_reason_of_t f t)
+  | DiffT (t1, t2) -> DiffT (mod_reason_of_t f t1, t2)
 
   | EnumT (reason, t) -> EnumT (f reason, t)
   | RecordT (reason, t) -> RecordT (f reason, t)
@@ -915,13 +946,22 @@ let rec mod_reason_of_t f = function
 
   | ElemT (reason, t, t2) -> ElemT (f reason, t, t2)
 
-  | ConcretizeT (reason, ts, t, t2) -> ConcretizeT (f reason, ts, t, t2)
+  | ConcretizeT (t1, ts1, ts2, t2) ->
+      ConcretizeT (mod_reason_of_t f t1, ts1, ts2, t2)
   | ConcreteT t -> ConcreteT (mod_reason_of_t f t)
+
+  | SpeculativeMatchFailureT (reason, t1, t2) ->
+      SpeculativeMatchFailureT (f reason, t1, t2)
 
   | SummarizeT (reason, t) -> SummarizeT (f reason, t)
 
   | CustomClassT (name, ts, t) ->
       CustomClassT (name, ts, mod_reason_of_t f t)
+
+  | CJSExportDefaultT (reason, t) -> CJSExportDefaultT (f reason, t)
+
+  | ImportModuleNsT (reason, t) -> ImportModuleNsT (f reason, t)
+  | ExportDefaultT (reason, t) -> ExportDefaultT (f reason, t)
 
 (* replace a type's pos with one taken from a reason *)
 let repos_t_from_reason r t =

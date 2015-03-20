@@ -1,0 +1,33 @@
+
+requireLazy.js:8:22,35: string
+This type is incompatible with
+  requireLazy.js:8:13,18: number
+
+requireLazy.js:9:22,35: number
+This type is incompatible with
+  requireLazy.js:9:13,18: string
+
+requireLazy.js:13:22,35: string
+This type is incompatible with
+  requireLazy.js:13:13,18: number
+
+requireLazy.js:14:22,35: number
+This type is incompatible with
+  requireLazy.js:14:13,18: string
+
+requireLazy.js:17:20,20: identifier A
+Unknown global name
+
+requireLazy.js:18:20,20: identifier B
+Unknown global name
+
+requireLazy.js:20:1,13: 
+The first arg to requireLazy() must be a literal array of string literals!
+
+requireLazy.js:21:1,34: 
+The first arg to requireLazy() must be a literal array of string literals!
+
+requireLazy.js:22:1,18: 
+The first arg to requireLazy() must be a literal array of string literals!
+
+Found 9 errors

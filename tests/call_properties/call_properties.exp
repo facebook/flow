@@ -59,16 +59,12 @@ D.js:11:10,19: function type
 Too few arguments (expected default/rest parameters in function)
   D.js:12:3,47: function
 
-D.js:20:21,26: string
+D.js:20:15,49: callable object type
 This type is incompatible with
-  D.js:20:59,64: number
-
-D.js:20:53,64: function type
-Too few arguments (expected default/rest parameters in function)
-  D.js:20:29,47: function type
+  D.js:20:53,64: function type
 
 E.js:2:9,28: property someProp
 Property not found in
   E.js:2:32,45: function
 
-Found 18 errors
+Found 17 errors

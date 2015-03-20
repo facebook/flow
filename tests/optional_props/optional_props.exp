@@ -11,20 +11,12 @@ test.js:12:11,12: string
 This type is incompatible with
   test.js:10:30,35: number
 
-test2.js:2:9,17: undefined
-This type is incompatible with
-  test2.js:1:16,21: string
-
 test2.js:3:9,12: null
 This type is incompatible with
   test2.js:1:16,21: string
-
-test2.js:9:34,42: undefined
-This type is incompatible with
-  test2.js:9:16,21: string
 
 test2.js:10:34,37: null
 This type is incompatible with
   test2.js:10:16,21: string
 
-Found 7 errors
+Found 5 errors

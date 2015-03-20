@@ -5,18 +5,14 @@ This type is incompatible with
 
 promise.js:10:54,54: string
 This type is incompatible with
-  promise.js:14:30,35: number
-
-promise.js:10:54,54: string
-This type is incompatible with
-  [LIB] core.js:326:1,336:1: Promise
+  [LIB] core.js:328:39,52: union type
 
 promise.js:11:30,31: string
 This type is incompatible with
-  promise.js:14:30,35: number
+  [LIB] core.js:328:82,95: union type
 
-promise.js:11:30,31: string
+promise.js:22:16,28: string
 This type is incompatible with
-  [LIB] core.js:326:1,336:1: Promise
+  [LIB] core.js:328:39,52: union type
 
-Found 5 errors
+Found 4 errors

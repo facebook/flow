@@ -1,5 +1,7 @@
 var React = require('react');
+var Mixin = require('Mixin');
 var C = React.createClass({
+    mixins: [Mixin],
     propTypes: {
         x: React.PropTypes.string.isRequired,
         y: React.PropTypes.array,
@@ -7,7 +9,7 @@ var C = React.createClass({
     },
     replaceProps(props: { }) { },
 
-    getDefaultProps() {
+    getDefaultProps(): { z: number } {
         return { z: 0 };
     },
     getInitialState() { return 4; },
@@ -18,6 +20,7 @@ var C = React.createClass({
         var w:number = this.props.x;
         this.props.y[0];
         var len:number = this.props.x.length;
+        this.success();
         return <div/>;
     }
 

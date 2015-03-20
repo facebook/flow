@@ -1,0 +1,232 @@
+
+B.js:3:23,24: number
+This type is incompatible with
+  es6modules.js:4:28,33: string
+
+CommonJS_Clobbering_Class.js:7:35,35: number
+This type is incompatible with
+  es6modules.js:4:28,33: string
+
+CommonJS_Clobbering_Class.js:8:35,35: number
+This type is incompatible with
+  es6modules.js:4:28,33: string
+
+CommonJS_Clobbering_Class.js:9:35,35: number
+This type is incompatible with
+  es6modules.js:4:28,33: string
+
+CommonJS_Clobbering_Class.js:10:35,35: number
+This type is incompatible with
+  es6modules.js:4:28,33: string
+
+CommonJS_Clobbering_Lit.js:7:17,17: number
+This type is incompatible with
+  es6modules.js:4:28,33: string
+
+CommonJS_Clobbering_Lit.js:8:17,17: number
+This type is incompatible with
+  es6modules.js:4:28,33: string
+
+CommonJS_Clobbering_Lit.js:10:17,17: number
+This type is incompatible with
+  es6modules.js:4:28,33: string
+
+CommonJS_Named.js:6:24,24: number
+This type is incompatible with
+  es6modules.js:4:28,33: string
+
+CommonJS_Named.js:7:24,24: number
+This type is incompatible with
+  es6modules.js:4:28,33: string
+
+CommonJS_Named.js:8:24,24: number
+This type is incompatible with
+  es6modules.js:4:28,33: string
+
+CommonJS_Named.js:9:24,24: number
+This type is incompatible with
+  es6modules.js:4:28,33: string
+
+CommonJS_Named.js:10:24,24: number
+This type is incompatible with
+  es6modules.js:4:28,33: string
+
+ES6_ExportAllFrom_Source1.js:6:12,23: number
+This type is incompatible with
+  es6modules.js:4:28,33: string
+
+ES6_ExportAllFrom_Source2.js:6:12,23: number
+This type is incompatible with
+  es6modules.js:4:28,33: string
+
+ES6_ExportFrom_Source1.js:6:12,23: number
+This type is incompatible with
+  es6modules.js:4:28,33: string
+
+ES6_ExportFrom_Source1.js:6:30,41: number
+This type is incompatible with
+  es6modules.js:4:28,33: string
+
+ES6_ExportFrom_Source2.js:6:12,23: number
+This type is incompatible with
+  es6modules.js:4:28,33: string
+
+ES6_ExportFrom_Source2.js:6:30,41: number
+This type is incompatible with
+  es6modules.js:4:28,33: string
+
+ES6_Named1.js:12:9,24: number
+This type is incompatible with
+  es6modules.js:4:28,33: string
+
+ES6_Named1.js:13:9,51: number
+This type is incompatible with
+  es6modules.js:4:28,33: string
+
+ES6_Named1.js:14:9,24: number
+This type is incompatible with
+  es6modules.js:4:28,33: string
+
+ES6_Named1.js:15:9,31: number
+This type is incompatible with
+  es6modules.js:4:28,33: string
+
+ES6_Named1.js:15:34,56: number
+This type is incompatible with
+  es6modules.js:4:28,33: string
+
+ES6_Named1.js:20:12,25: number
+This type is incompatible with
+  es6modules.js:4:28,33: string
+
+ES6_Named1.js:20:32,45: number
+This type is incompatible with
+  es6modules.js:4:28,33: string
+
+ES6_Named1.js:21:12,34: number
+This type is incompatible with
+  es6modules.js:4:28,33: string
+
+ES6_Named1.js:22:39,39: number
+This type is incompatible with
+  es6modules.js:4:28,33: string
+
+ES6_Named2.js:11:9,24: number
+This type is incompatible with
+  es6modules.js:4:28,33: string
+
+ES6_Named2.js:12:9,51: number
+This type is incompatible with
+  es6modules.js:4:28,33: string
+
+ES6_Named2.js:13:9,31: number
+This type is incompatible with
+  es6modules.js:4:28,33: string
+
+ES6_Named2.js:13:34,56: number
+This type is incompatible with
+  es6modules.js:4:28,33: string
+
+ES6_Named2.js:18:12,25: number
+This type is incompatible with
+  es6modules.js:4:28,33: string
+
+ES6_Named2.js:18:32,45: number
+This type is incompatible with
+  es6modules.js:4:28,33: string
+
+ES6_Named2.js:19:12,35: number
+This type is incompatible with
+  es6modules.js:4:28,33: string
+
+ES6_Named2.js:20:40,40: number
+This type is incompatible with
+  es6modules.js:4:28,33: string
+
+ProvidesModuleA.js:6:24,25: number
+This type is incompatible with
+  es6modules.js:4:28,33: string
+
+es6modules.js:21:22,24: C
+Required module not found
+
+es6modules.js:24:22,26: ./D
+Required module not found
+
+es6modules.js:30:9,19: import { doesntExist }
+Property not found in
+  es6modules.js:30:9,19: import { doesntExist }
+
+es6modules.js:42:14,39: number
+This type is incompatible with
+  es6modules.js:4:28,33: string
+
+es6modules.js:43:14,38: property doesntExist
+Property not found in
+  CommonJS_Clobbering_Lit.js:6:18,12:1: object literal
+
+es6modules.js:48:1,32: property default
+Property not found in
+  CommonJS_Clobbering_Lit.js:6:18,12:1: object literal
+
+es6modules.js:50:14,50: number
+This type is incompatible with
+  es6modules.js:4:28,33: string
+
+es6modules.js:62:1,33: property doesntExist
+Property not found in
+  CommonJS_Clobbering_Class.js:16:18,21: Test
+
+es6modules.js:66:14,48: number
+This type is incompatible with
+  es6modules.js:4:28,33: string
+
+es6modules.js:69:1,24: constructor call
+Constructor cannot be called on
+  es6modules.js:68:13,30: import * as CJS_Clobb_Class_NS
+
+es6modules.js:76:14,59: number
+This type is incompatible with
+  es6modules.js:4:28,33: string
+
+es6modules.js:82:9,19: import { doesntExist }
+Property not found in
+  CommonJS_Named.js: exports
+
+es6modules.js:95:14,34: property doesntExist
+Property not found in
+  CommonJS_Named.js: exports
+
+es6modules.js:111:14,32: number
+This type is incompatible with
+  es6modules.js:4:28,33: string
+
+es6modules.js:115:14,33: number
+This type is incompatible with
+  es6modules.js:4:28,33: string
+
+es6modules.js:151:14,27: number
+This type is incompatible with
+  es6modules.js:4:28,33: string
+
+es6modules.js:155:14,49: number
+This type is incompatible with
+  es6modules.js:4:28,33: string
+
+es6modules.js:189:14,32: number
+This type is incompatible with
+  es6modules.js:4:28,33: string
+
+es6modules.js:193:14,33: number
+This type is incompatible with
+  es6modules.js:4:28,33: string
+
+es6modules.js:226:14,28: number
+This type is incompatible with
+  es6modules.js:4:28,33: string
+
+es6modules.js:230:14,50: number
+This type is incompatible with
+  es6modules.js:4:28,33: string
+
+Found 58 errors

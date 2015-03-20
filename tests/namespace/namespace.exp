@@ -13,14 +13,10 @@ This type is incompatible with
 
 namespace.js:15:16,17: string
 This type is incompatible with
-  namespace.js:13:12,17: number
-
-namespace.js:15:16,17: string
-This type is incompatible with
-  namespace.js:13:21,30: array type
+  namespace.js:13:12,30: union type
 
 namespace.js:18:25,26: string
 This type is incompatible with
   namespace.js:17:29,34: number
 
-Found 6 errors
+Found 5 errors

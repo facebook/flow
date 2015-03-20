@@ -1,6 +1,6 @@
 {
   "name": "flow-parser",
-  "version": "0.2.1",
+  "version": "0.1.1",
   "description": "JavaScript parser written in OCaml. Produces SpiderMonkey AST",
   "author": {
     "name": "Gabe Levi",
@@ -23,10 +23,11 @@
     "minimist": ">=0.2.0"
   },
   "engines": {
-    "node": ">=0.4.0"
+      "node": ">=0.4.0"
   },
   "scripts": {
     "test": "node test/run_esprima_tests.js; node test/run_hardcoded_tests.js",
-    "prepublish": "make js"
+    "prepublish": "make js && mv README.md github-README.md && cp npm-README.md README.md",
+    "postpublish": "mv github-README.md README.md"
   }
 }

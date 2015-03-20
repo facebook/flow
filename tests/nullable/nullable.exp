@@ -3,10 +3,6 @@ nullable.js:1:32,35: null
 This type is incompatible with
   nullable.js:1:16,21: string
 
-nullable.js:9:9,13: ?string
-This type is incompatible with
-  nullable.js:5:16,21: string
-
 nullable.js:9:9,13: null
 This type is incompatible with
   nullable.js:5:16,21: string
@@ -27,4 +23,4 @@ simple_nullable.js:4:5,9: string
 This type is incompatible with
   simple_nullable.js:2:17,22: number
 
-Found 7 errors
+Found 6 errors

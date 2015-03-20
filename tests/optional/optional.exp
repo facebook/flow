@@ -3,7 +3,15 @@ nullable.js:16:9,11: null
 This type is incompatible with
   nullable.js:17:5,9: number
 
+nullable.js:16:9,11: undefined
+This type is incompatible with
+  nullable.js:17:5,9: number
+
 nullable.js:22:9,11: null
+This type is incompatible with
+  nullable.js:23:5,9: number
+
+nullable.js:22:9,11: undefined
 This type is incompatible with
   nullable.js:23:5,9: number
 
@@ -11,11 +19,19 @@ nullable.js:28:7,9: null
 This type is incompatible with
   nullable.js:29:5,9: number
 
+nullable.js:28:7,9: undefined
+This type is incompatible with
+  nullable.js:29:5,9: number
+
 nullable.js:34:7,9: null
 This type is incompatible with
   nullable.js:35:5,9: number
 
-optional.js:1:23,23: optional parameter x
+nullable.js:34:7,9: undefined
+This type is incompatible with
+  nullable.js:35:5,9: number
+
+optional.js:1:23,23: undefined
 This type is incompatible with
   optional.js:1:23,27: number
 
@@ -37,6 +53,10 @@ optional.js:10:14,15: number
 This type is incompatible with
   optional.js:7:30,35: string
 
+optional_param2.js:6:9,14: undefined
+This type is incompatible with
+  optional_param2.js:7:9,14: number
+
 undefined.js:8:12,17: property duck
 Property cannot be accessed on possibly undefined value
   undefined.js:1:5,5: undefined
@@ -50,7 +70,7 @@ Property cannot be accessed on possibly undefined value
   undefined2.js:1:5,5: undefined
 
 undefined2.js:8:12,17: property duck
-Property cannot be accessed on
-  undefined2.js:4:9,11: optional parameter bar
+Property cannot be accessed on possibly undefined value
+  undefined2.js:4:9,11: undefined
 
-Found 14 errors
+Found 19 errors

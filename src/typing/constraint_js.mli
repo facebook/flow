@@ -60,6 +60,7 @@ module Type :
       | AnyFunT of reason
 
       | ShapeT of t
+      | DiffT of t * t
 
       | EnumT of reason * t
       | RecordT of reason * t
@@ -68,8 +69,9 @@ module Type :
 
       | TypeT of reason * t
 
-      | ConcretizeT of reason * t list * t * t
-      | ConcreteT of t
+      | SpeculativeMatchFailureT of reason * t * t
+
+      | CJSExportDefaultT of reason * t
 
       | SummarizeT of reason * t
 
@@ -98,16 +100,22 @@ module Type :
 
       | MarkupT of reason * t * t
 
-      | ObjAssignT of reason * t * t
+      | ObjAssignT of reason * t * t * SSet.t
       | ObjRestT of reason * string list * t
-      | ObjExtendT of reason * t SMap.t * t
+      | ObjSealT of reason * t
 
       | UnifyT of t * t
+
+      | ConcretizeT of t * t list * t list * t
+      | ConcreteT of t
 
       | KeyT of reason * t
       | HasT of reason * string
 
       | ElemT of reason * t * t
+
+      | ImportModuleNsT of reason * t
+      | ExportDefaultT of reason * t
 
     and predicate =
         AndP of predicate * predicate
@@ -146,7 +154,8 @@ module Type :
       class_id: ident;
       type_args: t SMap.t;
       fields_tmap: fields;
-      methods_tmap: methods
+      methods_tmap: methods;
+      mixins: bool;
     }
     and typeparam = {
       reason: reason;

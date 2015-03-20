@@ -7,7 +7,7 @@ function.js:30:19,19: function type
 This type is incompatible with
   function.js:30:10,15: string
 
-function.js:31:21,21: any object type
+function.js:31:21,21: object type
 This type is incompatible with
   function.js:31:10,17: function type
 

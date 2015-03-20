@@ -150,10 +150,6 @@ let loc_of_reason r =
 let desc_of_reason r =
   r.desc
 
-(* TODO: delete *)
-let desc_of_reason2 r =
-  desc_of_reason r
-
 (* simple way to get reasons whose descriptions are simple prefix-extensions of
    the original *)
 let prefix_reason prefix reason =
