@@ -3519,9 +3519,7 @@ and mk_proptype cx = Ast.Expression.(function
           (_, {Ast.Identifier.name = "oneOf"; _ });
          _
       };
-      arguments = [Expression (_, Array { Array.
-        elements = es
-      })];
+      arguments = [Expression (_, Array { Array.elements })]
     } ->
       let rec string_literals lits es = match (es) with
         | Some (Expression (loc, Literal { Ast.Literal.
@@ -3530,21 +3528,11 @@ and mk_proptype cx = Ast.Expression.(function
             string_literals (lit :: lits) tl
         | [] -> Some lits
         | _  -> None in
-      (match string_literals [] es with
+      (match string_literals [] elements with
         | Some lits ->
             let reason = mk_reason "oneOf" vloc in
             mk_enum_type cx reason lits
         | None -> AnyT.at vloc)
-
-  | vloc, Call { Call.
-      callee = _, Member { Member.
-         property = Member.PropertyIdentifier
-          (_, {Ast.Identifier.name = "oneOf"; _ });
-         _
-      };
-      arguments = es;
-    } ->
-      AnyT.at vloc (* TODO *)
 
   | vloc, Call { Call.
       callee = _, Member { Member.
