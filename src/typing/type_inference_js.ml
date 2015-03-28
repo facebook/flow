@@ -3552,9 +3552,17 @@ and mk_proptype cx = Ast.Expression.(function
           (_, {Ast.Identifier.name = "oneOfType"; _ });
          _
       };
-      arguments = es;
+      arguments = [Expression (_, Array { Array.elements })]
     } ->
-      AnyT.at vloc (* TODO *)
+      let rec proptype_elements ts es = match es with
+        | Some (Expression e) :: tl ->
+            proptype_elements (mk_proptype cx e :: ts) tl
+        | [] -> Some ts
+        | _ -> None in
+      let reason = mk_reason "oneOf" vloc in
+      (match proptype_elements [] elements with
+        | Some ts -> UnionT (reason, ts)
+        | None -> AnyT.at vloc)
 
   | vloc, Call { Call.
       callee = _, Member { Member.
