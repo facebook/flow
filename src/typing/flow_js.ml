@@ -2470,7 +2470,7 @@ let rec flow cx (l,u) trace =
     (* functions statics *)
     (*********************)
 
-    | (FunT (_,static,_,_), _) when object_like_op u ->
+    | (FunT (_,static,_,_), _) when object_like_op_no_idx u ->
       select_flow cx (static, u)
         trace FunStatics
 
@@ -2663,6 +2663,13 @@ and object_like_op = function
   | KeyT _
   | ObjAssignT _ | ObjRestT _
   | SetElemT _ | GetElemT _
+  | AnyObjT _ -> true
+  | _ -> false
+
+and object_like_op_no_idx = function
+  | SetT _ | GetT _ | MethodT _ | LookupT _
+  | KeyT _
+  | ObjAssignT _ | ObjRestT _
   | AnyObjT _ -> true
   | _ -> false
 
