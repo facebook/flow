@@ -35,4 +35,8 @@ proptype_oneOf.js:11:28,32: string literal bar
 Property not found in
   proptype_oneOf.js:6:14,43: oneOf
 
-Found 9 errors
+proptype_oneOfType.js:23:32,35: boolean
+This type is incompatible with
+  proptype_oneOfType.js:6:11,9:6: oneOf
+
+Found 10 errors
