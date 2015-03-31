@@ -1,7 +1,7 @@
 
 ArityError.react.js:6:37,46: any
 Number of type arguments differs from
-  [LIB] react.js:96:62,78: any
+  [LIB] react.js:97:62,78: any
 
 jsx_spread.js:10:19,20: number
 This type is incompatible with
