@@ -1,4 +1,27 @@
+v0.8.0
+
+- Bump version to 0.8.0
+- [PR #356] Add React.version to lib/react.js
+- [PR #331] node http.get() implementation
+- Fixes for indexers in object types and objects used as dictionaries
+- Flow server speedup
+- Support both commas and semicolons in object type patterns
+- Fix object assign for unresolved objects
+- Add prerr_endlinef
+- Fix support for the mixin pattern of specifying super
+- Incremental typechecking fix
+- Fix up promises interface definition + more tests
+- Perf win by loading master_cx once per job
+- Support for-in of null and undefined
+- Support typeof x === 'boolean'
+- Refine true and false literals
+- Fix refinement unit test
+- Type declarations for Geolocation interface
+- [PR #321] Support for React.cloneElement in 0.13
+- Refine simple assignments (things like while (x = x.parent) { x.doStuff(); })
+
 v0.7.0
+
 - Bump version to 0.7.0
 - Initial support for ES6 import/export (with CommonJS interop)
 - Updates to CSS/CSSOM interface definitions
