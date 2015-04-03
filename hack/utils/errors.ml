@@ -330,6 +330,7 @@ module Typing                               = struct
   let cannot_declare_constant               = 4130 (* DONT MODIFY!!!! *)
   let cyclic_typeconst                      = 4131 (* DONT MODIFY!!!! *)
   let nullsafe_property_write_context       = 4132 (* DONT MODIFY!!!! *)
+  let noreturn_usage                        = 4133 (* DONT MODIFY!!!! *)
 
   (* EXTEND HERE WITH NEW VALUES IF NEEDED *)
 end
@@ -1521,9 +1522,13 @@ let trivial_strict_eq p b left right left_trail right_trail =
   add_list Typing.trivial_strict_eq
     ((p, msg) :: left @ left_trail @ right @ right_trail)
 
-let void_usage p reason =
-  let msg = "You are attempting to use the return value of a void function" in
-  add_list Typing.void_usage ((p, msg) :: reason)
+let void_usage p void_witness =
+  let msg = "You are using the return value of a void function" in
+  add_list Typing.void_usage ((p, msg) :: void_witness)
+
+let noreturn_usage p noreturn_witness =
+  let msg = "You are using the return value of a noreturn function" in
+  add_list Typing.noreturn_usage ((p, msg) :: noreturn_witness)
 
 let attribute_arity pos x n =
   let n = string_of_int n in

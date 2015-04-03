@@ -9,6 +9,7 @@
  *)
 
 open Utils
+open Sys_utils
 
 external get_embedded_hhi_data : string -> string option =
   "get_embedded_hhi_data"
@@ -38,14 +39,14 @@ let extract data =
   tmpdir
 
 let extract_embedded () =
-  Utils.opt_map extract (get_embedded_hhi_data Sys.executable_name)
+  opt_map extract (get_embedded_hhi_data Sys.executable_name)
 
 (* Look for the hhi.tar.gz in the place where it normally resides, so that we
  * support debugging binaries that don't have the section embedded, such as
  * bytecode builds. *)
 let extract_external () =
   let path = (Filename.dirname Sys.executable_name) ^ "/../hhi.tar.gz" in
-  if Sys.file_exists path then Some (extract (Utils.cat path)) else None
+  if Sys.file_exists path then Some (extract (cat path)) else None
 
 let get_hhi_root_impl () =
   match extract_embedded () with

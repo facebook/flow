@@ -100,7 +100,7 @@ module Type :
 
       | MarkupT of reason * t * t
 
-      | ObjAssignT of reason * t * t * SSet.t
+      | ObjAssignT of reason * t * t * string list * bool
       | ObjRestT of reason * string list * t
       | ObjSealT of reason * t
 
@@ -137,7 +137,7 @@ module Type :
     }
     and objtype = {
       flags: flags;
-      dict_t: dicttype;
+      dict_t: dicttype option;
       props_tmap: int;
       proto_t: prototype;
     }
@@ -252,6 +252,7 @@ type bounds = {
 }
 
 val new_bounds: int -> reason -> bounds
+val copy_bounds: bounds -> bounds
 
 (***************************************)
 

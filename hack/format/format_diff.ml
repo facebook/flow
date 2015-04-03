@@ -360,7 +360,7 @@ let parse_diff diff_text =
 let rec apply modes in_place ~diff:file_and_lines_modified =
   List.iter begin fun (filepath, modified_lines) ->
     let filename = Relative_path.to_absolute filepath in
-    let file_content = Utils.cat filename in
+    let file_content = Sys_utils.cat filename in
     apply_file modes in_place filepath file_content modified_lines
   end file_and_lines_modified
 

@@ -245,6 +245,7 @@ val nullsafe_not_needed : Pos.t -> (Pos.t * string) list -> unit
 val trivial_strict_eq : Pos.t -> string -> (Pos.t * string) list
   -> (Pos.t * string) list -> Pos.t list -> Pos.t list -> unit
 val void_usage : Pos.t -> (Pos.t * string) list -> unit
+val noreturn_usage : Pos.t -> (Pos.t * string) list -> unit
 val generic_at_runtime : Pos.t -> unit
 val not_abstract_without_typeconst : (Pos.t * string) -> unit
 val typeconst_depends_on_external_tparam : Pos.t -> Pos.t -> string -> unit

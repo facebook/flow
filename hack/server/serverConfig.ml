@@ -12,6 +12,7 @@ open Utils
 
 type t = {
   load_script      : string option;
+  load_script_timeout : int; (* in seconds *)
   (* Configures only the workers. Workers can have more relaxed GC configs as
    * they are short-lived processes *)
   gc_control       : Gc.control;
@@ -56,6 +57,11 @@ let load config_filename =
         let cmd =
           if Filename.is_relative cmd then root^"/"^cmd else cmd in
         Some cmd in
+  (* Since we use the unix alarm() for our timeouts, a timeout value of 0 means
+   * to wait indefinitely *)
+  let load_script_timeout =
+    Option.value_map (SMap.get "load_script_timeout" config)
+    ~default:0 ~f:int_of_string in
   let tcopts = {
     TypecheckerOptions.tco_assume_php = config_assume_php config;
     tco_unsafe_xhp = config_unsafe_xhp config;
@@ -63,6 +69,7 @@ let load config_filename =
   } in
   {
     load_script   = load_script;
+    load_script_timeout = load_script_timeout;
     gc_control    = make_gc_control config;
     tc_options    = tcopts;
   }
@@ -70,10 +77,12 @@ let load config_filename =
 (* useful in testing code *)
 let default_config = {
   load_script = None;
+  load_script_timeout = 0;
   gc_control = GlobalConfig.gc_control;
   tc_options = TypecheckerOptions.empty;
 }
 
 let load_script config = config.load_script
+let load_script_timeout config = config.load_script_timeout
 let gc_control config = config.gc_control
 let typechecker_options config = config.tc_options

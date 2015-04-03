@@ -102,10 +102,10 @@ exception FlowError of (reason * string) list
 
 let add_output cx level message_list =
   if modes.debug then
-    prerr_endline (spf "\nadd_output\n%s" (
+    prerr_endlinef "\nadd_output\n%s" (
       String.concat "\n" (
         List.map (fun (r, s) -> spf "r: [%s] s = %S" (dump_reason r) s)
-          message_list)));
+          message_list));
 
   if !throw_on_error then raise (FlowError message_list)
   else
@@ -121,9 +121,9 @@ let mk_tvar cx reason =
   let tvar = mk_var cx in
   let graph = cx.graph in
   cx.graph <- graph |> IMap.add tvar (new_bounds tvar reason);
-  (if modes.debug then prerr_endline
-    (spf "TVAR %d (%d): %s" tvar (IMap.cardinal graph)
-      (string_of_reason reason)));
+  (if modes.debug then prerr_endlinef
+    "TVAR %d (%d): %s" tvar (IMap.cardinal graph)
+    (string_of_reason reason));
   OpenT (reason, tvar)
 
 let mk_tvar_where cx reason f =
@@ -197,7 +197,7 @@ let rec havoc_ctx cx i j =
 
 and havoc_ctx_ = function
   | (block::blocks_, x1::stack1_, x2::stack2_) when x1 = x2 ->
-      (if modes.debug then prerr_endline (spf "HAVOC::%d" x1));
+      (if modes.debug then prerr_endlinef "HAVOC::%d" x1);
       block := SMap.mapi (fun x {specific;general;def_loc;for_type} ->
         (* internal names (.this, .super, .return, .exports) are read-only *)
         if is_internal_name x
@@ -420,10 +420,15 @@ let rec merge_type cx = function
 
   | (ObjT (_,ot1), ObjT (_,ot2)) ->
       (* TODO: How to merge indexer names? *)
-      let dict =
-        { dict_name = Some "_";
-          key = merge_type cx (ot1.dict_t.key, ot2.dict_t.key);
-          value = merge_type cx (ot1.dict_t.value, ot2.dict_t.value); }
+      let dict = match ot1.dict_t, ot2.dict_t with
+        | None, None -> None
+        | Some dict, None | None, Some dict -> Some dict
+        | Some dict1, Some dict2 ->
+            Some {
+              dict_name = None;
+              key = merge_type cx (dict1.key, dict2.key);
+              value = merge_type cx (dict1.value, dict2.value);
+            }
       in
       let pmap =
         let map1 = IMap.find_unsafe ot1.props_tmap cx.property_maps in
@@ -498,10 +503,14 @@ and ground_type_impl cx ids t = match t with
       )
 
   | ObjT (_, ot) ->
-      let dict =
-        { dict_name = ot.dict_t.dict_name;
-          key = (ground_type_impl cx ids ot.dict_t.key);
-          value = (ground_type_impl cx ids ot.dict_t.value); } in
+      let dict = match ot.dict_t with
+        | None -> None
+        | Some dict ->
+            Some { dict with
+              key = (ground_type_impl cx ids dict.key);
+              value = (ground_type_impl cx ids dict.value);
+            }
+      in
       let pmap =
         IMap.find_unsafe ot.props_tmap cx.property_maps
         |> SMap.map (ground_type_impl cx ids)
@@ -634,9 +643,13 @@ let rec normalize_type cx t =
       in
       ObjT (r,
         { ot with
-          dict_t = { ot.dict_t with
-                     key = normalize_type cx ot.dict_t.key;
-                     value = normalize_type cx ot.dict_t.value; };
+          dict_t = (match ot.dict_t with
+          | None -> None
+          | Some dict ->
+              Some { dict with
+                key = normalize_type cx dict.key;
+                value = normalize_type cx dict.value;
+              });
           proto_t = normalize_type cx ot.proto_t;
           props_tmap = pmap; })
 
@@ -781,9 +794,13 @@ let rec printify_type cx t =
       in
       ObjT (r,
         { ot with
-          dict_t = { ot.dict_t with
-                     key = printify_type cx ot.dict_t.key;
-                     value = printify_type cx ot.dict_t.value; };
+          dict_t = (match ot.dict_t with
+          | None -> None
+          | Some dict ->
+              Some { dict with
+                key = printify_type cx dict.key;
+                value = printify_type cx dict.value;
+              });
           proto_t = printify_type cx ot.proto_t;
           props_tmap = pmap; })
 
@@ -877,10 +894,12 @@ let check_lower_bound cx id f =
 
 let blame_map = ref IMap.empty
 
-let is_required cx id =
-  match IMap.get id !blame_map with
-  | None -> false
-  | Some rs -> (cx.strict_required <- cx.strict_required |> SSet.union rs; true)
+(* Mark a type variable if it depends on a `require`d module. This function is
+   used in assert_ground to relax missing annotation errors when an exported
+   type contains type variables that depend on a required module: e.g., when the
+   superclass of an exported class is `require`d, we should not insist on an
+   annotation for the superclass! *)
+let is_required cx id = IMap.mem id !blame_map
 
 (* need to consider only "def" types *)
 let rec assert_ground ?(infer=false) cx ids = function
@@ -1036,7 +1055,7 @@ let rec assume_ground cx ids = function
   | PredicateT(_,t)
   | SpecializeT(_,_,t)
   | MarkupT(_,_,t)
-  | ObjAssignT(_,_,t,_)
+  | ObjAssignT(_,_,t,_,_)
   | ObjRestT(_,_,t)
   | KeyT(_,t)
   | ImportModuleNsT(_,t)
@@ -1071,7 +1090,8 @@ let enforce_strict cx id bounds =
     );
   ) cx.required;
 
-  ignore (is_required cx id);
+  (* TODO: finer analysis to infer strict dependencies *)
+  cx.strict_required <- cx.required;
 
   let ids = ref (ISet.singleton id) in
   bounds.lower |> TypeMap.iter (fun t _ ->
@@ -1084,9 +1104,18 @@ let enforce_strict cx id bounds =
 (* builtins *)
 (**************)
 
+(* created in the master process, populated and saved to ContextHeap.
+   forked workers will have an empty replica from the master, but it's useless.
+   should only be accessed through ContextHeap. *)
 let master_cx = new_context (Files_js.get_flowlib_root ()) Files_js.lib_module
 
+(* builtins is similarly created in the master and replicated on fork.
+   this is critical under the current somewhat fragile scheme, as all
+   contexts agree on the id of this type var, and builtins are imported
+   via this agreement between master_cx and others *)
 let builtins = mk_tvar master_cx (builtin_reason "module")
+
+(********)
 
 module Union(M: MapSig) =
   struct
@@ -1109,7 +1138,7 @@ let debug_count =
   let count = ref 0 in
   fun f ->
     incr count;
-    prerr_endline (spf "[%d] %s" !count (f()))
+    prerr_endlinef "[%d] %s" !count (f())
 
 let debug_flow (l,u) =
   spf "%s ~> %s" (string_of_ctor l) (string_of_ctor u)
@@ -1145,10 +1174,10 @@ let rec flow cx (l,u) trace =
     if (not (is_use l)) then () else failwith (string_of_t cx l);
 
     (if modes.debug
-     then prerr_endline
-        (spf "\n# %s ~>\n# %s"
-           (dump_reason (reason_of_t l))
-           (dump_reason (reason_of_t u))));
+     then prerr_endlinef
+        "\n# %s ~>\n# %s"
+        (dump_reason (reason_of_t l))
+        (dump_reason (reason_of_t u)));
 
     if ground_subtype (l,u) then () else match (l,u) with
 
@@ -1165,8 +1194,9 @@ let rec flow cx (l,u) trace =
       (* Copy the exports into a new object, skipping any "default" keys *)
       let ns_obj = mk_object_with_proto cx reason (MixedT reason) in
       let ns_obj = mk_tvar_where cx reason (fun t ->
-        let skip_default = SSet.singleton "default" in
-        unit_flow cx (exported_t, ObjAssignT(reason, ns_obj, t, skip_default))
+        unit_flow cx (
+          exported_t,
+          ObjAssignT(reason, ns_obj, t, ["default"], false))
       ) in
 
       (* Set the 'default' property on the new object to point at the exports *)
@@ -1610,8 +1640,8 @@ let rec flow cx (l,u) trace =
     (* object types deconstruct into their parts *)
     (*********************************************)
 
-    | (ObjT (reason1, {props_tmap = flds1; proto_t; flags; _ }),
-       ObjT (reason2, {props_tmap = flds2; proto_t = u_; dict_t; _ }))
+    | (ObjT (reason1, {props_tmap = flds1; proto_t; flags; dict_t = dict1; _ }),
+       ObjT (reason2, {props_tmap = flds2; proto_t = u_; dict_t = dict2; _ }))
       ->
       (* if inflowing type is literal (thus guaranteed to be
          unaliased), propertywise subtyping is sound *)
@@ -1633,6 +1663,7 @@ let rec flow cx (l,u) trace =
                  annotation), then it is ok to relax the requirement that the
                  property be found immediately; instead, we constrain future
                  lookups of the property in inflowing type *)
+              dictionary cx (string_key s reason2) t1 dict1;
               unit_flow cx (l, LookupT (reason2, None, s, t1))
             | _ ->
               (* otherwise, we do strict lookup of property in prototype *)
@@ -1646,13 +1677,7 @@ let rec flow cx (l,u) trace =
       iter_props_ cx flds1
         (fun s -> fun t1 ->
           if (not(has_prop cx flds2 s))
-          then begin
-            let key_reason = replace_reason StrT.desc (reason_of_t t1) in
-            let key_reason =
-              prefix_reason (spf "property %s's key is a " s) key_reason in
-            unit_flow cx (StrT (key_reason, None), dict_t.key);
-            unit_flow cx (t1, dict_t.value)
-          end
+          then dictionary cx (string_key s reason1) t1 dict2
         );
       unit_flow cx (l, u_)
 
@@ -1699,7 +1724,8 @@ let rec flow cx (l,u) trace =
 
     | (_, ShapeT (o2))
       ->
-        unit_flow cx (l, ObjAssignT(reason_of_t o2, o2, AnyT.t,SSet.empty))
+        let reason = reason_of_t o2 in
+        unit_flow cx (l, ObjAssignT(reason, o2, AnyT.t, [], false))
 
     | (ShapeT (o1), _) ->
       unit_flow cx (o1, u)
@@ -1709,7 +1735,7 @@ let rec flow cx (l,u) trace =
         let reason = reason_of_t o2 in
         let t2 = mk_tvar cx reason in
         unit_flow cx (o2, ObjRestT (reason, [], t2));
-        unit_flow cx (l, ObjAssignT(reason, t2, o1, SSet.empty))
+        unit_flow cx (l, ObjAssignT(reason, t2, o1, [], false))
 
     (********************************************)
     (* array types deconstruct into their parts *)
@@ -1943,31 +1969,45 @@ let rec flow cx (l,u) trace =
     (* objects can be assigned, i.e., their properties can be set in bulk *)
     (**********************************************************************)
 
-    | (ObjT (_, { props_tmap = mapr; _ }),
-       ObjAssignT (reason, proto, t, props_to_skip)) ->
+    (** When some object-like type O1 flows to ObjAssignT(_,O2,X,_,false), the
+        properties of O1 are copied to O2, and O2 is linked to X to signal that
+        the copying is done; the intention is that when those properties are
+        read through X, they should be found (whereas this cannot be guaranteed
+        when those properties are read through O2). However, there is an
+        additional twist: this scheme may not work when O2 is unresolved. In
+        particular, when O2 is unresolved, the constraints that copy the
+        properties from O1 may race with reads of those properties through X as
+        soon as O2 is resolved. To avoid this race, we make O2 flow to
+        ObjAssignT(_,O1,X,_,true); when O2 is resolved, we make the switch. **)
+
+    | (ObjT (reason_, { props_tmap = mapr; _ }),
+       ObjAssignT (reason, proto, t, props_to_skip, false)) ->
       iter_props cx mapr (fun x t ->
-        if not (SSet.mem x props_to_skip) then (
+        if not (List.mem x props_to_skip) then (
           let reason = prefix_reason (spf "prop %s of " x) reason in
           unit_flow cx (proto, SetT (reason, x, t));
         );
       );
       unit_flow cx (proto, t)
 
-    | (InstanceT (_, _, _, { fields_tmap; methods_tmap; _ }),
-       ObjAssignT (reason, proto, t, props_to_skip)) ->
+    | (InstanceT (reason_, _, _, { fields_tmap; methods_tmap; _ }),
+       ObjAssignT (reason, proto, t, props_to_skip, false)) ->
       let map = SMap.union fields_tmap methods_tmap in
       map |> SMap.iter (fun x t ->
-        if not (SSet.mem x props_to_skip) then (
+        if not (List.mem x props_to_skip) then (
           unit_flow cx (proto, SetT (reason, x, t));
         );
       );
       unit_flow cx (proto, t)
 
+    | (MixedT _, ObjAssignT (_, proto, t, _, false)) ->
+      unit_flow cx (proto, t)
+
+    | (_, ObjAssignT(reason, o, t, xs, true)) ->
+      unit_flow cx (o, ObjAssignT(reason, l, t, xs, false))
+
     (* Object.assign semantics *)
     | ((NullT _ | VoidT _), ObjAssignT _) -> ()
-
-    | (MixedT _, ObjAssignT (_, proto, t, _)) ->
-      unit_flow cx (proto, t)
 
     (*************************)
     (* objects can be copied *)
@@ -2013,15 +2053,13 @@ let rec flow cx (l,u) trace =
       flags;
       props_tmap = mapr;
       proto_t = proto;
-      dict_t = { key; value; _ };
+      dict_t;
     }),
        SetT(reason_op,x,tin))
       ->
-      let strict = mk_strict flags.sealed reason_o reason_op in
-      let t = ensure_prop_ cx trace strict mapr x proto reason_o reason_op
-        trace in
-      unit_flow cx (StrT.t,key);
-      unit_flow cx (tin,value);
+      let strict = mk_strict flags.sealed (dict_t <> None) reason_o reason_op in
+      let t = ensure_prop_ cx trace strict mapr x proto reason_o reason_op in
+      dictionary cx (string_key x reason_op) t dict_t;
       select_flow cx (tin,t) trace (ObjProp x)
 
     (*****************************)
@@ -2037,13 +2075,13 @@ let rec flow cx (l,u) trace =
       flags;
       props_tmap = mapr;
       proto_t = proto;
-      dict_t = { key; value; _ };
+      dict_t;
     }),
        GetT(reason_op,x,tout))
       ->
-      let strict = mk_strict flags.sealed reason_o reason_op in
+      let strict = mk_strict flags.sealed (dict_t <> None) reason_o reason_op in
       let t = ensure_prop cx strict mapr x proto reason_o reason_op trace in
-      unit_flow cx (StrT.t,key);
+      dictionary cx (string_key x reason_op) t dict_t;
       (* move property type to read site *)
       let t = repos_t_from_reason reason_op t in
       select_flow cx (t, tout) trace (ObjProp x)
@@ -2056,12 +2094,13 @@ let rec flow cx (l,u) trace =
       flags;
       props_tmap = mapr;
       proto_t = proto;
-      dict_t = { key; value; _ };
+      dict_t;
     }),
        MethodT(reason_op,x,this,tins,tout,j))
       ->
-      let strict = mk_strict flags.sealed reason_o reason_op in
+      let strict = mk_strict flags.sealed (dict_t <> None) reason_o reason_op in
       let t = ensure_prop cx strict mapr x proto reason_o reason_op trace in
+      dictionary cx (string_key x reason_op) t dict_t;
       let callt = CallT (reason_op, mk_methodtype2 this tins None tout j) in
       select_flow cx (t, callt) trace (ObjProp x)
 
@@ -2114,7 +2153,7 @@ let rec flow cx (l,u) trace =
       unit_flow cx (key, ElemT(reason_op, l, LowerBoundT tout))
 
     | (StrT (reason_s, literal),
-       ElemT(reason_op, (ObjT(_, {dict_t = { key; value; _ }; _}) as o), t))
+       ElemT(reason_op, (ObjT(_, {dict_t; _}) as o), t))
       ->
       (match literal with
       | Some x ->
@@ -2123,16 +2162,22 @@ let rec flow cx (l,u) trace =
         | LowerBoundT tout -> unit_flow cx (o, GetT(reason_op,x,tout))
         | _ -> assert false)
       | None ->
-        unit_flow cx (l, key);
-        unit_flow cx (value,t);
-        unit_flow cx (t,value)
+        (match dict_t with
+        | None -> ()
+        | Some { key; value; _ } ->
+          unit_flow cx (l, key);
+          unit_flow cx (value,t);
+          unit_flow cx (t,value))
       )
 
-    | (_, ElemT(_, ObjT(_, {dict_t = { key; value; _ }; _}), t))
+    | (_, ElemT(_, ObjT(_, {dict_t; _}), t))
       ->
-      unit_flow cx (l, key);
-        unit_flow cx (value,t);
-        unit_flow cx (t,value)
+        (match dict_t with
+        | None -> ()
+        | Some { key; value; _ } ->
+          unit_flow cx (l, key);
+          unit_flow cx (value,t);
+          unit_flow cx (t,value))
 
     | (NumT (reason_i, literal),
        ElemT(reason_op, ArrT(_, value, ts), t))
@@ -2158,7 +2203,7 @@ let rec flow cx (l,u) trace =
     | (FunT (reason_f,_,t,_),
        SetT(reason_op,"prototype",tin))
       ->
-      unit_flow cx (tin, ObjAssignT(reason_op,t,AnyT.t,SSet.empty))
+      unit_flow cx (tin, ObjAssignT(reason_op, t, AnyT.t, [], false))
 
     (*********************************)
     (* ... and their prototypes read *)
@@ -2230,7 +2275,7 @@ let rec flow cx (l,u) trace =
         let function_proto = get_builtin_type cx reason "Function" in
         let obj = mk_object_with_map_proto cx reason map function_proto in
         let t = mk_tvar_where cx reason (fun t ->
-          unit_flow cx (statics, ObjAssignT (reason, obj, t, SSet.empty))
+          unit_flow cx (statics, ObjAssignT (reason, obj, t, [], false))
         ) in
         unit_flow cx (t, u)
 
@@ -2709,8 +2754,8 @@ and equatable cx trace = function
 
 and mk_nominal cx =
   let nominal = mk_var cx in
-  (if modes.debug then prerr_endline
-      (spf "NOM %d %s" nominal cx.file));
+  (if modes.debug then prerr_endlinef
+      "NOM %d %s" nominal cx.file);
   nominal
 
 and unify_map cx tmap1 tmap2 =
@@ -2720,13 +2765,13 @@ and unify_map cx tmap1 tmap2 =
   )
 
 (* Indicate whether property checking should be strict for a given object and an
-   operation on it. Strictness is enforced when the object is sealed (e.g., it
-   is a type annotation) or when the object and the operation originate in
-   different scopes. The enforcement is done via the returned "blame token" that
-   is used when looking up properties of objects in the prototype chain as part
-   of that operation. *)
-and mk_strict sealed reason_o reason_op =
-  if (not sealed && Reason_js.same_scope reason_o reason_op)
+   operation on it. Strictness is enforced when the object is not a dictionary,
+   and it is sealed (e.g., it is a type annotation) or it and the operation
+   originate in different scopes. The enforcement is done via the returned
+   "blame token" that is used when looking up properties of objects in the
+   prototype chain as part of that operation. *)
+and mk_strict sealed is_dict reason_o reason_op =
+  if (is_dict || (not sealed && Reason_js.same_scope reason_o reason_op))
   then None
   else Some reason_o
 
@@ -2779,16 +2824,20 @@ and subst cx (map: Type.t SMap.t) t =
 
   | ObjT (reason, {
     flags;
-    dict_t = { dict_name; key; value; };
+    dict_t;
     props_tmap = id;
     proto_t = proto
   }) ->
     let pmap = IMap.find_unsafe id cx.property_maps in
     ObjT (reason, {
       flags;
-      dict_t = { dict_name;
-                 key = subst cx map key;
-                 value = subst cx map value; };
+      dict_t = (match dict_t with
+      | None -> None
+      | Some dict ->
+          Some { dict with
+            key = subst cx map dict.key;
+            value = subst cx map dict.value;
+          });
       props_tmap = mk_propmap cx (pmap |> SMap.map (subst cx map));
       proto_t = subst cx map proto
     })
@@ -2858,8 +2907,8 @@ and subst cx (map: Type.t SMap.t) t =
   | RecordT(reason, t) ->
     RecordT(reason, subst cx map t)
 
-  | ObjAssignT(reason, t1, t2, xs) ->
-    ObjAssignT(reason, subst cx map t1, subst cx map t2, xs)
+  | ObjAssignT(reason, t1, t2, xs, resolve) ->
+    ObjAssignT(reason, subst cx map t1, subst cx map t2, xs, resolve)
 
   | _ -> assert false (** TODO **)
 
@@ -2896,11 +2945,7 @@ and mk_object_with_proto cx reason proto =
 
 and mk_object_with_map_proto cx reason ?(sealed=false) map proto =
   let flags = { default_flags with sealed } in
-  let dict = {
-    dict_name = None;
-    key = AnyT.t;
-    value = AnyT.t;
-  } in
+  let dict = None in
   let pmap = mk_propmap cx map in
   ObjT (reason, mk_objecttype ~flags dict pmap proto)
 
@@ -2939,9 +2984,24 @@ and try_intersection cx u reason = function
    early (and other branches are tried): otherwise, those failures may remain
    latent, and cause spurious errors to be reported. *)
 
-(** The set of type patterns that currently need to be concretized appear
-    below. This set needs to be kept in sync across parts_to_concretize and
-    replace_with_concrete parts. **)
+(** TODO: Concretization is a general pattern that could be useful elsewhere as
+    well. For example, we often have constraints that model "binary" operations,
+    where both arguments need to be concretized for an operation to proceed
+    (e.g., see rules involving AdderT, ComparatorT, ObjAssignT); in those cases,
+    we effectively concretize the first argument, then the second argument by
+    pushing the concretized first argument back into the constraint, and
+    signaling that we are done afterwards. A general solution would have to do
+    the following: specify parts of a constraint to be concretized, concretize
+    those parts, replace the constraint with the concrete parts, and signal that
+    we are done. The specification and replacement can be carried out generically
+    using type substitution (see rules involving SpecializeT). The signaling
+    could be done either by wrapping with ConcreteT, or by generically checking
+    that the specified parts to be concretized have indeed been replaced with
+    concrete parts. **)
+
+(* The set of type patterns that currently need to be concretized appear
+   below. This set needs to be kept in sync across parts_to_concretize and
+   replace_with_concrete parts. *)
 
 and parts_to_concretize cx = function
   (* call of overloaded function *)
@@ -2967,6 +3027,8 @@ and concretize_parts cx l todo_list done_list u =
   | [] -> unit_flow cx (l, ConcreteT(replace_with_concrete_parts done_list u))
   | t::todo_list -> unit_flow cx (t, ConcretizeT(l, todo_list, done_list, u))
 
+(* property lookup functions in objects and instances *)
+
 and ensure_prop cx strict mapr x proto reason_obj reason_op trace =
   if has_prop cx mapr x
   then read_prop cx mapr x
@@ -2978,7 +3040,7 @@ and ensure_prop cx strict mapr x proto reason_obj reason_op trace =
     in
     t |> recurse_proto cx strict proto reason_op x trace
 
-and ensure_prop_ cx trace strict mapr x proto reason_obj reason_op trace =
+and ensure_prop_ cx trace strict mapr x proto reason_obj reason_op =
   if has_prop cx mapr x
   then read_prop cx mapr x
   else
@@ -3050,6 +3112,7 @@ and is_number = function NumT _ -> true | _ -> false
 and is_function = function FunT _ -> true | _ -> false
 and is_object = function (ObjT _ | ArrT _) -> true | _ -> false
 and is_array = function ArrT _ -> true | _ -> false
+and is_bool = function BoolT _ -> true | _ -> false
 
 and not_ pred x = not(pred x)
 
@@ -3155,6 +3218,26 @@ and filter_not_undefined = function
   | VoidT r -> UndefT r
   | t -> t
 
+and filter_true = function
+  | BoolT (r, Some true)
+  | BoolT (r, None) -> BoolT (r, Some true)
+  | t -> UndefT (reason_of_t t)
+
+and filter_not_true = function
+  | BoolT (r, Some true) -> UndefT r
+  | BoolT (r, None) -> BoolT (r, Some false)
+  | t -> t
+
+and filter_false = function
+  | BoolT (r, Some false)
+  | BoolT (r, None) -> BoolT (r, Some false)
+  | t -> UndefT (reason_of_t t)
+
+and filter_not_false = function
+  | BoolT (r, Some false) -> UndefT r
+  | BoolT (r, None) -> BoolT (r, Some true)
+  | t -> t
+
 and predicate cx trace t (l,p) = match (l,p) with
 
   (************************)
@@ -3174,6 +3257,16 @@ and predicate cx trace t (l,p) = match (l,p) with
   | (_, OrP(p1,p2)) ->
     flow cx (l,PredicateT(p1,t)) trace;
     flow cx (l,PredicateT(p2,t)) trace
+
+  (***********************)
+  (* typeof _ ~ "boolean" *)
+  (***********************)
+
+  | (_, IsP "boolean") ->
+    filter cx trace t l is_bool
+
+  | (_, NotP(IsP "boolean")) ->
+    filter cx trace t l (not_ is_bool)
 
   (***********************)
   (* typeof _ ~ "string" *)
@@ -3254,6 +3347,26 @@ and predicate cx trace t (l,p) = match (l,p) with
 
   | (_, NotP(IsP "maybe")) ->
     flow cx (filter_not_maybe l, t) trace
+
+  (********)
+  (* true *)
+  (********)
+
+  | (_, IsP "true") ->
+    flow cx (filter_true l, t) trace
+
+  | (_, NotP(IsP "true")) ->
+    flow cx (filter_not_true l, t) trace
+
+  (*********)
+  (* false *)
+  (*********)
+
+  | (_, IsP "false") ->
+    flow cx (filter_false l, t) trace
+
+  | (_, NotP(IsP "false")) ->
+    flow cx (filter_not_false l, t) trace
 
   (************************)
   (* truthyness *)
@@ -3651,6 +3764,17 @@ and multiflow_helper cx trace (u, l) b (argi, pari) = function
     select_flow cx (tin,tout) trace (FunArg (argi, pari));
     multiflow_helper cx trace (u, l) b (argi + 1, pari + 1) (tins,touts)
 
+and dictionary cx keyt valuet = function
+  | None -> ()
+  | Some { key; value; _ } ->
+      unit_flow cx (keyt, key);
+      unit_flow cx (valuet, value)
+
+and string_key s reason =
+  let key_reason =
+    replace_reason (spf "property name \"%s\" is a string" s) reason in
+  StrT (key_reason, None)
+
 (* builtins, contd. *)
 
 and get_builtin cx x reason =
@@ -3790,8 +3914,11 @@ let rec gc cx polarity = function
       let id = objtype.props_tmap in
       gc_state.objs <- gc_state.objs |> ISet.add id;
       iter_props cx id (fun _ -> gc_undirected cx);
-      gc_undirected cx objtype.dict_t.key;
-      gc_undirected cx objtype.dict_t.value;
+      (match objtype.dict_t with
+      | None -> ()
+      | Some { key; value; _ } ->
+        gc_undirected cx key;
+        gc_undirected cx value);
       gc_undirected cx objtype.proto_t
 
   | MethodT(_, _, this, params, ret, _) ->
@@ -3918,8 +4045,11 @@ and gc_undirected cx = function
       let id = objtype.props_tmap in
       gc_state.objs <- gc_state.objs |> ISet.add id;
       iter_props cx id (fun _ -> gc_undirected cx);
-      gc_undirected cx objtype.dict_t.key;
-      gc_undirected cx objtype.dict_t.value;
+      (match objtype.dict_t with
+      | None -> ()
+      | Some { key; value; _ } ->
+        gc_undirected cx key;
+        gc_undirected cx value);
       gc_undirected cx objtype.proto_t
 
   | MethodT(_, _, this, params, ret, _) ->
@@ -4032,7 +4162,7 @@ let die cx tvar =
       bounds_u.lowertvars <-
         IMap.remove tvar bounds_u.lowertvars
   );
-  (if modes.debug then prerr_endline (spf "DEAD: %d" tvar));
+  (if modes.debug then prerr_endlinef "DEAD: %d" tvar);
   cx.graph <- cx.graph |> IMap.remove tvar
 
 let kill_lower cx tvar =
@@ -4083,7 +4213,7 @@ let cleanup cx =
         else if (not (ISet.mem tvar gc_state.negative))
         then kill_upper cx tvar
         else
-          (if modes.debug then prerr_endline (spf "LIVE: %d" tvar))
+          (if modes.debug then prerr_endlinef "LIVE: %d" tvar)
       )
       else
         die cx tvar

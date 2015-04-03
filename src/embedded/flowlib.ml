@@ -39,7 +39,7 @@ let extract_embedded () =
  * bytecode builds. *)
 let extract_external () =
   let path = (Filename.dirname Sys.executable_name) ^ "/flowlib.tar.gz" in
-  if Sys.file_exists path then Some (extract (Utils.cat path)) else None
+  if Sys.file_exists path then Some (extract (Sys_utils.cat path)) else None
 
 let get_flowlib_root_impl () =
   match extract_embedded () with

@@ -19,6 +19,7 @@ module Server = ServerFunctors
 module FlowProgram (OptionParser : OPTION_PARSER) : Server.SERVER_PROGRAM =
 struct
   open Utils
+  open Sys_utils
   open ServerEnv
 
   module EventLogger = FlowEventLogger
@@ -139,10 +140,7 @@ struct
         in
         AutocompleteService_js.autocomplete_get_results cx state
       with exn ->
-        prerr_endline
-          (spf "Couldn't autocomplete\n%s"
-              (Printexc.to_string exn)
-          );
+        prerr_endlinef "Couldn't autocomplete\n%s" (Printexc.to_string exn);
         []
     in
     Autocomplete_js.autocomplete_unset_hooks ();
@@ -259,11 +257,10 @@ struct
          let patch_content = patch file new_content in
          SMap.add file patch_content result_map
        with exn ->
-         prerr_endline
-           (spf "Could not fill types for %s\n%s"
-              file
-              (Printexc.to_string exn)
-           );
+         prerr_endlinef
+           "Could not fill types for %s\n%s"
+           file
+           (Printexc.to_string exn);
          result_map
       )
 
@@ -287,11 +284,10 @@ struct
         let patch_content = patch file new_content in
         SMap.add file patch_content result_map
       with exn ->
-        prerr_endline
-          (spf "Could not port docblock-style annotations for %s\n%s"
-            file
-            (Printexc.to_string exn) ^ "\n" ^ (Printexc.get_backtrace ())
-          );
+        prerr_endlinef
+          "Could not port docblock-style annotations for %s\n%s"
+          file
+          ((Printexc.to_string exn) ^ "\n" ^ (Printexc.get_backtrace ()));
         result_map
       )
 
@@ -326,11 +322,10 @@ struct
       let result = GetDef_js.getdef_get_result cx state in
       Marshal.to_channel oc result []
     with exn ->
-      prerr_endline
-        (spf "Could not get definition for %s:%d:%d\n%s"
-            file line col
-            (Printexc.to_string exn)
-        )
+      prerr_endlinef
+        "Could not get definition for %s:%d:%d\n%s"
+        file line col
+        (Printexc.to_string exn)
     );
     GetDef_js.getdef_unset_hooks ();
     flush oc
@@ -486,9 +481,9 @@ struct
       let options = OptionParser.get_flow_options () in
 
       let n = SSet.cardinal diff_js in
-      prerr_endline (spf "recheck %d files:" n);
+      prerr_endlinef "recheck %d files:" n;
       let _ = SSet.fold (fun f i ->
-        prerr_endline (spf "%d/%d: %s" i n f); i + 1) diff_js 1 in
+        prerr_endlinef "%d/%d: %s" i n f; i + 1) diff_js 1 in
 
       Types_js.recheck genv env diff_js options
 end

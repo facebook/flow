@@ -31,7 +31,7 @@ let debug () fnl =
   List.fold_left begin fun () filepath ->
     let filename = Relative_path.to_absolute filepath in
     try
-      let content = Utils.cat filename in
+      let content = Sys_utils.cat filename in
 
       (* Checking that we can parse the output *)
       let parsing_errors1, parser_output1 = Errors.do_ begin fun () ->
@@ -175,7 +175,7 @@ let parse_args() =
 
 let format_in_place modes filepath =
   let filename = Relative_path.to_absolute filepath in
-  match Format_hack.program modes filepath (Utils.cat filename) with
+  match Format_hack.program modes filepath (Sys_utils.cat filename) with
   | Format_hack.Success result ->
       let oc = open_out filename in
       output_string oc result;
@@ -297,7 +297,7 @@ let () =
         | Some error ->
             Printf.fprintf stderr "Error: %s\n" error;
             exit 2
-      else format_string modes filepath from to_ (Utils.cat filename)
+      else format_string modes filepath from to_ (Sys_utils.cat filename)
   | _ ->
       Printf.fprintf stderr "More than one file given\n";
       exit 2

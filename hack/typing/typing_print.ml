@@ -39,6 +39,7 @@ module ErrorString = struct
     | Nast.Tnum        -> "a num (int/float)"
     | Nast.Tresource   -> "a resource"
     | Nast.Tarraykey   -> "an array key (int/string)"
+    | Nast.Tnoreturn   -> "noreturn (throws or exits)"
 
   let rec type_ = function
     | Tany               -> "an untyped value"
@@ -173,6 +174,7 @@ module Suggest = struct
     | Nast.Tnum    -> "num (int/float)"
     | Nast.Tresource -> "resource"
     | Nast.Tarraykey -> "arraykey (int/string)"
+    | Nast.Tnoreturn -> "noreturn"
 
 end
 
@@ -240,6 +242,7 @@ module Full = struct
     | Nast.Tnum    -> "num"
     | Nast.Tresource -> "resource"
     | Nast.Tarraykey -> "arraykey"
+    | Nast.Tnoreturn -> "noreturn"
     )
 
   and fun_type st env o ft =

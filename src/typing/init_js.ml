@@ -17,6 +17,7 @@
    future. *)
 
 open Utils
+open Sys_utils
 
 module Ast = Spider_monkey_ast
 module Errors = Errors_js

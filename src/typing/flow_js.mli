@@ -81,7 +81,7 @@ val dummy_static : Type.t
 val dummy_prototype : Type.t
 
 val mk_objecttype : ?flags:Type.flags ->
-  Type.dicttype -> int -> Type.t -> Type.objtype
+  Type.dicttype option -> int -> Type.t -> Type.objtype
 
 val mk_object_with_proto : context -> reason -> Type.t -> Type.t
 val mk_object_with_map_proto : context -> reason -> ?sealed:bool ->

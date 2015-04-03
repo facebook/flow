@@ -1,0 +1,22 @@
+
+A.js:13:19,27: string
+This type is incompatible with
+  A.js:13:10,15: number
+
+A.js:21:20,29: string
+This type is incompatible with
+  A.js:21:11,16: number
+
+B.js:7:20,31: string
+This type is incompatible with
+  B.js:7:11,16: number
+
+B.js:10:20,22: string
+This type is incompatible with
+  B.js:10:11,16: number
+
+B.js:12:19,29: string
+This type is incompatible with
+  B.js:12:10,15: number
+
+Found 5 errors

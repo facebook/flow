@@ -347,6 +347,7 @@ let parse_build_args () =
       clean_before_build = !clean_before_build;
       check = !check;
       incremental = !incremental;
+      user = Sys_utils.logname;
       verbose = !verbose;
       wait = !wait;
     }

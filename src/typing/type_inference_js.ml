@@ -98,11 +98,15 @@ let (>>) f g = fun x -> g (f (x))
 let mk_object cx reason =
   Flow_js.mk_object_with_proto cx reason (MixedT reason)
 
-let extend_object cx reason o = function
+let extended_object cx reason ~sealed map spread =
+  let o =
+    Flow_js.mk_object_with_map_proto cx reason ~sealed map (MixedT reason)
+  in
+  match spread with
   | None -> o
   | Some other ->
       Flow_js.mk_tvar_where cx reason (fun t ->
-        Flow_js.unit_flow cx (other, ObjAssignT (reason, o, t, SSet.empty))
+        Flow_js.unit_flow cx (other, ObjAssignT (reason, o, t, [], false))
       )
 
 let summarize cx t = match t with
@@ -716,27 +720,25 @@ let rec convert cx map = Ast.Type.(function
           SMap.add "$call" (IntersectionT (callable_reason, fts)) map_
     in
     (* Seal an object type unless it specifies an indexer. *)
-    (* TODO: also consider sealing the object if it is non-empty *)
-    let sealed, dict_name, key, value = Object.Indexer.(
+    let sealed, dict = Object.Indexer.(
       match indexers with
       | [(_, { id = (_, { Ast.Identifier.name; _ }); key; value; _; })] ->
           let keyt = convert cx map key in
           let valuet = convert cx map value in
           false,
-          Some name,
-          keyt,
-          valuet
+          Some { Constraint_js.Type.
+            dict_name = Some name;
+            key = keyt;
+            value = valuet
+          }
       | [] ->
           true,
-          None,
-          MixedT (mk_reason "key" loc),
-          MixedT (mk_reason "value" loc)
+          None
       (* TODO *)
       | _ -> failwith "Unimplemented: multiple indexers"
     ) in
     let pmap = Flow_js.mk_propmap cx map_ in
     let proto = MixedT (reason_of_string "Object") in
-    let dict = { dict_name; key; value } in
     let flags = { sealed; exact = not sealed } in
     ObjT (mk_reason "object type" loc,
       Flow_js.mk_objecttype ~flags dict pmap proto)
@@ -1670,7 +1672,7 @@ and statement cx = Ast.Statement.(
       let save_continue_exn = Abnormal.swap (Abnormal.Continue None) false in
       let t = expression cx right in
       let o = mk_object cx (mk_reason "iteration expected on object" loc) in
-      Flow_js.unit_flow cx (t,o);
+      Flow_js.unit_flow cx (t, MaybeT o); (* null/undefined are allowed *)
 
       let ctx = !Env_js.env in
       let oldset = Env_js.swap_changeset (fun _ -> SSet.empty) in
@@ -1678,6 +1680,9 @@ and statement cx = Ast.Statement.(
 
       let body_ctx = Env_js.clone_env ctx in
       Env_js.update_frame cx body_ctx;
+
+      let _, pred, _, xtypes = predicate_of_condition cx right in
+      Env_js.refine_with_pred cx reason pred xtypes;
 
       (match left with
         | ForIn.LeftDeclaration (_, {
@@ -2516,10 +2521,7 @@ and expression_ cx loc e = Ast.Expression.(match e with
     let reason = mk_reason "object literal" loc in
     let map, spread = object_ cx properties in
     let sealed = (spread = None && not (SMap.is_empty map)) in
-    extend_object
-      cx reason
-      (Flow_js.mk_object_with_map_proto cx reason ~sealed map (MixedT reason))
-      spread
+    extended_object cx reason ~sealed map spread
 
   | Array { Array.elements } -> (
     let reason = mk_reason "array literal" loc in
@@ -3256,22 +3258,16 @@ and assignment cx loc = Ast.Expression.(function
 )
 
 (* Object assignment patterns. In the `copyProperties` model (chain_objects), an
-   existing object receives properties from other objects. In the
-   `mergeProperties` model (spread_objects), a new object receives properties
-   from other objects and is returned. Both these patterns suffer from "races"
-   in the type checker, since the object supposed to receive properties is
-   available even when the other objects supplying the properties are not yet
-   available. In constrast, clone_object makes the receiving object available
-   only when the properties have actually been received. This is useful when
-   merging properties across modules, e.g., and should eventually replace the
+   existing object receives properties from other objects. This pattern suffers
+   from "races" in the type checker, since the object supposed to receive
+   properties is available even when the other objects supplying the properties
+   are not yet available. In the `mergeProperties` model (spread_objects), a new
+   object receives properties from other objects and is returned, but the new
+   object is made available only when the properties have actually been
+   received. Similarly, clone_object makes the receiving object available only
+   when the properties have actually been received. These patterns are useful
+   when merging properties across modules, e.g., and should eventually replace
    other patterns wherever they are potentially racy. *)
-
-and chain_objects cx reason this those =
-  those |> List.iter (fun that ->
-    Flow_js.unit_flow cx
-      (that, ObjAssignT(reason, this, AnyT.t, SSet.empty))
-  );
-  this
 
 and spread_objects cx reason those =
   chain_objects cx reason (mk_object cx reason) those
@@ -3279,19 +3275,19 @@ and spread_objects cx reason those =
 and clone_object_with_excludes cx reason this that excludes =
   Flow_js.mk_tvar_where cx reason (fun tvar ->
     Flow_js.unit_flow cx (
-      that,
-      ObjAssignT(reason, this, ObjRestT(reason, excludes, tvar), SSet.empty)
+      this,
+      ObjAssignT(reason, that, ObjRestT(reason, excludes, tvar), [], true)
     )
   )
 
 and clone_object cx reason this that =
   clone_object_with_excludes cx reason this that []
 
-and chain_objects_lazy cx reason this those =
+and chain_objects cx reason this those =
   let result = ref this in
   List.iter (fun that ->
     result := Flow_js.mk_tvar_where cx reason (fun t ->
-      Flow_js.unit_flow cx (that, ObjAssignT(reason, !result, t, SSet.empty));
+      Flow_js.unit_flow cx (!result, ObjAssignT(reason, that, t, [], true));
     )
   ) those;
   !result
@@ -3504,7 +3500,7 @@ and mk_proptype cx = Ast.Expression.(function
         sealed = false;
         exact = true
       } in
-      let dict = {
+      let dict = Some {
         dict_name = None;
         key = AnyT.t;
         value = mk_proptype cx e
@@ -3519,7 +3515,9 @@ and mk_proptype cx = Ast.Expression.(function
           (_, {Ast.Identifier.name = "oneOf"; _ });
          _
       };
-      arguments = [Expression (_, Array { Array.elements })]
+      arguments = [Expression (_, Array { Array.
+        elements = es
+      })];
     } ->
       let rec string_literals lits es = match (es) with
         | Some (Expression (loc, Literal { Ast.Literal.
@@ -3528,7 +3526,7 @@ and mk_proptype cx = Ast.Expression.(function
             string_literals (lit :: lits) tl
         | [] -> Some lits
         | _  -> None in
-      (match string_literals [] elements with
+      (match string_literals [] es with
         | Some lits ->
             let reason = mk_reason "oneOf" vloc in
             mk_enum_type cx reason lits
@@ -3537,20 +3535,22 @@ and mk_proptype cx = Ast.Expression.(function
   | vloc, Call { Call.
       callee = _, Member { Member.
          property = Member.PropertyIdentifier
+          (_, {Ast.Identifier.name = "oneOf"; _ });
+         _
+      };
+      arguments = es;
+    } ->
+      AnyT.at vloc (* TODO *)
+
+  | vloc, Call { Call.
+      callee = _, Member { Member.
+         property = Member.PropertyIdentifier
           (_, {Ast.Identifier.name = "oneOfType"; _ });
          _
       };
-      arguments = [Expression (_, Array { Array.elements })]
+      arguments = es;
     } ->
-      let rec proptype_elements ts es = match es with
-        | Some (Expression e) :: tl ->
-            proptype_elements (mk_proptype cx e :: ts) tl
-        | [] -> Some ts
-        | _ -> None in
-      let reason = mk_reason "oneOf" vloc in
-      (match proptype_elements [] elements with
-        | Some ts -> UnionT (reason, ts)
-        | None -> AnyT.at vloc)
+      AnyT.at vloc (* TODO *)
 
   | vloc, Call { Call.
       callee = _, Member { Member.
@@ -3664,10 +3664,7 @@ and react_create_class cx loc class_props = Ast.Expression.(
           _ }) ->
         let reason = mk_reason "statics" nloc in
         let map, spread = object_ cx properties in
-        static :=
-          extend_object cx reason
-          (Flow_js.mk_object_with_map_proto cx reason map (MixedT reason))
-          spread;
+        static := extended_object cx reason ~sealed:false map spread;
         fmap, mmap
 
       (* propTypes *)
@@ -3720,7 +3717,7 @@ and react_create_class cx loc class_props = Ast.Expression.(
             returnType body this (MixedT reason)
           in
           let override_state =
-            ObjAssignT(reason_state, state, AnyT.t, SSet.empty)
+            ObjAssignT(reason_state, state, AnyT.t, [], false)
           in
           Flow_js.unit_flow cx (t,
             CallT (reason,
@@ -3883,6 +3880,22 @@ and predicate_of_condition cx e = Ast.(Expression.(
     | None -> empty_result (BoolT.at loc)
   in
 
+  let bool_test loc op e right =
+    let refinement = match refinable_lvalue e with
+    | None, t -> None
+    | Some name, t ->
+        match op with
+        (* TODO support == *)
+        | Binary.StrictEqual | Binary.StrictNotEqual ->
+            let pred = string_of_bool right in
+            Some (name, t, IsP pred, op = Binary.StrictEqual)
+        | _ -> None
+    in
+    match refinement with
+    | Some (name, t, p, sense) -> result (BoolT.at loc) name t p sense
+    | None -> empty_result (BoolT.at loc)
+  in
+
   (* inspect a typeof equality test *)
   let typeof_test sense arg typename =
     match refinable_lvalue arg with
@@ -3919,6 +3932,14 @@ and predicate_of_condition cx e = Ast.(Expression.(
       match refinable_lvalue e with
       | Some name, t -> result t name t ExistsP true
       | None, t -> empty_result t
+    )
+
+  (* assignments *)
+  | _, Assignment { Assignment.left = loc, Ast.Pattern.Identifier id; _ } -> (
+      let expr = expression cx e in
+      match refinable_lvalue (loc, Ast.Expression.Identifier id) with
+      | Some name, _ -> result expr name expr ExistsP true
+      | None, _ -> empty_result expr
     )
 
   (* expr instanceof t *)
@@ -3973,6 +3994,20 @@ and predicate_of_condition cx e = Ast.(Expression.(
     } ->
       ignore (expression cx void_arg);
       undef_test loc operator right
+
+  (* expr op true; expr op false *)
+  | loc, Binary { Binary.operator;
+      left;
+      right = _, Literal { Literal.value = Literal.Boolean value; _ }
+    } ->
+      bool_test loc operator left value
+
+  (* true op expr; false op expr *)
+  | loc, Binary { Binary.operator;
+      left = _, Literal { Literal.value = Literal.Boolean value; _ };
+      right
+    } ->
+      bool_test loc operator right value
 
   (* typeof expr ==/=== string *)
   | _, Binary { Binary.operator = Binary.Equal | Binary.StrictEqual;
@@ -4152,7 +4187,7 @@ and static_method_call_Object cx loc m args_ = Ast.Expression.(
   | ("assign", (Expression e)::others) ->
     let this = expression cx e in
     let those = List.map (expression_or_spread cx) others in
-    chain_objects_lazy cx reason this those
+    chain_objects cx reason this those
 
   (* TODO *)
   | (("seal" | "preventExtensions"), args)
@@ -4486,7 +4521,7 @@ and mk_interface cx reason typeparams map (sfmap, smmap, fmap, mmap) extends =
   imixins |> List.iter (fun imixin ->
     Flow_js.unit_flow cx (
       ClassT(imixin),
-      ObjAssignT(static_reason, static, AnyT.t, SSet.empty)
+      ObjAssignT(static_reason, static, AnyT.t, [], false)
     );
     Flow_js.unit_flow cx (imixin, SuperT(super_reason, instance));
   );
@@ -5079,6 +5114,13 @@ let declaration_require_strict cx m cx_to =
 let merge_module_strict cx cxs links declarations master_cx =
   Flow_js.Cache.clear();
 
+  (* merging will leave residue from our imports in the master_cx graph,
+     including tvars exclusive to our context. to prevent these from being
+     looked up erroneously in merges of other contexts with master, we need
+     to snapshot and restore the clean master graph. TODO should be a more
+     principled way to avoid this kind of leakage *)
+  let graph_snapshot = IMap.map copy_bounds master_cx.graph in
+
   copy_context_strict cx master_cx;
   implicit_require_strict cx master_cx;
 
@@ -5090,7 +5132,11 @@ let merge_module_strict cx cxs links declarations master_cx =
   );
   declarations |> List.iter (function cx_to, r ->
     declaration_require_strict cx r cx_to
-  )
+  );
+
+  (* restore clean master graph *)
+  master_cx.graph <- graph_snapshot
+
 
 (* merge all modules at a dependency level, then do xmgc *)
 let merge_module_list cx_list =

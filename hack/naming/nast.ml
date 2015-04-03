@@ -82,9 +82,10 @@ and tprim =
   | Tbool
   | Tfloat
   | Tstring
-  | Tnum
   | Tresource
+  | Tnum
   | Tarraykey
+  | Tnoreturn
 
 and class_ = {
   c_mode           : FileInfo.mode    ;

@@ -20,9 +20,9 @@ let read_stdin_to_string () =
     Buffer.contents buf
 
 (* Function connecting to hh_server *)
-let connect ?user:(user=None) root =
+let connect root =
   try
-    let sock_name = Socket.get_path ~user root in
+    let sock_name = Socket.get_path root in
     let sockaddr = Unix.ADDR_UNIX sock_name in
     let domain = Unix.domain_of_sockaddr sockaddr in
     let sock = Unix.socket domain Unix.SOCK_STREAM 0 in
@@ -31,7 +31,7 @@ let connect ?user:(user=None) root =
     let oc = Unix.out_channel_of_descr sock in
     ic, oc
   with _ ->
-    if not (Lock.check ~user root "init")
+    if not (Lock.check root "init")
     then raise ClientExceptions.Server_initializing
     else raise ClientExceptions.Server_cant_connect
 

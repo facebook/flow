@@ -1,7 +1,7 @@
 
 issue-198.js:5:16,28: string
 This type is incompatible with
-  [LIB] core.js:328:39,52: union type
+  [LIB] core.js:333:33,46: union type
 
 issue-324.js:3:7,9: Bar
 This type is incompatible with

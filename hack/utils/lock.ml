@@ -20,25 +20,26 @@ let lock_fds = ref SMap.empty
  * 2. giving a way to hh_client to check if a server is running.
  *)
 
-let lock_name ?user:(user=None) root file =
-    let tmp_dir = Tmp.get_dir ~user () in
-    let user = (match user with None -> Sys_utils.logname | Some u -> u) in
+let lock_name root file =
+    let tmp_dir = Tmp.get_dir () in
     let root_part = Path.slash_escaped_string_of_path root in
-    Printf.sprintf "%s/%s-%s.%s" tmp_dir user root_part file
+    Printf.sprintf "%s/%s.%s" tmp_dir root_part file
 
 (**
  * Grab or check if a file lock is available.
  *
  * Returns true if the lock is/was available, false otherwise.
  *)
-let _operations ?user:(user=None) root op file : bool =
+let _operations root op file : bool =
   try
-    let lock_file = lock_name ~user root file in
+    let lock_file = lock_name root file in
     let fd = match SMap.get lock_file !lock_fds with
       | None ->
-          let fd = Unix.descr_of_out_channel (open_out lock_file) in
-          lock_fds := SMap.add lock_file fd !lock_fds;
-          fd
+          Sys_utils.with_umask 0o111 begin fun () ->
+            let fd = Unix.descr_of_out_channel (open_out lock_file) in
+            lock_fds := SMap.add lock_file fd !lock_fds;
+            fd
+          end
       | Some fd -> fd
     in
     let _ = Unix.lockf fd op 1 in
@@ -71,5 +72,5 @@ let fd_of root file : int =
  * Check if the file lock is available without grabbing it.
  * Returns true if the lock is free.
  *)
-let check ?user:(user=None) root file : bool =
-  _operations ~user root Unix.F_TEST file
+let check root file : bool =
+  _operations root Unix.F_TEST file

@@ -222,6 +222,7 @@ let rec debug stack env (r, ty) =
       | Tnum -> o "Tnum"
       | Tresource -> o "Tresource"
       | Tarraykey -> o "Tarraykey"
+      | Tnoreturn -> o "Tnoreturn"
       )
   | Tgeneric (s, x) ->
       o "generic ";

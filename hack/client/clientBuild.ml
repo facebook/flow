@@ -8,6 +8,8 @@
  *
  *)
 
+open Sys_utils
+
 (* 800s was chosen because it was above most of the historical p95 of
  * hack server startup times as observed here:
  * https://fburl.com/48825801, see also https://fburl.com/29184831 *)
@@ -75,7 +77,7 @@ let rec connect env retries =
 
 let rec wait_for_response ic =
   try
-    ServerMsg.with_timeout 1
+    with_timeout 1
       ~on_timeout:(fun _ -> raise ClientExceptions.Server_busy)
       ~do_:(fun () ->
         let response = ServerMsg.response_from_channel ic in

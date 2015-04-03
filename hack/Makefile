@@ -133,6 +133,7 @@ endif
 	cp _build/h2tp/h2tp.native ../bin/h2tp
 
 test: build-hack copy-hack-files
+	python3 ../test/verify.py --program ../bin/hh_single_type_check ../test/autocomplete
 	python3 ../test/verify.py --program ../bin/hh_single_type_check ../test/color
 	python3 ../test/verify.py --program ../bin/hh_single_type_check ../test/coverage
 	python3 ../test/verify.py --program ../bin/hh_format ../test/format

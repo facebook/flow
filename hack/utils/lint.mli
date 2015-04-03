@@ -15,6 +15,7 @@ type severity =
 
 type 'a t
 val get_code : 'a t -> int
+val get_pos : 'a t -> 'a Pos.pos
 
 val add : int -> severity -> Pos.t -> string -> unit
 val to_absolute : Relative_path.t t -> string t

@@ -9,6 +9,7 @@
  *)
 
 open Utils
+open Sys_utils
 
 type t = string SMap.t
 

@@ -14,10 +14,9 @@
 (*****************************************************************************)
 open Utils
 
-let auto_complete env content oc =
+let auto_complete nenv content =
   AutocompleteService.attach_hooks();
   let funs, classes = ServerIdeUtils.declare Relative_path.default content in
-  let nenv = env.ServerEnv.nenv in
   let dummy_pos = Pos.none, Ident.foo in
   let ifuns =
     SSet.fold begin fun x (funmap, canon_names) ->
@@ -35,7 +34,5 @@ let auto_complete env content oc =
   let class_names = SMap.keys (fst nenv.Naming.iclasses) in
   let result = AutocompleteService.get_results fun_names class_names in
   ServerIdeUtils.revive funs classes;
-  Printf.printf "Auto-complete\n"; flush stdout;
-  Marshal.to_channel oc (result : AutocompleteService.result) [];
-  flush oc;
-  AutocompleteService.detach_hooks()
+  AutocompleteService.detach_hooks();
+  result

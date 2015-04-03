@@ -8,8 +8,6 @@
  *
  *)
 
-include Sys_utils
-
 let () = Random.self_init ()
 let debug = ref false
 let profile = ref false
@@ -140,15 +138,12 @@ module HashSet = (struct
 end : HashSetSig)
 
 let spf = Printf.sprintf
+let print_endlinef fmt = Printf.ksprintf print_endline fmt
+let prerr_endlinef fmt = Printf.ksprintf prerr_endline fmt
 
 let fst3 = function x, _, _ -> x
 let snd3 = function _, x, _ -> x
 let thd3 = function _, _, x -> x
-
-let internal_error s =
-  Printf.fprintf stderr
-    "You just found a bug!\nShoot me an email: julien.verlaguet@fb.com";
-  exit 2
 
 let opt f env = function
   | None -> env, None
@@ -342,9 +337,17 @@ let iter_n_acc n f acc =
 let set_of_list list =
   List.fold_right SSet.add list SSet.empty
 
+(* \A\B\C -> A\B\C *)
 let strip_ns s =
   if String.length s == 0 || s.[0] <> '\\' then s
   else String.sub s 1 ((String.length s) - 1)
+
+(* \A\B\C -> C *)
+let strip_all_ns s =
+  try
+    let base_name_start = String.rindex s '\\' + 1 in
+    String.sub s base_name_start ((String.length s) - base_name_start)
+  with Not_found -> s
 
 let str_starts_with long short =
   try

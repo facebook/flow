@@ -51,7 +51,6 @@ let autoimport_classes = [
   "WaitHandle";
   "StaticWaitHandle";
   "WaitableWaitHandle";
-  "BlockableWaitHandle";
   "ResumableWaitHandle";
   "AsyncFunctionWaitHandle";
   "AsyncGeneratorWaitHandle";

@@ -17,6 +17,7 @@
    point inside a function (and when to narrow or widen their types). *)
 
 open Utils
+open Sys_utils
 
 module Ast = Spider_monkey_ast
 module Constraint = Constraint_js

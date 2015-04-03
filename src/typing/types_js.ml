@@ -161,7 +161,7 @@ let infer_job opts (inferred, errsets) files =
     try checktime opts 1.0
       (fun t -> spf "perf: inferred %S in %f" file t)
       (fun () ->
-        (*prerr_endline (spf "[%d] INFER: %s" (Unix.getpid()) file);*)
+        (*prerr_endlinef "[%d] INFER: %s" (Unix.getpid()) file;*)
 
         (* infer produces a context for this module *)
         let cx = TI.infer_module file in
@@ -175,8 +175,8 @@ let infer_job opts (inferred, errsets) files =
         cx.file :: inferred, errs :: errsets
       )
     with exc ->
-      prerr_endline (spf "(%d) infer_job THROWS: %s"
-        (Unix.getpid()) (fmt_exc file exc));
+      prerr_endlinef "(%d) infer_job THROWS: %s"
+        (Unix.getpid()) (fmt_exc file exc);
       inferred, errsets
   ) (inferred, errsets) files
 
@@ -195,7 +195,7 @@ let infer workers files opts =
         ~job: (infer_job opts)
         ~neutral: ([], [])
         ~merge: rev_append_pair
-        ~next: (Bucket.make files) in
+        ~next: (Bucket.make_20 files) in
       save_errors infer_errors files errors;
       files
     )
@@ -273,32 +273,36 @@ let rec merge_requires cx rs =
 (* To merge results for a context, check for the existence of its requires,
    compute the dependency graph (via merge_requires), and then compute
    substitutions (via merge_module_strict). A merged context is returned. *)
-let merge_strict_context cx cache_function =
+let merge_strict_context cx master_cx cache_function =
   if cx.checked then (
     Hashtbl.clear cached_infer_contexts;
 
     check_requires cx;
     cache_function ();
 
-    let master_cx = ContextHeap.find_unsafe (Files_js.get_flowlib_root ()) in
-
     let cxs, links, declarations = merge_requires cx cx.required in
     TI.merge_module_strict cx cxs links declarations master_cx;
   ) else (
     (* do nothing on unchecked files *)
   );
-
   cx
 
 let merge_strict_file file =
   let cx = ContextHeap.find_unsafe file in
-  merge_strict_context cx (fun () -> Hashtbl.add cached_infer_contexts file cx)
+  let master_cx = ContextHeap.find_unsafe (Files_js.get_flowlib_root ()) in
+  merge_strict_context cx master_cx (fun () -> Hashtbl.add cached_infer_contexts file cx)
+
+let merge_strict_file_with_master file master_cx =
+  let cx = ContextHeap.find_unsafe file in
+  merge_strict_context cx master_cx
+    (fun () -> Hashtbl.add cached_infer_contexts file cx)
 
 let typecheck_contents contents filename =
   match Parsing_service_js.do_parse ~keep_errors:true contents filename with
   | Some ast, None ->
       let cx = TI.infer_ast ast filename "-" true in
-      Some (merge_strict_context cx (fun () -> ())), cx.errors
+      let master_cx = ContextHeap.find_unsafe (Files_js.get_flowlib_root ()) in
+      Some (merge_strict_context cx master_cx (fun () -> ())), cx.errors
   | _, Some errors ->
       None, errors
   | _ ->
@@ -307,18 +311,18 @@ let typecheck_contents contents filename =
 (* *)
 let merge_strict_job opts (merged, errsets) files =
   init_modes opts;
+  let master_cx = ContextHeap.find_unsafe (Files_js.get_flowlib_root ()) in
   List.fold_left (fun (merged, errsets) file ->
     try checktime opts 1.0
       (fun t -> spf "perf: merged %S in %f" file t)
       (fun () ->
-        (*prerr_endline (spf "[%d] MERGE: %s" (Unix.getpid()) file);*)
-
-        let cx = merge_strict_file file in
+        (*prerr_endlinef "[%d] MERGE: %s" (Unix.getpid()) file;*)
+        let cx = merge_strict_file_with_master file master_cx in
         cx.file :: merged, cx.errors :: errsets
       )
     with exc ->
-      prerr_endline (spf "(%d) merge_strict_job THROWS: %s\n"
-        (Unix.getpid()) (fmt_exc file exc));
+      prerr_endlinef "(%d) merge_strict_job THROWS: %s\n"
+        (Unix.getpid()) (fmt_exc file exc);
       (merged, errsets)
   ) (merged, errsets) files
 
@@ -335,7 +339,7 @@ let merge_strict workers files opts =
         ~job: (merge_strict_job opts)
         ~neutral: ([], [])
         ~merge: rev_append_pair
-        ~next: (Bucket.make files) in
+        ~next: (Bucket.make_20 files) in
       (* collect master context errors *)
       let (files, errsets) = (
         Flow_js.master_cx.file :: files,
@@ -362,8 +366,8 @@ let merge_nonstrict partition opts =
           ) acc cx_list
         with exc ->
           let files = Printf.sprintf "\n%s\n" (String.concat "\n" file_list) in
-          prerr_endline (spf "(%d) merge_module THROWS: %s\n"
-            (Unix.getpid()) (fmt_exc files exc));
+          prerr_endlinef "(%d) merge_module THROWS: %s\n"
+            (Unix.getpid()) (fmt_exc files exc);
           acc
       ) ([], []) partition in
       (* typecheck intrinsics--temp code *)
@@ -387,19 +391,6 @@ let calc_dependencies files =
   let (_, partition) = Sort_js.topsort deps in
   partition
 
-(* DISABLED
-   Enforce that strict dependencies don't have cycles. In the future, we
-   could do something with the topsort ordering, but for now we ignore it.
-*)
-let enforce_strict_dependencies files =
-  let deps = List.fold_left (fun err_map file ->
-    let { Module._module = m; strict_required = strict_reqs; _ } =
-      Module.get_module_info file in
-    SMap.add m (file, strict_reqs) err_map
-  ) SMap.empty files in
-  let (cycle,_) = Sort_js.topsort deps in
-  not cycle
-
 (* commit newly inferred and removed modules, collect errors. *)
 let commit_modules inferred removed =
   let files, errsets = Module.commit_modules inferred removed in
@@ -418,9 +409,7 @@ let typecheck workers files removed opts make_merge_input =
   let to_merge = make_merge_input inferred in
   (if modes.strict then (
     try
-      (* if enforce_strict_dependencies to_merge then *)
       merge_strict workers to_merge opts
-      (* else failwith "Cycle!" *)
     with exc ->
       prerr_endline (Printexc.to_string exc)
    )
@@ -571,9 +560,9 @@ let recheck genv env modified opts =
       let unmod_deps = deps unmodified_parsed inferred_set removed_modules in
 
       let n = SSet.cardinal unmod_deps in
-      prerr_endline (spf "remerge %d dependent files:" n);
+      prerr_endlinef "remerge %d dependent files:" n;
       let _ = SSet.fold (fun f i ->
-        prerr_endline (spf "%d/%d: %s" i n f); i + 1) unmod_deps 1 in
+        prerr_endlinef "%d/%d: %s" i n f; i + 1) unmod_deps 1 in
 
       SSet.elements (SSet.union unmod_deps inferred_set)
     ) |> ignore;

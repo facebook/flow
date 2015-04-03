@@ -9,6 +9,7 @@
  *)
 
 open Utils
+open Sys_utils
 module Errors = Errors_js
 module Reason = Reason_js
 module Ast = Spider_monkey_ast
@@ -97,8 +98,8 @@ let parse workers next init_modes =
 
   if Modes_js.(modes.profile) && not Modes_js.(modes.quiet) then
     let t2 = Unix.gettimeofday () in
-    prerr_endline (spf "parsed %d + %d files in %f"
-      (SSet.cardinal ok) (List.length fail) (t2 -. t))
+    prerr_endlinef "parsed %d + %d files in %f"
+      (SSet.cardinal ok) (List.length fail) (t2 -. t)
   else ();
 
   (ok, fail, errors)
@@ -106,7 +107,7 @@ let parse workers next init_modes =
 let reparse workers files init_modes =
   ParserHeap.remove_batch files;
   SharedMem.collect();
-  let next = Bucket.make (SSet.elements files) in
+  let next = Bucket.make_20 (SSet.elements files) in
   parse workers next init_modes
 
 let get_ast_unsafe file =

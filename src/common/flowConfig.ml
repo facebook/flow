@@ -9,6 +9,7 @@
  *)
 
 open Utils
+open Sys_utils
 
 type moduleSystem = Node | Haste
 

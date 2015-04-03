@@ -35,6 +35,7 @@ type 'a t = {
 let (lint_list: Relative_path.t t list option ref) = ref None
 
 let get_code {code; _} = code
+let get_pos {pos; _} = pos
 
 let add code severity pos message =
   if !Errors.is_hh_fixme pos code then () else begin

@@ -109,7 +109,10 @@ module Program : Server.SERVER_PROGRAM = struct
           | _ -> ()
         end env.ServerEnv.files_info
     | ServerMsg.AUTOCOMPLETE content ->
-        ServerAutoComplete.auto_complete env content oc
+        let result = ServerAutoComplete.auto_complete env.nenv content in
+        print_endline "Auto-complete";
+        Marshal.to_channel oc result [];
+        flush oc
     | ServerMsg.IDENTIFY_FUNCTION (content, line, char) ->
         ServerIdentifyFunction.go content line char oc
     | ServerMsg.OUTLINE content ->
@@ -184,27 +187,31 @@ module Program : Server.SERVER_PROGRAM = struct
     | ServerMsg.PING -> ServerMsg.response_to_channel oc ServerMsg.PONG
     | ServerMsg.BUILD build_opts ->
       let build_hook = BuildMain.go build_opts genv env oc in
-      ServerTypeCheck.hook_after_parsing := (fun genv old_env env updates ->
-        (* subtle: an exception there (such as writing on a closed pipe)
-         * will not be caught by handle_connection() because
-         * we have already returned from handle_connection(), hence
-         * this additional try.
-         *)
-        (try
-          with_context
-            ~enter:(fun () -> ())
-            ~exit:(fun () ->
-                   Unix.shutdown (Unix.descr_of_out_channel oc)
-                                 Unix.SHUTDOWN_SEND;
-                   close_out oc)
-            ~do_:(fun () -> build_hook genv old_env env updates);
-        with exn ->
-          let msg = Printexc.to_string exn in
-          Printf.printf "Exn in build_hook: %s" msg;
-          EventLogger.master_exception msg;
-        );
-        ServerTypeCheck.hook_after_parsing := (fun _ _ _ _ -> ())
-      )
+      let close oc =
+        Unix.shutdown (Unix.descr_of_out_channel oc) Unix.SHUTDOWN_SEND;
+        close_out oc in
+      (match build_hook with
+      | None -> close oc
+      | Some build_hook -> begin
+        ServerTypeCheck.hook_after_parsing := (fun genv old_env env updates ->
+          (* subtle: an exception there (such as writing on a closed pipe)
+           * will not be caught by handle_connection() because
+           * we have already returned from handle_connection(), hence
+           * this additional try.
+           *)
+          (try
+            with_context
+              ~enter:(fun () -> ())
+              ~exit:(fun () -> close oc)
+              ~do_:(fun () -> build_hook genv old_env env updates);
+          with exn ->
+            let msg = Printexc.to_string exn in
+            Printf.printf "Exn in build_hook: %s" msg;
+            EventLogger.master_exception msg;
+          );
+          ServerTypeCheck.hook_after_parsing := (fun _ _ _ _ -> ())
+        )
+      end)
     | ServerMsg.FIND_REFS find_refs_action ->
         ServerFindRefs.go find_refs_action genv env oc
     | ServerMsg.REFACTOR refactor_action ->

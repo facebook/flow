@@ -1,4 +1,36 @@
 
+assignment.js:16:14,21: null
+This type is incompatible with
+  assignment.js:10:12,13:1: object type
+
+assignment.js:16:14,21: undefined
+This type is incompatible with
+  assignment.js:10:12,13:1: object type
+
+assignment.js:22:14,21: property parent
+Property cannot be accessed on possibly null value
+  assignment.js:22:14,14: null
+
+assignment.js:22:14,21: property parent
+Property cannot be accessed on possibly undefined value
+  assignment.js:22:14,14: undefined
+
+bool.js:12:3,6: access of computed property/element
+Computed property/element cannot be accessed on possibly null value
+  bool.js:3:18,21: null
+
+bool.js:12:3,6: access of computed property/element
+Computed property/element cannot be accessed on possibly undefined value
+  bool.js:3:18,21: undefined
+
+bool.js:18:7,10: access of computed property/element
+Computed property/element cannot be accessed on possibly null value
+  bool.js:15:18,21: null
+
+bool.js:18:7,10: access of computed property/element
+Computed property/element cannot be accessed on possibly undefined value
+  bool.js:15:18,21: undefined
+
 hasOwnProperty.js:4:3,7: call of method y
 Function cannot be called on possibly undefined value
   hasOwnProperty.js:3:20,29: undefined
@@ -6,6 +38,34 @@ Function cannot be called on possibly undefined value
 hasOwnProperty.js:8:7,22: property z
 Property not found in
   hasOwnProperty.js:8:7,7: object type
+
+not.js:3:18,21: boolean
+This type is incompatible with
+  not.js:5:5,7: number
+
+not.js:3:18,21: null
+This type is incompatible with
+  not.js:5:5,7: number
+
+not.js:3:18,21: undefined
+This type is incompatible with
+  not.js:5:5,7: number
+
+not.js:11:5,8: access of computed property/element
+Computed property/element cannot be accessed on possibly null value
+  not.js:9:18,23: null
+
+not.js:11:5,8: access of computed property/element
+Computed property/element cannot be accessed on
+  not.js:9:18,23: number
+
+not.js:11:5,8: access of computed property/element
+Computed property/element cannot be accessed on possibly undefined value
+  not.js:9:18,23: undefined
+
+not.js:21:5,8: access of computed property/element
+Computed property/element cannot be accessed on
+  not.js:15:19,24: number
 
 refinements.js:2:16,16: number
 This type is incompatible with
@@ -59,6 +119,10 @@ refinements.js:50:13,17: boolean
 This type is incompatible with
   refinements.js:54:11,16: number
 
+typeof.js:5:5,8: access of computed property/element
+Computed property/element cannot be accessed on
+  typeof.js:3:17,20: boolean
+
 undef.js:29:29,34: null
 This type is incompatible with
   undef.js:31:13,20: number
@@ -82,6 +146,18 @@ This type is incompatible with
 undef.js:64:46,51: undefined
 This type is incompatible with
   undef.js:69:13,20: number
+
+union.js:7:5,8: access of computed property/element
+Computed property/element cannot be accessed on
+  union.js:3:23,26: boolean
+
+union.js:13:5,8: access of computed property/element
+Computed property/element cannot be accessed on
+  union.js:3:14,19: number
+
+union.js:19:5,8: access of computed property/element
+Computed property/element cannot be accessed on
+  union.js:3:14,19: number
 
 void.js:29:28,33: null
 This type is incompatible with
@@ -115,4 +191,4 @@ void.js:75:7,9: undefined
 This type is incompatible with
   void.js:75:36,45: number
 
-Found 29 errors
+Found 48 errors

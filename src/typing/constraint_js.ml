@@ -178,7 +178,7 @@ module Type = struct
   | MarkupT of reason * t * t
 
   (* operations on objects *)
-  | ObjAssignT of reason * t * t * SSet.t
+  | ObjAssignT of reason * t * t * string list * bool
   | ObjRestT of reason * string list * t
   | ObjSealT of reason * t
 
@@ -230,7 +230,7 @@ module Type = struct
 
   and objtype = {
     flags: flags;
-    dict_t: dicttype;
+    dict_t: dicttype option;
     props_tmap: int;
     proto_t: prototype;
   }
@@ -484,6 +484,10 @@ let new_bounds id reason =
   solution = None;
 }
 
+let copy_bounds b =
+  let { lower; upper; lowertvars; uppertvars; unifier; solution } = b in
+  { lower; upper; lowertvars; uppertvars; unifier; solution }
+
 type block_entry = {
   specific: Type.t;
   general: Type.t;
@@ -541,6 +545,7 @@ type context = {
   mutable property_maps: Type.t SMap.t IMap.t;
   mutable modulemap: Type.t SMap.t;
 
+  (* A subset of required modules on which the exported type depends *)
   mutable strict_required: SSet.t;
 
   mutable errors: Errors_js.ErrorSet.t;
@@ -776,7 +781,7 @@ let rec reason_of_t = function
   | UnifyT(_,t) ->
       reason_of_t t
 
-  | ObjAssignT (reason, _, _, _)
+  | ObjAssignT (reason, _, _, _, _)
   | ObjRestT (reason, _, _)
   | ObjSealT (reason, _)
     ->
@@ -925,7 +930,8 @@ let rec mod_reason_of_t f = function
 
   | UnifyT (t, t2) -> UnifyT (mod_reason_of_t f t, mod_reason_of_t f t2)
 
-  | ObjAssignT (reason, t, t2, filter) -> ObjAssignT (f reason, t, t2, filter)
+  | ObjAssignT (reason, t, t2, filter, resolve) ->
+      ObjAssignT (f reason, t, t2, filter, resolve)
   | ObjRestT (reason, t, t2) -> ObjRestT (f reason, t, t2)
   | ObjSealT (reason, t) -> ObjSealT (f reason, t)
 
@@ -1052,18 +1058,22 @@ let rec type_printer override fallback enclosure cx t =
            |> String.concat " "
         in
         let indexer =
-          (match dict_t.dict_name with
-          | Some name ->
+          (match dict_t with
+          | Some { dict_name; key; value } ->
               let indexer_prefix =
                 if props <> ""
                 then " "
                 else ""
               in
+              let dict_name = match dict_name with
+                | None -> "_"
+                | Some name -> name
+              in
               (spf "%s[%s: %s]: %s;"
                 indexer_prefix
-                name
-                (pp EnclosureNone cx dict_t.key)
-                (pp EnclosureNone cx dict_t.value)
+                dict_name
+                (pp EnclosureNone cx key)
+                (pp EnclosureNone cx value)
               )
           | None -> "")
         in
@@ -1356,10 +1366,10 @@ let rec is_printed_type_parsable_impl weak cx enclosure = function
   | ObjT (_, { props_tmap; dict_t; _ })
     ->
       let is_printable =
-        match dict_t.dict_name with
-        | Some _ ->
-            (is_printed_type_parsable_impl weak cx EnclosureNone dict_t.key) &&
-            (is_printed_type_parsable_impl weak cx EnclosureNone dict_t.value)
+        match dict_t with
+        | Some { key; value; _ } ->
+            (is_printed_type_parsable_impl weak cx EnclosureNone key) &&
+            (is_printed_type_parsable_impl weak cx EnclosureNone value)
         | None -> true
       in
       let prop_map = IMap.find_unsafe props_tmap cx.property_maps in

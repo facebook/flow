@@ -9,6 +9,7 @@
  *)
 
 open ClientExceptions
+open Sys_utils
 
 let get_hhserver () =
   let server_next_to_client = (Filename.dirname Sys.argv.(0)) ^ "/hh_server" in
@@ -56,7 +57,7 @@ let should_start env =
   then begin
     try
       (* Let's ping the server to make sure it's up and not out of date *)
-      let response = ServerMsg.with_timeout 6
+      let response = with_timeout 6
         ~on_timeout:(fun _ -> raise Server_busy)
         ~do_:(fun () ->
           let ic, oc = ClientUtils.connect env.root in

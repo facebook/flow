@@ -368,11 +368,10 @@ module Env = struct
           p, name
     )
 
-  (* Is called bad_style, but it is still an error ... Whatever *)
-  let bad_style env (p, x) =
-    let p' = SMap.get x !(env.all_locals) in
-    match p' with None -> assert false | Some p' ->
-      Errors.different_scope p x p'
+  let check_variable_scoping env (p, x) =
+    match SMap.get x !(env.all_locals) with
+    | Some p' -> Errors.different_scope p x p'
+    | None -> ()
 
   let is_superglobal =
     let l = [
@@ -433,8 +432,7 @@ module Env = struct
         match lcl with
         | Some lcl -> p, snd lcl
         | None when not !Autocomplete.auto_complete ->
-            if SMap.mem x !(env.all_locals)
-            then bad_style env (p, x);
+            check_variable_scoping env (p, x);
             handle_undefined_variable (genv, env) (p, x)
         | None -> p, Ident.tmp()
     in
@@ -805,6 +803,7 @@ and hint_id ~allow_this env is_static_var (p, x as id) hl =
     | x when x = SN.Typehints.num  -> N.Hprim N.Tnum
     | x when x = SN.Typehints.resource -> N.Hprim N.Tresource
     | x when x = SN.Typehints.arraykey -> N.Hprim N.Tarraykey
+    | x when x = SN.Typehints.noreturn -> N.Hprim N.Tnoreturn
     | x when x = SN.Typehints.mixed -> N.Hmixed
     | x when x = SN.Typehints.shape ->
         Errors.shape_typehint p;

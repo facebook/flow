@@ -697,8 +697,10 @@ end = struct
         })
 
       in let semicolon env =
-        if Peek.token env <> T_RCURLY
-        then Expect.token env T_SEMICOLON
+        match Peek.token env with
+        | T_COMMA | T_SEMICOLON -> Eat.token env
+        | T_RCURLY -> ()
+        | _ -> error_unexpected env
 
       in let rec properties ~allow_static env (acc, indexers, callProperties) =
         let start_loc = Peek.loc env in

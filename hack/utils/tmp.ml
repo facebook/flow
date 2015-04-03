@@ -17,13 +17,14 @@ let temp_dir_name =
   let dir = Filename.temp_dir_name in
   if dir.[String.length dir - 1] <> '/' then dir ^ "/" else dir
 
-let get_dir ?user:(user=None) () =
-  let user = match user with
-    | None -> Sys_utils.logname
-    | Some user -> user in
-  let tmp_dir = temp_dir_name ^ SysConfig.temp_base ^ "_" ^ user in
+let get_dir () =
+  let tmp_dir = temp_dir_name ^ SysConfig.temp_base in
   (* Emulate "mkdir -p", i.e., no error if already exists. *)
-  (try Unix.mkdir tmp_dir 0o755 with Unix.Unix_error (Unix.EEXIST, _, _) -> ());
+  Sys_utils.with_umask 0 begin fun () ->
+    (* Don't set sticky bit since the socket opening code wants to remove any
+     * old sockets it finds, which may be owned by a different user. *)
+    try Unix.mkdir tmp_dir 0o777 with Unix.Unix_error (Unix.EEXIST, _, _) -> ()
+  end;
   tmp_dir
 
 (* The missing counterpart to Filename.temp_file. Put in a random location

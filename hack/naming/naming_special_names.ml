@@ -83,6 +83,11 @@ module Members = struct
   let __get        = "__get"
   let __unset      = "__unset"
 
+
+  (* Any data- or aria- attribute is always valid, even if it is not declared
+   * for a given XHP element *)
+  let is_special_xhp_attribute s =
+    (Utils.str_starts_with s ":data-") || (Utils.str_starts_with s ":aria-")
 end
 
 open Utils
@@ -156,9 +161,10 @@ end
 module Typehints = struct
 
   let void     = "void"
-  let num      = "num"
   let resource = "resource"
+  let num      = "num"
   let arraykey = "arraykey"
+  let noreturn = "noreturn"
   let mixed    = "mixed"
   let this     = "this"
 

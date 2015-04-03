@@ -10,18 +10,21 @@
 
 open Coverage_level
 open Utils
+open Sys_utils
 
 (*****************************************************************************)
 (* Types, constants *)
 (*****************************************************************************)
 
 type mode =
-  | Suggest
+  | Ai
+  | Autocomplete
   | Color
-  | Coverage
-  | Prolog
-  | Lint
   | Errors
+  | Coverage
+  | Lint
+  | Prolog
+  | Suggest
 
 type options = {
   filename : string;
@@ -114,7 +117,8 @@ let builtins = "<?hh // decl\n"^
   "}\n"^
   "function array_map($x, $y, ...);\n"^
   "function idx<Tk, Tv>(?KeyedContainer<Tk, Tv> $c, $i, $d = null) {}\n"^
-  "final class stdClass {}\n"
+  "final class stdClass {}\n" ^
+  "function rand($x, $y): int;\n"
 
 (*****************************************************************************)
 (* Helpers *)
@@ -138,21 +142,27 @@ let parse_options () =
     else mode := x
   in
   let options = [
-    "--suggest",
-      Arg.Unit (set_mode Suggest),
-      "Suggest missing typehints";
+    "--ai",
+      Arg.Unit (set_mode Ai),
+      "Run the abstract interpreter";
+    "--auto-complete",
+      Arg.Unit (set_mode Autocomplete),
+      "Produce autocomplete suggestions";
     "--color",
       Arg.Unit (set_mode Color),
       "Produce color output";
     "--coverage",
       Arg.Unit (set_mode Coverage),
       "Produce coverage output";
-    "--prolog",
-      Arg.Unit (set_mode Prolog),
-      "Produce prolog facts";
     "--lint",
       Arg.Unit (set_mode Lint),
       "Produce lint errors";
+    "--prolog",
+      Arg.Unit (set_mode Prolog),
+      "Produce prolog facts";
+    "--suggest",
+      Arg.Unit (set_mode Suggest),
+      "Suggest missing typehints";
   ] in
   Arg.parse options (fun fn -> fn_ref := Some fn) usage;
   let fn = match !fn_ref with
@@ -248,8 +258,16 @@ let print_prolog files_info =
   end files_info [] in
   PrologMain.output_facts stdout facts
 
-let handle_mode mode files_info errors lint_errors =
+let handle_mode mode filename nenv files_info errors lint_errors ai_results =
   match mode with
+  | Ai -> ()
+  | Autocomplete ->
+      let file = cat (Relative_path.to_absolute filename) in
+      let result = ServerAutoComplete.auto_complete nenv file in
+      List.iter begin fun r ->
+        let open AutocompleteService in
+        Printf.printf "%s %s\n" r.res_name r.res_ty
+      end result
   | Color ->
       Relative_path.Map.iter begin fun fn fileinfo ->
         if fn = builtins_filename then () else begin
@@ -265,8 +283,6 @@ let handle_mode mode files_info errors lint_errors =
           print_coverage fn type_acc;
         end
       end files_info
-  | Prolog ->
-      print_prolog files_info
   | Lint ->
       let lint_errors =
         Relative_path.Map.fold begin fun fn fileinfo lint_errors ->
@@ -276,11 +292,16 @@ let handle_mode mode files_info errors lint_errors =
         end files_info lint_errors in
       if lint_errors <> []
       then begin
+        let lint_errors = List.sort begin fun x y ->
+          Pos.compare (Lint.get_pos x) (Lint.get_pos y)
+        end lint_errors in
         let lint_errors = List.map Lint.to_absolute lint_errors in
         ServerLint.output_text stdout lint_errors;
         exit 2
       end
       else Printf.printf "No lint errors\n"
+  | Prolog ->
+      print_prolog files_info
   | Suggest
   | Errors ->
       let errors = Relative_path.Map.fold begin fun _ fileinfo errors ->
@@ -300,9 +321,16 @@ let main_hack { filename; mode; } =
   ignore (Sys.signal Sys.sigusr1 (Sys.Signal_handle Typing.debug_print_last_pos));
   SharedMem.init();
   Hhi.set_hhi_root_for_unit_test "/tmp/hhi";
+  let outer_do f = match mode with
+    | Ai ->
+       let ai_results, inner_results = Ai.do_ f in
+       ai_results, [], inner_results
+    | _ ->
+       let lint_results, inner_results = Lint.do_ f in
+       [], lint_results, inner_results in
   let filename = Relative_path.create Relative_path.Dummy filename in
-  let lint_errors, (errors, files_info) =
-    Lint.do_ begin fun () ->
+  let ai_results, lint_errors, (errors, (nenv, files_info)) =
+    outer_do begin fun () ->
       Errors.do_ begin fun () ->
         let parsed_files = parse_file filename in
         let parsed_builtins = Parser_hack.program builtins_filename builtins in
@@ -337,10 +365,10 @@ let main_hack { filename; mode; } =
           Typing_decl.make_env nenv all_classes fn
         end files_info;
 
-        files_info
+        nenv, files_info
       end
     end in
-  handle_mode mode files_info errors lint_errors
+  handle_mode mode filename nenv files_info errors lint_errors ai_results
 
 (* command line driver *)
 let _ =

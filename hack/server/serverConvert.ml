@@ -8,6 +8,7 @@
  *
  *)
 open Utils
+open Sys_utils
 
 (*****************************************************************************)
 (* Pretty prints a patch *)
@@ -45,7 +46,7 @@ let file_data = ref (Relative_path.Map.empty :
   (int * string) list Relative_path.Map.t)
 
 let split_and_number content =
-  let lines = Utils.split_lines content in
+  let lines = split_lines content in
   let (_, numbered_lines) = List.fold_left begin fun (n, acc) line ->
     n+1, (n, line)::acc
   end (1, []) lines in
@@ -281,7 +282,6 @@ let check_no_error genv env =
 (*****************************************************************************)
 (* Entry point *)
 (*****************************************************************************)
-open Utils
 open ServerEnv
 
 (* Selects the files we want to annotate. *)

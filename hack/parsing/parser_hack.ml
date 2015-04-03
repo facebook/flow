@@ -3733,5 +3733,5 @@ and namespace_use_list env acc =
 
 let from_file file =
   let content =
-    try Utils.cat (Relative_path.to_absolute file) with _ -> "" in
+    try Sys_utils.cat (Relative_path.to_absolute file) with _ -> "" in
   program file content

@@ -23,7 +23,7 @@ let file_input_get_filename = function
   | FileContent (None, _) -> "-"
 
 let file_input_get_content = function
-  | FileName fn -> Utils.cat fn
+  | FileName fn -> Sys_utils.cat fn
   | FileContent (_, content) -> content
 
 type command =
