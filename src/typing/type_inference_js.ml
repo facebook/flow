@@ -867,7 +867,7 @@ and statement_decl cx = Ast.Statement.(
   | (loc, With _) ->
       (* TODO disallow or push vars into env? *)
       ()
-
+  | (loc, DeclareTypeAlias { TypeAlias.id; typeParameters; right})
   | (loc, TypeAlias { TypeAlias.id; typeParameters; right; } ) ->
       let _, { Ast.Identifier.name; _ } = id in
       let r = mk_reason (spf "type %s" name) loc in
@@ -1249,7 +1249,7 @@ and statement cx = Ast.Statement.(
   | (loc, With _) ->
       (* TODO or disallow? *)
       ()
-
+  | (loc, DeclareTypeAlias { TypeAlias.id; typeParameters; right})
   | (loc, TypeAlias { TypeAlias.id; typeParameters; right; } ) ->
       let _, { Ast.Identifier.name; _ } = id in
       let r = mk_reason (spf "type %s" name) loc in
