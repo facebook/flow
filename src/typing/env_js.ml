@@ -319,6 +319,27 @@ let clear_env reason =
     else create_env_entry ~for_type (UndefT reason) general def_loc
   )
 
+let string_of_block_entry cx entry =
+  let pos = match entry.def_loc with
+  | Some loc -> (string_of_pos (pos_of_loc loc))
+  | None -> "(none)"
+  in
+  Utils.spf "{ specific: %s; general: %s; def_loc: %s; for_type: %b }"
+    (dump_t cx entry.specific)
+    (dump_t cx entry.general)
+    pos
+    entry.for_type
+
+let string_of_block cx block =
+  SMap.fold (fun k v acc ->
+    (Utils.spf "%s: %s" k (string_of_block_entry cx v))::acc
+  ) !block []
+  |> String.concat ";\n  "
+  |> Utils.spf "{\n  %s\n}"
+
+let string_of_env cx ctx =
+  String.concat "\n" (List.map (string_of_block cx) ctx)
+
 (* The following functions are used to narrow the type of variables
    based on dynamic checks. *)
 
