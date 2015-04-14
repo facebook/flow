@@ -71,6 +71,9 @@ val havoc_heap_refinements : unit -> unit
 
 val clear_env : Reason_js.reason -> unit
 
+val string_of_block : context -> block -> string
+val string_of_env : context -> block list -> string
+
 val changeset: SSet.t ref
 val swap_changeset: (SSet.t -> SSet.t) -> SSet.t
 
