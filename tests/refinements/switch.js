@@ -34,7 +34,7 @@ function baz2(text: string | number): string {
   switch (typeof text) {
     case 'string':
     case 'number':
-      return text[0];
+      return text[0]; // error, [0] on number
   　default:
       return 'wat';
 　}
