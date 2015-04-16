@@ -1,3 +1,30 @@
+v0.9.0
+
+- Bump version to 0.9.0
+- Add Video-, Audio and TextTrackList (+ dependencies)
+- Refine switch cases
+- Better Not_found error
+- [PR #333] Partial fs module implementation
+- Update parser to match esprima-fb
+- [PR #370] Dom canvas context
+- [PR #393] Symbol should be called statically. Fix #391
+- Fix havoc_env to copy the `for_type` value
+- add bash completion
+- rewrite all the commands to use CommandSpec
+- json_of_t
+- [PR #384] Env printer
+- [PR #383] Add some build/test artifacts to .gitignore
+- [PR #377] Add missing HTMLImageElement properties
+- [PR #367] Re-add merged out oneOfType proptype implementation
+- Allow users to pin their .flowconfig to a specific version
+- colorize test failure diffs
+- Object spread fix
+- [PR #322] Add type signature for node "url", "querystring" and "path" modules
+- command parsing library
+- look for package.json in include paths
+- clear module errors properly
+- add verbose mode
+
 v0.8.0
 
 - Bump version to 0.8.0
