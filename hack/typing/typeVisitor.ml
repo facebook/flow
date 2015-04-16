@@ -15,7 +15,7 @@ class type ['a] type_visitor_type = object
   method on_tany : 'a -> 'a
   method on_tmixed : 'a -> 'a
   method on_tarray : 'a -> ty option -> ty option -> 'a
-  method on_tgeneric : 'a -> string -> ty option -> 'a
+  method on_tgeneric : 'a -> string -> (Ast.constraint_kind * ty) option -> 'a
   method on_toption : 'a -> ty -> 'a
   method on_tprim : 'a -> Nast.tprim -> 'a
   method on_tvar : 'a -> Ident.t -> 'a
@@ -38,13 +38,14 @@ class virtual ['a] type_visitor : ['a] type_visitor_type = object(this)
     let acc = opt_fold_left this#on_type acc ty1_opt in
     let acc = opt_fold_left this#on_type acc ty2_opt in
     acc
-  method on_tgeneric acc _ ty_opt = opt_fold_left this#on_type acc ty_opt
+  method on_tgeneric acc _ cstr =
+    opt_fold_left this#on_type acc (opt_map snd cstr)
   method on_toption acc ty = this#on_type acc ty
   method on_tprim acc _ = acc
   method on_tvar acc _ = acc
   method on_tfun acc {ft_params; ft_tparams; ft_ret; _} =
     let acc = List.fold_left this#on_type acc (List.map snd ft_params) in
-    let tparams = List.map thd3 ft_tparams in
+    let tparams = List.map (fun (_, _, x) -> opt_map snd x) ft_tparams in
     let acc = List.fold_left (opt_fold_left this#on_type) acc tparams in
     this#on_type acc ft_ret
   method on_tabstract acc _ tyl ty_opt =
@@ -65,7 +66,7 @@ class virtual ['a] type_visitor : ['a] type_visitor_type = object(this)
     | _, Tmixed -> this#on_tmixed acc
     | _, Tarray (ty1_opt, ty2_opt) ->
       this#on_tarray acc ty1_opt ty2_opt
-    | _, Tgeneric (s, ty_opt) -> this#on_tgeneric acc s ty_opt
+    | _, Tgeneric (s, cstr_opt) -> this#on_tgeneric acc s cstr_opt
     | _, Toption ty -> this#on_toption acc ty
     | _, Tprim prim -> this#on_tprim acc prim
     | _, Tvar id -> this#on_tvar acc id

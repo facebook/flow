@@ -51,9 +51,10 @@ let map_snd f (x,y) = (x, f y)
 
 let rec map_ty_ f t =
   match t with
-    | Tarray (ot, ot') -> f (Tarray ((opt_map (map_ty f) ot),
-                                     (opt_map (map_ty f) ot')))
-    | Tgeneric (a,ot) -> f (Tgeneric (a, opt_map (map_ty f) ot))
+    | Tarray (ot, ot') ->
+        f (Tarray ((opt_map (map_ty f) ot), (opt_map (map_ty f) ot')))
+    | Tgeneric (a, ot) ->
+        f (Tgeneric (a, (opt_map (map_snd (map_ty f)) ot)))
     | Toption t -> f (Toption (map_ty f t))
     | Tapply (x, ts) -> f (Tapply (x, List.map (map_ty f) ts))
     | Ttuple ts -> f (Ttuple (List.map (map_ty f) ts))

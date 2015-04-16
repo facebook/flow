@@ -11,6 +11,8 @@
 open Utils
 open Sys_utils
 
+let version = "0.9.0"
+
 type moduleSystem = Node | Haste
 
 type options = {
@@ -306,6 +308,22 @@ let parse_options config lines =
   let options = OptionsParser.parse options_parser lines in
   { config with options }
 
+let assert_version (ln, line) =
+  if line <> version
+  then error ln (
+    spf
+      "Wrong version of Flow. The config specifies version %s but this is version %s"
+      line
+      version
+  )
+
+let parse_version config lines =
+  lines
+    |> List.map (fun (ln, line) -> ln, String.trim line)
+    |> List.filter (fun (ln, s) -> s <> "")
+    |> List.iter assert_version;
+  config
+
 let parse_section config ((section_ln, section), lines) =
   match section, lines with
   | "", [] when section_ln = 0 -> config
@@ -315,6 +333,7 @@ let parse_section config ((section_ln, section), lines) =
   | "ignore", _ -> parse_excludes config lines
   | "libs", _ -> parse_libs config lines
   | "options", _ -> parse_options config lines
+  | "version", _ -> parse_version config lines
   | _ -> error section_ln (spf "Unsupported config section: \"%s\"" section)
 
 let parse config lines =

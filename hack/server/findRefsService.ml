@@ -116,7 +116,7 @@ let get_deps_set_function f_name =
 let find_refs target_classes target_method acc fileinfo_l =
   let results_acc = ref Pos.Map.empty in
   attach_hooks results_acc target_classes target_method;
-  ServerIdeUtils.recheck fileinfo_l;
+  ServerIdeUtils.recheck TypecheckerOptions.permissive fileinfo_l;
   detach_hooks ();
   Pos.Map.fold begin fun p str acc ->
     (str, p) :: acc

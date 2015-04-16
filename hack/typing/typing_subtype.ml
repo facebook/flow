@@ -76,26 +76,112 @@ let rec subtype_funs_generic ~check_return env r_super ft_super r_sub
   let env, _ = Unify.unify_funs env r_sub ft_sub r_sub orig_ft_sub in
   env
 
-and subtype_tparams env variancel super_tyl children_tyl =
+and subtype_tparams env c_name variancel super_tyl children_tyl =
   match variancel, super_tyl, children_tyl with
   | [], [], [] -> env
   | [], _, _
   | _, [], _
   | _, _, [] -> env
   | variance :: variancel, super :: superl, child :: childrenl ->
-      let env = subtype_tparam env variance super child in
-      subtype_tparams env variancel superl childrenl
+      let env = subtype_tparam env c_name variance super child in
+      subtype_tparams env c_name variancel superl childrenl
 
-and subtype_tparam env variance super child =
+and subtype_tparam env c_name variance (r_super, _ as super) child =
   match variance with
   | Ast.Covariant -> sub_type env super child
-  | Ast.Contravariant -> sub_type env child super
+  | Ast.Contravariant ->
+      Errors.try_
+        (fun () -> super_type env super child)
+        (fun err ->
+          let pos = Reason.to_pos r_super in
+          Errors.explain_contravariance pos c_name err; env)
   | Ast.Invariant -> fst (Unify.unify env super child)
 
 (* Distinction b/w sub_type and sub_type_with_uenv similar to unify and
  * unify_with_uenv, see comment there. *)
 and sub_type env ty_super ty_sub =
   sub_type_with_uenv env (TUEnv.empty, ty_super) (TUEnv.empty, ty_sub)
+
+and super_type env ty_super ty_sub =
+  let old_gs = Env.grow_super env in
+  let env =
+    sub_type_with_uenv { env with Env.grow_super = not old_gs }
+      (TUEnv.empty, ty_sub) (TUEnv.empty, ty_super) in
+  { env with Env.grow_super = old_gs }
+
+and get_super_typevar_set_ env set ty_super =
+  let env, ety_super = Env.expand_type env ty_super in
+  match ety_super with
+  | _, Tgeneric (x_super, cstr_opt) ->
+    let set = SSet.add x_super set in
+    (match cstr_opt with
+     | Some (Ast.Constraint_super, ty) -> get_super_typevar_set_ env set ty
+     | _ -> set)
+  | _ -> set
+
+(* If ty_super is a typevar, this function returns a set of the names of all
+ * typevars that are known to be subtypes of ty_super via "super" constraints,
+ * including ty_super itself. If ty_super is not a typevar, this returns the
+ * empty set. *)
+and get_super_typevar_set env ty_super =
+  get_super_typevar_set_ env SSet.empty ty_super
+
+and match_typevars_ env super_typevar_set ty_sub =
+  let env, ety_sub = Env.expand_type env ty_sub in
+  match ety_sub with
+  | _, Tgeneric (x_sub, cstr_opt) ->
+    if SSet.mem x_sub super_typevar_set then true else
+    (match cstr_opt with
+     | Some (Ast.Constraint_as, ty_sub) ->
+         match_typevars_ env super_typevar_set ty_sub
+     | _ -> false)
+  | _ -> false
+
+(* This function traverses over all the typevars known to be supertypes of
+ * ty_sub via "as" constraints (including ty_sub itself), and returns true
+ * if any of these typevars are in the set of typevars known to be subtypes
+ * of ty_super (as computed by get_super_typevar_set). Otherwise, this
+ * function returns false. *)
+and match_typevars env ty_super ty_sub =
+  match_typevars_ env (get_super_typevar_set env ty_super) ty_sub
+
+and typevars_subtype_ env (uenv_super, ety_super) (uenv_sub, ety_sub) =
+  match ety_super, ety_sub with
+  | _, (r_sub, Tgeneric (x_sub, Some (Ast.Constraint_as, ty_sub))) ->
+    Errors.try_
+      (fun () ->
+        let env, ety_sub = Env.expand_type env ty_sub in
+        typevars_subtype_ env (uenv_super, ety_super) (uenv_sub, ety_sub))
+      (fun l ->
+        Reason.explain_generic_constraint env.Env.pos r_sub x_sub l; env)
+  | (r_super, Tgeneric (x_super, Some (Ast.Constraint_super, ty_super))), _ ->
+    Errors.try_
+      (fun () ->
+        let env, ety_super = Env.expand_type env ty_super in
+        typevars_subtype_ env (uenv_super, ety_super) (uenv_sub, ety_sub))
+      (fun l ->
+        Reason.explain_generic_constraint env.Env.pos r_super x_super l; env)
+  | _ ->
+    sub_type_with_uenv env (uenv_super, ety_super) (uenv_sub, ety_sub)
+
+(* Checks if one typevar is a subtype of another typevar. *)
+and typevars_subtype env (uenv_super, ety_super) (uenv_sub, ety_sub) =
+  (* First, check if there exists some typevar that is a subtype of
+     ety_super (via "super" constraints) AND that is a supertype of ety_sub
+     (via "as" constraints). If such a typevar exists, then ety_sub must be a
+     subtype of ety_super. *)
+  if match_typevars env ety_super ety_sub then env else
+  (* Otherwise, traverse "super" constraints starting at ety_super,
+     traverse "as" constraints starting at ety_sub, and then check if the
+     latter is a subtype of the former. This logic is needed to support cases
+     such as `Tu as C, Tv super C` when we're checking if Tu is a subtype of
+     Tv.
+
+     Note that `Tu as Tv super Tw as C` cannot be a subtype of `Tx super C`
+     because `Tv` is not constrained in any way by `C`. Thus, if we encounter
+     any `super` constraints in the subtype or `as` constraints in the
+     supertype, it is safe to say that we have a type error. *)
+  typevars_subtype_ env (uenv_super, ety_super) (uenv_sub, ety_sub)
 
 (**
  * Checks that ty_sub is a subtype of ty_super, and returns an env.
@@ -125,12 +211,35 @@ and sub_type_with_uenv env (uenv_super, ty_super) (uenv_sub, ty_sub) =
       let env, _ =
         Unify.unify_with_uenv env (uenv_super, ty_super) (uenv_sub, ty_sub) in
       env
-  | (_, Tunresolved _), (r_sub, _) ->
+(****************************************************************************)
+(* ### Begin Tunresolved madness ###
+ * If grow_super is true (the common case), then if the supertype is a
+ * Tunresolved, we allow it to keep growing, which is the desired behavior for
+ * e.g. figuring out the type of a generic, but if the subtype is a
+ * Tunresolved, then we check that all the members are indeed subtypes of the
+ * given supertype, which is the desired behavior for e.g. checking function
+ * return values. In general, if a supertype is Tunresolved, then we
+ * consider it to be "not yet finalized", but if a subtype is Tunresolved
+ * and the supertype isn't, we've probably hit a type annotation
+ * and should consider the supertype to be definitive.
+ *
+ * However, sometimes we want this behavior reversed, e.g. when the type
+ * annotation has a contravariant generic parameter or a `super` constraint --
+ * now the definitive type is the subtype.
+ *
+ * I considered splitting this out into a separate function and swapping the
+ * order of the super / sub types passed to it, so we would only have to handle
+ * one set of cases, but it doesn't look much better since that function still
+ * has to recursively call sub_type and therefore needs to remember whether its
+ * arguments had been swapped.
+ *)
+(****************************************************************************)
+  | (_, Tunresolved _), (r_sub, _) when Env.grow_super env ->
       let ty_sub = (r_sub, Tunresolved [ty_sub]) in
       let env, _ =
         Unify.unify_with_uenv env (uenv_super, ty_super) (uenv_sub, ty_sub) in
       env
-  | (_, Tany), (_, Tunresolved _) ->
+  | (_, Tany), (_, Tunresolved _) when Env.grow_super env ->
       (* This branch is necessary in the following case:
        * function foo<T as I>(T $x)
        * if I call foo with an intersection type, T is a Tvar,
@@ -141,32 +250,40 @@ and sub_type_with_uenv env (uenv_super, ty_super) (uenv_sub, ty_sub) =
        * type.
        *)
       fst (Unify.unify_with_uenv env (uenv_super, ty_super) (uenv_sub, ty_sub))
-  | _, (_, Tunresolved tyl) ->
+  | _, (_, Tunresolved tyl) when Env.grow_super env ->
       List.fold_left begin fun env x ->
         sub_type_with_uenv env (uenv_super, ty_super) (uenv_sub, x)
       end env tyl
-  | (_, Tapply _), (r_sub, Tgeneric (x, Some ty_sub))
-  | (_, Tprim _), (r_sub, Tgeneric (x, Some ty_sub)) ->
-      (Errors.try_
-         (fun () -> sub_type_with_uenv env (uenv_super, ty_super) (uenv_sub, ty_sub))
-         (fun l -> Reason.explain_generic_constraint r_sub x l; env)
-      )
-  | (_, Tgeneric ("this", Some ty_super)), (_, Tgeneric ("this", Some ty_sub)) ->
+(****************************************************************************)
+(* Repeat the previous 3 cases but with the super / sub order reversed *)
+(****************************************************************************)
+  | (r_super, _), (_, Tunresolved _) when not (Env.grow_super env) ->
+      let ty_super = (r_super, Tunresolved [ty_super]) in
+      let env, _ =
+        Unify.unify_with_uenv env (uenv_super, ty_super) (uenv_sub, ty_sub) in
+      env
+  | (_, Tunresolved _), (_, Tany) when not (Env.grow_super env) ->
+      fst (Unify.unify_with_uenv env (uenv_super, ty_super) (uenv_sub, ty_sub))
+  | (_, Tunresolved tyl), _ when not (Env.grow_super env) ->
+      List.fold_left begin fun env x ->
+        sub_type_with_uenv env (uenv_super, x) (uenv_sub, ty_sub)
+      end env tyl
+(****************************************************************************)
+(* OCaml doesn't inspect `when` clauses when checking pattern matching
+ * exhaustiveness, so just assert false here *)
+(****************************************************************************)
+  | _, (_, Tunresolved _)
+  | (_, Tunresolved _), _ -> assert false
+(****************************************************************************)
+(* ### End Tunresolved madness ### *)
+(****************************************************************************)
+  | (_, Tgeneric ("this", Some (_, ty_super))),
+    (_, Tgeneric ("this", Some (_, ty_sub))) ->
       sub_type env ty_super ty_sub
-  | (_, Tgeneric (x_super, _)), (r_sub, Tgeneric (x_sub, Some ty_sub)) ->
-      if x_super = x_sub then env else
-      (Errors.try_
-         (fun () -> sub_type_with_uenv env (uenv_super, ty_super) (uenv_sub, ty_sub))
-         (fun l -> Reason.explain_generic_constraint r_sub x_sub l; env)
-      )
+  | (_, Tgeneric (_, _)), (_, Tgeneric (_, Some (Ast.Constraint_as, _)))
+  | (_, Tgeneric (_, Some (Ast.Constraint_super, _))), (_, Tgeneric (_, _)) ->
+      typevars_subtype env (uenv_super, ety_super) (uenv_sub, ety_sub)
   (* Dirty covariance hacks *)
-  | (_, (Tapply ((_, name_super), [ty_super]))), (_, (Tapply ((_, name_sub), [ty_sub])))
-    when name_super = SN.Classes.cAwaitable &&
-      name_sub = SN.Classes.cAwaitable ->
-      let old_allow_null_as_void = Env.allow_null_as_void env in
-      let env = Env.set_allow_null_as_void env in
-      let env = sub_type env ty_super ty_sub in
-      Env.set_allow_null_as_void ~allow:old_allow_null_as_void env
   | (_, (Tapply ((_, name_super), [ty_super]))),
     (_, (Tapply ((_, name_sub), [ty_sub])))
     when name_super = name_sub &&
@@ -199,19 +316,6 @@ and sub_type_with_uenv env (uenv_super, ty_super) (uenv_sub, ty_sub) =
       let env = sub_type env t1_super t1_sub in
       let env = sub_type env t2_super t2_sub in
       sub_type env t3_super t3_sub
-  | (_, (Tapply ((_, name_super), [tk_super; tv_super; ts_super]))),
-    (_, (Tapply ((_, name_sub), [tk_sub; tv_sub; ts_sub])))
-    when name_super = name_sub && (name_super = SN.Classes.cGenerator) ->
-      (* Currently, we are only covariant in the type of the value yielded. I
-       * think we could also be covariant in the type of the key yielded and
-       * also *contravariant* in the type of the value sent in, but since this
-       * code is new and no one is relying on those two yet, let's see if we can
-       * get away with being invariant and if anyone complains we can
-       * reconsider. TODO(#4534682) come back to this. *)
-      let env = sub_type env tv_super tv_sub in
-      let env, _ = Unify.unify env tk_super tk_sub in
-      let env, _ = Unify.unify env ts_super ts_sub in
-      env
   | (p_super, (Tapply (x_super, tyl_super) as ty_super_)),
       (p_sub, (Tapply (x_sub, tyl_sub) as ty_sub_))
       when Typing_env.get_enum_constraint (snd x_sub) = None  ->
@@ -225,7 +329,7 @@ and sub_type_with_uenv env (uenv_super, ty_super) (uenv_sub, ty_sub) =
             let variancel =
               List.map (fun (variance, _, _) -> variance) tc_tparams
             in
-            subtype_tparams env variancel tyl_super tyl_sub
+            subtype_tparams env cid_super variancel tyl_super tyl_sub
       else fst (Unify.unify env ety_super ety_sub)
     else begin
       let class_ = Env.get_class env cid_sub in
@@ -356,7 +460,7 @@ and sub_type_with_uenv env (uenv_super, ty_super) (uenv_sub, ty_sub) =
           let variancel =
             List.map (fun (variance, _, _) -> variance) tparams
           in
-          subtype_tparams env variancel tyl_super tyl_sub
+          subtype_tparams env name_super variancel tyl_super tyl_sub
       | _ -> env
       )
   | _, (_, Tabstract (_, _, Some x)) ->
@@ -373,6 +477,19 @@ and sub_type_with_uenv env (uenv_super, ty_super) (uenv_sub, ty_sub) =
           (fun () -> fst (Unify.unify env ty_super ty_sub))
           (fun _ -> sub_type env ty_super base)
       | None -> assert false)
+  (* If all else fails we fall back to the super/as constraint on a generics. *)
+  | _, (r_sub, Tgeneric (x, Some (Ast.Constraint_as, ty_sub))) ->
+      (Errors.try_
+         (fun () -> sub_type_with_uenv env (uenv_super, ty_super) (uenv_sub, ty_sub))
+         (fun l ->
+           Reason.explain_generic_constraint env.Env.pos r_sub x l; env)
+      )
+  | (r_super, Tgeneric (x, Some (Ast.Constraint_super, ty))), _ ->
+      (Errors.try_
+         (fun () -> sub_type_with_uenv env (uenv_super, ty) (uenv_sub, ty_sub))
+         (fun l ->
+           Reason.explain_generic_constraint env.Env.pos r_super x l; env)
+      )
   | (_, (Tarray (_, _) | Tprim _ | Tgeneric (_, _) | Tvar _
     | Tabstract (_, _, _) | Tapply (_, _) | Ttuple _ | Tanon (_, _) | Tfun _
     | Tobject | Tshape _)
@@ -392,7 +509,7 @@ and sub_string p env ty2 =
   | (_, Tprim _) ->
       env
   | (_, Tabstract (_, _, Some ty))
-  | (_, Tgeneric (_, Some ty)) ->
+  | (_, Tgeneric (_, Some (Ast.Constraint_as, ty))) ->
       sub_string p env ty
   | (r, Taccess taccess) ->
       let env, ety2 = TAccess.expand env r taccess in
@@ -443,3 +560,4 @@ let subtype_funs_no_return = subtype_funs_generic ~check_return:false
 (*****************************************************************************)
 
 let () = Typing_utils.sub_type_ref := sub_type
+let () = Typing_utils.super_type_ref := super_type

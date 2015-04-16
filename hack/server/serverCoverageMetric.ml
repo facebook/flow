@@ -42,7 +42,8 @@ let accumulate_types defs =
       | _ -> None in
     ignore (opt_map (fun kind ->
       Hashtbl.replace type_acc (p, kind) ty) expr_kind_opt))
-    (fun () -> ignore (ServerIdeUtils.check_defs defs));
+    (fun () -> ignore (ServerIdeUtils.check_defs
+      TypecheckerOptions.permissive defs));
   type_acc
 
 (* Returns a list of (file_name, assoc list of counts) *)

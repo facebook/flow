@@ -98,17 +98,6 @@ let (>>) f g = fun x -> g (f (x))
 let mk_object cx reason =
   Flow_js.mk_object_with_proto cx reason (MixedT reason)
 
-let extended_object cx reason ~sealed map spread =
-  let o =
-    Flow_js.mk_object_with_map_proto cx reason ~sealed map (MixedT reason)
-  in
-  match spread with
-  | None -> o
-  | Some other ->
-      Flow_js.mk_tvar_where cx reason (fun t ->
-        Flow_js.unit_flow cx (other, ObjAssignT (reason, o, t, [], false))
-      )
-
 let summarize cx t = match t with
   | OpenT _ ->
       let reason = reason_of_t t in
@@ -2228,7 +2217,7 @@ and raise_exception exn_ = match exn_ with
   | _ -> ()
 
 and object_ cx props = Ast.Expression.Object.(
-  let spread = ref None in
+  let spread = ref [] in
   List.fold_left (fun map -> function
 
     (* name = function expr *)
@@ -2283,7 +2272,7 @@ and object_ cx props = Ast.Expression.Object.(
 
     (* spread prop *)
     | SpreadProperty (loc, { SpreadProperty.argument }) ->
-      spread := Some (expression cx argument);
+      spread := (expression cx argument)::!spread;
       map
 
   ) SMap.empty props,
@@ -2537,7 +2526,7 @@ and expression_ cx loc e = Ast.Expression.(match e with
   | Object { Object.properties } ->
     let reason = mk_reason "object literal" loc in
     let map, spread = object_ cx properties in
-    let sealed = (spread = None && not (SMap.is_empty map)) in
+    let sealed = (spread = [] && not (SMap.is_empty map)) in
     extended_object cx reason ~sealed map spread
 
   | Array { Array.elements } -> (
@@ -3288,6 +3277,12 @@ and assignment cx loc = Ast.Expression.(function
 
 and spread_objects cx reason those =
   chain_objects cx reason (mk_object cx reason) those
+
+and extended_object cx reason ~sealed map spread =
+  let o =
+    Flow_js.mk_object_with_map_proto cx reason ~sealed map (MixedT reason)
+  in
+  chain_objects cx reason o spread
 
 and clone_object_with_excludes cx reason this that excludes =
   Flow_js.mk_tvar_where cx reason (fun tvar ->

@@ -82,17 +82,21 @@ type env = {
   genv    : genv       ;
   todo    : tfun list  ;
   in_loop : bool       ;
+  (* when encountering Tunresolved in the supertype, do we allow it to grow?
+   * if false, this allows the opposite, i.e. Tunresolved can grow in the
+   * subtype. *)
+  grow_super : bool      ;
 }
 
 and genv = {
+  tcopt   : TypecheckerOptions.t;
   mode    : FileInfo.mode;
   return  : ty         ;
   parent  : ty         ;
   self_id : string     ;
   self    : ty         ;
   static  : bool       ;
-  allow_null_as_void : bool;
-  fun_kind : Nast.fun_kind;
+  fun_kind : Ast.fun_kind;
   anons   : anon IMap.t;
   droot   : Typing_deps.Dep.variant option  ;
   file    : Relative_path.t;
@@ -171,7 +175,6 @@ let make_ft p params ret_ty =
   let arity = List.length params in
   {
     ft_pos      = p;
-    ft_unsafe   = false;
     ft_deprecated = None;
     ft_abstract = false;
     ft_arity    = Fstandard (arity, arity);
@@ -229,8 +232,9 @@ let rec debug stack env (r, ty) =
       o s;
       (match x with
       | None -> ()
-      | Some x -> o "<"; debug stack env x; o ">"
-      )
+      | Some (Ast.Constraint_as, x) -> o " as <"; debug stack env x; o ">"
+      | Some (Ast.Constraint_super, x) ->
+          o " super <"; debug stack env x; o ">")
   | Tvar x ->
       let env, x = get_var env x in
       if ISet.mem x stack
@@ -266,22 +270,23 @@ let empty_fake_members = {
 
 let empty_local = empty_fake_members, IMap.empty
 
-let empty file = {
+let empty tcopt file = {
   pos     = Pos.none;
   tenv    = IMap.empty;
   subst   = IMap.empty;
   lenv    = empty_local;
   todo    = [];
   in_loop = false;
+  grow_super = true;
   genv    = {
+    tcopt   = tcopt;
     mode    = FileInfo.Mstrict;
     return  = fresh_type();
     self_id = "";
     self    = Reason.none, Tany;
     static  = false;
     parent  = Reason.none, Tany;
-    allow_null_as_void = false;
-    fun_kind = FSync;
+    fun_kind = Ast.FSync;
     anons   = IMap.empty;
     droot   = None;
     file    = file;
@@ -329,7 +334,6 @@ let add_wclass env x =
 (* When we want to type something with a fresh typing environment *)
 let fresh_tenv env f =
   let genv = env.genv in
-  let genv = { genv with allow_null_as_void = false } in
   f { env with todo = []; tenv = IMap.empty; genv = genv; in_loop = false }
 
 let get_class env x =
@@ -414,6 +418,9 @@ let get_construct env class_ =
 let get_todo env =
   env.todo
 
+let grow_super env =
+  env.grow_super
+
 let get_return env =
   env.genv.return
 
@@ -427,7 +434,6 @@ let with_return env f =
   let env = f env in
   set_return env ret
 
-let allow_null_as_void env = env.genv.allow_null_as_void
 let is_static env = env.genv.static
 let get_self env = env.genv.self
 let get_self_id env = env.genv.self_id
@@ -441,11 +447,6 @@ let get_fun env x =
   let dep = Dep.Fun x in
   Typing_deps.add_idep env.genv.droot dep;
   Funs.get x
-
-let set_allow_null_as_void ?(allow=true) env =
-  let genv = env.genv in
-  let genv = { genv with allow_null_as_void = allow } in
-  { env with genv = genv }
 
 let set_fn_kind env fn_type =
   let genv = env.genv in
@@ -498,6 +499,8 @@ let get_mode env = env.genv.mode
 
 let is_strict env = get_mode env = FileInfo.Mstrict
 let is_decl env = get_mode env = FileInfo.Mdecl
+
+let get_options env = env.genv.tcopt
 
 (*
 let debug_env env =

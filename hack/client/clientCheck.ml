@@ -10,6 +10,7 @@
 
 open ClientEnv
 open ClientExceptions
+open Utils
 
 let connect args =
   let ic, oc = ClientUtils.connect args.root in
@@ -217,6 +218,13 @@ let rec main args retries =
         exit 0
     | MODE_LINT fnl ->
         let ic, oc = connect args in
+        let fnl = List.fold_left begin fun acc fn ->
+          match Sys_utils.realpath fn with
+          | Some path -> path :: acc
+          | None ->
+              prerr_endlinef "Could not find file '%s'" fn;
+              acc
+        end [] fnl in
         ServerMsg.cmd_to_channel oc (ServerMsg.LINT fnl);
         let results : ServerLint.result = Marshal.from_channel ic in
         ClientLint.go results args.output_json;

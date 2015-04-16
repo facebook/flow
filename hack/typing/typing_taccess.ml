@@ -136,7 +136,7 @@ and expand_ env root_ty ids =
             env, ty
           else
             env, (Reason.Rexpr_dep_type (fst ty, p ,x), snd ty)
-      | Tgeneric (x, Some ty) ->
+      | Tgeneric (x, Some (Ast.Constraint_as, ty)) ->
           (* If we haven't filled the type hole at this point we fill
            * it with self
            *)
@@ -215,7 +215,7 @@ and expand_generic env name root ids =
   then env, ty
   else env, (
     fst ty,
-    Tgeneric ((String.concat "::" (name :: (List.rev env.ids))), Some ty)
+    Tgeneric ((String.concat "::" (name :: (List.rev env.ids))), Some (Ast.Constraint_as, ty))
   )
 
 (* The function takes a "step" forward in the expansion. We look up the type
@@ -249,7 +249,8 @@ and create_root_from_type_constant env class_pos class_name root_ty (pos, tconst
     | {ttc_constraint = ty; _} ->
         { env with ids = tconst :: env.ids }, (
           Reason.Rwitness (fst typeconst.ttc_name),
-          Tgeneric (strip_ns class_name^"::"^tconst, ty)
+          let cstr = opt_map (fun ty -> Ast.Constraint_as, ty) ty in
+          Tgeneric (strip_ns class_name^"::"^tconst, cstr)
         ) in
   let tenv, tconst_ty = fill_type_hole_ env.tenv tconst_ty root_ty in
   { env with tenv = tenv }, tconst_ty
@@ -266,8 +267,9 @@ and check_tconst env (r, ty) =
       check_tconst_opt env ty1;
       check_tconst_opt env ty2;
       ()
-  | Tgeneric (_, ty) ->
-      check_tconst_opt env ty
+  | Tgeneric (_, Some (_, ty)) ->
+      check_tconst env ty
+  | Tgeneric (_, None) -> ()
   | Toption ty -> check_tconst env ty
   | Tprim _ -> ()
   | Tvar _ -> ()
@@ -311,8 +313,10 @@ and check_tconst_fun_param env (_, ty) =
 and check_tconst_tparam_list env x =
   List.iter (check_tconst_tparam env) x
 
-and check_tconst_tparam env (_, _, x) =
-  check_tconst_opt env x
+and check_tconst_tparam env (_, _, cstr) =
+  match cstr with
+  | Some (_ck, x) -> check_tconst env x
+  | None -> ()
 
 and check_tconst_opt env = function
   | None -> ()
@@ -348,8 +352,7 @@ let fill_type_hole env cid cid_ty ty =
     | CIparent | CIstatic when not (Env.is_static env) ->
         let cid = CIvar (pos, This) in
         let env, ty = Env.get_local env this in
-        let this_ty =
-          Reason.Rwitness pos, Tgeneric (SN.Typehints.this, Some ty) in
+        let this_ty = Reason.Rwitness pos, TUtils.this_of ty in
         let env, cid_ty = Inst.instantiate_this env cid_ty this_ty in
         env, cid, cid_ty
     | cid -> env, cid, cid_ty
@@ -367,7 +370,8 @@ let fill_type_hole env cid cid_ty ty =
         let name = "expr#"^string_of_int(Ident.tmp()) in
         Reason.Rwitness p, Tabstract ((p, fill_name name), [], Some cid_ty)
     | CIvar (p, This) ->
-        Reason.Rwitness p, Tabstract ((p, fill_name "$this"), [], Some cid_ty)
+        Reason.Rwitness p, Tabstract ((p, fill_name SN.SpecialIdents.this),
+                                      [], Some cid_ty)
     | _ ->
       let name = class_id_to_str cid in
       Reason.Rwitness pos, Tabstract ((pos, fill_name name), [], Some cid_ty)

@@ -48,7 +48,7 @@ and hint_ =
   | Hany
   | Hmixed
   | Htuple of hint list
-  | Habstr of string * hint option
+  | Habstr of string * (Ast.constraint_kind * hint) option
   | Harray of hint option * hint option
   | Hprim of tprim
   | Hoption of hint
@@ -63,7 +63,8 @@ and hint_ =
   *
   * Class  => Happly "Class"
   * self   => Happly of the class of definition
-  * static => Habstr ("static", Habstr ("this", Happly of class of definition))
+  * static => Habstr ("static",
+  *           Habstr ("this", (Constraint_as, Happly of class of definition)))
   * Type const access can be chained such as
   *
   * Class::TC1::TC2::TC3
@@ -122,7 +123,7 @@ and user_attribute = {
   ua_params: expr list (* user attributes are restricted to scalar values *)
 }
 
-and tparam = Ast.variance * sid * hint option
+and tparam = Ast.variance * sid * (Ast.constraint_kind * hint) option
 
 (* expr = None indicates an abstract const *)
 and class_const = hint option * sid * expr option
@@ -149,25 +150,18 @@ and class_var = {
 }
 
 and method_ = {
-  m_unsafe          : bool                      ;
-  m_final           : bool                      ;
-  m_abstract        : bool                      ;
-  m_visibility      : visibility                ;
-  m_name            : sid                       ;
-  m_tparams         : tparam list               ;
-  m_variadic        : fun_variadicity           ;
-  m_params          : fun_param list            ;
-  m_body            : body_block                ;
-  m_user_attributes : user_attribute list   ;
-  m_ret             : hint option               ;
-  m_fun_kind        : fun_kind                  ;
+  m_final           : bool                ;
+  m_abstract        : bool                ;
+  m_visibility      : visibility          ;
+  m_name            : sid                 ;
+  m_tparams         : tparam list         ;
+  m_variadic        : fun_variadicity     ;
+  m_params          : fun_param list      ;
+  m_body            : func_body           ;
+  m_fun_kind        : Ast.fun_kind;
+  m_user_attributes : user_attribute list ;
+  m_ret             : hint option         ;
 }
-
-and fun_kind =
-  | FSync
-  | FGenerator
-  | FAsync
-  | FAsyncGenerator
 
 and visibility =
   | Private
@@ -196,14 +190,13 @@ and fun_variadicity = (* does function take varying number of args? *)
 
 and fun_ = {
   f_mode     : FileInfo.mode;
-  f_unsafe   : bool;
   f_ret      : hint option;
   f_name     : sid;
   f_tparams  : tparam list;
   f_variadic : fun_variadicity;
   f_params   : fun_param list;
-  f_body     : body_block;
-  f_fun_kind : fun_kind;
+  f_body     : func_body;
+  f_fun_kind : Ast.fun_kind;
   f_user_attributes : user_attribute list;
 }
 
@@ -216,9 +209,29 @@ and gconst = {
   cst_value: expr option;
 }
 
-and body_block =
-  | UnnamedBody of Ast.block
-  | NamedBody of block
+and func_body =
+  | UnnamedBody of func_unnamed_body
+  | NamedBody of func_named_body
+
+and func_unnamed_body = {
+  (* Unnamed AST for the function body *)
+  fub_ast       : Ast.block;
+  (* Unnamed AST for the function type params *)
+  fub_tparams   : Ast.tparam list;
+  (* Namespace info *)
+  fub_namespace : Namespace_env.env;
+}
+
+and func_named_body = {
+  (* Named AST for the function body *)
+  fnb_nast     : block;
+  (* True if there are any UNSAFE blocks; the presence of any unsafe
+   * block in the function makes comparing the function body to the
+   * declared return type impossible, since that block could return;
+   * functions declared in Mdecl are by definition UNSAFE
+   *)
+  fnb_unsafe   : bool;
+}
 
 and stmt =
   | Expr of expr
@@ -262,6 +275,7 @@ and expr_ =
   | This
   | Id of sid
   | Lvar of id
+  | Lplaceholder of sid
   | Fun_id of sid
   | Method_id of expr * pstring
   (* meth_caller('Class name', 'method name') *)
@@ -335,7 +349,7 @@ let class_id_to_str cid =
     | CIparent -> SN.Classes.cParent
     | CIself -> SN.Classes.cSelf
     | CIstatic -> SN.Classes.cStatic
-    | CIvar (_, This) -> "$this"
+    | CIvar (_, This) -> SN.SpecialIdents.this
     | CIvar (_, Lvar (_, x)) -> "$"^string_of_int(x)
     | CIvar _ -> assert false
     | CI (_, x) -> x

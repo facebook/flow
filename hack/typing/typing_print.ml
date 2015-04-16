@@ -67,10 +67,10 @@ module ErrorString = struct
 
   and generic = function
     (* special generic for the 'this' type *)
-    | "this", Some x ->
+    | "this", Some (Ast.Constraint_as, x) ->
         "the type 'this'\n  that is compatible with "^type_ (snd x)
     (* expression dependent types are generics starting with '<SOME_ID>' *)
-    | s, Some x when String.contains s '<' ->
+    | s, Some (_, x) when String.contains s '<' ->
         "the expression dependent type "^s^"\n  that is compatible with "^type_ (snd x)
     (* abstract type constants are generic types containing a '::', i.e. 'C::T' *)
     | s, x when String.contains s ':' ->
@@ -78,7 +78,7 @@ module ErrorString = struct
         let sub =
           match x with
           | None -> ""
-          | Some x -> "\n  that is compatible with "^type_ (snd x)
+          | Some (_, x) -> "\n  that is compatible with "^type_ (snd x)
         in
         base^s^sub
     (* standard, user land generics *)
@@ -288,7 +288,7 @@ end
 
 module PrintClass = struct
 
-  let tenv = Typing_env.empty Relative_path.default
+  let tenv = Typing_env.empty TypecheckerOptions.default Relative_path.default
 
   let indent = "    "
   let bool = string_of_bool
@@ -307,17 +307,19 @@ module PrintClass = struct
     | Ast.Ctrait -> "Ctrait"
     | Ast.Cenum -> "Cenum"
 
-  let ty_opt = function
+  let constraint_ty_opt = function
     | None -> ""
-    | Some ty -> Full.to_string tenv ty
+    | Some (Ast.Constraint_as, ty) -> "as " ^ (Full.to_string tenv ty)
+    | Some (Ast.Constraint_super, ty) -> "super " ^ (Full.to_string tenv ty)
 
   let variance = function
     | Ast.Covariant -> "+"
     | Ast.Contravariant -> "-"
     | Ast.Invariant -> ""
 
-  let tparam (var, (position, name), cstr) =
-    variance var^pos position^" "^name^" "^ty_opt cstr
+  let tparam (var, (position, name), cstr_opt) =
+    variance var^pos position^" "^name^" "^
+    (constraint_ty_opt cstr_opt)
 
   let tparam_list l =
     List.fold_right (fun x acc -> tparam x^", "^acc) l ""
@@ -465,14 +467,12 @@ module PrintFun = struct
 
   let fun_type f =
     let ft_pos = PrintClass.pos f.ft_pos in
-    let ft_unsafe = string_of_bool f.ft_unsafe in
     let ft_abstract = string_of_bool f.ft_abstract in
     let ft_arity = farity f.ft_arity in
     let ft_tparams = PrintClass.tparam_list f.ft_tparams in
     let ft_params = fparams f.ft_params in
     let ft_ret = Full.to_string tenv f.ft_ret in
     "ft_pos: "^ft_pos^"\n"^
-    "ft_unsafe: "^ft_unsafe^"\n"^
     "ft_abstract: "^ft_abstract^"\n"^
     "ft_arity: "^ft_arity^"\n"^
     "ft_tparams: "^ft_tparams^"\n"^

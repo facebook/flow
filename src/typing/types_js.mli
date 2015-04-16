@@ -12,6 +12,7 @@ open Utils
 
 type options = {
   opt_debug : bool;
+  opt_verbose : bool;
   opt_all : bool;
   opt_weak : bool;
   opt_traces : bool;

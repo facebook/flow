@@ -17,7 +17,7 @@ open Sys_utils
 let print_patch filename (line, kind, type_) =
   let line = string_of_int line in
   let kind = Typing_suggest.string_of_kind kind in
-  let tenv = Typing_env.empty filename in
+  let tenv = Typing_env.empty TypecheckerOptions.permissive filename in
   let type_ = Typing_print.full tenv type_ in
   Printf.printf "File: %s, line: %s, kind: %s, type: %s\n" 
     (Relative_path.to_absolute filename) line kind type_
@@ -73,12 +73,12 @@ let write_file fn numbered_lines =
   close_out_no_fail abs_fn oc;
   file_data := Relative_path.Map.add fn numbered_lines !file_data
 
-let apply_patch genv env fn f =
+let apply_patch (genv:ServerEnv.genv) (env:ServerEnv.env) fn f =
   Printf.printf "Patching %s: %!" (Relative_path.to_absolute fn);
   let content = read_file fn in
   let patched = f fn content in
   if patched == content
-  then begin 
+  then begin
     Printf.printf "No patch\n"; flush stdout;
     [], env
   end
@@ -294,13 +294,14 @@ let select_files env dirname =
 
 (* Infers the types where annotations are missing. *)
 let infer_types genv env dirname =
-  let fast = select_files env dirname in  
+  let fast = select_files env dirname in
   let fast = FileInfo.simplify_fast fast in
   Typing_suggest_service.go genv.workers fast
 
 (* Tries to apply the patches one by one, rolls back if it failed. *)
-let apply_patches tried_patches genv env continue patches =
-  let tenv = Typing_env.empty Relative_path.default in
+let apply_patches tried_patches (genv:ServerEnv.genv) env continue patches =
+  let tcopt = ServerEnv.typechecker_options !env in
+  let tenv = Typing_env.empty tcopt Relative_path.default in
   file_data := Relative_path.Map.empty;
   Relative_path.Map.iter begin fun fn patchl ->
     List.iter begin fun (line, k, type_ as patch) ->
@@ -325,7 +326,7 @@ let apply_patches tried_patches genv env continue patches =
   ()
 
 (* Main entry point *)
-let go genv env dirname_path =
+let go (genv:ServerEnv.genv) env dirname_path =
   let dirname = Path.string_of_path dirname_path in
   let env = ref env in
   let continue = ref false in

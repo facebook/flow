@@ -63,12 +63,8 @@ module MainInit : sig
 end = struct
 
   let other_server_running() =
-    Printf.printf "Error: another server is already running?\n";
+    Hh_logger.log "Error: another server is already running?\n";
     exit 1
-
-  let init_message() =
-    Printf.printf "Initializing Server (This might take some time)\n";
-    flush stdout
 
   let grab_lock root =
     if not (Lock.grab root "lock")
@@ -80,16 +76,11 @@ end = struct
   let release_init_lock root =
     ignore(Lock.release root "init")
 
-  let ready_message() =
-    Printf.printf "Server is READY\n";
-    flush stdout;
-    ()
-
   (* This code is only executed when the options --check is NOT present *)
   let go root watch_paths init_fun =
     let t = Unix.gettimeofday () in
     grab_lock root;
-    init_message();
+    Hh_logger.log "Initializing Server (This might take some time)";
     grab_init_lock root;
     (* note: we only run periodical tasks on the root, not extras *)
     ServerPeriodical.init root;
@@ -97,9 +88,9 @@ end = struct
     ServerDfind.dfind_init (root :: watch_paths);
     let env = init_fun () in
     release_init_lock root;
-    ready_message ();
+    Hh_logger.log "Server is READY";
     let t' = Unix.gettimeofday () in
-    Printf.printf "Took %f seconds to initialize.\n" (t' -. t);
+    Hh_logger.log "Took %f seconds to initialize." (t' -. t);
     env
 end
 
@@ -119,11 +110,11 @@ end = struct
     let env = ref env in
     while true do
       if not (Lock.check root "lock") then begin
-        Printf.printf "Lost %s lock; reacquiring.\n" Program.name;
+        Hh_logger.log "Lost %s lock; reacquiring.\n" Program.name;
         Program.EventLogger.lock_lost root "lock";
         if not (Lock.grab root "lock")
         then
-          Printf.printf "Failed to reacquire lock; terminating.\n";
+          Hh_logger.log "Failed to reacquire lock; terminating.\n";
           Program.EventLogger.lock_stolen root "lock";
           die()
       end;
@@ -135,7 +126,7 @@ end = struct
       let config = Program.config_filename () in
       if Relative_path.Set.mem config updates &&
         not (Program.validate_config genv) then begin
-        Printf.fprintf stderr
+        Hh_logger.log
           "%s changed in an incompatible way; please restart %s.\n"
           (Relative_path.suffix config)
           Program.name;
@@ -172,7 +163,7 @@ end = struct
       let cmd = Printf.sprintf "%s %s %s" cmd
         (Filename.quote (Path.string_of_path (ServerArgs.root genv.options)))
         (Filename.quote Build_id.build_id_ohai) in
-      Printf.fprintf stderr "Running load script: %s\n%!" cmd;
+      Hh_logger.log "Running load script: %s\n%!" cmd;
       let state_fn, to_recheck =
         with_timeout (ServerConfig.load_script_timeout genv.config)
         ~on_timeout:(fun _ -> failwith "Load script timed out")
@@ -190,7 +181,7 @@ end = struct
           assert (Unix.close_process_in ic = Unix.WEXITED 0);
           state_fn, !to_recheck
         end in
-      Printf.fprintf stderr
+      Hh_logger.log
         "Load state found at %s. %d files to recheck\n%!"
         state_fn (List.length to_recheck);
       Program.EventLogger.load_script_done ();
@@ -199,16 +190,16 @@ end = struct
       env
     with
     | State_not_found ->
-        Printf.fprintf stderr "Load state not found!\n";
-        Printf.fprintf stderr "Starting from a fresh state instead...\n%!";
+        Hh_logger.log "Load state not found!";
+        Hh_logger.log "Starting from a fresh state instead...";
         let env = Program.init genv env in
         Program.EventLogger.init_done "load_state_not_found";
         env
     | e ->
         let msg = Printexc.to_string e in
-        Printf.fprintf stderr "Load error: %s\n%!" msg;
+        Hh_logger.log "Load error: %s" msg;
         Printexc.print_backtrace stderr;
-        Printf.fprintf stderr "Starting from a fresh state instead...\n%!";
+        Hh_logger.log "Starting from a fresh state instead...";
         Program.EventLogger.load_failed msg;
         let env = Program.init genv env in
         Program.EventLogger.init_done "load_error";
@@ -291,10 +282,9 @@ end = struct
       (* child process is ready *)
     end else begin
       (* let original parent exit *)
-      Printf.fprintf stderr "Spawned %s (child pid=%d)\n" (Program.name) pid;
-      Printf.fprintf stderr
-        "Logs will go to %s\n" (get_log_file (ServerArgs.root options));
-      flush stdout;
+      Printf.eprintf "Spawned %s (child pid=%d)\n" (Program.name) pid;
+      Printf.eprintf
+        "Logs will go to %s\n%!" (get_log_file (ServerArgs.root options));
       raise Exit
     end
 

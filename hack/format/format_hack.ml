@@ -844,11 +844,13 @@ let next_non_ws_token env =
 (* Helpers to look ahead. *)
 (*****************************************************************************)
 
-let try_word env word f = wrap env begin function
-  | Tword when !(env.last_str) = word ->
+let try_words env wordl f = wrap env begin function
+  | Tword when List.mem !(env.last_str) wordl ->
       f env
   | _ -> back env
 end
+
+let try_word env word f = try_words env [word] f
 
 let try_token env tok f = wrap env begin function
   | tok' when tok = tok' ->
@@ -1203,7 +1205,15 @@ and name env =
 
 and name_loop env =
   match token env with
-  | Tpercent | Tcolon | Tminus | Tword | Tbslash ->
+  (* names can contain colons, but cannot end with them *)
+  | Tcolon when attempt env begin fun env ->
+      match token env with
+        | Tword -> true
+        | _ -> false
+    end ->
+      last_token env;
+      name_loop env
+  | Tpercent | Tminus | Tword | Tbslash ->
       last_token env;
       name_loop env
   | _ ->
@@ -1283,7 +1293,7 @@ and hint env = wrap env begin function
           return_type env
       | _ ->
           name_loop env;
-          as_constraint env;
+          typevar_constraint env;
           hint_parameter env
       )
   | Tlp ->
@@ -1293,6 +1303,14 @@ and hint env = wrap env begin function
   | _ ->
       back env
 end
+
+and typevar_constraint env =
+  try_words env ["as"; "super"] begin fun env ->
+    space env;
+    last_token env;
+    space env;
+    hint env
+  end;
 
 and as_constraint env =
   try_word env "as" begin fun env ->

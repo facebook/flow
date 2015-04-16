@@ -36,6 +36,7 @@ type env = {
     failed_decl    : Relative_path.Set.t;
     failed_check   : Relative_path.Set.t;
   }
+let typechecker_options env = (Naming.typechecker_options env.nenv)
 
 (*****************************************************************************)
 (* Killing the server  *)

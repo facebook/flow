@@ -21,6 +21,7 @@
 
 open Utils
 module Ast = Spider_monkey_ast
+module Json = Hh_json
 
 type reason = {
   derivable: bool;
@@ -101,6 +102,18 @@ let string_of_pos pos =
       spf "File \"%s\", line %d, characters %d-%d"
         (Relative_path.to_absolute file) line start end_
 
+let json_of_pos pos = Json.(Pos.(Lexing.(
+  JAssoc [
+    "file", JString (Relative_path.to_absolute (Pos.filename pos));
+    "start", JAssoc [
+      "line", JInt pos.pos_start.pos_lnum;
+      "col", JInt (pos.pos_start.pos_cnum - pos.pos_start.pos_bol)];
+    "end", JAssoc [
+      "line", JInt pos.pos_end.pos_lnum;
+      "col", JInt (pos.pos_end.pos_cnum - pos.pos_end.pos_bol)];
+  ]
+)))
+
 let new_reason s pos = {
   derivable = false;
   desc = s;
@@ -123,6 +136,13 @@ let string_of_reason r =
     then spos
     else spf "%s:\n%s" spos desc
   )
+
+let json_of_reason r = Json.(
+  JAssoc [
+    "pos", json_of_pos r.pos;
+    "desc", JString r.desc
+  ]
+)
 
 let dump_reason r =
   spf "[%s] %S" (string_of_pos r.pos) r.desc

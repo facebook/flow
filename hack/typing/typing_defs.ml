@@ -57,15 +57,16 @@ and ty_ =
   | Tarray        of ty option * ty option
 
   (* The type of a generic inside a function using that generic, with an
-   * optional "as" constraint. For example:
+   * optional "as" or "super" constraint. For example:
    *
    * function f<T as int>(T $x) {
    *   // ...
    * }
    *
-   * The type of $x inside the body of f() is Tgeneric("T", Some(Tprim Tint))
+   * The type of $x inside f() is
+   * Tgeneric("T", Some(Constraint_as, Tprim Tint))
    *)
-  | Tgeneric      of string * ty option
+  | Tgeneric      of string * (Ast.constraint_kind * ty) option
 
   (* Nullable, called "option" in the ML parlance. *)
   | Toption       of ty
@@ -182,7 +183,6 @@ and taccess_type = ty * Nast.sid list
  * A function has a min and max arity because of optional arguments *)
 and fun_type = {
   ft_pos       : Pos.t;
-  ft_unsafe    : bool            ;
   ft_deprecated: string option   ;
   ft_abstract  : bool            ;
   ft_arity     : fun_arity       ;
@@ -267,7 +267,7 @@ and enum_type = {
   te_constraint : ty option;
 }
 
-and tparam = Ast.variance * Ast.id * ty option
+and tparam = Ast.variance * Ast.id * (Ast.constraint_kind * ty) option
 
 (* The identifier for this *)
 let this = Ident.make "$this"

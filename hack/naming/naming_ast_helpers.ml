@@ -156,7 +156,7 @@ module HintCycle = struct
     | Happly ((_, x), []) when SMap.mem x params ->
         let stack = SSet.add x stack in
         (match SMap.get x params with
-        | Some (Some param) ->
+        | Some (Some (_, param)) ->
             hint stack params param
         | _ -> ()
         )
@@ -169,8 +169,8 @@ module HintCycle = struct
 
   and hintl stack params l = List.iter (hint stack params) l
 
-  let check_constraint cstrs (_, _, hopt) =
-    match hopt with
+  let check_constraint cstrs (_, _, cstr_opt) =
+    match cstr_opt with
     | None -> ()
-    | Some h -> hint SSet.empty cstrs h
+    | Some (_, h) -> hint SSet.empty cstrs h
 end

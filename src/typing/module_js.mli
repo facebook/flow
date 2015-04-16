@@ -51,9 +51,9 @@ val get_reverse_imports: string -> SSet.t option
 
 (* commit new and removed modules, after local inference *)
 val commit_modules:
-  string list ->                        (* inferred modules *)
-  SSet.t ->                             (* removed files *)
-  string list * Errors_js.ErrorSet.t list
+  string list ->                (* inferred modules *)
+  SSet.t ->                     (* removed files *)
+  Errors_js.ErrorSet.t SMap.t   (* filenames to error sets *)
 
 (* add file represented by context to module info store *)
 val add_module_info: Constraint_js.context -> unit
@@ -64,3 +64,7 @@ val add_module_info: Constraint_js.context -> unit
 val remove_files: SSet.t -> SSet.t
 
 val add_package: string -> Errors_js.ErrorSet.t option
+
+(***************************************************)
+
+val clear_filename_cache: unit -> unit

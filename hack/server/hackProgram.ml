@@ -86,11 +86,12 @@ module Program : Server.SERVER_PROGRAM = struct
     );
     die ()
 
-  let respond genv env ~client ~msg =
+  let respond (genv:ServerEnv.genv) env ~client ~msg =
     let _, oc = client in
     match msg with
     | ServerMsg.ERROR_OUT_OF_DATE -> incorrect_hash oc
-    | ServerMsg.PRINT_COVERAGE_LEVELS fn -> ServerColorFile.go env fn oc
+    | ServerMsg.PRINT_COVERAGE_LEVELS fn ->
+      ServerColorFile.go env fn oc
     | ServerMsg.INFER_TYPE (fn, line, char) ->
         infer env (fn, line, char) oc
     | ServerMsg.SUGGEST (files) -> suggest files oc
@@ -237,7 +238,7 @@ module Program : Server.SERVER_PROGRAM = struct
     | ServerMsg.LINT_ALL code ->
         ServerLint.lint_all genv code oc
 
-  let handle_connection_ genv env socket =
+  let handle_connection_ (genv:ServerEnv.genv) (env:ServerEnv.env) socket =
     let cli, _ = Unix.accept socket in
     try
       let ic = Unix.in_channel_of_descr cli in

@@ -150,10 +150,10 @@ module type MODULE_SYSTEM = sig
 val choose_provider:
   string ->   (* module name *)
   SSet.t ->   (* set of candidate provider files *)
-  (* parallel lists of error files and error sets (accumulator) *)
-  (string list * ErrorSet.t list) ->
-  (* file, parallel lists of error files and error sets (additive) *)
-  (string * (string list * ErrorSet.t list))
+  (* map from files to error sets (accumulator) *)
+  Errors_js.ErrorSet.t SMap.t ->
+  (* file, error map (accumulator) *)
+  (string * Errors_js.ErrorSet.t SMap.t)
 
 end
 
@@ -171,20 +171,75 @@ let rec seqf f = function
     | None -> seqf f xs)
   | [] -> None
 
+(*********************************)
+
+(* TODO this exists only until we start resolving files using
+   NameHeap. unfortunately that will require more refactoring
+   than it should, since imported_module is currently called
+   during local inference, and simply storing raw module names
+   in cx.required et al and looking them up at merge time appears
+   to violate some well-hidden private agreements. TODO *)
+
+(* only purpose here is to guarantee a case-sensitive file exists
+   and try to keep it from being too horrendously expensive *)
+
+let case_sensitive =
+  not (Sys.file_exists (String.uppercase (Sys.getcwd ())))
+
+(* map of dirs to file lists *)
+let files_in_dir = ref SMap.empty
+
+(* called from Types_js.typecheck, so we rebuild every time *)
+let clear_filename_cache () =
+  files_in_dir := SMap.empty
+
+(* case-sensitive dir_exists  *)
+let dir_exists dir = Sys.file_exists dir && (
+  case_sensitive || (
+    let orig = Sys.getcwd () in
+    Sys.chdir dir;
+    let realdir = Sys.getcwd () in
+    let result = dir = realdir in
+    Sys.chdir orig;
+    result))
+
+(* when system is case-insensitive, do our own file exists check *)
+let file_exists path =
+  if case_sensitive
+  then Sys.file_exists path
+  else (
+    let dir = Filename.dirname path in
+    let files = match SMap.get dir !files_in_dir with
+    | Some files -> files
+    | None ->
+        let files = if dir_exists dir
+          then set_of_list (Array.to_list (Sys.readdir dir))
+          else SSet.empty in
+        files_in_dir := SMap.add dir files !files_in_dir;
+        files
+    in SSet.mem (Filename.basename path) files
+  )
+
+(*******************************)
+
 module Node = struct
   let exported_module file comments = file
 
   let path_if_exists path =
-    if Sys.file_exists path then Some path
+    if file_exists path then Some path
     else None
 
   let path_is_file path =
-    Sys.file_exists path && not (Sys.is_directory path)
+    file_exists path && not (Sys.is_directory path)
 
   let parse_main package =
-    if not (Sys.file_exists package) then None
+    if not (file_exists package) then None
     else
-      let tokens = package |> PackageHeap.find_unsafe in
+      let tokens = match PackageHeap.get package with
+      | Some tokens -> tokens
+      | None -> failwith (spf
+          "internal error: package %s not found" package)
+      in
       let dir = Filename.dirname package in
       match get_key "main" tokens with
       | None -> None
@@ -201,9 +256,10 @@ module Node = struct
               let path = Filename.concat path "index.js" in
               path_if_exists path)
 
+
   let resolve_relative dir r =
     let path = Files_js.normalize_path dir r in
-    if Files_js.is_flow_file path && path_is_file path
+    if Files_js.is_flow_file path
     then path_if_exists path
     else seq
       (fun () ->
@@ -249,12 +305,12 @@ module Node = struct
 (* in node, file names are module names, as guaranteed by
    our implementation of exported_name, so anything but a
    singleton provider set is craziness. *)
-let choose_provider m files errs =
+let choose_provider m files errmap =
   match SSet.elements files with
   | [] ->
       failwith (spf "internal error: empty provider set for module %S" m)
   | [f] ->
-      f, errs
+      f, errmap
   | files ->
       failwith (spf "internal error: multiple providers for module %S" m)
 
@@ -318,19 +374,19 @@ module Haste: MODULE_SYSTEM = struct
    arbitrary mock, if any exist. if multiple non-mock providers exist,
    we pick one arbitrarily and issue duplicate module warnings for the
    rest. *)
-let choose_provider m files (errfiles, errsets) =
+let choose_provider m files errmap =
   match SSet.elements files with
   | [] ->
       failwith (spf "internal error: empty provider set for module %S" m)
   | [f] ->
-      f, (errfiles, errsets)
+      f, errmap
   | files ->
       let mocks, non_mocks = List.partition is_mock files in
       match non_mocks with
-      | [] -> List.hd mocks, (errfiles, errsets)
-      | [f] -> f, (errfiles, errsets)
+      | [] -> List.hd mocks, errmap
+      | [f] -> f, errmap
       | h :: t ->
-          let errfiles, errsets = List.fold_left (fun (errfiles, errsets) f ->
+          let errmap = List.fold_left (fun acc f ->
             let w = Flow.new_warning [
               Reason.new_reason m (Pos.make_from
                 (Relative_path.create Relative_path.Dummy f)),
@@ -338,9 +394,9 @@ let choose_provider m files (errfiles, errsets) =
               Reason.new_reason "current provider"
                 (Pos.make_from (Relative_path.create Relative_path.Dummy h)),
                 ""] in
-            f :: errfiles, (ErrorSet.singleton w) :: errsets
-          ) (errfiles, errsets) t in
-          h, (errfiles, errsets)
+            SMap.add f (ErrorSet.singleton w) acc
+          ) errmap t in
+          h, errmap
 
 end
 
@@ -368,9 +424,9 @@ let imported_module file r =
   let module M = (val !module_system) in
   M.imported_module file r
 
-let choose_provider m files errs =
+let choose_provider m files errmap =
   let module M = (val !module_system) in
-  M.choose_provider m files errs
+  M.choose_provider m files errmap
 
 (****************** reverse import utils *********************)
 
@@ -567,28 +623,32 @@ let commit_modules inferred removed =
     acc |> SSet.add m |> SSet.add f
   ) removed inferred in
   (* prep for registering new mappings in NameHeap *)
-  let remove, replace, errs = SSet.fold (fun m (rem, rep, errs) ->
+  let remove, replace, errmap = SSet.fold (fun m (rem, rep, errmap) ->
     match get_providers m with
     | ps when SSet.cardinal ps = 0 ->
         Modes.debug_string (fun () -> spf
           "no remaining providers: %S" m);
-        (SSet.add m rem), rep, errs
+        (SSet.add m rem), rep, errmap
     | ps ->
-      let p, errs = choose_provider m ps errs in
+      (* incremental: clear error sets of provider candidates *)
+      let errmap = SSet.fold (fun f acc ->
+        SMap.add f ErrorSet.empty acc) ps errmap in
+      (* now choose provider for m *)
+      let p, errmap = choose_provider m ps errmap in
       match NameHeap.get m with
       | Some f when f = p ->
           Modes.debug_string (fun () -> spf
             "unchanged provider: %S -> %s" m p);
-          rem, rep, errs
+          rem, rep, errmap
       | Some f ->
           Modes.debug_string (fun () -> spf
             "new provider: %S -> %s replaces %s" m p f);
-          (SSet.add m rem), ((m, p) :: rep), errs
+          (SSet.add m rem), ((m, p) :: rep), errmap
       | None ->
           Modes.debug_string (fun () -> spf
             "initial provider %S -> %s" m p);
-          (SSet.add m rem), ((m, p) :: rep), errs
-  ) repick (SSet.empty, [], ([], [])) in
+          (SSet.add m rem), ((m, p) :: rep), errmap
+  ) repick (SSet.empty, [], SMap.empty) in
   (* update NameHeap *)
   NameHeap.remove_batch remove;
   SharedMem.collect ();
@@ -596,7 +656,7 @@ let commit_modules inferred removed =
   (* now that providers are updated, update reverse dependency info *)
   add_reverse_imports inferred;
   Modes.debug_string (fun () -> "*** done committing modules ***");
-  errs
+  errmap
 
 (* remove module mappings for given files, if they exist. Possibilities:
    1. file is current registered module provider for a given module name

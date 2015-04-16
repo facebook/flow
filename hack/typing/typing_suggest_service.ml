@@ -69,7 +69,7 @@ let resolve_types acc collated_values =
       let merged_tenv = IMap.union env.Env.tenv env_acc.Env.tenv in
       let merged_subst = IMap.union env.Env.subst env_acc.Env.subst in
       {env_acc with Env.tenv = merged_tenv; Env.subst = merged_subst}, ty::tyl
-    end envl_tyl (Env.empty fn, []) in
+    end envl_tyl (Env.empty TypecheckerOptions.default fn, []) in
     let reason = Typing_reason.Rnone in
     let ureason = Typing_reason.URnone in
     let any = reason, Typing_defs.Tany in
@@ -181,7 +181,7 @@ let collate_types fast all_types =
 
 let type_fun fn x =
   try
-    let tenv = Env.empty fn in
+    let tenv = Env.empty TypecheckerOptions.permissive fn in
     let fun_ = Naming_heap.FunHeap.find_unsafe x in
     Typing.fun_def tenv x fun_;
   with Not_found ->
@@ -190,7 +190,7 @@ let type_fun fn x =
 let type_class fn x =
   try
     let class_ = Naming_heap.ClassHeap.get x in
-    let tenv = Env.empty fn in
+    let tenv = Env.empty TypecheckerOptions.permissive fn in
     (match class_ with
     | None -> ()
     | Some class_ ->

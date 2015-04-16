@@ -10,7 +10,6 @@
 
 open ServerEnv
 open Utils
-open Sys_utils
 
 module Json = Hh_json
 module RP = Relative_path
@@ -76,13 +75,6 @@ let lint_all genv code oc =
   flush oc
 
 let go genv fnl oc =
-  let fnl = List.fold_left begin fun acc fn ->
-    match realpath fn with
-    | Some path -> path :: acc
-    | None ->
-        Printf.fprintf stderr "Could not find file '%s'" fn;
-        acc
-  end [] fnl in
   let fnl = rev_rev_map (Relative_path.create Relative_path.Root) fnl in
   let errs =
     if List.length fnl > 10

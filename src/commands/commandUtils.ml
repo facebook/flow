@@ -9,7 +9,9 @@
  *)
 
 let print_version () =
-  print_endline "Flow, a static type checker for JavaScript, version 0.8.0"
+  Utils.print_endlinef
+    "Flow, a static type checker for JavaScript, version %s"
+    FlowConfig.version
 
 (* line split/transform utils *)
 module Line : sig
@@ -45,12 +47,6 @@ end = struct
     | None -> s
 end
 
-let arg_set_unit r = Arg.Unit (fun () -> r := true)
-
-let arg_set_enum list r = Arg.Symbol (list, (fun e -> r := e))
-
-let arg_set_string r = Arg.String (fun s -> r := Some s)
-
 let global_kill_time = ref None
 
 let set_timeout max_wait_time_seconds =
@@ -74,18 +70,31 @@ let sleep seconds =
         then timeout_go_boom ()
         else Unix.sleep seconds
 
-let no_dashes opt =
-  if opt.[0] != '-' then opt
-  else if opt.[1] != '-' then String.sub opt 1 ((String.length opt) - 1)
-  else String.sub opt 2 ((String.length opt) - 2)
+let server_flags prev = CommandSpec.ArgSpec.(
+  prev
+  |> flag "--version" no_arg
+      ~doc:"Print version number and exit"
+  |> flag "--timeout" (optional int)
+      ~doc:"Maximum time to wait, in seconds"
+  |> flag "--from" (optional string)
+      ~doc:"Specify client (for use by editor plugins)"
+  |> flag "--show-all-errors" no_arg
+      ~doc:"Print all errors (the default is to truncate after 50 errors)"
+  |> flag "--retries" (optional int)
+      ~doc:"Set the number of retries. (default: 3)"
+  |> flag "--retry-if-init" (optional bool)
+      ~doc:"retry if the server is initializing (default: true)"
+  |> flag "--no-auto-start" no_arg
+      ~doc:"If the server if it is not running, do not start it; just exit"
+)
 
-let sort_opts opts =
-  let cmp (a, _, _) (b, _, _) = String.compare (no_dashes a) (no_dashes b) in
-  List.sort cmp opts
+let json_flags prev = CommandSpec.ArgSpec.(
+  prev
+  |> flag "--json" no_arg ~doc:"Output results in JSON format"
+)
 
 type command_params = {
   version : bool ref;
-  json : bool ref;
   from : string ref;
   show_all_errors : bool ref;
   retries : int ref;
@@ -94,38 +103,22 @@ type command_params = {
   no_auto_start : bool ref;
 }
 
-let create_command_options accepts_json =
-  let command_values = {
-    version = ref false;
-    json = ref false;
-    from = ref "";
-    show_all_errors = ref false;
-    retries = ref 3;
-    retry_if_init = ref true;
-    timeout = ref 0;
-    no_auto_start = ref false;
-  } in
-  let command_list = [
-    "--version", arg_set_unit command_values.version,
-      " Print version number and exit";
-    "--timeout", Arg.Set_int command_values.timeout,
-      " Maximum time to wait, in seconds";
-    "--from", Arg.Set_string command_values.from,
-      " Specify client (for use by editor plugins)";
-    "--show-all-errors", arg_set_unit command_values.show_all_errors,
-      " Print all errors (the default is to truncate after 50 errors)";
-    "--retries", Arg.Set_int command_values.retries,
-      " Set the number of retries. (default: 3)";
-    "--retry-if-init", Arg.Bool (fun x -> command_values.retry_if_init := x),
-      " retry if the server is initializing (default: true)";
-    "--no-auto-start", arg_set_unit command_values.no_auto_start,
-      " If the server if it is not running, do not start it; just exit";
-  ] in
-  command_values,
-  if accepts_json
-  then ( "--json", arg_set_unit command_values.json,
-          " Output results in JSON format";) :: command_list
-  else command_list
+let collect_server_flags
+    main
+    version timeout from show_all_errors
+    retries retry_if_init no_auto_start =
+  let default def = function
+  | Some x -> x
+  | None -> def in
+  main {
+    version = ref version;
+    from = ref (default "" from);
+    show_all_errors = ref show_all_errors;
+    retries = ref (default 3 retries);
+    retry_if_init = ref (default true retry_if_init);
+    timeout = ref (default 0 timeout);
+    no_auto_start = ref no_auto_start;
+  }
 
 let start_flow_server root =
   Printf.fprintf stderr "Flow server launched for %s\n%!"

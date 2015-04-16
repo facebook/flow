@@ -12,35 +12,30 @@
 (* flow port (transform docblock-style annotations) command *)
 (***********************************************************************)
 
-type env = {
-  files : string list;
-  option_values : CommandUtils.command_params;
+open CommandUtils
+
+let spec = {
+  CommandSpec.
+  name = "port";
+  doc = "Shows ported type annotations for given files";
+  usage = Printf.sprintf
+    "Usage: %s port [OPTION]... [FILE]...\n\n\
+      Ports types in one or more files\n\n\
+      Example usage:\n\
+      \t%s port file1 file2\n"
+      CommandUtils.exe_name
+      CommandUtils.exe_name;
+  args = CommandSpec.ArgSpec.(
+    empty
+    |> server_flags
+    |> anon "files" (required (list_of string))
+        ~doc:"File(s) to port"
+  )
 }
 
-let parse_args () =
-  let option_values, options = CommandUtils.create_command_options false in
-  let usage =  Printf.sprintf
-    "Usage: %s port [OPTION]... [FILE]...\n\n\
-    Ports types in one or more files\n\n\
-    Example usage:\n\
-    \t%s port file1 file2"
-    CommandUtils.exe_name
-    CommandUtils.exe_name in
-  let files = ClientArgs.parse_without_command options usage "port" in
-  match files with
-  | [] ->
-      Printf.fprintf stderr "You must provide at least one file\n%!";
-      Arg.usage options usage;
-      exit 2
-  | _ -> ();
-  { files; option_values; }
-
-let main { files; option_values; } =
-  let root = match files with
-  | file::_ -> CommandUtils.guess_root (Some file)
-  | _ -> failwith "Expected at least one file" in
-
-  let ic, oc = CommandUtils.connect_with_autostart option_values root in
+let main option_values files () =
+  let root = guess_root (Some (List.hd files)) in
+  let ic, oc = connect_with_autostart option_values root in
   let files = List.map ClientCheck.expand_path files in
   ServerProt.cmd_to_channel oc (ServerProt.PORT files);
   let patch_map = Marshal.from_channel ic in
@@ -49,6 +44,4 @@ let main { files; option_values; } =
   ) patch_map;
   flush stdout
 
-let name = "port"
-let doc = "Shows ported type annotations for given files"
-let run () = main (parse_args ())
+let command = CommandSpec.command spec (collect_server_flags main)

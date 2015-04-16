@@ -76,11 +76,12 @@ let check_members_implemented parent_reason reason parent_members members =
 let check_types_for_const env parent_type class_type =
   match (snd parent_type, snd class_type) with
     | Tgeneric (_, None), _ -> ()
-    (* parent abstract constant; no constraints *)
-    | Tgeneric (_, Some fty_parent), Tgeneric (_, Some fty_child) ->
+      (* parent abstract constant; no constraints *)
+    | Tgeneric (_, Some (Ast.Constraint_as, fty_parent)),
+      Tgeneric (_, Some (Ast.Constraint_as, fty_child)) ->
       (* redeclaration of an abstract constant *)
       ignore (TUtils.sub_type env fty_parent fty_child)
-    | Tgeneric (_, Some fty_parent), _ ->
+    | Tgeneric (_, Some (Ast.Constraint_as, fty_parent)), _ ->
       (* const definition constrained by parent abstract const *)
       ignore (TUtils.sub_type env fty_parent class_type)
     | (_, _) ->
@@ -125,8 +126,8 @@ let check_override env ?(ignore_fun_return = false) ?(check_for_const = false)
   if check_params then
     (* Replace the parent's this type with the child's. This avoids complaining
      * about how this as Base and this as Child are different types *)
-    let self = Env.get_self env in
-    let this_ty = fst self, Tgeneric ("this", Some self) in
+    let r, _ as self = Env.get_self env in
+    let this_ty = r, TUtils.this_of self in
     let env, parent_ce_type =
       Inst.instantiate_this env parent_class_elt.ce_type this_ty in
     if check_for_const
@@ -188,7 +189,6 @@ let default_constructor_ce class_ =
   let pos, name = class_.tc_pos, class_.tc_name in
   let r = Reason.Rwitness pos in (* reason doesn't get used in, e.g. arity checks *)
   let ft = { ft_pos      = pos;
-             ft_unsafe   = false;
              ft_deprecated = None;
              ft_abstract = false;
              ft_arity    = Fstandard (0, 0);
@@ -243,8 +243,8 @@ let tconst_subsumption this_ty env parent_typeconst child_typeconst =
 (* For type constants we need to check that a child respects the
  * constraints specified by its parent.  *)
 let check_typeconsts env parent_class class_ =
-  let self = Env.get_self env in
-  let this_ty = fst self, Tgeneric ("this", Some self) in
+  let r, _ as self = Env.get_self env in
+  let this_ty = r, TUtils.this_of self in
   let parent_pos, parent_class, _ = parent_class in
   let pos, class_, _ = class_ in
   let ptypeconsts = parent_class.tc_typeconsts in

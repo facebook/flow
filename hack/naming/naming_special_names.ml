@@ -20,6 +20,7 @@ module Classes = struct
 
   let cAwaitable = "\\Awaitable"
   let cWaitHandle = "\\WaitHandle"
+  let cWaitableWaitHandle = "\\WaitableWaitHandle"
   let cGenerator = "\\Generator"
   let cAsyncGenerator = "\\AsyncGenerator"
   let cFormatString = "\\FormatString" (* deprecated - defined in user code *)
@@ -127,6 +128,13 @@ module SpecialFunctions = struct
   let meth_caller    = "meth_caller"
 
   let call_user_func = "call_user_func"
+
+end
+
+module SpecialIdents = struct
+
+  let this = "$this"
+  let placeholder = "$_"
 
 end
 

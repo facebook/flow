@@ -282,17 +282,17 @@ let copy_env cx reason (ctx1,ctx2) xs =
 
 let havoc_env () =
   List.iter (fun block ->
-    block := SMap.mapi (fun x {general;def_loc;_} ->
-      create_env_entry general general def_loc
+    block := SMap.mapi (fun x {specific=_;general;def_loc;for_type;} ->
+      create_env_entry ~for_type general general def_loc
     ) !block
  ) !env
 
 let rec havoc_env2_ x = function
   | block::blocks ->
       (match SMap.get x !block with
-      | Some {general;def_loc;_} ->
+      | Some {specific=_;general;def_loc;for_type;} ->
           block := !block |>
-            SMap.add x (create_env_entry general general def_loc)
+            SMap.add x (create_env_entry ~for_type general general def_loc)
       | None ->
           havoc_env2_ x blocks
       )
@@ -303,9 +303,9 @@ let havoc_env2 xs =
 
 let havoc_heap_refinements () =
   List.iter (fun block ->
-    block := SMap.mapi (fun x ({general;def_loc;_} as entry) ->
+    block := SMap.mapi (fun x ({specific=_;general;def_loc;for_type;} as entry) ->
       if is_refinement x
-      then create_env_entry general general def_loc
+      then create_env_entry ~for_type general general def_loc
       else entry
     ) !block
  ) !env

@@ -118,6 +118,13 @@ and normalize_path_ dir names =
 
 and construct_path = List.fold_left Filename.concat
 
+(* return a list of all file paths ending in 'package.json'
+   under root or includes *)
 let package_json root =
   let config = FlowConfig.get root in
-  List.filter (wanted config) (Find.find_with_name [root] "package.json")
+  let sroot = Path.string_of_path root in
+  let want = wanted config in
+  let filt = fun p -> want p &&
+    (str_starts_with p sroot || FlowConfig.is_included config p) in
+  let paths = root :: config.FlowConfig.include_stems in
+  List.filter filt (Find.find_with_name paths "package.json")

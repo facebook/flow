@@ -25,7 +25,7 @@ val typeparam_alok : Pos.t * string -> unit
 val unexpected_eof : Pos.t -> unit
 val missing_field : Pos.t -> Pos.t -> string -> unit
 val generic_class_var : Pos.t -> unit
-val explain_constraint : Pos.t -> string -> error -> unit
+val explain_constraint : Pos.t -> Pos.t -> string -> error -> unit
 val explain_type_constant : (Pos.t * string) list -> error -> unit
 val unexpected_arrow : Pos.t -> string -> unit
 val missing_arrow : Pos.t -> string -> unit
@@ -89,7 +89,7 @@ val format_string :
 val expected_literal_string : Pos.t -> unit
 val generic_array_strict : Pos.t -> unit
 val strict_members_not_known : Pos.t -> string -> unit
-val nullable_void : Pos.t -> unit
+val option_return_only_typehint : Pos.t -> [< `void | `noreturn ] -> unit
 val tuple_syntax : Pos.t -> unit
 val class_arity : Pos.t -> Pos.t -> string -> int -> unit
 val expecting_type_hint : Pos.t -> unit
@@ -100,8 +100,8 @@ val field_kinds : Pos.t -> Pos.t -> unit
 val unbound_name_typing : Pos.t -> string -> unit
 val did_you_mean_naming : Pos.t -> string -> Pos.t -> string -> unit
 val previous_default : Pos.t -> unit
-val void_parameter : Pos.t -> unit
-val nullable_parameter : Pos.t -> unit
+val nullable_parameter: Pos.t -> unit
+val return_only_typehint : Pos.t -> [< `void | `noreturn ] -> unit
 val return_in_void : Pos.t -> Pos.t -> unit
 val this_in_static : Pos.t -> unit
 val this_var_outside_class : Pos.t -> unit
@@ -261,6 +261,7 @@ val cannot_declare_constant:
   [< `enum | `trait] -> Pos.t -> (Pos.t * string) -> unit
 val ambiguous_inheritance: Pos.t -> string -> string -> error -> unit
 val cyclic_typeconst : Pos.t -> string list -> unit
+val explain_contravariance : Pos.t -> string -> error -> unit
 
 val to_json : Pos.absolute error_ -> Hh_json.json
 val to_string : Pos.absolute error_ -> string

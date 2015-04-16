@@ -10,4 +10,10 @@ namespace_imports.js:20:2,4: number
 This type is incompatible with
   namespace_imports.js:20:7,11: Bar
 
-Found 3 errors
+namespace_imports.js:21:1,1: identifier A
+Unknown global name
+
+namespace_imports.js:25:3,3: identifier B
+Unknown global name
+
+Found 5 errors

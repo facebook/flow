@@ -33,7 +33,7 @@ type env = {
 val canon_key: String.t -> String.t
 
 (* The empty naming environment *)
-val empty: env
+val empty: TypecheckerOptions.t -> env
 
 (* Function building the original naming environment.
  * This pass "declares" all the global names. The only checks done

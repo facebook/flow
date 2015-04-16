@@ -32,6 +32,7 @@ type results = SSet.t * string list * Errors_js.error list list
 
 type options = {
   opt_debug : bool;
+  opt_verbose : bool;
   opt_all : bool;
   opt_weak : bool;
   opt_traces : bool;
@@ -50,6 +51,7 @@ type options = {
 
 let init_modes opts =
   modes.debug <- opts.opt_debug;
+  modes.verbose <- opts.opt_verbose;
   modes.all <- opts.opt_all;
   modes.weak_by_default <- opts.opt_weak;
   modes.traces_enabled <- opts.opt_traces;
@@ -114,6 +116,11 @@ let save_errors mapref files errsets =
     mapref := SMap.add file errset !mapref
   ) files errsets
 
+let save_errormap mapref errmap =
+  SMap.iter (fun file errset ->
+    mapref := SMap.add file errset !mapref
+  ) errmap
+
 (* quick exception format *)
 let fmt_exc file exc =
   file ^ ": " ^ (Printexc.to_string exc) ^ "\n"
@@ -121,14 +128,15 @@ let fmt_exc file exc =
 
 (* distribute errors from a set into a filename-indexed map,
    based on position info contained in error, not incoming key *)
-let distrib_errs file eset emap =
-  Errors_js.ErrorSet.fold (fun e emap ->
-    let file = Errors_js.file_of_error e in
+let distrib_errs file eset emap = Errors_js.(
+  ErrorSet.fold (fun e emap ->
+    let file = file_of_error e in
     let errs = match SMap.get file emap with
-    | Some set -> Errors_js.ErrorSet.add e set
-    | None -> Errors_js.ErrorSet.singleton e in
+    | Some set -> ErrorSet.add e set
+    | None -> ErrorSet.singleton e in
     SMap.add file errs emap
   ) eset emap
+)
 
 (* relocate errors to their reported positions,
    combine in single error map *)
@@ -393,13 +401,15 @@ let calc_dependencies files =
 
 (* commit newly inferred and removed modules, collect errors. *)
 let commit_modules inferred removed =
-  let files, errsets = Module.commit_modules inferred removed in
-  save_errors module_errors files errsets
+  let errmap = Module.commit_modules inferred removed in
+  save_errormap module_errors errmap
 
 (* helper *)
 (* make_merge_input takes list of files produced by infer, and
    returns list of files to merge (typically an expansion) *)
 let typecheck workers files removed opts make_merge_input =
+  (* TODO remove after lookup overhaul *)
+  Module.clear_filename_cache ();
   (* local inference populates context heap, module info heap *)
   let inferred = infer workers files opts in
   (* create module dependency graph, warn on dupes etc. *)

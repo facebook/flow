@@ -16,29 +16,29 @@ module Json = Hh_json
 
 open CommandUtils
 
-type env = {
-  file : ServerProt.file_input;
-  line : int;
-  column : int;
-  option_values : command_params;
-}
-
-let parse_args () =
-  let option_values, options = create_command_options true in
-  let path = ref "" in
-  let options = (
-    "--path", Arg.Set_string path,
-      " Specify (fake) path to file when reading data from stdin"
-    ) :: options in
-  let options = sort_opts options in
-  let usage = Printf.sprintf
+let spec = {
+  CommandSpec.
+  name = "type-at-pos";
+  doc = "Shows the type at a given file and position";
+  usage = Printf.sprintf
     "Usage: %s type-at-pos [OPTION]... [FILE] LINE COLUMN\n\n\
       e.g. %s type-at-pos foo.js 12 3\n\
-      or   %s type-at-pos 12 3 < foo.js\n\n"
+      or   %s type-at-pos 12 3 < foo.js\n"
       CommandUtils.exe_name
       CommandUtils.exe_name
-      CommandUtils.exe_name in
-  let args = ClientArgs.parse_without_command options usage "type-at-pos" in
+      CommandUtils.exe_name;
+  args = CommandSpec.ArgSpec.(
+    empty
+    |> server_flags
+    |> json_flags
+    |> flag "--path" (optional string)
+        ~doc:"Specify (fake) path to file when reading data from stdin"
+    |> anon "args" (required (list_of string)) ~doc:"[FILE] LINE COL"
+  )
+}
+
+let parse_args path args =
+  let path = match path with Some x -> x | None -> "" in
   let (file, line, column) = match args with
   | [file; line; column] ->
       let file = ClientCheck.expand_path file in
@@ -46,24 +46,25 @@ let parse_args () =
   | [line; column] ->
       let contents = ClientUtils.read_stdin_to_string () in
       let filename =
-        if not (!path = "")
-        then Some (get_path_of_file !path)
+        if not (path = "")
+        then Some (get_path_of_file path)
         else None
       in
       ServerProt.FileContent (filename, contents),
       (int_of_string line),
       (int_of_string column)
   | _ ->
-      Arg.usage options usage; exit 2 in
+      CommandSpec.usage spec; exit 2
+  in
   let (line, column) = convert_input_pos (line, column) in
-  { file; line; column; option_values; }
+  file, line, column
 
-let handle_response (pos, t, reasons) option_values =
+let handle_response (pos, t, reasons) json =
   let ty = match t with
     | None -> "(unknown)"
     | Some str -> str
   in
-  if !(option_values.json)
+  if json
   then (
     let pos = Errors_js.pos_to_json pos in
     let json = Json.JAssoc (
@@ -99,8 +100,8 @@ let handle_response (pos, t, reasons) option_values =
   );
   flush stdout
 
-let handle_error (pos, err) option_values =
-  if !(option_values.json)
+let handle_error (pos, err) json =
+  if json
   then (
     let pos = Errors_js.pos_to_json pos in
     let json = Json.JAssoc (("error", Json.JString err) :: pos) in
@@ -111,16 +112,15 @@ let handle_error (pos, err) option_values =
   );
   flush stderr
 
-let main {file; line; column; option_values;} =
+let main option_values json path args () =
+  let (file, line, column) = parse_args path args in
   let root = guess_root (ServerProt.path_of_input file) in
   let ic, oc = connect_with_autostart option_values root in
   ServerProt.cmd_to_channel oc
     (ServerProt.INFER_TYPE (file, line, column));
   match (Marshal.from_channel ic) with
-  | (Some err, None) -> handle_error err option_values
-  | (None, Some resp) -> handle_response resp option_values
+  | (Some err, None) -> handle_error err json
+  | (None, Some resp) -> handle_response resp json
   | (_, _) -> failwith "Oops"
 
-let name = "type-at-pos"
-let doc = "Shows the type at a given file and position"
-let run () = main (parse_args ())
+let command = CommandSpec.command spec (collect_server_flags main)

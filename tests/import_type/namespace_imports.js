@@ -16,5 +16,11 @@ var actualB = require('./B');
 (new actualB.Bar(): B.Bar);
 
 // And to make sure it's working lets use some of this stuff wrong
-(123: A);
-(456: B.Bar);
+(123: A); // Error
+(456: B.Bar); // Error
+A; // Error (not a runtime variable
+
+// Regression test for https://github.com/facebook/flow/issues/359
+function foo() {
+  B; // Error (not a runtime variable)
+}

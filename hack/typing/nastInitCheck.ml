@@ -60,7 +60,7 @@ module Env = struct
     | Done
 
     (* We have never computed this private bethod before *)
-    | Todo of body_block
+    | Todo of func_body
 
   type t = {
     methods : method_status ref SMap.t ;
@@ -159,7 +159,7 @@ and class_ tenv c =
   if c.c_mode = FileInfo.Mdecl then () else begin
   match c.c_constructor with
   | _ when c.c_kind = Ast.Cinterface -> ()
-  | Some { m_unsafe = true; _ } -> ()
+  | Some { m_body = NamedBody { fnb_unsafe = true; _ }; _ } -> ()
   | _ ->
       let p =
         match c.c_constructor with
@@ -194,7 +194,7 @@ and constructor env cstr =
   match cstr with
     | None -> SSet.empty
     | Some cstr -> match cstr.m_body with
-        | NamedBody b -> toplevel env SSet.empty b
+        | NamedBody b -> toplevel env SSet.empty b.fnb_nast
         | UnnamedBody _ -> (* FIXME FIXME *) SSet.empty
 
 and assign _env acc x =
@@ -312,7 +312,7 @@ and expr_ env acc p e =
   | Smethod_id _
   | Method_caller _
   | Id _ -> acc
-  | Lvar _ -> acc
+  | Lvar _ | Lplaceholder _ -> acc
   | Obj_get ((_, This), (_, Id (_, vx as v)), _) ->
       if SSet.mem vx env.cvars && not (SSet.mem vx acc)
       then (Errors.read_before_write v; acc)
@@ -340,7 +340,7 @@ and expr_ env acc p e =
           | Todo b ->
             method_ := Done;
             (match b with
-              | NamedBody b -> toplevel env acc b
+              | NamedBody b -> toplevel env acc b.fnb_nast
               | UnnamedBody _b -> (* FIXME *) acc
             )
           )

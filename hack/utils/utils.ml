@@ -58,6 +58,7 @@ module type MapSig = sig
   val merge : (key -> 'a option -> 'b option -> 'c option)
     -> 'a t -> 'b t -> 'c t
   val choose : 'a t -> key * 'a
+  val split: key -> 'a t -> 'a t * 'a option * 'a t
   val keys: 'a t -> key list
   val values: 'a t -> 'a list
 
@@ -140,10 +141,6 @@ end : HashSetSig)
 let spf = Printf.sprintf
 let print_endlinef fmt = Printf.ksprintf print_endline fmt
 let prerr_endlinef fmt = Printf.ksprintf prerr_endline fmt
-
-let fst3 = function x, _, _ -> x
-let snd3 = function _, x, _ -> x
-let thd3 = function _, _, x -> x
 
 let opt f env = function
   | None -> env, None

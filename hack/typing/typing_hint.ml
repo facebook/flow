@@ -28,7 +28,8 @@ class type ['a] hint_visitor_type = object
   method on_any    : 'a -> 'a
   method on_mixed  : 'a -> 'a
   method on_tuple  : 'a -> Nast.hint list -> 'a
-  method on_abstr  : 'a -> string -> Nast.hint option -> 'a
+  method on_abstr  : 'a -> string -> (Ast.constraint_kind * Nast.hint) option
+                      -> 'a
   method on_array  : 'a -> Nast.hint option -> Nast.hint option -> 'a
   method on_prim   : 'a -> Nast.tprim -> 'a
   method on_option : 'a -> Nast.hint -> 'a
@@ -50,7 +51,7 @@ class virtual ['a] hint_visitor: ['a] hint_visitor_type = object(this)
     | Hany                  -> this#on_any    acc
     | Hmixed                -> this#on_mixed  acc
     | Htuple hl             -> this#on_tuple  acc (hl:Nast.hint list)
-    | Habstr (x, hopt)      -> this#on_abstr  acc x hopt
+    | Habstr (x, cstr_opt)  -> this#on_abstr  acc x cstr_opt
     | Harray (hopt1, hopt2) -> this#on_array  acc hopt1 hopt2
     | Hprim p               -> this#on_prim   acc p
     | Hoption h             -> this#on_option acc h
@@ -64,10 +65,9 @@ class virtual ['a] hint_visitor: ['a] hint_visitor_type = object(this)
   method on_tuple acc hl =
     List.fold_left this#on_hint acc (hl:Nast.hint list)
 
-  method on_abstr acc _ hopt =
-    match hopt with
-      | None -> acc
-      | Some h -> this#on_hint acc h
+  method on_abstr acc _ = function
+    | None -> acc
+    | Some (_ck, h) -> this#on_hint acc h
 
   method on_array acc hopt1 hopt2 =
     let acc = match hopt1 with
@@ -145,10 +145,10 @@ let check_params_instantiable (env:Env.env) (params:Nast.fun_param list)=
   end) env params
 
 let check_tparams_instantiable (env:Env.env) (tparams:Nast.tparam list) =
-  List.fold_left (begin fun env (_variance, _sid, opt_hint) ->
-    match (opt_hint) with
+  List.fold_left (begin fun env (_variance, _sid, cstr_opt) ->
+    match cstr_opt with
       | None -> env
-      | Some h -> check_instantiable env h
+      | Some (_ck, h) -> check_instantiable env h
   end) env tparams
 
 (* Unpacking a hint for typing *)
@@ -172,11 +172,18 @@ and hint_ p env = function
       let env, h2 = opt hint env h2 in
       env, Tarray (h1, h2)
   | Hprim p -> env, Tprim p
-  | Habstr (x, hopt) ->
-      let env, ty_opt = opt hint env hopt in
-      env, Tgeneric (x, ty_opt)
+  | Habstr (x, cstr_opt) ->
+      let env, cstr_opt = match cstr_opt with
+        | Some (ck, h) ->
+            let env, h = hint env h in
+            env, Some (ck, h)
+        | None -> env, None in
+      env, Tgeneric (x, cstr_opt)
   | Hoption (_, Hprim Tvoid) ->
-      Errors.nullable_void p;
+      Errors.option_return_only_typehint p `void;
+      env, Tany
+  | Hoption (_, Hprim Tnoreturn) ->
+      Errors.option_return_only_typehint p `noreturn;
       env, Tany
   | Hoption (_, Hmixed) ->
       Errors.option_mixed p;
@@ -195,7 +202,6 @@ and hint_ p env = function
       in
       env, Tfun {
         ft_pos = p;
-        ft_unsafe = false;
         ft_deprecated = None;
         ft_abstract = false;
         ft_arity = arity;

@@ -40,7 +40,7 @@ type canon_names_map = string SMap.t
 let canon_key = String.lowercase
 
 (* <T as A>, A is a type constraint *)
-type type_constraint = hint option
+type type_constraint = (Ast.constraint_kind * hint) option
 
 type genv = {
 
@@ -101,52 +101,52 @@ type unbound_mode =
 (* The local environment *)
 type lenv = {
 
-    (* The set of locals *)
-    locals: map ref;
+  (* The set of locals *)
+  locals: map ref;
 
-    (* The set of constants *)
-    consts: map ref;
+  (* The set of constants *)
+  consts: map ref;
 
-    (* We keep all the locals, even if we are in a different scope
-     * to provide better error messages.
-     * if you write:
-     * if(...) {
-     *   $x = ...;
-     * }
-     * Technically, passed this point, $x is unbound.
-     * But it is much better to keep it somewhere, so that you can
-     * say it is bound, but in a different scope.
-     *)
-    all_locals: Pos.t SMap.t ref;
+  (* We keep all the locals, even if we are in a different scope
+   * to provide better error messages.
+   * if you write:
+   * if(...) {
+   *   $x = ...;
+   * }
+   * Technically, passed this point, $x is unbound.
+   * But it is much better to keep it somewhere, so that you can
+   * say it is bound, but in a different scope.
+   *)
+  all_locals: Pos.t SMap.t ref;
 
-    (* Some statements can define new variables afterwards, e.g.,
-     * if (...) {
-     *    $x = ...;
-     * } else {
-     *    $x = ...;
-     * }
-     * We need to give $x the same name in both branches, but we don't want
-     * $x to actually be a local until after the if block. So we stash it here,
-     * to indicate a name has been pre-allocated, but that the variable isn't
-     * actually defined yet.
-     *)
-    pending_locals: map ref;
+  (* Some statements can define new variables afterwards, e.g.,
+   * if (...) {
+   *    $x = ...;
+   * } else {
+   *    $x = ...;
+   * }
+   * We need to give $x the same name in both branches, but we don't want
+   * $x to actually be a local until after the if block. So we stash it here,
+   * to indicate a name has been pre-allocated, but that the variable isn't
+   * actually defined yet.
+   *)
+  pending_locals: map ref;
 
-    (* Tag controlling what we do when we encounter an unbound name.
-     * This is used when processing a lambda expression body that has
-     * an automatic use list.
-     *
-     * See expr_lambda for details.
-     *)
-    unbound_mode: unbound_mode;
+  (* Tag controlling what we do when we encounter an unbound name.
+   * This is used when processing a lambda expression body that has
+   * an automatic use list.
+   *
+   * See expr_lambda for details.
+   *)
+  unbound_mode: unbound_mode;
 
-    (* The presence of "yield" in the function body changes the type of the
-     * function into a generator, with no other syntactic indications
-     * elsewhere. For the sanity of the typechecker, we flatten this out into
-     * fun_kind, but need to track if we've seen a "yield" in order to do so.
-     *)
-    has_yield: bool ref;
-  }
+  (* The presence of an "UNSAFE" in the function body changes the
+   * verifiability of the function's return type, since the unsafe
+   * block could return. For the sanity of the typechecker, we flatten
+   * this out, but need to track if we've seen an "UNSAFE" in order to
+   * do so. *)
+  has_unsafe: bool ref;
+}
 
 (* The environment VISIBLE to the outside world. *)
 type env = {
@@ -194,8 +194,8 @@ let predef_tests = List.fold_right SSet.add predef_tests_list SSet.empty
 (* Empty (initial) environments *)
 (*****************************************************************************)
 
-let empty = {
-  itcopt    = TypecheckerOptions.empty;
+let empty tcopt = {
+  itcopt    = tcopt;
   iclasses  = SMap.empty, SMap.empty;
   ifuns     = !predef_funs, !predef_funnames;
   itypedefs = SMap.empty;
@@ -211,7 +211,7 @@ module Env = struct
     all_locals = ref SMap.empty;
     pending_locals = ref SMap.empty;
     unbound_mode = UBMErr;
-    has_yield = ref false;
+    has_unsafe = ref false;
   }
 
   let empty_global nenv = {
@@ -667,7 +667,7 @@ let check_repetition s param =
   let x = snd param.param_id in
   if SSet.mem x s
   then Errors.already_bound (fst param.param_id) x;
-  SSet.add x s
+  if x <> SN.SpecialIdents.placeholder then SSet.add x s else s
 
 (* Check that a name is not a typedef *)
 let no_typedef (genv, _) cid =
@@ -687,7 +687,7 @@ let convert_shape_name env = function
     let class_name = Env.class_name env x in
     (pos, N.SFclass_const (class_name, (pos, y)))
 
-let splat_unexpected = function
+let arg_unpack_unexpected = function
   | [] -> ()
   | (pos, _) :: _ -> Errors.naming_too_few_arguments pos; ()
 
@@ -714,24 +714,32 @@ let make_env old_env ~funs ~classes ~typedefs ~consts =
 (* Naming of type hints *)
 (*****************************************************************************)
 
-let rec hint ?(is_static_var=false) ?(allow_this=false) env (p, h) =
-  p, hint_ ~allow_this is_static_var p env h
+let rec hint
+    ?(is_static_var=false)
+    ?(allow_this=false)
+    ?(allow_retonly=false) env (p, h) =
+  p, hint_ ~allow_this ~allow_retonly is_static_var p env h
 
-and hint_ ~allow_this is_static_var p env x =
+and hint_ ~allow_this ~allow_retonly is_static_var p env x =
   let hint = hint ~is_static_var ~allow_this in
   match x with
-  | Htuple hl -> N.Htuple (List.map (hint env) hl)
-  | Hoption h -> N.Hoption (hint env h)
-  | Hfun (hl, opt, h) -> N.Hfun (List.map (hint env) hl, opt, hint env h)
-  | Happly ((_, x) as id, hl) -> hint_id ~allow_this env is_static_var id hl
+  | Htuple hl -> N.Htuple (List.map (hint ~allow_retonly env) hl)
+  | Hoption h ->
+    (* void/noreturn are permitted for Typing.option_return_only_typehint *)
+    N.Hoption (hint ~allow_retonly env h)
+  | Hfun (hl, opt, h) ->
+    N.Hfun (List.map (hint env) hl, opt,
+            hint ~allow_retonly:true env h)
+  | Happly ((_, x) as id, hl) ->
+    hint_id ~allow_this ~allow_retonly env is_static_var id hl
   | Haccess ((pos, root_id) as root, id, ids) ->
     (* Using a thunk to avoid computing this_ty in cases when we do not need it
      *)
-    let this_ty () = hint_id ~allow_this env is_static_var
-        (pos, SN.Typehints.this) [] in
+    let this_ty () = hint_id ~allow_this ~allow_retonly env is_static_var
+      (pos, SN.Typehints.this) [] in
     let self_ty () =
       match this_ty() with
-      | N.Habstr (x, Some self) when x = SN.Typehints.this -> snd self
+      | N.Habstr (x, Some (_, self)) when x = SN.Typehints.this -> snd self
       | _ -> N.Hany
     in
     let root_ty =
@@ -748,9 +756,10 @@ and hint_ ~allow_this is_static_var p env x =
           Errors.invalid_type_access_root root; N.Hany
       (* Create a type hole that we will fill during the local typing *)
       | x when x = SN.Typehints.this && allow_this ->
-          N.Habstr (SN.Typehints.type_hole, Some (pos, self_ty()))
+          N.Habstr (SN.Typehints.type_hole,
+            Some (Ast.Constraint_as, (pos, self_ty ())))
       | _ ->
-          (match hint_id ~allow_this env is_static_var root [] with
+          (match hint_id ~allow_this ~allow_retonly env is_static_var root [] with
           | N.Happly _ as h -> h
           | _ -> Errors.invalid_type_access_root root; N.Hany
           )
@@ -766,9 +775,8 @@ and hint_ ~allow_this is_static_var p env x =
       end ShapeMap.empty fdl
   end
 
-and hint_id ~allow_this env is_static_var (p, x as id) hl =
+and hint_id ~allow_this ~allow_retonly env is_static_var (p, x as id) hl =
   Naming_hooks.dispatch_hint_hook id;
-  let hint = hint ~allow_this in
   let params = (fst env).type_params in
   if   is_alok_type_name id && not (SMap.mem x params)
   then Errors.typeparam_alok id;
@@ -783,6 +791,7 @@ and hint_id ~allow_this env is_static_var (p, x as id) hl =
     match x with
       | x when x.[0] = '\\' &&
         ( x = ("\\"^SN.Typehints.void)
+        || x = ("\\"^SN.Typehints.noreturn)
         || x = ("\\"^SN.Typehints.int)
         || x = ("\\"^SN.Typehints.bool)
         || x = ("\\"^SN.Typehints.float)
@@ -799,15 +808,21 @@ and hint_id ~allow_this env is_static_var (p, x as id) hl =
         ) ->
         Errors.primitive_toplevel p;
         N.Hany
-    | x when x = SN.Typehints.void -> N.Hprim N.Tvoid
+    | x when x = SN.Typehints.void && allow_retonly -> N.Hprim N.Tvoid
+    | x when x = SN.Typehints.void ->
+      Errors.return_only_typehint p `void;
+      N.Hany
+    | x when x = SN.Typehints.noreturn && allow_retonly -> N.Hprim N.Tnoreturn
+    | x when x = SN.Typehints.noreturn ->
+      Errors.return_only_typehint p `noreturn;
+      N.Hany
     | x when x = SN.Typehints.num  -> N.Hprim N.Tnum
     | x when x = SN.Typehints.resource -> N.Hprim N.Tresource
     | x when x = SN.Typehints.arraykey -> N.Hprim N.Tarraykey
-    | x when x = SN.Typehints.noreturn -> N.Hprim N.Tnoreturn
     | x when x = SN.Typehints.mixed -> N.Hmixed
     | x when x = SN.Typehints.shape ->
-        Errors.shape_typehint p;
-        N.Hany
+      Errors.shape_typehint p;
+      N.Hany
     | x when x = SN.Typehints.this && allow_this ->
         if hl != []
         then Errors.this_no_argument p;
@@ -818,11 +833,10 @@ and hint_id ~allow_this env is_static_var (p, x as id) hl =
         | Some c ->
           let tparaml = (fst env).type_paraml in
           let tparaml = List.map begin fun (param_pos, param_name) ->
-            let _, cstr = get_constraint env param_name in
-            let cstr = opt_map (hint env) cstr in
-            param_pos, N.Habstr (param_name, cstr)
+            param_pos, N.Habstr (param_name, get_constraint env param_name)
           end tparaml in
-          N.Habstr (SN.Typehints.this, Some (fst c.c_name, N.Happly (c.c_name, tparaml))))
+          N.Habstr (SN.Typehints.this, Some (Ast.Constraint_as,
+            (fst c.c_name, N.Happly (c.c_name, tparaml)))))
     | x when x = SN.Typehints.this ->
         (match (fst env).cclass with
         | None ->
@@ -837,8 +851,7 @@ and hint_id ~allow_this env is_static_var (p, x as id) hl =
     | _ when SMap.mem x params ->
         if hl <> [] then
         Errors.tparam_with_tparam p x;
-        let env, gen_constraint = get_constraint env x in
-        N.Habstr (x, opt_map (hint env) gen_constraint)
+        N.Habstr (x, get_constraint env x)
     | _ ->
         (* In the future, when we have proper covariant support, we can
          * allow SN.Typehints.this to instantiate any covariant type variable.
@@ -867,11 +880,12 @@ and hint_id ~allow_this env is_static_var (p, x as id) hl =
       let data_type_covariance =
         (cname = SN.FB.cDataType || cname = SN.FB.cDataTypeImplProvider) in
       let awaitable_covariance =
-        (cname = SN.Classes.cAwaitable || cname = SN.Classes.cWaitHandle) in
+        (cname = SN.Classes.cAwaitable || cname = SN.Classes.cWaitHandle
+         || cname = SN.Classes.cWaitableWaitHandle) in
       let allow_this = allow_this &&
         (awaitable_covariance || gen_read_api_covariance ||
          privacy_policy_contravariance || data_type_covariance) in
-      N.Happly (name, hintl ~allow_this env hl)
+      N.Happly (name, hintl ~allow_this ~allow_retonly:true env hl)
   end
 
 (* Hints that are valid both as casts and type annotations.  Neither
@@ -879,7 +893,7 @@ and hint_id ~allow_this env is_static_var (p, x as id) hl =
  * instance, 'object' is not a valid annotation.  Thus callers will
  * have to handle the remaining cases. *)
 and try_castable_hint ?(allow_this=false) env p x hl =
-  let hint = hint ~allow_this in
+  let hint = hint ~allow_this ~allow_retonly:false in
   let canon = String.lowercase x in
   let opt_hint = match canon with
     | nm when nm = SN.Typehints.int    -> Some (N.Hprim N.Tint)
@@ -913,11 +927,16 @@ and get_constraint env tparam =
   let params = (fst env).type_params in
   let gen_constraint = SMap.find_unsafe tparam params in
   let genv, lenv = env in
+  (* this prevents an infinite loop from occurring since hint invokes
+   * get_constraint *)
   let genv = { genv with type_params = SMap.add tparam None params } in
   let env = genv, lenv in
-  env, gen_constraint
+  Option.map gen_constraint (constraint_ env)
 
-and hintl ~allow_this env l = List.map (hint ~allow_this env) l
+and constraint_ env (ck, h) = ck, hint env h
+
+and hintl ~allow_this ~allow_retonly env l =
+  List.map (hint ~allow_this ~allow_retonly env) l
 
 (*****************************************************************************)
 (* All the methods and static methods of an interface are "implicitly"
@@ -963,16 +982,6 @@ let check_tparams_shadow class_tparam_names methods =
   List.iter (check_method_tparams class_tparam_names) methods
 
 (*****************************************************************************)
-(* Check if the body of a method/function is UNSAFE *)
-(*****************************************************************************)
-
-let rec is_unsafe_body = function
-  | [] -> false
-  | Block x :: rl -> is_unsafe_body x || is_unsafe_body rl
-  | Unsafe :: _ -> true
-  | _ :: rl -> is_unsafe_body rl
-
-(*****************************************************************************)
 (* The entry point to CHECK the program, and transform the program *)
 (*****************************************************************************)
 
@@ -998,7 +1007,7 @@ and class_ genv c =
   let v_names  = List.fold_right SSet.add v_names SSet.empty in
   let sm_names = List.map (fun x -> snd x.N.m_name) smethods in
   let sm_names = List.fold_right SSet.add sm_names SSet.empty in
-  let parents  = List.map (hint ~allow_this:true env) c.c_extends in
+  let parents  = List.map (hint ~allow_this:true ~allow_retonly:false env) c.c_extends in
   let parents  = match c.c_kind with
     (* Make enums implicitly extend the BuiltinEnum class in order to provide
      * utility methods. *)
@@ -1106,8 +1115,10 @@ and type_paraml env tparams =
     tparams in
   List.rev ret
 
-and type_param env (variance, param_name, param_constraint) =
-  variance, param_name, opt_map (hint env) param_constraint
+and type_param env (variance, param_name, cstr_opt) =
+  variance,
+  param_name,
+  Option.map cstr_opt (constraint_ env)
 
 and class_use env x acc =
   match x with
@@ -1426,12 +1437,9 @@ and typeconst env t =
        c_tconst_type = type_;
      })
 
-and fun_kind env ft =
-  match !((snd env).has_yield), ft with
-  | false, Ast.FSync -> N.FSync
-  | false, Ast.FAsync -> N.FAsync
-  | true, Ast.FSync -> N.FGenerator
-  | true, Ast.FAsync -> N.FAsyncGenerator
+and fun_kind env fun_type =
+  let has_unsafe = !((snd env).has_unsafe) in
+  has_unsafe, fun_type
 
 and method_ env m =
   let genv, lenv = env in
@@ -1448,32 +1456,33 @@ and method_ env m =
   List.iter check_constraint m.m_tparams;
   let tparam_l = type_paraml env m.m_tparams in
   (* Naming method body: *)
-  let unsafe = is_unsafe_body m.m_body in
-  let body =
+  let body_nast =
     match genv.in_mode with
-    | FileInfo.Mpartial | FileInfo.Mstrict ->
-        block env m.m_body
+    | FileInfo.Mpartial | FileInfo.Mstrict -> block env m.m_body
     | FileInfo.Mdecl -> [] in
-  let body = N.NamedBody body in
   (* If not naming: ... *)
   (* let body = N.UnnamedBody m.m_body in *)
   (* ... and don't forget that fun_kind (generators) and unsafe
    * both depend upon the processing of the unnamed ast *)
   let attrs = user_attributes env m.m_user_attributes in
-  let method_type = fun_kind env m.m_fun_kind in
-  let ret = opt_map (hint ~allow_this:true env) m.m_ret in
-  N.({ m_unsafe     = unsafe ;
-       m_final      = final  ;
+  let unsafe_in_body, f_kind = fun_kind env m.m_fun_kind in
+  let unsafe = (genv.in_mode = FileInfo.Mdecl) || unsafe_in_body in
+  let ret = opt_map (hint ~allow_this:true ~allow_retonly:true env) m.m_ret in
+  let body = N.NamedBody {
+    N.fnb_nast = body_nast;
+    fnb_unsafe = unsafe;
+  } in
+  N.({ m_final      = final  ;
        m_visibility = vis    ;
        m_abstract   = abs    ;
        m_name       = name   ;
        m_tparams    = tparam_l;
        m_params     = paraml ;
        m_body       = body   ;
+       m_fun_kind   = f_kind ;
        m_user_attributes = attrs;
        m_ret        = ret    ;
        m_variadic   = variadicity;
-       m_fun_kind   = method_type;
      })
 
 and kind (final, abs, vis) = function
@@ -1516,13 +1525,13 @@ and fun_param ?(allow_this=false) env param =
   }
 
 and make_constraints paraml =
-  List.fold_right begin fun (_, (_, x), hl) acc ->
-    SMap.add x hl acc
+  List.fold_right begin fun (_, (_, x), cstr_opt) acc ->
+    SMap.add x cstr_opt acc
   end paraml SMap.empty
 
 and extend_params genv paraml =
-  let params = List.fold_right begin fun (_, (_, x), hopt) acc ->
-    SMap.add x hopt acc
+  let params = List.fold_right begin fun (_, (_, x), cstr_opt) acc ->
+    SMap.add x cstr_opt acc
   end paraml genv.type_params in
   { genv with type_params = params }
 
@@ -1536,7 +1545,8 @@ and uselist_lambda f =
     to_capture := x :: !to_capture;
     p, Ident.tmp()
   in
-  let genv = Env.make_fun_genv empty SMap.empty f in
+  let tcopt = TypecheckerOptions.permissive in
+  let genv = Env.make_fun_genv (empty tcopt) SMap.empty f in
   let lenv = Env.empty_local () in
   let lenv = { lenv with unbound_mode = UBMFunc handle_unbound } in
   let env = genv, lenv in
@@ -1548,48 +1558,49 @@ and fun_ genv f =
   let genv = Env.make_fun_genv genv tparams f in
   let lenv = Env.empty_local () in
   let env = genv, lenv in
-  let h = opt_map (hint ~allow_this:true env) f.f_ret in
+  let h = opt_map (hint ~allow_this:true ~allow_retonly:true env) f.f_ret in
   let variadicity, paraml = fun_paraml env f.f_params in
   let x = Env.fun_id env f.f_name in
   List.iter check_constraint f.f_tparams;
   let f_tparams = type_paraml env f.f_tparams in
   (* Naming func body: *)
-  let unsafe = is_unsafe_body f.f_body in
-  let body =
+  let body_nast =
     match genv.in_mode with
     | FileInfo.Mstrict | FileInfo.Mpartial -> block env f.f_body
     | FileInfo.Mdecl -> []
   in
-  let body = N.NamedBody body in
   (* If not naming: ... *)
   (* let body = N.UnnamedBody f.f_body in *)
   (* let unsafe = false in *)
   (* ... and don't forget that fun_kind (generators) and unsafe
    * both depend upon the processing of the unnamed ast *)
-  let kind = fun_kind env f.f_fun_kind in
-  let named_fun =
-    {
-      N.f_unsafe = unsafe;
-      f_mode = f.f_mode;
-      f_ret = h;
-      f_name = x;
-      f_tparams = f_tparams;
-      f_params = paraml;
-      f_body = body;
-      f_variadic = variadicity;
-      f_fun_kind = kind;
-      f_user_attributes = user_attributes env f.f_user_attributes;
-    }
-  in
+  let unsafe_in_body, f_kind = fun_kind env f.f_fun_kind in
+  let unsafe = (genv.in_mode = FileInfo.Mdecl) || unsafe_in_body in
+  let body = N.NamedBody {
+    N.fnb_nast = body_nast;
+    fnb_unsafe = unsafe;
+  } in
+  let named_fun = {
+    N.f_mode = f.f_mode;
+    f_ret = h;
+    f_name = x;
+    f_tparams = f_tparams;
+    f_params = paraml;
+    f_body = body;
+    f_fun_kind = f_kind;
+    f_variadic = variadicity;
+    f_user_attributes = user_attributes env f.f_user_attributes;
+  } in
   Naming_hooks.dispatch_fun_named_hook named_fun;
   named_fun
 
-and cut_and_flatten ?(replacement=Noop) = function
+and cut_and_flatten ?(replacement=Noop) env = function
   | [] -> []
-  | Unsafe :: _ -> [replacement]
+  | Unsafe :: _ -> (snd env).has_unsafe := true ; [replacement]
   | Block b :: rest ->
-      (cut_and_flatten ~replacement b) @ (cut_and_flatten ~replacement rest)
-  | x :: rest -> x :: (cut_and_flatten ~replacement rest)
+      (cut_and_flatten ~replacement env b) @
+        (cut_and_flatten ~replacement env rest)
+  | x :: rest -> x :: (cut_and_flatten ~replacement env rest)
 
 and stmt env st =
   match st with
@@ -1721,7 +1732,7 @@ and try_stmt env st b cl fb =
   result
 
 and block ?(new_scope=true) env stl =
-  let stl = cut_and_flatten stl in
+  let stl = cut_and_flatten env stl in
   if new_scope
   then
     Env.scope env (
@@ -1730,7 +1741,7 @@ and block ?(new_scope=true) env stl =
   else List.map (stmt env) stl
 
 and branch env stmt_l =
-  let stmt_l = cut_and_flatten stmt_l in
+  let stmt_l = cut_and_flatten env stmt_l in
   let genv, lenv = env in
   let lenv_copy = !(lenv.locals) in
   let lenv_all_locals_copy = !(lenv.all_locals) in
@@ -1828,7 +1839,9 @@ and expr_ env = function
         N.String x
       | _ -> N.Id (Env.global_const env x)
       )
-  | Lvar (_, "$this") -> N.This
+  | Lvar (_, x) when x = SN.SpecialIdents.this -> N.This
+  | Lvar ((_pos, x) as sid) when x = SN.SpecialIdents.placeholder ->
+    N.Lplaceholder sid
   | Lvar x ->
       N.Lvar (Env.lvar env x)
   | Obj_get (e1, (p, _ as e2), nullsafe) ->
@@ -1850,16 +1863,16 @@ and expr_ env = function
       N.Class_const (make_class_id env x1, x2)
   | Call ((_, Id (p, pseudo_func)), el, uel)
       when pseudo_func = SN.SpecialFunctions.echo ->
-      splat_unexpected uel ;
+      arg_unpack_unexpected uel ;
       N.Call (N.Cnormal, (p, N.Id (p, pseudo_func)), exprl env el, [])
   | Call ((p, Id (_, cn)), el, uel) when cn = SN.SpecialFunctions.call_user_func ->
-      splat_unexpected uel ;
+      arg_unpack_unexpected uel ;
       (match el with
       | [] -> Errors.naming_too_few_arguments p; N.Any
       | f :: el -> N.Call (N.Cuser_func, expr env f, exprl env el, [])
       )
   | Call ((p, Id (_, cn)), el, uel) when cn = SN.SpecialFunctions.fun_ ->
-      splat_unexpected uel ;
+      arg_unpack_unexpected uel ;
       (match el with
       | [] -> Errors.naming_too_few_arguments p; N.Any
       | [_, String (p2, s)] when String.contains s ':' ->
@@ -1871,7 +1884,7 @@ and expr_ env = function
       | _ -> Errors.naming_too_many_arguments p; N.Any
       )
   | Call ((p, Id (_, cn)), el, uel) when cn = SN.SpecialFunctions.inst_meth ->
-      splat_unexpected uel ;
+      arg_unpack_unexpected uel ;
       (match el with
       | [] -> Errors.naming_too_few_arguments p; N.Any
       | [_] -> Errors.naming_too_few_arguments p; N.Any
@@ -1883,7 +1896,7 @@ and expr_ env = function
       | _ -> Errors.naming_too_many_arguments p; N.Any
       )
   | Call ((p, Id (_, cn)), el, uel) when cn = SN.SpecialFunctions.meth_caller ->
-      splat_unexpected uel ;
+      arg_unpack_unexpected uel ;
       (match el with
       | [] -> Errors.naming_too_few_arguments p; N.Any
       | [_] -> Errors.naming_too_few_arguments p; N.Any
@@ -1901,7 +1914,7 @@ and expr_ env = function
       | _ -> Errors.naming_too_many_arguments p; N.Any
       )
   | Call ((p, Id (_, cn)), el, uel) when cn = SN.SpecialFunctions.class_meth ->
-      splat_unexpected uel ;
+      arg_unpack_unexpected uel ;
       (match el with
       | [] -> Errors.naming_too_few_arguments p; N.Any
       | [_] -> Errors.naming_too_few_arguments p; N.Any
@@ -1922,12 +1935,12 @@ and expr_ env = function
       | _ -> Errors.naming_too_many_arguments p; N.Any
       )
   | Call ((p, Id (_, cn)), el, uel) when cn = SN.SpecialFunctions.assert_ ->
-      splat_unexpected uel ;
+      arg_unpack_unexpected uel ;
       if List.length el <> 1
       then Errors.assert_arity p;
       N.Assert (N.AE_assert (expr env (List.hd el)))
   | Call ((p, Id (_, cn)), el, uel) when cn = SN.SpecialFunctions.invariant ->
-      splat_unexpected uel ;
+      arg_unpack_unexpected uel ;
       (match el with
       | st :: format :: el ->
           let el = exprl env el in
@@ -1938,7 +1951,7 @@ and expr_ env = function
       )
   | Call ((p, Id (_, cn)), el, uel)
       when cn = SN.SpecialFunctions.invariant_violation ->
-      splat_unexpected uel ;
+      arg_unpack_unexpected uel ;
       (match el with
       | format :: el ->
         let el = exprl env el in
@@ -1948,24 +1961,24 @@ and expr_ env = function
         N.Any
       )
   | Call ((p, Id (_, cn)), el, uel) when cn = SN.SpecialFunctions.tuple ->
-      splat_unexpected uel ;
+      arg_unpack_unexpected uel ;
       (match el with
       | [] -> Errors.naming_too_few_arguments p; N.Any
       | el -> N.List (exprl env el)
       )
   | Call ((p, Id (_, cn)), el, uel) when cn = SN.FB.fgena ->
-      splat_unexpected uel ;
+      arg_unpack_unexpected uel ;
       (match el with
       | [e] -> N.Special_func (N.Gena (expr env e))
       | _ -> Errors.gena_arity p; N.Any
       )
   | Call ((p, Id (_, cn)), el, uel) when cn = SN.FB.fgenva ->
-      splat_unexpected uel ;
+      arg_unpack_unexpected uel ;
       if List.length el < 1
       then (Errors.genva_arity p; N.Any)
       else N.Special_func (N.Genva (exprl env el))
   | Call ((p, Id (_, cn)), el, uel) when cn = SN.FB.fgen_array_rec ->
-      splat_unexpected uel ;
+      arg_unpack_unexpected uel ;
       (match el with
       | [e] -> N.Special_func (N.Gen_array_rec (expr env e))
       | _ -> Errors.gen_array_rec_arity p; N.Any
@@ -1986,8 +1999,8 @@ and expr_ env = function
      the cases above *)
   | Call (e, el, uel) ->
       N.Call (N.Cnormal, expr env e, exprl env el, exprl env uel)
-  | Yield_break -> (snd env).has_yield := true; N.Yield_break
-  | Yield e -> (snd env).has_yield := true; N.Yield (afield env e)
+  | Yield_break -> N.Yield_break
+  | Yield e -> N.Yield (afield env e)
   | Await e -> N.Await (expr env e)
   | List el -> N.List (exprl env el)
   | Expr_list el -> N.Expr_list (exprl env el)
@@ -2067,7 +2080,8 @@ and expr_ env = function
       N.New (make_class_id env (p, SN.Classes.cUnknown), exprl env el, exprl env uel)
   | Efun (f, idl) ->
       let idl = List.map fst idl in
-      let idl = List.filter (function (_, "$this") -> false | _ -> true) idl in
+      let idl = List.filter
+        (function (_, x) -> (x <> SN.SpecialIdents.this)) idl in
       let idl' = List.map (Env.lvar env) idl in
       let env = (fst env, Env.empty_local ()) in
       List.iter2 (Env.add_lvar env) idl idl';
@@ -2106,24 +2120,29 @@ and expr_ env = function
   | Ref (p, e_) -> expr_ env e_
 
 and expr_lambda env f =
-  let h = opt_map (hint ~allow_this:true env) f.f_ret in
-  let unsafe = List.mem Unsafe f.f_body in
+  let h = opt_map (hint ~allow_this:true ~allow_retonly:true env) f.f_ret in
+  let previous_unsafe = !((snd env).has_unsafe) in
+  (* save unsafe and yield state *)
+  (snd env).has_unsafe := false;
   let variadicity, paraml = fun_paraml env f.f_params in
   (* The bodies of lambdas go through naming in the containing local
    * environment *)
-  let named_body = block env f.f_body in
-  let body = N.NamedBody named_body in
-  let f_kind = fun_kind env f.f_fun_kind in
-  {
-    N.f_unsafe = unsafe;
-    f_mode = (fst env).in_mode;
+  let body_nast = block env f.f_body in
+  let unsafe, f_kind = fun_kind env f.f_fun_kind in
+  (* restore unsafe state *)
+  (snd env).has_unsafe := previous_unsafe;
+  let body = N.NamedBody {
+    N.fnb_unsafe = unsafe;
+    fnb_nast = body_nast;
+  } in {
+    N.f_mode = (fst env).in_mode;
     f_ret = h;
     f_name = f.f_name;
     f_params = paraml;
     f_tparams = [];
     f_body = body;
-    f_variadic = variadicity;
     f_fun_kind = f_kind;
+    f_variadic = variadicity;
     f_user_attributes = user_attributes env f.f_user_attributes;
   }
 
@@ -2144,7 +2163,7 @@ and make_class_id env (p, x as cid) =
         let () = Errors.static_outside_class p in
         N.CI (p, SN.Classes.cUnknown)
       else N.CIstatic
-    | x when x = "$this" -> N.CIvar (p, N.This)
+    | x when x = SN.SpecialIdents.this -> N.CIvar (p, N.This)
     | x when x.[0] = '$' -> N.CIvar (p, N.Lvar (Env.lvar env cid))
     | _ -> N.CI (Env.class_name env cid)
 
@@ -2153,23 +2172,26 @@ and casel env l =
 
 and case env acc = function
   | Default b ->
-    let b = cut_and_flatten ~replacement:Fallthrough b in
+    let b = cut_and_flatten ~replacement:Fallthrough env b in
     let all_locals, b = branch env b in
     let acc = SMap.union all_locals acc in
     acc, N.Default b
   | Case (e, b) ->
     let e = expr env e in
-    let b = cut_and_flatten ~replacement:Fallthrough b in
+    let b = cut_and_flatten ~replacement:Fallthrough env b in
     let all_locals, b = branch env b in
     let acc = SMap.union all_locals acc in
     acc, N.Case (e, b)
 
 and catchl env l = lfold (catch env) SMap.empty l
 and catch env acc (x1, x2, b) =
-  let x2 = Env.new_lvar env x2 in
-  let all_locals, b = branch env b in
-  let acc = SMap.union all_locals acc in
-  acc, (Env.class_name env x1, x2, b)
+  Env.scope env (
+  fun env ->
+    let x2 = Env.new_lvar env x2 in
+    let all_locals, b = branch env b in
+    let acc = SMap.union all_locals acc in
+    acc, (Env.class_name env x1, x2, b)
+  )
 
 and afield env = function
   | AFvalue e -> N.AFvalue (expr env e)
@@ -2205,7 +2227,7 @@ let typedef genv tdef =
   List.iter check_constraint tdef.t_tparams;
   let tparaml = type_paraml env tdef.t_tparams in
   List.iter begin function
-    | (_, _, Some (pos, _)) ->
+    | (_, _, Some (_, (pos, _))) ->
         Errors.typedef_constraint pos;
     | _ -> ()
   end tparaml;

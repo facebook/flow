@@ -64,12 +64,6 @@ and unify_with_uenv env (uenv1, ty1) (uenv2, ty2) =
   | (r2, Tmixed), (_, Toption ty1)
   | (_, Toption ty1), (r2, Tmixed) ->
     unify_with_uenv env (TUEnv.empty, ty1) (TUEnv.empty, (r2, Tmixed))
-  | (r1, (Tprim Nast.Tvoid as ty1')), (r2, (Toption ty as ty2')) ->
-     (* When we are in async functions, we allow people to write Awaitable<void>
-      * and then do yield result(null) *)
-      if Env.allow_null_as_void env
-      then unify_with_uenv env (uenv1, ty1) (uenv2, ty)
-      else (TUtils.uerror r1 ty1' r2 ty2'; env, (r1, ty1'))
   (* It might look like you can combine the next two cases, but you can't --
    * if both sides are a Tapply the "when" guard will only check ty1, so if ty2
    * is a typedef it won't get expanded. So we need an explicit check for both.
@@ -180,10 +174,12 @@ and unify_ env r1 ty1 r2 ty2 =
           env, Tabstract (id, argl, tcstr)
   | Tgeneric (x1, None), Tgeneric (x2, None) when x1 = x2 ->
       env, Tgeneric (x1, None)
-  | Tgeneric (x1, Some ty1), Tgeneric (x2, Some ty2) when x1 = x2 ->
+  | Tgeneric (x1, Some (ck1, ty1)), Tgeneric (x2, Some (ck2, ty2))
+    when x1 = x2 && ck1 = ck2 ->
       let env, ty = unify env ty1 ty2 in
-      env, Tgeneric (x1, Some ty)
-  | Tgeneric ("this", Some ((_, Tapply ((_, x) as id, _) as ty))), _ ->
+      env, Tgeneric (x1, Some (ck1, ty))
+  | Tgeneric ("this",
+      Some (Ast.Constraint_as, (_, Tapply ((_, x) as id, _) as ty))), _ ->
       let class_ = Env.get_class env x in
       (* For final class C, there is no difference between this<X> and X *)
       (match class_ with
@@ -197,15 +193,15 @@ and unify_ env r1 ty1 r2 ty2 =
                match ty2 with
                | Tapply ((_, y), _) -> y = x
                | Tany | Tmixed | Tarray (_, _) | Tprim _ | Tgeneric (_, _)
-                | Toption _ | Tvar _ | Tabstract (_, _, _) | Ttuple _
-                | Tanon (_, _) | Tfun _ | Tunresolved _ | Tobject
-                | Tshape _ | Taccess (_, _) -> false
+               | Toption _ | Tvar _ | Tabstract (_, _, _) | Ttuple _
+               | Tanon (_, _) | Tfun _ | Tunresolved _ | Tobject
+               | Tshape _ | Taccess (_, _) -> false
              end
              ~do_:(fun error -> Errors.this_final id (Reason.to_pos r1) error)
           );
           env, Tany
         )
-  | _, Tgeneric ("this", Some (_, Tapply _)) ->
+  | _, Tgeneric ("this", Some (Ast.Constraint_as, (_, Tapply _))) ->
       unify_ env r2 ty2 r1 ty1
   | (Ttuple _ as ty), Tarray (None, None)
   | Tarray (None, None), (Ttuple _ as ty) ->
