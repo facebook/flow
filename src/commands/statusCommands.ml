@@ -78,7 +78,7 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
         empty
         |> CommandUtils.server_flags
         |> CommandUtils.json_flags
-        |> dummy None
+        |> anon "root" (optional string) ~doc:"Root directory"
       )
     }
 

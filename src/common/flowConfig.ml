@@ -11,7 +11,7 @@
 open Utils
 open Sys_utils
 
-let version = "0.9.0"
+let version = "0.9.1"
 
 type moduleSystem = Node | Haste
 
