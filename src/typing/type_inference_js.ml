@@ -1275,30 +1275,47 @@ and statement cx = Ast.Statement.(
 
       let default = ref false in
       let ctx = !Env_js.env in
-      let last_ctx = ref ctx in
+      let last_ctx = ref None in
+      let fallthrough_ctx = ref ctx in
       let oldset = Env_js.swap_changeset (fun _ -> SSet.empty) in
 
-      let exceptions = List.rev_map (fun (loc, case) ->
+      let merge_with_last_ctx cx reason ctx changeset =
+        match !last_ctx with
+        | Some x -> Env_js.merge_env cx reason (ctx, ctx, x) changeset
+        | None -> ()
+      in
+
+      let exceptions = List.rev_map (fun (loc, {Switch.Case.test; consequent}) ->
         if !default then None (* TODO: error when case follows default *)
         else (
-          let case_ctx = Env_js.clone_env ctx in
           let reason = mk_reason "case" loc in
+          let _, pred, not_pred, xtypes = match test with
+          | None ->
+              default := true;
+              UndefT.t, SMap.empty, SMap.empty, SMap.empty
+          | Some expr ->
+              let fake_ast = loc, Ast.Expression.(Binary {
+                Binary.operator = Binary.StrictEqual;
+                left = discriminant;
+                right = expr;
+              }) in
+              predicate_of_condition cx fake_ast
+          in
+
+          let case_ctx = Env_js.clone_env !fallthrough_ctx in
           Env_js.update_frame cx case_ctx;
-          Env_js.merge_env cx reason (case_ctx,ctx,!last_ctx) !Env_js.changeset;
+          Env_js.refine_with_pred cx reason pred xtypes;
+          merge_with_last_ctx cx reason case_ctx !Env_js.changeset;
 
           let exception_ = ref None in
           mark_exception_handler (fun () ->
-            Ast.Statement.Switch.Case.(
-              match case.test with
-              | None ->
-                  default := true;
-                  toplevels cx case.consequent
-              | Some expr ->
-                  ignore (expression cx expr);
-                  toplevels cx case.consequent
-            )
+            toplevels cx consequent
           ) exception_;
-          last_ctx := case_ctx;
+
+          Env_js.update_frame cx !fallthrough_ctx;
+          Env_js.refine_with_pred cx reason not_pred xtypes;
+
+          last_ctx := Some case_ctx;
           !exception_
         )
       ) cases
@@ -1309,10 +1326,10 @@ and statement cx = Ast.Statement.(
       (* if there's no default clause, pretend there is and it's empty *)
       if not !default
       then (
-        let default_ctx = Env_js.clone_env ctx in
+        let default_ctx = Env_js.clone_env !fallthrough_ctx in
         let reason = mk_reason "default" loc in
         Env_js.update_frame cx default_ctx;
-        Env_js.merge_env cx reason (default_ctx,ctx,!last_ctx) newset
+        merge_with_last_ctx cx reason default_ctx newset
       );
 
       if Abnormal.swap (Abnormal.Break None) save_break_exn
