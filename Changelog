@@ -1,3 +1,8 @@
+v0.9.2
+
+- Fix lowercasing issue where "flow Path/To/Root" became "flow path/to/root"
+- Fix "My Path/To Flow/flow path/to/root" not autostarting server due to spaces
+
 v0.9.1
 
 - Unbreak the command line for "flow path/to/root" (thanks samwgoldman for the report!)
