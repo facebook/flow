@@ -124,7 +124,7 @@ let start_flow_server root =
   Printf.fprintf stderr "Flow server launched for %s\n%!"
     (Path.string_of_path root);
   let flow_server = Printf.sprintf "%s start %s 1>&2"
-    (Sys.argv.(0))
+    (Filename.quote (Sys.argv.(0)))
     (Filename.quote (Path.string_of_path root)) in
   match Unix.system flow_server with
     | Unix.WEXITED 0 -> ()

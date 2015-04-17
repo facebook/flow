@@ -59,15 +59,15 @@ end = struct
     let (command, argv) = match argv with
     | [] -> failwith "Expected command"
     | cmd::[] -> (default_command, cmd::default::[])
-    | cmd::subcmd::rest ->
-        let subcmd = String.lowercase subcmd in
+    | cmd::next::rest ->
+        let subcmd = String.lowercase next in
         try
           let command = List.find (fun command ->
             (CommandSpec.name command) = subcmd
           ) commands in
           (command, argv)
         with Not_found ->
-          (default_command, cmd::default::subcmd::rest)
+          (default_command, cmd::default::next::rest)
     in
     let command_string = CommandSpec.name command in
     FlowEventLogger.init_flow_command command_string;
