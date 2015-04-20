@@ -10,7 +10,11 @@
 
 open Spider_monkey_ast (* Loc *)
 
-type reason
+type reason = private {
+  derivable: bool;
+  desc: string;
+  pos: Pos.t;
+}
 
 val lexpos: string -> int -> int -> Lexing.position
 

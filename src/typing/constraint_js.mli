@@ -207,7 +207,11 @@ type rule =
   | FunStatics
   | ClassStatics
 
-type trace
+type link = private
+  | Node of Type.t
+  | Embed of rule * trace
+
+and trace = private Type.t * link list * Type.t
 
 val string_of_trace : string -> bool -> trace -> string
 (* TODO remove *)

@@ -19,7 +19,7 @@ val path_of_prefix : prefix -> string
 val set_path_prefix : prefix -> string -> unit
 
 module S : sig
-  type t
+  type t = prefix * string
   val compare : t -> t -> int
   val to_string : t -> string
 end
