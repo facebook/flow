@@ -22,7 +22,7 @@ This type is incompatible with
   destructuring.js:1:15,20: string
 
 destructuring.js:15:9,9: identifier z
-Unknown global name
+Could not resolve name
 
 destructuring.js:18:14,14: number
 This type is incompatible with

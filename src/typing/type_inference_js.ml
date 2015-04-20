@@ -2109,50 +2109,71 @@ and statement cx = Ast.Statement.(
           )
       ) in
       let import_str = if isType then "import type" else "import" in
+
+      let import_reason = mk_reason
+        (spf "exports of \"%s\"" module_name)
+        source_loc 
+      in
+      let module_ns_tvar = import_ns cx import_reason module_name source_loc in
+
       (match default with
-        | Some(_, local_ident) ->
+        | Some(local_ident_loc, local_ident) ->
           let local_name = local_ident.Ast.Identifier.name in
-          let reason =
-            mk_reason "Extract `default` property from ModuleNamespace obj" loc
+
+          let reason = mk_reason 
+            (spf "\"default\" export of \"%s\"" module_name)
+            local_ident_loc
           in
-          let module_ns_tvar = import_ns cx reason module_name source_loc in
           let local_t = Flow_js.mk_tvar_where cx reason (fun t ->
             Flow_js.unit_flow cx (module_ns_tvar, GetT(reason, "default", t))
           ) in
-          let reason =
-            mk_reason (spf "%s %s from \"%s\"" import_str local_name module_name) loc
+          let reason = mk_reason 
+            (spf "%s %s from \"%s\"" import_str local_name module_name) 
+            loc
           in
           Env_js.set_var cx ~for_type:isType local_name local_t reason
         | None -> (
           match specifier with
           | Some(ImportDeclaration.Named(_, named_specifiers)) ->
-            let import_specifier (_, specifier) = (
-              let (loc, remote_ident) =
+            let import_specifier (specifier_loc, specifier) = (
+              let (remote_ident_loc, remote_ident) =
                 specifier.ImportDeclaration.NamedSpecifier.id
               in
               let remote_name = remote_ident.Ast.Identifier.name in
-              let (local_name, reason) = (
+
+              let get_reason_str =
+                spf "\"%s\" export of \"%s\"" remote_name module_name
+              in
+
+              let (local_name, get_reason, set_reason) = (
                 match specifier.ImportDeclaration.NamedSpecifier.name with
-                | Some(_, { Ast.Identifier.name = local_name; _; }) ->
-                  let reason_str =
-                    spf "%s { %s as %s }" import_str remote_name local_name
+                | Some(local_ident_loc, { Ast.Identifier.name = local_name; _; }) ->
+                  let get_reason = mk_reason get_reason_str remote_ident_loc in
+                  let set_reason = mk_reason
+                    (spf "%s { %s as %s }" import_str remote_name local_name)
+                    specifier_loc
                   in
-                  (local_name, (mk_reason reason_str loc))
+                  (local_name, get_reason, set_reason)
                 | None ->
-                  let reason_str = spf "%s { %s }" import_str remote_name in
-                  (remote_name, (mk_reason reason_str loc))
+                  let get_reason = mk_reason get_reason_str specifier_loc in
+                  let set_reason = mk_reason
+                    (spf "%s { %s }" import_str remote_name)
+                    specifier_loc
+                  in
+                  (remote_name, get_reason, set_reason)
               ) in
-              let module_ns_tvar = import_ns cx reason module_name source_loc in
-              let local_t = Flow_js.mk_tvar_where cx reason (fun t ->
-                Flow_js.unit_flow cx (module_ns_tvar, GetT(reason, remote_name, t))
+
+              let local_t = Flow_js.mk_tvar_where cx get_reason (fun t ->
+                Flow_js.unit_flow cx (module_ns_tvar, GetT(get_reason, remote_name, t))
               ) in
-              Env_js.set_var cx ~for_type:isType local_name local_t reason
+              Env_js.set_var cx ~for_type:isType local_name local_t set_reason
             ) in
             List.iter import_specifier named_specifiers
           | Some(ImportDeclaration.NameSpace(_, (ident_loc, local_ident))) ->
             let local_name = local_ident.Ast.Identifier.name in
-            let reason =
-              mk_reason (spf "%s * as %s" import_str local_name) ident_loc
+            let reason = mk_reason
+              (spf "%s * as %s" import_str local_name)
+              ident_loc
             in
             if isType then (
               (**
@@ -2167,7 +2188,6 @@ and statement cx = Ast.Statement.(
               let module_type = require cx module_ module_name source_loc in
               Env_js.set_var ~for_type:true cx local_name module_type reason
             ) else (
-              let module_ns_tvar = import_ns cx reason module_name source_loc in
               Env_js.set_var cx local_name module_ns_tvar reason
             )
           | None ->
@@ -4953,7 +4973,6 @@ let infer_ast ast file m force_check =
   if check then (
     let init_exports = mk_object cx reason in
     set_module_exports cx reason init_exports;
-    Flow_js.unit_flow cx (init_exports, SetT(reason, "default", init_exports));
     infer_core cx statements;
   );
 

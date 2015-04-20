@@ -1,6 +1,6 @@
 
 errors.js:1:12,17: identifier define
-Unknown global name
+Could not resolve name
 
 errors.js:3:1,9: function call
 Callable signature not found in

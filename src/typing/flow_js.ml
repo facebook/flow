@@ -1201,10 +1201,12 @@ let rec flow cx (l,u) trace =
       (* Set the 'default' property on the new object to point at the exports *)
       unit_flow cx (ns_obj, SetT(reason, "default", exported_t));
 
-      let ns_obj_sealed = mk_tvar_where cx reason (fun t ->
-        unit_flow cx (ns_obj, ObjSealT(reason, t))
-      ) in
-      unit_flow cx (ns_obj_sealed, t);
+      (**
+       * Now that we've constructed the derived ES6 module namespace object for
+       * these CommonJS exports, flow them to the import to be treated like an
+       * ES6 -> ES6 import.
+       *)
+      unit_flow cx (ns_obj, u)
 
     | (ObjT(reason_o, {props_tmap = mapr; _;}), ExportDefaultT(reason, t)) ->
         let exported_props = IMap.find_unsafe mapr cx.property_maps in
@@ -1309,7 +1311,10 @@ let rec flow cx (l,u) trace =
     (* directly.                                                            *)
     (************************************************************************)
     | (_, ImportModuleNsT(reason, t)) ->
-      unit_flow cx (l, t)
+      let ns_obj_sealed = mk_tvar_where cx reason (fun t ->
+        unit_flow cx (l, ObjSealT(reason, t))
+      ) in
+      unit_flow cx (ns_obj_sealed, t)
 
     (**************************************************************************)
     (* Unwrap any CommonJS export objects that are flowing to something other *)
@@ -2583,7 +2588,7 @@ let rec flow cx (l,u) trace =
         let msg =
           if Str.string_match (Str.regexp "\\$module__\\(.*\\)") x 0
           then "Required module not found"
-          else "Unknown global name"
+          else "Could not resolve name"
         in
         let message_list = [
           reason_op, msg

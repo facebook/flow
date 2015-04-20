@@ -8,12 +8,13 @@ function takesAString(str: string): void {}
 // ===================== //
 
 // @providesModule
-import DefaultA from "A";
+import DefaultA from "A"; // Error: There is no default export
+import * as DefaultA from "A";
 takesANumber(DefaultA.numberValue1);
 takesAString(DefaultA.numberValue1); // Error: number ~> string
 
 // File path
-import DefaultB from "./B";
+import * as DefaultB from "./B";
 takesANumber(DefaultB.numberValue);
 takesAString(DefaultB.numberValue); // Error: number ~> string
 
@@ -40,7 +41,7 @@ takesAString(numVal1); // Error: number ~> string
 import CJS_Clobb_Lit from "CommonJS_Clobbering_Lit";
 takesANumber(CJS_Clobb_Lit.numberValue3);
 takesAString(CJS_Clobb_Lit.numberValue3); // Error: number ~> string
-takesANumber(CJS_Clobb_Lit.doesntExist); // Error doesntExist isn't a property
+takesANumber(CJS_Clobb_Lit.doesntExist); // Error: doesntExist isn't a property
 
 import * as CJS_Clobb_Lit_NS from "CommonJS_Clobbering_Lit";
 takesANumber(CJS_Clobb_Lit_NS.numberValue4);
@@ -53,13 +54,15 @@ takesAString(CJS_Clobb_Lit_NS.default.numberValue5); // Error: number ~> string
 // == CommonJS Clobbering Class Exports -> ES6 == //
 // ============================================== //
 
+import {doesntExist} from "CommonJS_Clobbering_Class"; // Error: Not an exported binding
+
 import {staticNumber1} from "CommonJS_Clobbering_Class";
 takesANumber(staticNumber1());
 takesAString(staticNumber1()); // Error: number ~> string
 
 import CJS_Clobb_Class from "CommonJS_Clobbering_Class";
 new CJS_Clobb_Class();
-new CJS_Clobb_Class().doesntExist; // Class has no `doesntExist` property
+new CJS_Clobb_Class().doesntExist; // Error: Class has no `doesntExist` property
 takesANumber(CJS_Clobb_Class.staticNumber2());
 takesAString(CJS_Clobb_Class.staticNumber2()); // Error: number ~> string
 takesANumber(new CJS_Clobb_Class().instNumber1());
@@ -89,22 +92,21 @@ import {numberValue3 as numVal3} from "CommonJS_Named";
 takesANumber(numVal3);
 takesAString(numVal3); // Error: number ~> string
 
-import CJS_Named from "CommonJS_Named";
+import * as CJS_Named from "CommonJS_Named";
 takesANumber(CJS_Named.numberValue1);
 takesAString(CJS_Named.numberValue1); // Error: number ~> string
-takesANumber(CJS_Named.doesntExist); // Error doesntExist isn't a property
+takesANumber(CJS_Named.doesntExist); // Error: doesntExist isn't a property
 
 import * as CJS_Named_NS from "CommonJS_Named";
 takesANumber(CJS_Named_NS.numberValue4);
-takesANumber(CJS_Named_NS.default.numberValue4);
-CJS_Named_NS.default.default; // Not an error -- just a weird consequence of CJS compatibility
-takesANumber(CJS_Named_NS.default.default.numberValue4);
+takesANumber(CJS_Named_NS.default.numberValue4); // Error: CommonJS_Named has no default export
 takesAString(CJS_Named_NS.numberValue4); // Error: number ~> string
-takesAString(CJS_Named_NS.default.numberValue5); // Error: number ~> string
 
 //////////////////////////////
 // == ES6 Default -> ES6 == //
 //////////////////////////////
+
+import {doesntExist} from "ES6_Default_AnonFunction1"; // Error: Not an exported binding
 
 import ES6_Def_AnonFunc1 from "ES6_Default_AnonFunction1";
 takesANumber(ES6_Def_AnonFunc1());
@@ -127,6 +129,8 @@ takesAString(ES6_Def_NamedFunc1()); // Error: number ~> string
 ////////////////////////////
 // == ES6 Named -> ES6 == //
 ////////////////////////////
+
+import doesntExist from "ES6_Named1"; // Error: Not an exported binding
 
 import {specifierNumber1} from "ES6_Named1";
 takesANumber(specifierNumber1);
@@ -183,6 +187,8 @@ takesAString(numberValue5); // Error: number ~> string
 ///////////////////////////////////
 // == ES6 Default -> CommonJS == //
 ///////////////////////////////////
+
+require('ES6_Default_AnonFunction2').doesntExist; // Error: 'doesntExist' isn't an export
 
 var ES6_Def_AnonFunc2 = require("ES6_Default_AnonFunction2").default;
 takesANumber(ES6_Def_AnonFunc2());
