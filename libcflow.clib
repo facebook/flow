@@ -1,0 +1,8 @@
+hack/utils/get_build_id.o
+hack/utils/realpath.o
+hack/utils/nproc.o
+hack/utils/get_build_id.gen.o
+hack/heap/hh_shared.o
+hack/third-party/inotify/inotify_stubs.o
+hack/hhi/hhi_elf.o
+src/embedded/flowlib_elf.o

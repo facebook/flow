@@ -111,10 +111,22 @@ clean:
 build-flow: build-flow-native-deps build-flowlib-archive
 	ocamlbuild  -no-links  $(INCLUDE_OPTS) $(LIB_OPTS) -lflags "$(LINKER_FLAGS)" src/flow.native
 
-build-flow-debug: build-flow-native-deps build-flowlib-archive
-	ocamlbuild -lflags -custom -no-links $(INCLUDE_OPTS) $(LIB_OPTS) -lflags "$(LINKER_FLAGS)" src/flow.d.byte
+#CAML_LD_LIBRARY_PATH=CAML_LD_LIBRARY_PATH:./bin/ ocamldebug ./bin/flow-debug single ../test/
+#load_printer ./bin/db_blob.cma
+#install_printer Pretty.imap
+build-flow-debug: build-flow-stubs build-flowlib-archive
+	ocamlbuild -no-links $(INCLUDE_OPTS) $(LIB_OPTS) -cflags "$(CC_OPTS)" libcflow.a
+	ocamlbuild -no-links -lflags "-dllib dllcflow.so -dllib libelf.so" $(INCLUDE_OPTS) $(LIB_OPTS) debug.otarget
 	mkdir -p bin
-	cp _build/src/flow.d.byte bin/flow
+	cp _build/dllcflow.so _build/src/common/db_blob.cma bin/
+	cp _build/src/flow.d.byte bin/flow-debug
+
+# Static binding attempt
+# build-flow-debug: build-flow-stubs build-flowlib-archive
+#	ocamlbuild -no-links $(INCLUDE_OPTS) $(LIB_OPTS) -cflags "$(CC_OPTS)" libcflow.a
+#	ocamlbuild -no-links -lflags "-custom -cclib libcflow.a -cclib -lelf -linkall" $(INCLUDE_OPTS) $(LIB_OPTS) debug.otarget
+#	mkdir -p bin
+#	mv _build/src/flow.d.byte bin/flow-debug
 
 build-flow-native-deps: build-flow-stubs
 	ocamlbuild -ocamlc "ocamlopt $(EXTRA_INCLUDE_OPTS) $(CC_OPTS)"\
