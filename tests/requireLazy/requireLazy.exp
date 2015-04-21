@@ -16,10 +16,10 @@ This type is incompatible with
   requireLazy.js:14:13,18: string
 
 requireLazy.js:17:20,20: identifier A
-Unknown global name
+Could not resolve name
 
 requireLazy.js:18:20,20: identifier B
-Unknown global name
+Could not resolve name
 
 requireLazy.js:20:1,13: 
 The first arg to requireLazy() must be a literal array of string literals!

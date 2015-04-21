@@ -51,15 +51,15 @@ This binding is shadowing
 which is a different sort of binding
 
 import_type.js:11:9,9: identifier A
-Unknown global name
+Could not resolve name
 
 import_type.js:12:9,11: identifier Foo
-Unknown global name
+Could not resolve name
 
 import_type.js:13:9,11: identifier Baz
-Unknown global name
+Could not resolve name
 
 type_alias.js:8:9,11: identifier Foo
-Unknown global name
+Could not resolve name
 
 Found 15 errors
