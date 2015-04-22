@@ -262,7 +262,16 @@ type block_entry = {
   def_loc: Spider_monkey_ast.Loc.t option;
   for_type: bool;
 }
-type block = block_entry SMap.t ref
+
+type block_scope =
+  | Hoist (* var, class, functions hoisted up to this point *)
+  | Block (* let, const *)
+
+type block = {
+  scope: block_scope;
+  entries: block_entry SMap.t ref;
+}
+
 type stack = int list
 
 val create_env_entry :

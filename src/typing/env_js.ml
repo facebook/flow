@@ -44,7 +44,10 @@ let swap_changeset f =
   changeset := newset;
   oldset
 
-let global_block: block = ref SMap.empty
+let global_block: block = {
+  scope = Hoist;
+  entries = ref SMap.empty;
+}
 
 let global_poison = ["eval"; "arguments"]
 let global_lexicals = [
@@ -60,12 +63,14 @@ let cache_global cx x reason =
   else
     Flow_js.get_builtin cx x reason
   )) in
-  global_block := SMap.add x (create_env_entry t t None) !global_block;
+  let global_entries = global_block.entries in
+  global_entries := SMap.add x (create_env_entry t t None) !global_entries;
   cx.globals <- SSet.add x cx.globals;
   global_block
 
 let find_global cx x reason =
-  if (SMap.mem x !global_block)
+  let global_entries = global_block.entries in
+  if (SMap.mem x !global_entries)
   then
     global_block
   else
@@ -75,34 +80,39 @@ let find_env ?(for_type=false) cx x reason =
   let rec loop = function
     | [] -> find_global cx x reason
     | block::blocks ->
-        (match SMap.get x !block with
+        let entries = block.entries in
+        (match SMap.get x !entries with
         | Some entry when (not entry.for_type || for_type) -> block
         | _ -> loop blocks)
   in
   loop (!env)
 
 let get_block x block =
-  SMap.find_unsafe x !block
+  let entries = block.entries in
+  SMap.find_unsafe x !entries
 
 let set_block x entry block =
-  block := !block |> SMap.add x entry
+  let entries = block.entries in
+  entries := !entries |> SMap.add x entry
 
 let exists_block x block =
-  SMap.get x !block
+  let entries = block.entries in
+  SMap.get x !entries
 
 let update_block ?(for_type=false) x shape block =
-  let values = !block in
+  let entries = block.entries in
   let (s, g) = shape in
-  let new_entry = match SMap.get x values with
+  let new_entry = match SMap.get x !entries with
     | Some {def_loc; for_type; _;} ->
         create_env_entry ~for_type s g def_loc
     | None ->
         create_env_entry ~for_type s g None
   in
-  block := values |> SMap.add x new_entry
+  entries := !entries |> SMap.add x new_entry
 
 let unset_block x block =
-  block := !block |> SMap.remove x
+  let entries = block.entries in
+  entries := !entries |> SMap.remove x
 
 let read_env ?(for_type=false) cx x reason =
   find_env ~for_type cx x reason |> get_block x
@@ -117,9 +127,12 @@ let pop_env () =
   env := List.tl !env
 
 let flat_env () =
-  List.fold_left (fun acc x ->
-    SMap.union acc !x
-  ) !global_block !env
+  let rec loop acc env =
+    match env with
+    | { entries; _ }::bs -> loop (SMap.union acc !entries) bs
+    | [] -> acc in
+  let global_entries = global_block.entries in
+  loop !global_entries !env
 
 let switch_env block =
   pop_env ();
@@ -196,7 +209,10 @@ let set_var ?(for_type=false) cx x s reason =
   write_env ~for_type cx x (s,t) reason
 
 let clone_env ctx =
-  List.map (fun block -> ref !block) ctx
+  List.map (fun block ->
+    let { scope; entries } = block in
+    { scope; entries = ref !entries }
+  ) ctx
 
 let update_frame cx ctx =
   let current_frame = List.hd !Flow_js.frames in
@@ -215,12 +231,15 @@ let rec merge_env cx reason (ctx, ctx1, ctx2) changeset =
   match (ctx, ctx1, ctx2) with
   | ([],[],[]) -> ()
   | (block::ctx, block1::ctx1, block2::ctx2) ->
+      let entries = block.entries in
+      let entries1 = block1.entries in
+      let entries2 = block2.entries in
       (* merge block, block1, block2 *)
       let not_found = SSet.fold (fun x not_found ->
-        match SMap.get x !block with
+        match SMap.get x !entries with
         | Some {specific;general;def_loc;for_type;} ->
-            let shape1 = SMap.find_unsafe x !block1 in
-            let shape2 = SMap.find_unsafe x !block2 in
+            let shape1 = SMap.find_unsafe x !entries1 in
+            let shape2 = SMap.find_unsafe x !entries2 in
             let s1 = shape1.specific in
             let s2 = shape2.specific in
             let (s, g) =
@@ -237,7 +256,7 @@ let rec merge_env cx reason (ctx, ctx1, ctx2) changeset =
                 (tvar,general)
             in
             let for_type = for_type || shape1.for_type || shape2.for_type in
-            block := SMap.add x (create_env_entry ~for_type s g def_loc) !block;
+            block.entries := SMap.add x (create_env_entry ~for_type s g def_loc) !entries;
             not_found
         | None ->
             SSet.add x not_found
@@ -248,9 +267,10 @@ let rec merge_env cx reason (ctx, ctx1, ctx2) changeset =
 
 let widen_env cx reason =
   let block = List.hd !env in
-  let vars = !block in
-  if SMap.cardinal vars < 32 then
-  block := vars |> SMap.mapi (fun x {specific;general;def_loc;for_type;} ->
+  let entries = block.entries in
+  let entries = !entries in
+  if SMap.cardinal entries < 32 then
+  block.entries := entries |> SMap.mapi (fun x {specific;general;def_loc;for_type;} ->
     if specific = general
     then create_env_entry ~for_type specific general def_loc
     else
@@ -264,9 +284,11 @@ let widen_env cx reason =
 let rec copy_env_ cx reason x = function
   | ([],[]) -> ()
   | (block1::ctx1, block2::ctx2) ->
-      (match SMap.get x !block1 with
+      let entries1 = block1.entries in
+      let entries2 = block2.entries in
+      (match SMap.get x !entries1 with
         | Some {specific=s1;_} ->
-            let s2 = (SMap.find_unsafe x !block2).specific in
+            let s2 = (SMap.find_unsafe x !entries2).specific in
             Flow_js.unit_flow cx (s2,s1)
         | None -> copy_env_ cx reason x (ctx1,ctx2)
       )
@@ -282,16 +304,18 @@ let copy_env cx reason (ctx1,ctx2) xs =
 
 let havoc_env () =
   List.iter (fun block ->
-    block := SMap.mapi (fun x {specific=_;general;def_loc;for_type;} ->
+    let entries = block.entries in
+    entries := SMap.mapi (fun x {specific=_;general;def_loc;for_type;} ->
       create_env_entry ~for_type general general def_loc
-    ) !block
+    ) !entries
  ) !env
 
 let rec havoc_env2_ x = function
   | block::blocks ->
-      (match SMap.get x !block with
+      let entries = block.entries in
+      (match SMap.get x !entries with
       | Some {specific=_;general;def_loc;for_type;} ->
-          block := !block |>
+          entries := !entries |>
             SMap.add x (create_env_entry ~for_type general general def_loc)
       | None ->
           havoc_env2_ x blocks
@@ -303,16 +327,18 @@ let havoc_env2 xs =
 
 let havoc_heap_refinements () =
   List.iter (fun block ->
-    block := SMap.mapi (fun x ({specific=_;general;def_loc;for_type;} as entry) ->
+    let entries = block.entries in
+    entries := SMap.mapi (fun x ({specific=_;general;def_loc;for_type;} as entry) ->
       if is_refinement x
       then create_env_entry ~for_type general general def_loc
       else entry
-    ) !block
+    ) !entries
  ) !env
 
 let clear_env reason =
   let block = List.hd !env in
-  block := !block |> SMap.mapi (fun x {specific;general;def_loc;for_type;} ->
+  let entries = block.entries in
+  entries := !entries |> SMap.mapi (fun x {specific;general;def_loc;for_type;} ->
     (* internal names (.this, .super, .return, .exports) are read-only *)
     if is_internal_name x
     then create_env_entry ~for_type specific general def_loc
@@ -331,9 +357,10 @@ let string_of_block_entry cx entry =
     entry.for_type
 
 let string_of_block cx block =
+  let entries = block.entries in
   SMap.fold (fun k v acc ->
     (Utils.spf "%s: %s" k (string_of_block_entry cx v))::acc
-  ) !block []
+  ) !entries []
   |> String.concat ";\n  "
   |> Utils.spf "{\n  %s\n}"
 
