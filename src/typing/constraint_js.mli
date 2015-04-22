@@ -266,7 +266,16 @@ type scope_entry = {
   def_loc: Spider_monkey_ast.Loc.t option;
   for_type: bool;
 }
-type scope = scope_entry SMap.t ref
+
+type scope_kind =
+  | VarScope (* var, class, functions hoisted up to this point *)
+  | LexicalScope (* let, const *)
+
+type scope = {
+  kind: scope_kind;
+  entries: scope_entry SMap.t ref;
+}
+
 type stack = int list
 
 val create_env_entry :

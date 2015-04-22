@@ -507,7 +507,16 @@ type scope_entry = {
   def_loc: Spider_monkey_ast.Loc.t option;
   for_type: bool;
 }
-type scope = scope_entry SMap.t ref
+
+type scope_kind =
+  | VarScope (* var, class, functions hoisted up to this point *)
+  | LexicalScope (* let, const *)
+
+type scope = {
+  kind: scope_kind;
+  entries: scope_entry SMap.t ref;
+}
+
 type stack = int list
 
 let create_env_entry ?(for_type=false) specific general loc =
@@ -1988,8 +1997,9 @@ let string_of_scope_entry cx entry =
     entry.for_type
 
 let string_of_scope cx scope =
+  let entries = scope.entries in
   SMap.fold (fun k v acc ->
     (Utils.spf "%s: %s" k (string_of_scope_entry cx v))::acc
-  ) !scope []
+  ) !entries []
   |> String.concat ";\n  "
   |> Utils.spf "{\n  %s\n}"
