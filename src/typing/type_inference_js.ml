@@ -1920,7 +1920,7 @@ and statement cx = Ast.Statement.(
           let map = SMap.map (fun {specific=export;_} -> export) !block in
           Flow_js.mk_object_with_map_proto cx reason map (MixedT reason)
     in
-    Flow_js.unify cx exports t
+    Flow_js.unify cx (CJSExportDefaultT(reason, exports)) t
   | (loc, ExportDeclaration {
       ExportDeclaration.default;
       ExportDeclaration.declaration;
