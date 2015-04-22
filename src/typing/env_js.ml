@@ -99,6 +99,26 @@ let exists_in_scope x scope =
   let entries = scope.entries in
   SMap.get x !entries
 
+let set_in_env x entry hoist =
+  let rec loop = function
+    | [] -> set_in_scope x entry global_scope
+    | scope::scopes ->
+        if (not hoist || (hoist && scope.kind = VarScope)) then
+          set_in_scope x entry scope
+        else
+          loop scopes in
+  loop (!env)
+
+let exists_in_env x hoist =
+  let rec loop = function
+    | [] -> exists_in_scope x global_scope
+    | scope::scopes ->
+        if (not hoist || (hoist && scope.kind = VarScope)) then
+          exists_in_scope x scope
+        else
+          loop scopes in
+  loop (!env)
+
 let update_scope ?(for_type=false) x (specific_t, general_t) scope =
   let entries = scope.entries in
   let new_entry = match SMap.get x !entries with
@@ -140,10 +160,9 @@ let switch_env scope =
 let peek_env () =
   List.hd !env
 
-let init_env cx x shape =
-  let scope = peek_env() in
-  match exists_in_scope x scope with
-  | None -> set_in_scope x shape scope
+let init_env cx x shape hoist =
+  match exists_in_env x hoist with
+  | None -> set_in_env x shape hoist
   | Some { general; for_type; def_loc; _; } when for_type <> shape.for_type ->
       (* When we have a value var shadowing a type var, replace the type var
        * with the value var *)
@@ -159,7 +178,7 @@ let init_env cx x shape =
         shadower_reason, "This binding is shadowing";
         shadowed_reason, "which is a different sort of binding";
       ];
-      set_in_scope x shape scope;
+      set_in_env x shape hoist;
       Flow_js.unify cx shape.general general
   | Some { general; _ } ->
       Flow_js.unify cx general shape.general
@@ -192,8 +211,7 @@ let var_ref ?(for_type=false) cx x reason =
   mod_reason_of_t (repos_reason p) t
 
 let get_refinement cx key r =
-  let scope = peek_env () in
-  match exists_in_scope key scope with
+  match exists_in_env key true with
   | Some { specific; _ } ->
       let pos = pos_of_reason r in
       let t = mod_reason_of_t (repos_reason pos) specific in
@@ -335,14 +353,20 @@ let havoc_heap_refinements () =
  ) !env
 
 let clear_env reason =
-  let scope = List.hd !env in
-  let entries = scope.entries in
-  entries := !entries |> SMap.mapi (fun x {specific;general;def_loc;for_type;} ->
-    (* internal names (.this, .super, .return, .exports) are read-only *)
-    if is_internal_name x
-    then create_env_entry ~for_type specific general def_loc
-    else create_env_entry ~for_type (UndefT reason) general def_loc
-  )
+  let rec loop = function
+    | [] -> ()
+    | scope::scopes ->
+        let entries = scope.entries in
+        entries := !entries |> SMap.mapi (fun x {specific;general;def_loc;for_type;} ->
+          (* internal names (.this, .super, .return, .exports) are read-only *)
+          if is_internal_name x
+          then create_env_entry ~for_type specific general def_loc
+          else create_env_entry ~for_type (UndefT reason) general def_loc
+        );
+        if scope.kind = VarScope then ()
+        else loop scopes
+  in
+  loop !env
 
 let string_of_scope_entry cx entry =
   let pos = match entry.def_loc with
@@ -372,7 +396,7 @@ let string_of_env cx ctx =
 let install_refinement cx x xtypes =
   if exists_in_scope x (peek_env ()) = None then
     let t = SMap.find_unsafe x xtypes in
-    init_env cx x (create_env_entry t t None)
+    init_env cx x (create_env_entry t t None) true (* TODO: verify correct hoist behavior *)
 
 let refine_with_pred cx reason pred xtypes =
   SMap.iter (fun x predx ->
