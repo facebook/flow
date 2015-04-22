@@ -99,6 +99,26 @@ let exists_block x block =
   let entries = block.entries in
   SMap.get x !entries
 
+let set_env x entry hoist =
+  let rec loop = function
+    | [] -> set_block x entry global_block
+    | block::blocks ->
+        if (not hoist || (hoist && block.scope = Hoist)) then
+          set_block x entry block
+        else
+          loop blocks in
+  loop (!env)
+
+let exists_env x hoist =
+  let rec loop = function
+    | [] -> exists_block x global_block
+    | block::blocks ->
+        if (not hoist || (hoist && block.scope = Hoist)) then
+          exists_block x block
+        else
+          loop blocks in
+  loop (!env)
+
 let update_block ?(for_type=false) x shape block =
   let entries = block.entries in
   let (s, g) = shape in
@@ -141,10 +161,9 @@ let switch_env block =
 let peek_env () =
   List.hd !env
 
-let init_env cx x shape =
-  let block = peek_env() in
-  match exists_block x block with
-  | None -> set_block x shape block
+let init_env cx x shape hoist =
+  match exists_env x hoist with
+  | None -> set_env x shape hoist
   | Some { general; for_type; def_loc; _; } when for_type <> shape.for_type ->
       (* When we have a value var shadowing a type var, replace the type var
        * with the value var *)
@@ -160,7 +179,7 @@ let init_env cx x shape =
         shadower_reason, "This binding is shadowing";
         shadowed_reason, "which is a different sort of binding";
       ];
-      set_block x shape block;
+      set_env x shape hoist;
       Flow_js.unify cx shape.general general
   | Some { general; _ } ->
       Flow_js.unify cx general shape.general
@@ -193,8 +212,7 @@ let var_ref ?(for_type=false) cx x reason =
   mod_reason_of_t (repos_reason p) t
 
 let get_refinement cx key r =
-  let block = peek_env () in
-  match exists_block key block with
+  match exists_env key true with
   | Some { specific; _ } ->
       let pos = pos_of_reason r in
       let t = mod_reason_of_t (repos_reason pos) specific in
@@ -373,7 +391,7 @@ let string_of_env cx ctx =
 let install_refinement cx x xtypes =
   if exists_block x (peek_env ()) = None then
     let t = SMap.find_unsafe x xtypes in
-    init_env cx x (create_env_entry t t None)
+    init_env cx x (create_env_entry t t None) true (* TODO: verify correct hoist behavior *)
 
 let refine_with_pred cx reason pred xtypes =
   SMap.iter (fun x predx ->
