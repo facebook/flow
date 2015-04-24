@@ -354,14 +354,20 @@ let havoc_heap_refinements () =
  ) !env
 
 let clear_env reason =
-  let block = List.hd !env in
-  let entries = block.entries in
-  entries := !entries |> SMap.mapi (fun x {specific;general;def_loc;for_type;} ->
-    (* internal names (.this, .super, .return, .exports) are read-only *)
-    if is_internal_name x
-    then create_env_entry ~for_type specific general def_loc
-    else create_env_entry ~for_type (UndefT reason) general def_loc
-  )
+  let rec loop = function
+    | [] -> ()
+    | block::blocks ->
+        let entries = block.entries in
+        entries := !entries |> SMap.mapi (fun x {specific;general;def_loc;for_type;} ->
+          (* internal names (.this, .super, .return, .exports) are read-only *)
+          if is_internal_name x
+          then create_env_entry ~for_type specific general def_loc
+          else create_env_entry ~for_type (UndefT reason) general def_loc
+        );
+        if block.scope = Hoist then ()
+        else loop blocks
+  in
+  loop !env
 
 let string_of_block_entry cx entry =
   let pos = match entry.def_loc with
