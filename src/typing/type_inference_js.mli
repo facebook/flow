@@ -23,7 +23,7 @@ val infer_module: string -> context
 val merge_module_list: context list -> unit
 
 val merge_module_strict: context ->
-  context list -> (context * context) list -> (context * string) list ->
+  context list -> (context * context) list -> context list Utils.SMap.t ->
   context -> unit
 
 val mk_object: context -> reason -> Type.t

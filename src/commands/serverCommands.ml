@@ -114,6 +114,7 @@ module OptionParser(Config : CONFIG) = struct
       ServerArgs.convert       = None;
       ServerArgs.no_load       = false;
       ServerArgs.save_filename = None;
+      ServerArgs.waiting_client= None;
     },
     {
       Types_js.opt_debug = debug;

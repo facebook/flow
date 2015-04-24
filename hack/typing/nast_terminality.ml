@@ -32,7 +32,6 @@ end = struct
     | Expr (_, Yield_break)
     | Expr (_, Assert (
             AE_assert (_, False) |
-            AE_invariant ((_, False), _, _) |
             AE_invariant_violation _))
       -> raise Exit
     | Expr (_, Call (Cnormal, (_, Id (_, fun_name)), _, _))
@@ -40,6 +39,8 @@ end = struct
         (fun_name = SN.PseudoFunctions.exit_ ||
          fun_name = SN.PseudoFunctions.die)
         -> raise Exit
+    | If ((_, True), b1, _) -> terminal inside_case b1
+    | If ((_, False), _, b2) -> terminal inside_case b2
     | If (_, b1, b2) ->
       (try terminal inside_case b1; () with Exit ->
         terminal inside_case b2)
@@ -122,12 +123,15 @@ end = struct
     | Expr (_, Yield_break)
     | Expr (_, Assert (
             AE_assert (_, False) |
-            AE_invariant ((_, False), _, _) |
             AE_invariant_violation _))
-    | Expr (_, Call (Cnormal, (_, Id (_, "exit")), _, _)) -> raise Exit
+      -> raise Exit
+    | Expr (_, Call (Cnormal, (_, Id (_, fun_name)), _, _))
+        when (fun_name = SN.PseudoFunctions.exit_
+             || fun_name = SN.PseudoFunctions.die) -> raise Exit
+    | If ((_, True), b1, _) -> terminal b1
+    | If ((_, False), _, b2) -> terminal b2
     | If (_, b1, b2) ->
-      (try terminal b1; () with Exit ->
-        terminal b2)
+      (try terminal b1; () with Exit -> terminal b2)
     | Switch (_, cl) ->
       terminal_cl cl
     | Try (b, catches, _) ->

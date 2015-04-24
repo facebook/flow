@@ -438,7 +438,6 @@ and type_ root variance env (reason, ty) =
   | Toption ty ->
       type_ root variance env ty
   | Tprim _ -> env
-  | Tvar _ -> assert false
   | Tfun ft ->
       let env = List.fold_left begin fun env (_, (r, _ as ty)) ->
         let pos = Reason.to_pos r in
@@ -457,10 +456,6 @@ and type_ root variance env (reason, ty) =
       in
       let env = type_ root variance env ft.ft_ret in
       env
-  | Tabstract (_, tyl, ty) ->
-      let env = type_list root variance env tyl in
-      let env = type_option root variance env ty in
-      env
   | Tapply (_, []) -> env
   | Tapply ((_, name as pos_name), tyl) ->
       let variancel = get_class_variance root pos_name in
@@ -474,9 +469,6 @@ and type_ root variance env (reason, ty) =
       type_list root variance env tyl
   (* when we add type params to type consts might need to change *)
   | Taccess _ -> env
-  | Tanon _ -> assert false
-  | Tunresolved _ -> assert false
-  | Tobject -> env
   | Tshape ty_map ->
       Nast.ShapeMap.fold begin fun _field_name ty env ->
         type_ root variance env ty

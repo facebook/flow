@@ -21,8 +21,8 @@ let (cmethod_hooks: (Typing_defs.class_type -> Pos.t * string ->
 let (lvar_hooks: (Pos.t * Ident.t -> Typing_env.env ->
                   unit) list ref) = ref []
 
-let (fun_call_hooks: ((string option * Typing_defs.ty) list -> Pos.t list ->
-                      Typing_env.env -> unit) list ref) = ref []
+let (fun_call_hooks: ((string option * Typing_defs.locl Typing_defs.ty) list ->
+                      Pos.t list -> Typing_env.env -> unit) list ref) = ref []
 
 let (new_id_hooks: (Nast.class_id-> Typing_env.env -> unit) list ref) = ref []
 
@@ -34,7 +34,7 @@ let (constructor_hooks: (Typing_defs.class_type ->
 let (class_id_hooks: (Pos.t * string ->
                       (Pos.t * string) option -> unit) list ref) = ref []
 
-let (infer_ty_hooks: (Typing_defs.ty -> Pos.t ->
+let (infer_ty_hooks: (Typing_defs.phase_ty -> Pos.t ->
                       Typing_env.env -> unit) list ref) = ref []
 
 let attach_smethod_hook hook =

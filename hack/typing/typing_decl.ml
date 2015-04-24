@@ -97,7 +97,7 @@ let make_substitution self_ty pos class_name class_type class_parameters =
   check_arity pos class_name class_type class_parameters;
   let this_ty = (fst self_ty,
     Tgeneric ("this", Some (Ast.Constraint_as, self_ty))) in
-  Inst.make_subst_with_this this_ty class_type.tc_tparams class_parameters
+  Inst.make_subst_with_this Phase.decl this_ty class_type.tc_tparams class_parameters
 
 (*-------------------------- end copypasta *)
 
@@ -156,19 +156,19 @@ let merge_single_req env subst inc_req_ty existing_req_opt
        * the one that's more restrictive (subtype of the other) *)
       let env, result_ty = Errors.try_
         (fun () ->
-          let env = Typing_ops.sub_type incoming_pos
+          let env = Typing_ops.sub_type_decl incoming_pos
             Reason.URclass_req_merge env ex_req_ty inc_req_ty
           in env, inc_req_ty)
         (fun _ ->
-          let env = Typing_ops.sub_type incoming_pos
+          let env = Typing_ops.sub_type_decl incoming_pos
             Reason.URclass_req_merge env inc_req_ty ex_req_ty
           in env, ex_req_ty
         )
       in
-      (env : Env.env), (result_ty: Typing_defs.ty)
+      (env : Env.env), (result_ty: decl ty)
     | None ->
       let env, inc_req_ty = Inst.instantiate subst env inc_req_ty in
-      (env : Env.env), (inc_req_ty: Typing_defs.ty)
+      (env : Env.env), (inc_req_ty: decl ty)
 
 (* for non-traits, check that requirements inherited from
  * traits/interfaces have been satisfied; for traits/interfaces,
@@ -198,7 +198,7 @@ let merge_parent_class_reqs class_nast impls
                 env
               | Some impl_ty ->
                 let env, req_ty = Inst.instantiate subst env req_ty in
-                Typing_ops.sub_type parent_pos Reason.URclass_req env req_ty impl_ty
+                Typing_ops.sub_type_decl parent_pos Reason.URclass_req env req_ty impl_ty
           end parent_type.tc_req_ancestors env
           in
           env, req_ancestors, req_ancestors_extends
@@ -240,7 +240,7 @@ let declared_class_req class_nast impls (env, requirements, req_extends) hint =
           (* Due to checking of incompatibility when accumulating
            * requirements, subtype violations in this case might not
            * actually be possible *)
-          Typing_ops.sub_type req_pos Reason.URclass_req env req_ty impl_ty
+          Typing_ops.sub_type_decl req_pos Reason.URclass_req env req_ty impl_ty
       )
   in
 
@@ -254,7 +254,7 @@ let declared_class_req class_nast impls (env, requirements, req_extends) hint =
       (* since the req is declared on this class, we should
        * emphatically *not* substitute: a require extends Foo<T> is
        * going to be this class's <T> *)
-      let subst = Inst.make_subst [] [] in
+      let subst = Inst.make_subst Phase.decl [] [] in
       let ex_ty_opt = SMap.get req_name requirements in
       let env, merged = merge_single_req env subst
         req_ty ex_ty_opt req_pos in
@@ -838,7 +838,7 @@ and type_typedef_naming_and_decl nenv tdef =
     | None -> env, None
     | Some constraint_type ->
       let env, constraint_type = Typing_hint.hint env constraint_type in
-      let sub_type = Typing_ops.sub_type pos Reason.URnewtype_cstr in
+      let sub_type = Typing_ops.sub_type_decl pos Reason.URnewtype_cstr in
       let env = sub_type env constraint_type concrete_type in
       env, Some constraint_type
   in

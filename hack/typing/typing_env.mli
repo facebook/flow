@@ -12,18 +12,18 @@ open Utils
 open Typing_defs
 
 module Class : sig type t = class_type val prefix : Prefix.t end
-module Fun : sig type t = fun_type val prefix : Prefix.t end
+module Fun : sig type t = decl fun_type val prefix : Prefix.t end
 module Typedef :
   sig
     type visibility = Public | Private
     type tdef =
-        visibility * tparam list * ty option *
-        ty * Pos.t
+        visibility * tparam list * decl ty option *
+        decl ty * Pos.t
     type tdef_or_error = Error | Ok of tdef
     type t = tdef_or_error
     val prefix : Prefix.t
   end
-module GConst : sig type t = ty val prefix : Prefix.t end
+module GConst : sig type t = decl ty val prefix : Prefix.t end
 
 module Funs : module type of SharedMem.WithCache (String) (Fun)
 module Classes : module type of SharedMem.WithCache (String) (Class)
@@ -37,11 +37,11 @@ type fake_members = {
   invalid : SSet.t;
   valid : SSet.t;
 }
-type local = ty list * ty
+type local = locl ty list * locl ty
 type local_env = fake_members * local IMap.t
 type env = {
   pos : Pos.t;
-  tenv : ty IMap.t;
+  tenv : locl ty IMap.t;
   subst : int IMap.t;
   lenv : local_env;
   genv : genv;
@@ -50,23 +50,23 @@ type env = {
   grow_super : bool;
 }
 and genv
-and anon = env -> fun_params -> env * ty
+and anon = env -> locl fun_params -> env * locl ty
 and tfun = env -> env
 val fresh : unit -> int
-val fresh_type : unit -> ty
+val fresh_type : unit -> locl ty
 val add_subst : env -> int -> int -> env
 val get_var : env -> int -> env * int
 val rename : env -> int -> int -> env
-val add : env -> int -> ty -> env
-val get_type : env -> int -> env * ty
-val get_type_unsafe : env -> int -> env * ty
-val expand_type : env -> ty -> env * ty
-val expand_type_recorded : env -> ISet.t -> ty -> env * ISet.t * ty
+val add : env -> int -> locl ty -> env
+val get_type : env -> int -> env * locl ty
+val get_type_unsafe : env -> int -> env * locl ty
+val expand_type : env -> 'a ty -> env * 'a ty
+val expand_type_recorded : env -> ISet.t -> locl ty -> env * ISet.t * locl ty
 val has_type : env -> int -> bool
-val make_ft : Pos.t -> fun_params -> ty -> fun_type
+val make_ft : Pos.t -> decl fun_params -> decl ty -> decl fun_type
 val get_shape_field_name : Nast.shape_field_name -> string
-val debugl : ISet.t -> env -> ty list -> unit
-val debug : env -> ty -> unit
+val debugl : ISet.t -> env -> locl ty list -> unit
+val debug : env -> locl ty -> unit
 val empty_fake_members : fake_members
 val empty_local : local_env
 val empty : TypecheckerOptions.t -> Relative_path.t -> env
@@ -75,7 +75,7 @@ val add_typedef : Typedefs.key -> Typedef.tdef -> unit
 val is_typedef : Typedefs.key -> bool
 val get_enum : Classes.key -> Classes.t option
 val is_enum : Classes.key -> bool
-val get_enum_constraint : Classes.key -> ty option
+val get_enum_constraint : Classes.key -> decl ty option
 val add_typedef_error : Typedefs.key -> unit
 val add_fun : Funs.key -> Funs.t -> unit
 val add_wclass : env -> string -> unit
@@ -95,14 +95,15 @@ val get_member : bool -> env -> class_type -> string -> class_elt option
 val suggest_member : bool -> class_type -> string -> (Pos.t * string) option
 val get_construct : env -> class_type -> class_elt option * bool
 val get_todo : env -> tfun list
-val get_return : env -> ty
-val set_return : env -> ty -> env
+val get_return : env -> locl ty
+val set_return : env -> locl ty -> env
 val with_return : env -> (env -> env) -> env
 val is_static : env -> bool
 val grow_super : env -> bool
-val get_self : env -> ty
+val invert_grow_super : env -> (env -> env) -> env
+val get_self : env -> decl ty
 val get_self_id : env -> string
-val get_parent : env -> ty
+val get_parent : env -> decl ty
 val get_fn_kind : env -> Ast.fun_kind
 val get_file : env -> Relative_path.t
 val get_fun : env -> Funs.key -> Funs.t option
@@ -111,8 +112,8 @@ val add_todo : env -> tfun -> env
 val add_anonymous : env -> anon -> env * int
 val get_anonymous : env -> int -> anon option
 val set_self_id : env -> string -> env
-val set_self : env -> ty -> env
-val set_parent : env -> ty -> env
+val set_self : env -> decl ty -> env
+val set_parent : env -> decl ty -> env
 val set_static : env -> env
 val set_mode : env -> FileInfo.mode -> env
 val set_root : env -> Typing_deps.Dep.variant -> env
@@ -121,7 +122,7 @@ val is_strict : env -> bool
 val is_decl : env -> bool
 val get_options: env -> TypecheckerOptions.t
 val get_last_call : env -> Pos.t
-val lost_info : string -> ISet.t -> env -> ty -> env * ty
+val lost_info : string -> ISet.t -> env -> locl ty -> env * locl ty
 val forget_members : env -> Pos.t -> env
 module FakeMembers :
   sig
@@ -134,9 +135,9 @@ module FakeMembers :
     val make : Pos.t -> env -> Nast.expr -> string -> env * int
     val make_static : Pos.t -> env -> Nast.class_id -> string -> env * int
   end
-val unbind : env -> ty -> env * ty
-val set_local : env -> Ident.t -> ty -> env
-val get_local : env -> Ident.t -> env * ty
+val unbind : env -> locl ty -> env * locl ty
+val set_local : env -> Ident.t -> locl ty -> env
+val get_local : env -> Ident.t -> env * locl ty
 val freeze_local_env : env -> env
-val anon : local_env -> env -> (env -> env * ty) -> env * ty
+val anon : local_env -> env -> (env -> env * locl ty) -> env * locl ty
 val in_loop : env -> (env -> env) -> env

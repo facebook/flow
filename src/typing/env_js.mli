@@ -28,7 +28,7 @@ val flat_env :
 
 val get_var : ?for_type:bool -> context -> string -> reason -> Type.t
 
-val get_var_in_scope : context -> string -> reason -> Type.t
+val get_var_in_scope : ?for_type:bool -> context -> string -> reason -> Type.t
 
 val var_ref : ?for_type:bool -> context -> string -> reason -> Type.t
 
@@ -71,7 +71,6 @@ val havoc_heap_refinements : unit -> unit
 
 val clear_env : Reason_js.reason -> unit
 
-val string_of_block : context -> block -> string
 val string_of_env : context -> block list -> string
 
 val changeset: SSet.t ref

@@ -16,7 +16,7 @@ module SN     = Naming_special_names
 module TUtils = Typing_utils
 
 type env   = Env.env
-type subst = ty SMap.t
+type 'a subst = ('a Phase.t * 'a ty) SMap.t
 
 (*****************************************************************************)
 (* Builds a substitution out of a list of type parameters and a list of types.
@@ -32,26 +32,27 @@ type subst = ty SMap.t
  *)
 (*****************************************************************************)
 
-let rec make_subst tparams tyl =
+let rec make_subst ~phase tparams tyl =
   (* We tolerate missing types in silent_mode. When that happens, we bind
    * all the parameters we can, and bind the remaining ones to "Tany".
    *)
   let subst = ref SMap.empty in
   let tyl = ref tyl in
-  List.iter (make_subst_tparam subst tyl) tparams;
+  List.iter (make_subst_tparam ~phase subst tyl) tparams;
   !subst
 
-and make_subst_with_this ~this tparams tyl =
-  make_subst ((Ast.Invariant, (Pos.none, SN.Typehints.this), None)::tparams)
+and make_subst_with_this ~phase ~this tparams tyl =
+  make_subst ~phase
+    ((Ast.Invariant, (Pos.none, SN.Typehints.this), None)::tparams)
     (this::tyl)
 
-and make_subst_tparam subst tyl (_, (_, tparam_name), _) =
+and make_subst_tparam ~phase subst tyl (_, (_, tparam_name), _) =
   let ty =
     match !tyl with
     | [] -> Reason.Rnone, Tany
     | ty :: rl -> tyl := rl; ty
   in
-  subst := SMap.add tparam_name ty !subst
+  subst := SMap.add tparam_name (phase, ty) !subst
 
 (*****************************************************************************)
 (* Code dealing with instantiation. *)
@@ -84,41 +85,86 @@ and instantiate_ft env ft =
     let env, var = TUtils.in_var env (r, Tunresolved []) in
     env, var :: vars
   end (env, []) ft.ft_tparams in
-  let subst = make_subst ft.ft_tparams tvarl in
+  let subst = make_subst Phase.locl ft.ft_tparams tvarl in
   let names, params = List.split ft.ft_params in
   let env, params = lfold (instantiate subst) env params in
   let env, arity = match ft.ft_arity with
     | Fvariadic (min, (name, var_ty)) ->
       let env, var_ty = instantiate subst env var_ty in
       env, Fvariadic (min, (name, var_ty))
-    | _ -> env, ft.ft_arity
+    | Fellipsis x -> env, Fellipsis x
+    | Fstandard (x, y) -> env, Fstandard (x, y)
   in
   let env, ret = instantiate subst env ft.ft_ret in
   let params = List.map2 (fun x y -> x, y) names params in
   env, { ft with ft_arity = arity; ft_params = params; ft_ret = ret }
 
-and check_constraint env ck ty x_ty =
+and check_constraint env ck cstr_ty ty =
+  let env, ty = TUtils.localize_phase env ty in
+  let env, cstr_ty = TUtils.localize_phase env cstr_ty in
   let env, ety = Env.expand_type env ty in
-  let env, ex_ty = Env.expand_type env x_ty in
-  match snd ety, snd ex_ty with
+  let env, ecstr_ty = Env.expand_type env cstr_ty in
+  match snd ecstr_ty, snd ety with
   | _, Tany ->
       (* This branch is only reached when we have an unbound type variable,
        * when this is the case, the constraint should always succeed.
        *)
       env
-  | Tany, _ -> fst (TUtils.unify env ty x_ty)
+  | Tany, _ -> fst (TUtils.unify env cstr_ty ty)
   | (Tmixed | Tarray (_, _) | Tprim _ | Tgeneric (_, _) | Toption _ | Tvar _
     | Tabstract (_, _, _) | Tapply (_, _) | Ttuple _ | Tanon (_, _) | Tfun _
     | Tunresolved _ | Tobject | Tshape _
     | Taccess _), _ -> begin
         match ck with
         | Ast.Constraint_as ->
-            TUtils.sub_type env ty x_ty
+            TUtils.sub_type env cstr_ty ty
         | Ast.Constraint_super ->
-            TUtils.super_type env ty x_ty
+            (* invert_grow_super is intentionally not used here. Consider
+             * the following:
+             *
+             * class A {}
+             * class B extends A {}
+             * class C extends A {}
+             * class Foo<T> {
+             *   public function bar<Tu super T>(Tu $x): Tu {}
+             * }
+             * function f(Foo<C> $x, B $y): A {
+             *   return $x->bar($y);
+             * }
+             *
+             * C is not a supertype of B. However, this doesn't mean the
+             * constraint is violated: All's good if Tu = A. Figuring out the
+             * most specific supertype is expensive, though, so we just put the
+             * constraint into a Tunresolved. (Tunresolved only grows if
+             * grow_super is true.) The return type hint provides the
+             * supertype we want, and we just have to check that the hint is
+             * consistent with all the types in the Tunresolved.
+             *
+             * Note that since Tu = mixed is always a solution, a `super`
+             * constraint itself should never create a type error. That is,
+             * it should only result in the type growing as a Tunresolved.
+             * Errors will only arise when we encounter conflicting type hints.
+             * Thus we ensure that ty is wrapped in a Tunresolved here.
+             *)
+            let env = match ty, ety with
+              | (_, Tvar _), (_, Tunresolved _) -> env
+              | (_, Tvar n), (r, _) ->
+                  let ety = r, Tunresolved [ety] in
+                  let env = Env.add env n ety in
+                  env
+              | _ ->
+                  (* I don't think ty will ever be anything but a Tvar...
+                   * might be able to assert false here *)
+                  env in
+            (* If cstr_ty is a Tvar, we don't want to unify that Tvar with
+             * ty; we merely want the constraint itself to be added to the
+             * ty's list of unresolved types. Thus we pass the expanded
+             * constraint type. *)
+            TUtils.sub_type env ty ecstr_ty
       end
 
-and instantiate subst env (r, ty) =
+and instantiate: type a. a subst -> env -> a ty -> env * a ty =
+  fun subst env (r, ty) ->
   (* PERF: If subst is empty then instantiation is a no-op. We can save a
    * significant amount of CPU by avoiding recursively deconstructing the ty
    * data type.
@@ -127,7 +173,7 @@ and instantiate subst env (r, ty) =
   match ty with
   | Tgeneric (x, cstr_opt) ->
       (match SMap.get x subst with
-      | Some x_ty ->
+      | Some (phase, x_ty) ->
           let env =
             (* Once the typing environment is "fully" solved, we
                check the constraints on generics *)
@@ -136,7 +182,7 @@ and instantiate subst env (r, ty) =
                 let env, ty = instantiate subst env ty in
                 Env.add_todo env begin fun env ->
                   Errors.try_
-                    (fun () -> check_constraint env ck ty x_ty)
+                    (fun () -> check_constraint env ck (phase ty) (phase x_ty))
                     (fun l ->
                       Reason.explain_generic_constraint env.Env.pos r x l;
                       env
@@ -153,13 +199,12 @@ and instantiate subst env (r, ty) =
           | None -> env, (r, ty)
         end
       )
-  | Tany | Tmixed | Tarray (_, _) | Tprim _ | Toption _ | Tvar _
-  | Tabstract (_, _, _) | Tapply (_, _) | Ttuple _ | Tanon (_, _) | Tfun _
-  | Tunresolved _ | Tobject | Tshape _ | Taccess (_, _) ->
+  | _ ->
       let env, ty = instantiate_ subst env ty in
       env, (r, ty)
 
-and instantiate_ subst env = function
+and instantiate_: type a. a subst -> env -> a ty_ -> env * a ty_ =
+  fun subst env x -> match x with
   | Tgeneric _ -> assert false
   (* IMPORTANT: We cannot expand Taccess during instantiation because this can
    * be called before all type consts have been declared and inherited
@@ -204,7 +249,7 @@ and instantiate_ subst env = function
         | Fvariadic (min, (name, var_ty)) ->
           let env, var_ty = instantiate subst env var_ty in
           env, Fvariadic (min, (name, var_ty))
-        | _ -> env, ft.ft_arity
+        | Fellipsis _ | Fstandard _ as x -> env, x
       in
       let env, ret = instantiate subst env ft.ft_ret in
       let params = List.map2 (fun x y -> x, y) names params in
@@ -228,16 +273,16 @@ and instantiate_ subst env = function
       let env, fdm = Nast.ShapeMap.map_env (instantiate subst) env fdm in
       env, Tshape fdm
 
-and instantiate_ce subst env ({ ce_type = x; _ } as ce) =
+let instantiate_ce subst env ({ ce_type = x; _ } as ce) =
   let env, x = instantiate subst env x in
   env, { ce with ce_type = x }
 
-and instantiate_typeconst subst env (
+let instantiate_typeconst subst env (
   { ttc_constraint = x; ttc_type = y; _ } as tc) =
     let env, x = opt (instantiate subst) env x in
     let env, y = opt (instantiate subst) env y in
     env, { tc with ttc_constraint = x; ttc_type = y }
 
-let instantiate_this env ty this_ty =
-  let subst = make_subst_with_this this_ty [] [] in
+let instantiate_this ~phase env ty this_ty =
+  let subst = make_subst_with_this ~phase ~this:this_ty [] [] in
   instantiate subst env ty

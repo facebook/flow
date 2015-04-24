@@ -1,0 +1,10 @@
+
+typeof.js:13:19,26: class type: MyClass1
+This type is incompatible with
+  typeof.js:9:7,14: MyClass1
+
+typeof.js:27:26,31: string
+This type is incompatible with
+  typeof.js:25:14,19: number
+
+Found 2 errors

@@ -20,6 +20,7 @@ type options = {
   convert          : Path.path option;
   no_load          : bool;
   save_filename    : string option;
+  waiting_client   : int option;
 }
 
 val parse_options: unit -> options
@@ -36,3 +37,4 @@ val should_detach       : options -> bool
 val convert             : options -> Path.path option
 val no_load             : options -> bool
 val save_filename       : options -> string option
+val waiting_client      : options -> int option
