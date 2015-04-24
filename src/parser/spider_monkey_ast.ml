@@ -504,11 +504,15 @@ and Statement : sig
     type specifier =
       | Named of Loc.t * (NamedSpecifier.t list)
       | NameSpace of (Loc.t * Identifier.t)
+    type importKind =
+      | ImportType
+      | ImportTypeof
+      | ImportValue
     type t = {
       default: Identifier.t option;
       specifier: specifier option;
       source: (Loc.t * Literal.t ); (* String literal *)
-      isType: bool;
+      importKind: importKind;
     }
   end
   module Expression : sig

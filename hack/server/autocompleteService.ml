@@ -36,7 +36,7 @@ type complete_autocomplete_result = {
 (* Results that still need a typing environment to convert ty information
    into strings *)
 type autocomplete_result = {
-    ty   : Typing_defs.ty;
+    ty   : Typing_defs.phase_ty;
     name : string;
     desc : string option
   }
@@ -139,7 +139,7 @@ let autocomplete_method is_static class_ id env cid =
       end results
     in
     SMap.iter begin fun x class_elt ->
-        add_result x class_elt.ce_type
+        add_result x (Phase.decl class_elt.ce_type)
       end results
   end
 
@@ -168,12 +168,13 @@ let autocomplete_lvar_typing id env =
     (* Get the types of all the variables in scope at this point *)
     SMap.iter begin fun x ident ->
       let _, ty = Typing_env.get_local env ident in
-      add_result x ty
+      add_result x (Phase.locl ty)
     end !Autocomplete.auto_complete_vars;
     (* Add $this if we're in a instance method *)
     let ty = Typing_env.get_self env in
     if not (Typing_env.is_static env) && (fst ty) <> Reason.Rnone
-    then add_result Naming_special_names.SpecialIdents.this ty
+    then add_result
+      Naming_special_names.SpecialIdents.this (Phase.decl ty)
   end
 
 let should_complete_class completion_type class_kind =
@@ -221,7 +222,7 @@ let compute_complete_global funs classes =
             let s = Utils.strip_ns name in
             (match !ac_env with
               | Some _env when completion_type=Some Autocomplete.Acnew ->
-                  add_result s (get_constructor_ty c)
+                  add_result s (Phase.decl (get_constructor_ty c))
               | _ ->
                   let desc = match c.Typing_defs.tc_kind with
                     | Ast.Cabstract -> "abstract class"
@@ -234,7 +235,7 @@ let compute_complete_global funs classes =
                     Typing_reason.Rwitness c.Typing_defs.tc_pos,
                     Typing_defs.Tapply ((c.Typing_defs.tc_pos, name), [])
                   in
-                  add_result_with_desc s ty desc)
+                  add_result_with_desc s (Phase.decl ty) desc)
         | _ -> ()
     end classes;
     if should_complete_fun completion_type
@@ -283,7 +284,7 @@ let compute_complete_global funs classes =
               Typing_reason.Rwitness fun_.Typing_defs.ft_pos,
               Typing_defs.Tfun fun_
             in
-            add_result stripped_name ty
+            add_result stripped_name (Phase.decl ty)
           | _ -> ()
       end funs
     end
@@ -303,10 +304,8 @@ let process_fun_call fun_args used_args env =
          * happen on the way up because autocomplete pos needs to get set
          * before this is called *)
         let argument_index = ref (-1) in
-        let index = ref 0 in
-        List.iter begin fun arg ->
-          if is_target pos arg then argument_index := !index;
-          incr index
+        List.iteri begin fun index arg ->
+          if is_target pos arg then argument_index := index;
         end used_args;
         begin try
           let _, arg_ty = List.nth fun_args !argument_index in
@@ -358,11 +357,15 @@ let get_results funs classes =
       Typing_env.empty tcopt Relative_path.default
   in
   let results = List.map begin fun x ->
+    let env, ty = match x.ty with
+      | DeclTy ty -> Typing_utils.localize env ty
+      | LoclTy ty -> env, ty
+    in
     let desc_string = match x.desc with
       | Some s -> s
-      | None -> Typing_print.full_strip_ns env (x.ty)
+      | None -> Typing_print.full_strip_ns env ty
     in
-    let func_details = match x.ty with
+    let func_details = match ty with
       | (_, Tfun ft) ->
         let param_to_record ?(is_variadic=false) (name, pty) =
           {
@@ -385,8 +388,8 @@ let get_results funs classes =
         }
       | _ -> None
     in
-    let expected_ty = result_matches_expected_ty x.ty in
-    let pos = Typing_reason.to_pos (fst x.ty) in
+    let expected_ty = result_matches_expected_ty ty in
+    let pos = Typing_reason.to_pos (fst ty) in
     {
       res_pos      = Pos.to_absolute pos;
       res_ty       = desc_string;

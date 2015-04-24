@@ -20,6 +20,7 @@ type options = {
   convert          : Path.path option;
   no_load          : bool;
   save_filename    : string option;
+  waiting_client   : int option;
 }
 
 (*****************************************************************************)
@@ -42,6 +43,8 @@ module Messages = struct
   let convert       = " adds type annotations automatically"
   let save          = " save server state to file"
   let no_load       = " don't load from a saved state"
+  let waiting_client= " kill pid with SIGUSR1 when server has begun starting"^
+                      " and again when it's done starting"
 end
 
 (*****************************************************************************)
@@ -69,8 +72,10 @@ let parse_options () =
   let save          = ref None in
   let no_load       = ref false in
   let version       = ref false in
+  let waiting_client= ref None in
   let cdir          = fun s -> convert_dir := Some s in
   let set_save      = fun s -> save := Some s in
+  let set_wait      = fun pid -> waiting_client := Some pid in
   let options =
     ["--debug"         , Arg.Set debug         , Messages.debug;
      "--check"         , Arg.Set check_mode    , Messages.check;
@@ -84,6 +89,7 @@ let parse_options () =
      "--save"          , Arg.String set_save   , Messages.save;
      "--no-load"       , Arg.Set no_load       , Messages.no_load;
      "--version"       , Arg.Set version       , "";
+     "--waiting-client", Arg.Int set_wait      , Messages.waiting_client;
     ] in
   let options = Arg.align options in
   Arg.parse options (fun s -> root := s) usage;
@@ -96,6 +102,10 @@ let parse_options () =
   (* Conversion mode implies check *)
   let check_mode = check_mode || !convert_dir <> None in
   let convert = Utils.opt_map Path.mk_path (!convert_dir) in
+  if check_mode && !waiting_client <> None then begin
+    Printf.fprintf stderr "--check is incompatible with wait modes!\n";
+    exit 2
+  end;
   (match !root with
   | "" ->
       Printf.fprintf stderr "You must specify a root directory!\n";
@@ -111,6 +121,7 @@ let parse_options () =
     convert       = convert;
     no_load       = !no_load;
     save_filename = !save;
+    waiting_client= !waiting_client;
   }
 
 (* useful in testing code *)
@@ -122,6 +133,7 @@ let default_options ~root = {
   convert = None;
   no_load = true;
   save_filename = None;
+  waiting_client = None;
 }
 
 (*****************************************************************************)
@@ -135,3 +147,4 @@ let should_detach options = options.should_detach
 let convert options = options.convert
 let no_load options = options.no_load
 let save_filename options = options.save_filename
+let waiting_client options = options.waiting_client

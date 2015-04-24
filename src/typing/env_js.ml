@@ -119,14 +119,13 @@ let exists_env x hoist =
           loop blocks in
   loop (!env)
 
-let update_block ?(for_type=false) x shape block =
+let update_block ?(for_type=false) x (specific_t, general_t) block =
   let entries = block.entries in
-  let (s, g) = shape in
   let new_entry = match SMap.get x !entries with
     | Some {def_loc; for_type; _;} ->
-        create_env_entry ~for_type s g def_loc
+        create_env_entry ~for_type specific_t general_t def_loc
     | None ->
-        create_env_entry ~for_type s g None
+        create_env_entry ~for_type specific_t general_t None
   in
   entries := !entries |> SMap.add x new_entry
 
@@ -199,8 +198,8 @@ let let_env x shape f =
 let get_var ?(for_type=false) cx x reason =
   (read_env ~for_type cx x reason).specific
 
-let get_var_in_scope cx x reason =
-  (read_env cx x reason).general
+let get_var_in_scope ?(for_type=false) cx x reason =
+  (read_env ~for_type cx x reason).general
 
 let get_var_ cx x reason =
   let block = find_env cx x reason in
@@ -220,11 +219,11 @@ let get_refinement cx key r =
   | None ->
       None
 
-let set_var ?(for_type=false) cx x s reason =
+let set_var ?(for_type=false) cx x specific_t reason =
   changeset := !changeset |> SSet.add x;
-  let t = (read_env ~for_type cx x reason).general in
-  Flow_js.unit_flow cx (s,t);
-  write_env ~for_type cx x (s,t) reason
+  let general = (read_env ~for_type cx x reason).general in
+  Flow_js.unit_flow cx (specific_t, general);
+  write_env ~for_type cx x (specific_t, general) reason
 
 let clone_env ctx =
   List.map (fun block ->
@@ -368,25 +367,6 @@ let clear_env reason =
         else loop blocks
   in
   loop !env
-
-let string_of_block_entry cx entry =
-  let pos = match entry.def_loc with
-  | Some loc -> (string_of_pos (pos_of_loc loc))
-  | None -> "(none)"
-  in
-  Utils.spf "{ specific: %s; general: %s; def_loc: %s; for_type: %b }"
-    (dump_t cx entry.specific)
-    (dump_t cx entry.general)
-    pos
-    entry.for_type
-
-let string_of_block cx block =
-  let entries = block.entries in
-  SMap.fold (fun k v acc ->
-    (Utils.spf "%s: %s" k (string_of_block_entry cx v))::acc
-  ) !entries []
-  |> String.concat ";\n  "
-  |> Utils.spf "{\n  %s\n}"
 
 let string_of_env cx ctx =
   String.concat "\n" (List.map (string_of_block cx) ctx)

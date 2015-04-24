@@ -150,16 +150,6 @@ let opt_map f = function
   | None -> None
   | Some x -> Some (f x)
 
-let opt_map_default f default x =
-  match x with
-  | None -> default
-  | Some x -> f x
-
-let opt_fold_left f x y =
-  match y with
-  | None -> x
-  | Some y -> f x y
-
 let rec cat_opts = function
   | [] -> []
   | Some x :: xs -> x :: cat_opts xs
@@ -308,9 +298,6 @@ let try_with_channel oc f1 f2 =
   with e ->
     close_out oc;
     f2 e
-
-let pipe (x : 'a)  (f : 'a -> 'b) : 'b = f x
-let (|>) = pipe
 
 let rec filter_some = function
   | [] -> []

@@ -88,9 +88,8 @@ module CompareTypes = struct
     let acc = ty_ acc x y in
     acc
 
-  and ty_ (subst, same as acc) ty1 ty2 =
+  and ty_ (subst, same as acc) (ty1: decl ty_) (ty2: decl ty_) =
     match ty1, ty2 with
-    | Tobject, Tobject
     | Tany, Tany
     | Tmixed, Tmixed -> acc
     | Tarray (ty1, ty2), Tarray (ty3, ty4) ->
@@ -104,15 +103,8 @@ module CompareTypes = struct
         ty acc ty1 ty2
     | Tprim x, Tprim y ->
         subst, same && x = y
-    | Tvar x, Tvar y ->
-        subst, same && x = y
     | Tfun f1, Tfun f2 ->
         fun_type acc f1 f2
-    | Tabstract (sid1, tyl1, cstr1), Tabstract (sid2, tyl2, cstr2) ->
-        let acc = ty_opt acc cstr1 cstr2 in
-        let acc = string_id acc sid1 sid2 in
-        let acc = tyl acc tyl1 tyl2 in
-        acc
     | Tapply (sid1, tyl1), Tapply (sid2, tyl2) ->
         let acc = string_id acc sid1 sid2 in
         let acc = tyl acc tyl1 tyl2 in
@@ -121,11 +113,8 @@ module CompareTypes = struct
       when List.length ids1 = List.length ids2 ->
         let acc = ty acc root_ty1 root_ty2 in
         List.fold_left2 string_id acc ids1 ids2
-    | Tunresolved tyl1, Tunresolved tyl2
     | Ttuple tyl1, Ttuple tyl2 ->
         tyl acc tyl1 tyl2
-    | Tanon (arity1, id1), Tanon (arity2, id2) ->
-        subst, same && arity1 = arity2 && id1 = id2
     | Tshape fdm1, Tshape fdm2 ->
         ShapeMap.fold begin fun name v1 acc ->
           match ShapeMap.get name fdm2 with
@@ -133,9 +122,8 @@ module CompareTypes = struct
           | Some v2 ->
               ty acc v1 v2
         end fdm1 acc
-    | (Tanon _ | Tany | Tmixed | Tarray (_, _) | Tshape _ | Taccess (_, _) |
-      Tgeneric (_, _)| Toption _| Tprim _| Tvar _| Tabstract _ |
-      Tfun _| Tapply (_, _) | Ttuple _| Tunresolved _| Tobject), _ -> default
+    | (Tany | Tmixed | Tarray (_, _) | Tfun _ | Taccess (_, _) | Tgeneric (_, _)
+       | Toption _ | Tprim _ | Tshape _| Tapply (_, _) | Ttuple _), _ -> default
 
   and tyl acc tyl1 tyl2 =
     if List.length tyl1 <> List.length tyl2
@@ -332,24 +320,18 @@ module TraversePos(ImplementPos: sig val pos: Pos.t -> Pos.t end) = struct
   let rec ty (p, x) =
     reason p, ty_ x
 
-  and ty_ = function
-    | Tanon _              -> failwith "TraversePos: Unexpected Tanon"
-    | Tvar _               -> failwith "TraversePos: Unexpected Tvar"
+  and ty_: decl ty_ -> decl ty_ = function
     | Tany
     | Tmixed as x          -> x
     | Tarray (ty1, ty2)    -> Tarray (ty_opt ty1, ty_opt ty2)
     | Tprim _ as x         -> x
     | Tgeneric (s, cstr_opt) -> Tgeneric (s, constraint_ cstr_opt)
     | Ttuple tyl           -> Ttuple (List.map (ty) tyl)
-    | Tunresolved tyl      -> Tunresolved (List.map (ty) tyl)
     | Toption x            -> Toption (ty x)
     | Tfun ft              -> Tfun (fun_type ft)
     | Tapply (sid, xl)     -> Tapply (string_id sid, List.map (ty) xl)
     | Taccess (root_ty, ids) ->
         Taccess (ty root_ty, List.map string_id ids)
-    | Tabstract (sid, xl, x) ->
-        Tabstract (string_id sid, List.map (ty) xl, ty_opt x)
-    | Tobject as x         -> x
     | Tshape fdm           -> Tshape (ShapeMap.map ty fdm)
 
   and ty_opt x = opt_map ty x

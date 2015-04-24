@@ -100,6 +100,7 @@ let enum_check_const ty_exp env (_, (p, _), _) t =
 let enum_class_check env tc consts const_types =
   match is_enum (tc.tc_pos, tc.tc_name) tc.tc_enum_type tc.tc_ancestors with
     | Some (ty_exp, _, ty_constraint) ->
+        let env, ty_exp = Typing_utils.localize env ty_exp in
         let env, (r, ty_exp'), trail =
           Typing_tdef.force_expand_typedef env ty_exp in
         (match ty_exp' with
@@ -129,6 +130,7 @@ let enum_class_check env tc consts const_types =
          * actually a subtype of it. *)
         let env = (match ty_constraint with
           | Some ty ->
+             let env, ty = Typing_utils.localize env ty in
             Typing_ops.sub_type tc.tc_pos Reason.URenum_cstr env ty ty_exp
           | None -> env) in
 

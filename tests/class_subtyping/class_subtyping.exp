@@ -7,4 +7,8 @@ test3.js:2:35,38: boolean
 This type is incompatible with
   test3.js:6:26,36: array type
 
-Found 2 errors
+test3.js:6:26,36: array type
+This type is incompatible with
+  test3.js:2:35,38: boolean
+
+Found 3 errors

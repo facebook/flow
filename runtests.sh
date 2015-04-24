@@ -22,7 +22,7 @@ do
         out_file="${name}.out"
         $FLOW check . --all --strip-root --show-all-errors 1> $out_file
         diff_file="${name}.diff"
-        diff -u $out_file $exp_file > $diff_file
+        diff -u $exp_file $out_file > $diff_file
         if [ -s $diff_file ]
         then
             (( failed++ ))

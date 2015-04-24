@@ -32,8 +32,11 @@ open Type
    meaningful in all contexts. This part of the design should be revisited:
    perhaps the data types can be refactored to make them more specialized. *)
 
+(* Methods may use a dummy statics object type to carry properties. We do not
+   want to encourage this pattern, but we also don't want to block uses of this
+   pattern. Thus, we compromise by not tracking the property types. *)
 let dummy_static =
-  MixedT (reason_of_string "empty statics object")
+  AnyObjT (reason_of_string "object type for statics")
 
 let dummy_prototype =
   MixedT (reason_of_string "empty prototype object")
@@ -114,12 +117,12 @@ let add_output cx level message_list =
 
 (* tvars *)
 
-let mk_var cx = Ident.make ""
+let mk_id cx = Ident.make ""
 
 let mk_tvar cx reason =
-  let tvar = mk_var cx in
+  let tvar = mk_id cx in
   let graph = cx.graph in
-  cx.graph <- graph |> IMap.add tvar (new_bounds tvar reason);
+  cx.graph <- graph |> IMap.add tvar (new_bounds ());
   (if modes.verbose then prerr_endlinef
     "TVAR %d (%d): %s" tvar (IMap.cardinal graph)
     (string_of_reason reason));
@@ -210,7 +213,7 @@ and havoc_ctx_ = function
 let frames: stack ref = ref []
 
 let mk_frame cx stack ctx =
-  let count = mk_var cx in
+  let count = mk_id cx in
   let stack = count::stack in
   cx.closures <- IMap.add count (stack, ctx) cx.closures;
   frames := stack
@@ -319,7 +322,7 @@ let add_error cx list =
    denoted references. *)
 
 let mk_propmap cx pmap =
-  let id = mk_var cx in
+  let id = mk_id cx in
   cx.property_maps <- IMap.add id pmap cx.property_maps;
   id
 
@@ -1226,54 +1229,81 @@ let rec flow cx (l,u) trace =
       let bounds1 = find_graph cx tvar1 in
       let bounds2 = find_graph cx tvar2 in
 
-      bounds1.lowertvars |> IMap.iter (fun tvar trace_l ->
-        let f2 = (fun trace_u -> concat_trace[trace_l;trace;trace_u]) in
+      (* tvar.uppertvars += tvar2
+         tvar.uppertvars += tvar2.uppertvars
+         tvar.upper += tvar2.upper *)
+      let flow_lowertvar tvar tracelist =
         let bounds = find_graph cx tvar in
-
-        (* final: X -> Y#, X -> Y'#, X' -> Y#, X' -> Y'# *)
+        (* final: tvar -> Y# *)
+        if not bounds2.cleared then
+          bounds.uppertvars <-
+            IMap.add tvar2 (concat_trace tracelist) bounds.uppertvars;
+        (* final: tvar -> Y'# *)
+        let f2 = (fun trace_u -> concat_trace (tracelist @ [trace_u])) in
         bounds.uppertvars <-
           UnionIMap.union f2 bounds2.uppertvars bounds.uppertvars;
-
-        (* final: X => U#, X' => U# *)
+        (* final: tvar => U# *)
         bounds.upper <-
           UnionTypeMap.union f2 bounds2.upper bounds.upper
-      );
-      bounds2.uppertvars |> IMap.iter (fun tvar trace_u ->
-        let f1 = (fun trace_l -> concat_trace[trace_l;trace;trace_u]) in
-        let bounds = find_graph cx tvar in
+      in
+      (* final: X -> Y#, X -> Y'#, X => U# *)
+      if not bounds1.cleared then
+        flow_lowertvar tvar1 [trace];
+      (* final: X' -> Y#, X' -> Y'#, X' => U# *)
+      bounds1.lowertvars |> IMap.iter (fun tvar trace_l ->
+        if tvar != tvar1 then flow_lowertvar tvar [trace_l;trace]);
 
-        (* final: X# -> Y, X'# -> Y, X# -> Y', X'# -> Y' *)
+      (* tvar.lowertvars += tvar1
+         tvar.lowertvars += tvar1.lowertvars
+         tvar.lower += tvar1.lower *)
+      let flow_uppertvar tvar tracelist =
+        let bounds = find_graph cx tvar in
+        (* final: X# -> tvar *)
+        if not bounds1.cleared then
+          bounds.lowertvars <-
+            IMap.add tvar1 (concat_trace tracelist) bounds.lowertvars;
+        (* final: X'# -> tvar *)
+        let f1 = (fun trace_l -> concat_trace ([trace_l] @ tracelist)) in
         bounds.lowertvars <-
           UnionIMap.union f1 bounds1.lowertvars bounds.lowertvars;
-        (* final: L# => Y, L# => Y' *)
+        (* final: L# => tvar *)
         bounds.lower <-
           UnionTypeMap.union f1 bounds1.lower bounds.lower
-      );
+      in
+      (* final: X# -> Y, X'# -> Y, L# -> Y *)
+      if not bounds2.cleared then
+        flow_uppertvar tvar2 [trace];
+      (* final: X# -> Y', X'# -> Y', L# -> Y' *)
+      bounds2.uppertvars |> IMap.iter (fun tvar trace_u ->
+        if tvar != tvar2 then flow_uppertvar tvar [trace;trace_u]);
+
       (* final: process L ~> U *)
       bounds1.lower |> TypeMap.iter
-          (fun l trace_l -> bounds2.upper |> TypeMap.iter
-              (fun u trace_u ->
-                flow cx (l,u) (concat_trace [trace_l;trace;trace_u])))
-
-    (* if Y => U exists then that flow has already been processed *)
-    | (OpenT(reason,tvar),t) when exists_upper_bound cx (tvar,t)
-        -> ()
+        (fun l trace_l -> bounds2.upper |> TypeMap.iter
+            (fun u trace_u ->
+              flow cx (l,u) (concat_trace [trace_l;trace;trace_u])))
 
     (******************)
     (* process Y ~> U *)
     (******************)
 
+    (* if Y => U exists then that flow has already been processed *)
+    | (OpenT(reason,tvar),t) when exists_upper_bound cx (tvar,t)
+        -> ()
+
     (* initial: Y' -> Y *)
     (* initial: L => Y *)
     | (OpenT(reason,tvar),t) ->
-
       let bounds = find_graph cx tvar in
-      bounds.lowertvars |> IMap.iter (fun tvar trace_l ->
-        let bounds = find_graph cx tvar in
-
-        (* final: Y => U, Y' => U *)
-        bounds.upper <-
-          TypeMap.add t (concat_trace [trace_l;trace]) bounds.upper
+      (* final: Y => U *)
+      if not bounds.cleared then
+        bounds.upper <- TypeMap.add t trace bounds.upper;
+      bounds.lowertvars |> IMap.iter (fun tvar' trace_l ->
+        let bounds' = find_graph cx tvar' in
+        if tvar != tvar' then
+          (* final: Y' => U *)
+          bounds'.upper <-
+            TypeMap.add t (concat_trace [trace_l;trace]) bounds'.upper
       );
 
       (* final: process L ~> U *)
@@ -1281,25 +1311,27 @@ let rec flow cx (l,u) trace =
         flow cx (l,t) (concat_trace [trace_l;trace])
       )
 
-    (* if U => X exists then that flow has already been processed *)
-    | (t,OpenT(reason,tvar)) when exists_lower_bound cx (tvar,t)
-        -> ()
-
     (******************)
     (* process L ~> X *)
     (******************)
 
+    (* if U => X exists then that flow has already been processed *)
+    | (t,OpenT(reason,tvar)) when exists_lower_bound cx (tvar,t)
+        -> ()
+
     (* initial: X -> X' *)
     (* initial: X => U *)
     | (t,OpenT(reason,tvar)) ->
-
       let bounds = find_graph cx tvar in
-      bounds.uppertvars |> IMap.iter (fun tvar trace_u ->
-        let bounds = find_graph cx tvar in
-
-        (* final: L => X, L => X' *)
-        bounds.lower <-
-          TypeMap.add t (concat_trace [trace;trace_u]) bounds.lower
+      (* final: L => X *)
+      if not bounds.cleared then
+        bounds.lower <- TypeMap.add t trace bounds.lower;
+      bounds.uppertvars |> IMap.iter (fun tvar' trace_u ->
+        let bounds' = find_graph cx tvar' in
+        if tvar != tvar' then
+          (* final: L => X' *)
+          bounds'.lower <-
+            TypeMap.add t (concat_trace [trace;trace_u]) bounds'.lower
       );
 
       (* final: process L ~> U *)
@@ -1307,10 +1339,9 @@ let rec flow cx (l,u) trace =
         flow cx (t,u) (concat_trace [trace;trace_u])
       )
 
-    (************************************************************************)
-    (* Non-CommonJS export objects flow to imported ModuleNamespace objects *)
-    (* directly.                                                            *)
-    (************************************************************************)
+    (*******************************)
+    (* Handle non-CommonJS imports *)
+    (*******************************)
     | (_, ImportModuleNsT(reason, t)) ->
       let ns_obj_sealed = mk_tvar_where cx reason (fun t ->
         unit_flow cx (l, ObjSealT(reason, t))
@@ -1323,6 +1354,41 @@ let rec flow cx (l,u) trace =
     (**************************************************************************)
     | (CJSExportDefaultT(_, t), _) ->
       unit_flow cx (t, u)
+
+    (*******************************************************************)
+    (* Import type creates a properly-parameterized type alias for the *)
+    (* remote type -- but only for particular, valid remote types.     *)
+    (*******************************************************************)
+    | (ClassT(inst), ImportTypeT(reason, t)) ->
+      unit_flow cx (TypeT(reason, inst), t)
+
+    | (PolyT(typeparams, ClassT(inst)), ImportTypeT(reason, t)) ->
+      unit_flow cx (PolyT(typeparams, TypeT(reason, inst)), t)
+
+    | (FunT(_, _, prototype, _), ImportTypeT(reason, t)) ->
+      unit_flow cx (TypeT(reason, prototype), t)
+
+    | (PolyT(typeparams, FunT(_, _, prototype, _)), ImportTypeT(reason, t)) ->
+      unit_flow cx (PolyT(typeparams, TypeT(reason, prototype)), t)
+
+    | (TypeT _, ImportTypeT(reason, t))
+    | (PolyT(_, TypeT _), ImportTypeT(reason, t))
+      -> unit_flow cx (l, t)
+
+    (**
+     * TODO: Delete this once the legacy export-type hacks have been eliminated
+     *       in favor of the newer, first class export-type feature.
+     *
+     *       TODO(jeffmo) Task(6860853)
+     *)
+    | (ObjT _, ImportTypeT(reason, t)) ->
+      unit_flow cx (l, t)
+
+    | (_, ImportTypeT(reason, t)) ->
+      add_error cx [
+        reason,
+        "`import type` only works on exported classes, functions, and type aliases!"
+      ]
 
     (***********************)
     (* guarded unification *)
@@ -1361,8 +1427,6 @@ let rec flow cx (l,u) trace =
     (*******************************)
     (* common implicit convertions *)
     (*******************************)
-
-    | (_, BoolT _) -> ()
 
     | (_, NumT _) when numeric l -> ()
 
@@ -1695,7 +1759,11 @@ let rec flow cx (l,u) trace =
           if (not(SMap.mem s flds1))
           then
             let reason2 = replace_reason (spf "property %s" s) reason2 in
-            unit_flow cx (super, LookupT (reason2, Some reason1, s, t2))
+            match t2 with
+            | OptionalT t1 ->
+                unit_flow cx (l, LookupT (reason2, None, s, t1))
+            | _ ->
+                unit_flow cx (super, LookupT (reason2, Some reason1, s, t2))
           else
             let t1 = SMap.find_unsafe s flds1 in
             unify cx t1 t2
@@ -2642,6 +2710,7 @@ and err_operation = function
   | ElemT (_, ArrT _, UpperBoundT _) -> "Element cannot be assigned with"
   | ObjAssignT _ -> "Expected object instead of"
   | ObjRestT _ -> "Expected object instead of"
+  | ObjSealT _ -> "Expected object instead of"
   | SuperT _ -> "Cannot inherit"
   | EqT (_, t) -> spf "Non-strict equality comparison with %s may involve unintended type conversions of" (desc_of_t t)
   | ComparatorT (_, t) -> spf "Relational comparison with %s may involve unintended type conversions of" (desc_of_t t)
@@ -2651,15 +2720,9 @@ and err_operation = function
   | KeyT _ -> "Expected object instead of"
   | HasT _ -> "Property not found in"
 
-  (* unreachable use-types *)
-  | AdderT _
-  | AndT _
-  | OrT _
-  | PredicateT _
-  | UnifyT _
-  (* def-types *)
-  | _
-    -> assert false
+  (* unreachable use-types and def-types *)
+  | t
+    -> failwith (spf "err_operation called on %s" (string_of_ctor t))
 
 and err_value = function
   | NullT _ -> " possibly null value"
@@ -2758,7 +2821,7 @@ and equatable cx trace = function
 (*********************)
 
 and mk_nominal cx =
-  let nominal = mk_var cx in
+  let nominal = mk_id cx in
   (if modes.verbose then prerr_endlinef
       "NOM %d %s" nominal cx.file);
   nominal
@@ -3029,7 +3092,10 @@ and replace_with_concrete_parts ts = function
    therefore ready to be moved to the done_list. *)
 and concretize_parts cx l todo_list done_list u =
   match todo_list with
-  | [] -> unit_flow cx (l, ConcreteT(replace_with_concrete_parts done_list u))
+  | [] ->
+      (* items were moved from todo_list to done_list in LIFO order *)
+      let done_list = List.rev done_list in
+      unit_flow cx (l, ConcreteT(replace_with_concrete_parts done_list u))
   | t::todo_list -> unit_flow cx (t, ConcretizeT(l, todo_list, done_list, u))
 
 (* property lookup functions in objects and instances *)
@@ -3115,7 +3181,7 @@ and filter cx trace t l pred =
 and is_string = function StrT _ -> true | _ -> false
 and is_number = function NumT _ -> true | _ -> false
 and is_function = function FunT _ -> true | _ -> false
-and is_object = function (ObjT _ | ArrT _) -> true | _ -> false
+and is_object = function (ObjT _ | ArrT _ | NullT _) -> true | _ -> false
 and is_array = function ArrT _ -> true | _ -> false
 and is_bool = function BoolT _ -> true | _ -> false
 
@@ -3178,6 +3244,7 @@ and filter_maybe = function
   | MaybeT t ->
     let reason = reason_of_t t in
     UnionT (reason, [NullT.why reason; VoidT.why reason])
+  | MixedT r -> UnionT (r, [NullT.why r; VoidT.why r])
   | NullT r -> NullT r
   | VoidT r -> VoidT r
   | OptionalT t ->
@@ -3195,6 +3262,7 @@ and filter_null = function
   | OptionalT (MaybeT t)
   | MaybeT t -> NullT.why (reason_of_t t)
   | NullT r -> NullT r
+  | MixedT r -> NullT.why r
   | t -> UndefT.t
 
 and filter_not_null = function
@@ -3212,6 +3280,7 @@ and filter_undefined = function
   | OptionalT t ->
     let reason = reason_of_t t in
     VoidT.why reason
+  | MixedT r -> VoidT.why r
   | t -> UndefT.t
 
 and filter_not_undefined = function
@@ -3226,6 +3295,7 @@ and filter_not_undefined = function
 and filter_true = function
   | BoolT (r, Some true)
   | BoolT (r, None) -> BoolT (r, Some true)
+  | MixedT r -> BoolT (replace_reason "boolean" r, Some true)
   | t -> UndefT (reason_of_t t)
 
 and filter_not_true = function
@@ -3236,6 +3306,7 @@ and filter_not_true = function
 and filter_false = function
   | BoolT (r, Some false)
   | BoolT (r, None) -> BoolT (r, Some false)
+  | MixedT r -> BoolT (replace_reason "boolean" r, Some false)
   | t -> UndefT (reason_of_t t)
 
 and filter_not_false = function
@@ -3267,6 +3338,9 @@ and predicate cx trace t (l,p) = match (l,p) with
   (* typeof _ ~ "boolean" *)
   (***********************)
 
+  | (MixedT r, IsP "boolean") ->
+    flow cx (BoolT.why r, t) trace
+
   | (_, IsP "boolean") ->
     filter cx trace t l is_bool
 
@@ -3276,6 +3350,9 @@ and predicate cx trace t (l,p) = match (l,p) with
   (***********************)
   (* typeof _ ~ "string" *)
   (***********************)
+
+  | (MixedT r, IsP "string") ->
+    flow cx (StrT.why r, t) trace
 
   | (_, IsP "string") ->
     filter cx trace t l is_string
@@ -3287,6 +3364,9 @@ and predicate cx trace t (l,p) = match (l,p) with
   (* typeof _ ~ "number" *)
   (***********************)
 
+  | (MixedT r, IsP "number") ->
+    flow cx (NumT.why r, t) trace
+
   | (_, IsP "number") ->
     filter cx trace t l is_number
 
@@ -3296,6 +3376,9 @@ and predicate cx trace t (l,p) = match (l,p) with
   (***********************)
   (* typeof _ ~ "function" *)
   (***********************)
+
+  | (MixedT r, IsP "function") ->
+    flow cx (AnyFunT (replace_reason "function" r), t) trace
 
   | (_, IsP "function") ->
     filter cx trace t l is_function
@@ -3307,6 +3390,11 @@ and predicate cx trace t (l,p) = match (l,p) with
   (* typeof _ ~ "object" *)
   (***********************)
 
+  | (MixedT r, IsP "object") ->
+    let obj = AnyObjT (replace_reason "object" r) in
+    let union = create_union [NullT.why r; obj] in
+    flow cx (union, t) trace
+
   | (_, IsP "object") ->
     filter cx trace t l is_object
 
@@ -3316,6 +3404,10 @@ and predicate cx trace t (l,p) = match (l,p) with
   (*******************)
   (* Array.isArray _ *)
   (*******************)
+
+  | (MixedT r, IsP "array") ->
+    let filtered_l = ArrT (replace_reason "array" r, AnyT.why r, []) in
+    flow cx (filtered_l, t) trace
 
   | (_, IsP "array") ->
     filter cx trace t l is_array
@@ -3487,6 +3579,7 @@ and ensure_unifier cx id =
    a root, wherein the solution is None. Or it is a root that is resolved to a
    type t, wherein the solution is Some t. *)
 and clear cx ?solution bounds =
+  bounds.cleared <- true;
   bounds.lowertvars <- IMap.empty;
   bounds.uppertvars <- IMap.empty;
   match solution with

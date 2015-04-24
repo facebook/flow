@@ -207,7 +207,7 @@ let suggest_files fast fnl =
   SharedMem.invalidate_caches();
   Typing_defs.is_suggest_mode := true;
   Typing_suggest.types := [];
-  Typing_suggest.initalized_members := SMap.empty;
+  Typing_suggest.initialized_members := SMap.empty;
   List.iter begin fun fn ->
     let { FileInfo.n_funs; n_classes; _ } =
       Relative_path.Map.find_unsafe fn fast in
@@ -217,7 +217,7 @@ let suggest_files fast fnl =
   let result = !Typing_suggest.types in
   Typing_defs.is_suggest_mode := false;
   Typing_suggest.types := [];
-  Typing_suggest.initalized_members := SMap.empty;
+  Typing_suggest.initialized_members := SMap.empty;
   result
 
 let suggest_files_worker acc fnl =

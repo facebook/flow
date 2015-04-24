@@ -227,3 +227,7 @@ and hint_ p env = function
   | Hshape fdm ->
       let env, fdm = ShapeMap.map_env hint env fdm in
       env, Tshape fdm
+
+let hint_locl ?(ensure_instantiable=false) env h =
+  let env, h = hint ~ensure_instantiable env h in
+  Typing_utils.localize env h

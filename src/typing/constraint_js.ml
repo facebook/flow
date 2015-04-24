@@ -25,6 +25,16 @@ let assert_false s =
 let __DEBUG__ ?(s="") f =
   try f() with _ -> assert_false s
 
+(* Time logging utility. Computes the elapsed time when running some code, and
+   if the elapsed time satisfies a given predicate (typically, is more than a
+   threshold), prints a message. *)
+let time pred msg f =
+  let start = Unix.gettimeofday () in
+  let ret = f () in
+  let elap = (Unix.gettimeofday ()) -. start in
+  if not (pred elap) then () else prerr_endline (msg elap);
+  ret
+
 module Ast = Spider_monkey_ast
 
 (******************************************************************************)
@@ -200,6 +210,7 @@ module Type = struct
 
   (* Special ES6 module import/export handling *)
   | ImportModuleNsT of reason * t
+  | ImportTypeT of reason * t
   | ExportDefaultT of reason * t
 
   and predicate =
@@ -472,21 +483,23 @@ type bounds = {
   mutable unifier: unifier option;
   (* indicates whether the type variable is resolved to some type *)
   mutable solution: Type.t option;
+  (* temporary: record whether bounds have been cleared *)
+  mutable cleared: bool;
 }
 
-let new_bounds id reason =
-  let tvar = OpenT (reason, id) in {
+let new_bounds () = {
   lower = TypeMap.empty;
   upper = TypeMap.empty;
-  lowertvars = IMap.singleton id (unit_trace tvar tvar);
-  uppertvars = IMap.singleton id (unit_trace tvar tvar);
+  lowertvars = IMap.empty;
+  uppertvars = IMap.empty;
   unifier = None;
   solution = None;
+  cleared = false;
 }
 
 let copy_bounds b =
-  let { lower; upper; lowertvars; uppertvars; unifier; solution } = b in
-  { lower; upper; lowertvars; uppertvars; unifier; solution }
+  let { lower; upper; lowertvars; uppertvars; unifier; solution; cleared } = b
+  in { lower; upper; lowertvars; uppertvars; unifier; solution; cleared }
 
 type block_entry = {
   specific: Type.t;
@@ -616,6 +629,7 @@ let is_use = function
   | HasT _
   | ElemT _
   | ImportModuleNsT _
+  | ImportTypeT _
   | ExportDefaultT _
   | ConcreteT _
   | ConcretizeT _
@@ -692,6 +706,7 @@ let string_of_ctor = function
   | CustomClassT _ -> "CustomClassT"
   | CJSExportDefaultT _ -> "CJSExportDefaultT"
   | ImportModuleNsT _ -> "ImportModuleNsT"
+  | ImportTypeT _ -> "ImportTypeT"
   | ExportDefaultT _ -> "ExportDefaultT"
 
 (* Usually types carry enough information about the "reason" for their
@@ -832,6 +847,7 @@ let rec reason_of_t = function
   | CJSExportDefaultT (reason, _) -> reason
 
   | ImportModuleNsT (reason, _) -> reason
+  | ImportTypeT (reason, _) -> reason
   | ExportDefaultT (reason, _) -> reason
 
 and string_of_predicate = function
@@ -842,8 +858,8 @@ and string_of_predicate = function
   | NotP p -> "not " ^ (string_of_predicate p)
 
   | ExistsP -> "truthy"
-  | InstanceofP t -> "instanceof " ^ (streason_of_t t)
-  | ConstructorP t -> "typeof " ^ (streason_of_t t)
+  | InstanceofP t -> "instanceof " ^ (desc_of_t t)
+  | ConstructorP t -> "typeof " ^ (desc_of_t t)
   | IsP s -> "is " ^ s
 
 and pos_of_predicate = function
@@ -976,6 +992,7 @@ let rec mod_reason_of_t f = function
   | CJSExportDefaultT (reason, t) -> CJSExportDefaultT (f reason, t)
 
   | ImportModuleNsT (reason, t) -> ImportModuleNsT (f reason, t)
+  | ImportTypeT (reason, t) -> ImportTypeT (f reason, t)
   | ExportDefaultT (reason, t) -> ExportDefaultT (f reason, t)
 
 (* replace a type's pos with one taken from a reason *)
@@ -1479,6 +1496,7 @@ let rec _json_of_t stack cx t = Json.(
     ]
 
   | ImportModuleNsT (_, t)
+  | ImportTypeT (_, t)
   | ExportDefaultT (_, t) -> [
       "type", _json_of_t stack cx t
     ]
@@ -1575,24 +1593,22 @@ and json_of_pred stack cx p = Json.(
 and json_of_bounds stack cx id = Json.(
   let stack = ISet.add id stack in
   match IMap.find_unsafe id cx.graph with
-  | { lower; upper; lowertvars; uppertvars; unifier; solution } ->
-    JAssoc ([] @
-    (if lower = TypeMap.empty then [] else
-      ["lower", json_of_tkeys stack cx lower]) @
-    (if upper = TypeMap.empty then [] else
-      ["upper", json_of_tkeys stack cx upper]) @
-    (if lowertvars = IMap.empty then [] else
-      ["lowertvars", json_of_tvarkeys stack cx lowertvars]) @
-    (if uppertvars = IMap.empty then [] else
-      ["uppertvars", json_of_tvarkeys stack cx uppertvars]) @
-    (match unifier with None -> []
+  | { lower; upper; lowertvars; uppertvars; unifier; solution; cleared } ->
+    JAssoc ([
+    "lower", json_of_tkeys stack cx lower;
+    "upper", json_of_tkeys stack cx upper;
+    "lowertvars", json_of_tvarkeys stack cx lowertvars;
+    "uppertvars", json_of_tvarkeys stack cx uppertvars] @
+    (match unifier with
+      | None -> []
       | Some u -> ["unifier", JAssoc (match u with
           | Goto id -> ["goto", JInt id]
           | Rank i -> ["rank", JInt i]
-        )]) @
-    (match solution with None -> []
-      | Some t -> ["solution", _json_of_t stack cx t])
-  )
+        )] @
+        (match solution with None -> []
+          | Some t -> ["solution", _json_of_t stack cx t]) @
+        ["cleared", JBool cleared])
+    )
 )
 
 and json_of_tkeys stack cx tmap = Json.(
@@ -1663,44 +1679,44 @@ and dump_tvar stack cx r id =
   let stack = ISet.add id stack in
   match IMap.find_unsafe id cx.graph with
   | { lower; upper; lowertvars; uppertvars;
-      unifier = None; solution = None }
+      unifier = None; solution = None; cleared }
       when lower = TypeMap.empty && upper = TypeMap.empty
       && IMap.cardinal lowertvars = 1 && IMap.cardinal uppertvars = 1 ->
       (* no inflows or outflows *)
       "(free)"
   | { lower; upper; lowertvars; uppertvars;
-      unifier = None; solution = None }
+      unifier = None; solution = None; cleared }
       when upper = TypeMap.empty
       && IMap.cardinal lowertvars = 1 && IMap.cardinal uppertvars = 1 ->
       (* only concrete inflows *)
       spf "L %s" (dump_tkeys stack cx lower)
   | { lower; upper; lowertvars; uppertvars;
-      unifier = None; solution = None }
+      unifier = None; solution = None; cleared }
       when lower = TypeMap.empty && upper = TypeMap.empty
       && IMap.cardinal uppertvars = 1 ->
       (* only tvar inflows *)
       spf "LV %s" (dump_tvarkeys cx id lowertvars)
   | { lower; upper; lowertvars; uppertvars;
-      unifier = None; solution = None }
+      unifier = None; solution = None; cleared }
       when lower = TypeMap.empty
       && IMap.cardinal lowertvars = 1 && IMap.cardinal uppertvars = 1 ->
       (* only concrete outflows *)
       spf "U %s" (dump_tkeys stack cx upper)
   | { lower; upper; lowertvars; uppertvars;
-      unifier = None; solution = None }
+      unifier = None; solution = None; cleared }
       when lower = TypeMap.empty && upper = TypeMap.empty
       && IMap.cardinal lowertvars = 1 ->
       (* only tvar outflows *)
       spf "UV %s" (dump_tvarkeys cx id uppertvars)
   | { lower; upper; lowertvars; uppertvars;
-      unifier = None; solution = None }
+      unifier = None; solution = None; cleared }
       when IMap.cardinal lowertvars = 1 && IMap.cardinal uppertvars = 1 ->
       (* only concrete inflows/outflows *)
       let l = dump_tkeys stack cx lower in
       let u = dump_tkeys stack cx upper in
       if l = u then "= " ^ l
       else "L " ^ l ^ " U " ^ u
-  | { lower; upper; lowertvars; uppertvars; unifier; solution } ->
+  | { lower; upper; lowertvars; uppertvars; unifier; solution; cleared } ->
     let slower = if lower = TypeMap.empty then "" else
       spf " lower = %s;" (dump_tkeys stack cx lower) in
     let supper = if upper = TypeMap.empty then "" else
@@ -1968,3 +1984,22 @@ and string_of_trace_old prefix b (r1, t, r2) =
 and string_of_trace prefix b (r1, t, r2) =
   let li = List.map string_of_reason (reasons_of_trace (r1, t, r2)) in
   (String.concat "\n" li) ^ "\n"
+
+let string_of_block_entry cx entry =
+  let pos = match entry.def_loc with
+  | Some loc -> (string_of_pos (pos_of_loc loc))
+  | None -> "(none)"
+  in
+  Utils.spf "{ specific: %s; general: %s; def_loc: %s; for_type: %b }"
+    (dump_t cx entry.specific)
+    (dump_t cx entry.general)
+    pos
+    entry.for_type
+
+let string_of_block cx block =
+  let entries = block.entries in
+  SMap.fold (fun k v acc ->
+    (Utils.spf "%s: %s" k (string_of_block_entry cx v))::acc
+  ) !entries []
+  |> String.concat ";\n  "
+  |> Utils.spf "{\n  %s\n}"

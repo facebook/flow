@@ -56,7 +56,7 @@ end
 
 module MainInit : sig
   val go:
-    Path.path ->        (* server root - one server at a time per root *)
+    ServerArgs.options ->
     Path.path list ->   (* other watched paths *)
     (unit -> env) ->    (* init function to run while we have init lock *)
     env
@@ -77,11 +77,16 @@ end = struct
     ignore(Lock.release root "init")
 
   (* This code is only executed when the options --check is NOT present *)
-  let go root watch_paths init_fun =
+  let go options watch_paths init_fun =
+    let root = ServerArgs.root options in
+    let send_signal () = match ServerArgs.waiting_client options with
+      | None -> ()
+      | Some pid -> (try Unix.kill pid Sys.sigusr1 with _ -> ()) in
     let t = Unix.gettimeofday () in
     grab_lock root;
     Hh_logger.log "Initializing Server (This might take some time)";
     grab_init_lock root;
+    send_signal ();
     (* note: we only run periodical tasks on the root, not extras *)
     ServerPeriodical.init root;
     (* watch root and extra paths *)
@@ -89,6 +94,7 @@ end = struct
     let env = init_fun () in
     release_init_lock root;
     Hh_logger.log "Server is READY";
+    send_signal ();
     let t' = Unix.gettimeofday () in
     Hh_logger.log "Took %f seconds to initialize." (t' -. t);
     env
@@ -252,7 +258,7 @@ end = struct
       Program.run_once_and_exit genv env
     else
       let watch_paths = Program.get_watch_paths options in
-      let env = MainInit.go root watch_paths program_init in
+      let env = MainInit.go options watch_paths program_init in
       let socket = Socket.init_unix_socket root in
       serve genv env socket
 
