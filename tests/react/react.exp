@@ -3,6 +3,10 @@ ArityError.react.js:6:37,46: any
 Number of type arguments differs from
   [LIB] react.js:97:62,78: any
 
+import_react.js:7:21,35: ReactComponent
+This type is incompatible with
+  import_react.js:7:8,13: number
+
 jsx_spread.js:10:19,20: number
 This type is incompatible with
   jsx_spread.js:6:10,31: string
@@ -39,4 +43,4 @@ proptype_oneOfType.js:23:32,35: boolean
 This type is incompatible with
   proptype_oneOfType.js:6:11,9:6: oneOfType
 
-Found 10 errors
+Found 11 errors

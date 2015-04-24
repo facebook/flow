@@ -22,12 +22,18 @@ do
         out_file="${name}.out"
         $FLOW check . --all --strip-root --show-all-errors 1> $out_file
         diff_file="${name}.diff"
-        diff $out_file $exp_file > $diff_file
+        diff -u $out_file $exp_file > $diff_file
         if [ -s $diff_file ]
         then
             (( failed++ ))
             echo "FAILED: ${name}"
-            cat $diff_file
+            if [ -t 1 ] ; then
+                esc=$(echo -e "\x1b")
+                cat $diff_file | sed \
+                    "s/^-/${esc}[31m-/;s/^+/${esc}[32m+/;s/^@/${esc}[35m@/;s/$/${esc}[0m/"
+            else
+                cat $diff_file
+            fi
         else
             (( passed++ ))
             echo "PASSED: ${name}"

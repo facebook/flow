@@ -28,7 +28,7 @@ end = struct
 
   let rec ty (_, x) = ty_ x
   and ty_ = function
-    | Tgeneric ("this", ty) -> ty_opt ty
+    | Tgeneric ("this", Some (_, x)) -> ty x
     | Tgeneric (x, _) -> raise (Found x)
     | Tanon _ | Taccess _
     | Tany | Tmixed | Tprim _ -> ()
@@ -59,10 +59,14 @@ end
 
 let rename env old_name new_name ty_to_rename =
   let rec ty env (r, t) = (match t with
-    | Tgeneric (x, ty) ->
+    | Tgeneric (x, cstr_opt) ->
         let name = if x = old_name then new_name else x in
-        let env, ty = ty_opt env ty in
-        env, (r, Tgeneric (name, ty))
+        let env, cstr_opt = match cstr_opt with
+          | Some (ck, t) ->
+              let env, t = ty env t in
+              env, Some (ck, t)
+          | None -> env, None in
+        env, (r, Tgeneric (name, cstr_opt))
     | Tanon _
     | Tany | Tmixed | Tprim _-> env, (r, t)
     | Tarray (ty1, ty2) ->

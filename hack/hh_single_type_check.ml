@@ -43,10 +43,10 @@ let builtins = "<?hh // decl\n"^
   "interface KeyedContainer<Tk, Tv> extends Container<Tv>, KeyedTraversable<Tk,Tv> {}\n"^
   "interface KeyedIterator<Tk, Tv> extends KeyedTraversable<Tk, Tv>, Iterator<Tv> {}\n"^
   "interface KeyedIterable<Tk, Tv> extends KeyedTraversable<Tk, Tv>, Iterable<Tv> {}\n"^
-  "interface Awaitable<T> {"^
+  "interface Awaitable<+T> {"^
   "  public function getWaitHandle(): WaitHandle<T>;"^
   "}\n"^
-  "interface WaitHandle<T> extends Awaitable<T> {}\n"^
+  "interface WaitHandle<+T> extends Awaitable<T> {}\n"^
   "interface ConstVector<+Tv> extends KeyedIterable<int, Tv>, KeyedContainer<int, Tv>{"^
   "  public function map<Tu>((function(Tv): Tu) $callback): ConstVector<Tu>;"^
   "}\n"^
@@ -82,7 +82,7 @@ let builtins = "<?hh // decl\n"^
   "final class Set<Tv> implements ConstSet<Tv> {}\n"^
   "final class ImmSet<Tv> implements ConstSet<Tv> {}\n"^
   "class Exception { public function __construct(string $x) {} }\n"^
-  "class Generator<Tk, Tv, Ts> implements KeyedIterator<Tk, Tv> {\n"^
+  "class Generator<+Tk, +Tv, -Ts> implements KeyedIterator<Tk, Tv> {\n"^
   "  public function next(): void;\n"^
   "  public function current(): Tv;\n"^
   "  public function key(): Tk;\n"^
@@ -97,7 +97,7 @@ let builtins = "<?hh // decl\n"^
   "interface Countable { public function count(): int; }\n"^
   "interface AsyncIterator<Tv> {}\n"^
   "interface AsyncKeyedIterator<Tk, Tv> extends AsyncIterator<Tv> {}\n"^
-  "class AsyncGenerator<Tk, Tv, Ts> implements AsyncKeyedIterator<Tk, Tv> {\n"^
+  "class AsyncGenerator<+Tk, +Tv, -Ts> implements AsyncKeyedIterator<Tk, Tv> {\n"^
   "  public function next(): Awaitable<?(Tk, Tv)> {}\n"^
   "  public function send(?Ts $v): Awaitable<?(Tk, Tv)> {}\n"^
   "  public function raise(Exception $e): Awaitable<?(Tk, Tv)> {}"^
@@ -272,7 +272,8 @@ let handle_mode mode filename nenv files_info errors lint_errors ai_results =
       Relative_path.Map.iter begin fun fn fileinfo ->
         if fn = builtins_filename then () else begin
           let result = ServerColorFile.get_level_list
-            (fun () -> ignore (ServerIdeUtils.check_defs fileinfo); fn) in
+            (fun () -> ignore (ServerIdeUtils.check_defs
+              TypecheckerOptions.default fileinfo); fn) in
           print_colored fn result;
         end
       end files_info
@@ -305,7 +306,7 @@ let handle_mode mode filename nenv files_info errors lint_errors ai_results =
   | Suggest
   | Errors ->
       let errors = Relative_path.Map.fold begin fun _ fileinfo errors ->
-        errors @ ServerIdeUtils.check_defs fileinfo
+        errors @ ServerIdeUtils.check_defs TypecheckerOptions.default fileinfo
       end files_info errors in
       if mode = Suggest
       then Relative_path.Map.iter suggest_and_print files_info;
@@ -348,11 +349,11 @@ let main_hack { filename; mode; } =
               consider_names_just_for_autoload = false }
           end parsed_files in
 
-        (* Note that nenv.Naming.itcopt remains TypecheckerOptions.empty *)
+        (* Note that nenv.Naming.itcopt remains TypecheckerOptions.default *)
         let nenv = Relative_path.Map.fold begin fun fn fileinfo nenv ->
           let {FileInfo.funs; classes; typedefs; consts; _} = fileinfo in
           Naming.make_env nenv ~funs ~classes ~typedefs ~consts
-        end files_info Naming.empty in
+        end files_info (Naming.empty TypecheckerOptions.default) in
 
         let all_classes =
           Relative_path.Map.fold begin fun fn {FileInfo.classes; _} acc ->

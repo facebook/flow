@@ -86,7 +86,7 @@ let get_classes fast =
 (* Let's go! That's where the action is *)
 (*****************************************************************************)
 
-let go workers nenv fast =
+let go (workers:Worker.t list option) nenv fast =
   let all_classes = get_classes fast in
   TypeDeclarationStore.store (all_classes, nenv);
   let fast_l = Relative_path.Map.fold (fun x _ y -> x :: y) fast [] in

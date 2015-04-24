@@ -97,7 +97,7 @@ and instantiate_ft env ft =
   let params = List.map2 (fun x y -> x, y) names params in
   env, { ft with ft_arity = arity; ft_params = params; ft_ret = ret }
 
-and check_constraint env ty x_ty =
+and check_constraint env ck ty x_ty =
   let env, ety = Env.expand_type env ty in
   let env, ex_ty = Env.expand_type env x_ty in
   match snd ety, snd ex_ty with
@@ -110,37 +110,48 @@ and check_constraint env ty x_ty =
   | (Tmixed | Tarray (_, _) | Tprim _ | Tgeneric (_, _) | Toption _ | Tvar _
     | Tabstract (_, _, _) | Tapply (_, _) | Ttuple _ | Tanon (_, _) | Tfun _
     | Tunresolved _ | Tobject | Tshape _
-    | Taccess _), _ -> TUtils.sub_type env ty x_ty
+    | Taccess _), _ -> begin
+        match ck with
+        | Ast.Constraint_as ->
+            TUtils.sub_type env ty x_ty
+        | Ast.Constraint_super ->
+            TUtils.super_type env ty x_ty
+      end
 
 and instantiate subst env (r, ty) =
+  (* PERF: If subst is empty then instantiation is a no-op. We can save a
+   * significant amount of CPU by avoiding recursively deconstructing the ty
+   * data type.
+   *)
+  if SMap.is_empty subst then env, (r, ty) else
   match ty with
-  | Tgeneric (x, ty_opt) ->
+  | Tgeneric (x, cstr_opt) ->
       (match SMap.get x subst with
       | Some x_ty ->
           let env =
-            match ty_opt with
-            | None -> env
-            | Some ty ->
+            (* Once the typing environment is "fully" solved, we
+               check the constraints on generics *)
+            match cstr_opt with
+            | Some (ck, ty) ->
                 let env, ty = instantiate subst env ty in
-                (* Once the typing environment is "fully" solved, we check
-                 * the constraints on generics
-                 *)
                 Env.add_todo env begin fun env ->
                   Errors.try_
-                    (fun () -> check_constraint env ty x_ty)
+                    (fun () -> check_constraint env ck ty x_ty)
                     (fun l ->
-                      Reason.explain_generic_constraint r x l;
+                      Reason.explain_generic_constraint env.Env.pos r x l;
                       env
                     )
                 end
+            | None -> env
           in
           env, (Reason.Rinstantiate (fst x_ty, x, r), snd x_ty)
-      | None ->
-          match ty_opt with
-          | None -> env, (r, ty)
-          | Some ty ->
+      | None -> begin
+          match cstr_opt with
+          | Some (ck, ty) ->
               let env, ty = instantiate subst env ty in
-              env, (r, Tgeneric (x, Some ty))
+              env, (r, Tgeneric (x, Some (ck, ty)))
+          | None -> env, (r, ty)
+        end
       )
   | Tany | Tmixed | Tarray (_, _) | Tprim _ | Toption _ | Tvar _
   | Tabstract (_, _, _) | Tapply (_, _) | Ttuple _ | Tanon (_, _) | Tfun _

@@ -210,6 +210,7 @@ class virtual ['a] nast_visitor: ['a] nast_visitor_type = object(this)
    | String s    -> this#on_string acc s
    | This        -> this#on_this acc
    | Id sid      -> this#on_id acc sid
+   | Lplaceholder sid -> acc
    | Lvar id     -> this#on_lvar acc id
    | Fun_id sid  -> this#on_fun_id acc sid
    | Method_id (expr, pstr) -> this#on_method_id acc expr pstr
@@ -350,7 +351,7 @@ class virtual ['a] nast_visitor: ['a] nast_visitor_type = object(this)
 
   method on_efun acc f _ = match f.f_body with
     | UnnamedBody _ -> acc
-    | NamedBody block -> this#on_block acc block
+    | NamedBody { fnb_nast ; _ } -> this#on_block acc fnb_nast
 
   method on_xml acc _ attrl el =
     let acc = List.fold_left begin fun acc (_, e) ->

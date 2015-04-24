@@ -37,6 +37,8 @@ val fullpath: Path.path -> string
 
 val init: Path.path -> string list -> unit
 
+val version: string
+
 
 
 (* true if a file path matches an include path in config *)

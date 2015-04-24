@@ -86,11 +86,12 @@ module Program : Server.SERVER_PROGRAM = struct
     );
     die ()
 
-  let respond genv env ~client ~msg =
+  let respond (genv:ServerEnv.genv) env ~client ~msg =
     let _, oc = client in
     match msg with
     | ServerMsg.ERROR_OUT_OF_DATE -> incorrect_hash oc
-    | ServerMsg.PRINT_COVERAGE_LEVELS fn -> ServerColorFile.go env fn oc
+    | ServerMsg.PRINT_COVERAGE_LEVELS fn ->
+      ServerColorFile.go env fn oc
     | ServerMsg.INFER_TYPE (fn, line, char) ->
         infer env (fn, line, char) oc
     | ServerMsg.SUGGEST (files) -> suggest files oc
@@ -237,7 +238,7 @@ module Program : Server.SERVER_PROGRAM = struct
     | ServerMsg.LINT_ALL code ->
         ServerLint.lint_all genv code oc
 
-  let handle_connection_ genv env socket =
+  let handle_connection_ (genv:ServerEnv.genv) (env:ServerEnv.env) socket =
     let cli, _ = Unix.accept socket in
     try
       let ic = Unix.in_channel_of_descr cli in
@@ -287,6 +288,25 @@ module Program : Server.SERVER_PROGRAM = struct
     let js_next_files = Find.make_next_files_js ~filter:(fun _ -> true) dir in
     fun () -> php_next_files () @ js_next_files ()
 
+  let stamp_file = Tmp.get_dir() ^ "/stamp"
+  let touch_stamp () = Sys_utils.with_umask 0o111 begin fun () ->
+    (* Open and close the file to set its mtime. Don't use the Unix.utimes
+     * function since that will fail if the stamp file doesn't exist. *)
+    close_out (open_out stamp_file)
+  end
+  let touch_stamp_errors l1 l2 =
+    (* We don't want to needlessly touch the stamp file if the error list is
+     * the same and nothing has changed, but we also don't want to spend a ton
+     * of time comparing huge lists of errors over and over (i.e., grind to a
+     * halt in the cases when there are thousands of errors). So we cut off the
+     * comparison at an arbitrary point. *)
+    let rec length_greater_than n = function
+      | [] -> false
+      | _ when n = 0 -> true
+      | _::l -> length_greater_than (n-1) l in
+    if length_greater_than 5 l1 || length_greater_than 5 l2 || l1 <> l2
+    then touch_stamp ()
+
   let init genv env =
     let module RP = Relative_path in
     let root = ServerArgs.root genv.options in
@@ -300,7 +320,9 @@ module Program : Server.SERVER_PROGRAM = struct
       match next_files_hhi () with
       | [] -> next_files_root ()
       | x -> x in
-    ServerInit.init genv env next_files
+    let env = ServerInit.init genv env next_files in
+    touch_stamp ();
+    env
 
   let run_once_and_exit genv env =
     ServerError.print_errorl (ServerArgs.json_mode genv.options)
@@ -335,6 +357,7 @@ module Program : Server.SERVER_PROGRAM = struct
       let check_env = { old_env with failed_parsing = failed_parsing } in
       let new_env = ServerTypeCheck.check genv check_env in
       BuildMain.incremental_update genv old_env new_env updates;
+      touch_stamp_errors old_env.errorl new_env.errorl;
       new_env
 
   let parse_options = ServerArgs.parse_options

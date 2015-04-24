@@ -77,33 +77,25 @@ let convert path recurse outpath =
 
 (* command wiring *)
 
-type env = {
-  path : string;
-  recurse : bool;
-  outpath : string option;
+let spec = {
+  CommandSpec.
+  name = "convert";
+  doc = "";
+  usage = Printf.sprintf
+    "Usage: %s convert [DIR]\n\n\
+      Convert *.d.ts in DIR if supplied, or current directory.\n\
+      foo.d.ts is written to foo.js\n"
+      CommandUtils.exe_name;
+  args = CommandSpec.ArgSpec.(
+    empty
+    |> flag "--output" (optional string)
+        ~doc:"Output path (not available when recursive)"
+    |> flag "--r" no_arg
+        ~doc:"Recurse into subdirectories"
+    |> anon "dir" (optional string)
+        ~doc:"Directory (default: current directory)"
+  )
 }
-
-let parse_args () =
-  let outpath = ref None in
-  let recurse = ref false in
-  let options = CommandUtils.sort_opts [
-    "--output", Arg.String (fun s -> outpath := Some s),
-      " Output path (not available when recursive)";
-    "--r", CommandUtils.arg_set_unit recurse,
-      " Recurse into subdirectories";
-  ] in
-  let usage = Printf.sprintf "Usage: %s convert [DIR]\n\n\
-  Convert *.d.ts in DIR if supplied, or current directory.\n\
-  foo.d.ts is written to foo.js" CommandUtils.exe_name in
-  let args = ClientArgs.parse_without_command options usage "convert" in
-  let path = match args with
-    | [] -> "."
-    | [path] -> path
-    | _ ->
-      Arg.usage options usage;
-      exit 2
-  in
-  { path; recurse = !recurse; outpath = !outpath }
 
 let die str =
   let oc = stderr in
@@ -111,7 +103,11 @@ let die str =
   close_out oc;
   exit 2
 
-let main { path; recurse; outpath; } =
+let main outpath recurse dir () =
+  let path = match dir with
+  | None -> "."
+  | Some path -> path
+  in
   if ! Sys.interactive
   then ()
   else
@@ -120,6 +116,4 @@ let main { path; recurse; outpath; } =
       (fun () -> convert path recurse outpath)
       (fun l -> die (Errors.to_string (Errors.to_absolute l)))
 
-let name = "convert"
-let doc = ""
-let run () = main (parse_args ())
+let command = CommandSpec.command spec main

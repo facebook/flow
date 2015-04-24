@@ -111,6 +111,11 @@ clean:
 build-flow: build-flow-native-deps build-flowlib-archive
 	ocamlbuild  -no-links  $(INCLUDE_OPTS) $(LIB_OPTS) -lflags "$(LINKER_FLAGS)" src/flow.native
 
+build-flow-debug: build-flow-native-deps build-flowlib-archive
+	ocamlbuild -lflags -custom -no-links $(INCLUDE_OPTS) $(LIB_OPTS) -lflags "$(LINKER_FLAGS)" src/flow.d.byte
+	mkdir -p bin
+	cp _build/src/flow.d.byte bin/flow
+
 build-flow-native-deps: build-flow-stubs
 	ocamlbuild -ocamlc "ocamlopt $(EXTRA_INCLUDE_OPTS) $(CC_OPTS)"\
 		$(NATIVE_OBJECT_FILES)

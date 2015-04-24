@@ -23,3 +23,10 @@ tools: native_test_files
 native_test_files:
 	ocamlbuild tools/native_test_files.native
 	mv native_test_files.native tools/native_test_files
+
+npm-publish:
+	mv README.md README-backup.md
+	mv README-npm.md README.md
+	-npm publish
+	mv README.md README-npm.md
+	mv README-backup.md README.md

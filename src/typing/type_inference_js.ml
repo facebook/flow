@@ -98,17 +98,6 @@ let (>>) f g = fun x -> g (f (x))
 let mk_object cx reason =
   Flow_js.mk_object_with_proto cx reason (MixedT reason)
 
-let extended_object cx reason ~sealed map spread =
-  let o =
-    Flow_js.mk_object_with_map_proto cx reason ~sealed map (MixedT reason)
-  in
-  match spread with
-  | None -> o
-  | Some other ->
-      Flow_js.mk_tvar_where cx reason (fun t ->
-        Flow_js.unit_flow cx (other, ObjAssignT (reason, o, t, [], false))
-      )
-
 let summarize cx t = match t with
   | OpenT _ ->
       let reason = reason_of_t t in
@@ -1275,30 +1264,47 @@ and statement cx = Ast.Statement.(
 
       let default = ref false in
       let ctx = !Env_js.env in
-      let last_ctx = ref ctx in
+      let last_ctx = ref None in
+      let fallthrough_ctx = ref ctx in
       let oldset = Env_js.swap_changeset (fun _ -> SSet.empty) in
 
-      let exceptions = List.rev_map (fun (loc, case) ->
+      let merge_with_last_ctx cx reason ctx changeset =
+        match !last_ctx with
+        | Some x -> Env_js.merge_env cx reason (ctx, ctx, x) changeset
+        | None -> ()
+      in
+
+      let exceptions = List.rev_map (fun (loc, {Switch.Case.test; consequent}) ->
         if !default then None (* TODO: error when case follows default *)
         else (
-          let case_ctx = Env_js.clone_env ctx in
           let reason = mk_reason "case" loc in
+          let _, pred, not_pred, xtypes = match test with
+          | None ->
+              default := true;
+              UndefT.t, SMap.empty, SMap.empty, SMap.empty
+          | Some expr ->
+              let fake_ast = loc, Ast.Expression.(Binary {
+                Binary.operator = Binary.StrictEqual;
+                left = discriminant;
+                right = expr;
+              }) in
+              predicate_of_condition cx fake_ast
+          in
+
+          let case_ctx = Env_js.clone_env !fallthrough_ctx in
           Env_js.update_frame cx case_ctx;
-          Env_js.merge_env cx reason (case_ctx,ctx,!last_ctx) !Env_js.changeset;
+          Env_js.refine_with_pred cx reason pred xtypes;
+          merge_with_last_ctx cx reason case_ctx !Env_js.changeset;
 
           let exception_ = ref None in
           mark_exception_handler (fun () ->
-            Ast.Statement.Switch.Case.(
-              match case.test with
-              | None ->
-                  default := true;
-                  toplevels cx case.consequent
-              | Some expr ->
-                  ignore (expression cx expr);
-                  toplevels cx case.consequent
-            )
+            toplevels cx consequent
           ) exception_;
-          last_ctx := case_ctx;
+
+          Env_js.update_frame cx !fallthrough_ctx;
+          Env_js.refine_with_pred cx reason not_pred xtypes;
+
+          last_ctx := Some case_ctx;
           !exception_
         )
       ) cases
@@ -1309,10 +1315,10 @@ and statement cx = Ast.Statement.(
       (* if there's no default clause, pretend there is and it's empty *)
       if not !default
       then (
-        let default_ctx = Env_js.clone_env ctx in
+        let default_ctx = Env_js.clone_env !fallthrough_ctx in
         let reason = mk_reason "default" loc in
         Env_js.update_frame cx default_ctx;
-        Env_js.merge_env cx reason (default_ctx,ctx,!last_ctx) newset
+        merge_with_last_ctx cx reason default_ctx newset
       );
 
       if Abnormal.swap (Abnormal.Break None) save_break_exn
@@ -1914,7 +1920,7 @@ and statement cx = Ast.Statement.(
           let map = SMap.map (fun {specific=export;_} -> export) !block in
           Flow_js.mk_object_with_map_proto cx reason map (MixedT reason)
     in
-    Flow_js.unify cx exports t
+    Flow_js.unify cx (CJSExportDefaultT(reason, exports)) t
   | (loc, ExportDeclaration {
       ExportDeclaration.default;
       ExportDeclaration.declaration;
@@ -2103,50 +2109,71 @@ and statement cx = Ast.Statement.(
           )
       ) in
       let import_str = if isType then "import type" else "import" in
+
+      let import_reason = mk_reason
+        (spf "exports of \"%s\"" module_name)
+        source_loc 
+      in
+      let module_ns_tvar = import_ns cx import_reason module_name source_loc in
+
       (match default with
-        | Some(_, local_ident) ->
+        | Some(local_ident_loc, local_ident) ->
           let local_name = local_ident.Ast.Identifier.name in
-          let reason =
-            mk_reason "Extract `default` property from ModuleNamespace obj" loc
+
+          let reason = mk_reason 
+            (spf "\"default\" export of \"%s\"" module_name)
+            local_ident_loc
           in
-          let module_ns_tvar = import_ns cx reason module_name source_loc in
           let local_t = Flow_js.mk_tvar_where cx reason (fun t ->
             Flow_js.unit_flow cx (module_ns_tvar, GetT(reason, "default", t))
           ) in
-          let reason =
-            mk_reason (spf "%s %s from \"%s\"" import_str local_name module_name) loc
+          let reason = mk_reason 
+            (spf "%s %s from \"%s\"" import_str local_name module_name) 
+            loc
           in
           Env_js.set_var cx ~for_type:isType local_name local_t reason
         | None -> (
           match specifier with
           | Some(ImportDeclaration.Named(_, named_specifiers)) ->
-            let import_specifier (_, specifier) = (
-              let (loc, remote_ident) =
+            let import_specifier (specifier_loc, specifier) = (
+              let (remote_ident_loc, remote_ident) =
                 specifier.ImportDeclaration.NamedSpecifier.id
               in
               let remote_name = remote_ident.Ast.Identifier.name in
-              let (local_name, reason) = (
+
+              let get_reason_str =
+                spf "\"%s\" export of \"%s\"" remote_name module_name
+              in
+
+              let (local_name, get_reason, set_reason) = (
                 match specifier.ImportDeclaration.NamedSpecifier.name with
-                | Some(_, { Ast.Identifier.name = local_name; _; }) ->
-                  let reason_str =
-                    spf "%s { %s as %s }" import_str remote_name local_name
+                | Some(local_ident_loc, { Ast.Identifier.name = local_name; _; }) ->
+                  let get_reason = mk_reason get_reason_str remote_ident_loc in
+                  let set_reason = mk_reason
+                    (spf "%s { %s as %s }" import_str remote_name local_name)
+                    specifier_loc
                   in
-                  (local_name, (mk_reason reason_str loc))
+                  (local_name, get_reason, set_reason)
                 | None ->
-                  let reason_str = spf "%s { %s }" import_str remote_name in
-                  (remote_name, (mk_reason reason_str loc))
+                  let get_reason = mk_reason get_reason_str specifier_loc in
+                  let set_reason = mk_reason
+                    (spf "%s { %s }" import_str remote_name)
+                    specifier_loc
+                  in
+                  (remote_name, get_reason, set_reason)
               ) in
-              let module_ns_tvar = import_ns cx reason module_name source_loc in
-              let local_t = Flow_js.mk_tvar_where cx reason (fun t ->
-                Flow_js.unit_flow cx (module_ns_tvar, GetT(reason, remote_name, t))
+
+              let local_t = Flow_js.mk_tvar_where cx get_reason (fun t ->
+                Flow_js.unit_flow cx (module_ns_tvar, GetT(get_reason, remote_name, t))
               ) in
-              Env_js.set_var cx ~for_type:isType local_name local_t reason
+              Env_js.set_var cx ~for_type:isType local_name local_t set_reason
             ) in
             List.iter import_specifier named_specifiers
           | Some(ImportDeclaration.NameSpace(_, (ident_loc, local_ident))) ->
             let local_name = local_ident.Ast.Identifier.name in
-            let reason =
-              mk_reason (spf "%s * as %s" import_str local_name) ident_loc
+            let reason = mk_reason
+              (spf "%s * as %s" import_str local_name)
+              ident_loc
             in
             if isType then (
               (**
@@ -2161,7 +2188,6 @@ and statement cx = Ast.Statement.(
               let module_type = require cx module_ module_name source_loc in
               Env_js.set_var ~for_type:true cx local_name module_type reason
             ) else (
-              let module_ns_tvar = import_ns cx reason module_name source_loc in
               Env_js.set_var cx local_name module_ns_tvar reason
             )
           | None ->
@@ -2211,7 +2237,7 @@ and raise_exception exn_ = match exn_ with
   | _ -> ()
 
 and object_ cx props = Ast.Expression.Object.(
-  let spread = ref None in
+  let spread = ref [] in
   List.fold_left (fun map -> function
 
     (* name = function expr *)
@@ -2266,7 +2292,7 @@ and object_ cx props = Ast.Expression.Object.(
 
     (* spread prop *)
     | SpreadProperty (loc, { SpreadProperty.argument }) ->
-      spread := Some (expression cx argument);
+      spread := (expression cx argument)::!spread;
       map
 
   ) SMap.empty props,
@@ -2520,7 +2546,7 @@ and expression_ cx loc e = Ast.Expression.(match e with
   | Object { Object.properties } ->
     let reason = mk_reason "object literal" loc in
     let map, spread = object_ cx properties in
-    let sealed = (spread = None && not (SMap.is_empty map)) in
+    let sealed = (spread = [] && not (SMap.is_empty map)) in
     extended_object cx reason ~sealed map spread
 
   | Array { Array.elements } -> (
@@ -3271,6 +3297,12 @@ and assignment cx loc = Ast.Expression.(function
 
 and spread_objects cx reason those =
   chain_objects cx reason (mk_object cx reason) those
+
+and extended_object cx reason ~sealed map spread =
+  let o =
+    Flow_js.mk_object_with_map_proto cx reason ~sealed map (MixedT reason)
+  in
+  chain_objects cx reason o spread
 
 and clone_object_with_excludes cx reason this that excludes =
   Flow_js.mk_tvar_where cx reason (fun tvar ->
@@ -4941,7 +4973,6 @@ let infer_ast ast file m force_check =
   if check then (
     let init_exports = mk_object cx reason in
     set_module_exports cx reason init_exports;
-    Flow_js.unit_flow cx (init_exports, SetT(reason, "default", init_exports));
     infer_core cx statements;
   );
 

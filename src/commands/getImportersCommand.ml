@@ -14,41 +14,36 @@
 
 open CommandUtils
 
-type env = {
-  modules : string list;
-  option_values : command_params;
-}
-
-let parse_args () =
-  let option_values, options = create_command_options true in
-  let options = sort_opts options in
-  let usage =  Printf.sprintf
-    "Usage: %s get-importers [OPTION]... [FILE]...\n\n\
-    Gets a list of all importers for one or more given modules\n\n\
-    Example usage:\n\
-    \t%s get-importers FirstModule SecondModule"
-    CommandUtils.exe_name
-    CommandUtils.exe_name in
-  let modules =
-    ClientArgs.parse_without_command options usage "get-importers" in
-  match modules with
-  | [] ->
-      Printf.fprintf stderr "You must provide at least one module name\n%!";
-      Arg.usage options usage;
-      exit 2
-  | _ -> ();
-  { modules; option_values; }
-
 module Json = Hh_json
 
-let main { modules; option_values; } =
+let spec = {
+  CommandSpec.
+  name = "get-importers";
+  doc = "Gets a list of all importers for one or more given modules";
+  usage = Printf.sprintf
+    "Usage: %s get-importers [OPTION]... [FILE]...\n\n\
+      Gets a list of all importers for one or more given modules\n\n\
+      Example usage:\n\
+      \t%s get-importers FirstModule SecondModule\n"
+      CommandUtils.exe_name
+      CommandUtils.exe_name;
+  args = CommandSpec.ArgSpec.(
+    empty
+    |> server_flags
+    |> json_flags
+    |> anon "modules" (required (list_of string))
+        ~doc:"Module name(s) to find"
+  )
+}
+
+let main option_values json modules () =
   let root = guess_root (Some (Sys.getcwd ())) in
 
   let ic, oc = connect_with_autostart option_values root in
 
   ServerProt.cmd_to_channel oc (ServerProt.GET_IMPORTERS modules);
   let importers_map = Marshal.from_channel ic in
-  if !(option_values.json)
+  if json
   then (
     let json_list =
       Utils.SMap.fold (fun module_name importers json_list ->
@@ -76,6 +71,4 @@ let main { modules; option_values; } =
     flush stdout
   )
 
-let name = "get-importers"
-let doc = "Gets a list of all importers for one or more given modules"
-let run () = main (parse_args ())
+let command = CommandSpec.command spec (collect_server_flags main)

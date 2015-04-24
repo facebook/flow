@@ -101,14 +101,13 @@ let silent_warnings = false
 exception FlowError of (reason * string) list
 
 let add_output cx level message_list =
-  if modes.debug then
-    prerr_endlinef "\nadd_output\n%s" (
-      String.concat "\n" (
-        List.map (fun (r, s) -> spf "r: [%s] s = %S" (dump_reason r) s)
-          message_list));
-
   if !throw_on_error then raise (FlowError message_list)
   else
+    (if modes.debug then
+      prerr_endlinef "\nadd_output cx.file = %S\n%s" cx.file (
+        String.concat "\n" (
+          List.map (fun (r, s) -> spf "r: [%s] s = %S" (dump_reason r) s)
+            message_list)));
     let error = level, message_list in
     if level = Errors_js.ERROR || not silent_warnings then
     cx.errors <- Errors_js.ErrorSet.add error cx.errors
@@ -121,7 +120,7 @@ let mk_tvar cx reason =
   let tvar = mk_var cx in
   let graph = cx.graph in
   cx.graph <- graph |> IMap.add tvar (new_bounds tvar reason);
-  (if modes.debug then prerr_endlinef
+  (if modes.verbose then prerr_endlinef
     "TVAR %d (%d): %s" tvar (IMap.cardinal graph)
     (string_of_reason reason));
   OpenT (reason, tvar)
@@ -197,7 +196,7 @@ let rec havoc_ctx cx i j =
 
 and havoc_ctx_ = function
   | (block::blocks_, x1::stack1_, x2::stack2_) when x1 = x2 ->
-      (if modes.debug then prerr_endlinef "HAVOC::%d" x1);
+      (if modes.verbose then prerr_endlinef "HAVOC::%d" x1);
       block := SMap.mapi (fun x {specific;general;def_loc;for_type} ->
         (* internal names (.this, .super, .return, .exports) are read-only *)
         if is_internal_name x
@@ -1173,7 +1172,7 @@ let rec flow cx (l,u) trace =
 
     if (not (is_use l)) then () else failwith (string_of_t cx l);
 
-    (if modes.debug
+    (if modes.verbose
      then prerr_endlinef
         "\n# %s ~>\n# %s"
         (dump_reason (reason_of_t l))
@@ -1202,10 +1201,12 @@ let rec flow cx (l,u) trace =
       (* Set the 'default' property on the new object to point at the exports *)
       unit_flow cx (ns_obj, SetT(reason, "default", exported_t));
 
-      let ns_obj_sealed = mk_tvar_where cx reason (fun t ->
-        unit_flow cx (ns_obj, ObjSealT(reason, t))
-      ) in
-      unit_flow cx (ns_obj_sealed, t);
+      (**
+       * Now that we've constructed the derived ES6 module namespace object for
+       * these CommonJS exports, flow them to the import to be treated like an
+       * ES6 -> ES6 import.
+       *)
+      unit_flow cx (ns_obj, u)
 
     | (ObjT(reason_o, {props_tmap = mapr; _;}), ExportDefaultT(reason, t)) ->
         let exported_props = IMap.find_unsafe mapr cx.property_maps in
@@ -1310,7 +1311,10 @@ let rec flow cx (l,u) trace =
     (* directly.                                                            *)
     (************************************************************************)
     | (_, ImportModuleNsT(reason, t)) ->
-      unit_flow cx (l, t)
+      let ns_obj_sealed = mk_tvar_where cx reason (fun t ->
+        unit_flow cx (l, ObjSealT(reason, t))
+      ) in
+      unit_flow cx (ns_obj_sealed, t)
 
     (**************************************************************************)
     (* Unwrap any CommonJS export objects that are flowing to something other *)
@@ -2584,7 +2588,7 @@ let rec flow cx (l,u) trace =
         let msg =
           if Str.string_match (Str.regexp "\\$module__\\(.*\\)") x 0
           then "Required module not found"
-          else "Unknown global name"
+          else "Could not resolve name"
         in
         let message_list = [
           reason_op, msg
@@ -2754,7 +2758,7 @@ and equatable cx trace = function
 
 and mk_nominal cx =
   let nominal = mk_var cx in
-  (if modes.debug then prerr_endlinef
+  (if modes.verbose then prerr_endlinef
       "NOM %d %s" nominal cx.file);
   nominal
 
@@ -4162,7 +4166,7 @@ let die cx tvar =
       bounds_u.lowertvars <-
         IMap.remove tvar bounds_u.lowertvars
   );
-  (if modes.debug then prerr_endlinef "DEAD: %d" tvar);
+  (if modes.verbose then prerr_endlinef "DEAD: %d" tvar);
   cx.graph <- cx.graph |> IMap.remove tvar
 
 let kill_lower cx tvar =
@@ -4213,7 +4217,7 @@ let cleanup cx =
         else if (not (ISet.mem tvar gc_state.negative))
         then kill_upper cx tvar
         else
-          (if modes.debug then prerr_endlinef "LIVE: %d" tvar)
+          (if modes.verbose then prerr_endlinef "LIVE: %d" tvar)
       )
       else
         die cx tvar

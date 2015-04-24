@@ -241,7 +241,7 @@ module Translate = struct
             Js.array (Array.of_list [node "ExportBatchSpecifier" loc])
         | None ->
             Js.array (Array.of_list []));
-        Js.Unsafe.set ret "source" (option module_specifier export.source);
+        Js.Unsafe.set ret "source" (option literal export.source);
         ret
       )
     | loc, ImportDeclaration import -> ImportDeclaration.(
@@ -254,7 +254,7 @@ module Translate = struct
         | Some (Named (_, sl)) -> (List.rev (List.map import_specifier sl)) @ specifiers
         | None -> specifiers) in
         Js.Unsafe.set ret "specifiers" (Js.array (Array.of_list (List.rev specifiers)));
-        Js.Unsafe.set ret "source" (module_specifier import.source);
+        Js.Unsafe.set ret "source" (literal import.source);
         Js.Unsafe.set ret "isType" (bool import.isType);
         ret
     )
@@ -1000,11 +1000,6 @@ module Translate = struct
     Js.Unsafe.set ret "name" (string id.name);
     ret
   )
-
-  and module_specifier lit =
-    let ret = literal lit in
-    Js.Unsafe.set ret "type" (string "ModuleSpecifier");
-    ret
 
   and export_specifier (loc, specifier) = Statement.ExportDeclaration.Specifier.(
     let ret = node "ExportSpecifier" loc in

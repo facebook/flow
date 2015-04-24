@@ -59,7 +59,11 @@ and gconst = {
     cst_namespace: Namespace_env.env;
   }
 
-and tparam = variance * id * hint option
+and constraint_kind =
+  | Constraint_as
+  | Constraint_super
+
+and tparam = variance * id * (constraint_kind * hint) option
 
 and tconstraint = hint option
 
@@ -196,9 +200,15 @@ and fun_ = {
   f_namespace       : Namespace_env.env;
 }
 
+and fun_decl_kind =
+  | FDeclAsync
+  | FDeclSync
+
 and fun_kind =
-  | FAsync
   | FSync
+  | FAsync
+  | FGenerator
+  | FAsyncGenerator
 
 and hint = Pos.t * hint_
 and hint_ =

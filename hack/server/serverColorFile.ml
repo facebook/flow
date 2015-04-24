@@ -21,7 +21,8 @@ let get_level_list check =
 
 let go env f_in oc =
   let result = get_level_list (fun () ->
-    ServerIdeUtils.check_file_input env.ServerEnv.files_info f_in
+    let tcopt = Naming.typechecker_options env.ServerEnv.nenv in
+    ServerIdeUtils.check_file_input tcopt env.ServerEnv.files_info f_in
   ) in
   Marshal.to_channel oc (result : result) [];
   flush oc

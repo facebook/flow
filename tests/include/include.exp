@@ -11,7 +11,7 @@ This type is incompatible with
 This type is incompatible with
   ../lib/libtest.js:1:7,12: string
 
-[LIB] core.js:247:11,16: string
+[LIB] core.js:248:11,16: string
 This type is incompatible with
   ../lib/libtest.js:3:7,12: number
 

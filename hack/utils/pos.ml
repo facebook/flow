@@ -108,6 +108,7 @@ let compare x y =
         if result <> 0 then result else seq rl
   in
   seq [(fun x y -> compare x.pos_file y.pos_file);
+       (fun x y -> compare x.pos_start.pos_lnum y.pos_start.pos_lnum);
        (fun x y -> compare x.pos_start.pos_cnum y.pos_start.pos_cnum);
        (fun x y -> compare x.pos_end.pos_cnum y.pos_end.pos_cnum)]
 

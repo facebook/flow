@@ -71,12 +71,11 @@ and check_typedef seen env (r, t) =
       check_typedef_opt seen env ty1;
       check_typedef_opt seen env ty2;
       ()
-  | Tgeneric (_, ty) ->
-      check_typedef_opt seen env ty
+  | Tgeneric (_, cstr_opt) -> check_typedef_constraint seen env cstr_opt
   | Toption ty -> check_typedef seen env ty
   | Tprim _ -> ()
   | Tvar _ ->
-      (* This can happen after intantiantion of the typedef.
+      (* This can happen after instantiantion of the typedef.
        * Having a cyclic typedef defined this way is fine, because of the
        * type variable, it will be handled gracefully.
        * Besides, it's not that the typedef depends on itself, it's that
@@ -126,8 +125,12 @@ and check_typedef_fun_param seen env (_, ty) =
 and check_typedef_tparam_list seen env x =
   List.iter (check_typedef_tparam seen env) x
 
-and check_typedef_tparam seen env (_, _, x) =
-  check_typedef_opt seen env x
+and check_typedef_tparam seen env (_, _, cstr_opt) =
+  check_typedef_constraint seen env cstr_opt
+
+and check_typedef_constraint seen env = function
+  | None -> ()
+  | Some (_ck, ty) -> check_typedef seen env ty
 
 and check_typedef_opt seen env = function
   | None -> ()

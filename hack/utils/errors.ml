@@ -162,6 +162,7 @@ module Naming                               = struct
   let dynamic_new_in_strict_mode            = 2060 (* DONT MODIFY!!!! *)
   let invalid_type_access_root              = 2061 (* DONT MODIFY!!!! *)
   let duplicate_user_attribute              = 2062 (* DONT MODIFY!!!! *)
+  let return_only_typehint                  = 2063 (* DONT MODIFY!!!! *)
 
   (* EXTEND HERE WITH NEW VALUES IF NEEDED *)
 end
@@ -265,7 +266,7 @@ module Typing                               = struct
   let null_container                        = 4063 (* DONT MODIFY!!!! *)
   let null_member                           = 4064 (* DONT MODIFY!!!! *)
   let nullable_parameter                    = 4065 (* DONT MODIFY!!!! *)
-  let nullable_void                         = 4066 (* DONT MODIFY!!!! *)
+  let option_return_only_typehint           = 4066 (* DONT MODIFY!!!! *)
   let object_string                         = 4067 (* DONT MODIFY!!!! *)
   let option_mixed                          = 4068 (* DONT MODIFY!!!! *)
   let overflow                              = 4069 (* DONT MODIFY!!!! *)
@@ -311,7 +312,7 @@ module Typing                               = struct
   let unsatisfied_req                       = 4111 (* DONT MODIFY!!!! *)
   let visibility                            = 4112 (* DONT MODIFY!!!! *)
   let visibility_extends                    = 4113 (* DONT MODIFY!!!! *)
-  let void_parameter                        = 4114 (* DONT MODIFY!!!! *)
+  (* DEPRECATED void_parameter              = 4114 *)
   let wrong_extend_kind                     = 4115 (* DONT MODIFY!!!! *)
   let generic_unify                         = 4116 (* DONT MODIFY!!!! *)
   let nullsafe_not_needed                   = 4117 (* DONT MODIFY!!!! *)
@@ -958,13 +959,19 @@ let missing_field pos1 pos2 name =
     [pos1, "The field '"^name^"' is missing";
      pos2, "The field '"^name^"' is defined"]
 
-let explain_constraint pos name (error: error) =
+let explain_constraint p_inst pos name (error : error) =
+  let inst_msg = "Some type constraint(s) here are violated" in
   let code, msgl = error in
+  (* There may be multiple constraints instantiated at one spot; avoid
+   * duplicating the instantiation message *)
+  let msgl = match msgl with
+    | (p, x) :: rest when x = inst_msg && p = p_inst -> rest
+    | _ -> msgl in
   let name = Utils.strip_ns name in
-  add_list code (
-    msgl @
-      [pos, "Considering the constraint on '"^name^"'"]
-  )
+  add_list code begin
+    [p_inst, inst_msg;
+     pos, "'"^name^"' is a constrained type"] @ msgl
+  end
 
 let explain_type_constant reason_msgl (error: error) =
   let code, msgl = error in
@@ -994,8 +1001,14 @@ let strict_members_not_known p name =
     (name^" has a non-<?hh grandparent; this is not allowed in strict mode"
      ^" because that parent may define methods of unknowable name and type")
 
-let nullable_void p =
-  add Typing.nullable_void p "?void is a nonsensical typehint"
+let option_return_only_typehint p kind =
+  let (typehint, reason) = match kind with
+    | `void -> ("?void", "only return implicitly")
+    | `noreturn -> ("?noreturn", "never return")
+  in
+  add Typing.option_return_only_typehint p
+    (typehint^" is a nonsensical typehint; a function cannot both "^reason
+     ^" and return null.")
 
 let tuple_syntax p =
   add Typing.tuple_syntax p
@@ -1037,8 +1050,12 @@ let previous_default p =
      "Remove all the default values for the preceding parameters,\n"^
      "or add a default value to this one.")
 
-let void_parameter p =
-  add Typing.void_parameter p "Cannot have a void parameter"
+let return_only_typehint p kind =
+  let msg = match kind with
+    | `void -> "void"
+    | `noreturn -> "noreturn" in
+  add Naming.return_only_typehint p
+    ("The "^msg^" typehint can only be used to describe a function return type")
 
 let nullable_parameter pos =
   add Typing.nullable_parameter pos
@@ -1563,6 +1580,12 @@ let ambiguous_inheritance pos class_ origin (error: error) =
   let class_ = strip_ns class_ in
   let message = "This declaration was inherited from an object of type "^origin^
     ". Redeclare this member in "^class_^" with a compatible signature." in
+  let code, msgl = error in
+  add_list code (msgl @ [pos, message])
+
+let explain_contravariance pos c_name error =
+  let message = "Considering that this type argument is contravariant "^
+                "with respect to " ^ strip_ns c_name in
   let code, msgl = error in
   add_list code (msgl @ [pos, message])
 

@@ -313,6 +313,10 @@ val repos_t_from_reason : reason -> Type.t -> Type.t
 val reasonless_compare : Type.t -> Type.t -> int
 
 val string_of_t : context -> Type.t -> string
+val json_of_t : context -> Type.t -> Hh_json.json
+val jstr_of_t : context -> Type.t -> string
+val json_of_graph : context -> Hh_json.json
+val jstr_of_graph : context -> string
 val dump_t : context -> Type.t -> string
 
 val parameter_name : context -> string -> Type.t -> string

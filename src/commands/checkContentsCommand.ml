@@ -12,42 +12,40 @@
 (* flow check-contents command *)
 (***********************************************************************)
 
-module Json = Hh_json
-
 open CommandUtils
 
-type env = {
-  file : ServerProt.file_input;
-  option_values : command_params;
+let spec = {
+  CommandSpec.
+  name = "check-contents";
+  doc = "Run typechecker on contents from stdin";
+  usage = Printf.sprintf
+    "Usage: %s check-contents [OPTION]... [FILE]\n\n\
+      e.g. %s check-contents < foo.js\n"
+      CommandUtils.exe_name
+      CommandUtils.exe_name;
+  args = CommandSpec.ArgSpec.(
+    empty
+    |> server_flags
+    |> json_flags
+    |> anon "filename" (optional string) ~doc:"Filename"
+  )
 }
 
-let parse_args () =
-  let option_values, options = create_command_options true in
-  let options = sort_opts options in
-  let usage = Printf.sprintf
-    "Usage: %s check-contents [OPTION]... [FILE]\n\n\
-      e.g. %s check-contents < foo.js\n\n"
-      CommandUtils.exe_name
-      CommandUtils.exe_name in
-  let args = ClientArgs.parse_without_command options usage "check-contents" in
-  let file = match args with
-    | [] ->
+let read_from_stdin file =
+  match file with
+    | None ->
         let contents = ClientUtils.read_stdin_to_string () in
         ServerProt.FileContent (None, contents)
-    | [file] ->
+    | Some file ->
         let contents = ClientUtils.read_stdin_to_string () in
         ServerProt.FileContent ((Some (get_path_of_file file)), contents)
-    | _ ->
-        Arg.usage options usage; exit 2
-  in
-  { file; option_values; }
 
-let main {file; option_values;} =
+let main option_values use_json file () =
+  let file = read_from_stdin file in
   let root = guess_root (ServerProt.path_of_input file) in
   let ic, oc = connect_with_autostart option_values root in
   ServerProt.cmd_to_channel oc (ServerProt.CHECK_FILE file);
   let response = ServerProt.response_from_channel ic in
-  let use_json = !(option_values.json) in
   match response with
   | ServerProt.ERRORS e ->
       if use_json || !(option_values.from) <> ""
@@ -64,6 +62,4 @@ let main {file; option_values;} =
       prerr_endline "Unexpected server response!";
       exit (-1)
 
-let name = "check-contents"
-let doc = "Run typechecker on contents from stdin"
-let run () = main (parse_args ())
+let command = CommandSpec.command spec (collect_server_flags main)

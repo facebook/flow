@@ -26,6 +26,7 @@ val diff_range : Spider_monkey_ast.Loc.t -> int * int
 val in_range : Pos.t -> Spider_monkey_ast.Loc.t -> bool
 
 val string_of_pos : Pos.t -> string
+val json_of_pos : Pos.t -> Hh_json.json
 
 val reason_of_string : string -> reason
 
@@ -39,6 +40,7 @@ val is_derivable_reason : reason -> bool
 val builtin_reason : string -> reason
 
 val string_of_reason : reason -> string
+val json_of_reason : reason -> Hh_json.json
 val dump_reason : reason -> string
 
 (* accessors *)

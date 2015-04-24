@@ -1200,6 +1200,418 @@ let string_of_t =
 let string_of_param_t =
   string_of_t_ EnclosureParam
 
+(****************** json ******************)
+
+module Json = Hh_json
+
+let json_of_literal l = Json.(match l with
+  | Some s -> ["literal", JString s]
+  | None -> []
+)
+
+let string_of_pred_ctor = function
+  | AndP _ -> "AndP"
+  | OrP _ -> "OrP"
+  | NotP _ -> "NotP"
+  | ExistsP -> "ExistsP"
+  | InstanceofP _ -> "InstanceofP"
+  | ConstructorP _ -> "ConstructorP"
+  | IsP _ -> "IsP"
+
+let rec _json_of_t stack cx t = Json.(
+  JAssoc ([
+    "reason", json_of_reason (reason_of_t t);
+    "kind", JString (string_of_ctor t)
+  ] @
+  match t with
+  | OpenT (_, id) -> [
+      "id", JInt id
+    ] @
+    if ISet.mem id stack then []
+    else [
+      "bounds", json_of_bounds stack cx id
+    ]
+
+  | NumT (_, lit)
+  | StrT (_, lit) ->
+    json_of_literal lit
+
+  | BoolT (_, b) ->
+    (match b with
+      | Some b -> ["literal", JBool b]
+      | None -> [])
+
+  | UndefT _
+  | MixedT _
+  | AnyT _
+  | NullT _
+  | VoidT _ ->
+    []
+
+  | FunT (_, static, proto, funtype) -> [
+      "static", _json_of_t stack cx static;
+      "prototype", _json_of_t stack cx proto;
+      "funType", json_of_funtype stack cx funtype
+    ]
+
+  | ObjT (_, objtype) -> [
+      "type", json_of_objtype stack cx objtype
+    ]
+
+  | ArrT (_, elemt, tuplet) -> [
+      "elemType", _json_of_t stack cx elemt;
+      "tupleType", JList (List.map (_json_of_t stack cx) tuplet)
+    ]
+
+  | ClassT t -> [
+      "type", _json_of_t stack cx t
+    ]
+
+  | InstanceT (_, static, super, instance) -> [
+      "static", _json_of_t stack cx static;
+      "super", _json_of_t stack cx super;
+      "instance", json_of_insttype stack cx instance
+    ]
+
+  | OptionalT t
+  | RestT t -> [
+      "type", _json_of_t stack cx t
+    ]
+
+  | PolyT (tparams, t) -> [
+      "typeParams", JList (List.map (json_of_typeparam stack cx) tparams);
+      "type", _json_of_t stack cx t
+    ]
+
+  | TypeAppT (t, targs) -> [
+      "typeArgs", JList (List.map (_json_of_t stack cx) targs);
+      "type", _json_of_t stack cx t
+    ]
+
+  | BoundT tparam -> [
+      "typeParam", json_of_typeparam stack cx tparam
+    ]
+
+  | MaybeT t -> [
+      "type", _json_of_t stack cx t
+    ]
+
+  | IntersectionT (_, ts)
+  | UnionT (_, ts) -> [
+      "types", JList (List.map (_json_of_t stack cx) ts)
+    ]
+
+  | UpperBoundT t
+  | LowerBoundT t -> [
+      "type", _json_of_t stack cx t
+    ]
+
+  | AnyObjT _
+  | AnyFunT _ ->
+    []
+
+  | ShapeT t -> [
+      "type", _json_of_t stack cx t
+    ]
+
+  | DiffT (t1, t2) -> [
+      "type1", _json_of_t stack cx t1;
+      "type2", _json_of_t stack cx t2
+    ]
+
+  | EnumT (_, t)
+  | RecordT (_, t) -> [
+      "type", _json_of_t stack cx t
+    ]
+
+  | CustomClassT (name, tparams, t) -> [
+      "name", JString name;
+      "typeParams", JList (List.map (_json_of_t stack cx) tparams);
+      "type", _json_of_t stack cx t
+    ]
+
+  | TypeT (_, t) -> [
+      "type", _json_of_t stack cx t
+    ]
+
+  | SpeculativeMatchFailureT (_, attempt, target) -> [
+      "attemptType", _json_of_t stack cx attempt;
+      "targetType", _json_of_t stack cx target
+    ]
+
+  | CJSExportDefaultT (_, t) -> [
+      "type", _json_of_t stack cx t
+    ]
+
+  | SummarizeT (_, t) -> [
+      "type", _json_of_t stack cx t
+    ]
+
+  | CallT (_, funtype) -> [
+      "funType", json_of_funtype stack cx funtype
+    ]
+
+  | MethodT (_, name, this, param_types, return_type, closure_id) -> [
+      "name", JString name;
+      "paramTypes", JList (List.map (_json_of_t stack cx) param_types);
+      "returnType", _json_of_t stack cx return_type;
+      "closureId", JInt closure_id
+    ]
+
+  | SetT (_, name, t)
+  | GetT (_, name, t) -> [
+      "propName", JString name;
+      "propType", _json_of_t stack cx t
+    ]
+
+  | SetElemT (_, indext, elemt)
+  | GetElemT (_, indext, elemt) -> [
+      "indexType", _json_of_t stack cx indext;
+      "elemType", _json_of_t stack cx elemt
+    ]
+
+  | ConstructorT (_, tparams, t) -> [
+      "typeParams", JList (List.map (_json_of_t stack cx) tparams);
+      "type", _json_of_t stack cx t
+    ]
+
+  | SuperT (_, instance) -> [
+      "instance", json_of_insttype stack cx instance
+    ]
+
+  | ExtendsT (t1, t2) -> [
+      "type1", _json_of_t stack cx t1;
+      "type2", _json_of_t stack cx t2
+    ]
+
+  | AdderT (_, l, r) -> [
+      "leftType", _json_of_t stack cx l;
+      "rightType", _json_of_t stack cx r
+    ]
+
+  | ComparatorT (_, t) -> [
+      "type", _json_of_t stack cx t
+    ]
+
+  | PredicateT (p, t) -> [
+      "pred", json_of_pred stack cx p;
+      "type", _json_of_t stack cx t
+    ]
+
+  | EqT (_, t) -> [
+      "type", _json_of_t stack cx t
+    ]
+
+  | AndT (_, right, res)
+  | OrT (_, right, res) -> [
+      "rightType", _json_of_t stack cx right;
+      "resultType", _json_of_t stack cx res
+    ]
+
+  | SpecializeT (_, targs, tvar) -> [
+      "types", JList (List.map (_json_of_t stack cx) targs);
+      "tvar", _json_of_t stack cx tvar
+    ]
+
+  | LookupT (_, rstrict, name, t) ->
+    (match rstrict with
+      | None -> []
+      | Some r -> ["strictReason", json_of_reason r]
+    ) @ [
+      "name", JString name;
+      "type", _json_of_t stack cx t
+    ]
+
+  | MarkupT (_, objtype, tvar) -> [
+      "objType", _json_of_t stack cx objtype;
+      "type", _json_of_t stack cx tvar
+    ]
+
+  | ObjAssignT (_, assignee, tvar, prop_names, flag) -> [
+      "assigneeType", _json_of_t stack cx assignee;
+      "resultType", _json_of_t stack cx tvar;
+      "propNames", JList (List.map (fun s -> JString s) prop_names);
+      "flag", JBool flag
+    ]
+
+  | ObjRestT (_, excludes, tvar) -> [
+      "excludedProps", JList (List.map (fun s -> JString s) excludes);
+      "resultType", _json_of_t stack cx tvar;
+    ]
+
+  | ObjSealT (_, t) -> [
+      "type", _json_of_t stack cx t
+    ]
+
+  | UnifyT (t1, t2) -> [
+      "type1", _json_of_t stack cx t1;
+      "type2", _json_of_t stack cx t2
+    ]
+
+  | ConcretizeT (l, todo_list, done_list, u) -> [
+      "inType", _json_of_t stack cx l;
+      "todoTypes", JList (List.map (_json_of_t stack cx) todo_list);
+      "doneTypes", JList (List.map (_json_of_t stack cx) done_list);
+      "absType", _json_of_t stack cx u
+    ]
+
+  | ConcreteT t
+  | KeyT (_, t) -> [
+      "type", _json_of_t stack cx t
+    ]
+
+  | HasT (_, key) -> [
+      "key", JString key
+    ]
+
+  | ElemT (_, base, elem) -> [
+      "baseType", _json_of_t stack cx base;
+      "elemType", _json_of_t stack cx elem
+    ]
+
+  | ImportModuleNsT (_, t)
+  | ExportDefaultT (_, t) -> [
+      "type", _json_of_t stack cx t
+    ]
+))
+
+and json_of_typeparam stack cx tparam = Json.(
+  JAssoc [
+    "reason", json_of_reason tparam.reason;
+    "name", JString tparam.name;
+    "bound", _json_of_t stack cx tparam.bound
+  ]
+)
+
+and json_of_objtype stack cx objtype = Json.(
+  JAssoc ([
+    "flags", json_of_flags objtype.flags;
+  ] @ (match objtype.dict_t with
+    | None -> []
+    | Some d -> ["dictType", json_of_dicttype stack cx d]
+  ) @ [
+    "propTypes",
+      (let tmap = IMap.find_unsafe objtype.props_tmap cx.property_maps in
+      json_of_tmap stack cx tmap);
+    "prototype", _json_of_t stack cx objtype.proto_t
+  ])
+)
+
+and json_of_dicttype stack cx dicttype = Json.(
+  JAssoc (
+    (match dicttype.dict_name with
+    | None -> []
+    | Some name -> ["name", JString name]
+  ) @ [
+    "keyType", _json_of_t stack cx dicttype.key;
+    "valueType", _json_of_t stack cx dicttype.value
+  ])
+)
+
+and json_of_flags flags = Json.(
+  JAssoc ["sealed", JBool flags.sealed; "exact", JBool flags.exact]
+)
+
+and json_of_funtype stack cx funtype = Json.(
+  JAssoc ([
+    "thisType", _json_of_t stack cx funtype.this_t;
+    "paramTypes", JList (List.map (_json_of_t stack cx) funtype.params_tlist)
+  ] @ (match funtype.params_names with
+    | None -> []
+    | Some names -> ["paramNames", JList (List.map (fun s -> JString s) names)]
+  ) @ [
+    "returnType", _json_of_t stack cx funtype.return_t;
+    "closureTypeIndex", JInt funtype.closure_t
+  ])
+)
+
+and json_of_insttype stack cx insttype = Json.(
+  JAssoc [
+    "classId", JInt insttype.class_id;
+    "typeArgs", json_of_tmap stack cx insttype.type_args;
+    "fieldTypes", json_of_tmap stack cx insttype.fields_tmap;
+    "methodTypes", json_of_tmap stack cx insttype.methods_tmap;
+    "mixins", JBool insttype.mixins
+  ]
+)
+
+and json_of_tmap stack cx bindings = Json.(
+  let lst = SMap.fold (fun name t acc ->
+    json_of_type_binding stack cx name t :: acc
+  ) bindings [] in
+  JList (List.rev lst)
+)
+
+and json_of_type_binding stack cx name t = Json.(
+  JAssoc ["name", JString name; "type", _json_of_t stack cx t]
+)
+
+and json_of_pred stack cx p = Json.(
+  JAssoc ([
+    "kind", JString (string_of_pred_ctor p)
+  ] @
+  match p with
+  | AndP (l, r)
+  | OrP (l, r) -> [
+      "left", json_of_pred stack cx l;
+      "right", json_of_pred stack cx r
+    ]
+  | NotP p -> ["pred", json_of_pred stack cx p]
+  | ExistsP -> []
+  | InstanceofP t -> ["type", _json_of_t stack cx t]
+  | ConstructorP t -> ["type ", _json_of_t stack cx t]
+  | IsP s -> ["typeName", JString s]
+))
+
+and json_of_bounds stack cx id = Json.(
+  let stack = ISet.add id stack in
+  match IMap.find_unsafe id cx.graph with
+  | { lower; upper; lowertvars; uppertvars; unifier; solution } ->
+    JAssoc ([] @
+    (if lower = TypeMap.empty then [] else
+      ["lower", json_of_tkeys stack cx lower]) @
+    (if upper = TypeMap.empty then [] else
+      ["upper", json_of_tkeys stack cx upper]) @
+    (if lowertvars = IMap.empty then [] else
+      ["lowertvars", json_of_tvarkeys stack cx lowertvars]) @
+    (if uppertvars = IMap.empty then [] else
+      ["uppertvars", json_of_tvarkeys stack cx uppertvars]) @
+    (match unifier with None -> []
+      | Some u -> ["unifier", JAssoc (match u with
+          | Goto id -> ["goto", JInt id]
+          | Rank i -> ["rank", JInt i]
+        )]) @
+    (match solution with None -> []
+      | Some t -> ["solution", _json_of_t stack cx t])
+  )
+)
+
+and json_of_tkeys stack cx tmap = Json.(
+  JList (TypeMap.fold (fun t _ acc -> _json_of_t stack cx t :: acc) tmap [])
+)
+
+and json_of_tvarkeys stack cx imap = Json.(
+  JList (IMap.fold (fun i _ acc -> JInt i :: acc) imap [])
+)
+
+let json_of_t cx t =
+  _json_of_t ISet.empty cx t
+
+let jstr_of_t cx t =
+  Json.json_to_multiline (json_of_t cx t)
+
+let json_of_graph cx = Json.(
+  let entries = IMap.fold (fun id _ entries ->
+    (spf "%d" id, json_of_bounds ISet.empty cx id) :: entries
+  ) cx.graph [] in
+  JAssoc (List.rev entries)
+)
+
+let jstr_of_graph cx =
+  Json.json_to_multiline (json_of_graph cx)
+
+(****************** end json ******************)
+
 (* debug printer *)
 let rec dump_t cx t =
   dump_t_ ISet.empty cx t

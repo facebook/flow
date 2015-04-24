@@ -1,6 +1,6 @@
 
 named_imports.js:15:21,23: identifier Bar
-Unknown global name
+Could not resolve name
 
 namespace_imports.js:19:2,4: number
 This type is incompatible with
@@ -10,4 +10,10 @@ namespace_imports.js:20:2,4: number
 This type is incompatible with
   namespace_imports.js:20:7,11: Bar
 
-Found 3 errors
+namespace_imports.js:21:1,1: identifier A
+Could not resolve name
+
+namespace_imports.js:25:3,3: identifier B
+Could not resolve name
+
+Found 5 errors

@@ -40,9 +40,7 @@ let make_genv ~multicore options config =
   }
 
 let make_env options config =
-  let nenv = { Naming.empty with
-    Naming.itcopt = ServerConfig.typechecker_options config;
-  } in
+  let nenv = Naming.empty (ServerConfig.typechecker_options config) in
   { nenv;
     files_info     = Relative_path.Map.empty;
     errorl         = [];

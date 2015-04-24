@@ -119,6 +119,22 @@ refinements.js:50:13,17: boolean
 This type is incompatible with
   refinements.js:54:11,16: number
 
+switch.js:3:29,34: number
+This type is incompatible with
+  switch.js:3:38,43: string
+
+switch.js:27:14,20: access of computed property/element
+Computed property/element cannot be accessed on
+  switch.js:23:30,35: number
+
+switch.js:37:14,20: access of computed property/element
+Computed property/element cannot be accessed on
+  switch.js:33:30,35: number
+
+switch.js:43:22,27: string
+This type is incompatible with
+  switch.js:51:15,20: number
+
 typeof.js:5:5,8: access of computed property/element
 Computed property/element cannot be accessed on
   typeof.js:3:17,20: boolean
@@ -191,4 +207,4 @@ void.js:75:7,9: undefined
 This type is incompatible with
   void.js:75:36,45: number
 
-Found 48 errors
+Found 52 errors

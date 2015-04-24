@@ -79,7 +79,7 @@ let default_config = {
   load_script = None;
   load_script_timeout = 0;
   gc_control = GlobalConfig.gc_control;
-  tc_options = TypecheckerOptions.empty;
+  tc_options = TypecheckerOptions.default;
 }
 
 let load_script config = config.load_script

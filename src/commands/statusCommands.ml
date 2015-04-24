@@ -14,87 +14,73 @@ open CommandInfo
 (* flow status (report current error set) command impl *)
 (***********************************************************************)
 
-module Impl (CommandList : COMMAND_LIST) = struct
-
+module type CONFIG = sig
   (* explicit == called with "flow status ..."
      rather than simply "flow ..." *)
-  let parse explicit =
-    let option_values, options = CommandUtils.create_command_options true in
-    let options = CommandUtils.sort_opts options in
-    let usage = match explicit with
-    | true ->
-      Printf.sprintf
-        "Usage: %s status [OPTION]... [ROOT]\n\
-        Shows current Flow errors by asking the Flow server.\n\n\
-        Flow will search upward for a .flowconfig file, beginning at ROOT.\n\
-        ROOT is assumed to be the current directory if unspecified.\n\
-        A server will be started if none is running over ROOT.\n\
-        \n\
-        Status command options:"
-        CommandUtils.exe_name
-    | false ->
-      let command_info = CommandList.commands
-        |> List.map (fun (the_module) ->
-          let module Command = (val the_module : COMMAND) in
-          (Command.name, Command.doc)
-        )
-        |> List.filter (fun (cmd, doc) -> cmd <> "" && doc <> "")
-        |> List.sort (fun (a, _) (b, _) -> String.compare a b)
-      in
+  val explicit : bool
+end
 
-      let col_width = List.fold_left
-        (fun acc (cmd, _) -> max acc (String.length cmd)) 0 command_info in
-      let cmd_usage = command_info
-        |> List.map (fun (cmd, doc) ->
-              Utils.spf "  %-*s  %s" col_width cmd doc
-           )
-        |> String.concat "\n"
-      in
-      Printf.sprintf
-        "Usage: %s [COMMAND] \n\n\
-        Valid values for COMMAND:\n%s\n\n\
-        Default values if unspecified:\n\
-          \ \ COMMAND\
-            \tstatus\n\
-        \n\
-        Status command options:"
-        CommandUtils.exe_name
-        cmd_usage
-    in
-    let args = match explicit with
-      | true ->
-          ClientArgs.parse_without_command options usage "status"
-      | false ->
-          let args = ref [] in
-          Arg.parse (Arg.align options) (fun x -> args := x::!args) usage;
-          List.rev !args
-    in
-    if !(option_values.CommandUtils.version) then (
-      CommandUtils.print_version ();
-      exit 0
-    );
-    let root = match args with
-      | [] -> None
-      | [x] -> Some x
-      | _ ->
-          Arg.usage options usage;
-          exit 2
-    in
-    let root = CommandUtils.guess_root root in
-    let timeout_arg = !(option_values.CommandUtils.timeout) in
-    if timeout_arg > 0 then CommandUtils.set_timeout timeout_arg;
+module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
+
+  let spec = if Config.explicit
+  then
     {
-      ClientEnv.mode = ClientEnv.MODE_STATUS;
-      ClientEnv.root = root;
-      ClientEnv.from = !(option_values.CommandUtils.from);
-      ClientEnv.output_json = !(option_values.CommandUtils.json);
-      ClientEnv.retry_if_init = !(option_values.CommandUtils.retry_if_init);
-      ClientEnv.retries = !(option_values.CommandUtils.retries);
-      ClientEnv.timeout = !CommandUtils.global_kill_time;
-      ClientEnv.autostart = true;
-      ClientEnv.no_load = true;
-    },
-    option_values
+      CommandSpec.
+      name = "status";
+      doc = "(default) Shows current Flow errors by asking the Flow server";
+      usage = Printf.sprintf
+        "Usage: %s status [OPTION]... [ROOT]\n\
+          Shows current Flow errors by asking the Flow server.\n\n\
+          Flow will search upward for a .flowconfig file, beginning at ROOT.\n\
+          ROOT is assumed to be the current directory if unspecified.\n\
+          A server will be started if none is running over ROOT.\n\
+          \n\
+          Status command options:"
+          CommandUtils.exe_name;
+      args = CommandSpec.ArgSpec.(
+        empty
+        |> CommandUtils.server_flags
+        |> CommandUtils.json_flags
+        |> anon "root" (optional string) ~doc:"Root directory"
+      )
+    }
+  else
+    let command_info = CommandList.commands
+      |> List.map (fun (command) ->
+        (CommandSpec.name command, CommandSpec.doc command)
+      )
+      |> List.filter (fun (cmd, doc) -> cmd <> "" && doc <> "")
+      |> List.sort (fun (a, _) (b, _) -> String.compare a b)
+    in
+    let col_width = List.fold_left
+      (fun acc (cmd, _) -> max acc (String.length cmd)) 0 command_info in
+    let cmd_usage = command_info
+      |> List.map (fun (cmd, doc) ->
+            Utils.spf "  %-*s  %s" col_width cmd doc
+         )
+      |> String.concat "\n"
+    in
+    {
+      CommandSpec.
+      name = "default";
+      doc = "";
+      usage = Printf.sprintf
+        "Usage: %s [COMMAND] \n\n\
+          Valid values for COMMAND:\n%s\n\n\
+          Default values if unspecified:\n\
+            \ \ COMMAND\
+              \tstatus\n\
+          \n\
+          Status command options:"
+          CommandUtils.exe_name
+          cmd_usage;
+      args = CommandSpec.ArgSpec.(
+        empty
+        |> CommandUtils.server_flags
+        |> CommandUtils.json_flags
+        |> anon "root" (optional string) ~doc:"Root directory"
+      )
+    }
 
   open ClientEnv
 
@@ -145,7 +131,7 @@ module Impl (CommandList : COMMAND_LIST) = struct
       flush stdout;
       raise ClientExceptions.Server_missing
 
-  let rec main (env, option_values) =
+  let rec main_rec (env, option_values) =
     CommandUtils.check_timeout ();
     try
       (* TODO: This code should really use commandUtils's connect utilities to
@@ -160,7 +146,7 @@ module Impl (CommandList : COMMAND_LIST) = struct
         then (
           Printf.fprintf stderr "Flow server still initializing\n%!";
           CommandUtils.sleep 1;
-          main (env, option_values)
+          main_rec (env, option_values)
         ) else (
           prerr_endline "Flow server still initializing, giving up!";
           exit 2
@@ -182,25 +168,45 @@ module Impl (CommandList : COMMAND_LIST) = struct
       Printf.fprintf stderr "%s\n%!" msg;
       CommandUtils.sleep sleep;
       let retries = env.ClientEnv.retries - 1 in
-      main ({ env with ClientEnv.retries }, option_values)
+      main_rec ({ env with ClientEnv.retries }, option_values)
     end else begin
       Printf.fprintf stderr "Out of retries, exiting!\n%!";
       exit 2
     end
+
+  let main option_values json root () =
+    if !(option_values.CommandUtils.version) then (
+      CommandUtils.print_version ();
+      exit 0
+    );
+
+    let root = CommandUtils.guess_root root in
+    let timeout_arg = !(option_values.CommandUtils.timeout) in
+    if timeout_arg > 0 then CommandUtils.set_timeout timeout_arg;
+    let env = {
+      ClientEnv.mode = ClientEnv.MODE_STATUS;
+      ClientEnv.root = root;
+      ClientEnv.from = !(option_values.CommandUtils.from);
+      ClientEnv.output_json = json;
+      ClientEnv.retry_if_init = !(option_values.CommandUtils.retry_if_init);
+      ClientEnv.retries = !(option_values.CommandUtils.retries);
+      ClientEnv.timeout = !CommandUtils.global_kill_time;
+      ClientEnv.autostart = true;
+      ClientEnv.no_load = true;
+    } in
+    main_rec (env, option_values)
 end
 
-module Status(CommandList : COMMAND_LIST) : COMMAND = struct
-  module Main = Impl (CommandList)
-
-  let name = "status"
-  let doc = "(default) Shows current Flow errors by asking the Flow server"
-  let run () = Main.main (Main.parse true)
+module Status(CommandList : COMMAND_LIST) = struct
+  module Main = Impl (CommandList) (struct let explicit = true end)
+  let command = CommandSpec.command
+    Main.spec
+    (CommandUtils.collect_server_flags Main.main)
 end
 
-module Default(CommandList : COMMAND_LIST) : COMMAND = struct
-  module Main = Impl (CommandList)
-
-  let name = ""
-  let doc = ""
-  let run () = Main.main (Main.parse false)
+module Default(CommandList : COMMAND_LIST) = struct
+  module Main = Impl (CommandList) (struct let explicit = false end)
+  let command = CommandSpec.command
+    Main.spec
+    (CommandUtils.collect_server_flags Main.main)
 end
