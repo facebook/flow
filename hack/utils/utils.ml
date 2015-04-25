@@ -29,14 +29,68 @@ let dn s =
     flush stdout;
   end
 
+module Show_hashtbl = struct
+  module Generic
+    (K : Deriving_Show.Show)
+    (V : Deriving_Show.Show)
+    : Deriving_Show.Show with type a = (K.a, V.a) Hashtbl.t =
+  Deriving_Show.Defaults(
+    struct
+      type a = (K.a, V.a) Hashtbl.t
+      let format formatter tbl =
+        Format.pp_open_box formatter 0;
+        Format.pp_print_string formatter "{";
+        Hashtbl.iter (fun key value ->
+                        Format.pp_open_box formatter 0;
+                        K.format formatter key;
+                        Format.pp_print_string formatter " => ";
+                        V.format formatter value;
+                        Format.fprintf formatter ";@;";
+                        Format.pp_close_box formatter ();
+                     ) tbl;
+        Format.pp_print_string formatter "}";
+        Format.pp_close_box formatter ();
+    end)
+  module Functorial
+    (H : Hashtbl.HashedType)
+    (K : Deriving_Show.Show with type a = H.t)
+    (V : Deriving_Show.Show)
+    : Deriving_Show.Show with type a = V.a Hashtbl.Make(H).t =
+  Deriving_Show.Defaults(
+    struct
+      module T = Hashtbl.Make(H)
+      type a = V.a T.t
+      let format formatter tbl =
+        Format.pp_open_box formatter 0;
+        Format.pp_print_string formatter "{";
+        T.iter (fun key value ->
+                  Format.pp_open_box formatter 0;
+                  K.format formatter key;
+                  Format.pp_print_string formatter " => ";
+                  V.format formatter value;
+                  Format.fprintf formatter ";@;";
+                  Format.pp_close_box formatter ();
+               ) tbl;
+        Format.pp_print_string formatter "}";
+        Format.pp_close_box formatter ();
+    end)
+  end
+
+module type MapOrderedType = sig
+  include Map.OrderedType
+  module Show_t: Deriving_Show.Show with type a = t
+end
+
 module String = struct
   include String
+  module Show_t = Deriving_Show.Show_string
   let to_string x = x
 end
 
 module type MapSig = sig
   type +'a t
   type key
+  module Show_t: functor (V: Deriving_Show.Show) -> Deriving_Show.Show with type a = V.a t
 
   val empty: 'a t
   val singleton: key -> 'a -> 'a t
@@ -67,10 +121,12 @@ module type MapSig = sig
   val elements: 'a t -> (key * 'a) list
 end
 
-module MyMap: functor (Ord: Map.OrderedType)
+module MyMap: functor (Ord: MapOrderedType)
 -> MapSig with type key = Ord.t
-= functor (Ord: Map.OrderedType) -> struct
+= functor (Ord: MapOrderedType) -> struct
     include Map.Make(Ord)
+    module Show_t = Deriving_Show.Show_map (Ord) (Ord.Show_t)
+
     let get x t =
       try Some (find x t) with Not_found -> None
 
@@ -101,10 +157,32 @@ module MyMap: functor (Ord: Map.OrderedType)
 
   end
 
+module type SetOrderedType = sig
+  include Map.OrderedType
+  module Show_t: Deriving_Show.Show with type a = t
+end
+
+module type SetSig = sig
+  include Set.S
+  module Show_t: Deriving_Show.Show with type a = t
+end
+
+module MySet: functor (Ord: SetOrderedType)
+-> SetSig with type elt = Ord.t
+= functor (Ord: SetOrderedType) -> struct
+  include Set.Make(Ord)
+  module Show_t = Deriving_Show.Show_set (Ord) (Ord.Show_t)
+end
+
+module MyHashtbl = struct
+  include Hashtbl
+  module Show_t = Show_hashtbl.Generic
+end
+
 module SMap = MyMap(String)
 module IMap = MyMap(Ident)
-module ISet = Set.Make(Ident)
-module SSet = Set.Make(String)
+module ISet = MySet(Ident)
+module SSet = MySet(String)
 module CSet = Set.Make(Char)
 module Map = struct end
 
