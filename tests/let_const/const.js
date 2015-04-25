@@ -1,10 +1,13 @@
-function basic(): string {
-  const foo = "foo";
-  return foo;
-}
+/* TODO: function singleAssignment() {
+  const foo = "foo"
+  foo = "bar" // error
+} */
 
-function isBlockScoped(): string {
-  const foo = "foo";
-  { const foo = 1 };
-  return foo;
-}
+/* TODO: function singleDeclaration() {
+  const foo = "foo"
+  const foo = "bar" // error
+} */
+
+/* TODO: function requiresInitializer() {
+  const foo; // error
+} */
