@@ -11,19 +11,32 @@
 open Utils
 open Typing_defs
 
-module Class : sig type t = class_type val prefix : Prefix.t end
-module Fun : sig type t = fun_type val prefix : Prefix.t end
+module Class :
+  sig
+    type t = class_type with show
+    val prefix : Prefix.t
+  end
+module Fun :
+  sig
+    type t = fun_type with show
+    val prefix : Prefix.t
+  end
 module Typedef :
   sig
-    type visibility = Public | Private
+    type visibility = Public | Private with show
     type tdef =
         visibility * tparam list * ty option *
         ty * Pos.t
-    type tdef_or_error = Error | Ok of tdef
-    type t = tdef_or_error
+        with show
+    type tdef_or_error = Error | Ok of tdef with show
+    type t = tdef_or_error with show
     val prefix : Prefix.t
   end
-module GConst : sig type t = ty val prefix : Prefix.t end
+module GConst :
+  sig
+    type t = ty with show
+    val prefix : Prefix.t
+  end
 
 module Funs : module type of SharedMem.WithCache (String) (Fun)
 module Classes : module type of SharedMem.WithCache (String) (Class)

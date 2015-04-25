@@ -17,6 +17,7 @@ type level =
   | Partial   (* Partially checked code, e.g. array, Awaitable<_> with no
                  concrete type parameters *)
   | Checked   (* Completely checked code *)
+  with show
 
 let string_of_level = function
   | Checked   -> "checked"
@@ -24,7 +25,7 @@ let string_of_level = function
   | Unchecked -> "unchecked"
 
 module CLMap = MyMap(struct
-  type t = level
+  type t = level with show
   let compare x y = Pervasives.compare x y
 end)
 

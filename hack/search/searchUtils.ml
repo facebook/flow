@@ -11,7 +11,7 @@
 (* Shared Search code between Fuzzy and Trie based searches *)
 
 module type Searchable = sig
-  type t
+  type t with show
   val fuzzy_types : t list
   val compare_result_type : t -> t -> int
 end
@@ -21,6 +21,6 @@ type ('a, 'b) term = {
   name: string;
   pos: 'a;
   result_type: 'b;
-}
+} with show
 
 let to_absolute t = { t with pos = Pos.to_absolute t.pos }

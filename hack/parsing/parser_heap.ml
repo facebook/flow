@@ -15,7 +15,7 @@
 (*****************************************************************************)
 
 module HH_FIXMES = SharedMem.WithCache (Relative_path.S) (struct
-  type t = Pos.t Utils.IMap.t Utils.IMap.t
+  type t = Pos.t Utils.IMap.t Utils.IMap.t with show
   let prefix = Prefix.make()
 end)
 
@@ -47,7 +47,7 @@ let () =
 (*****************************************************************************)
 
 module ParserHeap = SharedMem.NoCache (Relative_path.S) (struct
-    type t = Ast.program
+    type t = Ast.program with show
     let prefix = Prefix.make()
   end)
 

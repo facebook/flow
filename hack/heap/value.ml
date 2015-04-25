@@ -19,7 +19,7 @@
 (*****************************************************************************)
 
 module type Type = sig
-  type t
+  type t with show
   val prefix: Prefix.t
 end
 

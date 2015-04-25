@@ -24,7 +24,7 @@ type results =
 
 (* shared heap for parsed ASTs by filename *)
 module ParserHeap = SharedMem.WithCache (String) (struct
-    type t = Spider_monkey_ast.program
+    type t = Spider_monkey_ast.program with show
     let prefix = Prefix.make()
   end)
 

@@ -10,10 +10,10 @@
 
 external hh_counter_next : unit -> int = "hh_counter_next"
 
-type t = int
+type t = int with show
 
 module IMap = Map.Make (struct 
-  type t = int 
+  type t = int with show
   let compare = (-) 
 end)
 
@@ -64,7 +64,7 @@ let expand_name md x =
   let md_name = IMap.find md !trace in
   origin_id := IMap.add x md !origin_id ;
   origin := IMap.add x md_name !origin 
- 
+
 let debug x =
   try IMap.find x !trace^"["^string_of_int x^"]"
   with Not_found -> "v["^string_of_int x^"]"

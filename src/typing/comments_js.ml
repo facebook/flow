@@ -23,7 +23,7 @@ let string_of_span span = Ast.Loc.(
 )
 
 module SpanMap : MapSig with type key = Ast.Loc.t = MyMap(struct
-  type t = Ast.Loc.t
+  type t = Ast.Loc.t with show
   let poscmp p0 p1 = Ast.Loc.(
     match Pervasives.compare p0.line p1.line with
       | 0 -> Pervasives.compare p0.column p1.column

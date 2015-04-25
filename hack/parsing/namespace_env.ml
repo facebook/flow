@@ -11,6 +11,6 @@
 type env = {
   ns_uses: string Utils.SMap.t;
   ns_name: string option;
-}
+} with show
 
 let empty = { ns_uses = Utils.SMap.empty; ns_name = None }

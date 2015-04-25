@@ -27,7 +27,7 @@ type reason = {
   derivable: bool;
   desc: string;
   pos: Pos.t;
-}
+} with show
 
 let lexpos file line col = {
   Lexing.pos_fname = file;

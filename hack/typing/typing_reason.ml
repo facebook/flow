@@ -59,6 +59,7 @@ type t =
   | Rtype_access     of t * string list * t
   | Rexpr_dep_type   of t * Pos.t * string
   | Rnullsafe_op     of Pos.t (* ?-> operator is used *)
+  with show
 
 (* Translate a reason to a (pos, string) list, suitable for error_l. This
  * previously returned a string, however the need to return multiple lines with

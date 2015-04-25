@@ -33,7 +33,7 @@ type info = {
   require_loc: Spider_monkey_ast.Loc.t SMap.t;  (* statement locations *)
   strict_required: SSet.t;  (* strict requires (flow to export types) *)
   checked: bool;            (* in flow? *)
-}
+} with show
 
 type mode = ModuleMode_Checked | ModuleMode_Weak | ModuleMode_Unchecked
 
@@ -41,7 +41,7 @@ type mode = ModuleMode_Checked | ModuleMode_Weak | ModuleMode_Unchecked
 
 (* map from module name to filename *)
 module NameHeap = SharedMem.WithCache (String) (struct
-  type t = string
+  type t = string with show
   let prefix = Prefix.make()
 end)
 
@@ -49,7 +49,7 @@ end)
 (* note: currently we may have many files for one module name.
    this is an issue. *)
 module InfoHeap = SharedMem.WithCache (String) (struct
-  type t = info
+  type t = info with show
   let prefix = Prefix.make()
 end)
 
@@ -86,13 +86,13 @@ let parse_flow = parse_header parse_attributes_flow ModuleMode_Unchecked
 
 (* shared heap for package.json tokens by filename *)
 module PackageHeap = SharedMem.WithCache (String) (struct
-    type t = Spider_monkey_ast.Expression.t SMap.t
+    type t = Spider_monkey_ast.Expression.t SMap.t with show
     let prefix = Prefix.make()
   end)
 
 (* shared heap for package.json directories by package name *)
 module ReversePackageHeap = SharedMem.WithCache (String) (struct
-    type t = string
+    type t = string with show
     let prefix = Prefix.make()
   end)
 

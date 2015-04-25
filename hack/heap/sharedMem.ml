@@ -258,7 +258,7 @@ end
 module type S = sig
   type key
   type t
-  module KeySet : Set.S with type elt = key
+  module KeySet : SetSig with type elt = key
   module KeyMap : MapSig with type key = key
 
   val add              : key -> t -> unit
@@ -279,7 +279,7 @@ end
 (*****************************************************************************)
 
 module type UserKeyType = sig
-  type t
+  type t with show
   val to_string : t -> string
   val compare : t -> t -> int
 end
@@ -293,11 +293,11 @@ module NoCache (UserKeyType : UserKeyType) (Value : Value.Type) = struct
   module Key = KeyFunctor (UserKeyType)
   module New = New (Key) (Value)
   module Old = Old (Key) (Value)
-  module KeySet = Set.Make (UserKeyType)
+  module KeySet = MySet (UserKeyType)
   module KeyMap = MyMap (UserKeyType)
 
   type key = UserKeyType.t
-  type t = Value.t
+  type t = Value.t with show
 
   let add x y = New.add (Key.make Value.prefix x) y
   let find_unsafe x = New.find_unsafe (Key.make Value.prefix x)
@@ -542,7 +542,7 @@ module WithCache (UserKeyType : UserKeyType) (Value:Value.Type) = struct
 
   module New = New (Key) (Value)
   module Old = Old (Key) (Value)
-  module KeySet = Set.Make (UserKeyType)
+  module KeySet = MySet (UserKeyType)
   module KeyMap = MyMap (UserKeyType)
 
   module Direct = NoCache (UserKeyType) (Value)

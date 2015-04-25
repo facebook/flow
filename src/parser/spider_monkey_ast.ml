@@ -18,13 +18,13 @@ module Loc = struct
     line: int;
     column: int;
     offset: int;
-  }
+  } with show
 
   type t = {
     source: string option;
     start: position;
     _end: position;
-  }
+  } with show
 
   let none = {
     source = None;
@@ -549,6 +549,7 @@ and Statement : sig
     | DeclareModule of DeclareModule.t
     | ExportDeclaration of ExportDeclaration.t
     | ImportDeclaration of ImportDeclaration.t
+  with show
 end = Statement
 
 and Expression : sig
@@ -845,6 +846,7 @@ and Expression : sig
     | JSXElement of JSX.element
     | Class of Expression.Class.t
     | TypeCast of TypeCast.t
+  with show
 end = Expression
 
 and JSX : sig
@@ -1002,6 +1004,7 @@ and Comment : sig
   and t' =
     | Block of string
     | Line of string
+  with show
 end = Comment
 
-type program = Loc.t * Statement.t list * Comment.t list
+type program = Loc.t * Statement.t list * Comment.t list with show

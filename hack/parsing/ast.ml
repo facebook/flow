@@ -17,18 +17,20 @@ type cst_kind =
   | Cst_define
   (* The constant was introduced with: const X = ...; *)
   | Cst_const
+  with show
 
 (*****************************************************************************)
 (* The Abstract Syntax Tree *)
 (*****************************************************************************)
 
-type id = Pos.t * string
-type pstring = Pos.t * string
+type id = Pos.t * string with show
+type pstring = Pos.t * string with show
 
 type variance =
   | Covariant
   | Contravariant
   | Invariant
+  with show
 
 type program = def list
 
@@ -340,6 +342,7 @@ and field = expr * expr
 
 and attr = id * expr
 
+with show
  (* with tarzan *)
 
 type any =

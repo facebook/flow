@@ -14,8 +14,8 @@ open Reason_js
 val assert_false: string -> 'a
 val __DEBUG__: ?s: string -> (unit -> 'a) -> 'a
 
-type ident = int
-type name = string
+type ident = int with show
+type name = string with show
 
 (**************************************************)
 
@@ -167,6 +167,8 @@ module Type :
     and super = t
     and fields = t SMap.t
     and methods = t SMap.t
+    with show
+
     val compare : 'a -> 'a -> int
 
     val open_tvar: t -> (reason * ident)
@@ -206,6 +208,7 @@ type rule =
   | LibMethod of string
   | FunStatics
   | ClassStatics
+  with show
 
 type link = private
   | Node of Type.t
@@ -245,6 +248,7 @@ module VoidT: PrimitiveT
 type unifier =
 | Goto of ident
 | Rank of int
+with show
 
 type bounds = {
   mutable lower: trace TypeMap.t;
@@ -253,7 +257,7 @@ type bounds = {
   mutable uppertvars: trace IMap.t;
   mutable unifier: unifier option;
   mutable solution: Type.t option;
-}
+} with show
 
 val new_bounds: int -> reason -> bounds
 val copy_bounds: bounds -> bounds
@@ -265,9 +269,9 @@ type block_entry = {
   general: Type.t;
   def_loc: Spider_monkey_ast.Loc.t option;
   for_type: bool;
-}
-type block = block_entry SMap.t ref
-type stack = int list
+} with show
+type block = block_entry SMap.t ref with show
+type stack = int list with show
 
 val create_env_entry :
   ?for_type: bool ->
@@ -296,9 +300,9 @@ type context = {
   mutable errors: Errors_js.ErrorSet.t;
   mutable globals: SSet.t;
 
-  type_table: (Spider_monkey_ast.Loc.t, Type.t) Hashtbl.t;
-  annot_table: (Pos.t, Type.t) Hashtbl.t;
-}
+  type_table: (Spider_monkey_ast.Loc.t, Type.t) MyHashtbl.t;
+  annot_table: (Pos.t, Type.t) MyHashtbl.t;
+} with show
 
 val new_context: string -> string -> context
 

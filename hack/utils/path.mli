@@ -9,7 +9,10 @@
  *)
 
 
-type path
+type path = private {
+  is_normalized: bool;
+  path: string;
+} with show
 
 val dummy_path: path
 val mk_path: string -> path

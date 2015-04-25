@@ -14,17 +14,17 @@ module Make(S : SearchUtils.Searchable) = struct
 
 open SearchUtils
 
-type search_result_type = S.t
+type search_result_type = S.t with show
 
 let all_types = S.fuzzy_types
 
 module TMap = MyMap(struct
-  type t = search_result_type
+  type t = search_result_type with show
   let compare = S.compare_result_type
 end)
 
-type type_to_key_to_term_list = (Pos.t, S.t) term list SMap.t TMap.t
-type type_to_keyset = SSet.t TMap.t
+type type_to_key_to_term_list = (Pos.t, S.t) term list SMap.t TMap.t with show
+type type_to_keyset = SSet.t TMap.t with show
 
 (* Note only shared memory is modified within workers - and the keys are files
  * so that no two workers will modify the same key at the same time. *)
@@ -44,7 +44,7 @@ type type_to_keyset = SSet.t TMap.t
  * }
  *)
 module SearchKeys = SharedMem.NoCache (Relative_path.S) (struct
-  type t = type_to_keyset
+  type t = type_to_keyset with show
   let prefix = Prefix.make()
 end)
 
@@ -67,7 +67,7 @@ end)
  * }
  *)
 module SearchKeyToTermMap = SharedMem.WithCache (Relative_path.S) (struct
-  type t = type_to_key_to_term_list
+  type t = type_to_key_to_term_list with show
   let prefix = Prefix.make()
 end)
 

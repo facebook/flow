@@ -25,21 +25,21 @@
 open Utils
 
 module ClassHeap = SharedMem.NoCache (String) (struct
-  type t = Nast.class_
+  type t = Nast.class_ with show
   let prefix = Prefix.make()
 end)
 
 module FunHeap = SharedMem.NoCache (String) (struct
-  type t = Nast.fun_
+  type t = Nast.fun_ with show
   let prefix = Prefix.make()
 end)
 
 module TypedefHeap = SharedMem.NoCache (String) (struct
-  type t = Nast.typedef
+  type t = Nast.typedef with show
   let prefix = Prefix.make()
 end)
 
 module ConstHeap = SharedMem.NoCache (String) (struct
-  type t = Nast.gconst
+  type t = Nast.gconst with show
   let prefix = Prefix.make()
 end)

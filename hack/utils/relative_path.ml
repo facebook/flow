@@ -14,6 +14,7 @@ type prefix =
   | Root
   | Hhi
   | Dummy
+  with show
 
 let root = ref None
 let hhi = ref None
@@ -42,7 +43,7 @@ let set_path_prefix prefix v =
   | Dummy -> raise (Failure "Dummy is always represented by an empty string")
   | _ -> path_ref_of_prefix prefix := Some v
 
-type t = prefix * string
+type t = prefix * string with show
 
 let prefix (p : t) = fst p
 
@@ -51,8 +52,8 @@ let suffix (p : t) = snd p
 let default = (Dummy, "")
 
 module S = struct
-  type path = t
-  type t = path
+  type path = t with show
+  type t = path with show
 
   let compare = Pervasives.compare
 

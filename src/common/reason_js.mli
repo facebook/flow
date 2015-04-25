@@ -14,7 +14,7 @@ type reason = private {
   derivable: bool;
   desc: string;
   pos: Pos.t;
-}
+} with show
 
 val lexpos: string -> int -> int -> Lexing.position
 

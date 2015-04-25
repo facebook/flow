@@ -26,13 +26,13 @@ module Dep = Typing_deps.Dep
 
 (* Module used to represent serialized classes *)
 module Class = struct
-  type t = Typing_defs.class_type
+  type t = Typing_defs.class_type with show
   let prefix = Prefix.make()
 end
 
 (* a function type *)
 module Fun = struct
-  type t = Typing_defs.fun_type
+  type t = Typing_defs.fun_type with show
   let prefix = Prefix.make()
 end
 
@@ -41,19 +41,22 @@ module Typedef = struct
   type visibility =
     | Public
     | Private
+    with show
 
   type tdef = visibility * Typing_defs.tparam list * ty option * ty * Pos.t
+    with show
 
   type tdef_or_error =
     | Error
     | Ok of tdef
+    with show
 
-  type t = tdef_or_error
+  type t = tdef_or_error with show
   let prefix = Prefix.make()
 end
 
 module GConst = struct
-  type t = ty
+  type t = ty with show
   let prefix = Prefix.make()
 end
 

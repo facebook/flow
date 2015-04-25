@@ -18,13 +18,13 @@ module Make(S : SearchUtils.Searchable) = struct
     * of our index. Indexed on file name. Cached because we read from here
     * every time the user searches *)
   module SearchUpdates = SharedMem.WithCache (Relative_path.S) (struct
-    type t = (string * (Pos.t, S.t) term) list
+    type t = (string * (Pos.t, S.t) term) list with show
     let prefix = Prefix.make()
   end)
   (* Maps file name to a list of keys that the file has results for *)
   (* This is only read once per update, so cache gives us no advantage *)
   module SearchKeys = SharedMem.NoCache (Relative_path.S) (struct
-    type t = string list
+    type t = string list with show
     let prefix = Prefix.make()
   end)
 

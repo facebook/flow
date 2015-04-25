@@ -32,6 +32,7 @@ type mode =
   | Mdecl    (* just declare signatures, don't check anything *)
   | Mstrict  (* check everthing! *)
   | Mpartial (* Don't fail if you see a function/class you don't know *)
+  with show
 
 (*****************************************************************************)
 (* The record produced by the parsing phase. *)

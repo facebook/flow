@@ -17,6 +17,7 @@ type visibility =
   | Vpublic
   | Vprivate of string
   | Vprotected of string
+  with show
 
 (* All the possible types, reason is a trace of why a type
    was inferred in a certain way.
@@ -268,6 +269,8 @@ and enum_type = {
 }
 
 and tparam = Ast.variance * Ast.id * (Ast.constraint_kind * ty) option
+
+with show
 
 (* The identifier for this *)
 let this = Ident.make "$this"

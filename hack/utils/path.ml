@@ -12,7 +12,7 @@
 type path = {
   is_normalized: bool;
   path: string;
-}
+} with show
 
 let dummy_path: path = { is_normalized = true; path = ""; }
 

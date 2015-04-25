@@ -75,7 +75,7 @@ val invalidate_caches: unit -> unit
 module type S = sig
   type key
   type t
-  module KeySet : Set.S with type elt = key
+  module KeySet : SetSig with type elt = key
   module KeyMap : MapSig with type key = key
 
   (* Safe for concurrent writes, the first writer wins, the second write
@@ -109,7 +109,7 @@ module type S = sig
 end
 
 module type UserKeyType = sig
-  type t
+  type t with show
   val to_string : t -> string
   val compare : t -> t -> int
 end
@@ -119,7 +119,7 @@ module NoCache :
   functor (Value:Value.Type) ->
   S with type t = Value.t
     and type key = UserKeyType.t
-    and module KeySet = Set.Make (UserKeyType)
+    and module KeySet = MySet (UserKeyType)
     and module KeyMap = MyMap (UserKeyType)
 
 module WithCache :
@@ -127,5 +127,5 @@ module WithCache :
   functor (Value:Value.Type) ->
   S with type t = Value.t
     and type key = UserKeyType.t
-    and module KeySet = Set.Make (UserKeyType)
+    and module KeySet = MySet (UserKeyType)
     and module KeyMap = MyMap (UserKeyType)

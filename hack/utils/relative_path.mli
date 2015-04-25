@@ -14,17 +14,18 @@ type prefix =
   | Root
   | Hhi
   | Dummy
+  with show
 
 val path_of_prefix : prefix -> string
 val set_path_prefix : prefix -> string -> unit
 
 module S : sig
-  type t = prefix * string
+  type t = prefix * string with show
   val compare : t -> t -> int
   val to_string : t -> string
 end
 
-type t = S.t
+type t = S.t with show
 
 val default : t
 (* Checks that string indeed has the given prefix before constructing path *)

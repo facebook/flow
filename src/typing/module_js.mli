@@ -17,7 +17,7 @@ type info = {
   require_loc: Spider_monkey_ast.Loc.t SMap.t;  (* statement locations *)
   strict_required: SSet.t;  (* strict requires (flow to export types) *)
   checked: bool;            (* in flow? *)
-}
+} with show
 
 type mode = ModuleMode_Checked | ModuleMode_Weak | ModuleMode_Unchecked
 

@@ -17,9 +17,10 @@ type search_result_type =
   | Function
   | Typedef
   | Constant
+  with show
 
 module SS = SearchService.Make(struct
-  type t = search_result_type
+  type t = search_result_type with show
   let fuzzy_types = [Class Ast.Cnormal; Function; Constant; Typedef]
   let type_num = function
     | Class _ -> 0

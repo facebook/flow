@@ -51,8 +51,8 @@ module Ast = Spider_monkey_ast
    implementation of the subtyping algorithm, that effectively constructs a
    proof of the typing derivation based on these reasons as axioms. *)
 
-type ident = int
-type name = string
+type ident = int with show
+type name = string with show
 
 module Type = struct
   type t =
@@ -270,6 +270,8 @@ module Type = struct
 
   and methods = t SMap.t
 
+  with show
+
   let compare = Pervasives.compare
 
   let open_tvar tvar =
@@ -317,6 +319,7 @@ type rule =
   | LibMethod of string
   | FunStatics
   | ClassStatics
+  with show
 
 (* These strings should be read as answering *)
 let string_of_rule = function
@@ -353,6 +356,8 @@ type link =
   | Embed of rule * trace
 
 and trace = Type.t * link list * Type.t
+
+with show
 
 (* ------------- *)
 
@@ -461,6 +466,7 @@ end)
 type unifier =
 | Goto of ident
 | Rank of int
+with show
 
 type bounds = {
   mutable lower: trace TypeMap.t;
@@ -472,7 +478,7 @@ type bounds = {
   mutable unifier: unifier option;
   (* indicates whether the type variable is resolved to some type *)
   mutable solution: Type.t option;
-}
+} with show
 
 let new_bounds id reason =
   let tvar = OpenT (reason, id) in {
@@ -493,9 +499,9 @@ type block_entry = {
   general: Type.t;
   def_loc: Spider_monkey_ast.Loc.t option;
   for_type: bool;
-}
-type block = block_entry SMap.t ref
-type stack = int list
+} with show
+type block = block_entry SMap.t ref with show
+type stack = int list with show
 
 let create_env_entry ?(for_type=false) specific general loc =
   {
@@ -551,9 +557,9 @@ type context = {
   mutable errors: Errors_js.ErrorSet.t;
   mutable globals: SSet.t;
 
-  type_table: (Spider_monkey_ast.Loc.t, Type.t) Hashtbl.t;
-  annot_table: (Pos.t, Type.t) Hashtbl.t;
-}
+  type_table: (Spider_monkey_ast.Loc.t, Type.t) MyHashtbl.t;
+  annot_table: (Pos.t, Type.t) MyHashtbl.t;
+} with show
 
 let new_context file _module = {
   file = file;

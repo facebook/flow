@@ -60,9 +60,9 @@ let print_error_color (e:Errors.error) =
   print_reason_color ~first:true (List.hd e);
   List.iter (print_reason_color ~first:false) (List.tl e)
 
-type level = ERROR | WARNING
+type level = ERROR | WARNING with show
 
-type error = level * (Reason_js.reason * string) list
+type error = level * (Reason_js.reason * string) list with show
 
 let file_of_error err =
   let _, messages = err in
@@ -104,13 +104,13 @@ let compare =
     compare_message_lists ml1 ml2 (fun () -> 0)
 
 module Error = struct
-  type t = error
+  type t = error with show
   let compare = compare
 end
 
 (* we store errors in sets, currently, because distinct
    traces may share endpoints, and produce the same error *)
-module ErrorSet = Set.Make(Error)
+module ErrorSet = Utils.MySet(Error)
 
 (******* TODO move to hack structure throughout ********)
 

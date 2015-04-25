@@ -22,7 +22,7 @@ type options = {
 
 module PathMap : MapSig with type key = Path.path
 = MyMap(struct
-  type t = Path.path
+  type t = Path.path with show
   let compare p1 p2 =
     String.compare (Path.string_of_path p1) (Path.string_of_path p2)
 end)

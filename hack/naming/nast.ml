@@ -12,22 +12,24 @@ open Utils
 
 module SN = Naming_special_names
 
-type id = Pos.t * Ident.t
-type sid = Pos.t * string
-type pstring = Pos.t * string
+type id = Pos.t * Ident.t with show
+type sid = Pos.t * string with show
+type pstring = Pos.t * string with show
 
-type is_terminal = bool
+type is_terminal = bool with show
 
 type call_type =
   | Cnormal    (* when the call looks like f() *)
   | Cuser_func (* when the call looks like call_user_func(...) *)
+  with show
 
 type shape_field_name =
   | SFlit of pstring
   | SFclass_const of sid * pstring
+  with show
 
 module ShapeField = struct
-  type t = shape_field_name
+  type t = shape_field_name with show
   (* We include span information in shape_field_name to improve error
    * messages, but we don't want it being used in the comparison, so
    * we have to write our own compare. *)
@@ -332,6 +334,8 @@ and special_func =
   | Genva of expr list
   | Gen_array_rec of expr
   | Gen_array_va_rec of expr list
+
+with show
 
 type def =
  | Fun of fun_

@@ -78,7 +78,7 @@ let init_modes opts =
 
 (* map from file names to contexts *)
 module ContextHeap = SharedMem.NoCache (String) (struct
-  type t = context
+  type t = context with show
   let prefix = Prefix.make()
 end)
 

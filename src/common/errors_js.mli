@@ -16,7 +16,7 @@ val print_error_color: Errors.error -> unit
 
 type level = ERROR | WARNING
 
-type error = level * (Reason_js.reason * string) list
+type error = level * (Reason_js.reason * string) list with show
 
 val file_of_error : error -> string
 
@@ -24,13 +24,13 @@ val pos_to_json : Pos.t -> (string * Hh_json.json) list
 
 module Error :
   sig
-    type t = error
+    type t = error with show
     val compare : error -> error -> int
   end
 
 (* we store errors in sets, currently, because distinct
    traces may share endpoints, and produce the same error *)
-module ErrorSet : Set.S with type elt = error
+module ErrorSet : Utils.SetSig with type elt = error
 
 (******* TODO move to hack structure throughout ********)
 

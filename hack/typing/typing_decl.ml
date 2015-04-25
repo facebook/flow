@@ -38,7 +38,7 @@ module SN = Naming_special_names
 (*****************************************************************************)
 
 module ClassStatus = SharedMem.NoCache (String) (struct
-  type t = unit
+  type t = unit with show
   let prefix = Prefix.make()
 end)
 
