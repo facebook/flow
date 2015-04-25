@@ -11,16 +11,51 @@
 open Lexing
 open Utils
 
+(*let _ = fun (_ : position) -> ()
+
+module Show_position : Deriving_Show.Show with type a = position =
+  Deriving_Show.Defaults
+    (struct
+      type a = position
+
+      let format formatter : a -> unit =
+        fun {
+          pos_fname = pos_fname;
+          pos_lnum = pos_lnum;
+          pos_bol = pos_bol;
+          pos_cnum = pos_cnum
+        }
+        ->
+        Format.pp_open_hovbox formatter 0;
+        Format.pp_print_char formatter '{';
+        Format.pp_print_string formatter "pos_fname = ";
+        Deriving_Show.Show_string.format formatter pos_fname;
+        Format.pp_print_string formatter "; ";
+        Format.pp_print_string formatter "pos_lnum = ";
+        Deriving_Show.Show_int.format formatter pos_lnum;
+        Format.pp_print_string formatter "; ";
+        Format.pp_print_string formatter "pos_bol = ";
+        Deriving_Show.Show_int.format formatter pos_bol;
+        Format.pp_print_string formatter "; ";
+        Format.pp_print_string formatter "pos_cnum = ";
+        Deriving_Show.Show_int.format formatter pos_cnum;
+        Format.pp_print_char formatter '}';
+        Format.pp_close_box formatter ()
+
+      let _ = format
+
+    end)
+ *)
 (* Note: While Pos.string prints out positions as closed intervals, pos_start
  * and pos_end actually form a half-open interval (i.e. pos_end points to the
  * character *after* the last character of the relevant lexeme.) *)
 type 'a pos = {
   pos_file: 'a ;
-  pos_start: Lexing.position ;
-  pos_end: Lexing.position ;
-}
+  pos_start: position ;
+  pos_end: position ;
+} with show
 
-type t = Relative_path.t pos
+type t = (Relative_path.t pos) with show
 
 type absolute = string pos
 
@@ -67,7 +102,7 @@ let inside p line char_pos =
     else if line = last_line then char_pos <= (p.pos_end.pos_cnum - p.pos_end.pos_bol)
     else line > first_line && line < last_line
 
-let make file (lb:Lexing.lexbuf) =
+let make file (lb:lexbuf) =
   let pos_start = lexeme_start_p lb in
   let pos_end = lexeme_end_p lb in
   { pos_file = file;
@@ -76,7 +111,7 @@ let make file (lb:Lexing.lexbuf) =
   }
 
 let make_from file =
-  let pos = Lexing.dummy_pos in
+  let pos = dummy_pos in
   { pos_file = file;
     pos_start = pos;
     pos_end = pos;
@@ -113,9 +148,9 @@ let compare x y =
        (fun x y -> compare x.pos_end.pos_cnum y.pos_end.pos_cnum)]
 
 module Map = MyMap (struct
-  type path = t
+  type path = t with show
   (* The definition below needs to refer to the t in the outer scope, but MyMap
    * expects a module with a type of name t, so we define t in a second step *)
-  type t = path
+  type t = path with show
   let compare = compare
 end)
