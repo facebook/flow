@@ -8,6 +8,6 @@
   const foo = "bar" // error
 } */
 
-/* TODO: function requiresInitializer() {
+function requiresInitializer() {
   const foo; // error
-} */
+}
