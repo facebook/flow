@@ -11,7 +11,7 @@
 open Lexing
 open Utils
 
-(*let _ = fun (_ : position) -> ()
+let _ = fun (_ : position) -> ()
 
 module Show_position : Deriving_Show.Show with type a = position =
   Deriving_Show.Defaults
@@ -45,7 +45,7 @@ module Show_position : Deriving_Show.Show with type a = position =
       let _ = format
 
     end)
- *)
+
 (* Note: While Pos.string prints out positions as closed intervals, pos_start
  * and pos_end actually form a half-open interval (i.e. pos_end points to the
  * character *after* the last character of the relevant lexeme.) *)
