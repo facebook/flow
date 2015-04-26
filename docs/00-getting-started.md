@@ -24,7 +24,7 @@ This creates a directory called `flow` containing the executable binary (also ca
 
 ```bash
 $> cd flow
-$> echo "PATH=\"\$PATH:$(pwd)/\"" >> ~/.bashrc && source ~/.bashrc
+$> echo -e "\nPATH=\"\$PATH:$(pwd)/\"" >> ~/.bashrc && source ~/.bashrc
 ```
 ### Brew on OSX
 
