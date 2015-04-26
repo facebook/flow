@@ -106,11 +106,19 @@ clean:
 build-flow: _build/libcflow.a build-flowlib-archive
 	ocamlbuild -pp "camlp4o $(PP)" $(PKGS) -no-links $(INCLUDE_OPTS) -lflags "libcflow.a $(LINKER_FLAGS)" src/flow.native
 
-#CAML_LD_LIBRARY_PATH=CAML_LD_LIBRARY_PATH:./bin/ ocamldebug ./bin/flow-debug single ../test/
-#Emacs: M-x setenv CAML_LD_LIBRARY_PATH $CAML_LD_LIBRARY_PATH:/path/to/flow/bin/
-#load_printer debug_pp.cma
-#install_printer Utils.SSet.Show_t.format
-#install_printer Constraint_js.Show_context.format
+# CAML_LD_LIBRARY_PATH=CAML_LD_LIBRARY_PATH:./bin/ ocamldebug ./bin/flow-debug single ../test/
+# Emacs:
+# * M-x setenv CAML_LD_LIBRARY_PATH $CAML_LD_LIBRARY_PATH:/path/to/flow/bin/
+# * M-X ocamldebug ./bin/flow-debug ocamldebug
+# set arguments single ../../test
+# goto 0
+# load_printer debug_pp.cma
+# install_printer Utils.SSet.Show_t.format
+# install_printer Constraint_js.Show_context.format
+# install_printer Constraint_js.Show_block.format
+# install_printer Constraint_js.Show_bounds.format
+# install_printer Custom_printer.Show_string_type_map.format
+# install_printer Custom_printer.Show_int_string_type_map.format
 debug: _build/debug.otarget _build/libcflow.a
 	mkdir -p bin
 	cp _build/dllcflow.so bin/
