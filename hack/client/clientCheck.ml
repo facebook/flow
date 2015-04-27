@@ -279,7 +279,9 @@ let rec main args retries =
   | Server_missing ->
       if retries > 1
       then begin
-        Unix.sleep(3);
+        (* No sleep in this one -- if the server is missing, the startup code
+         * will wait to continue until at least the server has started
+         * initalizing to continue. *)
         main args (retries-1)
       end else begin
         if args.autostart

@@ -35,14 +35,14 @@ let builtins_filename =
   Relative_path.create Relative_path.Dummy "builtins.hhi"
 
 let builtins = "<?hh // decl\n"^
-  "interface Traversable<Tv> {}\n"^
-  "interface Container<Tv> extends Traversable<Tv> {}\n"^
-  "interface Iterator<Tv> extends Traversable<Tv> {}\n"^
-  "interface Iterable<Tv> extends Traversable<Tv> {}\n"^
-  "interface KeyedTraversable<Tk, Tv> extends Traversable<Tv> {}\n"^
-  "interface KeyedContainer<Tk, Tv> extends Container<Tv>, KeyedTraversable<Tk,Tv> {}\n"^
-  "interface KeyedIterator<Tk, Tv> extends KeyedTraversable<Tk, Tv>, Iterator<Tv> {}\n"^
-  "interface KeyedIterable<Tk, Tv> extends KeyedTraversable<Tk, Tv>, Iterable<Tv> {}\n"^
+  "interface Traversable<+Tv> {}\n"^
+  "interface Container<+Tv> extends Traversable<Tv> {}\n"^
+  "interface Iterator<+Tv> extends Traversable<Tv> {}\n"^
+  "interface Iterable<+Tv> extends Traversable<Tv> {}\n"^
+  "interface KeyedTraversable<+Tk, +Tv> extends Traversable<Tv> {}\n"^
+  "interface KeyedContainer<+Tk, +Tv> extends Container<Tv>, KeyedTraversable<Tk,Tv> {}\n"^
+  "interface KeyedIterator<+Tk, +Tv> extends KeyedTraversable<Tk, Tv>, Iterator<Tv> {}\n"^
+  "interface KeyedIterable<+Tk, +Tv> extends KeyedTraversable<Tk, Tv>, Iterable<Tv> {}\n"^
   "interface Awaitable<+T> {"^
   "  public function getWaitHandle(): WaitHandle<T>;"^
   "}\n"^
@@ -51,7 +51,7 @@ let builtins = "<?hh // decl\n"^
   "  public function map<Tu>((function(Tv): Tu) $callback): ConstVector<Tu>;"^
   "}\n"^
   "interface ConstSet<+Tv> extends KeyedIterable<mixed, Tv>, Container<Tv>{}\n"^
-  "interface ConstMap<Tk, +Tv> extends KeyedIterable<Tk, Tv>, KeyedContainer<Tk, Tv>{"^
+  "interface ConstMap<+Tk, +Tv> extends KeyedIterable<Tk, Tv>, KeyedContainer<Tk, Tv>{"^
   "  public function map<Tu>((function(Tv): Tu) $callback): ConstMap<Tk, Tu>;"^
   "  public function mapWithKey<Tu>((function(Tk, Tv): Tu) $fn): ConstMap<Tk, Tu>;"^
   "}\n"^
@@ -62,7 +62,7 @@ let builtins = "<?hh // decl\n"^
   "  public function add(Tv $value): Vector<Tv>;"^
   "  public function addAll(?Traversable<Tv> $it): Vector<Tv>;"^
   "}\n"^
-  "final class ImmVector<Tv> implements ConstVector<Tv> {"^
+  "final class ImmVector<+Tv> implements ConstVector<Tv> {"^
   "  public function map<Tu>((function(Tv): Tu) $callback): ImmVector<Tu>;"^
   "}\n"^
   "final class Map<Tk, Tv> implements ConstMap<Tk, Tv> {"^
@@ -71,7 +71,7 @@ let builtins = "<?hh // decl\n"^
   "  public function mapWithKey<Tu>((function(Tk, Tv): Tu) $fn): Map<Tk, Tu>;"^
   "  public function contains(Tk $k): bool;"^
   "}\n"^
-  "final class ImmMap<Tk, Tv> implements ConstMap<Tk, Tv>{"^
+  "final class ImmMap<+Tk, +Tv> implements ConstMap<Tk, Tv>{"^
   "  public function map<Tu>((function(Tv): Tu) $callback): ImmMap<Tk, Tu>;"^
   "  public function mapWithKey<Tu>((function(Tk, Tv): Tu) $fn): ImmMap<Tk, Tu>;"^
   "}\n"^
@@ -80,7 +80,7 @@ let builtins = "<?hh // decl\n"^
   "  public function mapWithKey<Tu>((function(Tk, Tv): Tu) $fn): StableMap<Tk, Tu>;"^
   "}\n"^
   "final class Set<Tv> implements ConstSet<Tv> {}\n"^
-  "final class ImmSet<Tv> implements ConstSet<Tv> {}\n"^
+  "final class ImmSet<+Tv> implements ConstSet<Tv> {}\n"^
   "class Exception { public function __construct(string $x) {} }\n"^
   "class Generator<+Tk, +Tv, -Ts> implements KeyedIterator<Tk, Tv> {\n"^
   "  public function next(): void;\n"^
@@ -90,13 +90,13 @@ let builtins = "<?hh // decl\n"^
   "  public function valid(): bool;\n"^
   "  public function send(?Ts $v): void;\n"^
   "}\n"^
-  "final class Pair<Tk, Tv> implements KeyedContainer<int,mixed> {public function isEmpty(): bool {}}\n"^
+  "final class Pair<+Tk, +Tv> implements KeyedContainer<int,mixed> {public function isEmpty(): bool {}}\n"^
   "interface Stringish {public function __toString(): string {}}\n"^
   "interface XHPChild {}\n"^
   "function hh_show($val) {}\n"^
   "interface Countable { public function count(): int; }\n"^
-  "interface AsyncIterator<Tv> {}\n"^
-  "interface AsyncKeyedIterator<Tk, Tv> extends AsyncIterator<Tv> {}\n"^
+  "interface AsyncIterator<+Tv> {}\n"^
+  "interface AsyncKeyedIterator<+Tk, +Tv> extends AsyncIterator<Tv> {}\n"^
   "class AsyncGenerator<+Tk, +Tv, -Ts> implements AsyncKeyedIterator<Tk, Tv> {\n"^
   "  public function next(): Awaitable<?(Tk, Tv)> {}\n"^
   "  public function send(?Ts $v): Awaitable<?(Tk, Tv)> {}\n"^
@@ -118,7 +118,8 @@ let builtins = "<?hh // decl\n"^
   "function array_map($x, $y, ...);\n"^
   "function idx<Tk, Tv>(?KeyedContainer<Tk, Tv> $c, $i, $d = null) {}\n"^
   "final class stdClass {}\n" ^
-  "function rand($x, $y): int;\n"
+  "function rand($x, $y): int;\n" ^
+  "function invariant($x, ...): void;\n"
 
 (*****************************************************************************)
 (* Helpers *)

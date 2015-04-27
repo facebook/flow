@@ -1,3 +1,20 @@
+v0.10.0
+
+- Bump version to 0.10.0
+- Support import/export type
+- [PR #412] More fs implementation
+- Support for static overloads
+- Fix order of args matched with overloads
+- Allow methods to have properties
+- [PR #405] Make interface-defined modules work with CommonJS/ES6Module interop
+- Refine mixed
+- Fix typeof null === "object" refinement
+- [PR #397] Facilitate debug builds
+- [PR #401] Improve error message clarity in a few places
+- Remove 'everything is a bool' implicit cast
+- Fix issues with optional properties during InstanceT ~> ObjT
+- Fix abnormals in catch blocks
+
 v0.9.2
 
 - Fix lowercasing issue where "flow Path/To/Root" became "flow path/to/root"

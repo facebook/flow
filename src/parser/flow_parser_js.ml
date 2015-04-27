@@ -255,7 +255,12 @@ module Translate = struct
         | None -> specifiers) in
         Js.Unsafe.set ret "specifiers" (Js.array (Array.of_list (List.rev specifiers)));
         Js.Unsafe.set ret "source" (literal import.source);
-        Js.Unsafe.set ret "isType" (bool import.isType);
+        Js.Unsafe.set ret "importKind" (Js.string (
+          match import.importKind with
+          | ImportType -> "type"
+          | ImportTypeof -> "typeof"
+          | ImportValue -> "value"
+        ));
         ret
     )
   )

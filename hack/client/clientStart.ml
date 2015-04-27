@@ -23,33 +23,40 @@ type env = {
   no_load : bool;
 }
 
-let rec wait env =
-  begin try
-    Unix.sleep(1);
-    ignore(ClientUtils.connect env.root);
-    Printf.fprintf stderr "Done waiting!\n%!"
-  with
-  | Server_initializing ->
-    Printf.fprintf stderr "Waiting for server to initialize\n%!";
-    wait env
-  | e ->
-    Printf.fprintf stderr
-      "Error: something went wrong while waiting for the server to start up\n%s\n%!"
-      (Printexc.to_string e);
-    exit 77
-  end
-
 let start_server env =
-  let hh_server = Printf.sprintf "%s -d %s %s"
+  let hh_server = Printf.sprintf "%s -d %s %s --waiting-client %d"
     (Filename.quote (get_hhserver ()))
     (Filename.quote (Path.string_of_path env.root))
-    (if env.no_load then "--no-load" else "") in
+    (if env.no_load then "--no-load" else "")
+    (Unix.getpid ())
+  in
   Printf.fprintf stderr "Server launched with the following command:\n\t%s\n%!"
     hh_server;
-  let () = match Unix.system hh_server with
+
+  (* Start up the hh_server, and wait on SIGUSR1, which is sent to us at various
+   * stages of the start up process. See if we're in the state we want to be in;
+   * if not, go to sleep again. *)
+  let old_mask = Unix.sigprocmask Unix.SIG_BLOCK [Sys.sigusr1] in
+  (* Have to actually handle and discard the signal -- if it's ignored, it won't
+   * break the sigsuspend. *)
+  let old_handle = Sys.signal Sys.sigusr1 (Sys.Signal_handle (fun _ -> ())) in
+
+  let rec wait_loop () =
+    Unix.sigsuspend old_mask;
+    (* NB: SIGUSR1 is now blocked again. *)
+    if env.wait && not (Lock.check env.root "init") then
+      wait_loop ()
+    else
+      ()
+  in
+
+  (match Unix.system hh_server with
     | Unix.WEXITED 0 -> ()
-    | _ -> Printf.fprintf stderr "Could not start hh_server!\n"; exit 77 in
-  if env.wait then wait env;
+    | _ -> Printf.fprintf stderr "Could not start hh_server!\n"; exit 77);
+  wait_loop ();
+
+  let _ = Sys.signal Sys.sigusr1 old_handle in
+  let _ = Unix.sigprocmask Unix.SIG_SETMASK old_mask in
   ()
 
 let should_start env =

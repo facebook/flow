@@ -33,7 +33,6 @@ module Cache: sig
   val clear: unit -> unit
 end
 
-val mk_var: context -> int
 val mk_tvar: context -> reason -> Type.t
 val mk_tvar_where: context -> reason -> (Type.t -> unit) -> Type.t
 

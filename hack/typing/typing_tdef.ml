@@ -39,7 +39,8 @@ let rec expand_typedef_ ?force_expand:(force_expand=false) seen env r x argl =
     let n = string_of_int n in
     Errors.type_param_arity pos x n
   end;
-  let subst = Inst.make_subst tparaml argl in
+  let env, expanded_ty = TUtils.localize env expanded_ty in
+  let subst = Inst.make_subst Phase.locl tparaml argl in
   let env, expanded_ty =
     if should_expand
     then begin
@@ -50,6 +51,7 @@ let rec expand_typedef_ ?force_expand:(force_expand=false) seen env r x argl =
         match tcstr with
         | None -> env, None
         | Some tcstr ->
+            let env, tcstr = TUtils.localize env tcstr in
             let env, tcstr = Inst.instantiate subst env tcstr in
             env, Some tcstr
       in
@@ -108,7 +110,6 @@ and check_typedef_list seen env x =
   List.iter (check_typedef seen env) x
 
 and check_fun_typedef seen env ft =
-  check_typedef_tparam_list seen env ft.ft_tparams;
   check_typedef_fun_param_list seen env ft.ft_params;
   (match ft.ft_arity with
     | Fvariadic (_, p) -> check_typedef_fun_param seen env p

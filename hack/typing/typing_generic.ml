@@ -21,7 +21,7 @@ module ShapeMap = Nast.ShapeMap
 module IsGeneric: sig
 
   (* Give back the name and position of a generic if found *)
-  val ty: ty -> string option
+  val ty: locl ty -> string option
 end = struct
 
   exception Found of string

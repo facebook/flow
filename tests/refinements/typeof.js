@@ -5,3 +5,11 @@ function foo(x: bool | number) {
     x[0]; // error for boolean, not number
   }
 }
+
+function bar(): number {
+  var x = null;
+  if (typeof x === "object") {
+    return x; // error, null
+  }
+  return 0;
+}

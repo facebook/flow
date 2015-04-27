@@ -38,9 +38,9 @@ let rec decl env methods =
         let ce_r, ft = match ce.ce_type with
           | r, Tfun ft -> r, ft
           | _, (Tany | Tmixed | Tarray (_, _) | Tprim _ | Tgeneric (_, _)
-                   | Toption _ | Tvar _ | Tabstract (_, _, _) | Tapply (_, _)
-                   | Ttuple _ | Tanon (_, _) | Tunresolved _ | Tobject
-                   | Tshape _ | Taccess (_, _)) -> assert false in
+                | Toption _ | Tapply (_, _) | Ttuple _ | Tshape _
+                | Taccess (_, _)
+               ) -> assert false in
         let p = Reason.to_pos (fst ft.ft_ret) in
         let gen_r = Reason.Rdynamic_yield (p, ft.ft_pos, gen_name, name) in
         let deprec_msg = Printf.sprintf

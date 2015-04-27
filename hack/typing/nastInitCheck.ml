@@ -38,7 +38,7 @@ type cvar_status =
   | Vnull (* The value is still potentially null *)
   | Vinit (* Yay! it has been initialized *)
 
-let parent_init_cvar = "parent::__construct"
+let parent_init_cvar = "parent::" ^ SN.Members.__construct
 
 (* Module initializing the environment
    Originally, every class member has 2 possible states,
@@ -59,7 +59,7 @@ module Env = struct
     (* We already computed this method *)
     | Done
 
-    (* We have never computed this private bethod before *)
+    (* We have never computed this private method before *)
     | Todo of func_body
 
   type t = {
@@ -169,7 +169,7 @@ and class_ tenv c =
       let env = Env.make tenv c in
       let inits = constructor env c.c_constructor in
 
-      Typing_suggest.save_initalized_members (snd c.c_name) inits;
+      Typing_suggest.save_initialized_members (snd c.c_name) inits;
       (* When the class is abstract, and it has a constructor the only
        * thing we care about is that the constructor calls
        * parent::__construct if it is needed. Because after that, it
@@ -214,7 +214,8 @@ and stmt env acc st =
   let catch = catch env in
   let case = case env in
   match st with
-    | Expr (_, Call (Cnormal, (_, Class_const (CIparent, _)), el, _uel)) ->
+    | Expr (_, Call (Cnormal, (_, Class_const (CIparent, (_, m))), el, _uel))
+        when m = SN.Members.__construct ->
       let acc = List.fold_left expr acc el in
       assign env acc parent_init_cvar
     | Expr e -> expr acc e
@@ -408,11 +409,6 @@ and expr_ env acc p e =
   | Binop (_, e1, e2) ->
       let acc = expr acc e1 in
       expr acc e2
-  | Assert (AE_invariant (e1, e2, el)) ->
-      let acc = expr acc e1 in
-      let acc = expr acc e2 in
-      let acc = exprl acc el in
-      acc
   | Eif (e1, None, e3) ->
       let acc = expr acc e1 in
       expr acc e3

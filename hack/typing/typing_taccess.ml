@@ -54,7 +54,7 @@ let empty_env env reason = {
 }
 
 let fill_type_hole_ env ty hole_ty =
-  let subst = Inst.make_subst
+  let subst = Inst.make_subst Phase.locl
     [Ast.Invariant, (Pos.none, SN.Typehints.type_hole), None]
     [hole_ty] in
   Inst.instantiate subst env ty
@@ -140,10 +140,12 @@ and expand_ env root_ty ids =
           (* If we haven't filled the type hole at this point we fill
            * it with self
            *)
-          let ty, x =
+          let (tenv, ty), x =
             if x = SN.Typehints.type_hole
-            then Env.get_self env.tenv, SN.Typehints.this
-            else ty, x in
+            then
+              TUtils.localize env.tenv (Env.get_self env.tenv), SN.Typehints.this
+            else (env.tenv, ty), x in
+          let env = { env with tenv = tenv } in
           expand_generic env x ty ids
       | Tunresolved tyl ->
           let tyl =
@@ -252,7 +254,8 @@ and create_root_from_type_constant env class_pos class_name root_ty (pos, tconst
           let cstr = opt_map (fun ty -> Ast.Constraint_as, ty) ty in
           Tgeneric (strip_ns class_name^"::"^tconst, cstr)
         ) in
-  let tenv, tconst_ty = fill_type_hole_ env.tenv tconst_ty root_ty in
+  let tenv, tconst_ty = TUtils.localize env.tenv tconst_ty in
+  let tenv, tconst_ty = fill_type_hole_ tenv tconst_ty root_ty in
   { env with tenv = tenv }, tconst_ty
 
 (* Following code checks for cycles that may occur when expanding a Taccess.
@@ -280,9 +283,10 @@ and check_tconst env (r, ty) =
   | Tabstract (_, tyl, cstr) ->
       check_tconst_list env tyl;
       check_tconst_opt env cstr
-  | Tunresolved tyl
   | Tapply (_, tyl)
   | Ttuple tyl ->
+      check_tconst_list env tyl
+  | Tunresolved tyl ->
       check_tconst_list env tyl
   | Taccess (root, ids) ->
       let env, ty = expand_ env root ids in
@@ -296,7 +300,6 @@ and check_tconst_list env x =
   List.iter (check_tconst env) x
 
 and check_fun_tconst env ft =
-  check_tconst_tparam_list env ft.ft_tparams;
   check_tconst_fun_param_list env ft.ft_params;
   (match ft.ft_arity with
     | Fvariadic (_, p) -> check_tconst_fun_param env p
@@ -309,14 +312,6 @@ and check_tconst_fun_param_list env x =
 
 and check_tconst_fun_param env (_, ty) =
   check_tconst env ty
-
-and check_tconst_tparam_list env x =
-  List.iter (check_tconst_tparam env) x
-
-and check_tconst_tparam env (_, _, cstr) =
-  match cstr with
-  | Some (_ck, x) -> check_tconst env x
-  | None -> ()
 
 and check_tconst_opt env = function
   | None -> ()
@@ -353,7 +348,7 @@ let fill_type_hole env cid cid_ty ty =
         let cid = CIvar (pos, This) in
         let env, ty = Env.get_local env this in
         let this_ty = Reason.Rwitness pos, TUtils.this_of ty in
-        let env, cid_ty = Inst.instantiate_this env cid_ty this_ty in
+        let env, cid_ty = Inst.instantiate_this Phase.locl env cid_ty this_ty in
         env, cid, cid_ty
     | cid -> env, cid, cid_ty
   in

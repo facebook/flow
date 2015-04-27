@@ -87,7 +87,6 @@ let check_types_for_const env parent_type class_type =
     | (_, _) ->
       (* types should be the same *)
       ignore (TUtils.unify env parent_type class_type)
-
 (* An abstract member can be declared in multiple ancestors. Sometimes these
  * declarations can be different, but yet compatible depending on which ancestor
  * we inherit the member from. For example:
@@ -128,17 +127,18 @@ let check_override env ?(ignore_fun_return = false) ?(check_for_const = false)
      * about how this as Base and this as Child are different types *)
     let r, _ as self = Env.get_self env in
     let this_ty = r, TUtils.this_of self in
+    let env, child_ce_type = TUtils.localize env class_elt.ce_type in
     let env, parent_ce_type =
-      Inst.instantiate_this env parent_class_elt.ce_type this_ty in
+      Inst.instantiate_this Phase.decl env parent_class_elt.ce_type this_ty in
+    let env, parent_ce_type = TUtils.localize env parent_ce_type in
     if check_for_const
-    then check_types_for_const env parent_ce_type class_elt.ce_type
-    else match parent_ce_type, class_elt.ce_type with
+    then check_types_for_const env parent_ce_type child_ce_type
+    else match parent_ce_type, child_ce_type with
       | (r_parent, Tfun ft_parent), (r_child, Tfun ft_child) ->
-        let subtype_funs =
-          if (not ignore_fun_return) &&
-            (class_known || check_partially_known_method_returns) then
-            SubType.subtype_funs
-          else SubType.subtype_funs_no_return in
+        let subtype_funs = SubType.subtype_funs_generic ~check_return:(
+            (not ignore_fun_return) &&
+            (class_known || check_partially_known_method_returns)
+          ) in
         let check (r1, ft1) (r2, ft2) () = ignore(subtype_funs env r1 ft1 r2 ft2) in
         check_ambiguous_inheritance check (r_parent, ft_parent) (r_child, ft_child)
           (Reason.to_pos r_child) class_ class_elt.ce_origin
@@ -233,11 +233,11 @@ let tconst_subsumption this_ty env parent_typeconst child_typeconst =
   match parent_typeconst, child_typeconst with
   | { ttc_constraint = Some parent_cstr; _},
       ({ ttc_type = Some child_ty; _ } | { ttc_constraint = Some child_ty; _ }) ->
-    let env, parent_cstr = Inst.instantiate_this env parent_cstr this_ty in
-    ignore (TUtils.sub_type env parent_cstr child_ty)
+    let env, parent_cstr = Inst.instantiate_this Phase.decl env parent_cstr this_ty in
+    ignore (TUtils.sub_type_phase env (Phase.decl parent_cstr) (Phase.decl child_ty))
   | { ttc_type = Some parent_ty; _ }, { ttc_type = Some child_ty; _ } ->
-    let env, parent_ty = Inst.instantiate_this env parent_ty this_ty in
-    ignore (TUtils.unify env parent_ty child_ty)
+    let env, parent_ty = Inst.instantiate_this Phase.decl env parent_ty this_ty in
+    ignore (TUtils.unify_phase env (Phase.decl parent_ty) (Phase.decl child_ty))
   | _, _ -> ()
 
 (* For type constants we need to check that a child respects the
@@ -281,8 +281,8 @@ let check_class_implements env parent_class class_ =
   let parent_pos, parent_class, parent_tparaml = parent_class in
   let pos, class_, tparaml = class_ in
   let fully_known = class_.tc_members_fully_known in
-  let psubst = Inst.make_subst parent_class.tc_tparams parent_tparaml in
-  let subst = Inst.make_subst class_.tc_tparams tparaml in
+  let psubst = Inst.make_subst Phase.decl parent_class.tc_tparams parent_tparaml in
+  let subst = Inst.make_subst Phase.decl class_.tc_tparams tparaml in
   check_consts env parent_class class_ psubst subst;
   let pmemberl = make_all_members parent_class in
   let memberl = make_all_members class_ in

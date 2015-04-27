@@ -211,9 +211,6 @@ module CheckFunctionType = struct
     | _, Assert (AE_invariant_violation (e, el)) ->
         liter expr f_type (e :: el);
         ()
-    | _, Assert (AE_invariant (e1, e2, el)) ->
-        liter expr f_type (e1 :: e2 :: el);
-        ()
     | _, Shape fdm ->
         ShapeMap.iter (fun _ v -> expr f_type v) fdm;
         ()
@@ -679,10 +676,6 @@ and expr_ env = function
       hint env h;
       expr env e;
       ()
-  | Assert (AE_invariant (e1, e2, el)) ->
-      expr env e1;
-      expr env e2;
-      liter expr env el
   | Binop (_, e1, e2) ->
       expr env e1;
       expr env e2;

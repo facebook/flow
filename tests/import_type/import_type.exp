@@ -1,19 +1,71 @@
 
-named_imports.js:15:21,23: identifier Bar
-Could not resolve name
-
-namespace_imports.js:19:2,4: number
+ExportCJSDefault_Class.js:5:7,15: ClassFoo3
 This type is incompatible with
-  A.js:8:18,18: A
+  import_type.js:34:9,14: number
 
-namespace_imports.js:20:2,4: number
+ExportCJSDefault_Class.js:5:7,15: ClassFoo3
 This type is incompatible with
-  namespace_imports.js:20:7,11: Bar
+  import_type.js:57:9,14: number
 
-namespace_imports.js:21:1,1: identifier A
+ExportCJSNamed_Class.js:5:7,15: ClassFoo4
+This type is incompatible with
+  import_type.js:45:9,14: number
+
+ExportCJSNamed_Class.js:11:24,32: ClassFoo4
+This type is incompatible with
+  import_type.js:45:9,14: number
+
+ExportDefault_Class.js:5:7,15: ClassFoo1
+This type is incompatible with
+  import_type.js:13:9,14: number
+
+ExportDefault_Class.js:10:31,39: ClassFoo1
+This type is incompatible with
+  import_type.js:13:9,14: number
+
+ExportNamed_Alias.js:5:26,7:1: property givesANum
+Property not found in
+  ExportCJSDefault_Class.js:5:7,15: ClassFoo3
+
+ExportNamed_Alias.js:5:26,7:1: property returnsANumber
+Property not found in
+  ExportCJSDefault_Class.js:12:18,26: ClassFoo3
+
+ExportNamed_Alias.js:5:26,7:1: object type
+This type is incompatible with
+  import_type.js:34:9,14: number
+
+ExportNamed_Alias.js:5:26,7:1: object type
+This type is incompatible with
+  import_type.js:57:9,14: number
+
+ExportNamed_Class.js:5:7,15: ClassFoo2
+This type is incompatible with
+  import_type.js:24:9,14: number
+
+ExportNamed_Class.js:10:31,39: ClassFoo2
+This type is incompatible with
+  import_type.js:24:9,14: number
+
+import_type.js:14:5,13: identifier ClassFoo1
 Could not resolve name
 
-namespace_imports.js:25:3,3: identifier B
+import_type.js:25:5,13: identifier ClassFoo2
 Could not resolve name
 
-Found 5 errors
+import_type.js:35:5,13: identifier ClassFoo3
+Could not resolve name
+
+import_type.js:46:5,13: identifier ClassFoo4
+Could not resolve name
+
+import_type.js:58:16,24: typeof-annotation 'AliasFoo4'
+Could not resolve name
+
+import_type.js:72:14,21: import type { numValue }
+`import type` only works on exported classes, functions, and type aliases!
+
+import_type.js:82:3,11: identifier ClassFoo6
+Could not resolve name
+
+Found 19 errors

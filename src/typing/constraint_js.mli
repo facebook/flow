@@ -14,6 +14,8 @@ open Reason_js
 val assert_false: string -> 'a
 val __DEBUG__: ?s: string -> (unit -> 'a) -> 'a
 
+val time: (float -> bool) -> (float -> string) -> (unit -> 'a) -> 'a
+
 type ident = int
 type name = string
 
@@ -115,6 +117,7 @@ module Type :
       | ElemT of reason * t * t
 
       | ImportModuleNsT of reason * t
+      | ImportTypeT of reason * t
       | ExportDefaultT of reason * t
 
     and predicate =
@@ -249,9 +252,10 @@ type bounds = {
   mutable uppertvars: trace IMap.t;
   mutable unifier: unifier option;
   mutable solution: Type.t option;
+  mutable cleared: bool;
 }
 
-val new_bounds: int -> reason -> bounds
+val new_bounds: unit -> bounds
 val copy_bounds: bounds -> bounds
 
 (***************************************)
@@ -326,6 +330,9 @@ val is_printed_type_parsable : ?weak:bool -> context -> Type.t -> bool
 val is_printed_param_type_parsable : ?weak:bool -> context -> Type.t -> bool
 
 val string_of_ctor : Type.t -> string
+
+val string_of_block_entry : context -> block_entry -> string
+val string_of_block : context -> block -> string
 
 (* TEMP *)
 val streason_of_t : Type.t -> string

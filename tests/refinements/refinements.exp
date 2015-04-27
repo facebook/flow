@@ -39,6 +39,58 @@ hasOwnProperty.js:8:7,22: property z
 Property not found in
   hasOwnProperty.js:8:7,7: object type
 
+mixed.js:6:17,21: number
+This type is incompatible with
+  mixed.js:4:25,30: string
+
+mixed.js:12:17,21: string
+This type is incompatible with
+  mixed.js:3:25,30: number
+
+mixed.js:18:18,22: boolean
+This type is incompatible with
+  mixed.js:4:25,30: string
+
+mixed.js:24:17,21: function
+This type is incompatible with
+  mixed.js:4:25,30: string
+
+mixed.js:30:17,21: null
+This type is incompatible with
+  mixed.js:4:25,30: string
+
+mixed.js:30:17,21: object
+This type is incompatible with
+  mixed.js:4:25,30: string
+
+mixed.js:36:17,21: array
+This type is incompatible with
+  mixed.js:4:25,30: string
+
+mixed.js:42:19,23: undefined
+This type is incompatible with
+  mixed.js:4:25,30: string
+
+mixed.js:48:19,23: null
+This type is incompatible with
+  mixed.js:4:25,30: string
+
+mixed.js:54:19,23: null
+This type is incompatible with
+  mixed.js:4:25,30: string
+
+mixed.js:54:19,23: undefined
+This type is incompatible with
+  mixed.js:4:25,30: string
+
+mixed.js:60:19,23: boolean
+This type is incompatible with
+  mixed.js:4:25,30: string
+
+mixed.js:66:20,24: boolean
+This type is incompatible with
+  mixed.js:4:25,30: string
+
 not.js:3:18,21: boolean
 This type is incompatible with
   not.js:5:5,7: number
@@ -139,6 +191,10 @@ typeof.js:5:5,8: access of computed property/element
 Computed property/element cannot be accessed on
   typeof.js:3:17,20: boolean
 
+typeof.js:10:11,14: null
+This type is incompatible with
+  typeof.js:9:17,22: number
+
 undef.js:29:29,34: null
 This type is incompatible with
   undef.js:31:13,20: number
@@ -207,4 +263,4 @@ void.js:75:7,9: undefined
 This type is incompatible with
   void.js:75:36,45: number
 
-Found 52 errors
+Found 66 errors
