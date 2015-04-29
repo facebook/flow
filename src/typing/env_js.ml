@@ -87,7 +87,7 @@ let get_from_scope x scope =
 let set_in_scope x entry scope =
   scope := !scope |> SMap.add x entry
 
-let exists_scope x scope =
+let exists_in_scope x scope =
   SMap.get x !scope
 
 let update_scope ?(for_type=false) x (specific_t, general_t) scope =
@@ -129,7 +129,7 @@ let peek_env () =
 
 let init_env cx x shape =
   let scope = peek_env() in
-  match exists_scope x scope with
+  match exists_in_scope x scope with
   | None -> set_in_scope x shape scope
   | Some { general; for_type; def_loc; _; } when for_type <> shape.for_type ->
       (* When we have a value var shadowing a type var, replace the type var
@@ -180,7 +180,7 @@ let var_ref ?(for_type=false) cx x reason =
 
 let get_refinement cx key r =
   let scope = peek_env () in
-  match exists_scope key scope with
+  match exists_in_scope key scope with
   | Some { specific; _ } ->
       let pos = pos_of_reason r in
       let t = mod_reason_of_t (repos_reason pos) specific in
@@ -325,7 +325,7 @@ let string_of_env cx ctx =
    based on dynamic checks. *)
 
 let install_refinement cx x xtypes =
-  if exists_scope x (peek_env ()) = None then
+  if exists_in_scope x (peek_env ()) = None then
     let t = SMap.find_unsafe x xtypes in
     init_env cx x (create_env_entry t t None)
 
