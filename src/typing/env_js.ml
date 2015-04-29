@@ -81,7 +81,7 @@ let find_env ?(for_type=false) cx x reason =
   in
   loop (!env)
 
-let get_scope x scope =
+let get_from_scope x scope =
   SMap.find_unsafe x !scope
 
 let set_scope x entry scope =
@@ -104,7 +104,7 @@ let unset_scope x scope =
   scope := !scope |> SMap.remove x
 
 let read_env ?(for_type=false) cx x reason =
-  find_env ~for_type cx x reason |> get_scope x
+  find_env ~for_type cx x reason |> get_from_scope x
 
 let write_env ?(for_type=false) cx x shape reason =
   find_env ~for_type cx x reason |> update_scope ~for_type x shape
@@ -171,7 +171,7 @@ let get_var_in_scope ?(for_type=false) cx x reason =
 
 let get_var_ cx x reason =
   let scope = find_env cx x reason in
-  (scope = global_scope, (get_scope x scope).specific)
+  (scope = global_scope, (get_from_scope x scope).specific)
 
 let var_ref ?(for_type=false) cx x reason =
   let t = (read_env ~for_type cx x reason).specific in
