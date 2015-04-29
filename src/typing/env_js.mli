@@ -12,19 +12,19 @@ open Utils
 open Reason_js
 open Constraint_js
 
-type env = block list ref
+type env = scope list ref
 
 val env : env
 
-val global_block : block
+val global_scope : scope
 
-val push_env : block -> unit
+val push_env : scope -> unit
 
 val pop_env : unit -> unit
 
 val flat_env :
   unit ->
-  block_entry Utils.SMap.t
+  scope_entry Utils.SMap.t
 
 val get_var : ?for_type:bool -> context -> string -> reason -> Type.t
 
@@ -34,11 +34,11 @@ val var_ref : ?for_type:bool -> context -> string -> reason -> Type.t
 
 val set_var : ?for_type:bool -> context -> string -> Type.t -> reason -> unit
 
-val init_env : context -> string -> block_entry -> unit
+val init_env : context -> string -> scope_entry -> unit
 
-val clone_env : block list -> block list
+val clone_env : scope list -> scope list
 
-val update_frame : context -> block list -> unit
+val update_frame : context -> scope list -> unit
 
 val refine_with_pred : context -> reason ->
   Type.predicate SMap.t ->
@@ -52,16 +52,16 @@ val refine_env : context -> reason ->
   'a
 
 val merge_env : context -> reason ->
-  block list * block list * block list ->
+  scope list * scope list * scope list ->
   SSet.t -> unit
 
 val widen_env : context -> reason -> unit
 
 val copy_env : context -> reason ->
-  block list * block list ->
+  scope list * scope list ->
   SSet.t -> unit
 
-val let_env : string -> block_entry -> (unit -> 'a) -> unit
+val let_env : string -> scope_entry -> (unit -> 'a) -> unit
 
 val havoc_env : unit -> unit
 
@@ -71,7 +71,7 @@ val havoc_heap_refinements : unit -> unit
 
 val clear_env : Reason_js.reason -> unit
 
-val string_of_env : context -> block list -> string
+val string_of_env : context -> scope list -> string
 
 val changeset: SSet.t ref
 val swap_changeset: (SSet.t -> SSet.t) -> SSet.t

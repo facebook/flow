@@ -194,19 +194,19 @@ let exists_lower_bound cx (tvar, t) =
 let rec havoc_ctx cx i j =
   if (i = 0 || j = 0) then () else
     let (stack2,_) = IMap.find_unsafe i cx.closures in
-    let (stack1,blocks) = IMap.find_unsafe j cx.closures in
-    havoc_ctx_ (List.rev blocks, List.rev stack1, List.rev stack2)
+    let (stack1,scopes) = IMap.find_unsafe j cx.closures in
+    havoc_ctx_ (List.rev scopes, List.rev stack1, List.rev stack2)
 
 and havoc_ctx_ = function
-  | (block::blocks_, x1::stack1_, x2::stack2_) when x1 = x2 ->
+  | (scope::scopes_, x1::stack1_, x2::stack2_) when x1 = x2 ->
       (if modes.verbose then prerr_endlinef "HAVOC::%d" x1);
-      block := SMap.mapi (fun x {specific;general;def_loc;for_type} ->
+      scope := SMap.mapi (fun x {specific;general;def_loc;for_type} ->
         (* internal names (.this, .super, .return, .exports) are read-only *)
         if is_internal_name x
         then create_env_entry ~for_type specific general def_loc
         else create_env_entry ~for_type general general def_loc
-      ) !block;
-      havoc_ctx_ (blocks_,stack1_,stack2_)
+      ) !scope;
+      havoc_ctx_ (scopes_,stack1_,stack2_)
   | _ -> ()
 
 let frames: stack ref = ref []
