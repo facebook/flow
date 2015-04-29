@@ -146,8 +146,7 @@ let pop_env () =
   env := List.tl !env
 
 let flat_env () =
-  let rec loop acc env =
-    match env with
+  let rec loop acc = function
     | { entries; _ }::bs -> loop (SMap.union acc !entries) bs
     | [] -> acc in
   let global_entries = global_scope.entries in
