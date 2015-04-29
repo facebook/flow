@@ -295,10 +295,10 @@ let destructuring_map cx t p =
   );
   !tmap, !lmap
 
-let pattern_decl cx t =
+let pattern_decl cx t hoist =
   destructuring cx t (fun cx loc name t ->
     Hashtbl.replace cx.type_table loc t;
-    Env_js.init_env cx name (create_env_entry t t (Some loc))
+    Env_js.init_env cx name (create_env_entry t t (Some loc)) hoist
   )
 
 (* type refinements on expressions - wraps Env_js API *)
@@ -804,17 +804,17 @@ and mk_enum_type cx reason keys =
 and statement_decl cx = Ast.Statement.(
 
   (* helpers *)
-  let var_declarator cx (loc, { VariableDeclaration.Declarator.id; init }) =
+  let var_declarator cx hoist (loc, { VariableDeclaration.Declarator.id; init }) =
     Ast.(match id with
     | (loc, Pattern.Identifier (_, { Identifier.name; typeAnnotation; _ })) ->
         let r = mk_reason (spf "var %s" name) loc in
         let t = mk_type_annotation cx r typeAnnotation in
         Hashtbl.replace cx.type_table loc t;
-        Env_js.init_env cx name (create_env_entry t t (Some loc))
+        Env_js.init_env cx name (create_env_entry t t (Some loc)) hoist
     | p ->
         let r = mk_reason "var _" loc in
         let t = type_of_pattern p |> mk_type_annotation cx r in
-        pattern_decl cx t p
+        pattern_decl cx t hoist p
     )
   in
 
@@ -822,17 +822,15 @@ and statement_decl cx = Ast.Statement.(
   let variable_declaration cx loc { VariableDeclaration.declarations; kind } =
     match kind with
     | VariableDeclaration.Const ->
-        let msg = "Unsupported variable declaration: const" in
-        Flow_js.add_error cx [mk_reason "" loc, msg]
+        List.iter (var_declarator cx false) declarations
     | VariableDeclaration.Let ->
-        let msg = "Unsupported variable declaration: let" in
-        Flow_js.add_error cx [mk_reason "" loc, msg]
+        List.iter (var_declarator cx false) declarations
     | VariableDeclaration.Var ->
-        List.iter (var_declarator cx) declarations
+        List.iter (var_declarator cx true) declarations
   in
 
   let block_body cx { Block.body } =
-    List.iter (statement_decl cx) body
+    List.iter (statement_decl cx) body;
   in
 
   let catch_clause cx { Try.CatchClause.body = (_, b); _ } =
@@ -870,7 +868,7 @@ and statement_decl cx = Ast.Statement.(
       let _, { Ast.Identifier.name; _ } = id in
       let r = mk_reason (spf "type %s" name) loc in
       let tvar = Flow_js.mk_tvar cx r in
-      Env_js.init_env cx name (create_env_entry ~for_type:true tvar tvar (Some loc))
+      Env_js.init_env cx name (create_env_entry ~for_type:true tvar tvar (Some loc)) true (* TODO: hoist behavior *)
 
   | (loc, Switch { Switch.discriminant; cases; lexical }) ->
       (* TODO: ensure that default is last *)
@@ -937,7 +935,7 @@ and statement_decl cx = Ast.Statement.(
         let _, { Ast.Identifier.name; _ } = id in
         let r = mk_reason (spf "function %s" name) loc in
         let tvar = Flow_js.mk_tvar cx r in
-        Env_js.init_env cx name (create_env_entry tvar tvar (Some loc))
+        Env_js.init_env cx name (create_env_entry tvar tvar (Some loc)) true (* TODO: hoist behavior *)
       | None -> failwith (
           "Flow Error: Nameless function declarations should always be given " ^
           "an implicit name before they get hoisted!"
@@ -950,7 +948,7 @@ and statement_decl cx = Ast.Statement.(
       let r = mk_reason (spf "declare %s" name) loc in
       let t = mk_type_annotation cx r typeAnnotation in
       Hashtbl.replace cx.type_table loc t;
-      Env_js.init_env cx name (create_env_entry t t (Some loc))
+      Env_js.init_env cx name (create_env_entry t t (Some loc)) true (* TODO: hoist behavior *)
 
   | (loc, VariableDeclaration decl) ->
       variable_declaration cx loc decl
@@ -961,7 +959,7 @@ and statement_decl cx = Ast.Statement.(
         let _, { Ast.Identifier.name; _ } = id in
         let r = mk_reason (spf "class %s" name) loc in
         let tvar = Flow_js.mk_tvar cx r in
-        Env_js.init_env cx name (create_env_entry tvar tvar (Some loc))
+        Env_js.init_env cx name (create_env_entry tvar tvar (Some loc)) true (* TODO: hoist behavior *)
       | None -> ()
     )
 
@@ -970,7 +968,7 @@ and statement_decl cx = Ast.Statement.(
       let _, { Ast.Identifier.name; _ } = id in
       let r = mk_reason (spf "class %s" name) loc in
       let tvar = Flow_js.mk_tvar cx r in
-      Env_js.init_env cx name (create_env_entry tvar tvar (Some loc))
+      Env_js.init_env cx name (create_env_entry tvar tvar (Some loc)) true (* TODO: hoist behavior *)
   | (loc, DeclareModule { DeclareModule.id; _ }) ->
       let name = match id with
       | DeclareModule.Identifier (_, id) -> id.Ast.Identifier.name
@@ -982,7 +980,7 @@ and statement_decl cx = Ast.Statement.(
       let r = mk_reason (spf "module %s" name) loc in
       let t = Flow_js.mk_tvar cx r in
       Hashtbl.replace cx.type_table loc t;
-      Env_js.init_env cx (spf "$module__%s" name) (create_env_entry t t (Some loc))
+      Env_js.init_env cx (spf "$module__%s" name) (create_env_entry t t (Some loc)) true (* TODO: hoist behavior *)
   | (_, ExportDeclaration {
       ExportDeclaration.default;
       ExportDeclaration.declaration;
@@ -1032,7 +1030,7 @@ and statement_decl cx = Ast.Statement.(
           let env_entry =
             (create_env_entry ~for_type:isType tvar tvar (Some loc))
           in
-          Env_js.init_env cx local_name env_entry
+          Env_js.init_env cx local_name env_entry true (* TODO: hoist behavior *)
         | None -> (
           match specifier with
           | Some(ImportDeclaration.Named(_, named_specifiers)) ->
@@ -1056,7 +1054,7 @@ and statement_decl cx = Ast.Statement.(
               let env_entry =
                 create_env_entry ~for_type:isType tvar tvar (Some specifier_loc)
               in
-              Env_js.init_env cx local_name env_entry;
+              Env_js.init_env cx local_name env_entry true (* TODO: hoist behavior *);
             ) in
             List.iter init_specifier named_specifiers
           | Some(ImportDeclaration.NameSpace(_, (loc, local_ident))) ->
@@ -1068,7 +1066,7 @@ and statement_decl cx = Ast.Statement.(
             let env_entry =
               create_env_entry ~for_type:isType tvar tvar (Some loc)
             in
-            Env_js.init_env cx local_name env_entry
+            Env_js.init_env cx local_name env_entry true (* TODO: hoist behavior *)
           | None -> failwith (
             "Parser error: Non-default imports must always have a " ^
             "specifier!"
@@ -1135,7 +1133,14 @@ and statement cx = Ast.Statement.(
   | (loc, Empty) -> ()
 
   | (loc, Block { Block.body }) ->
-      toplevels cx body
+      let entries = ref SMap.empty in
+      let block = { scope = Block; entries } in
+      Env_js.push_env block;
+
+      List.iter (statement_decl cx) body;
+      toplevels cx body;
+
+      Env_js.pop_env()
 
   | (loc, Expression { Expression.expression = e }) ->
       ignore (expression cx e)
@@ -1938,7 +1943,8 @@ and statement cx = Ast.Statement.(
 
     let reason = mk_reason (spf "module %s" name) loc in
     let t = Env_js.get_var_in_scope cx (spf "$module__%s" name) reason in
-    let block = ref SMap.empty in
+    let entries = ref SMap.empty in
+    let block = { scope = Hoist; entries } in
     Env_js.push_env block;
 
     List.iter (statement_decl cx) elements;
@@ -1946,12 +1952,12 @@ and statement cx = Ast.Statement.(
 
     Env_js.pop_env();
 
-    let exports = match SMap.get "exports" !block with
+    let exports = match SMap.get "exports" !entries with
       | Some {specific=exports;_} ->
           (* TODO: what happens when other things are also declared? *)
           exports
       | None ->
-          let map = SMap.map (fun {specific=export;_} -> export) !block in
+          let map = SMap.map (fun {specific=export;_} -> export) !entries in
           Flow_js.mk_object_with_map_proto cx reason map (MixedT reason)
     in
     Flow_js.unify cx (CJSExportDefaultT(reason, exports)) t
@@ -4659,7 +4665,7 @@ and mk_body id cx param_types_map param_types_loc ret body this super =
         map |> SMap.add name
           (create_env_entry (AnyT.at loc) (AnyT.at loc) None)
   in
-  let block = ref (
+  let entries = ref (
       param_types_map
       |> SMap.mapi (mk_upper_bound cx param_types_loc)
       |> add_rec
@@ -4674,6 +4680,7 @@ and mk_body id cx param_types_map param_types_loc ret body this super =
           (create_env_entry ret ret None)
   )
   in
+  let block = { scope = Hoist; entries } in
   Env_js.push_env block;
   Flow_js.mk_frame cx !Flow_js.frames !Env_js.env;
   let set = Env_js.swap_changeset (fun _ -> SSet.empty) in
@@ -4976,7 +4983,7 @@ let infer_core cx statements =
 
 (* build module graph *)
 let infer_ast ast file m force_check =
-  Env_js.global_block := SMap.empty;
+  Env_js.global_block.entries := SMap.empty;
   Flow_js.Cache.clear();
 
   let (loc, statements, comments) = ast in
@@ -5001,7 +5008,7 @@ let infer_ast ast file m force_check =
   cx.weak <- weak;
 
   let reason_exports_module = reason_of_string (spf "exports of module %s" m) in
-  let block = ref
+  let entries = ref
     (SMap.singleton "exports"
        (let exports = Flow_js.mk_tvar cx reason_exports_module in
         create_env_entry
@@ -5017,6 +5024,7 @@ let infer_ast ast file m force_check =
        )
     )
   in
+  let block = { scope = Hoist; entries } in
   Env_js.env := [block];
   Flow_js.mk_frame cx [] !Env_js.env;
   Env_js.changeset := SSet.empty;
@@ -5232,7 +5240,7 @@ let merge_module_list cx_list =
 
 (* variation of infer + merge for lib definitions *)
 let init file statements save_errors =
-  Env_js.global_block := SMap.empty;
+  Env_js.global_block.entries := SMap.empty;
   Flow_js.Cache.clear();
 
   let cx = new_context file Files_js.lib_module in
@@ -5240,14 +5248,15 @@ let init file statements save_errors =
   (* add types for pervasive builtins *)
   add_builtins cx;
 
-  let block = ref SMap.empty in
+  let entries = ref SMap.empty in
+  let block = { scope = Hoist; entries } in
   Env_js.env := [block];
   Flow_js.mk_frame cx [] !Env_js.env;
   Env_js.changeset := SSet.empty;
 
   infer_core cx statements;
 
-  !block |> SMap.iter (fun x {specific=t;_} ->
+  !entries |> SMap.iter (fun x {specific=t;_} ->
     Flow_js.set_builtin cx x t
   );
 

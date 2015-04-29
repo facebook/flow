@@ -507,7 +507,16 @@ type block_entry = {
   def_loc: Spider_monkey_ast.Loc.t option;
   for_type: bool;
 }
-type block = block_entry SMap.t ref
+
+type block_scope =
+  | Hoist (* var, class, functions hoisted up to this point *)
+  | Block (* let, const *)
+
+type block = {
+  scope: block_scope;
+  entries: block_entry SMap.t ref;
+}
+
 type stack = int list
 
 let create_env_entry ?(for_type=false) specific general loc =
@@ -1988,8 +1997,9 @@ let string_of_block_entry cx entry =
     entry.for_type
 
 let string_of_block cx block =
+  let entries = block.entries in
   SMap.fold (fun k v acc ->
     (Utils.spf "%s: %s" k (string_of_block_entry cx v))::acc
-  ) !block []
+  ) !entries []
   |> String.concat ";\n  "
   |> Utils.spf "{\n  %s\n}"
