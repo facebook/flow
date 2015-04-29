@@ -42,7 +42,7 @@ val mk_typeapp_instance: context -> reason -> string -> Type.t list -> Type.t
 
 val frames : stack ref
 
-val mk_frame : context -> int list -> block list -> unit
+val mk_frame : context -> int list -> scope list -> unit
 
 val havoc_ctx : context -> int -> int -> unit
 

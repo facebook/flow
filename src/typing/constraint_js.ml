@@ -501,13 +501,13 @@ let copy_bounds b =
   let { lower; upper; lowertvars; uppertvars; unifier; solution; cleared } = b
   in { lower; upper; lowertvars; uppertvars; unifier; solution; cleared }
 
-type block_entry = {
+type scope_entry = {
   specific: Type.t;
   general: Type.t;
   def_loc: Spider_monkey_ast.Loc.t option;
   for_type: bool;
 }
-type block = block_entry SMap.t ref
+type scope = scope_entry SMap.t ref
 type stack = int list
 
 let create_env_entry ?(for_type=false) specific general loc =
@@ -554,7 +554,7 @@ type context = {
   mutable require_loc: Ast.Loc.t SMap.t;
 
   mutable graph: bounds IMap.t;
-  mutable closures: (stack * block list) IMap.t;
+  mutable closures: (stack * scope list) IMap.t;
   mutable property_maps: Type.t SMap.t IMap.t;
   mutable modulemap: Type.t SMap.t;
 
@@ -1976,7 +1976,7 @@ and string_of_trace prefix b (r1, t, r2) =
   let li = List.map string_of_reason (reasons_of_trace (r1, t, r2)) in
   (String.concat "\n" li) ^ "\n"
 
-let string_of_block_entry cx entry =
+let string_of_scope_entry cx entry =
   let pos = match entry.def_loc with
   | Some loc -> (string_of_pos (pos_of_loc loc))
   | None -> "(none)"
@@ -1987,9 +1987,9 @@ let string_of_block_entry cx entry =
     pos
     entry.for_type
 
-let string_of_block cx block =
+let string_of_scope cx scope =
   SMap.fold (fun k v acc ->
-    (Utils.spf "%s: %s" k (string_of_block_entry cx v))::acc
-  ) !block []
+    (Utils.spf "%s: %s" k (string_of_scope_entry cx v))::acc
+  ) !scope []
   |> String.concat ";\n  "
   |> Utils.spf "{\n  %s\n}"

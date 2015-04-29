@@ -260,20 +260,20 @@ val copy_bounds: bounds -> bounds
 
 (***************************************)
 
-type block_entry = {
+type scope_entry = {
   specific: Type.t;
   general: Type.t;
   def_loc: Spider_monkey_ast.Loc.t option;
   for_type: bool;
 }
-type block = block_entry SMap.t ref
+type scope = scope_entry SMap.t ref
 type stack = int list
 
 val create_env_entry :
   ?for_type: bool ->
   Type.t -> Type.t ->
   Spider_monkey_ast.Loc.t option ->
-  block_entry
+  scope_entry
 
 (***************************************)
 
@@ -287,7 +287,7 @@ type context = {
   mutable require_loc: Spider_monkey_ast.Loc.t SMap.t;
 
   mutable graph: bounds IMap.t;
-  mutable closures: (stack * block list) IMap.t;
+  mutable closures: (stack * scope list) IMap.t;
   mutable property_maps: Type.t SMap.t IMap.t;
   mutable modulemap: Type.t SMap.t;
 
@@ -331,8 +331,8 @@ val is_printed_param_type_parsable : ?weak:bool -> context -> Type.t -> bool
 
 val string_of_ctor : Type.t -> string
 
-val string_of_block_entry : context -> block_entry -> string
-val string_of_block : context -> block -> string
+val string_of_scope_entry : context -> scope_entry -> string
+val string_of_scope : context -> scope -> string
 
 (* TEMP *)
 val streason_of_t : Type.t -> string

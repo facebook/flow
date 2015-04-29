@@ -1938,20 +1938,20 @@ and statement cx = Ast.Statement.(
 
     let reason = mk_reason (spf "module %s" name) loc in
     let t = Env_js.get_var_in_scope cx (spf "$module__%s" name) reason in
-    let block = ref SMap.empty in
-    Env_js.push_env block;
+    let scope = ref SMap.empty in
+    Env_js.push_env scope;
 
     List.iter (statement_decl cx) elements;
     toplevels cx elements;
 
     Env_js.pop_env();
 
-    let exports = match SMap.get "exports" !block with
+    let exports = match SMap.get "exports" !scope with
       | Some {specific=exports;_} ->
           (* TODO: what happens when other things are also declared? *)
           exports
       | None ->
-          let map = SMap.map (fun {specific=export;_} -> export) !block in
+          let map = SMap.map (fun {specific=export;_} -> export) !scope in
           Flow_js.mk_object_with_map_proto cx reason map (MixedT reason)
     in
     Flow_js.unify cx (CJSExportDefaultT(reason, exports)) t
@@ -4659,7 +4659,7 @@ and mk_body id cx param_types_map param_types_loc ret body this super =
         map |> SMap.add name
           (create_env_entry (AnyT.at loc) (AnyT.at loc) None)
   in
-  let block = ref (
+  let scope = ref (
       param_types_map
       |> SMap.mapi (mk_upper_bound cx param_types_loc)
       |> add_rec
@@ -4674,7 +4674,7 @@ and mk_body id cx param_types_map param_types_loc ret body this super =
           (create_env_entry ret ret None)
   )
   in
-  Env_js.push_env block;
+  Env_js.push_env scope;
   Flow_js.mk_frame cx !Flow_js.frames !Env_js.env;
   let set = Env_js.swap_changeset (fun _ -> SSet.empty) in
 
@@ -4976,7 +4976,7 @@ let infer_core cx statements =
 
 (* build module graph *)
 let infer_ast ast file m force_check =
-  Env_js.global_block := SMap.empty;
+  Env_js.global_scope := SMap.empty;
   Flow_js.Cache.clear();
 
   let (loc, statements, comments) = ast in
@@ -5001,7 +5001,7 @@ let infer_ast ast file m force_check =
   cx.weak <- weak;
 
   let reason_exports_module = reason_of_string (spf "exports of module %s" m) in
-  let block = ref
+  let scope = ref
     (SMap.singleton "exports"
        (let exports = Flow_js.mk_tvar cx reason_exports_module in
         create_env_entry
@@ -5017,7 +5017,7 @@ let infer_ast ast file m force_check =
        )
     )
   in
-  Env_js.env := [block];
+  Env_js.env := [scope];
   Flow_js.mk_frame cx [] !Env_js.env;
   Env_js.changeset := SSet.empty;
 
@@ -5232,7 +5232,7 @@ let merge_module_list cx_list =
 
 (* variation of infer + merge for lib definitions *)
 let init file statements save_errors =
-  Env_js.global_block := SMap.empty;
+  Env_js.global_scope := SMap.empty;
   Flow_js.Cache.clear();
 
   let cx = new_context file Files_js.lib_module in
@@ -5240,14 +5240,14 @@ let init file statements save_errors =
   (* add types for pervasive builtins *)
   add_builtins cx;
 
-  let block = ref SMap.empty in
-  Env_js.env := [block];
+  let scope = ref SMap.empty in
+  Env_js.env := [scope];
   Flow_js.mk_frame cx [] !Env_js.env;
   Env_js.changeset := SSet.empty;
 
   infer_core cx statements;
 
-  !block |> SMap.iter (fun x {specific=t;_} ->
+  !scope |> SMap.iter (fun x {specific=t;_} ->
     Flow_js.set_builtin cx x t
   );
 
