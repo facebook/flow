@@ -84,7 +84,7 @@ let find_env ?(for_type=false) cx x reason =
 let get_from_scope x scope =
   SMap.find_unsafe x !scope
 
-let set_scope x entry scope =
+let set_in_scope x entry scope =
   scope := !scope |> SMap.add x entry
 
 let exists_scope x scope =
@@ -100,7 +100,7 @@ let update_scope ?(for_type=false) x (specific_t, general_t) scope =
   in
   scope := values |> SMap.add x new_entry
 
-let unset_scope x scope =
+let unset_in_scope x scope =
   scope := !scope |> SMap.remove x
 
 let read_env ?(for_type=false) cx x reason =
@@ -130,7 +130,7 @@ let peek_env () =
 let init_env cx x shape =
   let scope = peek_env() in
   match exists_scope x scope with
-  | None -> set_scope x shape scope
+  | None -> set_in_scope x shape scope
   | Some { general; for_type; def_loc; _; } when for_type <> shape.for_type ->
       (* When we have a value var shadowing a type var, replace the type var
        * with the value var *)
@@ -146,15 +146,15 @@ let init_env cx x shape =
         shadower_reason, "This binding is shadowing";
         shadowed_reason, "which is a different sort of binding";
       ];
-      set_scope x shape scope;
+      set_in_scope x shape scope;
       Flow_js.unify cx shape.general general
   | Some { general; _ } ->
       Flow_js.unify cx general shape.general
 
 let let_env x shape f =
-  peek_env() |> set_scope x shape;
+  peek_env() |> set_in_scope x shape;
   f();
-  peek_env() |> unset_scope x
+  peek_env() |> unset_in_scope x
 
 (************)
 (* Contexts *)
