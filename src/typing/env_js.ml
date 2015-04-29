@@ -99,21 +99,21 @@ let exists_in_scope x scope =
   let entries = scope.entries in
   SMap.get x !entries
 
-let set_in_env x entry hoist =
+let set_in_env x entry scope_kind =
   let rec loop = function
     | [] -> set_in_scope x entry global_scope
     | scope::scopes ->
-        if (not hoist || (hoist && scope.kind = VarScope)) then
+        if (scope_kind = LexicalScope || scope.kind = scope_kind) then
           set_in_scope x entry scope
         else
           loop scopes in
   loop (!env)
 
-let exists_in_env x hoist =
+let exists_in_env x scope_kind =
   let rec loop = function
     | [] -> exists_in_scope x global_scope
     | scope::scopes ->
-        if (not hoist || (hoist && scope.kind = VarScope)) then
+        if (scope_kind = LexicalScope || scope.kind = scope_kind) then
           exists_in_scope x scope
         else
           loop scopes in
@@ -160,9 +160,9 @@ let switch_env scope =
 let peek_env () =
   List.hd !env
 
-let init_env cx x shape hoist =
-  match exists_in_env x hoist with
-  | None -> set_in_env x shape hoist
+let init_env cx x shape scope_kind =
+  match exists_in_env x scope_kind with
+  | None -> set_in_env x shape scope_kind
   | Some { general; for_type; def_loc; _; } when for_type <> shape.for_type ->
       (* When we have a value var shadowing a type var, replace the type var
        * with the value var *)
@@ -178,7 +178,7 @@ let init_env cx x shape hoist =
         shadower_reason, "This binding is shadowing";
         shadowed_reason, "which is a different sort of binding";
       ];
-      set_in_env x shape hoist;
+      set_in_env x shape scope_kind;
       Flow_js.unify cx shape.general general
   | Some { general; _ } ->
       Flow_js.unify cx general shape.general
@@ -211,7 +211,7 @@ let var_ref ?(for_type=false) cx x reason =
   mod_reason_of_t (repos_reason p) t
 
 let get_refinement cx key r =
-  match exists_in_env key true with
+  match exists_in_env key VarScope with
   | Some { specific; _ } ->
       let pos = pos_of_reason r in
       let t = mod_reason_of_t (repos_reason pos) specific in
@@ -396,7 +396,7 @@ let string_of_env cx ctx =
 let install_refinement cx x xtypes =
   if exists_in_scope x (peek_env ()) = None then
     let t = SMap.find_unsafe x xtypes in
-    init_env cx x (create_env_entry t t None) true (* TODO: verify correct hoist behavior *)
+    init_env cx x (create_env_entry t t None) VarScope (* TODO: verify correct hoist behavior *)
 
 let refine_with_pred cx reason pred xtypes =
   SMap.iter (fun x predx ->

@@ -295,10 +295,10 @@ let destructuring_map cx t p =
   );
   !tmap, !lmap
 
-let pattern_decl cx t hoist =
+let pattern_decl cx t scope_kind =
   destructuring cx t (fun cx loc name t ->
     Hashtbl.replace cx.type_table loc t;
-    Env_js.init_env cx name (create_env_entry t t (Some loc)) hoist
+    Env_js.init_env cx name (create_env_entry t t (Some loc)) scope_kind
   )
 
 (* type refinements on expressions - wraps Env_js API *)
@@ -804,17 +804,17 @@ and mk_enum_type cx reason keys =
 and statement_decl cx = Ast.Statement.(
 
   (* helpers *)
-  let var_declarator cx hoist (loc, { VariableDeclaration.Declarator.id; init }) =
+  let var_declarator cx scope_kind (loc, { VariableDeclaration.Declarator.id; init }) =
     Ast.(match id with
     | (loc, Pattern.Identifier (_, { Identifier.name; typeAnnotation; _ })) ->
         let r = mk_reason (spf "var %s" name) loc in
         let t = mk_type_annotation cx r typeAnnotation in
         Hashtbl.replace cx.type_table loc t;
-        Env_js.init_env cx name (create_env_entry t t (Some loc)) hoist
+        Env_js.init_env cx name (create_env_entry t t (Some loc)) scope_kind
     | p ->
         let r = mk_reason "var _" loc in
         let t = type_of_pattern p |> mk_type_annotation cx r in
-        pattern_decl cx t hoist p
+        pattern_decl cx t scope_kind p
     )
   in
 
@@ -822,11 +822,11 @@ and statement_decl cx = Ast.Statement.(
   let variable_declaration cx loc { VariableDeclaration.declarations; kind } =
     match kind with
     | VariableDeclaration.Const ->
-        List.iter (var_declarator cx false) declarations
+        List.iter (var_declarator cx LexicalScope) declarations
     | VariableDeclaration.Let ->
-        List.iter (var_declarator cx false) declarations
+        List.iter (var_declarator cx LexicalScope) declarations
     | VariableDeclaration.Var ->
-        List.iter (var_declarator cx true) declarations
+        List.iter (var_declarator cx VarScope) declarations
   in
 
   let block_body cx { Block.body } =
@@ -868,7 +868,7 @@ and statement_decl cx = Ast.Statement.(
       let _, { Ast.Identifier.name; _ } = id in
       let r = mk_reason (spf "type %s" name) loc in
       let tvar = Flow_js.mk_tvar cx r in
-      Env_js.init_env cx name (create_env_entry ~for_type:true tvar tvar (Some loc)) true (* TODO: hoist behavior *)
+      Env_js.init_env cx name (create_env_entry ~for_type:true tvar tvar (Some loc)) VarScope (* TODO: hoist behavior *)
 
   | (loc, Switch { Switch.discriminant; cases; lexical }) ->
       (* TODO: ensure that default is last *)
@@ -935,7 +935,7 @@ and statement_decl cx = Ast.Statement.(
         let _, { Ast.Identifier.name; _ } = id in
         let r = mk_reason (spf "function %s" name) loc in
         let tvar = Flow_js.mk_tvar cx r in
-        Env_js.init_env cx name (create_env_entry tvar tvar (Some loc)) true (* TODO: hoist behavior *)
+        Env_js.init_env cx name (create_env_entry tvar tvar (Some loc)) VarScope (* TODO: hoist behavior *)
       | None -> failwith (
           "Flow Error: Nameless function declarations should always be given " ^
           "an implicit name before they get hoisted!"
@@ -948,7 +948,7 @@ and statement_decl cx = Ast.Statement.(
       let r = mk_reason (spf "declare %s" name) loc in
       let t = mk_type_annotation cx r typeAnnotation in
       Hashtbl.replace cx.type_table loc t;
-      Env_js.init_env cx name (create_env_entry t t (Some loc)) true (* TODO: hoist behavior *)
+      Env_js.init_env cx name (create_env_entry t t (Some loc)) VarScope (* TODO: hoist behavior *)
 
   | (loc, VariableDeclaration decl) ->
       variable_declaration cx loc decl
@@ -959,7 +959,7 @@ and statement_decl cx = Ast.Statement.(
         let _, { Ast.Identifier.name; _ } = id in
         let r = mk_reason (spf "class %s" name) loc in
         let tvar = Flow_js.mk_tvar cx r in
-        Env_js.init_env cx name (create_env_entry tvar tvar (Some loc)) true (* TODO: hoist behavior *)
+        Env_js.init_env cx name (create_env_entry tvar tvar (Some loc)) VarScope (* TODO: hoist behavior *)
       | None -> ()
     )
 
@@ -968,7 +968,7 @@ and statement_decl cx = Ast.Statement.(
       let _, { Ast.Identifier.name; _ } = id in
       let r = mk_reason (spf "class %s" name) loc in
       let tvar = Flow_js.mk_tvar cx r in
-      Env_js.init_env cx name (create_env_entry tvar tvar (Some loc)) true (* TODO: hoist behavior *)
+      Env_js.init_env cx name (create_env_entry tvar tvar (Some loc)) VarScope (* TODO: hoist behavior *)
   | (loc, DeclareModule { DeclareModule.id; _ }) ->
       let name = match id with
       | DeclareModule.Identifier (_, id) -> id.Ast.Identifier.name
@@ -980,7 +980,7 @@ and statement_decl cx = Ast.Statement.(
       let r = mk_reason (spf "module %s" name) loc in
       let t = Flow_js.mk_tvar cx r in
       Hashtbl.replace cx.type_table loc t;
-      Env_js.init_env cx (spf "$module__%s" name) (create_env_entry t t (Some loc)) true (* TODO: hoist behavior *)
+      Env_js.init_env cx (spf "$module__%s" name) (create_env_entry t t (Some loc)) VarScope (* TODO: hoist behavior *)
   | (_, ExportDeclaration {
       ExportDeclaration.default;
       ExportDeclaration.declaration;
@@ -1030,7 +1030,7 @@ and statement_decl cx = Ast.Statement.(
           let env_entry =
             (create_env_entry ~for_type:isType tvar tvar (Some loc))
           in
-          Env_js.init_env cx local_name env_entry true; (* TODO: hoist behavior *)
+          Env_js.init_env cx local_name env_entry VarScope (* TODO: hoist behavior *)
         | None -> (
           match specifier with
           | Some(ImportDeclaration.Named(_, named_specifiers)) ->
@@ -1054,7 +1054,7 @@ and statement_decl cx = Ast.Statement.(
               let env_entry =
                 create_env_entry ~for_type:isType tvar tvar (Some specifier_loc)
               in
-              Env_js.init_env cx local_name env_entry true (* TODO: hoist behavior *);
+              Env_js.init_env cx local_name env_entry VarScope (* TODO: hoist behavior *);
             ) in
             List.iter init_specifier named_specifiers
           | Some(ImportDeclaration.NameSpace(_, (loc, local_ident))) ->
@@ -1066,7 +1066,7 @@ and statement_decl cx = Ast.Statement.(
             let env_entry =
               create_env_entry ~for_type:isType tvar tvar (Some loc)
             in
-            Env_js.init_env cx local_name env_entry true (* TODO: hoist behavior *)
+            Env_js.init_env cx local_name env_entry VarScope (* TODO: hoist behavior *)
           | None -> failwith (
             "Parser error: Non-default imports must always have a " ^
             "specifier!"
