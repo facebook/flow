@@ -268,8 +268,8 @@ type scope_entry = {
 }
 
 type scope_kind =
-  | VarScope (* var, class, functions hoisted up to this point *)
-  | LexicalScope (* let, const *)
+  | VarScope (* var, functions hoisted up to this point *)
+  | LexicalScope (* let, const, classes *)
 
 type scope = {
   kind: scope_kind;
