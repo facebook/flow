@@ -1717,6 +1717,10 @@ and statement cx = Ast.Statement.(
       let reason = mk_reason "for-in" loc in
       let save_break_exn = Abnormal.swap (Abnormal.Break None) false in
       let save_continue_exn = Abnormal.swap (Abnormal.Continue None) false in
+      let entries = ref SMap.empty in
+      let scope = { kind = LexicalScope; entries } in
+      Env_js.push_env scope;
+
       let t = expression cx right in
       let o = mk_object cx (mk_reason "iteration expected on object" loc) in
       Flow_js.unit_flow cx (t, MaybeT o); (* null/undefined are allowed *)
@@ -1730,6 +1734,12 @@ and statement cx = Ast.Statement.(
 
       let _, pred, _, xtypes = predicate_of_condition cx right in
       Env_js.refine_with_pred cx reason pred xtypes;
+
+      (match left with
+        | ForIn.LeftDeclaration (loc, decl) ->
+            variable_decl cx loc decl
+        | _ -> ()
+      );
 
       (match left with
         | ForIn.LeftDeclaration (_, {
@@ -1768,7 +1778,9 @@ and statement cx = Ast.Statement.(
       if Abnormal.swap (Abnormal.Break None) save_break_exn
       then Env_js.havoc_env2 newset;
 
-      raise_exception !exception_
+      raise_exception !exception_;
+
+      Env_js.pop_env()
 
   | (loc, ForOf _) ->
       (* TODO? *)

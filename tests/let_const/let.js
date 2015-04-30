@@ -7,6 +7,17 @@ function forLoop(): string {
   return i;
 }
 
+function forInLoop(): number {
+  let prop = 1;
+  let obj = { foo: true };
+
+  for (let prop in obj) {
+    let val: boolean = obj[prop];
+  }
+
+  return prop;
+}
+
 /* TODO: function TDZ1() {
   let foo;
   let foo; // OK
