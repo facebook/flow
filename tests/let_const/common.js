@@ -14,6 +14,24 @@ function isBlockScoped(): [string, string] {
   return [foo, bar];
 }
 
+function functionsAreLexicalToo(): [string, string] {
+  let foo = "foo";
+  const bar = "bar";
+  function inner() {
+    let foo = 1;
+    const bar = 2;
+  }
+  return [foo, bar];
+}
+
+function varsStillHoist(): string {
+  var foo = 1;
+  {
+    var foo = "foo";
+  }
+  return foo;
+}
+
 /* TODO: function TDZ1() {
   console.log(foo, bar, baz); // ReferenceErrors (baz is OK)
   let foo = 1;
