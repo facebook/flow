@@ -827,7 +827,11 @@ and variable_decl cx loc { Ast.Statement.VariableDeclaration.declarations; kind 
 
 and statement_decl cx = Ast.Statement.(
   let block_body cx { Block.body } =
+    let entries = ref SMap.empty in
+    let scope = { kind = LexicalScope; entries } in
+    Env_js.push_env scope;
     List.iter (statement_decl cx) body;
+    Env_js.pop_env()
   in
 
   let catch_clause cx { Try.CatchClause.body = (_, b); _ } =
@@ -956,7 +960,7 @@ and statement_decl cx = Ast.Statement.(
         let _, { Ast.Identifier.name; _ } = id in
         let r = mk_reason (spf "class %s" name) loc in
         let tvar = Flow_js.mk_tvar cx r in
-        Env_js.init_env cx name (create_env_entry tvar tvar (Some loc)) VarScope (* TODO: hoist behavior *)
+        Env_js.init_env cx name (create_env_entry tvar tvar (Some loc)) LexicalScope
       | None -> ()
     )
 

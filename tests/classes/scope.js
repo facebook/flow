@@ -1,4 +1,4 @@
-/* TODO: function foo() {
+function foo() {
   { class Foo { }; }
   var fail = new Foo(); // error
-} */
+}

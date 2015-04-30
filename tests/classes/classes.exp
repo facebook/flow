@@ -43,4 +43,7 @@ class_shapes.js:31:6,11: number
 This type is incompatible with
   class_shapes.js:5:6,11: string
 
-Found 11 errors
+scope.js:3:18,20: identifier Foo
+Could not resolve name
+
+Found 12 errors
