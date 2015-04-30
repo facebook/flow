@@ -30,3 +30,11 @@ function bad(x: Function, y: Object): void {
   var b: string = x; // Error
   var c: Function = y; // Object is not a Function
 }
+
+function scope(): string {
+  function a(): number { return 1 }
+  {
+    function a(): string { return "OK" }
+  }
+  return a();
+}
