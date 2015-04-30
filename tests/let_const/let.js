@@ -1,12 +1,11 @@
-/* TODO: function forLoop(): string {
+function forLoop(): string {
   let i = "hi";
 
   for (let i = 0; i < 10; i++) {
-    console.log(i);
   }
 
   return i;
-} */
+}
 
 /* TODO: function TDZ1() {
   let foo;

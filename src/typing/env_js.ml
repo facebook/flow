@@ -282,20 +282,26 @@ let rec merge_env cx reason (ctx, ctx1, ctx2) changeset =
   | _ -> assert false
 
 let widen_env cx reason =
-  let scope = List.hd !env in
-  let entries = scope.entries in
-  let entries = !entries in
-  if SMap.cardinal entries < 32 then
-  scope.entries := entries |> SMap.mapi (fun x {specific;general;def_loc;for_type;} ->
-    if specific = general
-    then create_env_entry ~for_type specific general def_loc
-    else
-      let reason = replace_reason x reason in
-      let tvar = Flow_js.mk_tvar cx reason in
-      Flow_js.unit_flow cx (specific,tvar);
-      Flow_js.unit_flow cx (tvar,general);
-      create_env_entry ~for_type tvar general def_loc
-  )
+  let rec loop = function
+    | [] -> ()
+    | scope::scopes ->
+        let entries = scope.entries in
+        let entries = !entries in
+        if SMap.cardinal entries < 32 then
+        scope.entries := entries |> SMap.mapi (fun x {specific;general;def_loc;for_type;} ->
+          if specific = general
+          then create_env_entry ~for_type specific general def_loc
+          else
+            let reason = replace_reason x reason in
+            let tvar = Flow_js.mk_tvar cx reason in
+            Flow_js.unit_flow cx (specific,tvar);
+            Flow_js.unit_flow cx (tvar,general);
+            create_env_entry ~for_type tvar general def_loc
+        );
+        if scope.kind = VarScope then ()
+        else loop scopes
+  in
+  loop !env
 
 let rec copy_env_ cx reason x = function
   | ([],[]) -> ()

@@ -801,9 +801,7 @@ and mk_enum_type cx reason keys =
 (************)
 
 (* TODO: detect structural misuses abnormal control flow constructs *)
-and statement_decl cx = Ast.Statement.(
-
-  (* helpers *)
+and variable_decl cx loc { Ast.Statement.VariableDeclaration.declarations; kind } = Ast.Statement.(
   let var_declarator cx scope_kind (loc, { VariableDeclaration.Declarator.id; init }) =
     Ast.(match id with
     | (loc, Pattern.Identifier (_, { Identifier.name; typeAnnotation; _ })) ->
@@ -818,17 +816,16 @@ and statement_decl cx = Ast.Statement.(
     )
   in
 
-  (* TODO const, let? *)
-  let variable_declaration cx loc { VariableDeclaration.declarations; kind } =
-    match kind with
-    | VariableDeclaration.Const ->
-        List.iter (var_declarator cx LexicalScope) declarations
-    | VariableDeclaration.Let ->
-        List.iter (var_declarator cx LexicalScope) declarations
-    | VariableDeclaration.Var ->
-        List.iter (var_declarator cx VarScope) declarations
-  in
+  match kind with
+  | VariableDeclaration.Const ->
+      List.iter (var_declarator cx LexicalScope) declarations
+  | VariableDeclaration.Let ->
+      List.iter (var_declarator cx LexicalScope) declarations
+  | VariableDeclaration.Var ->
+      List.iter (var_declarator cx VarScope) declarations
+)
 
+and statement_decl cx = Ast.Statement.(
   let block_body cx { Block.body } =
     List.iter (statement_decl cx) body;
   in
@@ -906,7 +903,7 @@ and statement_decl cx = Ast.Statement.(
   | (loc, For { For.init; test; update; body }) ->
       (match init with
         | Some (For.InitDeclaration (loc, decl)) ->
-            variable_declaration cx loc decl
+            variable_decl cx loc decl
         | _ -> ()
       );
       statement_decl cx body
@@ -914,7 +911,7 @@ and statement_decl cx = Ast.Statement.(
   | (loc, ForIn { ForIn.left; right; body; each }) ->
       (match left with
         | ForIn.LeftDeclaration (loc, decl) ->
-            variable_declaration cx loc decl
+            variable_decl cx loc decl
         | _ -> ()
       );
       statement_decl cx body
@@ -951,7 +948,7 @@ and statement_decl cx = Ast.Statement.(
       Env_js.init_env cx name (create_env_entry t t (Some loc)) VarScope (* TODO: hoist behavior *)
 
   | (loc, VariableDeclaration decl) ->
-      variable_declaration cx loc decl
+      variable_decl cx loc decl
 
   | (loc, ClassDeclaration { Class.id; _ }) -> (
       match id with
@@ -1134,8 +1131,8 @@ and statement cx = Ast.Statement.(
 
   | (loc, Block { Block.body }) ->
       let entries = ref SMap.empty in
-      let block = { kind = LexicalScope; entries } in
-      Env_js.push_env block;
+      let scope = { kind = LexicalScope; entries } in
+      Env_js.push_env scope;
 
       List.iter (statement_decl cx) body;
       toplevels cx body;
@@ -1646,9 +1643,14 @@ and statement cx = Ast.Statement.(
       let reason = mk_reason "for" loc in
       let save_break_exn = Abnormal.swap (Abnormal.Break None) false in
       let save_continue_exn = Abnormal.swap (Abnormal.Continue None) false in
+      let entries = ref SMap.empty in
+      let scope = { kind = LexicalScope; entries } in
+      Env_js.push_env scope;
+
       (match init with
         | None -> ()
         | Some (For.InitDeclaration (loc, decl)) ->
+            variable_decl cx loc decl;
             variables cx loc decl
         | Some (For.InitExpression expr) ->
             ignore (expression cx expr)
@@ -1695,7 +1697,10 @@ and statement cx = Ast.Statement.(
       if Abnormal.swap (Abnormal.Break None) save_break_exn
       then Env_js.havoc_env2 newset;
 
-      raise_exception !exception_
+      raise_exception !exception_;
+
+      Env_js.pop_env();
+
 
   (***************************************************************************)
   (* Refinements for `for-in` are derived by the following Hoare logic rule:
