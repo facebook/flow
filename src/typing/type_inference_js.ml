@@ -969,7 +969,7 @@ and statement_decl cx = Ast.Statement.(
       let _, { Ast.Identifier.name; _ } = id in
       let r = mk_reason (spf "class %s" name) loc in
       let tvar = Flow_js.mk_tvar cx r in
-      Env_js.init_env cx name (create_env_entry tvar tvar (Some loc)) VarScope (* TODO: hoist behavior *)
+      Env_js.init_env cx name (create_env_entry tvar tvar (Some loc)) LexicalScope
   | (loc, DeclareModule { DeclareModule.id; _ }) ->
       let name = match id with
       | DeclareModule.Identifier (_, id) -> id.Ast.Identifier.name
