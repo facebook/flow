@@ -949,7 +949,7 @@ and statement_decl cx = Ast.Statement.(
       let r = mk_reason (spf "declare %s" name) loc in
       let t = mk_type_annotation cx r typeAnnotation in
       Hashtbl.replace cx.type_table loc t;
-      Env_js.init_env cx name (create_env_entry t t (Some loc)) VarScope (* TODO: hoist behavior *)
+      Env_js.init_env cx name (create_env_entry t t (Some loc)) VarScope
 
   | (loc, VariableDeclaration decl) ->
       variable_decl cx loc decl
