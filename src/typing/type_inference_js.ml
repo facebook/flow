@@ -981,7 +981,7 @@ and statement_decl cx = Ast.Statement.(
       let r = mk_reason (spf "module %s" name) loc in
       let t = Flow_js.mk_tvar cx r in
       Hashtbl.replace cx.type_table loc t;
-      Env_js.init_env cx (spf "$module__%s" name) (create_env_entry t t (Some loc)) VarScope (* TODO: hoist behavior *)
+      Env_js.init_env cx (spf "$module__%s" name) (create_env_entry t t (Some loc)) VarScope
   | (_, ExportDeclaration {
       ExportDeclaration.default;
       ExportDeclaration.declaration;
@@ -1031,7 +1031,7 @@ and statement_decl cx = Ast.Statement.(
           let env_entry =
             (create_env_entry ~for_type:isType tvar tvar (Some loc))
           in
-          Env_js.init_env cx local_name env_entry VarScope (* TODO: hoist behavior *)
+          Env_js.init_env cx local_name env_entry VarScope
         | None -> (
           match specifier with
           | Some(ImportDeclaration.Named(_, named_specifiers)) ->
@@ -1055,7 +1055,7 @@ and statement_decl cx = Ast.Statement.(
               let env_entry =
                 create_env_entry ~for_type:isType tvar tvar (Some specifier_loc)
               in
-              Env_js.init_env cx local_name env_entry VarScope (* TODO: hoist behavior *);
+              Env_js.init_env cx local_name env_entry VarScope
             ) in
             List.iter init_specifier named_specifiers
           | Some(ImportDeclaration.NameSpace(_, (loc, local_ident))) ->
@@ -1067,7 +1067,7 @@ and statement_decl cx = Ast.Statement.(
             let env_entry =
               create_env_entry ~for_type:isType tvar tvar (Some loc)
             in
-            Env_js.init_env cx local_name env_entry VarScope (* TODO: hoist behavior *)
+            Env_js.init_env cx local_name env_entry VarScope
           | None -> failwith (
             "Parser error: Non-default imports must always have a " ^
             "specifier!"
