@@ -48,6 +48,7 @@ module Type :
       | PolyT of typeparam list * t
       | TypeAppT of t * t list
       | BoundT of typeparam
+      | ExistsT of reason
 
       | MaybeT of t
 
@@ -66,8 +67,6 @@ module Type :
 
       | EnumT of reason * t
       | RecordT of reason * t
-
-      | CustomClassT of name * t list * t
 
       | TypeT of reason * t
 
@@ -100,9 +99,8 @@ module Type :
 
       | LookupT of reason * reason option * string * t
 
-      | MarkupT of reason * t * t
-
       | ObjAssignT of reason * t * t * string list * bool
+      | ObjFreezeT of reason * t
       | ObjRestT of reason * string list * t
       | ObjSealT of reason * t
 
@@ -145,6 +143,7 @@ module Type :
       proto_t: prototype;
     }
     and flags = {
+      frozen: bool;
       sealed: bool;
       exact: bool;
     }
@@ -156,8 +155,8 @@ module Type :
     and insttype = {
       class_id: ident;
       type_args: t SMap.t;
-      fields_tmap: fields;
-      methods_tmap: methods;
+      fields_tmap: int;
+      methods_tmap: int;
       mixins: bool;
     }
     and typeparam = {
@@ -168,12 +167,10 @@ module Type :
     and prototype = t
     and static = t
     and super = t
-    and fields = t SMap.t
-    and methods = t SMap.t
+    and properties = t SMap.t
     val compare : 'a -> 'a -> int
 
     val open_tvar: t -> (reason * ident)
-    val mk_predicate: (predicate * t) -> t
   end
 
 module TypeMap : MapSig with type key = Type.t
@@ -184,43 +181,13 @@ val is_use: Type.t -> bool
 
 (***************************************)
 
-type rule =
-  | FunThis
-  | FunArg of int * int
-  | FunRet
-  | ObjProp of string
-  | ObjKey
-  | ArrIndex
-  | ArrElem
-  | DecomposeNullable
-  | InstantiatePoly
-  | ClassInst
-  | FunInst
-  | FunProto
-  | CopyProto
-  | InstanceProp of string
-  | ObjProto
-  | StrIndex
-  | StrElem
-  | InstanceSuper
-  | Op of string
-  | ReactProps
-  | ReactComponent
-  | LibMethod of string
-  | FunStatics
-  | ClassStatics
-
 type trace
 
-val string_of_trace : string -> bool -> trace -> string
-(* TODO remove *)
-val string_of_trace_old : string -> bool -> trace -> string
-
 val unit_trace : Type.t -> Type.t -> trace
-val select_trace: Type.t -> Type.t -> trace -> rule -> trace
+val rec_trace: Type.t -> Type.t -> trace -> trace
 val concat_trace: trace list -> trace
 
-val reasons_of_trace : trace -> reason list
+val reasons_of_trace : ?level:int -> trace -> reason list
 
 (***************************************)
 
@@ -288,7 +255,7 @@ type context = {
 
   mutable graph: bounds IMap.t;
   mutable closures: (stack * scope list) IMap.t;
-  mutable property_maps: Type.t SMap.t IMap.t;
+  mutable property_maps: Type.properties IMap.t;
   mutable modulemap: Type.t SMap.t;
 
   mutable strict_required: SSet.t;

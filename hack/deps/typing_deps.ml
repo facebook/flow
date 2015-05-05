@@ -28,8 +28,8 @@ module Dep = struct
     | Class of string
     | Fun of string
     | FunName of string
-    | CVar of string * string
-    | SCVar of string * string
+    | Prop of string * string
+    | SProp of string * string
     | Method of string * string
     | SMethod of string * string
     | Cstr of string
@@ -108,8 +108,8 @@ let get_ideps x =
 let get_bazooka x =
   match x with
   | Dep.Const (cid, _)
-  | Dep.CVar (cid, _)
-  | Dep.SCVar (cid, _)
+  | Dep.Prop (cid, _)
+  | Dep.SProp (cid, _)
   | Dep.Method (cid, _)
   | Dep.Cstr cid
   | Dep.SMethod (cid, _)

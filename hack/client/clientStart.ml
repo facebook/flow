@@ -60,53 +60,40 @@ let start_server env =
   ()
 
 let should_start env =
-  if ClientUtils.server_exists env.root
-  then begin
-    try
-      (* Let's ping the server to make sure it's up and not out of date *)
-      let response = with_timeout 6
-        ~on_timeout:(fun _ -> raise Server_busy)
-        ~do_:(fun () ->
-          let ic, oc = ClientUtils.connect env.root in
-          ServerMsg.cmd_to_channel oc ServerMsg.PING;
-          ServerMsg.response_from_channel ic) in
-      match response with
-      | ServerMsg.PONG -> false
-      | ServerMsg.SERVER_OUT_OF_DATE ->
-          Printf.fprintf
-            stderr
-            "Replacing out of date server for %s\n%!"
-            (Path.string_of_path env.root);
-          ignore(Unix.sleep 1);
-          true
-      | ServerMsg.SERVER_DYING
-      | ServerMsg.NO_ERRORS
-      | ServerMsg.ERRORS _
-      | ServerMsg.DIRECTORY_MISMATCH _ ->
-        let r = (ServerMsg.response_to_string response) in
-        failwith ("Unexpected response from the server: "^r)
-    with
-      | Server_busy ->
-          Printf.fprintf
-            stderr
-            "Replacing busy server for %s\n%!"
-            (Path.string_of_path env.root);
-          HackClientStop.kill_server env.root;
-          true
-      | Server_initializing ->
-          Printf.fprintf
-            stderr
-            "Found initializing server for %s\n%!"
-            (Path.string_of_path env.root);
-          false
-      | Server_cant_connect ->
-          Printf.fprintf
-            stderr
-            "Replacing unresponsive server for %s\n%!"
-            (Path.string_of_path env.root);
-          HackClientStop.kill_server env.root;
-          true
-  end else true
+  try
+    with_timeout 6
+      ~on_timeout:(fun _ -> raise Server_busy)
+      ~do_:(fun () ->
+        ignore (ClientUtils.connect env.root);
+        false)
+  with
+  | Server_missing -> true
+  | Server_busy ->
+      Printf.fprintf
+        stderr
+        "Replacing busy server for %s\n%!"
+        (Path.string_of_path env.root);
+      HackClientStop.kill_server env.root;
+      true
+  | Server_initializing ->
+      Printf.fprintf
+        stderr
+        "Found initializing server for %s\n%!"
+        (Path.string_of_path env.root);
+      false
+  | Server_cant_connect ->
+      Printf.fprintf
+        stderr
+        "Replacing unresponsive server for %s\n%!"
+        (Path.string_of_path env.root);
+      HackClientStop.kill_server env.root;
+      true
+  | Server_out_of_date ->
+      Printf.eprintf
+        "Replacing out of date server for %s\n%!"
+        (Path.string_of_path env.root);
+      ignore(Unix.sleep 1);
+      true
 
 let main env =
   if should_start env

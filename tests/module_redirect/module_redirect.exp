@@ -1,14 +1,14 @@
 
-[LIB] A.js: module A
+D.js:6:11,16: string
 This type is incompatible with
-  D.js:6:11,16: string
+  [LIB] A.js: module A
 
-[LIB] A.js: module A
+D.js:7:11,16: string
 This type is incompatible with
-  D.js:7:11,16: string
+  [LIB] A.js: module A
 
-[LIB] A.js: module A
+D.js:8:11,16: string
 This type is incompatible with
-  D.js:8:11,16: string
+  [LIB] A.js: module A
 
 Found 3 errors

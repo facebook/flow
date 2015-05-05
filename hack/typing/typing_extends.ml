@@ -20,6 +20,7 @@ open Typing_ops
 module Env = Typing_env
 module TUtils = Typing_utils
 module Inst = Typing_instantiate
+module Phase = Typing_phase
 
 (*****************************************************************************)
 (* Helpers *)
@@ -127,10 +128,10 @@ let check_override env ?(ignore_fun_return = false) ?(check_for_const = false)
      * about how this as Base and this as Child are different types *)
     let r, _ as self = Env.get_self env in
     let this_ty = r, TUtils.this_of self in
-    let env, child_ce_type = TUtils.localize env class_elt.ce_type in
+    let env, child_ce_type = Phase.localize env class_elt.ce_type in
     let env, parent_ce_type =
       Inst.instantiate_this Phase.decl env parent_class_elt.ce_type this_ty in
-    let env, parent_ce_type = TUtils.localize env parent_ce_type in
+    let env, parent_ce_type = Phase.localize env parent_ce_type in
     if check_for_const
     then check_types_for_const env parent_ce_type child_ce_type
     else match parent_ce_type, child_ce_type with
@@ -174,8 +175,8 @@ let instantiate_members subst env members =
   SMap.map_env (Inst.instantiate_ce subst) env members
 
 let make_all_members class_ = [
-  class_.tc_cvars;
-  class_.tc_scvars;
+  class_.tc_props;
+  class_.tc_sprops;
   class_.tc_methods;
   class_.tc_smethods;
 ]
@@ -234,10 +235,11 @@ let tconst_subsumption this_ty env parent_typeconst child_typeconst =
   | { ttc_constraint = Some parent_cstr; _},
       ({ ttc_type = Some child_ty; _ } | { ttc_constraint = Some child_ty; _ }) ->
     let env, parent_cstr = Inst.instantiate_this Phase.decl env parent_cstr this_ty in
-    ignore (TUtils.sub_type_phase env (Phase.decl parent_cstr) (Phase.decl child_ty))
+    ignore
+      (Phase.sub_type_phase env (Phase.decl parent_cstr) (Phase.decl child_ty))
   | { ttc_type = Some parent_ty; _ }, { ttc_type = Some child_ty; _ } ->
     let env, parent_ty = Inst.instantiate_this Phase.decl env parent_ty this_ty in
-    ignore (TUtils.unify_phase env (Phase.decl parent_ty) (Phase.decl child_ty))
+    ignore (Phase.unify_phase env (Phase.decl parent_ty) (Phase.decl child_ty))
   | _, _ -> ()
 
 (* For type constants we need to check that a child respects the

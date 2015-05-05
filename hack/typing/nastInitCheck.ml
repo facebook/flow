@@ -34,11 +34,11 @@ module SN = Naming_special_names
  *)
 exception InitReturn of SSet.t
 
-type cvar_status =
+type prop_status =
   | Vnull (* The value is still potentially null *)
   | Vinit (* Yay! it has been initialized *)
 
-let parent_init_cvar = "parent::" ^ SN.Members.__construct
+let parent_init_prop = "parent::" ^ SN.Members.__construct
 
 (* Module initializing the environment
    Originally, every class member has 2 possible states,
@@ -64,41 +64,41 @@ module Env = struct
 
   type t = {
     methods : method_status ref SMap.t ;
-    cvars   : SSet.t ;
+    props   : SSet.t ;
   }
 
   (* If we need to call parent::__construct, we treat it as if it were
    * a class variable that needs to be initialized. It's a bit hacky
    * but it works. The idea here is that if the parent needs to be
    * initialized, we add a phony class variable. *)
-  let add_parent_construct c tenv cvars parent_hint =
+  let add_parent_construct c tenv props parent_hint =
     match parent_hint with
       | (_, Happly ((_, parent), _)) ->
         let class_ = Typing_env.get_class tenv parent in
         (match class_ with
           | Some class_ when
               class_.Typing_defs.tc_need_init && c.c_constructor <> None
-              -> SSet.add parent_init_cvar cvars
-          | _ -> cvars
+              -> SSet.add parent_init_prop props
+          | _ -> props
         )
-      | _ -> cvars
+      | _ -> props
 
-  let parent tenv cvars c =
-    if c.c_mode = FileInfo.Mdecl then cvars
+  let parent tenv props c =
+    if c.c_mode = FileInfo.Mdecl then props
     else
       if c.c_kind = Ast.Ctrait
-      then List.fold_left (add_parent_construct c tenv) cvars c.c_req_extends
+      then List.fold_left (add_parent_construct c tenv) props c.c_req_extends
       else match c.c_extends with
-      | [] -> cvars
-      | parent_hint :: _ -> add_parent_construct c tenv cvars parent_hint
+      | [] -> props
+      | parent_hint :: _ -> add_parent_construct c tenv props parent_hint
 
   let rec make tenv c =
     let tenv = Typing_env.set_root tenv (Typing_deps.Dep.Class (snd c.c_name)) in
     let methods = List.fold_left method_ SMap.empty c.c_methods in
-    let cvars = List.fold_left cvar SSet.empty c.c_vars in
-    let cvars = parent_cvars tenv cvars c in
-    let cvars = parent tenv cvars c in
-    { methods = methods; cvars = cvars }
+    let props = List.fold_left prop SSet.empty c.c_vars in
+    let props = parent_props tenv props c in
+    let props = parent tenv props c in
+    { methods = methods; props = props }
 
   and method_ acc m =
     if m.m_visibility <> Private then acc else
@@ -106,7 +106,7 @@ module Env = struct
       let acc = SMap.add name (ref (Todo m.m_body)) acc in
       acc
 
-  and cvar acc cv =
+  and prop acc cv =
     if cv.cv_is_xhp then acc else begin
       let cname = snd cv.cv_id in
       match cv.cv_type with
@@ -117,7 +117,7 @@ module Env = struct
             | _ -> SSet.add cname acc
     end
 
-  and parent_cvars tenv acc c =
+  and parent_props tenv acc c =
     List.fold_left begin fun acc parent ->
       match parent with _, Happly ((_, parent), _) ->
         let tc = Typing_env.get_class tenv parent in
@@ -149,10 +149,10 @@ let rec class_decl tenv c =
   then
     let env = Env.make tenv c in
     let inits = constructor env c.c_constructor in
-    let cvars = env.cvars in
+    let props = env.props in
     SSet.fold begin fun x acc ->
       if SSet.mem x inits then acc else SSet.add x acc
-    end cvars SSet.empty
+    end props SSet.empty
   else SSet.empty
 
 and class_ tenv c =
@@ -177,16 +177,16 @@ and class_ tenv c =
       if c.c_kind = Ast.Ctrait || c.c_kind = Ast.Cabstract
       then begin
         let has_constructor = c.c_constructor <> None in
-        let needs_parent_call = SSet.mem parent_init_cvar env.cvars in
-        let is_calling_parent = SSet.mem parent_init_cvar inits in
+        let needs_parent_call = SSet.mem parent_init_prop env.props in
+        let is_calling_parent = SSet.mem parent_init_prop inits in
         if has_constructor && needs_parent_call && not is_calling_parent
-        then Errors.not_initialized (p, parent_init_cvar);
+        then Errors.not_initialized (p, parent_init_prop);
       end
       else begin
         SSet.iter begin fun x ->
           if not (SSet.mem x inits)
           then Errors.not_initialized (p, x);
-        end env.cvars
+        end env.props
       end
   end
 
@@ -217,7 +217,7 @@ and stmt env acc st =
     | Expr (_, Call (Cnormal, (_, Class_const (CIparent, (_, m))), el, _uel))
         when m = SN.Members.__construct ->
       let acc = List.fold_left expr acc el in
-      assign env acc parent_init_cvar
+      assign env acc parent_init_prop
     | Expr e -> expr acc e
     | Break _ -> acc
     | Continue _ -> acc
@@ -286,13 +286,13 @@ and block env acc l =
     raise (InitReturn acc_before_block)
 
 and are_all_init env set =
-  SSet.fold (fun cv acc -> SSet.mem cv set && acc) env.cvars true
+  SSet.fold (fun cv acc -> SSet.mem cv set && acc) env.props true
 
 and check_all_init p env acc =
   SSet.iter begin fun cv ->
     if not (SSet.mem cv acc)
     then Errors.call_before_init p cv
-  end env.cvars
+  end env.props
 
 and exprl env acc l = List.fold_left (expr env) acc l
 and expr env acc (p, e) = expr_ env acc p e
@@ -315,7 +315,7 @@ and expr_ env acc p e =
   | Id _ -> acc
   | Lvar _ | Lplaceholder _ -> acc
   | Obj_get ((_, This), (_, Id (_, vx as v)), _) ->
-      if SSet.mem vx env.cvars && not (SSet.mem vx acc)
+      if SSet.mem vx env.props && not (SSet.mem vx acc)
       then (Errors.read_before_write v; acc)
       else acc
   | Clone e -> expr acc e

@@ -441,6 +441,9 @@ end = struct
     and primary env =
       let loc = Peek.loc env in
       match Peek.token env with
+      | T_MULT ->
+          Expect.token env T_MULT;
+          loc, Type.Exists
       | T_LESS_THAN -> _function env
       | T_LPAREN -> function_or_group env
       | T_LCURLY ->

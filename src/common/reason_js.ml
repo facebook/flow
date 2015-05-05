@@ -189,6 +189,12 @@ let internal_name name =
 let is_internal_name name =
   String.length name >= 1 && name.[0] = '.'
 
+let internal_module_name name =
+  spf "$module__%s" name
+
+let is_internal_module_name name =
+  Str.string_match (Str.regexp "\\$module__.*") name 0
+
 let is_derivable_reason r =
   r.derivable
 

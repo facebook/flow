@@ -155,6 +155,7 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
         retry (env, option_values) 1 "Error: could not connect to flow server"
     | ClientExceptions.Server_busy ->
         retry (env, option_values) 1 "Error: flow server is busy"
+    | ClientExceptions.Server_out_of_date
     | ClientExceptions.Server_missing ->
         retry (env, option_values) 3 "The flow server will be ready in a moment"
     | _ ->

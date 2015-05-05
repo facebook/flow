@@ -17,7 +17,7 @@ type moduleSystem = Node | Haste
 
 type options = {
   moduleSystem: moduleSystem;
-  traces: bool;
+  traces: int;
 }
 
 module PathMap : MapSig with type key = Path.path
@@ -46,7 +46,7 @@ type config = {
 
 let default_options = {
   moduleSystem = Node;
-  traces = false;
+  traces = 0;
 }
 
 module Pp : sig
@@ -247,7 +247,10 @@ module OptionsParser : sig
   val configure : (string * option_parser) list -> t
 
   (******* Option parser constructors ********)
-  val enum : (string * 'a) list -> (options -> 'a -> options) -> option_parser
+  val generic: (string * (string -> 'a option)) ->
+    (options -> 'a -> options) -> option_parser
+  val enum : (string * 'a) list ->
+    (options -> 'a -> options) -> option_parser
 end = struct
   type option_parser = (options -> string -> (int * string) -> options)
   type t = option_parser SMap.t
@@ -257,20 +260,29 @@ end = struct
   let configure configuration =
     List.fold_left map_add SMap.empty configuration
 
+  (* Generic option parser constructor. Makes an option parser given a string
+     description `supported` of the target datatype and a partial function
+     `converter` that parsers strings to that datatype. *)
+  let generic (supported, converter) option_setter =
+    fun options opt (ln, value) ->
+      match converter value with
+      | Some value -> option_setter options value
+      | None ->
+          let msg = spf
+            "Unsupported value for %s: \"%s\"\nSupported values: %s"
+            opt value supported in
+          error ln msg
+
+  (* Option parser constructor for finite sets. Reuses the generic option parser
+     constructor, passing the appropriate `supported` and `converter`. *)
   let enum values option_setter =
     let map = List.fold_left map_add SMap.empty values in
-    fun options opt (ln, value) ->
-      if SMap.mem value map
-      then option_setter options (SMap.find_unsafe value map)
-      else
-        let supported = values
+    let converter = fun value -> SMap.get value map in
+    let supported = values
           |> List.map fst
           |> List.map (spf "\"%s\"")
           |> String.concat ", " in
-        let msg = spf
-          "Unsupported enum value for %s: \"%s\"\nSupprted values: %s"
-          opt value supported in
-        error ln msg
+    generic (supported, converter) option_setter
 
   let parse_line p (options, seen) (ln, line) =
     if Str.string_match (Str.regexp "^\\([a-zA-Z.]+\\)=\\(.*\\)$") line 0
@@ -295,10 +307,12 @@ end = struct
 end
 
 let options_parser = OptionsParser.configure [
-  "module.system", OptionsParser.enum (["node", Node; "haste", Haste]) (fun
-    options moduleSystem -> { options with moduleSystem });
-  "traces", OptionsParser.enum (["true", true; "false", false]) (fun
-    options traces -> { options with traces });
+  "module.system", OptionsParser.enum
+    (["node", Node; "haste", Haste])
+    (fun options moduleSystem -> { options with moduleSystem });
+  "traces", OptionsParser.generic
+    ("integer", fun s -> try Some (int_of_string s) with _ -> None)
+    (fun options traces -> { options with traces });
 ]
 
 let parse_options config lines =

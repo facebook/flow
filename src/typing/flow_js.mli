@@ -21,9 +21,7 @@ val add_error: context -> (reason * string) list -> unit
 val find_graph: context -> ident -> bounds
 
 (* propagates sources to sinks following a subtype relation *)
-val flow: context -> (Type.t * Type.t) -> trace -> unit
-
-val unit_flow: context -> (Type.t * Type.t) -> unit
+val flow: context -> (Type.t * Type.t) -> unit
 
 val unify: context -> Type.t -> Type.t -> unit
 
@@ -36,7 +34,7 @@ end
 val mk_tvar: context -> reason -> Type.t
 val mk_tvar_where: context -> reason -> (Type.t -> unit) -> Type.t
 
-val mk_typeapp_instance: context -> reason -> string -> Type.t list -> Type.t
+val get_builtin_typeapp: context -> reason -> string -> Type.t list -> Type.t
 
 (* frames *)
 
@@ -48,7 +46,7 @@ val havoc_ctx : context -> int -> int -> unit
 
 (* polymorphism *)
 
-val subst: context -> (Type.t SMap.t) -> Type.t -> Type.t
+val subst: context -> ?force:bool -> (Type.t SMap.t) -> Type.t -> Type.t
 
 (* property maps *)
 
@@ -105,7 +103,8 @@ val lookup_builtin: context -> string -> reason -> reason option -> Type.t -> un
 val get_builtin_type: context -> reason -> string -> Type.t
 val resolve_builtin_class: context -> Type.t -> Type.t
 val set_builtin: context -> string -> Type.t -> unit
-val mk_annot: context -> reason -> Type.t -> Type.t
+
+val mk_instance: context -> ?trace:trace -> reason -> Type.t -> Type.t
 
 (* strict *)
 val check_upper_bound: context -> ident -> (Type.t -> bool) -> bool

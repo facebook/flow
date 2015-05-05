@@ -52,7 +52,7 @@ let check_typedef x =
      * slightly larger change than I want to deal with right now. *)
     let tenv = Typing_env.set_mode tenv FileInfo.Mdecl in
     let tenv = Typing_env.set_root tenv (Typing_deps.Dep.Class x) in
-    Typing.typedef_def tenv x typedef;
+    Typing.typedef_def tenv typedef;
     Typing_variance.typedef x
   with Not_found ->
     ()
@@ -71,9 +71,9 @@ let check_const x =
           let root = Typing_deps.Dep.GConst (snd cst.Nast.cst_name) in
           let env = Typing_env.set_root env root in
           let env, value_type = Typing.expr env v in
-          let _env = Typing_utils.sub_type_phase env
-            (Typing_defs.Phase.decl declared_type)
-            (Typing_defs.Phase.locl value_type) in
+          let _env = Typing_phase.sub_type_phase env
+            (Typing_phase.decl declared_type)
+            (Typing_phase.locl value_type) in
           ()
         end
         | None -> ()

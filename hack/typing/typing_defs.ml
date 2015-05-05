@@ -31,6 +31,12 @@ type locl = private LoclPhase
 
 type 'phase ty = Reason.t * 'phase ty_
 and _ ty_ =
+  (*========== Following Types Exist Only in the Declared Phase ==========*)
+
+  (* Either an object type or a type alias, ty list are the arguments *)
+  | Tapply : Nast.sid * decl ty list -> decl ty_
+
+  (*========== Following Types Exist in Both Phases ==========*)
   (* "Any" is the type of a variable with a missing annotation, and "mixed" is
    * the type of a variable annotated as "mixed". THESE TWO ARE VERY DIFFERENT!
    * Any unifies with anything, i.e., it is both a supertype and subtype of any
@@ -87,8 +93,6 @@ and _ ty_ =
    * of indirection before you get to Tfun -- see Tanon below. *)
   | Tfun : 'phase fun_type -> 'phase ty_
 
-  (* Object type, ty list are the arguments *)
-  | Tapply : Nast.sid * 'phase ty list -> 'phase ty_
 
   (* Tuple, with ordered list of the types of the elements of the tuple. *)
   | Ttuple : 'phase ty list -> 'phase ty_
@@ -187,6 +191,9 @@ and _ ty_ =
    *)
   | Tobject : locl ty_
 
+  (* An instance of a class or interface, ty list are the arguments *)
+  | Tclass : Nast.sid * locl ty list -> locl ty_
+
 and 'phase taccess_type = 'phase ty * Nast.sid list
 
 (* The type of a function AND a method.
@@ -248,8 +255,8 @@ and class_type = {
   tc_tparams             : tparam list   ;
   tc_consts              : class_elt SMap.t;
   tc_typeconsts          : typeconst_type SMap.t;
-  tc_cvars               : class_elt SMap.t;
-  tc_scvars              : class_elt SMap.t;
+  tc_props               : class_elt SMap.t;
+  tc_sprops              : class_elt SMap.t;
   tc_methods             : class_elt SMap.t;
   tc_smethods            : class_elt SMap.t;
   tc_construct           : class_elt option * bool;
@@ -280,70 +287,16 @@ and enum_type = {
 
 and tparam = Ast.variance * Ast.id * (Ast.constraint_kind * decl ty) option
 
-(* Here is the general problem the delayed application of the phase solves.
- * Let's say you have a function that you want to operate generically across
- * phases. In most cases when you do this you can use the 'ty' GADT and locally
- * abstract types to write code in a phase agonistic way.
- *
- *  let yell_any: type a. a ty -> string = fun ty ->
- *    match ty with
- *    | _, Tany -> "Any"
- *    | _ -> ""
- *
- * Now let's add a function that works for all phases, but whose logic is phase
- * dependent. For this we can use 'phase_ty' ADT:
- *
- *  let yell_locl phase_ty =
- *     match phase_ty with
- *     | DeclTy ty -> ""
- *     | LoclTy ty -> "Locl"
- *
- * Now let's say you want to write a function that has behavior that works across
- * phases, but needs to invoke a function that is phase dependent. Our options
- * are as follows.
- *
- *  let yell_any_or_locl phase_ty =
- *    let ans = yell_locl phase_ty in
- *    match phase_ty with
- *    | DeclTy ty -> ans ^ (yell_any ty)
- *    | LoclTy ty -> ans ^ (yell_any ty)
- *
- * This would lead to code duplication since we cannot generically operate on the
- * underlying 'ty' GADT. If we want to eliminate this code duplication there are
- * two options.
- *
- *  let generic_ty: type a. phase_ty -> a ty = function
- *    | DeclTy ty -> ty
- *    | LoclTy ty -> ty
- *
- *  let yell_any_or_locl phase_ty =
- *    let ans = yell_locl phase_ty in
- *    ans ^ (yell_any (generic_ty phase_ty))
- *
- * generic_ty allows us to extract a generic value which we can use. This
- * approach is limiting because we lose all information about what phase 'a ty'
- * is.
- *
- * The other approach is to pass in a function that goes from 'a ty -> phase_ty'.
- *
- *  let yell_any_or_locl phase ty =
- *    let ans = yell_locl (phase ty) in
- *    ans ^ (yell_any ty)
- *
- * Here we can use 'ty' generically (without losing information about what phase
- * 'a ty' is), and we rely on the caller passing in an appropriate function that
- * converts into the 'phase_ty' for when we need to hop into phase specific code.
- *)
 type phase_ty =
   | DeclTy of decl ty
   | LoclTy of locl ty
 
-module Phase = struct
-  type 'a t = 'a ty -> phase_ty
+(* Tracks information about how a type was expanded *)
+type expand_env = {
+  typedef_expansions : (Pos.t * string) list;
+}
 
-  let decl ty = DeclTy ty
-  let locl ty = LoclTy ty
-end
+type ety = expand_env * locl ty
 
 (* The identifier for this *)
 let this = Ident.make "$this"

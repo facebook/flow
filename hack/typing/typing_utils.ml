@@ -24,8 +24,7 @@ module ShapeMap = Nast.ShapeMap
 let not_implemented _ = failwith "Function not implemented"
 
 type expand_typedef =
-    Env.env -> Reason.t -> string -> locl ty list -> Env.env * locl ty
-
+    expand_env -> Env.env -> Reason.t -> string -> locl ty list -> Env.env * ety
 let (expand_typedef_ref : expand_typedef ref) = ref not_implemented
 let expand_typedef x = !expand_typedef_ref x
 
@@ -185,8 +184,9 @@ let is_array_as_tuple env ty =
       | _ -> false
       )
   | _, (Tany | Tmixed | Tarray (_, _) | Tprim _ | Tgeneric (_, _) | Toption _
-    | Tvar _ | Tabstract (_, _, _) | Tapply (_, _) | Ttuple _ | Tanon (_, _)
+    | Tvar _ | Tabstract (_, _, _) | Tclass (_, _) | Ttuple _ | Tanon (_, _)
     | Tfun _ | Tunresolved _ | Tobject | Tshape _ | Taccess (_, _)) -> false
+
 
 (*****************************************************************************)
 (* Adds a new field to all the shapes found in a given type.
@@ -249,61 +249,3 @@ end = struct
     end
   let check ty = visitor#on_type false ty
 end
-
-let rec localize env (ty: decl ty): _ * locl ty =
-  match ty with
-  | _, (Tprim _ | Tany | Tmixed | Tgeneric (_, None)) as x -> env, x
-  | r, Tarray (ty1, ty2) ->
-     let env, ty1 = opt localize env ty1 in
-     let env, ty2 = opt localize env ty2 in
-     env, (r, Tarray (ty1, ty2))
-  | r, Tgeneric (s, Some (c, ty)) ->
-     let env, ty = localize env ty in
-     env, (r, Tgeneric (s, Some (c, ty)))
-  | r, Toption ty ->
-     let env, ty = localize env ty in
-     env, (r, Toption ty)
-  | r, Tfun ft ->
-     let env, ft = localize_ft env ft in
-     env, (r, Tfun ft)
-  | r, Tapply (cls, tyl) ->
-     let env, tyl = lfold localize env tyl in
-     env, (r, Tapply (cls, tyl))
-  | r, Ttuple tyl ->
-     let env, tyl = lfold localize env tyl in
-     env, (r, Ttuple tyl)
-  | r, Taccess (root_ty, ids) ->
-     let env, root_ty = localize env root_ty in
-     env, (r, Taccess (root_ty, ids))
-  | r, Tshape tym ->
-     let env, tym = ShapeMap.map_env localize env tym in
-     env, (r, Tshape tym)
-
-and localize_ft env ft =
-  let names, params = List.split ft.ft_params in
-  let env, params = lfold localize env params in
-  let env, arity = match ft.ft_arity with
-    | Fvariadic (min, (name, var_ty)) ->
-       let env, var_ty = localize env var_ty in
-       env, Fvariadic (min, (name, var_ty))
-    | Fellipsis _ | Fstandard (_, _) as x -> env, x in
-  let env, ret = localize env ft.ft_ret in
-  let params = List.map2 (fun x y -> x, y) names params in
-  env, { ft with ft_arity = arity; ft_params = params; ft_ret = ret }
-
-let localize_phase env phase_ty =
-  match phase_ty with
-  | DeclTy ty ->
-     localize env ty
-  | LoclTy ty ->
-     env, ty
-
-let unify_phase env pty1 pty2 =
-  let env, ty1 = localize_phase env pty1 in
-  let env, ty2 = localize_phase env pty2 in
-  unify env ty1 ty2
-
-let sub_type_phase env pty1 pty2 =
-  let env, ty1 = localize_phase env pty1 in
-  let env, ty2 = localize_phase env pty2 in
-  sub_type env ty1 ty2

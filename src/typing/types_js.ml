@@ -35,8 +35,7 @@ type options = {
   opt_verbose : bool;
   opt_all : bool;
   opt_weak : bool;
-  opt_traces : bool;
-  opt_newtraces : bool;
+  opt_traces : int;
   opt_strict : bool;
   opt_console : bool;
   opt_json : bool;
@@ -54,8 +53,7 @@ let init_modes opts =
   modes.verbose <- opts.opt_verbose;
   modes.all <- opts.opt_all;
   modes.weak_by_default <- opts.opt_weak;
-  modes.traces_enabled <- opts.opt_traces;
-  modes.newtraces_enabled <- opts.opt_newtraces;
+  modes.traces <- opts.opt_traces;
   modes.strict <- opts.opt_strict;
   modes.console <- opts.opt_console;
   modes.json <- opts.opt_json;
@@ -223,7 +221,7 @@ let check_requires cx =
       let m_name = req in
       let reason = Reason_js.mk_reason m_name loc in
       let tvar = Flow_js.mk_tvar cx reason in
-      Flow_js.lookup_builtin cx (spf "$module__%s" m_name)
+      Flow_js.lookup_builtin cx (Reason_js.internal_module_name m_name)
         reason (Some (Reason_js.builtin_reason m_name)) tvar;
   ) cx.required
 

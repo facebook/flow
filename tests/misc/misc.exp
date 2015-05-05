@@ -31,6 +31,10 @@ F.js:1:26,33: string
 This type is incompatible with
   F.js:1:26,37: number
 
+F.js:4:33,38: string
+This type is incompatible with
+  [LIB] core.js:160:13,18: number
+
 G.js:2:12,14: number
 This type is incompatible with
   G.js:1:19,24: string
@@ -41,14 +45,10 @@ Function cannot be called on
 
 G.js:6:12,17: string
 This type is incompatible with
-  [LIB] core.js:152:13,18: number
+  [LIB] core.js:160:13,18: number
 
 G.js:7:1,10: call of method length
 Function cannot be called on
-  [LIB] core.js:152:13,18: number
-
-[LIB] core.js:152:13,18: number
-This type is incompatible with
-  F.js:4:33,38: string
+  [LIB] core.js:160:13,18: number
 
 Found 13 errors

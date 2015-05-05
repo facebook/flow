@@ -1,54 +1,54 @@
 
 promise.js:11:11,11: number
 This type is incompatible with
-  [LIB] core.js:330:25,38: union type
+  [LIB] core.js:339:25,38: union type
 
 promise.js:22:13,13: number
 This type is incompatible with
-  [LIB] core.js:330:25,38: union type
+  [LIB] core.js:339:25,38: union type
 
 promise.js:33:15,15: number
 This type is incompatible with
-  [LIB] core.js:330:25,38: union type
+  [LIB] core.js:339:25,38: union type
 
 promise.js:44:13,14: number
 This type is incompatible with
-  [LIB] core.js:330:25,38: union type
+  [LIB] core.js:339:25,38: union type
 
 promise.js:106:17,17: number
 This type is incompatible with
-  [LIB] core.js:348:32,45: union type
+  [LIB] core.js:357:32,45: union type
 
 promise.js:112:33,33: number
 This type is incompatible with
-  [LIB] core.js:348:32,45: union type
+  [LIB] core.js:357:32,45: union type
 
 promise.js:118:49,49: number
 This type is incompatible with
-  [LIB] core.js:348:32,45: union type
+  [LIB] core.js:357:32,45: union type
 
 promise.js:149:32,37: string
 This type is incompatible with
-  [LIB] core.js:335:33,46: union type
+  [LIB] core.js:344:33,46: union type
 
 promise.js:157:48,53: string
 This type is incompatible with
-  [LIB] core.js:348:32,45: union type
+  [LIB] core.js:357:32,45: union type
 
 promise.js:165:64,69: string
 This type is incompatible with
-  [LIB] core.js:348:32,45: union type
+  [LIB] core.js:357:32,45: union type
 
 promise.js:189:33,38: string
 This type is incompatible with
-  [LIB] core.js:345:34,48: union type
+  [LIB] core.js:354:34,48: union type
 
 promise.js:197:49,54: string
 This type is incompatible with
-  [LIB] core.js:348:32,45: union type
+  [LIB] core.js:357:32,45: union type
 
 promise.js:205:65,70: string
 This type is incompatible with
-  [LIB] core.js:348:32,45: union type
+  [LIB] core.js:357:32,45: union type
 
 Found 13 errors

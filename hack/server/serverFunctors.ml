@@ -11,6 +11,7 @@
 open Utils
 open Sys_utils
 open ServerEnv
+open ServerUtils
 
 exception State_not_found
 
@@ -24,6 +25,8 @@ module type SERVER_PROGRAM = sig
     val load_failed: string -> unit
     val lock_lost: Path.path -> string -> unit
     val lock_stolen: Path.path -> string -> unit
+    val master_exception: string -> unit
+    val out_of_date: unit -> unit
   end
 
   val preinit : unit -> unit
@@ -43,7 +46,7 @@ module type SERVER_PROGRAM = sig
   val load_config : unit -> ServerConfig.t
   val validate_config : genv -> bool
   val get_errors: ServerEnv.env -> Errors.t
-  val handle_connection : genv -> env -> Unix.file_descr -> unit
+  val handle_client : genv -> env -> client -> unit
   (* This is a hack for us to save / restore the global state that is not
    * already captured by ServerEnv *)
   val marshal : out_channel -> unit
@@ -111,6 +114,44 @@ end = struct
     let ready_socket_l, _, _ = Unix.select [socket] [] [] (1.0) in
     ready_socket_l <> []
 
+  let handle_connection_ genv env socket =
+    let cli, _ = Unix.accept socket in
+    let ic = Unix.in_channel_of_descr cli in
+    let oc = Unix.out_channel_of_descr cli in
+    let close () =
+      Unix.shutdown cli Unix.SHUTDOWN_ALL;
+      Unix.close cli in
+    try
+      let client_build_id = input_line ic in
+      if client_build_id <> Build_id.build_id_ohai then begin
+        msg_to_channel oc Build_id_mismatch;
+        Program.EventLogger.out_of_date ();
+        Printf.eprintf "Status: Error\n";
+        Printf.eprintf "%s is out of date. Exiting.\n" Program.name;
+        exit 4
+      end else msg_to_channel oc Connection_ok;
+      let client = { ic; oc; close } in
+      Program.handle_client genv env client
+    with e ->
+      let msg = Printexc.to_string e in
+      Program.EventLogger.master_exception msg;
+      Printf.fprintf stderr "Error: %s\n%!" msg;
+      Printexc.print_backtrace stderr;
+      close ()
+
+  let handle_connection genv env socket =
+    ServerPeriodical.stamp_connection ();
+    try handle_connection_ genv env socket
+    with
+    | Unix.Unix_error (e, _, _) ->
+        Printf.fprintf stderr "Unix error: %s\n" (Unix.error_message e);
+        Printexc.print_backtrace stderr;
+        flush stderr
+    | e ->
+        Printf.fprintf stderr "Error: %s\n" (Printexc.to_string e);
+        Printexc.print_backtrace stderr;
+        flush stderr
+
   let serve genv env socket =
     let root = ServerArgs.root genv.options in
     let env = ref env in
@@ -139,7 +180,7 @@ end = struct
         exit 4;
       end;
       env := Program.recheck genv !env updates;
-      if has_client then Program.handle_connection genv !env socket;
+      if has_client then handle_connection genv !env socket;
     done
 
   let load genv filename to_recheck =

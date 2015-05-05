@@ -72,9 +72,8 @@ let main all weak debug verbose json show_all_errors profile quiet module_
     Types_js.opt_console = false;
     Types_js.opt_debug = debug;
     Types_js.opt_verbose = verbose;
-    Types_js.opt_newtraces = false;
     Types_js.opt_strict = true;
-    Types_js.opt_traces = false;
+    Types_js.opt_traces = 0;
     Types_js.opt_json = json;
     Types_js.opt_show_all_errors = show_all_errors;
     Types_js.opt_quiet = quiet || json;

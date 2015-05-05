@@ -44,8 +44,8 @@ end = struct
           | _ -> ())
     | Tabstract (_, tyl, x) ->
         List.iter ty tyl; ty_opt x
-    | Tapply (_, tyl)
     | Ttuple tyl -> List.iter ty tyl
+    | Tclass (_, tyl)
     | Tunresolved tyl -> List.iter ty tyl
     | Tobject -> ()
     | Tshape fdm ->
@@ -104,9 +104,9 @@ let rename env old_name new_name ty_to_rename =
         let env, l = tyl env l in
         let env, x = ty_opt env x in
         env, (r, Tabstract (id, l, x))
-    | Tapply (id, l) ->
-        let env, l = tyl env l in
-        env, (r, Tapply(id, l))
+    | Tclass (cls, l) ->
+       let env, l = tyl env l in
+       env, (r, Tclass(cls, l))
     | Taccess (x, ids) ->
         let env, x = ty env x in
         env, (r, Taccess(x, ids))

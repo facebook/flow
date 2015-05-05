@@ -61,9 +61,9 @@ and fully_expand_ seen env = function
       let tyl = List.map (fully_expand seen env) tyl in
       let cstr = fully_expand_opt seen env cstr in
       Tabstract (x, tyl, cstr)
-  | Tapply (x, tyl) ->
-      let tyl = List.map (fully_expand seen env) tyl in
-      Tapply (x, tyl)
+  | Tclass (x, tyl) ->
+     let tyl = List.map (fully_expand seen env) tyl in
+     Tclass (x, tyl)
   | Tobject as x -> x
   | Tshape fdm ->
       Tshape (Nast.ShapeMap.map (fully_expand seen env) fdm)

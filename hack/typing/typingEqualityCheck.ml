@@ -14,6 +14,7 @@ module Env = Typing_env
 module TDef = Typing_tdef
 module N = Nast
 module TAccess = Typing_taccess
+module Phase = Typing_phase
 
 (*****************************************************************************)
 (* Check if a comparison is trivially true or false *)
@@ -33,9 +34,9 @@ let trivial_comparison_error p bop (r1, ty1) (r2, ty2) trail1 trail2 =
 
 let rec assert_nontrivial p bop env ty1 ty2 =
   let _, ty1 = Env.expand_type env ty1 in
-  let _, ty1, trail1 = TDef.force_expand_typedef env ty1 in
+  let _, ty1, trail1 = TDef.force_expand_typedef ~phase:Phase.locl env ty1 in
   let _, ty2 = Env.expand_type env ty2 in
-  let _, ty2, trail2 = TDef.force_expand_typedef env ty2 in
+  let _, ty2, trail2 = TDef.force_expand_typedef ~phase:Phase.locl env ty2 in
   match ty1, ty2 with
   | (_, Tprim N.Tnum),               (_, Tprim (N.Tint | N.Tfloat))
   | (_, Tprim (N.Tint | N.Tfloat)),  (_, Tprim N.Tnum)
@@ -53,7 +54,6 @@ let rec assert_nontrivial p bop env ty1 ty2 =
   | (_, Toption ty1), (_, Tprim _ as ty2)
   | (_, Tprim _ as ty1), (_, Toption ty2) ->
       assert_nontrivial p bop env ty1 ty2
-  (* shouldn't we expand typedefs here as well? *)
   | (_, Taccess _), _ ->
       let _, ty1 = TAccess.expand env, ty1 in
       assert_nontrivial p bop env ty1 ty2
@@ -61,6 +61,6 @@ let rec assert_nontrivial p bop env ty1 ty2 =
       let _, ty2 = TAccess.expand env, ty2 in
       assert_nontrivial p bop env ty1 ty2
   | (_, (Tany | Tmixed | Tarray (_, _) | Tprim _ | Tgeneric (_, _) | Toption _
-    | Tvar _ | Tfun _ | Tabstract (_, _, _) | Tapply (_, _) | Ttuple _
+    | Tvar _ | Tfun _ | Tabstract (_, _, _) | Tclass (_, _) | Ttuple _
     | Tanon (_, _) | Tunresolved _ | Tobject | Tshape _)
     ), _ -> ()

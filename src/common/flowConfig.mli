@@ -11,7 +11,7 @@ type moduleSystem = Node | Haste
 
 type options = {
   moduleSystem: moduleSystem;
-  traces: bool;
+  traces: int;
 }
 
 module PathMap : Utils.MapSig with type key = Path.path

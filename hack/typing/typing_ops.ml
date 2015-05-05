@@ -17,6 +17,7 @@ module Inst    = Typing_instantiate
 module Unify   = Typing_unify
 module TDef    = Typing_tdef
 module SubType = Typing_subtype
+module Phase   = Typing_phase
 
 (*****************************************************************************)
 (* Exporting. *)
@@ -35,11 +36,11 @@ let unify p ur env ty1 ty2 =
     (fun () -> env, (Reason.Rwitness p, Tany))
 
 let sub_type_decl p ur env ty_super ty_sub =
-  let env, ty_super = TUtils.localize env ty_super in
-  let env, ty_sub = TUtils.localize env ty_sub in
+  let env, ty_super = Phase.localize env ty_super in
+  let env, ty_sub = Phase.localize env ty_sub in
   sub_type p ur env ty_super ty_sub
 
 let unify_decl p ur env ty1 ty2 =
-  let env, ty1 = TUtils.localize env ty1 in
-  let env, ty2 = TUtils.localize env ty2 in
+  let env, ty1 = Phase.localize env ty1 in
+  let env, ty2 = Phase.localize env ty2 in
   unify p ur env ty1 ty2

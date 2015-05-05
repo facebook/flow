@@ -109,19 +109,20 @@ let wait_on_server_restart ic =
      ()
 
 let rec main_ env retries =
-  (* Check if a server is up *)
-  if not (ClientUtils.server_exists env.root)
-  then ClientStart.start_server { ClientStart.
-    root = env.root;
-    wait = false;
-    no_load = false;
-  };
-  let ic, oc = connect env retries in
-  ServerMsg.cmd_to_channel oc (ServerMsg.BUILD env.build_opts);
+  let name = "hh_server" in
   try
+    let ic, oc = connect env retries in
+    ServerMsg.cmd_to_channel oc (ServerMsg.BUILD env.build_opts);
     let response = wait_for_response ic in
     handle_response response env retries ic
   with
+  | ClientExceptions.Server_missing ->
+      ClientStart.start_server { ClientStart.
+        root = env.root;
+        wait = false;
+        no_load = false;
+      };
+     main_ env retries
   | ClientExceptions.Server_out_of_date ->
      (* The server is out of date and is going to exit. Subsequent calls to
       * connect on the Unix Domain Socket might succeed, connecting to the
@@ -132,15 +133,10 @@ let rec main_ env retries =
       * for the connection to be closed, signaling that the server has exited
       * and the OS has cleaned up after it, then we try again.
       *)
-     Printf.printf "%s%s%!"
-                   "Hack server is an old version, waiting for it to exit,"
-                   " then will start the new server\n";
-     wait_on_server_restart ic;
-     close_in_noerr ic;
+     Printf.eprintf "%s is outdated, going to launch a new one.\n%!" name;
      main_ env (retries - 1)
   | Sys_error _ ->
      (* Connection reset, handle gracefully and try again *)
-     close_in_noerr ic;
      if should_retry env retries then
        (Printf.printf "Connection hung up, trying again \n%!";
         main_ env (retries - 1))
@@ -150,8 +146,6 @@ let rec main_ env retries =
 
 and handle_response response env retries ic =
   match response with
-  | ServerMsg.SERVER_OUT_OF_DATE ->
-    raise ClientExceptions.Server_out_of_date;
   | ServerMsg.PONG -> (* successful case *)
     begin
       let finished = ref false in

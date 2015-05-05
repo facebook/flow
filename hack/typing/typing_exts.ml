@@ -56,7 +56,7 @@ let rec map_ty_ f t =
     | Tgeneric (a, ot) ->
         f (Tgeneric (a, (opt_map (map_snd (map_ty f)) ot)))
     | Toption t -> f (Toption (map_ty f t))
-    | Tapply (x, ts) -> f (Tapply (x, List.map (map_ty f) ts))
+    | Tclass (x, ts) -> f (Tclass (x, List.map (map_ty f) ts))
     | Ttuple ts -> f (Ttuple (List.map (map_ty f) ts))
     | x -> f x
 and map_ty f = map_snd (map_ty_ f)
@@ -68,8 +68,8 @@ let fresh_tvars (env:Env.env) (ts:tparam list) (ps:locl fun_params) (uniq:int) :
       | [_] -> append_id s
       | _ -> s in
   let rename_ty = function
-    | Tapply ((pos,name), args) ->
-        Tapply ((pos, rename_str name), args)
+    | Tclass ((pos,name), args) ->
+        Tclass ((pos, rename_str name), args)
     | Tgeneric (name, ot) ->
         Tgeneric (rename_str name, ot)
     | s -> s in
@@ -80,13 +80,13 @@ let fresh_tvars (env:Env.env) (ts:tparam list) (ps:locl fun_params) (uniq:int) :
 let lookup_magic_type (env:Env.env) (class_:locl ty) (fname:string) (uniq:int) :
     Env.env * (locl fun_params * tparam list * locl ty option) option =
   match class_ with
-    | (_, Tapply ((_, className), [])) ->
+    | (_, Tclass ((_, className), [])) ->
         (match Env.get_class env className with
            | Some c ->
                let env, ce_type =
                  Env.get_member true env c fname |>
                    opt
-                     (fun env x -> Typing_utils.localize env x.ce_type)
+                     (fun env x -> Typing_phase.localize env x.ce_type)
                      env
                in
                (match ce_type with
@@ -171,10 +171,10 @@ let rec const_string_of (env:Env.env) (e:Nast.expr) : Env.env * (Pos.t, string) 
 let retype_magic_func (env:Env.env) (ft:locl fun_type) (el:Nast.expr list) : Env.env * locl fun_type =
   let rec f env param_types args : Env.env * (locl fun_params * tparam list) option =
     (match param_types, args with
-      | [(_,    (_,   Toption (_, Tapply ((_, fs), [_       ]))))], [(_, Nast.Null)]
+      | [(_,    (_,   Toption (_, Tclass ((_, fs), [_       ]))))], [(_, Nast.Null)]
         when SN.Classes.is_format_string fs -> env,None
-      | [(name, (why, Toption (_, Tapply ((_, fs), [type_arg]))))], (arg :: _)
-      | [(name, (why,             Tapply ((_, fs), [type_arg] )))], (arg :: _)
+      | [(name, (why, Toption (_, Tclass ((_, fs), [type_arg]))))], (arg :: _)
+      | [(name, (why,             Tclass ((_, fs), [type_arg] )))], (arg :: _)
         when SN.Classes.is_format_string fs ->
           (match const_string_of env arg with
              |  env, Right str ->
