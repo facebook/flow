@@ -1,9 +1,11 @@
 
-Arith.js:13:7,9: string
+Arith.js:13:3,10: function call
+  Arith.js:13:7,9: string
 This type is incompatible with
   Arith.js:4:16,21: number
 
-Arith.js:15:7,9: number
+Arith.js:15:3,10: function call
+  Arith.js:15:7,9: number
 This type is incompatible with
   Arith.js:6:16,21: string
 

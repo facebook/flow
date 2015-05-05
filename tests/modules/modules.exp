@@ -1,9 +1,11 @@
 
-cli2.js:5:3,7: string
+cli2.js:5:1,8: function call
+  cli2.js:5:3,7: string
 This type is incompatible with
   lib.js:7:14,19: number
 
-lib.js:7:33,33: number
+lib.js:7:31,34: function call
+  lib.js:7:33,33: number
 This type is incompatible with
   lib.js:3:14,19: string
 

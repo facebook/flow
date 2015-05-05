@@ -357,8 +357,6 @@ let rec_trace tl tu trace =
 
 (*****************************************************************)
 
-
-
 open Type
 
 (* type constants *)
@@ -1824,8 +1822,6 @@ let is_printed_param_type_parsable ?(weak=false) cx t =
 
 (* ------------- *)
 
-(* traces *)
-
 let string_of_scope_entry cx entry =
   let pos = match entry.def_loc with
   | Some loc -> (string_of_pos (pos_of_loc loc))
@@ -1844,32 +1840,76 @@ let string_of_scope cx scope =
   |> String.concat ";\n  "
   |> Utils.spf "{\n  %s\n}"
 
-(* Entry point to show links. *)
-let rec reasons_of_trace ?(level=0) (t1, links, t2) =
-  reasons_of_link_list level links
+(*****************************************************************)
 
-(* Don't show links unless level > 0. Otherwise, recursively show each link,
-   ensuring that there are no successive duplicates. *)
-and reasons_of_link_list level links =
-  if level > 0
-  then list_concat_no_succ_dupes (List.map (reasons_of_link level) links)
-  else []
+(* traces and types *)
 
-(* Show a node trace by printing its reason. Show an embedded trace by printing
-   its end points, along with the links up to level-1. *)
-and reasons_of_link level =
-  function Embed (t1, links, t2) ->
-    [reason_of_t t1] @
-    (reasons_of_link_list (level-1) links) @
-    [reason_of_t t2]
+let level_spaces level = 2 * level
 
-(* same as List.concat but without successive duplicates *)
-and list_concat_no_succ_dupes list =
-  let rev_result =
-    List.fold_left
-      (List.fold_left (fun rev_result x ->
-        match rev_result with
-        | top::_ when top = x -> rev_result
-        | _ -> x::rev_result))
-      [] list in
-  List.rev rev_result
+let pos_len r =
+  let pos = pos_of_reason r in
+  let fmt = Errors_js.format_reason_color (pos, "") in
+  let str = String.concat "" (List.map snd fmt) in
+  String.length str
+
+(* scan a trace tree, return maximum position length
+   of reasons at or above the given depth limit, and
+   min of that limit and actual max depth *)
+let max_pos_len_and_depth limit trace =
+  let rec f (len, depth) (t1, links, t2) =
+    let len = max len (pos_len (reason_of_t t1)) in
+    let len = max len (pos_len (reason_of_t t2)) in
+    if links = [] || depth = limit then len, depth
+    else List.fold_left (
+      fun (len, depth) (Embed trace) -> f (len, depth) trace
+    ) (len, depth + 1) links
+  in f (0, 1) trace
+
+let pretty_r indent r prefix suffix =
+  let len = pos_len r in
+  let ind = if indent > len then String.make (indent - len) ' ' else "" in
+  wrap_reason (ind ^ (spf "%s[" prefix)) (spf "]%s" suffix) r
+
+let rec unique_pos = function
+| [] -> []
+| r1 :: (r2 :: rs) when string_of_reason r1 = string_of_reason r2 ->
+  unique_pos (r2 :: rs)
+| r :: rs ->
+  r :: unique_pos rs
+
+(* ascii tree w/verbiage *)
+let reasons_of_trace ?(level=0) trace =
+  let max_len, max_depth = max_pos_len_and_depth level trace in
+  let level = min level max_depth in
+  let max_indent = max_len + (level_spaces level + 1) in
+  let rec f level (t1, links, t2) =
+    let indent = max_indent - (level_spaces level) in
+    if level >= 0 then
+      (pretty_r indent (reason_of_t t1)
+        (spf "%s " (string_of_ctor t1))
+        (if links <> [] && level > 0 then " produced by " else "")
+        ::
+        List.concat (
+          links |> List.map (fun (Embed trace) ->
+            f (level - 1) trace)
+        )) @
+      [pretty_r indent (reason_of_t t2)
+        (spf "~> %s " (string_of_ctor t2)) ""]
+    else []
+  in f level trace
+
+(* flat, deduped *)
+(* erases too much information - may be worth resurrecting
+   with more expressive traces *)
+let flat_reasons_of_trace ?(level=0) trace =
+  let indent = fst (max_pos_len_and_depth 0 trace) + 2 in
+  let rec f level (t1, links, t2) =
+    if level < 0 then [] else
+    (pretty_r indent (reason_of_t t1) "" ""
+      ::
+      List.concat (
+        links |> List.map (fun (Embed trace) ->
+          f (level - 1) trace)
+      )) @
+    [pretty_r indent (reason_of_t t2) "" ""]
+  in unique_pos (f level trace)

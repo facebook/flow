@@ -11,7 +11,8 @@ poly.js:20:34,39: array type
 This type is incompatible with
   poly.js:20:1,42: some incompatible instantiation of R
 
-poly.js:24:3,5: function call
+poly.js:23:11,19: function call
+  poly.js:24:3,5: function call
 Function cannot be called on
   poly.js:23:18,18: U
 

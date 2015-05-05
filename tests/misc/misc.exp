@@ -3,31 +3,38 @@ A.js:12:7,9: string
 This type is incompatible with
   A.js:6:12,15: boolean
 
-B.js:7:12,16: string
+C.js:9:3,8: function call
+  B.js:7:12,16: string
 This type is incompatible with
   A.js:9:14,20: boolean
 
-B.js:7:12,16: string
+C.js:10:3,8: function call
+  B.js:12:17,17: number
+This type is incompatible with
+  A.js:9:14,20: boolean
+
+C.js:11:3,8: call of method fn
+  B.js:7:12,16: string
 This type is incompatible with
   B.js:10:14,19: number
 
-B.js:12:17,17: number
-This type is incompatible with
-  A.js:9:14,20: boolean
-
-D.js:9:7,10: boolean
+D.js:11:9,14: call of method fn
+  D.js:9:7,10: boolean
 This type is incompatible with
   D.js:6:14,19: string
 
-D.js:11:9,14: string
+D.js:12:1,4: function call
+  D.js:11:9,14: string
 This type is incompatible with
   A.js:9:14,20: boolean
 
-E.js:8:6,10: boolean
+E.js:8:1,11: call of method fn
+  E.js:8:6,10: boolean
 This type is incompatible with
   E.js:4:14,19: number
 
-F.js:1:26,33: string
+F.js:2:1,19: function call
+  F.js:1:26,33: string
 This type is incompatible with
   F.js:1:26,37: number
 

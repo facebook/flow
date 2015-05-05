@@ -3,22 +3,6 @@ B.js:3:23,24: number
 This type is incompatible with
   es6modules.js:4:28,33: string
 
-CommonJS_Clobbering_Class.js:7:35,35: number
-This type is incompatible with
-  es6modules.js:4:28,33: string
-
-CommonJS_Clobbering_Class.js:8:35,35: number
-This type is incompatible with
-  es6modules.js:4:28,33: string
-
-CommonJS_Clobbering_Class.js:9:35,35: number
-This type is incompatible with
-  es6modules.js:4:28,33: string
-
-CommonJS_Clobbering_Class.js:10:35,35: number
-This type is incompatible with
-  es6modules.js:4:28,33: string
-
 CommonJS_Clobbering_Lit.js:7:17,17: number
 This type is incompatible with
   es6modules.js:4:28,33: string
@@ -177,11 +161,22 @@ es6modules.js:57:9,19: "doesntExist" export of "CommonJS_Clobbering_Class"
 Property not found in
   es6modules.js:57:27,53: exports of "CommonJS_Clobbering_Class"
 
+es6modules.js:61:14,28: function call
+  CommonJS_Clobbering_Class.js:7:35,35: number
+This type is incompatible with
+  es6modules.js:4:28,33: string
+
 es6modules.js:65:1,33: property doesntExist
 Property not found in
   CommonJS_Clobbering_Class.js:16:18,21: Test
 
-es6modules.js:69:14,48: number
+es6modules.js:67:14,44: call of method staticNumber2
+  CommonJS_Clobbering_Class.js:8:35,35: number
+This type is incompatible with
+  es6modules.js:4:28,33: string
+
+es6modules.js:69:14,48: call of method instNumber1
+  es6modules.js:69:14,48: number
 This type is incompatible with
   es6modules.js:4:28,33: string
 
@@ -189,7 +184,18 @@ es6modules.js:72:1,24: constructor call
 Constructor cannot be called on
   es6modules.js:71:37,63: exports of "CommonJS_Clobbering_Class"
 
-es6modules.js:79:14,59: number
+es6modules.js:74:14,47: call of method staticNumber3
+  CommonJS_Clobbering_Class.js:9:35,35: number
+This type is incompatible with
+  es6modules.js:4:28,33: string
+
+es6modules.js:77:14,55: call of method staticNumber4
+  CommonJS_Clobbering_Class.js:10:35,35: number
+This type is incompatible with
+  es6modules.js:4:28,33: string
+
+es6modules.js:79:14,59: call of method instNumber2
+  es6modules.js:79:14,59: number
 This type is incompatible with
   es6modules.js:4:28,33: string
 
@@ -209,11 +215,13 @@ es6modules.js:109:9,19: "doesntExist" export of "ES6_Default_AnonFunction1"
 Property not found in
   es6modules.js:109:27,53: exports of "ES6_Default_AnonFunction1"
 
-es6modules.js:113:14,32: number
+es6modules.js:113:14,32: function call
+  es6modules.js:113:14,32: number
 This type is incompatible with
   es6modules.js:4:28,33: string
 
-es6modules.js:117:14,33: number
+es6modules.js:117:14,33: function call
+  es6modules.js:117:14,33: number
 This type is incompatible with
   es6modules.js:4:28,33: string
 
@@ -221,11 +229,13 @@ es6modules.js:133:8,18: "default" export of "ES6_Named1"
 Property not found in
   es6modules.js:133:25,36: exports of "ES6_Named1"
 
-es6modules.js:155:14,27: number
+es6modules.js:155:14,27: function call
+  es6modules.js:155:14,27: number
 This type is incompatible with
   es6modules.js:4:28,33: string
 
-es6modules.js:159:14,49: number
+es6modules.js:159:14,49: call of method givesANumber
+  es6modules.js:159:14,49: number
 This type is incompatible with
   es6modules.js:4:28,33: string
 
@@ -233,19 +243,23 @@ es6modules.js:191:1,48: property doesntExist
 Property not found in
   ES6_Default_AnonFunction2.js: exports
 
-es6modules.js:195:14,32: number
+es6modules.js:195:14,32: function call
+  es6modules.js:195:14,32: number
 This type is incompatible with
   es6modules.js:4:28,33: string
 
-es6modules.js:199:14,33: number
+es6modules.js:199:14,33: function call
+  es6modules.js:199:14,33: number
 This type is incompatible with
   es6modules.js:4:28,33: string
 
-es6modules.js:232:14,28: number
+es6modules.js:232:14,28: function call
+  es6modules.js:232:14,28: number
 This type is incompatible with
   es6modules.js:4:28,33: string
 
-es6modules.js:236:14,50: number
+es6modules.js:236:14,50: call of method givesANumber
+  es6modules.js:236:14,50: number
 This type is incompatible with
   es6modules.js:4:28,33: string
 

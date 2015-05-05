@@ -3,7 +3,8 @@ A.js:8:10,12: string
 This type is incompatible with
   A.js:7:32,37: number
 
-A.js:13:12,18: string
+A.js:13:10,19: function call
+  A.js:13:12,18: string
 This type is incompatible with
   A.js:12:21,26: number
 

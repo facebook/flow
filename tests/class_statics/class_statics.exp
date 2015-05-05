@@ -23,7 +23,8 @@ test.js:13:11,11: number
 This type is incompatible with
   test.js:10:13,18: string
 
-test.js:15:11,11: number
+test.js:15:5,12: call of method foo
+  test.js:15:11,11: number
 This type is incompatible with
   test.js:11:17,22: string
 
@@ -31,7 +32,8 @@ test.js:17:11,11: number
 This type is incompatible with
   test.js:3:13,18: string
 
-test.js:18:11,11: number
+test.js:18:5,12: call of method bar
+  test.js:18:11,11: number
 This type is incompatible with
   test.js:5:17,22: string
 
@@ -43,7 +45,8 @@ test.js:30:5,12: call of method foo
 Property not found in
   test.js:28:7,7: statics of D
 
-test.js:32:11,11: number
+test.js:32:5,12: call of method bar
+  test.js:32:11,11: number
 This type is incompatible with
   test.js:28:19,24: string
 

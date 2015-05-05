@@ -1,5 +1,6 @@
 
-date.js:2:16,26: number
+date.js:2:16,26: call of method getTime
+  date.js:2:16,26: number
 This type is incompatible with
   date.js:2:7,12: string
 

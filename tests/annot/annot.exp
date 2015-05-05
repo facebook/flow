@@ -31,7 +31,8 @@ annot.js:31:7,11: string
 This type is incompatible with
   annot.js:30:23,28: number
 
-annot.js:37:26,72: property path
+annot.js:45:21,51:6: call of method map
+  annot.js:37:26,72: property path
 Property not found in
   annot.js:46:14,50:7: object literal
 

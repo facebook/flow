@@ -29,11 +29,13 @@ object_prototype.js:49:2,30: assignment of property toString
 Property cannot be assigned on
   object_prototype.js:49:2,4: number
 
-object_prototype.js:51:16,20: string
+object_prototype.js:51:2,21: call of method toString
+  object_prototype.js:51:16,20: string
 This type is incompatible with
   [LIB] core.js:74:22,27: number
 
-object_prototype.js:52:16,19: null
+object_prototype.js:52:2,20: call of method toString
+  object_prototype.js:52:16,19: null
 This type is incompatible with
   [LIB] core.js:74:22,27: number
 

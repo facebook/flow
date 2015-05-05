@@ -7,7 +7,8 @@ test.js:8:9,9: number
 This type is incompatible with
   test.js:2:16,21: string
 
-test.js:12:11,12: string
+test.js:12:1,14: function call
+  test.js:12:11,12: string
 This type is incompatible with
   test.js:10:30,35: number
 

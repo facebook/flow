@@ -173,7 +173,16 @@ let desc_of_reason r =
 (* simple way to get reasons whose descriptions are simple prefix-extensions of
    the original *)
 let prefix_reason prefix reason =
-  new_reason (spf "%s%s" prefix (desc_of_reason reason)) (pos_of_reason reason)
+  new_reason (spf "%s%s" prefix (desc_of_reason reason))
+    (pos_of_reason reason)
+
+let suffix_reason suffix reason =
+  new_reason (spf "%s%s" (desc_of_reason reason) suffix)
+    (pos_of_reason reason)
+
+let wrap_reason prefix suffix reason =
+  new_reason (spf "%s%s%s" prefix (desc_of_reason reason) suffix)
+    (pos_of_reason reason)
 
 (* simple way to get reasons whose descriptions are simple replacements of the
    original *)

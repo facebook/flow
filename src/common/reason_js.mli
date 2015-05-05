@@ -53,8 +53,10 @@ val pos_of_reason : reason -> Pos.t
 val desc_of_reason : reason -> string
 
 (* simple way to get derived reasons whose descriptions are
-   simple prefix-extensions of the original *)
+   simple extensions of the original *)
 val prefix_reason : string -> reason -> reason
+val suffix_reason : string -> reason -> reason
+val wrap_reason : string -> string -> reason -> reason
 
 (* simple way to get derived reasons whose descriptions are
    simple replacements of the original *)

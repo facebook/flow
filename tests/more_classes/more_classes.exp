@@ -6,7 +6,8 @@ Foo.js:16:21,21: string
 This type is incompatible with
   Bar.js:9:17,22: number
 
-Foo.js:18:12,21: string
+Foo.js:18:12,21: call of method bar
+  Foo.js:18:12,21: string
 This type is incompatible with
   Foo.js:13:19,24: number
 

@@ -17,14 +17,16 @@ unsupported destructuring
 destructuring.js:11:6,10: 
 unsupported destructuring
 
-destructuring.js:13:14,23: number
-This type is incompatible with
-  destructuring.js:1:15,20: string
-
 destructuring.js:15:9,9: identifier z
 Could not resolve name
 
-destructuring.js:18:14,14: number
+destructuring.js:18:1,19: function call
+  destructuring.js:13:14,23: number
+This type is incompatible with
+  destructuring.js:1:15,20: string
+
+destructuring.js:18:1,19: function call
+  destructuring.js:18:14,14: number
 This type is incompatible with
   destructuring.js:3:15,20: string
 
@@ -39,7 +41,8 @@ destructuring.js:20:20,23: boolean
 This type is incompatible with
   destructuring.js:2:15,20: string
 
-destructuring.js:23:11,33: property x
+destructuring.js:25:1,15: function call
+  destructuring.js:23:11,33: property x
 Property not found in
   destructuring.js:22:14,22: object pattern
 
@@ -47,11 +50,13 @@ destructuring.js:28:13,44: property z
 Property not found in
   destructuring.js:28:48,63: object literal
 
-destructuring.js:31:8,9: string
+destructuring.js:31:1,11: function call
+  destructuring.js:31:8,9: string
 This type is incompatible with
   destructuring.js:30:20,25: number
 
-destructuring.js:33:10,10: number
+destructuring.js:33:1,12: function call
+  destructuring.js:33:10,10: number
 This type is incompatible with
   destructuring.js:32:24,29: string
 

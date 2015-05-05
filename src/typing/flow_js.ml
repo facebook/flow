@@ -107,15 +107,42 @@ end)
 
 (**************************************************************)
 
+(* for now, we do speculative matching by setting this global.
+   it's set to true when trying the arms of intersection or
+   union types.
+   when it's true, the error-logging function throws instead 
+   of logging, and the speculative harness catches.
+   TODO
+ *)
 let throw_on_error = ref false
+
+(* we keep a stack of reasons representing the operations
+   taking place when flows are performed. the top op reason
+   is used in messages for errors that take place during its
+   residence.
+ *)
+let push_op, pop_op, peek_op, get_ops, set_ops =
+  let ops = ref [] in
+  (* push_op *)
+  (fun r -> ops := r :: !ops),
+  (* pop_op *)
+  (fun () -> ops := List.tl !ops),
+  (* peek_op *)
+  (fun () -> match !ops with r :: rs -> Some r | [] -> None),
+  (* get_ops *)
+  (fun () -> !ops),
+  (* set_ops *)
+  (fun _ops -> ops := _ops)
 
 let silent_warnings = false
 
 exception FlowError of (reason * string) list
 
 let add_output cx level message_list =
-  if !throw_on_error then raise (FlowError message_list)
-  else
+  if !throw_on_error 
+  then (
+    raise (FlowError message_list)
+  ) else (
     (if modes.debug then
       prerr_endlinef "\nadd_output cx.file = %S\n%s" cx.file (
         String.concat "\n" (
@@ -124,7 +151,7 @@ let add_output cx level message_list =
     let error = level, message_list in
     if level = Errors_js.ERROR || not silent_warnings then
     cx.errors <- Errors_js.ErrorSet.add error cx.errors
-
+  )
 (* tvars *)
 
 let mk_id cx = Ident.make ""
@@ -249,11 +276,14 @@ let ordered_reasons l u =
   else rl, ru
 
 let prmsg_flow cx level trace msg (r1, r2) =
-  let reasons_trace =
+  let reasons_trace = if modes.traces = 0 then [] else
     reasons_of_trace ~level:modes.traces trace
     |> List.map (fun r -> r, desc_of_reason r)
   in
-  let info =
+  let info = match peek_op () with
+  | Some r when r != r1 && r != r2 -> 
+    [r, desc_of_reason r]
+  | _ ->
     if lib_reason r1 && lib_reason r2
     then
       let r = new_reason "" (Pos.make_from
@@ -1219,7 +1249,8 @@ let rec __flow cx (l,u) trace =
         (dump_reason (reason_of_t l))
         (dump_reason (reason_of_t u)));
 
-    if ground_subtype (l,u) then () else match (l,u) with
+    if ground_subtype (l,u) then () 
+    else (match (l,u) with
 
     (* if X -> Y exists then that flow has already been processed *)
     | (OpenT(reason1,tvar1),OpenT(_,tvar2))
@@ -1346,7 +1377,7 @@ let rec __flow cx (l,u) trace =
       (* final: process L ~> U *)
       bounds.lower |> TypeMap.iter (fun l trace_l ->
         join_flow cx [trace_l;trace] (l,t)
-      )
+      );
 
     (******************)
     (* process L ~> X *)
@@ -1673,21 +1704,23 @@ let rec __flow cx (l,u) trace =
              {this_t = o2; params_tlist = tins2; return_t = t2; closure_t = j; _}))
       ->
       rec_flow cx trace (o2,o1);
-        multiflow cx trace (u, l) (tins2,tins1) |> ignore;
-        rec_flow cx trace (t1,t2);
-        havoc_ctx cx i j
+      multiflow cx trace (u, l) (tins2,tins1) |> ignore;
+      rec_flow cx trace (t1,t2);
+      havoc_ctx cx i j
 
-    | (FunT (reason1,_,_,
+    | (FunT (reason_fundef,_,_,
              {this_t = o1; params_tlist = tins1; return_t = t1; closure_t = i; _}),
-       CallT (reason2,
+       CallT (reason_callsite,
               {this_t = o2; params_tlist = tins2; return_t = t2; closure_t = j; _}))
       ->
+      push_op reason_callsite;
       rec_flow cx trace (o2,o1);
-        multiflow cx trace (u, l) (tins2,tins1) |> ignore;
-        (* relocate the function's return type at the call site *)
-        let t1 = repos_t_from_reason reason2 t1 in
-        rec_flow cx trace (t1,t2);
-        havoc_ctx cx i j
+      multiflow cx trace (u, l) (tins2,tins1) |> ignore;
+      (* relocate the function's return type at the call site TODO remove? *)
+      let t1 = repos_t_from_reason reason_callsite t1 in
+      rec_flow cx trace (t1,t2);
+      havoc_ctx cx i j;
+      pop_op ()
 
     (*********************************************)
     (* object types deconstruct into their parts *)
@@ -1883,13 +1916,13 @@ let rec __flow cx (l,u) trace =
        ConstructorT(reason_op,tins2,t))
       -> (* TODO: closure *)
       multiflow cx trace (u, l) (tins2, tins1) |> ignore;
-        let reason_rv = replace_reason "return undefined" reason in
-        rec_flow cx trace (tout1, VoidT reason_rv);
+      let reason_rv = replace_reason "return undefined" reason in
+      rec_flow cx trace (tout1, VoidT reason_rv);
 
-        let reason_c = replace_reason "new object" reason in
-        let o = mk_object_with_proto cx reason_c proto in
-        rec_flow cx trace (o, this);
-        rec_flow cx trace (o, t)
+      let reason_c = replace_reason "new object" reason in
+      let o = mk_object_with_proto cx reason_c proto in
+      rec_flow cx trace (o, this);
+      rec_flow cx trace (o, t);
 
     (*************************)
     (* "statics" can be read *)
@@ -2690,7 +2723,7 @@ let rec __flow cx (l,u) trace =
 
     | _ ->
       prerr_flow cx trace (err_msg l u) l u
-
+    );
   )
 
 and abs_path_of_reason r =
@@ -3038,6 +3071,8 @@ and mk_object_with_map_proto cx reason ?(sealed=false) map proto =
 
 (* Speculatively match types, returning whether the match fails. *)
 and speculative_flow_error cx trace l u =
+  (* save the ops stack, since throws from within __flow will screw it up *)
+  let ops = get_ops () in
   throw_on_error := true;
   let result =
     try rec_flow cx trace (l, u); false
@@ -3046,6 +3081,8 @@ and speculative_flow_error cx trace l u =
     | exn -> raise exn
   in
   throw_on_error := false;
+  (* restore ops stack *)
+  set_ops ops;
   result
 
 (* try each branch of a union in turn *)

@@ -1,13 +1,16 @@
 
-array.js:2:38,38: number
+array.js:2:9,42: call of method map
+  array.js:2:38,38: number
 This type is incompatible with
   array.js:3:8,13: string
 
-array.js:7:45,49: string
+array.js:7:13,53: call of method map
+  array.js:7:45,49: string
 This type is incompatible with
   array.js:8:11,16: number
 
-array.js:14:45,49: string
+array.js:15:20,29: call of method get
+  array.js:14:45,49: string
 This type is incompatible with
   array.js:15:11,16: number
 

@@ -10,6 +10,9 @@
 
 val pos_range : Pos.t -> int * int * int * int
 
+val format_reason_color: ?first:bool -> Pos.t * string ->
+  (Tty.style * string) list
+
 val print_reason_color: first:bool -> Pos.t * string -> unit
 
 val print_error_color: Errors.error -> unit

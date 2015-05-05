@@ -39,55 +39,68 @@ hasOwnProperty.js:8:7,22: property z
 Property not found in
   hasOwnProperty.js:8:7,7: object type
 
-mixed.js:6:17,21: number
+mixed.js:8:5,18: function call
+  mixed.js:6:17,21: number
 This type is incompatible with
   mixed.js:4:25,30: string
 
-mixed.js:12:17,21: string
+mixed.js:14:5,18: function call
+  mixed.js:12:17,21: string
 This type is incompatible with
   mixed.js:3:25,30: number
 
-mixed.js:18:18,22: boolean
+mixed.js:20:5,18: function call
+  mixed.js:18:18,22: boolean
 This type is incompatible with
   mixed.js:4:25,30: string
 
-mixed.js:24:17,21: function
+mixed.js:26:5,18: function call
+  mixed.js:24:17,21: function
 This type is incompatible with
   mixed.js:4:25,30: string
 
-mixed.js:30:17,21: null
+mixed.js:32:5,18: function call
+  mixed.js:30:17,21: null
 This type is incompatible with
   mixed.js:4:25,30: string
 
-mixed.js:30:17,21: object
+mixed.js:32:5,18: function call
+  mixed.js:30:17,21: object
 This type is incompatible with
   mixed.js:4:25,30: string
 
-mixed.js:36:17,21: array
+mixed.js:38:5,18: function call
+  mixed.js:36:17,21: array
 This type is incompatible with
   mixed.js:4:25,30: string
 
-mixed.js:42:19,23: undefined
+mixed.js:44:5,18: function call
+  mixed.js:42:19,23: undefined
 This type is incompatible with
   mixed.js:4:25,30: string
 
-mixed.js:48:19,23: null
+mixed.js:50:5,18: function call
+  mixed.js:48:19,23: null
 This type is incompatible with
   mixed.js:4:25,30: string
 
-mixed.js:54:19,23: null
+mixed.js:56:5,18: function call
+  mixed.js:54:19,23: null
 This type is incompatible with
   mixed.js:4:25,30: string
 
-mixed.js:54:19,23: undefined
+mixed.js:56:5,18: function call
+  mixed.js:54:19,23: undefined
 This type is incompatible with
   mixed.js:4:25,30: string
 
-mixed.js:60:19,23: boolean
+mixed.js:62:5,18: function call
+  mixed.js:60:19,23: boolean
 This type is incompatible with
   mixed.js:4:25,30: string
 
-mixed.js:66:20,24: boolean
+mixed.js:68:5,18: function call
+  mixed.js:66:20,24: boolean
 This type is incompatible with
   mixed.js:4:25,30: string
 

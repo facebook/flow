@@ -11,7 +11,8 @@ This type is incompatible with
 This type is incompatible with
   [LIB] core.js:258:11,16: string
 
-../lib/libtest.js:4:16,30: number
+../lib/libtest.js:4:16,30: function call
+  ../lib/libtest.js:4:16,30: number
 This type is incompatible with
   ../lib/libtest.js:4:7,12: string
 

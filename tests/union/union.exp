@@ -1,5 +1,6 @@
 
-issue-198.js:5:16,28: string
+issue-198.js:1:9,10:6: call of method then
+  issue-198.js:5:16,28: string
 This type is incompatible with
   [LIB] core.js:344:33,46: union type
 
@@ -15,10 +16,6 @@ union.js:7:5,5: number
 This type is incompatible with
   union.js:6:17,33: union type
 
-union.js:9:7,7: C
-This type is incompatible with
-  union.js:13:17,26: union type
-
 union.js:11:9,9: C
 This type is incompatible with
   union.js:11:14,14: D
@@ -30,5 +27,10 @@ This type is incompatible with
 union.js:11:14,14: D
 This type is incompatible with
   union.js:11:9,9: C
+
+union.js:14:1,10: function call
+  union.js:9:7,7: C
+This type is incompatible with
+  union.js:13:17,26: union type
 
 Found 8 errors
