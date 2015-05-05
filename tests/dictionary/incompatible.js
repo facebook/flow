@@ -6,4 +6,4 @@ var z : {[key: number]: string} = x; // error, string !~> number
 
 var a : {[key: string]: ?string} = {};
 var b : {[key: string]: string} = a; // error
-var c : {[key: string]: ?string} = b; // no error
+var c : {[key: string]: ?string} = b; // error, since c['x'] = null updates b

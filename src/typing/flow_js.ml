@@ -1704,12 +1704,13 @@ let rec __flow cx (l,u) trace =
         || (Str.string_match (Str.regexp ".*React") desc1 0)
       in
 
-      (* If both are dictionaries, ensure l's indexer is compatible with u's
-         indexer. *)
-      (match dict1 with
-        | Some {key; value; _} ->
-            dictionary cx trace key value dict2
-        | None -> ());
+      (* If both are dictionaries, ensure the keys and values are compatible
+         with each other. *)
+      (match dict1, dict2 with
+        | Some {key = k1; value = v1; _}, Some {key = k2; value = v2; _} ->
+            dictionary cx trace k1 v1 dict2;
+            dictionary cx trace k2 v2 dict1
+        | _ -> ());
 
       (* Properties in u must either exist in l, or match l's indexer. *)
       iter_props_ cx flds2
