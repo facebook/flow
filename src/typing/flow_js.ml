@@ -1703,6 +1703,15 @@ let rec __flow cx (l,u) trace =
         (desc1 = "object literal")
         || (Str.string_match (Str.regexp ".*React") desc1 0)
       in
+
+      (* If both are dictionaries, ensure l's indexer is compatible with u's
+         indexer. *)
+      (match dict1 with
+        | Some {key; value; _} ->
+            dictionary cx trace key value dict2
+        | None -> ());
+
+      (* Properties in u must either exist in l, or match l's indexer. *)
       iter_props_ cx flds2
         (fun s -> fun t2 ->
           if (not(has_prop cx flds1 s))
