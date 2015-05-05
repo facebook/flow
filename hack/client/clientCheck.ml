@@ -116,6 +116,9 @@ let rec main args retries =
         let results : ServerFindRefs.result = Marshal.from_channel ic in
         ClientFindRefs.go results args.output_json;
         exit 0
+    | MODE_DUMP_SYMBOL_INFO files ->
+        let ic, oc = connect args in
+        ClientSymbolInfo.go files ic oc expand_path
     | MODE_REFACTOR ->
         ClientRefactor.go args;
         exit 0

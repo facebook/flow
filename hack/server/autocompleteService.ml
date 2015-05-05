@@ -122,7 +122,7 @@ let autocomplete_new cid env =
   | Nast.CI sid -> autocomplete_token Autocomplete.Acnew (Some env) sid
   | _ -> ()
 
-let autocomplete_method is_static class_ id env cid =
+let autocomplete_method is_static class_ id env cid ~is_method =
   if is_auto_complete (snd id)
   then begin
     ac_env := Some env;

@@ -314,6 +314,7 @@ and bind_param env (_, ty1) param =
 (* Now we are actually checking stuff! *)
 (*****************************************************************************)
 and fun_def env _ f =
+  Typing_hooks.dispatch_enter_fun_def_hook f;
   let nb = (Nast.assert_named_body f.f_body) in
   NastCheck.fun_ env f nb;
   (* Fresh type environment is actually unnecessary, but I prefer to
@@ -344,8 +345,9 @@ and fun_def env _ f =
         match f.f_ret with
           | None -> suggest_return env (fst f.f_name) hret
           | Some _ -> ()
-      end;
-  )
+      end
+  );
+  Typing_hooks.dispatch_exit_fun_def_hook f
 
 (*****************************************************************************)
 (* function used to type closures, functions and methods *)
@@ -2365,7 +2367,8 @@ and class_get_ ~is_method ~is_const env cty (p, mid) cid =
             Typing_defs.accumulate_method_calls_result :=
                 (p, (class_.tc_name^"::"^mid)) ::
                     !Typing_defs.accumulate_method_calls_result;
-          Typing_hooks.dispatch_smethod_hook class_ (p, mid) env (Some cid);
+          Typing_hooks.dispatch_smethod_hook
+            class_ (p, mid) env (Some cid) ~is_method;
           (match smethod with
           | None when not is_method ->
             smember_not_found p ~is_const ~is_method class_ mid;
@@ -2541,7 +2544,8 @@ and obj_get_ ~is_method ~nullsafe env ty1 cid (p, s as id)
               Typing_defs.accumulate_method_calls_result :=
                 (p, (class_.tc_name^"::"^s)) ::
                 !Typing_defs.accumulate_method_calls_result;
-            Typing_hooks.dispatch_cmethod_hook class_ (p, s) env None;
+            Typing_hooks.dispatch_cmethod_hook
+                class_ (p, s) env None ~is_method;
             (match member_ with
               | None when not is_method ->
                 if not (SN.Members.is_special_xhp_attribute s)
@@ -3517,6 +3521,7 @@ and get_self_from_c env c =
   ret
 
 and class_def_ env_up c tc =
+  Typing_hooks.dispatch_enter_class_def_hook c tc;
   let env = Env.set_self_id env_up (snd c.c_name) in
   let env = Env.set_mode env c.c_mode in
   let env = Env.set_root env (Dep.Class (snd c.c_name)) in
@@ -3560,7 +3565,8 @@ and class_def_ env_up c tc =
     let env = Env.set_static env in
     List.iter (class_var_def env true c) c.c_static_vars;
     List.iter (method_def env) c.c_static_methods
-  end
+  end;
+  Typing_hooks.dispatch_exit_class_def_hook c tc
 
 and check_extend_abstract_meth p smap =
   SMap.iter begin fun x ce ->
@@ -3659,6 +3665,7 @@ and class_var_def env is_static c cv =
       ()
 
 and method_def env m =
+  Typing_hooks.dispatch_enter_method_def_hook m;
   let env = { env with Env.lenv = Env.empty_local } in
   let env, self = Phase.localize env (Env.get_self env) in
   let env = Env.set_local env this self in
@@ -3721,7 +3728,8 @@ and method_def env m =
        *)
       suggest_return env (fst m.m_name) ret
     | None
-    | Some _ -> ()
+    | Some _ -> ();
+  Typing_hooks.dispatch_exit_method_def_hook m
 
 and typedef_def env_up typedef =
   NastCheck.typedef env_up typedef;

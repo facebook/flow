@@ -207,6 +207,11 @@ module Program : Server.SERVER_PROGRAM = struct
         ServerFindRefs.go find_refs_action genv env oc
     | ServerMsg.REFACTOR refactor_action ->
         ServerRefactor.go refactor_action genv env oc
+    | ServerMsg.DUMP_SYMBOL_INFO file_list ->
+        let results = (SymbolInfoService.find_fun_calls
+          genv.ServerEnv.workers file_list env) in
+        Marshal.to_channel oc results [];
+        flush oc;
     | ServerMsg.ARGUMENT_INFO (contents, line, col) ->
         ServerArgumentInfo.go genv env oc contents line col
     | ServerMsg.PROLOG ->

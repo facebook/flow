@@ -32,6 +32,7 @@ type client_mode =
 | MODE_SEARCH of string * string
 | MODE_LINT of string list
 | MODE_LINT_ALL of int
+| MODE_DUMP_SYMBOL_INFO of string
 
 type client_check_env = {
   mode: client_mode;

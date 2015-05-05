@@ -90,6 +90,7 @@ type command =
 | PRINT_COVERAGE_LEVELS of file_input
 | LINT of string list
 | LINT_ALL of int
+| DUMP_SYMBOL_INFO of string list
 
 let cmd_to_channel (oc:out_channel) (cmd:command): unit =
   Marshal.to_channel oc cmd [];
