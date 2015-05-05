@@ -29,6 +29,7 @@ class type ['a] type_visitor_type = object
   method on_tobject : 'a -> 'a
   method on_tshape : 'a -> 'b ty Nast.ShapeMap.t -> 'a
   method on_taccess : 'a -> 'b taccess_type -> 'a
+  method on_tclass : 'a -> Nast.sid -> locl ty list -> 'a
 end
 
 class virtual ['a] type_visitor : ['a] type_visitor_type = object(this)
@@ -69,6 +70,8 @@ class virtual ['a] type_visitor : ['a] type_visitor_type = object(this)
     fun acc fdm ->
     let f _ v acc = this#on_type acc v in
     Nast.ShapeMap.fold f fdm acc
+  method on_tclass acc _ tyl =
+    List.fold_left this#on_type acc tyl
   method on_type: type a. _ -> a ty -> _ = fun acc x ->
     match x with
     | _, Tany -> this#on_tany acc
@@ -88,4 +91,5 @@ class virtual ['a] type_visitor : ['a] type_visitor_type = object(this)
     | _, Tunresolved tyl -> this#on_tunresolved acc tyl
     | _, Tobject -> this#on_tobject acc
     | _, Tshape fdm -> this#on_tshape acc fdm
+    | _, Tclass (cls, tyl) -> this#on_tclass acc cls tyl
 end

@@ -23,7 +23,6 @@ module HackConfig : ClientStop.STOP_CONFIG = struct
   let response_to_string = ServerMsg.response_to_string
 
   let is_expected = function
-    | ServerMsg.SERVER_OUT_OF_DATE
     | ServerMsg.SERVER_DYING ->
         true
     | _ ->

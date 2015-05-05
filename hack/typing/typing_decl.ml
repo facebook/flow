@@ -26,6 +26,7 @@ module Inst = Typing_instantiate
 module Attrs = Attributes
 
 module SN = Naming_special_names
+module Phase = Typing_phase
 
 (*****************************************************************************)
 (* Module used to track what classes are declared and which ones still need
@@ -400,8 +401,8 @@ and class_decl tcopt c =
   let class_dep = Dep.Class cls_name in
   let env = Env.set_root env class_dep in
   let env, inherited = Typing_inherit.make env c in
-  let cvars = inherited.Typing_inherit.ih_cvars in
-  let env, cvars = List.fold_left (class_var_decl c) (env, cvars) c.c_vars in
+  let props = inherited.Typing_inherit.ih_props in
+  let env, props = List.fold_left (class_var_decl c) (env, props) c.c_vars in
   let m = inherited.Typing_inherit.ih_methods in
   let env, m = List.fold_left (method_decl_acc c) (env, m) c.c_methods in
   let consts = inherited.Typing_inherit.ih_consts in
@@ -412,8 +413,8 @@ and class_decl tcopt c =
   let env, typeconsts =
     List.fold_left (typeconst_decl c) (env, typeconsts) c.c_typeconsts in
   let sclass_var = static_class_var_decl c in
-  let scvars = inherited.Typing_inherit.ih_scvars in
-  let env, scvars = List.fold_left sclass_var (env, scvars) c.c_static_vars in
+  let sprops = inherited.Typing_inherit.ih_sprops in
+  let env, sprops = List.fold_left sclass_var (env, sprops) c.c_static_vars in
   let sm = inherited.Typing_inherit.ih_smethods in
   let env, sm = List.fold_left (method_decl_acc c) (env, sm) c.c_static_methods in
   SMap.iter (check_static_method m) sm;
@@ -464,9 +465,7 @@ and class_decl tcopt c =
        || DynamicYield.contains_dynamic_yield req_ancestors_extends)
   in
   let env, m = if dy_check
-    then
-      (* let () = Printf.printf "DynamicYield.decl %s\n" cls_name in  *)
-      DynamicYield.decl env m
+    then DynamicYield.decl env m
     else env, m
   in
   let ext_strict = List.fold_left (trait_exists env) ext_strict c.c_uses in
@@ -505,8 +504,8 @@ and class_decl tcopt c =
     tc_tparams = tparams;
     tc_consts = consts;
     tc_typeconsts = typeconsts;
-    tc_cvars = cvars;
-    tc_scvars = scvars;
+    tc_props = props;
+    tc_sprops = sprops;
     tc_methods = m;
     tc_smethods = sm;
     tc_construct = cstr;

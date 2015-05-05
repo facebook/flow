@@ -14,6 +14,7 @@ open Typing_defs
 module Env    = Typing_env
 module SN     = Naming_special_names
 module TUtils = Typing_utils
+module Phase = Typing_phase
 
 type env   = Env.env
 type 'a subst = ('a Phase.t * 'a ty) SMap.t
@@ -69,11 +70,8 @@ let rec instantiate_fun env fty el =
       let env, ft = instantiate_ft env ft in
       let fty = r, Tfun ft in
       env, fty
-  | r, Tapply ((_, x), argl) when Typing_env.is_typedef x ->
-      let env, fty = TUtils.expand_typedef env r x argl in
-      instantiate_fun env fty el
   | _, (Tany | Tmixed | Tarray (_, _) | Tprim _ | Tgeneric (_, _) | Toption _
-    | Tvar _ | Tabstract (_, _, _) | Tapply (_, _) | Ttuple _ | Tanon (_, _)
+    | Tvar _ | Tabstract (_, _, _) | Tclass (_, _) | Ttuple _ | Tanon (_, _)
     | Tunresolved _ | Tobject | Tshape _ | Taccess (_, _)) -> env, fty
 
 and instantiate_ft env ft =
@@ -100,8 +98,8 @@ and instantiate_ft env ft =
   env, { ft with ft_arity = arity; ft_params = params; ft_ret = ret }
 
 and check_constraint env ck cstr_ty ty =
-  let env, ty = TUtils.localize_phase env ty in
-  let env, cstr_ty = TUtils.localize_phase env cstr_ty in
+  let env, ty = Phase.localize_phase env ty in
+  let env, cstr_ty = Phase.localize_phase env cstr_ty in
   let env, ety = Env.expand_type env ty in
   let env, ecstr_ty = Env.expand_type env cstr_ty in
   match snd ecstr_ty, snd ety with
@@ -112,7 +110,7 @@ and check_constraint env ck cstr_ty ty =
       env
   | Tany, _ -> fst (TUtils.unify env cstr_ty ty)
   | (Tmixed | Tarray (_, _) | Tprim _ | Tgeneric (_, _) | Toption _ | Tvar _
-    | Tabstract (_, _, _) | Tapply (_, _) | Ttuple _ | Tanon (_, _) | Tfun _
+    | Tabstract (_, _, _) | Tclass (_, _) | Ttuple _ | Tanon (_, _) | Tfun _
     | Tunresolved _ | Tobject | Tshape _
     | Taccess _), _ -> begin
         match ck with
@@ -265,6 +263,9 @@ and instantiate_: type a. a subst -> env -> a ty_ -> env * a ty_ =
       in
       let env, tyl = lfold (instantiate subst) env tyl in
       env, Tabstract (x, tyl, tcstr)
+  | Tclass (x, tyl) ->
+     let env, tyl = lfold (instantiate subst) env tyl in
+     env, Tclass (x, tyl)
   | Tapply (x, tyl) ->
       let env, tyl = lfold (instantiate subst) env tyl in
       env, Tapply (x, tyl)

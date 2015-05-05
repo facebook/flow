@@ -343,7 +343,7 @@
     let lex_errors_acc = (loc, err)::(!(env.lex_state).lex_errors_acc) in
     env.lex_state := { !(env.lex_state) with lex_errors_acc; }
 
-  let unexpected_error env loc value = 
+  let unexpected_error env loc value =
     lex_error env loc (Parse_error.UnexpectedToken value)
 
   let illegal env loc = lex_error env loc (Parse_error.UnexpectedToken "ILLEGAL")
@@ -562,7 +562,7 @@ rule token env = parse
                          unicode_fix_cols lexbuf;
                          token env lexbuf }
   | "/*"               {
-                         if env.lex_in_comment_syntax 
+                         if env.lex_in_comment_syntax
                          then unexpected_error env (lb_to_loc lexbuf) "/*"
                          else begin
                            let start = lb_to_loc lexbuf in
@@ -573,7 +573,7 @@ rule token env = parse
                          token env lexbuf
                        }
   | "/*" whitespace* (":" | "::" | "flow-include" as escape_type) as pattern
-                       { 
+                       {
                          if env.lex_in_comment_syntax
                          then unexpected_error env (lb_to_loc lexbuf) pattern;
                          let env = { env with lex_in_comment_syntax = true } in
@@ -705,7 +705,7 @@ and type_token env = parse
                          unicode_fix_cols lexbuf;
                          type_token env lexbuf }
   | "/*"               {
-                         if env.lex_in_comment_syntax 
+                         if env.lex_in_comment_syntax
                          then unexpected_error env (lb_to_loc lexbuf) "/*"
                          else begin
                            let start = lb_to_loc lexbuf in
@@ -716,7 +716,7 @@ and type_token env = parse
                          type_token env lexbuf
                        }
   | "/*" whitespace* (":" | "::" | "flow-include" as escape_type) as pattern
-                       { 
+                       {
                          if env.lex_in_comment_syntax
                          then unexpected_error env (lb_to_loc lexbuf) pattern;
                          let env = { env with lex_in_comment_syntax = true } in
@@ -772,6 +772,9 @@ and type_token env = parse
   | ">"                { env, T_GREATER_THAN }
   (* Optional or nullable *)
   | "?"                { env, T_PLING }
+  (* Existential *)
+  | "*"                { env, T_MULT }
+  (* Annotation or bound *)
   | ":"                { env, T_COLON }
   (* Union *)
   | '|'                { env, T_BIT_OR }

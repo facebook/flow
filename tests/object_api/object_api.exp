@@ -13,4 +13,72 @@ object_assign.js:7:19,40: property bar
 Property not found in
   object_assign.js:7:58,59: object literal
 
-Found 4 errors
+object_prototype.js:38:17,22: number
+This type is incompatible with
+  [LIB] core.js:46:5,22: function type
+
+object_prototype.js:39:24,29: number
+This type is incompatible with
+  [LIB] core.js:46:17,22: string
+
+object_prototype.js:43:17,22: number
+This type is incompatible with
+  [LIB] core.js:46:5,22: function type
+
+object_prototype.js:49:2,30: assignment of property toString
+Property cannot be assigned on
+  object_prototype.js:49:2,4: number
+
+object_prototype.js:51:16,20: string
+This type is incompatible with
+  [LIB] core.js:74:22,27: number
+
+object_prototype.js:52:16,19: null
+This type is incompatible with
+  [LIB] core.js:74:22,27: number
+
+object_prototype.js:71:23,28: number
+This type is incompatible with
+  [LIB] core.js:43:5,38: function type
+
+object_prototype.js:72:42,47: number
+This type is incompatible with
+  [LIB] core.js:43:32,38: boolean
+
+object_prototype.js:76:23,28: number
+This type is incompatible with
+  [LIB] core.js:43:5,38: function type
+
+object_prototype.js:96:29,34: number
+This type is incompatible with
+  [LIB] core.js:44:5,44: function type
+
+object_prototype.js:97:48,53: number
+This type is incompatible with
+  [LIB] core.js:44:38,44: boolean
+
+object_prototype.js:102:29,34: number
+This type is incompatible with
+  [LIB] core.js:44:5,44: function type
+
+object_prototype.js:122:16,21: number
+This type is incompatible with
+  [LIB] core.js:212:5,21: function type
+
+object_prototype.js:126:16,21: number
+This type is incompatible with
+  [LIB] core.js:47:5,21: function type
+
+object_prototype.js:150:23,28: number
+This type is incompatible with
+  [LIB] core.js:209:5,28: function type
+
+object_prototype.js:151:30,35: number
+This type is incompatible with
+  [LIB] core.js:209:23,28: string
+
+object_prototype.js:155:23,28: number
+This type is incompatible with
+  [LIB] core.js:45:5,28: function type
+
+Found 21 errors

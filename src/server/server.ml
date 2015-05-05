@@ -21,6 +21,7 @@ struct
   open Utils
   open Sys_utils
   open ServerEnv
+  open ServerUtils
 
   module EventLogger = FlowEventLogger
 
@@ -55,6 +56,11 @@ struct
     ignore (Flowlib.get_flowlib_root ())
 
   let init genv env =
+    if not (ServerArgs.check_mode genv.ServerEnv.options) then (
+      (* write binary path and version to server log *)
+      Hh_logger.log "executable=%s" Sys.executable_name;
+      Hh_logger.log "version=%s" FlowConfig.version);
+    (* start the server *)
     let flow_options = OptionParser.get_flow_options () in
     let env = Types_js.server_init genv env flow_options in
     env
@@ -375,7 +381,7 @@ struct
     flush oc
 
   let respond genv env ~client ~msg =
-    let _, oc = client in
+    let oc = client.oc in
     match msg with
     | ServerProt.AUTOCOMPLETE fn ->
         autocomplete fn oc
@@ -404,28 +410,10 @@ struct
     | ServerProt.SUGGEST (files) ->
         suggest files oc
 
-  let handle_connection_ genv env socket =
-    let cli, _ = Unix.accept socket in
-    let ic = Unix.in_channel_of_descr cli in
-    let oc = Unix.out_channel_of_descr cli in
-    let client = ic, oc in
-    let msg = ServerProt.cmd_from_channel ic in
-    let finished, _, _ = Unix.select [cli] [] [] 0.0 in
-    (if finished <> [] then () else begin
-      ServerPeriodical.stamp_connection();
-      respond genv env ~client ~msg;
-      (try Unix.close cli with e ->
-        Printf.fprintf stderr "Error: %s\n" (Printexc.to_string e);
-        flush stderr);
-    end)
-
-  let handle_connection genv env socket =
-    try handle_connection_ genv env socket
-    with
-    | Unix.Unix_error (e, _, _) ->
-        flush stdout
-    | e ->
-        flush stdout
+  let handle_client genv env client =
+    let msg = ServerProt.cmd_from_channel client.ic in
+    respond genv env ~client ~msg;
+    client.close ()
 
   (* Note: this single-file entry point is only called by
      ServerMain.load currently, which Flow doesn't support.

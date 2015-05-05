@@ -1,2 +1,6 @@
 
-Found 0 errors
+docblock.js:34:1,42:1: assignment of property o
+Property not found in
+  docblock.js:18:7,7: statics of C
+
+Found 1 error

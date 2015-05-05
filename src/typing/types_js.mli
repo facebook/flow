@@ -15,8 +15,7 @@ type options = {
   opt_verbose : bool;
   opt_all : bool;
   opt_weak : bool;
-  opt_traces : bool;
-  opt_newtraces : bool;
+  opt_traces : int;
   opt_strict : bool;
   opt_console : bool;
   opt_json : bool;

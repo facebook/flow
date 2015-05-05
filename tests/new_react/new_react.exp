@@ -1,19 +1,51 @@
 
-classes.js:6:17,22: number
-This type is incompatible with
-  classes.js:14:29,34: string
-
-classes.js:11:25,36: number
-This type is incompatible with
-  classes.js:11:16,21: string
-
-classes.js:14:29,34: string
-This type is incompatible with
-  classes.js:6:17,22: number
-
-classes.js:18:17,30: property y_
+classes.js:4:14,26: property x
 Property not found in
-  classes.js:6:12,24: object type
+  classes.js:40:25,30: type parameter D of React element: Foo
+
+classes.js:5:19,24: number
+This type is incompatible with
+  classes.js:20:27,32: string
+
+classes.js:17:21,32: number
+This type is incompatible with
+  classes.js:17:12,17: string
+
+classes.js:20:27,32: string
+This type is incompatible with
+  classes.js:5:19,24: number
+
+classes.js:24:15,28: property y_
+Property not found in
+  classes.js:5:14,26: object type
+
+classes.js:24:15,28: property y_
+Property not found in
+  classes.js:20:22,34: object type
+
+classes.js:39:20,20: number
+This type is incompatible with
+  classes.js:3:21,23: object type
+
+classes.js:40:15,20: number
+This type is incompatible with
+  [LIB] react.js:16:1,49:1: ReactComponent
+
+classes.js:47:3,11: property x
+Property not found in
+  classes.js:80:32,43: type parameter D of React element: FooLegacy
+
+classes.js:58:21,32: number
+This type is incompatible with
+  classes.js:58:12,17: string
+
+classes.js:65:15,28: property y_
+Property not found in
+  classes.js:44:17,77:2: state of React component
+
+classes.js:80:22,27: number
+This type is incompatible with
+  [LIB] react.js:16:1,49:1: ReactComponent
 
 new_react.js:3:9,27:2: state of React component
 Expected object instead of
@@ -26,6 +58,10 @@ This type is incompatible with
 new_react.js:5:5,13: propTypes
 This type is incompatible with
   new_react.js:18:18,23: string
+
+new_react.js:5:5,13: property x
+Property not found in
+  new_react.js:30:16,19: type parameter D of React element: C
 
 new_react.js:19:27,38: number
 This type is incompatible with
@@ -47,6 +83,10 @@ new_react.js:29:23,23: number
 This type is incompatible with
   new_react.js:6:12,33: string
 
+new_react.js:32:8,13: number
+This type is incompatible with
+  [LIB] react.js:47:23,28: string
+
 props.js:14:25,36: string
 This type is incompatible with
   props.js:14:16,21: number
@@ -65,6 +105,10 @@ This type is incompatible with
 
 props.js:20:29,33: boolean
 This type is incompatible with
+  props.js:5:12,33: string
+
+props.js:20:29,33: boolean
+This type is incompatible with
   props.js:10:20,21: string
 
 props.js:20:39,43: boolean
@@ -74,6 +118,10 @@ This type is incompatible with
 props.js:20:49,53: boolean
 This type is incompatible with
   props.js:6:12,33: number
+
+props.js:25:5,13: property w
+Property not found in
+  props.js:4:5,13: propTypes
 
 props2.js:9:41,46: number
 This type is incompatible with
@@ -89,11 +137,11 @@ This type is incompatible with
 
 props3.js:49:16,44: property imaginaryType
 Property not found in
-  [LIB] react.js:67:23,84:1: object type
+  [LIB] react.js:86:23,103:1: object type
 
 props3.js:50:16,48: property inRequired
 Property not found in
-  [LIB] react.js:62:39,65:1: object type
+  [LIB] react.js:81:39,84:1: object type
 
 state.js:19:18,35: property qux
 Property cannot be accessed on possibly null value
@@ -111,8 +159,4 @@ state3.js:14:16,20: boolean
 This type is incompatible with
   state3.js:11:16,21: number
 
-[LIB] react.js:16:18,23: string
-This type is incompatible with
-  new_react.js:31:8,13: number
-
-Found 29 errors
+Found 40 errors

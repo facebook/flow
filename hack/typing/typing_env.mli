@@ -110,6 +110,7 @@ val get_fun : env -> Funs.key -> Funs.t option
 val set_fn_kind : env -> Ast.fun_kind -> env
 val add_todo : env -> tfun -> env
 val add_anonymous : env -> anon -> env * int
+val set_anonymous : env -> int -> anon -> env
 val get_anonymous : env -> int -> anon option
 val set_self_id : env -> string -> env
 val set_self : env -> decl ty -> env

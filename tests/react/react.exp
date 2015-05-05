@@ -1,8 +1,4 @@
 
-ArityError.react.js:6:37,46: any
-Number of type arguments differs from
-  [LIB] react.js:97:62,78: any
-
 import_react.js:7:21,35: ReactComponent
 This type is incompatible with
   import_react.js:7:8,13: number
@@ -43,4 +39,4 @@ proptype_oneOfType.js:23:32,35: boolean
 This type is incompatible with
   proptype_oneOfType.js:6:11,9:6: oneOfType
 
-Found 11 errors
+Found 10 errors

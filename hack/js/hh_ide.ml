@@ -217,7 +217,7 @@ let hh_auto_complete fn =
       | Some Autocomplete.Acnew -> "new"
       | Some Autocomplete.Actype -> "type"
       | Some Autocomplete.Acclass_get -> "class_get"
-      | Some Autocomplete.Acvar -> "var"
+      | Some Autocomplete.Acprop -> "var"
       | None -> "none" in
     let result = AutocompleteService.get_results [] [] in
     let result =

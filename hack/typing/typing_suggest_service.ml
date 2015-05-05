@@ -96,10 +96,10 @@ let resolve_types acc collated_values =
               end (fun _ -> raise Exit)
             with Timeout -> raise Timeout | _ -> guess_super env tyl guesses in
 
-        let xhp = reason, Typing_defs.Tapply ((Pos.none, "\\:xhp"), []) in
+        let xhp = reason, Typing_defs.Tclass ((Pos.none, "\\:xhp"), []) in
         let xhp_option = reason, Typing_defs.Toption xhp in
         let awaitable ty =
-          reason, Typing_defs.Tapply ((Pos.none, SN.Classes.cAwaitable), [ty]) in
+          reason, Typing_defs.Tclass ((Pos.none, SN.Classes.cAwaitable), [ty]) in
         let awaitable_xhp = awaitable xhp in
         let awaitable_xhp_option = awaitable xhp_option in
 
