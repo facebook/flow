@@ -2416,20 +2416,25 @@ and expr_atomic env =
        expr env;
        expect ")" env
      end
-     (* Expression *)
-     else if is_followed_by env expr ")"
-     then begin
-       margin_set (!(env.char_pos) -1) env begin fun env ->
-         expr env
-       end;
-       expect ")" env;
-     end
      (* Short lambda parameters *)
-     else begin
+     else if attempt env begin fun env ->
+       try
+         list_comma fun_param env;
+         seq env [expect ")"; return_type];
+         wrap_eof env (fun tok -> tok = Tlambda)
+       with Format_error -> false
+     end then begin
        margin_set (!(env.char_pos) -1) env begin fun env ->
          list_comma fun_param env
        end;
        seq env [expect ")"; return_type];
+     end
+     (* Expression *)
+     else begin
+       margin_set (!(env.char_pos) -1) env begin fun env ->
+         expr env
+       end;
+       expect ")" env;
      end
   | Tlt when is_xhp env ->
       if attempt env begin fun env ->
