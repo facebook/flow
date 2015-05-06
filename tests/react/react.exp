@@ -1,5 +1,6 @@
 
-import_react.js:7:21,35: ReactComponent
+import_react.js:7:17,37: constructor call
+  import_react.js:7:21,35: ReactComponent
 This type is incompatible with
   import_react.js:7:8,13: number
 

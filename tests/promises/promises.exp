@@ -4,11 +4,13 @@ promise.js:10:1,17:2: call of method then
 This type is incompatible with
   [LIB] core.js:339:25,38: union type
 
-promise.js:22:13,13: number
+promise.js:21:11,23:4: constructor call
+  promise.js:22:13,13: number
 This type is incompatible with
   [LIB] core.js:339:25,38: union type
 
-promise.js:33:15,15: number
+promise.js:32:13,34:6: constructor call
+  promise.js:33:15,15: number
 This type is incompatible with
   [LIB] core.js:339:25,38: union type
 

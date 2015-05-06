@@ -1174,7 +1174,7 @@ module Cache = struct
     CAUTION:
 
     Before doing any work on the typechecker, it's important to understand
-    that the currenct caching strategy has two counterintuitive effects:
+    that the current caching strategy has two counterintuitive effects:
     - calls to __flow on arbitrary type pairs may not run
     - simple changes to the internal representation of type terms
       may cause completely unrelated changes to typechecking behavior.
@@ -1184,8 +1184,9 @@ module Cache = struct
     __flow will not typecheck a pair whose hashes are present, thus one
     visited pair may suppress the checking of other, unrelated pairs.
 
-    The algorithm as it currently stands depends on this false positive
-    behavior to terminate. When a non-lossy scheme is substituted, the
+    The algorithm as it currently stands depends on these false positive
+    cache hits to terminate. When a non-lossy scheme is substituted - i.e.
+    when every unvisited type pair actually makes it past the guard - the
     algorithm is subject to multiple unbounded recursions, e.g. in our
     test suite.
 
@@ -1193,7 +1194,7 @@ module Cache = struct
     to Hashtbl.hash_param below. The arguments to this call are extremely
     important tuning parameters: they specify a fixed amount of internal
     structure to be traversed in the course of generating a hash value.
-    The current values appear tuned to avoid endless rucursion, without
+    The current values are tuned to avoid endless recursion, without
     omitting too many typechecks.
 
     Improving this situation is a high priority. Meanwhile, bear in mind:
@@ -1700,15 +1701,15 @@ let rec __flow cx (l,u) trace =
     (* function types deconstruct into their parts *)
     (***********************************************)
 
-    | (FunT (reason1,_,_,
-             {this_t = o1; params_tlist = tins1; return_t = t1; closure_t = i; _}),
-       FunT (reason2,_,_,
-             {this_t = o2; params_tlist = tins2; return_t = t2; closure_t = j; _}))
+    | FunT (reason1, _, _,
+        {this_t = o1; params_tlist = tins1; return_t = t1; closure_t = i; _}),
+      FunT (reason2, _, _,
+        {this_t = o2; params_tlist = tins2; return_t = t2; closure_t = j; _})
       ->
       rec_flow cx trace (o2,o1);
       multiflow cx trace (u, l) (tins2,tins1) |> ignore;
       rec_flow cx trace (t1,t2);
-      havoc_ctx cx i j
+      havoc_ctx cx i j;
 
     | FunT (reason_fundef, _, _,
         {this_t = o1; params_tlist = tins1; return_t = t1; closure_t = i; _}),
@@ -1891,32 +1892,31 @@ let rec __flow cx (l,u) trace =
     (* class types derive instance types (with constructors) *)
     (*********************************************************)
 
-    | (ClassT(InstanceT(reason_c,static,super,instance)),
-       ConstructorT(reason_op,tins2,t))
-      ->
+    | ClassT (InstanceT (reason_c, static, super, instance)),
+      ConstructorT (reason_op, tins2, t) ->
+      Ops.push reason_op;
       let methods = find_props cx instance.methods_tmap in
       (match SMap.get "constructor" methods with
       | Some (FunT (reason,_,_,{params_tlist = tins1; _})) ->
         (* TODO: closure *)
         multiflow cx trace (u, l) (tins2,tins1) |> ignore
-
       | _ -> () (* TODO *)
       );
       let it = InstanceT(reason_c,static,super,instance) in
-      rec_flow cx trace (it, t)
+      rec_flow cx trace (it, t);
+      Ops.pop ();
 
     (****************************************************************)
     (* function types derive objects through explicit instantiation *)
     (****************************************************************)
 
-    | (FunT (reason,_, proto, {
-      this_t = this;
-      params_tlist = tins1;
-      return_t = tout1;
-      _
-    }),
-       ConstructorT(reason_op,tins2,t))
-      -> (* TODO: closure *)
+    | FunT (reason, _, proto, {
+        this_t = this;
+        params_tlist = tins1;
+        return_t = tout1;
+        _ }),
+      ConstructorT (reason_op, tins2, t) ->
+      (* TODO: closure *)
       multiflow cx trace (u, l) (tins2, tins1) |> ignore;
       let reason_rv = replace_reason "return undefined" reason in
       rec_flow cx trace (tout1, VoidT reason_rv);
@@ -1930,12 +1930,10 @@ let rec __flow cx (l,u) trace =
     (* "statics" can be read *)
     (*************************)
 
-    | (InstanceT (_,static,_,_), GetT (_,"statics",t))
-      ->
+    | InstanceT (_, static, _, _), GetT (_, "statics", t) ->
       rec_flow cx trace (static, t)
 
-    | (MixedT reason, GetT(_, "statics", u))
-      ->
+    | MixedT reason, GetT(_, "statics", u) ->
       (* MixedT serves as the instance type of the root class, and also as the
          statics of the root class. *)
       rec_flow cx trace (MixedT (prefix_reason "statics of " reason), u)
@@ -1944,8 +1942,8 @@ let rec __flow cx (l,u) trace =
     (* instances of classes may have their fields looked up *)
     (********************************************************)
 
-    | (InstanceT(reason,_,super,instance),
-       LookupT (_,strict,x, t))
+    | InstanceT(reason, _, super, instance),
+      LookupT (reason_op, strict, x, t)
       ->
       let strict = if instance.mixins then None else strict in
       let pmap = match strict, t with
@@ -1973,8 +1971,8 @@ let rec __flow cx (l,u) trace =
       | None ->
         rec_flow cx trace (super, u)
       | Some tx ->
-        rec_flow cx trace (t,tx); rec_flow cx trace (tx,t)
-      )
+        rec_flow cx trace (t, tx); rec_flow cx trace (tx,t)
+      );
 
     (********************************)
     (* ... and their fields written *)
@@ -2196,27 +2194,20 @@ let rec __flow cx (l,u) trace =
     (* ... and their fields read *)
     (*****************************)
 
-    | (ObjT (_, {proto_t = proto; _}), GetT (_, "__proto__", t)) ->
-
+    | ObjT (_, {proto_t = proto; _}), GetT (_, "__proto__", t) ->
       rec_flow cx trace (proto,t)
 
-    | (ObjT _, GetT(reason_op,"constructor",tout)) ->
+    | ObjT _, GetT(reason_op, "constructor", tout) ->
       rec_flow cx trace (AnyT.why reason_op, tout)
 
-    | (ObjT (reason_o, {
-      flags;
-      props_tmap = mapr;
-      proto_t = proto;
-      dict_t;
-    }),
-       GetT(reason_op,x,tout))
-      ->
+    | ObjT (reason_o, { flags; props_tmap = mapr; proto_t = proto; dict_t }),
+      GetT (reason_op, x, tout) ->
       let strict = mk_strict flags.sealed (dict_t <> None) reason_o reason_op in
       let t = ensure_prop cx strict mapr x proto reason_o reason_op trace in
       dictionary cx trace (string_key x reason_op) t dict_t;
       (* move property type to read site *)
       let t = repos_t_from_reason reason_op t in
-      rec_flow cx trace (t, tout)
+      rec_flow cx trace (t, tout);
 
     (********************************)
     (* ... and their methods called *)
