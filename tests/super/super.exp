@@ -1,16 +1,18 @@
 
 super.js:9:5,12: super(...)
-  super.js:9:11,11: string
+Error:
+super.js:9:11,11: string
 This type is incompatible with
-  super.js:3:17,22: number
+super.js:3:17,22: number
 
 super.js:12:5,14: super.f(...)
-  super.js:12:13,13: number
+Error:
+super.js:12:13,13: number
 This type is incompatible with
-  super.js:4:7,12: string
+super.js:4:7,12: string
 
 super.js:13:18,18: property g
 Property not found in
-  super.js:7:17,17: A
+super.js:7:17,17: A
 
 Found 3 errors

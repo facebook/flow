@@ -1,6 +1,6 @@
 
 any.js:6:16,21: mixed
 This type is incompatible with
-  any.js:6:7,12: string
+any.js:6:7,12: string
 
 Found 1 error

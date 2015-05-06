@@ -1,21 +1,24 @@
 
 ../lib/libtest.js:1:7,12: string
 This type is incompatible with
-  [LIB] core.js:14:18,23: number
+[LIB] core.js:14:18,23: number
 
 ../lib/libtest.js:2:16,31: property MAX_VALUE
-  ../lib/libtest.js:2:7,12: string
+Error:
+../lib/libtest.js:2:7,12: string
 This type is incompatible with
-  [LIB] core.js:81:23,28: number
+[LIB] core.js:81:23,28: number
 
 ../lib/libtest.js:3:16,35: property name
-  ../lib/libtest.js:3:7,12: number
+Error:
+../lib/libtest.js:3:7,12: number
 This type is incompatible with
-  [LIB] core.js:258:11,16: string
+[LIB] core.js:258:11,16: string
 
 ../lib/libtest.js:4:16,30: function call
-  ../lib/libtest.js:4:16,30: number
+Error:
+../lib/libtest.js:4:16,30: number
 This type is incompatible with
-  ../lib/libtest.js:4:7,12: string
+../lib/libtest.js:4:7,12: string
 
 Found 4 errors

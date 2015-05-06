@@ -1,23 +1,24 @@
 
 test.js:2:8,23: property foo
 Property not found in
-  test.js:2:27,27: object type
+test.js:2:27,27: object type
 
 test.js:8:9,9: number
 This type is incompatible with
-  test.js:2:16,21: string
+test.js:2:16,21: string
 
 test.js:12:1,14: function call
-  test.js:12:11,12: string
+Error:
+test.js:12:11,12: string
 This type is incompatible with
-  test.js:10:30,35: number
+test.js:10:30,35: number
 
 test2.js:3:9,12: null
 This type is incompatible with
-  test2.js:1:16,21: string
+test2.js:1:16,21: string
 
 test2.js:10:34,37: null
 This type is incompatible with
-  test2.js:10:16,21: string
+test2.js:10:16,21: string
 
 Found 5 errors

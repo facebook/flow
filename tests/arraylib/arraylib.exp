@@ -1,22 +1,26 @@
 
 array_lib.js:4:9,54: call of method map
-  array_lib.js:3:10,10: number
+Error:
+array_lib.js:3:10,10: number
 This type is incompatible with
-  array_lib.js:1:16,21: string
+array_lib.js:1:16,21: string
 
 array_lib.js:4:9,54: call of method map
-  array_lib.js:4:45,50: string
+Error:
+array_lib.js:4:45,50: string
 This type is incompatible with
-  array_lib.js:7:8,13: number
+array_lib.js:7:8,13: number
 
 array_lib.js:9:23,33: call of method reverse
-  array_lib.js:3:10,10: number
+Error:
+array_lib.js:3:10,10: number
 This type is incompatible with
-  array_lib.js:9:13,18: string
+array_lib.js:9:13,18: string
 
 array_lib.js:9:23,33: call of method reverse
-  array_lib.js:9:13,18: string
+Error:
+array_lib.js:9:13,18: string
 This type is incompatible with
-  array_lib.js:3:10,10: number
+array_lib.js:3:10,10: number
 
 Found 4 errors

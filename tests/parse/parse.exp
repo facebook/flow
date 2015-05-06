@@ -7,6 +7,6 @@ fail.js:1:1,1: Unexpected token .
 
 no_parse_error.js:6:13,13: string
 This type is incompatible with
-  no_parse_error.js:6:9,13: number
+no_parse_error.js:6:9,13: number
 
 Found 4 errors

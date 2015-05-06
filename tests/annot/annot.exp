@@ -1,39 +1,40 @@
 
 annot.js:4:15,20: number
 This type is incompatible with
-  annot.js:1:18,23: string
+annot.js:1:18,23: string
 
 annot.js:6:58,67: string
 This type is incompatible with
-  annot.js:6:42,47: number
+annot.js:6:42,47: number
 
 annot.js:8:10,42: property j
 Property not found in
-  annot.js:8:46,77: object literal
+annot.js:8:46,77: object literal
 
 annot.js:8:62,66: string
 This type is incompatible with
-  annot.js:8:25,30: number
+annot.js:8:25,30: number
 
 annot.js:10:31,35: string
 This type is incompatible with
-  annot.js:10:16,21: number
+annot.js:10:16,21: number
 
 annot.js:13:28,32: string
 This type is incompatible with
-  annot.js:13:12,17: number
+annot.js:13:12,17: number
 
 annot.js:26:16,56: property foo-bar
 Property not found in
-  annot.js:27:25,43: object literal
+annot.js:27:25,43: object literal
 
 annot.js:31:7,11: string
 This type is incompatible with
-  annot.js:30:23,28: number
+annot.js:30:23,28: number
 
 annot.js:45:21,51:6: call of method map
-  annot.js:37:26,72: property path
+Error:
+annot.js:37:26,72: property path
 Property not found in
-  annot.js:46:14,50:7: object literal
+annot.js:46:14,50:7: object literal
 
 Found 9 errors

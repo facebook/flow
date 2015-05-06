@@ -46,13 +46,13 @@ let format_reason_color ?(first=false) ((p, s): Pos.t * string) = Pos.(
 )
 
 let print_reason_color ~(first:bool) ((p, s): Pos.t * string) =
-  let to_print = format_reason_color (p, s) in
-  if not first then Printf.printf "  " else Printf.printf "\n";
+  let to_print = format_reason_color ~first (p, s) in
+  (if first then Printf.printf "\n");
   if Unix.isatty Unix.stdout && Sys.getenv "TERM" <> "dumb"
   then
     C.print to_print
   else
-    let strings = List.map (fun (_,x) -> x) to_print in
+    let strings = List.map snd to_print in
     List.iter (Printf.printf "%s") strings
 
 let print_error_color (e:Errors.error) =

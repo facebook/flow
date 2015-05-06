@@ -1,74 +1,85 @@
 
 ExportNamed_Alias.js:5:26,7:1: property returnsANumber
 Property not found in
-  ExportCJSDefault_Class.js:12:18,26: ClassFoo3
+ExportCJSDefault_Class.js:12:18,26: ClassFoo3
 
 import_type.js:13:18,29: function call
-  ExportDefault_Class.js:5:7,15: ClassFoo1
+Error:
+ExportDefault_Class.js:5:7,15: ClassFoo1
 This type is incompatible with
-  import_type.js:13:9,14: number
+import_type.js:13:9,14: number
 
 import_type.js:13:18,29: function call
-  ExportDefault_Class.js:10:31,39: ClassFoo1
+Error:
+ExportDefault_Class.js:10:31,39: ClassFoo1
 This type is incompatible with
-  import_type.js:13:9,14: number
+import_type.js:13:9,14: number
 
 import_type.js:14:5,13: identifier ClassFoo1
 Could not resolve name
 
 import_type.js:24:18,29: function call
-  ExportNamed_Class.js:5:7,15: ClassFoo2
+Error:
+ExportNamed_Class.js:5:7,15: ClassFoo2
 This type is incompatible with
-  import_type.js:24:9,14: number
+import_type.js:24:9,14: number
 
 import_type.js:24:18,29: function call
-  ExportNamed_Class.js:10:31,39: ClassFoo2
+Error:
+ExportNamed_Class.js:10:31,39: ClassFoo2
 This type is incompatible with
-  import_type.js:24:9,14: number
+import_type.js:24:9,14: number
 
 import_type.js:25:5,13: identifier ClassFoo2
 Could not resolve name
 
 import_type.js:34:18,29: function call
-  ExportCJSDefault_Class.js:5:7,15: ClassFoo3
+Error:
+ExportCJSDefault_Class.js:5:7,15: ClassFoo3
 This type is incompatible with
-  import_type.js:34:9,14: number
+import_type.js:34:9,14: number
 
 import_type.js:34:18,29: function call
-  ExportNamed_Alias.js:5:26,7:1: object type
+Error:
+ExportNamed_Alias.js:5:26,7:1: object type
 This type is incompatible with
-  import_type.js:34:9,14: number
+import_type.js:34:9,14: number
 
 import_type.js:35:5,13: identifier ClassFoo3
 Could not resolve name
 
 import_type.js:45:18,29: function call
-  ExportCJSNamed_Class.js:5:7,15: ClassFoo4
+Error:
+ExportCJSNamed_Class.js:5:7,15: ClassFoo4
 This type is incompatible with
-  import_type.js:45:9,14: number
+import_type.js:45:9,14: number
 
 import_type.js:45:18,29: function call
-  ExportCJSNamed_Class.js:11:24,32: ClassFoo4
+Error:
+ExportCJSNamed_Class.js:11:24,32: ClassFoo4
 This type is incompatible with
-  import_type.js:45:9,14: number
+import_type.js:45:9,14: number
 
 import_type.js:46:5,13: identifier ClassFoo4
 Could not resolve name
 
 import_type.js:56:21,32: function call
-  ExportNamed_Alias.js:5:26,7:1: property givesANum
+Error:
+ExportNamed_Alias.js:5:26,7:1: property givesANum
 Property not found in
-  ExportCJSDefault_Class.js:5:7,15: ClassFoo3
+ExportCJSDefault_Class.js:5:7,15: ClassFoo3
 
 import_type.js:57:18,29: function call
-  ExportCJSDefault_Class.js:5:7,15: ClassFoo3
+Error:
+ExportCJSDefault_Class.js:5:7,15: ClassFoo3
 This type is incompatible with
-  import_type.js:57:9,14: number
+import_type.js:57:9,14: number
 
 import_type.js:57:18,29: function call
-  ExportNamed_Alias.js:5:26,7:1: object type
+Error:
+ExportNamed_Alias.js:5:26,7:1: object type
 This type is incompatible with
-  import_type.js:57:9,14: number
+import_type.js:57:9,14: number
 
 import_type.js:58:16,24: typeof-annotation 'AliasFoo4'
 Could not resolve name

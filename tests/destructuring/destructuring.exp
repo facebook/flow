@@ -1,15 +1,15 @@
 
 destructuring.js:4:2,10: number
 This type is incompatible with
-  destructuring.js:1:15,20: string
+destructuring.js:1:15,20: string
 
 destructuring.js:4:2,10: number
 This type is incompatible with
-  destructuring.js:2:15,20: string
+destructuring.js:2:15,20: string
 
 destructuring.js:4:30,30: number
 This type is incompatible with
-  destructuring.js:3:15,20: string
+destructuring.js:3:15,20: string
 
 destructuring.js:10:9,13: 
 unsupported destructuring
@@ -21,48 +21,53 @@ destructuring.js:15:9,9: identifier z
 Could not resolve name
 
 destructuring.js:18:1,19: function call
-  destructuring.js:13:14,23: number
+Error:
+destructuring.js:13:14,23: number
 This type is incompatible with
-  destructuring.js:1:15,20: string
+destructuring.js:1:15,20: string
 
 destructuring.js:18:1,19: function call
-  destructuring.js:18:14,14: number
+Error:
+destructuring.js:18:14,14: number
 This type is incompatible with
-  destructuring.js:3:15,20: string
+destructuring.js:3:15,20: string
 
 destructuring.js:20:7,10: 
 unsupported destructuring
 
 destructuring.js:20:16,16: number
 This type is incompatible with
-  destructuring.js:1:15,20: string
+destructuring.js:1:15,20: string
 
 destructuring.js:20:20,23: boolean
 This type is incompatible with
-  destructuring.js:2:15,20: string
+destructuring.js:2:15,20: string
 
 destructuring.js:25:1,15: function call
-  destructuring.js:23:11,33: property x
+Error:
+destructuring.js:23:11,33: property x
 Property not found in
-  destructuring.js:22:14,22: object pattern
+destructuring.js:22:14,22: object pattern
 
 destructuring.js:28:13,44: property z
 Property not found in
-  destructuring.js:28:48,63: object literal
+destructuring.js:28:48,63: object literal
 
 destructuring.js:31:1,11: function call
-  destructuring.js:31:8,9: string
+Error:
+destructuring.js:31:8,9: string
 This type is incompatible with
-  destructuring.js:30:20,25: number
+destructuring.js:30:20,25: number
 
 destructuring.js:33:1,12: function call
-  destructuring.js:33:10,10: number
+Error:
+destructuring.js:33:10,10: number
 This type is incompatible with
-  destructuring.js:32:24,29: string
+destructuring.js:32:24,29: string
 
 destructuring.js:35:27,28: string
 This type is incompatible with
-  destructuring.js:35:13,18: number
+destructuring.js:35:13,18: number
 
 destructuring_param.js:5:17,17: Strict mode function may not have duplicate parameter names
 

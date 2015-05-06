@@ -1,18 +1,18 @@
 
 generics.js:11:11,11: T
 This type is incompatible with
-  generics.js:20:7,12: number
+generics.js:20:7,12: number
 
 generics.js:18:18,18: number
 This type is incompatible with
-  generics.js:19:7,12: string
+generics.js:19:7,12: string
 
 generics.js:28:22,22: number
 This type is incompatible with
-  generics.js:28:7,12: string
+generics.js:28:7,12: string
 
 generics.js:38:9,13: string
 This type is incompatible with
-  generics.js:39:28,33: number
+generics.js:39:28,33: number
 
 Found 4 errors

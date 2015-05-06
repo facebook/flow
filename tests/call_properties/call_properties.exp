@@ -1,71 +1,72 @@
 
 A.js:8:10,12: string
 This type is incompatible with
-  A.js:7:32,37: number
+A.js:7:32,37: number
 
 A.js:13:10,19: function call
-  A.js:13:12,18: string
+Error:
+A.js:13:12,18: string
 This type is incompatible with
-  A.js:12:21,26: number
+A.js:12:21,26: number
 
 A.js:18:10,12: function call
 Too few arguments (expected default/rest parameters in function)
-  A.js:17:17,35: function type
+A.js:17:17,35: function type
 
 A.js:23:10,12: function call
 Callable signature not found in
-  A.js:23:10,10: object type
+A.js:23:10,10: object type
 
 A.js:29:10,12: function call
 Callable signature not found in
-  A.js:29:10,10: object literal
+A.js:29:10,10: object literal
 
 B.js:5:23,28: number
 This type is incompatible with
-  B.js:5:56,61: string
+B.js:5:56,61: string
 
 B.js:5:56,61: string
 This type is incompatible with
-  B.js:5:23,28: number
+B.js:5:23,28: number
 
 B.js:8:14,19: string
 This type is incompatible with
-  B.js:8:47,52: number
+B.js:8:47,52: number
 
 B.js:8:47,52: number
 This type is incompatible with
-  B.js:8:14,19: string
+B.js:8:14,19: string
 
 B.js:11:10,19: function type
 Too few arguments (expected default/rest parameters in function)
-  B.js:11:25,69: function
+B.js:11:25,69: function
 
 C.js:7:30,35: string
 This type is incompatible with
-  C.js:7:56,61: number
+C.js:7:56,61: number
 
 C.js:12:45,50: string
 This type is incompatible with
-  C.js:12:21,26: number
+C.js:12:21,26: number
 
 C.js:17:41,52: function type
 Too few arguments (expected default/rest parameters in function)
-  C.js:17:17,35: function type
+C.js:17:17,35: function type
 
 C.js:22:20,31: function type
 Callable signature not found in
-  C.js:23:10,10: object type
+C.js:23:10,10: object type
 
 D.js:11:10,19: function type
 Too few arguments (expected default/rest parameters in function)
-  D.js:12:3,47: function
+D.js:12:3,47: function
 
 D.js:20:15,49: callable object type
 This type is incompatible with
-  D.js:20:53,64: function type
+D.js:20:53,64: function type
 
 E.js:2:9,28: property someProp
 Property not found in
-  E.js:2:32,45: function
+E.js:2:32,45: function
 
 Found 17 errors

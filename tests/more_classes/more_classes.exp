@@ -3,14 +3,16 @@ Foo.js:13:16,16: parameter z
 Missing annotation
 
 Foo.js:16:13,22: constructor call
-  Foo.js:16:21,21: string
+Error:
+Foo.js:16:21,21: string
 This type is incompatible with
-  Bar.js:9:17,22: number
+Bar.js:9:17,22: number
 
 Foo.js:18:12,21: call of method bar
-  Foo.js:18:12,21: string
+Error:
+Foo.js:18:12,21: string
 This type is incompatible with
-  Foo.js:13:19,24: number
+Foo.js:13:19,24: number
 
 Qux.js:7:8,8: return
 Missing annotation

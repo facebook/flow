@@ -284,7 +284,8 @@ let prmsg_flow cx level trace msg (r1, r2) =
   in
   let info = match Ops.peek () with
   | Some r when r != r1 && r != r2 -> 
-    [r, desc_of_reason r]
+    let desc = (desc_of_reason r) ^ "\nError:" in
+    [r, desc]
   | _ ->
     if lib_reason r1 && lib_reason r2
     then

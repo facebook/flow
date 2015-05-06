@@ -1,22 +1,26 @@
 
 Traces.js:4:1,5: function call
-  Traces.js:4:4,4: number
+Error:
+Traces.js:4:4,4: number
 This type is incompatible with
-  Traces.js:2:15,20: string
+Traces.js:2:15,20: string
 
 Traces.js:9:1,12: function call
-  Traces.js:9:11,11: number
+Error:
+Traces.js:9:11,11: number
 This type is incompatible with
-  Traces.js:7:25,30: string
+Traces.js:7:25,30: string
 
 Traces.js:14:1,32: function call
-  Traces.js:12:22,27: string
+Error:
+Traces.js:12:22,27: string
 This type is incompatible with
-  Traces.js:14:25,29: number
+Traces.js:14:25,29: number
 
 Traces.js:20:1,10: function call
-  Traces.js:17:22,27: string
+Error:
+Traces.js:17:22,27: string
 This type is incompatible with
-  Traces.js:19:29,33: number
+Traces.js:19:29,33: number
 
 Found 4 errors
