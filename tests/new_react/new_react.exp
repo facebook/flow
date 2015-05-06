@@ -19,7 +19,8 @@ classes.js:24:15,28: property y_
 Property not found in
   classes.js:20:22,34: object type
 
-classes.js:39:20,20: number
+classes.js:39:1,20: assignment of property defaultProps
+  classes.js:39:20,20: number
 This type is incompatible with
   classes.js:3:21,23: object type
 

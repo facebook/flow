@@ -114,6 +114,8 @@ let json_of_pos pos = Json.(Pos.(Lexing.(
   ]
 )))
 
+(* reason constructors, accessors, etc. *)
+
 let new_reason s pos = {
   derivable = false;
   desc = s;
@@ -170,28 +172,6 @@ let loc_of_reason r =
 let desc_of_reason r =
   r.desc
 
-(* simple way to get reasons whose descriptions are simple prefix-extensions of
-   the original *)
-let prefix_reason prefix reason =
-  new_reason (spf "%s%s" prefix (desc_of_reason reason))
-    (pos_of_reason reason)
-
-let suffix_reason suffix reason =
-  new_reason (spf "%s%s" (desc_of_reason reason) suffix)
-    (pos_of_reason reason)
-
-let wrap_reason prefix suffix reason =
-  new_reason (spf "%s%s%s" prefix (desc_of_reason reason) suffix)
-    (pos_of_reason reason)
-
-(* simple way to get reasons whose descriptions are simple replacements of the
-   original *)
-let replace_reason replacement reason =
-  new_reason replacement (pos_of_reason reason)
-
-let repos_reason pos reason =
-  new_reason (desc_of_reason reason) pos
-
 let internal_name name =
   spf ".%s" name
 
@@ -221,3 +201,28 @@ let compare r1 r2 =
 
 let same_scope r1 r2 =
   r1.pos.Pos.pos_file = r2.pos.Pos.pos_file
+
+(* reason transformers: *)
+
+(* returns reason whose description is prefix-extension of original *)
+let prefix_reason prefix reason =
+  new_reason (spf "%s%s" prefix (desc_of_reason reason))
+    (pos_of_reason reason)
+
+(* returns reason whose description is suffix-extension of original *)
+let suffix_reason suffix reason =
+  new_reason (spf "%s%s" (desc_of_reason reason) suffix)
+    (pos_of_reason reason)
+
+(* returns reason whose description is prefix+suffix-extension of original *)
+let wrap_reason prefix suffix reason =
+  new_reason (spf "%s%s%s" prefix (desc_of_reason reason) suffix)
+    (pos_of_reason reason)
+
+(* returns reason with new description and position of original *)
+let replace_reason replacement reason =
+  new_reason replacement (pos_of_reason reason)
+
+(* returns reason with new position and description of original *)
+let repos_reason pos reason =
+  new_reason (desc_of_reason reason) pos

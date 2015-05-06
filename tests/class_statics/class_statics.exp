@@ -19,7 +19,8 @@ test.js:10:13,18: string
 This type is incompatible with
   test.js:2:13,18: number
 
-test.js:13:11,11: number
+test.js:13:5,11: assignment of property x
+  test.js:13:11,11: number
 This type is incompatible with
   test.js:10:13,18: string
 
@@ -28,7 +29,8 @@ test.js:15:5,12: call of method foo
 This type is incompatible with
   test.js:11:17,22: string
 
-test.js:17:11,11: number
+test.js:17:5,11: assignment of property y
+  test.js:17:11,11: number
 This type is incompatible with
   test.js:3:13,18: string
 

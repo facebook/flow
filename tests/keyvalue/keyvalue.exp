@@ -1,9 +1,11 @@
 
-keyvalue.js:2:8,13: number
+keyvalue.js:2:17,25: access of computed property/element
+  keyvalue.js:2:8,13: number
 This type is incompatible with
   [LIB] dom.js:52:22,25: File
 
-keyvalue.js:2:23,24: string
+keyvalue.js:2:17,25: access of computed property/element
+  keyvalue.js:2:23,24: string
 This type is incompatible with
   [LIB] dom.js:52:13,18: number
 

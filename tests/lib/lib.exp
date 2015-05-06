@@ -3,11 +3,13 @@ libtest.js:1:7,12: string
 This type is incompatible with
   [LIB] core.js:14:18,23: number
 
-libtest.js:2:7,12: string
+libtest.js:2:16,31: property MAX_VALUE
+  libtest.js:2:7,12: string
 This type is incompatible with
   [LIB] core.js:81:23,28: number
 
-libtest.js:3:7,12: number
+libtest.js:3:16,35: property name
+  libtest.js:3:7,12: number
 This type is incompatible with
   [LIB] core.js:258:11,16: string
 

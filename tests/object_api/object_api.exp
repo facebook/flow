@@ -13,11 +13,13 @@ object_assign.js:7:19,40: property bar
 Property not found in
   object_assign.js:7:58,59: object literal
 
-object_prototype.js:38:17,22: number
+object_prototype.js:38:26,35: property toString
+  object_prototype.js:38:17,22: number
 This type is incompatible with
   [LIB] core.js:46:5,22: function type
 
-object_prototype.js:39:24,29: number
+object_prototype.js:39:33,42: property toString
+  object_prototype.js:39:24,29: number
 This type is incompatible with
   [LIB] core.js:46:17,22: string
 
@@ -39,11 +41,13 @@ object_prototype.js:52:2,20: call of method toString
 This type is incompatible with
   [LIB] core.js:74:22,27: number
 
-object_prototype.js:71:23,28: number
+object_prototype.js:71:32,47: property hasOwnProperty
+  object_prototype.js:71:23,28: number
 This type is incompatible with
   [LIB] core.js:43:5,38: function type
 
-object_prototype.js:72:42,47: number
+object_prototype.js:72:51,66: property hasOwnProperty
+  object_prototype.js:72:42,47: number
 This type is incompatible with
   [LIB] core.js:43:32,38: boolean
 
@@ -51,11 +55,13 @@ object_prototype.js:76:23,28: number
 This type is incompatible with
   [LIB] core.js:43:5,38: function type
 
-object_prototype.js:96:29,34: number
+object_prototype.js:96:38,59: property propertyIsEnumerable
+  object_prototype.js:96:29,34: number
 This type is incompatible with
   [LIB] core.js:44:5,44: function type
 
-object_prototype.js:97:48,53: number
+object_prototype.js:98:3,24: property propertyIsEnumerable
+  object_prototype.js:97:48,53: number
 This type is incompatible with
   [LIB] core.js:44:38,44: boolean
 
@@ -63,7 +69,8 @@ object_prototype.js:102:29,34: number
 This type is incompatible with
   [LIB] core.js:44:5,44: function type
 
-object_prototype.js:122:16,21: number
+object_prototype.js:122:25,33: property valueOf
+  object_prototype.js:122:16,21: number
 This type is incompatible with
   [LIB] core.js:212:5,21: function type
 
@@ -71,11 +78,13 @@ object_prototype.js:126:16,21: number
 This type is incompatible with
   [LIB] core.js:47:5,21: function type
 
-object_prototype.js:150:23,28: number
+object_prototype.js:150:32,47: property toLocaleString
+  object_prototype.js:150:23,28: number
 This type is incompatible with
   [LIB] core.js:209:5,28: function type
 
-object_prototype.js:151:30,35: number
+object_prototype.js:151:39,54: property toLocaleString
+  object_prototype.js:151:30,35: number
 This type is incompatible with
   [LIB] core.js:209:23,28: string
 

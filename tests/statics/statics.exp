@@ -16,7 +16,8 @@ class_statics.js:7:1,6: call of method g
 Property not found in
   class_statics.js:1:7,7: statics of C
 
-class_statics.js:10:7,7: number
+class_statics.js:10:1,7: assignment of property x
+  class_statics.js:10:7,7: number
 This type is incompatible with
   class_statics.js:3:12,17: string
 

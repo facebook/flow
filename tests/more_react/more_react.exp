@@ -1,4 +1,12 @@
 
+API.react.js:4:1,20: call of method setProps
+Property not found in
+  JSX.js:8:3,14: ReactElement
+
+API.react.js:5:1,20: call of method setState
+Property not found in
+  JSX.js:8:3,14: ReactElement
+
 App.react.js:19:15,15: number
 This type is incompatible with
   App.react.js:10:16,21: string
@@ -12,15 +20,5 @@ This type is incompatible with
 
 App.react.js:26:21,21: return
 Missing annotation
-
-JSX.js:8:3,14: React element: App
-  API.react.js:4:1,20: call of method setProps
-Property not found in
-  JSX.js:8:3,14: ReactElement
-
-JSX.js:8:3,14: React element: App
-  API.react.js:5:1,20: call of method setState
-Property not found in
-  JSX.js:8:3,14: ReactElement
 
 Found 6 errors

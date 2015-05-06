@@ -121,18 +121,20 @@ let throw_on_error = ref false
    is used in messages for errors that take place during its
    residence.
  *)
-let push_op, pop_op, peek_op, get_ops, set_ops =
-  let ops = ref [] in
-  (* push_op *)
-  (fun r -> ops := r :: !ops),
-  (* pop_op *)
-  (fun () -> ops := List.tl !ops),
-  (* peek_op *)
-  (fun () -> match !ops with r :: rs -> Some r | [] -> None),
-  (* get_ops *)
-  (fun () -> !ops),
-  (* set_ops *)
-  (fun _ops -> ops := _ops)
+module Ops : sig
+  val push : reason -> unit
+  val pop : unit -> unit
+  val peek : unit -> reason option
+  val get : unit -> reason list
+  val set : reason list -> unit
+end = struct
+  let ops = ref []
+  let push r = ops := r :: !ops
+  let pop () = ops := List.tl !ops
+  let peek () = match !ops with r :: rs -> Some r | [] -> None
+  let get () = !ops
+  let set _ops = ops := _ops
+end
 
 let silent_warnings = false
 
@@ -280,7 +282,7 @@ let prmsg_flow cx level trace msg (r1, r2) =
     reasons_of_trace ~level:modes.traces trace
     |> List.map (fun r -> r, desc_of_reason r)
   in
-  let info = match peek_op () with
+  let info = match Ops.peek () with
   | Some r when r != r1 && r != r2 -> 
     [r, desc_of_reason r]
   | _ ->
@@ -1708,19 +1710,19 @@ let rec __flow cx (l,u) trace =
       rec_flow cx trace (t1,t2);
       havoc_ctx cx i j
 
-    | (FunT (reason_fundef,_,_,
-             {this_t = o1; params_tlist = tins1; return_t = t1; closure_t = i; _}),
-       CallT (reason_callsite,
-              {this_t = o2; params_tlist = tins2; return_t = t2; closure_t = j; _}))
+    | FunT (reason_fundef, _, _,
+        {this_t = o1; params_tlist = tins1; return_t = t1; closure_t = i; _}),
+      CallT (reason_callsite,
+        {this_t = o2; params_tlist = tins2; return_t = t2; closure_t = j; _})
       ->
-      push_op reason_callsite;
+      Ops.push reason_callsite;
       rec_flow cx trace (o2,o1);
       multiflow cx trace (u, l) (tins2,tins1) |> ignore;
       (* relocate the function's return type at the call site TODO remove? *)
       let t1 = repos_t_from_reason reason_callsite t1 in
       rec_flow cx trace (t1,t2);
       havoc_ctx cx i j;
-      pop_op ()
+      Ops.pop ()
 
     (*********************************************)
     (* object types deconstruct into their parts *)
@@ -1978,38 +1980,39 @@ let rec __flow cx (l,u) trace =
     (* ... and their fields written *)
     (********************************)
 
-    | (InstanceT (reason_c,static,super,instance),
-       SetT(reason_op,x,tin))
-      ->
+    | InstanceT (reason_c, static, super, instance),
+      SetT (reason_op, x, tin) ->
+      Ops.push reason_op;
       (* methods are immutable, so we hide them from property set operations *)
       let fields = instance.fields_tmap in
-      set_prop cx trace reason_op reason_c super x fields tin
+      set_prop cx trace reason_op reason_c super x fields tin;
+      Ops.pop ();
 
     (*****************************)
     (* ... and their fields read *)
     (*****************************)
 
-    | (InstanceT (_, _, super, _), GetT (_, "__proto__", t)) ->
+    | InstanceT (_, _, super, _), GetT (_, "__proto__", t) ->
+      rec_flow cx trace (super, t)
 
-      rec_flow cx trace (super,t)
-
-    | (InstanceT (reason_c,static,super,instance),
-       GetT(reason_op,x,tout)) ->
-
+    | InstanceT (reason_c, static, super, instance),
+      GetT (reason_op, x, tout) ->
+      Ops.push reason_op;
       let fields_tmap = find_props cx instance.fields_tmap in
       let methods_tmap = find_props cx instance.methods_tmap in
       let fields = SMap.union fields_tmap methods_tmap in
       let strict = if instance.mixins then None else Some reason_c in
-      get_prop cx trace reason_op strict super x fields tout
+      get_prop cx trace reason_op strict super x fields tout;
+      Ops.pop ();
 
     (********************************)
     (* ... and their methods called *)
     (********************************)
 
-    | (InstanceT (reason_c,static,super,instance),
-       MethodT(reason_op,x,this,tins2,tout2,j))
+    | InstanceT (reason_c, static, super, instance),
+      MethodT (reason_op, x, this, tins2, tout2, j)
       -> (* TODO: closure *)
-
+      Ops.push reason_op;
       let fields_tmap = find_props cx instance.fields_tmap in
       let methods_tmap = find_props cx instance.methods_tmap in
       let methods = SMap.union fields_tmap methods_tmap in
@@ -2017,7 +2020,8 @@ let rec __flow cx (l,u) trace =
       let strict = if instance.mixins then None else Some reason_c in
       get_prop cx trace reason_op strict super x methods funt;
       let callt = CallT (reason_op, mk_methodtype2 this tins2 None tout2 j) in
-      rec_flow cx trace (funt, callt)
+      rec_flow cx trace (funt, callt);
+      Ops.pop ();
 
     (** In traditional type systems, object types are not extensible.  E.g., an
         object {x: 0, y: ""} has type {x: number; y: string}. While it is
@@ -3072,7 +3076,7 @@ and mk_object_with_map_proto cx reason ?(sealed=false) map proto =
 (* Speculatively match types, returning whether the match fails. *)
 and speculative_flow_error cx trace l u =
   (* save the ops stack, since throws from within __flow will screw it up *)
-  let ops = get_ops () in
+  let ops = Ops.get () in
   throw_on_error := true;
   let result =
     try rec_flow cx trace (l, u); false
@@ -3082,7 +3086,7 @@ and speculative_flow_error cx trace l u =
   in
   throw_on_error := false;
   (* restore ops stack *)
-  set_ops ops;
+  Ops.set ops;
   result
 
 (* try each branch of a union in turn *)
