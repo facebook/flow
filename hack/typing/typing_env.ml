@@ -95,8 +95,9 @@ and genv = {
   return  : locl ty         ;
   parent  : decl ty         ;
   self_id : string     ;
-  self    : decl ty         ;
+  self    : locl ty         ;
   static  : bool       ;
+  is_constructor : bool;
   fun_kind : Ast.fun_kind;
   anons   : anon IMap.t;
   droot   : Typing_deps.Dep.variant option  ;
@@ -219,7 +220,7 @@ let rec debug stack env (r, ty) =
   | Tarray _ -> assert false
   | Tmixed -> o "mixed"
   | Tabstract (x, argl, _)
-  | Tapply (x, argl) ->
+  | Tclass (x, argl) ->
       Printf.printf "App %s" (snd x);
       o "<"; List.iter (fun x -> debug stack env x; o ", ") argl;
       o ">"
@@ -304,6 +305,7 @@ let empty tcopt file = {
     self_id = "";
     self    = Reason.none, Tany;
     static  = false;
+    is_constructor = false;
     parent  = Reason.none, Tany;
     fun_kind = Ast.FSync;
     anons   = IMap.empty;
@@ -394,10 +396,10 @@ let get_gconst env cst_name =
 let get_static_member is_method env class_ mid =
   add_wclass env class_.tc_name;
   let dep = if is_method then Dep.SMethod (class_.tc_name, mid)
-  else Dep.SCVar (class_.tc_name, mid) in
+  else Dep.SProp (class_.tc_name, mid) in
   Typing_deps.add_idep env.genv.droot dep;
   if is_method then SMap.get mid class_.tc_smethods
-  else SMap.get mid class_.tc_scvars
+  else SMap.get mid class_.tc_sprops
 
 let suggest_member members mid =
   let members = SMap.fold begin fun x ce acc ->
@@ -409,7 +411,7 @@ let suggest_member members mid =
 
 let suggest_static_member is_method class_ mid =
   let mid = String.lowercase mid in
-  let members = if is_method then class_.tc_smethods else class_.tc_scvars in
+  let members = if is_method then class_.tc_smethods else class_.tc_sprops in
   suggest_member members mid
 
 let method_exists class_ mid =
@@ -418,14 +420,14 @@ let method_exists class_ mid =
 let get_member is_method env class_ mid =
   add_wclass env class_.tc_name;
   let dep = if is_method then Dep.Method (class_.tc_name, mid)
-  else Dep.CVar (class_.tc_name, mid) in
+  else Dep.Prop (class_.tc_name, mid) in
   Typing_deps.add_idep env.genv.droot dep;
   if is_method then (SMap.get mid class_.tc_methods)
-  else SMap.get mid class_.tc_cvars
+  else SMap.get mid class_.tc_props
 
 let suggest_member is_method class_ mid =
   let mid = String.lowercase mid in
-  let members = if is_method then class_.tc_methods else class_.tc_cvars in
+  let members = if is_method then class_.tc_methods else class_.tc_props in
   suggest_member members mid
 
 let get_construct env class_ =
@@ -460,6 +462,7 @@ let with_return env f =
   let env = f env in
   set_return env ret
 
+let is_constructor env = env.genv.is_constructor
 let is_static env = env.genv.static
 let get_self env = env.genv.self
 let get_self_id env = env.genv.self_id
@@ -487,6 +490,11 @@ let add_anonymous env x =
   let anon_id = Ident.tmp() in
   let genv = { genv with anons = IMap.add anon_id x genv.anons } in
   { env with genv = genv }, anon_id
+
+let set_anonymous env anon_id x =
+  let genv = env.genv in
+  let genv = { genv with anons = IMap.add anon_id x genv.anons } in
+  { env with genv = genv }
 
 let get_anonymous env x =
   IMap.get x env.genv.anons
@@ -519,6 +527,11 @@ let set_mode env mode =
 let set_root env root =
   let genv = env.genv in
   let genv = { genv with droot = Some root } in
+  { env with genv = genv }
+
+let set_is_constructor env =
+  let genv = env.genv in
+  let genv = { genv with is_constructor = true } in
   { env with genv = genv }
 
 let get_mode env = env.genv.mode

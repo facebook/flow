@@ -341,7 +341,7 @@ let rec class_ class_name class_type impl =
   let tparams = class_type.tc_tparams in
   let env = SMap.empty in
   let env = List.fold_left (type_ root Vboth) env impl in
-  let env = SMap.fold (class_member root) class_type.tc_cvars env in
+  let env = SMap.fold (class_member root) class_type.tc_props env in
   let env = SMap.fold (class_method root) class_type.tc_methods env in
   List.iter (check_variance env) tparams
 
@@ -410,7 +410,7 @@ and type_ root variance env (reason, ty) =
     let env = type_option root variance env ty1 in
     let env = type_option root variance env ty2 in
     env
-  | Tgeneric ("this", _) ->
+  | Tthis ->
       (* `this` constraints are bivariant (otherwise any class that used the
        * `this` type would not be able to use covariant type params) *)
       env

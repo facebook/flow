@@ -14,6 +14,7 @@ open Typing_defs
 class type ['a] type_visitor_type = object
   method on_tany : 'a -> 'a
   method on_tmixed : 'a -> 'a
+  method on_tthis : 'a -> 'a
   method on_tarray : 'a -> 'b ty option -> 'b ty option -> 'a
   method on_tgeneric : 'a -> string -> (Ast.constraint_kind * 'b ty) option -> 'a
   method on_toption : 'a -> 'b ty -> 'a
@@ -29,11 +30,13 @@ class type ['a] type_visitor_type = object
   method on_tobject : 'a -> 'a
   method on_tshape : 'a -> 'b ty Nast.ShapeMap.t -> 'a
   method on_taccess : 'a -> 'b taccess_type -> 'a
+  method on_tclass : 'a -> Nast.sid -> locl ty list -> 'a
 end
 
 class virtual ['a] type_visitor : ['a] type_visitor_type = object(this)
   method on_tany acc = acc
   method on_tmixed acc = acc
+  method on_tthis acc = acc
   method on_tarray: type a. _ -> a ty option -> a ty option -> _ =
     fun acc ty1_opt ty2_opt ->
     let acc = Option.fold ~f:this#on_type ~init:acc ty1_opt in
@@ -69,10 +72,13 @@ class virtual ['a] type_visitor : ['a] type_visitor_type = object(this)
     fun acc fdm ->
     let f _ v acc = this#on_type acc v in
     Nast.ShapeMap.fold f fdm acc
+  method on_tclass acc _ tyl =
+    List.fold_left this#on_type acc tyl
   method on_type: type a. _ -> a ty -> _ = fun acc x ->
     match x with
     | _, Tany -> this#on_tany acc
     | _, Tmixed -> this#on_tmixed acc
+    | _, Tthis -> this#on_tthis acc
     | _, Tarray (ty1_opt, ty2_opt) ->
       this#on_tarray acc ty1_opt ty2_opt
     | _, Tgeneric (s, cstr_opt) -> this#on_tgeneric acc s cstr_opt
@@ -88,4 +94,5 @@ class virtual ['a] type_visitor : ['a] type_visitor_type = object(this)
     | _, Tunresolved tyl -> this#on_tunresolved acc tyl
     | _, Tobject -> this#on_tobject acc
     | _, Tshape fdm -> this#on_tshape acc fdm
+    | _, Tclass (cls, tyl) -> this#on_tclass acc cls tyl
 end

@@ -1,6 +1,6 @@
 
 test.js:9:16,21: string
 This type is incompatible with
-  test.js:13:12,14: number
+test.js:13:12,14: number
 
 Found 1 error

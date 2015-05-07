@@ -53,4 +53,4 @@ let init save_errors =
   let cx = Flow.master_cx in
   let reason = Reason.builtin_reason "module" in
   let builtin_module = TI.mk_object cx reason in
-  Flow.unit_flow cx (builtin_module, Flow.builtins)
+  Flow.flow cx (builtin_module, Flow.builtins)

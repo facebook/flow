@@ -54,19 +54,6 @@ let print_error_color e =
 
 let check_status connect (args:client_check_env) =
   let name = "hh_server" in
-  (* Check if a server is up *)
-  if not (ClientUtils.server_exists args.root)
-  then begin
-    if args.autostart
-    then
-      (* fork the server and raise an exception *)
-      ClientStart.start_server { ClientStart.
-        root = args.root;
-        wait = false;
-        no_load = args.no_load;
-      };
-    raise Server_missing
-  end;
   let response = with_timeout 6
     ~on_timeout:(fun _ -> raise Server_busy)
     ~do_:(fun () ->
@@ -74,12 +61,6 @@ let check_status connect (args:client_check_env) =
       ServerMsg.cmd_to_channel oc (ServerMsg.STATUS args.root);
       ServerMsg.response_from_channel ic) in
   match response with
-  | ServerMsg.SERVER_OUT_OF_DATE ->
-    if args.autostart
-    then Printf.printf "%s is outdated, going to launch a new one.\n" name
-    else Printf.printf "%s is outdated, killing it.\n" name;
-    flush stdout;
-    raise Server_out_of_date
   | ServerMsg.NO_ERRORS ->
     ServerError.print_errorl args.output_json [] stdout;
     exit 0

@@ -208,6 +208,7 @@ and Type : sig
     | Typeof of t
     | Tuple of t list
     | StringLiteral of StringLiteral.t
+    | Exists
 
   (* Type.annotation is a concrete syntax node with a location that starts at
    * the colon and ends after the type. For example, "var a: number", the

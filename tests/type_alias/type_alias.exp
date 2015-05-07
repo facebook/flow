@@ -1,6 +1,6 @@
 
 scope.js:3:13,5:1: property vs
 Property not found in
-  scope.js:20:8,9: object literal
+scope.js:20:8,9: object literal
 
 Found 1 error

@@ -70,7 +70,7 @@ let save_type hint_kind env x arg =
             add_type env x_pos hint_kind arg;
         )
     | _, (Tmixed | Tarray (_, _) | Tprim _ | Tgeneric (_, _) | Toption _
-      | Tvar _ | Tabstract (_, _, _) | Tapply (_, _) | Ttuple _ | Tanon (_, _)
+      | Tvar _ | Tabstract (_, _, _) | Tclass (_, _) | Ttuple _ | Tanon (_, _)
       | Tfun _ | Tunresolved _ | Tobject | Tshape _ | Taccess (_, _)) -> ()
   end
 
@@ -142,11 +142,12 @@ let get_implements (_, x) =
   match Env.Classes.get x with
   | None -> SSet.empty
   | Some { tc_ancestors = tyl; _ } ->
-      SMap.fold begin fun _ (ty: decl ty) set ->
+      SMap.fold begin fun _ ty set ->
         match ty with
         | _, Tapply ((_, x), []) -> SSet.add x set
         | _, (Tany | Tmixed | Tarray (_, _) | Tprim _ | Tgeneric (_, _) | Tfun _
-          | Toption _ | Tapply (_, _) | Ttuple _ | Tshape _ | Taccess (_, _)) ->
+          | Toption _ | Tapply (_, _) | Ttuple _ | Tshape _ | Taccess (_, _)
+          | Tthis) ->
           raise Exit
       end tyl SSet.empty
 
@@ -165,19 +166,19 @@ and normalize_ = function
       let tyl = List.filter begin function
         |  _, (Tany |  Tunresolved []) -> false
         | _, (Tmixed | Tarray (_, _) | Tprim _ | Tgeneric (_, _) | Toption _
-          | Tvar _ | Tabstract (_, _, _) | Tapply (_, _) | Ttuple _
+          | Tvar _ | Tabstract (_, _, _) | Tclass (_, _) | Ttuple _
           | Tanon (_, _) | Tfun _ | Tunresolved _ | Tobject | Tshape _
           | Taccess (_, _)) -> true
       end tyl in
       normalize_ (Tunresolved tyl)
-  | Tunresolved ((_, Tapply (x, [])) :: rl) ->
+  | Tunresolved ((_, Tclass (x, [])) :: rl) ->
       (* If we have A & B & C where all the elements are classes
        * we try to find a unique common ancestor.
        *)
       let rl = List.map begin function
-        | _, Tapply (x, []) -> x
+        | _, Tclass (x, []) -> x
         | _, (Tany | Tmixed | Tarray (_, _) | Tprim _ | Tgeneric (_, _)
-          | Toption _ | Tvar _ | Tabstract (_, _, _) | Tapply (_, _) | Ttuple _
+          | Toption _ | Tvar _ | Tabstract (_, _, _) | Tclass (_, _) | Ttuple _
           | Tanon (_, _) | Tfun _ | Tunresolved _ | Tobject
           | Tshape _ | Taccess (_, _)) -> raise Exit
       end rl in
@@ -187,7 +188,7 @@ and normalize_ = function
       end x_imp rl in
       (* is it unique? *)
       if SSet.cardinal set = 1
-      then Tapply ((Pos.none, SSet.choose set), [])
+      then Tclass ((Pos.none, SSet.choose set), [])
       else raise Exit
   | Tunresolved (x :: (y :: _ as rl)) when compare_types x y = 0 ->
       normalize_ (Tunresolved rl)
@@ -205,25 +206,25 @@ and normalize_ = function
   | Tvar _ -> raise Exit
   | Tfun _ -> raise Exit
   | Taccess (_, _) -> raise Exit
-  | Tapply ((pos, name), tyl) when name.[0] = '\\' && String.rindex name '\\' = 0 ->
+  | Tclass ((pos, name), tyl) when name.[0] = '\\' && String.rindex name '\\' = 0 ->
       (* TODO this transform isn't completely legit; can cause a reference into
        * the global namespace to suddenly refer to a different class in the
        * local one. Figure something else out that doesn't involve spamming '\'
        * across FB code, maybe? See if anyone complains on GitHub? I have no
        * idea how bad this is in practice, I'm kinda hoping it's okay. *)
-      normalize_ (Tapply ((pos, strip_ns name), tyl))
-  | Tapply ((pos1, "Awaitable"), [(_, Toption (pos2, Tprim Nast.Tvoid))]) ->
+      normalize_ (Tclass ((pos, strip_ns name), tyl))
+  | Tclass ((pos1, "Awaitable"), [(_, Toption (pos2, Tprim Nast.Tvoid))]) ->
       (* Special case: Awaitable<?void> is nonsensical, but often
        * Awaitable<void> works. *)
-      Tapply ((pos1, "Awaitable"), [(pos2, Tprim Nast.Tvoid)])
-  | Tapply ((pos, name), tyl) ->
+      Tclass ((pos1, "Awaitable"), [(pos2, Tprim Nast.Tvoid)])
+  | Tclass ((pos, name), tyl) ->
       (* Handling xhp names *)
       let name =
         if String.contains name ':' && name.[0] <> ':'
         then ":"^name
         else name
       in
-      Tapply ((pos, name), List.map normalize tyl)
+      Tclass ((pos, name), List.map normalize tyl)
   | Ttuple tyl -> Ttuple (List.map normalize tyl)
   | Tanon _ -> raise Exit
   | Tobject -> raise Exit

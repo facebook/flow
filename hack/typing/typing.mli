@@ -27,7 +27,7 @@ val fun_def:
 val class_def:
   Typing_env.env -> 'a -> Nast.class_ -> unit
 val typedef_def:
-  Typing_env.env -> string -> Nast.typedef -> unit
+  Typing_env.env -> Nast.typedef -> unit
 
 val expr:
   Typing_env.env -> Nast.expr ->
@@ -49,7 +49,6 @@ val type_param:
 
 val get_implements:
   with_checks:bool ->
-  this:Typing_defs.decl Typing_defs.ty ->
   Typing_env.env ->
   decl ty ->
   Typing_env.env * (decl ty SMap.t * decl ty SMap.t)

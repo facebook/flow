@@ -221,7 +221,7 @@ let get_refinement cx key r =
 let set_var ?(for_type=false) cx x specific_t reason =
   changeset := !changeset |> SSet.add x;
   let general = (read_env ~for_type cx x reason).general in
-  Flow_js.unit_flow cx (specific_t, general);
+  Flow_js.flow cx (specific_t, general);
   write_env ~for_type cx x (specific_t, general) reason
 
 let clone_env ctx =
@@ -266,9 +266,9 @@ let rec merge_env cx reason (ctx, ctx1, ctx2) changeset =
               else
                 let reason = replace_reason x reason in
                 let tvar = Flow_js.mk_tvar cx reason in
-                Flow_js.unit_flow cx (s1,tvar);
-                Flow_js.unit_flow cx (s2,tvar);
-                Flow_js.unit_flow cx (tvar,general);
+                Flow_js.flow cx (s1,tvar);
+                Flow_js.flow cx (s2,tvar);
+                Flow_js.flow cx (tvar,general);
                 (tvar,general)
             in
             let for_type = for_type || shape1.for_type || shape2.for_type in
@@ -294,8 +294,8 @@ let widen_env cx reason =
           else
             let reason = replace_reason x reason in
             let tvar = Flow_js.mk_tvar cx reason in
-            Flow_js.unit_flow cx (specific,tvar);
-            Flow_js.unit_flow cx (tvar,general);
+            Flow_js.flow cx (specific,tvar);
+            Flow_js.flow cx (tvar,general);
             create_env_entry ~for_type tvar general def_loc
         );
         if scope.kind = VarScope then ()
@@ -311,7 +311,7 @@ let rec copy_env_ cx reason x = function
       (match SMap.get x !entries1 with
         | Some {specific=s1;_} ->
             let s2 = (SMap.find_unsafe x !entries2).specific in
-            Flow_js.unit_flow cx (s2,s1)
+            Flow_js.flow cx (s2,s1)
         | None -> copy_env_ cx reason x (ctx1,ctx2)
       )
   | _ -> assert false
@@ -412,8 +412,8 @@ let refine_with_pred cx reason pred xtypes =
       let rstr = spf "identifier %s when %s" x (string_of_predicate predx) in
       let reason = replace_reason rstr reason in
       let t = Flow_js.mk_tvar cx reason in
-      let rt = mk_predicate (predx, t) in
-      Flow_js.unit_flow cx (tx, rt);
+      let rt = PredicateT (predx, t) in
+      Flow_js.flow cx (tx, rt);
       set_var cx x t reason
     ))
   pred

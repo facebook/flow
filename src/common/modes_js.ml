@@ -12,8 +12,7 @@ type modes = {
   mutable verbose: bool;
   mutable all: bool;
   mutable weak_by_default: bool;
-  mutable traces_enabled: bool;
-  mutable newtraces_enabled: bool;
+  mutable traces: int;
   mutable strict: bool;
   mutable console: bool;
   mutable json: bool;
@@ -28,8 +27,7 @@ let modes = {
   verbose = false;
   all = false;
   weak_by_default = false;
-  traces_enabled = false;
-  newtraces_enabled = false;
+  traces = 0;
   strict = false;
   console = false;
   json = false;

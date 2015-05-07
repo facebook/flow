@@ -16,16 +16,14 @@ let pos_range p = Pos.(Lexing.(
     p.pos_end.pos_lnum, p.pos_end.pos_cnum
 ))
 
-let print_reason_color ~(first:bool) ((p, s): Pos.t * string) = Pos.(
+let format_reason_color ?(first=false) ((p, s): Pos.t * string) = Pos.(
   let l0, c0, l1, c1 = pos_range p in
   let err_clr  = if first then C.Normal C.Red else C.Normal C.Green in
   let file_clr = if first then C.Bold C.Blue else C.Bold C.Magenta in
   let line_clr = C.Normal C.Yellow in
   let col_clr  = C.Normal C.Cyan in
 
-  let to_print = [
-    (file_clr, Relative_path.to_absolute p.pos_file)
-  ]
+  [file_clr, Relative_path.to_absolute p.pos_file]
   @ (if l0 > 0 && c0 > 0 && l1 > 0 && c1 > 0 then [
       (C.Normal C.Default, ":");
       (line_clr,           string_of_int l0);
@@ -44,16 +42,18 @@ let print_reason_color ~(first:bool) ((p, s): Pos.t * string) = Pos.(
     (C.Normal C.Default, ": ");
     (err_clr,            s);
     (C.Normal C.Default, "\n");
-  ] in
+  ]
+)
 
-  if not first then Printf.printf "  " else Printf.printf "\n";
+let print_reason_color ~(first:bool) ((p, s): Pos.t * string) =
+  let to_print = format_reason_color ~first (p, s) in
+  (if first then Printf.printf "\n");
   if Unix.isatty Unix.stdout && Sys.getenv "TERM" <> "dumb"
   then
     C.print to_print
   else
-    let strings = List.map (fun (_,x) -> x) to_print in
+    let strings = List.map snd to_print in
     List.iter (Printf.printf "%s") strings
-)
 
 let print_error_color (e:Errors.error) =
   let e = Errors.to_list e in

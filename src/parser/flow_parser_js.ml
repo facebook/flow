@@ -764,6 +764,7 @@ module Translate = struct
     | Typeof t -> typeof_type (loc, t)
     | Tuple t -> tuple_type (loc, t)
     | StringLiteral s -> string_literal_type (loc, s)
+    | Exists -> exists_type loc
   )
 
   and any_type loc = node "AnyTypeAnnotation" loc
@@ -885,6 +886,8 @@ module Translate = struct
     Js.Unsafe.set ret "raw" (string s.raw);
     ret
   )
+
+  and exists_type loc = node "ExistsTypeAnnotation" loc
 
   and type_annotation (loc, ty) =
     let ret = node "TypeAnnotation" loc in

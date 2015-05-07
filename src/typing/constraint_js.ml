@@ -98,12 +98,27 @@ module Type = struct
   (* type of a rest parameter *)
   | RestT of t
 
+  (** A polymorphic type is like a type-level "function" that, when applied to
+      lists of type arguments, generates types. Just like a function, a
+      polymorphic type has a list of type parameters, represented as bound type
+      variables. We say that type parameters are "universally quantified" (or
+      "universal"): every substitution of type arguments for type parameters
+      generates a type. Dually, we have "existentially quantified" (or
+      "existential") type variables: such a type variable denotes some, possibly
+      unknown, type. Universal type parameters may specify subtype constraints
+      ("bounds"), which must be satisfied by any types they may be substituted
+      by. Evaluation of existential types, which involves generating fresh type
+      variables, never happens under polymorphic types; it is forced only when
+      polymorphic types are applied. **)
+
   (* polymorphic type *)
   | PolyT of typeparam list * t
   (* type application *)
   | TypeAppT of t * t list
   (* bound type variable *)
   | BoundT of typeparam
+  (* existential type variable *)
+  | ExistsT of reason
 
   (* ? types *)
   | MaybeT of t
@@ -130,9 +145,6 @@ module Type = struct
   | EnumT of reason * t
   (* constrains the keys of an object *)
   | RecordT of reason * t
-
-  (* type of a custom class, e.g., a React class *)
-  | CustomClassT of name * t list * t
 
   (* type aliases *)
   | TypeT of reason * t
@@ -184,11 +196,9 @@ module Type = struct
   (* operation on prototypes *)
   | LookupT of reason * reason option * string * t
 
-  (* JSX *)
-  | MarkupT of reason * t * t
-
   (* operations on objects *)
   | ObjAssignT of reason * t * t * string list * bool
+  | ObjFreezeT of reason * t
   | ObjRestT of reason * string list * t
   | ObjSealT of reason * t
 
@@ -247,6 +257,7 @@ module Type = struct
   }
 
   and flags = {
+    frozen: bool;
     sealed: bool;
     exact: bool;
   }
@@ -260,8 +271,8 @@ module Type = struct
   and insttype = {
     class_id: ident;
     type_args: t SMap.t;
-    fields_tmap: fields;
-    methods_tmap: methods;
+    fields_tmap: int;
+    methods_tmap: int;
     mixins: bool;
   }
 
@@ -277,9 +288,7 @@ module Type = struct
 
   and static = t
 
-  and fields = t SMap.t
-
-  and methods = t SMap.t
+  and properties = t SMap.t
 
   let compare = Pervasives.compare
 
@@ -287,9 +296,6 @@ module Type = struct
     match tvar with
     | OpenT(reason,id) -> (reason,id)
     | _ -> assert false
-
-  let mk_predicate (p,t) =
-    PredicateT(p,t)
 
 end
 
@@ -302,103 +308,54 @@ module TypeMap : MapSig with type key = Type.t
 
 (*****************************************************************)
 
-
-type rule =
-  | FunThis
-  | FunArg of int * int
-  | FunRet
-  | ObjProp of string
-  | ObjKey
-  | ArrIndex
-  | ArrElem
-  | DecomposeNullable
-  | InstantiatePoly
-  | ClassInst
-  | FunInst
-  | FunProto
-  | CopyProto
-  | InstanceProp of string
-  | ObjProto
-  | StrIndex
-  | StrElem
-  | InstanceSuper
-  | Op of string
-  | ReactProps
-  | ReactComponent
-  | LibMethod of string
-  | FunStatics
-  | ClassStatics
-
-(* These strings should be read as answering *)
-let string_of_rule = function
-  | FunThis -> "this type of function type"
-  | FunArg (i, j) -> spf "arg %d ~ param %d type of function type flow" i j
-  | FunRet -> "return type of function type"
-  | ObjProp x -> spf "type of property %s of object type" x
-  | ObjKey -> "key type of object type"
-  | ArrIndex -> "index type of array type"
-  | ArrElem -> "element type of array type"
-  | DecomposeNullable -> "base type of nullable type"
-  | InstantiatePoly -> "specialization of polymorphic type"
-  | ClassInst -> "instance type of class type"
-  | FunInst -> "instance type of function type"
-  | FunProto -> "prototype type of function type"
-  | CopyProto -> "[INTERNAL] copy object type to prototype type"
-  | InstanceProp x -> spf "type of property %s of instance type" x
-  | ObjProto -> "prototype type of object type"
-  | StrIndex -> "index type of string type"
-  | StrElem -> "element type of string type"
-  | InstanceSuper -> "super type of instance type"
-  | Op x -> spf "type of operation %s" x
-  | ReactProps -> "properties type of React class"
-  | ReactComponent -> "component type of React class"
-  | LibMethod x -> spf "type of %s method" x
-  | FunStatics -> "statics type of function type"
-  | ClassStatics -> "statics type of class type"
-
-type link =
-  (* intermediate node, expect it to be a tvar *)
-  | Node of Type.t
-
-  (* derived node, expect it to be the decomposition of a type structure *)
-  | Embed of rule * trace
-
-and trace = Type.t * link list * Type.t
+type trace = Type.t * link list * Type.t
+and link = Embed of trace
 
 (* ------------- *)
 
-(* The following functions are used to build larger traces from their
-   subparts. The "leaves" of a trace are the reasons associated with the types
-   of definitions and uses in code. The "internal nodes" are caused by (1)
-   transitively propagating the effects of a definition to a use through
-   statements in the code, such as assignments; and (2) by subtyping rules that
-   simplify a constraint between higher-order types into constraints involving
-   their subparts, such as propagating an argument of a function call to a
-   parameter of a function. *)
+(** The following functions are used to build larger traces from their
+    subparts. The "leaves" of a trace are the reasons associated with the types
+    of definitions and uses in code. The "internal nodes" are caused by (1)
+    transitively propagating the effects of a definition to a use through
+    statements in the code, such as assignments; and (2) by subtyping rules that
+    simplify a constraint between higher-order types into constraints involving
+    their subparts, such as propagating an argument of a function call to a
+    parameter of a function. **)
 
+(* Leaf of a trace. Typically, such a trace is associated with a "source"
+   constraint generated in Type_inference_js. *)
 let unit_trace tl tu = (tl, [], tu)
 
-let is_empty_trace = function
-  | (tl, [], tu) -> tl = tu
-  | _ -> false
+(* Transitively propagate a lower bound to an upper bound through a type
+   variable. Typically, such a trace is associated with transitive closure
+   computation in the constraint graph.
 
+   Optimization: only do this when modes.trace > 0, because otherwise we're not
+   going to see any traces anyway.
+*)
 let join_trace (tl, cl, ti) (_, cu, tu) =
-  let links = if modes.traces_enabled  || modes.newtraces_enabled
+  let links = if modes.traces > 0
     then (cl @ cu)
     else [] in
   (tl, links, tu)
 
+(* lift join_trace from pairs of traces to lists of traces *)
 let concat_trace traces =
   List.fold_left join_trace (List.hd traces) (List.tl traces)
 
-let select_trace rl ru trace rule =
-  if modes.traces_enabled || modes.newtraces_enabled
-    then (rl, [Embed (rule, trace)], ru)
+(* Embed a trace within another trace. Typically, such a trace is associated
+   with a constraint that is generated by simplifying another constraint
+   following some subtyping rule in Flow_js.
+
+   Optimization: only do this when modes.trace > 0, because otherwise we're not
+   going to see any traces anyway.
+*)
+let rec_trace tl tu trace =
+  if modes.traces > 0
+    then (tl, [Embed trace], tu)
     else trace
 
 (*****************************************************************)
-
-
 
 open Type
 
@@ -564,7 +521,7 @@ type context = {
 
   mutable graph: bounds IMap.t;
   mutable closures: (stack * scope list) IMap.t;
-  mutable property_maps: Type.t SMap.t IMap.t;
+  mutable property_maps: Type.properties IMap.t;
   mutable modulemap: Type.t SMap.t;
 
   (* A subset of required modules on which the exported type depends *)
@@ -620,8 +577,8 @@ let is_use = function
   | EqT _
   | SpecializeT _
   | LookupT _
-  | MarkupT _
   | ObjAssignT _
+  | ObjFreezeT _
   | ObjRestT _
   | ObjSealT _
   | UnifyT _
@@ -655,6 +612,7 @@ let string_of_ctor = function
   | FunT _ -> "FunT"
   | PolyT _ -> "PolyT"
   | BoundT _ -> "BoundT"
+  | ExistsT _ -> "ExistsT"
   | ObjT _ -> "ObjT"
   | ArrT _ -> "ArrT"
   | ClassT _ -> "ClassT"
@@ -678,7 +636,6 @@ let string_of_ctor = function
   | EqT _ -> "EqT"
   | AndT _ -> "AndT"
   | OrT _ -> "OrT"
-  | MarkupT _ -> "MarkupT"
   | SpecializeT _ -> "SpecializeT"
   | TypeAppT _ -> "TypeAppT"
   | MaybeT _ -> "MaybeT"
@@ -687,6 +644,7 @@ let string_of_ctor = function
   | LookupT _ -> "LookupT"
   | UnifyT _ -> "UnifyT"
   | ObjAssignT _ -> "ObjAssignT"
+  | ObjFreezeT _ -> "ObjFreezeT"
   | ObjRestT _ -> "ObjRestT"
   | ObjSealT _ -> "ObjSealT"
   | UpperBoundT _ -> "UpperBoundT"
@@ -703,7 +661,6 @@ let string_of_ctor = function
   | ConcretizeT _ -> "ConcretizeT"
   | ConcreteT _ -> "ConcreteT"
   | SpeculativeMatchFailureT _ -> "SpeculativeMatchFailureT"
-  | CustomClassT _ -> "CustomClassT"
   | CJSExportDefaultT _ -> "CJSExportDefaultT"
   | ImportModuleNsT _ -> "ImportModuleNsT"
   | ImportTypeT _ -> "ImportTypeT"
@@ -735,6 +692,8 @@ let rec reason_of_t = function
       prefix_reason "polymorphic type: " (reason_of_t t)
   | BoundT typeparam ->
       typeparam.reason
+  | ExistsT reason ->
+      reason
 
   | ObjT (reason,_)
   | ArrT (reason,_,_)
@@ -775,14 +734,10 @@ let rec reason_of_t = function
   | RestT t ->
       prefix_reason "rest array of " (reason_of_t t)
 
-  | PredicateT (pred,t) -> prefix_reason
-      ((string_of_predicate pred) ^ " # ")
-      (reason_of_t t)
+  | PredicateT (pred,t) -> reason_of_t t
 
   | EqT (reason, t) ->
       reason
-
-  | MarkupT(reason,_,_)
 
   | SpecializeT(reason,_,_)
       -> reason
@@ -806,6 +761,7 @@ let rec reason_of_t = function
       reason_of_t t
 
   | ObjAssignT (reason, _, _, _, _)
+  | ObjFreezeT (reason, _)
   | ObjRestT (reason, _, _)
   | ObjSealT (reason, _)
     ->
@@ -842,8 +798,6 @@ let rec reason_of_t = function
 
   | SummarizeT (reason, t) -> reason
 
-  | CustomClassT (_, _, t) -> reason_of_t t
-
   | CJSExportDefaultT (reason, _) -> reason
 
   | ImportModuleNsT (reason, _) -> reason
@@ -860,7 +814,7 @@ and string_of_predicate = function
   | ExistsP -> "truthy"
   | InstanceofP t -> "instanceof " ^ (desc_of_t t)
   | ConstructorP t -> "typeof " ^ (desc_of_t t)
-  | IsP s -> "is " ^ s
+  | IsP s -> s
 
 and pos_of_predicate = function
   | AndP (p1,p2)
@@ -904,6 +858,7 @@ let rec mod_reason_of_t f = function
   | FunT (reason, s, p, ft) -> FunT (f reason, s, p, ft)
   | PolyT (plist, t) -> PolyT (plist, mod_reason_of_t f t)
   | BoundT { reason; name; bound } -> BoundT { reason = f reason; name; bound }
+  | ExistsT reason -> ExistsT (f reason)
   | ObjT (reason, ot) -> ObjT (f reason, ot)
   | ArrT (reason, t, ts) -> ArrT (f reason, t, ts)
 
@@ -939,8 +894,6 @@ let rec mod_reason_of_t f = function
   | AndT (reason, t1, t2) -> AndT (f reason, t1, t2)
   | OrT (reason, t1, t2) -> OrT (f reason, t1, t2)
 
-  | MarkupT(reason, t, t2) -> MarkupT (f reason, t, t2)
-
   | SpecializeT(reason, ts, t) -> SpecializeT (f reason, ts, t)
 
   | TypeAppT (t, ts) -> TypeAppT (mod_reason_of_t f t, ts)
@@ -957,6 +910,7 @@ let rec mod_reason_of_t f = function
 
   | ObjAssignT (reason, t, t2, filter, resolve) ->
       ObjAssignT (f reason, t, t2, filter, resolve)
+  | ObjFreezeT (reason, t) -> ObjFreezeT (f reason, t)
   | ObjRestT (reason, t, t2) -> ObjRestT (f reason, t, t2)
   | ObjSealT (reason, t) -> ObjSealT (f reason, t)
 
@@ -985,9 +939,6 @@ let rec mod_reason_of_t f = function
       SpeculativeMatchFailureT (f reason, t1, t2)
 
   | SummarizeT (reason, t) -> SummarizeT (f reason, t)
-
-  | CustomClassT (name, ts, t) ->
-      CustomClassT (name, ts, mod_reason_of_t f t)
 
   | CJSExportDefaultT (reason, t) -> CJSExportDefaultT (f reason, t)
 
@@ -1178,13 +1129,6 @@ let rec type_printer override fallback enclosure cx t =
     | TypeT (_, t) ->
         spf "[type: %s]" (pp EnclosureNone cx t)
 
-    | CustomClassT (name, ts, inst) ->
-        spf "%s<%s>" name
-          (ts
-           |> List.map (pp EnclosureNone cx)
-           |> String.concat ", "
-          )
-
     | LowerBoundT t ->
         spf "$Subtype<%s>" (pp EnclosureNone cx t)
 
@@ -1318,6 +1262,9 @@ let rec _json_of_t stack cx t = Json.(
       "typeParam", json_of_typeparam stack cx tparam
     ]
 
+  | ExistsT tparam ->
+    []
+
   | MaybeT t -> [
       "type", _json_of_t stack cx t
     ]
@@ -1347,12 +1294,6 @@ let rec _json_of_t stack cx t = Json.(
 
   | EnumT (_, t)
   | RecordT (_, t) -> [
-      "type", _json_of_t stack cx t
-    ]
-
-  | CustomClassT (name, tparams, t) -> [
-      "name", JString name;
-      "typeParams", JList (List.map (_json_of_t stack cx) tparams);
       "type", _json_of_t stack cx t
     ]
 
@@ -1448,16 +1389,15 @@ let rec _json_of_t stack cx t = Json.(
       "type", _json_of_t stack cx t
     ]
 
-  | MarkupT (_, objtype, tvar) -> [
-      "objType", _json_of_t stack cx objtype;
-      "type", _json_of_t stack cx tvar
-    ]
-
   | ObjAssignT (_, assignee, tvar, prop_names, flag) -> [
       "assigneeType", _json_of_t stack cx assignee;
       "resultType", _json_of_t stack cx tvar;
       "propNames", JList (List.map (fun s -> JString s) prop_names);
       "flag", JBool flag
+    ]
+
+  | ObjFreezeT (_, t) -> [
+      "type", _json_of_t stack cx t
     ]
 
   | ObjRestT (_, excludes, tvar) -> [
@@ -1536,7 +1476,11 @@ and json_of_dicttype stack cx dicttype = Json.(
 )
 
 and json_of_flags flags = Json.(
-  JAssoc ["sealed", JBool flags.sealed; "exact", JBool flags.exact]
+  JAssoc [
+    "frozen", JBool flags.frozen;
+    "sealed", JBool flags.sealed;
+    "exact", JBool flags.exact;
+  ]
 )
 
 and json_of_funtype stack cx funtype = Json.(
@@ -1556,8 +1500,12 @@ and json_of_insttype stack cx insttype = Json.(
   JAssoc [
     "classId", JInt insttype.class_id;
     "typeArgs", json_of_tmap stack cx insttype.type_args;
-    "fieldTypes", json_of_tmap stack cx insttype.fields_tmap;
-    "methodTypes", json_of_tmap stack cx insttype.methods_tmap;
+    "fieldTypes",
+      (let tmap = IMap.find_unsafe insttype.fields_tmap cx.property_maps in
+       json_of_tmap stack cx tmap);
+    "methodTypes",
+      (let tmap = IMap.find_unsafe insttype.methods_tmap cx.property_maps in
+       json_of_tmap stack cx tmap);
     "mixins", JBool insttype.mixins
   ]
 )
@@ -1853,11 +1801,6 @@ let rec is_printed_type_parsable_impl weak cx enclosure = function
     ->
       is_printed_type_parsable_impl weak cx EnclosureNone t
 
-  | CustomClassT (_, ts, _)
-    when weak
-    ->
-      is_printed_type_list_parsable weak cx EnclosureNone ts
-
   | VoidT _
     when weak
     ->
@@ -1888,103 +1831,6 @@ let is_printed_param_type_parsable ?(weak=false) cx t =
 
 (* ------------- *)
 
-(* traces *)
-
-(* TODO arg num *)
-let eval_funarg = function
-  | (FunT (r1, _,_,ft1), links, FunT (r2, _,_,ft2))
-  | (FunT (r1, _,_,ft1), links, CallT (r2, ft2)) ->
-      (List.hd ft2.params_tlist, [], List.hd ft1.params_tlist)
-  | _ -> assert false
-
-(* DISABLING
-let desc_reason t conn r =
-  let desc = desc_of_t t in
-  prefix_reason (desc ^ conn) r
-*)
-
-let desc_reason t conn r =
-  reason_of_t t
-
-let reasons_of_funarg i j = function
-  | (FunT (r1, _,_,ft1), links, FunT (r2, _,_,ft2)) ->
-      let arg_type = List.nth ft2.params_tlist j in
-      let arg_conn = spf " param %d of " j in
-      let arg_reason = desc_reason arg_type arg_conn r2 in
-      let par_type = List.nth ft1.params_tlist i in
-      let par_conn = spf " param %d of " i in
-      let par_reason = desc_reason par_type par_conn r1 in
-      [arg_reason; par_reason]
-
-  | (FunT (r1, _,_,ft1), links, CallT (r2, ft2)) ->
-      let arg_type = List.nth ft2.params_tlist j in
-      let arg_conn = spf " arg %d of " j in
-      let arg_reason = desc_reason arg_type arg_conn r2 in
-      let par_type = List.nth ft1.params_tlist i in
-      let par_conn = spf " param %d of " i in
-      let par_reason = desc_reason par_type par_conn r1 in
-      [arg_reason; par_reason]
-
-  | _ -> [] (* TODO *)
-
-let rec reasons_of_embed = function
-  | (FunArg (i, j), t) -> reasons_of_funarg i j t
-  | embed -> []
-
-and reasons_of_link = function
-  | Node ty -> [reason_of_t ty]
-  | Embed (rule, trace) -> reasons_of_embed (rule, trace)
-
-and reasons_of_trace (t1, links, t2) =
-  List.flatten (List.map reasons_of_link links)
-
-(* old trace printing *)
-
-let vertical_bar = "|"
-let horizontal_bar = "--"
-let space_bar = " "
-
-let slant_bar = "/"
-let terminal_bar = "."
-
-(* print out a bottom-up ASCII tree of the trace *)
-let rec string_of_link prefix b = function
-  | Node t ->
-      prefix ^ (if b then terminal_bar else vertical_bar) ^
-        (horizontal_bar ^ space_bar) ^ (string_of_reason (reason_of_t t)) ^ "\n"
-
-  | Embed (r,t) ->
-      (string_of_trace_old
-        (prefix ^ (if b then space_bar else vertical_bar))
-        true t
-      ) ^
-      (prefix ^ (if b then space_bar else vertical_bar) ^
-        (slant_bar ^ horizontal_bar ^ space_bar) ^
-        (string_of_rule r) ^ "\n")
-
-and string_of_link_list prefix b = function
-
-  | (t::ts) ->
-      (string_of_link
-        (prefix ^ (if b then space_bar else vertical_bar))
-        true t
-      ) ^
-      (List.fold_left (fun s t ->  s ^
-        (string_of_link
-          (prefix ^ (if b then space_bar else vertical_bar))
-          false t
-        )) "" ts)
-
-  | [] -> ""
-
-and string_of_trace_old prefix b (r1, t, r2) =
-  string_of_link_list prefix b
-    ([Node r1] @ t @ [Node r2])
-
-and string_of_trace prefix b (r1, t, r2) =
-  let li = List.map string_of_reason (reasons_of_trace (r1, t, r2)) in
-  (String.concat "\n" li) ^ "\n"
-
 let string_of_scope_entry cx entry =
   let pos = match entry.def_loc with
   | Some loc -> (string_of_pos (pos_of_loc loc))
@@ -2003,3 +1849,77 @@ let string_of_scope cx scope =
   ) !entries []
   |> String.concat ";\n  "
   |> Utils.spf "{\n  %s\n}"
+
+(*****************************************************************)
+
+(* traces and types *)
+
+let level_spaces level = 2 * level
+
+let pos_len r =
+  let pos = pos_of_reason r in
+  let fmt = Errors_js.format_reason_color (pos, "") in
+  let str = String.concat "" (List.map snd fmt) in
+  String.length str
+
+(* scan a trace tree, return maximum position length
+   of reasons at or above the given depth limit, and
+   min of that limit and actual max depth *)
+let max_pos_len_and_depth limit trace =
+  let rec f (len, depth) (t1, links, t2) =
+    let len = max len (pos_len (reason_of_t t1)) in
+    let len = max len (pos_len (reason_of_t t2)) in
+    if links = [] || depth = limit then len, depth
+    else List.fold_left (
+      fun (len, depth) (Embed trace) -> f (len, depth) trace
+    ) (len, depth + 1) links
+  in f (0, 1) trace
+
+let pretty_r indent r prefix suffix =
+  let len = pos_len r in
+  let ind = if indent > len then String.make (indent - len) ' ' else "" in
+  wrap_reason (ind ^ (spf "%s[" prefix)) (spf "]%s" suffix) r
+
+let rec unique_pos = function
+| [] -> []
+| r1 :: (r2 :: rs) when string_of_reason r1 = string_of_reason r2 ->
+  unique_pos (r2 :: rs)
+| r :: rs ->
+  r :: unique_pos rs
+
+(* ascii tree w/verbiage *)
+let reasons_of_trace ?(level=0) trace =
+  let max_len, max_depth = max_pos_len_and_depth level trace in
+  let level = min level max_depth in
+  let max_indent = max_len + (level_spaces level + 1) in
+  let rec f level (t1, links, t2) =
+    let indent = max_indent - (level_spaces level) in
+    if level >= 0 then
+      (pretty_r indent (reason_of_t t1)
+        (spf "%s " (string_of_ctor t1))
+        (if links <> [] && level > 0 then " produced by " else "")
+        ::
+        List.concat (
+          links |> List.map (fun (Embed trace) ->
+            f (level - 1) trace)
+        )) @
+      [pretty_r indent (reason_of_t t2)
+        (spf "~> %s " (string_of_ctor t2)) ""]
+    else []
+  in f level trace
+
+(* flat, deduped *)
+(* erases too much information - may be worth resurrecting
+   with more expressive traces *)
+let flat_reasons_of_trace ?(level=0) trace =
+  let indent = fst (max_pos_len_and_depth 0 trace) + 2 in
+  let rec f level (t1, links, t2) =
+    if level < 0 then [] else
+    (pretty_r indent (reason_of_t t1) "" ""
+      ::
+      List.concat (
+        links |> List.map (fun (Embed trace) ->
+          f (level - 1) trace)
+      )) @
+    [pretty_r indent (reason_of_t t2) "" ""]
+  in unique_pos (f level trace)

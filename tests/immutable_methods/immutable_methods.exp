@@ -1,10 +1,10 @@
 
 test.js:9:1,41: assignment of property foo
 Property not found in
-  test.js:1:7,7: A
+test.js:1:7,7: A
 
 test.js:9:1,41: assignment of property foo
 Property not found in
-  test.js:8:16,16: B
+test.js:8:16,16: B
 
 Found 2 errors

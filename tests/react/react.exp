@@ -1,46 +1,62 @@
 
-ArityError.react.js:6:37,46: any
-Number of type arguments differs from
-  [LIB] react.js:97:62,78: any
-
+import_react.js:7:17,37: constructor call
+Error:
 import_react.js:7:21,35: ReactComponent
 This type is incompatible with
-  import_react.js:7:8,13: number
+import_react.js:7:8,13: number
 
+jsx_spread.js:11:12,29: React element: Foo
+Error:
 jsx_spread.js:10:19,20: number
 This type is incompatible with
-  jsx_spread.js:6:10,31: string
+jsx_spread.js:6:10,31: string
 
+proptype_arrayOf.js:13:22,40: React element: Example
+Error:
 proptype_arrayOf.js:13:36,36: number
 This type is incompatible with
-  proptype_arrayOf.js:6:10,56: arrayOf
+proptype_arrayOf.js:6:10,56: arrayOf
 
+proptype_arrayOf.js:14:27,54: React element: Example
+Error:
 proptype_arrayOf.js:14:45,49: string
 This type is incompatible with
-  proptype_arrayOf.js:6:34,55: number
+proptype_arrayOf.js:6:34,55: number
 
+proptype_func.js:14:21,40: React element: Example
+Error:
 proptype_func.js:14:36,36: number
 This type is incompatible with
-  proptype_func.js:6:11,30: func
+proptype_func.js:6:11,30: func
 
+proptype_object.js:13:21,42: React element: Example
+Error:
 proptype_object.js:13:38,38: number
 This type is incompatible with
-  proptype_object.js:6:13,34: object
+proptype_object.js:6:13,34: object
 
+proptype_objectOf.js:13:23,41: React element: Example
+Error:
 proptype_objectOf.js:13:37,37: number
 This type is incompatible with
-  proptype_objectOf.js:6:10,57: objectOf
+proptype_objectOf.js:6:10,57: objectOf
 
+proptype_objectOf.js:14:27,56: React element: Example
+Error:
 proptype_objectOf.js:14:47,51: string
 This type is incompatible with
-  proptype_objectOf.js:6:35,56: number
+proptype_objectOf.js:6:35,56: number
 
+proptype_oneOf.js:11:11,35: React element: Example
+Error:
 proptype_oneOf.js:11:28,32: string literal bar
 Property not found in
-  proptype_oneOf.js:6:14,43: oneOf
+proptype_oneOf.js:6:14,43: oneOf
 
+proptype_oneOfType.js:23:17,39: React element: Example
+Error:
 proptype_oneOfType.js:23:32,35: boolean
 This type is incompatible with
-  proptype_oneOfType.js:6:11,9:6: oneOfType
+proptype_oneOfType.js:6:11,9:6: oneOfType
 
-Found 11 errors
+Found 10 errors

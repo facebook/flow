@@ -133,8 +133,6 @@ let start_flow_server root =
 let rec connect_helper autostart retries retry_if_init root =
   check_timeout ();
   try
-    if not (ClientUtils.server_exists root)
-    then raise ClientExceptions.Server_missing;
     ClientUtils.connect root
   with
   | ClientExceptions.Server_initializing ->
@@ -155,6 +153,7 @@ let rec connect_helper autostart retries retry_if_init root =
   | ClientExceptions.Server_busy ->
       retry autostart retries retry_if_init root
         1 "Error: flow server is busy, retrying..."
+  | ClientExceptions.Server_out_of_date
   | ClientExceptions.Server_missing ->
     if autostart
     then (

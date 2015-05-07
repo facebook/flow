@@ -39,8 +39,8 @@ module OptionParser(Config : CONFIG) = struct
         ~doc:"Typecheck all files, not just @flow"
     |> flag "--weak" no_arg
         ~doc:"Typecheck with weak inference, assuming dynamic types by default"
-    |> flag "--traces" no_arg
-        ~doc:"Outline an error path"
+    |> flag "--traces" (optional int)
+        ~doc:"Outline an error path up to a specified level"
     |> flag "--strip-root" no_arg
         ~doc:"Print paths without the root"
     |> flag "--lib" (optional string)
@@ -103,7 +103,9 @@ module OptionParser(Config : CONFIG) = struct
         |> List.map Path.mk_path in
         libs @ flowconfig.libs
     ) in
-    let opt_traces = traces || FlowConfig.(flowconfig.options.traces) in
+    let opt_traces = match traces with
+      | Some level -> level
+      | None -> FlowConfig.(flowconfig.options.traces) in
 
     (* hack opts and flow opts: latter extends the former *)
     result := Some ({
@@ -122,7 +124,6 @@ module OptionParser(Config : CONFIG) = struct
       Types_js.opt_all = all;
       Types_js.opt_weak = weak;
       Types_js.opt_traces;
-      Types_js.opt_newtraces = false;
       Types_js.opt_strict = true;
       Types_js.opt_console = false;
       Types_js.opt_json = json;

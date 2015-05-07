@@ -733,31 +733,25 @@ and hint_ ~allow_this ~allow_retonly is_static_var p env x =
   | Happly ((_, x) as id, hl) ->
     hint_id ~allow_this ~allow_retonly env is_static_var id hl
   | Haccess ((pos, root_id) as root, id, ids) ->
-    (* Using a thunk to avoid computing this_ty in cases when we do not need it
-     *)
-    let this_ty () = hint_id ~allow_this ~allow_retonly env is_static_var
-      (pos, SN.Typehints.this) [] in
-    let self_ty () =
-      match this_ty() with
-      | N.Habstr (x, Some (_, self)) when x = SN.Typehints.this -> snd self
-      | _ -> N.Hany
-    in
     let root_ty =
       match root_id with
       | x when x = SN.Classes.cSelf ->
           (match (fst env).cclass with
           | None ->
-              Errors.self_outside_class pos;
-              N.Hany
+             Errors.self_outside_class pos;
+             N.Hany
           | Some class_ ->
-              N.Happly (class_.c_name, [])
+             let tparaml = (fst env).type_paraml in
+             let tparaml = List.map begin fun (param_pos, param_name) ->
+               param_pos, N.Habstr (param_name, get_constraint env param_name)
+             end tparaml in
+             N.Happly (class_.c_name, tparaml)
           )
       | x when x = SN.Classes.cStatic || x = SN.Classes.cParent ->
           Errors.invalid_type_access_root root; N.Hany
       (* Create a type hole that we will fill during the local typing *)
       | x when x = SN.Typehints.this && allow_this ->
-          N.Habstr (SN.Typehints.type_hole,
-            Some (Ast.Constraint_as, (pos, self_ty ())))
+          N.Habstr (SN.Typehints.type_hole, None)
       | _ ->
           (match hint_id ~allow_this ~allow_retonly env is_static_var root [] with
           | N.Happly _ as h -> h
@@ -831,12 +825,8 @@ and hint_id ~allow_this ~allow_retonly env is_static_var (p, x as id) hl =
           Errors.this_hint_outside_class p;
           N.Hany
         | Some c ->
-          let tparaml = (fst env).type_paraml in
-          let tparaml = List.map begin fun (param_pos, param_name) ->
-            param_pos, N.Habstr (param_name, get_constraint env param_name)
-          end tparaml in
-          N.Habstr (SN.Typehints.this, Some (Ast.Constraint_as,
-            (fst c.c_name, N.Happly (c.c_name, tparaml)))))
+          N.Hthis
+        )
     | x when x = SN.Typehints.this ->
         (match (fst env).cclass with
         | None ->
@@ -1001,10 +991,10 @@ and class_ genv c =
   List.iter (hint_no_typedef env) c.c_implements;
   let name     = Env.class_name env c.c_name in
   let smethods = List.fold_right (class_static_method env) c.c_body [] in
-  let svars    = List.fold_right (class_var_static env) c.c_body [] in
-  let vars     = List.fold_right (class_var env) c.c_body [] in
-  let v_names  = List.map (fun x -> snd x.N.cv_id) vars in
-  let v_names  = List.fold_right SSet.add v_names SSet.empty in
+  let sprops    = List.fold_right (class_prop_static env) c.c_body [] in
+  let props     = List.fold_right (class_prop env) c.c_body [] in
+  let prop_names  = List.map (fun x -> snd x.N.cv_id) props in
+  let prop_names  = List.fold_right SSet.add prop_names SSet.empty in
   let sm_names = List.map (fun x -> snd x.N.m_name) smethods in
   let sm_names = List.fold_right SSet.add sm_names SSet.empty in
   let parents  = List.map (hint ~allow_this:true ~allow_retonly:false env) c.c_extends in
@@ -1019,7 +1009,7 @@ and class_ genv c =
                          [enum_type]) in
         parent::parents
     | _ -> parents in
-  let fmethod  = class_method env sm_names v_names in
+  let fmethod  = class_method env sm_names prop_names in
   let methods  = List.fold_right fmethod c.c_body [] in
   let uses     = List.fold_right (class_use env) c.c_body [] in
   let xhp_attr_uses = List.fold_right (xhp_attr_use env) c.c_body [] in
@@ -1053,8 +1043,8 @@ and class_ genv c =
       N.c_implements     = implements;
       N.c_consts         = consts;
       N.c_typeconsts     = typeconsts;
-      N.c_static_vars    = svars;
-      N.c_vars           = vars;
+      N.c_static_vars    = sprops;
+      N.c_vars           = props;
       N.c_constructor    = constructor;
       N.c_static_methods = smethods;
       N.c_methods        = methods;
@@ -1206,7 +1196,7 @@ and class_const env x acc =
   | Method _ -> acc
   | TypeConst _ -> acc
 
-and class_var_static env x acc =
+and class_prop_static env x acc =
   match x with
   | Attributes _ -> acc
   | ClassUse _ -> acc
@@ -1216,15 +1206,15 @@ and class_var_static env x acc =
   | AbsConst _ -> acc
   | ClassVars (kl, h, cvl) when List.mem Static kl ->
     let h = opt_map (hint ~is_static_var:true env) h in
-    let cvl = List.map (class_var_ env) cvl in
-    let cvl = List.map (fill_cvar kl h) cvl in
+    let cvl = List.map (class_prop_ env) cvl in
+    let cvl = List.map (fill_prop kl h) cvl in
     cvl @ acc
   | ClassVars _ -> acc
   | XhpAttr _ -> acc
   | Method _ -> acc
   | TypeConst _ -> acc
 
-and class_var env x acc =
+and class_prop env x acc =
   match x with
   | Attributes _ -> acc
   | ClassUse _ -> acc
@@ -1236,8 +1226,8 @@ and class_var env x acc =
     (* there are no covariance issues with private members *)
     let allow_this = (List.mem Private kl) in
     let h = opt_map (hint ~allow_this:allow_this env) h in
-    let cvl = List.map (class_var_ env) cvl in
-    let cvl = List.map (fill_cvar kl h) cvl in
+    let cvl = List.map (class_prop_ env) cvl in
+    let cvl = List.map (fill_prop kl h) cvl in
     cvl @ acc
   | ClassVars _ -> acc
   | XhpAttr (kl, h, cvl, is_required, maybe_enum) ->
@@ -1279,8 +1269,8 @@ and class_var env x acc =
           else Some (p, Hoption (p, h))
       | None -> None) in
     let h = opt_map (hint env) h in
-    let cvl = List.map (class_var_ env) cvl in
-    let cvl = List.map (fill_cvar kl h) cvl in
+    let cvl = List.map (class_prop_ env) cvl in
+    let cvl = List.map (fill_prop kl h) cvl in
     cvl @ acc
   | Method _ -> acc
   | TypeConst _ -> acc
@@ -1373,7 +1363,7 @@ and abs_const_def env h x =
   let h = opt_map (hint ~allow_this:true env) h in
   h, new_const, None
 
-and class_var_ env (x, e) =
+and class_prop_ env (x, e) =
   let id = Env.new_const env x in
   let e =
     match (fst env).in_mode with
@@ -1399,7 +1389,7 @@ and class_var_ env (x, e) =
        cv_expr = e;
      })
 
-and fill_cvar kl ty x =
+and fill_prop kl ty x =
   let x = { x with N.cv_type = ty } in
   List.fold_left (
   fun x k ->

@@ -124,6 +124,19 @@ let parse_check_args cmd =
       " (mode) finds references of the provided method name";
     "--find-class-refs", Arg.String (fun x -> set_mode (MODE_FIND_CLASS_REFS x) ()),
       " (mode) finds references of the provided class name";
+    "--dump-symbol-info", Arg.String (fun files ->
+        set_mode (MODE_DUMP_SYMBOL_INFO files) ()
+        ),
+      (*  Input format:
+       *  The file list can either be "-" which accepts the input from stdin
+       *  separated by newline(for long list) or directly from command line
+       *  separated by semicolon.
+       *  Output format:
+       *    [
+       *      "function_calls": list of fun_calls;
+       *    ]
+       *  Note: results list can be in any order *)
+      "";
     "--identify-function", Arg.String (fun x -> set_mode (MODE_IDENTIFY_FUNCTION x) ()),
       " (mode) print the full function name at the position [line:character] of the text on stdin";
     "--refactor", Arg.Unit (set_mode MODE_REFACTOR),

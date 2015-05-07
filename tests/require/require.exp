@@ -1,11 +1,11 @@
 
 B.js:3:23,24: number
 This type is incompatible with
-  require.js:4:28,33: string
+require.js:4:28,33: string
 
 ProvidesModuleA.js:6:23,24: number
 This type is incompatible with
-  require.js:4:28,33: string
+require.js:4:28,33: string
 
 require.js:17:1,12: C
 Required module not found

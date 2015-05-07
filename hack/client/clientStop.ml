@@ -8,6 +8,7 @@
  *
  *)
 
+open Core
 open Sys_utils
 
 exception FailedToKill
@@ -73,7 +74,12 @@ module StopCommand (Config : STOP_CONFIG) : STOP_COMMAND = struct
           Config.server_name;
         raise FailedToKill
     in
-    List.iter (fun (pid, reason) -> Unix.kill pid 9) pids;
+    List.iter pids ~f:begin fun (pid, reason) ->
+      try Unix.kill pid 9
+      with Unix.Unix_error (Unix.ESRCH, "kill", _) ->
+        (* no such process *)
+        ()
+    end;
     ignore(Unix.sleep 1);
     if ClientUtils.server_exists env.root
     then raise FailedToKill

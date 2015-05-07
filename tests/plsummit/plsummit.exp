@@ -1,18 +1,20 @@
 
 generics.js:4:32,32: X
 This type is incompatible with
-  generics.js:3:8,13: number
+generics.js:3:8,13: number
 
+import_class.js:3:9,17: constructor call
+Error:
 import_class.js:3:15,16: string
 This type is incompatible with
-  export_class.js:3:20,25: number
+export_class.js:3:20,25: number
 
 objects.js:1:25,25: number
 This type is incompatible with
-  objects.js:5:8,13: string
+objects.js:5:8,13: string
 
 objects.js:7:25,30: string
 This type is incompatible with
-  objects.js:13:8,13: number
+objects.js:13:8,13: number
 
 Found 4 errors

@@ -1684,7 +1684,9 @@ and xhp_single env =
   xhp_attribute_list ~break:space env;
   wrap_xhp env begin function
     | Tslash -> seq env [space; last_token; expect_xhp ">"]
-    | _ -> raise One_line
+    | _ ->
+        back env;
+        seq env [expect_xhp ">"; xhp_body; xhp_close_tag];
   end
 
 and xhp_multi env =
@@ -1709,13 +1711,13 @@ and xhp_multi env =
           xhp_body env;
         end;
         newline env;
-        expect_xhp "<" env;
-        expect_xhp "/" env;
-        name env;
-        expect_xhp ">" env;
+        xhp_close_tag env;
   end;
   if next_token env <> Tsc
   then newline env
+
+and xhp_close_tag env =
+  seq env [expect_xhp "<"; expect_xhp "/"; name; expect_xhp ">"]
 
 and xhp_attribute_list ~break env = wrap_xhp env begin function
   | Tword ->
@@ -1769,7 +1771,6 @@ and xhp_body env =
       xhp_comment env;
       k env
   | Tlt when is_xhp env ->
-      newline env;
       last_token env;
       xhp env;
       k env;
@@ -2415,20 +2416,25 @@ and expr_atomic env =
        expr env;
        expect ")" env
      end
-     (* Expression *)
-     else if is_followed_by env expr ")"
-     then begin
-       margin_set (!(env.char_pos) -1) env begin fun env ->
-         expr env
-       end;
-       expect ")" env;
-     end
      (* Short lambda parameters *)
-     else begin
+     else if attempt env begin fun env ->
+       try
+         list_comma fun_param env;
+         seq env [expect ")"; return_type];
+         wrap_eof env (fun tok -> tok = Tlambda)
+       with Format_error -> false
+     end then begin
        margin_set (!(env.char_pos) -1) env begin fun env ->
          list_comma fun_param env
        end;
        seq env [expect ")"; return_type];
+     end
+     (* Expression *)
+     else begin
+       margin_set (!(env.char_pos) -1) env begin fun env ->
+         expr env
+       end;
+       expect ")" env;
      end
   | Tlt when is_xhp env ->
       if attempt env begin fun env ->

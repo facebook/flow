@@ -10,6 +10,7 @@
 
 open Utils
 open ServerEnv
+open ServerUtils
 
 module Server = ServerFunctors
 
@@ -39,13 +40,6 @@ module Program : Server.SERVER_PROGRAM = struct
   let suggest _files oc =
     output_string oc "Unimplemented\n";
     flush oc
-
-  let incorrect_hash oc =
-    ServerMsg.response_to_channel oc ServerMsg.SERVER_OUT_OF_DATE;
-    EventLogger.out_of_date ();
-    Printf.printf     "Status: Error\n";
-    Printf.printf     "%s is out of date. Exiting.\n" name;
-    exit 4
 
   let status_log env =
     if List.length (get_errors env) = 0
@@ -87,9 +81,8 @@ module Program : Server.SERVER_PROGRAM = struct
     die ()
 
   let respond (genv:ServerEnv.genv) env ~client ~msg =
-    let _, oc = client in
+    let oc = client.oc in
     match msg with
-    | ServerMsg.ERROR_OUT_OF_DATE -> incorrect_hash oc
     | ServerMsg.PRINT_COVERAGE_LEVELS fn ->
       ServerColorFile.go env fn oc
     | ServerMsg.INFER_TYPE (fn, line, char) ->
@@ -188,11 +181,8 @@ module Program : Server.SERVER_PROGRAM = struct
     | ServerMsg.PING -> ServerMsg.response_to_channel oc ServerMsg.PONG
     | ServerMsg.BUILD build_opts ->
       let build_hook = BuildMain.go build_opts genv env oc in
-      let close oc =
-        Unix.shutdown (Unix.descr_of_out_channel oc) Unix.SHUTDOWN_SEND;
-        close_out oc in
       (match build_hook with
-      | None -> close oc
+      | None -> client.close ()
       | Some build_hook -> begin
         ServerTypeCheck.hook_after_parsing := (fun genv old_env env updates ->
           (* subtle: an exception there (such as writing on a closed pipe)
@@ -203,7 +193,7 @@ module Program : Server.SERVER_PROGRAM = struct
           (try
             with_context
               ~enter:(fun () -> ())
-              ~exit:(fun () -> close oc)
+              ~exit:(fun () -> client.close ())
               ~do_:(fun () -> build_hook genv old_env env updates);
           with exn ->
             let msg = Printexc.to_string exn in
@@ -217,6 +207,11 @@ module Program : Server.SERVER_PROGRAM = struct
         ServerFindRefs.go find_refs_action genv env oc
     | ServerMsg.REFACTOR refactor_action ->
         ServerRefactor.go refactor_action genv env oc
+    | ServerMsg.DUMP_SYMBOL_INFO file_list ->
+        let results = (SymbolInfoService.find_fun_calls
+          genv.ServerEnv.workers file_list env) in
+        Marshal.to_channel oc results [];
+        flush oc;
     | ServerMsg.ARGUMENT_INFO (contents, line, col) ->
         ServerArgumentInfo.go genv env oc contents line col
     | ServerMsg.PROLOG ->
@@ -238,41 +233,15 @@ module Program : Server.SERVER_PROGRAM = struct
     | ServerMsg.LINT_ALL code ->
         ServerLint.lint_all genv code oc
 
-  let handle_connection_ (genv:ServerEnv.genv) (env:ServerEnv.env) socket =
-    let cli, _ = Unix.accept socket in
-    try
-      let ic = Unix.in_channel_of_descr cli in
-      let oc = Unix.out_channel_of_descr cli in
-      let client = ic, oc in
-      let msg = ServerMsg.cmd_from_channel ic in
-      let finished, _, _ = Unix.select [cli] [] [] 0.0 in
-      if finished <> [] then () else begin
-        ServerPeriodical.stamp_connection();
-        match msg with
-        | ServerMsg.BUILD _ ->
-          (* The build step is special. It closes the socket itself. *)
-          respond genv env ~client ~msg
-        | _ ->
-          respond genv env ~client ~msg;
-          Unix.close cli
-      end
-    with e ->
-      let msg = Printexc.to_string e in
-      EventLogger.master_exception msg;
-      Printf.fprintf stderr "Error: %s\n%!" msg;
-      Unix.close cli
-
-  let handle_connection genv env socket =
-    try handle_connection_ genv env socket
-    with
-    | Unix.Unix_error (e, _, _) ->
-        Printf.fprintf stderr "Unix error: %s\n" (Unix.error_message e);
-        Printexc.print_backtrace stderr;
-        flush stderr
-    | e ->
-        Printf.fprintf stderr "Error: %s\n" (Printexc.to_string e);
-        Printexc.print_backtrace stderr;
-        flush stderr
+  let handle_client (genv:ServerEnv.genv) (env:ServerEnv.env) client =
+    let msg = ServerMsg.cmd_from_channel client.ic in
+    match msg with
+    | ServerMsg.BUILD _ ->
+        (* The build step is special. It closes the socket itself. *)
+        respond genv env ~client ~msg
+    | _ ->
+        respond genv env ~client ~msg;
+        client.close ()
 
   let preinit () =
     HackSearchService.attach_hooks ();
