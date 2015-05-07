@@ -91,6 +91,7 @@ module CompareTypes = struct
   and ty_ (subst, same as acc) (ty1: decl ty_) (ty2: decl ty_) =
     match ty1, ty2 with
     | Tany, Tany
+    | Tthis, Tthis
     | Tmixed, Tmixed -> acc
     | Tarray (ty1, ty2), Tarray (ty3, ty4) ->
         let acc = ty_opt (subst, same) ty1 ty3 in
@@ -123,7 +124,8 @@ module CompareTypes = struct
               ty acc v1 v2
         end fdm1 acc
     | (Tany | Tmixed | Tarray (_, _) | Tfun _ | Taccess (_, _) | Tgeneric (_, _)
-       | Toption _ | Tprim _ | Tshape _| Tapply (_, _) | Ttuple _), _ -> default
+       | Toption _ | Tprim _ | Tshape _| Tapply (_, _) | Ttuple _ | Tthis
+      ), _ -> default
 
   and tyl acc tyl1 tyl2 =
     if List.length tyl1 <> List.length tyl2
@@ -322,6 +324,7 @@ module TraversePos(ImplementPos: sig val pos: Pos.t -> Pos.t end) = struct
 
   and ty_: decl ty_ -> decl ty_ = function
     | Tany
+    | Tthis
     | Tmixed as x          -> x
     | Tarray (ty1, ty2)    -> Tarray (ty_opt ty1, ty_opt ty2)
     | Tprim _ as x         -> x

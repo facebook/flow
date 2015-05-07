@@ -14,6 +14,7 @@ open Typing_defs
 
 module Env = Typing_env
 module TUtils = Typing_utils
+module TSubst = Typing_subst
 module ShapeMap = Nast.ShapeMap
 
 (* Here is the general problem the delayed application of the phase solves.
@@ -76,14 +77,12 @@ let locl ty = LoclTy ty
 
 type env = expand_env
 
-let empty_env = {
-  typedef_expansions = [];
-}
-
 (*****************************************************************************)
 (* Transforms a declaration phase type into a localized type. This performs
  * common operations that are necessary for this operation, specifically:
  *   > Expand newtype/types
+ *   > Resolves the "this" type
+ *   > Instantiate generics
  *   > ...
  *
  * When keep track of additional information while localizing a type such as
@@ -91,16 +90,39 @@ let empty_env = {
  *)
 (*****************************************************************************)
 
-let rec localize_with_env ?(ety_env = empty_env) env (dty: decl ty) =
+let rec localize_with_env ~ety_env env (dty: decl ty) =
   match dty with
-  | _, (Tany | Tmixed | Tprim _ | Tgeneric (_, None)) as x-> env, (ety_env, x)
+  | _, (Tany | Tmixed | Tprim _ ) as x -> env, (ety_env, x)
+  | r, Tthis ->
+     let ty = match ety_env.this_ty with
+       | Reason.Rnone, ty -> r, ty
+       | reason, ty -> Reason.Rinstantiate (reason, "this", r), ty in
+     env, (ety_env, ty)
   | r, Tarray (ty1, ty2) ->
       let env, ty1 = opt (localize ~ety_env) env ty1 in
       let env, ty2 = opt (localize ~ety_env) env ty2 in
       env, (ety_env, (r, Tarray (ty1, ty2)))
-  | r, Tgeneric (s, Some (ck, ty)) ->
-      let env, ty = localize ~ety_env env ty in
-      env, (ety_env, (r, Tgeneric (s, Some (ck, ty))))
+  | r, Tgeneric (x, cstr_opt) ->
+     (match SMap.get x ety_env.substs with
+      | Some x_ty ->
+         let env =
+           match cstr_opt with
+           | Some (ck, ty) ->
+              let env, ty = localize ~ety_env env ty in
+              TSubst.add_check_constraint_todo env r x ck ty x_ty
+           | None -> env
+         in
+         env, (ety_env, (Reason.Rinstantiate (fst x_ty, x, r), snd x_ty))
+      | None ->
+         let env, cstr_opt =
+           match cstr_opt with
+           | None -> env, None
+           | Some (ck, ty) ->
+              let env, ty = localize ~ety_env env ty in
+              env, Some (ck, ty)
+         in
+         env, (ety_env, (r, Tgeneric (x, cstr_opt)))
+     )
   | r, Toption ty ->
      let env, ty = localize ~ety_env env ty in
      env, (ety_env, (r, Toption ty))
@@ -123,11 +145,17 @@ let rec localize_with_env ?(ety_env = empty_env) env (dty: decl ty) =
      let env, tym = ShapeMap.map_env (localize ~ety_env) env tym in
      env, (ety_env, (r, Tshape tym))
 
-and localize ?(ety_env = empty_env) env ty =
+and localize ~ety_env env ty =
   let env, (_, ty) = localize_with_env ~ety_env env ty in
   env, ty
 
-and localize_ft ?(ety_env = empty_env) env ft =
+and localize_ft ~ety_env env ft =
+  let ety_env = {
+    ety_env with
+    substs = List.fold_left begin fun subst (_, (_, x), _) ->
+      SMap.remove x subst
+    end ety_env.substs ft.ft_tparams;
+  } in
   let names, params = List.split ft.ft_params in
   let env, params = lfold (localize ~ety_env) env params in
   let env, arity = match ft.ft_arity with
@@ -139,19 +167,32 @@ and localize_ft ?(ety_env = empty_env) env ft =
   let params = List.map2 (fun x y -> x, y) names params in
   env, { ft with ft_arity = arity; ft_params = params; ft_ret = ret }
 
-let localize_phase ?(ety_env = empty_env) env phase_ty =
+let localize_phase ~ety_env env phase_ty =
   match phase_ty with
   | DeclTy ty ->
      localize ~ety_env env ty
   | LoclTy ty ->
      env, ty
 
-let unify_phase env pty1 pty2 =
-  let env, ty1 = localize_phase env pty1 in
-  let env, ty2 = localize_phase env pty2 in
+let env_with_self env =
+  {
+    typedef_expansions = [];
+    substs = SMap.empty;
+    this_ty = Reason.none, TUtils.this_of (Env.get_self env);
+  }
+
+(* Performs no substitutions of generics and initializes Tthis to
+ * Env.get_self env
+ *)
+let localize_with_self env ty =
+  localize env ty ~ety_env:(env_with_self env)
+
+let unify_decl env ty1 ty2 =
+  let env, ty1 = localize_with_self env ty1 in
+  let env, ty2 = localize_with_self env ty2 in
   TUtils.unify env ty1 ty2
 
-let sub_type_phase env pty1 pty2 =
-  let env, ty1 = localize_phase env pty1 in
-  let env, ty2 = localize_phase env pty2 in
+let sub_type_decl env ty1 ty2 =
+  let env, ty1 = localize_with_self env ty1 in
+  let env, ty2 = localize_with_self env ty2 in
   TUtils.sub_type env ty1 ty2

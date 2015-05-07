@@ -68,7 +68,8 @@ let rec expand_with_env ety_env env reason (root, ids) =
   expand_env.tenv, (expand_env.ety_env, ty)
 
 and expand env r t =
-  let env, (_, ty) = expand_with_env Phase.empty_env env r t in
+  let ety_env = Phase.env_with_self env in
+  let env, (_, ty) = expand_with_env ety_env env r t in
   env, ty
 
 (* The root of a type access is a type. When expanding a type access this type
@@ -145,17 +146,13 @@ and expand_ env root_ty ids =
             env, ty
           else
             env, (Reason.Rexpr_dep_type (fst ty, p ,x), snd ty)
+      | Tgeneric (x, None) when x = SN.Typehints.type_hole ->
+         (* If we haven't filled the type hole at this point we fill
+          * it with self
+          *)
+         expand_generic env SN.Typehints.this (Env.get_self env.tenv) ids
       | Tgeneric (x, Some (Ast.Constraint_as, ty)) ->
-          (* If we haven't filled the type hole at this point we fill
-           * it with self
-           *)
-          let (tenv, ty), x =
-            if x = SN.Typehints.type_hole
-            then
-              Phase.localize env.tenv (Env.get_self env.tenv), SN.Typehints.this
-            else (env.tenv, ty), x in
-          let env = { env with tenv = tenv } in
-          expand_generic env x ty ids
+         expand_generic env x ty ids
       | Tunresolved tyl ->
           let tyl =
             List.map begin fun ty ->
@@ -263,8 +260,9 @@ and create_root_from_type_constant env class_pos class_name root_ty (pos, tconst
           let cstr = opt_map (fun ty -> Ast.Constraint_as, ty) ty in
           Tgeneric (strip_ns class_name^"::"^tconst, cstr)
         ) in
+  let ety_env = { env.ety_env with this_ty = root_ty } in
   let tenv, (ety_env, tconst_ty) =
-    Phase.localize_with_env ~ety_env:env.ety_env env.tenv tconst_ty in
+    Phase.localize_with_env ~ety_env env.tenv tconst_ty in
   let tenv, tconst_ty = fill_type_hole_ tenv tconst_ty root_ty in
   { env with tenv = tenv }, tconst_ty, ety_env
 
@@ -346,23 +344,9 @@ let fill_type_hole env cid cid_ty ty =
   (* we use <.*> to indicate an expression dependent type *)
   let fill_name n = "<"^n^">" in
   let pos = Reason.to_pos (fst cid_ty) in
-  let env, cid, cid_ty =
-    match cid with
-    (* In a non-static context, <parent>::T and <static>::T should be
-     * compatible with <$this>::T. This is because $this, static, and
-     * parent (maybe?) all refer to the same late static bound type.
-     *)
-    | CIparent | CIstatic when not (Env.is_static env) ->
-        let cid = CIvar (pos, This) in
-        let env, ty = Env.get_local env this in
-        let this_ty = Reason.Rwitness pos, TUtils.this_of ty in
-        let env, cid_ty = Inst.instantiate_this Phase.locl env cid_ty this_ty in
-        env, cid, cid_ty
-    | cid -> env, cid, cid_ty
-  in
   let filling_ty =
     match cid with
-    | CIself | CI _ ->
+    | CIparent | CIself | CI _ ->
         cid_ty
     (* For (almost) all expressions we generate a new identifier. In the future,
      * we might be able to do some local analysis to determine if two given
@@ -372,11 +356,18 @@ let fill_type_hole env cid cid_ty ty =
     | CIvar (p, x) when x <> This ->
         let name = "expr#"^string_of_int(Ident.tmp()) in
         Reason.Rwitness p, Tabstract ((p, fill_name name), [], Some cid_ty)
-    | CIvar (p, This) ->
+    | CIvar (p, This) when cid = CIstatic && not (Env.is_static env) ->
         Reason.Rwitness p, Tabstract ((p, fill_name SN.SpecialIdents.this),
                                       [], Some cid_ty)
     | _ ->
-      let name = class_id_to_str cid in
+      (* In a non-static context, <static>::T should be compatible with
+       * <$this>::T. This is because $this, and static refer to the same
+       * late static bound type.
+       *)
+      let name =
+        if cid = CIstatic && not (Env.is_static env)
+        then SN.SpecialIdents.this
+        else class_id_to_str cid in
       Reason.Rwitness pos, Tabstract ((pos, fill_name name), [], Some cid_ty)
   in
   fill_type_hole_ env ty filling_ty

@@ -14,6 +14,7 @@ open Typing_defs
 class type ['a] type_visitor_type = object
   method on_tany : 'a -> 'a
   method on_tmixed : 'a -> 'a
+  method on_tthis : 'a -> 'a
   method on_tarray : 'a -> 'b ty option -> 'b ty option -> 'a
   method on_tgeneric : 'a -> string -> (Ast.constraint_kind * 'b ty) option -> 'a
   method on_toption : 'a -> 'b ty -> 'a
@@ -35,6 +36,7 @@ end
 class virtual ['a] type_visitor : ['a] type_visitor_type = object(this)
   method on_tany acc = acc
   method on_tmixed acc = acc
+  method on_tthis acc = acc
   method on_tarray: type a. _ -> a ty option -> a ty option -> _ =
     fun acc ty1_opt ty2_opt ->
     let acc = Option.fold ~f:this#on_type ~init:acc ty1_opt in
@@ -76,6 +78,7 @@ class virtual ['a] type_visitor : ['a] type_visitor_type = object(this)
     match x with
     | _, Tany -> this#on_tany acc
     | _, Tmixed -> this#on_tmixed acc
+    | _, Tthis -> this#on_tthis acc
     | _, Tarray (ty1_opt, ty2_opt) ->
       this#on_tarray acc ty1_opt ty2_opt
     | _, Tgeneric (s, cstr_opt) -> this#on_tgeneric acc s cstr_opt

@@ -14,6 +14,7 @@ open Typing_defs
 module Reason = Typing_reason
 module Env    = Typing_env
 module Inst   = Typing_instantiate
+module TSubst = Typing_subst
 module TUtils = Typing_utils
 module TAccess = Typing_taccess
 module Phase = Typing_phase
@@ -50,15 +51,16 @@ let expand_typedef_ ?force_expand:(force_expand=false) ety_env env r x argl =
              Errors.type_param_arity pos x n
            end;
          let ety_env = {
-           typedef_expansions = (tdef_pos, x) :: ety_env.typedef_expansions
+           ety_env with
+           typedef_expansions = (tdef_pos, x) :: ety_env.typedef_expansions;
+           substs = TSubst.make tparaml argl;
          } in
-         let env, expanded_ty =
-           Phase.localize ~ety_env env expanded_ty in
-         let subst = Inst.make_subst Phase.locl tparaml argl in
          let env, expanded_ty =
            if should_expand
            then begin
-               Inst.instantiate subst env expanded_ty
+               let env, expanded_ty =
+                 Phase.localize ~ety_env env expanded_ty in
+               env, expanded_ty
              end
            else begin
                let env, tcstr =
@@ -67,7 +69,6 @@ let expand_typedef_ ?force_expand:(force_expand=false) ety_env env r x argl =
                  | Some tcstr ->
                     let env, tcstr =
                       Phase.localize ~ety_env env tcstr in
-                    let env, tcstr = Inst.instantiate subst env tcstr in
                     env, Some tcstr
                in
                env, (r, Tabstract ((pos, x), argl, tcstr))
@@ -82,8 +83,9 @@ let expand_typedef ety_env env r x argl = expand_typedef_ ety_env env r x argl
 
 (* Expand a typedef, smashing abstraction and collecting a trail
  * of where the typedefs come from. *)
-let rec force_expand_typedef: type a. phase:a Phase.t -> ?ety_env:_ -> _ -> a ty -> _=
-  fun ~phase ?(ety_env = Phase.empty_env) env t ->
+let rec force_expand_typedef:
+  type a. phase:a Phase.t -> ety_env:_ -> _ -> a ty -> _=
+  fun ~phase ~ety_env env t ->
   match t with
   | r, Tapply ((_, x), argl) when Typing_env.is_typedef x ->
      let env, argl = lfold (Phase.localize ~ety_env) env argl in

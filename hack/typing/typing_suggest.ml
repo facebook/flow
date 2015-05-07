@@ -146,7 +146,8 @@ let get_implements (_, x) =
         match ty with
         | _, Tapply ((_, x), []) -> SSet.add x set
         | _, (Tany | Tmixed | Tarray (_, _) | Tprim _ | Tgeneric (_, _) | Tfun _
-          | Toption _ | Tapply (_, _) | Ttuple _ | Tshape _ | Taccess (_, _)) ->
+          | Toption _ | Tapply (_, _) | Ttuple _ | Tshape _ | Taccess (_, _)
+          | Tthis) ->
           raise Exit
       end tyl SSet.empty
 

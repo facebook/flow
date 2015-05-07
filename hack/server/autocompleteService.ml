@@ -176,7 +176,7 @@ let autocomplete_lvar_typing id env =
     let ty = Typing_env.get_self env in
     if not (Typing_env.is_static env) && (fst ty) <> Reason.Rnone
     then add_result
-      Naming_special_names.SpecialIdents.this (Phase.decl ty)
+      Naming_special_names.SpecialIdents.this (Phase.locl ty)
   end
 
 let should_complete_class completion_type class_kind =
@@ -360,7 +360,7 @@ let get_results funs classes =
   in
   let results = List.map begin fun x ->
     let env, ty = match x.ty with
-      | DeclTy ty -> Phase.localize env ty
+      | DeclTy ty -> Phase.localize_with_self env ty
       | LoclTy ty -> env, ty
     in
     let desc_string = match x.desc with

@@ -27,6 +27,7 @@ class type ['a] hint_visitor_type = object
 
   method on_any    : 'a -> 'a
   method on_mixed  : 'a -> 'a
+  method on_this   : 'a -> 'a
   method on_tuple  : 'a -> Nast.hint list -> 'a
   method on_abstr  : 'a -> string -> (Ast.constraint_kind * Nast.hint) option
                       -> 'a
@@ -50,6 +51,7 @@ class virtual ['a] hint_visitor: ['a] hint_visitor_type = object(this)
   method on_hint_ acc h = match h with
     | Hany                  -> this#on_any    acc
     | Hmixed                -> this#on_mixed  acc
+    | Hthis                 -> this#on_this   acc
     | Htuple hl             -> this#on_tuple  acc (hl:Nast.hint list)
     | Habstr (x, cstr_opt)  -> this#on_abstr  acc x cstr_opt
     | Harray (hopt1, hopt2) -> this#on_array  acc hopt1 hopt2
@@ -62,6 +64,7 @@ class virtual ['a] hint_visitor: ['a] hint_visitor_type = object(this)
 
   method on_any acc = acc
   method on_mixed acc = acc
+  method on_this acc = acc
   method on_tuple acc hl =
     List.fold_left this#on_hint acc (hl:Nast.hint list)
 
@@ -165,6 +168,8 @@ and hint_ p env = function
       env, Tany
   | Hmixed ->
       env, Tmixed
+  | Hthis ->
+     env, Tthis
   | Harray (h1, h2) ->
       if Env.is_strict env && h1 = None
       then Errors.generic_array_strict p;
@@ -230,4 +235,4 @@ and hint_ p env = function
 
 let hint_locl ?(ensure_instantiable=false) env h =
   let env, h = hint ~ensure_instantiable env h in
-  Typing_phase.localize env h
+  Typing_phase.localize_with_self env h

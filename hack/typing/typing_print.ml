@@ -61,6 +61,7 @@ module ErrorString = struct
     | Tobject            -> "an object"
     | Tshape _           -> "a shape"
     | Taccess (root_ty, ids) -> tconst root_ty ids
+    | Tthis -> "the type 'this'"
 
 
   and array: type a. a ty option * a ty option -> _ = function
@@ -138,6 +139,7 @@ module Suggest = struct
   let rec type_: type a. a ty -> string = fun (_, ty) ->
     match ty with
     | Tarray _               -> "array"
+    | Tthis                  -> "this"
     | Tunresolved _          -> "..."
     | Ttuple (l)             -> "("^list l^")"
     | Tany                   -> "..."
@@ -215,6 +217,7 @@ module Full = struct
       fun x y -> list_sep o ", " x y in
     match x with
     | Tany -> o "_"
+    | Tthis -> o "this"
     | Tmixed -> o "mixed"
     | Tarray (None, None) -> o "array"
     | Tarray (Some x, None) -> o "array<"; k x; o ">"

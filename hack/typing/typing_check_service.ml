@@ -71,9 +71,8 @@ let check_const x =
           let root = Typing_deps.Dep.GConst (snd cst.Nast.cst_name) in
           let env = Typing_env.set_root env root in
           let env, value_type = Typing.expr env v in
-          let _env = Typing_phase.sub_type_phase env
-            (Typing_phase.decl declared_type)
-            (Typing_phase.locl value_type) in
+          let env, dty = Typing_phase.localize_with_self env declared_type in
+          let _env = Typing_utils.sub_type env dty value_type in
           ()
         end
         | None -> ()

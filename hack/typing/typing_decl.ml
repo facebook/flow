@@ -94,11 +94,9 @@ let check_arity pos class_name class_type class_parameters =
   then Errors.class_arity pos class_type.tc_pos class_name arity;
   ()
 
-let make_substitution self_ty pos class_name class_type class_parameters =
+let make_substitution pos class_name class_type class_parameters =
   check_arity pos class_name class_type class_parameters;
-  let this_ty = (fst self_ty,
-    Tgeneric ("this", Some (Ast.Constraint_as, self_ty))) in
-  Inst.make_subst_with_this Phase.decl this_ty class_type.tc_tparams class_parameters
+  Inst.make_subst Phase.decl class_type.tc_tparams class_parameters
 
 (*-------------------------- end copypasta *)
 
@@ -186,8 +184,8 @@ let merge_parent_class_reqs class_nast impls
       (* The class lives in PHP *)
       env, req_ancestors, req_ancestors_extends
     | Some parent_type ->
-      let self = Typing.get_self_from_c env class_nast in
-      let subst = make_substitution self parent_pos parent_name parent_type parent_params in
+      let subst =
+        make_substitution parent_pos parent_name parent_type parent_params in
       match class_nast.c_kind with
         | Ast.Cnormal | Ast.Cabstract ->
           (* Check inherited requirements and check their compatibility *)
@@ -435,9 +433,8 @@ and class_decl tcopt c =
       ty :: impl
     | _ -> impl
   in
-  let self = Typing.get_self_from_c env c in
   let env, impl_dimpl =
-    lfold (Typing.get_implements ~with_checks:false ~this:self) env impl in
+    lfold (Typing.get_implements ~with_checks:false) env impl in
   let impl, dimpl = List.split impl_dimpl in
   let impl = List.fold_right (SMap.fold SMap.add) impl SMap.empty in
   let dimpl = List.fold_right (SMap.fold SMap.add) dimpl SMap.empty in

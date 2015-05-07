@@ -55,6 +55,7 @@ and hint_ =
   | Hfun of hint list * bool * hint
   | Happly of sid * hint list
   | Hshape of hint ShapeMap.t
+  | Hthis
 
  (* This represents the use of a type const. Type consts are accessed like
   * regular consts in Hack, i.e.

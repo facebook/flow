@@ -86,7 +86,8 @@ let lookup_magic_type (env:Env.env) (class_:locl ty) (fname:string) (uniq:int) :
                let env, ce_type =
                  Env.get_member true env c fname |>
                    opt
-                     (fun env x -> Typing_phase.localize env x.ce_type)
+                     (fun env x ->
+                      Typing_phase.localize_with_self env x.ce_type)
                      env
                in
                (match ce_type with

@@ -31,8 +31,6 @@ type 'a subst
 (*****************************************************************************)
 
 val make_subst: phase:'a Typing_phase.t -> tparam list -> 'a ty list -> 'a subst
-val make_subst_with_this:
-  phase:'a Typing_phase.t -> this:'a ty -> tparam list -> 'a ty list -> 'a subst
 
 (*****************************************************************************)
 (* Primitive instantiating a type.
@@ -47,6 +45,3 @@ val instantiate_typeconst :
 
 val instantiate_ft  : env -> locl fun_type -> env * locl fun_type
 val instantiate_fun : env -> locl ty -> Nast.expr list -> env * locl ty
-
-val instantiate_this :
-  phase:'a Typing_phase.t -> env -> 'a ty -> 'a ty -> env * 'a ty

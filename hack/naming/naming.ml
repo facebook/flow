@@ -733,31 +733,25 @@ and hint_ ~allow_this ~allow_retonly is_static_var p env x =
   | Happly ((_, x) as id, hl) ->
     hint_id ~allow_this ~allow_retonly env is_static_var id hl
   | Haccess ((pos, root_id) as root, id, ids) ->
-    (* Using a thunk to avoid computing this_ty in cases when we do not need it
-     *)
-    let this_ty () = hint_id ~allow_this ~allow_retonly env is_static_var
-      (pos, SN.Typehints.this) [] in
-    let self_ty () =
-      match this_ty() with
-      | N.Habstr (x, Some (_, self)) when x = SN.Typehints.this -> snd self
-      | _ -> N.Hany
-    in
     let root_ty =
       match root_id with
       | x when x = SN.Classes.cSelf ->
           (match (fst env).cclass with
           | None ->
-              Errors.self_outside_class pos;
-              N.Hany
+             Errors.self_outside_class pos;
+             N.Hany
           | Some class_ ->
-              N.Happly (class_.c_name, [])
+             let tparaml = (fst env).type_paraml in
+             let tparaml = List.map begin fun (param_pos, param_name) ->
+               param_pos, N.Habstr (param_name, get_constraint env param_name)
+             end tparaml in
+             N.Happly (class_.c_name, tparaml)
           )
       | x when x = SN.Classes.cStatic || x = SN.Classes.cParent ->
           Errors.invalid_type_access_root root; N.Hany
       (* Create a type hole that we will fill during the local typing *)
       | x when x = SN.Typehints.this && allow_this ->
-          N.Habstr (SN.Typehints.type_hole,
-            Some (Ast.Constraint_as, (pos, self_ty ())))
+          N.Habstr (SN.Typehints.type_hole, None)
       | _ ->
           (match hint_id ~allow_this ~allow_retonly env is_static_var root [] with
           | N.Happly _ as h -> h
@@ -831,12 +825,8 @@ and hint_id ~allow_this ~allow_retonly env is_static_var (p, x as id) hl =
           Errors.this_hint_outside_class p;
           N.Hany
         | Some c ->
-          let tparaml = (fst env).type_paraml in
-          let tparaml = List.map begin fun (param_pos, param_name) ->
-            param_pos, N.Habstr (param_name, get_constraint env param_name)
-          end tparaml in
-          N.Habstr (SN.Typehints.this, Some (Ast.Constraint_as,
-            (fst c.c_name, N.Happly (c.c_name, tparaml)))))
+          N.Hthis
+        )
     | x when x = SN.Typehints.this ->
         (match (fst env).cclass with
         | None ->

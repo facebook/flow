@@ -109,7 +109,7 @@ and extract_fun_t ce =
     | r, Tfun ft -> r, ft
     | _, (Tany | Tmixed | Tarray (_, _) | Tprim _ | Tgeneric (_, _)
              | Toption _ | Tapply (_, _) | Ttuple _ | Tshape _
-             | Taccess (_, _)
+             | Taccess (_, _) | Tthis
     ) -> assert false)
 
 and parse_get_name name =

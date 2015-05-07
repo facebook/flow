@@ -410,7 +410,7 @@ and type_ root variance env (reason, ty) =
     let env = type_option root variance env ty1 in
     let env = type_option root variance env ty2 in
     env
-  | Tgeneric ("this", _) ->
+  | Tthis ->
       (* `this` constraints are bivariant (otherwise any class that used the
        * `this` type would not be able to use covariant type params) *)
       env

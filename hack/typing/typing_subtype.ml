@@ -16,6 +16,7 @@ module Inst = Typing_instantiate
 module Unify = Typing_unify
 module Env = Typing_env
 module TDef = Typing_tdef
+module TSubst = Typing_subst
 module TUtils = Typing_utils
 module TUEnv = Typing_unification_env
 module ShapeMap = Nast.ShapeMap
@@ -302,7 +303,13 @@ and sub_type_with_uenv env (uenv_super, ty_super) (uenv_sub, ty_sub) =
                   | _, Some _ -> acc
                   | env, None ->
                     Errors.try_ begin fun () ->
-                      let env, elt_type = Phase.localize env elt_type in
+                      let ety_env = {
+                        typedef_expansions = [];
+                        substs = SMap.empty;
+                        this_ty = ty_sub;
+                      } in
+                      let env, elt_type =
+                        Phase.localize ~ety_env env elt_type in
                       let _, elt_ty = elt_type in
                       env, Some (sub_type env ty_super (p_sub, elt_ty))
                     end (fun _ -> acc)
@@ -325,9 +332,20 @@ and sub_type_with_uenv env (uenv_super, ty_super) (uenv_sub, ty_sub) =
                   then
                     Errors.expected_tparam
                       (Reason.to_pos p_sub) (List.length class_.tc_tparams);
-                  let env, up_obj = Phase.localize env up_obj in
-                  let subst = Inst.make_subst Phase.locl class_.tc_tparams tyl_sub in
-                  let env, up_obj = Inst.instantiate subst env up_obj in
+                  (* NOTE: We rely on the fact that we fold all ancestors of
+                   * ty_sub in its class_type so we will never hit this case
+                   * again. If this ever changes then we would need to store
+                   * ty_sub as the 'this_ty' in the uenv and be careful to
+                   * thread it through.
+                   *
+                   * This is covered by test/typecheck/this_tparam2.php
+                   *)
+                  let ety_env = {
+                    typedef_expansions = [];
+                    substs = TSubst.make class_.tc_tparams tyl_sub;
+                    this_ty = Reason.none, TUtils.this_of ty_sub;
+                  } in
+                  let env, up_obj = Phase.localize ~ety_env env up_obj in
                   sub_type env ty_super up_obj
                 | None when class_.tc_members_fully_known ->
                   TUtils.uerror p_super ty_super_ p_sub ty_sub_;
@@ -434,7 +452,12 @@ and sub_type_with_uenv env (uenv_super, ty_super) (uenv_sub, ty_sub) =
         Errors.try_
           (fun () -> fst (Unify.unify env ty_super ty_sub))
           (fun _ ->
-           let env, base = Phase.localize env base in
+           let ety_env = {
+             typedef_expansions = [];
+             substs = SMap.empty;
+             this_ty = Reason.none, TUtils.this_of ty_sub;
+           } in
+           let env, base = Phase.localize ~ety_env env base in
            sub_type env ty_super base)
       | None -> assert false)
   (* If all else fails we fall back to the super/as constraint on a generics. *)

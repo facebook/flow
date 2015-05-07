@@ -270,7 +270,7 @@ and hint env (p, h) =
   hint_ env p h
 
 and hint_ env p = function
-  | Hany  | Hmixed  | Habstr _ | Hprim _  | Haccess _ ->
+  | Hany  | Hmixed  | Habstr _ | Hprim _  | Hthis | Haccess _ ->
       ()
   | Harray (ty1, ty2) ->
       maybe hint env ty1;
@@ -451,7 +451,7 @@ and check_no_class_tparams class_tparams (pos, ty)  =
       then Errors.typeconst_depends_on_external_tparam pos c_tp_pos c_tp_name
     end class_tparams in
   match ty with
-    | Hany | Hmixed | Hprim _ -> ()
+    | Hany | Hmixed | Hprim _ | Hthis -> ()
     (* We have found a type parameter. Make sure its name does not match
      * a name in class_tparams *)
     | Habstr (tparam_name, cstr_opt) ->

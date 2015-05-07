@@ -32,6 +32,8 @@ type locl = private LoclPhase
 type 'phase ty = Reason.t * 'phase ty_
 and _ ty_ =
   (*========== Following Types Exist Only in the Declared Phase ==========*)
+  (* The late static bound type of a class *)
+  | Tthis : decl ty_
 
   (* Either an object type or a type alias, ty list are the arguments *)
   | Tapply : Nast.sid * decl ty list -> decl ty_
@@ -294,6 +296,8 @@ type phase_ty =
 (* Tracks information about how a type was expanded *)
 type expand_env = {
   typedef_expansions : (Pos.t * string) list;
+  substs : locl ty SMap.t;
+  this_ty : locl ty;
 }
 
 type ety = expand_env * locl ty

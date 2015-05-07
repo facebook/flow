@@ -49,7 +49,6 @@ val type_param:
 
 val get_implements:
   with_checks:bool ->
-  this:Typing_defs.decl Typing_defs.ty ->
   Typing_env.env ->
   decl ty ->
   Typing_env.env * (decl ty SMap.t * decl ty SMap.t)

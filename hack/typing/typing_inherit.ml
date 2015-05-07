@@ -190,13 +190,9 @@ let check_arity pos class_name class_type class_parameters =
   then Errors.class_arity pos class_type.tc_pos class_name arity;
   ()
 
-let make_substitution ?this:(this=None) pos class_name class_type class_parameters =
+let make_substitution pos class_name class_type class_parameters =
   check_arity pos class_name class_type class_parameters;
-  match this with
-  | None -> Inst.make_subst Phase.decl class_type.tc_tparams class_parameters
-  | Some (r, _ as this) ->
-      let this_ty = r, TUtils.this_of this in
-      Inst.make_subst_with_this ~phase:Phase.decl ~this:this_ty class_type.tc_tparams class_parameters
+  Inst.make_subst Phase.decl class_type.tc_tparams class_parameters
 
 let constructor env subst (cstr, consistent) = match cstr with
   | None -> env, (None, consistent)
@@ -250,8 +246,7 @@ let chown_privates owner = apply_fn_to_class_elts (chown_private owner)
 (*****************************************************************************)
 
 let inherit_hack_class c env p class_name class_type argl =
-  let self = Typing.get_self_from_c env c in
-  let subst = make_substitution ~this:(Some self) p class_name class_type argl in
+  let subst = make_substitution p class_name class_type argl in
   let instantiate = SMap.map_env (Inst.instantiate_ce subst) in
   let class_type =
     match class_type.tc_kind with
