@@ -79,7 +79,7 @@ type genv = {
   gconsts: map ref;
 
   (* The current class, None if we are in a function *)
-  cclass: Ast.class_ option;
+  current_cls: (Ast.id * Ast.class_kind) option;
 
   (* Normally we don't need to add dependencies at this stage, but there
    * are edge cases when we do.  *)
@@ -225,7 +225,7 @@ module Env = struct
     funs          = ref nenv.ifuns;
     typedefs      = ref nenv.itypedefs;
     gconsts       = ref nenv.iconsts;
-    cclass        = None;
+    current_cls   = None;
     droot         = None;
     namespace     = Namespace_env.empty;
   }
@@ -242,7 +242,7 @@ module Env = struct
     funs          = ref nenv.ifuns;
     typedefs      = ref nenv.itypedefs;
     gconsts       = ref nenv.iconsts;
-    cclass        = Some c;
+    current_cls   = Some (c.c_name, c.c_kind);
     droot         = Some (Typing_deps.Dep.Class (snd c.c_name));
     namespace     = c.c_namespace;
   }
@@ -264,7 +264,7 @@ module Env = struct
     funs          = ref nenv.ifuns;
     typedefs      = ref nenv.itypedefs;
     gconsts       = ref nenv.iconsts;
-    cclass        = None;
+    current_cls   = None;
     droot         = None;
     namespace     = tdef.t_namespace;
   }
@@ -286,7 +286,7 @@ module Env = struct
     funs          = ref nenv.ifuns;
     typedefs      = ref nenv.itypedefs;
     gconsts       = ref nenv.iconsts;
-    cclass        = None;
+    current_cls   = None;
     droot         = Some (Typing_deps.Dep.Fun (snd f.f_name));
     namespace     = f.f_namespace;
   }
@@ -302,7 +302,7 @@ module Env = struct
     funs          = ref nenv.ifuns;
     typedefs      = ref nenv.itypedefs;
     gconsts       = ref nenv.iconsts;
-    cclass        = None;
+    current_cls   = None;
     droot         = Some (Typing_deps.Dep.GConst (snd cst.cst_name));
     namespace     = cst.cst_namespace;
   }
@@ -736,16 +736,16 @@ and hint_ ~allow_this ~allow_retonly is_static_var p env x =
     let root_ty =
       match root_id with
       | x when x = SN.Classes.cSelf ->
-          (match (fst env).cclass with
+          (match (fst env).current_cls with
           | None ->
              Errors.self_outside_class pos;
              N.Hany
-          | Some class_ ->
+          | Some (cid, _) ->
              let tparaml = (fst env).type_paraml in
              let tparaml = List.map begin fun (param_pos, param_name) ->
                param_pos, N.Habstr (param_name, get_constraint env param_name)
              end tparaml in
-             N.Happly (class_.c_name, tparaml)
+             N.Happly (cid, tparaml)
           )
       | x when x = SN.Classes.cStatic || x = SN.Classes.cParent ->
           Errors.invalid_type_access_root root; N.Hany
@@ -820,7 +820,7 @@ and hint_id ~allow_this ~allow_retonly env is_static_var (p, x as id) hl =
     | x when x = SN.Typehints.this && allow_this ->
         if hl != []
         then Errors.this_no_argument p;
-        (match (fst env).cclass with
+        (match (fst env).current_cls with
         | None ->
           Errors.this_hint_outside_class p;
           N.Hany
@@ -828,7 +828,7 @@ and hint_id ~allow_this ~allow_retonly env is_static_var (p, x as id) hl =
           N.Hthis
         )
     | x when x = SN.Typehints.this ->
-        (match (fst env).cclass with
+        (match (fst env).current_cls with
         | None ->
             Errors.this_hint_outside_class p
         | Some _ ->
@@ -1832,18 +1832,18 @@ and expr_ env = function
     (match snd x with
       | const when const = SN.PseudoConsts.g__LINE__ -> N.Int x
       | const when const = SN.PseudoConsts.g__CLASS__ ->
-        (match (fst env).cclass with
+        (match (fst env).current_cls with
           | None -> Errors.illegal_CLASS (fst x); N.Any
-          | Some c ->
+          | Some (cid, _) ->
             (* this isn't quite correct when inside a trait, as
              * __CLASS__ is replaced by the using class, but it's
              * sufficient for typechecking purposes (we require
              * subclass to be compatible with the trait member/method
              * declarations) *)
-            N.String c.c_name)
+            N.String cid)
       | const when const = SN.PseudoConsts.g__TRAIT__ ->
-        (match (fst env).cclass with
-          | Some c when c.c_kind = Ctrait -> N.String c.c_name
+        (match (fst env).current_cls with
+          | Some (cid, Ctrait) -> N.String cid
           | _ -> Errors.illegal_TRAIT (fst x); N.Any)
       | const when
           const = SN.PseudoConsts.g__FILE__
@@ -1943,8 +1943,8 @@ and expr_ env = function
             N.Smethod_id (Env.class_name env cl, meth)
           | (p, N.Class_const ((N.CIself|N.CIstatic), (_, mem))),
               (_, N.String meth) when mem = SN.Members.mClass ->
-            (match (fst env).cclass with
-              | Some cl -> N.Smethod_id (cl.c_name, meth)
+            (match (fst env).current_cls with
+              | Some (cid, _) -> N.Smethod_id (cid, meth)
               | None -> Errors.illegal_class_meth p; N.Any)
           | (p, _), (_) -> Errors.illegal_class_meth p; N.Any
           )
@@ -2058,17 +2058,17 @@ and expr_ env = function
   | InstanceOf (e, (p, Id x)) ->
     let id = match x with
       | px, n when n = SN.Classes.cParent ->
-        if (fst env).cclass = None then
+        if (fst env).current_cls = None then
           let () = Errors.parent_outside_class p in
           (px, SN.Classes.cUnknown)
         else (px, n)
       | px, n when n = SN.Classes.cSelf ->
-        if (fst env).cclass = None then
+        if (fst env).current_cls = None then
           let () = Errors.self_outside_class p in
           (px, SN.Classes.cUnknown)
         else (px, n)
       | px, n when n = SN.Classes.cStatic ->
-        if (fst env).cclass = None then
+        if (fst env).current_cls = None then
           let () = Errors.static_outside_class p in
           (px, SN.Classes.cUnknown)
         else (px, n)
@@ -2156,16 +2156,16 @@ and make_class_id env (p, x as cid) =
   no_typedef env cid;
   match x with
     | x when x = SN.Classes.cParent ->
-      if (fst env).cclass = None then
+      if (fst env).current_cls = None then
         let () = Errors.parent_outside_class p in
         N.CI (p, SN.Classes.cUnknown)
       else N.CIparent
     | x when x = SN.Classes.cSelf ->
-      if (fst env).cclass = None then
+      if (fst env).current_cls = None then
         let () = Errors.self_outside_class p in
         N.CI (p, SN.Classes.cUnknown)
       else N.CIself
-    | x when x = SN.Classes.cStatic -> if (fst env).cclass = None then
+    | x when x = SN.Classes.cStatic -> if (fst env).current_cls = None then
         let () = Errors.static_outside_class p in
         N.CI (p, SN.Classes.cUnknown)
       else N.CIstatic
