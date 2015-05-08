@@ -2733,7 +2733,7 @@ and is_object_prototype_method = function
   | "valueOf" -> true
   | _ -> false
 
-(* only on use-types *)
+(* only on use-types - guard calls with is_use t *)
 and err_operation = function
   | GetT _ -> "Property cannot be accessed on"
   | SetT _ -> "Property cannot be assigned on"
@@ -2756,10 +2756,15 @@ and err_operation = function
   | LookupT _ -> "Property not found in"
   | KeyT _ -> "Expected object instead of"
   | HasT _ -> "Property not found in"
-
-  (* unreachable use-types and def-types *)
-  | t
-    -> failwith (spf "err_operation called on %s" (string_of_ctor t))
+  (* unreachable or unclassified use-types. until we have a mechanical way
+     to verify that all legit use types are listed above, we can't afford
+     to throw on a use type, so mark the error instead *)
+  | t when is_use t ->
+    (spf "Type is incompatible with (unclassified use type: %s)"
+      (string_of_ctor t))
+  (* def-types *)
+  | t ->
+    failwith (spf "err_operation called on def type %s" (string_of_ctor t))
 
 and err_value = function
   | NullT _ -> " possibly null value"
