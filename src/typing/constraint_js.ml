@@ -1846,6 +1846,14 @@ let string_of_scope cx scope =
 
 let level_spaces level = 2 * level
 
+let spaces n = String.make n ' '
+
+let fill =
+  let spacer = ". " in
+  let spacer_len = String.length spacer in
+  let spacer_char i = spacer.[i mod spacer_len] in
+  (fun n -> String.init n spacer_char)
+
 let pos_len r =
   let pos = pos_of_reason r in
   let fmt = Errors_js.format_reason_color (pos, "") in
@@ -1865,51 +1873,32 @@ let max_pos_len_and_depth limit trace =
     ) (len, depth + 1) links
   in f (0, 1) trace
 
-let pretty_r indent r prefix suffix =
+let pretty_r margin indent r prefix suffix =
   let len = pos_len r in
-  let ind = if indent > len then String.make (indent - len) ' ' else "" in
+  let ind = 
+    (if margin > len then spaces (margin - len) else "") ^
+    (if indent > len then fill (indent - margin) else "") in
   wrap_reason (ind ^ (spf "%s[" prefix)) (spf "]%s" suffix) r
-
-let rec unique_pos = function
-| [] -> []
-| r1 :: (r2 :: rs) when string_of_reason r1 = string_of_reason r2 ->
-  unique_pos (r2 :: rs)
-| r :: rs ->
-  r :: unique_pos rs
 
 (* ascii tree w/verbiage *)
 let reasons_of_trace ?(level=0) trace =
   let max_len, max_depth = max_pos_len_and_depth level trace in
   let level = min level max_depth in
-  let max_indent = max_len + (level_spaces level + 1) in
+  let max_indent = max_len + (level_spaces level) in
   let rec f level (t1, links, t2) =
     let indent = max_indent - (level_spaces level) in
     if level >= 0 then
-      (pretty_r indent (reason_of_t t1)
-        (spf "%s " (string_of_ctor t1))
-        (if links <> [] && level > 0 then " produced by " else "")
-        ::
-        List.concat (
-          links |> List.map (fun (Embed trace) ->
-            f (level - 1) trace)
-        )) @
-      [pretty_r indent (reason_of_t t2)
-        (spf "~> %s " (string_of_ctor t2)) ""]
+      [pretty_r max_len indent (reason_of_t t1) 
+        (spf "%s " (string_of_ctor t1)) 
+        "";
+      pretty_r max_len indent (reason_of_t t2)
+        (spf "~> %s " (string_of_ctor t2)) 
+        (if links <> [] && level > 0 then " comes from" else "")
+      ] @ 
+      (* note that we're deduping for now *)
+      List.concat (
+        (uniq links) |> List.map (fun (Embed trace) ->
+          f (level - 1) trace)
+      )
     else []
   in f level trace
-
-(* flat, deduped *)
-(* erases too much information - may be worth resurrecting
-   with more expressive traces *)
-let flat_reasons_of_trace ?(level=0) trace =
-  let indent = fst (max_pos_len_and_depth 0 trace) + 2 in
-  let rec f level (t1, links, t2) =
-    if level < 0 then [] else
-    (pretty_r indent (reason_of_t t1) "" ""
-      ::
-      List.concat (
-        links |> List.map (fun (Embed trace) ->
-          f (level - 1) trace)
-      )) @
-    [pretty_r indent (reason_of_t t2) "" ""]
-  in unique_pos (f level trace)
