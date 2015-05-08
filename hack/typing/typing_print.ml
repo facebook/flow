@@ -430,7 +430,7 @@ module PrintClass = struct
     let tc_need_init = bool c.tc_need_init in
     let tc_members_fully_known = bool c.tc_members_fully_known in
     let tc_abstract = bool c.tc_abstract in
-    let tc_members_init = sset c.tc_members_init in
+    let tc_deferred_init_members = sset c.tc_deferred_init_members in
     let tc_kind = class_kind c.tc_kind in
     let tc_name = c.tc_name in
     let tc_tparams = tparam_list c.tc_tparams in
@@ -451,7 +451,7 @@ module PrintClass = struct
     "tc_need_init: "^tc_need_init^"\n"^
     "tc_members_fully_known: "^tc_members_fully_known^"\n"^
     "tc_abstract: "^tc_abstract^"\n"^
-    "tc_members_init: "^tc_members_init^"\n"^
+    "tc_deferred_init_members: "^tc_deferred_init_members^"\n"^
     "tc_kind: "^tc_kind^"\n"^
     "tc_name: "^tc_name^"\n"^
     "tc_tparams: "^tc_tparams^"\n"^

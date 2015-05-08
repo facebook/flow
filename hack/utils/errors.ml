@@ -197,6 +197,7 @@ module NastCheck                            = struct
   let typeconst_depends_on_external_tparam  = 3027 (* DONT MODIFY!!!! *)
   let typeconst_assigned_tparam             = 3028 (* DONT MODIFY!!!! *)
   let abstract_with_typeconst               = 3029 (* DONT MODIFY!!!! *)
+  let constructor_required                  = 3030 (* DONT MODIFY!!!! *)
 
   (* EXTEND HERE WITH NEW VALUES IF NEEDED *)
 end
@@ -691,16 +692,22 @@ let no_construct_parent pos =
    ]
  )
 
-let not_initialized (p, c) =
-  if c = "parent::__construct" then no_construct_parent p else
-  add NastCheck.not_initialized p (
-  sl[
-  "The class member "; c;
-  " is not always properly initialized\n";
-  "Make sure you systematically set $this->"; c;
-  " when the method __construct is called\n";
-  "Alternatively, you can define the type as optional (?...)\n"
-])
+let constructor_required (pos, name) prop_names =
+  let name = Utils.strip_ns name in
+  let props_str = SSet.fold (fun x acc -> x^" "^acc) prop_names "" in
+  add NastCheck.constructor_required pos
+    ("Lacking __construct, class "^name^" does not initialize its private members: "^props_str)
+
+let not_initialized (pos, prop) =
+  if prop = "parent::__construct" then no_construct_parent pos else
+  add NastCheck.not_initialized pos (
+    sl[
+      "The class member "; prop;
+      " is not always properly initialized\n";
+      "Make sure you systematically set $this->"; prop;
+      " when the method __construct is called\n";
+      "Alternatively, you can define the type as optional (?...)\n"
+    ])
 
 let call_before_init pos cv =
   add NastCheck.call_before_init pos (

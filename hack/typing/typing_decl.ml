@@ -418,7 +418,7 @@ and class_decl tcopt c =
   SMap.iter (check_static_method m) sm;
   let parent_cstr = inherited.Typing_inherit.ih_cstr in
   let env, cstr = constructor_decl env parent_cstr c in
-  let need_init = match (fst cstr) with
+  let has_concrete_cstr = match (fst cstr) with
     | None
     | Some {ce_type = (_, Tfun ({ft_abstract = true; _})); _} -> false
     | _ -> true in
@@ -507,11 +507,13 @@ and class_decl tcopt c =
         { te_base       = base_hint;
           te_constraint = constraint_hint } in
   let consts = Typing_enum.enum_class_decl_rewrite c.c_name enum impl consts in
+  let has_own_cstr = has_concrete_cstr && (None <> c.c_constructor) in
+  let deferred_members = NastInitCheck.class_decl ~has_own_cstr env c in
   let tc = {
     tc_final = c.c_final;
     tc_abstract = is_abstract;
-    tc_need_init = need_init;
-    tc_members_init = NastInitCheck.class_decl env c;
+    tc_need_init = has_concrete_cstr;
+    tc_deferred_init_members = deferred_members;
     tc_members_fully_known = ext_strict;
     tc_kind = c.c_kind;
     tc_name = snd c.c_name;

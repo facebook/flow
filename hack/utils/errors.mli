@@ -197,6 +197,7 @@ val override_per_trait : Pos.t * string -> string -> Pos.t -> unit
 val missing_assign : Pos.t -> unit
 val private_override : Pos.t -> string -> string -> unit
 val no_construct_parent : Pos.t -> unit
+val constructor_required : Pos.t * string -> Utils.SSet.t -> unit
 val not_initialized : Pos.t * string -> unit
 val call_before_init : Pos.t -> string -> unit
 val type_arity : Pos.t -> string -> string -> unit

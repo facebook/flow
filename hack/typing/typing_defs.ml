@@ -250,7 +250,7 @@ and class_type = {
   tc_final               : bool;
   (* When a class is abstract (or in a trait) the initialization of
    * a protected member can be delayed *)
-  tc_members_init        : SSet.t;
+  tc_deferred_init_members : SSet.t;
   tc_kind                : Ast.class_kind;
   tc_name                : string    ;
   tc_pos                 : Pos.t ;
