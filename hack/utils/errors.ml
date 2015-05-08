@@ -332,7 +332,7 @@ module Typing                               = struct
   let cyclic_typeconst                      = 4131 (* DONT MODIFY!!!! *)
   let nullsafe_property_write_context       = 4132 (* DONT MODIFY!!!! *)
   let noreturn_usage                        = 4133 (* DONT MODIFY!!!! *)
-
+  let this_lvalue                           = 4134 (* DONT MODIFY!!!! *)
   (* EXTEND HERE WITH NEW VALUES IF NEEDED *)
 end
 
@@ -1485,6 +1485,9 @@ let declared_contravariant pos1 pos2 emsg =
 let cyclic_typeconst pos sl =
   add Typing.cyclic_typeconst pos
     ("Cyclic type constant:\n  "^String.concat " -> " sl)
+
+let this_lvalue pos =
+  add Typing.this_lvalue pos "Cannot assign a value to $this"
 
 (*****************************************************************************)
 (* Typing decl errors *)

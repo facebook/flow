@@ -806,6 +806,9 @@ and expr_ ~in_cond ~(valkind: [> `lvalue | `rvalue | `other ]) env (p, e) =
   | This when Env.is_static env ->
       Errors.this_in_static p;
       env, (Reason.Rwitness p, Tany)
+  | This when valkind = `lvalue ->
+     Errors.this_lvalue p;
+     env, (Reason.Rwitness p, Tany)
   | This ->
       let r, _ = Env.get_self env in
       if r = Reason.Rnone
@@ -1648,6 +1651,9 @@ and assign p env e1 ty2 =
        * are shapes and some others are not.
        *)
       assign_simple p env e1 ty2
+  | _, This ->
+     Errors.this_lvalue p;
+     env, (Reason.Rwitness p, Tany)
   | _ ->
       assign_simple p env e1 ty2
 
