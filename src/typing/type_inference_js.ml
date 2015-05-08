@@ -627,6 +627,14 @@ let rec convert cx map = Ast.Type.(function
           | _ -> assert false
         )
 
+      (* $FixMe is a synonym for any. *)
+      (* TODO move this to a type alias once optional type params
+         work properly in type aliases: #7007731 *)
+      | "$FixMe" ->
+        (* Optional type params are info-only, validated then forgotten. *)
+        List.iter (fun p -> ignore (convert cx map p)) typeParameters;
+        AnyT.at loc
+
       (* Class<T> is the type of the class whose instances are of type T *)
       | "Class" ->
         check_type_param_arity cx loc typeParameters 1 (fun () ->
@@ -774,7 +782,6 @@ let rec convert cx map = Ast.Type.(function
 
 and convert_qualification ?(for_type=true) cx reason_prefix = Ast.Type.Generic.Identifier.(function
   | Qualified (loc, { qualification; id; }) ->
-
     let m = convert_qualification cx reason_prefix qualification in
     let _, { Ast.Identifier.name; _ } = id in
     let reason = mk_reason (spf "%s '<<object>>.%s')" reason_prefix name) loc in
@@ -783,7 +790,6 @@ and convert_qualification ?(for_type=true) cx reason_prefix = Ast.Type.Generic.I
     )
 
   | Unqualified (id) ->
-
     let loc, { Ast.Identifier.name; _ } = id in
     let reason = mk_reason (spf "%s '%s'" reason_prefix name) loc in
     Env_js.get_var ~for_type cx name reason

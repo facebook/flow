@@ -3,4 +3,11 @@ any.js:6:16,21: mixed
 This type is incompatible with
 any.js:6:7,12: string
 
-Found 1 error
+fixme.js:8:23,29: identifier nnumber
+Could not resolve name
+
+fixme.js:11:16,21: mixed
+This type is incompatible with
+fixme.js:11:7,12: string
+
+Found 3 errors
