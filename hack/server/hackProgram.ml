@@ -303,10 +303,6 @@ module Program : Server.SERVER_PROGRAM = struct
         ServerConvert.go genv env dirname;
         exit 0
 
-  (* We won't filter more rigorously until later so the hooks can stay up to
-   * date on filesystem changes *)
-  let filter_update _genv _env _update = true
-
   let process_updates _genv _env updates =
     Relative_path.relativize_set Relative_path.Root updates
 

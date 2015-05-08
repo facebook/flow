@@ -415,15 +415,6 @@ struct
     respond genv env ~client ~msg;
     client.close ()
 
-  (* Note: this single-file entry point is only called by
-     ServerMain.load currently, which Flow doesn't support.
-     so we ignore include paths here for now. *)
-  let filter_update genv _env update =
-    let flowconfig_path =
-      FlowConfig.fullpath (ServerArgs.root genv.ServerEnv.options) in
-    let abs = Relative_path.to_absolute update in
-    Files_js.is_flow_file abs || abs = flowconfig_path
-
   let get_watch_paths options =
     let config = FlowConfig.get (ServerArgs.root options) in
     config.FlowConfig.include_stems

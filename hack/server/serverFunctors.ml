@@ -32,8 +32,6 @@ module type SERVER_PROGRAM = sig
   val preinit : unit -> unit
   val init : genv -> env -> env
   val run_once_and_exit : genv -> env -> unit
-  (* filter a single updated file path *)
-  val filter_update : genv -> env -> Relative_path.t -> bool
   (* filter and relativize updated file paths *)
   val process_updates : genv -> env -> SSet.t -> Relative_path.Set.t
   val recheck: genv -> env -> Relative_path.Set.t -> env
@@ -199,8 +197,6 @@ end = struct
         (fun acc update -> Relative_path.Set.add update acc)
         Relative_path.Set.empty
         paths_to_recheck in
-      let updates =
-        Relative_path.Set.filter (Program.filter_update genv env) updates in
       let env = Program.recheck genv env updates in
       Program.EventLogger.load_recheck_end ();
       env
