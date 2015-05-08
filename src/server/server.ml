@@ -438,6 +438,9 @@ struct
       else acc
     ) updates Relative_path.Set.empty
 
+  (* XXX: can some of the logic in process_updates be moved here? *)
+  let should_recheck _update = true
+
   (* on notification, execute client commands or recheck files *)
   let recheck genv env updates =
     let diff_js = updates in
@@ -465,4 +468,7 @@ struct
         prerr_endlinef "%d/%d: %s" i n f; i + 1) diff_js 1 in
 
       Types_js.recheck genv env diff_js options
+
+  let post_recheck_hook _genv _old_env _new_env _updates = ()
+
 end

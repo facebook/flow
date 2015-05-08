@@ -306,24 +306,20 @@ module Program : Server.SERVER_PROGRAM = struct
   let process_updates _genv _env updates =
     Relative_path.relativize_set Relative_path.Root updates
 
-  let filter_typecheck_update update =
+  let should_recheck update =
     Find.is_php_path (Relative_path.suffix update)
 
-  let recheck genv old_env updates =
-    let php_diff = Relative_path.Set.filter filter_typecheck_update updates in
-    if Relative_path.Set.is_empty php_diff
-    then
-      begin
-        BuildMain.incremental_update genv old_env old_env updates;
-        old_env
-      end
-    else
-      let failed_parsing = Relative_path.Set.union php_diff old_env.failed_parsing in
+  let recheck genv old_env typecheck_updates =
+    if Relative_path.Set.is_empty typecheck_updates then old_env else begin
+      let failed_parsing =
+        Relative_path.Set.union typecheck_updates old_env.failed_parsing in
       let check_env = { old_env with failed_parsing = failed_parsing } in
       let new_env = ServerTypeCheck.check genv check_env in
-      BuildMain.incremental_update genv old_env new_env updates;
       touch_stamp_errors old_env.errorl new_env.errorl;
       new_env
+    end
+
+  let post_recheck_hook = BuildMain.incremental_update
 
   let parse_options = ServerArgs.parse_options
 
