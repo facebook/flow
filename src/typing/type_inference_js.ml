@@ -5156,9 +5156,26 @@ let infer_ast ast file m force_check =
 
   cx
 
+(* return all comments preceding the first executable statement *)
+let get_comment_header (_, stmts, comments) =
+  match stmts with
+  | [] -> comments
+  | stmt :: _ ->
+    let stmtloc = fst stmt in
+    let rec loop acc comments =
+      match comments with
+      | c :: cs when fst c < stmtloc ->
+        loop (c :: acc) cs
+      | _ -> acc
+    in
+    List.rev (loop [] comments)
+
+(* Given a filename, retrieve the parsed AST, derive a module name,
+   and invoke the local (infer) pass. This will build and return a
+   fresh context object for the module. *)
 let infer_module file =
   let ast = Parsing_service_js.get_ast_unsafe file in
-  let (_, _, comments) = ast in
+  let comments = get_comment_header ast in
   let module_name = Module_js.exported_module file comments in
   infer_ast ast file module_name modes.all
 
