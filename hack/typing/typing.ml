@@ -3562,15 +3562,15 @@ and class_def_ env_up c tc =
   then begin
     List.iter (class_implements_type env c) impl;
     SMap.iter (fun _ ty -> class_implements_type env c ty) dimpl;
-    List.iter (class_var_def env false c) c.c_vars;
-    List.iter (method_def env) c.c_methods;
-    let const_types = List.map (class_const_def env) c.c_consts in
-    let env = Typing_enum.enum_class_check env tc c.c_consts const_types in
-    class_constr_def env c;
-    let env = Env.set_static env in
-    List.iter (class_var_def env true c) c.c_static_vars;
-    List.iter (method_def env) c.c_static_methods
   end;
+  List.iter (class_var_def env false c) c.c_vars;
+  List.iter (method_def env) c.c_methods;
+  let const_types = List.map (class_const_def env) c.c_consts in
+  let env = Typing_enum.enum_class_check env tc c.c_consts const_types in
+  class_constr_def env c;
+  let env = Env.set_static env in
+  List.iter (class_var_def env true c) c.c_static_vars;
+  List.iter (method_def env) c.c_static_methods;
   Typing_hooks.dispatch_exit_class_def_hook c tc
 
 and check_extend_abstract_meth p smap =
