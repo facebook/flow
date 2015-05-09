@@ -165,7 +165,7 @@ let make_param_type_ ~phase ~for_body ~default ~localize env param =
          localize env ty
       | Some x ->
         match (param.param_expr) with
-          | Some (null_pos, Null) when not (Env.is_decl env) ->
+          | Some (null_pos, Null) ->
             Errors.nullable_parameter (fst x);
             let env, ty = Typing_hint.hint env x in
             let env, ty = localize env ty in
