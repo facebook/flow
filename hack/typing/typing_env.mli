@@ -30,8 +30,6 @@ module Classes : module type of SharedMem.WithCache (String) (Class)
 module Typedefs : module type of SharedMem.WithCache (String) (Typedef)
 module GConsts : module type of SharedMem.WithCache (String) (GConst)
 
-type funs = Funs.t
-type classes = Classes.t
 type fake_members = {
   last_call : Pos.t option;
   invalid : SSet.t;
@@ -62,7 +60,6 @@ val get_type : env -> int -> env * locl ty
 val get_type_unsafe : env -> int -> env * locl ty
 val expand_type : env -> 'a ty -> env * 'a ty
 val expand_type_recorded : env -> ISet.t -> locl ty -> env * ISet.t * locl ty
-val has_type : env -> int -> bool
 val make_ft : Pos.t -> decl fun_params -> decl ty -> decl fun_type
 val get_shape_field_name : Nast.shape_field_name -> string
 val debugl : ISet.t -> env -> locl ty list -> unit
@@ -82,7 +79,6 @@ val add_wclass : env -> string -> unit
 val fresh_tenv : env -> (env -> unit) -> unit
 val get_class : env -> Classes.key -> Classes.t option
 val get_typedef : env -> Typedefs.key -> Typedefs.t option
-val class_exists : Classes.key -> bool
 val add_extends_dependency : env -> string -> unit
 val get_class_dep : env -> Classes.key -> Classes.t option
 val get_const : env -> class_type -> string -> class_elt option
@@ -90,7 +86,6 @@ val get_gconst : env -> GConsts.key -> GConsts.t option
 val get_static_member : bool -> env -> class_type -> string -> class_elt option
 val suggest_static_member :
   bool -> class_type -> string -> (Pos.t * string) option
-val method_exists : class_type -> string -> bool
 val get_member : bool -> env -> class_type -> string -> class_elt option
 val suggest_member : bool -> class_type -> string -> (Pos.t * string) option
 val get_construct : env -> class_type -> class_elt option * bool

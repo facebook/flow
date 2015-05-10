@@ -63,9 +63,6 @@ module Classes = SharedMem.WithCache (String) (Class)
 module Typedefs = SharedMem.WithCache (String) (Typedef)
 module GConsts = SharedMem.WithCache (String) (GConst)
 
-type funs    = Funs.t
-type classes = Classes.t
-
 type fake_members = {
   last_call : Pos.t option;
   invalid   : SSet.t;
@@ -169,10 +166,6 @@ let expand_type_recorded env set ty =
     env, set, ty
   end
   | x -> env, set, x
-
-let has_type env x =
-  let env, x = get_var env x in
-  IMap.mem x env.tenv
 
 let make_ft p params ret_ty =
   let arity = List.length params in
@@ -365,9 +358,6 @@ let get_typedef env x =
   add_wclass env x;
   Typedefs.get x
 
-let class_exists x =
-  Classes.mem x
-
 let add_extends_dependency env x =
   let dep = Dep.Class x in
   Typing_deps.add_idep env.genv.droot dep;
@@ -413,9 +403,6 @@ let suggest_static_member is_method class_ mid =
   let mid = String.lowercase mid in
   let members = if is_method then class_.tc_smethods else class_.tc_sprops in
   suggest_member members mid
-
-let method_exists class_ mid =
-  SMap.mem mid class_.tc_methods
 
 let get_member is_method env class_ mid =
   add_wclass env class_.tc_name;
