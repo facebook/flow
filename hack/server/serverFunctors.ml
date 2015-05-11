@@ -202,13 +202,13 @@ end = struct
           die()
       end;
       ServerHealth.check();
+      ServerPeriodical.call_before_sleeping();
+      let has_client = sleep_and_check socket in
       let start_t = Unix.time () in
       let loop_count, rechecked_count, new_env = recheck_loop genv !env in
       env := new_env;
       if rechecked_count > 0
       then Program.EventLogger.recheck_end start_t loop_count rechecked_count;
-      ServerPeriodical.call_before_sleeping();
-      let has_client = sleep_and_check socket in
       if has_client then handle_connection genv !env socket;
     done
 
