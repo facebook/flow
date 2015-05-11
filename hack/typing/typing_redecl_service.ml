@@ -129,44 +129,6 @@ let compute_gconsts_deps old_gconsts (to_redecl, to_recheck) gconsts =
   to_redecl, to_recheck
 
 (*****************************************************************************)
-(* Sometimes, we know that the API of class hasn't changed. The only thing
- * that changed are the positions (the user added a new line somewhere).
- * When that happens, it is too expensive to go off and redeclare everything
- * that inherits from this class.
- * Some classes have thousands of sub-classes, working on such of file, 
- * without this function, would be nightmarish. Every new line, would trigger
- * a huge re-declaration phase.
- * The solution is simple. If we know the API hasn't changed (only the
- * positions). We create a substitution (from Pos to Pos), replacing the
- * old_positions with the new one. We then apply this substitution to all the
- * classes that needed to be redeclared directly on the name nodes.
- *)
-(*****************************************************************************)
-
-(*
- * XXX UNUSED: Position substitution has been disabled for now, but we're
- * leaving the code in to minimize bitrot
- *)
-let update_positions classes _to_update =
-  (* First compute the substitution *)
-  let _position_subst, is_empty =
-    let old_classes = Typing_env.Classes.get_old_batch classes in
-    let new_classes = Typing_env.Classes.get_batch classes in
-    Typing_compare.get_classes_psubst old_classes new_classes classes
-  in
-  if is_empty 
-  then ()
-  else begin
-    (* Now apply the substitution in parallel on all the data nodes *)
-    (*
-    Typing_env.Classes.apply_batch to_update begin fun class_ ->
-      Typing_compare.SubstPos.class_type position_subst class_
-    end;
-    *)
-  end;
-  ()
-
-(*****************************************************************************)
 (* Redeclares a list of files 
  * And then computes the files that must be redeclared/rechecked by looking
  * at what changed in the signatures of the classes/functions.
@@ -185,7 +147,7 @@ let otf_decl_files nenv all_classes filel =
   let errors, failed = redeclare_files nenv all_classes filel in
   errors, failed
 
-let compute_deps ~update_pos fast filel =
+let compute_deps fast filel =
   let infol = List.map (fun fn -> Relative_path.Map.find_unsafe fn fast) filel in
   let names = List.fold_left FileInfo.merge_names FileInfo.empty_names infol in
   let { FileInfo.n_classes; n_funs; n_types; n_consts } = names in
@@ -204,11 +166,7 @@ let compute_deps ~update_pos fast filel =
   let new_classes = Typing_env.Classes.get_batch n_classes in
   let compare_classes = compute_classes_deps old_classes new_classes in
   let (to_redecl, to_recheck) = compare_classes acc n_classes in
-  if update_pos then ();
-(* TODO: DEACTIVATING THE CODE FOR NOW BECAUSE OF A BUG
-  then update_positions classes (SSet.diff to_redecl to_recheck);
-  let to_redecl = SSet.inter to_redecl to_recheck in
-*)
+
   to_redecl, to_recheck
 
 (*****************************************************************************)
@@ -224,10 +182,10 @@ let load_and_otf_decl_files _ filel =
     flush stdout;
     raise e
 
-let load_and_compute_deps ~update_pos _acc filel =
+let load_and_compute_deps _acc filel =
   try
     let _, _, fast = OnTheFlyStore.load() in
-    compute_deps ~update_pos fast filel
+    compute_deps fast filel
   with e ->
     Printf.printf "Error: %s\n" (Printexc.to_string e);
     flush stdout;
@@ -247,7 +205,7 @@ let merge_compute_deps (to_redecl1, to_recheck1) (to_redecl2, to_recheck2) =
 (* The parallel worker *)
 (*****************************************************************************)
 
-let parallel_otf_decl ~update_pos workers nenv all_classes fast fnl =
+let parallel_otf_decl workers nenv all_classes fast fnl =
   OnTheFlyStore.store (nenv, all_classes, fast);
   let errors, failed =
     MultiWorker.call
@@ -260,7 +218,7 @@ let parallel_otf_decl ~update_pos workers nenv all_classes fast fnl =
   let to_redecl, to_recheck =
     MultiWorker.call
       workers
-      ~job:(load_and_compute_deps ~update_pos)
+      ~job:load_and_compute_deps
       ~neutral:compute_deps_neutral
       ~merge:merge_compute_deps
       ~next:(Bucket.make fnl)
@@ -302,7 +260,7 @@ let get_defs fast =
 (* The main entry point *)
 (*****************************************************************************)
 
-let redo_type_decl ~update_pos workers nenv fast =
+let redo_type_decl workers nenv fast =
   let fnl = Relative_path.Map.keys fast in
   let all_classes = Typing_decl_service.get_classes fast in
   let defs = get_defs fast in
@@ -312,9 +270,9 @@ let redo_type_decl ~update_pos workers nenv fast =
     if List.length fnl < 10
     then
       let errors, failed = otf_decl_files nenv all_classes fnl in
-      let to_redecl, to_recheck = compute_deps ~update_pos fast fnl in
+      let to_redecl, to_recheck = compute_deps fast fnl in
       errors, failed, to_redecl, to_recheck
-    else parallel_otf_decl ~update_pos workers nenv all_classes fast fnl
+    else parallel_otf_decl workers nenv all_classes fast fnl
   in
   remove_old_defs defs;
   result
