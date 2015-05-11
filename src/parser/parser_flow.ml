@@ -2937,6 +2937,7 @@ end = struct
         | T_CASE
         | T_CATCH
         | T_CONTINUE
+        | T_DECLARE
         | T_DEFAULT
         | T_DO
         | T_FINALLY
