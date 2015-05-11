@@ -2842,6 +2842,9 @@ and expr_call_list_remain env =
       let unpack_e = expr { env with priority = 0 } in
       (* no regular params after an unpack *)
       (match L.token env.file env.lb with
+        | Tcomma ->
+            expect env Trp;
+            [], [unpack_e]
         | Trp -> [], [unpack_e]
         | _ -> error_expect env ")"; [], [unpack_e])
     | _ ->
