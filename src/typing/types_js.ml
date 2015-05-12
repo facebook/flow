@@ -79,11 +79,32 @@ module ContextHeap = SharedMem.WithCache (String) (struct
   let prefix = Prefix.make()
 end)
 
+(* errors are stored by phase,
+   in maps from file path to error set
+ *)
+(* errors encountered during parsing.
+   Note: both @flow and non-@flow files are parsed,
+   and their errors are retained. However, only
+   files referenced as modules from @flow files
+   have their parse errors reported. collate_errors
+   does the filtering *)
+let parse_errors = ref SMap.empty
+(* errors encountered during local inference *)
 let infer_errors = ref SMap.empty
+(* errors encountered during module commit *)
 let module_errors = ref SMap.empty
+(* errors encountered during merge *)
 let merge_errors = ref SMap.empty
+(* aggregate error map, built after check or recheck
+   by collate_errors
+ *)
 let all_errors = ref SMap.empty
 
+(* retrieve a full error list.
+   Note: in-place conversion using an array is to avoid
+   memory pressure on pathologically huge error sets, but
+   this may no longer be necessary
+ *)
 let get_errors () =
   let revlist = SMap.fold (
     fun file errset ret ->
@@ -94,7 +115,6 @@ let get_errors () =
   in
   List.rev revlist
 
-
 (****************** typecheck job helpers *********************)
 
 (* error state handling.
@@ -103,9 +123,10 @@ let get_errors () =
 let clear_errors files =
   List.iter (fun file ->
     debug_string (fun () -> spf "clear errors %s" file);
-    module_errors := SMap.remove file !module_errors;
+    parse_errors := SMap.remove file !parse_errors;
     infer_errors := SMap.remove file !infer_errors;
-    merge_errors := SMap.remove file !merge_errors
+    merge_errors := SMap.remove file !merge_errors;
+    module_errors := SMap.remove file !module_errors;
   ) files
 
 let save_errors mapref files errsets =
@@ -135,10 +156,22 @@ let distrib_errs file eset emap = Errors_js.(
   ) eset emap
 )
 
+(* we report parse errors if a file is either checked,
+   or unchecked but used as a module by a checked file *)
+let filter_unchecked_unused errmap =
+  let is_imported m = match Module.get_reverse_imports m with
+  | Some set -> SSet.cardinal set > 0 | None -> false in
+  SMap.filter Module.(fun file _ ->
+    let info = get_module_info file in
+    info.checked || is_imported info._module
+  ) errmap
+
 (* relocate errors to their reported positions,
    combine in single error map *)
 let collate_errors workers files =
-  let all = SMap.fold distrib_errs !merge_errors !infer_errors in
+  let all = filter_unchecked_unused !parse_errors in
+  let all = SMap.fold distrib_errs !infer_errors all in
+  let all = SMap.fold distrib_errs !merge_errors all in
   let all = SMap.fold distrib_errs !module_errors all in
   all_errors := all
 
@@ -319,7 +352,7 @@ let merge_strict_file file =
   merge_strict_context cx master_cx
 
 let typecheck_contents contents filename =
-  match Parsing_service_js.do_parse ~keep_errors:true contents filename with
+  match Parsing_service_js.do_parse contents filename with
   | Some ast, None ->
       let cx = TI.infer_ast ast filename "-" true in
       let master_cx = ContextHeap.find_unsafe (Files_js.get_flowlib_root ()) in
@@ -419,11 +452,13 @@ let commit_modules inferred removed =
 (* helper *)
 (* make_merge_input takes list of files produced by infer, and
    returns list of files to merge (typically an expansion) *)
-let typecheck workers files removed opts make_merge_input =
+let typecheck workers files removed unparsed opts make_merge_input =
   (* TODO remove after lookup overhaul *)
   Module.clear_filename_cache ();
   (* local inference populates context heap, module info heap *)
   let inferred = infer workers files opts in
+  (* add tracking modules for unparsed files *)
+  List.iter Module.add_unparsed_info unparsed;
   (* create module dependency graph, warn on dupes etc. *)
   commit_modules inferred removed;
   (* SHUTTLE *)
@@ -526,7 +561,6 @@ let recheck genv env modified opts =
   if not opts.opt_strict
   then failwith "Missing -- strict";
 
-
   (* filter modified files *)
   let root = ServerArgs.root genv.ServerEnv.options in
   let config = FlowConfig.get root in
@@ -547,7 +581,7 @@ let recheck genv env modified opts =
     Parsing_service_js.reparse genv.ServerEnv.workers modified
       (fun () -> init_modes opts)
   in
-  save_errors infer_errors freshparse_fail freshparse_errors;
+  save_errors parse_errors freshparse_fail freshparse_errors;
 
   (* get old (unmodified, undeleted) files that were parsed successfully *)
   let old_parsed = Relative_path.Map.fold (fun k _ a ->
@@ -575,7 +609,12 @@ let recheck genv env modified opts =
 
   (* recheck *)
   let freshparsed_list = SSet.elements freshparsed in
-  typecheck genv.ServerEnv.workers freshparsed_list removed_modules opts
+  typecheck
+    genv.ServerEnv.workers
+    freshparsed_list
+    removed_modules
+    freshparse_fail
+    opts
     (fun inferred ->
       (* need to merge the closure of inferred files and their deps *)
       let inferred_set = set_of_list inferred in
@@ -607,15 +646,14 @@ let full_check workers parse_next opts =
   };
   init_modes opts;
 
-  let parse_results =
+  let parsed, error_files, errors =
     Parsing_service_js.parse workers parse_next
       (fun () -> init_modes opts)
   in
-  let parsed, parse_fails, parse_errors = parse_results in
-  save_errors infer_errors parse_fails parse_errors;
+  save_errors parse_errors error_files errors;
 
   let files = SSet.elements parsed in
-  let checked = typecheck workers files SSet.empty opts (fun x ->
+  let checked = typecheck workers files SSet.empty error_files opts (fun x ->
     Init_js.init (fun file errs ->
       save_errors infer_errors [file] [errs]);
     x

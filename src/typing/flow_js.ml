@@ -2685,6 +2685,8 @@ let rec __flow cx (l,u) trace =
             possible deluge of shadow properties on Object.prototype, since it
             is shared by every object. **)
         rec_flow cx trace (get_builtin_type cx reason "Object", u)
+      (* TODO: make sure the logic that follows doesn't get tripped up
+         by include paths *)
       else if Files_js.is_lib_file_or_flowlib_root (abs_path_of_reason reason)
       then
         let msg =

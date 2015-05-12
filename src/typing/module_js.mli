@@ -17,6 +17,7 @@ type info = {
   require_loc: Spider_monkey_ast.Loc.t SMap.t;  (* statement locations *)
   strict_required: SSet.t;  (* strict requires (flow to export types) *)
   checked: bool;            (* in flow? *)
+  parsed: bool;             (* if false, it's a tracking record only *)
 }
 
 type mode = ModuleMode_Checked | ModuleMode_Weak | ModuleMode_Unchecked
@@ -57,6 +58,9 @@ val commit_modules:
 
 (* add file represented by context to module info store *)
 val add_module_info: Constraint_js.context -> unit
+
+(* add info for unparsed file to module info store *)
+val add_unparsed_info: string -> unit
 
 (* remove module info being tracked for given file set;
    returns the set of modules removed

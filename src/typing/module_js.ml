@@ -33,6 +33,7 @@ type info = {
   require_loc: Spider_monkey_ast.Loc.t SMap.t;  (* statement locations *)
   strict_required: SSet.t;  (* strict requires (flow to export types) *)
   checked: bool;            (* in flow? *)
+  parsed: bool;             (* if false, it's a tracking record only *)
 }
 
 type mode = ModuleMode_Checked | ModuleMode_Weak | ModuleMode_Unchecked
@@ -55,22 +56,22 @@ end)
 
 (****************** header parse utils *********************)
 
+let words_rx = Str.regexp "[ \t\n\\*/]+"
+
 (* scan the first node in an AST comment list, using the given
    word-list parser and default result. default is returned if
    parser returns nothing, or comment list is empty.
    Note: 'header' is a bit of a misnomer. we simply call this
    on the comment list returned from the parser, which makes no
    guarantees that the first comment appears before anything else *)
-let parse_header wordlist_parser default =
-  let words = Str.regexp "[ \t\n\\*/]+"
-  in Ast.Comment.(function
-    | [] -> default
-    | (loc, Block s) :: _
-    | (loc, Line s) :: _ ->
-        match wordlist_parser (Str.split words s) with
-        | Some x -> x
-        | None -> default
-  )
+let parse_header wordlist_parser default = Ast.Comment.(function
+| [] -> default
+| (loc, Block s) :: _
+| (loc, Line s) :: _ ->
+  match wordlist_parser (Str.split words_rx s) with
+  | Some x -> x
+  | None -> default
+)
 
 (****************** @flow parser *********************)
 
@@ -106,7 +107,7 @@ let get_key key tokens = Spider_monkey_ast.(
 (* basic parse of JSON as a JS expression; throws on parse failure *)
 let parse_json json file =
   let js = spf "(%s)" json in
-  let ast, errors = Parsing_service_js.do_parse ~keep_errors:true js file in
+  let ast, errors = Parsing_service_js.do_parse js file in
   Spider_monkey_ast.(match ast with
     | Some (_, [_, Statement.Expression ({
         Statement.Expression.expression = _, Expression.Object {
@@ -139,6 +140,9 @@ let add_package package =
 module type MODULE_SYSTEM = sig
   (* Given a file and comments in it, make the name of the module it exports. *)
   val exported_module: string -> Spider_monkey_ast.Comment.t list -> string
+
+  (* Given just a file name, guess the name of the module it exports. *)
+  val guess_exported_module: string -> string -> string
 
   (* Given a file and a reference in it to an imported module, make the name of
      the module it refers to. *)
@@ -226,6 +230,7 @@ let file_exists path =
 
 module Node = struct
   let exported_module file comments = file
+  let guess_exported_module file _content = file
 
   let path_if_exists path =
     if file_exists path then Some path
@@ -344,8 +349,25 @@ module Haste: MODULE_SYSTEM = struct
   let exported_module file comments =
     if is_mock file
     then short_module_name_of file
-    else
-      parse_module_name file comments
+    else parse_module_name file comments
+
+  (* grep for "@providesModule foo" when we don't have an AST *)
+  (* TODO instead of this, try retaining ASTs in ParseHeap after errors
+     and parsing them in the usual way *)
+  let grep_provides =
+    let provides_rx = Str.regexp
+      "\\(.\\|\n\\)*@providesModule[ \t]+\\([_a-zA-Z][^ \t\n]*\\)" in
+    let module_name_group = 2 in
+    fun file content ->
+      let content = cat file in
+      if Str.string_match provides_rx content 0
+      then Str.matched_group module_name_group content
+      else file
+
+  let guess_exported_module file content =
+    if is_mock file
+    then short_module_name_of file
+    else grep_provides file content
 
   let expanded_name r =
     match Str.split_delim Files_js.dir_sep r with
@@ -421,6 +443,10 @@ let init specifier =
 let exported_module file comments =
   let module M = (val !module_system) in
   M.exported_module file comments
+
+let guess_exported_module file comments =
+  let module M = (val !module_system) in
+  M.guess_exported_module file comments
 
 let imported_module file r =
   let module M = (val !module_system) in
@@ -529,7 +555,8 @@ let info_of cx = {
   required = cx.Constraint.required;
   require_loc = cx.Constraint.require_loc;
   strict_required = cx.Constraint.strict_required;
-  checked = cx.Constraint.checked
+  checked = cx.Constraint.checked;
+  parsed = true;
 }
 
 (* during inference, we add per-file module info to the shared heap
@@ -538,6 +565,24 @@ let info_of cx = {
 let add_module_info cx =
   let info = info_of cx in
   InfoHeap.add info.file info
+
+(* We need to track files that have failed to parse. This begins with
+   adding tracking records for unparsed files to InfoHeap. They never
+   become providers - the process of committing modules happens after
+   parsed files are finished with local inference. But since we guess
+   the module names of unparsed files, we're able to tell whether an
+   unparsed file has been required/imported.
+ *)
+let add_unparsed_info file =
+  let content = cat file in
+  let _module = guess_exported_module file content in
+  let checked = Parsing_service_js.in_flow content file in
+  let info = { file; _module; checked; parsed = false;
+    required = SSet.empty;
+    require_loc = SMap.empty;
+    strict_required = SSet.empty;
+  } in
+  InfoHeap.add file info
 
 (* Note that the module provided by a file is always accessible via its full
    path, so that it may be imported by specifying (a part of) that path in any
@@ -674,14 +719,14 @@ let remove_files files =
   let names = SSet.fold (fun file names ->
       match InfoHeap.get file with
       | Some info ->
-          let { _module = name; required = requires; _ } = info in
-          remove_provider file name;
-          (match NameHeap.get name with
+          let { _module; required; parsed; _ } = info in
+          (if parsed then remove_provider file _module);
+          (match NameHeap.get _module with
           | Some f when f = file -> (
               (* untrack all imports from this file. we only do this for
                  module providers to avoid inconsistencies when there are
                  multiple providers. *)
-              reverse_imports_untrack name requires;
+              reverse_imports_untrack _module required;
               (* when we delete a module and it was never referenced we need
                  to delete it from the reverse import heap. Otherwise, it can
                  still be looked up by using get-imported-by and that is
@@ -689,13 +734,13 @@ let remove_files files =
                  module provider. This makes sure that exsiting modules won't
                  get erased when a duplicate is removed.
               *)
-              match reverse_imports_get name with
+              match reverse_imports_get _module with
               | Some reverse_imports ->
                   if SSet.is_empty reverse_imports
-                  then reverse_imports_clear name
+                  then reverse_imports_clear _module
               | None -> ()
               );
-              names |> SSet.add name |> SSet.add file
+              names |> SSet.add _module |> SSet.add file
           | _ ->
               names
         )
