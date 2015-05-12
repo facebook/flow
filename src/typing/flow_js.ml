@@ -110,7 +110,7 @@ end)
 (* for now, we do speculative matching by setting this global.
    it's set to true when trying the arms of intersection or
    union types.
-   when it's true, the error-logging function throws instead 
+   when it's true, the error-logging function throws instead
    of logging, and the speculative harness catches.
    TODO
  *)
@@ -141,7 +141,7 @@ let silent_warnings = false
 exception FlowError of (reason * string) list
 
 let add_output cx level message_list =
-  if !throw_on_error 
+  if !throw_on_error
   then (
     raise (FlowError message_list)
   ) else (
@@ -283,12 +283,18 @@ let prmsg_flow cx level trace msg (r1, r2) =
     |> List.map (fun r -> r, desc_of_reason r)
   in
   let info = match Ops.peek () with
-  | Some r when r != r1 && r != r2 -> 
+  | Some r when r != r1 && r != r2 ->
+    (* NOTE: We include the operation's reason in the error message only if it
+       is distinct from the reasons of the endpoints. *)
     let desc = (desc_of_reason r) ^ "\nError:" in
     [r, desc]
   | _ ->
     if lib_reason r1 && lib_reason r2
     then
+      (* Since pointing to endpoints in the library without any information on
+         the code that uses those endpoints inconsistently is useless, we point
+         to the file containing that code instead. Ideally, improvements in
+         error reporting would cause this case to never arise. *)
       let r = new_reason "" (Pos.make_from
         (Relative_path.create Relative_path.Dummy cx.file)) in
       [r, "inconsistent use of library definitions"]
@@ -1253,7 +1259,7 @@ let rec __flow cx (l,u) trace =
         (dump_reason (reason_of_t l))
         (dump_reason (reason_of_t u)));
 
-    if ground_subtype (l,u) then () 
+    if ground_subtype (l,u) then ()
     else (match (l,u) with
 
     (* if X -> Y exists then that flow has already been processed *)
@@ -1893,18 +1899,16 @@ let rec __flow cx (l,u) trace =
     (* class types derive instance types (with constructors) *)
     (*********************************************************)
 
-    | ClassT (InstanceT (reason_c, static, super, instance)),
-      ConstructorT (reason_op, tins2, t) ->
+    | ClassT (this),
+      ConstructorT (reason_op, args, t) ->
       Ops.push reason_op;
-      let methods = find_props cx instance.methods_tmap in
-      (match SMap.get "constructor" methods with
-      | Some (FunT (reason,_,_,{params_tlist = tins1; _})) ->
-        (* TODO: closure *)
-        multiflow cx trace (u, l) (tins2,tins1) |> ignore
-      | _ -> () (* TODO *)
+      (* call this.constructor(args) *)
+      rec_flow cx trace (
+        this,
+        MethodT (reason_op, "constructor", this, args, VoidT.t, 0)
       );
-      let it = InstanceT(reason_c,static,super,instance) in
-      rec_flow cx trace (it, t);
+      (* return this *)
+      rec_flow cx trace (this, t);
       Ops.pop ();
 
     (****************************************************************)

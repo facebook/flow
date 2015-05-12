@@ -1,0 +1,6 @@
+
+test.js:10:10,16: constructor call
+Too few arguments (expected default/rest parameters in function)
+test.js:7:3,25: method constructor
+
+Found 1 error

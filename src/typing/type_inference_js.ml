@@ -4337,13 +4337,14 @@ and body_loc = Ast.Statement.FunctionDeclaration.(function
 )
 
 (* Makes signatures for fields and methods in a class. *)
-and mk_signature cx c_type_params_map body = Ast.Statement.Class.(
+and mk_signature cx reason_c c_type_params_map body = Ast.Statement.Class.(
   let _, { Body.body = elements } = body in
 
   (* In case there is no constructor, we create one. *)
   let default_methods =
     SMap.singleton "constructor"
-      ([], SMap.empty, ([], [], VoidT.t, SMap.empty, SMap.empty))
+      (replace_reason "default constructor" reason_c, [], SMap.empty,
+       ([], [], VoidT.t, SMap.empty, SMap.empty))
   in
   (* NOTE: We used to mine field declarations from field assignments in a
      constructor as a convenience, but it was not worth it: often, all that did
@@ -4380,8 +4381,8 @@ and mk_signature cx c_type_params_map body = Ast.Statement.Class.(
         )
         else params_ret
       in
-
-      let method_sig = typeparams, f_type_params_map, params_ret in
+      let reason_m = mk_reason (spf "method %s" name) loc in
+      let method_sig = reason_m, typeparams, f_type_params_map, params_ret in
       if static
       then
         sfields,
@@ -4437,11 +4438,10 @@ and mk_class_elements cx instance_info static_info body = Ast.Statement.Class.(
         if static then static_info else instance_info
       in
 
-      let (typeparams, type_params_map,
-           (_, _, ret, param_types_map, param_loc_map)) =
+      let reason, typeparams, type_params_map,
+           (_, _, ret, param_types_map, param_loc_map) =
         SMap.find_unsafe name method_sigs in
 
-      let reason = mk_reason (spf "method %s" name) loc in
       let save_return_exn = Abnormal.swap Abnormal.Return false in
       let save_throw_exn = Abnormal.swap Abnormal.Throw false in
       generate_tests cx reason typeparams (fun map_ ->
@@ -4458,55 +4458,14 @@ and mk_class_elements cx instance_info static_info body = Ast.Statement.Class.(
   ) elements
 )
 
-(*
-and mk_static_fields_methods cx super_static static body = Ast.Statement.Class.(
-  let _, { Body.body = elements } = body in
-
-  let map = List.fold_left (fun map -> function
-
-    | Body.Method (loc, {
-        Method.key = Ast.Expression.Object.Property.Identifier (_,
-          { Ast.Identifier.name; _ });
-        value = _, { Ast.Expression.Function.params; defaults; rest;
-          returnType; typeParameters; body; _ };
-        kind = Ast.Expression.Object.Property.Init;
-        static = true
-      }) ->
-      let reason = mk_reason (spf "function %s" name) loc in
-      let this = Flow_js.mk_tvar cx (replace_reason "this" reason) in
-      let meth = mk_function None cx reason
-        typeParameters (params, defaults, rest) returnType body this
-      in
-      SMap.add name meth map
-
-    | Body.Property (loc, {
-        Property.key = Ast.Expression.Object.Property.Identifier
-          (_, { Ast.Identifier.name; _ });
-        typeAnnotation = (_, typeAnnotation);
-        static = true;
-      }) ->
-        let t = convert cx SMap.empty typeAnnotation in
-        SMap.add name t map
-
-    | _ -> map
-  ) SMap.empty elements in
-
-  Flow_js.flow cx (
-    Flow_js.mk_object_with_map_proto cx (reason_of_t static) map super_static,
-    static
-  )
-)
-*)
-
-(* TODO: why reason_c? *)
-and mk_methodtype reason_c (typeparams,_,(params,pnames,ret,_,_)) =
-  let ft = FunT (reason_c, Flow_js.dummy_static, Flow_js.dummy_prototype,
-                 Flow_js.mk_functiontype2 params pnames ret 0) in
+and mk_methodtype (reason_m, typeparams,_,(params,pnames,ret,_,_)) =
+  let ft = FunT (
+    reason_m, Flow_js.dummy_static, Flow_js.dummy_prototype,
+    Flow_js.mk_functiontype2 params pnames ret 0
+  ) in
   if (typeparams = [])
-  then
-    ft
-  else
-    PolyT (typeparams, ft)
+  then ft
+  else PolyT (typeparams, ft)
 
 (* Process a class definition, returning a (polymorphic) class type. A class
    type is a wrapper around an instance type, which contains types of instance
@@ -4525,7 +4484,7 @@ and mk_class cx reason_c type_params extends body =
 
   (* fields: { f: X }, methods_: { m<Y: X>(x: Y): X } *)
   let sfields, smethods_, fields, methods_ =
-    mk_signature cx type_params_map body
+    mk_signature cx reason_c type_params_map body
   in
 
   let id = Flow_js.mk_nominal cx in
@@ -4550,7 +4509,7 @@ and mk_class cx reason_c type_params extends body =
 
     (* methods: { m<Y: X>(x: Y): T } *)
     let subst_method_sig cx map_
-        (typeparams,type_params_map,
+        (reason_m, typeparams,type_params_map,
          (params,pnames,ret,param_types_map,param_loc_map)) =
 
       (* typeparams = <Y: X> *)
@@ -4565,14 +4524,14 @@ and mk_class cx reason_c type_params extends body =
       let param_types_map =
         SMap.map (Flow_js.subst cx map_) param_types_map in
 
-      (typeparams,type_params_map,
+      (reason_m, typeparams,type_params_map,
        (params, Some pnames, ret, param_types_map, param_loc_map))
     in
 
     let methods_ = methods_ |> SMap.map (subst_method_sig cx map_) in
-    let methods = methods_ |> SMap.map (mk_methodtype reason_c) in
+    let methods = methods_ |> SMap.map mk_methodtype in
     let smethods_ = smethods_ |> SMap.map (subst_method_sig cx map_) in
-    let smethods = smethods_ |> SMap.map (mk_methodtype reason_c) in
+    let smethods = smethods_ |> SMap.map mk_methodtype in
 
     let static_instance = {
       class_id = 0;
@@ -4606,15 +4565,15 @@ and mk_class cx reason_c type_params extends body =
   );
 
   let enforce_void_return
-      (typeparams, type_params_map,
+      (reason_m, typeparams, type_params_map,
        (params,pnames,ret,params_map,params_loc)) =
     let ret =
       if (is_void cx ret)
       then (VoidT.at (loc_of_t ret))
       else ret
     in
-    mk_methodtype reason_c
-      (typeparams, type_params_map,
+    mk_methodtype
+      (reason_m, typeparams, type_params_map,
        (params,Some pnames,ret,params_map,params_loc))
   in
 
