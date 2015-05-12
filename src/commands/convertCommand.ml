@@ -26,9 +26,9 @@ let convert_file outpath file =
   if errors = []
   then (
     Printf.printf "...no errors!\n%!";
-    let oc = open_out outfile in
+    (*let oc = open_out outfile in
     Printer_dts.program (Format.formatter_of_out_channel oc) ast;
-    close_out oc;
+    close_out oc;*)
     0
   ) else (
     let n = List.length errors in
