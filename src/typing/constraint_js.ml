@@ -1848,11 +1848,10 @@ let level_spaces level = 2 * level
 
 let spaces n = String.make n ' '
 
-let fill =
-  let spacer = ". " in
-  let spacer_len = String.length spacer in
-  let spacer_char i = spacer.[i mod spacer_len] in
-  (fun n -> String.init n spacer_char)
+let rec fill n =
+  if n = 1 then "."
+  else if n > 1 then ". "^(fill (n-2))
+  else ""
 
 let pos_len r =
   let pos = pos_of_reason r in
