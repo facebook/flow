@@ -266,24 +266,21 @@ let check_requires cx =
    not only OK, but we rely on it during merging, so it is both safe and
    necessary to cache the local copies. As a side effect, this probably helps
    performance too by avoiding redundant copying. *)
-module ContextCache = struct
-  let cached_infer_contexts = Hashtbl.create 0
+class context_cache = object
+  val cached_infer_contexts = Hashtbl.create 0
 
   (* find a context in the cache *)
-  let find file =
+  method find file =
     try Some (Hashtbl.find cached_infer_contexts file)
     with _ -> None
 
   (* read a context from shared memory, copy its graph, and cache the context *)
-  let read file =
+  method read file =
     let cx = ContextHeap.find_unsafe file in
     let cx = { cx with graph = IMap.map copy_bounds cx.graph } in
     Hashtbl.add cached_infer_contexts file cx;
     cx
 
-  (* clear the cache; do this once before every merge *)
-  let clear () =
-    Hashtbl.clear cached_infer_contexts
 end
 
 let add_decl (r, cx) declarations =
@@ -300,22 +297,24 @@ let merge_decls =
 
 (* Merging requires for a context returns a dependency graph: (a) the set of
    contexts of transitive strict requires for that context, (b) the set of edges
-   between these and from these to the context. Context lookups are cached. An
+   between these and from these to the context. Contexts are cached. Note also
+   that contexts are updated by side effect, so transitive merging is only
+   performed when a context is first read and placed in the cache. An
    interesting property of this procedure is that it gracefully handles cycles;
    by delaying the actual substitutions, it can detect cycles via caching. *)
-let rec merge_requires cx rs =
+let rec merge_requires cache cx rs =
   SSet.fold (fun r (cxs, implementations, declarations) ->
     if Module.module_exists r && checked r then
       let file = Module.get_file r in
-      match ContextCache.find file with
+      match cache#find file with
       | Some cx_ ->
           cxs,
           (cx_, cx)::implementations,
           declarations
       | None ->
-          let cx_ = ContextCache.read file in
+          let cx_ = cache#read file in
           let (cxs_, implementations_, declarations_) =
-            merge_requires cx_ cx_.strict_required in
+            merge_requires cache cx_ cx_.strict_required in
           List.rev_append cxs_ (cx_::cxs),
           List.rev_append implementations_ ((cx_,cx)::implementations),
           merge_decls declarations_ declarations
@@ -328,12 +327,12 @@ let rec merge_requires cx rs =
 (* To merge results for a context, check for the existence of its requires,
    compute the dependency graph (via merge_requires), and then compute
    substitutions (via merge_module_strict). A merged context is returned. *)
-let merge_strict_context cx master_cx =
+let merge_strict_context cache cx master_cx =
   if cx.checked then (
     check_requires cx;
 
-    let cxs, implementations, declarations = merge_requires cx cx.required in
-    TI.merge_module_strict cx cxs implementations declarations master_cx
+    let cxs, impls, decls = merge_requires cache cx cx.required in
+    TI.merge_module_strict cx cxs impls decls master_cx
   ) else (
     (* do nothing on unchecked files *)
   );
@@ -343,20 +342,20 @@ let merge_strict_context cx master_cx =
 (* entry point for merging a file *)
 (**********************************)
 let merge_strict_file file =
-  (* First, clear the local context cache. *)
-  ContextCache.clear();
-  (* Subsequently, always use ContextCache to read contexts, instead of directly
+  let cache = new context_cache in
+  (* always use cache to read contexts, instead of directly
      using ContextHeap; otherwise bad things will happen. *)
-  let cx = ContextCache.read file in
-  let master_cx = ContextCache.read (Files_js.get_flowlib_root ()) in
-  merge_strict_context cx master_cx
+  let cx = cache#read file in
+  let master_cx = cache#read (Files_js.get_flowlib_root ()) in
+  merge_strict_context cache cx master_cx
 
 let typecheck_contents contents filename =
   match Parsing_service_js.do_parse contents filename with
   | Some ast, None ->
       let cx = TI.infer_ast ast filename "-" true in
-      let master_cx = ContextHeap.find_unsafe (Files_js.get_flowlib_root ()) in
-      Some (merge_strict_context cx master_cx), cx.errors
+      let cache = new context_cache in
+      let master_cx = cache#read (Files_js.get_flowlib_root ()) in
+      Some (merge_strict_context cache cx master_cx), cx.errors
   | _, Some errors ->
       None, errors
   | _ ->
