@@ -15,6 +15,14 @@ open Sys_utils
 let dts_ext = ".d.ts"
 let dts_ext_find_pattern = "*.d.ts"
 
+
+let try_run try_function function_input =
+  try
+    try_function function_input;
+    true
+  with _ ->
+    false;;
+
 let convert_file outpath file =
   let base = Filename.chop_suffix (Filename.basename file) dts_ext in
   let outpath = match outpath with
@@ -25,10 +33,13 @@ let convert_file outpath file =
   let ast, errors = Parser_dts.program_file ~fail:false content file in
   if errors = []
   then (
-    Printf.printf "...no errors!\n%!";
-    (*let oc = open_out outfile in
-    Printer_dts.program (Format.formatter_of_out_channel oc) ast;
-    close_out oc;*)
+    let oc = open_out outfile in
+    if try_run (Printer_dts.program (Format.formatter_of_out_channel oc)) ast
+    then
+      Printf.printf "No errors!\n\n"
+    else
+      Printf.printf "Conversion was not successful!\n\n";
+    close_out oc;
     0
   ) else (
     let n = List.length errors in
