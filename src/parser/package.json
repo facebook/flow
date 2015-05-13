@@ -15,7 +15,7 @@
     "private": true
   },
   "devDependencies": {
-    "esprima-fb": "14001.1.0-dev-harmony-fb"
+    "esprima-fb": "15001.1.0-dev-harmony-fb"
   },
   "dependencies": {
     "ast-types": "0.7.6",
