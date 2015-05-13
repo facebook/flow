@@ -91,9 +91,11 @@ module ArgSpec = struct
 
   let required arg_type = {
     parse = (function
-    | None -> raise Not_found
+    | None -> raise (Failed_to_parse "missing required arguments")
     | value -> match arg_type.parse value with
-      | None -> raise Not_found
+      | None -> raise (Failed_to_parse (Utils.spf
+          "wrong type for required argument%s"
+          (match value with Some [x] -> ": " ^ x | _ -> "")))
       | Some result -> result
     );
     arg = arg_type.arg;
@@ -113,7 +115,8 @@ module ArgSpec = struct
         Some (List.map (fun x ->
           match arg_type.parse (Some [x]) with
           | Some result -> result
-          | None -> raise Not_found
+          | None -> raise (Failed_to_parse (Utils.spf
+              "wrong type for argument list item: %s" x))
         ) values)
     );
     arg = Arg_List;
