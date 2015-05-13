@@ -187,18 +187,28 @@ let connect_with_autostart command_values =
     !(command_values.retries)
     !(command_values.retry_if_init)
 
-(* Given a file or directory, find a valid flow root directory *)
+(* Given a valid file or directory, find a valid flow root directory *)
+(* NOTE: exists on invalid file or .flowconfig not found! *)
 let guess_root dir_or_file =
   let dir_or_file = match dir_or_file with
   | Some dir_or_file -> dir_or_file
   | None -> "." in
-  let dir = if Sys.is_directory dir_or_file
-    then dir_or_file
-    else Filename.dirname dir_or_file in
-  match ClientArgs.guess_root ".flowconfig" (Path.mk_path dir) 50 with
-  | Some root -> root
-  | None -> Printf.fprintf stderr "Could not find a .flowconfig in %s or any \
-      of its parent directories\nsee \"flow init --help\" for more info\n%!" dir; exit 2
+  if not (Sys.file_exists dir_or_file) then (
+    Printf.fprintf stderr "Could not find file or directory %s; canceling \
+    search for .flowconfig.\nSee \"flow init --help\" for more info\n%!" dir_or_file;
+    exit 2
+  ) else (
+    let dir = if Sys.is_directory dir_or_file
+      then dir_or_file
+      else Filename.dirname dir_or_file in
+    match ClientArgs.guess_root ".flowconfig" (Path.mk_path dir) 50 with
+    | Some root ->
+        root
+    | None ->
+        Printf.fprintf stderr "Could not find a .flowconfig in %s or any \
+        of its parent directories.\nSee \"flow init --help\" for more info\n%!" dir;
+        exit 2
+  )
 
 (* convert 1,1 based line/column to 1,0 for internal use *)
 let convert_input_pos (line, column) =
