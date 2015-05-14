@@ -31,3 +31,6 @@ val typecheck_contents:
   string ->               (* contents *)
   string ->               (* fake file-/module name *)
   Constraint_js.context option * Errors_js.ErrorSet.t
+
+(* TODO move this *)
+val relative_path: string -> string -> string

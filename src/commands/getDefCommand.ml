@@ -31,6 +31,8 @@ let spec = {
     empty
     |> server_flags
     |> json_flags
+    |> flag "--strip-root" no_arg
+        ~doc:"Print paths without the root"
     |> flag "--path" (optional string)
         ~doc:"Specify (fake) path to file when reading data from stdin"
     |> anon "args" (required (list_of string)) ~doc:"[FILE] LINE COL"
@@ -59,20 +61,39 @@ let parse_args path args =
   let (line, column) = convert_input_pos (line, column) in
   file, line, column
 
-let main option_values json path args () =
+(* get-def command handler.
+   - json toggles JSON output
+   - strip_root toggles whether output positions are relativized w.r.t. root
+   - path is a user-specified path to use as incoming content source path
+   - args is mandatory command args; see parse_args above
+ *)
+let main option_values json strip_root path args () =
   let (file, line, column) = parse_args path args in
   let root = guess_root (ServerProt.path_of_input file) in
+  (* connect to server *)
   let ic, oc = connect_with_autostart option_values root in
+  (* dispatch command *)
   ServerProt.cmd_to_channel oc
     (ServerProt.GET_DEF (file, line, column));
-  let pos = Marshal.from_channel ic in
+  (* command result will be a position structure with full file path *)
+  let pos:Pos.t = Marshal.from_channel ic in
+  (* if strip_root has been specified, relativize path to root *)
+  let pos = if not strip_root then pos else Pos.({
+    pos with pos_file =
+      (* ugh too many path utils in this joint *)
+      let sroot = Path.string_of_path root in
+      let spath = Relative_path.to_absolute pos.pos_file in
+      let spath = Types_js.relative_path sroot spath in
+      Relative_path.create Relative_path.Dummy spath
+  }) in
+  (* format output *)
   if json
   then (
     let json = Json.JAssoc (Errors_js.pos_to_json pos) in
     let json = Json.json_to_string json in
     print_endline json;
   ) else (
-    let file = Pos.(pos.pos_file) in
+    let file = Relative_path.to_absolute Pos.(pos.pos_file) in
     let l0, c0, l1, c1 = Errors_js.pos_range pos in
     print_endline (Utils.spf "%s:%d:%d,%d:%d" file l0 c0 l1 c1)
   )

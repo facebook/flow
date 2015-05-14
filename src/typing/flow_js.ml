@@ -397,9 +397,38 @@ let iter_props_ cx id f =
 (* strict mode *)
 (***************)
 
+(* shim to unwrap residual CJSExportDefaultT instances.
+   Normally CJSExportDefaultT is ephemeral: it is intercepted
+   by ImportModuleNsT and unwrapped. However, this doesn't always
+   happen (e.g., when a module is required, rather than imported).
+   This leaves open the possibility that instances of it will be
+   encountered as concrete types in bounds.lower and bounds.upper.
+
+   This is a problem for callers of possible_types (currently
+   resolve_type and assert_ground), which expect to see only
+   unwrapped value types such as ObjT in these bounds maps.
+
+   CJSExportDefaultT will be factored away (or its ephemerality
+   will be guaranteed) shortly, so rather than replumb __flow to
+   fix the immediate problem, we'll just use an on-the-fly unwrapper
+   in place of a raw call to TypeMap.keys. Once the CJSExportDefaultT
+   work is done, this shim can be removed.
+
+   Note: possible_types is the only place where this delegation
+   was necessary to fix the get-def command (see T7047791), but
+   there may well be others.
+ *)
+let typemap_keys m =
+  TypeMap.fold (fun k _ acc ->
+    (match k with
+      | CJSExportDefaultT (_, t) -> t
+      | t -> t
+    ) :: acc
+  ) m []
+
 let possible_types cx id =
   let bounds = find_graph cx id in
-  TypeMap.keys bounds.lower
+  typemap_keys bounds.lower
 
 let possible_types_of_type cx = function
   | OpenT (_, id) -> possible_types cx id
@@ -2683,8 +2712,6 @@ let rec __flow cx (l,u) trace =
             possible deluge of shadow properties on Object.prototype, since it
             is shared by every object. **)
         rec_flow cx trace (get_builtin_type cx reason "Object", u)
-      (* TODO: make sure the logic that follows doesn't get tripped up
-         by include paths *)
       else if Files_js.is_lib_file_or_flowlib_root (abs_path_of_reason reason)
       then
         let msg =
