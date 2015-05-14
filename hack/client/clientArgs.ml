@@ -64,6 +64,7 @@ let parse_check_args cmd =
   let timeout = ref None in
   let autostart = ref true in
   let from = ref "" in
+  let version = ref false in
 
   (* custom behaviors *)
   let set_from x () = from := x in
@@ -176,7 +177,7 @@ let parse_check_args cmd =
       " (mode) lint the given list of files";
     "--lint-all", Arg.Int (fun x -> set_mode (MODE_LINT_ALL x) ()),
       " (mode) find all occurrences of lint with the given error code";
-    "--version", Arg.Unit (set_mode MODE_VERSION),
+    "--version", Arg.Set version,
       " (mode) show version and exit\n";
 
     (* flags *)
@@ -208,6 +209,11 @@ let parse_check_args cmd =
       " (deprecated) equivalent to --from check_trunk";
   ] in
   let args = parse_without_command options usage "check" in
+
+  if !version then begin
+    print_endline Build_id.build_id_ohai;
+    exit 0;
+  end;
 
   (* fixups *)
   if !mode == MODE_UNSPECIFIED then mode := MODE_STATUS;

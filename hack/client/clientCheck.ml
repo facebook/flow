@@ -21,8 +21,8 @@ let connect args =
     Tty.print_clear_line stderr;
   (ic, oc)
 
-let get_list_files (args:client_check_env): string list =
-  let ic, oc = connect args in
+let get_list_files conn (args:client_check_env): string list =
+  let ic, oc = conn in
   Cmd.(stream_request oc LIST_FILES);
   let res = ref [] in
   try
@@ -62,12 +62,13 @@ let rec main args retries =
     Printf.fprintf stderr "Error: hh_client hit timeout, giving up!\n%!";
     exit 7
   end else try
+    let conn = connect args in
     match args.mode with
     | MODE_LIST_FILES ->
-        let infol = get_list_files args in
+        let infol = get_list_files conn args in
         List.iter (Printf.printf "%s\n") infol
     | MODE_LIST_MODES ->
-        let ic, oc = connect args in
+        let ic, oc = conn in
         Cmd.(stream_request oc LIST_MODES);
         begin try
           while true do print_endline (input_line ic) done;
@@ -81,24 +82,20 @@ let rec main args retries =
             let file = expand_path file in
             ServerUtils.FileName file
         in
-        let conn = connect args in
         let pos_level_l = Cmd.rpc conn @@ Rpc.COVERAGE_LEVELS file_input in
         ClientColorFile.go file_input args.output_json pos_level_l;
         exit 0
     | MODE_COVERAGE file ->
-        let conn = connect args in
         let counts_opt =
           Cmd.rpc conn @@ Rpc.COVERAGE_COUNTS (expand_path file) in
         ClientCoverageMetric.go ~json:args.output_json counts_opt;
         exit 0
     | MODE_FIND_CLASS_REFS name ->
-        let conn = connect args in
         let results =
           Cmd.rpc conn @@ Rpc.FIND_REFS (ServerFindRefs.Class name) in
         ClientFindRefs.go results args.output_json;
         exit 0
     | MODE_FIND_REFS name ->
-        let conn = connect args in
         let pieces = Str.split (Str.regexp "::") name in
         let action =
           try
@@ -112,10 +109,9 @@ let rec main args retries =
         ClientFindRefs.go results args.output_json;
         exit 0
     | MODE_DUMP_SYMBOL_INFO files ->
-        let ic, oc = connect args in
-        ClientSymbolInfo.go files ic oc expand_path
+        ClientSymbolInfo.go conn files expand_path
     | MODE_REFACTOR ->
-        ClientRefactor.go args;
+        ClientRefactor.go conn args;
         exit 0
     | MODE_IDENTIFY_FUNCTION arg ->
         let tpos = Str.split (Str.regexp ":") arg in
@@ -126,9 +122,8 @@ let rec main args retries =
                 int_of_string line, int_of_string char
             | _ -> raise Exit
           with _ ->
-            Printf.fprintf stderr "Invalid position\n"; exit 1
+            Printf.eprintf "Invalid position\n"; exit 1
         in
-        let conn = connect args in
         let content = ClientUtils.read_stdin_to_string () in
         let result =
           Cmd.rpc conn @@ Rpc.IDENTIFY_FUNCTION (content, line, char) in
@@ -150,7 +145,6 @@ let rec main args retries =
           with _ ->
             Printf.fprintf stderr "Invalid position\n"; exit 1
         in
-        let conn = connect args in
         let pos, ty = Cmd.rpc conn @@ Rpc.INFER_TYPE (fn, line, char) in
         ClientTypeAtPos.go pos ty args.output_json;
         exit 0
@@ -165,54 +159,44 @@ let rec main args retries =
           with _ ->
             Printf.fprintf stderr "Invalid position\n"; exit 1
         in
-        let conn = connect args in
         let content = ClientUtils.read_stdin_to_string () in
         let results =
           Cmd.rpc conn @@ Rpc.ARGUMENT_INFO (content, line, char) in
         ClientArgumentInfo.go results args.output_json;
         exit 0
     | MODE_AUTO_COMPLETE ->
-        let conn = connect args in
         let content = ClientUtils.read_stdin_to_string () in
         let results = Cmd.rpc conn @@ Rpc.AUTOCOMPLETE content in
         ClientAutocomplete.go results args.output_json;
         exit 0
     | MODE_OUTLINE ->
         let content = ClientUtils.read_stdin_to_string () in
-        let conn = connect args in
         let results = Cmd.rpc conn @@ Rpc.OUTLINE content in
         ClientOutline.go results args.output_json;
         exit 0
     | MODE_METHOD_JUMP_CHILDREN class_ ->
-        let conn = connect args in
         let results = Cmd.rpc conn @@ Rpc.METHOD_JUMP (class_, true) in
         ClientMethodJumps.go results true args.output_json;
         exit 0
     | MODE_METHOD_JUMP_ANCESTORS class_ ->
-        let conn = connect args in
         let results = Cmd.rpc conn @@ Rpc.METHOD_JUMP (class_, false) in
         ClientMethodJumps.go results false args.output_json;
         exit 0
     | MODE_STATUS ->
-        let conn = connect args in
         let error_list = Cmd.rpc conn Rpc.STATUS in
         if args.output_json || args.from <> "" || error_list = []
         then ServerError.print_errorl args.output_json error_list stdout
         else List.iter ClientCheckStatus.print_error_color error_list;
         exit (if error_list = [] then 0 else 2)
-    | MODE_VERSION ->
-        Printf.printf "%s\n" (Build_id.build_id_ohai);
     | MODE_SHOW classname ->
-        let ic, oc = connect args in
+        let ic, oc = conn in
         Cmd.(stream_request oc (SHOW classname));
         print_all ic
     | MODE_SEARCH (query, type_) ->
-        let conn = connect args in
         let results = Cmd.rpc conn @@ Rpc.SEARCH (query, type_) in
         ClientSearch.go results args.output_json;
         exit 0
     | MODE_LINT fnl ->
-        let conn = connect args in
         let fnl = List.fold_left begin fun acc fn ->
           match Sys_utils.realpath fn with
           | Some path -> path :: acc
@@ -224,7 +208,6 @@ let rec main args retries =
         ClientLint.go results args.output_json;
         exit 0
     | MODE_LINT_ALL code ->
-        let conn = connect args in
         let results = Cmd.rpc conn @@ Rpc.LINT_ALL code in
         ClientLint.go results args.output_json;
         exit 0

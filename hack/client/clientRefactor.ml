@@ -9,7 +9,6 @@
  *)
 
 open ClientEnv
-open ClientUtils
 open Utils
 module Json = Hh_json
 
@@ -123,7 +122,7 @@ let print_patches_json file_map =
   end file_map [] in
   print_endline (Json.json_to_string (Json.JList entries))
 
-let go args =
+let go conn args =
   try
     print_endline ("WARNING: This tool will only refactor references in "^
         "typed, hack code. Its results should be manually verified. "^
@@ -153,9 +152,7 @@ let go args =
       ServerRefactor.MethodRename (class_name, method_name, new_name)
     | _ -> raise Exit in
     
-    let ic, oc = connect args.root in
-    let patches =
-      ServerCommand.(rpc (ic, oc) (ServerRpc.REFACTOR command)) in
+    let patches = ServerCommand.rpc conn @@ ServerRpc.REFACTOR command in
     let file_map = List.fold_left map_patches_to_filename SMap.empty patches in
     if args.output_json
     then print_patches_json file_map
