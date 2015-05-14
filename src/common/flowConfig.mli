@@ -11,8 +11,11 @@ type moduleSystem = Node | Haste
 
 type options = {
   moduleSystem: moduleSystem;
+  module_name_mappers: (Str.regexp * string) list;
   traces: int;
 }
+
+val default_options: options
 
 module PathMap : Utils.MapSig with type key = Path.t
 

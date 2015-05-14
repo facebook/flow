@@ -10,7 +10,7 @@
 
 module type OPTION_PARSER = sig
   val parse : unit -> ServerArgs.options
-  val get_flow_options : unit -> Types_js.options
+  val get_flow_options : unit -> Options.options
 end
 
 module TI = Type_inference_js

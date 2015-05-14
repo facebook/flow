@@ -10,35 +10,18 @@
 
 open Utils
 
-type options = {
-  opt_debug : bool;
-  opt_verbose : bool;
-  opt_all : bool;
-  opt_weak : bool;
-  opt_traces : int;
-  opt_strict : bool;
-  opt_console : bool;
-  opt_json : bool;
-  opt_show_all_errors : bool;
-  opt_quiet : bool;
-  opt_profile : bool;
-  opt_strip_root : bool;
-  opt_module: string;
-  opt_libs: Path.t list;
-  opt_no_flowlib: bool;
-}
-
-val init_modes: options -> unit
+val init_modes: Options.options -> unit
 
 (* incremental typecheck entry point *)
-val recheck: ServerEnv.genv -> ServerEnv.env -> SSet.t -> options ->
+val recheck: ServerEnv.genv -> ServerEnv.env -> SSet.t -> Options.options ->
   ServerEnv.env
 
 (* hh_server initial (full) check *)
-val server_init: ServerEnv.genv -> ServerEnv.env -> options -> ServerEnv.env
+val server_init:
+  ServerEnv.genv -> ServerEnv.env -> Options.options -> ServerEnv.env
 
 (* hh_single_type_check entry point, probably to be moved *)
-val single_main: string list -> options -> unit
+val single_main: string list -> Options.options -> unit
 
 val get_errors: unit -> Errors.t
 

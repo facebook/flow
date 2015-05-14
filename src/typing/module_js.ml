@@ -38,6 +38,40 @@ type info = {
 
 type mode = ModuleMode_Checked | ModuleMode_Weak | ModuleMode_Unchecked
 
+let flow_options = ref None (*Options.default_options*)
+
+(**
+ * A set of module.name_mapper config entry allows users to specify regexp
+ * matcher strings each with a template string in order to map the names of a
+ * dependency in a JS file to another name before trying to resolve it.
+ *
+ * The user can specify any number of these mappers, but the one that gets
+ * applied to any given module name is the first one whose name matches the
+ * regexp string. For the node module system, we go a step further and only
+ * choose candidates that match the string *and* are a valid, resolvable path.
+ *)
+let module_name_candidates_cache = Hashtbl.create 50
+let module_name_candidates name =
+  if Hashtbl.mem module_name_candidates_cache name then (
+    Hashtbl.find module_name_candidates_cache name
+  ) else (
+    match !flow_options with
+    | None -> Constraint_js.assert_false (spf
+        ("Attempted to map module name (%s) before the flow_options were " ^^
+         "provided to Module_js.ml :(")
+        name
+      )
+    | Some(flow_options) ->
+      let mappers = flow_options.Options.opt_module_name_mappers in
+      let map_name mapped_names (regexp, template) =
+        let new_name = Str.global_replace regexp template name in
+        if new_name = name then mapped_names else new_name::mapped_names
+      in
+      let mapped_names = List.rev (name::(List.fold_left map_name [] mappers)) in
+      Hashtbl.add module_name_candidates_cache name mapped_names;
+      mapped_names
+  )
+
 (****************** shared dependency map *********************)
 
 (* map from module name to filename *)
@@ -104,36 +138,19 @@ let get_key key tokens = Spider_monkey_ast.(
   | _ -> None
 )
 
-(* basic parse of JSON as a JS expression; throws on parse failure *)
-let parse_json json file =
-  let js = spf "(%s)" json in
-  let ast, errors = Parsing_service_js.do_parse js file in
-  Spider_monkey_ast.(match ast with
-    | Some (_, [_, Statement.Expression ({
-        Statement.Expression.expression = _, Expression.Object {
-          Expression.Object.properties = ps
-        }
-      })], _) ->
-        List.fold_left Expression.Object.(fun map -> function
-          | Property (_, {
-              Property.key = Property.Literal (_, { Literal.raw; _ });
-              value;
-              _
-            }) -> SMap.add raw value map
-          | _ -> map
-        ) SMap.empty ps
-    | _ -> SMap.empty
-  ), errors
-
 let add_package package =
   let json = cat package in
-  let tokens, errors = parse_json json package in
+  let tokens, errors = FlowJSON.parse_object json package in
   PackageHeap.add package tokens;
   (match get_key "name" tokens with
   | Some name ->
     ReversePackageHeap.add name (Filename.dirname package)
   | None -> ());
-  errors
+  if List.length errors = 0 then None else
+    let fold_error e_set error =
+      Errors_js.(ErrorSet.add (parse_error_to_flow_error error) e_set)
+    in
+    Some(List.fold_left fold_error Errors_js.ErrorSet.empty errors)
 
 (* Specification of a module system. Currently this signature is sufficient to
    model both Haste and Node, but should be further generalized. *)
@@ -263,9 +280,8 @@ module Node = struct
               let path = Filename.concat path "index.js" in
               path_if_exists path)
 
-
-  let resolve_relative dir r =
-    let path = Files_js.normalize_path dir r in
+  let resolve_relative root_path rel_path =
+    let path = Files_js.normalize_path root_path rel_path in
     if Files_js.is_flow_file path
     then path_if_exists path
     else seq
@@ -297,29 +313,35 @@ module Node = struct
     || Str.string_match Files_js.current_dir_name r 0
     || Str.string_match Files_js.parent_dir_name r 0
 
-  let resolve_import file r =
+  let resolve_import file import_str =
     let dir = Filename.dirname file in
-    if relative r
-    then resolve_relative dir r
-    else node_module dir r
+    if relative import_str
+    then resolve_relative dir import_str
+    else node_module dir import_str
 
-  let imported_module file r =
-    let opt_module_name = resolve_import file r in
-    match opt_module_name with
-    | Some r -> r
-    | _ -> r
+  let imported_module file import_str =
+    let candidates = module_name_candidates import_str in
 
-(* in node, file names are module names, as guaranteed by
-   our implementation of exported_name, so anything but a
-   singleton provider set is craziness. *)
-let choose_provider m files errmap =
-  match SSet.elements files with
-  | [] ->
-      failwith (spf "internal error: empty provider set for module %S" m)
-  | [f] ->
-      f, errmap
-  | files ->
-      failwith (spf "internal error: multiple providers for module %S" m)
+    let choose_candidate chosen candidate =
+      match chosen with
+      | Some(c) -> chosen
+      | None -> resolve_import file candidate
+    in
+    match List.fold_left choose_candidate None candidates with
+    | Some(str) -> str
+    | None -> import_str
+
+  (* in node, file names are module names, as guaranteed by
+     our implementation of exported_name, so anything but a
+     singleton provider set is craziness. *)
+  let choose_provider m files errmap =
+    match SSet.elements files with
+    | [] ->
+        failwith (spf "internal error: empty provider set for module %S" m)
+    | [f] ->
+        f, errmap
+    | files ->
+        failwith (spf "internal error: multiple providers for module %S" m)
 
 end
 
@@ -387,40 +409,54 @@ module Haste: MODULE_SYSTEM = struct
         | None -> None
       )
 
-  let imported_module file r =
-    match resolve_import file r with
-    | Some r -> r
-    | None -> Haste_module_preprocessor.preprocess_name r
+  let imported_module file imported_name =
+    let candidates = module_name_candidates imported_name in
 
-(* in haste, many files may provide the same module. here we're also
-   supporting the notion of mock modules - allowed duplicates used as
-   fallbacks. we prefer the non-mock if it exists, otherwise choose an
-   arbitrary mock, if any exist. if multiple non-mock providers exist,
-   we pick one arbitrarily and issue duplicate module warnings for the
-   rest. *)
-let choose_provider m files errmap =
-  match SSet.elements files with
-  | [] ->
-      failwith (spf "internal error: empty provider set for module %S" m)
-  | [f] ->
-      f, errmap
-  | files ->
-      let mocks, non_mocks = List.partition is_mock files in
-      match non_mocks with
-      | [] -> List.hd mocks, errmap
-      | [f] -> f, errmap
-      | h :: t ->
-          let errmap = List.fold_left (fun acc f ->
-            let w = Flow.new_warning [
-              Reason.new_reason m (Pos.make_from
-                (Relative_path.create Relative_path.Dummy f)),
-                "Duplicate module provider";
-              Reason.new_reason "current provider"
-                (Pos.make_from (Relative_path.create Relative_path.Dummy h)),
-                ""] in
-            SMap.add f (ErrorSet.singleton w) acc
-          ) errmap t in
-          h, errmap
+    (**
+     * In Haste, we don't have an autoritative list of all valid module names
+     * until after all modules have been sweeped (because the module name is
+     * specified in the contents of the file). So, unlike the node module
+     * system, we can't run through the list of mapped module names and only
+     * choose the first one that is valid.
+     *
+     * Therefore, for the Haste module system, we simply always pick the first
+     * matching candidate (rather than the first *valid* matching candidate).
+     *)
+    let chosen_candidate = List.hd candidates in
+
+    match resolve_import file chosen_candidate with
+    | Some(name) -> name
+    | None -> chosen_candidate
+
+  (* in haste, many files may provide the same module. here we're also
+     supporting the notion of mock modules - allowed duplicates used as
+     fallbacks. we prefer the non-mock if it exists, otherwise choose an
+     arbitrary mock, if any exist. if multiple non-mock providers exist,
+     we pick one arbitrarily and issue duplicate module warnings for the
+     rest. *)
+  let choose_provider m files errmap =
+    match SSet.elements files with
+    | [] ->
+        failwith (spf "internal error: empty provider set for module %S" m)
+    | [f] ->
+        f, errmap
+    | files ->
+        let mocks, non_mocks = List.partition is_mock files in
+        match non_mocks with
+        | [] -> List.hd mocks, errmap
+        | [f] -> f, errmap
+        | h :: t ->
+            let errmap = List.fold_left (fun acc f ->
+              let w = Flow.new_warning [
+                Reason.new_reason m (Pos.make_from
+                  (Relative_path.create Relative_path.Dummy f)),
+                  "Duplicate module provider";
+                Reason.new_reason "current provider"
+                  (Pos.make_from (Relative_path.create Relative_path.Dummy h)),
+                  ""] in
+              SMap.add f (ErrorSet.singleton w) acc
+            ) errmap t in
+            h, errmap
 
 end
 
@@ -437,8 +473,9 @@ let module_system_table =
 
 let module_system = ref (module Node: MODULE_SYSTEM)
 
-let init specifier =
-  module_system := Hashtbl.find module_system_table specifier
+let init opts =
+  flow_options := Some(opts);
+  module_system := Hashtbl.find module_system_table opts.Options.opt_module
 
 let exported_module file comments =
   let module M = (val !module_system) in

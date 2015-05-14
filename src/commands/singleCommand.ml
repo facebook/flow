@@ -66,22 +66,28 @@ let main all weak debug verbose json show_all_errors profile quiet module_
   | None -> "node"
   in
 
+  let config_root = CommandUtils.guess_root (Some(root)) in
+  let flowconfig = FlowConfig.get config_root in
+
   let options = {
-    Types_js.opt_all = all;
-    Types_js.opt_weak = weak;
-    Types_js.opt_console = false;
-    Types_js.opt_debug = debug;
-    Types_js.opt_verbose = verbose;
-    Types_js.opt_strict = true;
-    Types_js.opt_traces = 0;
-    Types_js.opt_json = json;
-    Types_js.opt_show_all_errors = show_all_errors;
-    Types_js.opt_quiet = quiet || json;
-    Types_js.opt_profile = profile;
-    Types_js.opt_strip_root = false;
-    Types_js.opt_module = module_;
-    Types_js.opt_libs;
-    Types_js.opt_no_flowlib = no_flowlib;
+    Options.opt_all = all;
+    Options.opt_weak = weak;
+    Options.opt_console = false;
+    Options.opt_debug = debug;
+    Options.opt_verbose = verbose;
+    Options.opt_strict = true;
+    Options.opt_traces = 0;
+    Options.opt_json = json;
+    Options.opt_show_all_errors = show_all_errors;
+    Options.opt_quiet = quiet || json;
+    Options.opt_profile = profile;
+    Options.opt_strip_root = false;
+    Options.opt_module = module_;
+    Options.opt_module_name_mappers = FlowConfig.(
+      flowconfig.options.module_name_mappers
+    );
+    Options.opt_libs;
+    Options.opt_no_flowlib = no_flowlib;
   } in
 
   if ! Sys.interactive

@@ -30,40 +30,22 @@ type file_errors = string * Errors_js.error list
  * and parallel list of error lists. *)
 type results = SSet.t * string list * Errors_js.error list list
 
-type options = {
-  opt_debug : bool;
-  opt_verbose : bool;
-  opt_all : bool;
-  opt_weak : bool;
-  opt_traces : int;
-  opt_strict : bool;
-  opt_console : bool;
-  opt_json : bool;
-  opt_show_all_errors : bool;
-  opt_quiet : bool;
-  opt_profile : bool;
-  opt_strip_root : bool;
-  opt_module: string;
-  opt_libs: Path.t list;
-  opt_no_flowlib: bool;
-}
-
 let init_modes opts =
-  modes.debug <- opts.opt_debug;
-  modes.verbose <- opts.opt_verbose;
-  modes.all <- opts.opt_all;
-  modes.weak_by_default <- opts.opt_weak;
-  modes.traces <- opts.opt_traces;
-  modes.strict <- opts.opt_strict;
-  modes.console <- opts.opt_console;
-  modes.json <- opts.opt_json;
-  modes.show_all_errors <- opts.opt_show_all_errors;
-  modes.quiet <- opts.opt_quiet;
-  modes.profile <- opts.opt_profile;
-  modes.no_flowlib <- opts.opt_no_flowlib;
+  modes.debug <- opts.Options.opt_debug;
+  modes.verbose <- opts.Options.opt_verbose;
+  modes.all <- opts.Options.opt_all;
+  modes.weak_by_default <- opts.Options.opt_weak;
+  modes.traces <- opts.Options.opt_traces;
+  modes.strict <- opts.Options.opt_strict;
+  modes.console <- opts.Options.opt_console;
+  modes.json <- opts.Options.opt_json;
+  modes.show_all_errors <- opts.Options.opt_show_all_errors;
+  modes.quiet <- opts.Options.opt_quiet;
+  modes.profile <- opts.Options.opt_profile;
+  modes.no_flowlib <- opts.Options.opt_no_flowlib;
   (* TODO: confirm that only master uses strip_root, otherwise set it! *)
-  Module_js.init (opts.opt_module);
-  Files_js.init (opts.opt_libs)
+  Module_js.init opts;
+  Files_js.init (opts.Options.opt_libs)
 
 (****************** shared context heap *********************)
 
@@ -176,7 +158,7 @@ let collate_errors workers files =
   all_errors := all
 
 let wraptime opts pred msg f =
-  if opts.opt_quiet || not opts.opt_profile then f ()
+  if opts.Options.opt_quiet || not opts.Options.opt_profile then f ()
   else time pred msg f
 
 let checktime opts limit msg f =
@@ -557,7 +539,7 @@ let deps unmodified inferred_files removed_modules =
    phase (which could be the init phase or a previous recheck phase)
 *)
 let recheck genv env modified opts =
-  if not opts.opt_strict
+  if not opts.Options.opt_strict
   then failwith "Missing -- strict";
 
   (* filter modified files *)
@@ -697,7 +679,7 @@ let print_errors ?root flow_opts =
         Array.iteri (fun i error ->
           let list = Errors.to_list error in
           let list =
-            if flow_opts.opt_strip_root
+            if flow_opts.Options.opt_strip_root
             then List.map (fun (p,s) -> (strip_root p path, s)) list
             else list in
           let e = Errors.make_error 0 list in
@@ -708,7 +690,7 @@ let print_errors ?root flow_opts =
         errors
   in
 
-  if flow_opts.opt_json
+  if flow_opts.Options.opt_json
   then Errors_js.print_errorl true errors stdout
   else
     Errors_js.print_error_summary

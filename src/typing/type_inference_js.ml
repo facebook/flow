@@ -152,7 +152,8 @@ let exports cx m =
   module_t cx m (Reason_js.new_reason "exports" (Pos.make_from
     (Relative_path.create Relative_path.Dummy cx.file)))
 
-let lookup_module cx m = SMap.find_unsafe m cx.modulemap
+let lookup_module cx m =
+  SMap.find_unsafe m cx.modulemap
 
 (**
  * Given an exported default declaration, identify nameless declarations and

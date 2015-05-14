@@ -11,12 +11,15 @@
 open Utils
 open Sys_utils
 
+module Json = Hh_json
+
 let version = "0.11.0"
 
 type moduleSystem = Node | Haste
 
 type options = {
   moduleSystem: moduleSystem;
+  module_name_mappers: (Str.regexp * string) list;
   traces: int;
 }
 
@@ -46,6 +49,7 @@ type config = {
 
 let default_options = {
   moduleSystem = Node;
+  module_name_mappers = [];
   traces = 0;
 }
 
@@ -112,14 +116,15 @@ let group_into_sections lines =
       if Str.string_match is_section_header line 0
       then begin
         let sections = (section, List.rev lines)::sections in
-        let section = Str.matched_group 1 line in
-        if SSet.mem section seen
-        then error ln (spf "contains duplicate section: \"%s\"" section);
-        SSet.add section seen, sections, ((ln, section), [])
+        let section_name = Str.matched_group 1 line in
+        if SSet.mem section_name seen
+        then error ln (spf "contains duplicate section: \"%s\"" section_name);
+        SSet.add section_name seen, sections, ((ln, section_name), [])
       end else
         seen, sections, (section, (ln, line)::lines)
     ) (SSet.empty, [], ((0, ""), [])) lines in
-  List.rev (section::sections)
+  let (section, section_lines) = section in
+  List.rev ((section, List.rev section_lines)::sections)
 
 (* given a path, return the max prefix not containing a wildcard *)
 let path_stem =
@@ -238,22 +243,15 @@ let parse_excludes config lines =
   |> List.map (fun s -> (s, Str.regexp s)) in
   { config with excludes; }
 
-module OptionsParser : sig
-  type t
-  type option_parser
-  (* Parses a list of lines into an options object *)
-  val parse : t -> (int * string) list -> options
-  (* Pass configure a list of option names and option parsers *)
-  val configure : (string * option_parser) list -> t
-
-  (******* Option parser constructors ********)
-  val generic: (string * (string -> 'a option)) ->
-    (options -> 'a -> options) -> option_parser
-  val enum : (string * 'a) list ->
-    (options -> 'a -> options) -> option_parser
-end = struct
+module OptionsParser = struct
   type option_parser = (options -> string -> (int * string) -> options)
   type t = option_parser SMap.t
+  type option_flag =
+    | ALLOW_DUPLICATE
+  type option_entry = {
+    flags: option_flag list;
+    _parser: option_parser;
+  }
 
   let map_add map (key, value) = SMap.add key value map
 
@@ -266,7 +264,7 @@ end = struct
   let generic (supported, converter) option_setter =
     fun options opt (ln, value) ->
       match converter value with
-      | Some value -> option_setter options value
+      | Some value -> option_setter options (ln, value)
       | None ->
           let msg = spf
             "Unsupported value for %s: \"%s\"\nSupported values: %s"
@@ -284,18 +282,44 @@ end = struct
           |> String.concat ", " in
     generic (supported, converter) option_setter
 
+  let str_to_str_mapper option_setter =
+    fun options opt (ln, value) ->
+      let value = String.trim value in
+
+      let regexp_str = "^'\\([^']*\\)'[ \t]*->[ \t]*'\\([^']*\\)'$" in
+      let regexp = Str.regexp regexp_str in
+      (if not (Str.string_match regexp value 0) then
+        error ln (
+          "Expected a mapping of form: " ^
+          "'single-quoted-string' -> 'single-quoted-string'"
+        )
+      );
+
+      let left = Str.matched_group 1 value in
+      let right = Str.matched_group 2 value in
+
+      option_setter options (ln, (left, right))
+
+  let contains_flag flags flag =
+    List.fold_left (fun contains_flag maybe_flag ->
+      (maybe_flag = flag) || contains_flag
+    ) false flags
+
   let parse_line p (options, seen) (ln, line) =
-    if Str.string_match (Str.regexp "^\\([a-zA-Z.]+\\)=\\(.*\\)$") line 0
+    if Str.string_match (Str.regexp "^\\([a-zA-Z._]+\\)=\\(.*\\)$") line 0
     then
       let opt = Str.matched_group 1 line in
-      let seen = if SSet.mem opt seen
-        then error ln (spf "Duplicate option: \"%s\"" opt)
-        else SSet.add opt seen in
       if SMap.mem opt p
       then
-        let options =
-          (SMap.find_unsafe opt p) options opt (ln, (Str.matched_group 2 line))
-        in options, seen
+        let opt_entry = SMap.find_unsafe opt p in
+        let allows_dupes = contains_flag opt_entry.flags ALLOW_DUPLICATE in
+        let seen = if SSet.mem opt seen && not allows_dupes
+          then error ln (spf "Duplicate option: \"%s\"" opt)
+          else SSet.add opt seen
+        in
+        let _parser = opt_entry._parser in
+        let options = _parser options opt (ln, (Str.matched_group 2 line)) in
+        (options, seen)
       else error ln (spf "Unsupported option: \"%s\"" opt)
     else error ln "Unable to parse line"
 
@@ -307,12 +331,28 @@ end = struct
 end
 
 let options_parser = OptionsParser.configure [
-  "module.system", OptionsParser.enum
-    (["node", Node; "haste", Haste])
-    (fun options moduleSystem -> { options with moduleSystem });
-  "traces", OptionsParser.generic
-    ("integer", fun s -> try Some (int_of_string s) with _ -> None)
-    (fun options traces -> { options with traces });
+  ("module.system", OptionsParser.({
+    flags = [];
+    _parser = enum ["node", Node; "haste", Haste] (fun opts (_, moduleSystem) ->
+      {opts with moduleSystem}
+    );
+  }));
+
+  ("module.name_mapper", OptionsParser.({
+    flags = [ALLOW_DUPLICATE];
+    _parser = str_to_str_mapper (fun options (ln, (pattern, template)) ->
+      let rewriter = (Str.regexp pattern, template) in
+      let module_name_mappers = options.module_name_mappers @ [rewriter] in
+      {options with module_name_mappers }
+    );
+  }));
+
+  ("traces", OptionsParser.({
+    flags = [];
+    _parser = generic
+      ("integer", fun s -> try Some (int_of_string s) with _ -> None)
+      (fun opts (_, traces) -> { opts with traces });
+  }));
 ]
 
 let parse_options config lines =
@@ -360,7 +400,7 @@ let fullpath root =
 let read root =
   let filename = fullpath root in
   let lines = cat_no_fail filename |> split_lines in
-  let lines = List.mapi (fun i line -> (i+1, line)) lines in
+  let lines = List.mapi (fun i line -> (i+1, String.trim line)) lines in
   let config = empty_config root in
   parse config lines
 
