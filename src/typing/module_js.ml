@@ -30,7 +30,7 @@ type info = {
   file: string;             (* file name *)
   _module: string;          (* module name *)
   required: SSet.t;         (* required module names *)
-  require_loc: Spider_monkey_ast.Loc.t SMap.t;  (* statement locations *)
+  require_loc: Ast.Loc.t SMap.t;  (* statement locations *)
   strict_required: SSet.t;  (* strict requires (flow to export types) *)
   checked: bool;            (* in flow? *)
   parsed: bool;             (* if false, it's a tracking record only *)
@@ -121,7 +121,7 @@ let parse_flow = parse_header parse_attributes_flow ModuleMode_Unchecked
 
 (* shared heap for package.json tokens by filename *)
 module PackageHeap = SharedMem.WithCache (String) (struct
-    type t = Spider_monkey_ast.Expression.t SMap.t
+    type t = Ast.Expression.t SMap.t
     let prefix = Prefix.make()
   end)
 
@@ -131,7 +131,7 @@ module ReversePackageHeap = SharedMem.WithCache (String) (struct
     let prefix = Prefix.make()
   end)
 
-let get_key key tokens = Spider_monkey_ast.(
+let get_key key tokens = Ast.(
   match SMap.get (spf "\"%s\"" key) tokens with
   | Some (_, Expression.Literal { Literal.value = Literal.String name; _ }) ->
       Some name
@@ -156,7 +156,7 @@ let add_package package =
    model both Haste and Node, but should be further generalized. *)
 module type MODULE_SYSTEM = sig
   (* Given a file and comments in it, make the name of the module it exports. *)
-  val exported_module: string -> Spider_monkey_ast.Comment.t list -> string
+  val exported_module: string -> Ast.Comment.t list -> string
 
   (* Given just a file name, guess the name of the module it exports. *)
   val guess_exported_module: string -> string -> string
@@ -426,7 +426,12 @@ module Haste: MODULE_SYSTEM = struct
 
     match resolve_import file chosen_candidate with
     | Some(name) -> name
-    | None -> chosen_candidate
+    | None ->
+        (**
+         * TODO(jeffmo): Remove Haste_module_preprocessor once Flow 0.12 is
+         *               deployed
+         *)
+        Haste_module_preprocessor.preprocess_name chosen_candidate
 
   (* in haste, many files may provide the same module. here we're also
      supporting the notion of mock modules - allowed duplicates used as
