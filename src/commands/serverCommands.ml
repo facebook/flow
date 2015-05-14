@@ -100,7 +100,7 @@ module OptionParser(Config : CONFIG) = struct
     | Some libs ->
         let libs = libs
         |> Str.split (Str.regexp ",")
-        |> List.map Path.mk_path in
+        |> List.map Path.make in
         libs @ flowconfig.libs
     ) in
     let opt_traces = match traces with

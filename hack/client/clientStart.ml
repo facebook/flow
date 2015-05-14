@@ -18,7 +18,7 @@ let get_hhserver () =
   else "hh_server"
 
 type env = {
-  root: Path.path;
+  root: Path.t;
   wait: bool;
   no_load : bool;
 }
@@ -26,7 +26,7 @@ type env = {
 let start_server env =
   let hh_server = Printf.sprintf "%s -d %s %s --waiting-client %d"
     (Filename.quote (get_hhserver ()))
-    (Filename.quote (Path.string_of_path env.root))
+    (Filename.quote (Path.to_string env.root))
     (if env.no_load then "--no-load" else "")
     (Unix.getpid ())
   in
@@ -72,26 +72,26 @@ let should_start env =
       Printf.fprintf
         stderr
         "Replacing busy server for %s\n%!"
-        (Path.string_of_path env.root);
+        (Path.to_string env.root);
       HackClientStop.kill_server env.root;
       true
   | Server_initializing ->
       Printf.fprintf
         stderr
         "Found initializing server for %s\n%!"
-        (Path.string_of_path env.root);
+        (Path.to_string env.root);
       false
   | Server_cant_connect ->
       Printf.fprintf
         stderr
         "Replacing unresponsive server for %s\n%!"
-        (Path.string_of_path env.root);
+        (Path.to_string env.root);
       HackClientStop.kill_server env.root;
       true
   | Server_out_of_date ->
       Printf.eprintf
         "Replacing out of date server for %s\n%!"
-        (Path.string_of_path env.root);
+        (Path.to_string env.root);
       ignore(Unix.sleep 1);
       true
 
@@ -103,6 +103,6 @@ let main env =
       stderr
       "Error: Server already exists for %s\n\
       Use hh_client restart if you want to kill it and start a new one\n%!"
-      (Path.string_of_path env.root);
+      (Path.to_string env.root);
     exit 77
   end

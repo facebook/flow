@@ -55,8 +55,8 @@ module Program : Server.SERVER_PROGRAM = struct
       ServerMsg.response_to_channel oc msg;
       Printf.printf "Status: Error\n";
       Printf.printf "server_dir=%s, client_dir=%s\n"
-        (Path.string_of_path server_root)
-        (Path.string_of_path client_root);
+        (Path.to_string server_root)
+        (Path.to_string client_root);
       Printf.printf "%s is not listening to the same directory. Exiting.\n" name;
       exit 5
     end;
@@ -279,7 +279,7 @@ module Program : Server.SERVER_PROGRAM = struct
   let init genv env =
     let module RP = Relative_path in
     let root = ServerArgs.root genv.options in
-    let hhi_root = Path.mk_path (Hhi.get_hhi_root ()) in
+    let hhi_root = Path.make (Hhi.get_hhi_root ()) in
     let next_files_hhi =
       compose (rev_rev_map (RP.create RP.Hhi)) (make_next_files hhi_root) in
     let next_files_root = compose

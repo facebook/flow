@@ -54,7 +54,7 @@ let convert_file outpath file =
   (* Printer_dts.program *)
 
 let find_files_recursive path =
-  Find.find_with_name [Path.mk_path path] dts_ext_find_pattern
+  Find.find_with_name [Path.make path] dts_ext_find_pattern
 
 let find_files path =
   Array.fold_left (fun acc f ->

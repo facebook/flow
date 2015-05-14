@@ -12,8 +12,8 @@ open ClientCommand
 open ClientEnv
 open Utils
 
-let rec guess_root config start recursion_limit : Path.path option =
-  let fs_root = Path.mk_path "/" in
+let rec guess_root config start recursion_limit : Path.t option =
+  let fs_root = Path.make "/" in
   if Path.equal start fs_root then None
   else if Wwwroot.is_www_directory ~config start then Some start
   else if recursion_limit <= 0 then None
@@ -42,7 +42,7 @@ let get_root ?(config=".hhconfig") path_opt =
   let start_str = match path_opt with
     | None -> "."
     | Some s -> s in
-  let start_path = Path.mk_path start_str in
+  let start_path = Path.make start_str in
   let root = match guess_root config start_path 50 with
     | None -> start_path
     | Some r -> r in

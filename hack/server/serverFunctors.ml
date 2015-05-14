@@ -18,14 +18,14 @@ exception State_not_found
 
 module type SERVER_PROGRAM = sig
   module EventLogger : sig
-    val init: Path.path -> float -> unit
+    val init: Path.t -> float -> unit
     val init_done: string -> unit
     val load_script_done: unit -> unit
     val load_read_end: string -> unit
     val load_recheck_end: float -> int -> unit
     val load_failed: string -> unit
-    val lock_lost: Path.path -> string -> unit
-    val lock_stolen: Path.path -> string -> unit
+    val lock_lost: Path.t -> string -> unit
+    val lock_stolen: Path.t -> string -> unit
     val master_exception: string -> unit
     val out_of_date: unit -> unit
     val recheck_end: float -> int -> int -> unit
@@ -42,7 +42,7 @@ module type SERVER_PROGRAM = sig
   val infer: env -> (ServerMsg.file_input * int * int) -> out_channel -> unit
   val suggest: string list -> out_channel -> unit
   val parse_options: unit -> ServerArgs.options
-  val get_watch_paths: ServerArgs.options -> Path.path list
+  val get_watch_paths: ServerArgs.options -> Path.t list
   val name: string
   val config_filename : unit -> Relative_path.t
   val load_config : unit -> ServerConfig.t
@@ -62,7 +62,7 @@ end
 module MainInit : sig
   val go:
     ServerArgs.options ->
-    Path.path list ->   (* other watched paths *)
+    Path.t list ->   (* other watched paths *)
     (unit -> env) ->    (* init function to run while we have init lock *)
     env
 end = struct
@@ -236,7 +236,7 @@ end = struct
   let run_load_script genv env cmd =
     try
       let cmd = Printf.sprintf "%s %s %s" cmd
-        (Filename.quote (Path.string_of_path (ServerArgs.root genv.options)))
+        (Filename.quote (Path.to_string (ServerArgs.root genv.options)))
         (Filename.quote Build_id.build_id_ohai) in
       Hh_logger.log "Running load script: %s\n%!" cmd;
       let state_fn, to_recheck =
@@ -365,7 +365,7 @@ end = struct
 
   let start () =
     let options = Program.parse_options () in
-    let root = Path.string_of_path (ServerArgs.root options) in
+    let root = Path.to_string (ServerArgs.root options) in
     Relative_path.set_path_prefix Relative_path.Root root;
     let config = Program.load_config () in
     try

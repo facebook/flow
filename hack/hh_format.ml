@@ -112,7 +112,7 @@ let debug () fnl =
   end () fnl
 
 let debug_directory dir =
-  let path = Path.mk_path dir in
+  let path = Path.make dir in
   let next = compose
     (rev_rev_map (Relative_path.create Relative_path.Root))
     (Find.make_next_files_php path) in
@@ -200,7 +200,7 @@ let job_in_place modes acc fnl =
   end acc fnl
 
 let directory modes dir =
-  let path = Path.mk_path dir in
+  let path = Path.make dir in
   let next = compose
     (rev_rev_map (Relative_path.create Relative_path.Root))
     (Find.make_next_files_php path) in
@@ -265,10 +265,10 @@ let () =
     | None ->
         Printf.fprintf stderr "No root specified, trying to guess one\n";
         let root = ClientArgs.get_root None in
-        let root = Path.string_of_path root in
+        let root = Path.to_string root in
         Printf.fprintf stderr "Guessed root: %s\n%!" root;
         root
-    | Some root -> Path.string_of_path (Path.mk_path root)
+    | Some root -> Path.to_string (Path.make root)
   in
   Relative_path.set_path_prefix Relative_path.Root root;
   match files with
@@ -288,7 +288,7 @@ let () =
       then debug_directory dir
       else directory modes dir
   | [filename] ->
-      let filename = Path.string_of_path (Path.mk_path filename) in
+      let filename = Path.to_string (Path.make filename) in
       let filepath = Relative_path.create Relative_path.Root filename in
       if in_place
       then

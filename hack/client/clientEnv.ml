@@ -36,7 +36,7 @@ type client_mode =
 
 type client_check_env = {
   mode: client_mode;
-  root: Path.path;
+  root: Path.t;
   from: string;
   output_json: bool;
   retry_if_init: bool;

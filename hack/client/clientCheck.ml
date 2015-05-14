@@ -37,14 +37,14 @@ let print_all ic =
   with End_of_file -> ()
 
 let expand_path file =
-  let path = Path.mk_path file in
+  let path = Path.make file in
   if Path.file_exists path
-  then Path.string_of_path path
+  then Path.to_string path
   else
     let file = Filename.concat (Sys.getcwd()) file in
-    let path = Path.mk_path file in
+    let path = Path.make file in
     if Path.file_exists path
-    then Path.string_of_path path
+    then Path.to_string path
     else begin
       Printf.printf "File not found\n";
       exit 2

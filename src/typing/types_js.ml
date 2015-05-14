@@ -44,7 +44,7 @@ type options = {
   opt_profile : bool;
   opt_strip_root : bool;
   opt_module: string;
-  opt_libs: Path.path list;
+  opt_libs: Path.t list;
   opt_no_flowlib: bool;
 }
 
@@ -681,7 +681,7 @@ let strip_root p path =
       if Files_js.is_lib_file pos_file
       then spf "[LIB] %s" (Filename.basename pos_file)
       else relative_path
-        (spf "%s%s" (Path.string_of_path path) Filename.dir_sep) pos_file
+        (spf "%s%s" (Path.to_string path) Filename.dir_sep) pos_file
     in
     {(make_from (Relative_path.create Relative_path.Dummy pos_file)) with
       pos_start; pos_end }
@@ -756,6 +756,6 @@ let server_init genv env flow_opts =
  * parses and checks serially, prints errs to stdout.
  *)
 let single_main (paths : string list) flow_opts =
-  let get_next = Files_js.make_next_files (Path.mk_path (List.hd paths)) in
+  let get_next = Files_js.make_next_files (Path.make (List.hd paths)) in
   let _ = full_check None get_next flow_opts in
   print_errors flow_opts

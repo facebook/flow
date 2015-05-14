@@ -102,8 +102,8 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
     | ServerProt.DIRECTORY_MISMATCH d ->
       Printf.printf "%s is running on a different directory.\n" name;
       Printf.printf "server_root: %s, client_root: %s\n"
-        (Path.string_of_path d.ServerProt.server)
-        (Path.string_of_path d.ServerProt.client);
+        (Path.to_string d.ServerProt.server)
+        (Path.to_string d.ServerProt.client);
       flush stdout;
       raise ClientExceptions.Server_directory_mismatch
     | ServerProt.ERRORS e ->
@@ -122,7 +122,7 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
         exit 2
     | ServerProt.SERVER_DYING ->
       Printf.printf "Server has been killed for %s\n"
-        (Path.string_of_path args.root);
+        (Path.to_string args.root);
       exit 2
     | ServerProt.SERVER_OUT_OF_DATE ->
       if args.autostart

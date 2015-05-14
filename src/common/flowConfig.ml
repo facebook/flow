@@ -20,28 +20,28 @@ type options = {
   traces: int;
 }
 
-module PathMap : MapSig with type key = Path.path
+module PathMap : MapSig with type key = Path.t
 = MyMap(struct
-  type t = Path.path
+  type t = Path.t
   let compare p1 p2 =
-    String.compare (Path.string_of_path p1) (Path.string_of_path p2)
+    String.compare (Path.to_string p1) (Path.to_string p2)
 end)
 
 type config = {
   (* file blacklist *)
   excludes: (string * Str.regexp) list;
   (* non-root include paths. may contain wildcards *)
-  includes: Path.path list;
+  includes: Path.t list;
   (* stems extracted from includes *)
-  include_stems: Path.path list;
+  include_stems: Path.t list;
   (* map from include_stems to list of (original path, regexified path) *)
   include_map: ((string * Str.regexp) list) PathMap.t;
   (* library paths. no wildcards *)
-  libs: Path.path list;
+  libs: Path.t list;
   (* config options *)
   options: options;
   (* root path *)
-  root: Path.path;
+  root: Path.t;
 }
 
 let default_options = {
@@ -61,10 +61,10 @@ end = struct
     List.iter (fun ex -> (fprintf o "%s\n" (fst ex))) excludes
 
   let includes o includes =
-    List.iter (fun inc -> (fprintf o "%s\n" (Path.string_of_path inc))) includes
+    List.iter (fun inc -> (fprintf o "%s\n" (Path.to_string inc))) includes
 
   let libs o libs =
-    List.iter (fun lib -> (fprintf o "%s\n" (Path.string_of_path lib))) libs
+    List.iter (fun lib -> (fprintf o "%s\n" (Path.to_string lib))) libs
 
   let options =
     let opt o name value = fprintf o "%s=%s\n" name value
@@ -125,11 +125,11 @@ let group_into_sections lines =
 let path_stem =
   let wc = Str.regexp "^[^*?]*[*?]" in
   (fun path ->
-    let path_str = Path.string_of_path path in
+    let path_str = Path.to_string path in
     let stem = if Str.string_match wc path_str 0
     then Filename.dirname (Str.matched_string path_str)
     else path_str in
-    Path.mk_path stem)
+    Path.make stem)
 
 let dir_sep = Str.regexp_string Filename.dir_sep
 
@@ -139,7 +139,7 @@ let path_patt =
   let star2 = Str.regexp_string "**" in
   let qmark = Str.regexp_string "?" in
   fun path ->
-    let str = Path.string_of_path path in
+    let str = Path.to_string path in
     (* because we accept both * and **, convert in 2 steps *)
     let results = Str.full_split star2 str in
     let results = List.map (fun r -> match r with
@@ -154,7 +154,7 @@ let path_patt =
 (* helper - eliminate noncanonical entries where possible.
    no other normalization is done *)
 let fixup_path p = if Path.is_normalized p then p else
-  let s = Path.string_of_path p in
+  let s = Path.to_string p in
   let abs = not (Filename.is_relative s) in
   let entries = Str.split_delim dir_sep s in
   let rec loop revbase entries =
@@ -172,12 +172,12 @@ let fixup_path p = if Path.is_normalized p then p else
   let entries = loop [] entries in
   let s = List.fold_left Filename.concat "" entries in
   let s = if abs then Filename.dir_sep ^ s else s in
-  Path.mk_path s
+  Path.make s
 
 let make_path_absolute config path =
   if Filename.is_relative path
   then Path.concat config.root path
-  else Path.mk_path path
+  else Path.make path
 
 (* parse include lines and set config's
    includes (a list of path specs) and
@@ -192,7 +192,7 @@ let parse_includes config lines =
   let include_stems, include_map = List.fold_left (fun (stems, map) path ->
     let stem = path_stem path in
     let patt = path_patt path in
-    let pstr = Path.string_of_path path in
+    let pstr = Path.to_string path in
     match PathMap.get stem map with
       | None ->
           let map = PathMap.add stem [pstr, patt] map in
@@ -207,7 +207,7 @@ let parse_includes config lines =
 (* find a prefix for f in a list of paths, or none *)
 let rec find_prefix f = function
 | [] -> None
-| h :: _ when str_starts_with f (Path.string_of_path h) -> Some h
+| h :: _ when str_starts_with f (Path.to_string h) -> Some h
 | h :: t -> find_prefix f t
 
 (* find a match for f in a list of patterns, or none *)
@@ -355,7 +355,7 @@ let parse config lines =
   List.fold_left parse_section config sections
 
 let fullpath root =
-  Path.string_of_path (Path.concat root ".flowconfig")
+  Path.to_string (Path.concat root ".flowconfig")
 
 let read root =
   let filename = fullpath root in

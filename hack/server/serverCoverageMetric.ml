@@ -104,7 +104,7 @@ let mk_trie acc fn_counts_l =
  * Returns None if root is not a prefix of path. *)
 let relativize root path =
   (* naive implementation *)
-  let root = Path.string_of_path root ^ "/" in
+  let root = Path.to_string root ^ "/" in
   if str_starts_with path root
   then
     let root_len = String.length root in
@@ -112,7 +112,7 @@ let relativize root path =
   else None
 
 let go_ fn genv env =
-  let path = Path.mk_path fn in
+  let path = Path.make fn in
   let root = Path.parent path in
   let module RP = Relative_path in
   let next_files = compose

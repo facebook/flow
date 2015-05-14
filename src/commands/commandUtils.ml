@@ -122,10 +122,10 @@ let collect_server_flags
 
 let start_flow_server root =
   Printf.fprintf stderr "Flow server launched for %s\n%!"
-    (Path.string_of_path root);
+    (Path.to_string root);
   let flow_server = Printf.sprintf "%s start %s 1>&2"
     (Filename.quote (Sys.argv.(0)))
-    (Filename.quote (Path.string_of_path root)) in
+    (Filename.quote (Path.to_string root)) in
   match Unix.system flow_server with
     | Unix.WEXITED 0 -> ()
     | _ -> (Printf.fprintf stderr "Could not start flow server!\n"; exit 77)
@@ -163,7 +163,7 @@ let rec connect_helper autostart retries retry_if_init root =
     ) else (
       prerr_endline (Utils.spf
           "Error: There is no flow server running in '%s'."
-          (Path.string_of_path root));
+          (Path.to_string root));
       exit 2
     )
   | _ -> Printf.fprintf stderr "Something went wrong :(\n%!"; exit 2
@@ -201,7 +201,7 @@ let guess_root dir_or_file =
     let dir = if Sys.is_directory dir_or_file
       then dir_or_file
       else Filename.dirname dir_or_file in
-    match ClientArgs.guess_root ".flowconfig" (Path.mk_path dir) 50 with
+    match ClientArgs.guess_root ".flowconfig" (Path.make dir) 50 with
     | Some root ->
         root
     | None ->
@@ -220,14 +220,14 @@ let convert_input_pos (line, column) =
 
 (* copied (and adapted) from Hack's ClientCheck module *)
 let get_path_of_file file =
-  let path = Path.mk_path file in
+  let path = Path.make file in
   if Path.file_exists path
-  then Path.string_of_path path
+  then Path.to_string path
   else
     (* Filename.concat does not return a normalized path when the file does
        not exist. Thus, we do it on our own... *)
     let file = Files_js.normalize_path (Sys.getcwd()) file in
-    let path = Path.mk_path file in
-    Path.string_of_path path
+    let path = Path.make file in
+    Path.to_string path
 
 let exe_name = Filename.basename Sys.executable_name

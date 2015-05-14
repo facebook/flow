@@ -10,4 +10,4 @@
 
 val main : ClientStop.env -> unit
 
-val kill_server : Path.path -> unit
+val kill_server : Path.t -> unit

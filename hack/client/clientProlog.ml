@@ -11,7 +11,7 @@
 let num_build_retries = 60
 
 type env = {
-  root: Path.path;
+  root: Path.t;
 }
 
 let rec connect env retries =

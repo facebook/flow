@@ -26,8 +26,8 @@ module Init = struct
 
   let main options root () =
     let root = match root with
-    | None -> Sys.getcwd () |> Path.mk_path
-    | Some root -> Path.mk_path root
+    | None -> Sys.getcwd () |> Path.make
+    | Some root -> Path.make root
     in
     let options = match options with
     | None -> []

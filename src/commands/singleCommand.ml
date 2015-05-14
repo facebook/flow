@@ -56,7 +56,7 @@ let main all weak debug verbose json show_all_errors profile quiet module_
          lib no_flowlib root () =
   let opt_libs = match lib with
   | None -> []
-  | Some lib -> [Path.mk_path lib]
+  | Some lib -> [Path.make lib]
   in
 
   let module_ = match module_ with

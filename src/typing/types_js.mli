@@ -24,7 +24,7 @@ type options = {
   opt_profile : bool;
   opt_strip_root : bool;
   opt_module: string;
-  opt_libs: Path.path list;
+  opt_libs: Path.t list;
   opt_no_flowlib: bool;
 }
 

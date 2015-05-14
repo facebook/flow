@@ -68,7 +68,7 @@ type patch =
 | Replace of insert_patch
 
 type command =
-| STATUS of Path.path
+| STATUS of Path.t
 | LIST_FILES
 | LIST_MODES
 | AUTOCOMPLETE of string
@@ -100,8 +100,8 @@ let cmd_from_channel (ic:in_channel): command =
   Marshal.from_channel ic
 
 type directory_mismatch = {
-  server: Path.path;
-  client: Path.path;
+  server: Path.t;
+  client: Path.t;
 }
 
 type response =

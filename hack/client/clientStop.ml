@@ -14,7 +14,7 @@ open Sys_utils
 exception FailedToKill
 
 type env = {
-  root: Path.path;
+  root: Path.t;
 }
 
 module type STOP_CONFIG = sig
@@ -37,7 +37,7 @@ module StopCommand (Config : STOP_CONFIG) : STOP_COMMAND = struct
   let nice_kill env =
     let root = env.root in
     Printf.fprintf stderr "Attempting to nicely kill server for %s\n%!"
-      (Path.string_of_path root);
+      (Path.to_string root);
     let response = with_timeout 6
       ~on_timeout: (fun _ -> raise ClientExceptions.Server_busy)
       ~do_:(fun () ->
@@ -54,7 +54,7 @@ module StopCommand (Config : STOP_CONFIG) : STOP_COMMAND = struct
       if ClientUtils.server_exists root
       then raise FailedToKill
       else Printf.fprintf stderr "Successfully killed server for %s\n%!"
-        (Path.string_of_path root)
+        (Path.to_string root)
     end else begin
       Printf.fprintf stderr "Unexpected response from the server: %s\n"
         (Config.response_to_string response);
@@ -63,7 +63,7 @@ module StopCommand (Config : STOP_CONFIG) : STOP_COMMAND = struct
 
   let mean_kill env =
     Printf.fprintf stderr "Attempting to meanly kill server for %s\n%!"
-      (Path.string_of_path env.root);
+      (Path.to_string env.root);
     let pids =
       try PidLog.get_pids env.root
       with PidLog.FailedToGetPids ->
@@ -84,25 +84,25 @@ module StopCommand (Config : STOP_CONFIG) : STOP_COMMAND = struct
     if ClientUtils.server_exists env.root
     then raise FailedToKill
     else Printf.fprintf stderr "Successfully killed server for %s\n%!"
-      (Path.string_of_path env.root)
+      (Path.to_string env.root)
 
   let kill_server env =
     Printf.fprintf stderr "Killing server for %s\n%!"
-      (Path.string_of_path env.root);
+      (Path.to_string env.root);
     try nice_kill env
     with FailedToKill ->
       Printf.fprintf stderr "Failed to kill server nicely for %s\n%!"
-        (Path.string_of_path env.root);
+        (Path.to_string env.root);
       try mean_kill env
       with FailedToKill ->
         Printf.fprintf stderr "Failed to kill server meanly for %s\n%!"
-          (Path.string_of_path env.root);
+          (Path.to_string env.root);
         exit 1
 
   let main env =
     if ClientUtils.server_exists env.root
     then kill_server env
     else Printf.fprintf stderr "Error: no server to kill for %s\n%!"
-      (Path.string_of_path env.root)
+      (Path.to_string env.root)
 
 end

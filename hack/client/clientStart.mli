@@ -9,7 +9,7 @@
  *)
 
 type env = {
-  root: Path.path;
+  root: Path.t;
   wait: bool;
   no_load: bool;
 }

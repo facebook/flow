@@ -9,7 +9,7 @@
  *)
 
 type env = {
-  root: Path.path;
+  root: Path.t;
 }
 
 module type STOP_CONFIG = sig

@@ -16,7 +16,7 @@ open Sys_utils
 let num_build_retries = 800
 
 type env = {
-  root : Path.path;
+  root : Path.t;
   build_opts : ServerMsg.build_opts;
 }
 

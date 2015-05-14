@@ -9,12 +9,12 @@
  *)
 
 
-type path = {
+type t = {
   is_normalized: bool;
   path: string;
 }
 
-let dummy_path: path = { is_normalized = true; path = ""; }
+let dummy_path: t = { is_normalized = true; path = ""; }
 
 (**
  * Like Python's os.path.expanduser, though probably doesn't cover some cases.
@@ -48,7 +48,7 @@ let expanduser (path : string) : string =
  * - paths are always absolute. So the empty string "" becomes
  *   the current directory (in absolute)
  *)
-let mk_path (path : string) : path =
+let make (path : string) : t =
   match Sys_utils.realpath (expanduser path) with
   | Some path ->
     {
@@ -61,41 +61,41 @@ let mk_path (path : string) : path =
       path=path;
     }
 
-let string_of_path (path : path) : string =
+let to_string (path : t) : string =
   path.path
 
-let equal (path1 : path) (path2 : path) : bool =
+let equal (path1 : t) (path2 : t) : bool =
   path1.is_normalized = path2.is_normalized &&
   path1.path = path2.path
 
-let file_exists (path : path) : bool =
-  let file = string_of_path path in
+let file_exists (path : t) : bool =
+  let file = to_string path in
   Sys.file_exists file
 
-let is_directory (path : path) : bool =
-  let file = string_of_path path in
+let is_directory (path : t) : bool =
+  let file = to_string path in
   Sys.is_directory file
 
-let is_normalized (path : path) : bool =
+let is_normalized (path : t) : bool =
   path.is_normalized
 
-let concat (path : path) (more : string) : path =
-  let path = string_of_path path in
+let concat (path : t) (more : string) : t =
+  let path = to_string path in
   let path = Printf.sprintf "%s/%s" path more in
-  mk_path path
+  make path
 
-let remove (path : path) : unit =
-  let file = string_of_path path in
+let remove (path : t) : unit =
+  let file = to_string path in
   Sys.remove file
 
-let parent (path : path) : path =
-  let s = string_of_path path in
+let parent (path : t) : t =
+  let s = to_string path in
   if is_directory path
-  then mk_path (s ^ "/../")
-  else mk_path (Filename.dirname s)
+  then make (s ^ "/../")
+  else make (Filename.dirname s)
 
-let slash_escaped_string_of_path (path: path) : string =
-  let path_str = string_of_path path in
+let slash_escaped_string_of_path (path: t) : string =
+  let path_str = to_string path in
   let buf = Buffer.create (String.length path_str) in
   String.iter (fun ch ->
     match ch with
@@ -106,7 +106,7 @@ let slash_escaped_string_of_path (path: path) : string =
   ) path_str;
   Buffer.contents buf
 
-let path_of_slash_escaped_string (str: string) : path =
+let path_of_slash_escaped_string (str: string) : t =
   let length = String.length str in
   let buf = Buffer.create length in
   let rec consume i =
@@ -126,4 +126,4 @@ let path_of_slash_escaped_string (str: string) : path =
       Buffer.add_char buf c;
       consume next_i
   in consume 0;
-  mk_path (Buffer.contents buf)
+  make (Buffer.contents buf)

@@ -107,8 +107,8 @@ struct
       ServerProt.response_to_channel oc msg;
       Printf.printf "Status: Error\n";
       Printf.printf "server_dir=%s, client_dir=%s\n"
-        (Path.string_of_path server_root)
-        (Path.string_of_path client_root);
+        (Path.to_string server_root)
+        (Path.to_string client_root);
       Printf.printf "%s is not listening to the same directory. Exiting.\n"
         name;
       exit 5
@@ -238,7 +238,7 @@ struct
     let suggest_for_file result_map file =
       (try
          let (file, region) = parse_suggest_cmd file in
-         let file = Path.string_of_path (Path.mk_path file) in
+         let file = Path.to_string (Path.make file) in
          let cx = Types_js.merge_strict_file file in
          let content = cat file in
          let lines = Str.split_delim (Str.regexp "\n") content in
@@ -280,7 +280,7 @@ struct
   let port =
     let port_for_file result_map file =
       (try
-        let file = Path.string_of_path (Path.mk_path file) in
+        let file = Path.to_string (Path.make file) in
         let ast = Parsing_service_js.get_ast_unsafe file in
         let content = cat file in
         let lines = Str.split_delim (Str.regexp "\n") content in
@@ -429,7 +429,7 @@ struct
       fun f -> Files_js.is_flow_file f || f = config_path
     in
     let config = FlowConfig.get root in
-    let sroot = Path.string_of_path root in
+    let sroot = Path.to_string root in
     SSet.fold (fun f acc ->
       if is_flow_file f &&
         (* note: is_included may be expensive. check in-root match first. *)

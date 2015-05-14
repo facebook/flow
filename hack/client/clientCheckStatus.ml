@@ -72,13 +72,13 @@ let check_status connect (args:client_check_env) =
   | ServerMsg.DIRECTORY_MISMATCH d ->
     Printf.printf "%s is running on a different directory.\n" name;
     Printf.printf "server_root: %s, client_root: %s\n"
-      (Path.string_of_path d.ServerMsg.server)
-      (Path.string_of_path d.ServerMsg.client);
+      (Path.to_string d.ServerMsg.server)
+      (Path.to_string d.ServerMsg.client);
     flush stdout;
     raise Server_directory_mismatch
   | ServerMsg.SERVER_DYING ->
     Printf.printf "Server has been killed for %s\n"
-      (Path.string_of_path args.root);
+      (Path.to_string args.root);
     exit 2
   | ServerMsg.PONG ->
       Printf.printf "Why on earth did the server respond with a pong?\n%!";
