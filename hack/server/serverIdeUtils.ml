@@ -120,13 +120,13 @@ let recheck tcopt fileinfo_l =
 
 let check_file_input tcopt files_info fi =
   match fi with
-  | ServerMsg.FileContent content ->
+  | ServerUtils.FileContent content ->
       let path = Relative_path.default in
       let funs, classes = declare path content in
       fix_file_and_def path content;
       revive funs classes;
       path
-  | ServerMsg.FileName fn ->
+  | ServerUtils.FileName fn ->
       let path = Relative_path.create Relative_path.Root fn in
       let () = match Relative_path.Map.get path files_info with
       | Some fileinfo -> recheck tcopt [fileinfo]

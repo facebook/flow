@@ -39,15 +39,12 @@ module type SERVER_PROGRAM = sig
   val process_updates : genv -> env -> SSet.t -> Relative_path.Set.t
   val recheck: genv -> env -> Relative_path.Set.t -> env
   val post_recheck_hook: genv -> env -> env -> Relative_path.Set.t -> unit
-  val infer: env -> (ServerMsg.file_input * int * int) -> out_channel -> unit
-  val suggest: string list -> out_channel -> unit
   val parse_options: unit -> ServerArgs.options
   val get_watch_paths: ServerArgs.options -> Path.t list
   val name: string
   val config_filename : unit -> Relative_path.t
   val load_config : unit -> ServerConfig.t
   val validate_config : genv -> bool
-  val get_errors: ServerEnv.env -> Errors.t
   val handle_client : genv -> env -> client -> unit
   (* This is a hack for us to save / restore the global state that is not
    * already captured by ServerEnv *)
@@ -210,6 +207,7 @@ end = struct
       if rechecked_count > 0
       then Program.EventLogger.recheck_end start_t loop_count rechecked_count;
       if has_client then handle_connection genv !env socket;
+      ServerEnv.invoke_async_queue ();
     done
 
   let load genv filename to_recheck =

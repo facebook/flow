@@ -348,7 +348,7 @@ let parse_build_args () =
   in
   CBuild { ClientBuild.
     root = root;
-    build_opts = { ServerMsg.
+    build_opts = { ServerBuild.
       steps = !steps;
       no_steps = !no_steps;
       run_scripts = !run_scripts;

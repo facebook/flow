@@ -40,7 +40,7 @@ let go (files:string) ic oc expand_path =
     List.rev_map begin fun file_path ->
       expand_path file_path
     end file_list in
-  let command = ServerMsg.DUMP_SYMBOL_INFO (expand_path_list file_list) in
-  ServerMsg.cmd_to_channel oc command;
-  let result_json = to_json (Marshal.from_channel ic) in
+  let command = ServerRpc.DUMP_SYMBOL_INFO (expand_path_list file_list) in
+  let result = ServerCommand.rpc (ic, oc) command in
+  let result_json = to_json result in
   print_endline (Hh_json.json_to_string result_json)

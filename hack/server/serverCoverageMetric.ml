@@ -134,12 +134,8 @@ let go_ fn genv env =
   let result = List.map ~f:relativize_list result in
   List.fold_left ~f:mk_trie ~init:None result
 
-let go fn genv env oc =
-  let result =
-    try go_ fn genv env
-    with Failure _ | Invalid_argument _ ->
-      print_string "Coverage collection failed!";
-      None
-  in
-  Marshal.to_channel oc (result : result) [];
-  flush oc
+let go fn genv env =
+  try go_ fn genv env
+  with Failure _ | Invalid_argument _ ->
+    print_string "Coverage collection failed!";
+    None

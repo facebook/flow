@@ -9,24 +9,17 @@
  *)
 
 module HackConfig : ClientStop.STOP_CONFIG = struct
-  type response = ServerMsg.response
+  type response = unit
 
   let server_desc = "Hack"
 
   let server_name = "hh_server"
 
-  let kill_cmd_to_channel oc =
-    ServerMsg.cmd_to_channel oc ServerMsg.KILL
+  let kill (ic, oc) = ServerCommand.rpc (ic, oc) ServerRpc.KILL
 
-  let response_from_channel = ServerMsg.response_from_channel
+  let response_to_string () = "Server Dying"
 
-  let response_to_string = ServerMsg.response_to_string
-
-  let is_expected = function
-    | ServerMsg.SERVER_DYING ->
-        true
-    | _ ->
-        false
+  let is_expected () = true
 
 end
 

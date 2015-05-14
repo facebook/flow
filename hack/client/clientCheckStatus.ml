@@ -7,9 +7,6 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  *)
-open ClientEnv
-open ClientExceptions
-open Sys_utils
 
 module C = Tty
 
@@ -51,35 +48,3 @@ let print_error_color e =
   let msg_list = Errors.to_list e in
   print_reason_color ~first:true ~code (List.hd msg_list);
   List.iter (print_reason_color ~first:false ~code) (List.tl msg_list)
-
-let check_status connect (args:client_check_env) =
-  let name = "hh_server" in
-  let response = with_timeout 6
-    ~on_timeout:(fun _ -> raise Server_busy)
-    ~do_:(fun () ->
-      let ic, oc = connect args in
-      ServerMsg.cmd_to_channel oc (ServerMsg.STATUS args.root);
-      ServerMsg.response_from_channel ic) in
-  match response with
-  | ServerMsg.NO_ERRORS ->
-    ServerError.print_errorl args.output_json [] stdout;
-    exit 0
-  | ServerMsg.ERRORS error_list ->
-    if args.output_json || args.from <> ""
-    then ServerError.print_errorl args.output_json error_list stdout
-    else List.iter print_error_color error_list;
-    exit 2
-  | ServerMsg.DIRECTORY_MISMATCH d ->
-    Printf.printf "%s is running on a different directory.\n" name;
-    Printf.printf "server_root: %s, client_root: %s\n"
-      (Path.to_string d.ServerMsg.server)
-      (Path.to_string d.ServerMsg.client);
-    flush stdout;
-    raise Server_directory_mismatch
-  | ServerMsg.SERVER_DYING ->
-    Printf.printf "Server has been killed for %s\n"
-      (Path.to_string args.root);
-    exit 2
-  | ServerMsg.PONG ->
-      Printf.printf "Why on earth did the server respond with a pong?\n%!";
-      exit 2

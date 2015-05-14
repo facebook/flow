@@ -35,10 +35,9 @@ module FlowConfig : ClientStop.STOP_CONFIG = struct
 
   let server_name = "flow"
 
-  let kill_cmd_to_channel oc =
-    ServerProt.cmd_to_channel oc ServerProt.KILL
-
-  let response_from_channel = ServerProt.response_from_channel
+  let kill (ic, oc) =
+    ServerProt.cmd_to_channel oc ServerProt.KILL;
+    ServerProt.response_from_channel ic
 
   let response_to_string = ServerProt.response_to_string
 

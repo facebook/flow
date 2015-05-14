@@ -43,8 +43,6 @@ struct
 
   let parse_options = OptionParser.parse
 
-  let get_errors _ = Types_js.get_errors ()
-
   let preinit () =
     (* Do some initialization before creating workers, so that each worker is
      * forked with this information already available. Finding lib files is one
@@ -82,7 +80,7 @@ struct
     exit 4
 
   let status_log env =
-    if List.length (get_errors env) = 0
+    if List.length (Types_js.get_errors ()) = 0
     then Printf.printf "Status: OK\n"
     else Printf.printf "Status: Error\n";
     flush stdout
@@ -116,7 +114,7 @@ struct
     flush stdout;
     (* TODO: check status.directory *)
     status_log env;
-    let errors = get_errors env in
+    let errors = Types_js.get_errors () in
     EventLogger.check_response errors;
     send_errorl errors oc
 
@@ -162,11 +160,6 @@ struct
         | _, errors -> errors)
     in
     send_errorl (Errors_js.to_list errors) oc
-
-  (* our infer implementation uses a different type for file_input, we stub
-     the (unused) public interface to avoid issues *)
-  let infer env (file_input, line, col) oc =
-    ()
 
   let mk_pos file line col =
     {

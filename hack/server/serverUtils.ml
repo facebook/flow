@@ -21,3 +21,17 @@ type connection_state =
 let msg_to_channel oc msg =
   Marshal.to_channel oc msg [];
   flush oc
+
+type file_input =
+  | FileName of string
+  | FileContent of string
+
+let die_nicely () =
+  EventLogger.killed ();
+  Printf.printf "Status: Error\n";
+  Printf.printf "Sent KILL command by client. Dying.\n";
+  (match !ServerDfind.dfind_pid with
+  | Some pid -> Unix.kill pid Sys.sigterm;
+  | None -> failwith "Dfind died before we could kill it"
+  );
+  exit 0

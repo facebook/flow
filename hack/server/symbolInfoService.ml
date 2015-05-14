@@ -15,7 +15,7 @@ type target_type =
   | Method
   | Constructor
 
-type fun_call_result = {
+type result = {
   name:  string;
   type_: target_type;
   pos: string Pos.pos;

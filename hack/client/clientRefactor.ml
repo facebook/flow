@@ -23,9 +23,9 @@ let compare_pos pos1 pos2 =
   else 0
 
 let get_pos = function
-  | ServerMsg.Insert patch
-  | ServerMsg.Replace patch -> patch.ServerMsg.pos
-  | ServerMsg.Remove p -> p
+  | ServerRefactor.Insert patch
+  | ServerRefactor.Replace patch -> patch.ServerRefactor.pos
+  | ServerRefactor.Remove p -> p
 
 let compare_result res1 res2 =
   compare_pos (get_pos res1) (get_pos res2)
@@ -66,12 +66,12 @@ let write_patches_to_buffer buf original_content patch_list =
     let char_start, char_end = Pos.info_raw pos in
     add_original_content (char_start - 1);
     match res with
-      | ServerMsg.Insert patch ->
-          Buffer.add_string buf patch.ServerMsg.text
-      | ServerMsg.Replace patch ->
-          Buffer.add_string buf patch.ServerMsg.text;
+      | ServerRefactor.Insert patch ->
+          Buffer.add_string buf patch.ServerRefactor.text
+      | ServerRefactor.Replace patch ->
+          Buffer.add_string buf patch.ServerRefactor.text;
           i := char_end
-      | ServerMsg.Remove _ ->
+      | ServerRefactor.Remove _ ->
           i := char_end
   end patch_list;
   add_original_content (String.length original_content - 1)
@@ -96,11 +96,11 @@ let apply_patches file_map =
 
 let patch_to_json res =
   let type_, replacement = match res with
-    | ServerMsg.Insert patch ->
-        "insert", patch.ServerMsg.text
-    | ServerMsg.Replace patch ->
-        "replace", patch.ServerMsg.text
-    | ServerMsg.Remove _ ->
+    | ServerRefactor.Insert patch ->
+        "insert", patch.ServerRefactor.text
+    | ServerRefactor.Replace patch ->
+        "replace", patch.ServerRefactor.text
+    | ServerRefactor.Remove _ ->
         "remove", ""
   in
   let pos = get_pos res in
@@ -140,23 +140,22 @@ let go args =
     | "1" -> 
       let class_name = input_prompt "Enter class name: " in
       let new_name = input_prompt "Enter a new name for this class: " in
-      ServerMsg.ClassRename (class_name, new_name)
+      ServerRefactor.ClassRename (class_name, new_name)
     | "2" ->
       let fun_name = input_prompt "Enter function name: " in
       let new_name = input_prompt "Enter a new name for this function: " in
-      ServerMsg.FunctionRename (fun_name, new_name)
+      ServerRefactor.FunctionRename (fun_name, new_name)
     | "3" ->
       let class_name = input_prompt "Enter class name: " in
       let method_name = input_prompt "Enter method name: " in
       let new_name =
           input_prompt ("Enter a new name for this method: "^class_name^"::") in
-      ServerMsg.MethodRename (class_name, method_name, new_name)
+      ServerRefactor.MethodRename (class_name, method_name, new_name)
     | _ -> raise Exit in
     
     let ic, oc = connect args.root in
-    let command = ServerMsg.REFACTOR command in
-    ServerMsg.cmd_to_channel oc command;
-    let patches : ServerRefactor.result = Marshal.from_channel ic in
+    let patches =
+      ServerCommand.(rpc (ic, oc) (ServerRpc.REFACTOR command)) in
     let file_map = List.fold_left map_patches_to_filename SMap.empty patches in
     if args.output_json
     then print_patches_json file_map

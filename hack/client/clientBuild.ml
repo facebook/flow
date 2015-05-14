@@ -8,8 +8,6 @@
  *
  *)
 
-open Sys_utils
-
 (* 800s was chosen because it was above most of the historical p95 of
  * hack server startup times as observed here:
  * https://fburl.com/48825801, see also https://fburl.com/29184831 *)
@@ -17,12 +15,12 @@ let num_build_retries = 800
 
 type env = {
   root : Path.t;
-  build_opts : ServerMsg.build_opts;
+  build_opts : ServerBuild.build_opts;
 }
 
 let build_kind_of build_opts =
   let module LC = ClientLogCommand in
-  let {ServerMsg.steps; no_steps; is_push; incremental; _} = build_opts in
+  let {ServerBuild.steps; no_steps; is_push; incremental; _} = build_opts in
   if steps <> None || no_steps <> None then
     LC.Steps
   else if is_push then
@@ -32,7 +30,7 @@ let build_kind_of build_opts =
   else
     LC.Full
 
-let should_retry env tries = env.build_opts.ServerMsg.wait || tries > 0
+let should_retry env tries = env.build_opts.ServerBuild.wait || tries > 0
 
 let rec connect env retries =
   try
@@ -49,7 +47,7 @@ let rec connect env retries =
     end
     else exit 2
   | ClientExceptions.Server_initializing ->
-    let wait_msg = if env.build_opts.ServerMsg.wait
+    let wait_msg = if env.build_opts.ServerBuild.wait
                    then Printf.sprintf "will wait forever due to --wait option, have waited %d seconds" (num_build_retries - retries)
                    else Printf.sprintf "will wait %d more seconds" retries in
     Printf.printf
@@ -75,26 +73,6 @@ let rec connect env retries =
       exit 2
     end
 
-let rec wait_for_response ic =
-  try
-    with_timeout 1
-      ~on_timeout:(fun _ -> raise ClientExceptions.Server_busy)
-      ~do_:(fun () ->
-        let response = ServerMsg.response_from_channel ic in
-        if Tty.spinner_used() then Tty.print_clear_line stdout;
-        response)
-  with
-  | End_of_file ->
-     prerr_string "Server disconnected or crashed. Try `hh_client restart`\n";
-     flush stderr;
-     exit 1
-  | ClientExceptions.Server_busy ->
-     (* We timed out waiting for response from hh_server, update message *)
-     Printf.printf
-       "Awaiting response from hh_server, hh_server typechecking... %s \r%!"
-       (Tty.spinner());
-     wait_for_response ic
-
 let wait_on_server_restart ic =
   try
     while true do
@@ -112,9 +90,8 @@ let rec main_ env retries =
   let name = "hh_server" in
   try
     let ic, oc = connect env retries in
-    ServerMsg.cmd_to_channel oc (ServerMsg.BUILD env.build_opts);
-    let response = wait_for_response ic in
-    handle_response response env retries ic
+    ServerCommand.(stream_request oc (BUILD env.build_opts));
+    handle_response env retries ic
   with
   | ClientExceptions.Server_missing ->
       ClientStart.start_server { ClientStart.
@@ -144,45 +121,39 @@ let rec main_ env retries =
        (Printf.printf "Error: Client failed to connect to server!!\n%!";
         exit 2)
 
-and handle_response response env retries ic =
-  match response with
-  | ServerMsg.PONG -> (* successful case *)
-    begin
-      let finished = ref false in
-      let exit_code = ref 0 in
-      EventLogger.client_begin_work (ClientLogCommand.LCBuild
-        (env.root, build_kind_of env.build_opts));
-      try
-        while true do
-          let line:ServerMsg.build_progress = Marshal.from_channel ic in
-          match line with
-          | ServerMsg.BUILD_PROGRESS s -> print_endline s
-          | ServerMsg.BUILD_ERROR s -> exit_code := 2; print_endline s
-          | ServerMsg.BUILD_FINISHED -> finished := true
-        done
-      with
-      | End_of_file ->
-        if not !finished then begin
-          Printf.fprintf stderr ("Build unexpectedly terminated! "^^
-            "You may need to do `hh_client restart`.\n");
-          exit 1
-        end;
-        if !exit_code = 0
-        then ()
-        else exit (!exit_code)
-      | Failure _ as e ->
-        (* We are seeing Failure "input value: bad object" which can
-         * realistically only happen from Marshal.from_channel ic.
-         * This admittedly won't help us root cause this, but at least
-         * this will help us identify where it is occurring
-         *)
-        let backtrace = Printexc.get_backtrace () in
-        let e_str = Printexc.to_string e in
-        Printf.fprintf stderr "Unexpected error: %s\n%s%!" e_str backtrace;
-        raise e
-    end
-  | resp -> Printf.printf "Unexpected server response %s.\n%!"
-    (ServerMsg.response_to_string resp)
+and handle_response env retries ic =
+  let finished = ref false in
+  let exit_code = ref 0 in
+  EventLogger.client_begin_work (ClientLogCommand.LCBuild
+    (env.root, build_kind_of env.build_opts));
+  try
+    while true do
+      let line:ServerBuild.build_progress = Marshal.from_channel ic in
+      match line with
+      | ServerBuild.BUILD_PROGRESS s -> print_endline s
+      | ServerBuild.BUILD_ERROR s -> exit_code := 2; print_endline s
+      | ServerBuild.BUILD_FINISHED -> finished := true
+    done
+  with
+  | End_of_file ->
+    if not !finished then begin
+      Printf.fprintf stderr ("Build unexpectedly terminated! "^^
+        "You may need to do `hh_client restart`.\n");
+      exit 1
+    end;
+    if !exit_code = 0
+    then ()
+    else exit (!exit_code)
+  | Failure _ as e ->
+    (* We are seeing Failure "input value: bad object" which can
+     * realistically only happen from Marshal.from_channel ic.
+     * This admittedly won't help us root cause this, but at least
+     * this will help us identify where it is occurring
+     *)
+    let backtrace = Printexc.get_backtrace () in
+    let e_str = Printexc.to_string e in
+    Printf.fprintf stderr "Unexpected error: %s\n%s%!" e_str backtrace;
+    raise e
 
 let main env =
   main_ env num_build_retries
