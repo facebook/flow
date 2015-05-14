@@ -11,4 +11,8 @@ objects.js:7:12,16: boolean
 This type is incompatible with
 objects.js:3:17,22: string
 
-Found 3 errors
+objects.js:9:1,23: assignment of computed property/element
+Property not found in
+objects.js:9:1,1: object type
+
+Found 4 errors
