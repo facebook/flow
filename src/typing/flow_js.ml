@@ -2280,30 +2280,24 @@ let rec __flow cx (l,u) trace =
       ->
       rec_flow cx trace (key, ElemT(reason_op, l, LowerBoundT tout))
 
-    | (StrT (reason_s, literal),
-       ElemT(reason_op, (ObjT(_, {dict_t; _}) as o), t))
-      ->
-      (match literal with
-      | Some x -> (match t with
-        | UpperBoundT tin -> rec_flow cx trace (o, SetT(reason_op,x,tin))
-        | LowerBoundT tout -> rec_flow cx trace (o, GetT(reason_op,x,tout))
-        | _ -> assert false)
-      | None -> (match dict_t with
-        | None -> ()
-        | Some { key; value; _ } ->
-            rec_flow cx trace (l, key);
-            rec_flow cx trace (value,t);
-            rec_flow cx trace (t,value))
-      )
+    | (StrT (_, Some x), ElemT(reason_op, (ObjT _ as o), t)) ->
+      (match t with
+      | UpperBoundT tin -> rec_flow cx trace (o, SetT(reason_op,x,tin))
+      | LowerBoundT tout -> rec_flow cx trace (o, GetT(reason_op,x,tout))
+      | _ -> assert false)
 
-    | (_, ElemT(_, ObjT(_, {dict_t; _}), t))
+    (* if the object is a dictionary, verify it *)
+    | (_, ElemT(_, ObjT(_, {dict_t = Some { key; value; _ }; _}), t))
       ->
-        (match dict_t with
-        | None -> ()
-        | Some { key; value; _ } ->
-            rec_flow cx trace (l, key);
-            rec_flow cx trace (value,t);
-            rec_flow cx trace (t,value))
+      rec_flow cx trace (l, key);
+      rec_flow cx trace (value,t);
+      rec_flow cx trace (t,value)
+
+    (* otherwise, string and number keys are allowed, but there's nothing else
+       to flow without knowing their literal values. *)
+    | (StrT _, ElemT(_, ObjT _, _))
+    | (NumT _, ElemT(_, ObjT _, _)) ->
+      ()
 
     | (NumT (reason_i, literal),
        ElemT(reason_op, ArrT(_, value, ts), t))
