@@ -252,9 +252,9 @@ and class_type = {
    * a protected member can be delayed *)
   tc_deferred_init_members : SSet.t;
   tc_kind                : Ast.class_kind;
-  tc_name                : string    ;
+  tc_name                : string ;
   tc_pos                 : Pos.t ;
-  tc_tparams             : tparam list   ;
+  tc_tparams             : tparam list ;
   tc_consts              : class_elt SMap.t;
   tc_typeconsts          : typeconst_type SMap.t;
   tc_props               : class_elt SMap.t;

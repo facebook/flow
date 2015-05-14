@@ -46,8 +46,11 @@ let check_partially_known_method_visibility = true
 (* Rules for visibility *)
 let check_visibility parent_class_elt class_elt =
   match parent_class_elt.ce_visibility, class_elt.ce_visibility with
+  | Vprivate _   , _ ->
+    (* The only time this case should come into play is when the
+     * parent_class_elt comes from a trait *)
+    ()
   | Vpublic      , Vpublic
-  | Vprivate _   , Vprivate _
   | Vprotected _ , Vprotected _
   | Vprotected _ , Vpublic       -> ()
   | _ ->
@@ -58,14 +61,22 @@ let check_visibility parent_class_elt class_elt =
     Errors.visibility_extends vis pos parent_pos parent_vis
 
 (* Check that all the required members are implemented *)
-let check_members_implemented parent_reason reason parent_members members =
+let check_members_implemented check_private parent_reason reason parent_members members =
   SMap.iter begin fun member_name class_elt ->
     match class_elt.ce_visibility with
-    | Vprivate _ -> ()
-    | _ when not (SMap.mem member_name members) ->
+      | Vprivate _ when not check_private -> ()
+      | Vprivate _ ->
+        (* This case cannot be removed as long as we're forced to
+         * check against every extended parent by the fact that // decl
+         * parents aren't fully checked against grandparents; when
+         * (class) extends (class // decl) use (trait), the grandchild
+         * won't have access to private members of the grandparent
+         * trait *)
+        ()
+      | _ when not (SMap.mem member_name members) ->
         let defn_reason = Reason.to_pos (fst class_elt.ce_type) in
         Errors.member_not_implemented member_name parent_reason reason defn_reason
-    | _ -> ()
+      | _ -> ()
   end parent_members
 
 (* When constant is overridden we need to check if the type is
@@ -151,8 +162,9 @@ let filter_privates members =
     else SMap.add name class_elt acc
   end members SMap.empty
 
-let check_members env parent_class class_ parent_members members =
-  let parent_members = filter_privates parent_members in
+let check_members check_private env parent_class class_ parent_members members =
+  let parent_members = if check_private then parent_members
+    else filter_privates parent_members in
   SMap.iter begin fun member_name parent_class_elt ->
     match SMap.get member_name members with
     | Some class_elt  ->
@@ -282,9 +294,10 @@ let check_class_implements env parent_class class_ =
   check_constructors env parent_class class_ psubst subst;
   let env, pmemberl = lfold (instantiate_members psubst) env pmemberl in
   let env, memberl = lfold (instantiate_members subst) env memberl in
+  let check_privates:bool = (parent_class.tc_kind = Ast.Ctrait) in
   if not fully_known then () else
-    List.iter2 (check_members_implemented parent_pos pos) pmemberl memberl;
-  List.iter2 (check_members env parent_class class_) pmemberl memberl;
+    List.iter2 (check_members_implemented check_privates parent_pos pos) pmemberl memberl;
+  List.iter2 (check_members check_privates env parent_class class_) pmemberl memberl;
   ()
 
 (*****************************************************************************)
