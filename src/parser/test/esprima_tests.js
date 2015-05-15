@@ -2963,7 +2963,18 @@ module.exports = {
         '({ set i(x) { }, set i(x) { } })',
         '((a)) => 42',
         '(a, (b)) => 42',
-        '"use strict"; (eval = 10) => 42',
+        {
+          content: '"use strict"; (eval = 10) => 42',
+          explanation: "This is an arrow function error, not an assignment "+
+            "error",
+          expected_differences: {
+            'root.errors.0.message': {
+              type: 'Wrong error message',
+              expected: 'Assignment to eval or arguments is not allowed in strict mode',
+              actual: 'Parameter name eval or arguments is not allowed in strict mode',
+            },
+          },
+        },
         // strict mode, using eval when IsSimpleParameterList is true
         {
           content: '"use strict"; eval => 42',
@@ -3430,6 +3441,28 @@ module.exports = {
           }
         },
         'class A { foo() { let let } }',
+        {
+          content: 'function foo([a.a]) {}',
+          explanation: 'Esprima is off by one',
+          expected_differences: {
+            'root.errors.0.column': {
+              type: 'Wrong error column',
+              expected: 18,
+              actual: '14-17'
+            },
+          },
+        },
+        {
+          content: 'var f = function ([a.a]) {}',
+          explanation: 'Esprima is off by one',
+          expected_differences: {
+            'root.errors.0.column': {
+              type: 'Wrong error column',
+              expected: 23,
+              actual: '19-22'
+            },
+          },
+        },
     ],
     'Invalid unicode related syntax': [
         'x\\u005c',

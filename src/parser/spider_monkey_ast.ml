@@ -653,6 +653,8 @@ and Expression : sig
       body: Statement.FunctionDeclaration.body;
       generator: bool;
       expression: bool;
+      returnType: Type.annotation option;
+      typeParameters: Type.ParameterDeclaration.t option;
     }
   end
   module Sequence : sig

@@ -288,6 +288,8 @@ module Translate = struct
         Js.Unsafe.set ret "body" (body);
         Js.Unsafe.set ret "generator" (bool arrow.generator);
         Js.Unsafe.set ret "expression" (bool arrow.expression);
+        Js.Unsafe.set ret "returnType" (option type_annotation arrow.returnType);
+        Js.Unsafe.set ret "typeParameters" (option type_parameter_declaration arrow.typeParameters);
         ret
       )
     | loc, Sequence sequence ->

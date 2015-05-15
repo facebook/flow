@@ -3001,12 +3001,14 @@ and expression_ cx loc e = Ast.Expression.(match e with
       ArrowFunction.id;
       params; defaults; rest;
       body;
+      returnType;
+      typeParameters;
       _
     } ->
-      let reason = mk_reason "arrow" loc in
+      let reason = mk_reason "arrow function" loc in
       let this = this_ cx reason in
-      let super = super_ cx reason in
-      mk_method cx reason (params, defaults, rest) None body this super
+      mk_function id cx reason
+        typeParameters (params, defaults, rest) returnType body this
 
   | TaggedTemplate {
       TaggedTemplate.tag = _, Identifier (_,
