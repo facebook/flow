@@ -81,7 +81,7 @@ let main option_values json strip_root path args () =
   let pos = if not strip_root then pos else Pos.({
     pos with pos_file =
       (* ugh too many path utils in this joint *)
-      let sroot = Path.string_of_path root in
+      let sroot = Path.to_string root in
       let spath = Relative_path.to_absolute pos.pos_file in
       let spath = Types_js.relative_path sroot spath in
       Relative_path.create Relative_path.Dummy spath
