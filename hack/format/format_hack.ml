@@ -680,6 +680,12 @@ let rec skip_spaces env =
   | Tspace -> skip_spaces env
   | _ -> back env
 
+let rec skip_spaces_and_nl env =
+  match token env with
+  | Teof -> ()
+  | Tspace | Tnewline -> skip_spaces_and_nl env
+  | _ -> back env
+
 let rec comment env =
   right_n 1 env comment_loop
 
@@ -1686,7 +1692,9 @@ and xhp_single env =
     | Tslash -> seq env [space; last_token; expect_xhp ">"]
     | _ ->
         back env;
-        seq env [expect_xhp ">"; xhp_body; xhp_close_tag];
+        seq env [expect_xhp ">"; skip_spaces_and_nl; xhp_body];
+        env.spaces := 0;
+        xhp_close_tag env;
   end
 
 and xhp_multi env =
@@ -1707,6 +1715,7 @@ and xhp_multi env =
         back env;
         expect_xhp ">" env;
         newline env;
+        skip_spaces_and_nl env;
         margin_set margin_pos env begin fun env ->
           xhp_body env;
         end;
@@ -1751,36 +1760,35 @@ and xhp_attribute_value env = wrap_xhp env begin function
       back env
   end
 
-and xhp_space_after_Trcb = function
-  | Trp | Trcb | Trb | Tsc | Tcolon | Tcomma
-  | Tpercent | Tlcb | Tdot | Tem | Tqm | Tunderscore -> false
-  | _ -> false
-
+(* It seems like whitespace is significant in XHP, but only insofar as it acts
+ * as a separator of non-whitespace characters. That is, consecutive whitespace
+ * will be rendered as a single space at runtime. Thus the handling of xhp_body
+ * has to be slightly different from the rest of the syntax, which does not
+ * treat whitespace as significant. In particular, we output consecutive
+ * whitespace here as a single space, unless we have just wrapped a line, in
+ * which case we output the necessary number of spaces required by the
+ * indentation level. *)
 and xhp_body env =
   let k = xhp_body in
-  let last = !(env.last_token) in
   match xhp_token env with
   | Teof -> ()
-  | Tnewline ->
-      newline env;
-      k env
-  | Tspace ->
+  | Tnewline | Tspace ->
+      if !(env.last) <> Newline then space env;
       k env
   | Topen_xhp_comment ->
       last_token env;
       xhp_comment env;
       k env
   | Tlt when is_xhp env ->
-      last_token env;
-      xhp env;
+      Try.one_line env
+        (fun env -> last_token env; xhp_single env)
+        (fun env -> newline env; last_token env; xhp env);
       k env;
   | Tlt ->
       back env
   | Tlcb ->
       Try.one_line env
         begin fun env ->
-          if last = Tspace && !(env.last) <> Newline
-          then space env;
           last_token env;
           expr env;
           expect_xhp "}" env;
@@ -1793,19 +1801,10 @@ and xhp_body env =
         end;
       k env
   | x ->
-      let add_space =
-        if last = Trcb
-        then xhp_space_after_Trcb x
-        else true
-      in
       let pos = !(env.char_pos) in
       let text = xhp_text env (Buffer.create 256) x in
       if pos + String.length text >= env.char_size
-      then newline env
-      else if !(env.last) = Newline
-      then ()
-      else if add_space
-      then space env;
+      then newline env;
       out text { env with report_fit = false };
       env.last := Text;
       k env
@@ -1818,7 +1817,12 @@ and xhp_text env buf = function
       Buffer.add_string buf !(env.last_out);
       xhp_text env buf (xhp_token env)
 
-and xhp_comment env =
+and xhp_comment env = Try.one_line env xhp_comment_single xhp_comment_multi
+
+and xhp_comment_single env =
+  seq env [xhp_comment_body; expect_xhp "-->"]
+
+and xhp_comment_multi env =
   newline env;
   right env xhp_comment_body;
   newline env;
@@ -1828,6 +1832,7 @@ and xhp_comment_body env =
   match xhp_token env with
   | Teof -> ()
   | Tnewline | Tspace ->
+      if !(env.last) <> Newline then space env;
       xhp_comment_body env
   | Tclose_xhp_comment ->
       back env
@@ -1838,10 +1843,7 @@ and xhp_comment_body env =
       let pos = !(env.char_pos) in
       let text = xhp_text env (Buffer.create 256) x in
       if pos + String.length text >= env.char_size
-      then newline env
-      else if !(env.last) = Newline
-      then ()
-      else space env;
+      then newline env;
       out text env;
       env.last := Text;
       xhp_comment_body env
