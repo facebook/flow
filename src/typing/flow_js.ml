@@ -2485,10 +2485,6 @@ let rec __flow cx (l,u) trace =
 
       rec_flow cx trace (NumT.why reason, t)
 
-    | (StrT (_, Some x), AdderT(reason, StrT (_, Some y), t)) ->
-
-      rec_flow cx trace (StrT (reason, Some (x^y)), t)
-
     | (StrT _, AdderT(reason,_, t))
     | (_, AdderT(reason,StrT _, t)) ->
 
