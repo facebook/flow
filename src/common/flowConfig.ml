@@ -126,13 +126,19 @@ let group_into_sections lines =
   let (section, section_lines) = section in
   List.rev ((section, List.rev section_lines)::sections)
 
-(* given a path, return the max prefix not containing a wildcard *)
+(* given a path, return the max prefix not containing a wildcard
+   or a terminal filename.
+ *)
 let path_stem =
   let wc = Str.regexp "^[^*?]*[*?]" in
   (fun path ->
+    (* strip filename *)
+    let path = if Path.file_exists path && not (Path.is_directory path)
+      then Path.parent path else path in
     let path_str = Path.to_string path in
+    (* strip back to non-wc prefix *)
     let stem = if Str.string_match wc path_str 0
-    then Filename.dirname (Str.matched_string path_str)
+      then Filename.dirname (Str.matched_string path_str)
     else path_str in
     Path.make stem)
 
