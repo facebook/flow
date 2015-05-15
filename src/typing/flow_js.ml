@@ -1646,6 +1646,20 @@ let rec __flow cx (l,u) trace =
         errors produced). This is useful to typecheck union types and
         intersection types: see below. **)
 
+    (***********************************************************************)
+    (* Type applications wait for their type parameters to become concrete *)
+    (***********************************************************************)
+
+    | (TypeAppT(c,ts), _) ->
+        let reason = reason_of_t u in
+        let t = mk_typeapp_instance cx reason c ts in
+        rec_flow cx trace (t, u)
+
+    | (_, TypeAppT(c,ts)) ->
+        let reason = reason_of_t l in
+        let t = mk_typeapp_instance cx reason c ts in
+        rec_flow cx trace (l, t)
+
     (***************)
     (* union types *)
     (***************)
@@ -1715,16 +1729,6 @@ let rec __flow cx (l,u) trace =
     | (PolyT (ids,t), SpecializeT(reason,ts,tvar)) ->
       let t_ = instantiate_poly_ cx trace reason (ids,t) ts in
       rec_flow cx trace (t_, tvar)
-
-    | (TypeAppT(c,ts), _) ->
-        let reason = reason_of_t u in
-        let t = mk_typeapp_instance cx reason c ts in
-        rec_flow cx trace (t, u)
-
-    | (_, TypeAppT(c,ts)) ->
-        let reason = reason_of_t l in
-        let t = mk_typeapp_instance cx reason c ts in
-        rec_flow cx trace (l, t)
 
     | (PolyT _, PolyT _) -> () (* TODO *)
 
