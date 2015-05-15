@@ -696,17 +696,21 @@ let constructor_required (pos, name) prop_names =
   let name = Utils.strip_ns name in
   let props_str = SSet.fold (fun x acc -> x^" "^acc) prop_names "" in
   add NastCheck.constructor_required pos
-    ("Lacking __construct, class "^name^" does not initialize its private members: "^props_str)
+    ("Lacking __construct, class "^name^" does not initialize its private member(s): "^props_str)
 
-let not_initialized (pos, prop) =
-  if prop = "parent::__construct" then no_construct_parent pos else
+let not_initialized (pos, cname) prop_names =
+  let cname = Utils.strip_ns cname in
+  let props_str = SSet.fold (fun x acc -> x^" "^acc) prop_names "" in
+  let members, verb = if 1 == SSet.cardinal prop_names then "member", "is"
+    else "members", "are" in
+  let setters_str = SSet.fold (fun x acc -> "$this->"^x^" "^acc) prop_names "" in
   add NastCheck.not_initialized pos (
     sl[
-      "The class member "; prop;
-      " is not always properly initialized\n";
-      "Make sure you systematically set $this->"; prop;
-      " when the method __construct is called\n";
-      "Alternatively, you can define the type as optional (?...)\n"
+      "Class "; cname ; " does not initialize all of its members; ";
+      props_str; verb; " not always initialized.";
+      "\nMake sure you systematically set "; setters_str;
+      "when the method __construct is called.";
+      "\nAlternatively, you can define the "; members ;" as optional (?...)\n"
     ])
 
 let call_before_init pos cv =

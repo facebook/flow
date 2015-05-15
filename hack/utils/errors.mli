@@ -198,7 +198,7 @@ val missing_assign : Pos.t -> unit
 val private_override : Pos.t -> string -> string -> unit
 val no_construct_parent : Pos.t -> unit
 val constructor_required : Pos.t * string -> Utils.SSet.t -> unit
-val not_initialized : Pos.t * string -> unit
+val not_initialized : Pos.t * string -> Utils.SSet.t -> unit
 val call_before_init : Pos.t -> string -> unit
 val type_arity : Pos.t -> string -> string -> unit
 val invalid_req_implements : Pos.t -> unit

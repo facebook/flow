@@ -112,6 +112,8 @@ module Env = struct
         | _ -> acc
     end acc (c.c_extends @ c.c_uses)
 
+  (* return a tuple of the private init-requiring props of the class
+   * and the other init-requiring props of the class and its ancestors *)
   let classify_props_for_decl tenv c =
     let tenv = Typing_env.set_root tenv (Typing_deps.Dep.Class (snd c.c_name)) in
     let adder = begin fun cv (private_props, hierarchy_props) ->
@@ -173,38 +175,39 @@ let rec class_decl ~has_own_cstr tenv c =
   else SSet.empty
 
 and class_ tenv c =
-  if c.c_mode = FileInfo.Mdecl then () else begin
+  if c.c_mode = FileInfo.Mdecl then () else
   match c.c_constructor with
   | _ when c.c_kind = Ast.Cinterface -> ()
   | Some { m_body = NamedBody { fnb_unsafe = true; _ }; _ } -> ()
-  | _ ->
-      let p = match c.c_constructor with
-        | Some m -> fst m.m_name
-        | None -> fst c.c_name
-      in
-      let env = Env.make tenv c in
-      let inits = constructor env c.c_constructor in
+  | _ -> (
+    let p = match c.c_constructor with
+      | Some m -> fst m.m_name
+      | None -> fst c.c_name
+    in
+    let env = Env.make tenv c in
+    let inits = constructor env c.c_constructor in
 
-      Typing_suggest.save_initialized_members (snd c.c_name) inits;
-      if c.c_kind = Ast.Ctrait || c.c_kind = Ast.Cabstract
-      then begin
-        let has_constructor = match c.c_constructor with
-          | None -> false
-          | Some m when m.m_abstract -> false
-          | Some _ -> true in
-        if has_constructor then
-          SSet.iter begin fun x ->
-            if not (SSet.mem x inits)
-            then Errors.not_initialized (p, x);
-          end env.props;
+    let check_inits = begin fun () ->
+      let uninit_props = SSet.diff env.props inits in
+      if SSet.empty <> uninit_props then begin
+        if SSet.mem parent_init_prop uninit_props then
+          Errors.no_construct_parent p
+        else
+          Errors.not_initialized (p, snd c.c_name) uninit_props
       end
-      else begin
-        SSet.iter begin fun x ->
-          if not (SSet.mem x inits)
-          then Errors.not_initialized (p, x);
-        end env.props
-      end
-  end
+    end in
+
+    Typing_suggest.save_initialized_members (snd c.c_name) inits;
+    if c.c_kind = Ast.Ctrait || c.c_kind = Ast.Cabstract
+    then begin
+      let has_constructor = match c.c_constructor with
+        | None -> false
+        | Some m when m.m_abstract -> false
+        | Some _ -> true in
+      if has_constructor then check_inits () else ()
+    end
+    else check_inits ()
+  )
 
 and constructor env cstr =
   match cstr with
