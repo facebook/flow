@@ -1654,8 +1654,11 @@ and xhp_attribute_format_elt env =
         expect "}" env
     | _ -> back env; hint env
   end;
-  if !(env.abs_pos) != curr_pos && next_token env <> Tsc
-  then space env;
+  if !(env.abs_pos) != curr_pos then begin
+    match next_token env with
+      | Tsc | Tcomma -> ()
+      | _ -> space env
+  end;
   name env;
   wrap env begin function
     | Teq -> seq env [space; last_token; space; expr]
