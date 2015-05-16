@@ -23,6 +23,7 @@ struct
   open ServerEnv
   open ServerUtils
 
+  module HackEventLogger = EventLogger
   module EventLogger = FlowEventLogger
 
   let name = "flow server"
@@ -54,6 +55,8 @@ struct
     ignore (Flowlib.get_flowlib_root ())
 
   let init genv env =
+    (* disable the Hack event logger; Flow has its own *)
+    HackEventLogger.disable ();
     if not (ServerArgs.check_mode genv.ServerEnv.options) then (
       (* write binary path and version to server log *)
       Hh_logger.log "executable=%s" Sys.executable_name;
