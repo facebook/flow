@@ -164,8 +164,12 @@ let path_patt =
 
 (* helper - eliminate noncanonical entries where possible.
    no other normalization is done *)
-let fixup_path p = if Path.is_normalized p then p else
+let fixup_path p =
   let s = Path.to_string p in
+  let is_normalized = match realpath s with
+      | Some s' -> s' = s
+      | None -> false in
+  if is_normalized then p else
   let abs = not (Filename.is_relative s) in
   let entries = Str.split_delim dir_sep s in
   let rec loop revbase entries =

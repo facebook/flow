@@ -14,10 +14,8 @@ type t
 val dummy_path: t
 val make: string -> t
 val to_string: t -> string
-val equal: t -> t -> bool
 val file_exists: t -> bool
 val is_directory: t -> bool
-val is_normalized: t -> bool
 val concat: t -> string -> t
 val remove: t -> unit
 val parent: t -> t

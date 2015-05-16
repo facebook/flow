@@ -99,7 +99,7 @@ struct
 
   let print_status genv env client_root oc =
     let server_root = ServerArgs.root genv.options in
-    if not (Path.equal server_root client_root)
+    if server_root <> client_root
     then begin
       let msg = ServerProt.DIRECTORY_MISMATCH {
         ServerProt.server=server_root;
