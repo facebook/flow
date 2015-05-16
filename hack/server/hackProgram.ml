@@ -71,7 +71,7 @@ module Program : Server.SERVER_PROGRAM = struct
   let init genv env =
     let module RP = Relative_path in
     let root = ServerArgs.root genv.options in
-    let hhi_root = Path.make (Hhi.get_hhi_root ()) in
+    let hhi_root = Hhi.get_hhi_root () in
     let next_files_hhi =
       compose (rev_rev_map (RP.create RP.Hhi)) (make_next_files hhi_root) in
     let next_files_root = compose

@@ -101,7 +101,7 @@ let parse_options () =
   let check_mode = !check_mode || !json_mode || !save <> None; in
   (* Conversion mode implies check *)
   let check_mode = check_mode || !convert_dir <> None in
-  let convert = Utils.opt_map Path.make (!convert_dir) in
+  let convert = Option.map ~f:Path.make !convert_dir in
   if check_mode && !waiting_client <> None then begin
     Printf.fprintf stderr "--check is incompatible with wait modes!\n";
     exit 2

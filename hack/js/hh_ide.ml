@@ -493,7 +493,7 @@ let js_wrap_string_2 func =
   Js.wrap_callback f
 
 let () =
-  Relative_path.set_path_prefix Relative_path.Root "/";
+  Relative_path.set_path_prefix Relative_path.Root (Path.make "/");
   Js.Unsafe.set Js.Unsafe.global "hh_check_file" (js_wrap_string_1 hh_check);
   Js.Unsafe.set Js.Unsafe.global "hh_add_file" (js_wrap_string_2 hh_add_file);
   Js.Unsafe.set Js.Unsafe.global "hh_add_dep" (js_wrap_string_2 hh_add_dep);

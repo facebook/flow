@@ -8,10 +8,11 @@
  *
  *)
 
+include Sys
 
 type t = string
 
-let dummy_path: t = ""
+let dummy_path : t = ""
 
 (**
  * Like Python's os.path.expanduser, though probably doesn't cover some cases.
@@ -52,19 +53,18 @@ let make path =
 
 let to_string path = path
 
-let file_exists = Sys.file_exists
-
-let is_directory = Sys.is_directory
-
 let concat path more =
   make (Printf.sprintf "%s/%s" path more)
 
-let remove = Sys.remove
+let cat = Sys_utils.cat
+let dirname = Filename.dirname
 
 let parent path =
   if is_directory path
   then make (path ^ "/../")
   else make (Filename.dirname path)
+
+let output = output_string
 
 let slash_escaped_string_of_path path =
   let buf = Buffer.create (String.length path) in

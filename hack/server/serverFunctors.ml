@@ -59,7 +59,7 @@ end
 module MainInit : sig
   val go:
     ServerArgs.options ->
-    Path.t list ->   (* other watched paths *)
+    Path.t list ->      (* other watched paths *)
     (unit -> env) ->    (* init function to run while we have init lock *)
     env
 end = struct
@@ -233,7 +233,8 @@ end = struct
 
   let run_load_script genv env cmd =
     try
-      let cmd = Printf.sprintf "%s %s %s" cmd
+      let cmd = Printf.sprintf "%s %s %s"
+        (Filename.quote (Path.to_string cmd))
         (Filename.quote (Path.to_string (ServerArgs.root genv.options)))
         (Filename.quote Build_id.build_id_ohai) in
       Hh_logger.log "Running load script: %s\n%!" cmd;
@@ -363,8 +364,7 @@ end = struct
 
   let start () =
     let options = Program.parse_options () in
-    let root = Path.to_string (ServerArgs.root options) in
-    Relative_path.set_path_prefix Relative_path.Root root;
+    Relative_path.set_path_prefix Relative_path.Root (ServerArgs.root options);
     let config = Program.load_config () in
     try
       if ServerArgs.should_detach options

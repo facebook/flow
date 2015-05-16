@@ -19,8 +19,7 @@ let is_www_directory ?(config=".hhconfig") (path : Path.t) : bool =
 let assert_www_directory ?(config=".hhconfig") (path : Path.t) : unit =
    if not (Path.file_exists path && Path.is_directory path)
    then begin
-     Printf.fprintf stderr "Error: %s is not a directory\n" (Path.to_string path);
-     flush stderr;
+     Printf.eprintf "Error: %s is not a directory\n%!" (Path.to_string path);
      exit 1
    end;
    if not (is_www_directory ~config path)

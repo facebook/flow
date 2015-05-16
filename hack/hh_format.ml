@@ -263,12 +263,11 @@ let () =
   let root =
     match root with
     | None ->
-        Printf.fprintf stderr "No root specified, trying to guess one\n";
+        Printf.eprintf "No root specified, trying to guess one\n";
         let root = ClientArgs.get_root None in
-        let root = Path.to_string root in
-        Printf.fprintf stderr "Guessed root: %s\n%!" root;
+        Printf.eprintf "Guessed root: %a\n%!" Path.output root;
         root
-    | Some root -> Path.to_string (Path.make root)
+    | Some root -> Path.make root
   in
   Relative_path.set_path_prefix Relative_path.Root root;
   match files with

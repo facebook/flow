@@ -17,8 +17,14 @@ val to_string: t -> string
 val file_exists: t -> bool
 val is_directory: t -> bool
 val concat: t -> string -> t
+val chdir: t -> unit
+val dirname: t -> t
+val getcwd: unit -> t
+val output: out_channel -> t -> unit
 val remove: t -> unit
 val parent: t -> t
+val executable_name: t
+val cat: t -> string
 
 val slash_escaped_string_of_path: t -> string
 val path_of_slash_escaped_string: string -> t
