@@ -119,7 +119,9 @@ let builtins = "<?hh // decl\n"^
   "function idx<Tk, Tv>(?KeyedContainer<Tk, Tv> $c, $i, $d = null) {}\n"^
   "final class stdClass {}\n" ^
   "function rand($x, $y): int;\n" ^
-  "function invariant($x, ...): void;\n"
+  "function invariant($x, ...): void;\n" ^
+  "function exit(int $exit_code_or_message = 0): noreturn;\n" ^
+  "function invariant_violation(...): noreturn;\n"
 
 (*****************************************************************************)
 (* Helpers *)

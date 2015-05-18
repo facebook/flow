@@ -12,9 +12,30 @@ open Nast
 
 module SN = Naming_special_names
 
+(* Not adding a Typing_dep here because it will be added anyway when
+ * the Nast is fully processed (by the caller of this code) *)
+let get_fun = Typing_env.Funs.get
+
+let get_static_meth (cls_name:string) (meth_name:string) =
+  match Typing_env.Classes.get cls_name with
+    | None -> None
+    | Some { Typing_defs.tc_smethods ; _ } ->
+      begin match Utils.SMap.get meth_name tc_smethods with
+        | None -> None
+        | Some { Typing_defs.ce_type = (_r, Typing_defs.Tfun fty) ; _}
+          -> Some fty
+        | Some _ -> None
+      end
+
+let terminal_func_call_ = function
+  | None -> ()
+  | Some ({ Typing_defs.ft_ret = (_r, Typing_defs.Tprim Tnoreturn); _})
+    -> raise Exit
+  | Some _ -> ()
+
 (* Module coded with an exception, if we find a terminal statement we
  * throw the exception Exit.
-*)
+ *)
 module Terminal: sig
   val case: case -> bool
   val block: block -> bool
@@ -30,15 +51,12 @@ end = struct
     | Throw _
     | Return _
     | Expr (_, Yield_break)
-    | Expr (_, Assert (
-            AE_assert (_, False) |
-            AE_invariant_violation _))
+    | Expr (_, Assert (AE_assert (_, False)))
       -> raise Exit
-    | Expr (_, Call (Cnormal, (_, Id (_, fun_name)), _, _))
-        when
-        (fun_name = SN.PseudoFunctions.exit_ ||
-         fun_name = SN.PseudoFunctions.die)
-        -> raise Exit
+    | Expr (_, Call (Cnormal, (_, Id (_, fun_name)), _, _)) ->
+      terminal_func_call_ (get_fun fun_name)
+    | Expr (_, Call (Cnormal, (_, Class_const (CI cls_id, meth_id)), _, _)) ->
+      terminal_func_call_ (get_static_meth (snd cls_id) (snd meth_id))
     | If ((_, True), b1, _) -> terminal inside_case b1
     | If ((_, False), _, b2) -> terminal inside_case b2
     | If (_, b1, b2) ->
@@ -121,13 +139,11 @@ end = struct
     | Throw _
     | Return _
     | Expr (_, Yield_break)
-    | Expr (_, Assert (
-            AE_assert (_, False) |
-            AE_invariant_violation _))
-      -> raise Exit
-    | Expr (_, Call (Cnormal, (_, Id (_, fun_name)), _, _))
-        when (fun_name = SN.PseudoFunctions.exit_
-             || fun_name = SN.PseudoFunctions.die) -> raise Exit
+    | Expr (_, Assert (AE_assert (_, False))) -> raise Exit
+    | Expr (_, Call (Cnormal, (_, Id (_, fun_name)), _, _)) ->
+      terminal_func_call_ (get_fun fun_name)
+    | Expr (_, Call (Cnormal, (_, Class_const (CI cls_id, meth_id)), _, _)) ->
+      terminal_func_call_ (get_static_meth (snd cls_id) (snd meth_id))
     | If ((_, True), b1, _) -> terminal b1
     | If ((_, False), _, b2) -> terminal b2
     | If (_, b1, b2) ->

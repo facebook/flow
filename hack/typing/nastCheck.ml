@@ -208,9 +208,6 @@ module CheckFunctionType = struct
     | _, Assert (AE_assert e) ->
         expr f_type e;
         ()
-    | _, Assert (AE_invariant_violation (e, el)) ->
-        liter expr f_type (e :: el);
-        ()
     | _, Shape fdm ->
         ShapeMap.iter (fun _ v -> expr f_type v) fdm;
         ()
@@ -689,9 +686,6 @@ and expr_ env = function
       expr env e2;
       expr env e3;
       ()
-  | Assert (AE_invariant_violation (e, el)) ->
-      expr env e;
-      liter expr env el
   | Assert (AE_assert e)
   | InstanceOf (e, _) ->
       expr env e;

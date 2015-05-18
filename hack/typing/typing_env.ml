@@ -89,15 +89,15 @@ type env = {
 and genv = {
   tcopt   : TypecheckerOptions.t;
   mode    : FileInfo.mode;
-  return  : locl ty         ;
-  parent  : decl ty         ;
-  self_id : string     ;
-  self    : locl ty         ;
-  static  : bool       ;
+  return  : locl ty;
+  parent  : decl ty;
+  self_id : string;
+  self    : locl ty;
+  static  : bool;
   is_constructor : bool;
   fun_kind : Ast.fun_kind;
   anons   : anon IMap.t;
-  droot   : Typing_deps.Dep.variant option  ;
+  droot   : Typing_deps.Dep.variant option;
   file    : Relative_path.t;
 }
 

@@ -1952,17 +1952,6 @@ and expr_ env = function
       if List.length el <> 1
       then Errors.assert_arity p;
       N.Assert (N.AE_assert (expr env (List.hd el)))
-  | Call ((p, Id (_, cn)), el, uel)
-      when cn = SN.SpecialFunctions.invariant_violation ->
-      arg_unpack_unexpected uel ;
-      (match el with
-      | format :: el ->
-        let el = exprl env el in
-        N.Assert (N.AE_invariant_violation (expr env format, el))
-      | _ ->
-        Errors.naming_too_few_arguments p;
-        N.Any
-      )
   | Call ((p, Id (_, cn)), el, uel) when cn = SN.SpecialFunctions.tuple ->
       arg_unpack_unexpected uel ;
       (match el with

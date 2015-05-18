@@ -820,12 +820,6 @@ and expr_ ~in_cond ~(valkind: [> `lvalue | `rvalue | `other ]) env (p, e) =
   | Assert (AE_assert e) ->
       let env = condition env true e in
       env, (Reason.Rwitness p, Tprim Tvoid)
-  | Assert (AE_invariant_violation (e, el)) ->
-      let env, _ = lfold expr env el in
-      let env, ty = expr env e in
-      let string = Reason.Rwitness (fst e), Tprim Tstring in
-      let env, _ = Type.unify (fst e) Reason.URparam env ty string in
-      env, (Reason.Rwitness p, Tprim Tvoid)
   | True
   | False ->
       env, (Reason.Rwitness p, Tprim Tbool)
