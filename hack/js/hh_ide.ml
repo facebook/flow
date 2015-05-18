@@ -183,6 +183,14 @@ let hh_check fn =
           error [l]
         end
 
+let hh_check_syntax fn content =
+  let fn = Relative_path.create Relative_path.Root fn in
+  let errors, _ = Errors.do_ begin fun () ->
+    Parser_hack.program fn content
+  end in
+  error errors
+
+
 let permissive_empty_envs fn =
   let tcopt = TypecheckerOptions.permissive in
   let nenv = Naming.empty tcopt in
@@ -495,6 +503,7 @@ let js_wrap_string_2 func =
 let () =
   Relative_path.set_path_prefix Relative_path.Root (Path.make "/");
   Js.Unsafe.set Js.Unsafe.global "hh_check_file" (js_wrap_string_1 hh_check);
+  Js.Unsafe.set Js.Unsafe.global "hh_check_syntax" (js_wrap_string_2 hh_check_syntax);
   Js.Unsafe.set Js.Unsafe.global "hh_add_file" (js_wrap_string_2 hh_add_file);
   Js.Unsafe.set Js.Unsafe.global "hh_add_dep" (js_wrap_string_2 hh_add_dep);
   Js.Unsafe.set Js.Unsafe.global "hh_auto_complete" (js_wrap_string_1 hh_auto_complete);
