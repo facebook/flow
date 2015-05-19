@@ -110,7 +110,7 @@
 #define GLOBAL_SIZE_B   GIG
 
 /* Used for the dependency hashtable */
-#define DEP_POW         24
+#define DEP_POW         26
 #define DEP_SIZE        (1 << DEP_POW)
 #define DEP_SIZE_B      (DEP_SIZE * sizeof(value))
 
@@ -640,6 +640,23 @@ void hh_add_dep(value ocaml_dep) {
   }
 
   htable_add(deptbl, dep >> 31, dep);
+}
+
+value hh_dep_used_slots() {
+  CAMLparam0();
+  uint64_t count = 0;
+  uintptr_t slot = 0;
+  for (slot = 0; slot < DEP_SIZE; ++slot) {
+    if (deptbl[slot]) {
+      count++;
+    }
+  }
+  CAMLreturn(Val_long(count));
+}
+
+value hh_dep_slots() {
+  CAMLparam0();
+  CAMLreturn(Val_long(DEP_SIZE));
 }
 
 /* Given a key, returns the list of values bound to it. */

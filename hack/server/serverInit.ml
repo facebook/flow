@@ -57,6 +57,11 @@ let init_hack genv env get_next =
 
   SharedMem.init_done();
 
+  let {SharedMem.dep_used_slots; dep_slots} = SharedMem.dep_stats () in
+  let load_factor = float_of_int dep_used_slots /. float_of_int dep_slots in
+  Hh_logger.log "Dependency table load factor: %d / %d (%.02f)"
+    dep_used_slots dep_slots load_factor;
+
   let errorl = List.fold_right List.rev_append
       [errorl1; errorl2; errorl3; errorl4] [] in
   env, errorl, failed
