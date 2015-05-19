@@ -697,7 +697,7 @@ end = struct
       | _ -> None
 
     let wrap f env =
-      let env = with_strict env true in
+      let env = env |> with_strict true in
       Eat.push_lex_mode env TYPE_LEX;
       let ret = f env in
       Eat.pop_lex_mode env;
@@ -793,7 +793,7 @@ end = struct
          * want to do these checks in strict mode *)
         let env =
           if strict
-          then with_strict env (not (Parser_env.strict env))
+          then env |> with_strict (not (Parser_env.strict env))
           else env in
         (match id with
         | Some (loc, { Identifier.name; _ }) ->
@@ -846,7 +846,7 @@ end = struct
       loc, Statement.FunctionDeclaration.BodyBlock (loc, block), strict
 
     let concise_function_body env =
-      let env = with_in_function env true in
+      let env = env |> with_in_function true in
       match Peek.token env with
       | T_LCURLY ->
           let _, body, strict = function_body env in
@@ -880,7 +880,7 @@ end = struct
       let params, defaults, rest = function_params env in
       let returnType = Type.return_type env in
       let _, body, strict =
-        function_body (with_allow_yield env generator) in
+        function_body (env |> with_allow_yield generator) in
       let simple = is_simple_function_params params defaults rest in
       strict_post_check env ~strict ~simple id params;
       let end_loc, expression = Ast.Statement.FunctionDeclaration.(
@@ -945,7 +945,7 @@ end = struct
     let var = declarations T_VAR Statement.VariableDeclaration.Var
 
     let const env =
-      let env = with_no_let env true in
+      let env = env |> with_no_let true in
       let ret =
         declarations T_CONST Statement.VariableDeclaration.Const env in
       (* Make sure all consts defined are initialized *)
@@ -959,7 +959,7 @@ end = struct
       ret
 
     let _let env =
-      let env = with_no_let env true in
+      let env = env |> with_no_let true in
       declarations T_LET Statement.VariableDeclaration.Let env
 
     let variable env =
@@ -1046,7 +1046,7 @@ end = struct
     and do_while env =
       let start_loc = Peek.loc env in
       Expect.token env T_DO;
-      let body = Parse.statement (with_in_loop env true) in
+      let body = Parse.statement (env |> with_in_loop true) in
       Expect.token env T_WHILE;
       Expect.token env T_LPAREN;
       let test = Parse.expression env in
@@ -1072,16 +1072,14 @@ end = struct
       let init = match Peek.token env with
       | T_SEMICOLON -> None
       | T_LET ->
-          let decl = Declaration._let (with_no_in env true) in
+          let decl = Declaration._let (env |> with_no_in true) in
           Some (Statement.For.InitDeclaration decl)
       | T_VAR ->
-          let decl = Declaration.var (with_no_in env true ) in
+          let decl = Declaration.var (env |> with_no_in true ) in
           Some (Statement.For.InitDeclaration decl)
       | _ ->
           let expr =
-            let env = with_no_in env true in
-            with_no_let env true
-            |> Parse.expression in
+            Parse.expression (env |> with_no_in true |> with_no_let true) in
           Some (Statement.For.InitExpression expr) in
       match Peek.token env with
       | T_IN ->
@@ -1106,7 +1104,7 @@ end = struct
           Expect.token env T_IN;
           let right = Parse.expression env in
           Expect.token env T_RPAREN;
-          let body = Parse.statement (with_in_loop env true) in
+          let body = Parse.statement (env |> with_in_loop true) in
           Loc.btwn start_loc (fst body), Statement.(ForIn ForIn.({
             left;
             right;
@@ -1124,7 +1122,7 @@ end = struct
           | T_RPAREN -> None
           | _ -> Some (Parse.expression env) in
           Expect.token env T_RPAREN;
-          let body = Parse.statement (with_in_loop env true) in
+          let body = Parse.statement (env |> with_in_loop true) in
           Loc.btwn start_loc (fst body), Statement.(For For.({
             init;
             test;
@@ -1198,7 +1196,7 @@ end = struct
           | T_RCURLY | T_DEFAULT | T_CASE -> true
           | _ -> false in
           let consequent =
-            Parse.statement_list ~term_fn (with_in_switch env true) in
+            Parse.statement_list ~term_fn (env |> with_in_switch true) in
           let end_loc = match List.rev consequent with
           | last_stmt::_ -> fst last_stmt
           | _ -> end_loc in
@@ -1299,7 +1297,7 @@ end = struct
         (* Let statement *)
         Expect.token env T_LPAREN;
         let end_loc, declarations =
-          Declaration.variable_declaration_list (with_no_let env true) in
+          Declaration.variable_declaration_list (env |> with_no_let true) in
         let head = List.map
           (fun (_, {Ast.Statement.VariableDeclaration.Declarator.id; init;}) ->
             Statement.Let.({ id; init; }))
@@ -1317,7 +1315,7 @@ end = struct
       end else begin
         (* Let declaration *)
         let end_loc, declarations =
-          Declaration.variable_declaration_list (with_no_let env true) in
+          Declaration.variable_declaration_list (env |> with_no_let true) in
         let declaration =
           Ast.(Statement.VariableDeclaration Statement.VariableDeclaration.({
             declarations;
@@ -1336,7 +1334,7 @@ end = struct
       Expect.token env T_LPAREN;
       let test = Parse.expression env in
       Expect.token env T_RPAREN;
-      let body = Parse.statement (with_in_loop env true) in
+      let body = Parse.statement (env |> with_in_loop true) in
       Loc.btwn start_loc (fst body), Statement.(While While.({
         test;
         body;
@@ -1484,7 +1482,7 @@ end = struct
           | _ -> List.rev acc
 
         in fun env start_loc ->
-          let env = with_strict env true in
+          let env = env |> with_strict true in
           Expect.token env T_CLASS;
           let id = Parse.identifier env in
           let typeParameters = Type.type_parameter_declaration env in
@@ -1627,8 +1625,7 @@ end = struct
               specifiers env (specifier::acc)
 
         in fun env ->
-          let env = with_strict env true in
-          let env = with_in_export env true in
+          let env = env |> with_strict true |> with_in_export true in
           let start_loc = Peek.loc env in
           Expect.token env T_EXPORT;
           Statement.ExportDeclaration.(match Peek.token env with
@@ -1772,7 +1769,7 @@ end = struct
               Statement.ImportDeclaration.Named (Loc.btwn start_loc end_loc, specifiers)
 
         in fun env ->
-          let env = with_strict env true in
+          let env = env |> with_strict true in
           let start_loc = Peek.loc env in
           Expect.token env T_IMPORT;
           (* It might turn out that we need to treat this "type" token as an
@@ -1899,7 +1896,7 @@ end = struct
         * assignment expression or if this is just the beginning of an arrow
         * function *)
       in let try_assignment_but_not_arrow_function env =
-        let env = with_error_callback env error_callback in
+        let env = env |> with_error_callback error_callback in
         let ret = assignment_but_not_arrow_function env in
         match Peek.token env with
         | T_ARROW (* x => 123 *)
@@ -2026,7 +2023,7 @@ end = struct
       then begin
         Expect.token env T_PLING;
         (* no_in is ignored for the consequent *)
-        let env' = with_no_in env false in
+        let env' = env |> with_no_in false in
         let consequent = assignment env' in
         Expect.token env T_COLON;
         let alternate = assignment env in
@@ -2118,7 +2115,7 @@ end = struct
             collapse_stack (make_binary left right lop) rest
 
       in let rec helper env stack =
-        let right = unary (with_no_in env false) in
+        let right = unary (env |> with_no_in false) in
         if Peek.token env = T_LESS_THAN
         then begin
           match right with
@@ -2272,7 +2269,7 @@ end = struct
           let expr = match Peek.token env with
           | T_FUNCTION -> _function env
           | _ -> primary env in
-          let callee = member (with_no_call env true) expr in
+          let callee = member (env |> with_no_call true) expr in
           (* You can do something like
            *   new raw`42`
            *)
@@ -2321,7 +2318,7 @@ end = struct
       match Peek.token env with
       | T_LBRACKET ->
           Expect.token env T_LBRACKET;
-          let expr = Parse.expression (with_no_call env false) in
+          let expr = Parse.expression (env |> with_no_call false) in
           let last_loc = Peek.loc env in
           Expect.token env T_RBRACKET;
           call env (Loc.btwn (fst left) last_loc, Expression.(Member Member.({
@@ -2355,7 +2352,7 @@ end = struct
       let params, defaults, rest = Declaration.function_params env in
       let returnType = Type.return_type env in
       let end_loc, body, strict =
-        Declaration.function_body (with_allow_yield env generator) in
+        Declaration.function_body (env |> with_allow_yield generator) in
       let simple = Declaration.is_simple_function_params params defaults rest in
       Declaration.strict_post_check env ~strict ~simple id params;
       let expression = Ast.Statement.FunctionDeclaration.(
@@ -2578,7 +2575,7 @@ end = struct
         | _ -> raise Try.Rollback) in
 
       fun env ->
-        let env = with_error_callback env error_callback in
+        let env = env |> with_error_callback error_callback in
 
         let start_loc = Peek.loc env in
         let generator = false in
@@ -2614,7 +2611,8 @@ end = struct
         let env = without_error_callback env in
 
         let body, strict =
-          Declaration.concise_function_body (with_allow_yield env generator) in
+          Declaration.concise_function_body
+            (env |> with_allow_yield generator) in
         let simple =
           Declaration.is_simple_function_params params defaults rest in
         Declaration.strict_post_check env ~strict ~simple None params;
@@ -2749,7 +2747,7 @@ end = struct
       | T_LBRACKET when allow_computed_key ->
           let start_loc = Peek.loc env in
           Expect.token env T_LBRACKET;
-          let expr = Parse.assignment (with_no_in env false) in
+          let expr = Parse.assignment (env |> with_no_in false) in
           let end_loc = Peek.loc env in
           Expect.token env T_RBRACKET;
           Loc.btwn start_loc end_loc, Ast.Expression.Object.Property.Computed expr
@@ -2772,7 +2770,7 @@ end = struct
       Expect.token env T_RPAREN;
       let returnType = Type.return_type env in
       let _, body, strict = Declaration.function_body
-        (with_allow_yield env generator) in
+        (env |> with_allow_yield generator) in
       let defaults = [] in
       let rest = None in
       let simple = Declaration.is_simple_function_params params defaults rest in
@@ -2863,7 +2861,7 @@ end = struct
                 let params, defaults, rest = Declaration.function_params env in
                 let returnType = Type.return_type env in
                 let _, body, strict = Declaration.function_body
-                  (with_allow_yield env generator) in
+                  (env |> with_allow_yield generator) in
                 let simple = Declaration.is_simple_function_params params defaults rest in
                 Declaration.strict_post_check env ~strict ~simple None params;
                 let end_loc, expression = Ast.Statement.FunctionDeclaration.(
@@ -2956,7 +2954,7 @@ end = struct
         then begin
           Expect.token env T_EXTENDS;
           let superClass =
-            Expression.left_hand_side (with_allow_yield env false) in
+            Expression.left_hand_side (env |> with_allow_yield false) in
           let superTypeParameters = Type.type_parameter_instantiation env in
           Some superClass, superTypeParameters
         end else None, None in
@@ -3048,7 +3046,7 @@ end = struct
           let params, defaults, rest = Declaration.function_params env in
           let returnType = Type.return_type env in
           let _, body, strict = Declaration.function_body
-            (with_allow_yield env generator) in
+            (env |> with_allow_yield generator) in
           let simple = Declaration.is_simple_function_params params defaults rest in
           Declaration.strict_post_check env ~strict ~simple None params;
           let end_loc, expression = Ast.Statement.FunctionDeclaration.(
@@ -3093,10 +3091,10 @@ end = struct
 
     let class_declaration env =
       (* 10.2.1 says all parts of a class definition are strict *)
-      let env = with_strict env true in
+      let env = env |> with_strict true in
       let start_loc = Peek.loc env in
       Expect.token env T_CLASS;
-      let tmp_env = with_no_let env true in
+      let tmp_env = env |> with_no_let true in
       let id = (
         match in_export env, Peek.identifier tmp_env with
         | true, false -> None
@@ -3484,7 +3482,7 @@ end = struct
                 let strict = (strict env) || (str = "use strict" && len = 12) in
                 let string_tokens = string_token::string_tokens in
                 statement_list
-                  (with_strict env strict)
+                  (env |> with_strict strict)
                   term_fn
                   item_fn
                   (string_tokens, stmts)

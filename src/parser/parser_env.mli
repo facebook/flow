@@ -69,16 +69,16 @@ val set_lex_env : env -> lex_env -> unit
 
 (* functional operations -- these return shallow copies, so future mutations to
  * the returned env will also affect the original: *)
-val with_strict : env -> bool -> env
-val with_in_function : env -> bool -> env
-val with_allow_yield : env -> bool -> env
-val with_no_let : env -> bool -> env
-val with_in_loop : env -> bool -> env
-val with_no_in : env -> bool -> env
-val with_in_switch : env -> bool -> env
-val with_in_export : env -> bool -> env
-val with_no_call : env -> bool -> env
-val with_error_callback : env -> (env -> Error.t -> unit) -> env
+val with_strict : bool -> env -> env
+val with_in_function : bool -> env -> env
+val with_allow_yield : bool -> env -> env
+val with_no_let : bool -> env -> env
+val with_in_loop : bool -> env -> env
+val with_no_in : bool -> env -> env
+val with_in_switch : bool -> env -> env
+val with_in_export : bool -> env -> env
+val with_no_call : bool -> env -> env
+val with_error_callback : (env -> Error.t -> unit) -> env -> env
 
 val without_error_callback : env -> env
 

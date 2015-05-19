@@ -114,16 +114,16 @@ let set_lookahead env l = env.lookahead := l
 let set_lex_env env lex_env = env.lex_env := lex_env
 
 (* functional operations: *)
-let with_strict env strict = { env with strict }
-let with_in_function env in_function = { env with in_function }
-let with_allow_yield env allow_yield = { env with allow_yield }
-let with_no_let env no_let = { env with no_let }
-let with_in_loop env in_loop = { env with in_loop }
-let with_no_in env no_in = { env with no_in }
-let with_in_switch env in_switch = { env with in_switch }
-let with_in_export env in_export = { env with in_export }
-let with_no_call env no_call = { env with no_call }
-let with_error_callback env error_callback =
+let with_strict strict env = { env with strict }
+let with_in_function in_function env = { env with in_function }
+let with_allow_yield allow_yield env = { env with allow_yield }
+let with_no_let no_let env = { env with no_let }
+let with_in_loop in_loop env = { env with in_loop }
+let with_no_in no_in env = { env with no_in }
+let with_in_switch in_switch env = { env with in_switch }
+let with_in_export in_export env = { env with in_export }
+let with_no_call no_call env = { env with no_call }
+let with_error_callback error_callback env =
   { env with error_callback = Some error_callback }
 
 (* other helper functions: *)
