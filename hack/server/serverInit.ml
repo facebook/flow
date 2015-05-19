@@ -36,6 +36,13 @@ let init_hack genv env get_next =
       Naming.ndecl_file files_info ([], Relative_path.Set.empty, env.nenv)
   end in
 
+  let () = Hh_logger.log
+    "Naming results: %d classes, %d typedefs, %d funs, %d consts"
+    (Hashtbl.length (fst nenv.Naming.iclasses))
+    (Hashtbl.length (nenv.Naming.itypedefs))
+    (Hashtbl.length (fst nenv.Naming.ifuns))
+    (Hashtbl.length (nenv.Naming.iconsts)) in
+
   let fast, errorl3, failed3 = Hh_logger.measure "Type-decl" begin fun () ->
     let fast = FileInfo.simplify_fast files_info in
     let fast = Relative_path.Set.fold Relative_path.Map.remove failed2 fast in

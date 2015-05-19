@@ -36,7 +36,8 @@ type decl_set = fun_set * class_set * typedef_set * const_set
  *)
 type positioned_ident = (Pos.t * Ident.t)
 type map = positioned_ident SMap.t
-type canon_names_map = string SMap.t
+type pi_hash = (string, positioned_ident) Hashtbl.t
+type canon_names_hash = (string, string) Hashtbl.t
 let canon_key = String.lowercase
 
 (* <T as A>, A is a type constraint *)
@@ -67,16 +68,16 @@ type genv = {
   type_paraml: Ast.id list;
 
   (* Set of class names defined, and their positions *)
-  classes: (map * canon_names_map) ref;
+  classes: (pi_hash * canon_names_hash) ref;
 
   (* Set of function names defined, and their positions *)
-  funs: (map * canon_names_map) ref;
+  funs: (pi_hash * canon_names_hash) ref;
 
   (* Set of typedef names defined, and their position *)
-  typedefs: map ref;
+  typedefs: pi_hash ref;
 
   (* Set of constant names defined, and their position *)
-  gconsts: map ref;
+  gconsts: pi_hash ref;
 
   (* The current class, None if we are in a function *)
   current_cls: (Ast.id * Ast.class_kind) option;
@@ -151,10 +152,10 @@ type lenv = {
 (* The environment VISIBLE to the outside world. *)
 type env = {
   itcopt: TypecheckerOptions.t;
-  iclasses: map * canon_names_map;
-  ifuns: map * canon_names_map;
-  itypedefs: map;
-  iconsts: map;
+  iclasses: pi_hash * canon_names_hash;
+  ifuns: pi_hash * canon_names_hash;
+  itypedefs: pi_hash;
+  iconsts: pi_hash;
 }
 
 (**
@@ -163,19 +164,21 @@ type env = {
  * world.
  *)
 let get_classes env =
-  SMap.fold (fun key _ acc -> key :: acc) (fst env.iclasses) []
+  Hashtbl.fold (fun key _ acc -> key :: acc) (fst env.iclasses) []
 
 (*****************************************************************************)
 (* Predefined names *)
 (*****************************************************************************)
 
-let predef_funs = ref SMap.empty
-let predef_funnames = ref SMap.empty
+let n_estimated_funs = 30000
+
+let predef_funs = ref (Hashtbl.create ~random:false n_estimated_funs)
+let predef_funnames = ref (Hashtbl.create ~random:false n_estimated_funs)
 let predef_fun x =
   let var = Pos.none, Ident.make x in
   let canon_x = canon_key x in
-  predef_funs := SMap.add x var !predef_funs;
-  predef_funnames := SMap.add canon_x x !predef_funnames;
+  Hashtbl.add !predef_funs x var;
+  Hashtbl.add !predef_funnames canon_x x;
   x
 
 let is_int    = predef_fun SN.StdlibFunctions.is_int
@@ -194,12 +197,17 @@ let predef_tests = List.fold_right SSet.add predef_tests_list SSet.empty
 (* Empty (initial) environments *)
 (*****************************************************************************)
 
+let n_estimated_classes = 350000
+let n_estimated_typedefs = 10000
+let n_estimated_consts = 20000
+
 let empty tcopt = {
   itcopt    = tcopt;
-  iclasses  = SMap.empty, SMap.empty;
+  iclasses  = (Hashtbl.create ~random:false n_estimated_classes),
+              (Hashtbl.create ~random:false n_estimated_classes);
   ifuns     = !predef_funs, !predef_funnames;
-  itypedefs = SMap.empty;
-  iconsts   = SMap.empty;
+  itypedefs = (Hashtbl.create ~random:false n_estimated_typedefs);
+  iconsts   = (Hashtbl.create ~random:false n_estimated_consts);
 }
 
 (* The primitives to manipulate the naming environment *)
@@ -328,19 +336,21 @@ module Env = struct
     env := SMap.add x y !env;
     y
 
-  let lookup genv env (p, x) =
-    let v = SMap.get x env in
-    match v with
-    | None ->
-      (match genv.in_mode with
+  let hash_lookup genv env (p, x) =
+    try
+      let _v = Hashtbl.find env x in
+      (* p, (snd v) *)
+      ()
+    with Not_found ->
+      let ()  = (match genv.in_mode with
         | FileInfo.Mstrict -> Errors.unbound_name p x `const
         | FileInfo.Mpartial | FileInfo.Mdecl when not
             (TypecheckerOptions.assume_php genv.tcopt) ->
           Errors.unbound_name p x `const
         | FileInfo.Mdecl | FileInfo.Mpartial -> ()
-      );
-      p, Ident.make x
-    | Some v -> p, snd v
+      ) in
+      (* (p, Ident.make x) *)
+      ()
 
   (* Check and see if the user might have been trying to use one of the
    * generics in scope as a runtime value *)
@@ -351,26 +361,26 @@ module Env = struct
 
   let canonicalize genv env_and_names (p, name) kind =
     let env, canon_names = !env_and_names in
-    if SMap.mem name env then (p, name)
+    if Hashtbl.mem env name then (p, name)
     else (
       let name_key = canon_key name in
-      match SMap.get name_key canon_names with
-        | Some canonical ->
-          let p_canon, _ = SMap.find_unsafe canonical env in
-          Errors.did_you_mean_naming p name p_canon canonical;
+      try
+        let canonical = Hashtbl.find canon_names name_key in
+        let p_canon, _ = Hashtbl.find(*_unsafe*) env canonical in
+        Errors.did_you_mean_naming p name p_canon canonical;
           (* Recovering from the capitalization error means
            * returning the name in its canonical form *)
-          p, canonical
-        | None ->
-          (match genv.in_mode with
-            | FileInfo.Mpartial | FileInfo.Mdecl
-                when TypecheckerOptions.assume_php genv.tcopt
+        p, canonical
+      with Not_found ->
+        (match genv.in_mode with
+          | FileInfo.Mpartial | FileInfo.Mdecl
+              when TypecheckerOptions.assume_php genv.tcopt
                 || name = SN.Classes.cUnknown -> ()
-            | FileInfo.Mstrict -> Errors.unbound_name p name kind
-            | FileInfo.Mpartial | FileInfo.Mdecl ->
-                Errors.unbound_name p name kind
-          );
-          p, name
+          | FileInfo.Mstrict -> Errors.unbound_name p name kind
+          | FileInfo.Mpartial | FileInfo.Mdecl ->
+            Errors.unbound_name p name kind
+        );
+        p, name
     )
 
   let check_variable_scoping env (p, x) =
@@ -445,7 +455,8 @@ module Env = struct
     p, ident
 
   let get_name genv namespace x =
-    ignore (lookup genv namespace x); x
+    ignore (hash_lookup genv namespace x);
+    x
 
   (* For dealing with namespace fallback on constants *)
   let elaborate_and_get_name_with_fallback mk_dep genv genv_sect x =
@@ -467,7 +478,7 @@ module Env = struct
        * action-at-a-distance. *)
       Typing_deps.add_idep genv.droot (mk_dep (snd fq_x));
       Typing_deps.add_idep genv.droot (mk_dep (snd global_x));
-      let mem (_, s) = SMap.mem s pos_map in
+      let mem (_, s) = Hashtbl.mem pos_map s in
       match mem fq_x, mem global_x with
       (* Found in the current namespace *)
       | true, _ -> get_name genv pos_map fq_x
@@ -498,7 +509,7 @@ module Env = struct
       Typing_deps.add_idep genv.droot (mk_dep (snd fq_x));
       Typing_deps.add_idep genv.droot (mk_dep (snd global_x));
       (* canonicalize the names being searched *)
-      let mem (_, nm) = SMap.mem (canon_key nm) (canon_map) in
+      let mem (_, nm) = Hashtbl.mem canon_map (canon_key nm) in
       match mem fq_x, mem global_x with
       | true, _ -> (* Found in the current namespace *)
         let fq_x = canonicalize genv genv_sect fq_x `func in
@@ -535,11 +546,11 @@ module Env = struct
 
   let fun_id (genv, _) x =
     elaborate_and_get_name_with_canonicalized_fallback
-      (* Not just Dep.Fun, but Dep.FunName. This forces an incremental full
-       * redeclaration of this class if the name changes, not just a
-       * retypecheck -- the name that is referred to here actually changes as
-       * a result of what else is defined, which is stronger than just the need
-       * to retypecheck. *)
+      (* Not just Dep.Fun, but Dep.FunName. This forces an incremental
+       * full redeclaration of this class if the name changes, not just
+       * a retypecheck -- the name that is referred to here actually
+       * changes as a result of what else is defined, which is stronger
+       * than just the need to retypecheck. *)
       (fun x -> Typing_deps.Dep.FunName x)
       genv
       genv.funs
@@ -548,61 +559,66 @@ module Env = struct
   let new_const (genv, env) x =
     try ignore (new_var env.consts x); x with exn ->
       match genv.in_mode with
-      | FileInfo.Mstrict -> raise exn
-      | FileInfo.Mpartial | FileInfo.Mdecl -> x
+        | FileInfo.Mstrict -> raise exn
+        | FileInfo.Mpartial | FileInfo.Mdecl -> x
 
   let resilient_new_canon_var env_and_names (p, name) =
     let env, canon_names = !env_and_names in
     let name_key = canon_key name in
-    match SMap.get name_key canon_names with
-      | Some canonical ->
-        let p', id = SMap.find_unsafe canonical env in
-        if Pos.compare p p' = 0 then (p, id)
-        else begin
-          Errors.error_name_already_bound name canonical p p';
-          p', id
-        end
-      | None ->
-        let pos_and_id = p, Ident.make name in
-        env_and_names :=
-          SMap.add name pos_and_id env, SMap.add name_key name canon_names;
-        pos_and_id
+    try
+      let canonical = Hashtbl.find canon_names name_key in
+      let p', id = Hashtbl.find (* _unsafe *) env canonical in
+      if Pos.compare p p' = 0 then (p, id)
+      else begin
+        Errors.error_name_already_bound name canonical p p';
+        p', id
+      end
+    with Not_found ->
+      let pos_and_id = p, Ident.make name in
+      let () = Hashtbl.add canon_names name_key name in
+      let () = Hashtbl.add env name pos_and_id in
+      env_and_names := env, canon_names;
+      pos_and_id
 
   let resilient_new_var env (p, x) =
-    if SMap.mem x !env
-    then begin
-      let p', y = SMap.find_unsafe x !env in
+    let renv = !env in
+    try
+      let p', y = Hashtbl.find renv x in
       if Pos.compare p p' = 0 then (p, y)
       else begin
         Errors.error_name_already_bound x x p p';
         p', y
       end
-    end
-    else
+    with Not_found ->
       let y = p, Ident.make x in
-      env := SMap.add x y !env;
+      let () = Hashtbl.add renv x y in
+      env := renv;
       y
 
   let new_fun_id genv x =
-    if SMap.mem (snd x) !predef_funs then () else
-    ignore (resilient_new_canon_var genv.funs x)
+    if Hashtbl.mem !predef_funs (snd x) then () else
+      ignore (resilient_new_canon_var genv.funs x)
 
   let new_class_id genv x =
     ignore (resilient_new_canon_var genv.classes x)
 
   let new_typedef_id genv x =
     let v = resilient_new_canon_var genv.classes x in
-    genv.typedefs := SMap.add (snd x) v !(genv.typedefs);
+    let typedefs = !(genv.typedefs) in
+    let () = Hashtbl.add typedefs (snd x) v in
+    genv.typedefs := typedefs;
     ()
 
   let new_global_const_id genv x =
     let v = resilient_new_var genv.gconsts x in
-    genv.gconsts := SMap.add (snd x) v !(genv.gconsts);
+    let gconsts = !(genv.gconsts) in
+    let () = Hashtbl.add gconsts (snd x) v in
+    genv.gconsts := gconsts;
     ()
 
-(* Scope, keep the locals, go and name the body, and leave the
- * local environment intact
- *)
+  (* Scope, keep the locals, go and name the body, and leave the
+   * local environment intact
+   *)
   let scope env f =
     let genv, lenv = env in
     let lenv_copy = !(lenv.locals) in
@@ -624,21 +640,23 @@ let remove_decls env (funs, classes, typedefs, consts) =
   let typedef_namekeys = SSet.fold canonicalize_set typedefs SSet.empty in
   let fun_namekeys = SSet.fold canonicalize_set funs SSet.empty in
   let iclassmap, iclassnames = env.iclasses in
-  let iclassmap, iclassnames =
-    SSet.fold SMap.remove classes iclassmap,
-    SSet.fold SMap.remove class_namekeys iclassnames
+  let (), () =
+    SSet.iter (Hashtbl.remove iclassmap) classes,
+    SSet.iter (Hashtbl.remove iclassnames) class_namekeys
   in
-  let iclassmap, iclassnames =
-    SSet.fold SMap.remove typedefs iclassmap,
-    SSet.fold SMap.remove typedef_namekeys iclassnames
+  let (), () =
+    SSet.iter (Hashtbl.remove iclassmap) typedefs,
+    SSet.iter (Hashtbl.remove iclassnames) typedef_namekeys
   in
   let ifunmap, ifunnames = env.ifuns in
-  let ifunmap, ifunnames =
-    SSet.fold SMap.remove funs ifunmap,
-    SSet.fold SMap.remove fun_namekeys ifunnames
+  let (), () =
+    SSet.iter (Hashtbl.remove ifunmap) funs,
+    SSet.iter (Hashtbl.remove ifunnames) fun_namekeys
   in
-  let itypedefs = SSet.fold SMap.remove typedefs env.itypedefs in
-  let iconsts = SSet.fold SMap.remove consts env.iconsts in
+  let itypedefs = env.itypedefs in
+  let () = SSet.iter (Hashtbl.remove itypedefs) typedefs in
+  let iconsts = env.iconsts in
+  let () = SSet.iter (Hashtbl.remove iconsts) consts in
   { env with
     ifuns     = ifunmap, ifunnames;
     iclasses  = iclassmap, iclassnames;
@@ -677,10 +695,10 @@ let check_repetition s param =
 (* Check that a name is not a typedef *)
 let no_typedef (genv, _) cid =
   let (pos, name) = Namespaces.elaborate_id genv.namespace cid in
-  if SMap.mem name !(genv.typedefs)
-  then
-    let def_pos, _ = SMap.find_unsafe name !(genv.typedefs) in
+  try
+    let def_pos, _ = Hashtbl.find !(genv.typedefs) name in
     Errors.unexpected_typedef pos def_pos
+  with Not_found -> ()
 
 let hint_no_typedef env = function
   | _, Happly (x, _) -> no_typedef env x
@@ -2350,11 +2368,11 @@ let global_const genv cst =
 
 let add_files_to_rename nenv failed defl defs_in_env =
   List.fold_left begin fun failed (_, def) ->
-    match SMap.get def defs_in_env with
-    | None -> failed
-    | Some (previous_definition_position, _) ->
+    try
+      let previous_definition_position, _ = Hashtbl.find defs_in_env def in
       let filename = Pos.filename previous_definition_position in
       Relative_path.Set.add filename failed
+    with Not_found -> failed
   end failed defl
 
 let ndecl_file fn

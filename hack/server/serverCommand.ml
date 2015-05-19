@@ -62,13 +62,13 @@ let stream_response (genv:ServerEnv.genv) env ~client ~cmd =
       output_string oc "class:\n";
       let canon_name = Naming.canon_key qual_name in
       let class_name = (
-        match SMap.get canon_name (snd nenv.Naming.iclasses) with
-        | None ->
-          let () = output_string oc "Missing from naming env\n" in qual_name
-        | Some canon ->
-          let p, _ = SMap.find_unsafe canon (fst nenv.Naming.iclasses) in
+        try
+          let canon = Hashtbl.find (snd nenv.Naming.iclasses) canon_name in
+          let p, _ = Hashtbl.find (* _unsafe *) (fst nenv.Naming.iclasses) canon in
           let () = output_string oc ((Pos.string (Pos.to_absolute p))^"\n") in
           canon
+        with Not_found ->
+          let () = output_string oc "Missing from naming env\n" in qual_name
       ) in
       let class_ = Typing_env.Classes.get class_name in
       (match class_ with
@@ -78,14 +78,14 @@ let stream_response (genv:ServerEnv.genv) env ~client ~cmd =
           output_string oc (class_str^"\n")
       );
       output_string oc "\nfunction:\n";
-      let fun_name =
-      (match SMap.get (Naming.canon_key qual_name) (snd nenv.Naming.ifuns) with
-        | None ->
-          let () = output_string oc "Missing from naming env\n" in qual_name
-        | Some canon ->
-          let p, _ = SMap.find_unsafe canon (fst nenv.Naming.ifuns) in
+      let fun_name = (
+        try
+          let canon = Hashtbl.find (snd nenv.Naming.ifuns) canon_name in
+          let p, _ = Hashtbl.find (* _unsafe *) (fst nenv.Naming.ifuns) canon in
           let () = output_string oc ((Pos.string (Pos.to_absolute p))^"\n") in
           canon
+        with Not_found ->
+          let () = output_string oc "Missing from naming env\n" in qual_name
       ) in
       let fun_ = Typing_env.Funs.get fun_name in
       (match fun_ with
@@ -96,9 +96,10 @@ let stream_response (genv:ServerEnv.genv) env ~client ~cmd =
           output_string oc (fun_str^"\n")
       );
       output_string oc "\nglobal const:\n";
-      (match SMap.get qual_name nenv.Naming.iconsts with
-      | Some (p, _) -> output_string oc (Pos.string (Pos.to_absolute p)^"\n")
-      | None -> output_string oc "Missing from naming env\n");
+      (try
+         let p, _ = Hashtbl.find nenv.Naming.iconsts qual_name in
+         output_string oc (Pos.string (Pos.to_absolute p)^"\n")
+       with Not_found -> output_string oc "Missing from naming env\n" );
       let gconst_ty = Typing_env.GConsts.get qual_name in
       (match gconst_ty with
       | None -> output_string oc "Missing from typing env\n"
@@ -107,9 +108,10 @@ let stream_response (genv:ServerEnv.genv) env ~client ~cmd =
           output_string oc ("ty: "^gconst_str^"\n")
       );
       output_string oc "typedef:\n";
-      (match SMap.get qual_name nenv.Naming.itypedefs with
-      | Some (p, _) -> output_string oc (Pos.string (Pos.to_absolute p)^"\n")
-      | None -> output_string oc "Missing from naming env\n");
+      (try
+         let p, _ = Hashtbl.find nenv.Naming.itypedefs qual_name in
+         output_string oc (Pos.string (Pos.to_absolute p)^"\n")
+       with Not_found -> output_string oc "Missing from naming env\n");
       let tdef = Typing_env.Typedefs.get qual_name in
       (match tdef with
       | None ->
