@@ -14,5 +14,4 @@ type Seq = number | Array<Seq>;
 var s1:Seq = [0,[0]];
 var s2:Seq = [[""]];
 
-declare var exports: { foo: number };
-module.exports = { foo: "" };
+module.exports = { foo: ("": number) };

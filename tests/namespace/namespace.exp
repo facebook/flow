@@ -15,8 +15,8 @@ namespace.js:15:16,17: string
 This type is incompatible with
 namespace.js:13:12,30: union type
 
-namespace.js:18:25,26: string
+namespace.js:17:26,27: string
 This type is incompatible with
-namespace.js:17:29,34: number
+namespace.js:17:30,35: number
 
 Found 5 errors

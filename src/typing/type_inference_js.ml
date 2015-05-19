@@ -5067,22 +5067,21 @@ let infer_ast ast file m force_check =
   cx.weak <- weak;
 
   let reason_exports_module = reason_of_string (spf "exports of module %s" m) in
-  let scope = ref
-    (SMap.singleton "exports"
-       (let exports = Flow_js.mk_tvar cx reason_exports_module in
-        create_env_entry
-          exports
-          exports
-          None
-       ) |>
-     SMap.add (internal_name "exports")
-       (create_env_entry
-          (UndefT (reason_of_string "undefined exports"))
-          (AnyT reason_exports_module)
-          None
-       )
-    )
-  in
+  let local_exports = Flow_js.mk_tvar cx reason_exports_module in
+  let scope = ref (
+    SMap.singleton "exports"
+      (create_env_entry
+        local_exports
+        local_exports
+        None
+      )
+    |> SMap.add (internal_name "exports")
+      (create_env_entry
+        (UndefT (reason_of_string "undefined exports"))
+        (AnyT reason_exports_module)
+        None
+      )
+  ) in
   Env_js.env := [scope];
   Flow_js.mk_frame cx [] !Env_js.env;
   Env_js.changeset := SSet.empty;
@@ -5093,18 +5092,16 @@ let infer_ast ast file m force_check =
   if check then (
     let init_exports = mk_object cx reason in
     set_module_exports cx reason init_exports;
+    Flow_js.flow cx (
+      init_exports,
+      Env_js.get_var_in_scope cx "exports" reason
+    );
     infer_core cx statements;
   );
 
   cx.checked <- check;
-
-  let exports_var_in_scope = Env_js.get_var_in_scope cx "exports" reason in
   Flow_js.flow cx (
     get_module_exports cx reason,
-    exports_var_in_scope
-  );
-  Flow_js.flow cx (
-    exports_var_in_scope,
     exports cx m);
 
   let ins = (Flow_js.builtins)::(
