@@ -4705,7 +4705,7 @@ and function_decl id cx (reason:reason) type_params params ret body this super =
 
 and is_void cx = function
   | OpenT(_,id) ->
-      Flow_js.check_lower_bound cx id (function | VoidT _ -> true | _ -> false)
+      Flow_js.check_types cx id (function | VoidT _ -> true | _ -> false)
   | _ -> false
 
 and mk_upper_bound cx locs name t =
@@ -4988,7 +4988,7 @@ and mine_fields cx body fields =
 (* seed new graph with builtins *)
 let add_builtins cx =
   let reason, id = open_tvar Flow_js.builtins in
-  cx.graph <- cx.graph |> IMap.add id (new_bounds ())
+  cx.graph <- cx.graph |> IMap.add id (new_unresolved_root ())
 
 (* cross-module GC toggle *)
 let xmgc_enabled = ref true
@@ -5013,17 +5013,21 @@ let cross_module_gc =
 let force_annotations cx =
   let tvar = lookup_module cx cx._module in
   let reason, id = open_tvar tvar in
-  let bounds = Flow_js.find_graph cx id in
+  let constraints = Flow_js.find_graph cx id in
   let before = Errors_js.ErrorSet.cardinal cx.errors in
-  Flow_js.enforce_strict cx id bounds;
+  Flow_js.enforce_strict cx id constraints;
   let after = Errors_js.ErrorSet.cardinal cx.errors in
-  let ground_bounds = new_bounds () in
+  let ground_node = new_unresolved_root () in
+  let ground_bounds = bounds_of_unresolved_root ground_node in
   if (after = before)
   then (
-    ground_bounds.lower <- bounds.lower;
-    ground_bounds.lowertvars <- bounds.lowertvars
+    match constraints with
+    | Unresolved bounds ->
+        ground_bounds.lower <- bounds.lower;
+        ground_bounds.lowertvars <- bounds.lowertvars
+    | _ -> ()
   );
-  cx.graph <- IMap.add id ground_bounds cx.graph
+  cx.graph <- IMap.add id ground_node cx.graph
 
 (* core inference, assuming setup and teardown happens elsewhere *)
 let infer_core cx statements =
@@ -5146,35 +5150,23 @@ let infer_module file =
    So do union N M as long as N may override M for overlapping keys.
 *)
 
-(* helper for merge_module *)
-let aggregate_context_data cx =
-  let master_cx = Flow_js.master_cx in
-  (* CLOSURES *)
-  let old_mast = IMap.cardinal master_cx.closures in
-  let old_mod = IMap.cardinal cx.closures in
-  master_cx.closures <-
-    IMap.union cx.closures master_cx.closures;
-  let new_mast = IMap.cardinal master_cx.closures in
-  assert (old_mast + old_mod = new_mast);
-  (* PROPERTY MAPS *)
-  let old_mast = IMap.cardinal master_cx.property_maps in
-  let old_mod = IMap.cardinal cx.property_maps in
-  master_cx.property_maps <- IMap.union
-    cx.property_maps master_cx.property_maps;
-  let new_mast = IMap.cardinal master_cx.property_maps in
-  assert (old_mast + old_mod = new_mast);
-  (* add globals to master cx *)
-  master_cx.globals <-
-    SSet.union cx.globals master_cx.globals;
-  ()
+(* aggregate module context data with other module context data *)
+let aggregate_context_data cx cx_other =
+  cx.closures <-
+    IMap.union cx_other.closures cx.closures;
+  cx.property_maps <-
+    IMap.union cx_other.property_maps cx.property_maps;
+  cx.globals <-
+    SSet.union cx_other.globals cx.globals
 
-(* update master graph with module graph *)
-let update_graph cx =
+(* update module graph with other module graph *)
+let update_graph cx cx_other =
   let _, builtin_id = open_tvar Flow_js.builtins in
-  cx.graph |> IMap.iter (fun id module_bounds ->
+  let master_node = IMap.find_unsafe builtin_id cx.graph in
+  let master_bounds = bounds_of_unresolved_root master_node in
+  cx_other.graph |> IMap.iter (fun id module_node ->
     if (id = builtin_id) then (
-      (* merge new bounds with old bounds for builtins *)
-      let master_bounds = Flow_js.find_graph Flow_js.master_cx id in
+      let module_bounds = bounds_of_unresolved_root module_node in
       master_bounds.uppertvars <- IMap.union
         module_bounds.uppertvars
         master_bounds.uppertvars;
@@ -5183,9 +5175,7 @@ let update_graph cx =
         master_bounds.upper
     )
     else
-      (* add all other tvars -> bounds *)
-      Flow_js.master_cx.graph <-
-        Flow_js.master_cx.graph |> IMap.add id module_bounds;
+      cx.graph <- cx.graph |> IMap.add id module_node
   )
 
 type direction = Out | In
@@ -5207,42 +5197,20 @@ let export_to_master cx m =
 let require_from_master cx m =
   link_module_types Out cx m
 
-(* merge module context into master context *)
-let merge_module cx =
-  (* aggregate context data before flow calcs *)
-  aggregate_context_data cx;
-  (* update master graph with module graph *)
-  update_graph cx;
-  (* link local and global types for our export and our required's *)
-  export_to_master cx cx._module;
-  SSet.iter (require_from_master cx) cx.required;
-  ()
-
 (* Copy context from cx_other to cx *)
-(* TODO: Generalize aggregate_context_data and update_graph to work for
-   arbitrary cx_other instead of master_cx, and use those functions instead of
-   duplicating their functionality here. *)
-let copy_context_strict cx cx_other =
-  (* aggregate context data *)
-  cx.closures <-
-    IMap.union cx_other.closures cx.closures;
-  cx.property_maps <- IMap.union
-    cx_other.property_maps cx.property_maps;
-  cx.globals <-
-    SSet.union cx_other.globals cx.globals;
-  (* update graph *)
-  let _, builtin_id = open_tvar Flow_js.builtins in
-  cx_other.graph |> IMap.iter (fun id module_bounds ->
-    if (id <> builtin_id) then
-      cx.graph <- cx.graph |> IMap.add id module_bounds
-  )
+let copy_context cx cx_other =
+  aggregate_context_data cx cx_other;
+  update_graph cx cx_other
+
+let copy_context_master cx =
+  copy_context Flow_js.master_cx cx
 
 (* Connect the builtins object in master_cx to the builtins reference in some
    arbitrary cx. *)
 let implicit_require_strict cx master_cx =
   let _, builtin_id = open_tvar Flow_js.builtins in
-  let master_bounds = Flow_js.find_graph master_cx builtin_id in
-  master_bounds.lower |> TypeMap.iter (fun t _ ->
+  let types = Flow_js.possible_types master_cx builtin_id in
+  types |> List.iter (fun t ->
     Flow_js.flow cx (t, Flow_js.builtins)
   )
 
@@ -5281,8 +5249,8 @@ let merge_module_strict cx cxs implementations declarations master_cx =
   Flow_js.Cache.clear();
 
   (* First, copy cxs and master_cx to the host cx. *)
-  cxs |> List.iter (copy_context_strict cx);
-  copy_context_strict cx master_cx;
+  cxs |> List.iter (copy_context cx);
+  copy_context cx master_cx;
 
   (* Connect links between implementations and requires. Since the host contains
      copies of all graphs, the links should already be available. *)
@@ -5296,19 +5264,6 @@ let merge_module_strict cx cxs implementations declarations master_cx =
      reference is shared, this connects the definitions of builtins to their
      uses in all contexts. *)
   implicit_require_strict cx master_cx
-
-(* merge all modules at a dependency level, then do xmgc *)
-let merge_module_list cx_list =
-  List.iter merge_module cx_list;
-  let (modules,requires) = cx_list |> ((SSet.empty,SSet.empty) |>
-      List.fold_left (fun (modules,requires) cx ->
-        (SSet.add cx._module modules,
-         SSet.union cx.required requires)
-      )
-  ) in
-  (* cross-module garbage collection *)
-  cross_module_gc Flow_js.master_cx modules requires;
-  ()
 
 (* variation of infer + merge for lib definitions *)
 let init file statements save_errors =
@@ -5331,9 +5286,32 @@ let init file statements save_errors =
     Flow_js.set_builtin cx x t
   );
 
-  aggregate_context_data cx;
-  update_graph cx;
+  copy_context_master cx;
 
   let errs = cx.errors in
   cx.errors <- Errors_js.ErrorSet.empty;
   save_errors errs
+
+(* Legacy functions for managing non-strict merges. *)
+(* !!!!!!!!!!! TODO: out of date !!!!!!!!!!!!!!! *)
+
+(* merge module context into master context *)
+let merge_module cx =
+  copy_context_master cx;
+  (* link local and global types for our export and our required's *)
+  export_to_master cx cx._module;
+  SSet.iter (require_from_master cx) cx.required;
+  ()
+
+(* merge all modules at a dependency level, then do xmgc *)
+let merge_module_list cx_list =
+  List.iter merge_module cx_list;
+  let (modules,requires) = cx_list |> ((SSet.empty,SSet.empty) |>
+      List.fold_left (fun (modules,requires) cx ->
+        (SSet.add cx._module modules,
+         SSet.union cx.required requires)
+      )
+  ) in
+  (* cross-module garbage collection *)
+  cross_module_gc Flow_js.master_cx modules requires;
+  ()

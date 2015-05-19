@@ -259,7 +259,7 @@ class context_cache = object
   (* read a context from shared memory, copy its graph, and cache the context *)
   method read file =
     let cx = ContextHeap.find_unsafe file in
-    let cx = { cx with graph = IMap.map copy_bounds cx.graph } in
+    let cx = { cx with graph = IMap.map copy_node cx.graph } in
     Hashtbl.add cached_infer_contexts file cx;
     cx
 

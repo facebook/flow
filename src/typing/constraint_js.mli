@@ -208,22 +208,30 @@ module AnyT: PrimitiveT
 module NullT: PrimitiveT
 module VoidT: PrimitiveT
 
-type unifier =
+type node =
 | Goto of ident
-| Rank of int
+| Root of root
 
-type bounds = {
+and root = {
+  rank: int;
+  constraints: constraints;
+}
+
+and constraints =
+| Resolved of Type.t
+| Unresolved of bounds
+
+and bounds = {
   mutable lower: trace TypeMap.t;
   mutable upper: trace TypeMap.t;
   mutable lowertvars: trace IMap.t;
   mutable uppertvars: trace IMap.t;
-  mutable unifier: unifier option;
-  mutable solution: Type.t option;
-  mutable cleared: bool;
 }
 
-val new_bounds: unit -> bounds
-val copy_bounds: bounds -> bounds
+val new_unresolved_root: unit -> node
+val bounds_of_unresolved_root: node -> bounds
+
+val copy_node: node -> node
 
 (***************************************)
 
@@ -253,7 +261,7 @@ type context = {
   mutable required: SSet.t;
   mutable require_loc: Spider_monkey_ast.Loc.t SMap.t;
 
-  mutable graph: bounds IMap.t;
+  mutable graph: node IMap.t;
   mutable closures: (stack * scope list) IMap.t;
   mutable property_maps: Type.properties IMap.t;
   mutable modulemap: Type.t SMap.t;

@@ -18,7 +18,7 @@ val new_error: (reason * string) list -> Errors_js.error
 val add_warning: context -> (reason * string) list -> unit
 val add_error: context -> (reason * string) list -> unit
 
-val find_graph: context -> ident -> bounds
+val find_graph: context -> ident -> constraints
 
 (* propagates sources to sinks following a subtype relation *)
 val flow: context -> (Type.t * Type.t) -> unit
@@ -107,12 +107,12 @@ val set_builtin: context -> string -> Type.t -> unit
 val mk_instance: context -> ?trace:trace -> reason -> Type.t -> Type.t
 
 (* strict *)
-val check_upper_bound: context -> ident -> (Type.t -> bool) -> bool
-val check_lower_bound: context -> ident -> (Type.t -> bool) -> bool
-val enforce_strict: context -> ident -> bounds -> unit
+val check_types: context -> ident -> (Type.t -> bool) -> bool
+val enforce_strict: context -> ident -> constraints -> unit
 val suggested_type_cache: Type.t IMap.t ref
 val merge_type: context -> (Type.t * Type.t) -> Type.t
 val resolve_type: context -> Type.t -> Type.t
+val possible_types: context -> ident -> Type.t list
 val possible_types_of_type: context -> Type.t -> Type.t list
 
 val ground_type: context -> Type.t -> Type.t

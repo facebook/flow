@@ -111,6 +111,14 @@ new_react.js:32:8,13: number
 This type is incompatible with
 [LIB] react.js:47:23,28: string
 
+props.js:4:5,13: property x
+Property not found in
+props.js:25:5,13: propTypes
+
+props.js:4:5,13: property z
+Property not found in
+props.js:25:5,13: propTypes
+
 props.js:14:25,36: string
 This type is incompatible with
 props.js:14:16,21: number
@@ -151,8 +159,6 @@ props.js:20:49,53: boolean
 This type is incompatible with
 props.js:6:12,33: number
 
-props.js:20:15,57: React element: TestProps
-Error:
 props.js:25:5,13: property w
 Property not found in
 props.js:4:5,13: propTypes
@@ -197,4 +203,4 @@ state3.js:14:16,20: boolean
 This type is incompatible with
 state3.js:11:16,21: number
 
-Found 42 errors
+Found 44 errors
