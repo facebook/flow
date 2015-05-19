@@ -54,7 +54,7 @@ type genv = {
   in_try: bool;
 
   (* are we in the body of a non-static member function? *)
-  in_non_static_method: bool;
+  in_instance_method: bool;
 
   (* In function foo<T1, ..., Tn> or class<T1, ..., Tn>, the field
    * type_params knows T1 .. Tn. It is able to find out about the
@@ -218,7 +218,7 @@ module Env = struct
     in_mode       = FileInfo.Mstrict;
     tcopt         = nenv.itcopt;
     in_try        = false;
-    in_non_static_method = false;
+    in_instance_method = false;
     type_params   = SMap.empty;
     type_paraml   = [];
     classes       = ref nenv.iclasses;
@@ -235,7 +235,7 @@ module Env = struct
       (if !Autocomplete.auto_complete then FileInfo.Mpartial else mode);
     tcopt         = nenv.itcopt;
     in_try        = false;
-    in_non_static_method = false;
+    in_instance_method = false;
     type_params   = params;
     type_paraml   = tparams;
     classes       = ref nenv.iclasses;
@@ -259,7 +259,7 @@ module Env = struct
     in_mode       = FileInfo.(if !Ide.is_ide_mode then Mpartial else Mstrict);
     tcopt         = nenv.itcopt;
     in_try        = false;
-    in_non_static_method = false;
+    in_instance_method = false;
     type_params   = cstrs;
     type_paraml   = List.map (fun (_, x, _) -> x) tdef.t_tparams;
     classes       = ref nenv.iclasses;
@@ -281,7 +281,7 @@ module Env = struct
     in_mode       = f_mode;
     tcopt         = nenv.itcopt;
     in_try        = false;
-    in_non_static_method = false;
+    in_instance_method = false;
     type_params   = params;
     type_paraml   = [];
     classes       = ref nenv.iclasses;
@@ -300,7 +300,7 @@ module Env = struct
     in_mode       = cst.cst_mode;
     tcopt         = nenv.itcopt;
     in_try        = false;
-    in_non_static_method = false;
+    in_instance_method = false;
     type_params   = SMap.empty;
     type_paraml   = [];
     classes       = ref nenv.iclasses;
@@ -1308,7 +1308,7 @@ and class_method env sids cv_ids x acc =
   | Method m when snd m.m_name = SN.Members.__construct -> acc
   | Method m when not (List.mem Static m.m_kind) ->
       let genv = fst env in
-      method_ { genv with in_non_static_method = true } m :: acc
+      method_ { genv with in_instance_method = true } m :: acc
   | Method _ -> acc
   | TypeConst _ -> acc
 
@@ -1437,7 +1437,7 @@ and method_ genv m =
   let genv = extend_params genv m.m_tparams in
   let env = genv, Env.empty_local() in
   (* Cannot use 'this' if it is a public instance method *)
-  let allow_this = not genv.in_non_static_method ||
+  let allow_this = not genv.in_instance_method ||
     not (List.mem Public m.m_kind) in
   let variadicity, paraml = fun_paraml ~allow_this env m.m_params in
   let name = Env.new_const env m.m_name in
@@ -2290,12 +2290,12 @@ let class_meth_bodies nenv nc =
   let genv  = Env.make_class_genv nenv cstrs
     nc.N.c_mode tparams (nc.N.c_name, nc.N.c_kind) Namespace_env.empty
   in
-  let inst_genv = {genv with in_non_static_method = true} in
+  let inst_genv = {genv with in_instance_method = true} in
   let inst_meths = List.map (meth_body inst_genv) nc.N.c_methods in
   let opt_constructor = match nc.N.c_constructor with
     | None -> None
     | Some c -> Some (meth_body inst_genv c) in
-  let static_genv = {genv with in_non_static_method = false} in
+  let static_genv = {genv with in_instance_method = false} in
   let static_meths = List.map (meth_body static_genv) nc.N.c_static_methods in
   { nc with
     N.c_methods        = inst_meths;
