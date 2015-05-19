@@ -77,6 +77,7 @@
     | T_DEBUGGER
     | T_DECLARE
     | T_TYPE
+    | T_OF
     (* Operators *)
     | T_RSHIFT3_ASSIGN
     | T_RSHIFT_ASSIGN
@@ -213,6 +214,7 @@
     | T_DEBUGGER -> "debugger"
     | T_DECLARE -> "declare"
     | T_TYPE -> "type"
+    | T_OF -> "of"
     | T_LCURLY -> "{"
     | T_RCURLY -> "}"
     | T_LPAREN -> "("
@@ -491,6 +493,7 @@
       "debugger", T_DEBUGGER;
       "declare", T_DECLARE;
       "type", T_TYPE;
+      "of", T_OF;
     ]
   let _ = List.iter (fun (key, token) -> Hashtbl.add type_keywords key token)
     [

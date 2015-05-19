@@ -1426,6 +1426,7 @@ module.exports = {
         'eval = 42',
         'arguments = 42',
         'type = 42',
+        'of = 42',
         'interface = 42',
         'declare = 42',
         'x *= 42',
@@ -2106,6 +2107,9 @@ module.exports = {
         'start: for (;;) break start',
         'start: while (true) break start',
         '__proto__: test',
+        'type: 42',
+        'of: 52',
+        'declare: 62',
     ],
 
     'throw statement': [
@@ -5191,6 +5195,10 @@ module.exports = {
         'import type from "MyModule"',
         'import type, {} from "MyModule"',
         'import type, * as namespace from "MyModule"',
+
+        // Other pseudo keywords
+        'import of from "MyModule"',
+        'import declare from "MyModule"',
       ],
     },
     'Import Type': {
@@ -5521,5 +5529,29 @@ module.exports = {
     'Bounded Polymorphism': [
       'function foo<T: Foo>() {}',
       'class Foo<T: Bar> {}',
+    ],
+    'For Of Loops': [
+        'for(x of list) process(x);',
+        'for (var x of list) process(x);',
+        'for (let x of list) process(x);',
+    ],
+    'Invalid For Of Loops': [
+        {
+          content: 'for (let x = 42 of list) process(x);',
+          explanation: 'Exprima is off by one here location-wise '+
+            'and I like my error here better',
+          expected_differences: {
+            'root.errors.0.column': {
+              type: 'Wrong error column',
+              expected: 16,
+              actual: '5-15',
+            } ,
+            'root.errors.0.message': {
+              type: 'Wrong error message',
+              expected: 'Unexpected identifier',
+              actual: 'Invalid left-hand side in for-of',
+            }
+          }
+        },
     ],
 };

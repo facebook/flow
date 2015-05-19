@@ -1987,4 +1987,11 @@ module.exports = {
       }
     },
   },
+  'Invalid For Of Loops': {
+    'for (var x = 42 of list) process(x);': {
+      'errors': {
+        '0.message': 'Invalid left-hand side in for-of',
+      },
+    },
+  },
 };

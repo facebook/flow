@@ -76,6 +76,7 @@ module Peek = struct
     | _ when is_strict_reserved name || is_restricted name -> true
     | T_LET
     | T_TYPE
+    | T_OF
     | T_DECLARE
     | T_IDENTIFIER -> true
     | _ -> false
@@ -1062,70 +1063,99 @@ end = struct
         test;
       }))
 
-    and _for env =
-      let start_loc = Peek.loc env in
-      Expect.token env T_FOR;
-      Expect.token env T_LPAREN;
-      let init = match Peek.token env with
-      | T_SEMICOLON -> None
-      | T_LET ->
-          let decl = Declaration._let (env |> with_no_in true) in
-          Some (Statement.For.InitDeclaration decl)
-      | T_VAR ->
-          let decl = Declaration.var (env |> with_no_in true ) in
-          Some (Statement.For.InitDeclaration decl)
-      | _ ->
-          let expr =
-            Parse.expression (env |> with_no_in true |> with_no_let true) in
-          Some (Statement.For.InitExpression expr) in
-      match Peek.token env with
-      | T_IN ->
-          let left = Statement.(match init with
-          | Some (For.InitDeclaration (loc, decl)) -> Statement.VariableDeclaration.(
-              (* 13.6 says you can't have multiple declarations in a for-in
-               * statement *)
-              let decl = match decl.declarations with
-              | []
-              | [_] -> decl
-              | d::_ ->
-                  error_at env (loc, Error.InvalidLHSInForIn);
-                  { decl with declarations = [d]; } in
-              ForIn.LeftDeclaration (loc, decl)
-          )
-          | Some (For.InitExpression expr) ->
-              if not (Parse.is_assignable_lhs expr)
-              then error_at env (fst expr, Error.InvalidLHSInForIn);
-              ForIn.LeftExpression expr
-          | None -> assert false) in
-          (* This is a for in loop *)
-          Expect.token env T_IN;
-          let right = Parse.expression env in
-          Expect.token env T_RPAREN;
-          let body = Parse.statement (env |> with_in_loop true) in
-          Loc.btwn start_loc (fst body), Statement.(ForIn ForIn.({
-            left;
-            right;
-            body;
-            each = false;
-          }))
-      | _ ->
-          (* This is a for loop *)
-          Expect.token env T_SEMICOLON;
-          let test = match Peek.token env with
-          | T_SEMICOLON -> None
-          | _ -> Some (Parse.expression env) in
-          Expect.token env T_SEMICOLON;
-          let update = match Peek.token env with
-          | T_RPAREN -> None
-          | _ -> Some (Parse.expression env) in
-          Expect.token env T_RPAREN;
-          let body = Parse.statement (env |> with_in_loop true) in
-          Loc.btwn start_loc (fst body), Statement.(For For.({
-            init;
-            test;
-            update;
-            body;
-          }))
+    and _for =
+      let assert_can_be_forin_or_forof env err = Statement.VariableDeclaration.(function
+        | Some (Statement.For.InitDeclaration (loc, {
+          declarations;
+          _;
+        })) ->
+            (* Only a single declarator is allowed, without an init. So
+             * something like
+             *
+             * for (var x in y) {}
+             *
+             * is allowed, but we disallow
+             *
+             * for (var x, y in z) {}
+             * for (var x = 42 in y) {}
+             *)
+            (match declarations with
+            | [ (_, { Declarator.init = None; _; }) ] -> ()
+            | _ -> error_at env (loc, err))
+        | Some (Statement.For.InitExpression (loc, expr)) ->
+            (* Only certain expressions can be the lhs of a for in or for of *)
+            if not (Parse.is_assignable_lhs (loc, expr))
+            then error_at env (loc, err)
+        | _ -> error env err
+      )
+
+      in fun env ->
+        let start_loc = Peek.loc env in
+        Expect.token env T_FOR;
+        Expect.token env T_LPAREN;
+        let init = match Peek.token env with
+        | T_SEMICOLON -> None
+        | T_LET ->
+            let decl = Declaration._let (env |> with_no_in true)  in
+            Some (Statement.For.InitDeclaration decl)
+        | T_VAR ->
+            let decl = Declaration.var (env |> with_no_in true) in
+            Some (Statement.For.InitDeclaration decl)
+        | _ ->
+            let expr = Parse.expression (env |> with_no_in true |> with_no_let true) in
+            Some (Statement.For.InitExpression expr) in
+        match Peek.token env with
+        | T_IN ->
+            assert_can_be_forin_or_forof env Error.InvalidLHSInForIn init;
+            let left = Statement.(match init with
+            | Some (For.InitDeclaration decl) -> ForIn.LeftDeclaration decl
+            | Some (For.InitExpression expr) -> ForIn.LeftExpression expr
+            | None -> assert false) in
+            (* This is a for in loop *)
+            Expect.token env T_IN;
+            let right = Parse.expression env in
+            Expect.token env T_RPAREN;
+            let body = Parse.statement (env |> with_in_loop true) in
+            Loc.btwn start_loc (fst body), Statement.(ForIn ForIn.({
+              left;
+              right;
+              body;
+              each = false;
+            }))
+        | T_OF ->
+            assert_can_be_forin_or_forof env Error.InvalidLHSInForOf init;
+            let left = Statement.(match init with
+            | Some (For.InitDeclaration decl) -> ForOf.LeftDeclaration decl
+            | Some (For.InitExpression expr) -> ForOf.LeftExpression expr
+            | None -> assert false) in
+            (* This is a for of loop *)
+            Expect.token env T_OF;
+            let right = Parse.assignment env in
+            Expect.token env T_RPAREN;
+            let body = Parse.statement (env |> with_in_loop true) in
+            Loc.btwn start_loc (fst body), Statement.(ForOf ForOf.({
+              left;
+              right;
+              body;
+            }))
+        | _ ->
+            (* This is a for loop *)
+            Expect.token env T_SEMICOLON;
+            let test = match Peek.token env with
+            | T_SEMICOLON -> None
+            | _ -> Some (Parse.expression env) in
+            Expect.token env T_SEMICOLON;
+            let update = match Peek.token env with
+            | T_RPAREN -> None
+            | _ -> Some (Parse.expression env) in
+            Expect.token env T_RPAREN;
+            let body = Parse.statement (env |> with_in_loop true) in
+            Loc.btwn start_loc (fst body), Statement.(For For.({
+              init;
+              test;
+              update;
+              body;
+            }))
 
     and _if env =
       let start_loc = Peek.loc env in
@@ -1410,7 +1440,7 @@ end = struct
         }))
       end else begin
         Eat.vomit env;
-        expression env
+        Parse.statement env
       end
 
     (* TODO: deprecate `interface`; somewhat confusingly, it plays two roles,
@@ -1580,7 +1610,7 @@ end = struct
             declare_var env start_loc
         | _ ->
           Eat.vomit env;
-          expression env)
+          Parse.statement env)
 
       let export_declaration =
         let source env =
@@ -1782,8 +1812,9 @@ end = struct
               failwith "Unsupported: `import typeof`";
             | _ -> ImportValue, None
           ) in
-          Statement.ImportDeclaration.(match Peek.token env with
-            | T_STRING (str_loc, value, raw, octal)
+          Statement.ImportDeclaration.(
+            match Peek.token env, Peek.identifier env with
+            | T_STRING (str_loc, value, raw, octal), _
               when importKind = ImportValue ->
                 (* import "ModuleSpecifier"; *)
                 if octal then strict_error env Error.StrictOctalLiteral;
@@ -1800,8 +1831,8 @@ end = struct
                   source;
                   importKind;
                 }
-            | T_COMMA
-            | T_IDENTIFIER ->
+            | T_COMMA, _
+            | _, true ->
                 (* import defaultspecifier ... *)
                 let importKind, default = (
                   match type_ident, Peek.token env, Peek.value env with
@@ -2700,6 +2731,7 @@ end = struct
         | T_PUBLIC
         | T_YIELD
         | T_TYPE
+        | T_OF
         | T_ANY_TYPE
         | T_BOOLEAN_TYPE
         | T_NUMBER_TYPE
@@ -3562,7 +3594,7 @@ end = struct
     | T_TRY -> _try env
     | T_WHILE -> _while env
     | T_WITH -> _with env
-    | T_IDENTIFIER -> maybe_labeled env
+    | _ when Peek.identifier env -> maybe_labeled env
     (* If we see an else then it's definitely an error, but we can probably
      * assume that this is a malformed if statement that is missing the if *)
     | T_ELSE -> _if env
@@ -3625,6 +3657,7 @@ end = struct
       strict_error env Error.StrictReservedWord;
       Eat.token env
     | T_DECLARE
+    | T_OF
     | T_TYPE as t ->
         (* These aren't real identifiers *)
         Expect.token env t
