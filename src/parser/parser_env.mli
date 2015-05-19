@@ -27,8 +27,6 @@ val mode_to_string : lex_mode -> string
 
 type env
 
-val lex : env -> lex_mode -> lex_result
-
 (* constructor: *)
 val init_env : Lexing.lexbuf -> env
 
@@ -60,12 +58,12 @@ val last_loc : env -> Loc.t option
 (* mutators: *)
 val error_at : env -> Loc.t * Error.t -> unit
 val comment_list : env -> Comment.t list -> unit
-val set_lookahead : env -> lex_result -> unit
 val error_list : env -> (Loc.t * Error.t) list -> unit
 val push_lex_mode : env -> lex_mode -> unit
 val pop_lex_mode : env -> unit
 val double_pop_lex_mode : env -> unit
 val set_lex_env : env -> lex_env -> unit
+val clear_lookahead_errors : env -> unit
 
 (* functional operations -- these return shallow copies, so future mutations to
  * the returned env will also affect the original: *)
@@ -96,5 +94,5 @@ module Try : sig
 end
 
 (* TODO get rid of these abominations *)
-val advance : env -> lex_env * lex_result -> lex_result -> unit
+val advance : env -> lex_env * lex_result -> lex_mode -> unit
 val vomit : env -> unit

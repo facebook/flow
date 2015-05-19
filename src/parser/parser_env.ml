@@ -111,6 +111,9 @@ let error_at env (loc, e) =
 let comment_list env =
   List.iter (fun c -> env.comments := c :: !(env.comments))
 let set_lookahead env l = env.lookahead := l
+let clear_lookahead_errors env =
+  let lookahead = { (lookahead env) with lex_errors = [] } in
+  set_lookahead env lookahead
 let set_lex_env env lex_env = env.lex_env := lex_env
 
 (* functional operations: *)
@@ -140,7 +143,14 @@ let lex env mode =
   env.lex_env := lex_env;
   lex_result
 
-let advance env (lex_env, lex_result) next_lex_result =
+let advance env (lex_env, lex_result) lex_mode =
+  let next_lex_result =
+    if lex_result.lex_token = T_EOF then
+      (* There's no next token, so we don't lex, we just pretend that the EOF is
+       * next *)
+      lex_result
+    else
+      lex env lex_mode in
   error_list env lex_result.lex_errors;
   comment_list env lex_result.lex_comments;
   env.last := Some (lex_env, lex_result);

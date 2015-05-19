@@ -108,7 +108,7 @@ let error_unexpected env =
    * token, so we should process any lexing errors before complaining about the
    * unexpected token *)
   error_list env (lookahead.lex_errors);
-  set_lookahead env { lookahead with lex_errors = []; };
+  clear_lookahead_errors env;
   error env (match lookahead.lex_token, lookahead.lex_value with
   | T_EOF, _ -> Error.UnexpectedEOS
   | T_NUMBER _, _ -> Error.UnexpectedNumber
@@ -121,7 +121,7 @@ let error_unexpected env =
 
 (* Consume zero or more tokens *)
 module Eat : sig
-  val advance : env -> lex_env * lex_result -> lex_result -> unit
+  val advance : env -> lex_env * lex_result -> lex_mode -> unit
   val token : env -> unit
   val vomit : env -> unit
   val push_lex_mode : env -> lex_mode -> unit
@@ -135,8 +135,7 @@ end = struct
   (* Consume a single token *)
   let token env =
     let last = lex_env env, lookahead env in
-    let next_lex_result = lex env (lex_mode env) in
-    advance env last next_lex_result
+    advance env last (lex_mode env)
 
   (* Back up a single token *)
   let vomit = Parser_env.vomit
@@ -165,9 +164,7 @@ module Expect = struct
   let eof env =
     if Peek.token env <> T_EOF then error_unexpected env;
     let eof_lex_result = lookahead env in
-    (* There's no next token, so we don't lex, we just pretend that the EOF is
-     * next *)
-    Eat.advance env (lex_env env, eof_lex_result) eof_lex_result
+    Eat.advance env (lex_env env, eof_lex_result) (lex_mode env)
 
   (* If the next token is t, then eat it and return true
    * else return false *)
@@ -2456,8 +2453,7 @@ end = struct
         | T_RCURLY ->
             let lex_env, lex_result = lex_template_part (lex_env env) in
             set_lex_env env lex_env;
-            let next_lex_result = lex env NORMAL_LEX in
-            Eat.advance env (lex_env, lex_result) next_lex_result;
+            Eat.advance env (lex_env, lex_result) NORMAL_LEX;
             let loc, part = match lex_result.lex_token with
             | T_TEMPLATE_PART (loc, part) -> loc, part
             | _ -> assert false in
@@ -2548,8 +2544,7 @@ end = struct
     and regexp env prefix =
       let lex_env, lex_result = lex_regexp (lex_env env) prefix in
       set_lex_env env lex_env;
-      let next_lex_result = lex env NORMAL_LEX in
-      Eat.advance env (lex_env, lex_result) next_lex_result;
+      Eat.advance env (lex_env, lex_result) NORMAL_LEX;
       let pattern, raw_flags = match lex_result.lex_token with
         | T_REGEXP (_, pattern, flags) -> pattern, flags
         | _ -> assert false in
