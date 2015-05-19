@@ -1284,6 +1284,37 @@ and abs_const env =
   seq env [space ; name ; expect ";"]
 
 (*****************************************************************************)
+(* Type Constants *)
+(*****************************************************************************)
+
+and is_typeconst env =
+  attempt env begin fun env ->
+    wrap_non_ws env begin function
+      | Tword when !(env.last_str) = "type" ->
+         (match next_non_ws_token env with
+         | Teq | Tsc -> false
+         | _ -> true
+         )
+      | _ -> false
+    end
+  end
+
+and type_const env =
+  seq env [last_token; space; expect "type"; space; hint; as_constraint];
+  if next_non_ws_token env = Teq
+  then seq env [space; expect "="; space; typedef; semi_colon]
+  else semi_colon env
+
+and abs_type_const env =
+  seq env [last_token; space; expect "type"; space; hint];
+  if attempt env begin fun env ->
+    as_constraint env;
+    next_token env = Tsc
+  end
+  then seq env [as_constraint; semi_colon]
+  else semi_colon env
+
+(*****************************************************************************)
 (* Type hints. *)
 (*****************************************************************************)
 
@@ -1297,6 +1328,18 @@ and hint_function_param env = wrap env begin function
   | _ -> back env; hint env
 end
 
+and taccess_loop env = wrap env begin function
+  | Tcolcol when next_token env = Tword ->
+     last_token env;
+     wrap env begin function
+       | Tword ->
+          last_token env;
+          taccess_loop env
+       | _ -> back env
+     end
+  | _ -> back env
+end
+
 and hint env = wrap env begin function
   | Tplus | Tminus | Tqm | Tat | Tbslash ->
       last_token env;
@@ -1304,6 +1347,7 @@ and hint env = wrap env begin function
   | Tpercent | Tcolon ->
       last_token env;
       name_loop env;
+      taccess_loop env;
       hint_parameter env
   | Tword ->
       last_token env;
@@ -1313,6 +1357,7 @@ and hint env = wrap env begin function
           return_type env
       | _ ->
           name_loop env;
+          taccess_loop env;
           typevar_constraint env;
           hint_parameter env
       )
@@ -1555,7 +1600,9 @@ and class_element_word env = function
       back env;
       seq env [modifier_list; after_modifier; newline]
   | "const" ->
-      const env
+     if is_typeconst env
+     then type_const env
+     else const env
   | "require" ->
       seq env [last_token; space; class_extends; semi_colon]
   | "use" ->
@@ -1604,7 +1651,9 @@ end
 
 and after_modifier env = wrap env begin function
   | Tword when !(env.last_str) = "const" ->
-      abs_const env
+      if is_typeconst env
+      then abs_type_const env
+      else abs_const env
   | Tword when !(env.last_str) = "function" ->
       seq env [last_token; space; fun_]
   | _ ->
