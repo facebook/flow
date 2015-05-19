@@ -9,91 +9,12 @@
  *)
 
 open Lexer_flow
+open Parser_env
 module Ast = Spider_monkey_ast
 open Ast
 module Error = Parse_error
 module SSet = Set.Make(String)
 module SMap = Map.Make(String)
-
-(*****************************************************************************)
-(* Environment *)
-(*****************************************************************************)
-type lex_mode =
-  | NORMAL_LEX
-  | TYPE_LEX
-  | JSX_TAG
-  | JSX_CHILD
-
-let mode_to_string = function
-  | NORMAL_LEX -> "NORMAL"
-  | TYPE_LEX -> "TYPE"
-  | JSX_TAG -> "JSX TAG"
-  | JSX_CHILD -> "JSX CHILD"
-
-let lex lex_env = function
-  | NORMAL_LEX -> token lex_env
-  | TYPE_LEX -> type_token lex_env
-  | JSX_TAG -> lex_jsx_tag lex_env
-  | JSX_CHILD -> lex_jsx_child lex_env
-
-type env = {
-  errors          : (Loc.t * Error.t) list ref;
-  comments        : Ast.Comment.t list ref;
-  labels          : SSet.t;
-  lb              : Lexing.lexbuf;
-  lookahead       : lex_result ref;
-  last            : (lex_env * lex_result) option ref;
-  priority        : int;
-  strict          : bool;
-  in_export       : bool;
-  in_loop         : bool;
-  in_switch       : bool;
-  in_function     : bool;
-  no_in           : bool;
-  no_call         : bool;
-  no_let          : bool;
-  allow_yield     : bool;
-  error_callback  : (env -> Error.t -> unit) option;
-  lex_mode_stack  : lex_mode list ref;
-  lex_env         : lex_env ref;
-}
-
-let init_env lb =
-  let lex_env = new_lex_env lb in
-  let lex_env, lookahead = lex lex_env NORMAL_LEX in
-  {
-    errors          = ref [];
-    comments        = ref [];
-    labels          = SSet.empty;
-    lb              = lb;
-    lookahead       = ref lookahead;
-    last            = ref None;
-    priority        = 0;
-    strict          = false;
-    in_export       = false;
-    in_loop         = false;
-    in_switch       = false;
-    in_function     = false;
-    no_in           = false;
-    no_call         = false;
-    no_let          = false;
-    allow_yield     = true;
-    error_callback  = None;
-    lex_mode_stack  = ref [NORMAL_LEX];
-    lex_env         = ref lex_env;
-  }
-
-let lex env mode =
-  let lex_env, lex_result = lex !(env.lex_env) mode in
-  env.lex_env := lex_env;
-  lex_result
-
-let last_opt env fn = match !(env.last) with
-  | None -> None
-  | Some (_, result) -> Some (fn result)
-let last env = last_opt env (fun result -> result.lex_token)
-let last_value env = last_opt env (fun result -> result.lex_value)
-let last_loc env = last_opt env (fun result -> result.lex_loc)
 
 let is_future_reserved = function
   | "class"
@@ -125,9 +46,9 @@ module Peek = struct
   open Loc
 
   (* If you're looping waiting for a token, then use token_loop instead. *)
-  let token env = !(env.lookahead).lex_token
-  let value env = !(env.lookahead).lex_value
-  let loc env = !(env.lookahead).lex_loc
+  let token env = (lookahead env).lex_token
+  let value env = (lookahead env).lex_value
+  let loc env = (lookahead env).lex_loc
 
   (* True if there is a line terminator before the next token *)
   let line_terminator env =
@@ -163,22 +84,15 @@ end
 (*****************************************************************************)
 (* Errors *)
 (*****************************************************************************)
-let error_at env (loc, e) =
-  env.errors := (loc, e) :: !(env.errors);
-  match env.error_callback with
-  | None -> ()
-  | Some callback -> callback env e
 
 (* Complains about an error at the location of the lookahead *)
 let error env e =
   let loc = Peek.loc env in
   error_at env (loc, e)
 
-let error_list env = List.iter (error_at env)
+let strict_error env e = if strict env then error env e
 
-let strict_error env e = if env.strict then error env e
-
-let strict_error_at env (loc, e) = if env.strict then error_at env (loc, e)
+let strict_error_at env (loc, e) = if strict env then error_at env (loc, e)
 
 let rec filter_duplicate_errors acc = function
 | [_] | [] as l -> l
@@ -186,18 +100,15 @@ let rec filter_duplicate_errors acc = function
     filter_duplicate_errors acc rl
 | x :: rl -> filter_duplicate_errors (x :: acc) rl
 
-let comment_list env =
-  List.iter (fun c -> env.comments := c :: !(env.comments))
-
 let error_unexpected env =
-  let lookahead = !(env.lookahead) in
+  let lookahead = lookahead env in
   (* So normally we consume the lookahead lex result when Eat.advance is
    * called, which will add any lexing errors to our list of errors. However,
    * raising an unexpected error for a lookahead is kind of like consuming that
    * token, so we should process any lexing errors before complaining about the
    * unexpected token *)
   error_list env (lookahead.lex_errors);
-  env.lookahead := { lookahead with lex_errors = []; };
+  set_lookahead env { lookahead with lex_errors = []; };
   error env (match lookahead.lex_token, lookahead.lex_value with
   | T_EOF, _ -> Error.UnexpectedEOS
   | T_NUMBER _, _ -> Error.UnexpectedNumber
@@ -218,69 +129,21 @@ module Eat : sig
   val double_pop_lex_mode : env -> unit
   val semicolon : env -> unit
 end = struct
-  let advance env (lex_env, lex_result) next_lex_result =
-    error_list env lex_result.lex_errors;
-    comment_list env lex_result.lex_comments;
-    env.last := Some (lex_env, lex_result);
-    env.lookahead := next_lex_result
+  let advance = Parser_env.advance
 
+  (* TODO should this be in Parser_env? *)
   (* Consume a single token *)
   let token env =
-    let last = !(env.lex_env), !(env.lookahead) in
-    let next_lex_result = lex env (List.hd !(env.lex_mode_stack)) in
+    let last = lex_env env, lookahead env in
+    let next_lex_result = lex env (lex_mode env) in
     advance env last next_lex_result
 
   (* Back up a single token *)
-  let vomit env =
-    Lexing.(match !(env.last) with
-    | None ->
-        env.lb.lex_curr_pos <- 0;
-        let none_curr_p = {
-          pos_fname = env.lb.lex_curr_p.pos_fname;
-          pos_bol = 0;
-          pos_lnum = 1;
-          pos_cnum = 0;
-        } in
-        env.lb.lex_curr_p <- none_curr_p;
-        env.lookahead := {
-          lex_token = T_ERROR;
-          lex_loc = Loc.none;
-          lex_value = "";
-          lex_errors = [];
-          lex_comments = [];
-          lex_lb_curr_p = none_curr_p;
-        }
-    | Some (lex_env, result) ->
-        env.lex_env := lex_env;
-        let bytes = env.lb.lex_curr_p.pos_cnum - result.lex_lb_curr_p.pos_cnum in
-        env.lb.lex_curr_pos <- env.lb.lex_curr_pos - bytes;
-        env.lb.lex_curr_p <- result.lex_lb_curr_p;
-        env.lookahead := result
-    )
+  let vomit = Parser_env.vomit
 
-  (* Switching modes requires rolling back one token so that we can re-lex the
-   * lookahead token *)
-  let update_lookahead env =
-    vomit env;
-    env.lookahead := lex env (List.hd !(env.lex_mode_stack))
-
-  let push_lex_mode env mode =
-    env.lex_mode_stack := mode::!(env.lex_mode_stack);
-    update_lookahead env
-
-  let pop_lex_mode env =
-    let new_stack = match !(env.lex_mode_stack) with
-    | _mode::stack -> stack
-    | _ -> failwith "Popping lex mode from empty stack" in
-    env.lex_mode_stack := new_stack;
-    update_lookahead env
-
-  let double_pop_lex_mode env =
-    let new_stack = match !(env.lex_mode_stack) with
-    | _::_::stack -> stack
-    | _ -> failwith "Popping lex mode from empty stack" in
-    (env.lex_mode_stack) := new_stack;
-    update_lookahead env
+  let push_lex_mode = Parser_env.push_lex_mode
+  let pop_lex_mode = Parser_env.pop_lex_mode
+  let double_pop_lex_mode = Parser_env.double_pop_lex_mode
 
   (* Semicolon insertion is handled here :(. There seem to be 2 cases where
   * semicolons are inserted. First, if we reach the EOF. Second, if the next
@@ -301,10 +164,10 @@ module Expect = struct
 
   let eof env =
     if Peek.token env <> T_EOF then error_unexpected env;
-    let eof_lex_result = !(env.lookahead) in
+    let eof_lex_result = lookahead env in
     (* There's no next token, so we don't lex, we just pretend that the EOF is
      * next *)
-    Eat.advance env (!(env.lex_env), eof_lex_result) eof_lex_result
+    Eat.advance env (lex_env env, eof_lex_result) eof_lex_result
 
   (* If the next token is t, then eat it and return true
    * else return false *)
@@ -319,73 +182,6 @@ module Expect = struct
     if Peek.value env <> str
     then error_unexpected env;
     Eat.token env
-end
-
-(* This module allows you to try parsing and rollback if you need. This is not
- * cheap and its usage is strongly discouraged *)
-module Try : sig
-  type 'a parse_result =
-    | ParsedSuccessfully of 'a
-    | FailedToParse
-
-  exception Rollback
-
-  val to_parse: env -> (env -> 'a) -> 'a parse_result
-end = struct
-  type 'a parse_result =
-    | ParsedSuccessfully of 'a
-    | FailedToParse
-
-  exception Rollback
-
-  type saved_state = {
-    saved_errors         : (Loc.t * Error.t) list;
-    saved_comments       : Ast.Comment.t list;
-    saved_lb             : Lexing.lexbuf;
-    saved_lookahead      : lex_result;
-    saved_last           : (lex_env * lex_result) option;
-    saved_lex_mode_stack : lex_mode list;
-    saved_lex_env        : lex_env;
-  }
-
-  let save_state env = {
-    saved_errors         = !(env.errors);
-    saved_comments       = !(env.comments);
-    saved_lb             = Lexing.({env.lb with lex_abs_pos=env.lb.lex_abs_pos});
-    saved_lookahead      = !(env.lookahead);
-    saved_last           = !(env.last);
-    saved_lex_mode_stack = !(env.lex_mode_stack);
-    saved_lex_env        = !(env.lex_env);
-  }
-
-  let rollback_state env saved_state =
-    env.errors := saved_state.saved_errors;
-    env.comments := saved_state.saved_comments;
-    env.lookahead := saved_state.saved_lookahead;
-    env.last := saved_state.saved_last;
-    env.lex_mode_stack := saved_state.saved_lex_mode_stack;
-    env.lex_env := saved_state.saved_lex_env;
-
-    Lexing.(begin
-      env.lb.lex_buffer <- saved_state.saved_lb.lex_buffer;
-      env.lb.lex_buffer_len <- saved_state.saved_lb.lex_buffer_len;
-      env.lb.lex_abs_pos <- saved_state.saved_lb.lex_abs_pos;
-      env.lb.lex_start_pos <- saved_state.saved_lb.lex_start_pos;
-      env.lb.lex_curr_pos <- saved_state.saved_lb.lex_curr_pos;
-      env.lb.lex_last_pos <- saved_state.saved_lb.lex_last_pos;
-      env.lb.lex_last_action <- saved_state.saved_lb.lex_last_action;
-      env.lb.lex_eof_reached <- saved_state.saved_lb.lex_eof_reached;
-      env.lb.lex_mem <- saved_state.saved_lb.lex_mem;
-      env.lb.lex_start_p <- saved_state.saved_lb.lex_start_p;
-      env.lb.lex_curr_p <- saved_state.saved_lb.lex_curr_p;
-    end);
-
-    FailedToParse
-
-  let to_parse env parse =
-    let saved_state = save_state env in
-    try ParsedSuccessfully (parse env)
-    with Rollback -> rollback_state env saved_state
 end
 
 module rec Parse : sig
@@ -901,7 +697,7 @@ end = struct
       | _ -> None
 
     let wrap f env =
-      let env = { env with strict = true; } in
+      let env = with_strict env true in
       Eat.push_lex_mode env TYPE_LEX;
       let ret = f env in
       Eat.pop_lex_mode env;
@@ -997,7 +793,7 @@ end = struct
          * want to do these checks in strict mode *)
         let env =
           if strict
-          then { env with strict = not env.strict; }
+          then with_strict env (not (Parser_env.strict env))
           else env in
         (match id with
         | Some (loc, { Identifier.name; _ }) ->
@@ -1045,24 +841,19 @@ end = struct
         params, defaults, rest
 
     let function_body env =
-      let env = { env with
-        in_function = true;
-        in_loop = false;
-        in_switch = false;
-        labels = SSet.empty;
-      } in
+      let env = enter_function env in
       let loc, block, strict = Parse.function_block_body env in
       loc, Statement.FunctionDeclaration.BodyBlock (loc, block), strict
 
     let concise_function_body env =
-      let env = { env with in_function = true; } in
+      let env = with_in_function env true in
       match Peek.token env with
       | T_LCURLY ->
           let _, body, strict = function_body env in
           body, strict
       | _ ->
           let expr = Parse.assignment env in
-          Statement.FunctionDeclaration.BodyExpression expr, env.strict
+          Statement.FunctionDeclaration.BodyExpression expr, strict env
 
     let generator env = Expect.maybe env T_MULT
 
@@ -1079,7 +870,7 @@ end = struct
       Expect.token env T_FUNCTION;
       let generator = generator env in
       let id = (
-        match env.in_export, Peek.token env with
+        match in_export env, Peek.token env with
         | true, T_LPAREN -> None
         | _ -> Some(
             Parse.identifier ~restricted_error:Error.StrictFunctionName env
@@ -1089,7 +880,7 @@ end = struct
       let params, defaults, rest = function_params env in
       let returnType = Type.return_type env in
       let _, body, strict =
-        function_body { env with allow_yield = generator; } in
+        function_body (with_allow_yield env generator) in
       let simple = is_simple_function_params params defaults rest in
       strict_post_check env ~strict ~simple id params;
       let end_loc, expression = Ast.Statement.FunctionDeclaration.(
@@ -1154,7 +945,7 @@ end = struct
     let var = declarations T_VAR Statement.VariableDeclaration.Var
 
     let const env =
-      let env = { env with no_let = true; } in
+      let env = with_no_let env true in
       let ret =
         declarations T_CONST Statement.VariableDeclaration.Const env in
       (* Make sure all consts defined are initialized *)
@@ -1168,7 +959,7 @@ end = struct
       ret
 
     let _let env =
-      let env = { env with no_let = true; } in
+      let env = with_no_let env true in
       declarations T_LET Statement.VariableDeclaration.Let env
 
     let variable env =
@@ -1200,7 +991,7 @@ end = struct
         else begin
           let label = Parse.identifier env in
           let name = (snd label).Identifier.name in
-          if not (SSet.mem name env.labels)
+          if not (SSet.mem name (labels env))
           then error env (Error.UnknownLabel name);
           Some label
         end
@@ -1211,7 +1002,7 @@ end = struct
         | Some id -> fst id
         | None -> start_loc) in
       let loc = Loc.btwn start_loc end_loc in
-      if label = None && not (env.in_loop || env.in_switch)
+      if label = None && not (in_loop env || in_switch env)
       then error_at env (loc, Error.IllegalBreak);
       Eat.semicolon env;
       loc, Statement.Break {
@@ -1226,7 +1017,7 @@ end = struct
         then None
         else begin
           let (_, { Identifier.name; _ }) as label = Parse.identifier env in
-          if not (SSet.mem name env.labels)
+          if not (SSet.mem name (labels env))
           then error env (Error.UnknownLabel name);
           Some label
         end in
@@ -1236,7 +1027,7 @@ end = struct
         | Some id -> fst id
         | None -> start_loc) in
       let loc = Loc.btwn start_loc end_loc in
-      if not (env.in_loop)
+      if not (in_loop env)
       then error_at env (loc, Error.IllegalContinue);
       Eat.semicolon env;
       loc, Statement.Continue {
@@ -1255,7 +1046,7 @@ end = struct
     and do_while env =
       let start_loc = Peek.loc env in
       Expect.token env T_DO;
-      let body = Parse.statement { env with in_loop = true } in
+      let body = Parse.statement (with_in_loop env true) in
       Expect.token env T_WHILE;
       Expect.token env T_LPAREN;
       let test = Parse.expression env in
@@ -1281,13 +1072,16 @@ end = struct
       let init = match Peek.token env with
       | T_SEMICOLON -> None
       | T_LET ->
-          let decl = Declaration._let { env with no_in = true; } in
+          let decl = Declaration._let (with_no_in env true) in
           Some (Statement.For.InitDeclaration decl)
       | T_VAR ->
-          let decl = Declaration.var { env with no_in = true; } in
+          let decl = Declaration.var (with_no_in env true ) in
           Some (Statement.For.InitDeclaration decl)
       | _ ->
-          let expr = Parse.expression { env with no_in = true; no_let = true; } in
+          let expr =
+            let env = with_no_in env true in
+            with_no_let env true
+            |> Parse.expression in
           Some (Statement.For.InitExpression expr) in
       match Peek.token env with
       | T_IN ->
@@ -1312,7 +1106,7 @@ end = struct
           Expect.token env T_IN;
           let right = Parse.expression env in
           Expect.token env T_RPAREN;
-          let body = Parse.statement { env with in_loop = true } in
+          let body = Parse.statement (with_in_loop env true) in
           Loc.btwn start_loc (fst body), Statement.(ForIn ForIn.({
             left;
             right;
@@ -1330,7 +1124,7 @@ end = struct
           | T_RPAREN -> None
           | _ -> Some (Parse.expression env) in
           Expect.token env T_RPAREN;
-          let body = Parse.statement { env with in_loop = true } in
+          let body = Parse.statement (with_in_loop env true) in
           Loc.btwn start_loc (fst body), Statement.(For For.({
             init;
             test;
@@ -1364,7 +1158,7 @@ end = struct
       }))
 
     and return env =
-      if not env.in_function
+      if not (in_function env)
       then error env Error.IllegalReturn;
       let start_loc = Peek.loc env in
       Expect.token env T_RETURN;
@@ -1403,7 +1197,8 @@ end = struct
           let term_fn = function
           | T_RCURLY | T_DEFAULT | T_CASE -> true
           | _ -> false in
-          let consequent = Parse.statement_list ~term_fn { env with in_switch = true; } in
+          let consequent =
+            Parse.statement_list ~term_fn (with_in_switch env true) in
           let end_loc = match List.rev consequent with
           | last_stmt::_ -> fst last_stmt
           | _ -> end_loc in
@@ -1504,7 +1299,7 @@ end = struct
         (* Let statement *)
         Expect.token env T_LPAREN;
         let end_loc, declarations =
-          Declaration.variable_declaration_list { env with no_let = true; } in
+          Declaration.variable_declaration_list (with_no_let env true) in
         let head = List.map
           (fun (_, {Ast.Statement.VariableDeclaration.Declarator.id; init;}) ->
             Statement.Let.({ id; init; }))
@@ -1522,7 +1317,7 @@ end = struct
       end else begin
         (* Let declaration *)
         let end_loc, declarations =
-          Declaration.variable_declaration_list { env with no_let = true; } in
+          Declaration.variable_declaration_list (with_no_let env true) in
         let declaration =
           Ast.(Statement.VariableDeclaration Statement.VariableDeclaration.({
             declarations;
@@ -1541,7 +1336,7 @@ end = struct
       Expect.token env T_LPAREN;
       let test = Parse.expression env in
       Expect.token env T_RPAREN;
-      let body = Parse.statement { env with in_loop = true } in
+      let body = Parse.statement (with_in_loop env true) in
       Loc.btwn start_loc (fst body), Statement.(While While.({
         test;
         body;
@@ -1571,9 +1366,9 @@ end = struct
       | ((loc, Expression.Identifier label), T_COLON) ->
           let { Identifier.name; _ } = snd label in
           Expect.token env T_COLON;
-          if SSet.mem name env.labels
+          if SSet.mem name (labels env)
           then error_at env (loc, Error.Redeclaration ("Label", name));
-          let env = { env with labels = SSet.add name env.labels } in
+          let env = add_label env name in
           let labeled_stmt = Parse.statement env in
           Loc.btwn loc (fst labeled_stmt), Statement.Labeled {
             Statement.Labeled.label = label;
@@ -1689,7 +1484,7 @@ end = struct
           | _ -> List.rev acc
 
         in fun env start_loc ->
-          let env = { env with strict = true; } in
+          let env = with_strict env true in
           Expect.token env T_CLASS;
           let id = Parse.identifier env in
           let typeParameters = Type.type_parameter_declaration env in
@@ -1832,7 +1627,8 @@ end = struct
               specifiers env (specifier::acc)
 
         in fun env ->
-          let env = { env with strict = true; in_export = true; } in
+          let env = with_strict env true in
+          let env = with_in_export env true in
           let start_loc = Peek.loc env in
           Expect.token env T_EXPORT;
           Statement.ExportDeclaration.(match Peek.token env with
@@ -1976,7 +1772,7 @@ end = struct
               Statement.ImportDeclaration.Named (Loc.btwn start_loc end_loc, specifiers)
 
         in fun env ->
-          let env = { env with strict = true; } in
+          let env = with_strict env true in
           let start_loc = Peek.loc env in
           Expect.token env T_IMPORT;
           (* It might turn out that we need to treat this "type" token as an
@@ -2103,7 +1899,7 @@ end = struct
         * assignment expression or if this is just the beginning of an arrow
         * function *)
       in let try_assignment_but_not_arrow_function env =
-        let env = { env with error_callback = Some error_callback } in
+        let env = with_error_callback env error_callback in
         let ret = assignment_but_not_arrow_function env in
         match Peek.token env with
         | T_ARROW (* x => 123 *)
@@ -2113,7 +1909,7 @@ end = struct
 
       in fun env ->
         match Peek.token env, Peek.identifier env with
-        | T_YIELD, _ when env.allow_yield -> yield env
+        | T_YIELD, _ when (allow_yield env) -> yield env
         | T_LPAREN, _
         | T_LESS_THAN, _
         | _, true ->
@@ -2140,7 +1936,7 @@ end = struct
     and yield env =
       let start_loc = Peek.loc env in
       Expect.token env T_YIELD;
-      if not env.allow_yield
+      if not (allow_yield env)
       then error env Error.IllegalYield;
       let delegate = Expect.maybe env T_MULT in
       let argument = assignment env in
@@ -2230,7 +2026,7 @@ end = struct
       then begin
         Expect.token env T_PLING;
         (* no_in is ignored for the consequent *)
-        let env' = { env with no_in = false } in
+        let env' = with_no_in env false in
         let consequent = assignment env' in
         Expect.token env T_COLON;
         let alternate = assignment env in
@@ -2289,7 +2085,7 @@ end = struct
         | T_GREATER_THAN -> Some (GreaterThan, 6)
         | T_GREATER_THAN_EQUAL -> Some (GreaterThanEqual, 6)
         | T_IN ->
-            if env.no_in then None else Some (In, 6)
+            if (no_in env) then None else Some (In, 6)
         | T_INSTANCEOF -> Some (Instanceof, 6)
         | T_LSHIFT -> Some (LShift, 7)
         | T_RSHIFT -> Some (RShift, 7)
@@ -2322,7 +2118,7 @@ end = struct
             collapse_stack (make_binary left right lop) rest
 
       in let rec helper env stack =
-        let right = unary { env with no_in = false; } in
+        let right = unary (with_no_in env false) in
         if Peek.token env = T_LESS_THAN
         then begin
           match right with
@@ -2429,7 +2225,7 @@ end = struct
 
     and call env left =
       match Peek.token env with
-      | T_LPAREN when not env.no_call ->
+      | T_LPAREN when not (no_call env) ->
           let args_loc, arguments = arguments env in
           call env (Loc.btwn (fst left) args_loc, Expression.(Call Call.({
             callee = left;
@@ -2476,7 +2272,7 @@ end = struct
           let expr = match Peek.token env with
           | T_FUNCTION -> _function env
           | _ -> primary env in
-          let callee = member { env with no_call = true; } expr in
+          let callee = member (with_no_call env true) expr in
           (* You can do something like
            *   new raw`42`
            *)
@@ -2525,7 +2321,7 @@ end = struct
       match Peek.token env with
       | T_LBRACKET ->
           Expect.token env T_LBRACKET;
-          let expr = Parse.expression { env with no_call = false; } in
+          let expr = Parse.expression (with_no_call env false) in
           let last_loc = Peek.loc env in
           Expect.token env T_RBRACKET;
           call env (Loc.btwn (fst left) last_loc, Expression.(Member Member.({
@@ -2559,7 +2355,7 @@ end = struct
       let params, defaults, rest = Declaration.function_params env in
       let returnType = Type.return_type env in
       let end_loc, body, strict =
-        Declaration.function_body { env with allow_yield = generator; } in
+        Declaration.function_body (with_allow_yield env generator) in
       let simple = Declaration.is_simple_function_params params defaults rest in
       Declaration.strict_post_check env ~strict ~simple id params;
       let expression = Ast.Statement.FunctionDeclaration.(
@@ -2661,8 +2457,8 @@ end = struct
         let expressions = expr::expressions in
         match Peek.token env with
         | T_RCURLY ->
-            let lex_env, lex_result = lex_template_part !(env.lex_env) in
-            env.lex_env := lex_env;
+            let lex_env, lex_result = lex_template_part (lex_env env) in
+            set_lex_env env lex_env;
             let next_lex_result = lex env NORMAL_LEX in
             Eat.advance env (lex_env, lex_result) next_lex_result;
             let loc, part = match lex_result.lex_token with
@@ -2753,8 +2549,8 @@ end = struct
         })
 
     and regexp env prefix =
-      let lex_env, lex_result = lex_regexp !(env.lex_env) prefix in
-      env.lex_env := lex_env;
+      let lex_env, lex_result = lex_regexp (lex_env env) prefix in
+      set_lex_env env lex_env;
       let next_lex_result = lex env NORMAL_LEX in
       Eat.advance env (lex_env, lex_result) next_lex_result;
       let pattern, raw_flags = match lex_result.lex_token with
@@ -2782,9 +2578,7 @@ end = struct
         | _ -> raise Try.Rollback) in
 
       fun env ->
-        let env = { env with
-          error_callback = Some error_callback;
-        } in
+        let env = with_error_callback env error_callback in
 
         let start_loc = Peek.loc env in
         let generator = false in
@@ -2809,7 +2603,7 @@ end = struct
          * instead generate errors as if we were parsing an arrow function *)
         let env =
           if params = [] || rest <> None
-          then { env with error_callback = None; }
+          then without_error_callback env
           else env in
 
         if Peek.line_terminator env && Peek.token env = T_ARROW
@@ -2817,10 +2611,10 @@ end = struct
         Expect.token env T_ARROW;
 
         (* Now we know for sure this is an arrow function *)
-        let env = { env with error_callback = None; } in
+        let env = without_error_callback env in
 
         let body, strict =
-          Declaration.concise_function_body { env with allow_yield = generator; } in
+          Declaration.concise_function_body (with_allow_yield env generator) in
         let simple =
           Declaration.is_simple_function_params params defaults rest in
         Declaration.strict_post_check env ~strict ~simple None params;
@@ -2955,7 +2749,7 @@ end = struct
       | T_LBRACKET when allow_computed_key ->
           let start_loc = Peek.loc env in
           Expect.token env T_LBRACKET;
-          let expr = Parse.assignment { env with no_in = false; } in
+          let expr = Parse.assignment (with_no_in env false) in
           let end_loc = Peek.loc env in
           Expect.token env T_RBRACKET;
           Loc.btwn start_loc end_loc, Ast.Expression.Object.Property.Computed expr
@@ -2978,7 +2772,7 @@ end = struct
       Expect.token env T_RPAREN;
       let returnType = Type.return_type env in
       let _, body, strict = Declaration.function_body
-        { env with allow_yield = generator; } in
+        (with_allow_yield env generator) in
       let defaults = [] in
       let rest = None in
       let simple = Declaration.is_simple_function_params params defaults rest in
@@ -3069,7 +2863,7 @@ end = struct
                 let params, defaults, rest = Declaration.function_params env in
                 let returnType = Type.return_type env in
                 let _, body, strict = Declaration.function_body
-                  { env with allow_yield = generator; } in
+                  (with_allow_yield env generator) in
                 let simple = Declaration.is_simple_function_params params defaults rest in
                 Declaration.strict_post_check env ~strict ~simple None params;
                 let end_loc, expression = Ast.Statement.FunctionDeclaration.(
@@ -3161,7 +2955,8 @@ end = struct
         if Peek.token env = T_EXTENDS
         then begin
           Expect.token env T_EXTENDS;
-          let superClass = Expression.left_hand_side { env with allow_yield = false; } in
+          let superClass =
+            Expression.left_hand_side (with_allow_yield env false) in
           let superTypeParameters = Type.type_parameter_instantiation env in
           Some superClass, superTypeParameters
         end else None, None in
@@ -3253,7 +3048,7 @@ end = struct
           let params, defaults, rest = Declaration.function_params env in
           let returnType = Type.return_type env in
           let _, body, strict = Declaration.function_body
-            { env with allow_yield = generator; } in
+            (with_allow_yield env generator) in
           let simple = Declaration.is_simple_function_params params defaults rest in
           Declaration.strict_post_check env ~strict ~simple None params;
           let end_loc, expression = Ast.Statement.FunctionDeclaration.(
@@ -3298,12 +3093,12 @@ end = struct
 
     let class_declaration env =
       (* 10.2.1 says all parts of a class definition are strict *)
-      let env = { env with strict = true; } in
+      let env = with_strict env true in
       let start_loc = Peek.loc env in
       Expect.token env T_CLASS;
-      let tmp_env = { env with no_let = true; } in
+      let tmp_env = with_no_let env true in
       let id = (
-        match env.in_export, Peek.identifier tmp_env with
+        match in_export env, Peek.identifier tmp_env with
         | true, false -> None
         | _ -> Some(Parse.identifier tmp_env)
       ) in
@@ -3651,10 +3446,10 @@ end = struct
   let rec program env =
     let stmts = module_body_with_directives env (fun _ -> false) in
     let loc = match stmts with
-    | [] -> Loc.from_lb env.lb
+    | [] -> Loc.from_lb (lb env)
     | _ -> Loc.btwn (fst (List.hd stmts)) (fst (List.hd (List.rev stmts))) in
     Expect.eof env;
-    let comments = List.rev !(env.comments) in
+    let comments = List.rev (comments env) in
     loc, stmts, comments
 
   and directives =
@@ -3686,9 +3481,13 @@ end = struct
                   * has the right length)
                   *)
                 let len = Ast.Loc.(loc._end.column - loc.start.column) in
-                let strict = env.strict || (str = "use strict" && len = 12) in
+                let strict = (strict env) || (str = "use strict" && len = 12) in
                 let string_tokens = string_token::string_tokens in
-                statement_list { env with strict; } term_fn item_fn (string_tokens, stmts)
+                statement_list
+                  (with_strict env strict)
+                  term_fn
+                  item_fn
+                  (string_tokens, stmts)
             | _ ->
                 env, string_tokens, stmts)
 
@@ -3725,7 +3524,7 @@ end = struct
     let stmts = statement_list ~term_fn env in
     (* Prepend the directives *)
     let stmts = List.fold_left (fun acc stmt -> stmt::acc) stmts directives in
-    stmts, env.strict
+    stmts, (strict env)
 
   and statement_list =
     let rec statements env term_fn acc =
@@ -3823,10 +3622,10 @@ end = struct
     | T_LET ->
     (* So "let" is disallowed as an identifier in a few situations. 11.6.2.1
      * lists them out. It is always disallowed in strict mode *)
-      if env.strict
+      if strict env
       then strict_error env Error.StrictReservedWord
       else
-        if env.no_let
+        if no_let env
         then error env (Error.UnexpectedToken name);
       Eat.token env
     | _ when is_strict_reserved name ->
@@ -3900,9 +3699,9 @@ let parse_program fail filename content =
       { lb.Lexing.lex_curr_p with Lexing.pos_fname = fn });
   let env = init_env lb in
   let ast = Parse.program env in
-  if fail && !(env.errors) <> []
-  then raise (Error.Error (filter_duplicate_errors [] !(env.errors)));
-  ast, List.rev !(env.errors)
+  if fail && (errors env) <> []
+  then raise (Error.Error (filter_duplicate_errors [] (errors env)));
+  ast, List.rev (errors env)
 
 let program ?(fail=true) content =
   parse_program fail None content
