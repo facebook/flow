@@ -628,10 +628,14 @@ let rec convert cx map = Ast.Type.(function
           | _ -> assert false
         )
 
-      (* $FixMe is a synonym for any. *)
-      (* TODO move this to a type alias once optional type params
+      (* $FlowIssue is a synonym for any, used by JS devs to signal
+         a potential typechecker bug to the Flow team.
+         $FlowFixMe is a synonym for any, used by the Flow team to
+         signal a needed mod to JS devs.
+       *)
+      (* TODO move these to type aliases once optional type args
          work properly in type aliases: #7007731 *)
-      | "$FixMe" ->
+      | "$FlowIssue" | "$FlowFixMe" ->
         (* Optional type params are info-only, validated then forgotten. *)
         List.iter (fun p -> ignore (convert cx map p)) typeParameters;
         AnyT.at loc
