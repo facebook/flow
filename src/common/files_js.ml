@@ -92,7 +92,7 @@ let make_next_files root =
   let filter = wanted config in
   let others = config.FlowConfig.include_stems in
   let sroot = Path.to_string root in
-  Find.make_next_files_with_find (fun p ->
+  Find.make_next_files (fun p ->
     (str_starts_with p sroot || FlowConfig.is_included config p)
     && is_flow_file p
     && filter p

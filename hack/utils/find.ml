@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2014, Facebook, Inc.
+ * Copyright (c) 2015, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -15,34 +15,6 @@
  * For the initialization of the server we use the plain 'find' command
  * to find the list of files to analyze.
  *)
-
-(*****************************************************************************)
-(* The file extensions we are interested in *)
-(*****************************************************************************)
-
-let extensions = [
-  ".php"  ; (* normal php file *)
-  ".hh"   ; (* Hack extension some open source code is starting to use *)
-  ".phpt" ; (* our php template files *)
-  ".hhi"  ; (* interface files only visible to the type checker *)
-]
-
-let is_directory path = try Sys.is_directory path with Sys_error _ -> false
-
-let is_dot_file path =
-  let filename = Filename.basename path in
-  String.length filename > 0 && filename.[0] = '.'
-
-let is_php_path path =
-  not (is_dot_file path) &&
-  List.exists (Filename.check_suffix path) extensions &&
-  not (is_directory path) &&
-  not (FilesToIgnore.should_ignore path)
-
-let is_js_path path =
-  not (is_dot_file path) &&
-  Filename.check_suffix path ".js" &&
-  not (is_directory path)
 
 let escape_spaces = Str.global_replace (Str.regexp " ") "\\ "
 
@@ -68,7 +40,7 @@ let find_with_name paths pattern =
 (* Main entry point *)
 (*****************************************************************************)
 
-let make_next_files_with_find filter ?(others=[]) root =
+let make_next_files filter ?(others=[]) root =
   let paths = paths_to_path_string (root::others) in
   let ic = Unix.open_process_in ("find "^paths) in
   let done_ = ref false in
@@ -99,7 +71,3 @@ let make_next_files_with_find filter ?(others=[]) root =
         done_ := true;
         (try ignore (Unix.close_process_in ic) with _ -> ());
         !result
-
-let make_next_files_php = make_next_files_with_find is_php_path
-let make_next_files_js ~filter =
-  make_next_files_with_find (fun x -> is_js_path x && filter x)
