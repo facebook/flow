@@ -197,7 +197,6 @@ end = struct
           Program.EventLogger.lock_stolen root "lock";
           die()
       end;
-      ServerHealth.check();
       ServerPeriodical.call_before_sleeping();
       let has_client = sleep_and_check socket in
       let start_t = Unix.time () in
