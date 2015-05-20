@@ -56,21 +56,21 @@ let parse_args = function
   | None
   | Some [] ->
       ServerProt.FileContent (None,
-                              ClientUtils.read_stdin_to_string ())
+                              Sys_utils.read_stdin_to_string ())
   | Some [filename] ->
       let filename = get_path_of_file filename in
       ServerProt.FileContent (Some filename,
-                              ClientUtils.read_stdin_to_string ())
+                              Sys_utils.read_stdin_to_string ())
   | Some [line; column] ->
       let line = int_of_string line in
       let column = int_of_string column in
-      let contents = ClientUtils.read_stdin_to_string () in
+      let contents = Sys_utils.read_stdin_to_string () in
       ServerProt.FileContent (None,
                               add_autocomplete_token contents line column)
   | Some [filename; line; column] ->
       let line = int_of_string line in
       let column = int_of_string column in
-      let contents = ClientUtils.read_stdin_to_string () in
+      let contents = Sys_utils.read_stdin_to_string () in
       let filename = get_path_of_file filename in
       ServerProt.FileContent (Some filename,
                               add_autocomplete_token contents line column)

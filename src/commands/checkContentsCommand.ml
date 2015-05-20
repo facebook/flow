@@ -34,10 +34,10 @@ let spec = {
 let read_from_stdin file =
   match file with
     | None ->
-        let contents = ClientUtils.read_stdin_to_string () in
+        let contents = Sys_utils.read_stdin_to_string () in
         ServerProt.FileContent (None, contents)
     | Some file ->
-        let contents = ClientUtils.read_stdin_to_string () in
+        let contents = Sys_utils.read_stdin_to_string () in
         ServerProt.FileContent ((Some (get_path_of_file file)), contents)
 
 let main option_values use_json file () =
