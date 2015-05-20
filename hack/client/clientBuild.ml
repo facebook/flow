@@ -34,7 +34,7 @@ let build_kind_of build_opts =
 let handle_response env ic =
   let finished = ref false in
   let exit_code = ref 0 in
-  EventLogger.client_begin_work (ClientLogCommand.LCBuild
+  HackEventLogger.client_begin_work (ClientLogCommand.LCBuild
     (env.root, build_kind_of env.build_opts));
   try
     while true do

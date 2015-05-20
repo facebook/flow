@@ -27,7 +27,7 @@ type file_input =
   | FileContent of string
 
 let die_nicely () =
-  EventLogger.killed ();
+  HackEventLogger.killed ();
   Printf.printf "Status: Error\n";
   Printf.printf "Sent KILL command by client. Dying.\n";
   (match !ServerDfind.dfind_pid with

@@ -26,7 +26,6 @@ module type SERVER_PROGRAM = sig
     val load_failed: string -> unit
     val lock_lost: Path.t -> string -> unit
     val lock_stolen: Path.t -> string -> unit
-    val master_exception: string -> unit
     val out_of_date: unit -> unit
     val recheck_end: float -> int -> int -> unit
   end
@@ -133,7 +132,7 @@ end = struct
       Program.handle_client genv env client
     with e ->
       let msg = Printexc.to_string e in
-      Program.EventLogger.master_exception msg;
+      EventLogger.master_exception msg;
       Printf.fprintf stderr "Error: %s\n%!" msg;
       Printexc.print_backtrace stderr;
       close ()
