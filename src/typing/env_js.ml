@@ -29,6 +29,10 @@ let refinement_key names =
 let is_refinement name =
   (String.length name) >= 5 && (String.sub name 0 5) = "$REFI"
 
+let refined_object_from_key name =
+  let i = String.index name '.' in
+  String.sub name 6 (i - 6)
+
 (****************)
 (* Environments *)
 (****************)
@@ -399,9 +403,17 @@ let string_of_env cx ctx =
    based on dynamic checks. *)
 
 let install_refinement cx x xtypes =
-  if exists_in_scope x (peek_env ()) = None then
-    let t = SMap.find_unsafe x xtypes in
-    init_env cx x (create_env_entry t t None) VarScope (* TODO: verify correct hoist behavior *)
+  let obj = refined_object_from_key x in
+  let t = SMap.find_unsafe x xtypes in
+  let entry = create_env_entry t t None in
+  let rec loop = function
+    | [] -> set_in_scope x entry global_scope
+    | scope::scopes ->
+        if scope.kind = VarScope || Option.is_some (exists_in_scope obj scope) then
+          set_in_scope x entry scope
+        else
+          loop scopes in
+  loop (!env)
 
 let refine_with_pred cx reason pred xtypes =
   SMap.iter (fun x predx ->

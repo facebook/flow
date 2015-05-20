@@ -95,4 +95,15 @@ null_tests.js:101:7,12: undefined
 This type is incompatible with
 null_tests.js:147:16,21: string
 
-Found 24 errors
+scope.js:12:5,5: identifier x
+Could not resolve name
+
+scope.js:34:21,23: null
+This type is incompatible with
+scope.js:34:12,17: string
+
+scope.js:34:21,23: undefined
+This type is incompatible with
+scope.js:34:12,17: string
+
+Found 27 errors
