@@ -1426,6 +1426,7 @@ module.exports = {
         'eval = 42',
         'arguments = 42',
         'type = 42',
+        'of = 42',
         'interface = 42',
         'declare = 42',
         'x *= 42',
@@ -2106,6 +2107,9 @@ module.exports = {
         'start: for (;;) break start',
         'start: while (true) break start',
         '__proto__: test',
+        'type: 42',
+        'of: 52',
+        'declare: 62',
     ],
 
     'throw statement': [
@@ -2963,7 +2967,18 @@ module.exports = {
         '({ set i(x) { }, set i(x) { } })',
         '((a)) => 42',
         '(a, (b)) => 42',
-        '"use strict"; (eval = 10) => 42',
+        {
+          content: '"use strict"; (eval = 10) => 42',
+          explanation: "This is an arrow function error, not an assignment "+
+            "error",
+          expected_differences: {
+            'root.errors.0.message': {
+              type: 'Wrong error message',
+              expected: 'Assignment to eval or arguments is not allowed in strict mode',
+              actual: 'Parameter name eval or arguments is not allowed in strict mode',
+            },
+          },
+        },
         // strict mode, using eval when IsSimpleParameterList is true
         {
           content: '"use strict"; eval => 42',
@@ -3430,6 +3445,28 @@ module.exports = {
           }
         },
         'class A { foo() { let let } }',
+        {
+          content: 'function foo([a.a]) {}',
+          explanation: 'Esprima is off by one',
+          expected_differences: {
+            'root.errors.0.column': {
+              type: 'Wrong error column',
+              expected: 18,
+              actual: '14-17'
+            },
+          },
+        },
+        {
+          content: 'var f = function ([a.a]) {}',
+          explanation: 'Esprima is off by one',
+          expected_differences: {
+            'root.errors.0.column': {
+              type: 'Wrong error column',
+              expected: 23,
+              actual: '19-22'
+            },
+          },
+        },
     ],
     'Invalid unicode related syntax': [
         'x\\u005c',
@@ -5158,6 +5195,10 @@ module.exports = {
         'import type from "MyModule"',
         'import type, {} from "MyModule"',
         'import type, * as namespace from "MyModule"',
+
+        // Other pseudo keywords
+        'import of from "MyModule"',
+        'import declare from "MyModule"',
       ],
     },
     'Import Type': {
@@ -5488,5 +5529,29 @@ module.exports = {
     'Bounded Polymorphism': [
       'function foo<T: Foo>() {}',
       'class Foo<T: Bar> {}',
+    ],
+    'For Of Loops': [
+        'for(x of list) process(x);',
+        'for (var x of list) process(x);',
+        'for (let x of list) process(x);',
+    ],
+    'Invalid For Of Loops': [
+        {
+          content: 'for (let x = 42 of list) process(x);',
+          explanation: 'Exprima is off by one here location-wise '+
+            'and I like my error here better',
+          expected_differences: {
+            'root.errors.0.column': {
+              type: 'Wrong error column',
+              expected: 16,
+              actual: '5-15',
+            } ,
+            'root.errors.0.message': {
+              type: 'Wrong error message',
+              expected: 'Unexpected identifier',
+              actual: 'Invalid left-hand side in for-of',
+            }
+          }
+        },
     ],
 };

@@ -110,7 +110,7 @@ end)
 (* for now, we do speculative matching by setting this global.
    it's set to true when trying the arms of intersection or
    union types.
-   when it's true, the error-logging function throws instead 
+   when it's true, the error-logging function throws instead
    of logging, and the speculative harness catches.
    TODO
  *)
@@ -141,7 +141,7 @@ let silent_warnings = false
 exception FlowError of (reason * string) list
 
 let add_output cx level message_list =
-  if !throw_on_error 
+  if !throw_on_error
   then (
     raise (FlowError message_list)
   ) else (
@@ -161,7 +161,7 @@ let mk_id cx = Ident.make ""
 let mk_tvar cx reason =
   let tvar = mk_id cx in
   let graph = cx.graph in
-  cx.graph <- graph |> IMap.add tvar (new_bounds ());
+  cx.graph <- graph |> IMap.add tvar (new_unresolved_root ());
   (if modes.verbose then prerr_endlinef
     "TVAR %d (%d): %s" tvar (IMap.cardinal graph)
     (string_of_reason reason));
@@ -179,52 +179,48 @@ let mk_tvar_derivable_where cx reason f =
   let reason = derivable_reason reason in
   mk_tvar_where cx reason f
 
-(* Finds the bounds of a type variable in the graph. If the type variable is not
-   a unifier, or is a unifier that is also a root, the bounds are stored with
-   the type variable. Otherwise, a chain of type variables may need to be
-   traversed to reach such a type variable. *)
+(* Find the constraints of a type variable in the graph.
+
+   Recall that type variables are either roots or goto nodes. (See
+   constraint_js.ml for details.) If the type variable is a root, the
+   constraints are stored with the type variable. Otherwise, the type variable
+   is a goto node, and it points to another type variable: a linked list of such
+   type variables must be traversed until a root is reached. *)
 let rec find_graph cx id =
-  try
-    let bounds = IMap.find_unsafe id cx.graph in
-    (match bounds.unifier with
-      | Some (Goto id) ->
-          let id_, bounds_ = find_root cx id in
-          bounds.unifier <- Some (Goto id_);
-          bounds_
-      | _ -> bounds
-    )
-  with _ ->
-    let msg = spf "tvar %d not found in file %s" id cx.file in
-    failwith msg
+  let id, constraints = find_constraints cx id in
+  constraints
 
-(* Find the root of a unifier, potentially traversing a chain of unifiers, while
-   short-circuiting all the unifiers in the chain to the root during traversal
-   to speed up future traversals. *)
+and find_constraints cx id =
+  let id, root = find_root cx id in
+  id, root.constraints
+
+(* Find the root of a type variable, potentially traversing a chain of type
+   variables, while short-circuiting all the type variables in the chain to the
+   root during traversal to speed up future traversals. *)
 and find_root cx id =
-  let bounds = IMap.find_unsafe id cx.graph in
-  match bounds.unifier with
-  | Some (Goto id) ->
-      let id_, bounds_ = find_root cx id in
-      bounds.unifier <- Some (Goto id_);
-      id_, bounds_
-  | Some (Rank _) -> id, bounds
-  | _ -> assert false
+  match IMap.get id cx.graph with
+  | Some (Goto id_) ->
+      let id_, root_ = find_root cx id_ in
+      replace_node cx id (Goto id_);
+      id_, root_
 
-let exists_link cx (tvar1, tvar2) =
-  let bounds1 = find_graph cx tvar1 in
-  IMap.mem tvar2 bounds1.uppertvars
+  | Some (Root root) ->
+      id, root
 
-let exists_link_rev cx (tvar1, tvar2) =
-  let bounds2 = find_graph cx tvar2 in
-  IMap.mem tvar1 bounds2.lowertvars
+  | None ->
+      let msg = spf "tvar %d not found in file %s" id cx.file in
+      failwith msg
 
-let exists_upper_bound cx (tvar, t) =
-  let bounds = find_graph cx tvar in
-  TypeMap.mem t bounds.upper
+(* Replace the node associated with a type variable in the graph. *)
+and replace_node cx id node =
+  cx.graph <- cx.graph |> IMap.add id node
 
-let exists_lower_bound cx (tvar, t) =
-  let bounds = find_graph cx tvar in
-  TypeMap.mem t bounds.lower
+(* Check that id1 is not linked to id2. *)
+let not_linked (id1, bounds1) (id2, bounds2) =
+  (* It suffices to check that id1 is not already in the lower bounds of
+     id2. Equivalently, we could check that id2 is not already in the upper
+     bounds of id1. *)
+  not (IMap.mem id1 bounds2.lowertvars)
 
 (**********)
 (* frames *)
@@ -284,12 +280,18 @@ let prmsg_flow cx level trace msg (r1, r2) =
     |> List.map (fun r -> r, desc_of_reason r)
   in
   let info = match Ops.peek () with
-  | Some r when r != r1 && r != r2 -> 
+  | Some r when r != r1 && r != r2 ->
+    (* NOTE: We include the operation's reason in the error message only if it
+       is distinct from the reasons of the endpoints. *)
     let desc = (desc_of_reason r) ^ "\nError:" in
     [r, desc]
   | _ ->
     if lib_reason r1 && lib_reason r2
     then
+      (* Since pointing to endpoints in the library without any information on
+         the code that uses those endpoints inconsistently is useless, we point
+         to the file containing that code instead. Ideally, improvements in
+         error reporting would cause this case to never arise. *)
       let r = new_reason "" (Pos.make_from
         (Relative_path.create Relative_path.Dummy cx.file)) in
       [r, "inconsistent use of library definitions"]
@@ -392,24 +394,76 @@ let iter_props_ cx id f =
 (* strict mode *)
 (***************)
 
+(* shim to unwrap residual CJSExportDefaultT instances.
+   Normally CJSExportDefaultT is ephemeral: it is intercepted
+   by ImportModuleNsT and unwrapped. However, this doesn't always
+   happen (e.g., when a module is required, rather than imported).
+   This leaves open the possibility that instances of it will be
+   encountered as concrete types in bounds.lower and bounds.upper.
+
+   This is a problem for callers of possible_types (currently
+   resolve_type and assert_ground), which expect to see only
+   unwrapped value types such as ObjT in these bounds maps.
+
+   CJSExportDefaultT will be factored away (or its ephemerality
+   will be guaranteed) shortly, so rather than replumb __flow to
+   fix the immediate problem, we'll just use an on-the-fly unwrapper
+   in place of a raw call to TypeMap.keys. Once the CJSExportDefaultT
+   work is done, this shim can be removed.
+
+   Note: possible_types is the only place where this delegation
+   was necessary to fix the get-def command (see T7047791), but
+   there may well be others.
+ *)
+let typemap_keys m =
+  TypeMap.fold (fun k _ acc ->
+    (match k with
+      | CJSExportDefaultT (_, t) -> t
+      | t -> t
+    ) :: acc
+  ) m []
+
+(* For any constraints, return a list of def types that form either the lower
+   bounds of the solution, or a singleton containing the solution itself. *)
+let types_of constraints =
+  match constraints with
+  | Unresolved { lower; _ } -> TypeMap.keys lower
+  | Resolved t -> [t]
+
+(* Def types that describe the solution of a type variable. *)
 let possible_types cx id =
-  let bounds = find_graph cx id in
-  TypeMap.keys bounds.lower
+  let constraints = find_graph cx id in
+  (* TODO: Replace the following code with `types_of constraints`. The code
+     below mostly duplicates the functionality of `types_of constraints`, except
+     for the call to typemap_keys instead of TypeMap.keys. *)
+  match constraints with
+  | Unresolved { lower; _ } -> typemap_keys lower
+  | Resolved t -> [t]
 
 let possible_types_of_type cx = function
   | OpenT (_, id) -> possible_types cx id
   | _ -> []
 
+(* Gather the possible types of the tvar associated with the given id, and group
+   them by their reason's description. Return a map from those descriptions to
+   one such matching type and a count.
+
+   NOTE: here we rely on the unchecked invariant that types are reliably tagged
+   by their reason descriptions, i.e., that any two nontrivially different types
+   will always have different reasons.  Given the number of places where reasons
+   are freely created in code, this is a vulnerability.
+   TODO: find a way to guarantee, or collate types on some other basis.
+*)
 let distinct_possible_types cx id =
-  let bounds = find_graph cx id in
-  TypeMap.fold (fun t _ map ->
+  let types = possible_types cx id in
+  List.fold_left (fun map t ->
     let desc = desc_of_reason (reason_of_t t) in
     let info = match SMap.get desc map with
       | Some (t0, count) -> (t0, count + 1)
       | None -> (t, 1)
     in
     SMap.add desc info map
-  ) bounds.lower SMap.empty
+  ) SMap.empty types
 
 let suggested_type_cache = ref IMap.empty
 
@@ -626,12 +680,11 @@ and lookup_type_ cx ids id =
   if ISet.mem id ids then assert false
   else
     let ids = ISet.add id ids in
-    let bounds = find_graph cx id in
+    let types = possible_types cx id in
     try
-      UndefT.t
-      |> TypeMap.fold
-          (fun t _ -> fun u -> merge_type cx (ground_type_impl cx ids t, u))
-          bounds.lower
+      List.fold_left
+        (fun u t -> merge_type cx (ground_type_impl cx ids t, u))
+        UndefT.t types
     with _ ->
       AnyT.t
 
@@ -904,21 +957,11 @@ let printified_type cx t =
   let t = normalize_type cx t in
   printify_type cx t
 
-module Exists(M: MapSig) =
-  struct
-    let exists pred map =
-      M.fold (fun k _ found -> found || pred k) map false
-  end
-
-module ExistsTypeMap = Exists(TypeMap)
-
-let check_upper_bound cx id f =
-  let bounds = find_graph cx id in
-  bounds.upper |> ExistsTypeMap.exists f
-
-let check_lower_bound cx id f =
-  let bounds = find_graph cx id in
-  bounds.lower |> ExistsTypeMap.exists f
+(* Check whether any of the def types describing a solution for a type variable
+   satisfy a predicate. *)
+let check_types cx id f =
+  let types = possible_types cx id in
+  List.exists f types
 
 let blame_map = ref IMap.empty
 
@@ -943,10 +986,8 @@ let rec assert_ground ?(infer=false) cx ids = function
       then
         if infer
         then
-          let bounds = find_graph cx id in
-          bounds.lower |> TypeMap.iter (fun t _ ->
-            assert_ground cx ids t
-          )
+          let types = possible_types cx id in
+          List.iter (assert_ground cx ids) types
         else
           (* Disabling. This computation is based off inadequate, infer-only
              information. In contrast, a type-at-pos computation would also take
@@ -1092,16 +1133,20 @@ let rec assume_ground cx ids = function
 and assume_ground_ cx ids id =
   if not (ISet.mem id !ids) then (
     ids := !ids |> ISet.add id;
-    let bounds = find_graph cx id in
-    bounds.upper |> TypeMap.iter (fun t _ ->
+    let constraints = find_graph cx id in
+    match constraints with
+    | Unresolved { upper; uppertvars; _ } ->
+      upper |> TypeMap.iter (fun t _ ->
+        assume_ground cx ids t
+      );
+      uppertvars |> IMap.iter (fun id _ ->
+        assume_ground_ cx ids id
+      )
+    | Resolved t ->
       assume_ground cx ids t
-    );
-    bounds.uppertvars |> IMap.iter (fun id _ ->
-      assume_ground_ cx ids id
-    )
   )
 
-let enforce_strict cx id bounds =
+let enforce_strict cx id constraints =
   SSet.iter (fun r ->
     let tvar = SMap.find_unsafe r cx.modulemap in
     let ids = ref ISet.empty in
@@ -1119,9 +1164,7 @@ let enforce_strict cx id bounds =
   cx.strict_required <- cx.required;
 
   let ids = ref (GroundIDSet.singleton (id, false)) in
-  bounds.lower |> TypeMap.iter (fun t _ ->
-    assert_ground cx ids t
-  );
+  types_of constraints |> List.iter (assert_ground cx ids);
 
   blame_map := IMap.empty
 
@@ -1240,13 +1283,23 @@ end
 (* subtype relation *)
 (********************)
 
+(* Sometimes we expect types to be def types. For example, when we see a flow
+   constraint from type l to type u, we expect l to be a def type. As another
+   example, when we see a unification constraint between t1 and t2, we expect
+   both t1 and t2 to be def types. *)
+let expect_def t =
+  if is_use t
+  then assert_false (spf "Expected def type, but got: %s" (string_of_ctor t))
+
 (** NOTE: Do not call this function directly. Instead, call the wrapper
     functions `rec_flow`, `join_flow`, or `flow_opt` (described below) inside
     this module, and the function `flow` outside this module. **)
 let rec __flow cx (l,u) trace =
   if not (Cache.F.mem (l,u)) then (
 
-    if (not (is_use l)) then () else failwith (string_of_t cx l);
+    (* Expect that l is a def type. On the other hand, u may be a use type or a
+       def type: the latter typically when we have annotations. *)
+    expect_def l;
 
     (if modes.verbose
      then prerr_endlinef
@@ -1254,13 +1307,63 @@ let rec __flow cx (l,u) trace =
         (dump_reason (reason_of_t l))
         (dump_reason (reason_of_t u)));
 
-    if ground_subtype (l,u) then () 
+    if ground_subtype (l,u) then ()
     else (match (l,u) with
 
-    (* if X -> Y exists then that flow has already been processed *)
-    | (OpenT(reason1,tvar1),OpenT(_,tvar2))
-        when exists_link cx (tvar1,tvar2)
-          -> ()
+    (******************)
+    (* process X ~> Y *)
+    (******************)
+
+    | (OpenT(reason1,tvar1),OpenT(reason2,tvar2)) ->
+
+      let id1, constraints1 = find_constraints cx tvar1 in
+      let id2, constraints2 = find_constraints cx tvar2 in
+
+      (match constraints1, constraints2 with
+      | Unresolved bounds1, Unresolved bounds2 ->
+          if not_linked (id1, bounds1) (id2, bounds2) then (
+            add_upper_edges cx trace (id1, bounds1) (id2, bounds2);
+            add_lower_edges cx trace (id1, bounds1) (id2, bounds2);
+            flows_across cx trace bounds1.lower bounds2.upper;
+          );
+
+      | Unresolved bounds1, Resolved t2 ->
+          edges_and_flows_to_t cx trace (id1, bounds1) t2
+
+      | Resolved t1, Unresolved bounds2 ->
+          edges_and_flows_from_t cx trace t1 (id2, bounds2)
+
+      | Resolved t1, Resolved t2 ->
+          rec_flow cx trace (t1, t2)
+      );
+
+    (******************)
+    (* process Y ~> U *)
+    (******************)
+
+    | (OpenT(reason,tvar), t2) ->
+      let id1, constraints1 = find_constraints cx tvar in
+      (match constraints1 with
+      | Unresolved bounds1 ->
+          edges_and_flows_to_t cx trace (id1, bounds1) t2
+
+      | Resolved t1 ->
+          rec_flow cx trace (t1, t2)
+      );
+
+    (******************)
+    (* process L ~> X *)
+    (******************)
+
+    | (t1, OpenT(reason,tvar)) ->
+      let id2, constraints2 = find_constraints cx tvar in
+      (match constraints2 with
+      | Unresolved bounds2 ->
+          edges_and_flows_from_t cx trace t1 (id2, bounds2)
+
+      | Resolved t2 ->
+          rec_flow cx trace (t1, t2)
+      );
 
     (**********************************************************************)
     (* Unpack CommonJS exports early to guarantee that bounds are checked *)
@@ -1290,127 +1393,6 @@ let rec __flow cx (l,u) trace =
         let exported_props = SMap.add "default" t exported_props in
         cx.property_maps <- IMap.add mapr exported_props cx.property_maps;
         rec_flow cx trace (l, SetT(reason, "default", t))
-
-    (******************)
-    (* process X ~> Y *)
-    (******************)
-
-    (* initial link bounds: X' -> X, Y -> Y' *)
-    (* initial type bounds: L => X, Y => U *)
-    | (OpenT(reason1,tvar1),OpenT(reason2,tvar2)) ->
-
-      let bounds1 = find_graph cx tvar1 in
-      let bounds2 = find_graph cx tvar2 in
-
-      (* tvar.uppertvars += tvar2
-         tvar.uppertvars += tvar2.uppertvars
-         tvar.upper += tvar2.upper *)
-      let flow_lowertvar tvar tracelist =
-        let bounds = find_graph cx tvar in
-        (* final: tvar -> Y# *)
-        if not bounds2.cleared then
-          bounds.uppertvars <-
-            IMap.add tvar2 (concat_trace tracelist) bounds.uppertvars;
-        (* final: tvar -> Y'# *)
-        let f2 = (fun trace_u -> concat_trace (tracelist @ [trace_u])) in
-        bounds.uppertvars <-
-          UnionIMap.union f2 bounds2.uppertvars bounds.uppertvars;
-        (* final: tvar => U# *)
-        bounds.upper <-
-          UnionTypeMap.union f2 bounds2.upper bounds.upper
-      in
-      (* final: X -> Y#, X -> Y'#, X => U# *)
-      if not bounds1.cleared then
-        flow_lowertvar tvar1 [trace];
-      (* final: X' -> Y#, X' -> Y'#, X' => U# *)
-      bounds1.lowertvars |> IMap.iter (fun tvar trace_l ->
-        if tvar != tvar1 then flow_lowertvar tvar [trace_l;trace]);
-
-      (* tvar.lowertvars += tvar1
-         tvar.lowertvars += tvar1.lowertvars
-         tvar.lower += tvar1.lower *)
-      let flow_uppertvar tvar tracelist =
-        let bounds = find_graph cx tvar in
-        (* final: X# -> tvar *)
-        if not bounds1.cleared then
-          bounds.lowertvars <-
-            IMap.add tvar1 (concat_trace tracelist) bounds.lowertvars;
-        (* final: X'# -> tvar *)
-        let f1 = (fun trace_l -> concat_trace ([trace_l] @ tracelist)) in
-        bounds.lowertvars <-
-          UnionIMap.union f1 bounds1.lowertvars bounds.lowertvars;
-        (* final: L# => tvar *)
-        bounds.lower <-
-          UnionTypeMap.union f1 bounds1.lower bounds.lower
-      in
-      (* final: X# -> Y, X'# -> Y, L# -> Y *)
-      if not bounds2.cleared then
-        flow_uppertvar tvar2 [trace];
-      (* final: X# -> Y', X'# -> Y', L# -> Y' *)
-      bounds2.uppertvars |> IMap.iter (fun tvar trace_u ->
-        if tvar != tvar2 then flow_uppertvar tvar [trace;trace_u]);
-
-      (* final: process L ~> U *)
-      bounds1.lower |> TypeMap.iter
-          (fun l trace_l -> bounds2.upper |> TypeMap.iter
-              (fun u trace_u ->
-                join_flow cx [trace_l;trace;trace_u] (l,u)))
-
-    (******************)
-    (* process Y ~> U *)
-    (******************)
-
-    (* if Y => U exists then that flow has already been processed *)
-    | (OpenT(reason,tvar),t) when exists_upper_bound cx (tvar,t)
-        -> ()
-
-    (* initial: Y' -> Y *)
-    (* initial: L => Y *)
-    | (OpenT(reason,tvar),t) ->
-      let bounds = find_graph cx tvar in
-      (* final: Y => U *)
-      if not bounds.cleared then
-        bounds.upper <- TypeMap.add t trace bounds.upper;
-      bounds.lowertvars |> IMap.iter (fun tvar' trace_l ->
-        let bounds' = find_graph cx tvar' in
-        if tvar != tvar' then
-          (* final: Y' => U *)
-          bounds'.upper <-
-            TypeMap.add t (concat_trace [trace_l;trace]) bounds'.upper
-      );
-
-      (* final: process L ~> U *)
-      bounds.lower |> TypeMap.iter (fun l trace_l ->
-        join_flow cx [trace_l;trace] (l,t)
-      );
-
-    (******************)
-    (* process L ~> X *)
-    (******************)
-
-    (* if U => X exists then that flow has already been processed *)
-    | (t,OpenT(reason,tvar)) when exists_lower_bound cx (tvar,t)
-        -> ()
-
-    (* initial: X -> X' *)
-    (* initial: X => U *)
-    | (t,OpenT(reason,tvar)) ->
-      let bounds = find_graph cx tvar in
-      (* final: L => X *)
-      if not bounds.cleared then
-        bounds.lower <- TypeMap.add t trace bounds.lower;
-      bounds.uppertvars |> IMap.iter (fun tvar' trace_u ->
-        let bounds' = find_graph cx tvar' in
-        if tvar != tvar' then
-          (* final: L => X' *)
-          bounds'.lower <-
-            TypeMap.add t (concat_trace [trace;trace_u]) bounds'.lower
-      );
-
-      (* final: process L ~> U *)
-      bounds.upper |> TypeMap.iter (fun u trace_u ->
-        join_flow cx [trace;trace_u] (t,u)
-      )
 
     (*******************************)
     (* Handle non-CommonJS imports *)
@@ -1612,6 +1594,20 @@ let rec __flow cx (l,u) trace =
         errors produced). This is useful to typecheck union types and
         intersection types: see below. **)
 
+    (***********************************************************************)
+    (* Type applications wait for their type parameters to become concrete *)
+    (***********************************************************************)
+
+    | (TypeAppT(c,ts), _) ->
+        let reason = reason_of_t u in
+        let t = mk_typeapp_instance cx reason c ts in
+        rec_flow cx trace (t, u)
+
+    | (_, TypeAppT(c,ts)) ->
+        let reason = reason_of_t l in
+        let t = mk_typeapp_instance cx reason c ts in
+        rec_flow cx trace (l, t)
+
     (***************)
     (* union types *)
     (***************)
@@ -1681,16 +1677,6 @@ let rec __flow cx (l,u) trace =
     | (PolyT (ids,t), SpecializeT(reason,ts,tvar)) ->
       let t_ = instantiate_poly_ cx trace reason (ids,t) ts in
       rec_flow cx trace (t_, tvar)
-
-    | (TypeAppT(c,ts), _) ->
-        let reason = reason_of_t u in
-        let t = mk_typeapp_instance cx reason c ts in
-        rec_flow cx trace (t, u)
-
-    | (_, TypeAppT(c,ts)) ->
-        let reason = reason_of_t l in
-        let t = mk_typeapp_instance cx reason c ts in
-        rec_flow cx trace (l, t)
 
     | (PolyT _, PolyT _) -> () (* TODO *)
 
@@ -1894,18 +1880,16 @@ let rec __flow cx (l,u) trace =
     (* class types derive instance types (with constructors) *)
     (*********************************************************)
 
-    | ClassT (InstanceT (reason_c, static, super, instance)),
-      ConstructorT (reason_op, tins2, t) ->
+    | ClassT (this),
+      ConstructorT (reason_op, args, t) ->
       Ops.push reason_op;
-      let methods = find_props cx instance.methods_tmap in
-      (match SMap.get "constructor" methods with
-      | Some (FunT (reason,_,_,{params_tlist = tins1; _})) ->
-        (* TODO: closure *)
-        multiflow cx trace (u, l) (tins2,tins1) |> ignore
-      | _ -> () (* TODO *)
+      (* call this.constructor(args) *)
+      rec_flow cx trace (
+        this,
+        MethodT (reason_op, "constructor", this, args, VoidT.t, 0)
       );
-      let it = InstanceT(reason_c,static,super,instance) in
-      rec_flow cx trace (it, t);
+      (* return this *)
+      rec_flow cx trace (this, t);
       Ops.pop ();
 
     (****************************************************************)
@@ -2277,30 +2261,24 @@ let rec __flow cx (l,u) trace =
       ->
       rec_flow cx trace (key, ElemT(reason_op, l, LowerBoundT tout))
 
-    | (StrT (reason_s, literal),
-       ElemT(reason_op, (ObjT(_, {dict_t; _}) as o), t))
-      ->
-      (match literal with
-      | Some x -> (match t with
-        | UpperBoundT tin -> rec_flow cx trace (o, SetT(reason_op,x,tin))
-        | LowerBoundT tout -> rec_flow cx trace (o, GetT(reason_op,x,tout))
-        | _ -> assert false)
-      | None -> (match dict_t with
-        | None -> ()
-        | Some { key; value; _ } ->
-            rec_flow cx trace (l, key);
-            rec_flow cx trace (value,t);
-            rec_flow cx trace (t,value))
-      )
+    | (StrT (_, Some x), ElemT(reason_op, (ObjT _ as o), t)) ->
+      (match t with
+      | UpperBoundT tin -> rec_flow cx trace (o, SetT(reason_op,x,tin))
+      | LowerBoundT tout -> rec_flow cx trace (o, GetT(reason_op,x,tout))
+      | _ -> assert false)
 
-    | (_, ElemT(_, ObjT(_, {dict_t; _}), t))
+    (* if the object is a dictionary, verify it *)
+    | (_, ElemT(_, ObjT(_, {dict_t = Some { key; value; _ }; _}), t))
       ->
-        (match dict_t with
-        | None -> ()
-        | Some { key; value; _ } ->
-            rec_flow cx trace (l, key);
-            rec_flow cx trace (value,t);
-            rec_flow cx trace (t,value))
+      rec_flow cx trace (l, key);
+      rec_flow cx trace (value,t);
+      rec_flow cx trace (t,value)
+
+    (* otherwise, string and number keys are allowed, but there's nothing else
+       to flow without knowing their literal values. *)
+    | (StrT _, ElemT(_, ObjT _, _))
+    | (NumT _, ElemT(_, ObjT _, _)) ->
+      ()
 
     | (NumT (reason_i, literal),
        ElemT(reason_op, ArrT(_, value, ts), t))
@@ -2734,7 +2712,7 @@ and is_object_prototype_method = function
   | "valueOf" -> true
   | _ -> false
 
-(* only on use-types *)
+(* only on use-types - guard calls with is_use t *)
 and err_operation = function
   | GetT _ -> "Property cannot be accessed on"
   | SetT _ -> "Property cannot be assigned on"
@@ -2757,10 +2735,15 @@ and err_operation = function
   | LookupT _ -> "Property not found in"
   | KeyT _ -> "Expected object instead of"
   | HasT _ -> "Property not found in"
-
-  (* unreachable use-types and def-types *)
-  | t
-    -> failwith (spf "err_operation called on %s" (string_of_ctor t))
+  (* unreachable or unclassified use-types. until we have a mechanical way
+     to verify that all legit use types are listed above, we can't afford
+     to throw on a use type, so mark the error instead *)
+  | t when is_use t ->
+    (spf "Type is incompatible with (unclassified use type: %s)"
+      (string_of_ctor t))
+  (* def-types *)
+  | t ->
+    failwith (spf "err_operation called on def type %s" (string_of_ctor t))
 
 and err_value = function
   | NullT _ -> " possibly null value"
@@ -3633,177 +3616,280 @@ and predicate cx trace t (l,p) = match (l,p) with
   | _ ->
     prerr_flow cx trace "Unsatisfied predicate" l (PredicateT(p,t))
 
+(***********************)
+(* bounds manipulation *)
+(***********************)
+
+(** The following general considerations apply when manipulating bounds.
+
+    1. All type variables start out as roots, but some of them eventually become
+    goto nodes. As such, bounds of roots may contain goto nodes. However, we
+    never perform operations directly on goto nodes; instead, we perform those
+    operations on their roots. It is tempting to replace goto nodes proactively
+    with their roots to avoid this issue, but doing so may be expensive, whereas
+    the union-find data structure amortizes the cost of looking up roots.
+
+    2. Another issue is that while the bounds of a type variable start out
+    empty, and in particular do not contain the type variable itself, eventually
+    other type variables in the bounds may be unified with the type variable. We
+    do not remove these type variables proactively, but instead filter them out
+    when considering the bounds. In the future we might consider amortizing the
+    cost of this filtering.
+
+    3. When roots are resolved, they act like the corresponding concrete
+    types. We maintain the invariant that whenever lower bounds or upper bounds
+    contain resolved roots, they also contain the corresponding concrete types.
+
+    4. When roots are unresolved (they have lower bounds and upper bounds,
+    possibly consisting of concrete types as well as type variables), we
+    maintain the invarant that every lower bound has already been propagated to
+    every upper bound. We also maintain the invariant that the bounds are
+    transitively closed modulo equivalence: for every type variable in the
+    bounds, all the bounds of its root are also included.
+
+**)
+
+(* for each l in ls: l => u *)
+and flows_to_t cx trace ls u =
+  ls |> TypeMap.iter (fun l trace_l ->
+    join_flow cx [trace_l;trace] (l,u)
+  )
+
+(* for each u in us: l => u *)
+and flows_from_t cx trace l us =
+  us |> TypeMap.iter (fun u trace_u ->
+    join_flow cx [trace;trace_u] (l,u)
+  )
+
+(* for each l in ls, u in us: l => u *)
+and flows_across cx trace ls us =
+  ls |> TypeMap.iter (fun l trace_l ->
+    us |> TypeMap.iter (fun u trace_u ->
+      join_flow cx [trace_l;trace;trace_u] (l,u)
+    )
+  )
+
+(* bounds.upper += u *)
+and add_upper u trace bounds =
+  bounds.upper <- TypeMap.add u trace bounds.upper
+
+(* bounds.lower += l *)
+and add_lower l trace bounds =
+  bounds.lower <- TypeMap.add l trace bounds.lower
+
+(* Helper for functions that follow. *)
+(* Given a map of bindings from tvars to traces, a tvar to skip, and an `each`
+   function taking a tvar and its associated trace, apply `each` to all
+   unresolved root constraints reached from the bound tvars, except those of
+   skip_tvar. (Typically skip_tvar is a tvar that will be processed separately,
+   so we don't want to redo that work. We also don't want to consider any tvar
+   that has already been resolved, because the resolved type will be processed
+   separately, too, as part of the bounds of skip_tvar. **)
+and iter_with_filter cx bindings skip_id each =
+  bindings |> IMap.iter (fun id trace ->
+    match find_constraints cx id with
+    | root_id, Unresolved bounds when root_id <> skip_id ->
+        each (root_id, bounds) trace
+    | _ ->
+        ()
+  )
+
+(* for each id in id1 + bounds1.lowertvars:
+   id.bounds.upper += t2
+*)
+(** When going through bounds1.lowertvars, filter out id1. **)
+(** As an optimization, skip id1 when it will become either a resolved root or a
+    goto node (so that updating its bounds is unnecessary). **)
+and edges_to_t cx trace ?(opt=false) (id1, bounds1) t2 =
+  if not opt then add_upper t2 trace bounds1;
+  iter_with_filter cx bounds1.lowertvars id1 (fun (_, bounds) trace_l ->
+    add_upper t2 (concat_trace[trace_l;trace]) bounds
+  )
+
+(* for each id in id2 + bounds2.uppertvars:
+   id.bounds.lower += t1
+*)
+(** When going through bounds2.uppertvars, filter out id2. **)
+(** As an optimization, skip id2 when it will become either a resolved root or a
+    goto node (so that updating its bounds is unnecessary). **)
+and edges_from_t cx trace ?(opt=false) t1 (id2, bounds2) =
+  if not opt then add_lower t1 trace bounds2;
+  iter_with_filter cx bounds2.uppertvars id2 (fun (_, bounds) trace_u ->
+    add_lower t1 (concat_trace[trace;trace_u]) bounds
+  )
+
+(* for each id' in id + bounds.lowertvars:
+   id'.bounds.upper += us
+*)
+and edges_to_ts cx trace ?(opt=false) (id, bounds) us =
+  us |> TypeMap.iter (fun u trace_u ->
+    edges_to_t cx (concat_trace[trace;trace_u]) ~opt (id, bounds) u
+  )
+
+(* for each id' in id + bounds.uppertvars:
+   id'.bounds.lower += ls
+*)
+and edges_from_ts cx trace ?(opt=false) ls (id, bounds) =
+  ls |> TypeMap.iter (fun l trace_l ->
+    edges_from_t cx (concat_trace[trace_l;trace]) ~opt l (id, bounds)
+  )
+
+(* for each id in id1 + bounds1.lowertvars:
+   id.bounds.upper += t2
+   for each l in bounds1.lower: l => t2
+*)
+(** As an invariant, bounds1.lower should already contain id.bounds.lower for
+    each id in bounds1.lowertvars. **)
+and edges_and_flows_to_t cx trace ?(opt=false) (id1, bounds1) t2 =
+  if not (TypeMap.mem t2 bounds1.upper) then (
+    edges_to_t cx trace ~opt (id1, bounds1) t2;
+    flows_to_t cx trace bounds1.lower t2
+  )
+
+(* for each id in id2 + bounds2.uppertvars:
+   id.bounds.lower += t1
+   for each u in bounds2.upper: t1 => u
+*)
+(** As an invariant, bounds2.upper should already contain id.bounds.upper for
+    each id in bounds2.uppertvars. **)
+and edges_and_flows_from_t cx trace ?(opt=false) t1 (id2, bounds2) =
+  if not (TypeMap.mem t1 bounds2.lower) then (
+    edges_from_t cx trace ~opt t1 (id2, bounds2);
+    flows_from_t cx trace t1 bounds2.upper
+  )
+
+(* bounds.uppertvars += id *)
+and add_uppertvar id trace bounds =
+  bounds.uppertvars <- IMap.add id trace bounds.uppertvars
+
+(* bounds.lowertvars += id *)
+and add_lowertvar id trace bounds =
+  bounds.lowertvars <- IMap.add id trace bounds.lowertvars
+
+(* for each id in id1 + bounds1.lowertvars:
+   id.bounds.uppertvars += id2
+*)
+(** When going through bounds1.lowertvars, filter out id1. **)
+(** As an optimization, skip id1 when it will become either a resolved root or a
+    goto node (so that updating its bounds is unnecessary). **)
+and edges_to_tvar cx trace ?(opt=false) (id1, bounds1) id2 =
+  if not opt then add_uppertvar id2 trace bounds1;
+  iter_with_filter cx bounds1.lowertvars id1 (fun (_, bounds) trace_l ->
+    add_uppertvar id2 (concat_trace[trace_l;trace]) bounds
+  )
+
+(* for each id in id2 + bounds2.uppertvars:
+   id.bounds.lowertvars += id1
+*)
+(** When going through bounds2.uppertvars, filter out id2. **)
+(** As an optimization, skip id2 when it will become either a resolved root or a
+    goto node (so that updating its bounds is unnecessary). **)
+and edges_from_tvar cx trace ?(opt=false) id1 (id2, bounds2) =
+  if not opt then add_lowertvar id1 trace bounds2;
+  iter_with_filter cx bounds2.uppertvars id2 (fun (_, bounds) trace_u ->
+    add_lowertvar id1 (concat_trace[trace;trace_u]) bounds
+  )
+
+(* for each id in id1 + bounds1.lowertvars:
+   id.bounds.upper += bounds2.upper
+   id.bounds.uppertvars += id2
+   id.bounds.uppertvars += bounds2.uppertvars
+*)
+and add_upper_edges cx trace ?(opt=false) (id1, bounds1) (id2, bounds2) =
+  edges_to_ts cx trace ~opt (id1, bounds1) bounds2.upper;
+  edges_to_tvar cx trace ~opt (id1, bounds1) id2;
+  iter_with_filter cx bounds2.uppertvars id2 (fun (tvar, _) trace_u ->
+    edges_to_tvar cx (concat_trace[trace;trace_u]) ~opt (id1, bounds1) tvar
+  )
+
+(* for each id in id2 + bounds2.uppertvars:
+   id.bounds.lower += bounds1.lower
+   id.bounds.lowertvars += id1
+   id.bounds.lowertvars += bounds1.lowertvars
+*)
+and add_lower_edges cx trace ?(opt=false) (id1, bounds1) (id2, bounds2) =
+  edges_from_ts cx trace ~opt bounds1.lower (id2, bounds2);
+  edges_from_tvar cx trace ~opt id1 (id2, bounds2);
+  iter_with_filter cx bounds1.lowertvars id1 (fun (tvar, _) trace_l ->
+    edges_from_tvar cx (concat_trace[trace_l;trace]) ~opt tvar (id2, bounds2)
+  )
 
 (***************)
 (* unification *)
 (***************)
 
-(* Ensure that a type variable is, or is converted to, a unifier. *)
-and ensure_unifier cx id =
-  let bounds = IMap.find_unsafe id cx.graph in
-  match bounds.unifier with
-  | None -> bounds.unifier <- Some (Rank 0)
-  | _ -> ()
-
-(* Clear the bounds of a type variable. Either it is a unifier that is no longer
-   a root, wherein the solution is None. Or it is a root that is resolved to a
-   type t, wherein the solution is Some t. *)
-and clear cx ?solution bounds =
-  bounds.cleared <- true;
-  bounds.lowertvars <- IMap.empty;
-  bounds.uppertvars <- IMap.empty;
-  match solution with
-  | None ->
-    bounds.solution <- None;
-    bounds.lower <- TypeMap.empty;
-    bounds.upper <- TypeMap.empty;
-  | Some t ->
-    bounds.solution <- None;
-    bounds.lower <- TypeMap.singleton t (unit_trace t t);
-    bounds.upper <- TypeMap.singleton t (unit_trace t t)
-
-and rank = function
-  | Some (Rank r) -> r
-  | _ -> assert false
-
 (* Chain a root to another root. If both roots are unresolved, this amounts to
    copying over the bounds of one root to another, and adding all the
-   connections necessary when two non-unifiers flow to each other. On the other
-   hand, when one or both roots are resolved, we can assume that their bounds are
-   cleared. *)
-and goto cx trace ?(flag=false) id1 id2 =
-  let bounds1, bounds2 =
-    IMap.find_unsafe id1 cx.graph, IMap.find_unsafe id2 cx.graph
-  in
-  bounds1.unifier <- Some (Goto id2);
-  if flag then bounds2.unifier <- Some (Rank (1 + (rank bounds2.unifier)));
-  (match bounds1.solution, bounds2.solution with
+   connections necessary when two non-unifiers flow to each other. If one or
+   both of the roots are resolved, they effectively act like the corresponding
+   concrete types. *)
+and goto cx trace ?(flag=false) (id1, root1) (id2, root2) =
+  replace_node cx id1 (Goto id2);
+  (match root1.constraints, root2.constraints with
 
-  | None, None ->
-    bounds1.lower |> TypeMap.iter (fun l trace_l ->
-      bounds2.upper |> TypeMap.iter (fun u trace_u ->
-        join_flow cx [trace_l;trace;trace_u] (l,u)
-      ));
-    bounds2.lower |> TypeMap.iter (fun l trace_l ->
-      bounds1.upper |> TypeMap.iter (fun u trace_u ->
-        join_flow cx [trace_l;trace;trace_u] (l,u)
-      ));
-    bounds1.lowertvars |> IMap.iter (fun idl trace_l ->
-      let f = (fun trace_u -> concat_trace[trace_l;trace;trace_u]) in
-      let bounds_l = find_graph cx idl in
-      bounds_l.upper <- UnionTypeMap.union f bounds2.upper bounds_l.upper;
-      bounds_l.uppertvars <- UnionIMap.union f bounds2.uppertvars bounds_l.uppertvars
+  | Unresolved bounds1, Unresolved bounds2 ->
+    let cond1 = not_linked (id1, bounds1) (id2, bounds2) in
+    let cond2 = not_linked (id2, bounds2) (id1, bounds1) in
+    if cond1 then
+      flows_across cx trace bounds1.lower bounds2.upper;
+    if cond2 then
+      flows_across cx trace bounds2.lower bounds1.upper;
+    if cond1 then (
+      add_upper_edges cx trace ~opt:true (id1, bounds1) (id2, bounds2);
+      add_lower_edges cx trace (id1, bounds1) (id2, bounds2);
     );
-    bounds2.lowertvars |> IMap.iter (fun idl trace_l ->
-      let f = (fun trace_u -> concat_trace[trace_l;trace;trace_u]) in
-      let bounds_l = find_graph cx idl in
-      bounds_l.upper <- UnionTypeMap.union f bounds1.upper bounds_l.upper;
-      bounds_l.uppertvars <- UnionIMap.union f bounds1.uppertvars bounds_l.uppertvars
+    if cond2 then (
+      add_upper_edges cx trace (id2, bounds2) (id1, bounds1);
+      add_lower_edges cx trace ~opt:true (id2, bounds2) (id1, bounds1);
     );
-    bounds1.uppertvars |> IMap.iter (fun idu trace_u ->
-      let f = (fun trace_l -> concat_trace[trace_l;trace;trace_u]) in
-      let bounds_u = find_graph cx idu in
-      bounds_u.lower <- UnionTypeMap.union f bounds2.lower bounds_u.lower;
-      bounds_u.lowertvars <- UnionIMap.union f bounds2.lowertvars bounds_u.lowertvars
-    );
-    bounds2.uppertvars |> IMap.iter (fun idu trace_u ->
-      let f = (fun trace_l -> concat_trace[trace_l;trace;trace_u]) in
-      let bounds_u = find_graph cx idu in
-      bounds_u.lower <- UnionTypeMap.union f bounds1.lower bounds_u.lower;
-      bounds_u.lowertvars <- UnionIMap.union f bounds1.lowertvars bounds_u.lowertvars
-    );
-    (* TODO: traces *)
-    bounds2.lower <- TypeMap.union bounds1.lower bounds2.lower;
-    bounds2.upper <- TypeMap.union bounds1.upper bounds2.upper;
-    bounds2.lowertvars <- IMap.union bounds1.lowertvars bounds2.lowertvars;
-    bounds2.uppertvars <- IMap.union bounds1.uppertvars bounds2.uppertvars
 
-  | None, Some t2 ->
-    bounds1.lower |> TypeMap.iter (fun l trace_l ->
-      join_flow cx [trace_l;trace] (l,t2)
-    );
-    bounds1.upper |> TypeMap.iter (fun u trace_u ->
-      join_flow cx [trace;trace_u] (t2,u)
-    );
-    bounds1.lowertvars |> IMap.iter (fun idl trace_l ->
-      let bounds_l = find_graph cx idl in
-      bounds_l.upper <- TypeMap.add t2 (concat_trace[trace_l;trace]) bounds_l.upper
-    );
-    bounds1.uppertvars |> IMap.iter (fun idu trace_u ->
-      let bounds_u = find_graph cx idu in
-      bounds_u.lower <- TypeMap.add t2 (concat_trace[trace;trace_u]) bounds_u.lower
-    )
+  | Unresolved bounds1, Resolved t2 ->
+    edges_and_flows_to_t cx trace ~opt:true (id1, bounds1) t2;
+    edges_and_flows_from_t cx trace ~opt:true t2 (id1, bounds1);
 
-  | Some t1, None ->
-    bounds2.lower |> TypeMap.iter (fun l trace_l ->
-      join_flow cx [trace_l;trace] (l,t1)
-    );
-    bounds2.upper |> TypeMap.iter (fun u trace_u ->
-      join_flow cx [trace;trace_u] (t1,u)
-    );
-    bounds2.lowertvars |> IMap.iter (fun idl trace_l ->
-      let bounds_l = find_graph cx idl in
-      bounds_l.upper <- TypeMap.add t1 (concat_trace[trace_l;trace]) bounds_l.upper
-    );
-    bounds2.uppertvars |> IMap.iter (fun idu trace_u ->
-      let bounds_u = find_graph cx idu in
-      bounds_u.lower <- TypeMap.add t1 (concat_trace[trace;trace_u]) bounds_u.lower
-    );
-    clear cx ~solution:t1 bounds2
+  | Resolved t1, Unresolved bounds2 ->
+    edges_and_flows_to_t cx trace ~opt:true (id2, bounds2) t1;
+    edges_and_flows_from_t cx trace ~opt:true t1 (id2, bounds2);
+    replace_node cx id2 (Root { root2 with constraints = Resolved t1 });
 
-  | Some t1, Some t2 ->
+  | Resolved t1, Resolved t2 ->
     rec_unify cx trace t1 t2;
-  );
-  clear cx bounds1
+  )
 
-(* Unify two type variables. This involves ensuring that they are unifiers,
-   finding their roots, and making one point to the other. Ranks are used to
-   keep chains short. *)
+(* Unify two type variables. This involves finding their roots, and making one
+   point to the other. Ranks are used to keep chains short. *)
 and merge_ids cx trace id1 id2 =
-  ensure_unifier cx id1; ensure_unifier cx id2;
-  let (id1, bounds1), (id2, bounds2) = find_root cx id1, find_root cx id2 in
-  let r1, r2 = rank bounds1.unifier, rank bounds2.unifier in
+  let (id1, root1), (id2, root2) = find_root cx id1, find_root cx id2 in
   if id1 = id2 then ()
-  else if r1 < r2 then goto cx trace id1 id2
-  else if r2 < r1 then goto cx trace id2 id1
-  else goto cx trace ~flag:true id1 id2
+  else if root1.rank < root2.rank then goto cx trace (id1, root1) (id2, root2)
+  else if root2.rank < root1.rank then goto cx trace (id2, root2) (id1, root1)
+  else (
+    replace_node cx id2 (Root { root2 with rank = root1.rank+1; });
+    goto cx trace (id1, root1) (id2, root2);
+  )
 
-(* Resolve a type variable to a type. This involves ensuring that it is a
-   unifier, finding its root, and resolving to that type. *)
+(* Resolve a type variable to a type. This involves finding its root, and
+   resolving to that type. *)
 and resolve_id cx trace id t =
-  ensure_unifier cx id;
-  let id, _ = find_root cx id in
-  let bounds = IMap.find_unsafe id cx.graph in
-  match bounds.solution with
-  | None ->
-    bounds.lower |> TypeMap.iter (fun l trace_l ->
-      join_flow cx [trace_l;trace] (l,t)
-    );
-    bounds.upper |> TypeMap.iter (fun u trace_u ->
-      join_flow cx [trace;trace_u] (t,u)
-    );
-    bounds.lowertvars |> IMap.iter (fun idl trace_l ->
-      let bounds_l = find_graph cx idl in
-      bounds_l.upper <- TypeMap.add t (concat_trace[trace_l;trace]) bounds_l.upper
-    );
-    bounds.uppertvars |> IMap.iter (fun idu trace_u ->
-      let bounds_u = find_graph cx idu in
-      bounds_u.lower <- TypeMap.add t (concat_trace[trace;trace_u]) bounds_u.lower
-    );
-    clear cx ~solution:t bounds
-  | Some t_ ->
+  let id, root = find_root cx id in
+  match root.constraints with
+  | Unresolved bounds ->
+    edges_and_flows_to_t cx trace ~opt:true (id, bounds) t;
+    edges_and_flows_from_t cx trace ~opt:true t (id, bounds);
+
+    replace_node cx id (Root { root with constraints = Resolved t })
+
+  | Resolved t_ ->
     rec_unify cx trace t_ t
 
 (******************)
 
-(* TODO: Unification between concrete types is still implemented as
-   bidirectional flows. This means that the destructuring work is duplicated,
-   and we're missing some opportunities for nested unification. *)
-and naive_unify cx trace t1 t2 =
-  rec_flow cx trace (t1,t2); rec_flow cx trace (t2,t1)
-
 (* Unification of two types *)
+
 and rec_unify cx trace t1 t2 =
+  (* Expect that t1 and t2 are def types. *)
+  expect_def t1; expect_def t2;
+
   match (t1,t2) with
   | (OpenT (_,id1), OpenT (_,id2)) ->
     merge_ids cx trace id1 id2
@@ -3816,26 +3902,40 @@ and rec_unify cx trace t1 t2 =
 
   | (ObjT (reason1, {props_tmap = flds1; _}),
      ObjT (reason2, {props_tmap = flds2; _})) ->
-    let pmap1, pmap2 =
-      find_props cx flds1,
-      find_props cx flds2
-    in
-    let error_ref = ref false in
-    SMap.iter (fun x t ->
-      match SMap.get x pmap2 with
-      | Some t_ -> rec_unify cx trace t t_
-      | None -> error_ref := true
-    ) pmap1;
-    if !error_ref || (SMap.cardinal pmap2 > SMap.cardinal pmap1)
-    then
-      let message_list = [
-        reason1, "Objects do not have the same properties";
-        reason2, ""
-      ] in
-      add_warning cx message_list
+    let pmap1, pmap2 = find_props cx flds1, find_props cx flds2 in
+    SMap.merge (fun x t1 t2 ->
+      if not (is_internal_name x)
+      then (match t1, t2 with
+      | Some t1, Some t2 -> rec_unify cx trace t1 t2
+      | Some _, None ->
+          let reason1 = replace_reason (spf "property %s" x) reason1 in
+          let message_list = [
+            reason1, "Property not found in";
+            reason2, ""
+          ] in
+          add_warning cx message_list
+
+      | None, Some _ ->
+          let reason2 = replace_reason (spf "property %s" x) reason2 in
+          let message_list = [
+            reason2, "Property not found in";
+            reason1, ""
+          ] in
+          add_warning cx message_list
+
+      | None, None -> ());
+      None
+    ) pmap1 pmap2 |> ignore
 
   | _ ->
     naive_unify cx trace t1 t2
+
+(* TODO: Unification between concrete types is still implemented as
+   bidirectional flows. This means that the destructuring work is duplicated,
+   and we're missing some opportunities for nested unification. *)
+
+and naive_unify cx trace t1 t2 =
+  rec_flow cx trace (t1,t2); rec_flow cx trace (t2,t1)
 
 (* mutable sites on parent values (i.e. object properties,
    array elements) must be typed invariantly when a value
@@ -4083,11 +4183,17 @@ let gc_state = {
   objs = ISet.empty;
 }
 
+(* WARNING: unsafe access of bounds of a tvar, throws unless the tvar is an
+   unresolved root (see comment on bounds_of_resolved_root). This is a temporary
+   utility until gc is resurrected in a follow-up diff. *)
+let unsafe_access_bounds cx id =
+  cx.graph |> IMap.find_unsafe id |> bounds_of_unresolved_root
+
 (** TODO: this is out of date!!!!!!!!!!!!!!!!!!!!! **)
 let rec gc cx polarity = function
 
   | OpenT(reason, id) ->
-      let bounds = cx.graph |> IMap.find_unsafe id in
+      let bounds = unsafe_access_bounds cx id in
       if (polarity)
       then
         if (ISet.mem id gc_state.positive)
@@ -4217,7 +4323,7 @@ and gc_pred cx polarity = function
 and gc_undirected cx = function
 
   | OpenT(reason, id) ->
-      let bounds = cx.graph |> IMap.find_unsafe id in
+      let bounds = unsafe_access_bounds cx id in
       if (ISet.mem id gc_state.positive)
       then ()
       else (
@@ -4343,12 +4449,12 @@ and gc_undirected_pred cx = function
 
 
 let die cx tvar =
-  let bounds = IMap.find_unsafe tvar cx.graph in
+  let bounds = unsafe_access_bounds cx tvar in
   bounds.lowertvars |> IMap.iter (fun l _ ->
     if (l = tvar)
     then ()
     else
-      let bounds_l = IMap.find_unsafe l cx.graph in
+      let bounds_l = unsafe_access_bounds cx l in
       bounds_l.uppertvars <-
         IMap.remove tvar bounds_l.uppertvars
   );
@@ -4356,7 +4462,7 @@ let die cx tvar =
     if (u = tvar)
     then ()
     else
-      let bounds_u = IMap.find_unsafe u cx.graph in
+      let bounds_u = unsafe_access_bounds cx u in
       bounds_u.lowertvars <-
         IMap.remove tvar bounds_u.lowertvars
   );
@@ -4364,13 +4470,13 @@ let die cx tvar =
   cx.graph <- cx.graph |> IMap.remove tvar
 
 let kill_lower cx tvar =
-  let bounds = IMap.find_unsafe tvar cx.graph in
+  let bounds = unsafe_access_bounds cx tvar in
   bounds.lower <- TypeMap.empty;
   bounds.lowertvars |> IMap.iter (fun l _ ->
     if (l = tvar)
     then ()
     else
-      let bounds_l = IMap.find_unsafe l cx.graph in
+      let bounds_l = unsafe_access_bounds cx l in
       bounds_l.uppertvars <-
         IMap.remove tvar bounds_l.uppertvars
   );
@@ -4378,13 +4484,13 @@ let kill_lower cx tvar =
     IMap.singleton tvar (IMap.find_unsafe tvar bounds.lowertvars)
 
 let kill_upper cx tvar =
-  let bounds = IMap.find_unsafe tvar cx.graph in
+  let bounds = unsafe_access_bounds cx tvar in
   bounds.upper <- TypeMap.empty;
   bounds.uppertvars |> IMap.iter (fun u _ ->
     if (u = tvar)
     then ()
     else
-      let bounds_u = IMap.find_unsafe u cx.graph in
+      let bounds_u = unsafe_access_bounds cx u in
       bounds_u.lowertvars <-
         IMap.remove tvar bounds_u.lowertvars
   );
@@ -4433,7 +4539,7 @@ let check_properties cx =
     SMap.iter (fun _ -> function
 
       | OpenT(reason,id) ->
-          let bounds = IMap.find_unsafe id cx.graph in
+          let bounds = unsafe_access_bounds cx id in
           let no_def =
             not (ISet.mem id gc_state.negative)
             && TypeMap.is_empty
@@ -4456,12 +4562,14 @@ let check_properties cx =
   )
 
 (* Disabling gc so that query/replace has complete information. *)
-let do_gc cx neg pos =
+let do_gc cx neg pos = ()
+(*
   List.iter (gc cx false) neg;
   List.iter (gc cx true) pos;
-  (* cleanup cx; *)
+  cleanup cx;
   check_properties cx;
   clear_gc_state ()
+*)
 
 (* TODO: Think of a better place to put this *)
 let rec extract_members cx this_t =

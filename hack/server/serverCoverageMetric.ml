@@ -104,7 +104,7 @@ let mk_trie acc fn_counts_l =
  * Returns None if root is not a prefix of path. *)
 let relativize root path =
   (* naive implementation *)
-  let root = Path.string_of_path root ^ "/" in
+  let root = Path.to_string root ^ "/" in
   if str_starts_with path root
   then
     let root_len = String.length root in
@@ -112,7 +112,7 @@ let relativize root path =
   else None
 
 let go_ fn genv env =
-  let path = Path.mk_path fn in
+  let path = Path.make fn in
   let root = Path.parent path in
   let module RP = Relative_path in
   let next_files = compose
@@ -134,12 +134,8 @@ let go_ fn genv env =
   let result = List.map ~f:relativize_list result in
   List.fold_left ~f:mk_trie ~init:None result
 
-let go fn genv env oc =
-  let result =
-    try go_ fn genv env
-    with Failure _ | Invalid_argument _ ->
-      print_string "Coverage collection failed!";
-      None
-  in
-  Marshal.to_channel oc (result : result) [];
-  flush oc
+let go fn genv env =
+  try go_ fn genv env
+  with Failure _ | Invalid_argument _ ->
+    print_string "Coverage collection failed!";
+    None

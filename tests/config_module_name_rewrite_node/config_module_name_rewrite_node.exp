@@ -1,0 +1,26 @@
+
+A.js:5:19,27: number
+This type is incompatible with
+A.js:5:10,15: string
+
+A.js:14:19,27: number
+This type is incompatible with
+A.js:14:10,15: string
+
+A.js:22:19,27: number
+This type is incompatible with
+A.js:22:10,15: string
+
+Exists.js:4:11,12: number
+This type is incompatible with
+A.js:8:10,15: string
+
+Exists.js:4:11,12: number
+This type is incompatible with
+A.js:17:10,15: string
+
+node_modules/Exists/index.js:4:11,12: number
+This type is incompatible with
+A.js:25:10,15: string
+
+Found 6 errors

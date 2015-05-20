@@ -9,7 +9,6 @@
  *)
 
 open Utils
-open Sys_utils
 
 external get_embedded_hhi_data : string -> string option =
   "get_embedded_hhi_data"
@@ -18,7 +17,7 @@ external get_embedded_hhi_data : string -> string option =
 let root = ref None
 
 let touch_root r =
-  let r = Filename.quote r in
+  let r = Filename.quote (Path.to_string r) in
   ignore (Unix.system ("find " ^ r ^ " -name '*.hhi' -exec touch '{}' ';'"))
 
 let touch () =
@@ -30,8 +29,8 @@ let touch () =
  * handling in general, really). Running the server as root is likely to be a
  * security risk. Be careful. *)
 let extract data =
-  let tmpdir = unsafe_opt (realpath (Tmp.temp_dir "hhi")) in
-  let oc = Unix.open_process_out ("tar xzC " ^ tmpdir) in
+  let tmpdir = Path.make (Tmp.temp_dir "hhi") in
+  let oc = Unix.open_process_out ("tar xzC " ^ (Path.to_string tmpdir)) in
   output_string oc data;
   flush oc;
   ignore (Unix.close_process_out oc);
@@ -45,8 +44,9 @@ let extract_embedded () =
  * support debugging binaries that don't have the section embedded, such as
  * bytecode builds. *)
 let extract_external () =
-  let path = (Filename.dirname Sys.executable_name) ^ "/../hhi.tar.gz" in
-  if Sys.file_exists path then Some (extract (cat path)) else None
+  let path =
+    Path.concat (Path.dirname Path.executable_name) "/../hhi.tar.gz" in
+  if Path.file_exists path then Some (extract (Path.cat path)) else None
 
 let get_hhi_root_impl () =
   match extract_embedded () with

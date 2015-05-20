@@ -197,6 +197,7 @@ module NastCheck                            = struct
   let typeconst_depends_on_external_tparam  = 3027 (* DONT MODIFY!!!! *)
   let typeconst_assigned_tparam             = 3028 (* DONT MODIFY!!!! *)
   let abstract_with_typeconst               = 3029 (* DONT MODIFY!!!! *)
+  let constructor_required                  = 3030 (* DONT MODIFY!!!! *)
 
   (* EXTEND HERE WITH NEW VALUES IF NEEDED *)
 end
@@ -332,7 +333,7 @@ module Typing                               = struct
   let cyclic_typeconst                      = 4131 (* DONT MODIFY!!!! *)
   let nullsafe_property_write_context       = 4132 (* DONT MODIFY!!!! *)
   let noreturn_usage                        = 4133 (* DONT MODIFY!!!! *)
-
+  let this_lvalue                           = 4134 (* DONT MODIFY!!!! *)
   (* EXTEND HERE WITH NEW VALUES IF NEEDED *)
 end
 
@@ -691,16 +692,26 @@ let no_construct_parent pos =
    ]
  )
 
-let not_initialized (p, c) =
-  if c = "parent::__construct" then no_construct_parent p else
-  add NastCheck.not_initialized p (
-  sl[
-  "The class member "; c;
-  " is not always properly initialized\n";
-  "Make sure you systematically set $this->"; c;
-  " when the method __construct is called\n";
-  "Alternatively, you can define the type as optional (?...)\n"
-])
+let constructor_required (pos, name) prop_names =
+  let name = Utils.strip_ns name in
+  let props_str = SSet.fold (fun x acc -> x^" "^acc) prop_names "" in
+  add NastCheck.constructor_required pos
+    ("Lacking __construct, class "^name^" does not initialize its private member(s): "^props_str)
+
+let not_initialized (pos, cname) prop_names =
+  let cname = Utils.strip_ns cname in
+  let props_str = SSet.fold (fun x acc -> x^" "^acc) prop_names "" in
+  let members, verb = if 1 == SSet.cardinal prop_names then "member", "is"
+    else "members", "are" in
+  let setters_str = SSet.fold (fun x acc -> "$this->"^x^" "^acc) prop_names "" in
+  add NastCheck.not_initialized pos (
+    sl[
+      "Class "; cname ; " does not initialize all of its members; ";
+      props_str; verb; " not always initialized.";
+      "\nMake sure you systematically set "; setters_str;
+      "when the method __construct is called.";
+      "\nAlternatively, you can define the "; members ;" as optional (?...)\n"
+    ])
 
 let call_before_init pos cv =
   add NastCheck.call_before_init pos (
@@ -1485,6 +1496,9 @@ let declared_contravariant pos1 pos2 emsg =
 let cyclic_typeconst pos sl =
   add Typing.cyclic_typeconst pos
     ("Cyclic type constant:\n  "^String.concat " -> " sl)
+
+let this_lvalue pos =
+  add Typing.this_lvalue pos "Cannot assign a value to $this"
 
 (*****************************************************************************)
 (* Typing decl errors *)

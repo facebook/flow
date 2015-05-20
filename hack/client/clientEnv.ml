@@ -16,7 +16,6 @@ type client_mode =
 | MODE_AUTO_COMPLETE
 | MODE_STATUS
 | MODE_UNSPECIFIED
-| MODE_VERSION
 | MODE_SHOW of string
 | MODE_COLORING of string
 | MODE_COVERAGE of string
@@ -36,7 +35,7 @@ type client_mode =
 
 type client_check_env = {
   mode: client_mode;
-  root: Path.path;
+  root: Path.t;
   from: string;
   output_json: bool;
   retry_if_init: bool;

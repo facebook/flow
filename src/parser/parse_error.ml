@@ -23,6 +23,7 @@ type t =
   | UnterminatedRegExp
   | InvalidLHSInAssignment
   | InvalidLHSInForIn
+  | InvalidLHSInForOf
   | InvalidLHSInFormalsList
   | MultipleDefaultsInSwitch
   | NoCatchOrFinally
@@ -76,6 +77,7 @@ module PP =
       | UnterminatedRegExp ->  "Invalid regular expression: missing /"
       | InvalidLHSInAssignment ->  "Invalid left-hand side in assignment"
       | InvalidLHSInForIn ->  "Invalid left-hand side in for-in"
+      | InvalidLHSInForOf ->  "Invalid left-hand side in for-of"
       | InvalidLHSInFormalsList -> "Invalid left-hand side in formals list"
       | MultipleDefaultsInSwitch -> "More than one default clause in switch statement"
       | NoCatchOrFinally ->  "Missing catch or finally after try"

@@ -47,7 +47,7 @@ let is_js_path path =
 let escape_spaces = Str.global_replace (Str.regexp " ") "\\ "
 
 let paths_to_path_string paths =
-  let stringed_paths = List.map Path.string_of_path paths in
+  let stringed_paths = List.map Path.to_string paths in
   let escaped_paths =  List.map escape_spaces stringed_paths in
   String.concat " " escaped_paths
 

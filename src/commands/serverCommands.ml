@@ -100,7 +100,7 @@ module OptionParser(Config : CONFIG) = struct
     | Some libs ->
         let libs = libs
         |> Str.split (Str.regexp ",")
-        |> List.map Path.mk_path in
+        |> List.map Path.make in
         libs @ flowconfig.libs
     ) in
     let opt_traces = match traces with
@@ -119,21 +119,24 @@ module OptionParser(Config : CONFIG) = struct
       ServerArgs.waiting_client= None;
     },
     {
-      Types_js.opt_debug = debug;
-      Types_js.opt_verbose = verbose;
-      Types_js.opt_all = all;
-      Types_js.opt_weak = weak;
-      Types_js.opt_traces;
-      Types_js.opt_strict = true;
-      Types_js.opt_console = false;
-      Types_js.opt_json = json;
-      Types_js.opt_show_all_errors = show_all_errors;
-      Types_js.opt_quiet = quiet || json;
-      Types_js.opt_profile = profile;
-      Types_js.opt_strip_root = strip_root;
-      Types_js.opt_module;
-      Types_js.opt_libs;
-      Types_js.opt_no_flowlib = no_flowlib;
+      Options.opt_debug = debug;
+      Options.opt_verbose = verbose;
+      Options.opt_all = all;
+      Options.opt_weak = weak;
+      Options.opt_traces;
+      Options.opt_strict = true;
+      Options.opt_console = false;
+      Options.opt_json = json;
+      Options.opt_show_all_errors = show_all_errors;
+      Options.opt_quiet = quiet || json;
+      Options.opt_module_name_mappers = FlowConfig.(
+        flowconfig.options.module_name_mappers
+      );
+      Options.opt_profile = profile;
+      Options.opt_strip_root = strip_root;
+      Options.opt_module;
+      Options.opt_libs;
+      Options.opt_no_flowlib = no_flowlib;
     });
     ()
 

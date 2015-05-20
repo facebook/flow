@@ -41,7 +41,7 @@ let match_flow content file =
 let in_flow content file =
   Modes_js.(modes.all) || match_flow content file
 
-let do_parse ?(keep_errors=false) content file =
+let do_parse content file =
   try (
     let ast, parse_errors = Parser_flow.program_file content file in
     assert (parse_errors = []);
@@ -49,21 +49,17 @@ let do_parse ?(keep_errors=false) content file =
   )
   with
   | Parse_error.Error parse_errors ->
-    if keep_errors || in_flow content file then
-      let converted = List.fold_left (fun acc err ->
-        Errors.(ErrorSet.add (parse_error_to_flow_error err) acc)
-      ) Errors.ErrorSet.empty parse_errors in
-      None, Some converted
-    else None, None
+    let converted = List.fold_left (fun acc err ->
+      Errors.(ErrorSet.add (parse_error_to_flow_error err) acc)
+    ) Errors.ErrorSet.empty parse_errors in
+    None, Some converted
   | e ->
-    if keep_errors || in_flow content file then
-      let s = Printexc.to_string e in
-      let msg = spf "unexpected parsing exception: %s" s in
-      let reason = Reason.new_reason "" (Pos.make_from
-        (Relative_path.create Relative_path.Dummy file)) in
-      let err = Errors.ERROR, [reason, msg] in
-      None, Some (Errors.ErrorSet.singleton err)
-    else None, None
+    let s = Printexc.to_string e in
+    let msg = spf "unexpected parsing exception: %s" s in
+    let reason = Reason.new_reason "" (Pos.make_from
+      (Relative_path.create Relative_path.Dummy file)) in
+    let err = Errors.ERROR, [reason, msg] in
+    None, Some (Errors.ErrorSet.singleton err)
 
 (* parse file, store AST to shared heap on success.
  * Add success/error info to passed accumulator. *)

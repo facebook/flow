@@ -232,8 +232,8 @@ let type_check genv env =
   let to_redecl_phase2, to_recheck1 =
     Hh_logger.measure "Determining changes" begin fun () ->
       let _, _, to_redecl_phase2, to_recheck1 =
-        Typing_redecl_service.redo_type_decl
-          ~update_pos:true genv.workers env.nenv fast in
+        Typing_redecl_service.redo_type_decl genv.workers env.nenv fast
+      in
       let to_redecl_phase2 = Typing_deps.get_files to_redecl_phase2 in
       let to_recheck1 = Typing_deps.get_files to_recheck1 in
       to_redecl_phase2, to_recheck1
@@ -246,7 +246,7 @@ let type_check genv env =
     Hh_logger.measure "Type-decl" begin fun () ->
       let errorl', failed_decl, _to_redecl2, to_recheck2 =
         Typing_redecl_service.redo_type_decl
-          ~update_pos:false genv.workers env.nenv fast_redecl_phase2 in
+          genv.workers env.nenv fast_redecl_phase2 in
       let to_recheck2 = Typing_deps.get_files to_recheck2 in
       errorl', failed_decl, to_recheck2
     end in

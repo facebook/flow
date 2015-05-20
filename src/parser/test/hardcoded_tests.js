@@ -1599,6 +1599,54 @@ module.exports = {
         }
       ]
     },
+    '(x: number): number => x': {
+      'body.0.expression': {
+        'params': [
+          {
+            'name': 'x',
+            'typeAnnotation.typeAnnotation.type': 'NumberTypeAnnotation',
+          },
+        ],
+        'returnType.typeAnnotation.type': 'NumberTypeAnnotation',
+      },
+    },
+    '<T>(x: T): T => x': {
+      'body.0.expression.typeParameters.params': [
+        {
+          'name': 'T',
+        }
+      ],
+    },
+  },
+  'Invalid Arrow Functions': {
+    'var f = x: number => 42': {
+      'errors': {
+        '0.message': 'Unexpected token :',
+      }
+    },
+    'label: typeThatIsActuallyAnParam => 42': {
+      'body': [
+        {
+          'type': 'LabeledStatement',
+          'body.expression.type': 'ArrowFunctionExpression',
+        },
+      ],
+    },
+    '<T>x => 42': {
+      'errors': {
+        '0.message': 'Unexpected token ILLEGAL',
+      },
+    },
+    '*x => x': {
+      'errors': {
+        '0.message': 'Unexpected token *',
+      },
+    },
+    '*(x) => x': {
+      'errors': {
+        '0.message': 'Unexpected token *',
+      },
+    },
   },
   'Declare Module': {
     'declare module A {}': {
@@ -1935,8 +1983,15 @@ module.exports = {
     },
     'var f = (a, ...b,) => b.concat(a);': {
       'errors': {
-        '0.message': 'Rest parameter must be final parameter of an argument list',
+        '0.message': 'Unexpected token ...',
       }
+    },
+  },
+  'Invalid For Of Loops': {
+    'for (var x = 42 of list) process(x);': {
+      'errors': {
+        '0.message': 'Invalid left-hand side in for-of',
+      },
     },
   },
 };

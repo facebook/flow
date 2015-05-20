@@ -1,2 +1,5 @@
 
-Found 0 errors
+foo/bar/client.js:7:19,39: annotation
+Required module not found
+
+Found 1 error

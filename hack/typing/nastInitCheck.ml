@@ -92,10 +92,49 @@ module Env = struct
       | [] -> props
       | parent_hint :: _ -> add_parent_construct c tenv props parent_hint
 
+  let prop_needs_init add_to_acc acc cv =
+    if cv.cv_is_xhp then acc else begin
+      match cv.cv_type with
+        | None
+        | Some (_, Hoption _)
+        | Some (_, Hmixed) -> acc
+        | Some _ when cv.cv_expr = None -> add_to_acc cv acc
+        | Some _ -> acc
+    end
+
+  let parent_props tenv acc c =
+    List.fold_left begin fun acc parent ->
+      match parent with _, Happly ((_, parent), _) ->
+        let tc = Typing_env.get_class tenv parent in
+        (match tc with
+          | None -> acc
+          | Some { tc_deferred_init_members = members; _ } -> SSet.union members acc)
+        | _ -> acc
+    end acc (c.c_extends @ c.c_uses)
+
+  (* return a tuple of the private init-requiring props of the class
+   * and the other init-requiring props of the class and its ancestors *)
+  let classify_props_for_decl tenv c =
+    let tenv = Typing_env.set_root tenv (Typing_deps.Dep.Class (snd c.c_name)) in
+    let adder = begin fun cv (private_props, hierarchy_props) ->
+      let cname = snd cv.cv_id in
+      if cv.cv_visibility = Private then
+        (SSet.add cname private_props), hierarchy_props
+      else
+        private_props, (SSet.add cname hierarchy_props)
+    end in
+    let acc = (SSet.empty, SSet.empty) in
+    let priv_props, props = List.fold_left (prop_needs_init adder) acc c.c_vars in
+    let props = parent_props tenv props c in
+    let props = parent tenv props c in
+    priv_props, props
+
   let rec make tenv c =
     let tenv = Typing_env.set_root tenv (Typing_deps.Dep.Class (snd c.c_name)) in
     let methods = List.fold_left method_ SMap.empty c.c_methods in
-    let props = List.fold_left prop SSet.empty c.c_vars in
+    let adder = begin fun cv acc -> SSet.add (snd cv.cv_id) acc end in
+    let props =
+      List.fold_left (prop_needs_init adder) SSet.empty c.c_vars in
     let props = parent_props tenv props c in
     let props = parent tenv props c in
     { methods = methods; props = props }
@@ -105,27 +144,6 @@ module Env = struct
       let name = snd m.m_name in
       let acc = SMap.add name (ref (Todo m.m_body)) acc in
       acc
-
-  and prop acc cv =
-    if cv.cv_is_xhp then acc else begin
-      let cname = snd cv.cv_id in
-      match cv.cv_type with
-        | Some (_, Hoption _) | Some (_, Hmixed) | None -> acc
-        | _ ->
-          match cv.cv_expr with
-            | Some _ -> acc
-            | _ -> SSet.add cname acc
-    end
-
-  and parent_props tenv acc c =
-    List.fold_left begin fun acc parent ->
-      match parent with _, Happly ((_, parent), _) ->
-        let tc = Typing_env.get_class tenv parent in
-        (match tc with
-          | None -> acc
-          | Some { tc_members_init = members; _ } -> SSet.union members acc)
-        | _ -> acc
-    end acc (c.c_extends @ c.c_uses)
 
   let get_method env m =
     SMap.get m env.methods
@@ -144,51 +162,52 @@ let is_whitelisted = function
   | x when x = SN.StdlibFunctions.get_class -> true
   | _ -> false
 
-let rec class_decl tenv c =
-  if c.c_kind = Ast.Ctrait || c.c_kind = Ast.Cabstract
+let rec class_decl ~has_own_cstr tenv c =
+  if not has_own_cstr && (c.c_kind = Ast.Ctrait || c.c_kind = Ast.Cabstract)
   then
-    let env = Env.make tenv c in
-    let inits = constructor env c.c_constructor in
-    let props = env.props in
-    SSet.fold begin fun x acc ->
-      if SSet.mem x inits then acc else SSet.add x acc
-    end props SSet.empty
+    (* private properties cannot be initialized without a constructor *)
+    let priv_props, props = Env.classify_props_for_decl tenv c in
+    if priv_props <> SSet.empty && (c.c_kind = Ast.Cabstract) then
+      (* XXX: should priv_props be checked for a trait?
+       *  see chown_privates in typing_inherit *)
+      Errors.constructor_required c.c_name priv_props;
+    SSet.union priv_props props
   else SSet.empty
 
 and class_ tenv c =
-  if c.c_mode = FileInfo.Mdecl then () else begin
+  if c.c_mode = FileInfo.Mdecl then () else
   match c.c_constructor with
   | _ when c.c_kind = Ast.Cinterface -> ()
   | Some { m_body = NamedBody { fnb_unsafe = true; _ }; _ } -> ()
-  | _ ->
-      let p =
-        match c.c_constructor with
-        | Some m -> fst m.m_name
-        | None -> fst c.c_name
-      in
-      let env = Env.make tenv c in
-      let inits = constructor env c.c_constructor in
+  | _ -> (
+    let p = match c.c_constructor with
+      | Some m -> fst m.m_name
+      | None -> fst c.c_name
+    in
+    let env = Env.make tenv c in
+    let inits = constructor env c.c_constructor in
 
-      Typing_suggest.save_initialized_members (snd c.c_name) inits;
-      (* When the class is abstract, and it has a constructor the only
-       * thing we care about is that the constructor calls
-       * parent::__construct if it is needed. Because after that, it
-       * won't be reachable in the sub-classes anymore. *)
-      if c.c_kind = Ast.Ctrait || c.c_kind = Ast.Cabstract
-      then begin
-        let has_constructor = c.c_constructor <> None in
-        let needs_parent_call = SSet.mem parent_init_prop env.props in
-        let is_calling_parent = SSet.mem parent_init_prop inits in
-        if has_constructor && needs_parent_call && not is_calling_parent
-        then Errors.not_initialized (p, parent_init_prop);
+    let check_inits = begin fun () ->
+      let uninit_props = SSet.diff env.props inits in
+      if SSet.empty <> uninit_props then begin
+        if SSet.mem parent_init_prop uninit_props then
+          Errors.no_construct_parent p
+        else
+          Errors.not_initialized (p, snd c.c_name) uninit_props
       end
-      else begin
-        SSet.iter begin fun x ->
-          if not (SSet.mem x inits)
-          then Errors.not_initialized (p, x);
-        end env.props
-      end
-  end
+    end in
+
+    Typing_suggest.save_initialized_members (snd c.c_name) inits;
+    if c.c_kind = Ast.Ctrait || c.c_kind = Ast.Cabstract
+    then begin
+      let has_constructor = match c.c_constructor with
+        | None -> false
+        | Some m when m.m_abstract -> false
+        | Some _ -> true in
+      if has_constructor then check_inits () else ()
+    end
+    else check_inits ()
+  )
 
 and constructor env cstr =
   match cstr with

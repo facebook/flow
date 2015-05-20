@@ -67,6 +67,11 @@ type name = string
 module Type = struct
   type t =
   (* open type variable *)
+  (* A type variable (tvar) is an OpenT(reason, id) where id is an int index
+     into a context's graph: a context's graph is a map from tvar ids to nodes
+     (see below). *)
+  (** Note: ids are globally unique. tvars are "owned" by a single context, but
+      that context and its tvars may later be merged into other contexts. **)
   | OpenT of reason * ident
 
   (*************)
@@ -422,41 +427,106 @@ module NullT = Primitive (struct
   let make r = NullT r
 end)
 
-(* type bounds *)
+(** Type variables are unknowns, and we are ultimately interested in constraints
+    on their solutions for type inference.
 
-(* A unifier is a type variable that is either the root of a set of unified type
-   variables, in which case it has a rank, or points to another unifier *)
-type unifier =
+    Type variables form nodes in a "union-find" forest: each tree denotes a set
+    of type variables that are considered by the type system to be equivalent.
+
+    There are two kinds of nodes: Goto nodes and Root nodes.
+
+    - All Goto nodes of a tree point, directly or indirectly, to the Root node
+    of the tree.
+    - A Root node holds the actual non-trivial state of a tvar, represented by a
+    root structure (see below).
+**)
+type node =
 | Goto of ident
-| Rank of int
+| Root of root
 
-type bounds = {
+(** A root structure carries the actual non-trivial state of a tvar, and
+    consists of:
+
+    - rank, which is a quantity roughly corresponding to the longest chain of
+    gotos pointing to the tvar. It's an implementation detail of the unification
+    algorithm that simply has to do with efficiently finding the root of a tree.
+    We merge a tree with another tree by converting the root with the lower rank
+    to a goto node, and making it point to the root with the higher rank. See
+    http://en.wikipedia.org/wiki/Disjoint-set_data_structure for more details on
+    this data structure and supported operations.
+
+    - constraints, which carry type information that narrows down the possible
+    solutions of the tvar (see below).  **)
+
+and root = {
+  rank: int;
+  constraints: constraints;
+}
+
+(** Constraints carry type information that narrows down the possible solutions
+    of tvar, and are of two kinds:
+
+    - A Resolved constraint contains a concrete type that is considered by the
+    type system to be the solution of the tvar carrying the constraint. In other
+    words, the tvar is equivalent to this concrete type in all respects.
+
+    - Unresolved constraints contain bounds that carry both concrete types and
+    other tvars as upper and lower bounds (see below).
+**)
+
+and constraints =
+| Resolved of Type.t
+| Unresolved of bounds
+
+(** The bounds structure carries the evolving constraints on the solution of an
+    unresolved tvar.
+
+    - upper and lower hold concrete upper and lower bounds, respectively. At any
+    point in analysis the aggregate lower bound of a tvar is (conceptually) the
+    union of the concrete types in lower, and the aggregate upper bound is
+    (conceptually) the intersection of the concrete types in upper. (Upper and
+    lower are maps, with the types as keys, and trace information as values.)
+
+    - lowertvars and uppertvars hold tvars which are also (latent) lower and
+    upper bounds, respectively. See the __flow function for how these structures
+    are populated and operated on.  Here the map keys are tvar ids, with trace
+    info as values.
+**)
+and bounds = {
   mutable lower: trace TypeMap.t;
   mutable upper: trace TypeMap.t;
   mutable lowertvars: trace IMap.t;
   mutable uppertvars: trace IMap.t;
-
-  (* indicates whether the type variable is a unifier *)
-  mutable unifier: unifier option;
-  (* indicates whether the type variable is resolved to some type *)
-  mutable solution: Type.t option;
-  (* temporary: record whether bounds have been cleared *)
-  mutable cleared: bool;
 }
+
+(* Extract bounds from a node. *)
+(** WARNING: This function is unsafe, since not all nodes are roots, and not all
+    roots are unresolved. Use this function only when you are absolutely sure
+    that a node is an unresolved root: this is guaranteed to be the case when
+    the type variable it denotes is never involved in unification. **)
+let bounds_of_unresolved_root node =
+  match node with
+  | Root { constraints = Unresolved bounds; _ } -> bounds
+  | _ -> failwith "expected unresolved root"
 
 let new_bounds () = {
   lower = TypeMap.empty;
   upper = TypeMap.empty;
   lowertvars = IMap.empty;
   uppertvars = IMap.empty;
-  unifier = None;
-  solution = None;
-  cleared = false;
 }
 
-let copy_bounds b =
-  let { lower; upper; lowertvars; uppertvars; unifier; solution; cleared } = b
-  in { lower; upper; lowertvars; uppertvars; unifier; solution; cleared }
+let new_unresolved_root () =
+  Root { rank = 0; constraints = Unresolved (new_bounds ()) }
+
+let copy_bounds = function
+  | { lower; upper; lowertvars; uppertvars; } ->
+    { lower; upper; lowertvars; uppertvars; }
+
+let copy_node node = match node with
+  | Root { rank; constraints = Unresolved bounds } ->
+    Root { rank; constraints = Unresolved (copy_bounds bounds) }
+  | _ -> node
 
 type scope_entry = {
   specific: Type.t;
@@ -486,31 +556,6 @@ let create_env_entry ?(for_type=false) specific general loc =
 
 (* type context *)
 
-(* The following fields can be pulled out of context :) and cached.  However,
-   caching these may not help a lot yet since, in comparison to the other
-   (non-cacheable) parts of the context, their sizes are quite small and their
-   accesses not much more frequent.
-
-   Basically for caching to win we must have:
-     R1 * S1 >> R2 * S2 + (S1 - S2)
-   where
-     R1 is number of context reads
-     S1 is size of context
-
-     R2 is number of non-cacheable context reads
-     S2 is size of non-cacheable context
-*)
-
-(*
-type cacheable_context = {
-  file: string;
-  _module: string;
-  required: Utils.SSet.t;
-  modulemap: Type.t Utils.SMap.t;
-  strict_required: Utils.SSet.t;
-}
-*)
-
 type context = {
   file: string;
   _module: string;
@@ -519,7 +564,7 @@ type context = {
   mutable required: SSet.t;
   mutable require_loc: Ast.Loc.t SMap.t;
 
-  mutable graph: bounds IMap.t;
+  mutable graph: node IMap.t;
   mutable closures: (stack * scope list) IMap.t;
   mutable property_maps: Type.properties IMap.t;
   mutable modulemap: Type.t SMap.t;
@@ -1199,7 +1244,7 @@ let rec _json_of_t stack cx t = Json.(
     ] @
     if ISet.mem id stack then []
     else [
-      "bounds", json_of_bounds stack cx id
+      "node", json_of_node stack cx id
     ]
 
   | NumT (_, lit)
@@ -1538,25 +1583,46 @@ and json_of_pred stack cx p = Json.(
   | IsP s -> ["typeName", JString s]
 ))
 
-and json_of_bounds stack cx id = Json.(
-  let stack = ISet.add id stack in
-  match IMap.find_unsafe id cx.graph with
-  | { lower; upper; lowertvars; uppertvars; unifier; solution; cleared } ->
-    JAssoc ([
-    "lower", json_of_tkeys stack cx lower;
-    "upper", json_of_tkeys stack cx upper;
-    "lowertvars", json_of_tvarkeys stack cx lowertvars;
-    "uppertvars", json_of_tvarkeys stack cx uppertvars] @
-    (match unifier with
-      | None -> []
-      | Some u -> ["unifier", JAssoc (match u with
-          | Goto id -> ["goto", JInt id]
-          | Rank i -> ["rank", JInt i]
-        )] @
-        (match solution with None -> []
-          | Some t -> ["solution", _json_of_t stack cx t]) @
-        ["cleared", JBool cleared])
-    )
+and json_of_node stack cx id = Json.(
+  JAssoc (
+    let stack = ISet.add id stack in
+    match IMap.find_unsafe id cx.graph with
+    | Goto id ->
+      ["kind", JString "Goto"]
+      @ ["id", JInt id]
+    | Root root ->
+      ["kind", JString "Root"]
+      @ ["root", json_of_root stack cx root]
+  )
+)
+
+and json_of_root stack cx root = Json.(
+  JAssoc ([
+    "rank", JInt root.rank;
+    "constraints", json_of_constraints stack cx root.constraints
+  ])
+)
+
+and json_of_constraints stack cx constraints = Json.(
+  JAssoc (
+    match constraints with
+    | Resolved t ->
+      ["kind", JString "ResolvedT"]
+      @ ["type", _json_of_t stack cx t]
+    | Unresolved bounds ->
+      ["kind", JString "UnresolvedT"]
+      @ ["bounds", json_of_bounds stack cx bounds]
+  )
+)
+
+and json_of_bounds stack cx bounds = Json.(
+  match bounds with
+  | { lower; upper; lowertvars; uppertvars; } -> JAssoc ([
+      "lower", json_of_tkeys stack cx lower;
+      "upper", json_of_tkeys stack cx upper;
+      "lowertvars", json_of_tvarkeys stack cx lowertvars;
+      "uppertvars", json_of_tvarkeys stack cx uppertvars;
+    ])
 )
 
 and json_of_tkeys stack cx tmap = Json.(
@@ -1575,7 +1641,7 @@ let jstr_of_t cx t =
 
 let json_of_graph cx = Json.(
   let entries = IMap.fold (fun id _ entries ->
-    (spf "%d" id, json_of_bounds ISet.empty cx id) :: entries
+    (spf "%d" id, json_of_node ISet.empty cx id) :: entries
   ) cx.graph [] in
   JAssoc (List.rev entries)
 )
@@ -1624,47 +1690,52 @@ and dump_t_ =
    sense of some of the obvious data constructors *)
 and dump_tvar stack cx r id =
   let sbounds = if ISet.mem id stack then "(...)" else (
-  let stack = ISet.add id stack in
-  match IMap.find_unsafe id cx.graph with
-  | { lower; upper; lowertvars; uppertvars;
-      unifier = None; solution = None; cleared }
+    let stack = ISet.add id stack in
+    match IMap.find_unsafe id cx.graph with
+    | Goto id -> spf "Goto TYPE_%d" id
+    | Root { rank; constraints = Resolved t } ->
+        spf "Root (rank = %d, resolved = %s)"
+          rank (dump_t_ stack cx t)
+    | Root { rank; constraints = Unresolved bounds } ->
+        spf "Root (rank = %d, unresolved = %s)"
+          rank (dump_bounds stack cx id bounds)
+  ) in
+  (spf "TYPE_%d: " id) ^ sbounds
+
+and dump_bounds stack cx id bounds = match bounds with
+  | { lower; upper; lowertvars; uppertvars; }
       when lower = TypeMap.empty && upper = TypeMap.empty
       && IMap.cardinal lowertvars = 1 && IMap.cardinal uppertvars = 1 ->
       (* no inflows or outflows *)
       "(free)"
-  | { lower; upper; lowertvars; uppertvars;
-      unifier = None; solution = None; cleared }
+  | { lower; upper; lowertvars; uppertvars; }
       when upper = TypeMap.empty
       && IMap.cardinal lowertvars = 1 && IMap.cardinal uppertvars = 1 ->
       (* only concrete inflows *)
       spf "L %s" (dump_tkeys stack cx lower)
-  | { lower; upper; lowertvars; uppertvars;
-      unifier = None; solution = None; cleared }
+  | { lower; upper; lowertvars; uppertvars; }
       when lower = TypeMap.empty && upper = TypeMap.empty
       && IMap.cardinal uppertvars = 1 ->
       (* only tvar inflows *)
       spf "LV %s" (dump_tvarkeys cx id lowertvars)
-  | { lower; upper; lowertvars; uppertvars;
-      unifier = None; solution = None; cleared }
+  | { lower; upper; lowertvars; uppertvars; }
       when lower = TypeMap.empty
       && IMap.cardinal lowertvars = 1 && IMap.cardinal uppertvars = 1 ->
       (* only concrete outflows *)
       spf "U %s" (dump_tkeys stack cx upper)
-  | { lower; upper; lowertvars; uppertvars;
-      unifier = None; solution = None; cleared }
+  | { lower; upper; lowertvars; uppertvars; }
       when lower = TypeMap.empty && upper = TypeMap.empty
       && IMap.cardinal lowertvars = 1 ->
       (* only tvar outflows *)
       spf "UV %s" (dump_tvarkeys cx id uppertvars)
-  | { lower; upper; lowertvars; uppertvars;
-      unifier = None; solution = None; cleared }
+  | { lower; upper; lowertvars; uppertvars; }
       when IMap.cardinal lowertvars = 1 && IMap.cardinal uppertvars = 1 ->
       (* only concrete inflows/outflows *)
       let l = dump_tkeys stack cx lower in
       let u = dump_tkeys stack cx upper in
       if l = u then "= " ^ l
       else "L " ^ l ^ " U " ^ u
-  | { lower; upper; lowertvars; uppertvars; unifier; solution; cleared } ->
+  | { lower; upper; lowertvars; uppertvars; } ->
     let slower = if lower = TypeMap.empty then "" else
       spf " lower = %s;" (dump_tkeys stack cx lower) in
     let supper = if upper = TypeMap.empty then "" else
@@ -1673,17 +1744,7 @@ and dump_tvar stack cx r id =
       spf " lowertvars = %s;" (dump_tvarkeys cx id lowertvars) in
     let sutvars = if IMap.cardinal uppertvars <= 1 then "" else
       spf " uppertvars = %s;" (dump_tvarkeys cx id uppertvars) in
-    let sunifier = match unifier with None -> ""
-    | Some u -> " unifier = " ^ (match u with
-        | Goto id -> spf "Goto TYPE_%d;" id
-        | Rank i -> spf "Rank %d" i
-      ) ^ ";" in
-    let ssolution = match solution with None -> ""
-    | Some t -> " solution = " ^ dump_t cx t  ^ ";"
-    in
-    "{" ^ slower ^ supper ^ sltvars ^ sutvars ^ sunifier ^ ssolution ^ " }"
-  ) in
-  (spf "TYPE_%d " id) ^ sbounds
+    "{" ^ slower ^ supper ^ sltvars ^ sutvars ^ " }"
 
 (* dump the keys of a type map as a list *)
 and dump_tkeys stack cx tmap =
@@ -1856,6 +1917,13 @@ let string_of_scope cx scope =
 
 let level_spaces level = 2 * level
 
+let spaces n = String.make n ' '
+
+let rec fill n =
+  if n = 1 then "."
+  else if n > 1 then ". "^(fill (n-2))
+  else ""
+
 let pos_len r =
   let pos = pos_of_reason r in
   let fmt = Errors_js.format_reason_color (pos, "") in
@@ -1875,51 +1943,32 @@ let max_pos_len_and_depth limit trace =
     ) (len, depth + 1) links
   in f (0, 1) trace
 
-let pretty_r indent r prefix suffix =
+let pretty_r margin indent r prefix suffix =
   let len = pos_len r in
-  let ind = if indent > len then String.make (indent - len) ' ' else "" in
+  let ind =
+    (if margin > len then spaces (margin - len) else "") ^
+    (if indent > len then fill (indent - margin) else "") in
   wrap_reason (ind ^ (spf "%s[" prefix)) (spf "]%s" suffix) r
-
-let rec unique_pos = function
-| [] -> []
-| r1 :: (r2 :: rs) when string_of_reason r1 = string_of_reason r2 ->
-  unique_pos (r2 :: rs)
-| r :: rs ->
-  r :: unique_pos rs
 
 (* ascii tree w/verbiage *)
 let reasons_of_trace ?(level=0) trace =
   let max_len, max_depth = max_pos_len_and_depth level trace in
   let level = min level max_depth in
-  let max_indent = max_len + (level_spaces level + 1) in
+  let max_indent = max_len + (level_spaces level) in
   let rec f level (t1, links, t2) =
     let indent = max_indent - (level_spaces level) in
     if level >= 0 then
-      (pretty_r indent (reason_of_t t1)
+      [pretty_r max_len indent (reason_of_t t1)
         (spf "%s " (string_of_ctor t1))
-        (if links <> [] && level > 0 then " produced by " else "")
-        ::
-        List.concat (
-          links |> List.map (fun (Embed trace) ->
-            f (level - 1) trace)
-        )) @
-      [pretty_r indent (reason_of_t t2)
-        (spf "~> %s " (string_of_ctor t2)) ""]
+        "";
+      pretty_r max_len indent (reason_of_t t2)
+        (spf "~> %s " (string_of_ctor t2))
+        (if links <> [] && level > 0 then " comes from" else "")
+      ] @
+      (* note that we're deduping for now *)
+      List.concat (
+        (uniq links) |> List.map (fun (Embed trace) ->
+          f (level - 1) trace)
+      )
     else []
   in f level trace
-
-(* flat, deduped *)
-(* erases too much information - may be worth resurrecting
-   with more expressive traces *)
-let flat_reasons_of_trace ?(level=0) trace =
-  let indent = fst (max_pos_len_and_depth 0 trace) + 2 in
-  let rec f level (t1, links, t2) =
-    if level < 0 then [] else
-    (pretty_r indent (reason_of_t t1) "" ""
-      ::
-      List.concat (
-        links |> List.map (fun (Embed trace) ->
-          f (level - 1) trace)
-      )) @
-    [pretty_r indent (reason_of_t t2) "" ""]
-  in unique_pos (f level trace)

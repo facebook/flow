@@ -15,9 +15,9 @@
 type options = {
   check_mode       : bool;
   json_mode        : bool;
-  root             : Path.path;
+  root             : Path.t;
   should_detach    : bool;
-  convert          : Path.path option;
+  convert          : Path.t option;
   no_load          : bool;
   save_filename    : string option;
   waiting_client   : int option;
@@ -101,7 +101,7 @@ let parse_options () =
   let check_mode = !check_mode || !json_mode || !save <> None; in
   (* Conversion mode implies check *)
   let check_mode = check_mode || !convert_dir <> None in
-  let convert = Utils.opt_map Path.mk_path (!convert_dir) in
+  let convert = Option.map ~f:Path.make !convert_dir in
   if check_mode && !waiting_client <> None then begin
     Printf.fprintf stderr "--check is incompatible with wait modes!\n";
     exit 2
@@ -111,7 +111,7 @@ let parse_options () =
       Printf.fprintf stderr "You must specify a root directory!\n";
       exit 2
   | _ -> ());
-  let root_path = Path.mk_path !root in
+  let root_path = Path.make !root in
   Wwwroot.assert_www_directory root_path;
   {
     json_mode     = !json_mode;
@@ -128,7 +128,7 @@ let parse_options () =
 let default_options ~root = {
   check_mode = false;
   json_mode = false;
-  root = Path.mk_path root;
+  root = Path.make root;
   should_detach = false;
   convert = None;
   no_load = true;

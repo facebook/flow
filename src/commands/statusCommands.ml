@@ -88,7 +88,7 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
 
   let check_status connect (args:env) option_values =
     Sys.set_signal Sys.sigalrm (Sys.Signal_handle
-      (fun _ -> raise ClientExceptions.Server_busy)
+      (fun _ -> raise CommandExceptions.Server_busy)
     );
     ignore(Unix.alarm 6);
 
@@ -102,10 +102,10 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
     | ServerProt.DIRECTORY_MISMATCH d ->
       Printf.printf "%s is running on a different directory.\n" name;
       Printf.printf "server_root: %s, client_root: %s\n"
-        (Path.string_of_path d.ServerProt.server)
-        (Path.string_of_path d.ServerProt.client);
+        (Path.to_string d.ServerProt.server)
+        (Path.to_string d.ServerProt.client);
       flush stdout;
-      raise ClientExceptions.Server_directory_mismatch
+      raise CommandExceptions.Server_directory_mismatch
     | ServerProt.ERRORS e ->
       if args.output_json || args.from <> ""
       then Errors_js.print_errorl args.output_json e stdout
@@ -122,14 +122,14 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
         exit 2
     | ServerProt.SERVER_DYING ->
       Printf.printf "Server has been killed for %s\n"
-        (Path.string_of_path args.root);
+        (Path.to_string args.root);
       exit 2
     | ServerProt.SERVER_OUT_OF_DATE ->
       if args.autostart
       then Printf.printf "%s is outdated, going to launch a new one.\n" name
       else Printf.printf "%s is outdated, killing it.\n" name;
       flush stdout;
-      raise ClientExceptions.Server_missing
+      raise CommandExceptions.Server_missing
 
   let rec main_rec (env, option_values) =
     CommandUtils.check_timeout ();
@@ -137,11 +137,11 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
       (* TODO: This code should really use commandUtils's connect utilities to
          avoid code duplication *)
       check_status
-        (fun env -> ClientUtils.connect env.root)
+        (fun env -> CommandUtils.connect env.root)
         env
         option_values
     with
-    | ClientExceptions.Server_initializing ->
+    | CommandExceptions.Server_initializing ->
         if env.ClientEnv.retry_if_init
         then (
           Printf.fprintf stderr "Flow server still initializing\n%!";
@@ -151,12 +151,12 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
           prerr_endline "Flow server still initializing, giving up!";
           exit 2
         )
-    | ClientExceptions.Server_cant_connect ->
+    | CommandExceptions.Server_cant_connect ->
         retry (env, option_values) 1 "Error: could not connect to flow server"
-    | ClientExceptions.Server_busy ->
+    | CommandExceptions.Server_busy ->
         retry (env, option_values) 1 "Error: flow server is busy"
-    | ClientExceptions.Server_out_of_date
-    | ClientExceptions.Server_missing ->
+    | CommandExceptions.Server_out_of_date
+    | CommandExceptions.Server_missing ->
         retry (env, option_values) 3 "The flow server will be ready in a moment"
     | _ ->
         Printf.fprintf stderr "Something went wrong :(\n%!";

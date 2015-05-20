@@ -202,12 +202,16 @@ function handleSpecialObjectCompare(esprima, flow, env) {
     case 'ClassProperty':
       esprima.static = esprima.static || false;
       break;
+    case 'ArrowFunctionExpression':
+      esprima.returnType = null;
+      esprima.typeParameters = null;
+      break;
   }
 
   switch (esprima.type) {
     case 'FunctionDeclaration':
     case 'FunctionExpression':
-    case 'ArrowFunction':
+    case 'ArrowFunctionExpression':
       if (Array.isArray(esprima.defaults)) {
         for (var i = 0; i < esprima.defaults.length; i++) {
           if (esprima.defaults[i] === undefined) {

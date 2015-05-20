@@ -232,7 +232,7 @@ module CompareTypes = struct
       c1.tc_abstract = c2.tc_abstract &&
       c1.tc_kind = c2.tc_kind &&
       c1.tc_name = c2.tc_name &&
-      SSet.compare c1.tc_members_init c2.tc_members_init = 0 &&
+      SSet.compare c1.tc_deferred_init_members c2.tc_deferred_init_members = 0 &&
       SSet.compare c1.tc_extends c2.tc_extends = 0 &&
       SSet.compare c1.tc_req_ancestors_extends c2.tc_req_ancestors_extends = 0
     in
@@ -376,7 +376,7 @@ module TraversePos(ImplementPos: sig val pos: Pos.t -> Pos.t end) = struct
   and class_type tc =
     { tc_final                 = tc.tc_final                          ;
       tc_need_init             = tc.tc_need_init                      ;
-      tc_members_init          = tc.tc_members_init                   ;
+      tc_deferred_init_members = tc.tc_deferred_init_members          ;
       tc_abstract              = tc.tc_abstract                       ;
       tc_members_fully_known   = tc.tc_members_fully_known            ;
       tc_kind                  = tc.tc_kind                           ;
@@ -519,7 +519,7 @@ let class_big_diff class1 class2 =
   let class1 = NormalizeSig.class_type class1 in
   let class2 = NormalizeSig.class_type class2 in
   class1.tc_need_init <> class2.tc_need_init ||
-  SSet.compare class1.tc_members_init class2.tc_members_init <> 0 ||
+  SSet.compare class1.tc_deferred_init_members class2.tc_deferred_init_members <> 0 ||
   class1.tc_members_fully_known <> class2.tc_members_fully_known ||
   class1.tc_kind <> class2.tc_kind ||
   class1.tc_tparams <> class2.tc_tparams ||

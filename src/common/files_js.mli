@@ -17,7 +17,7 @@ val is_directory: string -> bool
 val is_flow_file: string -> bool
 
 (* name of library directory defining builtins *)
-val init: Path.path list -> unit
+val init: Path.t list -> unit
 
 val get_flowlib_root: unit -> string
 
@@ -37,7 +37,7 @@ val parent_dir_name: Str.regexp
 val wanted: FlowConfig.config -> string -> bool
 
 (* given a root, make a next_files function for MultiWorker *)
-val make_next_files: Path.path -> unit -> string list
+val make_next_files: Path.t -> unit -> string list
 
 (* given a base directory and a relative path, return an absolute path *)
 val normalize_path: string -> string -> string
@@ -45,4 +45,4 @@ val normalize_path: string -> string -> string
 (* given a base directory and a relative path, return an absolute path *)
 val construct_path: string -> string list -> string
 
-val package_json: Path.path -> string list
+val package_json: Path.t -> string list

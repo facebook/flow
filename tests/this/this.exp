@@ -31,13 +31,13 @@ This.js:48:29,34: string
 This type is incompatible with
 This.js:47:17,22: number
 
-This.js:53:21,37: number
-This type is incompatible with
-This.js:53:12,17: string
-
-This.js:56:12,15: function call
+This.js:49:12,15: function call
 Error:
 This.js:48:29,34: property x
 Property cannot be accessed on global object
+
+This.js:53:21,37: number
+This type is incompatible with
+This.js:53:12,17: string
 
 Found 9 errors

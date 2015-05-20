@@ -1,4 +1,16 @@
-v0.10.0
+###v0.11.0
+
+- We are now syncing Flow's [commit history](https://github.com/facebook/flow/commits/master) to GitHub. No more huge updating diffs. We'll also filter the changelog to the most important things.
+- Big React refactoring to support ES6 React classes
+- Do you use `any` to workaround things that you want to fix later? Well, now you can use `$FixMe` instead of `any` and easily grep for these workarounds later.
+- We now report parsing errors in non-@flow files that you are `require()`'ing/`import`'ing
+- Better error messages and better error message positions
+- Better error traces, with `flow check --traces N`, where `N` is the trace depth
+- Basic support for `Object.freeze()`
+- Assorted fixes and updates to the flow libs
+- We're trying to be better about commenting the code
+
+###v0.10.0
 
 - Bump version to 0.10.0
 - Support import/export type
@@ -15,16 +27,16 @@ v0.10.0
 - Fix issues with optional properties during InstanceT ~> ObjT
 - Fix abnormals in catch blocks
 
-v0.9.2
+###v0.9.2
 
 - Fix lowercasing issue where "flow Path/To/Root" became "flow path/to/root"
 - Fix "My Path/To Flow/flow path/to/root" not autostarting server due to spaces
 
-v0.9.1
+###v0.9.1
 
 - Unbreak the command line for "flow path/to/root" (thanks samwgoldman for the report!)
 
-v0.9.0
+###v0.9.0
 
 - Bump version to 0.9.0
 - Add Video-, Audio and TextTrackList (+ dependencies)
@@ -51,7 +63,7 @@ v0.9.0
 - clear module errors properly
 - add verbose mode
 
-v0.8.0
+###v0.8.0
 
 - Bump version to 0.8.0
 - [PR #356] Add React.version to lib/react.js
@@ -73,7 +85,7 @@ v0.8.0
 - [PR #321] Support for React.cloneElement in 0.13
 - Refine simple assignments (things like while (x = x.parent) { x.doStuff(); })
 
-v0.7.0
+###v0.7.0
 
 - Bump version to 0.7.0
 - Initial support for ES6 import/export (with CommonJS interop)
@@ -85,7 +97,7 @@ v0.7.0
 - Use Object.prototype.hasOwnProperty() calls as a refinement
 - Updates to Element and HTMLElement interface definitions
 
-v0.6.0
+###v0.6.0
 
 - Bump version to 0.6.0
 - Also watch for changes in include paths
@@ -98,7 +110,7 @@ v0.6.0
 - Update componentWillReceive spec
 - Unsuppress library errors
 
-v0.5.0
+###v0.5.0
 
 - Bump version to 0.5.0
 - Add HTMLAnchorElement
@@ -119,7 +131,7 @@ v0.5.0
 - node haste module support
 - add Abnormal.string
 
-v0.4.0
+###v0.4.0
 
 ** Flow comments should be ready for use **
 
@@ -142,7 +154,7 @@ v0.4.0
 - work around false positive conflict markers
 - Better dumping types for debugging
 
-v0.3.0
+###v0.3.0
 
 ** Type casts and import type should be ready for use **
 
@@ -158,7 +170,7 @@ v0.3.0
 - [PR #247] Resubmit #113 this fixes #155
 - [PR #246] Fixes #195
 
-v0.2.0
+###v0.2.0
 
 - Bump version to 0.2.0
 - Fix refinement of optional nullable types
@@ -172,7 +184,7 @@ v0.2.0
 - Add Number.isNaN and Number.isSafeInteger type annotations
 - Optional properties in objects & optional type revamp
 
-v0.1.6
+###v0.1.6
 
 - Bump version to 0.1.6
 - declare modules that redefine exports instead of exporting multiple things
@@ -184,7 +196,7 @@ v0.1.6
 - Add MAX_SAFE_INTEGER and MIN_SAFE_INTEGER to Number
 - make param annotations strict upper bounds 
 
-v0.1.5
+###v0.1.5
 
 - Bump version to 0.1.5
 - [PR #223] from commonlisp/master
@@ -207,7 +219,7 @@ v0.1.5
 - Add missing constructors to TypedArray declarations
 - [Parser] Update Flow's test suite to match updated esprima
 
-v0.1.4
+###v0.1.4
 
 - Bump Flow version to 0.1.4
 - [Flow] Unbreak the open source build
@@ -219,7 +231,7 @@ v0.1.4
 - missing annotation errors for type aliases
 - Type refinement fixes for early return
 
-v0.1.3
+###v0.1.3
 
 - Handle strict undefined checks.
 - Add theoretical support to print tuple types properly.
@@ -259,7 +271,7 @@ v0.1.3
 - Add ES6 String.prototype.contains
 - Add Promise.prototype.done() to Flow lib
 
-v0.1.2
+###v0.1.2
 
 - [#78] Fallback to index.js if no main attribute in package.json
 - [#82] Added ES6 functions to the Math object
@@ -275,7 +287,7 @@ v0.1.2
 - Improvements to type printing in flow suggest and other commands
 - Fixes to various issues where parser errors were being suppressed
 
-v0.1.1
+###v0.1.1
 
 - [Issue #4] Typecheck .jsx files
 - [Issue #22] Return a nonzero exit code from 'flow check' if there are errors
@@ -289,6 +301,6 @@ v0.1.1
 - [PR #65] Fix dependencies in flux-chat example
 - [PR #66] Add type definitions for HTMLCanvasElement
 
-v0.1.0
+###v0.1.0
 
 Initial release

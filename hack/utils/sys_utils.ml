@@ -68,10 +68,27 @@ let restart () =
   let argv = Sys.argv in
   Unix.execv cmd argv
 
-let logname =
+let logname_impl () =
   try Sys.getenv "USER" with Not_found ->
   try Sys.getenv "LOGNAME" with Not_found ->
-  exec_read "logname"
+  (* If this function is generally useful, it can be lifted to toplevel in this
+   * file, but this is the only place we need it for now. *)
+  let exec_try_read cmd =
+    let ic = Unix.open_process_in cmd in
+    let out = try Some (input_line ic) with End_of_file -> None in
+    let status = Unix.close_process_in ic in
+    match out, status with
+      | Some _, Unix.WEXITED 0 -> out
+      | _ -> None
+  in
+  try Utils.unsafe_opt (exec_try_read "logname") with Invalid_argument _ ->
+  try Utils.unsafe_opt (exec_try_read "id -un") with Invalid_argument _ ->
+  "[unknown]"
+
+let logname_ref = ref None
+let logname () =
+  if !logname_ref = None then logname_ref := Some (logname_impl ());
+  Utils.unsafe_opt !logname_ref
 
 let with_umask umask f =
   let old_umask = ref 0 in

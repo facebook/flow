@@ -8,4 +8,5 @@
  *
  *)
 
-let string_of_path x = x
+let make x = x
+let to_string x = x

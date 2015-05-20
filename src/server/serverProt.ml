@@ -38,7 +38,7 @@ type command =
 | KILL
 | PING
 | PORT of string list
-| STATUS of Path.path
+| STATUS of Path.t
 | SUGGEST of string list
 
 let cmd_to_channel (oc:out_channel) (cmd:command): unit =
@@ -53,8 +53,8 @@ let cmd_from_channel (ic:in_channel): command =
   else Marshal.from_channel ic
 
 type directory_mismatch = {
-  server: Path.path;
-  client: Path.path;
+  server: Path.t;
+  client: Path.t;
 }
 
 type response =

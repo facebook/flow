@@ -112,6 +112,13 @@ and Type : sig
     }
   end
 
+  module StringLiteral : sig
+    type t = {
+      value: string;
+      raw: string;
+    }
+  end
+
   type t = Loc.t * t'
   (* Yes, we could add a little complexity here to show that Any and Void
    * should never be declared nullable, but that check can happen later *)
@@ -121,7 +128,7 @@ and Type : sig
     | Number
     | String
     | Boolean
-    | StringLiteral of string
+    | StringLiteral of StringLiteral.t
     | Nullable of t
     | Function of Function.t
     | ConstructorFunction of Function.t

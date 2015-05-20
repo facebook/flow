@@ -21,7 +21,7 @@ external init: unit -> unit = "hh_shared_init"
  * free data (cf hh_shared.c for the underlying C implementation).
  *)
 (*****************************************************************************)
-external collect: unit -> unit = "hh_collect"
+external hh_collect: unit -> unit = "hh_collect"
 
 (*****************************************************************************)
 (* Must be called after the initialization of the hack server is over.
@@ -44,6 +44,32 @@ external load: string -> unit = "hh_load"
 (* The size of the dynamically allocated shared memory section *)
 (*****************************************************************************)
 external heap_size: unit -> int = "hh_heap_size"
+
+(*****************************************************************************)
+(* The number of used slots in our dependency table *)
+(*****************************************************************************)
+external dep_used_slots : unit -> int = "hh_dep_used_slots"
+
+(*****************************************************************************)
+(* The total number of slots in our dependency table *)
+(*****************************************************************************)
+external dep_slots : unit -> int = "hh_dep_slots"
+
+type dep_stats_t = {
+  dep_used_slots : int;
+  dep_slots : int;
+}
+
+let dep_stats () = {
+  dep_used_slots = dep_used_slots ();
+  dep_slots = dep_slots ();
+}
+
+let collect () =
+  let old_size = heap_size () in
+  hh_collect ();
+  let new_size = heap_size () in
+  EventLogger.sharedmem_gc old_size new_size
 
 (*****************************************************************************)
 (* Module returning the MD5 of the key. It's because the code in C land

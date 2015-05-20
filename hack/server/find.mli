@@ -12,15 +12,15 @@ val is_php_path: string -> bool
 val is_js_path: string -> bool
 
 val make_next_files_with_find:
-  (string -> bool) -> ?others: Path.path list -> Path.path ->
+  (string -> bool) -> ?others: Path.t list -> Path.t ->
   string MultiWorker.nextlist
 
 val make_next_files_php:
-  ?others: Path.path list (* includes *) -> Path.path (* root directory *) ->
+  ?others: Path.t list (* includes *) -> Path.t (* root directory *) ->
   string MultiWorker.nextlist
 val make_next_files_js:
   filter:(string -> bool) ->
-  ?others: Path.path list (* includes *) -> Path.path (* root directory *) ->
+  ?others: Path.t list (* includes *) -> Path.t (* root directory *) ->
   string MultiWorker.nextlist
 
-val find_with_name : Path.path list -> string -> string list
+val find_with_name : Path.t list -> string -> string list

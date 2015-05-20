@@ -46,7 +46,7 @@ let get_flowlib_root () =
       let root = match Flowlib.get_flowlib_root () with
       | None ->
           print_endline "Could not locate hhi files"; exit 1
-      | Some root -> Path.string_of_path root in
+      | Some root -> Path.to_string root in
       flowlib_root := Some root;
       root
 
@@ -56,7 +56,7 @@ let init libs =
   | None -> (
     let libs = if Modes_js.modes.no_flowlib
       then libs
-      else (Path.mk_path (get_flowlib_root ()))::libs
+      else (Path.make (get_flowlib_root ()))::libs
     in
     let libs = if libs = []
       then SSet.empty
@@ -91,7 +91,7 @@ let make_next_files root =
   let config = FlowConfig.get root in
   let filter = wanted config in
   let others = config.FlowConfig.include_stems in
-  let sroot = Path.string_of_path root in
+  let sroot = Path.to_string root in
   Find.make_next_files_with_find (fun p ->
     (str_starts_with p sroot || FlowConfig.is_included config p)
     && is_flow_file p
@@ -122,7 +122,7 @@ and construct_path = List.fold_left Filename.concat
    under root or includes *)
 let package_json root =
   let config = FlowConfig.get root in
-  let sroot = Path.string_of_path root in
+  let sroot = Path.to_string root in
   let want = wanted config in
   let filt = fun p -> want p &&
     (str_starts_with p sroot || FlowConfig.is_included config p) in

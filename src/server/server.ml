@@ -10,7 +10,7 @@
 
 module type OPTION_PARSER = sig
   val parse : unit -> ServerArgs.options
-  val get_flow_options : unit -> Types_js.options
+  val get_flow_options : unit -> Options.options
 end
 
 module TI = Type_inference_js
@@ -42,8 +42,6 @@ struct
   let validate_config _config = false
 
   let parse_options = OptionParser.parse
-
-  let get_errors _ = Types_js.get_errors ()
 
   let preinit () =
     (* Do some initialization before creating workers, so that each worker is
@@ -82,7 +80,7 @@ struct
     exit 4
 
   let status_log env =
-    if List.length (get_errors env) = 0
+    if List.length (Types_js.get_errors ()) = 0
     then Printf.printf "Status: OK\n"
     else Printf.printf "Status: Error\n";
     flush stdout
@@ -98,7 +96,7 @@ struct
 
   let print_status genv env client_root oc =
     let server_root = ServerArgs.root genv.options in
-    if not (Path.equal server_root client_root)
+    if server_root <> client_root
     then begin
       let msg = ServerProt.DIRECTORY_MISMATCH {
         ServerProt.server=server_root;
@@ -107,8 +105,8 @@ struct
       ServerProt.response_to_channel oc msg;
       Printf.printf "Status: Error\n";
       Printf.printf "server_dir=%s, client_dir=%s\n"
-        (Path.string_of_path server_root)
-        (Path.string_of_path client_root);
+        (Path.to_string server_root)
+        (Path.to_string client_root);
       Printf.printf "%s is not listening to the same directory. Exiting.\n"
         name;
       exit 5
@@ -116,7 +114,7 @@ struct
     flush stdout;
     (* TODO: check status.directory *)
     status_log env;
-    let errors = get_errors env in
+    let errors = Types_js.get_errors () in
     EventLogger.check_response errors;
     send_errorl errors oc
 
@@ -162,11 +160,6 @@ struct
         | _, errors -> errors)
     in
     send_errorl (Errors_js.to_list errors) oc
-
-  (* our infer implementation uses a different type for file_input, we stub
-     the (unused) public interface to avoid issues *)
-  let infer env (file_input, line, col) oc =
-    ()
 
   let mk_pos file line col =
     {
@@ -238,7 +231,7 @@ struct
     let suggest_for_file result_map file =
       (try
          let (file, region) = parse_suggest_cmd file in
-         let file = Path.string_of_path (Path.mk_path file) in
+         let file = Path.to_string (Path.make file) in
          let cx = Types_js.merge_strict_file file in
          let content = cat file in
          let lines = Str.split_delim (Str.regexp "\n") content in
@@ -280,7 +273,7 @@ struct
   let port =
     let port_for_file result_map file =
       (try
-        let file = Path.string_of_path (Path.mk_path file) in
+        let file = Path.to_string (Path.make file) in
         let ast = Parsing_service_js.get_ast_unsafe file in
         let content = cat file in
         let lines = Str.split_delim (Str.regexp "\n") content in
@@ -415,15 +408,6 @@ struct
     respond genv env ~client ~msg;
     client.close ()
 
-  (* Note: this single-file entry point is only called by
-     ServerMain.load currently, which Flow doesn't support.
-     so we ignore include paths here for now. *)
-  let filter_update genv _env update =
-    let flowconfig_path =
-      FlowConfig.fullpath (ServerArgs.root genv.ServerEnv.options) in
-    let abs = Relative_path.to_absolute update in
-    Files_js.is_flow_file abs || abs = flowconfig_path
-
   let get_watch_paths options =
     let config = FlowConfig.get (ServerArgs.root options) in
     config.FlowConfig.include_stems
@@ -438,7 +422,7 @@ struct
       fun f -> Files_js.is_flow_file f || f = config_path
     in
     let config = FlowConfig.get root in
-    let sroot = Path.string_of_path root in
+    let sroot = Path.to_string root in
     SSet.fold (fun f acc ->
       if is_flow_file f &&
         (* note: is_included may be expensive. check in-root match first. *)
@@ -446,6 +430,9 @@ struct
       then Relative_path.(Set.add (create Dummy f) acc)
       else acc
     ) updates Relative_path.Set.empty
+
+  (* XXX: can some of the logic in process_updates be moved here? *)
+  let should_recheck _update = true
 
   (* on notification, execute client commands or recheck files *)
   let recheck genv env updates =
@@ -474,4 +461,7 @@ struct
         prerr_endlinef "%d/%d: %s" i n f; i + 1) diff_js 1 in
 
       Types_js.recheck genv env diff_js options
+
+  let post_recheck_hook _genv _old_env _new_env _updates = ()
+
 end

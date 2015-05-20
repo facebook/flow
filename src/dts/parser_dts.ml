@@ -512,10 +512,13 @@ end = struct
         | None ->
             let loc, g = generic env in
             loc, Type.Generic g)
-      | T_STRING (loc, value, raw, octal) ->
+      | T_STRING (loc, value, raw, octal)  ->
           if octal then strict_error env Error.StrictOctalLiteral;
           Expect.token env (T_STRING (loc, value, raw, octal));
-          loc, Type.StringLiteral value
+          loc, Type.(StringLiteral StringLiteral.({
+            value;
+            raw;
+          }))
       | T_NEW ->
           constructor_function env
       | _ ->

@@ -152,7 +152,8 @@ let exports cx m =
   module_t cx m (Reason_js.new_reason "exports" (Pos.make_from
     (Relative_path.create Relative_path.Dummy cx.file)))
 
-let lookup_module cx m = SMap.find_unsafe m cx.modulemap
+let lookup_module cx m =
+  SMap.find_unsafe m cx.modulemap
 
 (**
  * Given an exported default declaration, identify nameless declarations and
@@ -627,6 +628,18 @@ let rec convert cx map = Ast.Type.(function
           | _ -> assert false
         )
 
+      (* $FlowIssue is a synonym for any, used by JS devs to signal
+         a potential typechecker bug to the Flow team.
+         $FlowFixMe is a synonym for any, used by the Flow team to
+         signal a needed mod to JS devs.
+       *)
+      (* TODO move these to type aliases once optional type args
+         work properly in type aliases: #7007731 *)
+      | "$FlowIssue" | "$FlowFixMe" ->
+        (* Optional type params are info-only, validated then forgotten. *)
+        List.iter (fun p -> ignore (convert cx map p)) typeParameters;
+        AnyT.at loc
+
       (* Class<T> is the type of the class whose instances are of type T *)
       | "Class" ->
         check_type_param_arity cx loc typeParameters 1 (fun () ->
@@ -774,7 +787,6 @@ let rec convert cx map = Ast.Type.(function
 
 and convert_qualification ?(for_type=true) cx reason_prefix = Ast.Type.Generic.Identifier.(function
   | Qualified (loc, { qualification; id; }) ->
-
     let m = convert_qualification cx reason_prefix qualification in
     let _, { Ast.Identifier.name; _ } = id in
     let reason = mk_reason (spf "%s '<<object>>.%s')" reason_prefix name) loc in
@@ -783,7 +795,6 @@ and convert_qualification ?(for_type=true) cx reason_prefix = Ast.Type.Generic.I
     )
 
   | Unqualified (id) ->
-
     let loc, { Ast.Identifier.name; _ } = id in
     let reason = mk_reason (spf "%s '%s'" reason_prefix name) loc in
     Env_js.get_var ~for_type cx name reason
@@ -3022,12 +3033,14 @@ and expression_ cx loc e = Ast.Expression.(match e with
       ArrowFunction.id;
       params; defaults; rest;
       body;
+      returnType;
+      typeParameters;
       _
     } ->
-      let reason = mk_reason "arrow" loc in
+      let reason = mk_reason "arrow function" loc in
       let this = this_ cx reason in
-      let super = super_ cx reason in
-      mk_method cx reason (params, defaults, rest) None body this super
+      mk_function id cx reason
+        typeParameters (params, defaults, rest) returnType body this
 
   | TaggedTemplate {
       TaggedTemplate.tag = _, Identifier (_,
@@ -4359,13 +4372,14 @@ and body_loc = Ast.Statement.FunctionDeclaration.(function
 )
 
 (* Makes signatures for fields and methods in a class. *)
-and mk_signature cx c_type_params_map body = Ast.Statement.Class.(
+and mk_signature cx reason_c c_type_params_map body = Ast.Statement.Class.(
   let _, { Body.body = elements } = body in
 
   (* In case there is no constructor, we create one. *)
   let default_methods =
     SMap.singleton "constructor"
-      ([], SMap.empty, ([], [], VoidT.t, SMap.empty, SMap.empty))
+      (replace_reason "default constructor" reason_c, [], SMap.empty,
+       ([], [], VoidT.t, SMap.empty, SMap.empty))
   in
   (* NOTE: We used to mine field declarations from field assignments in a
      constructor as a convenience, but it was not worth it: often, all that did
@@ -4402,8 +4416,8 @@ and mk_signature cx c_type_params_map body = Ast.Statement.Class.(
         )
         else params_ret
       in
-
-      let method_sig = typeparams, f_type_params_map, params_ret in
+      let reason_m = mk_reason (spf "method %s" name) loc in
+      let method_sig = reason_m, typeparams, f_type_params_map, params_ret in
       if static
       then
         sfields,
@@ -4459,11 +4473,10 @@ and mk_class_elements cx instance_info static_info body = Ast.Statement.Class.(
         if static then static_info else instance_info
       in
 
-      let (typeparams, type_params_map,
-           (_, _, ret, param_types_map, param_loc_map)) =
+      let reason, typeparams, type_params_map,
+           (_, _, ret, param_types_map, param_loc_map) =
         SMap.find_unsafe name method_sigs in
 
-      let reason = mk_reason (spf "method %s" name) loc in
       let save_return_exn = Abnormal.swap Abnormal.Return false in
       let save_throw_exn = Abnormal.swap Abnormal.Throw false in
       generate_tests cx reason typeparams (fun map_ ->
@@ -4480,55 +4493,14 @@ and mk_class_elements cx instance_info static_info body = Ast.Statement.Class.(
   ) elements
 )
 
-(*
-and mk_static_fields_methods cx super_static static body = Ast.Statement.Class.(
-  let _, { Body.body = elements } = body in
-
-  let map = List.fold_left (fun map -> function
-
-    | Body.Method (loc, {
-        Method.key = Ast.Expression.Object.Property.Identifier (_,
-          { Ast.Identifier.name; _ });
-        value = _, { Ast.Expression.Function.params; defaults; rest;
-          returnType; typeParameters; body; _ };
-        kind = Ast.Expression.Object.Property.Init;
-        static = true
-      }) ->
-      let reason = mk_reason (spf "function %s" name) loc in
-      let this = Flow_js.mk_tvar cx (replace_reason "this" reason) in
-      let meth = mk_function None cx reason
-        typeParameters (params, defaults, rest) returnType body this
-      in
-      SMap.add name meth map
-
-    | Body.Property (loc, {
-        Property.key = Ast.Expression.Object.Property.Identifier
-          (_, { Ast.Identifier.name; _ });
-        typeAnnotation = (_, typeAnnotation);
-        static = true;
-      }) ->
-        let t = convert cx SMap.empty typeAnnotation in
-        SMap.add name t map
-
-    | _ -> map
-  ) SMap.empty elements in
-
-  Flow_js.flow cx (
-    Flow_js.mk_object_with_map_proto cx (reason_of_t static) map super_static,
-    static
-  )
-)
-*)
-
-(* TODO: why reason_c? *)
-and mk_methodtype reason_c (typeparams,_,(params,pnames,ret,_,_)) =
-  let ft = FunT (reason_c, Flow_js.dummy_static, Flow_js.dummy_prototype,
-                 Flow_js.mk_functiontype2 params pnames ret 0) in
+and mk_methodtype (reason_m, typeparams,_,(params,pnames,ret,_,_)) =
+  let ft = FunT (
+    reason_m, Flow_js.dummy_static, Flow_js.dummy_prototype,
+    Flow_js.mk_functiontype2 params pnames ret 0
+  ) in
   if (typeparams = [])
-  then
-    ft
-  else
-    PolyT (typeparams, ft)
+  then ft
+  else PolyT (typeparams, ft)
 
 (* Process a class definition, returning a (polymorphic) class type. A class
    type is a wrapper around an instance type, which contains types of instance
@@ -4547,7 +4519,7 @@ and mk_class cx reason_c type_params extends body =
 
   (* fields: { f: X }, methods_: { m<Y: X>(x: Y): X } *)
   let sfields, smethods_, fields, methods_ =
-    mk_signature cx type_params_map body
+    mk_signature cx reason_c type_params_map body
   in
 
   let id = Flow_js.mk_nominal cx in
@@ -4572,7 +4544,7 @@ and mk_class cx reason_c type_params extends body =
 
     (* methods: { m<Y: X>(x: Y): T } *)
     let subst_method_sig cx map_
-        (typeparams,type_params_map,
+        (reason_m, typeparams,type_params_map,
          (params,pnames,ret,param_types_map,param_loc_map)) =
 
       (* typeparams = <Y: X> *)
@@ -4587,14 +4559,14 @@ and mk_class cx reason_c type_params extends body =
       let param_types_map =
         SMap.map (Flow_js.subst cx map_) param_types_map in
 
-      (typeparams,type_params_map,
+      (reason_m, typeparams,type_params_map,
        (params, Some pnames, ret, param_types_map, param_loc_map))
     in
 
     let methods_ = methods_ |> SMap.map (subst_method_sig cx map_) in
-    let methods = methods_ |> SMap.map (mk_methodtype reason_c) in
+    let methods = methods_ |> SMap.map mk_methodtype in
     let smethods_ = smethods_ |> SMap.map (subst_method_sig cx map_) in
-    let smethods = smethods_ |> SMap.map (mk_methodtype reason_c) in
+    let smethods = smethods_ |> SMap.map mk_methodtype in
 
     let static_instance = {
       class_id = 0;
@@ -4628,15 +4600,15 @@ and mk_class cx reason_c type_params extends body =
   );
 
   let enforce_void_return
-      (typeparams, type_params_map,
+      (reason_m, typeparams, type_params_map,
        (params,pnames,ret,params_map,params_loc)) =
     let ret =
       if (is_void cx ret)
       then (VoidT.at (loc_of_t ret))
       else ret
     in
-    mk_methodtype reason_c
-      (typeparams, type_params_map,
+    mk_methodtype
+      (reason_m, typeparams, type_params_map,
        (params,Some pnames,ret,params_map,params_loc))
   in
 
@@ -4765,7 +4737,7 @@ and function_decl id cx (reason:reason) type_params params ret body this super =
 
 and is_void cx = function
   | OpenT(_,id) ->
-      Flow_js.check_lower_bound cx id (function | VoidT _ -> true | _ -> false)
+      Flow_js.check_types cx id (function | VoidT _ -> true | _ -> false)
   | _ -> false
 
 and mk_upper_bound cx locs name t =
@@ -5049,7 +5021,7 @@ and mine_fields cx body fields =
 (* seed new graph with builtins *)
 let add_builtins cx =
   let reason, id = open_tvar Flow_js.builtins in
-  cx.graph <- cx.graph |> IMap.add id (new_bounds ())
+  cx.graph <- cx.graph |> IMap.add id (new_unresolved_root ())
 
 (* cross-module GC toggle *)
 let xmgc_enabled = ref true
@@ -5074,17 +5046,21 @@ let cross_module_gc =
 let force_annotations cx =
   let tvar = lookup_module cx cx._module in
   let reason, id = open_tvar tvar in
-  let bounds = Flow_js.find_graph cx id in
+  let constraints = Flow_js.find_graph cx id in
   let before = Errors_js.ErrorSet.cardinal cx.errors in
-  Flow_js.enforce_strict cx id bounds;
+  Flow_js.enforce_strict cx id constraints;
   let after = Errors_js.ErrorSet.cardinal cx.errors in
-  let ground_bounds = new_bounds () in
+  let ground_node = new_unresolved_root () in
+  let ground_bounds = bounds_of_unresolved_root ground_node in
   if (after = before)
   then (
-    ground_bounds.lower <- bounds.lower;
-    ground_bounds.lowertvars <- bounds.lowertvars
+    match constraints with
+    | Unresolved bounds ->
+        ground_bounds.lower <- bounds.lower;
+        ground_bounds.lowertvars <- bounds.lowertvars
+    | _ -> ()
   );
-  cx.graph <- IMap.add id ground_bounds cx.graph
+  cx.graph <- IMap.add id ground_node cx.graph
 
 (* core inference, assuming setup and teardown happens elsewhere *)
 let infer_core cx statements =
@@ -5128,22 +5104,21 @@ let infer_ast ast file m force_check =
   cx.weak <- weak;
 
   let reason_exports_module = reason_of_string (spf "exports of module %s" m) in
-  let entries = ref
-    (SMap.singleton "exports"
-       (let exports = Flow_js.mk_tvar cx reason_exports_module in
-        create_env_entry
-          exports
-          exports
-          None
-       ) |>
-     SMap.add (internal_name "exports")
-       (create_env_entry
-          (UndefT (reason_of_string "undefined exports"))
-          (AnyT reason_exports_module)
-          None
-       )
-    )
-  in
+  let local_exports = Flow_js.mk_tvar cx reason_exports_module in
+  let entries = ref (
+    SMap.singleton "exports"
+      (create_env_entry
+        local_exports
+        local_exports
+        None
+      )
+    |> SMap.add (internal_name "exports")
+      (create_env_entry
+        (UndefT (reason_of_string "undefined exports"))
+        (AnyT reason_exports_module)
+        None
+      )
+  ) in
   let scope = { kind = VarScope; entries } in
   Env_js.env := [scope];
   Flow_js.mk_frame cx [] !Env_js.env;
@@ -5155,18 +5130,16 @@ let infer_ast ast file m force_check =
   if check then (
     let init_exports = mk_object cx reason in
     set_module_exports cx reason init_exports;
+    Flow_js.flow cx (
+      init_exports,
+      Env_js.get_var_in_scope cx "exports" reason
+    );
     infer_core cx statements;
   );
 
   cx.checked <- check;
-
-  let exports_var_in_scope = Env_js.get_var_in_scope cx "exports" reason in
   Flow_js.flow cx (
     get_module_exports cx reason,
-    exports_var_in_scope
-  );
-  Flow_js.flow cx (
-    exports_var_in_scope,
     exports cx m);
 
   let ins = (Flow_js.builtins)::(
@@ -5180,9 +5153,26 @@ let infer_ast ast file m force_check =
 
   cx
 
+(* return all comments preceding the first executable statement *)
+let get_comment_header (_, stmts, comments) =
+  match stmts with
+  | [] -> comments
+  | stmt :: _ ->
+    let stmtloc = fst stmt in
+    let rec loop acc comments =
+      match comments with
+      | c :: cs when fst c < stmtloc ->
+        loop (c :: acc) cs
+      | _ -> acc
+    in
+    List.rev (loop [] comments)
+
+(* Given a filename, retrieve the parsed AST, derive a module name,
+   and invoke the local (infer) pass. This will build and return a
+   fresh context object for the module. *)
 let infer_module file =
   let ast = Parsing_service_js.get_ast_unsafe file in
-  let (_, _, comments) = ast in
+  let comments = get_comment_header ast in
   let module_name = Module_js.exported_module file comments in
   infer_ast ast file module_name modes.all
 
@@ -5194,35 +5184,23 @@ let infer_module file =
    So do union N M as long as N may override M for overlapping keys.
 *)
 
-(* helper for merge_module *)
-let aggregate_context_data cx =
-  let master_cx = Flow_js.master_cx in
-  (* CLOSURES *)
-  let old_mast = IMap.cardinal master_cx.closures in
-  let old_mod = IMap.cardinal cx.closures in
-  master_cx.closures <-
-    IMap.union cx.closures master_cx.closures;
-  let new_mast = IMap.cardinal master_cx.closures in
-  assert (old_mast + old_mod = new_mast);
-  (* PROPERTY MAPS *)
-  let old_mast = IMap.cardinal master_cx.property_maps in
-  let old_mod = IMap.cardinal cx.property_maps in
-  master_cx.property_maps <- IMap.union
-    cx.property_maps master_cx.property_maps;
-  let new_mast = IMap.cardinal master_cx.property_maps in
-  assert (old_mast + old_mod = new_mast);
-  (* add globals to master cx *)
-  master_cx.globals <-
-    SSet.union cx.globals master_cx.globals;
-  ()
+(* aggregate module context data with other module context data *)
+let aggregate_context_data cx cx_other =
+  cx.closures <-
+    IMap.union cx_other.closures cx.closures;
+  cx.property_maps <-
+    IMap.union cx_other.property_maps cx.property_maps;
+  cx.globals <-
+    SSet.union cx_other.globals cx.globals
 
-(* update master graph with module graph *)
-let update_graph cx =
+(* update module graph with other module graph *)
+let update_graph cx cx_other =
   let _, builtin_id = open_tvar Flow_js.builtins in
-  cx.graph |> IMap.iter (fun id module_bounds ->
+  let master_node = IMap.find_unsafe builtin_id cx.graph in
+  let master_bounds = bounds_of_unresolved_root master_node in
+  cx_other.graph |> IMap.iter (fun id module_node ->
     if (id = builtin_id) then (
-      (* merge new bounds with old bounds for builtins *)
-      let master_bounds = Flow_js.find_graph Flow_js.master_cx id in
+      let module_bounds = bounds_of_unresolved_root module_node in
       master_bounds.uppertvars <- IMap.union
         module_bounds.uppertvars
         master_bounds.uppertvars;
@@ -5231,9 +5209,7 @@ let update_graph cx =
         master_bounds.upper
     )
     else
-      (* add all other tvars -> bounds *)
-      Flow_js.master_cx.graph <-
-        Flow_js.master_cx.graph |> IMap.add id module_bounds;
+      cx.graph <- cx.graph |> IMap.add id module_node
   )
 
 type direction = Out | In
@@ -5255,42 +5231,20 @@ let export_to_master cx m =
 let require_from_master cx m =
   link_module_types Out cx m
 
-(* merge module context into master context *)
-let merge_module cx =
-  (* aggregate context data before flow calcs *)
-  aggregate_context_data cx;
-  (* update master graph with module graph *)
-  update_graph cx;
-  (* link local and global types for our export and our required's *)
-  export_to_master cx cx._module;
-  SSet.iter (require_from_master cx) cx.required;
-  ()
-
 (* Copy context from cx_other to cx *)
-(* TODO: Generalize aggregate_context_data and update_graph to work for
-   arbitrary cx_other instead of master_cx, and use those functions instead of
-   duplicating their functionality here. *)
-let copy_context_strict cx cx_other =
-  (* aggregate context data *)
-  cx.closures <-
-    IMap.union cx_other.closures cx.closures;
-  cx.property_maps <- IMap.union
-    cx_other.property_maps cx.property_maps;
-  cx.globals <-
-    SSet.union cx_other.globals cx.globals;
-  (* update graph *)
-  let _, builtin_id = open_tvar Flow_js.builtins in
-  cx_other.graph |> IMap.iter (fun id module_bounds ->
-    if (id <> builtin_id) then
-      cx.graph <- cx.graph |> IMap.add id module_bounds
-  )
+let copy_context cx cx_other =
+  aggregate_context_data cx cx_other;
+  update_graph cx cx_other
+
+let copy_context_master cx =
+  copy_context Flow_js.master_cx cx
 
 (* Connect the builtins object in master_cx to the builtins reference in some
    arbitrary cx. *)
 let implicit_require_strict cx master_cx =
   let _, builtin_id = open_tvar Flow_js.builtins in
-  let master_bounds = Flow_js.find_graph master_cx builtin_id in
-  master_bounds.lower |> TypeMap.iter (fun t _ ->
+  let types = Flow_js.possible_types master_cx builtin_id in
+  types |> List.iter (fun t ->
     Flow_js.flow cx (t, Flow_js.builtins)
   )
 
@@ -5329,8 +5283,8 @@ let merge_module_strict cx cxs implementations declarations master_cx =
   Flow_js.Cache.clear();
 
   (* First, copy cxs and master_cx to the host cx. *)
-  cxs |> List.iter (copy_context_strict cx);
-  copy_context_strict cx master_cx;
+  cxs |> List.iter (copy_context cx);
+  copy_context cx master_cx;
 
   (* Connect links between implementations and requires. Since the host contains
      copies of all graphs, the links should already be available. *)
@@ -5344,19 +5298,6 @@ let merge_module_strict cx cxs implementations declarations master_cx =
      reference is shared, this connects the definitions of builtins to their
      uses in all contexts. *)
   implicit_require_strict cx master_cx
-
-(* merge all modules at a dependency level, then do xmgc *)
-let merge_module_list cx_list =
-  List.iter merge_module cx_list;
-  let (modules,requires) = cx_list |> ((SSet.empty,SSet.empty) |>
-      List.fold_left (fun (modules,requires) cx ->
-        (SSet.add cx._module modules,
-         SSet.union cx.required requires)
-      )
-  ) in
-  (* cross-module garbage collection *)
-  cross_module_gc Flow_js.master_cx modules requires;
-  ()
 
 (* variation of infer + merge for lib definitions *)
 let init file statements save_errors =
@@ -5380,9 +5321,32 @@ let init file statements save_errors =
     Flow_js.set_builtin cx x t
   );
 
-  aggregate_context_data cx;
-  update_graph cx;
+  copy_context_master cx;
 
   let errs = cx.errors in
   cx.errors <- Errors_js.ErrorSet.empty;
   save_errors errs
+
+(* Legacy functions for managing non-strict merges. *)
+(* !!!!!!!!!!! TODO: out of date !!!!!!!!!!!!!!! *)
+
+(* merge module context into master context *)
+let merge_module cx =
+  copy_context_master cx;
+  (* link local and global types for our export and our required's *)
+  export_to_master cx cx._module;
+  SSet.iter (require_from_master cx) cx.required;
+  ()
+
+(* merge all modules at a dependency level, then do xmgc *)
+let merge_module_list cx_list =
+  List.iter merge_module cx_list;
+  let (modules,requires) = cx_list |> ((SSet.empty,SSet.empty) |>
+      List.fold_left (fun (modules,requires) cx ->
+        (SSet.add cx._module modules,
+         SSet.union cx.required requires)
+      )
+  ) in
+  (* cross-module garbage collection *)
+  cross_module_gc Flow_js.master_cx modules requires;
+  ()

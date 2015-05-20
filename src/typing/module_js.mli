@@ -17,14 +17,17 @@ type info = {
   require_loc: Spider_monkey_ast.Loc.t SMap.t;  (* statement locations *)
   strict_required: SSet.t;  (* strict requires (flow to export types) *)
   checked: bool;            (* in flow? *)
+  parsed: bool;             (* if false, it's a tracking record only *)
 }
 
 type mode = ModuleMode_Checked | ModuleMode_Weak | ModuleMode_Unchecked
 
+val module_name_candidates: string -> string list
+
 val parse_flow: Spider_monkey_ast.Comment.t list -> mode
 
 (* initialize to a module system, given the name of the module system *)
-val init: string -> unit
+val init: Options.options -> unit
 
 (* export and import functions for the module system *)
 val exported_module: string -> Spider_monkey_ast.Comment.t list -> string
@@ -57,6 +60,9 @@ val commit_modules:
 
 (* add file represented by context to module info store *)
 val add_module_info: Constraint_js.context -> unit
+
+(* add info for unparsed file to module info store *)
+val add_unparsed_info: string -> unit
 
 (* remove module info being tracked for given file set;
    returns the set of modules removed

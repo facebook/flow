@@ -15,6 +15,13 @@ open Sys_utils
 let dts_ext = ".d.ts"
 let dts_ext_find_pattern = "*.d.ts"
 
+let call_succeeds try_function function_input =
+  try
+    try_function function_input;
+    true
+  with _ ->
+    false
+
 let convert_file outpath file =
   let base = Filename.chop_suffix (Filename.basename file) dts_ext in
   let outpath = match outpath with
@@ -25,11 +32,18 @@ let convert_file outpath file =
   let ast, errors = Parser_dts.program_file ~fail:false content file in
   if errors = []
   then (
-    Printf.printf "...no errors!\n%!";
     let oc = open_out outfile in
-    Printer_dts.program (Format.formatter_of_out_channel oc) ast;
-    close_out oc;
-    0
+    if
+      let fmt = Format.formatter_of_out_channel oc in
+      call_succeeds (Printer_dts.program fmt) ast
+    then
+      let () = Printf.printf "No errors!\n\n" in
+      close_out oc;
+      0, 1, 1
+    else
+      let () = Printf.printf "No errors!\n\n" in
+      Printf.printf "Conversion was not successful!\n\n";
+      0, 0, 1
   ) else (
     let n = List.length errors in
     Printf.printf "%d errors:\n" n;
@@ -37,13 +51,13 @@ let convert_file outpath file =
       let e = Errors_js.parse_error_to_hack_error e in
       Errors_js.print_error_color e
     ) errors;
-    n
+    n, 0, 1
   )
 
   (* Printer_dts.program *)
 
 let find_files_recursive path =
-  Find.find_with_name [Path.mk_path path] dts_ext_find_pattern
+  Find.find_with_name [Path.make path] dts_ext_find_pattern
 
 let find_files path =
   Array.fold_left (fun acc f ->
@@ -54,26 +68,36 @@ let find_files path =
 
 let sum f = List.fold_left (fun n i -> n + f i) 0
 
+(* sum_triple adds triples (3-tuples) in a list obtained by applying
+   function f on a list of inputs (similar to sum function which adds
+   integers instead of triples) *)
+let sum_triple f = List.fold_left (
+  fun (x,y,z) i ->
+    let a, b, c = f i
+    in (a+x, b+y, c+z)) (0, 0, 0)
+
 let convert_dir outpath path recurse =
   let dts_files = if recurse
     then find_files_recursive path
     else find_files path in
   (* List.fold_left (convert_file outpath) dts_files *)
-  sum (convert_file outpath) dts_files
+  sum_triple (convert_file outpath) dts_files
 
 let convert path recurse outpath =
-  let nerrs = if Filename.check_suffix path dts_ext then (
-    let outpath = match outpath with
-      | None -> Some (Filename.dirname path)
-      | _ -> outpath
-    in
-    convert_file outpath path
-  ) else (
-    if recurse && outpath != None then
-      failwith "output path not available when recursive";
-    convert_dir outpath path recurse
-  ) in
-  Printf.printf "%d total errors\n%!" nerrs
+  let nerrs, successful_converts, total_files  =
+    if Filename.check_suffix path dts_ext then (
+      let outpath = match outpath with
+        | None -> Some (Filename.dirname path)
+        | _ -> outpath
+      in
+      convert_file outpath path
+    ) else (
+      if recurse && outpath != None then
+        failwith "output path not available when recursive";
+      convert_dir outpath path recurse
+    ) in
+  Printf.printf "Total Errors: %d\nTotal Files: %d\n\
+ Successful Conversions: %d\n" nerrs total_files successful_converts
 
 (* command wiring *)
 

@@ -1,26 +1,44 @@
 
-array_lib.js:4:9,54: call of method map
+array_lib.js:5:9,54: call of method map
 Error:
-array_lib.js:3:10,10: number
+array_lib.js:4:10,10: number
 This type is incompatible with
-array_lib.js:1:16,21: string
+array_lib.js:2:16,21: string
 
-array_lib.js:4:9,54: call of method map
+array_lib.js:5:9,54: call of method map
 Error:
-array_lib.js:4:45,50: string
+array_lib.js:5:45,50: string
 This type is incompatible with
-array_lib.js:7:8,13: number
+array_lib.js:8:8,13: number
 
-array_lib.js:9:23,33: call of method reverse
+array_lib.js:10:23,33: call of method reverse
 Error:
-array_lib.js:3:10,10: number
+array_lib.js:4:10,10: number
 This type is incompatible with
-array_lib.js:9:13,18: string
+array_lib.js:10:13,18: string
 
-array_lib.js:9:23,33: call of method reverse
+array_lib.js:10:23,33: call of method reverse
 Error:
-array_lib.js:9:13,18: string
+array_lib.js:10:13,18: string
 This type is incompatible with
-array_lib.js:3:10,10: number
+array_lib.js:4:10,10: number
 
-Found 4 errors
+array_lib.js:21:24,46: call of method concat
+Error:
+array_lib.js:21:33,35: string
+This type is incompatible with
+[LIB] core.js:138:31,42: union type
+
+array_lib.js:21:24,46: call of method concat
+Error:
+array_lib.js:21:38,40: string
+This type is incompatible with
+[LIB] core.js:138:31,42: union type
+
+array_lib.js:21:24,46: call of method concat
+Error:
+array_lib.js:21:43,45: string
+This type is incompatible with
+[LIB] core.js:138:31,42: union type
+
+Found 7 errors

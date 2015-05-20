@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2014, Facebook, Inc.
+ * Copyright (c) 2015, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -8,10 +8,12 @@
  *
  *)
 
-type result = (Pos.absolute * string * string) list
+type error =
+  | Server_missing
+  | Server_initializing
+  | Server_busy
+  | Build_id_mismatch
 
-let go content oc =
-  let res_list = FileOutline.outline content in
-  Marshal.to_channel oc (res_list : result) [];
-  flush oc;
-  ()
+val server_exists : Path.t -> bool
+
+val connect_once : Path.t -> (in_channel * out_channel, error) Result.t

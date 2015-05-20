@@ -11,7 +11,7 @@
 open Utils
 
 type t = {
-  load_script      : string option;
+  load_script      : Path.t option;
   load_script_timeout : int; (* in seconds *)
   (* Configures only the workers. Workers can have more relaxed GC configs as
    * they are short-lived processes *)
@@ -50,13 +50,7 @@ let config_user_attributes config =
 let load config_filename =
   let config = Config_file.parse (Relative_path.to_absolute config_filename) in
   let load_script =
-    match SMap.get "load_script" config with
-    | None -> None
-    | Some cmd ->
-        let root = Relative_path.path_of_prefix Relative_path.Root in
-        let cmd =
-          if Filename.is_relative cmd then root^"/"^cmd else cmd in
-        Some cmd in
+    Option.map ~f:Path.make (SMap.get "load_script" config) in
   (* Since we use the unix alarm() for our timeouts, a timeout value of 0 means
    * to wait indefinitely *)
   let load_script_timeout =

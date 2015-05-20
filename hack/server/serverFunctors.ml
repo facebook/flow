@@ -8,44 +8,42 @@
  *
  *)
 
-open Utils
 open Sys_utils
 open ServerEnv
 open ServerUtils
+open Utils
+module List = Core_list
 
 exception State_not_found
 
 module type SERVER_PROGRAM = sig
   module EventLogger : sig
-    val init: Path.path -> float -> unit
+    val init: Path.t -> float -> unit
     val init_done: string -> unit
     val load_script_done: unit -> unit
     val load_read_end: string -> unit
-    val load_recheck_end: unit -> unit
+    val load_recheck_end: float -> int -> unit
     val load_failed: string -> unit
-    val lock_lost: Path.path -> string -> unit
-    val lock_stolen: Path.path -> string -> unit
-    val master_exception: string -> unit
+    val lock_lost: Path.t -> string -> unit
+    val lock_stolen: Path.t -> string -> unit
     val out_of_date: unit -> unit
+    val recheck_end: float -> int -> int -> unit
   end
 
   val preinit : unit -> unit
   val init : genv -> env -> env
   val run_once_and_exit : genv -> env -> unit
-  (* filter a single updated file path *)
-  val filter_update : genv -> env -> Relative_path.t -> bool
+  val should_recheck : Relative_path.t -> bool
   (* filter and relativize updated file paths *)
   val process_updates : genv -> env -> SSet.t -> Relative_path.Set.t
   val recheck: genv -> env -> Relative_path.Set.t -> env
-  val infer: env -> (ServerMsg.file_input * int * int) -> out_channel -> unit
-  val suggest: string list -> out_channel -> unit
+  val post_recheck_hook: genv -> env -> env -> Relative_path.Set.t -> unit
   val parse_options: unit -> ServerArgs.options
-  val get_watch_paths: ServerArgs.options -> Path.path list
+  val get_watch_paths: ServerArgs.options -> Path.t list
   val name: string
   val config_filename : unit -> Relative_path.t
   val load_config : unit -> ServerConfig.t
   val validate_config : genv -> bool
-  val get_errors: ServerEnv.env -> Errors.t
   val handle_client : genv -> env -> client -> unit
   (* This is a hack for us to save / restore the global state that is not
    * already captured by ServerEnv *)
@@ -60,7 +58,7 @@ end
 module MainInit : sig
   val go:
     ServerArgs.options ->
-    Path.path list ->   (* other watched paths *)
+    Path.t list ->      (* other watched paths *)
     (unit -> env) ->    (* init function to run while we have init lock *)
     env
 end = struct
@@ -134,7 +132,7 @@ end = struct
       Program.handle_client genv env client
     with e ->
       let msg = Printexc.to_string e in
-      Program.EventLogger.master_exception msg;
+      EventLogger.master_exception msg;
       Printf.fprintf stderr "Error: %s\n%!" msg;
       Printexc.print_backtrace stderr;
       close ()
@@ -152,6 +150,40 @@ end = struct
         Printexc.print_backtrace stderr;
         flush stderr
 
+  let recheck genv old_env updates =
+    let to_recheck =
+      Relative_path.Set.filter Program.should_recheck updates in
+    let config = Program.config_filename () in
+    if Relative_path.Set.mem config updates &&
+      not (Program.validate_config genv) then begin
+      Hh_logger.log
+        "%s changed in an incompatible way; please restart %s.\n"
+        (Relative_path.suffix config)
+        Program.name;
+      exit 4;
+    end;
+    let env = Program.recheck genv old_env to_recheck in
+    Program.post_recheck_hook genv old_env env updates;
+    env, to_recheck
+
+  (* When a rebase occurs, dfind takes a while to give us the full list of
+   * updates, and it often comes in batches. To get an accurate measurement
+   * of rebase time, we use the heuristic that any changes that come in
+   * right after one rechecking round finishes to be part of the same
+   * rebase, and we don't log the recheck_end event until the update list
+   * is no longer getting populated. *)
+  let rec recheck_loop i rechecked_count genv env =
+    let raw_updates = ServerDfind.get_updates () in
+    if SSet.is_empty raw_updates then i, rechecked_count, env else begin
+      let updates = Program.process_updates genv env raw_updates in
+      let env, rechecked = recheck genv env updates in
+      let rechecked_count = rechecked_count +
+        (Relative_path.Set.cardinal rechecked) in
+      recheck_loop (i + 1) rechecked_count genv env
+    end
+
+  let recheck_loop = recheck_loop 0 0
+
   let serve genv env socket =
     let root = ServerArgs.root genv.options in
     let env = ref env in
@@ -168,47 +200,41 @@ end = struct
       ServerHealth.check();
       ServerPeriodical.call_before_sleeping();
       let has_client = sleep_and_check socket in
-      let updates = ServerDfind.get_updates () in
-      let updates = Program.process_updates genv !env updates in
-      let config = Program.config_filename () in
-      if Relative_path.Set.mem config updates &&
-        not (Program.validate_config genv) then begin
-        Hh_logger.log
-          "%s changed in an incompatible way; please restart %s.\n"
-          (Relative_path.suffix config)
-          Program.name;
-        exit 4;
-      end;
-      env := Program.recheck genv !env updates;
+      let start_t = Unix.time () in
+      let loop_count, rechecked_count, new_env = recheck_loop genv !env in
+      env := new_env;
+      if rechecked_count > 0
+      then Program.EventLogger.recheck_end start_t loop_count rechecked_count;
       if has_client then handle_connection genv !env socket;
+      ServerEnv.invoke_async_queue ();
     done
 
   let load genv filename to_recheck =
-      let chan = open_in filename in
-      let env = Marshal.from_channel chan in
-      Program.unmarshal chan;
-      close_in chan;
-      SharedMem.load (filename^".sharedmem");
-      Program.EventLogger.load_read_end filename;
-      let to_recheck =
-        List.rev_append (BuildMain.get_all_targets ()) to_recheck in
-      let paths_to_recheck =
-        rev_rev_map (Relative_path.concat Relative_path.Root) to_recheck
-      in
-      let updates = List.fold_left
-        (fun acc update -> Relative_path.Set.add update acc)
-        Relative_path.Set.empty
-        paths_to_recheck in
-      let updates =
-        Relative_path.Set.filter (Program.filter_update genv env) updates in
-      let env = Program.recheck genv env updates in
-      Program.EventLogger.load_recheck_end ();
-      env
+    let chan = open_in filename in
+    let env = Marshal.from_channel chan in
+    Program.unmarshal chan;
+    close_in chan;
+    SharedMem.load (filename^".sharedmem");
+    Program.EventLogger.load_read_end filename;
+    let to_recheck =
+      List.rev_append (BuildMain.get_all_targets ()) to_recheck in
+    let paths_to_recheck =
+      List.map ~f:(Relative_path.concat Relative_path.Root) to_recheck in
+    let updates = List.fold_left
+      ~f:(fun acc update -> Relative_path.Set.add update acc)
+      ~init:Relative_path.Set.empty
+      paths_to_recheck in
+    let start_t = Unix.time () in
+    let env, rechecked = recheck genv env updates in
+    let rechecked_count = Relative_path.Set.cardinal rechecked in
+    Program.EventLogger.load_recheck_end start_t rechecked_count;
+    env
 
   let run_load_script genv env cmd =
     try
-      let cmd = Printf.sprintf "%s %s %s" cmd
-        (Filename.quote (Path.string_of_path (ServerArgs.root genv.options)))
+      let cmd = Printf.sprintf "%s %s %s"
+        (Filename.quote (Path.to_string cmd))
+        (Filename.quote (Path.to_string (ServerArgs.root genv.options)))
         (Filename.quote Build_id.build_id_ohai) in
       Hh_logger.log "Running load script: %s\n%!" cmd;
       let state_fn, to_recheck =
@@ -337,8 +363,7 @@ end = struct
 
   let start () =
     let options = Program.parse_options () in
-    let root = Path.string_of_path (ServerArgs.root options) in
-    Relative_path.set_path_prefix Relative_path.Root root;
+    Relative_path.set_path_prefix Relative_path.Root (ServerArgs.root options);
     let config = Program.load_config () in
     try
       if ServerArgs.should_detach options
