@@ -52,7 +52,8 @@ end
 
 module FlowStopCommand = ClientStop.StopCommand (FlowConfig)
 
-let main root () =
-  FlowStopCommand.main { ClientStop.root = CommandUtils.guess_root root; }
+let main root () = FlowStopCommand.kill_server {
+    ClientStop.root = CommandUtils.guess_root root;
+  }
 
 let command = CommandSpec.command spec main

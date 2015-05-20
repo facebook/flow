@@ -25,7 +25,7 @@ end
 
 module HackStopCommand = ClientStop.StopCommand (HackConfig)
 
-let main = HackStopCommand.main
+let main = HackStopCommand.kill_server
 
 let kill_server root =
   HackStopCommand.kill_server { ClientStop.root }

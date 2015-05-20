@@ -49,8 +49,7 @@ let () =
   let log_cmd = ClientLogCommandUtils.log_command_of_command command in
   EventLogger.client_startup log_cmd;
   begin match command with
-    | ClientCommand.CCheck check_env ->
-        ClientCheck.main check_env check_env.ClientEnv.retries;
+    | ClientCommand.CCheck check_env -> ClientCheck.main check_env
     | ClientCommand.CStart env -> ClientStart.main env
     | ClientCommand.CStop env -> HackClientStop.main env
     | ClientCommand.CRestart env -> ClientRestart.main env

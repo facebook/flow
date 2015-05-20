@@ -8,8 +8,7 @@
  *
  *)
 
-open ClientExceptions
-open Sys_utils
+module CCS = ClientConnectSimple
 
 let get_hhserver () =
   let server_next_to_client = (Filename.dirname Sys.argv.(0)) ^ "/hh_server" in
@@ -60,47 +59,24 @@ let start_server env =
   ()
 
 let should_start env =
-  try
-    with_timeout 6
-      ~on_timeout:(fun _ -> raise Server_busy)
-      ~do_:(fun () ->
-        ignore (ClientUtils.connect env.root);
-        false)
-  with
-  | Server_missing -> true
-  | Server_busy ->
-      Printf.fprintf
-        stderr
-        "Replacing busy server for %s\n%!"
-        (Path.to_string env.root);
-      HackClientStop.kill_server env.root;
-      true
-  | Server_initializing ->
-      Printf.fprintf
-        stderr
-        "Found initializing server for %s\n%!"
-        (Path.to_string env.root);
+  let root_s = Path.to_string env.root in
+  match CCS.connect_once env.root with
+  | Result.Ok _conn -> false
+  | Result.Error CCS.Server_missing
+  | Result.Error CCS.Build_id_mismatch -> true
+  | Result.Error CCS.Server_initializing ->
+      Printf.eprintf "Found initializing server for %s\n%!" root_s;
       false
-  | Server_cant_connect ->
-      Printf.fprintf
-        stderr
-        "Replacing unresponsive server for %s\n%!"
-        (Path.to_string env.root);
+  | Result.Error CCS.Server_busy ->
+      Printf.eprintf "Replacing unresponsive server for %s\n%!" root_s;
       HackClientStop.kill_server env.root;
-      true
-  | Server_out_of_date ->
-      Printf.eprintf
-        "Replacing out of date server for %s\n%!"
-        (Path.to_string env.root);
-      ignore(Unix.sleep 1);
       true
 
 let main env =
   if should_start env
   then start_server env
   else begin
-    Printf.fprintf
-      stderr
+    Printf.eprintf
       "Error: Server already exists for %s\n\
       Use hh_client restart if you want to kill it and start a new one\n%!"
       (Path.to_string env.root);

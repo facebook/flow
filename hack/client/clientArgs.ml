@@ -354,6 +354,7 @@ let parse_build_args () =
   in
   CBuild { ClientBuild.
     root = root;
+    wait = !wait;
     build_opts = { ServerBuild.
       steps = !steps;
       no_steps = !no_steps;
@@ -368,7 +369,6 @@ let parse_build_args () =
       incremental = !incremental;
       user = Sys_utils.logname ();
       verbose = !verbose;
-      wait = !wait;
     }
   }
 

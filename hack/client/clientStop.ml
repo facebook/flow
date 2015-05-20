@@ -9,7 +9,7 @@
  *)
 
 open Core
-open Sys_utils
+module CCS = ClientConnectSimple
 
 exception FailedToKill
 
@@ -28,30 +28,23 @@ end
 
 module type STOP_COMMAND = sig
   val kill_server : env -> unit
-  val main : env -> unit
 end
 
 module StopCommand (Config : STOP_CONFIG) : STOP_COMMAND = struct
 
-  let nice_kill env =
+  let nice_kill (ic, oc) env =
     let root = env.root in
-    Printf.fprintf stderr "Attempting to nicely kill server for %s\n%!"
+    Printf.eprintf "Attempting to nicely kill server for %s\n%!"
       (Path.to_string root);
-    let response = with_timeout 6
-      ~on_timeout: (fun _ -> raise ClientExceptions.Server_busy)
-      ~do_:(fun () ->
-        try
-          let ic, oc = ClientUtils.connect root in
-          Config.kill (ic, oc)
-        with e -> begin
-          Printf.fprintf stderr "%s\n%!" (Printexc.to_string e);
-          raise FailedToKill
-        end) in
+    let response = Config.kill (ic, oc) in
     if Config.is_expected response then begin
-      ignore(Unix.sleep 1);
-      if ClientUtils.server_exists root
-      then raise FailedToKill
-      else Printf.fprintf stderr "Successfully killed server for %s\n%!"
+      let i = ref 0 in
+      while CCS.server_exists root do
+        incr i;
+        if !i < 5 then ignore @@ Unix.sleep 1
+        else raise FailedToKill
+      done;
+      Printf.eprintf "Successfully killed server for %s\n%!"
         (Path.to_string root)
     end else begin
       Printf.fprintf stderr "Unexpected response from the server: %s\n"
@@ -79,28 +72,29 @@ module StopCommand (Config : STOP_CONFIG) : STOP_COMMAND = struct
         ()
     end;
     ignore(Unix.sleep 1);
-    if ClientUtils.server_exists env.root
+    if CCS.server_exists env.root
     then raise FailedToKill
     else Printf.fprintf stderr "Successfully killed server for %s\n%!"
       (Path.to_string env.root)
 
   let kill_server env =
-    Printf.fprintf stderr "Killing server for %s\n%!"
-      (Path.to_string env.root);
-    try nice_kill env
-    with FailedToKill ->
-      Printf.fprintf stderr "Failed to kill server nicely for %s\n%!"
-        (Path.to_string env.root);
-      try mean_kill env
-      with FailedToKill ->
-        Printf.fprintf stderr "Failed to kill server meanly for %s\n%!"
-          (Path.to_string env.root);
-        exit 1
-
-  let main env =
-    if ClientUtils.server_exists env.root
-    then kill_server env
-    else Printf.fprintf stderr "Error: no server to kill for %s\n%!"
-      (Path.to_string env.root)
+    let root_s = Path.to_string env.root in
+    match CCS.connect_once env.root with
+    | Result.Ok conn ->
+        begin
+          try nice_kill conn env
+          with FailedToKill ->
+            Printf.eprintf "Failed to kill server nicely for %s\n%!" root_s;
+            exit 1
+        end
+    | Result.Error CCS.Server_missing ->
+        Printf.eprintf "Error: no server to kill for %s\n%!" root_s
+    | Result.Error CCS.Build_id_mismatch ->
+        Printf.eprintf "Successfully killed server for %s\n%!" root_s
+    | Result.Error (CCS.Server_busy | CCS.Server_initializing) ->
+        try mean_kill env
+        with FailedToKill ->
+          Printf.eprintf "Failed to kill server meanly for %s\n%!" root_s;
+          exit 1
 
 end

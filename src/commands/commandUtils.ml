@@ -130,12 +130,67 @@ let start_flow_server root =
     | Unix.WEXITED 0 -> ()
     | _ -> (Printf.fprintf stderr "Could not start flow server!\n"; exit 77)
 
+
+let server_exists root = not (Lock.check root "lock")
+
+let wait_on_server_restart ic =
+  try
+    while true do
+      let _ = input_char ic in
+      ()
+    done
+  with
+  | End_of_file
+  | Sys_error _ ->
+     (* Server has exited and hung up on us *)
+     Printf.printf "Old server has exited\n%!";
+     ()
+
+(* Function connecting to hh_server *)
+let connect root =
+  if not (server_exists root)
+  then raise CommandExceptions.Server_missing;
+  let ic, oc, cstate =
+    try
+      let sock_name = Socket.get_path root in
+      let sockaddr = Unix.ADDR_UNIX sock_name in
+      let ic, oc = Unix.open_connection sockaddr in
+      try
+        Printf.fprintf oc "%s\n%!" Build_id.build_id_ohai;
+        let cstate : ServerUtils.connection_state = Marshal.from_channel ic in
+        ic, oc, cstate
+      with e ->
+        Unix.shutdown_connection ic;
+        close_in_noerr ic;
+        raise e
+    with _ ->
+      if not (Lock.check root "init")
+      then raise CommandExceptions.Server_initializing
+      else raise CommandExceptions.Server_cant_connect
+  in
+  let () = match cstate with
+    | ServerUtils.Connection_ok -> ()
+    | ServerUtils.Build_id_mismatch ->
+        (* The server is out of date and is going to exit. Subsequent calls
+         * to connect on the Unix Domain Socket might succeed, connecting to
+         * the server that is about to die, and eventually we will be hung
+         * up on while trying to read from our end.
+         *
+         * To avoid that fate, when we know the server is about to exit, we
+         * wait for the connection to be closed, signaling that the server
+         * has exited and the OS has cleaned up after it, then we try again.
+         *)
+        wait_on_server_restart ic;
+        close_in_noerr ic;
+        raise CommandExceptions.Server_out_of_date in
+  ic, oc
+
 let rec connect_helper autostart retries retry_if_init root =
   check_timeout ();
   try
-    ClientUtils.connect root
+    connect root
   with
-  | ClientExceptions.Server_initializing ->
+  | CommandExceptions.Server_initializing ->
       let init_msg = "flow server still initializing. If it was " ^
                      "just started this can take some time." in
       if retry_if_init
@@ -147,14 +202,14 @@ let rec connect_helper autostart retries retry_if_init root =
         Printf.fprintf stderr "%s Try again...\n%!" init_msg;
         exit 2
       )
-  | ClientExceptions.Server_cant_connect ->
+  | CommandExceptions.Server_cant_connect ->
       retry autostart retries retry_if_init root
         1 "Error: could not connect to flow server, retrying..."
-  | ClientExceptions.Server_busy ->
+  | CommandExceptions.Server_busy ->
       retry autostart retries retry_if_init root
         1 "Error: flow server is busy, retrying..."
-  | ClientExceptions.Server_out_of_date
-  | ClientExceptions.Server_missing ->
+  | CommandExceptions.Server_out_of_date
+  | CommandExceptions.Server_missing ->
     if autostart
     then (
       start_flow_server root;

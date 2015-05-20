@@ -14,41 +14,15 @@ type env = {
   root: Path.t;
 }
 
-let rec connect env retries =
-  try
-    let result = ClientUtils.connect env.root in
-    Printf.printf "\n%!";
-    result
-  with
-  | ClientExceptions.Server_cant_connect ->
-    if retries > 0
-    then begin
-      Printf.printf "Can't connect to server yet, retrying.\n%!";
-      Unix.sleep 1;
-      connect env (retries - 1)
-    end
-    else begin
-      Printf.fprintf stderr
-        "Error: could not connect to hh_server, giving up!\n%!";
-      exit 2
-    end
-  | ClientExceptions.Server_initializing ->
-    Printf.printf "Server still initializing. %s\r%!" (Tty.spinner());
-    if retries > 0
-    then (
-      Unix.sleep(1);
-      connect env (retries - 1)
-    )
-    else exit 2
-
 let main env =
-  if not (ClientUtils.server_exists env.root)
-  then ClientStart.start_server { ClientStart.
+  let ic, oc = ClientConnect.connect { ClientConnect.
     root = env.root;
-    wait = false;
+    autostart = true;
+    retries = Some num_build_retries;
+    retry_if_init = true;
+    expiry = None;
     no_load = false;
-  };
-  let ic, oc = connect env num_build_retries in
+  } in
   let path = ServerCommand.(rpc (ic, oc) ServerRpc.PROLOG) in
   close_out oc;
   Unix.execv path [||]

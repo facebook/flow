@@ -23,7 +23,6 @@ end
 
 module type STOP_COMMAND = sig
   val kill_server : env -> unit
-  val main : env -> unit
 end
 
 module StopCommand (Config : STOP_CONFIG) : STOP_COMMAND

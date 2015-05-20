@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2014, Facebook, Inc.
+ * Copyright (c) 2015, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -15,6 +15,7 @@ let num_build_retries = 800
 
 type env = {
   root : Path.t;
+  wait : bool;
   build_opts : ServerBuild.build_opts;
 }
 
@@ -30,98 +31,7 @@ let build_kind_of build_opts =
   else
     LC.Full
 
-let should_retry env tries = env.build_opts.ServerBuild.wait || tries > 0
-
-let rec connect env retries =
-  try
-    let result = ClientUtils.connect env.root in
-    if Tty.spinner_used() then Tty.print_clear_line stdout;
-    result
-  with
-  | ClientExceptions.Server_cant_connect ->
-    Printf.printf "Can't connect to server yet, retrying.\n%!";
-    if should_retry env retries
-    then begin
-      Unix.sleep 1;
-      connect env (retries - 1)
-    end
-    else exit 2
-  | ClientExceptions.Server_initializing ->
-    let wait_msg = if env.build_opts.ServerBuild.wait
-                   then Printf.sprintf "will wait forever due to --wait option, have waited %d seconds" (num_build_retries - retries)
-                   else Printf.sprintf "will wait %d more seconds" retries in
-    Printf.printf
-      (* This extra space before the \r is here to erase the spinner
-         when the length of this line decreases (but by at most 1!) as
-         it ticks down. We don't want to rely on Tty.print_clear_line
-         --- it would emit newlines when stdout is not a tty, and
-         obviate the effect of the \r. *)
-      "Hack server still initializing. (%s) %s \r%!"
-      wait_msg (Tty.spinner());
-    if should_retry env retries
-    then begin
-      Unix.sleep 1;
-      connect env (retries - 1)
-    end
-    else begin
-      if Tty.spinner_used() then Tty.print_clear_line stdout;
-      Printf.printf "Waited >%ds for hack server initialization.\n%s\n%s\n%s\n%!"
-        num_build_retries
-        "Your hack server is still initializing. This is an IO-bound"
-        "operation and may take a while if your disk cache is cold."
-        "Trying the build again may work; the server may be caught up now.";
-      exit 2
-    end
-
-let wait_on_server_restart ic =
-  try
-    while true do
-      let _ = input_char ic in
-      ()
-    done
-  with
-  | End_of_file
-  | Sys_error _ ->
-     (* Server has exited and hung up on us *)
-     Printf.printf "Old server has exited\n%!";
-     ()
-
-let rec main_ env retries =
-  let name = "hh_server" in
-  try
-    let ic, oc = connect env retries in
-    ServerCommand.(stream_request oc (BUILD env.build_opts));
-    handle_response env retries ic
-  with
-  | ClientExceptions.Server_missing ->
-      ClientStart.start_server { ClientStart.
-        root = env.root;
-        wait = false;
-        no_load = false;
-      };
-     main_ env retries
-  | ClientExceptions.Server_out_of_date ->
-     (* The server is out of date and is going to exit. Subsequent calls to
-      * connect on the Unix Domain Socket might succeed, connecting to the
-      * server that is about to die, and eventually we will be hung up on
-      * while trying to read from our end.
-      *
-      * To avoid that fate, when we know the server is about to exit, we wait
-      * for the connection to be closed, signaling that the server has exited
-      * and the OS has cleaned up after it, then we try again.
-      *)
-     Printf.eprintf "%s is outdated, going to launch a new one.\n%!" name;
-     main_ env (retries - 1)
-  | Sys_error _ ->
-     (* Connection reset, handle gracefully and try again *)
-     if should_retry env retries then
-       (Printf.printf "Connection hung up, trying again \n%!";
-        main_ env (retries - 1))
-     else
-       (Printf.printf "Error: Client failed to connect to server!!\n%!";
-        exit 2)
-
-and handle_response env retries ic =
+let handle_response env ic =
   let finished = ref false in
   let exit_code = ref 0 in
   EventLogger.client_begin_work (ClientLogCommand.LCBuild
@@ -156,4 +66,13 @@ and handle_response env retries ic =
     raise e
 
 let main env =
-  main_ env num_build_retries
+  let ic, oc = ClientConnect.connect { ClientConnect.
+    root = env.root;
+    autostart = true;
+    retries = if env.wait then None else Some num_build_retries;
+    retry_if_init = true;
+    expiry = None;
+    no_load = false;
+  } in
+  ServerCommand.(stream_request oc (BUILD env.build_opts));
+  handle_response env ic
