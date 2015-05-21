@@ -11,4 +11,64 @@ Arith.js:15:7,9: number
 This type is incompatible with
 Arith.js:6:16,21: string
 
-Found 2 errors
+relational.js:4:6,10: string
+This type is incompatible with
+relational.js:4:2,10: number
+
+relational.js:5:10,10: number
+This type is incompatible with
+relational.js:5:2,10: string
+
+relational.js:7:6,13: object literal
+This type is incompatible with
+relational.js:7:2,13: number
+
+relational.js:8:2,13: relational comparison
+Relational comparison with number may involve unintended type conversions of
+relational.js:8:2,9: object literal
+
+relational.js:9:2,20: relational comparison
+Relational comparison with object literal may involve unintended type conversions of
+relational.js:9:2,9: object literal
+
+relational.js:10:10,17: object literal
+This type is incompatible with
+relational.js:10:2,17: string
+
+relational.js:11:2,17: relational comparison
+Relational comparison with string may involve unintended type conversions of
+relational.js:11:2,9: object literal
+
+relational.js:14:6,6: null
+This type is incompatible with
+relational.js:14:2,6: number
+
+relational.js:14:6,6: undefined
+This type is incompatible with
+relational.js:14:2,6: number
+
+relational.js:15:2,6: relational comparison
+Relational comparison with number may involve unintended type conversions of possibly null value
+relational.js:15:2,2: null
+
+relational.js:15:2,6: relational comparison
+Relational comparison with number may involve unintended type conversions of possibly undefined value
+relational.js:15:2,2: undefined
+
+relational.js:17:2,12: relational comparison
+Relational comparison with null may involve unintended type conversions of possibly null value
+relational.js:17:9,12: null
+
+relational.js:18:2,17: relational comparison
+Relational comparison with undefined may involve unintended type conversions of possibly null value
+relational.js:18:14,17: null
+
+relational.js:19:2,17: relational comparison
+Relational comparison with undefined may involve unintended type conversions of possibly null value
+relational.js:19:2,5: null
+
+relational.js:20:2,22: relational comparison
+Relational comparison with undefined may involve unintended type conversions of possibly undefined value
+relational.js:20:2,10: undefined
+
+Found 17 errors
