@@ -61,4 +61,16 @@ E.js:2:9,28: property someProp
 Property not found in
 E.js:2:32,45: function
 
-Found 15 errors
+F.js:6:41,44: string
+This type is incompatible with
+F.js:6:23,28: number
+
+F.js:9:41,51: call of method toFixed
+Property not found in
+[LIB] core.js:166:1,192:1: String
+
+F.js:12:10,19: function type
+Too few arguments (expected default/rest parameters in function)
+F.js:12:25,35: arrow function
+
+Found 18 errors
