@@ -216,7 +216,14 @@ let rec parse values spec = function
   | [] -> values
   | arg::args ->
       if is_arg arg
-      then parse_flag values spec arg args
+      then
+        (* split "--foo=bar"::args into "--foo"::"bar"::args *)
+        let arg, args = match (Str.bounded_split (Str.regexp "=") arg 2) with
+        | arg::value::[] -> arg, value::args
+        | arg::[] -> arg, args
+        | _ -> assert false
+        in
+        parse_flag values spec arg args
       else parse_anon values spec arg args
 
 and parse_flag values spec arg args =
