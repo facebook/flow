@@ -747,7 +747,7 @@ and class_ ~attr ~final ~kind env =
   let cextends    =
     if kind = Ctrait then []
     else class_extends ~single:(kind <> Cinterface) env in
-  let cimplements = class_implements env in
+  let cimplements = class_implements kind env in
   let cbody       = class_body env in
   let result =
     { c_mode            = env.mode;
@@ -841,11 +841,16 @@ and class_extends ~single env =
       error_expect env "{";
       []
 
-and class_implements env =
+and class_implements kind env =
   match L.token env.file env.lb with
   | Tword ->
       (match Lexing.lexeme env.lb with
-      | "implements" -> class_extends_list env
+      | "implements" ->
+         let impl = class_extends_list env in
+         if kind = Cinterface then begin
+           error env "Expected: extends; Got implements"; []
+         end else
+           impl
       | "extends" -> L.back env.lb; []
       | s -> error env ("Expected: implements; Got: "^s); []
       )
