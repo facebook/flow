@@ -328,6 +328,16 @@ let str_ends_with long short =
   with Invalid_argument _ ->
     false
 
+(* Return a copy of the string with prefixing string removed.
+ * The function is a no-op if it s does not start with prefix.
+ * Modeled after Python's string.lstrip.
+ *)
+let lstrip s prefix =
+  let prefix_length = String.length prefix in
+  if str_starts_with s prefix
+  then String.sub s prefix_length (String.length s - prefix_length)
+  else s
+
 (*****************************************************************************)
 (* Same as List.iter2, except that we only iterate as far as the shortest
  * of both lists.
