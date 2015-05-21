@@ -80,6 +80,19 @@ module ArgSpec = struct
     );
     arg = Arg;
   }
+  let enum values = {
+    parse = (function
+    | Some [x] ->
+        if List.mem x values
+        then Some x
+        else raise (Failed_to_parse (Utils.spf
+          "expected one of: %s"
+          (String.concat ", " values)
+        ))
+    | _ -> None
+    );
+    arg = Arg;
+  }
 
   let no_arg = {
     parse = (function

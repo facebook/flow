@@ -7,6 +7,9 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  *)
+
+type color_mode = Always | Never | Auto
+
 type modes = {
   mutable debug: bool;
   mutable verbose: bool;
@@ -20,6 +23,7 @@ type modes = {
   mutable quiet : bool;
   mutable profile : bool;
   mutable no_flowlib: bool;
+  mutable color: color_mode;
 }
 
 let modes = {
@@ -35,6 +39,7 @@ let modes = {
   quiet = true;
   profile = false;
   no_flowlib = false;
+  color = Auto;
 }
 
 let debug_string f = if modes.debug then prerr_endline (f ())

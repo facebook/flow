@@ -33,6 +33,7 @@ module ArgSpec : sig
   val string : string option flag_t
   val bool : bool option flag_t
   val int : int option flag_t
+  val enum : string list -> string option flag_t
 
   val required : 'a option flag_t -> 'a flag_t
   val optional : 'a option flag_t -> 'a option flag_t
