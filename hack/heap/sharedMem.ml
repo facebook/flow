@@ -46,6 +46,16 @@ external load: string -> unit = "hh_load"
 external heap_size: unit -> int = "hh_heap_size"
 
 (*****************************************************************************)
+(* The number of used slots in our hashtable *)
+(*****************************************************************************)
+external hash_used_slots : unit -> int = "hh_hash_used_slots"
+
+(*****************************************************************************)
+(* The total number of slots in our hashtable *)
+(*****************************************************************************)
+external hash_slots : unit -> int = "hh_hash_slots"
+
+(*****************************************************************************)
 (* The number of used slots in our dependency table *)
 (*****************************************************************************)
 external dep_used_slots : unit -> int = "hh_dep_used_slots"
@@ -55,14 +65,19 @@ external dep_used_slots : unit -> int = "hh_dep_used_slots"
 (*****************************************************************************)
 external dep_slots : unit -> int = "hh_dep_slots"
 
-type dep_stats_t = {
-  dep_used_slots : int;
-  dep_slots : int;
+type table_stats = {
+  used_slots : int;
+  slots : int;
 }
 
 let dep_stats () = {
-  dep_used_slots = dep_used_slots ();
-  dep_slots = dep_slots ();
+  used_slots = dep_used_slots ();
+  slots = dep_slots ();
+}
+
+let hash_stats () = {
+  used_slots = hash_used_slots ();
+  slots = hash_slots ();
 }
 
 let collect () =
