@@ -727,9 +727,9 @@ and attribute env (_, e) =
   expr env e;
   ()
 
-let typedef tenv (_, _, h) =
+let typedef tenv t =
   let env = { t_is_finally = false;
               class_name = None; class_kind = None;
               imm_ctrl_ctx = Toplevel;
               tenv = tenv } in
-  hint env h
+  hint env t.t_kind

@@ -3742,7 +3742,12 @@ and method_def env m =
 
 and typedef_def env_up typedef =
   NastCheck.typedef env_up typedef;
-  let _, tcstr, hint = typedef in
+  let {
+    t_tparams = _;
+    t_constraint = tcstr;
+    t_kind = hint;
+    t_user_attributes = _;
+  } = typedef in
   ignore (Typing_hint.hint_locl ~ensure_instantiable:true env_up hint);
   ignore (opt_map (Typing_hint.check_instantiable env_up) tcstr);
   match hint with

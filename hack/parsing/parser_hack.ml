@@ -613,25 +613,11 @@ and toplevel_word ~attr env = function
       let fun_ = fun_ ~attr ~sync:FDeclSync env in
       [Fun fun_]
   | "newtype" ->
-      let id, tparaml, tconstraint, typedef = typedef env in
-      [Typedef {
-          t_id = id;
-          t_tparams = tparaml;
-          t_constraint = tconstraint;
-          t_kind = NewType typedef;
-          t_namespace = Namespace_env.empty;
-          t_mode = env.mode;
-      }]
+      let typedef_ = typedef ~attr ~is_abstract:true env in
+      [Typedef typedef_]
   | "type" ->
-      let id, tparaml, tconstraint, typedef = typedef env in
-      [Typedef {
-          t_id = id;
-          t_tparams = tparaml;
-          t_constraint = tconstraint;
-          t_kind = Alias typedef;
-          t_namespace = Namespace_env.empty;
-          t_mode = env.mode;
-      }]
+      let typedef_ = typedef ~attr ~is_abstract:false env in
+      [Typedef typedef_]
   | "namespace" ->
       let id, body = namespace env in
       [Namespace (id, body)]
@@ -3648,14 +3634,23 @@ and xhp_body pos name env =
 (* Typedefs *)
 (*****************************************************************************)
 
-and typedef env =
+and typedef ~attr ~is_abstract env =
   let id = identifier env in
   let tparams = class_params env in
   let tconstraint = typedef_constraint env in
   expect env Teq;
   let td = typedef_body env in
   expect env Tsc;
-  id, tparams, tconstraint, td
+  let kind = if is_abstract then NewType td else Alias td in
+  {
+    t_id = id;
+    t_tparams = tparams;
+    t_constraint = tconstraint;
+    t_kind = kind;
+    t_user_attributes = attr;
+    t_namespace = Namespace_env.empty;
+    t_mode = env.mode;
+  }
 
 and typedef_constraint env =
   match L.token env.file env.lb with

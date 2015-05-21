@@ -2237,8 +2237,13 @@ let typedef genv tdef =
         Errors.typedef_constraint pos;
     | _ -> ()
   end tparaml;
-  let ty = hint env ty in
-  tparaml, tconstraint, ty
+  let attrs = user_attributes env tdef.t_user_attributes in
+  {
+    N.t_tparams = tparaml;
+    t_constraint = tconstraint;
+    t_kind = hint env ty;
+    t_user_attributes = attrs;
+  }
 
 (*****************************************************************************)
 (* Global constants *)

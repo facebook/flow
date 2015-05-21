@@ -42,8 +42,8 @@ let type_class tcopt x =
 
 let check_typedef x =
   try
-    let _, _, hint as typedef = Naming_heap.TypedefHeap.find_unsafe x in
-    let filename = Pos.filename (fst hint) in
+    let typedef = Naming_heap.TypedefHeap.find_unsafe x in
+    let filename = Pos.filename Nast.(fst typedef.t_kind) in
     let tenv = Typing_env.empty TypecheckerOptions.permissive filename in
     (* Mode for typedefs themselves doesn't really matter right now, but
      * they can expand hints, so make it loose so that the typedef doesn't

@@ -201,7 +201,12 @@ and fun_ = {
   f_user_attributes : user_attribute list;
 }
 
-and typedef = tparam list * hint option * hint
+and typedef = {
+  t_tparams : tparam list;
+  t_constraint : hint option;
+  t_kind : hint;
+  t_user_attributes : user_attribute list;
+}
 
 and gconst = {
   cst_mode: FileInfo.mode;

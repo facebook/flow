@@ -840,8 +840,12 @@ and type_typedef_naming_and_decl nenv tdef =
     match tdef.Ast.t_kind with
     | Ast.Alias _ -> false
     | Ast.NewType _ -> true
-  in
-  let params, tcstr, concrete_type as decl = Naming.typedef nenv tdef in
+  in let {
+    t_tparams = params;
+    t_constraint = tcstr;
+    t_kind = concrete_type;
+    t_user_attributes = _;
+  } as decl = Naming.typedef nenv tdef in
   let filename = Pos.filename pos in
   let tcopt = Naming.typechecker_options nenv in
   let env = Typing_env.empty tcopt filename in
