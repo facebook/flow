@@ -2450,23 +2450,14 @@ let rec __flow cx (l,u) trace =
 
       rec_flow cx trace (StrT.why reason, t)
 
-    (***********************************************************)
-    (* comparison typechecks iff either of the following hold: *)
-    (*                                                         *)
-    (* number <> number = number                               *)
-    (* string <> string = string                               *)
-    (***********************************************************)
+    (**************************)
+    (* relational comparisons *)
+    (**************************)
 
-    | (_, ComparatorT(reason, ((OpenT _ | UnionT _) as u_))) ->
-      rec_flow cx trace (u_, ComparatorT (reason, l))
-
-    | (StrT _, ComparatorT(reason,t)) ->
-
-      rec_flow cx trace (t, StrT.why reason)
-
-    | (l, ComparatorT(reason,t)) when numeric l ->
-
-      rec_flow cx trace (t, NumT.why reason)
+    | (l, ComparatorT(reason, r)) ->
+      Ops.push reason;
+      flow_comparator cx trace reason l r;
+      Ops.pop ()
 
     (**************************************)
     (* types may be refined by predicates *)
@@ -2700,6 +2691,20 @@ let rec __flow cx (l,u) trace =
     );
   )
 
+(**
+ * relational comparisons like <, >, <=, >=
+ *
+ * typecheck iff either of the following hold:
+ *   number <> number = number
+ *   string <> string = string
+ **)
+and flow_comparator cx trace reason l r = match (l, r) with
+  | (_, (OpenT _ | UnionT _ | OptionalT _ | MaybeT _)) ->
+    rec_flow cx trace (r, ComparatorT (reason, l))
+  | (StrT _, StrT _) -> ()
+  | (_, _) when numeric l && numeric r -> ()
+  | (_, _) -> prerr_flow cx trace "Cannot be compared to" l r
+
 and abs_path_of_reason r =
   r |> pos_of_reason |> Pos.filename |> Relative_path.to_absolute
 
@@ -2729,7 +2734,6 @@ and err_operation = function
   | ObjSealT _ -> "Expected object instead of"
   | SuperT _ -> "Cannot inherit"
   | EqT (_, t) -> spf "Non-strict equality comparison with %s may involve unintended type conversions of" (desc_of_t t)
-  | ComparatorT (_, t) -> spf "Relational comparison with %s may involve unintended type conversions of" (desc_of_t t)
   | SpecializeT _ -> "Expected polymorphic type instead of"
   | LookupT _ -> "Property not found in"
   | KeyT _ -> "Expected object instead of"
