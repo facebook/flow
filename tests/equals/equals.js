@@ -1,2 +1,12 @@
-var x = (1 == null);
-var y = (1 == "");
+/* @flow */
+
+(1 == 1);
+("foo" == "bar");
+(1 == null);
+(null == 1);
+(1 == ""); // error
+("" == 1); // error
+
+var x = (null : ?number);
+(x == 1);
+(1 == x); // TODO: should not error!
