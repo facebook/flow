@@ -1626,7 +1626,7 @@ and stmt env st =
         N.Expr (cp, N.Any)
       | (cond_p, cond) :: el ->
         let violation = (cp, Call
-          ((p, Id (fp, SN.SpecialFunctions.invariant_violation)), el, uel)) in
+          ((p, Id (fp, "\\"^SN.SpecialFunctions.invariant_violation)), el, uel)) in
         if cond <> False then
           let b1, b2 = [Expr violation], [Noop] in
           let cond = cond_p, Unop (Unot, (cond_p, cond)) in
