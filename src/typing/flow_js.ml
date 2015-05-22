@@ -1789,19 +1789,18 @@ let rec __flow cx (l,u) trace =
         );
       rec_flow cx trace (l, u_)
 
-    | (ObjT (reason2, _),
-       InstanceT (reason1, _, super, { fields_tmap; methods_tmap; _ }))
+    (* TODO Try and remove this. We're not sure why this case should exist but
+     * it does seem to be triggered in www. *)
+    | (ObjT _,
+       InstanceT (reason1, _, super, {
+         fields_tmap;
+         methods_tmap;
+         structural = false;
+         _;
+       }))
       ->
-      let fields_tmap = find_props cx fields_tmap in
-      let methods_tmap = find_props cx methods_tmap in
-      let methods_tmap = SMap.remove "constructor" methods_tmap in
-      let flds2 = SMap.union fields_tmap methods_tmap in
-      flds2 |> SMap.iter
-          (fun s t2 ->
-            let reason2 = replace_reason (spf "property %s" s) reason2 in
-            rec_flow cx trace (l, LookupT (reason2, Some reason1, s, t2))
-          );
-      rec_flow cx trace (l, super)
+      structural_subtype cx trace l (reason1, super, fields_tmap, methods_tmap)
+
 
     (****************************************)
     (* You can cast an object to a function *)
@@ -1836,6 +1835,20 @@ let rec __flow cx (l,u) trace =
     | ArrT (r1, t1, ts1), ArrT (r2, t2, ts2) ->
       let lit = (desc_of_reason r1) = "array literal" in
       array_flow cx trace lit (ts1, t1, ts2, t2)
+
+    (***************************************************************)
+    (* Enable structural subtyping for upperbounds like interfaces *)
+    (***************************************************************)
+
+    | (_,
+       InstanceT (reason1, _, super, {
+         fields_tmap;
+         methods_tmap;
+         structural = true;
+         _;
+       }))
+      ->
+      structural_subtype cx trace l (reason1, super, fields_tmap, methods_tmap)
 
     (**************************************************)
     (* instances of classes follow declared hierarchy *)
@@ -2475,7 +2488,7 @@ let rec __flow cx (l,u) trace =
     (* Array library call *)
     (**********************)
 
-    | (ArrT (_, t, _), (GetT _ | SetT _ | MethodT _)) ->
+    | (ArrT (_, t, _), (GetT _ | SetT _ | MethodT _ | LookupT _)) ->
       let reason = reason_of_t u in
       let arrt = get_builtin_typeapp cx reason "Array" [t] in
       rec_flow cx trace (arrt, u)
@@ -2484,21 +2497,21 @@ let rec __flow cx (l,u) trace =
     (* String library call *)
     (***********************)
 
-    | (StrT (reason, _), (GetT _ | MethodT _)) ->
+    | (StrT (reason, _), (GetT _ | MethodT _ | LookupT _)) ->
       rec_flow cx trace (get_builtin_type cx reason "String",u)
 
     (***********************)
     (* Number library call *)
     (***********************)
 
-    | (NumT (reason, _), (GetT _ | MethodT _)) ->
+    | (NumT (reason, _), (GetT _ | MethodT _ | LookupT _)) ->
       rec_flow cx trace (get_builtin_type cx reason "Number",u)
 
     (***********************)
     (* Boolean library call *)
     (***********************)
 
-    | (BoolT (reason, _), (GetT _ | MethodT _)) ->
+    | (BoolT (reason, _), (GetT _ | MethodT _ | LookupT _)) ->
       rec_flow cx trace (get_builtin_type cx reason "Boolean",u)
 
     (***************************)
@@ -2871,6 +2884,19 @@ and mk_strict sealed is_dict reason_o reason_op =
   if (is_dict || (not sealed && Reason_js.same_scope reason_o reason_op))
   then None
   else Some reason_o
+
+and structural_subtype cx trace lower (upper_reason, super, fields_tmap, methods_tmap) =
+  let lower_reason = reason_of_t lower in
+  let fields_tmap = find_props cx fields_tmap in
+  let methods_tmap = find_props cx methods_tmap in
+  let methods_tmap = SMap.remove "constructor" methods_tmap in
+  let flds2 = SMap.union fields_tmap methods_tmap in
+  flds2 |> SMap.iter
+      (fun s t2 ->
+        let lookup_reason = replace_reason (spf "property %s" s) (reason_of_t t2) in
+        rec_flow cx trace (lower, LookupT (lookup_reason, Some lower_reason, s, t2))
+      );
+  rec_flow cx trace (lower, super)
 
 (*****************)
 (* substitutions *)

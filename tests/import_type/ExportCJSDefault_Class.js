@@ -3,7 +3,7 @@
  */
 
 class ClassFoo3 {
-  returnsANumber(): number { return 42; }
+  givesANum(): number { return 42; }
   static givesAFoo3(): ClassFoo3 {
     return new ClassFoo3();
   }

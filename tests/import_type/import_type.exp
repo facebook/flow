@@ -1,8 +1,4 @@
 
-ExportNamed_Alias.js:5:26,7:1: property returnsANumber
-Property not found in
-ExportCJSDefault_Class.js:12:18,26: ClassFoo3
-
 import_type.js:13:18,29: function call
 Error:
 ExportDefault_Class.js:5:7,15: ClassFoo1
@@ -63,12 +59,6 @@ import_type.js:45:9,14: number
 import_type.js:46:5,13: identifier ClassFoo4
 Could not resolve name
 
-import_type.js:56:21,32: function call
-Error:
-ExportNamed_Alias.js:5:26,7:1: property givesANum
-Property not found in
-ExportCJSDefault_Class.js:5:7,15: ClassFoo3
-
 import_type.js:57:18,29: function call
 Error:
 ExportCJSDefault_Class.js:5:7,15: ClassFoo3
@@ -90,4 +80,4 @@ import_type.js:72:14,21: import type { numValue }
 import_type.js:82:3,11: identifier ClassFoo6
 Could not resolve name
 
-Found 19 errors
+Found 17 errors
