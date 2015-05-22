@@ -33,6 +33,8 @@ val body_loc: Spider_monkey_ast.Statement.FunctionDeclaration.body ->
 
 val query_type: context -> Pos.t -> Pos.t * Type.t option * Type.t list
 
+val dump_types: context -> (Pos.t * string * Reason_js.reason list) list
+
 val fill_types: context -> (int * int * string) list
 
 val init:

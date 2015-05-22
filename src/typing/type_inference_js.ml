@@ -427,6 +427,21 @@ let query_type cx pos =
   ) cx.type_table;
   !result
 
+let dump_types cx =
+  Flow_js.suggested_type_cache := IMap.empty;
+  let lst = Hashtbl.fold (fun range t list ->
+    let pos = Reason_js.pos_of_loc range in
+    let ground_t = Flow_js.printified_type cx t in
+    let possible_ts = Flow_js.possible_types_of_type cx t in
+    let possible_reasons = possible_ts
+      |> List.map Constraint_js.reason_of_t
+    in
+    (pos, string_of_t cx ground_t, possible_reasons)::list
+  ) cx.type_table [] in
+  lst |> List.sort (fun
+    (a_pos, _, _) (b_pos, _, _) -> Pervasives.compare a_pos b_pos
+  )
+
 (********)
 (* Fill *)
 (********)
