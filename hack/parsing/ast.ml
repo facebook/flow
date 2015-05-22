@@ -52,13 +52,13 @@ and typedef = {
 }
 
 and gconst = {
-    cst_mode: FileInfo.mode;
-    cst_kind: cst_kind;
-    cst_name: id;
-    cst_type: hint option;
-    cst_value: expr;
-    cst_namespace: Namespace_env.env;
-  }
+  cst_mode: FileInfo.mode;
+  cst_kind: cst_kind;
+  cst_name: id;
+  cst_type: hint option;
+  cst_value: expr;
+  cst_namespace: Namespace_env.env;
+}
 
 and constraint_kind =
   | Constraint_as

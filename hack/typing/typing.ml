@@ -207,7 +207,8 @@ let make_param_local_ty env param =
     ~localize:Phase.localize_with_self
     env param
 
-let rec fun_decl (tcopt:TypecheckerOptions.t) f =
+let rec fun_decl nenv f =
+  let tcopt = Naming.typechecker_options nenv in
   let env = Env.empty tcopt (Pos.filename (fst f.f_name)) in
   let env = Env.set_mode env f.f_mode in
   let env = Env.set_root env (Dep.Fun (snd f.f_name)) in
@@ -314,9 +315,9 @@ and bind_param env (_, ty1) param =
 (*****************************************************************************)
 (* Now we are actually checking stuff! *)
 (*****************************************************************************)
-and fun_def env _ f =
+and fun_def env nenv _ f =
   Typing_hooks.dispatch_enter_fun_def_hook f;
-  let nb = (Nast.assert_named_body f.f_body) in
+  let nb = Naming.func_body nenv f in
   NastCheck.fun_ env f nb;
   (* Fresh type environment is actually unnecessary, but I prefer to
    * have a guarantee that we are using a clean typing environment. *)
@@ -339,7 +340,7 @@ and fun_def env _ f =
       let env, params =
         lfold make_param_local_ty env f_params in
       let env = List.fold_left2 bind_param env params f_params in
-      let env = fun_ env hret (fst f.f_name) f.f_body f.f_fun_kind in
+      let env = fun_ env hret (fst f.f_name) nb f.f_fun_kind in
       let env = fold_fun_list env env.Env.todo in
       if Env.is_strict env then begin
         List.iter2 (check_param env) f_params params;
@@ -354,22 +355,20 @@ and fun_def env _ f =
 (* function used to type closures, functions and methods *)
 (*****************************************************************************)
 
-and fun_ ?(abstract=false) env hret pos b f_kind =
+and fun_ ?(abstract=false) env hret pos named_body f_kind =
   Env.with_return env begin fun env ->
     debug_last_pos := pos;
     let env = Env.set_return env hret in
-    let nb = Nast.assert_named_body b in
     let env = Env.set_fn_kind env f_kind in
-    let env = block env nb.fnb_nast in
+    let env = block env named_body.fnb_nast in
     let ret = Env.get_return env in
     let env =
-      if Nast_terminality.Terminal.block nb.fnb_nast ||
+      if Nast_terminality.Terminal.block named_body.fnb_nast ||
         abstract ||
-        nb.fnb_unsafe ||
-        Env.is_decl env ||
+        named_body.fnb_unsafe ||
         !auto_complete
       then env
-      else fun_implicit_return env pos ret nb.fnb_nast f_kind in
+      else fun_implicit_return env pos ret named_body.fnb_nast f_kind in
     debug_last_pos := Pos.none;
     env
   end
@@ -3500,9 +3499,9 @@ and check_parent_abstract position parent_type class_type =
     check_extend_abstract_typeconst position class_type.tc_typeconsts;
   end else ()
 
-and class_def env_up _ c =
-  if not !auto_complete
-  then begin
+and class_def env_up nenv _ c =
+  let c = Naming.class_meth_bodies nenv c in
+  if not !auto_complete then begin
     NastCheck.class_ env_up c;
     NastInitCheck.class_ env_up c;
   end;
@@ -3511,13 +3510,12 @@ and class_def env_up _ c =
   match tc with
   | None ->
       (* This can happen if there was an error during the declaration
-       * of the class.
-       *)
+       * of the class. *)
       ()
   | Some tc -> class_def_ env_up c tc
 
 and get_self_from_c env c =
-  let _, tparams = lfold type_param env c.c_tparams in
+  let _, tparams = lfold type_param env (fst c.c_tparams) in
   let tparams = List.map begin fun (_, (p, s), param) ->
     Reason.Rwitness p, Tgeneric (s, param)
   end tparams in
@@ -3532,7 +3530,7 @@ and class_def_ env_up c tc =
   let pc, _ = c.c_name in
   let env, impl =
     lmap Typing_hint.hint env (c.c_extends @ c.c_implements @ c.c_uses) in
-  let env = Typing_hint.check_tparams_instantiable env c.c_tparams in
+  let env = Typing_hint.check_tparams_instantiable env (fst c.c_tparams) in
   Typing_variance.class_ (snd c.c_name) tc impl;
   let self = get_self_from_c env c in
   let env, impl_dimpl =
@@ -3631,9 +3629,9 @@ and class_implements_type env c1 ctype2 =
           env, Some (ck, ty)
       | None -> env, None in
     env, (Reason.Rwitness p, Tgeneric (s, param))
-  end env c1.c_tparams
+  end env (fst c1.c_tparams)
   in
-  let r = Reason.Rwitness (fst (c1.c_name)) in
+  let r = Reason.Rwitness (fst c1.c_name) in
   let ctype1 = r, Tapply (c1.c_name, params) in
   Typing_extends.check_implements env ctype2 ctype1;
   ()
@@ -3728,7 +3726,8 @@ and method_def env m =
     List.iter2 (check_param env) m_params params;
   end;
   let env = List.fold_left2 bind_param env params m_params in
-  let env = fun_ ~abstract:m.m_abstract env ret (fst m.m_name) m.m_body m.m_fun_kind in
+  let nb = Nast.assert_named_body m.m_body in
+  let env = fun_ ~abstract:m.m_abstract env ret (fst m.m_name) nb m.m_fun_kind in
   let env = List.fold_left (fun env f -> f env) env (Env.get_todo env) in
   match m.m_ret with
     | None when Env.is_strict env && snd m.m_name <> SN.Members.__destruct ->

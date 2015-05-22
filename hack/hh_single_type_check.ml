@@ -252,10 +252,10 @@ let print_coverage fn type_acc =
   let counts = ServerCoverageMetric.count_exprs fn type_acc in
   ClientCoverageMetric.go ~json:false (Some (Leaf counts))
 
-let print_prolog files_info =
+let print_prolog nenv files_info =
   let facts = Relative_path.Map.fold begin fun _ file_info acc ->
     let { FileInfo.funs; classes; typedefs; consts; _ } = file_info in
-    Prolog.facts_of_defs acc funs classes typedefs consts
+    Prolog.facts_of_defs acc nenv funs classes typedefs consts
   end files_info [] in
   PrologMain.output_facts stdout facts
 
@@ -273,8 +273,7 @@ let handle_mode mode filename nenv files_info errors lint_errors ai_results =
       Relative_path.Map.iter begin fun fn fileinfo ->
         if fn = builtins_filename then () else begin
           let result = ServerColorFile.get_level_list
-            (fun () -> ignore (ServerIdeUtils.check_defs
-              TypecheckerOptions.default fileinfo); fn) in
+            (fun () -> ignore (ServerIdeUtils.check_defs nenv fileinfo); fn) in
           print_colored fn result;
         end
       end files_info
@@ -303,11 +302,11 @@ let handle_mode mode filename nenv files_info errors lint_errors ai_results =
       end
       else Printf.printf "No lint errors\n"
   | Prolog ->
-      print_prolog files_info
+      print_prolog nenv files_info
   | Suggest
   | Errors ->
       let errors = Relative_path.Map.fold begin fun _ fileinfo errors ->
-        errors @ ServerIdeUtils.check_defs TypecheckerOptions.default fileinfo
+        errors @ ServerIdeUtils.check_defs nenv fileinfo
       end files_info errors in
       if mode = Suggest
       then Relative_path.Map.iter suggest_and_print files_info;

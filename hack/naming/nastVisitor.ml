@@ -350,7 +350,8 @@ class virtual ['a] nast_visitor: ['a] nast_visitor_type = object(this)
     acc
 
   method on_efun acc f _ = match f.f_body with
-    | UnnamedBody _ -> acc
+    | UnnamedBody _ ->
+      failwith "lambdas expected to be named in the context of the surrounding function"
     | NamedBody { fnb_nast ; _ } -> this#on_block acc fnb_nast
 
   method on_xml acc _ attrl el =

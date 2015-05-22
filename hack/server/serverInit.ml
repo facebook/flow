@@ -46,7 +46,7 @@ let init_hack genv env get_next =
   Hh_logger.log "Heap size: %d" (SharedMem.heap_size ());
 
   let errorl4, failed4 = Hh_logger.measure "Type-check" begin fun () ->
-    Typing_check_service.go (Naming.typechecker_options nenv) genv.workers fast
+    Typing_check_service.go genv.workers nenv fast
   end in
 
   let failed =

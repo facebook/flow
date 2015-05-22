@@ -330,7 +330,7 @@ and class_ tenv c =
   liter hint env c.c_extends;
   liter hint env c.c_implements;
   liter class_const env c.c_consts;
-  liter typeconst (env, c.c_tparams) c.c_typeconsts;
+  liter typeconst (env, (fst c.c_tparams)) c.c_typeconsts;
   liter class_var env c.c_static_vars;
   liter class_var env c.c_vars;
   liter method_ (env, true) c.c_static_methods;

@@ -304,7 +304,7 @@ let ifun_decl nenv (f: Ast.fun_) =
   let f = Naming.fun_ nenv f in
   let cid = snd f.f_name in
   Naming_heap.FunHeap.add cid f;
-  Typing.fun_decl (Naming.typechecker_options nenv) f;
+  Typing.fun_decl nenv f;
   ()
 
 (*****************************************************************************)
@@ -497,7 +497,7 @@ and class_decl tcopt c =
     then SMap.fold SMap.add self_dimpl dimpl
     else dimpl
   in
-  let env, tparams = lfold Typing.type_param env c.c_tparams in
+  let env, tparams = lfold Typing.type_param env (fst c.c_tparams) in
   let env, enum = match c.c_enum with
     | None -> env, None
     | Some e ->
