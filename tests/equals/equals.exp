@@ -1,14 +1,14 @@
 
 equals.js:7:2,8: non-strict equality comparison
-Non-strict equality comparison with string may involve unintended type conversions of
+Error:
 equals.js:7:2,2: number
+Cannot be compared to
+equals.js:7:7,8: string
 
 equals.js:8:2,8: non-strict equality comparison
-Non-strict equality comparison with number may involve unintended type conversions of
+Error:
 equals.js:8:2,3: string
+Cannot be compared to
+equals.js:8:8,8: number
 
-equals.js:12:2,7: non-strict equality comparison
-Non-strict equality comparison with ?number may involve unintended type conversions of
-equals.js:12:2,2: number
-
-Found 3 errors
+Found 2 errors

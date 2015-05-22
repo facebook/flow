@@ -2459,24 +2459,17 @@ let rec __flow cx (l,u) trace =
       flow_comparator cx trace reason l r;
       Ops.pop ()
 
+    | (l, EqT(reason, r)) ->
+      Ops.push reason;
+      flow_eq cx trace reason l r;
+      Ops.pop ()
+
     (**************************************)
     (* types may be refined by predicates *)
     (**************************************)
 
     | (_, PredicateT(p,t)) ->
       predicate cx trace t (l,p)
-
-    (***********************************************************************)
-    (* types may be compared with unstrict (in)equality iff they intersect *)
-    (* (otherwise, unsafe coercions may happen)                            *)
-    (* note: any types may be compared with strict (in)equality            *)
-    (***********************************************************************)
-
-    | (_, EqT(reason, ((OpenT _ | UnionT _) as u_))) ->
-
-      rec_flow cx trace (u_, EqT(reason, l))
-
-    | (_, EqT(_, u_)) when equatable cx trace (l,u_) -> ()
 
     (**********************)
     (* Array library call *)
@@ -2705,6 +2698,19 @@ and flow_comparator cx trace reason l r = match (l, r) with
   | (_, _) when numeric l && numeric r -> ()
   | (_, _) -> prerr_flow cx trace "Cannot be compared to" l r
 
+(**
+ * == equality
+ *
+ * typecheck iff they intersect (otherwise, unsafe coercions may happen).
+ *
+ * note: any types may be compared with === (in)equality.
+ **)
+and flow_eq cx trace reason l r = match (l, r) with
+  | (_, (OpenT _ | UnionT _ | OptionalT _ | MaybeT _)) ->
+    rec_flow cx trace (r, EqT(reason, l))
+  | (_, _) when equatable cx trace (l, r) -> ()
+  | (_, _) -> prerr_flow cx trace "Cannot be compared to" l r
+
 and abs_path_of_reason r =
   r |> pos_of_reason |> Pos.filename |> Relative_path.to_absolute
 
@@ -2733,7 +2739,6 @@ and err_operation = function
   | ObjRestT _ -> "Expected object instead of"
   | ObjSealT _ -> "Expected object instead of"
   | SuperT _ -> "Cannot inherit"
-  | EqT (_, t) -> spf "Non-strict equality comparison with %s may involve unintended type conversions of" (desc_of_t t)
   | SpecializeT _ -> "Expected polymorphic type instead of"
   | LookupT _ -> "Property not found in"
   | KeyT _ -> "Expected object instead of"

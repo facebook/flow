@@ -9,4 +9,4 @@
 
 var x = (null : ?number);
 (x == 1);
-(1 == x); // TODO: should not error!
+(1 == x);
