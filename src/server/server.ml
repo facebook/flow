@@ -118,14 +118,14 @@ struct
     EventLogger.check_response errors;
     send_errorl errors oc
 
-  let die_nicely oc =
+  let die_nicely genv oc =
     ServerProt.response_to_channel oc ServerProt.SERVER_DYING;
     EventLogger.killed ();
     Printf.printf "Status: Error\n";
     Printf.printf "Sent KILL command by client. Dying.\n";
-    (match !ServerDfind.dfind_pid with
-    | Some pid -> Unix.kill pid Sys.sigterm;
-    | None -> failwith "Dfind died before we could kill it"
+    (match genv.ServerEnv.dfind with
+    | Some handle -> Unix.kill (DfindLib.pid handle) Sys.sigterm;
+    | None -> ()
     );
     die ()
 
@@ -415,7 +415,7 @@ struct
     | ServerProt.INFER_TYPE (fn, line, char) ->
         infer_type (fn, line, char) oc
     | ServerProt.KILL ->
-        die_nicely oc
+        die_nicely genv oc
     | ServerProt.PING ->
         ServerProt.response_to_channel oc ServerProt.PONG
     | ServerProt.PORT (files) ->

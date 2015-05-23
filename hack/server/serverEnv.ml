@@ -18,6 +18,7 @@ type genv = {
     options          : ServerArgs.options;
     config           : ServerConfig.t;
     workers          : Worker.t list option;
+    dfind            : DfindLib.t option;
   }
 
 (*****************************************************************************)

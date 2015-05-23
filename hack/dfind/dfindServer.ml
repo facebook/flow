@@ -20,8 +20,6 @@ open Utils
 (* Processing an fsnotify event *)
 (*****************************************************************************)
 
-(* Die if something unexpected happened *)
-
 let (process_fsnotify_event:
        DfindEnv.t -> SSet.t -> Fsnotify.event
          -> SSet.t) = fun env dirty event ->

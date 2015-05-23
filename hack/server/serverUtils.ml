@@ -26,12 +26,12 @@ type file_input =
   | FileName of string
   | FileContent of string
 
-let die_nicely () =
+let die_nicely genv =
   HackEventLogger.killed ();
   Printf.printf "Status: Error\n";
   Printf.printf "Sent KILL command by client. Dying.\n";
-  (match !ServerDfind.dfind_pid with
-  | Some pid -> Unix.kill pid Sys.sigterm;
-  | None -> failwith "Dfind died before we could kill it"
+  (match genv.ServerEnv.dfind with
+  | Some handle -> Unix.kill (DfindLib.pid handle) Sys.sigterm;
+  | None -> ()
   );
   exit 0
