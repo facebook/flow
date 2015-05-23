@@ -11,10 +11,10 @@
 open Utils
 open Typing_defs
 
-module Funs = Typing_heap.Funs
-module Classes = Typing_heap.Classes
-module Typedefs = Typing_heap.Typedefs
-module GConsts = Typing_heap.GConsts
+module Funs : module type of Typing_heap.Funs
+module Classes : module type of Typing_heap.Classes
+module Typedefs : module type of Typing_heap.Typedefs
+module GConsts : module type of Typing_heap.GConsts
 
 type fake_members = {
   last_call : Pos.t option;
