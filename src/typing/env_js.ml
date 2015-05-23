@@ -210,6 +210,13 @@ let get_var_ cx x reason =
   (scope = global_scope, (get_from_scope x scope).specific)
 
 let var_ref ?(for_type=false) cx x reason =
+  (match exists_in_env x VarScope with
+  | Some { def_loc = Some loc; scope_kind = LexicalScope } ->
+      if Pervasives.compare (pos_of_reason reason) (pos_of_loc loc) < 0
+      then Flow_js.add_error cx [
+        reason, "ReferenceError: can't access lexical declaration before initialization"
+      ]
+  | _ -> ());
   let t = (read_env ~for_type cx x reason).specific in
   let p = pos_of_reason reason in
   mod_reason_of_t (repos_reason p) t

@@ -1,4 +1,16 @@
 
+common.js:36:15,17: identifier foo
+ReferenceError: can't access lexical declaration before initialization
+
+common.js:36:20,22: identifier bar
+ReferenceError: can't access lexical declaration before initialization
+
+common.js:44:17,19: identifier foo
+ReferenceError: can't access lexical declaration before initialization
+
+common.js:44:22,24: identifier bar
+ReferenceError: can't access lexical declaration before initialization
+
 const.js:12:9,11: Const must be initialized
 
-Found 1 error
+Found 5 errors

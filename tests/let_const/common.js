@@ -32,9 +32,38 @@ function varsStillHoist(): string {
   return foo;
 }
 
-/* TODO: function TDZ1() {
+function TDZ1() {
   console.log(foo, bar, baz); // ReferenceErrors (baz is OK)
   let foo = 1;
   const bar = 2;
   var baz = 3;
-} */
+}
+
+function TDZ2() {
+  {
+    console.log(foo, bar, baz); // ReferenceErrors (baz is OK)
+  }
+  let foo = 1;
+  const bar = 2;
+  var baz = 3;
+}
+
+function TDZ3() {
+  function fn() {
+    console.log(foo, bar, baz); // OK: only called after assignment
+  }
+  let foo = 1;
+  const bar = 2;
+  var baz = 3;
+  fn();
+}
+
+function TDZ4() {
+  function fn() {
+    console.log(foo, bar, baz); // TODO: called before assignment, should fail
+  }
+  fn();
+  let foo = 1;
+  const bar = 2;
+  var baz = 3;
+}
