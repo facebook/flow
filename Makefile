@@ -121,7 +121,7 @@ build-flow-native-deps: build-flow-stubs
 		$(NATIVE_OBJECT_FILES)
 
 build-flow-stubs:
-	echo 'const char* const BuildInfo_kRevision = "${SHA}";' > hack/utils/get_build_id.gen.c
+	echo "const char* const BuildInfo_kRevision = \"$$(git rev-parse HEAD)\";" > hack/utils/get_build_id.gen.c
 
 build-flowlib-archive:
 	mkdir -p bin

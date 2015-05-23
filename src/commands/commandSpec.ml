@@ -80,6 +80,19 @@ module ArgSpec = struct
     );
     arg = Arg;
   }
+  let enum values = {
+    parse = (function
+    | Some [x] ->
+        if List.mem x values
+        then Some x
+        else raise (Failed_to_parse (Utils.spf
+          "expected one of: %s"
+          (String.concat ", " values)
+        ))
+    | _ -> None
+    );
+    arg = Arg;
+  }
 
   let no_arg = {
     parse = (function
@@ -203,7 +216,14 @@ let rec parse values spec = function
   | [] -> values
   | arg::args ->
       if is_arg arg
-      then parse_flag values spec arg args
+      then
+        (* split "--foo=bar"::args into "--foo"::"bar"::args *)
+        let arg, args = match (Str.bounded_split (Str.regexp "=") arg 2) with
+        | arg::value::[] -> arg, value::args
+        | arg::[] -> arg, args
+        | _ -> assert false
+        in
+        parse_flag values spec arg args
       else parse_anon values spec arg args
 
 and parse_flag values spec arg args =

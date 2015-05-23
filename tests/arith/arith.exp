@@ -11,4 +11,94 @@ Arith.js:15:7,9: number
 This type is incompatible with
 Arith.js:6:16,21: string
 
-Found 2 errors
+relational.js:4:2,10: relational comparison
+Error:
+relational.js:4:2,2: number
+Cannot be compared to
+relational.js:4:6,10: string
+
+relational.js:5:2,10: relational comparison
+Error:
+relational.js:5:2,6: string
+Cannot be compared to
+relational.js:5:10,10: number
+
+relational.js:7:2,13: relational comparison
+Error:
+relational.js:7:2,2: number
+Cannot be compared to
+relational.js:7:6,13: object literal
+
+relational.js:8:2,13: relational comparison
+Error:
+relational.js:8:2,9: object literal
+Cannot be compared to
+relational.js:8:13,13: number
+
+relational.js:9:2,20: relational comparison
+Error:
+relational.js:9:2,9: object literal
+Cannot be compared to
+relational.js:9:13,20: object literal
+
+relational.js:10:2,17: relational comparison
+Error:
+relational.js:10:2,6: string
+Cannot be compared to
+relational.js:10:10,17: object literal
+
+relational.js:11:2,17: relational comparison
+Error:
+relational.js:11:2,9: object literal
+Cannot be compared to
+relational.js:11:13,17: string
+
+relational.js:14:2,6: relational comparison
+Error:
+relational.js:14:6,6: null
+Cannot be compared to
+relational.js:14:2,2: number
+
+relational.js:14:2,6: relational comparison
+Error:
+relational.js:14:6,6: undefined
+Cannot be compared to
+relational.js:14:2,2: number
+
+relational.js:15:2,6: relational comparison
+Error:
+relational.js:15:2,2: null
+Cannot be compared to
+relational.js:15:6,6: number
+
+relational.js:15:2,6: relational comparison
+Error:
+relational.js:15:2,2: undefined
+Cannot be compared to
+relational.js:15:6,6: number
+
+relational.js:17:2,12: relational comparison
+Error:
+relational.js:17:9,12: null
+Cannot be compared to
+relational.js:17:2,5: null
+
+relational.js:18:2,17: relational comparison
+Error:
+relational.js:18:14,17: null
+Cannot be compared to
+relational.js:18:2,10: undefined
+
+relational.js:19:2,17: relational comparison
+Error:
+relational.js:19:2,5: null
+Cannot be compared to
+relational.js:19:9,17: undefined
+
+relational.js:20:2,22: relational comparison
+Error:
+relational.js:20:2,10: undefined
+Cannot be compared to
+relational.js:20:14,22: undefined
+
+Found 17 errors

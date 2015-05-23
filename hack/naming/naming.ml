@@ -40,7 +40,7 @@ type canon_names_map = string SMap.t
 let canon_key = String.lowercase
 
 (* <T as A>, A is a type constraint *)
-type type_constraint = (Ast.constraint_kind * hint) option
+type type_constraint = (Ast.constraint_kind * Ast.hint) option
 
 type genv = {
 
@@ -54,7 +54,7 @@ type genv = {
   in_try: bool;
 
   (* are we in the body of a non-static member function? *)
-  in_non_static_method: bool;
+  in_instance_method: bool;
 
   (* In function foo<T1, ..., Tn> or class<T1, ..., Tn>, the field
    * type_params knows T1 .. Tn. It is able to find out about the
@@ -218,7 +218,7 @@ module Env = struct
     in_mode       = FileInfo.Mstrict;
     tcopt         = nenv.itcopt;
     in_try        = false;
-    in_non_static_method = false;
+    in_instance_method = false;
     type_params   = SMap.empty;
     type_paraml   = [];
     classes       = ref nenv.iclasses;
@@ -230,25 +230,27 @@ module Env = struct
     namespace     = Namespace_env.empty;
   }
 
-  let make_class_genv nenv params c = {
+  let make_class_genv nenv params mode tparams (cid, ckind) namespace = {
     in_mode       =
-      (if !Autocomplete.auto_complete then FileInfo.Mpartial else c.c_mode);
+      (if !Autocomplete.auto_complete then FileInfo.Mpartial else mode);
     tcopt         = nenv.itcopt;
     in_try        = false;
-    in_non_static_method = false;
+    in_instance_method = false;
     type_params   = params;
-    type_paraml   = List.map (fun (_, x, _) -> x) c.c_tparams;
+    type_paraml   = tparams;
     classes       = ref nenv.iclasses;
     funs          = ref nenv.ifuns;
     typedefs      = ref nenv.itypedefs;
     gconsts       = ref nenv.iconsts;
-    current_cls   = Some (c.c_name, c.c_kind);
-    droot         = Some (Typing_deps.Dep.Class (snd c.c_name));
-    namespace     = c.c_namespace;
+    current_cls   = Some (cid, ckind);
+    droot         = Some (Typing_deps.Dep.Class (snd cid));
+    namespace;
   }
 
-  let make_class_env genv params c =
-    let genv = make_class_genv genv params c in
+  let make_class_env nenv params c =
+    let tparams = List.map (fun (_, x, _) -> x) c.c_tparams in
+    let genv = make_class_genv nenv params c.c_mode
+      tparams (c.c_name, c.c_kind) c.c_namespace in
     let lenv = empty_local () in
     let env  = genv, lenv in
     env
@@ -257,7 +259,7 @@ module Env = struct
     in_mode       = FileInfo.(if !Ide.is_ide_mode then Mpartial else Mstrict);
     tcopt         = nenv.itcopt;
     in_try        = false;
-    in_non_static_method = false;
+    in_instance_method = false;
     type_params   = cstrs;
     type_paraml   = List.map (fun (_, x, _) -> x) tdef.t_tparams;
     classes       = ref nenv.iclasses;
@@ -275,11 +277,11 @@ module Env = struct
     let env  = genv, lenv in
     env
 
-  let make_fun_genv nenv params f = {
-    in_mode       = f.f_mode;
+  let make_fun_genv nenv params f_mode f_name f_namespace = {
+    in_mode       = f_mode;
     tcopt         = nenv.itcopt;
     in_try        = false;
-    in_non_static_method = false;
+    in_instance_method = false;
     type_params   = params;
     type_paraml   = [];
     classes       = ref nenv.iclasses;
@@ -287,15 +289,18 @@ module Env = struct
     typedefs      = ref nenv.itypedefs;
     gconsts       = ref nenv.iconsts;
     current_cls   = None;
-    droot         = Some (Typing_deps.Dep.Fun (snd f.f_name));
-    namespace     = f.f_namespace;
+    droot         = Some (Typing_deps.Dep.Fun f_name);
+    namespace     = f_namespace;
   }
+
+  let make_fun_decl_genv nenv params f =
+    make_fun_genv nenv params f.f_mode (snd f.f_name) f.f_namespace
 
   let make_const_genv nenv cst = {
     in_mode       = cst.cst_mode;
     tcopt         = nenv.itcopt;
     in_try        = false;
-    in_non_static_method = false;
+    in_instance_method = false;
     type_params   = SMap.empty;
     type_paraml   = [];
     classes       = ref nenv.iclasses;
@@ -975,16 +980,16 @@ let check_tparams_shadow class_tparam_names methods =
 (* The entry point to CHECK the program, and transform the program *)
 (*****************************************************************************)
 
-let rec class_constraints genv tparams =
+let rec class_constraints tparams =
   let cstrs = make_constraints tparams in
   (* Checking there is no cycle in the type constraints *)
   List.iter (Naming_ast_helpers.HintCycle.check_constraint cstrs) tparams;
   cstrs
 
 (* Naming of a class *)
-and class_ genv c =
-  let cstrs    = class_constraints genv c.c_tparams in
-  let env      = Env.make_class_env genv cstrs c in
+and class_ nenv c =
+  let constraints = class_constraints c.c_tparams in
+  let env      = Env.make_class_env nenv constraints c in
   (* Checking for a code smell *)
   List.iter check_constraint c.c_tparams;
   List.iter (hint_no_typedef env) c.c_extends;
@@ -1034,7 +1039,7 @@ and class_ genv c =
       N.c_is_xhp         = c.c_is_xhp;
       N.c_kind           = c.c_kind;
       N.c_name           = name;
-      N.c_tparams        = tparam_l;
+      N.c_tparams        = (tparam_l, constraints);
       N.c_extends        = parents;
       N.c_uses           = uses;
       N.c_xhp_attr_uses  = xhp_attr_uses;
@@ -1178,7 +1183,7 @@ and constructor env acc = function
   | XhpAttr _ -> acc
   | Method ({ m_name = (p, name); _ } as m) when name = SN.Members.__construct ->
       (match acc with
-      | None -> Some (method_ env m)
+      | None -> Some (method_ (fst env) m)
       | Some _ -> Errors.method_name_already_bound p name; acc)
   | Method _ -> acc
   | TypeConst _ -> acc
@@ -1286,7 +1291,7 @@ and class_static_method env x acc =
   | ClassVars _ -> acc
   | XhpAttr _ -> acc
   | Method m when snd m.m_name = SN.Members.__construct -> acc
-  | Method m when List.mem Static m.m_kind -> method_ env m :: acc
+  | Method m when List.mem Static m.m_kind -> method_ (fst env) m :: acc
   | Method _ -> acc
   | TypeConst _ -> acc
 
@@ -1302,9 +1307,8 @@ and class_method env sids cv_ids x acc =
   | XhpAttr _ -> acc
   | Method m when snd m.m_name = SN.Members.__construct -> acc
   | Method m when not (List.mem Static m.m_kind) ->
-      let genv, lenv = env in
-      let env = ({ genv with in_non_static_method = true}, lenv) in
-      method_ env m :: acc
+      let genv = fst env in
+      method_ { genv with in_instance_method = true } m :: acc
   | Method _ -> acc
   | TypeConst _ -> acc
 
@@ -1427,17 +1431,13 @@ and typeconst env t =
        c_tconst_type = type_;
      })
 
-and fun_kind env fun_type =
-  let has_unsafe = !((snd env).has_unsafe) in
-  has_unsafe, fun_type
+and func_body_had_unsafe env = !((snd env).has_unsafe)
 
-and method_ env m =
-  let genv, lenv = env in
-  let lenv = Env.empty_local() in
+and method_ genv m =
   let genv = extend_params genv m.m_tparams in
-  let env = genv, lenv in
+  let env = genv, Env.empty_local() in
   (* Cannot use 'this' if it is a public instance method *)
-  let allow_this = not genv.in_non_static_method ||
+  let allow_this = not genv.in_instance_method ||
     not (List.mem Public m.m_kind) in
   let variadicity, paraml = fun_paraml ~allow_this env m.m_params in
   let name = Env.new_const env m.m_name in
@@ -1445,34 +1445,34 @@ and method_ env m =
   let final, abs, vis = List.fold_left kind acc m.m_kind in
   List.iter check_constraint m.m_tparams;
   let tparam_l = type_paraml env m.m_tparams in
-  (* Naming method body: *)
-  let body_nast =
-    match genv.in_mode with
-    | FileInfo.Mpartial | FileInfo.Mstrict -> block env m.m_body
-    | FileInfo.Mdecl -> [] in
-  (* If not naming: ... *)
-  (* let body = N.UnnamedBody m.m_body in *)
-  (* ... and don't forget that fun_kind (generators) and unsafe
-   * both depend upon the processing of the unnamed ast *)
-  let attrs = user_attributes env m.m_user_attributes in
-  let unsafe_in_body, f_kind = fun_kind env m.m_fun_kind in
-  let unsafe = (genv.in_mode = FileInfo.Mdecl) || unsafe_in_body in
+
   let ret = opt_map (hint ~allow_this:true ~allow_retonly:true env) m.m_ret in
-  let body = N.NamedBody {
-    N.fnb_nast = body_nast;
-    fnb_unsafe = unsafe;
-  } in
-  N.({ m_final      = final  ;
-       m_visibility = vis    ;
-       m_abstract   = abs    ;
-       m_name       = name   ;
-       m_tparams    = tparam_l;
-       m_params     = paraml ;
-       m_body       = body   ;
-       m_fun_kind   = f_kind ;
+  let f_kind = m.m_fun_kind in
+  let body = (match genv.in_mode with
+    | FileInfo.Mdecl ->
+      N.NamedBody {
+        N.fnb_nast = [];
+        fnb_unsafe = true;
+      }
+    | FileInfo.Mstrict | FileInfo.Mpartial ->
+      N.UnnamedBody {
+        N.fub_ast = m.m_body;
+        fub_tparams = m.m_tparams;
+        fub_namespace = genv.namespace;
+      }
+  ) in
+  let attrs = user_attributes env m.m_user_attributes in
+  N.({ m_final           = final       ;
+       m_visibility      = vis         ;
+       m_abstract        = abs         ;
+       m_name            = name        ;
+       m_tparams         = tparam_l    ;
+       m_params          = paraml      ;
+       m_body            = body        ;
+       m_fun_kind        = f_kind      ;
+       m_ret             = ret         ;
+       m_variadic        = variadicity ;
        m_user_attributes = attrs;
-       m_ret        = ret    ;
-       m_variadic   = variadicity;
      })
 
 and kind (final, abs, vis) = function
@@ -1536,16 +1536,16 @@ and uselist_lambda f =
     p, Ident.tmp()
   in
   let tcopt = TypecheckerOptions.permissive in
-  let genv = Env.make_fun_genv (empty tcopt) SMap.empty f in
+  let genv = Env.make_fun_decl_genv (empty tcopt) SMap.empty f in
   let lenv = Env.empty_local () in
   let lenv = { lenv with unbound_mode = UBMFunc handle_unbound } in
   let env = genv, lenv in
   ignore (expr_lambda env f);
   uniq !to_capture
 
-and fun_ genv f =
+and fun_ nenv f =
   let tparams = make_constraints f.f_tparams in
-  let genv = Env.make_fun_genv genv tparams f in
+  let genv = Env.make_fun_decl_genv nenv tparams f in
   let lenv = Env.empty_local () in
   let env = genv, lenv in
   let h = opt_map (hint ~allow_this:true ~allow_retonly:true env) f.f_ret in
@@ -1553,23 +1553,20 @@ and fun_ genv f =
   let x = Env.fun_id env f.f_name in
   List.iter check_constraint f.f_tparams;
   let f_tparams = type_paraml env f.f_tparams in
-  (* Naming func body: *)
-  let body_nast =
-    match genv.in_mode with
-    | FileInfo.Mstrict | FileInfo.Mpartial -> block env f.f_body
-    | FileInfo.Mdecl -> []
+  let f_kind = f.f_fun_kind in
+  let body = match genv.in_mode with
+    | FileInfo.Mdecl ->
+      N.NamedBody {
+        N.fnb_nast = [];
+        fnb_unsafe = true;
+      }
+    | FileInfo.Mstrict | FileInfo.Mpartial ->
+      N.UnnamedBody {
+        N.fub_ast = f.f_body;
+        fub_tparams = f.f_tparams;
+        fub_namespace = f.f_namespace;
+      }
   in
-  (* If not naming: ... *)
-  (* let body = N.UnnamedBody f.f_body in *)
-  (* let unsafe = false in *)
-  (* ... and don't forget that fun_kind (generators) and unsafe
-   * both depend upon the processing of the unnamed ast *)
-  let unsafe_in_body, f_kind = fun_kind env f.f_fun_kind in
-  let unsafe = (genv.in_mode = FileInfo.Mdecl) || unsafe_in_body in
-  let body = N.NamedBody {
-    N.fnb_nast = body_nast;
-    fnb_unsafe = unsafe;
-  } in
   let named_fun = {
     N.f_mode = f.f_mode;
     f_ret = h;
@@ -2131,10 +2128,11 @@ and expr_lambda env f =
   (* save unsafe and yield state *)
   (snd env).has_unsafe := false;
   let variadicity, paraml = fun_paraml env f.f_params in
+  let f_kind = f.f_fun_kind in
   (* The bodies of lambdas go through naming in the containing local
    * environment *)
   let body_nast = block env f.f_body in
-  let unsafe, f_kind = fun_kind env f.f_fun_kind in
+  let unsafe = func_body_had_unsafe env in
   (* restore unsafe state *)
   (snd env).has_unsafe := previous_unsafe;
   let body = N.NamedBody {
@@ -2221,13 +2219,97 @@ and attr env (x, e) = x, expr env e
 and string2 env idl =
   rev_rev_map (expr env) idl
 
+
+(*****************************************************************************)
+(* Function/Method Body Naming: *)
+(* Ensure that, given a function / class, any UnnamedBody within is
+ * transformed into a a named body *)
+(*****************************************************************************)
+
+let func_body nenv f =
+  match f.N.f_body with
+    | N.NamedBody b -> b
+    | N.UnnamedBody { N.fub_ast; N.fub_tparams; N.fub_namespace; _ } ->
+      let genv = Env.make_fun_genv nenv
+        SMap.empty f.N.f_mode (snd f.N.f_name) fub_namespace in
+      let genv = extend_params genv fub_tparams in
+      let lenv = Env.empty_local () in
+      let env = genv, lenv in
+      (* Reuse the ids issued by the naming pass over the params
+       * in the declaration *)
+      let add_param_as_local = begin fun param env ->
+        let p_name = param.N.param_name in
+        let p_pos, _ = param.N.param_id in
+        let () = Env.add_lvar env (p_pos, p_name) param.N.param_id in
+        env
+      end in
+      let env = List.fold_right add_param_as_local f.N.f_params env in
+      let env = match f.N.f_variadic with
+        | N.FVellipsis | N.FVnonVariadic -> env
+        | N.FVvariadicArg param -> add_param_as_local param env
+      in
+      let body = block env fub_ast in
+      let unsafe = func_body_had_unsafe env in {
+        N.fnb_nast = body;
+        fnb_unsafe = unsafe;
+      }
+
+let meth_body genv m =
+  let named_body = (match m.N.m_body with
+    | N.NamedBody _ as b -> b
+    | N.UnnamedBody {N.fub_ast; N.fub_tparams; N.fub_namespace; _} ->
+      let genv = {genv with namespace = fub_namespace} in
+      let genv = extend_params genv fub_tparams in
+      let env = genv, Env.empty_local() in
+
+      (* Reuse the ids issued by the naming pass over the params
+       * in the declaration *)
+      let add_param_as_local = begin fun param env ->
+        let p_name = param.N.param_name in
+        let p_pos, _ = param.N.param_id in
+        let () = Env.add_lvar env (p_pos, p_name) param.N.param_id in
+        env
+      end in
+      let env = List.fold_right add_param_as_local m.N.m_params env in
+      let env = match m.N.m_variadic with
+        | N.FVellipsis | N.FVnonVariadic -> env
+        | N.FVvariadicArg param -> add_param_as_local param env
+      in
+      let body = block env fub_ast in
+      let unsafe = func_body_had_unsafe env in
+      N.NamedBody {
+        N.fnb_nast = body;
+        fnb_unsafe = unsafe;
+      }
+  ) in
+  {m with N.m_body = named_body}
+
+let class_meth_bodies nenv nc =
+  let n_tparams, cstrs = nc.N.c_tparams in
+  let tparams = List.map (fun (_, x, _) -> x) n_tparams in
+  let genv  = Env.make_class_genv nenv cstrs
+    nc.N.c_mode tparams (nc.N.c_name, nc.N.c_kind) Namespace_env.empty
+  in
+  let inst_genv = {genv with in_instance_method = true} in
+  let inst_meths = List.map (meth_body inst_genv) nc.N.c_methods in
+  let opt_constructor = match nc.N.c_constructor with
+    | None -> None
+    | Some c -> Some (meth_body inst_genv c) in
+  let static_genv = {genv with in_instance_method = false} in
+  let static_meths = List.map (meth_body static_genv) nc.N.c_static_methods in
+  { nc with
+    N.c_methods        = inst_meths;
+    N.c_static_methods = static_meths ;
+    N.c_constructor    = opt_constructor ;
+  }
+
 (*****************************************************************************)
 (* Typedefs *)
 (*****************************************************************************)
 
 let typedef genv tdef =
   let ty = match tdef.t_kind with Alias t | NewType t -> t in
-  let cstrs = class_constraints genv tdef.t_tparams in
+  let cstrs = class_constraints tdef.t_tparams in
   let env = Env.make_typedef_env genv cstrs tdef in
   let tconstraint = opt_map (hint env) tdef.t_constraint in
   List.iter check_constraint tdef.t_tparams;
@@ -2237,8 +2319,13 @@ let typedef genv tdef =
         Errors.typedef_constraint pos;
     | _ -> ()
   end tparaml;
-  let ty = hint env ty in
-  tparaml, tconstraint, ty
+  let attrs = user_attributes env tdef.t_user_attributes in
+  {
+    N.t_tparams = tparaml;
+    t_constraint = tconstraint;
+    t_kind = hint env ty;
+    t_user_attributes = attrs;
+  }
 
 (*****************************************************************************)
 (* Global constants *)

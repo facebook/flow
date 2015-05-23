@@ -2075,7 +2075,7 @@ and else_word ~is_toplevel env = wrap_word env begin function
         | _ -> back env);
       block ~is_toplevel env;
   | "elseif" ->
-      seq env [last_token; space; expr_paren; space];
+      seq env [out "else"; space; out "if"; space; expr_paren; space];
       block ~is_toplevel env;
   | _ -> assert false
 end

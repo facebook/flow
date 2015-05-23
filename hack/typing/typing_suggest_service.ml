@@ -181,20 +181,21 @@ let collate_types fast all_types =
 
 let type_fun fn x =
   try
-    let tenv = Env.empty TypecheckerOptions.permissive fn in
+    let tcopt = TypecheckerOptions.permissive in
+    let nenv, tenv = Naming.empty tcopt, Env.empty tcopt fn in
     let fun_ = Naming_heap.FunHeap.find_unsafe x in
-    Typing.fun_def tenv x fun_;
+    Typing.fun_def tenv nenv x fun_;
   with Not_found ->
     ()
 
 let type_class fn x =
   try
+    let tcopt = TypecheckerOptions.permissive in
+    let nenv, tenv = Naming.empty tcopt, Env.empty tcopt fn in
     let class_ = Naming_heap.ClassHeap.get x in
-    let tenv = Env.empty TypecheckerOptions.permissive fn in
     (match class_ with
     | None -> ()
-    | Some class_ ->
-        Typing.class_def tenv x class_
+    | Some class_ -> Typing.class_def tenv nenv x class_
     )
   with Not_found ->
     ()

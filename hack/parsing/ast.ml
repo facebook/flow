@@ -42,22 +42,23 @@ and def =
   | NamespaceUse of (id * id) list
 
 and typedef = {
-    t_id: id;
-    t_tparams: tparam list;
-    t_constraint: tconstraint;
-    t_kind: typedef_kind;
-    t_namespace: Namespace_env.env;
-    t_mode: FileInfo.mode;
+  t_id: id;
+  t_tparams: tparam list;
+  t_constraint: tconstraint;
+  t_kind: typedef_kind;
+  t_user_attributes: user_attribute list;
+  t_namespace: Namespace_env.env;
+  t_mode: FileInfo.mode;
 }
 
 and gconst = {
-    cst_mode: FileInfo.mode;
-    cst_kind: cst_kind;
-    cst_name: id;
-    cst_type: hint option;
-    cst_value: expr;
-    cst_namespace: Namespace_env.env;
-  }
+  cst_mode: FileInfo.mode;
+  cst_kind: cst_kind;
+  cst_name: id;
+  cst_type: hint option;
+  cst_value: expr;
+  cst_namespace: Namespace_env.env;
+}
 
 and constraint_kind =
   | Constraint_as

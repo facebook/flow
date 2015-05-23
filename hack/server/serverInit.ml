@@ -46,7 +46,7 @@ let init_hack genv env get_next =
   Hh_logger.log "Heap size: %d" (SharedMem.heap_size ());
 
   let errorl4, failed4 = Hh_logger.measure "Type-check" begin fun () ->
-    Typing_check_service.go (Naming.typechecker_options nenv) genv.workers fast
+    Typing_check_service.go genv.workers nenv fast
   end in
 
   let failed =
@@ -57,10 +57,15 @@ let init_hack genv env get_next =
 
   SharedMem.init_done();
 
-  let {SharedMem.dep_used_slots; dep_slots} = SharedMem.dep_stats () in
-  let load_factor = float_of_int dep_used_slots /. float_of_int dep_slots in
+  let {SharedMem.used_slots; slots} = SharedMem.dep_stats () in
+  let load_factor = float_of_int used_slots /. float_of_int slots in
   Hh_logger.log "Dependency table load factor: %d / %d (%.02f)"
-    dep_used_slots dep_slots load_factor;
+    used_slots slots load_factor;
+
+  let {SharedMem.used_slots; slots} = SharedMem.hash_stats () in
+  let load_factor = float_of_int used_slots /. float_of_int slots in
+  Hh_logger.log "Hashtable load factor: %d / %d (%.02f)"
+    used_slots slots load_factor;
 
   let errorl = List.fold_right List.rev_append
       [errorl1; errorl2; errorl3; errorl4] [] in

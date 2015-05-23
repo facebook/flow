@@ -61,7 +61,7 @@ let declare path content =
             let nenv = Naming.empty tcopt in
             let f = Naming.fun_ nenv f in
             let fname = (snd f.Nast.f_name) in
-            Typing.fun_decl tcopt f;
+            Typing.fun_decl nenv f;
             declared_funs := SSet.add fname !declared_funs;
         | Ast.Class c ->
             let tcopt = TypecheckerOptions.permissive in
@@ -91,14 +91,14 @@ let fix_file_and_def path content = try
           let f = Naming.fun_ nenv f in
           let filename = Pos.filename (fst f.Nast.f_name) in
           let tenv = Typing_env.empty tcopt filename in
-          Typing.fun_def tenv (snd f.Nast.f_name) f
+          Typing.fun_def tenv nenv (snd f.Nast.f_name) f
       | Ast.Class c ->
           let tcopt = TypecheckerOptions.permissive in
           let nenv = Naming.empty tcopt in
           let c = Naming.class_ nenv c in
           let filename = Pos.filename (fst c.Nast.c_name) in
           let tenv = Typing_env.empty tcopt filename in
-          let res = Typing.class_def tenv (snd c.Nast.c_name) c in
+          let res = Typing.class_def tenv nenv (snd c.Nast.c_name) c in
           res
       | _ -> ()
     end ast;
@@ -107,16 +107,16 @@ with e ->
   report_error e;
   ()
 
-let check_defs tcopt {FileInfo.funs; classes; typedefs; _} =
+let check_defs nenv {FileInfo.funs; classes; typedefs; _} =
   fst (Errors.do_ (fun () ->
-    List.iter (fun (_, x) -> Typing_check_service.type_fun tcopt x) funs;
-    List.iter (fun (_, x) -> Typing_check_service.type_class tcopt x) classes;
+    List.iter (fun (_, x) -> Typing_check_service.type_fun nenv x) funs;
+    List.iter (fun (_, x) -> Typing_check_service.type_class nenv x) classes;
     List.iter (fun (_, x) -> Typing_check_service.check_typedef x) typedefs;
   ))
 
-let recheck tcopt fileinfo_l =
+let recheck nenv fileinfo_l =
   SharedMem.invalidate_caches();
-  List.iter (fun defs -> ignore (check_defs tcopt defs)) fileinfo_l
+  List.iter (fun defs -> ignore (check_defs nenv defs)) fileinfo_l
 
 let check_file_input tcopt files_info fi =
   match fi with

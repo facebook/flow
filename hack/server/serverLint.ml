@@ -61,7 +61,7 @@ let lint_all genv code =
   let root = ServerArgs.root genv.options in
   let next = compose
     (rev_rev_map (RP.create RP.Root))
-    (Find.make_next_files_php root) in
+    (Find.make_next_files FindUtils.is_php root) in
   let errs = MultiWorker.call
     genv.workers
     ~job:(fun acc fnl ->

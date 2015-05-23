@@ -86,6 +86,8 @@ let server_flags prev = CommandSpec.ArgSpec.(
       ~doc:"retry if the server is initializing (default: true)"
   |> flag "--no-auto-start" no_arg
       ~doc:"If the server if it is not running, do not start it; just exit"
+  |> flag "--color" (enum ["auto"; "never"; "always"])
+      ~doc:"Display terminal output in color. never, always, auto (default: auto)"
 )
 
 let json_flags prev = CommandSpec.ArgSpec.(
@@ -101,15 +103,24 @@ type command_params = {
   retry_if_init : bool ref;
   timeout : int ref;
   no_auto_start : bool ref;
+  color : Modes_js.color_mode ref;
 }
 
 let collect_server_flags
     main
     version timeout from show_all_errors
-    retries retry_if_init no_auto_start =
+    retries retry_if_init no_auto_start color =
   let default def = function
   | Some x -> x
   | None -> def in
+  let color = match color with
+  | Some "never" -> Modes_js.Never
+  | Some "always" -> Modes_js.Always
+  | Some "auto"
+  | None -> Modes_js.Auto
+  | _ -> assert false (* the enum type enforces this *)
+  in
+  Modes_js.(modes.color <- color);
   main {
     version = ref version;
     from = ref (default "" from);
@@ -118,6 +129,7 @@ let collect_server_flags
     retry_if_init = ref (default true retry_if_init);
     timeout = ref (default 0 timeout);
     no_auto_start = ref no_auto_start;
+    color = ref color;
   }
 
 let start_flow_server root =

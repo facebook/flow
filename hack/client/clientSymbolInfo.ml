@@ -31,7 +31,7 @@ let to_json fun_call_results =
 let go conn (files:string) expand_path =
   let file_list = match files with
   | "-" ->
-      let content = ClientUtils.read_stdin_to_string () in
+      let content = Sys_utils.read_stdin_to_string () in
       Str.split (Str.regexp "\n") content
   | _ ->
       Str.split (Str.regexp ";") files

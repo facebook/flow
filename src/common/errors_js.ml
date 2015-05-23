@@ -48,7 +48,12 @@ let format_reason_color ?(first=false) ((p, s): Pos.t * string) = Pos.(
 let print_reason_color ~(first:bool) ((p, s): Pos.t * string) =
   let to_print = format_reason_color ~first (p, s) in
   (if first then Printf.printf "\n");
-  if Unix.isatty Unix.stdout && Sys.getenv "TERM" <> "dumb"
+  let should_color = Modes_js.(match modes.color with
+    | Always -> true
+    | Never -> false
+    | Auto -> Unix.isatty Unix.stdout && Sys.getenv "TERM" <> "dumb"
+  ) in
+  if should_color
   then
     C.print to_print
   else

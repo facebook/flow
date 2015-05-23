@@ -46,7 +46,7 @@ let parse_args path args =
       let file = ClientCheck.expand_path file in
       ServerProt.FileName file, (int_of_string line), (int_of_string column)
   | [line; column] ->
-      let contents = ClientUtils.read_stdin_to_string () in
+      let contents = Sys_utils.read_stdin_to_string () in
       let filename =
         if not (path = "")
         then Some (get_path_of_file path)

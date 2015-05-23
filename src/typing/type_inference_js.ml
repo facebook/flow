@@ -427,6 +427,21 @@ let query_type cx pos =
   ) cx.type_table;
   !result
 
+let dump_types cx =
+  Flow_js.suggested_type_cache := IMap.empty;
+  let lst = Hashtbl.fold (fun range t list ->
+    let pos = Reason_js.pos_of_loc range in
+    let ground_t = Flow_js.printified_type cx t in
+    let possible_ts = Flow_js.possible_types_of_type cx t in
+    let possible_reasons = possible_ts
+      |> List.map Constraint_js.reason_of_t
+    in
+    (pos, string_of_t cx ground_t, possible_reasons)::list
+  ) cx.type_table [] in
+  lst |> List.sort (fun
+    (a_pos, _, _) (b_pos, _, _) -> Pervasives.compare a_pos b_pos
+  )
+
 (********)
 (* Fill *)
 (********)
@@ -1885,7 +1900,11 @@ and statement cx = Ast.Statement.(
       typeParameters;
       body = (_, { Ast.Type.Object.properties; indexers; callProperties });
       extends;
-    }) ->
+    }) as stmt ->
+    let structural = match stmt with
+    | (_, InterfaceDeclaration _) -> true
+    | _ -> false in
+
     let _, { Ast.Identifier.name = iname; _ } = id in
     let reason = mk_reason iname loc in
     let typeparams, map = mk_type_param_declarations cx typeParameters in
@@ -1960,7 +1979,7 @@ and statement cx = Ast.Statement.(
         mmap
     in
     let i = mk_interface cx reason typeparams map
-      (sfmap, smmap, fmap, mmap) extends in
+      (sfmap, smmap, fmap, mmap) extends structural in
     Hashtbl.replace cx.type_table loc i;
     Env_js.set_var cx iname i reason
 
@@ -3921,6 +3940,7 @@ and react_create_class cx loc class_props = Ast.Expression.(
     fields_tmap = Flow_js.mk_propmap cx fmap;
     methods_tmap = Flow_js.mk_propmap cx mmap;
     mixins = !mixins <> [];
+    structural = false;
   } in
   Flow_js.flow cx (super, SuperT (super_reason, itype));
 
@@ -4574,6 +4594,7 @@ and mk_class cx reason_c type_params extends body =
       fields_tmap = Flow_js.mk_propmap cx sfields;
       methods_tmap = Flow_js.mk_propmap cx smethods;
       mixins = false;
+      structural = false;
     } in
     Flow_js.flow cx (super_static, SuperT(super_reason, static_instance));
     let static = InstanceT (
@@ -4589,6 +4610,7 @@ and mk_class cx reason_c type_params extends body =
       fields_tmap = Flow_js.mk_propmap cx fields;
       methods_tmap = Flow_js.mk_propmap cx methods;
       mixins = false;
+      structural = false;
     } in
     Flow_js.flow cx (super, SuperT(super_reason, instance));
     let this = InstanceT (reason_c,static,super,instance) in
@@ -4621,6 +4643,7 @@ and mk_class cx reason_c type_params extends body =
     fields_tmap = Flow_js.mk_propmap cx sfields;
     methods_tmap = Flow_js.mk_propmap cx smethods;
     mixins = false;
+    structural = false;
   } in
   let static = InstanceT (
     static_reason,
@@ -4635,6 +4658,7 @@ and mk_class cx reason_c type_params extends body =
     fields_tmap = Flow_js.mk_propmap cx fields;
     methods_tmap = Flow_js.mk_propmap cx methods;
     mixins = false;
+    structural = false;
   } in
   let this = InstanceT (reason_c, static, super, instance) in
 
@@ -4646,8 +4670,11 @@ and mk_class cx reason_c type_params extends body =
 
 (* Processes a declare class. The fact that we process an interface the same way
    as a declare class is legacy, and might change when we have proper support
-   for interfaces. *)
-and mk_interface cx reason typeparams map (sfmap, smmap, fmap, mmap) extends =
+   for interfaces. One difference between declare class and interfaces is that
+   the the A ~> B check is structural if B is an interface and nominal if B is
+   a declare class. If you set the structural flag to true, then this interface
+   will be checked structurally *)
+and mk_interface cx reason typeparams map (sfmap, smmap, fmap, mmap) extends structural =
   let id = Flow_js.mk_nominal cx in
   let extends =
     match extends with
@@ -4675,6 +4702,7 @@ and mk_interface cx reason typeparams map (sfmap, smmap, fmap, mmap) extends =
     fields_tmap = Flow_js.mk_propmap cx sfmap;
     methods_tmap = Flow_js.mk_propmap cx smmap;
     mixins = imixins <> [];
+    structural;
   } in
   Flow_js.flow cx (super_static, SuperT(static_reason, static_instance));
   let static = InstanceT (
@@ -4690,6 +4718,7 @@ and mk_interface cx reason typeparams map (sfmap, smmap, fmap, mmap) extends =
     fields_tmap = Flow_js.mk_propmap cx fmap;
     methods_tmap = Flow_js.mk_propmap cx mmap;
     mixins = imixins <> [];
+    structural;
   } in
   Flow_js.flow cx (super, SuperT(super_reason, instance));
   let this = InstanceT (reason, static, super, instance) in

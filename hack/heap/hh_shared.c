@@ -39,7 +39,7 @@
  *    Only the hashes of the objects are stored, so this uses relatively
  *    little memory. No dynamic allocation is required.
  *
- * III) The Hashtable that maps string keys to string values. (The strings
+ * III) The hashtable that maps string keys to string values. (The strings
  *    are really serialized / marshalled representations of OCaml structures.)
  *    Key observation of the table is that data with the same key are
  *    considered equivalent, and so you can arbitrarily get any copy of it;
@@ -204,6 +204,23 @@ static size_t heap_init_size = 0;
 value hh_heap_size() {
   CAMLparam0();
   CAMLreturn(Val_long(*heap - heap_init));
+}
+
+value hh_hash_used_slots() {
+  CAMLparam0();
+  uint64_t count = 0;
+  uintptr_t i = 0;
+  for (i = 0; i < HASHTBL_SIZE; ++i) {
+    if (hashtbl[i].addr != NULL) {
+      count++;
+    }
+  }
+  CAMLreturn(Val_long(count));
+}
+
+value hh_hash_slots() {
+  CAMLparam0();
+  CAMLreturn(Val_long(HASHTBL_SIZE));
 }
 
 /*****************************************************************************/

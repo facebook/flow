@@ -95,8 +95,12 @@ and class_ = {
   c_is_xhp         : bool;
   c_kind           : Ast.class_kind   ;
   c_name           : sid              ;
-    (* The type parameters of a class A<T> (T is the parameter) *)
-  c_tparams        : tparam list      ;
+  (* The type parameters of a class A<T> (T is the parameter) *)
+  c_tparams :
+    tparam list *
+    (* keeping around the ast version of the constraint only
+     * for the purposes of Naming.class_meth_bodies *)
+    ((Ast.constraint_kind * Ast.hint) option SMap.t);
   c_extends        : hint list        ;
   c_uses           : hint list        ;
   c_xhp_attr_uses  : hint list        ;
@@ -201,7 +205,12 @@ and fun_ = {
   f_user_attributes : user_attribute list;
 }
 
-and typedef = tparam list * hint option * hint
+and typedef = {
+  t_tparams : tparam list;
+  t_constraint : hint option;
+  t_kind : hint;
+  t_user_attributes : user_attribute list;
+}
 
 and gconst = {
   cst_mode: FileInfo.mode;
@@ -346,6 +355,9 @@ type def =
 
 type program = def list
 
+(* Expecting that Naming.func_body / Naming.class_meth_bodies has been
+ * allowed at the AST. Ideally this would be enforced by the compiler,
+ * a la the typechecking decl vs local phases *)
 let assert_named_body = function
   | NamedBody b -> b
   | UnnamedBody _ -> failwith "Expecting a named function body"

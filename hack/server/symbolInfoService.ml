@@ -107,7 +107,8 @@ let detach_hooks () =
 let find_fun_calls_helper acc fileinfo_l =
   let result_map = ref Pos.Map.empty in
   attach_hooks result_map;
-  ignore(ServerIdeUtils.recheck TypecheckerOptions.permissive fileinfo_l);
+  let nenv = Naming.empty (TypecheckerOptions.permissive) in
+  ignore(ServerIdeUtils.recheck nenv fileinfo_l);
   detach_hooks ();
   List.rev_append (Pos.Map.values !result_map) acc
 

@@ -56,15 +56,17 @@ val load: string -> unit
 val heap_size : unit -> int
 
 (*****************************************************************************)
-(* Stats of the statically sized dependency hash table *)
+(* Stats of the statically sized hash / dep tables *)
 (*****************************************************************************)
 
-type dep_stats_t = {
-  dep_used_slots : int;
-  dep_slots : int;
+type table_stats = {
+  used_slots : int;
+  slots : int;
 }
 
-val dep_stats : unit -> dep_stats_t
+val dep_stats : unit -> table_stats
+
+val hash_stats : unit -> table_stats
 
 (*****************************************************************************)
 (* Cache invalidation. *)

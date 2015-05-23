@@ -304,7 +304,7 @@ let ifun_decl nenv (f: Ast.fun_) =
   let f = Naming.fun_ nenv f in
   let cid = snd f.f_name in
   Naming_heap.FunHeap.add cid f;
-  Typing.fun_decl (Naming.typechecker_options nenv) f;
+  Typing.fun_decl nenv f;
   ()
 
 (*****************************************************************************)
@@ -497,7 +497,7 @@ and class_decl tcopt c =
     then SMap.fold SMap.add self_dimpl dimpl
     else dimpl
   in
-  let env, tparams = lfold Typing.type_param env c.c_tparams in
+  let env, tparams = lfold Typing.type_param env (fst c.c_tparams) in
   let env, enum = match c.c_enum with
     | None -> env, None
     | Some e ->
@@ -840,8 +840,12 @@ and type_typedef_naming_and_decl nenv tdef =
     match tdef.Ast.t_kind with
     | Ast.Alias _ -> false
     | Ast.NewType _ -> true
-  in
-  let params, tcstr, concrete_type as decl = Naming.typedef nenv tdef in
+  in let {
+    t_tparams = params;
+    t_constraint = tcstr;
+    t_kind = concrete_type;
+    t_user_attributes = _;
+  } as decl = Naming.typedef nenv tdef in
   let filename = Pos.filename pos in
   let tcopt = Naming.typechecker_options nenv in
   let env = Typing_env.empty tcopt filename in

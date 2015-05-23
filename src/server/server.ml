@@ -200,6 +200,26 @@ struct
     Marshal.to_channel oc (err, resp) [];
     flush oc
 
+  let dump_types file_input oc =
+    let file = ServerProt.file_input_get_filename file_input in
+    let (err, resp) =
+    (try
+      let cx = match file_input with
+        | ServerProt.FileName file ->
+            Types_js.merge_strict_file file
+        | ServerProt.FileContent (_, content) ->
+            (match Types_js.typecheck_contents content file with
+            | Some cx, _ -> cx
+            | _, errors  -> failwith "Couldn't parse file") in
+      (None, Some (TI.dump_types cx))
+    with exn ->
+      let pos = mk_pos file 0 0 in
+      let err = (pos, Printexc.to_string exn) in
+      (Some err, None)
+    ) in
+    Marshal.to_channel oc (err, resp) [];
+    flush oc
+
   let write_file file str =
     let oc = open_out file in
     output_string oc str;
@@ -380,6 +400,8 @@ struct
         autocomplete fn oc
     | ServerProt.CHECK_FILE fn ->
         check_file fn oc
+    | ServerProt.DUMP_TYPES fn ->
+        dump_types fn oc
     | ServerProt.ERROR_OUT_OF_DATE ->
         incorrect_hash oc
     | ServerProt.FIND_MODULES module_names ->

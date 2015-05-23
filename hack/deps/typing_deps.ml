@@ -34,7 +34,6 @@ module Dep = struct
     | SMethod of string * string
     | Cstr of string
     | Extends of string
-    | Injectable
 
   type t = int
 
@@ -119,7 +118,6 @@ let get_bazooka x =
   | Dep.FunName fid -> get_ideps (Dep.FunName fid)
   | Dep.GConst cid -> get_ideps (Dep.GConst cid)
   | Dep.GConstName cid -> get_ideps (Dep.GConstName cid)
-  | Dep.Injectable -> DepSet.empty
 
 (*****************************************************************************)
 (* Module keeping track which files contain the toplevel definitions. *)

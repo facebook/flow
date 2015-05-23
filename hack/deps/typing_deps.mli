@@ -23,7 +23,6 @@ module Dep :
       | SMethod of string * string
       | Cstr of string
       | Extends of string
-      | Injectable
     type t
     val make : variant -> t
     val is_class : t -> bool

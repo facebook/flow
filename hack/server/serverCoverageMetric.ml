@@ -44,8 +44,9 @@ let accumulate_types defs =
       | _ -> None in
     ignore (opt_map (fun kind ->
       Hashtbl.replace type_acc (p, kind) ty) expr_kind_opt))
-    (fun () -> ignore (ServerIdeUtils.check_defs
-      TypecheckerOptions.permissive defs));
+    (fun () ->
+      let nenv = Naming.empty (TypecheckerOptions.permissive) in
+      ignore (ServerIdeUtils.check_defs nenv defs));
   type_acc
 
 (* Returns a list of (file_name, assoc list of counts) *)
@@ -117,7 +118,7 @@ let go_ fn genv env =
   let module RP = Relative_path in
   let next_files = compose
     (rev_rev_map (RP.create RP.Root))
-    (Find.make_next_files_php path)
+    (Find.make_next_files FindUtils.is_php path)
   in
   FileInfoStore.store env.ServerEnv.files_info;
   let result =

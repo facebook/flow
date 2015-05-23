@@ -1790,19 +1790,18 @@ let rec __flow cx (l,u) trace =
         );
       rec_flow cx trace (l, u_)
 
-    | (ObjT (reason2, _),
-       InstanceT (reason1, _, super, { fields_tmap; methods_tmap; _ }))
+    (* TODO Try and remove this. We're not sure why this case should exist but
+     * it does seem to be triggered in www. *)
+    | (ObjT _,
+       InstanceT (reason1, _, super, {
+         fields_tmap;
+         methods_tmap;
+         structural = false;
+         _;
+       }))
       ->
-      let fields_tmap = find_props cx fields_tmap in
-      let methods_tmap = find_props cx methods_tmap in
-      let methods_tmap = SMap.remove "constructor" methods_tmap in
-      let flds2 = SMap.union fields_tmap methods_tmap in
-      flds2 |> SMap.iter
-          (fun s t2 ->
-            let reason2 = replace_reason (spf "property %s" s) reason2 in
-            rec_flow cx trace (l, LookupT (reason2, Some reason1, s, t2))
-          );
-      rec_flow cx trace (l, super)
+      structural_subtype cx trace l (reason1, super, fields_tmap, methods_tmap)
+
 
     (****************************************)
     (* You can cast an object to a function *)
@@ -1837,6 +1836,20 @@ let rec __flow cx (l,u) trace =
     | ArrT (r1, t1, ts1), ArrT (r2, t2, ts2) ->
       let lit = (desc_of_reason r1) = "array literal" in
       array_flow cx trace lit (ts1, t1, ts2, t2)
+
+    (***************************************************************)
+    (* Enable structural subtyping for upperbounds like interfaces *)
+    (***************************************************************)
+
+    | (_,
+       InstanceT (reason1, _, super, {
+         fields_tmap;
+         methods_tmap;
+         structural = true;
+         _;
+       }))
+      ->
+      structural_subtype cx trace l (reason1, super, fields_tmap, methods_tmap)
 
     (**************************************************)
     (* instances of classes follow declared hierarchy *)
@@ -2451,23 +2464,19 @@ let rec __flow cx (l,u) trace =
 
       rec_flow cx trace (StrT.why reason, t)
 
-    (***********************************************************)
-    (* comparison typechecks iff either of the following hold: *)
-    (*                                                         *)
-    (* number <> number = number                               *)
-    (* string <> string = string                               *)
-    (***********************************************************)
+    (**************************)
+    (* relational comparisons *)
+    (**************************)
 
-    | (_, ComparatorT(reason, ((OpenT _ | UnionT _) as u_))) ->
-      rec_flow cx trace (u_, ComparatorT (reason, l))
+    | (l, ComparatorT(reason, r)) ->
+      Ops.push reason;
+      flow_comparator cx trace reason l r;
+      Ops.pop ()
 
-    | (StrT _, ComparatorT(reason,t)) ->
-
-      rec_flow cx trace (t, StrT.why reason)
-
-    | (l, ComparatorT(reason,t)) when numeric l ->
-
-      rec_flow cx trace (t, NumT.why reason)
+    | (l, EqT(reason, r)) ->
+      Ops.push reason;
+      flow_eq cx trace reason l r;
+      Ops.pop ()
 
     (**************************************)
     (* types may be refined by predicates *)
@@ -2476,23 +2485,11 @@ let rec __flow cx (l,u) trace =
     | (_, PredicateT(p,t)) ->
       predicate cx trace t (l,p)
 
-    (***********************************************************************)
-    (* types may be compared with unstrict (in)equality iff they intersect *)
-    (* (otherwise, unsafe coercions may happen)                            *)
-    (* note: any types may be compared with strict (in)equality            *)
-    (***********************************************************************)
-
-    | (_, EqT(reason, ((OpenT _ | UnionT _) as u_))) ->
-
-      rec_flow cx trace (u_, EqT(reason, l))
-
-    | (_, EqT(_, u_)) when equatable cx trace (l,u_) -> ()
-
     (**********************)
     (* Array library call *)
     (**********************)
 
-    | (ArrT (_, t, _), (GetT _ | SetT _ | MethodT _)) ->
+    | (ArrT (_, t, _), (GetT _ | SetT _ | MethodT _ | LookupT _)) ->
       let reason = reason_of_t u in
       let arrt = get_builtin_typeapp cx reason "Array" [t] in
       rec_flow cx trace (arrt, u)
@@ -2501,21 +2498,21 @@ let rec __flow cx (l,u) trace =
     (* String library call *)
     (***********************)
 
-    | (StrT (reason, _), (GetT _ | MethodT _)) ->
+    | (StrT (reason, _), (GetT _ | MethodT _ | LookupT _)) ->
       rec_flow cx trace (get_builtin_type cx reason "String",u)
 
     (***********************)
     (* Number library call *)
     (***********************)
 
-    | (NumT (reason, _), (GetT _ | MethodT _)) ->
+    | (NumT (reason, _), (GetT _ | MethodT _ | LookupT _)) ->
       rec_flow cx trace (get_builtin_type cx reason "Number",u)
 
     (***********************)
     (* Boolean library call *)
     (***********************)
 
-    | (BoolT (reason, _), (GetT _ | MethodT _)) ->
+    | (BoolT (reason, _), (GetT _ | MethodT _ | LookupT _)) ->
       rec_flow cx trace (get_builtin_type cx reason "Boolean",u)
 
     (***************************)
@@ -2701,6 +2698,33 @@ let rec __flow cx (l,u) trace =
     );
   )
 
+(**
+ * relational comparisons like <, >, <=, >=
+ *
+ * typecheck iff either of the following hold:
+ *   number <> number = number
+ *   string <> string = string
+ **)
+and flow_comparator cx trace reason l r = match (l, r) with
+  | (_, (OpenT _ | UnionT _ | OptionalT _ | MaybeT _)) ->
+    rec_flow cx trace (r, ComparatorT (reason, l))
+  | (StrT _, StrT _) -> ()
+  | (_, _) when numeric l && numeric r -> ()
+  | (_, _) -> prerr_flow cx trace "Cannot be compared to" l r
+
+(**
+ * == equality
+ *
+ * typecheck iff they intersect (otherwise, unsafe coercions may happen).
+ *
+ * note: any types may be compared with === (in)equality.
+ **)
+and flow_eq cx trace reason l r = match (l, r) with
+  | (_, (OpenT _ | UnionT _ | OptionalT _ | MaybeT _)) ->
+    rec_flow cx trace (r, EqT(reason, l))
+  | (_, _) when equatable cx trace (l, r) -> ()
+  | (_, _) -> prerr_flow cx trace "Cannot be compared to" l r
+
 and abs_path_of_reason r =
   r |> pos_of_reason |> Pos.filename |> Relative_path.to_absolute
 
@@ -2729,8 +2753,6 @@ and err_operation = function
   | ObjRestT _ -> "Expected object instead of"
   | ObjSealT _ -> "Expected object instead of"
   | SuperT _ -> "Cannot inherit"
-  | EqT (_, t) -> spf "Non-strict equality comparison with %s may involve unintended type conversions of" (desc_of_t t)
-  | ComparatorT (_, t) -> spf "Relational comparison with %s may involve unintended type conversions of" (desc_of_t t)
   | SpecializeT _ -> "Expected polymorphic type instead of"
   | LookupT _ -> "Property not found in"
   | KeyT _ -> "Expected object instead of"
@@ -2863,6 +2885,19 @@ and mk_strict sealed is_dict reason_o reason_op =
   if (is_dict || (not sealed && Reason_js.same_scope reason_o reason_op))
   then None
   else Some reason_o
+
+and structural_subtype cx trace lower (upper_reason, super, fields_tmap, methods_tmap) =
+  let lower_reason = reason_of_t lower in
+  let fields_tmap = find_props cx fields_tmap in
+  let methods_tmap = find_props cx methods_tmap in
+  let methods_tmap = SMap.remove "constructor" methods_tmap in
+  let flds2 = SMap.union fields_tmap methods_tmap in
+  flds2 |> SMap.iter
+      (fun s t2 ->
+        let lookup_reason = replace_reason (spf "property %s" s) (reason_of_t t2) in
+        rec_flow cx trace (lower, LookupT (lookup_reason, Some lower_reason, s, t2))
+      );
+  rec_flow cx trace (lower, super)
 
 (*****************)
 (* substitutions *)

@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2014, Facebook, Inc.
+ * Copyright (c) 2015, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -8,4 +8,8 @@
  *
  *)
 
-let facts_of_defs _ _ _ _ _ _ = []
+val make_next_files:
+  (string -> bool) -> ?others: Path.t list -> Path.t ->
+  (unit -> string list)
+
+val find_with_name : Path.t list -> string -> string list

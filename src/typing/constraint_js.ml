@@ -279,6 +279,7 @@ module Type = struct
     fields_tmap: int;
     methods_tmap: int;
     mixins: bool;
+    structural: bool;
   }
 
   and typeparam = {
@@ -1551,7 +1552,8 @@ and json_of_insttype stack cx insttype = Json.(
     "methodTypes",
       (let tmap = IMap.find_unsafe insttype.methods_tmap cx.property_maps in
        json_of_tmap stack cx tmap);
-    "mixins", JBool insttype.mixins
+    "mixins", JBool insttype.mixins;
+    "structural", JBool insttype.structural;
   ]
 )
 

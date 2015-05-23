@@ -45,7 +45,6 @@ module Dep = struct
     | SMethod of string * string
     | Cstr of string
     | Extends of string
-    | Injectable
 
   type variant = t
 
@@ -64,7 +63,6 @@ module Dep = struct
     | SMethod (x, y) -> x^"::"^y
     | Cstr s -> s^"->__construct"
     | Extends s -> "extends:"^s
-    | Injectable -> "injectable"
 end
 
 module DSet = Set.Make(Dep)
@@ -89,7 +87,6 @@ let split_deps deps =
   let funs, classes = SSet.empty, SSet.empty in
   DSet.fold begin fun x (funs, classes) ->
     match x with
-    | Dep.Injectable -> funs, classes
     | Dep.GConst s
     | Dep.GConstName s
     | Dep.Const (s, _)
@@ -198,7 +195,6 @@ let extends_igraph = Hashtbl.create 23
 
 let add_idep root obj =
   match obj with
-  | Dep.Injectable -> ()
   | (Dep.FunName _ as x)
   | (Dep.Fun _ as x) -> deps := DSet.add x !deps
   | Dep.GConst s

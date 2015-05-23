@@ -68,7 +68,7 @@ let main args =
   | MODE_COLORING file ->
       let file_input = match file with
         | "-" ->
-          let content = ClientUtils.read_stdin_to_string () in
+          let content = Sys_utils.read_stdin_to_string () in
           ServerUtils.FileContent content
         | _ ->
           let file = expand_path file in
@@ -116,7 +116,7 @@ let main args =
         with _ ->
           Printf.eprintf "Invalid position\n"; exit 1
       in
-      let content = ClientUtils.read_stdin_to_string () in
+      let content = Sys_utils.read_stdin_to_string () in
       let result =
         Cmd.rpc conn @@ Rpc.IDENTIFY_FUNCTION (content, line, char) in
       print_endline result
@@ -129,7 +129,7 @@ let main args =
               let fn = expand_path filename in
               ServerUtils.FileName fn, int_of_string line, int_of_string char
           | [line; char] ->
-              let content = ClientUtils.read_stdin_to_string () in
+              let content = Sys_utils.read_stdin_to_string () in
               ServerUtils.FileContent content,
               int_of_string line,
               int_of_string char
@@ -151,18 +151,18 @@ let main args =
         with _ ->
           Printf.fprintf stderr "Invalid position\n"; exit 1
       in
-      let content = ClientUtils.read_stdin_to_string () in
+      let content = Sys_utils.read_stdin_to_string () in
       let results =
         Cmd.rpc conn @@ Rpc.ARGUMENT_INFO (content, line, char) in
       ClientArgumentInfo.go results args.output_json;
       exit 0
   | MODE_AUTO_COMPLETE ->
-      let content = ClientUtils.read_stdin_to_string () in
+      let content = Sys_utils.read_stdin_to_string () in
       let results = Cmd.rpc conn @@ Rpc.AUTOCOMPLETE content in
       ClientAutocomplete.go results args.output_json;
       exit 0
   | MODE_OUTLINE ->
-      let content = ClientUtils.read_stdin_to_string () in
+      let content = Sys_utils.read_stdin_to_string () in
       let results = Cmd.rpc conn @@ Rpc.OUTLINE content in
       ClientOutline.go results args.output_json;
       exit 0

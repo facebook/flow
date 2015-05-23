@@ -158,6 +158,7 @@ module Type :
       fields_tmap: int;
       methods_tmap: int;
       mixins: bool;
+      structural: bool;
     }
     and typeparam = {
       reason: reason;
