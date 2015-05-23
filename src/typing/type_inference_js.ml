@@ -310,7 +310,7 @@ let destructuring_map cx t p =
 let pattern_decl cx t scope_kind =
   destructuring cx t (fun cx loc name t ->
     Hashtbl.replace cx.type_table loc t;
-    Env_js.init_env cx name (create_env_entry t t (Some loc)) scope_kind
+    Env_js.init_env cx name (create_env_entry t t (Some loc) scope_kind) scope_kind
   )
 
 (* type refinements on expressions - wraps Env_js API *)
@@ -864,7 +864,7 @@ and variable_decl cx loc { Ast.Statement.VariableDeclaration.declarations; kind 
         let r = mk_reason (spf "var %s" name) loc in
         let t = mk_type_annotation cx r typeAnnotation in
         Hashtbl.replace cx.type_table loc t;
-        Env_js.init_env cx name (create_env_entry t t (Some loc)) scope_kind
+        Env_js.init_env cx name (create_env_entry t t (Some loc) scope_kind) scope_kind
     | p ->
         let r = mk_reason "var _" loc in
         let t = type_of_pattern p |> mk_type_annotation cx r in
@@ -925,7 +925,7 @@ and statement_decl cx = Ast.Statement.(
       let _, { Ast.Identifier.name; _ } = id in
       let r = mk_reason (spf "type %s" name) loc in
       let tvar = Flow_js.mk_tvar cx r in
-      Env_js.init_env cx name (create_env_entry ~for_type:true tvar tvar (Some loc)) VarScope
+      Env_js.init_env cx name (create_env_entry ~for_type:true tvar tvar (Some loc) VarScope) VarScope
 
   | (loc, Switch { Switch.discriminant; cases; lexical }) ->
       (* TODO: ensure that default is last *)
@@ -992,7 +992,7 @@ and statement_decl cx = Ast.Statement.(
         let _, { Ast.Identifier.name; _ } = id in
         let r = mk_reason (spf "function %s" name) loc in
         let tvar = Flow_js.mk_tvar cx r in
-        Env_js.init_env cx name (create_env_entry tvar tvar (Some loc)) VarScope
+        Env_js.init_env cx name (create_env_entry tvar tvar (Some loc) VarScope) VarScope
       | None -> failwith (
           "Flow Error: Nameless function declarations should always be given " ^
           "an implicit name before they get hoisted!"
@@ -1005,7 +1005,7 @@ and statement_decl cx = Ast.Statement.(
       let r = mk_reason (spf "declare %s" name) loc in
       let t = mk_type_annotation cx r typeAnnotation in
       Hashtbl.replace cx.type_table loc t;
-      Env_js.init_env cx name (create_env_entry t t (Some loc)) VarScope
+      Env_js.init_env cx name (create_env_entry t t (Some loc) VarScope) VarScope
 
   | (loc, VariableDeclaration decl) ->
       variable_decl cx loc decl
@@ -1016,7 +1016,7 @@ and statement_decl cx = Ast.Statement.(
         let _, { Ast.Identifier.name; _ } = id in
         let r = mk_reason (spf "class %s" name) loc in
         let tvar = Flow_js.mk_tvar cx r in
-        Env_js.init_env cx name (create_env_entry tvar tvar (Some loc)) LexicalScope
+        Env_js.init_env cx name (create_env_entry tvar tvar (Some loc) LexicalScope) LexicalScope
       | None -> ()
     )
 
@@ -1025,7 +1025,9 @@ and statement_decl cx = Ast.Statement.(
       let _, { Ast.Identifier.name; _ } = id in
       let r = mk_reason (spf "class %s" name) loc in
       let tvar = Flow_js.mk_tvar cx r in
-      Env_js.init_env cx name (create_env_entry tvar tvar (Some loc)) LexicalScope
+      (* FIXME: The entry should be have scope_kind = LexicalScope,
+       * but the correct scope kind breaks existing declarations under TDZ *)
+      Env_js.init_env cx name (create_env_entry tvar tvar (Some loc) VarScope) LexicalScope
   | (loc, DeclareModule { DeclareModule.id; _ }) ->
       let name = match id with
       | DeclareModule.Identifier (_, id) -> id.Ast.Identifier.name
@@ -1039,7 +1041,7 @@ and statement_decl cx = Ast.Statement.(
       Hashtbl.replace cx.type_table loc t;
       Env_js.init_env cx
         (internal_module_name name)
-        (create_env_entry t t (Some loc))
+        (create_env_entry t t (Some loc) VarScope)
         VarScope
   | (_, ExportDeclaration {
       ExportDeclaration.default;
@@ -1088,7 +1090,7 @@ and statement_decl cx = Ast.Statement.(
           let tvar = Flow_js.mk_tvar cx reason in
 
           let env_entry =
-            (create_env_entry ~for_type:isType tvar tvar (Some loc))
+            (create_env_entry ~for_type:isType tvar tvar (Some loc) VarScope)
           in
           Env_js.init_env cx local_name env_entry VarScope
         | None -> (
@@ -1112,7 +1114,7 @@ and statement_decl cx = Ast.Statement.(
               ) in
               let tvar = Flow_js.mk_tvar cx reason in
               let env_entry =
-                create_env_entry ~for_type:isType tvar tvar (Some specifier_loc)
+                create_env_entry ~for_type:isType tvar tvar (Some specifier_loc) VarScope
               in
               Env_js.init_env cx local_name env_entry VarScope;
             ) in
@@ -1124,7 +1126,7 @@ and statement_decl cx = Ast.Statement.(
             in
             let tvar = Flow_js.mk_tvar cx reason in
             let env_entry =
-              create_env_entry ~for_type:isType tvar tvar (Some loc)
+              create_env_entry ~for_type:isType tvar tvar (Some loc) VarScope
             in
             Env_js.init_env cx local_name env_entry VarScope
           | None -> failwith (
@@ -1175,7 +1177,7 @@ and statement cx = Ast.Statement.(
           let t = Flow_js.mk_tvar cx (mk_reason "catch" loc) in
           Env_js.let_env
             name
-            (create_env_entry t t (Some loc))
+            (create_env_entry t t (Some loc) LexicalScope)
             (fun () -> toplevels cx b.Block.body)
 
       | loc, Identifier (_, { Ast.Identifier.name; _ }) ->
@@ -4770,7 +4772,7 @@ and is_void cx = function
   | _ -> false
 
 and mk_upper_bound cx locs name t =
-  create_env_entry t t (SMap.get name locs)
+  create_env_entry t t (SMap.get name locs) VarScope
 
 and mk_body id cx param_types_map param_types_loc ret body this super =
   let ctx = !Env_js.env in
@@ -4782,7 +4784,7 @@ and mk_body id cx param_types_map param_types_loc ret body this super =
     | None -> map
     | Some (loc, { Ast.Identifier.name; _ }) ->
         map |> SMap.add name
-          (create_env_entry (AnyT.at loc) (AnyT.at loc) None)
+          (create_env_entry (AnyT.at loc) (AnyT.at loc) None VarScope)
   in
   let entries = ref (
       param_types_map
@@ -4790,13 +4792,13 @@ and mk_body id cx param_types_map param_types_loc ret body this super =
       |> add_rec
       |> SMap.add
           (internal_name "super")
-          (create_env_entry super super None)
+          (create_env_entry super super None VarScope)
       |> SMap.add
           (internal_name "this")
-          (create_env_entry this this None)
+          (create_env_entry this this None VarScope)
       |> SMap.add
           (internal_name "return")
-          (create_env_entry ret ret None)
+          (create_env_entry ret ret None VarScope)
   )
   in
   let scope = { kind = VarScope; entries } in
@@ -5140,12 +5142,14 @@ let infer_ast ast file m force_check =
         local_exports
         local_exports
         None
+        VarScope
       )
     |> SMap.add (internal_name "exports")
       (create_env_entry
         (UndefT (reason_of_string "undefined exports"))
         (AnyT reason_exports_module)
         None
+        VarScope
       )
   ) in
   let scope = { kind = VarScope; entries } in

@@ -236,16 +236,17 @@ val copy_node: node -> node
 
 (***************************************)
 
+type scope_kind =
+  | VarScope (* var, functions hoisted up to this point *)
+  | LexicalScope (* let, const, classes *)
+
 type scope_entry = {
   specific: Type.t;
   general: Type.t;
   def_loc: Spider_monkey_ast.Loc.t option;
   for_type: bool;
+  scope_kind: scope_kind;
 }
-
-type scope_kind =
-  | VarScope (* var, functions hoisted up to this point *)
-  | LexicalScope (* let, const, classes *)
 
 type scope = {
   kind: scope_kind;
@@ -258,6 +259,7 @@ val create_env_entry :
   ?for_type: bool ->
   Type.t -> Type.t ->
   Spider_monkey_ast.Loc.t option ->
+  scope_kind ->
   scope_entry
 
 (***************************************)

@@ -68,7 +68,7 @@ let cache_global cx x reason =
     Flow_js.get_builtin cx x reason
   )) in
   let global_entries = global_scope.entries in
-  global_entries := SMap.add x (create_env_entry t t None) !global_entries;
+  global_entries := SMap.add x (create_env_entry t t None VarScope) !global_entries;
   cx.globals <- SSet.add x cx.globals;
   global_scope
 
@@ -126,8 +126,8 @@ let exists_in_env x scope_kind =
 let update_scope ?(for_type=false) cx x (specific_t, general_t) reason scope =
   let entries = scope.entries in
   (match SMap.get x !entries with
-  | Some {def_loc; for_type; _;} ->
-      let new_entry = create_env_entry ~for_type specific_t general_t def_loc in
+  | Some {def_loc; for_type; scope_kind; _;} ->
+      let new_entry = create_env_entry ~for_type specific_t general_t def_loc scope_kind in
       entries := !entries |> SMap.add x new_entry
   | None ->
       let msg = "can't find entry to update" in
@@ -257,7 +257,7 @@ let rec merge_env cx reason (ctx, ctx1, ctx2) changeset =
       (* merge scope, scope1, scope2 *)
       let not_found = SSet.fold (fun x not_found ->
         match SMap.get x !entries with
-        | Some {specific;general;def_loc;for_type;} ->
+        | Some {specific;general;def_loc;for_type;scope_kind} ->
             let shape1 = SMap.find_unsafe x !entries1 in
             let shape2 = SMap.find_unsafe x !entries2 in
             let s1 = shape1.specific in
@@ -276,7 +276,7 @@ let rec merge_env cx reason (ctx, ctx1, ctx2) changeset =
                 (tvar,general)
             in
             let for_type = for_type || shape1.for_type || shape2.for_type in
-            scope.entries := SMap.add x (create_env_entry ~for_type s g def_loc) !entries;
+            scope.entries := SMap.add x (create_env_entry ~for_type s g def_loc scope_kind) !entries;
             not_found
         | None ->
             SSet.add x not_found
@@ -292,15 +292,15 @@ let widen_env cx reason =
         let entries = scope.entries in
         let entries = !entries in
         if SMap.cardinal entries < 32 then
-        scope.entries := entries |> SMap.mapi (fun x {specific;general;def_loc;for_type;} ->
+        scope.entries := entries |> SMap.mapi (fun x {specific;general;def_loc;for_type;scope_kind} ->
           if specific = general
-          then create_env_entry ~for_type specific general def_loc
+          then create_env_entry ~for_type specific general def_loc scope_kind
           else
             let reason = replace_reason x reason in
             let tvar = Flow_js.mk_tvar cx reason in
             Flow_js.flow cx (specific,tvar);
             Flow_js.flow cx (tvar,general);
-            create_env_entry ~for_type tvar general def_loc
+            create_env_entry ~for_type tvar general def_loc scope_kind
         );
         if scope.kind = VarScope then ()
         else loop scopes
@@ -331,8 +331,8 @@ let copy_env cx reason (ctx1,ctx2) xs =
 let havoc_env () =
   List.iter (fun scope ->
     let entries = scope.entries in
-    entries := SMap.mapi (fun x {specific=_;general;def_loc;for_type;} ->
-      create_env_entry ~for_type general general def_loc
+    entries := SMap.mapi (fun x {specific=_;general;def_loc;for_type;scope_kind} ->
+      create_env_entry ~for_type general general def_loc scope_kind
     ) !entries
  ) !env
 
@@ -340,9 +340,9 @@ let rec havoc_env2_ x = function
   | scope::scopes ->
       let entries = scope.entries in
       (match SMap.get x !entries with
-      | Some {specific=_;general;def_loc;for_type;} ->
+      | Some {specific=_;general;def_loc;for_type;scope_kind} ->
           entries := !entries |>
-            SMap.add x (create_env_entry ~for_type general general def_loc)
+            SMap.add x (create_env_entry ~for_type general general def_loc scope_kind)
       | None ->
           havoc_env2_ x scopes
       )
@@ -354,9 +354,9 @@ let havoc_env2 xs =
 let havoc_heap_refinements () =
   List.iter (fun scope ->
     let entries = scope.entries in
-    entries := SMap.mapi (fun x ({specific=_;general;def_loc;for_type;} as entry) ->
+    entries := SMap.mapi (fun x ({specific=_;general;def_loc;for_type;scope_kind} as entry) ->
       if is_refinement x
-      then create_env_entry ~for_type general general def_loc
+      then create_env_entry ~for_type general general def_loc scope_kind
       else entry
     ) !entries
  ) !env
@@ -366,11 +366,11 @@ let clear_env reason =
     | [] -> ()
     | scope::scopes ->
         let entries = scope.entries in
-        entries := !entries |> SMap.mapi (fun x {specific;general;def_loc;for_type;} ->
+        entries := !entries |> SMap.mapi (fun x {specific;general;def_loc;for_type;scope_kind} ->
           (* internal names (.this, .super, .return, .exports) are read-only *)
           if is_internal_name x
-          then create_env_entry ~for_type specific general def_loc
-          else create_env_entry ~for_type (UndefT reason) general def_loc
+          then create_env_entry ~for_type specific general def_loc scope_kind
+          else create_env_entry ~for_type (UndefT reason) general def_loc scope_kind
         );
         if scope.kind = VarScope then ()
         else loop scopes
@@ -405,7 +405,7 @@ let string_of_env cx ctx =
 let install_refinement cx x xtypes =
   let obj = refined_object_from_key x in
   let t = SMap.find_unsafe x xtypes in
-  let entry = create_env_entry t t None in
+  let entry = create_env_entry t t None LexicalScope in
   let rec loop = function
     | [] -> set_in_scope x entry global_scope
     | scope::scopes ->
