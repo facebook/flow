@@ -10,16 +10,12 @@
 (*****************************************************************************)
 (* Library code *)
 (*****************************************************************************)
-open Utils
 
 let start roots =
-  let msg_out, result_in, pid = DfindServer.fork_in_pipe roots in
-  (Unix.out_channel_of_descr msg_out,
-  Unix.in_channel_of_descr result_in),
-  pid
+  let {Daemon.channels; pid} =
+    Daemon.fork (DfindServer.run_daemon roots) in
+  channels, pid
 
-let get_changes (msg_out, result_in) =
-  Marshal.to_channel msg_out "Go" [];
-  flush msg_out;
-  let (result: SSet.t) = Marshal.from_channel result_in in
-  result
+let get_changes (result_in, msg_out) =
+  Daemon.to_channel msg_out ();
+  Daemon.from_channel result_in

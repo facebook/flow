@@ -17,7 +17,12 @@
 type 'a in_channel = Pervasives.in_channel
 type 'a out_channel = Pervasives.out_channel
 
-type ('in_, 'out) handle = 'in_ in_channel * 'out out_channel
+type ('in_, 'out) channel_pair = 'in_ in_channel * 'out out_channel
+
+type ('in_, 'out) handle = {
+  channels : ('in_, 'out) channel_pair;
+  pid : int;
+}
 
 let to_channel : 'a out_channel -> ?flush:bool -> 'a -> unit =
 fun oc ?flush:(should_flush=true) v ->
@@ -26,6 +31,8 @@ fun oc ?flush:(should_flush=true) v ->
 
 let from_channel : 'a in_channel -> 'a = fun ic ->
   Marshal.from_channel ic
+
+let flush : 'a out_channel -> unit = Pervasives.flush
 
 let descr_of_in_channel : 'a in_channel -> Unix.file_descr =
   Unix.descr_of_in_channel
@@ -42,7 +49,7 @@ let make_pipe () =
   let oc = Unix.out_channel_of_descr descr_out in
   ic, oc
 
-let fork (f : ('a, 'b) handle -> unit) : ('b, 'a) handle =
+let fork (f : ('a, 'b) channel_pair -> unit) : ('b, 'a) handle =
   let parent_in, child_out = make_pipe () in
   let child_in, parent_out = make_pipe () in
   match Fork.fork () with
@@ -55,4 +62,4 @@ let fork (f : ('a, 'b) handle -> unit) : ('b, 'a) handle =
   | pid -> (* parent *)
       close_in child_in;
       close_out child_out;
-      parent_in, parent_out
+      { channels = parent_in, parent_out; pid }
