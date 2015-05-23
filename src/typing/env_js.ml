@@ -123,15 +123,15 @@ let exists_in_env x scope_kind =
           loop scopes in
   loop (!env)
 
-let update_scope ?(for_type=false) x (specific_t, general_t) scope =
+let update_scope ?(for_type=false) cx x (specific_t, general_t) reason scope =
   let entries = scope.entries in
-  let new_entry = match SMap.get x !entries with
-    | Some {def_loc; for_type; _;} ->
-        create_env_entry ~for_type specific_t general_t def_loc
-    | None ->
-        create_env_entry ~for_type specific_t general_t None
-  in
-  entries := !entries |> SMap.add x new_entry
+  (match SMap.get x !entries with
+  | Some {def_loc; for_type; _;} ->
+      let new_entry = create_env_entry ~for_type specific_t general_t def_loc in
+      entries := !entries |> SMap.add x new_entry
+  | None ->
+      let msg = "can't find entry to update" in
+      Flow_js.add_error cx [reason, msg])
 
 let unset_in_scope x scope =
   let entries = scope.entries in
@@ -141,7 +141,7 @@ let read_env ?(for_type=false) cx x reason =
   find_env ~for_type cx x reason |> get_from_scope x
 
 let write_env ?(for_type=false) cx x shape reason =
-  find_env ~for_type cx x reason |> update_scope ~for_type x shape
+  find_env ~for_type cx x reason |> update_scope ~for_type cx x shape reason
 
 let push_env scope =
   env := scope :: !env
