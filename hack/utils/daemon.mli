@@ -19,7 +19,7 @@ type 'a in_channel
 type 'a out_channel
 type ('in_, 'out) handle = 'in_ in_channel * 'out out_channel
 
-val to_channel : 'a out_channel -> 'a -> unit
+val to_channel : 'a out_channel -> ?flush:bool -> 'a -> unit
 val from_channel : 'a in_channel -> 'a
 (* This breaks the type safety, but is necessary in order to allow select() *)
 val descr_of_in_channel : 'a in_channel -> Unix.file_descr

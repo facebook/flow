@@ -19,8 +19,10 @@ type 'a out_channel = Pervasives.out_channel
 
 type ('in_, 'out) handle = 'in_ in_channel * 'out out_channel
 
-let to_channel : 'a out_channel -> 'a -> unit = fun oc v ->
-  Marshal.to_channel oc v []
+let to_channel : 'a out_channel -> ?flush:bool -> 'a -> unit =
+fun oc ?flush:(should_flush=true) v ->
+  Marshal.to_channel oc v [];
+  if should_flush then flush oc
 
 let from_channel : 'a in_channel -> 'a = fun ic ->
   Marshal.from_channel ic
@@ -43,7 +45,7 @@ let make_pipe () =
 let fork (f : ('a, 'b) handle -> unit) : ('b, 'a) handle =
   let parent_in, child_out = make_pipe () in
   let child_in, parent_out = make_pipe () in
-  match Unix.fork () with
+  match Fork.fork () with
   | -1 -> failwith "Go get yourself a real computer"
   | 0 -> (* child *)
       close_in parent_in;

@@ -11,3 +11,4 @@
 let master_exception _ = ()
 let worker_exception _ = ()
 let sharedmem_gc _ _ = ()
+let flush _ = ()

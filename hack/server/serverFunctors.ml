@@ -206,6 +206,7 @@ end = struct
       then Program.EventLogger.recheck_end start_t loop_count rechecked_count;
       if has_client then handle_connection genv !env socket;
       ServerEnv.invoke_async_queue ();
+      EventLogger.flush ();
     done
 
   let load genv filename to_recheck =
@@ -335,7 +336,7 @@ end = struct
 
   let daemonize options =
     (* detach ourselves from the parent process *)
-    let pid = Unix.fork() in
+    let pid = Fork.fork() in
     if pid == 0
     then begin
       ignore(Unix.setsid());

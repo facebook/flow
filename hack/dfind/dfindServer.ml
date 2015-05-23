@@ -78,7 +78,7 @@ let daemon_from_pipe env message_in result_out =
 let fork_in_pipe roots =
   let msg_in, msg_out = Unix.pipe() in
   let result_in, result_out = Unix.pipe() in
-  match Unix.fork() with
+  match Fork.fork() with
   | -1 -> failwith "Go get yourself a real computer"
   | 0 ->
       Unix.close msg_out;
