@@ -15,6 +15,7 @@ module Reason = Typing_reason
 module Inst = Typing_instantiate
 module Unify = Typing_unify
 module Env = Typing_env
+module DefsDB = Typing_heap
 module TDef = Typing_tdef
 module TSubst = Typing_subst
 module TUtils = Typing_utils
@@ -432,7 +433,7 @@ and sub_type_with_uenv env (uenv_super, ty_super) (uenv_sub, ty_sub) =
     when name_super = name_sub ->
       let td = Env.get_typedef env name_super in
       (match td with
-      | Some (Env.Typedef.Ok (_, tparams, _, _, _)) ->
+      | Some (DefsDB.Typedef.Ok (_, tparams, _, _, _)) ->
           let variancel =
             List.map (fun (variance, _, _) -> variance) tparams
           in

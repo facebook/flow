@@ -11,32 +11,39 @@
 open Utils
 open Ast
 
+module FuncTerm = Typing_heap.FuncTerminality
+
 (* helpers for GetLocals below *)
 (* TODO It really sucks that this and Nast_terminality.Terminal are very
  * slightly different (notably, this version is somewhat buggier). Fixing that
  * exposes a lot of errors in www unfortunately -- we should bite the bullet on
  * fixing switch all the way when we do that, most likely though -- see tasks
  * #3140431 and #2813555. *)
-let rec terminal in_try stl = List.iter (terminal_ in_try) stl
-and terminal_ in_try = function
+let rec terminal nsenv ~in_try stl = List.iter (terminal_ nsenv ~in_try) stl
+and terminal_ nsenv ~in_try = function
   | Throw _ when not in_try -> raise Exit
   | Throw _ -> ()
   | Continue _
   | Expr (_, (Call ((_, Id (_, "assert")), [_, False], [])
-                 | Call ((_, Id (_, "invariant")), (_, False) :: _ :: _, [])
-                 | Call ((_, Id (_, "invariant_violation")), _ :: _, [])))
-  | Return _
-  | Expr (_, Call ((_, Id (_, ("exit" | "die"))), _, _)) -> raise Exit
+                 | Call ((_, Id (_, "invariant")), (_, False) :: _ :: _, [])))
+  | Return _ -> raise Exit
+  | Expr (_, Call ((_, Id fun_id), _, _)) ->
+    let _, fun_name = Namespaces.elaborate_id nsenv fun_id in
+    FuncTerm.raise_exit_if_terminal (FuncTerm.get_fun fun_name)
+  | Expr (_, Call ((_, Class_const (cls_id, (_, meth_name))), _, _))
+    when (snd cls_id).[0] <> '$' ->
+    let _, cls_name = Namespaces.elaborate_id nsenv cls_id in
+    FuncTerm.raise_exit_if_terminal (FuncTerm.get_static_meth cls_name meth_name)
   | If (_, b1, b2) ->
-      (try terminal in_try b1; () with Exit ->
-        terminal in_try b2)
+      (try terminal nsenv ~in_try b1; () with Exit ->
+        terminal nsenv ~in_try b2)
   | Switch (_, cl) ->
-      terminal_cl in_try cl
-  | Block b -> terminal in_try b
+      terminal_cl nsenv ~in_try cl
+  | Block b -> terminal nsenv ~in_try b
   | Try (b, catch_l, finb) ->
     (* return is not allowed in finally, so we can ignore fb *)
-    (terminal true b;
-     List.iter (terminal_catch in_try) catch_l)
+    (terminal nsenv ~in_try:true b;
+     List.iter (terminal_catch nsenv ~in_try) catch_l)
   | Do _
   | While _
   | For _
@@ -48,22 +55,24 @@ and terminal_ in_try = function
   | Break _ (* TODO this is terminal sometimes too, except switch, see above. *)
   | Static_var _ -> ()
 
-and terminal_catch in_try (_, _, b) =
-  terminal in_try b
+and terminal_catch nsenv ~in_try (_, _, b) =
+  terminal nsenv ~in_try b
 
-and terminal_cl in_try = function
+and terminal_cl nsenv ~in_try = function
   | [] -> raise Exit
   | Case (_, b) :: rl ->
       (try
-        terminal in_try b;
+        terminal nsenv ~in_try b;
         if List.exists (function Break _ -> true | _ -> false) b
         then ()
         else raise Exit
-      with Exit -> terminal_cl in_try rl)
+      with Exit -> terminal_cl nsenv ~in_try rl)
   | Default b :: rl ->
-      (try terminal in_try b with Exit -> terminal_cl in_try rl)
+      (try terminal nsenv ~in_try b with Exit -> terminal_cl nsenv ~in_try rl)
 
-let is_terminal stl = try terminal false stl; false with Exit -> true
+let is_terminal nsenv stl =
+  try terminal nsenv ~in_try:false stl; false
+  with Exit -> true
 
 (* Module calculating the locals for a statement
 * This is useful when someone uses $x on both sides
@@ -76,19 +85,29 @@ let is_terminal stl = try terminal false stl; false with Exit -> true
 *)
 module GetLocals = struct
 
-  let rec lvalue acc = function
-    | (p, Lvar (_, x)) -> SMap.add x p acc
+  let smap_union ((nsenv:Namespace_env.env), (m1:Pos.t Utils.SMap.t))
+      (m2:Pos.t Utils.SMap.t) =
+    let m_combined = SMap.fold SMap.add m1 m2 in
+    nsenv, m_combined
+
+  let rec lvalue (acc:(Namespace_env.env * Pos.t Utils.SMap.t)) = function
+    | (p, Lvar (_, x)) ->
+      let nsenv, m = acc in
+      nsenv, SMap.add x p m
     | _, List lv -> List.fold_left lvalue acc lv
     (* Ref forms a local inside a foreach *)
-    | (_, Ref (p, Lvar (_, x))) ->  SMap.add x p acc
+    | (_, Ref (p, Lvar (_, x))) ->
+      let nsenv, m = acc in
+      nsenv, SMap.add x p m
     | _ -> acc
 
-  let rec stmt acc st =
+  let rec stmt (acc:(Namespace_env.env * Pos.t Utils.SMap.t)) st =
+    let nsenv = fst acc in
     match st with
     | Expr (_, Binop (Eq None, lv, rv))
     | Expr (_, Eif ((_, Binop (Eq None, lv, rv)), _, _)) ->
-        let acc = stmt acc (Expr rv) in
-        lvalue acc lv
+      let acc = stmt acc (Expr rv) in
+      lvalue acc lv
     | Unsafe
     | Fallthrough
     | Expr _ | Break _ | Continue _ | Throw _
@@ -96,47 +115,54 @@ module GetLocals = struct
     | Return _ | Static_var _ | Noop -> acc
     | Block b -> block acc b
     | If (_, b1, b2) ->
-        let term1 = is_terminal b1 in
-        let term2 = is_terminal b2 in
-        if term1 && term2
-        then acc
-        else if term1
-        then smap_union acc (block SMap.empty b2)
-        else if term2
-        then smap_union acc (block SMap.empty b1)
-        else
-          let b1 = block SMap.empty b1 in
-          let b2 = block SMap.empty b2 in
-          smap_union acc (smap_inter b1 b2)
+      let term1 = is_terminal nsenv b1 in
+      let term2 = is_terminal nsenv b2 in
+      if term1 && term2
+      then acc
+      else if term1
+      then
+        let _, m2 = block (nsenv, SMap.empty) b2 in
+        smap_union acc m2
+      else if term2
+      then
+        let _, m1 = block (nsenv, SMap.empty) b1 in
+        smap_union acc m1
+      else begin
+        let _, m1 = block (nsenv, SMap.empty) b1 in
+        let _, m2 = block (nsenv, SMap.empty) b2 in
+        let (m:Pos.t Utils.SMap.t) = (smap_inter m1 m2) in
+        smap_union acc m
+      end
     | Switch (e, cl) ->
-        let cl = List.filter begin function
-          | Case (_, b)
-          | Default b -> not (is_terminal b)
-        end cl in
-        let cl = casel cl in
-        let c = smap_inter_list cl in
-        smap_union acc c
+      let cl = List.filter begin function
+        | Case (_, b)
+        | Default b -> not (is_terminal nsenv b)
+      end cl in
+      let cl = casel nsenv cl in
+      let c = smap_inter_list cl in
+      smap_union acc c
     | Try (b, cl, f) ->
-        let c = block SMap.empty b in
-        let lcl = List.map catch cl in
-        let tcl = List.map (fun (_, _, b) -> is_terminal b) cl in
-        let cl = List.fold_right2 begin fun x y acc ->
-          if y then acc else x :: acc
-        end lcl tcl [] in
-        let c = smap_inter_list (c :: cl) in
-        smap_union acc c
+      let _, c = block (nsenv, SMap.empty) b in
+      let lcl = List.map (catch nsenv) cl in
+      let tcl = List.map (fun (_, _, b) -> is_terminal nsenv b) cl in
+      let cl = List.fold_right2 begin fun x y acc ->
+        if y then acc else x :: acc
+      end lcl tcl [] in
+      let c = smap_inter_list (c :: cl) in
+      smap_union acc c
 
   and block acc l = List.fold_left stmt acc l
 
-  and casel = function
+  and casel nsenv = function
     | [] -> []
-    | Case (_, []) :: rl -> casel rl
+    | Case (_, []) :: rl -> casel nsenv rl
     | Default b :: rl
     | Case (_, b) :: rl ->
-        let b = block SMap.empty b in
-        b :: casel rl
+        let _, b = block (nsenv, SMap.empty) b in
+        b :: casel nsenv rl
 
-  and catch (_, _, b) = block SMap.empty b
+  and catch nsenv (_, _, b) =
+    snd (block (nsenv, SMap.empty) b)
 
 end
 

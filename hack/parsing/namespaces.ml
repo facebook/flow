@@ -138,7 +138,7 @@ let elaborate_id_no_autos = elaborate_id_impl ~autoimport:false
  * Fully-qualifies the things we need for Parsing_service.AddDeps -- the classes
  * we extend, traits we use, interfaces we implement; along with classes we
  * define. So that we can also use them to figure out fallback behavior, we also
- * fully-qualifiy functions that we define, even though AddDeps doesn't need
+ * fully-qualify functions that we define, even though AddDeps doesn't need
  * them this early.
  *
  * Note that, since AddDeps doesn't need it, we don't recursively traverse

@@ -280,11 +280,11 @@ and hint_ env p = function
       hint env h;
       ()
   | Happly ((_, x), hl) when Typing_env.is_typedef x ->
-      let tdef = Typing_env.Typedefs.find_unsafe x in
+      let tdef = Typing_heap.Typedefs.find_unsafe x in
       let params =
         match tdef with
-        | Typing_env.Typedef.Error -> []
-        | Typing_env.Typedef.Ok (_, x, _, _, _) -> x
+        | Typing_heap.Typedef.Error -> []
+        | Typing_heap.Typedef.Ok (_, x, _, _, _) -> x
       in
       check_params env p x params hl
   | Happly ((_, x), hl) ->
