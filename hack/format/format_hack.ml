@@ -2560,7 +2560,7 @@ and expr_atomic_word env last_tok = function
       end
   | "function" when last_tok <> Tarrow && last_tok <> Tnsarrow ->
       last_token env;
-      space env;
+      if next_non_ws_token env <> Tlp then space env;
       fun_ env
   | "await" ->
       last_token env;
