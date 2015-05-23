@@ -310,7 +310,7 @@ let destructuring_map cx t p =
 let pattern_decl cx t scope_kind =
   destructuring cx t (fun cx loc name t ->
     Hashtbl.replace cx.type_table loc t;
-    Env_js.init_env cx name (create_env_entry t t (Some loc) scope_kind) scope_kind
+    Env_js.init_env cx name (create_env_entry t t (Some loc) scope_kind)
   )
 
 (* type refinements on expressions - wraps Env_js API *)
@@ -864,7 +864,7 @@ and variable_decl cx loc { Ast.Statement.VariableDeclaration.declarations; kind 
         let r = mk_reason (spf "var %s" name) loc in
         let t = mk_type_annotation cx r typeAnnotation in
         Hashtbl.replace cx.type_table loc t;
-        Env_js.init_env cx name (create_env_entry t t (Some loc) scope_kind) scope_kind
+        Env_js.init_env cx name (create_env_entry t t (Some loc) scope_kind)
     | p ->
         let r = mk_reason "var _" loc in
         let t = type_of_pattern p |> mk_type_annotation cx r in
@@ -925,7 +925,7 @@ and statement_decl cx = Ast.Statement.(
       let _, { Ast.Identifier.name; _ } = id in
       let r = mk_reason (spf "type %s" name) loc in
       let tvar = Flow_js.mk_tvar cx r in
-      Env_js.init_env cx name (create_env_entry ~for_type:true tvar tvar (Some loc) VarScope) VarScope
+      Env_js.init_env cx name (create_env_entry ~for_type:true tvar tvar (Some loc) VarScope)
 
   | (loc, Switch { Switch.discriminant; cases; lexical }) ->
       (* TODO: ensure that default is last *)
@@ -992,7 +992,7 @@ and statement_decl cx = Ast.Statement.(
         let _, { Ast.Identifier.name; _ } = id in
         let r = mk_reason (spf "function %s" name) loc in
         let tvar = Flow_js.mk_tvar cx r in
-        Env_js.init_env cx name (create_env_entry tvar tvar (Some loc) VarScope) VarScope
+        Env_js.init_env cx name (create_env_entry tvar tvar (Some loc) VarScope)
       | None -> failwith (
           "Flow Error: Nameless function declarations should always be given " ^
           "an implicit name before they get hoisted!"
@@ -1005,7 +1005,7 @@ and statement_decl cx = Ast.Statement.(
       let r = mk_reason (spf "declare %s" name) loc in
       let t = mk_type_annotation cx r typeAnnotation in
       Hashtbl.replace cx.type_table loc t;
-      Env_js.init_env cx name (create_env_entry t t (Some loc) VarScope) VarScope
+      Env_js.init_env cx name (create_env_entry t t (Some loc) VarScope)
 
   | (loc, VariableDeclaration decl) ->
       variable_decl cx loc decl
@@ -1016,7 +1016,7 @@ and statement_decl cx = Ast.Statement.(
         let _, { Ast.Identifier.name; _ } = id in
         let r = mk_reason (spf "class %s" name) loc in
         let tvar = Flow_js.mk_tvar cx r in
-        Env_js.init_env cx name (create_env_entry tvar tvar (Some loc) LexicalScope) LexicalScope
+        Env_js.init_env cx name (create_env_entry tvar tvar (Some loc) LexicalScope)
       | None -> ()
     )
 
@@ -1027,7 +1027,7 @@ and statement_decl cx = Ast.Statement.(
       let tvar = Flow_js.mk_tvar cx r in
       (* FIXME: The entry should be have scope_kind = LexicalScope,
        * but the correct scope kind breaks existing declarations under TDZ *)
-      Env_js.init_env cx name (create_env_entry tvar tvar (Some loc) VarScope) LexicalScope
+      Env_js.init_env cx name (create_env_entry tvar tvar (Some loc) VarScope)
   | (loc, DeclareModule { DeclareModule.id; _ }) ->
       let name = match id with
       | DeclareModule.Identifier (_, id) -> id.Ast.Identifier.name
@@ -1042,7 +1042,6 @@ and statement_decl cx = Ast.Statement.(
       Env_js.init_env cx
         (internal_module_name name)
         (create_env_entry t t (Some loc) VarScope)
-        VarScope
   | (_, ExportDeclaration {
       ExportDeclaration.default;
       ExportDeclaration.declaration;
@@ -1092,7 +1091,7 @@ and statement_decl cx = Ast.Statement.(
           let env_entry =
             (create_env_entry ~for_type:isType tvar tvar (Some loc) VarScope)
           in
-          Env_js.init_env cx local_name env_entry VarScope
+          Env_js.init_env cx local_name env_entry
         | None -> (
           match specifier with
           | Some(ImportDeclaration.Named(_, named_specifiers)) ->
@@ -1116,7 +1115,7 @@ and statement_decl cx = Ast.Statement.(
               let env_entry =
                 create_env_entry ~for_type:isType tvar tvar (Some specifier_loc) VarScope
               in
-              Env_js.init_env cx local_name env_entry VarScope;
+              Env_js.init_env cx local_name env_entry
             ) in
             List.iter init_specifier named_specifiers
           | Some(ImportDeclaration.NameSpace(_, (loc, local_ident))) ->
@@ -1128,7 +1127,7 @@ and statement_decl cx = Ast.Statement.(
             let env_entry =
               create_env_entry ~for_type:isType tvar tvar (Some loc) VarScope
             in
-            Env_js.init_env cx local_name env_entry VarScope
+            Env_js.init_env cx local_name env_entry
           | None -> failwith (
             "Parser error: Non-default imports must always have a " ^
             "specifier!"

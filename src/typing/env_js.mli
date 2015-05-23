@@ -34,7 +34,7 @@ val var_ref : ?for_type:bool -> context -> string -> reason -> Type.t
 
 val set_var : ?for_type:bool -> context -> string -> Type.t -> reason -> unit
 
-val init_env : context -> string -> scope_entry -> scope_kind -> unit
+val init_env : context -> string -> scope_entry -> unit
 
 val clone_env : scope list -> scope list
 

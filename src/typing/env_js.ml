@@ -103,11 +103,11 @@ let exists_in_scope x scope =
   let entries = scope.entries in
   SMap.get x !entries
 
-let set_in_env x entry scope_kind =
+let set_in_env x entry =
   let rec loop = function
     | [] -> set_in_scope x entry global_scope
     | scope::scopes ->
-        if (scope_kind = LexicalScope || scope.kind = scope_kind) then
+        if (entry.scope_kind = LexicalScope || scope.kind = entry.scope_kind) then
           set_in_scope x entry scope
         else
           loop scopes in
@@ -163,9 +163,10 @@ let switch_env scope =
 let peek_env () =
   List.hd !env
 
-let init_env cx x shape scope_kind =
+let init_env cx x shape =
+  let scope_kind = shape.scope_kind in
   match exists_in_env x scope_kind with
-  | None -> set_in_env x shape scope_kind
+  | None -> set_in_env x shape
   | Some { general; for_type; def_loc; _; } when for_type <> shape.for_type ->
       (* When we have a value var shadowing a type var, replace the type var
        * with the value var *)
@@ -181,7 +182,7 @@ let init_env cx x shape scope_kind =
         shadower_reason, "This binding is shadowing";
         shadowed_reason, "which is a different sort of binding";
       ];
-      set_in_env x shape scope_kind;
+      set_in_env x shape;
       Flow_js.unify cx shape.general general
   | Some { general; _ } ->
       Flow_js.unify cx general shape.general
