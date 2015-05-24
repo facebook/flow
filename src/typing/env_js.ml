@@ -187,8 +187,23 @@ let init_env cx x shape =
       ];
       set_in_env x shape;
       Flow_js.unify cx shape.general general
-  | (_, Some { general; _ }) ->
-      Flow_js.unify cx general shape.general
+  | (scope, Some { general; for_type; def_loc; scope_kind }) ->
+      if (scope.kind = LexicalScope &&
+         (scope_kind = LexicalScope || shape.scope_kind = LexicalScope)) then
+        let shadowed_reason =
+          mk_reason
+            (spf "%s binding %s" (if for_type then "type" else "value") x)
+            (match def_loc with None -> Ast.Loc.none | Some loc -> loc) in
+        let shadower_reason =
+          mk_reason
+            (spf "%s binding %s" (if shape.for_type then "type" else "value") x)
+            (match shape.def_loc with None -> Ast.Loc.none | Some loc -> loc) in
+        Flow_js.add_error cx [
+          shadower_reason, "This binding conflicts with";
+          shadowed_reason, "which is already declared";
+        ]
+      else
+        Flow_js.unify cx general shape.general
 
 let let_env x shape f =
   peek_env() |> set_in_scope x shape;

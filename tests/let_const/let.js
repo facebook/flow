@@ -18,14 +18,14 @@ function forInLoop(): number {
   return prop;
 }
 
-/* TODO: function TDZ1() {
+function TDZ1() {
   let foo;
   let foo; // OK
   if (true) {
     let bar;
     let bar; // TypeError
   }
-} */
+}
 
 /* TODO: function TDZ2(x) {
   switch (x) {

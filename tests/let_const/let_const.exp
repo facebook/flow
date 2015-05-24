@@ -19,4 +19,9 @@ ReferenceError: can't access lexical declaration before initialization
 
 const.js:12:9,11: Const must be initialized
 
-Found 7 errors
+let.js:26:9,11: value binding bar
+This binding conflicts with
+let.js:25:9,11: value binding bar
+which is already declared
+
+Found 8 errors
