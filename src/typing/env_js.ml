@@ -117,10 +117,13 @@ let exists_in_env x scope_kind =
   let rec loop = function
     | [] -> exists_in_scope x global_scope
     | scope::scopes ->
-        if (scope_kind = LexicalScope || scope.kind = scope_kind) then
-          exists_in_scope x scope
-        else
-          loop scopes in
+        (match exists_in_scope x scope with
+        | Some entry -> Some entry
+        | None ->
+          if (scope.kind = scope_kind) then
+            None
+          else
+            loop scopes) in
   loop (!env)
 
 let update_scope ?(for_type=false) cx x (specific_t, general_t) reason scope =
