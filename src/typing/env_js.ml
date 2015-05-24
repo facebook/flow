@@ -115,13 +115,13 @@ let set_in_env x entry =
 
 let exists_in_env x scope_kind =
   let rec loop = function
-    | [] -> exists_in_scope x global_scope
+    | [] -> (global_scope, exists_in_scope x global_scope)
     | scope::scopes ->
         (match exists_in_scope x scope with
-        | Some entry -> Some entry
+        | Some entry -> (scope, Some entry)
         | None ->
           if (scope.kind = scope_kind) then
-            None
+            (scope, None)
           else
             loop scopes) in
   loop (!env)
@@ -169,8 +169,8 @@ let peek_env () =
 let init_env cx x shape =
   let scope_kind = shape.scope_kind in
   match exists_in_env x scope_kind with
-  | None -> set_in_env x shape
-  | Some { general; for_type; def_loc; _; } when for_type <> shape.for_type ->
+  | (_, None) -> set_in_env x shape
+  | (_, Some { general; for_type; def_loc; _; }) when for_type <> shape.for_type ->
       (* When we have a value var shadowing a type var, replace the type var
        * with the value var *)
       let shadowed_reason =
@@ -187,7 +187,7 @@ let init_env cx x shape =
       ];
       set_in_env x shape;
       Flow_js.unify cx shape.general general
-  | Some { general; _ } ->
+  | (_, Some { general; _ }) ->
       Flow_js.unify cx general shape.general
 
 let let_env x shape f =
@@ -214,7 +214,7 @@ let get_var_ cx x reason =
 
 let var_ref ?(for_type=false) cx x reason =
   (match exists_in_env x VarScope with
-  | Some { def_loc = Some loc; scope_kind = LexicalScope } ->
+  | (_, Some { def_loc = Some loc; scope_kind = LexicalScope }) ->
       if Pervasives.compare (pos_of_reason reason) (pos_of_loc loc) < 0
       then Flow_js.add_error cx [
         reason, "ReferenceError: can't access lexical declaration before initialization"
@@ -226,11 +226,11 @@ let var_ref ?(for_type=false) cx x reason =
 
 let get_refinement cx key r =
   match exists_in_env key VarScope with
-  | Some { specific; _ } ->
+  | (_, Some { specific; _ }) ->
       let pos = pos_of_reason r in
       let t = mod_reason_of_t (repos_reason pos) specific in
       Some t
-  | None ->
+  | (_, None) ->
       None
 
 let set_var ?(for_type=false) cx x specific_t reason =
