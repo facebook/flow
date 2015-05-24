@@ -27,7 +27,7 @@ function TDZ1() {
   }
 }
 
-/* TODO: function TDZ2(x) {
+function TDZ2(x) {
   switch (x) {
     case 0:
       let foo;
@@ -37,4 +37,4 @@ function TDZ1() {
       let foo; // TypeError
       break;
   }
-} */
+}

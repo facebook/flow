@@ -24,4 +24,9 @@ This binding conflicts with
 let.js:25:9,11: value binding bar
 which is already declared
 
-Found 8 errors
+let.js:37:11,13: value binding foo
+This binding conflicts with
+let.js:33:11,13: value binding foo
+which is already declared
+
+Found 9 errors

@@ -928,10 +928,16 @@ and statement_decl cx = Ast.Statement.(
       Env_js.init_env cx name (create_env_entry ~for_type:true tvar tvar (Some loc) VarScope)
 
   | (loc, Switch { Switch.discriminant; cases; lexical }) ->
+      let entries = ref SMap.empty in
+      let scope = { kind = LexicalScope; entries } in
+      Env_js.push_env scope;
+
       (* TODO: ensure that default is last *)
       List.iter (fun (loc, { Switch.Case.test; consequent }) ->
         List.iter (statement_decl cx) consequent
-      ) cases
+      ) cases;
+
+      Env_js.pop_env();
 
   | (loc, Return _) -> ()
 
@@ -1344,6 +1350,11 @@ and statement cx = Ast.Statement.(
   | (loc, Switch { Switch.discriminant; cases; lexical }) ->
 
       ignore (expression cx discriminant);
+
+      let entries = ref SMap.empty in
+      let scope = { kind = LexicalScope; entries } in
+      Env_js.push_env scope;
+
       let save_break_exn = Abnormal.swap (Abnormal.Break None) false in
 
       let default = ref false in
@@ -1382,6 +1393,7 @@ and statement cx = Ast.Statement.(
 
           let exception_ = ref None in
           mark_exception_handler (fun () ->
+            List.iter (statement_decl cx) consequent;
             toplevels cx consequent
           ) exception_;
 
@@ -1423,7 +1435,9 @@ and statement cx = Ast.Statement.(
               | _ -> false
             )
             then Abnormal.raise_exn exn
-      )
+      );
+
+      Env_js.pop_env()
 
   | (loc, Return { Return.argument }) ->
       let reason = mk_reason "return" loc in
