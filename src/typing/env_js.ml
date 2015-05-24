@@ -120,7 +120,7 @@ let exists_in_env x scope_kind =
         (match exists_in_scope x scope with
         | Some entry -> (scope, Some entry)
         | None ->
-          if (scope.kind = scope_kind) then
+          if (scope.kind = VarScope || scope.kind = scope_kind) then
             (scope, None)
           else
             loop scopes) in
@@ -129,8 +129,15 @@ let exists_in_env x scope_kind =
 let update_scope ?(for_type=false) cx x (specific_t, general_t) reason scope =
   let entries = scope.entries in
   (match SMap.get x !entries with
-  | Some {def_loc; for_type; scope_kind; _;} ->
-      let new_entry = create_env_entry ~for_type specific_t general_t def_loc scope_kind in
+  | Some {def_loc; for_type; constant; scope_kind; _;} ->
+      (match def_loc with
+      | Some loc ->
+        if constant && Pervasives.compare (pos_of_reason reason) (pos_of_loc loc) > 0
+        then Flow_js.add_error cx [
+          reason, (spf "TypeError: `%s` has already been defined" x)
+        ]
+      | _ -> ());
+      let new_entry = create_env_entry ~for_type ~constant specific_t general_t def_loc scope_kind in
       entries := !entries |> SMap.add x new_entry
   | None ->
       let msg = "can't find entry to update" in
@@ -187,7 +194,7 @@ let init_env cx x shape =
       ];
       set_in_env x shape;
       Flow_js.unify cx shape.general general
-  | (scope, Some { general; for_type; def_loc; scope_kind }) ->
+  | (scope, Some { general; for_type; constant; def_loc; scope_kind }) ->
       if (scope.kind = LexicalScope &&
          (scope_kind = LexicalScope || shape.scope_kind = LexicalScope)) then
         let shadowed_reason =
@@ -283,7 +290,7 @@ let rec merge_env cx reason (ctx, ctx1, ctx2) changeset =
       (* merge scope, scope1, scope2 *)
       let not_found = SSet.fold (fun x not_found ->
         match SMap.get x !entries with
-        | Some {specific;general;def_loc;for_type;scope_kind} ->
+        | Some {specific;general;def_loc;for_type;constant;scope_kind} ->
             let shape1 = SMap.find_unsafe x !entries1 in
             let shape2 = SMap.find_unsafe x !entries2 in
             let s1 = shape1.specific in
@@ -302,7 +309,7 @@ let rec merge_env cx reason (ctx, ctx1, ctx2) changeset =
                 (tvar,general)
             in
             let for_type = for_type || shape1.for_type || shape2.for_type in
-            scope.entries := SMap.add x (create_env_entry ~for_type s g def_loc scope_kind) !entries;
+            scope.entries := SMap.add x (create_env_entry ~for_type ~constant s g def_loc scope_kind) !entries;
             not_found
         | None ->
             SSet.add x not_found
@@ -318,15 +325,15 @@ let widen_env cx reason =
         let entries = scope.entries in
         let entries = !entries in
         if SMap.cardinal entries < 32 then
-        scope.entries := entries |> SMap.mapi (fun x {specific;general;def_loc;for_type;scope_kind} ->
+        scope.entries := entries |> SMap.mapi (fun x {specific;general;def_loc;for_type;constant;scope_kind} ->
           if specific = general
-          then create_env_entry ~for_type specific general def_loc scope_kind
+          then create_env_entry ~for_type ~constant specific general def_loc scope_kind
           else
             let reason = replace_reason x reason in
             let tvar = Flow_js.mk_tvar cx reason in
             Flow_js.flow cx (specific,tvar);
             Flow_js.flow cx (tvar,general);
-            create_env_entry ~for_type tvar general def_loc scope_kind
+            create_env_entry ~for_type ~constant tvar general def_loc scope_kind
         );
         if scope.kind = VarScope then ()
         else loop scopes
@@ -357,8 +364,8 @@ let copy_env cx reason (ctx1,ctx2) xs =
 let havoc_env () =
   List.iter (fun scope ->
     let entries = scope.entries in
-    entries := SMap.mapi (fun x {specific=_;general;def_loc;for_type;scope_kind} ->
-      create_env_entry ~for_type general general def_loc scope_kind
+    entries := SMap.mapi (fun x {specific=_;general;def_loc;for_type;constant;scope_kind} ->
+      create_env_entry ~for_type ~constant general general def_loc scope_kind
     ) !entries
  ) !env
 
@@ -366,9 +373,9 @@ let rec havoc_env2_ x = function
   | scope::scopes ->
       let entries = scope.entries in
       (match SMap.get x !entries with
-      | Some {specific=_;general;def_loc;for_type;scope_kind} ->
+      | Some {specific=_;general;def_loc;for_type;constant;scope_kind} ->
           entries := !entries |>
-            SMap.add x (create_env_entry ~for_type general general def_loc scope_kind)
+            SMap.add x (create_env_entry ~for_type ~constant general general def_loc scope_kind)
       | None ->
           havoc_env2_ x scopes
       )
@@ -380,9 +387,9 @@ let havoc_env2 xs =
 let havoc_heap_refinements () =
   List.iter (fun scope ->
     let entries = scope.entries in
-    entries := SMap.mapi (fun x ({specific=_;general;def_loc;for_type;scope_kind} as entry) ->
+    entries := SMap.mapi (fun x ({specific=_;general;def_loc;for_type;constant;scope_kind} as entry) ->
       if is_refinement x
-      then create_env_entry ~for_type general general def_loc scope_kind
+      then create_env_entry ~for_type ~constant general general def_loc scope_kind
       else entry
     ) !entries
  ) !env
@@ -392,11 +399,11 @@ let clear_env reason =
     | [] -> ()
     | scope::scopes ->
         let entries = scope.entries in
-        entries := !entries |> SMap.mapi (fun x {specific;general;def_loc;for_type;scope_kind} ->
+        entries := !entries |> SMap.mapi (fun x {specific;general;def_loc;for_type;constant;scope_kind} ->
           (* internal names (.this, .super, .return, .exports) are read-only *)
           if is_internal_name x
-          then create_env_entry ~for_type specific general def_loc scope_kind
-          else create_env_entry ~for_type (UndefT reason) general def_loc scope_kind
+          then create_env_entry ~for_type ~constant specific general def_loc scope_kind
+          else create_env_entry ~for_type ~constant (UndefT reason) general def_loc scope_kind
         );
         if scope.kind = VarScope then ()
         else loop scopes

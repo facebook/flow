@@ -538,6 +538,7 @@ type scope_entry = {
   general: Type.t;
   def_loc: Spider_monkey_ast.Loc.t option;
   for_type: bool;
+  constant: bool;
   scope_kind: scope_kind;
 }
 
@@ -548,12 +549,13 @@ type scope = {
 
 type stack = int list
 
-let create_env_entry ?(for_type=false) specific general loc scope_kind =
+let create_env_entry ?(for_type=false) ?(constant=false) specific general loc scope_kind =
   {
     specific;
     general;
     def_loc = loc;
     for_type;
+    constant;
     scope_kind;
   }
 

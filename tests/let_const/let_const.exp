@@ -17,6 +17,12 @@ ReferenceError: can't access lexical declaration before initialization
 common.js:56:22,24: identifier bar
 ReferenceError: can't access lexical declaration before initialization
 
+const.js:3:3,5: assignment of identifier foo
+TypeError: `foo` has already been defined
+
+const.js:8:9,11: var foo
+TypeError: `foo` has already been defined
+
 const_undeclared.js:8:9,11: Const must be initialized
 
 let.js:26:9,11: value binding bar
@@ -29,4 +35,4 @@ This binding conflicts with
 let.js:33:11,13: value binding foo
 which is already declared
 
-Found 9 errors
+Found 11 errors

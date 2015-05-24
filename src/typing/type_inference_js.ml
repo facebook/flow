@@ -307,10 +307,10 @@ let destructuring_map cx t p =
   );
   !tmap, !lmap
 
-let pattern_decl cx t scope_kind =
+let pattern_decl cx t ?(constant=false) scope_kind =
   destructuring cx t (fun cx loc name t ->
     Hashtbl.replace cx.type_table loc t;
-    Env_js.init_env cx name (create_env_entry t t (Some loc) scope_kind)
+    Env_js.init_env cx name (create_env_entry ~constant t t (Some loc) scope_kind)
   )
 
 (* type refinements on expressions - wraps Env_js API *)
@@ -858,23 +858,23 @@ and mk_enum_type cx reason keys =
 
 (* TODO: detect structural misuses abnormal control flow constructs *)
 and variable_decl cx loc { Ast.Statement.VariableDeclaration.declarations; kind } = Ast.Statement.(
-  let var_declarator cx scope_kind (loc, { VariableDeclaration.Declarator.id; init }) =
+  let var_declarator cx ?(constant=false) scope_kind (loc, { VariableDeclaration.Declarator.id; init }) =
     Ast.(match id with
     | (loc, Pattern.Identifier (_, { Identifier.name; typeAnnotation; _ })) ->
         let r = mk_reason (spf "var %s" name) loc in
         let t = mk_type_annotation cx r typeAnnotation in
         Hashtbl.replace cx.type_table loc t;
-        Env_js.init_env cx name (create_env_entry t t (Some loc) scope_kind)
+        Env_js.init_env cx name (create_env_entry ~constant t t (Some loc) scope_kind)
     | p ->
         let r = mk_reason "var _" loc in
         let t = type_of_pattern p |> mk_type_annotation cx r in
-        pattern_decl cx t scope_kind p
+        pattern_decl cx t ~constant scope_kind p
     )
   in
 
   match kind with
   | VariableDeclaration.Const ->
-      List.iter (var_declarator cx LexicalScope) declarations
+      List.iter (var_declarator cx ~constant:true LexicalScope) declarations
   | VariableDeclaration.Let ->
       List.iter (var_declarator cx LexicalScope) declarations
   | VariableDeclaration.Var ->
