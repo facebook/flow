@@ -7,7 +7,3 @@
   const foo = "foo"
   const foo = "bar" // error
 } */
-
-function requiresInitializer() {
-  const foo; // error
-}

@@ -17,7 +17,7 @@ ReferenceError: can't access lexical declaration before initialization
 common.js:56:22,24: identifier bar
 ReferenceError: can't access lexical declaration before initialization
 
-const.js:12:9,11: Const must be initialized
+const_undeclared.js:8:9,11: Const must be initialized
 
 let.js:26:9,11: value binding bar
 This binding conflicts with
