@@ -21,10 +21,6 @@ A.js:29:10,12: function call
 Callable signature not found in
 A.js:29:10,10: object literal
 
-B.js:5:23,28: number
-This type is incompatible with
-B.js:5:56,61: string
-
 B.js:5:56,61: string
 This type is incompatible with
 B.js:5:23,28: number
@@ -32,10 +28,6 @@ B.js:5:23,28: number
 B.js:8:14,19: string
 This type is incompatible with
 B.js:8:47,52: number
-
-B.js:8:47,52: number
-This type is incompatible with
-B.js:8:14,19: string
 
 B.js:11:10,19: function type
 Too few arguments (expected default/rest parameters in function)
@@ -69,4 +61,16 @@ E.js:2:9,28: property someProp
 Property not found in
 E.js:2:32,45: function
 
-Found 17 errors
+F.js:6:41,44: string
+This type is incompatible with
+F.js:6:23,28: number
+
+F.js:9:41,51: call of method toFixed
+Property not found in
+[LIB] core.js:166:1,192:1: String
+
+F.js:12:10,19: function type
+Too few arguments (expected default/rest parameters in function)
+F.js:12:25,35: arrow function
+
+Found 18 errors
