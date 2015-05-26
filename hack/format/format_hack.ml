@@ -2126,12 +2126,22 @@ and foreach_as env =
 
 and for_loop env =
   seq env [space; expect "("];
-  seq env [list_comma_single expr; semi_colon];
-  seq env [space; expr_list; semi_colon];
-  seq env [space; expr_list];
-  seq env [expect ")"];
-  block env;
-  newline env
+  (* the expr_list at toplevel adds newlines before and after the list, which
+   * we don't want *)
+  let expr_list = list_comma ~trailing:false expr in
+  let for_exprs ~break = begin fun env ->
+    seq env [expr_list; semi_colon];
+    seq env [break; expr_list; semi_colon];
+    seq env [break; expr_list]
+  end in
+  Try.one_line env
+    (for_exprs ~break:space)
+    begin fun env ->
+      newline env;
+      right env (for_exprs ~break:newline);
+      newline env;
+    end;
+  seq env [expect ")"; block; newline]
 
 (*****************************************************************************)
 (* Switch statement *)
