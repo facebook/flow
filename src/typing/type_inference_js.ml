@@ -4442,8 +4442,38 @@ and mk_signature cx reason_c c_type_params_map body = Ast.Statement.Class.(
           SMap.add name t fields,
           methods
 
-    (* skip unexpected members *)
-    | _ -> sfields, smethods, fields, methods
+    (* get/set *)
+    | Body.Method (loc, {
+       Method.kind = Ast.Expression.Object.Property.Get
+                   | Ast.Expression.Object.Property.Set
+      }) ->
+        let msg = "get/set properties not yet supported" in
+        Flow_js.add_error cx [mk_reason "" loc, msg];
+        sfields, smethods, fields, methods
+
+    (* literal LHS *)
+    | Body.Method (loc, {
+        Method.key = Ast.Expression.Object.Property.Literal _;
+        Method.kind = Ast.Expression.Object.Property.Init;
+      })
+    | Body.Property (loc, {
+        Property.key = Ast.Expression.Object.Property.Literal _;
+      }) ->
+        let msg = "literal properties not yet supported" in
+        Flow_js.add_error cx [mk_reason "" loc, msg];
+        sfields, smethods, fields, methods
+
+    (* computed LHS *)
+    | Body.Method (loc, {
+        Method.key = Ast.Expression.Object.Property.Computed _;
+        Method.kind = Ast.Expression.Object.Property.Init;
+      })
+    | Body.Property (loc, {
+        Property.key = Ast.Expression.Object.Property.Computed _;
+      }) ->
+        let msg = "computed property keys not supported" in
+        Flow_js.add_error cx [mk_reason "" loc, msg];
+        sfields, smethods, fields, methods
 
   ) (SMap.empty, SMap.empty, SMap.empty, default_methods) elements
 )
