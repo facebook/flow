@@ -662,12 +662,16 @@ let rec convert cx map = Ast.Type.(function
         )
 
       | "Function" | "function" ->
-        let reason = mk_reason "function type" loc in
-        AnyFunT reason
+        check_type_param_arity cx loc typeParameters 0 (fun () ->
+          let reason = mk_reason "function type" loc in
+          AnyFunT reason
+        )
 
       | "Object" ->
-        let reason = mk_reason "object type" loc in
-        AnyObjT reason
+        check_type_param_arity cx loc typeParameters 0 (fun () ->
+          let reason = mk_reason "object type" loc in
+          AnyObjT reason
+        )
       (* TODO: presumably some existing uses of AnyT can benefit from AnyObjT
          as well: e.g., where AnyT is used to model prototypes and statics we
          don't care about; but then again, some of these uses may be internal,

@@ -15,4 +15,13 @@ generics.js:38:9,13: string
 This type is incompatible with
 generics.js:39:28,33: number
 
-Found 4 errors
+generics.js:41:11,32: 
+Incorrect number of type parameters (expected 0)
+
+generics.js:42:10,25: 
+Incorrect number of type parameters (expected 0)
+
+generics.js:43:10,25: 
+Incorrect number of type parameters (expected 0)
+
+Found 7 errors
