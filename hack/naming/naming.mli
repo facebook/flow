@@ -21,13 +21,12 @@ open Utils
  * to the original name of the entity, e.g. "foo", that is then
  * mapped here in ifuns to a freshly created unique integer identifier.
  *)
-type positioned_ident = (Pos.t * Ident.t)
 type env = {
   itcopt    : TypecheckerOptions.t;
-  iclasses  : ((string, positioned_ident) Hashtbl.t) * ((string, string) Hashtbl.t);
-  ifuns     : ((string, positioned_ident) Hashtbl.t) * ((string, string) Hashtbl.t);
-  itypedefs : (string, positioned_ident) Hashtbl.t;
-  iconsts   : (string, positioned_ident) Hashtbl.t;
+  iclasses  : ((Pos.t * Ident.t) SMap.t) * (String.t SMap.t);
+  ifuns     : ((Pos.t * Ident.t) SMap.t) * (String.t SMap.t);
+  itypedefs : (Pos.t * Ident.t) SMap.t;
+  iconsts   : (Pos.t * Ident.t) SMap.t;
 }
 
 (* Canonicalizes a key *)
