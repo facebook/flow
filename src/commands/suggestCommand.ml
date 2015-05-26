@@ -46,7 +46,7 @@ let main option_values files () =
   | _ -> failwith "Expected at least one file" in
 
   let ic, oc = connect_with_autostart option_values root in
-  let files = List.map ClientCheck.expand_path files in
+  let files = List.map expand_path files in
   let files = List.map2 (^) files regions in
   ServerProt.cmd_to_channel oc (ServerProt.SUGGEST files);
   let suggestion_map = Marshal.from_channel ic in

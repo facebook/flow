@@ -39,7 +39,7 @@ let spec = {
 
 let get_file path = function
   | Some filename ->
-      ServerProt.FileName (ClientCheck.expand_path filename)
+      ServerProt.FileName (expand_path filename)
   | None ->
       let contents = Sys_utils.read_stdin_to_string () in
       let filename = (match path with
