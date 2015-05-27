@@ -16,3 +16,5 @@ bliffl.toString = function() {}; // error
 baz.baz = 0;
 
 var x : number = Object.freeze(123);
+
+var xx : { x: number } = Object.freeze({ x: "error" })
