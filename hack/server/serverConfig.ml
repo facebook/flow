@@ -19,24 +19,20 @@ type t = {
   tc_options       : TypecheckerOptions.t;
 }
 
+let int_ key ~default config =
+  Option.value_map (SMap.get key config) ~default ~f:int_of_string
+
+let bool_ key ~default config =
+  Option.value_map (SMap.get key config) ~default ~f:bool_of_string
+
 let make_gc_control config =
-  let minor_heap_size = match SMap.get "gc_minor_heap_size" config with
-    | Some s -> int_of_string s
-    | None -> GlobalConfig.gc_control.Gc.minor_heap_size in
-  let space_overhead = match SMap.get "gc_space_overhead" config with
-    | Some s -> int_of_string s
-    | None -> GlobalConfig.gc_control.Gc.space_overhead in
-  { GlobalConfig.gc_control with Gc.minor_heap_size; Gc.space_overhead; }
+  let {Gc.minor_heap_size; space_overhead; _} = GlobalConfig.gc_control in
+  let minor_heap_size =
+    int_ "gc_minor_heap_size" ~default:minor_heap_size config in
+  let space_overhead =
+    int_ "gc_space_overhead" ~default:space_overhead config in
+  { GlobalConfig.gc_control with Gc.minor_heap_size; space_overhead; }
 
-let config_assume_php config =
-  match SMap.get "assume_php" config with
-    | Some s -> bool_of_string s
-    | None -> true
-
-let config_unsafe_xhp config =
-  match SMap.get "unsafe_xhp" config with
-    | Some s -> bool_of_string s
-    | None -> false
 
 let config_list_regexp = (Str.regexp "[, \t]+")
 
@@ -49,23 +45,20 @@ let config_user_attributes config =
 
 let load config_filename =
   let config = Config_file.parse (Relative_path.to_absolute config_filename) in
-  let load_script =
-    Option.map ~f:Path.make (SMap.get "load_script" config) in
+  let load_script = Option.map ~f:Path.make (SMap.get "load_script" config) in
   (* Since we use the unix alarm() for our timeouts, a timeout value of 0 means
    * to wait indefinitely *)
-  let load_script_timeout =
-    Option.value_map (SMap.get "load_script_timeout" config)
-    ~default:0 ~f:int_of_string in
-  let tcopts = {
-    TypecheckerOptions.tco_assume_php = config_assume_php config;
-    tco_unsafe_xhp = config_unsafe_xhp config;
+  let load_script_timeout = int_ "load_script_timeout" ~default:0 config in
+  let tcopts = { TypecheckerOptions.
+    tco_assume_php = bool_ "assume_php" ~default:true config;
+    tco_unsafe_xhp = bool_ "unsafe_xhp" ~default:false config;
     tco_user_attrs = config_user_attributes config;
   } in
   {
-    load_script   = load_script;
+    load_script = load_script;
     load_script_timeout = load_script_timeout;
-    gc_control    = make_gc_control config;
-    tc_options    = tcopts;
+    gc_control = make_gc_control config;
+    tc_options = tcopts;
   }
 
 (* useful in testing code *)
