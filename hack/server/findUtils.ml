@@ -17,6 +17,7 @@ let extensions = [
   ".hh"   ; (* Hack extension some open source code is starting to use *)
   ".phpt" ; (* our php template files *)
   ".hhi"  ; (* interface files only visible to the type checker *)
+  ".xhp"  ; (* XHP extensions *)
 ]
 
 let is_directory path = try Sys.is_directory path with Sys_error _ -> false
