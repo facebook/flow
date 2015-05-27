@@ -43,14 +43,8 @@ object_freeze.js:9:28,49: frozen object literal
 
 object_freeze.js:20:26,54: Object.freeze
 Error:
-object_freeze.js:20:15,20: number
-This type is incompatible with
-object_freeze.js:20:45,51: string
-
-object_freeze.js:20:26,54: Object.freeze
-Error:
 object_freeze.js:20:45,51: string
 This type is incompatible with
 object_freeze.js:20:15,20: number
 
-Found 9 errors
+Found 8 errors

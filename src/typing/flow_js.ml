@@ -1726,6 +1726,7 @@ let rec __flow cx (l,u) trace =
         (desc1 = "object literal")
         || (desc1 = "function")
         || (desc1 = "arrow function")
+        || (desc1 = "frozen object literal")
         || (Str.string_match (Str.regexp ".*React") desc1 0)
       in
 
