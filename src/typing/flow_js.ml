@@ -244,14 +244,6 @@ and havoc_ctx_ = function
       havoc_ctx_ (blocks_,stack1_,stack2_)
   | _ -> ()
 
-let frames: stack ref = ref []
-
-let mk_frame cx stack ctx =
-  let count = mk_id cx in
-  let stack = count::stack in
-  cx.closures <- IMap.add count (stack, ctx) cx.closures;
-  frames := stack
-
 (***************)
 (* print utils *)
 (***************)

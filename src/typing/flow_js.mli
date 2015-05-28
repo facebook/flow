@@ -31,16 +31,14 @@ module Cache: sig
   val clear: unit -> unit
 end
 
+val mk_id : context -> ident
+
 val mk_tvar: context -> reason -> Type.t
 val mk_tvar_where: context -> reason -> (Type.t -> unit) -> Type.t
 
 val get_builtin_typeapp: context -> reason -> string -> Type.t list -> Type.t
 
 (* frames *)
-
-val frames : stack ref
-
-val mk_frame : context -> int list -> scope list -> unit
 
 val havoc_ctx : context -> int -> int -> unit
 

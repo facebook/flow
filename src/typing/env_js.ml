@@ -34,7 +34,33 @@ let is_refinement name =
 (****************)
 
 type env = scope list ref
-let env: env = ref []
+
+let fresh_env () =
+   let global_scope = ref SMap.empty in
+   [global_scope]
+
+let env: env = ref (fresh_env ())
+let frames: stack ref = ref []
+
+let mk_frame cx =
+  let count = Flow_js.mk_id cx in
+  let stack = count::!frames in
+  cx.closures <- IMap.add count (stack, !env) cx.closures;
+  count
+
+(**
+ * Initialize a new environment (once per module)
+ *
+ * The context should likely be new too, since this creates the global scope
+ * and installs the builtins.
+ *)
+let init cx =
+  env := fresh_env ();
+  frames := [mk_frame cx];
+
+  (* add types for pervasive builtins *)
+  let reason, id = open_tvar Flow_js.builtins in
+  cx.graph <- cx.graph |> IMap.add id (new_unresolved_root ())
 
 let changeset = ref SSet.empty
 
@@ -44,15 +70,13 @@ let swap_changeset f =
   changeset := newset;
   oldset
 
-let global_scope: scope = ref SMap.empty
-
 let global_poison = ["eval"; "arguments"]
 let global_lexicals = [
   (internal_name "super");
   (internal_name "this")
 ]
 
-let cache_global cx x reason =
+let cache_global cx x reason global_scope =
   let t = (if (List.mem x global_poison) then
     AnyT.t
   else (if (List.mem x global_lexicals) then
@@ -64,20 +88,21 @@ let cache_global cx x reason =
   cx.globals <- SSet.add x cx.globals;
   global_scope
 
-let find_global cx x reason =
+let find_global cx x reason global_scope =
   if (SMap.mem x !global_scope)
   then
     global_scope
   else
-    cache_global cx x reason
+    cache_global cx x reason global_scope
 
 let find_env ?(for_type=false) cx x reason =
   let rec loop = function
-    | [] -> find_global cx x reason
+    | [global_scope] -> find_global cx x reason global_scope
     | scope::scopes ->
         (match SMap.get x !scope with
         | Some entry when (not entry.for_type || for_type) -> scope
         | _ -> loop scopes)
+    | [] -> assert false
   in
   loop (!env)
 
@@ -109,16 +134,18 @@ let read_env ?(for_type=false) cx x reason =
 let write_env ?(for_type=false) cx x shape reason =
   find_env ~for_type cx x reason |> update_scope ~for_type x shape
 
-let push_env scope =
-  env := scope :: !env
+let push_env cx scope =
+  env := scope :: !env;
+  frames := (mk_frame cx) :: !frames
 
 let pop_env () =
-  env := List.tl !env
+  env := List.tl !env;
+  frames := List.tl !frames
 
 let flat_env () =
   List.fold_left (fun acc x ->
     SMap.union acc !x
-  ) !global_scope !env
+  ) SMap.empty !env
 
 let switch_env scope =
   pop_env ();
@@ -126,6 +153,9 @@ let switch_env scope =
 
 let peek_env () =
   List.hd !env
+
+let peek_frame () =
+  List.hd !frames
 
 let init_env cx x shape =
   let scope = peek_env() in
@@ -169,10 +199,6 @@ let get_var ?(for_type=false) cx x reason =
 let get_var_in_scope ?(for_type=false) cx x reason =
   (read_env ~for_type cx x reason).general
 
-let get_var_ cx x reason =
-  let scope = find_env cx x reason in
-  (scope = global_scope, (get_from_scope x scope).specific)
-
 let var_ref ?(for_type=false) cx x reason =
   let t = (read_env ~for_type cx x reason).specific in
   let p = pos_of_reason reason in
@@ -198,7 +224,7 @@ let clone_env ctx =
   List.map (fun scope -> ref !scope) ctx
 
 let update_frame cx ctx =
-  let current_frame = List.hd !Flow_js.frames in
+  let current_frame = List.hd !frames in
   let (stack, _) = IMap.find_unsafe current_frame cx.closures in
   cx.closures <- IMap.add current_frame (stack,ctx) cx.closures;
   env := ctx
@@ -333,16 +359,14 @@ let refine_with_pred cx reason pred xtypes =
   SMap.iter (fun x predx ->
     if is_refinement x then install_refinement cx x xtypes;
     let reason' = replace_reason (spf "identifier %s" x) reason in
-    let (is_global, tx) = get_var_ cx x reason' in
-    if not is_global then (
-      let rstr = spf "identifier %s when %s" x (string_of_predicate predx) in
-      let reason = replace_reason rstr reason in
-      let t = Flow_js.mk_tvar cx reason in
-      let rt = PredicateT (predx, t) in
-      Flow_js.flow cx (tx, rt);
-      set_var cx x t reason
-    ))
-  pred
+    let tx = get_var cx x reason' in
+    let rstr = spf "identifier %s when %s" x (string_of_predicate predx) in
+    let reason = replace_reason rstr reason in
+    let t = Flow_js.mk_tvar cx reason in
+    let rt = PredicateT (predx, t) in
+    Flow_js.flow cx (tx, rt);
+    set_var cx x t reason
+  ) pred
 
 let refine_env cx reason pred xtypes f =
   let ctx = !env in
