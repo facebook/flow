@@ -36,32 +36,26 @@ endif
 ################################################################################
 
 MODULES=\
-  src/stubs\
   src/commands\
   src/common\
-  src/embedded\
   src/dts\
-  src/typing\
+  src/embedded\
   src/parser\
-  src/server\
   src/parsing\
-  hack/utils\
-  hack/client\
-  hack/socket\
-  hack/server\
-  hack/stubs\
-  hack/typing\
-  hack/naming\
-  hack/parsing\
+  src/server\
+  src/stubs\
+  src/typing\
   hack/deps\
-  hack/heap\
-  hack/globals\
-  hack/procs\
-  hack/search\
-  hack/hhi\
   hack/dfind\
+  hack/globals\
+  hack/heap\
+  hack/parsing\
+  hack/procs\
+  hack/socket\
+  hack/stubs\
   hack/third-party/avl\
   hack/third-party/core\
+  hack/utils\
   hack/$(INOTIFY)\
   hack/$(FSNOTIFY)
 
