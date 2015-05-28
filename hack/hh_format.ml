@@ -28,24 +28,24 @@ exception Format_error
 
 let debug () fnl =
   let modes = [Some FileInfo.Mstrict; Some FileInfo.Mpartial] in
-  List.fold_left begin fun () filepath ->
-    let filename = Relative_path.to_absolute filepath in
+  List.fold_left begin fun () (filepath : Path.t) ->
     try
-      let content = Sys_utils.cat filename in
+      let content = Sys_utils.cat (filepath :> string) in
 
       (* Checking that we can parse the output *)
       let parsing_errors1, parser_output1 = Errors.do_ begin fun () ->
-        Parser_hack.program filepath content
+        let rp =
+          Relative_path.create Relative_path.Dummy (filepath :> string) in
+        Parser_hack.program rp content
       end in
       if parser_output1.Parser_hack.file_mode = None || parsing_errors1 <> []
       then raise Exit;
 
       if parsing_errors1 <> []
       then begin
-        Printf.fprintf stderr
-          "The file had a syntax error before we even started: %s\n"
-          filename;
-        flush stdout
+        Printf.eprintf
+          "The file had a syntax error before we even started: %s\n%!"
+          (filepath :> string);
       end;
 
       let content = Format_hack.program modes filepath content in
@@ -55,10 +55,10 @@ let debug () fnl =
         | Format_hack.Disabled_mode ->
             raise Exit
         | Format_hack.Parsing_error _ ->
-            Printf.fprintf stderr "Parsing: %s\n" filename; flush stdout;
+            Printf.eprintf "Parsing: %s\n%!" (filepath :> string);
             ""
         | Format_hack.Internal_error ->
-            Printf.fprintf stderr "Internal: %s\n" filename; flush stdout;
+            Printf.eprintf "Internal: %s\n%!" (filepath :> string);
             ""
       in
 
@@ -71,9 +71,9 @@ let debug () fnl =
       in
       if content <> content2
       then begin
-        Printf.fprintf stderr
-          "Applying the formatter twice lead to different results: %s\n"
-          filename; flush stdout;
+        Printf.eprintf
+          "Applying the formatter twice lead to different results: %s\n%!"
+          (filepath :> string);
         let () = Random.self_init() in
         let nbr = string_of_int (Random.int 100000) in
         let tmp = "/tmp/xx_"^nbr in
@@ -92,21 +92,20 @@ let debug () fnl =
 
       (* Checking that we can parse the output *)
       let parsing_errors2, _parser_output2 = Errors.do_ begin fun () ->
-        Parser_hack.program filepath content
+        let rp = Relative_path.(create Dummy (filepath :> string)) in
+        Parser_hack.program rp content
       end in
       if parsing_errors2 <> []
       then begin
-        Printf.fprintf stderr
-          "The output of the formatter could not be parsed: %s\n"
-          filename;
-        flush stdout
+        Printf.eprintf
+          "The output of the formatter could not be parsed: %s\n%!"
+          (filepath :> string);
       end;
 
       ()
     with
     | Format_error ->
-        Printf.fprintf stderr "Format error: %s\n" filename;
-        flush stdout
+        Printf.eprintf "Format error: %s\n%!" (filepath :> string);
     | Exit ->
         ()
   end () fnl
@@ -114,7 +113,7 @@ let debug () fnl =
 let debug_directory dir =
   let path = Path.make dir in
   let next = compose
-    (rev_rev_map (Relative_path.create Relative_path.Root))
+    (rev_rev_map Path.make)
     (Find.make_next_files FindUtils.is_php path) in
   let workers = Worker.make GlobalConfig.nbr_procs GlobalConfig.gc_control in
   MultiWorker.call
@@ -173,11 +172,11 @@ let parse_args() =
 (* Formats a file in place *)
 (*****************************************************************************)
 
-let format_in_place modes filepath =
-  let filename = Relative_path.to_absolute filepath in
-  match Format_hack.program modes filepath (Sys_utils.cat filename) with
+let format_in_place modes (filepath : Path.t) =
+  let content = Sys_utils.cat (filepath :> string) in
+  match Format_hack.program modes filepath content with
   | Format_hack.Success result ->
-      let oc = open_out filename in
+      let oc = open_out (filepath :> string) in
       output_string oc result;
       close_out oc;
       None
@@ -202,7 +201,7 @@ let job_in_place modes acc fnl =
 let directory modes dir =
   let path = Path.make dir in
   let next = compose
-    (rev_rev_map (Relative_path.create Relative_path.Root))
+    (rev_rev_map Path.make)
     (Find.make_next_files FindUtils.is_php path) in
   let workers = Worker.make GlobalConfig.nbr_procs GlobalConfig.gc_control in
   let messages =
@@ -250,7 +249,7 @@ let read_stdin () =
 
 let format_stdin modes from to_ =
   let content = read_stdin () in
-  format_string modes Relative_path.default from to_ content
+  format_string modes Path.dummy_path from to_ content
 
 (*****************************************************************************)
 (* The main entry point. *)
@@ -260,20 +259,19 @@ let () =
   SharedMem.(init default_config);
   PidLog.log_oc := Some (open_out "/dev/null");
   let files, from, to_, in_place, debug, diff, modes, root = parse_args() in
-  let root =
-    match root with
-    | None ->
-        Printf.eprintf "No root specified, trying to guess one\n";
-        let root = ClientArgs.get_root None in
-        Printf.eprintf "Guessed root: %a\n%!" Path.output root;
-        root
-    | Some root -> Path.make root
-  in
-  Relative_path.set_path_prefix Relative_path.Root root;
   match files with
   | [] when diff ->
+      let prefix =
+        match root with
+        | None ->
+            Printf.eprintf "No root specified, trying to guess one\n";
+            let root = ClientArgs.get_root None in
+            Printf.eprintf "Guessed root: %a\n%!" Path.output root;
+            root
+        | Some root -> Path.make root
+      in
       let diff = read_stdin () in
-      let file_and_modified_lines = Format_diff.parse_diff diff in
+      let file_and_modified_lines = Format_diff.parse_diff prefix diff in
       Format_diff.apply modes in_place ~diff:file_and_modified_lines
   | _ when diff ->
       Printf.fprintf stderr "--diff mode expects no files\n";
@@ -287,16 +285,15 @@ let () =
       then debug_directory dir
       else directory modes dir
   | [filename] ->
-      let filename = Path.to_string (Path.make filename) in
-      let filepath = Relative_path.create Relative_path.Root filename in
+      let filepath = Path.make filename in
       if in_place
       then
         match format_in_place modes filepath with
         | None -> ()
         | Some error ->
-            Printf.fprintf stderr "Error: %s\n" error;
+            Printf.eprintf "Error: %s\n" error;
             exit 2
-      else format_string modes filepath from to_ (Sys_utils.cat filename)
+      else format_string modes filepath from to_ (Path.cat filepath)
   | _ ->
-      Printf.fprintf stderr "More than one file given\n";
+      Printf.eprintf "More than one file given\n";
       exit 2

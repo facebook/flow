@@ -470,7 +470,7 @@ let hh_arg_info fn line char =
 let hh_format contents start end_ =
   let modes = [Some FileInfo.Mstrict; Some FileInfo.Mpartial] in
   let result =
-    Format_hack.region modes Relative_path.default start end_ contents in
+    Format_hack.region modes Path.dummy_path start end_ contents in
   let error, result, internal_error = match result with
     | Format_hack.Disabled_mode -> "Php_or_decl", "", false
     | Format_hack.Parsing_error _ -> "Parsing_error", "", false

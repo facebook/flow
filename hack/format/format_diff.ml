@@ -40,37 +40,40 @@ let split_lines content =
  *)
 (*****************************************************************************)
 
-type filename = Relative_path.t
+type filename = Path.t
 type interval = int * int
 type file_diff = filename * interval list
 
 module ParseDiff: sig
 
-  val go: string -> file_diff list
+  val go: Path.t -> string -> file_diff list
 
 end = struct
 
-  type filename = Relative_path.t
+  type filename = Path.t
   type interval = int * int
   type file_diff = filename * interval list
 
   type env = {
-      (* The file we are currently parsing (None for '/dev/null') *)
-      mutable file: string option;
+    (* The prefix of the files in this diff *)
+    prefix : Path.t;
 
-      (* The list of lines that have been modified *)
-      mutable modified: int list;
+    (* The file we are currently parsing (None for '/dev/null') *)
+    mutable file: string option;
 
-      (* The current line *)
-      mutable line: int;
+    (* The list of lines that have been modified *)
+    mutable modified: int list;
 
-      (* The accumulator (for the result) *)
-      mutable result: file_diff list;
-    }
+    (* The current line *)
+    mutable line: int;
+
+    (* The accumulator (for the result) *)
+    mutable result: file_diff list;
+  }
 
   (* The entry point *)
-  let rec go content =
-    let env = { file = None; modified = []; line = 0; result = [] } in
+  let rec go prefix content =
+    let env = { prefix; file = None; modified = []; line = 0; result = [] } in
     let lines = split_lines content in
     start env lines;
     List.rev env.result
@@ -135,7 +138,7 @@ end = struct
     match env.file with
     | None -> ()
     | Some filename ->
-        let path = Relative_path.concat Relative_path.Root filename in
+        let path = Path.concat env.prefix filename in
         env.result <- (path, lines_modified) :: env.result
 
   (* Merges intervals when necessary.
@@ -354,23 +357,22 @@ let apply_blocks outc blocks lines =
 (* Formats a diff (in place) *)
 (*****************************************************************************)
 
-let parse_diff diff_text =
-  ParseDiff.go diff_text
+let parse_diff prefix diff_text =
+  ParseDiff.go prefix diff_text
 
 let rec apply modes in_place ~diff:file_and_lines_modified =
   List.iter begin fun (filepath, modified_lines) ->
-    let filename = Relative_path.to_absolute filepath in
-    let file_content = Sys_utils.cat filename in
+    let file_content = Path.cat filepath in
     apply_file modes in_place filepath file_content modified_lines
   end file_and_lines_modified
 
 and apply_file modes in_place filepath file_content modified_lines =
-  let filename = Relative_path.to_absolute filepath in
+  let filename = Path.to_string filepath in
   let result =
     Format_hack.program_with_source_metadata modes filepath file_content in
   match result with
   | Format_hack.Success formatted_content ->
-      apply_formatted in_place filename formatted_content file_content
+      apply_formatted in_place filepath formatted_content file_content
         modified_lines
   | Format_hack.Disabled_mode ->
       Printf.fprintf stderr "PHP FILE: skipping %s\n" filename
@@ -379,11 +381,12 @@ and apply_file modes in_place filepath file_content modified_lines =
   | Format_hack.Internal_error ->
       Printf.fprintf stderr "*** PANIC *** Internal error!: %s\n" filename
 
-and apply_formatted in_place filename formatted_content file_content
+and apply_formatted in_place filepath formatted_content file_content
     modified_lines =
   let blocks = TextBlocks.make formatted_content in
   let blocks = matching_blocks [] modified_lines blocks in
   let lines = split_lines file_content in
+  let filename = Path.to_string filepath in
   try
     let outc = open_out (if in_place then filename else "/dev/null") in
     let hunks = apply_blocks outc blocks lines in
@@ -393,4 +396,4 @@ and apply_formatted in_place filename formatted_content file_content
       List.iter print_hunk hunks;
     end;
   with Sys_error _ ->
-    Printf.fprintf stderr "Error: could not modify file %s\n" filename
+    Printf.eprintf "Error: could not modify file %s\n" filename
