@@ -8,13 +8,27 @@
  *
  *)
 
-
 open Utils
+
+type config = {
+  global_size: int;
+  heap_size : int;
+}
+
+let default_config =
+  let gig = 1024 * 1024 * 1024 in
+  {global_size = gig; heap_size = 20 * gig}
 
 (*****************************************************************************)
 (* Initializes the shared memory. Must be called before forking. *)
 (*****************************************************************************)
-external init: unit -> unit = "hh_shared_init"
+external hh_shared_init: global_size:int -> heap_size:int -> unit
+= "hh_shared_init"
+
+let init config =
+  hh_shared_init
+    ~global_size:config.global_size
+    ~heap_size:config.heap_size
 
 (*****************************************************************************)
 (* The shared memory garbage collector. It must be called every time we

@@ -322,7 +322,7 @@ let handle_mode mode filename nenv files_info errors lint_errors ai_results =
 
 let main_hack { filename; mode; } =
   ignore (Sys.signal Sys.sigusr1 (Sys.Signal_handle Typing.debug_print_last_pos));
-  SharedMem.init();
+  SharedMem.(init default_config);
   Hhi.set_hhi_root_for_unit_test (Path.make "/tmp/hhi");
   let outer_do f = match mode with
     | Ai ->

@@ -257,7 +257,7 @@ let format_stdin modes from to_ =
 (*****************************************************************************)
 
 let () =
-  SharedMem.init();
+  SharedMem.(init default_config);
   PidLog.log_oc := Some (open_out "/dev/null");
   let files, from, to_, in_place, debug, diff, modes, root = parse_args() in
   let root =

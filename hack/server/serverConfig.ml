@@ -16,6 +16,7 @@ type t = {
   (* Configures only the workers. Workers can have more relaxed GC configs as
    * they are short-lived processes *)
   gc_control       : Gc.control;
+  sharedmem_config : SharedMem.config;
   tc_options       : TypecheckerOptions.t;
 }
 
@@ -33,6 +34,12 @@ let make_gc_control config =
     int_ "gc_space_overhead" ~default:space_overhead config in
   { GlobalConfig.gc_control with Gc.minor_heap_size; space_overhead; }
 
+let make_sharedmem_config config =
+  let {SharedMem.global_size; heap_size} =
+    SharedMem.default_config in
+  let global_size = int_ "sharedmem_global_size" ~default:global_size config in
+  let heap_size = int_ "sharedmem_heap_size" ~default:heap_size config in
+  {SharedMem.global_size; heap_size}
 
 let config_list_regexp = (Str.regexp "[, \t]+")
 
@@ -58,6 +65,7 @@ let load config_filename =
     load_script = load_script;
     load_script_timeout = load_script_timeout;
     gc_control = make_gc_control config;
+    sharedmem_config = make_sharedmem_config config;
     tc_options = tcopts;
   }
 
@@ -66,10 +74,12 @@ let default_config = {
   load_script = None;
   load_script_timeout = 0;
   gc_control = GlobalConfig.gc_control;
+  sharedmem_config = SharedMem.default_config;
   tc_options = TypecheckerOptions.default;
 }
 
 let load_script config = config.load_script
 let load_script_timeout config = config.load_script_timeout
 let gc_control config = config.gc_control
+let sharedmem_config config = config.sharedmem_config
 let typechecker_options config = config.tc_options

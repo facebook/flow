@@ -135,7 +135,7 @@ let main outpath recurse dir () =
   if ! Sys.interactive
   then ()
   else
-    SharedMem.init();
+    SharedMem.(init default_config);
     Errors.try_
       (fun () -> convert path recurse outpath)
       (fun l -> die (Errors.to_string (Errors.to_absolute l)))
