@@ -52,7 +52,15 @@ let config_user_attributes config =
 
 let load config_filename =
   let config = Config_file.parse (Relative_path.to_absolute config_filename) in
-  let load_script = Option.map ~f:Path.make (SMap.get "load_script" config) in
+  let load_script = Option.map (SMap.get "load_script" config) begin fun fn ->
+    (* Note: this is not the same as calling realpath; the cwd is not
+     * necessarily the same as hh_server's root!!! *)
+    Path.make begin
+      if Filename.is_relative fn
+      then Relative_path.(to_absolute (concat Root fn))
+      else fn
+    end
+  end in
   (* Since we use the unix alarm() for our timeouts, a timeout value of 0 means
    * to wait indefinitely *)
   let load_script_timeout = int_ "load_script_timeout" ~default:0 config in
