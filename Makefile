@@ -51,6 +51,7 @@ MODULES=\
   hack/heap\
   hack/parsing\
   hack/procs\
+  hack/search\
   hack/socket\
   hack/stubs\
   hack/third-party/avl\
