@@ -109,7 +109,7 @@ let elaborate_id_impl ~autoimport nsenv (p, id) =
       let bslash_loc =
         try String.index id '\\' with Not_found -> String.length id in
       let prefix = String.sub id 0 bslash_loc in
-      if prefix = "namespace" then begin
+      if prefix = "namespace" && id <> "namespace" then begin
         (* Strip off the 'namespace\' (including the slash) from id, then
         elaborate back into the current namespace. *)
         let len = (String.length id) - bslash_loc  - 1 in
