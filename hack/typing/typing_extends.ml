@@ -238,14 +238,49 @@ let check_constructors env parent_class class_ psubst subst =
       | None, _ -> ()
   ) else ()
 
+(* Checks if a child is compatible with the type constant of its parent.
+ * This requires the child's constraint and assigned type to be a subtype of
+ * the parent's type constant.
+ *)
 let tconst_subsumption env parent_typeconst child_typeconst =
-  match parent_typeconst, child_typeconst with
-  | { ttc_constraint = Some parent_cstr; _},
-      ({ ttc_type = Some child_ty; _ } | { ttc_constraint = Some child_ty; _ }) ->
-    ignore(Phase.sub_type_decl env parent_cstr child_ty)
-  | { ttc_type = Some parent_ty; _ }, { ttc_type = Some child_ty; _ } ->
-    ignore (Phase.unify_decl env parent_ty child_ty)
-  | _, _ -> ()
+  let pos = fst child_typeconst.ttc_name in
+  let parent_pos = fst parent_typeconst.ttc_name in
+  let is_final =
+    Option.is_none parent_typeconst.ttc_constraint &&
+    Option.is_some parent_typeconst.ttc_type in
+
+  (* Check that the child's constraint is compatible with the parent. If the
+   * parent has a constraint then the child must also have a constraint if it
+   * is abstract
+   *)
+  let child_is_abstract = Option.is_none child_typeconst.ttc_type in
+  let default = Reason.Rtconst_no_cstr child_typeconst.ttc_name,
+                Tgeneric (snd child_typeconst.ttc_name, None) in
+  let child_cstr =
+    if child_is_abstract
+    then Some (Option.value child_typeconst.ttc_constraint ~default)
+    else child_typeconst.ttc_constraint in
+  ignore @@ Option.map2
+    parent_typeconst.ttc_constraint
+    child_cstr
+    ~f:(sub_type_decl pos Reason.URsubsume_tconst_cstr env);
+
+  (* Check that the child's assigned type satisifies parent constraint *)
+  ignore @@ Option.map2
+    parent_typeconst.ttc_constraint
+    child_typeconst.ttc_type
+    ~f:(sub_type_decl parent_pos Reason.URtypeconst_cstr env);
+
+  (* If the parent cannot be overridden, we unify the types otherwise we ensure
+   * the child's assigned type is compatible with the parent's *)
+  let check x y =
+    if is_final
+    then ignore(unify_decl pos Reason.URsubsume_tconst_assign env x y)
+    else ignore(sub_type_decl pos Reason.URsubsume_tconst_assign env x y) in
+  ignore @@ Option.map2
+    parent_typeconst.ttc_type
+    child_typeconst.ttc_type
+    ~f:check
 
 (* For type constants we need to check that a child respects the
  * constraints specified by its parent.  *)

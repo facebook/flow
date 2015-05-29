@@ -3557,6 +3557,7 @@ and class_def_ env_up c tc =
   end;
   List.iter (class_var_def env false c) c.c_vars;
   List.iter (method_def env) c.c_methods;
+  List.iter (typeconst_def env) c.c_typeconsts;
   let const_types = List.map (class_const_def env) c.c_consts in
   let env = Typing_enum.enum_class_check env tc c.c_consts const_types in
   class_constr_def env c;
@@ -3593,6 +3594,17 @@ and check_extend_abstract_const p smap =
           | Tapply (_, _) | Ttuple _ | Tshape _ | Taccess (_, _) | Tthis
          ) -> ()
   end smap
+
+and typeconst_def env {
+  c_tconst_name = (pos, _);
+  c_tconst_constraint;
+  c_tconst_type;
+} =
+  let env, cstr = opt Typing_hint.hint_locl env c_tconst_constraint in
+  let env, ty = opt Typing_hint.hint_locl env c_tconst_type in
+  ignore(
+    Option.map2 cstr ty ~f:(Type.sub_type pos Reason.URtypeconst_cstr env)
+  )
 
 and class_const_def env (h, id, e) =
   let env, ty =
