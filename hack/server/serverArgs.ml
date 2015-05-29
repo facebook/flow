@@ -13,6 +13,7 @@
 (*****************************************************************************)
 
 type options = {
+  ai_mode          : bool;
   check_mode       : bool;
   json_mode        : bool;
   root             : Path.t;
@@ -34,6 +35,7 @@ let usage = Printf.sprintf "Usage: %s [WWW DIRECTORY]\n" Sys.argv.(0)
 
 module Messages = struct
   let debug         = " debugging mode"
+  let ai            = " run ai and exit"
   let check         = " check and exit"
   let json          = " output errors in json format (arc lint mode)"
   let daemon        = " detach process"
@@ -65,6 +67,7 @@ let parse_options () =
   let from_emacs    = ref false in
   let from_hhclient = ref false in
   let debug         = ref false in
+  let ai_mode       = ref false in
   let check_mode    = ref false in
   let json_mode     = ref false in
   let should_detach = ref false in
@@ -78,6 +81,7 @@ let parse_options () =
   let set_wait      = fun pid -> waiting_client := Some pid in
   let options =
     ["--debug"         , Arg.Set debug         , Messages.debug;
+     "--ai"            , Arg.Set ai_mode       , Messages.ai;
      "--check"         , Arg.Set check_mode    , Messages.check;
      "--json"          , Arg.Set json_mode     , Messages.json; (* CAREFUL!!! *)
      "--daemon"        , Arg.Set should_detach , Messages.daemon;
@@ -115,6 +119,7 @@ let parse_options () =
   Wwwroot.assert_www_directory root_path;
   {
     json_mode     = !json_mode;
+    ai_mode       = !ai_mode;
     check_mode    = check_mode;
     root          = root_path;
     should_detach = !should_detach;
@@ -126,6 +131,7 @@ let parse_options () =
 
 (* useful in testing code *)
 let default_options ~root = {
+  ai_mode = false;
   check_mode = false;
   json_mode = false;
   root = Path.make root;
@@ -140,6 +146,7 @@ let default_options ~root = {
 (* Accessors *)
 (*****************************************************************************)
 
+let ai_mode options = options.ai_mode
 let check_mode options = options.check_mode
 let json_mode options = options.json_mode
 let root options = options.root
