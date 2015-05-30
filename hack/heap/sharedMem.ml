@@ -38,13 +38,6 @@ let init config =
 external hh_collect: unit -> unit = "hh_collect"
 
 (*****************************************************************************)
-(* Must be called after the initialization of the hack server is over.
- * (cf serverInit.ml).
- *)
-(*****************************************************************************)
-external init_done: unit -> unit = "hh_call_after_init"
-
-(*****************************************************************************)
 (* Serializes the shared memory and writes it to a file *)
 (*****************************************************************************)
 external save: string -> unit = "hh_save"
@@ -78,6 +71,16 @@ external dep_used_slots : unit -> int = "hh_dep_used_slots"
 (* The total number of slots in our dependency table *)
 (*****************************************************************************)
 external dep_slots : unit -> int = "hh_dep_slots"
+
+(*****************************************************************************)
+(* Must be called after the initialization of the hack server is over.
+ * (cf serverInit.ml). *)
+(*****************************************************************************)
+external hh_init_done: unit -> unit = "hh_call_after_init"
+
+let init_done () =
+  hh_init_done ();
+  EventLogger.sharedmem_init_done (heap_size ())
 
 type table_stats = {
   used_slots : int;
@@ -291,7 +294,7 @@ end = functor (Key : Key) -> functor (Value: Value.Type) -> struct
 
   let mem key = Raw.hh_mem (Key.md5_old key)
 
-  let remove key = 
+  let remove key =
     if mem key
     then Raw.hh_remove (Key.md5_old key)
 

@@ -195,10 +195,14 @@ static char* heap_init;
 /* This should only be used by the master */
 static size_t heap_init_size = 0;
 
-/* For debugging */
+static size_t used_heap_size() {
+  return *heap - heap_init;
+}
+
+/* Expose so we can display diagnostics */
 value hh_heap_size() {
   CAMLparam0();
-  CAMLreturn(Val_long(*heap - heap_init));
+  CAMLreturn(Val_long(used_heap_size()));
 }
 
 value hh_hash_used_slots() {
@@ -733,7 +737,13 @@ value hh_get_dep(value dep) {
  */
 /*****************************************************************************/
 void hh_call_after_init() {
-  heap_init_size = (uintptr_t)*heap - (uintptr_t)heap_init;
+  CAMLparam0();
+  heap_init_size = used_heap_size();
+  if(2 * heap_init_size >= heap_size) {
+    caml_failwith("Heap init size is too close to max heap size; "
+      "GC will never get triggered!");
+  }
+  CAMLreturn0;
 }
 
 /*****************************************************************************/
@@ -752,7 +762,7 @@ void hh_collect() {
   size_t mem_size = 0;
   char* tmp_heap;
 
-  if(*heap < heap_init + 2 * heap_init_size) {
+  if(used_heap_size() < 2 * heap_init_size) {
     // We have not grown past twice the size of the initial size
     return;
   }
