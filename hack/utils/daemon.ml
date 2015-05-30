@@ -71,3 +71,9 @@ let fork ?log_name (f : ('a, 'b) channel_pair -> unit) :
       close_in child_in;
       close_out child_out;
       { channels = parent_in, parent_out; pid }
+
+(* for testing code *)
+let devnull () =
+  let ic = open_in "/dev/null" in
+  let oc = open_out "/dev/null" in
+  {channels = ic, oc; pid = 0}
