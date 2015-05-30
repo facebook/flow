@@ -18,11 +18,18 @@
 (*****************************************************************************)
 open Utils
 
+type config = {
+  global_size: int;
+  heap_size : int;
+}
+
+val default_config : config
+
 (*****************************************************************************)
 (* Initializes the shared memory. Must be called before forking! *)
 (*****************************************************************************)
 
-val init: unit -> unit
+val init: config -> unit
 
 (*****************************************************************************)
 (* The shared memory garbage collector. It must be called every time we

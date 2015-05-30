@@ -9,7 +9,7 @@
  *)
 
 
-type t
+type t = private string
 
 val dummy_path: t
 val make: string -> t

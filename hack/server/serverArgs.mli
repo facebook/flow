@@ -13,6 +13,7 @@
 (* The main entry point *)
 (*****************************************************************************)
 type options = {
+  ai_mode          : bool;
   check_mode       : bool;
   json_mode        : bool;
   root             : Path.t;
@@ -30,6 +31,7 @@ val default_options: root:string -> options
 (* Accessors *)
 (*****************************************************************************)
 
+val ai_mode             : options -> bool
 val check_mode          : options -> bool
 val json_mode           : options -> bool
 val root                : options -> Path.t

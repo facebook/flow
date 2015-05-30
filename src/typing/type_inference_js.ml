@@ -1973,7 +1973,7 @@ and statement cx = Ast.Statement.(
     let reason = mk_reason (spf "module %s" name) loc in
     let t = Env_js.get_var_in_scope cx (internal_module_name name) reason in
     let scope = ref SMap.empty in
-    Env_js.push_env scope;
+    Env_js.push_env cx scope;
 
     List.iter (statement_decl cx) elements;
     toplevels cx elements;
@@ -2854,7 +2854,7 @@ and expression_ cx loc e = Ast.Expression.(match e with
              performed by the flow algorithm itself. *)
           Env_js.havoc_heap_refinements ();
           Flow_js.mk_tvar_where cx reason (fun t ->
-            let frame = List.hd !Flow_js.frames in
+            let frame = Env_js.peek_frame () in
             let app = Flow_js.mk_methodtype2 ot argts None t frame in
             Flow_js.flow cx (f, CallT (reason, app));
           )
@@ -2862,7 +2862,7 @@ and expression_ cx loc e = Ast.Expression.(match e with
           Env_js.havoc_heap_refinements ();
           Flow_js.mk_tvar_where cx reason (fun t ->
             Flow_js.flow cx
-              (ot, MethodT(reason, name, ot, argts, t, List.hd !Flow_js.frames))
+              (ot, MethodT(reason, name, ot, argts, t, Env_js.peek_frame ()))
           )
       )
 
@@ -3099,7 +3099,7 @@ and func_call cx reason func_t argts =
   Env_js.havoc_heap_refinements ();
   Flow_js.mk_tvar_where cx reason (fun t ->
     let app =
-      Flow_js.mk_functiontype2 argts None t (List.hd !Flow_js.frames)
+      Flow_js.mk_functiontype2 argts None t (Env_js.peek_frame ())
     in
     Flow_js.flow cx (func_t, CallT(reason, app))
   )
@@ -4810,8 +4810,7 @@ and mk_body id cx param_types_map param_types_loc ret body this super =
           (create_env_entry ret ret None)
   )
   in
-  Env_js.push_env scope;
-  Flow_js.mk_frame cx !Flow_js.frames !Env_js.env;
+  Env_js.push_env cx scope;
   let set = Env_js.swap_changeset (fun _ -> SSet.empty) in
 
   let stmts = Ast.Statement.(match body with
@@ -4830,7 +4829,6 @@ and mk_body id cx param_types_map param_types_loc ret body this super =
       (VoidT (mk_reason "return undefined" phantom_return_loc), ret)
   );
 
-  Flow_js.frames := List.tl !Flow_js.frames;
   Env_js.pop_env();
   Env_js.changeset := set;
 
@@ -4997,7 +4995,7 @@ and mk_function id cx reason type_params params ret body this =
     params_tlist = params;
     params_names = Some pnames;
     return_t = ret;
-    closure_t = List.hd !Flow_js.frames
+    closure_t = Env_js.peek_frame ()
   } in
 
   if (typeparams = [])
@@ -5012,7 +5010,7 @@ and mk_method cx reason params ret body this super =
   in
   FunT (reason, Flow_js.dummy_static, Flow_js.dummy_prototype,
         Flow_js.mk_functiontype2
-          params (Some pnames) ret (List.hd !Flow_js.frames))
+          params (Some pnames) ret (Env_js.peek_frame ()))
 
 (* scrape top-level, unconditional field assignments from constructor code *)
 (** TODO: use a visitor **)
@@ -5056,11 +5054,6 @@ and mine_fields cx body fields =
 (**********)
 (* Driver *)
 (**********)
-
-(* seed new graph with builtins *)
-let add_builtins cx =
-  let reason, id = open_tvar Flow_js.builtins in
-  cx.graph <- cx.graph |> IMap.add id (new_unresolved_root ())
 
 (* cross-module GC toggle *)
 let xmgc_enabled = ref true
@@ -5118,7 +5111,6 @@ let infer_core cx statements =
 
 (* build module graph *)
 let infer_ast ast file m force_check =
-  Env_js.global_scope := SMap.empty;
   Flow_js.Cache.clear();
 
   let (loc, statements, comments) = ast in
@@ -5136,11 +5128,9 @@ let infer_ast ast file m force_check =
   ) in
 
   let cx = new_context file m in
-
-  (* add types for pervasive builtins *)
-  add_builtins cx;
-
   cx.weak <- weak;
+
+  Env_js.init cx;
 
   let reason_exports_module = reason_of_string (spf "exports of module %s" m) in
   let local_exports = Flow_js.mk_tvar cx reason_exports_module in
@@ -5158,8 +5148,7 @@ let infer_ast ast file m force_check =
         None
       )
   ) in
-  Env_js.env := [scope];
-  Flow_js.mk_frame cx [] !Env_js.env;
+  Env_js.push_env cx scope;
   Env_js.changeset := SSet.empty;
 
   let reason = new_reason "exports" (Pos.make_from
@@ -5339,17 +5328,14 @@ let merge_module_strict cx cxs implementations declarations master_cx =
 
 (* variation of infer + merge for lib definitions *)
 let init file statements save_errors =
-  Env_js.global_scope := SMap.empty;
   Flow_js.Cache.clear();
 
   let cx = new_context file Files_js.lib_module in
 
-  (* add types for pervasive builtins *)
-  add_builtins cx;
+  Env_js.init cx;
 
   let scope = ref SMap.empty in
-  Env_js.env := [scope];
-  Flow_js.mk_frame cx [] !Env_js.env;
+  Env_js.push_env cx scope;
   Env_js.changeset := SSet.empty;
 
   infer_core cx statements;

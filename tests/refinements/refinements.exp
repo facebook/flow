@@ -221,6 +221,22 @@ typeof.js:10:11,14: null
 This type is incompatible with
 typeof.js:9:17,22: number
 
+typeof.js:23:3,16: call of method stuff
+Function cannot be called on possibly undefined value
+[LIB] lib.js:3:27,45: undefined
+
+typeof.js:23:3,16: call of method stuff
+Method cannot be called on possibly undefined value
+[LIB] lib.js:3:50,53: undefined
+
+typeof.js:26:3,11: property stuff
+Property cannot be accessed on possibly undefined value
+[LIB] lib.js:3:50,53: undefined
+
+typeof.js:30:5,18: call of method stuff
+Function cannot be called on possibly undefined value
+typeof.js:28:14,22: undefined
+
 undef.js:29:29,34: null
 This type is incompatible with
 undef.js:31:13,20: number
@@ -289,4 +305,4 @@ void.js:75:7,9: undefined
 This type is incompatible with
 void.js:75:36,45: number
 
-Found 66 errors
+Found 70 errors

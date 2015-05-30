@@ -75,7 +75,7 @@ type env = {
     buffer     : Buffer.t             ;
 
     (* The path of the current file *)
-    file       : Relative_path.t      ;
+    file       : Path.t               ;
 
     (* The state of the lexer *)
     lexbuf     : Lexing.lexbuf        ;
@@ -914,7 +914,7 @@ let print_error tok_str env =
     else buffer
   in
   let error =
-    (Pos.string (Pos.to_absolute (Pos.make env.file env.lexbuf)))^"\n"^
+    (Pos.string (Pos.make (env.file :> string) env.lexbuf))^"\n"^
     (Printf.sprintf "Expected: %s, found: '%s'\n" tok_str !(env.last_str))^
     buffer^"\n"
   in
@@ -935,8 +935,8 @@ let expect_xhp tok_str env = wrap_xhp env begin fun _ ->
   then last_token env
   else begin
     if debug then begin
-      output_string stderr (Pos.string (Pos.to_absolute
-        (Pos.make env.file env.lexbuf)));
+      prerr_string
+        (Pos.string ((Pos.make (env.file :> string) env.lexbuf)));
       flush stderr
     end;
     raise Format_error
@@ -1168,11 +1168,12 @@ type 'a return =
   | Success of 'a
 
 let rec entry ~keep_source_metadata ~no_trailing_commas ~modes
-    file from to_ content k =
+    (file : Path.t) from to_ content k =
   try
     let errorl, () = Errors.do_ begin fun () ->
+      let rp = Relative_path.(create Dummy (file :> string)) in
       let {Parser_hack.file_mode; _} =
-        Parser_hack.program file content in
+        Parser_hack.program rp content in
       if not (List.mem file_mode modes) then raise PHP;
     end in
     if errorl <> []

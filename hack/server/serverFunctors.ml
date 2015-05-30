@@ -305,7 +305,7 @@ end = struct
     let root = ServerArgs.root options in
     Program.EventLogger.init root (Unix.time ());
     Program.preinit ();
-    SharedMem.init();
+    SharedMem.init (ServerConfig.sharedmem_config config);
     (* this is to transform SIGPIPE in an exception. A SIGPIPE can happen when
     * someone C-c the client.
     *)
@@ -313,12 +313,12 @@ end = struct
     PidLog.init root;
     PidLog.log ~reason:"main" (Unix.getpid());
     let watch_paths = root :: Program.get_watch_paths options in
-    let genv =
-      ServerEnvBuild.make_genv ~multicore:true options config watch_paths in
+    let genv = ServerEnvBuild.make_genv options config watch_paths in
     let env = ServerEnvBuild.make_env options config in
     let program_init = create_program_init genv env in
     let is_check_mode = ServerArgs.check_mode genv.options in
-    if is_check_mode then
+    let is_ai_mode = ServerArgs.ai_mode genv.options in
+    if is_check_mode || is_ai_mode then
       let env = program_init () in
       Option.iter (ServerArgs.save_filename genv.options) (save genv env);
       Program.run_once_and_exit genv env

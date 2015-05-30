@@ -41,7 +41,29 @@ let match_flow content file =
 let in_flow content file =
   Modes_js.(modes.all) || match_flow content file
 
-let do_parse content file =
+let (parser_hook: (string -> Ast.program -> unit) list ref) = ref []
+let call_on_success f = parser_hook := f :: !parser_hook
+
+let execute_hook file ast =
+  let ast = match ast with
+  | None ->
+      let empty_ast, _ = Parser_flow.parse_program true (Some file) "" in
+      empty_ast
+  | Some ast -> ast
+  in
+  try
+    List.iter (fun callback -> callback file ast) !parser_hook
+  with e ->
+    Printf.printf
+      "Hook failed: %s
+      (you can restart the server with OCAMLRUNPARAM=b to see a stack trace)\n"
+      (Printexc.to_string e);
+    Printexc.print_backtrace stdout
+
+let delete_file fn =
+  execute_hook fn None
+
+let do_parse ?(keep_errors=false) content file =
   try (
     let ast, parse_errors = Parser_flow.program_file content file in
     assert (parse_errors = []);
@@ -69,10 +91,13 @@ let reducer init_modes (ok, fails, errors) file =
   match (do_parse content file) with
   | Some ast, None ->
       ParserHeap.add file ast;
+      execute_hook file (Some ast);
       (SSet.add file ok, fails, errors)
   | None, Some converted ->
+      execute_hook file None;
       (ok, file :: fails, converted :: errors)
   | None, None ->
+      execute_hook file None;
       (ok, fails, errors)
   | _ -> assert false
 
@@ -81,7 +106,6 @@ let merge (ok1, fail1, errors1) (ok2, fail2, errors2) =
   (SSet.union ok1 ok2, fail1 @ fail2, errors1 @ errors2)
 
 (***************************** public ********************************)
-
 
 let parse workers next init_modes =
   let t = Unix.gettimeofday () in
@@ -110,4 +134,5 @@ let get_ast_unsafe file =
   ParserHeap.find_unsafe file
 
 let remove_asts files =
-  ParserHeap.remove_batch files
+  ParserHeap.remove_batch files;
+  SSet.iter delete_file files

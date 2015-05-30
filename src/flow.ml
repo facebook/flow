@@ -15,6 +15,7 @@
 module FlowShell : sig
   val main : unit -> unit
 end = struct
+
   (* normal commands *)
   let commands = [
     AutocompleteCommand.command;
@@ -29,6 +30,7 @@ end = struct
     PortCommand.command;
     ServerCommands.Server.command;
     SingleCommand.command;
+    SearchCommand.command;
     ServerCommands.Start.command;
     StopCommand.command;
     SuggestCommand.command;

@@ -93,7 +93,7 @@ let main all weak debug verbose json show_all_errors profile quiet module_
   if ! Sys.interactive
   then ()
   else
-    SharedMem.init();
+    SharedMem.(init default_config);
     Errors.try_
       (fun () -> Types_js.single_main [root] options)
       (fun l -> die (Errors.to_string (Errors.to_absolute l)))

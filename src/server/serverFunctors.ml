@@ -303,7 +303,7 @@ end = struct
     let root = ServerArgs.root options in
     Program.EventLogger.init root (Unix.time ());
     Program.preinit ();
-    SharedMem.init ();
+    SharedMem.(init default_config);
     (* this is to transform SIGPIPE in an exception. A SIGPIPE can happen when
     * someone C-c the client.
     *)

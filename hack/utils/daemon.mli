@@ -1,17 +1,11 @@
 (**
- *  Copyright 2015 Facebook.
+ * Copyright (c) 2015, Facebook, Inc.
+ * All rights reserved.
  *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
+ * This source code is licensed under the BSD-style license found in the
+ * LICENSE file in the "hack" directory of this source tree. An additional grant
+ * of patent rights can be found in the PATENTS file in the same directory.
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
  *)
 
 (* Type-safe versions of the channels in Pervasives. *)
@@ -31,4 +25,8 @@ val descr_of_in_channel : 'a in_channel -> Unix.file_descr
 val descr_of_out_channel : 'a out_channel -> Unix.file_descr
 
 (* Fork and run a function that communicates via the typed channels *)
-val fork : (('a, 'b) channel_pair -> unit) -> ('b, 'a) handle
+val fork : ?log_name:string -> (('a, 'b) channel_pair -> unit) ->
+  ('b, 'a) handle
+
+(* for unit tests *)
+val devnull : unit -> ('a, 'b) handle
