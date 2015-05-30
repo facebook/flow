@@ -58,7 +58,6 @@ end
 module MainInit : sig
   val go:
     ServerArgs.options ->
-    Path.t list ->      (* other watched paths *)
     (unit -> env) ->    (* init function to run while we have init lock *)
     env
 end = struct
@@ -78,7 +77,7 @@ end = struct
     ignore(Lock.release root "init")
 
   (* This code is only executed when the options --check is NOT present *)
-  let go options watch_paths init_fun =
+  let go options init_fun =
     let root = ServerArgs.root options in
     let send_signal () = match ServerArgs.waiting_client options with
       | None -> ()
@@ -90,8 +89,6 @@ end = struct
     send_signal ();
     (* note: we only run periodical tasks on the root, not extras *)
     ServerPeriodical.init root;
-    (* watch root and extra paths *)
-    ServerDfind.dfind_init (root :: watch_paths);
     let env = init_fun () in
     release_init_lock root;
     Hh_logger.log "Server is READY";
@@ -173,7 +170,7 @@ end = struct
    * rebase, and we don't log the recheck_end event until the update list
    * is no longer getting populated. *)
   let rec recheck_loop i rechecked_count genv env =
-    let raw_updates = ServerDfind.get_updates () in
+    let raw_updates = DfindLib.get_changes (unsafe_opt genv.dfind) in
     if SSet.is_empty raw_updates then i, rechecked_count, env else begin
       let updates = Program.process_updates genv env raw_updates in
       let env, rechecked = recheck genv env updates in
@@ -206,6 +203,7 @@ end = struct
       then Program.EventLogger.recheck_end start_t loop_count rechecked_count;
       if has_client then handle_connection genv !env socket;
       ServerEnv.invoke_async_queue ();
+      EventLogger.flush ();
     done
 
   let load genv filename to_recheck =
@@ -307,24 +305,26 @@ end = struct
     let root = ServerArgs.root options in
     Program.EventLogger.init root (Unix.time ());
     Program.preinit ();
-    SharedMem.init();
+    SharedMem.init (ServerConfig.sharedmem_config config);
     (* this is to transform SIGPIPE in an exception. A SIGPIPE can happen when
     * someone C-c the client.
     *)
     Sys.set_signal Sys.sigpipe Sys.Signal_ignore;
     PidLog.init root;
     PidLog.log ~reason:"main" (Unix.getpid());
-    let genv = ServerEnvBuild.make_genv ~multicore:true options config in
+    let watch_paths = root :: Program.get_watch_paths options in
+    let genv =
+      ServerEnvBuild.make_genv ~multicore:true options config watch_paths in
     let env = ServerEnvBuild.make_env options config in
     let program_init = create_program_init genv env in
     let is_check_mode = ServerArgs.check_mode genv.options in
-    if is_check_mode then
+    let is_ai_mode = ServerArgs.ai_mode genv.options in
+    if is_check_mode || is_ai_mode then
       let env = program_init () in
       Option.iter (ServerArgs.save_filename genv.options) (save genv env);
       Program.run_once_and_exit genv env
     else
-      let watch_paths = Program.get_watch_paths options in
-      let env = MainInit.go options watch_paths program_init in
+      let env = MainInit.go options program_init in
       let socket = Socket.init_unix_socket root in
       serve genv env socket
 
@@ -335,7 +335,7 @@ end = struct
 
   let daemonize options =
     (* detach ourselves from the parent process *)
-    let pid = Unix.fork() in
+    let pid = Fork.fork() in
     if pid == 0
     then begin
       ignore(Unix.setsid());

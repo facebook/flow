@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2014, Facebook, Inc.
+ * Copyright (c) 2015, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -8,13 +8,16 @@
  *
  *)
 
-open Utils
+type client = {
+  ic : in_channel;
+  oc : out_channel;
+  close : unit -> unit;
+}
 
-val dfind_pid: int option ref
+type connection_state =
+  | Connection_ok
+  | Build_id_mismatch
 
-val dfind_init:
-  Path.t list -> unit
-
-(* new set of php and js files *)
-val get_updates: unit -> SSet.t
-
+let msg_to_channel oc msg =
+  Marshal.to_channel oc msg [];
+  flush oc

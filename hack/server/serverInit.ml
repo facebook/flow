@@ -27,7 +27,9 @@ let init_hack genv env get_next =
     ServerArgs.save_filename genv.options = None
   in
 
-  if not is_check_mode then begin
+  let is_ai_mode = ServerArgs.ai_mode genv.options in
+
+  if not (is_check_mode || is_ai_mode) then begin
     Typing_deps.update_files files_info;
   end;
 
@@ -49,9 +51,14 @@ let init_hack genv env get_next =
     Typing_check_service.go genv.workers nenv fast
   end in
 
+  let errorl5, failed5 = if is_ai_mode then
+      Ai.go ServerIdeUtils.check_defs files_info
+    else
+      [], Relative_path.Set.empty in
+
   let failed =
     List.fold_right Relative_path.Set.union
-      [failed1; failed2; failed3; failed4]
+      [failed1; failed2; failed3; failed4; failed5]
       Relative_path.Set.empty in
   let env = { env with files_info = files_info; nenv = nenv } in
 
@@ -68,7 +75,7 @@ let init_hack genv env get_next =
     used_slots slots load_factor;
 
   let errorl = List.fold_right List.rev_append
-      [errorl1; errorl2; errorl3; errorl4] [] in
+      [errorl1; errorl2; errorl3; errorl4; errorl5] [] in
   env, errorl, failed
 
 (* entry point *)

@@ -65,4 +65,4 @@ let handle : type a. genv -> env -> a t -> a =
     | COVERAGE_COUNTS path -> ServerCoverageMetric.go path genv env
     | LINT fnl -> ServerLint.go genv fnl
     | LINT_ALL code -> ServerLint.lint_all genv code
-    | KILL -> ServerEnv.async ServerUtils.die_nicely
+    | KILL -> ServerEnv.async (fun () -> ServerUtils.die_nicely genv)

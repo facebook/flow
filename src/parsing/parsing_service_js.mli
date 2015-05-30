@@ -38,8 +38,14 @@ val get_ast_unsafe: string -> Spider_monkey_ast.program
 (* remove asts for given file set. *)
 val remove_asts: SSet.t -> unit
 
+(* Adds a hook called every time a file has been successfully parsed.
+ * When a file is deleted, the hook is called with an empty Ast.
+ *)
+val call_on_success: (string -> Spider_monkey_ast.program -> unit) -> unit
+
 (* parse contents of a file *)
 val do_parse:
+  ?keep_errors:bool ->
   string ->                 (* contents of the file *)
   string ->                 (* filename *)
   (Spider_monkey_ast.program option * Errors_js.ErrorSet.t option)

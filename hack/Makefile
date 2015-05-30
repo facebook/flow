@@ -36,48 +36,48 @@ endif
 ################################################################################
 
 MODULES=\
-  utils\
   client\
-  socket\
-  server\
-  stubs\
-  typing\
-  naming\
-  parsing\
-  format\
   deps\
-  heap\
-  globals\
-  procs\
-  search\
-  hhi\
   dfind\
+  format\
+  globals\
   h2tp/common\
   h2tp/mapper\
-  h2tp/unparser\
   h2tp/test\
+  h2tp/unparser\
   h2tp\
+  heap\
+  hhi\
+  naming\
+  parsing\
+  procs\
+  search\
+  server\
+  socket\
+  stubs\
   third-party/avl\
   third-party/core\
-  $(INOTIFY)\
-  $(FSNOTIFY)
+  typing\
+  utils\
+  $(FSNOTIFY)\
+  $(INOTIFY)
 
 NATIVE_OBJECT_FILES=\
   heap/hh_shared.o\
-  utils/realpath.o\
-  $(INOTIFY)/$(notdir $(INOTIFY))_stubs.o\
-  utils/nproc.o\
   hhi/hhi_elf.o\
   utils/get_build_id.gen.o\
-  utils/get_build_id.o
+  utils/get_build_id.o\
+  utils/nproc.o\
+  utils/realpath.o\
+  $(INOTIFY)/$(notdir $(INOTIFY))_stubs.o
 
 OCAML_LIBRARIES=\
-  unix\
-  str
+  str\
+  unix
 
 NATIVE_LIBRARIES=\
-  $(ELF)\
-  pthread
+  pthread\
+  $(ELF)
 
 TARGETS=_build/hh_server.native _build/hh_client.native _build/hh_single_type_check.native \
 		_build/hh_format.native _build/h2tp.native _build/test_unparser.native

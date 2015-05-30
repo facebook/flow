@@ -13,6 +13,20 @@ let print_version () =
     "Flow, a static type checker for JavaScript, version %s"
     FlowConfig.version
 
+let expand_path file =
+  let path = Path.make file in
+  if Path.file_exists path
+  then Path.to_string path
+  else
+    let file = Filename.concat (Sys.getcwd()) file in
+    let path = Path.make file in
+    if Path.file_exists path
+    then Path.to_string path
+    else begin
+      Printf.printf "File not found\n";
+      exit 2
+    end
+
 (* line split/transform utils *)
 module Line : sig
   (* split string at nth line. if it exists, returns pre, line, post *)
@@ -254,6 +268,13 @@ let connect_with_autostart command_values =
     !(command_values.retries)
     !(command_values.retry_if_init)
 
+let rec search_for_root config start recursion_limit : Path.t option =
+  let fs_root = Path.make "/" in
+  if start = fs_root then None
+  else if Wwwroot.is_www_directory ~config start then Some start
+  else if recursion_limit <= 0 then None
+  else search_for_root config (Path.parent start) (recursion_limit - 1)
+
 (* Given a valid file or directory, find a valid flow root directory *)
 (* NOTE: exists on invalid file or .flowconfig not found! *)
 let guess_root dir_or_file =
@@ -268,7 +289,7 @@ let guess_root dir_or_file =
     let dir = if Sys.is_directory dir_or_file
       then dir_or_file
       else Filename.dirname dir_or_file in
-    match ClientArgs.guess_root ".flowconfig" (Path.make dir) 50 with
+    match search_for_root ".flowconfig" (Path.make dir) 50 with
     | Some root ->
         root
     | None ->

@@ -59,6 +59,7 @@ type t =
   | Rtype_access     of t * string list * t
   | Rexpr_dep_type   of t * Pos.t * string
   | Rnullsafe_op     of Pos.t (* ?-> operator is used *)
+  | Rtconst_no_cstr  of Nast.sid
 
 (* Translate a reason to a (pos, string) list, suitable for error_l. This
  * previously returned a string, however the need to return multiple lines with
@@ -160,6 +161,8 @@ let rec to_string prefix r =
       List.hd l
         :: (p, "  where '"^n^"' is a reference to this expression")
         :: List.tl l
+  | Rtconst_no_cstr (_, n) ->
+     [(p, prefix ^ " because the type constant "^n^" has no constraints")]
 
 and to_pos = function
   | Rnone     -> Pos.none
@@ -211,6 +214,7 @@ and to_pos = function
   | Rtype_access (r, _, _) -> to_pos r
   | Rexpr_dep_type (r, _, _) -> to_pos r
   | Rnullsafe_op p -> p
+  | Rtconst_no_cstr (p, _) -> p
 
 type ureason =
   | URnone
@@ -246,6 +250,9 @@ type ureason =
   | URclass_req_merge
   | URenum
   | URenum_cstr
+  | URtypeconst_cstr
+  | URsubsume_tconst_cstr
+  | URsubsume_tconst_assign
 
 let string_of_ureason = function
   | URnone -> "Typing error"
@@ -287,6 +294,12 @@ let string_of_ureason = function
       "Constant does not match the type of the enum it is in"
   | URenum_cstr ->
       "Invalid constraint on enum"
+  | URtypeconst_cstr ->
+     "Unable to satisfy constraint on this type constant"
+  | URsubsume_tconst_cstr ->
+     "The constraint on this type constant is inconsistent with its parent"
+  | URsubsume_tconst_assign ->
+     "The assigned type of this type constant is inconsistent with its parent"
 
 let compare r1 r2 =
   match r1, r2 with

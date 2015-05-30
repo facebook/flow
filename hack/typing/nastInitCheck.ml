@@ -363,18 +363,6 @@ and expr_ env acc p e =
             toplevel env acc fb.fnb_nast
           )
       )
-  | Assert (AE_invariant_violation (e, el)) ->
-    let el =
-      match e with
-        | _, Id (_, fun_name) when is_whitelisted fun_name ->
-          List.filter begin function
-            | _, This -> false
-            | _ -> true
-          end el
-        | _ -> el
-    in
-    let acc = List.fold_left expr acc el in
-    expr acc e
   | Call (_, e, el, uel) ->
     let el = el @ uel in
     let el =

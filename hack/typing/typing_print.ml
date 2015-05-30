@@ -507,8 +507,8 @@ end
 module PrintTypedef = struct
 
   let typedef = function
-    | Typing_env.Typedef.Error -> "[Error]"
-    | Typing_env.Typedef.Ok (_vis, tparaml, constr_opt, ty, pos) ->
+    | Typing_heap.Typedef.Error -> "[Error]"
+    | Typing_heap.Typedef.Ok (_vis, tparaml, constr_opt, ty, pos) ->
       let tparaml_s = PrintClass.tparam_list tparaml in
       let constr_s = match constr_opt with
         | None -> "[None]"

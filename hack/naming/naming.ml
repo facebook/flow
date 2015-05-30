@@ -1626,7 +1626,7 @@ and stmt env st =
         N.Expr (cp, N.Any)
       | (cond_p, cond) :: el ->
         let violation = (cp, Call
-          ((p, Id (fp, SN.SpecialFunctions.invariant_violation)), el, uel)) in
+          ((p, Id (fp, "\\"^SN.SpecialFunctions.invariant_violation)), el, uel)) in
         if cond <> False then
           let b1, b2 = [Expr violation], [Noop] in
           let cond = cond_p, Unop (Unot, (cond_p, cond)) in
@@ -1638,7 +1638,8 @@ and stmt env st =
 
 and if_stmt env st e b1 b2 =
   let e = expr env e in
-  let vars = Naming_ast_helpers.GetLocals.stmt SMap.empty st in
+  let nsenv = (fst env).namespace in
+  let _, vars = Naming_ast_helpers.GetLocals.stmt (nsenv, SMap.empty) st in
   SMap.iter (fun x p -> Env.new_pending_lvar env (p, x)) vars;
   let result = Env.scope env (
   fun env ->
@@ -1673,7 +1674,8 @@ and for_stmt env e1 e2 e3 b =
 
 and switch_stmt env st e cl =
   let e = expr env e in
-  let vars = Naming_ast_helpers.GetLocals.stmt SMap.empty st in
+  let nsenv = (fst env).namespace in
+  let _, vars = Naming_ast_helpers.GetLocals.stmt (nsenv, SMap.empty) st in
   SMap.iter (fun x p -> Env.new_pending_lvar env (p, x)) vars;
   let result = Env.scope env (
   fun env ->
@@ -1700,20 +1702,22 @@ and foreach_stmt env e aw ae b =
 
 and as_expr env aw = function
   | As_v ev ->
-      let vars = Naming_ast_helpers.GetLocals.lvalue SMap.empty ev in
-      SMap.iter (fun x p -> ignore (Env.new_lvar env (p, x))) vars;
-      let ev = expr env ev in
-      (match aw with
-        | None -> N.As_v ev
-        | Some p -> N.Await_as_v (p, ev))
+    let nsenv = (fst env).namespace in
+    let _, vars = Naming_ast_helpers.GetLocals.lvalue (nsenv, SMap.empty) ev in
+    SMap.iter (fun x p -> ignore (Env.new_lvar env (p, x))) vars;
+    let ev = expr env ev in
+    (match aw with
+      | None -> N.As_v ev
+      | Some p -> N.Await_as_v (p, ev))
   | As_kv ((p1, Lvar k), ev) ->
-      let k = p1, N.Lvar (Env.new_lvar env k) in
-      let vars = Naming_ast_helpers.GetLocals.lvalue SMap.empty ev in
-      SMap.iter (fun x p -> ignore (Env.new_lvar env (p, x))) vars;
-      let ev = expr env ev in
-      (match aw with
-        | None -> N.As_kv (k, ev)
-        | Some p -> N.Await_as_kv (p, k, ev))
+    let k = p1, N.Lvar (Env.new_lvar env k) in
+    let nsenv = (fst env).namespace in
+    let _, vars = Naming_ast_helpers.GetLocals.lvalue (nsenv, SMap.empty) ev in
+    SMap.iter (fun x p -> ignore (Env.new_lvar env (p, x))) vars;
+    let ev = expr env ev in
+    (match aw with
+      | None -> N.As_kv (k, ev)
+      | Some p -> N.Await_as_kv (p, k, ev))
   | As_kv ((p, _), _) ->
       Errors.expected_variable p;
       let x1 = p, N.Lvar (Env.new_lvar env (p, "__internal_placeholder")) in
@@ -1723,7 +1727,8 @@ and as_expr env aw = function
         | Some p -> N.Await_as_kv (p, x1, x2))
 
 and try_stmt env st b cl fb =
-  let vars = Naming_ast_helpers.GetLocals.stmt SMap.empty st in
+  let nsenv = (fst env).namespace in
+  let _, vars = Naming_ast_helpers.GetLocals.stmt (nsenv, SMap.empty) st in
   SMap.iter (fun x p -> Env.new_pending_lvar env (p, x)) vars;
   let result = Env.scope env (
   fun env ->
@@ -1952,17 +1957,6 @@ and expr_ env = function
       if List.length el <> 1
       then Errors.assert_arity p;
       N.Assert (N.AE_assert (expr env (List.hd el)))
-  | Call ((p, Id (_, cn)), el, uel)
-      when cn = SN.SpecialFunctions.invariant_violation ->
-      arg_unpack_unexpected uel ;
-      (match el with
-      | format :: el ->
-        let el = exprl env el in
-        N.Assert (N.AE_invariant_violation (expr env format, el))
-      | _ ->
-        Errors.naming_too_few_arguments p;
-        N.Any
-      )
   | Call ((p, Id (_, cn)), el, uel) when cn = SN.SpecialFunctions.tuple ->
       arg_unpack_unexpected uel ;
       (match el with
@@ -2039,7 +2033,8 @@ and expr_ env = function
   | Unop (uop, e) -> N.Unop (uop, expr env e)
   | Binop (Eq None as op, lv, e2) ->
       let e2 = expr env e2 in
-      let vars = Naming_ast_helpers.GetLocals.lvalue SMap.empty lv in
+      let nsenv = (fst env).namespace in
+      let _, vars = Naming_ast_helpers.GetLocals.lvalue (nsenv, SMap.empty) lv in
       SMap.iter (fun x p -> ignore (Env.new_lvar env (p, x))) vars;
       N.Binop (op, expr env lv, e2)
   | Binop (bop, e1, e2) ->

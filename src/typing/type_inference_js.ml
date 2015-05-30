@@ -662,12 +662,16 @@ let rec convert cx map = Ast.Type.(function
         )
 
       | "Function" | "function" ->
-        let reason = mk_reason "function type" loc in
-        AnyFunT reason
+        check_type_param_arity cx loc typeParameters 0 (fun () ->
+          let reason = mk_reason "function type" loc in
+          AnyFunT reason
+        )
 
       | "Object" ->
-        let reason = mk_reason "object type" loc in
-        AnyObjT reason
+        check_type_param_arity cx loc typeParameters 0 (fun () ->
+          let reason = mk_reason "object type" loc in
+          AnyObjT reason
+        )
       (* TODO: presumably some existing uses of AnyT can benefit from AnyObjT
          as well: e.g., where AnyT is used to model prototypes and statics we
          don't care about; but then again, some of these uses may be internal,
@@ -885,7 +889,7 @@ and statement_decl cx = Ast.Statement.(
   let block_body cx { Block.body } =
     let entries = ref SMap.empty in
     let scope = { kind = LexicalScope; entries } in
-    Env_js.push_env scope;
+    Env_js.push_env cx scope;
     List.iter (statement_decl cx) body;
     Env_js.pop_env()
   in
@@ -930,7 +934,7 @@ and statement_decl cx = Ast.Statement.(
   | (loc, Switch { Switch.discriminant; cases; lexical }) ->
       let entries = ref SMap.empty in
       let scope = { kind = LexicalScope; entries } in
-      Env_js.push_env scope;
+      Env_js.push_env cx scope;
 
       (* TODO: ensure that default is last *)
       List.iter (fun (loc, { Switch.Case.test; consequent }) ->
@@ -1202,7 +1206,7 @@ and statement cx = Ast.Statement.(
   | (loc, Block { Block.body }) ->
       let entries = ref SMap.empty in
       let scope = { kind = LexicalScope; entries } in
-      Env_js.push_env scope;
+      Env_js.push_env cx scope;
 
       List.iter (statement_decl cx) body;
       toplevels cx body;
@@ -1353,7 +1357,7 @@ and statement cx = Ast.Statement.(
 
       let entries = ref SMap.empty in
       let scope = { kind = LexicalScope; entries } in
-      Env_js.push_env scope;
+      Env_js.push_env cx scope;
 
       let save_break_exn = Abnormal.swap (Abnormal.Break None) false in
 
@@ -1719,7 +1723,7 @@ and statement cx = Ast.Statement.(
       let save_continue_exn = Abnormal.swap (Abnormal.Continue None) false in
       let entries = ref SMap.empty in
       let scope = { kind = LexicalScope; entries } in
-      Env_js.push_env scope;
+      Env_js.push_env cx scope;
 
       (match init with
         | None -> ()
@@ -1787,7 +1791,7 @@ and statement cx = Ast.Statement.(
       let save_continue_exn = Abnormal.swap (Abnormal.Continue None) false in
       let entries = ref SMap.empty in
       let scope = { kind = LexicalScope; entries } in
-      Env_js.push_env scope;
+      Env_js.push_env cx scope;
 
       let t = expression cx right in
       let o = mk_object cx (mk_reason "iteration expected on object" loc) in
@@ -2012,7 +2016,7 @@ and statement cx = Ast.Statement.(
     let t = Env_js.get_var_in_scope cx (internal_module_name name) reason in
     let entries = ref SMap.empty in
     let scope = { kind = VarScope; entries } in
-    Env_js.push_env scope;
+    Env_js.push_env cx scope;
 
     List.iter (statement_decl cx) elements;
     toplevels cx elements;
@@ -2893,7 +2897,7 @@ and expression_ cx loc e = Ast.Expression.(match e with
              performed by the flow algorithm itself. *)
           Env_js.havoc_heap_refinements ();
           Flow_js.mk_tvar_where cx reason (fun t ->
-            let frame = List.hd !Flow_js.frames in
+            let frame = Env_js.peek_frame () in
             let app = Flow_js.mk_methodtype2 ot argts None t frame in
             Flow_js.flow cx (f, CallT (reason, app));
           )
@@ -2901,7 +2905,7 @@ and expression_ cx loc e = Ast.Expression.(match e with
           Env_js.havoc_heap_refinements ();
           Flow_js.mk_tvar_where cx reason (fun t ->
             Flow_js.flow cx
-              (ot, MethodT(reason, name, ot, argts, t, List.hd !Flow_js.frames))
+              (ot, MethodT(reason, name, ot, argts, t, Env_js.peek_frame ()))
           )
       )
 
@@ -3138,7 +3142,7 @@ and func_call cx reason func_t argts =
   Env_js.havoc_heap_refinements ();
   Flow_js.mk_tvar_where cx reason (fun t ->
     let app =
-      Flow_js.mk_functiontype2 argts None t (List.hd !Flow_js.frames)
+      Flow_js.mk_functiontype2 argts None t (Env_js.peek_frame ())
     in
     Flow_js.flow cx (func_t, CallT(reason, app))
   )
@@ -4485,8 +4489,43 @@ and mk_signature cx reason_c c_type_params_map body = Ast.Statement.Class.(
           SMap.add name t fields,
           methods
 
-    (* skip unexpected members *)
-    | _ -> sfields, smethods, fields, methods
+    (* get/set *)
+    | Body.Method (loc, {
+        Method.kind = Ast.Expression.Object.Property.Get
+                    | Ast.Expression.Object.Property.Set;
+        _
+      }) ->
+        let msg = "get/set properties not yet supported" in
+        Flow_js.add_error cx [mk_reason "" loc, msg];
+        sfields, smethods, fields, methods
+
+    (* literal LHS *)
+    | Body.Method (loc, {
+        Method.key = Ast.Expression.Object.Property.Literal _;
+        Method.kind = Ast.Expression.Object.Property.Init;
+        _
+      })
+    | Body.Property (loc, {
+        Property.key = Ast.Expression.Object.Property.Literal _;
+        _
+      }) ->
+        let msg = "literal properties not yet supported" in
+        Flow_js.add_error cx [mk_reason "" loc, msg];
+        sfields, smethods, fields, methods
+
+    (* computed LHS *)
+    | Body.Method (loc, {
+        Method.key = Ast.Expression.Object.Property.Computed _;
+        Method.kind = Ast.Expression.Object.Property.Init;
+        _
+      })
+    | Body.Property (loc, {
+        Property.key = Ast.Expression.Object.Property.Computed _;
+        _
+      }) ->
+        let msg = "computed property keys not supported" in
+        Flow_js.add_error cx [mk_reason "" loc, msg];
+        sfields, smethods, fields, methods
 
   ) (SMap.empty, SMap.empty, SMap.empty, default_methods) elements
 )
@@ -4815,8 +4854,7 @@ and mk_body id cx param_types_map param_types_loc ret body this super =
   )
   in
   let scope = { kind = VarScope; entries } in
-  Env_js.push_env scope;
-  Flow_js.mk_frame cx !Flow_js.frames !Env_js.env;
+  Env_js.push_env cx scope;
   let set = Env_js.swap_changeset (fun _ -> SSet.empty) in
 
   let stmts = Ast.Statement.(match body with
@@ -4835,7 +4873,6 @@ and mk_body id cx param_types_map param_types_loc ret body this super =
       (VoidT (mk_reason "return undefined" phantom_return_loc), ret)
   );
 
-  Flow_js.frames := List.tl !Flow_js.frames;
   Env_js.pop_env();
   Env_js.changeset := set;
 
@@ -5002,7 +5039,7 @@ and mk_function id cx reason type_params params ret body this =
     params_tlist = params;
     params_names = Some pnames;
     return_t = ret;
-    closure_t = List.hd !Flow_js.frames
+    closure_t = Env_js.peek_frame ()
   } in
 
   if (typeparams = [])
@@ -5017,7 +5054,7 @@ and mk_method cx reason params ret body this super =
   in
   FunT (reason, Flow_js.dummy_static, Flow_js.dummy_prototype,
         Flow_js.mk_functiontype2
-          params (Some pnames) ret (List.hd !Flow_js.frames))
+          params (Some pnames) ret (Env_js.peek_frame ()))
 
 (* scrape top-level, unconditional field assignments from constructor code *)
 (** TODO: use a visitor **)
@@ -5061,11 +5098,6 @@ and mine_fields cx body fields =
 (**********)
 (* Driver *)
 (**********)
-
-(* seed new graph with builtins *)
-let add_builtins cx =
-  let reason, id = open_tvar Flow_js.builtins in
-  cx.graph <- cx.graph |> IMap.add id (new_unresolved_root ())
 
 (* cross-module GC toggle *)
 let xmgc_enabled = ref true
@@ -5123,7 +5155,6 @@ let infer_core cx statements =
 
 (* build module graph *)
 let infer_ast ast file m force_check =
-  Env_js.global_scope.entries := SMap.empty;
   Flow_js.Cache.clear();
 
   let (loc, statements, comments) = ast in
@@ -5141,11 +5172,9 @@ let infer_ast ast file m force_check =
   ) in
 
   let cx = new_context file m in
-
-  (* add types for pervasive builtins *)
-  add_builtins cx;
-
   cx.weak <- weak;
+
+  Env_js.init cx;
 
   let reason_exports_module = reason_of_string (spf "exports of module %s" m) in
   let local_exports = Flow_js.mk_tvar cx reason_exports_module in
@@ -5166,8 +5195,7 @@ let infer_ast ast file m force_check =
       )
   ) in
   let scope = { kind = VarScope; entries } in
-  Env_js.env := [scope];
-  Flow_js.mk_frame cx [] !Env_js.env;
+  Env_js.push_env cx scope;
   Env_js.changeset := SSet.empty;
 
   let reason = new_reason "exports" (Pos.make_from
@@ -5347,18 +5375,15 @@ let merge_module_strict cx cxs implementations declarations master_cx =
 
 (* variation of infer + merge for lib definitions *)
 let init file statements save_errors =
-  Env_js.global_scope.entries := SMap.empty;
   Flow_js.Cache.clear();
 
   let cx = new_context file Files_js.lib_module in
 
-  (* add types for pervasive builtins *)
-  add_builtins cx;
+  Env_js.init cx;
 
   let entries = ref SMap.empty in
   let scope = { kind = VarScope; entries } in
-  Env_js.env := [scope];
-  Flow_js.mk_frame cx [] !Env_js.env;
+  Env_js.push_env cx scope;
   Env_js.changeset := SSet.empty;
 
   infer_core cx statements;

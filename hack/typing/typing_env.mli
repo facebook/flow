@@ -11,24 +11,10 @@
 open Utils
 open Typing_defs
 
-module Class : sig type t = class_type val prefix : Prefix.t end
-module Fun : sig type t = decl fun_type val prefix : Prefix.t end
-module Typedef :
-  sig
-    type visibility = Public | Private
-    type tdef =
-        visibility * tparam list * decl ty option *
-        decl ty * Pos.t
-    type tdef_or_error = Error | Ok of tdef
-    type t = tdef_or_error
-    val prefix : Prefix.t
-  end
-module GConst : sig type t = decl ty val prefix : Prefix.t end
-
-module Funs : module type of SharedMem.WithCache (String) (Fun)
-module Classes : module type of SharedMem.WithCache (String) (Class)
-module Typedefs : module type of SharedMem.WithCache (String) (Typedef)
-module GConsts : module type of SharedMem.WithCache (String) (GConst)
+module Funs : module type of Typing_heap.Funs
+module Classes : module type of Typing_heap.Classes
+module Typedefs : module type of Typing_heap.Typedefs
+module GConsts : module type of Typing_heap.GConsts
 
 type fake_members = {
   last_call : Pos.t option;
@@ -68,7 +54,7 @@ val empty_fake_members : fake_members
 val empty_local : local_env
 val empty : TypecheckerOptions.t -> Relative_path.t -> env
 val add_class : Classes.key -> Classes.t -> unit
-val add_typedef : Typedefs.key -> Typedef.tdef -> unit
+val add_typedef : Typedefs.key -> Typing_heap.Typedef.tdef -> unit
 val is_typedef : Typedefs.key -> bool
 val get_enum : Classes.key -> Classes.t option
 val is_enum : Classes.key -> bool

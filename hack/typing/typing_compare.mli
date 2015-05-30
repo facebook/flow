@@ -10,7 +10,7 @@
 
 open Utils
 open Typing_deps
-open Typing_env
+open Typing_heap
 
 val get_extend_deps : DepSet.elt -> DepSet.t -> DepSet.t
 

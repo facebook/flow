@@ -210,7 +210,7 @@ class virtual ['a] nast_visitor: ['a] nast_visitor_type = object(this)
    | String s    -> this#on_string acc s
    | This        -> this#on_this acc
    | Id sid      -> this#on_id acc sid
-   | Lplaceholder sid -> acc
+   | Lplaceholder _sid -> acc
    | Lvar id     -> this#on_lvar acc id
    | Fun_id sid  -> this#on_fun_id acc sid
    | Method_id (expr, pstr) -> this#on_method_id acc expr pstr
@@ -363,10 +363,6 @@ class virtual ['a] nast_visitor: ['a] nast_visitor_type = object(this)
 
   method on_assert acc = function
     | AE_assert e -> this#on_expr acc e
-    | AE_invariant_violation (e, el) ->
-        let acc = this#on_expr acc e in
-        let acc = List.fold_left this#on_expr acc el in
-        acc
 
   method on_clone acc e = this#on_expr acc e
 

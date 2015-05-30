@@ -51,7 +51,8 @@ struct
     Types_js.init_modes flow_options;
     (* Force flowlib files to be extracted and their location saved before workers
      * fork, so everyone can know about the same flowlib path. *)
-    ignore (Flowlib.get_flowlib_root ())
+    ignore (Flowlib.get_flowlib_root ());
+    Parsing_service_js.call_on_success SearchService_js.update
 
   let init genv env =
     if not (ServerArgs.check_mode genv.ServerEnv.options) then (
@@ -61,6 +62,11 @@ struct
     (* start the server *)
     let flow_options = OptionParser.get_flow_options () in
     let env = Types_js.server_init genv env flow_options in
+    let files =
+      Relative_path.Map.fold (fun fn _ acc ->
+        Relative_path.Set.add fn acc
+      ) env.ServerEnv.files_info Relative_path.Set.empty in
+    SearchService_js.update_from_master files;
     env
 
   let run_once_and_exit genv env =
@@ -118,14 +124,14 @@ struct
     EventLogger.check_response errors;
     send_errorl errors oc
 
-  let die_nicely oc =
+  let die_nicely genv oc =
     ServerProt.response_to_channel oc ServerProt.SERVER_DYING;
     EventLogger.killed ();
     Printf.printf "Status: Error\n";
     Printf.printf "Sent KILL command by client. Dying.\n";
-    (match !ServerDfind.dfind_pid with
-    | Some pid -> Unix.kill pid Sys.sigterm;
-    | None -> failwith "Dfind died before we could kill it"
+    (match genv.ServerEnv.dfind with
+    | Some handle -> Unix.kill (DfindLib.pid handle) Sys.sigterm;
+    | None -> ()
     );
     die ()
 
@@ -393,6 +399,11 @@ struct
     output_string oc "Not supported\n";
     flush oc
 
+  let search query oc =
+    let results = SearchService_js.query query in
+    Marshal.to_channel oc results [];
+    flush oc
+
   let respond genv env ~client ~msg =
     let oc = client.oc in
     match msg with
@@ -415,11 +426,13 @@ struct
     | ServerProt.INFER_TYPE (fn, line, char) ->
         infer_type (fn, line, char) oc
     | ServerProt.KILL ->
-        die_nicely oc
+        die_nicely genv oc
     | ServerProt.PING ->
         ServerProt.response_to_channel oc ServerProt.PONG
     | ServerProt.PORT (files) ->
         port files oc
+    | ServerProt.SEARCH query ->
+        search query oc
     | ServerProt.STATUS client_root ->
         print_status genv env client_root oc
     | ServerProt.SUGGEST (files) ->
@@ -461,7 +474,8 @@ struct
     let diff_js = updates in
     if Relative_path.Set.is_empty diff_js
     then env
-    else
+    else begin
+      SearchService_js.clear updates;
       let diff_js = Relative_path.Set.fold (fun x a ->
         SSet.add (Relative_path.to_absolute x) a) diff_js SSet.empty in
       (* TEMP: if library files change, stop the server *)
@@ -482,7 +496,10 @@ struct
       let _ = SSet.fold (fun f i ->
         prerr_endlinef "%d/%d: %s" i n f; i + 1) diff_js 1 in
 
-      Types_js.recheck genv env diff_js options
+      let server_env = Types_js.recheck genv env diff_js options in
+      SearchService_js.update_from_master updates;
+      server_env
+    end
 
   let post_recheck_hook _genv _old_env _new_env _updates = ()
 

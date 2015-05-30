@@ -862,9 +862,9 @@ and type_typedef_naming_and_decl nenv tdef =
       let env = sub_type env constraint_type concrete_type in
       env, Some constraint_type
   in
-  let visibility =
-    if is_abstract then Env.Typedef.Private else Env.Typedef.Public
-  in
+  let visibility = if is_abstract
+    then Typing_heap.Typedef.Private
+    else Typing_heap.Typedef.Public in
   let tdecl = visibility, params, tcstr, concrete_type, pos in
   Env.add_typedef tid tdecl;
   Naming_heap.TypedefHeap.add tid decl;

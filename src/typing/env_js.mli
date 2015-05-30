@@ -16,9 +16,9 @@ type env = scope list ref
 
 val env : env
 
-val global_scope : scope
+val init : context -> unit
 
-val push_env : scope -> unit
+val push_env : context -> scope -> unit
 
 val pop_env : unit -> unit
 
@@ -38,6 +38,7 @@ val init_env : context -> string -> scope_entry -> unit
 
 val clone_env : scope list -> scope list
 
+val peek_frame : unit -> ident
 val update_frame : context -> scope list -> unit
 
 val refine_with_pred : context -> reason ->

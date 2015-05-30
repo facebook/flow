@@ -13,3 +13,20 @@ function bar(): number {
   }
   return 0;
 }
+
+/* refining globals */
+function fn() {
+  if (typeof BAZ !== 'undefined' &&
+      typeof BAZ.stuff === 'function') {
+    BAZ.stuff(123);
+  }
+  BAZ.stuff(123); // error, refinement is gone
+}
+function fn() {
+  BAZ.stuff; // error, could be undefined
+  if (typeof BAZ !== 'undefined' &&
+      typeof BAZ.stuff === 'function') {
+    BAZ.stuff(123); // ok
+    BAZ.stuff(123); // error, refinement is gone
+  }
+}

@@ -24,44 +24,10 @@ module Dep = Typing_deps.Dep
  * very well isolated.
 *)
 
-(* Module used to represent serialized classes *)
-module Class = struct
-  type t = Typing_defs.class_type
-  let prefix = Prefix.make()
-end
-
-(* a function type *)
-module Fun = struct
-  type t = decl Typing_defs.fun_type
-  let prefix = Prefix.make()
-end
-
-module Typedef = struct
-
-  type visibility =
-    | Public
-    | Private
-
-  type tdef =
-    visibility * Typing_defs.tparam list * decl ty option * decl ty * Pos.t
-
-  type tdef_or_error =
-    | Error
-    | Ok of tdef
-
-  type t = tdef_or_error
-  let prefix = Prefix.make()
-end
-
-module GConst = struct
-  type t = decl ty
-  let prefix = Prefix.make()
-end
-
-module Funs = SharedMem.WithCache (String) (Fun)
-module Classes = SharedMem.WithCache (String) (Class)
-module Typedefs = SharedMem.WithCache (String) (Typedef)
-module GConsts = SharedMem.WithCache (String) (GConst)
+module Funs = Typing_heap.Funs
+module Classes = Typing_heap.Classes
+module Typedefs = Typing_heap.Typedefs
+module GConsts = Typing_heap.GConsts
 
 type fake_members = {
   last_call : Pos.t option;
@@ -89,15 +55,15 @@ type env = {
 and genv = {
   tcopt   : TypecheckerOptions.t;
   mode    : FileInfo.mode;
-  return  : locl ty         ;
-  parent  : decl ty         ;
-  self_id : string     ;
-  self    : locl ty         ;
-  static  : bool       ;
+  return  : locl ty;
+  parent  : decl ty;
+  self_id : string;
+  self    : locl ty;
+  static  : bool;
   is_constructor : bool;
   fun_kind : Ast.fun_kind;
   anons   : anon IMap.t;
-  droot   : Typing_deps.Dep.variant option  ;
+  droot   : Typing_deps.Dep.variant option;
   file    : Relative_path.t;
 }
 
@@ -311,7 +277,7 @@ let add_class x y =
   Classes.add x y
 
 let add_typedef x y =
-  Typedefs.add x (Typedef.Ok y)
+  Typedefs.add x (Typing_heap.Typedef.Ok y)
 
 let is_typedef x =
   match Typedefs.get x with
@@ -334,7 +300,7 @@ let get_enum_constraint x =
       | Some e -> e.te_constraint
 
 let add_typedef_error x =
-  Typedefs.add x Typedef.Error
+  Typedefs.add x Typing_heap.Typedef.Error
 
 (* Adds a new function (global) *)
 let add_fun x ft =

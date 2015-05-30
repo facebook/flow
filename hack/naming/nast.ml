@@ -295,7 +295,10 @@ and expr_ =
   | Array_get of expr * expr option
   | Class_get of class_id * pstring
   | Class_const of class_id * pstring
-  | Call of call_type * expr * expr list * expr list
+  | Call of call_type
+    * expr (* function *)
+    * expr list (* positional args *)
+    * expr list (* unpacked args *)
   | True
   | False
   | Int of pstring
@@ -329,7 +332,6 @@ and expr_ =
  * and noreturn *)
 and assert_expr =
   | AE_assert of expr
-  | AE_invariant_violation of expr * expr list
 
 and case =
   | Default of block

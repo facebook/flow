@@ -245,14 +245,6 @@ and havoc_ctx_ = function
       havoc_ctx_ (scopes_,stack1_,stack2_)
   | _ -> ()
 
-let frames: stack ref = ref []
-
-let mk_frame cx stack ctx =
-  let count = mk_id cx in
-  let stack = count::stack in
-  cx.closures <- IMap.add count (stack, ctx) cx.closures;
-  frames := stack
-
 (***************)
 (* print utils *)
 (***************)
@@ -1725,6 +1717,8 @@ let rec __flow cx (l,u) trace =
       let desc1 = (desc_of_reason reason1) in
       let lit =
         (desc1 = "object literal")
+        || (desc1 = "function")
+        || (desc1 = "arrow function")
         || (Str.string_match (Str.regexp ".*React") desc1 0)
       in
 

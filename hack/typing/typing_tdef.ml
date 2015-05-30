@@ -13,6 +13,7 @@ open Typing_defs
 
 module Reason = Typing_reason
 module Env    = Typing_env
+module DefsDB = Typing_heap
 module Inst   = Typing_instantiate
 module TSubst = Typing_subst
 module TUtils = Typing_utils
@@ -34,15 +35,15 @@ let expand_typedef_ ?force_expand:(force_expand=false) ety_env env r x argl =
       let tdef = Typing_env.get_typedef env x in
       let tdef = match tdef with None -> assert false | Some x -> x in
       match tdef with
-      | Env.Typedef.Error -> env, (ety_env, (r, Tany))
-      | Env.Typedef.Ok tdef ->
+      | DefsDB.Typedef.Error -> env, (ety_env, (r, Tany))
+      | DefsDB.Typedef.Ok tdef ->
          let visibility, tparaml, tcstr, expanded_ty, tdef_pos = tdef in
          let should_expand =
            force_expand ||
              match visibility with
-             | Env.Typedef.Private ->
+             | DefsDB.Typedef.Private ->
                 Pos.filename tdef_pos = Env.get_file env
-             | Env.Typedef.Public -> true
+             | DefsDB.Typedef.Public -> true
          in
          if List.length tparaml <> List.length argl
          then begin

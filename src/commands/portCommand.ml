@@ -36,7 +36,7 @@ let spec = {
 let main option_values files () =
   let root = guess_root (Some (List.hd files)) in
   let ic, oc = connect_with_autostart option_values root in
-  let files = List.map ClientCheck.expand_path files in
+  let files = List.map expand_path files in
   ServerProt.cmd_to_channel oc (ServerProt.PORT files);
   let patch_map = Marshal.from_channel ic in
   Utils.SMap.iter (fun file patches ->

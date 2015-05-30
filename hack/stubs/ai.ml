@@ -8,4 +8,5 @@
  *
  *)
 
-let do_ f = ([], f ())
+let do_ _ f = ([], f ())
+let go _ _ = [], Relative_path.Set.empty

@@ -41,7 +41,7 @@ let parse_args path args =
   let path = match path with Some x -> x | None -> "" in
   let (file, line, column) = match args with
   | [file; line; column] ->
-      let file = ClientCheck.expand_path file in
+      let file = expand_path file in
       ServerProt.FileName file, (int_of_string line), (int_of_string column)
   | [line; column] ->
       let contents = Sys_utils.read_stdin_to_string () in

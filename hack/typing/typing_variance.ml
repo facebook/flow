@@ -320,13 +320,13 @@ let get_class_variance root (pos, class_name) =
       let dep = Typing_deps.Dep.Class class_name in
       Typing_deps.add_idep (Some root) dep;
       let tparams =
-        if Typing_env.Typedefs.mem class_name
+        if Typing_heap.Typedefs.mem class_name
         then
-          match Typing_env.Typedefs.get class_name with
-          | Some (Typing_env.Typedef.Ok (_, tparams, _, _, _)) -> tparams
+          match Typing_heap.Typedefs.get class_name with
+          | Some (Typing_heap.Typedef.Ok (_, tparams, _, _, _)) -> tparams
           | _ -> []
         else
-          match Typing_env.Classes.get class_name with
+          match Typing_heap.Classes.get class_name with
           | None -> []
           | Some { tc_tparams; _ } -> tc_tparams
       in
@@ -350,8 +350,8 @@ let rec class_ class_name class_type impl =
 (*****************************************************************************)
 
 and typedef type_name =
-  match Typing_env.Typedefs.get type_name with
-  | Some (Typing_env.Typedef.Ok (_, tparams, _cstr, ty, _)) ->
+  match Typing_heap.Typedefs.get type_name with
+  | Some (Typing_heap.Typedef.Ok (_, tparams, _cstr, ty, _)) ->
       let root = Typing_deps.Dep.Class type_name in
       let env = SMap.empty in
       let pos = Reason.to_pos (fst ty) in

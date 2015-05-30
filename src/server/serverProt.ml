@@ -40,6 +40,7 @@ type command =
 | PING
 | PORT of string list
 | STATUS of Path.t
+| SEARCH of string
 | SUGGEST of string list
 
 let cmd_to_channel (oc:out_channel) (cmd:command): unit =
