@@ -46,9 +46,9 @@ module Peek = struct
   open Loc
 
   (* If you're looping waiting for a token, then use token_loop instead. *)
-  let token env = (lookahead env).lex_token
-  let value env = (lookahead env).lex_value
-  let loc env = (lookahead env).lex_loc
+  let token ?(i=0) env = (lookahead ~i env).lex_token
+  let value ?(i=0) env = (lookahead ~i env).lex_value
+  let loc ?(i=0) env = (lookahead ~i env).lex_loc
 
   (* True if there is a line terminator before the next token *)
   let line_terminator env =
@@ -63,16 +63,16 @@ module Peek = struct
     | T_SEMICOLON -> false
     | _ -> line_terminator env
 
-  let semicolon_loc env =
-    if token env = T_SEMICOLON
-    then Some (loc env)
+  let semicolon_loc ?(i=0) env =
+    if token ~i env = T_SEMICOLON
+    then Some (loc ~i env)
     else None
 
   (* This returns true if the next token is identifier-ish (even if it is an
    * error) *)
-  let identifier env =
-    let name = value env in
-    match token env with
+  let identifier ?(i=0) env =
+    let name = value ~i env in
+    match token ~i env with
     | _ when is_strict_reserved name || is_restricted name -> true
     | T_LET
     | T_TYPE

@@ -33,7 +33,7 @@ val strict : env -> bool
 val last : env -> (lex_env * lex_result) option
 val last_token : env -> token option
 val lb : env -> Lexing.lexbuf
-val lookahead : env -> lex_result
+val lookahead : ?i:int -> env -> lex_result
 val lex_env : env -> lex_env
 val lex_mode : env -> lex_mode
 val in_export : env -> bool
