@@ -1527,6 +1527,25 @@ end = struct
             extends;
           })) in
 
+      (* This is more or less identical to `type_alias` *)
+      let declare_type_alias env start_loc =
+	Expect.token env T_TYPE;
+	Eat.push_lex_mode env TYPE_LEX;
+	let id = Parse.identifier env in
+	let typeParameters = Type.type_parameter_declaration env in
+	Expect.token env T_ASSIGN;
+	let right = Type._type env in
+	let end_loc = match Peek.semicolon_loc env with
+	  | None -> fst right
+	  | Some end_loc -> end_loc in
+	Eat.semicolon env;
+	Eat.pop_lex_mode env;
+        Loc.btwn start_loc end_loc, Statement.(TypeAlias TypeAlias.({
+          id;
+          typeParameters;
+          right;
+        })) in
+
       let declare_function env start_loc =
         Expect.token env T_FUNCTION;
         let id = Parse.identifier env in
@@ -1599,6 +1618,7 @@ end = struct
         Expect.token env T_DECLARE;
         (* eventually, just emit a wrapper AST node *)
         (match Peek.token env with
+	| T_TYPE -> declare_type_alias env start_loc
         | T_CLASS -> declare_class env start_loc
         | T_FUNCTION -> declare_function env start_loc
         | T_VAR -> declare_var env start_loc
