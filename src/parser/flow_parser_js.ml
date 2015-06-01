@@ -493,7 +493,7 @@ module Translate = struct
     ret
   )
 
-  and class_declaration (loc, c) = Statement.Class.(
+  and class_declaration (loc, c) = Class.(
     (* esprima/estree hasn't come around to the idea that class decls can have
      * optional ids :( *)
     let (node_type, node_value) = (
@@ -523,25 +523,25 @@ module Translate = struct
     ret
   )
 
-  and class_implements (loc, implements) = Statement.Class.Implements.(
+  and class_implements (loc, implements) = Class.Implements.(
     let ret = node "ClassImplements" loc in
     Js.Unsafe.set ret "id" (identifier implements.id);
     Js.Unsafe.set ret "typeParameters" (option type_parameter_instantiation implements.typeParameters);
     ret
   )
 
-  and class_body (loc, body) = Statement.Class.Body.(
+  and class_body (loc, body) = Class.Body.(
     let ret = node "ClassBody" loc in
     Js.Unsafe.set ret "body" (array class_element body.body);
     ret
   )
 
-  and class_element = Statement.Class.Body.(function
+  and class_element = Class.Body.(function
     | Method m -> class_method m
     | Property p -> class_property p)
 
   and class_method (loc, method_) =
-    let { Statement.Class.Method.key; value; kind; static; } = method_ in
+    let { Class.Method.key; value; kind; static; } = method_ in
     Expression.Object.Property.(
       let ret = node "MethodDefinition" loc in
       let key, computed = (match key with
@@ -559,7 +559,7 @@ module Translate = struct
       ret
     )
 
-  and class_property (loc, prop) = Statement.Class.Property.(
+  and class_property (loc, prop) = Class.Property.(
     let ret = node "ClassProperty" loc in
     let key, computed = (match prop.key with
     | Expression.Object.Property.Literal lit -> literal lit, false

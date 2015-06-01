@@ -174,8 +174,8 @@ let nameify_default_export_decl decl = Ast.Statement.(
       }))
 
   | loc, ClassDeclaration(class_decl) ->
-    if class_decl.Class.id <> None then decl else
-      loc, ClassDeclaration(Class.({
+    if class_decl.Ast.Class.id <> None then decl else
+      loc, ClassDeclaration(Ast.Class.({
         class_decl with
           id = Some(Ast.Identifier.(loc, {
             name = internal_name "*default*";
@@ -1015,7 +1015,7 @@ and statement_decl cx = Ast.Statement.(
   | (loc, VariableDeclaration decl) ->
       variable_declaration cx loc decl
 
-  | (loc, ClassDeclaration { Class.id; _ }) -> (
+  | (loc, ClassDeclaration { Ast.Class.id; _ }) -> (
       match id with
       | Some(id) ->
         let _, { Ast.Identifier.name; _ } = id in
@@ -1849,7 +1849,7 @@ and statement cx = Ast.Statement.(
   | (loc, VariableDeclaration decl) ->
       variables cx loc decl
 
-  | (loc, ClassDeclaration { Class.id; body; superClass;
+  | (loc, ClassDeclaration { Ast.Class.id; body; superClass;
       typeParameters; superTypeParameters; implements }) ->
       if implements <> [] then
         let msg = "implements not supported" in
@@ -2006,14 +2006,14 @@ and statement cx = Ast.Statement.(
         | loc, FunctionDeclaration({FunctionDeclaration.id=Some(_, id); _;}) ->
           let name = id.Ast.Identifier.name in
           [(spf "function %s() {}" name, loc, name)]
-        | loc, ClassDeclaration({Class.id=None; _;}) ->
+        | loc, ClassDeclaration({Ast.Class.id=None; _;}) ->
           if default then
             [("class {}", loc, internal_name "*default*")]
           else failwith (
             "Parser Error: Immediate exports of nameless classes can " ^
             "only exist for default exports"
           )
-        | loc, ClassDeclaration({Class.id=Some(_, id); _;}) ->
+        | loc, ClassDeclaration({Ast.Class.id=Some(_, id); _;}) ->
           let name = id.Ast.Identifier.name in
           [(spf "class %s() {}" name, loc, name)]
         | _, VariableDeclaration({VariableDeclaration.declarations; _; }) ->
@@ -3073,7 +3073,7 @@ and expression_ cx loc e = Ast.Expression.(match e with
   | JSXElement e ->
       jsx cx e
 
-  | Class { Class.id; body; superClass;
+  | Class { Ast.Class.id; body; superClass;
       typeParameters; superTypeParameters; implements } ->
       if implements <> [] then
         let msg = "implements not supported" in
@@ -4382,7 +4382,7 @@ and body_loc = Ast.Statement.FunctionDeclaration.(function
 )
 
 (* Makes signatures for fields and methods in a class. *)
-and mk_signature cx reason_c c_type_params_map body = Ast.Statement.Class.(
+and mk_signature cx reason_c c_type_params_map body = Ast.Class.(
   let _, { Body.body = elements } = body in
 
   (* In case there is no constructor, we create one. *)
@@ -4502,7 +4502,7 @@ and mk_signature cx reason_c c_type_params_map body = Ast.Statement.Class.(
 )
 
 (* Processes the bodies of instance and static methods. *)
-and mk_class_elements cx instance_info static_info body = Ast.Statement.Class.(
+and mk_class_elements cx instance_info static_info body = Ast.Class.(
   let _, { Body.body = elements } = body in
   List.iter (function
 
