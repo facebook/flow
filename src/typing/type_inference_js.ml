@@ -3073,12 +3073,26 @@ and expression_ cx loc e = Ast.Expression.(match e with
   | JSXElement e ->
       jsx cx e
 
+  | Class { Class.id; body; superClass;
+      typeParameters; superTypeParameters; implements } ->
+      if implements <> [] then
+        let msg = "implements not supported" in
+        Flow_js.add_error cx [mk_reason "" loc, msg]
+      else ();
+      let (nloc, name) = (
+        match id with
+        | Some(nloc, { Ast.Identifier.name; _ }) -> nloc, name
+        | None -> loc, "<<anonymous class>>"
+      ) in
+      let reason = mk_reason name nloc in
+      let extends = superClass, superTypeParameters in
+      mk_class cx reason typeParameters extends body
+
   (* TODO *)
   | Yield _
   | Comprehension _
   | Generator _
-  | Let _
-  | Class _ ->
+  | Let _ ->
     Flow_js.add_error cx [mk_reason "" loc, "not (sup)ported"];
     UndefT.at loc
 )

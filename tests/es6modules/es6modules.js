@@ -117,14 +117,14 @@ takesANumber(ES6_Def_NamedFunc1());
 takesAString(ES6_Def_NamedFunc1()); // Error: number ~> string
 
 // TODO: Support anonymous class declarations
-//import ES6_Def_AnonClass1 from "ES6_Default_AnonClass1";
-//takesANumber(new ES6_Def_AnonClass1().givesANum());
-//takesAString(new ES6_Def_AnonClass1().givesANum()); // Error: number ~> string
+import ES6_Def_AnonClass1 from "ES6_Default_AnonClass1";
+takesANumber(new ES6_Def_AnonClass1().givesANum());
+takesAString(new ES6_Def_AnonClass1().givesANum()); // Error: number ~> string
 
 // TODO: Support named class declarations in an export
-//import ES6_Def_NamedClass1 from "ES6_Default_NamedClass1";
-//takesANumber(new ES6_Def_NamedClass1().givesANum());
-//takesAString(new ES6_Def_NamedClass1().givesANum());
+import ES6_Def_NamedClass1 from "ES6_Default_NamedClass1";
+takesANumber(new ES6_Def_NamedClass1().givesANum());
+takesAString(new ES6_Def_NamedClass1().givesANum()); // Error: number ~> string
 
 ////////////////////////////
 // == ES6 Named -> ES6 == //
@@ -199,14 +199,14 @@ takesANumber(ES6_Def_NamedFunc2());
 takesAString(ES6_Def_NamedFunc2()); // Error: number ~> string
 
 // TODO: Support anonymous class declarations
-// var ES6_Def_AnonClass2 = require("ES6_Default_AnonClass2").default;
-//takesANumber(new ES6_Def_AnonClass2().givesANum());
-//takesAString(new ES6_Def_AnonClass2().givesANum()); // Error: number ~> string
+var ES6_Def_AnonClass2 = require("ES6_Default_AnonClass2").default;
+takesANumber(new ES6_Def_AnonClass2().givesANum());
+takesAString(new ES6_Def_AnonClass2().givesANum()); // Error: number ~> string
 
 // TODO: Support named class declarations in an export
-// var ES6_Def_NamedClass2 = require("ES6_Default_NamedClass2");
-//takesANumber(new ES6_Def_NamedClass2().givesANum());
-//takesAString(new ES6_Def_NamedClass2().givesANum());
+var ES6_Def_NamedClass2 = require("ES6_Default_NamedClass2").default;
+takesANumber(new ES6_Def_NamedClass2().givesANum());
+takesAString(new ES6_Def_NamedClass2().givesANum());
 
 /////////////////////////////////
 // == ES6 Named -> CommonJS == //

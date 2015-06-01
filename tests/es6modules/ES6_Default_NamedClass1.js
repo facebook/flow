@@ -4,4 +4,4 @@
  */
 
 // TODO: Support named class declarations in an export
-//export default class Foo { givesANum(): number { return 42; }};
+export default class Foo { givesANum(): number { return 42; }};

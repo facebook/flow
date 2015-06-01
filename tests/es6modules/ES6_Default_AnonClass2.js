@@ -4,4 +4,4 @@
  */
 
 // TODO: Support anonymous class declarations
-//export default class { givesANum(): number { return 42; }};
+export default class { givesANum(): number { return 42; }};

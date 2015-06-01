@@ -233,6 +233,18 @@ es6modules.js:117:14,33: number
 This type is incompatible with
 es6modules.js:4:28,33: string
 
+es6modules.js:122:14,49: call of method givesANum
+Error:
+es6modules.js:122:14,49: number
+This type is incompatible with
+es6modules.js:4:28,33: string
+
+es6modules.js:127:14,50: call of method givesANum
+Error:
+es6modules.js:127:14,50: number
+This type is incompatible with
+es6modules.js:4:28,33: string
+
 es6modules.js:133:8,18: "default" export of "ES6_Named1"
 Property not found in
 es6modules.js:133:25,36: exports of "ES6_Named1"
@@ -265,6 +277,18 @@ es6modules.js:199:14,33: number
 This type is incompatible with
 es6modules.js:4:28,33: string
 
+es6modules.js:204:14,49: call of method givesANum
+Error:
+es6modules.js:204:14,49: number
+This type is incompatible with
+es6modules.js:4:28,33: string
+
+es6modules.js:209:14,50: call of method givesANum
+Error:
+es6modules.js:209:14,50: number
+This type is incompatible with
+es6modules.js:4:28,33: string
+
 es6modules.js:232:14,28: function call
 Error:
 es6modules.js:232:14,28: number
@@ -277,4 +301,4 @@ es6modules.js:236:14,50: number
 This type is incompatible with
 es6modules.js:4:28,33: string
 
-Found 63 errors
+Found 67 errors
