@@ -1849,20 +1849,14 @@ and statement cx = Ast.Statement.(
   | (loc, VariableDeclaration decl) ->
       variables cx loc decl
 
-  | (loc, ClassDeclaration { Ast.Class.id; body; superClass;
-      typeParameters; superTypeParameters; implements }) ->
-      if implements <> [] then
-        let msg = "implements not supported" in
-        Flow_js.add_error cx [mk_reason "" loc, msg]
-      else ();
+  | (loc, ClassDeclaration ({ Ast.Class.id } as c)) ->
       let (nloc, name) = (
         match id with
         | Some(nloc, { Ast.Identifier.name; _ }) -> nloc, name
         | None -> loc, "<<anonymous class>>"
       ) in
       let reason = mk_reason name nloc in
-      let extends = superClass, superTypeParameters in
-      let cls_type = mk_class cx reason typeParameters extends body in
+      let cls_type = mk_class cx loc reason c in
       Hashtbl.replace cx.type_table loc cls_type;
       Env_js.set_var cx name cls_type reason
 
@@ -3073,20 +3067,14 @@ and expression_ cx loc e = Ast.Expression.(match e with
   | JSXElement e ->
       jsx cx e
 
-  | Class { Ast.Class.id; body; superClass;
-      typeParameters; superTypeParameters; implements } ->
-      if implements <> [] then
-        let msg = "implements not supported" in
-        Flow_js.add_error cx [mk_reason "" loc, msg]
-      else ();
+  | Class ({ Ast.Class.id } as c) ->
       let (nloc, name) = (
         match id with
         | Some(nloc, { Ast.Identifier.name; _ }) -> nloc, name
         | None -> loc, "<<anonymous class>>"
       ) in
       let reason = mk_reason name nloc in
-      let extends = superClass, superTypeParameters in
-      mk_class cx reason typeParameters extends body
+      mk_class cx loc reason c
 
   (* TODO *)
   | Yield _
@@ -4553,14 +4541,22 @@ and mk_methodtype (reason_m, typeparams,_,(params,pnames,ret,_,_)) =
    static members. The static members can be thought of as instance members of a
    "metaclass": thus, the static type is itself implemented as an instance
    type. *)
-and mk_class cx reason_c type_params extends body =
+and mk_class cx loc reason_c = Ast.Class.(function { body; superClass;
+  typeParameters; superTypeParameters; implements } ->
+
   (* As a running example, let's say the class declaration is:
      class C<X> extends D<X> { f: X; m<Y: X>(x: Y): X { ... } }
   *)
 
+  (* TODO *)
+  if implements <> [] then
+    let msg = "implements not supported" in
+    Flow_js.add_error cx [mk_reason "" loc, msg]
+  else ();
+
   (* type parameters: <X> *)
   let typeparams, type_params_map =
-    mk_type_param_declarations cx type_params in
+    mk_type_param_declarations cx typeParameters in
 
   (* fields: { f: X }, methods_: { m<Y: X>(x: Y): X } *)
   let sfields, smethods_, fields, methods_ =
@@ -4570,6 +4566,7 @@ and mk_class cx reason_c type_params extends body =
   let id = Flow_js.mk_nominal cx in
 
   (* super: D<X> *)
+  let extends = superClass, superTypeParameters in
   let super = mk_extends cx reason_c type_params_map extends in
   let super_static = ClassT (super) in
 
@@ -4692,6 +4689,7 @@ and mk_class cx reason_c type_params extends body =
     ClassT this
   else
     PolyT(typeparams, ClassT this)
+)
 
 (* Processes a declare class. The fact that we process an interface the same way
    as a declare class is legacy, and might change when we have proper support
