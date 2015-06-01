@@ -91,6 +91,5 @@ module Try : sig
   val to_parse: env -> (env -> 'a) -> 'a parse_result
 end
 
-(* TODO get rid of these abominations *)
+(* TODO get rid of this abomination *)
 val advance : env -> lex_env * lex_result -> lex_mode -> unit
-val vomit : env -> unit
