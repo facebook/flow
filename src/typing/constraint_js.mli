@@ -69,6 +69,7 @@ module Type :
       | RecordT of reason * t
 
       | TypeT of reason * t
+      | BecomeT of reason * t
 
       | SpeculativeMatchFailureT of reason * t * t
 

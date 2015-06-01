@@ -509,13 +509,9 @@ let rec convert cx map = Ast.Type.(function
           Generic.id = qualification;
           typeParameters = None
         }) ->
-          (**
-           * TODO(jeffmo): Set ~for_type:false once the export-type hacks are
-           *               cleared up using proper `export type` functionality.
-           *
-           *               Task(6860853)
-           *)
-          convert_qualification (*~for_type:false*) cx "typeof-annotation" qualification
+          let valtype = convert_qualification ~for_type:false cx
+            "typeof-annotation" qualification in
+          Flow_js.mk_typeof_annotation cx valtype
       | _ ->
         error_type cx loc "Unexpected typeof expression")
 
@@ -4483,7 +4479,6 @@ and mk_signature cx reason_c c_type_params_map body = Ast.Statement.Class.(
         let msg = "computed property keys not supported" in
         Flow_js.add_error cx [mk_reason "" loc, msg];
         sfields, smethods, fields, methods
-
   ) (SMap.empty, SMap.empty, SMap.empty, default_methods) elements
 )
 

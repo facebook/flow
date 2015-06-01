@@ -59,6 +59,9 @@ import_type.js:45:9,14: number
 import_type.js:46:5,13: identifier ClassFoo4
 Could not resolve name
 
+import_type.js:48:16,24: typeof-annotation 'ClassFoo5'
+Could not resolve name
+
 import_type.js:57:18,29: function call
 Error:
 ExportCJSDefault_Class.js:5:7,15: ClassFoo3
@@ -80,4 +83,4 @@ import_type.js:72:14,21: import type { numValue }
 import_type.js:82:3,11: identifier ClassFoo6
 Could not resolve name
 
-Found 17 errors
+Found 18 errors

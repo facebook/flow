@@ -1864,13 +1864,21 @@ let rec __flow cx (l,u) trace =
     (* runtime types derive static types through annotation *)
     (********************************************************)
 
-    | (ClassT(it), TypeT(_,t)) ->
+    | (ClassT(it), TypeT(r,t)) ->
+      (* CAUTION: BecomeT is not currently usable here, because
+         some features are implemented in ways that break the
+         invariant that a bidirectional flow is equivalent to
+         unification. One such is immutable methods; others can
+         be seen by swapping commented blocks below and running
+         tests. TODO *)
+      (* a class value annotation becomes the instance type *)
+      (* rec_flow cx trace (it, BecomeT (r, t)) *)
       rec_flow cx trace (it, t);
       rec_flow cx trace (t, it)
 
-    | (FunT(reason,_,prototype,_), TypeT(_,t)) ->
-      rec_flow cx trace (prototype, t);
-      rec_flow cx trace (t, prototype)
+    | (FunT(reason,_,prototype,_), TypeT(r,t)) ->
+      (* a function value annotation becomes the prototype type *)
+      rec_flow cx trace (prototype, BecomeT (r, t))
 
     | (TypeT(_,l), TypeT(_,u)) ->
       rec_unify cx trace l u
@@ -1881,6 +1889,13 @@ let rec __flow cx (l,u) trace =
     | (FunT(_,static1,prototype,_), ClassT(InstanceT(_,static2,_, _) as u_)) ->
       rec_unify cx trace static1 static2;
       rec_unify cx trace prototype u_
+
+    (****************************************************************)
+    (* BecomeT unifies a tvar with an incoming concrete lower bound *)
+    (****************************************************************)
+
+    | _, BecomeT (_, t) ->
+      rec_unify cx trace l t
 
     (*********************************************************)
     (* class types derive instance types (with constructors) *)
@@ -2975,8 +2990,7 @@ and subst cx ?(force=true) (map: Type.t SMap.t) t =
   | ClassT t -> ClassT (subst cx ~force map t)
 
   | TypeT (reason, t) ->
-    TypeT (reason,
-           subst cx ~force map t)
+    TypeT (reason, subst cx ~force map t)
 
   | InstanceT (reason, static, super, instance) ->
     InstanceT (
@@ -4099,6 +4113,36 @@ and mk_instance cx ?trace instance_reason c =
   mk_tvar_derivable_where cx instance_reason (fun t ->
     flow_opt cx ?trace (c, TypeT(instance_reason,t))
   )
+
+(* We want to match against some t, which may either be a concrete
+   type, or a tvar that will be concretized by a single incoming
+   lower bound (for instance, a tvar representing an externally
+   defined type - the concrete definition will appear as a lower
+   bound to that tvar at merge time).
+
+   Given such a t, `become` will return
+   * t itself, if it is concrete already, or
+   * a new tvar which will behave exactly like the first concrete
+    lower bound that flows into t, whenever that happens.
+ *)
+and become cx ?trace r t = match t with
+  | OpenT _ ->
+    (* if t is not concrete, create a new tvar within a BecomeT
+       operation and add it to t's uppertvars. When a concrete
+       lower bound flows to t, it will also flow to this BecomeT,
+       and the rule for BecomeT in __flow will unify the new tvar
+       with it. *)
+    mk_tvar_derivable_where cx r (fun tvar ->
+      flow_opt cx ?trace (t, BecomeT (r, tvar)))
+  | _ ->
+    (* optimization: if t is already concrete, become t immediately :) *)
+    t
+
+(* given the type of a value v, return the type term
+   representing the `typeof v` annotation expression *)
+and mk_typeof_annotation cx ?trace valtype =
+  let r = prefix_reason "typeof " (reason_of_t valtype) in
+  become cx ?trace r valtype
 
 and get_builtin_type cx reason x =
   let t = get_builtin cx x reason in

@@ -154,6 +154,9 @@ module Type = struct
   (* type aliases *)
   | TypeT of reason * t
 
+  (* unifies with incoming concrete LB *)
+  | BecomeT of reason * t
+
   (* failure case for speculative matching *)
   | SpeculativeMatchFailureT of reason * t * t
 
@@ -627,6 +630,7 @@ let is_use = function
   | ExportDefaultT _
   | ConcreteT _
   | ConcretizeT _
+  | BecomeT _
     -> true
 
   | _ -> false
@@ -667,6 +671,7 @@ let string_of_ctor = function
   | AdderT _ -> "AdderT"
   | ComparatorT _ -> "ComparatorT"
   | TypeT _ -> "TypeT"
+  | BecomeT _ -> "BecomeT"
   | OptionalT _ -> "OptionalT"
   | RestT _ -> "RestT"
   | PredicateT _ -> "PredicateT"
@@ -760,6 +765,7 @@ let rec reason_of_t = function
   | OrT (reason, _, _)
 
   | TypeT (reason,_)
+  | BecomeT (reason, _)
       -> reason
 
   | ExtendsT (_,t) ->
@@ -919,6 +925,7 @@ let rec mod_reason_of_t f = function
   | ComparatorT (reason, t) -> ComparatorT (f reason, t)
 
   | TypeT (reason, t) -> TypeT (f reason, t)
+  | BecomeT (reason, t) -> BecomeT (f reason, t)
 
   | OptionalT t -> OptionalT (mod_reason_of_t f t)
 
@@ -1166,6 +1173,9 @@ let rec type_printer override fallback enclosure cx t =
     | TypeT (_, t) ->
         spf "[type: %s]" (pp EnclosureNone cx t)
 
+    | BecomeT (_, t) ->
+        spf "[become: %s]" (pp EnclosureNone cx t)
+
     | LowerBoundT t ->
         spf "$Subtype<%s>" (pp EnclosureNone cx t)
 
@@ -1335,7 +1345,11 @@ let rec _json_of_t stack cx t = Json.(
     ]
 
   | TypeT (_, t) -> [
-      "type", _json_of_t stack cx t
+      "result", _json_of_t stack cx t
+    ]
+
+  | BecomeT (_, t) -> [
+      "result", _json_of_t stack cx t
     ]
 
   | SpeculativeMatchFailureT (_, attempt, target) -> [
@@ -1600,10 +1614,10 @@ and json_of_constraints stack cx constraints = Json.(
   JAssoc (
     match constraints with
     | Resolved t ->
-      ["kind", JString "ResolvedT"]
+      ["kind", JString "Resolved"]
       @ ["type", _json_of_t stack cx t]
     | Unresolved bounds ->
-      ["kind", JString "UnresolvedT"]
+      ["kind", JString "Unresolved"]
       @ ["bounds", json_of_bounds stack cx bounds]
   )
 )
