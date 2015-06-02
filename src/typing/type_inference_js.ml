@@ -3290,7 +3290,7 @@ and binary cx loc = Ast.Expression.Binary.(function
       t
 
   | { operator = Plus; left; right } ->
-      let reason = mk_reason "add" loc in
+      let reason = mk_reason "+" loc in
       let t1 = expression cx left in
       let t2 = expression cx right in
       Flow_js.mk_tvar_where cx reason (fun t ->

@@ -11,6 +11,14 @@ Arith.js:15:7,9: number
 This type is incompatible with
 Arith.js:6:16,21: string
 
+mult.js:5:5,8: null
+This type is incompatible with
+mult.js:5:5,12: number
+
+mult.js:6:9,12: null
+This type is incompatible with
+mult.js:6:5,12: number
+
 relational.js:4:2,10: relational comparison
 Error:
 relational.js:4:2,2: number
@@ -101,4 +109,4 @@ relational.js:20:2,10: undefined
 Cannot be compared to
 relational.js:20:14,22: undefined
 
-Found 17 errors
+Found 19 errors

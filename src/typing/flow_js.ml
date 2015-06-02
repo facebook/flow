@@ -2494,34 +2494,14 @@ let rec __flow cx (l, u) trace =
 
     | (MixedT _, SuperT _) -> ()
 
-    (*********************************************************)
-    (* addition typechecks iff either of the following hold: *)
-    (*                                                       *)
-    (* bool|number + bool|number = number                    *)
-    (* _ + _ = string                                        *)
-    (*********************************************************)
+    (***********************************************************)
+    (* addition                                                *)
+    (***********************************************************)
 
-    | ((BoolT _ | NumT _), AdderT(reason,(BoolT _ | NumT _), t)) ->
-
-      rec_flow cx trace (NumT.why reason, t)
-
-    | (StrT _, AdderT(reason,_, t))
-    | (_, AdderT(reason,StrT _, t)) ->
-
-      rec_flow cx trace (StrT.why reason, t)
-
-    | (MixedT _, AdderT(reason,_, t))
-    | (_, AdderT(reason,MixedT _, t)) ->
-
-      rec_flow cx trace (MixedT.why reason, t)
-
-    | (_, AdderT(reason,((OpenT _ | UnionT _) as tin), tout)) ->
-
-      rec_flow cx trace (tin, AdderT(reason,l , tout))
-
-    | (_, AdderT(reason,_, t)) ->
-
-      rec_flow cx trace (StrT.why reason, t)
+    | (l, AdderT (reason, r, u)) ->
+      Ops.push reason;
+      flow_addition cx trace reason l r u;
+      Ops.pop ()
 
     (**************************)
     (* relational comparisons *)
@@ -2757,6 +2737,44 @@ let rec __flow cx (l, u) trace =
     );
   )
 
+
+(**
+ * Addition
+ *
+ * Given l + r:
+ *  - if l or r is a string, or a Date, or an object whose
+ *    valueOf() returns an object, returns a string.
+ *  - otherwise, returns a number
+ *
+ * Since we don't consider valueOf() right now, Date is no different than
+ * any other object. The only things that are neither objects nor strings
+ * are numbers, booleans, null, undefined and symbols. Since we can more
+ * easily enumerate those things, this implementation inverts the check:
+ * anything that is a number, boolean, null or undefined is treated as a
+ * number; everything else is a string.
+ *
+ * TODO: handle symbols (which raise a TypeError, so should be banned)
+ *
+ **)
+and flow_addition cx trace reason l r u = match (l, r) with
+  | (StrT _, _)
+  | (_, StrT _) ->
+    rec_flow cx trace (StrT.why reason, u)
+
+  | (MixedT _, _)
+  | (_, MixedT _) ->
+    rec_flow cx trace (MixedT.why reason, u)
+
+  (* l + r === r + l, so this lets complex values of r be decomposed *)
+  | (_, (OpenT _ | UnionT _ | OptionalT _ | MaybeT _)) ->
+    rec_flow cx trace (r, AdderT (reason, l, u))
+
+  | ((NumT _ | BoolT _ | NullT _ | VoidT _),
+     (NumT _ | BoolT _ | NullT _ | VoidT _)) ->
+    rec_flow cx trace (NumT.why reason, u)
+
+  | (_, _) ->
+    rec_flow cx trace (StrT.why reason, u)
 
 (**
  * relational comparisons like <, >, <=, >=
