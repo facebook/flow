@@ -25,14 +25,14 @@ TypeError: `foo` has already been defined
 
 const_undeclared.js:8:9,11: Const must be initialized
 
-let.js:26:9,11: value binding bar
+let.js:34:9,11: value binding bar
 This binding conflicts with
-let.js:25:9,11: value binding bar
+let.js:33:9,11: value binding bar
 which is already declared
 
-let.js:37:11,13: value binding foo
+let.js:45:11,13: value binding foo
 This binding conflicts with
-let.js:33:11,13: value binding foo
+let.js:41:11,13: value binding foo
 which is already declared
 
 Found 11 errors

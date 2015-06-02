@@ -18,6 +18,14 @@ function forInLoop(): number {
   return prop;
 }
 
+function forOfLoop(): number {
+  let x = 1;
+
+  for (let x of "abc") {}
+
+  return x;
+}
+
 function TDZ1() {
   let foo;
   let foo; // OK
