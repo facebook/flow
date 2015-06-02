@@ -1026,11 +1026,14 @@ and statement_decl cx = Ast.Statement.(
     )
 
   | (loc, DeclareClass { Interface.id; _ })
-  | (loc, InterfaceDeclaration { Interface.id; _ }) ->
+  | (loc, InterfaceDeclaration { Interface.id; _ }) as stmt ->
+      let is_interface = match stmt with
+      | (_, InterfaceDeclaration _) -> true
+      | _ -> false in
       let _, { Ast.Identifier.name; _ } = id in
       let r = mk_reason (spf "class %s" name) loc in
       let tvar = Flow_js.mk_tvar cx r in
-      Env_js.init_env cx name (create_env_entry tvar tvar (Some loc))
+      Env_js.init_env cx name (create_env_entry ~for_type:is_interface tvar tvar (Some loc))
   | (loc, DeclareModule { DeclareModule.id; _ }) ->
       let name = match id with
       | DeclareModule.Identifier (_, id) -> id.Ast.Identifier.name
@@ -1926,10 +1929,9 @@ and statement cx = Ast.Statement.(
       body = (_, { Ast.Type.Object.properties; indexers; callProperties });
       extends;
     }) as stmt ->
-    let structural = match stmt with
+    let is_interface = match stmt with
     | (_, InterfaceDeclaration _) -> true
     | _ -> false in
-
     let _, { Ast.Identifier.name = iname; _ } = id in
     let reason = mk_reason iname loc in
     let typeparams, map = mk_type_param_declarations cx typeParameters in
@@ -2004,9 +2006,9 @@ and statement cx = Ast.Statement.(
         mmap
     in
     let i = mk_interface cx reason typeparams map
-      (sfmap, smmap, fmap, mmap) extends structural in
+      (sfmap, smmap, fmap, mmap) extends is_interface in
     Hashtbl.replace cx.type_table loc i;
-    Env_js.set_var cx iname i reason
+    Env_js.set_var ~for_type:is_interface cx iname i reason
 
   | (loc, DeclareModule { DeclareModule.id; body; }) ->
     let name = match id with
