@@ -977,9 +977,13 @@ and statement_decl cx = Ast.Statement.(
       );
       statement_decl cx body
 
-  | (loc, ForOf _) ->
-      (* TODO? *)
-      ()
+  | (loc, ForOf { ForOf.left; right; body; }) ->
+      (match left with
+        | ForOf.LeftDeclaration (loc, decl) ->
+            variable_declaration cx loc decl
+        | _ -> ()
+      );
+      statement_decl cx body
 
   | (loc, Let _) ->
       (* TODO *)
@@ -1790,11 +1794,7 @@ and statement cx = Ast.Statement.(
             Flow_js.add_error cx [mk_reason "" loc, msg]
       );
 
-      let exception_ = ref None in
-      ignore_break_continue_exception_handler
-        (fun () -> statement cx body)
-        None
-        (save_handler exception_);
+      ignore_exception_handler (fun () -> statement cx body);
 
       let newset = Env_js.swap_changeset (SSet.union oldset) in
 
@@ -1804,13 +1804,65 @@ and statement cx = Ast.Statement.(
 
       Env_js.update_frame cx ctx;
       if Abnormal.swap (Abnormal.Break None) save_break_exn
+      then Env_js.havoc_env2 newset
+
+  | (loc, ForOf { ForOf.left; right; body; }) ->
+      let reason = mk_reason "for-of" loc in
+      let save_break_exn = Abnormal.swap (Abnormal.Break None) false in
+      let save_continue_exn = Abnormal.swap (Abnormal.Continue None) false in
+      let t = expression cx right in
+
+      let element_tvar = Flow_js.mk_tvar cx reason in
+      let o = Flow_js.get_builtin_typeapp
+        cx
+        (mk_reason "iteration expected on Iterable" loc)
+        "Iterable"
+        [element_tvar] in
+
+      Flow_js.flow cx (t, o); (* null/undefined are NOT allowed *)
+
+      let ctx = !Env_js.env in
+      let oldset = Env_js.swap_changeset (fun _ -> SSet.empty) in
+      Env_js.widen_env cx reason;
+
+      let body_ctx = Env_js.clone_env ctx in
+      Env_js.update_frame cx body_ctx;
+
+      let _, pred, _, xtypes = predicate_of_condition cx right in
+      Env_js.refine_with_pred cx reason pred xtypes;
+
+      (match left with
+        | ForOf.LeftDeclaration (_, {
+            VariableDeclaration.declarations = [
+              (loc, {
+                VariableDeclaration.Declarator.id =
+                  (_, Ast.Pattern.Identifier (_, id));
+                _;
+              })
+            ];
+            _;
+          })
+        | ForOf.LeftExpression (loc, Ast.Expression.Identifier (_, id)) ->
+            let name = id.Ast.Identifier.name in
+            let reason = mk_reason (spf "for..of %s" name) loc in
+            Env_js.set_var cx name element_tvar reason
+
+        | _ ->
+            let msg = "unexpected LHS in for...of" in
+            Flow_js.add_error cx [mk_reason "" loc, msg]
+      );
+
+      ignore_exception_handler (fun () -> statement cx body);
+
+      let newset = Env_js.swap_changeset (SSet.union oldset) in
+
+      if Abnormal.swap (Abnormal.Continue None) save_continue_exn
       then Env_js.havoc_env2 newset;
+      Env_js.copy_env cx reason (ctx,body_ctx) newset;
 
-      raise_exception !exception_
-
-  | (loc, ForOf _) ->
-      (* TODO? *)
-      ()
+      Env_js.update_frame cx ctx;
+      if Abnormal.swap (Abnormal.Break None) save_break_exn
+      then Env_js.havoc_env2 newset
 
   | (loc, Let _) ->
       (* TODO *)
