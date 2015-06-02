@@ -491,11 +491,6 @@ struct
       end;
       let options = OptionParser.get_flow_options () in
 
-      let n = SSet.cardinal diff_js in
-      prerr_endlinef "recheck %d files:" n;
-      let _ = SSet.fold (fun f i ->
-        prerr_endlinef "%d/%d: %s" i n f; i + 1) diff_js 1 in
-
       let server_env = Types_js.recheck genv env diff_js options in
       SearchService_js.update_from_master updates;
       server_env
