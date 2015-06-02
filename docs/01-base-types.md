@@ -74,5 +74,5 @@ error paths with type `any`.
 Using this "backdoor" is dangerous and not recommended, but it is necessary 
 because a static type system simply cannot model the entirety of a dynamic
 language. Furthermore, it is a necessary tool for gradual typing, in that 
-`any`models code where Flow does not have knowledge; i.e., when you reference 
+`any` models code where Flow does not have knowledge; i.e., when you reference 
 something in a non-Flow file, it has type `any`.
