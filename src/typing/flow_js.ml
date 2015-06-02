@@ -1282,7 +1282,7 @@ module Cache = struct
 
   module F = struct
     let cache = Hashtbl.create 0
-    let hash = Hashtbl.hash_param 50 100
+    let hash = Hashtbl.hash_param 150 200
     let mem (l,u) =
       let types = hash l, hash u in
       try
