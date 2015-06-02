@@ -103,6 +103,7 @@ val resolve_builtin_class: context -> Type.t -> Type.t
 val set_builtin: context -> string -> Type.t -> unit
 
 val mk_instance: context -> ?trace:trace -> reason -> Type.t -> Type.t
+val mk_typeof_annotation: context -> ?trace:trace -> Type.t -> Type.t
 
 (* strict *)
 val check_types: context -> ident -> (Type.t -> bool) -> bool

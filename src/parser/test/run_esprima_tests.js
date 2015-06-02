@@ -162,6 +162,7 @@ function go() {
       }
     }
     console.log("%d/%d tests passed", num_successes, num_successes + num_failures);
+    process.exit(1);
   }
 }
 

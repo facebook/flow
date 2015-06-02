@@ -1,3 +1,28 @@
+###v0.12.0-dev
+
+Likely to cause new Flow errors:
+
+- Fixed a bug where declarations from libraries which are exported from one module are not checked properly in the module into which that module is imported (e.g. if `A.foo()` returns a `Promise`, and module B requires A and calls `A.foo()`, the return type of `A.foo()` was not being checked properly)
+- Fixed enforcement of Object and Function type annotation arity, so that Object<K, V> errors
+- Restricted valid computed properties, such that only strings and numbers are allowed (notably, disallows `null` and `undefined`)
+
+New features:
+
+- Added support for `for-of`
+- Added structural subtyping for interfaces -- anything can be an instance of an interface as long as it looks right
+- Added support for type annotations of the form `typeof x`, where `x` is the name of an in-scope variable
+- Added a new config option `module.name_mapper`, a regexp -> replacement template tuple to be applied to any matching module names before the Flow system resolves the name and looks it up
+- Added a `--color=always|never|auto` CLI option, useful when piping to `less -R`
+
+Misc:
+
+- Improved warnings on unsupported class members [PR #461]
+- Fixed the `flow get-def` command, especially around imported types
+- Fixed a bug with `==` and improved comparison-related error messages
+- Fixed file watching for individual files included via .flowconfig [includes]
+- Fixed the build ID, so that the server restarts when accessed from a mismatched client version
+
+
 ###v0.11.0
 
 - We are now syncing Flow's [commit history](https://github.com/facebook/flow/commits/master) to GitHub. No more huge updating diffs. We'll also filter the changelog to the most important things.

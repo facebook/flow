@@ -313,8 +313,7 @@ end = struct
     PidLog.init root;
     PidLog.log ~reason:"main" (Unix.getpid());
     let watch_paths = root :: Program.get_watch_paths options in
-    let genv =
-      ServerEnvBuild.make_genv ~multicore:true options config watch_paths in
+    let genv = ServerEnvBuild.make_genv options config watch_paths in
     let env = ServerEnvBuild.make_env options config in
     let program_init = create_program_init genv env in
     let is_check_mode = ServerArgs.check_mode genv.options in

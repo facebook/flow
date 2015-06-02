@@ -266,11 +266,9 @@ let ordered_reasons l u =
   then ru, rl
   else rl, ru
 
-let prmsg_flow cx level trace msg (r1, r2) =
-  let reasons_trace = if modes.traces = 0 then [] else
-    reasons_of_trace ~level:modes.traces trace
-    |> List.map (fun r -> r, desc_of_reason r)
-  in
+(* format an error or warning and add it to flow's output.
+   here preformatted trace output is passed directly as an argument *)
+let prmsg_flow_trace_reasons cx level trace_reasons msg (r1, r2) =
   let info = match Ops.peek () with
   | Some r when r != r1 && r != r2 ->
     (* NOTE: We include the operation's reason in the error message only if it
@@ -297,12 +295,43 @@ let prmsg_flow cx level trace msg (r1, r2) =
     else [
       r1, spf "%s\n%s" (desc_of_reason r1) msg;
       r2, (desc_of_reason r2) ^
-        (if reasons_trace = [] then ""
+        (if trace_reasons = [] then ""
        else "\nError path:");
     ]
   in
-  add_output cx level (info @ message_list @ reasons_trace)
+  add_output cx level (info @ message_list @ trace_reasons)
 
+(* format an error or warning and add it to flow's output.
+   here we gate trace output on global settings *)
+let prmsg_flow cx level trace msg (r1, r2) =
+  let trace_reasons = if modes.traces = 0 then [] else
+    reasons_of_trace ~level:modes.traces trace
+    |> List.map (fun r -> r, desc_of_reason r)
+  in
+  prmsg_flow_trace_reasons cx level trace_reasons msg (r1, r2)
+
+(* format an error and add it to flow's output.
+   here we print the full trace, ignoring global settings.
+   Notes
+   1. since traces can be gigantic, we set the per-level
+   indentation to 0 when printing them here.
+   2. as an optimization, we never accumulate traces beyond
+   a single level if the global setting disables them.
+   Being downstream of that throttle, we are subject to that
+   restriction here.
+*)
+let prerr_flow_full_trace cx trace msg l u =
+  let trace_reasons =
+    reasons_of_trace ~level:(trace_depth trace + 1) ~tab:0 trace
+    |> List.map (fun r -> r, desc_of_reason r)
+  in
+  prmsg_flow_trace_reasons cx
+    Errors_js.ERROR
+    trace_reasons
+    msg
+    (ordered_reasons l u)
+
+(* format an error and add it to flow's output *)
 let prerr_flow cx trace msg l u =
   prmsg_flow cx
     Errors_js.ERROR
@@ -310,6 +339,7 @@ let prerr_flow cx trace msg l u =
     msg
     (ordered_reasons l u)
 
+(* format a warning and add it to flow's output *)
 let prwarn_flow cx trace msg l u =
   prmsg_flow cx
     Errors_js.WARNING
@@ -1253,7 +1283,7 @@ module Cache = struct
 
   module F = struct
     let cache = Hashtbl.create 0
-    let hash = Hashtbl.hash_param 50 100
+    let hash = Hashtbl.hash_param 150 200
     let mem (l,u) =
       let types = hash l, hash u in
       try
@@ -1283,11 +1313,33 @@ let expect_def t =
   if is_use t
   then assert_false (spf "Expected def type, but got: %s" (string_of_ctor t))
 
+(* Recursion limiter. We proxy recursion depth with trace depth,
+   which is either equal or pretty close.
+   When check is called with a trace whose depth exceeds a constant
+   limit, we throw a LimitExceeded exception.
+ *)
+module RecursionCheck : sig
+  exception LimitExceeded of trace
+  val check: trace -> unit
+
+end = struct
+  exception LimitExceeded of trace
+  let limit = 100
+
+  (* check trace depth as a proxy for recursion depth
+     and throw when limit is exceeded *)
+  let check trace =
+    if trace_depth trace >= limit
+    then raise (LimitExceeded trace)
+end
+
 (** NOTE: Do not call this function directly. Instead, call the wrapper
     functions `rec_flow`, `join_flow`, or `flow_opt` (described below) inside
     this module, and the function `flow` outside this module. **)
-let rec __flow cx (l,u) trace =
+let rec __flow cx (l, u) trace =
   if not (Cache.F.mem (l,u)) then (
+    (* limit recursion depth *)
+    RecursionCheck.check trace;
 
     (* Expect that l is a def type. On the other hand, u may be a use type or a
        def type: the latter typically when we have annotations. *)
@@ -1295,7 +1347,8 @@ let rec __flow cx (l,u) trace =
 
     (if modes.verbose
      then prerr_endlinef
-        "\n# %s ~>\n# %s"
+        "\n# (%d) %s ~>\n# %s"
+        (Unix.getpid ())
         (dump_reason (reason_of_t l))
         (dump_reason (reason_of_t u)));
 
@@ -1307,7 +1360,6 @@ let rec __flow cx (l,u) trace =
     (******************)
 
     | (OpenT(reason1,tvar1),OpenT(reason2,tvar2)) ->
-
       let id1, constraints1 = find_constraints cx tvar1 in
       let id2, constraints2 = find_constraints cx tvar2 in
 
@@ -1356,6 +1408,12 @@ let rec __flow cx (l,u) trace =
       | Resolved t2 ->
           rec_flow cx trace (t1, t2)
       );
+
+    (****************************************************************)
+    (* BecomeT unifies a tvar with an incoming concrete lower bound *)
+    (****************************************************************)
+    | _, BecomeT (_, t) ->
+      rec_unify cx trace l t
 
     (**********************************************************************)
     (* Unpack CommonJS exports early to guarantee that bounds are checked *)
@@ -1865,13 +1923,21 @@ let rec __flow cx (l,u) trace =
     (* runtime types derive static types through annotation *)
     (********************************************************)
 
-    | (ClassT(it), TypeT(_,t)) ->
+    | (ClassT(it), TypeT(r,t)) ->
+      (* CAUTION: BecomeT is not currently usable here, because
+         some features are implemented in ways that break the
+         invariant that a bidirectional flow is equivalent to
+         unification. One such is immutable methods; others can
+         be seen by swapping commented blocks below and running
+         tests. TODO *)
+      (* a class value annotation becomes the instance type *)
+      (* rec_flow cx trace (it, BecomeT (r, t)) *)
       rec_flow cx trace (it, t);
       rec_flow cx trace (t, it)
 
-    | (FunT(reason,_,prototype,_), TypeT(_,t)) ->
-      rec_flow cx trace (prototype, t);
-      rec_flow cx trace (t, prototype)
+    | (FunT(reason,_,prototype,_), TypeT(r,t)) ->
+      (* a function value annotation becomes the prototype type *)
+      rec_flow cx trace (prototype, BecomeT (r, t))
 
     | (TypeT(_,l), TypeT(_,u)) ->
       rec_unify cx trace l u
@@ -2692,6 +2758,7 @@ let rec __flow cx (l,u) trace =
     );
   )
 
+
 (**
  * relational comparisons like <, >, <=, >=
  *
@@ -2976,8 +3043,7 @@ and subst cx ?(force=true) (map: Type.t SMap.t) t =
   | ClassT t -> ClassT (subst cx ~force map t)
 
   | TypeT (reason, t) ->
-    TypeT (reason,
-           subst cx ~force map t)
+    TypeT (reason, subst cx ~force map t)
 
   | InstanceT (reason, static, super, instance) ->
     InstanceT (
@@ -4101,6 +4167,36 @@ and mk_instance cx ?trace instance_reason c =
     flow_opt cx ?trace (c, TypeT(instance_reason,t))
   )
 
+(* We want to match against some t, which may either be a concrete
+   type, or a tvar that will be concretized by a single incoming
+   lower bound (for instance, a tvar representing an externally
+   defined type - the concrete definition will appear as a lower
+   bound to that tvar at merge time).
+
+   Given such a t, `become` will return
+   * t itself, if it is concrete already, or
+   * a new tvar which will behave exactly like the first concrete
+    lower bound that flows into t, whenever that happens.
+ *)
+and become cx ?trace r t = match t with
+  | OpenT _ ->
+    (* if t is not concrete, create a new tvar within a BecomeT
+       operation and add it to t's uppertvars. When a concrete
+       lower bound flows to t, it will also flow to this BecomeT,
+       and the rule for BecomeT in __flow will unify the new tvar
+       with it. *)
+    mk_tvar_derivable_where cx r (fun tvar ->
+      flow_opt cx ?trace (t, BecomeT (r, tvar)))
+  | _ ->
+    (* optimization: if t is already concrete, become t immediately :) *)
+    t
+
+(* given the type of a value v, return the type term
+   representing the `typeof v` annotation expression *)
+and mk_typeof_annotation cx ?trace valtype =
+  let r = prefix_reason "typeof " (reason_of_t valtype) in
+  become cx ?trace r valtype
+
 and get_builtin_type cx reason x =
   let t = get_builtin cx x reason in
   mk_instance cx reason t
@@ -4188,13 +4284,24 @@ and rec_flow cx trace (t1, t2) =
    which are themselves called both from outside and inside (with or without
    traces), so they call this function instead. *)
 and flow_opt cx ?trace (t1, t2) =
-  match trace with
-  | None -> __flow cx (t1, t2) (unit_trace t1 t2)
-  | Some trace -> rec_flow cx trace (t1, t2)
+  let trace = match trace with
+    | None -> unit_trace t1 t2
+    | Some trace -> rec_trace t1 t2 trace in
+  __flow cx (t1, t2) trace
 
 (* Externally visible function for subtyping. *)
-let flow cx (t1, t2) =
-  flow_opt cx (t1, t2)
+(* Calls internal entry point and traps runaway recursion. *)
+and flow cx (lower, upper) =
+  try
+    flow_opt cx (lower, upper)
+  with
+  | RecursionCheck.LimitExceeded trace ->
+    (* log and continue *)
+    let msg = "*** Recursion limit exceeded ***" in
+    prerr_flow_full_trace cx trace msg lower upper
+  | ex ->
+    (* rethrow *)
+    raise ex
 
 (* Externally visible function for unification. *)
 let unify cx t1 t2 =

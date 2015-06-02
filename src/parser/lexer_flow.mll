@@ -750,7 +750,11 @@ and type_token env = parse
                          env, T_STRING (Ast.Loc.btwn start _end, Buffer.contents buf, Buffer.contents raw, octal)
                        }
   (* Keyword or Identifier *)
-  | word as word       {
+  (* TODO: Better support for things like @@iterator. At the moment I'm just
+   * declaring it in the type lexer so that declare class and iterators can use
+   * it *)
+  | ("@@"? word) as word 
+                       {
                          unicode_fix_cols lexbuf;
                          try env, Hashtbl.find type_keywords word
                          with Not_found -> env, T_IDENTIFIER

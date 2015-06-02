@@ -33,7 +33,7 @@ val strict : env -> bool
 val last : env -> (lex_env * lex_result) option
 val last_token : env -> token option
 val lb : env -> Lexing.lexbuf
-val lookahead : env -> lex_result
+val lookahead : ?i:int -> env -> lex_result
 val lex_env : env -> lex_env
 val lex_mode : env -> lex_mode
 val in_export : env -> bool
@@ -91,6 +91,5 @@ module Try : sig
   val to_parse: env -> (env -> 'a) -> 'a parse_result
 end
 
-(* TODO get rid of these abominations *)
+(* TODO get rid of this abomination *)
 val advance : env -> lex_env * lex_result -> lex_mode -> unit
-val vomit : env -> unit

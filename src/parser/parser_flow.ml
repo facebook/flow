@@ -46,9 +46,9 @@ module Peek = struct
   open Loc
 
   (* If you're looping waiting for a token, then use token_loop instead. *)
-  let token env = (lookahead env).lex_token
-  let value env = (lookahead env).lex_value
-  let loc env = (lookahead env).lex_loc
+  let token ?(i=0) env = (lookahead ~i env).lex_token
+  let value ?(i=0) env = (lookahead ~i env).lex_value
+  let loc ?(i=0) env = (lookahead ~i env).lex_loc
 
   (* True if there is a line terminator before the next token *)
   let line_terminator env =
@@ -63,16 +63,16 @@ module Peek = struct
     | T_SEMICOLON -> false
     | _ -> line_terminator env
 
-  let semicolon_loc env =
-    if token env = T_SEMICOLON
-    then Some (loc env)
+  let semicolon_loc ?(i=0) env =
+    if token ~i env = T_SEMICOLON
+    then Some (loc ~i env)
     else None
 
   (* This returns true if the next token is identifier-ish (even if it is an
    * error) *)
-  let identifier env =
-    let name = value env in
-    match token env with
+  let identifier ?(i=0) env =
+    let name = value ~i env in
+    match token ~i env with
     | _ when is_strict_reserved name || is_restricted name -> true
     | T_LET
     | T_TYPE
@@ -124,7 +124,6 @@ let error_unexpected env =
 module Eat : sig
   val advance : env -> lex_env * lex_result -> lex_mode -> unit
   val token : env -> unit
-  val vomit : env -> unit
   val push_lex_mode : env -> lex_mode -> unit
   val pop_lex_mode : env -> unit
   val double_pop_lex_mode : env -> unit
@@ -137,9 +136,6 @@ end = struct
   let token env =
     let last = lex_env env, lookahead env in
     advance env last (lex_mode env)
-
-  (* Back up a single token *)
-  let vomit = Parser_env.vomit
 
   let push_lex_mode = Parser_env.push_lex_mode
   let pop_lex_mode = Parser_env.pop_lex_mode
@@ -1420,9 +1416,9 @@ end = struct
 
     and type_alias env =
       let start_loc = Peek.loc env in
-      Expect.token env T_TYPE;
-      if Peek.identifier env
+      if Peek.identifier ~i:1 env
       then begin
+        Expect.token env T_TYPE;
         Eat.push_lex_mode env TYPE_LEX;
         let id = Parse.identifier env in
         let typeParameters = Type.type_parameter_declaration env in
@@ -1439,7 +1435,6 @@ end = struct
           right;
         }))
       end else begin
-        Eat.vomit env;
         Parse.statement env
       end
 
@@ -1465,9 +1460,9 @@ end = struct
 
       in fun env ->
         let start_loc = Peek.loc env in
-        Expect.token env T_INTERFACE;
-        if Peek.identifier env
+        if Peek.identifier ~i:1 env
         then begin
+          Expect.token env T_INTERFACE;
           let id = Parse.identifier env in
           let typeParameters = Type.type_parameter_declaration env in
           let extends = if Peek.token env = T_EXTENDS
@@ -1484,7 +1479,6 @@ end = struct
             extends;
           }))
         end else begin
-          Eat.vomit env;
           expression env
         end
 
@@ -1596,21 +1590,27 @@ end = struct
 
       fun ?(in_module=false) env ->
         let start_loc = Peek.loc env in
-        Expect.token env T_DECLARE;
         (* eventually, just emit a wrapper AST node *)
-        (match Peek.token env with
-        | T_CLASS -> declare_class env start_loc
-        | T_FUNCTION -> declare_function env start_loc
-        | T_VAR -> declare_var env start_loc
-        | T_IDENTIFIER when not in_module && Peek.value env = "module" ->
+        (match Peek.token ~i:1 env with
+        | T_CLASS ->
+            Expect.token env T_DECLARE;
+            declare_class env start_loc
+        | T_FUNCTION ->
+            Expect.token env T_DECLARE;
+            declare_function env start_loc
+        | T_VAR ->
+            Expect.token env T_DECLARE;
+            declare_var env start_loc
+        | T_IDENTIFIER when not in_module && Peek.value ~i:1 env = "module" ->
+            Expect.token env T_DECLARE;
             declare_module env start_loc
         | _ when in_module ->
             (* Oh boy, found some bad stuff in a declare module. Let's just
              * pretend it's a declare var (arbitrary choice) *)
+            Expect.token env T_DECLARE;
             declare_var env start_loc
         | _ ->
-          Eat.vomit env;
-          Parse.statement env)
+            Parse.statement env)
 
       let export_declaration =
         let source env =

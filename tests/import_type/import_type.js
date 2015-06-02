@@ -44,7 +44,7 @@ import {givesAFoo4, givesAFoo5} from "./ExportCJSNamed_Class";
 var d1: ClassFoo4 = givesAFoo4();
 var d2: number = givesAFoo4(); // Error: ClassFoo4 ~> number
 new ClassFoo4(); // Error: ClassFoo4 is not a value-identifier
-// TODO: This should be an error once Task(6860853) is completed
+// TODO: this errors correctly, but the message is just 'can't resolve name'
 var d3: typeof ClassFoo5 = givesAFoo5(); // Error: Can't typeof a type alias
 
 ////////////////////////////////////////////

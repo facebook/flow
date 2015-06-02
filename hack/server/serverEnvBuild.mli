@@ -9,7 +9,7 @@
  *)
 
 val make_genv: 
-  multicore:bool -> ServerArgs.options -> ServerConfig.t -> Path.t list
+  ServerArgs.options -> ServerConfig.t -> Path.t list
   -> ServerEnv.genv
 
 val make_env:

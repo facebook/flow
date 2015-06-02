@@ -15,6 +15,19 @@ module Error = Parse_error
 module SSet = Set.Make(String)
 module SMap = Map.Make(String)
 
+(* READ THIS BEFORE YOU MODIFY:
+ *
+ * The current implementation for lookahead beyond a single token is
+ * inefficient. If you believe you need to increase this constant, do one of the
+ * following:
+ * - Find another way
+ * - Benchmark your change and provide convincing evidence that it doesn't
+ *   actually have a significant perf impact.
+ * - Refactor this to memoize all requested lookahead, so we aren't lexing the
+ *   same token multiple times.
+ *)
+let maximum_lookahead = 2
+
 type lex_mode =
   | NORMAL_LEX
   | TYPE_LEX
@@ -33,28 +46,105 @@ let lex lex_env = function
   | JSX_TAG -> lex_jsx_tag lex_env
   | JSX_CHILD -> lex_jsx_child lex_env
 
+module Lookahead : sig
+  type t
+  val create : Lexing.lexbuf -> lex_env -> lex_mode -> t
+  val peek : t -> int -> lex_result
+end = struct
+  type t = {
+    mutable la_results    : lex_result option array;
+    mutable la_num_lexed  : int;
+    la_lex_mode           : lex_mode;
+    mutable la_lex_env    : lex_env;
+  }
+
+  let create lb lex_env mode =
+    (* copy all the mutable things so that we have a distinct lexing environment
+     * that does not interfere with ordinary lexer operations *)
+    (* lex_buffer has type bytes, which is itself mutable, but the lexer
+     * promises not to change it so a shallow copy should be fine *)
+    (* I don't know how to do a copy without an update *)
+    let lb = Lexing.({ lb with lex_buffer = lb.lex_buffer }) in
+    let lex_env = { lex_env with
+      lex_lb = lb;
+      lex_state = ref !(lex_env.lex_state)
+    } in
+    {
+      la_results = [||];
+      la_num_lexed = 0;
+      la_lex_mode = mode;
+      la_lex_env = lex_env;
+    }
+
+  let next_power_of_two n =
+    let rec f i =
+      if i >= n then
+        i
+      else
+        f (i * 2) in
+    f 1
+
+  (* resize the tokens array to have at least n elements *)
+  let grow t n =
+    if Array.length t.la_results < n then begin
+      let new_size = next_power_of_two n in
+      let filler i =
+        if i < Array.length t.la_results then
+          t.la_results.(i)
+        else
+          None in
+      let new_arr = Array.init new_size filler in
+      t.la_results <- new_arr
+    end
+
+  (* precondition: there is enough room in t.la_results for the result *)
+  let lex t =
+    let lex_env, lex_result = lex t.la_lex_env t.la_lex_mode in
+    t.la_lex_env <- lex_env;
+    t.la_results.(t.la_num_lexed) <- Some lex_result;
+    t.la_num_lexed <- t.la_num_lexed + 1
+
+  let lex_until t i =
+    grow t (i + 1);
+    while t.la_num_lexed <= i do
+      lex t
+    done
+
+  let peek t i =
+    lex_until t i;
+    match t.la_results.(i) with
+      | Some result -> result
+      (* only happens if there is a defect in the lookahead module *)
+      | None -> failwith "Lookahead.peek failed"
+end
+
 type env = {
-  errors          : (Loc.t * Error.t) list ref;
-  comments        : Comment.t list ref;
-  labels          : SSet.t;
-  lb              : Lexing.lexbuf;
-  lookahead       : lex_result ref;
-  last            : (lex_env * lex_result) option ref;
-  priority        : int;
-  strict          : bool;
-  in_export       : bool;
-  in_loop         : bool;
-  in_switch       : bool;
-  in_function     : bool;
-  no_in           : bool;
-  no_call         : bool;
-  no_let          : bool;
-  allow_yield     : bool;
-  (* Use this to indicate that the "()" as in "() => 123" is not allowed in
-   * this expression *)
-  error_callback  : (env -> Error.t -> unit) option;
-  lex_mode_stack  : lex_mode list ref;
-  lex_env         : lex_env ref;
+  errors            : (Loc.t * Error.t) list ref;
+  comments          : Comment.t list ref;
+  labels            : SSet.t;
+  (* the lex buffer in the state after a single lookahead *)
+  lb                : Lexing.lexbuf;
+  single_lookahead  : lex_result ref;
+  last              : (lex_env * lex_result) option ref;
+  priority          : int;
+  strict            : bool;
+  in_export         : bool;
+  in_loop           : bool;
+  in_switch         : bool;
+  in_function       : bool;
+  no_in             : bool;
+  no_call           : bool;
+  no_let            : bool;
+  allow_yield       : bool;
+  error_callback    : (env -> Error.t -> unit) option;
+  lex_mode_stack    : lex_mode list ref;
+  (* lex_env is the lex_env after the single lookahead has been lexed *)
+  lex_env           : lex_env ref;
+  (* infinite lookahead -- serves tokens two through infinity. For the first
+   * token of lookahead, use single_lookahead it's convoluted because too many
+   * places assume that the state here is consistent with having lexed exactly
+   * one token of lookahead. This needs to be cleared whenever we advance. *)
+  lookahead         : Lookahead.t option ref;
 }
 
 (* constructor *)
@@ -62,30 +152,30 @@ let init_env lb =
   let lex_env = new_lex_env lb in
   let lex_env, lookahead = lex lex_env NORMAL_LEX in
   {
-    errors          = ref [];
-    comments        = ref [];
-    labels          = SSet.empty;
-    lb              = lb;
-    lookahead       = ref lookahead;
-    last            = ref None;
-    priority        = 0;
-    strict          = false;
-    in_export       = false;
-    in_loop         = false;
-    in_switch       = false;
-    in_function     = false;
-    no_in           = false;
-    no_call         = false;
-    no_let          = false;
-    allow_yield     = true;
-    error_callback  = None;
-    lex_mode_stack  = ref [NORMAL_LEX];
-    lex_env         = ref lex_env;
+    errors            = ref [];
+    comments          = ref [];
+    labels            = SSet.empty;
+    lb                = lb;
+    single_lookahead  = ref lookahead;
+    last              = ref None;
+    priority          = 0;
+    strict            = false;
+    in_export         = false;
+    in_loop           = false;
+    in_switch         = false;
+    in_function       = false;
+    no_in             = false;
+    no_call           = false;
+    no_let            = false;
+    allow_yield       = true;
+    error_callback    = None;
+    lex_mode_stack    = ref [NORMAL_LEX];
+    lex_env           = ref lex_env;
+    lookahead         = ref None;
   }
 
 (* getters: *)
 let strict env = env.strict
-let lookahead env = !(env.lookahead)
 let lb env = env.lb
 let lex_mode env = List.hd !(env.lex_mode_stack)
 let lex_env env = !(env.lex_env)
@@ -110,11 +200,27 @@ let error_at env (loc, e) =
   | Some callback -> callback env e
 let comment_list env =
   List.iter (fun c -> env.comments := c :: !(env.comments))
-let set_lookahead env l = env.lookahead := l
+let set_lex_env env lex_env = env.lex_env := lex_env
+
+(* lookahead: *)
+let lookahead ?(i=0) env =
+  assert (i < maximum_lookahead);
+  if i == 0 then
+    !(env.single_lookahead)
+  else
+    let lookahead = match !(env.lookahead) with
+      | Some l -> l
+      | None -> begin
+          let l = Lookahead.create (lb env) (lex_env env) (lex_mode env) in
+          env.lookahead := Some l;
+          l
+        end in
+    Lookahead.peek lookahead (i - 1)
+
+let set_lookahead env l = env.single_lookahead := l
 let clear_lookahead_errors env =
   let lookahead = { (lookahead env) with lex_errors = [] } in
   set_lookahead env lookahead
-let set_lex_env env lex_env = env.lex_env := lex_env
 
 (* functional operations: *)
 let with_strict strict env = { env with strict }
@@ -154,7 +260,8 @@ let advance env (lex_env, lex_result) lex_mode =
   error_list env lex_result.lex_errors;
   comment_list env lex_result.lex_comments;
   env.last := Some (lex_env, lex_result);
-  env.lookahead := next_lex_result
+  env.single_lookahead := next_lex_result;
+  env.lookahead := None
 
 let vomit env =
   Lexing.(match last env with
@@ -167,27 +274,30 @@ let vomit env =
         pos_cnum = 0;
       } in
       env.lb.lex_curr_p <- none_curr_p;
-      env.lookahead := {
+      env.single_lookahead := {
         lex_token = T_ERROR;
         lex_loc = Loc.none;
         lex_value = "";
         lex_errors = [];
         lex_comments = [];
         lex_lb_curr_p = none_curr_p;
-      }
+      };
+      env.lookahead := None
   | Some (lex_env, result) ->
       env.lex_env := lex_env;
       let bytes = env.lb.lex_curr_p.pos_cnum - result.lex_lb_curr_p.pos_cnum in
       env.lb.lex_curr_pos <- env.lb.lex_curr_pos - bytes;
       env.lb.lex_curr_p <- result.lex_lb_curr_p;
-      env.lookahead := result
+      env.single_lookahead := result;
+      env.lookahead := None
   )
 
 (* Switching modes requires rolling back one token so that we can re-lex the
  * lookahead token *)
 let re_lex_lookahead env =
   vomit env;
-  set_lookahead env (lex env (lex_mode env))
+  set_lookahead env (lex env (lex_mode env));
+  env.lookahead := None
 
 let push_lex_mode env mode =
   env.lex_mode_stack := mode :: !(env.lex_mode_stack);
@@ -241,7 +351,7 @@ module Try = struct
     saved_comments       = !(env.comments);
     saved_lb             =
       Lexing.({env.lb with lex_abs_pos=env.lb.lex_abs_pos});
-    saved_lookahead      = !(env.lookahead);
+    saved_lookahead      = !(env.single_lookahead);
     saved_last           = !(env.last);
     saved_lex_mode_stack = !(env.lex_mode_stack);
     saved_lex_env        = !(env.lex_env);
@@ -250,10 +360,11 @@ module Try = struct
   let rollback_state env saved_state =
     env.errors := saved_state.saved_errors;
     env.comments := saved_state.saved_comments;
-    env.lookahead := saved_state.saved_lookahead;
+    env.single_lookahead := saved_state.saved_lookahead;
     env.last := saved_state.saved_last;
     env.lex_mode_stack := saved_state.saved_lex_mode_stack;
     env.lex_env := saved_state.saved_lex_env;
+    env.lookahead := None;
 
     Lexing.(begin
       env.lb.lex_buffer <- saved_state.saved_lb.lex_buffer;
