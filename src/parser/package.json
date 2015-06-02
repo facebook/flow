@@ -26,7 +26,7 @@
       "node": ">=0.4.0"
   },
   "scripts": {
-    "test": "node test/run_esprima_tests.js; node test/run_hardcoded_tests.js",
+    "test": "bash test/run_all.sh",
     "prepublish": "make js"
   }
 }
