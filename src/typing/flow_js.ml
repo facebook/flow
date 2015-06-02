@@ -265,11 +265,9 @@ let ordered_reasons l u =
   then ru, rl
   else rl, ru
 
-let prmsg_flow cx level trace msg (r1, r2) =
-  let reasons_trace = if modes.traces = 0 then [] else
-    reasons_of_trace ~level:modes.traces trace
-    |> List.map (fun r -> r, desc_of_reason r)
-  in
+(* format an error or warning and add it to flow's output.
+   here preformatted trace output is passed directly as an argument *)
+let prmsg_flow_trace_reasons cx level trace_reasons msg (r1, r2) =
   let info = match Ops.peek () with
   | Some r when r != r1 && r != r2 ->
     (* NOTE: We include the operation's reason in the error message only if it
@@ -296,12 +294,43 @@ let prmsg_flow cx level trace msg (r1, r2) =
     else [
       r1, spf "%s\n%s" (desc_of_reason r1) msg;
       r2, (desc_of_reason r2) ^
-        (if reasons_trace = [] then ""
+        (if trace_reasons = [] then ""
        else "\nError path:");
     ]
   in
-  add_output cx level (info @ message_list @ reasons_trace)
+  add_output cx level (info @ message_list @ trace_reasons)
 
+(* format an error or warning and add it to flow's output.
+   here we gate trace output on global settings *)
+let prmsg_flow cx level trace msg (r1, r2) =
+  let trace_reasons = if modes.traces = 0 then [] else
+    reasons_of_trace ~level:modes.traces trace
+    |> List.map (fun r -> r, desc_of_reason r)
+  in
+  prmsg_flow_trace_reasons cx level trace_reasons msg (r1, r2)
+
+(* format an error and add it to flow's output.
+   here we print the full trace, ignoring global settings.
+   Notes
+   1. since traces can be gigantic, we set the per-level
+   indentation to 0 when printing them here.
+   2. as an optimization, we never accumulate traces beyond
+   a single level if the global setting disables them.
+   Being downstream of that throttle, we are subject to that
+   restriction here.
+*)
+let prerr_flow_full_trace cx trace msg l u =
+  let trace_reasons =
+    reasons_of_trace ~level:(trace_depth trace + 1) ~tab:0 trace
+    |> List.map (fun r -> r, desc_of_reason r)
+  in
+  prmsg_flow_trace_reasons cx
+    Errors_js.ERROR
+    trace_reasons
+    msg
+    (ordered_reasons l u)
+
+(* format an error and add it to flow's output *)
 let prerr_flow cx trace msg l u =
   prmsg_flow cx
     Errors_js.ERROR
@@ -309,6 +338,7 @@ let prerr_flow cx trace msg l u =
     msg
     (ordered_reasons l u)
 
+(* format a warning and add it to flow's output *)
 let prwarn_flow cx trace msg l u =
   prmsg_flow cx
     Errors_js.WARNING
@@ -1282,11 +1312,33 @@ let expect_def t =
   if is_use t
   then assert_false (spf "Expected def type, but got: %s" (string_of_ctor t))
 
+(* Recursion limiter. We proxy recursion depth with trace depth,
+   which is either equal or pretty close.
+   When check is called with a trace whose depth exceeds a constant
+   limit, we throw a LimitExceeded exception.
+ *)
+module RecursionCheck : sig
+  exception LimitExceeded of trace
+  val check: trace -> unit
+
+end = struct
+  exception LimitExceeded of trace
+  let limit = 100
+
+  (* check trace depth as a proxy for recursion depth
+     and throw when limit is exceeded *)
+  let check trace =
+    if trace_depth trace >= limit
+    then raise (LimitExceeded trace)
+end
+
 (** NOTE: Do not call this function directly. Instead, call the wrapper
     functions `rec_flow`, `join_flow`, or `flow_opt` (described below) inside
     this module, and the function `flow` outside this module. **)
-let rec __flow cx (l,u) trace =
+let rec __flow cx (l, u) trace =
   if not (Cache.F.mem (l,u)) then (
+    (* limit recursion depth *)
+    RecursionCheck.check trace;
 
     (* Expect that l is a def type. On the other hand, u may be a use type or a
        def type: the latter typically when we have annotations. *)
@@ -1294,7 +1346,8 @@ let rec __flow cx (l,u) trace =
 
     (if modes.verbose
      then prerr_endlinef
-        "\n# %s ~>\n# %s"
+        "\n# (%d) %s ~>\n# %s"
+        (Unix.getpid ())
         (dump_reason (reason_of_t l))
         (dump_reason (reason_of_t u)));
 
@@ -1306,7 +1359,6 @@ let rec __flow cx (l,u) trace =
     (******************)
 
     | (OpenT(reason1,tvar1),OpenT(reason2,tvar2)) ->
-
       let id1, constraints1 = find_constraints cx tvar1 in
       let id2, constraints2 = find_constraints cx tvar2 in
 
@@ -2705,6 +2757,7 @@ let rec __flow cx (l,u) trace =
       prerr_flow cx trace (err_msg l u) l u
     );
   )
+
 
 (**
  * relational comparisons like <, >, <=, >=
@@ -4231,13 +4284,24 @@ and rec_flow cx trace (t1, t2) =
    which are themselves called both from outside and inside (with or without
    traces), so they call this function instead. *)
 and flow_opt cx ?trace (t1, t2) =
-  match trace with
-  | None -> __flow cx (t1, t2) (unit_trace t1 t2)
-  | Some trace -> rec_flow cx trace (t1, t2)
+  let trace = match trace with
+    | None -> unit_trace t1 t2
+    | Some trace -> rec_trace t1 t2 trace in
+  __flow cx (t1, t2) trace
 
 (* Externally visible function for subtyping. *)
-let flow cx (t1, t2) =
-  flow_opt cx (t1, t2)
+(* Calls internal entry point and traps runaway recursion. *)
+and flow cx (lower, upper) =
+  try
+    flow_opt cx (lower, upper)
+  with
+  | RecursionCheck.LimitExceeded trace ->
+    (* log and continue *)
+    let msg = "*** Recursion limit exceeded ***" in
+    prerr_flow_full_trace cx trace msg lower upper
+  | ex ->
+    (* rethrow *)
+    raise ex
 
 (* Externally visible function for unification. *)
 let unify cx t1 t2 =
