@@ -1408,6 +1408,12 @@ let rec __flow cx (l, u) trace =
           rec_flow cx trace (t1, t2)
       );
 
+    (****************************************************************)
+    (* BecomeT unifies a tvar with an incoming concrete lower bound *)
+    (****************************************************************)
+    | _, BecomeT (_, t) ->
+      rec_unify cx trace l t
+
     (**********************************************************************)
     (* Unpack CommonJS exports early to guarantee that bounds are checked *)
     (* on the exports data rather than on the CJSExportDefaultT wrapper.  *)
@@ -1941,13 +1947,6 @@ let rec __flow cx (l, u) trace =
     | (FunT(_,static1,prototype,_), ClassT(InstanceT(_,static2,_, _) as u_)) ->
       rec_unify cx trace static1 static2;
       rec_unify cx trace prototype u_
-
-    (****************************************************************)
-    (* BecomeT unifies a tvar with an incoming concrete lower bound *)
-    (****************************************************************)
-
-    | _, BecomeT (_, t) ->
-      rec_unify cx trace l t
 
     (*********************************************************)
     (* class types derive instance types (with constructors) *)
