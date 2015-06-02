@@ -938,14 +938,14 @@ end = struct
 
     let var = declarations T_VAR Statement.VariableDeclaration.Var
 
-    let const env =
+    let const ?(check_init=true) env =
       let env = env |> with_no_let true in
       let ret =
         declarations T_CONST Statement.VariableDeclaration.Const env in
       (* Make sure all consts defined are initialized *)
       Statement.VariableDeclaration.(
         List.iter (function
-          | loc, { Declarator.init = None; _ } ->
+          | loc, { Declarator.init = None; _ } when check_init ->
               error_at env (loc, Error.NoUnintializedConst)
           | _ -> ()
         ) (snd ret).declarations
@@ -1096,6 +1096,9 @@ end = struct
             Some (Statement.For.InitDeclaration decl)
         | T_VAR ->
             let decl = Declaration.var (env |> with_no_in true) in
+            Some (Statement.For.InitDeclaration decl)
+        | T_CONST ->
+            let decl = Declaration.const ~check_init:false (env |> with_no_in true) in
             Some (Statement.For.InitDeclaration decl)
         | _ ->
             let expr = Parse.expression (env |> with_no_in true |> with_no_let true) in
