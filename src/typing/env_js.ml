@@ -27,11 +27,11 @@ let refinement_key names =
   "$REFI " ^ (String.concat "." names)
 
 let is_refinement name =
-  (String.length name) >= 5 && (String.sub name 0 5) = "$REFI"
-
-let refined_object_from_key name =
-  let i = String.index name '.' in
-  String.sub name 6 (i - 6)
+  if (String.length name) >= 5 && (String.sub name 0 5) = "$REFI" then
+    let i = String.index name '.' in
+    Some (String.sub name 6 (i - 6))
+  else
+    None
 
 (****************)
 (* Environments *)
@@ -399,7 +399,7 @@ let havoc_heap_refinements () =
   List.iter (fun scope ->
     let entries = scope.entries in
     entries := SMap.mapi (fun x ({specific=_;general;def_loc;for_type;constant;scope_kind} as entry) ->
-      if is_refinement x
+      if Option.is_some (is_refinement x)
       then create_env_entry ~for_type ~constant general general def_loc scope_kind
       else entry
     ) !entries
@@ -446,8 +446,7 @@ let string_of_env cx ctx =
 (* The following functions are used to narrow the type of variables
    based on dynamic checks. *)
 
-let install_refinement cx x xtypes =
-  let obj = refined_object_from_key x in
+let install_refinement cx x xtypes obj =
   let t = SMap.find_unsafe x xtypes in
   let entry = create_env_entry t t None LexicalScope in
   let rec loop = function
@@ -462,7 +461,9 @@ let install_refinement cx x xtypes =
 
 let refine_with_pred cx reason pred xtypes =
   SMap.iter (fun x predx ->
-    if is_refinement x then install_refinement cx x xtypes;
+    (match is_refinement x with
+    | Some obj -> install_refinement cx x xtypes obj
+    | None -> ());
     let reason' = replace_reason (spf "identifier %s" x) reason in
     let tx = get_var cx x reason' in
     let rstr = spf "identifier %s when %s" x (string_of_predicate predx) in
