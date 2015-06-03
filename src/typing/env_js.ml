@@ -36,11 +36,10 @@ let refinement_key names =
   "$REFI " ^ (String.concat "." names)
 
 let heap_refinement name =
-  if (String.length name) >= 5 && (String.sub name 0 5) = "$REFI" then
-    let i = String.index name '.' in
-    Some (String.sub name 6 (i - 6))
-  else
-    None
+  let r = Str.regexp "^\\$REFI \\([^.]*\\)\\." in
+  if Str.string_match r name 0
+  then Some (Str.matched_group 1 name)
+  else None
 
 (****************)
 (* Environments *)
