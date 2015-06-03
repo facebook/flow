@@ -102,6 +102,13 @@ let apply_shape ~f env (r1, fdm1) (r2, fdm2) =
 (*****************************************************************************)
 (* Try to unify all the types in a intersection *)
 (*****************************************************************************)
+let flatten_unresolved env ty acc =
+  let env, ety = Env.expand_type env ty in
+  let res = match ety with
+    (* flatten Tunresolved[Tunresolved[...]] *)
+    | (_, Tunresolved tyl) -> tyl @ acc
+    | _ -> ty :: acc in
+  env, res
 
 let rec member_inter env ty tyl acc =
   match tyl with
@@ -110,7 +117,8 @@ let rec member_inter env ty tyl acc =
       Errors.try_
         begin fun () ->
           let env, ty = unify env x ty in
-          env, List.rev_append acc (ty :: rl)
+          let env, res = flatten_unresolved env ty rl in
+          env, List.rev_append acc res
         end
         begin fun _ ->
           member_inter env ty rl (x :: acc)

@@ -52,10 +52,7 @@ let rec overload_extract_from_awaitable env p opt_ty_maybe =
       (* We have the invariant we'll never have Tunresolved[Tunresolved], but
        * the recursive call above can remove a layer of Awaitable, so we need
        * to flatten any Tunresolved that may have been inside. *)
-       let env, rtyl = match Env.expand_type env rty with
-         | env, (_, Tunresolved tyl) -> env, tyl@rtyl
-         | env, _ -> env, rty::rtyl in
-      env, rtyl
+      TUtils.flatten_unresolved env rty rtyl
     end tyl (env, []) in
     env, (r, Tunresolved rtyl)
   | _, (Tany | Tmixed | Tarray (_, _) | Tprim _ | Tgeneric (_, _) | Toption _
