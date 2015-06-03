@@ -108,13 +108,13 @@ let json_flags prev = CommandSpec.ArgSpec.(
 )
 
 type command_params = {
-  from : string ref;
-  show_all_errors : bool ref;
-  retries : int ref;
-  retry_if_init : bool ref;
-  timeout : int ref;
-  no_auto_start : bool ref;
-  color : Modes_js.color_mode ref;
+  from : string;
+  show_all_errors : bool;
+  retries : int;
+  retry_if_init : bool;
+  timeout : int;
+  no_auto_start : bool;
+  color : Modes_js.color_mode;
 }
 
 let collect_server_flags
@@ -133,13 +133,13 @@ let collect_server_flags
   in
   Modes_js.(modes.color <- color);
   main {
-    from = ref (default "" from);
-    show_all_errors = ref show_all_errors;
-    retries = ref (default 3 retries);
-    retry_if_init = ref (default true retry_if_init);
-    timeout = ref (default 0 timeout);
-    no_auto_start = ref no_auto_start;
-    color = ref color;
+    from = (default "" from);
+    show_all_errors = show_all_errors;
+    retries = (default 3 retries);
+    retry_if_init = (default true retry_if_init);
+    timeout = (default 0 timeout);
+    no_auto_start = no_auto_start;
+    color = color;
   }
 
 let start_flow_server root =
@@ -260,9 +260,9 @@ and retry autostart retries retry_if_init root delay message =
 
 let connect_with_autostart command_values =
   connect_helper
-    (not !(command_values.no_auto_start))
-    !(command_values.retries)
-    !(command_values.retry_if_init)
+    (not command_values.no_auto_start)
+    command_values.retries
+    command_values.retry_if_init
 
 let rec search_for_root config start recursion_limit : Path.t option =
   let fs_root = Path.make "/" in

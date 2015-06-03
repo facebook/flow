@@ -113,7 +113,7 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
       if args.output_json || args.from <> ""
       then Errors_js.print_errorl args.output_json e stdout
       else (
-        let show_all = !(option_values.CommandUtils.show_all_errors) in
+        let show_all = option_values.CommandUtils.show_all_errors in
         Errors_js.print_error_summary (not show_all) e
       );
       exit 2
@@ -185,15 +185,15 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
     );
 
     let root = CommandUtils.guess_root root in
-    let timeout_arg = !(option_values.CommandUtils.timeout) in
+    let timeout_arg = option_values.CommandUtils.timeout in
     if timeout_arg > 0 then CommandUtils.set_timeout timeout_arg;
     let env = {
       ClientEnv.mode = ClientEnv.MODE_STATUS;
       ClientEnv.root = root;
-      ClientEnv.from = !(option_values.CommandUtils.from);
+      ClientEnv.from = option_values.CommandUtils.from;
       ClientEnv.output_json = json;
-      ClientEnv.retry_if_init = !(option_values.CommandUtils.retry_if_init);
-      ClientEnv.retries = !(option_values.CommandUtils.retries);
+      ClientEnv.retry_if_init = option_values.CommandUtils.retry_if_init;
+      ClientEnv.retries = option_values.CommandUtils.retries;
       ClientEnv.timeout = !CommandUtils.global_kill_time;
       ClientEnv.autostart = true;
       ClientEnv.no_load = true;

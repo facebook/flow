@@ -48,10 +48,10 @@ let main option_values use_json file () =
   let response = ServerProt.response_from_channel ic in
   match response with
   | ServerProt.ERRORS e ->
-      if use_json || !(option_values.from) <> ""
+      if use_json || option_values.from <> ""
       then Errors_js.print_errorl use_json e stdout
       else (
-        let show_all = !(option_values.show_all_errors) in
+        let show_all = option_values.show_all_errors in
         Errors_js.print_error_summary (not show_all) e;
         exit 2
       )
