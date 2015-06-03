@@ -86,8 +86,6 @@ let sleep seconds =
 
 let server_flags prev = CommandSpec.ArgSpec.(
   prev
-  |> flag "--version" no_arg
-      ~doc:"Print version number and exit"
   |> flag "--timeout" (optional int)
       ~doc:"Maximum time to wait, in seconds"
   |> flag "--from" (optional string)
@@ -110,7 +108,6 @@ let json_flags prev = CommandSpec.ArgSpec.(
 )
 
 type command_params = {
-  version : bool ref;
   from : string ref;
   show_all_errors : bool ref;
   retries : int ref;
@@ -122,7 +119,7 @@ type command_params = {
 
 let collect_server_flags
     main
-    version timeout from show_all_errors
+    timeout from show_all_errors
     retries retry_if_init no_auto_start color =
   let default def = function
   | Some x -> x
@@ -136,7 +133,6 @@ let collect_server_flags
   in
   Modes_js.(modes.color <- color);
   main {
-    version = ref version;
     from = ref (default "" from);
     show_all_errors = ref show_all_errors;
     retries = ref (default 3 retries);

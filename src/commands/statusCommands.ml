@@ -41,6 +41,7 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
         empty
         |> CommandUtils.server_flags
         |> CommandUtils.json_flags
+        |> dummy false (* match --version below *)
         |> anon "root" (optional string) ~doc:"Root directory"
       )
     }
@@ -78,6 +79,8 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
         empty
         |> CommandUtils.server_flags
         |> CommandUtils.json_flags
+        |> flag "--version" no_arg
+            ~doc:"Print version number and exit"
         |> anon "root" (optional string) ~doc:"Root directory"
       )
     }
@@ -175,8 +178,8 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
       exit 2
     end
 
-  let main option_values json root () =
-    if !(option_values.CommandUtils.version) then (
+  let main option_values json version root () =
+    if version then (
       CommandUtils.print_version ();
       exit 0
     );
