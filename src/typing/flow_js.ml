@@ -3170,7 +3170,9 @@ and speculative_flow_error cx trace l u =
     try rec_flow cx trace (l, u); false
     with
     | FlowError msgs -> true
-    | exn -> raise exn
+    | exn ->
+        throw_on_error := false;
+        raise exn
   in
   throw_on_error := false;
   (* restore ops stack *)
