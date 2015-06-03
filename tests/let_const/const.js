@@ -10,7 +10,7 @@ function singleDeclaration() {
 
 function forInLoop(): number {
   const prop = 1;
-  let obj = { foo: true }; // TODO: this can't be const
+  const obj = { foo: true };
 
   for (const prop in obj) {
     const val: boolean = obj[prop];
@@ -25,4 +25,13 @@ function forOfLoop(): number {
   for (const x of "abc") {}
 
   return x;
+}
+
+// Ensure refinements aren't redefinition errors
+function refi(): number {
+  const x: ?number = 1;
+  if (x) {
+    return x;
+  }
+  return 1;
 }

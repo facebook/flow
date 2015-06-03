@@ -295,7 +295,13 @@ and type_of_pattern = Ast.Pattern.(function
 let destructuring_assignment cx t =
   destructuring cx t (fun cx loc name t ->
     let reason = mk_reason (spf "assignment of identifier %s" name) loc in
-    Env_js.set_var cx name t reason
+    match Env_js.get_entry cx name reason with
+    | { constant = true } ->
+        Flow_js.add_error cx [
+          reason, (spf "TypeError: `%s` has already been defined" name)
+        ]
+    | _ ->
+        Env_js.set_var cx name t reason
   )
 
 (* instantiate pattern visitor for parameters *)
@@ -967,28 +973,46 @@ and statement_decl cx = Ast.Statement.(
       statement_decl cx body
 
   | (loc, For { For.init; test; update; body }) ->
+      let entries = ref SMap.empty in
+      let scope = { kind = LexicalScope; entries } in
+      Env_js.push_env cx scope;
+
       (match init with
         | Some (For.InitDeclaration (loc, decl)) ->
             variable_decl cx loc decl
         | _ -> ()
       );
-      statement_decl cx body
+      statement_decl cx body;
+
+      Env_js.pop_env()
 
   | (loc, ForIn { ForIn.left; right; body; each }) ->
+      let entries = ref SMap.empty in
+      let scope = { kind = LexicalScope; entries } in
+      Env_js.push_env cx scope;
+
       (match left with
         | ForIn.LeftDeclaration (loc, decl) ->
             variable_decl cx loc decl
         | _ -> ()
       );
-      statement_decl cx body
+      statement_decl cx body;
+
+      Env_js.pop_env()
 
   | (loc, ForOf { ForOf.left; right; body; }) ->
+      let entries = ref SMap.empty in
+      let scope = { kind = LexicalScope; entries } in
+      Env_js.push_env cx scope;
+
       (match left with
         | ForOf.LeftDeclaration (loc, decl) ->
             variable_decl cx loc decl
         | _ -> ()
       );
-      statement_decl cx body
+      statement_decl cx body;
+
+      Env_js.pop_env()
 
   | (loc, Let _) ->
       (* TODO *)

@@ -20,8 +20,10 @@ ReferenceError: can't access lexical declaration before initialization
 const.js:3:3,5: assignment of identifier foo
 TypeError: `foo` has already been defined
 
-const.js:8:9,11: var foo
-TypeError: `foo` has already been defined
+const.js:8:9,11: value binding foo
+This binding conflicts with
+const.js:7:9,11: value binding foo
+which is already declared
 
 const_undeclared.js:8:9,11: Const must be initialized
 

@@ -157,13 +157,6 @@ let update_scope ?(for_type=false) cx x (specific_t, general_t) reason scope =
   let entries = scope.entries in
   (match SMap.get x !entries with
   | Some {def_loc; for_type; constant; scope_kind; _;} ->
-      (match def_loc with
-      | Some loc ->
-        if constant && Pervasives.compare (pos_of_reason reason) (pos_of_loc loc) > 0
-        then Flow_js.add_error cx [
-          reason, (spf "TypeError: `%s` has already been defined" x)
-        ]
-      | _ -> ());
       let new_entry = create_env_entry ~for_type ~constant specific_t general_t def_loc scope_kind in
       entries := !entries |> SMap.add x new_entry
   | None ->
@@ -173,9 +166,6 @@ let update_scope ?(for_type=false) cx x (specific_t, general_t) reason scope =
 let unset_in_scope x scope =
   let entries = scope.entries in
   entries := !entries |> SMap.remove x
-
-let read_env ?(for_type=false) cx x reason =
-  find_env ~for_type cx x reason |> get_from_scope x
 
 let write_env ?(for_type=false) cx x shape reason =
   find_env ~for_type cx x reason |> update_scope ~for_type cx x shape reason
@@ -226,8 +216,8 @@ let init_env cx x shape =
       set_in_env x shape;
       Flow_js.unify cx shape.general general
   | (scope, Some { general; for_type; constant; def_loc; scope_kind }) ->
-      if (scope.kind = LexicalScope &&
-         (scope_kind = LexicalScope || shape.scope_kind = LexicalScope)) then
+      if ((scope.kind = LexicalScope || constant) &&
+          (scope_kind = LexicalScope || shape.scope_kind = LexicalScope)) then
         let shadowed_reason =
           mk_reason
             (spf "%s binding %s" (if for_type then "type" else "value") x)
@@ -255,11 +245,14 @@ let let_env x shape f =
 (* Recall that for every variable we maintain two types, one flow-sensitive and
    the other flow-insensitive. *)
 
+let get_entry ?(for_type=false) cx x reason =
+  find_env ~for_type cx x reason |> get_from_scope x
+
 let get_var ?(for_type=false) cx x reason =
-  (read_env ~for_type cx x reason).specific
+  (get_entry ~for_type cx x reason).specific
 
 let get_var_in_scope ?(for_type=false) cx x reason =
-  (read_env ~for_type cx x reason).general
+  (get_entry ~for_type cx x reason).general
 
 let var_ref ?(for_type=false) cx x reason =
   (match exists_in_env x VarScope with
@@ -269,7 +262,7 @@ let var_ref ?(for_type=false) cx x reason =
         reason, "ReferenceError: can't access lexical declaration before initialization"
       ]
   | _ -> ());
-  let t = (read_env ~for_type cx x reason).specific in
+  let t = (get_entry ~for_type cx x reason).specific in
   let p = pos_of_reason reason in
   mod_reason_of_t (repos_reason p) t
 
@@ -284,7 +277,7 @@ let get_refinement cx key r =
 
 let set_var ?(for_type=false) cx x specific_t reason =
   changeset := !changeset |> SSet.add x;
-  let general = (read_env ~for_type cx x reason).general in
+  let general = (get_entry ~for_type cx x reason).general in
   Flow_js.flow cx (specific_t, general);
   write_env ~for_type cx x (specific_t, general) reason
 
