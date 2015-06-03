@@ -238,6 +238,9 @@ val copy_node: node -> node
 
 (***************************************)
 
+(* Currently, many constructs are considered to be VarBindings, including type
+   aliases, functions, and imports. Let-declared variables and classes are
+   considered LetBindings. *)
 type binding_type =
   | VarBinding
   | LetBinding
@@ -251,9 +254,13 @@ type scope_entry = {
   binding_type: binding_type;
 }
 
+(* VarBindings are hoisted to the nearest enclosing VarScope, whereas
+   LetBindings and ConstBindings will be installed in whichever scope they are
+   defined. LexicalScopes are created around constructs where only LetBindings
+   can be installed, like blocks *)
 type scope_kind =
-  | VarScope (* var, functions hoisted up to this point *)
-  | LexicalScope (* let, const, classes *)
+  | VarScope
+  | LexicalScope
 
 type scope = {
   kind: scope_kind;
