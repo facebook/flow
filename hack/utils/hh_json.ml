@@ -10,7 +10,7 @@
 
 
 (**
- * Quick and dirty Json pretty printing library.
+ * Json pretty printing library.
  *
  *)
 
@@ -23,20 +23,69 @@ type json =
   | JInt of int
   | JFloat of float
 
-let rec json_to_string (json:json): string =
+(* buf_concat :
+   Designed as a substitute for String.concat that passes a buffer
+   into which intermediate strings are added, and also includes left
+   and right bracket (lb and rb) in addition to sep. They are strings,
+   despite common case of (), [],{}, or even <>, to handle missing brackets,
+   brackets with spacing and multichar brackets like OCaml's arrays ([| and |]).
+   The A conc_elt function parameter performs the operation of transforming
+   the list element to a string and adding it to the buffer, the simplest
+   example would be fun x -> Buffer.add_string (to_string x)
+ *)
+
+let buf_concat ~buf ~lb ~rb ~sep ~concat_elt l =
+  Buffer.add_string buf lb;
+  (match l with
+   | [] -> ()
+   | elt::elts ->
+      concat_elt buf elt;
+      List.iter
+        (fun e -> Buffer.add_string buf sep; concat_elt buf e)
+        elts);
+  Buffer.add_string buf rb
+
+(* quote_string s:
+   A replacement for fun s -> Printf.sprintf "%S" s
+*)
+let quote_string s =
+  let len = String.length s in
+  let r = String.create (len + 2) in
+  String.set r 0 '\"';
+  String.set r (len+1) '\"';
+  String.unsafe_blit s 0 r 1 len;
+  r
+
+let add_char buf c = Buffer.add_char buf c
+let add_string buf s = Buffer.add_string buf s
+
+let rec add_json_to_buffer (buf:Buffer.t) (json:json): unit =
   match json with
-    JList l ->
-      let nl = List.map json_to_string l in
-      "[" ^ (String.concat "," nl) ^ "]"
-  | JAssoc l ->
-      let nl = List.map (fun (k, v) -> (json_to_string (JString k)) ^ ":" ^
-        (json_to_string v)) l in
-      "{" ^ (String.concat "," nl) ^ "}"
-  | JBool b -> if b then "true" else "false"
-  | JString s -> Printf.sprintf "%S" s
-  | JNull -> "null"
-  | JInt i -> Printf.sprintf "%d" i
-  | JFloat f -> Printf.sprintf "%f" f
+  | JList l -> buf_concat
+                 ~buf
+                 ~lb:"[" ~rb:"]" ~sep:","
+                 ~concat_elt:add_json_to_buffer
+       l
+  | JAssoc l -> buf_concat
+                  ~buf
+                  ~lb:"{" ~rb:"}" ~sep:","
+                  ~concat_elt:add_assoc_to_buffer
+                  l
+  | JBool b -> if b then add_string buf "true" else add_string buf "false"
+  | JString s -> add_string buf (quote_string s)
+  | JNull -> add_string buf "null"
+  | JInt i -> add_string buf (string_of_int i)
+  | JFloat f -> add_string buf (string_of_float f)
+
+and add_assoc_to_buffer (buf:Buffer.t) (k,v) =
+  add_string buf (quote_string k);
+  add_char buf ':';
+  add_json_to_buffer buf v
+
+let json_to_string (json:json): string =
+  let buf = Buffer.create 1024 in (* need a better estimate! *)
+  add_json_to_buffer buf json;
+  Buffer.contents buf
 
 let json_to_multiline json =
   let rec loop indent json =
