@@ -23,6 +23,18 @@ SyntaxError: Assignment to constant variable `foo`
 const.js:8:9,11: 
 SyntaxError: Variable `foo` has already been declared
 
+const.js:41:3,5: update of identifier x
+SyntaxError: Update to constant variable `x`
+
+const.js:42:3,3: assignment of identifier x
+SyntaxError: Assignment to constant variable `x`
+
+const.js:43:3,3: assignment of identifier x
+SyntaxError: Assignment to constant variable `x`
+
+const.js:44:10,12: update of identifier x
+SyntaxError: Update to constant variable `x`
+
 const_undeclared.js:8:9,11: Const must be initialized
 
 let.js:34:9,11: 
@@ -31,4 +43,4 @@ SyntaxError: Variable `bar` has already been declared
 let.js:45:11,13: 
 SyntaxError: Variable `foo` has already been declared
 
-Found 11 errors
+Found 15 errors

@@ -3305,6 +3305,16 @@ and unary cx loc = Ast.Expression.Unary.(function
 and update cx loc = Ast.Expression.Update.(function
   | { operator; argument; _ } ->
       let t = NumT.at loc in
+      (match argument with
+      | _, Ast.Expression.Identifier (_, { Ast.Identifier.name }) ->
+          let reason = mk_reason (spf "update of identifier %s" name) loc in
+          (match Env_js.get_entry cx name reason with
+          | { constant = true } ->
+              let msg =
+                spf "SyntaxError: Update to constant variable `%s`" name in
+              Flow_js.add_error cx [reason, msg]
+          | _ -> ())
+      | _ -> ());
       Flow_js.flow cx (expression cx argument, t);
       t
 )
@@ -3405,7 +3415,14 @@ and assignment_lhs cx = Ast.Pattern.(function
       error_destructuring cx loc;
       AnyT.at loc
 
-  | loc, Identifier i ->
+  | loc, Identifier (_, { Ast.Identifier.name } as i) ->
+      let reason = mk_reason (spf "assignment of identifier %s" name) loc in
+      (match Env_js.get_entry cx name reason with
+      | { constant = true } ->
+          let msg =
+            (spf "SyntaxError: Assignment to constant variable `%s`" name) in
+          Flow_js.add_error cx [reason, msg]
+      | _ -> ());
       expression cx (loc, Ast.Expression.Identifier i)
 
   | _, Expression ((_, Ast.Expression.Member _) as m) ->

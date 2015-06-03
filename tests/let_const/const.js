@@ -35,3 +35,11 @@ function refi(): number {
   }
   return 1;
 }
+
+function constUpdate() {
+  const x = 0;
+  x++; // error
+  x += 1; // error
+  x *= 1; // error
+  for (;;x++) {} // error
+}
