@@ -27,11 +27,9 @@ module Phase = Typing_phase
 
 (* This function checks that the method ft_sub can be used to replace
  * (is a subtype of) ft_super *)
-let rec subtype_funs_generic ~check_return env r_super ft_super r_sub
-    orig_ft_sub =
+let rec subtype_funs_generic ~check_return env r_super ft_super r_sub ft_sub =
   let p_sub = Reason.to_pos r_sub in
   let p_super = Reason.to_pos r_super in
-  let env, ft_sub = Inst.instantiate_ft env orig_ft_sub in
   if (arity_min ft_sub.ft_arity) > (arity_min ft_super.ft_arity)
   then Errors.fun_too_many_args p_sub p_super;
   (match ft_sub.ft_arity, ft_super.ft_arity with
@@ -76,8 +74,22 @@ let rec subtype_funs_generic ~check_return env r_super ft_super r_sub
       );
   *)
   let env = if check_return then sub_type env ft_super.ft_ret ft_sub.ft_ret else env in
-  let env, _ = Unify.unify_funs env r_sub ft_sub r_sub orig_ft_sub in
   env
+
+(* Checking subtyping for methods is different than normal functions. Since
+ * methods are declarations we do not want to instantiate their function type
+ * parameters as unresolved, instead it should stay as a Tgeneric.
+ *)
+and subtype_method ~check_return env r_super ft_super r_sub ft_sub =
+  let ety_env = Phase.env_with_self env in
+  let env, ft_super_no_tvars =
+    Phase.localize_ft ~ety_env ~instantiate_tparams:false env ft_super in
+  let env, ft_sub_no_tvars =
+    Phase.localize_ft ~ety_env ~instantiate_tparams:false env ft_sub in
+  subtype_funs_generic
+    ~check_return env
+    r_super ft_super_no_tvars
+    r_sub ft_sub_no_tvars
 
 and subtype_tparams env c_name variancel super_tyl children_tyl =
   match variancel, super_tyl, children_tyl with

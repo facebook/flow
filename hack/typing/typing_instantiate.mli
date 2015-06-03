@@ -42,6 +42,3 @@ val instantiate     : 'a subst -> env -> 'a ty -> env * 'a ty
 val instantiate_ce  : decl subst -> env -> class_elt -> env * class_elt
 val instantiate_typeconst :
   decl subst -> env -> typeconst_type -> env * typeconst_type
-
-val instantiate_ft  : env -> locl fun_type -> env * locl fun_type
-val instantiate_fun : env -> locl ty -> Nast.expr list -> env * locl ty

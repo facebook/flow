@@ -893,11 +893,19 @@ and expr_ ~in_cond ~(valkind: [> `lvalue | `rvalue | `other ]) env (p, e) =
     (match class_ with
     | None -> unbound_name env pos_cname
     | Some class_ ->
+       (* Create a class type for the given object instantiated with unresolved
+        * types for its type parameters.
+        *)
+        let env, tvarl = lfold TUtils.unresolved_tparam env class_.tc_tparams in
         let params = List.map begin fun (_, (p, n), cstr) ->
           Reason.Rwitness p, Tgeneric (n, cstr)
         end class_.tc_tparams in
         let obj_type = Reason.Rwitness p, Tapply (pos_cname, params) in
-        let env, local_obj_ty = Phase.localize_with_self env obj_type in
+        let ety_env = {
+          (Phase.env_with_self env) with
+          substs = TSubst.make class_.tc_tparams tvarl;
+        } in
+        let env, local_obj_ty = Phase.localize ~ety_env env obj_type in
         let env, fty =
           obj_get ~is_method:true ~nullsafe:None env local_obj_ty
                  (CI (pos, class_name)) meth_name (fun x -> x) in
@@ -908,12 +916,16 @@ and expr_ ~in_cond ~(valkind: [> `lvalue | `rvalue | `other ]) env (p, e) =
              * function<T as Class>(T $x): return_type_of(Class:meth_name)
              *)
             let tparam = Ast.Invariant, pos_cname, Some (Ast.Constraint_as, obj_type) in
-            let param = Tgeneric (class_name, Some (Ast.Constraint_as, local_obj_ty)) in
-            let param = Reason.Rwitness pos, param in
+            let env, tvar = TUtils.unresolved_tparam env tparam in
+            let param = Reason.Rwitness pos,
+              Tgeneric (class_name, Some (Ast.Constraint_as, obj_type)) in
+            let ety_env = {
+              ety_env with
+              substs = TSubst.make (tparam :: class_.tc_tparams) (tvar :: tvarl)
+            } in
+            let env, param = Phase.localize ~ety_env env param in
             let fty = { fty with
-                        ft_tparams = tparam :: class_.tc_tparams @ fty.ft_tparams;
                         ft_params = (None, param) :: fty.ft_params } in
-            let env, fty = Inst.instantiate_ft env fty in
             let fun_arity = match fty.ft_arity with
               | Fstandard (min, max) -> Fstandard (min + 1, max + 1)
               | Fvariadic (min, x) -> Fvariadic (min + 1, x)
@@ -1770,7 +1782,6 @@ and dispatch_call p env call_type (fpos, fun_expr as e) el uel =
       (* dispatch the call to typecheck the arguments *)
       let env, fty = fun_type_of_id env id in
       let env, fty = Env.expand_type env fty in
-      let env, fty = Inst.instantiate_fun env fty el in (* ignore uel ; el for FormatString *)
       let env, res = call p env fty el uel in
       (* but ignore the result and overwrite it with custom return type *)
       let x = List.hd el in
@@ -1953,7 +1964,6 @@ and dispatch_call p env call_type (fpos, fun_expr as e) el uel =
               env, build_function (fun tr ->
                 (r_fty, Tarray(Some(tr), None))))
         | _ -> env, fty in
-      let env, fty = Inst.instantiate_fun env fty el in (* ignore uel ; el for FormatString *)
       call p env fty el []
   | Id ((_, "\\idx") as id) ->
       (* Directly call get_fun so that we can muck with the type before
@@ -1980,7 +1990,6 @@ and dispatch_call p env call_type (fpos, fun_expr as e) el uel =
         let fty = { fty with ft_params = params; ft_ret = ret } in
         let ety_env = Phase.env_with_self env in
         let env, fty = Phase.localize_ft ~ety_env env fty in
-        let env, fty = Inst.instantiate_ft env fty in
         let tfun = Reason.Rwitness fty.ft_pos, Tfun fty in
         call p env tfun el []
       | None -> unbound_name env id)
@@ -1995,7 +2004,6 @@ and dispatch_call p env call_type (fpos, fun_expr as e) el uel =
          * methods *)
         let env, fty = class_get ~is_method:true ~is_const:false env ty1 m CIparent in
         let env, fty = Env.expand_type env fty in
-        let env, fty = Inst.instantiate_fun env fty el in (* ignore uel ; el for FormatString *)
         let fty = check_abstract_parent_meth (snd m) p fty in
         call p env fty el uel
       end
@@ -2015,7 +2023,6 @@ and dispatch_call p env call_type (fpos, fun_expr as e) el uel =
               obj_get_ ~is_method:true ~nullsafe:None env ty1 CIparent m
               begin fun (env, fty, _) ->
                 let env, fty = Env.expand_type env fty in
-                let env, fty = Inst.instantiate_fun env fty el in (* ignore uel ; el for FormatString *)
                 let fty = check_abstract_parent_meth (snd m) p fty in
                 let env, method_ = call p env fty el uel in
                 env, method_, None
@@ -2026,7 +2033,6 @@ and dispatch_call p env call_type (fpos, fun_expr as e) el uel =
           | Some _ ->
             let env, fty = class_get ~is_method:true ~is_const:false env ty1 m CIparent in
             let env, fty = Env.expand_type env fty in
-            let env, fty = Inst.instantiate_fun env fty el in (* ignore uel ; el for FormatString *)
             let fty = check_abstract_parent_meth (snd m) p fty in
             call p env fty el uel
         )
@@ -2036,7 +2042,6 @@ and dispatch_call p env call_type (fpos, fun_expr as e) el uel =
       let env, ty1 = static_class_id p env e1 in
       let env, fty = class_get ~is_method:true ~is_const:false env ty1 m e1 in
       let env, fty = Env.expand_type env fty in
-      let env, fty = Inst.instantiate_fun env fty el in (* ignore uel ; el for FormatString *)
       let () = match e1 with
         | CIself when is_abstract_ft fty ->
           (match Env.get_self env with
@@ -2063,7 +2068,6 @@ and dispatch_call p env call_type (fpos, fun_expr as e) el uel =
         ) in
       let fn = (fun (env, fty, _) ->
         let env, fty = Env.expand_type env fty in
-        let env, fty = Inst.instantiate_fun env fty el in (* ignore uel ; el for FormatString *)
         let env, method_ = call p env fty el uel in
         env, method_, None) in
       obj_get ~is_method ~nullsafe env ty1 (CIvar e1) m fn
@@ -2072,12 +2076,10 @@ and dispatch_call p env call_type (fpos, fun_expr as e) el uel =
       Typing_hooks.dispatch_id_hook x env;
       let env, fty = fun_type_of_id env x in
       let env, fty = Env.expand_type env fty in
-      let env, fty = Inst.instantiate_fun env fty el in (* ignore uel ; el for FormatString *)
       call p env fty el uel
   | _ ->
       let env, fty = expr env e in
       let env, fty = Env.expand_type env fty in
-      let env, fty = Inst.instantiate_fun env fty el in (* ignore uel ; el for FormatString *)
       call p env fty el uel
 
 and fun_type_of_id env x =
@@ -2088,7 +2090,6 @@ and fun_type_of_id env x =
     | Some fty ->
         let ety_env = Phase.env_with_self env in
         let env, fty = Phase.localize_ft ~ety_env env fty in
-        let env, fty = Inst.instantiate_ft env fty in
         env, (Reason.Rwitness fty.ft_pos, Tfun fty)
   in
   env, fty
@@ -2938,6 +2939,10 @@ and call_ pos env fty el uel =
     let env, retl = lmap (fun env ty -> call pos env ty el uel) env tyl in
     TUtils.in_var env (r, Tunresolved retl)
   | r2, Tfun ft ->
+    (* Typing of format string functions. It is dependent on the arguments (el)
+     * so it cannot be done earlier.
+     *)
+    let env, ft = Typing_exts.retype_magic_func env ft el in
     check_deprecated pos ft;
     let pos_def = Reason.to_pos r2 in
     let () = check_arity ~check_min:(uel = [])

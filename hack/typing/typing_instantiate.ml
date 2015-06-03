@@ -27,45 +27,7 @@ let make_subst ~phase tparams tyl =
 (* Code dealing with instantiation. *)
 (*****************************************************************************)
 
-let rec instantiate_fun env fty el =
-  let env, efty = Env.expand_type env fty in
-  match efty with
-  | r, Tfun ft ->
-      (* TODO: this is a horrible hack, instantiating a function should not
-       * require the arguments (el).
-       *)
-      let env, ft = Typing_exts.retype_magic_func env ft el in
-      let env, ft = instantiate_ft env ft in
-      let fty = r, Tfun ft in
-      env, fty
-  | _, (Tany | Tmixed | Tarray (_, _) | Tprim _ | Tgeneric (_, _) | Toption _
-    | Tvar _ | Tabstract (_, _, _) | Tclass (_, _) | Ttuple _ | Tanon (_, _)
-    | Tunresolved _ | Tobject | Tshape _ | Taccess (_, _)) -> env, fty
-
-and instantiate_ft env ft =
-  let env, tvarl = List.fold_left begin fun (env, vars) (_, (pos, _), _) ->
-    (* Set the instantiated type parameter to initially point to unresolved, so
-     * that it can grow and eventually be a subtype of something like "mixed".
-     *)
-    let r = Reason.Rwitness pos in
-    let env, var = TUtils.in_var env (r, Tunresolved []) in
-    env, var :: vars
-  end (env, []) ft.ft_tparams in
-  let subst = make_subst Phase.locl ft.ft_tparams tvarl in
-  let names, params = List.split ft.ft_params in
-  let env, params = lfold (instantiate subst) env params in
-  let env, arity = match ft.ft_arity with
-    | Fvariadic (min, (name, var_ty)) ->
-      let env, var_ty = instantiate subst env var_ty in
-      env, Fvariadic (min, (name, var_ty))
-    | Fellipsis x -> env, Fellipsis x
-    | Fstandard (x, y) -> env, Fstandard (x, y)
-  in
-  let env, ret = instantiate subst env ft.ft_ret in
-  let params = List.map2 (fun x y -> x, y) names params in
-  env, { ft with ft_arity = arity; ft_params = params; ft_ret = ret }
-
-and instantiate: type a. a subst -> env -> a ty -> env * a ty =
+let rec instantiate: type a. a subst -> env -> a ty -> env * a ty =
   fun (phase, subst as phase_subst) env (r, ty) ->
   (* PERF: If subst is empty then instantiation is a no-op. We can save a
    * significant amount of CPU by avoiding recursively deconstructing the ty

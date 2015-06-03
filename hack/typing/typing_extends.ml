@@ -92,13 +92,13 @@ let check_types_for_const env parent_type class_type =
     | Tgeneric (_, Some (Ast.Constraint_as, fty_parent)),
       Tgeneric (_, Some (Ast.Constraint_as, fty_child)) ->
       (* redeclaration of an abstract constant *)
-      ignore (TUtils.sub_type env fty_parent fty_child)
+      ignore (Phase.sub_type_decl env fty_parent fty_child)
     | Tgeneric (_, Some (Ast.Constraint_as, fty_parent)), _ ->
       (* const definition constrained by parent abstract const *)
-      ignore (TUtils.sub_type env fty_parent class_type)
+      ignore (Phase.sub_type_decl env fty_parent class_type)
     | (_, _) ->
       (* types should be the same *)
-      ignore (TUtils.unify env parent_type class_type)
+      ignore (Phase.unify_decl env parent_type class_type)
 (* An abstract member can be declared in multiple ancestors. Sometimes these
  * declarations can be different, but yet compatible depending on which ancestor
  * we inherit the member from. For example:
@@ -135,15 +135,11 @@ let check_override env ?(ignore_fun_return = false) ?(check_for_const = false)
   if check_vis then check_visibility parent_class_elt class_elt else ();
   let check_params = class_known || check_partially_known_method_params in
   if check_params then
-    let env, child_ce_type =
-      Phase.localize_with_self env class_elt.ce_type in
-    let env, parent_ce_type =
-      Phase.localize_with_self env parent_class_elt.ce_type in
     if check_for_const
-    then check_types_for_const env parent_ce_type child_ce_type
-    else match parent_ce_type, child_ce_type with
+    then check_types_for_const env parent_class_elt.ce_type class_elt.ce_type
+    else match parent_class_elt.ce_type, class_elt.ce_type with
       | (r_parent, Tfun ft_parent), (r_child, Tfun ft_child) ->
-        let subtype_funs = SubType.subtype_funs_generic ~check_return:(
+        let subtype_funs = SubType.subtype_method ~check_return:(
             (not ignore_fun_return) &&
             (class_known || check_partially_known_method_returns)
           ) in
@@ -152,7 +148,7 @@ let check_override env ?(ignore_fun_return = false) ?(check_for_const = false)
           (Reason.to_pos r_child) class_ class_elt.ce_origin
       | fty_parent, fty_child ->
         let pos = Reason.to_pos (fst fty_child) in
-        ignore (unify pos Typing_reason.URnone env fty_parent fty_child)
+        ignore (unify_decl pos Typing_reason.URnone env fty_parent fty_child)
 
 (* Privates are only visible in the parent, we don't need to check them *)
 let filter_privates members =

@@ -46,39 +46,8 @@ let magic_method_name input =
           else if c == uc then "format_upcase_" ^ String.make 1 lc
           else "format_" ^ String.make 1 lc
 
-let map_fst f (x,y) = (f x, y)
-let map_snd f (x,y) = (x, f y)
-
-let rec map_ty_ f t =
-  match t with
-    | Tarray (ot, ot') ->
-        f (Tarray ((opt_map (map_ty f) ot), (opt_map (map_ty f) ot')))
-    | Tgeneric (a, ot) ->
-        f (Tgeneric (a, (opt_map (map_snd (map_ty f)) ot)))
-    | Toption t -> f (Toption (map_ty f t))
-    | Tclass (x, ts) -> f (Tclass (x, List.map (map_ty f) ts))
-    | Ttuple ts -> f (Ttuple (List.map (map_ty f) ts))
-    | x -> f x
-and map_ty f = map_snd (map_ty_ f)
-
-let fresh_tvars (env:Env.env) (ts:tparam list) (ps:locl fun_params) (uniq:int) : Env.env * locl fun_params * tparam list =
-  let append_id s = Printf.sprintf "%s_%d" s uniq in
-  let rename_str s =
-    match List.find_all (fun (_, (_, str),_) -> str = s) ts with
-      | [_] -> append_id s
-      | _ -> s in
-  let rename_ty = function
-    | Tclass ((pos,name), args) ->
-        Tclass ((pos, rename_str name), args)
-    | Tgeneric (name, ot) ->
-        Tgeneric (rename_str name, ot)
-    | s -> s in
-  let ps' = List.map (map_snd (map_ty rename_ty)) ps in
-  let ts' = List.map (fun (x, y, z) -> x, map_snd rename_str y, z) ts in
-  env, ps', ts'
-
-let lookup_magic_type (env:Env.env) (class_:locl ty) (fname:string) (uniq:int) :
-    Env.env * (locl fun_params * tparam list * locl ty option) option =
+let lookup_magic_type (env:Env.env) (class_:locl ty) (fname:string) :
+    Env.env * (locl fun_params * locl ty option) option =
   match class_ with
     | (_, Tclass ((_, className), [])) ->
         (match Env.get_class env className with
@@ -92,18 +61,15 @@ let lookup_magic_type (env:Env.env) (class_:locl ty) (fname:string) (uniq:int) :
                in
                (match ce_type with
                   | Some (_, Tfun {
-                            ft_tparams = tpars;
-                            ft_params = pars;
+                                   ft_params = pars;
                             ft_ret = ty;
                             _;
                           }
                     ) ->
-                     let env, pars, tpars = fresh_tvars env tpars pars uniq
-                     in env, Some (pars,
-                                   tpars,
-                                   (match ty with
-                                    | (_, Tprim Nast.Tstring) -> None
-                                    | _ -> Some ty))
+                     env, Some (pars,
+                                (match ty with
+                                 | (_, Tprim Nast.Tstring) -> None
+                                 | _ -> Some ty))
                   | _ -> env, None)
            | None -> env, None)
     | _ -> env, None
@@ -111,30 +77,30 @@ let lookup_magic_type (env:Env.env) (class_:locl ty) (fname:string) (uniq:int) :
 let get_char s i =
   if i >= String.length s then None else Some (String.get s i)
 
-let parse_printf_string (env:Env.env) (s:string) (pos:Pos.t) (class_:locl ty) : Env.env * locl fun_params * tparam list =
-  let rec read_text env i : Env.env * locl fun_params * tparam list =
+let parse_printf_string env s pos (class_:locl ty) : Env.env * locl fun_params =
+  let rec read_text env i : Env.env * locl fun_params =
     match get_char s i with
       | Some '%' -> read_modifier env (i+1) class_ i
       | Some _   -> read_text env (i+1)
-      | None     -> env, [], []
-  and read_modifier env i class_ i0 : Env.env * locl fun_params * tparam list =
+      | None     -> env, []
+  and read_modifier env i class_ i0 : Env.env * locl fun_params =
     let fname = magic_method_name (get_char s i) in
     let snippet = String.sub s i0 ((min (i+1) (String.length s)) - i0) in
     let add_reason = List.map
       (function name, (why, ty) ->
          name, (Reason.Rformat (pos,snippet,why), ty)) in
-    match lookup_magic_type env class_ fname i0 with
-      | env, Some (good_args, targs, None) ->
-            (match read_text env (i+1) with
-               | env, xs, ys -> env, add_reason good_args @ xs, targs @ ys)
-      | env, Some (good_args, targs, Some next) ->
-          (match read_modifier env (i+1) next i0 with
-             | env, xs, ys -> env, add_reason good_args @ xs, targs @ ys)
+    match lookup_magic_type env class_ fname with
+      | env, Some (good_args, None) ->
+          let env, xs = read_text env (i+1) in
+          env, add_reason good_args @ xs
+      | env, Some (good_args, Some next) ->
+          let env, xs = read_modifier env (i+1) next i0 in
+          env, add_reason good_args @ xs
       | env, None ->
           Errors.format_string
             pos snippet s (Reason.to_pos (fst class_)) fname (Print.suggest class_);
-            (match read_text env (i+1) with
-             | env, xs, ys -> env, add_reason xs, ys)
+          let env, xs = read_text env (i+1) in
+          env, add_reason xs
   in
     read_text env 0
 
@@ -170,7 +136,7 @@ let rec const_string_of (env:Env.env) (e:Nast.expr) : Env.env * (Pos.t, string) 
 
 (* Specialize a function type using whatever we can tell about the args *)
 let retype_magic_func (env:Env.env) (ft:locl fun_type) (el:Nast.expr list) : Env.env * locl fun_type =
-  let rec f env param_types args : Env.env * (locl fun_params * tparam list) option =
+  let rec f env param_types args : Env.env * locl fun_params option =
     (match param_types, args with
       | [(_,    (_,   Toption (_, Tclass ((_, fs), [_       ]))))], [(_, Nast.Null)]
         when SN.Classes.is_format_string fs -> env,None
@@ -179,8 +145,9 @@ let retype_magic_func (env:Env.env) (ft:locl fun_type) (el:Nast.expr list) : Env
         when SN.Classes.is_format_string fs ->
           (match const_string_of env arg with
              |  env, Right str ->
-                  let env, argl, targl = parse_printf_string env str (fst arg) type_arg in
-                  env, Some ((name, (why, Tprim Nast.Tstring)) :: argl, targl)
+                  let env, argl =
+                    parse_printf_string env str (fst arg) type_arg in
+                  env, Some ((name, (why, Tprim Nast.Tstring)) :: argl)
              |  env, Left pos ->
                   if Env.is_strict env
                   then Errors.expected_literal_string pos;
@@ -188,14 +155,13 @@ let retype_magic_func (env:Env.env) (ft:locl fun_type) (el:Nast.expr list) : Env
       | (param::params), (_::args) ->
           (match f env params args with
              | env, None -> env, None
-             | env, Some (xs,ys) -> env, Some (param :: xs, ys))
+             | env, Some xs -> env, Some (param :: xs))
       | _ -> env, None)
   in match f env ft.ft_params el with
     | env, None -> env, ft
-    | env, Some (xs,ys) ->
+    | env, Some xs ->
       let num_params = List.length xs in
       env, { ft with
-        ft_tparams = ft.ft_tparams @ ys;
         ft_params  = xs;
         ft_arity   = Fstandard (num_params, num_params);
       }

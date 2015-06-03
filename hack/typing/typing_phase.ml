@@ -149,13 +149,25 @@ and localize ~ety_env env ty =
   let env, (_, ty) = localize_with_env ~ety_env env ty in
   env, ty
 
-and localize_ft ~ety_env env ft =
-  let ety_env = {
-    ety_env with
-    substs = List.fold_left begin fun subst (_, (_, x), _) ->
+(* For the majority of cases when we localize a function type we instantiate
+ * the function's type parameters to be a Tunresolved wrapped in a Tvar so the
+ * type can grow. There is ONLY ONE case where we do not do this, in
+ * Typing_subtype.subtype_method. See the comment for that function for why
+ * this is necessary.
+ *)
+and localize_ft ?(instantiate_tparams=true) ~ety_env env ft =
+  (* Set the instantiated type parameter to initially point to unresolved, so
+   * that it can grow and eventually be a subtype of something like "mixed".
+   *)
+  let env, substs =
+    if instantiate_tparams
+    then let env, tvarl = lfold TUtils.unresolved_tparam env ft.ft_tparams in
+         let ft_subst = TSubst.make ft.ft_tparams tvarl in
+         env, SMap.union ft_subst ety_env.substs
+    else env, List.fold_left begin fun subst (_, (_, x), _) ->
       SMap.remove x subst
-    end ety_env.substs ft.ft_tparams;
-  } in
+    end ety_env.substs ft.ft_tparams in
+  let ety_env = {ety_env with substs = substs} in
   let names, params = List.split ft.ft_params in
   let env, params = lfold (localize ~ety_env) env params in
   let env, arity = match ft.ft_arity with

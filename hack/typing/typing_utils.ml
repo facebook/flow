@@ -132,6 +132,10 @@ let in_var env ty =
   let env, res = unify env ty res in
   env, res
 
+let unresolved_tparam env (_, (pos, _), _) =
+  let reason = Reason.Rwitness pos in
+  in_var env (reason, Tunresolved [])
+
 (*****************************************************************************)
 (*****************************************************************************)
 

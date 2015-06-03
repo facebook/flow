@@ -115,8 +115,6 @@ and unify_ env r1 ty1 r2 ty2 =
       let env, ty2 = unify env ty2 ty4 in
       env, Tarray (Some ty1, Some ty2)
   | Tfun ft1, Tfun ft2 ->
-      let env, ft1 = Inst.instantiate_ft env ft1 in
-      let env, ft2 = Inst.instantiate_ft env ft2 in
       let env, ft = unify_funs env r1 ft1 r2 ft2 in
       env, Tfun ft
   | Tclass (((p1, x1) as id), argl1),
@@ -224,7 +222,6 @@ and unify_ env r1 ty1 r2 ty2 =
         let p2 = Reason.to_pos r2 in
         if not (unify_arities ~ellipsis_is_variadic:true anon_arity ft.ft_arity)
         then Errors.fun_arity_mismatch p1 p2;
-        let env, ft = Inst.instantiate_ft env ft in
         let env, ret = anon env ft.ft_params in
         let env, _ = unify env ft.ft_ret ret in
         env, Tfun ft)
