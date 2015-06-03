@@ -436,26 +436,8 @@ and class_decl tcopt c =
   let env, impl_dimpl =
     lfold (Typing.get_implements ~with_checks:false) env impl in
   let impl, dimpl = List.split impl_dimpl in
-
-  let add_ancestor name c1 m = match SMap.get name m with
-    | Some c2 ->
-       (* Same ancestor listed multiple times - try to keep most specific one *)
-       let is_subtype = Errors.try_
-                   (* We ignore the returned env because we only want to test,
-                      not force the subtyping relation. *)
-         (fun () -> ignore (Typing_phase.sub_type_decl env c2 c1); true)
-         (fun _  -> false) in
-       if is_subtype then
-        (* c1 is a subtype of c2, so it's more specific *)
-         SMap.add name c1 m
-       else
-        (* c2 is a subtype of c1 OR there must exist c3 that is their common
-           descendant, and it will be picked in subsequent iterations.*)
-         m
-    | None -> SMap.add name c1 m in
-
-  let impl = List.fold_right (SMap.fold add_ancestor) impl SMap.empty in
-  let dimpl = List.fold_right (SMap.fold add_ancestor) dimpl SMap.empty in
+  let impl = List.fold_right (SMap.fold SMap.add) impl SMap.empty in
+  let dimpl = List.fold_right (SMap.fold SMap.add) dimpl SMap.empty in
   let env, extends, ext_strict = get_class_parents_and_traits env c in
   let extends = if c.c_is_xhp
     then SSet.add "XHP" extends
