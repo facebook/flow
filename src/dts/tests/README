@@ -1,0 +1,8 @@
+1. Run
+   $ ./runtests
+   to test flow convert on a hand crafted example present in the directory hand_crafted
+
+2. Check out https://github.com/borisyankov/DefinitelyTyped in <path>
+   Run
+   $ ./runtests -b <path>
+   to see how many files does flow convert runs on without running into errors.

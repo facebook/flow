@@ -1,6 +1,8 @@
 open Format
 open Dts_ast
 
+module SSet = Set.Make(String)
+
 let rec list ?(sep="") f fmt = function
   | [x] ->
       fprintf fmt "%a"
@@ -73,41 +75,123 @@ let todo fmt =
 *)
 
 let rec get_modules_in_scope = function
-  | [] -> []
+  | [] -> SSet.empty
   | x :: xs ->
     extract_module (get_modules_in_scope xs) x
 
-and extract_module tail = Statement.(function
+and extract_module acc = Statement.(function
   | _, ModuleDeclaration { Module.id; _; } ->
-    get_names tail id
-  | _ -> tail
+    get_names acc id
+  | _ -> acc
 )
 
-and get_names tail = function
+and get_names acc = function
   | _ , { IdPath.ids; _} ->
-    append_names tail ids
+    append_names acc ids
 
-and append_names tail = function
-  | [] -> tail
-  | x :: xs -> (id_name x) :: tail
+and append_names acc = function
+  | [] -> acc
+  | x :: xs -> SSet.add (id_name x) acc
 
 and id_name = function
   | _, { Identifier.name; _ } -> name
 
+
+
+(* get_modules_used computes a list of possible use of modules in the
+   given list of statements. What it does is find all instances of
+   object notation and enlist them. For example consider the
+   following code:
+
+   declare module M {
+       export class A extends B implements C { }
+   }
+
+   declare module O {
+       export class D {}
+   }
+
+   declare module N {
+       var x : M.A
+       var y : W.A
+       var z : O.D
+   }
+
+   For the above .d.ts file, get_modules_used will return
+   "M" :: "W" :: "O" :: [] when ran on the body of "module N"
+   However, we can see that only "W" might not be a reference to a
+   module, possibly "W" is an object defined in another file.
+*)
+
+let rec get_modules_used = function
+  | [] -> SSet.empty
+  | x :: xs ->
+    module_used_statement (get_modules_used xs) x
+
+(* modules_used_statement walks the AST of a given statement to see
+   if it contains any node in object notation.
+
+   TODO: Currently it only considers the case where object notation is
+   present in the type annotation of a variable declaration. Need to
+   cover the rest of the cases like:
+
+   export class P extends M.Q { }
+
+   etc.
+*)
+and module_used_statement acc = Statement.(function
+  | _, VariableDeclaration { VariableDeclaration.
+      declarations; _
+    } -> VariableDeclaration.(
+      match declarations with
+      | [(_, {Declarator.id; _})] ->
+        module_used_pattern acc id
+      | _ -> failwith "Only single declarator handled currently"
+    )
+  | _ -> acc
+)
+
+and module_used_pattern acc = Pattern.(function
+  | _, Identifier id -> module_used_id acc id
+  | _ -> failwith "Only identifier allowed in variable declaration"
+)
+
+and module_used_id acc = function
+  | _, { Identifier. typeAnnotation; _ } ->
+      match typeAnnotation with
+      | None -> acc
+      | Some x -> module_used_type acc x
+
+and module_used_type acc = Type.(function
+  | _, Generic t -> module_used_generic acc t
+  | _ -> acc
+)
+
+and module_used_generic acc = Type.(function
+  | { Generic.id; _ } -> match id with
+    | _, {IdPath.ids; _} -> module_used_ids acc ids
+)
+
+and module_used_ids acc = function
+  | x :: xs ->  ( match x with
+    | _, {Identifier. name; _ } -> SSet.add name acc
+  )
+  | _ -> acc
+
+
 let rec program fmt (_, stmts, _) =
   Format.set_margin 80;
   let scope = get_modules_in_scope stmts in
-  let () = printf "%d\n" (List.length scope) in
   fprintf fmt "@[<v>@,%a@]@."
-    (list ~sep:";" statement) stmts
+    (list ~sep:"" (statement scope)) stmts
 
-and statement fmt = Statement.(function
+and statement scope fmt = Statement.(function
   | _, VariableDeclaration { VariableDeclaration.
       declarations; _
     } -> VariableDeclaration.(
       match declarations with
       | [(_, { Declarator.id; _ })] ->
-          fprintf fmt "@[<hv>declare var %a@]"
+          fprintf fmt "@[<hv>declare var %a;@]"
             pattern id
       | _ -> todo fmt
     )
@@ -122,17 +206,26 @@ and statement fmt = Statement.(function
         object_type (snd body)
 
   | _, ModuleDeclaration { Module.id; body; } ->
-      fprintf fmt "@[<v>declare module %a {@;<0 2>@[<v>%a@]@,}@]"
-        id_path id
-        (list ~sep:";" statement) body
+    (* First we compute all the possible instances of module
+    references and then take an intersection with the list of modules
+    in scope which are defined in the same file to get a subset of
+    actual references to sibling modules.  *)
+
+    let list_possible_modules = get_modules_used body in
+    let list_modules_used = SSet.inter scope list_possible_modules in
+
+    fprintf fmt "@[<v>declare module %a {@;<0 2>@[<v>%a%a@]@,}@]"
+      id_path id
+      (list_ ~sep:"" import_module) (SSet.elements list_modules_used)
+      (_list ~sep:"" (statement scope)) body
 
   | _, ExportModuleDeclaration { ExportModule.name; body; } ->
       fprintf fmt "@[<v>declare module %s {@;<0 2>@[<v>%a@]@,}@]"
         name
-        (list ~sep:";" statement) body
+        (list ~sep:"" (statement scope)) body
 
   | _, ExportAssignment id ->
-      fprintf fmt "@[<h>declare var exports: typeof %a@]"
+      fprintf fmt "@[<h>declare var exports: typeof %a;@]"
         id_ id
 
   | _, AmbientClassDeclaration { AmbientClass.
@@ -318,3 +411,10 @@ and rest_ ?(follows=false) fmt = Type.Function.(function
         id_ name
       type_ typeAnnotation
 )
+
+(* This prints the import module statement. Since currently, the flow
+   parser does not parse import statements inside a module
+   declaration, we use this hack of $Exports
+*)
+and import_module fmt = function
+  | x -> fprintf fmt "declare var %s: $Exports<'%s'>;" x x
