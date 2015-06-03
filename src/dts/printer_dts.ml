@@ -81,17 +81,17 @@ let rec get_modules_in_scope = function
 
 and extract_module acc = Statement.(function
   | _, ModuleDeclaration { Module.id; _; } ->
-    get_names acc id
+    SSet.add (get_name id) acc
   | _ -> acc
 )
 
-and get_names acc = function
-  | _ , { IdPath.ids; _} ->
-    append_names acc ids
+and get_name = function
+  | _ , { IdPath.ids; _} -> append_name ids
 
-and append_names acc = function
-  | [] -> acc
-  | x :: xs -> SSet.add (id_name x) acc
+and append_name = function
+  | [x] -> id_name x
+  | _ -> failwith
+    "FLow only supports module declaration with one identifier"
 
 and id_name = function
   | _, { Identifier.name; _ } -> name
