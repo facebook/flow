@@ -298,7 +298,7 @@ let destructuring_assignment cx t =
     match Env_js.get_entry cx name reason with
     | { constant = true } ->
         Flow_js.add_error cx [
-          reason, (spf "TypeError: `%s` has already been defined" name)
+          reason, (spf "SyntaxError: Assignment to constant variable `%s`" name)
         ]
     | _ ->
         Env_js.set_var cx name t reason

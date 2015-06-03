@@ -18,23 +18,17 @@ common.js:56:22,24: identifier bar
 ReferenceError: can't access lexical declaration before initialization
 
 const.js:3:3,5: assignment of identifier foo
-TypeError: `foo` has already been defined
+SyntaxError: Assignment to constant variable `foo`
 
-const.js:8:9,11: value binding foo
-This binding conflicts with
-const.js:7:9,11: value binding foo
-which is already declared
+const.js:8:9,11: 
+SyntaxError: Variable `foo` has already been declared
 
 const_undeclared.js:8:9,11: Const must be initialized
 
-let.js:34:9,11: value binding bar
-This binding conflicts with
-let.js:33:9,11: value binding bar
-which is already declared
+let.js:34:9,11: 
+SyntaxError: Variable `bar` has already been declared
 
-let.js:45:11,13: value binding foo
-This binding conflicts with
-let.js:41:11,13: value binding foo
-which is already declared
+let.js:45:11,13: 
+SyntaxError: Variable `foo` has already been declared
 
 Found 11 errors
