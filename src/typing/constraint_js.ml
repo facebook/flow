@@ -544,12 +544,12 @@ type binding_type =
   | VarBinding
   | LetBinding
   | ConstBinding
+  | TypeBinding
 
 type scope_entry = {
   specific: Type.t;
   general: Type.t;
   def_loc: Spider_monkey_ast.Loc.t option;
-  for_type: bool;
   binding_type: binding_type;
 }
 
@@ -564,12 +564,11 @@ type scope = {
 
 type stack = int list
 
-let create_env_entry ?(for_type=false) specific general loc binding_type =
+let create_env_entry specific general loc binding_type =
   {
     specific;
     general;
     def_loc = loc;
-    for_type;
     binding_type;
   }
 
@@ -1927,17 +1926,17 @@ let string_of_binding_type = function
   | VarBinding -> "VarBinding"
   | LetBinding -> "LetBinding"
   | ConstBinding -> "ConstBinding"
+  | TypeBinding -> "TypeBinding"
 
 let string_of_scope_entry cx entry =
   let pos = match entry.def_loc with
   | Some loc -> (string_of_pos (pos_of_loc loc))
   | None -> "(none)"
   in
-  Utils.spf "{ specific: %s; general: %s; def_loc: %s; for_type: %b; binding_type: %s }"
+  Utils.spf "{ specific: %s; general: %s; def_loc: %s; binding_type: %s }"
     (dump_t cx entry.specific)
     (dump_t cx entry.general)
     pos
-    entry.for_type
     (string_of_binding_type entry.binding_type)
 
 let string_of_scope cx scope =

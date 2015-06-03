@@ -931,7 +931,7 @@ and statement_decl cx = Ast.Statement.(
       let _, { Ast.Identifier.name; _ } = id in
       let r = mk_reason (spf "type %s" name) loc in
       let tvar = Flow_js.mk_tvar cx r in
-      Env_js.init_env cx name (create_env_entry ~for_type:true tvar tvar (Some loc) VarBinding)
+      Env_js.init_env cx name (create_env_entry tvar tvar (Some loc) TypeBinding)
 
   | (loc, Switch { Switch.discriminant; cases; lexical }) ->
       let entries = ref SMap.empty in
@@ -1056,15 +1056,15 @@ and statement_decl cx = Ast.Statement.(
 
   | (loc, DeclareClass { Interface.id; _ })
   | (loc, InterfaceDeclaration { Interface.id; _ }) as stmt ->
-      let is_interface = match stmt with
-      | (_, InterfaceDeclaration _) -> true
-      | _ -> false in
+      let binding_type = match stmt with
+      | (_, InterfaceDeclaration _) -> TypeBinding
+      | _ -> VarBinding in
       let _, { Ast.Identifier.name; _ } = id in
       let r = mk_reason (spf "class %s" name) loc in
       let tvar = Flow_js.mk_tvar cx r in
       (* FIXME: The entry should be have scope_kind = LexicalScope,
        * but the correct scope kind breaks existing declarations under TDZ *)
-      Env_js.init_env cx name (create_env_entry ~for_type:is_interface tvar tvar (Some loc) VarBinding)
+      Env_js.init_env cx name (create_env_entry tvar tvar (Some loc) binding_type)
   | (loc, DeclareModule { DeclareModule.id; _ }) ->
       let name = match id with
       | DeclareModule.Identifier (_, id) -> id.Ast.Identifier.name
@@ -1124,9 +1124,9 @@ and statement_decl cx = Ast.Statement.(
           in
           let reason = mk_reason reason_str loc in
           let tvar = Flow_js.mk_tvar cx reason in
-
+          let binding_type = if isType then TypeBinding else VarBinding in
           let env_entry =
-            (create_env_entry ~for_type:isType tvar tvar (Some loc) VarBinding)
+            (create_env_entry tvar tvar (Some loc) binding_type)
           in
           Env_js.init_env cx local_name env_entry
         | None -> (
@@ -1149,8 +1149,9 @@ and statement_decl cx = Ast.Statement.(
                   (remote_name, (mk_reason reason_str loc))
               ) in
               let tvar = Flow_js.mk_tvar cx reason in
+              let binding_type = if isType then TypeBinding else VarBinding in
               let env_entry =
-                create_env_entry ~for_type:isType tvar tvar (Some specifier_loc) VarBinding
+                create_env_entry tvar tvar (Some specifier_loc) binding_type
               in
               Env_js.init_env cx local_name env_entry
             ) in
@@ -1161,8 +1162,9 @@ and statement_decl cx = Ast.Statement.(
               mk_reason (spf "%s * as %s" import_str local_name) loc
             in
             let tvar = Flow_js.mk_tvar cx reason in
+            let binding_type = if isType then TypeBinding else VarBinding in
             let env_entry =
-              create_env_entry ~for_type:isType tvar tvar (Some loc) VarBinding
+              create_env_entry tvar tvar (Some loc) binding_type
             in
             Env_js.init_env cx local_name env_entry
           | None -> failwith (

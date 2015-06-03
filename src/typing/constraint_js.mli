@@ -238,19 +238,19 @@ val copy_node: node -> node
 
 (***************************************)
 
-(* Currently, many constructs are considered to be VarBindings, including type
-   aliases, functions, and imports. Let-declared variables and classes are
-   considered LetBindings. *)
+(* Currently, many constructs are considered to be VarBindings, including
+   functions and imports. Let-declared variables and classes are considered
+   LetBindings. *)
 type binding_type =
   | VarBinding
   | LetBinding
   | ConstBinding
+  | TypeBinding
 
 type scope_entry = {
   specific: Type.t;
   general: Type.t;
   def_loc: Spider_monkey_ast.Loc.t option;
-  for_type: bool;
   binding_type: binding_type;
 }
 
@@ -270,7 +270,6 @@ type scope = {
 type stack = int list
 
 val create_env_entry :
-  ?for_type: bool ->
   Type.t -> Type.t ->
   Spider_monkey_ast.Loc.t option ->
   binding_type ->
