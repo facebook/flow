@@ -296,7 +296,7 @@ let destructuring_assignment cx t =
   destructuring cx t (fun cx loc name t ->
     let reason = mk_reason (spf "assignment of identifier %s" name) loc in
     match Env_js.get_entry cx name reason with
-    | { constant = true } ->
+    | { binding_type = ConstBinding } ->
         Flow_js.add_error cx [
           reason, (spf "SyntaxError: Assignment to constant variable `%s`" name)
         ]
@@ -313,10 +313,10 @@ let destructuring_map cx t p =
   );
   !tmap, !lmap
 
-let pattern_decl cx t ?(constant=false) scope_kind =
+let pattern_decl cx t binding_type =
   destructuring cx t (fun cx loc name t ->
     Hashtbl.replace cx.type_table loc t;
-    Env_js.init_env cx name (create_env_entry ~constant t t (Some loc) scope_kind)
+    Env_js.init_env cx name (create_env_entry t t (Some loc) binding_type)
   )
 
 (* type refinements on expressions - wraps Env_js API *)
@@ -864,27 +864,27 @@ and mk_enum_type cx reason keys =
 
 (* TODO: detect structural misuses abnormal control flow constructs *)
 and variable_decl cx loc { Ast.Statement.VariableDeclaration.declarations; kind } = Ast.Statement.(
-  let var_declarator cx ?(constant=false) scope_kind (loc, { VariableDeclaration.Declarator.id; init }) =
+  let var_declarator cx binding_type (loc, { VariableDeclaration.Declarator.id; init }) =
     Ast.(match id with
     | (loc, Pattern.Identifier (_, { Identifier.name; typeAnnotation; _ })) ->
         let r = mk_reason (spf "var %s" name) loc in
         let t = mk_type_annotation cx r typeAnnotation in
         Hashtbl.replace cx.type_table loc t;
-        Env_js.init_env cx name (create_env_entry ~constant t t (Some loc) scope_kind)
+        Env_js.init_env cx name (create_env_entry t t (Some loc) binding_type)
     | p ->
         let r = mk_reason "var _" loc in
         let t = type_of_pattern p |> mk_type_annotation cx r in
-        pattern_decl cx t ~constant scope_kind p
+        pattern_decl cx t binding_type p
     )
   in
 
   match kind with
   | VariableDeclaration.Const ->
-      List.iter (var_declarator cx ~constant:true LexicalScope) declarations
+      List.iter (var_declarator cx ConstBinding) declarations
   | VariableDeclaration.Let ->
-      List.iter (var_declarator cx LexicalScope) declarations
+      List.iter (var_declarator cx LetBinding) declarations
   | VariableDeclaration.Var ->
-      List.iter (var_declarator cx VarScope) declarations
+      List.iter (var_declarator cx VarBinding) declarations
 )
 
 and statement_decl cx = Ast.Statement.(
@@ -931,7 +931,7 @@ and statement_decl cx = Ast.Statement.(
       let _, { Ast.Identifier.name; _ } = id in
       let r = mk_reason (spf "type %s" name) loc in
       let tvar = Flow_js.mk_tvar cx r in
-      Env_js.init_env cx name (create_env_entry ~for_type:true tvar tvar (Some loc) VarScope)
+      Env_js.init_env cx name (create_env_entry ~for_type:true tvar tvar (Some loc) VarBinding)
 
   | (loc, Switch { Switch.discriminant; cases; lexical }) ->
       let entries = ref SMap.empty in
@@ -1026,7 +1026,7 @@ and statement_decl cx = Ast.Statement.(
         let _, { Ast.Identifier.name; _ } = id in
         let r = mk_reason (spf "function %s" name) loc in
         let tvar = Flow_js.mk_tvar cx r in
-        Env_js.init_env cx name (create_env_entry tvar tvar (Some loc) VarScope)
+        Env_js.init_env cx name (create_env_entry tvar tvar (Some loc) VarBinding)
       | None -> failwith (
           "Flow Error: Nameless function declarations should always be given " ^
           "an implicit name before they get hoisted!"
@@ -1039,7 +1039,7 @@ and statement_decl cx = Ast.Statement.(
       let r = mk_reason (spf "declare %s" name) loc in
       let t = mk_type_annotation cx r typeAnnotation in
       Hashtbl.replace cx.type_table loc t;
-      Env_js.init_env cx name (create_env_entry t t (Some loc) VarScope)
+      Env_js.init_env cx name (create_env_entry t t (Some loc) VarBinding)
 
   | (loc, VariableDeclaration decl) ->
       variable_decl cx loc decl
@@ -1050,7 +1050,7 @@ and statement_decl cx = Ast.Statement.(
         let _, { Ast.Identifier.name; _ } = id in
         let r = mk_reason (spf "class %s" name) loc in
         let tvar = Flow_js.mk_tvar cx r in
-        Env_js.init_env cx name (create_env_entry tvar tvar (Some loc) LexicalScope)
+        Env_js.init_env cx name (create_env_entry tvar tvar (Some loc) LetBinding)
       | None -> ()
     )
 
@@ -1064,7 +1064,7 @@ and statement_decl cx = Ast.Statement.(
       let tvar = Flow_js.mk_tvar cx r in
       (* FIXME: The entry should be have scope_kind = LexicalScope,
        * but the correct scope kind breaks existing declarations under TDZ *)
-      Env_js.init_env cx name (create_env_entry ~for_type:is_interface tvar tvar (Some loc) VarScope)
+      Env_js.init_env cx name (create_env_entry ~for_type:is_interface tvar tvar (Some loc) VarBinding)
   | (loc, DeclareModule { DeclareModule.id; _ }) ->
       let name = match id with
       | DeclareModule.Identifier (_, id) -> id.Ast.Identifier.name
@@ -1078,7 +1078,7 @@ and statement_decl cx = Ast.Statement.(
       Hashtbl.replace cx.type_table loc t;
       Env_js.init_env cx
         (internal_module_name name)
-        (create_env_entry t t (Some loc) VarScope)
+        (create_env_entry t t (Some loc) VarBinding)
   | (_, ExportDeclaration {
       ExportDeclaration.default;
       ExportDeclaration.declaration;
@@ -1126,7 +1126,7 @@ and statement_decl cx = Ast.Statement.(
           let tvar = Flow_js.mk_tvar cx reason in
 
           let env_entry =
-            (create_env_entry ~for_type:isType tvar tvar (Some loc) VarScope)
+            (create_env_entry ~for_type:isType tvar tvar (Some loc) VarBinding)
           in
           Env_js.init_env cx local_name env_entry
         | None -> (
@@ -1150,7 +1150,7 @@ and statement_decl cx = Ast.Statement.(
               ) in
               let tvar = Flow_js.mk_tvar cx reason in
               let env_entry =
-                create_env_entry ~for_type:isType tvar tvar (Some specifier_loc) VarScope
+                create_env_entry ~for_type:isType tvar tvar (Some specifier_loc) VarBinding
               in
               Env_js.init_env cx local_name env_entry
             ) in
@@ -1162,7 +1162,7 @@ and statement_decl cx = Ast.Statement.(
             in
             let tvar = Flow_js.mk_tvar cx reason in
             let env_entry =
-              create_env_entry ~for_type:isType tvar tvar (Some loc) VarScope
+              create_env_entry ~for_type:isType tvar tvar (Some loc) VarBinding
             in
             Env_js.init_env cx local_name env_entry
           | None -> failwith (
@@ -1213,7 +1213,7 @@ and statement cx = Ast.Statement.(
           let t = Flow_js.mk_tvar cx (mk_reason "catch" loc) in
           Env_js.let_env
             name
-            (create_env_entry t t (Some loc) LexicalScope)
+            (create_env_entry t t (Some loc) LetBinding)
             (fun () -> toplevels cx b.Block.body)
 
       | loc, Identifier (_, { Ast.Identifier.name; _ }) ->
@@ -3309,7 +3309,7 @@ and update cx loc = Ast.Expression.Update.(function
       | _, Ast.Expression.Identifier (_, { Ast.Identifier.name }) ->
           let reason = mk_reason (spf "update of identifier %s" name) loc in
           (match Env_js.get_entry cx name reason with
-          | { constant = true } ->
+          | { binding_type = ConstBinding } ->
               let msg =
                 spf "SyntaxError: Update to constant variable `%s`" name in
               Flow_js.add_error cx [reason, msg]
@@ -3418,7 +3418,7 @@ and assignment_lhs cx = Ast.Pattern.(function
   | loc, Identifier (_, { Ast.Identifier.name } as i) ->
       let reason = mk_reason (spf "assignment of identifier %s" name) loc in
       (match Env_js.get_entry cx name reason with
-      | { constant = true } ->
+      | { binding_type = ConstBinding } ->
           let msg =
             (spf "SyntaxError: Assignment to constant variable `%s`" name) in
           Flow_js.add_error cx [reason, msg]
@@ -4929,7 +4929,7 @@ and is_void cx = function
   | _ -> false
 
 and mk_upper_bound cx locs name t =
-  create_env_entry t t (SMap.get name locs) VarScope
+  create_env_entry t t (SMap.get name locs) VarBinding
 
 and mk_body id cx param_types_map param_types_loc ret body this super =
   let ctx = !Env_js.env in
@@ -4941,7 +4941,7 @@ and mk_body id cx param_types_map param_types_loc ret body this super =
     | None -> map
     | Some (loc, { Ast.Identifier.name; _ }) ->
         map |> SMap.add name
-          (create_env_entry (AnyT.at loc) (AnyT.at loc) None VarScope)
+          (create_env_entry (AnyT.at loc) (AnyT.at loc) None VarBinding)
   in
   let entries = ref (
       param_types_map
@@ -4949,13 +4949,13 @@ and mk_body id cx param_types_map param_types_loc ret body this super =
       |> add_rec
       |> SMap.add
           (internal_name "super")
-          (create_env_entry super super None VarScope)
+          (create_env_entry super super None VarBinding)
       |> SMap.add
           (internal_name "this")
-          (create_env_entry this this None VarScope)
+          (create_env_entry this this None VarBinding)
       |> SMap.add
           (internal_name "return")
-          (create_env_entry ret ret None VarScope)
+          (create_env_entry ret ret None VarBinding)
   )
   in
   let scope = { kind = VarScope; entries } in
@@ -5289,14 +5289,14 @@ let infer_ast ast file m force_check =
         local_exports
         local_exports
         None
-        VarScope
+        VarBinding
       )
     |> SMap.add (internal_name "exports")
       (create_env_entry
         (UndefT (reason_of_string "undefined exports"))
         (AnyT reason_exports_module)
         None
-        VarScope
+        VarBinding
       )
   ) in
   let scope = { kind = VarScope; entries } in

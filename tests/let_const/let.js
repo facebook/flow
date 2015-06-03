@@ -28,10 +28,10 @@ function forOfLoop(): number {
 
 function TDZ1() {
   let foo;
-  let foo; // OK
+  let foo; // error
   if (true) {
     let bar;
-    let bar; // TypeError
+    let bar; // error
   }
 }
 
@@ -42,7 +42,7 @@ function TDZ2(x) {
       break;
 
     case 1:
-      let foo; // TypeError
+      let foo; // error
       break;
   }
 }

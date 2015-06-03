@@ -540,18 +540,22 @@ let copy_node node = match node with
     Root { rank; constraints = Unresolved (copy_bounds bounds) }
   | _ -> node
 
-type scope_kind =
-  | VarScope (* var, functions hoisted up to this point *)
-  | LexicalScope (* let, const, classes *)
+type binding_type =
+  | VarBinding
+  | LetBinding
+  | ConstBinding
 
 type scope_entry = {
   specific: Type.t;
   general: Type.t;
   def_loc: Spider_monkey_ast.Loc.t option;
   for_type: bool;
-  constant: bool;
-  scope_kind: scope_kind;
+  binding_type: binding_type;
 }
+
+type scope_kind =
+  | VarScope (* var, functions hoisted up to this point *)
+  | LexicalScope (* let, const, classes *)
 
 type scope = {
   kind: scope_kind;
@@ -560,14 +564,13 @@ type scope = {
 
 type stack = int list
 
-let create_env_entry ?(for_type=false) ?(constant=false) specific general loc scope_kind =
+let create_env_entry ?(for_type=false) specific general loc binding_type =
   {
     specific;
     general;
     def_loc = loc;
     for_type;
-    constant;
-    scope_kind;
+    binding_type;
   }
 
 (* type context *)
@@ -1920,16 +1923,22 @@ let is_printed_param_type_parsable ?(weak=false) cx t =
 
 (* ------------- *)
 
+let string_of_binding_type = function
+  | VarBinding -> "VarBinding"
+  | LetBinding -> "LetBinding"
+  | ConstBinding -> "ConstBinding"
+
 let string_of_scope_entry cx entry =
   let pos = match entry.def_loc with
   | Some loc -> (string_of_pos (pos_of_loc loc))
   | None -> "(none)"
   in
-  Utils.spf "{ specific: %s; general: %s; def_loc: %s; for_type: %b }"
+  Utils.spf "{ specific: %s; general: %s; def_loc: %s; for_type: %b; binding_type: %s }"
     (dump_t cx entry.specific)
     (dump_t cx entry.general)
     pos
     entry.for_type
+    (string_of_binding_type entry.binding_type)
 
 let string_of_scope cx scope =
   let entries = scope.entries in

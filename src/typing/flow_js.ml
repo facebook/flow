@@ -236,11 +236,11 @@ and havoc_ctx_ = function
   | (scope::scopes_, x1::stack1_, x2::stack2_) when x1 = x2 ->
       (if modes.verbose then prerr_endlinef "HAVOC::%d" x1);
       let entries = scope.entries in
-      entries := SMap.mapi (fun x {specific;general;def_loc;for_type;scope_kind} ->
+      entries := SMap.mapi (fun x {specific;general;def_loc;binding_type} ->
         (* internal names (.this, .super, .return, .exports) are read-only *)
         if is_internal_name x
-        then create_env_entry ~for_type specific general def_loc scope_kind
-        else create_env_entry ~for_type general general def_loc scope_kind
+        then create_env_entry specific general def_loc binding_type
+        else create_env_entry general general def_loc binding_type
       ) !entries;
       havoc_ctx_ (scopes_,stack1_,stack2_)
   | _ -> ()
