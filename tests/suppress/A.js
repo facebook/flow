@@ -17,3 +17,8 @@ var test4: string = 123; // This error is NOT suppressed
 
                          // $FlowFixMe Indentation shouldn't matter
 var test5: string = 123; // This error should be suppressed
+
+/*
+ * $FlowNewLine
+ */
+var test6: string = 123;

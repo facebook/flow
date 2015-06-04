@@ -272,14 +272,24 @@ module OptionsParser = struct
   let configure configuration =
     List.fold_left map_add SMap.empty configuration
 
+  let unescape opt (ln, value) =
+    try Scanf.unescaped value
+    with Scanf.Scan_failure reason ->
+      let msg = spf "Invalid ocaml string for %s: %s" opt reason in
+      error ln msg
+
   let raw_string option_setter =
     fun options opt (ln, value) ->
-      option_setter options (ln, value)
+      (* Process escape characters as if the string were written in ocaml *)
+      let unescaped_value = unescape opt (ln, value) in
+      option_setter options (ln, unescaped_value)
 
   let regexp option_setter =
     fun options opt (ln, value) ->
       try
-        let r = Str.regexp value in
+        (* Process escape characters as if the string were written in ocaml *)
+        let unescaped_value = unescape opt (ln, value) in
+        let r = Str.regexp unescaped_value in
         option_setter options (ln, r)
       with Failure reason ->
         let msg = spf "Invalid regex for %s: %s" opt reason in
