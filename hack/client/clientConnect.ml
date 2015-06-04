@@ -73,8 +73,7 @@ let rec connect env retries =
       end else exit 6
   | Result.Error Server_initializing ->
       Printf.eprintf begin
-        "hh_server still initializing. If it was "^^
-        "just started this can take some time.%!"
+        "hh_server still initializing. This can take some time.%!"
       end;
       if env.retry_if_init
       then begin
