@@ -209,6 +209,8 @@ module Type = struct
   | ObjFreezeT of reason * t
   | ObjRestT of reason * string list * t
   | ObjSealT of reason * t
+  (** test that something is object-like, returning a default type otherwise **)
+  | ObjTestT of reason * t * t
 
   (* Guarded unification (bidirectional).
      Remodel as unidirectional GuardT(l,u)? *)
@@ -701,6 +703,7 @@ let string_of_ctor = function
   | ObjFreezeT _ -> "ObjFreezeT"
   | ObjRestT _ -> "ObjRestT"
   | ObjSealT _ -> "ObjSealT"
+  | ObjTestT _ -> "ObjTestT"
   | UpperBoundT _ -> "UpperBoundT"
   | LowerBoundT _ -> "LowerBoundT"
   | AnyObjT _ -> "AnyObjT"
@@ -819,6 +822,7 @@ let rec reason_of_t = function
   | ObjFreezeT (reason, _)
   | ObjRestT (reason, _, _)
   | ObjSealT (reason, _)
+  | ObjTestT (reason, _, _)
     ->
       reason
 
@@ -969,6 +973,7 @@ let rec mod_reason_of_t f = function
   | ObjFreezeT (reason, t) -> ObjFreezeT (f reason, t)
   | ObjRestT (reason, t, t2) -> ObjRestT (f reason, t, t2)
   | ObjSealT (reason, t) -> ObjSealT (f reason, t)
+  | ObjTestT (reason, t1, t2) -> ObjTestT (f reason, t1, t2)
 
   | UpperBoundT t -> UpperBoundT (mod_reason_of_t f t)
   | LowerBoundT t -> LowerBoundT (mod_reason_of_t f t)
@@ -1470,6 +1475,11 @@ let rec _json_of_t stack cx t = Json.(
 
   | ObjSealT (_, t) -> [
       "type", _json_of_t stack cx t
+    ]
+
+  | ObjTestT (_, default, res) -> [
+      "defaultType", _json_of_t stack cx default;
+      "resultType", _json_of_t stack cx res
     ]
 
   | UnifyT (t1, t2) -> [

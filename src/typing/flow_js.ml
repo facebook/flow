@@ -1611,6 +1611,11 @@ let rec __flow cx (l, u) trace =
         )
       )
 
+    | (_, ObjTestT(reason, default, u)) ->
+      if object_like l
+      then rec_flow cx trace (l, u)
+      else rec_flow cx trace (default, u)
+
     (*****************************)
     (* upper and lower any types *)
     (*****************************)
@@ -1970,19 +1975,20 @@ let rec __flow cx (l, u) trace =
 
     | FunT (reason, _, proto, {
         this_t = this;
-        params_tlist = tins1;
-        return_t = tout1;
+        params_tlist = params;
+        return_t = ret;
         _ }),
-      ConstructorT (reason_op, tins2, t) ->
+      ConstructorT (reason_op, args, t) ->
       (* TODO: closure *)
-      multiflow cx trace (u, l) (tins2, tins1) |> ignore;
-      let reason_rv = replace_reason "return undefined" reason in
-      rec_flow cx trace (tout1, VoidT reason_rv);
-
+      (** create new object **)
       let reason_c = replace_reason "new object" reason in
-      let o = mk_object_with_proto cx reason_c proto in
-      rec_flow cx trace (o, this);
-      rec_flow cx trace (o, t);
+      let new_obj = mk_object_with_proto cx reason_c proto in
+      (** call function with this = new_obj, params = args **)
+      rec_flow cx trace (new_obj, this);
+      multiflow cx trace (u, l) (args, params) |> ignore;
+      (** if ret is object-like, return ret; otherwise return new_obj **)
+      let reason_o = replace_reason "constructor return" reason in
+      rec_flow cx trace (ret, ObjTestT(reason_o, new_obj, t))
 
     (*************************)
     (* "statics" can be read *)

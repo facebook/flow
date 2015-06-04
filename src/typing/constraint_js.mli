@@ -104,6 +104,7 @@ module Type :
       | ObjFreezeT of reason * t
       | ObjRestT of reason * string list * t
       | ObjSealT of reason * t
+      | ObjTestT of reason * t * t
 
       | UnifyT of t * t
 
