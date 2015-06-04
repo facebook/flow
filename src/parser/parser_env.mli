@@ -43,6 +43,7 @@ val in_loop : env -> bool
 val in_switch : env -> bool
 val in_function : env -> bool
 val allow_yield : env -> bool
+val allow_await: env -> bool
 val no_in : env -> bool
 val no_call : env -> bool
 val no_let : env -> bool
@@ -68,6 +69,7 @@ val clear_lookahead_errors : env -> unit
 val with_strict : bool -> env -> env
 val with_in_function : bool -> env -> env
 val with_allow_yield : bool -> env -> env
+val with_allow_await : bool -> env -> env
 val with_no_let : bool -> env -> env
 val with_in_loop : bool -> env -> env
 val with_no_in : bool -> env -> env
@@ -79,7 +81,7 @@ val with_error_callback : (env -> Parse_error.t -> unit) -> env -> env
 val without_error_callback : env -> env
 
 val add_label : env -> string -> env
-val enter_function : env -> env
+val enter_function : env -> async:bool -> generator:bool -> env
 
 module Try : sig
   type 'a parse_result =

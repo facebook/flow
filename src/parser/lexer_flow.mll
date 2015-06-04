@@ -78,6 +78,8 @@
     | T_DECLARE
     | T_TYPE
     | T_OF
+    | T_ASYNC
+    | T_AWAIT
     (* Operators *)
     | T_RSHIFT3_ASSIGN
     | T_RSHIFT_ASSIGN
@@ -215,6 +217,8 @@
     | T_DECLARE -> "declare"
     | T_TYPE -> "type"
     | T_OF -> "of"
+    | T_ASYNC -> "async"
+    | T_AWAIT -> "await"
     | T_LCURLY -> "{"
     | T_RCURLY -> "}"
     | T_LPAREN -> "("
@@ -494,6 +498,8 @@
       "declare", T_DECLARE;
       "type", T_TYPE;
       "of", T_OF;
+      "async", T_ASYNC;
+      "await", T_AWAIT;
     ]
   let _ = List.iter (fun (key, token) -> Hashtbl.add type_keywords key token)
     [

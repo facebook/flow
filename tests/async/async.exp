@@ -1,0 +1,76 @@
+
+async.js:1:1,21: 
+async not (sup)ported
+
+async.js:2:1,35: 
+async not (sup)ported
+
+async.js:12:9,28: 
+async not (sup)ported
+
+async.js:13:10,42: 
+async not (sup)ported
+
+async.js:15:13,31: 
+async not (sup)ported
+
+async_base_class.js:5:1,8:1: 
+async not (sup)ported
+
+async_base_class.js:6:22,34: 
+not (sup)ported
+
+await.js:1:1,31: 
+async not (sup)ported
+
+await.js:1:22,28: 
+not (sup)ported
+
+await.js:2:1,45: 
+async not (sup)ported
+
+await.js:2:36,42: 
+not (sup)ported
+
+await.js:5:15,21: 
+not (sup)ported
+
+await.js:6:29,35: 
+not (sup)ported
+
+await.js:7:29,35: 
+not (sup)ported
+
+await.js:8:36,42: 
+not (sup)ported
+
+await.js:11:9,38: 
+async not (sup)ported
+
+await.js:11:29,35: 
+not (sup)ported
+
+await.js:12:10,52: 
+async not (sup)ported
+
+await.js:12:43,49: 
+not (sup)ported
+
+await.js:14:13,41: 
+async not (sup)ported
+
+await.js:14:32,38: 
+not (sup)ported
+
+await.js:16:23,29: 
+not (sup)ported
+
+await.js:17:31,37: 
+not (sup)ported
+
+await.js:18:33,43: 
+not (sup)ported
+
+await_not_in_async.js:2:9,9: Unexpected number
+
+Found 25 errors

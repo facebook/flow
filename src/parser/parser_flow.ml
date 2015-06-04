@@ -78,8 +78,14 @@ module Peek = struct
     | T_TYPE
     | T_OF
     | T_DECLARE
+    | T_ASYNC
+    | T_AWAIT
     | T_IDENTIFIER -> true
     | _ -> false
+
+  let _function ?(i=0) env =
+    token ~i env = T_FUNCTION ||
+    (token ~i env = T_ASYNC && token ~i:(i+1) env = T_FUNCTION)
 end
 
 (*****************************************************************************)
@@ -834,22 +840,30 @@ end = struct
         Expect.token env T_RPAREN;
         params, defaults, rest
 
-    let function_body env =
-      let env = enter_function env in
+    let function_body env ~async ~generator =
+      let env = enter_function env ~async ~generator in
       let loc, block, strict = Parse.function_block_body env in
       loc, Statement.FunctionDeclaration.BodyBlock (loc, block), strict
 
-    let concise_function_body env =
+    let concise_function_body env ~async ~generator =
       let env = env |> with_in_function true in
       match Peek.token env with
       | T_LCURLY ->
-          let _, body, strict = function_body env in
+          let _, body, strict = function_body env ~async ~generator in
           body, strict
       | _ ->
+          let env = enter_function env ~async ~generator in
           let expr = Parse.assignment env in
           Statement.FunctionDeclaration.BodyExpression expr, strict env
 
-    let generator env = Expect.maybe env T_MULT
+    let generator env is_async =
+      match is_async, Expect.maybe env T_MULT with
+      | true, true ->
+          error env Error.AsyncGenerator;
+          true
+      | _, result -> result
+
+    let async env = Expect.maybe env T_ASYNC
 
     let is_simple_function_params =
       let is_simple_param = function
@@ -861,8 +875,9 @@ end = struct
 
     let _function env =
       let start_loc = Peek.loc env in
+      let async = async env in
       Expect.token env T_FUNCTION;
-      let generator = generator env in
+      let generator = generator env async in
       let id = (
         match in_export env, Peek.token env with
         | true, T_LPAREN -> None
@@ -873,8 +888,7 @@ end = struct
       let typeParameters = Type.type_parameter_declaration env in
       let params, defaults, rest = function_params env in
       let returnType = Type.return_type env in
-      let _, body, strict =
-        function_body (env |> with_allow_yield generator) in
+      let _, body, strict = function_body env ~async ~generator in
       let simple = is_simple_function_params params defaults rest in
       strict_post_check env ~strict ~simple id params;
       let end_loc, expression = Ast.Statement.FunctionDeclaration.(
@@ -888,6 +902,7 @@ end = struct
         rest;
         body;
         generator;
+        async;
         expression;
         returnType;
         typeParameters;
@@ -1160,7 +1175,7 @@ end = struct
       let test = Parse.expression env in
       Expect.token env T_RPAREN;
       let consequent = match Peek.token env with
-      | T_FUNCTION ->
+      | _ when Peek._function env ->
           strict_error env Error.StrictFunctionStatement;
           Declaration._function env
       | _ -> Parse.statement env in
@@ -1601,6 +1616,11 @@ end = struct
         | T_VAR ->
             Expect.token env T_DECLARE;
             declare_var env start_loc
+        | T_ASYNC ->
+            Expect.token env T_DECLARE;
+            error env Error.DeclareAsync;
+            Expect.token env T_ASYNC;
+            declare_function env start_loc
         | T_IDENTIFIER when not in_module && Peek.value ~i:1 env = "module" ->
             Expect.token env T_DECLARE;
             declare_module env start_loc
@@ -2170,6 +2190,12 @@ end = struct
       | T_TYPEOF -> Some Typeof
       | T_VOID -> Some Void
       | T_DELETE -> Some Delete
+      (* If we are in a unary expression context, and within an async function,
+       * assume that a use of "await" is intended as a keyword, not an ordinary
+       * identifier. This is a little bit inconsistent, since it can be used as
+       * an identifier in other contexts (such as a variable name), but it's how
+       * Babel does it. *)
+      | T_AWAIT when allow_await env -> Some Await
       | _ -> None) in
       match op with
       | None -> begin
@@ -2239,7 +2265,7 @@ end = struct
     and left_hand_side env =
       let expr = match Peek.token env with
       | T_NEW -> _new env (fun new_expr _args -> new_expr)
-      | T_FUNCTION -> _function env
+      | _ when Peek._function env -> _function env
       | _ -> primary env in
       let expr = member env expr in
       match Peek.token env with
@@ -2295,7 +2321,7 @@ end = struct
           _new env finish_fn'
       | _ ->
           let expr = match Peek.token env with
-          | T_FUNCTION -> _function env
+          | _ when Peek._function env -> _function env
           | _ -> primary env in
           let callee = member (env |> with_no_call true) expr in
           (* You can do something like
@@ -2366,8 +2392,9 @@ end = struct
 
     and _function env =
       let start_loc = Peek.loc env in
+      let async = Declaration.async env in
       Expect.token env T_FUNCTION;
-      let generator = Declaration.generator env in
+      let generator = Declaration.generator env async in
       let id, typeParameters =
         if Peek.token env = T_LPAREN
         then None, None
@@ -2380,7 +2407,7 @@ end = struct
       let params, defaults, rest = Declaration.function_params env in
       let returnType = Type.return_type env in
       let end_loc, body, strict =
-        Declaration.function_body (env |> with_allow_yield generator) in
+        Declaration.function_body env ~async ~generator in
       let simple = Declaration.is_simple_function_params params defaults rest in
       Declaration.strict_post_check env ~strict ~simple id params;
       let expression = Ast.Statement.FunctionDeclaration.(
@@ -2394,6 +2421,7 @@ end = struct
         rest;
         body;
         generator;
+        async;
         expression;
         returnType;
         typeParameters;
@@ -2604,7 +2632,6 @@ end = struct
         let env = env |> with_error_callback error_callback in
 
         let start_loc = Peek.loc env in
-        let generator = false in
         let typeParameters = Type.type_parameter_declaration env in
         let params, defaults, rest, returnType =
           (* Disallow all fancy features for identifier => body *)
@@ -2636,9 +2663,9 @@ end = struct
         (* Now we know for sure this is an arrow function *)
         let env = without_error_callback env in
 
+        let async = false in (* TODO: async arrow functions *)
         let body, strict =
-          Declaration.concise_function_body
-            (env |> with_allow_yield generator) in
+          Declaration.concise_function_body env ~async ~generator:false in
         let simple =
           Declaration.is_simple_function_params params defaults rest in
         Declaration.strict_post_check env ~strict ~simple None params;
@@ -2653,7 +2680,8 @@ end = struct
           defaults;
           rest;
           body;
-          generator;
+          async;
+          generator = false; (* arrow functions cannot be generators *)
           expression;
           returnType;
           typeParameters;
@@ -2737,6 +2765,8 @@ end = struct
         | T_NUMBER_TYPE
         | T_STRING_TYPE
         | T_VOID_TYPE
+        | T_ASYNC
+        | T_AWAIT
         | T_DEBUGGER -> ()
         | _ ->
             error_unexpected env);
@@ -2783,7 +2813,8 @@ end = struct
           fst id, Identifier id)
 
     let _method env kind =
-      let generator = Declaration.generator env in
+      let async = Declaration.async env in
+      let generator = Declaration.generator env async in
       let _, key = key env in
       let typeParameters = Type.type_parameter_declaration env in
       Expect.token env T_LPAREN;
@@ -2796,8 +2827,7 @@ end = struct
       | Init -> assert false) in
       Expect.token env T_RPAREN;
       let returnType = Type.return_type env in
-      let _, body, strict = Declaration.function_body
-        (env |> with_allow_yield generator) in
+      let _, body, strict = Declaration.function_body env ~async ~generator in
       let defaults = [] in
       let rest = None in
       let simple = Declaration.is_simple_function_params params defaults rest in
@@ -2813,6 +2843,7 @@ end = struct
         rest;
         body;
         generator;
+        async;
         expression;
         returnType;
         typeParameters;
@@ -2831,19 +2862,24 @@ end = struct
             argument;
           }))
         end else begin
-          Property (match Declaration.generator env, key env with
-          | false, (_, (Property.Identifier (_, { Ast.Identifier.name = "get"; _}) as key)) ->
+          (* look for a following identifier to tell whether to parse a function
+           * or not *)
+          let async = Peek.identifier ~i:1 env && Declaration.async env in
+          Property (match async , Declaration.generator env async, key env with
+          | false, false, (_, (Property.Identifier (_, { Ast.Identifier.name =
+              "get"; _}) as key)) ->
               (match Peek.token env with
               | T_COLON
-              | T_LPAREN -> init env start_loc key false
+              | T_LPAREN -> init env start_loc key false false
               | _ -> get env start_loc)
-          | false, (_, (Property.Identifier (_, { Ast.Identifier.name = "set"; _}) as key)) ->
+          | false, false, (_, (Property.Identifier (_, { Ast.Identifier.name =
+              "set"; _}) as key)) ->
               (match Peek.token env with
               | T_COLON
-              | T_LPAREN -> init env start_loc key false
+              | T_LPAREN -> init env start_loc key false false
               | _ -> set env start_loc)
-          | generator, (_, key) ->
-              init env start_loc key generator
+          | async, generator, (_, key) ->
+              init env start_loc key async generator
           )
         end
       )
@@ -2872,7 +2908,7 @@ end = struct
           shorthand = false;
         })
 
-      and init env start_loc key generator =
+      and init env start_loc key async generator =
         Ast.Expression.Object.Property.(
           let value, shorthand, _method =
             match Peek.token env with
@@ -2887,8 +2923,8 @@ end = struct
                 let typeParameters = Type.type_parameter_declaration env in
                 let params, defaults, rest = Declaration.function_params env in
                 let returnType = Type.return_type env in
-                let _, body, strict = Declaration.function_body
-                  (env |> with_allow_yield generator) in
+                let _, body, strict =
+                  Declaration.function_body env ~async ~generator in
                 let simple = Declaration.is_simple_function_params params defaults rest in
                 Declaration.strict_post_check env ~strict ~simple None params;
                 let end_loc, expression = Ast.Statement.FunctionDeclaration.(
@@ -2902,6 +2938,7 @@ end = struct
                   rest;
                   body;
                   generator;
+                  async;
                   expression;
                   returnType;
                   typeParameters;
@@ -3055,8 +3092,8 @@ end = struct
           static;
         })))
 
-      in let init env start_loc key generator static =
-        if not generator && Peek.token env = T_COLON
+      in let init env start_loc key async generator static =
+        if not async && not generator && Peek.token env = T_COLON
         then begin
           (* Class property with annotation *)
           let typeAnnotation = Type.annotation env in
@@ -3072,9 +3109,10 @@ end = struct
           let typeParameters = Type.type_parameter_declaration env in
           let params, defaults, rest = Declaration.function_params env in
           let returnType = Type.return_type env in
-          let _, body, strict = Declaration.function_body
-            (env |> with_allow_yield generator) in
-          let simple = Declaration.is_simple_function_params params defaults rest in
+          let _, body, strict =
+            Declaration.function_body env ~async ~generator in
+          let simple =
+            Declaration.is_simple_function_params params defaults rest in
           Declaration.strict_post_check env ~strict ~simple None params;
           let end_loc, expression = Ast.Statement.FunctionDeclaration.(
             match body with
@@ -3087,6 +3125,7 @@ end = struct
             rest;
             body;
             generator;
+            async;
             expression;
             returnType;
             typeParameters;
@@ -3102,18 +3141,21 @@ end = struct
       in fun env -> Ast.Expression.Object.Property.(
         let start_loc = Peek.loc env in
         let static = Expect.maybe env T_STATIC in
-        let generator = Declaration.generator env in
-        match (generator, key env) with
-        | false, (_, (Identifier (_, { Identifier.name = "get"; _ }) as key)) ->
+        let async = Declaration.async env in
+        let generator = Declaration.generator env async in
+        match (async, generator, key env) with
+        | false, false,
+          (_, (Identifier (_, { Identifier.name = "get"; _ }) as key)) ->
             (match Peek.token env with
-            | T_LPAREN -> init env start_loc key generator static
+            | T_LPAREN -> init env start_loc key async generator static
             | _ -> get env start_loc static )
-        | false, (_, (Identifier (_, { Identifier.name = "set"; _ }) as key)) ->
+        | false, false,
+          (_, (Identifier (_, { Identifier.name = "set"; _ }) as key)) ->
             (match Peek.token env with
-            | T_LPAREN -> init env start_loc key generator static
+            | T_LPAREN -> init env start_loc key async generator static
             | _ -> set env start_loc static)
-        | _, (_, key) ->
-            init env start_loc key generator static
+        | _, _, (_, key) ->
+            init env start_loc key async generator static
       )
 
     let class_declaration env =
@@ -3567,7 +3609,7 @@ end = struct
       * statements... (see section 13) *)
     | T_LET -> _let env
     | T_CONST -> var_or_const env
-    | T_FUNCTION -> Declaration._function env
+    | _ when Peek._function env -> Declaration._function env
     | T_CLASS -> class_declaration env
     | T_INTERFACE -> interface env
     | T_DECLARE -> declare env
@@ -3658,6 +3700,8 @@ end = struct
       Eat.token env
     | T_DECLARE
     | T_OF
+    | T_ASYNC
+    | T_AWAIT
     | T_TYPE as t ->
         (* These aren't real identifiers *)
         Expect.token env t

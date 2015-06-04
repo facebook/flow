@@ -322,6 +322,7 @@ and Statement : sig
       defaults: Expression.t option list;
       rest: Identifier.t option;
       body: body;
+      async: bool;
       generator: bool;
       expression: bool;
       returnType: Type.annotation option;
@@ -638,6 +639,7 @@ and Expression : sig
       defaults: Expression.t option list;
       rest: Identifier.t option;
       body: Statement.FunctionDeclaration.body;
+      async: bool;
       generator: bool;
       expression: bool;
       returnType: Type.annotation option;
@@ -651,6 +653,7 @@ and Expression : sig
       defaults: Expression.t option list;
       rest: Identifier.t option;
       body: Statement.FunctionDeclaration.body;
+      async: bool;
       generator: bool;
       expression: bool;
       returnType: Type.annotation option;
@@ -671,6 +674,7 @@ and Expression : sig
       | Typeof
       | Void
       | Delete
+      | Await
     type t = {
       operator: operator;
       prefix: bool;

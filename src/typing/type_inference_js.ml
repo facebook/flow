@@ -1000,7 +1000,10 @@ and statement_decl cx = Ast.Statement.(
 
   | (loc, Debugger) -> ()
 
-  | (loc, FunctionDeclaration { FunctionDeclaration.id; _ }) -> (
+  | (loc, FunctionDeclaration { FunctionDeclaration.id; async; _ }) -> (
+      if async then begin
+        Flow_js.add_error cx [mk_reason "" loc, "async not (sup)ported"]
+      end;
       match id with
       | Some(id) ->
         let _, { Ast.Identifier.name; _ } = id in
@@ -3073,10 +3076,14 @@ and expression_ cx loc e = Ast.Expression.(match e with
       Function.id;
       params; defaults; rest;
       body;
+      async;
       returnType;
       typeParameters;
       _
     } ->
+      if async then begin
+        Flow_js.add_error cx [mk_reason "" loc, "async not (sup)ported"]
+      end;
       let reason = mk_reason "function" loc in
       let this = Flow_js.mk_tvar cx (replace_reason "this" reason) in
       mk_function id cx reason
@@ -3087,10 +3094,14 @@ and expression_ cx loc e = Ast.Expression.(match e with
       ArrowFunction.id;
       params; defaults; rest;
       body;
+      async;
       returnType;
       typeParameters;
       _
     } ->
+      if async then begin
+        Flow_js.add_error cx [mk_reason "" loc, "async not (sup)ported"]
+      end;
       let reason = mk_reason "arrow function" loc in
       let this = this_ cx reason in
       mk_function id cx reason
@@ -3230,6 +3241,9 @@ and unary cx loc = Ast.Expression.Unary.(function
   | { operator = Delete; argument; _ } ->
       ignore (expression cx argument);
       BoolT.at loc
+  | { operator = Await; _ } ->
+    Flow_js.add_error cx [mk_reason "" loc, "not (sup)ported"];
+    UndefT.at loc
 )
 
 and update cx loc = Ast.Expression.Update.(function

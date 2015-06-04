@@ -1177,7 +1177,8 @@ module.exports = {
         'x | y ^ z',
         'x | y & z',
         {
-          content: '1 + type + interface + declare + let + eval + super',
+          content: '1 + type + interface + declare + let + eval + super + ' +
+            'async + await',
           explanation: 'Let is fine as an identifier',
           expected_differences: {
             'root.errors': {
@@ -4143,6 +4144,7 @@ module.exports = {
             },
           }
         },
+        'function* f () { var e = () => yield 1; }',
     ],
 
 
@@ -5553,5 +5555,37 @@ module.exports = {
             }
           }
         },
+    ],
+    'Async/Await': [
+        {
+          content: 'y = async function() { return await bar; } ()',
+          explanation: 'Babel has no problem with this, and it seems ' +
+            'perfectly sensical',
+          expected_differences: {
+            'root.errors': {
+              type: 'Flow found no error',
+              expected: 'Line 1: Unexpected token (',
+              actual: undefined,
+            },
+          },
+        },
+        'async function f() { return 1; }',
+        'async function foo() { await 1; }',
+        'var x = { async m() { await 1; } };',
+        'function async() { }',
+        'async function foo() { return function await() { }; }',
+        {
+          content: 'async function foo() { return await foo + await bar + 5; }',
+          explanation: 'Works in Babel and the spec appears to allow it',
+          expected_differences: {
+            'root.errors': {
+              type: 'Flow found no error',
+              expected: 'Line 1: Unexpected identifier',
+              actual: undefined,
+            },
+          },
+        },
+        'async function foo() { var await = 4; }',
+        'async function foo() { return await; }',
     ],
 };

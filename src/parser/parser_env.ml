@@ -136,6 +136,7 @@ type env = {
   no_call           : bool;
   no_let            : bool;
   allow_yield       : bool;
+  allow_await       : bool;
   error_callback    : (env -> Error.t -> unit) option;
   lex_mode_stack    : lex_mode list ref;
   (* lex_env is the lex_env after the single lookahead has been lexed *)
@@ -168,6 +169,7 @@ let init_env lb =
     no_call           = false;
     no_let            = false;
     allow_yield       = true;
+    allow_await       = false;
     error_callback    = None;
     lex_mode_stack    = ref [NORMAL_LEX];
     lex_env           = ref lex_env;
@@ -187,6 +189,7 @@ let in_loop env = env.in_loop
 let in_switch env = env.in_switch
 let in_function env = env.in_function
 let allow_yield env = env.allow_yield
+let allow_await env = env.allow_await
 let no_in env = env.no_in
 let no_call env = env.no_call
 let no_let env = env.no_let
@@ -226,6 +229,7 @@ let clear_lookahead_errors env =
 let with_strict strict env = { env with strict }
 let with_in_function in_function env = { env with in_function }
 let with_allow_yield allow_yield env = { env with allow_yield }
+let with_allow_await allow_await env = { env with allow_await }
 let with_no_let no_let env = { env with no_let }
 let with_in_loop in_loop env = { env with in_loop }
 let with_no_in no_in env = { env with no_in }
@@ -320,11 +324,13 @@ let double_pop_lex_mode env =
 let without_error_callback env = { env with error_callback = None }
 
 let add_label env label = { env with labels = SSet.add label env.labels }
-let enter_function env = { env with
+let enter_function env ~async ~generator = { env with
     in_function = true;
     in_loop = false;
     in_switch = false;
     labels = SSet.empty;
+    allow_await = async;
+    allow_yield = generator;
   }
 
 (* This module allows you to try parsing and rollback if you need. This is not

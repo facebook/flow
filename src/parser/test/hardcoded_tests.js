@@ -1994,4 +1994,98 @@ module.exports = {
       },
     },
   },
+  'Async/Await': {
+    'async: while (async) { continue async; }': {},
+    'await: while (await) { continue await; }': {},
+    'var await = { await }': {},
+    'var async = { async }': {},
+    'var async = { async : foo }': {},
+    'async function f() { var await = { await : async function foo() {} } }':
+      {},
+    'async function f(async, await) { var x = await async; return x; }': {},
+    'function f() { return await; }': {},
+    'async function f() { return await; }': {
+      'errors': {
+        // inside an async function, await is considered a keyword
+        '0.message': 'Unexpected token ;',
+      },
+    },
+    'function f(x: async) : async { return x; }': {},
+    'declare async function foo() : T': {
+      'errors': {
+        '0.message': "async is an implementation detail and isn't necessary " +
+          "for your declare function statement. It is sufficient for your " +
+          "declare function to just have a Promise return type.",
+      },
+    },
+    'declare async function async(async : async) : async': {
+      'errors': {
+        '0.message': "async is an implementation detail and isn't necessary " +
+          "for your declare function statement. It is sufficient for your " +
+          "declare function to just have a Promise return type.",
+      },
+    },
+    'declare async function await(await : await) : await': {
+      'errors': {
+        '0.message': "async is an implementation detail and isn't necessary " +
+          "for your declare function statement. It is sufficient for your " +
+          "declare function to just have a Promise return type.",
+      },
+    },
+    'declare function foo() : Promise<async>': {},
+    'declare function foo() : Promise<await>': {},
+    'async function foo() { var await = 4; }': {},
+    'async function foo() { var await = 4; return await; }': {
+      'errors': {
+        '0.message': 'Unexpected token ;',
+      },
+    },
+  },
+  'Invalid Async Generators': {
+    'async function *foo() {}' : {
+      'errors': {
+        '0.message': 'A function may not be both async and a generator',
+      },
+    },
+    'async function *ft<T>(a: T): void {}' : {
+      'errors': {
+        '0.message': 'A function may not be both async and a generator',
+      },
+    },
+    'class C { async *m() {} }' : {
+      'errors': {
+        '0.message': 'A function may not be both async and a generator',
+      },
+    },
+    'class C { async *mt<T>(a: T): void {} }' : {
+      'errors': {
+        '0.message': 'A function may not be both async and a generator',
+      },
+    },
+    'class C { static async *m(a): void {} }' : {
+      'errors': {
+        '0.message': 'A function may not be both async and a generator',
+      },
+    },
+    'class C { static async *mt<T>(a: T): void {} }' : {
+      'errors': {
+        '0.message': 'A function may not be both async and a generator',
+      },
+    },
+    'var e = async function *() {};' : {
+      'errors': {
+        '0.message': 'A function may not be both async and a generator',
+      },
+    },
+    'var et = async function*<T> (a: T): void {};' : {
+      'errors': {
+        '0.message': 'A function may not be both async and a generator',
+      },
+    },
+    'var n = new async function*() {};' : {
+      'errors': {
+        '0.message': 'A function may not be both async and a generator',
+      },
+    },
+  },
 };

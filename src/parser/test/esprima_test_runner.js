@@ -219,6 +219,9 @@ function handleSpecialObjectCompare(esprima, flow, env) {
           }
         }
       }
+      if (esprima.async === undefined) {
+        esprima.async = false;
+      }
   }
 
   if (flow && flow.type) {

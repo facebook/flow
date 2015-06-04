@@ -199,6 +199,7 @@ module Translate = struct
       | BodyBlock b -> block b
       | BodyExpression b -> expression b) in
       Js.Unsafe.set ret "body" (body);
+      Js.Unsafe.set ret "async" (bool fn.async);
       Js.Unsafe.set ret "generator" (bool fn.generator);
       Js.Unsafe.set ret "expression" (bool fn.expression);
       Js.Unsafe.set ret "returnType" (option type_annotation fn.returnType);
@@ -286,6 +287,7 @@ module Translate = struct
         | Statement.FunctionDeclaration.BodyBlock b -> block b
         | Statement.FunctionDeclaration.BodyExpression expr -> expression expr) in
         Js.Unsafe.set ret "body" (body);
+        Js.Unsafe.set ret "async" (bool arrow.async);
         Js.Unsafe.set ret "generator" (bool arrow.generator);
         Js.Unsafe.set ret "expression" (bool arrow.expression);
         Js.Unsafe.set ret "returnType" (option type_annotation arrow.returnType);
@@ -297,19 +299,36 @@ module Translate = struct
         Js.Unsafe.set ret "expressions" (array expression sequence.Sequence.expressions);
         ret
     | loc, Unary unary -> Unary.(
-        let ret = node "UnaryExpression" loc in
-        let operator = string (match unary.operator with
-        | Minus -> "-"
-        | Plus -> "+"
-        | Not -> "!"
-        | BitNot -> "~"
-        | Typeof -> "typeof"
-        | Void -> "void"
-        | Delete -> "delete") in
-        Js.Unsafe.set ret "operator" (operator);
-        Js.Unsafe.set ret "prefix" (bool unary.prefix);
-        Js.Unsafe.set ret "argument" (expression unary.argument);
-        ret
+        match unary.operator with
+        | Await ->
+          (* await is defined as a separate expression in ast-types
+           *
+           * TODO
+           * 1) Send a PR to ast-types
+           *    (https://github.com/benjamn/ast-types/issues/113)
+           * 2) Output a UnaryExpression
+           * 3) Modify the esprima test runner to compare AwaitExpression and
+           *    our UnaryExpression
+           * *)
+          let ret = node "AwaitExpression" loc in
+          Js.Unsafe.set ret "argument" (expression unary.argument);
+          ret
+        | _ -> begin
+          let ret = node "UnaryExpression" loc in
+          let operator = string (match unary.operator with
+          | Minus -> "-"
+          | Plus -> "+"
+          | Not -> "!"
+          | BitNot -> "~"
+          | Typeof -> "typeof"
+          | Void -> "void"
+          | Delete -> "delete"
+          | Await -> failwith "matched above") in
+          Js.Unsafe.set ret "operator" (operator);
+          Js.Unsafe.set ret "prefix" (bool unary.prefix);
+          Js.Unsafe.set ret "argument" (expression unary.argument);
+          ret
+        end
       )
     | loc, Binary binary -> Binary.(
         let ret = node "BinaryExpression" loc in
@@ -451,6 +470,7 @@ module Translate = struct
     Js.Unsafe.set ret "body" (match _function.body with
     | Statement.FunctionDeclaration.BodyBlock b -> block b
     | Statement.FunctionDeclaration.BodyExpression expr -> expression expr);
+    Js.Unsafe.set ret "async" (bool _function.async);
     Js.Unsafe.set ret "generator" (bool _function.generator);
     Js.Unsafe.set ret "expression" (bool _function.expression);
     Js.Unsafe.set ret "returnType" (option type_annotation _function.returnType);
