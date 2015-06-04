@@ -77,25 +77,12 @@ let infer_errors = ref SMap.empty
 let module_errors = ref SMap.empty
 (* errors encountered during merge *)
 let merge_errors = ref SMap.empty
+(* error suppressions in the code *)
+let error_suppressions = ref SMap.empty
 (* aggregate error map, built after check or recheck
    by collate_errors
  *)
 let all_errors = ref SMap.empty
-
-(* retrieve a full error list.
-   Note: in-place conversion using an array is to avoid
-   memory pressure on pathologically huge error sets, but
-   this may no longer be necessary
- *)
-let get_errors () =
-  let revlist = SMap.fold (
-    fun file errset ret ->
-      Errors_js.ErrorSet.fold (fun flow_err ret ->
-        (Errors_js.flow_error_to_hack_error flow_err) :: ret
-      ) errset ret
-    ) !all_errors []
-  in
-  List.rev revlist
 
 (****************** typecheck job helpers *********************)
 
@@ -109,9 +96,10 @@ let clear_errors files =
     infer_errors := SMap.remove file !infer_errors;
     merge_errors := SMap.remove file !merge_errors;
     module_errors := SMap.remove file !module_errors;
+    error_suppressions := SMap.remove file !error_suppressions;
   ) files
 
-let save_errors mapref files errsets =
+let save_errors_or_suppressions mapref files errsets =
   List.iter2 (fun file errset ->
     mapref := SMap.add file errset !mapref
   ) files errsets
@@ -128,7 +116,7 @@ let fmt_exc file exc =
 
 (* distribute errors from a set into a filename-indexed map,
    based on position info contained in error, not incoming key *)
-let distrib_errs file eset emap = Errors_js.(
+let distrib_errs _ eset emap = Errors_js.(
   ErrorSet.fold (fun e emap ->
     let file = file_of_error e in
     let errs = match SMap.get file emap with
@@ -137,6 +125,61 @@ let distrib_errs file eset emap = Errors_js.(
     SMap.add file errs emap
   ) eset emap
 )
+
+(* Given all the errors as a map from file => errorset
+ * 1) Filter out the suppressed errors from the error sets
+ * 2) Remove files with empty errorsets from the map
+ * 3) Add errors for unused suppressions
+ * 4) Properly distribute the new errors
+ *)
+let filter_suppressed_errors = Errors_js.(
+  let suppressions = ref ErrorSuppressions.empty in
+
+  let filter_suppressed_error error =
+    let (suppressed, sups) = ErrorSuppressions.check error !suppressions in
+    suppressions := sups;
+    not suppressed
+
+  in fun emap ->
+    suppressions := SMap.fold
+      (fun _key -> ErrorSuppressions.union)
+      !error_suppressions
+      ErrorSuppressions.empty;
+
+    let emap = emap
+      |> SMap.map (ErrorSet.filter filter_suppressed_error)
+      |> SMap.filter (fun k v -> not (ErrorSet.is_empty v)) in
+
+    (* For each unused suppression, create an error *)
+    let unused_suppression_errors = List.fold_left
+      (fun errset loc ->
+        let reason = Reason_js.mk_reason "Error suppressing comment" loc in
+        let err = Flow_js.new_error [(reason, "Unused suppression")] in
+        ErrorSet.add err errset
+      )
+      ErrorSet.empty
+      (ErrorSuppressions.unused !suppressions) in
+
+    distrib_errs "" unused_suppression_errors emap
+)
+
+(* retrieve a full error list.
+   Note: in-place conversion using an array is to avoid
+   memory pressure on pathologically huge error sets, but
+   this may no longer be necessary
+ *)
+let get_errors () =
+  let all = !all_errors in
+  let all = filter_suppressed_errors all in
+
+  let revlist = SMap.fold (
+    fun file errset ret ->
+      Errors_js.ErrorSet.fold (fun flow_err ret ->
+        (Errors_js.flow_error_to_hack_error flow_err) :: ret
+      ) errset ret
+    ) all []
+  in
+  List.rev revlist
 
 (* we report parse errors if a file is either checked,
    or unchecked but used as a module by a checked file *)
@@ -155,6 +198,7 @@ let collate_errors workers files =
   let all = SMap.fold distrib_errs !infer_errors all in
   let all = SMap.fold distrib_errs !merge_errors all in
   let all = SMap.fold distrib_errs !module_errors all in
+
   all_errors := all
 
 let wraptime opts pred msg f =
@@ -170,9 +214,9 @@ let logtime opts msg f =
 (* local inference job:
    takes list of filenames, accumulates into parallel lists of
    filenames, error sets *)
-let infer_job opts (inferred, errsets) files =
+let infer_job opts (inferred, errsets, errsuppressions) files =
   init_modes opts;
-  List.fold_left (fun (inferred, errsets) file ->
+  List.fold_left (fun (inferred, errsets, errsuppressions) file ->
     try checktime opts 1.0
       (fun t -> spf "perf: inferred %S in %f" file t)
       (fun () ->
@@ -182,21 +226,27 @@ let infer_job opts (inferred, errsets) files =
         let cx = TI.infer_module file in
         (* register module info *)
         Module.add_module_info cx;
-        (* note: save and clear errors before storing cx to shared heap *)
+        (* note: save and clear errors and error suppressions before storing
+         * cx to shared heap *)
         let errs = cx.errors in
+        let suppressions = cx.error_suppressions in
         cx.errors <- Errors_js.ErrorSet.empty;
+        cx.error_suppressions <- Errors_js.ErrorSuppressions.empty;
         ContextHeap.add cx.file cx;
-        (* add filename, errorset *)
-        cx.file :: inferred, errs :: errsets
+        (* add filename, errorset, suppressions *)
+        cx.file :: inferred, errs :: errsets, suppressions :: errsuppressions
       )
     with exc ->
       prerr_endlinef "(%d) infer_job THROWS: %s"
         (Unix.getpid()) (fmt_exc file exc);
-      inferred, errsets
-  ) (inferred, errsets) files
+      inferred, errsets, errsuppressions
+  ) (inferred, errsets, errsuppressions) files
 
 let rev_append_pair (x1, y1) (x2, y2) =
   (List.rev_append x1 x2, List.rev_append y1 y2)
+
+let rev_append_triple (x1, y1, z1) (x2, y2, z2) =
+  (List.rev_append x1 x2, List.rev_append y1 y2, List.rev_append z1 z2)
 
 (* local type inference pass.
    Returns a set of sucessfully inferred files.
@@ -205,13 +255,15 @@ let infer workers files opts =
   logtime opts
     (fun t -> spf "inferred %d files in %f" (List.length files) t)
     (fun () ->
-      let files, errors = MultiWorker.call
+      let files, errors, suppressions = MultiWorker.call
         workers
         ~job: (infer_job opts)
-        ~neutral: ([], [])
-        ~merge: rev_append_pair
+        ~neutral: ([], [], [])
+        ~merge: rev_append_triple
         ~next: (Bucket.make_20 files) in
-      save_errors infer_errors files errors;
+      save_errors_or_suppressions infer_errors files errors;
+      save_errors_or_suppressions error_suppressions files suppressions;
+
       files
     )
 
@@ -380,7 +432,7 @@ let merge_strict workers files opts =
         Flow_js.master_cx.errors :: errsets
       ) in
       (* save *)
-      save_errors merge_errors files errsets
+      save_errors_or_suppressions merge_errors files errsets
     )
 
 (* *)
@@ -405,14 +457,14 @@ let merge_nonstrict partition opts =
           acc
       ) ([], []) partition in
       (* typecheck intrinsics--temp code *)
-      Init_js.init (fun file errs -> ());
+      Init_js.init (fun file errs -> ()) (fun file errs -> ());
       (* collect master context errors *)
       let (files, errsets) = (
         Flow_js.master_cx.file :: files,
         Flow_js.master_cx.errors :: errsets
       ) in
       (* save *)
-      save_errors merge_errors files errsets
+      save_errors_or_suppressions merge_errors files errsets
   )
 
 (* calculate module dependencies *)
@@ -562,7 +614,7 @@ let recheck genv env modified opts =
     Parsing_service_js.reparse genv.ServerEnv.workers modified
       (fun () -> init_modes opts)
   in
-  save_errors parse_errors freshparse_fail freshparse_errors;
+  save_errors_or_suppressions parse_errors freshparse_fail freshparse_errors;
 
   (* get old (unmodified, undeleted) files that were parsed successfully *)
   let old_parsed = Relative_path.Map.fold (fun k _ a ->
@@ -631,12 +683,13 @@ let full_check workers parse_next opts =
     Parsing_service_js.parse workers parse_next
       (fun () -> init_modes opts)
   in
-  save_errors parse_errors error_files errors;
+  save_errors_or_suppressions parse_errors error_files errors;
 
   let files = SSet.elements parsed in
   let checked = typecheck workers files SSet.empty error_files opts (fun x ->
-    Init_js.init (fun file errs ->
-      save_errors infer_errors [file] [errs]);
+    Init_js.init
+      (fun file errs -> save_errors_or_suppressions infer_errors [file] [errs])
+      (fun file sups -> save_errors_or_suppressions error_suppressions [file] [sups]);
     x
   ) in
 
@@ -706,7 +759,7 @@ let server_init genv env flow_opts =
     match errors with
     | None -> ()
     | Some error ->
-      save_errors infer_errors [package] [error]
+      save_errors_or_suppressions infer_errors [package] [error]
   );
 
   let get_next = Files_js.make_next_files root in

@@ -12,6 +12,8 @@ type moduleSystem = Node | Haste
 type options = {
   moduleSystem: moduleSystem;
   module_name_mappers: (Str.regexp * string) list;
+  suppress_comments: Str.regexp list;
+  suppress_types: Utils.SSet.t;
   traces: int;
 }
 
@@ -36,6 +38,7 @@ type config = {
   root: Path.t;
 }
 val get: Path.t -> config
+val get_unsafe: unit -> config
 val fullpath: Path.t -> string
 
 val init: Path.t -> string list -> unit

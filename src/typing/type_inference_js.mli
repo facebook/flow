@@ -40,5 +40,7 @@ val fill_types: context -> (int * int * string) list
 val init:
   string ->
   Spider_monkey_ast.Statement.t list ->
+  Spider_monkey_ast.Comment.t list ->
   (Errors_js.ErrorSet.t -> unit) ->
+  (Errors_js.ErrorSuppressions.t -> unit) ->
   unit

@@ -470,6 +470,11 @@ let check_type_param_arity cx loc params n f =
     let msg = spf "Incorrect number of type parameters (expected %n)" n in
     error_type cx loc msg
 
+let is_suppress_type type_name = FlowConfig.(
+  let config = get_unsafe () in
+  SSet.mem type_name config.options.suppress_types
+)
+
 (**********************************)
 (* Transform annotations to types *)
 (**********************************)
@@ -639,18 +644,6 @@ let rec convert cx map = Ast.Type.(function
           | _ -> assert false
         )
 
-      (* $FlowIssue is a synonym for any, used by JS devs to signal
-         a potential typechecker bug to the Flow team.
-         $FlowFixMe is a synonym for any, used by the Flow team to
-         signal a needed mod to JS devs.
-       *)
-      (* TODO move these to type aliases once optional type args
-         work properly in type aliases: #7007731 *)
-      | "$FlowIssue" | "$FlowFixMe" ->
-        (* Optional type params are info-only, validated then forgotten. *)
-        List.iter (fun p -> ignore (convert cx map p)) typeParameters;
-        AnyT.at loc
-
       (* Class<T> is the type of the class whose instances are of type T *)
       | "Class" ->
         check_type_param_arity cx loc typeParameters 1 (fun () ->
@@ -668,6 +661,22 @@ let rec convert cx map = Ast.Type.(function
           let reason = mk_reason "object type" loc in
           AnyObjT reason
         )
+
+      (* You can specify in the .flowconfig the names of types that should be
+       * treated like any<actualType>. So if you have
+       * suppress_type=$FlowFixMe
+       *
+       * Then you can do
+       *
+       * var x: $FlowFixMe<number> = 123;
+       *)
+      (* TODO move these to type aliases once optional type args
+         work properly in type aliases: #7007731 *)
+      | type_name when is_suppress_type type_name ->
+        (* Optional type params are info-only, validated then forgotten. *)
+        List.iter (fun p -> ignore (convert cx map p)) typeParameters;
+        AnyT.at loc
+
       (* TODO: presumably some existing uses of AnyT can benefit from AnyObjT
          as well: e.g., where AnyT is used to model prototypes and statics we
          don't care about; but then again, some of these uses may be internal,
@@ -5158,6 +5167,27 @@ let infer_core cx statements =
         Flow_js.add_warning cx [new_reason "" (Pos.make_from
           (Relative_path.create Relative_path.Dummy cx.file)), msg]
 
+(* There's a .flowconfig option to specify suppress_comments regexes. Any
+ * comments that match those regexes will suppress any errors on the next line
+ *)
+let scan_for_suppressions =
+  let should_suppress suppress_comments comment =
+    List.exists (fun r -> Str.string_match r comment 0) suppress_comments
+
+  in fun cx comments ->
+    let config = FlowConfig.get_unsafe () in
+    let suppress_comments = FlowConfig.(config.options.suppress_comments) in
+    let should_suppress = should_suppress suppress_comments in
+
+    (* Bail immediately if we're not using error suppressing comments *)
+    if suppress_comments <> []
+    then List.iter (function
+      | loc, Ast.Comment.Block comment
+      | loc, Ast.Comment.Line comment when should_suppress comment ->
+          cx.error_suppressions <-
+            Errors_js.ErrorSuppressions.add loc cx.error_suppressions
+      | _ -> ()) comments
+
 (* build module graph *)
 let infer_ast ast file m force_check =
   Flow_js.Cache.clear();
@@ -5211,6 +5241,7 @@ let infer_ast ast file m force_check =
       Env_js.get_var_in_scope cx "exports" reason
     );
     infer_core cx statements;
+    scan_for_suppressions cx comments;
   );
 
   cx.checked <- check;
@@ -5376,7 +5407,7 @@ let merge_module_strict cx cxs implementations declarations master_cx =
   implicit_require_strict cx master_cx
 
 (* variation of infer + merge for lib definitions *)
-let init file statements save_errors =
+let init file statements comments save_errors save_suppressions =
   Flow_js.Cache.clear();
 
   let cx = new_context file Files_js.lib_module in
@@ -5388,6 +5419,7 @@ let init file statements save_errors =
   Env_js.changeset := SSet.empty;
 
   infer_core cx statements;
+  scan_for_suppressions cx comments;
 
   !scope |> SMap.iter (fun x {specific=t;_} ->
     Flow_js.set_builtin cx x t
@@ -5397,7 +5429,8 @@ let init file statements save_errors =
 
   let errs = cx.errors in
   cx.errors <- Errors_js.ErrorSet.empty;
-  save_errors errs
+  save_errors errs;
+  save_suppressions cx.error_suppressions
 
 (* Legacy functions for managing non-strict merges. *)
 (* !!!!!!!!!!! TODO: out of date !!!!!!!!!!!!!!! *)

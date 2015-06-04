@@ -20,6 +20,8 @@ type moduleSystem = Node | Haste
 type options = {
   moduleSystem: moduleSystem;
   module_name_mappers: (Str.regexp * string) list;
+  suppress_comments: Str.regexp list;
+  suppress_types: SSet.t;
   traces: int;
 }
 
@@ -50,6 +52,8 @@ type config = {
 let default_options = {
   moduleSystem = Node;
   module_name_mappers = [];
+  suppress_comments = [];
+  suppress_types = SSet.empty;
   traces = 0;
 }
 
@@ -268,6 +272,19 @@ module OptionsParser = struct
   let configure configuration =
     List.fold_left map_add SMap.empty configuration
 
+  let raw_string option_setter =
+    fun options opt (ln, value) ->
+      option_setter options (ln, value)
+
+  let regexp option_setter =
+    fun options opt (ln, value) ->
+      try
+        let r = Str.regexp value in
+        option_setter options (ln, r)
+      with Failure reason ->
+        let msg = spf "Invalid regex for %s: %s" opt reason in
+        error ln msg
+
   (* Generic option parser constructor. Makes an option parser given a string
      description `supported` of the target datatype and a partial function
      `converter` that parsers strings to that datatype. *)
@@ -341,6 +358,25 @@ module OptionsParser = struct
 end
 
 let options_parser = OptionsParser.configure [
+  ("suppress_comment", OptionsParser.({
+    flags = [ALLOW_DUPLICATE];
+    _parser = regexp (fun options (ln, suppress_comment) ->
+      let suppress_comments = suppress_comment::(options.suppress_comments) in
+      { options with suppress_comments; }
+    );
+  }));
+
+  ("suppress_type", OptionsParser.({
+    flags = [ALLOW_DUPLICATE];
+    _parser = raw_string (fun options (ln, suppress_type) ->
+      let suppress_types = options.suppress_types in
+      if SSet.mem suppress_type suppress_types
+      then error ln (spf "Duplicate suppress_type value %s" suppress_type);
+      let suppress_types = SSet.add suppress_type suppress_types in
+      { options with suppress_types; }
+    );
+  }));
+
   ("module.system", OptionsParser.({
     flags = [];
     _parser = enum ["node", Node; "haste", Haste] (fun opts (_, moduleSystem) ->
@@ -439,3 +475,8 @@ let get root =
   | Some config ->
       assert (root = config.root);
       config
+
+let get_unsafe () =
+  match !cache with
+  | Some config -> config
+  | none -> failwith "No config loaded"

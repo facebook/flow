@@ -9,44 +9,15 @@
  *)
 
 open Utils
+open Span
 
 module Ast = Spider_monkey_ast
 
 (**************************)
 
-let string_of_pos p = Ast.Loc.(
-  spf "%d:%d" p.line p.column
-)
-
-let string_of_span span = Ast.Loc.(
-  spf "%s - %s" (string_of_pos span.start) (string_of_pos span._end)
-)
-
-module SpanMap : MapSig with type key = Ast.Loc.t = MyMap(struct
-  type t = Ast.Loc.t
-  let poscmp p0 p1 = Ast.Loc.(
-    match Pervasives.compare p0.line p1.line with
-      | 0 -> Pervasives.compare p0.column p1.column
-      | _ as x -> x
-  )
-  let compare l0 l1 = Ast.Loc.(
-    match poscmp l0.start l1.start with
-      | 1 -> (
-          match poscmp l0._end l1._end with
-            | -1 -> 0
-            | _ -> 1
-          )
-      | _ as x -> x
-  )
-end)
-
 let unwrap_comment = Ast.Comment.(function
   loc, Block str | loc, Line str -> (loc, str)
 )
-
-let make_span startpos endpos = Ast.Loc.({
-  source = None; start = startpos; _end = endpos
-})
 
 let add_comment start _end cloc cstr cmap =
   let span = make_span start _end in

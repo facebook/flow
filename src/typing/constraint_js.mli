@@ -274,6 +274,8 @@ type context = {
   mutable errors: Errors_js.ErrorSet.t;
   mutable globals: SSet.t;
 
+  mutable error_suppressions: Errors_js.ErrorSuppressions.t;
+
   type_table: (Spider_monkey_ast.Loc.t, Type.t) Hashtbl.t;
   annot_table: (Pos.t, Type.t) Hashtbl.t;
 }

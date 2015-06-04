@@ -35,6 +35,16 @@ module Error :
    traces may share endpoints, and produce the same error *)
 module ErrorSet : Set.S with type elt = error
 
+module ErrorSuppressions : sig
+  type t
+
+  val empty : t
+  val add : Spider_monkey_ast.Loc.t -> t -> t
+  val union : t -> t -> t
+  val check : error -> t -> (bool * t)
+  val unused : t -> Spider_monkey_ast.Loc.t list
+end
+
 (******* TODO move to hack structure throughout ********)
 
 val flow_error_to_hack_error : error -> Errors.error

@@ -117,6 +117,76 @@ end
    traces may share endpoints, and produce the same error *)
 module ErrorSet = Set.Make(Error)
 
+(* This is a data structure used to track what locations are being suppressed
+ * and which suppressions have yet to be used.
+ *)
+module ErrorSuppressions = struct
+  open Span
+  module Ast = Spider_monkey_ast
+
+  type error_suppressions = Ast.Loc.t SpanMap.t
+  type t = {
+    suppressions: error_suppressions;
+    unused: error_suppressions;
+  }
+
+  let empty = {
+    suppressions = SpanMap.empty;
+    unused = SpanMap.empty;
+  }
+
+  let add loc { suppressions; unused; } = Ast.Loc.(
+    let start = { loc.start with line = loc._end.line + 1; column = 0 } in
+    let _end = { loc._end with line = loc._end.line + 2; column = 0 } in
+    let suppression_loc = { loc with start; _end; } in
+    {
+      suppressions = SpanMap.add suppression_loc loc suppressions;
+      unused = SpanMap.add suppression_loc loc unused;
+    }
+  )
+
+  let union a b = {
+    suppressions = SpanMap.union a.suppressions b.suppressions;
+    unused = SpanMap.union a.unused b.unused;
+  }
+
+  let check_reason ((result, { suppressions; unused; }) as acc) reason =
+    let loc = Reason_js.loc_of_reason reason in
+
+    (* We only want to check the starting position of the reason *)
+    let loc = Ast.Loc.({ loc with _end = loc.start; }) in
+    if SpanMap.mem loc suppressions
+    then true, { suppressions; unused = SpanMap.remove loc unused}
+    else acc
+
+  (* We need to check every reason in the error message in order to figure out
+   * which suppressions are really unused...that's why we don't shortcircuit as
+   * soon as we find a matching error suppression
+   *)
+  let rec check_error_messages acc = function
+    | [] -> acc
+    | (reason, error_message)::errors ->
+        let acc = check_reason acc reason in
+
+        (* There's this feature --traces which will tack on an error trace to
+         * the error. We don't want to suppress an error based on a location
+         * that only shows up when --traces is turned on. The only way to
+         * detect it at the moment is to find the error message that has
+         * "\nError path:" tacked on at the end. When we see it we will stop
+         * looking at reason locations
+         *)
+        if Str.string_match (Str.regexp ".*\nError path:$") error_message 0
+        then acc
+        else check_error_messages acc errors
+
+  (* Checks if an error should be suppressed. *)
+  let check err suppressions =
+    check_error_messages (false, suppressions) (snd err)
+
+  (* Get's the locations of the suppression comments that are yet unused *)
+  let unused { unused; _; } = SpanMap.values unused
+end
+
 (******* TODO move to hack structure throughout ********)
 
 let flow_error_to_hack_error flow_err =

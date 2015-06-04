@@ -41,14 +41,19 @@ let parse_lib () =
       failwith (spf "Can't read library definitions file %s, exiting." lib_file)
   )
 
-let init_lib save_errors =
+let init_lib save_errors save_suppressions =
   parse_lib () |> List.iter (fun (file, ast) ->
-    let _, statements, _ = ast in
-    Type_inference_js.init file statements (save_errors file)
+    let _, statements, comments = ast in
+    Type_inference_js.init
+      file
+      statements
+      comments
+      (save_errors file)
+      (save_suppressions file)
   )
 
-let init save_errors =
-  init_lib save_errors;
+let init save_errors save_suppressions =
+  init_lib save_errors save_suppressions;
   Flow.Cache.clear();
   let cx = Flow.master_cx in
   let reason = Reason.builtin_reason "module" in
