@@ -327,7 +327,8 @@ let main_hack { filename; mode; } =
   Hhi.set_hhi_root_for_unit_test (Path.make "/tmp/hhi");
   let outer_do f = match mode with
     | Ai ->
-       let ai_results, inner_results = Ai.do_ ServerIdeUtils.check_defs f in
+       let ai_results, inner_results =
+         Ai.do_ ServerIdeUtils.check_defs filename in
        ai_results, [], inner_results
     | _ ->
        let lint_results, inner_results = Lint.do_ f in

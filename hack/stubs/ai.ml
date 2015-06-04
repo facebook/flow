@@ -8,5 +8,6 @@
  *
  *)
 
-let do_ _ f = ([], f ())
+let do_ _ _ =
+  [], ([], (Naming.empty TypecheckerOptions.default, Relative_path.Map.empty))
 let go _ _ = [], Relative_path.Set.empty
