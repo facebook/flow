@@ -218,7 +218,7 @@ module Typing                               = struct
   let cyclic_class_def                      = 4013 (* DONT MODIFY!!!! *)
   let cyclic_typedef                        = 4014 (* DONT MODIFY!!!! *)
   let discarded_awaitable                   = 4015 (* DONT MODIFY!!!! *)
-  let isset_empty_unset_in_strict           = 4016 (* DONT MODIFY!!!! *)
+  let isset_empty_in_strict                 = 4016 (* DONT MODIFY!!!! *)
   (* DEPRECATED dynamic_yield_private       = 4017 *)
   let enum_constant_type_bad                = 4018 (* DONT MODIFY!!!! *)
   let enum_switch_nonexhaustive             = 4019 (* DONT MODIFY!!!! *)
@@ -334,6 +334,7 @@ module Typing                               = struct
   let nullsafe_property_write_context       = 4132 (* DONT MODIFY!!!! *)
   let noreturn_usage                        = 4133 (* DONT MODIFY!!!! *)
   let this_lvalue                           = 4134 (* DONT MODIFY!!!! *)
+  let unset_nonidx_in_strict                 = 4135 (* DONT MODIFY!!!! *)
   (* EXTEND HERE WITH NEW VALUES IF NEEDED *)
 end
 
@@ -1178,11 +1179,15 @@ let classname_abstract_call cname meth_name call_pos decl_pos =
     decl_pos, "Declaration is here"
   ]
 
-let isset_empty_unset_in_strict pos name =
+let isset_empty_in_strict pos name =
   let name = Utils.strip_ns name in
-  add Typing.isset_empty_unset_in_strict pos
+  add Typing.isset_empty_in_strict pos
     (name^" cannot be used in a completely type safe way and so is banned in "
      ^"strict mode")
+
+let unset_nonidx_in_strict pos =
+  add Typing.unset_nonidx_in_strict pos
+    ("In strict mode, unset is banned except on array indexing")
 
 let array_get_arity pos1 name pos2 =
   add_list Typing.array_get_arity [
