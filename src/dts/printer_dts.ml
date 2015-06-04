@@ -58,6 +58,18 @@ let todo fmt =
       "#######"
 
 
+(* generate_mangled_name generates a new name for an inner level
+   module so that it can be moved to global scope without any
+   collisions of names with any other module definition.
+*)
+let generate_mangled_name name = function
+  | "" -> name
+  | prefix -> String.concat "___" [prefix; name]
+
+(* inverse of generate_mangled_name *)
+let clean_mangled_name mangled_name =
+  Str.global_substitute (Str.regexp ".*___") (fun _ -> "") mangled_name
+
 (* get_modules_in_scope computes the list of modules which are
    declared int he cuurent scope. In particular we shall use it to
    find a list of modules in global scope.
@@ -72,31 +84,48 @@ let todo fmt =
 
    For the above d.ts file, the function will return the following
    list -> "M" :: "N" :: []
+
+   In case of nested modules, it does more. It prepends a prefix
+   which is names of its ancestors separated by "____".
+
+
+
+   declare module M {
+       declare module N {
+           declare module P {
+
+           }
+           declare module Q {
+
+           }
+       }
+   }
+
+   when called for the body of module N, the function will return the
+   following list --> "M___N___P" :: "M___N___Q" :: []
 *)
 
-let rec get_modules_in_scope = function
-  | [] -> SSet.empty
+let rec get_modules_in_scope acc prefix = function
+  | [] -> acc
   | x :: xs ->
-    extract_module (get_modules_in_scope xs) x
+    extract_module (get_modules_in_scope acc prefix xs) prefix x
 
-and extract_module acc = Statement.(function
+and extract_module acc prefix = Statement.(function
   | _, ModuleDeclaration { Module.id; _; } ->
-    SSet.add (get_name id) acc
+    (get_name prefix id) :: acc
   | _ -> acc
 )
 
-and get_name = function
-  | _ , { IdPath.ids; _} -> append_name ids
+and get_name prefix = function
+  | _ , { IdPath.ids; _} -> append_name prefix ids
 
-and append_name = function
-  | [x] -> id_name x
+and append_name prefix = function
+  | [x] -> id_name prefix x
   | _ -> failwith
     "FLow only supports module declaration with one identifier"
 
-and id_name = function
-  | _, { Identifier.name; _ } -> name
-
-
+and id_name prefix = function
+  | _, { Identifier.name; _ } -> generate_mangled_name name prefix
 
 (* get_modules_used computes a list of possible use of modules in the
    given list of statements. What it does is find all instances of
@@ -179,13 +208,39 @@ and module_used_ids acc = function
   | _ -> acc
 
 
+
+(*
+  get_modules_to_import returns a list of modules that need to be
+  imported. An element of this list is a tuple of two strings A and
+  B. A refers to the name by which the module is to be referred to in the
+  current scope and B refers to the name to which the module is be
+  referred to in the global scope.
+*)
+let get_modules_to_import scope set =
+  (* find_module matches name of a module with all the modules in
+     scope by stripping of the prefix *)
+  let rec find_module name = function
+    | [] -> None
+    | x :: xs ->
+      if (clean_mangled_name x) = name
+      then Some (name, x)
+      else find_module name xs
+  and fold_intermediate scope name acc =
+    match (find_module name scope) with
+    | None -> acc
+    | Some x -> x :: acc
+  in
+  SSet.fold (fold_intermediate scope) set []
+
+
 let rec program fmt (_, stmts, _) =
   Format.set_margin 80;
-  let scope = get_modules_in_scope stmts in
+  let scope = get_modules_in_scope [] "" stmts in
   fprintf fmt "@[<v>@,%a@]@."
-    (list ~sep:"" (statement scope)) stmts
+    (list ~sep:"" (statement scope "")) stmts
 
-and statement scope fmt = Statement.(function
+and statement scope prefix fmt =
+  Statement.(function
   | _, VariableDeclaration { VariableDeclaration.
       declarations; _
     } -> VariableDeclaration.(
@@ -210,19 +265,22 @@ and statement scope fmt = Statement.(function
     references and then take an intersection with the list of modules
     in scope which are defined in the same file to get a subset of
     actual references to sibling modules.  *)
-
+    let new_prefix = get_name prefix id in
+    let new_scope = get_modules_in_scope scope new_prefix body in
     let list_possible_modules = get_modules_used body in
-    let list_modules_used = SSet.inter scope list_possible_modules in
+    let list_modules_used =
+      get_modules_to_import new_scope list_possible_modules in
 
     fprintf fmt "@[<v>declare module %a {@;<0 2>@[<v>%a%a@]@,}@]"
       id_path id
-      (list_ ~sep:"" import_module) (SSet.elements list_modules_used)
-      (_list ~sep:"" (statement scope)) body
+      (list_ ~sep:"" import_module) list_modules_used
+      (_list ~sep:"" (statement new_scope new_prefix)) body
 
   | _, ExportModuleDeclaration { ExportModule.name; body; } ->
+    let new_prefix = generate_mangled_name name prefix in
       fprintf fmt "@[<v>declare module %s {@;<0 2>@[<v>%a@]@,}@]"
         name
-        (list ~sep:"" (statement scope)) body
+        (list ~sep:"" (statement scope new_prefix)) body
 
   | _, ExportAssignment id ->
       fprintf fmt "@[<h>declare var exports: typeof %a;@]"
@@ -417,4 +475,4 @@ and rest_ ?(follows=false) fmt = Type.Function.(function
    declaration, we use this hack of $Exports
 *)
 and import_module fmt = function
-  | x -> fprintf fmt "declare var %s: $Exports<'%s'>;" x x
+  | (x, y) -> fprintf fmt "declare var %s: $Exports<'%s'>;" x y
