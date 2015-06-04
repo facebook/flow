@@ -3104,7 +3104,7 @@ and expression_ cx loc e = Ast.Expression.(match e with
       end;
       let reason = mk_reason "arrow function" loc in
       let this = this_ cx reason in
-      mk_function id cx reason
+      mk_function id cx reason ~bound:true
         typeParameters (params, defaults, rest) returnType body this
 
   | TaggedTemplate {
@@ -5050,7 +5050,7 @@ and extract_type_param_instantiations = function
   | Some (_, typeParameters) -> typeParameters.Ast.Type.ParameterInstantiation.params
 
 (* Process a function definition, returning a (polymorphic) class type. *)
-and mk_function id cx reason type_params params ret body this =
+and mk_function id cx reason ?(bound=false) type_params params ret body this =
 
   let (typeparams,params,pnames,ret) =
     function_decl id cx reason type_params params ret
@@ -5061,6 +5061,12 @@ and mk_function id cx reason type_params params ret body this =
   let proto_reason = replace_reason "prototype" reason in
   let prototype = mk_object cx proto_reason in
   let static = mk_object cx (prefix_reason "statics of " reason) in
+  (* If the function is bound, e.g. it is an arrow, then do not expose the type
+     of `this` in the function's type. The call to function_decl above has
+     already done the necessary checking of `this` in the body of the
+     function. Now we want to avoid re-binding `this` to objects through which
+     the function may be called. *)
+  let this = if bound then Flow_js.dummy_this else this in
 
   let funtype = {
     this_t = this;
@@ -5076,6 +5082,8 @@ and mk_function id cx reason type_params params ret body this =
   else
     PolyT (typeparams, FunT(reason, static,prototype,funtype))
 
+(* This function is around for the sole purpose of modeling some method-like
+   behaviors of non-ES6 React classes. It is otherwise deprecated. *)
 and mk_method cx reason params ret body this super =
   let (_,params,pnames,ret) =
     function_decl None cx reason None params ret body this super

@@ -72,6 +72,7 @@ val mk_functiontype : Type.t list -> string list option -> Type.t ->
 val mk_functiontype2 : Type.t list -> string list option -> Type.t ->
   int -> Type.funtype
 
+val dummy_this : Type.t
 val dummy_static : Type.t
 val dummy_prototype : Type.t
 
