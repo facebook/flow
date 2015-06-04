@@ -1963,10 +1963,10 @@ and statement cx = Ast.Statement.(
             let map_ = if static then smmap_ else mmap_ in
             let t = match SMap.get name map_ with
               | None -> t
-              | Some (IntersectionT (reason, ts)) ->
-                  IntersectionT (reason, ts @ [t])
-              | Some t0 ->
-                  IntersectionT (Reason_js.mk_reason iname loc, [t; t0])
+              | Some (IntersectionT (reason, seen_ts)) ->
+                  IntersectionT (reason, seen_ts @ [t])
+              | Some seen_t ->
+                  IntersectionT (Reason_js.mk_reason iname loc, [seen_t; t])
             in
             (* TODO: additionally check that the four maps are disjoint *)
             (match static, _method with
