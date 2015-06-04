@@ -1616,6 +1616,11 @@ let rec __flow cx (l, u) trace =
       then rec_flow cx trace (l, u)
       else rec_flow cx trace (default, u)
 
+    | (ObjTestT(reason, default, u), _) ->
+      if object_like u
+      then rec_flow cx trace (l, u)
+      else rec_flow cx trace (l, default)
+
     (*****************************)
     (* upper and lower any types *)
     (*****************************)
@@ -3121,6 +3126,9 @@ and subst cx ?(force=true) (map: Type.t SMap.t) t =
 
   | ObjAssignT(reason, t1, t2, xs, resolve) ->
     ObjAssignT(reason, subst cx ~force map t1, subst cx ~force map t2, xs, resolve)
+
+  | ObjTestT(reason, t1, t2) ->
+    ObjTestT(reason, subst cx ~force map t1, subst cx ~force map t2)
 
   | _ -> assert false (** TODO **)
 
