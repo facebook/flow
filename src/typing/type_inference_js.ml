@@ -632,7 +632,7 @@ let rec convert cx map = Ast.Type.(function
           RecordT (mk_reason "record type" loc, t)
         )
 
-      (* $Record<T> is the type of objects whose keys are those of T *)
+      (* $ObjTest<T> is the default if the given type is not an object *)
       | "$ObjTest" ->
         check_type_param_arity cx loc typeParameters 2 (fun () ->
           let t1 = typeParameters |> List.hd |> convert cx map in
