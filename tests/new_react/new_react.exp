@@ -65,6 +65,12 @@ classes.js:80:22,27: number
 This type is incompatible with
 [LIB] react.js:16:1,49:1: ReactComponent
 
+classes.js:88:22,39: React element: NoDefaultProps
+Error:
+classes.js:85:10,22: property x
+Property not found in
+classes.js:88:22,39: type parameter D of React element: NoDefaultProps
+
 new_react.js:3:9,27:2: state of React component
 This type is incompatible with
 new_react.js:17:18,23: string
@@ -203,4 +209,4 @@ state3.js:14:16,20: boolean
 This type is incompatible with
 state3.js:11:16,21: number
 
-Found 44 errors
+Found 45 errors

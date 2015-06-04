@@ -632,6 +632,14 @@ let rec convert cx map = Ast.Type.(function
           RecordT (mk_reason "record type" loc, t)
         )
 
+      (* $ObjTest<T> is the default if the given type is not an object *)
+      | "$ObjTest" ->
+        check_type_param_arity cx loc typeParameters 2 (fun () ->
+          let t1 = typeParameters |> List.hd |> convert cx map in
+          let t2 = typeParameters |> List.tl |> List.hd |> convert cx map in
+          ObjTestT (mk_reason "object test" loc, t1, t2)
+        )
+
       (* $Exports<'M'> is the type of the exports of module 'M' *)
       (** TODO: use `import typeof` instead when that lands **)
       | "$Exports" ->

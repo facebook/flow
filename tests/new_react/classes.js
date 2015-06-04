@@ -80,3 +80,9 @@ FooLegacy.defaultProps = 0; // TODO: should be error
 var foo_legacy: $jsx<number> = <FooLegacy/>;
 
 FooLegacy.bar();
+
+class NoDefaultProps extends React.Component {
+  props: { x: number };
+}
+
+var noDefaultProps = <NoDefaultProps /> // error
