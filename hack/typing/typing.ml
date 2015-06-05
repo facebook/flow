@@ -1463,8 +1463,15 @@ and check_shape_keys_validity env pos keys =
     (* If the key is a class constant, get its class name and type. *)
     let get_field_info env key =
       let key_pos = shape_field_pos key in
+      (* Empty strings or literals that start with numbers are not
+         permitted as shape field names. *)
       (match key with
-        | SFlit _ -> env, key_pos, None
+        | SFlit (_, key_name) ->
+           if (String.length key_name = 0) then
+             (Errors.invalid_shape_field_name_empty key_pos)
+           else if (key_name.[0] >= '0' && key_name.[0] <='9') then
+             (Errors.invalid_shape_field_name_number key_pos);
+           env, key_pos, None
         | SFclass_const (_, cls as x, y) ->
           let env, ty = class_const env pos (CI x, y) in
           let env = Typing_enum.check_valid_array_key_type

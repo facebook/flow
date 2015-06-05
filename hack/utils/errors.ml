@@ -334,7 +334,9 @@ module Typing                               = struct
   let nullsafe_property_write_context       = 4132 (* DONT MODIFY!!!! *)
   let noreturn_usage                        = 4133 (* DONT MODIFY!!!! *)
   let this_lvalue                           = 4134 (* DONT MODIFY!!!! *)
-  let unset_nonidx_in_strict                 = 4135 (* DONT MODIFY!!!! *)
+  let unset_nonidx_in_strict                = 4135 (* DONT MODIFY!!!! *)
+  let invalid_shape_field_name_empty        = 4136 (* DONT MODIFY!!!! *)
+  let invalid_shape_field_name_number       = 4137 (* DONT MODIFY!!!! *)
   (* EXTEND HERE WITH NEW VALUES IF NEEDED *)
 end
 
@@ -939,6 +941,14 @@ let enum_switch_wrong_class pos expected got =
 let invalid_shape_field_name p =
   add Typing.invalid_shape_field_name p
     "Was expecting a constant string or class constant (for shape access)"
+
+let invalid_shape_field_name_empty p =
+  add Typing.invalid_shape_field_name_empty p
+    "A shape field name cannot be an empty string"
+
+let invalid_shape_field_name_number p =
+  add Typing.invalid_shape_field_name_number p
+    "A shape field name cannot start with numbers"
 
 let invalid_shape_field_type pos ty_pos ty trail =
   add_with_trail Typing.invalid_shape_field_type
