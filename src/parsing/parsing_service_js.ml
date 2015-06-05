@@ -10,7 +10,6 @@
 
 open Utils
 open Sys_utils
-module Errors = Errors_js
 module Reason = Reason_js
 module Ast = Spider_monkey_ast
 
@@ -18,7 +17,7 @@ module Ast = Spider_monkey_ast
 type results =
   SSet.t *                  (* successfully parsed files *)
   string list *             (* list of failed files *)
-  Errors.ErrorSet.t list    (* parallel list of error sets *)
+  Errors_js.ErrorSet.t list (* parallel list of error sets *)
 
 (**************************** internal *********************************)
 
@@ -72,16 +71,16 @@ let do_parse ?(keep_errors=false) content file =
   with
   | Parse_error.Error parse_errors ->
     let converted = List.fold_left (fun acc err ->
-      Errors.(ErrorSet.add (parse_error_to_flow_error err) acc)
-    ) Errors.ErrorSet.empty parse_errors in
+      Errors_js.(ErrorSet.add (parse_error_to_flow_error err) acc)
+    ) Errors_js.ErrorSet.empty parse_errors in
     None, Some converted
   | e ->
     let s = Printexc.to_string e in
     let msg = spf "unexpected parsing exception: %s" s in
     let reason = Reason.new_reason "" (Pos.make_from
       (Relative_path.create Relative_path.Dummy file)) in
-    let err = Errors.ERROR, [reason, msg] in
-    None, Some (Errors.ErrorSet.singleton err)
+    let err = Errors_js.ERROR, [reason, msg] in
+    None, Some (Errors_js.ErrorSet.singleton err)
 
 (* parse file, store AST to shared heap on success.
  * Add success/error info to passed accumulator. *)

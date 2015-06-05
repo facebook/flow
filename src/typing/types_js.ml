@@ -175,7 +175,7 @@ let get_errors () =
   let revlist = SMap.fold (
     fun file errset ret ->
       Errors_js.ErrorSet.fold (fun flow_err ret ->
-        (Errors_js.flow_error_to_hack_error flow_err) :: ret
+        flow_err :: ret
       ) errset ret
     ) all []
   in
@@ -708,19 +708,21 @@ let relative_path =
     |> String.concat Filename.dir_sep
 
 (* helper: strip root from positions *)
-let strip_root p path =
-  Pos.(
-    let { pos_file; pos_start; pos_end } = p in
-    let pos_file = Relative_path.to_absolute pos_file in
-    let pos_file =
-      if Files_js.is_lib_file pos_file
-      then spf "[LIB] %s" (Filename.basename pos_file)
-      else relative_path
-        (spf "%s%s" (Path.to_string path) Filename.dir_sep) pos_file
-    in
-    {(make_from (Relative_path.create Relative_path.Dummy pos_file)) with
-      pos_start; pos_end }
-  )
+let strip_root reason path = Pos.(
+  let { pos_file; pos_start; pos_end } = Reason_js.pos_of_reason reason in
+  let pos_file = Relative_path.to_absolute pos_file in
+  let pos_file =
+    if Files_js.is_lib_file pos_file
+    then spf "[LIB] %s" (Filename.basename pos_file)
+    else relative_path
+      (spf "%s%s" (Path.to_string path) Filename.dir_sep) pos_file
+  in
+  let p = {
+    (Pos.make_from (Relative_path.create Relative_path.Dummy pos_file)) with
+    pos_start; pos_end
+  } in
+  Reason_js.repos_reason p reason
+)
 
 (* helper - print errors. used in check-and-die runs *)
 let print_errors ?root flow_opts =
@@ -730,12 +732,12 @@ let print_errors ?root flow_opts =
     | Some path ->
         let ae = Array.of_list errors in
         Array.iteri (fun i error ->
-          let list = Errors.to_list error in
+          let level, list = error in
           let list =
             if flow_opts.Options.opt_strip_root
-            then List.map (fun (p,s) -> (strip_root p path, s)) list
+            then List.map (fun (reason,s) -> (strip_root reason path, s)) list
             else list in
-          let e = Errors.make_error 0 list in
+          let e = level, list in
           ae.(i) <- e
         ) ae;
         Array.to_list ae

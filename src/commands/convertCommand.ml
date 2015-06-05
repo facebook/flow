@@ -48,7 +48,7 @@ let convert_file outpath file =
     let n = List.length errors in
     Printf.printf "%d errors:\n" n;
     List.iter (fun e ->
-      let e = Errors_js.parse_error_to_hack_error e in
+      let e = Errors_js.parse_error_to_flow_error e in
       Errors_js.print_error_color e
     ) errors;
     n, 0, 1
@@ -121,12 +121,6 @@ let spec = {
   )
 }
 
-let die str =
-  let oc = stderr in
-  output_string oc str;
-  close_out oc;
-  exit 2
-
 let main outpath recurse dir () =
   let path = match dir with
   | None -> "."
@@ -136,8 +130,6 @@ let main outpath recurse dir () =
   then ()
   else
     SharedMem.(init default_config);
-    Errors.try_
-      (fun () -> convert path recurse outpath)
-      (fun l -> die (Errors.to_string (Errors.to_absolute l)))
+    convert path recurse outpath
 
 let command = CommandSpec.command spec main

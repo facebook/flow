@@ -8,18 +8,20 @@
  *
  *)
 
+type level = ERROR | WARNING
+type message = (Reason_js.reason * string)
+type error = level * message list
+
 val pos_range : Pos.t -> int * int * int * int
 
 val format_reason_color: ?first:bool -> Pos.t * string ->
   (Tty.style * string) list
 
-val print_reason_color: first:bool -> Pos.t * string -> unit
+val print_reason_color: first:bool -> message -> unit
 
-val print_error_color: Errors.error -> unit
+val print_error_color: error -> unit
 
-type level = ERROR | WARNING
-
-type error = level * (Reason_js.reason * string) list
+val pos_of_error : error -> Pos.t
 
 val file_of_error : error -> string
 
@@ -45,21 +47,14 @@ module ErrorSuppressions : sig
   val unused : t -> Spider_monkey_ast.Loc.t list
 end
 
-(******* TODO move to hack structure throughout ********)
-
-val flow_error_to_hack_error : error -> Errors.error
-
 val parse_error_to_flow_error :
   (Spider_monkey_ast.Loc.t * Parse_error.t) -> error
 
-val parse_error_to_hack_error :
-  (Spider_monkey_ast.Loc.t * Parse_error.t) -> Errors.error
-
-val to_list : ErrorSet.t -> Errors.error list
+val to_list : ErrorSet.t -> error list
 
 (******* Error output functionality working on Hack's error *******)
 
-val print_errorl : bool -> Errors.error list -> out_channel -> unit
+val print_errorl : bool -> error list -> out_channel -> unit
 
 (* Human readable output *)
-val print_error_summary : bool -> Errors.error list -> unit
+val print_error_summary : bool -> error list -> unit

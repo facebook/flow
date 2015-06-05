@@ -61,7 +61,7 @@ type directory_mismatch = {
 
 type response =
 | DIRECTORY_MISMATCH of directory_mismatch
-| ERRORS of Errors.error list
+| ERRORS of Errors_js.error list
 | NO_ERRORS
 | PONG
 | SERVER_DYING

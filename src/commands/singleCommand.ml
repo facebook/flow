@@ -46,12 +46,6 @@ let spec = {
   )
 }
 
-let die str =
-  let oc = stderr in
-  output_string oc str;
-  close_out oc;
-  exit 2
-
 let main all weak debug verbose json show_all_errors profile quiet module_
          lib no_flowlib root () =
   let opt_libs = match lib with
@@ -94,8 +88,6 @@ let main all weak debug verbose json show_all_errors profile quiet module_
   then ()
   else
     SharedMem.(init default_config);
-    Errors.try_
-      (fun () -> Types_js.single_main [root] options)
-      (fun l -> die (Errors.to_string (Errors.to_absolute l)))
+    Types_js.single_main [root] options
 
 let command = CommandSpec.command spec main

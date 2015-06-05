@@ -23,7 +23,7 @@ val server_init:
 (* hh_single_type_check entry point, probably to be moved *)
 val single_main: string list -> Options.options -> unit
 
-val get_errors: unit -> Errors.t
+val get_errors: unit -> Errors_js.error list
 
 val merge_strict_file: string -> Constraint_js.context
 

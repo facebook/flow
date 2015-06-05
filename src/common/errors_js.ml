@@ -11,6 +11,10 @@
 module C = Tty
 module Json = Hh_json
 
+type level = ERROR | WARNING
+type message = (Reason_js.reason * string)
+type error = level * message list
+
 let pos_range p = Pos.(Lexing.(
   p.pos_start.pos_lnum, p.pos_start.pos_cnum + 1,
     p.pos_end.pos_lnum, p.pos_end.pos_cnum
@@ -45,7 +49,8 @@ let format_reason_color ?(first=false) ((p, s): Pos.t * string) = Pos.(
   ]
 )
 
-let print_reason_color ~(first:bool) ((p, s): Pos.t * string) =
+let print_reason_color ~(first:bool) ((reason, s): message) =
+  let p = Reason_js.pos_of_reason reason in
   let to_print = format_reason_color ~first (p, s) in
   (if first then Printf.printf "\n");
   let should_color = Modes_js.(match modes.color with
@@ -60,20 +65,19 @@ let print_reason_color ~(first:bool) ((p, s): Pos.t * string) =
     let strings = List.map snd to_print in
     List.iter (Printf.printf "%s") strings
 
-let print_error_color (e:Errors.error) =
-  let e = Errors.to_list e in
-  print_reason_color ~first:true (List.hd e);
-  List.iter (print_reason_color ~first:false) (List.tl e)
+let print_error_color (e:error) =
+  let level, messages = e in
+  print_reason_color ~first:true (List.hd messages);
+  List.iter (print_reason_color ~first:false) (List.tl messages)
 
-type level = ERROR | WARNING
-
-type error = level * (Reason_js.reason * string) list
+let pos_of_error err =
+  let _, messages = err in
+  match messages with
+  | (reason, _) :: _ -> Reason_js.pos_of_reason reason
+  | _ -> Pos.none
 
 let file_of_error err =
-  let _, messages = err in
-  let pos = match messages with
-  | (reason, _) :: _ -> Reason_js.pos_of_reason reason
-  | _ -> Pos.none in
+  let pos = pos_of_error err in
   Relative_path.to_absolute pos.Pos.pos_file
 
 let pos_to_json pos =
@@ -187,41 +191,27 @@ module ErrorSuppressions = struct
   let unused { unused; _; } = SpanMap.values unused
 end
 
-(******* TODO move to hack structure throughout ********)
-
-let flow_error_to_hack_error flow_err =
-  let level, messages = flow_err in
-  let message_list = List.map (fun (reason, message) ->
-    Reason_js.pos_of_reason reason, message
-  ) messages in
-  Errors.make_error 0 message_list
-
 let parse_error_to_flow_error (loc, err) =
   let reason = Reason_js.mk_reason "" loc in
   let msg = Parse_error.PP.error err in
   ERROR, [reason, msg]
 
-let parse_error_to_hack_error parse_err =
-  flow_error_to_hack_error (parse_error_to_flow_error parse_err)
-
-let to_list errors =
-  let revlist =
-    ErrorSet.fold (fun flow_err ret ->
-        (flow_error_to_hack_error flow_err) :: ret
-      ) errors []
-  in
-  List.rev revlist
+let to_list errors = ErrorSet.elements errors
 
 (******* Error output functionality working on Hack's error *******)
 
 (* adapted from Errors.to_json to output multi-line errors properly *)
-let to_json (error : Errors.error) = Json.(
-  let error_code = Errors.get_code error in
-  let elts = List.map (fun (p, w) ->
+let to_json (error : error) = Json.(
+  let level, messages = error in
+  let level_str = match level with
+  | ERROR -> "error"
+  | WARNING -> "warning"
+  in
+  let elts = List.map (fun (reason, w) ->
       JAssoc (("descr", Json.JString w) ::
-              ("code",  Json.JInt error_code) ::
-              (pos_to_json p))
-    ) (Errors.to_list error)
+              ("level", Json.JString level_str) ::
+              (pos_to_json (Reason_js.pos_of_reason reason)))
+    ) messages
   in
   JAssoc [ "message", JList elts ]
 )
@@ -244,16 +234,18 @@ let print_errorl_json oc el =
   flush oc
 
 (* adapted from Errors.to_string to omit error codes *)
-let to_string (e : Errors.error) : string =
-  let msgl = Errors.to_list e in
+let to_string (error : error) : string =
+  let level, msgl = error in
   let buf = Buffer.create 50 in
   (match msgl with
   | [] -> assert false
-  | (pos1, msg1) :: rest_of_error ->
+  | (reason1, msg1) :: rest_of_error ->
+      let pos1 = Reason_js.pos_of_reason reason1 in
       Buffer.add_string buf begin
         Printf.sprintf "%s\n%s\n" (Pos.string (Pos.to_absolute pos1)) msg1
       end;
-      List.iter begin fun (p, w) ->
+      List.iter begin fun (reason, w) ->
+        let p = Reason_js.pos_of_reason reason in
         let msg = Printf.sprintf "%s\n%s\n" (Pos.string (Pos.to_absolute p)) w
         in Buffer.add_string buf msg
       end rest_of_error
@@ -281,7 +273,7 @@ let print_errorl use_json el oc =
   flush oc
 
 (* Human readable output *)
-let print_error_summary truncate errors =
+let print_error_summary truncate (errors : error list) =
   let error_or_errors n = if n != 1 then "errors" else "error" in
   let print_error_if_not_truncated curr e =
     (if not(truncate) || curr < 50 then print_error_color e);

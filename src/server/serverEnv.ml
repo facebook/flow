@@ -32,7 +32,7 @@ type genv = {
  *)
 type env = {
     files_info     : FileInfo.t Relative_path.Map.t;
-    errorl         : Errors.t;
+    errorl         : Errors_js.error list;
   }
 
 let async_queue : (unit -> unit) list ref = ref []
@@ -60,7 +60,7 @@ let die() =
 let list_files env oc =
   let acc = List.fold_right
     ~f:begin fun error acc ->
-      let pos = Errors.get_pos error in
+      let pos = Errors_js.pos_of_error error in
       Relative_path.Set.add pos.Pos.pos_file acc
     end
     ~init:Relative_path.Set.empty
