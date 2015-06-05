@@ -10,6 +10,7 @@
 (*****************************************************************************)
 (* Imported modules. *)
 (*****************************************************************************)
+open Core
 open Lexer_hack
 
 exception Format_error
@@ -853,7 +854,7 @@ let next_non_ws_token env =
 (*****************************************************************************)
 
 let try_words env wordl f = wrap env begin function
-  | Tword when List.mem !(env.last_str) wordl ->
+  | Tword when List.mem wordl !(env.last_str) ->
       f env
   | _ -> back env
 end
@@ -1174,7 +1175,7 @@ let rec entry ~keep_source_metadata ~no_trailing_commas ~modes
       let rp = Relative_path.(create Dummy (file :> string)) in
       let {Parser_hack.file_mode; _} =
         Parser_hack.program rp content in
-      if not (List.mem file_mode modes) then raise PHP;
+      if not (List.mem modes file_mode) then raise PHP;
     end in
     if errorl <> []
     then Parsing_error errorl

@@ -8,6 +8,8 @@
  *
  *)
 
+open Core
+
 (*****************************************************************************)
 (* Helper function, splits the content of a file into a list of lines.  *)
 (*****************************************************************************)
@@ -132,7 +134,7 @@ end = struct
 
   and add_file env =
     (* Given a list of modified lines => returns a list of intervals *)
-    let lines_modified = List.rev_map (fun x -> (x, x)) env.modified in
+    let lines_modified = List.rev_map env.modified (fun x -> (x, x)) in
     let lines_modified = normalize_intervals [] lines_modified in
     (* Adds the file to the list of results *)
     match env.file with
@@ -305,8 +307,8 @@ let print_hunk (old_start_line, new_start_line, old_lines, new_lines) =
   let new_range = List.length new_lines in
   Printf.printf "@@ -%d,%d +%d,%d @@\n"
     old_start_line old_range new_start_line new_range;
-  List.iter (Printf.printf "-%s\n") old_lines;
-  List.iter (Printf.printf "+%s\n") new_lines
+  List.iter old_lines (Printf.printf "-%s\n");
+  List.iter new_lines (Printf.printf "+%s\n")
 
 (*****************************************************************************)
 (* Applies the changes to a list of lines:
@@ -341,7 +343,7 @@ let apply_blocks outc blocks lines =
         output_string outc new_content;
         (* Cut the old content. *)
         let old_lines, lines =
-          Core_list.split_n lines (end_block - start_block + 1) in
+          List.split_n lines (end_block - start_block + 1) in
         let new_lines = split_lines new_content in
         let acc =
           (* only add a hunk if it is nonempty *)
@@ -361,10 +363,10 @@ let parse_diff prefix diff_text =
   ParseDiff.go prefix diff_text
 
 let rec apply modes in_place ~diff:file_and_lines_modified =
-  List.iter begin fun (filepath, modified_lines) ->
+  List.iter file_and_lines_modified begin fun (filepath, modified_lines) ->
     let file_content = Path.cat filepath in
     apply_file modes in_place filepath file_content modified_lines
-  end file_and_lines_modified
+  end
 
 and apply_file modes in_place filepath file_content modified_lines =
   let filename = Path.to_string filepath in
@@ -393,7 +395,7 @@ and apply_formatted in_place filepath formatted_content file_content
     close_out outc;
     if List.length hunks <> 0 then begin
       print_file_header filename;
-      List.iter print_hunk hunks;
+      List.iter hunks print_hunk;
     end;
   with Sys_error _ ->
     Printf.eprintf "Error: could not modify file %s\n" filename
