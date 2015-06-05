@@ -1,0 +1,21 @@
+declare module R {
+  declare var T: $Exports<'R___T'>;
+  declare class A extends C {
+
+  }
+  declare var x: C;
+  declare var y: T.E;
+}
+declare module R___T {
+
+  declare class E {
+
+  }
+}
+declare module R___T___U {
+
+}
+declare module S {
+  declare var R: $Exports<'R'>;
+  declare var y: R.A;
+}

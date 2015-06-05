@@ -27,6 +27,4 @@ then
     ../../../facebook/flow convert --r .
     printf "\n\n***************** RUNNING FLOW CHECK *********************\n\n"
     ../../../facebook/flow check hand_crafted
-    rm hand_crafted/declarations/a.js
-    rm hand_crafted/declarations/b.js
 fi

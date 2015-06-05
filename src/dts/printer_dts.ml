@@ -233,12 +233,110 @@ let get_modules_to_import scope set =
   SSet.fold (fold_intermediate scope) set []
 
 
+
+(*
+  The following two functions filter out module and not_module
+  statements from a list of statements respectively.
+*)
+let rec filter_modules prefix scope = Statement.(function
+  | [] -> []
+  |  x :: xs -> match x with
+    | _, ModuleDeclaration _ ->
+      (prefix, scope, x) :: (filter_modules prefix scope xs)
+    | _, ExportModuleDeclaration _ ->
+      (prefix, scope, x) :: (filter_modules prefix scope xs)
+    | _ -> filter_modules prefix scope xs
+)
+
+let rec filter_not_modules = Statement.(function
+  | [] -> []
+  |  x :: xs -> match x with
+    | _, ModuleDeclaration _ -> filter_not_modules xs
+    | _, ExportModuleDeclaration _ -> filter_not_modules xs
+    | _ -> x :: (filter_not_modules xs)
+)
+
+(*
+  Find a list of modules declared within the current module. If you
+  only consider the module nodes in the AST then, this is just the
+  find_child function of a tree.
+*)
+let find_child_modules acc prefix scope = Statement.(function
+  | _, ModuleDeclaration { Module.id; body; } ->
+    let new_prefix = get_name prefix id in
+    let new_scope = get_modules_in_scope scope new_prefix body in
+    List.append (filter_modules new_prefix new_scope body) acc
+  | _, ExportModuleDeclaration { ExportModule.name; body; } ->
+    let new_prefix = generate_mangled_name name prefix in
+    let new_scope = get_modules_in_scope scope new_prefix body in
+    List.append (filter_modules new_prefix new_scope body) acc
+  | _ -> failwith
+    "Unexpected statement. A module declaration was expected"
+)
+
+(*
+  To handle flatten nested modules, we decopes the AST into modules
+  and not_modules component. Note that the modules will form a tree
+  and we just need to flatten that tree. We do this in DFS order for
+  readability.
+*)
+
 let rec program fmt (_, stmts, _) =
   Format.set_margin 80;
+  let prefix  = "" in
   let scope = get_modules_in_scope [] "" stmts in
-  fprintf fmt "@[<v>@,%a@]@."
-    (list ~sep:"" (statement scope "")) stmts
+  let modules = filter_modules prefix scope stmts in
+  let not_modules = filter_not_modules stmts in
+  fprintf fmt "@[<v>@,%a%a@]@."
+    print_modules modules
+    (list ~sep:"" (statement scope prefix)) not_modules
 
+(*
+  print_modules calls print_module in a DFS order. It can easily be
+  converted to BFS order by changing find_child_moduels.
+*)
+
+and print_modules fmt = function
+  | [] -> ()
+  | (prefix, scope, x) :: xs ->
+    fprintf fmt "%a@,%a"
+      (print_module scope prefix) x
+      print_modules (find_child_modules xs prefix scope x)
+
+and print_module scope prefix fmt = Statement.(function
+
+  (* First we compute all the possible instances of module
+     references and then take an intersection with the list of modules
+     in scope which are defined in the same file to get a subset of
+     actual references to other modules.  *)
+
+  | _, ModuleDeclaration { Module.id; body; } ->
+    let new_prefix = get_name prefix id in
+    let new_scope = get_modules_in_scope scope new_prefix body in
+    let list_possible_modules = get_modules_used body in
+    let list_modules_used =
+      get_modules_to_import new_scope list_possible_modules in
+
+    fprintf fmt "@[<v>declare module %s {@;<0 2>@[<v>%a%a@]@,}@]"
+      new_prefix
+      (list_ ~sep:"" import_module) list_modules_used
+      (_list ~sep:"" (statement new_scope new_prefix))
+      (filter_not_modules body)
+
+  | _, ExportModuleDeclaration { ExportModule.name; body; } ->
+    let new_prefix = generate_mangled_name name prefix in
+    let new_scope = get_modules_in_scope scope new_prefix body in
+    let list_possible_modules = get_modules_used body in
+    let list_modules_used =
+      get_modules_to_import new_scope list_possible_modules in
+
+    fprintf fmt "@[<v>declare module %s {@;<0 2>@[<v>%a%a@]@,}@]"
+      new_prefix
+      (list_ ~sep:"" import_module) list_modules_used
+      (_list ~sep:"" (statement new_scope new_prefix))
+      (filter_not_modules body)
+  | _ -> todo fmt
+)
 and statement scope prefix fmt =
   Statement.(function
   | _, VariableDeclaration { VariableDeclaration.
@@ -259,28 +357,6 @@ and statement scope prefix fmt =
         (opt (non_empty "<@[<h>%a@]>" (list ~sep:"," type_param))) typeParameters
         extends_interface extends
         object_type (snd body)
-
-  | _, ModuleDeclaration { Module.id; body; } ->
-    (* First we compute all the possible instances of module
-    references and then take an intersection with the list of modules
-    in scope which are defined in the same file to get a subset of
-    actual references to sibling modules.  *)
-    let new_prefix = get_name prefix id in
-    let new_scope = get_modules_in_scope scope new_prefix body in
-    let list_possible_modules = get_modules_used body in
-    let list_modules_used =
-      get_modules_to_import new_scope list_possible_modules in
-
-    fprintf fmt "@[<v>declare module %a {@;<0 2>@[<v>%a%a@]@,}@]"
-      id_path id
-      (list_ ~sep:"" import_module) list_modules_used
-      (_list ~sep:"" (statement new_scope new_prefix)) body
-
-  | _, ExportModuleDeclaration { ExportModule.name; body; } ->
-    let new_prefix = generate_mangled_name name prefix in
-      fprintf fmt "@[<v>declare module %s {@;<0 2>@[<v>%a@]@,}@]"
-        name
-        (list ~sep:"" (statement scope new_prefix)) body
 
   | _, ExportAssignment id ->
       fprintf fmt "@[<h>declare var exports: typeof %a;@]"
