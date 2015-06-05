@@ -31,7 +31,7 @@ let default_options = {
   opt_profile = false;
   opt_strip_root = false;
   opt_module = FlowConfig.(
-    match default_options.moduleSystem with
+    match default_module_system with
     | Node -> "node"
     | Haste -> "haste"
   );

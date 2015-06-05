@@ -15,9 +15,11 @@ type options = {
   suppress_comments: Str.regexp list;
   suppress_types: Utils.SSet.t;
   traces: int;
+  log_file: Path.t;
 }
 
-val default_options: options
+val default_module_system: moduleSystem
+val default_options: Path.t -> options
 
 module PathMap : Utils.MapSig with type key = Path.t
 

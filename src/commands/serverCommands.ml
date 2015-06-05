@@ -47,6 +47,8 @@ module OptionParser(Config : CONFIG) = struct
         ~doc:"Specify one or more library paths, comma separated"
     |> flag "--no-flowlib" no_arg
         ~doc:"Do not include embedded declarations"
+    |> flag "--log-file" string
+        ~doc:"Path to log file (default: /tmp/flow/<escaped root path>.log)"
     |> anon "root" (optional string) ~doc:"Root directory"
   )
 
@@ -89,7 +91,7 @@ module OptionParser(Config : CONFIG) = struct
 
   let result = ref None
   let main json show_all_errors profile quiet debug verbose all weak
-           traces strip_root lib no_flowlib root () =
+           traces strip_root lib no_flowlib log_file root () =
     let root = CommandUtils.guess_root root in
     let flowconfig = FlowConfig.get root in
     let opt_module = FlowConfig.(match flowconfig.options.moduleSystem with
@@ -106,6 +108,14 @@ module OptionParser(Config : CONFIG) = struct
     let opt_traces = match traces with
       | Some level -> level
       | None -> FlowConfig.(flowconfig.options.traces) in
+    let opt_log_file = match log_file with
+      | Some s ->
+          let dirname = Path.make (Filename.dirname s) in
+          let basename = Filename.basename s in
+          Path.concat dirname basename
+      | None ->
+          FlowConfig.(flowconfig.options.log_file)
+    in
 
     (* hack opts and flow opts: latter extends the former *)
     result := Some ({
@@ -117,6 +127,7 @@ module OptionParser(Config : CONFIG) = struct
       ServerArgs.no_load       = false;
       ServerArgs.save_filename = None;
       ServerArgs.waiting_client= None;
+      ServerArgs.log_file      = opt_log_file;
     },
     {
       Options.opt_debug = debug;

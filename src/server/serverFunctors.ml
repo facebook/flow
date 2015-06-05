@@ -325,11 +325,6 @@ end = struct
       let socket = Socket.init_unix_socket root in
       serve genv env socket
 
-  let get_log_file root =
-    let tmp_dir = Tmp.get_dir() in
-    let root_part = Path.slash_escaped_string_of_path root in
-    Printf.sprintf "%s/%s.log" tmp_dir root_part
-
   let daemonize options =
     (* detach ourselves from the parent process *)
     let pid = Fork.fork() in
@@ -341,7 +336,7 @@ end = struct
         let fd = Unix.openfile "/dev/null" [Unix.O_RDONLY; Unix.O_CREAT] 0o777 in
         Unix.dup2 fd Unix.stdin;
         Unix.close fd;
-        let file = get_log_file (ServerArgs.root options) in
+        let file = Path.to_string (ServerArgs.log_file options) in
         (try Sys.rename file (file ^ ".old") with _ -> ());
         let fd = Unix.openfile file [Unix.O_WRONLY; Unix.O_CREAT; Unix.O_APPEND] 0o666 in
         Unix.dup2 fd Unix.stdout;
@@ -353,7 +348,7 @@ end = struct
       (* let original parent exit *)
       Printf.eprintf "Spawned %s (child pid=%d)\n" (Program.name) pid;
       Printf.eprintf
-        "Logs will go to %s\n%!" (get_log_file (ServerArgs.root options));
+        "Logs will go to %s\n%!" (Path.to_string (ServerArgs.log_file options));
       raise Exit
     end
 

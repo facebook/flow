@@ -23,6 +23,7 @@ type options = {
   suppress_comments: Str.regexp list;
   suppress_types: SSet.t;
   traces: int;
+  log_file: Path.t;
 }
 
 module PathMap : MapSig with type key = Path.t
@@ -49,12 +50,20 @@ type config = {
   root: Path.t;
 }
 
-let default_options = {
-  moduleSystem = Node;
+let default_log_file root =
+  let tmp_dir = Tmp.get_dir() in
+  let root_part = Path.slash_escaped_string_of_path root in
+  Path.make (Printf.sprintf "%s/%s.log" tmp_dir root_part)
+
+let default_module_system = Node
+
+let default_options root = {
+  moduleSystem = default_module_system;
   module_name_mappers = [];
   suppress_comments = [];
   suppress_types = SSet.empty;
   traces = 0;
+  log_file = default_log_file root;
 }
 
 module Pp : sig
@@ -81,8 +90,10 @@ end = struct
       | Node -> "node"
       | Haste -> "haste"
 
-    in fun o options ->
-      if options.moduleSystem <> default_options.moduleSystem
+    in fun o config ->
+      let options = config.options in
+      let default_opts = default_options config.root in
+      if options.moduleSystem <> default_opts.moduleSystem
       then opt o "module.system" (module_system options.moduleSystem)
 
   let config o config =
@@ -96,7 +107,7 @@ end = struct
     libs o config.libs;
     fprintf o "\n";
     section_header o "options";
-    options o config.options
+    options o config
 end
 
 let empty_config root = {
@@ -105,7 +116,7 @@ let empty_config root = {
   include_stems = [];
   include_map = PathMap.empty;
   libs = [];
-  options = default_options;
+  options = (default_options root);
   root;
 }
 
@@ -360,10 +371,10 @@ module OptionsParser = struct
       else error ln (spf "Unsupported option: \"%s\"" opt)
     else error ln "Unable to parse line"
 
-  let parse p lines =
+  let parse config p lines =
     let seen = SSet.empty in
     let options, _ =
-      List.fold_left (parse_line p) (default_options, seen) lines in
+      List.fold_left (parse_line p) (default_options config.root, seen) lines in
     options
 end
 
@@ -385,6 +396,13 @@ let options_parser = OptionsParser.configure [
       let suppress_types = SSet.add suppress_type suppress_types in
       { options with suppress_types; }
     );
+  }));
+
+  ("log.file", OptionsParser.({
+    flags = [];
+    _parser = generic
+      ("string", fun s -> Some (Path.make s))
+      (fun opts (_, log_file) -> { opts with log_file });
   }));
 
   ("module.system", OptionsParser.({
@@ -415,7 +433,7 @@ let parse_options config lines =
   let lines = lines
     |> List.map (fun (ln, line) -> ln, String.trim line)
     |> List.filter (fun (ln, s) -> s <> "") in
-  let options = OptionsParser.parse options_parser lines in
+  let options = OptionsParser.parse config options_parser lines in
   { config with options }
 
 let assert_version (ln, line) =
