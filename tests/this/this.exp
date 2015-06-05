@@ -44,4 +44,10 @@ arrows.js:1:7,7: C
 This type is incompatible with
 arrows.js:12:7,7: D
 
-Found 10 errors
+arrows.js:24:7,19: super.foo(...)
+Error:
+arrows.js:24:17,18: string
+This type is incompatible with
+arrows.js:19:10,15: number
+
+Found 11 errors
