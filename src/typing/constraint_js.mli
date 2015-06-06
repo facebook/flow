@@ -66,7 +66,6 @@ module Type :
       | DiffT of t * t
 
       | EnumT of reason * t
-      | RecordT of reason * t
 
       | TypeT of reason * t
       | BecomeT of reason * t

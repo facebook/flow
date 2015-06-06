@@ -625,13 +625,6 @@ let rec convert cx map = Ast.Type.(function
           EnumT (mk_reason "enum type" loc, t)
         )
 
-      (* $Record<T> is the type of objects whose keys are those of T *)
-      | "$Record" ->
-        check_type_param_arity cx loc typeParameters 1 (fun () ->
-          let t = convert cx map (List.hd typeParameters) in
-          RecordT (mk_reason "record type" loc, t)
-        )
-
       (* $Exports<'M'> is the type of the exports of module 'M' *)
       (** TODO: use `import typeof` instead when that lands **)
       | "$Exports" ->

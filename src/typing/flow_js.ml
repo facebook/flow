@@ -689,12 +689,6 @@ and ground_type_impl cx ids t = match t with
   | DiffT (t1, t2) ->
       DiffT (ground_type_impl cx ids t1, ground_type_impl cx ids t2)
 
-  | RecordT (_, t) ->
-      RecordT (
-        reason_of_string "record",
-        ground_type_impl cx ids t
-      )
-
   | _ -> assert false (** TODO **)
 
 and lookup_type_ cx ids id =
@@ -795,9 +789,6 @@ let rec normalize_type cx t =
       ShapeT (normalize_type cx t)
   | DiffT (t1, t2) ->
       DiffT (normalize_type cx t1, normalize_type cx t2)
-
-  | RecordT (r, t) ->
-      RecordT (r, normalize_type cx t)
 
   (* TODO: Normalize all types? *)
   | t -> t
@@ -968,9 +959,6 @@ let rec printify_type cx t =
   | DiffT (t1, t2) ->
       DiffT (printify_type cx t1, printify_type cx t2)
 
-  | RecordT (r, t) ->
-      RecordT (r, printify_type cx t)
-
   | t -> t
 
 let printified_type cx t =
@@ -1103,9 +1091,6 @@ let rec assert_ground ?(infer=false) cx ids = function
       assert_ground cx ids t2
 
   | EnumT(reason,t) ->
-      assert_ground cx ids t
-
-  | RecordT(reason,t) ->
       assert_ground cx ids t
 
   | CJSExportDefaultT (reason,t) ->
@@ -2577,15 +2562,6 @@ let rec __flow cx (l, u) trace =
     | (EnumT (reason1, o1), _) ->
       rec_flow cx trace (o1, KeyT (reason1, u))
 
-    | (_, RecordT (reason2, o2)) ->
-      rec_flow cx trace (o2, KeyT(reason2, EnumT(reason2, l)))
-
-    | (RecordT (reason, o2),
-       (HasT(_,x) |
-           LookupT(_,_,x,_) | GetT(_,x,_) | SetT(_,x,_) | MethodT(_,x,_,_,_,_)))
-      ->
-      rec_flow cx trace (o2, HasT(reason_of_t u,x))
-
     | (ObjT (reason_o, { props_tmap = mapr; _ }), HasT(reason_op, x)) ->
       if has_prop cx mapr x then ()
       else
@@ -2609,9 +2585,6 @@ let rec __flow cx (l, u) trace =
           (reason_op, reason_o)
       )
 
-    | (RecordT (reason, o2), KeyT(reason_, key)) ->
-      rec_flow cx trace (o2, KeyT(reason_, key))
-
     | (ObjT (reason, { props_tmap = mapr; _ }), KeyT(_,key)) ->
       iter_props cx mapr (fun x tv ->
         let t = StrT (reason, Some x) in
@@ -2626,11 +2599,6 @@ let rec __flow cx (l, u) trace =
         let t = StrT (reason, Some x) in
         rec_flow cx trace (t, key)
       )
-
-    | (RecordT (reason, o2), (ObjT _ | InstanceT _)) ->
-      let tvar = mk_tvar cx reason in
-      rec_flow cx trace (u, KeyT(reason, tvar));
-      rec_flow cx trace (tvar, EnumT(reason, o2))
 
     (*********************)
     (* functions statics *)
@@ -2895,7 +2863,7 @@ and numeric = function
   | _ -> false
 
 and object_like = function
-  | ObjT _ | InstanceT _ | RecordT _ -> true
+  | ObjT _ | InstanceT _ -> true
   | t -> function_like t
 
 and object_like_op = function
@@ -3115,9 +3083,6 @@ and subst cx ?(force=true) (map: Type.t SMap.t) t =
 
   | EnumT(reason, t) ->
     EnumT(reason, subst cx ~force map t)
-
-  | RecordT(reason, t) ->
-    RecordT(reason, subst cx ~force map t)
 
   | ObjAssignT(reason, t1, t2, xs, resolve) ->
     ObjAssignT(reason, subst cx ~force map t1, subst cx ~force map t2, xs, resolve)

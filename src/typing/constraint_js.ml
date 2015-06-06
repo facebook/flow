@@ -148,8 +148,6 @@ module Type = struct
 
   (* collects the keys of an object *)
   | EnumT of reason * t
-  (* constrains the keys of an object *)
-  | RecordT of reason * t
 
   (* type aliases *)
   | TypeT of reason * t
@@ -711,7 +709,6 @@ let string_of_ctor = function
   | ShapeT _ -> "ShapeT"
   | DiffT _ -> "DiffT"
   | EnumT _ -> "EnumT"
-  | RecordT _ -> "RecordT"
   | KeyT _ -> "KeyT"
   | HasT _ -> "HasT"
   | ElemT _ -> "ElemT"
@@ -841,7 +838,6 @@ let rec reason_of_t = function
       -> reason_of_t t
 
   | EnumT (reason, _)
-  | RecordT (reason, _)
       ->
       reason
 
@@ -985,7 +981,6 @@ let rec mod_reason_of_t f = function
   | DiffT (t1, t2) -> DiffT (mod_reason_of_t f t1, t2)
 
   | EnumT (reason, t) -> EnumT (f reason, t)
-  | RecordT (reason, t) -> RecordT (f reason, t)
 
   | KeyT (reason, t) -> KeyT (f reason, t)
   | HasT (reason, t) -> HasT (f reason, t)
@@ -1205,9 +1200,6 @@ let rec type_printer override fallback enclosure cx t =
     | AnyFunT _ ->
         "Function"
 
-    | RecordT (_, t) ->
-        spf "$Record<%s>" (pp EnclosureNone cx t)
-
     | t ->
         fallback t
 
@@ -1356,8 +1348,7 @@ let rec _json_of_t stack cx t = Json.(
       "type2", _json_of_t stack cx t2
     ]
 
-  | EnumT (_, t)
-  | RecordT (_, t) -> [
+  | EnumT (_, t) -> [
       "type", _json_of_t stack cx t
     ]
 
@@ -1885,7 +1876,6 @@ let rec is_printed_type_parsable_impl weak cx enclosure = function
   | TypeT (_, t)
   | LowerBoundT t
   | UpperBoundT t
-  | RecordT (_, t)
   | ClassT t
     when weak
     ->
