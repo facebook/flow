@@ -21,4 +21,10 @@ App.react.js:10:16,21: string
 App.react.js:26:21,21: return
 Missing annotation
 
-Found 6 errors
+propTypes.js:15:1,18:2: React element: D
+Error:
+propTypes.js:9:3,11: property name
+Property not found in
+propTypes.js:15:1,18:2: type parameter D of React element: D
+
+Found 7 errors

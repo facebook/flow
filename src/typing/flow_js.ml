@@ -3126,9 +3126,8 @@ and instantiate_poly cx trace reason_ (xs,t) =
 and mk_object_with_proto cx reason proto =
   mk_object_with_map_proto cx reason SMap.empty proto
 
-and mk_object_with_map_proto cx reason ?(sealed=false) map proto =
+and mk_object_with_map_proto cx reason ?(sealed=false) ?dict map proto =
   let flags = { default_flags with sealed } in
-  let dict = None in
   let pmap = mk_propmap cx map in
   ObjT (reason, mk_objecttype ~flags dict pmap proto)
 

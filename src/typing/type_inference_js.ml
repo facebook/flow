@@ -3749,15 +3749,14 @@ and mk_proptype cx = Ast.Expression.(function
       arguments = [Expression (_, Object { Object.properties })];
     } ->
       let reason = mk_reason "shape" vloc in
-      let amap, omap = mk_proptypes cx properties in
-      Flow_js.mk_object_with_map_proto cx reason
-        (SMap.union amap omap) (MixedT reason)
-
+      let amap, omap, dict = mk_proptypes cx properties in
+      let map = SMap.union amap omap in
+      Flow_js.mk_object_with_map_proto cx reason ?dict map (MixedT reason)
   | vloc, _ -> AnyT.at vloc
 )
 
 and mk_proptypes cx props = Ast.Expression.Object.(
-  List.fold_left (fun (amap, omap) -> function
+  List.fold_left (fun (amap, omap, dict) -> function
 
     (* required prop *)
     | Property (loc, { Property.
@@ -3774,7 +3773,8 @@ and mk_proptypes cx props = Ast.Expression.Object.(
         _ }) ->
         let tvar = mk_proptype cx e in
         SMap.add name tvar amap,
-        omap
+        omap,
+        dict
 
     (* other prop *)
     | Property (loc, { Property.kind = Property.Init;
@@ -3788,33 +3788,39 @@ and mk_proptypes cx props = Ast.Expression.Object.(
         _ }) ->
         let tvar = mk_proptype cx v in
         amap,
-        SMap.add name tvar omap
+        SMap.add name tvar omap,
+        dict
+
+    (* spread prop *)
+    | SpreadProperty (loc, { SpreadProperty.argument }) ->
+      (* Instead of modeling the spread precisely, we instead make the propTypes
+         extensible. This has the effect of loosening the check for properties
+         added by the spread, while leaving the checking of other properties as
+         is. FWIW we use a similar approximation for mixins. It would be nice to
+         be more precise here, but given that this only affects legacy React
+         classes, and that reconstructing props is already fairly delicate in
+         that world, it may not be worth it to spend time on this right now. *)
+      amap, omap, Some { dict_name=None; key=StrT.t; value=AnyT.t; }
 
     (* literal LHS *)
     | Property (loc, { Property.key = Property.Literal _; _ }) ->
       let msg = "non-string literal property keys not supported" in
       Flow_js.add_error cx [mk_reason "" loc, msg];
-      amap, omap
+      amap, omap, dict
 
     (* get/set kind *)
     | Property (loc, { Property.kind = Property.Get | Property.Set; _ }) ->
       let msg = "get/set properties not yet supported" in
       Flow_js.add_error cx [mk_reason "" loc, msg];
-      amap, omap
+      amap, omap, dict
 
     (* computed LHS *)
     | Property (loc, { Property.key = Property.Computed _; _ }) ->
       let msg = "computed property keys not supported" in
       Flow_js.add_error cx [mk_reason "" loc, msg];
-      amap, omap
+      amap, omap, dict
 
-    (* spread prop *)
-    | SpreadProperty (loc, { SpreadProperty.argument }) ->
-      let msg = "spread property not supported" in
-      Flow_js.add_error cx [mk_reason "" loc, msg];
-      amap, omap
-
-  ) (SMap.empty, SMap.empty) props
+  ) (SMap.empty, SMap.empty, None) props
 )
 
 (* Legacy: generate React class from specification object. *)
@@ -3864,10 +3870,12 @@ and react_create_class cx loc class_props = Ast.Expression.(
           _ }) ->
         ignore (expression cx value);
         let reason = mk_reason "propTypes" nloc in
-        let amap, omap = mk_proptypes cx properties in
-        let map = SMap.fold (fun k v map -> SMap.add k (OptionalT v) map) omap amap in
+        let amap, omap, dict = mk_proptypes cx properties in
+        let map = SMap.fold (fun k v map ->
+          SMap.add k (OptionalT v) map
+        ) omap amap in
         props :=
-          Flow_js.mk_object_with_map_proto cx reason map (MixedT reason);
+          Flow_js.mk_object_with_map_proto cx reason ?dict map (MixedT reason);
         fmap, mmap
 
       (* getDefaultProps *)
