@@ -31,6 +31,38 @@ incompatible.js:9:26,31: undefined
 This type is incompatible with
 incompatible.js:8:25,30: string
 
+incompatible.js:12:39,44: number
+This type is incompatible with
+incompatible.js:12:72,77: string
+
+incompatible.js:12:72,77: string
+This type is incompatible with
+incompatible.js:12:39,44: number
+
+incompatible.js:19:42,47: string
+This type is incompatible with
+incompatible.js:18:28,33: number
+
+incompatible.js:26:17,19: number
+This type is incompatible with
+incompatible.js:25:41,46: string
+
+incompatible.js:31:43,55: property foo
+Property not found in
+incompatible.js:32:10,10: object type
+
+incompatible.js:36:43,78: property foo
+Property not found in
+incompatible.js:37:10,10: object type
+
+incompatible.js:41:23,45: some property
+Property not found in
+incompatible.js:41:56,68: object type
+
+incompatible.js:46:46,68: some property
+Property not found in
+incompatible.js:46:23,35: object type
+
 test.js:1:23,28: number
 This type is incompatible with
 test.js:1:47,52: string
@@ -43,4 +75,4 @@ test_client.js:5:10,21: number
 This type is incompatible with
 test.js:2:42,47: string
 
-Found 11 errors
+Found 19 errors

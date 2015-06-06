@@ -3985,29 +3985,36 @@ and rec_unify cx trace t1 t2 =
   | (ArrT (_, t1, ts1), ArrT (_, t2, ts2)) ->
     array_unify cx trace (ts1,t1, ts2,t2)
 
-  | (ObjT (reason1, {props_tmap = flds1; _}),
-     ObjT (reason2, {props_tmap = flds2; _})) ->
+  | (ObjT (reason1, {props_tmap = flds1; dict_t = dict1; _}),
+     ObjT (reason2, {props_tmap = flds2; dict_t = dict2; _})) ->
+
+    (* ensure the keys and values are compatible with each other. *)
+    begin match dict1, dict2 with
+    | Some {key = k1; value = v1; _}, Some {key = k2; value = v2; _} ->
+        dictionary cx trace k1 v1 dict2;
+        dictionary cx trace k2 v2 dict1
+    | Some _, None ->
+        let reason1 = replace_reason "some property" reason1 in
+        add_warning cx [reason1, "Property not found in"; reason2, ""]
+    | None, Some _ ->
+        let reason2 = replace_reason "some property" reason2 in
+        add_warning cx [reason2, "Property not found in"; reason1, ""]
+    | None, None -> ()
+    end;
+
     let pmap1, pmap2 = find_props cx flds1, find_props cx flds2 in
     SMap.merge (fun x t1 t2 ->
       if not (is_internal_name x)
       then (match t1, t2 with
       | Some t1, Some t2 -> rec_unify cx trace t1 t2
-      | Some _, None ->
-          let reason1 = replace_reason (spf "property %s" x) reason1 in
-          let message_list = [
-            reason1, "Property not found in";
-            reason2, ""
-          ] in
-          add_warning cx message_list
-
-      | None, Some _ ->
-          let reason2 = replace_reason (spf "property %s" x) reason2 in
-          let message_list = [
-            reason2, "Property not found in";
-            reason1, ""
-          ] in
-          add_warning cx message_list
-
+      | Some t1, None ->
+          (* x exists in obj1 but not obj2; if obj2 is a dictionary make sure
+             t1 is allowed, otherwise error *)
+          flow_prop_to_dict cx trace x t1 dict2 reason1 reason2
+      | None, Some t2 ->
+          (* x exists in obj2 but not obj1; if obj1 is a dictionary make sure
+             t2 is allowed, otherwise error *)
+          flow_prop_to_dict cx trace x t2 dict1 reason2 reason1
       | None, None -> ());
       None
     ) pmap1 pmap2 |> ignore
@@ -4021,6 +4028,17 @@ and rec_unify cx trace t1 t2 =
 
 and naive_unify cx trace t1 t2 =
   rec_flow cx trace (t1,t2); rec_flow cx trace (t2,t1)
+
+and flow_prop_to_dict cx trace k v dict prop_reason dict_reason =
+  match dict with
+  | Some {key; value; _} ->
+    dictionary cx trace (string_key k prop_reason) v dict
+  | None ->
+    let prop_reason = replace_reason (spf "property %s" k) prop_reason in
+    add_warning cx [
+      prop_reason, "Property not found in";
+      dict_reason, ""
+    ]
 
 (* mutable sites on parent values (i.e. object properties,
    array elements) must be typed invariantly when a value
