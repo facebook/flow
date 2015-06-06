@@ -167,6 +167,29 @@ let rec get_modules_used = function
    export class P extends M.Q { }
 
    etc.
+
+   Note: All the child modules are by default imported by the
+   parent. This is done so that they are accessbile in through the
+   parent module via dot notation.
+
+   Eg.
+   declare module R {
+       module T {
+           export class E { }
+       }
+   }
+
+   converts to
+   declare module R {
+     declare var T: $Exports<'R___T'>;
+   }
+   declare module R___T {
+     declare class E {
+
+     }
+   }
+
+   So that we can access class E as R.T.E
 *)
 and module_used_statement acc = Statement.(function
   | _, VariableDeclaration { VariableDeclaration.
@@ -177,6 +200,10 @@ and module_used_statement acc = Statement.(function
         module_used_pattern acc id
       | _ -> failwith "Only single declarator handled currently"
     )
+  | _, ExportModuleDeclaration { ExportModule.name; body; } ->
+    SSet.add name acc
+  | _, ModuleDeclaration { Module.id; body; } ->
+    SSet.add (get_name "" id) acc
   | _ -> acc
 )
 

@@ -7,7 +7,7 @@ declare module R {
   declare var y: T.E;
 }
 declare module R___T {
-
+  declare var U: $Exports<'R___T___U'>;
   declare class E {
 
   }

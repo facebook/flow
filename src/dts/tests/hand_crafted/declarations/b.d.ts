@@ -1,3 +1,5 @@
+
+
 declare module P {
     export class B { }
 }

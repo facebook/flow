@@ -1,6 +1,6 @@
 declare module R {
-    declare module T {
-        declare module U {
+    module T {
+        export module U {
 
         }
         export class E { }
