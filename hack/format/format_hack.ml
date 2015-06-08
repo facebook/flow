@@ -1353,20 +1353,22 @@ and hint env = wrap env begin function
       hint_parameter env
   | Tword ->
       last_token env;
-      (match !(env.last_str) with
-      | "function" ->
+      name_loop env;
+      taccess_loop env;
+      typevar_constraint env;
+      hint_parameter env
+  | Tlp -> begin
+      last_token env;
+      (match token env with
+      | Tword when !(env.last_str) = "function" ->
+          last_token env;
           hint_function_params env;
           return_type env
       | _ ->
-          name_loop env;
-          taccess_loop env;
-          typevar_constraint env;
-          hint_parameter env
-      )
-  | Tlp ->
-      last_token env;
-      hint_list env;
+          back env;
+          hint_list env);
       expect ")" env
+    end
   | _ ->
       back env
 end
