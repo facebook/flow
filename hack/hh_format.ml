@@ -131,42 +131,54 @@ let parse_args() =
   let from = ref 0 in
   let to_ = ref max_int in
   let files = ref [] in
-  let in_place = ref false in
   let diff = ref false in
   let modes = ref [Some FileInfo.Mstrict; Some FileInfo.Mpartial] in
   let root = ref None in
   let debug = ref false in
+  let apply_mode = ref Format_mode.Print in
+  let set_apply_mode mode () = match !apply_mode with
+    | Format_mode.Patch -> () (* Patch implies In_place but not vice versa *)
+    | Format_mode.In_place when mode = Format_mode.Patch -> apply_mode := mode
+    | Format_mode.In_place -> ()
+    | Format_mode.Print -> apply_mode := mode
+  in
   Arg.parse
     [
-     "--from", Arg.Int (fun x -> from := x),
-     "[int] start after character position";
+      "--from", Arg.Set_int from,
+      "[int] start after character position";
 
-     "--to", Arg.Int (fun x -> to_ := x),
-     "[int] stop after character position";
+      "--to", Arg.Set_int to_,
+      "[int] stop after character position";
 
-     "-i", Arg.Set in_place,
-     "modify the files in place";
+      "-i", Arg.Unit (set_apply_mode Format_mode.In_place),
+      "modify the files in place";
 
-     "--in-place", Arg.Set in_place,
-     "modify the files in place";
+      "--in-place", Arg.Unit (set_apply_mode Format_mode.In_place),
+      "modify the files in place";
 
-     "--diff", Arg.Set diff,
-     "formats the changed lines in a diff "^
-     "(example: git diff | hh_format --diff)";
+      "-p", Arg.Unit (set_apply_mode Format_mode.Patch),
+      "interactively choose hunks of patches to apply (implies --in-place)";
 
-     "--yolo", Arg.Unit (fun () ->
-       modes := [Some FileInfo.Mdecl; None (* PHP *)]),
-     "Formats *only* PHP and decl-mode files. Results may be unreliable; "^
-     "you should *always* inspect the formatted output before committing it!";
+      "--patch", Arg.Unit (set_apply_mode Format_mode.Patch),
+      "interactively choose hunks of patches to apply (implies --in-place)";
 
-     "--root", Arg.String (fun x -> root := Some x),
-     "specifies a root directory (useful in diff mode)";
+      "--diff", Arg.Set diff,
+      "formats the changed lines in a diff "^
+      "(example: git diff | hh_format --diff)";
 
-     "--debug", Arg.Set debug, ""
-   ]
+      "--yolo", Arg.Unit (fun () ->
+        modes := [Some FileInfo.Mdecl; None (* PHP *)]),
+      "Formats *only* PHP and decl-mode files. Results may be unreliable; "^
+      "you should *always* inspect the formatted output before committing it!";
+
+      "--root", Arg.String (fun x -> root := Some x),
+      "specifies a root directory (useful in diff mode)";
+
+      "--debug", Arg.Set debug, ""
+    ]
     (fun file -> files := file :: !files)
     (Printf.sprintf "Usage: %s (filename|directory)" Sys.argv.(0));
-  !files, !from, !to_, !in_place, !debug, !diff, !modes, !root
+  !files, !from, !to_, !apply_mode, !debug, !diff, !modes, !root
 
 (*****************************************************************************)
 (* Formats a file in place *)
@@ -258,7 +270,7 @@ let format_stdin modes from to_ =
 let () =
   SharedMem.(init default_config);
   PidLog.log_oc := Some (open_out "/dev/null");
-  let files, from, to_, in_place, debug, diff, modes, root = parse_args() in
+  let files, from, to_, apply_mode, debug, diff, modes, root = parse_args() in
   match files with
   | [] when diff ->
       let prefix =
@@ -272,11 +284,11 @@ let () =
       in
       let diff = read_stdin () in
       let file_and_modified_lines = Format_diff.parse_diff prefix diff in
-      Format_diff.apply modes in_place ~diff:file_and_modified_lines
+      Format_diff.apply modes apply_mode ~diff:file_and_modified_lines
   | _ when diff ->
       Printf.fprintf stderr "--diff mode expects no files\n";
       exit 2
-  | [] when in_place ->
+  | [] when apply_mode <> Format_mode.Print ->
       Printf.fprintf stderr "Cannot modify stdin in-place\n";
       exit 2
   | [] -> format_stdin modes from to_
@@ -286,14 +298,19 @@ let () =
       else directory modes dir
   | [filename] ->
       let filepath = Path.make filename in
-      if in_place
-      then
-        match format_in_place modes filepath with
-        | None -> ()
-        | Some error ->
-            Printf.eprintf "Error: %s\n" error;
-            exit 2
-      else format_string modes filepath from to_ (Path.cat filepath)
+      (match apply_mode with
+      | Format_mode.Print ->
+          format_string modes filepath from to_ (Path.cat filepath)
+      | Format_mode.In_place -> begin
+          match format_in_place modes filepath with
+          | None -> ()
+          | Some error ->
+              Printf.eprintf "Error: %s\n" error;
+              exit 2
+        end
+      | Format_mode.Patch ->
+          Printf.eprintf "Error: --patch only supported in diff mode\n";
+          exit 2);
   | _ ->
       Printf.eprintf "More than one file given\n";
       exit 2

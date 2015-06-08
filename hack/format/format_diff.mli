@@ -20,4 +20,5 @@ type interval = int * int
 type file_diff = filename * interval list
 
 val parse_diff: Path.t -> string -> file_diff list
-val apply: FileInfo.mode option list -> bool -> diff:(file_diff list) -> unit
+val apply:
+  FileInfo.mode option list -> Format_mode.t -> diff:(file_diff list) -> unit

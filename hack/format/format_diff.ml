@@ -9,6 +9,7 @@
  *)
 
 open Core
+open Utils
 
 (*****************************************************************************)
 (* Helper function, splits the content of a file into a list of lines.  *)
@@ -312,48 +313,55 @@ let print_hunk (old_start_line, new_start_line, old_lines, new_lines) =
 
 (*****************************************************************************)
 (* Applies the changes to a list of lines:
- * -) 'outc' the output channel that we are printing to
- * -) 'line_number' the current input line_number (not output!)
- * -) 'blocks' the list of indivisible blocks that should be replaced
+ * -) 'blocks' the list of indivisible blocks of formatted content
  *     (cf TextBlocks)
- * -) 'lines' the remaining lines to be treated
+ * -) 'lines' the lines in the pre-formatted file
  *)
 (*****************************************************************************)
-
-let apply_blocks outc blocks lines =
-  let rec loop acc old_lineno new_lineno blocks lines =
+let apply_blocks ~should_patch filename blocks lines =
+  let buf = Buffer.create 1024 in
+  let add_line buf s = Buffer.add_string buf s; Buffer.add_char buf '\n' in
+  let first_hunk = ref true in
+  let rec loop old_lineno new_lineno blocks lines =
     match blocks, lines with
     (* We reached the end of the input file. *)
-    | _, [] -> acc
+    | _, [] -> ()
 
     (* We have no more modifications for that file. *)
     | [], line :: lines ->
-        output_string outc line;
-        output_char outc '\n';
-        loop acc (old_lineno + 1) (new_lineno + 1) blocks lines
+        add_line buf line;
+        loop (old_lineno + 1) (new_lineno + 1) blocks lines
 
     (* We have not reached the beginning of the block yet. *)
     | (start_block, _, _) :: _, line :: lines when old_lineno < start_block ->
-        output_string outc line;
-        output_char outc '\n';
-        loop acc (old_lineno + 1) (new_lineno + 1) blocks lines
+        add_line buf line;
+        loop (old_lineno + 1) (new_lineno + 1) blocks lines
 
     (* We found a block that must be replaced! *)
     | (start_block, end_block, new_content) :: blocks, lines ->
-        output_string outc new_content;
         (* Cut the old content. *)
         let old_lines, lines =
           List.split_n lines (end_block - start_block + 1) in
         let new_lines = split_lines new_content in
-        let acc =
-          (* only add a hunk if it is nonempty *)
-          if old_lines <> new_lines
-          then (start_block, new_lineno, old_lines, new_lines) :: acc
-          else acc in
+        let hunk = (start_block, new_lineno, old_lines, new_lines) in
         let new_lineno = new_lineno + (List.length new_lines) in
-        loop acc (end_block + 1) new_lineno blocks lines
+        (* only show nonempty hunks *)
+        if old_lines = new_lines
+        then Buffer.add_string buf new_content
+        else begin
+          if !first_hunk then begin
+            print_file_header filename;
+            first_hunk := false;
+          end;
+          print_hunk hunk;
+          if should_patch ()
+          then Buffer.add_string buf new_content
+          else List.iter old_lines (add_line buf);
+        end;
+        loop (end_block + 1) new_lineno blocks lines
   in
-  List.rev (loop [] 1 1 blocks lines)
+  loop 1 1 blocks lines;
+  Buffer.contents buf
 
 (*****************************************************************************)
 (* Formats a diff (in place) *)
@@ -362,19 +370,19 @@ let apply_blocks outc blocks lines =
 let parse_diff prefix diff_text =
   ParseDiff.go prefix diff_text
 
-let rec apply modes in_place ~diff:file_and_lines_modified =
+let rec apply modes apply_mode ~diff:file_and_lines_modified =
   List.iter file_and_lines_modified begin fun (filepath, modified_lines) ->
     let file_content = Path.cat filepath in
-    apply_file modes in_place filepath file_content modified_lines
+    apply_file modes apply_mode filepath file_content modified_lines
   end
 
-and apply_file modes in_place filepath file_content modified_lines =
+and apply_file modes apply_mode filepath file_content modified_lines =
   let filename = Path.to_string filepath in
   let result =
     Format_hack.program_with_source_metadata modes filepath file_content in
   match result with
   | Format_hack.Success formatted_content ->
-      apply_formatted in_place filepath formatted_content file_content
+      apply_formatted apply_mode filepath formatted_content file_content
         modified_lines
   | Format_hack.Disabled_mode ->
       Printf.fprintf stderr "PHP FILE: skipping %s\n" filename
@@ -383,19 +391,33 @@ and apply_file modes in_place filepath file_content modified_lines =
   | Format_hack.Internal_error ->
       Printf.fprintf stderr "*** PANIC *** Internal error!: %s\n" filename
 
-and apply_formatted in_place filepath formatted_content file_content
+and apply_formatted apply_mode filepath formatted_content file_content
     modified_lines =
   let blocks = TextBlocks.make formatted_content in
   let blocks = matching_blocks [] modified_lines blocks in
   let lines = split_lines file_content in
   let filename = Path.to_string filepath in
-  try
-    let outc = open_out (if in_place then filename else "/dev/null") in
-    let hunks = apply_blocks outc blocks lines in
-    close_out outc;
-    if List.length hunks <> 0 then begin
-      print_file_header filename;
-      List.iter hunks print_hunk;
-    end;
-  with Sys_error _ ->
-    Printf.eprintf "Error: could not modify file %s\n" filename
+  let should_patch =
+    if apply_mode <> Format_mode.Patch
+    then fun () -> true
+    else fun () ->
+      match Tty.read_choice "Apply this patch?" ['y'; 'n'; 'q'] with
+      | 'y' -> true
+      | 'n' -> false
+      | 'q' -> raise Exit
+      | _ -> assert false
+  in
+  let formatted =
+    try Some (apply_blocks ~should_patch filename blocks lines)
+    with Exit -> None
+  in
+  match formatted with
+  | None -> ()
+  | Some _ when apply_mode = Format_mode.Print -> ()
+  | Some content ->
+      try
+        let outc = open_out filename in
+        output_string outc content;
+        close_out outc
+      with Sys_error _ ->
+        Printf.eprintf "Error: could not modify file %s\n" filename
