@@ -1,20 +1,40 @@
 
 /* @providesModule Sigma */
 
-class A { }
+class A { a() {} }
 
-class B extends A { }
+class B extends A { b() {} }
 
-class C extends B { }
+class C extends B { c() {} }
 
 function bar(x:B) {
-  if (x instanceof A) { x(); } // error
-  else { x(); } // no error, since unreachable (x: B implies x: A)
+  if (x instanceof A) {
+    x.a();
+    x.c(); // error
+  } else {
+    x++; // no error, since unreachable (x: B implies x: A)
+  }
 }
 
 function foo(x:A) {
-  if (x instanceof C) { x(); } // error
-  else { x() } // error
+  if (x instanceof C) {
+    x.a();
+    x.b();
+    x.c();
+    x.d(); // error
+  } else {
+    x.a();
+    x.c(); // error
+  }
+}
+
+
+class D { d() {} }
+
+function foo(x:D) {
+  if (x instanceof A) {
+    // unreachable, TODO: this shouldn't throw
+  }
 }
 
 module.exports = "sigma";

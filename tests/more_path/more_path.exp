@@ -1,18 +1,22 @@
 
-Sigma.js:11:25,27: function call
-Function cannot be called on
+Sigma.js:4:7,7: A
+This type is incompatible with
+Sigma.js:34:16,16: D
+
+Sigma.js:13:5,9: call of method c
+Property not found in
 Sigma.js:10:16,16: B
 
-Sigma.js:16:25,27: function call
-Function cannot be called on
+Sigma.js:24:5,9: call of method d
+Property not found in
 Sigma.js:8:7,7: C
 
-Sigma.js:17:10,12: function call
-Function cannot be called on
-Sigma.js:15:16,16: A
+Sigma.js:27:5,9: call of method c
+Property not found in
+Sigma.js:19:16,16: A
 
 test.js:11:12,29: property childProp_TYPO
 Property not found in
 test.js:5:7,16: ChildClass
 
-Found 4 errors
+Found 5 errors
