@@ -40,10 +40,12 @@ let style_num = function
   | Normal c -> color_num c
   | Bold c   -> color_num c ^ ";1"
 
-let print_one (c,s) =
+let print_one c s =
   Printf.printf "\x1b[%sm%s\x1b[0m" (style_num c) (s)
 
-let print strs = List.iter strs print_one
+let print strs = List.iter strs (fun (c, s) -> print_one c s)
+
+let printf c = Printf.ksprintf (print_one c)
 
 let (spinner, spinner_used) =
   let state = ref 0 in

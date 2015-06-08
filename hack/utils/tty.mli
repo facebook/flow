@@ -28,6 +28,7 @@ type style =
  * codes.
  *)
 val print : (style * string) list -> unit
+val printf : style -> ('a, unit, string, unit) format4 -> 'a
 
 (* These two functions provide a four-state TTY-friendly spinner that
  * a client can output between sleeps if it happens to be waiting on
