@@ -126,8 +126,9 @@ let expand_type: type a. _ -> a ty -> _ * a ty =
 
 let expand_type_recorded env set ty =
   match ty with
-  | _, Tvar x -> begin
-    let env, ty = if ISet.mem x set then env, ty else expand_type env ty in
+  | r, Tvar x -> begin
+    let env, ty =
+      if ISet.mem x set then env, (r, Tany) else expand_type env ty in
     let set = ISet.add x set in
     env, set, ty
   end

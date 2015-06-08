@@ -201,8 +201,23 @@ and typevars_subtype env (uenv_super, ety_super) (uenv_sub, ety_sub) =
  *      sub_type env int string => error
  *)
 and sub_type_with_uenv env (uenv_super, ty_super) (uenv_sub, ty_sub) =
-  let env, ety_super = Env.expand_type env ty_super in
-  let env, ety_sub = Env.expand_type env ty_sub in
+  let env, seen_tvars_super, ety_super =
+    Env.expand_type_recorded env uenv_super.TUEnv.seen_tvars ty_super in
+  let env, seen_tvars_sub, ety_sub =
+    Env.expand_type_recorded env uenv_sub.TUEnv.seen_tvars ty_sub in
+  (* UGLY: We don't update uenv_super with seen_tvars_super just yet because
+   * sometimes we call sub_type_with_uenv recursively with the same ty_super
+   * (i.e. ty_sub has changed, but ty_super remains the same). If we pass
+   * through the updated uenv_super, we would not be able to expand ty_super
+   * a second time.
+   * The converse goes for seen_tvars_sub and ty_sub.
+   * TODO: Right now we only update seen_tvars when recursing into
+   * Tunresolveds, because we are encountering actual code that creates such
+   * recursive types. Should probably update seen_tvars regardless of which
+   * types we are recursing into, or prove that recursive types can't happen
+   * in those cases.
+   * TODO: Figure out a nicer (type-enforced?) way to associate the right
+   * uenv with the right type. *)
   match ety_super, ety_sub with
   | _, (r, Taccess taccess) ->
       let env, ty_sub = TAccess.expand env r taccess in
@@ -254,6 +269,7 @@ and sub_type_with_uenv env (uenv_super, ty_super) (uenv_sub, ty_sub) =
        *)
       fst (Unify.unify_with_uenv env (uenv_super, ty_super) (uenv_sub, ty_sub))
   | _, (_, Tunresolved tyl) when Env.grow_super env ->
+      let uenv_sub = {uenv_sub with TUEnv.seen_tvars = seen_tvars_sub} in
       List.fold_left begin fun env x ->
         sub_type_with_uenv env (uenv_super, ty_super) (uenv_sub, x)
       end env tyl
@@ -268,6 +284,7 @@ and sub_type_with_uenv env (uenv_super, ty_super) (uenv_sub, ty_sub) =
   | (_, Tunresolved _), (_, Tany) when not (Env.grow_super env) ->
       fst (Unify.unify_with_uenv env (uenv_super, ty_super) (uenv_sub, ty_sub))
   | (_, Tunresolved tyl), _ when not (Env.grow_super env) ->
+      let uenv_super = {uenv_super with TUEnv.seen_tvars = seen_tvars_super} in
       List.fold_left begin fun env x ->
         sub_type_with_uenv env (uenv_super, x) (uenv_sub, ty_sub)
       end env tyl
