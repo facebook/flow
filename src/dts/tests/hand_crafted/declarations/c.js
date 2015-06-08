@@ -5,6 +5,12 @@ declare module Module1 {
   }
 }
 declare module Module2 {
-  declare var Module1: $Exports<'Module1'>;
-  declare var exports: typeof Module1;
+  declare var M: $Exports<'Module2___M'>;
+  declare var exports: typeof M;
+}
+declare module Module2___M {
+
+  declare class A {
+
+  }
 }
