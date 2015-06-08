@@ -1616,11 +1616,11 @@ and class_element_word env = function
       seq env [last_token; xhp_category; semi_colon]
   | "attribute" ->
       last_token env;
-      class_members_list xhp_attribute_format_elt env
+      xhp_class_attribute_list env
   | "children" ->
       last_token env;
       space env;
-      right env xhp_children;
+      xhp_children env;
       semi_colon env
   | _ ->
       back env
@@ -1699,7 +1699,7 @@ end
 and xhp_children env = wrap env begin function
   | Tlp ->
       last_token env;
-      list_comma_nl ~trailing:false xhp_children env;
+      right env (list_comma_nl ~trailing:false xhp_children);
       expect ")" env;
       xhp_children_post env;
       xhp_children_remain env
@@ -1718,23 +1718,42 @@ end
 
 and xhp_children_remain env = wrap env begin function
   | Tbar ->
-      last_token env;
-      xhp_children env;
-      xhp_children_remain env
+      seq env [space; last_token; space; xhp_children]
   | _ -> back env
 end
 
 and xhp_category env =
   space env; list_comma ~trailing:false name env
 
-and xhp_attribute_format_elt env =
+and xhp_class_attribute_list env =
+  Try.one_line env
+    (class_member_list_single xhp_class_attribute)
+    (fun env -> newline env; right env xhp_class_attribute_list_multi);
+  semi_colon env
+
+and xhp_class_attribute_list_multi env = preserve_nl env begin fun env ->
+  xhp_class_attribute env;
+  match token env with
+  | Tcomma ->
+      seq env [last_token; newline; add_block_tag];
+      xhp_class_attribute_list_multi env
+  | _ -> back env
+end
+
+and xhp_class_attribute env =
+  Try.one_line env
+    (xhp_class_attribute_impl ~enum_list_elts:(list_comma_single expr))
+    (xhp_class_attribute_impl ~enum_list_elts:
+      (fun env -> right env (list_comma_multi_nl ~trailing:true expr)))
+
+and xhp_class_attribute_impl ~enum_list_elts env =
   let curr_pos = !(env.abs_pos) in
   wrap env begin function
     | Tword when !(env.last_str) = "enum" ->
         last_token env;
         space env;
         expect "{" env;
-        expr_list env;
+        enum_list_elts env;
         expect "}" env
     | _ -> back env; hint env
   end;
