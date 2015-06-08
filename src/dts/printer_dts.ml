@@ -200,10 +200,11 @@ and module_used_statement acc = Statement.(function
         module_used_pattern acc id
       | _ -> failwith "Only single declarator handled currently"
     )
-  | _, ExportModuleDeclaration { ExportModule.name; body; } ->
-    SSet.add name acc
   | _, ModuleDeclaration { Module.id; body; } ->
     SSet.add (get_name "" id) acc
+  | _, ExportAssignment id -> (match id with
+    | _, {Identifier. name; _} -> SSet.add name acc
+  )
   | _ -> acc
 )
 
@@ -270,8 +271,6 @@ let rec filter_modules prefix scope = Statement.(function
   |  x :: xs -> match x with
     | _, ModuleDeclaration _ ->
       (prefix, scope, x) :: (filter_modules prefix scope xs)
-    | _, ExportModuleDeclaration _ ->
-      (prefix, scope, x) :: (filter_modules prefix scope xs)
     | _ -> filter_modules prefix scope xs
 )
 
@@ -279,7 +278,6 @@ let rec filter_not_modules = Statement.(function
   | [] -> []
   |  x :: xs -> match x with
     | _, ModuleDeclaration _ -> filter_not_modules xs
-    | _, ExportModuleDeclaration _ -> filter_not_modules xs
     | _ -> x :: (filter_not_modules xs)
 )
 
@@ -291,10 +289,6 @@ let rec filter_not_modules = Statement.(function
 let find_child_modules acc prefix scope = Statement.(function
   | _, ModuleDeclaration { Module.id; body; } ->
     let new_prefix = get_name prefix id in
-    let new_scope = get_modules_in_scope scope new_prefix body in
-    List.append (filter_modules new_prefix new_scope body) acc
-  | _, ExportModuleDeclaration { ExportModule.name; body; } ->
-    let new_prefix = generate_mangled_name name prefix in
     let new_scope = get_modules_in_scope scope new_prefix body in
     List.append (filter_modules new_prefix new_scope body) acc
   | _ -> failwith
@@ -350,18 +344,6 @@ and print_module scope prefix fmt = Statement.(function
       (_list ~sep:"" (statement new_scope new_prefix))
       (filter_not_modules body)
 
-  | _, ExportModuleDeclaration { ExportModule.name; body; } ->
-    let new_prefix = generate_mangled_name name prefix in
-    let new_scope = get_modules_in_scope scope new_prefix body in
-    let list_possible_modules = get_modules_used body in
-    let list_modules_used =
-      get_modules_to_import new_scope list_possible_modules in
-
-    fprintf fmt "@[<v>declare module %s {@;<0 2>@[<v>%a%a@]@,}@]"
-      new_prefix
-      (list_ ~sep:"" import_module) list_modules_used
-      (_list ~sep:"" (statement new_scope new_prefix))
-      (filter_not_modules body)
   | _ -> todo fmt
 )
 and statement scope prefix fmt =
@@ -398,6 +380,16 @@ and statement scope prefix fmt =
         extends_class extends
         implements_class implements
         object_type (snd body)
+
+  | _, ExportModuleDeclaration { ExportModule.name; body; } ->
+    let list_possible_modules = get_modules_used body in
+    let list_modules_used =
+      get_modules_to_import scope list_possible_modules in
+    fprintf fmt "@[<v>declare module %s {@;<0 2>@[<v>%a%a@]@,}@]"
+      name
+      (list_ ~sep:"" import_module) list_modules_used
+      (_list ~sep:"" (statement scope prefix))
+      (filter_not_modules body)
 
   | _ ->
       todo fmt
