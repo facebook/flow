@@ -83,7 +83,7 @@ ES6_Named1.js:20:32,45: number
 This type is incompatible with
 es6modules.js:4:28,33: string
 
-ES6_Named1.js:21:12,34: number
+ES6_Named1.js:21:13,33: number
 This type is incompatible with
 es6modules.js:4:28,33: string
 
@@ -115,7 +115,7 @@ ES6_Named2.js:18:32,45: number
 This type is incompatible with
 es6modules.js:4:28,33: string
 
-ES6_Named2.js:19:12,35: number
+ES6_Named2.js:19:13,34: number
 This type is incompatible with
 es6modules.js:4:28,33: string
 

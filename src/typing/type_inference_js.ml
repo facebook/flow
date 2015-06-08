@@ -233,7 +233,7 @@ let rec destructuring cx t f = Ast.Pattern.(function
   | loc, Array { Array.elements; _; } -> Array.(
       let reason = mk_reason "array pattern" loc in
       elements |> List.iteri (fun i -> function
-        | Some (Element p) ->
+        | Some (Element ((loc, _) as p)) ->
             let i = NumT (mk_reason "number" loc, Some (string_of_int i)) in
             let tvar = Flow_js.mk_tvar cx reason in
             Flow_js.flow cx (t, GetElemT(reason,i,tvar));
@@ -246,12 +246,12 @@ let rec destructuring cx t f = Ast.Pattern.(function
     )
 
   | loc, Object { Object.properties; _; } -> Object.(
-      let reason = mk_reason "object pattern" loc in
       let xs = ref [] in
       properties |> List.iter (function
         | Property (loc, prop) -> Property.(
             match prop with
-            | { key = Identifier (_, id); pattern = p; } ->
+            | { key = Identifier (loc, id); pattern = p; } ->
+                let reason = mk_reason "object pattern property" loc in
                 let x = id.Ast.Identifier.name in
                 xs := x :: !xs;
                 let tvar = Flow_js.mk_tvar cx reason in
@@ -261,6 +261,7 @@ let rec destructuring cx t f = Ast.Pattern.(function
               error_destructuring cx loc
           )
         | SpreadProperty (loc, { SpreadProperty.argument }) ->
+            let reason = mk_reason "object pattern spread property" loc in
             let tvar = Flow_js.mk_tvar cx reason in
             Flow_js.flow cx (t, ObjRestT(reason,!xs,tvar));
             destructuring cx tvar f argument
