@@ -2088,4 +2088,26 @@ module.exports = {
       },
     },
   },
+  'Async Arrow Functions': {
+    'var x = async () => await promise;': {},
+    'var x = async (a) => await a;': {},
+    'var x = async a => await a;': {},
+    'var x = async => async + 1;': {},
+    'var x = async (a => a + 1);': {},
+    'var x = async(x)': {},
+    'var x = async (a, b) => await a + b;': {
+      'body.0.declarations.0.init.body': {
+        'type': 'BinaryExpression',
+      },
+    },
+    'var x = async (a, b, c, d, e, f, g) => await a + await b + c + d + e + f + g;': {},
+    'var x = 1 y => y': {
+      'errors': {
+        '0.message': 'Unexpected identifier',
+      },
+    },
+    'var x = async\ny => y': {
+      'body.length': 2,
+    },
+  }
 };

@@ -1950,6 +1950,14 @@ end = struct
         | T_ARROW (* x => 123 *)
         | T_COLON -> (* (x): number => 123 *)
           raise Try.Rollback
+        (* async x => 123 -- and we've already parsed async as an identifier
+         * expression *)
+        | _ when Peek.identifier env -> begin match snd ret with
+          | Expression.Identifier (_, {Identifier.name = "async"; _ })
+              when not (Peek.line_terminator env) ->
+            raise Try.Rollback
+          | _ -> ret
+          end
         | _ -> ret
 
       in fun env ->
@@ -2632,6 +2640,9 @@ end = struct
         let env = env |> with_error_callback error_callback in
 
         let start_loc = Peek.loc env in
+        (* a T_ASYNC could either be a parameter name or it could be indicating
+         * that it's an async function *)
+        let async = Peek.token ~i:1 env <> T_ARROW && Declaration.async env in
         let typeParameters = Type.type_parameter_declaration env in
         let params, defaults, rest, returnType =
           (* Disallow all fancy features for identifier => body *)
@@ -2663,7 +2674,6 @@ end = struct
         (* Now we know for sure this is an arrow function *)
         let env = without_error_callback env in
 
-        let async = false in (* TODO: async arrow functions *)
         let body, strict =
           Declaration.concise_function_body env ~async ~generator:false in
         let simple =

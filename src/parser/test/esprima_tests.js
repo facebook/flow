@@ -5587,5 +5587,9 @@ module.exports = {
         },
         'async function foo() { var await = 4; }',
         'async function foo() { return await; }',
+        'var x = async (a, b) => await a;',
+        'var x = async a => await a;',
+        'foo(async () => await bar);',
+        'var x = async\ny => y',
     ],
 };
