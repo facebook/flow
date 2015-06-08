@@ -5557,6 +5557,17 @@ module.exports = {
         },
     ],
     'Async/Await': [
+        'try { foo(); } catch (async) { bar(); }',
+        'try { foo(); } catch (await) { bar(); }',
+        'var x = { async() { bar(); }}',
+        'var x = { set async(v) { }, get async() { return "foo";}, }',
+        'var x = { set await(v) { }, get await() { return "foo";}, }',
+        'class async { }',
+        'class async { async() { } }',
+        'class async { async async() { await foo; } }',
+        'class await { await() { } }',
+        'class A { set async(v) { } get async() { return "foo";} }',
+        'class A { set await(v) { } get await() { return "foo";} }',
         {
           content: 'y = async function() { return await bar; } ()',
           explanation: 'Babel has no problem with this, and it seems ' +
@@ -5586,10 +5597,12 @@ module.exports = {
           },
         },
         'async function foo() { var await = 4; }',
+        'var x = async function bar() { await foo; }',
         'async function foo() { return await; }',
         'var x = async (a, b) => await a;',
         'var x = async a => await a;',
         'foo(async () => await bar);',
         'var x = async\ny => y',
+        'class A { async bar() { await foo; } }',
     ],
 };

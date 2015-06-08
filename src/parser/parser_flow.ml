@@ -1713,6 +1713,9 @@ end = struct
           | T_CONST
           | T_VAR
           | T_CLASS
+          (* not using Peek._function here because it would guard all of the
+           * cases *)
+          | T_ASYNC
           | T_FUNCTION ->
               let stmt = Parse.statement_list_item env in
               let declaration = Some (Declaration stmt) in
@@ -2823,7 +2826,8 @@ end = struct
           fst id, Identifier id)
 
     let _method env kind =
-      let async = Declaration.async env in
+      (* this is a getter or setter, it cannot be async *)
+      let async = false in
       let generator = Declaration.generator env async in
       let _, key = key env in
       let typeParameters = Type.type_parameter_declaration env in
@@ -3151,7 +3155,7 @@ end = struct
       in fun env -> Ast.Expression.Object.Property.(
         let start_loc = Peek.loc env in
         let static = Expect.maybe env T_STATIC in
-        let async = Declaration.async env in
+        let async = Peek.token ~i:1 env <> T_LPAREN && Declaration.async env in
         let generator = Declaration.generator env async in
         match (async, generator, key env) with
         | false, false,

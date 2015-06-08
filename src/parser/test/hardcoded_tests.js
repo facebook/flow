@@ -2034,12 +2034,23 @@ module.exports = {
     },
     'declare function foo() : Promise<async>': {},
     'declare function foo() : Promise<await>': {},
+    'declare function async() : bar': {},
     'async function foo() { var await = 4; }': {},
     'async function foo() { var await = 4; return await; }': {
       'errors': {
         '0.message': 'Unexpected token ;',
       },
     },
+    // esprima chokes on these
+    'export const async = 5': {},
+    'export const await = 5': {},
+    'export const foo = async function() { }': {},
+    'export const foo = async () => y': {},
+    'export function async() { }': {},
+    'export function await() { }': {},
+    'export async function foo(x) { await x; }': {},
+    "import async from 'foo'": {},
+    "import await from 'foo'": {},
   },
   'Invalid Async Generators': {
     'async function *foo() {}' : {
