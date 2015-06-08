@@ -20,12 +20,18 @@ let pos_range p = Pos.(Lexing.(
     p.pos_end.pos_lnum, p.pos_end.pos_cnum
 ))
 
-let format_reason_color ?(first=false) ((p, s): Pos.t * string) = Pos.(
+let format_reason_color
+  ?(first=false)
+  ?(one_line=false)
+  ((p, s): Pos.t * string)
+= Pos.(
   let l0, c0, l1, c1 = pos_range p in
   let err_clr  = if first then C.Normal C.Red else C.Normal C.Green in
   let file_clr = if first then C.Bold C.Blue else C.Bold C.Magenta in
   let line_clr = C.Normal C.Yellow in
   let col_clr  = C.Normal C.Cyan in
+
+  let s = if one_line then Str.global_replace (Str.regexp "\n") "\\n" s else s in
 
   [file_clr, Relative_path.to_absolute p.pos_file]
   @ (if l0 > 0 && c0 > 0 && l1 > 0 && c1 > 0 then [
@@ -45,13 +51,13 @@ let format_reason_color ?(first=false) ((p, s): Pos.t * string) = Pos.(
   @ [
     (C.Normal C.Default, ": ");
     (err_clr,            s);
-    (C.Normal C.Default, "\n");
+    (C.Normal C.Default, if one_line then "\\n" else "\n");
   ]
 )
 
-let print_reason_color ~(first:bool) ((reason, s): message) =
+let print_reason_color ~(first:bool) ~(one_line:bool) ((reason, s): message) =
   let p = Reason_js.pos_of_reason reason in
-  let to_print = format_reason_color ~first (p, s) in
+  let to_print = format_reason_color ~first ~one_line (p, s) in
   (if first then Printf.printf "\n");
   let should_color = Modes_js.(match modes.color with
     | Always -> true
@@ -65,10 +71,10 @@ let print_reason_color ~(first:bool) ((reason, s): message) =
     let strings = List.map snd to_print in
     List.iter (Printf.printf "%s") strings
 
-let print_error_color (e:error) =
+let print_error_color ~(one_line:bool) (e:error) =
   let level, messages = e in
-  print_reason_color ~first:true (List.hd messages);
-  List.iter (print_reason_color ~first:false) (List.tl messages)
+  print_reason_color ~first:true ~one_line (List.hd messages);
+  List.iter (print_reason_color ~first:false ~one_line) (List.tl messages)
 
 let pos_of_error err =
   let _, messages = err in
@@ -273,10 +279,10 @@ let print_errorl use_json el oc =
   flush oc
 
 (* Human readable output *)
-let print_error_summary truncate (errors : error list) =
+let print_error_summary ?(one_line=false) truncate (errors : error list) =
   let error_or_errors n = if n != 1 then "errors" else "error" in
   let print_error_if_not_truncated curr e =
-    (if not(truncate) || curr < 50 then print_error_color e);
+    (if not(truncate) || curr < 50 then print_error_color ~one_line e);
     curr + 1
   in
   let total =

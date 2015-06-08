@@ -22,7 +22,7 @@ let call_succeeds try_function function_input =
   with _ ->
     false
 
-let convert_file outpath file =
+let convert_file one_line outpath file =
   let base = Filename.chop_suffix (Filename.basename file) dts_ext in
   let outpath = match outpath with
     | None -> Filename.dirname file | Some p -> p in
@@ -49,7 +49,7 @@ let convert_file outpath file =
     Printf.printf "%d errors:\n" n;
     List.iter (fun e ->
       let e = Errors_js.parse_error_to_flow_error e in
-      Errors_js.print_error_color e
+      Errors_js.print_error_color ~one_line e
     ) errors;
     n, 0, 1
   )
@@ -76,25 +76,25 @@ let sum_triple f = List.fold_left (
     let a, b, c = f i
     in (a+x, b+y, c+z)) (0, 0, 0)
 
-let convert_dir outpath path recurse =
+let convert_dir outpath path recurse one_line =
   let dts_files = if recurse
     then find_files_recursive path
     else find_files path in
   (* List.fold_left (convert_file outpath) dts_files *)
-  sum_triple (convert_file outpath) dts_files
+  sum_triple (convert_file one_line outpath) dts_files
 
-let convert path recurse outpath =
+let convert path recurse one_line outpath =
   let nerrs, successful_converts, total_files  =
     if Filename.check_suffix path dts_ext then (
       let outpath = match outpath with
         | None -> Some (Filename.dirname path)
         | _ -> outpath
       in
-      convert_file outpath path
+      convert_file one_line outpath path
     ) else (
       if recurse && outpath != None then
         failwith "output path not available when recursive";
-      convert_dir outpath path recurse
+      convert_dir outpath path recurse one_line
     ) in
   Printf.printf "Total Errors: %d\nTotal Files: %d\n\
  Successful Conversions: %d\n" nerrs total_files successful_converts
@@ -116,12 +116,14 @@ let spec = {
         ~doc:"Output path (not available when recursive)"
     |> flag "--r" no_arg
         ~doc:"Recurse into subdirectories"
+    |> flag "--one-line" no_arg
+        ~doc:"Escapes newlines so that each error prints on one line"
     |> anon "dir" (optional string)
         ~doc:"Directory (default: current directory)"
   )
 }
 
-let main outpath recurse dir () =
+let main outpath recurse one_line dir () =
   let path = match dir with
   | None -> "."
   | Some path -> path
@@ -130,6 +132,6 @@ let main outpath recurse dir () =
   then ()
   else
     SharedMem.(init default_config);
-    convert path recurse outpath
+    convert path recurse one_line outpath
 
 let command = CommandSpec.command spec main

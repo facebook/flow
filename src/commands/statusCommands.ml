@@ -42,6 +42,8 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
         |> CommandUtils.server_flags
         |> CommandUtils.json_flags
         |> dummy false (* match --version below *)
+        |> flag "--one-line" no_arg
+            ~doc:"Escapes newlines so that each error prints on one line"
         |> anon "root" (optional string) ~doc:"Root directory"
       )
     }
@@ -81,6 +83,8 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
         |> CommandUtils.json_flags
         |> flag "--version" no_arg
             ~doc:"Print version number and exit"
+        |> flag "--one-line" no_arg
+            ~doc:"Escapes newlines so that each error prints on one line"
         |> anon "root" (optional string) ~doc:"Root directory"
       )
     }
@@ -114,7 +118,7 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
       then Errors_js.print_errorl args.output_json e stdout
       else (
         let show_all = option_values.CommandUtils.show_all_errors in
-        Errors_js.print_error_summary (not show_all) e
+        Errors_js.print_error_summary (not show_all) ~one_line:args.one_line e
       );
       exit 2
     | ServerProt.NO_ERRORS ->
@@ -178,7 +182,7 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
       exit 2
     end
 
-  let main option_values json version root () =
+  let main option_values json version one_line root () =
     if version then (
       CommandUtils.print_version ();
       exit 0
@@ -197,6 +201,7 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
       ClientEnv.timeout = !CommandUtils.global_kill_time;
       ClientEnv.autostart = true;
       ClientEnv.no_load = true;
+      ClientEnv.one_line = one_line;
     } in
     main_rec (env, option_values)
 end

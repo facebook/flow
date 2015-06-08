@@ -43,4 +43,5 @@ type client_check_env = {
   timeout: float option;
   autostart: bool;
   no_load: bool;
+  one_line: bool;
 }

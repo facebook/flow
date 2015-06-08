@@ -14,12 +14,12 @@ type error = level * message list
 
 val pos_range : Pos.t -> int * int * int * int
 
-val format_reason_color: ?first:bool -> Pos.t * string ->
+val format_reason_color: ?first:bool -> ?one_line:bool -> Pos.t * string ->
   (Tty.style * string) list
 
-val print_reason_color: first:bool -> message -> unit
+val print_reason_color: first:bool -> one_line:bool -> message -> unit
 
-val print_error_color: error -> unit
+val print_error_color: one_line:bool -> error -> unit
 
 val pos_of_error : error -> Pos.t
 
@@ -57,4 +57,4 @@ val to_list : ErrorSet.t -> error list
 val print_errorl : bool -> error list -> out_channel -> unit
 
 (* Human readable output *)
-val print_error_summary : bool -> error list -> unit
+val print_error_summary : ?one_line:bool -> bool -> error list -> unit
