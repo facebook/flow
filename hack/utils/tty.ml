@@ -41,7 +41,9 @@ let style_num = function
   | Bold c   -> color_num c ^ ";1"
 
 let print_one c s =
-  Printf.printf "\x1b[%sm%s\x1b[0m" (style_num c) (s)
+  if Unix.isatty Unix.stdout
+  then Printf.printf "\x1b[%sm%s\x1b[0m" (style_num c) (s)
+  else Printf.printf "%s" s
 
 let print strs = List.iter strs (fun (c, s) -> print_one c s)
 
