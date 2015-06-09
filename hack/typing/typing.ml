@@ -1419,13 +1419,15 @@ and instanceof_in_env p (env:Env.env) (e1:Nast.expr) (e2:Nast.expr) =
 and instantiable_cid p env cid =
   let env, class_ = class_id p env cid in
   (match class_ with
-    | Some ((pos, name), class_) when class_.tc_kind = Ast.Ctrait ->
+    | Some ((pos, name), class_) when
+           class_.tc_kind = Ast.Ctrait || class_.tc_kind = Ast.Cenum ->
       (match cid with
         | CI _ -> Errors.uninstantiable_class pos class_.tc_pos name; env
         | CIstatic | CIparent | CIself -> env
         | CIvar _ -> env)
-    | Some ((pos, name), class_) when class_.tc_kind = Ast.Cabstract && class_.tc_final ->
-        Errors.uninstantiable_class pos class_.tc_pos name; env
+    | Some ((pos, name), class_) when
+           class_.tc_kind = Ast.Cabstract && class_.tc_final ->
+       Errors.uninstantiable_class pos class_.tc_pos name; env
     | None | Some _ -> env)
 
 and exception_ty pos env ty =
