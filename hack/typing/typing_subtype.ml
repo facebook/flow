@@ -448,6 +448,21 @@ and sub_type_with_uenv env (uenv_super, ty_super) (uenv_sub, ty_sub) =
     wfold_left2 sub_type env tyl_super tyl_sub
   | (r_super, Tfun ft_super), (r_sub, Tfun ft_sub) ->
       subtype_funs_generic ~check_return:true env r_super ft_super r_sub ft_sub
+  | (r_super, Tfun ft), (r_sub, Tanon (anon_arity, id)) ->
+      (match Env.get_anonymous env id with
+      | None ->
+          Errors.anonymous_recursive_call (Reason.to_pos r_sub);
+          env
+      | Some anon ->
+          let p_super = Reason.to_pos r_super in
+          let p_sub = Reason.to_pos r_sub in
+          if not (Unify.unify_arities
+                    ~ellipsis_is_variadic:true anon_arity ft.ft_arity)
+          then Errors.fun_arity_mismatch p_super p_sub;
+          let env, ret = anon env ft.ft_params in
+          let env = sub_type env ft.ft_ret ret in
+          env
+      )
   | (r_super, Tshape fdm_super), (r_sub, Tshape fdm_sub) ->
       ShapeMap.iter begin fun k _ ->
         if not (ShapeMap.mem k fdm_super)
