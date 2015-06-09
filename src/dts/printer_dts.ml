@@ -160,9 +160,7 @@ let rec get_modules_used = function
    if it contains any node in object notation.
 
    TODO:  Have not covered all the cases where object notation might
-   be present. Eg.,
-
-   export var x : typeof M.y;
+   be present. Eg., union, intersection, array etc.
 
    etc.
 
@@ -193,10 +191,13 @@ and module_used_statement acc = Statement.(function
   (* This handles the following case:
 
      declare module M {
-       class A { }
+       export class A { }
      }
      declare module N {
-       var x: M.A;
+       export var x: M.A
+     }
+     delcare module P {
+       export var z: typeof N.x
      }
   *)
   | _, VariableDeclaration { VariableDeclaration.
@@ -253,6 +254,8 @@ and module_used_id acc = function
 
 and module_used_type acc = Type.(function
   | _, Generic t -> module_used_generic acc t
+  | _, Typeof x ->
+    (match x with _, {IdPath.ids; _}-> module_used_ids acc ids)
   | _ -> acc
 )
 
@@ -479,6 +482,8 @@ and type_ fmt = Type.(function
   | _, Object t -> object_type fmt t
   | _, Array t -> array_type fmt t
   | _, Generic t -> generic_type fmt t
+  | _, Typeof x -> fprintf fmt "typeof %a"
+    id_path x
   | _ -> todo fmt
 )
 

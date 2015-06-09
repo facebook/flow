@@ -20,13 +20,9 @@ declare module R___T___U {
 }
 declare module S {
   declare var R: $Exports<'R'>;
-  declare class CC extends R.A {
-
-  }
+  declare var z: typeof R.x;
 }
 declare module SS {
-  declare var R: $Exports<'R'>;
-  declare class II extends R.I {
 
-  }
 }
+

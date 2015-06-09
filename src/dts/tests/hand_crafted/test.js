@@ -9,3 +9,5 @@ var z: typeof N.z = new O.D();
 var k: typeof R.y = new R.T.E();
 var Module2 = require('Module2');
 var f : Module2.A = new Module2.A();
+var S = require('S');
+var variable : typeof S.z = new C();

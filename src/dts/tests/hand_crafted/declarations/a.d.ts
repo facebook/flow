@@ -12,9 +12,10 @@ declare module R {
 }
 
 declare module S {
-    export class CC extends R.A { }
+   // export class CC extends R.A { }
+    var z : typeof R.x
 }
 
 declare module SS {
-    export interface II extends R.I { }
+   // export interface II extends R.I { }
 }
