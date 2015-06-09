@@ -3350,6 +3350,7 @@ and filter_not_exists t = match t with
   (* truthy things get removed *)
   | BoolT (r, Some _)
   | StrT (r, Some _)
+  | ArrT (r, _, _)
   | NumT (r, Some _) -> UndefT r
 
   (* unknown boolies become falsy *)

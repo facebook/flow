@@ -59,6 +59,13 @@ function logical2e(): string {
 }
 
 /**
+ * A literal on the left side of &&
+ */
+function logical2e(): string {
+    return [1,2,3] && 'foo';
+}
+
+/**
  * An expression on the left side of &&
  */
 function logical3a(): string { // expected `: boolean`
