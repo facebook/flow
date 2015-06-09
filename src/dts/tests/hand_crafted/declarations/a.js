@@ -3,6 +3,9 @@ declare module R {
   declare class A extends C {
 
   }
+  declare class I {
+
+  }
   declare var x: C;
   declare var y: T.E;
 }
@@ -17,5 +20,13 @@ declare module R___T___U {
 }
 declare module S {
   declare var R: $Exports<'R'>;
-  declare var y: R.A;
+  declare class CC extends R.A {
+
+  }
+}
+declare module SS {
+  declare var R: $Exports<'R'>;
+  declare class II extends R.I {
+
+  }
 }

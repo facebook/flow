@@ -6,10 +6,15 @@ declare module R {
         export class E { }
     }
     export class A extends C { }
+    export interface I { }
     var x : C
     var y : T.E
 }
 
 declare module S {
-    var y : R.A
+    export class CC extends R.A { }
+}
+
+declare module SS {
+    export interface II extends R.I { }
 }

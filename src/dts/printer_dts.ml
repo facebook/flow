@@ -159,11 +159,10 @@ let rec get_modules_used = function
 (* modules_used_statement walks the AST of a given statement to see
    if it contains any node in object notation.
 
-   TODO: Currently it only considers the case where object notation is
-   present in the type annotation of a variable declaration. Need to
-   cover the rest of the cases like:
+   TODO:  Have not covered all the cases where object notation might
+   be present. Eg.,
 
-   export class P extends M.Q { }
+   export var x : typeof M.y;
 
    etc.
 
@@ -191,6 +190,15 @@ let rec get_modules_used = function
    So that we can access class E as R.T.E
 *)
 and module_used_statement acc = Statement.(function
+  (* This handles the following case:
+
+     declare module M {
+       class A { }
+     }
+     declare module N {
+       var x: M.A;
+     }
+  *)
   | _, VariableDeclaration { VariableDeclaration.
       declarations; _
     } -> VariableDeclaration.(
@@ -199,11 +207,36 @@ and module_used_statement acc = Statement.(function
         module_used_pattern acc id
       | _ -> failwith "Only single declarator handled currently"
     )
+  (* This case means that the child modules are imported by default.*)
   | _, ModuleDeclaration { Module.id; body; } ->
     SSet.add (get_name [] id) acc
+  (* This case check for possible module references in export
+       assignments. Note this does not look for object notation. Eg.,
+
+     declare module M { }
+     declare module "N" {
+       export = M // this is reference to a module
+     }
+  *)
   | _, ExportAssignment id -> (match id with
     | _, {Identifier. name; _} -> SSet.add name acc
   )
+  (* This case checks for object notation in extend property of a
+       class. Eg.,
+     export class C extends M.D { }
+  *)
+  | _, AmbientClassDeclaration { AmbientClass. extends; _ } ->
+    (match extends with
+    | Some (_, t) -> module_used_generic acc t
+    | _ -> acc
+    )
+  (* This case checks for object notation in extend property of an
+       interface. Eg.,
+     export interface C extends M.D { }
+  *)
+  | _, InterfaceDeclaration { Interface. extends; _ } ->
+    let fold_intermediate x y = module_used_generic x (snd y) in
+    List.fold_left fold_intermediate acc extends
   | _ -> acc
 )
 
