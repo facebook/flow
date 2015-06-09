@@ -3471,6 +3471,11 @@ and shape_field_name env =
   match e with
   | String p -> SFlit p
   | Class_const (id, ps) -> SFclass_const (id, ps)
+  | String2 (_, _) ->
+     error env
+           ("Shape field names cannot be strings enclosed by double quotes."
+            ^" Use single quotes instead.");
+     SFlit (pos, "")
   | _ -> error_expect env "string literal or class constant";
     SFlit (pos, "")
 
