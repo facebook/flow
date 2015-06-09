@@ -289,9 +289,9 @@ and meta_statement cmap = Ast.Statement.(function
   | loc, Expression { Expression.expression = e } ->
       meta_expression cmap e
 
-  | loc, ClassDeclaration { Class.body; _ } ->
-      let _, { Class.Body.body = elements; _ } = body in
-      concat_fold Class.(fun cmap -> function
+  | loc, ClassDeclaration { Ast.Class.body; _ } ->
+      let _, { Ast.Class.Body.body = elements; _ } = body in
+      concat_fold Ast.Class.(fun cmap -> function
         | Body.Method (loc, {
             Method.key = Ast.Expression.Object.Property.Identifier (_,
               { Ast.Identifier.name; _ });

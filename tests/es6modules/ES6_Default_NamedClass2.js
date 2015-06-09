@@ -1,5 +1,5 @@
 /**
- * @providesModule ES6_Default_NamedClass1
+ * @providesModule ES6_Default_NamedClass2
  * @flow
  */
 
