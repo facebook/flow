@@ -2561,6 +2561,7 @@ and obj_get_ ~is_method ~nullsafe env ty1 cid (p, s as id)
           | None ->
             env, (Reason.Rnone, Tany), None
           | Some class_ when not is_method
+              && not (Env.is_strict env)
               && class_.tc_name = SN.Classes.cStdClass ->
             env, (Reason.Rnone, Tany), None
           | Some class_ ->
