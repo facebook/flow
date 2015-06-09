@@ -931,6 +931,14 @@ let expect tok_str env = wrap env begin fun _ ->
   end
 end
 
+let expect_token tok env = wrap env begin fun x ->
+  if x = tok
+  then last_token env
+  else begin
+    raise Format_error
+  end
+end
+
 let expect_xhp tok_str env = wrap_xhp env begin fun _ ->
   if !(env.last_str) = tok_str
   then last_token env
@@ -1405,7 +1413,7 @@ and hint_list ?(trailing=true) env =
 (*****************************************************************************)
 
 and enum_ env =
-  seq env [name; hint_parameter; space];
+  seq env [expect_token Tword; hint_parameter; space];
   try_token env Tcolon (seq_fun
     [last_token; space; hint; as_constraint; space]);
   (* stmt parses any list of statements, including things like $x = 1; which
