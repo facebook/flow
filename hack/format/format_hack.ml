@@ -1742,7 +1742,7 @@ and xhp_class_attribute_list_multi env = preserve_nl env begin fun env ->
   xhp_class_attribute env;
   match token env with
   | Tcomma ->
-      seq env [last_token; newline; add_block_tag];
+      seq env [last_token; keep_comment; newline; add_block_tag];
       xhp_class_attribute_list_multi env
   | _ -> back env
 end
