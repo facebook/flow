@@ -828,20 +828,20 @@ let wrap_word env f = wrap env begin function
   | _ -> back env
 end
 
-let next_real_token_info env =
+let next_real_token_info ~wrap env =
   attempt env begin fun env ->
-    wrap_eof env begin fun tok ->
+    wrap env begin fun tok ->
       let tok_str = !(env.last_str) in
       tok, tok_str
     end
   end
 
-let next_token env =
-  let tok, _tok_str = next_real_token_info env in
+let next_token ?(wrap=wrap_eof) env =
+  let tok, _tok_str = next_real_token_info ~wrap env in
   tok
 
-let next_token_str env =
-  let _tok, tok_str = next_real_token_info env in
+let next_token_str ?(wrap=wrap_eof) env =
+  let _tok, tok_str = next_real_token_info ~wrap env in
   tok_str
 
 let next_non_ws_token env =
@@ -944,8 +944,7 @@ let expect_xhp tok_str env = wrap_xhp env begin fun _ ->
   then last_token env
   else begin
     if debug then begin
-      prerr_string
-        (Pos.string ((Pos.make (env.file :> string) env.lexbuf)));
+      print_error tok_str env;
       flush stderr
     end;
     raise Format_error
@@ -1797,47 +1796,100 @@ and is_xhp env =
         false
   end
 
-and xhp env = Try.one_line env xhp_single xhp_multi
-
-and xhp_single env =
-  name env;
-  xhp_attribute_list ~break:space env;
-  wrap_xhp env begin function
-    | Tslash -> seq env [space; last_token; expect_xhp ">"]
-    | _ ->
-        back env;
-        seq env [expect_xhp ">"; skip_spaces_and_nl; xhp_body];
-        env.spaces := 0;
-        xhp_close_tag env;
+and xhp_tag_kind env =
+  attempt env begin fun env ->
+    expect_xhp "<" env;
+    name env;
+    xhp_attribute_list ~break:space env;
+    match next_token ~wrap:wrap_eof_xhp env with
+    | Tslash -> `Xhp_self_closing
+    | Tgt -> `Xhp_paired
+    | _ -> raise Format_error
   end
 
-and xhp_multi env =
+(* First we try inserting the XHP on the current line, e.g.
+ *
+ *   $foo = <aaaaaaaaaa>1</aaaaaaaaaa>;
+ *
+ * If that fails to fit within char_break, then we try inserting the same XHP
+ * on the next line:
+ *
+ *   $foo =
+ *     <aaaaaaaaaa>1</aaaaaaaaaa>;
+ *
+ * If that *still* fails to fit, we split the XHP up into multiple lines:
+ *
+ *   $foo =
+ *     <aaaaaaaaaa>
+ *       1
+ *     </aaaaaaaaaa>;
+ *)
+and xhp env =
+  match xhp_tag_kind env with
+  | `Xhp_self_closing ->
+      Try.one_line env
+        xhp_self_closing_single
+        (fun env ->
+          newline env;
+          Try.one_line env
+            xhp_self_closing_single
+            xhp_self_closing_multi)
+  | `Xhp_paired ->
+      Try.one_line env
+        xhp_paired_single
+        (fun env ->
+          newline env;
+          Try.one_line env
+            xhp_paired_single
+            xhp_paired_multi)
+
+and xhp_self_closing_single env =
+  seq env [expect_xhp "<"; name; xhp_attribute_list ~break:space];
+  seq env [space; expect_xhp "/"; expect_xhp ">"];
+
+and xhp_self_closing_multi env =
+  seq env [expect_xhp "<"; name];
+  right env (xhp_attribute_list ~break:newline);
+  seq env [newline; expect_xhp "/"; expect_xhp ">"];
+  xhp_multi_post env
+
+and xhp_paired_single env =
+  seq env [expect_xhp "<"; name; xhp_attribute_list ~break:space];
+  seq env [expect_xhp ">"; skip_spaces_and_nl; xhp_body];
+  env.spaces := 0;
+  xhp_close_tag env;
+
+and xhp_paired_multi env =
+  expect_xhp "<" env;
   let margin_pos = !(env.char_pos) in
   name env;
   Try.one_line env
-    (xhp_attribute_list ~break:space)
+    begin fun env ->
+      xhp_attribute_list ~break:space env;
+      expect_xhp ">" env
+    end
     begin fun env ->
       margin_set margin_pos env
-        (xhp_attribute_list ~break:newline)
+        (xhp_attribute_list ~break:newline);
+      expect_xhp ">" env;
     end;
-  wrap_xhp env begin function
-    | Tslash ->
-        newline env;
-        last_token env;
-        expect_xhp ">" env;
-    | _ ->
-        back env;
-        expect_xhp ">" env;
-        newline env;
-        skip_spaces_and_nl env;
-        margin_set margin_pos env begin fun env ->
-          xhp_body env;
-        end;
-        newline env;
-        xhp_close_tag env;
+  newline env;
+  skip_spaces_and_nl env;
+  margin_set margin_pos env begin fun env ->
+    xhp_body env;
   end;
-  if next_token env <> Tsc
-  then newline env
+  newline env;
+  xhp_close_tag env;
+  xhp_multi_post env
+
+and xhp_multi_post env =
+  match xhp_token env with
+  | Tnewline | Tspace ->
+      newline env
+  | Tlt when is_xhp env ->
+      back env;
+      newline env
+  | _ -> back env
 
 and xhp_close_tag env =
   seq env [expect_xhp "<"; expect_xhp "/"; name; expect_xhp ">"]
@@ -1894,9 +1946,11 @@ and xhp_body env =
       xhp_comment env;
       k env
   | Tlt when is_xhp env ->
-      Try.one_line env
-        (fun env -> last_token env; xhp_single env)
-        (fun env -> newline env; last_token env; xhp env);
+      back env;
+      xhp env;
+      (match xhp_token env with
+      | Tnewline -> newline env
+      | _ -> back env);
       k env;
   | Tlt ->
       back env
@@ -1913,6 +1967,9 @@ and xhp_body env =
           expr env;
           expect_xhp "}" env;
         end;
+      (match xhp_token env with
+      | Tnewline -> newline env
+      | _ -> back env);
       k env
   | x ->
       let pos = !(env.char_pos) in
@@ -2557,23 +2614,8 @@ and expr_atomic env =
        expect ")" env;
      end
   | Tlt when is_xhp env ->
-      if attempt env begin fun env ->
-        let line = !(env.line) in
-        last_token env;
-        xhp env;
-        line = !(env.line)
-      end
-      then (last_token env; xhp env)
-      else if !(env.char_pos) = 1
-      then begin
-        last_token env;
-        xhp env
-      end
-      else right env begin fun env ->
-        newline env;
-        last_token env;
-        xhp env
-      end
+      back env;
+      xhp env;
   | Theredoc ->
       last_token env;
       heredoc env
