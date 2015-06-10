@@ -3757,7 +3757,7 @@ and mk_proptype cx = Ast.Expression.(function
     } ->
       let reason = mk_reason "shape" vloc in
       let amap, omap, dict = mk_proptypes cx properties in
-      let map = SMap.union amap omap in
+      let map = SMap.union amap (SMap.map (fun t -> OptionalT t) omap) in
       Flow_js.mk_object_with_map_proto cx reason ?dict map (MixedT reason)
 
   | vloc, _ -> AnyT.at vloc

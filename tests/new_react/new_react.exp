@@ -111,6 +111,16 @@ new_react.js:32:8,13: number
 This type is incompatible with
 [LIB] react.js:47:23,28: string
 
+propTypes.js:13:1,16:4: React element: C
+Error:
+propTypes.js:6:35,9:6: property label
+Property not found in
+propTypes.js:14:3,4: object literal
+
+propTypes.js:18:18,48: property label
+Property not found in
+propTypes.js:19:3,4: object literal
+
 props.js:4:5,13: property x
 Property not found in
 props.js:25:5,13: propTypes
@@ -203,4 +213,4 @@ state3.js:14:16,20: boolean
 This type is incompatible with
 state3.js:11:16,21: number
 
-Found 44 errors
+Found 46 errors
