@@ -532,7 +532,7 @@ module Translate = struct
     ret
   )
 
-  and class_expression (loc, c) = Expression.Class.(
+  and class_expression (loc, c) = Class.(
     let ret = node "ClassExpression" loc in
     Js.Unsafe.set ret "id" (option identifier c.id);
     Js.Unsafe.set ret "body" (class_body c.body);
