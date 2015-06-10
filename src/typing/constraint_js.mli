@@ -238,19 +238,41 @@ val copy_node: node -> node
 
 (***************************************)
 
+(* Currently, many constructs are considered to be VarBindings, including
+   functions and imports. Let-declared variables and classes are considered
+   LetBindings. *)
+type binding_type =
+  | VarBinding
+  | LetBinding
+  | ConstBinding
+  | TypeBinding
+
 type scope_entry = {
   specific: Type.t;
   general: Type.t;
   def_loc: Spider_monkey_ast.Loc.t option;
-  for_type: bool;
+  binding_type: binding_type;
 }
-type scope = scope_entry SMap.t ref
+
+(* VarBindings are hoisted to the nearest enclosing VarScope, whereas
+   LetBindings and ConstBindings will be installed in whichever scope they are
+   defined. LexicalScopes are created around constructs where only LetBindings
+   can be installed, like blocks *)
+type scope_kind =
+  | VarScope
+  | LexicalScope
+
+type scope = {
+  kind: scope_kind;
+  entries: scope_entry SMap.t ref;
+}
+
 type stack = int list
 
 val create_env_entry :
-  ?for_type: bool ->
   Type.t -> Type.t ->
   Spider_monkey_ast.Loc.t option ->
+  binding_type ->
   scope_entry
 
 (***************************************)

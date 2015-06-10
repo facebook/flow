@@ -26,6 +26,8 @@ val flat_env :
   unit ->
   scope_entry Utils.SMap.t
 
+val get_entry : ?for_type:bool -> context -> string -> reason -> scope_entry
+
 val get_var : ?for_type:bool -> context -> string -> reason -> Type.t
 
 val get_var_in_scope : ?for_type:bool -> context -> string -> reason -> Type.t

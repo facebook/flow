@@ -21,13 +21,31 @@ open Type
 module Ast = Spider_monkey_ast
 
 (* helpers *)
+let scope_of_binding = function
+  | LetBinding
+  | ConstBinding -> LexicalScope
+  | VarBinding
+  | TypeBinding -> VarScope
+
+let is_lexical = function
+  | LetBinding
+  | ConstBinding -> true
+  | VarBinding
+  | TypeBinding -> false
+
+let is_type_binding = function
+  | TypeBinding -> true
+  | _ -> false
 
 (* refinement keys *)
 let refinement_key names =
   "$REFI " ^ (String.concat "." names)
 
-let is_refinement name =
-  (String.length name) >= 5 && (String.sub name 0 5) = "$REFI"
+let heap_refinement name =
+  let r = Str.regexp "^\\$REFI \\([^.]*\\)\\." in
+  if Str.string_match r name 0
+  then Some (Str.matched_group 1 name)
+  else None
 
 (****************)
 (* Environments *)
@@ -36,7 +54,10 @@ let is_refinement name =
 type env = scope list ref
 
 let fresh_env () =
-   let global_scope = ref SMap.empty in
+   let global_scope = {
+     kind = VarScope;
+     entries = ref SMap.empty;
+   } in
    [global_scope]
 
 let env: env = ref (fresh_env ())
@@ -84,12 +105,14 @@ let cache_global cx x reason global_scope =
   else
     Flow_js.get_builtin cx x reason
   )) in
-  global_scope := SMap.add x (create_env_entry t t None) !global_scope;
+  let global_entries = global_scope.entries in
+  global_entries := SMap.add x (create_env_entry t t None VarBinding) !global_entries;
   cx.globals <- SSet.add x cx.globals;
   global_scope
 
 let find_global cx x reason global_scope =
-  if (SMap.mem x !global_scope)
+  let global_entries = global_scope.entries in
+  if (SMap.mem x !global_entries)
   then
     global_scope
   else
@@ -99,40 +122,72 @@ let find_env ?(for_type=false) cx x reason =
   let rec loop = function
     | [global_scope] -> find_global cx x reason global_scope
     | scope::scopes ->
-        (match SMap.get x !scope with
-        | Some entry when (not entry.for_type || for_type) -> scope
+        let entries = scope.entries in
+        (match SMap.get x !entries with
+        | Some entry when (not (entry.binding_type = TypeBinding) || for_type) -> scope
         | _ -> loop scopes)
     | [] -> assert false
   in
   loop (!env)
 
 let get_from_scope x scope =
-  SMap.find_unsafe x !scope
+  let entries = scope.entries in
+  SMap.find_unsafe x !entries
 
 let set_in_scope x entry scope =
-  scope := !scope |> SMap.add x entry
+  let entries = scope.entries in
+  entries := !entries |> SMap.add x entry
 
 let exists_in_scope x scope =
-  SMap.get x !scope
+  let entries = scope.entries in
+  SMap.get x !entries
 
-let update_scope ?(for_type=false) x (specific_t, general_t) scope =
-  let values = !scope in
-  let new_entry = match SMap.get x values with
-    | Some {def_loc; for_type; _;} ->
-        create_env_entry ~for_type specific_t general_t def_loc
-    | None ->
-        create_env_entry ~for_type specific_t general_t None
-  in
-  scope := values |> SMap.add x new_entry
+let set_in_env x entry =
+  let should_install scope = match (scope.kind, entry.binding_type) with
+  | LexicalScope, LetBinding
+  | LexicalScope, ConstBinding
+  | VarScope, _ -> true
+  | _ -> false in
+  let rec loop = function
+    | [global_scope] -> set_in_scope x entry global_scope
+    | scope::scopes ->
+        if should_install scope then
+          set_in_scope x entry scope
+        else
+          loop scopes
+    | [] -> assert false in
+  loop (!env)
+
+let exists_in_env x scope_kind =
+  let rec loop = function
+    | [global_scope] -> (global_scope, exists_in_scope x global_scope)
+    | scope::scopes ->
+        (match exists_in_scope x scope with
+        | Some entry -> (scope, Some entry)
+        | None ->
+          if (scope.kind = VarScope || scope.kind = scope_kind) then
+            (scope, None)
+          else
+            loop scopes)
+    | [] -> assert false in
+  loop (!env)
+
+let update_scope ?(for_type=false) cx x (specific_t, general_t) reason scope =
+  let entries = scope.entries in
+  (match SMap.get x !entries with
+  | Some {def_loc; binding_type; _;} ->
+      let new_entry = create_env_entry specific_t general_t def_loc binding_type in
+      entries := !entries |> SMap.add x new_entry
+  | None ->
+      let msg = "can't find entry to update" in
+      Flow_js.add_error cx [reason, msg])
 
 let unset_in_scope x scope =
-  scope := !scope |> SMap.remove x
-
-let read_env ?(for_type=false) cx x reason =
-  find_env ~for_type cx x reason |> get_from_scope x
+  let entries = scope.entries in
+  entries := !entries |> SMap.remove x
 
 let write_env ?(for_type=false) cx x shape reason =
-  find_env ~for_type cx x reason |> update_scope ~for_type x shape
+  find_env ~for_type cx x reason |> update_scope ~for_type cx x shape reason
 
 let push_env cx scope =
   env := scope :: !env;
@@ -143,8 +198,9 @@ let pop_env () =
   frames := List.tl !frames
 
 let flat_env () =
-  List.fold_left (fun acc x ->
-    SMap.union acc !x
+  List.fold_left (fun acc scope ->
+    let entries = scope.entries in
+    SMap.union acc !entries
   ) SMap.empty !env
 
 let switch_env scope =
@@ -158,28 +214,33 @@ let peek_frame () =
   List.hd !frames
 
 let init_env cx x shape =
-  let scope = peek_env() in
-  match exists_in_scope x scope with
-  | None -> set_in_scope x shape scope
-  | Some { general; for_type; def_loc; _; } when for_type <> shape.for_type ->
+  let scope_kind = scope_of_binding shape.binding_type in
+  match exists_in_env x scope_kind with
+  | (_, None) -> set_in_env x shape
+  | (_, Some { general; def_loc; binding_type }) when is_type_binding binding_type <> is_type_binding shape.binding_type ->
       (* When we have a value var shadowing a type var, replace the type var
        * with the value var *)
       let shadowed_reason =
         mk_reason
-          (spf "%s binding %s" (if for_type then "type" else "value") x)
+          (spf "%s binding %s" (if is_type_binding binding_type then "type" else "value") x)
           (match def_loc with None -> Ast.Loc.none | Some loc -> loc) in
       let shadower_reason =
         mk_reason
-          (spf "%s binding %s" (if shape.for_type then "type" else "value") x)
+          (spf "%s binding %s" (if is_type_binding shape.binding_type then "type" else "value") x)
           (match shape.def_loc with None -> Ast.Loc.none | Some loc -> loc) in
       Flow_js.add_error cx [
         shadower_reason, "This binding is shadowing";
         shadowed_reason, "which is a different sort of binding";
       ];
-      set_in_scope x shape scope;
+      set_in_env x shape;
       Flow_js.unify cx shape.general general
-  | Some { general; _ } ->
-      Flow_js.unify cx general shape.general
+  | (scope, Some { general; binding_type }) ->
+      if is_lexical binding_type || is_lexical shape.binding_type then
+        let loc = (match shape.def_loc with None -> Ast.Loc.none | Some loc -> loc) in
+        let msg = spf "SyntaxError: Variable `%s` has already been declared" x in
+        Flow_js.add_error cx [mk_reason "" loc, msg]
+      else
+        Flow_js.unify cx general shape.general
 
 let let_env x shape f =
   peek_env() |> set_in_scope x shape;
@@ -193,35 +254,47 @@ let let_env x shape f =
 (* Recall that for every variable we maintain two types, one flow-sensitive and
    the other flow-insensitive. *)
 
+let get_entry ?(for_type=false) cx x reason =
+  find_env ~for_type cx x reason |> get_from_scope x
+
 let get_var ?(for_type=false) cx x reason =
-  (read_env ~for_type cx x reason).specific
+  (get_entry ~for_type cx x reason).specific
 
 let get_var_in_scope ?(for_type=false) cx x reason =
-  (read_env ~for_type cx x reason).general
+  (get_entry ~for_type cx x reason).general
 
 let var_ref ?(for_type=false) cx x reason =
-  let t = (read_env ~for_type cx x reason).specific in
+  (match exists_in_env x VarScope with
+  | (_, Some { def_loc = Some loc; binding_type }) when is_lexical binding_type ->
+      if Pervasives.compare (pos_of_reason reason) (pos_of_loc loc) < 0
+      then Flow_js.add_error cx [
+        reason, "ReferenceError: can't access lexical declaration before initialization"
+      ]
+  | _ -> ());
+  let t = (get_entry ~for_type cx x reason).specific in
   let p = pos_of_reason reason in
   mod_reason_of_t (repos_reason p) t
 
 let get_refinement cx key r =
-  let scope = peek_env () in
-  match exists_in_scope key scope with
-  | Some { specific; _ } ->
+  match exists_in_env key VarScope with
+  | (_, Some { specific; _ }) ->
       let pos = pos_of_reason r in
       let t = mod_reason_of_t (repos_reason pos) specific in
       Some t
-  | None ->
+  | (_, None) ->
       None
 
 let set_var ?(for_type=false) cx x specific_t reason =
   changeset := !changeset |> SSet.add x;
-  let general = (read_env ~for_type cx x reason).general in
+  let general = (get_entry ~for_type cx x reason).general in
   Flow_js.flow cx (specific_t, general);
   write_env ~for_type cx x (specific_t, general) reason
 
 let clone_env ctx =
-  List.map (fun scope -> ref !scope) ctx
+  List.map (fun scope ->
+    let { kind; entries } = scope in
+    { kind; entries = ref !entries }
+  ) ctx
 
 let update_frame cx ctx =
   let current_frame = List.hd !frames in
@@ -240,12 +313,15 @@ let rec merge_env cx reason (ctx, ctx1, ctx2) changeset =
   match (ctx, ctx1, ctx2) with
   | ([],[],[]) -> ()
   | (scope::ctx, scope1::ctx1, scope2::ctx2) ->
+      let entries = scope.entries in
+      let entries1 = scope1.entries in
+      let entries2 = scope2.entries in
       (* merge scope, scope1, scope2 *)
       let not_found = SSet.fold (fun x not_found ->
-        match SMap.get x !scope with
-        | Some {specific;general;def_loc;for_type;} ->
-            let shape1 = SMap.find_unsafe x !scope1 in
-            let shape2 = SMap.find_unsafe x !scope2 in
+        match SMap.get x !entries with
+        | Some {specific;general;def_loc;binding_type} ->
+            let shape1 = SMap.find_unsafe x !entries1 in
+            let shape2 = SMap.find_unsafe x !entries2 in
             let s1 = shape1.specific in
             let s2 = shape2.specific in
             let (s, g) =
@@ -261,8 +337,8 @@ let rec merge_env cx reason (ctx, ctx1, ctx2) changeset =
                 Flow_js.flow cx (tvar,general);
                 (tvar,general)
             in
-            let for_type = for_type || shape1.for_type || shape2.for_type in
-            scope := SMap.add x (create_env_entry ~for_type s g def_loc) !scope;
+            (* FIXME: should we merge the binding_types here? *)
+            scope.entries := SMap.add x (create_env_entry s g def_loc binding_type) !entries;
             not_found
         | None ->
             SSet.add x not_found
@@ -272,26 +348,35 @@ let rec merge_env cx reason (ctx, ctx1, ctx2) changeset =
   | _ -> assert false
 
 let widen_env cx reason =
-  let scope = List.hd !env in
-  let vars = !scope in
-  if SMap.cardinal vars < 32 then
-  scope := vars |> SMap.mapi (fun x {specific;general;def_loc;for_type;} ->
-    if specific = general
-    then create_env_entry ~for_type specific general def_loc
-    else
-      let reason = replace_reason x reason in
-      let tvar = Flow_js.mk_tvar cx reason in
-      Flow_js.flow cx (specific,tvar);
-      Flow_js.flow cx (tvar,general);
-      create_env_entry ~for_type tvar general def_loc
-  )
+  let rec loop = function
+    | [] -> ()
+    | scope::scopes ->
+        let entries = scope.entries in
+        let entries = !entries in
+        if SMap.cardinal entries < 32 then
+        scope.entries := entries |> SMap.mapi (fun x {specific;general;def_loc;binding_type} ->
+          if specific = general
+          then create_env_entry specific general def_loc binding_type
+          else
+            let reason = replace_reason x reason in
+            let tvar = Flow_js.mk_tvar cx reason in
+            Flow_js.flow cx (specific,tvar);
+            Flow_js.flow cx (tvar,general);
+            create_env_entry tvar general def_loc binding_type
+        );
+        if scope.kind = VarScope then ()
+        else loop scopes
+  in
+  loop !env
 
 let rec copy_env_ cx reason x = function
   | ([],[]) -> ()
   | (scope1::ctx1, scope2::ctx2) ->
-      (match SMap.get x !scope1 with
+      let entries1 = scope1.entries in
+      let entries2 = scope2.entries in
+      (match SMap.get x !entries1 with
         | Some {specific=s1;_} ->
-            let s2 = (SMap.find_unsafe x !scope2).specific in
+            let s2 = (SMap.find_unsafe x !entries2).specific in
             Flow_js.flow cx (s2,s1)
         | None -> copy_env_ cx reason x (ctx1,ctx2)
       )
@@ -307,17 +392,19 @@ let copy_env cx reason (ctx1,ctx2) xs =
 
 let havoc_env () =
   List.iter (fun scope ->
-    scope := SMap.mapi (fun x {specific=_;general;def_loc;for_type;} ->
-      create_env_entry ~for_type general general def_loc
-    ) !scope
+    let entries = scope.entries in
+    entries := SMap.mapi (fun x {specific=_;general;def_loc;binding_type} ->
+      create_env_entry general general def_loc binding_type
+    ) !entries
  ) !env
 
 let rec havoc_env2_ x = function
   | scope::scopes ->
-      (match SMap.get x !scope with
-      | Some {specific=_;general;def_loc;for_type;} ->
-          scope := !scope |>
-            SMap.add x (create_env_entry ~for_type general general def_loc)
+      let entries = scope.entries in
+      (match SMap.get x !entries with
+      | Some {specific=_;general;def_loc;binding_type} ->
+          entries := !entries |>
+            SMap.add x (create_env_entry general general def_loc binding_type)
       | None ->
           havoc_env2_ x scopes
       )
@@ -328,21 +415,29 @@ let havoc_env2 xs =
 
 let havoc_heap_refinements () =
   List.iter (fun scope ->
-    scope := SMap.mapi (fun x ({specific=_;general;def_loc;for_type;} as entry) ->
-      if is_refinement x
-      then create_env_entry ~for_type general general def_loc
+    let entries = scope.entries in
+    entries := SMap.mapi (fun x ({specific=_;general;def_loc;binding_type} as entry) ->
+      if Option.is_some (heap_refinement x)
+      then create_env_entry general general def_loc binding_type
       else entry
-    ) !scope
+    ) !entries
  ) !env
 
 let clear_env reason =
-  let scope = List.hd !env in
-  scope := !scope |> SMap.mapi (fun x {specific;general;def_loc;for_type;} ->
-    (* internal names (.this, .super, .return, .exports) are read-only *)
-    if is_internal_name x
-    then create_env_entry ~for_type specific general def_loc
-    else create_env_entry ~for_type (UndefT reason) general def_loc
-  )
+  let rec loop = function
+    | [] -> ()
+    | scope::scopes ->
+        let entries = scope.entries in
+        entries := !entries |> SMap.mapi (fun x {specific;general;def_loc;binding_type} ->
+          (* internal names (.this, .super, .return, .exports) are read-only *)
+          if is_internal_name x
+          then create_env_entry specific general def_loc binding_type
+          else create_env_entry (UndefT reason) general def_loc binding_type
+        );
+        if scope.kind = VarScope then ()
+        else loop scopes
+  in
+  loop !env
 
 let string_of_env cx ctx =
   String.concat "\n" (List.map (string_of_scope cx) ctx)
@@ -350,14 +445,18 @@ let string_of_env cx ctx =
 (* The following functions are used to narrow the type of variables
    based on dynamic checks. *)
 
-let install_refinement cx x xtypes =
-  if exists_in_scope x (peek_env ()) = None then
-    let t = SMap.find_unsafe x xtypes in
-    init_env cx x (create_env_entry t t None)
+let install_heap_refinement cx x xtypes obj =
+  let t = SMap.find_unsafe x xtypes in
+  match exists_in_env obj VarScope with
+  | scope, _ ->
+      let entry = create_env_entry t t None LetBinding in
+      set_in_scope x entry scope
 
 let refine_with_pred cx reason pred xtypes =
   SMap.iter (fun x predx ->
-    if is_refinement x then install_refinement cx x xtypes;
+    (match heap_refinement x with
+    | Some obj -> install_heap_refinement cx x xtypes obj
+    | None -> ());
     let reason' = replace_reason (spf "identifier %s" x) reason in
     let tx = get_var cx x reason' in
     let rstr = spf "identifier %s when %s" x (string_of_predicate predx) in
