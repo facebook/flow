@@ -1,26 +1,53 @@
-async function f() {}
-async function ft<T>(a: T): void {}
+// @flow
 
-// TODO: these async methods should log errors until typechecking is supported
-class C {
-  async m() {}
-  async mt<T>(a: T): void {}
-  static async m(a): void {}
-  static async mt<T>(a: T): void {}
+// "For async functions, a Promise<T> is returned,
+// and the type of return expressions must be T."
+//
+
+async function f0(): Promise<number> {
+  return 1;
 }
 
-var e = async function () {};
-var et = async function<T> (a: T): void {};
+// TODO this gets a double error currently, locs swapped
+async function f1(): Promise<bool> {
+  return 1;  // error, number != bool
+}
 
-var n = new async function() {};
+// await: (p: Promise<T> | T) => T
+//
 
-// TODO: these async functions should log errors until typechecking is supported
-var o = { async m() {} };
-var ot = { async m<T>(a: T) {} };
-var oz = { async async() {} };
+async function f2(p: Promise<number>): Promise<number> {
+  var x: number = await p;
+  var y: number = await 1;
+  return x + y;
+}
 
-var x = { async : 5 };
-console.log(x.async);
+async function f3(p: Promise<number>): Promise<number> {
+  return await p;
+}
 
-var async = 3;
-var y = { async };
+// TODO: this is one of those bad generic errors, currently:
+// "inconsistent use of library definitions" with two core.js locs
+async function f4(p: Promise<number>): Promise<bool> {
+  return await p; // error, number != bool
+}
+
+// async arrow functions
+//
+
+var f5: () => Promise<number> = async () => await 1;
+
+// async methods
+//
+
+class C {
+  async m() { return 1; }
+  async mt<T>(a: T): Promise<T> { return a; }
+  static async m(a): void { await a; }
+  static async mt<T>(a: T): Promise<T> { return a; }
+}
+
+// async function props
+
+var obj = { f: async () => await 1 };
+var objf : () => Promise<number> = obj.f;

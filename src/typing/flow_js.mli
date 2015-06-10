@@ -94,6 +94,12 @@ val mk_nominal: context -> int
 
 val do_gc: context -> Type.t list -> Type.t list -> unit
 
+(* contexts *)
+val fresh_context:
+  ?checked:bool -> ?weak:bool ->
+  file:string -> _module:string ->
+  context
+
 (* builtins *)
 
 val builtins: Type.t

@@ -311,7 +311,7 @@ let destructuring_map cx t p =
 let pattern_decl cx t =
   destructuring cx t (fun cx loc name t ->
     Hashtbl.replace cx.type_table loc t;
-    Env_js.init_env cx name (create_env_entry t t (Some loc))
+    Env_js.init_var cx name (Scope.create_entry t t (Some loc))
   )
 
 (* type refinements on expressions - wraps Env_js API *)
@@ -632,7 +632,7 @@ let rec convert cx map = Ast.Type.(function
         check_type_param_arity cx loc typeParameters 1 (fun () ->
           match List.hd typeParameters with
           | _, StringLiteral { StringLiteral.value; _ } ->
-              Env_js.get_var_in_scope cx
+              Env_js.get_var_declared_type cx
                 (internal_module_name value)
                 (mk_reason (spf "exports of module %s" value) loc)
           | _ -> assert false
@@ -859,6 +859,12 @@ and mk_enum_type cx reason keys =
 (* Visitors *)
 (************)
 
+(********************************************************************
+ * local inference preliminary pass: traverse AST, collecting
+ * declarations and populating variable environment (scope stack)
+ * in prep for main pass
+ ********************************************************************)
+
 (* TODO: detect structural misuses abnormal control flow constructs *)
 and statement_decl cx = Ast.Statement.(
 
@@ -869,7 +875,7 @@ and statement_decl cx = Ast.Statement.(
         let r = mk_reason (spf "var %s" name) loc in
         let t = mk_type_annotation cx r typeAnnotation in
         Hashtbl.replace cx.type_table loc t;
-        Env_js.init_env cx name (create_env_entry t t (Some loc))
+        Env_js.init_var cx name (Scope.create_entry t t (Some loc))
     | p ->
         let r = mk_reason "var _" loc in
         let t = type_of_pattern p |> mk_type_annotation cx r in
@@ -929,7 +935,7 @@ and statement_decl cx = Ast.Statement.(
       let _, { Ast.Identifier.name; _ } = id in
       let r = mk_reason (spf "type %s" name) loc in
       let tvar = Flow_js.mk_tvar cx r in
-      Env_js.init_env cx name (create_env_entry ~for_type:true tvar tvar (Some loc))
+      Env_js.init_var cx name (Scope.create_entry ~for_type:true tvar tvar (Some loc))
 
   | (loc, Switch { Switch.discriminant; cases; lexical }) ->
       (* TODO: ensure that default is last *)
@@ -995,15 +1001,13 @@ and statement_decl cx = Ast.Statement.(
   | (loc, Debugger) -> ()
 
   | (loc, FunctionDeclaration { FunctionDeclaration.id; async; _ }) -> (
-      if async then begin
-        Flow_js.add_error cx [mk_reason "" loc, "async not (sup)ported"]
-      end;
       match id with
-      | Some(id) ->
+      | Some id ->
         let _, { Ast.Identifier.name; _ } = id in
-        let r = mk_reason (spf "function %s" name) loc in
+        let r = mk_reason (spf "%sfunction %s"
+          (if async then "async " else "") name) loc in
         let tvar = Flow_js.mk_tvar cx r in
-        Env_js.init_env cx name (create_env_entry tvar tvar (Some loc))
+        Env_js.init_var cx name (Scope.create_entry tvar tvar (Some loc))
       | None -> failwith (
           "Flow Error: Nameless function declarations should always be given " ^
           "an implicit name before they get hoisted!"
@@ -1016,7 +1020,7 @@ and statement_decl cx = Ast.Statement.(
       let r = mk_reason (spf "declare %s" name) loc in
       let t = mk_type_annotation cx r typeAnnotation in
       Hashtbl.replace cx.type_table loc t;
-      Env_js.init_env cx name (create_env_entry t t (Some loc))
+      Env_js.init_var cx name (Scope.create_entry t t (Some loc))
 
   | (loc, VariableDeclaration decl) ->
       variable_declaration cx loc decl
@@ -1027,7 +1031,7 @@ and statement_decl cx = Ast.Statement.(
         let _, { Ast.Identifier.name; _ } = id in
         let r = mk_reason (spf "class %s" name) loc in
         let tvar = Flow_js.mk_tvar cx r in
-        Env_js.init_env cx name (create_env_entry tvar tvar (Some loc))
+        Env_js.init_var cx name (Scope.create_entry tvar tvar (Some loc))
       | None -> ()
     )
 
@@ -1039,7 +1043,7 @@ and statement_decl cx = Ast.Statement.(
       let _, { Ast.Identifier.name; _ } = id in
       let r = mk_reason (spf "class %s" name) loc in
       let tvar = Flow_js.mk_tvar cx r in
-      Env_js.init_env cx name (create_env_entry ~for_type:is_interface tvar tvar (Some loc))
+      Env_js.init_var cx name (Scope.create_entry ~for_type:is_interface tvar tvar (Some loc))
   | (loc, DeclareModule { DeclareModule.id; _ }) ->
       let name = match id with
       | DeclareModule.Identifier (_, id) -> id.Ast.Identifier.name
@@ -1051,9 +1055,9 @@ and statement_decl cx = Ast.Statement.(
       let r = mk_reason (spf "module %s" name) loc in
       let t = Flow_js.mk_tvar cx r in
       Hashtbl.replace cx.type_table loc t;
-      Env_js.init_env cx
+      Env_js.init_var cx
         (internal_module_name name)
-        (create_env_entry t t (Some loc))
+        (Scope.create_entry t t (Some loc))
   | (_, ExportDeclaration {
       ExportDeclaration.default;
       ExportDeclaration.declaration;
@@ -1101,9 +1105,9 @@ and statement_decl cx = Ast.Statement.(
           let tvar = Flow_js.mk_tvar cx reason in
 
           let env_entry =
-            (create_env_entry ~for_type:isType tvar tvar (Some loc))
+            (Scope.create_entry ~for_type:isType tvar tvar (Some loc))
           in
-          Env_js.init_env cx local_name env_entry
+          Env_js.init_var cx local_name env_entry
         | None -> (
           match specifier with
           | Some(ImportDeclaration.Named(_, named_specifiers)) ->
@@ -1125,9 +1129,9 @@ and statement_decl cx = Ast.Statement.(
               ) in
               let tvar = Flow_js.mk_tvar cx reason in
               let env_entry =
-                create_env_entry ~for_type:isType tvar tvar (Some specifier_loc)
+                Scope.create_entry ~for_type:isType tvar tvar (Some specifier_loc)
               in
-              Env_js.init_env cx local_name env_entry;
+              Env_js.init_var cx local_name env_entry;
             ) in
             List.iter init_specifier named_specifiers
           | Some(ImportDeclaration.NameSpace(_, (loc, local_ident))) ->
@@ -1137,9 +1141,9 @@ and statement_decl cx = Ast.Statement.(
             in
             let tvar = Flow_js.mk_tvar cx reason in
             let env_entry =
-              create_env_entry ~for_type:isType tvar tvar (Some loc)
+              Scope.create_entry ~for_type:isType tvar tvar (Some loc)
             in
-            Env_js.init_env cx local_name env_entry
+            Env_js.init_var cx local_name env_entry
           | None -> failwith (
             "Parser error: Non-default imports must always have a " ^
             "specifier!"
@@ -1147,6 +1151,11 @@ and statement_decl cx = Ast.Statement.(
         )
       )
 )
+
+(***************************************************************
+ * local inference main pass: visit AST statement list, calling
+ * flow to check types/create graphs for merge-time checking
+ ***************************************************************)
 
 and toplevels cx stmts =
   let n = ref 0 in
@@ -1188,7 +1197,7 @@ and statement cx = Ast.Statement.(
           let t = Flow_js.mk_tvar cx (mk_reason "catch" loc) in
           Env_js.let_env
             name
-            (create_env_entry t t (Some loc))
+            (Scope.create_entry t t (Some loc))
             (fun () -> toplevels cx b.Block.body)
 
       | loc, Identifier (_, { Ast.Identifier.name; _ }) ->
@@ -1222,21 +1231,21 @@ and statement cx = Ast.Statement.(
   | (loc, If { If.test; consequent; alternate }) ->
       let reason = mk_reason "if" loc in
       let _, pred, not_pred, xts = predicate_of_condition cx test in
-      let ctx = !Env_js.env in
-      let oldset = Env_js.swap_changeset (fun _ -> SSet.empty) in
+      let ctx =  Env_js.get_scopes () in
+      let oldset = Env_js.clear_changeset () in
 
       let exception_then, exception_else = ref None, ref None in
 
-      let then_ctx = Env_js.clone_env ctx in
-      Env_js.update_frame cx then_ctx;
+      let then_ctx = Env_js.clone_scopes ctx in
+      Env_js.update_env cx then_ctx;
       Env_js.refine_with_pred cx reason pred xts;
 
       mark_exception_handler
         (fun () -> statement cx consequent)
         exception_then;
 
-      let else_ctx = Env_js.clone_env ctx in
-      Env_js.update_frame cx else_ctx;
+      let else_ctx = Env_js.clone_scopes ctx in
+      Env_js.update_env cx else_ctx;
       Env_js.refine_with_pred cx reason not_pred xts;
       (match alternate with
         | None -> ()
@@ -1246,20 +1255,20 @@ and statement cx = Ast.Statement.(
               exception_else;
       );
 
-      let newset = Env_js.swap_changeset (SSet.union oldset) in
+      let newset = Env_js.merge_changeset oldset in
 
       (* adjust post-if environment. if we've returned from one arm,
          swap in the env generated by the other, otherwise merge *)
       (match !exception_then, !exception_else with
       | Some Abnormal.Return, None
       | Some Abnormal.Throw, None ->
-          Env_js.update_frame cx else_ctx
+          Env_js.update_env cx else_ctx
       | None, Some Abnormal.Return
       | None, Some Abnormal.Throw ->
-          Env_js.update_frame cx then_ctx
+          Env_js.update_env cx then_ctx
       | _ ->
           Env_js.merge_env cx reason (ctx, then_ctx, else_ctx) newset;
-          Env_js.update_frame cx ctx);
+          Env_js.update_env cx ctx);
 
       (match !exception_then, !exception_else with
       | Some Abnormal.Throw, Some Abnormal.Return
@@ -1277,39 +1286,39 @@ and statement cx = Ast.Statement.(
       | (loc, ForIn _)
         ->
         let reason = mk_reason "label" loc in
-        let oldset = Env_js.swap_changeset (fun _ -> SSet.empty) in
+        let oldset = Env_js.clear_changeset () in
         let label = Some name in
         let save_break_exn = Abnormal.swap (Abnormal.Break label) false in
         let save_continue_exn = Abnormal.swap (Abnormal.Continue label) false in
 
-        let ctx = !Env_js.env in
+        let ctx = Env_js.get_scopes () in
         Env_js.widen_env cx reason;
 
-        let loop_ctx = Env_js.clone_env ctx in
-        Env_js.update_frame cx loop_ctx;
+        let loop_ctx = Env_js.clone_scopes ctx in
+        Env_js.update_env cx loop_ctx;
 
         ignore_break_continue_exception_handler
           (fun () -> statement cx body)
           label
           Abnormal.raise_exn;
-        let newset = Env_js.swap_changeset (SSet.union oldset) in
+        let newset = Env_js.merge_changeset oldset in
         if (Abnormal.swap (Abnormal.Continue label) save_continue_exn)
-        then Env_js.havoc_env2 newset;
+        then Env_js.havoc_vars newset;
         Env_js.copy_env cx reason (ctx,loop_ctx) newset;
 
         if (Abnormal.swap (Abnormal.Break label) save_break_exn)
-        then Env_js.havoc_env2 newset
+        then Env_js.havoc_vars newset
 
       | _ ->
-        let oldset = Env_js.swap_changeset (fun _ -> SSet.empty) in
+        let oldset = Env_js.clear_changeset () in
         let label = Some name in
         let save_break_exn = Abnormal.swap (Abnormal.Break label) false in
         ignore_break_exception_handler
           (fun () -> statement cx body)
           label;
-        let newset = Env_js.swap_changeset (SSet.union oldset) in
+        let newset = Env_js.merge_changeset oldset in
         if (Abnormal.swap (Abnormal.Break label) save_break_exn)
-        then Env_js.havoc_env2 newset
+        then Env_js.havoc_vars newset
       )
 
   | (loc, Break { Break.label }) ->
@@ -1352,10 +1361,10 @@ and statement cx = Ast.Statement.(
       let save_break_exn = Abnormal.swap (Abnormal.Break None) false in
 
       let default = ref false in
-      let ctx = !Env_js.env in
+      let ctx =  Env_js.get_scopes () in
       let last_ctx = ref None in
       let fallthrough_ctx = ref ctx in
-      let oldset = Env_js.swap_changeset (fun _ -> SSet.empty) in
+      let oldset = Env_js.clear_changeset () in
 
       let merge_with_last_ctx cx reason ctx changeset =
         match !last_ctx with
@@ -1380,17 +1389,17 @@ and statement cx = Ast.Statement.(
               predicate_of_condition cx fake_ast
           in
 
-          let case_ctx = Env_js.clone_env !fallthrough_ctx in
-          Env_js.update_frame cx case_ctx;
+          let case_ctx = Env_js.clone_scopes !fallthrough_ctx in
+          Env_js.update_env cx case_ctx;
           Env_js.refine_with_pred cx reason pred xtypes;
-          merge_with_last_ctx cx reason case_ctx !Env_js.changeset;
+          merge_with_last_ctx cx reason case_ctx (Env_js.peek_changeset ());
 
           let exception_ = ref None in
           mark_exception_handler (fun () ->
             toplevels cx consequent
           ) exception_;
 
-          Env_js.update_frame cx !fallthrough_ctx;
+          Env_js.update_env cx !fallthrough_ctx;
           Env_js.refine_with_pred cx reason not_pred xtypes;
 
           last_ctx := Some case_ctx;
@@ -1399,19 +1408,19 @@ and statement cx = Ast.Statement.(
       ) cases
       in
 
-      let newset = Env_js.swap_changeset (SSet.union oldset) in
+      let newset = Env_js.merge_changeset oldset in
 
       (* if there's no default clause, pretend there is and it's empty *)
       if not !default
       then (
-        let default_ctx = Env_js.clone_env !fallthrough_ctx in
+        let default_ctx = Env_js.clone_scopes !fallthrough_ctx in
         let reason = mk_reason "default" loc in
-        Env_js.update_frame cx default_ctx;
+        Env_js.update_env cx default_ctx;
         merge_with_last_ctx cx reason default_ctx newset
       );
 
       if Abnormal.swap (Abnormal.Break None) save_break_exn
-      then Env_js.havoc_env2 newset;
+      then Env_js.havoc_vars newset;
 
       (* if the default clause exits abnormally and other cases either fall
          through or exit abnormally the same way, then the switch exits
@@ -1438,6 +1447,13 @@ and statement cx = Ast.Statement.(
       let t = match argument with
         | None -> void_ loc
         | Some expr -> expression cx expr
+      in
+      (* if we're in an async function, convert the return
+         expression's type T to Promise<T> *)
+      let t = if Env_js.in_async_scope ()
+        then Flow_js.get_builtin_typeapp cx
+          (mk_reason "async return" loc) "Promise" [t]
+        else t
       in
       Flow_js.flow cx (t, ret);
       Env_js.clear_env reason;
@@ -1504,7 +1520,7 @@ and statement cx = Ast.Statement.(
   (***************************************************************************)
   | (loc, Try { Try.block = (_, b); handler; guardedHandlers; finalizer }) ->
       let reason = mk_reason "try" loc in
-      let oldset = Env_js.swap_changeset (fun _ -> SSet.empty) in
+      let oldset = Env_js.clear_changeset () in
       let exception_try = ref None in
       let exception_catch = ref None in
       let exception_finally = ref None in
@@ -1514,7 +1530,7 @@ and statement cx = Ast.Statement.(
         exception_try;
 
       (* clone end of try as start of finally *)
-      let finally_ctx = Env_js.clone_env !Env_js.env in
+      let finally_ctx = Env_js.clone_scopes (Env_js.get_scopes ()) in
 
       (match handler with
         | None ->
@@ -1524,14 +1540,14 @@ and statement cx = Ast.Statement.(
 
         | Some (_, h) ->
             (* havoc environment, since the try block may exit anywhere *)
-            Env_js.havoc_env2 !Env_js.changeset;
+            Env_js.(havoc_vars (peek_changeset ()));
             mark_exception_handler
               (fun () -> catch_clause cx h)
               exception_catch;
 
             (* merge end of catch to start of finally *)
             Env_js.merge_env cx reason
-              (finally_ctx, finally_ctx, !Env_js.env) !Env_js.changeset;
+              (finally_ctx, finally_ctx,  Env_js.get_scopes ()) (Env_js.peek_changeset ());
       );
 
       assert (guardedHandlers = []); (* remove from AST *)
@@ -1541,24 +1557,24 @@ and statement cx = Ast.Statement.(
             (* update environment to the end of try or catch; otherwise do
                nothing, so that this remains the state reached at the end of the
                try-catch-finally *)
-            Env_js.update_frame cx finally_ctx
+            Env_js.update_env cx finally_ctx
 
         | Some (_, { Block.body }) ->
             (* analyze twice, with different start states *)
 
             (* 1. havoc environment, since the catch block may exit anywhere *)
-            Env_js.havoc_env2 !Env_js.changeset;
+            Env_js.(havoc_vars (peek_changeset ()));
             mark_exception_handler
               (fun () -> toplevels cx body)
               exception_finally;
 
             (* 2. update environment to the end of try or catch *)
-            Env_js.update_frame cx finally_ctx;
+            Env_js.update_env cx finally_ctx;
             ignore_exception_handler
               (fun () -> toplevels cx body);
       );
 
-      let newset = Env_js.swap_changeset (SSet.union oldset) in
+      let newset = Env_js.merge_changeset oldset in
       ignore newset;
 
       raise_exception !exception_finally;
@@ -1586,23 +1602,23 @@ and statement cx = Ast.Statement.(
       let reason = mk_reason "while" loc in
       let save_break_exn = Abnormal.swap (Abnormal.Break None) false in
       let save_continue_exn = Abnormal.swap (Abnormal.Continue None) false in
-      let ctx = !Env_js.env in
-      let oldset = Env_js.swap_changeset (fun _ -> SSet.empty) in
+      let ctx =  Env_js.get_scopes () in
+      let oldset = Env_js.clear_changeset () in
       (* ctx = Pre *)
       (* ENV = [ctx] *)
 
       Env_js.widen_env cx reason;
       (* ctx = Pre', Pre' > Pre *)
 
-      let do_ctx = Env_js.clone_env ctx in
-      Env_js.update_frame cx do_ctx;
+      let do_ctx = Env_js.clone_scopes ctx in
+      Env_js.update_env cx do_ctx;
       (* do_ctx = Pre' *)
       (* ENV = [do_ctx] *)
       let _, pred, not_pred, xtypes =
         predicate_of_condition cx test in
 
-      let body_ctx = Env_js.clone_env do_ctx in
-      Env_js.update_frame cx body_ctx;
+      let body_ctx = Env_js.clone_scopes do_ctx in
+      Env_js.update_env cx body_ctx;
       (* body_ctx = Pre' *)
       (* ENV = [body_ctx] *)
 
@@ -1616,17 +1632,17 @@ and statement cx = Ast.Statement.(
         (save_handler exception_);
       (* body_ctx = Post' *)
 
-      let newset = Env_js.swap_changeset (SSet.union oldset) in
+      let newset = Env_js.merge_changeset oldset in
 
       if Abnormal.swap (Abnormal.Continue None) save_continue_exn
-      then Env_js.havoc_env2 newset;
+      then Env_js.havoc_vars newset;
       Env_js.copy_env cx reason (ctx,body_ctx) newset;
       (* Pre' > Post' *)
 
-      Env_js.update_frame cx do_ctx;
+      Env_js.update_env cx do_ctx;
       Env_js.refine_with_pred cx reason not_pred xtypes;
       if Abnormal.swap (Abnormal.Break None) save_break_exn
-      then Env_js.havoc_env2 newset;
+      then Env_js.havoc_vars newset;
       (* ENV = [ctx] *)
       (* ctx = Pre' * ~c *)
 
@@ -1646,16 +1662,16 @@ and statement cx = Ast.Statement.(
       let reason = mk_reason "do-while" loc in
       let save_break_exn = Abnormal.swap (Abnormal.Break None) false in
       let save_continue_exn = Abnormal.swap (Abnormal.Continue None) false in
-      let ctx = !Env_js.env in
-      let oldset = Env_js.swap_changeset (fun _ -> SSet.empty) in
+      let ctx =  Env_js.get_scopes () in
+      let oldset = Env_js.clear_changeset () in
       (* ctx = Pre *)
       (* ENV = [ctx] *)
 
       Env_js.widen_env cx reason;
       (* ctx = Pre', Pre' > Pre *)
 
-      let body_ctx = Env_js.clone_env ctx in
-      Env_js.update_frame cx body_ctx;
+      let body_ctx = Env_js.clone_scopes ctx in
+      Env_js.update_env cx body_ctx;
       (* body_ctx = Pre' *)
       (* ENV = [body_ctx] *)
 
@@ -1666,26 +1682,26 @@ and statement cx = Ast.Statement.(
         (save_handler exception_);
 
       if Abnormal.swap (Abnormal.Continue None) save_continue_exn
-      then Env_js.havoc_env2 !Env_js.changeset;
+      then Env_js.(havoc_vars (peek_changeset ()));
 
       let _, pred, not_pred, xtypes =
         predicate_of_condition cx test in
       (* body_ctx = Post' *)
 
-      let done_ctx = Env_js.clone_env body_ctx in
+      let done_ctx = Env_js.clone_scopes body_ctx in
       (* done_ctx = Post' *)
 
       Env_js.refine_with_pred cx reason pred xtypes;
       (* body_ctx = Post' & c *)
 
-      let newset = Env_js.swap_changeset (SSet.union oldset) in
-      Env_js.copy_env cx reason (ctx,body_ctx) newset;
+      let newset = Env_js.merge_changeset oldset in
+      Env_js.copy_env cx reason (ctx, body_ctx) newset;
       (* Pre' > Post' & c *)
 
-      Env_js.update_frame cx done_ctx;
+      Env_js.update_env cx done_ctx;
       Env_js.refine_with_pred cx reason not_pred xtypes;
       if Abnormal.swap (Abnormal.Break None) save_break_exn
-      then Env_js.havoc_env2 newset;
+      then Env_js.havoc_vars newset;
       (* ENV = [done_ctx] *)
       (* done_ctx = Post' & ~c *)
 
@@ -1716,12 +1732,12 @@ and statement cx = Ast.Statement.(
             ignore (expression cx expr)
       );
 
-      let ctx = !Env_js.env in
-      let oldset = Env_js.swap_changeset (fun _ -> SSet.empty) in
+      let ctx =  Env_js.get_scopes () in
+      let oldset = Env_js.clear_changeset () in
       Env_js.widen_env cx reason;
 
-      let do_ctx = Env_js.clone_env ctx in
-      Env_js.update_frame cx do_ctx;
+      let do_ctx = Env_js.clone_scopes ctx in
+      Env_js.update_env cx do_ctx;
 
       let _, pred, not_pred, xtypes = match test with
         | None ->
@@ -1730,14 +1746,14 @@ and statement cx = Ast.Statement.(
             predicate_of_condition cx expr
       in
 
-      let body_ctx = Env_js.clone_env do_ctx in
-      Env_js.update_frame cx body_ctx;
+      let body_ctx = Env_js.clone_scopes do_ctx in
+      Env_js.update_env cx body_ctx;
       Env_js.refine_with_pred cx reason pred xtypes;
 
       ignore_exception_handler (fun () -> statement cx body);
 
       if Abnormal.swap (Abnormal.Continue None) save_continue_exn
-      then Env_js.havoc_env2 !Env_js.changeset;
+      then Env_js.(havoc_vars (peek_changeset ()));
 
       (match update with
         | None -> ()
@@ -1745,13 +1761,13 @@ and statement cx = Ast.Statement.(
             ignore (expression cx expr)
       );
 
-      let newset = Env_js.swap_changeset (SSet.union oldset) in
-      Env_js.copy_env cx reason (ctx,body_ctx) newset;
+      let newset = Env_js.merge_changeset oldset in
+      Env_js.copy_env cx reason (ctx, body_ctx) newset;
 
-      Env_js.update_frame cx do_ctx;
+      Env_js.update_env cx do_ctx;
       Env_js.refine_with_pred cx reason not_pred xtypes;
       if Abnormal.swap (Abnormal.Break None) save_break_exn
-      then Env_js.havoc_env2 newset
+      then Env_js.havoc_vars newset
 
   (***************************************************************************)
   (* Refinements for `for-in` are derived by the following Hoare logic rule:
@@ -1772,12 +1788,12 @@ and statement cx = Ast.Statement.(
       let o = mk_object cx (mk_reason "iteration expected on object" loc) in
       Flow_js.flow cx (t, MaybeT o); (* null/undefined are allowed *)
 
-      let ctx = !Env_js.env in
-      let oldset = Env_js.swap_changeset (fun _ -> SSet.empty) in
+      let ctx =  Env_js.get_scopes () in
+      let oldset = Env_js.clear_changeset () in
       Env_js.widen_env cx reason;
 
-      let body_ctx = Env_js.clone_env ctx in
-      Env_js.update_frame cx body_ctx;
+      let body_ctx = Env_js.clone_scopes ctx in
+      Env_js.update_env cx body_ctx;
 
       let _, pred, _, xtypes = predicate_of_condition cx right in
       Env_js.refine_with_pred cx reason pred xtypes;
@@ -1805,15 +1821,15 @@ and statement cx = Ast.Statement.(
 
       ignore_exception_handler (fun () -> statement cx body);
 
-      let newset = Env_js.swap_changeset (SSet.union oldset) in
+      let newset = Env_js.merge_changeset oldset in
 
       if Abnormal.swap (Abnormal.Continue None) save_continue_exn
-      then Env_js.havoc_env2 newset;
+      then Env_js.havoc_vars newset;
       Env_js.copy_env cx reason (ctx,body_ctx) newset;
 
-      Env_js.update_frame cx ctx;
+      Env_js.update_env cx ctx;
       if Abnormal.swap (Abnormal.Break None) save_break_exn
-      then Env_js.havoc_env2 newset
+      then Env_js.havoc_vars newset
 
   | (loc, ForOf { ForOf.left; right; body; }) ->
       let reason = mk_reason "for-of" loc in
@@ -1830,12 +1846,12 @@ and statement cx = Ast.Statement.(
 
       Flow_js.flow cx (t, o); (* null/undefined are NOT allowed *)
 
-      let ctx = !Env_js.env in
-      let oldset = Env_js.swap_changeset (fun _ -> SSet.empty) in
+      let ctx =  Env_js.get_scopes () in
+      let oldset = Env_js.clear_changeset () in
       Env_js.widen_env cx reason;
 
-      let body_ctx = Env_js.clone_env ctx in
-      Env_js.update_frame cx body_ctx;
+      let body_ctx = Env_js.clone_scopes ctx in
+      Env_js.update_env cx body_ctx;
 
       let _, pred, _, xtypes = predicate_of_condition cx right in
       Env_js.refine_with_pred cx reason pred xtypes;
@@ -1863,15 +1879,15 @@ and statement cx = Ast.Statement.(
 
       ignore_exception_handler (fun () -> statement cx body);
 
-      let newset = Env_js.swap_changeset (SSet.union oldset) in
+      let newset = Env_js.merge_changeset oldset in
 
       if Abnormal.swap (Abnormal.Continue None) save_continue_exn
-      then Env_js.havoc_env2 newset;
+      then Env_js.havoc_vars newset;
       Env_js.copy_env cx reason (ctx,body_ctx) newset;
 
-      Env_js.update_frame cx ctx;
+      Env_js.update_env cx ctx;
       if Abnormal.swap (Abnormal.Break None) save_break_exn
-      then Env_js.havoc_env2 newset
+      then Env_js.havoc_vars newset
 
   | (loc, Let _) ->
       (* TODO *)
@@ -1887,12 +1903,13 @@ and statement cx = Ast.Statement.(
       body;
       returnType;
       typeParameters;
+      async;
       _
     }) ->
       let reason = mk_reason "function" loc in
       let this = Flow_js.mk_tvar cx (replace_reason "this" reason) in
-      let fn_type = mk_function None cx reason typeParameters
-        (params, defaults, rest) returnType body this
+      let fn_type = mk_function None cx reason  ~async
+        typeParameters (params, defaults, rest) returnType body this
       in
       Hashtbl.replace cx.type_table loc fn_type;
       (match id with
@@ -2017,24 +2034,28 @@ and statement cx = Ast.Statement.(
     let _, { Ast.Statement.Block.body = elements } = body in
 
     let reason = mk_reason (spf "module %s" name) loc in
-    let t = Env_js.get_var_in_scope cx (internal_module_name name) reason in
-    let scope = ref SMap.empty in
-    Env_js.push_env cx scope;
+    let t = Env_js.get_var_declared_type cx (internal_module_name name) reason in
+
+    let module_scope = Scope.fresh () in
+    Env_js.push_env cx module_scope;
 
     List.iter (statement_decl cx) elements;
     toplevels cx elements;
 
-    Env_js.pop_env();
+    Env_js.pop_env ();
 
-    let exports = match SMap.get "exports" !scope with
-      | Some {specific=exports;_} ->
+    let exports = Scope.(match get "exports" module_scope with
+      | Some { specific=exports;_} ->
           (* TODO: what happens when other things are also declared? *)
           exports
       | None ->
-          let map = SMap.map (fun {specific=export;_} -> export) !scope in
+          let map = SMap.map (
+            fun { specific = export; _ } -> export
+          ) module_scope.entries in
           Flow_js.mk_object_with_map_proto cx reason map (MixedT reason)
-    in
+    ) in
     Flow_js.unify cx (CJSExportDefaultT(reason, exports)) t
+
   | (loc, ExportDeclaration {
       ExportDeclaration.default;
       ExportDeclaration.declaration;
@@ -2257,7 +2278,7 @@ and statement cx = Ast.Statement.(
             loc
           in
           let local_t_generic =
-            Env_js.get_var_in_scope ~for_type:isType cx local_name reason
+            Env_js.get_var_declared_type ~for_type:isType cx local_name reason
           in
           Flow_js.unify cx local_t local_t_generic;
         | None -> (
@@ -2296,7 +2317,7 @@ and statement cx = Ast.Statement.(
               ) in
 
               let local_t_generic =
-                Env_js.get_var_in_scope ~for_type:isType cx local_name get_reason
+                Env_js.get_var_declared_type ~for_type:isType cx local_name get_reason
               in
               Flow_js.unify cx local_t local_t_generic;
             ) in
@@ -2381,11 +2402,11 @@ and object_ cx props = Ast.Expression.Object.(
                        _ }) ->
         Ast.Expression.Function.(
           let { params; defaults; rest; body;
-                returnType; typeParameters; id; _ } = func
+                returnType; typeParameters; id; async; _ } = func
           in
           let reason = mk_reason "function" vloc in
           let this = Flow_js.mk_tvar cx (replace_reason "this" reason) in
-          let ft = mk_function id cx reason typeParameters
+          let ft = mk_function id cx ~async reason typeParameters
             (params, defaults, rest) returnType body this
           in
           Hashtbl.replace cx.type_table vloc ft;
@@ -2487,7 +2508,7 @@ and variable cx (loc, vdecl) = Ast.(
         (match typeAnnotation with
           | None -> ()
           | Some _ ->
-              let t = Env_js.get_var_in_scope cx name reason in
+              let t = Env_js.get_var_declared_type cx name reason in
               Env_js.set_var cx name t reason
         )
 
@@ -3028,22 +3049,22 @@ and expression_ cx loc e = Ast.Expression.(match e with
   | Conditional { Conditional.test; consequent; alternate } ->
       let reason = mk_reason "conditional" loc in
       let _, pred, not_pred, xtypes = predicate_of_condition cx test in
-      let ctx = !Env_js.env in
-      let oldset = Env_js.swap_changeset (fun _ -> SSet.empty) in
+      let ctx =  Env_js.get_scopes () in
+      let oldset = Env_js.clear_changeset () in
 
-      let then_ctx = Env_js.clone_env ctx in
-      Env_js.update_frame cx then_ctx;
+      let then_ctx = Env_js.clone_scopes ctx in
+      Env_js.update_env cx then_ctx;
       Env_js.refine_with_pred cx reason pred xtypes;
       let t1 = expression cx consequent in
 
-      let else_ctx = Env_js.clone_env ctx in
-      Env_js.update_frame cx else_ctx;
+      let else_ctx = Env_js.clone_scopes ctx in
+      Env_js.update_env cx else_ctx;
       Env_js.refine_with_pred cx reason not_pred xtypes;
       let t2 = expression cx alternate in
 
-      let newset = Env_js.swap_changeset (SSet.union oldset) in
+      let newset = Env_js.merge_changeset oldset in
       Env_js.merge_env cx reason (ctx, then_ctx, else_ctx) newset;
-      Env_js.update_frame cx ctx;
+      Env_js.update_env cx ctx;
       (* TODO call pos_of_predicate on some pred? t1 is wrong but hopefully close *)
       Flow_js.mk_tvar_where cx reason (fun t ->
         Flow_js.flow cx (t1, t);
@@ -3065,12 +3086,10 @@ and expression_ cx loc e = Ast.Expression.(match e with
       typeParameters;
       _
     } ->
-      if async then begin
-        Flow_js.add_error cx [mk_reason "" loc, "async not (sup)ported"]
-      end;
-      let reason = mk_reason "function" loc in
+      let desc = (if async then "async " else "") ^ "function" in
+      let reason = mk_reason desc loc in
       let this = Flow_js.mk_tvar cx (replace_reason "this" reason) in
-      mk_function id cx reason
+      mk_function id cx reason ~async
         typeParameters (params, defaults, rest) returnType body this
 
   (* TODO: unsupported generators *)
@@ -3083,13 +3102,11 @@ and expression_ cx loc e = Ast.Expression.(match e with
       typeParameters;
       _
     } ->
-      if async then begin
-        Flow_js.add_error cx [mk_reason "" loc, "async not (sup)ported"]
-      end;
-      let reason = mk_reason "arrow function" loc in
+      let desc = (if async then "async " else "") ^ "arrow function" in
+      let reason = mk_reason desc loc in
       let this = this_ cx reason in
       let super = super_ cx reason in
-      mk_arrow id cx reason
+      mk_arrow id cx reason ~async
         typeParameters (params, defaults, rest) returnType body this super
 
   | TaggedTemplate {
@@ -3180,6 +3197,7 @@ and non_identifier s =
   (* should be stricter *)
   Str.string_match (Str.regexp ".* ") s 0
 
+(* traverse a literal expression, return result type *)
 and literal cx loc lit = Ast.Literal.(match lit.value with
   | String s ->
     let lit =
@@ -3204,6 +3222,7 @@ and literal cx loc lit = Ast.Literal.(match lit.value with
       Flow_js.get_builtin_type cx (mk_reason "regexp" loc) "RegExp"
 )
 
+(* traverse a unary expression, return result type *)
 and unary cx loc = Ast.Expression.Unary.(function
   | { operator = Not; argument; _ } ->
       ignore (expression cx argument);
@@ -3230,9 +3249,18 @@ and unary cx loc = Ast.Expression.Unary.(function
   | { operator = Delete; argument; _ } ->
       ignore (expression cx argument);
       BoolT.at loc
-  | { operator = Await; _ } ->
-    Flow_js.add_error cx [mk_reason "" loc, "not (sup)ported"];
-    UndefT.at loc
+
+  | { operator = Await; argument; _ } ->
+    (* see declaration of $await in core.js:
+       if argument is a Promise<T>, then (await argument) returns T.
+       otherwise it just returns the argument type.
+       TODO update this comment when recursive unwrapping of
+       Promise is done.
+     *)
+    let reason = mk_reason "await" loc in
+    let await = Flow_js.get_builtin cx "$await" reason in
+    let arg = expression cx argument in
+    func_call cx reason await [arg]
 )
 
 and update cx loc = Ast.Expression.Update.(function
@@ -3242,23 +3270,7 @@ and update cx loc = Ast.Expression.Update.(function
       t
 )
 
-(* TODO verify that these cases are properly covered
-   by the new parser:
-
-  | ((U_new,tok),e) ->
-      let class_ = expression cx e in
-      new_call cx tok class_ []
-
-  | ((U_spread,tok),e) ->
-      (* TODO: tuples *)
-      let arr = expression cx e in
-      let reason_array_arg = mk_reason ("array argument of operator") tok in
-      let tvar = Flow_js.mk_tvar cx reason_array_arg in
-      Flow_js.flow cx (arr, ArrT (reason_array_arg,tvar,[]));
-      RestT(tvar)
-*)
-
-
+(* traverse a binary expression, return result type *)
 and binary cx loc = Ast.Expression.Binary.(function
   | { operator = Equal; left; right }
   | { operator = NotEqual; left; right } ->
@@ -3747,6 +3759,7 @@ and mk_proptype cx = Ast.Expression.(function
       let amap, omap, dict = mk_proptypes cx properties in
       let map = SMap.union amap omap in
       Flow_js.mk_object_with_map_proto cx reason ?dict map (MixedT reason)
+
   | vloc, _ -> AnyT.at vloc
 )
 
@@ -3884,7 +3897,7 @@ and react_create_class cx loc class_props = Ast.Expression.(
             returnType; typeParameters; _ } = func
           in
           let reason = mk_reason "defaultProps" vloc in
-          let t = mk_method cx reason (params, defaults, rest)
+          let t = mk_method cx reason ~async:false (params, defaults, rest)
             returnType body this (MixedT reason)
           in
           (match t with
@@ -3905,7 +3918,7 @@ and react_create_class cx loc class_props = Ast.Expression.(
             returnType; typeParameters; _ } = func
           in
           let reason = mk_reason "initialState" vloc in
-          let t = mk_method cx reason (params, defaults, rest)
+          let t = mk_method cx reason ~async:false (params, defaults, rest)
             returnType body this (MixedT reason)
           in
           let override_state =
@@ -3925,10 +3938,10 @@ and react_create_class cx loc class_props = Ast.Expression.(
           _ }) ->
         Ast.Expression.Function.(
           let { params; defaults; rest; body;
-            returnType; typeParameters; _ } = func
+            returnType; typeParameters; async; _ } = func
           in
           let reason = mk_reason "function" vloc in
-          let t = mk_method cx reason (params, defaults, rest)
+          let t = mk_method cx reason ~async (params, defaults, rest)
             returnType body this (MixedT reason)
           in
           fmap, SMap.add name t mmap
@@ -4565,7 +4578,7 @@ and mk_class_elements cx instance_info static_info body = Ast.Class.(
         Method.key = Ast.Expression.Object.Property.Identifier (_,
           { Ast.Identifier.name; _ });
         value = _, { Ast.Expression.Function.params; defaults; rest;
-          returnType; typeParameters; body; _ };
+          returnType; typeParameters; body; async; _ };
         kind = Ast.Expression.Object.Property.Init;
         static;
       }) ->
@@ -4584,7 +4597,8 @@ and mk_class_elements cx instance_info static_info body = Ast.Class.(
           param_types_map |> SMap.map (Flow_js.subst cx map_) in
         let ret = Flow_js.subst cx map_ ret in
 
-        mk_body None cx param_types_map param_loc_map ret body this super;
+        mk_body None cx ~async
+          param_types_map param_loc_map ret body this super;
       );
       ignore (Abnormal.swap Abnormal.Return save_return_exn);
       ignore (Abnormal.swap Abnormal.Throw save_throw_exn)
@@ -4837,7 +4851,9 @@ and mk_interface cx reason typeparams map (sfmap, smmap, fmap, mmap) extends str
    signature consisting of type parameters, parameter types, parameter names,
    and return type, check the body against that signature by adding `this` and
    `super` to the environment, and return the signature. *)
-and function_decl id cx (reason:reason) type_params params ret body this super =
+and function_decl id cx (reason:reason) ~async
+  type_params params ret body this super =
+
   let typeparams, type_params_map = mk_type_param_declarations cx type_params in
 
   let (params, pnames, ret, param_types_map, param_types_loc) =
@@ -4850,7 +4866,7 @@ and function_decl id cx (reason:reason) type_params params ret body this super =
       param_types_map |> SMap.map (Flow_js.subst cx map_) in
     let ret = Flow_js.subst cx map_ ret in
 
-    mk_body id cx param_types_map param_types_loc ret body this super;
+    mk_body id cx ~async param_types_map param_types_loc ret body this super;
   );
 
   ignore (Abnormal.swap Abnormal.Return save_return_exn);
@@ -4870,37 +4886,35 @@ and is_void cx = function
   | _ -> false
 
 and mk_upper_bound cx locs name t =
-  create_env_entry t t (SMap.get name locs)
+  Scope.create_entry t t (SMap.get name locs)
 
-and mk_body id cx param_types_map param_types_loc ret body this super =
-  let ctx = !Env_js.env in
-  let new_ctx = Env_js.clone_env ctx in
-  Env_js.update_frame cx new_ctx;
-  Env_js.havoc_env();
-  let add_rec map =
-    match id with
-    | None -> map
+and mk_body id cx ~async param_types_map param_locs_map ret body this super =
+  let ctx =  Env_js.get_scopes () in
+  let new_ctx = Env_js.clone_scopes ctx in
+  Env_js.update_env cx new_ctx;
+  Env_js.havoc_all();
+
+  (* create and prepopulate function scope *)
+  let function_scope = Scope.(
+    let scope = (if async then fresh_async else fresh) () in
+    (* add param bindings *)
+    param_types_map |> SMap.iter (fun name t ->
+      let entry = create_entry t t (SMap.get name param_locs_map) in
+      add name entry scope);
+    (* early-add our own name binding for recursive calls *)
+    (match id with
+    | None -> ()
     | Some (loc, { Ast.Identifier.name; _ }) ->
-        map |> SMap.add name
-          (create_env_entry (AnyT.at loc) (AnyT.at loc) None)
-  in
-  let scope = ref (
-      param_types_map
-      |> SMap.mapi (mk_upper_bound cx param_types_loc)
-      |> add_rec
-      |> SMap.add
-          (internal_name "super")
-          (create_env_entry super super None)
-      |> SMap.add
-          (internal_name "this")
-          (create_env_entry this this None)
-      |> SMap.add
-          (internal_name "return")
-          (create_env_entry ret ret None)
-  )
-  in
-  Env_js.push_env cx scope;
-  let set = Env_js.swap_changeset (fun _ -> SSet.empty) in
+      let entry = create_entry (AnyT.at loc) (AnyT.at loc) None in
+      add name entry scope);
+    (* special bindings for super, this, return value slot *)
+    add (internal_name "super") (create_entry super super None) scope;
+    add (internal_name "this") (create_entry this this None) scope;
+    add (internal_name "return") (create_entry ret ret None) scope;
+    scope
+  ) in
+
+  Env_js.push_env cx function_scope;
 
   let stmts = Ast.Statement.(match body with
     | FunctionDeclaration.BodyBlock (_, { Block.body }) ->
@@ -4919,9 +4933,8 @@ and mk_body id cx param_types_map param_types_loc ret body this super =
   );
 
   Env_js.pop_env();
-  Env_js.changeset := set;
 
-  Env_js.update_frame cx ctx
+  Env_js.update_env cx ctx
 
 and before_pos loc =
   Ast.Loc.(
@@ -5067,18 +5080,18 @@ and extract_type_param_instantiations = function
   | Some (_, typeParameters) -> typeParameters.Ast.Type.ParameterInstantiation.params
 
 (* Process a function definition, returning a (polymorphic) function type. *)
-and mk_function id cx reason type_params params ret body this =
+and mk_function id cx reason ~async type_params params ret body this =
   (* Normally, functions do not have access to super. *)
   let super = MixedT (replace_reason "empty super object" reason) in
   let signature =
-    function_decl id cx reason type_params params ret body this super
+    function_decl id cx reason ~async type_params params ret body this super
   in
   mk_function_type cx reason this signature
 
 (* Process an arrow function, returning a (polymorphic) function type. *)
-and mk_arrow id cx reason type_params params ret body this super =
+and mk_arrow id cx reason ~async type_params params ret body this super =
   let signature =
-    function_decl id cx reason type_params params ret body this super
+    function_decl id cx reason ~async type_params params ret body this super
   in
   (* Do not expose the type of `this` in the function's type. The call to
      function_decl above has already done the necessary checking of `this` in
@@ -5111,9 +5124,9 @@ and mk_function_type cx reason this signature =
 
 (* This function is around for the sole purpose of modeling some method-like
    behaviors of non-ES6 React classes. It is otherwise deprecated. *)
-and mk_method cx reason params ret body this super =
+and mk_method cx reason ~async params ret body this super =
   let (_,params,pnames,ret) =
-    function_decl None cx reason None params ret body this super
+    function_decl None cx ~async reason None params ret body this super
   in
   FunT (reason, Flow_js.dummy_static, Flow_js.dummy_prototype,
         Flow_js.mk_functiontype2
@@ -5238,70 +5251,70 @@ let scan_for_suppressions =
       | _ -> ()) comments
 
 (* build module graph *)
-let infer_ast ast file m force_check =
+let infer_ast ast file _module force_check =
   Flow_js.Cache.clear();
 
-  let (loc, statements, comments) = ast in
+  let loc, statements, comments = ast in
 
-  let mode = Module_js.parse_flow comments in
+  let checked, weak = Module_js.(match parse_flow comments with
+  | ModuleMode_Checked ->
+    true, modes.weak_by_default
+  | ModuleMode_Weak ->
+    true, true
+  | ModuleMode_Unchecked ->
+    force_check, modes.weak_by_default) in
 
-  let check = (match mode with
-    | Module_js.ModuleMode_Unchecked -> force_check
-    | _ -> true
-  ) in
+  let cx = Flow_js.fresh_context ~file ~_module ~checked ~weak in
 
-  let weak = (match mode with
-    | Module_js.ModuleMode_Weak -> true
-    | _ -> modes.weak_by_default
-  ) in
+  let module_scope = (
+    let scope = Scope.fresh () in
 
-  let cx = new_context file m in
-  cx.weak <- weak;
+    let reason_exports_module = reason_of_string
+      (spf "exports of module %s" _module) in
 
-  Env_js.init cx;
+    let local_exports = Flow_js.mk_tvar cx reason_exports_module in
 
-  let reason_exports_module = reason_of_string (spf "exports of module %s" m) in
-  let local_exports = Flow_js.mk_tvar cx reason_exports_module in
-  let scope = ref (
-    SMap.singleton "exports"
-      (create_env_entry
-        local_exports
-        local_exports
-        None
-      )
-    |> SMap.add (internal_name "exports")
-      (create_env_entry
+    Scope.add "exports"
+      (Scope.create_entry local_exports local_exports None)
+      scope;
+
+    Scope.add (internal_name "exports")
+      (Scope.create_entry
         (UndefT (reason_of_string "undefined exports"))
         (AnyT reason_exports_module)
-        None
-      )
+        None)
+      scope;
+
+    scope
   ) in
-  Env_js.push_env cx scope;
-  Env_js.changeset := SSet.empty;
+
+  Env_js.init_env cx module_scope;
 
   let reason = new_reason "exports" (Pos.make_from
     (Relative_path.create Relative_path.Dummy cx.file)) in
 
-  if check then (
+  if checked then (
     let init_exports = mk_object cx reason in
     set_module_exports cx reason init_exports;
     Flow_js.flow cx (
       init_exports,
-      Env_js.get_var_in_scope cx "exports" reason
+      Env_js.get_var_declared_type cx "exports" reason
     );
+
+    (* infer *)
     infer_core cx statements;
+
     scan_for_suppressions cx comments;
   );
 
-  cx.checked <- check;
   Flow_js.flow cx (
     get_module_exports cx reason,
-    exports cx m);
+    exports cx _module);
 
   let ins = (Flow_js.builtins)::(
     SSet.fold (fun r list -> (lookup_module cx r)::list) cx.required []
   ) in
-  let outs = [lookup_module cx m] in
+  let outs = [lookup_module cx _module] in
   Flow_js.do_gc cx ins outs;
 
   (* insist that whatever type flows into exports is fully annotated *)
@@ -5459,20 +5472,17 @@ let merge_module_strict cx cxs implementations declarations master_cx =
 let init file statements comments save_errors save_suppressions =
   Flow_js.Cache.clear();
 
-  let cx = new_context file Files_js.lib_module in
+  let cx = Flow_js.fresh_context file Files_js.lib_module in
 
-  Env_js.init cx;
-
-  let scope = ref SMap.empty in
-  Env_js.push_env cx scope;
-  Env_js.changeset := SSet.empty;
+  let module_scope = Scope.fresh () in
+  Env_js.init_env cx module_scope;
 
   infer_core cx statements;
   scan_for_suppressions cx comments;
 
-  !scope |> SMap.iter (fun x {specific=t;_} ->
+  module_scope |> Scope.(iter (fun x {specific=t;_} ->
     Flow_js.set_builtin cx x t
-  );
+  ));
 
   copy_context_master cx;
 

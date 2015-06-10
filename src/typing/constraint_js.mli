@@ -238,37 +238,89 @@ val copy_node: node -> node
 
 (***************************************)
 
-type scope_entry = {
-  specific: Type.t;
-  general: Type.t;
-  def_loc: Spider_monkey_ast.Loc.t option;
-  for_type: bool;
-}
-type scope = scope_entry SMap.t ref
-type stack = int list
+(* scopes *)
+(* Note: this is basically owned by Env_js, but are here
+   to break circularity between Env_js and Flow_js.
+   Longer-term solution is to break up Flow_js.
+ *)
+module Scope : sig
 
-val create_env_entry :
-  ?for_type: bool ->
-  Type.t -> Type.t ->
-  Spider_monkey_ast.Loc.t option ->
-  scope_entry
+  type entry = {
+    specific: Type.t;
+    general: Type.t;
+    def_loc: Spider_monkey_ast.Loc.t option;
+    for_type: bool;
+  }
+
+  type var_scope_attrs = {
+    async: bool
+  }
+
+  type kind = VarScope of var_scope_attrs | LexScope
+
+  type t = {
+    kind: kind;
+    mutable entries: entry SMap.t;
+  }
+
+  val fresh: unit -> t
+
+  val fresh_async: unit -> t
+
+  val fresh_lex: unit -> t
+
+  val clone: t -> t
+
+  val update: (string -> entry -> entry) -> t -> unit
+
+  val iter: (string -> entry -> unit) -> t -> unit
+
+  val add: string -> entry -> t -> unit
+
+  val remove: string -> t -> unit
+
+  val mem: string -> t -> bool
+
+  val get: string -> t -> entry option
+
+  val get_unsafe: string -> t -> entry
+
+  val create_entry :
+    ?for_type: bool ->
+    Type.t -> Type.t ->
+    Spider_monkey_ast.Loc.t option ->
+    entry
+
+end
 
 (***************************************)
+
+type stack = int list
 
 (* TODO this has a bunch of stuff in it that should be localized *)
 type context = {
   file: string;
   _module: string;
-  mutable checked: bool;
-  mutable weak: bool;
+  checked: bool;
+  weak: bool;
+
+  (* required modules, and map to their locations *)
   mutable required: SSet.t;
   mutable require_loc: Spider_monkey_ast.Loc.t SMap.t;
 
+  (* map from tvar ids to nodes (type info structures) *)
   mutable graph: node IMap.t;
-  mutable closures: (stack * scope list) IMap.t;
+
+  (* obj types point to mutable property maps *)
   mutable property_maps: Type.properties IMap.t;
+
+  (* map from closure ids to env snapshots *)
+  mutable closures: (stack * Scope.t list) IMap.t;
+
+  (* map from module names to their types *)
   mutable modulemap: Type.t SMap.t;
 
+  (* A subset of required modules on which the exported type depends *)
   mutable strict_required: SSet.t;
 
   mutable errors: Errors_js.ErrorSet.t;
@@ -280,7 +332,10 @@ type context = {
   annot_table: (Pos.t, Type.t) Hashtbl.t;
 }
 
-val new_context: string -> string -> context
+val new_context:
+  ?checked:bool -> ?weak:bool ->
+  file:string -> _module:string ->
+  context
 
 (**************************************)
 
@@ -311,8 +366,7 @@ val is_printed_param_type_parsable : ?weak:bool -> context -> Type.t -> bool
 
 val string_of_ctor : Type.t -> string
 
-val string_of_scope_entry : context -> scope_entry -> string
-val string_of_scope : context -> scope -> string
+val string_of_scope : context -> Scope.t -> string
 
 (* TEMP *)
 val streason_of_t : Type.t -> string

@@ -12,70 +12,81 @@ open Utils
 open Reason_js
 open Constraint_js
 
-type env = scope list ref
+val peek_scope: unit -> Scope.t
 
-val env : env
+val get_scopes: unit -> Scope.t list
 
-val init : context -> unit
+val clone_scopes: Scope.t list -> Scope.t list
 
-val push_env : context -> scope -> unit
+val in_async_scope: unit -> bool
 
-val pop_env : unit -> unit
+val all_entries: unit -> Scope.entry SMap.t
 
-val flat_env :
-  unit ->
-  scope_entry Utils.SMap.t
+val peek_changeset: unit -> SSet.t
 
-val get_var : ?for_type:bool -> context -> string -> reason -> Type.t
+val clear_changeset: unit -> SSet.t
 
-val get_var_in_scope : ?for_type:bool -> context -> string -> reason -> Type.t
+val merge_changeset: SSet.t -> SSet.t
 
-val var_ref : ?for_type:bool -> context -> string -> reason -> Type.t
+val peek_frame: unit -> ident
 
-val set_var : ?for_type:bool -> context -> string -> Type.t -> reason -> unit
+val clear_env: Reason_js.reason -> unit
 
-val init_env : context -> string -> scope_entry -> unit
+val push_env: context -> Scope.t -> unit
 
-val clone_env : scope list -> scope list
+val pop_env: unit -> unit
 
-val peek_frame : unit -> ident
-val update_frame : context -> scope list -> unit
+val init_env: context -> Scope.t -> unit
 
-val refine_with_pred : context -> reason ->
+val update_env: context -> Scope.t list -> unit
+
+(***)
+
+val get_var: ?for_type:bool -> context -> string ->
+  reason -> Type.t
+
+val get_var_declared_type: ?for_type:bool -> context ->
+  string -> reason -> Type.t
+
+val var_ref: ?for_type:bool -> context -> string ->
+  reason -> Type.t
+
+val set_var: ?for_type:bool -> context -> string -> Type.t ->
+  reason -> unit
+
+val init_var: context -> string -> Scope.entry -> unit
+
+val refine_with_pred: context -> reason ->
   Type.predicate SMap.t ->
   Type.t SMap.t ->
   unit
 
-val refine_env : context -> reason ->
+val refine_env: context -> reason ->
   Type.predicate SMap.t ->
   Type.t SMap.t ->
   (unit -> 'a) ->
   'a
 
-val merge_env : context -> reason ->
-  scope list * scope list * scope list ->
+val merge_env: context -> reason ->
+  Scope.t list * Scope.t list * Scope.t list ->
   SSet.t -> unit
 
-val widen_env : context -> reason -> unit
+val widen_env: context -> reason -> unit
 
-val copy_env : context -> reason ->
-  scope list * scope list ->
+val copy_env: context -> reason ->
+  Scope.t list * Scope.t list ->
   SSet.t -> unit
 
-val let_env : string -> scope_entry -> (unit -> 'a) -> unit
+val let_env: string -> Scope.entry -> (unit -> 'a) -> unit
 
-val havoc_env : unit -> unit
+val havoc_all: unit -> unit
 
-val havoc_env2 : SSet.t -> unit
+val havoc_vars: SSet.t -> unit
 
-val havoc_heap_refinements : unit -> unit
+val havoc_heap_refinements: unit -> unit
 
-val clear_env : Reason_js.reason -> unit
+val string_of_env: context -> Scope.t list -> string
 
-val string_of_env : context -> scope list -> string
+val refinement_key: string list -> string
 
-val changeset: SSet.t ref
-val swap_changeset: (SSet.t -> SSet.t) -> SSet.t
-
-val refinement_key : string list -> string
 val get_refinement: context -> string -> reason -> Type.t option

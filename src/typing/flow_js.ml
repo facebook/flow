@@ -226,22 +226,30 @@ let not_linked (id1, bounds1) (id2, bounds2) =
 (* frames *)
 (**********)
 
+(* note: these are here instead of Env_js because of circular deps:
+  Env_js depends on Flow_js bookkeeping funcs such as mk_tvar,
+  and builtins. When Flow_js is split into algo / other stuff,
+  these can be pulled into Env *)
+
+(* clear refinements of closed-over variables *)
 let rec havoc_ctx cx i j =
   if (i = 0 || j = 0) then () else
-    let (stack2,_) = IMap.find_unsafe i cx.closures in
-    let (stack1,blocks) = IMap.find_unsafe j cx.closures in
-    havoc_ctx_ (List.rev blocks, List.rev stack1, List.rev stack2)
+    let stack2, _ = IMap.find_unsafe i cx.closures in
+    let stack1, scopes = IMap.find_unsafe j cx.closures in
+    havoc_ctx_ (List.rev scopes, List.rev stack1, List.rev stack2)
 
 and havoc_ctx_ = function
-  | (block::blocks_, x1::stack1_, x2::stack2_) when x1 = x2 ->
-      (if modes.verbose then prerr_endlinef "HAVOC::%d" x1);
-      block := SMap.mapi (fun x {specific;general;def_loc;for_type} ->
+  | scope::scopes, frame1::stack1, frame2::stack2
+    when frame1 = frame2 ->
+    (if modes.verbose then prerr_endlinef "HAVOC::%d" frame1);
+    scope |> Scope.(update (
+      fun name { specific; general; def_loc; for_type } ->
         (* internal names (.this, .super, .return, .exports) are read-only *)
-        if is_internal_name x
-        then create_env_entry ~for_type specific general def_loc
-        else create_env_entry ~for_type general general def_loc
-      ) !block;
-      havoc_ctx_ (blocks_,stack1_,stack2_)
+        if is_internal_name name
+        then create_entry ~for_type specific general def_loc
+        else create_entry ~for_type general general def_loc
+      ));
+    havoc_ctx_ (scopes, stack1, stack2)
   | _ -> ()
 
 (***************)
@@ -1188,6 +1196,14 @@ let master_cx = new_context (Files_js.get_flowlib_root ()) Files_js.lib_module
    contexts agree on the id of this type var, and builtins are imported
    via this agreement between master_cx and others *)
 let builtins = mk_tvar master_cx (builtin_reason "module")
+
+(* new contexts are prepared here, so we can install shared tvars *)
+let fresh_context ?(checked=false) ?(weak=false) ~file ~_module =
+  let cx = new_context ~file ~_module ~checked ~weak in
+  (* add types for pervasive builtins *)
+  let reason, id = open_tvar builtins in
+  cx.graph <- cx.graph |> IMap.add id (new_unresolved_root ());
+  cx
 
 (********)
 

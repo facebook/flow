@@ -1,76 +1,39 @@
 
-async.js:1:1,21: 
-async not (sup)ported
+async.js: inconsistent use of library definitions
+[LIB] core.js:343:1,370:1: Promise
+This type is incompatible with
+[LIB] core.js:373:31,44: union type
 
-async.js:2:1,35: 
-async not (sup)ported
+async.js:12:30,33: boolean
+This type is incompatible with
+async.js:13:10,10: number
 
-async.js:12:9,28: 
-async not (sup)ported
+async.js:13:10,10: number
+This type is incompatible with
+async.js:12:30,33: boolean
 
-async.js:13:10,42: 
-async not (sup)ported
+async2.js:7:11,21: await
+Error:
+async2.js:3:10,11: number
+This type is incompatible with
+async2.js:9:10,15: string
 
-async.js:15:13,31: 
-async not (sup)ported
+async3.js:23:11,21: await
+Error:
+async3.js:26:10,15: number
+This type is incompatible with
+[LIB] core.js:343:1,370:1: Promise
 
-async_base_class.js:5:1,8:1: 
-async not (sup)ported
+async3.js:23:11,21: await
+Error:
+async3.js:30:10,15: string
+This type is incompatible with
+[LIB] core.js:343:1,370:1: Promise
 
-async_base_class.js:6:22,34: 
-not (sup)ported
+await_not_in_async.js:5:9,9: Unexpected number
 
-await.js:1:1,31: 
-async not (sup)ported
+await_not_in_async2.js:6:9,9: Unexpected number
 
-await.js:1:22,28: 
-not (sup)ported
+await_not_in_async3.js:6:9,9: Unexpected number
 
-await.js:2:1,45: 
-async not (sup)ported
-
-await.js:2:36,42: 
-not (sup)ported
-
-await.js:5:15,21: 
-not (sup)ported
-
-await.js:6:29,35: 
-not (sup)ported
-
-await.js:7:29,35: 
-not (sup)ported
-
-await.js:8:36,42: 
-not (sup)ported
-
-await.js:11:9,38: 
-async not (sup)ported
-
-await.js:11:29,35: 
-not (sup)ported
-
-await.js:12:10,52: 
-async not (sup)ported
-
-await.js:12:43,49: 
-not (sup)ported
-
-await.js:14:13,41: 
-async not (sup)ported
-
-await.js:14:32,38: 
-not (sup)ported
-
-await.js:16:23,29: 
-not (sup)ported
-
-await.js:17:31,37: 
-not (sup)ported
-
-await.js:18:33,43: 
-not (sup)ported
-
-await_not_in_async.js:2:9,9: Unexpected number
-
-Found 25 errors
+Found 9 errors

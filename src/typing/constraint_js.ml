@@ -540,36 +540,127 @@ let copy_node node = match node with
     Root { rank; constraints = Unresolved (copy_bounds bounds) }
   | _ -> node
 
-type scope_entry = {
-  specific: Type.t;
-  general: Type.t;
-  def_loc: Spider_monkey_ast.Loc.t option;
-  for_type: bool;
-}
-type scope = scope_entry SMap.t ref
-type stack = int list
+(***************************************)
 
-let create_env_entry ?(for_type=false) specific general loc =
-  {
+(* scopes *)
+(* these are basically owned by Env_js, but are here
+   to break circularity between Env_js and Flow_js
+ *)
+
+module Scope = struct
+
+  (* a scope entry is a symbol binding *)
+  (* TODO separate types, vars, consts... *)
+  type entry = {
+    specific: Type.t;
+    general: Type.t;
+    def_loc: Spider_monkey_ast.Loc.t option;
+    for_type: bool;
+  }
+
+  (* a var scope corresponds to a runtime activation,
+     e.g. a function. *)
+  type var_scope_attrs = {
+    async: bool
+  }
+
+  (* var and lexical scopes differ in hoisting behavior
+     and auxiliary properties *)
+  (* TODO lexical scope support *)
+  type kind = VarScope of var_scope_attrs | LexScope
+
+  (* a scope is a mutable binding table, plus kind and attributes *)
+  (* TODO add in-scope type variable binding table *)
+  type t = {
+    kind: kind;
+    mutable entries: entry SMap.t;
+  }
+
+  (* return a fresh scope of the most common kind (var, non-async) *)
+  let fresh () = {
+    kind = VarScope { async = false };
+    entries = SMap.empty;
+  }
+
+  (* return a fresh async var scope *)
+  let fresh_async () = {
+    kind = VarScope { async = true };
+    entries = SMap.empty;
+  }
+
+  (* return a fresh lexical scope *)
+  let fresh_lex () = {
+    kind = LexScope;
+    entries = SMap.empty;
+  }
+
+  (* clone a scope (snapshots mutable entries) *)
+  let clone { kind; entries } =
+    { kind; entries }
+
+  (* use passed f to update all scope entries *)
+  let update f scope =
+    scope.entries <- SMap.mapi f scope.entries
+
+  (* run passed f on all scope entries *)
+  let iter f scope =
+    SMap.iter f scope.entries
+
+  (* add entry to scope *)
+  let add name entry scope =
+    scope.entries <- SMap.add name entry scope.entries
+
+  (* remove entry from scope *)
+  let remove name scope =
+    scope.entries <- SMap.remove name scope.entries
+
+  (* true iff name is bound in scope *)
+  let mem name scope =
+    SMap.mem name scope.entries
+
+  (* get entry from scope, or None *)
+  let get name scope =
+    SMap.get name scope.entries
+
+  (* get entry from scope, or fail *)
+  let get_unsafe name scope =
+    SMap.find_unsafe name scope.entries
+
+  (* create new entry *)
+  let create_entry ?(for_type=false) specific general loc = {
     specific;
     general;
     def_loc = loc;
     for_type;
   }
+end
+
+(***************************************)
 
 (* type context *)
+
+type stack = int list
 
 type context = {
   file: string;
   _module: string;
-  mutable checked: bool;
-  mutable weak: bool;
+  checked: bool;
+  weak: bool;
+
+  (* required modules, and map to their locations *)
   mutable required: SSet.t;
   mutable require_loc: Ast.Loc.t SMap.t;
 
+  (* map from tvar ids to nodes (type info structures) *)
   mutable graph: node IMap.t;
-  mutable closures: (stack * scope list) IMap.t;
+
+  (* obj types point to mutable property maps *)
   mutable property_maps: Type.properties IMap.t;
+
+  (* map from closure ids to env snapshots *)
+  mutable closures: (stack * Scope.t list) IMap.t;
+
+  (* map from module names to their types *)
   mutable modulemap: Type.t SMap.t;
 
   (* A subset of required modules on which the exported type depends *)
@@ -584,11 +675,15 @@ type context = {
   annot_table: (Pos.t, Type.t) Hashtbl.t;
 }
 
-let new_context file _module = {
-  file = file;
-  _module = _module;
-  checked = false;
-  weak = false;
+(* create a new context structure.
+   Flow_js.fresh_context prepares for actual use.
+ *)
+let new_context ?(checked=false) ?(weak=false) ~file ~_module = {
+  file;
+  _module;
+  checked;
+  weak;
+
   required = SSet.empty;
   require_loc = SMap.empty;
 
@@ -607,6 +702,8 @@ let new_context file _module = {
   type_table = Hashtbl.create 0;
   annot_table = Hashtbl.create 0;
 }
+
+
 
 (********************************************************************)
 
@@ -1909,25 +2006,34 @@ let is_printed_type_parsable ?(weak=false) cx t =
 let is_printed_param_type_parsable ?(weak=false) cx t =
   is_printed_type_parsable_impl weak cx EnclosureParam t
 
-(* ------------- *)
+(*****************************************************************)
 
-let string_of_scope_entry cx entry =
-  let pos = match entry.def_loc with
-  | Some loc -> (string_of_pos (pos_of_loc loc))
-  | None -> "(none)"
+(* scopes and types *)
+
+let string_of_scope cx scope = Scope.(
+
+  let string_of_entry cx entry =
+    let pos = match entry.def_loc with
+    | Some loc -> (string_of_pos (pos_of_loc loc))
+    | None -> "(none)"
+    in
+    Utils.spf "{ specific: %s; general: %s; def_loc: %s; for_type: %b }"
+      (dump_t cx entry.specific)
+      (dump_t cx entry.general)
+      pos
+      entry.for_type
   in
-  Utils.spf "{ specific: %s; general: %s; def_loc: %s; for_type: %b }"
-    (dump_t cx entry.specific)
-    (dump_t cx entry.general)
-    pos
-    entry.for_type
 
-let string_of_scope cx scope =
-  SMap.fold (fun k v acc ->
-    (Utils.spf "%s: %s" k (string_of_scope_entry cx v))::acc
-  ) !scope []
-  |> String.concat ";\n  "
-  |> Utils.spf "{\n  %s\n}"
+  let string_of_entries cx entries =
+    SMap.fold (fun k v acc ->
+      (Utils.spf "%s: %s" k (string_of_entry cx v))::acc
+    ) entries []
+    |> String.concat ";\n  "
+  in
+
+  Utils.spf "{ entries:\n%s\n}"
+    (string_of_entries cx scope.entries)
+)
 
 (*****************************************************************)
 

@@ -129,7 +129,7 @@ let autocomplete_member cx this =
   List.rev (SMap.values result_map)
 
 let autocomplete_id cx env =
-  Utils.SMap.fold (fun key value acc ->
+  Utils.SMap.fold Scope.(fun key value acc ->
       (* Filter out internal environment variables except for this and
          super. *)
       let is_this = key = (Reason_js.internal_name "this") in

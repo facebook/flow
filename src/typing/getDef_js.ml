@@ -18,9 +18,9 @@ type getdef_type =
 let getdef_id (state, pos) cx name loc =
   if Reason_js.in_range pos loc
   then (
-    let env = Env_js.flat_env () in
+    let env = Env_js.all_entries () in
     match SMap.get name env with
-    | Some {def_loc;_} ->
+    | Some { Scope.def_loc; _ } ->
         (match def_loc with
         | Some loc ->
             state := Some (Gdloc (loc))
