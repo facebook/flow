@@ -41,4 +41,10 @@ object_freeze.js:14:1,31: assignment of property toString
 Mutation not allowed on
 object_freeze.js:9:28,49: frozen object literal
 
-Found 7 errors
+object_freeze.js:20:26,54: Object.freeze
+Error:
+object_freeze.js:20:45,51: string
+This type is incompatible with
+object_freeze.js:20:15,20: number
+
+Found 8 errors
