@@ -3567,9 +3567,9 @@ and class_def_ env_up c tc =
     | Ast.Cenum -> (* the parser won't let enums be final *) assert false
     | Ast.Cnormal -> ()
   end;
+  List.iter (class_implements_type env c) impl;
   if not (Env.is_decl env) || is_hhi (Pos.filename (fst c.c_name))
   then begin
-    List.iter (class_implements_type env c) impl;
     SMap.iter (fun _ ty -> class_implements_type env c ty) dimpl;
   end;
   List.iter (class_var_def env false c) c.c_vars;
