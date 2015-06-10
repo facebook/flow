@@ -3051,7 +3051,7 @@ end = struct
       let loc = match typeParameters with
       | None -> fst id
       | Some (loc, _) -> Loc.btwn (fst id) loc in
-      let implement = loc, Ast.Statement.Class.Implements.({
+      let implement = loc, Ast.Class.Implements.({
         id;
         typeParameters;
       }) in
@@ -3079,7 +3079,7 @@ end = struct
         let body = elements env [] in
         let end_loc = Peek.loc env in
         Expect.token env T_RCURLY;
-        Loc.btwn start_loc end_loc, Ast.Statement.Class.Body.({
+        Loc.btwn start_loc end_loc, Ast.Class.Body.({
           body;
         })
 
@@ -3089,7 +3089,7 @@ end = struct
       let get env start_loc static =
         let key, (end_loc, _ as value) =
           _method env Ast.Expression.Object.Property.Get in
-        Ast.Statement.Class.(Body.Method (Loc.btwn start_loc end_loc, Method.({
+        Ast.Class.(Body.Method (Loc.btwn start_loc end_loc, Method.({
           key;
           value;
           kind = Ast.Expression.Object.Property.Get;
@@ -3099,7 +3099,7 @@ end = struct
       in let set env start_loc static =
         let key, (end_loc, _ as value) =
           _method env Ast.Expression.Object.Property.Set in
-        Ast.Statement.Class.(Body.Method (Loc.btwn start_loc end_loc, Method.({
+        Ast.Class.(Body.Method (Loc.btwn start_loc end_loc, Method.({
           key;
           value;
           kind = Ast.Expression.Object.Property.Set;
@@ -3114,7 +3114,7 @@ end = struct
           let end_loc = Peek.loc env in
           Expect.token env T_SEMICOLON;
           let loc = Loc.btwn start_loc end_loc in
-          Ast.Statement.Class.(Body.Property (loc, Property.({
+          Ast.Class.(Body.Property (loc, Property.({
             key;
             typeAnnotation;
             static;
@@ -3144,7 +3144,7 @@ end = struct
             returnType;
             typeParameters;
           }) in
-          Ast.Statement.Class.(Body.Method (Loc.btwn start_loc end_loc, Method.({
+          Ast.Class.(Body.Method (Loc.btwn start_loc end_loc, Method.({
             key;
             value;
             kind = Ast.Expression.Object.Property.Init;

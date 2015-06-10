@@ -233,48 +233,72 @@ es6modules.js:117:14,33: number
 This type is incompatible with
 es6modules.js:4:28,33: string
 
-es6modules.js:133:8,18: "default" export of "ES6_Named1"
+es6modules.js:121:14,49: call of method givesANum
+Error:
+es6modules.js:121:14,49: number
+This type is incompatible with
+es6modules.js:4:28,33: string
+
+es6modules.js:125:14,50: call of method givesANum
+Error:
+es6modules.js:125:14,50: number
+This type is incompatible with
+es6modules.js:4:28,33: string
+
+es6modules.js:131:8,18: "default" export of "ES6_Named1"
 Property not found in
-es6modules.js:133:25,36: exports of "ES6_Named1"
+es6modules.js:131:25,36: exports of "ES6_Named1"
 
-es6modules.js:155:14,27: function call
+es6modules.js:153:14,27: function call
 Error:
-es6modules.js:155:14,27: number
+es6modules.js:153:14,27: number
 This type is incompatible with
 es6modules.js:4:28,33: string
 
-es6modules.js:159:14,49: call of method givesANumber
+es6modules.js:157:14,49: call of method givesANumber
 Error:
-es6modules.js:159:14,49: number
+es6modules.js:157:14,49: number
 This type is incompatible with
 es6modules.js:4:28,33: string
 
-es6modules.js:191:1,48: property doesntExist
+es6modules.js:189:1,48: property doesntExist
 Property not found in
 ES6_Default_AnonFunction2.js: exports
 
-es6modules.js:195:14,32: function call
+es6modules.js:193:14,32: function call
 Error:
-es6modules.js:195:14,32: number
+es6modules.js:193:14,32: number
 This type is incompatible with
 es6modules.js:4:28,33: string
 
-es6modules.js:199:14,33: function call
+es6modules.js:197:14,33: function call
 Error:
-es6modules.js:199:14,33: number
+es6modules.js:197:14,33: number
 This type is incompatible with
 es6modules.js:4:28,33: string
 
-es6modules.js:232:14,28: function call
+es6modules.js:201:14,49: call of method givesANum
 Error:
-es6modules.js:232:14,28: number
+es6modules.js:201:14,49: number
 This type is incompatible with
 es6modules.js:4:28,33: string
 
-es6modules.js:236:14,50: call of method givesANumber
+es6modules.js:205:14,50: call of method givesANum
 Error:
-es6modules.js:236:14,50: number
+es6modules.js:205:14,50: number
 This type is incompatible with
 es6modules.js:4:28,33: string
 
-Found 63 errors
+es6modules.js:228:14,28: function call
+Error:
+es6modules.js:228:14,28: number
+This type is incompatible with
+es6modules.js:4:28,33: string
+
+es6modules.js:232:14,50: call of method givesANumber
+Error:
+es6modules.js:232:14,50: number
+This type is incompatible with
+es6modules.js:4:28,33: string
+
+Found 67 errors

@@ -174,8 +174,8 @@ let nameify_default_export_decl decl = Ast.Statement.(
       }))
 
   | loc, ClassDeclaration(class_decl) ->
-    if class_decl.Class.id <> None then decl else
-      loc, ClassDeclaration(Class.({
+    if class_decl.Ast.Class.id <> None then decl else
+      loc, ClassDeclaration(Ast.Class.({
         class_decl with
           id = Some(Ast.Identifier.(loc, {
             name = internal_name "*default*";
@@ -1021,7 +1021,7 @@ and statement_decl cx = Ast.Statement.(
   | (loc, VariableDeclaration decl) ->
       variable_declaration cx loc decl
 
-  | (loc, ClassDeclaration { Class.id; _ }) -> (
+  | (loc, ClassDeclaration { Ast.Class.id; _ }) -> (
       match id with
       | Some(id) ->
         let _, { Ast.Identifier.name; _ } = id in
@@ -1906,21 +1906,11 @@ and statement cx = Ast.Statement.(
   | (loc, VariableDeclaration decl) ->
       variables cx loc decl
 
-  | (loc, ClassDeclaration { Class.id; body; superClass;
-      typeParameters; superTypeParameters; implements }) ->
-      if implements <> [] then
-        let msg = "implements not supported" in
-        Flow_js.add_error cx [mk_reason "" loc, msg]
-      else ();
-      let (nloc, name) = (
-        match id with
-        | Some(nloc, { Ast.Identifier.name; _ }) -> nloc, name
-        | None -> loc, "<<anonymous class>>"
-      ) in
-      let reason = mk_reason name nloc in
-      let extends = superClass, superTypeParameters in
-      let cls_type = mk_class cx reason typeParameters extends body in
-      Hashtbl.replace cx.type_table loc cls_type;
+  | (class_loc, ClassDeclaration c) ->
+      let (name_loc, name) = extract_class_name class_loc c in
+      let reason = mk_reason name name_loc in
+      let cls_type = mk_class cx class_loc reason c in
+      Hashtbl.replace cx.type_table class_loc cls_type;
       Env_js.set_var cx name cls_type reason
 
   | (loc, DeclareClass {
@@ -2062,14 +2052,14 @@ and statement cx = Ast.Statement.(
         | loc, FunctionDeclaration({FunctionDeclaration.id=Some(_, id); _;}) ->
           let name = id.Ast.Identifier.name in
           [(spf "function %s() {}" name, loc, name)]
-        | loc, ClassDeclaration({Class.id=None; _;}) ->
+        | loc, ClassDeclaration({Ast.Class.id=None; _;}) ->
           if default then
             [("class {}", loc, internal_name "*default*")]
           else failwith (
             "Parser Error: Immediate exports of nameless classes can " ^
             "only exist for default exports"
           )
-        | loc, ClassDeclaration({Class.id=Some(_, id); _;}) ->
+        | loc, ClassDeclaration({Ast.Class.id=Some(_, id); _;}) ->
           let name = id.Ast.Identifier.name in
           [(spf "class %s() {}" name, loc, name)]
         | _, VariableDeclaration({VariableDeclaration.declarations; _; }) ->
@@ -3138,12 +3128,16 @@ and expression_ cx loc e = Ast.Expression.(match e with
   | JSXElement e ->
       jsx cx e
 
+  | Class c ->
+      let (name_loc, name) = extract_class_name loc c in
+      let reason = mk_reason name name_loc in
+      mk_class cx loc reason c
+
   (* TODO *)
   | Yield _
   | Comprehension _
   | Generator _
-  | Let _
-  | Class _ ->
+  | Let _ ->
     Flow_js.add_error cx [mk_reason "" loc, "not (sup)ported"];
     UndefT.at loc
 )
@@ -4444,7 +4438,7 @@ and body_loc = Ast.Statement.FunctionDeclaration.(function
 )
 
 (* Makes signatures for fields and methods in a class. *)
-and mk_signature cx reason_c c_type_params_map body = Ast.Statement.Class.(
+and mk_signature cx reason_c c_type_params_map body = Ast.Class.(
   let _, { Body.body = elements } = body in
 
   (* In case there is no constructor, we create one. *)
@@ -4563,7 +4557,7 @@ and mk_signature cx reason_c c_type_params_map body = Ast.Statement.Class.(
 )
 
 (* Processes the bodies of instance and static methods. *)
-and mk_class_elements cx instance_info static_info body = Ast.Statement.Class.(
+and mk_class_elements cx instance_info static_info body = Ast.Class.(
   let _, { Body.body = elements } = body in
   List.iter (function
 
@@ -4608,20 +4602,34 @@ and mk_methodtype (reason_m, typeparams,_,(params,pnames,ret,_,_)) =
   then ft
   else PolyT (typeparams, ft)
 
+and extract_class_name class_loc  = Ast.Class.(function {id; _;} ->
+  match id with
+  | Some(name_loc, {Ast.Identifier.name; _;}) -> (name_loc, name)
+  | None -> (class_loc, "<<anonymous class>>")
+)
+
 (* Process a class definition, returning a (polymorphic) class type. A class
    type is a wrapper around an instance type, which contains types of instance
    members, a pointer to the super instance type, and a container for types of
    static members. The static members can be thought of as instance members of a
    "metaclass": thus, the static type is itself implemented as an instance
    type. *)
-and mk_class cx reason_c type_params extends body =
+and mk_class cx loc reason_c = Ast.Class.(function { id=_; body; superClass;
+  typeParameters; superTypeParameters; implements } ->
+
   (* As a running example, let's say the class declaration is:
      class C<X> extends D<X> { f: X; m<Y: X>(x: Y): X { ... } }
   *)
 
+  (* TODO *)
+  if implements <> [] then
+    let msg = "implements not supported" in
+    Flow_js.add_error cx [mk_reason "" loc, msg]
+  else ();
+
   (* type parameters: <X> *)
   let typeparams, type_params_map =
-    mk_type_param_declarations cx type_params in
+    mk_type_param_declarations cx typeParameters in
 
   (* fields: { f: X }, methods_: { m<Y: X>(x: Y): X } *)
   let sfields, smethods_, fields, methods_ =
@@ -4631,6 +4639,7 @@ and mk_class cx reason_c type_params extends body =
   let id = Flow_js.mk_nominal cx in
 
   (* super: D<X> *)
+  let extends = superClass, superTypeParameters in
   let super = mk_extends cx reason_c type_params_map extends in
   let super_static = ClassT (super) in
 
@@ -4753,6 +4762,7 @@ and mk_class cx reason_c type_params extends body =
     ClassT this
   else
     PolyT(typeparams, ClassT this)
+)
 
 (* Processes a declare class. The fact that we process an interface the same way
    as a declare class is legacy, and might change when we have proper support

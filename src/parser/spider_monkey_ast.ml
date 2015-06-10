@@ -397,49 +397,6 @@ and Statement : sig
       body: Statement.t;
     }
   end
-  module Class : sig
-    module Method : sig
-      type t = Loc.t * t'
-      and t' = {
-        kind: Expression.Object.Property.kind;
-        key: Expression.Object.Property.key;
-        value: Loc.t * Expression.Function.t;
-        static: bool;
-      }
-    end
-    module Property : sig
-      type t = Loc.t * t'
-      and t' = {
-        key: Expression.Object.Property.key;
-        typeAnnotation: Type.annotation;
-        static: bool;
-      }
-    end
-    module Implements : sig
-      type t = Loc.t * t'
-      and t' = {
-        id: Identifier.t;
-        typeParameters: Type.ParameterInstantiation.t option;
-      }
-    end
-    module Body : sig
-      type element =
-        | Method of Method.t
-        | Property of Property.t
-      type t = Loc.t * t'
-      and t' = {
-        body: element list;
-      }
-    end
-    type t = {
-      id: Identifier.t option;
-      body: Body.t;
-      superClass: Expression.t option;
-      typeParameters: Type.ParameterDeclaration.t option;
-      superTypeParameters: Type.ParameterInstantiation.t option;
-      implements: Implements.t list;
-    }
-  end
   module Interface : sig
     module Extends : sig
       type t = Loc.t * t'
@@ -811,16 +768,6 @@ and Expression : sig
       body: Expression.t;
     }
   end
-  module Class : sig
-    type t = {
-      id: Identifier.t option;
-      body: Statement.Class.Body.t;
-      superClass: Expression.t option;
-      typeParameters: Type.ParameterDeclaration.t option;
-      superTypeParameters: Type.ParameterInstantiation.t option;
-      implements: Statement.Class.Implements.t list;
-    }
-  end
   module TypeCast : sig
     type t = {
       expression: Expression.t;
@@ -854,7 +801,7 @@ and Expression : sig
     | TemplateLiteral of TemplateLiteral.t
     | TaggedTemplate of TaggedTemplate.t
     | JSXElement of JSX.element
-    | Class of Expression.Class.t
+    | Class of Class.t
     | TypeCast of TypeCast.t
 end = Expression
 
@@ -1014,5 +961,49 @@ and Comment : sig
     | Block of string
     | Line of string
 end = Comment
+
+and Class : sig
+  module Method : sig
+    type t = Loc.t * t'
+    and t' = {
+      kind: Expression.Object.Property.kind;
+      key: Expression.Object.Property.key;
+      value: Loc.t * Expression.Function.t;
+      static: bool;
+    }
+  end
+  module Property : sig
+    type t = Loc.t * t'
+    and t' = {
+      key: Expression.Object.Property.key;
+      typeAnnotation: Type.annotation;
+      static: bool;
+    }
+  end
+  module Implements : sig
+    type t = Loc.t * t'
+    and t' = {
+      id: Identifier.t;
+      typeParameters: Type.ParameterInstantiation.t option;
+    }
+  end
+  module Body : sig
+    type element =
+      | Method of Method.t
+      | Property of Property.t
+    type t = Loc.t * t'
+    and t' = {
+      body: element list;
+    }
+  end
+  type t = {
+    id: Identifier.t option;
+    body: Class.Body.t;
+    superClass: Expression.t option;
+    typeParameters: Type.ParameterDeclaration.t option;
+    superTypeParameters: Type.ParameterInstantiation.t option;
+    implements: Class.Implements.t list;
+  }
+end = Class
 
 type program = Loc.t * Statement.t list * Comment.t list

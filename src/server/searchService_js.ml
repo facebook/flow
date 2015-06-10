@@ -86,7 +86,7 @@ let update fn ast =
           let fuzzy_defs = add_fuzzy_term f_name Function fuzzy_defs in
           fuzzy_defs, trie_defs
       | Ast.Statement.ClassDeclaration
-         { Ast.Statement.Class.id = Some f_name; _ }
+         { Ast.Class.id = Some f_name; _ }
       | Ast.Statement.DeclareClass
          { Ast.Statement.Interface.id = f_name; _ } ->
           let fuzzy_defs = add_fuzzy_term f_name Class fuzzy_defs in
