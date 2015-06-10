@@ -63,11 +63,14 @@ module OptionParser(Config : CONFIG) = struct
           ~doc:"Output profiling information"
       |> flag "--quiet" no_arg
           ~doc:"Suppress info messages to stdout (included in --json)"
+      |> flag "--one-line" no_arg
+          ~doc:"Escapes newlines so that each error prints on one line"
       |> common_args
     )
   | Normal
   | Detach -> CommandSpec.ArgSpec.(
       empty
+      |> dummy false
       |> dummy false
       |> dummy false
       |> dummy false
@@ -90,7 +93,7 @@ module OptionParser(Config : CONFIG) = struct
   }
 
   let result = ref None
-  let main json show_all_errors profile quiet debug verbose all weak
+  let main json show_all_errors profile quiet one_line debug verbose all weak
            traces strip_root lib no_flowlib log_file root () =
     let root = CommandUtils.guess_root root in
     let flowconfig = FlowConfig.get root in
@@ -148,6 +151,7 @@ module OptionParser(Config : CONFIG) = struct
       Options.opt_module;
       Options.opt_libs;
       Options.opt_no_flowlib = no_flowlib;
+      Options.opt_one_line_errors = one_line;
     });
     ()
 

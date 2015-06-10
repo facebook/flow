@@ -41,13 +41,15 @@ let spec = {
         ~doc:"Specify a library path"
     |> flag "--no-flowlib" no_arg
         ~doc:"Do not include embedded declarations"
+    |> flag "--one-line" no_arg
+        ~doc:"Escapes newlines so that each error prints on one line"
     |> anon "root" (required string)
         ~doc:"Root"
   )
 }
 
 let main all weak debug verbose json show_all_errors profile quiet module_
-         lib no_flowlib root () =
+         lib no_flowlib one_line root () =
   let opt_libs = match lib with
   | None -> []
   | Some lib -> [Path.make lib]
@@ -82,6 +84,7 @@ let main all weak debug verbose json show_all_errors profile quiet module_
     );
     Options.opt_libs;
     Options.opt_no_flowlib = no_flowlib;
+    Options.opt_one_line_errors = one_line;
   } in
 
   if ! Sys.interactive

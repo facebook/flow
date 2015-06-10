@@ -751,6 +751,7 @@ let print_errors ?root flow_opts =
     Errors_js.print_error_summary
       (not Modes_js.modes.show_all_errors)
       errors
+      ~one_line:flow_opts.Options.opt_one_line_errors
 
 (* initialize flow server state, including full check *)
 let server_init genv env flow_opts =

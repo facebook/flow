@@ -15,6 +15,7 @@ type options = {
   opt_libs: Path.t list;
   opt_no_flowlib: bool;
   opt_module_name_mappers: (Str.regexp * string) list;
+  opt_one_line_errors: bool;
 }
 
 let default_options = {
@@ -38,4 +39,5 @@ let default_options = {
   opt_libs = [];
   opt_no_flowlib = false;
   opt_module_name_mappers = [];
+  opt_one_line_errors = false;
 }
