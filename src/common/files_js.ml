@@ -128,3 +128,15 @@ let package_json root =
     (str_starts_with p sroot || FlowConfig.is_included config p) in
   let paths = root :: config.FlowConfig.include_stems in
   List.filter filt (Find.find_with_name paths "package.json")
+
+(* helper: make relative path from root to file *)
+let relative_path =
+  let split_path = Str.split dir_sep in
+  let rec make_relative = function
+    | (dir1::root, dir2::file) when dir1 = dir2 -> make_relative (root, file)
+    | (root, file) ->
+        List.fold_left (fun path _ -> Filename.parent_dir_name::path) file root
+  in
+  fun root file ->
+    make_relative (split_path root, split_path file)
+    |> String.concat Filename.dir_sep

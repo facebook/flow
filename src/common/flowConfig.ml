@@ -23,6 +23,7 @@ type options = {
   suppress_comments: Str.regexp list;
   suppress_types: SSet.t;
   traces: int;
+  strip_root: bool;
   log_file: Path.t;
 }
 
@@ -63,6 +64,7 @@ let default_options root = {
   suppress_comments = [];
   suppress_types = SSet.empty;
   traces = 0;
+  strip_root = false;
   log_file = default_log_file root;
 }
 
@@ -426,6 +428,13 @@ let options_parser = OptionsParser.configure [
     _parser = generic
       ("integer", fun s -> try Some (int_of_string s) with _ -> None)
       (fun opts (_, traces) -> { opts with traces });
+  }));
+
+  ("strip_root", OptionsParser.({
+    flags = [];
+    _parser = generic
+      ("true, false", fun s -> try Some (bool_of_string s) with _ -> None)
+      (fun opts (_, strip_root) -> { opts with strip_root });
   }));
 ]
 

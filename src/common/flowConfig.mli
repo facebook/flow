@@ -15,6 +15,7 @@ type options = {
   suppress_comments: Str.regexp list;
   suppress_types: Utils.SSet.t;
   traces: int;
+  strip_root: bool;
   log_file: Path.t;
 }
 

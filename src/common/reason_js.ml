@@ -227,3 +227,19 @@ let replace_reason replacement reason =
 let repos_reason pos reason =
   new_reason (desc_of_reason reason) pos
 
+(* helper: strip root from positions *)
+let strip_root reason path = Pos.(
+  let { pos_file; pos_start; pos_end } = pos_of_reason reason in
+  let pos_file = Relative_path.to_absolute pos_file in
+  let pos_file =
+    if Files_js.is_lib_file_or_flowlib_root pos_file
+    then spf "[LIB] %s" (Filename.basename pos_file)
+    else Files_js.relative_path
+      (spf "%s%s" (Path.to_string path) Filename.dir_sep) pos_file
+  in
+  let p = {
+    (Pos.make_from (Relative_path.create Relative_path.Dummy pos_file)) with
+    pos_start; pos_end
+  } in
+  repos_reason p reason
+)

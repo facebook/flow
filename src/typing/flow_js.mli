@@ -15,8 +15,8 @@ open Constraint_js
 val new_warning: (reason * string) list -> Errors_js.error
 val new_error: (reason * string) list -> Errors_js.error
 
-val add_warning: context -> (reason * string) list -> unit
-val add_error: context -> (reason * string) list -> unit
+val add_warning: context -> ?trace:trace -> (reason * string) list -> unit
+val add_error: context -> ?trace:trace -> (reason * string) list -> unit
 
 val find_graph: context -> ident -> constraints
 

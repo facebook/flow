@@ -40,6 +40,7 @@ let init_modes opts =
   modes.console <- opts.Options.opt_console;
   modes.json <- opts.Options.opt_json;
   modes.show_all_errors <- opts.Options.opt_show_all_errors;
+  modes.strip_root <- opts.Options.opt_strip_root;
   modes.quiet <- opts.Options.opt_quiet;
   modes.profile <- opts.Options.opt_profile;
   modes.no_flowlib <- opts.Options.opt_no_flowlib;
@@ -695,35 +696,6 @@ let full_check workers parse_next opts =
 
   (parsed, checked)
 
-(* helper: make relative path from root to file *)
-let relative_path =
-  let split_path = Str.split Files_js.dir_sep in
-  let rec make_relative = function
-    | (dir1::root, dir2::file) when dir1 = dir2 -> make_relative (root, file)
-    | (root, file) ->
-        List.fold_left (fun path _ -> Filename.parent_dir_name::path) file root
-  in
-  fun root file ->
-    make_relative (split_path root, split_path file)
-    |> String.concat Filename.dir_sep
-
-(* helper: strip root from positions *)
-let strip_root reason path = Pos.(
-  let { pos_file; pos_start; pos_end } = Reason_js.pos_of_reason reason in
-  let pos_file = Relative_path.to_absolute pos_file in
-  let pos_file =
-    if Files_js.is_lib_file pos_file
-    then spf "[LIB] %s" (Filename.basename pos_file)
-    else relative_path
-      (spf "%s%s" (Path.to_string path) Filename.dir_sep) pos_file
-  in
-  let p = {
-    (Pos.make_from (Relative_path.create Relative_path.Dummy pos_file)) with
-    pos_start; pos_end
-  } in
-  Reason_js.repos_reason p reason
-)
-
 (* helper - print errors. used in check-and-die runs *)
 let print_errors ?root flow_opts =
   let errors = get_errors () in
@@ -734,8 +706,10 @@ let print_errors ?root flow_opts =
         Array.iteri (fun i error ->
           let level, list = error in
           let list =
-            if flow_opts.Options.opt_strip_root
-            then List.map (fun (reason,s) -> (strip_root reason path, s)) list
+            if Modes_js.modes.strip_root
+            then List.map (
+                fun (reason, s) -> (Reason_js.strip_root reason path, s)
+              ) list
             else list in
           let e = level, list in
           ae.(i) <- e
@@ -751,7 +725,6 @@ let print_errors ?root flow_opts =
     Errors_js.print_error_summary
       (not Modes_js.modes.show_all_errors)
       errors
-      ~one_line:flow_opts.Options.opt_one_line_errors
 
 (* initialize flow server state, including full check *)
 let server_init genv env flow_opts =

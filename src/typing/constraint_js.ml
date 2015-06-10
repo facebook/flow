@@ -2050,7 +2050,14 @@ let fill n tab =
     else "." ^ (spaces (tab - 1)) ^ (loop (n - tab))
   in loop n
 
+let prep_path r =
+  if not (Modes_js.modes.strip_root) then r
+  else
+    let path = FlowConfig.((get_unsafe ()).root) in
+    Reason_js.strip_root r path
+
 let pos_len r =
+  let r = prep_path r in
   let pos = pos_of_reason r in
   let fmt = Errors_js.format_reason_color (pos, "") in
   let str = String.concat "" (List.map snd fmt) in
@@ -2063,11 +2070,11 @@ let max_pos_len_and_depth limit trace =
   let rec f (len, depth) (lower, links, upper, _) =
     let len = max len (pos_len (reason_of_t lower)) in
     let len = max len (pos_len (reason_of_t upper)) in
-    if links = [] || depth = limit then len, depth
+    if links = [] || depth > limit then len, depth
     else List.fold_left (
       fun (len, depth) (Embed trace) -> f (len, depth) trace
     ) (len, depth + 1) links
-  in f (0, 1) trace
+  in f (0, 0) trace
 
 let pretty_r margin indent tab r prefix suffix =
   let len = pos_len r in

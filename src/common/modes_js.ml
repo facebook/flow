@@ -20,6 +20,7 @@ type modes = {
   mutable console: bool;
   mutable json: bool;
   mutable show_all_errors: bool;
+  mutable strip_root: bool;
   mutable quiet : bool;
   mutable profile : bool;
   mutable no_flowlib: bool;
@@ -36,6 +37,7 @@ let modes = {
   console = false;
   json = false;
   show_all_errors = false;
+  strip_root = false;
   quiet = true;
   profile = false;
   no_flowlib = false;

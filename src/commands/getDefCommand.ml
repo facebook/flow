@@ -83,7 +83,7 @@ let main option_values json strip_root path args () =
       (* ugh too many path utils in this joint *)
       let sroot = Path.to_string root in
       let spath = Relative_path.to_absolute pos.pos_file in
-      let spath = Types_js.relative_path sroot spath in
+      let spath = Files_js.relative_path sroot spath in
       Relative_path.create Relative_path.Dummy spath
   }) in
   (* format output *)

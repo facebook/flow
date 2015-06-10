@@ -297,24 +297,28 @@ let prmsg_flow_trace_reasons cx level trace_reasons msg (r1, r2) =
   let message_list =
     if (pos_of_reason r2 = Pos.none)
     then [
-      r1, spf "%s\n%s %s" (desc_of_reason r1) msg (desc_of_reason r2);
+      r1, spf "%s\n%s %s" (desc_of_reason r1) msg (desc_of_reason r2) ^
+        (if trace_reasons = [] then "" else "\nError path:")
     ]
     else [
       r1, spf "%s\n%s" (desc_of_reason r1) msg;
       r2, (desc_of_reason r2) ^
-        (if trace_reasons = [] then ""
-       else "\nError path:");
+        (if trace_reasons = [] then "" else "\nError path:")
     ]
   in
   add_output cx level (info @ message_list @ trace_reasons)
 
+(* format a trace into list of (reason, desc) pairs used
+   downstream for obscure reasons *)
+let make_trace_reasons trace =
+  if modes.traces = 0 then [] else
+    reasons_of_trace ~level:modes.traces trace
+    |> List.map (fun r -> r, desc_of_reason r)
+
 (* format an error or warning and add it to flow's output.
    here we gate trace output on global settings *)
 let prmsg_flow cx level trace msg (r1, r2) =
-  let trace_reasons = if modes.traces = 0 then [] else
-    reasons_of_trace ~level:modes.traces trace
-    |> List.map (fun r -> r, desc_of_reason r)
-  in
+  let trace_reasons = make_trace_reasons trace in
   prmsg_flow_trace_reasons cx level trace_reasons msg (r1, r2)
 
 (* format an error and add it to flow's output.
@@ -361,18 +365,32 @@ let tweak_output list =
     reason, dmsg
   ) list
 
+let add_msg cx ?trace level list =
+  let list = match trace with
+    | Some trace when modes.traces != 0 ->
+        let list = tweak_output list in
+        let rev_list = List.rev list in
+        let head = List.hd rev_list in
+        let head = fst head, snd head ^ "\nError path:" in
+        let rev_list = head :: List.tl rev_list in
+        let list = List.rev rev_list in
+        list @ make_trace_reasons trace
+    | _ -> tweak_output list
+  in
+  add_output cx level list
+
 (* for outside calls *)
 let new_warning list =
   Errors_js.WARNING, tweak_output list
 
-let add_warning cx list =
-  add_output cx Errors_js.WARNING (tweak_output list)
+let add_warning cx ?trace list =
+  add_msg cx ?trace Errors_js.WARNING list
 
 let new_error list =
   Errors_js.ERROR, tweak_output list
 
-let add_error cx list =
-  add_output cx Errors_js.ERROR (tweak_output list)
+let add_error cx ?trace list =
+  add_msg cx ?trace Errors_js.ERROR list
 
 (********************************************************************)
 
@@ -2697,7 +2715,7 @@ let rec __flow cx (l, u) trace =
         let message_list = [
           reason_op, msg
         ] in
-        add_warning cx message_list
+        add_warning cx message_list ~trace
       else
         let msg =
           if x = "$call"
@@ -4012,10 +4030,10 @@ and rec_unify cx trace t1 t2 =
         dictionary cx trace k2 v2 dict1
     | Some _, None ->
         let reason1 = replace_reason "some property" reason1 in
-        add_warning cx [reason1, "Property not found in"; reason2, ""]
+        add_warning cx [reason1, "Property not found in"; reason2, ""] ~trace
     | None, Some _ ->
         let reason2 = replace_reason "some property" reason2 in
-        add_warning cx [reason2, "Property not found in"; reason1, ""]
+        add_warning cx [reason2, "Property not found in"; reason1, ""] ~trace
     | None, None -> ()
     end;
 
@@ -4055,7 +4073,7 @@ and flow_prop_to_dict cx trace k v dict prop_reason dict_reason =
     add_warning cx [
       prop_reason, "Property not found in";
       dict_reason, ""
-    ]
+    ] ~trace
 
 (* mutable sites on parent values (i.e. object properties,
    array elements) must be typed invariantly when a value

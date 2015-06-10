@@ -111,6 +111,8 @@ module OptionParser(Config : CONFIG) = struct
     let opt_traces = match traces with
       | Some level -> level
       | None -> FlowConfig.(flowconfig.options.traces) in
+    let opt_strip_root = strip_root ||
+      FlowConfig.(flowconfig.options.strip_root) in
     let opt_log_file = match log_file with
       | Some s ->
           let dirname = Path.make (Filename.dirname s) in
@@ -147,7 +149,7 @@ module OptionParser(Config : CONFIG) = struct
         flowconfig.options.module_name_mappers
       );
       Options.opt_profile = profile;
-      Options.opt_strip_root = strip_root;
+      Options.opt_strip_root;
       Options.opt_module;
       Options.opt_libs;
       Options.opt_no_flowlib = no_flowlib;

@@ -46,3 +46,5 @@ val normalize_path: string -> string -> string
 val construct_path: string -> string list -> string
 
 val package_json: Path.t -> string list
+
+val relative_path: string -> string -> string
