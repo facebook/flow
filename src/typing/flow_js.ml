@@ -1324,7 +1324,7 @@ module RecursionCheck : sig
 
 end = struct
   exception LimitExceeded of trace
-  let limit = 10000
+  let limit = 1000000
 
   (* check trace depth as a proxy for recursion depth
      and throw when limit is exceeded *)
