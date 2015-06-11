@@ -9,18 +9,26 @@ Likely to cause new Flow errors:
 New features:
 
 - Added support for `for-of`
+- Added support for `async`/`await`
 - Added structural subtyping for interfaces -- anything can be an instance of an interface as long as it looks right
 - Added support for type annotations of the form `typeof x`, where `x` is the name of an in-scope variable
+- Added a new config option `suppress_comment`, a regexp which matches against comments and causes any Flow error on the next line to be suppressed. For example, `suppress_comment=.*\$FlowFixMe.*` will cause `/* $FlowFixMe */\nvar x : number = "oops";` to not raise an error.
 - Added a new config option `module.name_mapper`, a regexp -> replacement template tuple to be applied to any matching module names before the Flow system resolves the name and looks it up
 - Added a `--color=always|never|auto` CLI option, useful when piping to `less -R`
+- Added a `--one-line` CLI option which replaces `\n` with `\\n` in multiline error messages, useful when piping to `grep`
 
 Misc:
 
+- Many improvements to library files, especially node and ES6 APIs
 - Improved warnings on unsupported class members [PR #461]
+- Added support for `export default class`
+- Fixed `if (x instanceof Array)`
+- Fixed the type of `x && y` when `x` is an array, object or function
 - Fixed the `flow get-def` command, especially around imported types
 - Fixed a bug with `==` and improved comparison-related error messages
 - Fixed file watching for individual files included via .flowconfig [includes]
 - Fixed the build ID, so that the server restarts when accessed from a mismatched client version
+- Added a new config option `log.file` which overrides the default log file path
 
 
 ###v0.11.0
@@ -219,7 +227,7 @@ Misc:
 - Add Object.is
 - uncomment `delete` method signatures
 - Add MAX_SAFE_INTEGER and MIN_SAFE_INTEGER to Number
-- make param annotations strict upper bounds 
+- make param annotations strict upper bounds
 
 ###v0.1.5
 
