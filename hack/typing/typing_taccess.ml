@@ -10,7 +10,6 @@
 
 open Typing_defs
 open Utils
-open Nast
 
 module TUtils = Typing_utils
 module Reason = Typing_reason
@@ -55,12 +54,6 @@ let empty_env env ety_env reason = {
   seen_tvar = ISet.empty;
   ids = [];
 }
-
-let fill_type_hole_ env ty hole_ty =
-  let subst = Inst.make_subst Phase.locl
-    [Ast.Invariant, (Pos.none, SN.Typehints.type_hole), None]
-    [hole_ty] in
-  Inst.instantiate subst env ty
 
 let rec expand_with_env ety_env env reason (root, ids) =
   let expand_env = empty_env env ety_env reason in
@@ -146,11 +139,6 @@ and expand_ env root_ty ids =
             env, ty
           else
             env, (Reason.Rexpr_dep_type (fst ty, p ,x), snd ty)
-      | Tgeneric (x, None) when x = SN.Typehints.type_hole ->
-         (* If we haven't filled the type hole at this point we fill
-          * it with self
-          *)
-         expand_generic env SN.Typehints.this (Env.get_self env.tenv) ids
       | Tgeneric (x, Some (Ast.Constraint_as, ty)) ->
          expand_generic env x ty ids
       | Tunresolved tyl ->
@@ -263,7 +251,6 @@ and create_root_from_type_constant env class_pos class_name root_ty (pos, tconst
   let ety_env = { env.ety_env with this_ty = root_ty } in
   let tenv, (ety_env, tconst_ty) =
     Phase.localize_with_env ~ety_env env.tenv tconst_ty in
-  let tenv, tconst_ty = fill_type_hole_ tenv tconst_ty root_ty in
   { env with tenv = tenv }, tconst_ty, ety_env
 
 (* Following code checks for cycles that may occur when expanding a Taccess.
@@ -322,52 +309,3 @@ and check_tconst_fun_param env (_, ty) =
 and check_tconst_opt env = function
   | None -> ()
   | Some x -> check_tconst env x
-
-(* A type access "this::T" is translated to "<this>::T" during the
- * naming phase. While typing a body, "<this>" is a type hole that needs to
- * be filled with a final concrete type. Resolution is specified in typing.ml,
- * here is a high level break down:
- *
- * 1) When a class member "bar" is accessed via "[CID]->bar" or "[CID]::bar"
- * we resolves "<this>" in the type of "bar" to "<[CID]>"
- *
- * 2) When typing a method, we resolve "<this>" in the return type to
- * "this"
- *
- * 3) When typing a method, we resolve "<this>" in parameters of the
- * function to "<static>" in static methods or "<$this>" in non-static
- * methods
- *
- * More specific details are explained inline
- *)
-let fill_type_hole env cid cid_ty ty =
-  (* we use <.*> to indicate an expression dependent type *)
-  let fill_name n = "<"^n^">" in
-  let pos = Reason.to_pos (fst cid_ty) in
-  let filling_ty =
-    match cid with
-    | CIparent | CIself | CI _ ->
-        cid_ty
-    (* For (almost) all expressions we generate a new identifier. In the future,
-     * we might be able to do some local analysis to determine if two given
-     * expressions refer to the same Late Static Bound Type, but for now we do
-     * this since it is easy and sound.
-     *)
-    | CIvar (p, x) when x <> This ->
-        let name = "expr#"^string_of_int(Ident.tmp()) in
-        Reason.Rwitness p, Tabstract ((p, fill_name name), [], Some cid_ty)
-    | CIvar (p, This) when cid = CIstatic && not (Env.is_static env) ->
-        Reason.Rwitness p, Tabstract ((p, fill_name SN.SpecialIdents.this),
-                                      [], Some cid_ty)
-    | _ ->
-      (* In a non-static context, <static>::T should be compatible with
-       * <$this>::T. This is because $this, and static refer to the same
-       * late static bound type.
-       *)
-      let name =
-        if cid = CIstatic && not (Env.is_static env)
-        then SN.SpecialIdents.this
-        else class_id_to_str cid in
-      Reason.Rwitness pos, Tabstract ((pos, fill_name name), [], Some cid_ty)
-  in
-  fill_type_hole_ env ty filling_ty

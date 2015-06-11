@@ -298,6 +298,10 @@ type expand_env = {
   typedef_expansions : (Pos.t * string) list;
   substs : locl ty SMap.t;
   this_ty : locl ty;
+  (* The class that the type is extracted from. Used for creating expression
+   * dependent types for type constants.
+   *)
+  from_class : Nast.class_id option;
 }
 
 type ety = expand_env * locl ty

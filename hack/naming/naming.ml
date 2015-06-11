@@ -754,12 +754,9 @@ and hint_ ~allow_this ~allow_retonly is_static_var p env x =
           )
       | x when x = SN.Classes.cStatic || x = SN.Classes.cParent ->
           Errors.invalid_type_access_root root; N.Hany
-      (* Create a type hole that we will fill during the local typing *)
-      | x when x = SN.Typehints.this && allow_this ->
-          N.Habstr (SN.Typehints.type_hole, None)
-      | _ ->
+        | _ ->
           (match hint_id ~allow_this ~allow_retonly env is_static_var root [] with
-          | N.Happly _ as h -> h
+          | N.Hthis | N.Happly _ as h -> h
           | _ -> Errors.invalid_type_access_root root; N.Hany
           )
     in

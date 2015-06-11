@@ -337,6 +337,7 @@ and sub_type_with_uenv env (uenv_super, ty_super) (uenv_sub, ty_sub) =
                         typedef_expansions = [];
                         substs = SMap.empty;
                         this_ty = ty_sub;
+                        from_class = None;
                       } in
                       let env, elt_type =
                         Phase.localize ~ety_env env elt_type in
@@ -374,6 +375,7 @@ and sub_type_with_uenv env (uenv_super, ty_super) (uenv_sub, ty_sub) =
                     typedef_expansions = [];
                     substs = TSubst.make class_.tc_tparams tyl_sub;
                     this_ty = Reason.none, TUtils.this_of ty_sub;
+                    from_class = None;
                   } in
                   let env, up_obj = Phase.localize ~ety_env env up_obj in
                   sub_type env ty_super up_obj
@@ -501,6 +503,7 @@ and sub_type_with_uenv env (uenv_super, ty_super) (uenv_sub, ty_sub) =
              typedef_expansions = [];
              substs = SMap.empty;
              this_ty = Reason.none, TUtils.this_of ty_sub;
+             from_class = None;
            } in
            let env, base = Phase.localize ~ety_env env base in
            sub_type env ty_super base)

@@ -96,6 +96,7 @@ let rec localize_with_env ~ety_env env (dty: decl ty) =
   | r, Tthis ->
      let ty = match ety_env.this_ty with
        | Reason.Rnone, ty -> r, ty
+       | ty when ety_env.from_class <> None -> ty
        | reason, ty -> Reason.Rinstantiate (reason, "this", r), ty in
      env, (ety_env, ty)
   | r, Tarray (ty1, ty2) ->
@@ -124,8 +125,13 @@ let rec localize_with_env ~ety_env env (dty: decl ty) =
          env, (ety_env, (r, Tgeneric (x, cstr_opt)))
      )
   | r, Toption ty ->
-     let env, ty = localize ~ety_env env ty in
-     env, (ety_env, (r, Toption ty))
+      let env, ty = localize ~ety_env env ty in
+      let ty_ =
+        if TUtils.is_option env ty then
+          snd ty
+        else
+          Toption ty in
+      env, (ety_env, (r, ty_))
   | r, Tfun ft ->
      let env, ft = localize_ft ~ety_env env ft in
      env, (ety_env, (r, Tfun ft))
@@ -138,8 +144,13 @@ let rec localize_with_env ~ety_env env (dty: decl ty) =
   | r, Ttuple tyl ->
      let env, tyl = lfold (localize ~ety_env) env tyl in
      env, (ety_env, (r, Ttuple tyl))
-  | r, Taccess (root_ty, ids) ->
+  | r, Taccess ((_, orig_root as root_ty), ids) ->
      let env, root_ty = localize ~ety_env env root_ty in
+     let root_ty =
+       match ety_env.from_class with
+       | Some cid when orig_root = Tthis ->
+          TUtils.expr_dependent_ty env cid root_ty
+       | _ -> root_ty in
      env, (ety_env, (r, Taccess (root_ty, ids)))
   | r, Tshape tym ->
      let env, tym = ShapeMap.map_env (localize ~ety_env) env tym in
@@ -191,6 +202,7 @@ let env_with_self env =
     typedef_expansions = [];
     substs = SMap.empty;
     this_ty = Reason.none, TUtils.this_of (Env.get_self env);
+    from_class = None;
   }
 
 (* Performs no substitutions of generics and initializes Tthis to

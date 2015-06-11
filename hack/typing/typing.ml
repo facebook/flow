@@ -199,12 +199,43 @@ let make_param_ty env reason param =
     ~localize:(fun env ty -> env, ty)
     env param
 
+(* For params we want to resolve to "static" or "$this" depending on the
+ * context. Even though we are passing in CIstatic, resolve_with_class_id
+ * is smart enough to know what to do. Why do this? Consider the following
+ *
+ * abstract class C {
+ *   abstract const type T;
+ *
+ *   private this::T $val;
+ *
+ *   final public function __construct(this::T $x) {
+ *     $this->val = $x;
+ *   }
+ *
+ *   public static function create(this::T $x): this {
+ *     return new static($x);
+ *   }
+ * }
+ *
+ * class D extends C { const type T = int; }
+ *
+ * In __construct() we want to be able to assign $x to $this->val. The type of
+ * $this->val will expand to '$this::T', so we need $x to also be '$this::T'.
+ * We can do this soundly because when we construct a new class such as,
+ * 'new D(0)' we can determine the late static bound type (D) and resolve
+ * 'this::T' to 'D::T' which is int.
+ *
+ * A similar line of reasoning is applied for the static method create.
+ *)
 let make_param_local_ty env param =
+  let ety_env =
+    { (Phase.env_with_self env) with
+      from_class = Some CIstatic; } in
   make_param_type_
     ~phase:Phase.locl
     ~for_body:true
     ~default:Env.fresh_type
-    ~localize:Phase.localize_with_self
+    ~localize:(Phase.localize ~ety_env)
     env param
 
 let rec fun_decl nenv f =
@@ -970,10 +1001,9 @@ and expr_ ~in_cond ~(valkind: [> `lvalue | `rvalue | `other ]) env (p, e) =
           typedef_expansions = [];
           substs = SMap.empty;
           this_ty = cid_ty;
+          from_class = Some cid;
         } in
         let env, smethod_type = Phase.localize ~ety_env env smethod.ce_type in
-        let env, smethod_type =
-          TAccess.fill_type_hole env cid cid_ty smethod_type in
         (match smethod_type with
         | _, Tfun fty -> check_deprecated p fty
         | _ -> ());
@@ -1386,6 +1416,7 @@ and new_object ~check_not_abstract p env c el uel =
               typedef_expansions = [];
               substs = SMap.empty;
               this_ty = obj_type;
+              from_class = None;
             } in
             let _, ce_type = Phase.localize ~ety_env env ce.ce_type in
             ignore (check_abstract_parent_meth SN.Members.__construct p ce_type)
@@ -2370,14 +2401,10 @@ and class_contains_smethod env cty (_pos, mid) =
     | Tunresolved _ | Tobject | Tshape _ | Taccess (_, _))-> None
 
 and class_get ~is_method ~is_const env cty (p, mid) cid =
-  let env, ty = class_get_ ~is_method ~is_const env cty (p, mid) cid in
-  TAccess.fill_type_hole env cid cty ty
-
-and class_get_ ~is_method ~is_const env cty (p, mid) cid =
   match cty with
   | r, Taccess taccess ->
       let env, cty = TAccess.expand env r taccess in
-      class_get_ ~is_method ~is_const env cty (p, mid) cid
+      class_get ~is_method ~is_const env cty (p, mid) cid
   | _, Tgeneric (_, Some (Ast.Constraint_as, (_, Tclass ((_, c), paraml))))
   | _, Tclass ((_, c), paraml) ->
       let class_ = Env.get_class env c in
@@ -2409,6 +2436,7 @@ and class_get_ ~is_method ~is_const env cty (p, mid) cid =
                   typedef_expansions = [];
                   this_ty = cty;
                   substs = TSubst.make class_.tc_tparams paraml;
+                  from_class = Some cid;
                 } in
                 let env, ft = Phase.localize_ft ~ety_env env ft in
                 let ft = { ft with
@@ -2423,6 +2451,7 @@ and class_get_ ~is_method ~is_const env cty (p, mid) cid =
                 typedef_expansions = [];
                 this_ty = cty;
                 substs = TSubst.make class_.tc_tparams paraml;
+                from_class = Some cid;
               } in
               let env, method_ =
                 Phase.localize ~ety_env env method_ in
@@ -2597,6 +2626,7 @@ and obj_get_ ~is_method ~nullsafe env ty1 cid (p, s as id)
                       typedef_expansions = [];
                       this_ty = this_ty;
                       substs = TSubst.make class_.tc_tparams paraml;
+                      from_class = Some cid;
                     } in
                     let env, ft = Phase.localize_ft ~ety_env env ft in
 
@@ -2610,8 +2640,7 @@ and obj_get_ ~is_method ~nullsafe env ty1 cid (p, s as id)
                       ft_arity = Fellipsis 0;
                       ft_tparams = []; ft_params = [];
                     } in
-                    let env, member_ =
-                      TAccess.fill_type_hole env cid this_ty (r, Tfun ft) in
+                    let member_ = (r, Tfun ft) in
                     env, member_, Some (mem_pos, vis)
                   | _ -> assert false
                 )
@@ -2624,10 +2653,9 @@ and obj_get_ ~is_method ~nullsafe env ty1 cid (p, s as id)
                   typedef_expansions = [];
                   this_ty = this_ty;
                   substs = TSubst.make class_.tc_tparams paraml;
+                  from_class = Some cid;
                 } in
                 let env, member_ = Phase.localize ~ety_env env member_ in
-                let env, member_ =
-                  TAccess.fill_type_hole env cid this_ty member_ in
                 env, member_, Some (mem_pos, vis)
             )
         )
@@ -2799,9 +2827,9 @@ and call_construct p env class_ params el uel cid =
         typedef_expansions = [];
         this_ty = cid_ty;
         substs = TSubst.make class_.tc_tparams params;
+        from_class = Some cid;
       } in
       let env, m = Phase.localize ~ety_env env m in
-      let env, m = TAccess.fill_type_hole env cid cid_ty m in
       fst (call p env m el uel)
 
 and check_visibility p env (p_vis, vis) cid =
@@ -3710,41 +3738,6 @@ and method_def env m =
   let env = Typing_hint.check_tparams_instantiable env m.m_tparams in
   let env, params =
     lfold make_param_local_ty env m_params in
-  (* For params we want to resolve to "static" or "$this" depending on the
-   * context. Even though we are passing in CIstatic, resolve_with_class_id
-   * is smart enough to know what to do. Why do this? Consider the following
-   *
-   * abstract class C {
-   *   abstract const type T;
-   *
-   *   private this::T $val;
-   *
-   *   final public function __construct(this::T $x) {
-   *     $this->val = $x;
-   *   }
-   *
-   *   public static function create(this::T $x): this {
-   *     return new static($x);
-   *   }
-   * }
-   *
-   * class D extends C { const type T = int; }
-   *
-   * In __construct() we want to be able to assign $x to $this->val. The type of
-   * $this->val will expand to '$this::T', so we need $x to also be '$this::T'.
-   * We can do this soundly because when we construct a new class such as,
-   * 'new D(0)' we can determine the late static bound type (D) and resolve
-   * 'this::T' to 'D::T' which is int.
-   *
-   * A similar line of reasoning is applied for the static method create.
-   *)
-  let env, cid_ty = static_class_id (fst m.m_name) env CIstatic in
-  let env, params =
-      lfold (fun env (x, ty) ->
-        let env, ty = TAccess.fill_type_hole env CIstatic cid_ty ty in
-        env, (x, ty)
-      ) env params
-  in
   if Env.is_strict env then begin
     List.iter2 (check_param env) m_params params;
   end;
