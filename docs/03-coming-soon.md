@@ -11,7 +11,7 @@ Flow is still in early stages, and we're iterating fast. Here's a (partial) list
 
 * Support for converting existing TypeScript declaration files (.d.ts) for common libraries on DefinitelyTyped.org to Flow declarations.
 
-* ~~ES6 module support~~ EDIT: Available as of Flow v0.7
+* <del>ES6 module support</del> EDIT: Available as of Flow v0.7
 
 * Compiling the Flow checker to JavaScript using js\_of\_ocaml
 
