@@ -152,9 +152,6 @@ let exports cx m =
   module_t cx m (Reason_js.new_reason "exports" (Pos.make_from
     (Relative_path.create Relative_path.Dummy cx.file)))
 
-let lookup_module cx m =
-  SMap.find_unsafe m cx.modulemap
-
 (**
  * Given an exported default declaration, identify nameless declarations and
  * name them with a special internal name that can be used to reference them
@@ -2010,7 +2007,7 @@ and statement cx = Ast.Statement.(
     let mmap = match SMap.get "constructor" mmap with
       | None ->
         let constructor_funtype =
-          Flow_js.mk_functiontype2 [] (Some []) VoidT.t 0 in
+          Flow_js.mk_functiontype [] ~params_names:[] VoidT.t in
         let funt = (FunT (Reason_js.mk_reason "constructor" loc,
           Flow_js.dummy_static, Flow_js.dummy_prototype, constructor_funtype))
         in
@@ -2826,7 +2823,7 @@ and expression_ cx loc e = Ast.Expression.(match e with
       ) argts;
       let reason = mk_reason "new Function(..)" loc in
       FunT (reason, Flow_js.dummy_static, Flow_js.dummy_prototype,
-        Flow_js.mk_functiontype [] (Some []) (MixedT reason))
+        Flow_js.mk_functiontype [] ~params_names:[] (MixedT reason))
     )
 
   | New {
@@ -2894,7 +2891,7 @@ and expression_ cx loc e = Ast.Expression.(match e with
       Type_inference_hooks_js.dispatch_call_hook cx name ploc super;
       Flow_js.mk_tvar_where cx reason (fun t ->
         Flow_js.flow cx (super,
-          MethodT (reason, name, super, argts, t, 0));
+          MethodT (reason, name, Flow_js.mk_methodtype super argts t));
       )
 
   | Call {
@@ -2922,14 +2919,15 @@ and expression_ cx loc e = Ast.Expression.(match e with
           Env_js.havoc_heap_refinements ();
           Flow_js.mk_tvar_where cx reason (fun t ->
             let frame = Env_js.peek_frame () in
-            let app = Flow_js.mk_methodtype2 ot argts None t frame in
+            let app = Flow_js.mk_methodtype2 ot argts t frame in
             Flow_js.flow cx (f, CallT (reason, app));
           )
       | None ->
           Env_js.havoc_heap_refinements ();
           Flow_js.mk_tvar_where cx reason (fun t ->
-            Flow_js.flow cx
-              (ot, MethodT(reason, name, ot, argts, t, Env_js.peek_frame ()))
+            let frame = Env_js.peek_frame () in
+            let app = Flow_js.mk_methodtype2 ot argts t frame in
+            Flow_js.flow cx (ot, MethodT(reason, name, app))
           )
       )
 
@@ -2941,8 +2939,8 @@ and expression_ cx loc e = Ast.Expression.(match e with
       let reason = mk_reason "super(...)" loc in
       let super = super_ cx reason in
       let t = VoidT reason in
-      Flow_js.flow cx
-        (super, MethodT(reason, "constructor", super, argts, t, 0));
+      Flow_js.flow cx (super,
+        MethodT(reason, "constructor", Flow_js.mk_methodtype super argts t));
       t
 
   (******************************************)
@@ -3129,7 +3127,6 @@ and expression_ cx loc e = Ast.Expression.(match e with
       let ft = Flow_js.mk_functiontype
         [ ArrT (reason_array, StrT.why reason, []);
           RestT (AnyT.why reason) ]
-        None (* TODO: ? *)
         (StrT.why reason)
       in
       Flow_js.flow cx (t, CallT (reason, ft));
@@ -3174,9 +3171,8 @@ and new_call cx tok class_ argts =
 and func_call cx reason func_t argts =
   Env_js.havoc_heap_refinements ();
   Flow_js.mk_tvar_where cx reason (fun t ->
-    let app =
-      Flow_js.mk_functiontype2 argts None t (Env_js.peek_frame ())
-    in
+    let frame = Env_js.peek_frame () in
+    let app = Flow_js.mk_functiontype2 argts t frame in
     Flow_js.flow cx (func_t, CallT(reason, app))
   )
 
@@ -3550,7 +3546,7 @@ and jsx_title cx openingElement children = Ast.JSX.(
       Flow_js.mk_tvar_where cx reason (fun tvar ->
         Flow_js.flow cx (
           react,
-          MethodT(reason, "createElement", react, [c;o], tvar, 0)
+          MethodT(reason, "createElement", Flow_js.mk_methodtype react [c;o] tvar)
         );
       )
 
@@ -3929,7 +3925,7 @@ and react_create_class cx loc class_props = Ast.Expression.(
           in
           Flow_js.flow cx (t,
             CallT (reason,
-              Flow_js.mk_functiontype [] None override_state));
+              Flow_js.mk_functiontype [] override_state));
           fmap, mmap
         )
 
@@ -4418,7 +4414,7 @@ and static_method_call cx name tok m argts =
   let reason = mk_reason (spf "%s.%s" name m) tok in
   let cls = Flow_js.get_builtin cx name reason in
   Flow_js.mk_tvar_where cx reason (fun tvar ->
-    Flow_js.flow cx (cls, MethodT(reason, m, cls, argts, tvar, 0));
+    Flow_js.flow cx (cls, MethodT(reason, m, Flow_js.mk_methodtype cls argts tvar));
   )
 
 (* TODO: reason_c could be replaced by c *)
@@ -4610,10 +4606,10 @@ and mk_class_elements cx instance_info static_info body = Ast.Class.(
   ) elements
 )
 
-and mk_methodtype (reason_m, typeparams,_,(params,pnames,ret,_,_)) =
+and mk_methodtype (reason_m, typeparams,_,(params,params_names,ret,_,_)) =
   let ft = FunT (
     reason_m, Flow_js.dummy_static, Flow_js.dummy_prototype,
-    Flow_js.mk_functiontype2 params pnames ret 0
+    Flow_js.mk_functiontype params ?params_names ret
   ) in
   if (typeparams = [])
   then ft
@@ -5140,7 +5136,7 @@ and mk_method cx reason ~async params ret body this super =
   in
   FunT (reason, Flow_js.dummy_static, Flow_js.dummy_prototype,
         Flow_js.mk_functiontype2
-          params (Some pnames) ret (Env_js.peek_frame ()))
+          params ~params_names:pnames ret (Env_js.peek_frame ()))
 
 (* scrape top-level, unconditional field assignments from constructor code *)
 (** TODO: use a visitor **)
@@ -5191,38 +5187,26 @@ let xmgc_enabled = ref true
 (**************************************)
 
 let cross_module_gc =
-
   let require_set = ref SSet.empty in
-
   fun cx ms reqs ->
     if !xmgc_enabled then (
       reqs |> SSet.iter (fun r -> require_set := SSet.add r !require_set);
       ms |> SSet.iter (fun m -> require_set := SSet.remove m !require_set);
 
-      let ins = (Flow_js.builtins)::(
-        SSet.fold (fun r list -> (lookup_module cx r)::list) !require_set []
-      ) in
-      Flow_js.do_gc cx ins []
+      let ins = SSet.elements !require_set in
+      Flow_js.do_gc cx ins
     )
 
 let force_annotations cx =
-  let tvar = lookup_module cx cx._module in
+  let tvar = Flow_js.lookup_module cx cx._module in
   let reason, id = open_tvar tvar in
   let constraints = Flow_js.find_graph cx id in
   let before = Errors_js.ErrorSet.cardinal cx.errors in
   Flow_js.enforce_strict cx id constraints;
   let after = Errors_js.ErrorSet.cardinal cx.errors in
-  let ground_node = new_unresolved_root () in
-  let ground_bounds = bounds_of_unresolved_root ground_node in
-  if (after = before)
-  then (
-    match constraints with
-    | Unresolved bounds ->
-        ground_bounds.lower <- bounds.lower;
-        ground_bounds.lowertvars <- bounds.lowertvars
-    | _ -> ()
-  );
-  cx.graph <- IMap.add id ground_node cx.graph
+  if (after > before)
+  then cx.graph <- cx.graph |>
+    IMap.add id (Root { rank = 0; constraints = Resolved AnyT.t })
 
 (* core inference, assuming setup and teardown happens elsewhere *)
 let infer_core cx statements =
@@ -5321,14 +5305,13 @@ let infer_ast ast file _module force_check =
     get_module_exports cx reason,
     exports cx _module);
 
-  let ins = (Flow_js.builtins)::(
-    SSet.fold (fun r list -> (lookup_module cx r)::list) cx.required []
-  ) in
-  let outs = [lookup_module cx _module] in
-  Flow_js.do_gc cx ins outs;
-
   (* insist that whatever type flows into exports is fully annotated *)
   (if modes.strict then force_annotations cx);
+
+  let ins = SSet.elements cx.required in
+  let out = _module in
+  cx.strict_required <- Flow_js.analyze_dependencies cx ins out;
+  Flow_js.do_gc cx (out::ins);
 
   cx
 
@@ -5398,7 +5381,7 @@ type direction = Out | In
  * in the direction specified *)
 let link_module_types dir cx m =
   let glo = exports Flow_js.master_cx m in
-  let loc = lookup_module cx m in
+  let loc = Flow_js.lookup_module cx m in
   let edge = match dir with Out -> (glo, loc) | In -> (loc, glo) in
   Flow_js.flow Flow_js.master_cx edge
 
@@ -5431,12 +5414,12 @@ let implicit_require_strict cx master_cx =
    arbitrary cx, so cx_from and cx_to should have already been copied to cx. *)
 let explicit_impl_require_strict cx (cx_from, cx_to) =
   let m = cx_from._module in
-  let from_t = lookup_module cx_from m in
+  let from_t = Flow_js.lookup_module cx_from m in
   let to_t =
-    try lookup_module cx_to m
+    try Flow_js.lookup_module cx_to m
     with _ ->
       (* The module exported by cx_from may be imported by path in cx_to *)
-      lookup_module cx_to cx_from.file
+      Flow_js.lookup_module cx_to cx_from.file
   in
   Flow_js.flow cx (from_t, to_t)
 
@@ -5447,7 +5430,7 @@ let explicit_decl_require_strict cx m cxs_to =
   let from_t = Flow_js.mk_tvar cx reason in
   Flow_js.lookup_builtin cx (internal_module_name m) reason None from_t;
   cxs_to |> List.iter (fun cx_to ->
-    let to_t = lookup_module cx_to m in
+    let to_t = Flow_js.lookup_module cx_to m in
     Flow_js.flow cx (from_t, to_t)
   )
 

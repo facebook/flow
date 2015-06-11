@@ -60,16 +60,16 @@ val iter_props : context -> int -> (string -> Type.t -> unit) -> unit
 
 (* object/method types *)
 
-val mk_methodtype : Type.t -> Type.t list -> string list option ->
+val mk_methodtype : Type.t -> Type.t list -> ?params_names:string list ->
   Type.t -> Type.funtype
 
-val mk_methodtype2 : Type.t -> Type.t list -> string list option ->
+val mk_methodtype2 : Type.t -> Type.t list -> ?params_names:string list ->
   Type.t -> int -> Type.funtype
 
-val mk_functiontype : Type.t list -> string list option -> Type.t ->
+val mk_functiontype : Type.t list -> ?params_names:string list -> Type.t ->
   Type.funtype
 
-val mk_functiontype2 : Type.t list -> string list option -> Type.t ->
+val mk_functiontype2 : Type.t list -> ?params_names:string list -> Type.t ->
   int -> Type.funtype
 
 val dummy_this : Type.t
@@ -91,8 +91,9 @@ val static_method_call: context -> string -> reason -> string
 val mk_nominal: context -> int
 
 (* val graph: bounds IMap.t ref *)
-
-val do_gc: context -> Type.t list -> Type.t list -> unit
+val lookup_module: context -> string -> Type.t
+val analyze_dependencies: context -> string list -> string -> SSet.t
+val do_gc: context -> string list -> unit
 
 (* contexts *)
 val fresh_context:

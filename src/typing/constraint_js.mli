@@ -68,7 +68,6 @@ module Type :
       | EnumT of reason * t
 
       | TypeT of reason * t
-      | BecomeT of reason * t
 
       | SpeculativeMatchFailureT of reason * t * t
 
@@ -77,7 +76,7 @@ module Type :
       | SummarizeT of reason * t
 
       | CallT of reason * funtype
-      | MethodT of reason * name * t * t list * t * int
+      | MethodT of reason * name * funtype
       | SetT of reason * name * t
       | GetT of reason * name * t
       | SetElemT of reason * t * t
@@ -106,6 +105,7 @@ module Type :
       | ObjTestT of reason * t * t
 
       | UnifyT of t * t
+      | BecomeT of reason * t
 
       | ConcretizeT of t * t list * t list * t
       | ConcreteT of t

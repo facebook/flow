@@ -44,34 +44,34 @@ let dummy_prototype =
 let dummy_this =
   MixedT (reason_of_string "global object")
 
-let mk_methodtype this tins pnames tout = {
+let mk_methodtype this tins ?params_names tout = {
   this_t = this;
   params_tlist = tins;
-  params_names = pnames;
+  params_names;
   return_t = tout;
   closure_t = 0
 }
 
-let mk_methodtype2 this tins pnames tout j = {
+let mk_methodtype2 this tins ?params_names tout j = {
   this_t = this;
   params_tlist = tins;
-  params_names = pnames;
+  params_names;
   return_t = tout;
   closure_t = j
 }
 
-let mk_functiontype tins pnames tout = {
+let mk_functiontype tins ?params_names tout = {
   this_t = dummy_this;
   params_tlist = tins;
-  params_names = pnames;
+  params_names;
   return_t = tout;
   closure_t = 0
 }
 
-let mk_functiontype2 tins pnames tout j = {
+let mk_functiontype2 tins ?params_names tout j = {
   this_t = dummy_this;
   params_tlist = tins;
-  params_names = pnames;
+  params_names;
   return_t = tout;
   closure_t = j
 }
@@ -94,16 +94,6 @@ let mk_objecttype ?(flags=default_flags) dict map proto = {
   props_tmap = map;
   proto_t = proto
 }
-
-
-module GroundIDSet = Set.Make(struct
-  type t = Ident.t * bool
-  let compare (i1, b1) (i2, b2) =
-    let i = Ident.compare i1 i2 in
-    if i = 0 then Pervasives.compare b1 b2
-    else i
-end)
-
 
 (**************************************************************)
 
@@ -553,7 +543,7 @@ let rec merge_type cx = function
       FunT (
         reason_of_string "function",
         dummy_static, dummy_prototype,
-        mk_functiontype tins None tout
+        mk_functiontype tins tout
       )
 
   | (ObjT (_,ot1), ObjT (_,ot2)) ->
@@ -637,7 +627,7 @@ and ground_type_impl cx ids t = match t with
       FunT (
         reason_of_string "function",
         dummy_static, dummy_prototype,
-        mk_functiontype tins params_names tout
+        mk_functiontype tins ?params_names tout
       )
 
   | ObjT (_, ot) ->
@@ -998,152 +988,35 @@ let check_types cx id f =
   let types = possible_types cx id in
   List.exists f types
 
-let blame_map = ref IMap.empty
+(** The following functions do "shallow" walks over types, respectively from
+    requires and from exports, in order to report missing annotations. There are
+    some opportunities for future work:
 
-(* Mark a type variable if it depends on a `require`d module. This function is
-   used in assert_ground to relax missing annotation errors when an exported
-   type contains type variables that depend on a required module: e.g., when the
-   superclass of an exported class is `require`d, we should not insist on an
-   annotation for the superclass! *)
-let is_required cx id = IMap.mem id !blame_map
+    - Rewrite these functions using a type visitor class.
 
-(* need to consider only "def" types *)
-let rec assert_ground ?(infer=false) cx ids = function
-  | BoundT _ -> ()
-
-  | OpenT (_, id) when GroundIDSet.mem (id, infer) !ids -> ()
-  | OpenT (reason_open, id) ->
-      ids := !ids |> GroundIDSet.add (id, infer);
-      (* Type variables that are not forced to be annotated include those that
-         are dependent on requires, or whose reasons indicate that they are
-         derivable. The latter category includes annotations and builtins. *)
-      if not (is_required cx id || is_derivable_reason reason_open)
-      then
-        if infer
-        then
-          let types = possible_types cx id in
-          List.iter (assert_ground cx ids) types
-        else
-          (* Disabling. This computation is based off inadequate, infer-only
-             information. In contrast, a type-at-pos computation would also take
-             into account information during the merge phase. *)
-          (*
-          let tmap = distinct_possible_types cx id in
-          let possible_types = List.rev (
-            SMap.fold (fun desc (t, count) list ->
-              let desc = match count with
-                | 1 -> desc
-                | 2 -> desc ^ " (1 more site)"
-                | _ -> spf "%s (%d more sites)" desc count
-              in
-              ((reason_of_t t), desc) :: list
-            ) tmap []
-          ) in
-          *)
-          let possible_types = [] in
-          let msg = if possible_types = []
-            then "Missing annotation"
-            else "Missing annotation. Possible values:" in
-          let message_list = [
-            reason_open, spf "%s\n%s" (desc_of_reason reason_open) msg;
-          ] @ possible_types in
-          add_output cx Errors_js.WARNING message_list
-
-  | NumT _
-  | StrT _
-  | BoolT _
-  | UndefT _
-  | MixedT _
-  | AnyT _
-  | NullT _
-  | VoidT _
-    ->
-      ()
-
-  | FunT (reason, _, _, { params_tlist = params; return_t = ret; _ }) ->
-      let f = assert_ground cx ids in
-      List.iter f params;
-      f ret
-
-  | PolyT (xs,t) ->
-      assert_ground cx ids t
-
-  | ObjT (reason, { props_tmap = id; _ }) ->
-      iter_props cx id (fun _ -> assert_ground ~infer:true cx ids)
-
-  | ArrT (reason, t, ts) ->
-      assert_ground cx ids t;
-      ts |> List.iter (assert_ground cx ids)
-
-  | ClassT t -> assert_ground cx ids t
-
-  | TypeT (reason, t) -> assert_ground cx ids t
-
-  | InstanceT (reason, static, super, instance) ->
-      let f = assert_ground cx ids in
-      iter_props cx instance.fields_tmap (fun _ -> f);
-      iter_props cx instance.methods_tmap (fun _ -> f);
-      f super
-
-  | RestT (t) -> assert_ground cx ids t
-
-  | OptionalT (t) -> assert_ground cx ids t
-
-  | TypeAppT(c,ts) ->
-      assert_ground ~infer:true cx ids c;
-      List.iter (assert_ground cx ids) ts
-
-  | MaybeT(t) -> assert_ground cx ids t
-
-  | IntersectionT(reason,ts) ->
-      List.iter (assert_ground cx ids) ts
-
-  | UnionT(reason,ts) ->
-      List.iter (assert_ground cx ids) ts
-
-  | UpperBoundT(t) ->
-      assert_ground cx ids t
-
-  | LowerBoundT(t) ->
-      assert_ground cx ids t
-
-  | AnyObjT _ -> ()
-  | AnyFunT _ -> ()
-
-  | ShapeT(t) ->
-      assert_ground cx ids t
-  | DiffT(t1, t2) ->
-      assert_ground cx ids t1;
-      assert_ground cx ids t2
-
-  | EnumT(reason,t) ->
-      assert_ground cx ids t
-
-  | CJSExportDefaultT (reason,t) ->
-      assert_ground ~infer:true cx ids t
-
-  | t -> failwith (streason_of_t t) (** TODO **)
+    - Consider using gc to crawl the graph further down from requires, and
+    maybe also up from exports. Preliminary experiments along those lines
+    suggest that a general walk doesn't always give expected results. As an
+    example in one direction, the signature of a class is reachable from a
+    `require`d superclass, but the corresponding constraint simply checks for
+    consistency of overrides, and should not relax reporting missing annotations
+    in the signature. As an example in the other direction, an exported function
+    may have an open `this` type that we cannot expect to be annotated.
+**)
 
 (* To avoid complaining about "missing" annotations where external types are
-   used in the exported type, we mark requires and their uses as types, and if
-   (and only if) we encounter such uses in the exported type, we record strict
-   dependencies on those requires instead. Currently, we mark requires or their
-   uses as types only when they are directly part of the exported type. In the
-   future we may consider using gc to crawl the graph further down from
-   requires---and maybe also up from exports---but preliminary experiments along
-   those lines suggest that the rules then becomes hard to
-   explain/understand/justify. For now, we have simpler but stricter rules,
-   leaving further relaxing of these rules for future work. *)
+   used in the exported type, we mark requires and their uses as types. *)
+
 let rec assume_ground cx ids = function
   | OpenT(_,id) ->
-      assume_ground_ cx ids id
+      assume_ground_id cx ids id
 
   (* The subset of operations to crawl. The type variables denoting the results
      of these operations would be ignored by the is_required check in
      `assert_ground`. *)
   | SummarizeT(_,t)
   | CallT(_,{ return_t = t; _ })
-  | MethodT(_,_,_,_,t,_)
+  | MethodT(_,_,{ return_t = t; _})
   | GetT(_,_,t)
   | GetElemT(_,_,t)
   | ConstructorT(_,_,t)
@@ -1162,7 +1035,7 @@ let rec assume_ground cx ids = function
 
   | _ -> ()
 
-and assume_ground_ cx ids id =
+and assume_ground_id cx ids id =
   if not (ISet.mem id !ids) then (
     ids := !ids |> ISet.add id;
     let constraints = find_graph cx id in
@@ -1172,33 +1045,132 @@ and assume_ground_ cx ids id =
         assume_ground cx ids t
       );
       uppertvars |> IMap.iter (fun id _ ->
-        assume_ground_ cx ids id
+        assume_ground_id cx ids id
       )
     | Resolved t ->
       assume_ground cx ids t
   )
 
+(* Walk the graph from exports and report missing annotations for type variables
+   encountered. Type variables that are in a given list are skipped: these are
+   marked above as depending on `require`d modules. Thus, e.g., when
+   the superclass of an exported class is `require`d, we should not insist on an
+   annotation for the superclass. *)
+
+(* need to consider only "def" types *)
+let rec assert_ground ?(infer=false) cx skip ids = function
+  | BoundT _ -> ()
+
+  (* Type variables that are not forced to be annotated include those that
+     are dependent on requires, or whose reasons indicate that they are
+     derivable. The latter category includes annotations and builtins. *)
+  | OpenT (reason_open, id)
+      when (ISet.mem id skip || is_derivable_reason reason_open)
+        -> ()
+
+  | OpenT (_, id) when infer ->
+      if not (ISet.mem id !ids)
+      then (
+        ids := !ids |> ISet.add id;
+        let types = possible_types cx id in
+        List.iter (assert_ground cx skip ids) types
+      )
+
+  | OpenT (reason_open, id) ->
+      let message_list = [
+      (* print out id to debug *)
+        reason_open,
+        spf "%s\nMissing annotation" (desc_of_reason reason_open)
+      ] in
+      add_output cx Errors_js.WARNING message_list
+
+  | NumT _
+  | StrT _
+  | BoolT _
+  | UndefT _
+  | MixedT _
+  | AnyT _
+  | NullT _
+  | VoidT _
+    ->
+      ()
+
+  | FunT (reason, _, _, { params_tlist = params; return_t = ret; _ }) ->
+      let f = assert_ground cx skip ids in
+      List.iter f params;
+      f ret
+
+  | PolyT (xs,t) ->
+      assert_ground cx skip ids t
+
+  | ObjT (reason, { props_tmap = id; _ }) ->
+      iter_props cx id (fun _ -> assert_ground ~infer:true cx skip ids)
+
+  | ArrT (reason, t, ts) ->
+      assert_ground cx skip ids t;
+      ts |> List.iter (assert_ground cx skip ids)
+
+  | ClassT t -> assert_ground cx skip ids t
+
+  | TypeT (reason, t) -> assert_ground cx skip ids t
+
+  | InstanceT (reason, static, super, instance) ->
+      let f = assert_ground cx skip ids in
+      iter_props cx instance.fields_tmap (fun _ -> f);
+      iter_props cx instance.methods_tmap (fun _ -> f);
+      f super
+
+  | RestT (t) -> assert_ground cx skip ids t
+
+  | OptionalT (t) -> assert_ground cx skip ids t
+
+  | TypeAppT(c,ts) ->
+      assert_ground ~infer:true cx skip ids c;
+      List.iter (assert_ground cx skip ids) ts
+
+  | MaybeT(t) -> assert_ground cx skip ids t
+
+  | IntersectionT(reason,ts) ->
+      List.iter (assert_ground cx skip ids) ts
+
+  | UnionT(reason,ts) ->
+      List.iter (assert_ground cx skip ids) ts
+
+  | UpperBoundT(t) ->
+      assert_ground cx skip ids t
+
+  | LowerBoundT(t) ->
+      assert_ground cx skip ids t
+
+  | AnyObjT _ -> ()
+  | AnyFunT _ -> ()
+
+  | ShapeT(t) ->
+      assert_ground cx skip ids t
+  | DiffT(t1, t2) ->
+      assert_ground cx skip ids t1;
+      assert_ground cx skip ids t2
+
+  | EnumT(reason,t) ->
+      assert_ground cx skip ids t
+
+  | CJSExportDefaultT (reason,t) ->
+      assert_ground ~infer:true cx skip ids t
+
+  | t -> failwith (streason_of_t t) (** TODO **)
+
+let lookup_module cx m =
+  SMap.find_unsafe m cx.modulemap
+
 let enforce_strict cx id constraints =
+  let skip_ids = ref ISet.empty in
   SSet.iter (fun r ->
     let tvar = SMap.find_unsafe r cx.modulemap in
-    let ids = ref ISet.empty in
-    assume_ground cx ids tvar;
-    !ids |> ISet.iter (fun id ->
-      let rs = match IMap.get id !blame_map with
-        | None -> SSet.singleton r
-        | Some rs -> SSet.add r rs
-      in
-      blame_map := !blame_map |> IMap.add id rs
-    );
+    assume_ground cx skip_ids tvar
   ) cx.required;
 
-  (* TODO: finer analysis to infer strict dependencies *)
-  cx.strict_required <- cx.required;
-
-  let ids = ref (GroundIDSet.singleton (id, false)) in
-  types_of constraints |> List.iter (assert_ground cx ids);
-
-  blame_map := IMap.empty
+  let ids = ref (ISet.singleton id) in
+  types_of constraints |> List.iter (assert_ground cx !skip_ids ids)
 
 (**************)
 (* builtins *)
@@ -1983,7 +1955,7 @@ let rec __flow cx (l, u) trace =
       (* call this.constructor(args) *)
       rec_flow cx trace (
         this,
-        MethodT (reason_op, "constructor", this, args, VoidT.t, 0)
+        MethodT (reason_op, "constructor", mk_methodtype this args VoidT.t)
       );
       (* return this *)
       rec_flow cx trace (this, t);
@@ -2092,7 +2064,7 @@ let rec __flow cx (l, u) trace =
     (********************************)
 
     | InstanceT (reason_c, static, super, instance),
-      MethodT (reason_op, x, this, tins2, tout2, j)
+      MethodT (reason_op, x, funtype)
       -> (* TODO: closure *)
       Ops.push reason_op;
       let fields_tmap = find_props cx instance.fields_tmap in
@@ -2101,7 +2073,7 @@ let rec __flow cx (l, u) trace =
       let funt = mk_tvar cx reason_op in
       let strict = if instance.mixins then None else Some reason_c in
       get_prop cx trace reason_op strict super x methods funt;
-      let callt = CallT (reason_op, mk_methodtype2 this tins2 None tout2 j) in
+      let callt = CallT (reason_op, funtype) in
       rec_flow cx trace (funt, callt);
       Ops.pop ();
 
@@ -2297,7 +2269,7 @@ let rec __flow cx (l, u) trace =
     (* ... and their methods called *)
     (********************************)
 
-    | (ObjT _, MethodT(_, "constructor", _, _, _, _)) -> ()
+    | (ObjT _, MethodT(_, "constructor", _)) -> ()
 
     | (ObjT (reason_o, {
       flags;
@@ -2305,12 +2277,12 @@ let rec __flow cx (l, u) trace =
       proto_t = proto;
       dict_t;
     }),
-       MethodT(reason_op,x,this,tins,tout,j))
+       MethodT(reason_op,x,funtype))
       ->
       let strict = mk_strict flags.sealed (dict_t <> None) reason_o reason_op in
       let t = ensure_prop cx strict mapr x proto reason_o reason_op trace in
       dictionary cx trace (string_key x reason_op) t dict_t;
-      let callt = CallT (reason_op, mk_methodtype2 this tins None tout j) in
+      let callt = CallT (reason_op, funtype) in
       rec_flow cx trace (t, callt)
 
     (******************************************)
@@ -2399,7 +2371,7 @@ let rec __flow cx (l, u) trace =
       rec_flow cx trace (AnyT.why reason_op, tout)
 
     | (ArrT _,
-       (SetT(_,"constructor",_) | MethodT(_,"constructor",_,_,_,_))) -> ()
+       (SetT(_,"constructor",_) | MethodT(_,"constructor",_))) -> ()
 
     (***********************************************)
     (* functions may have their prototypes written *)
@@ -2428,17 +2400,19 @@ let rec __flow cx (l, u) trace =
     (* functions may be called by passing a receiver and arguments *)
     (***************************************************************)
 
-    | (FunT _, MethodT(reason_op,"call",_,o2::tins2,tout2,_))
+    | (FunT _,
+       MethodT(reason_op, "call", ({params_tlist=o2::tins2; _} as funtype)))
       -> (* TODO: closure *)
 
-      let funtype = mk_methodtype o2 tins2 None tout2 in
+      let funtype = { funtype with this_t = o2; params_tlist = tins2 } in
       rec_flow cx trace (l, CallT (prefix_reason "call " reason_op, funtype))
 
     (*******************************************)
     (* ... or a receiver and an argument array *)
     (*******************************************)
 
-    | (FunT _, MethodT(reason_op,"apply",_,[o2;tinsArr2],tout2,_))
+    | (FunT _,
+       MethodT(reason_op,"apply",({params_tlist=[o2;tinsArr2]; _} as funtype)))
       -> (* TODO: closure *)
 
       let reason = replace_reason "element of arguments" reason_op in
@@ -2446,7 +2420,7 @@ let rec __flow cx (l, u) trace =
 
       rec_flow cx trace (tinsArr2, ArrT(reason,elem,[]));
 
-      let funtype = mk_methodtype o2 [RestT elem] None tout2 in
+      let funtype = { funtype with this_t = o2; params_tlist = [RestT elem] } in
       rec_flow cx trace (l, CallT(prefix_reason "apply " reason_op, funtype))
 
     (************************************************************************)
@@ -2455,17 +2429,17 @@ let rec __flow cx (l, u) trace =
 
     | (FunT (reason,_,_,
              {this_t = o1; params_tlist = tins1; return_t = tout1; _}),
-       MethodT(reason_op,"bind",_,o2::tins2,tout2,_))
+       MethodT(reason_op ,"bind", ({params_tlist=o2::tins2; _} as funtype)))
       -> (* TODO: closure *)
 
-      rec_flow cx trace (o2,o1);
+        rec_flow cx trace (o2,o1);
 
         let tins1 = multiflow cx trace (u, l) ~strict:false (tins2,tins1) in
 
         rec_flow cx trace (
           FunT(reason_op, dummy_static, dummy_prototype,
-               mk_functiontype tins1 None tout1),
-          tout2)
+               mk_functiontype tins1 tout1),
+          funtype.return_t)
 
     (***********************************************)
     (* You can use a function as a callable object *)
@@ -4291,7 +4265,7 @@ and instantiate_type t =
 and static_method_call cx name reason m argts =
   let cls = get_builtin cx name reason in
   mk_tvar_where cx reason (fun tvar ->
-    flow_opt cx (cls, MethodT(reason, m, cls, argts, tvar, 0))
+    flow_opt cx (cls, MethodT(reason, m, mk_methodtype cls argts tvar))
   )
 
 (** TODO: this should rather be moved close to ground_type_impl/resolve_type
@@ -4318,14 +4292,6 @@ and resolve_builtin_class cx = function
 and set_builtin cx x t =
   let reason = builtin_reason x in
   flow_opt cx (builtins, SetT(reason,x,t))
-
-and module_t cx m reason =
-  match SMap.get m cx.modulemap with
-  | Some t -> t
-  | None ->
-    mk_tvar_where cx reason (fun t ->
-      cx.modulemap <- cx.modulemap |> SMap.add m t;
-    )
 
 (* Wrapper functions around __flow that manage traces. Use these functions for
    all recursive calls in the implementation of __flow. *)
@@ -4374,405 +4340,427 @@ and flow cx (lower, upper) =
 let unify cx t1 t2 =
   rec_unify cx (unit_trace t1 t2) t1 t2
 
-type gc_state = {
-  mutable positive: ISet.t;
-  mutable negative: ISet.t;
-  mutable objs: ISet.t;
-}
+(********* Garbage collection *********)
 
-let gc_state = {
-  positive = ISet.empty;
-  negative = ISet.empty;
-  objs = ISet.empty;
-}
+(** Garbage collection (GC) for graphs refers to the act of "marking" reachable
+    type variables from a given set of "roots," by following links between type
+    variables and traversing their concrete bounds. There are two GC modes.
 
-(* WARNING: unsafe access of bounds of a tvar, throws unless the tvar is an
-   unresolved root (see comment on bounds_of_resolved_root). This is a temporary
-   utility until gc is resurrected in a follow-up diff. *)
-let unsafe_access_bounds cx id =
-  cx.graph |> IMap.find_unsafe id |> bounds_of_unresolved_root
+    - FullRecursive, where we mark all dependencies, including links between
+    type variables.
 
-(** TODO: this is out of date!!!!!!!!!!!!!!!!!!!!! **)
-let rec gc cx polarity = function
+    - OptRecursive, where we mark only those dependencies that may contribute to
+    errors. In particular, only type variables that are indirectly reachable via
+    concrete bounds are marked; directly reachable type variables via links are
+    not marked, since Flow's algorithm ensures that their concrete bounds are
+    already propagated.
 
-  | OpenT(reason, id) ->
-      let bounds = unsafe_access_bounds cx id in
-      if (polarity)
-      then
-        if (ISet.mem id gc_state.positive)
-        then ()
-        else (
-          gc_state.positive <- gc_state.positive |> ISet.add id;
-          bounds.lower |> TypeMap.iter (fun t _ -> gc cx true t)
-        )
-      else
-        if (ISet.mem id gc_state.negative)
-        then ()
-        else (
-          gc_state.negative <- gc_state.negative |> ISet.add id;
-          bounds.upper |> TypeMap.iter (fun t _ -> gc cx false t)
-        )
+    The two GC modes are used for different purposes. FullRecursive is used for
+    computing "strict requires": the subset of requires that exports depend
+    on. OptRecursive is used for pruning the graph, i.e., removing type
+    variables in a graph that make no difference when the graph is merged with
+    other graphs through its requires and exports.
+**)
+type gc_mode =
+| FullRecursive
+| OptRecursive
+
+(* State carried by GC, which includes most importantly a set of type variables
+   marked as reachable. *)
+class gc_state ~(mode: gc_mode) = object(this)
+  method mode = mode
+
+  val mutable _markedset = ISet.empty
+
+  method markedset =
+    _markedset
+
+  method marked id =
+    ISet.mem id _markedset
+
+  method mark id =
+    if this#marked id then false
+    else (
+      _markedset <- _markedset |> ISet.add id;
+      true
+    )
+end
+
+(* GC can be made more precise by respecting "polarity," which is just a fancy
+   name that indicates the direction of walking: when a type variable is
+   reached, we can walk only its lower bounds or its upper bounds based on the
+   direction of the walk at that point.
+
+   However, a directed walk requires determining the polarity of every part of
+   every type. For some types, like those for functions, objects, arrays,
+   etc. this is fairly standard. But for several other types, it is non-trivial
+   to determine polarity: to do so, we need to carefully analyze how they appear
+   in the flow rules, and whether their parts switch sides when those rules are
+   simplified. Determining the wrong polarity in even one case can lead to
+   hard-to-find bugs: at best, things crash because a type variable is reached
+   that was marked unreachable, leading to a crash; at worst, a dependency is
+   missed, leading to missed errors.
+
+   Thus, do a conservative version of GC for now, that is undirected.
+*)
+let rec gc cx state = function
+  | OpenT(_, id) ->
+      gc_id cx state id
+
+  (** def types **)
+
+  | NumT _
+  | StrT _
+  | BoolT _
+  | UndefT _
+  | MixedT _
+  | AnyT _
+  | NullT _
+  | VoidT _
+      -> ()
 
   | FunT(_, static, prototype, funtype) ->
-      gc cx (not polarity) funtype.this_t;
-      funtype.params_tlist |> List.iter (gc cx (not polarity));
-      gc cx polarity funtype.return_t;
-      gc_undirected cx prototype;
-      gc cx polarity static
-
-  | CallT(_, funtype) ->
-      gc cx (not polarity) funtype.this_t;
-      funtype.params_tlist |> List.iter (gc cx (not polarity));
-      gc cx polarity funtype.return_t
+      gc cx state funtype.this_t;
+      funtype.params_tlist |> List.iter (gc cx state);
+      gc cx state funtype.return_t;
+      gc cx state prototype;
+      gc cx state static
 
   | ObjT(_, objtype) ->
       let id = objtype.props_tmap in
-      gc_state.objs <- gc_state.objs |> ISet.add id;
-      iter_props cx id (fun _ -> gc_undirected cx);
+      iter_props cx id (fun _ -> gc cx state);
       (match objtype.dict_t with
-      | None -> ()
-      | Some { key; value; _ } ->
-        gc_undirected cx key;
-        gc_undirected cx value);
-      gc_undirected cx objtype.proto_t
-
-  | MethodT(_, _, this, params, ret, _) ->
-      gc cx (not polarity) this;
-      params |> List.iter (gc cx (not polarity));
-      gc cx polarity ret
-
-  | SetT(_, _, t) ->
-      gc cx (not polarity) t
-
-  | GetT(_, _, t) ->
-      gc cx polarity t
-
-  | ClassT(t) ->
-      gc cx polarity t
-
-  | InstanceT(_, static, super, instance) ->
-      iter_props cx instance.fields_tmap (fun _ -> gc_undirected cx);
-      iter_props cx instance.methods_tmap (fun _ -> gc_undirected cx);
-      gc cx polarity static;
-      gc cx polarity super
-
-  | TypeT(_, t) ->
-      gc_undirected cx t
-
-  | SuperT(_, instance) ->
-      iter_props cx instance.fields_tmap (fun _ -> gc_undirected cx);
-      iter_props cx instance.methods_tmap (fun _ -> gc cx (not polarity))
-
-  | ConstructorT(_, params, obj) ->
-      params |> List.iter (gc cx (not polarity));
-      gc_undirected cx obj
-
-  | ArrT(_, t, ts) ->
-      gc_undirected cx t;
-      ts |> List.iter (gc_undirected cx);
-
-  | SetElemT(_, i, t) ->
-      gc_undirected cx i;
-      gc cx (not polarity) t
-
-  | GetElemT(_, i, t) ->
-      gc_undirected cx i;
-      gc cx polarity t
-
-  | AdderT(_, t1, t2) ->
-      gc cx (not polarity) t1;
-      gc cx polarity t2
-
-  | RestT t ->
-      gc cx polarity t
-
-  | OptionalT t ->
-      gc cx polarity t
-
-  | PredicateT (pred, t) ->
-      gc_pred cx polarity pred;
-      gc cx polarity t
-
-  | EqT (_, t) ->
-      gc cx (not polarity) t
-
-  | MaybeT(t) ->
-      gc cx polarity t
-
-  | _ -> ()
-
-and gc_pred cx polarity = function
-
-  | AndP (p1,p2) ->
-      gc_pred cx polarity p1;
-      gc_pred cx polarity p2
-
-  | OrP (p1,p2) ->
-      gc_pred cx polarity p1;
-      gc_pred cx polarity p2
-
-  | NotP (p) ->
-      gc_pred cx polarity p
-
-  | InstanceofP t ->
-      gc cx (not polarity) t
-
-  | ConstructorP t ->
-      gc cx (not polarity) t
-
-  | _ -> ()
-
-
-and gc_undirected cx = function
-
-  | OpenT(reason, id) ->
-      let bounds = unsafe_access_bounds cx id in
-      if (ISet.mem id gc_state.positive)
-      then ()
-      else (
-        gc_state.positive <- gc_state.positive |> ISet.add id;
-        bounds.lower |> TypeMap.iter (fun t _ -> gc cx true t)
+        | None -> ()
+        | Some { key; value; _ } ->
+          gc cx state key;
+          gc cx state value;
       );
-      if (ISet.mem id gc_state.negative)
-      then ()
-      else (
-        gc_state.negative <- gc_state.negative |> ISet.add id;
-        bounds.upper |> TypeMap.iter (fun t _ -> gc cx false t)
-      )
-
-  | FunT(_, static, prototype, funtype) ->
-      gc_undirected cx funtype.this_t;
-      funtype.params_tlist |> List.iter (gc_undirected cx);
-      gc_undirected cx funtype.return_t;
-      gc_undirected cx prototype;
-      gc_undirected cx static
-
-  | CallT(_, funtype) ->
-      gc_undirected cx funtype.this_t;
-      funtype.params_tlist |> List.iter (gc_undirected cx);
-      gc_undirected cx funtype.return_t
-
-  | ObjT(_, objtype) ->
-      let id = objtype.props_tmap in
-      gc_state.objs <- gc_state.objs |> ISet.add id;
-      iter_props cx id (fun _ -> gc_undirected cx);
-      (match objtype.dict_t with
-      | None -> ()
-      | Some { key; value; _ } ->
-        gc_undirected cx key;
-        gc_undirected cx value);
-      gc_undirected cx objtype.proto_t
-
-  | MethodT(_, _, this, params, ret, _) ->
-      gc_undirected cx this;
-      params |> List.iter (gc_undirected cx);
-      gc_undirected cx ret
-
-  | SetT(_, _, t) ->
-      gc_undirected cx t
-
-  | GetT(_, _, t) ->
-      gc_undirected cx t
-
-  | ClassT(t) ->
-      gc_undirected cx t
-
-  | InstanceT(_, static, super, instance) ->
-      iter_props cx instance.fields_tmap (fun _ -> gc_undirected cx);
-      iter_props cx instance.methods_tmap (fun _ -> gc_undirected cx);
-      gc_undirected cx static;
-      gc_undirected cx super
-
-  | TypeT(_, t) ->
-      gc_undirected cx t
-
-  | SuperT(_, instance) ->
-      iter_props cx instance.fields_tmap (fun _ -> gc_undirected cx);
-      iter_props cx instance.methods_tmap (fun _ -> gc_undirected cx)
-
-  | ConstructorT(_, params, obj) ->
-      params |> List.iter (gc_undirected cx);
-      gc_undirected cx obj
+      gc cx state objtype.proto_t
 
   | ArrT(_, t, ts) ->
-      gc_undirected cx t;
-      ts |> List.iter (gc_undirected cx)
+      gc cx state t;
+      ts |> List.iter (gc cx state);
 
-  | SetElemT(_, i, t) ->
-      gc_undirected cx i;
-      gc_undirected cx t
+  | ClassT(t) ->
+      gc cx state t
 
-  | GetElemT(_, i, t) ->
-      gc_undirected cx i;
-      gc_undirected cx t
-
-  | AdderT(_, t1, t2) ->
-      gc_undirected cx t1;
-      gc_undirected cx t2
-
-  | RestT t ->
-      gc_undirected cx t
+  | InstanceT(_, static, super, instance) ->
+      instance.type_args |> SMap.iter (fun _ -> gc cx state);
+      iter_props cx instance.fields_tmap (fun _ -> gc cx state);
+      iter_props cx instance.methods_tmap (fun _ -> gc cx state);
+      gc cx state static;
+      gc cx state super
 
   | OptionalT t ->
-      gc_undirected cx t
+      gc cx state t
+
+  | RestT t ->
+      gc cx state t
+
+  | PolyT (typeparams, t) ->
+      typeparams |> List.iter (gc_typeparam cx state);
+      gc cx state t
+
+  | TypeAppT (t, ts) ->
+      gc cx state t;
+      ts |> List.iter (gc cx state)
+
+  | BoundT typeparam ->
+      gc_typeparam cx state typeparam
+
+  | ExistsT _ -> ()
+
+  | MaybeT t ->
+      gc cx state t
+
+  | IntersectionT (_, ts) ->
+      ts |> List.iter (gc cx state)
+
+  | UnionT (_, ts) ->
+      ts |> List.iter (gc cx state)
+
+  | UpperBoundT (t) ->
+      gc cx state t
+
+  | LowerBoundT (t) ->
+      gc cx state t
+
+  | AnyObjT _
+  | AnyFunT _
+      -> ()
+
+  | ShapeT t ->
+      gc cx state t
+
+  | DiffT (t1, t2) ->
+      gc cx state t1;
+      gc cx state t2;
+
+  | EnumT (_, t) ->
+      gc cx state t
+
+  | TypeT (_, t) ->
+      gc cx state t
+
+  | SpeculativeMatchFailureT (_, t1, t2) ->
+      gc cx state t1;
+      gc cx state t2
+
+  | CJSExportDefaultT (_, t) ->
+      gc cx state t
+
+  (** use types **)
+
+  | SummarizeT (_, t) ->
+      gc cx state t
+
+  | CallT(_, funtype) ->
+      gc cx state funtype.this_t;
+      funtype.params_tlist |> List.iter (gc cx state);
+      gc cx state funtype.return_t
+
+  | MethodT(_, _, funtype) ->
+      gc cx state funtype.this_t;
+      funtype.params_tlist |> List.iter (gc cx state);
+      gc cx state funtype.return_t
+
+  | SetT(_, _, t) ->
+      gc cx state t
+
+  | GetT(_, _, t) ->
+      gc cx state t
+
+  | SetElemT(_, i, t) ->
+      gc cx state i;
+      gc cx state t
+
+  | GetElemT(_, i, t) ->
+      gc cx state i;
+      gc cx state t
+
+  | ConstructorT(_, params, t) ->
+      params |> List.iter (gc cx state);
+      gc cx state t
+
+  | SuperT(_, instance) ->
+      instance.type_args |> SMap.iter (fun _ -> gc cx state);
+      iter_props cx instance.fields_tmap (fun _ -> gc cx state);
+      iter_props cx instance.methods_tmap (fun _ -> gc cx state)
+
+  | ExtendsT (t1, t2) ->
+      gc cx state t1;
+      gc cx state t2
+
+  | AdderT(_, t1, t2) ->
+      gc cx state t1;
+      gc cx state t2
+
+  | ComparatorT(_, t) ->
+      gc cx state t
 
   | PredicateT (pred, t) ->
-      gc_undirected_pred cx pred;
-      gc_undirected cx t
+      gc_pred cx state pred;
+      gc cx state t
 
   | EqT (_, t) ->
-      gc_undirected cx t
+      gc cx state t
 
-  | MaybeT(t) ->
-      gc_undirected cx t
+  | AndT (_, t1, t2) ->
+      gc cx state t1;
+      gc cx state t2
 
-  | _ -> ()
+  | OrT (_, t1, t2) ->
+      gc cx state t1;
+      gc cx state t2
 
-and gc_undirected_pred cx = function
+  | SpecializeT (_, ts, t) ->
+      ts |> List.iter (gc cx state);
+      gc cx state t
+
+  | LookupT (_, _, _, t) ->
+      gc cx state t
+
+  | ObjAssignT (_, t1, t2, _, _) ->
+      gc cx state t1;
+      gc cx state t2
+
+  | ObjFreezeT (_, t) ->
+      gc cx state t
+
+  | ObjRestT (_, _, t) ->
+      gc cx state t
+
+  | ObjSealT (_, t) ->
+      gc cx state t
+
+  | ObjTestT (_, t1, t2) ->
+      gc cx state t1;
+      gc cx state t2
+
+  | UnifyT (t1, t2) ->
+      gc cx state t1;
+      gc cx state t2
+
+  | BecomeT (_, t) ->
+      gc cx state t
+
+  | ConcretizeT (t1, ts1, ts2, t2) ->
+      gc cx state t1;
+      ts1 |> List.iter (gc cx state);
+      ts2 |> List.iter (gc cx state);
+      gc cx state t2
+
+  | ConcreteT (t) ->
+      gc cx state t
+
+  | KeyT (_, t) ->
+      gc cx state t
+
+  | HasT _ -> ()
+
+  | ElemT (_, t1, t2) ->
+      gc cx state t1;
+      gc cx state t2
+
+  | ImportModuleNsT (_, t) ->
+      gc cx state t
+
+  | ImportTypeT (_, t) ->
+      gc cx state t
+
+  | ExportDefaultT (_, t) ->
+      gc cx state t
+
+and gc_id cx state id =
+  let root_id, constraints = find_constraints cx id in (
+    if state#mark id then (
+      match constraints with
+      | Resolved t -> gc cx state t
+      | Unresolved bounds -> match state#mode with
+        | FullRecursive ->
+            bounds.lower |> TypeMap.iter (fun t _ -> gc cx state t);
+            bounds.upper |> TypeMap.iter (fun t _ -> gc cx state t);
+            bounds.lowertvars |> IMap.iter (fun id _ -> gc_id cx state id);
+            bounds.uppertvars |> IMap.iter (fun id _ -> gc_id cx state id);
+        | OptRecursive ->
+            bounds.lower |> TypeMap.iter (fun t _ -> gc cx state t);
+            bounds.upper |> TypeMap.iter (fun t _ -> gc cx state t);
+    )
+  );
+  state#mark root_id |> ignore
+
+and gc_typeparam cx state typeparam =
+  gc cx state typeparam.bound
+
+and gc_pred cx state = function
 
   | AndP (p1,p2) ->
-      gc_undirected_pred cx p1;
-      gc_undirected_pred cx p2
+      gc_pred cx state p1;
+      gc_pred cx state p2
 
   | OrP (p1,p2) ->
-      gc_undirected_pred cx p1;
-      gc_undirected_pred cx p2
+      gc_pred cx state p1;
+      gc_pred cx state p2
 
   | NotP (p) ->
-      gc_undirected_pred cx p
+      gc_pred cx state p
+
+  | ExistsP -> ()
 
   | InstanceofP t ->
-      gc_undirected cx t
+      gc cx state t
 
   | ConstructorP t ->
-      gc_undirected cx t
+      gc cx state t
 
-  | _ -> ()
+  | IsP _ -> ()
 
+(* Keep a reachable type variable around. *)
+let live cx state id =
+  let constraints = find_graph cx id in
+  match constraints with
+  | Resolved _ -> ()
+  | Unresolved bounds -> (
+      bounds.uppertvars <-
+        bounds.uppertvars |> IMap.filter (fun id _ -> state#marked id);
+      bounds.lowertvars <-
+        bounds.lowertvars |> IMap.filter (fun id _ -> state#marked id);
+    )
 
-
-let die cx tvar =
-  let bounds = unsafe_access_bounds cx tvar in
-  bounds.lowertvars |> IMap.iter (fun l _ ->
-    if (l = tvar)
-    then ()
-    else
-      let bounds_l = unsafe_access_bounds cx l in
-      bounds_l.uppertvars <-
-        IMap.remove tvar bounds_l.uppertvars
-  );
-  bounds.uppertvars |> IMap.iter (fun u _ ->
-    if (u = tvar)
-    then ()
-    else
-      let bounds_u = unsafe_access_bounds cx u in
-      bounds_u.lowertvars <-
-        IMap.remove tvar bounds_u.lowertvars
-  );
-  (if modes.verbose then prerr_endlinef "DEAD: %d" tvar);
-  cx.graph <- cx.graph |> IMap.remove tvar
-
-let kill_lower cx tvar =
-  let bounds = unsafe_access_bounds cx tvar in
-  bounds.lower <- TypeMap.empty;
-  bounds.lowertvars |> IMap.iter (fun l _ ->
-    if (l = tvar)
-    then ()
-    else
-      let bounds_l = unsafe_access_bounds cx l in
-      bounds_l.uppertvars <-
-        IMap.remove tvar bounds_l.uppertvars
-  );
-  bounds.lowertvars <-
-    IMap.singleton tvar (IMap.find_unsafe tvar bounds.lowertvars)
-
-let kill_upper cx tvar =
-  let bounds = unsafe_access_bounds cx tvar in
-  bounds.upper <- TypeMap.empty;
-  bounds.uppertvars |> IMap.iter (fun u _ ->
-    if (u = tvar)
-    then ()
-    else
-      let bounds_u = unsafe_access_bounds cx u in
-      bounds_u.lowertvars <-
-        IMap.remove tvar bounds_u.lowertvars
-  );
-  bounds.uppertvars <-
-    IMap.singleton tvar (IMap.find_unsafe tvar bounds.uppertvars)
-
-let die_obj cx id =
-  cx.property_maps <- cx.property_maps |> IMap.remove id
+(* Kill an unreachable type variable. *)
+let die cx id =
+  cx.graph <- cx.graph |> IMap.remove id
 
 (* flag controls in-module GC *)
 let cleanup_enabled = ref true
 
-let clear_gc_state () =
-  gc_state.positive <- ISet.empty;
-  gc_state.negative <- ISet.empty
-
-let cleanup cx =
+(* Prune the graph given a GC state contained marked type variables. *)
+let cleanup cx state =
   if !cleanup_enabled then (
-    cx.graph |> IMap.iter (fun tvar _ ->
-      if (ISet.mem tvar gc_state.positive || ISet.mem tvar gc_state.negative)
-      then (
-        if (not (ISet.mem tvar gc_state.positive))
-        then kill_lower cx tvar
-        else if (not (ISet.mem tvar gc_state.negative))
-        then kill_upper cx tvar
-        else
-          (if modes.verbose then prerr_endlinef "LIVE: %d" tvar)
-      )
-      else
-        die cx tvar
+    cx.graph |> IMap.iter (fun id _ ->
+      if state#marked id
+      then live cx state id
+      else die cx id
     );
-  (*
-    cx.property_maps |> IMap.iter (fun id _ ->
-      if (not (ISet.mem id gc_state.objs))
-      then die_obj cx id
-    )
-  *)
   )
 
-let ok_bound = function
-  | UnifyT _ -> false
-  | _ -> true
-
-let check_properties cx =
-  cx.property_maps |> IMap.iter (fun _ ->
-    SMap.iter (fun _ -> function
-
-      | OpenT(reason,id) ->
-          let bounds = unsafe_access_bounds cx id in
-          let no_def =
-            not (ISet.mem id gc_state.negative)
-            && TypeMap.is_empty
-              (bounds.lower |> TypeMap.filter (fun t _ -> ok_bound t))
-            && IMap.cardinal bounds.lowertvars = 1 in
-          let no_use =
-            not (ISet.mem id gc_state.positive)
-            && TypeMap.is_empty bounds.upper
-            && IMap.cardinal bounds.uppertvars = 1 in
-
-          (* DISABLED
-          if no_def && not no_use
-          then add_warning cx "This property is never defined." reason;
-          if no_use && not no_def
-          then add_warning cx "This property is never used." reason;
-          *) ignore no_def; ignore no_use
-
-      | _ -> ()
-    )
+(* Main entry point for graph pruning. *)
+let do_gc cx ms =
+  if cx.checked then (
+    let state = new gc_state ~mode:OptRecursive in
+    List.iter (gc cx state) (builtins::(List.map (lookup_module cx) ms));
+    cleanup cx state;
   )
 
-(* Disabling gc so that query/replace has complete information. *)
-let do_gc cx neg pos = ()
-(*
-  List.iter (gc cx false) neg;
-  List.iter (gc cx true) pos;
-  cleanup cx;
-  check_properties cx;
-  clear_gc_state ()
-*)
+(* Compute dependencies of a given module endpoint in the graph, storing the
+   results in a map from module names to GC states. *)
+let calc_dep cx dep_map m =
+  let state = new gc_state ~mode:FullRecursive in
+  gc cx state (lookup_module cx m);
+  SMap.add m state dep_map
+
+(* Determine if two module endpoints have a dependency between them. Such a
+   dependency is considered to exist when there is a type variable that is
+   reachable from both module endpoints. *)
+let connected dep_map m1 m2 =
+  let state1 = SMap.find_unsafe m1 dep_map in
+  let state2 = SMap.find_unsafe m2 dep_map in
+  not (ISet.is_empty (ISet.inter state1#markedset state2#markedset))
+
+(* Compute strict requires, i.e., the subset of requires (ins) that the exports
+   (out) depend on. A require is a strict require if there is a dependency
+   between it and the exports, and between it and some other strict require. *)
+let rec find_dependencies dep_map ins out =
+  let some_ins_and_out = walk dep_map ([], [out], ins, []) in
+  List.filter (fun m -> m <> out) some_ins_and_out
+
+(* The recursive computation of strict requires follows a Prim/Dijkstra-style
+   walk over the dependency edges between module endpoints. There is a
+   "frontier" with module endpoints for which not all dependency edges have been
+   explored. Module endpoints in the frontier are processed in turn. When a
+   dependency edge exists between a module endpoint in the frontier and a module
+   endpoint in "candidates", the latter is added to the frontier, otherwise it
+   is saved in "next_round" to be considered for the next module endpoint in the
+   frontier. When all dependency edges for a particular module endpoint in the
+   frontier are processed, it is added to the "result." *)
+and walk dep_map (result, frontier, candidates, next_round) =
+  match frontier, candidates with
+  | x::frontier, y::candidates ->
+      if connected dep_map x y
+      then walk dep_map (result, x::y::frontier, candidates, next_round)
+      else walk dep_map (result, x::frontier, candidates, y::next_round)
+  | x::frontier, [] ->
+      walk dep_map (x::result, frontier, next_round, [])
+  | [], _ ->
+      result
+
+(* Main entry point for computing strict requires. *)
+let analyze_dependencies cx ins out =
+  if cx.checked then (
+    let dep_map = List.fold_left (calc_dep cx) SMap.empty (out::ins) in
+    let strict_ins = find_dependencies dep_map ins out in
+    SSet.of_list strict_ins
+  ) else SSet.empty
 
 (* TODO: Think of a better place to put this *)
 let rec extract_members cx this_t =

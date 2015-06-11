@@ -152,9 +152,6 @@ module Type = struct
   (* type aliases *)
   | TypeT of reason * t
 
-  (* unifies with incoming concrete LB *)
-  | BecomeT of reason * t
-
   (* failure case for speculative matching *)
   | SpeculativeMatchFailureT of reason * t * t
 
@@ -170,7 +167,7 @@ module Type = struct
 
   (* operations on runtime values, such as functions, objects, and arrays *)
   | CallT of reason * funtype
-  | MethodT of reason * name * t * t list * t * int
+  | MethodT of reason * name * funtype
   | SetT of reason * name * t
   | GetT of reason * name * t
   | SetElemT of reason * t * t
@@ -213,6 +210,9 @@ module Type = struct
   (* Guarded unification (bidirectional).
      Remodel as unidirectional GuardT(l,u)? *)
   | UnifyT of t * t
+
+  (* unifies with incoming concrete lower bound *)
+  | BecomeT of reason * t
 
   (* manage a worklist of types to be concretized *)
   | ConcretizeT of t * t list * t list * t
@@ -730,6 +730,7 @@ let is_use = function
   | ObjFreezeT _
   | ObjRestT _
   | ObjSealT _
+  | ObjTestT _
   | UnifyT _
   | KeyT _
   | HasT _
@@ -858,7 +859,7 @@ let rec reason_of_t = function
 
   | CallT (reason, _)
 
-  | MethodT (reason,_,_,_,_,_)
+  | MethodT (reason,_,_)
   | SetT (reason,_,_)
   | GetT (reason,_,_)
 
@@ -1021,7 +1022,7 @@ let rec mod_reason_of_t f = function
 
   | CallT (reason, ft) -> CallT (f reason, ft)
 
-  | MethodT (reason, name, s, ts, t, n) -> MethodT(f reason, name, s, ts, t, n)
+  | MethodT (reason, name, ft) -> MethodT(f reason, name, ft)
   | SetT (reason, n, t) -> SetT (f reason, n, t)
   | GetT (reason, n, t) -> GetT (f reason, n, t)
 
@@ -1474,11 +1475,9 @@ let rec _json_of_t stack cx t = Json.(
       "funType", json_of_funtype stack cx funtype
     ]
 
-  | MethodT (_, name, this, param_types, return_type, closure_id) -> [
+  | MethodT (_, name, funtype) -> [
       "name", JString name;
-      "paramTypes", JList (List.map (_json_of_t stack cx) param_types);
-      "returnType", _json_of_t stack cx return_type;
-      "closureId", JInt closure_id
+      "funType", json_of_funtype stack cx funtype
     ]
 
   | SetT (_, name, t)
