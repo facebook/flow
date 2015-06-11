@@ -426,12 +426,7 @@ module Haste: MODULE_SYSTEM = struct
 
     match resolve_import file chosen_candidate with
     | Some(name) -> name
-    | None ->
-        (**
-         * TODO(jeffmo): Remove Haste_module_preprocessor once Flow 0.12 is
-         *               deployed
-         *)
-        Haste_module_preprocessor.preprocess_name chosen_candidate
+    | None -> chosen_candidate
 
   (* in haste, many files may provide the same module. here we're also
      supporting the notion of mock modules - allowed duplicates used as
