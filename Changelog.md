@@ -3,7 +3,7 @@
 Likely to cause new Flow errors:
 
 - Fixed a bug where declarations from libraries which are exported from one module are not checked properly in the module into which that module is imported (e.g. if `A.foo()` returns a `Promise`, and module B requires A and calls `A.foo()`, the return type of `A.foo()` was not being checked properly)
-- Fixed enforcement of Object and Function type annotation arity, so that Object<K, V> errors
+- Fixed enforcement of Object and Function type annotation arity, so that `Object<K, V>` errors
 - Restricted valid computed properties, such that only strings and numbers are allowed (notably, disallows `null` and `undefined`)
 
 New features:
