@@ -2125,7 +2125,8 @@ and stmt_toplevel_word env = function
       back env
 
 and stmt_list ~is_toplevel env =
-  let env = { env with char_break = env.char_break - 1 } in
+  (* -1 for the trailing semicolon *)
+  let env = {env with char_break = min env.char_break (env.char_size - 1)} in
   list env (stmt ~is_toplevel)
 
 and block ?(is_toplevel=false) env = wrap env begin function
@@ -2299,7 +2300,9 @@ and rhs_assign env =
         Try.one_line env
           (fun env -> space env; expr env)
           (fun env -> newline env; right env expr)
-    | Tword when !(env.last_str) = "array" || !(env.last_str) = "shape" ->
+    | Tword when
+          !(env.last_str) = "array" || !(env.last_str) = "shape" ||
+          !(env.last_str) = "tuple" ->
         back env;
         space env; expr env
     | Tword when next_token env = Tlcb ->
@@ -2329,6 +2332,8 @@ and rhs_assign env =
 
 and expr_paren env =
   expect "(" env;
+  (* an expr_paren is usually followed by `) {`, so take that into account *)
+  let env = {env with char_break = min env.char_break (env.char_size - 3)} in
   margin_set (!(env.char_pos) - 1) env expr;
   expect ")" env
 
@@ -2625,7 +2630,7 @@ and expr_atomic env =
 and expr_atomic_word env last_tok = function
   | "true" | "false" | "null" ->
       last_token env
-  | "array" | "shape" as v ->
+  | "array" | "shape" | "tuple" as v ->
       out v env;
       expect "(" env;
       right env array_body;
