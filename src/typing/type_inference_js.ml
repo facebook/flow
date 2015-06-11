@@ -3353,8 +3353,11 @@ and assignment_lhs cx = Ast.Pattern.(function
   | loc, Identifier i ->
       expression cx (loc, Ast.Expression.Identifier i)
 
-  | loc, Expression e ->
-      expression cx e
+  | _, Expression ((_, Ast.Expression.Member _) as m) ->
+      expression cx m
+
+  (* parser will error before we get here *)
+  | _ -> assert false
 )
 
 and assignment cx loc = Ast.Expression.(function
