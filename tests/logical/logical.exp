@@ -7,92 +7,92 @@ logical.js:23:12,16: boolean
 This type is incompatible with
 logical.js:22:23,28: number
 
-logical.js:73:12,20: boolean
+logical.js:101:12,20: boolean
 This type is incompatible with
-logical.js:71:23,28: string
+logical.js:99:23,28: string
 
-logical.js:73:25,30: boolean
+logical.js:101:25,30: boolean
 This type is incompatible with
-logical.js:71:23,28: string
+logical.js:99:23,28: string
 
-logical.js:81:12,20: boolean
+logical.js:109:12,20: boolean
 This type is incompatible with
-logical.js:79:23,28: number
+logical.js:107:23,28: number
 
-logical.js:89:12,25: boolean
+logical.js:117:12,25: boolean
 This type is incompatible with
-logical.js:87:24,29: number
+logical.js:115:24,29: number
 
-logical.js:96:12,12: boolean
+logical.js:124:12,12: boolean
 This type is incompatible with
-logical.js:95:32,37: string
+logical.js:123:32,37: string
 
-logical.js:120:12,12: boolean
+logical.js:148:12,12: boolean
 This type is incompatible with
-logical.js:118:23,28: string
+logical.js:146:23,28: string
 
-logical.js:148:12,15: boolean
+logical.js:176:12,15: boolean
 This type is incompatible with
-logical.js:147:23,28: number
+logical.js:175:23,28: number
 
-logical.js:253:12,12: boolean
+logical.js:281:12,12: boolean
 This type is incompatible with
-logical.js:251:23,28: string
+logical.js:279:23,28: string
 
-logical.js:263:22,26: boolean
+logical.js:291:22,26: boolean
 This type is incompatible with
-logical.js:262:4,18: union type
+logical.js:290:4,18: union type
 
-logical.js:287:22,26: boolean
+logical.js:315:22,26: boolean
 This type is incompatible with
-logical.js:286:4,18: union type
+logical.js:314:4,18: union type
 
-logical.js:294:12,16: boolean
+logical.js:322:12,16: boolean
 This type is incompatible with
-logical.js:293:44,53: array type
+logical.js:321:44,53: array type
 
-logical.js:301:12,12: number
+logical.js:329:12,12: number
 This type is incompatible with
-logical.js:300:44,53: array type
+logical.js:328:44,53: array type
 
-logical.js:301:17,21: boolean
+logical.js:329:17,21: boolean
 This type is incompatible with
-logical.js:300:44,53: array type
+logical.js:328:44,53: array type
 
-logical.js:320:18,21: boolean
+logical.js:348:18,21: boolean
 This type is incompatible with
-logical.js:318:24,29: number
+logical.js:346:24,29: number
 
-logical.js:333:13,17: boolean
+logical.js:361:13,17: boolean
 This type is incompatible with
-logical.js:328:24,29: number
+logical.js:356:24,29: number
 
-logical.js:343:18,21: boolean
+logical.js:371:18,21: boolean
 This type is incompatible with
-logical.js:341:24,29: number
+logical.js:369:24,29: number
 
-logical.js:353:13,13: number
+logical.js:381:13,13: number
 This type is incompatible with
-logical.js:351:42,47: string
+logical.js:379:42,47: string
 
-logical.js:355:21,25: boolean
+logical.js:383:21,25: boolean
 This type is incompatible with
-logical.js:351:42,47: string
+logical.js:379:42,47: string
 
-logical.js:356:13,17: boolean
+logical.js:384:13,17: boolean
 This type is incompatible with
-logical.js:351:42,47: string
+logical.js:379:42,47: string
 
-logical.js:369:13,13: number
+logical.js:397:13,13: number
 This type is incompatible with
-logical.js:367:42,47: string
+logical.js:395:42,47: string
 
-logical.js:371:22,25: boolean
+logical.js:399:22,25: boolean
 This type is incompatible with
-logical.js:367:42,47: string
+logical.js:395:42,47: string
 
-logical.js:372:13,16: boolean
+logical.js:400:13,16: boolean
 This type is incompatible with
-logical.js:367:42,47: string
+logical.js:395:42,47: string
 
 Found 24 errors

@@ -3386,6 +3386,10 @@ and filter_not_exists t = match t with
   | BoolT (r, Some _)
   | StrT (r, Some _)
   | ArrT (r, _, _)
+  | ObjT (r, _)
+  | AnyObjT r
+  | FunT (r, _, _, _)
+  | AnyFunT r
   | NumT (r, Some _) -> UndefT r
 
   (* unknown boolies become falsy *)

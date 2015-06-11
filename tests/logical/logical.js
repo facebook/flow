@@ -66,6 +66,34 @@ function logical2e(): string {
 }
 
 /**
+ * A literal on the left side of &&
+ */
+function logical2f(x: {a: number}): string {
+    return x && 'foo';
+}
+
+/**
+ * A literal on the left side of &&
+ */
+function logical2g(x: Object): string {
+    return x && 'foo';
+}
+
+/**
+ * A literal on the left side of &&
+ */
+function logical2h(x: (a: number) => number): string {
+    return x && 'foo';
+}
+
+/**
+ * A literal on the left side of &&
+ */
+function logical2i(x: Function): string {
+    return x && 'foo';
+}
+
+/**
  * An expression on the left side of &&
  */
 function logical3a(): string { // expected `: boolean`
