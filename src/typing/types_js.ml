@@ -600,6 +600,14 @@ let recheck genv env modified opts =
   let config = FlowConfig.get root in
   let modified = SSet.filter (Files_js.wanted config) modified in
 
+  let n = SSet.cardinal modified in
+    if n > 0
+    then prerr_endlinef "recheck %d files:" n;
+
+  let _ = SSet.fold (fun f i ->
+    if n > 0
+    then prerr_endlinef "%d/%d: %s" i n f; i + 1) modified 1 in
+
   (* clear errors for modified files and master *)
   clear_errors (Flow_js.master_cx.file :: SSet.elements modified);
 
@@ -655,7 +663,9 @@ let recheck genv env modified opts =
       let unmod_deps = deps unmodified_parsed inferred_set removed_modules in
 
       let n = SSet.cardinal unmod_deps in
-      prerr_endlinef "remerge %d dependent files:" n;
+        if n > 0
+        then prerr_endlinef "remerge %d dependent files:" n;
+      
       let _ = SSet.fold (fun f i ->
         prerr_endlinef "%d/%d: %s" i n f; i + 1) unmod_deps 1 in
 
