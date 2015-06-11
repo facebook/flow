@@ -22,10 +22,11 @@ async function baz() {
   // Promise<number> until nested-promise unwrap is fixed
   var a = await bar();
 
-  // should be ok, but currently gives Promise ~> number error
+  // TODO this is valid code, but currently gives Promise ~> number error
+  // due to lack of transitive Promise unwrap.
   var b: number = a;
 
   // should be number ~> string error, but currently gives
-  // Promise ~> string error
+  // Promise ~> string error for the same reason
   var c: string = a;
 }

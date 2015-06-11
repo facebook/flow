@@ -4927,9 +4927,16 @@ and mk_body id cx ~async param_types_map param_locs_map ret body this super =
 
   if not (has_return_exception_handler (fun () -> toplevels cx stmts))
   then (
-    let phantom_return_loc = before_pos (body_loc body) in
-    Flow_js.flow cx
-      (VoidT (mk_reason "return undefined" phantom_return_loc), ret)
+    let loc = loc_of_t ret in
+    let void_t = if async then
+      Flow_js.get_builtin_typeapp cx
+        (mk_reason "return Promise<void>" loc)
+        "Promise"
+        [VoidT.at loc]
+    else
+      VoidT (mk_reason "return undefined" loc)
+    in
+    Flow_js.flow cx (void_t, ret)
   );
 
   Env_js.pop_env();
@@ -5016,8 +5023,8 @@ and mk_params_ret cx map_ params (body_loc, ret_type_opt) =
   in
 
   let phantom_return_loc = before_pos body_loc in
-  let return_type =
-    mk_type_annotation_ cx map_ (mk_reason "return" phantom_return_loc) ret_type_opt in
+  let return_type = mk_type_annotation_ cx map_
+    (mk_reason "return" phantom_return_loc) ret_type_opt in
 
   (List.rev rev_param_types_list,
    List.rev rev_param_names,

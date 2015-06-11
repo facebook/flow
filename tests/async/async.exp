@@ -12,21 +12,41 @@ async.js:13:10,10: number
 This type is incompatible with
 async.js:12:30,33: boolean
 
-async2.js:7:11,21: await
-Error:
-async2.js:3:10,11: number
+async.js:46:22,25: undefined
 This type is incompatible with
-async2.js:9:10,15: string
+[LIB] core.js:343:1,370:1: Promise
+
+async2.js:10:11,21: await
+Error:
+async2.js:6:10,11: number
+This type is incompatible with
+async2.js:12:10,15: string
+
+async2.js:29:21,24: undefined
+This type is incompatible with
+[LIB] core.js:343:1,370:1: Promise
+
+async2.js:43:28,31: undefined
+This type is incompatible with
+[LIB] core.js:343:1,370:1: Promise
+
+async2.js:48:3,17: undefined
+This type is incompatible with
+async2.js:48:11,16: number
+
+async2.js:48:11,16: number
+This type is incompatible with
+async2.js:48:3,17: undefined
 
 async3.js:23:11,21: await
 Error:
-async3.js:26:10,15: number
+async3.js:27:10,15: number
 This type is incompatible with
 [LIB] core.js:343:1,370:1: Promise
 
 async3.js:23:11,21: await
 Error:
-async3.js:30:10,15: string
+async3.js:31:10,15: string
 This type is incompatible with
 [LIB] core.js:343:1,370:1: Promise
 
@@ -36,4 +56,4 @@ await_not_in_async2.js:6:9,9: Unexpected number
 
 await_not_in_async3.js:6:9,9: Unexpected number
 
-Found 9 errors
+Found 14 errors

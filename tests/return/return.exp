@@ -2,7 +2,7 @@
 function_return.js:4:17,17: return
 Missing annotation
 
-function_return.js:7:22,22: return undefined
+function_return.js:7:16,21: return undefined
 This type is incompatible with
 function_return.js:7:16,21: number
 

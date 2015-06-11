@@ -1,15 +1,15 @@
 async function f() {}
-async function ft<T>(a: T): void {}
+async function ft<T>(a: T) {}
 
 class C {
   async m() {}
-  async mt<T>(a: T): void {}
-  static async m(a): void {}
-  static async mt<T>(a: T): void {}
+  async mt<T>(a: T) {}
+  static async m(a) {}
+  static async mt<T>(a: T) {}
 }
 
 var e = async function () {};
-var et = async function<T> (a: T): void {};
+var et = async function<T> (a: T) {};
 
 var n = new async function() {};
 
