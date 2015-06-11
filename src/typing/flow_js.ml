@@ -3653,6 +3653,26 @@ and predicate cx trace t (l,p) = match (l,p) with
   (* (careful: this is backwards)                              *)
   (*************************************************************)
 
+  (** instanceof on an ArrT is a special case since we treat ArrT as its own
+      type, rather than an InstanceT of the Array builtin class. So, we resolve
+      the ArrT to an InstanceT of Array, and redo the instanceof check. We do
+      it at this stage instead of simply converting (ArrT, InstanceofP c)
+      to (InstanceT(Array), InstanceofP c) because this allows c to be resolved
+      first. *)
+  | (ClassT(InstanceT _ as a),
+     ConstructorP (ArrT (reason, elemt, _) as arr)) ->
+
+    let l = ClassT(ExtendsT(arr, a)) in
+    let arrt = get_builtin_typeapp cx reason "Array" [elemt] in
+    rec_flow cx trace (arrt, PredicateT(InstanceofP(l), t))
+
+  | (ClassT(InstanceT _ as a),
+     NotP(ConstructorP (ArrT (reason, elemt, _) as arr))) ->
+
+    let l = ClassT(ExtendsT(arr, a)) in
+    let arrt = get_builtin_typeapp cx reason "Array" [elemt] in
+    rec_flow cx trace (arrt, PredicateT(NotP(InstanceofP(l)), t))
+
   (** An object is considered `instanceof` a function F when it is constructed
       by F. Note that this is incomplete with respect to the runtime semantics,
       where instanceof is transitive: if F.prototype `instanceof` G, then the
