@@ -57,7 +57,7 @@ npm install react-tools@0.13.0-beta.2
 *Nothing! All `import type` declarations get stripped away just like other flow syntax.*
 
 #### **Can I use `import type` to pull in type aliases from another module, too?**
-~~*Not quite yet...but soon! There are a few other moving parts that we need to build first, but we're working on it.*~~
+~~Not quite yet...but soon! There are a few other moving parts that we need to build first, but we're working on it.~~
 
 EDIT: Yes! As of Flow 0.10 you can use the `export type MyType = ... ;` syntax to compliment the `import type` syntax. Here's a trivial example:
 
