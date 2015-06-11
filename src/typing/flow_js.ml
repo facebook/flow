@@ -4731,8 +4731,8 @@ let connected dep_map m1 m2 =
    (out) depend on. A require is a strict require if there is a dependency
    between it and the exports, and between it and some other strict require. *)
 let rec find_dependencies dep_map ins out =
-  let some_ins_and_out = walk dep_map ([], [out], ins, []) in
-  List.filter (fun m -> m <> out) some_ins_and_out
+  let some_ins_and_out = walk dep_map (SSet.empty, [out], ins, []) in
+  SSet.remove out some_ins_and_out
 
 (* The recursive computation of strict requires follows a Prim/Dijkstra-style
    walk over the dependency edges between module endpoints. There is a
@@ -4750,7 +4750,7 @@ and walk dep_map (result, frontier, candidates, next_round) =
       then walk dep_map (result, x::y::frontier, candidates, next_round)
       else walk dep_map (result, x::frontier, candidates, y::next_round)
   | x::frontier, [] ->
-      walk dep_map (x::result, frontier, next_round, [])
+      walk dep_map (SSet.add x result, frontier, next_round, [])
   | [], _ ->
       result
 
@@ -4758,8 +4758,7 @@ and walk dep_map (result, frontier, candidates, next_round) =
 let analyze_dependencies cx ins out =
   if cx.checked then (
     let dep_map = List.fold_left (calc_dep cx) SMap.empty (out::ins) in
-    let strict_ins = find_dependencies dep_map ins out in
-    SSet.of_list strict_ins
+    find_dependencies dep_map ins out
   ) else SSet.empty
 
 (* TODO: Think of a better place to put this *)
