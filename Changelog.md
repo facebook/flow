@@ -1,4 +1,4 @@
-###v0.12.0-dev
+###v0.12.0
 
 Likely to cause new Flow errors:
 
