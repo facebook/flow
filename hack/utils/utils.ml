@@ -338,6 +338,8 @@ let lstrip s prefix =
   then String.sub s prefix_length (String.length s - prefix_length)
   else s
 
+let string_of_char = String.make 1
+
 (*****************************************************************************)
 (* Same as List.iter2, except that we only iterate as far as the shortest
  * of both lists.

@@ -354,7 +354,7 @@ let apply_blocks ~should_patch filename blocks lines =
             first_hunk := false;
           end;
           print_hunk hunk;
-          if should_patch ()
+          if should_patch (old_lines, new_lines)
           then Buffer.add_string buf new_content
           else List.iter old_lines (add_line buf);
         end;
@@ -399,9 +399,11 @@ and apply_formatted apply_mode filepath formatted_content file_content
   let filename = Path.to_string filepath in
   let should_patch =
     if apply_mode <> Format_mode.Patch
-    then fun () -> true
-    else fun () ->
-      match Tty.read_choice "Apply this patch?" ['y'; 'n'; 'q'] with
+    then fun _ -> true
+    else fun (old_lines, new_lines) ->
+      let choice = Tty.read_choice "Apply this patch?" ['y'; 'n'; 'q'] in
+      FormatEventLogger.patch_choice filename (old_lines, new_lines) choice;
+      match choice with
       | 'y' -> true
       | 'n' -> false
       | 'q' -> raise Exit

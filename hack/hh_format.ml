@@ -269,6 +269,7 @@ let format_stdin modes from to_ =
 
 let () =
   SharedMem.(init default_config);
+  FormatEventLogger.init (Unix.time());
   PidLog.log_oc := Some (open_out "/dev/null");
   let files, from, to_, apply_mode, debug, diff, modes, root = parse_args() in
   match files with

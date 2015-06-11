@@ -9,6 +9,7 @@
  *)
 
 open Core
+open Utils
 
 type raw_color =
   | Default
@@ -87,10 +88,9 @@ let read_char () =
 (* Prompt the user to pick one character out of a given list. If other
  * characters are entered, the prompt repeats indefinitely. *)
 let read_choice message choices =
-  let char_to_string = String.make 1 in
   let rec loop () =
     Printf.printf "%s (%s)%!" message
-      (String.concat "|" (List.map choices char_to_string));
+      (String.concat "|" (List.map choices string_of_char));
     let choice = read_char () in
     print_newline ();
     if List.mem choices choice then choice else loop ()
