@@ -9,6 +9,10 @@ declare module R {
     export interface I { }
     var x : C
     var y : T.E
+
+    export enum Color {
+        R, G, B
+    }
 }
 
 declare module S {

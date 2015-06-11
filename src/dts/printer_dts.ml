@@ -58,6 +58,17 @@ let todo fmt =
       "#######"
 
 
+(* get_line_number returns a line number corresponding to a
+   location *)
+
+let get_line_number = Loc. (function
+  | { start; _ } -> start.line
+)
+
+let failwith_location loc str = failwith (
+  String.concat "" [sprintf "Line %d: " (get_line_number loc); str] )
+
+
 (* generate_mangled_name generates a new name for an inner level
    module so that it can be moved to global scope without any
    collisions of names with any other module definition.
@@ -200,13 +211,14 @@ and module_used_statement acc = Statement.(function
        export var z: typeof N.x
      }
   *)
-  | _, VariableDeclaration { VariableDeclaration.
+  | loc, VariableDeclaration { VariableDeclaration.
       declarations; _
     } -> VariableDeclaration.(
       match declarations with
       | [(_, {Declarator.id; _})] ->
         module_used_pattern acc id
-      | _ -> failwith "Only single declarator handled currently"
+      | _ -> failwith_location loc
+        "Only single declarator handled currently"
     )
   (* This case means that the child modules are imported by default.*)
   | _, ModuleDeclaration { Module.id; body; } ->
@@ -243,7 +255,8 @@ and module_used_statement acc = Statement.(function
 
 and module_used_pattern acc = Pattern.(function
   | _, Identifier id -> module_used_id acc id
-  | _ -> failwith "Only identifier allowed in variable declaration"
+  | loc, _ -> failwith_location loc
+    "Only identifier allowed in variable declaration"
 )
 
 and module_used_id acc = function
@@ -332,7 +345,7 @@ let find_child_modules acc prefix scope = Statement.(function
   | _, ExportModuleDeclaration { ExportModule.name; body; } ->
     let new_scope = get_modules_in_scope scope [name] body in
     List.append (filter_modules [name] new_scope body) acc
-  | _ -> failwith
+  | loc, _  -> failwith_location loc
     "Unexpected statement. A module declaration was expected"
 )
 
@@ -386,10 +399,10 @@ and print_module scope prefix fmt = Statement.(function
       (_list ~sep:"" (statement new_scope new_prefix))
       (filter_not_modules body)
 
-  | _, ExportModuleDeclaration { ExportModule.name; body; } ->
+  | loc, ExportModuleDeclaration { ExportModule.name; body; } ->
     (* ExportModuleDeclaration is allowed only in global scope, that
     is the prefix when an ExportModuleDeclaration is encoutered is ""  *)
-    if prefix <> [] then failwith
+    if prefix <> [] then failwith_location loc
       "Export Module Declaration allowed only in the global scope"
     else
       let new_scope = get_modules_in_scope scope [name] body in
@@ -402,7 +415,7 @@ and print_module scope prefix fmt = Statement.(function
         (_list ~sep:"" (statement scope prefix))
         (filter_not_modules body)
 
-  | _ -> todo fmt
+  | loc, _ -> failwith_location loc "Module declaration expected here"
 )
 and statement scope prefix fmt =
   Statement.(function
@@ -439,8 +452,31 @@ and statement scope prefix fmt =
         implements_class implements
         object_type (snd body)
 
-  | _ ->
-      todo fmt
+  (* The following case converts an enum declaration to a class with
+      static members of type "number"
+
+     Eg.
+
+     export enum Color { R, G, B }
+
+     converts to
+
+     declare class Color {
+       static R : number;
+       static G : number;
+       static B : number;
+     }
+  *)
+  | _, EnumDeclaration { Enum. name; members } ->
+    (* TODO: Write a doc explaining difference between enums and our
+       approximation for the same *)
+    let () = prerr_endline "Warning: The declaration file contains \
+       enums.\nEnums are converted to class with static members. More\
+       details here : <url for doc>\n" in
+    fprintf fmt "@[<v>declare class %a {@;<0 2>@[<v>%a@]@,}@]"
+      id_ name
+      (list_ ~sep:";" enum_member) members
+  | loc, _ -> failwith_location loc "This is not suppoerted yet"
 )
 
 and pattern fmt = Pattern.(function
@@ -621,3 +657,22 @@ and rest_ ?(follows=false) fmt = Type.Function.(function
 *)
 and import_module fmt = function
   | (x, y) -> fprintf fmt "declare var %s: $Exports<'%s'>;" x y
+
+(* The following helper function prints a member of enum as a static
+   memeber of the corresponding class. *)
+and enum_member fmt = Statement.Enum.(function
+  | _, { Member. name; _ } -> fprintf fmt "static %a : number"
+    enum_key name
+)
+
+(* We do not support computed members in enum. Although a TODO could
+   be to strip off the computation part and just print the
+   identifier. *)
+and enum_key fmt = Expression.Object.Property.(function
+  | Identifier id -> id_ fmt id
+  (* TODO: Handle the next line as error rather than raising an exception*)
+  | Literal (loc, _) -> failwith_location loc
+    "Literals are not allowed in Enums"
+  | Computed (loc, _) -> failwith_location loc
+        "Computed members in enums are not supported by Flow"
+)

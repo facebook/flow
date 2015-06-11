@@ -8,6 +8,11 @@ declare module R {
   }
   declare var x: C;
   declare var y: T.E;
+  declare class Color {
+    static R : number;
+    static G : number;
+    static B : number;
+  }
 }
 declare module R___T {
   declare var U: $Exports<'R___T___U'>;

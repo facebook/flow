@@ -11,3 +11,6 @@ var Module2 = require('Module2');
 var f : Module2.A = new Module2.A();
 var S = require('S');
 var variable : typeof S.z = new C();
+
+var x : number = R.Color.R; // R.Color.R is of type number
+// expected error : string ~> number

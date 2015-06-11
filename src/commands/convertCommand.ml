@@ -19,8 +19,11 @@ let call_succeeds try_function function_input =
   try
     try_function function_input;
     true
-  with _ ->
-    false
+  with
+  (* print failwith <msg> command's exception message *)
+  | Failure msg -> let () = prerr_endline msg in
+                   false
+  | _ -> false
 
 let convert_file one_line outpath file =
   let base = Filename.chop_suffix (Filename.basename file) dts_ext in
