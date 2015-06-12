@@ -8,7 +8,7 @@ Likely to cause new Flow errors:
 
 New features:
 
-- Added support for `for-of`
+- Added support for `for-of` and support for `Iterable` interface(s)
 - Added support for `async`/`await`
 - Added structural subtyping for interfaces -- anything can be an instance of an interface as long as it looks right
 - Added support for type annotations of the form `typeof x`, where `x` is the name of an in-scope variable
