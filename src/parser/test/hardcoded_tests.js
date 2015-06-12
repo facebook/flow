@@ -1121,7 +1121,7 @@ module.exports = {
     },
     'export default class A {}': {
       'body.0.declaration': {
-        'type': 'ClassExpression'
+        'type': 'ClassDeclaration'
       }
     }
   },
