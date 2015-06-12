@@ -192,7 +192,7 @@ let check_arity pos class_name class_type class_parameters =
 
 let make_substitution pos class_name class_type class_parameters =
   check_arity pos class_name class_type class_parameters;
-  Inst.make_subst Phase.decl class_type.tc_tparams class_parameters
+  Inst.make_subst class_type.tc_tparams class_parameters
 
 let constructor env subst (cstr, consistent) = match cstr with
   | None -> env, (None, consistent)

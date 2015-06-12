@@ -3468,7 +3468,7 @@ and get_implements ~with_checks (env: Env.env) ht =
           let size2 = List.length paraml in
           if size1 <> size2 then Errors.class_arity p class_.tc_pos c size1;
           let subst =
-            Inst.make_subst ~phase:Phase.decl class_.tc_tparams paraml in
+            Inst.make_subst class_.tc_tparams paraml in
           iter2_shortest begin fun (_, (p, _), cstr_opt) ty ->
             if with_checks then
               match cstr_opt with

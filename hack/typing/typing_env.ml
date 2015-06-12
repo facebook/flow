@@ -118,8 +118,7 @@ let get_type_unsafe env x =
       env, (Reason.none, Tany)
   | Some ty -> env, ty
 
-let expand_type: type a. _ -> a ty -> _ * a ty =
-  fun env x ->
+let expand_type env x =
   match x with
   | _, Tvar x -> get_type env x
   | x -> env, x

@@ -317,8 +317,8 @@ let check_class_implements env parent_class class_ =
   let parent_pos, parent_class, parent_tparaml = parent_class in
   let pos, class_, tparaml = class_ in
   let fully_known = class_.tc_members_fully_known in
-  let psubst = Inst.make_subst Phase.decl parent_class.tc_tparams parent_tparaml in
-  let subst = Inst.make_subst Phase.decl class_.tc_tparams tparaml in
+  let psubst = Inst.make_subst parent_class.tc_tparams parent_tparaml in
+  let subst = Inst.make_subst class_.tc_tparams tparaml in
   check_consts env parent_class class_ psubst subst;
   let pmemberl = make_all_members parent_class in
   let memberl = make_all_members class_ in

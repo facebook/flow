@@ -43,8 +43,7 @@ let this_of ty = Tgeneric (SN.Typehints.this, Some (Ast.Constraint_as, ty))
 (* Returns true if a type is optional *)
 (*****************************************************************************)
 
-let rec is_option: type a. _ -> a ty -> _ =
-  fun env ty ->
+let rec is_option env ty =
   let _, ety = Env.expand_type env ty in
   match snd ety with
   | Toption _ -> true

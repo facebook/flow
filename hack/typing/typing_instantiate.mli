@@ -15,7 +15,7 @@ open Typing_defs
 (*****************************************************************************)
 
 type env = Typing_env.env
-type 'a subst
+type subst
 
 (*****************************************************************************)
 (* Builds a substitution out of a list of type parameters and a list of types.
@@ -30,7 +30,7 @@ type 'a subst
  *)
 (*****************************************************************************)
 
-val make_subst: phase:'a Typing_phase.t -> tparam list -> 'a ty list -> 'a subst
+val make_subst: tparam list -> decl ty list -> subst
 
 (*****************************************************************************)
 (* Primitive instantiating a type.
@@ -38,7 +38,7 @@ val make_subst: phase:'a Typing_phase.t -> tparam list -> 'a ty list -> 'a subst
  *)
 (*****************************************************************************)
 
-val instantiate     : 'a subst -> env -> 'a ty -> env * 'a ty
-val instantiate_ce  : decl subst -> env -> class_elt -> env * class_elt
+val instantiate     : subst -> env -> decl ty -> env * decl ty
+val instantiate_ce  : subst -> env -> class_elt -> env * class_elt
 val instantiate_typeconst :
-  decl subst -> env -> typeconst_type -> env * typeconst_type
+  subst -> env -> typeconst_type -> env * typeconst_type

@@ -96,7 +96,7 @@ let check_arity pos class_name class_type class_parameters =
 
 let make_substitution pos class_name class_type class_parameters =
   check_arity pos class_name class_type class_parameters;
-  Inst.make_subst Phase.decl class_type.tc_tparams class_parameters
+  Inst.make_subst class_type.tc_tparams class_parameters
 
 (*-------------------------- end copypasta *)
 
@@ -253,7 +253,7 @@ let declared_class_req class_nast impls (env, requirements, req_extends) hint =
       (* since the req is declared on this class, we should
        * emphatically *not* substitute: a require extends Foo<T> is
        * going to be this class's <T> *)
-      let subst = Inst.make_subst Phase.decl [] [] in
+      let subst = Inst.make_subst [] [] in
       let ex_ty_opt = SMap.get req_name requirements in
       let env, merged = merge_single_req env subst
         req_ty ex_ty_opt req_pos in

@@ -44,7 +44,7 @@ val rename : env -> int -> int -> env
 val add : env -> int -> locl ty -> env
 val get_type : env -> int -> env * locl ty
 val get_type_unsafe : env -> int -> env * locl ty
-val expand_type : env -> 'a ty -> env * 'a ty
+val expand_type : env -> locl ty -> env * locl ty
 val expand_type_recorded : env -> ISet.t -> locl ty -> env * ISet.t * locl ty
 val make_ft : Pos.t -> decl fun_params -> decl ty -> decl fun_type
 val get_shape_field_name : Nast.shape_field_name -> string
