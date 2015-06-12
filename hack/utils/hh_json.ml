@@ -47,6 +47,25 @@ let buf_concat ~buf ~lb ~rb ~sep ~concat_elt l =
 let add_char buf c = Buffer.add_char buf c
 let add_string buf s = Buffer.add_string buf s
 
+let escape s =
+  let b = Buffer.create ((String.length s) + 2) in
+  Buffer.add_char b '"';
+  s |> String.iter begin fun c ->
+    let code = Char.code c in
+    match c, code with
+      | '\\', _ -> Buffer.add_string b "\\\\"
+      | '"', _ ->  Buffer.add_string b "\\\""
+      | '\n', _ -> Buffer.add_string b "\\n"
+      | '\r', _ -> Buffer.add_string b "\\r"
+      | '\t', _ -> Buffer.add_string b "\\t"
+      | _, _ when code <= 0x1f ->
+        Printf.sprintf "\\u%04x" code
+        |> Buffer.add_string b
+      | _ -> Buffer.add_char b c
+  end;
+  Buffer.add_char b '"';
+  Buffer.contents b
+
 let rec add_json_to_buffer (buf:Buffer.t) (json:json): unit =
   match json with
   | JList l ->
@@ -54,13 +73,13 @@ let rec add_json_to_buffer (buf:Buffer.t) (json:json): unit =
   | JAssoc l ->
       buf_concat ~buf ~lb:"{" ~rb:"}" ~sep:"," ~concat_elt:add_assoc_to_buffer l
   | JBool b -> if b then add_string buf "true" else add_string buf "false"
-  | JString s -> add_string buf (Printf.sprintf "%S" s)
+  | JString s -> add_string buf (escape s)
   | JNull -> add_string buf "null"
   | JInt i -> add_string buf (string_of_int i)
   | JFloat f -> add_string buf (string_of_float f)
 
 and add_assoc_to_buffer (buf:Buffer.t) (k,v) =
-  add_string buf (Printf.sprintf "%S" k);
+  add_string buf (escape k);
   add_char buf ':';
   add_json_to_buffer buf v
 
