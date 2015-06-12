@@ -721,7 +721,11 @@ module Translate = struct
               Js.Unsafe.inject (string flags);
             |]
           in
-          Js.Unsafe.set ret "value" regexp
+          Js.Unsafe.set ret "value" regexp;
+          let regex = new_obj () in
+          Js.Unsafe.set regex "pattern" (string pattern);
+          Js.Unsafe.set regex "flags" (string flags);
+          Js.Unsafe.set ret "regex" regex
     );
     Js.Unsafe.set ret "raw" (string raw);
     ret

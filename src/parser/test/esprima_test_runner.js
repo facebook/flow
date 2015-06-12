@@ -86,9 +86,6 @@ function handleSpecialObjectCompare(esprima, flow, env) {
   }
 
   switch (esprima.type) {
-    case 'Literal':
-      delete esprima.regex;
-      break;
     case "SwitchStatement":
       // Esprima doesn't support let statements so it doesn't include the
       // lexical field
