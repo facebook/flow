@@ -1195,9 +1195,10 @@ let isset_empty_in_strict pos name =
     (name^" cannot be used in a completely type safe way and so is banned in "
      ^"strict mode")
 
-let unset_nonidx_in_strict pos =
-  add Typing.unset_nonidx_in_strict pos
-    ("In strict mode, unset is banned except on array indexing")
+let unset_nonidx_in_strict pos msgs =
+  add_list Typing.unset_nonidx_in_strict
+    ([pos, "In strict mode, unset is banned except on array indexing"] @
+     msgs)
 
 let array_get_arity pos1 name pos2 =
   add_list Typing.array_get_arity [

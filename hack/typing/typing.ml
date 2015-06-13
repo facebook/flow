@@ -1805,10 +1805,23 @@ and dispatch_call p env call_type (fpos, fun_expr as e) el uel =
       Errors.isset_empty_in_strict p pseudo_func;
     env, (Reason.Rwitness p, Tprim Tbool)
   | Id (_, pseudo_func) when pseudo_func = SN.PseudoFunctions.unset ->
-     if Env.is_strict env then
-       (match el with
-        | [(_, Array_get _)] -> ()
-        | _ -> Errors.unset_nonidx_in_strict p);
+     let env, _ = lfold expr env el in
+     let env, _ = lfold unpack_expr env uel in
+     let env = if Env.is_strict env then
+       (match el, uel with
+         | [(_, Array_get (ea, Some _))], [] ->
+           let env, ty = expr env ea in
+           Errors.try_
+             (fun () -> SubType.sub_type
+                          env (Reason.Rnone, Tarray (None, None)) ty)
+             (fun _ ->
+              let env, (r, ety) = Env.expand_type env ty in
+              Errors.unset_nonidx_in_strict
+                p
+                (Reason.to_string ("This is " ^ Typing_print.error ety) r);
+              env)
+         | _ -> Errors.unset_nonidx_in_strict p []; env)
+       else env in
       (match el with
         | [(p, Obj_get (_, _, OG_nullsafe))] ->
           begin
