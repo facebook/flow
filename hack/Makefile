@@ -125,14 +125,12 @@ $(TARGETS): $(ALL_SRC_FILES)
 		-lflags "$(LINKER_FLAGS)" \
 		$(patsubst _build/%,%,$(TARGETS))
 	# Touching the targets is necessary because the ocaml build
-	# doens't change the modification dates of the targets if
+	# doesn't change the modification dates of the targets if
 	# the new binaries are exactly the same as the old ones
 	touch $(TARGETS)
 
 build-hack-native-deps: build-hack-stubs
-	# ocamlbuild before 4.00 does not pass thru cflags when building native C
-	# objects, because they're not important, right? So use this super ugly hack.
-	ocamlbuild -ocamlc "ocamlopt $(EXTRA_INCLUDE_OPTS) $(EXTRA_CC_OPTS)" $(NATIVE_OBJECT_FILES)
+	ocamlbuild -cflags "$(EXTRA_INCLUDE_OPTS) $(EXTRA_CC_OPTS)" $(NATIVE_OBJECT_FILES)
 
 build-hack-stubs:
 	REV="const char* const BuildInfo_kRevision = \"$$(git rev-parse HEAD)\";"; \
