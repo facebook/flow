@@ -46,6 +46,19 @@ let buf_concat ~buf ~lb ~rb ~sep ~concat_elt l =
 
 let add_char buf c = Buffer.add_char buf c
 let add_string buf s = Buffer.add_string buf s
+let add_float buf x =
+  match classify_float x with
+  | FP_nan ->
+      failwith "NaN not allowed"
+  | FP_infinite ->
+      failwith "infinity not allowed"
+  | _ ->
+      (* tries to print the shortest representation it can. if 16 significant
+         digits isn't enough to recover the original float, then falls back to
+         17 digits. for example, try 0.1 and 0.10000000000000002 *)
+      let s = Printf.sprintf "%.16g" x in
+      if float_of_string s = x then add_string buf s
+      else Printf.bprintf buf "%.17g" x
 
 let escape s =
   let b = Buffer.create ((String.length s) + 2) in
@@ -76,7 +89,7 @@ let rec add_json_to_buffer (buf:Buffer.t) (json:json): unit =
   | JString s -> add_string buf (escape s)
   | JNull -> add_string buf "null"
   | JInt i -> add_string buf (string_of_int i)
-  | JFloat f -> add_string buf (string_of_float f)
+  | JFloat f -> add_float buf f
 
 and add_assoc_to_buffer (buf:Buffer.t) (k,v) =
   add_string buf (escape k);
