@@ -135,6 +135,7 @@ let parse_args() =
   let modes = ref [Some FileInfo.Mstrict; Some FileInfo.Mpartial] in
   let root = ref None in
   let debug = ref false in
+  let test = ref false in
   let apply_mode = ref Format_mode.Print in
   let set_apply_mode mode () = match !apply_mode with
     | Format_mode.Patch -> () (* Patch implies In_place but not vice versa *)
@@ -174,11 +175,12 @@ let parse_args() =
       "--root", Arg.String (fun x -> root := Some x),
       "specifies a root directory (useful in diff mode)";
 
-      "--debug", Arg.Set debug, ""
+      "--debug", Arg.Set debug, "";
+      "--test", Arg.Set test, "";
     ]
     (fun file -> files := file :: !files)
     (Printf.sprintf "Usage: %s (filename|directory)" Sys.argv.(0));
-  !files, !from, !to_, !apply_mode, !debug, !diff, !modes, !root
+  !files, !from, !to_, !apply_mode, !debug, !diff, !modes, !root, !test
 
 (*****************************************************************************)
 (* Formats a file in place *)
@@ -269,9 +271,10 @@ let format_stdin modes from to_ =
 
 let () =
   SharedMem.(init default_config);
-  FormatEventLogger.init (Unix.time());
   PidLog.log_oc := Some (open_out "/dev/null");
-  let files, from, to_, apply_mode, debug, diff, modes, root = parse_args() in
+  let files, from, to_, apply_mode, debug, diff, modes, root, test =
+    parse_args() in
+  if not test then FormatEventLogger.init (Unix.time());
   match files with
   | [] when diff ->
       let prefix =
