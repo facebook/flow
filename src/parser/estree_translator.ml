@@ -21,12 +21,15 @@ module type Translator = sig
   val regexp: Ast.Loc.t -> string -> string -> t
 end
 
-module Translate (Impl : Translator) : sig
+module Translate (Impl : Translator) : (sig
+  type t
   val program:
     Ast.Loc.t * Ast.Statement.t list * (Ast.Loc.t * Ast.Comment.t') list ->
-    Impl.t
-  val errors: (Ast.Loc.t * Parse_error.t) list -> Impl.t
-end = struct
+    t
+  val errors: (Ast.Loc.t * Parse_error.t) list -> t
+end with type t = Impl.t) = struct
+  type t = Impl.t
+
   open Ast
   open Impl
 

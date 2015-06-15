@@ -18,6 +18,7 @@ end = struct
 
   (* normal commands *)
   let commands = [
+    AstCommand.command;
     AutocompleteCommand.command;
     ServerCommands.Check.command;
     CheckContentsCommand.command;
