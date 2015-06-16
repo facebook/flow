@@ -93,9 +93,13 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
       )
     }
 
-  open ClientEnv
-
-  type env = client_check_env
+  type env = {
+    root: Path.t;
+    from: string;
+    output_json: bool;
+    one_line: bool;
+    show_all_errors: bool;
+  }
 
   let check_status connect (args:env) option_values =
     Sys.set_signal Sys.sigalrm (Sys.Signal_handle
@@ -136,9 +140,9 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
         (Path.to_string args.root);
       exit 2
     | ServerProt.SERVER_OUT_OF_DATE ->
-      if args.autostart
-      then Printf.printf "%s is outdated, going to launch a new one.\n" name
-      else Printf.printf "%s is outdated, killing it.\n" name;
+      if option_values.CommandUtils.no_auto_start
+      then Printf.printf "%s is outdated, killing it.\n" name
+      else Printf.printf "%s is outdated, going to launch a new one.\n" name;
       flush stdout;
       raise CommandExceptions.Server_missing
 
@@ -153,7 +157,7 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
         option_values
     with
     | CommandExceptions.Server_initializing ->
-        if env.ClientEnv.retry_if_init
+        if option_values.CommandUtils.retry_if_init
         then (
           Printf.fprintf stderr "Flow server still initializing\n%!";
           CommandUtils.sleep 1;
@@ -175,12 +179,12 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
 
   and retry (env, option_values) sleep msg =
     CommandUtils.check_timeout ();
-    if env.retries > 0
+    let retries = option_values.CommandUtils.retries in
+    if retries > 0
     then begin
       Printf.fprintf stderr "%s\n%!" msg;
       CommandUtils.sleep sleep;
-      let retries = env.ClientEnv.retries - 1 in
-      main_rec ({ env with ClientEnv.retries }, option_values)
+      main_rec (env, { option_values with CommandUtils.retries = retries - 1 })
     end else begin
       Printf.fprintf stderr "Out of retries, exiting!\n%!";
       exit 2
@@ -196,17 +200,11 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
     let timeout_arg = option_values.CommandUtils.timeout in
     if timeout_arg > 0 then CommandUtils.set_timeout timeout_arg;
     let env = {
-      ClientEnv.mode = ClientEnv.MODE_STATUS;
-      ClientEnv.root = root;
-      ClientEnv.from = option_values.CommandUtils.from;
-      ClientEnv.output_json = json;
-      ClientEnv.retry_if_init = option_values.CommandUtils.retry_if_init;
-      ClientEnv.retries = option_values.CommandUtils.retries;
-      ClientEnv.timeout = !CommandUtils.global_kill_time;
-      ClientEnv.autostart = true;
-      ClientEnv.no_load = true;
-      ClientEnv.one_line = one_line;
-      ClientEnv.show_all_errors = show_all_errors;
+      root;
+      from = option_values.CommandUtils.from;
+      output_json = json;
+      one_line;
+      show_all_errors;
     } in
     main_rec (env, option_values)
 end
