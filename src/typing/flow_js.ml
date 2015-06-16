@@ -2626,16 +2626,29 @@ let rec __flow cx (l, u) trace =
       rec_flow cx trace (instance, GetT(reason,"statics",tvar));
       rec_flow cx trace (tvar,u)
 
-    (********)
-    (* cast *)
-    (********)
+    (***************************************************************************)
+    (* classes can behave like functions, functions can be declared as classes *)
+    (***************************************************************************)
 
-    | (ClassT instance, (FunT _ | CallT _))
-      ->
-      let reason = reason_of_t u in
-      let tvar = mk_tvar cx reason in
-      rec_flow cx trace (instance, GetT(reason,"statics",tvar));
-      rec_flow cx trace (tvar, GetT(reason,"$call",u))
+    (* When a class value flows to a function annotation or call site, check for
+       the presence of a $call property in the former (as a static) compatible
+       with the latter. *)
+    | (ClassT instance, (FunT (reason, _, _, _) | CallT (reason, _))) ->
+      rec_flow cx trace (l, GetT(reason,"$call",u))
+
+    (* For a function type to be used as a class type, the following must hold:
+       - the class's instance type must be a subtype of the function's prototype
+       property type and 'this' type
+       - the function's statics should be included in the class's statics
+       (typically a function's statics are under-specified, so we don't
+       enforce equality)
+       - the class's static $call property type must be a subtype of the
+       function type. *)
+    | (FunT (reason, static, prototype, funtype), ClassT instance) ->
+      rec_flow cx trace (instance, prototype);
+      rec_flow cx trace (instance, funtype.this_t);
+      rec_flow cx trace (instance, GetT(reason,"statics",static));
+      rec_flow cx trace (u, GetT(reason,"$call",l))
 
     (************)
     (* indexing *)
