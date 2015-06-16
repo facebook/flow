@@ -5,7 +5,7 @@ declare module M {
     }
     export var m : typeof N.z
     export module N {
-        export var z : string
+        export var z : typeof x
     }
 }
 

@@ -1,7 +1,7 @@
 declare module M {
-
   declare var x: number;
   declare class C {
     y: typeof x;
+
   }
 }

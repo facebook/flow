@@ -28,7 +28,6 @@ do
 
         $FLOW convert  --r . >/dev/null 2>&1
         $FLOW check --all --strip-root --show-all-errors 1> $out_file
-
         diff_file="${name}.diff"
         diff -u $exp_file $out_file > $diff_file
         if [ -s $diff_file ]

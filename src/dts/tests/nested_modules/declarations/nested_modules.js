@@ -3,12 +3,16 @@ declare module M {
   declare var x: number;
   declare class C {
     y: typeof x;
+
   }
   declare var m: typeof N.z;
 }
 declare module M___N {
-
-  declare var z: string;
+  declare var M: $Exports<'M'>;
+  declare var x : typeof M.x;
+  declare var C : typeof M.C;
+  declare var m : typeof M.m;
+  declare var z: typeof x;
 }
 declare module P {
   declare var M: $Exports<'M'>;

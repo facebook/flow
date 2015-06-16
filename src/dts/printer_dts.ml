@@ -16,7 +16,7 @@ let rec list ?(sep="") f fmt = function
 
 let rec list_ ?(sep="") f fmt = function
   | [x] ->
-      fprintf fmt "%a%s"
+      fprintf fmt "%a%s@,"
         f x
         sep
   | x::xs ->
@@ -314,14 +314,14 @@ let get_modules_to_import scope set =
   The following two functions filter out module and not_module
   statements from a list of statements respectively.
 *)
-let rec filter_modules prefix scope = Statement.(function
+let rec filter_modules prefix imports scope = Statement.(function
   | [] -> []
   |  x :: xs -> match x with
     | _, ModuleDeclaration _ ->
-      (prefix, scope, x) :: (filter_modules prefix scope xs)
+      (prefix, imports, scope, x) :: (filter_modules prefix imports scope xs)
     | _, ExportModuleDeclaration _ ->
-      (prefix, scope, x) :: (filter_modules prefix scope xs)
-    | _ -> filter_modules prefix scope xs
+      (prefix, imports, scope, x) :: (filter_modules prefix imports scope xs)
+    | _ -> filter_modules prefix imports scope xs
 )
 
 let rec filter_not_modules = Statement.(function
@@ -337,17 +337,91 @@ let rec filter_not_modules = Statement.(function
   only consider the module nodes in the AST then, this is just the
   find_child function of a tree.
 *)
-let find_child_modules acc prefix scope = Statement.(function
+let find_child_modules acc prefix imports scope = Statement.(function
   | _, ModuleDeclaration { Module.id; body; } ->
     let new_prefix = List.append prefix [get_name [] id] in
     let new_scope = get_modules_in_scope scope new_prefix body in
-    List.append (filter_modules new_prefix new_scope body) acc
+    List.append (filter_modules new_prefix imports new_scope body) acc
   | _, ExportModuleDeclaration { ExportModule.name; body; } ->
     let new_scope = get_modules_in_scope scope [name] body in
-    List.append (filter_modules [name] new_scope body) acc
+    List.append (filter_modules [name] imports new_scope body) acc
   | loc, _  -> failwith_location loc
     "Unexpected statement. A module declaration was expected"
 )
+
+(*
+  Find a list of non module statements declared within the current module. And
+  append it in imports.
+
+  Cases handled:
+    1. Variable Declaration
+    2. Class Declaration
+    3. Interference Declaration
+    4, Enum Declaration
+
+  TODO:
+    1. Function Declaration
+
+  "imports" is a list of pairs (a, b) where 'a' is the non module entity to be
+  imported and 'b' is the of the module whose context 'a' is declared.
+
+  Eg.
+
+  module M {
+    variable x : number
+    class A { }
+    module N {
+
+    }
+  }
+
+  If run on module M, expand_imports returns ("x", "M") :: ("A", "M") :: []
+*)
+
+let rec expand_imports imports = Statement.(function
+  | _, ModuleDeclaration{Module. body; id; _ } ->
+    let name = get_name [] id in
+    expand_imports_statements imports name body
+  | _, ExportModuleDeclaration{ExportModule. body; name; _ } ->
+    expand_imports_statements imports name body
+  | loc, _ -> failwith_location loc
+    "Unexpected statement. A module declaration was expexted"
+)
+
+and expand_imports_statements acc name = function
+  | [] -> acc
+  | x :: xs ->
+    expand_imports_statement (expand_imports_statements acc name xs) name x
+
+and expand_imports_statement acc name = Statement.(function
+  | loc, VariableDeclaration { VariableDeclaration.
+      declarations; _
+    } -> VariableDeclaration.(
+      match declarations with
+      | [(_, {Declarator.id; _})] ->
+        expand_imports_pattern acc name id
+      | _ -> failwith_location loc
+        "Only single declarator handled currently"
+    )
+  | _, AmbientClassDeclaration { AmbientClass. id; _ } ->
+    expand_imports_id acc name id
+  | _, InterfaceDeclaration { Interface. id; _ } ->
+    expand_imports_id acc name id
+  | _, EnumDeclaration { Enum. name = id; members } ->
+    expand_imports_id acc name id
+  | _ -> acc
+)
+
+and expand_imports_pattern acc name = Pattern.(function
+  | _, Identifier id -> expand_imports_id acc name id
+  | loc, _ -> failwith_location loc
+    "Only identifier allowed in variable declaration"
+)
+
+and expand_imports_id acc name= function
+  | _, { Identifier. name = import; _ } -> (import, name) :: acc
+
+
 
 (*
   To handle flatten nested modules, we decopes the AST into modules
@@ -360,11 +434,11 @@ let rec program fmt (_, stmts, _) =
   Format.set_margin 80;
   let prefix  = [] in
   let scope = get_modules_in_scope [] prefix stmts in
-  let modules = filter_modules prefix scope stmts in
+  let modules = filter_modules prefix [] scope stmts in
   let not_modules = filter_not_modules stmts in
-  fprintf fmt "@[<v>@,%a%a@]@."
+  fprintf fmt "@[<v>%a%a@]@."
     print_modules modules
-    (list ~sep:"" (statement scope prefix)) not_modules
+    (list_ ~sep:"" (statement scope prefix)) not_modules
 
 (*
   print_modules calls print_module in a DFS order. It can easily be
@@ -373,30 +447,38 @@ let rec program fmt (_, stmts, _) =
 
 and print_modules fmt = function
   | [] -> ()
-  | (prefix, scope, x) :: xs ->
+  | (prefix, imports, scope, x) :: xs ->
     fprintf fmt "%a@,%a"
-      (print_module scope prefix) x
-      print_modules (find_child_modules xs prefix scope x)
+      (print_module scope imports prefix) x
+      print_modules
+      (find_child_modules xs prefix (expand_imports imports x) scope x)
 
-and print_module scope prefix fmt = Statement.(function
+and print_module scope imports prefix fmt = Statement.(function
 
-  (* First we compute all the possible instances of module
+  (* 1. First we compute all the possible instances of module
      references and then take an intersection with the list of modules
      in scope which are defined in the same file to get a subset of
-     actual references to other modules.  *)
+     actual references to other modules.
+
+     2. Also, we import all the entities declared by any of the anscestors.
+     3. And ofcourse we import all the parent modules. This is done to
+        assist step 2.
+  *)
 
   | _, ModuleDeclaration { Module.id; body; } ->
     let name = get_name [] id in
     let new_prefix = List.append prefix [name] in
     let new_scope = get_modules_in_scope scope new_prefix body in
-    let list_possible_modules = get_modules_used body in
+    let list_possible_modules =
+      SSet.union (get_modules_used body) (SSet.of_list prefix) in
     let list_modules_used =
       get_modules_to_import new_scope list_possible_modules in
 
-    fprintf fmt "@[<v>declare module %s {@;<0 2>@[<v>%a%a@]@,}@]"
+    fprintf fmt "@[<v>declare module %s {@;<0 2>@[<v>%a%a%a@]@,}@]"
       (generate_mangled_name name prefix)
       (list_ ~sep:"" import_module) list_modules_used
-      (_list ~sep:"" (statement new_scope new_prefix))
+      (list_ ~sep:"" import_members) imports
+      (list ~sep:"" (statement new_scope new_prefix))
       (filter_not_modules body)
 
   | loc, ExportModuleDeclaration { ExportModule.name; body; } ->
@@ -412,7 +494,7 @@ and print_module scope prefix fmt = Statement.(function
       fprintf fmt "@[<v>declare module %s {@;<0 2>@[<v>%a%a@]@,}@]"
         name
         (list_ ~sep:"" import_module) list_modules_used
-        (_list ~sep:"" (statement scope prefix))
+        (list ~sep:"" (statement scope prefix))
         (filter_not_modules body)
 
   | loc, _ -> failwith_location loc "Module declaration expected here"
@@ -657,6 +739,13 @@ and rest_ ?(follows=false) fmt = Type.Function.(function
 *)
 and import_module fmt = function
   | (x, y) -> fprintf fmt "declare var %s: $Exports<'%s'>;" x y
+
+(* This prints the import member from module. Since currently, the flow
+   parser does not parse import statements inside a module
+   declaration, we use this hack of "typeof"
+*)
+and import_members fmt = function
+  | (x, y) -> fprintf fmt "declare var %s : typeof %s.%s;" x y x
 
 (* The following helper function prints a member of enum as a static
    memeber of the corresponding class. *)
