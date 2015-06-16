@@ -13,8 +13,13 @@ function foo() {
   num(x+y); // error
   str(x+y);
   str(x+x); // error
-  str(z+y);
-  str(x+z);
+  str(z+y); // error
+
+  // 3 errors: x+z is a string, but
+  //   1) num !~> string
+  //   2) object !~> string
+  //   3) string ~> num (function call)
+  num(x+z);
 }
 
 // test MaybeT(NumT)
@@ -53,5 +58,12 @@ num(null + true); // === 1
 num(true + null); // === 1
 num(undefined + true); // === NaN
 num(true + undefined); // === NaN
+
+str("foo" + true); // error
+str(true + "foo"); // error
+str("foo" + null); // error
+str(null + "foo"); // error
+str("foo" + undefined); // error
+str(undefined + "foo"); // error
 
 module.exports = "arith";

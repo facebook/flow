@@ -2736,12 +2736,16 @@ let rec __flow cx (l, u) trace =
  * anything that is a number, boolean, null or undefined is treated as a
  * number; everything else is a string.
  *
+ * We are less permissive than the spec when it comes to string coersion:
+ * only numbers can be coerced, to allow things like `num + '%'`.
+ *
  * TODO: handle symbols (which raise a TypeError, so should be banned)
  *
  **)
 and flow_addition cx trace reason l r u = match (l, r) with
-  | (StrT _, _)
-  | (_, StrT _) ->
+  | (StrT _, StrT _)
+  | (StrT _, NumT _)
+  | (NumT _, StrT _) ->
     rec_flow cx trace (StrT.why reason, u)
 
   | (MixedT _, _)
@@ -2757,7 +2761,10 @@ and flow_addition cx trace reason l r u = match (l, r) with
     rec_flow cx trace (NumT.why reason, u)
 
   | (_, _) ->
-    rec_flow cx trace (StrT.why reason, u)
+    let fake_str = StrT.why reason in
+    rec_flow cx trace (l, fake_str);
+    rec_flow cx trace (r, fake_str);
+    rec_flow cx trace (fake_str, u);
 
 (**
  * relational comparisons like <, >, <=, >=

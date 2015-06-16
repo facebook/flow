@@ -11,6 +11,66 @@ Arith.js:15:7,9: number
 This type is incompatible with
 Arith.js:6:16,21: string
 
+Arith.js:16:7,9: +
+Error:
+Arith.js:16:7,7: object literal
+This type is incompatible with
+Arith.js:16:7,9: string
+
+Arith.js:22:3,10: function call
+Error:
+Arith.js:22:7,9: string
+This type is incompatible with
+Arith.js:4:16,21: number
+
+Arith.js:22:7,9: +
+Error:
+Arith.js:22:7,7: number
+This type is incompatible with
+Arith.js:22:7,9: string
+
+Arith.js:22:7,9: +
+Error:
+Arith.js:22:9,9: object literal
+This type is incompatible with
+Arith.js:22:7,9: string
+
+Arith.js:62:5,16: +
+Error:
+Arith.js:62:13,16: boolean
+This type is incompatible with
+Arith.js:62:5,16: string
+
+Arith.js:63:5,16: +
+Error:
+Arith.js:63:5,8: boolean
+This type is incompatible with
+Arith.js:63:5,16: string
+
+Arith.js:64:5,16: +
+Error:
+Arith.js:64:13,16: null
+This type is incompatible with
+Arith.js:64:5,16: string
+
+Arith.js:65:5,16: +
+Error:
+Arith.js:65:5,8: null
+This type is incompatible with
+Arith.js:65:5,16: string
+
+Arith.js:66:5,21: +
+Error:
+Arith.js:66:13,21: undefined
+This type is incompatible with
+Arith.js:66:5,21: string
+
+Arith.js:67:5,21: +
+Error:
+Arith.js:67:5,13: undefined
+This type is incompatible with
+Arith.js:67:5,21: string
+
 mult.js:5:5,8: null
 This type is incompatible with
 mult.js:5:5,12: number
@@ -109,4 +169,4 @@ relational.js:20:2,10: undefined
 Cannot be compared to
 relational.js:20:14,22: undefined
 
-Found 19 errors
+Found 29 errors
