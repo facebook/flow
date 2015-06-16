@@ -46,6 +46,8 @@ let convert_file one_line outpath file =
     else
       let () = Printf.printf "No errors!\n\n" in
       Printf.printf "Conversion was not successful!\n\n";
+      close_out oc;
+      Sys.remove outfile;
       0, 0, 1
   ) else (
     let n = List.length errors in
