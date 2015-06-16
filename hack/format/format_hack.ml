@@ -2259,10 +2259,11 @@ and case env =
 
 and case_word env = function
   | "case" ->
-      seq env [last_token; space; expr; expect ":"; newline];
+      seq env [last_token; space; expr; expect ":"; space; keep_comment;
+        newline];
       right env (stmt_list ~is_toplevel:false)
   | "default" ->
-      seq env [last_token; expect ":"; newline];
+      seq env [last_token; expect ":"; keep_comment; newline];
       right env (stmt_list ~is_toplevel:false)
   | _ ->
       back env
