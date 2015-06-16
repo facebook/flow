@@ -34,8 +34,6 @@ struct
     let s = to_absolute relp in
     create Dummy s)
 
-  let load_config () = ServerConfig.default_config
-
   (* This determines whether the current config file is compatible with the
    * config that this server was initialized with. Returning false means
    * that any change in .flowconfig results in a server restart. *)
@@ -73,10 +71,6 @@ struct
     match env.ServerEnv.errorl with
       | [] -> exit 0
       | _ -> exit 2
-
-  let marshal _ = ()
-
-  let unmarshal _ = ()
 
   let incorrect_hash oc =
     ServerProt.response_to_channel oc ServerProt.SERVER_OUT_OF_DATE;

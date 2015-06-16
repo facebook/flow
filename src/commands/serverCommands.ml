@@ -125,13 +125,8 @@ module OptionParser(Config : CONFIG) = struct
     (* hack opts and flow opts: latter extends the former *)
     result := Some ({
       ServerArgs.check_mode    = Config.(mode = Check);
-      ServerArgs.json_mode     = json;
       ServerArgs.root          = root;
       ServerArgs.should_detach = Config.(mode = Detach);
-      ServerArgs.convert       = None;
-      ServerArgs.no_load       = false;
-      ServerArgs.save_filename = None;
-      ServerArgs.waiting_client= None;
       ServerArgs.log_file      = opt_log_file;
     },
     {

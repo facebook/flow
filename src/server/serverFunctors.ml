@@ -42,13 +42,8 @@ module type SERVER_PROGRAM = sig
   val get_watch_paths: ServerArgs.options -> Path.t list
   val name: string
   val config_filename : unit -> Relative_path.t
-  val load_config : unit -> ServerConfig.t
   val validate_config : genv -> bool
   val handle_client : genv -> env -> client -> unit
-  (* This is a hack for us to save / restore the global state that is not
-   * already captured by ServerEnv *)
-  val marshal : out_channel -> unit
-  val unmarshal : in_channel -> unit
 end
 
 (*****************************************************************************)
@@ -79,20 +74,15 @@ end = struct
   (* This code is only executed when the options --check is NOT present *)
   let go options init_fun =
     let root = ServerArgs.root options in
-    let send_signal () = match ServerArgs.waiting_client options with
-      | None -> ()
-      | Some pid -> (try Unix.kill pid Sys.sigusr1 with _ -> ()) in
     let t = Unix.gettimeofday () in
     grab_lock root;
     Hh_logger.log "Initializing Server (This might take some time)";
     grab_init_lock root;
-    send_signal ();
     (* note: we only run periodical tasks on the root, not extras *)
     ServerPeriodical.init root;
     let env = init_fun () in
     release_init_lock root;
     Hh_logger.log "Server is READY";
-    send_signal ();
     let t' = Unix.gettimeofday () in
     Hh_logger.log "Took %f seconds to initialize." (t' -. t);
     env
@@ -206,92 +196,10 @@ end = struct
       EventLogger.flush ();
     done
 
-  let load genv filename to_recheck =
-    let chan = open_in filename in
-    let env = Marshal.from_channel chan in
-    Program.unmarshal chan;
-    close_in chan;
-    SharedMem.load (filename^".sharedmem");
-    Program.EventLogger.load_read_end filename;
-    let paths_to_recheck =
-      List.map ~f:(Relative_path.concat Relative_path.Root) to_recheck in
-    let updates = List.fold_left
-      ~f:(fun acc update -> Relative_path.Set.add update acc)
-      ~init:Relative_path.Set.empty
-      paths_to_recheck in
-    let start_t = Unix.time () in
-    let env, rechecked = recheck genv env updates in
-    let rechecked_count = Relative_path.Set.cardinal rechecked in
-    Program.EventLogger.load_recheck_end start_t rechecked_count;
-    env
-
-  let run_load_script genv env cmd =
-    try
-      let cmd = Printf.sprintf "%s %s %s"
-        (Filename.quote (Path.to_string cmd))
-        (Filename.quote (Path.to_string (ServerArgs.root genv.options)))
-        (Filename.quote Build_id.build_id_ohai) in
-      Hh_logger.log "Running load script: %s\n%!" cmd;
-      let state_fn, to_recheck =
-        with_timeout (ServerConfig.load_script_timeout genv.config)
-        ~on_timeout:(fun _ -> failwith "Load script timed out")
-        ~do_:begin fun () ->
-          let ic = Unix.open_process_in cmd in
-          let state_fn = begin
-            try input_line ic
-            with End_of_file -> raise State_not_found
-          end in
-          let to_recheck = ref [] in
-          begin
-            try while true do to_recheck := input_line ic :: !to_recheck done
-            with End_of_file -> ()
-          end;
-          assert (Unix.close_process_in ic = Unix.WEXITED 0);
-          state_fn, !to_recheck
-        end in
-      Hh_logger.log
-        "Load state found at %s. %d files to recheck\n%!"
-        state_fn (List.length to_recheck);
-      Program.EventLogger.load_script_done ();
-      let env = load genv state_fn to_recheck in
-      Program.EventLogger.init_done "load";
-      env
-    with
-    | State_not_found ->
-        Hh_logger.log "Load state not found!";
-        Hh_logger.log "Starting from a fresh state instead...";
-        let env = Program.init genv env in
-        Program.EventLogger.init_done "load_state_not_found";
-        env
-    | e ->
-        let msg = Printexc.to_string e in
-        Hh_logger.log "Load error: %s" msg;
-        Printexc.print_backtrace stderr;
-        Hh_logger.log "Starting from a fresh state instead...";
-        Program.EventLogger.load_failed msg;
-        let env = Program.init genv env in
-        Program.EventLogger.init_done "load_error";
-        env
-
   let create_program_init genv env = fun () ->
-    match ServerConfig.load_script genv.config with
-    | None ->
-        let env = Program.init genv env in
-        Program.EventLogger.init_done "fresh";
-        env
-    | Some load_script ->
-        run_load_script genv env load_script
-
-  let save _genv env fn =
-    let chan = open_out_no_fail fn in
-    Marshal.to_channel chan env [];
-    Program.marshal chan;
-    close_out_no_fail fn chan;
-    (* We cannot save the shared memory to `chan` because the OCaml runtime
-     * does not expose the underlying file descriptor to C code; so we use
-     * a separate ".sharedmem" file. *)
-    SharedMem.save (fn^".sharedmem");
-    Program.EventLogger.init_done "save"
+    let env = Program.init genv env in
+    Program.EventLogger.init_done "fresh";
+    env
 
   (* The main entry point of the daemon
   * the only trick to understand here, is that env.modified is the set
@@ -299,7 +207,7 @@ end = struct
   * type-checker succeeded. So to know if there is some work to be done,
   * we look if env.modified changed.
   *)
-  let main options config =
+  let main options =
     let root = ServerArgs.root options in
     Program.EventLogger.init root (Unix.time ());
     Program.preinit ();
@@ -312,13 +220,12 @@ end = struct
     PidLog.log ~reason:"main" (Unix.getpid());
     let watch_paths = root :: Program.get_watch_paths options in
     let genv =
-      ServerEnvBuild.make_genv ~multicore:true options config watch_paths in
-    let env = ServerEnvBuild.make_env options config in
+      ServerEnvBuild.make_genv ~multicore:true options watch_paths in
+    let env = ServerEnvBuild.make_env options in
     let program_init = create_program_init genv env in
     let is_check_mode = ServerArgs.check_mode genv.options in
     if is_check_mode then
       let env = program_init () in
-      Option.iter (ServerArgs.save_filename genv.options) (save genv env);
       Program.run_once_and_exit genv env
     else
       let env = MainInit.go options program_init in
@@ -355,11 +262,10 @@ end = struct
   let start () =
     let options = Program.parse_options () in
     Relative_path.set_path_prefix Relative_path.Root (ServerArgs.root options);
-    let config = Program.load_config () in
     try
       if ServerArgs.should_detach options
       then daemonize options;
-      main options config
+      main options
     with Exit ->
       ()
 end

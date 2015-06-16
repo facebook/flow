@@ -14,24 +14,20 @@
 (*****************************************************************************)
 open ServerEnv
 
-let make_genv ~multicore options config watch_paths =
+let make_genv ~multicore options watch_paths =
   let check_mode   = ServerArgs.check_mode options in
-  let gc_control   = ServerConfig.gc_control config in
-  Typing_deps.trace :=
-    not check_mode || ServerArgs.convert options <> None ||
-    ServerArgs.save_filename options <> None;
+  let gc_control   = GlobalConfig.gc_control in
   let nbr_procs    = GlobalConfig.nbr_procs in
   let workers =
     if multicore then Some (Worker.make nbr_procs gc_control) else None
   in
   let dfind = if check_mode then None else Some (DfindLib.init watch_paths) in
   { options;
-    config;
     workers;
     dfind;
   }
 
-let make_env options config =
+let make_env options =
   { files_info     = Relative_path.Map.empty;
     errorl         = [];
   }
