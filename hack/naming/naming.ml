@@ -1350,14 +1350,8 @@ and const_defl h env l = List.map (const_def h env) l
 and const_def h env (x, e) =
   check_constant_expr e;
   let new_const = Env.new_const env x in
-  match (fst env).in_mode with
-  | FileInfo.Mstrict
-  | FileInfo.Mpartial ->
-      let h = opt_map (hint ~allow_this:true env) h in
-      h, new_const, Some (expr env e)
-  | FileInfo.Mdecl ->
-      let h = opt_map (hint ~allow_this:true env) h in
-      h, new_const, Some (fst e, N.Any)
+  let h = opt_map (hint ~allow_this:true env) h in
+  h, new_const, Some (expr env e)
 
 and abs_const_def env h x =
   let new_const = Env.new_const env x in
