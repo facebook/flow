@@ -26,6 +26,7 @@ module Translate (Impl : Translator) : (sig
   val program:
     Ast.Loc.t * Ast.Statement.t list * (Ast.Loc.t * Ast.Comment.t') list ->
     t
+  val expression: Ast.Expression.t -> t
   val errors: (Ast.Loc.t * Parse_error.t) list -> t
 end with type t = Impl.t) = struct
   type t = Impl.t
