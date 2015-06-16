@@ -17,7 +17,6 @@ type modes = {
   mutable weak_by_default: bool;
   mutable traces: int;
   mutable strict: bool;
-  mutable console: bool;
   mutable json: bool;
   mutable strip_root: bool;
   mutable quiet : bool;
@@ -33,7 +32,6 @@ let modes = {
   weak_by_default = false;
   traces = 0;
   strict = false;
-  console = false;
   json = false;
   strip_root = false;
   quiet = true;

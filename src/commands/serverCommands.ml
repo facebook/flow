@@ -141,7 +141,6 @@ module OptionParser(Config : CONFIG) = struct
       Options.opt_weak = weak;
       Options.opt_traces;
       Options.opt_strict = true;
-      Options.opt_console = false;
       Options.opt_json = json;
       Options.opt_show_all_errors = show_all_errors;
       Options.opt_quiet = quiet || json;

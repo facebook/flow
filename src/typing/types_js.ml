@@ -37,7 +37,6 @@ let init_modes opts =
   modes.weak_by_default <- opts.Options.opt_weak;
   modes.traces <- opts.Options.opt_traces;
   modes.strict <- opts.Options.opt_strict;
-  modes.console <- opts.Options.opt_console;
   modes.json <- opts.Options.opt_json;
   modes.strip_root <- opts.Options.opt_strip_root;
   modes.quiet <- opts.Options.opt_quiet;

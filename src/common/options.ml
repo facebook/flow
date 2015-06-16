@@ -5,7 +5,6 @@ type options = {
   opt_weak : bool;
   opt_traces : int;
   opt_strict : bool;
-  opt_console : bool;
   opt_json : bool;
   opt_show_all_errors : bool;
   opt_quiet : bool;
@@ -25,7 +24,6 @@ let default_options = {
   opt_weak = false;
   opt_traces = 0;
   opt_strict = false;
-  opt_console = false;
   opt_json = false;
   opt_show_all_errors = false;
   opt_quiet = false;

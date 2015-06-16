@@ -68,7 +68,6 @@ let main all weak debug verbose json show_all_errors profile quiet module_
   let options = {
     Options.opt_all = all;
     Options.opt_weak = weak;
-    Options.opt_console = false;
     Options.opt_debug = debug;
     Options.opt_verbose = verbose;
     Options.opt_strict = true;
