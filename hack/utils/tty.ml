@@ -25,9 +25,11 @@ type raw_color =
 type style =
   | Normal of raw_color
   | Bold of raw_color
+  | NormalWithBG of raw_color * raw_color
+  | BoldWithBG of raw_color * raw_color
 
-let color_num = function
-  | Default -> "0"
+let text_num = function
+  | Default -> "39"
   | Black   -> "30"
   | Red     -> "31"
   | Green   -> "32"
@@ -37,9 +39,26 @@ let color_num = function
   | Cyan    -> "36"
   | White   -> "37"
 
+let background_num = function
+  | Default -> "49"
+  | Black   -> "40"
+  | Red     -> "41"
+  | Green   -> "42"
+  | Yellow  -> "43"
+  | Blue    -> "44"
+  | Magenta -> "45"
+  | Cyan    -> "46"
+  | White   -> "47"
+
+let color_num = function
+  | Default -> "0"
+  | x -> text_num x
+
 let style_num = function
   | Normal c -> color_num c
   | Bold c   -> color_num c ^ ";1"
+  | NormalWithBG (text, bg) -> (text_num text) ^ ";" ^ (background_num bg)
+  | BoldWithBG (text, bg) -> (text_num text) ^ ";" ^ (background_num bg) ^ ";1"
 
 let print_one c s =
   if Unix.isatty Unix.stdout

@@ -22,6 +22,8 @@ type raw_color =
 type style =
   | Normal of raw_color
   | Bold of raw_color
+  | NormalWithBG of raw_color * raw_color
+  | BoldWithBG of raw_color * raw_color
 
 (*
  * Print a sequence of colorized strings to stdout, using ANSI color escapes
