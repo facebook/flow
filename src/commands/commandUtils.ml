@@ -90,8 +90,6 @@ let server_flags prev = CommandSpec.ArgSpec.(
       ~doc:"Maximum time to wait, in seconds"
   |> flag "--from" (optional string)
       ~doc:"Specify client (for use by editor plugins)"
-  |> flag "--show-all-errors" no_arg
-      ~doc:"Print all errors (the default is to truncate after 50 errors)"
   |> flag "--retries" (optional int)
       ~doc:"Set the number of retries. (default: 3)"
   |> flag "--retry-if-init" (optional bool)
@@ -109,7 +107,6 @@ let json_flags prev = CommandSpec.ArgSpec.(
 
 type command_params = {
   from : string;
-  show_all_errors : bool;
   retries : int;
   retry_if_init : bool;
   timeout : int;
@@ -119,7 +116,7 @@ type command_params = {
 
 let collect_server_flags
     main
-    timeout from show_all_errors
+    timeout from
     retries retry_if_init no_auto_start color =
   let default def = function
   | Some x -> x
@@ -134,7 +131,6 @@ let collect_server_flags
   Modes_js.(modes.color <- color);
   main {
     from = (default "" from);
-    show_all_errors = show_all_errors;
     retries = (default 3 retries);
     retry_if_init = (default true retry_if_init);
     timeout = (default 0 timeout);

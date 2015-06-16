@@ -44,6 +44,8 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
         |> dummy false (* match --version below *)
         |> flag "--one-line" no_arg
             ~doc:"Escapes newlines so that each error prints on one line"
+        |> flag "--show-all-errors" no_arg
+            ~doc:"Print all errors (the default is to truncate after 50 errors)"
         |> anon "root" (optional string) ~doc:"Root directory"
       )
     }
@@ -85,6 +87,8 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
             ~doc:"Print version number and exit"
         |> flag "--one-line" no_arg
             ~doc:"Escapes newlines so that each error prints on one line"
+        |> flag "--show-all-errors" no_arg
+            ~doc:"Print all errors (the default is to truncate after 50 errors)"
         |> anon "root" (optional string) ~doc:"Root directory"
       )
     }
@@ -117,8 +121,8 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
       if args.output_json || args.from <> ""
       then Errors_js.print_errorl args.output_json e stdout
       else (
-        let show_all = option_values.CommandUtils.show_all_errors in
-        Errors_js.print_error_summary (not show_all) ~one_line:args.one_line e
+        Errors_js.print_error_summary
+          (not args.show_all_errors) ~one_line:args.one_line e
       );
       exit 2
     | ServerProt.NO_ERRORS ->
@@ -182,7 +186,7 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
       exit 2
     end
 
-  let main option_values json version one_line root () =
+  let main option_values json version one_line show_all_errors root () =
     if version then (
       CommandUtils.print_version ();
       exit 0
@@ -202,6 +206,7 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
       ClientEnv.autostart = true;
       ClientEnv.no_load = true;
       ClientEnv.one_line = one_line;
+      ClientEnv.show_all_errors = show_all_errors;
     } in
     main_rec (env, option_values)
 end

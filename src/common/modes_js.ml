@@ -19,7 +19,6 @@ type modes = {
   mutable strict: bool;
   mutable console: bool;
   mutable json: bool;
-  mutable show_all_errors: bool;
   mutable strip_root: bool;
   mutable quiet : bool;
   mutable profile : bool;
@@ -36,7 +35,6 @@ let modes = {
   strict = false;
   console = false;
   json = false;
-  show_all_errors = false;
   strip_root = false;
   quiet = true;
   profile = false;

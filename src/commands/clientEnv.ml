@@ -44,4 +44,5 @@ type client_check_env = {
   autostart: bool;
   no_load: bool;
   one_line: bool;
+  show_all_errors: bool;
 }

@@ -27,6 +27,8 @@ let spec = {
     empty
     |> server_flags
     |> json_flags
+    |> flag "--show-all-errors" no_arg
+        ~doc:"Print all errors (the default is to truncate after 50 errors)"
     |> anon "filename" (optional string) ~doc:"Filename"
   )
 }
@@ -40,7 +42,7 @@ let read_from_stdin file =
         let contents = Sys_utils.read_stdin_to_string () in
         ServerProt.FileContent ((Some (get_path_of_file file)), contents)
 
-let main option_values use_json file () =
+let main option_values use_json show_all_errors file () =
   let file = read_from_stdin file in
   let root = guess_root (ServerProt.path_of_input file) in
   let ic, oc = connect_with_autostart option_values root in
@@ -51,8 +53,7 @@ let main option_values use_json file () =
       if use_json || option_values.from <> ""
       then Errors_js.print_errorl use_json e stdout
       else (
-        let show_all = option_values.show_all_errors in
-        Errors_js.print_error_summary (not show_all) e;
+        Errors_js.print_error_summary (not show_all_errors) e;
         exit 2
       )
   | ServerProt.NO_ERRORS ->

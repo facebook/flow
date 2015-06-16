@@ -39,7 +39,6 @@ let init_modes opts =
   modes.strict <- opts.Options.opt_strict;
   modes.console <- opts.Options.opt_console;
   modes.json <- opts.Options.opt_json;
-  modes.show_all_errors <- opts.Options.opt_show_all_errors;
   modes.strip_root <- opts.Options.opt_strip_root;
   modes.quiet <- opts.Options.opt_quiet;
   modes.profile <- opts.Options.opt_profile;
@@ -665,7 +664,7 @@ let recheck genv env modified opts =
       let n = SSet.cardinal unmod_deps in
         if n > 0
         then prerr_endlinef "remerge %d dependent files:" n;
-      
+
       let _ = SSet.fold (fun f i ->
         prerr_endlinef "%d/%d: %s" i n f; i + 1) unmod_deps 1 in
 
@@ -733,7 +732,7 @@ let print_errors ?root flow_opts =
   then Errors_js.print_errorl true errors stdout
   else
     Errors_js.print_error_summary
-      (not Modes_js.modes.show_all_errors)
+      (not flow_opts.Options.opt_show_all_errors)
       errors
 
 (* initialize flow server state, including full check *)
