@@ -133,4 +133,3 @@ endif
 
 test: build-flow copy-flow-files
 	./runtests.sh bin/flow
-	./src/dts/runtests.sh bin/flow
