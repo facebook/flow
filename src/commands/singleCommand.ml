@@ -66,6 +66,10 @@ let main all weak debug verbose json show_all_errors profile quiet module_
   let flowconfig = FlowConfig.get config_root in
 
   let options = {
+    Options.opt_root = Path.make root;
+    Options.opt_should_detach = false;
+    Options.opt_check_mode = false;
+    Options.opt_log_file = FlowConfig.(flowconfig.options.log_file);
     Options.opt_all = all;
     Options.opt_weak = weak;
     Options.opt_debug = debug;

@@ -594,7 +594,7 @@ let recheck genv env modified opts =
   then failwith "Missing -- strict";
 
   (* filter modified files *)
-  let root = ServerArgs.root genv.ServerEnv.options in
+  let root = Options.root genv.ServerEnv.options in
   let config = FlowConfig.get root in
   let modified = SSet.filter (Files_js.wanted config) modified in
 
@@ -736,7 +736,7 @@ let print_errors ?root flow_opts =
 
 (* initialize flow server state, including full check *)
 let server_init genv env flow_opts =
-  let root = ServerArgs.root genv.ServerEnv.options in
+  let root = Options.root genv.ServerEnv.options in
 
   Files_js.package_json root |> List.iter (fun package ->
     let errors = Module_js.add_package package in
@@ -763,7 +763,7 @@ let server_init genv env flow_opts =
 
   SharedMem.init_done();
 
-  if ServerArgs.check_mode genv.ServerEnv.options
+  if Options.is_check_mode genv.ServerEnv.options
   then (
     print_errors ~root flow_opts;
     { env with ServerEnv.errorl = get_errors () }

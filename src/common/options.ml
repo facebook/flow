@@ -1,4 +1,17 @@
+(**
+ * Copyright (c) 2015, Facebook, Inc.
+ * All rights reserved.
+ *
+ * This source code is licensed under the BSD-style license found in the
+ * LICENSE file in the "flow" directory of this source tree. An additional grant
+ * of patent rights can be found in the PATENTS file in the same directory.
+ *
+ *)
+
 type options = {
+  opt_check_mode: bool;
+  opt_root : Path.t;
+  opt_should_detach : bool;
   opt_debug : bool;
   opt_verbose : bool;
   opt_all : bool;
@@ -12,30 +25,13 @@ type options = {
   opt_strip_root : bool;
   opt_module: string;
   opt_libs: Path.t list;
+  opt_log_file: Path.t;
   opt_no_flowlib: bool;
   opt_module_name_mappers: (Str.regexp * string) list;
   opt_one_line_errors: bool;
 }
 
-let default_options = {
-  opt_debug = false;
-  opt_verbose = false;
-  opt_all = false;
-  opt_weak = false;
-  opt_traces = 0;
-  opt_strict = false;
-  opt_json = false;
-  opt_show_all_errors = false;
-  opt_quiet = false;
-  opt_profile = false;
-  opt_strip_root = false;
-  opt_module = FlowConfig.(
-    match default_module_system with
-    | Node -> "node"
-    | Haste -> "haste"
-  );
-  opt_libs = [];
-  opt_no_flowlib = false;
-  opt_module_name_mappers = [];
-  opt_one_line_errors = false;
-}
+let is_check_mode opts = opts.opt_check_mode
+let log_file opts = opts.opt_log_file
+let root opts = opts.opt_root
+let should_detach opts = opts.opt_should_detach

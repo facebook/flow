@@ -38,8 +38,8 @@ module type SERVER_PROGRAM = sig
   val process_updates : genv -> env -> SSet.t -> Relative_path.Set.t
   val recheck: genv -> env -> Relative_path.Set.t -> env
   val post_recheck_hook: genv -> env -> env -> Relative_path.Set.t -> unit
-  val parse_options: unit -> ServerArgs.options
-  val get_watch_paths: ServerArgs.options -> Path.t list
+  val parse_options: unit -> Options.options
+  val get_watch_paths: Options.options -> Path.t list
   val name: string
   val config_filename : unit -> Relative_path.t
   val validate_config : genv -> bool
@@ -52,7 +52,7 @@ end
 
 module MainInit : sig
   val go:
-    ServerArgs.options ->
+    Options.options ->
     (unit -> env) ->    (* init function to run while we have init lock *)
     env
 end = struct
@@ -73,7 +73,7 @@ end = struct
 
   (* This code is only executed when the options --check is NOT present *)
   let go options init_fun =
-    let root = ServerArgs.root options in
+    let root = Options.root options in
     let t = Unix.gettimeofday () in
     grab_lock root;
     Hh_logger.log "Initializing Server (This might take some time)";
@@ -172,7 +172,7 @@ end = struct
   let recheck_loop = recheck_loop 0 0
 
   let serve genv env socket =
-    let root = ServerArgs.root genv.options in
+    let root = Options.root genv.options in
     let env = ref env in
     while true do
       if not (Lock.check root "lock") then begin
@@ -208,7 +208,7 @@ end = struct
   * we look if env.modified changed.
   *)
   let main options =
-    let root = ServerArgs.root options in
+    let root = Options.root options in
     Program.EventLogger.init root (Unix.time ());
     Program.preinit ();
     SharedMem.(init default_config);
@@ -223,7 +223,7 @@ end = struct
       ServerEnvBuild.make_genv ~multicore:true options watch_paths in
     let env = ServerEnvBuild.make_env options in
     let program_init = create_program_init genv env in
-    let is_check_mode = ServerArgs.check_mode genv.options in
+    let is_check_mode = Options.is_check_mode options in
     if is_check_mode then
       let env = program_init () in
       Program.run_once_and_exit genv env
@@ -243,7 +243,7 @@ end = struct
         let fd = Unix.openfile "/dev/null" [Unix.O_RDONLY; Unix.O_CREAT] 0o777 in
         Unix.dup2 fd Unix.stdin;
         Unix.close fd;
-        let file = Path.to_string (ServerArgs.log_file options) in
+        let file = Path.to_string (Options.log_file options) in
         (try Sys.rename file (file ^ ".old") with _ -> ());
         let fd = Unix.openfile file [Unix.O_WRONLY; Unix.O_CREAT; Unix.O_APPEND] 0o666 in
         Unix.dup2 fd Unix.stdout;
@@ -255,15 +255,15 @@ end = struct
       (* let original parent exit *)
       Printf.eprintf "Spawned %s (child pid=%d)\n" (Program.name) pid;
       Printf.eprintf
-        "Logs will go to %s\n%!" (Path.to_string (ServerArgs.log_file options));
+        "Logs will go to %s\n%!" (Path.to_string (Options.log_file options));
       raise Exit
     end
 
   let start () =
     let options = Program.parse_options () in
-    Relative_path.set_path_prefix Relative_path.Root (ServerArgs.root options);
+    Relative_path.set_path_prefix Relative_path.Root (Options.root options);
     try
-      if ServerArgs.should_detach options
+      if Options.should_detach options
       then daemonize options;
       main options
     with Exit ->

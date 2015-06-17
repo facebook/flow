@@ -9,8 +9,7 @@
  *)
 
 module type OPTION_PARSER = sig
-  val parse : unit -> ServerArgs.options
-  val get_flow_options : unit -> Options.options
+  val parse : unit -> Options.options
 end
 
 module TI = Type_inference_js
@@ -45,7 +44,7 @@ struct
     (* Do some initialization before creating workers, so that each worker is
      * forked with this information already available. Finding lib files is one
      * example *)
-    let flow_options = OptionParser.get_flow_options () in
+    let flow_options = OptionParser.parse () in
     Types_js.init_modes flow_options;
     (* Force flowlib files to be extracted and their location saved before workers
      * fork, so everyone can know about the same flowlib path. *)
@@ -53,13 +52,12 @@ struct
     Parsing_service_js.call_on_success SearchService_js.update
 
   let init genv env =
-    if not (ServerArgs.check_mode genv.ServerEnv.options) then (
+    if not (Options.is_check_mode genv.ServerEnv.options) then (
       (* write binary path and version to server log *)
       Hh_logger.log "executable=%s" Sys.executable_name;
       Hh_logger.log "version=%s" FlowConfig.version);
     (* start the server *)
-    let flow_options = OptionParser.get_flow_options () in
-    let env = Types_js.server_init genv env flow_options in
+    let env = Types_js.server_init genv env genv.ServerEnv.options in
     let files =
       Relative_path.Map.fold (fun fn _ acc ->
         Relative_path.Set.add fn acc
@@ -95,7 +93,7 @@ struct
     flush oc
 
   let print_status genv env client_root oc =
-    let server_root = ServerArgs.root genv.options in
+    let server_root = Options.root genv.options in
     if server_root <> client_root
     then begin
       let msg = ServerProt.DIRECTORY_MISMATCH {
@@ -438,14 +436,14 @@ struct
     client.close ()
 
   let get_watch_paths options =
-    let config = FlowConfig.get (ServerArgs.root options) in
+    let config = FlowConfig.get (Options.root options) in
     config.FlowConfig.include_stems
 
   (* filter a set of updates coming from dfind and return
      a Relative_path.Set. updates may be coming in from
      the root, or an include path. *)
   let process_updates genv env updates =
-    let root = ServerArgs.root (genv.ServerEnv.options) in
+    let root = Options.root (genv.ServerEnv.options) in
     let is_flow_file =
       let config_path = FlowConfig.fullpath root in
       fun f -> Files_js.is_flow_file f || f = config_path
@@ -483,8 +481,7 @@ struct
           name;
         exit 4
       end;
-      let options = OptionParser.get_flow_options () in
-
+      let options = genv.ServerEnv.options in
       let server_env = Types_js.recheck genv env diff_js options in
       SearchService_js.update_from_master updates;
       server_env

@@ -15,7 +15,7 @@ open Core
 (*****************************************************************************)
 
 type genv = {
-    options          : ServerArgs.options;
+    options          : Options.options;
     workers          : Worker.t list option;
     dfind            : DfindLib.t option;
   }

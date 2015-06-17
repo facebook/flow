@@ -122,14 +122,11 @@ module OptionParser(Config : CONFIG) = struct
           FlowConfig.(flowconfig.options.log_file)
     in
 
-    (* hack opts and flow opts: latter extends the former *)
-    result := Some ({
-      ServerArgs.check_mode    = Config.(mode = Check);
-      ServerArgs.root          = root;
-      ServerArgs.should_detach = Config.(mode = Detach);
-      ServerArgs.log_file      = opt_log_file;
-    },
-    {
+    result := Some {
+      Options.opt_check_mode = Config.(mode = Check);
+      Options.opt_log_file = opt_log_file;
+      Options.opt_root = root;
+      Options.opt_should_detach = Config.(mode = Detach);
       Options.opt_debug = debug;
       Options.opt_verbose = verbose;
       Options.opt_all = all;
@@ -148,19 +145,16 @@ module OptionParser(Config : CONFIG) = struct
       Options.opt_libs;
       Options.opt_no_flowlib = no_flowlib;
       Options.opt_one_line_errors = one_line;
-    });
+    };
     ()
 
-  let rec do_parse () =
+  let rec parse () =
     match !result with
     | Some result -> result
     | None ->
         let argv = Array.to_list Sys.argv in
         CommandSpec.main spec main argv;
-        do_parse ()
-
-  let parse () = fst (do_parse ())
-  let get_flow_options () = snd (do_parse ())
+        parse ()
 end
 
 module Main (OptionParser : Server.OPTION_PARSER) =

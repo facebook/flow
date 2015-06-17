@@ -15,7 +15,7 @@
 open ServerEnv
 
 let make_genv ~multicore options watch_paths =
-  let check_mode   = ServerArgs.check_mode options in
+  let check_mode   = Options.is_check_mode options in
   let gc_control   = GlobalConfig.gc_control in
   let nbr_procs    = GlobalConfig.nbr_procs in
   let workers =
