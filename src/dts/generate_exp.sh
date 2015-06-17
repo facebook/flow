@@ -18,6 +18,11 @@ do
         echo "Running on directory: ${name}"
         $FLOW convert  --r . >/dev/null 2>&1
         $FLOW check --all --strip-root --show-all-errors 1> $exp_file
+        cd declarations
+        for filename in *.js; do
+            mv $filename "${filename}.exp"
+        done
+        cd ..
     else
         echo "Skipping directory: ${name}"
     fi
