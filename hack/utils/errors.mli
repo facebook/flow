@@ -46,7 +46,6 @@ val unexpected_typedef : Pos.t -> Pos.t -> unit
 val fd_name_already_bound : Pos.t -> unit
 val primitive_toplevel : Pos.t -> unit
 val primitive_invalid_alias : Pos.t -> string -> string -> unit
-val shape_typehint : Pos.t -> unit
 val dynamic_new_in_strict_mode : Pos.t -> unit
 val void_cast: Pos.t -> unit
 val object_cast: Pos.t -> string -> unit

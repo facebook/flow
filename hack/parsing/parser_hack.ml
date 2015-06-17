@@ -981,6 +981,9 @@ and hint env =
       let e = hint env in
       Pos.btw start (fst e), Hoption e
   (* A<_> *)(* :XHPNAME *)
+  | Tword when Lexing.lexeme env.lb = "shape" ->
+      let pos = Pos.make env.file env.lb in
+      pos, Hshape (hint_shape_field_list env pos)
   | Tword | Tcolon when Lexing.lexeme env.lb <> "function" ->
       L.back env.lb;
       hint_apply_or_access env []
@@ -3649,7 +3652,7 @@ and typedef ~attr ~is_abstract env =
   let tparams = class_params env in
   let tconstraint = typedef_constraint env in
   expect env Teq;
-  let td = typedef_body env in
+  let td = hint env in
   expect env Tsc;
   let kind = if is_abstract then NewType td else Alias td in
   {
@@ -3670,36 +3673,34 @@ and typedef_constraint env =
       L.back env.lb;
       None
 
-and typedef_body env =
+and hint_shape_field_list env shape_keyword_pos =
   match L.token env.file env.lb with
-  | Tword when Lexing.lexeme env.lb = "shape" ->
-      let pos = Pos.make env.file env.lb in
-      pos, Hshape (typedef_shape_field_list env)
-  | _ -> L.back env.lb; hint env
+  | Tlp -> hint_shape_field_list_remain env
+  | _ ->
+    L.back env.lb;
+    error_at env shape_keyword_pos "\"shape\" is an invalid type; you need to \
+    declare and use a specific shape type.";
+    []
 
-and typedef_shape_field_list env =
-  expect env Tlp;
-  typedef_shape_field_list_remain env
-
-and typedef_shape_field_list_remain env =
+and hint_shape_field_list_remain env =
   match L.token env.file env.lb with
   | Trp -> []
   | _ ->
       L.back env.lb;
       let error_state = !(env.errors) in
-      let fd = typedef_shape_field env in
+      let fd = hint_shape_field env in
       match L.token env.file env.lb with
       | Trp ->
           [fd]
       | Tcomma ->
           if !(env.errors) != error_state
           then [fd]
-          else fd :: typedef_shape_field_list_remain env
+          else fd :: hint_shape_field_list_remain env
       | _ ->
           error_expect env ")";
           [fd]
 
-and typedef_shape_field env =
+and hint_shape_field env =
   let name = shape_field_name env in
   expect env Tsarrow;
   let ty = hint env in

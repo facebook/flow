@@ -816,9 +816,6 @@ and hint_id ~allow_this ~allow_retonly env is_static_var (p, x as id) hl =
     | x when x = SN.Typehints.resource -> N.Hprim N.Tresource
     | x when x = SN.Typehints.arraykey -> N.Hprim N.Tarraykey
     | x when x = SN.Typehints.mixed -> N.Hmixed
-    | x when x = SN.Typehints.shape ->
-      Errors.shape_typehint p;
-      N.Hany
     | x when x = SN.Typehints.this && allow_this ->
         if hl != []
         then Errors.this_no_argument p;

@@ -158,7 +158,7 @@ module Naming                               = struct
   let unset_cast                            = 2056 (* DONT MODIFY!!!! *)
   (* DEPRECATED let nullsafe_property_access = 2057 *)
   let illegal_TRAIT                         = 2058 (* DONT MODIFY!!!! *)
-  let shape_typehint                        = 2059 (* DONT MODIFY!!!! *)
+  (* DEPRECATED let shape_typehint          = 2059  *)
   let dynamic_new_in_strict_mode            = 2060 (* DONT MODIFY!!!! *)
   let invalid_type_access_root              = 2061 (* DONT MODIFY!!!! *)
   let duplicate_user_attribute              = 2062 (* DONT MODIFY!!!! *)
@@ -475,11 +475,6 @@ let primitive_invalid_alias pos used valid =
     ("Invalid Hack type. Using '"^used^"' in Hack is considered \
     an error. Use '"^valid^"' instead, to keep the codebase \
     consistent.")
-
-let shape_typehint pos =
-  add Naming.shape_typehint pos
-  "\"shape\" is an invalid type; you need to declare and use a specific shape \
-  type."
 
 let dynamic_new_in_strict_mode pos =
   add Naming.dynamic_new_in_strict_mode pos
