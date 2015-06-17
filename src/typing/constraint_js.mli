@@ -71,7 +71,7 @@ module Type :
 
       | SpeculativeMatchFailureT of reason * t * t
 
-      | CJSExportDefaultT of reason * t
+      | ModuleT of reason * exporttypes
 
       | SummarizeT of reason * t
 
@@ -115,9 +115,13 @@ module Type :
 
       | ElemT of reason * t * t
 
+      | CJSRequireT of reason * t
       | ImportModuleNsT of reason * t
       | ImportTypeT of reason * t
-      | ExportDefaultT of reason * t
+
+      | CJSExtractNamedExportsT of reason * t * t_out
+      | SetCJSExportT of reason * t * t_out
+      | SetNamedExportsT of reason * t SMap.t * t_out
 
     and predicate =
         AndP of predicate * predicate
@@ -161,6 +165,10 @@ module Type :
       mixins: bool;
       structural: bool;
     }
+    and exporttypes = {
+      exports_tmap: int;
+      cjs_export: t option;
+    }
     and typeparam = {
       reason: reason;
       name: string;
@@ -170,6 +178,8 @@ module Type :
     and static = t
     and super = t
     and properties = t SMap.t
+    and t_out = t
+
     val compare : 'a -> 'a -> int
 
     val open_tvar: t -> (reason * ident)
@@ -307,6 +317,7 @@ type context = {
   (* required modules, and map to their locations *)
   mutable required: SSet.t;
   mutable require_loc: Spider_monkey_ast.Loc.t SMap.t;
+  mutable module_exports_type: module_exports_type;
 
   (* map from tvar ids to nodes (type info structures) *)
   mutable graph: node IMap.t;
@@ -331,6 +342,9 @@ type context = {
   type_table: (Spider_monkey_ast.Loc.t, Type.t) Hashtbl.t;
   annot_table: (Pos.t, Type.t) Hashtbl.t;
 }
+and module_exports_type =
+  | CommonJSModule of Spider_monkey_ast.Loc.t option
+  | ESModule
 
 val new_context:
   ?checked:bool -> ?weak:bool ->

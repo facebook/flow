@@ -126,9 +126,17 @@ let summarize cx t = match t with
   | NumT (reason, Some _) -> NumT.why reason
   | _ -> t
 
+let mk_module_t cx reason = ModuleT(
+  reason,
+  {
+    exports_tmap = Flow_js.mk_propmap cx SMap.empty;
+    cjs_export = None;
+  }
+)
+
 (* given a module name, return associated tvar if already
  * present in module map, or create and add *)
-let module_t cx m reason =
+let get_module_t cx m reason =
   match SMap.get m cx.modulemap with
   | Some t -> t
   | None ->
@@ -136,21 +144,91 @@ let module_t cx m reason =
         cx.modulemap <- cx.modulemap |> SMap.add m t;
       )
 
+let mark_dependency cx module_ loc = (
+  cx.required <- SSet.add module_ cx.required;
+  cx.require_loc <- SMap.add module_ loc cx.require_loc;
+)
+
 let require cx m m_name loc =
-  cx.required <- SSet.add m cx.required;
-  cx.require_loc <- SMap.add m loc cx.require_loc;
-  module_t cx m (mk_reason m_name loc)
+  mark_dependency cx m loc;
+  let reason = mk_reason (spf "CommonJS exports of \"%s\"" m) loc in
+  Flow_js.mk_tvar_where cx reason (fun t ->
+    Flow_js.flow cx (
+      get_module_t cx m (mk_reason m_name loc),
+      CJSRequireT(reason, t)
+    )
+  )
 
 let import_ns cx reason module_name loc =
   let module_ = Module_js.imported_module cx.file module_name in
-  let module_type = require cx module_ module_name loc in
+  mark_dependency cx module_ loc;
   Flow_js.mk_tvar_where cx reason (fun t ->
-    Flow_js.flow cx (module_type, ImportModuleNsT(reason, t))
+    Flow_js.flow cx (
+      get_module_t cx module_ (mk_reason module_name loc),
+      ImportModuleNsT(reason, t)
+    )
+  )
+
+(**
+ * When CommonJS modules set their export type, we do two things:
+ *
+ * (1) If the type is an object, mark it's properties as named exports.
+ *     (this is for convenience as part of our ES <-> CJS module interop
+ *      semantics)
+ *
+ * (2) Set the type in the cjs_export slot of the ModuleT container
+ *)
+let merge_commonjs_export cx reason module_t export_t =
+  let module_t = Flow_js.mk_tvar_where cx reason (fun t ->
+    Flow_js.flow cx (export_t, CJSExtractNamedExportsT(reason, module_t, t))
+  ) in
+  Flow_js.mk_tvar_where cx reason (fun t ->
+    Flow_js.flow cx (module_t, SetCJSExportT(reason, export_t, t))
   )
 
 let exports cx m =
-  module_t cx m (Reason_js.new_reason "exports" (Pos.make_from
+  get_module_t cx m (Reason_js.new_reason "exports" (Pos.make_from
     (Relative_path.create Relative_path.Dummy cx.file)))
+
+(**
+ * Before running inference, we assume that we're dealing with a CommonJS
+ * module that has a built-in, initialized `exports` object (i.e. it is not an
+ * ES module).
+ *
+ * During inference, if we encounter an assignment to module.exports then we
+ * use this as an indicator that the module is definitely a CommonJS module --
+ * but that the bult-in `exports` value is no longer the exported variable.
+ * Instead, whatever was assigned to `module.exports` is now that CJS exported
+ * value.
+ *
+ * On the other hand, if we encounter an ES `export` statement during inference,
+ * we use this as an indicator that the module is an ES module. The one
+ * exception to this rule is that we do not use `export type` as an indicator of
+ * an ES module (since we want CommonJS modules to be able to use `export type`
+ * as well).
+ *
+ * At the end of inference, we make use of this information to decide which
+ * types to store as the expors of the module (i.e. Do we use the built-in
+ * `exports` value? Do we use the type that clobbered `module.exports`? Or do we
+ * use neither because the module only has direct ES exports?).
+ *)
+let mark_exports_type cx reason new_exports_type = (
+  (match (cx.module_exports_type, new_exports_type) with
+  | (ESModule, CommonJSModule(Some _))
+  | (CommonJSModule(Some _), ESModule)
+    ->
+      let msg =
+        "Unable to determine module type (CommonJS vs ES) if both an export " ^
+        "statement and module.exports are used in the same module!"
+      in
+      Flow_js.add_warning cx [(reason, msg)]
+  | _ -> ()
+  );
+  cx.module_exports_type <- new_exports_type
+)
+
+let lookup_module cx m =
+  SMap.find_unsafe m cx.modulemap
 
 (**
  * Given an exported default declaration, identify nameless declarations and
@@ -629,9 +707,13 @@ let rec convert cx map = Ast.Type.(function
         check_type_param_arity cx loc typeParameters 1 (fun () ->
           match List.hd typeParameters with
           | _, StringLiteral { StringLiteral.value; _ } ->
-              Env_js.get_var_declared_type cx
-                (internal_module_name value)
-                (mk_reason (spf "exports of module %s" value) loc)
+              let reason = (mk_reason (spf "exports of module %s" value) loc) in
+              let remote_module_t =
+                Env_js.get_var_declared_type cx (internal_module_name value) reason
+              in
+              Flow_js.mk_tvar_where cx reason (fun t ->
+                Flow_js.flow cx (remote_module_t, CJSRequireT(reason, t))
+              )
           | _ -> assert false
         )
 
@@ -2051,8 +2133,9 @@ and statement cx = Ast.Statement.(
           ) module_scope.entries in
           Flow_js.mk_object_with_map_proto cx reason map (MixedT reason)
     ) in
-    Flow_js.unify cx (CJSExportDefaultT(reason, exports)) t
-
+    let module_t = mk_module_t cx reason in
+    let module_t = merge_commonjs_export cx reason module_t exports in
+    Flow_js.unify cx module_t t
   | (loc, ExportDeclaration {
       ExportDeclaration.default;
       ExportDeclaration.declaration;
@@ -2110,14 +2193,23 @@ and statement cx = Ast.Statement.(
           in
           let for_type = match decl with _, TypeAlias _ -> true | _ -> false in
           let local_tvar = Env_js.var_ref ~for_type cx local_name reason in
-          let exports_obj = get_module_exports cx reason in
-          let relation =
-            if default then
-              (exports_obj, ExportDefaultT(reason, local_tvar))
-            else
-              (exports_obj, SetT(reason, local_name, local_tvar))
-          in
-          Flow_js.flow cx relation
+
+          (**
+           * NOTE: We do not use `export type` as an indicator of an ESModule in
+           *       order to allow CommonJS modules to use `export type` as well.
+           *
+           *       Note that this means that modules that only consist of
+           *       `export type` exports will be internally considered a
+           *       CommonJS module, but this should have minimal observable
+           *       effect to the user given CommonJS<->ESModule interop.
+           *)
+          (if not for_type then mark_exports_type cx reason ESModule);
+
+          let local_name = if default then "default" else local_name in
+          Flow_js.flow cx (
+            exports cx cx._module,
+            SetNamedExportsT(reason, SMap.singleton local_name local_tvar, AnyT.t)
+          )
         ) in
 
         (**
@@ -2131,9 +2223,11 @@ and statement cx = Ast.Statement.(
           let reason =
             mk_reason (spf "%s <<expression>>" export_reason_start) loc
           in
-          let exports_obj = get_module_exports cx reason in
-          let relation = (exports_obj, ExportDefaultT(reason, expr_t)) in
-          Flow_js.flow cx relation
+          mark_exports_type cx reason ESModule;
+          Flow_js.flow cx (
+            exports cx cx._module,
+            SetNamedExportsT(reason, SMap.singleton "default" expr_t, AnyT.t)
+          )
         ) else failwith (
           "Parser Error: Exporting an expression is only possible for " ^
           "`export default`!"
@@ -2192,9 +2286,10 @@ and statement cx = Ast.Statement.(
                   Env_js.var_ref cx local_name reason
               ) in
 
+              mark_exports_type cx reason ESModule;
               Flow_js.flow cx (
-                get_module_exports cx reason,
-                SetT(reason, remote_name, local_tvar)
+                exports cx cx._module,
+                SetNamedExportsT(reason, SMap.singleton remote_name local_tvar, AnyT.t)
               )
             ) in
             List.iter export_specifier specifiers
@@ -2222,6 +2317,21 @@ and statement cx = Ast.Statement.(
               ) in
 
               let reason = mk_reason "export * from \"%s\"" loc in
+
+              (**
+               * TODO: Should probably make a specialized use type for this.
+               *
+               * Doing this as it is done now means that only the last
+               * `export * from` statement in a module counts. So a scenario
+               * like the following will not behave properly:
+               *
+               *   // ModuleA
+               *   export * from "SourceModule1"; // These exports get dropped
+               *   export * from "SourceModule2";
+               *
+               * TODO: Also, add a test for this scenario once it's fixed
+               *)
+              mark_exports_type cx reason (CommonJSModule(Some(loc)));
               set_module_exports cx reason source_tvar
 
           | None -> failwith (
@@ -3369,7 +3479,8 @@ and assignment cx loc = Ast.Expression.(function
             _
           }) ->
             let reason = mk_reason "assignment of module.exports" loc in
-            set_module_exports cx reason (CJSExportDefaultT(reason, t));
+            mark_exports_type cx reason (CommonJSModule(Some(loc)));
+            set_module_exports cx reason t
 
         | _, Ast.Pattern.Expression (_, Member {
             Member._object = _, Identifier (_,
@@ -5260,23 +5371,22 @@ let infer_ast ast file _module force_check =
 
   let cx = Flow_js.fresh_context ~file ~_module ~checked ~weak in
 
+  let reason_exports_module = reason_of_string (spf "exports of module %s" _module) in
+  let local_exports_var = Flow_js.mk_tvar cx reason_exports_module in
+
   let module_scope = (
     let scope = Scope.fresh () in
 
-    let reason_exports_module = reason_of_string
-      (spf "exports of module %s" _module) in
-
-    let local_exports = Flow_js.mk_tvar cx reason_exports_module in
-
     Scope.add "exports"
-      (Scope.create_entry local_exports local_exports None)
+      (Scope.create_entry local_exports_var local_exports_var None)
       scope;
 
     Scope.add (internal_name "exports")
       (Scope.create_entry
         (UndefT (reason_of_string "undefined exports"))
         (AnyT reason_exports_module)
-        None)
+        None
+      )
       scope;
 
     scope
@@ -5290,20 +5400,33 @@ let infer_ast ast file _module force_check =
   if checked then (
     let init_exports = mk_object cx reason in
     set_module_exports cx reason init_exports;
-    Flow_js.flow cx (
-      init_exports,
-      Env_js.get_var_declared_type cx "exports" reason
-    );
 
     (* infer *)
+    Flow_js.flow cx (init_exports, local_exports_var);
     infer_core cx statements;
 
     scan_for_suppressions cx comments;
   );
 
-  Flow_js.flow cx (
-    get_module_exports cx reason,
-    exports cx _module);
+  let module_t =
+    mk_module_t cx (reason_of_string (spf "exports of module %s" _module))
+  in
+  let module_t = (
+    match cx.module_exports_type with
+    (* CommonJS with a clobbered module.exports *)
+    | CommonJSModule(Some(loc)) ->
+      let module_exports_t = get_module_exports cx reason in
+      let reason = mk_reason "exports" loc in
+      merge_commonjs_export cx reason module_t module_exports_t
+
+    (* CommonJS with a mutated 'exports' object *)
+    | CommonJSModule(None) ->
+      merge_commonjs_export cx reason module_t local_exports_var
+
+    (* Uses standard ES module exports *)
+    | ESModule -> module_t
+  ) in
+  Flow_js.flow cx (module_t, exports cx _module);
 
   (* insist that whatever type flows into exports is fully annotated *)
   (if modes.strict then force_annotations cx);

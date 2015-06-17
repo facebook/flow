@@ -18,5 +18,5 @@ function givesAFoo5(): ClassFoo5 {
 
 exports.ClassFoo4 = ClassFoo4;
 exports.ClassFoo5 = ClassFoo5
-exports.givesAFoo4 = givesAFoo4;
-exports.givesAFoo5 = givesAFoo5;
+exports.foo4Inst = new ClassFoo4();
+exports.foo5Inst = new ClassFoo5();

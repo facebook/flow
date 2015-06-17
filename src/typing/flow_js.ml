@@ -431,35 +431,6 @@ let iter_props_ cx id f =
 (* strict mode *)
 (***************)
 
-(* shim to unwrap residual CJSExportDefaultT instances.
-   Normally CJSExportDefaultT is ephemeral: it is intercepted
-   by ImportModuleNsT and unwrapped. However, this doesn't always
-   happen (e.g., when a module is required, rather than imported).
-   This leaves open the possibility that instances of it will be
-   encountered as concrete types in bounds.lower and bounds.upper.
-
-   This is a problem for callers of possible_types (currently
-   resolve_type and assert_ground), which expect to see only
-   unwrapped value types such as ObjT in these bounds maps.
-
-   CJSExportDefaultT will be factored away (or its ephemerality
-   will be guaranteed) shortly, so rather than replumb __flow to
-   fix the immediate problem, we'll just use an on-the-fly unwrapper
-   in place of a raw call to TypeMap.keys. Once the CJSExportDefaultT
-   work is done, this shim can be removed.
-
-   Note: possible_types is the only place where this delegation
-   was necessary to fix the get-def command (see T7047791), but
-   there may well be others.
- *)
-let typemap_keys m =
-  TypeMap.fold (fun k _ acc ->
-    (match k with
-      | CJSExportDefaultT (_, t) -> t
-      | t -> t
-    ) :: acc
-  ) m []
-
 (* For any constraints, return a list of def types that form either the lower
    bounds of the solution, or a singleton containing the solution itself. *)
 let types_of constraints =
@@ -468,14 +439,7 @@ let types_of constraints =
   | Resolved t -> [t]
 
 (* Def types that describe the solution of a type variable. *)
-let possible_types cx id =
-  let constraints = find_graph cx id in
-  (* TODO: Replace the following code with `types_of constraints`. The code
-     below mostly duplicates the functionality of `types_of constraints`, except
-     for the call to typemap_keys instead of TypeMap.keys. *)
-  match constraints with
-  | Unresolved { lower; _ } -> typemap_keys lower
-  | Resolved t -> [t]
+let possible_types cx id = types_of (find_graph cx id)
 
 let possible_types_of_type cx = function
   | OpenT (_, id) -> possible_types cx id
@@ -1030,6 +994,8 @@ let rec assume_ground cx ids = function
   | ObjRestT(_,_,t)
   | KeyT(_,t)
   | ImportModuleNsT(_,t)
+  | CJSRequireT(_,t)
+  | ImportTypeT(_,t)
 
       -> assume_ground cx ids t
 
@@ -1154,8 +1120,12 @@ let rec assert_ground ?(infer=false) cx skip ids = function
   | EnumT(reason,t) ->
       assert_ground cx skip ids t
 
-  | CJSExportDefaultT (reason,t) ->
-      assert_ground ~infer:true cx skip ids t
+  | ModuleT(reason, {exports_tmap; cjs_export}) ->
+      iter_props cx exports_tmap (fun _ -> assert_ground ~infer:true cx skip ids);
+      (match cjs_export with
+       | Some(t) -> assert_ground ~infer:true cx skip ids t
+       | None -> ()
+      )
 
   | t -> failwith (streason_of_t t) (** TODO **)
 
@@ -1405,50 +1375,25 @@ let rec __flow cx (l, u) trace =
     | _, BecomeT (_, t) ->
       rec_unify cx trace l t
 
-    (**********************************************************************)
-    (* Unpack CommonJS exports early to guarantee that bounds are checked *)
-    (* on the exports data rather than on the CJSExportDefaultT wrapper.  *)
-    (**********************************************************************)
-    | (CJSExportDefaultT(_, exported_t), ImportModuleNsT(reason, t)) ->
-      (* Copy the exports into a new object, skipping any "default" keys *)
-      let ns_obj = mk_object_with_proto cx reason (MixedT reason) in
-      let ns_obj = mk_tvar_where cx reason (fun t ->
-        rec_flow cx trace
-          (exported_t,
-           ObjAssignT(reason, ns_obj, t, ["default"], false))
-      ) in
+    (************************************************)
+    (* bound variables are equal only to themselves *)
+    (************************************************)
+    | (BoundT _, _) | (_, BoundT _) when l = u ->
+      ()
 
-      (* Set the 'default' property on the new object to point at the exports *)
-      rec_flow cx trace (ns_obj, SetT(reason, "default", exported_t));
+    (***********************)
+    (* guarded unification *)
+    (***********************)
 
-      (**
-       * Now that we've constructed the derived ES6 module namespace object for
-       * these CommonJS exports, flow them to the import to be treated like an
-       * ES6 -> ES6 import.
-       *)
-      rec_flow cx trace (ns_obj, u)
+    (** Utility to unify a pair of types based on a trigger. Triggers are
+        commonly type variables that are set up to record when certain
+        operations have been processed: until then, they remain latent. For
+        example, we can respond to events such as "a property is added," "a
+        refinement succeeds," etc., by setting up unification constraints that
+        are processed only when the corresponding triggers fire. *)
 
-    | (ObjT(reason_o, {props_tmap = mapr; _;}), ExportDefaultT(reason, t)) ->
-        let exported_props = find_props cx mapr in
-        let exported_props = SMap.add "default" t exported_props in
-        cx.property_maps <- IMap.add mapr exported_props cx.property_maps;
-        rec_flow cx trace (l, SetT(reason, "default", t))
-
-    (*******************************)
-    (* Handle non-CommonJS imports *)
-    (*******************************)
-    | (_, ImportModuleNsT(reason, t)) ->
-      let ns_obj_sealed = mk_tvar_where cx reason (fun t ->
-        rec_flow cx trace (l, ObjSealT(reason, t))
-      ) in
-      rec_flow cx trace (ns_obj_sealed, t)
-
-    (**************************************************************************)
-    (* Unwrap any CommonJS export objects that are flowing to something other *)
-    (* than a ImportModuleNsT.                                                *)
-    (**************************************************************************)
-    | (CJSExportDefaultT(_, t), _) ->
-      rec_flow cx trace (t, u)
+    | (_, UnifyT(t,t_other)) ->
+      rec_unify cx trace t t_other
 
     (*******************************************************************)
     (* Import type creates a properly-parameterized type alias for the *)
@@ -1485,26 +1430,173 @@ let rec __flow cx (l, u) trace =
         "`import type` only works on exported classes, functions, and type aliases!"
       ]
 
-    (***********************)
-    (* guarded unification *)
-    (***********************)
+    (**************************************************************************)
+    (* Module exports                                                         *)
+    (*                                                                        *)
+    (* Flow supports both CommonJS and standard ES modules as well as some    *)
+    (* interoperability semantics for communicating between the two module    *)
+    (* systems in both directions.                                            *)
+    (*                                                                        *)
+    (* In order to support both systems at once, Flow abstracts the notion of *)
+    (* module exports by storing a type map for each of the exports of a      *)
+    (* given module, and for each module there is a ModuleT that maintains    *)
+    (* this type map. The exported types are then considered immutable once   *)
+    (* the module has finished inference.                                     *)
+    (*                                                                        *)
+    (* When a type is set for the CommonJS exports value, we store it         *)
+    (* separately from the normal named exports tmap that ES exports are      *)
+    (* stored within. This allows us to distinguish CommonJS modules from ES  *)
+    (* modules when interpreting an ES import statement -- which is important *)
+    (* because ES ModuleNamespace objects built from CommonJS exports are a   *)
+    (* little bit magic.                                                      *)
+    (*                                                                        *)
+    (* For example: If a CommonJS module exports an object, we will extract   *)
+    (* each of the properties of that object and consider them as "named"     *)
+    (* exports for the purposes of an import statement elsewhere:             *)
+    (*                                                                        *)
+    (*   // CJSModule.js                                                      *)
+    (*   module.exports = {                                                   *)
+    (*     someNumber: 42                                                     *)
+    (*   };                                                                   *)
+    (*                                                                        *)
+    (*   // ESModule.js                                                       *)
+    (*   import {someNumber} from "CJSModule";                                *)
+    (*   var a: number = someNumber;                                          *)
+    (*                                                                        *)
+    (* We also map CommonJS export values to the "default" export for         *)
+    (* purposes of import statements in other modules:                        *)
+    (*                                                                        *)
+    (*   // CJSModule.js                                                      *)
+    (*   module.exports = {                                                   *)
+    (*     someNumber: 42                                                     *)
+    (*   };                                                                   *)
+    (*                                                                        *)
+    (*   // ESModule.js                                                       *)
+    (*   import CJSDefaultExport from "CJSModule";                            *)
+    (*   var a: number = CJSDefaultExport.someNumber;                         *)
+    (*                                                                        *)
+    (* Note that the ModuleT type is not intended to be surfaced to any       *)
+    (* userland-visible constructs. Instead it's meant as an internal         *)
+    (* construct that is only *mapped* to/from userland constructs (such as a *)
+    (* CommonJS exports object or an ES ModuleNamespace object).              *)
+    (**************************************************************************)
 
-    (** Utility to unify a pair of types based on a trigger. Triggers are
-        commonly type variables that are set up to record when certain
-        operations have been processed: until then, they remain latent. For
-        example, we can respond to events such as "a property is added," "a
-        refinement succeeds," etc., by setting up unification constraints that
-        are processed only when the corresponding triggers fire. *)
+    (* ES exports *)
+    | (ModuleT(_, exports), SetNamedExportsT(reason, tmap, t_out)) ->
+      SMap.iter (write_prop cx exports.exports_tmap) tmap;
+      rec_flow cx trace (l, t_out)
 
-    | (_, UnifyT(t,t_other)) ->
-      rec_unify cx trace t t_other
+    (* CommonJS export *)
+    | (ModuleT(_, exports), SetCJSExportT(reason, t, t_out)) ->
+      (match exports.cjs_export with
+       | Some _ ->
+          assert_false "Internal Error: SetCJSExportT was applied twice!"
+       | None ->
+          rec_flow cx trace (
+            ModuleT(reason, {exports with cjs_export = Some(t)}),
+            t_out
+          )
+      )
 
-    (************************************************)
-    (* bound variables are equal only to themselves *)
-    (************************************************)
+    (**
+     * ObjT CommonJS export values have their properties turned into named
+     * exports
+     *)
+    | (ObjT(_, {props_tmap; proto_t; _;}),
+       CJSExtractNamedExportsT(reason, module_t, t_out)) ->
 
-    | (BoundT _, _) | (_, BoundT _) when l = u ->
-      ()
+      (* Copy props from the prototype *)
+      let module_t = mk_tvar_where cx reason (fun t ->
+        rec_flow cx trace (proto_t, CJSExtractNamedExportsT(reason, module_t, t))
+      ) in
+
+      (* Copy own props *)
+      let module_t = mk_tvar_where cx reason (fun t ->
+        rec_flow cx trace (module_t, SetNamedExportsT(
+          reason,
+          find_props cx props_tmap,
+          t
+        ))
+      ) in
+      rec_flow cx trace (module_t, t_out)
+
+    (**
+     * InstanceT CommonJS export values have their properties turned into named
+     * exports
+     *)
+    | (InstanceT(_, _, super, {fields_tmap; methods_tmap; _;}),
+       CJSExtractNamedExportsT(reason, module_t, t_out)) ->
+
+      (* Copy fields *)
+      let module_t = mk_tvar_where cx reason (fun t ->
+        rec_flow cx trace (module_t, SetNamedExportsT(
+          reason,
+          find_props cx fields_tmap,
+          t
+        ))
+      ) in
+
+      (* Copy methods *)
+      let module_t = mk_tvar_where cx reason (fun t ->
+        rec_flow cx trace (module_t, SetNamedExportsT(
+          reason,
+          find_props cx methods_tmap,
+          t
+        ))
+      ) in
+      rec_flow cx trace (module_t, t_out)
+
+    (**
+     * All other CommonJS export value types do not get merged into the named
+     * exports tmap in any special way.
+     *)
+    | (_, CJSExtractNamedExportsT(_, module_t, t_out)) ->
+      rec_flow cx trace (module_t, t_out)
+
+    (**************************************************************************)
+    (* Module imports                                                         *)
+    (*                                                                        *)
+    (* The process of importing from a module consists of reading from the    *)
+    (* foreign ModuleT type and generating a user-visible construct from it.  *)
+    (*                                                                        *)
+    (* For CommonJS imports (AKA 'require()'), if the foreign module is an ES *)
+    (* module we generate an object whose properties correspond to each of    *)
+    (* the named exports of the foreign module. If the foreign module is also *)
+    (* a CommonJS module, use the type of the foreign CommonJS exports value  *)
+    (* directly.                                                              *)
+    (*                                                                        *)
+    (* For ES imports (AKA `import` statements), simply generate a model of   *)
+    (* an ES ModuleNamespace object from the individual named exports of the  *)
+    (* foreign module. This object can then be passed up to "userland"        *)
+    (* directly (via `import * as`) or it can be used to extract individual   *)
+    (* exports from the foreign module (via `import {}` and `import X from`). *)
+    (**************************************************************************)
+
+    (* require('SomeModule') *)
+    | (ModuleT(_, exports), CJSRequireT(reason, t)) ->
+      let cjs_exports = (
+        match exports.cjs_export with
+        | Some(t) -> t
+        | None ->
+          let proto = MixedT(reason) in
+          let props_smap = find_props cx exports.exports_tmap in
+          mk_object_with_map_proto cx reason ~sealed:true props_smap proto
+      ) in
+      rec_flow cx trace (cjs_exports, t)
+
+    (* import [...] from 'SomeModule'; *)
+    | (ModuleT(_, exports), ImportModuleNsT(reason, t)) ->
+      let exports_tmap = find_props cx exports.exports_tmap in
+      let ns_obj_tmap = (
+        match exports.cjs_export with
+        | Some(t) -> SMap.add "default" t exports_tmap
+        | None -> exports_tmap
+      ) in
+      let proto = MixedT(reason) in
+      let ns_obj =
+        mk_object_with_map_proto cx reason ~sealed:true ns_obj_tmap proto
+      in
+      rec_flow cx trace (ns_obj, t)
 
     (********************************************)
     (* summary types forget literal information *)
@@ -4526,8 +4618,12 @@ let rec gc cx state = function
       gc cx state t1;
       gc cx state t2
 
-  | CJSExportDefaultT (_, t) ->
-      gc cx state t
+  | ModuleT (_, {exports_tmap; cjs_export}) ->
+      iter_props cx exports_tmap (fun _ -> gc cx state);
+      (match cjs_export with
+        | Some t -> gc cx state t
+        | None -> ()
+      )
 
   (** use types **)
 
@@ -4648,8 +4744,20 @@ let rec gc cx state = function
   | ImportTypeT (_, t) ->
       gc cx state t
 
-  | ExportDefaultT (_, t) ->
+  | CJSRequireT (_, t) ->
       gc cx state t
+
+  | CJSExtractNamedExportsT (_, t, t_out) ->
+      gc cx state t;
+      gc cx state t_out
+
+  | SetCJSExportT (_, t, t_out) ->
+      gc cx state t;
+      gc cx state t_out
+
+  | SetNamedExportsT (_, t_smap, t_out) ->
+      List.iter (gc cx state) (SMap.values t_smap);
+      gc cx state t_out
 
 and gc_id cx state id =
   let root_id, constraints = find_constraints cx id in (

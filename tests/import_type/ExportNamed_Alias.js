@@ -5,10 +5,7 @@
 export type AliasFoo3  = {
   givesANum(): number
 };
-export type AliasFoo4 = {
-  givesAStr(): string
-};
-export function givesAFoo3(): AliasFoo3 {
+export function givesAFoo3Obj(): AliasFoo3 {
   return {
     givesANum(): number { return 42; }
   };

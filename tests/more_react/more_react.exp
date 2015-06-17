@@ -11,9 +11,6 @@ App.react.js:19:15,15: number
 This type is incompatible with
 App.react.js:10:16,21: string
 
-App.react.js:22:21,25: parameter event
-Missing annotation
-
 App.react.js:23:22,23: number
 This type is incompatible with
 App.react.js:10:16,21: string
@@ -27,4 +24,4 @@ propTypes.js:9:3,11: property name
 Property not found in
 propTypes.js:15:1,18:2: type parameter D of React element: D
 
-Found 7 errors
+Found 6 errors

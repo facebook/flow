@@ -7,4 +7,4 @@ class ClassFoo1 {
 }
 
 export default ClassFoo1;
-export function givesAFoo1(): ClassFoo1 { return new ClassFoo1(); };
+export var foo1Inst = new ClassFoo1();
