@@ -1,7 +1,7 @@
 open Format
 open Dts_ast
 
-module SSet = Set.Make(String)
+module SSet = Utils.SSet
 
 let rec list ?(sep="") f fmt = function
   | [x] ->
@@ -470,7 +470,7 @@ and print_module scope imports prefix fmt = Statement.(function
     let new_prefix = List.append prefix [name] in
     let new_scope = get_modules_in_scope scope new_prefix body in
     let list_possible_modules =
-      SSet.union (get_modules_used body) (SSet.of_list prefix) in
+      SSet.union (get_modules_used body) (Utils.set_of_list prefix) in
     let list_modules_used =
       get_modules_to_import new_scope list_possible_modules in
 
