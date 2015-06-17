@@ -1249,19 +1249,8 @@ and name_loop env =
       back env
 
 (*****************************************************************************)
-(* Typedefs *)
+(* Shapes *)
 (*****************************************************************************)
-
-and typedef env = wrap env begin function
-  | Tword when !(env.last_str) = "shape" ->
-      last_token env;
-      expect "(" env;
-      right env (list_comma_multi_nl ~trailing:true shape_type_elt);
-      expect ")" env
-  | _ ->
-      back env;
-      hint env
-end
 
 and shape_type_elt env =
   if has_consumed env expr
@@ -1311,7 +1300,7 @@ and is_typeconst env =
 and type_const env =
   seq env [last_token; space; expect "type"; space; hint; as_constraint];
   if next_non_ws_token env = Teq
-  then seq env [space; expect "="; space; typedef; semi_colon]
+  then seq env [space; expect "="; space; hint; semi_colon]
   else semi_colon env
 
 and abs_type_const env =
@@ -1358,6 +1347,22 @@ and hint env = wrap env begin function
       name_loop env;
       taccess_loop env;
       hint_parameter env
+  | Tword when !(env.last_str) = "shape" ->
+      last_token env;
+      expect "(" env;
+      if next_token env = Trp || attempt env begin fun env ->
+        (* does the shape have only one element? *)
+        shape_type_elt env;
+        wrap_eof env begin function
+          | Tcomma -> next_token env = Trp
+          | Trp -> true
+          | _ -> false
+        end
+      end then
+        list_comma_single shape_type_elt env
+      else
+        right env (list_comma_multi_nl ~trailing:true shape_type_elt);
+      expect ")" env
   | Tword ->
       last_token env;
       name_loop env;
@@ -2113,7 +2118,7 @@ and stmt_toplevel_word env = function
   | "type" | "newtype" ->
       seq env [last_token; space; hint; as_constraint; space;
                expect "="; space];
-      typedef env;
+      hint env;
       semi_colon env;
   | "namespace" ->
       last_token env;
