@@ -13,12 +13,11 @@ open Utils
 val init_modes: Options.options -> unit
 
 (* incremental typecheck entry point *)
-val recheck: ServerEnv.genv -> ServerEnv.env -> SSet.t -> Options.options ->
-  ServerEnv.env
+val recheck: ServerEnv.genv -> ServerEnv.env -> SSet.t -> ServerEnv.env
 
 (* hh_server initial (full) check *)
 val server_init:
-  ServerEnv.genv -> ServerEnv.env -> Options.options -> ServerEnv.env
+  ServerEnv.genv -> ServerEnv.env -> ServerEnv.env
 
 (* hh_single_type_check entry point, probably to be moved *)
 val single_main: string list -> Options.options -> unit

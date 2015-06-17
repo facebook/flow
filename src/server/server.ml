@@ -57,7 +57,7 @@ struct
       Hh_logger.log "executable=%s" Sys.executable_name;
       Hh_logger.log "version=%s" FlowConfig.version);
     (* start the server *)
-    let env = Types_js.server_init genv env genv.ServerEnv.options in
+    let env = Types_js.server_init genv env in
     let files =
       Relative_path.Map.fold (fun fn _ acc ->
         Relative_path.Set.add fn acc
@@ -481,8 +481,7 @@ struct
           name;
         exit 4
       end;
-      let options = genv.ServerEnv.options in
-      let server_env = Types_js.recheck genv env diff_js options in
+      let server_env = Types_js.recheck genv env diff_js in
       SearchService_js.update_from_master updates;
       server_env
     end

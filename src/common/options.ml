@@ -35,3 +35,4 @@ let is_check_mode opts = opts.opt_check_mode
 let log_file opts = opts.opt_log_file
 let root opts = opts.opt_root
 let should_detach opts = opts.opt_should_detach
+let show_all_errors opts = opts.opt_show_all_errors

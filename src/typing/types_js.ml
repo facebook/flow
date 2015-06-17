@@ -589,12 +589,13 @@ let deps unmodified inferred_files removed_modules =
    `files_info` contains files that parsed successfully in the previous
    phase (which could be the init phase or a previous recheck phase)
 *)
-let recheck genv env modified opts =
-  if not opts.Options.opt_strict
+let recheck genv env modified =
+  let options = genv.ServerEnv.options in
+  if not options.Options.opt_strict
   then failwith "Missing -- strict";
 
   (* filter modified files *)
-  let root = Options.root genv.ServerEnv.options in
+  let root = Options.root options in
   let config = FlowConfig.get root in
   let modified = SSet.filter (Files_js.wanted config) modified in
 
@@ -619,7 +620,7 @@ let recheck genv env modified opts =
   (* reparse modified and added files *)
   let freshparsed, freshparse_fail, freshparse_errors =
     Parsing_service_js.reparse genv.ServerEnv.workers modified
-      (fun () -> init_modes opts)
+      (fun () -> init_modes options)
   in
   save_errors_or_suppressions parse_errors freshparse_fail freshparse_errors;
 
@@ -654,7 +655,7 @@ let recheck genv env modified opts =
     freshparsed_list
     removed_modules
     freshparse_fail
-    opts
+    options
     (fun inferred ->
       (* need to merge the closure of inferred files and their deps *)
       let inferred_set = set_of_list inferred in
@@ -705,7 +706,7 @@ let full_check workers parse_next opts =
   (parsed, checked)
 
 (* helper - print errors. used in check-and-die runs *)
-let print_errors ?root flow_opts =
+let print_errors ?root options =
   let errors = get_errors () in
 
   let errors = match root with
@@ -727,16 +728,17 @@ let print_errors ?root flow_opts =
         errors
   in
 
-  if flow_opts.Options.opt_json
+  if options.Options.opt_json
   then Errors_js.print_errorl true errors stdout
   else
     Errors_js.print_error_summary
-      (not flow_opts.Options.opt_show_all_errors)
+      (not (Options.show_all_errors options))
       errors
 
 (* initialize flow server state, including full check *)
-let server_init genv env flow_opts =
-  let root = Options.root genv.ServerEnv.options in
+let server_init genv env =
+  let options = genv.ServerEnv.options in
+  let root = Options.root options in
 
   Files_js.package_json root |> List.iter (fun package ->
     let errors = Module_js.add_package package in
@@ -748,7 +750,7 @@ let server_init genv env flow_opts =
 
   let get_next = Files_js.make_next_files root in
   let (parsed, checked) =
-    full_check genv.ServerEnv.workers get_next flow_opts in
+    full_check genv.ServerEnv.workers get_next options in
 
   (* for now we populate file_infos with empty def lists *)
   let files_info = SSet.fold (fun file info ->
@@ -763,9 +765,9 @@ let server_init genv env flow_opts =
 
   SharedMem.init_done();
 
-  if Options.is_check_mode genv.ServerEnv.options
+  if Options.is_check_mode options
   then (
-    print_errors ~root flow_opts;
+    print_errors ~root options;
     { env with ServerEnv.errorl = get_errors () }
   ) else (
     env
@@ -774,7 +776,7 @@ let server_init genv env flow_opts =
 (* single command entry point: takes a list of paths,
  * parses and checks serially, prints errs to stdout.
  *)
-let single_main (paths : string list) flow_opts =
+let single_main (paths : string list) options =
   let get_next = Files_js.make_next_files (Path.make (List.hd paths)) in
-  let _ = full_check None get_next flow_opts in
-  print_errors flow_opts
+  let _ = full_check None get_next options in
+  print_errors options
