@@ -26,12 +26,7 @@ struct
 
   let name = "flow server"
 
-  (* to support multiple roots, all relative paths in flow
-     are absolute paths with a dummy prefix  *)
-  let config_filename () = Relative_path.(
-    let relp = concat Root ".flowconfig" in
-    let s = to_absolute relp in
-    create Dummy s)
+  let config_path root = Path.concat root ".flowconfig"
 
   (* This determines whether the current config file is compatible with the
    * config that this server was initialized with. Returning false means
@@ -59,9 +54,9 @@ struct
     (* start the server *)
     let env = Types_js.server_init genv env in
     let files =
-      Relative_path.Map.fold (fun fn _ acc ->
-        Relative_path.Set.add fn acc
-      ) env.ServerEnv.files_info Relative_path.Set.empty in
+      ServerEnv.PathMap.fold (fun fn _ acc ->
+        ServerEnv.PathSet.add fn acc
+      ) env.ServerEnv.files_info ServerEnv.PathSet.empty in
     SearchService_js.update_from_master files;
     env
 
@@ -440,7 +435,7 @@ struct
     config.FlowConfig.include_stems
 
   (* filter a set of updates coming from dfind and return
-     a Relative_path.Set. updates may be coming in from
+     a ServerEnv.PathSet. updates may be coming in from
      the root, or an include path. *)
   let process_updates genv env updates =
     let root = Options.root (genv.ServerEnv.options) in
@@ -454,9 +449,9 @@ struct
       if is_flow_file f &&
         (* note: is_included may be expensive. check in-root match first. *)
         (str_starts_with f sroot || FlowConfig.is_included config f)
-      then Relative_path.(Set.add (create Dummy f) acc)
+      then ServerEnv.PathSet.add (Path.make f) acc
       else acc
-    ) updates Relative_path.Set.empty
+    ) updates ServerEnv.PathSet.empty
 
   (* XXX: can some of the logic in process_updates be moved here? *)
   let should_recheck _update = true
@@ -464,12 +459,12 @@ struct
   (* on notification, execute client commands or recheck files *)
   let recheck genv env updates =
     let diff_js = updates in
-    if Relative_path.Set.is_empty diff_js
+    if ServerEnv.PathSet.is_empty diff_js
     then env
     else begin
       SearchService_js.clear updates;
-      let diff_js = Relative_path.Set.fold (fun x a ->
-        SSet.add (Relative_path.to_absolute x) a) diff_js SSet.empty in
+      let diff_js = ServerEnv.PathSet.fold (fun x a ->
+        SSet.add (Path.to_string x) a) diff_js SSet.empty in
       (* TEMP: if library files change, stop the server *)
       let modified_lib_files = SSet.inter diff_js (Files_js.get_lib_files ()) in
       if not (SSet.is_empty modified_lib_files)

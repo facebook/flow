@@ -16,6 +16,7 @@ val make: string -> t
 val to_string: t -> string
 val file_exists: t -> bool
 val is_directory: t -> bool
+val compare: t -> t -> int
 val concat: t -> string -> t
 val chdir: t -> unit
 val dirname: t -> t

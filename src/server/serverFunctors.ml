@@ -33,15 +33,15 @@ module type SERVER_PROGRAM = sig
   val preinit : unit -> unit
   val init : genv -> env -> env
   val run_once_and_exit : genv -> env -> unit
-  val should_recheck : Relative_path.t -> bool
+  val should_recheck : Path.t -> bool
   (* filter and relativize updated file paths *)
-  val process_updates : genv -> env -> SSet.t -> Relative_path.Set.t
-  val recheck: genv -> env -> Relative_path.Set.t -> env
-  val post_recheck_hook: genv -> env -> env -> Relative_path.Set.t -> unit
+  val process_updates : genv -> env -> SSet.t -> ServerEnv.PathSet.t
+  val recheck: genv -> env -> ServerEnv.PathSet.t -> env
+  val post_recheck_hook: genv -> env -> env -> ServerEnv.PathSet.t -> unit
   val parse_options: unit -> Options.options
   val get_watch_paths: Options.options -> Path.t list
   val name: string
-  val config_filename : unit -> Relative_path.t
+  val config_path : Path.t -> Path.t
   val validate_config : genv -> bool
   val handle_client : genv -> env -> client -> unit
 end
@@ -139,13 +139,13 @@ end = struct
 
   let recheck genv old_env updates =
     let to_recheck =
-      Relative_path.Set.filter Program.should_recheck updates in
-    let config = Program.config_filename () in
-    if Relative_path.Set.mem config updates &&
+      ServerEnv.PathSet.filter Program.should_recheck updates in
+    let config = Program.config_path (Options.root genv.ServerEnv.options) in
+    if ServerEnv.PathSet.mem config updates &&
       not (Program.validate_config genv) then begin
       Hh_logger.log
         "%s changed in an incompatible way; please restart %s.\n"
-        (Relative_path.suffix config)
+        (Path.to_string config)
         Program.name;
       exit 4;
     end;
@@ -165,7 +165,7 @@ end = struct
       let updates = Program.process_updates genv env raw_updates in
       let env, rechecked = recheck genv env updates in
       let rechecked_count = rechecked_count +
-        (Relative_path.Set.cardinal rechecked) in
+        (ServerEnv.PathSet.cardinal rechecked) in
       recheck_loop (i + 1) rechecked_count genv env
     end
 

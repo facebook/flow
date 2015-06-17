@@ -56,6 +56,8 @@ let to_string path = path
 let concat path more =
   make (Printf.sprintf "%s/%s" path more)
 
+let compare = Pervasives.compare
+
 let cat = Sys_utils.cat
 let dirname = Filename.dirname
 

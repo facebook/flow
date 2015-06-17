@@ -625,8 +625,8 @@ let recheck genv env modified =
   save_errors_or_suppressions parse_errors freshparse_fail freshparse_errors;
 
   (* get old (unmodified, undeleted) files that were parsed successfully *)
-  let old_parsed = Relative_path.Map.fold (fun k _ a ->
-    SSet.add (Relative_path.to_absolute k) a)
+  let old_parsed = ServerEnv.PathMap.fold (fun k _ a ->
+    SSet.add (Path.to_string k) a)
     env.ServerEnv.files_info SSet.empty in
   let undeleted_parsed = SSet.diff old_parsed deleted in
   let unmodified_parsed = SSet.diff undeleted_parsed modified in
@@ -674,9 +674,9 @@ let recheck genv env modified =
   (* for now we populate file_infos with empty def lists *)
   let parsed = SSet.union freshparsed unmodified_parsed in
   let files_info = SSet.fold (fun file info ->
-    let file = Relative_path.create Relative_path.Dummy file in
-    Relative_path.Map.add file Parsing_service.empty_file_info info
-  ) parsed Relative_path.Map.empty in
+    let file = Path.make file in
+    ServerEnv.PathMap.add file Parsing_service.empty_file_info info
+  ) parsed ServerEnv.PathMap.empty in
 
   (* NOTE: unused fields are left in their initial empty state *)
   { env with ServerEnv.files_info = files_info; }
@@ -754,9 +754,9 @@ let server_init genv env =
 
   (* for now we populate file_infos with empty def lists *)
   let files_info = SSet.fold (fun file info ->
-    let file = Relative_path.create Relative_path.Dummy file in
-    Relative_path.Map.add file Parsing_service.empty_file_info info
-  ) parsed Relative_path.Map.empty in
+    let file = Path.make file in
+    ServerEnv.PathMap.add file Parsing_service.empty_file_info info
+  ) parsed ServerEnv.PathMap.empty in
 
   (* We ensure an invariant required by recheck, namely that the keyset of
      `files_info` contains files that parsed successfully. *)

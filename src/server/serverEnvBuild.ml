@@ -28,6 +28,6 @@ let make_genv ~multicore options watch_paths =
   }
 
 let make_env options =
-  { files_info     = Relative_path.Map.empty;
+  { files_info     = ServerEnv.PathMap.empty;
     errorl         = [];
   }

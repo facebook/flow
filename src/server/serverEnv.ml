@@ -8,7 +8,8 @@
  *
  *)
 
-open Core
+module PathSet = Set.Make(Path)
+module PathMap = Utils.MyMap(Path)
 
 (*****************************************************************************)
 (* The "static" environment, initialized first and then doesn't change *)
@@ -29,8 +30,9 @@ type genv = {
  * (see respectively Parser_heap, Naming_heap, Typing_env).
  * The Ast.id are keys to index this shared space.
  *)
+
 type env = {
-    files_info     : FileInfo.t Relative_path.Map.t;
+    files_info     : FileInfo.t PathMap.t;
     errorl         : Errors_js.error list;
   }
 
@@ -43,7 +45,7 @@ let invoke_async_queue () =
   (* we reset the queue before rather than after invoking the function as
    * those functions may themselves add more items to the queue *)
   async_queue := [];
-  List.iter ~f:(fun f -> f ()) queue
+  List.iter (fun f -> f ()) queue
 
 (*****************************************************************************)
 (* Killing the server  *)
@@ -51,19 +53,3 @@ let invoke_async_queue () =
 
 let die() =
   exit(0)
-
-(*****************************************************************************)
-(* Listing all the files present in the environment *)
-(*****************************************************************************)
-
-let list_files env oc =
-  let acc = List.fold_right
-    ~f:begin fun error acc ->
-      let pos = Errors_js.pos_of_error error in
-      Relative_path.Set.add pos.Pos.pos_file acc
-    end
-    ~init:Relative_path.Set.empty
-    env.errorl in
-  Relative_path.Set.iter (fun s ->
-    Printf.fprintf oc "%s\n" (Relative_path.to_absolute s)) acc;
-  flush oc
