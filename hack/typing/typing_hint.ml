@@ -231,7 +231,11 @@ and hint_ p env = function
       env, Ttuple tyl
   | Hshape fdm ->
       let env, fdm = ShapeMap.map_env hint env fdm in
-      env, Tshape fdm
+      (* "fields known" is false, because this shape type comes from type
+       * hint - shapes that contain listed fields can be passed here, but due
+       * to structural subtyping they can also contain other fields, that we
+       * don't know about. *)
+      env, Tshape (false, fdm)
 
 let hint_locl ?(ensure_instantiable=false) env h =
   let env, h = hint ~ensure_instantiable env h in

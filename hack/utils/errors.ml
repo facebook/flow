@@ -238,7 +238,7 @@ module Typing                               = struct
   let expecting_type_hint_suggest           = 4033 (* DONT MODIFY!!!! *)
   let extend_final                          = 4035 (* DONT MODIFY!!!! *)
   let field_kinds                           = 4036 (* DONT MODIFY!!!! *)
-  let field_missing                         = 4037 (* DONT MODIFY!!!! *)
+  (* DEPRECATED field_missing               = 4037 *)
   let format_string                         = 4038 (* DONT MODIFY!!!! *)
   let fun_arity_mismatch                    = 4039 (* DONT MODIFY!!!! *)
   let fun_too_few_args                      = 4040 (* DONT MODIFY!!!! *)
@@ -337,6 +337,7 @@ module Typing                               = struct
   let unset_nonidx_in_strict                = 4135 (* DONT MODIFY!!!! *)
   let invalid_shape_field_name_empty        = 4136 (* DONT MODIFY!!!! *)
   let invalid_shape_field_name_number       = 4137 (* DONT MODIFY!!!! *)
+  let shape_fields_unknown                  = 4138 (* DONT MODIFY!!!! *)
   (* EXTEND HERE WITH NEW VALUES IF NEEDED *)
 end
 
@@ -981,6 +982,14 @@ let missing_field pos1 pos2 name =
     [pos1, "The field '"^name^"' is missing";
      pos2, "The field '"^name^"' is defined"]
 
+let shape_fields_unknown pos1 pos2 =
+  add_list Typing.shape_fields_unknown
+    [pos1, "This is a shape type coming from a type annotation. Because of " ^
+            "structural subtyping it might have some other fields besides " ^
+            "those listed in its declaration.";
+     pos2, "It is incompatible with a shape created using \"shape\" "^
+           "constructor, which has all the fields known"]
+
 let explain_constraint p_inst pos name (error : error) =
   let inst_msg = "Some type constraint(s) here are violated" in
   let code, msgl = error in
@@ -1393,12 +1402,6 @@ let expected_tparam pos n =
   | n -> string_of_int n ^ " type parameters"
   )
  )
-
-let field_missing k pos1 pos2 =
-  add_list Typing.field_missing [
-  pos2, "The field '"^k^"' is defined";
-  pos1, "The field '"^k^"' is missing";
-]
 
 let object_string pos1 pos2 =
   add_list Typing.object_string [

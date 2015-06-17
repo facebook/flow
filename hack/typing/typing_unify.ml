@@ -228,12 +228,31 @@ and unify_ env r1 ty1 r2 ty2 =
   | Tobject, Tobject
   | Tobject, Tclass _
   | Tclass _, Tobject -> env, Tobject
-  | Tshape fdm1, Tshape fdm2 ->
-      let f env x y = fst (unify env x y) in
-      (* We do it both direction to verify that no field is missing *)
-      let env = TUtils.apply_shape ~f env (r1, fdm1) (r2, fdm2) in
-      let env = TUtils.apply_shape ~f env (r2, fdm2) (r1, fdm1) in
-      env, Tshape fdm1
+  | Tshape (fields_known1, fdm1), Tshape (fields_known2, fdm2)  ->
+      if fields_known1 <> fields_known2 then begin
+        let pos1 = Reason.to_pos r1 in
+        let pos2 = Reason.to_pos r2 in
+        if not fields_known1 then
+          Errors.shape_fields_unknown pos1 pos2
+        else
+          Errors.shape_fields_unknown pos2 pos1
+      end;
+      let on_common_field (env, acc) name ty1 ty2 =
+        let env, ty = unify env ty1 ty2 in
+        env, Nast.ShapeMap.add name ty acc in
+      let on_missing_optional_field (env, acc) name ty =
+        env, Nast.ShapeMap.add name ty acc in
+      (* We do it both directions to verify that no field is missing *)
+      let res = Nast.ShapeMap.empty in
+      let env, res = TUtils.apply_shape
+        ~on_common_field
+        ~on_missing_optional_field
+        (env, res) (r1, fields_known1, fdm1) (r2, fields_known2, fdm2) in
+      let env, res = TUtils.apply_shape
+        ~on_common_field
+        ~on_missing_optional_field
+        (env, res) (r2, fields_known2, fdm2) (r1, fields_known1, fdm1) in
+      env, Tshape (fields_known1 && fields_known2, res)
   | Taccess taccess, _ ->
       let env, fty1 = TAccess.expand env r1 taccess in
       let env, fty = unify env fty1 (r2, ty2) in

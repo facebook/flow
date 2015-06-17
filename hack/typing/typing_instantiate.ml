@@ -106,9 +106,9 @@ and instantiate_ subst env x =
   | Tapply (x, tyl) ->
       let env, tyl = lfold (instantiate subst) env tyl in
       env, Tapply (x, tyl)
-  | Tshape fdm ->
+  | Tshape (fields_known, fdm) ->
       let env, fdm = Nast.ShapeMap.map_env (instantiate subst) env fdm in
-      env, Tshape fdm
+      env, Tshape (fields_known, fdm)
 
 let instantiate_ce subst env ({ ce_type = x; _ } as ce) =
   let env, x = instantiate subst env x in

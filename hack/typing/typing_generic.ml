@@ -48,7 +48,7 @@ end = struct
     | Tclass (_, tyl)
     | Tunresolved tyl -> List.iter ty tyl
     | Tobject -> ()
-    | Tshape fdm ->
+    | Tshape (_, fdm) ->
         ShapeMap.iter (fun _ v -> ty v) fdm
 
   and ty_opt = function None -> () | Some x -> ty x
@@ -117,12 +117,12 @@ let rename env old_name new_name ty_to_rename =
         let env, l = tyl env l in
         env, (r, Tunresolved l)
     | Tobject -> env, (r, Tobject)
-    | Tshape fdm ->
+    | Tshape (fields_known, fdm) ->
         let env, fdm = ShapeMap.fold (fun k v (env, fdm) ->
           let env, v = ty env v in
           env, ShapeMap.add k v fdm
         ) fdm (env, ShapeMap.empty) in
-        env, (r, Tshape fdm ))
+        env, (r, Tshape (fields_known, fdm) ))
 
   and ty_opt env = function
     | None -> env, None

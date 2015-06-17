@@ -65,8 +65,8 @@ and fully_expand_ seen env = function
      let tyl = List.map (fully_expand seen env) tyl in
      Tclass (x, tyl)
   | Tobject as x -> x
-  | Tshape fdm ->
-      Tshape (Nast.ShapeMap.map (fully_expand seen env) fdm)
+  | Tshape (fields_known, fdm) ->
+      Tshape (fields_known, (Nast.ShapeMap.map (fully_expand seen env) fdm))
 
 and fully_expand_opt seen env x = opt_map (fully_expand seen env) x
 

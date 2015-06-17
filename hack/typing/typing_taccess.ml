@@ -286,7 +286,7 @@ and check_tconst env (_, ty) =
   | Tclass (_, tyl) ->
      check_tconst_list env tyl
   | Tobject -> ()
-  | Tshape tym ->
+  | Tshape (_, tym) ->
       Nast.ShapeMap.iter (fun _ v -> check_tconst env v) tym
 
 and check_tconst_list env x =

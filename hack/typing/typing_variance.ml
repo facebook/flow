@@ -469,7 +469,7 @@ and type_ root variance env (reason, ty) =
       type_list root variance env tyl
   (* when we add type params to type consts might need to change *)
   | Taccess _ -> env
-  | Tshape ty_map ->
+  | Tshape (_, ty_map) ->
       Nast.ShapeMap.fold begin fun _field_name ty env ->
         type_ root variance env ty
       end ty_map env

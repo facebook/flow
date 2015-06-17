@@ -226,7 +226,10 @@ let rec debug stack env (r, ty) =
         | _, (_, Tany) -> o (Ident.debug x)
         | _, ty -> debug stack env ty)
   | Tobject -> o "object"
-  | Tshape fdm -> o "shape(";
+  | Tshape (fields_known, fdm) ->
+      o "shape<fields ";
+      o (if fields_known then "fully" else "partially");
+      o " known>(";
       ShapeMap.iter begin fun k v ->
         o (get_shape_field_name k); o " => "; debug stack env v
       end fdm;

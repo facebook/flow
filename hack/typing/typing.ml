@@ -1263,7 +1263,9 @@ and expr_ ~in_cond ~(valkind: [> `lvalue | `rvalue | `other ]) env (p, e) =
       (* allow_inter adds a type-variable *)
       let env, fdm = ShapeMap.map_env TUtils.unresolved env fdm in
       let env = check_shape_keys_validity env p (ShapeMap.keys fdm) in
-      env, (Reason.Rwitness p, Tshape fdm)
+      (* "fields known" set to true, because this shape is constructed
+       * using shape keyword and we know exactly what fields are set. *)
+      env, (Reason.Rwitness p, Tshape (true, fdm))
 
 and class_const env p (cid, mid) =
   TUtils.process_static_find_ref cid mid;
@@ -2311,7 +2313,7 @@ and array_get is_lvalue p env ty1 ety1 e2 ty2 =
           Errors.typing_error p (Reason.string_of_ureason Reason.URpair_access);
           env, (Reason.Rwitness p, Tany)
       )
-  | Tshape fdm ->
+  | Tshape (_, fdm) ->
     let p, e2' = e2 in
     let field = shape_field_name p e2' in
     (match ShapeMap.get field fdm with

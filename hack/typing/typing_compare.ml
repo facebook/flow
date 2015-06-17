@@ -116,13 +116,14 @@ module CompareTypes = struct
         List.fold_left2 string_id acc ids1 ids2
     | Ttuple tyl1, Ttuple tyl2 ->
         tyl acc tyl1 tyl2
-    | Tshape fdm1, Tshape fdm2 ->
-        ShapeMap.fold begin fun name v1 acc ->
+    | Tshape (fields_known1, fdm1), Tshape (fields_known2, fdm2) ->
+        let subst, same = ShapeMap.fold begin fun name v1 acc ->
           match ShapeMap.get name fdm2 with
           | None -> default
           | Some v2 ->
               ty acc v1 v2
-        end fdm1 acc
+        end fdm1 acc in
+        subst, same && (fields_known1 = fields_known2)
     | (Tany | Tmixed | Tarray (_, _) | Tfun _ | Taccess (_, _) | Tgeneric (_, _)
        | Toption _ | Tprim _ | Tshape _| Tapply (_, _) | Ttuple _ | Tthis
       ), _ -> default
@@ -336,7 +337,8 @@ module TraversePos(ImplementPos: sig val pos: Pos.t -> Pos.t end) = struct
     | Tapply (sid, xl)     -> Tapply (string_id sid, List.map (ty) xl)
     | Taccess (root_ty, ids) ->
         Taccess (ty root_ty, List.map string_id ids)
-    | Tshape fdm           -> Tshape (ShapeMap.map ty fdm)
+    | Tshape (fields_known, fdm) ->
+        Tshape (fields_known, ShapeMap.map ty fdm)
 
   and ty_opt x = opt_map ty x
 

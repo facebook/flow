@@ -85,18 +85,21 @@ let rec find_pos p_default tyl =
 
 let get_shape_field_name = Env.get_shape_field_name
 
-let apply_shape ~f env (r1, fdm1) (r2, fdm2) =
-  ShapeMap.fold begin fun name ty1 env ->
+(* This is used in subtyping and unification. *)
+let apply_shape ~on_common_field ~on_missing_optional_field (env, acc)
+  (r1, _, fdm1) (r2, fields_known2, fdm2) =
+  ShapeMap.fold begin fun name ty1 (env, acc) ->
     match ShapeMap.get name fdm2 with
-    | None when is_option env ty1 -> env
+    | None when fields_known2 && is_option env ty1 ->
+        on_missing_optional_field (env, acc) name ty1
     | None ->
         let pos1 = Reason.to_pos r1 in
         let pos2 = Reason.to_pos r2 in
         Errors.missing_field pos2 pos1 (get_shape_field_name name);
-        env
+        (env, acc)
     | Some ty2 ->
-        f env ty1 ty2
-  end fdm1 env
+        on_common_field (env, acc) name ty1 ty2
+  end fdm1 (env, acc)
 
 (*****************************************************************************)
 (* Try to unify all the types in a intersection *)
@@ -208,9 +211,9 @@ let is_array_as_tuple env ty =
 let rec grow_shape pos lvalue field_name ty env shape =
   let _, shape = Env.expand_type env shape in
   match shape with
-  | _, Tshape fields ->
+  | _, Tshape (fields_known, fields) ->
       let fields = ShapeMap.add field_name ty fields in
-      let result = Reason.Rwitness pos, Tshape fields in
+      let result = Reason.Rwitness pos, Tshape (fields_known, fields) in
       env, result
   | _, Tunresolved tyl ->
       let env, tyl = lfold (grow_shape pos lvalue field_name ty) env tyl in

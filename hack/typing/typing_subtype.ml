@@ -465,15 +465,19 @@ and sub_type_with_uenv env (uenv_super, ty_super) (uenv_sub, ty_sub) =
           let env = sub_type env ft.ft_ret ret in
           env
       )
-  | (r_super, Tshape fdm_super), (r_sub, Tshape fdm_sub) ->
-      ShapeMap.iter begin fun k _ ->
-        if not (ShapeMap.mem k fdm_super)
-        then
-          let p_super = Reason.to_pos r_super in
-          let p_sub = Reason.to_pos r_sub in
-          Errors.field_missing (TUtils.get_shape_field_name k) p_super p_sub
-      end fdm_sub;
-      TUtils.apply_shape sub_type env (r_super, fdm_super) (r_sub, fdm_sub)
+  | (r_super, Tshape (fields_known_super, fdm_super)),
+      (r_sub, Tshape (fields_known_sub, fdm_sub)) ->
+      if (not fields_known_sub) && fields_known_super then begin
+        let pos1 = Reason.to_pos r_sub in
+        let pos2 = Reason.to_pos r_super in
+        Errors.shape_fields_unknown pos1 pos2
+      end;
+      fst (TUtils.apply_shape
+        ~on_common_field:(fun (env, acc) _ x y -> sub_type env x y, acc)
+        ~on_missing_optional_field:(fun acc _ _ -> acc)
+        (env, None)
+        (r_super, fields_known_super, fdm_super)
+        (r_sub, fields_known_sub, fdm_sub))
   | (_, Tabstract ((_, name_super), tyl_super, _)),
       (_, Tabstract ((_, name_sub), tyl_sub, _))
     when name_super = name_sub ->

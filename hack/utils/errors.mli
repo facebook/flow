@@ -171,7 +171,6 @@ val fun_too_few_args : Pos.t -> Pos.t -> unit
 val fun_unexpected_nonvariadic : Pos.t -> Pos.t -> unit
 val fun_variadicity_hh_vs_php56 : Pos.t -> Pos.t -> unit
 val expected_tparam : Pos.t -> int -> unit
-val field_missing : string -> Pos.t -> Pos.t -> unit
 val object_string : Pos.t -> Pos.t -> unit
 val type_param_arity : Pos.t -> string -> string -> unit
 val cyclic_typedef : Pos.t -> unit
@@ -246,6 +245,7 @@ val invalid_shape_field_literal : Pos.t -> Pos.t -> unit
 val invalid_shape_field_const : Pos.t -> Pos.t -> unit
 val shape_field_class_mismatch : Pos.t -> Pos.t -> string -> string -> unit
 val shape_field_type_mismatch : Pos.t -> Pos.t -> string -> string -> unit
+val shape_fields_unknown: Pos.t -> Pos.t  -> unit
 val using_internal_class : Pos.t -> string -> unit
 val nullsafe_not_needed : Pos.t -> (Pos.t * string) list -> unit
 val trivial_strict_eq : Pos.t -> string -> (Pos.t * string) list

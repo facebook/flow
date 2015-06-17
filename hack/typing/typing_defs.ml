@@ -102,8 +102,33 @@ and _ ty_ =
   (* Name of class, name of type const, remaining names of type consts *)
   | Taccess : 'phase taccess_type -> 'phase ty_
 
-  (* Shape and types of each of the arms. *)
-  | Tshape : 'phase ty Nast.ShapeMap.t -> 'phase ty_
+  (* Whether all fields of this shape are known, types of each of the
+   * known arms.
+   *
+   * Example: local shape constructed using "shape" keyword has all the fields
+   * known:
+   *
+   *   $s = shape('x' => 4, 'y' => 4);
+   *
+   * It has fields 'x' and 'y' and definitely no other fields. On the other
+   * hand, shape types that come from typehints may (due to structural
+   * subtyping of shapes) have some other, unlisted fields:
+   *
+   *   type s = shape('x' => int);
+   *
+   *   function f(s $s) {
+   *   }
+   *
+   *   f(shape('x' => 4, 'y' => 5));
+   *
+   * The call to f is valid because of structural subtyping - shapes are
+   * permitted to "forget" fields. But the 'y' field still exists at runtime,
+   * and we cannot say inside the body of $f that we know that 'x' is the only
+   * field. This is relevant when deciding if it's safe to omit optional fields
+   * - if shape fields are not fully known, even optional fields have to be
+   * explicitly set/unset.
+   *)
+  | Tshape : bool * ('phase ty Nast.ShapeMap.t) -> 'phase ty_
 
   (*========== Below Are Types That Cannot Be Declared In User Code ==========*)
 
