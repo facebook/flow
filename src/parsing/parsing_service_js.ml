@@ -79,7 +79,7 @@ let do_parse ?(keep_errors=false) content file =
     let msg = spf "unexpected parsing exception: %s" s in
     let reason = Reason.new_reason "" (Pos.make_from
       (Relative_path.create Relative_path.Dummy file)) in
-    let err = Errors_js.ERROR, [reason, msg] in
+    let err = Errors_js.ERROR, [reason, msg], [] in
     None, Some (Errors_js.ErrorSet.singleton err)
 
 (* parse file, store AST to shared heap on success.

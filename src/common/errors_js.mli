@@ -10,7 +10,7 @@
 
 type level = ERROR | WARNING
 type message = (Reason_js.reason * string)
-type error = level * message list
+type error = level * message list * message list
 
 val pos_range : Pos.t -> int * int * int * int
 

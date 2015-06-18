@@ -140,17 +140,7 @@ let add_output cx level ?(trace_reasons=[]) message_list =
         String.concat "\n" (
           List.map (fun (r, s) -> spf "r: [%s] s = %S" (dump_reason r) s)
             message_list)));
-    let message_list = match trace_reasons with
-    | [] -> message_list
-    | _ ->
-        let rev_list = List.rev message_list in
-        let head = List.hd rev_list in
-        let head = fst head, snd head ^ "\nError path:" in
-        let rev_list = head :: List.tl rev_list in
-        let message_list = List.rev rev_list in
-        message_list @ trace_reasons
-    in
-    let error = level, message_list in
+    let error = level, message_list, trace_reasons in
     if level = Errors_js.ERROR || not silent_warnings then
     cx.errors <- Errors_js.ErrorSet.add error cx.errors
   )
@@ -372,13 +362,13 @@ let add_msg cx ?trace level list =
 
 (* for outside calls *)
 let new_warning list =
-  Errors_js.WARNING, tweak_output list
+  Errors_js.WARNING, tweak_output list, []
 
 let add_warning cx ?trace list =
   add_msg cx ?trace Errors_js.WARNING list
 
 let new_error list =
-  Errors_js.ERROR, tweak_output list
+  Errors_js.ERROR, tweak_output list, []
 
 let add_error cx ?trace list =
   add_msg cx ?trace Errors_js.ERROR list

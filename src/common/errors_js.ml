@@ -13,12 +13,23 @@ module Json = Hh_json
 
 type level = ERROR | WARNING
 type message = (Reason_js.reason * string)
-type error = level * message list
+type error = level * message list (* message *) * message list (* trace *)
 
 let pos_range p = Pos.(Lexing.(
   p.pos_start.pos_lnum, p.pos_start.pos_cnum + 1,
     p.pos_end.pos_lnum, p.pos_end.pos_cnum
 ))
+
+let append_trace_reasons message_list trace_reasons =
+  match trace_reasons with
+  | [] -> message_list
+  | _ ->
+      let rev_list = List.rev message_list in
+      let head = List.hd rev_list in
+      let head = fst head, snd head ^ "\nError path:" in
+      let rev_list = head :: List.tl rev_list in
+      let message_list = List.rev rev_list in
+      message_list @ trace_reasons
 
 let format_reason_color
   ?(first=false)
@@ -72,12 +83,13 @@ let print_reason_color ~(first:bool) ~(one_line:bool) ((reason, s): message) =
     List.iter (Printf.printf "%s") strings
 
 let print_error_color ~(one_line:bool) (e:error) =
-  let level, messages = e in
+  let level, messages, trace_reasons = e in
+  let messages = append_trace_reasons messages trace_reasons in
   print_reason_color ~first:true ~one_line (List.hd messages);
   List.iter (print_reason_color ~first:false ~one_line) (List.tl messages)
 
 let pos_of_error err =
-  let _, messages = err in
+  let _, messages, _ = err in
   match messages with
   | (reason, _) :: _ -> Reason_js.pos_of_reason reason
   | _ -> Pos.none
@@ -115,7 +127,7 @@ let compare =
     | [], _ -> -1
     | _ -> 1
 
-  in fun (lx, ml1) (ly, ml2) ->
+  in fun (lx, ml1, _) (ly, ml2, _) ->
     compare_message_lists ml1 ml2 (fun () -> 0)
 
 module Error = struct
@@ -177,21 +189,12 @@ module ErrorSuppressions = struct
     | [] -> acc
     | (reason, error_message)::errors ->
         let acc = check_reason acc reason in
-
-        (* There's this feature --traces which will tack on an error trace to
-         * the error. We don't want to suppress an error based on a location
-         * that only shows up when --traces is turned on. The only way to
-         * detect it at the moment is to find the error message that has
-         * "\nError path:" tacked on at the end. When we see it we will stop
-         * looking at reason locations
-         *)
-        if Str.string_match (Str.regexp ".*\nError path:$") error_message 0
-        then acc
-        else check_error_messages acc errors
+        check_error_messages acc errors
 
   (* Checks if an error should be suppressed. *)
   let check err suppressions =
-    check_error_messages (false, suppressions) (snd err)
+    let _, message_list, _ = err in
+    check_error_messages (false, suppressions) message_list
 
   (* Get's the locations of the suppression comments that are yet unused *)
   let unused { unused; _; } = SpanMap.values unused
@@ -200,7 +203,7 @@ end
 let parse_error_to_flow_error (loc, err) =
   let reason = Reason_js.mk_reason "" loc in
   let msg = Parse_error.PP.error err in
-  ERROR, [reason, msg]
+  ERROR, [reason, msg], []
 
 let to_list errors = ErrorSet.elements errors
 
@@ -208,11 +211,12 @@ let to_list errors = ErrorSet.elements errors
 
 (* adapted from Errors.to_json to output multi-line errors properly *)
 let to_json (error : error) = Json.(
-  let level, messages = error in
+  let level, messages, trace_reasons = error in
   let level_str = match level with
   | ERROR -> "error"
   | WARNING -> "warning"
   in
+  let messages = append_trace_reasons messages trace_reasons in
   let elts = List.map (fun (reason, w) ->
       JAssoc (("descr", Json.JString w) ::
               ("level", Json.JString level_str) ::
@@ -241,7 +245,8 @@ let print_errorl_json oc el =
 
 (* adapted from Errors.to_string to omit error codes *)
 let to_string (error : error) : string =
-  let level, msgl = error in
+  let level, msgl, trace_reasons = error in
+  let msgl = append_trace_reasons msgl trace_reasons in
   let buf = Buffer.create 50 in
   (match msgl with
   | [] -> assert false

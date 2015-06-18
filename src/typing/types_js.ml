@@ -705,6 +705,11 @@ let full_check workers parse_next opts =
 
   (parsed, checked)
 
+let strip_root_from_reason_list root list =
+  if Modes_js.modes.strip_root
+  then List.map (fun (reason, s) -> (Reason_js.strip_root reason root, s)) list
+  else list
+
 (* helper - print errors. used in check-and-die runs *)
 let print_errors ?root options =
   let errors = get_errors () in
@@ -713,14 +718,10 @@ let print_errors ?root options =
     | Some path ->
         let ae = Array.of_list errors in
         Array.iteri (fun i error ->
-          let level, list = error in
-          let list =
-            if Modes_js.modes.strip_root
-            then List.map (
-                fun (reason, s) -> (Reason_js.strip_root reason path, s)
-              ) list
-            else list in
-          let e = level, list in
+          let level, list, trace_reasons = error in
+          let list = strip_root_from_reason_list path list in
+          let trace_reasons = strip_root_from_reason_list path trace_reasons in
+          let e = level, list, trace_reasons in
           ae.(i) <- e
         ) ae;
         Array.to_list ae
