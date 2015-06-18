@@ -535,3 +535,9 @@ let class_ c = PrintClass.class_type c
 let gconst gc = Full.to_string_decl gc
 let fun_ f = PrintFun.fun_type f
 let typedef td = PrintTypedef.typedef td
+let strip_ns env phase_ty =
+  match phase_ty with
+  | Typing_defs.DeclTy type_ ->
+      full_strip_ns env type_
+  | Typing_defs.LoclTy type_ ->
+      full_strip_ns env type_

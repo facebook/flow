@@ -23,7 +23,7 @@ type _ t =
   | METHOD_JUMP : (string * bool) -> MethodJumps.result list t
   | FIND_REFS : ServerFindRefs.action -> ServerFindRefs.result t
   | REFACTOR : ServerRefactor.action -> ServerRefactor.patch list t
-  | DUMP_SYMBOL_INFO : string list -> SymbolInfoService.result list t
+  | DUMP_SYMBOL_INFO : string list -> SymbolInfoService.result t
   | ARGUMENT_INFO : string * int * int -> ServerArgumentInfo.result t
   | PROLOG : string t
   | SEARCH : string * string -> ServerSearch.result t
@@ -57,7 +57,7 @@ let handle : type a. genv -> env -> a t -> a =
         ServerFindRefs.go find_refs_action genv env
     | REFACTOR refactor_action -> ServerRefactor.go refactor_action genv env
     | DUMP_SYMBOL_INFO file_list ->
-        SymbolInfoService.find_fun_calls genv.workers file_list env
+        SymbolInfoService.go genv.workers file_list env
     | ARGUMENT_INFO (contents, line, col) ->
         ServerArgumentInfo.go genv env contents line col
     | PROLOG -> PrologMain.go genv env

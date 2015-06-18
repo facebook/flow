@@ -7,26 +7,42 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  *)
-open SymbolInfoService
 
-let to_json fun_call_results =
-  let open Hh_json in
-  (* Map from 'fun_call_result list' to 'json JList' *)
+open Hh_json
+
+let fun_call_to_json fun_call_results =
+  let open SymbolFunCallService in
   (* List.rev_map is used here for performance purpose(tail recursive) *)
-  let result = List.rev_map begin fun item ->
+  List.rev_map begin fun item ->
     let item_type =
-      match item.SymbolInfoService.type_ with
+      match item.SymbolFunCallService.type_ with
       | Function        -> "Function"
       | Method          -> "Method"
       | Constructor     -> "Constructor" in
     JAssoc [
-      "name",           JString item.SymbolInfoService.name;
+      "name",           JString item.SymbolFunCallService.name;
       "type",           JString item_type;
-      "pos",            Pos.json item.SymbolInfoService.pos;
-      "caller",         JString item.SymbolInfoService.caller;
+      "pos",            Pos.json item.SymbolFunCallService.pos;
+      "caller",         JString item.SymbolFunCallService.caller;
     ]
-  end fun_call_results in
-  JAssoc [ "function_calls", JList result; ]
+  end fun_call_results
+
+let symbol_type_to_json symbol_type_results =
+  List.rev_map begin fun item ->
+    JAssoc [
+      "pos",    Pos.json item.SymbolTypeService.pos;
+      "type",   JString item.SymbolTypeService.type_;
+    ]
+  end symbol_type_results
+
+let to_json result =
+  let fun_call_json = fun_call_to_json result.SymbolInfoService.fun_calls in
+  let symbol_type_json =
+    symbol_type_to_json result.SymbolInfoService.symbol_types in
+  JAssoc [
+    "function_calls",   JList fun_call_json;
+    "symbol_types",     JList symbol_type_json;
+  ]
 
 let go conn (files:string) expand_path =
   let file_list = match files with

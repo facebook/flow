@@ -10,129 +10,90 @@
 
 (* This module dumps all the symbol info(like fun-calls) in input files *)
 
-type target_type =
-  | Function
-  | Method
-  | Constructor
-
 type result = {
-  name:  string;
-  type_: target_type;
-  pos: string Pos.pos;
-  caller: string;
+  fun_calls: SymbolFunCallService.result list;
+  symbol_types: SymbolTypeService.result list;
 }
 
-(* Strip the prefix of Pos.post_file so only relative path portion is used *)
-let pos_to_relative pos =
-  { pos with Pos.pos_file = Relative_path.suffix pos.Pos.pos_file }
+let recheck_naming filename_l =
+  List.iter begin fun file ->
+    match Parser_heap.ParserHeap.get file with
+    | Some ast -> begin
+      let tcopt = TypecheckerOptions.permissive in
+        Errors.ignore_ begin fun () ->
+          (* We only need to name to find references to locals *)
+          List.iter begin fun def ->
+          match def with
+          | Ast.Fun f ->
+              let nenv = Naming.empty tcopt in
+              let _ = Naming.fun_ nenv f in
+              ()
+          | Ast.Class c ->
+              let nenv = Naming.empty tcopt in
+              let _ = Naming.class_ nenv c in
+              ()
+          | _ -> ()
+          end ast
+        end
+      end
+    | None -> () (* Do nothing if the file is not in parser heap *)
+  end filename_l
 
-let combine_name cur_class cur_caller =
-  match (!cur_class, !cur_caller) with
-  | Some c, Some f -> c^"::"^f
-  | None, Some f -> f
-  | _ -> failwith "Why isn't caller set correctly?"
-
-let process_fun_id result_map cur_class cur_caller id =
-  let caller_str = combine_name cur_class cur_caller in
-  let pos, name = id in
-  result_map := Pos.Map.add pos {
-    name = Utils.strip_ns name;
-    type_ = Function;
-    pos = pos_to_relative pos;
-    caller = caller_str;
-  } !result_map
-
-let process_method_id result_map cur_class cur_caller
-    target_type class_def id _ _ ~is_method =
-  if is_method then begin
-    let caller_str = combine_name cur_class cur_caller in
-    let class_name = class_def.Typing_defs.tc_name in
-    let pos, method_name = id in
-    let method_fullname = class_name^"::"^method_name in
-      result_map := Pos.Map.add pos {
-        name = Utils.strip_ns method_fullname;
-        type_ = target_type;
-        pos = pos_to_relative pos;
-        caller = caller_str;
-      } !result_map
-  end
-
-let process_constructor result_map cur_class cur_caller class_def _ pos =
-  process_method_id result_map cur_class cur_caller Constructor
-    class_def (pos, "__construct") () () ~is_method:true
-
-let process_enter_class_def cur_class cls _ =
-  cur_class := Some (Utils.strip_ns (snd cls.Nast.c_name))
-
-let process_exit_class_def cur_class _ _ =
-  cur_class := None
-
-let process_enter_method_def cur_class cur_caller method_def =
-  ignore(Utils.unsafe_opt_note "cur_class is not set correctly" !cur_class);
-  cur_caller := Some (snd method_def.Nast.m_name)
-
-let process_exit_method_def cur_caller _ =
-  cur_caller := None
-
-let process_enter_fun_def cur_caller fun_def =
-  cur_caller := Some (Utils.strip_ns (snd fun_def.Nast.f_name))
-
-let process_exit_fun_def cur_caller _ =
-  cur_caller := None
-
-let attach_hooks result_map =
-  let cur_caller = ref None in
-  let cur_class = ref None in
-  Typing_hooks.attach_fun_id_hook
-    (process_fun_id result_map cur_class cur_caller);
-  Typing_hooks.attach_cmethod_hook
-    (process_method_id result_map cur_class cur_caller Method);
-  Typing_hooks.attach_smethod_hook
-    (process_method_id result_map cur_class cur_caller Method);
-  Typing_hooks.attach_constructor_hook
-    (process_constructor result_map cur_class cur_caller);
-  Typing_hooks.attach_class_def_hook
-    (Some (process_enter_class_def cur_class))
-    (Some (process_exit_class_def cur_class));
-  Typing_hooks.attach_method_def_hook
-    (Some (process_enter_method_def cur_class cur_caller))
-    (Some (process_exit_method_def cur_caller));
-  Typing_hooks.attach_fun_def_hook
-    (Some (process_enter_fun_def cur_caller))
-    (Some (process_exit_fun_def cur_caller))
-
-let detach_hooks () =
-  Typing_hooks.remove_all_hooks ()
-
-let find_fun_calls_helper acc fileinfo_l =
-  let result_map = ref Pos.Map.empty in
-  attach_hooks result_map;
+let recheck_typing fileinfo_l =
   let nenv = Naming.empty (TypecheckerOptions.permissive) in
-  ignore(ServerIdeUtils.recheck nenv fileinfo_l);
-  detach_hooks ();
-  List.rev_append (Pos.Map.values !result_map) acc
+  ignore(ServerIdeUtils.recheck nenv fileinfo_l)
 
-let parallel_find_fun_calls workers fileinfo_l =
+let helper acc filetuple_l =
+  let fun_call_map = ref Pos.Map.empty in
+  SymbolFunCallService.attach_hooks fun_call_map;
+  let type_map = ref Pos.Map.empty in
+  let lvar_map = ref Pos.Map.empty in
+  SymbolTypeService.attach_hooks type_map lvar_map;
+  let filename_l = List.rev_map fst filetuple_l in
+  let fileinfo_l = List.rev_map snd filetuple_l in
+  recheck_naming filename_l;
+  recheck_typing fileinfo_l;
+  SymbolFunCallService.detach_hooks ();
+  SymbolTypeService.detach_hooks ();
+  let fun_calls = Pos.Map.values !fun_call_map in
+  let symbol_types = SymbolTypeService.generate_types !lvar_map !type_map in
+  (fun_calls, symbol_types) :: acc
+
+let parallel_helper workers filetuple_l =
   MultiWorker.call
     workers
-    ~job:(find_fun_calls_helper)
-    ~neutral:([])
-    ~merge:(List.rev_append)
-    ~next:(Bucket.make fileinfo_l)
+    ~job:helper
+    ~neutral:[]
+    ~merge:List.rev_append
+    ~next:(Bucket.make filetuple_l)
+
+(* Format result from '(fun_calls * symbol_types) list' raw result into *)
+(* 'fun_calls list, symbol_types list' and store in SymbolInfoService.result *)
+let format_result raw_result =
+  let result_list = List.fold_left begin fun acc bucket ->
+    let result1, result2 = acc in
+    let part1, part2 = bucket in
+    (List.rev_append part1 result1,
+    List.rev_append part2 result2)
+  end ([], []) raw_result in
+  {
+    fun_calls = fst result_list;
+    symbol_types = snd result_list;
+  }
 
 (* Entry Point *)
-let find_fun_calls workers file_list env =
+let go workers file_list env =
   (* Convert 'string list' into 'fileinfo list' *)
-  let fileinfo_l = List.fold_left begin fun acc file_path ->
+  let filetuple_l = List.fold_left begin fun acc file_path ->
     let fn = Relative_path.create Relative_path.Root file_path in
     match Relative_path.Map.get fn env.ServerEnv.files_info with
-    | Some fileinfo -> fileinfo :: acc
+    | Some fileinfo -> (fn, fileinfo) :: acc
     | None -> acc
   end [] file_list
   in
-  let fun_call_results =
+  let raw_result =
     if (List.length file_list) < 10 then
-      find_fun_calls_helper [] fileinfo_l
+      helper [] filetuple_l
     else
-      parallel_find_fun_calls workers fileinfo_l in
-  fun_call_results
+      parallel_helper workers filetuple_l in
+  format_result raw_result
