@@ -10,8 +10,10 @@ This type is incompatible with
 A.js:12:21,26: number
 
 A.js:18:10,12: function call
-Too few arguments (expected default/rest parameters in function)
-A.js:17:17,35: function type
+Error:
+A.js:18:10,12: undefined (too few arguments, expected default/rest parameters)
+This type is incompatible with
+A.js:17:21,26: number
 
 A.js:23:10,12: function call
 Callable signature not found in
@@ -29,9 +31,9 @@ B.js:8:14,19: string
 This type is incompatible with
 B.js:8:47,52: number
 
-B.js:11:10,19: function type
-Too few arguments (expected default/rest parameters in function)
-B.js:11:25,69: function
+B.js:11:10,19: undefined (too few arguments, expected default/rest parameters)
+This type is incompatible with
+B.js:11:38,43: number
 
 C.js:7:30,35: string
 This type is incompatible with
@@ -41,17 +43,17 @@ C.js:12:45,50: string
 This type is incompatible with
 C.js:12:21,26: number
 
-C.js:17:41,52: function type
-Too few arguments (expected default/rest parameters in function)
-C.js:17:17,35: function type
+C.js:17:41,52: undefined (too few arguments, expected default/rest parameters)
+This type is incompatible with
+C.js:17:21,26: number
 
 C.js:22:20,31: function type
 Callable signature not found in
 C.js:23:10,10: object type
 
-D.js:11:10,19: function type
-Too few arguments (expected default/rest parameters in function)
-D.js:12:3,47: function
+D.js:11:10,19: undefined (too few arguments, expected default/rest parameters)
+This type is incompatible with
+D.js:12:16,21: number
 
 D.js:20:15,49: callable object type
 This type is incompatible with
@@ -69,8 +71,4 @@ F.js:9:41,51: call of method toFixed
 Property not found in
 [LIB] core.js:167:1,195:1: String
 
-F.js:12:10,19: function type
-Too few arguments (expected default/rest parameters in function)
-F.js:12:25,35: arrow function
-
-Found 18 errors
+Found 17 errors

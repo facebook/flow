@@ -1823,7 +1823,7 @@ let rec __flow cx (l, u) trace =
         {this_t = o2; params_tlist = tins2; return_t = t2; closure_t = j; _})
       ->
       rec_flow cx trace (o2,o1);
-      multiflow cx trace (u, l) (tins2,tins1) |> ignore;
+      multiflow cx trace reason2 (tins2,tins1);
       rec_flow cx trace (t1,t2);
       havoc_ctx cx i j;
 
@@ -1834,7 +1834,7 @@ let rec __flow cx (l, u) trace =
       ->
       Ops.push reason_callsite;
       rec_flow cx trace (o2,o1);
-      multiflow cx trace (u, l) (tins2,tins1) |> ignore;
+      multiflow cx trace reason_callsite (tins2,tins1);
       (* relocate the function's return type at the call site TODO remove? *)
       let t1 = repos_t_from_reason reason_callsite t1 in
       rec_flow cx trace (t1,t2);
@@ -2060,7 +2060,7 @@ let rec __flow cx (l, u) trace =
       let new_obj = mk_object_with_proto cx reason_c proto in
       (** call function with this = new_obj, params = args **)
       rec_flow cx trace (new_obj, this);
-      multiflow cx trace (u, l) (args, params) |> ignore;
+      multiflow cx trace reason_op (args, params);
       (** if ret is object-like, return ret; otherwise return new_obj **)
       let reason_o = replace_reason "constructor return" reason in
       rec_flow cx trace (ret, ObjTestT(reason_o, new_obj, t))
@@ -2517,7 +2517,7 @@ let rec __flow cx (l, u) trace =
 
         rec_flow cx trace (o2,o1);
 
-        let tins1 = multiflow cx trace (u, l) ~strict:false (tins2,tins1) in
+        let tins1 = multiflow_partial cx trace (tins2,tins1) in
 
         rec_flow cx trace (
           FunT(reason_op, dummy_static, dummy_prototype,
@@ -4221,11 +4221,17 @@ and array_unify cx trace = function
 (* subtyping a sequence of arguments with a sequence of parameters *)
 (*******************************************************************)
 
-(** TODO: add arg number to FunArg trace selectors **)
-and multiflow cx trace (l, u) ?(strict=true) (arglist, parlist) =
-  multiflow_helper cx trace (l, u) ~strict (arglist, parlist)
+and multiflow cx trace reason_op (arglist, parlist) =
+  multiflow_partial cx trace ~strict:reason_op (arglist, parlist) |> ignore
 
-and multiflow_helper cx trace (u, l) ~strict = function
+(* Match arguments to parameters, taking an optional parameter 'strict':
+   - when strict=None, missing arguments (and unmatched parameters) are
+   expected. This is used, e.g., when processing Function.prototype.bind.
+   - when strict=Some reason_op, missing arguments are treated as undefined,
+   whose types are given a reason derived from reason_op when passing to
+   unmatched parameters.
+*)
+and multiflow_partial cx trace ?strict = function
   (* Do not complain on too many arguments.
      This pattern is ubiqutous and causes a lot of noise when complained about.
      Note: optional/rest parameters do not provide a workaround in this case.
@@ -4236,16 +4242,16 @@ and multiflow_helper cx trace (u, l) ~strict = function
 
   | ([RestT tin],(OptionalT tout)::touts) ->
     rec_flow cx trace (tin, tout);
-    multiflow_helper cx trace (u, l) ~strict ([RestT tin],touts)
+    multiflow_partial cx trace ?strict ([RestT tin],touts)
 
   | ((OptionalT tin)::tins,[RestT tout]) ->
     rec_flow cx trace (tin,tout);
-    multiflow_helper cx trace (u, l) ~strict (tins,[RestT tout])
+    multiflow_partial cx trace ?strict (tins,[RestT tout])
 
   | ((OptionalT tin)::tins,(OptionalT tout)::touts)
   | (tin::tins,(OptionalT tout)::touts) ->
     rec_flow cx trace (tin,tout);
-    multiflow_helper cx trace (u, l) ~strict (tins,touts)
+    multiflow_partial cx trace ?strict (tins,touts)
 
   | ([RestT tin],[RestT tout]) ->
     rec_flow cx trace (tin,tout);
@@ -4258,16 +4264,20 @@ and multiflow_helper cx trace (u, l) ~strict = function
     [RestT tout]
 
   | ([],ts) ->
-    (if strict then
-        prerr_flow cx trace
-          "Too few arguments (expected default/rest parameters in function)"
-          u l
+    (match strict with
+    | Some reason_op ->
+        let reason = replace_reason
+          "undefined (too few arguments, expected default/rest parameters)"
+          reason_op
+        in
+        ts |> List.iter (fun t -> rec_flow cx trace (VoidT reason, t))
+    | None -> ()
     );
     ts
 
   | (tin::tins,tout::touts) ->
     rec_flow cx trace (tin,tout);
-    multiflow_helper cx trace (u, l) ~strict (tins,touts)
+    multiflow_partial cx trace ?strict (tins,touts)
 
 and dictionary cx trace keyt valuet = function
   | None -> ()
