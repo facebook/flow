@@ -101,8 +101,10 @@ let convert path recurse one_line outpath =
         failwith "output path not available when recursive";
       convert_dir outpath path recurse one_line
     ) in
-  Printf.printf "Total Errors: %d\nTotal Files: %d\n\
- Successful Conversions: %d\n" nerrs total_files successful_converts
+  let () =   Printf.printf "Total Errors: %d\nTotal Files: %d\n\
+ Successful Conversions: %d\n" nerrs total_files successful_converts in
+  (* exit code = number of unsuccessful coversions *)
+  let _ = exit (total_files - successful_converts) in ()
 
 (* command wiring *)
 
