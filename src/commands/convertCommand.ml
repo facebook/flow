@@ -9,7 +9,7 @@
  *)
 
 open Sys_utils
-
+open Utils
 (* conversion *)
 
 let dts_ext = ".d.ts"
@@ -101,10 +101,10 @@ let convert path recurse one_line outpath =
         failwith "output path not available when recursive";
       convert_dir outpath path recurse one_line
     ) in
-  let () =   Printf.printf "Total Errors: %d\nTotal Files: %d\n\
- Successful Conversions: %d\n" nerrs total_files successful_converts in
+  print_endlinef "Total Errors: %d\nTotal Files: %d\nSuccessful Conversions: %d"
+    nerrs total_files successful_converts;
   (* exit code = number of unsuccessful coversions *)
-  let _ = exit (total_files - successful_converts) in ()
+  exit (total_files - successful_converts)
 
 (* command wiring *)
 
