@@ -44,14 +44,6 @@ let dummy_prototype =
 let dummy_this =
   MixedT (reason_of_string "global object")
 
-let mk_methodtype this tins ?params_names tout = {
-  this_t = this;
-  params_tlist = tins;
-  params_names;
-  return_t = tout;
-  closure_t = 0
-}
-
 let mk_methodtype2 this tins ?params_names tout j = {
   this_t = this;
   params_tlist = tins;
@@ -60,21 +52,12 @@ let mk_methodtype2 this tins ?params_names tout j = {
   closure_t = j
 }
 
-let mk_functiontype tins ?params_names tout = {
-  this_t = dummy_this;
-  params_tlist = tins;
-  params_names;
-  return_t = tout;
-  closure_t = 0
-}
+let mk_methodtype this tins ?params_names tout =
+  mk_methodtype2 this tins ?params_names tout 0
 
-let mk_functiontype2 tins ?params_names tout j = {
-  this_t = dummy_this;
-  params_tlist = tins;
-  params_names;
-  return_t = tout;
-  closure_t = j
-}
+let mk_functiontype2 = mk_methodtype2 dummy_this
+
+let mk_functiontype = mk_methodtype dummy_this
 
 (* An object type has two flags, sealed and exact. A sealed object type cannot
    be extended. An exact object type accurately describes objects without
