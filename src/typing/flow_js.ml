@@ -130,7 +130,7 @@ let silent_warnings = false
 
 exception FlowError of (reason * string) list
 
-let add_output cx level message_list =
+let add_output cx level ?(trace_reasons=[]) message_list =
   if !throw_on_error
   then (
     raise (FlowError message_list)
@@ -140,6 +140,16 @@ let add_output cx level message_list =
         String.concat "\n" (
           List.map (fun (r, s) -> spf "r: [%s] s = %S" (dump_reason r) s)
             message_list)));
+    let message_list = match trace_reasons with
+    | [] -> message_list
+    | _ ->
+        let rev_list = List.rev message_list in
+        let head = List.hd rev_list in
+        let head = fst head, snd head ^ "\nError path:" in
+        let rev_list = head :: List.tl rev_list in
+        let message_list = List.rev rev_list in
+        message_list @ trace_reasons
+    in
     let error = level, message_list in
     if level = Errors_js.ERROR || not silent_warnings then
     cx.errors <- Errors_js.ErrorSet.add error cx.errors
@@ -287,16 +297,14 @@ let prmsg_flow_trace_reasons cx level trace_reasons msg (r1, r2) =
   let message_list =
     if (pos_of_reason r2 = Pos.none)
     then [
-      r1, spf "%s\n%s %s" (desc_of_reason r1) msg (desc_of_reason r2) ^
-        (if trace_reasons = [] then "" else "\nError path:")
+      r1, spf "%s\n%s %s" (desc_of_reason r1) msg (desc_of_reason r2)
     ]
     else [
       r1, spf "%s\n%s" (desc_of_reason r1) msg;
-      r2, (desc_of_reason r2) ^
-        (if trace_reasons = [] then "" else "\nError path:")
+      r2, (desc_of_reason r2)
     ]
   in
-  add_output cx level (info @ message_list @ trace_reasons)
+  add_output cx level ~trace_reasons (info @ message_list)
 
 (* format a trace into list of (reason, desc) pairs used
    downstream for obscure reasons *)
@@ -356,18 +364,11 @@ let tweak_output list =
   ) list
 
 let add_msg cx ?trace level list =
-  let list = match trace with
-    | Some trace when modes.traces != 0 ->
-        let list = tweak_output list in
-        let rev_list = List.rev list in
-        let head = List.hd rev_list in
-        let head = fst head, snd head ^ "\nError path:" in
-        let rev_list = head :: List.tl rev_list in
-        let list = List.rev rev_list in
-        list @ make_trace_reasons trace
-    | _ -> tweak_output list
+  let trace_reasons = match trace with
+  | Some trace -> Some (make_trace_reasons trace)
+  | None -> None
   in
-  add_output cx level list
+  add_output cx level ?trace_reasons (tweak_output list)
 
 (* for outside calls *)
 let new_warning list =
