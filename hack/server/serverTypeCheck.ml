@@ -264,6 +264,7 @@ let type_check genv env =
   let errorl', failed_check = Hh_logger.measure "Type-check" begin fun () ->
     let to_recheck = Relative_path.Set.union to_recheck env.failed_check in
     let fast = reparse fast files_info to_recheck in
+    ServerCheckpoint.process_updates fast;
     Typing_check_service.go genv.workers env.nenv fast
   end in
 

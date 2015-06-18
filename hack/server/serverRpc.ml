@@ -30,6 +30,9 @@ type _ t =
   | COVERAGE_COUNTS : string -> ServerCoverageMetric.result t
   | LINT : string list -> ServerLint.result t
   | LINT_ALL : int -> ServerLint.result t
+  | CREATE_CHECKPOINT : string -> unit t
+  | RETRIEVE_CHECKPOINT : string -> string list option t
+  | DELETE_CHECKPOINT : string -> bool t
   | KILL : unit t
 
 let handle : type a. genv -> env -> a t -> a =
@@ -65,4 +68,7 @@ let handle : type a. genv -> env -> a t -> a =
     | COVERAGE_COUNTS path -> ServerCoverageMetric.go path genv env
     | LINT fnl -> ServerLint.go genv fnl
     | LINT_ALL code -> ServerLint.lint_all genv code
+    | CREATE_CHECKPOINT x -> ServerCheckpoint.create_checkpoint x
+    | RETRIEVE_CHECKPOINT x -> ServerCheckpoint.retrieve_checkpoint x
+    | DELETE_CHECKPOINT x -> ServerCheckpoint.delete_checkpoint x
     | KILL -> ServerEnv.async (fun () -> ServerUtils.die_nicely genv)
