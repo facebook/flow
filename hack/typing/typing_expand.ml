@@ -34,7 +34,10 @@ let rec fully_expand seen env (r, ty) =
 
 and fully_expand_ seen env = function
   | Tvar _ -> assert false
-  | Tmixed | Tgeneric _ | Tany | Tanon _ | Tprim _ as x -> x
+  | Tmixed | Tgeneric (_, None) | Tany | Tanon _ | Tprim _ as x -> x
+  | Tgeneric (x, Some (ck, cstr)) ->
+      let cstr = fully_expand seen env cstr in
+      Tgeneric (x, Some (ck, cstr))
   | Tarray (ty1, ty2) ->
       let ty1 = fully_expand_opt seen env ty1 in
       let ty2 = fully_expand_opt seen env ty2 in

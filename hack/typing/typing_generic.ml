@@ -34,7 +34,7 @@ end = struct
     | Tany | Tmixed | Tprim _ -> ()
     | Tarray (ty1, ty2) ->
         ty_opt ty1; ty_opt ty2
-    | Tvar _ -> () (* Expansion got rid of Tvars ... *)
+    | Tvar _ -> assert false (* Expansion got rid of Tvars ... *)
     | Toption x -> ty x
     | Tfun fty ->
         List.iter ty (List.map snd fty.ft_params);
