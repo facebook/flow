@@ -899,6 +899,7 @@ and convert_qualification ?(for_type=true) cx reason_prefix = Ast.Type.Generic.I
 
 and mk_rest cx = function
   | ArrT(_, t, []) -> RestT t
+  | AnyT _ as t -> RestT t
   | t ->
       (* unify t with Array<e>, return (RestT e) *)
       let reason = prefix_reason "element of " (reason_of_t t) in
