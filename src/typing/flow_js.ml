@@ -2034,14 +2034,17 @@ let rec __flow cx (l, u) trace =
 
     | ClassT (this),
       ConstructorT (reason_op, args, t) ->
+      let reason_o = replace_reason "constructor return" (reason_of_t this) in
       Ops.push reason_op;
       (* call this.constructor(args) *)
-      rec_flow cx trace (
-        this,
-        MethodT (reason_op, "constructor", mk_methodtype this args VoidT.t)
-      );
+      let ret = mk_tvar_where cx reason_o (fun t ->
+        rec_flow cx trace (
+          this,
+          MethodT (reason_op, "constructor", mk_methodtype this args t)
+        );
+      ) in
       (* return this *)
-      rec_flow cx trace (this, t);
+      rec_flow cx trace (ret, ObjTestT(reason_o, this, t));
       Ops.pop ();
 
     (****************************************************************)

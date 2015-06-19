@@ -3049,10 +3049,10 @@ and expression_ cx loc e = Ast.Expression.(match e with
       let argts = List.map (expression_or_spread cx) arguments in
       let reason = mk_reason "super(...)" loc in
       let super = super_ cx reason in
-      let t = VoidT reason in
-      Flow_js.flow cx (super,
-        MethodT(reason, "constructor", Flow_js.mk_methodtype super argts t));
-      t
+      Flow_js.mk_tvar_where cx reason (fun t ->
+        Flow_js.flow cx (super,
+          MethodT(reason, "constructor", Flow_js.mk_methodtype super argts t))
+      )
 
   (******************************************)
   (* See ~/www/static_upstream/core/ *)
@@ -4597,15 +4597,6 @@ and mk_signature cx reason_c c_type_params_map body = Ast.Class.(
 
       let params_ret = mk_params_ret cx map
         (params, defaults, rest) (body_loc body, returnType) in
-      let params_ret = if not static && name = "constructor"
-        then (
-          let params, pnames, ret, params_map, params_loc = params_ret in
-          let return_void = VoidT (mk_reason "return undefined" loc) in
-          Flow_js.flow cx (ret, return_void);
-          params, pnames, return_void, params_map, params_loc
-        )
-        else params_ret
-      in
       let reason_m = mk_reason (spf "method %s" name) loc in
       let method_sig = reason_m, typeparams, f_type_params_map, params_ret in
       if static
