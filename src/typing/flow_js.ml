@@ -4248,14 +4248,6 @@ and multiflow_partial cx trace ?strict = function
     rec_flow cx trace (tin,tout);
     multiflow_partial cx trace ?strict (tins,[RestT tout])
 
-  | ((VoidT _)::tins,(OptionalT _)::touts) ->
-    multiflow_partial cx trace ?strict (tins,touts)
-
-  | ((OptionalT tin)::tins,(OptionalT tout)::touts)
-  | (tin::tins,(OptionalT tout)::touts) ->
-    rec_flow cx trace (tin,tout);
-    multiflow_partial cx trace ?strict (tins,touts)
-
   | ([RestT tin],[RestT tout]) ->
     rec_flow cx trace (tin,tout);
     []
@@ -4265,6 +4257,10 @@ and multiflow_partial cx trace ?strict = function
       rec_flow cx trace (tin,tout);
     );
     [RestT tout]
+
+  | (tin::tins,(OptionalT tout)::touts) ->
+    rec_flow cx trace (tin,(OptionalT tout));
+    multiflow_partial cx trace ?strict (tins,touts)
 
   | ([],ts) ->
     (match strict with
