@@ -15,7 +15,7 @@ test.js:22:10,15: string
 This type is incompatible with
 test.js:7:12,17: number
 
-test.js:23:17,24: string
+test.js:22:10,15: string
 This type is incompatible with
 test.js:23:8,13: number
 

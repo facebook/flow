@@ -94,7 +94,7 @@ module Type :
       | AndT of reason * t * t
       | OrT of reason * t * t
 
-      | SpecializeT of reason * t list * t
+      | SpecializeT of reason * bool * t list * t
 
       | LookupT of reason * reason option * string * t
 
@@ -185,6 +185,7 @@ module Type :
     val open_tvar: t -> (reason * ident)
   end
 
+module TypeSet : Set.S with type elt = Type.t
 module TypeMap : MapSig with type key = Type.t
 
 (***************************************)
@@ -392,5 +393,10 @@ val loc_of_t : Type.t -> Spider_monkey_ast.Loc.t
 
 val string_of_predicate : Type.predicate -> string
 
-(* TODO should be in constraint_js, ocaml scoping quirk stymies me for now *)
 val pos_of_predicate : Type.predicate -> Pos.t
+
+class ['a] type_visitor : object
+  (* Only exposing a few methods for now. *)
+  method type_ : context -> 'a -> Type.t -> 'a
+  method id_ : context -> 'a -> ident -> 'a
+end

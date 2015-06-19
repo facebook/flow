@@ -126,6 +126,73 @@ end = struct
   let set _ops = ops := _ops
 end
 
+(* We maintain a stack of entries representing type applications processed
+   during calls to flow, for the purpose of terminating unbounded expansion of
+   type applications. Intuitively, we may have a potential infinite loop when
+   processing a type application leads to another type application with the same
+   root, but expanding type arguments. The entries in a stack contain
+   approximate measurements that allow us to detect such expansion.
+
+   An entry representing a type application with root C and type args T1,...,Tn
+   is of the form (C, [A1,...,An]), where each Ai is a list of the roots of type
+   applications nested in Ti. We consider a stack to indicate a potential
+   infinite loop when the top of the stack is (C, [A1,...,An]) and there is
+   another entry (C, [B1,...,Bn]) in the stack, such that each Bi is non-empty
+   and is contained in Ai. *)
+
+module TypeAppExpansion : sig
+  type entry
+  val push : context -> (Type.t * Type.t list) -> unit
+  val pop : unit -> unit
+  val get : unit -> entry list
+  val set : entry list -> unit
+  val loop : unit -> bool
+end = struct
+  type entry = Type.t * TypeSet.t list
+  let stack = ref ([]: entry list)
+
+  (* visitor to collect roots of type applications nested in a type *)
+  class roots_collector = object
+    inherit [TypeSet.t] type_visitor as super
+
+    method! type_ cx acc t = match t with
+    | TypeAppT (c, _) -> super#type_ cx (TypeSet.add c acc) t
+    | _ -> super#type_ cx acc t
+  end
+  let collect_roots cx = (new roots_collector)#type_ cx TypeSet.empty
+  let push cx (c, ts) =
+    stack := (c, List.map (collect_roots cx) ts) :: !stack
+  let pop () = stack := List.tl !stack
+  let get () = !stack
+  let set _stack = stack := _stack
+
+  (* Util to stringify a list, given a separator string and a function that maps
+     elements of the list to strings. Should probably be moved somewhere else
+     for general reuse. *)
+  let string_of_list list sep f =
+    list |> List.map f |> String.concat sep
+
+  (* show entries in the stack *)
+  let dump_stack () =
+    string_of_list !stack "\n" (fun (c, tss) ->
+      spf "%s<%s>" (desc_of_t c) (
+        string_of_list tss "," (fun ts ->
+          spf "[%s]" (string_of_list (TypeSet.elements ts) ";" desc_of_t)
+        )))
+
+  (* loop detector *)
+  let loop =
+    let contains ts1 ts2 =
+      not (TypeSet.is_empty ts1) && TypeSet.subset ts1 ts2
+    in fun () ->
+      match !stack with
+      | [] -> false
+      | (c, tss)::prev_stack ->
+        prev_stack |> List.exists (fun (prev_c, prev_tss) ->
+          c = prev_c && (List.for_all2 contains prev_tss tss)
+      )
+end
+
 let silent_warnings = false
 
 exception FlowError of (reason * string) list
@@ -144,12 +211,11 @@ let add_output cx level ?(trace_reasons=[]) message_list =
     if level = Errors_js.ERROR || not silent_warnings then
     cx.errors <- Errors_js.ErrorSet.add error cx.errors
   )
+
 (* tvars *)
 
-let mk_id cx = Ident.make ""
-
 let mk_tvar cx reason =
-  let tvar = mk_id cx in
+  let tvar = mk_id () in
   let graph = cx.graph in
   cx.graph <- graph |> IMap.add tvar (new_unresolved_root ());
   (if modes.verbose then prerr_endlinef
@@ -383,7 +449,7 @@ let add_error cx ?trace list =
    denoted references. *)
 
 let mk_propmap cx pmap =
-  let id = mk_id cx in
+  let id = mk_id () in
   cx.property_maps <- IMap.add id pmap cx.property_maps;
   id
 
@@ -980,7 +1046,7 @@ let rec assume_ground cx ids = function
   | AndT(_,_,t)
   | OrT(_,_,t)
   | PredicateT(_,t)
-  | SpecializeT(_,_,t)
+  | SpecializeT(_,_,_,t)
   | ObjAssignT(_,_,t,_,_)
   | ObjRestT(_,_,t)
   | KeyT(_,t)
@@ -1171,10 +1237,6 @@ module Union(M: MapSig) =
 module UnionIMap = Union(IMap)
 module UnionTypeMap = Union(TypeMap)
 
-(***********************)
-(* instantiation utils *)
-(***********************)
-
 let debug_count =
   let count = ref 0 in
   fun f ->
@@ -1184,70 +1246,57 @@ let debug_count =
 let debug_flow (l,u) =
   spf "%s ~> %s" (string_of_ctor l) (string_of_ctor u)
 
-(*********************************************************************)
+(***********************)
+(* instantiation utils *)
+(***********************)
+
+(* Make a type argument for a given type parameter, given a reason. Note that
+   not all type arguments are tvars; the following function is used only when
+   polymorphic types need to be implicitly instantiated, because there was no
+   explicit instantiation (via a type application), or when we want to cache a
+   unique instantiation and unify it with other explicit instantiations. *)
+let mk_targ cx (typeparam, reason_op) =
+  mk_tvar cx (
+    prefix_reason (spf "type parameter %s of " typeparam.name) reason_op
+  )
 
 module Cache = struct
-
-  (*
-    CAUTION:
-
-    Before doing any work on the typechecker, it's important to understand
-    that the current caching strategy has two counterintuitive effects:
-    - calls to __flow on arbitrary type pairs may not run
-    - simple changes to the internal representation of type terms
-      may cause completely unrelated changes to typechecking behavior.
-
-    Superficially this looks like a cache of visited type pairs. It is not.
-    The cache keys here are pairs of hashes, not type terms themselves.
-    __flow will not typecheck a pair whose hashes are present, thus one
-    visited pair may suppress the checking of other, unrelated pairs.
-
-    The algorithm as it currently stands depends on these false positive
-    cache hits to terminate. When a non-lossy scheme is substituted - i.e.
-    when every unvisited type pair actually makes it past the guard - the
-    algorithm is subject to multiple unbounded recursions, e.g. in our
-    test suite.
-
-    The function used to compute type term hashes is created with a call
-    to Hashtbl.hash_param below. The arguments to this call are extremely
-    important tuning parameters: they specify a fixed amount of internal
-    structure to be traversed in the course of generating a hash value.
-    The current values are tuned to avoid endless recursion, without
-    omitting too many typechecks.
-
-    Improving this situation is a high priority. Meanwhile, bear in mind:
-
-    - since there is no precise definition of which typechecks will be
-    silently declined, any unexpected typechecking behavior may have
-    such an omission at its source. Verify that your typecheck is actually
-    making it past the guard at the top of the __flow function.
-
-    - because the hashing function is parameterized by a fixed quantity
-    of internal type term structure to consider, typechecking behavior
-    is susceptible to changes in the *internal structure* of types.
-    In particular, adding structure will cause the quantity of false
-    positives to increase, meaning that fewer typechecks will actually
-    be performed. Be sure to check that the typechecker still works as
-    expected after any such internal change, no matter how seemingly
-    innocuous.
-  *)
-
-  module F = struct
+  (* Cache that remembers pairs of types that are passed to __flow__. *)
+  module FlowConstraint = struct
     let cache = Hashtbl.create 0
-    let hash = Hashtbl.hash_param 150 200
+
     let mem (l,u) =
-      let types = hash l, hash u in
       try
-        let hits = Hashtbl.find cache types in
-        Hashtbl.add cache types (hits+1);
+        Hashtbl.find cache (l,u);
         true
       with _ ->
-        Hashtbl.add cache types 0;
+        Hashtbl.add cache (l,u) ();
         false
   end
 
+  (* Cache that limits instantiation of polymorphic definitions. Intuitively,
+     for each operation on a polymorphic definition, we remember the type
+     arguments we use to specialize the type parameters. An operation is
+     identified by its reason: we don't use the entire operation for caching
+     since it may contain the very type variables we are trying to limit the
+     creation of with the cache. In other words, the cache would be useless if
+     we considered those type variables as part of the identity of the
+     operation. *)
+  module PolyInstantiation = struct
+    let cache = Hashtbl.create 0
+
+    let find cx (typeparam, reason_op) =
+      try
+        Hashtbl.find cache (typeparam.reason, reason_op)
+      with _ ->
+        let t = mk_targ cx (typeparam, reason_op) in
+        Hashtbl.add cache (typeparam.reason, reason_op) t;
+        t
+  end
+
   let clear () =
-    Hashtbl.clear F.cache
+    Hashtbl.clear FlowConstraint.cache;
+    Hashtbl.clear PolyInstantiation.cache
 end
 
 (*********************************************************************)
@@ -1284,17 +1333,27 @@ end = struct
     then raise (LimitExceeded trace)
 end
 
+(* Sometimes we don't expect to see type parameters, e.g. when they should have
+   been substituted away. *)
+let not_expect_bound t = match t with
+  | BoundT _ -> assert_false (spf "Did not expect %s" (string_of_ctor t))
+  | _ -> ()
+
 (** NOTE: Do not call this function directly. Instead, call the wrapper
     functions `rec_flow`, `join_flow`, or `flow_opt` (described below) inside
     this module, and the function `flow` outside this module. **)
 let rec __flow cx (l, u) trace =
-  if not (Cache.F.mem (l,u)) then (
+  if not (Cache.FlowConstraint.mem (l,u)) then (
     (* limit recursion depth *)
     RecursionCheck.check trace;
 
     (* Expect that l is a def type. On the other hand, u may be a use type or a
        def type: the latter typically when we have annotations. *)
     expect_def l;
+    (* Type parameters should always be substituted out, and as such they should
+       never appear "exposed" in flows. (They can still appear bound inside
+       polymorphic definitions.) *)
+    not_expect_bound l; not_expect_bound u;
 
     (if modes.verbose
      then prerr_endlinef
@@ -1716,25 +1775,57 @@ let rec __flow cx (l, u) trace =
     | (_, LowerBoundT t) ->
       rec_flow cx trace (l,t)
 
+    (*********************)
+    (* type applications *)
+    (*********************)
+
+    (* Sometimes a polymorphic class may have a field or method whose return
+       type is a type application on the same polymorphic class, but
+       expanded. See Array#concat, e.g. It is not unusual for programmers to
+       reuse variables, assigning the result of a field get or a method call on
+       a variable to itself, in which case we could get into cycles of unbounded
+       instantiation. We use caching to cut these cycles. Caching relies on
+       reasons (see module Cache.I). This is OK since intuitively, there should
+       be a unique instantiation of a polymorphic definition for any given use
+       of it in the source code.
+
+       In principle we could use caching more liberally, but we don't because
+       not all use types arise from source code, and because reasons are not
+       perfect. Indeed, if we tried caching for all use types, we'd lose
+       precision and report spurious errors.
+
+       Also worth noting is that we can never safely cache def types. This is
+       because substitution of type parameters in def types does not affect
+       their reasons, so we'd trivially lose precision. *)
+
+    | (TypeAppT(c,ts), (GetT _ | MethodT _)) ->
+        let reason_op = reason_of_t u in
+        let t = mk_typeapp_instance cx reason_op ~cache:true c ts in
+        rec_flow cx trace (t, u)
+
+    | (TypeAppT(c,ts), _) ->
+        if not (TypeAppExpansion.loop()) then (
+          TypeAppExpansion.push cx (c, ts);
+          let reason = reason_of_t u in
+          let t = mk_typeapp_instance cx reason c ts in
+          rec_flow cx trace (t, u);
+          TypeAppExpansion.pop ()
+        )
+
+    | (_, TypeAppT(c,ts)) ->
+        if not (TypeAppExpansion.loop()) then (
+          TypeAppExpansion.push cx (c, ts);
+          let reason = reason_of_t l in
+          let t = mk_typeapp_instance cx reason c ts in
+          rec_flow cx trace (l, t);
+          TypeAppExpansion.pop ()
+        )
+
     (** In general, typechecking is monotonic in the sense that more constraints
         produce more errors. However, sometimes we may want to speculatively try
         out constraints, backtracking if they produce errors (and removing the
         errors produced). This is useful to typecheck union types and
         intersection types: see below. **)
-
-    (***********************************************************************)
-    (* Type applications wait for their type parameters to become concrete *)
-    (***********************************************************************)
-
-    | (TypeAppT(c,ts), _) ->
-        let reason = reason_of_t u in
-        let t = mk_typeapp_instance cx reason c ts in
-        rec_flow cx trace (t, u)
-
-    | (_, TypeAppT(c,ts)) ->
-        let reason = reason_of_t l in
-        let t = mk_typeapp_instance cx reason c ts in
-        rec_flow cx trace (l, t)
 
     (***************)
     (* union types *)
@@ -1743,8 +1834,8 @@ let rec __flow cx (l, u) trace =
     | (UnionT(_,ts), _) ->
       ts |> List.iter (fun t -> rec_flow cx trace (t,u))
 
-    (** To check that the concrete type l may flow to some type in ts, we try
-        each type in ts in turn. The types in ts may be type variables, but by
+    (** To check that the concrete type l may flow to UnionT(_, ts), we try each
+        type in ts in turn. The types in ts may be type variables, but by
         routing them through SpeculativeMatchFailureT, we ensure that they are
         tried only when their concrete uses are available. The different
         branches of unions are assumed to be disjoint at the top level, so that
@@ -1773,10 +1864,10 @@ let rec __flow cx (l, u) trace =
     | (_, IntersectionT(_,ts)) ->
       ts |> List.iter (fun t -> rec_flow cx trace (l,t))
 
-    (** To check that some type in ts may flow to the concrete type u, we try
-        each type in ts in turn. The types in ts may be type variables, but by
-        routing them through SpeculativeMatchFailureT, we ensure that they are
-        tried only when their concrete definitionss are available. Note that
+    (** To check that IntersectionT(_, ts) may flow to the concrete type u, we
+        try each type in ts in turn. The types in ts may be type variables, but
+        by routing them through SpeculativeMatchFailureT, we ensure that they
+        are tried only when their concrete definitionss are available. Note that
         unlike unions, the different branches of intersections are usually not
         distinct at the top level (e.g., they may all be function types, or
         object types): instead, they are assumed to be disjoint in their parts,
@@ -1802,13 +1893,76 @@ let rec __flow cx (l, u) trace =
     (* generic function may be specialized *)
     (***************************************)
 
-    | (PolyT (ids,t), SpecializeT(reason,ts,tvar)) ->
-      let t_ = instantiate_poly_ cx trace reason (ids,t) ts in
+    (* Instantiate a polymorphic definition using the supplied type
+       arguments. Use the instantiation cache if directed to do so by the
+       operation. (SpecializeT operations are created when processing TypeAppT
+       types, so the decision to cache or not originates there.) *)
+    | (PolyT (ids,t), SpecializeT(reason,cache,ts,tvar)) ->
+      let t_ = instantiate_poly_with_targs cx trace reason ~cache (ids,t) ts in
       rec_flow cx trace (t_, tvar)
 
-    | (PolyT _, PolyT _) -> () (* TODO *)
+    (* When do we consider a polymorphic type <X:U> T to be a subtype of another
+       polymorphic type <X:U'> T'? This is the subject of a long line of
+       research. A rule that works (Cardelli/Wegner) is: force U = U', and prove
+       that T is a subtype of T' for any X:U'. A more general rule that proves
+       that U' is a subtype of U instead of forcing U = U' is known to cause
+       undecidable subtyping (Pierce): the counterexamples are fairly
+       pathological, but can be reliably constructed by exploiting the "switch"
+       of bounds from U' to U (and back, with sufficient trickery), in ways that
+       are difficult to detect statically.
 
-    | (PolyT (ids,t), _) -> (* TODO: limit the scope of this rule *)
+       However, these results are somewhat tricky to interpret in Flow, since we
+       are not proving stuff inductively: instead we are co-inductively assuming
+       what we want to prove, and checking consistency.
+
+       Separately, none of these rules capture the logical interpretation of the
+       original subtyping question (interpreting subtyping as implication, and
+       polymorphism as universal quantification). What we really want to show is
+       that, for all X:U', there is some X:U such that T is a subtype of T'. But
+       we already deal with statements of this form when checking polymorphic
+       definitions! In particular, statements such as "there is some X:U...")
+       correspond to "create a type variable with that constraint and ...", and
+       statements such as "show that for all X:U" correspond to "show that for
+       both X = bottom and X = U, ...".
+
+       Thus, all we need to do when checking that any type flows to a
+       polymorphic type is to follow the same principles used when checking that
+       a polymorphic definition has a polymorphic type. This has the pleasant
+       side effect that the type we're checking does not itself need to be a
+       polymorphic type at all! For example, we can let a non-generic method be
+       overridden with a generic method, as long as the non-generic signature
+       can be derived as a specialization of the generic signature. *)
+    | (_, PolyT (ids, t)) ->
+      generate_tests cx (reason_of_t l) ids (fun map_ ->
+        rec_flow cx trace (l, subst cx map_ t)
+      )
+
+    | (PolyT (ids,t), _) ->
+      (* WARNING: An observed non-legit case of u is ObjAssignT, which arises
+         solely due to CJSExportDefault. It is explicitly called out here so
+         that we remember to fix it when CJSExportDefault: a polymorphic
+         exported value should not be copied over to an export object by
+         instantiating it, but that is what we do currently. Instead, it should
+         form the exports as is, with default fields managed on the side. *)
+      (* NOTE: Other observed cases of u are listed below. These look legit, as
+         common uses of polymorphic classes and functions. However, they may not
+         cover all legit uses.
+
+      (* class-like *)
+      | TypeT _
+      | ConstructorT _
+      | GetT _
+      | SetT _
+      | MethodT _
+
+      (* function-like *)
+      | CallT _
+      | FunT _
+
+      (* general uses *)
+      | PredicateT _
+
+      *)
       let reason = reason_of_t u in
       let t_ = instantiate_poly cx trace reason (ids,t) in
       rec_flow cx trace (t_, u)
@@ -2003,16 +2157,8 @@ let rec __flow cx (l, u) trace =
     (********************************************************)
 
     | (ClassT(it), TypeT(r,t)) ->
-      (* CAUTION: BecomeT is not currently usable here, because
-         some features are implemented in ways that break the
-         invariant that a bidirectional flow is equivalent to
-         unification. One such is immutable methods; others can
-         be seen by swapping commented blocks below and running
-         tests. TODO *)
       (* a class value annotation becomes the instance type *)
-      (* rec_flow cx trace (it, BecomeT (r, t)) *)
-      rec_flow cx trace (it, t);
-      rec_flow cx trace (t, it)
+      rec_flow cx trace (it, BecomeT (r, t))
 
     | (FunT(reason,_,prototype,_), TypeT(r,t)) ->
       (* a function value annotation becomes the prototype type *)
@@ -2113,7 +2259,7 @@ let rec __flow cx (l, u) trace =
       | None ->
         rec_flow cx trace (super, u)
       | Some tx ->
-        rec_flow cx trace (t, tx); rec_flow cx trace (tx,t)
+        rec_unify cx trace t tx
       );
 
     (********************************)
@@ -2557,7 +2703,7 @@ let rec __flow cx (l, u) trace =
           lookup_prop cx trace l reason None x t
         );
         iter_props cx instance.methods_tmap (fun x t ->
-          if (x <> "constructor") then
+          if (x <> "constructor" && x <> "$call") then
             (* we're able to do supertype compatibility in super methods because
                they're immutable *)
             lookup_prop cx trace l reason None x (UpperBoundT t)
@@ -3026,12 +3172,36 @@ and equatable cx trace = function
 
   | _ -> true
 
+(* generics *)
+
+(* Generate for every type parameter a pair of tests, instantiating that type
+   parameter with its bound and Bottom. Run a closure that takes these
+   instantiations, each one in turn, and does something with it. We use a
+   different value for test_id (see Reason_js.TestID) for every instantiation so
+   that re-analyzing the same AST with different instantiations causes different
+   reasons to be generated. *)
+
+and generate_tests cx reason typeparams each =
+  (* generate 2^|typeparams| maps *)
+  let maps = List.fold_left (fun list {name; bound; _ } ->
+    let xreason = replace_reason name reason in
+    let bot = UndefT (
+      prefix_reason "some incompatible instantiation of " xreason
+    ) in
+    List.rev_append
+      (List.map (fun map -> SMap.add name (subst cx map bound) map) list)
+      (List.map (SMap.add name bot) list)
+  ) [SMap.empty] typeparams in
+  match maps with
+  | [map] -> each map (* no typeparams, so reuse current test_id *)
+  | _ -> List.iter (TestID.run each) maps
+
 (*********************)
 (* inheritance utils *)
 (*********************)
 
 and mk_nominal cx =
-  let nominal = mk_id cx in
+  let nominal = mk_id () in
   (if modes.verbose then prerr_endlinef
       "NOM %d %s" nominal cx.file);
   nominal
@@ -3210,33 +3380,48 @@ and subst_propmap cx force map id =
   if pmap_ = pmap then id
   else mk_propmap cx pmap_
 
-and instantiate_poly_ cx trace reason_ (xs,t) ts =
+and typeapp_arity_mismatch cx expected_num reason =
+  let msg = spf "wrong number of type arguments (expected %d)" expected_num in
+  add_error cx [reason, msg];
+
+(* Instantiate a polymorphic definition given type arguments. *)
+and instantiate_poly_with_targs cx trace reason_op ?(cache=false) (xs,t) ts =
   let len_xs = List.length xs in
   if len_xs <> List.length ts
-  then
-    let msg = spf "wrong number of type arguments (expected %d)" len_xs in
-    add_error cx [reason_, msg];
-    AnyT reason_
+  then (
+    typeapp_arity_mismatch cx len_xs reason_op;
+    AnyT reason_op
+  )
   else
     let map =
       List.fold_left2
-        (fun map {reason; name; bound} t ->
-          rec_flow cx trace (t, subst cx map bound);
-          SMap.add name t map
+        (fun map typeparam t ->
+          let t_ = cache_instantiate cx trace cache (typeparam, reason_op) t in
+          rec_flow cx trace (t_, subst cx map typeparam.bound);
+          SMap.add typeparam.name t_ map
         )
         SMap.empty xs ts
     in
     subst cx map t
 
-and instantiate_poly cx trace reason_ (xs,t) =
-  let ts = xs |> List.map (fun {reason=reason_id; _} ->
-    let reason = prefix_reason (
-      spf "type parameter %s of " (desc_of_reason reason_id)
-    ) reason_ in
-    mk_tvar cx reason
+(* Given a type parameter, a supplied type argument for specializing it, and a
+   reason for specialization, either return the type argument or, when directed,
+   look up the instantiation cache for an existing type argument for the same
+   purpose and unify it with the supplied type argument. *)
+and cache_instantiate cx trace cache (typeparam, reason_op) t =
+  if cache then
+    let t_ = Cache.PolyInstantiation.find cx (typeparam, reason_op) in
+    rec_unify cx trace t t_;
+    t_
+  else t
+
+(* Instantiate a polymorphic definition by creating fresh type arguments. *)
+and instantiate_poly cx trace reason_op (xs,t) =
+  let ts = xs |> List.map (fun typeparam ->
+    mk_targ cx (typeparam, reason_op)
   )
   in
-  instantiate_poly_ cx trace reason_ (xs,t) ts
+  instantiate_poly_with_targs cx trace reason_op (xs,t) ts
 
 and mk_object_with_proto cx reason proto =
   mk_object_with_map_proto cx reason SMap.empty proto
@@ -3246,10 +3431,12 @@ and mk_object_with_map_proto cx reason ?(sealed=false) ?dict map proto =
   let pmap = mk_propmap cx map in
   ObjT (reason, mk_objecttype ~flags dict pmap proto)
 
-(* Speculatively match types, returning whether the match fails. *)
+(* Speculatively match types, returning Some(error messages) when the match
+   fails, and None otherwise. *)
 and speculative_flow_error cx trace l u =
   (* save the ops stack, since throws from within __flow will screw it up *)
   let ops = Ops.get () in
+  let typeapp_stack = TypeAppExpansion.get () in
   throw_on_error := true;
   let result =
     try rec_flow cx trace (l, u); false
@@ -3260,6 +3447,7 @@ and speculative_flow_error cx trace l u =
         raise exn
   in
   throw_on_error := false;
+  TypeAppExpansion.set typeapp_stack;
   (* restore ops stack *)
   Ops.set ops;
   result
@@ -3359,7 +3547,7 @@ and ensure_prop_ cx trace strict mapr x proto reason_obj reason_op =
         trace
         "Property not found in"
         (reason_op, reason_o);
-      MixedT.t
+      AnyT.t
     | None ->
       let t =
         if has_prop cx mapr (internal_name x)
@@ -3369,6 +3557,7 @@ and ensure_prop_ cx trace strict mapr x proto reason_obj reason_op =
         else intro_prop_ cx reason_obj x mapr
       in
       t |> recurse_proto cx None proto reason_op x trace
+
 
 and lookup_prop cx trace l reason strict x t =
   let l =
@@ -4072,9 +4261,9 @@ and goto cx trace ?(flag=false) (id1, root1) (id2, root2) =
     edges_and_flows_from_t cx trace ~opt:true t2 (id1, bounds1);
 
   | Resolved t1, Unresolved bounds2 ->
+    replace_node cx id2 (Root { root2 with constraints = Resolved t1 });
     edges_and_flows_to_t cx trace ~opt:true (id2, bounds2) t1;
     edges_and_flows_from_t cx trace ~opt:true t1 (id2, bounds2);
-    replace_node cx id2 (Root { root2 with constraints = Resolved t1 });
 
   | Resolved t1, Resolved t2 ->
     rec_unify cx trace t1 t2;
@@ -4098,10 +4287,9 @@ and resolve_id cx trace id t =
   let id, root = find_root cx id in
   match root.constraints with
   | Unresolved bounds ->
+    replace_node cx id (Root { root with constraints = Resolved t });
     edges_and_flows_to_t cx trace ~opt:true (id, bounds) t;
     edges_and_flows_from_t cx trace ~opt:true t (id, bounds);
-
-    replace_node cx id (Root { root with constraints = Resolved t })
 
   | Resolved t_ ->
     rec_unify cx trace t_ t
@@ -4110,15 +4298,33 @@ and resolve_id cx trace id t =
 
 (* Unification of two types *)
 
+(* It is potentially dangerous to unify a type variable to a type that "forgets"
+   constraints during propagation. These types are "any-like": the canonical
+   example of such a type is any. Overall, we want unification to be a sound
+   "optimization," in the sense that replacing bidirectional flows with
+   unification should not miss errors. But consider a scenario where we have a
+   type variable with two incoming flows, string and any, and two outgoing
+   flows, number and any. If we replace the flows from/to any with an
+   unification with any, we will miss the string/number incompatibility error.
+
+   In the future, we may consider unifying with any-like types to be sometimes
+   desirable / intentional. At that point, we could consider limiting this set
+   to just LowerBoundT and UpperBoundT, which are internal types. *)
+and any_like = function
+  | LowerBoundT _ | UpperBoundT _ | AnyT _ | AnyObjT _ | AnyFunT _ -> true
+  | _ -> false
+
 and rec_unify cx trace t1 t2 =
+  if t1 = t2 then () else (
   (* Expect that t1 and t2 are def types. *)
   expect_def t1; expect_def t2;
+  not_expect_bound t1; not_expect_bound t2;
 
   match (t1,t2) with
   | (OpenT (_,id1), OpenT (_,id2)) ->
     merge_ids cx trace id1 id2
 
-  | (OpenT (_, id), t) | (t, OpenT (_, id)) ->
+  | (OpenT (_, id), t) | (t, OpenT (_, id)) when not (any_like t) ->
     resolve_id cx trace id t
 
   | (ArrT (_, t1, ts1), ArrT (_, t2, ts2)) ->
@@ -4160,6 +4366,7 @@ and rec_unify cx trace t1 t2 =
 
   | _ ->
     naive_unify cx trace t1 t2
+  )
 
 (* TODO: Unification between concrete types is still implemented as
    bidirectional flows. This means that the destructuring work is duplicated,
@@ -4314,9 +4521,9 @@ and get_builtin_typeapp cx reason x ts =
   TypeAppT(get_builtin cx x reason, ts)
 
 (* Specialize a polymorphic class, make an instance of the specialized class. *)
-and mk_typeapp_instance cx reason c ts =
+and mk_typeapp_instance cx reason ?(cache=false) c ts =
   let t = mk_tvar cx reason in
-  flow_opt cx (c, SpecializeT(reason,ts,t));
+  flow_opt cx (c, SpecializeT(reason,cache,ts,t));
   mk_instance cx reason t
 
 and mk_instance cx ?trace instance_reason c =
@@ -4476,7 +4683,12 @@ let unify cx t1 t2 =
     on. OptRecursive is used for pruning the graph, i.e., removing type
     variables in a graph that make no difference when the graph is merged with
     other graphs through its requires and exports.
-**)
+
+    NOTE: while OptRecursive and FullRecursive don't have additional semantics
+    attached to them (they only affect marking of type variables), it is
+    important to use them in the proper order. In particular, pruning the graph
+    before computing strict requires would be wrong, since some dependencies
+    that need to be recorded would be removed. **)
 type gc_mode =
 | FullRecursive
 | OptRecursive
@@ -4693,7 +4905,7 @@ let rec gc cx state = function
       gc cx state t1;
       gc cx state t2
 
-  | SpecializeT (_, ts, t) ->
+  | SpecializeT (_, _, ts, t) ->
       ts |> List.iter (gc cx state);
       gc cx state t
 
