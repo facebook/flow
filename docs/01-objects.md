@@ -207,8 +207,6 @@ object literals are considered to have sealed object types. In fact, the only ca
 an object type is not sealed are when it describes an empty object literal (to be extended
 by adding properties to it), an object literal with [spread properties](https://github.com/sebmarkbage/ecmascript-rest-spread), or when it describes a map (see below).
 
-### Cautious Flexibility
-
 Overall, the weaker guarantee for dynamically added properties is a small cost
 to pay for the huge increase in flexibility it affords. Specifically, it
 allows Flow to usefully type check lots of idiomatic JavaScript code, while
@@ -219,7 +217,7 @@ initialization is complete.
 
 In any case, for most objects you can altogether avoid adding properties
 dynamically, in which case you get stronger guarantees. Furthermore, as
-described below, object type annotations are sealed, so you can always force
+described above, object type annotations are sealed, so you can always force
 sealing by going through an annotation (and sealing is enforced at module
 boundaries).
 
