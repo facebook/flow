@@ -93,7 +93,7 @@ be `undefined`, and reports errors when they are used as is.
 
 {% highlight javascript linenos=table %}
 /* @flow */
-...
+var obj: { a: string; b?: number } = { a: "hello" };
 obj.b * 10 // error: undefined is incompatible with number
 {% endhighlight %}
 
@@ -162,7 +162,8 @@ For example, the following code typechecks:
 function foo(p) { p.x = 42; }
 function bar(q) { q.f(); }
 
-var o = { f() { return this.x; } };
+var o = { };
+o.f = function() { return this.x; };
 
 bar(o);
 foo(o);
@@ -178,7 +179,8 @@ Fortunately, though, the following code does not typecheck:
 function foo(p) { p.x = 42; }
 function bar(q) { q.f(); }
 
-var o = { f() { return this.x; } };
+var o = { };
+o.f = function() { return this.x; };
 
 foo(o);
 var x: string = bar(o);
@@ -192,6 +194,17 @@ This type is incompatible with
 
 In other words, Flow knows enough to infer that whenever the `x` property of
 `o` does exist, it is a number, so a `string` should not be expected.
+
+## Sealed object types
+
+Unfortunately, supporting dynamically added properties means that Flow can miss
+errors where the programmer accesses a non-existent property by mistake. Thus, Flow
+also supports sealed object types, where accesses of non-existent properties are reported
+as errors.
+
+When object types appear as annotatations, they are considered sealed. Also, non-empty
+object literals are considered to have sealed object types. In fact, the only cases where
+an object type is not sealed is when
 
 ### Cautious Flexibility
 
