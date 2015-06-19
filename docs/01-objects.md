@@ -78,6 +78,28 @@ sayHello(mySampleData);
 sayHello({message: 'Hi', isAwesome: false});
 {% endhighlight %}
 
+## Optional properties
+
+Object types can have optional properties. The following code shows how
+optional properties allow objects with missing properties to be typed.
+
+{% highlight javascript linenos=table %}
+/* @flow */
+var obj: { a: string; b?: number } = { a: "hello" };
+{% endhighlight %}
+
+When optional properties are accessed, Flow tracks the fact that they could
+be `undefined`, and reports errors when they are used as is.
+
+{% highlight javascript linenos=table %}
+/* @flow */
+...
+obj.b * 10 // error: undefined is incompatible with number
+{% endhighlight %}
+
+One way to avoid errors is to dynamically check that an optional property exists
+before using it. See [nullable types](http://flowtype.org/docs/nullable-types.html#_) for details.
+
 ## Constructor Functions and Prototype Objects
 
 Another way of creating objects in JavaScript is by using `new` on
