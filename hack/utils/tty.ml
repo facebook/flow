@@ -28,6 +28,11 @@ type style =
   | NormalWithBG of raw_color * raw_color
   | BoldWithBG of raw_color * raw_color
 
+type color_mode =
+  | Color_Always
+  | Color_Never
+  | Color_Auto
+
 let text_num = function
   | Default -> "39"
   | Black   -> "30"
@@ -60,14 +65,21 @@ let style_num = function
   | NormalWithBG (text, bg) -> (text_num text) ^ ";" ^ (background_num bg)
   | BoldWithBG (text, bg) -> (text_num text) ^ ";" ^ (background_num bg) ^ ";1"
 
-let print_one c s =
-  if Unix.isatty Unix.stdout
+let print_one ?(color_mode=Color_Auto) c s =
+  let should_color = match color_mode with
+    | Color_Always -> true
+    | Color_Never -> false
+    | Color_Auto -> Unix.isatty Unix.stdout && Sys.getenv "TERM" <> "dumb"
+  in
+  if should_color
   then Printf.printf "\x1b[%sm%s\x1b[0m" (style_num c) (s)
   else Printf.printf "%s" s
 
-let print strs = List.iter strs (fun (c, s) -> print_one c s)
+let print ?(color_mode=Color_Auto) strs =
+  List.iter strs (fun (c, s) -> print_one ~color_mode c s)
 
-let printf c = Printf.ksprintf (print_one c)
+let printf ?(color_mode=Color_Auto) c =
+  Printf.ksprintf (print_one ~color_mode c)
 
 let (spinner, spinner_used) =
   let state = ref 0 in

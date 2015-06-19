@@ -111,7 +111,7 @@ type command_params = {
   retry_if_init : bool;
   timeout : int;
   no_auto_start : bool;
-  color : Modes_js.color_mode;
+  color : Tty.color_mode;
 }
 
 let collect_server_flags
@@ -122,10 +122,10 @@ let collect_server_flags
   | Some x -> x
   | None -> def in
   let color = match color with
-  | Some "never" -> Modes_js.Never
-  | Some "always" -> Modes_js.Always
+  | Some "never" -> Tty.Color_Never
+  | Some "always" -> Tty.Color_Always
   | Some "auto"
-  | None -> Modes_js.Auto
+  | None -> Tty.Color_Auto
   | _ -> assert false (* the enum type enforces this *)
   in
   Modes_js.(modes.color <- color);

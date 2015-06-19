@@ -70,17 +70,7 @@ let print_reason_color ~(first:bool) ~(one_line:bool) ((reason, s): message) =
   let p = Reason_js.pos_of_reason reason in
   let to_print = format_reason_color ~first ~one_line (p, s) in
   (if first then Printf.printf "\n");
-  let should_color = Modes_js.(match modes.color with
-    | Always -> true
-    | Never -> false
-    | Auto -> Unix.isatty Unix.stdout && Sys.getenv "TERM" <> "dumb"
-  ) in
-  if should_color
-  then
-    C.print to_print
-  else
-    let strings = List.map snd to_print in
-    List.iter (Printf.printf "%s") strings
+  C.print ~color_mode:Modes_js.(modes.color) to_print
 
 let print_error_color ~(one_line:bool) (e:error) =
   let level, messages, trace_reasons = e in
