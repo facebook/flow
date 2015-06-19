@@ -20,7 +20,6 @@ type modes = {
   mutable quiet : bool;
   mutable profile : bool;
   mutable no_flowlib: bool;
-  mutable color: Tty.color_mode;
 }
 
 let modes = {
@@ -35,7 +34,6 @@ let modes = {
   quiet = true;
   profile = false;
   no_flowlib = false;
-  color = Tty.Color_Auto;
 }
 
 let debug_string f = if modes.debug then prerr_endline (f ())

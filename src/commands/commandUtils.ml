@@ -84,6 +84,16 @@ let sleep seconds =
         then timeout_go_boom ()
         else Unix.sleep seconds
 
+let error_flags prev = CommandSpec.ArgSpec.(
+  prev
+  |> flag "--color" (enum ["auto"; "never"; "always"])
+      ~doc:"Display terminal output in color. never, always, auto (default: auto)"
+  |> flag "--one-line" no_arg
+      ~doc:"Escapes newlines so that each error prints on one line"
+  |> flag "--show-all-errors" no_arg
+      ~doc:"Print all errors (the default is to truncate after 50 errors)"
+)
+
 let server_flags prev = CommandSpec.ArgSpec.(
   prev
   |> flag "--timeout" (optional int)
@@ -96,8 +106,6 @@ let server_flags prev = CommandSpec.ArgSpec.(
       ~doc:"retry if the server is initializing (default: true)"
   |> flag "--no-auto-start" no_arg
       ~doc:"If the server if it is not running, do not start it; just exit"
-  |> flag "--color" (enum ["auto"; "never"; "always"])
-      ~doc:"Display terminal output in color. never, always, auto (default: auto)"
 )
 
 let json_flags prev = CommandSpec.ArgSpec.(
@@ -111,31 +119,28 @@ type command_params = {
   retry_if_init : bool;
   timeout : int;
   no_auto_start : bool;
-  color : Tty.color_mode;
 }
 
-let collect_server_flags
-    main
-    timeout from
-    retries retry_if_init no_auto_start color =
-  let default def = function
-  | Some x -> x
-  | None -> def in
-  let color = match color with
+let parse_color_enum = function
   | Some "never" -> Tty.Color_Never
   | Some "always" -> Tty.Color_Always
   | Some "auto"
   | None -> Tty.Color_Auto
   | _ -> assert false (* the enum type enforces this *)
-  in
-  Modes_js.(modes.color <- color);
+
+let collect_server_flags
+    main
+    timeout from
+    retries retry_if_init no_auto_start =
+  let default def = function
+  | Some x -> x
+  | None -> def in
   main {
     from = (default "" from);
     retries = (default 3 retries);
     retry_if_init = (default true retry_if_init);
     timeout = (default 0 timeout);
     no_auto_start = no_auto_start;
-    color = color;
   }
 
 let start_flow_server root =

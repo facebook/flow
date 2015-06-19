@@ -12,6 +12,8 @@
 (* server commands *)
 (***********************************************************************)
 
+open CommandUtils
+
 type mode = Check | Normal | Detach
 
 module type CONFIG = sig
@@ -55,26 +57,24 @@ module OptionParser(Config : CONFIG) = struct
   let args = match Config.mode with
   | Check -> CommandSpec.ArgSpec.(
       empty
+      |> error_flags
       |> flag "--json" no_arg
           ~doc:"Output errors in JSON format"
-      |> flag "--show-all-errors" no_arg
-          ~doc:"Print all errors (the default is to truncate after 50 errors)"
       |> flag "--profile" no_arg
           ~doc:"Output profiling information"
       |> flag "--quiet" no_arg
           ~doc:"Suppress info messages to stdout (included in --json)"
-      |> flag "--one-line" no_arg
-          ~doc:"Escapes newlines so that each error prints on one line"
       |> common_args
     )
   | Normal
   | Detach -> CommandSpec.ArgSpec.(
       empty
-      |> dummy false
-      |> dummy false
-      |> dummy false
-      |> dummy false
-      |> dummy false
+      |> dummy None  (* error_flags.color *)
+      |> dummy false (* error_flags.one_line *)
+      |> dummy false (* error_flags.show_all_errors *)
+      |> dummy false (* json *)
+      |> dummy false (* profile *)
+      |> dummy false (* quiet *)
       |> common_args
     )
 
@@ -89,12 +89,12 @@ module OptionParser(Config : CONFIG) = struct
         Flow will search upward for a .flowconfig file, beginning at ROOT.\n\
         ROOT is assumed to be the current directory if unspecified.\n\
         A server will be started if none is running over ROOT.\n"
-        CommandUtils.exe_name cmdname cmddoc;
+        exe_name cmdname cmddoc;
   }
 
   let result = ref None
-  let main json show_all_errors profile quiet one_line debug verbose all weak
-           traces strip_root lib no_flowlib log_file root () =
+  let main color one_line show_all_errors json profile quiet debug verbose all
+           weak traces strip_root lib no_flowlib log_file root () =
     let root = CommandUtils.guess_root root in
     let flowconfig = FlowConfig.get root in
     let opt_module = FlowConfig.(match flowconfig.options.moduleSystem with
@@ -124,6 +124,7 @@ module OptionParser(Config : CONFIG) = struct
 
     result := Some {
       Options.opt_check_mode = Config.(mode = Check);
+      Options.opt_color = parse_color_enum color;
       Options.opt_log_file = opt_log_file;
       Options.opt_root = root;
       Options.opt_should_detach = Config.(mode = Detach);

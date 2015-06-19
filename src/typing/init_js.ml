@@ -34,7 +34,10 @@ let parse_lib () =
       let lib_content = cat lib_file in
       match (Parsing_service_js.do_parse lib_content lib_file) with
       | Some ast, _ -> lib_file, ast
-      | _, Some err -> Errors_js.print_error_summary true (Errors_js.to_list err); assert false
+      | _, Some err ->
+        Errors_js.print_error_summary
+          ~color:Tty.Color_Auto true (Errors_js.to_list err);
+        assert false
       | _ -> assert false
     )
     with _ ->
