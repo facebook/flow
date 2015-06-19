@@ -194,7 +194,12 @@ module Type = struct
   | OrT of reason * t * t
 
   (* operation on polymorphic types *)
-  | SpecializeT of reason * t list * t
+  (** SpecializeT(_, cache, targs, tresult) instantiates a polymorphic type with
+      type arguments targs, and flows the result into tresult. If cache is set,
+      it looks up a cache of existing instantiations for the type parameters of
+      the polymorphic type, unifying the type arguments with those
+      instantiations if such exist. **)
+  | SpecializeT of reason * bool * t list * t
 
   (* operation on prototypes *)
   | LookupT of reason * reason option * string * t
@@ -337,9 +342,12 @@ module Type = struct
 
 end
 
-(* The typechecking algorithm often needs to maintain sets of types. In
-   addition, for logging we need to associate some provenanced information to
-   types. Both these purposes are served by using type maps. *)
+(* The typechecking algorithm often needs to maintain sets of types, or more
+   generally, maps of types (for logging we need to associate some provenanced
+   information to types). *)
+
+module TypeSet : Set.S with type elt = Type.t
+  = Set.Make(Type)
 
 module TypeMap : MapSig with type key = Type.t
   = MyMap(Type)
@@ -932,7 +940,7 @@ let rec reason_of_t = function
   | EqT (reason, t) ->
       reason
 
-  | SpecializeT(reason,_,_)
+  | SpecializeT(reason,_,_,_)
       -> reason
 
   | TypeAppT(t,_)
@@ -1091,7 +1099,7 @@ let rec mod_reason_of_t f = function
   | AndT (reason, t1, t2) -> AndT (f reason, t1, t2)
   | OrT (reason, t1, t2) -> OrT (f reason, t1, t2)
 
-  | SpecializeT(reason, ts, t) -> SpecializeT (f reason, ts, t)
+  | SpecializeT(reason, cache, ts, t) -> SpecializeT (f reason, cache, ts, t)
 
   | TypeAppT (t, ts) -> TypeAppT (mod_reason_of_t f t, ts)
 
@@ -1582,7 +1590,8 @@ let rec _json_of_t stack cx t = Json.(
       "resultType", _json_of_t stack cx res
     ]
 
-  | SpecializeT (_, targs, tvar) -> [
+  | SpecializeT (_, cache, targs, tvar) -> [
+      "cache", JBool cache;
       "types", JList (List.map (_json_of_t stack cx) targs);
       "tvar", _json_of_t stack cx tvar
     ]
@@ -2171,3 +2180,186 @@ let reasons_of_trace ?(level=0) ?(tab=2) trace =
       )
     else []
   in f level trace
+
+(********* type visitor *********)
+
+(* We walk types in a lot of places for all kinds of things, but often most of
+   the code is boilerplate. The following visitor class for types aims to
+   reduce that boilerplate. It is designed as a fold on the structure of types,
+   parameterized by an accumulator.
+
+   WARNING: This is only a partial implementation, sufficient for current
+   purposes but intended to be completed in a later diff.
+*)
+class ['a] type_visitor = object(self)
+  method type_ cx (acc: 'a) = function
+  | OpenT (_, id) -> self#id_ cx acc id
+
+  | NumT _
+  | StrT _
+  | BoolT _
+  | UndefT _
+  | MixedT _
+  | AnyT _
+  | NullT _
+  | VoidT _ -> acc
+
+  | FunT (_, static, prototype, funtype) ->
+    let acc = self#type_ cx acc static in
+    let acc = self#type_ cx acc prototype in
+    let acc = self#fun_type cx acc funtype in
+    acc
+
+  | ObjT (_, { dict_t; props_tmap; proto_t; _ }) ->
+    let acc = self#opt (self#dict_ cx) acc dict_t in
+    let acc = self#props cx acc props_tmap in
+    let acc = self#type_ cx acc proto_t in
+    acc
+
+  | ArrT (_, t, ts) ->
+    let acc = self#type_ cx acc t in
+    let acc = self#list (self#type_ cx) acc ts in
+    acc
+
+  | ClassT t -> self#type_ cx acc t
+
+  | InstanceT (_, static, super, insttype) ->
+    let acc = self#type_ cx acc static in
+    let acc = self#type_ cx acc super in
+    let acc = self#inst_type cx acc insttype in
+    acc
+
+  | OptionalT t -> self#type_ cx acc t
+
+  | RestT t -> self#type_ cx acc t
+
+  | PolyT (typeparams, t) ->
+    let acc = self#list (self#type_param cx) acc typeparams in
+    let acc = self#type_ cx acc t in
+    acc
+
+  | TypeAppT (t, ts) ->
+    let acc = self#type_ cx acc t in
+    let acc = self#list (self#type_ cx) acc ts in
+    acc
+
+  | BoundT typeparam -> self#type_param cx acc typeparam
+
+  | ExistsT _ -> acc
+
+  | MaybeT t -> self#type_ cx acc t
+
+  | IntersectionT (_, ts)
+  | UnionT (_, ts) -> self#list (self#type_ cx) acc ts
+
+  | UpperBoundT t
+  | LowerBoundT t -> self#type_ cx acc t
+
+  | AnyObjT _
+  | AnyFunT _ -> acc
+
+  | ShapeT t -> self#type_ cx acc t
+
+  | DiffT (t1, t2) ->
+    let acc = self#type_ cx acc t1 in
+    let acc = self#type_ cx acc t2 in
+    acc
+
+  | EnumT (_, t) -> self#type_ cx acc t
+
+  | TypeT (_, t) -> self#type_ cx acc t
+
+  | BecomeT (_, t) -> self#type_ cx acc t
+
+  | SpeculativeMatchFailureT (_, t1, t2) ->
+    let acc = self#type_ cx acc t1 in
+    let acc = self#type_ cx acc t2 in
+    acc
+
+  | ModuleT (_, exporttypes) ->
+    self#export_types cx acc exporttypes
+
+  (* Currently not walking use types. This will change in an upcoming diff. *)
+  | SummarizeT (_, _)
+  | CallT (_, _)
+  | MethodT (_, _, _)
+  | SetT (_, _, _)
+  | GetT (_, _, _)
+  | SetElemT (_, _, _)
+  | GetElemT (_, _, _)
+  | ConstructorT (_, _, _)
+  | SuperT (_, _)
+  | ExtendsT (_, _)
+  | AdderT (_, _, _)
+  | ComparatorT (_, _)
+  | PredicateT (_, _)
+  | EqT (_, _)
+  | AndT (_, _, _)
+  | OrT (_, _, _)
+  | SpecializeT (_, _, _, _)
+  | LookupT (_, _, _, _)
+  | ObjAssignT (_, _, _, _, _)
+  | ObjFreezeT (_, _)
+  | ObjRestT (_, _, _)
+  | ObjSealT (_, _)
+  | ObjTestT (_, _, _)
+  | UnifyT (_, _)
+  | ConcretizeT (_, _, _, _)
+  | ConcreteT _
+  | KeyT (_, _)
+  | HasT (_, _)
+  | ElemT (_, _, _)
+  | CJSRequireT (_, _)
+  | ImportModuleNsT (_, _)
+  | ImportTypeT (_, _)
+  | CJSExtractNamedExportsT (_, _, _)
+  | SetCJSExportT (_, _, _)
+  | SetNamedExportsT (_, _, _)
+    -> self#__TODO__ cx acc
+
+  (* The default behavior here could be fleshed out a bit, to look up the graph,
+     handle Resolved and Unresolved cases, etc. *)
+  method id_ cx acc id = acc
+
+  method private dict_ cx acc { key; value; _ } =
+    let acc = self#type_ cx acc key in
+    let acc = self#type_ cx acc value in
+    acc
+
+  method private props cx acc id =
+    self#smap (self#type_ cx) acc (IMap.find_unsafe id cx.property_maps)
+
+  method private type_param cx acc { bound; _ } =
+    self#type_ cx acc bound
+
+  method private fun_type cx acc { this_t; params_tlist; return_t; _} =
+    let acc = self#type_ cx acc this_t in
+    let acc = self#list (self#type_ cx) acc params_tlist in
+    let acc = self#type_ cx acc return_t in
+    acc
+
+  method private inst_type cx acc { type_args; fields_tmap; methods_tmap; _ } =
+    let acc = self#smap (self#type_ cx) acc type_args in
+    let acc = self#props cx acc fields_tmap in
+    let acc = self#props cx acc methods_tmap in
+    acc
+
+  method private export_types cx acc { exports_tmap; cjs_export } =
+    let acc = self#props cx acc exports_tmap in
+    let acc = self#opt (self#type_ cx) acc cjs_export in
+    acc
+
+  method private __TODO__ cx acc = acc
+
+  method private list: 't. ('a -> 't -> 'a) -> 'a -> 't list -> 'a =
+    List.fold_left
+
+  method private opt: 't. ('a -> 't -> 'a) -> 'a -> 't option -> 'a =
+    fun f acc -> function
+    | None -> acc
+    | Some x -> f acc x
+
+  method private smap: 't. ('a -> 't -> 'a) -> 'a -> 't SMap.t -> 'a =
+    fun f acc map ->
+      SMap.fold (fun _ t acc -> f acc t) map acc
+end

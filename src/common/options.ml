@@ -10,6 +10,7 @@
 
 type options = {
   opt_check_mode: bool;
+  opt_color: Tty.color_mode;
   opt_root : Path.t;
   opt_should_detach : bool;
   opt_debug : bool;
@@ -31,6 +32,7 @@ type options = {
   opt_one_line_errors: bool;
 }
 
+let color_mode opts = opts.opt_color
 let is_check_mode opts = opts.opt_check_mode
 let log_file opts = opts.opt_log_file
 let root opts = opts.opt_root

@@ -23,7 +23,44 @@ open Utils
 module Ast = Spider_monkey_ast
 module Json = Hh_json
 
+let mk_id () = Ident.make ""
+
+(* Reasons are included in types mainly for error reporting, but sometimes we
+   also use reasons in types to recover information on the source code that
+   caused those reasons to be created. Two examples of such secondary uses of
+   reasons are:
+
+   - strictness analysis: we use reasons to locate the origin of an object and
+   the origin of an operation on the object, and use such origins to determine
+   whether certain errors should be suppressed.
+
+   - termination analysis: we use reasons to limit instantiation of type
+   parameters in polymorphic types at particular locations, to prevent the type
+   checker from generating an unbounded number of constraints. The `pos` field
+   of reasons is sufficient to distinguish code locations, except that as an
+   implementation strategy for checking polymorphic definitions, we walk over
+   the same source code multiple times to check it with different instantiations
+   of type parameters, and to index "copies" of the reasons created in those
+   passes over the same source code, we use an additional `test_id` field.
+*)
+module TestID = struct
+  let _current = ref None
+
+  (* Get current test id. *)
+  let current() = !_current
+
+  (* Call f on a, installing new_test_id as the current test_id, and restoring
+     the current test_id when done. (See also the function new_reason below.) *)
+  let run f a =
+    let test_id = current () in
+    _current := Some (mk_id ());
+    f a;
+    _current := test_id
+
+end
+
 type reason = {
+  test_id: int option;
   derivable: bool;
   desc: string;
   pos: Pos.t;
@@ -116,7 +153,9 @@ let json_of_pos pos = Json.(Pos.(Lexing.(
 
 (* reason constructors, accessors, etc. *)
 
+(* The current test_id is included in every new reason. *)
 let new_reason s pos = {
+  test_id = TestID.current();
   derivable = false;
   desc = s;
   pos = pos;

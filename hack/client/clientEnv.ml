@@ -32,6 +32,9 @@ type client_mode =
 | MODE_LINT of string list
 | MODE_LINT_ALL of int
 | MODE_DUMP_SYMBOL_INFO of string
+| MODE_CREATE_CHECKPOINT of string
+| MODE_RETRIEVE_CHECKPOINT of string
+| MODE_DELETE_CHECKPOINT of string
 
 type client_check_env = {
   mode: client_mode;

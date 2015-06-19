@@ -11,4 +11,12 @@ poly.js:18:31,32: string
 This type is incompatible with
 poly.js:18:11,16: number
 
-Found 3 errors
+test.js:2:7,7: X
+This type is incompatible with
+test.js:8:10,15: number
+
+test.js:8:19,24: number
+This type is incompatible with
+test.js:8:3,38: some incompatible instantiation of X
+
+Found 5 errors

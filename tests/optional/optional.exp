@@ -59,7 +59,7 @@ optional.js:10:14,15: number
 This type is incompatible with
 optional.js:7:30,35: string
 
-optional_param2.js:6:9,14: undefined
+optional_param2.js:7:19,33: undefined
 This type is incompatible with
 optional_param2.js:7:9,14: number
 

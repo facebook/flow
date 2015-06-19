@@ -3,36 +3,22 @@ issue-198.js:1:9,10:6: call of method then
 Error:
 issue-198.js:5:16,28: string
 This type is incompatible with
-[LIB] core.js:350:33,46: union type
+[LIB] core.js:357:33,46: union type
 
 issue-324.js:3:7,9: Bar
 This type is incompatible with
 issue-324.js:5:13,24: union type
 
-issue-324.js:6:32,34: Bar
+union.js:2:5,5: number
 This type is incompatible with
-issue-324.js:5:13,24: union type
+union.js:1:17,33: union type
 
-union.js:7:5,5: number
+union.js:4:7,7: C
 This type is incompatible with
-union.js:6:17,33: union type
+union.js:5:7,7: D
 
-union.js:11:9,9: C
+union.js:5:7,7: D
 This type is incompatible with
-union.js:11:14,14: D
+union.js:4:7,7: C
 
-union.js:11:14,14: D
-This type is incompatible with
-union.js:9:7,7: C
-
-union.js:11:14,14: D
-This type is incompatible with
-union.js:11:9,9: C
-
-union.js:14:1,10: function call
-Error:
-union.js:9:7,7: C
-This type is incompatible with
-union.js:13:17,26: union type
-
-Found 8 errors
+Found 5 errors

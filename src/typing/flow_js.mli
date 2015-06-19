@@ -31,8 +31,6 @@ module Cache: sig
   val clear: unit -> unit
 end
 
-val mk_id : context -> ident
-
 val mk_tvar: context -> reason -> Type.t
 val mk_tvar_where: context -> reason -> (Type.t -> unit) -> Type.t
 
@@ -45,6 +43,8 @@ val havoc_ctx : context -> int -> int -> unit
 (* polymorphism *)
 
 val subst: context -> ?force:bool -> (Type.t SMap.t) -> Type.t -> Type.t
+val generate_tests: context -> reason -> Type.typeparam list -> (Type.t SMap.t -> unit)
+  -> unit
 
 (* property maps *)
 

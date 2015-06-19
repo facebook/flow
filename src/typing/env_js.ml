@@ -120,7 +120,7 @@ let clear_env () =
 (* TODO maintain changelist here too *)
 let push_env cx scope =
   (* frame id goes with new scope *)
-  let frame = Flow_js.mk_id cx in
+  let frame = mk_id () in
   (* push scope and frame *)
   scopes := scope :: !scopes;
   frames := frame :: !frames;

@@ -179,6 +179,20 @@ let parse_check_args cmd =
       " (mode) find all occurrences of lint with the given error code";
     "--version", Arg.Set version,
       " (mode) show version and exit\n";
+    (* Create a checkpoint which can be used to retrieve changed files later *)
+    "--create-checkpoint", Arg.String (fun x -> set_mode (MODE_CREATE_CHECKPOINT x) ()),
+      "";
+    (* Retrieve changed files since input checkpoint.
+     * Output is separated by newline.
+     * Exit code will be non-zero if no checkpoint is found *)
+    "--retrieve-checkpoint",
+      Arg.String (fun x -> set_mode (MODE_RETRIEVE_CHECKPOINT x) ()),
+      "";
+    (* Delete an existing checkpoint.
+     * Exitcode will be non-zero if no checkpoint is found *)
+    "--delete-checkpoint",
+      Arg.String (fun x -> set_mode (MODE_DELETE_CHECKPOINT x) ()),
+      "";
 
     (* flags *)
     "--json", Arg.Set output_json,

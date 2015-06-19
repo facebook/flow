@@ -66,27 +66,17 @@ let format_reason_color
   ]
 )
 
-let print_reason_color ~(first:bool) ~(one_line:bool) ((reason, s): message) =
+let print_reason_color ~first ~one_line ~color ((reason, s): message) =
   let p = Reason_js.pos_of_reason reason in
   let to_print = format_reason_color ~first ~one_line (p, s) in
   (if first then Printf.printf "\n");
-  let should_color = Modes_js.(match modes.color with
-    | Always -> true
-    | Never -> false
-    | Auto -> Unix.isatty Unix.stdout && Sys.getenv "TERM" <> "dumb"
-  ) in
-  if should_color
-  then
-    C.print to_print
-  else
-    let strings = List.map snd to_print in
-    List.iter (Printf.printf "%s") strings
+  C.print ~color_mode:color to_print
 
-let print_error_color ~(one_line:bool) (e:error) =
+let print_error_color ~one_line ~color e =
   let level, messages, trace_reasons = e in
   let messages = append_trace_reasons messages trace_reasons in
-  print_reason_color ~first:true ~one_line (List.hd messages);
-  List.iter (print_reason_color ~first:false ~one_line) (List.tl messages)
+  print_reason_color ~first:true ~one_line ~color (List.hd messages);
+  List.iter (print_reason_color ~first:false ~one_line ~color) (List.tl messages)
 
 let pos_of_error err =
   let _, messages, _ = err in
@@ -284,10 +274,15 @@ let print_errorl use_json el oc =
   flush oc
 
 (* Human readable output *)
-let print_error_summary ?(one_line=false) truncate (errors : error list) =
+let print_error_summary
+  ?(one_line=false)
+  ~color
+  truncate
+  (errors : error list)
+=
   let error_or_errors n = if n != 1 then "errors" else "error" in
   let print_error_if_not_truncated curr e =
-    (if not(truncate) || curr < 50 then print_error_color ~one_line e);
+    (if not(truncate) || curr < 50 then print_error_color ~one_line ~color e);
     curr + 1
   in
   let total =

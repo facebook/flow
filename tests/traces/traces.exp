@@ -63,16 +63,10 @@ Traces2.js:17:12,25:          InstanceT [ReactElement]
 [LIB] react.js:68:1,73:1:     ~> ExtendsT [extends ReactElement] comes from
 Traces2.js:17:12,25:          . InstanceT [ReactElement]
 [LIB] react.js:68:1,73:1:     . ~> InstanceT [ReactElement] comes from
-Traces2.js:17:12,25:          . . ClassT [class type: ReactElement]
-[LIB] react.js:68:1,73:1:     . . ~> TypeT [ReactElement] comes from
-Traces2.js:17:12,25:          . . . PolyT [polymorphic type: class type: ReactElement]
-[LIB] react.js:68:1,73:1:     . . . ~> SpecializeT [ReactElement]
-Traces2.js:17:12,25:          . . TypeAppT [type application of polymorphic type: class type: ReactElement]
+[LIB] react.js:68:1,73:1:     . . OpenT [ReactElement]
 [LIB] react.js:68:1,73:1:     . . ~> InstanceT [ReactElement] comes from
-[LIB] react.js:131:33,135:26: . . . FunT [function type]
-Traces2.js:17:12,25:          . . . ~> CallT [React element: B]
-[LIB] react.js:68:1,73:1:     . . . ClassT [class type: ReactElement]
-Traces2.js:13:16,27:          . . . ~> TypeT [ReactElement]
+Traces2.js:17:12,25:          . . . TypeAppT [type application of polymorphic type: class type: ReactElement]
+Traces2.js:13:16,27:          . . . ~> BecomeT [ReactElement]
 
 Traces2.js:10:3,11: property bar
 Property not found in
@@ -82,15 +76,9 @@ Traces2.js:17:12,25:          InstanceT [ReactElement]
 [LIB] react.js:68:1,73:1:     ~> ExtendsT [extends ReactElement] comes from
 Traces2.js:17:12,25:          . InstanceT [ReactElement]
 [LIB] react.js:68:1,73:1:     . ~> InstanceT [ReactElement] comes from
-Traces2.js:17:12,25:          . . ClassT [class type: ReactElement]
-[LIB] react.js:68:1,73:1:     . . ~> TypeT [ReactElement] comes from
-Traces2.js:17:12,25:          . . . PolyT [polymorphic type: class type: ReactElement]
-[LIB] react.js:68:1,73:1:     . . . ~> SpecializeT [ReactElement]
-Traces2.js:17:12,25:          . . TypeAppT [type application of polymorphic type: class type: ReactElement]
+[LIB] react.js:68:1,73:1:     . . OpenT [ReactElement]
 [LIB] react.js:68:1,73:1:     . . ~> InstanceT [ReactElement] comes from
-[LIB] react.js:131:33,135:26: . . . FunT [function type]
-Traces2.js:17:12,25:          . . . ~> CallT [React element: B]
-[LIB] react.js:68:1,73:1:     . . . ClassT [class type: ReactElement]
-Traces2.js:13:16,27:          . . . ~> TypeT [ReactElement]
+Traces2.js:17:12,25:          . . . TypeAppT [type application of polymorphic type: class type: ReactElement]
+Traces2.js:13:16,27:          . . . ~> BecomeT [ReactElement]
 
 Found 6 errors

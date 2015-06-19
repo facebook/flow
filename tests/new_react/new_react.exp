@@ -15,10 +15,6 @@ classes.js:24:15,28: property y_
 Property not found in
 classes.js:5:14,26: object type
 
-classes.js:24:15,28: property y_
-Property not found in
-classes.js:20:22,34: object type
-
 classes.js:39:1,20: assignment of property defaultProps
 Error:
 classes.js:39:20,20: number
@@ -213,4 +209,4 @@ state3.js:14:16,20: boolean
 This type is incompatible with
 state3.js:11:16,21: number
 
-Found 46 errors
+Found 45 errors

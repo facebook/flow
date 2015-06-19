@@ -41,11 +41,8 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
         empty
         |> CommandUtils.server_flags
         |> CommandUtils.json_flags
+        |> CommandUtils.error_flags
         |> dummy false (* match --version below *)
-        |> flag "--one-line" no_arg
-            ~doc:"Escapes newlines so that each error prints on one line"
-        |> flag "--show-all-errors" no_arg
-            ~doc:"Print all errors (the default is to truncate after 50 errors)"
         |> anon "root" (optional string) ~doc:"Root directory"
       )
     }
@@ -83,12 +80,9 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
         empty
         |> CommandUtils.server_flags
         |> CommandUtils.json_flags
+        |> CommandUtils.error_flags
         |> flag "--version" no_arg
             ~doc:"Print version number and exit"
-        |> flag "--one-line" no_arg
-            ~doc:"Escapes newlines so that each error prints on one line"
-        |> flag "--show-all-errors" no_arg
-            ~doc:"Print all errors (the default is to truncate after 50 errors)"
         |> anon "root" (optional string) ~doc:"Root directory"
       )
     }
@@ -98,6 +92,7 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
     from: string;
     output_json: bool;
     one_line: bool;
+    color: Tty.color_mode;
     show_all_errors: bool;
   }
 
@@ -126,7 +121,9 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
       then Errors_js.print_errorl args.output_json e stdout
       else (
         Errors_js.print_error_summary
-          (not args.show_all_errors) ~one_line:args.one_line e
+          ~one_line:args.one_line
+          ~color:args.color
+          (not args.show_all_errors) e
       );
       exit 2
     | ServerProt.NO_ERRORS ->
@@ -190,7 +187,7 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
       exit 2
     end
 
-  let main option_values json version one_line show_all_errors root () =
+  let main option_values json color one_line show_all_errors version root () =
     if version then (
       CommandUtils.print_version ();
       exit 0
@@ -200,6 +197,7 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
     let timeout_arg = option_values.CommandUtils.timeout in
     if timeout_arg > 0 then CommandUtils.set_timeout timeout_arg;
     let env = {
+      color = CommandUtils.parse_color_enum color;
       root;
       from = option_values.CommandUtils.from;
       output_json = json;

@@ -3049,10 +3049,10 @@ and expression_ cx loc e = Ast.Expression.(match e with
       let argts = List.map (expression_or_spread cx) arguments in
       let reason = mk_reason "super(...)" loc in
       let super = super_ cx reason in
-      let t = VoidT reason in
-      Flow_js.flow cx (super,
-        MethodT(reason, "constructor", Flow_js.mk_methodtype super argts t));
-      t
+      Flow_js.mk_tvar_where cx reason (fun t ->
+        Flow_js.flow cx (super,
+          MethodT(reason, "constructor", Flow_js.mk_methodtype super argts t))
+      )
 
   (******************************************)
   (* See ~/www/static_upstream/core/ *)
@@ -3319,6 +3319,7 @@ and literal cx loc lit = Ast.Literal.(match lit.value with
 
   | Null ->
       let null = null_ loc in
+      (* TODO: investigate returning just null instead of a union. *)
       let reason = reason_of_t null in
       UnionT (reason, [null; Flow_js.mk_tvar cx reason])
 
@@ -4546,7 +4547,7 @@ and mk_extends cx reason_c map = function
 
 and mk_nominal_type cx reason map (e, targs) =
   let c = expression cx e in
-  mk_nominal_type_ cx reason map (c, targs)
+  mk_nominal_type_ cx (reason_of_t c) map (c, targs)
 
 and mk_nominal_type_ cx reason map (c, targs) =
   match targs with
@@ -4597,15 +4598,6 @@ and mk_signature cx reason_c c_type_params_map body = Ast.Class.(
 
       let params_ret = mk_params_ret cx map
         (params, defaults, rest) (body_loc body, returnType) in
-      let params_ret = if not static && name = "constructor"
-        then (
-          let params, pnames, ret, params_map, params_loc = params_ret in
-          let return_void = VoidT (mk_reason "return undefined" loc) in
-          Flow_js.flow cx (ret, return_void);
-          params, pnames, return_void, params_map, params_loc
-        )
-        else params_ret
-      in
       let reason_m = mk_reason (spf "method %s" name) loc in
       let method_sig = reason_m, typeparams, f_type_params_map, params_ret in
       if static
@@ -4703,7 +4695,7 @@ and mk_class_elements cx instance_info static_info body = Ast.Class.(
 
       let save_return_exn = Abnormal.swap Abnormal.Return false in
       let save_throw_exn = Abnormal.swap Abnormal.Throw false in
-      generate_tests cx reason typeparams (fun map_ ->
+      Flow_js.generate_tests cx reason typeparams (fun map_ ->
         let param_types_map =
           param_types_map |> SMap.map (Flow_js.subst cx map_) in
         let ret = Flow_js.subst cx map_ ret in
@@ -4768,13 +4760,13 @@ and mk_class cx loc reason_c = Ast.Class.(function { id=_; body; superClass;
   let super = mk_extends cx reason_c type_params_map extends in
   let super_static = ClassT (super) in
 
-  let super_reason = prefix_reason "super of " reason_c in
   let static_reason = prefix_reason "statics of " reason_c in
 
-  generate_tests cx reason_c typeparams (fun map_ ->
+  Flow_js.generate_tests cx reason_c typeparams (fun map_ ->
     (* map_: [X := T] where T = mixed, _|_ *)
 
     (* super: D<T> *)
+    let super_reason = prefix_reason "super of " reason_c in
     let super = Flow_js.subst cx map_ super in
     let super_static = Flow_js.subst cx map_ super_static in
 
@@ -4895,7 +4887,11 @@ and mk_class cx loc reason_c = Ast.Class.(function { id=_; body; superClass;
    the the A ~> B check is structural if B is an interface and nominal if B is
    a declare class. If you set the structural flag to true, then this interface
    will be checked structurally *)
-and mk_interface cx reason typeparams map (sfmap, smmap, fmap, mmap) extends structural =
+(* TODO: this function shares a lot of code with mk_class. Sometimes that causes
+   bad divergence; e.g., bugs around the handling of generics were fixed in
+   mk_class but not in mk_interface. This code should be consolidated soon,
+   ideally when we provide full support for interfaces. *)
+and mk_interface cx reason_i typeparams map (sfmap, smmap, fmap, mmap) extends structural =
   let id = Flow_js.mk_nominal cx in
   let extends =
     match extends with
@@ -4904,55 +4900,64 @@ and mk_interface cx reason typeparams map (sfmap, smmap, fmap, mmap) extends str
         (* TODO: multiple extends *)
         Some (loc,Ast.Expression.Identifier id), typeParameters
   in
-  let super_reason = prefix_reason "super of " reason in
-  let static_reason = prefix_reason "statics of " reason in
-
-  let super = mk_extends cx super_reason map extends in
+  let super = mk_extends cx reason_i map extends in
   let super_static = ClassT(super) in
 
-  let (imixins,fmap) =
-    match SMap.get "mixins" fmap with
-    | None -> ([], fmap)
-    | Some (ArrT(_,_,ts)) -> (ts, SMap.remove "mixins" fmap)
-    | _ -> assert false
-  in
+  let static_reason = prefix_reason "statics of " reason_i in
+
+  Flow_js.generate_tests cx reason_i typeparams (fun map_ ->
+    let super_reason = prefix_reason "super of " reason_i in
+    let super = Flow_js.subst cx map_ super in
+    let super_static = Flow_js.subst cx map_ super_static in
+
+    let fmap = fmap |> SMap.map (Flow_js.subst cx map_) in
+    let sfmap = sfmap |> SMap.map (Flow_js.subst cx map_) in
+    let mmap = mmap |> SMap.map (Flow_js.subst cx map_) in
+    let smmap = smmap |> SMap.map (Flow_js.subst cx map_) in
+
+    let static_instance = {
+      class_id = 0;
+      type_args = map |> SMap.map (Flow_js.subst cx map_);
+      fields_tmap = Flow_js.mk_propmap cx sfmap;
+      methods_tmap = Flow_js.mk_propmap cx smmap;
+      mixins = false;
+      structural;
+    } in
+    Flow_js.flow cx (super_static, SuperT(super_reason, static_instance));
+    let instance = {
+      class_id = id;
+      type_args = map |> SMap.map (Flow_js.subst cx map_);
+      fields_tmap = Flow_js.mk_propmap cx fmap;
+      methods_tmap = Flow_js.mk_propmap cx mmap;
+      mixins = false;
+      structural;
+    } in
+    Flow_js.flow cx (super, SuperT(super_reason, instance));
+  );
 
   let static_instance = {
     class_id = 0;
     type_args = map;
     fields_tmap = Flow_js.mk_propmap cx sfmap;
     methods_tmap = Flow_js.mk_propmap cx smmap;
-    mixins = imixins <> [];
+    mixins = false;
     structural;
   } in
-  Flow_js.flow cx (super_static, SuperT(static_reason, static_instance));
   let static = InstanceT (
     static_reason,
     MixedT.t,
     super_static,
     static_instance
   ) in
-
   let instance = {
     class_id = id;
     type_args = map;
     fields_tmap = Flow_js.mk_propmap cx fmap;
     methods_tmap = Flow_js.mk_propmap cx mmap;
-    mixins = imixins <> [];
+    mixins = false;
     structural;
   } in
-  Flow_js.flow cx (super, SuperT(super_reason, instance));
-  let this = InstanceT (reason, static, super, instance) in
-
-  (* TODO: Mixins are handled quite superficially. *)
-  (* mixins must be consistent with instance and static properties *)
-  imixins |> List.iter (fun imixin ->
-    Flow_js.flow cx (imixin, SuperT(super_reason, instance));
-    Flow_js.flow cx (
-      ClassT(imixin),
-      SuperT(static_reason, static_instance)
-    );
-  );
+  let this = InstanceT (reason_i, static, super, instance) in
 
   if typeparams = []
   then ClassT(this)
@@ -4972,7 +4977,7 @@ and function_decl id cx (reason:reason) ~async
 
   let save_return_exn = Abnormal.swap Abnormal.Return false in
   let save_throw_exn = Abnormal.swap Abnormal.Throw false in
-  generate_tests cx reason typeparams (fun map_ ->
+  Flow_js.generate_tests cx reason typeparams (fun map_ ->
     let param_types_map =
       param_types_map |> SMap.map (Flow_js.subst cx map_) in
     let ret = Flow_js.subst cx map_ ret in
@@ -5142,29 +5147,6 @@ and mk_params_ret cx map_ params (body_loc, ret_type_opt) =
    return_type,
    param_types_map,
    param_types_loc)
-
-(* Generate for every type parameter a pair of tests, instantiating that type
-   parameter with its bound and Bottom. Run a closure that takes these
-   instantiations, each one in turn, and does something with it. We modify the
-   salt for every instantiation so that re-analyzing the same AST with different
-   instantiations causes different reasons to be generated. *)
-
-and generate_tests cx reason typeparams each =
-  typeparams
-  |> List.fold_left (fun list {name; bound; _ } ->
-    let xreason = replace_reason name reason in
-    let bot = UndefT (
-      prefix_reason "some incompatible instantiation of " xreason
-    ) in
-    List.rev_append
-      (list |> List.map (fun map ->
-        SMap.add name (Flow_js.subst cx map bound) map)
-      )
-      (list |> List.map (SMap.add name bot))
-  ) [SMap.empty]
-  |> List.iteri (fun i map_ ->
-       each map_;
-     )
 
 (* take a list of types appearing in AST as type params,
    do semantic checking and create tvars for them. *)

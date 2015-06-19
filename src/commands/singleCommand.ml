@@ -12,6 +12,8 @@
 (* flow single (run analysis single-threaded) command *)
 (***********************************************************************)
 
+open CommandUtils
+
 let spec = {
   CommandSpec.
   name = "single";
@@ -29,8 +31,6 @@ let spec = {
         ~doc:"Print verbose info during typecheck"
     |> flag "--json" no_arg
         ~doc:"Output errors in JSON format"
-    |> flag "--show-all-errors" no_arg
-        ~doc:"Print all errors (the default is to truncate after 50 errors)"
     |> flag "--profile" no_arg
         ~doc:"Output profiling information"
     |> flag "--quiet" no_arg
@@ -41,15 +41,14 @@ let spec = {
         ~doc:"Specify a library path"
     |> flag "--no-flowlib" no_arg
         ~doc:"Do not include embedded declarations"
-    |> flag "--one-line" no_arg
-        ~doc:"Escapes newlines so that each error prints on one line"
+    |> error_flags
     |> anon "root" (required string)
         ~doc:"Root"
   )
 }
 
-let main all weak debug verbose json show_all_errors profile quiet module_
-         lib no_flowlib one_line root () =
+let main all weak debug verbose json profile quiet module_
+         lib no_flowlib color one_line show_all_errors root () =
   let opt_libs = match lib with
   | None -> []
   | Some lib -> [Path.make lib]
@@ -66,6 +65,7 @@ let main all weak debug verbose json show_all_errors profile quiet module_
   let flowconfig = FlowConfig.get config_root in
 
   let options = {
+    Options.opt_color = parse_color_enum color;
     Options.opt_root = Path.make root;
     Options.opt_should_detach = false;
     Options.opt_check_mode = false;

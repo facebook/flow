@@ -10,7 +10,13 @@
 
 open Spider_monkey_ast (* Loc *)
 
+val mk_id: unit -> int
+
 type reason
+
+module TestID: sig
+  val run: ('a -> unit) -> 'a -> unit
+end
 
 val lexpos: string -> int -> int -> Lexing.position
 

@@ -25,12 +25,17 @@ type style =
   | NormalWithBG of raw_color * raw_color
   | BoldWithBG of raw_color * raw_color
 
+type color_mode =
+  | Color_Always
+  | Color_Never
+  | Color_Auto
+
 (*
  * Print a sequence of colorized strings to stdout, using ANSI color escapes
  * codes.
  *)
-val print : (style * string) list -> unit
-val printf : style -> ('a, unit, string, unit) format4 -> 'a
+val print : ?color_mode:color_mode -> (style * string) list -> unit
+val printf : ?color_mode:color_mode -> style -> ('a, unit, string, unit) format4 -> 'a
 
 (* These two functions provide a four-state TTY-friendly spinner that
  * a client can output between sleeps if it happens to be waiting on

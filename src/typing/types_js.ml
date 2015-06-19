@@ -733,6 +733,7 @@ let print_errors ?root options =
   then Errors_js.print_errorl true errors stdout
   else
     Errors_js.print_error_summary
+      ~color:(Options.color_mode options)
       (not (Options.show_all_errors options))
       errors
 

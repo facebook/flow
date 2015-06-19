@@ -1,6 +1,3 @@
-# Copyright (c) 2014, Facebook, Inc.
-# All rights reserved.
-
 ################################################################################
 #                            Variables to override                             #
 ################################################################################
@@ -121,8 +118,8 @@ $(TARGETS): $(ALL_SRC_FILES)
 	# build-hack-native-deps is a dependency of $(TARGETS) but as it is phony
 	# we place it here to avoid unnecessary rebuilds
 	$(MAKE) build-hack-native-deps build-hhi-archive
-	ocamlbuild -no-links $(INCLUDE_OPTS) $(LIB_OPTS) \
-		-lflags "$(LINKER_FLAGS)" \
+	ocamlbuild -no-links -cflag -g $(INCLUDE_OPTS) $(LIB_OPTS) \
+		-lflags "-g $(LINKER_FLAGS)" \
 		$(patsubst _build/%,%,$(TARGETS))
 	# Touching the targets is necessary because the ocaml build
 	# doesn't change the modification dates of the targets if
@@ -130,7 +127,7 @@ $(TARGETS): $(ALL_SRC_FILES)
 	touch $(TARGETS)
 
 build-hack-native-deps: build-hack-stubs
-	ocamlbuild -cflags "$(EXTRA_INCLUDE_OPTS) $(EXTRA_CC_OPTS)" $(NATIVE_OBJECT_FILES)
+	ocamlbuild -cflags "-g $(EXTRA_INCLUDE_OPTS) $(EXTRA_CC_OPTS)" $(NATIVE_OBJECT_FILES)
 
 build-hack-stubs:
 	REV="const char* const BuildInfo_kRevision = \"$$(git rev-parse HEAD)\";"; \

@@ -203,4 +203,22 @@ let main args =
       let results = Cmd.rpc conn @@ Rpc.LINT_ALL code in
       ClientLint.go results args.output_json;
       exit 0
+  | MODE_CREATE_CHECKPOINT x ->
+      Cmd.rpc conn @@ Rpc.CREATE_CHECKPOINT x;
+      exit 0
+  | MODE_RETRIEVE_CHECKPOINT x ->
+      let results = Cmd.rpc conn @@ Rpc.RETRIEVE_CHECKPOINT x in
+      begin
+        match results with
+        | Some results ->
+            List.iter print_endline results;
+            exit 0
+        | None ->
+            exit 7
+      end
+  | MODE_DELETE_CHECKPOINT x ->
+      if Cmd.rpc conn @@ Rpc.DELETE_CHECKPOINT x then
+        exit 0
+      else
+        exit 7
   | MODE_UNSPECIFIED -> assert false

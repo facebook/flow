@@ -67,6 +67,11 @@ let inside p line char_pos =
     else if line = last_line then char_pos <= (p.pos_end.pos_cnum - p.pos_end.pos_bol)
     else line > first_line && line < last_line
 
+let contains pos_container pos =
+  filename pos_container = filename pos &&
+    pos.pos_start.pos_cnum >= pos_container.pos_start.pos_cnum &&
+    pos.pos_end.pos_cnum <= pos_container.pos_end.pos_cnum
+
 let make file (lb:Lexing.lexbuf) =
   let pos_start = lexeme_start_p lb in
   let pos_end = lexeme_end_p lb in

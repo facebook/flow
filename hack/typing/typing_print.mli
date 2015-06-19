@@ -21,3 +21,4 @@ val class_: Typing_heap.Class.t -> string
 val gconst: Typing_heap.GConst.t -> string
 val fun_: Typing_heap.Fun.t -> string
 val typedef: Typing_heap.Typedef.t -> string
+val strip_ns: Typing_env.env -> Typing_defs.phase_ty -> string
