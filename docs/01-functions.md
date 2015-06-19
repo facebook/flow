@@ -67,6 +67,8 @@ bar('h', 'e', 'l', 'l', 'o');
 Calls are matched against function signatures following the usual rules of
 argument matching while taking into account optional/rest parameters.
 
+When checking the body of a function, types of optional parameters are considered [optional](http://flowtype.org/docs/nullable-types.html#_) unless default values are provided.
+
 ### Too Few Arguments
 
 Flow produces an error whenever a call provides too few arguments to a
