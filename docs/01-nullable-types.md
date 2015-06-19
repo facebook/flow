@@ -88,7 +88,7 @@ explicitly passing around the non-`null` value in your code, and if you are
 careful enough it should be possible to satisfy Flow without doing additional
 `null` checks.
 
-## Undefined Values
+## Undefined Values and Optional Types
 
 Undefined values, just like `null`, can cause issues too. Unfortunately,
 undefined values are ubiquitous in JavaScript and it is hard to avoid them
