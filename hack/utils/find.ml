@@ -23,9 +23,10 @@ let paths_to_path_string paths =
   let escaped_paths =  List.map escape_spaces stringed_paths in
   String.concat " " escaped_paths
 
-let find_with_name paths pattern =
+let find_with_name ?(follow_symlinks=false) paths pattern =
   let paths = paths_to_path_string paths in
-  let cmd = Utils.spf "find %s -name \"%s\"" paths pattern in
+  let flags = if follow_symlinks then "-L" else "" in
+  let cmd = Utils.spf "find %s %s -name \"%s\"" flags paths pattern in
   let ic = Unix.open_process_in cmd in
   let buf = Buffer.create 16 in
   (try
@@ -40,9 +41,10 @@ let find_with_name paths pattern =
 (* Main entry point *)
 (*****************************************************************************)
 
-let make_next_files filter ?(others=[]) root =
+let make_next_files filter ?(others=[]) ?(follow_symlinks=false) root =
   let paths = paths_to_path_string (root::others) in
-  let ic = Unix.open_process_in ("find "^paths) in
+  let flags = if follow_symlinks then "-L " else "" in
+  let ic = Unix.open_process_in ("find "^flags^paths) in
   let done_ = ref false in
   (* This is subtle, but to optimize latency, we open the process and
    * then return a closure immediately. That way 'find' gets started

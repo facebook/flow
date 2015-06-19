@@ -60,7 +60,7 @@ let init libs =
     in
     let libs = if libs = []
       then SSet.empty
-      else (Find.find_with_name libs "*.js")
+      else (Find.find_with_name libs "*.js" ~follow_symlinks:true)
         |> List.fold_left (fun set x -> SSet.add x set) SSet.empty
     in
     lib_files := Some libs
@@ -96,7 +96,7 @@ let make_next_files root =
     (str_starts_with p sroot || FlowConfig.is_included config p)
     && is_flow_file p
     && filter p
-  ) ~others root
+  ) ~others ~follow_symlinks:true root
 
 let rec normalize_path dir file =
   normalize_path_ dir (Str.split_delim dir_sep file)
@@ -127,7 +127,8 @@ let package_json root =
   let filt = fun p -> want p &&
     (str_starts_with p sroot || FlowConfig.is_included config p) in
   let paths = root :: config.FlowConfig.include_stems in
-  List.filter filt (Find.find_with_name paths "package.json")
+  List.filter filt
+    (Find.find_with_name paths "package.json" ~follow_symlinks:true)
 
 (* helper: make relative path from root to file *)
 let relative_path =
