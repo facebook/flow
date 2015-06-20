@@ -29,16 +29,9 @@ let wait_on_server_restart ic =
      ()
 
 let establish_connection root =
-  try
-    let sock_name = Socket.get_path root in
-    let sockaddr = Unix.ADDR_UNIX sock_name in
-    Sys_utils.with_timeout 1
-      ~on_timeout:(fun _ -> raise Exit)
-      ~do_:(fun () -> Result.Ok (Unix.open_connection sockaddr))
-  with _ ->
-    if not (Lock.check root "init")
-    then Result.Error Server_initializing
-    else Result.Error Server_busy
+  let sock_name = Socket.get_path root in
+  let sockaddr = Unix.ADDR_UNIX sock_name in
+  Result.Ok (Unix.open_connection sockaddr)
 
 let get_cstate (ic, oc) =
   try
@@ -68,7 +61,16 @@ let verify_cstate ic = function
 
 let connect_once root =
   let open Result in
-  ok_if_true (server_exists root) ~error:Server_missing >>= fun () ->
-  establish_connection root >>= fun (ic, oc) ->
-  get_cstate (ic, oc) >>= verify_cstate ic >>= fun () ->
-  Ok (ic, oc)
+  try
+    Sys_utils.with_timeout 1
+      ~on_timeout:(fun _ -> raise Exit)
+      ~do_:begin fun () ->
+        ok_if_true (server_exists root) ~error:Server_missing >>= fun () ->
+        establish_connection root >>= fun (ic, oc) ->
+        get_cstate (ic, oc) >>= verify_cstate ic >>= fun () ->
+        Ok (ic, oc)
+      end
+  with _ ->
+    if not (Lock.check root "init")
+    then Result.Error Server_initializing
+    else Result.Error Server_busy

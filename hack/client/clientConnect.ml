@@ -22,8 +22,8 @@ type env = {
 let rec connect env retries =
   match retries with
   | Some n when n < 0 ->
-      Printf.eprintf "Ran out of retries, giving up!";
-      exit 1;
+      Printf.eprintf "\nError: Ran out of retries, giving up!\n";
+      exit 1
   | Some _
   | None -> ();
   let has_timed_out = match env.expiry with
@@ -31,7 +31,7 @@ let rec connect env retries =
     | Some t -> Unix.time() > t
   in
   if has_timed_out then begin
-    Printf.eprintf "Error: hh_client hit timeout, giving up!\n%!";
+    Printf.eprintf "\nError: hh_client hit timeout, giving up!\n%!";
     exit 7
   end;
   let conn = connect_once env.root in
@@ -54,9 +54,9 @@ let rec connect env retries =
         exit 6
       end
   | Result.Error Server_busy ->
-      Printf.eprintf "Error: hh_server is busy... %s%!" (Tty.spinner());
+      Printf.eprintf "hh_server is busy, retrying... %s%!" (Tty.spinner());
       Unix.sleep 1;
-      connect env (Option.map ~f:((-) 1) retries)
+      connect env (Option.map retries (fun x -> x - 1))
   | Result.Error Build_id_mismatch ->
       Printf.eprintf begin
         "hh_server's version doesn't match the client's, "^^
