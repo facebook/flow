@@ -1357,21 +1357,17 @@ and abs_const_def env h x =
 
 and class_prop_ env (x, e) =
   let id = Env.new_const env x in
+  let e = Option.map e (expr env) in
+  (* If the user has not provided a value, we initialize the member variable
+   * ourselves to a value of type Tany. Classes might inherit from our decl
+   * mode class that are themselves not in decl, and there's no way to figure
+   * out what variables are initialized in a decl class without typechecking
+   * its initalizers and constructor, which we don't want to do, so just assume
+   * we're covered. *)
   let e =
-    match (fst env).in_mode with
-    | FileInfo.Mstrict | FileInfo.Mpartial -> opt_map (expr env) e
-    (* Consider every member variable defined in a class in decl mode to be
-     * initialized by giving it a magic value of type Tany (you can't actually
-     * write this cast in PHP). Classes might inherit from our decl mode class
-     * that are themselves not in decl, and there's no way to figure out what
-     * variables are initialized in a decl class without typechecking its
-     * initalizers and constructor, which we don't want to do, so just assume
-     * we're covered. *)
-    | FileInfo.Mdecl ->
-      let p = match e with
-        | None -> fst id
-        | Some (p, _) -> p in
-      Some (p, N.Cast ((p, N.Hany), (p, N.Null)))
+    if (fst env).in_mode = FileInfo.Mdecl && e = None
+    then Some (fst id, N.Any)
+    else e
   in
   N.({ cv_final = false;
        cv_is_xhp = ((String.sub (snd x) 0 1) = ":");
