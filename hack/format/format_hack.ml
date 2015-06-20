@@ -1953,9 +1953,7 @@ and xhp_body env =
   | Tlt when is_xhp env ->
       back env;
       xhp env;
-      (match xhp_token env with
-      | Tnewline -> newline env
-      | _ -> back env);
+      xhp_keep_one_nl env;
       k env;
   | Tlt ->
       back env
@@ -1972,9 +1970,7 @@ and xhp_body env =
           expr env;
           expect_xhp "}" env;
         end;
-      (match xhp_token env with
-      | Tnewline -> newline env
-      | _ -> back env);
+      xhp_keep_one_nl env;
       k env
   | x ->
       let pos = !(env.char_pos) in
@@ -1984,6 +1980,20 @@ and xhp_body env =
       out text { env with report_fit = false };
       env.last := Text;
       k env
+
+(* preserves up to one empty line between XHP blocks *)
+and xhp_keep_one_nl env =
+  match xhp_token env with
+  | Teof -> ()
+  | Tnewline ->
+      newline env;
+      (match xhp_token env with
+      | Tnewline -> force_nl env
+      | _ -> back env);
+      while xhp_token env = Tnewline do () done;
+      back env;
+  | _ ->
+      back env
 
 and xhp_text env buf = function
   | Tnewline | Tspace | Tlt | Tlcb | Teof | Tclose_xhp_comment ->
