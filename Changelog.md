@@ -4,6 +4,9 @@ Likely to cause new Flow errors:
 
 - Restricted addition to only allow strings and numbers, and no longer implicitly cast objects, booleans, null or undefined. Use `String(x)` to explicitly cast these values.
 
+Misc:
+
+- Fixed passing `undefined` to optional parameters
 
 ###v0.12.0
 
