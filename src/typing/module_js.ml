@@ -261,13 +261,12 @@ module Node = struct
       match get_key "main" tokens with
       | None -> None
       | Some file ->
-         let path = Files_js.normalize_path dir file in
-	 let check_es6_files =
-	   match !flow_options with
-	   | Some opts -> Options.check_es6_files opts
-	   | None -> false
-	 in
-	 Printf.printf "[%b]\n" check_es6_files;
+          let path = Files_js.normalize_path dir file in
+	  let check_es6_files =
+	    match !flow_options with
+	    | Some opts -> Options.check_es6_files opts
+	    | None -> false
+          in
           if path_is_file path
           then Some path
           else seq
@@ -286,7 +285,6 @@ module Node = struct
       | Some opts -> Options.check_es6_files opts
       | None -> false
     in
-    Printf.printf "[%b]\n" check_es6_files;
     if Files_js.is_flow_file ~check_es6_files path
     then path_if_exists path
     else seq
