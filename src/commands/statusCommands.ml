@@ -96,18 +96,12 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
     show_all_errors: bool;
   }
 
-  let check_status connect (args:env) option_values =
-    Sys.set_signal Sys.sigalrm (Sys.Signal_handle
-      (fun _ -> raise CommandExceptions.Server_busy)
-    );
-    ignore(Unix.alarm 6);
-
+  let rec check_status (args:env) option_values =
     let name = "flow" in
 
     let ic, oc = CommandUtils.connect_with_autostart option_values args.root in
     ServerProt.cmd_to_channel oc (ServerProt.STATUS args.root);
     let response = ServerProt.response_from_channel ic in
-    ignore (Unix.alarm 0);
     match response with
     | ServerProt.DIRECTORY_MISMATCH d ->
       Printf.printf "%s is running on a different directory.\n" name;
@@ -141,38 +135,7 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
       then Printf.printf "%s is outdated, killing it.\n" name
       else Printf.printf "%s is outdated, going to launch a new one.\n" name;
       flush stdout;
-      raise CommandExceptions.Server_missing
-
-  let rec main_rec (env, option_values) =
-    CommandUtils.check_timeout ();
-    try
-      (* TODO: This code should really use commandUtils's connect utilities to
-         avoid code duplication *)
-      check_status
-        (fun env -> CommandUtils.connect env.root)
-        env
-        option_values
-    with
-    | CommandExceptions.Server_initializing ->
-        if option_values.CommandUtils.retry_if_init
-        then (
-          Printf.fprintf stderr "Flow server still initializing\n%!";
-          CommandUtils.sleep 1;
-          main_rec (env, option_values)
-        ) else (
-          prerr_endline "Flow server still initializing, giving up!";
-          exit 2
-        )
-    | CommandExceptions.Server_cant_connect ->
-        retry (env, option_values) 1 "Error: could not connect to flow server"
-    | CommandExceptions.Server_busy ->
-        retry (env, option_values) 1 "Error: flow server is busy"
-    | CommandExceptions.Server_out_of_date
-    | CommandExceptions.Server_missing ->
-        retry (env, option_values) 3 "The flow server will be ready in a moment"
-    | _ ->
-        Printf.fprintf stderr "Something went wrong :(\n%!";
-        exit 2
+      retry (args, option_values) 3 "The flow server will be ready in a moment"
 
   and retry (env, option_values) sleep msg =
     CommandUtils.check_timeout ();
@@ -181,7 +144,7 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
     then begin
       Printf.fprintf stderr "%s\n%!" msg;
       CommandUtils.sleep sleep;
-      main_rec (env, { option_values with CommandUtils.retries = retries - 1 })
+      check_status env { option_values with CommandUtils.retries = retries - 1 }
     end else begin
       Printf.fprintf stderr "Out of retries, exiting!\n%!";
       exit 2
@@ -204,7 +167,7 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
       one_line;
       show_all_errors;
     } in
-    main_rec (env, option_values)
+    check_status env option_values
 end
 
 module Status(CommandList : COMMAND_LIST) = struct

@@ -64,7 +64,7 @@ end
 let global_kill_time = ref None
 
 let set_timeout max_wait_time_seconds =
-  global_kill_time := Some (Sys.time() +. (float_of_int max_wait_time_seconds))
+  global_kill_time := Some (Unix.time() +. (float_of_int max_wait_time_seconds))
 
 let timeout_go_boom () =
   print_endline "Timeout exceeded, exiting";
@@ -74,13 +74,13 @@ let check_timeout () =
   match !global_kill_time with
     | None -> ()
     | Some kill_time ->
-        if Sys.time () > kill_time then timeout_go_boom ()
+        if Unix.time () > kill_time then timeout_go_boom ()
 
 let sleep seconds =
   match !global_kill_time with
     | None -> Unix.sleep seconds
     | Some kill_time ->
-        if int_of_float (ceil (kill_time -. Sys.time ())) <= seconds
+        if int_of_float (ceil (kill_time -. Unix.time ())) <= seconds
         then timeout_go_boom ()
         else Unix.sleep seconds
 
