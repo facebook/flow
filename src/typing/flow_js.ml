@@ -1053,6 +1053,7 @@ let rec assume_ground cx ids = function
   | ImportModuleNsT(_,t)
   | CJSRequireT(_,t)
   | ImportTypeT(_,t)
+  | ImportTypeofT(_,t)
 
       -> assume_ground cx ids t
 
@@ -1445,10 +1446,10 @@ let rec __flow cx (l, u) trace =
     | (_, UnifyT(t,t_other)) ->
       rec_unify cx trace t t_other
 
-    (*******************************************************************)
-    (* Import type creates a properly-parameterized type alias for the *)
-    (* remote type -- but only for particular, valid remote types.     *)
-    (*******************************************************************)
+    (*********************************************************************)
+    (* `import type` creates a properly-parameterized type alias for the *)
+    (* remote type -- but only for particular, valid remote types.       *)
+    (*********************************************************************)
     | (ClassT(inst), ImportTypeT(reason, t)) ->
       rec_flow cx trace (TypeT(reason, inst), t)
 
@@ -1479,6 +1480,25 @@ let rec __flow cx (l, u) trace =
         reason,
         "`import type` only works on exported classes, functions, and type aliases!"
       ]
+
+    (************************************************************************)
+    (* `import typeof` creates a properly-parameterized type alias for the  *)
+    (* "typeof" the remote export.                                          *)
+    (************************************************************************)
+    | (PolyT(typeparams, ((ClassT _ | FunT _) as lower_t)), ImportTypeofT(reason, t)) ->
+      let typeof_t = mk_typeof_annotation cx ~trace lower_t in
+      rec_flow cx trace (PolyT(typeparams, TypeT(reason, typeof_t)), t)
+
+    | ((TypeT _ | PolyT(_, TypeT _)), ImportTypeofT(reason, t)) ->
+      add_error cx [
+        reason,
+        "`import typeof` can not be used on type-only exports! If you " ^
+        "intended to import a type alias, please use `import type` instead."
+      ]
+
+    | (_, ImportTypeofT(reason, t)) ->
+      let typeof_t = mk_typeof_annotation cx ~trace l in
+      rec_flow cx trace (TypeT(reason, typeof_t), t)
 
     (**************************************************************************)
     (* Module exports                                                         *)
@@ -4947,6 +4967,9 @@ let rec gc cx state = function
       gc cx state t
 
   | ImportTypeT (_, t) ->
+      gc cx state t
+
+  | ImportTypeofT (_, t) ->
       gc cx state t
 
   | CJSRequireT (_, t) ->

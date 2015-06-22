@@ -118,6 +118,7 @@ module Type :
       | CJSRequireT of reason * t
       | ImportModuleNsT of reason * t
       | ImportTypeT of reason * t
+      | ImportTypeofT of reason * t
 
       | CJSExtractNamedExportsT of reason * t * t_out
       | SetCJSExportT of reason * t * t_out

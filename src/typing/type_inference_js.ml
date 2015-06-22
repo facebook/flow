@@ -2368,6 +2368,33 @@ and statement cx = Ast.Statement.(
       in
 
       let module_ns_tvar = import_ns cx import_reason module_name source_loc in
+
+      let get_imported_t get_reason set_reason remote_export_name =
+        let remote_t = Flow_js.mk_tvar_where cx get_reason (fun t ->
+          Flow_js.flow cx (
+            module_ns_tvar,
+            GetT(get_reason, remote_export_name, t)
+          )
+        ) in
+
+        Flow_js.mk_tvar_where cx get_reason (fun t ->
+          let import_use =
+            match importKind with
+            | ImportDeclaration.ImportType -> ImportTypeT(set_reason, t)
+            | ImportDeclaration.ImportTypeof -> ImportTypeofT(set_reason, t)
+            | ImportDeclaration.ImportValue -> t
+          in
+          Flow_js.flow cx (remote_t, import_use)
+        )
+      in
+
+      let set_imported_binding reason local_name t =
+        let t_generic =
+          Env_js.get_var_declared_type ~for_type:isType cx local_name reason
+        in
+        Flow_js.unify cx t t_generic
+      in
+
       (match default with
         | Some(local_ident_loc, local_ident) ->
           let local_name = local_ident.Ast.Identifier.name in
@@ -2376,19 +2403,13 @@ and statement cx = Ast.Statement.(
             (spf "\"default\" export of \"%s\"" module_name)
             local_ident_loc
           in
-          let local_t = Flow_js.mk_tvar_where cx reason (fun t ->
-            let t = if not isType then t else ImportTypeT(reason, t) in
-            Flow_js.flow cx (module_ns_tvar, GetT(reason, "default", t));
-          ) in
+          let imported_t = get_imported_t reason reason "default" in
 
           let reason = mk_reason
             (spf "%s %s from \"%s\"" import_str local_name module_name)
             loc
           in
-          let local_t_generic =
-            Env_js.get_var_declared_type ~for_type:isType cx local_name reason
-          in
-          Flow_js.unify cx local_t local_t_generic;
+          set_imported_binding reason local_name imported_t
         | None -> (
           match specifier with
           | Some(ImportDeclaration.Named(_, named_specifiers)) ->
@@ -2419,15 +2440,9 @@ and statement cx = Ast.Statement.(
                   in
                   (remote_name, get_reason, set_reason)
               ) in
-              let local_t = Flow_js.mk_tvar_where cx get_reason (fun t ->
-                let t = if not isType then t else ImportTypeT(set_reason, t) in
-                Flow_js.flow cx (module_ns_tvar, GetT(get_reason, remote_name, t))
-              ) in
+              let imported_t = get_imported_t get_reason set_reason remote_name in
 
-              let local_t_generic =
-                Env_js.get_var_declared_type ~for_type:isType cx local_name get_reason
-              in
-              Flow_js.unify cx local_t local_t_generic;
+              set_imported_binding get_reason local_name imported_t
             ) in
             List.iter import_specifier named_specifiers
           | Some(ImportDeclaration.NameSpace(_, (ident_loc, local_ident))) ->
@@ -2447,9 +2462,9 @@ and statement cx = Ast.Statement.(
                *)
               let module_ = Module_js.imported_module cx.file module_name in
               let module_type = require cx module_ module_name source_loc in
-              Env_js.set_var ~for_type:true cx local_name module_type reason
+              set_imported_binding reason local_name module_type
             ) else (
-              Env_js.set_var cx local_name module_ns_tvar reason
+              set_imported_binding reason local_name module_ns_tvar
             )
           | None ->
             failwith (

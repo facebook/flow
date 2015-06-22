@@ -3148,11 +3148,8 @@ end = struct
             match Peek.token env with
             | T_TYPE -> ImportType, Some(Parse.identifier env)
             | T_TYPEOF ->
-              (* TODO: jeffmo
               Expect.token env T_TYPEOF;
               ImportTypeof, None
-              *)
-              failwith "Unsupported: `import typeof`";
             | _ -> ImportValue, None
           ) in
           Statement.ImportDeclaration.(

@@ -5225,6 +5225,26 @@ module.exports = {
         'import type defaultbinding, {x, y as z} from "MyModule";',
       ],
     },
+    'Import Typeof': {
+      'esprima_opts': { sourceType: "module" },
+      'tests': [
+        'import typeof defaultbinding from "MyModule";',
+        'import typeof {} from "MyModule";',
+        'import typeof defaultbinding, {} from "MyModule";',
+        /* TODO Esprima should support these
+        'import typeof {x,} from "MyModule";',
+        'import typeof defaultbinding, {x,} from "MyModule";',
+        */
+        'import typeof {x} from "MyModule";',
+        'import typeof {x,y} from "MyModule";',
+        'import typeof {x as z} from "MyModule";',
+        'import typeof {x, y as z} from "MyModule";',
+        'import typeof defaultbinding, {x} from "MyModule";',
+        'import typeof defaultbinding, {x,y} from "MyModule";',
+        'import typeof defaultbinding, {x as z} from "MyModule";',
+        'import typeof defaultbinding, {x, y as z} from "MyModule";',
+      ],
+    },
     'Declare Statements': [
       'declare var foo',
       'declare var foo;',

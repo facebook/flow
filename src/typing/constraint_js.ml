@@ -235,6 +235,7 @@ module Type = struct
   | CJSRequireT of reason * t
   | ImportModuleNsT of reason * t
   | ImportTypeT of reason * t
+  | ImportTypeofT of reason * t
 
   (* Module export handling *)
   | CJSExtractNamedExportsT of
@@ -783,6 +784,7 @@ let is_use = function
   | CJSRequireT _
   | ImportModuleNsT _
   | ImportTypeT _
+  | ImportTypeofT _
   | CJSExtractNamedExportsT _
   | SetNamedExportsT _
   | SetCJSExportT _
@@ -860,6 +862,7 @@ let string_of_ctor = function
   | SpeculativeMatchFailureT _ -> "SpeculativeMatchFailureT"
   | ImportModuleNsT _ -> "ImportModuleNsT"
   | ImportTypeT _ -> "ImportTypeT"
+  | ImportTypeofT _ -> "ImportTypeofT"
   | ModuleT _ -> "ModuleT"
   | CJSRequireT _ -> "CJSRequireT"
   | CJSExtractNamedExportsT _ -> "CJSExtractNamedExportsT"
@@ -1004,6 +1007,7 @@ let rec reason_of_t = function
   | CJSRequireT (reason, _) -> reason
   | ImportModuleNsT (reason, _) -> reason
   | ImportTypeT (reason, _) -> reason
+  | ImportTypeofT (reason, _) -> reason
   | CJSExtractNamedExportsT (reason, _, _) -> reason
   | SetNamedExportsT (reason, _, _) -> reason
   | SetCJSExportT (reason, _, _) -> reason
@@ -1150,6 +1154,7 @@ let rec mod_reason_of_t f = function
   | CJSRequireT (reason, t) -> CJSRequireT (f reason, t)
   | ImportModuleNsT (reason, t) -> ImportModuleNsT (f reason, t)
   | ImportTypeT (reason, t) -> ImportTypeT (f reason, t)
+  | ImportTypeofT (reason, t) -> ImportTypeofT (f reason, t)
 
   | CJSExtractNamedExportsT (reason, t1, t2) -> CJSExtractNamedExportsT (f reason, t1, t2)
   | SetNamedExportsT (reason, tmap, t_out) -> SetNamedExportsT(f reason, tmap, t_out)
@@ -1662,6 +1667,7 @@ let rec _json_of_t stack cx t = Json.(
     ]
   | ImportModuleNsT (_, t)
   | ImportTypeT (_, t)
+  | ImportTypeofT (_, t)
     -> ["type", _json_of_t stack cx t]
 
   | CJSExtractNamedExportsT (_, module_t, t_out) -> [
@@ -2312,6 +2318,7 @@ class ['a] type_visitor = object(self)
   | CJSRequireT (_, _)
   | ImportModuleNsT (_, _)
   | ImportTypeT (_, _)
+  | ImportTypeofT (_, _)
   | CJSExtractNamedExportsT (_, _, _)
   | SetCJSExportT (_, _, _)
   | SetNamedExportsT (_, _, _)
