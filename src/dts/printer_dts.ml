@@ -491,7 +491,7 @@ and print_module scope imports prefix fmt = Statement.(function
       let list_possible_modules = get_modules_used body in
       let list_modules_used =
         get_modules_to_import new_scope list_possible_modules in
-      fprintf fmt "@[<v>declare module %s {@;<0 2>@[<v>%a%a@]@,}@]"
+      fprintf fmt "@[<v>declare module \"%s\" {@;<0 2>@[<v>%a%a@]@,}@]"
         name
         (list_ ~sep:"" import_module) list_modules_used
         (list ~sep:"" (statement scope prefix))

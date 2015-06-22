@@ -1,0 +1,21 @@
+declare module P {
+  declare var N: $Exports<'P___N'>;
+  declare var x: number;
+  declare class C {
+    y: typeof x;
+    
+  }
+  declare var m: typeof N.z;
+}
+declare module P___N {
+  declare var P: $Exports<'P'>;
+  declare var x : typeof P.x;
+  declare var C : typeof P.C;
+  declare var m : typeof P.m;
+  declare var z: typeof x;
+}
+declare module "module-P" {
+  declare var P: $Exports<'P'>;
+  declare var exports: typeof P;
+}
+

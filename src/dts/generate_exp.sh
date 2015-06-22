@@ -12,8 +12,7 @@ do
     cd $dir
     name=${dir##*/}
     exp_file="${name}.exp"
-    if [ -e ".flowconfig" ] && [ -e $exp_file ] &&
-        [[ -z $filter || $name =~ $filter ]]
+    if [ -e ".flowconfig" ] && [[ -z $filter || $name =~ $filter ]]
     then
         echo "Running on directory: ${name}"
         $FLOW convert  --r . >/dev/null 2>&1
