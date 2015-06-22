@@ -215,20 +215,13 @@ let clear_filename_cache () =
   files_in_dir := SMap.empty
 
 (* case-sensitive dir_exists  *)
-let dir_exists dir =
-  try Sys.is_directory dir && (
-    case_sensitive || (
-      let orig = Sys.getcwd () in
-      Sys.chdir dir;
-      let realdir = Sys.getcwd () in
-      let result = dir = realdir in
-      Sys.chdir orig;
-      result))
+let rec dir_exists dir =
+  try Sys.is_directory dir && (case_sensitive || file_exists dir)
   with _ -> false
 
 (* when system is case-insensitive, do our own file exists check *)
-let file_exists path =
-  if case_sensitive
+and file_exists path =
+  if case_sensitive || path = "/" (* case doesn't matter for "/" *)
   then Sys.file_exists path
   else (
     let dir = Filename.dirname path in
