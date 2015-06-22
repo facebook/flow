@@ -250,6 +250,7 @@ module Node = struct
     file_exists path && not (Sys.is_directory path)
 
   let parse_main package =
+    let package = Path.to_string (Path.make package) in (* resolve symlinks *)
     if not (file_exists package) then None
     else
       let tokens = match PackageHeap.get package with

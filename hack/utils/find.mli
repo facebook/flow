@@ -9,8 +9,7 @@
  *)
 
 val make_next_files:
-  (string -> bool) -> ?others: Path.t list -> ?follow_symlinks: bool ->
-  Path.t -> (unit -> string list)
+  (string -> bool) -> ?others: Path.t list -> Path.t ->
+  (unit -> string list)
 
-val find_with_name:
-  ?follow_symlinks: bool -> Path.t list -> string -> string list
+val find_with_name: Path.t list -> string -> string list

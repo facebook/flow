@@ -60,7 +60,7 @@ let init libs =
     in
     let libs = if libs = []
       then SSet.empty
-      else (Find.find_with_name libs "*.js" ~follow_symlinks:true)
+      else (Find.find_with_name libs "*.js")
         (* Following line is to check if the library file is a file,
            it possible to have a directory which ends with ".js"
            extension so, extension check is not enough *)
@@ -100,7 +100,7 @@ let make_next_files root =
     (str_starts_with p sroot || FlowConfig.is_included config p)
     && is_flow_file p
     && filter p
-  ) ~others ~follow_symlinks:true root
+  ) ~others root
 
 let rec normalize_path dir file =
   normalize_path_ dir (Str.split_delim dir_sep file)
@@ -131,8 +131,7 @@ let package_json root =
   let filt = fun p -> want p &&
     (str_starts_with p sroot || FlowConfig.is_included config p) in
   let paths = root :: config.FlowConfig.include_stems in
-  List.filter filt
-    (Find.find_with_name paths "package.json" ~follow_symlinks:true)
+  List.filter filt (Find.find_with_name paths "package.json")
 
 (* helper: make relative path from root to file *)
 let relative_path =
