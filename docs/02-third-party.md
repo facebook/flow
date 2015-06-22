@@ -11,7 +11,7 @@ Most real JavaScript programs depend on third-party libraries. This guide shows 
 
 ## Interface Files
 
-Flow support *interface files* for the purpose of understanding third party code you did not write. These files define the interface to a library, including types, separately from the actual code of the library. You never need to change library code to use interface files, but your code will be typechecked against the types declared in the interface file.
+Flow supports *interface files* for the purpose of understanding third party code you did not write. These files define the interface to a library, including types, separately from the actual code of the library. You never need to change library code to use interface files, but your code will be typechecked against the types declared in the interface file.
 
 The workflow for dealing with library code is:
 
