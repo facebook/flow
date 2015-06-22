@@ -61,6 +61,10 @@ let init libs =
     let libs = if libs = []
       then SSet.empty
       else (Find.find_with_name libs "*.js" ~follow_symlinks:true)
+        (* Following line is to check if the library file is a file,
+           it possible to have a directory which ends with ".js"
+           extension so, extension check is not enough *)
+        |> List.filter (fun x -> not (is_directory x))
         |> List.fold_left (fun set x -> SSet.add x set) SSet.empty
     in
     lib_files := Some libs
