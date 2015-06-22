@@ -261,27 +261,39 @@ module Node = struct
       match get_key "main" tokens with
       | None -> None
       | Some file ->
-          let path = Files_js.normalize_path dir file in
+         let path = Files_js.normalize_path dir file in
+	 let check_es6_files =
+	   match !flow_options with
+	   | Some opts -> Options.check_es6_files opts
+	   | None -> false
+	 in
+	 Printf.printf "[%b]\n" check_es6_files;
           if path_is_file path
           then Some path
           else seq
             (fun () ->
               seqf
                 (fun ext -> path_if_exists (path ^ ext))
-                Files_js.flow_extensions)
+                (Files_js.get_flow_extensions ~check_es6_files))
             (fun () ->
               let path = Filename.concat path "index.js" in
               path_if_exists path)
 
   let resolve_relative root_path rel_path =
     let path = Files_js.normalize_path root_path rel_path in
-    if Files_js.is_flow_file path
+    let check_es6_files =
+      match !flow_options with
+      | Some opts -> Options.check_es6_files opts
+      | None -> false
+    in
+    Printf.printf "[%b]\n" check_es6_files;
+    if Files_js.is_flow_file ~check_es6_files path
     then path_if_exists path
     else seq
       (fun () ->
         seqf
           (fun ext -> path_if_exists (path ^ ext))
-          Files_js.flow_extensions
+	  (Files_js.get_flow_extensions ~check_es6_files)
       )
       (fun () -> seq
           (fun () ->

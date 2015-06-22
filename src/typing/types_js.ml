@@ -741,6 +741,7 @@ let print_errors ?root options =
 let server_init genv env =
   let options = genv.ServerEnv.options in
   let root = Options.root options in
+  let check_es6_files = Options.check_es6_files options in
 
   Files_js.package_json root |> List.iter (fun package ->
     let errors = Module_js.add_package package in
@@ -750,7 +751,7 @@ let server_init genv env =
       save_errors_or_suppressions infer_errors [package] [error]
   );
 
-  let get_next = Files_js.make_next_files root in
+  let get_next = Files_js.make_next_files ~check_es6_files root in
   let (parsed, checked) =
     full_check genv.ServerEnv.workers get_next options in
 
@@ -779,6 +780,8 @@ let server_init genv env =
  * parses and checks serially, prints errs to stdout.
  *)
 let single_main (paths : string list) options =
-  let get_next = Files_js.make_next_files (Path.make (List.hd paths)) in
+  let check_es6_files = Options.check_es6_files options in
+  let get_next =
+    Files_js.make_next_files ~check_es6_files (Path.make (List.hd paths)) in
   let _ = full_check None get_next options in
   print_errors options

@@ -439,9 +439,11 @@ struct
      the root, or an include path. *)
   let process_updates genv env updates =
     let root = Options.root (genv.ServerEnv.options) in
+    let check_es6_files =
+      Options.check_es6_files (genv.ServerEnv.options) in    
     let is_flow_file =
       let config_path = FlowConfig.fullpath root in
-      fun f -> Files_js.is_flow_file f || f = config_path
+      fun f -> Files_js.is_flow_file ~check_es6_files f || f = config_path
     in
     let config = FlowConfig.get root in
     let sroot = Path.to_string root in

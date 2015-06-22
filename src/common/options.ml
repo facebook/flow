@@ -30,6 +30,7 @@ type options = {
   opt_no_flowlib: bool;
   opt_module_name_mappers: (Str.regexp * string) list;
   opt_one_line_errors: bool;
+  opt_check_es6_files: bool;
 }
 
 let color_mode opts = opts.opt_color
@@ -38,3 +39,4 @@ let log_file opts = opts.opt_log_file
 let root opts = opts.opt_root
 let should_detach opts = opts.opt_should_detach
 let show_all_errors opts = opts.opt_show_all_errors
+let check_es6_files opts = opts.opt_check_es6_files

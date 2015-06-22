@@ -41,6 +41,8 @@ let spec = {
         ~doc:"Specify a library path"
     |> flag "--no-flowlib" no_arg
         ~doc:"Do not include embedded declarations"
+    |> flag "--check-es6-files" no_arg
+	~doc:"Check .es6 files"
     |> error_flags
     |> anon "root" (required string)
         ~doc:"Root"
@@ -48,7 +50,7 @@ let spec = {
 }
 
 let main all weak debug verbose json profile quiet module_
-         lib no_flowlib color one_line show_all_errors root () =
+         lib no_flowlib check_es6_files color one_line show_all_errors root () =
   let opt_libs = match lib with
   | None -> []
   | Some lib -> [Path.make lib]
@@ -88,6 +90,7 @@ let main all weak debug verbose json profile quiet module_
     Options.opt_libs;
     Options.opt_no_flowlib = no_flowlib;
     Options.opt_one_line_errors = one_line;
+    Options.opt_check_es6_files = check_es6_files
   } in
 
   if ! Sys.interactive

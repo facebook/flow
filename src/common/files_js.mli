@@ -10,11 +10,13 @@
 
 (* utilities for supported filenames *)
 
-val flow_extensions: string list
+val default_flow_extensions: string list
 
+val get_flow_extensions : check_es6_files:bool -> string list			    
+			    
 val is_directory: string -> bool
 
-val is_flow_file: string -> bool
+val is_flow_file: check_es6_files:bool -> string -> bool
 
 (* name of library directory defining builtins *)
 val init: Path.t list -> unit
@@ -37,7 +39,7 @@ val parent_dir_name: Str.regexp
 val wanted: FlowConfig.config -> string -> bool
 
 (* given a root, make a next_files function for MultiWorker *)
-val make_next_files: Path.t -> unit -> string list
+val make_next_files: check_es6_files:bool -> Path.t -> unit -> string list
 
 (* given a base directory and a relative path, return an absolute path *)
 val normalize_path: string -> string -> string
