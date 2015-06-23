@@ -10,6 +10,7 @@
 
 (* This module defines the ML data types that represent types in Flow. *)
 
+open Utils
 open Utils_js
 open Modes_js
 open Reason_js

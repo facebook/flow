@@ -8,8 +8,21 @@
  *
 *)
 
-(* bring in utils shared with Hack *)
-include Utils
+(**
+ * There seems to be a bug in OCaml 4.01 that causes `include Utils` in this
+ * file to generate an interface for this file that is merged with the interface
+ * for Utils -- but is somehow not type compatible with it.
+ *
+ * The only workaround I could find was to require that downstream users of both
+ * utils.ml and utils_js.ml explicitly refer to both :(
+ *
+ * If at some point we are able to deprecate support for 4.01, we should
+ * consider re-instating the following line and using Utils_js as a direct
+ * extension of utils.ml.
+ *)
+(* include Utils *)
+
+open Utils
 
 (* ok-or-error type *)
 type ('a,'b) ok_or_err = OK of 'a | Err of 'b

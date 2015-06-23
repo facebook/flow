@@ -8,6 +8,7 @@
  *
  *)
 
+open Utils
 open Utils_js
 
 (* results of parse job, returned by parse and reparse *)

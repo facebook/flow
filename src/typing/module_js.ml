@@ -16,6 +16,7 @@
    variables) but also flow-sensitive information about local variables at every
    point inside a function (and when to narrow or widen their types). *)
 
+open Utils
 open Utils_js
 open Sys_utils
 

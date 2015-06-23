@@ -16,6 +16,7 @@
    analysis, remember results, recompute them when necessary, etc.---essentially
    mimic all the sweet ways Hack scales. *)
 
+open Utils
 open Utils_js
 open Constraint_js
 open Modes_js
