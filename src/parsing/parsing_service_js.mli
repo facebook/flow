@@ -8,7 +8,7 @@
  *
  *)
 
-open Utils
+open Utils_js
 
 (* results of parse job, returned by parse and reparse *)
 (* NOTE: same as Types_js.results, should factor to common upstream *)
@@ -48,7 +48,7 @@ val do_parse:
   ?keep_errors:bool ->
   string ->                 (* contents of the file *)
   string ->                 (* filename *)
-  (Spider_monkey_ast.program option * Errors_js.ErrorSet.t option)
+  (Spider_monkey_ast.program, Errors_js.ErrorSet.t) ok_or_err
 
 (* true if file is in flow, i.e. is to be checked. CAUTION expensive *)
 val in_flow: string -> string -> bool

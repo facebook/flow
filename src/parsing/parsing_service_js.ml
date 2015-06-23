@@ -8,7 +8,7 @@
  *
  *)
 
-open Utils
+open Utils_js
 open Sys_utils
 module Reason = Reason_js
 module Ast = Spider_monkey_ast
@@ -66,21 +66,21 @@ let do_parse ?(keep_errors=false) content file =
   try (
     let ast, parse_errors = Parser_flow.program_file content file in
     assert (parse_errors = []);
-    Some ast, None
+    OK ast
   )
   with
   | Parse_error.Error parse_errors ->
     let converted = List.fold_left (fun acc err ->
       Errors_js.(ErrorSet.add (parse_error_to_flow_error err) acc)
     ) Errors_js.ErrorSet.empty parse_errors in
-    None, Some converted
+    Err converted
   | e ->
     let s = Printexc.to_string e in
     let msg = spf "unexpected parsing exception: %s" s in
     let reason = Reason.new_reason "" (Pos.make_from
       (Relative_path.create Relative_path.Dummy file)) in
     let err = Errors_js.ERROR, [reason, msg], [] in
-    None, Some (Errors_js.ErrorSet.singleton err)
+    Err (Errors_js.ErrorSet.singleton err)
 
 (* parse file, store AST to shared heap on success.
  * Add success/error info to passed accumulator. *)
@@ -88,17 +88,13 @@ let reducer init_modes (ok, fails, errors) file =
   init_modes ();
   let content = cat file in
   match (do_parse content file) with
-  | Some ast, None ->
+  | OK ast ->
       ParserHeap.add file ast;
       execute_hook file (Some ast);
       (SSet.add file ok, fails, errors)
-  | None, Some converted ->
+  | Err converted ->
       execute_hook file None;
       (ok, file :: fails, converted :: errors)
-  | None, None ->
-      execute_hook file None;
-      (ok, fails, errors)
-  | _ -> assert false
 
 (* merge is just memberwise union/concat of results *)
 let merge (ok1, fail1, errors1) (ok2, fail2, errors2) =

@@ -16,7 +16,7 @@
    analysis, remember results, recompute them when necessary, etc.---essentially
    mimic all the sweet ways Hack scales. *)
 
-open Utils
+open Utils_js
 open Constraint_js
 open Modes_js
 
@@ -30,21 +30,22 @@ type file_errors = string * Errors_js.error list
  * and parallel list of error lists. *)
 type results = SSet.t * string list * Errors_js.error list list
 
-let init_modes opts =
-  modes.debug <- opts.Options.opt_debug;
-  modes.verbose <- opts.Options.opt_verbose;
-  modes.all <- opts.Options.opt_all;
-  modes.weak_by_default <- opts.Options.opt_weak;
-  modes.traces <- opts.Options.opt_traces;
-  modes.strict <- opts.Options.opt_strict;
-  modes.json <- opts.Options.opt_json;
-  modes.strip_root <- opts.Options.opt_strip_root;
-  modes.quiet <- opts.Options.opt_quiet;
-  modes.profile <- opts.Options.opt_profile;
-  modes.no_flowlib <- opts.Options.opt_no_flowlib;
+let init_modes opts = Options.(
+  modes.debug <- opts.opt_debug;
+  modes.verbose <- opts.opt_verbose;
+  modes.all <- opts.opt_all;
+  modes.weak_by_default <- opts.opt_weak;
+  modes.traces <- opts.opt_traces;
+  modes.strict <- opts.opt_strict;
+  modes.json <- opts.opt_json;
+  modes.strip_root <- opts.opt_strip_root;
+  modes.quiet <- opts.opt_quiet;
+  modes.profile <- opts.opt_profile;
+  modes.no_flowlib <- opts.opt_no_flowlib;
   (* TODO: confirm that only master uses strip_root, otherwise set it! *)
   Module_js.init opts;
-  Files_js.init (opts.Options.opt_libs)
+  Files_js.init opts.opt_libs
+)
 
 (****************** shared context heap *********************)
 
@@ -98,6 +99,8 @@ let clear_errors files =
     error_suppressions := SMap.remove file !error_suppressions;
   ) files
 
+(* given a reference to a error map (files to errorsets), and
+   two parallel lists of such, save the latter into the former. *)
 let save_errors_or_suppressions mapref files errsets =
   List.iter2 (fun file errset ->
     mapref := SMap.add file errset !mapref
@@ -162,7 +165,19 @@ let filter_suppressed_errors = Errors_js.(
     distrib_errs "" unused_suppression_errors emap
 )
 
+let strip_root_from_reason_list root list =
+  List.map (
+    fun (reason, s) -> (Reason_js.strip_root reason root, s)
+  ) list
+
+let strip_root_from_error root error =
+  let level, list, trace_reasons = error in
+  let list = strip_root_from_reason_list root list in
+  let trace_reasons = strip_root_from_reason_list root trace_reasons in
+  level, list, trace_reasons
+
 (* retrieve a full error list.
+   Library errors are forced to the top of the list.
    Note: in-place conversion using an array is to avoid
    memory pressure on pathologically huge error sets, but
    this may no longer be necessary
@@ -171,33 +186,56 @@ let get_errors () =
   let all = !all_errors in
   let all = filter_suppressed_errors all in
 
-  let revlist = SMap.fold (
-    fun file errset ret ->
-      Errors_js.ErrorSet.fold (fun flow_err ret ->
-        flow_err :: ret
-      ) errset ret
-    ) all []
+  (* flatten to list, with lib errors bumped to top *)
+  let lib_files = Files_js.get_lib_files () in
+  let append_errset errset errlist =
+    List.rev_append (Errors_js.ErrorSet.elements errset) errlist
   in
-  List.rev revlist
+  let revlist_libs, revlist_others = SMap.fold (
+    fun file errset (libs, others) ->
+      if SSet.mem file lib_files
+      then append_errset errset libs, others
+      else libs, append_errset errset others
+    ) all ([], [])
+  in
+  let list = List.rev_append revlist_libs (List.rev revlist_others) in
 
-(* we report parse errors if a file is either checked,
-   or unchecked but used as a module by a checked file *)
+  (* strip root if specified *)
+  if modes.strip_root then (
+    let path = FlowConfig.((get_unsafe ()).root) in
+    (* TODO verify this is still worth doing, otherwise just List.map it *)
+    let ae = Array.of_list list in
+    Array.iteri (fun i error ->
+      ae.(i) <- strip_root_from_error path error
+    ) ae;
+    Array.to_list ae
+  )
+  else list
+
+(* we report parse errors if a file is either a lib file,
+   a checked module, or an unchecked file that's used as a
+   module by a checked file
+ *)
 let filter_unchecked_unused errmap =
   let is_imported m = match Module.get_reverse_imports m with
-  | Some set -> SSet.cardinal set > 0 | None -> false in
+  | Some set -> SSet.cardinal set > 0
+  | None -> false
+  in
+  let lib_files = Files_js.get_lib_files () in
   SMap.filter Module.(fun file _ ->
-    let info = get_module_info file in
-    info.checked || is_imported info._module
+    SSet.mem file lib_files || (
+      let info = get_module_info file in
+      info.checked || is_imported info._module
+    )
   ) errmap
 
 (* relocate errors to their reported positions,
    combine in single error map *)
-let collate_errors workers files =
+let collate_errors files =
   let all = filter_unchecked_unused !parse_errors in
   let all = SMap.fold distrib_errs !infer_errors all in
   let all = SMap.fold distrib_errs !merge_errors all in
   let all = SMap.fold distrib_errs !module_errors all in
-
   all_errors := all
 
 let wraptime opts pred msg f =
@@ -383,16 +421,15 @@ let merge_strict_file file =
   merge_strict_context cache cx master_cx
 
 let typecheck_contents contents filename =
-  match Parsing_service_js.do_parse contents filename with
-  | Some ast, None ->
+  Parsing_service_js.(match do_parse contents filename with
+  | OK ast ->
       let cx = TI.infer_ast ast filename "-" true in
       let cache = new context_cache in
       let master_cx = cache#read (Files_js.get_flowlib_root ()) in
       Some (merge_strict_context cache cx master_cx), cx.errors
-  | _, Some errors ->
+  | Err errors ->
       None, errors
-  | _ ->
-      assert false
+  )
 
 (* *)
 let merge_strict_job opts (merged, errsets) files =
@@ -456,7 +493,8 @@ let merge_nonstrict partition opts =
           acc
       ) ([], []) partition in
       (* typecheck intrinsics--temp code *)
-      Init_js.init (fun file errs -> ()) (fun file errs -> ());
+      let forget file errs = () in
+      ignore (Init_js.init forget forget forget);
       (* collect master context errors *)
       let (files, errsets) = (
         Flow_js.master_cx.file :: files,
@@ -483,7 +521,11 @@ let commit_modules inferred removed =
 
 (* helper *)
 (* make_merge_input takes list of files produced by infer, and
-   returns list of files to merge (typically an expansion) *)
+   returns (true, list of files to merge (typically an expansion)),
+   or (false, list of files with errors). If the latter, merge is
+   not performed.
+   return a list of files that have been checked.
+ *)
 let typecheck workers files removed unparsed opts make_merge_input =
   (* TODO remove after lookup overhaul *)
   Module.clear_filename_cache ();
@@ -495,20 +537,24 @@ let typecheck workers files removed unparsed opts make_merge_input =
   commit_modules inferred removed;
   (* SHUTTLE *)
   (* call supplied function to calculate closure of modules to merge *)
-  let to_merge = make_merge_input inferred in
-  (if modes.strict then (
-    try
-      merge_strict workers to_merge opts
-    with exc ->
-      prerr_endline (Printexc.to_string exc)
-   )
-  else
-    let partition = calc_dependencies to_merge in
-    merge_nonstrict partition opts
-  );
-  (* collate errors by origin *)
-  collate_errors workers to_merge;
-  to_merge
+  match make_merge_input inferred with
+  | true, to_merge ->
+    (if modes.strict then (
+      try
+        merge_strict workers to_merge opts
+      with exc ->
+        prerr_endline (Printexc.to_string exc)
+     ) else (
+      let partition = calc_dependencies to_merge in
+      merge_nonstrict partition opts
+    ));
+    (* collate errors by origin *)
+    collate_errors to_merge;
+    to_merge
+  | false, to_collate ->
+    (* collate errors by origin *)
+    collate_errors to_collate;
+    []
 
 (* sketch of baseline incremental alg:
 
@@ -668,7 +714,7 @@ let recheck genv env modified =
       let _ = SSet.fold (fun f i ->
         prerr_endlinef "%d/%d: %s" i n f; i + 1) unmod_deps 1 in
 
-      SSet.elements (SSet.union unmod_deps inferred_set)
+      true, SSet.elements (SSet.union unmod_deps inferred_set)
     ) |> ignore;
 
   (* for now we populate file_infos with empty def lists *)
@@ -696,39 +742,31 @@ let full_check workers parse_next opts =
   save_errors_or_suppressions parse_errors error_files errors;
 
   let files = SSet.elements parsed in
-  let checked = typecheck workers files SSet.empty error_files opts (fun x ->
-    Init_js.init
-      (fun file errs -> save_errors_or_suppressions infer_errors [file] [errs])
-      (fun file sups -> save_errors_or_suppressions error_suppressions [file] [sups]);
-    x
+  let checked = typecheck workers files SSet.empty error_files opts (
+    fun inferred ->
+      (* after local inference and before merge, bring in libraries *)
+      (* if any fail to parse, our return value will suppress merge *)
+      let lib_files = Init_js.init
+        (fun file errs -> save_errors_or_suppressions parse_errors [file] [errs])
+        (fun file errs -> save_errors_or_suppressions infer_errors [file] [errs])
+        (fun file sups ->
+          save_errors_or_suppressions error_suppressions [file] [sups])
+      in
+      (* Note: if any libs failed, return false and files to report errors for.
+         (other errors will be suppressed.)
+         otherwise, return true and files to merge *)
+      let err_libs = List.fold_left (
+        fun acc (file, ok) -> if ok then acc else file :: acc
+      ) [] lib_files in
+      if err_libs != []
+      then false, err_libs
+      else true, inferred
   ) in
 
   (parsed, checked)
 
-let strip_root_from_reason_list root list =
-  if Modes_js.modes.strip_root
-  then List.map (fun (reason, s) -> (Reason_js.strip_root reason root, s)) list
-  else list
-
 (* helper - print errors. used in check-and-die runs *)
-let print_errors ?root options =
-  let errors = get_errors () in
-
-  let errors = match root with
-    | Some path ->
-        let ae = Array.of_list errors in
-        Array.iteri (fun i error ->
-          let level, list, trace_reasons = error in
-          let list = strip_root_from_reason_list path list in
-          let trace_reasons = strip_root_from_reason_list path trace_reasons in
-          let e = level, list, trace_reasons in
-          ae.(i) <- e
-        ) ae;
-        Array.to_list ae
-    | None ->
-        errors
-  in
-
+let print_errors options errors =
   if options.Options.opt_json
   then Errors_js.print_errorl true errors stdout
   else
@@ -769,8 +807,9 @@ let server_init genv env =
 
   if Options.is_check_mode options
   then (
-    print_errors ~root options;
-    { env with ServerEnv.errorl = get_errors () }
+    let errors = get_errors () in
+    print_errors options errors;
+    { env with ServerEnv.errorl = errors }
   ) else (
     env
   )
@@ -781,4 +820,4 @@ let server_init genv env =
 let single_main (paths : string list) options =
   let get_next = Files_js.make_next_files (Path.make (List.hd paths)) in
   let _ = full_check None get_next options in
-  print_errors options
+  print_errors options (get_errors ())

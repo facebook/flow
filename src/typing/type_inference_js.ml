@@ -5583,7 +5583,7 @@ let merge_module_strict cx cxs implementations declarations master_cx =
   implicit_require_strict cx master_cx
 
 (* variation of infer + merge for lib definitions *)
-let init file statements comments save_errors save_suppressions =
+let init_lib_file file statements comments save_errors save_suppressions =
   Flow_js.Cache.clear();
 
   let cx = Flow_js.fresh_context file Files_js.lib_module in

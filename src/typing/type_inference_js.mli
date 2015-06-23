@@ -37,7 +37,7 @@ val dump_types: context -> (Pos.t * string * Reason_js.reason list) list
 
 val fill_types: context -> (int * int * string) list
 
-val init:
+val init_lib_file:
   string ->
   Spider_monkey_ast.Statement.t list ->
   Spider_monkey_ast.Comment.t list ->

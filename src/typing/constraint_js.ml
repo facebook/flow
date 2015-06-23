@@ -10,30 +10,9 @@
 
 (* This module defines the ML data types that represent types in Flow. *)
 
-open Utils
+open Utils_js
 open Modes_js
 open Reason_js
-
-let assert_false s =
-  let callstack = Printexc.(get_callstack 10 |> raw_backtrace_to_string) in
-  prerr_endline (spf "%s%s\n%s:\n%s%s%s"
-    (* this clowny shit is to evade hg's conflict marker detection *)
-    "<<<<" "<<<<" s callstack ">>>>" ">>>>"
-  );
-  failwith s
-
-let __DEBUG__ ?(s="") f =
-  try f() with _ -> assert_false s
-
-(* Time logging utility. Computes the elapsed time when running some code, and
-   if the elapsed time satisfies a given predicate (typically, is more than a
-   threshold), prints a message. *)
-let time pred msg f =
-  let start = Unix.gettimeofday () in
-  let ret = f () in
-  let elap = (Unix.gettimeofday ()) -. start in
-  if not (pred elap) then () else prerr_endline (msg elap);
-  ret
 
 module Ast = Spider_monkey_ast
 

@@ -16,7 +16,7 @@
    variables) but also flow-sensitive information about local variables at every
    point inside a function (and when to narrow or widen their types). *)
 
-open Utils
+open Utils_js
 open Sys_utils
 
 module Ast = Spider_monkey_ast
@@ -56,7 +56,7 @@ let module_name_candidates name =
     Hashtbl.find module_name_candidates_cache name
   ) else (
     match !flow_options with
-    | None -> Constraint_js.assert_false (spf
+    | None -> assert_false (spf
         ("Attempted to map module name (%s) before the flow_options were " ^^
          "provided to Module_js.ml :(")
         name

@@ -8,13 +8,8 @@
  *
  *)
 
-open Utils
+open Utils_js
 open Reason_js
-
-val assert_false: string -> 'a
-val __DEBUG__: ?s: string -> (unit -> 'a) -> 'a
-
-val time: (float -> bool) -> (float -> string) -> (unit -> 'a) -> 'a
 
 type ident = int
 type name = string
