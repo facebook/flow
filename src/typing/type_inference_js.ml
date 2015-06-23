@@ -4578,14 +4578,17 @@ and body_loc = Ast.Statement.FunctionDeclaration.(function
 )
 
 (* Makes signatures for fields and methods in a class. *)
-and mk_signature cx reason_c c_type_params_map body = Ast.Class.(
+and mk_signature cx reason_c c_type_params_map superClass body = Ast.Class.(
   let _, { Body.body = elements } = body in
 
   (* In case there is no constructor, we create one. *)
-  let default_methods =
-    SMap.singleton "constructor"
-      (replace_reason "default constructor" reason_c, [], SMap.empty,
-       ([], [], VoidT.t, SMap.empty, SMap.empty))
+  let default_methods = match superClass with
+    | None ->
+        SMap.singleton "constructor"
+          (replace_reason "default constructor" reason_c, [], SMap.empty,
+           ([], [], VoidT.t, SMap.empty, SMap.empty))
+    | Some _ ->
+        SMap.empty
   in
   (* NOTE: We used to mine field declarations from field assignments in a
      constructor as a convenience, but it was not worth it: often, all that did
@@ -4765,7 +4768,7 @@ and mk_class cx loc reason_c = Ast.Class.(function { id=_; body; superClass;
 
   (* fields: { f: X }, methods_: { m<Y: X>(x: Y): X } *)
   let sfields, smethods_, fields, methods_ =
-    mk_signature cx reason_c type_params_map body
+    mk_signature cx reason_c type_params_map superClass body
   in
 
   let id = Flow_js.mk_nominal cx in

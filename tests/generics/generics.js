@@ -24,7 +24,7 @@ class E<X> extends C<X> {
     set(x:X):X { /*return x;*/ this.x = x; return /*this.x; */this.get(); }
 }
 
-var e = new E();
+var e = new E(); // error: too few arguments to inherited constructor
 var x:string = e.set(0);
 
 class F<X> { }

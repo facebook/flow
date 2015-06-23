@@ -7,6 +7,10 @@ generics.js:18:18,18: number
 This type is incompatible with
 generics.js:19:7,12: string
 
+generics.js:27:9,15: undefined (too few arguments, expected default/rest parameters)
+This type is incompatible with
+generics.js:28:7,12: string
+
 generics.js:28:22,22: number
 This type is incompatible with
 generics.js:28:7,12: string
@@ -24,4 +28,4 @@ Incorrect number of type parameters (expected 0)
 generics.js:43:10,25: 
 Incorrect number of type parameters (expected 0)
 
-Found 7 errors
+Found 8 errors
