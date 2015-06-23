@@ -1,33 +1,33 @@
 
-nullable.js:16:9,11: null
+nullable.js:15:37,42: null
 This type is incompatible with
 nullable.js:17:5,9: number
 
-nullable.js:16:9,11: undefined
+nullable.js:15:37,42: undefined
 This type is incompatible with
 nullable.js:17:5,9: number
 
-nullable.js:22:9,11: null
+nullable.js:21:37,42: null
 This type is incompatible with
 nullable.js:23:5,9: number
 
-nullable.js:22:9,11: undefined
+nullable.js:21:37,42: undefined
 This type is incompatible with
 nullable.js:23:5,9: number
 
-nullable.js:28:7,9: null
+nullable.js:27:37,42: null
 This type is incompatible with
 nullable.js:29:5,9: number
 
-nullable.js:28:7,9: undefined
+nullable.js:27:37,42: undefined
 This type is incompatible with
 nullable.js:29:5,9: number
 
-nullable.js:34:7,9: null
+nullable.js:33:37,42: null
 This type is incompatible with
 nullable.js:35:5,9: number
 
-nullable.js:34:7,9: undefined
+nullable.js:33:37,42: undefined
 This type is incompatible with
 nullable.js:35:5,9: number
 
