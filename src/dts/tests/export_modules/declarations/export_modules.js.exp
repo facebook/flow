@@ -1,4 +1,4 @@
-declare module P {
+declare module "P" {
   declare var N: $Exports<'P___N'>;
   declare var x: number;
   declare class C {
@@ -7,7 +7,7 @@ declare module P {
   }
   declare var m: typeof N.z;
 }
-declare module P___N {
+declare module "P___N" {
   declare var P: $Exports<'P'>;
   declare var x : typeof P.x;
   declare var C : typeof P.C;

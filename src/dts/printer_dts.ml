@@ -474,7 +474,7 @@ and print_module scope imports prefix fmt = Statement.(function
     let list_modules_used =
       get_modules_to_import new_scope list_possible_modules in
 
-    fprintf fmt "@[<v>declare module %s {@;<0 2>@[<v>%a%a%a@]@,}@]"
+    fprintf fmt "@[<v>declare module \"%s\" {@;<0 2>@[<v>%a%a%a@]@,}@]"
       (generate_mangled_name name prefix)
       (list_ ~sep:"" import_module) list_modules_used
       (list_ ~sep:"" import_members) imports
@@ -654,12 +654,16 @@ and extends_interface fmt = function
    }
 
 *)
+
+(* implements_class currently does nothing, uncomment the commented
+   lines when "implements" is supported on the flow side *)
 and implements_class fmt = function
-  | [] -> ()
+(*  | [] -> ()
   | [_, t] ->
       fprintf fmt "@[ implements %a@]"
         generic_type t
-  | _ -> todo fmt
+  | _ -> todo fmt *)
+  | _ -> ()
 
 and object_type fmt = Type.(function
   | { Object.properties; indexers; } ->
