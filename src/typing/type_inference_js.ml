@@ -4581,13 +4581,19 @@ and body_loc = Ast.Statement.FunctionDeclaration.(function
 and mk_signature cx reason_c c_type_params_map superClass body = Ast.Class.(
   let _, { Body.body = elements } = body in
 
-  (* In case there is no constructor, we create one. *)
+  (* In case there is no constructor, pick up a default one. *)
   let default_methods = match superClass with
     | None ->
+        (* Parent class constructors simply return new instances, which is
+           indicated by the VoidT return type *)
         SMap.singleton "constructor"
           (replace_reason "default constructor" reason_c, [], SMap.empty,
            ([], [], VoidT.t, SMap.empty, SMap.empty))
     | Some _ ->
+        (* Subclass default constructors are technically of the form
+           (...args) => { super(...args) }, but we can approximate that using
+           flow's existing inheritance machinery. *)
+        (* TODO: Does this distinction matter for the type checker? *)
         SMap.empty
   in
   (* NOTE: We used to mine field declarations from field assignments in a
