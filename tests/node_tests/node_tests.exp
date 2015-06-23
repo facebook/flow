@@ -1,2 +1,4 @@
 
-Found 0 errors
+invalid_package_file/package.json:1:3,2: Unexpected end of input
+
+Found 1 error
