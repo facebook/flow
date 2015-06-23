@@ -10,7 +10,6 @@
 
 (* Strip the prefix of Pos.post_file so only relative path portion is used *)
 let pos_to_relative pos =
-  assert (Relative_path.prefix pos.Pos.pos_file = Relative_path.Root);
   { pos with Pos.pos_file = Relative_path.suffix pos.Pos.pos_file }
 
 let pos_str pos =

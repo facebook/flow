@@ -20,8 +20,9 @@ type mode =
   | Ai
   | Autocomplete
   | Color
-  | Errors
   | Coverage
+  | DumpSymbolInfo
+  | Errors
   | Lint
   | Prolog
   | Suggest
@@ -157,6 +158,9 @@ let parse_options () =
     "--coverage",
       Arg.Unit (set_mode Coverage),
       "Produce coverage output";
+    "--dump-symbol-info",
+      Arg.Unit (set_mode DumpSymbolInfo),
+      "Dump all symbol information";
     "--lint",
       Arg.Unit (set_mode Lint),
       "Produce lint errors";
@@ -286,6 +290,16 @@ let handle_mode mode filename nenv files_info errors lint_errors ai_results =
           print_coverage fn type_acc;
         end
       end files_info
+  | DumpSymbolInfo ->
+      begin match Relative_path.Map.get filename files_info with
+        | Some fileinfo ->
+            let raw_result =
+              SymbolInfoService.helper [] [(filename, fileinfo)] in
+            let result = SymbolInfoService.format_result raw_result in
+            let result_json = ClientSymbolInfo.to_json result in
+            print_endline (Hh_json.json_to_string result_json)
+        | None -> ()
+      end
   | Lint ->
       let lint_errors =
         Relative_path.Map.fold begin fun fn fileinfo lint_errors ->
