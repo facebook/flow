@@ -781,7 +781,7 @@ let server_init genv env =
   let options = genv.ServerEnv.options in
   let root = Options.root options in
 
-  Files_js.package_json root |> List.iter (fun package ->
+  Files_js.package_json root |> SSet.iter (fun package ->
     let errors = Module_js.add_package package in
     match errors with
     | None -> ()

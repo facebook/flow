@@ -45,6 +45,6 @@ val normalize_path: string -> string -> string
 (* given a base directory and a relative path, return an absolute path *)
 val construct_path: string -> string list -> string
 
-val package_json: Path.t -> string list
+val package_json: Path.t -> Utils.SSet.t
 
 val relative_path: string -> string -> string

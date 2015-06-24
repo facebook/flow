@@ -50,6 +50,16 @@ let get_flowlib_root () =
       flowlib_root := Some root;
       root
 
+let get_all =
+  let rec get_all_rec next accum =
+    match next () with
+    | [] -> accum
+    | result ->
+      let accum = List.fold_left (fun set x -> SSet.add x set) accum result in
+      get_all_rec next accum
+  in
+  fun next -> get_all_rec next SSet.empty
+
 let init libs =
   match !lib_files with
   | Some libs -> ()
@@ -60,12 +70,13 @@ let init libs =
     in
     let libs = if libs = []
       then SSet.empty
-      else (Find.find_with_name libs "*.js")
-        (* Following line is to check if the library file is a file,
-           it possible to have a directory which ends with ".js"
-           extension so, extension check is not enough *)
-        |> List.filter (fun x -> not (is_directory x))
-        |> List.fold_left (fun set x -> SSet.add x set) SSet.empty
+      else
+        let get_next = Find.make_next_files
+          is_flow_file
+          ~others:(List.tl libs)
+          (List.hd libs)
+        in
+        get_all get_next
     in
     lib_files := Some libs
   )
@@ -128,10 +139,13 @@ let package_json root =
   let config = FlowConfig.get root in
   let sroot = Path.to_string root in
   let want = wanted config in
-  let filt = fun p -> want p &&
+  let filt = fun p ->
+    (Filename.basename p) = "package.json" &&
+    want p &&
     (str_starts_with p sroot || FlowConfig.is_included config p) in
-  let paths = root :: config.FlowConfig.include_stems in
-  List.filter filt (Find.find_with_name paths "package.json")
+  let others = config.FlowConfig.include_stems in
+  let get_next = Find.make_next_files filt ~others root in
+  get_all get_next
 
 (* helper: make relative path from root to file *)
 let relative_path =
