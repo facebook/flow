@@ -41,6 +41,14 @@ For example: `bash runtests.sh bin/flow class | grep -v 'Skipping directory'`
 
 Flow is simple to install: all you need is the `flow` binary on your PATH and you're good to go. 
 
+## Using Homebrew
+
+Flow for [Homebrew](http://brew.sh/) is available:
+
+```
+brew install flow
+```
+
 ## Using OPAM
 
 You can also build and install flow via the OCaml [OPAM](https://opam.ocaml.org) package manager with one command:
