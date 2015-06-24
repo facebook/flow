@@ -11,15 +11,20 @@
 (************** file filter utils ***************)
 
 open Utils
+open Utils_js
 open Modes_js
 
 let global_file_name = "(global)"
 
-let flow_extensions = [
-    ".js"  ;      (* Standard JavaScript files *)
-    ".jsx" ;      (* JavaScript files with JSX *)
-  ]
+let config_options : FlowConfig.options option ref = ref None
 
+let get_config_options () =
+  match !config_options with
+  | Some opts -> opts
+  | None ->
+     assert_false ("Attempted to use config_options before " ^
+		   "Files_js was initialized.")
+                  
 let is_directory path = try Sys.is_directory path with Sys_error _ -> false
 
 let is_dot_file path =
@@ -27,8 +32,9 @@ let is_dot_file path =
   String.length filename > 0 && filename.[0] = '.'
 
 let is_valid_path path =
+  let file_exts = FlowConfig.((get_config_options ()).module_file_exts) in
   not (is_dot_file path) &&
-  List.exists (Filename.check_suffix path) flow_extensions
+  List.exists (Filename.check_suffix path) file_exts
 
 let is_flow_file path = is_valid_path path && not (is_directory path)
 
@@ -164,6 +170,7 @@ let init ~tmp_dir libs =
   match !lib_files with
   | Some libs -> ()
   | None -> (
+    config_options := Some FlowConfig.((get_unsafe ()).options);
     let libs = if Modes_js.modes.no_flowlib
       then libs
       else
