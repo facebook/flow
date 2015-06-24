@@ -80,6 +80,13 @@ let generate_mangled_name name prefix =
 let clean_mangled_name mangled_name =
   Str.global_substitute (Str.regexp ".*___") (fun _ -> "") mangled_name
 
+(* Function to convert an arbitrary module name to a valid javascript
+   identifier. Change this later as need be.
+   Right now it just convert "-" to "$HYPHEN$". *)
+
+let module_to_identifier =
+  Str.global_replace (Str.regexp "-") "$HYPHEN$" ;;
+
 (* get_modules_in_scope computes the list of modules which are
    declared int he cuurent scope. In particular we shall use it to
    find a list of modules in global scope.
@@ -123,6 +130,8 @@ let rec get_modules_in_scope acc prefix = function
 and extract_module acc prefix = Statement.(function
   | _, ModuleDeclaration { Module.id; _; } ->
     (get_name prefix id) :: acc
+  | _, ExportModuleDeclaration { ExportModule.name; _; } ->
+    (generate_mangled_name name prefix) :: acc
   | _ -> acc
 )
 
@@ -383,6 +392,7 @@ let rec expand_imports imports = Statement.(function
     let name = get_name [] id in
     expand_imports_statements imports name body
   | _, ExportModuleDeclaration{ExportModule. body; name; _ } ->
+    let name = module_to_identifier name in
     expand_imports_statements imports name body
   | loc, _ -> failwith_location loc
     "Unexpected statement. A module declaration was expexted"
@@ -742,7 +752,8 @@ and rest_ ?(follows=false) fmt = Type.Function.(function
    declaration, we use this hack of $Exports
 *)
 and import_module fmt = function
-  | (x, y) -> fprintf fmt "declare var %s: $Exports<'%s'>;" x y
+  | (x, y) -> fprintf fmt "declare var %s: $Exports<'%s'>;"
+    (module_to_identifier x) y
 
 (* This prints the import member from module. Since currently, the flow
    parser does not parse import statements inside a module
