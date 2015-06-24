@@ -1,4 +1,6 @@
 
+test2.js:7:14,20: constructor call
+Error:
 test2.js:7:18,18: C
 This type is incompatible with
 test2.js:7:8,10: B
