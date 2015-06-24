@@ -3,10 +3,14 @@
 Likely to cause new Flow errors:
 
 - Restricted addition to only allow strings and numbers, and no longer implicitly cast objects, booleans, null or undefined. Use `String(x)` to explicitly cast these values.
+- Fixed a few bugs where types shared between modules may have lost precision or weren't enforced.
 
 Misc:
 
 - Fixed passing `undefined` to optional parameters
+- Added new `import typeof` feature that allows you to import the type of a *value* export from another module. It is sugar for: `import MyThing_tmp from "MyModule"; type MyThing = typeof MyThing_tmp;` (except it removes the need for the intermediate `MyThing_tmp` variable)
+- Added support for class expressions
+- It is now possible to use `export type` and `module.exports =` simultaneously in the same module
 
 ###v0.12.0
 

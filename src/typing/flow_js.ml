@@ -21,6 +21,7 @@
    subtyping. This process continues till a fixpoint is reached---which itself
    is guaranteed to exist, and is usually reached in very few steps. *)
 
+open Utils
 open Utils_js
 open Modes_js
 open Reason_js

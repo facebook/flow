@@ -16,6 +16,7 @@
    function. In any case, this part of the design must be revisited in the
    future. *)
 
+open Utils
 open Utils_js
 open Sys_utils
 

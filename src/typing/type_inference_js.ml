@@ -2667,8 +2667,10 @@ and spread cx (loc, e) =
   Flow_js.flow cx (arr, ArrT (reason, tvar, []));
   RestT tvar
 
-and expression cx (loc, e) =
-  let t = expression_ cx loc e in
+(* NOTE: the is_cond flag is only used when checking the type of conditions in
+   `predicate_of_condition`: see comments on function `condition`. *)
+and expression ?(is_cond=false) cx (loc, e) =
+  let t = expression_ ~is_cond cx loc e in
   Hashtbl.replace cx.type_table loc t;
   t
 
@@ -2718,7 +2720,7 @@ and identifier ?(for_type=false) cx name loc =
     )
   )
 
-and expression_ cx loc e = Ast.Expression.(match e with
+and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
 
   | Literal lit ->
       literal cx loc lit
@@ -2741,12 +2743,12 @@ and expression_ cx loc e = Ast.Expression.(match e with
       logical cx loc l
 
   | TypeCast {
-        TypeCast.expression = eloc, expr;
+        TypeCast.expression = e;
         typeAnnotation } ->
       let r = mk_reason "typecast" loc in
       let t = mk_type_annotation cx r (Some typeAnnotation) in
       Hashtbl.replace cx.type_table loc t;
-      let infer_t = expression_ cx eloc expr in
+      let infer_t = expression cx e in
       Flow_js.flow cx (infer_t, t);
       t
 
@@ -2814,11 +2816,8 @@ and expression_ cx loc e = Ast.Expression.(match e with
         let tobj = expression cx _object in
         if Type_inference_hooks_js.dispatch_member_hook cx name ploc tobj
         then AnyT.at ploc
-        else (
-          Flow_js.mk_tvar_where cx reason (fun t ->
-            Flow_js.flow cx (tobj, GetT (reason, name, t)))
-        )
-      )
+        else get_prop ~is_cond cx reason tobj name
+    )
 
   | Object { Object.properties } ->
     let reason = mk_reason "object literal" loc in
@@ -4157,7 +4156,7 @@ and predicate_of_condition cx e = Ast.(Expression.(
 
   (* refinement key if expr is eligible, along with unrefined type *)
   let refinable_lvalue e =
-    Refinement.key e, expression cx e
+    Refinement.key e, condition cx e
   in
 
   (* package result quad from test type, refi key, unrefined type,
@@ -4457,6 +4456,30 @@ and predicate_of_condition cx e = Ast.(Expression.(
   | e ->
       empty_result (expression cx e)
 ))
+
+(* Conditional expressions are checked like expressions, except that property
+   accesses are allowed even when such properties do not exist. This
+   accommodates the common JavaScript idiom of testing for the existence of a
+   property before using that property. *)
+and condition cx e =
+  expression ~is_cond:true cx e
+
+(* Property lookups become non-strict when processing conditional expressions
+   (see above).
+
+   TODO: It should be possible to factor the processing of LHS / reference
+   expressions out of `expression`, somewhat like what assignment_lhs does. That
+   would make everything involving Refinement be in the same place.
+*)
+and get_prop ~is_cond cx reason tobj name =
+  Flow_js.mk_tvar_where cx reason (fun t ->
+    let get_prop_u =
+      if is_cond
+      then LookupT (reason, None, name, LowerBoundT t)
+      else GetT (reason, name, t)
+    in
+    Flow_js.flow cx (tobj, get_prop_u)
+  )
 
 (* TODO: switch to TypeScript specification of Object *)
 and static_method_call_Object cx loc m args_ = Ast.Expression.(

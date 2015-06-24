@@ -8,7 +8,7 @@
  *
  *)
 
-open Utils_js
+open Utils
 open Reason_js
 
 type ident = int
