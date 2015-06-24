@@ -51,6 +51,8 @@ module OptionParser(Config : CONFIG) = struct
         ~doc:"Do not include embedded declarations"
     |> flag "--log-file" string
         ~doc:"Path to log file (default: /tmp/flow/<escaped root path>.log)"
+    |> flag "--check-es6-files" no_arg
+	~doc:"Check .es6 files"
     |> anon "root" (optional string) ~doc:"Root directory"
   )
 
@@ -94,7 +96,7 @@ module OptionParser(Config : CONFIG) = struct
 
   let result = ref None
   let main color one_line show_all_errors json profile quiet debug verbose all
-           weak traces strip_root lib no_flowlib log_file root () =
+           weak traces strip_root lib no_flowlib log_file check_es6_files root () =
     let root = CommandUtils.guess_root root in
     let flowconfig = FlowConfig.get root in
     let opt_module = FlowConfig.(match flowconfig.options.moduleSystem with
@@ -146,6 +148,7 @@ module OptionParser(Config : CONFIG) = struct
       Options.opt_libs;
       Options.opt_no_flowlib = no_flowlib;
       Options.opt_one_line_errors = one_line;
+      Options.opt_check_es6_files = check_es6_files
     };
     ()
 

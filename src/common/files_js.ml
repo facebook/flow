@@ -13,18 +13,23 @@
 open Utils
 open Modes_js
 
-let flow_extensions = [
+let default_flow_extensions = [
     ".js"  ;      (* Standard JavaScript files *)
     ".jsx" ;      (* JavaScript files with JSX *)
   ]
 
+let get_flow_extensions ~check_es6_files =
+  if check_es6_files then ".es6" :: default_flow_extensions
+  else default_flow_extensions	
+		
 let is_directory path = try Sys.is_directory path with Sys_error _ -> false
 
 let is_dot_file path =
   let filename = Filename.basename path in
   String.length filename > 0 && filename.[0] = '.'
 
-let is_flow_file path =
+let is_flow_file ~check_es6_files path =
+  let flow_extensions = get_flow_extensions ~check_es6_files in
   not (is_dot_file path) &&
   List.exists (Filename.check_suffix path) flow_extensions &&
   not (is_directory path)
@@ -91,14 +96,14 @@ let wanted config =
     not (List.exists (match_regexp file) list) &&
       not (SSet.mem file (get_lib_files ()))
 
-let make_next_files root =
+let make_next_files ~check_es6_files root =
   let config = FlowConfig.get root in
   let filter = wanted config in
   let others = config.FlowConfig.include_stems in
   let sroot = Path.to_string root in
   Find.make_next_files (fun p ->
     (str_starts_with p sroot || FlowConfig.is_included config p)
-    && is_flow_file p
+    && is_flow_file ~check_es6_files p
     && filter p
   ) ~others root
 
