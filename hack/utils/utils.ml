@@ -51,6 +51,7 @@ module type MapSig = sig
   val find_unsafe: key -> 'a t -> 'a
   val is_empty: 'a t -> bool
   val union: 'a t -> 'a t -> 'a t
+  val partition: (key -> 'a -> bool) -> 'a t -> 'a t * 'a t
   val cardinal: 'a t -> int
   val compare: 'a t -> 'a t -> int
   val equal: 'a t -> 'a t -> bool
