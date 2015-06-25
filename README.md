@@ -17,6 +17,10 @@ There are binary distributions for Mac OS X and many variants of Linux; you can 
 
 Flow is written in OCaml (OCaml 4.01.0 or higher is required) and (on Linux) requires libelf. You can install OCaml on Mac OS X and Linux by following the instructions at [ocaml.org](https://ocaml.org/docs/install.html). 
 
+For example, on Ubuntu 14.04 and similar systems:
+
+    sudo apt-get install ocaml libelf-dev
+
 Once you have these dependencies, building Flow just requires running
 
 ```
