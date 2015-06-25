@@ -1094,13 +1094,19 @@ and statement_decl cx = Ast.Statement.(
         )
     )
 
-  | (loc, DeclareVariable { DeclareVariable.id; })
-  | (loc, DeclareFunction { DeclareFunction.id; }) ->
+  | (loc, DeclareVariable { DeclareVariable.id; }) ->
       let _, { Ast.Identifier.name; typeAnnotation; _; } = id in
       let r = mk_reason (spf "declare %s" name) loc in
       let t = mk_type_annotation cx r typeAnnotation in
       Hashtbl.replace cx.type_table loc t;
       Env_js.init_var cx name (Scope.create_entry t t (Some loc))
+
+  | (loc, DeclareFunction { DeclareFunction.id; }) ->
+      let _, { Ast.Identifier.name; typeAnnotation; _; } = id in
+      let r = mk_reason (spf "declare %s" name) loc in
+      let t = mk_type_annotation cx r typeAnnotation in
+      Hashtbl.replace cx.type_table loc t;
+      Env_js.init_declare_fun cx name (Scope.create_entry t t (Some loc))
 
   | (loc, VariableDeclaration decl) ->
       variable_declaration cx loc decl

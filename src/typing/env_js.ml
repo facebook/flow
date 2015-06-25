@@ -230,6 +230,27 @@ let init_var cx name shape =
   | Some { general; _ } ->
       Flow_js.unify cx general shape.general
 
+(* initialize entry for declare function in top scope *)
+let init_declare_fun =
+  let update_type seen_t new_t = match seen_t with
+  | IntersectionT(reason, seen_ts) -> IntersectionT(reason, seen_ts@[new_t])
+  | _ ->
+    let reason = replace_reason "intersection type" (reason_of_t seen_t) in
+    IntersectionT(reason,[seen_t;new_t])
+  in
+  fun cx name new_shape ->
+    assert (not new_shape.for_type);
+    let scope = peek_scope () in
+    match Scope.get name scope with
+    | None -> Scope.add name new_shape scope
+    | Some seen_shape ->
+      assert (not seen_shape.for_type);
+      let shape = { seen_shape with
+        specific = update_type seen_shape.specific new_shape.specific;
+        general = update_type seen_shape.general new_shape.general
+      } in
+      Scope.add name shape scope
+
 (* run passed function with given entry added to scope *)
 (* CAUTION: caller must ensure that name isn't already bound,
    otherwise this will remove the preexisting binding *)
