@@ -49,8 +49,6 @@ module OptionParser(Config : CONFIG) = struct
         ~doc:"Specify one or more library paths, comma separated"
     |> flag "--no-flowlib" no_arg
         ~doc:"Do not include embedded declarations"
-    |> flag "--log-file" string
-        ~doc:"Path to log file (default: /tmp/flow/<escaped root path>.log)"
     |> anon "root" (optional string) ~doc:"Root directory"
   )
 
@@ -64,9 +62,20 @@ module OptionParser(Config : CONFIG) = struct
           ~doc:"Output profiling information"
       |> flag "--quiet" no_arg
           ~doc:"Suppress info messages to stdout (included in --json)"
+      |> dummy None  (* log-file *)
       |> common_args
     )
-  | Normal
+  | Normal -> CommandSpec.ArgSpec.(
+      empty
+      |> dummy None  (* error_flags.color *)
+      |> dummy false (* error_flags.one_line *)
+      |> dummy false (* error_flags.show_all_errors *)
+      |> dummy false (* json *)
+      |> dummy false (* profile *)
+      |> dummy false (* quiet *)
+      |> dummy None  (* log-file *)
+      |> common_args
+    )
   | Detach -> CommandSpec.ArgSpec.(
       empty
       |> dummy None  (* error_flags.color *)
@@ -75,6 +84,8 @@ module OptionParser(Config : CONFIG) = struct
       |> dummy false (* json *)
       |> dummy false (* profile *)
       |> dummy false (* quiet *)
+      |> flag "--log-file" string
+          ~doc:"Path to log file (default: /tmp/flow/<escaped root path>.log)"
       |> common_args
     )
 
@@ -93,8 +104,8 @@ module OptionParser(Config : CONFIG) = struct
   }
 
   let result = ref None
-  let main color one_line show_all_errors json profile quiet debug verbose all
-           weak traces strip_root lib no_flowlib log_file root () =
+  let main color one_line show_all_errors json profile quiet log_file debug
+           verbose all weak traces strip_root lib no_flowlib root () =
     let root = CommandUtils.guess_root root in
     let flowconfig = FlowConfig.get root in
     let opt_module = FlowConfig.(match flowconfig.options.moduleSystem with
