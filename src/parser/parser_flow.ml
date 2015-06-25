@@ -1521,13 +1521,16 @@ end = struct
 
     and number env number_type =
       let value = Peek.value env in
-      (* octal is the only thing handled differently by float_of_string *)
-      let value =
-        if number_type = OCTAL
-        then begin
-          strict_error env Error.StrictOctalLiteral;
-          float (int_of_string ("0o"^value))
-        end else float_of_string value in
+      let value = match number_type with
+      | LEGACY_OCTAL ->
+        strict_error env Error.StrictOctalLiteral;
+        float (int_of_string ("0o"^value))
+      | BINARY
+      | OCTAL ->
+        float (int_of_string value)
+      | NORMAL ->
+        float_of_string value
+      in
       Expect.token env (T_NUMBER number_type);
       value
 

@@ -9,7 +9,6 @@ var todo = {
   "Whitespace": true,
   'Invalid unicode related syntax': true,
   'Invalid Type Annotations': true,
-  'ES6: Numeric Literal': true,
   'Array Comprehension': true,
   'Harmony: Modules': true,
   'Harmony: Iterators': true,

@@ -142,6 +142,8 @@
     | T_VOID_TYPE
 
   and number_type =
+    | BINARY
+    | LEGACY_OCTAL
     | OCTAL
     | NORMAL
 
@@ -525,8 +527,10 @@ let unicode_whitespace =
 let whitespace = [' ' '\t' '\r' '\x0c'] | unicode_whitespace
 
 (* Different ways you can write a number *)
+let binnumber = '0' ['B''b'] ['0''1']+
 let hexnumber = '0' ['X''x'] hex+
-let octnumber = '0' ['0'-'7']+
+let octnumber = '0' ['O''o'] ['0'-'7']+
+let legacyoctnumber = '0' ['0'-'7']+
 let scinumber = ['0'-'9']*'.'?['0'-'9']+['e''E']['-''+']?['0'-'9']+
 let wholenumber = ['0'-'9']+'.'?
 let floatnumber = ['0'-'9']*'.'['0'-'9']+
@@ -623,9 +627,15 @@ rule token env = parse
                        }
   | '`'                { lex_template_part env template_part }
   (* Numbers cannot be immediately followed by words *)
+  | binnumber ((letter | ['2'-'9']) alphanumeric* as w)
+                       { illegal_number env lexbuf w (T_NUMBER BINARY) }
+  | binnumber          { env, T_NUMBER BINARY }
   | octnumber ((letter | ['8'-'9']) alphanumeric* as w)
                        { illegal_number env lexbuf w (T_NUMBER OCTAL) }
   | octnumber          { env, T_NUMBER OCTAL }
+  | legacyoctnumber ((letter | ['8'-'9']) alphanumeric* as w)
+                       { illegal_number env lexbuf w (T_NUMBER LEGACY_OCTAL) }
+  | legacyoctnumber    { env, T_NUMBER LEGACY_OCTAL }
   | hexnumber (non_hex_letter alphanumeric* as w)
                        { illegal_number env lexbuf w (T_NUMBER NORMAL) }
   | hexnumber          { env, T_NUMBER NORMAL }
@@ -759,7 +769,7 @@ and type_token env = parse
   (* TODO: Better support for things like @@iterator. At the moment I'm just
    * declaring it in the type lexer so that declare class and iterators can use
    * it *)
-  | ("@@"? word) as word 
+  | ("@@"? word) as word
                        {
                          unicode_fix_cols lexbuf;
                          try env, Hashtbl.find type_keywords word
