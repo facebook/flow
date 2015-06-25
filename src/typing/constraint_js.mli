@@ -198,6 +198,7 @@ val rec_trace: Type.t -> Type.t -> trace -> trace
 val concat_trace: trace list -> trace
 
 val reasons_of_trace : ?level:int -> ?tab:int -> trace -> reason list
+val locs_of_trace : trace -> reason list
 
 (***************************************)
 

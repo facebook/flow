@@ -2167,6 +2167,40 @@ let reasons_of_trace ?(level=0) ?(tab=2) trace =
     else []
   in f level trace
 
+
+module LocMap = MyMap(struct
+  type t = Ast.Loc.t
+  let compare = Ast.Loc.compare
+end)
+
+(* flat list of reasons, with unique trace positions and summary descs *)
+let locs_of_trace trace =
+
+  let add_reason_of_t t map =
+    let r = reason_of_t t in
+    let loc = loc_of_reason r in
+    let desc = desc_of_reason r in
+    match LocMap.get loc map with
+    | Some prev ->
+      LocMap.add loc (SSet.add desc prev) map
+    | None ->
+      LocMap.add loc (SSet.singleton desc) map
+  in
+
+  let rec f acc (lower, links, upper, _) =
+    let acc = add_reason_of_t lower acc in
+    let acc = add_reason_of_t upper acc in
+    List.fold_left (fun acc (Embed trace) -> f acc trace) acc links
+  in
+
+  let map = f LocMap.empty trace in
+  let lst = LocMap.fold (fun loc sset acc ->
+    let desc = String.concat ", " (SSet.elements sset) in
+    let r = mk_reason desc loc in
+    r :: acc
+  ) map [] in
+  List.rev lst
+
 (********* type visitor *********)
 
 (* We walk types in a lot of places for all kinds of things, but often most of
