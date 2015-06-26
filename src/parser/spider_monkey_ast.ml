@@ -509,6 +509,7 @@ and Statement : sig
     | DeclareVariable of DeclareVariable.t
     | DeclareFunction of DeclareFunction.t
     | DeclareClass of Interface.t
+    | DeclareTypeAlias of TypeAlias.t
     | DeclareModule of DeclareModule.t
     | ExportDeclaration of ExportDeclaration.t
     | ImportDeclaration of ImportDeclaration.t

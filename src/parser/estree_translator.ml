@@ -237,6 +237,13 @@ end with type t = Impl.t) = struct
           "id", identifier d.id;
         |]
     )
+    | loc, DeclareTypeAlias alias -> TypeAlias.(
+      node "DeclareTypeAlias" loc [|
+        "id", identifier alias.id;
+        "typeParameters", option type_parameter_declaration alias.typeParameters;
+        "right", _type alias.right;
+      |]
+    )
     | loc, DeclareClass d -> Statement.Interface.(
         node "DeclareClass" loc [|
           "id", identifier d.id;
