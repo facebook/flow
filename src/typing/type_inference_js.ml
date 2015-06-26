@@ -706,9 +706,9 @@ let rec convert cx map = Ast.Type.(function
           DiffT (t1, t2)
         )
 
-      (* $Enum<T> is the set of keys of T *)
-      (** TODO: rename to $Keys **)
-      | "$Enum" | "$Keys" ->
+      (* $Keys<T> is the set of keys of T *)
+      (** TODO: remove $Enum **)
+      | "$Keys" | "$Enum"->
         check_type_param_arity cx loc typeParameters 1 (fun () ->
           let t = convert cx map (List.hd typeParameters) in
           KeysT (mk_reason "key set" loc, t)
@@ -942,14 +942,7 @@ and mk_type_annotation_ cx map reason = function
   | None -> mk_type_ cx map reason None
   | Some (loc, typeAnnotation) -> mk_type_ cx map reason (Some typeAnnotation)
 
-(* TODO: Replace this function with the following. *)
-and mk_enum_type cx reason keys =
-  let map = List.fold_left (fun map key ->
-    SMap.add key AnyT.t map
-  ) SMap.empty keys in
-  KeysT (reason, Flow_js.mk_object_with_map_proto cx reason map (MixedT reason))
-
-(* Simpler way to model a set of keys as the union of their singleton types. *)
+(* Model a set of keys as the union of their singleton types. *)
 and mk_keys_type reason keys =
   match keys with
   | [key] -> mk_singleton_string reason key
@@ -3899,8 +3892,7 @@ and mk_proptype cx = Ast.Expression.(function
       (match string_literals [] elements with
         | Some lits ->
             let reason = mk_reason "oneOf" vloc in
-            (* TODO: switch to using union of singletons, see mk_keys_type *)
-            mk_enum_type cx reason lits
+            mk_keys_type reason lits
         | None -> AnyT.at vloc)
 
   | vloc, Call { Call.
@@ -4600,7 +4592,7 @@ and static_method_call_Object cx loc m args_ = Ast.Expression.(
     ArrT (reason,
       Flow_js.mk_tvar_where cx reason (fun tvar ->
         let reason = prefix_reason "element of " reason in
-        Flow_js.flow cx (o, KeyT(reason, tvar));
+        Flow_js.flow cx (o, GetKeysT(reason, tvar));
       ),
           [])
 

@@ -49,9 +49,9 @@ proptype_objectOf.js:6:35,56: number
 
 proptype_oneOf.js:11:11,35: React element: Example
 Error:
-proptype_oneOf.js:11:28,32: string literal bar
-Property not found in
-proptype_oneOf.js:6:14,43: oneOf
+proptype_oneOf.js:11:28,32: string
+Expected string literal foo, got bar instead
+proptype_oneOf.js:6:14,43: string literal foo
 
 proptype_oneOfType.js:23:17,39: React element: Example
 Error:

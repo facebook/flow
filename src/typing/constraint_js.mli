@@ -108,7 +108,7 @@ module Type :
       | ConcretizeT of t * t list * t list * t
       | ConcreteT of t
 
-      | KeyT of reason * t
+      | GetKeysT of reason * t
       | HasKeyT of reason * string
 
       | ElemT of reason * t * t

@@ -235,6 +235,14 @@ tagged_union.js:40:6,10: string literal Maybe
 This type is incompatible with
 tagged_union.js:40:13,24: union type
 
+tagged_union.js:72:19,21: property A
+Property not found in
+tagged_union.js:67:10,31: object type
+
+tagged_union.js:82:15,27: property nationality
+Property not found in
+tagged_union.js:78:16,32: object type
+
 typeof.js:5:5,8: access of computed property/element
 Computed property/element cannot be accessed on
 typeof.js:3:17,20: boolean
@@ -327,4 +335,4 @@ void.js:74:45,50: undefined
 This type is incompatible with
 void.js:75:36,45: number
 
-Found 75 errors
+Found 77 errors

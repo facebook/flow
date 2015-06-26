@@ -212,7 +212,7 @@ module Type = struct
   | ConcreteT of t
 
   (* Keys *)
-  | KeyT of reason * t
+  | GetKeysT of reason * t
   | HasKeyT of reason * string
 
   (* Element access *)
@@ -776,7 +776,7 @@ let is_use = function
   | ObjSealT _
   | ObjTestT _
   | UnifyT _
-  | KeyT _
+  | GetKeysT _
   | HasKeyT _
   | ElemT _
   | ConcreteT _
@@ -858,7 +858,7 @@ let string_of_ctor = function
   | SingletonStrT _ -> "SingletonStrT"
   | SingletonNumT _ -> "SingletonNumT"
   | SingletonBoolT _ -> "SingletonBoolT"
-  | KeyT _ -> "KeyT"
+  | GetKeysT _ -> "GetKeysT"
   | HasKeyT _ -> "HasKeyT"
   | ElemT _ -> "ElemT"
   | ConcretizeT _ -> "ConcretizeT"
@@ -995,7 +995,7 @@ let rec reason_of_t = function
   | SingletonNumT (reason, _)
   | SingletonBoolT (reason, _) -> reason
 
-  | KeyT (reason, _) -> reason
+  | GetKeysT (reason, _) -> reason
   | HasKeyT (reason, _) -> reason
 
   | ElemT (reason, _, _) -> reason
@@ -1149,7 +1149,7 @@ let rec mod_reason_of_t f = function
   | SingletonNumT (reason, t) -> SingletonNumT (f reason, t)
   | SingletonBoolT (reason, t) -> SingletonBoolT (f reason, t)
 
-  | KeyT (reason, t) -> KeyT (f reason, t)
+  | GetKeysT (reason, t) -> GetKeysT (f reason, t)
   | HasKeyT (reason, t) -> HasKeyT (f reason, t)
 
   | ElemT (reason, t, t2) -> ElemT (f reason, t, t2)
@@ -1681,7 +1681,7 @@ let rec _json_of_t stack cx t = Json.(
     ]
 
   | ConcreteT t
-  | KeyT (_, t) -> [
+  | GetKeysT (_, t) -> [
       "type", _json_of_t stack cx t
     ]
 
@@ -2411,7 +2411,7 @@ class ['a] type_visitor = object(self)
   | UnifyT (_, _)
   | ConcretizeT (_, _, _, _)
   | ConcreteT _
-  | KeyT (_, _)
+  | GetKeysT (_, _)
   | HasKeyT (_, _)
   | ElemT (_, _, _)
   | CJSRequireT (_, _)

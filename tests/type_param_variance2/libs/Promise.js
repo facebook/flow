@@ -42,7 +42,7 @@ declare module "Promise" {
 
     static allObject<T: Object>(
       promisesByKey: T
-    ): PromisePolyfill<{[key: $Enum<T>]: any}>;
+    ): PromisePolyfill<{[key: $Keys<T>]: any}>;
   }
 
   // Don't "declare class exports" directly, otherwise in error messages our

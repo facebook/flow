@@ -1054,7 +1054,7 @@ let rec assume_ground cx ids = function
   | SpecializeT(_,_,_,t)
   | ObjAssignT(_,_,t,_,_)
   | ObjRestT(_,_,t)
-  | KeyT(_,t)
+  | GetKeysT(_,t)
   | ImportModuleNsT(_,t)
   | CJSRequireT(_,t)
   | ImportTypeT(_,t)
@@ -1850,11 +1850,150 @@ let rec __flow cx (l, u) trace =
           TypeAppExpansion.pop ()
         )
 
+    (***********************)
+    (* Singletons and keys *)
+    (***********************)
+
+    (** Finite keysets over arbitrary objects can be represented by KeysT. While
+        it is possible to also represent singleton string types using KeysT (by
+        taking the keyset of an object with a single property whose key is that
+        string and whose value is ignored), we can model them more directly
+        using SingletonStrT. Specifically, SingletonStrT models a type
+        annotation that looks like a string literal, which describes a singleton
+        set containing that string literal. Going further, other uses of KeysT
+        where the underlying object is created solely for the purpose of
+        describing a keyset can be modeled using unions of singleton strings.
+
+        One may also legitimately wonder why SingletonStrT(_, key) cannot be
+        always replaced by StrT(_, Some key). The reason is that types of the
+        latter form (string literal types) are inferred to be the type of string
+        literals appearing as values, and we don't want to prematurely narrow
+        down the type of the location where such values may appear, since that
+        would preclude other strings to be stored in that location. Thus, by
+        necessity we allow all string types to flow to StrT (whereas only
+        exactly matching string literal types may flow to SingletonStrT).  **)
+
+    (**********************)
+    (* string singletons *)
+    (**********************)
+
+    | (StrT (_, Some x), SingletonStrT (_, key)) ->
+        if x <> key then
+          let msg = spf "Expected string literal %s, got %s instead" key x in
+          prerr_flow cx trace msg l u
+
+    | (StrT (_, None), SingletonStrT (_, key)) ->
+      prerr_flow cx trace (spf "Expected string literal %s" key) l u
+
+    | (SingletonStrT (reason, key), _) ->
+      rec_flow cx trace (StrT(reason, Some key), u)
+
+    (*********************)
+    (* number singletons *)
+    (*********************)
+
+    (** Similar to SingletonStrT, SingletonNumT models a type annotation that
+        looks like a single number literal. This contrasts with
+        `NumT(_, Some num)`, which starts out representing `num` but allows any
+        number, whereas `SingletonNumT` accepts only exactly that value. **)
+    | (NumT (_, Some (x, _)), SingletonNumT (_, (y, _))) ->
+        (* this equality check is ok for now because we don't do arithmetic *)
+        if x <> y then
+          let msg = spf "Expected number literal %.16g, got %.16g instead" y x in
+          prerr_flow cx trace msg l u
+
+    | (NumT (_, None), SingletonNumT (_, (y, _))) ->
+      prerr_flow cx trace (spf "Expected number literal %.16g" y) l u
+
+    | (SingletonNumT (reason, lit), _) ->
+      rec_flow cx trace (NumT(reason, Some lit), u)
+
+    (**********************)
+    (* boolean singletons *)
+    (**********************)
+
+    (** Similar to SingletonStrT, SingletonBoolT models a type annotation that
+        looks like a specific boolean literal (either true or false, but not
+        both). This contrasts with `BoolT(_, Some b)`, which starts out
+        representing `b` but allows any boolean, whereas `SingletonBoolT`
+        accepts only exactly that value. **)
+    | (BoolT (_, Some x), SingletonBoolT (_, y)) ->
+        if x <> y then
+          let msg = spf "Expected boolean literal %b, got %b instead" y x in
+          prerr_flow cx trace msg l u
+
+    | (BoolT (_, None), SingletonBoolT (_, y)) ->
+      prerr_flow cx trace (spf "Expected boolean literal %b" y) l u
+
+    | (SingletonBoolT (reason, b), _) ->
+      rec_flow cx trace (BoolT(reason, Some b), u)
+
+    (*****************************************************)
+    (* keys (NOTE: currently we only support string keys *)
+    (*****************************************************)
+
+    | (StrT (reason_s, Some x), KeysT (reason_op, o)) ->
+      let reason_op = replace_reason (spf "string literal %s" x) reason_s in
+      (* check that o has key x *)
+      rec_flow cx trace (o, HasKeyT(reason_op,x))
+
+    | (StrT (_, None), KeysT _) ->
+      prerr_flow cx trace "Expected string literal" l u
+
+    | (KeysT (reason1, o1), _) ->
+      (* flow all keys of o1 to u *)
+      rec_flow cx trace (o1, GetKeysT (reason1, u))
+
+    (* helpers *)
+
+    | (ObjT (reason_o, { props_tmap = mapr; _ }), HasKeyT (reason_op, x)) ->
+      if has_prop cx mapr x then ()
+      else
+        prmsg_flow cx
+          Errors_js.ERROR
+          trace
+          "Property not found in"
+          (reason_op, reason_o)
+
+    | (InstanceT (reason_o, _, _, instance), HasKeyT(reason_op, x)) ->
+      let fields_tmap = find_props cx instance.fields_tmap in
+      let methods_tmap = find_props cx instance.methods_tmap in
+      let fields = SMap.union fields_tmap methods_tmap in
+      (match SMap.get x fields with
+      | Some tx -> ()
+      | None ->
+        prmsg_flow cx
+          Errors_js.ERROR
+          trace
+          "Property not found in"
+          (reason_op, reason_o)
+      )
+
+    | (ObjT (reason, { props_tmap = mapr; _ }), GetKeysT(_,key)) ->
+      (* flow each key of l to key *)
+      iter_props cx mapr (fun x tv ->
+        let t = StrT (reason, Some x) in
+        rec_flow cx trace (t, key)
+      )
+
+    | (InstanceT (reason, _, _, instance), GetKeysT(_,key)) ->
+      let fields_tmap = find_props cx instance.fields_tmap in
+      let methods_tmap = find_props cx instance.methods_tmap in
+      let fields = SMap.union fields_tmap methods_tmap in
+      fields |> SMap.iter (fun x tv ->
+        let t = StrT (reason, Some x) in
+        rec_flow cx trace (t, key)
+      )
+
     (** In general, typechecking is monotonic in the sense that more constraints
         produce more errors. However, sometimes we may want to speculatively try
         out constraints, backtracking if they produce errors (and removing the
         errors produced). This is useful to typecheck union types and
         intersection types: see below. **)
+
+    (** NOTE: It is important that any def type that simplifies to a union or
+        intersection of other def types be processed before we process unions
+        and intersections: otherwise we may get spurious errors. **)
 
     (***************)
     (* union types *)
@@ -2817,128 +2956,6 @@ let rec __flow cx (l, u) trace =
     | (BoolT (reason, _), (GetT _ | MethodT _ | LookupT _)) ->
       rec_flow cx trace (get_builtin_type cx reason "Boolean",u)
 
-    (********)
-    (* Keys *)
-    (********)
-
-    (** Finite keysets over arbitrary objects can be represented by KeysT. While
-        it is possible to also represent singleton string types using KeysT (by
-        taking the keyset of an object with a single property whose key is that
-        string and whose value is ignored), we can model them more directly
-        using SingletonStrT. Specifically, SingletonStrT models a type
-        annotation that looks like a string literal, which describes a singleton
-        set containing that string literal. Going further, other uses of KeysT
-        where the underlying object is created solely for the purpose of
-        describing a keyset can be modeled using unions of singleton strings.
-
-        One may also legitimately wonder why SingletonStrT(_, key) cannot be
-        always replaced by StrT(_, Some key). The reason is that types of the
-        latter form (string literal types) are inferred to be the type of string
-        literals appearing as values, and we don't want to prematurely narrow
-        down the type of the location where such values may appear, since that
-        would preclude other strings to be stored in that location. Thus, by
-        necessity we allow all string types to flow to StrT (whereas only
-        exactly matching string literal types may flow to SingletonStrT).  **)
-
-    (* singletons and keys as upper bounds *)
-
-    | (StrT (reason_s, Some x), SingletonStrT (_, key)) ->
-        if x <> key then
-          let msg = spf "Expected string literal %s, got %s instead" key x in
-          prerr_flow cx trace msg l u
-
-    | (StrT (reason_s, Some x), KeysT (reason_op, o)) ->
-      let reason_op = replace_reason (spf "string literal %s" x) reason_s in
-      (* check that o has key x *)
-      rec_flow cx trace (o, HasKeyT(reason_op,x))
-
-    | (StrT (_, None), (SingletonStrT _ | KeysT _)) ->
-      prerr_flow cx trace "Expected string literal" l u
-
-    (* singletons and keys as lower bounds *)
-
-    | (SingletonStrT (reason, key), u) ->
-      rec_flow cx trace (StrT(reason, Some key), u)
-
-    | (KeysT (reason1, o1), _) ->
-      (* flow all keys of o1 to u *)
-      rec_flow cx trace (o1, KeyT (reason1, u))
-
-    (* helpers *)
-
-    | (ObjT (reason_o, { props_tmap = mapr; _ }), HasKeyT (reason_op, x)) ->
-      if has_prop cx mapr x then ()
-      else
-        prmsg_flow cx
-          Errors_js.ERROR
-          trace
-          "Property not found in"
-          (reason_op, reason_o)
-
-    | (InstanceT (reason_o, _, _, instance), HasKeyT(reason_op, x)) ->
-      let fields_tmap = find_props cx instance.fields_tmap in
-      let methods_tmap = find_props cx instance.methods_tmap in
-      let fields = SMap.union fields_tmap methods_tmap in
-      (match SMap.get x fields with
-      | Some tx -> ()
-      | None ->
-        prmsg_flow cx
-          Errors_js.ERROR
-          trace
-          "Property not found in"
-          (reason_op, reason_o)
-      )
-
-    | (ObjT (reason, { props_tmap = mapr; _ }), KeyT(_,key)) ->
-      iter_props cx mapr (fun x tv ->
-        let t = StrT (reason, Some x) in
-        rec_flow cx trace (t, key)
-      )
-
-    | (InstanceT (reason, _, _, instance), KeyT(_,key)) ->
-      let fields_tmap = find_props cx instance.fields_tmap in
-      let methods_tmap = find_props cx instance.methods_tmap in
-      let fields = SMap.union fields_tmap methods_tmap in
-      fields |> SMap.iter (fun x tv ->
-        let t = StrT (reason, Some x) in
-        rec_flow cx trace (t, key)
-      )
-
-    (*********************)
-    (* number singletons *)
-    (*********************)
-
-    (** Similar to SingletonStrT, SingletonNumT models a type annotation that
-        looks like a single number literal. This contrasts with
-        `NumT(_, Some num)`, which starts out representing `num` but allows any
-        number, whereas `SingletonNumT` accepts only exactly that value. **)
-    | (NumT (_, Some (x, _)), SingletonNumT (_, (y, _))) ->
-        (* this equality check is ok for now because we don't do arithmetic *)
-        if x <> y then
-          let msg = spf "Expected number literal %.16g, got %.16g instead" y x in
-          prerr_flow cx trace msg l u
-
-    | (SingletonNumT (reason, lit), u) ->
-      rec_flow cx trace (NumT(reason, Some lit), u)
-
-    (**********************)
-    (* boolean singletons *)
-    (**********************)
-
-    (** Similar to SingletonStrT, SingletonBoolT models a type annotation that
-        looks like a specific boolean literal (either true or false, but not
-        both). This contrasts with `BoolT(_, Some b)`, which starts out
-        representing `b` but allows any boolean, whereas `SingletonBoolT`
-        accepts only exactly that value. **)
-    | (BoolT (_, Some x), SingletonBoolT (_, y)) ->
-        (* this equality check is ok for now because we don't do arithmetic *)
-        if x <> y then
-          let msg = spf "Expected boolean literal %b, got %b instead" y x in
-          prerr_flow cx trace msg l u
-
-    | (SingletonBoolT (reason, b), u) ->
-      rec_flow cx trace (BoolT(reason, Some b), u)
-
     (*********************)
     (* functions statics *)
     (*********************)
@@ -3166,7 +3183,7 @@ and err_operation = function
   | SuperT _ -> "Cannot inherit"
   | SpecializeT _ -> "Expected polymorphic type instead of"
   | LookupT _ -> "Property not found in"
-  | KeyT _ -> "Expected object instead of"
+  | GetKeysT _ -> "Expected object instead of"
   | HasKeyT _ -> "Property not found in"
   (* unreachable or unclassified use-types. until we have a mechanical way
      to verify that all legit use types are listed above, we can't afford
@@ -3229,7 +3246,7 @@ and object_like = function
 and object_like_op = function
   | SetT _ | GetT _ | MethodT _ | LookupT _
   | SuperT _
-  | KeyT _
+  | GetKeysT _ | HasKeyT _
   | ObjAssignT _ | ObjRestT _
   | SetElemT _ | GetElemT _
   | AnyObjT _ -> true
@@ -4177,7 +4194,7 @@ and sentinel_prop_test key cx trace result = function
       the predicate function and its callers to understand how the context is
       set up so that filtering ultimately only depends on what flows to
       result. **)
-  (* obj.key ===/!== value *)
+  (* obj.key ===/!== string value *)
   | (sense, (ObjT (_, { props_tmap; _}) as obj), StrT (_, Some value)) ->
       (match read_prop_opt cx props_tmap key with
         | Some (SingletonStrT (_, v))
@@ -4190,6 +4207,22 @@ and sentinel_prop_test key cx trace result = function
                property doesn't exist at all *)
             rec_flow cx trace (obj, result)
       )
+
+  (* obj.key ===/!== number value *)
+  | (sense, (ObjT (_, { props_tmap; _}) as obj), NumT (_, Some (value, _))) ->
+      (match read_prop_opt cx props_tmap key with
+        | Some (SingletonNumT (_, (v, _)))
+        | Some (NumT (_, Some (v, _))) when (value = v) != sense ->
+            (* provably unreachable, so prune *)
+            ()
+        | _ ->
+            (* not enough info to refine: either the property exists but is
+               something else that we cannot use as a refinement, or the
+               property doesn't exist at all *)
+            rec_flow cx trace (obj, result)
+      )
+
+  (* TODO: refine based on boolean values (currently those go to bool_test) *)
 
   | (_, obj, _) -> (* not enough info to refine *)
     rec_flow cx trace (obj, result)
@@ -5104,7 +5137,7 @@ let rec gc cx state = function
   | ConcreteT (t) ->
       gc cx state t
 
-  | KeyT (_, t) ->
+  | GetKeysT (_, t) ->
       gc cx state t
 
   | HasKeyT _ -> ()
