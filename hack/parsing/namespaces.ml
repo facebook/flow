@@ -102,7 +102,7 @@ let elaborate_into_current_ns nsenv id =
 let elaborate_id_impl ~autoimport nsenv (p, id) =
   (* Go ahead and fully-qualify the name first. *)
   let fully_qualified =
-    if id.[0] = '\\' then id
+    if id <> "" && id.[0] = '\\' then id
     else if autoimport && is_autoimport_name id then "\\" ^ id
     else begin
       (* Expand "use" imports. *)
