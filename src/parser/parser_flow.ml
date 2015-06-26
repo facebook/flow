@@ -345,6 +345,14 @@ end = struct
             value;
             raw;
           }))
+      | (T_TRUE | T_FALSE) as token ->
+          let raw = Peek.value env in
+          Expect.token env token;
+          let value = token = T_TRUE in
+          loc, Type.(BooleanLiteral BooleanLiteral.({
+            value;
+            raw;
+          }))
       | token ->
           match primitive token with
           | Some t ->

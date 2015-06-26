@@ -623,6 +623,10 @@ let rec convert cx map = Ast.Type.(function
       let reason = mk_reason "number literal type" loc in
       mk_singleton_number reason value raw
 
+  | loc, BooleanLiteral { BooleanLiteral.value; _ }  ->
+      let reason = mk_reason "boolean literal type" loc in
+      mk_singleton_boolean reason value
+
   (* TODO *)
   | loc, Generic { Generic.id = Generic.Identifier.Qualified (_,
          { Generic.Identifier.qualification; id; }); typeParameters } ->
@@ -958,6 +962,10 @@ and mk_singleton_string reason key =
 and mk_singleton_number reason num raw =
   let reason = replace_reason (spf "number literal %.16g" num) reason in
   SingletonNumT (reason, (num, raw))
+
+and mk_singleton_boolean reason b =
+  let reason = replace_reason (spf "boolean literal %b" b) reason in
+  SingletonBoolT (reason, b)
 
 (************)
 (* Visitors *)

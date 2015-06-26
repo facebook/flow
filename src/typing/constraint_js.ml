@@ -133,6 +133,8 @@ module Type = struct
   (* matches exactly a given number literal, for some definition of "exactly"
      when it comes to floats... *)
   | SingletonNumT of reason * number_literal
+  (* singleton bool, matches exactly a given boolean literal *)
+  | SingletonBoolT of reason * bool
 
   (* type aliases *)
   | TypeT of reason * t
@@ -855,6 +857,7 @@ let string_of_ctor = function
   | KeysT _ -> "KeysT"
   | SingletonStrT _ -> "SingletonStrT"
   | SingletonNumT _ -> "SingletonNumT"
+  | SingletonBoolT _ -> "SingletonBoolT"
   | KeyT _ -> "KeyT"
   | HasKeyT _ -> "HasKeyT"
   | ElemT _ -> "ElemT"
@@ -989,7 +992,8 @@ let rec reason_of_t = function
 
   | KeysT (reason, _)
   | SingletonStrT (reason, _)
-  | SingletonNumT (reason, _) -> reason
+  | SingletonNumT (reason, _)
+  | SingletonBoolT (reason, _) -> reason
 
   | KeyT (reason, _) -> reason
   | HasKeyT (reason, _) -> reason
@@ -1143,6 +1147,7 @@ let rec mod_reason_of_t f = function
   | KeysT (reason, t) -> KeysT (f reason, t)
   | SingletonStrT (reason, t) -> SingletonStrT (f reason, t)
   | SingletonNumT (reason, t) -> SingletonNumT (f reason, t)
+  | SingletonBoolT (reason, t) -> SingletonBoolT (f reason, t)
 
   | KeyT (reason, t) -> KeyT (f reason, t)
   | HasKeyT (reason, t) -> HasKeyT (f reason, t)
@@ -1532,6 +1537,10 @@ let rec _json_of_t stack cx t = Json.(
 
   | SingletonNumT (_, (_, raw)) -> [
       "literal", JString raw
+    ]
+
+  | SingletonBoolT (_, b) -> [
+      "literal", JBool b
     ]
 
   | TypeT (_, t) -> [
@@ -2359,8 +2368,9 @@ class ['a] type_visitor = object(self)
 
   | KeysT (_, t) -> self#type_ cx acc t
 
-  | SingletonStrT (_, s) -> acc
-  | SingletonNumT _ -> acc
+  | SingletonStrT _
+  | SingletonNumT _
+  | SingletonBoolT _ -> acc
 
   | TypeT (_, t) -> self#type_ cx acc t
 

@@ -1548,6 +1548,22 @@ module.exports = {
       ],
     }
   },
+  'Boolean Literal Types': {
+    'var a: true': {
+      'body.0.declarations.0.id.typeAnnotation.typeAnnotation': {
+        'type': 'BooleanLiteralTypeAnnotation',
+        'value': true,
+        'raw': 'true',
+      }
+    },
+    'var a: false': {
+      'body.0.declarations.0.id.typeAnnotation.typeAnnotation': {
+        'type': 'BooleanLiteralTypeAnnotation',
+        'value': false,
+        'raw': 'false',
+      }
+    }
+  },
   'Member Type': {
     'var a : A.B': {
       'body.0.declarations.0.id.typeAnnotation.typeAnnotation': {

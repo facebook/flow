@@ -510,6 +510,8 @@
       "any",     T_ANY_TYPE;
       "bool",    T_BOOLEAN_TYPE;
       "boolean", T_BOOLEAN_TYPE;
+      "true",    T_TRUE;
+      "false",   T_FALSE;
       "number",  T_NUMBER_TYPE;
       "string",  T_STRING_TYPE;
       "void",    T_VOID_TYPE;

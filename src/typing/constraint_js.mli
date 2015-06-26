@@ -63,6 +63,7 @@ module Type :
       | KeysT of reason * t
       | SingletonStrT of reason * string
       | SingletonNumT of reason * number_literal
+      | SingletonBoolT of reason * bool
 
       | TypeT of reason * t
 

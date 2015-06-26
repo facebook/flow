@@ -1185,6 +1185,7 @@ let rec assert_ground ?(infer=false) cx skip ids = function
 
   | SingletonStrT _ -> ()
   | SingletonNumT _ -> ()
+  | SingletonBoolT _ -> ()
 
   | ModuleT(reason, {exports_tmap; cjs_export}) ->
       iter_props cx exports_tmap (fun _ -> assert_ground ~infer:true cx skip ids);
@@ -2911,11 +2912,32 @@ let rec __flow cx (l, u) trace =
         looks like a single number literal. This contrasts with
         `NumT(_, Some num)`, which starts out representing `num` but allows any
         number, whereas `SingletonNumT` accepts only exactly that value. **)
-    | (NumT (reason_s, Some (x, _)), SingletonNumT (_, (y, _))) ->
+    | (NumT (_, Some (x, _)), SingletonNumT (_, (y, _))) ->
         (* this equality check is ok for now because we don't do arithmetic *)
         if x <> y then
           let msg = spf "Expected number literal %.16g, got %.16g instead" y x in
           prerr_flow cx trace msg l u
+
+    | (SingletonNumT (reason, lit), u) ->
+      rec_flow cx trace (NumT(reason, Some lit), u)
+
+    (**********************)
+    (* boolean singletons *)
+    (**********************)
+
+    (** Similar to SingletonStrT, SingletonBoolT models a type annotation that
+        looks like a specific boolean literal (either true or false, but not
+        both). This contrasts with `BoolT(_, Some b)`, which starts out
+        representing `b` but allows any boolean, whereas `SingletonBoolT`
+        accepts only exactly that value. **)
+    | (BoolT (_, Some x), SingletonBoolT (_, y)) ->
+        (* this equality check is ok for now because we don't do arithmetic *)
+        if x <> y then
+          let msg = spf "Expected boolean literal %b, got %b instead" y x in
+          prerr_flow cx trace msg l u
+
+    | (SingletonBoolT (reason, b), u) ->
+      rec_flow cx trace (BoolT(reason, Some b), u)
 
     (*********************)
     (* functions statics *)
@@ -3077,8 +3099,8 @@ and flow_addition cx trace reason l r u = match (l, r) with
   | (_, (OpenT _ | UnionT _ | OptionalT _ | MaybeT _)) ->
     rec_flow cx trace (r, AdderT (reason, l, u))
 
-  | ((NumT _ | SingletonNumT _ | BoolT _ | NullT _ | VoidT _),
-     (NumT _ | SingletonNumT _ | BoolT _ | NullT _ | VoidT _)) ->
+  | ((NumT _ | SingletonNumT _ | BoolT _ | SingletonBoolT _ | NullT _ | VoidT _),
+     (NumT _ | SingletonNumT _ | BoolT _ | SingletonBoolT _ | NullT _ | VoidT _)) ->
     rec_flow cx trace (NumT.why reason, u)
 
   | (_, _) ->
@@ -4961,6 +4983,7 @@ let rec gc cx state = function
 
   | SingletonStrT _
   | SingletonNumT _
+  | SingletonBoolT _
       -> ()
 
   | TypeT (_, t) ->

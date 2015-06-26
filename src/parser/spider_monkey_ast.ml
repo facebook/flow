@@ -196,6 +196,13 @@ and Type : sig
     }
   end
 
+  module BooleanLiteral : sig
+    type t = {
+      value: bool;
+      raw: string;
+    }
+  end
+
   type t = Loc.t * t'
   (* Yes, we could add a little complexity here to show that Any and Void
    * should never be declared nullable, but that check can happen later *)
@@ -216,6 +223,7 @@ and Type : sig
     | Tuple of t list
     | StringLiteral of StringLiteral.t
     | NumberLiteral of NumberLiteral.t
+    | BooleanLiteral of BooleanLiteral.t
     | Exists
 
   (* Type.annotation is a concrete syntax node with a location that starts at

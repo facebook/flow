@@ -1,7 +1,7 @@
 /* @flow */
 
-function highlander(howMany: 1): string {
-  return "there can be only one!";
+function highlander(howMany: 1): number {
+  return howMany; // there can be only one!
 }
 
 highlander(1);
