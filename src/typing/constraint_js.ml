@@ -127,7 +127,9 @@ module Type = struct
   | DiffT of t * t
 
   (* collects the keys of an object *)
-  | EnumT of reason * t
+  | KeysT of reason * t
+  (* singleton string, matches exactly a given string literal *)
+  | SingletonT of reason * string
 
   (* type aliases *)
   | TypeT of reason * t
@@ -206,7 +208,7 @@ module Type = struct
 
   (* Keys *)
   | KeyT of reason * t
-  | HasT of reason * string
+  | HasKeyT of reason * string
 
   (* Element access *)
   | ElemT of reason * t * t
@@ -230,15 +232,21 @@ module Type = struct
   | OrP of predicate * predicate
   | NotP of predicate
 
+  (* mechanism to handle binary tests where both sides need to be evaluated *)
+  | LeftP of binary_test * t
+  | RightP of binary_test * t
+
   (* truthy *)
   | ExistsP
 
-   (* instanceof *)
-  | InstanceofP of t
-  | ConstructorP of t
-
   (* typeof, null check, Array.isArray *)
   | IsP of string
+
+  and binary_test =
+  (* e1 instanceof e2 *)
+  | Instanceof
+  (* e1.key === e2 *)
+  | SentinelProp of string
 
   and literal = string option
 
@@ -756,7 +764,7 @@ let is_use = function
   | ObjTestT _
   | UnifyT _
   | KeyT _
-  | HasT _
+  | HasKeyT _
   | ElemT _
   | ConcreteT _
   | ConcretizeT _
@@ -833,9 +841,10 @@ let string_of_ctor = function
   | AnyFunT _ -> "AnyFunT"
   | ShapeT _ -> "ShapeT"
   | DiffT _ -> "DiffT"
-  | EnumT _ -> "EnumT"
+  | KeysT _ -> "KeysT"
+  | SingletonT _ -> "SingletonT"
   | KeyT _ -> "KeyT"
-  | HasT _ -> "HasT"
+  | HasKeyT _ -> "HasKeyT"
   | ElemT _ -> "ElemT"
   | ConcretizeT _ -> "ConcretizeT"
   | ConcreteT _ -> "ConcreteT"
@@ -966,12 +975,13 @@ let rec reason_of_t = function
   | DiffT (t, _)
       -> reason_of_t t
 
-  | EnumT (reason, _)
+  | KeysT (reason, _)
       ->
       reason
+  | SingletonT (reason, _) -> reason
 
   | KeyT (reason, _) -> reason
-  | HasT (reason, _) -> reason
+  | HasKeyT (reason, _) -> reason
 
   | ElemT (reason, _, _) -> reason
 
@@ -998,11 +1008,18 @@ and string_of_predicate = function
   | OrP (p1,p2) ->
       (string_of_predicate p1) ^ " || " ^ (string_of_predicate p2)
   | NotP p -> "not " ^ (string_of_predicate p)
-
+  | LeftP (b, t) ->
+      spf "left operand of %s with right operand = %s"
+        (string_of_binary_test b) (desc_of_t t)
+  | RightP (b, t) ->
+      spf "right operand of %s with left operand = %s"
+        (string_of_binary_test b) (desc_of_t t)
   | ExistsP -> "truthy"
-  | InstanceofP t -> "instanceof " ^ (desc_of_t t)
-  | ConstructorP t -> "typeof " ^ (desc_of_t t)
   | IsP s -> s
+
+and string_of_binary_test = function
+  | Instanceof -> "instanceof"
+  | SentinelProp key -> "sentinel prop " ^ key
 
 and pos_of_predicate = function
   | AndP (p1,p2)
@@ -1012,13 +1029,11 @@ and pos_of_predicate = function
   | NotP p
     -> pos_of_predicate p
 
-  | ExistsP
-    -> Pos.none (* TODO!!!!!!!!!!!! *)
-
-  | InstanceofP t
-  | ConstructorP t
+  | LeftP (_, t)
+  | RightP (_, t)
     -> pos_of_t t
 
+  | ExistsP
   | IsP _
     -> Pos.none (* TODO!!!!!!!!!!!! *)
 
@@ -1113,10 +1128,11 @@ let rec mod_reason_of_t f = function
   | ShapeT t -> ShapeT (mod_reason_of_t f t)
   | DiffT (t1, t2) -> DiffT (mod_reason_of_t f t1, t2)
 
-  | EnumT (reason, t) -> EnumT (f reason, t)
+  | KeysT (reason, t) -> KeysT (f reason, t)
+  | SingletonT (reason, t) -> SingletonT (f reason, t)
 
   | KeyT (reason, t) -> KeyT (f reason, t)
-  | HasT (reason, t) -> HasT (f reason, t)
+  | HasKeyT (reason, t) -> HasKeyT (f reason, t)
 
   | ElemT (reason, t, t2) -> ElemT (f reason, t, t2)
 
@@ -1377,10 +1393,14 @@ let string_of_pred_ctor = function
   | AndP _ -> "AndP"
   | OrP _ -> "OrP"
   | NotP _ -> "NotP"
+  | LeftP _ -> "LeftP"
+  | RightP _ -> "RightP"
   | ExistsP -> "ExistsP"
-  | InstanceofP _ -> "InstanceofP"
-  | ConstructorP _ -> "ConstructorP"
   | IsP _ -> "IsP"
+
+let string_of_binary_test_ctor = function
+  | Instanceof -> "Instanceof"
+  | SentinelProp _ -> "SentinelProp"
 
 let rec _json_of_t stack cx t = Json.(
   JAssoc ([
@@ -1486,8 +1506,12 @@ let rec _json_of_t stack cx t = Json.(
       "type2", _json_of_t stack cx t2
     ]
 
-  | EnumT (_, t) -> [
+  | KeysT (_, t) -> [
       "type", _json_of_t stack cx t
+    ]
+
+  | SingletonT (_, s) -> [
+      "literal", JString s
     ]
 
   | TypeT (_, t) -> [
@@ -1632,7 +1656,7 @@ let rec _json_of_t stack cx t = Json.(
       "type", _json_of_t stack cx t
     ]
 
-  | HasT (_, key) -> [
+  | HasKeyT (_, key) -> [
       "key", JString key
     ]
 
@@ -1755,10 +1779,22 @@ and json_of_pred stack cx p = Json.(
       "right", json_of_pred stack cx r
     ]
   | NotP p -> ["pred", json_of_pred stack cx p]
+  | LeftP (b, t)
+  | RightP (b, t) -> [
+      "binaryTest", json_of_binary_test b;
+      "type", _json_of_t stack cx t
+    ]
   | ExistsP -> []
-  | InstanceofP t -> ["type", _json_of_t stack cx t]
-  | ConstructorP t -> ["type ", _json_of_t stack cx t]
   | IsP s -> ["typeName", JString s]
+))
+
+and json_of_binary_test b = Json.(
+  JAssoc ([
+    "kind", JString (string_of_binary_test_ctor b)
+  ] @
+  match b with
+  | Instanceof -> []
+  | SentinelProp s -> ["key", JString s]
 ))
 
 and json_of_node stack cx id = Json.(
@@ -2285,7 +2321,9 @@ class ['a] type_visitor = object(self)
     let acc = self#type_ cx acc t2 in
     acc
 
-  | EnumT (_, t) -> self#type_ cx acc t
+  | KeysT (_, t) -> self#type_ cx acc t
+
+  | SingletonT (_, s) -> acc
 
   | TypeT (_, t) -> self#type_ cx acc t
 
@@ -2327,7 +2365,7 @@ class ['a] type_visitor = object(self)
   | ConcretizeT (_, _, _, _)
   | ConcreteT _
   | KeyT (_, _)
-  | HasT (_, _)
+  | HasKeyT (_, _)
   | ElemT (_, _, _)
   | CJSRequireT (_, _)
   | ImportModuleNsT (_, _)

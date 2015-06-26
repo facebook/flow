@@ -463,7 +463,11 @@ let has_prop cx id x =
 let read_prop cx id x =
   find_props cx id |> SMap.find_unsafe x
 
-let read_prop_ cx id x =
+(* suitable replacement for has_prop; read_prop *)
+let read_prop_opt cx id x =
+  find_props cx id |> SMap.get x
+
+let read_and_delete_prop cx id x =
   find_props cx id |> (fun pmap ->
     let t = SMap.find_unsafe x pmap in
     let pmap = SMap.remove x pmap in
@@ -1176,8 +1180,11 @@ let rec assert_ground ?(infer=false) cx skip ids = function
       assert_ground cx skip ids t1;
       assert_ground cx skip ids t2
 
-  | EnumT(reason,t) ->
+  | KeysT(reason,t) ->
       assert_ground cx skip ids t
+
+  | SingletonT _ ->
+      ()
 
   | ModuleT(reason, {exports_tmap; cjs_export}) ->
       iter_props cx exports_tmap (fun _ -> assert_ground ~infer:true cx skip ids);
@@ -2807,24 +2814,56 @@ let rec __flow cx (l, u) trace =
     | (BoolT (reason, _), (GetT _ | MethodT _ | LookupT _)) ->
       rec_flow cx trace (get_builtin_type cx reason "Boolean",u)
 
-    (***************************)
-    (* Keys: enums and records *)
-    (***************************)
+    (********)
+    (* Keys *)
+    (********)
 
-    | (StrT (reason_s, literal), EnumT (reason_op, o)) ->
-      (match literal with
-      | Some x ->
-        let reason_op =
-          replace_reason (spf "string literal %s" x) reason_s in
-        rec_flow cx trace (o, HasT(reason_op,x))
-      | None ->
-        prerr_flow cx trace "Expected string literal" l u
-      )
+    (** Finite keysets over arbitrary objects can be represented by KeysT. While
+        it is possible to also represent singleton string types using KeysT (by
+        taking the keyset of an object with a single property whose key is that
+        string and whose value is ignored), we can model them more directly
+        using SingletonT. Specifically, SingletonT models a type annotation of
+        that looks like a string literal, which describes a singleton set
+        containing that string literal. Going further, other uses of KeysT where
+        the underlying object is created solely for the purpose of describing a
+        keyset can be modeled using unions of singleton strings.
 
-    | (EnumT (reason1, o1), _) ->
+        One may also legitimately wonder why SingletonT(_, key) cannot be always
+        replaced by StrT(_, Some key). The reason is that types of the latter
+        form (string literal types) are inferred to be the type of string
+        literals appearing as values, and we don't want to prematurely narrow
+        down the type of the location where such values may appear, since that
+        would preclude other strings to be stored in that location. Thus, by
+        necessity we allow all string types to flow to StrT (whereas only
+        exactly matching string literal types may flow to SingletonT).  **)
+
+    (* singletons and keys as upper bounds *)
+
+    | (StrT (reason_s, Some x), SingletonT (_, key)) ->
+        if x <> key then
+          let msg = spf "Expected string literal %s, got %s instead" key x in
+          prerr_flow cx trace msg l u
+
+    | (StrT (reason_s, Some x), KeysT (reason_op, o)) ->
+      let reason_op = replace_reason (spf "string literal %s" x) reason_s in
+      (* check that o has key x *)
+      rec_flow cx trace (o, HasKeyT(reason_op,x))
+
+    | (StrT (_, None), (SingletonT _ | KeysT _)) ->
+      prerr_flow cx trace "Expected string literal" l u
+
+    (* singletons and keys as lower bounds *)
+
+    | (SingletonT (reason, key), u) ->
+      rec_flow cx trace (StrT(reason, Some key), u)
+
+    | (KeysT (reason1, o1), _) ->
+      (* flow all keys of o1 to u *)
       rec_flow cx trace (o1, KeyT (reason1, u))
 
-    | (ObjT (reason_o, { props_tmap = mapr; _ }), HasT(reason_op, x)) ->
+    (* helpers *)
+
+    | (ObjT (reason_o, { props_tmap = mapr; _ }), HasKeyT (reason_op, x)) ->
       if has_prop cx mapr x then ()
       else
         prmsg_flow cx
@@ -2833,7 +2872,7 @@ let rec __flow cx (l, u) trace =
           "Property not found in"
           (reason_op, reason_o)
 
-    | (InstanceT (reason_o, _, _, instance), HasT(reason_op, x)) ->
+    | (InstanceT (reason_o, _, _, instance), HasKeyT(reason_op, x)) ->
       let fields_tmap = find_props cx instance.fields_tmap in
       let methods_tmap = find_props cx instance.methods_tmap in
       let fields = SMap.union fields_tmap methods_tmap in
@@ -3090,7 +3129,7 @@ and err_operation = function
   | SpecializeT _ -> "Expected polymorphic type instead of"
   | LookupT _ -> "Property not found in"
   | KeyT _ -> "Expected object instead of"
-  | HasT _ -> "Property not found in"
+  | HasKeyT _ -> "Property not found in"
   (* unreachable or unclassified use-types. until we have a mechanical way
      to verify that all legit use types are listed above, we can't afford
      to throw on a use type, so mark the error instead *)
@@ -3387,8 +3426,10 @@ and subst cx ?(force=true) (map: Type.t SMap.t) t =
   | DiffT(t1, t2) ->
     DiffT(subst cx ~force map t1, subst cx ~force map t2)
 
-  | EnumT(reason, t) ->
-    EnumT(reason, subst cx ~force map t)
+  | KeysT(reason, t) ->
+    KeysT(reason, subst cx ~force map t)
+
+  | SingletonT _ -> t
 
   | ObjAssignT(reason, t1, t2, xs, resolve) ->
     ObjAssignT(reason, subst cx ~force map t1, subst cx ~force map t2, xs, resolve)
@@ -3547,38 +3588,38 @@ and concretize_parts cx trace l u done_list = function
 (* property lookup functions in objects and instances *)
 
 and ensure_prop cx strict mapr x proto reason_obj reason_op trace =
-  if has_prop cx mapr x
-  then read_prop cx mapr x
-  else
+  match read_prop_opt cx mapr x with
+  | Some t -> t
+  | None ->
     let t =
-      if has_prop cx mapr (internal_name x)
-      then read_prop cx mapr (internal_name x)
-      else intro_prop cx reason_obj x mapr
+      match read_prop_opt cx mapr (internal_name x) with
+      | Some t -> t
+      | None -> intro_prop cx reason_obj x mapr
     in
     t |> recurse_proto cx strict proto reason_op x trace
 
 and ensure_prop_ cx trace strict mapr x proto reason_obj reason_op =
-  if has_prop cx mapr x
-  then read_prop cx mapr x
-  else
-    match strict with
-    | Some reason_o ->
-      prmsg_flow cx
-        Errors_js.ERROR
-        trace
-        "Property not found in"
-        (reason_op, reason_o);
-      AnyT.t
-    | None ->
-      let t =
-        if has_prop cx mapr (internal_name x)
-        then read_prop_ cx mapr (internal_name x) |> (fun t ->
-          write_prop cx mapr x t; t
-        )
-        else intro_prop_ cx reason_obj x mapr
-      in
-      t |> recurse_proto cx None proto reason_op x trace
-
+  match read_prop_opt cx mapr x with
+  | Some t -> t
+  | None -> (
+      match strict with
+      | Some reason_o ->
+        prmsg_flow cx
+          Errors_js.ERROR
+          trace
+          "Property not found in"
+          (reason_op, reason_o);
+        AnyT.t
+      | None ->
+        let t =
+          if has_prop cx mapr (internal_name x)
+          then read_and_delete_prop cx mapr (internal_name x) |> (fun t ->
+            write_prop cx mapr x t; t
+          )
+          else intro_prop_ cx reason_obj x mapr
+        in
+        t |> recurse_proto cx None proto reason_op x trace
+  )
 
 and lookup_prop cx trace l reason strict x t =
   let l =
@@ -3787,6 +3828,22 @@ and predicate cx trace t (l,p) = match (l,p) with
     rec_flow cx trace (l,PredicateT(p1,t));
     rec_flow cx trace (l,PredicateT(p2,t))
 
+  (*********************************)
+  (* deconstruction of binary test *)
+  (*********************************)
+
+  (* when left is evaluated, store it and evaluate right *)
+  | (_, LeftP(b, r)) ->
+    rec_flow cx trace (r, PredicateT(RightP(b, l), t))
+  | (_, NotP(LeftP(b, r))) ->
+    rec_flow cx trace (r, PredicateT(NotP(RightP(b, l)), t))
+
+  (* when right is evaluated, call appropriate handler *)
+  | (r, RightP(b, l)) ->
+    binary_predicate cx trace true b l r t
+  | (r, NotP(RightP(b, l))) ->
+    binary_predicate cx trace false b l r t
+
   (***********************)
   (* typeof _ ~ "boolean" *)
   (***********************)
@@ -3928,51 +3985,46 @@ and predicate cx trace t (l,p) = match (l,p) with
   | (_, NotP(ExistsP)) ->
     rec_flow cx trace (filter_not_exists l, t)
 
-  (*************************************************************)
-  (* instanceof: resolve the constructor, pushing the instance *)
-  (*************************************************************)
+  (* unreachable *)
+  | (_, (NotP _ | IsP _)) ->
+    assert_false (spf "Unexpected predicate %s" (string_of_predicate p))
 
-  | (_, InstanceofP (c)) ->
-    rec_flow cx trace (c, PredicateT(ConstructorP(l),t))
+and binary_predicate cx trace sense test left right result =
+  let handler =
+    match test with
+    | Instanceof -> instanceof_test
+    | SentinelProp key -> sentinel_prop_test key
+  in
+  handler cx trace result (sense, left, right)
 
-  | (_, NotP(InstanceofP (c))) ->
-    rec_flow cx trace (c, PredicateT(NotP(ConstructorP(l)),t))
-
-  (*************************************************************)
-  (* ... and refine the instance with the resolved constructor *)
-  (* (careful: this is backwards)                              *)
-  (*************************************************************)
-
+and instanceof_test cx trace result = function
   (** instanceof on an ArrT is a special case since we treat ArrT as its own
       type, rather than an InstanceT of the Array builtin class. So, we resolve
       the ArrT to an InstanceT of Array, and redo the instanceof check. We do
       it at this stage instead of simply converting (ArrT, InstanceofP c)
       to (InstanceT(Array), InstanceofP c) because this allows c to be resolved
       first. *)
-  | (ClassT(InstanceT _ as a),
-     ConstructorP (ArrT (reason, elemt, _) as arr)) ->
+  | (true, (ArrT (reason, elemt, _) as arr), ClassT(InstanceT _ as a)) ->
 
-    let l = ClassT(ExtendsT(arr, a)) in
+    let right = ClassT(ExtendsT(arr, a)) in
     let arrt = get_builtin_typeapp cx reason "Array" [elemt] in
-    rec_flow cx trace (arrt, PredicateT(InstanceofP(l), t))
+    rec_flow cx trace (arrt, PredicateT(LeftP(Instanceof, right), result))
 
-  | (ClassT(InstanceT _ as a),
-     NotP(ConstructorP (ArrT (reason, elemt, _) as arr))) ->
+  | (false, (ArrT (reason, elemt, _) as arr), ClassT(InstanceT _ as a)) ->
 
-    let l = ClassT(ExtendsT(arr, a)) in
+    let right = ClassT(ExtendsT(arr, a)) in
     let arrt = get_builtin_typeapp cx reason "Array" [elemt] in
-    rec_flow cx trace (arrt, PredicateT(NotP(InstanceofP(l)), t))
+    rec_flow cx trace (arrt, PredicateT(NotP(LeftP(Instanceof, right)), result))
 
   (** An object is considered `instanceof` a function F when it is constructed
       by F. Note that this is incomplete with respect to the runtime semantics,
       where instanceof is transitive: if F.prototype `instanceof` G, then the
       object is `instanceof` G. There is nothing fundamentally difficult in
       modeling the complete semantics, but we haven't found a need to do it. **)
-  | (FunT (_,_,proto1,_),
-     ConstructorP (ObjT (_,{proto_t = proto2; _}) as u))
+  | (true, (ObjT (_,{proto_t = proto2; _}) as obj), FunT (_,_,proto1,_))
       when proto1 = proto2 ->
 
-    rec_flow cx trace (u,t)
+    rec_flow cx trace (obj, result)
 
   (** Suppose that we have an instance x of class C, and we check whether x is
       `instanceof` class A. To decide what the appropriate refinement for x
@@ -3983,37 +4035,34 @@ and predicate cx trace t (l,p) = match (l,p) with
       class. (As a technical tool, we use Extends(_, _) to perform this
       recursion; it is also used elsewhere for running similar recursive
       subclass decisions.) **)
-  | (ClassT(InstanceT _ as a),
-     ConstructorP (InstanceT _ as c)) ->
+  | (true, (InstanceT _ as c), ClassT(InstanceT _ as a)) ->
 
-    predicate cx trace t (ClassT(ExtendsT(c, a)), p)
+    predicate cx trace result (ClassT(ExtendsT(c, a)), RightP(Instanceof, c))
 
   (** If C is a subclass of A, then don't refine the type of x. Otherwise,
       refine the type of x to A. (In general, the type of x should be refined to
       C & A, but that's hard to compute.) **)
-  | (ClassT(ExtendsT(c, InstanceT (_,_,_,instance_a))),
-     ConstructorP (InstanceT (_,_,super_c,instance_c)))
+  | (true, InstanceT (_,_,super_c,instance_c),
+     (ClassT(ExtendsT(c, InstanceT (_,_,_,instance_a))) as right))
     -> (* TODO: intersection *)
 
     if instance_a.class_id = instance_c.class_id
-    then rec_flow cx trace (c, t)
+    then rec_flow cx trace (c, result)
     else
       (** Recursively check whether super(C) extends A, with enough context. **)
-      rec_flow cx trace (super_c, PredicateT(InstanceofP(l), t))
+      rec_flow cx trace (super_c, PredicateT(LeftP(Instanceof, right), result))
 
-  | (ClassT(ExtendsT (_, a)),
-     ConstructorP (MixedT _))
+  | (true, MixedT _, ClassT(ExtendsT (_, a)))
     ->
     (** We hit the root class, so C is not a subclass of A **)
-    rec_flow cx trace (a, t)
+    rec_flow cx trace (a, result)
 
   (** Prune the type when any other `instanceof` check succeeds (since this is
       impossible). *)
-  | (_, ConstructorP _) ->
+  | (true, _, _) ->
     ()
 
-  | (FunT (_,_,proto1,_),
-     NotP(ConstructorP (ObjT (_,{proto_t = proto2; _}))))
+  | (false, ObjT (_,{proto_t = proto2; _}), FunT (_,_,proto1,_))
       when proto1 = proto2 ->
     ()
 
@@ -4021,34 +4070,76 @@ and predicate cx trace t (l,p) = match (l,p) with
       check whether x is _not_ `instanceof` class A. To decide what the
       appropriate refinement for x should be, we need to decide whether C
       extends A, choosing either nothing or C based on the result. **)
-  | (ClassT(InstanceT _ as a),
-     NotP(ConstructorP (InstanceT _ as c))) ->
+  | (false, (InstanceT _ as c), ClassT(InstanceT _ as a)) ->
 
-    predicate cx trace t (ClassT(ExtendsT(c, a)), p)
+    predicate cx trace result (ClassT(ExtendsT(c, a)), NotP(RightP(Instanceof, c)))
 
   (** If C is a subclass of A, then do nothing, since this check cannot
       succeed. Otherwise, don't refine the type of x. **)
-  | (ClassT(ExtendsT(c, InstanceT (_,_,_,instance_a))),
-     NotP(ConstructorP (InstanceT (_,_,super_c,instance_c))))
+  | (false, InstanceT (_,_,super_c,instance_c),
+     (ClassT(ExtendsT(c, InstanceT (_,_,_,instance_a))) as right))
     ->
 
     if instance_a.class_id = instance_c.class_id
     then ()
-    else rec_flow cx trace (super_c, PredicateT(NotP(InstanceofP(l)), t))
+    else rec_flow cx trace (super_c, PredicateT(NotP(LeftP(Instanceof, right)), result))
 
-  | (ClassT(ExtendsT(c, _)),
-     NotP(ConstructorP (MixedT _)))
+  | (false, MixedT _, ClassT(ExtendsT(c, _)))
     ->
     (** We hit the root class, so C is not a subclass of A **)
-    rec_flow cx trace (c, t)
+    rec_flow cx trace (c, result)
 
   (** Don't refine the type when any other `instanceof` check fails. **)
-  | (_, NotP(ConstructorP u)) ->
-    rec_flow cx trace (u,t)
+  | (false, left, _) ->
+    rec_flow cx trace (left, result)
 
-  (* unknown predicate *)
-  | _ ->
-    prerr_flow cx trace "Unsatisfied predicate" l (PredicateT(p,t))
+and sentinel_prop_test key cx trace result = function
+  (** Evaluate a refinement predicate of the form
+
+      obj.key eq value
+
+      where eq is === or !==.
+
+      * key is key
+      * (sense, obj, value) are the sense of the test, obj and value as above,
+      respectively.
+
+      As with other predicate filters, the goal is to statically determine when
+      the predicate is definitely satisfied and when it is definitely
+      unsatisfied, and narrow the possible types of obj under those conditions,
+      while not narrowing in all other cases.
+
+      In this case, the predicate is definitely satisfied (respectively,
+      definitely unsatisfied) when the type of the key property in the type obj
+      can be statically verified as having (respectively, not having) value as
+      its only inhabitant.
+
+      When satisfied, type obj flows to the recipient type result (in other
+      words, we allow all such types in the refined type for obj).
+
+      Otherwise, nothing flows to type result (in other words, we don't allow
+      any such type in the refined type for obj).
+
+      Overall the filtering process is somewhat tricky to understand. Refer to
+      the predicate function and its callers to understand how the context is
+      set up so that filtering ultimately only depends on what flows to
+      result. **)
+  (* obj.key ===/!== value *)
+  | (sense, (ObjT (_, { props_tmap; _}) as obj), StrT (_, Some value)) ->
+      (match read_prop_opt cx props_tmap key with
+        | Some (SingletonT (_, v))
+        | Some (StrT (_, Some v)) when (value = v) != sense ->
+            (* provably unreachable, so prune *)
+            ()
+        | _ ->
+            (* not enough info to refine: either the property exists but is
+               something else that we cannot use as a refinement, or the
+               property doesn't exist at all *)
+            rec_flow cx trace (obj, result)
+      )
+
+  | (_, obj, _) -> (* not enough info to refine *)
+    rec_flow cx trace (obj, result)
 
 (***********************)
 (* bounds manipulation *)
@@ -4834,8 +4925,11 @@ let rec gc cx state = function
       gc cx state t1;
       gc cx state t2;
 
-  | EnumT (_, t) ->
+  | KeysT (_, t) ->
       gc cx state t
+
+  | SingletonT _
+      -> ()
 
   | TypeT (_, t) ->
       gc cx state t
@@ -4958,7 +5052,7 @@ let rec gc cx state = function
   | KeyT (_, t) ->
       gc cx state t
 
-  | HasT _ -> ()
+  | HasKeyT _ -> ()
 
   | ElemT (_, t1, t2) ->
       gc cx state t1;
@@ -5011,24 +5105,19 @@ and gc_typeparam cx state typeparam =
 
 and gc_pred cx state = function
 
-  | AndP (p1,p2) ->
-      gc_pred cx state p1;
-      gc_pred cx state p2
-
+  | AndP (p1,p2)
   | OrP (p1,p2) ->
       gc_pred cx state p1;
       gc_pred cx state p2
+
+  | LeftP (_, t)
+  | RightP (_, t) ->
+      gc cx state t
 
   | NotP (p) ->
       gc_pred cx state p
 
   | ExistsP -> ()
-
-  | InstanceofP t ->
-      gc cx state t
-
-  | ConstructorP t ->
-      gc cx state t
 
   | IsP _ -> ()
 

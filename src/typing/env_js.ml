@@ -319,10 +319,10 @@ let rec merge_env cx reason (ctx, ctx1, ctx2) changeset =
   | scope::ctx, scope1::ctx1, scope2::ctx2 ->
       (* merge scope, scope1, scope2 *)
       let not_found = SSet.fold (fun name not_found ->
-        match Scope.get name scope with
-        | Some { specific; general; def_loc; for_type } ->
-            let shape1 = Scope.get_unsafe name scope1 in
-            let shape2 = Scope.get_unsafe name scope2 in
+        match Scope.get name scope,
+          Scope.get name scope1, Scope.get name scope2 with
+        | Some { specific; general; def_loc; for_type },
+            Some shape1, Some shape2 ->
             let specific1 = shape1.specific in
             let specific2 = shape2.specific in
             let s, g =
@@ -342,7 +342,13 @@ let rec merge_env cx reason (ctx, ctx1, ctx2) changeset =
             let new_entry = Scope.create_entry ~for_type s g def_loc in
             Scope.add name new_entry scope;
             not_found
-        | None ->
+        | Some _, _, _ ->
+            (* Ideally, this case should be unreachable. However, there is
+               currently an issue where heap refinements leak into scope without
+               having been installed in scope1 / scope2: this is exposed at
+               least in switch statements. Tracked by #7534515.*)
+            not_found
+        | None, _, _ ->
             SSet.add name not_found
       ) changeset SSet.empty in
       (* look for the rest of changeset in outer scopes *)

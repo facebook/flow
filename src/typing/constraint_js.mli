@@ -60,7 +60,8 @@ module Type :
       | ShapeT of t
       | DiffT of t * t
 
-      | EnumT of reason * t
+      | KeysT of reason * t
+      | SingletonT of reason * string
 
       | TypeT of reason * t
 
@@ -106,7 +107,7 @@ module Type :
       | ConcreteT of t
 
       | KeyT of reason * t
-      | HasT of reason * string
+      | HasKeyT of reason * string
 
       | ElemT of reason * t * t
 
@@ -123,10 +124,14 @@ module Type :
         AndP of predicate * predicate
       | OrP of predicate * predicate
       | NotP of predicate
+      | LeftP of binary_test * t
+      | RightP of binary_test * t
       | ExistsP
-      | InstanceofP of t
-      | ConstructorP of t
       | IsP of string
+
+    and binary_test =
+        Instanceof
+      | SentinelProp of string
 
     and literal = string option
 

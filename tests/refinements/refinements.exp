@@ -215,6 +215,26 @@ switch.js:43:22,27: string
 This type is incompatible with
 switch.js:51:15,20: number
 
+tagged_union.js:20:12,28: call of method charAt
+Method cannot be called on possibly undefined value
+tagged_union.js:20:12,18: undefined
+
+tagged_union.js:34:30,36: string literal Bad
+Expected string literal Good, got Bad instead
+tagged_union.js:34:39,44: string literal Good
+
+tagged_union.js:35:9,13: string literal Maybe
+Expected string literal No, got Maybe instead
+tagged_union.js:35:16,19: string literal No
+
+tagged_union.js:40:6,10: property raw
+Property not found in
+tagged_union.js:27:15,46: object type
+
+tagged_union.js:40:6,10: string literal Maybe
+This type is incompatible with
+tagged_union.js:40:13,24: union type
+
 typeof.js:5:5,8: access of computed property/element
 Computed property/element cannot be accessed on
 typeof.js:3:17,20: boolean
@@ -307,4 +327,4 @@ void.js:74:45,50: undefined
 This type is incompatible with
 void.js:75:36,45: number
 
-Found 70 errors
+Found 75 errors

@@ -613,7 +613,7 @@ let rec convert cx map = Ast.Type.(function
 
   | loc, StringLiteral { StringLiteral.value; _ }  ->
       let reason = mk_reason "string literal type" loc in
-      mk_enum_type cx reason [value]
+      mk_singleton_string reason value
 
   (* TODO *)
   | loc, Generic { Generic.id = Generic.Identifier.Qualified (_,
@@ -695,10 +695,11 @@ let rec convert cx map = Ast.Type.(function
         )
 
       (* $Enum<T> is the set of keys of T *)
-      | "$Enum" ->
+      (** TODO: rename to $Keys **)
+      | "$Enum" | "$Keys" ->
         check_type_param_arity cx loc typeParameters 1 (fun () ->
           let t = convert cx map (List.hd typeParameters) in
-          EnumT (mk_reason "enum type" loc, t)
+          KeysT (mk_reason "key set" loc, t)
         )
 
       (* $Exports<'M'> is the type of the exports of module 'M' *)
@@ -929,11 +930,22 @@ and mk_type_annotation_ cx map reason = function
   | None -> mk_type_ cx map reason None
   | Some (loc, typeAnnotation) -> mk_type_ cx map reason (Some typeAnnotation)
 
+(* TODO: Replace this function with the following. *)
 and mk_enum_type cx reason keys =
   let map = List.fold_left (fun map key ->
     SMap.add key AnyT.t map
   ) SMap.empty keys in
-  EnumT (reason, Flow_js.mk_object_with_map_proto cx reason map (MixedT reason))
+  KeysT (reason, Flow_js.mk_object_with_map_proto cx reason map (MixedT reason))
+
+(* Simpler way to model a set of keys as the union of their singleton types. *)
+and mk_keys_type reason keys =
+  match keys with
+  | [key] -> mk_singleton_string reason key
+  | _ -> UnionT (reason, List.map (mk_singleton_string reason) keys)
+
+and mk_singleton_string reason key =
+  let reason = replace_reason (spf "string literal %s" key) reason in
+  SingletonT (reason, key)
 
 (************)
 (* Visitors *)
@@ -3858,6 +3870,7 @@ and mk_proptype cx = Ast.Expression.(function
       (match string_literals [] elements with
         | Some lits ->
             let reason = mk_reason "oneOf" vloc in
+            (* TODO: switch to using union of singletons, see mk_keys_type *)
             mk_enum_type cx reason lits
         | None -> AnyT.at vloc)
 
@@ -4233,6 +4246,22 @@ and predicate_of_condition cx e = Ast.(Expression.(
     | None -> empty_result (BoolT.at loc)
   in
 
+  (* inspect a sentinel property test *)
+  let sentinel_prop_test loc op e key value =
+    let refinement = match refinable_lvalue e with
+    | None, t -> None
+    | Some name, t ->
+        match op with
+        | Binary.StrictEqual | Binary.StrictNotEqual ->
+            let pred = LeftP (SentinelProp key, expression cx value) in
+            Some (name, t, pred, op = Binary.StrictEqual)
+        | _ -> None
+    in
+    match refinement with
+    | Some (name, t, p, sense) -> result (BoolT.at loc) name t p sense
+    | None -> empty_result (BoolT.at loc)
+  in
+
   (* inspect a typeof equality test *)
   let typeof_test sense arg typename =
     match refinable_lvalue arg with
@@ -4283,7 +4312,8 @@ and predicate_of_condition cx e = Ast.(Expression.(
   | _, Binary { Binary.operator = Binary.Instanceof; left; right } -> (
       match refinable_lvalue left with
       | Some name, t ->
-          result BoolT.t name t (InstanceofP (expression cx right)) true
+          let pred = LeftP (Instanceof, expression cx right) in
+          result BoolT.t name t pred true
       | None, t ->
           empty_result BoolT.t
     )
@@ -4373,6 +4403,28 @@ and predicate_of_condition cx e = Ast.(Expression.(
       right = _, Unary { Unary.operator = Unary.Typeof; argument; _ }
     } ->
       typeof_test false argument s
+
+  (* expr.name op string *)
+  | loc, Binary { Binary.operator;
+      left = _, Member {
+        Member._object;
+        property = Member.PropertyIdentifier (_,
+          { Identifier.name; _ });
+        _ };
+      right;
+    } ->
+      sentinel_prop_test loc operator _object name right
+
+  (* string op expr.name *)
+  | loc, Binary { Binary.operator;
+      left;
+      right = _, Member {
+        Member._object;
+        property = Member.PropertyIdentifier (_,
+          { Identifier.name; _ });
+        _ }
+    } ->
+      sentinel_prop_test loc operator _object name left
 
   (* Array.isArray(expr) *)
   | _, Call {
