@@ -1,0 +1,14 @@
+
+number.js:8:1,13: function call
+Error:
+number.js:8:12,12: number
+Expected number literal 1, got 2 instead
+number.js:3:30,30: number literal 1
+
+number.js:19:1,6: function call
+Error:
+number.js:19:5,5: number
+This type is incompatible with
+number.js:11:12,16: union type
+
+Found 2 errors

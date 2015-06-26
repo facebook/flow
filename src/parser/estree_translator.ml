@@ -825,6 +825,7 @@ end with type t = Impl.t) = struct
     | Typeof t -> typeof_type (loc, t)
     | Tuple t -> tuple_type (loc, t)
     | StringLiteral s -> string_literal_type (loc, s)
+    | NumberLiteral n -> number_literal_type (loc, n)
     | Exists -> exists_type loc
   )
 
@@ -949,6 +950,13 @@ end with type t = Impl.t) = struct
   and string_literal_type (loc, s) = Type.StringLiteral.(
     node "StringLiteralTypeAnnotation" loc [|
       "value", string s.value;
+      "raw", string s.raw;
+    |]
+  )
+
+  and number_literal_type (loc, s) = Type.NumberLiteral.(
+    node "NumberLiteralTypeAnnotation" loc [|
+      "value", number s.value;
       "raw", string s.raw;
     |]
   )

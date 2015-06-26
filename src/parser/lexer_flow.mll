@@ -765,6 +765,32 @@ and type_token env = parse
                          let _end, octal = string_quote env quote buf raw octal lexbuf in
                          env, T_STRING (Ast.Loc.btwn start _end, Buffer.contents buf, Buffer.contents raw, octal)
                        }
+
+  (**
+   * Number literals
+   *)
+
+  (* Numbers cannot be immediately followed by words *)
+  | binnumber ((letter | ['2'-'9']) alphanumeric* as w)
+                       { illegal_number env lexbuf w (T_NUMBER BINARY) }
+  | binnumber          { env, T_NUMBER BINARY }
+  | octnumber ((letter | ['8'-'9']) alphanumeric* as w)
+                       { illegal_number env lexbuf w (T_NUMBER OCTAL) }
+  | octnumber          { env, T_NUMBER OCTAL }
+  | legacyoctnumber ((letter | ['8'-'9']) alphanumeric* as w)
+                       { illegal_number env lexbuf w (T_NUMBER LEGACY_OCTAL) }
+  | legacyoctnumber    { env, T_NUMBER LEGACY_OCTAL }
+  | hexnumber (non_hex_letter alphanumeric* as w)
+                       { illegal_number env lexbuf w (T_NUMBER NORMAL) }
+  | hexnumber          { env, T_NUMBER NORMAL }
+  | scinumber (word as w)
+                       { illegal_number env lexbuf w (T_NUMBER NORMAL) }
+  | scinumber          { env, T_NUMBER NORMAL }
+  | (wholenumber | floatnumber) (word as w)
+                       { illegal_number env lexbuf w (T_NUMBER NORMAL) }
+  | wholenumber
+  | floatnumber        { env, T_NUMBER NORMAL }
+
   (* Keyword or Identifier *)
   (* TODO: Better support for things like @@iterator. At the moment I'm just
    * declaring it in the type lexer so that declare class and iterators can use

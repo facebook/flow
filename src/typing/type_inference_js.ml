@@ -310,7 +310,10 @@ let rec destructuring cx t f = Ast.Pattern.(function
       let reason = mk_reason "array pattern" loc in
       elements |> List.iteri (fun i -> function
         | Some (Element ((loc, _) as p)) ->
-            let i = NumT (mk_reason "number" loc, Some (string_of_int i)) in
+            let i = NumT (
+              mk_reason "number" loc,
+              Some (float i, string_of_int i)
+            ) in
             let tvar = Flow_js.mk_tvar cx reason in
             Flow_js.flow cx (t, GetElemT(reason,i,tvar));
             destructuring cx tvar f p
@@ -615,6 +618,10 @@ let rec convert cx map = Ast.Type.(function
   | loc, StringLiteral { StringLiteral.value; _ }  ->
       let reason = mk_reason "string literal type" loc in
       mk_singleton_string reason value
+
+  | loc, NumberLiteral { NumberLiteral.value; raw; _ }  ->
+      let reason = mk_reason "number literal type" loc in
+      mk_singleton_number reason value raw
 
   (* TODO *)
   | loc, Generic { Generic.id = Generic.Identifier.Qualified (_,
@@ -946,7 +953,11 @@ and mk_keys_type reason keys =
 
 and mk_singleton_string reason key =
   let reason = replace_reason (spf "string literal %s" key) reason in
-  SingletonT (reason, key)
+  SingletonStrT (reason, key)
+
+and mk_singleton_number reason num raw =
+  let reason = replace_reason (spf "number literal %.16g" num) reason in
+  SingletonNumT (reason, (num, raw))
 
 (************)
 (* Visitors *)
@@ -3366,7 +3377,7 @@ and literal cx loc lit = Ast.Literal.(match lit.value with
       UnionT (reason, [null; Flow_js.mk_tvar cx reason])
 
   | Number f ->
-      NumT (mk_reason "number" loc, Some lit.raw)
+      NumT (mk_reason "number" loc, Some (f, lit.raw))
 
   | RegExp rx ->
       Flow_js.get_builtin_type cx (mk_reason "regexp" loc) "RegExp"

@@ -1502,6 +1502,52 @@ module.exports = {
       ],
     }
   },
+  'Number Literal Types': {
+    'var a: 123': {
+      'body.0.declarations.0.id.typeAnnotation.typeAnnotation': {
+        'type': 'NumberLiteralTypeAnnotation',
+        'value': 123,
+        'raw': '123',
+      }
+    },
+    'var a: 123.0': {
+      'body.0.declarations.0.id.typeAnnotation.typeAnnotation': {
+        'type': 'NumberLiteralTypeAnnotation',
+        'value': 123,
+        'raw': '123.0',
+      }
+    },
+    'var a: 0x7B': {
+      'body.0.declarations.0.id.typeAnnotation.typeAnnotation': {
+        'type': 'NumberLiteralTypeAnnotation',
+        'value': 123,
+        'raw': '0x7B',
+      }
+    },
+    'var a: 0b1111011': {
+      'body.0.declarations.0.id.typeAnnotation.typeAnnotation': {
+        'type': 'NumberLiteralTypeAnnotation',
+        'value': 123,
+        'raw': '0b1111011',
+      }
+    },
+    'var a: 0o173': {
+      'body.0.declarations.0.id.typeAnnotation.typeAnnotation': {
+        'type': 'NumberLiteralTypeAnnotation',
+        'value': 123,
+        'raw': '0o173',
+      }
+    }
+  },
+  'Invalid Number Literal Types': {
+    'var a: 0173': {
+      'errors': [
+        {
+          'message': 'Octal literals are not allowed in strict mode.',
+        }
+      ],
+    }
+  },
   'Member Type': {
     'var a : A.B': {
       'body.0.declarations.0.id.typeAnnotation.typeAnnotation': {

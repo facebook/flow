@@ -1183,8 +1183,8 @@ let rec assert_ground ?(infer=false) cx skip ids = function
   | KeysT(reason,t) ->
       assert_ground cx skip ids t
 
-  | SingletonT _ ->
-      ()
+  | SingletonStrT _ -> ()
+  | SingletonNumT _ -> ()
 
   | ModuleT(reason, {exports_tmap; cjs_export}) ->
       iter_props cx exports_tmap (fun _ -> assert_ground ~infer:true cx skip ids);
@@ -2613,14 +2613,16 @@ let rec __flow cx (l, u) trace =
     | (NumT (reason_i, literal),
        ElemT(reason_op, ArrT(_, value, ts), t))
       ->
-      let value =
-        try
-          unsafe_opt literal
-          |> float_of_string
-          |> int_of_float
-          |> List.nth ts
-        with _ ->
-          value
+      let value = match literal with
+      | Some (float_value, _) ->
+          begin try
+            float_value
+            |> int_of_float
+            |> List.nth ts
+          with _ ->
+            value
+          end
+      | None -> value
       in
       (match t with
       | UpperBoundT tin -> rec_flow cx trace (tin, value)
@@ -2822,24 +2824,24 @@ let rec __flow cx (l, u) trace =
         it is possible to also represent singleton string types using KeysT (by
         taking the keyset of an object with a single property whose key is that
         string and whose value is ignored), we can model them more directly
-        using SingletonT. Specifically, SingletonT models a type annotation of
-        that looks like a string literal, which describes a singleton set
-        containing that string literal. Going further, other uses of KeysT where
-        the underlying object is created solely for the purpose of describing a
-        keyset can be modeled using unions of singleton strings.
+        using SingletonStrT. Specifically, SingletonStrT models a type
+        annotation that looks like a string literal, which describes a singleton
+        set containing that string literal. Going further, other uses of KeysT
+        where the underlying object is created solely for the purpose of
+        describing a keyset can be modeled using unions of singleton strings.
 
-        One may also legitimately wonder why SingletonT(_, key) cannot be always
-        replaced by StrT(_, Some key). The reason is that types of the latter
-        form (string literal types) are inferred to be the type of string
+        One may also legitimately wonder why SingletonStrT(_, key) cannot be
+        always replaced by StrT(_, Some key). The reason is that types of the
+        latter form (string literal types) are inferred to be the type of string
         literals appearing as values, and we don't want to prematurely narrow
         down the type of the location where such values may appear, since that
         would preclude other strings to be stored in that location. Thus, by
         necessity we allow all string types to flow to StrT (whereas only
-        exactly matching string literal types may flow to SingletonT).  **)
+        exactly matching string literal types may flow to SingletonStrT).  **)
 
     (* singletons and keys as upper bounds *)
 
-    | (StrT (reason_s, Some x), SingletonT (_, key)) ->
+    | (StrT (reason_s, Some x), SingletonStrT (_, key)) ->
         if x <> key then
           let msg = spf "Expected string literal %s, got %s instead" key x in
           prerr_flow cx trace msg l u
@@ -2849,12 +2851,12 @@ let rec __flow cx (l, u) trace =
       (* check that o has key x *)
       rec_flow cx trace (o, HasKeyT(reason_op,x))
 
-    | (StrT (_, None), (SingletonT _ | KeysT _)) ->
+    | (StrT (_, None), (SingletonStrT _ | KeysT _)) ->
       prerr_flow cx trace "Expected string literal" l u
 
     (* singletons and keys as lower bounds *)
 
-    | (SingletonT (reason, key), u) ->
+    | (SingletonStrT (reason, key), u) ->
       rec_flow cx trace (StrT(reason, Some key), u)
 
     | (KeysT (reason1, o1), _) ->
@@ -2900,6 +2902,20 @@ let rec __flow cx (l, u) trace =
         let t = StrT (reason, Some x) in
         rec_flow cx trace (t, key)
       )
+
+    (*********************)
+    (* number singletons *)
+    (*********************)
+
+    (** Similar to SingletonStrT, SingletonNumT models a type annotation that
+        looks like a single number literal. This contrasts with
+        `NumT(_, Some num)`, which starts out representing `num` but allows any
+        number, whereas `SingletonNumT` accepts only exactly that value. **)
+    | (NumT (reason_s, Some (x, _)), SingletonNumT (_, (y, _))) ->
+        (* this equality check is ok for now because we don't do arithmetic *)
+        if x <> y then
+          let msg = spf "Expected number literal %.16g, got %.16g instead" y x in
+          prerr_flow cx trace msg l u
 
     (*********************)
     (* functions statics *)
@@ -3061,8 +3077,8 @@ and flow_addition cx trace reason l r u = match (l, r) with
   | (_, (OpenT _ | UnionT _ | OptionalT _ | MaybeT _)) ->
     rec_flow cx trace (r, AdderT (reason, l, u))
 
-  | ((NumT _ | BoolT _ | NullT _ | VoidT _),
-     (NumT _ | BoolT _ | NullT _ | VoidT _)) ->
+  | ((NumT _ | SingletonNumT _ | BoolT _ | NullT _ | VoidT _),
+     (NumT _ | SingletonNumT _ | BoolT _ | NullT _ | VoidT _)) ->
     rec_flow cx trace (NumT.why reason, u)
 
   | (_, _) ->
@@ -3177,6 +3193,7 @@ and ground_subtype = function
 
 and numeric = function
   | NumT _ -> true
+  | SingletonNumT _ -> true
 
   | InstanceT (reason, _, _, _) ->
     desc_of_reason reason = "Date"
@@ -3443,7 +3460,7 @@ and subst cx ?(force=true) (map: Type.t SMap.t) t =
   | KeysT(reason, t) ->
     KeysT(reason, subst cx ~force map t)
 
-  | SingletonT _ -> t
+  | SingletonStrT _ -> t
 
   | ObjAssignT(reason, t1, t2, xs, resolve) ->
     ObjAssignT(reason, subst cx ~force map t1, subst cx ~force map t2, xs, resolve)
@@ -3707,14 +3724,14 @@ and filter_exists = function
   | VoidT r
   | BoolT (r, Some false)
   | StrT (r, Some "")
-  | NumT (r, Some "0") -> UndefT r
+  | NumT (r, Some (0., _)) -> UndefT r
 
   (* unknown things become truthy *)
   | MaybeT t -> t
   | OptionalT t -> filter_exists t
   | BoolT (r, None) -> BoolT (r, Some true)
   | StrT (r, None) -> StrT (r, Some "truthy") (* hmmmm *)
-  | NumT (r, None) -> NumT (r, Some "truthy") (* hmmmm *)
+  | NumT (r, None) -> NumT (r, Some (1., "truthy")) (* hmmmm *)
 
   (* truthy things pass through *)
   | t -> t
@@ -3725,7 +3742,7 @@ and filter_not_exists t = match t with
   | VoidT _
   | BoolT (_, Some false)
   | StrT (_, Some "")
-  | NumT (_, Some "0") -> t
+  | NumT (_, Some (0., _)) -> t
 
   (* truthy things get removed *)
   | BoolT (r, Some _)
@@ -3743,7 +3760,7 @@ and filter_not_exists t = match t with
     UnionT (reason, [NullT.why reason; VoidT.why reason])
   | BoolT (r, None) -> BoolT (r, Some false)
   | StrT (r, None) -> StrT (r, Some "")
-  | NumT (r, None) -> NumT (r, Some "0")
+  | NumT (r, None) -> NumT (r, Some (0., "0"))
 
   (* things that don't track truthiness pass through *)
   | t -> t
@@ -4141,7 +4158,7 @@ and sentinel_prop_test key cx trace result = function
   (* obj.key ===/!== value *)
   | (sense, (ObjT (_, { props_tmap; _}) as obj), StrT (_, Some value)) ->
       (match read_prop_opt cx props_tmap key with
-        | Some (SingletonT (_, v))
+        | Some (SingletonStrT (_, v))
         | Some (StrT (_, Some v)) when (value = v) != sense ->
             (* provably unreachable, so prune *)
             ()
@@ -4942,7 +4959,8 @@ let rec gc cx state = function
   | KeysT (_, t) ->
       gc cx state t
 
-  | SingletonT _
+  | SingletonStrT _
+  | SingletonNumT _
       -> ()
 
   | TypeT (_, t) ->

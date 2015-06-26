@@ -60,7 +60,7 @@ module Type = struct
 
   (* TODO: constant types *)
 
-  | NumT of reason * literal
+  | NumT of reason * number_literal option
   | StrT of reason * literal
   | BoolT of reason * bool option
   | UndefT of reason
@@ -129,7 +129,10 @@ module Type = struct
   (* collects the keys of an object *)
   | KeysT of reason * t
   (* singleton string, matches exactly a given string literal *)
-  | SingletonT of reason * string
+  | SingletonStrT of reason * string
+  (* matches exactly a given number literal, for some definition of "exactly"
+     when it comes to floats... *)
+  | SingletonNumT of reason * number_literal
 
   (* type aliases *)
   | TypeT of reason * t
@@ -249,6 +252,7 @@ module Type = struct
   | SentinelProp of string
 
   and literal = string option
+  and number_literal = (float * string)
 
   (* used by FunT and CallT *)
   and funtype = {
@@ -849,7 +853,8 @@ let string_of_ctor = function
   | ShapeT _ -> "ShapeT"
   | DiffT _ -> "DiffT"
   | KeysT _ -> "KeysT"
-  | SingletonT _ -> "SingletonT"
+  | SingletonStrT _ -> "SingletonStrT"
+  | SingletonNumT _ -> "SingletonNumT"
   | KeyT _ -> "KeyT"
   | HasKeyT _ -> "HasKeyT"
   | ElemT _ -> "ElemT"
@@ -983,9 +988,8 @@ let rec reason_of_t = function
       -> reason_of_t t
 
   | KeysT (reason, _)
-      ->
-      reason
-  | SingletonT (reason, _) -> reason
+  | SingletonStrT (reason, _)
+  | SingletonNumT (reason, _) -> reason
 
   | KeyT (reason, _) -> reason
   | HasKeyT (reason, _) -> reason
@@ -1137,7 +1141,8 @@ let rec mod_reason_of_t f = function
   | DiffT (t1, t2) -> DiffT (mod_reason_of_t f t1, t2)
 
   | KeysT (reason, t) -> KeysT (f reason, t)
-  | SingletonT (reason, t) -> SingletonT (f reason, t)
+  | SingletonStrT (reason, t) -> SingletonStrT (f reason, t)
+  | SingletonNumT (reason, t) -> SingletonNumT (f reason, t)
 
   | KeyT (reason, t) -> KeyT (f reason, t)
   | HasKeyT (reason, t) -> HasKeyT (f reason, t)
@@ -1392,11 +1397,6 @@ let string_of_param_t =
 
 module Json = Hh_json
 
-let json_of_literal l = Json.(match l with
-  | Some s -> ["literal", JString s]
-  | None -> []
-)
-
 let string_of_pred_ctor = function
   | AndP _ -> "AndP"
   | OrP _ -> "OrP"
@@ -1424,9 +1424,17 @@ let rec _json_of_t stack cx t = Json.(
       "node", json_of_node stack cx id
     ]
 
-  | NumT (_, lit)
+  | NumT (_, lit) ->
+    begin match lit with
+    | Some (_, raw) -> ["literal", JString raw]
+    | None -> []
+    end
+
   | StrT (_, lit) ->
-    json_of_literal lit
+    begin match lit with
+    | Some s -> ["literal", JString s]
+    | None -> []
+    end
 
   | BoolT (_, b) ->
     (match b with
@@ -1518,8 +1526,12 @@ let rec _json_of_t stack cx t = Json.(
       "type", _json_of_t stack cx t
     ]
 
-  | SingletonT (_, s) -> [
+  | SingletonStrT (_, s) -> [
       "literal", JString s
+    ]
+
+  | SingletonNumT (_, (_, raw)) -> [
+      "literal", JString raw
     ]
 
   | TypeT (_, t) -> [
@@ -1897,8 +1909,8 @@ and dump_t_ =
   (* we'll want to add more here *)
   let override stack cx t = match t with
     | OpenT (r, id) -> Some (dump_tvar stack cx r id)
-    | NumT (r, c) -> Some (match c with
-        | Some n -> spf "NumT(%s)" n
+    | NumT (r, lit) -> Some (match lit with
+        | Some (_, raw) -> spf "NumT(%s)" raw
         | None -> "NumT")
     | StrT (r, c) -> Some (match c with
         | Some s -> spf "StrT(%S)" s
@@ -2347,7 +2359,8 @@ class ['a] type_visitor = object(self)
 
   | KeysT (_, t) -> self#type_ cx acc t
 
-  | SingletonT (_, s) -> acc
+  | SingletonStrT (_, s) -> acc
+  | SingletonNumT _ -> acc
 
   | TypeT (_, t) -> self#type_ cx acc t
 

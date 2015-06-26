@@ -21,7 +21,7 @@ module Type :
     type t =
         OpenT of reason * ident
 
-      | NumT of reason * literal
+      | NumT of reason * number_literal option
       | StrT of reason * literal
       | BoolT of reason * bool option
       | UndefT of reason
@@ -61,7 +61,8 @@ module Type :
       | DiffT of t * t
 
       | KeysT of reason * t
-      | SingletonT of reason * string
+      | SingletonStrT of reason * string
+      | SingletonNumT of reason * number_literal
 
       | TypeT of reason * t
 
@@ -134,6 +135,7 @@ module Type :
       | SentinelProp of string
 
     and literal = string option
+    and number_literal = (float * string)
 
     and funtype = {
       this_t: t;

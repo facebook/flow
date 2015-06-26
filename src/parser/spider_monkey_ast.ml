@@ -189,6 +189,13 @@ and Type : sig
     }
   end
 
+  module NumberLiteral : sig
+    type t = {
+      value: float;
+      raw: string;
+    }
+  end
+
   type t = Loc.t * t'
   (* Yes, we could add a little complexity here to show that Any and Void
    * should never be declared nullable, but that check can happen later *)
@@ -208,6 +215,7 @@ and Type : sig
     | Typeof of t
     | Tuple of t list
     | StringLiteral of StringLiteral.t
+    | NumberLiteral of NumberLiteral.t
     | Exists
 
   (* Type.annotation is a concrete syntax node with a location that starts at

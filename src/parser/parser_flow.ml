@@ -328,6 +328,23 @@ end = struct
             value;
             raw;
           }))
+      | T_NUMBER number_type ->
+          let raw = Peek.value env in
+          Expect.token env (T_NUMBER number_type);
+          let value = match number_type with
+          | LEGACY_OCTAL ->
+            strict_error env Error.StrictOctalLiteral;
+            float (int_of_string ("0o"^raw))
+          | BINARY
+          | OCTAL ->
+            float (int_of_string raw)
+          | NORMAL ->
+            float_of_string raw
+          in
+          loc, Type.(NumberLiteral NumberLiteral.({
+            value;
+            raw;
+          }))
       | token ->
           match primitive token with
           | Some t ->
