@@ -1670,14 +1670,15 @@ end = struct
           }))
         in
 
+      (* declare_function now returns an AmbientFunctionDeclaration
+         instead of a VariableDeclaration *)
       let declare_function env start_loc =
         Expect.token env T_FUNCTION;
         let id = Parse.identifier env in
-        let start_sig_loc = Peek.loc env in
         let typeParameters = match Type.type_parameters env with
         | None -> []
         | Some (_, params) -> params in
-        let rest, params = Type.function_param_list env in
+        let params, defaults, rest = Declaration.function_params env in
         (* optional return type anno *)
         let returnType, end_loc = match Peek.token env with
           | T_COLON ->
@@ -1688,29 +1689,18 @@ end = struct
               let loc = Peek.loc env in
               (loc, Ast.Type.Any), loc
         in
-        let loc = Loc.btwn start_sig_loc end_loc in
-        let value = loc, Ast.Type.(Function {Function.
-          params;
-          returnType;
-          rest;
-          typeParameters;
-        }) in
-        let id =
-          Loc.btwn (fst id) end_loc,
-          Ast.Identifier.({(snd id) with typeAnnotation = Some value; })
-        in
         let end_loc = match Peek.semicolon_loc env with
         | None -> end_loc
         | Some end_loc -> end_loc in
         Eat.semicolon env;
         Loc.btwn start_loc end_loc,
-        Statement.(VariableDeclaration VariableDeclaration.({
-          kind = Var;
-          declarations = [
-            fst id, VariableDeclaration.Declarator.({
-              id = fst id, Pattern.Identifier id;
-              init = None;
-            })];
+        Statement.(AmbientFunctionDeclaration AmbientFunctionDeclaration.({
+          id;
+          params;
+          defaults;
+          rest;
+          returnType;
+          typeParameters;
         }))
       in
 

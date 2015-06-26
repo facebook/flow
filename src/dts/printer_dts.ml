@@ -568,6 +568,14 @@ and statement scope prefix fmt =
     fprintf fmt "@[<v>declare class %a {@;<0 2>@[<v>%a@]@,}@]"
       id_ name
       (list_ ~sep:";" enum_member) members
+
+  (* The following case handles function declaration *)
+  | _, AmbientFunctionDeclaration {AmbientFunctionDeclaration.
+      id; params; returnType; _ } ->
+    fprintf fmt "@[<hv>declare function %a(%a)%a;@]"
+      id_ id
+      (list ~sep:", " pattern) params
+      annot returnType
   | loc, _ -> failwith_location loc "This is not suppoerted yet"
 )
 

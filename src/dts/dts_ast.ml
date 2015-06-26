@@ -250,6 +250,16 @@ and Statement : sig
       typeParameters: Type.Param.t list;
     }
   end
+  module AmbientFunctionDeclaration : sig
+    type t = {
+      id: Identifier.t;
+      params: Pattern.t list;
+      defaults: Expression.t option list;
+      rest: Identifier.t option;
+      returnType: Type.t;
+      typeParameters: Type.Param.t list;
+    }
+  end
   module VariableDeclaration : sig
     module Declarator : sig
       type t = Loc.t * t'
@@ -419,6 +429,7 @@ and Statement : sig
     | Let of Let.t
     | Debugger
     | FunctionDeclaration of FunctionDeclaration.t
+    | AmbientFunctionDeclaration of AmbientFunctionDeclaration.t
     | VariableDeclaration of VariableDeclaration.t
     | ClassDeclaration of Class.t
     | AmbientClassDeclaration of AmbientClass.t
