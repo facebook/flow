@@ -17,6 +17,7 @@
    point inside a function (and when to narrow or widen their types). *)
 
 open Utils
+open Utils_js
 
 module Ast = Spider_monkey_ast
 
@@ -1549,8 +1550,10 @@ and statement cx = Ast.Statement.(
       (* if we're in an async function, convert the return
          expression's type T to Promise<T> *)
       let t = if Env_js.in_async_scope ()
-        then Flow_js.get_builtin_typeapp cx
-          (mk_reason "async return" loc) "Promise" [t]
+        then
+          let reason = mk_reason "async return" loc in
+          let promise = Env_js.get_var ~for_type:true cx "Promise" reason in
+          TypeAppT (promise, [t])
         else t
       in
       Flow_js.flow cx (t, ret);
@@ -2045,7 +2048,14 @@ and statement cx = Ast.Statement.(
     | _ -> false in
     let _, { Ast.Identifier.name = iname; _ } = id in
     let reason = mk_reason iname loc in
-    let typeparams, map = mk_type_param_declarations cx typeParameters in
+
+    (* TODO excise the Promise/PromisePolyfill special-case ASAP *)
+    let typeparams, map =
+      if (iname = "Promise" || iname = "PromisePolyfill") &&
+        List.length (extract_type_param_declarations typeParameters) = 1
+      then mk_type_param_declarations cx typeParameters ~polarities:[Positive]
+      else mk_type_param_declarations cx typeParameters in
+
     let sfmap, smmap, fmap, mmap = List.fold_left Ast.Type.Object.Property.(
       fun (sfmap_, smmap_, fmap_, mmap_)
         (loc, { key; value; static; _method; _ }) -> (* TODO: optional *)
@@ -4141,6 +4151,7 @@ and react_create_class cx loc class_props = Ast.Expression.(
   let itype = {
     class_id = id;
     type_args = SMap.empty;
+    arg_polarities = SMap.empty;
     fields_tmap = Flow_js.mk_propmap cx fmap;
     methods_tmap = Flow_js.mk_propmap cx mmap;
     mixins = !mixins <> [];
@@ -4853,6 +4864,10 @@ and mk_class cx loc reason_c = Ast.Class.(function { id=_; body; superClass;
   let typeparams, type_params_map =
     mk_type_param_declarations cx typeParameters in
 
+  let arg_polarities = List.fold_left (fun acc tp ->
+    SMap.add tp.name tp.polarity acc
+  ) SMap.empty typeparams in
+
   (* fields: { f: X }, methods_: { m<Y: X>(x: Y): X } *)
   let sfields, smethods_, fields, methods_ =
     mk_signature cx reason_c type_params_map superClass body
@@ -4908,6 +4923,7 @@ and mk_class cx loc reason_c = Ast.Class.(function { id=_; body; superClass;
     let static_instance = {
       class_id = 0;
       type_args = type_params_map |> SMap.map (Flow_js.subst cx map_);
+      arg_polarities;
       fields_tmap = Flow_js.mk_propmap cx sfields;
       methods_tmap = Flow_js.mk_propmap cx smethods;
       mixins = false;
@@ -4924,6 +4940,7 @@ and mk_class cx loc reason_c = Ast.Class.(function { id=_; body; superClass;
     let instance = {
       class_id = id;
       type_args = type_params_map |> SMap.map (Flow_js.subst cx map_);
+      arg_polarities;
       fields_tmap = Flow_js.mk_propmap cx fields;
       methods_tmap = Flow_js.mk_propmap cx methods;
       mixins = false;
@@ -4957,6 +4974,7 @@ and mk_class cx loc reason_c = Ast.Class.(function { id=_; body; superClass;
   let static_instance = {
     class_id = 0;
     type_args = type_params_map;
+    arg_polarities;
     fields_tmap = Flow_js.mk_propmap cx sfields;
     methods_tmap = Flow_js.mk_propmap cx smethods;
     mixins = false;
@@ -4972,6 +4990,7 @@ and mk_class cx loc reason_c = Ast.Class.(function { id=_; body; superClass;
   let instance = {
     class_id = id;
     type_args = type_params_map;
+    arg_polarities;
     fields_tmap = Flow_js.mk_propmap cx fields;
     methods_tmap = Flow_js.mk_propmap cx methods;
     mixins = false;
@@ -5010,6 +5029,11 @@ and mk_interface cx reason_i typeparams map (sfmap, smmap, fmap, mmap) extends s
 
   let static_reason = prefix_reason "statics of " reason_i in
 
+  let arg_polarities = map |> SMap.map (fun t -> match t with
+  | BoundT { polarity; _ } -> polarity
+  | _ -> assert_false (spf "Expected BoundT but found %s" (string_of_ctor t))
+  ) in
+
   Flow_js.generate_tests cx reason_i typeparams (fun map_ ->
     let super_reason = prefix_reason "super of " reason_i in
     let super = Flow_js.subst cx map_ super in
@@ -5023,6 +5047,7 @@ and mk_interface cx reason_i typeparams map (sfmap, smmap, fmap, mmap) extends s
     let static_instance = {
       class_id = 0;
       type_args = map |> SMap.map (Flow_js.subst cx map_);
+      arg_polarities;
       fields_tmap = Flow_js.mk_propmap cx sfmap;
       methods_tmap = Flow_js.mk_propmap cx smmap;
       mixins = false;
@@ -5032,6 +5057,7 @@ and mk_interface cx reason_i typeparams map (sfmap, smmap, fmap, mmap) extends s
     let instance = {
       class_id = id;
       type_args = map |> SMap.map (Flow_js.subst cx map_);
+      arg_polarities;
       fields_tmap = Flow_js.mk_propmap cx fmap;
       methods_tmap = Flow_js.mk_propmap cx mmap;
       mixins = false;
@@ -5043,6 +5069,7 @@ and mk_interface cx reason_i typeparams map (sfmap, smmap, fmap, mmap) extends s
   let static_instance = {
     class_id = 0;
     type_args = map;
+    arg_polarities;
     fields_tmap = Flow_js.mk_propmap cx sfmap;
     methods_tmap = Flow_js.mk_propmap cx smmap;
     mixins = false;
@@ -5057,6 +5084,7 @@ and mk_interface cx reason_i typeparams map (sfmap, smmap, fmap, mmap) extends s
   let instance = {
     class_id = id;
     type_args = map;
+    arg_polarities;
     fields_tmap = Flow_js.mk_propmap cx fmap;
     methods_tmap = Flow_js.mk_propmap cx mmap;
     mixins = false;
@@ -5150,10 +5178,9 @@ and mk_body id cx ~async param_types_map param_locs_map ret body this super =
   then (
     let loc = loc_of_t ret in
     let void_t = if async then
-      Flow_js.get_builtin_typeapp cx
-        (mk_reason "return Promise<void>" loc)
-        "Promise"
-        [VoidT.at loc]
+      let reason = mk_reason "return Promise<void>" loc in
+      let promise = Env_js.get_var ~for_type:true cx "Promise" reason in
+      TypeAppT (promise, [VoidT.at loc])
     else
       VoidT (mk_reason "return undefined" loc)
     in
@@ -5253,28 +5280,42 @@ and mk_params_ret cx map_ params (body_loc, ret_type_opt) =
    param_types_map,
    param_types_loc)
 
-(* take a list of types appearing in AST as type params,
-   do semantic checking and create tvars for them. *)
-and mk_type_params cx ?(map=SMap.empty) (types: Ast.Identifier.t list) =
-  let mk_type_param (typeparams, smap) (loc, t) =
+(* take a list of AST type param declarations,
+   do semantic checking and create types for them. *)
+(* note: polarities arg is temporary -
+   full support will put them in the typeParameter AST *)
+and mk_type_param_declarations cx ?(map=SMap.empty)
+  ?(polarities=[]) typeParameters
+  =
+  let add_type_param (typeparams, smap) (loc, t) polarity =
     let name = t.Ast.Identifier.name in
     let reason = mk_reason name loc in
     let bound = match t.Ast.Identifier.typeAnnotation with
       | None -> MixedT reason
       | Some (_, u) -> mk_type_ cx (SMap.union smap map) reason (Some u)
     in
-
-    let typeparam = { reason; name; bound } in
+    (* leaving in this deliberately cumbersome backdoor until
+       we have proper annotations, in case of emergency :) *)
+    let polarity =
+      if polarity != Neutral then polarity
+      else if str_starts_with name "$Covariant$" then Positive
+      else if str_starts_with name "$Contravariant$" then Negative
+      else Neutral
+    in
+    let typeparam = { reason; name; bound; polarity } in
     (typeparam :: typeparams,
      SMap.add name (BoundT typeparam) smap)
   in
+  let (types:Ast.Identifier.t list) =
+    extract_type_param_declarations typeParameters
+  in
+  let polarities = if polarities != [] then polarities
+    else make_list (fun () -> Neutral) (List.length types)
+  in
   let typeparams, smap =
-    List.fold_left mk_type_param ([], SMap.empty) types
+    List.fold_left2 add_type_param ([], SMap.empty) types polarities
   in
   List.rev typeparams, smap
-
-and mk_type_param_declarations cx ?(map=SMap.empty) typeParameters =
-  mk_type_params cx ~map (extract_type_param_declarations typeParameters)
 
 and extract_type_param_declarations = function
   | None -> []

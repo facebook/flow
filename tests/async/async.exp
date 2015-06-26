@@ -4,23 +4,18 @@ async.js: inconsistent use of library definitions
 This type is incompatible with
 [LIB] core.js:380:31,44: union type
 
-async.js:12:30,33: boolean
+async.js:12:10,10: number
 This type is incompatible with
-async.js:13:10,10: number
+async.js:11:30,33: boolean
 
-async.js:13:10,10: number
-This type is incompatible with
-async.js:12:30,33: boolean
-
-async.js:46:22,25: undefined
+async.js:45:22,25: undefined
 This type is incompatible with
 [LIB] core.js:350:1,377:1: Promise
 
-async2.js:10:11,21: await
-Error:
-async2.js:6:10,11: number
+async2.js: inconsistent use of library definitions
+[LIB] core.js:350:1,377:1: Promise
 This type is incompatible with
-async2.js:12:10,15: string
+[LIB] core.js:380:31,44: union type
 
 async2.js:29:21,24: undefined
 This type is incompatible with
@@ -33,10 +28,6 @@ This type is incompatible with
 async2.js:48:3,17: undefined
 This type is incompatible with
 async2.js:48:11,16: number
-
-async2.js:48:11,16: number
-This type is incompatible with
-async2.js:48:3,17: undefined
 
 async3.js:23:11,21: await
 Error:
@@ -56,4 +47,4 @@ await_not_in_async2.js:6:9,9: Unexpected number
 
 await_not_in_async3.js:6:9,9: Unexpected number
 
-Found 14 errors
+Found 12 errors

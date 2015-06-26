@@ -8,7 +8,6 @@ async function f0(): Promise<number> {
   return 1;
 }
 
-// TODO this gets a double error currently, locs swapped
 async function f1(): Promise<bool> {
   return 1;  // error, number != bool
 }

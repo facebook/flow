@@ -158,9 +158,14 @@ module Type :
       key: t;
       value: t;
     }
+    and polarity =
+      | Negative      (* contravariant *)
+      | Neutral       (* invariant *)
+      | Positive      (* covariant *)
     and insttype = {
       class_id: ident;
       type_args: t SMap.t;
+      arg_polarities: polarity SMap.t;
       fields_tmap: int;
       methods_tmap: int;
       mixins: bool;
@@ -174,6 +179,7 @@ module Type :
       reason: reason;
       name: string;
       bound: t;
+      polarity: polarity
     }
     and prototype = t
     and static = t

@@ -278,9 +278,15 @@ module Type = struct
     value: t;
   }
 
+  and polarity =
+    | Negative      (* contravariant *)
+    | Neutral       (* invariant *)
+    | Positive      (* covariant *)
+
   and insttype = {
     class_id: ident;
     type_args: t SMap.t;
+    arg_polarities: polarity SMap.t;
     fields_tmap: int;
     methods_tmap: int;
     mixins: bool;
@@ -310,6 +316,7 @@ module Type = struct
     reason: reason;
     name: string;
     bound: t;
+    polarity: polarity
   }
 
   and prototype = t
@@ -1060,7 +1067,8 @@ let rec mod_reason_of_t f = function
 
   | FunT (reason, s, p, ft) -> FunT (f reason, s, p, ft)
   | PolyT (plist, t) -> PolyT (plist, mod_reason_of_t f t)
-  | BoundT { reason; name; bound } -> BoundT { reason = f reason; name; bound }
+  | BoundT { reason; name; bound; polarity } ->
+    BoundT { reason = f reason; name; bound; polarity }
   | ExistsT reason -> ExistsT (f reason)
   | ObjT (reason, ot) -> ObjT (f reason, ot)
   | ArrT (reason, t, ts) -> ArrT (f reason, t, ts)
@@ -1688,11 +1696,19 @@ let rec _json_of_t stack cx t = Json.(
     ]
 ))
 
+and json_of_polarity polarity =
+  Json.JString (match polarity with
+  | Negative -> "Negative"
+  | Neutral -> "Neutral"
+  | Positive -> "Positive"
+)
+
 and json_of_typeparam stack cx tparam = Json.(
   JAssoc [
     "reason", json_of_reason tparam.reason;
     "name", JString tparam.name;
-    "bound", _json_of_t stack cx tparam.bound
+    "bound", _json_of_t stack cx tparam.bound;
+    "polarity", json_of_polarity tparam.polarity;
   ]
 )
 
@@ -1746,6 +1762,7 @@ and json_of_insttype stack cx insttype = Json.(
   JAssoc [
     "classId", JInt insttype.class_id;
     "typeArgs", json_of_tmap stack cx insttype.type_args;
+    "argPolarities", json_of_polarity_map insttype.arg_polarities;
     "fieldTypes",
       (let tmap = IMap.find_unsafe insttype.fields_tmap cx.property_maps in
        json_of_tmap stack cx tmap);
@@ -1755,6 +1772,13 @@ and json_of_insttype stack cx insttype = Json.(
     "mixins", JBool insttype.mixins;
     "structural", JBool insttype.structural;
   ]
+)
+
+and json_of_polarity_map pmap = Json.(
+  let lst = SMap.fold (fun name pol acc ->
+    JAssoc ["name", JString name; "polarity", json_of_polarity pol] :: acc
+  ) pmap [] in
+  JList (List.rev lst)
 )
 
 and json_of_tmap stack cx bindings = Json.(

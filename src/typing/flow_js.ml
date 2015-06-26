@@ -2176,7 +2176,7 @@ let rec __flow cx (l, u) trace =
 
       if instance.class_id = instance_super.class_id
       then
-        unify_map cx trace instance.type_args instance_super.type_args
+        flow_type_args cx trace instance instance_super
       else
         rec_flow cx trace (super, u)
 
@@ -3270,6 +3270,20 @@ and unify_map cx trace tmap1 tmap2 =
   tmap1 |> SMap.iter (fun x t1 ->
     let t2 = SMap.find_unsafe x tmap2 in
     rec_unify cx trace t1 t2
+  )
+
+and flow_type_args cx trace instance instance_super =
+  (* with this out of the way, we can assume polaritiy maps are the same *)
+  (if instance.class_id != instance_super.class_id then
+    assert_false "unexpected difference in class_ids in flow_type_args");
+  let { type_args = tmap1; arg_polarities = pmap; _ } = instance in
+  let { type_args = tmap2; _ } = instance_super in
+  tmap1 |> SMap.iter (fun x t1 ->
+    let t2 = SMap.find_unsafe x tmap2 in
+    match SMap.find_unsafe x pmap with
+    | Negative -> rec_flow cx trace (t2, t1)
+    | Neutral -> rec_unify cx trace t1 t2
+    | Positive -> rec_flow cx trace (t1, t2)
   )
 
 (* Indicate whether property checking should be strict for a given object and an
