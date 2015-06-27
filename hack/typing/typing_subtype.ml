@@ -212,10 +212,10 @@ and sub_type_with_uenv env (uenv_super, ty_super) (uenv_sub, ty_sub) =
    * a second time.
    * The converse goes for seen_tvars_sub and ty_sub.
    * TODO: Right now we only update seen_tvars when recursing into
-   * Tunresolveds, because we are encountering actual code that creates such
-   * recursive types. Should probably update seen_tvars regardless of which
-   * types we are recursing into, or prove that recursive types can't happen
-   * in those cases.
+   * Tunresolveds and Toptions, because we are encountering actual code that
+   * creates such recursive types. Should probably update seen_tvars regardless
+   * of which types we are recursing into, or prove that recursive types can't
+   * happen in those cases.
    * TODO: Figure out a nicer (type-enforced?) way to associate the right
    * uenv with the right type. *)
   match ety_super, ety_sub with
@@ -434,16 +434,29 @@ and sub_type_with_uenv env (uenv_super, ty_super) (uenv_sub, ty_sub) =
       sub_type env ty_super (reason, Tarray (Some int_type, Some elt_ty))
   | _, (_, Tany) -> env
   | (_, Tany), _ -> fst (Unify.unify env ty_super ty_sub)
+    (* recording seen_tvars for Toption variants to avoid infinte recursion
+       in case of type variable X = ?X *)
   | (_, Toption ty_super), _ when uenv_super.TUEnv.non_null ->
+      let uenv_super = {uenv_super with TUEnv.seen_tvars = seen_tvars_super} in
       sub_type_with_uenv env (uenv_super, ty_super) (uenv_sub, ty_sub)
   | _, (_, Toption ty_sub) when uenv_sub.TUEnv.non_null ->
+      let uenv_sub = {uenv_sub with TUEnv.seen_tvars = seen_tvars_sub} in
       sub_type_with_uenv env (uenv_super, ty_super) (uenv_sub, ty_sub)
   | (_, Toption ty_super), (_, Toption ty_sub) ->
-      let uenv_super = { uenv_super with TUEnv.non_null = true } in
-      let uenv_sub = { uenv_sub with TUEnv.non_null = true } in
+      let uenv_super = {
+        TUEnv.non_null = true;
+        TUEnv.seen_tvars = seen_tvars_super
+      } in
+      let uenv_sub = {
+        TUEnv.non_null = true;
+        TUEnv.seen_tvars = seen_tvars_sub
+      } in
       sub_type_with_uenv env (uenv_super, ty_super) (uenv_sub, ty_sub)
   | (_, Toption ty_super), _ ->
-      let uenv_super = { uenv_super with TUEnv.non_null = true } in
+      let uenv_super = {
+        TUEnv.non_null = true;
+        TUEnv.seen_tvars = seen_tvars_super
+      } in
       sub_type_with_uenv env (uenv_super, ty_super) (uenv_sub, ty_sub)
   | (_, Ttuple tyl_super), (_, Ttuple tyl_sub)
     when List.length tyl_super = List.length tyl_sub ->
