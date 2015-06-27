@@ -8,6 +8,6 @@
  *
  *)
 
-val main : ClientStop.env -> unit
+val main : ClientStop.env -> Exit_status.t
 
 val kill_server : Path.t -> unit

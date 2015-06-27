@@ -25,7 +25,9 @@ end
 
 module HackStopCommand = ClientStop.StopCommand (HackConfig)
 
-let main = HackStopCommand.kill_server
+let main env =
+  HackStopCommand.kill_server env;
+  Exit_status.Ok
 
 let kill_server root =
   HackStopCommand.kill_server { ClientStop.root }

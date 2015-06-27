@@ -33,7 +33,7 @@ let build_kind_of build_opts =
 
 let handle_response env ic =
   let finished = ref false in
-  let exit_code = ref 0 in
+  let exit_code = ref Exit_status.Ok in
   HackEventLogger.client_begin_work (ClientLogCommand.LCBuild
     (env.root, build_kind_of env.build_opts));
   try
@@ -41,19 +41,18 @@ let handle_response env ic =
       let line:ServerBuild.build_progress = Marshal.from_channel ic in
       match line with
       | ServerBuild.BUILD_PROGRESS s -> print_endline s
-      | ServerBuild.BUILD_ERROR s -> exit_code := 2; print_endline s
+      | ServerBuild.BUILD_ERROR s ->
+          exit_code := Exit_status.Build_error; print_endline s
       | ServerBuild.BUILD_FINISHED -> finished := true
-    done
+    done;
+    Exit_status.Ok
   with
   | End_of_file ->
     if not !finished then begin
       Printf.fprintf stderr ("Build unexpectedly terminated! "^^
         "You may need to do `hh_client restart`.\n");
-      exit 1
-    end;
-    if !exit_code = 0
-    then ()
-    else exit (!exit_code)
+      Exit_status.Build_terminated
+    end else !exit_code
   | Failure _ as e ->
     (* We are seeing Failure "input value: bad object" which can
      * realistically only happen from Marshal.from_channel ic.

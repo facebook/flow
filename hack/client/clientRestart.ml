@@ -13,4 +13,5 @@ let main env =
   then HackClientStop.kill_server env.ClientStart.root
   else Printf.eprintf "Warning: no server to restart for %s\n%!"
     (Path.to_string env.ClientStart.root);
-  ClientStart.start_server env
+  ClientStart.start_server env;
+  Exit_status.Ok

@@ -29,7 +29,7 @@ let start_server env =
     (if env.no_load then "--no-load" else "")
     (Unix.getpid ())
   in
-  Printf.fprintf stderr "Server launched with the following command:\n\t%s\n%!"
+  Printf.eprintf "Server launched with the following command:\n\t%s\n%!"
     hh_server;
 
   (* Start up the hh_server, and wait on SIGUSR1, which is sent to us at various
@@ -74,11 +74,13 @@ let should_start env =
 
 let main env =
   if should_start env
-  then start_server env
-  else begin
+  then begin
+    start_server env;
+    Exit_status.Ok
+  end else begin
     Printf.eprintf
       "Error: Server already exists for %s\n\
       Use hh_client restart if you want to kill it and start a new one\n%!"
       (Path.to_string env.root);
-    exit 77
+    Exit_status.Server_already_exists
   end
