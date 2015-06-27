@@ -48,13 +48,16 @@ let () =
   let command = ClientArgs.parse_args () in
   let log_cmd = ClientLogCommandUtils.log_command_of_command command in
   HackEventLogger.client_startup log_cmd;
-  let exit_status = match command with
-    | ClientCommand.CCheck check_env -> ClientCheck.main check_env
-    | ClientCommand.CStart env -> ClientStart.main env
-    | ClientCommand.CStop env -> HackClientStop.main env
-    | ClientCommand.CRestart env -> ClientRestart.main env
-    | ClientCommand.CBuild env -> ClientBuild.main env
-    | ClientCommand.CProlog env -> ClientProlog.main env
+  let exit_status =
+    try
+      match command with
+        | ClientCommand.CCheck check_env -> ClientCheck.main check_env
+        | ClientCommand.CStart env -> ClientStart.main env
+        | ClientCommand.CStop env -> HackClientStop.main env
+        | ClientCommand.CRestart env -> ClientRestart.main env
+        | ClientCommand.CBuild env -> ClientBuild.main env
+        | ClientCommand.CProlog env -> ClientProlog.main env
+    with Exit_status.Exit_with es -> es
   in
   HackEventLogger.client_finish log_cmd (Exit_status.to_string exit_status);
   Exit_status.exit exit_status

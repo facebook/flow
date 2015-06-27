@@ -8,7 +8,7 @@
  *
  *)
 
-open ClientConnectSimple
+module CCS = ClientConnectSimple
 
 type env = {
   root : Path.t;
@@ -23,7 +23,7 @@ let rec connect env retries =
   match retries with
   | Some n when n < 0 ->
       Printf.eprintf "\nError: Ran out of retries, giving up!\n";
-      exit 1
+      raise Exit_status.(Exit_with Out_of_retries)
   | Some _
   | None -> ();
   let has_timed_out = match env.expiry with
@@ -32,13 +32,13 @@ let rec connect env retries =
   in
   if has_timed_out then begin
     Printf.eprintf "\nError: hh_client hit timeout, giving up!\n%!";
-    exit 7
+    raise Exit_status.(Exit_with Out_of_time)
   end;
-  let conn = connect_once env.root in
+  let conn = CCS.connect_once env.root in
   if Tty.spinner_used () then Tty.print_clear_line stderr;
   match conn with
   | Result.Ok (ic, oc) -> (ic, oc)
-  | Result.Error Server_missing ->
+  | Result.Error CCS.Server_missing ->
       if env.autostart then begin
         ClientStart.start_server { ClientStart.
           root = env.root;
@@ -51,13 +51,13 @@ let rec connect env retries =
           "Error: no hh_server running. Either start hh_server"^^
           " yourself or run hh_client without --autostart-server false\n%!"
         end;
-        exit 6
+        raise Exit_status.(Exit_with No_server_running)
       end
-  | Result.Error Server_busy ->
+  | Result.Error CCS.Server_busy ->
       Printf.eprintf "hh_server is busy, retrying... %s%!" (Tty.spinner());
       Unix.sleep 1;
       connect env (Option.map retries (fun x -> x - 1))
-  | Result.Error Build_id_mismatch ->
+  | Result.Error CCS.Build_id_mismatch ->
       Printf.eprintf begin
         "hh_server's version doesn't match the client's, "^^
         "so it has exited.\n%!"
@@ -70,8 +70,8 @@ let rec connect env retries =
          * will actually start the server -- we need to make sure that happens.
          *)
         connect env retries
-      end else exit 6
-  | Result.Error Server_initializing ->
+      end else raise Exit_status.(Exit_with No_server_running)
+  | Result.Error CCS.Server_initializing ->
       Printf.eprintf begin
         "hh_server still initializing. This can take some time.%!"
       end;
@@ -82,7 +82,7 @@ let rec connect env retries =
         connect env retries
       end else begin
         Printf.eprintf " Not retrying since --retry-if-init is false.\n%!";
-        exit 1
+        raise Exit_status.(Exit_with Server_initializing)
       end
 
 let connect env = connect env env.retries
