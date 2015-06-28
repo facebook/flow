@@ -98,14 +98,14 @@ let mk_objecttype ?(flags=default_flags) dict map proto = {
 
 (**************************************************************)
 
-(* for now, we do speculative matching by setting this global.
-   it's set to true when trying the arms of intersection or
+(* For now, we do speculative matching by incrementing this global.
+   It's incremented when trying the arms of intersection or
    union types.
-   when it's true, the error-logging function throws instead
+   When it's non-zero, the error-logging function throws instead
    of logging, and the speculative harness catches.
    TODO
  *)
-let throw_on_error = ref false
+let throw_on_error = ref 0
 
 (* we keep a stack of reasons representing the operations
    taking place when flows are performed. the top op reason
@@ -199,7 +199,7 @@ let silent_warnings = false
 exception FlowError of (reason * string) list
 
 let add_output cx level ?(trace_reasons=[]) message_list =
-  if !throw_on_error
+  if !throw_on_error > 0
   then (
     raise (FlowError message_list)
   ) else (
@@ -3569,16 +3569,16 @@ and speculative_flow_error cx trace l u =
   (* save the ops stack, since throws from within __flow will screw it up *)
   let ops = Ops.get () in
   let typeapp_stack = TypeAppExpansion.get () in
-  throw_on_error := true;
+  throw_on_error := !throw_on_error + 1;
   let result =
     try rec_flow cx trace (l, u); false
     with
     | FlowError msgs -> true
     | exn ->
-        throw_on_error := false;
+        throw_on_error := 0;
         raise exn
   in
-  throw_on_error := false;
+  throw_on_error := !throw_on_error - 1;
   TypeAppExpansion.set typeapp_stack;
   (* restore ops stack *)
   Ops.set ops;

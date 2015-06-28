@@ -19,3 +19,11 @@ function corge(b) {
     var x = b ? "" : 0;
     new F().foo(x);
 }
+
+var ok: ('foo' | 'bar') | 'baz' = 'baz';
+
+type FooBar = 'foo' | 'bar';
+type Baz = 'baz';
+type FooBarBaz = FooBar | Baz;
+
+var bad: FooBarBaz = 'baz';
