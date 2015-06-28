@@ -20,10 +20,10 @@ function corge(b) {
     new F().foo(x);
 }
 
-var ok: ('foo' | 'bar') | 'baz' = 'baz';
+var nested1: ('foo' | 'bar') | 'baz' = 'baz';
 
 type FooBar = 'foo' | 'bar';
 type Baz = 'baz';
 type FooBarBaz = FooBar | Baz;
 
-var bad: FooBarBaz = 'baz';
+var nested2: FooBarBaz = 'baz';
