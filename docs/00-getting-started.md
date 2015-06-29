@@ -11,8 +11,8 @@ next: five-simple-examples.html
 
 We provide pre-built binaries for Flow, depending on your operating system:
 
-  * Mac OS X: https://facebook.github.io/flow/downloads/flow-osx-latest.zip
-  * Linux (64 bit): https://facebook.github.io/flow/downloads/flow-linux64-latest.zip
+  * Mac OS X: [https://facebook.github.io/flow/downloads/flow-osx-latest.zip](https://facebook.github.io/flow/downloads/flow-osx-latest.zip)
+  * Linux (64 bit): [https://facebook.github.io/flow/downloads/flow-linux64-latest.zip](https://facebook.github.io/flow/downloads/flow-linux64-latest.zip)
 
 Flow is packaged as a zip file. To install, simply unzip it:
 
