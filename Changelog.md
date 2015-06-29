@@ -2,15 +2,24 @@
 
 Likely to cause new Flow errors:
 
-- Restricted addition to only allow strings and numbers, and no longer implicitly cast objects, booleans, null or undefined. Use `String(x)` to explicitly cast these values.
+- Restricted `+` and `+=` to only allow strings and numbers, and no longer implicitly cast objects, booleans, null or undefined. Use `String(x)` to explicitly cast these values.
 - Fixed a few bugs where types shared between modules may have lost precision or weren't enforced.
 
 Misc:
 
-- Fixed passing `undefined` to optional parameters
-- Added new `import typeof` feature that allows you to import the type of a *value* export from another module. It is sugar for: `import MyThing_tmp from "MyModule"; type MyThing = typeof MyThing_tmp;` (except it removes the need for the intermediate `MyThing_tmp` variable)
+- Added `import typeof` feature that allows you to import the type of a *value* export from another module. It is sugar for: `import MyThing_tmp from "MyModule"; type MyThing = typeof MyThing_tmp;` (except it removes the need for the intermediate `MyThing_tmp` variable)
+- Added `flow ast` command to print a serialized JSON (ESTree)[https://github.com/estree/estree] AST. (Note that this AST does not include types, just syntactic structure for now)
 - Added support for class expressions
-- It is now possible to use `export type` and `module.exports =` simultaneously in the same module
+- Added support for following symlinks
+- Added support for number-literal and boolean-literal annotations. (useful for things like enum types and refinements based on tests of equivalence between two variables)
+- Added support for ES6 binary and octal integer literals
+- Added support for `export type` within a CommonJS module that also uses the `module.exports = ...` pattern
+- Added support for refining some union types down to their disjoint members
+- Added support for covariant Promise type parameters
+- Added improved support for understanding ES5-style imperative class definitions (i.e. via functions + prototypes)
+- Fixed passing `undefined` to optional parameters
+- Fixed return-type tracking for tagged template usage
+- Fixed an issue where library parse errors would cause the flow server to continuously restart upon initialization without giving an error
 
 ###v0.12.0
 
