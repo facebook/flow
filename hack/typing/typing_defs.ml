@@ -12,6 +12,7 @@
 open Utils
 
 module Reason = Typing_reason
+module SN = Naming_special_names
 
 type visibility =
   | Vpublic
@@ -37,6 +38,18 @@ and _ ty_ =
 
   (* Either an object type or a type alias, ty list are the arguments *)
   | Tapply : Nast.sid * decl ty list -> decl ty_
+
+  (* The type of a generic inside a function using that generic, with an
+   * optional "as" or "super" constraint. For example:
+   *
+   * function f<T as int>(T $x) {
+   *   // ...
+   * }
+   *
+   * The type of $x inside f() is
+   * Tgeneric("T", Some(Constraint_as, Tprim Tint))
+   *)
+  | Tgeneric : string * (Ast.constraint_kind * decl ty) option -> decl ty_
 
   (*========== Following Types Exist in Both Phases ==========*)
   (* "Any" is the type of a variable with a missing annotation, and "mixed" is
@@ -71,18 +84,6 @@ and _ ty_ =
    * Tarray (None, Some ty)      => [invalid]
    *)
   | Tarray : 'phase ty option * 'phase ty option -> 'phase ty_
-
-  (* The type of a generic inside a function using that generic, with an
-   * optional "as" or "super" constraint. For example:
-   *
-   * function f<T as int>(T $x) {
-   *   // ...
-   * }
-   *
-   * The type of $x inside f() is
-   * Tgeneric("T", Some(Constraint_as, Tprim Tint))
-   *)
-  | Tgeneric : string * (Ast.constraint_kind * 'phase ty) option -> 'phase ty_
 
   (* Nullable, called "option" in the ML parlance. *)
   | Toption : 'phase ty -> 'phase ty_
@@ -151,8 +152,20 @@ and _ ty_ =
    * Tabstract ((pos, "my_type"), [], Some (Tprim Tint))
    *
    * Which means that my_type is abstract, but is subtype of int as well.
+   *
+   * We also create abstract types for generic parameters of a function, i.e.
+   *
+   *  function foo<T>(T $x): void {
+   *    // Body
+   *  }
+   *
+   *  The type 'T' will be represented as an abstract type when type checking
+   *  the body of 'foo'.
+   *
+   *  Finally abstract types are also derived from the 'this' type and
+   *  accessing type constants on it, resulting in a dependent type.
    *)
-  | Tabstract : Nast.sid * locl ty list * locl ty option -> locl ty_
+  | Tabstract : abstract_kind * locl ty option -> locl ty_
 
   (* An anonymous function, including the fun arity, and the identifier to
    * type the body of the function. (The actual closure is stored in
@@ -220,6 +233,54 @@ and _ ty_ =
 
   (* An instance of a class or interface, ty list are the arguments *)
   | Tclass : Nast.sid * locl ty list -> locl ty_
+
+(* An abstract type derived from either a newtype, a type parameter, or some
+ * dependent type
+ *)
+and abstract_kind =
+  | AKnewtype of string * locl ty list
+  | AKgeneric of string * locl ty option
+  | AKdependent of dependent_type
+
+(* A dependent type consists of a base kind which indicates what the type is
+ * dependent on. It is either dependent on:
+ *  - The type 'this'
+ *  - The class context (what 'static' is resolved to in a class)
+ *  - A class
+ *  - An expression
+ *
+ * Dependent types also have a path component (derived from accessing a type
+ * constant). Thus the dependent type (`expr 0, ['A', 'B', 'C']) roughly means
+ * "The type resulting from accessing the type constant A then the type constant
+ * B and then the type constant C on the expression reference by 0"
+ *)
+and dependent_type =
+  (* Type that is the subtype of the late bound type within a class. *)
+  [ `this
+  (* The late bound type within a class. It is the type of 'new static()' and
+   * '$this'. This is different than the 'this' type. The 'this' type isn't
+   * quite strong enough in some cases. It means you are a subtype of the late
+   * bound class, but there are instances where you need the exact type.
+   * We may not need both since the only way to make something of type 'this'
+   * that is not 'static' is with 'instanceof static'.
+   *)
+  | `static
+  (* A class name, new type, or generic, i.e.
+   *
+   * abstract class C { abstract const type T }
+   *
+   * The type C::T is (`cls '\C', ['T'])
+   *)
+  | `cls of string
+  (* A reference to some expression. For example:
+   *
+   *  $x->foo()
+   *
+   *  The expression $x would have a reference Ident.t
+   *  The expression $x->foo() would have a different one
+   *)
+  | `expr of Ident.t
+  ] * string list
 
 and 'phase taccess_type = 'phase ty * Nast.sid list
 
@@ -336,6 +397,20 @@ let this = Ident.make "$this"
 
 let arity_min ft_arity : int = match ft_arity with
   | Fstandard (min, _) | Fvariadic (min, _) | Fellipsis min -> min
+
+module AbstractKind = struct
+  let to_string = function
+    | AKnewtype (name, _) -> name
+    | AKgeneric (name, _) -> name
+    | AKdependent (dt, ids) ->
+       let dt =
+         match dt with
+         | `this -> SN.Typehints.this
+         | `static -> "<"^SN.Classes.cStatic^">"
+         | `cls c -> c
+         | `expr i -> "<expr#"^string_of_int i^">" in
+       String.concat "::" (dt::ids)
+end
 
 (*****************************************************************************)
 (* Accumulate method calls mode *)

@@ -72,7 +72,7 @@ let expand_typedef_ ?force_expand:(force_expand=false) ety_env env r x argl =
                       Phase.localize ~ety_env env tcstr in
                     env, Some tcstr
                in
-               env, (r, Tabstract ((pos, x), argl, tcstr))
+               env, (r, Tabstract (AKnewtype (x, argl), tcstr))
              end
          in
          if Naming_special_names.Classes.is_format_string x
@@ -93,7 +93,7 @@ let rec force_expand_typedef:
      let env, (ety_env, ty) =
        expand_typedef_ ~force_expand:true ety_env env r x argl in
      force_expand_typedef ~phase:Phase.locl ~ety_env env ty
-  | r, Tabstract ((_, x), argl, _) when Typing_env.is_typedef x ->
+  | r, Tabstract (AKnewtype (x, argl), _) ->
      let env, (ety_env, ty) =
        expand_typedef_ ~force_expand:true ety_env env r x argl in
      force_expand_typedef ~phase ~ety_env env ty

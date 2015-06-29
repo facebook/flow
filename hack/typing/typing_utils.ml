@@ -37,7 +37,7 @@ let (sub_type_ref: sub_type ref) = ref not_implemented
 let sub_type x = !sub_type_ref x
 
 (* Convenience function for creating `this` types *)
-let this_of ty = Tgeneric (SN.Typehints.this, Some (Ast.Constraint_as, ty))
+let this_of ty = Tabstract (AKdependent (`this, []), Some ty)
 
 (*****************************************************************************)
 (* Returns true if a type is optional *)
@@ -197,8 +197,8 @@ let is_array_as_tuple env ty =
       | _, Tunresolved _ -> true
       | _ -> false
       )
-  | _, (Tany | Tmixed | Tarray (_, _) | Tprim _ | Tgeneric (_, _) | Toption _
-    | Tvar _ | Tabstract (_, _, _) | Tclass (_, _) | Ttuple _ | Tanon (_, _)
+  | _, (Tany | Tmixed | Tarray (_, _) | Tprim _ | Toption _
+    | Tvar _ | Tabstract (_, _) | Tclass (_, _) | Ttuple _ | Tanon (_, _)
     | Tfun _ | Tunresolved _ | Tobject | Tshape _ | Taccess (_, _)) -> false
 
 
@@ -263,55 +263,3 @@ end = struct
     end
   let check ty = visitor#on_type false ty
 end
-
-(*****************************************************************************)
-(* A type access "this::T" is translated to "<this>::T" during the
- * naming phase. While typing a body, "<this>" is a type hole that needs to
- * be filled with a final concrete type. Resolution is specified in typing.ml,
- * here is a high level break down:
- *
- * 1) When a class member "bar" is accessed via "[CID]->bar" or "[CID]::bar"
- * we resolves "<this>" in the type of "bar" to "<[CID]>"
- *
- * 2) When typing a method, we resolve "<this>" in the return type to
- * "this"
- *
- * 3) When typing a method, we resolve "<this>" in parameters of the
- * function to "<static>" in static methods or "<$this>" in non-static
- * methods
- *
- * More specific details are explained inline
- *)
-(*****************************************************************************)
-let expr_dependent_ty env cid cid_ty =
-  (* we use <.*> to indicate an expression dependent type *)
-  let fill_name n = "<"^n^">" in
-  let pos = Reason.to_pos (fst cid_ty) in
-  let tag =
-    match cid with
-    | N.CIparent | N.CIself | N.CI _ ->
-        None
-    (* For (almost) all expressions we generate a new identifier. In the future,
-     * we might be able to do some local analysis to determine if two given
-     * expressions refer to the same Late Static Bound Type, but for now we do
-     * this since it is easy and sound.
-     *)
-    | N.CIvar (p, x) when x <> N.This ->
-        let name = "expr#"^string_of_int(Ident.tmp()) in
-        Some (p, fill_name name)
-    | N.CIvar (p, N.This) when cid = N.CIstatic && not (Env.is_static env) ->
-        Some (p, fill_name SN.SpecialIdents.this)
-    | _ ->
-        (* In a non-static context, <static>::T should be compatible with
-         * <$this>::T. This is because $this, and static refer to the same
-         * late static bound type.
-         *)
-        let name =
-          if cid = N.CIstatic && not (Env.is_static env)
-          then SN.SpecialIdents.this
-          else N.class_id_to_str cid in
-        Some (pos, fill_name name) in
-  match tag with
-  | None -> cid_ty
-  | Some (p, _ as tag) ->
-      Reason.Rwitness p, Tabstract (tag, [], Some cid_ty)

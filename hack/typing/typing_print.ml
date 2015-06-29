@@ -52,10 +52,9 @@ module ErrorString = struct
     | Tvar _             -> "some value"
     | Tanon _    -> "a function"
     | Tfun _     -> "a function"
-    | Tgeneric (x, y)    -> generic (x, y)
+    | Tgeneric (x, _)    -> "a value of generic type "^x
+    | Tabstract (ak, cstr) -> abstract ak cstr
     | Tclass ((_, x), _) ->
-       "an object of type "^(strip_ns x)
-    | Tabstract ((_, x), _, _) ->
        "an object of type "^(strip_ns x)
     | Tapply ((_, x), _) -> "an object of type "^(strip_ns x)
     | Tobject            -> "an object"
@@ -70,25 +69,21 @@ module ErrorString = struct
     | Some _, Some _ -> "an array (used like a hashtable)"
     | _              -> assert false
 
-  and generic: type a. _ * (_ * a ty) option -> _ = function
-    (* special generic for the 'this' type *)
-    | "this", Some (Ast.Constraint_as, x) ->
-        "the type 'this'\n  that is compatible with "^type_ (snd x)
-    (* expression dependent types are generics starting with '<SOME_ID>' *)
-    | s, Some (_, x) when String.contains s '<' ->
-        "the expression dependent type "^s^"\n  that is compatible with "^type_ (snd x)
-    (* abstract type constants are generic types containing a '::', i.e. 'C::T' *)
-    | s, x when String.contains s ':' ->
-        let base = "the abstract type constant " in
-        let sub =
-          match x with
-          | None -> ""
-          | Some (_, x) -> "\n  that is compatible with "^type_ (snd x)
-        in
-        base^s^sub
-    (* standard, user land generics *)
-    | s, _ -> "a value of generic type "^s
-
+  and abstract ak cstr =
+    let x = strip_ns @@ AbstractKind.to_string ak in
+    let base, cstr =
+      match ak with
+      | AKdependent (`cls _, []) | AKnewtype (_, _) ->
+          "an object of type "^x, None
+      | AKgeneric (_, _) -> "a value of generic type "^x, None
+      | AKdependent (`this, []) -> "the type 'this'", cstr
+      | AKdependent ((`static | `expr _), _) ->
+          "the expression dependent type "^x, cstr
+      | AKdependent (_, _::_) -> "the abstract type constant "^x, cstr in
+    Option.fold
+      cstr
+      ~init:base
+      ~f:(fun init ty -> init^"\n  that is compatible with "^type_ (snd ty))
   and unresolved l =
     let l = List.map snd l in
     let l = List.map type_ l in
@@ -114,7 +109,7 @@ module ErrorString = struct
     | Tgeneric (x, _) -> f x
     | Tapply ((_, x), _) -> f x
     | Tclass ((_, x), _) -> f x
-    | Tabstract ((_, x), _, _) -> f x
+    | Tabstract (ak, _) -> f @@ AbstractKind.to_string ak
     | Taccess _ as x ->
         List.fold_left (fun acc (_, sid) -> acc^"::"^sid)
           (type_ x) ids
@@ -145,6 +140,7 @@ module Suggest = struct
     | Tany                   -> "..."
     | Tmixed                 -> "mixed"
     | Tgeneric (s, _)        -> s
+    | Tabstract (AKgeneric (s, _), _) -> s
     | Toption ty             -> "?" ^ type_ ty
     | Tprim tp               -> prim tp
     | Tvar _                 -> "..."
@@ -154,20 +150,21 @@ module Suggest = struct
     | Tapply ((_, cid), [x]) -> (Utils.strip_ns cid)^"<"^type_ x^">"
     | Tapply ((_, cid), l)   -> (Utils.strip_ns cid)^"<"^list l^">"
     | Tclass ((_, cid), []) -> Utils.strip_ns cid
-    | Tabstract ((_, cid), [], _)  -> Utils.strip_ns cid
+    | Tabstract (AKnewtype (cid, []), _)  -> Utils.strip_ns cid
     | Tclass ((_, cid), [x]) -> (Utils.strip_ns cid)^"<"^type_ x^">"
-    | Tabstract ((_, cid), [x], _) -> (Utils.strip_ns cid)^"<"^type_ x^">"
+    | Tabstract (AKnewtype (cid, [x]), _) ->
+        (Utils.strip_ns cid)^"<"^type_ x^">"
     | Tclass ((_, cid), l) -> (Utils.strip_ns cid)^"<"^list l^">"
-    | Tabstract ((_, cid), l, _)   -> (Utils.strip_ns cid)^"<"^list l^">"
+    | Tabstract (AKnewtype (cid, l), _)   ->
+        (Utils.strip_ns cid)^"<"^list l^">"
+    | Tabstract (AKdependent (_, _), _) -> "..."
     | Tobject                -> "..."
     | Tshape _               -> "..."
     | Taccess (root_ty, ids) ->
         let x =
           match snd root_ty with
-          | Tgeneric (x, _) -> Some x
           | Tapply ((_, x), _) -> Some x
           | Tclass ((_, x), _) -> Some x
-          | Tabstract ((_, x), _, _) -> Some x
           | _ -> None in
         (match x with
          | None -> "..."
@@ -224,7 +221,6 @@ module Full = struct
     | Tarray (Some x, Some y) -> o "array<"; k x; o ", "; k y; o ">"
     | Tarray (None, Some _) -> assert false
     | Tclass ((_, s), []) -> o s
-    | Tabstract ((_, s), [], _) -> o s
     | Tapply ((_, s), []) -> o s
     | Tgeneric (s, _) -> o s
     | Taccess (root_ty, ids) ->
@@ -244,7 +240,9 @@ module Full = struct
         | (Reason.Rdynamic_yield _, _) -> o " [DynamicYield]"
         | _ -> ())
     | Tclass ((_, s), tyl) -> o s; o "<"; list k tyl; o ">"
-    | Tabstract ((_, s), tyl, _) -> o s; o "<"; list k tyl; o ">"
+    | Tabstract (AKnewtype (s, []), _) -> o s
+    | Tabstract (AKnewtype (s, tyl), _) -> o s; o "<"; list k tyl; o ">"
+    | Tabstract (ak, _) -> o @@ AbstractKind.to_string ak;
     (* Don't strip_ns here! We want the FULL type, including the initial slash.
     *)
     | Tapply ((_, s), tyl) -> o s; o "<"; list k tyl; o ">"

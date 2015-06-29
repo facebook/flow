@@ -140,12 +140,14 @@ and unify_ env r1 ty1 r2 ty2 =
         else
           let env, argl = lfold2 unify env argl1 argl2 in
           env, Tclass (id, argl)
-  | Tabstract (((p1, x1) as id), argl1, tcstr1),
-      Tabstract ((p2, x2), argl2, tcstr2) when String.compare x1 x2 = 0 ->
+  | Tabstract (AKnewtype (x1, argl1), tcstr1),
+    Tabstract (AKnewtype (x2, argl2), tcstr2) when String.compare x1 x2 = 0 ->
         if List.length argl1 <> List.length argl2
         then begin
           let n1 = soi (List.length argl1) in
           let n2 = soi (List.length argl2) in
+          let p1 = Reason.to_pos r1 in
+          let p2 = Reason.to_pos r2 in
           Errors.type_arity_mismatch p1 n1 p2 n2;
           env, Tany
         end
@@ -159,17 +161,28 @@ and unify_ env r1 ty1 r2 ty2 =
             | _ -> assert false
           in
           let env, argl = lfold2 unify env argl1 argl2 in
-          env, Tabstract (id, argl, tcstr)
-  | Tgeneric (x1, None), Tgeneric (x2, None) when x1 = x2 ->
-      env, Tgeneric (x1, None)
-  | Tgeneric (x1, Some (ck1, ty1)), Tgeneric (x2, Some (ck2, ty2))
-    when x1 = x2 && ck1 = ck2 ->
-      let env, ty = unify env ty1 ty2 in
-      env, Tgeneric (x1, Some (ck1, ty))
-  | Tgeneric ("this",
-      Some (Ast.Constraint_as, (_, Tclass ((_, x) as id, _) as ty))), _ ->
+          env, Tabstract (AKnewtype (x1, argl), tcstr)
+  | Tabstract (AKgeneric (x1, Some super1), tcstr1),
+    Tabstract (AKgeneric (x2, Some super2), tcstr2)
+    when x1 = x2 && (Option.is_none tcstr1 = Option.is_none tcstr2) ->
+      let env, super = unify env super1 super2 in
+      let env, tcstr = match Option.map2 tcstr1 tcstr2 ~f:(unify env) with
+        | None -> env, None
+        | Some (env, cstr) -> env, Some cstr in
+      env, Tabstract (AKgeneric (x1, Some super), tcstr)
+  | Tabstract (ak1, tcstr1), Tabstract (ak2, tcstr2)
+    when ak1 = ak2 && (Option.is_none tcstr1 = Option.is_none tcstr2) ->
+      let env, tcstr = match Option.map2 tcstr1 tcstr2 ~f:(unify env) with
+        | None -> env, None
+        | Some (env, cstr) -> env, Some cstr in
+      env, Tabstract (ak1, tcstr)
+  | Tabstract (AKdependent (_, _),
+      Some (_, Tclass ((_, x) as id, _) as ty)), _ ->
       let class_ = Env.get_class env x in
-      (* For final class C, there is no difference between this<X> and X *)
+      (* For final class C, there is no difference between abstract<X> and X.
+       * The one exception is for new types, because it is considered a distinct
+       * type from X.
+       *)
       (match class_ with
       | Some {tc_final = true; _} ->
           let env, ty = unify env ty (r2, ty2) in
@@ -180,8 +193,8 @@ and unify_ env r1 ty1 r2 ty2 =
              ~when_: begin fun () ->
                match ty2 with
                | Tclass ((_, y), _) -> y = x
-               | Tany | Tmixed | Tarray (_, _) | Tprim _ | Tgeneric (_, _)
-               | Toption _ | Tvar _ | Tabstract (_, _, _) | Ttuple _
+               | Tany | Tmixed | Tarray (_, _) | Tprim _
+               | Toption _ | Tvar _ | Tabstract (_, _) | Ttuple _
                | Tanon (_, _) | Tfun _ | Tunresolved _ | Tobject
                | Tshape _ | Taccess (_, _) -> false
              end
@@ -189,7 +202,7 @@ and unify_ env r1 ty1 r2 ty2 =
           );
           env, Tany
         )
-  | _, Tgeneric ("this", Some (Ast.Constraint_as, (_, Tclass _))) ->
+  | _, Tabstract (AKdependent (_, _), Some (_, Tclass _)) ->
       unify_ env r2 ty2 r1 ty1
   | (Ttuple _ as ty), Tarray (None, None)
   | Tarray (None, None), (Ttuple _ as ty) ->
@@ -259,8 +272,8 @@ and unify_ env r1 ty1 r2 ty2 =
       env, snd fty
   | _, Taccess _ ->
       unify_ env r2 ty2 r1 ty1
-  | (Tany | Tmixed | Tarray (_, _) | Tprim _ | Tgeneric (_, _) | Toption _
-      | Tvar _ | Tabstract (_, _, _) | Tclass (_, _) | Ttuple _ | Tanon (_, _)
+  | (Tany | Tmixed | Tarray (_, _) | Tprim _ | Toption _
+      | Tvar _ | Tabstract (_, _) | Tclass (_, _) | Ttuple _ | Tanon (_, _)
       | Tfun _ | Tunresolved _ | Tobject | Tshape _), _ ->
         (* Make sure to add a dependency on any classes referenced here, even if
          * we're in an error state (i.e., where we are right now). The need for

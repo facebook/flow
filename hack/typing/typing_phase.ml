@@ -11,6 +11,7 @@
 
 open Utils
 open Typing_defs
+open Typing_dependent_type
 
 module Env = Typing_env
 module TUtils = Typing_utils
@@ -115,14 +116,16 @@ let rec localize_with_env ~ety_env env (dty: decl ty) =
          in
          env, (ety_env, (Reason.Rinstantiate (fst x_ty, x, r), snd x_ty))
       | None ->
-         let env, cstr_opt =
-           match cstr_opt with
-           | None -> env, None
-           | Some (ck, ty) ->
-              let env, ty = localize ~ety_env env ty in
-              env, Some (ck, ty)
-         in
-         env, (ety_env, (r, Tgeneric (x, cstr_opt)))
+         (match cstr_opt with
+         | None ->
+             env, (ety_env, (r, Tabstract (AKgeneric (x, None), None)))
+         | Some (Ast.Constraint_as, ty) ->
+             let env, ty = localize ~ety_env env ty in
+             env, (ety_env, (r, Tabstract (AKgeneric (x, None), Some ty)))
+         | Some (Ast.Constraint_super, ty) ->
+             let env, ty = localize ~ety_env env ty in
+             env, (ety_env, (r, Tabstract (AKgeneric (x, Some ty), None)))
+         )
      )
   | r, Toption ty ->
       let env, ty = localize ~ety_env env ty in
@@ -149,7 +152,7 @@ let rec localize_with_env ~ety_env env (dty: decl ty) =
      let root_ty =
        match ety_env.from_class with
        | Some cid when orig_root = Tthis ->
-          TUtils.expr_dependent_ty env cid root_ty
+          ExprDepTy.make cid root_ty
        | _ -> root_ty in
      env, (ety_env, (r, Taccess (root_ty, ids)))
   | r, Tshape (fields_known, tym) ->

@@ -69,8 +69,8 @@ let save_type hint_kind env x arg =
             let x_pos = Reason.to_pos (fst x) in
             add_type env x_pos hint_kind arg;
         )
-    | _, (Tmixed | Tarray (_, _) | Tprim _ | Tgeneric (_, _) | Toption _
-      | Tvar _ | Tabstract (_, _, _) | Tclass (_, _) | Ttuple _ | Tanon (_, _)
+    | _, (Tmixed | Tarray (_, _) | Tprim _ | Toption _
+      | Tvar _ | Tabstract (_, _) | Tclass (_, _) | Ttuple _ | Tanon (_, _)
       | Tfun _ | Tunresolved _ | Tobject | Tshape _ | Taccess (_, _)) -> ()
   end
 
@@ -165,8 +165,8 @@ and normalize_ = function
     when List.exists (function _, (Tany | Tunresolved []) -> true | _ -> false) tyl ->
       let tyl = List.filter begin function
         |  _, (Tany |  Tunresolved []) -> false
-        | _, (Tmixed | Tarray (_, _) | Tprim _ | Tgeneric (_, _) | Toption _
-          | Tvar _ | Tabstract (_, _, _) | Tclass (_, _) | Ttuple _
+        | _, (Tmixed | Tarray (_, _) | Tprim _ | Toption _
+          | Tvar _ | Tabstract (_, _) | Tclass (_, _) | Ttuple _
           | Tanon (_, _) | Tfun _ | Tunresolved _ | Tobject | Tshape _
           | Taccess (_, _)) -> true
       end tyl in
@@ -177,8 +177,8 @@ and normalize_ = function
        *)
       let rl = List.map begin function
         | _, Tclass (x, []) -> x
-        | _, (Tany | Tmixed | Tarray (_, _) | Tprim _ | Tgeneric (_, _)
-          | Toption _ | Tvar _ | Tabstract (_, _, _) | Tclass (_, _) | Ttuple _
+        | _, (Tany | Tmixed | Tarray (_, _) | Tprim _
+          | Toption _ | Tvar _ | Tabstract (_, _) | Tclass (_, _) | Ttuple _
           | Tanon (_, _) | Tfun _ | Tunresolved _ | Tobject
           | Tshape _ | Taccess (_, _)) -> raise Exit
       end rl in
@@ -198,7 +198,7 @@ and normalize_ = function
     try Tarray (opt_map normalize k, opt_map normalize v)
     with Exit -> Tarray (None, None)
   end
-  | Tgeneric _ as x -> x
+  | Tabstract (AKgeneric (_, _), _) as x -> x
   | Toption (_, (Toption (_, _) as ty)) -> normalize_ ty
   | Toption (_, Tprim Nast.Tvoid) -> raise Exit
   | Toption ty -> Toption (normalize ty)

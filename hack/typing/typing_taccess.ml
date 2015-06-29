@@ -126,21 +126,20 @@ and expand_ env root_ty ids =
             with
               Exit -> env, (Reason.none, Tany)
           end
-      | Tabstract ((p, x), _, Some ty) ->
-          let env, ty = expand_generic env x ty ids in
+      | Tabstract (ak, Some ty) ->
+          let name = strip_ns @@ AbstractKind.to_string ak in
+          let env, ty = expand_generic env ak name ty ids in
           (* If it is a expression dependent type we want to explain what
-           * expression it was derived from. When we substitute an expression
-           * dependent type it will be a Tabstract. Since all other Tabstract
-           * we create are from newtype defs, if it isn't a typedef then we
-           * know it has to be an expression dependent type
+           * expression it was derived from.
            *)
-          if Env.is_typedef x
-          then
-            env, ty
-          else
-            env, (Reason.Rexpr_dep_type (fst ty, p ,x), snd ty)
-      | Tgeneric (x, Some (Ast.Constraint_as, ty)) ->
-         expand_generic env x ty ids
+          let reason =
+            match ak with
+            | AKdependent ((`static | `expr _), _) ->
+                let pos = Reason.to_pos @@ fst root_ty in
+                Reason.Rexpr_dep_type (fst ty, pos, name)
+            | AKgeneric (_, _) | AKnewtype (_, _) | AKdependent (_, _) ->
+                fst ty in
+          env, (reason, snd ty)
       | Tunresolved tyl ->
           let tyl =
             List.map begin fun ty ->
@@ -159,15 +158,15 @@ and expand_ env root_ty ids =
             expand_ env ty ids
           )
       | Tanon _ | Tobject | Tmixed | Tprim _ | Tshape _ | Ttuple _
-      | Tarray (_, _) | Tfun _ | Tabstract (_, _, _) | Tgeneric (_, _) ->
+      | Tarray (_, _) | Tfun _ | Tabstract (_, _) ->
           let pos, tconst = head in
           let ty = Typing_print.error (snd root_ty) in
           Errors.non_object_member tconst (Reason.to_pos (fst root_ty)) ty pos;
           env, (Reason.none, Tany)
   end
 
-(* When expanding the constraint of a Tgeneric or Tabstract we need to modify
- * the environment. While expanding a generic we will always choose the
+(* When expanding the constraint of a Tabstract we need to modify
+ * the environment. While expanding an abstract type we will always choose the
  * constraint of a type constant (the "as" defined type) over the assigned type
  * (the "=" defined type). This is because the type constant could've been
  * overridden by a subclass so we only have the gurantee that the constraint is
@@ -200,19 +199,21 @@ and expand_ env root_ty ids =
  *
  *    this::TGeneric as I::TGeneric as I
  *)
-and expand_generic env name root ids =
+and expand_generic env ak name root ids =
   let env = { env with
     is_generic = true;
     expansions = List.fold_left (fun acc (_, s) -> acc^"::"^s) name ids
       :: env.expansions;
   } in
   let env, ty = expand_ env root ids in
-  if env.ids = []
-  then env, ty
-  else env, (
-    fst ty,
-    Tgeneric ((String.concat "::" (name :: (List.rev env.ids))), Some (Ast.Constraint_as, ty))
-  )
+  if env.ids = [] then
+    env, ty
+  else
+    let dt =
+      match ak with
+      | AKgeneric (x, _) | AKnewtype (x, _) -> `cls x
+      | AKdependent (dt, _) -> dt in
+    env, (fst ty, Tabstract (AKdependent (dt, env.ids), Some ty))
 
 (* The function takes a "step" forward in the expansion. We look up the type
  * constant associated with the given class_name and create a new root type.
@@ -234,24 +235,26 @@ and create_root_from_type_constant env class_pos class_name root_ty (pos, tconst
           pos (class_.tc_pos, class_name) tconst `no_hint;
         raise Exit
     | Some tc -> tc in
-  let env, tconst_ty =
-    match typeconst with
-    | { ttc_type = Some ty; _ }
-      when typeconst.ttc_constraint = None || (not env.is_generic) ->
-        (* It is important to clear the fields in the environment so we don't
-         * accidently wrap this into a generic type in expand_generic
-         *)
-        { env with ids = []; is_generic = false }, ty
-    | {ttc_constraint = ty; _} ->
-        { env with ids = tconst :: env.ids }, (
-          Reason.Rwitness (fst typeconst.ttc_name),
-          let cstr = opt_map (fun ty -> Ast.Constraint_as, ty) ty in
-          Tgeneric (strip_ns class_name^"::"^tconst, cstr)
-        ) in
   let ety_env = { env.ety_env with this_ty = root_ty } in
-  let tenv, (ety_env, tconst_ty) =
-    Phase.localize_with_env ~ety_env env.tenv tconst_ty in
-  { env with tenv = tenv }, tconst_ty, ety_env
+  (match typeconst with
+  | { ttc_type = Some ty; _ }
+    when typeconst.ttc_constraint = None || (not env.is_generic) ->
+      (* It is important to clear the fields in the environment so we don't
+       * accidently wrap this into a generic type in expand_generic
+       *)
+      let tenv, (ety_env, ty) =
+        Phase.localize_with_env ~ety_env env.tenv ty in
+      { env with ids = []; is_generic = false; tenv = tenv }, ty, ety_env
+  | {ttc_constraint = cstr; _} ->
+      let tenv, ety_env, cstr =
+        match opt (Phase.localize_with_env ~ety_env) env.tenv cstr with
+        | tenv, Some (ety_env, cstr) -> tenv, ety_env, Some cstr
+        | tenv, None -> tenv, ety_env, None in
+      let ty =
+        Reason.Rwitness (fst typeconst.ttc_name),
+        Tabstract (AKdependent (`cls class_name, [tconst]), cstr) in
+      { env with ids = tconst :: env.ids; tenv = tenv }, ty, ety_env
+  )
 
 (* Following code checks for cycles that may occur when expanding a Taccess.
  * This is mainly copy-pasta from Typing_tdef.ml. We should see if its possible
@@ -265,15 +268,17 @@ and check_tconst env (_, ty) =
       check_tconst_opt env ty1;
       check_tconst_opt env ty2;
       ()
-  | Tgeneric (_, Some (_, ty)) ->
-      check_tconst env ty
-  | Tgeneric (_, None) -> ()
   | Toption ty -> check_tconst env ty
   | Tprim _ -> ()
   | Tvar _ -> ()
   | Tfun fty -> check_fun_tconst env fty
-  | Tabstract (_, tyl, cstr) ->
+  | Tabstract (AKgeneric (_, super), cstr) ->
+      check_tconst_opt env super;
+      check_tconst_opt env cstr
+  | Tabstract (AKnewtype (_, tyl), cstr) ->
       check_tconst_list env tyl;
+      check_tconst_opt env cstr
+  | Tabstract (AKdependent (_, _), cstr) ->
       check_tconst_opt env cstr
   | Ttuple tyl ->
       check_tconst_list env tyl

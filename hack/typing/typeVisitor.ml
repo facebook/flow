@@ -22,7 +22,7 @@ class type ['a] type_visitor_type = object
   method on_tvar : 'a -> Ident.t -> 'a
   method on_type : 'a -> 'b ty -> 'a
   method on_tfun : 'a -> 'b fun_type -> 'a
-  method on_tabstract : 'a -> Nast.sid -> locl ty list -> locl ty option -> 'a
+  method on_tabstract : 'a -> abstract_kind -> locl ty option -> 'a
   method on_tapply : 'a -> Nast.sid -> 'b ty list -> 'a
   method on_ttuple : 'a -> 'b ty list -> 'a
   method on_tanon : 'a -> locl fun_arity -> Ident.t -> 'a
@@ -55,8 +55,13 @@ class virtual ['a] type_visitor : ['a] type_visitor_type = object(this)
     let acc = List.fold_left (fun acc tp ->
       Option.fold ~f:this#on_type ~init:acc tp) acc tparams in
     this#on_type acc ft_ret
-  method on_tabstract acc _ tyl ty_opt =
-    let acc = List.fold_left this#on_type acc tyl in
+  method on_tabstract acc ak ty_opt =
+    let acc =
+      match ak with
+      | AKnewtype (_, tyl) -> List.fold_left this#on_type acc tyl
+      | AKgeneric (_, super) ->
+          Option.fold ~f:this#on_type ~init:acc super
+      | AKdependent (_, _) -> acc in
     let acc = Option.fold ~f:this#on_type ~init:acc ty_opt in
     acc
   method on_tapply: type a. _ -> _ -> a ty list -> _ =
@@ -86,7 +91,7 @@ class virtual ['a] type_visitor : ['a] type_visitor_type = object(this)
     | _, Tprim prim -> this#on_tprim acc prim
     | _, Tvar id -> this#on_tvar acc id
     | _, Tfun fty -> this#on_tfun acc fty
-    | _, Tabstract (s, tyl, ty_opt) -> this#on_tabstract acc s tyl ty_opt
+    | _, Tabstract (ak, ty_opt) -> this#on_tabstract acc ak ty_opt
     | _, Tapply (s, tyl) -> this#on_tapply acc s tyl
     | _, Taccess aty -> this#on_taccess acc aty
     | _, Ttuple tyl -> this#on_ttuple acc tyl

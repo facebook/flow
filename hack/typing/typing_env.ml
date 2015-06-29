@@ -178,9 +178,9 @@ let rec debug stack env (r, ty) =
       debug stack env y; o ">"
   | Tarray _ -> assert false
   | Tmixed -> o "mixed"
-  | Tabstract (x, argl, _)
-  | Tclass (x, argl) ->
-      Printf.printf "App %s" (snd x);
+  | Tabstract (AKnewtype (x, argl), _)
+  | Tclass ((_, x), argl) ->
+      Printf.printf "App %s" x;
       o "<"; List.iter (fun x -> debug stack env x; o ", ") argl;
       o ">"
   | Taccess (root_ty, ids) ->
@@ -206,14 +206,17 @@ let rec debug stack env (r, ty) =
       | Tarraykey -> o "Tarraykey"
       | Tnoreturn -> o "Tnoreturn"
       )
-  | Tgeneric (s, x) ->
+  | Tabstract (AKgeneric(s, super), cstr_opt) ->
       o "generic ";
       o s;
-      (match x with
-      | None -> ()
-      | Some (Ast.Constraint_as, x) -> o " as <"; debug stack env x; o ">"
-      | Some (Ast.Constraint_super, x) ->
-          o " super <"; debug stack env x; o ">")
+      (match cstr_opt, super with
+      | None, None -> ()
+      | Some x, _ -> o " as <"; debug stack env x; o ">"
+      | _, Some x -> o " super <"; debug stack env x; o ">"
+      )
+  | Tabstract (ak, cstr) ->
+     o "[";  o (AbstractKind.to_string ak); o "]";
+     Option.iter cstr ~f:(debug stack env)
   | Tvar x ->
       let env, x = get_var env x in
       if ISet.mem x stack
