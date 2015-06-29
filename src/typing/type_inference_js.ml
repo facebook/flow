@@ -4342,62 +4342,78 @@ and predicate_of_condition cx e = Ast.(Expression.(
     )
 
   (* expr op null *)
-  | loc, Binary { Binary.operator;
+  | loc, Binary { Binary.
+      operator = (Binary.Equal | Binary.StrictEqual |
+                  Binary.NotEqual | Binary.StrictNotEqual) as op;
       left;
       right = _, Literal { Literal.value = Literal.Null; _ }
     } ->
-      null_test loc operator left
+      null_test loc op left
 
   (* null op expr *)
-  | loc, Binary { Binary.operator;
+  | loc, Binary { Binary.
+      operator = (Binary.Equal | Binary.StrictEqual |
+                  Binary.NotEqual | Binary.StrictNotEqual) as op;
       left = _, Literal { Literal.value = Literal.Null; _ };
       right
     } ->
-      null_test loc operator right
+      null_test loc op right
 
   (* expr op undefined *)
-  | loc, Binary { Binary.operator;
+  | loc, Binary { Binary.
+      operator = (Binary.Equal | Binary.StrictEqual |
+                  Binary.NotEqual | Binary.StrictNotEqual) as op;
       left;
       right = _, Identifier (_, { Identifier.name = "undefined"; _ })
     } ->
-      undef_test loc operator left
+      undef_test loc op left
 
   (* undefined op expr *)
-  | loc, Binary { Binary.operator;
+  | loc, Binary { Binary.
+      operator = (Binary.Equal | Binary.StrictEqual |
+                  Binary.NotEqual | Binary.StrictNotEqual) as op;
       left = _, Identifier (_, { Identifier.name = "undefined"; _ });
       right
     } ->
-      undef_test loc operator right
+      undef_test loc op right
 
   (* expr op void(...) *)
-  | loc, Binary { Binary.operator;
+  | loc, Binary { Binary.
+      operator = (Binary.Equal | Binary.StrictEqual |
+                  Binary.NotEqual | Binary.StrictNotEqual) as op;
       left;
       right = _, Unary ({ Unary.operator = Unary.Void; _ }) as void_arg
     } ->
       ignore (expression cx void_arg);
-      undef_test loc operator left
+      undef_test loc op left
 
   (* void(...) op expr *)
-  | loc, Binary { Binary.operator;
+  | loc, Binary { Binary.
+      operator = (Binary.Equal | Binary.StrictEqual |
+                  Binary.NotEqual | Binary.StrictNotEqual) as op;
       left = _, Unary ({ Unary.operator = Unary.Void; _ }) as void_arg;
       right
     } ->
       ignore (expression cx void_arg);
-      undef_test loc operator right
+      undef_test loc op right
 
   (* expr op true; expr op false *)
-  | loc, Binary { Binary.operator;
+  | loc, Binary { Binary.
+      operator = (Binary.Equal | Binary.StrictEqual |
+                  Binary.NotEqual | Binary.StrictNotEqual) as op;
       left;
       right = _, Literal { Literal.value = Literal.Boolean value; _ }
     } ->
-      bool_test loc operator left value
+      bool_test loc op left value
 
   (* true op expr; false op expr *)
-  | loc, Binary { Binary.operator;
+  | loc, Binary { Binary.
+      operator = (Binary.Equal | Binary.StrictEqual |
+                  Binary.NotEqual | Binary.StrictNotEqual) as op;
       left = _, Literal { Literal.value = Literal.Boolean value; _ };
       right
     } ->
-      bool_test loc operator right value
+      bool_test loc op right value
 
   (* typeof expr ==/=== string *)
   | _, Binary { Binary.operator = Binary.Equal | Binary.StrictEqual;

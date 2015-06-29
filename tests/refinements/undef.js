@@ -69,3 +69,12 @@ function undef_var_nonstrict(x: ?number, y: ?number) {
     var b = y * 1000; // error
   }
 }
+
+function undef_bogus_comparison() {
+  if (100 * undefined) {
+    return;
+  }
+  if (undefined * 100) {
+    return;
+  }
+}
