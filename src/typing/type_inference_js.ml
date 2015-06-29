@@ -3289,13 +3289,14 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
       let t = expression cx tag in
       let reason = mk_reason "encaps tag" loc in
       let reason_array = replace_reason "array" reason in
+      let ret = Flow_js.mk_tvar cx reason in
       let ft = Flow_js.mk_functiontype
         [ ArrT (reason_array, StrT.why reason, []);
           RestT (AnyT.why reason) ]
-        (StrT.why reason)
+        ret
       in
       Flow_js.flow cx (t, CallT (reason, ft));
-      StrT.at loc
+      ret
 
   | TemplateLiteral {
       TemplateLiteral.quasis;
