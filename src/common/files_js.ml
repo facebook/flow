@@ -24,10 +24,11 @@ let is_dot_file path =
   let filename = Filename.basename path in
   String.length filename > 0 && filename.[0] = '.'
 
-let is_flow_file path =
+let is_valid_path path =
   not (is_dot_file path) &&
-  List.exists (Filename.check_suffix path) flow_extensions &&
-  not (is_directory path)
+  List.exists (Filename.check_suffix path) flow_extensions
+
+let is_flow_file path = is_valid_path path && not (is_directory path)
 
 (* This is initialized early, before we work all the workers, so that each
  * worker isn't forced to find all the lib files themselves *)
@@ -50,6 +51,116 @@ let get_flowlib_root () =
       flowlib_root := Some root;
       root
 
+let realpath path = match Sys_utils.realpath path with
+| Some path -> path
+| None -> path (* perhaps this should error? *)
+
+type file_kind =
+| Reg of string
+| Dir of string
+| Other
+
+(* Determines whether a path is a regular file, a directory, or something else
+   like a pipe, socket or device. If `path` is a symbolic link, then it returns
+   the type of the target of the symlink, and the target's real path. *)
+let kind_of_path path = Unix.(
+  try match (lstat path).st_kind with
+  | S_REG -> Reg path
+  | S_LNK ->
+    (* TODO: can stat return a symlink? if yes, match S_LNK and recurse? *)
+    begin match (stat path).st_kind with
+    | S_REG -> Reg (realpath path)
+    | S_DIR -> Dir (realpath path)
+    | _ -> Other
+    end
+  | _ -> Other
+  with Unix_error _ -> Other
+)
+
+let escape_spaces = Str.global_replace (Str.regexp " ") "\\ "
+
+(* Calls out to `find <paths>` and immediately returns a closure. Running that
+   closure will return a List of up to 1000 files whose paths match
+   `path_filter`, and if the path is a symlink then whose real path matches
+   `realpath_filter`; it also returns an SSet of all of the symlinks that
+    point to _directories_ outside of `paths`. *)
+let make_next_files_and_symlinks ~path_filter ~realpath_filter paths =
+  let escaped_paths = List.map escape_spaces paths in
+  let paths_str = String.concat " " escaped_paths in
+  let ic = Unix.open_process_in ("find "^paths_str) in
+  let done_ = ref false in
+  (* This is subtle, but to optimize latency, we open the process and
+   * then return a closure immediately. That way 'find' gets started
+   * in parallel and will be ready when we need to get the list of
+   * files (although it will be stopped very soon as the pipe buffer
+   * will get full very quickly).
+   *)
+  fun () ->
+    if !done_
+    then [], SSet.empty
+    else
+      let result = ref [] in
+
+      (* accumulates all of the symlinks that point to directories outside of
+         `paths`; symlinks that point to directories already covered by `paths`
+         will be found on their own, so they are skipped. *)
+      let symlinks = ref SSet.empty in
+
+      let i = ref 0 in
+      try
+        while !i < 1000 do
+          let path = input_line ic in
+          match kind_of_path path with
+          | Reg real ->
+            if path_filter path && (path = real || realpath_filter real)
+            then begin
+              result := real :: !result;
+              incr i;
+            end
+          | Dir path ->
+              if not (List.exists (str_starts_with path) paths) then
+                symlinks := SSet.add path !symlinks
+          | Other -> ()
+        done;
+        List.rev !result, !symlinks
+      with End_of_file ->
+        done_ := true;
+        (try ignore (Unix.close_process_in ic) with _ -> ());
+        !result, !symlinks
+
+(* Returns a closure that returns batches of files matching `path_filter` and/or
+   `realpath_filter` (see `make_next_files_and_symlinks`), starting from `paths`
+   and including any directories that are symlinked to even if they are outside
+   of `paths`. *)
+let make_next_files_following_symlinks ~path_filter ~realpath_filter paths =
+  let paths = List.map Path.to_string paths in
+  let cb = ref (make_next_files_and_symlinks
+    ~path_filter ~realpath_filter paths
+  ) in
+  let symlinks = ref SSet.empty in
+  let seen_symlinks = ref SSet.empty in
+  let rec rec_cb () =
+    let files, new_symlinks = !cb () in
+    symlinks := SSet.fold (fun symlink accum ->
+      if SSet.mem symlink !seen_symlinks then accum
+      else SSet.add symlink accum
+    ) new_symlinks !symlinks;
+    seen_symlinks := SSet.union new_symlinks !seen_symlinks;
+    let num_files = List.length files in
+    if num_files > 0 then files
+    else if (SSet.is_empty !symlinks) then []
+    else begin
+      let paths = SSet.elements !symlinks in
+      symlinks := SSet.empty;
+      (* since we're following a symlink, use realpath_filter for both *)
+      cb := make_next_files_and_symlinks
+        ~path_filter:realpath_filter ~realpath_filter paths;
+      rec_cb ()
+    end
+  in
+  rec_cb
+
+(* Calls `next` repeatedly until it is resolved, returning a SSet of results *)
 let get_all =
   let rec get_all_rec next accum =
     match next () with
@@ -71,10 +182,10 @@ let init libs =
     let libs = if libs = []
       then SSet.empty
       else
-        let get_next = Find.make_next_files
-          is_flow_file
-          ~others:(List.tl libs)
-          (List.hd libs)
+        let get_next = make_next_files_following_symlinks
+          ~path_filter:is_valid_path
+          ~realpath_filter:is_valid_path
+          libs
         in
         get_all get_next
     in
@@ -107,11 +218,13 @@ let make_next_files root =
   let filter = wanted config in
   let others = config.FlowConfig.include_stems in
   let sroot = Path.to_string root in
-  Find.make_next_files (fun p ->
-    (str_starts_with p sroot || FlowConfig.is_included config p)
-    && is_flow_file p
-    && filter p
-  ) ~others root
+  let realpath_filter path = is_valid_path path && filter path in
+  let path_filter path =
+    (str_starts_with path sroot || FlowConfig.is_included config path)
+    && realpath_filter path
+  in
+  make_next_files_following_symlinks
+    ~path_filter ~realpath_filter (root::others)
 
 let rec normalize_path dir file =
   normalize_path_ dir (Str.split_delim dir_sep file)
@@ -139,12 +252,19 @@ let package_json root =
   let config = FlowConfig.get root in
   let sroot = Path.to_string root in
   let want = wanted config in
-  let filt = fun p ->
-    (Filename.basename p) = "package.json" &&
-    want p &&
-    (str_starts_with p sroot || FlowConfig.is_included config p) in
+  let realpath_filter path =
+    (Filename.basename path) = "package.json" && want path
+  in
+  let path_filter path =
+    (str_starts_with path sroot || FlowConfig.is_included config path)
+    && realpath_filter path
+  in
   let others = config.FlowConfig.include_stems in
-  let get_next = Find.make_next_files filt ~others root in
+  let get_next = make_next_files_following_symlinks
+    ~path_filter
+    ~realpath_filter
+    (root::others)
+  in
   get_all get_next
 
 (* helper: make relative path from root to file *)

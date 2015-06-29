@@ -12,8 +12,6 @@
 
 val flow_extensions: string list
 
-val is_directory: string -> bool
-
 val is_flow_file: string -> bool
 
 (* name of library directory defining builtins *)
