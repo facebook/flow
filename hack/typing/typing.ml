@@ -1263,10 +1263,10 @@ and expr_ ~in_cond ~(valkind: [> `lvalue | `rvalue | `other ]) env (p, e) =
         env, (namepstr, (valp, valty))
       end env attrl in
       let env, _body = lfold expr env el in
-      let env, class_ = class_id p env cid in
+      let env, class_ = class_id_for_new p env cid in
       (match class_ with
       | None -> env, (Reason.Runknown_class p, Tobject)
-      | Some (_, class_) ->
+      | Some (_, class_, _) ->
         if TypecheckerOptions.unsafe_xhp (Env.get_options env) then
           env, obj
         else begin
@@ -1428,15 +1428,23 @@ and special_func env p func =
   ) in
   env, (Reason.Rwitness p, Tclass ((p, SN.Classes.cAwaitable), [ty]))
 
+and requires_consistent_construct = function
+  | CIstatic -> true
+  | CIvar _ -> true
+  | CIparent -> false
+  | CIself -> false
+  | CI _ -> false
+
 and new_object ~check_not_abstract p env c el uel =
-  let env, class_ = class_id p env c in
+  let env, class_ = class_id_for_new p env c in
   (match class_ with
   | None ->
       let _ = lmap expr env el in
       let _ = lmap expr env uel in
       env, (Reason.Runknown_class p, Tobject)
-  | Some (cname, class_) ->
-      if check_not_abstract && class_.tc_abstract && c <> CIstatic
+  | Some (cname, class_, c_ty) ->
+      if check_not_abstract && class_.tc_abstract
+        && not (requires_consistent_construct c)
       then Errors.uninstantiable_class p class_.tc_pos class_.tc_name;
       let env, params = lfold begin fun env _ ->
         TUtils.in_var env (Reason.Rnone, Tunresolved [])
@@ -1446,27 +1454,39 @@ and new_object ~check_not_abstract p env c el uel =
         let env = call_construct p env class_ params el uel c in
         env
       in
-      let obj_type = Reason.Rwitness p, Tclass (cname, params) in
+      let r_witness = Reason.Rwitness p in
+      let obj_ty = r_witness, Tclass (cname, params) in
+      if not (snd class_.tc_construct) then
+        (match c with
+          | CIstatic -> Errors.new_inconsistent_construct p cname `static
+          | CIvar _ -> Errors.new_inconsistent_construct p cname `classname
+          | _ -> ());
       match c with
-      | CIstatic ->
-        if not (snd class_.tc_construct) then
-          Errors.new_static_inconsistent p cname
-        else ();
-        env, (Reason.Rwitness p, TUtils.this_of obj_type)
-      | CIparent ->
-        (match (fst class_.tc_construct) with
-          | Some ce ->
-            let ety_env = {
-              type_expansions = [];
-              substs = SMap.empty;
-              this_ty = obj_type;
-              from_class = None;
-            } in
-            let _, ce_type = Phase.localize ~ety_env env ce.ce_type in
-            ignore (check_abstract_parent_meth SN.Members.__construct p ce_type)
-          | None -> ());
-        env, obj_type
-      | _ -> env, obj_type
+        | CIstatic ->
+          env, (r_witness, TUtils.this_of obj_ty)
+        | CIparent ->
+          (match (fst class_.tc_construct) with
+            | Some ce ->
+              let ety_env = {
+                type_expansions = [];
+                substs = SMap.empty;
+                this_ty = obj_ty;
+                from_class = None;
+              } in
+              let _, ce_type = Phase.localize ~ety_env env ce.ce_type in
+              ignore (check_abstract_parent_meth SN.Members.__construct p ce_type)
+            | None -> ());
+          env, obj_ty
+        | CI _ | CIself -> env, obj_ty
+        | CIvar _ ->
+          let c_ty = r_witness, snd c_ty in
+          (* When constructing from a (classname) variable, the variable
+           * dictates what the constructed object is going to be. This allows
+           * for generic and dependent types to be correctly carried
+           * through the 'new $foo()' iff the constructed obj_ty is a
+           * supertype of the variable-dictated c_ty *)
+          let env = SubType.sub_type env obj_ty c_ty in
+          env, c_ty
   )
 
 and instanceof_naming = function
@@ -1492,15 +1512,21 @@ and instanceof_in_env p (env:Env.env) (e1:Nast.expr) (e2:Nast.expr) =
       env
 
 and instantiable_cid p env cid =
-  let env, class_ = class_id p env cid in
+  let env, class_ = class_id_for_new p env cid in
   (match class_ with
-    | Some ((pos, name), class_) when
+    | Some ((pos, name), class_, _) when
            class_.tc_kind = Ast.Ctrait || class_.tc_kind = Ast.Cenum ->
       (match cid with
         | CI _ -> Errors.uninstantiable_class pos class_.tc_pos name; env
         | CIstatic | CIparent | CIself -> env
-        | CIvar _ -> env)
-    | Some ((pos, name), class_) when
+        | CIvar _ ->
+          (* FIXME: we need to check for instantiability in this case,
+           * but if the variable type is classname<Interface>,
+           * ClassImplementingInterface::class may be passed. The solution
+           * is likely something like concrete_classname<Interface>, which
+           * Interface::class would not be *)
+          env)
+    | Some ((pos, name), class_, _) when
            class_.tc_kind = Ast.Cabstract && class_.tc_final ->
        Errors.uninstantiable_class pos class_.tc_pos name; env
     | None | Some _ -> env)
@@ -2766,29 +2792,22 @@ and obj_get_ ~is_method ~nullsafe env ty1 cid (p, s as id)
 and type_could_be_null env ty1 =
   let env, ety1 = Env.expand_type env ty1 in
   match (snd ety1) with
-  | Tabstract (_, Some ty) -> type_could_be_null env ty
-  | Toption _ | Tabstract (_, None) | Tunresolved _ | Tmixed | Tany -> true
-  | Tarray (_, _) | Tprim _ | Tvar _ | Tfun _
-  | Tclass (_, _) | Ttuple _ | Tanon (_, _) | Tobject
-  | Tshape _ -> false
+    | Tabstract (_, Some ty) -> type_could_be_null env ty
+    | Toption _ | Tabstract (_, None) | Tunresolved _ | Tmixed | Tany -> true
+    | Tarray (_, _) | Tprim _ | Tvar _ | Tfun _
+    | Tclass (_, _) | Ttuple _ | Tanon (_, _) | Tobject
+    | Tshape _ -> false
 
-and class_id p env cid =
+and class_id_for_new p env cid =
   let env, obj = static_class_id p env cid in
   match obj with
-    | _, Tabstract (AKdependent (`this, []),
-        Some (_, Tclass ((_, cid as c), _))) ->
-      let class_ = Env.get_class env cid in
-      (match class_ with
-        | None -> env, None
-        | Some class_ ->
-          env, Some (c, class_)
-      )
-    | _, Tclass ((_, cid as c), _) ->
-      let class_ = Env.get_class env cid in
-      (match class_ with
-        | None -> env, None
-        | Some class_ ->
-          env, Some (c, class_)
+    | _, Tclass (c, _)
+    | _, Tabstract (AKdependent (`this, []), Some (_, Tclass (c, _)))
+    | _, Tabstract (AKgeneric _, Some (_, Tclass (c, _))) ->
+      let class_ = Env.get_class env (snd c) in
+      env, (match class_ with
+        | None -> None
+        | Some class_ -> Some (c, class_, obj)
       )
     | _, (Tany | Tmixed | Tarray (_, _) | Toption _ | Tprim _
       | Tvar _ | Tfun _ | Tabstract (_, _) | Ttuple _ | Tanon (_, _)
@@ -2911,19 +2930,26 @@ and static_class_id p env = function
       let env, ty = expr env e in
       let env, ty = TUtils.fold_unresolved env ty in
       let _, ty = Env.expand_type env ty in
-      let ty = match TUtils.get_base_type ty with
-        | _, Tabstract (AKnewtype (classname, [ty]), _) when
-            classname = SN.Classes.cClassname -> ty
-        | _, Tabstract (_, Some (_, Tclass _))
-        | _, Tclass _ -> ty
-        | _, (Tany | Tmixed | Tarray (_, _) | Toption _
-                 | Tprim _ | Tvar _ | Tfun _ | Tabstract (_, _) | Ttuple _
-                 | Tanon (_, _) | Tunresolved _ | Tobject | Tshape _
-        ) ->
-          if Env.get_mode env = FileInfo.Mstrict
-          then Errors.dynamic_class p;
-          Reason.Rnone, Tany
-      in env, ty
+      let rec resolve_ety = fun ety -> begin
+        match TUtils.get_base_type ety with
+          | _, Tabstract (AKnewtype (classname, [the_cls]), _) when
+              classname = SN.Classes.cClassname ->
+            resolve_ety the_cls
+          | _, Tabstract (_, Some (_, Tclass _))
+          | _, Tclass _ -> ety
+          | _, Tabstract (_, _) ->
+            Reason.Rnone, Tany
+          | _, (Tany | Tmixed | Tarray (_, _) | Toption _
+                   | Tprim _ | Tvar _ | Tfun _ |
+                           (* Tabstract (_, _) |  *)
+                       Ttuple _
+                   | Tanon (_, _) | Tunresolved _ | Tobject | Tshape _
+          ) ->
+            if Env.get_mode env = FileInfo.Mstrict
+            then Errors.dynamic_class p;
+            Reason.Rnone, Tany
+      end
+      in env, resolve_ety ty
 
 and call_construct p env class_ params el uel cid =
   let cstr = Env.get_construct env class_ in

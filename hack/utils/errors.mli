@@ -116,7 +116,8 @@ val array_cast : Pos.t -> unit
 val anonymous_recursive : Pos.t -> unit
 val static_outside_class : Pos.t -> unit
 val self_outside_class : Pos.t -> unit
-val new_static_inconsistent : Pos.t -> (Pos.t * string) -> unit
+val new_inconsistent_construct : Pos.t -> (Pos.t * string)
+  -> [< `static | `classname ] -> unit
 val pair_arity : Pos.t -> unit
 val tuple_arity : Pos.t -> int -> Pos.t -> int -> unit
 val undefined_parent : Pos.t -> unit

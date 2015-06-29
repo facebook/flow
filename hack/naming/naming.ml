@@ -2063,12 +2063,14 @@ and expr_ env = function
     N.InstanceOf (expr env e, (p, N.Id id))
   | InstanceOf (e1, e2) ->
       N.InstanceOf (expr env e1, expr env e2)
-  | New ((_, Id x), el, uel) ->
-      N.New (make_class_id env x, exprl env el, exprl env uel)
+  | New ((_, Id x), el, uel)
+  | New ((_, Lvar x), el, uel) ->
+    N.New (make_class_id env x, exprl env el, exprl env uel)
   | New ((p, e_), el, uel) ->
-      if (fst env).in_mode = FileInfo.Mstrict
-      then Errors.dynamic_new_in_strict_mode p;
-      N.New (make_class_id env (p, SN.Classes.cUnknown), exprl env el, exprl env uel)
+    if (fst env).in_mode = FileInfo.Mstrict
+    then Errors.dynamic_new_in_strict_mode p;
+    N.New (make_class_id env (p, SN.Classes.cUnknown),
+           exprl env el, exprl env uel)
   | Efun (f, idl) ->
       let idl = List.map fst idl in
       let idl = List.filter

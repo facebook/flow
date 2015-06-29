@@ -1191,11 +1191,14 @@ let self_outside_class pos =
   add Typing.self_outside_class pos
     "'self' is undefined outside of a class"
 
-let new_static_inconsistent new_pos (cpos, cname) =
+let new_inconsistent_construct new_pos (cpos, cname) kind =
   let name = Utils.strip_ns cname in
+  let preamble = match kind with
+    | `static -> "Can't use new static() for "^name
+    | `classname -> "Can't use new on classname<"^name^">"
+  in
   add_list Typing.new_static_inconsistent [
-    new_pos, "Can't use new static() for "^name^
-  "; __construct arguments are not \
+    new_pos, preamble^"; __construct arguments are not \
     guaranteed to be consistent in child classes";
     cpos, ("This declaration neither defines an abstract/final __construct"
            ^" nor uses <<__ConsistentConstruct>> attribute")]

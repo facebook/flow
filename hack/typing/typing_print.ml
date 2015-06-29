@@ -53,7 +53,7 @@ module ErrorString = struct
     | Tvar _             -> "some value"
     | Tanon _    -> "a function"
     | Tfun _     -> "a function"
-    | Tgeneric (x, _)    -> "a value of generic type "^x
+    | Tgeneric (x, _)    -> "a value of declared generic type "^x
     | Tabstract (ak, _)
         when AbstractKind.is_classname ak -> "a classname string"
     | Tabstract (ak, cstr) -> abstract ak cstr
@@ -531,6 +531,10 @@ let error: type a. a ty_ -> _ = fun ty -> ErrorString.type_ ty
 let suggest: type a. a ty -> _ =  fun ty -> Suggest.type_ ty
 let full env ty = Full.to_string env ty
 let full_strip_ns env ty = Full.to_string_strip_ns env ty
+let debug env ty =
+  let e_str = error (snd ty) in
+  let f_str = full_strip_ns env ty in
+  e_str^" "^f_str
 let class_ c = PrintClass.class_type c
 let gconst gc = Full.to_string_decl gc
 let fun_ f = PrintFun.fun_type f

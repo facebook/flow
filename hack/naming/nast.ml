@@ -365,12 +365,11 @@ let assert_named_body = function
   | NamedBody b -> b
   | UnnamedBody _ -> failwith "Expecting a named function body"
 
-let class_id_to_str cid =
-  match cid with
-    | CIparent -> SN.Classes.cParent
-    | CIself -> SN.Classes.cSelf
-    | CIstatic -> SN.Classes.cStatic
-    | CIvar (_, This) -> SN.SpecialIdents.this
-    | CIvar (_, Lvar (_, x)) -> "$"^string_of_int(x)
-    | CIvar _ -> assert false
-    | CI (_, x) -> x
+let class_id_to_str = function
+  | CIparent -> SN.Classes.cParent
+  | CIself -> SN.Classes.cSelf
+  | CIstatic -> SN.Classes.cStatic
+  | CIvar (_, This) -> SN.SpecialIdents.this
+  | CIvar (_, Lvar (_, x)) -> "$"^string_of_int(x)
+  | CIvar _ -> assert false
+  | CI (_, x) -> x

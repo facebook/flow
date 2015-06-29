@@ -65,6 +65,8 @@ let is_class ty = match snd ty with
 (*****************************************************************************)
 
 let rec get_base_type ty = match snd ty with
+  | Tabstract (AKnewtype (classname, _), _) when
+      classname = SN.Classes.cClassname -> ty
   | Tabstract (_, Some ty) -> get_base_type ty
   | _ -> ty
 
