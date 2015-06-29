@@ -1,0 +1,1 @@
+cmd: check --all --show-all-errors --strip-root --lib lib
