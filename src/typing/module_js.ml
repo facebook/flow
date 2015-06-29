@@ -222,8 +222,14 @@ let rec dir_exists dir =
 
 (* when system is case-insensitive, do our own file exists check *)
 and file_exists path =
-  if case_sensitive || path = "/" (* case doesn't matter for "/" *)
-  then Sys.file_exists path
+  (* case doesn't matter for "/", ".", "..." and these serve as a base-case for
+   * case-insensitive filesystems *)
+  if (
+    case_sensitive
+    || path = Filename.dir_sep
+    || path = Filename.current_dir_name
+    || path = Filename.parent_dir_name
+  ) then Sys.file_exists path
   else (
     let dir = Filename.dirname path in
     let files = match SMap.get dir !files_in_dir with
