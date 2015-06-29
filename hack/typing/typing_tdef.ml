@@ -26,7 +26,7 @@ module Phase = Typing_phase
 
 let expand_typedef_ ?force_expand:(force_expand=false) ety_env env r x argl =
   let pos = Reason.to_pos r in
-  if List.mem x (List.map snd ety_env.typedef_expansions)
+  if List.mem x (List.map snd ety_env.type_expansions)
   then begin
       Errors.cyclic_typedef pos;
       env, (ety_env, (r, Tany))
@@ -53,7 +53,7 @@ let expand_typedef_ ?force_expand:(force_expand=false) ety_env env r x argl =
            end;
          let ety_env = {
            ety_env with
-           typedef_expansions = (tdef_pos, x) :: ety_env.typedef_expansions;
+           type_expansions = (tdef_pos, x) :: ety_env.type_expansions;
            substs = TSubst.make tparaml argl;
          } in
          let env, expanded_ty =
@@ -97,15 +97,10 @@ let rec force_expand_typedef:
      let env, (ety_env, ty) =
        expand_typedef_ ~force_expand:true ety_env env r x argl in
      force_expand_typedef ~phase ~ety_env env ty
-  | r, Taccess (root, ids) ->
-     let env, root = Phase.localize_phase ~ety_env env (phase root) in
-     let env, (ety_env, ty) =
-       TAccess.expand_with_env ety_env env r (root, ids) in
-     force_expand_typedef ~phase:Phase.locl ~ety_env env ty
   | ty ->
      let env, ty =
        Phase.localize_phase ~ety_env env (phase ty) in
-     env, ty, ety_env.typedef_expansions |> List.map fst |> List.rev
+     env, ty, ety_env.type_expansions |> List.map fst |> List.rev
 
 (*****************************************************************************)
 (*****************************************************************************)

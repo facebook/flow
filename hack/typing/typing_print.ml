@@ -134,7 +134,7 @@ module Suggest = struct
   let rec type_: type a. a ty -> string = fun (_, ty) ->
     match ty with
     | Tarray _               -> "array"
-    | Tthis                  -> "this"
+    | Tthis                  -> SN.Typehints.this
     | Tunresolved _          -> "..."
     | Ttuple (l)             -> "("^list l^")"
     | Tany                   -> "..."
@@ -164,7 +164,7 @@ module Suggest = struct
         let x =
           match snd root_ty with
           | Tapply ((_, x), _) -> Some x
-          | Tclass ((_, x), _) -> Some x
+          | Tthis -> Some SN.Typehints.this
           | _ -> None in
         (match x with
          | None -> "..."
@@ -214,7 +214,7 @@ module Full = struct
       fun x y -> list_sep o ", " x y in
     match x with
     | Tany -> o "_"
-    | Tthis -> o "this"
+    | Tthis -> o SN.Typehints.this
     | Tmixed -> o "mixed"
     | Tarray (None, None) -> o "array"
     | Tarray (Some x, None) -> o "array<"; k x; o ">"

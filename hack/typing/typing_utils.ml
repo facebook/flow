@@ -36,6 +36,12 @@ type sub_type = Env.env -> locl ty -> locl ty -> Env.env
 let (sub_type_ref: sub_type ref) = ref not_implemented
 let sub_type x = !sub_type_ref x
 
+type expand_typeconst =
+  expand_env -> Env.env -> Reason.t -> locl ty -> Nast.sid list ->
+  Env.env * ety
+let (expand_typeconst_ref: expand_typeconst ref) = ref not_implemented
+let expand_typeconst x = !expand_typeconst_ref x
+
 (* Convenience function for creating `this` types *)
 let this_of ty = Tabstract (AKdependent (`this, []), Some ty)
 
@@ -199,7 +205,7 @@ let is_array_as_tuple env ty =
       )
   | _, (Tany | Tmixed | Tarray (_, _) | Tprim _ | Toption _
     | Tvar _ | Tabstract (_, _) | Tclass (_, _) | Ttuple _ | Tanon (_, _)
-    | Tfun _ | Tunresolved _ | Tobject | Tshape _ | Taccess (_, _)) -> false
+    | Tfun _ | Tunresolved _ | Tobject | Tshape _) -> false
 
 
 (*****************************************************************************)

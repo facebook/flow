@@ -57,12 +57,6 @@ let rec assert_nontrivial p bop env ty1 ty2 =
   | (_, Toption ty1), (_, Tprim _ as ty2)
   | (_, Tprim _ as ty1), (_, Toption ty2) ->
       assert_nontrivial p bop env ty1 ty2
-  | (_, Taccess _), _ ->
-      let _, ty1 = TAccess.expand env, ty1 in
-      assert_nontrivial p bop env ty1 ty2
-  | _, (_, Taccess _) ->
-      let _, ty2 = TAccess.expand env, ty2 in
-      assert_nontrivial p bop env ty1 ty2
   | (_, (Tany | Tmixed | Tarray (_, _) | Tprim _ | Toption _
     | Tvar _ | Tfun _ | Tabstract (_, _) | Tclass (_, _) | Ttuple _
     | Tanon (_, _) | Tunresolved _ | Tobject | Tshape _)

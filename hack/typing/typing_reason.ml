@@ -157,10 +157,8 @@ let rec to_string prefix r =
         r_expanded
       )
   | Rexpr_dep_type (r, p, n) ->
-      let l = (to_string prefix r) in
-      List.hd l
-        :: (p, "  where '"^n^"' is a reference to this expression")
-        :: List.tl l
+      (p, "  where '"^n^"' is a reference to this expression") ::
+      (to_string prefix r)
   | Rtconst_no_cstr (_, n) ->
      [(p, prefix ^ " because the type constant "^n^" has no constraints")]
 
@@ -325,11 +323,10 @@ let none = Rnone
 
 let explain_generic_constraint p_inst reason name error =
   match reason with
-  | Rexpr_dep_type _ ->
+  | Rtype_access (_, _, _) | Rexpr_dep_type _ ->
       let msgl =
         to_string ("Considering the constraint on '"^name^"'") reason in
       Errors.explain_type_constant msgl error
-  | Rtype_access (_, _, reason)
   | reason ->
       let pos = to_pos reason in
       Errors.explain_constraint p_inst pos name error

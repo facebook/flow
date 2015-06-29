@@ -183,9 +183,6 @@ let rec debug stack env (r, ty) =
       Printf.printf "App %s" x;
       o "<"; List.iter (fun x -> debug stack env x; o ", ") argl;
       o ">"
-  | Taccess (root_ty, ids) ->
-      debug stack env root_ty;
-      o (List.fold_left (fun acc (_, sid) -> acc ^ "::" ^ sid) "" ids)
   | Tany -> o "X"
   | Tanon _ -> o "anonymous"
   | Tfun ft ->

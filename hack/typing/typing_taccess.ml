@@ -9,6 +9,7 @@
  *)
 
 open Typing_defs
+open Typing_dependent_type
 open Utils
 
 module TUtils = Typing_utils
@@ -22,295 +23,200 @@ module Phase = Typing_phase
 type env = {
   tenv : Env.env;
   ety_env : Phase.env;
-  (* Keeps track of all the expansions that occur when expanding a Taccess.
-   * This is necessary to check for potential cycles while expanding, as well
-   * as providing detailed information in the Reason.t of the resulting type.
+  (* A trail of all the type constants we have expanded. Used primarily for
+   * error reporting
    *)
-  expansions : string list;
-  (* Original reason for the Taccess. This will contain a Pos.t to the place
-   * where the Taccess is declared
-   *)
-  orig_reason : Reason.t;
-  (* Whether or not we are expanding a generic type such as "this::T".
-   * If we are expanding a generic then when choosing the type of a
-   * type constant we use the constraint type rather than the assigned type.
-   *)
-  is_generic : bool;
+  trail : dependent_type list;
   (* Keep track of any Tvars we see to check for potential recursive Tvars *)
   seen_tvar : ISet.t;
-  (* This is used when expanding generics so we know what ids need to
-   * be appended for the new generic that we derive. See expand_generic for
-   * a more detailed example.
+  (* A list of dependent we have encountered while expanding a type constant.
+   * After expanding a type constant we can choose either the assigned type or
+   * the constrained type. If we choose the assigned type, the result will not
+   * be expression dependent so this list will be set to empty. However, if it
+   * is the constrained type then the final type will also be a dependent type.
    *)
-  ids : string list;
+  dep_tys : (Reason.t * dependent_type) list;
+  (* The remaining type constants we need to expand *)
+  ids : Nast.sid list;
 }
 
-let empty_env env ety_env reason = {
+let empty_env env ety_env ids = {
   tenv = env;
   ety_env = ety_env;
-  expansions = [];
-  orig_reason = reason;
-  is_generic = false;
+  trail = [];
   seen_tvar = ISet.empty;
-  ids = [];
+  dep_tys = [];
+  ids = ids;
 }
 
-let rec expand_with_env ety_env env reason (root, ids) =
-  let expand_env = empty_env env ety_env reason in
-  let expand_env, ty = expand_ expand_env root ids in
+let rec expand_with_env ety_env env reason root ids =
+  let expand_env = empty_env env ety_env ids in
+  let env, ty = expand_ expand_env root in
+  let reason = Reason.Rtype_access(
+    reason,
+    env.trail
+    |> List.rev
+    |> List.map (compose strip_ns ExprDepTy.to_string ),
+    fst ty
+  ) in
+  let ty = reason, snd ty in
   expand_env.tenv, (expand_env.ety_env, ty)
 
-and expand env r t =
+and expand env r (root, ids) =
   let ety_env = Phase.env_with_self env in
-  let env, (_, ty) = expand_with_env ety_env env r t in
+  let env, (ety_env, root) = Phase.localize_with_env ~ety_env env root in
+  let env, (_, ty) = expand_with_env ety_env env r root ids in
   env, ty
 
 (* The root of a type access is a type. When expanding a type access this type
  * needs to resolve to the name of a class so we can look up if a given type
  * constant is defined in the class.
  *
- * We also need to track additional information in the enviornment as we expand.
- * See the declaration of the type "env" above for all the information we need.
+ * We also need to track what expansions have already taken place to make sure
+ * we do not recurse infinitely.
  *)
-and expand_ env root_ty ids =
-  match ids with
+and expand_ env (root_reason, root_ty as root) =
+  match env.ids with
   | [] ->
-      (* check for potential cycles *)
-      Errors.try_with_error
-      (fun () ->
-        check_tconst env root_ty;
-        let reason = Reason.Rtype_access(
-          env.orig_reason,
-          List.rev env.expansions,
-          fst root_ty
-        ) in
-        env, (reason, snd root_ty)
-      )
-      (fun () -> env, (Reason.none, Tany))
-  | head :: tail -> begin
-      match snd root_ty with
-      | Tany ->
-          env, root_ty
-      | Taccess (root, ids2) ->
-          expand_ env root (ids2 @ ids)
-      | Toption ty ->
-          expand_ env ty ids
+      env, make_dependent_type env.dep_tys root
+  | head::tail -> begin match root_ty with
+      | Tany -> env, root
+      | Tabstract (AKnewtype (_, _), Some ty) | Toption ty -> expand_ env ty
       | Tclass ((class_pos, class_name), _) ->
-          begin
-            try
-              let env, ty, ety_env = create_root_from_type_constant
-                env class_pos class_name root_ty head in
-              (* check for cycles before expanding further *)
-              let seen =
-                let cur_tconst = List.fold_left (fun acc (_, s) -> acc^"::"^s)
-                  (strip_ns class_name) ids in
-                if List.mem cur_tconst env.expansions
-                then (
-                  let seen = List.rev (cur_tconst :: env.expansions) in
-                  Errors.cyclic_typeconst (Reason.to_pos (fst ty)) seen;
-                  raise Exit
-                )
-                else cur_tconst :: env.expansions in
-              let env =
-                if tail = []
-                then {
-                  env with
-                  expansions = seen;
-                  ety_env = ety_env;
-                }
-                else {
-                  env with
-                  expansions = seen
-                } in
-              expand_ env ty tail
-            with
-              Exit -> env, (Reason.none, Tany)
-          end
-      | Tabstract (ak, Some ty) ->
-          let name = strip_ns @@ AbstractKind.to_string ak in
-          let env, ty = expand_generic env ak name ty ids in
-          (* If it is a expression dependent type we want to explain what
-           * expression it was derived from.
-           *)
-          let reason =
-            match ak with
-            | AKdependent ((`static | `expr _), _) ->
-                let pos = Reason.to_pos @@ fst root_ty in
-                Reason.Rexpr_dep_type (fst ty, pos, name)
-            | AKgeneric (_, _) | AKnewtype (_, _) | AKdependent (_, _) ->
-                fst ty in
-          env, (reason, snd ty)
+          let env, ty =
+            create_root_from_type_constant
+              env class_pos class_name root head in
+          expand_ { env with ids = tail } ty
+      | Tabstract (AKgeneric (s, _), Some ty) ->
+          (* Expanding a generic creates a dependent type *)
+          let dep_ty = `cls s, [] in
+          let env =
+            { env with
+              dep_tys = (root_reason, dep_ty)::env.dep_tys } in
+          expand_ env ty
+      | Tabstract (AKdependent dep_ty, Some ty) ->
+          let env =
+            { env with
+              dep_tys = (root_reason, dep_ty)::env.dep_tys } in
+          expand_ env ty
       | Tunresolved tyl ->
-          let tyl =
-            List.map begin fun ty ->
-              snd (expand_ env ty ids)
-            end tyl in
-          env, (env.orig_reason, Tunresolved tyl)
-      | Tvar n ->
-          if ISet.mem n env.seen_tvar
-          then env, (Reason.none, Tany)
-          else (
-            let tenv, ty = Env.expand_type env.tenv root_ty in
-            let env = { env with
-              tenv = tenv;
-              seen_tvar = ISet.add n env.seen_tvar;
-            } in
-            expand_ env ty ids
-          )
+          let env, tyl = lfold begin fun prev_env ty ->
+            let env, ty = expand_ env ty in
+            { prev_env with tenv = env.tenv }, ty
+          end env tyl in
+          env, (root_reason, Tunresolved tyl)
+      | Tvar _ ->
+          let tenv, seen, ty =
+            Env.expand_type_recorded env.tenv env.seen_tvar root in
+          let env = { env with tenv = tenv; seen_tvar = seen } in
+          expand_ env ty
       | Tanon _ | Tobject | Tmixed | Tprim _ | Tshape _ | Ttuple _
       | Tarray (_, _) | Tfun _ | Tabstract (_, _) ->
           let pos, tconst = head in
-          let ty = Typing_print.error (snd root_ty) in
-          Errors.non_object_member tconst (Reason.to_pos (fst root_ty)) ty pos;
-          env, (Reason.none, Tany)
-  end
-
-(* When expanding the constraint of a Tabstract we need to modify
- * the environment. While expanding an abstract type we will always choose the
- * constraint of a type constant (the "as" defined type) over the assigned type
- * (the "=" defined type). This is because the type constant could've been
- * overridden by a subclass so we only have the gurantee that the constraint is
- * satisified.
- *
- * We also need to do extra bookkeeping as well. Each time we use the constraint
- * of a type constant we add it to the list "env.ids". This is to ensure we
- * construct the correct generic result. For example:
- *
- * interface I {
- *   const type TnoGeneric = I;
- *   abstract const type TGeneric as I;
- *
- *   public function f(): this::TnoGeneric;
- *   public function g(): this::TGeneric;
- * }
- *
- * When expanding "this::TnoGeneric" the root will be a generic "this as I".
- * We will call 'expand_generic env "this" Tapply "I" ["TnoGeneric"]'. We will
- * continue expanding "I::TnoGeneric". When we look up the type constant we
- * will use the assigned type since there is no constraint. The resulting type
- * will be "I" after expansion is complete.
- *
- * However when expanding "this::TGeneric" there is a constraint on the type
- * constant "I::TGeneric". Since we are in a generic context we must use the
- * constraint type and also store "TGeneric" in "env.ids". When we get back to
- * expand_generic we see that "env.ids" is non-empty so we construct a new
- * generic type by appending the ids in "env.ids" to the name of generic.
- * The resulting type should be
- *
- *    this::TGeneric as I::TGeneric as I
- *)
-and expand_generic env ak name root ids =
-  let env = { env with
-    is_generic = true;
-    expansions = List.fold_left (fun acc (_, s) -> acc^"::"^s) name ids
-      :: env.expansions;
-  } in
-  let env, ty = expand_ env root ids in
-  if env.ids = [] then
-    env, ty
-  else
-    let dt =
-      match ak with
-      | AKgeneric (x, _) | AKnewtype (x, _) -> `cls x
-      | AKdependent (dt, _) -> dt in
-    env, (fst ty, Tabstract (AKdependent (dt, env.ids), Some ty))
+          let ty = Typing_print.error root_ty in
+          Errors.non_object_member tconst (Reason.to_pos root_reason) ty pos;
+          env, (root_reason, Tany)
+     end
 
 (* The function takes a "step" forward in the expansion. We look up the type
  * constant associated with the given class_name and create a new root type.
- * A type constant has both a constraint type and assigned type. The constraint
- * type is always used if env.is_generic is true, otherwise we use the assigned
- * type if one exists.
+ * A type constant has both a constraint type and assigned type. Which one we
+ * choose depends on if there are any dependent types set in the environment.
+ * If the root type is not a dependent type then we choose the assigned type,
+ * otherwise we choose the constraint type. If there is no constraint type then
+ * we choose the assigned type.
  *)
 and create_root_from_type_constant env class_pos class_name root_ty (pos, tconst) =
-  let class_ =
-    match Env.get_class env.tenv class_name with
-    | None ->
-        Errors.unbound_name_typing class_pos class_name;
+  match get_typeconst env class_pos class_name pos tconst with
+  | None -> env, (fst root_ty, Tany)
+  | Some (ety_env, typeconst) ->
+      let env =
+        { env with
+          trail = (`cls class_name, List.map snd env.ids)::env.trail } in
+      let ety_env = { ety_env with this_ty = root_ty; from_class = None } in
+      begin
+        match typeconst with
+        | { ttc_type = Some ty; _ }
+            when typeconst.ttc_constraint = None || env.dep_tys = [] ->
+            (* We are choosing the assigned type. The assigned type itself
+             * may contain a 'this' type so we need to change the this_ty in
+             * the environment to be the root as a dependent type.
+             *)
+            let ety_env =
+              { ety_env with
+                this_ty = make_dependent_type env.dep_tys root_ty;
+                from_class = None; } in
+            let tenv, ty = Phase.localize ~ety_env env.tenv ty in
+            { env with dep_tys = []; tenv = tenv }, ty
+        | {ttc_constraint = Some cstr; _} ->
+            let tenv, cstr = Phase.localize ~ety_env env.tenv cstr in
+            let dep_ty = Reason.Rwitness (fst typeconst.ttc_name),
+                         (`cls class_name, [tconst]) in
+            (* Append the name of the expanded type constant to each dependent
+             * type.
+             *)
+            let dep_tys =
+              List.map (fun (r, (d, s)) -> r, (d, s @ [tconst])) env.dep_tys in
+            { env with dep_tys = dep_ty::dep_tys; tenv = tenv }, cstr
+        | _ ->
+            let ty =
+              Reason.Rwitness (fst typeconst.ttc_name),
+              Tabstract (AKdependent (`cls class_name, [tconst]), None) in
+            let dep_tys =
+              List.map (fun (r, (d, s)) -> r, (d, s @ [tconst])) env.dep_tys in
+            { env with dep_tys = dep_tys }, ty
+      end
+
+(* Looks up the type constant within the given class. This also checks for
+ * potential cycles by examining the expansions we have already performed.
+ *)
+and get_typeconst env class_pos class_name pos tconst =
+  try
+    let class_ = match Env.get_class env.tenv class_name with
+      | None ->
+          Errors.unbound_name_typing class_pos class_name;
+          raise Exit
+      | Some c -> c in
+    let typeconst = match SMap.get tconst class_.tc_typeconsts with
+      | None ->
+          Errors.smember_not_found
+            `class_typeconst pos (class_.tc_pos, class_name) tconst `no_hint;
+          raise Exit
+      | Some tc -> tc in
+    (* Check for cycles. We do this by combining the name of the current class
+     * with the remaining ids that we need to expand. If we encounter the same
+     * class name + ids that means we have entered a cycle.
+     *)
+    let cur_tconst = `cls class_name, List.map snd env.ids in
+    let seen = ExprDepTy.to_string cur_tconst in
+    let expansions = (pos, seen)::env.ety_env.type_expansions in
+    if List.mem seen (List.map snd env.ety_env.type_expansions) then
+      begin
+        let seen = expansions |> List.map snd |> List.rev in
+        Errors.cyclic_typeconst (fst typeconst.ttc_name) seen;
         raise Exit
-    | Some c -> c in
-  let typeconst =
-    match SMap.get tconst class_.tc_typeconsts with
-    | None ->
-        Errors.smember_not_found `class_typeconst
-          pos (class_.tc_pos, class_name) tconst `no_hint;
-        raise Exit
-    | Some tc -> tc in
-  let ety_env = { env.ety_env with this_ty = root_ty } in
-  (match typeconst with
-  | { ttc_type = Some ty; _ }
-    when typeconst.ttc_constraint = None || (not env.is_generic) ->
-      (* It is important to clear the fields in the environment so we don't
-       * accidently wrap this into a generic type in expand_generic
-       *)
-      let tenv, (ety_env, ty) =
-        Phase.localize_with_env ~ety_env env.tenv ty in
-      { env with ids = []; is_generic = false; tenv = tenv }, ty, ety_env
-  | {ttc_constraint = cstr; _} ->
-      let tenv, ety_env, cstr =
-        match opt (Phase.localize_with_env ~ety_env) env.tenv cstr with
-        | tenv, Some (ety_env, cstr) -> tenv, ety_env, Some cstr
-        | tenv, None -> tenv, ety_env, None in
-      let ty =
-        Reason.Rwitness (fst typeconst.ttc_name),
-        Tabstract (AKdependent (`cls class_name, [tconst]), cstr) in
-      { env with ids = tconst :: env.ids; tenv = tenv }, ty, ety_env
-  )
+      end;
+    Some ({ env.ety_env with type_expansions = expansions }, typeconst)
+  with
+    Exit -> None
 
-(* Following code checks for cycles that may occur when expanding a Taccess.
- * This is mainly copy-pasta from Typing_tdef.ml. We should see if its possible
- * to provide a more generic cycle detection utility function.
- * *)
-and check_tconst env (_, ty) =
-  match ty with
-  | Tany -> ()
-  | Tmixed -> ()
-  | Tarray (ty1, ty2) ->
-      check_tconst_opt env ty1;
-      check_tconst_opt env ty2;
-      ()
-  | Toption ty -> check_tconst env ty
-  | Tprim _ -> ()
-  | Tvar _ -> ()
-  | Tfun fty -> check_fun_tconst env fty
-  | Tabstract (AKgeneric (_, super), cstr) ->
-      check_tconst_opt env super;
-      check_tconst_opt env cstr
-  | Tabstract (AKnewtype (_, tyl), cstr) ->
-      check_tconst_list env tyl;
-      check_tconst_opt env cstr
-  | Tabstract (AKdependent (_, _), cstr) ->
-      check_tconst_opt env cstr
-  | Ttuple tyl ->
-      check_tconst_list env tyl
-  | Tunresolved tyl ->
-      check_tconst_list env tyl
-  | Taccess (root, ids) ->
-      let env, ty = expand_ env root ids in
-      check_tconst env ty
-  | Tanon _ -> assert false
-  | Tclass (_, tyl) ->
-     check_tconst_list env tyl
-  | Tobject -> ()
-  | Tshape (_, tym) ->
-      Nast.ShapeMap.iter (fun _ v -> check_tconst env v) tym
+and make_dependent_type dep_tys ty =
+  List.fold_left begin fun ty (r, dep_ty) ->
+    (* If it is a expression dependent type we want to explain what
+     * expression it was derived from.
+     *)
+    let reason = match fst dep_ty with
+      | `expr _ | `static ->
+          let pos = Reason.to_pos r in
+          let name = ExprDepTy.to_string (fst dep_ty, []) in
+          Reason.Rexpr_dep_type (fst ty, pos, name)
+      | _ ->
+          fst ty in
+    reason, Tabstract (AKdependent dep_ty, Some ty)
+  end ty dep_tys
 
-and check_tconst_list env x =
-  List.iter (check_tconst env) x
+(*****************************************************************************)
+(* Exporting *)
+(*****************************************************************************)
 
-and check_fun_tconst env ft =
-  check_tconst_fun_param_list env ft.ft_params;
-  (match ft.ft_arity with
-    | Fvariadic (_, p) -> check_tconst_fun_param env p
-    | _ -> ());
-  check_tconst env ft.ft_ret;
-  ()
-
-and check_tconst_fun_param_list env x =
-  List.iter (check_tconst_fun_param env) x
-
-and check_tconst_fun_param env (_, ty) =
-  check_tconst env ty
-
-and check_tconst_opt env = function
-  | None -> ()
-  | Some x -> check_tconst env x
+let () = Typing_utils.expand_typeconst_ref := expand_with_env

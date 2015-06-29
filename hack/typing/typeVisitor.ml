@@ -16,20 +16,20 @@ class type ['a] type_visitor_type = object
   method on_tmixed : 'a -> 'a
   method on_tthis : 'a -> 'a
   method on_tarray : 'a -> 'b ty option -> 'b ty option -> 'a
-  method on_tgeneric : 'a -> string -> (Ast.constraint_kind * 'b ty) option -> 'a
+  method on_tgeneric : 'a -> string -> (Ast.constraint_kind * decl ty) option -> 'a
   method on_toption : 'a -> 'b ty -> 'a
   method on_tprim : 'a -> Nast.tprim -> 'a
   method on_tvar : 'a -> Ident.t -> 'a
   method on_type : 'a -> 'b ty -> 'a
   method on_tfun : 'a -> 'b fun_type -> 'a
   method on_tabstract : 'a -> abstract_kind -> locl ty option -> 'a
-  method on_tapply : 'a -> Nast.sid -> 'b ty list -> 'a
+  method on_tapply : 'a -> Nast.sid -> decl ty list -> 'a
   method on_ttuple : 'a -> 'b ty list -> 'a
   method on_tanon : 'a -> locl fun_arity -> Ident.t -> 'a
   method on_tunresolved : 'a -> locl ty list -> 'a
   method on_tobject : 'a -> 'a
   method on_tshape : 'a -> bool -> 'b ty Nast.ShapeMap.t -> 'a
-  method on_taccess : 'a -> 'b taccess_type -> 'a
+  method on_taccess : 'a -> taccess_type -> 'a
   method on_tclass : 'a -> Nast.sid -> locl ty list -> 'a
 end
 
@@ -42,8 +42,8 @@ class virtual ['a] type_visitor : ['a] type_visitor_type = object(this)
     let acc = Option.fold ~f:this#on_type ~init:acc ty1_opt in
     let acc = Option.fold ~f:this#on_type ~init:acc ty2_opt in
     acc
-  method on_tgeneric: type a. _ -> _ -> (_ * a ty) option -> _ =
-    fun acc _ cstr -> Option.fold ~f:this#on_type ~init:acc (opt_map snd cstr)
+  method on_tgeneric acc _ cstr =
+    Option.fold ~f:this#on_type ~init:acc (opt_map snd cstr)
   method on_toption: type a. _ -> a ty -> _ =
     fun acc ty -> this#on_type acc ty
   method on_tprim acc _ = acc
@@ -64,10 +64,8 @@ class virtual ['a] type_visitor : ['a] type_visitor_type = object(this)
       | AKdependent (_, _) -> acc in
     let acc = Option.fold ~f:this#on_type ~init:acc ty_opt in
     acc
-  method on_tapply: type a. _ -> _ -> a ty list -> _ =
-    fun acc _ tyl -> List.fold_left this#on_type acc tyl
-  method on_taccess: type a. _ -> a taccess_type -> _ =
-    fun acc (root, _ids) -> this#on_type acc root
+  method on_tapply acc _ tyl = List.fold_left this#on_type acc tyl
+  method on_taccess acc (root, _ids) = this#on_type acc root
   method on_ttuple: type a. _ -> a ty list -> _ =
     fun acc tyl -> List.fold_left this#on_type acc tyl
   method on_tanon acc _ _ = acc

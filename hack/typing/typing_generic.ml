@@ -30,8 +30,7 @@ end = struct
   and ty_ = function
     | Tabstract (AKdependent (_, _), cstr) -> ty_opt cstr
     | Tabstract (AKgeneric (x, _), _) -> raise (Found x)
-    | Tanon _ | Taccess _
-    | Tany | Tmixed | Tprim _ -> ()
+    | Tanon _ | Tany | Tmixed | Tprim _ -> ()
     | Tarray (ty1, ty2) ->
         ty_opt ty1; ty_opt ty2
     | Tvar _ -> assert false (* Expansion got rid of Tvars ... *)

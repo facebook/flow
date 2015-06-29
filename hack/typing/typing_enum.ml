@@ -78,7 +78,7 @@ let check_valid_array_key_type f_fail ~allow_any:allow_any env p t =
     | Tany when allow_any -> ()
     | Tany | Tmixed | Tarray (_, _) | Tprim _ | Toption _
       | Tvar _ | Tabstract (_, _) | Tclass (_, _) | Ttuple _ | Tanon (_, _)
-      | Tfun _ | Tunresolved _ | Tobject | Tshape _ | Taccess (_, _) ->
+      | Tfun _ | Tunresolved _ | Tobject | Tshape _ ->
         f_fail p (Reason.to_pos r) (Typing_print.error t') trail);
   env
 
@@ -127,9 +127,9 @@ let enum_class_check env tc consts const_types =
           | Tabstract (AKgeneric (_, _), _) -> ()
           | Tany | Tarray (_, _) | Tprim _ | Toption _ | Tvar _
             | Tabstract (_, _) | Tclass (_, _) | Ttuple _ | Tanon (_, _)
-            | Tunresolved _ | Tobject | Tfun _ | Tshape _
-            | Taccess (_, _) -> Errors.enum_type_bad (Reason.to_pos r)
-                   (Typing_print.error ty_exp') trail);
+            | Tunresolved _ | Tobject | Tfun _ | Tshape _ ->
+              Errors.enum_type_bad (Reason.to_pos r)
+                (Typing_print.error ty_exp') trail);
 
         (* Make sure that if a constraint was given that the base type is
          * actually a subtype of it. *)

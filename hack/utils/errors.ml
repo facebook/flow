@@ -1508,6 +1508,7 @@ let declared_contravariant pos1 pos2 emsg =
  )
 
 let cyclic_typeconst pos sl =
+  let sl = List.map strip_ns sl in
   add Typing.cyclic_typeconst pos
     ("Cyclic type constant:\n  "^String.concat " -> " sl)
 

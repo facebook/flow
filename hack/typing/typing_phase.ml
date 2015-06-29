@@ -148,13 +148,12 @@ let rec localize_with_env ~ety_env env (dty: decl ty) =
      let env, tyl = lfold (localize ~ety_env) env tyl in
      env, (ety_env, (r, Ttuple tyl))
   | r, Taccess ((_, orig_root as root_ty), ids) ->
-     let env, root_ty = localize ~ety_env env root_ty in
-     let root_ty =
-       match ety_env.from_class with
-       | Some cid when orig_root = Tthis ->
-          ExprDepTy.make cid root_ty
-       | _ -> root_ty in
-     env, (ety_env, (r, Taccess (root_ty, ids)))
+      let env, root_ty = localize ~ety_env env root_ty in
+      let root_ty =
+        match ety_env.from_class with
+        | Some cid when orig_root = Tthis -> ExprDepTy.make cid root_ty
+        | _ -> root_ty in
+      TUtils.expand_typeconst ety_env env r root_ty ids
   | r, Tshape (fields_known, tym) ->
      let env, tym = ShapeMap.map_env (localize ~ety_env) env tym in
      env, (ety_env, (r, Tshape (fields_known, tym)))
@@ -202,7 +201,7 @@ let localize_phase ~ety_env env phase_ty =
 
 let env_with_self env =
   {
-    typedef_expansions = [];
+    type_expansions = [];
     substs = SMap.empty;
     this_ty = Reason.none, TUtils.this_of (Env.get_self env);
     from_class = None;

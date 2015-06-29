@@ -64,12 +64,6 @@ and unify_with_uenv env (uenv1, ty1) (uenv2, ty2) =
   | (r2, Tmixed), (_, Toption ty1)
   | (_, Toption ty1), (r2, Tmixed) ->
     unify_with_uenv env (TUEnv.empty, ty1) (TUEnv.empty, (r2, Tmixed))
-  | (r, Taccess taccess), _ ->
-      let env, ty1 = TAccess.expand env r taccess in
-      unify_with_uenv env (uenv1, ty1) (uenv2, ty2)
-  | _, (r, Taccess taccess) ->
-      let env, ty2 = TAccess.expand env r taccess in
-      unify_with_uenv env (uenv1, ty1) (uenv2, ty2)
   | (r1, ty1), (r2, ty2) ->
       let r = unify_reason r1 r2 in
       let env, ty = unify_ env r1 ty1 r2 ty2 in
@@ -196,7 +190,7 @@ and unify_ env r1 ty1 r2 ty2 =
                | Tany | Tmixed | Tarray (_, _) | Tprim _
                | Toption _ | Tvar _ | Tabstract (_, _) | Ttuple _
                | Tanon (_, _) | Tfun _ | Tunresolved _ | Tobject
-               | Tshape _ | Taccess (_, _) -> false
+               | Tshape _ -> false
              end
              ~do_:(fun error -> Errors.this_final id (Reason.to_pos r1) error)
           );
@@ -266,12 +260,6 @@ and unify_ env r1 ty1 r2 ty2 =
         ~on_missing_optional_field
         (env, res) (r2, fields_known2, fdm2) (r1, fields_known1, fdm1) in
       env, Tshape (fields_known1 && fields_known2, res)
-  | Taccess taccess, _ ->
-      let env, fty1 = TAccess.expand env r1 taccess in
-      let env, fty = unify env fty1 (r2, ty2) in
-      env, snd fty
-  | _, Taccess _ ->
-      unify_ env r2 ty2 r1 ty1
   | (Tany | Tmixed | Tarray (_, _) | Tprim _ | Toption _
       | Tvar _ | Tabstract (_, _) | Tclass (_, _) | Ttuple _ | Tanon (_, _)
       | Tfun _ | Tunresolved _ | Tobject | Tshape _), _ ->

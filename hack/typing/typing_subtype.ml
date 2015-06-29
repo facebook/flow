@@ -217,12 +217,6 @@ and sub_type_with_uenv env (uenv_super, ty_super) (uenv_sub, ty_sub) =
    * TODO: Figure out a nicer (type-enforced?) way to associate the right
    * uenv with the right type. *)
   match ety_super, ety_sub with
-  | _, (r, Taccess taccess) ->
-      let env, ty_sub = TAccess.expand env r taccess in
-      sub_type_with_uenv env (uenv_super, ty_super) (uenv_sub, ty_sub)
-  | (r, Taccess taccess), _ ->
-      let env, ty_super = TAccess.expand env r taccess in
-      sub_type_with_uenv env (uenv_super, ty_super) (uenv_sub, ty_sub)
   | (_, Tunresolved _), (_, Tunresolved _) ->
       let env, _ =
         Unify.unify_with_uenv env (uenv_super, ty_super) (uenv_sub, ty_sub) in
@@ -339,7 +333,7 @@ and sub_type_with_uenv env (uenv_super, ty_super) (uenv_sub, ty_sub) =
                   | env, None ->
                     Errors.try_ begin fun () ->
                       let ety_env = {
-                        typedef_expansions = [];
+                        type_expansions = [];
                         substs = SMap.empty;
                         this_ty = ty_sub;
                         from_class = None;
@@ -377,7 +371,7 @@ and sub_type_with_uenv env (uenv_super, ty_super) (uenv_sub, ty_sub) =
                    * This is covered by test/typecheck/this_tparam2.php
                    *)
                   let ety_env = {
-                    typedef_expansions = [];
+                    type_expansions = [];
                     substs = TSubst.make class_.tc_tparams tyl_sub;
                     this_ty = Reason.none, TUtils.this_of ty_sub;
                     from_class = None;
@@ -540,7 +534,7 @@ and sub_type_with_uenv env (uenv_super, ty_super) (uenv_sub, ty_sub) =
           (fun () -> fst (Unify.unify env ty_super ty_sub))
           (fun _ ->
            let ety_env = {
-             typedef_expansions = [];
+             type_expansions = [];
              substs = SMap.empty;
              this_ty = Reason.none, TUtils.this_of ty_sub;
              from_class = None;
@@ -583,9 +577,6 @@ and sub_string p env ty2 =
       env
   | (_, Tabstract (_, Some ty)) ->
       sub_string p env ty
-  | (r, Taccess taccess) ->
-      let env, ety2 = TAccess.expand env r taccess in
-      sub_string p env ety2
   | (r2, Tclass (x, _)) ->
       let class_ = Env.get_class env (snd x) in
       (match class_ with

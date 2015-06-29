@@ -56,7 +56,6 @@ and fully_expand_ seen env = function
         | x -> x
       in
       Tfun { ft with ft_params = params; ft_arity = arity; ft_ret = ret }
-  | Taccess (_, _) as ty -> ty
   | Tabstract (AKgeneric (x, super), cstr) ->
       let super = fully_expand_opt seen env super in
       let cstr = fully_expand_opt seen env cstr in

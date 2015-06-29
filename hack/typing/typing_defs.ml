@@ -51,6 +51,9 @@ and _ ty_ =
    *)
   | Tgeneric : string * (Ast.constraint_kind * decl ty) option -> decl ty_
 
+  (* Name of class, name of type const, remaining names of type consts *)
+  | Taccess : taccess_type -> decl ty_
+
   (*========== Following Types Exist in Both Phases ==========*)
   (* "Any" is the type of a variable with a missing annotation, and "mixed" is
    * the type of a variable annotated as "mixed". THESE TWO ARE VERY DIFFERENT!
@@ -99,9 +102,6 @@ and _ ty_ =
 
   (* Tuple, with ordered list of the types of the elements of the tuple. *)
   | Ttuple : 'phase ty list -> 'phase ty_
-
-  (* Name of class, name of type const, remaining names of type consts *)
-  | Taccess : 'phase taccess_type -> 'phase ty_
 
   (* Whether all fields of this shape are known, types of each of the
    * known arms.
@@ -282,7 +282,7 @@ and dependent_type =
   | `expr of Ident.t
   ] * string list
 
-and 'phase taccess_type = 'phase ty * Nast.sid list
+and taccess_type = decl ty * Nast.sid list
 
 (* The type of a function AND a method.
  * A function has a min and max arity because of optional arguments *)
@@ -381,7 +381,10 @@ type phase_ty =
 
 (* Tracks information about how a type was expanded *)
 type expand_env = {
-  typedef_expansions : (Pos.t * string) list;
+  (* A list of the type defs and type access we have expanded thus far. Used
+   * to prevent entering into a cycle when expanding these types
+   *)
+  type_expansions : (Pos.t * string) list;
   substs : locl ty SMap.t;
   this_ty : locl ty;
   (* The class that the type is extracted from. Used for creating expression
