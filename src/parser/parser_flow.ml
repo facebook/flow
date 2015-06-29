@@ -2865,7 +2865,7 @@ end = struct
 	  | Some end_loc -> end_loc in
 	Eat.semicolon env;
 	Eat.pop_lex_mode env;
-	Loc.btwn start_loc end_loc, Statement.(TypeAlias TypeAlias.({
+	Loc.btwn start_loc end_loc, Statement.(DeclareTypeAlias TypeAlias.({
 				       id;
 				       typeParameters;
 				       right;
