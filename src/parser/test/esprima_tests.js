@@ -4154,8 +4154,28 @@ module.exports = {
     'Harmony: Iterators': [
         'for(x of list) process(x);',
         'for (var x of list) process(x);',
-        'for (var x = 42 of list) process(x);',
-        'for (let x of list) process(x);'
+        'for (let x of list) process(x);',
+        {
+          content: 'for (var x = 42 of list) process(x);',
+          explanation: "Esprima thinks this is valid, it isn't",
+          expected_differences : {
+            'root.errors.0.column': {
+              type: 'Wrong error column',
+              expected: undefined,
+              actual: 6,
+            },
+            'root.errors.0.line': {
+              type: 'Wrong error line',
+              expected: undefined,
+              actual: 1,
+            },
+            'root.errors.0.message': {
+              type: 'Wrong error message',
+              expected: undefined,
+              actual: 'Invalid left-hand side in for-of',
+            }
+          }
+        }
     ],
 
 

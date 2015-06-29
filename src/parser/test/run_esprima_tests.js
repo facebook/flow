@@ -11,7 +11,6 @@ var todo = {
   'Invalid Type Annotations': true,
   'Array Comprehension': true,
   'Harmony: Modules': true,
-  'Harmony: Iterators': true,
   'Harmony: Invalid Class (strawman)': true,
   'ES6: Destructured Parameters': true,
   'ES7 Proposal: Rest Properties' : true,
