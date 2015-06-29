@@ -2131,10 +2131,10 @@ and statement cx = Ast.Statement.(
 	 let for_types, nonfor_types =
 	   SMap.partition (fun _ { for_type; _ } -> for_type) module_scope.entries
 	 in
-         let map = SMap.map (
-		       fun { specific = export; _ } -> export
-		     ) nonfor_types in
-         for_types, Flow_js.mk_object_with_map_proto cx reason map (MixedT reason)
+        let map = SMap.map (
+		      fun { specific = export; _ } -> export
+		    ) nonfor_types in
+        for_types, Flow_js.mk_object_with_map_proto cx reason map (MixedT reason)
     )
     in
     let module_t = mk_module_t cx reason in
