@@ -204,14 +204,9 @@ let dir_sep = Str.regexp_string Filename.dir_sep
 let current_dir_name = Str.regexp_string Filename.current_dir_name
 let parent_dir_name = Str.regexp_string Filename.parent_dir_name
 
-let match_regexp s r =
-  Str.string_match r s 0
-
-let wanted config =
-  let list = List.map snd config.FlowConfig.excludes in
-  fun file ->
-    not (List.exists (match_regexp file) list) &&
-      not (SSet.mem file (get_lib_files ()))
+let wanted config path =
+  not (FlowConfig.is_excluded config path) &&
+    not (is_lib_file path)
 
 let make_next_files root =
   let config = FlowConfig.get root in

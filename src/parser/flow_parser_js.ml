@@ -9,7 +9,7 @@
  *)
 
 module JsTranslator : sig
-  val translation_errors: (Spider_monkey_ast.Loc.t * Parse_error.t) list ref
+  val translation_errors: (Loc.t * Parse_error.t) list ref
   include Estree_translator.Translator
 end = struct
   type t = Js.Unsafe.any

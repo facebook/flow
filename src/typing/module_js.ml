@@ -258,7 +258,9 @@ module Node = struct
 
   let parse_main package =
     let package = Path.to_string (Path.make package) in (* resolve symlinks *)
-    if not (file_exists package) then None
+    if not (file_exists package) ||
+      FlowConfig.(is_excluded (get_unsafe ()) package)
+    then None
     else
       let tokens = match PackageHeap.get package with
       | Some tokens -> tokens

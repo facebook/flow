@@ -256,6 +256,11 @@ let is_included config f =
       let patts = PathMap.find_unsafe stem config.include_map in
       match_patt f patts != None
 
+(* true if path matches one of our excludes *)
+let is_excluded config path =
+  let list = List.map snd config.excludes in
+  List.exists (fun rx -> Str.string_match rx path 0) list
+
 let parse_libs config lines =
   let libs = lines
   |> List.map (fun (ln, line) -> String.trim line)

@@ -11,8 +11,6 @@
 open Utils
 open Hh_json
 
-module Ast = Spider_monkey_ast
-
 let rec check_ast_walker ast path =
   match ast with
   | JAssoc properties ->
@@ -130,11 +128,11 @@ let has_errors_prop x = match x with
   | JAssoc props -> List.exists (fun (name, _) -> name = "errors") props
   | _ -> false
 
-let check_errors (errors: (Ast.Loc.t * Parse_error.t) list) (spec:json) =
+let check_errors (errors: (Loc.t * Parse_error.t) list) (spec:json) =
   if List.length errors > 0 && not (has_errors_prop spec) then
   begin
     let errors_str = errors
-      |> List.mapi Ast.(fun i (loc, err) ->
+      |> List.mapi (fun i (loc, err) ->
         spf "(#%d) (line %d, col %d) - (line %d, col %d): %s"
           i
           loc.Loc.start.Loc.line

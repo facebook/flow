@@ -48,7 +48,8 @@ val init: Path.t -> string list -> unit
 
 val version: string
 
-
-
 (* true if a file path matches an include path in config *)
 val is_included: config -> string -> bool
+
+(* true if a file path matches an exclude (ignore) entry in config *)
+val is_excluded: config -> string -> bool
