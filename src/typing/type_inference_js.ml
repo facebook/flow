@@ -3227,7 +3227,7 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
       let newset = Env_js.merge_changeset oldset in
       Env_js.merge_env cx reason (ctx, then_ctx, else_ctx) newset;
       Env_js.update_env cx ctx;
-      (* TODO call pos_of_predicate on some pred? t1 is wrong but hopefully close *)
+      (* TODO call loc_of_predicate on some pred? t1 is wrong but hopefully close *)
       Flow_js.mk_tvar_where cx reason (fun t ->
         Flow_js.flow cx (t1, t);
         Flow_js.flow cx (t2, t);

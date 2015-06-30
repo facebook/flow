@@ -399,12 +399,11 @@ val streason_of_t : Type.t -> string
 
 val desc_of_t : Type.t -> string
 
-val pos_of_t : Type.t -> Pos.t
 val loc_of_t : Type.t -> Loc.t
 
 val string_of_predicate : Type.predicate -> string
 
-val pos_of_predicate : Type.predicate -> Pos.t
+val loc_of_predicate : Type.predicate -> Loc.t
 
 class ['a] type_visitor : object
   (* Only exposing a few methods for now. *)

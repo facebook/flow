@@ -1036,27 +1036,25 @@ and string_of_binary_test = function
   | Instanceof -> "instanceof"
   | SentinelProp key -> "sentinel prop " ^ key
 
-and pos_of_predicate = function
+and loc_of_predicate = function
   | AndP (p1,p2)
   | OrP (p1,p2)
-    -> pos_of_predicate p1
+    -> loc_of_predicate p1
 
   | NotP p
-    -> pos_of_predicate p
+    -> loc_of_predicate p
 
   | LeftP (_, t)
   | RightP (_, t)
-    -> pos_of_t t
+    -> loc_of_t t
 
   | ExistsP
   | IsP _
-    -> Pos.none (* TODO!!!!!!!!!!!! *)
+    -> Loc.none (* TODO!!!!!!!!!!!! *)
 
 and streason_of_t t = string_of_reason (reason_of_t t)
 
 and desc_of_t t = desc_of_reason (reason_of_t t)
-
-and pos_of_t t = pos_of_reason (reason_of_t t)
 
 and loc_of_t t = loc_of_reason (reason_of_t t)
 

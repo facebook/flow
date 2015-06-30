@@ -325,7 +325,7 @@ let ordered_reasons l u =
   let rl = reason_of_t l in
   let ru = reason_of_t u in
   if is_use u ||
-      pos_of_t l = Pos.none ||
+      loc_of_t l = Loc.none ||
       (lib_reason rl && not (lib_reason ru))
   then ru, rl
   else rl, ru
@@ -3885,7 +3885,7 @@ and predicate cx trace t (l,p) = match (l,p) with
   (************************)
 
   | (_, AndP(p1,p2)) ->
-    let reason = new_reason "and" (pos_of_predicate p1) in
+    let reason = mk_reason "and" (loc_of_predicate p1) in
     let tvar = mk_tvar cx reason in
     rec_flow cx trace (l,PredicateT(p1,tvar));
     rec_flow cx trace (tvar,PredicateT(p2,t))

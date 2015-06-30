@@ -206,8 +206,10 @@ let dump_reason r =
 let pos_of_reason r =
   r.pos
 
-let loc_of_reason r =
-  let p = pos_of_reason r in Pos.(Lexing.(Loc.({
+let loc_of_reason r = Pos.(Lexing.(Loc.(
+  let p = pos_of_reason r in
+  if p = Pos.none then Loc.none
+  else {
     source =
       if p.pos_file = Relative_path.default then None
       else Some (Relative_path.to_absolute p.pos_file);
@@ -221,7 +223,8 @@ let loc_of_reason r =
       column = p.pos_end.pos_cnum - p.pos_end.pos_bol;
       offset = p.pos_end.pos_cnum;
     }
-  })))
+  }
+)))
 
 let desc_of_reason r =
   r.desc
