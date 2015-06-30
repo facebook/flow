@@ -10,7 +10,7 @@
 
 type options = {
   opt_check_mode: bool;
-  opt_color: Tty.color_mode;
+  opt_error_flags: Errors_js.flags;
   opt_root : Path.t;
   opt_should_detach : bool;
   opt_debug : bool;
@@ -20,7 +20,6 @@ type options = {
   opt_traces : int;
   opt_strict : bool;
   opt_json : bool;
-  opt_show_all_errors : bool;
   opt_quiet : bool;
   opt_profile : bool;
   opt_strip_root : bool;
@@ -29,12 +28,10 @@ type options = {
   opt_log_file: Path.t;
   opt_no_flowlib: bool;
   opt_module_name_mappers: (Str.regexp * string) list;
-  opt_one_line_errors: bool;
 }
 
-let color_mode opts = opts.opt_color
+let error_flags opts = opts.opt_error_flags
 let is_check_mode opts = opts.opt_check_mode
 let log_file opts = opts.opt_log_file
 let root opts = opts.opt_root
 let should_detach opts = opts.opt_should_detach
-let show_all_errors opts = opts.opt_show_all_errors

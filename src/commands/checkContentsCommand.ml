@@ -52,11 +52,7 @@ let main option_values error_flags use_json file () =
       if use_json || option_values.from <> ""
       then Errors_js.print_errorl use_json e stdout
       else (
-        Errors_js.print_error_summary
-          ~color:error_flags.Errors_js.color
-          ~one_line:error_flags.Errors_js.one_line
-          (not error_flags.Errors_js.show_all_errors)
-          e;
+        Errors_js.print_error_summary ~flags:error_flags e;
         exit 2
       )
   | ServerProt.NO_ERRORS ->

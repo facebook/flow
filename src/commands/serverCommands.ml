@@ -131,7 +131,7 @@ module OptionParser(Config : CONFIG) = struct
 
     result := Some {
       Options.opt_check_mode = Config.(mode = Check);
-      Options.opt_color = error_flags.Errors_js.color;
+      Options.opt_error_flags = error_flags;
       Options.opt_log_file = opt_log_file;
       Options.opt_root = root;
       Options.opt_should_detach = Config.(mode = Detach);
@@ -142,7 +142,6 @@ module OptionParser(Config : CONFIG) = struct
       Options.opt_traces;
       Options.opt_strict = true;
       Options.opt_json = json;
-      Options.opt_show_all_errors = error_flags.Errors_js.show_all_errors;
       Options.opt_quiet = quiet || json;
       Options.opt_module_name_mappers = FlowConfig.(
         flowconfig.options.module_name_mappers
@@ -152,7 +151,6 @@ module OptionParser(Config : CONFIG) = struct
       Options.opt_module;
       Options.opt_libs;
       Options.opt_no_flowlib = no_flowlib;
-      Options.opt_one_line_errors = error_flags.Errors_js.one_line;
     };
     ()
 

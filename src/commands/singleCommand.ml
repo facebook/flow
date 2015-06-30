@@ -65,7 +65,7 @@ let main all weak debug verbose json profile quiet module_
   let flowconfig = FlowConfig.get config_root in
 
   let options = {
-    Options.opt_color = error_flags.Errors_js.color;
+    Options.opt_error_flags = error_flags;
     Options.opt_root = Path.make root;
     Options.opt_should_detach = false;
     Options.opt_check_mode = false;
@@ -77,7 +77,6 @@ let main all weak debug verbose json profile quiet module_
     Options.opt_strict = true;
     Options.opt_traces = 0;
     Options.opt_json = json;
-    Options.opt_show_all_errors = error_flags.Errors_js.show_all_errors;
     Options.opt_quiet = quiet || json;
     Options.opt_profile = profile;
     Options.opt_strip_root = false;
@@ -87,7 +86,6 @@ let main all weak debug verbose json profile quiet module_
     );
     Options.opt_libs;
     Options.opt_no_flowlib = no_flowlib;
-    Options.opt_one_line_errors = error_flags.Errors_js.one_line;
   } in
 
   if ! Sys.interactive

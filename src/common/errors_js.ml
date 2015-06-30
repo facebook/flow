@@ -283,13 +283,11 @@ let print_errorl use_json el oc =
   flush oc
 
 (* Human readable output *)
-let print_error_summary
-  ?(one_line=false)
-  ~color
-  truncate
-  (errors : error list)
-=
+let print_error_summary ~flags errors =
   let error_or_errors n = if n != 1 then "errors" else "error" in
+  let truncate = not (flags.show_all_errors) in
+  let one_line = flags.one_line in
+  let color = flags.color in
   let print_error_if_not_truncated curr e =
     (if not(truncate) || curr < 50 then print_error_color ~one_line ~color e);
     curr + 1

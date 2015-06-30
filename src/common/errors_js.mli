@@ -66,5 +66,4 @@ val to_list : ErrorSet.t -> error list
 val print_errorl : bool -> error list -> out_channel -> unit
 
 (* Human readable output *)
-val print_error_summary:
-  ?one_line:bool -> color:Tty.color_mode -> bool -> error list -> unit
+val print_error_summary: flags:flags -> error list -> unit

@@ -112,12 +112,7 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
       let error_flags = args.error_flags in
       if args.output_json || args.from <> ""
       then Errors_js.print_errorl args.output_json e stdout
-      else (
-        Errors_js.print_error_summary
-          ~one_line:error_flags.Errors_js.one_line
-          ~color:error_flags.Errors_js.color
-          (not error_flags.Errors_js.show_all_errors) e
-      );
+      else Errors_js.print_error_summary ~flags:error_flags e;
       exit 2
     | ServerProt.NO_ERRORS ->
       Errors_js.print_errorl args.output_json [] stdout;

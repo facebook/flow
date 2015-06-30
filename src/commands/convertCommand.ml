@@ -56,11 +56,7 @@ let convert_file error_flags outpath file =
     let flow_errors = List.map (fun e ->
       Errors_js.parse_error_to_flow_error e
     ) errors in
-    Errors_js.print_error_summary
-      ~one_line:error_flags.Errors_js.one_line
-      ~color:error_flags.Errors_js.color
-      (not error_flags.Errors_js.show_all_errors)
-      flow_errors;
+    Errors_js.print_error_summary ~flags:error_flags flow_errors;
     n, 0, 1
   )
 
