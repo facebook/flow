@@ -1174,13 +1174,13 @@ let rec mod_reason_of_t f = function
 
 (* replace a type's pos with one taken from a reason *)
 let repos_t_from_reason r t =
-  mod_reason_of_t (repos_reason (pos_of_reason r)) t
+  mod_reason_of_t (repos_reason (loc_of_reason r)) t
 
 (* return a type copy with reason modified using second, operational reason *)
 let to_op_reason op_reason t =
   mod_reason_of_t (fun r ->
     let d = spf "%s (%s)" (desc_of_reason r) (desc_of_reason op_reason) in
-    new_reason d (pos_of_reason op_reason)
+    mk_reason d (loc_of_reason op_reason)
   ) t
 
 (* replace a type's reason in its entirety *)

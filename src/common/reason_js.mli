@@ -18,9 +18,7 @@ end
 
 val lexpos: string -> int -> int -> Lexing.position
 
-(* reason constructors *)
-
-val new_reason: string -> Pos.t -> reason
+(* reason constructor *)
 val mk_reason: string -> Loc.t -> reason
 
 (* ranges *)
@@ -66,7 +64,7 @@ val wrap_reason: string -> string -> reason -> reason
    simple replacements of the original *)
 val replace_reason: string -> reason -> reason
 
-val repos_reason: Pos.t -> reason -> reason
+val repos_reason: Loc.t -> reason -> reason
 
 val compare: reason -> reason -> int
 

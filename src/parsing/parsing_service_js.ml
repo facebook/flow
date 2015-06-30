@@ -78,8 +78,7 @@ let do_parse ?(keep_errors=false) content file =
   | e ->
     let s = Printexc.to_string e in
     let msg = spf "unexpected parsing exception: %s" s in
-    let reason = Reason.new_reason "" (Pos.make_from
-      (Relative_path.create Relative_path.Dummy file)) in
+    let reason = Reason.mk_reason "" Loc.({ none with source = Some file }) in
     let err = Errors_js.ERROR, [reason, msg], [] in
     Err (Errors_js.ErrorSet.singleton err)
 

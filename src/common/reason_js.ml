@@ -50,7 +50,7 @@ module TestID = struct
   let current() = !_current
 
   (* Call f on a, installing new_test_id as the current test_id, and restoring
-     the current test_id when done. (See also the function new_reason below.) *)
+     the current test_id when done. (See also the function mk_reason below.) *)
   let run f a =
     let test_id = current () in
     _current := Some (mk_id ());
@@ -74,7 +74,8 @@ let lexpos file line col = {
 }
 
 let pos_of_loc loc = Loc.(
-  let file = match loc.source with Some s -> s | None -> "" in
+  if loc = Loc.none then Pos.none
+  else let file = match loc.source with Some s -> s | None -> "" in
   { Pos.
     pos_file = Relative_path.create Relative_path.Dummy file;
     pos_start = lexpos file loc.start.line loc.start.column;
@@ -169,18 +170,15 @@ let json_of_pos pos = Json.(Pos.(Lexing.(
 (* reason constructors, accessors, etc. *)
 
 (* The current test_id is included in every new reason. *)
-let new_reason s pos = {
+let mk_reason s loc = {
   test_id = TestID.current();
   derivable = false;
   desc = s;
-  pos = pos;
+  pos = pos_of_loc loc;
 }
 
 let reason_of_string s =
-  new_reason s Pos.none
-
-let mk_reason s loc =
-  new_reason s (pos_of_loc loc)
+  mk_reason s Loc.none
 
 let string_of_reason r =
   let spos = string_of_pos r.pos in
@@ -248,8 +246,7 @@ let derivable_reason r =
   { r with derivable = true }
 
 let builtin_reason x =
-  new_reason x (Pos.make_from
-    (Relative_path.create Relative_path.Dummy (Files_js.get_flowlib_root ())))
+  mk_reason x Loc.({ none with source = Some (Files_js.get_flowlib_root ()) })
   |> derivable_reason
 
 (* reasons compare on their positions *)
@@ -263,40 +260,38 @@ let same_scope r1 r2 =
 
 (* returns reason whose description is prefix-extension of original *)
 let prefix_reason prefix reason =
-  new_reason (spf "%s%s" prefix (desc_of_reason reason))
-    (pos_of_reason reason)
+  mk_reason (spf "%s%s" prefix (desc_of_reason reason))
+    (loc_of_reason reason)
 
 (* returns reason whose description is suffix-extension of original *)
 let suffix_reason suffix reason =
-  new_reason (spf "%s%s" (desc_of_reason reason) suffix)
-    (pos_of_reason reason)
+  mk_reason (spf "%s%s" (desc_of_reason reason) suffix)
+    (loc_of_reason reason)
 
 (* returns reason whose description is prefix+suffix-extension of original *)
 let wrap_reason prefix suffix reason =
-  new_reason (spf "%s%s%s" prefix (desc_of_reason reason) suffix)
-    (pos_of_reason reason)
+  mk_reason (spf "%s%s%s" prefix (desc_of_reason reason) suffix)
+    (loc_of_reason reason)
 
 (* returns reason with new description and position of original *)
 let replace_reason replacement reason =
-  new_reason replacement (pos_of_reason reason)
+  mk_reason replacement (loc_of_reason reason)
 
-(* returns reason with new position and description of original *)
-let repos_reason pos reason =
-  new_reason (desc_of_reason reason) pos
+(* returns reason with new location and description of original *)
+let repos_reason loc reason =
+  mk_reason (desc_of_reason reason) loc
 
 (* helper: strip root from positions *)
-let strip_root reason path = Pos.(
-  let { pos_file; pos_start; pos_end } = pos_of_reason reason in
-  let pos_file = Relative_path.to_absolute pos_file in
-  let pos_file =
-    if Files_js.is_lib_file_or_flowlib_root pos_file
-    then spf "[LIB] %s" (Filename.basename pos_file)
+let strip_root reason path = Loc.(
+  let loc = loc_of_reason reason in
+  let source = match loc.source with
+  | None -> None
+  | Some file -> Some (
+    if Files_js.is_lib_file_or_flowlib_root file
+    then spf "[LIB] %s" (Filename.basename file)
     else Files_js.relative_path
-      (spf "%s%s" (Path.to_string path) Filename.dir_sep) pos_file
-  in
-  let p = {
-    (Pos.make_from (Relative_path.create Relative_path.Dummy pos_file)) with
-    pos_start; pos_end
-  } in
-  repos_reason p reason
+      (spf "%s%s" (Path.to_string path) Filename.dir_sep) file
+  ) in
+  let loc = { loc with source } in
+  repos_reason loc reason
 )

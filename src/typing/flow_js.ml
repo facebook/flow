@@ -346,8 +346,7 @@ let prmsg_flow_trace_reasons cx level trace_reasons msg (r1, r2) =
          the code that uses those endpoints inconsistently is useless, we point
          to the file containing that code instead. Ideally, improvements in
          error reporting would cause this case to never arise. *)
-      let r = new_reason "" (Pos.make_from
-        (Relative_path.create Relative_path.Dummy cx.file)) in
+      let r = mk_reason "" Loc.({ none with source = Some cx.file }) in
       [r, "inconsistent use of library definitions"]
     else []
   in

@@ -282,16 +282,16 @@ let get_var_declared_type ?(for_type=false) cx name reason =
 (* TODO remove once positions in __flow are fully worked out *)
 let var_ref ?(for_type=false) cx name reason =
   let t = (read_env ~for_type cx name reason).specific in
-  let p = pos_of_reason reason in
-  mod_reason_of_t (repos_reason p) t
+  let loc = loc_of_reason reason in
+  mod_reason_of_t (repos_reason loc) t
 
 (* get refinement entry *)
 let get_refinement cx key r =
   let scope = peek_scope () in
   match Scope.get key scope with
   | Some { specific; _ } ->
-      let pos = pos_of_reason r in
-      let t = mod_reason_of_t (repos_reason pos) specific in
+      let loc = loc_of_reason r in
+      let t = mod_reason_of_t (repos_reason loc) specific in
       Some t
   | None ->
       None

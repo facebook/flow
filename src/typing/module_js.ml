@@ -449,11 +449,10 @@ module Haste: MODULE_SYSTEM = struct
         | h :: t ->
             let errmap = List.fold_left (fun acc f ->
               let w = Flow.new_warning [
-                Reason.new_reason m (Pos.make_from
-                  (Relative_path.create Relative_path.Dummy f)),
+                Reason.mk_reason m Loc.({ none with source = Some f }),
                   "Duplicate module provider";
-                Reason.new_reason "current provider"
-                  (Pos.make_from (Relative_path.create Relative_path.Dummy h)),
+                Reason.mk_reason "current provider"
+                  Loc.({ none with source = Some h }),
                   ""] in
               SMap.add f (ErrorSet.singleton w) acc
             ) errmap t in

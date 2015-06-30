@@ -188,8 +188,8 @@ let merge_commonjs_export cx reason module_t export_t =
   )
 
 let exports cx m =
-  get_module_t cx m (Reason_js.new_reason "exports" (Pos.make_from
-    (Relative_path.create Relative_path.Dummy cx.file)))
+  let loc = Loc.({ none with source = Some cx.file }) in
+  get_module_t cx m (Reason_js.mk_reason "exports" loc)
 
 (**
  * Before running inference, we assume that we're dealing with a CommonJS
@@ -5483,12 +5483,14 @@ let infer_core cx statements =
   with
     | Abnormal.Exn _ ->
         let msg = "abnormal control flow" in
-        Flow_js.add_warning cx [new_reason "" (Pos.make_from
-          (Relative_path.create Relative_path.Dummy cx.file)), msg]
+        Flow_js.add_warning cx [mk_reason "" Loc.({
+          none with source = Some cx.file
+        }), msg]
     | exc ->
         let msg = Printexc.to_string exc in
-        Flow_js.add_warning cx [new_reason "" (Pos.make_from
-          (Relative_path.create Relative_path.Dummy cx.file)), msg]
+        Flow_js.add_warning cx [mk_reason "" Loc.({
+          none with source = Some cx.file
+        }), msg]
 
 (* There's a .flowconfig option to specify suppress_comments regexes. Any
  * comments that match those regexes will suppress any errors on the next line
@@ -5550,8 +5552,7 @@ let infer_ast ast file _module force_check =
 
   Env_js.init_env cx module_scope;
 
-  let reason = new_reason "exports" (Pos.make_from
-    (Relative_path.create Relative_path.Dummy cx.file)) in
+  let reason = mk_reason "exports" Loc.({ none with source = Some cx.file }) in
 
   if checked then (
     let init_exports = mk_object cx reason in
