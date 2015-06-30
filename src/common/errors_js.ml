@@ -15,6 +15,18 @@ type level = ERROR | WARNING
 type message = (Reason_js.reason * string)
 type error = level * message list (* message *) * message list (* trace *)
 
+type flags = {
+  color: Tty.color_mode;
+  one_line: bool;
+  show_all_errors: bool;
+}
+
+let default_flags = {
+  color = Tty.Color_Auto;
+  one_line = false;
+  show_all_errors = false;
+}
+
 let append_trace_reasons message_list trace_reasons =
   match trace_reasons with
   | [] -> message_list

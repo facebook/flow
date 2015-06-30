@@ -26,8 +26,8 @@ let spec = {
   args = CommandSpec.ArgSpec.(
     empty
     |> server_flags
-    |> json_flags
     |> error_flags
+    |> json_flags
     |> anon "filename" (optional string) ~doc:"Filename"
   )
 }
@@ -41,19 +41,22 @@ let read_from_stdin file =
         let contents = Sys_utils.read_stdin_to_string () in
         ServerProt.FileContent ((Some (get_path_of_file file)), contents)
 
-let main option_values use_json color one_line show_all_errors file () =
+let main option_values error_flags use_json file () =
   let file = read_from_stdin file in
   let root = guess_root (ServerProt.path_of_input file) in
   let ic, oc = connect_with_autostart option_values root in
   ServerProt.cmd_to_channel oc (ServerProt.CHECK_FILE file);
   let response = ServerProt.response_from_channel ic in
-  let color = parse_color_enum color in
   match response with
   | ServerProt.ERRORS e ->
       if use_json || option_values.from <> ""
       then Errors_js.print_errorl use_json e stdout
       else (
-        Errors_js.print_error_summary ~color ~one_line (not show_all_errors) e;
+        Errors_js.print_error_summary
+          ~color:error_flags.Errors_js.color
+          ~one_line:error_flags.Errors_js.one_line
+          (not error_flags.Errors_js.show_all_errors)
+          e;
         exit 2
       )
   | ServerProt.NO_ERRORS ->
@@ -63,4 +66,4 @@ let main option_values use_json color one_line show_all_errors file () =
       prerr_endline "Unexpected server response!";
       exit (-1)
 
-let command = CommandSpec.command spec (collect_server_flags main)
+let command = CommandSpec.command spec main

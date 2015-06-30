@@ -50,4 +50,4 @@ let main option_values use_json query () =
     end results
   )
 
-let command = CommandSpec.command spec (collect_server_flags main)
+let command = CommandSpec.command spec main

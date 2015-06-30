@@ -120,4 +120,4 @@ let main option_values json path args () =
   | (None, Some resp) -> handle_response resp json
   | (_, _) -> failwith "Oops"
 
-let command = CommandSpec.command spec (collect_server_flags main)
+let command = CommandSpec.command spec main

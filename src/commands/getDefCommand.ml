@@ -92,4 +92,4 @@ let main option_values json strip_root path args () =
   ) else
     print_endline (range_string_of_loc loc)
 
-let command = CommandSpec.command spec (collect_server_flags main)
+let command = CommandSpec.command spec main

@@ -12,6 +12,14 @@ type level = ERROR | WARNING
 type message = (Reason_js.reason * string)
 type error = level * message list * message list
 
+type flags = {
+  color: Tty.color_mode;
+  one_line: bool;
+  show_all_errors: bool;
+}
+
+val default_flags : flags
+
 val format_reason_color: ?first:bool -> ?one_line:bool -> Loc.t * string ->
   (Tty.style * string) list
 

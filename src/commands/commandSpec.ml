@@ -180,6 +180,12 @@ module ArgSpec = struct
     flags = prev.flags;
     anons = prev.anons;
   }
+
+  let collect fn prev = {
+    f = (fun x -> let (values, main) = prev.f x in (values, fn main));
+    flags = prev.flags;
+    anons = prev.anons;
+  }
 end
 
 type ('a, 'b) builder_t = {

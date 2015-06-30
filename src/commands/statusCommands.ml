@@ -91,15 +91,13 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
     root: Path.t;
     from: string;
     output_json: bool;
-    one_line: bool;
-    color: Tty.color_mode;
-    show_all_errors: bool;
+    error_flags: Errors_js.flags;
   }
 
-  let rec check_status (args:env) option_values =
+  let rec check_status (args:env) server_flags =
     let name = "flow" in
 
-    let ic, oc = CommandUtils.connect_with_autostart option_values args.root in
+    let ic, oc = CommandUtils.connect_with_autostart server_flags args.root in
     ServerProt.cmd_to_channel oc (ServerProt.STATUS args.root);
     let response = ServerProt.response_from_channel ic in
     match response with
@@ -111,13 +109,14 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
       flush stdout;
       raise CommandExceptions.Server_directory_mismatch
     | ServerProt.ERRORS e ->
+      let error_flags = args.error_flags in
       if args.output_json || args.from <> ""
       then Errors_js.print_errorl args.output_json e stdout
       else (
         Errors_js.print_error_summary
-          ~one_line:args.one_line
-          ~color:args.color
-          (not args.show_all_errors) e
+          ~one_line:error_flags.Errors_js.one_line
+          ~color:error_flags.Errors_js.color
+          (not error_flags.Errors_js.show_all_errors) e
       );
       exit 2
     | ServerProt.NO_ERRORS ->
@@ -131,55 +130,50 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
         (Path.to_string args.root);
       exit 2
     | ServerProt.SERVER_OUT_OF_DATE ->
-      if option_values.CommandUtils.no_auto_start
+      if server_flags.CommandUtils.no_auto_start
       then Printf.printf "%s is outdated, killing it.\n" name
       else Printf.printf "%s is outdated, going to launch a new one.\n" name;
       flush stdout;
-      retry (args, option_values) 3 "The flow server will be ready in a moment"
+      retry (args, server_flags) 3 "The flow server will be ready in a moment"
 
-  and retry (env, option_values) sleep msg =
+
+  and retry (env, server_flags) sleep msg =
     CommandUtils.check_timeout ();
-    let retries = option_values.CommandUtils.retries in
+    let retries = server_flags.CommandUtils.retries in
     if retries > 0
     then begin
       Printf.fprintf stderr "%s\n%!" msg;
       CommandUtils.sleep sleep;
-      check_status env { option_values with CommandUtils.retries = retries - 1 }
+      check_status env { server_flags with CommandUtils.retries = retries - 1 }
     end else begin
       Printf.fprintf stderr "Out of retries, exiting!\n%!";
       exit 2
     end
 
-  let main option_values json color one_line show_all_errors version root () =
+  let main server_flags json error_flags version root () =
     if version then (
       CommandUtils.print_version ();
       exit 0
     );
 
     let root = CommandUtils.guess_root root in
-    let timeout_arg = option_values.CommandUtils.timeout in
+    let timeout_arg = server_flags.CommandUtils.timeout in
     if timeout_arg > 0 then CommandUtils.set_timeout timeout_arg;
     let env = {
-      color = CommandUtils.parse_color_enum color;
       root;
-      from = option_values.CommandUtils.from;
+      from = server_flags.CommandUtils.from;
       output_json = json;
-      one_line;
-      show_all_errors;
+      error_flags;
     } in
-    check_status env option_values
+    check_status env server_flags
 end
 
 module Status(CommandList : COMMAND_LIST) = struct
   module Main = Impl (CommandList) (struct let explicit = true end)
-  let command = CommandSpec.command
-    Main.spec
-    (CommandUtils.collect_server_flags Main.main)
+  let command = CommandSpec.command Main.spec Main.main
 end
 
 module Default(CommandList : COMMAND_LIST) = struct
   module Main = Impl (CommandList) (struct let explicit = false end)
-  let command = CommandSpec.command
-    Main.spec
-    (CommandUtils.collect_server_flags Main.main)
+  let command = CommandSpec.command Main.spec Main.main
 end

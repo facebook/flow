@@ -94,4 +94,4 @@ let main option_values json modules () =
     flush stdout
   )
 
-let command = CommandSpec.command spec (collect_server_flags main)
+let command = CommandSpec.command spec main

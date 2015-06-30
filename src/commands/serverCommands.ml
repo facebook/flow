@@ -67,9 +67,7 @@ module OptionParser(Config : CONFIG) = struct
     )
   | Normal -> CommandSpec.ArgSpec.(
       empty
-      |> dummy None  (* error_flags.color *)
-      |> dummy false (* error_flags.one_line *)
-      |> dummy false (* error_flags.show_all_errors *)
+      |> dummy Errors_js.default_flags (* error_flags *)
       |> dummy false (* json *)
       |> dummy false (* profile *)
       |> dummy false (* quiet *)
@@ -78,9 +76,7 @@ module OptionParser(Config : CONFIG) = struct
     )
   | Detach -> CommandSpec.ArgSpec.(
       empty
-      |> dummy None  (* error_flags.color *)
-      |> dummy false (* error_flags.one_line *)
-      |> dummy false (* error_flags.show_all_errors *)
+      |> dummy Errors_js.default_flags (* error_flags *)
       |> dummy false (* json *)
       |> dummy false (* profile *)
       |> dummy false (* quiet *)
@@ -104,8 +100,8 @@ module OptionParser(Config : CONFIG) = struct
   }
 
   let result = ref None
-  let main color one_line show_all_errors json profile quiet log_file debug
-           verbose all weak traces strip_root lib no_flowlib root () =
+  let main error_flags json profile quiet log_file debug verbose all
+           weak traces strip_root lib no_flowlib root () =
     let root = CommandUtils.guess_root root in
     let flowconfig = FlowConfig.get root in
     let opt_module = FlowConfig.(match flowconfig.options.moduleSystem with
@@ -135,7 +131,7 @@ module OptionParser(Config : CONFIG) = struct
 
     result := Some {
       Options.opt_check_mode = Config.(mode = Check);
-      Options.opt_color = parse_color_enum color;
+      Options.opt_color = error_flags.Errors_js.color;
       Options.opt_log_file = opt_log_file;
       Options.opt_root = root;
       Options.opt_should_detach = Config.(mode = Detach);
@@ -146,7 +142,7 @@ module OptionParser(Config : CONFIG) = struct
       Options.opt_traces;
       Options.opt_strict = true;
       Options.opt_json = json;
-      Options.opt_show_all_errors = show_all_errors;
+      Options.opt_show_all_errors = error_flags.Errors_js.show_all_errors;
       Options.opt_quiet = quiet || json;
       Options.opt_module_name_mappers = FlowConfig.(
         flowconfig.options.module_name_mappers
@@ -156,7 +152,7 @@ module OptionParser(Config : CONFIG) = struct
       Options.opt_module;
       Options.opt_libs;
       Options.opt_no_flowlib = no_flowlib;
-      Options.opt_one_line_errors = one_line;
+      Options.opt_one_line_errors = error_flags.Errors_js.one_line;
     };
     ()
 

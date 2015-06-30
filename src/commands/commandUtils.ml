@@ -84,28 +84,25 @@ let sleep seconds =
         then timeout_go_boom ()
         else Unix.sleep seconds
 
+let collect_error_flags main color one_line show_all_errors =
+  let color = match color with
+  | Some "never" -> Tty.Color_Never
+  | Some "always" -> Tty.Color_Always
+  | Some "auto"
+  | None -> Tty.Color_Auto
+  | _ -> assert false (* the enum type enforces this *)
+  in
+  main { Errors_js.color; one_line; show_all_errors; }
+
 let error_flags prev = CommandSpec.ArgSpec.(
   prev
+  |> collect collect_error_flags
   |> flag "--color" (enum ["auto"; "never"; "always"])
       ~doc:"Display terminal output in color. never, always, auto (default: auto)"
   |> flag "--one-line" no_arg
       ~doc:"Escapes newlines so that each error prints on one line"
   |> flag "--show-all-errors" no_arg
       ~doc:"Print all errors (the default is to truncate after 50 errors)"
-)
-
-let server_flags prev = CommandSpec.ArgSpec.(
-  prev
-  |> flag "--timeout" (optional int)
-      ~doc:"Maximum time to wait, in seconds"
-  |> flag "--from" (optional string)
-      ~doc:"Specify client (for use by editor plugins)"
-  |> flag "--retries" (optional int)
-      ~doc:"Set the number of retries. (default: 3)"
-  |> flag "--retry-if-init" (optional bool)
-      ~doc:"retry if the server is initializing (default: true)"
-  |> flag "--no-auto-start" no_arg
-      ~doc:"If the server if it is not running, do not start it; just exit"
 )
 
 let json_flags prev = CommandSpec.ArgSpec.(
@@ -121,17 +118,7 @@ type command_params = {
   no_auto_start : bool;
 }
 
-let parse_color_enum = function
-  | Some "never" -> Tty.Color_Never
-  | Some "always" -> Tty.Color_Always
-  | Some "auto"
-  | None -> Tty.Color_Auto
-  | _ -> assert false (* the enum type enforces this *)
-
-let collect_server_flags
-    main
-    timeout from
-    retries retry_if_init no_auto_start =
+let collect_server_flags main timeout from retries retry_if_init no_auto_start =
   let default def = function
   | Some x -> x
   | None -> def in
@@ -142,6 +129,22 @@ let collect_server_flags
     timeout = (default 0 timeout);
     no_auto_start = no_auto_start;
   }
+
+
+let server_flags prev = CommandSpec.ArgSpec.(
+  prev
+  |> collect collect_server_flags
+  |> flag "--timeout" (optional int)
+      ~doc:"Maximum time to wait, in seconds"
+  |> flag "--from" (optional string)
+      ~doc:"Specify client (for use by editor plugins)"
+  |> flag "--retries" (optional int)
+      ~doc:"Set the number of retries. (default: 3)"
+  |> flag "--retry-if-init" (optional bool)
+      ~doc:"retry if the server is initializing (default: true)"
+  |> flag "--no-auto-start" no_arg
+      ~doc:"If the server if it is not running, do not start it; just exit"
+)
 
 let start_flow_server root =
   Printf.fprintf stderr "Flow server launched for %s\n%!"

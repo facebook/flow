@@ -116,4 +116,4 @@ let main option_values json path filename () =
   | (None, Some resp) -> handle_response resp json
   | (_, _) -> assert false
 
-let command = CommandSpec.command spec (collect_server_flags main)
+let command = CommandSpec.command spec main
