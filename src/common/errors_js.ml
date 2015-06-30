@@ -136,7 +136,7 @@ module ErrorSuppressions = struct
   open Span
   module Ast = Spider_monkey_ast
 
-  type error_suppressions = Ast.Loc.t SpanMap.t
+  type error_suppressions = Loc.t SpanMap.t
   type t = {
     suppressions: error_suppressions;
     unused: error_suppressions;
@@ -147,7 +147,7 @@ module ErrorSuppressions = struct
     unused = SpanMap.empty;
   }
 
-  let add loc { suppressions; unused; } = Ast.Loc.(
+  let add loc { suppressions; unused; } = Loc.(
     let start = { loc.start with line = loc._end.line + 1; column = 0 } in
     let _end = { loc._end with line = loc._end.line + 2; column = 0 } in
     let suppression_loc = { loc with start; _end; } in
@@ -166,7 +166,7 @@ module ErrorSuppressions = struct
     let loc = Reason_js.loc_of_reason reason in
 
     (* We only want to check the starting position of the reason *)
-    let loc = Ast.Loc.({ loc with _end = loc.start; }) in
+    let loc = Loc.({ loc with _end = loc.start; }) in
     if SpanMap.mem loc suppressions
     then true, { suppressions; unused = SpanMap.remove loc unused}
     else acc

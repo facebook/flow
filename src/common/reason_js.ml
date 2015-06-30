@@ -73,7 +73,7 @@ let lexpos file line col = {
   Lexing.pos_cnum = col;
 }
 
-let pos_of_loc loc = Ast.Loc.(
+let pos_of_loc loc = Loc.(
   let file = match loc.source with Some s -> s | None -> "" in
   { Pos.
     pos_file = Relative_path.create Relative_path.Dummy file;
@@ -82,7 +82,7 @@ let pos_of_loc loc = Ast.Loc.(
   }
 )
 
-let diff_range loc = Ast.Loc.(
+let diff_range loc = Loc.(
   let line1, line2 = loc.start.line, loc._end.line in
   (* TODO: Get rid of +1 which is here to ensure same behavior as old code
      using Pos.info_pos *)
@@ -90,7 +90,7 @@ let diff_range loc = Ast.Loc.(
   (line2 - line1, end_ - start)
 )
 
-let in_range p loc = Ast.Loc.(
+let in_range p loc = Loc.(
   let line, start, end_ = Pos.info_pos p in
   let loc_line1, loc_line2 = loc.start.line, loc._end.line in
   (* TODO: Get rid of +1 which is here to ensure same behavior as old code
@@ -192,7 +192,7 @@ let pos_of_reason r =
   r.pos
 
 let loc_of_reason r =
-  let p = pos_of_reason r in Pos.(Lexing.(Ast.Loc.({
+  let p = pos_of_reason r in Pos.(Lexing.(Loc.({
     source =
       if p.pos_file = Relative_path.default then None
       else Some (Relative_path.to_absolute p.pos_file);

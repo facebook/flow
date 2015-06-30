@@ -1,8 +1,8 @@
 val make_span:
-  Spider_monkey_ast.Loc.position ->
-  Spider_monkey_ast.Loc.position ->
-  Spider_monkey_ast.Loc.t
+  Loc.position ->
+  Loc.position ->
+  Loc.t
 
-val string_of_span: Spider_monkey_ast.Loc.t -> string
+val string_of_span: Loc.t -> string
 
-module SpanMap : Utils.MapSig with type key = Spider_monkey_ast.Loc.t
+module SpanMap : Utils.MapSig with type key = Loc.t

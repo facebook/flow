@@ -12,7 +12,7 @@ open Constraint_js
 open Utils
 
 type getdef_type =
-| Gdloc of (Spider_monkey_ast.Loc.t)
+| Gdloc of Loc.t
 | Gdmem of (string * Type.t)
 
 let getdef_id (state, pos) cx name loc =

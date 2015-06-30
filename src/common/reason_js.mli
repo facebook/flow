@@ -8,8 +8,6 @@
  *
  *)
 
-open Spider_monkey_ast (* Loc *)
-
 val mk_id: unit -> int
 
 type reason
@@ -23,13 +21,13 @@ val lexpos: string -> int -> int -> Lexing.position
 (* reason constructors *)
 
 val new_reason: string -> Pos.t -> reason
-val mk_reason: string -> Spider_monkey_ast.Loc.t -> reason
+val mk_reason: string -> Loc.t -> reason
 
 (* ranges *)
 (* TODO convert all range stuff to use single Ast loc *)
-val pos_of_loc: Spider_monkey_ast.Loc.t -> Pos.t
-val diff_range: Spider_monkey_ast.Loc.t -> int * int
-val in_range: Pos.t -> Spider_monkey_ast.Loc.t -> bool
+val pos_of_loc: Loc.t -> Pos.t
+val diff_range: Loc.t -> int * int
+val in_range: Pos.t -> Loc.t -> bool
 
 val string_of_pos: Pos.t -> string
 val json_of_pos: Pos.t -> Hh_json.json

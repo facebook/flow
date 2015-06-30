@@ -13,8 +13,6 @@
  * https://developer.mozilla.org/en-US/docs/SpiderMonkey/Parser_API
  *)
 
-module Loc = Spider_monkey_ast.Loc
-
 module rec Identifier : sig
   type t = Loc.t * t'
   and t' = {

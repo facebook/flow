@@ -28,8 +28,7 @@ val merge_module_strict: context ->
 
 val mk_object: context -> reason -> Type.t
 
-val body_loc: Spider_monkey_ast.Statement.FunctionDeclaration.body ->
-    Spider_monkey_ast.Loc.t
+val body_loc: Spider_monkey_ast.Statement.FunctionDeclaration.body -> Loc.t
 
 val query_type: context -> Pos.t -> Pos.t * Type.t option * Type.t list
 

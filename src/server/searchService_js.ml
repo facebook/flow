@@ -9,7 +9,6 @@
  *)
 
 module Ast = Spider_monkey_ast
-module Loc = Ast.Loc
 module Json = Hh_json
 
 type search_result_type =

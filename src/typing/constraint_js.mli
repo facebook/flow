@@ -219,7 +219,7 @@ val locs_of_trace : trace -> reason list
 module type PrimitiveT = sig
   val desc: string
   val t: Type.t
-  val at: Spider_monkey_ast.Loc.t -> Type.t
+  val at: Loc.t -> Type.t
   val why: reason -> Type.t
   val tag: string -> Type.t
 end
@@ -270,7 +270,7 @@ module Scope : sig
   type entry = {
     specific: Type.t;
     general: Type.t;
-    def_loc: Spider_monkey_ast.Loc.t option;
+    def_loc: Loc.t option;
     for_type: bool;
   }
 
@@ -310,7 +310,7 @@ module Scope : sig
   val create_entry :
     ?for_type: bool ->
     Type.t -> Type.t ->
-    Spider_monkey_ast.Loc.t option ->
+    Loc.t option ->
     entry
 
 end
@@ -328,7 +328,7 @@ type context = {
 
   (* required modules, and map to their locations *)
   mutable required: SSet.t;
-  mutable require_loc: Spider_monkey_ast.Loc.t SMap.t;
+  mutable require_loc: Loc.t SMap.t;
   mutable module_exports_type: module_exports_type;
 
   (* map from tvar ids to nodes (type info structures) *)
@@ -351,11 +351,11 @@ type context = {
 
   mutable error_suppressions: Errors_js.ErrorSuppressions.t;
 
-  type_table: (Spider_monkey_ast.Loc.t, Type.t) Hashtbl.t;
+  type_table: (Loc.t, Type.t) Hashtbl.t;
   annot_table: (Pos.t, Type.t) Hashtbl.t;
 }
 and module_exports_type =
-  | CommonJSModule of Spider_monkey_ast.Loc.t option
+  | CommonJSModule of Loc.t option
   | ESModule
 
 val new_context:
@@ -400,7 +400,7 @@ val streason_of_t : Type.t -> string
 val desc_of_t : Type.t -> string
 
 val pos_of_t : Type.t -> Pos.t
-val loc_of_t : Type.t -> Spider_monkey_ast.Loc.t
+val loc_of_t : Type.t -> Loc.t
 
 val string_of_predicate : Type.predicate -> string
 

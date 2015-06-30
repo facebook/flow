@@ -369,18 +369,18 @@ module rec Parse : sig
   val statement_list_with_directives : term_fn:(token->bool) -> env -> Ast.Statement.t list * bool
   val expression : env -> Ast.Expression.t
   val assignment : env -> Ast.Expression.t
-  val object_initializer : env -> Ast.Loc.t * Ast.Expression.Object.t
-  val array_initializer : env -> Ast.Loc.t * Ast.Expression.Array.t
+  val object_initializer : env -> Loc.t * Ast.Expression.Object.t
+  val array_initializer : env -> Loc.t * Ast.Expression.Array.t
   val identifier : ?restricted_error:Error.t -> env -> Ast.Identifier.t
   val identifier_or_reserved_keyword : env -> Ast.Identifier.t
   val identifier_with_type : ?allow_keyword:bool -> env -> Error.t -> Ast.Identifier.t
   val idpath : ?allow_keywords:bool -> env -> Ast.IdPath.t
-  val block_body : env -> Ast.Loc.t * Ast.Statement.Block.t
-  val function_block_body : env -> Ast.Loc.t * Ast.Statement.Block.t * bool
+  val block_body : env -> Loc.t * Ast.Statement.Block.t
+  val function_block_body : env -> Loc.t * Ast.Statement.Block.t * bool
   val pattern : env -> Ast.Expression.t -> Ast.Pattern.t
-  val object_pattern_with_type : env -> (Ast.Loc.t * Ast.Expression.Object.t) -> Ast.Pattern.t
-  val array_pattern_with_type : env -> (Ast.Loc.t * Ast.Expression.Array.t) -> Ast.Pattern.t
-  val object_key : env -> Ast.Loc.t * Ast.Expression.Object.Property.key
+  val object_pattern_with_type : env -> (Loc.t * Ast.Expression.Object.t) -> Ast.Pattern.t
+  val array_pattern_with_type : env -> (Loc.t * Ast.Expression.Array.t) -> Ast.Pattern.t
+  val object_key : env -> Loc.t * Ast.Expression.Object.Property.key
   val class_declaration : env -> Ast.Statement.t
   val class_expression : env -> Ast.Expression.t
   val is_assignable_lhs : Ast.Expression.t -> bool
@@ -2726,8 +2726,8 @@ end = struct
   (* A module for parsing various object related things, like object literals
    * and classes *)
   module Object : sig
-    val key : env -> Ast.Loc.t * Ast.Expression.Object.Property.key
-    val _initializer : env -> Ast.Loc.t * Ast.Expression.Object.t
+    val key : env -> Loc.t * Ast.Expression.Object.Property.key
+    val _initializer : env -> Loc.t * Ast.Expression.Object.t
     val class_declaration : env -> Ast.Statement.t
     val class_expression : env -> Ast.Expression.t
   end = struct
@@ -3249,7 +3249,7 @@ end = struct
                  * that actually seems to work pretty well (make sure the string
                  * has the right length)
                  *)
-                let len = Ast.Loc.(loc._end.column - loc.start.column) in
+                let len = Loc.(loc._end.column - loc.start.column) in
                 let strict = env.strict || (str = "use strict" && len = 12) in
                 let string_tokens = string_token::string_tokens in
                 statement_list { env with strict; } term_fn (string_tokens, stmts)

@@ -425,7 +425,7 @@ end
 module type PrimitiveT = sig
   val desc: string
   val t: Type.t
-  val at: Spider_monkey_ast.Loc.t -> Type.t
+  val at: Loc.t -> Type.t
   val why: reason -> Type.t
   val tag: string -> Type.t
 end
@@ -593,7 +593,7 @@ module Scope = struct
   type entry = {
     specific: Type.t;
     general: Type.t;
-    def_loc: Spider_monkey_ast.Loc.t option;
+    def_loc: Loc.t option;
     for_type: bool;
   }
 
@@ -688,7 +688,7 @@ type context = {
 
   (* required modules, and map to their locations *)
   mutable required: SSet.t;
-  mutable require_loc: Ast.Loc.t SMap.t;
+  mutable require_loc: Loc.t SMap.t;
   mutable module_exports_type: module_exports_type;
 
   (* map from tvar ids to nodes (type info structures) *)
@@ -711,11 +711,11 @@ type context = {
 
   mutable error_suppressions: Errors_js.ErrorSuppressions.t;
 
-  type_table: (Spider_monkey_ast.Loc.t, Type.t) Hashtbl.t;
+  type_table: (Loc.t, Type.t) Hashtbl.t;
   annot_table: (Pos.t, Type.t) Hashtbl.t;
 }
 and module_exports_type =
-  | CommonJSModule of Ast.Loc.t option
+  | CommonJSModule of Loc.t option
   | ESModule
 
 (* create a new context structure.
@@ -2250,8 +2250,8 @@ let reasons_of_trace ?(level=0) ?(tab=2) trace =
 
 
 module LocMap = MyMap(struct
-  type t = Ast.Loc.t
-  let compare = Ast.Loc.compare
+  type t = Loc.t
+  let compare = Loc.compare
 end)
 
 (* flat list of reasons, with unique trace positions and summary descs *)

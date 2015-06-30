@@ -18,16 +18,16 @@ module type Translator = sig
   val array: t array -> t
   val number: float -> t
   val null: t
-  val regexp: Ast.Loc.t -> string -> string -> t
+  val regexp: Loc.t -> string -> string -> t
 end
 
 module Translate (Impl : Translator) : (sig
   type t
   val program:
-    Ast.Loc.t * Ast.Statement.t list * (Ast.Loc.t * Ast.Comment.t') list ->
+    Loc.t * Ast.Statement.t list * (Loc.t * Ast.Comment.t') list ->
     t
   val expression: Ast.Expression.t -> t
-  val errors: (Ast.Loc.t * Parse_error.t) list -> t
+  val errors: (Loc.t * Parse_error.t) list -> t
 end with type t = Impl.t) = struct
   type t = Impl.t
 

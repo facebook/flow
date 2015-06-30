@@ -4497,7 +4497,7 @@ and predicate_of_condition cx e = Ast.(Expression.(
       let fake_ast = callee_loc, Ast.Expression.Member {
         Member._object;
         property = Member.PropertyIdentifier (
-          Ast.Loc.none, {
+          Loc.none, {
             Identifier.name = x;
             typeAnnotation = None;
             optional = false;
@@ -5220,7 +5220,7 @@ and mk_body id cx ~async param_types_map param_locs_map ret body this super =
   Env_js.update_env cx ctx
 
 and before_pos loc =
-  Ast.Loc.(
+  Loc.(
     let line = loc.start.line in
     let column = loc.start.column in
     let offset = loc.start.offset in

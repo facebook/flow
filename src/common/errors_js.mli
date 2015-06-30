@@ -47,14 +47,13 @@ module ErrorSuppressions : sig
   type t
 
   val empty : t
-  val add : Spider_monkey_ast.Loc.t -> t -> t
+  val add : Loc.t -> t -> t
   val union : t -> t -> t
   val check : error -> t -> (bool * t)
-  val unused : t -> Spider_monkey_ast.Loc.t list
+  val unused : t -> Loc.t list
 end
 
-val parse_error_to_flow_error :
-  (Spider_monkey_ast.Loc.t * Parse_error.t) -> error
+val parse_error_to_flow_error : (Loc.t * Parse_error.t) -> error
 
 val to_list : ErrorSet.t -> error list
 

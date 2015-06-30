@@ -19,8 +19,6 @@ open Constraint_js
 open Type   (* from Constraint_js *)
 open Scope
 
-module Ast = Spider_monkey_ast
-
 (* helpers *)
 
 (* refinement keys *)
@@ -216,11 +214,11 @@ let init_var cx name shape =
       let shadowed_reason =
         mk_reason
           (spf "%s binding %s" (if for_type then "type" else "value") name)
-          (match def_loc with None -> Ast.Loc.none | Some loc -> loc) in
+          (match def_loc with None -> Loc.none | Some loc -> loc) in
       let shadower_reason =
         mk_reason
           (spf "%s binding %s" (if shape.for_type then "type" else "value") name)
-          (match shape.def_loc with None -> Ast.Loc.none | Some loc -> loc) in
+          (match shape.def_loc with None -> Loc.none | Some loc -> loc) in
       Flow_js.add_error cx [
         shadower_reason, "This binding is shadowing";
         shadowed_reason, "which is a different sort of binding";
