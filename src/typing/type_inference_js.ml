@@ -4443,8 +4443,9 @@ and predicate_of_condition cx e = Ast.(Expression.(
     } ->
       typeof_test false argument s
 
-  (* expr.name op string *)
-  | loc, Binary { Binary.operator;
+  (* expr.name ===/!== value *)
+  | loc, Binary { Binary.
+      operator = (Binary.StrictEqual | Binary.StrictNotEqual) as op;
       left = _, Member {
         Member._object;
         property = Member.PropertyIdentifier (_,
@@ -4452,10 +4453,11 @@ and predicate_of_condition cx e = Ast.(Expression.(
         _ };
       right;
     } ->
-      sentinel_prop_test loc operator _object name right
+      sentinel_prop_test loc op _object name right
 
-  (* string op expr.name *)
-  | loc, Binary { Binary.operator;
+  (* value ===/!== expr.name *)
+  | loc, Binary { Binary.
+      operator = (Binary.StrictEqual | Binary.StrictNotEqual) as op;
       left;
       right = _, Member {
         Member._object;
@@ -4463,7 +4465,7 @@ and predicate_of_condition cx e = Ast.(Expression.(
           { Identifier.name; _ });
         _ }
     } ->
-      sentinel_prop_test loc operator _object name left
+      sentinel_prop_test loc op _object name left
 
   (* Array.isArray(expr) *)
   | _, Call {
