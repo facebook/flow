@@ -2156,7 +2156,7 @@ let string_of_scope cx scope = Scope.(
 
   let string_of_entry cx entry =
     let pos = match entry.def_loc with
-    | Some loc -> (string_of_pos (pos_of_loc loc))
+    | Some loc -> string_of_loc loc
     | None -> "(none)"
     in
     Utils.spf "{ specific: %s; general: %s; def_loc: %s; for_type: %b }"

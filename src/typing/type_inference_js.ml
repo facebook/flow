@@ -488,7 +488,7 @@ and ground_exports rs exports t =
 *)
 
 let query_type cx pos =
-  let result = ref (Pos.none, None, []) in
+  let result = ref (Loc.none, None, []) in
   let diff = ref (max_int, max_int) in
   Hashtbl.iter (fun range t ->
     if in_range pos range
@@ -500,8 +500,8 @@ let query_type cx pos =
         let ground_t = Flow_js.printified_type cx t in
         let possible_ts = Flow_js.possible_types_of_type cx t in
         result := if is_printed_type_parsable cx ground_t
-          then (Reason_js.pos_of_loc range, Some ground_t, possible_ts)
-          else (Reason_js.pos_of_loc range, None, possible_ts)
+          then (range, Some ground_t, possible_ts)
+          else (range, None, possible_ts)
       )
     )
   ) cx.type_table;
@@ -509,17 +509,16 @@ let query_type cx pos =
 
 let dump_types cx =
   Flow_js.suggested_type_cache := IMap.empty;
-  let lst = Hashtbl.fold (fun range t list ->
-    let pos = Reason_js.pos_of_loc range in
+  let lst = Hashtbl.fold (fun loc t list ->
     let ground_t = Flow_js.printified_type cx t in
     let possible_ts = Flow_js.possible_types_of_type cx t in
     let possible_reasons = possible_ts
       |> List.map Constraint_js.reason_of_t
     in
-    (pos, string_of_t cx ground_t, possible_reasons)::list
+    (loc, string_of_t cx ground_t, possible_reasons)::list
   ) cx.type_table [] in
   lst |> List.sort (fun
-    (a_pos, _, _) (b_pos, _, _) -> Pervasives.compare a_pos b_pos
+    (a_loc, _, _) (b_loc, _, _) -> Loc.compare a_loc b_loc
   )
 
 (********)

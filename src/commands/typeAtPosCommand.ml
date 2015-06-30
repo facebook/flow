@@ -59,35 +59,32 @@ let parse_args path args =
   let (line, column) = convert_input_pos (line, column) in
   file, line, column
 
-let handle_response (pos, t, reasons) json =
+let handle_response (loc, t, reasons) json =
   let ty = match t with
     | None -> "(unknown)"
     | Some str -> str
   in
   if json
   then (
-    let pos = Errors_js.pos_to_json pos in
+    let loc = Errors_js.json_of_loc loc in
     let json = Json.JAssoc (
         ("type", Json.JString ty) ::
         ("reasons", Json.JList
           (List.map (fun r ->
               Json.JAssoc (
                   ("desc", Json.JString (Reason_js.desc_of_reason r)) ::
-                  (Errors_js.pos_to_json (Reason_js.pos_of_reason r))
+                  (Errors_js.json_of_loc (Reason_js.loc_of_reason r))
                 )
             ) reasons)) ::
-        pos
+        loc
       ) in
     let json = Json.json_to_string json in
     output_string stdout (json^"\n")
   ) else (
     let range =
-      if pos = Pos.none then ""
-      else (
-        let file = Relative_path.to_absolute Pos.(pos.pos_file) in
-        let l0, c0, l1, c1 = Errors_js.pos_range pos in
-        (Utils.spf "\n%s:%d:%d,%d:%d" file l0 c0 l1 c1)
-      ) in
+      if loc = Loc.none then ""
+      else Utils.spf "\n%s" (range_string_of_loc loc)
+    in
     let pty =
       if reasons = [] then ""
       else "\n\nSee the following locations:\n" ^ (

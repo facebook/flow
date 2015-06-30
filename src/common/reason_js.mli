@@ -25,11 +25,11 @@ val mk_reason: string -> Loc.t -> reason
 
 (* ranges *)
 (* TODO convert all range stuff to use single Ast loc *)
-val pos_of_loc: Loc.t -> Pos.t
 val diff_range: Loc.t -> int * int
 val in_range: Pos.t -> Loc.t -> bool
 
 val string_of_pos: Pos.t -> string
+val string_of_loc: Loc.t -> string
 val json_of_pos: Pos.t -> Hh_json.json
 
 val reason_of_string: string -> reason

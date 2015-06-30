@@ -49,20 +49,20 @@ let get_file path = function
       ) in
       ServerProt.FileContent (filename, contents)
 
-let string_of_pos pos =
-  let file = Pos.filename pos in
-  if file = Relative_path.default then
-    ""
-  else
-    let line, start, end_ = Pos.info_pos pos in
+let string_of_loc loc = Loc.(
+  match loc.source with
+  | None -> ""
+  | Some file ->
+    let line = loc.start.line in
+    let start = loc.start.column + 1 in
+    let end_ = loc._end.column in
     if line <= 0 then
-      Utils.spf "%s:1:0" (Relative_path.to_absolute file)
-    else if Pos.length pos = 1 then
-      Utils.spf "%s:%d:%d"
-        (Relative_path.to_absolute file) line start
+      Utils.spf "%s:0:0" file
+    else if line = loc._end.line && start - end_ = 1 then
+      Utils.spf "%s:%d:%d" file line start
     else
-      Utils.spf "%s:%d:%d-%d"
-        (Relative_path.to_absolute file) line start end_
+      Utils.spf "%s:%d:%d-%d" file line start end_
+)
 
 let handle_error (pos, err) json =
   if json
@@ -79,24 +79,24 @@ let handle_error (pos, err) json =
 let handle_response types json =
   if json
   then (
-    let lst = types |> List.map (fun (pos, str, reasons) ->
+    let lst = types |> List.map (fun (loc, str, reasons) ->
       Json.JAssoc (
         ("type", Json.JString str) ::
         ("reasons", Json.JList (List.map (fun r ->
           Json.JAssoc (
             ("desc", Json.JString (Reason_js.desc_of_reason r)) ::
-            (Errors_js.pos_to_json (Reason_js.pos_of_reason r))
+            (Errors_js.json_of_loc (Reason_js.loc_of_reason r))
           )
         ) reasons)) ::
-        (Errors_js.pos_to_json pos)
+        (Errors_js.json_of_loc loc)
       )
     ) in
     let json = Json.json_to_string (Json.JList lst) in
     output_string stdout (json^"\n")
   ) else (
     let out = types
-      |> List.map (fun (pos, str, reasons) ->
-        (Utils.spf "%s: %s" (string_of_pos pos) str)
+      |> List.map (fun (loc, str, reasons) ->
+        (Utils.spf "%s: %s" (string_of_loc loc) str)
       )
       |> String.concat "\n"
     in

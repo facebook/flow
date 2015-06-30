@@ -175,7 +175,7 @@ struct
             | _, errors  -> failwith "Couldn't parse file") in
       let file = cx.Constraint_js.file in
       let pos = mk_pos file line col in
-      let (pos, ground_t, possible_ts) = TI.query_type cx pos in
+      let (loc, ground_t, possible_ts) = TI.query_type cx pos in
       let ty = match ground_t with
         | None -> None
         | Some t -> Some (Constraint_js.string_of_t cx t)
@@ -184,7 +184,7 @@ struct
         possible_ts
         |> List.map Constraint_js.reason_of_t
       in
-      (None, Some (pos, ty, reasons))
+      (None, Some (loc, ty, reasons))
     with exn ->
       let pos = mk_pos file line col in
       let err = (pos, Printexc.to_string exn) in

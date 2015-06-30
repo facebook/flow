@@ -139,6 +139,21 @@ let string_of_pos pos =
       spf "File \"%s\", line %d, characters %d-%d"
         (Relative_path.to_absolute file) line start end_
 
+let string_of_loc loc = Loc.(
+  match loc.source with
+  | None -> ""
+  | Some file ->
+    let line = loc.start.line in
+    let start = loc.start.column + 1 in
+    let end_ = loc._end.column in
+    if line <= 0 then
+      spf "File \"%s\"" file
+    else if line = loc._end.line && start - end_ = 1 then
+      spf "File \"%s\", line %d, character %d" file line start
+    else
+      spf "File \"%s\", line %d, characters %d-%d" file line start end_
+)
+
 let json_of_pos pos = Json.(Pos.(Lexing.(
   JAssoc [
     "file", JString (Relative_path.to_absolute (Pos.filename pos));

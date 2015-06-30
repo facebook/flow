@@ -32,6 +32,7 @@ val pos_of_error : error -> Pos.t
 val file_of_error : error -> string
 
 val pos_to_json : Pos.t -> (string * Hh_json.json) list
+val json_of_loc : Loc.t -> (string * Hh_json.json) list
 
 module Error :
   sig

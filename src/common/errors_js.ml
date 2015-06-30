@@ -88,6 +88,7 @@ let file_of_error err =
   let pos = pos_of_error err in
   Relative_path.to_absolute pos.Pos.pos_file
 
+(* TODO: deprecate this in favor of Reason_js.json_of_pos *)
 let pos_to_json pos =
   let file = Pos.(pos.pos_file) in
   let l0, c0, l1, c1 = pos_range pos in
@@ -96,6 +97,16 @@ let pos_to_json pos =
     "endline", Json.JInt l1;
     "start", Json.JInt c0;
     "end", Json.JInt c1 ]
+
+(* TODO: deprecate this in favor of one that matches Reason_js.json_of_pos *)
+let json_of_loc loc = Loc.(
+  let file = match loc.source with Some filename -> filename | None -> "" in
+  [ "path", Json.JString file;
+    "line", Json.JInt loc.start.line;
+    "endline", Json.JInt loc._end.line;
+    "start", Json.JInt (loc.start.column + 1);
+    "end", Json.JInt loc._end.column ]
+)
 
 (* warnings before errors, then first reason's position,
   then second reason's position. If all positions match then first message,

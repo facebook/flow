@@ -46,18 +46,17 @@ let getdef_call (state, pos) cx name loc this_t =
 
 let getdef_get_result cx state =
   match !state with
-  | Some Gdloc (loc) ->
-      Reason_js.pos_of_loc loc
+  | Some Gdloc (loc) -> loc
   | Some Gdmem (name, this) ->
       let this_t = Flow_js.resolve_type cx this in
       let result_map = Flow_js.extract_members cx this_t in
       (match SMap.get name result_map with
       | Some t ->
-          pos_of_t t
+          loc_of_t t
       | None ->
-          Pos.none)
+          Loc.none)
   | _ ->
-      Pos.none
+      Loc.none
 
 let getdef_set_hooks pos =
   let state = ref None in

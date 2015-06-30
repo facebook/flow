@@ -36,9 +36,7 @@ let spec = {
   )
 }
 
-let extract_position req req_locs =
-  let loc = Utils.SMap.find_unsafe req req_locs in
-  Reason_js.pos_of_loc loc
+let extract_location req req_locs = Utils.SMap.find_unsafe req req_locs
 
 let main option_values json modules () =
   let root = guess_root (Some (Sys.getcwd ())) in
@@ -60,10 +58,10 @@ let main option_values json modules () =
       Utils.SMap.fold (fun module_name (requires, req_locs) json_list ->
           let requirements =
             Utils.SSet.fold (fun req json_list ->
-                let pos = extract_position req req_locs in
+                let loc = extract_location req req_locs in
                 Json.JAssoc (
                   ("import", Json.JString req) ::
-                  (Errors_js.pos_to_json pos)
+                  (Errors_js.json_of_loc loc)
                 ) :: json_list
               ) requires [] in
           (module_name, Json.JAssoc [
@@ -82,10 +80,8 @@ let main option_values json modules () =
           Utils.SMap.find_unsafe module_name requirements_map in
         Printf.printf "Imports for module '%s':\n" module_name;
         Utils.SSet.iter (fun req ->
-          let pos = extract_position req req_locs in
-          let file = Relative_path.to_absolute Pos.(pos.pos_file) in
-          let l0, c0, l1, c1 = Errors_js.pos_range pos in
-          Printf.printf "\t%s@%s:%d:%d,%d:%d\n" req file l0 c0 l1 c1
+          let loc = extract_location req req_locs in
+          Printf.printf "\t%s@%s\n" req (range_string_of_loc loc)
         ) requirements
       end else if (Utils.SSet.mem module_name non_flow)
       then

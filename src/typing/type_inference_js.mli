@@ -30,9 +30,9 @@ val mk_object: context -> reason -> Type.t
 
 val body_loc: Spider_monkey_ast.Statement.FunctionDeclaration.body -> Loc.t
 
-val query_type: context -> Pos.t -> Pos.t * Type.t option * Type.t list
+val query_type: context -> Pos.t -> Loc.t * Type.t option * Type.t list
 
-val dump_types: context -> (Pos.t * string * Reason_js.reason list) list
+val dump_types: context -> (Loc.t * string * Reason_js.reason list) list
 
 val fill_types: context -> (int * int * string) list
 

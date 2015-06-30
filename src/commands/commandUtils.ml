@@ -315,4 +315,11 @@ let get_path_of_file file =
     let path = Path.make file in
     Path.to_string path
 
+let range_string_of_loc loc = Loc.(
+  let file = match loc.source with Some file -> file | None -> "" in
+  let l0, c0 = loc.start.line, loc.start.column + 1 in
+  let l1, c1 = loc._end.line, loc._end.column in
+  Utils.spf "%s:%d:%d,%d:%d" file l0 c0 l1 c1
+)
+
 let exe_name = Filename.basename Sys.executable_name

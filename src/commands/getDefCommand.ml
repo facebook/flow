@@ -76,26 +76,20 @@ let main option_values json strip_root path args () =
   ServerProt.cmd_to_channel oc
     (ServerProt.GET_DEF (file, line, column));
   (* command result will be a position structure with full file path *)
-  let pos:Pos.t = Marshal.from_channel ic in
+  let loc:Loc.t = Marshal.from_channel ic in
   (* if strip_root has been specified, relativize path to root *)
-  let pos = if not strip_root then pos else Pos.({
-    pos with pos_file =
-      (* ugh too many path utils in this joint *)
-      let sroot = Path.to_string root in
-      let spath = Relative_path.to_absolute pos.pos_file in
-      let spath = Files_js.relative_path sroot spath in
-      Relative_path.create Relative_path.Dummy spath
+  let loc = if not strip_root then loc else Loc.({
+    loc with source = match loc.source with
+    | Some source -> Some (Files_js.relative_path (Path.to_string root) source)
+    | None -> None
   }) in
   (* format output *)
   if json
   then (
-    let json = Json.JAssoc (Errors_js.pos_to_json pos) in
+    let json = Json.JAssoc (Errors_js.json_of_loc loc) in
     let json = Json.json_to_string json in
     print_endline json;
-  ) else (
-    let file = Relative_path.to_absolute Pos.(pos.pos_file) in
-    let l0, c0, l1, c1 = Errors_js.pos_range pos in
-    print_endline (Utils.spf "%s:%d:%d,%d:%d" file l0 c0 l1 c1)
-  )
+  ) else
+    print_endline (range_string_of_loc loc)
 
 let command = CommandSpec.command spec (collect_server_flags main)
