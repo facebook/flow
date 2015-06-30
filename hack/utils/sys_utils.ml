@@ -120,7 +120,6 @@ let read_stdin_to_string () =
   with End_of_file ->
     Buffer.contents buf
 
-
 (**
  * Like Python's os.path.expanduser, though probably doesn't cover some cases.
  * Roughly follow's bash's tilde expansion:
@@ -182,3 +181,39 @@ let executable_path : unit -> string =
       in
       executable_path_ := Some path;
       path
+
+let lines_of_in_channel ic =
+  let rec loop accum =
+    match try Some(input_line ic) with e -> None with
+    | None -> List.rev accum
+    | Some(line) -> loop (line::accum)
+  in
+  loop []
+
+let lines_of_file filename =
+  let ic = open_in filename in
+  try
+    let result = lines_of_in_channel ic in
+    let _ = close_in ic in
+    result
+  with _ ->
+    close_in ic;
+    []
+
+
+let read_file file =
+  let ic = open_in file  in
+  let size = in_channel_length ic in
+  let buf = String.create size in
+  really_input ic buf 0 size;
+  close_in ic;
+  buf
+
+let write_file ~file s =
+  let chan = open_out file in
+  (output_string chan s; close_out chan)
+
+(* could be in control section too *)
+
+let filemtime file =
+  (Unix.stat file).Unix.st_mtime

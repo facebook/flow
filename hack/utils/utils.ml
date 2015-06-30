@@ -52,7 +52,7 @@ module type MapSig = sig
   val is_empty: 'a t -> bool
   val union: 'a t -> 'a t -> 'a t
   val partition: (key -> 'a -> bool) -> 'a t -> 'a t * 'a t
-  val cardinal: 'a t -> int
+  val cardinal : 'a t -> int
   val compare: 'a t -> 'a t -> int
   val equal: 'a t -> 'a t -> bool
   val filter: (key -> 'a -> bool) -> 'a t -> 'a t
@@ -345,6 +345,7 @@ let lstrip s prefix =
 
 let string_of_char = String.make 1
 
+(* let match_re_string = Sys_utils.match_re *)
 (*****************************************************************************)
 (* Same as List.iter2, except that we only iterate as far as the shortest
  * of both lists.
