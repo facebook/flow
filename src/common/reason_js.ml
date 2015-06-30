@@ -63,7 +63,7 @@ type reason = {
   test_id: int option;
   derivable: bool;
   desc: string;
-  pos: Pos.t;
+  loc: Loc.t;
 }
 
 let lexpos file line col = {
@@ -73,16 +73,6 @@ let lexpos file line col = {
   Lexing.pos_cnum = col;
 }
 
-let pos_of_loc loc = Loc.(
-  if loc = Loc.none then Pos.none
-  else let file = match loc.source with Some s -> s | None -> "" in
-  { Pos.
-    pos_file = Relative_path.create Relative_path.Dummy file;
-    pos_start = lexpos file loc.start.line loc.start.column;
-    pos_end = lexpos file loc._end.line loc._end.column;
-  }
-)
-
 let diff_range loc = Loc.(
   let line1, line2 = loc.start.line, loc._end.line in
   (* TODO: Get rid of +1 which is here to ensure same behavior as old code
@@ -91,14 +81,13 @@ let diff_range loc = Loc.(
   (line2 - line1, end_ - start)
 )
 
-let in_range p loc = Loc.(
-  let line, start, end_ = Pos.info_pos p in
-  let loc_line1, loc_line2 = loc.start.line, loc._end.line in
-  (* TODO: Get rid of +1 which is here to ensure same behavior as old code
-     using Pos.info_pos *)
-  let loc_start, loc_end  = loc.start.column + 1, loc._end.column in
-  loc_line1 <= line && line <= loc_line2 &&
-    loc_start <= start && end_ <= loc_end
+let in_range loc1 loc2 = Loc.(
+  let loc1_line = loc1.start.line in
+  let loc1_start, loc1_end = loc1.start.column, loc1._end.column in
+  let loc2_line1, loc2_line2 = loc2.start.line, loc2._end.line in
+  let loc2_start, loc2_end  = loc2.start.column, loc2._end.column in
+  loc2_line1 <= loc1_line && loc1_line <= loc2_line2 &&
+    loc2_start <= loc1_start && loc1_end <= loc2_end
 )
 
 let rec patch ll offset lines = function
@@ -125,21 +114,6 @@ let do_patch lines insertions =
   patch 1 0 lines insertions;
   String.concat "\n" (Array.to_list lines)
 
-let string_of_pos pos =
-  let file = Pos.filename pos in
-  if file = Relative_path.default then
-    ""
-  else
-    let line, start, end_ = Pos.info_pos pos in
-    if line <= 0 then
-      spf "File \"%s\", line 1, character 0" (Relative_path.to_absolute file)
-    else if Pos.length pos = 1 then
-      spf "File \"%s\", line %d, character %d"
-        (Relative_path.to_absolute file) line start
-    else
-      spf "File \"%s\", line %d, characters %d-%d"
-        (Relative_path.to_absolute file) line start end_
-
 let string_of_loc loc = Loc.(
   match loc.source with
   | None -> ""
@@ -155,33 +129,37 @@ let string_of_loc loc = Loc.(
       spf "File \"%s\", line %d, characters %d-%d" file line start end_
 )
 
-let json_of_pos pos = Json.(Pos.(Lexing.(
+let json_of_loc loc = Json.(Loc.(
   JAssoc [
-    "file", JString (Relative_path.to_absolute (Pos.filename pos));
+    "file", JString (match loc.source with Some x -> x | None -> "");
     "start", JAssoc [
-      "line", JInt pos.pos_start.pos_lnum;
-      "col", JInt (pos.pos_start.pos_cnum - pos.pos_start.pos_bol)];
+      "line", JInt loc.start.line;
+      "col", JInt loc.start.column;
+    ];
     "end", JAssoc [
-      "line", JInt pos.pos_end.pos_lnum;
-      "col", JInt (pos.pos_end.pos_cnum - pos.pos_end.pos_bol)];
+      "line", JInt loc._end.line;
+      "col", JInt loc._end.column;
+    ];
   ]
-)))
+))
 
 (* reason constructors, accessors, etc. *)
 
 (* The current test_id is included in every new reason. *)
-let mk_reason s loc = {
+let mk_reason desc loc = {
   test_id = TestID.current();
   derivable = false;
-  desc = s;
-  pos = pos_of_loc loc;
+  desc;
+  loc;
 }
 
 let reason_of_string s =
   mk_reason s Loc.none
 
+let loc_of_reason r = r.loc
+
 let string_of_reason r =
-  let spos = string_of_pos r.pos in
+  let spos = string_of_loc (loc_of_reason r) in
   let desc = r.desc in
   if spos = ""
   then desc
@@ -193,36 +171,13 @@ let string_of_reason r =
 
 let json_of_reason r = Json.(
   JAssoc [
-    "pos", json_of_pos r.pos;
+    "pos", json_of_loc (loc_of_reason r);
     "desc", JString r.desc
   ]
 )
 
 let dump_reason r =
-  spf "[%s] %S" (string_of_pos r.pos) r.desc
-
-let pos_of_reason r =
-  r.pos
-
-let loc_of_reason r = Pos.(Lexing.(Loc.(
-  let p = pos_of_reason r in
-  if p = Pos.none then Loc.none
-  else {
-    source =
-      if p.pos_file = Relative_path.default then None
-      else Some (Relative_path.to_absolute p.pos_file);
-    start = {
-      line = p.pos_start.pos_lnum;
-      column = p.pos_start.pos_cnum - p.pos_start.pos_bol;
-      offset = p.pos_start.pos_cnum;
-    };
-    _end = {
-      line = p.pos_end.pos_lnum;
-      column = p.pos_end.pos_cnum - p.pos_end.pos_bol;
-      offset = p.pos_end.pos_cnum;
-    }
-  }
-)))
+  spf "[%s] %S" (string_of_loc (loc_of_reason r)) r.desc
 
 let desc_of_reason r =
   r.desc
@@ -249,12 +204,12 @@ let builtin_reason x =
   mk_reason x Loc.({ none with source = Some (Files_js.get_flowlib_root ()) })
   |> derivable_reason
 
-(* reasons compare on their positions *)
+(* reasons compare on their locations *)
 let compare r1 r2 =
-  Pervasives.compare (pos_of_reason r1) (pos_of_reason r2)
+  Pervasives.compare (loc_of_reason r1) (loc_of_reason r2)
 
 let same_scope r1 r2 =
-  r1.pos.Pos.pos_file = r2.pos.Pos.pos_file
+  r1.loc.Loc.source = r2.loc.Loc.source
 
 (* reason transformers: *)
 

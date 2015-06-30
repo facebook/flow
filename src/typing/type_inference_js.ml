@@ -487,11 +487,11 @@ and ground_exports rs exports t =
   ground_exported_type exports t
 *)
 
-let query_type cx pos =
+let query_type cx loc =
   let result = ref (Loc.none, None, []) in
   let diff = ref (max_int, max_int) in
   Hashtbl.iter (fun range t ->
-    if in_range pos range
+    if in_range loc range
     then (
       let d = diff_range range in
       if d < !diff then (
@@ -527,8 +527,9 @@ let dump_types cx =
 
 let fill_types cx =
   Flow_js.suggested_type_cache := IMap.empty;
-  Hashtbl.fold (fun pos t list ->
-    let line, start, end_ = Pos.info_pos pos in
+  Hashtbl.fold Loc.(fun loc t list ->
+    let line = loc._end.line in
+    let end_ = loc._end.column in
     let t = Flow_js.printified_type cx t in
     if is_printed_type_parsable cx t then
       (line, end_, spf ": %s" (string_of_t cx t))::list
@@ -929,7 +930,7 @@ and mk_type_ cx map reason = function
         then AnyT.why reason
         else Flow_js.mk_tvar cx reason
       in
-      Hashtbl.replace cx.annot_table (pos_of_reason reason) t;
+      Hashtbl.replace cx.annot_table (loc_of_reason reason) t;
       t
 
   | Some annot ->

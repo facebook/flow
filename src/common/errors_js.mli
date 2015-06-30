@@ -12,9 +12,7 @@ type level = ERROR | WARNING
 type message = (Reason_js.reason * string)
 type error = level * message list * message list
 
-val pos_range : Pos.t -> int * int * int * int
-
-val format_reason_color: ?first:bool -> ?one_line:bool -> Pos.t * string ->
+val format_reason_color: ?first:bool -> ?one_line:bool -> Loc.t * string ->
   (Tty.style * string) list
 
 val print_reason_color:
@@ -27,11 +25,8 @@ val print_reason_color:
 val print_error_color:
   one_line:bool -> color:Tty.color_mode -> error -> unit
 
-val pos_of_error : error -> Pos.t
-
 val file_of_error : error -> string
 
-val pos_to_json : Pos.t -> (string * Hh_json.json) list
 val json_of_loc : Loc.t -> (string * Hh_json.json) list
 
 module Error :

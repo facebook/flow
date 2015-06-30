@@ -97,15 +97,15 @@ let handle_response (loc, t, reasons) json =
   );
   flush stdout
 
-let handle_error (pos, err) json =
+let handle_error (loc, err) json =
   if json
   then (
-    let pos = Errors_js.pos_to_json pos in
-    let json = Json.JAssoc (("error", Json.JString err) :: pos) in
+    let loc = Errors_js.json_of_loc loc in
+    let json = Json.JAssoc (("error", Json.JString err) :: loc) in
     output_string stderr ((Json.json_to_string json)^"\n");
   ) else (
-    let pos = Reason_js.string_of_pos pos in
-    output_string stderr (Utils.spf "%s:\n%s\n" pos err);
+    let loc = Reason_js.string_of_loc loc in
+    output_string stderr (Utils.spf "%s:\n%s\n" loc err);
   );
   flush stderr
 

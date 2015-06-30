@@ -154,12 +154,12 @@ struct
     in
     send_errorl (Errors_js.to_list errors) oc
 
-  let mk_pos file line col =
+  let mk_loc file line col =
     {
-      Pos.
-      pos_file = Relative_path.create Relative_path.Dummy file;
-      pos_start = Reason_js.lexpos file line col;
-      pos_end = Reason_js.lexpos file line (col+1);
+      Loc.
+      source = Some file;
+      start = { Loc.line; column = col; offset = 0; };
+      _end = { Loc.line; column = col + 1; offset = 0; };
     }
 
   let infer_type (file_input, line, col) oc =
@@ -174,8 +174,8 @@ struct
             | Some cx, _ -> cx
             | _, errors  -> failwith "Couldn't parse file") in
       let file = cx.Constraint_js.file in
-      let pos = mk_pos file line col in
-      let (loc, ground_t, possible_ts) = TI.query_type cx pos in
+      let loc = mk_loc file line col in
+      let (loc, ground_t, possible_ts) = TI.query_type cx loc in
       let ty = match ground_t with
         | None -> None
         | Some t -> Some (Constraint_js.string_of_t cx t)
@@ -186,8 +186,8 @@ struct
       in
       (None, Some (loc, ty, reasons))
     with exn ->
-      let pos = mk_pos file line col in
-      let err = (pos, Printexc.to_string exn) in
+      let loc = mk_loc file line col in
+      let err = (loc, Printexc.to_string exn) in
       (Some err, None)
     ); in
     Marshal.to_channel oc (err, resp) [];
@@ -206,8 +206,8 @@ struct
             | _, errors  -> failwith "Couldn't parse file") in
       (None, Some (TI.dump_types cx))
     with exn ->
-      let pos = mk_pos file 0 0 in
-      let err = (pos, Printexc.to_string exn) in
+      let loc = mk_loc file 0 0 in
+      let err = (loc, Printexc.to_string exn) in
       (Some err, None)
     ) in
     Marshal.to_channel oc (err, resp) [];
@@ -323,8 +323,8 @@ struct
 
   let get_def (file_input, line, col) oc =
     let file = ServerProt.file_input_get_filename file_input in
-    let pos = mk_pos file line col in
-    let state = GetDef_js.getdef_set_hooks pos in
+    let loc = mk_loc file line col in
+    let state = GetDef_js.getdef_set_hooks loc in
     (try
       let content = ServerProt.file_input_get_content file_input in
       let cx = match Types_js.typecheck_contents content file with

@@ -352,7 +352,7 @@ type context = {
   mutable error_suppressions: Errors_js.ErrorSuppressions.t;
 
   type_table: (Loc.t, Type.t) Hashtbl.t;
-  annot_table: (Pos.t, Type.t) Hashtbl.t;
+  annot_table: (Loc.t, Type.t) Hashtbl.t;
 }
 and module_exports_type =
   | CommonJSModule of Loc.t option

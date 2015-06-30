@@ -318,8 +318,10 @@ let string_of_flow r1 r2 =
     (string_of_reason r1) (string_of_reason r2)
 
 let lib_reason r =
-  Files_js.is_lib_file (Relative_path.to_absolute
-    (Pos.filename (pos_of_reason r)))
+  let loc = loc_of_reason r in
+  match Loc.(loc.source) with
+  | Some filename -> Files_js.is_lib_file filename
+  | None -> false
 
 let ordered_reasons l u =
   let rl = reason_of_t l in
@@ -351,7 +353,7 @@ let prmsg_flow_trace_reasons cx level trace_reasons msg (r1, r2) =
     else []
   in
   let message_list =
-    if (pos_of_reason r2 = Pos.none)
+    if (loc_of_reason r2 = Loc.none)
     then [
       r1, spf "%s\n%s %s" (desc_of_reason r1) msg (desc_of_reason r2)
     ]
@@ -3153,7 +3155,10 @@ and flow_eq cx trace reason l r = match (l, r) with
   | (_, _) -> prerr_flow cx trace "Cannot be compared to" l r
 
 and abs_path_of_reason r =
-  r |> pos_of_reason |> Pos.filename |> Relative_path.to_absolute
+  let loc = loc_of_reason r in
+  match Loc.(loc.source) with
+  | Some filename -> filename
+  | None -> ""
 
 and is_object_prototype_method = function
   | "hasOwnProperty"

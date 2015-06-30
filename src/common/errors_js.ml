@@ -15,11 +15,6 @@ type level = ERROR | WARNING
 type message = (Reason_js.reason * string)
 type error = level * message list (* message *) * message list (* trace *)
 
-let pos_range p = Pos.(Lexing.(
-  p.pos_start.pos_lnum, p.pos_start.pos_cnum + 1,
-    p.pos_end.pos_lnum, p.pos_end.pos_cnum
-))
-
 let append_trace_reasons message_list trace_reasons =
   match trace_reasons with
   | [] -> message_list
@@ -34,9 +29,10 @@ let append_trace_reasons message_list trace_reasons =
 let format_reason_color
   ?(first=false)
   ?(one_line=false)
-  ((p, s): Pos.t * string)
-= Pos.(
-  let l0, c0, l1, c1 = pos_range p in
+  ((loc, s): Loc.t * string)
+= Loc.(
+  let l0, c0 = loc.start.line, loc.start.column + 1 in
+  let l1, c1 = loc._end.line, loc._end.column in
   let err_clr  = if first then C.Normal C.Red else C.Normal C.Green in
   let file_clr = if first then C.Bold C.Blue else C.Bold C.Magenta in
   let line_clr = C.Normal C.Yellow in
@@ -44,7 +40,7 @@ let format_reason_color
 
   let s = if one_line then Str.global_replace (Str.regexp "\n") "\\n" s else s in
 
-  [file_clr, Relative_path.to_absolute p.pos_file]
+  [file_clr, match loc.source with Some filename -> filename | None -> ""]
   @ (if l0 > 0 && c0 > 0 && l1 > 0 && c1 > 0 then [
       (C.Normal C.Default, ":");
       (line_clr,           string_of_int l0);
@@ -67,8 +63,8 @@ let format_reason_color
 )
 
 let print_reason_color ~first ~one_line ~color ((reason, s): message) =
-  let p = Reason_js.pos_of_reason reason in
-  let to_print = format_reason_color ~first ~one_line (p, s) in
+  let loc = Reason_js.loc_of_reason reason in
+  let to_print = format_reason_color ~first ~one_line (loc, s) in
   (if first then Printf.printf "\n");
   C.print ~color_mode:color to_print
 
@@ -78,27 +74,17 @@ let print_error_color ~one_line ~color e =
   print_reason_color ~first:true ~one_line ~color (List.hd messages);
   List.iter (print_reason_color ~first:false ~one_line ~color) (List.tl messages)
 
-let pos_of_error err =
+let loc_of_error err =
   let _, messages, _ = err in
   match messages with
-  | (reason, _) :: _ -> Reason_js.pos_of_reason reason
-  | _ -> Pos.none
+  | (reason, _) :: _ -> Reason_js.loc_of_reason reason
+  | _ -> Loc.none
 
 let file_of_error err =
-  let pos = pos_of_error err in
-  Relative_path.to_absolute pos.Pos.pos_file
+  let loc = loc_of_error err in
+  match loc.Loc.source with Some filename -> filename | None -> ""
 
-(* TODO: deprecate this in favor of Reason_js.json_of_pos *)
-let pos_to_json pos =
-  let file = Pos.(pos.pos_file) in
-  let l0, c0, l1, c1 = pos_range pos in
-  [ "path", Json.JString (Relative_path.to_absolute file);
-    "line", Json.JInt l0;
-    "endline", Json.JInt l1;
-    "start", Json.JInt c0;
-    "end", Json.JInt c1 ]
-
-(* TODO: deprecate this in favor of one that matches Reason_js.json_of_pos *)
+(* TODO: deprecate this in favor of Reason_js.json_of_loc *)
 let json_of_loc loc = Loc.(
   let file = match loc.source with Some filename -> filename | None -> "" in
   [ "path", Json.JString file;
@@ -221,7 +207,7 @@ let to_json (error : error) = Json.(
   let elts = List.map (fun (reason, w) ->
       JAssoc (("descr", Json.JString w) ::
               ("level", Json.JString level_str) ::
-              (pos_to_json (Reason_js.pos_of_reason reason)))
+              (json_of_loc (Reason_js.loc_of_reason reason)))
     ) messages
   in
   JAssoc [ "message", JList elts ]
@@ -252,13 +238,13 @@ let to_string (error : error) : string =
   (match msgl with
   | [] -> assert false
   | (reason1, msg1) :: rest_of_error ->
-      let pos1 = Reason_js.pos_of_reason reason1 in
+      let loc1 = Reason_js.loc_of_reason reason1 in
       Buffer.add_string buf begin
-        Printf.sprintf "%s\n%s\n" (Pos.string (Pos.to_absolute pos1)) msg1
+        Printf.sprintf "%s\n%s\n" (Reason_js.string_of_loc loc1) msg1
       end;
       List.iter begin fun (reason, w) ->
-        let p = Reason_js.pos_of_reason reason in
-        let msg = Printf.sprintf "%s\n%s\n" (Pos.string (Pos.to_absolute p)) w
+        let loc = Reason_js.loc_of_reason reason in
+        let msg = Printf.sprintf "%s\n%s\n" (Reason_js.string_of_loc loc) w
         in Buffer.add_string buf msg
       end rest_of_error
   );

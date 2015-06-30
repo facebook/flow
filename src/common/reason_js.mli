@@ -22,13 +22,10 @@ val lexpos: string -> int -> int -> Lexing.position
 val mk_reason: string -> Loc.t -> reason
 
 (* ranges *)
-(* TODO convert all range stuff to use single Ast loc *)
 val diff_range: Loc.t -> int * int
-val in_range: Pos.t -> Loc.t -> bool
+val in_range: Loc.t -> Loc.t -> bool
 
-val string_of_pos: Pos.t -> string
 val string_of_loc: Loc.t -> string
-val json_of_pos: Pos.t -> Hh_json.json
 
 val reason_of_string: string -> reason
 
@@ -50,7 +47,6 @@ val dump_reason: reason -> string
 
 (* accessors *)
 val loc_of_reason: reason -> Loc.t
-val pos_of_reason: reason -> Pos.t
 
 val desc_of_reason: reason -> string
 

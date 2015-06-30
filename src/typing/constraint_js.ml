@@ -712,7 +712,7 @@ type context = {
   mutable error_suppressions: Errors_js.ErrorSuppressions.t;
 
   type_table: (Loc.t, Type.t) Hashtbl.t;
-  annot_table: (Pos.t, Type.t) Hashtbl.t;
+  annot_table: (Loc.t, Type.t) Hashtbl.t;
 }
 and module_exports_type =
   | CommonJSModule of Loc.t option
@@ -2198,8 +2198,8 @@ let prep_path r =
 
 let pos_len r =
   let r = prep_path r in
-  let pos = pos_of_reason r in
-  let fmt = Errors_js.format_reason_color (pos, "") in
+  let loc = loc_of_reason r in
+  let fmt = Errors_js.format_reason_color (loc, "") in
   let str = String.concat "" (List.map snd fmt) in
   String.length str
 

@@ -25,14 +25,29 @@ let result_to_string (term: (Pos.t, search_result_type) SearchUtils.term) =
     term.name
     (Pos.string (Pos.to_absolute term.pos))
     (result_type_to_string term.result_type)
- )
+)
+
+let pos_range p = Pos.(Lexing.(
+  p.pos_start.pos_lnum, p.pos_start.pos_cnum + 1,
+    p.pos_end.pos_lnum, p.pos_end.pos_cnum
+))
+
+(* TODO: deprecate this in favor of Reason_js.json_of_loc *)
+let pos_to_json pos =
+  let file = Pos.(pos.pos_file) in
+  let l0, c0, l1, c1 = pos_range pos in
+  [ "path", Json.JString (Relative_path.to_absolute file);
+    "line", Json.JInt l0;
+    "endline", Json.JInt l1;
+    "start", Json.JInt c0;
+    "end", Json.JInt c1 ]
 
 let result_to_json term =
   SearchUtils.(
   Json.JAssoc (
     ("name", Json.JString term.name) ::
     ("type", Json.JString (result_type_to_string term.result_type)) ::
-    (Errors_js.pos_to_json term.pos)
+    (pos_to_json term.pos)
   ))
 
 module SS = SearchService.Make(struct
