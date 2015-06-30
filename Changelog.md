@@ -8,7 +8,7 @@ Likely to cause new Flow errors:
 Misc:
 
 - Added `import typeof` feature that allows you to import the type of a *value* export from another module. It is sugar for: `import MyThing_tmp from "MyModule"; type MyThing = typeof MyThing_tmp;` (except it removes the need for the intermediate `MyThing_tmp` variable)
-- Added `flow ast` command to print a serialized JSON (ESTree)[https://github.com/estree/estree] AST. (Note that this AST does not include types, just syntactic structure for now)
+- Added `flow ast` command to print a serialized JSON [ESTree](https://github.com/estree/estree) AST. (Note that this AST does not include types, just syntactic structure for now)
 - Added support for class expressions
 - Added support for following symlinks
 - Added support for number-literal and boolean-literal annotations. (useful for things like enum types and refinements based on tests of equivalence between two variables)
