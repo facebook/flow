@@ -3393,7 +3393,7 @@ and unary cx loc = Ast.Expression.Unary.(function
 
   | { operator = Plus; argument; _ } ->
       ignore (expression cx argument);
-      AnyT.at loc
+      NumT.at loc
 
   | { operator = Minus; argument; _ }
   | { operator = BitNot; argument; _ } ->
