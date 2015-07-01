@@ -54,10 +54,10 @@ let rec decl env methods =
               | Some base_ty -> (
                 let base_p = Reason.to_pos (fst base_ty) in
                 let get_r = Reason.Rdynamic_yield (base_p, ft.ft_pos, get_name, name) in
-                let deprec_msg = Printf.sprintf
-                  ("The pseudo-method %s is deprecated; instead of relying on "
-                   ^^ "DynamicYield::__call, await %s either directly or through "
-                   ^^ "dynamic_yield_get_DEPRECATED") get_name name in
+                let deprec_msg = Printf.sprintf begin
+                   "The pseudo-method %s is deprecated; instead of relying "^^
+                   "on DynamicYield::__call, use await %s(...) or prep(%s(...))"
+                end get_name name name in
                 let get_ty = ce_r, Tfun {ft with
                   ft_ret = get_r, (snd base_ty);
                   ft_deprecated = Some deprec_msg
