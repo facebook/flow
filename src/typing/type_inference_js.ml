@@ -5208,7 +5208,7 @@ and mk_body id cx ~async param_types_map param_locs_map ret body this super =
   then (
     let loc = loc_of_t ret in
     let void_t = if async then
-      let reason = mk_reason "return Promise<void>" loc in
+      let reason = mk_reason "return Promise<Unit>" loc in
       let promise = Env_js.get_var ~for_type:true cx "Promise" reason in
       TypeAppT (promise, [VoidT.at loc])
     else
