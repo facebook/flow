@@ -204,9 +204,9 @@ let dir_sep = Str.regexp_string Filename.dir_sep
 let current_dir_name = Str.regexp_string Filename.current_dir_name
 let parent_dir_name = Str.regexp_string Filename.parent_dir_name
 
-let wanted config path =
-  not (FlowConfig.is_excluded config path) &&
-    not (is_lib_file path)
+let wanted config =
+  let is_excluded = FlowConfig.is_excluded config in
+  fun path -> not (is_excluded path) && not (is_lib_file path)
 
 let make_next_files root =
   let config = FlowConfig.get root in

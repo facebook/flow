@@ -257,9 +257,9 @@ let is_included config f =
       match_patt f patts != None
 
 (* true if path matches one of our excludes *)
-let is_excluded config path =
+let is_excluded config =
   let list = List.map snd config.excludes in
-  List.exists (fun rx -> Str.string_match rx path 0) list
+  fun path -> List.exists (fun rx -> Str.string_match rx path 0) list
 
 let parse_libs config lines =
   let libs = lines
