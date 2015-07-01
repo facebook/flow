@@ -24,6 +24,7 @@ module DynamicYield = Typing_dynamic_yield
 module Reason = Typing_reason
 module Inst = Typing_instantiate
 module Attrs = Attributes
+module TUtils = Typing_utils
 
 module SN = Naming_special_names
 module Phase = Typing_phase
@@ -433,11 +434,8 @@ and class_decl tcopt c =
       ty :: impl
     | _ -> impl
   in
-  let env, impl_dimpl =
-    lfold (Typing.get_implements ~with_checks:false) env impl in
-  let impl, dimpl = List.split impl_dimpl in
+  let env, impl = lfold get_implements env impl in
   let impl = List.fold_right (SMap.fold SMap.add) impl SMap.empty in
-  let dimpl = List.fold_right (SMap.fold SMap.add) dimpl SMap.empty in
   let env, extends, ext_strict = get_class_parents_and_traits env c in
   let extends = if c.c_is_xhp
     then SSet.add "XHP" extends
@@ -473,12 +471,6 @@ and class_decl tcopt c =
     Errors.strict_members_not_known p name
   else ();
   let ext_strict = if not_strict_because_xhp then false else ext_strict in
-  let self_dimpl = if is_abstract then impl else SMap.empty in
-  let dimpl =
-    if is_abstract
-    then SMap.fold SMap.add self_dimpl dimpl
-    else dimpl
-  in
   let env, tparams = lfold Typing.type_param env (fst c.c_tparams) in
   let env, enum = match c.c_enum with
     | None -> env, None
@@ -509,7 +501,6 @@ and class_decl tcopt c =
     tc_smethods = sm;
     tc_construct = cstr;
     tc_ancestors = impl;
-    tc_ancestors_checked_when_concrete = dimpl;
     tc_extends = extends;
     tc_req_ancestors = req_ancestors;
     tc_req_ancestors_extends = req_ancestors_extends;
@@ -525,10 +516,23 @@ and class_decl tcopt c =
   SMap.iter begin fun x _ ->
     Typing_deps.add_idep (Some class_dep) (Dep.Class x)
   end impl;
-  SMap.iter begin fun x _ ->
-    Typing_deps.add_idep (Some class_dep) (Dep.Class x)
-  end dimpl;
   Env.add_class (snd c.c_name) tc
+
+and get_implements (env: Env.env) ht =
+  let _r, (_p, c), paraml = Typing_hint.open_class_hint ht in
+  let class_ = Env.get_class_dep env c in
+  match class_ with
+  | None ->
+      (* The class lives in PHP land *)
+      env, SMap.singleton c ht
+  | Some class_ ->
+      let subst = Inst.make_subst class_.tc_tparams paraml in
+      let sub_implements =
+        SMap.map
+          (fun ty -> snd (Inst.instantiate subst env ty))
+          class_.tc_ancestors
+      in
+      env, SMap.add c ht sub_implements
 
 and trait_exists env acc trait =
   match trait with

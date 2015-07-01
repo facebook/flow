@@ -96,8 +96,6 @@ let unbound_name env (pos, name)=
   );
   env, (Reason.Rnone, Tany)
 
-let is_hhi path = str_ends_with (Relative_path.suffix path) ".hhi"
-
 (*****************************************************************************)
 (* Global constants typing *)
 (*****************************************************************************)
@@ -3443,48 +3441,31 @@ and string2 env idl =
     env
  ) env idl
 
-and get_implements ~with_checks (env: Env.env) ht =
-  match ht with
-  | _, Tapply ((p, c), paraml) ->
-      let class_ = Env.get_class_dep env c in
-      (match class_ with
-      | None ->
-          (* The class lives in PHP land *)
-          env, (SMap.add c ht SMap.empty, SMap.empty)
-      | Some class_ ->
-          let size1 = List.length class_.tc_tparams in
-          let size2 = List.length paraml in
-          if size1 <> size2 then Errors.class_arity p class_.tc_pos c size1;
-          let subst =
-            Inst.make_subst class_.tc_tparams paraml in
-          iter2_shortest begin fun (_, (p, _), cstr_opt) ty ->
-            if with_checks then
-              match cstr_opt with
-              | None -> ()
-              | Some (Ast.Constraint_as, cstr) ->
-                  let cstr = snd (Inst.instantiate subst env cstr) in
-                  ignore (Type.sub_type_decl p Reason.URnone env cstr ty);
-              | Some (Ast.Constraint_super, cstr) ->
-                  let cstr = snd (Inst.instantiate subst env cstr) in
-                  ignore (Type.sub_type_decl p Reason.URnone env ty cstr);
-            else ()
-          end class_.tc_tparams paraml;
-          let sub_implements =
-            SMap.map
-              (fun ty -> snd (Inst.instantiate subst env ty))
-              class_.tc_ancestors
-          in
-          let sub_dimplements =
-            SMap.map
-              (fun ty -> snd (Inst.instantiate subst env ty))
-              class_.tc_ancestors_checked_when_concrete
-          in
-          env, (SMap.add c ht sub_implements, sub_dimplements)
-      )
-  | _, (Tany | Tmixed | Tarray (_, _) | Tgeneric (_,_) | Toption _ | Tprim _
-    | Tfun _ | Ttuple _ | Tshape _  | Tthis | Taccess (_, _)) ->
+(* If the current class inherits from classes that take type arguments, we need
+ * to check that the arguments provided are consistent with the constraints on
+ * the type parameters. *)
+and check_implements_tparaml (env: Env.env) ht =
+  let _r, (p, c), paraml = Typing_hint.open_class_hint ht in
+  let class_ = Env.get_class_dep env c in
+  match class_ with
+  | None ->
       (* The class lives in PHP land *)
-      env, (SMap.empty, SMap.empty)
+      ()
+  | Some class_ ->
+      let size1 = List.length class_.tc_tparams in
+      let size2 = List.length paraml in
+      if size1 <> size2 then Errors.class_arity p class_.tc_pos c size1;
+      let subst = Inst.make_subst class_.tc_tparams paraml in
+      iter2_shortest begin fun (_, (p, _), cstr_opt) ty ->
+        match cstr_opt with
+        | None -> ()
+        | Some (Ast.Constraint_as, cstr) ->
+            let cstr = snd (Inst.instantiate subst env cstr) in
+            ignore (Type.sub_type_decl p Reason.URnone env cstr ty);
+        | Some (Ast.Constraint_super, cstr) ->
+            let cstr = snd (Inst.instantiate subst env cstr) in
+            ignore (Type.sub_type_decl p Reason.URnone env ty cstr);
+      end class_.tc_tparams paraml
 
 (* In order to type-check a class, we need to know what "parent"
  * refers to. Sometimes people write "parent::", when that happens,
@@ -3560,10 +3541,7 @@ and class_def_ env_up c tc =
   let env = Typing_hint.check_tparams_instantiable env (fst c.c_tparams) in
   Typing_variance.class_ (snd c.c_name) tc impl;
   let self = get_self_from_c env c in
-  let env, impl_dimpl =
-    lfold (get_implements ~with_checks:true) env impl in
-  let _, dimpl = List.split impl_dimpl in
-  let dimpl = List.fold_right (SMap.fold SMap.add) dimpl SMap.empty in
+  List.iter (check_implements_tparaml env) impl;
   let env, parent = class_def_parent env c tc in
   if tc.tc_kind = Ast.Cnormal && tc.tc_members_fully_known
   then begin
@@ -3584,10 +3562,6 @@ and class_def_ env_up c tc =
     | Ast.Cnormal -> ()
   end;
   List.iter (class_implements_type env c) impl;
-  if not (Env.is_decl env) || is_hhi (Pos.filename (fst c.c_name))
-  then begin
-    SMap.iter (fun _ ty -> class_implements_type env c ty) dimpl;
-  end;
   List.iter (class_var_def env false c) c.c_vars;
   List.iter (method_def env) c.c_methods;
   List.iter (typeconst_def env) c.c_typeconsts;

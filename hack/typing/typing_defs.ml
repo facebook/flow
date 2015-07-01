@@ -351,9 +351,6 @@ and class_type = {
   (* This includes all the classes, interfaces and traits this class is
    * using. *)
   tc_ancestors           : decl ty SMap.t ;
-  (* Ancestors that have to be checked when the class becomes
-   * concrete. *)
-  tc_ancestors_checked_when_concrete  : decl ty SMap.t;
   tc_req_ancestors       : decl ty SMap.t;
   tc_req_ancestors_extends : SSet.t; (* the extends of req_ancestors *)
   tc_extends             : SSet.t;

@@ -335,20 +335,18 @@ let check_class_implements env parent_class class_ =
 (* The externally visible function *)
 (*****************************************************************************)
 
-let open_class_hint = function
-  | r, Tapply (name, tparaml) -> Reason.to_pos r, name, tparaml
-  | _ -> assert false
-
 let check_implements env parent_type type_ =
-  let parent_pos, parent_name, parent_tparaml = open_class_hint parent_type in
-  let pos, name, tparaml = open_class_hint type_ in
+  let parent_r, parent_name, parent_tparaml =
+    Typing_hint.open_class_hint parent_type in
+  let r, name, tparaml = Typing_hint.open_class_hint type_ in
   let parent_class = Env.get_class env (snd parent_name) in
   let class_ = Env.get_class env (snd name) in
   match parent_class, class_ with
   | None, _ | _, None -> ()
   | Some parent_class, Some class_ ->
-      let parent_class = parent_pos, parent_class, parent_tparaml in
-      let class_ = pos, class_, tparaml in
+      let parent_class =
+        (Reason.to_pos parent_r), parent_class, parent_tparaml in
+      let class_ = (Reason.to_pos r), class_, tparaml in
       Errors.try_
         (fun () -> check_class_implements env parent_class class_)
         (fun errorl ->

@@ -440,8 +440,6 @@ module PrintClass = struct
     let tc_smethods = class_elt_smap_with_breaks c.tc_smethods in
     let tc_construct = constructor c.tc_construct in
     let tc_ancestors = ancestors_smap c.tc_ancestors in
-    let tc_ancestors_checked_when_concrete =
-      ancestors_smap c.tc_ancestors_checked_when_concrete in
     let tc_req_ancestors = ancestors_smap c.tc_req_ancestors in
     let tc_req_ancestors_extends = sset c.tc_req_ancestors_extends in
     let tc_extends = sset c.tc_extends in
@@ -461,7 +459,6 @@ module PrintClass = struct
     "tc_smethods: "^tc_smethods^"\n"^
     "tc_construct: "^tc_construct^"\n"^
     "tc_ancestors: "^tc_ancestors^"\n"^
-    "tc_ancestors_checked_when_concrete: "^tc_ancestors_checked_when_concrete^"\n"^
     "tc_extends: "^tc_extends^"\n"^
     "tc_req_ancestors: "^tc_req_ancestors^"\n"^
     "tc_req_ancestors_extends: "^tc_req_ancestors_extends^"\n"^

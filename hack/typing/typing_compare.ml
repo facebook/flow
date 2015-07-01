@@ -248,10 +248,6 @@ module CompareTypes = struct
     let acc = constructor acc c1.tc_construct c2.tc_construct in
     let acc = ancestry acc c1.tc_req_ancestors c2.tc_req_ancestors in
     let acc = ancestry acc c1.tc_ancestors c2.tc_ancestors in
-    let acc = ancestry acc
-      c1.tc_ancestors_checked_when_concrete
-      c2.tc_ancestors_checked_when_concrete
-    in
     let acc = cmp_opt enum_type acc c1.tc_enum_type c2.tc_enum_type in
     acc
 
@@ -397,7 +393,6 @@ module TraversePos(ImplementPos: sig val pos: Pos.t -> Pos.t end) = struct
       tc_smethods              = SMap.map class_elt tc.tc_smethods    ;
       tc_construct             = opt_map class_elt (fst tc.tc_construct), (snd tc.tc_construct);
       tc_ancestors             = SMap.map ty tc.tc_ancestors          ;
-      tc_ancestors_checked_when_concrete    = SMap.map ty tc.tc_ancestors_checked_when_concrete ;
       tc_user_attributes       = tc.tc_user_attributes                ;
       tc_enum_type             = opt_map enum_type tc.tc_enum_type    ;
     }
@@ -527,7 +522,6 @@ let class_big_diff class1 class2 =
   class1.tc_kind <> class2.tc_kind ||
   class1.tc_tparams <> class2.tc_tparams ||
   SMap.compare class1.tc_ancestors class2.tc_ancestors <> 0 ||
-  SMap.compare class1.tc_ancestors_checked_when_concrete class2.tc_ancestors_checked_when_concrete <> 0 ||
   SMap.compare class1.tc_req_ancestors class2.tc_req_ancestors <> 0 ||
   SSet.compare class1.tc_req_ancestors_extends class2.tc_req_ancestors_extends <> 0 ||
   SSet.compare class1.tc_extends class2.tc_extends <> 0 ||
