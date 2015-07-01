@@ -110,7 +110,7 @@ val get_builtin_type: context -> reason -> string -> Type.t
 val resolve_builtin_class: context -> Type.t -> Type.t
 val set_builtin: context -> string -> Type.t -> unit
 
-val mk_instance: context -> ?trace:trace -> reason -> Type.t -> Type.t
+val mk_instance: context -> reason -> ?for_type:bool -> Type.t -> Type.t
 val mk_typeof_annotation: context -> ?trace:trace -> Type.t -> Type.t
 
 (* strict *)

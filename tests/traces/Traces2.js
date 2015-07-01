@@ -10,7 +10,7 @@ var B = React.createClass({
   propTypes: { bar: React.PropTypes.string.isRequired }
 });
 
-function f(b): ReactElement {
+function f(b): ReactElement<*,*,*> {
   if (b) {
     return <A foo="hey"/>;
   } else {

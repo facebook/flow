@@ -59,26 +59,26 @@ Traces2.js:6:3,11: property foo
 Property not found in
 Traces2.js:10:3,11: propTypes
 Error path:
-Traces2.js:17:12,25:          InstanceT [ReactElement]
-[LIB] react.js:68:1,73:1:     ~> ExtendsT [extends ReactElement] comes from
-Traces2.js:17:12,25:          . InstanceT [ReactElement]
-[LIB] react.js:68:1,73:1:     . ~> InstanceT [ReactElement] comes from
-[LIB] react.js:68:1,73:1:     . . OpenT [ReactElement]
-[LIB] react.js:68:1,73:1:     . . ~> InstanceT [ReactElement] comes from
-Traces2.js:17:12,25:          . . . TypeAppT [type application of polymorphic type: class type: ReactElement]
-Traces2.js:13:16,27:          . . . ~> BecomeT [ReactElement]
+Traces2.js:17:12,25:      InstanceT [ReactElement]
+[LIB] react.js:68:1,73:1: ~> ExtendsT [extends ReactElement] comes from
+Traces2.js:17:12,25:      . InstanceT [ReactElement]
+[LIB] react.js:68:1,73:1: . ~> InstanceT [ReactElement] comes from
+Traces2.js:17:12,25:      . . InstanceT [ReactElement]
+Traces2.js:17:12,25:      . . ~> OpenT [ReactElement] comes from
+Traces2.js:17:12,25:      . . . InstanceT [ReactElement]
+Traces2.js:13:16,34:      . . . ~> TypeAppT [type application of identifier ReactElement]
 
 Traces2.js:10:3,11: property bar
 Property not found in
 Traces2.js:6:3,11: propTypes
 Error path:
-Traces2.js:17:12,25:          InstanceT [ReactElement]
-[LIB] react.js:68:1,73:1:     ~> ExtendsT [extends ReactElement] comes from
-Traces2.js:17:12,25:          . InstanceT [ReactElement]
-[LIB] react.js:68:1,73:1:     . ~> InstanceT [ReactElement] comes from
-[LIB] react.js:68:1,73:1:     . . OpenT [ReactElement]
-[LIB] react.js:68:1,73:1:     . . ~> InstanceT [ReactElement] comes from
-Traces2.js:17:12,25:          . . . TypeAppT [type application of polymorphic type: class type: ReactElement]
-Traces2.js:13:16,27:          . . . ~> BecomeT [ReactElement]
+Traces2.js:17:12,25:      InstanceT [ReactElement]
+[LIB] react.js:68:1,73:1: ~> ExtendsT [extends ReactElement] comes from
+Traces2.js:17:12,25:      . InstanceT [ReactElement]
+[LIB] react.js:68:1,73:1: . ~> InstanceT [ReactElement] comes from
+Traces2.js:17:12,25:      . . InstanceT [ReactElement]
+Traces2.js:17:12,25:      . . ~> OpenT [ReactElement] comes from
+Traces2.js:17:12,25:      . . . InstanceT [ReactElement]
+Traces2.js:13:16,34:      . . . ~> TypeAppT [type application of identifier ReactElement]
 
 Found 6 errors

@@ -1,4 +1,8 @@
 
+annot.js:10:38,48: property x
+Property not found in
+annot.js:10:20,21: object type
+
 poly.js:16:19,19: number
 This type is incompatible with
 poly.js:17:7,12: string
@@ -19,4 +23,4 @@ test.js:8:19,24: number
 This type is incompatible with
 test.js:8:3,38: some incompatible instantiation of X
 
-Found 5 errors
+Found 6 errors

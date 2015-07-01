@@ -15,4 +15,10 @@ super.js:13:18,18: property g
 Property not found in
 super.js:7:17,17: A
 
-Found 3 errors
+test.js:3:16,16: return
+Missing annotation
+
+test.js:4:8,8: return
+Missing annotation
+
+Found 5 errors

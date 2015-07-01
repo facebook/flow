@@ -640,7 +640,7 @@ let rec convert cx map = Ast.Type.(function
     let typeParameters = extract_type_param_instantiations typeParameters in
     let params = if typeParameters = []
       then None else Some typeParameters in
-    mk_nominal_type_ cx reason map (t, params)
+    mk_nominal_type cx reason map (t, params)
 
   (* type applications: name < params > *)
   | loc, Generic {
@@ -781,7 +781,7 @@ let rec convert cx map = Ast.Type.(function
         let params = if typeParameters = []
           then None else Some typeParameters in
         let c = identifier ~for_type:true cx name loc in
-        mk_nominal_type_ cx reason map (c, params)
+        mk_nominal_type cx reason map (c, params)
     )
 
   (* TODO: unsupported generators *)
@@ -4667,32 +4667,29 @@ and static_method_call cx name tok m argts =
     Flow_js.flow cx (cls, MethodT(reason, m, Flow_js.mk_methodtype cls argts tvar));
   )
 
-(* TODO: reason_c could be replaced by c *)
-and mk_extends cx reason_c map = function
+and mk_extends cx map = function
   | (None, None) ->
       let root = MixedT (reason_of_string "Object") in
       root
   | (None, _) ->
       assert false (* type args with no head expr *)
   | (Some e, targs) ->
-      let loc, _ = e in
-      let reason = mk_reason (desc_of_reason reason_c) loc in
       let params = match targs with
       | None -> None
       | Some (_, { Ast.Type.ParameterInstantiation.params; }) -> Some params in
-      mk_nominal_type cx reason map (e, params)
+      let c = expression cx e in
+      mk_nominal_type cx (reason_of_t c) ~for_type:false map (c, params)
 
-and mk_nominal_type cx reason map (e, targs) =
-  let c = expression cx e in
-  mk_nominal_type_ cx (reason_of_t c) map (c, targs)
-
-and mk_nominal_type_ cx reason map (c, targs) =
+(* Given the type of expression C and type arguments T1...Tn, return the type of
+   values described by C<T1,...,Tn>, or C when there are no type arguments. *)
+(** See comment on Flow_js.mk_instance for what the for_type flag means. **)
+and mk_nominal_type cx reason ?(for_type=true) map (c, targs) =
   match targs with
   | Some ts ->
       let tparams = List.map (convert cx map) ts in
       TypeAppT (c, tparams)
   | None ->
-      Flow_js.mk_instance cx reason c
+      Flow_js.mk_instance cx reason ~for_type c
 
 and body_loc = Ast.Statement.FunctionDeclaration.(function
   | BodyBlock (loc, _) -> loc
@@ -4907,7 +4904,7 @@ and mk_class cx loc reason_c = Ast.Class.(function { id=_; body; superClass;
 
   (* super: D<X> *)
   let extends = superClass, superTypeParameters in
-  let super = mk_extends cx reason_c type_params_map extends in
+  let super = mk_extends cx type_params_map extends in
   let super_static = ClassT (super) in
 
   let static_reason = prefix_reason "statics of " reason_c in
@@ -5054,7 +5051,7 @@ and mk_interface cx reason_i typeparams map (sfmap, smmap, fmap, mmap) extends s
         (* TODO: multiple extends *)
         Some (loc,Ast.Expression.Identifier id), typeParameters
   in
-  let super = mk_extends cx reason_i map extends in
+  let super = mk_extends cx map extends in
   let super_static = ClassT(super) in
 
   let static_reason = prefix_reason "statics of " reason_i in

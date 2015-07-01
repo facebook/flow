@@ -2107,15 +2107,9 @@ let rec __flow cx (l, u) trace =
       )
 
     | (PolyT (ids,t), _) ->
-      (* WARNING: An observed non-legit case of u is ObjAssignT, which arises
-         solely due to CJSExportDefault. It is explicitly called out here so
-         that we remember to fix it when CJSExportDefault: a polymorphic
-         exported value should not be copied over to an export object by
-         instantiating it, but that is what we do currently. Instead, it should
-         form the exports as is, with default fields managed on the side. *)
-      (* NOTE: Other observed cases of u are listed below. These look legit, as
-         common uses of polymorphic classes and functions. However, they may not
-         cover all legit uses.
+      (* Some observed cases of u are listed below. These look legit, as common
+         uses of polymorphic classes and functions. However, they may not cover
+         all legit uses.
 
       (* class-like *)
       | TypeT _
@@ -2132,8 +2126,29 @@ let rec __flow cx (l, u) trace =
       | PredicateT _
 
       *)
+
+      let weak = match u with
+        (* Implicitly instantiating polymorphic types in annotations leads to
+           confusing errors. In particular, when multiple instantiations of a
+           polymorphic type flow to such an annotation, the instantiations are
+           unified via the implicit instantiation at the annotation. This
+           situation is made worse by the fact that the annotation site is often
+           not included as part of the ensuing errors due to such unification.
+
+           Instead, we fall back to using `any` as type arguments when they are
+           missing. This conforms to the general intuition that all
+           instantiations of a polymorphic type Foo are subtypes of Foo. When
+           falling back to `any` is inadequate, we force the programmer to be
+           explicit about what the type arguments of a polymorphic type are in
+           an annotation. Overall, this scheme reduces false positives as well
+           as improves blaming when errors do arise.
+
+           It is always possible to recover implicit instantiation by explicitly
+           using `*`. *)
+        | TypeT _ -> true
+        | _ -> false in
       let reason = reason_of_t u in
-      let t_ = instantiate_poly cx trace reason (ids,t) in
+      let t_ = instantiate_poly ~weak cx trace reason (ids,t) in
       rec_flow cx trace (t_, u)
 
     (***********************************************)
@@ -3552,9 +3567,10 @@ and cache_instantiate cx trace cache (typeparam, reason_op) t =
   else t
 
 (* Instantiate a polymorphic definition by creating fresh type arguments. *)
-and instantiate_poly cx trace reason_op (xs,t) =
+and instantiate_poly ?(weak=false) cx trace reason_op (xs,t) =
   let ts = xs |> List.map (fun typeparam ->
-    mk_targ cx (typeparam, reason_op)
+    if weak then AnyT.why reason_op
+    else mk_targ cx (typeparam, reason_op)
   )
   in
   instantiate_poly_with_targs cx trace reason_op (xs,t) ts
@@ -4717,9 +4733,13 @@ and mk_typeapp_instance cx reason ?(cache=false) c ts =
   flow_opt cx (c, SpecializeT(reason,cache,ts,t));
   mk_instance cx reason t
 
-and mk_instance cx ?trace instance_reason c =
+(* NOTE: the for_type flag is true when expecting a type (e.g., when processing
+   an annotation), and false when expecting a runtime value (e.g., when
+   processing an extends). *)
+and mk_instance cx instance_reason ?(for_type=true) c =
   mk_tvar_derivable_where cx instance_reason (fun t ->
-    flow_opt cx ?trace (c, TypeT(instance_reason,t))
+    let u = if for_type then TypeT(instance_reason,t) else ClassT(t) in
+    flow_opt cx (c, u)
   )
 
 (* We want to match against some t, which may either be a concrete
