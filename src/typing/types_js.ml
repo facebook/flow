@@ -424,7 +424,7 @@ let merge_strict_file file =
 let typecheck_contents contents filename =
   Parsing_service_js.(match do_parse contents filename with
   | OK ast ->
-      let cx = TI.infer_ast ast filename "-" true in
+      let cx = TI.infer_ast ast filename true in
       let cache = new context_cache in
       let master_cx = cache#read (Files_js.get_flowlib_root ()) in
       Some (merge_strict_context cache cx master_cx), cx.errors

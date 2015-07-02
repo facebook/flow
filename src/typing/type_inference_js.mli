@@ -14,7 +14,7 @@ open Constraint_js
 val infer_ast:
   Spider_monkey_ast.program ->
   string ->                     (* filename *)
-  string ->                     (* module name *)
+  ?module_name: string ->       (* module name *)
   bool ->                       (* force_check *)
   context
 

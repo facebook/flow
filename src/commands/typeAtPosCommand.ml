@@ -31,6 +31,8 @@ let spec = {
     empty
     |> server_flags
     |> json_flags
+    |> flag "--strip-root" no_arg
+        ~doc:"Print paths without the root"
     |> flag "--path" (optional string)
         ~doc:"Specify (fake) path to file when reading data from stdin"
     |> anon "args" (required (list_of string)) ~doc:"[FILE] LINE COL"
@@ -59,11 +61,12 @@ let parse_args path args =
   let (line, column) = convert_input_pos (line, column) in
   file, line, column
 
-let handle_response (loc, t, reasons) json =
+let handle_response (loc, t, reasons) json strip =
   let ty = match t with
     | None -> "(unknown)"
     | Some str -> str
   in
+  let loc = strip loc in
   if json
   then (
     let loc = Errors_js.json_of_loc loc in
@@ -73,7 +76,7 @@ let handle_response (loc, t, reasons) json =
           (List.map (fun r ->
               Json.JAssoc (
                   ("desc", Json.JString (Reason_js.desc_of_reason r)) ::
-                  (Errors_js.json_of_loc (Reason_js.loc_of_reason r))
+                  (Errors_js.json_of_loc (strip (Reason_js.loc_of_reason r)))
                 )
             ) reasons)) ::
         loc
@@ -89,6 +92,9 @@ let handle_response (loc, t, reasons) json =
       if reasons = [] then ""
       else "\n\nSee the following locations:\n" ^ (
         reasons
+        |> List.map (fun r ->
+             Reason_js.repos_reason (strip (Reason_js.loc_of_reason r)) r
+           )
         |> List.map Reason_js.string_of_reason
         |> String.concat "\n"
       )
@@ -97,7 +103,8 @@ let handle_response (loc, t, reasons) json =
   );
   flush stdout
 
-let handle_error (loc, err) json =
+let handle_error (loc, err) json strip =
+  let loc = strip loc in
   if json
   then (
     let loc = Errors_js.json_of_loc loc in
@@ -109,15 +116,15 @@ let handle_error (loc, err) json =
   );
   flush stderr
 
-let main option_values json path args () =
+let main option_values json strip_root path args () =
   let (file, line, column) = parse_args path args in
   let root = guess_root (ServerProt.path_of_input file) in
   let ic, oc = connect_with_autostart option_values root in
   ServerProt.cmd_to_channel oc
     (ServerProt.INFER_TYPE (file, line, column));
   match (Marshal.from_channel ic) with
-  | (Some err, None) -> handle_error err json
-  | (None, Some resp) -> handle_response resp json
+  | (Some err, None) -> handle_error err json (relativize strip_root root)
+  | (None, Some resp) -> handle_response resp json (relativize strip_root root)
   | (_, _) -> failwith "Oops"
 
 let command = CommandSpec.command spec main

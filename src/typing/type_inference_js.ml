@@ -5514,7 +5514,7 @@ let scan_for_suppressions =
       | _ -> ()) comments
 
 (* build module graph *)
-let infer_ast ast file _module force_check =
+let infer_ast ast file ?module_name force_check =
   Flow_js.Cache.clear();
 
   let loc, statements, comments = ast in
@@ -5527,9 +5527,14 @@ let infer_ast ast file _module force_check =
   | ModuleMode_Unchecked ->
     force_check, modes.weak_by_default) in
 
+  let _module = match module_name with
+    | Some _module -> _module
+    | None -> "-" (* some dummy string *) in
   let cx = Flow_js.fresh_context ~file ~_module ~checked ~weak in
 
-  let reason_exports_module = reason_of_string (spf "exports of module %s" _module) in
+  let reason_exports_module =
+    reason_of_string (spf "exports of module %s" _module) in
+
   let local_exports_var = Flow_js.mk_tvar cx reason_exports_module in
 
   let module_scope = (
@@ -5565,9 +5570,7 @@ let infer_ast ast file _module force_check =
     scan_for_suppressions cx comments;
   );
 
-  let module_t =
-    mk_module_t cx (reason_of_string (spf "exports of module %s" _module))
-  in
+  let module_t = mk_module_t cx reason_exports_module in
   let module_t = (
     match cx.module_exports_type with
     (* CommonJS with a clobbered module.exports *)
@@ -5591,7 +5594,7 @@ let infer_ast ast file _module force_check =
   let ins = SSet.elements cx.required in
   let out = _module in
   cx.strict_required <- Flow_js.analyze_dependencies cx ins out;
-  Flow_js.do_gc cx (out::ins);
+  if module_name <> None then Flow_js.do_gc cx (out::ins);
 
   cx
 
@@ -5616,7 +5619,7 @@ let infer_module file =
   let ast = Parsing_service_js.get_ast_unsafe file in
   let comments = get_comment_header ast in
   let module_name = Module_js.exported_module file comments in
-  infer_ast ast file module_name modes.all
+  infer_ast ast file ~module_name modes.all
 
 (* Map.union: which is faster, union M N or union N M when M > N?
    union X Y = fold add X Y which means iterate over X, adding to Y

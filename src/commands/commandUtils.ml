@@ -110,6 +110,14 @@ let json_flags prev = CommandSpec.ArgSpec.(
   |> flag "--json" no_arg ~doc:"Output results in JSON format"
 )
 
+(* relativize a loc's source path to a given root whenever strip_root is set *)
+let relativize strip_root root loc =
+  if not strip_root then loc else Loc.({
+    loc with source = match loc.source with
+    | Some source -> Some (Files_js.relative_path (Path.to_string root) source)
+    | None -> None
+  })
+
 type command_params = {
   from : string;
   retries : int;

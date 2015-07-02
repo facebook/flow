@@ -166,14 +166,10 @@ struct
     let file = ServerProt.file_input_get_filename file_input in
     let (err, resp) =
     (try
-      let cx = match file_input with
-        | ServerProt.FileName file ->
-            Types_js.merge_strict_file file
-        | ServerProt.FileContent (_, content) ->
-            (match Types_js.typecheck_contents content file with
-            | Some cx, _ -> cx
-            | _, errors  -> failwith "Couldn't parse file") in
-      let file = cx.Constraint_js.file in
+       let content = ServerProt.file_input_get_content file_input in
+       let cx = match Types_js.typecheck_contents content file with
+       | Some cx, _ -> cx
+       | _, errors  -> failwith "Couldn't parse file" in
       let loc = mk_loc file line col in
       let (loc, ground_t, possible_ts) = TI.query_type cx loc in
       let ty = match ground_t with

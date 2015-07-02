@@ -78,11 +78,7 @@ let main option_values json strip_root path args () =
   (* command result will be a position structure with full file path *)
   let loc:Loc.t = Marshal.from_channel ic in
   (* if strip_root has been specified, relativize path to root *)
-  let loc = if not strip_root then loc else Loc.({
-    loc with source = match loc.source with
-    | Some source -> Some (Files_js.relative_path (Path.to_string root) source)
-    | None -> None
-  }) in
+  let loc = relativize strip_root root loc in
   (* format output *)
   if json
   then (
