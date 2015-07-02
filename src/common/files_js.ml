@@ -46,7 +46,7 @@ let get_flowlib_root () =
   | None ->
       let root = match Flowlib.get_flowlib_root () with
       | None ->
-          print_endline "Could not locate hhi files"; exit 1
+          print_endline "Could not locate flowlib files"; exit 1
       | Some root -> Path.to_string root in
       flowlib_root := Some root;
       root
