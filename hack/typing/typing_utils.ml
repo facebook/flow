@@ -8,7 +8,6 @@
  *
  *)
 
-open Utils
 open Typing_defs
 
 module N = Nast
@@ -213,27 +212,6 @@ let is_array_as_tuple env ty =
   | _, (Tany | Tmixed | Tarray (_, _) | Tprim _ | Toption _
     | Tvar _ | Tabstract (_, _) | Tclass (_, _) | Ttuple _ | Tanon (_, _)
     | Tfun _ | Tunresolved _ | Tobject | Tshape _) -> false
-
-
-(*****************************************************************************)
-(* Adds a new field to all the shapes found in a given type.
- * The function leaves all the other types (non-shapes) unchanged.
- *)
-(*****************************************************************************)
-
-let rec grow_shape pos lvalue field_name ty env shape =
-  let _, shape = Env.expand_type env shape in
-  match shape with
-  | _, Tshape (fields_known, fields) ->
-      let fields = ShapeMap.add field_name ty fields in
-      let result = Reason.Rwitness pos, Tshape (fields_known, fields) in
-      env, result
-  | _, Tunresolved tyl ->
-      let env, tyl = lfold (grow_shape pos lvalue field_name ty) env tyl in
-      let result = Reason.Rwitness pos, Tunresolved tyl in
-      env, result
-  | x ->
-      env, x
 
 (*****************************************************************************)
 (* Keep the most restrictive visibility (private < protected < public).

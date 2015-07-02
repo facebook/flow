@@ -1676,7 +1676,8 @@ and assign p env e1 ty2 =
        *)
       let env, shape_ty = expr env shape in
       let field = TUtils.shape_field_name p1 e in
-      let env, shape_ty = TUtils.grow_shape p e1 field ty2 env shape_ty in
+      let env, shape_ty =
+        Typing_shapes.grow_shape p e1 field ty2 env shape_ty in
       let env, _ty = set_valid_rvalue p env lvar shape_ty in
 
       (* We still need to call assign_simple, because shape_ty could be more
@@ -2061,6 +2062,23 @@ and dispatch_call p env call_type (fpos, fun_expr as e) el uel =
            * return type hint *)
           let env, _ = Typing_shapes.idx env fty shape_ty field None in
           env, res
+        | _  -> env, res
+      end
+   | Class_const (CI(_, shapes) as class_id, ((_, remove_key) as method_id))
+      when shapes = SN.Shapes.cShapes && remove_key = SN.Shapes.removeKey ->
+      overload_function p env class_id method_id el uel
+      begin fun env fty res el -> match el with
+        | [shape; field] -> begin match shape with
+            | (_, Lvar (_, lvar)) ->
+              let env, shape_ty = expr env shape in
+              let env, shape_ty =
+                Typing_shapes.remove_key p env fty shape_ty field in
+              let env, _ = set_valid_rvalue p env lvar shape_ty in
+              env, res
+            | _ ->
+              Errors.invalid_shape_remove_key (fst shape);
+              env, res
+          end
         | _  -> env, res
       end
   | Class_const (CIparent, (_, construct))

@@ -8,12 +8,53 @@
  *
  *)
 
+open Nast
 open Typing_defs
+open Utils
 
 module Env          = Typing_env
 module Type         = Typing_ops
 module Reason       = Typing_reason
 module TUtils       = Typing_utils
+
+(*****************************************************************************)
+(* Adds a new field to all the shapes found in a given type.
+ * The function leaves all the other types (non-shapes) unchanged.
+ *)
+(*****************************************************************************)
+
+let rec grow_shape pos lvalue field_name ty env shape =
+  let _, shape = Env.expand_type env shape in
+  match shape with
+  | _, Tshape (fields_known, fields) ->
+      let fields = ShapeMap.add field_name ty fields in
+      let result = Reason.Rwitness pos, Tshape (fields_known, fields) in
+      env, result
+  | _, Tunresolved tyl ->
+      let env, tyl = lfold (grow_shape pos lvalue field_name ty) env tyl in
+      let result = Reason.Rwitness pos, Tunresolved tyl in
+      env, result
+  | x ->
+      env, x
+(*****************************************************************************)
+(* Remove a field from all the shapes found in a given type.
+ * The function leaves all the other types (non-shapes) unchanged.
+ *)
+(*****************************************************************************)
+
+let rec shrink_shape pos field_name env shape =
+  let _, shape = Env.expand_type env shape in
+  match shape with
+  | _, Tshape (fields_known, fields) ->
+      let fields = ShapeMap.remove field_name fields in
+      let result = Reason.Rwitness pos, Tshape (fields_known, fields) in
+      env, result
+  | _, Tunresolved tyl ->
+      let env, tyl = lfold (shrink_shape pos field_name) env tyl in
+      let result = Reason.Rwitness pos, Tunresolved tyl in
+      env, result
+  | x ->
+      env, x
 
 let idx env fty shape_ty field default =
   let env, shape_ty = Env.expand_type env shape_ty in
@@ -37,3 +78,11 @@ let idx env fty shape_ty field default =
       env, (fst fty, Toption res)
     | Some (default_pos, default_ty) ->
       Type.sub_type default_pos Reason.URparam env default_ty res, res
+
+let remove_key p env fty shape_ty field  =
+  (* try acessing the field, to verify existence, but ignore
+   * the returned type and keep the one coming from function
+   * return type hint *)
+  let env, _ = idx env fty shape_ty field None in
+  let field_name = TUtils.shape_field_name (fst field) (snd field) in
+  shrink_shape p field_name env shape_ty

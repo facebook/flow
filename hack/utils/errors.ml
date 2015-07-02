@@ -339,6 +339,7 @@ module Typing                               = struct
   let invalid_shape_field_name_empty        = 4136 (* DONT MODIFY!!!! *)
   let invalid_shape_field_name_number       = 4137 (* DONT MODIFY!!!! *)
   let shape_fields_unknown                  = 4138 (* DONT MODIFY!!!! *)
+  let invalid_shape_remove_key              = 4139 (* DONT MODIFY!!!! *)
   (* EXTEND HERE WITH NEW VALUES IF NEEDED *)
 end
 
@@ -987,6 +988,10 @@ let shape_fields_unknown pos1 pos2 =
             "those listed in its declaration.";
      pos2, "It is incompatible with a shape created using \"shape\" "^
            "constructor, which has all the fields known"]
+
+let invalid_shape_remove_key p =
+  add Typing.invalid_shape_remove_key p
+    "You can only unset fields of local variables"
 
 let explain_constraint p_inst pos name (error : error) =
   let inst_msg = "Some type constraint(s) here are violated" in

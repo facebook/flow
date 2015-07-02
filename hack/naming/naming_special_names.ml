@@ -233,4 +233,5 @@ module Shapes = struct
   let cShapes                = "\\Shapes"
   let idx                    = "idx"
   let keyExists              = "keyExists"
+  let removeKey              = "removeKey"
 end
