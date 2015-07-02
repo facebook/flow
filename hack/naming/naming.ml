@@ -735,8 +735,14 @@ and hint_ ~allow_this ~allow_retonly is_static_var p env x =
   | Hfun (hl, opt, h) ->
     N.Hfun (List.map (hint env) hl, opt,
             hint ~allow_retonly:true env h)
-  | Happly ((_, x) as id, hl) ->
-    hint_id ~allow_this ~allow_retonly env is_static_var id hl
+  | Happly ((p, x) as id, hl) ->
+    let hint_id = hint_id ~allow_this ~allow_retonly env is_static_var id hl in
+    (match hint_id with
+    | N.Hprim _ | N.Hmixed ->
+      if hl <> [] then Errors.unexpected_type_arguments p
+    | _ -> ()
+    );
+    hint_id
   | Haccess ((pos, root_id) as root, id, ids) ->
     let root_ty =
       match root_id with
@@ -894,7 +900,7 @@ and try_castable_hint ?(allow_this=false) env p x hl =
         | [] -> N.Harray (None, None)
         | [val_] -> N.Harray (Some (hint env val_), None)
         | [key_; val_] -> N.Harray (Some (hint env key_), Some (hint env val_))
-        | _ -> Errors.naming_too_many_arguments p; N.Hany
+        | _ -> Errors.too_many_type_arguments p; N.Hany
       )
     | nm when nm = SN.Typehints.integer ->
       Errors.primitive_invalid_alias p nm SN.Typehints.int;

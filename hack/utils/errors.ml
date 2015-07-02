@@ -163,7 +163,8 @@ module Naming                               = struct
   let invalid_type_access_root              = 2061 (* DONT MODIFY!!!! *)
   let duplicate_user_attribute              = 2062 (* DONT MODIFY!!!! *)
   let return_only_typehint                  = 2063 (* DONT MODIFY!!!! *)
-
+  let unexpected_type_arguments             = 2064 (* DONT MODIFY!!!! *)
+  let too_many_type_arguments               = 2065 (* DONT MODIFY!!!! *)
   (* EXTEND HERE WITH NEW VALUES IF NEEDED *)
 end
 
@@ -1082,6 +1083,14 @@ let return_only_typehint p kind =
     | `noreturn -> "noreturn" in
   add Naming.return_only_typehint p
     ("The "^msg^" typehint can only be used to describe a function return type")
+
+let unexpected_type_arguments p =
+  add Naming.unexpected_type_arguments p
+    ("Type arguments are not expected for this type")
+
+let too_many_type_arguments p =
+  add Naming.too_many_type_arguments p
+    ("Too many type arguments for this type")
 
 let nullable_parameter pos =
   add Typing.nullable_parameter pos
