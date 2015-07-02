@@ -1,4 +1,5 @@
 declare module "M" {
+  declare var P: $Exports<'P'>;
   declare var N: $Exports<'M___N'>;
   declare var x: number;
   declare class C {
