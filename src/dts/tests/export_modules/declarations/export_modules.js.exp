@@ -4,6 +4,7 @@ declare module "module-P" {
     
   }
   declare var exports: typeof P;
+  
 }
 declare module "module-P___P" {
   declare var module$HYPHEN$P: $Exports<'module-P'>;
@@ -15,6 +16,7 @@ declare module "module-P___P" {
     
   }
   declare var m: typeof N.z;
+  
 }
 declare module "module-P___P___N" {
   declare var module$HYPHEN$P: $Exports<'module-P'>;
@@ -24,5 +26,6 @@ declare module "module-P___P___N" {
   declare var m : typeof P.m;
   declare var D : typeof module$HYPHEN$P.D;
   declare var z: typeof x;
+  
 }
 

@@ -4,5 +4,6 @@ declare module "M" {
     y: typeof x;
     
   }
+  
 }
 

@@ -3,6 +3,88 @@ open Dts_ast
 
 module SSet = Utils.SSet
 
+(* contents of an option type *)
+let contents = function
+  | Some x -> x
+  | None -> failwith "Trying  access contents of None option"
+
+(* returns identifier of an interface or variable declaration.
+  returns None for anything else. *)
+let rec get_identifier = Statement.(function
+  | _, VariableDeclaration { VariableDeclaration.
+      declarations; _
+    } -> VariableDeclaration.(
+    match declarations with
+    | [(_, { Declarator.id; _})] ->
+      get_identifier_pattern id
+    | _ -> None
+  )
+  | _, InterfaceDeclaration { Interface.
+      id; _
+    } ->
+        get_identifier_id id
+  | _ -> None
+)
+
+and get_identifier_pattern = Pattern.(function
+  | _, Identifier id ->
+    get_identifier_id id
+  | _ -> None
+)
+
+and get_identifier_id = function
+  | _, { Identifier.name; _ } ->
+      Some name
+
+let same_name x y =
+  let x = get_identifier x in
+  let y = get_identifier y in
+  if x = None || y = None then false
+  else x = y
+
+(* returns body of an interface or type of a variable in object form.
+   returns None for anything else. *)
+let rec get_object = Statement.(function
+  | _, VariableDeclaration { VariableDeclaration.
+      declarations; _
+    } -> VariableDeclaration.(
+    match declarations with
+    | [(_, { Declarator.id; _})] ->
+      get_object_pattern id
+    | _ -> None
+  )
+  | _, InterfaceDeclaration { Interface.
+      body; _
+    } ->
+        Some (snd body)
+  | _ -> None
+)
+
+and get_object_pattern = Pattern.(function
+  | _, Identifier id ->
+    get_object_id id
+  | _ -> None
+)
+
+and get_object_id = function
+  | _, { Identifier.typeAnnotation; _ } ->
+    get_object_annotation typeAnnotation
+
+and get_object_annotation = Type.(function
+  | Some (_, Object t) -> Some t
+  | _ -> None
+)
+
+(* returns true if and only if x and y are VariableDeclaration or
+   InterfaceDeclaration and they have same identifier associated
+   with them *)
+let same_name x y =
+  let x = get_identifier x in
+  let y = get_identifier y in
+  if x = None || y = None then false
+  else x = y
+
+
 let rec list ?(sep="") f fmt = function
   | [x] ->
       fprintf fmt "%a"
@@ -38,9 +120,26 @@ let rec _list ?(sep="") f fmt = function
         (_list ~sep f) xs
   | [] -> ()
 
+(* This is a little modification of the list functions above.
+   This does a one step look ahead to find variable and interface
+   declarations which can be squashed together as a class. *)
+let rec look_ahead ?(sep="") f fmt = function
+  | [x] ->
+      fprintf fmt "%a%s@,"
+        f (x, None)
+        sep
+  | x::y::xs ->
+    let samename = (same_name x y) in
+      fprintf fmt "%a%s@,%a"
+        f (x, if samename then Some y else None)
+        sep
+        (look_ahead ~sep f) (if samename then xs else y::xs)
+  | [] -> ()
+
 let non_empty wrapper f fmt = function
   | [] -> ()
   | list -> fprintf fmt wrapper f list
+
 
 let opt f fmt = function
   | None -> ()
@@ -448,7 +547,7 @@ let rec program fmt (_, stmts, _) =
   let not_modules = filter_not_modules stmts in
   fprintf fmt "@[<v>%a%a@]@."
     print_modules modules
-    (list_ ~sep:"" (statement scope prefix)) not_modules
+    (look_ahead ~sep:"" (statement scope prefix)) not_modules
 
 (*
   print_modules calls print_module in a DFS order. It can easily be
@@ -488,7 +587,7 @@ and print_module scope imports prefix fmt = Statement.(function
       (generate_mangled_name name prefix)
       (list_ ~sep:"" import_module) list_modules_used
       (list_ ~sep:"" import_members) imports
-      (list ~sep:"" (statement new_scope new_prefix))
+      (look_ahead ~sep:"" (statement new_scope new_prefix))
       (filter_not_modules body)
 
   | loc, ExportModuleDeclaration { ExportModule.name; body; } ->
@@ -504,39 +603,66 @@ and print_module scope imports prefix fmt = Statement.(function
       fprintf fmt "@[<v>declare module \"%s\" {@;<0 2>@[<v>%a%a@]@,}@]"
         name
         (list_ ~sep:"" import_module) list_modules_used
-        (list ~sep:"" (statement scope prefix))
+        (look_ahead ~sep:"" (statement scope prefix))
         (filter_not_modules body)
 
   | loc, _ -> failwith_location loc "Module declaration expected here"
 )
 and statement scope prefix fmt =
   Statement.(function
-  | _, VariableDeclaration { VariableDeclaration.
+  (* This case sqashes a variable with the following interface
+     with same name *)
+  | ((_, VariableDeclaration _) as y), Some x -> (match x with
+      | _, InterfaceDeclaration { Interface.
+        id; extends; typeParameters; _
+        } ->
+        fprintf fmt "@[<v>declare class %a%a%a %a@]"
+          id_ id
+          (opt (non_empty "<@[<h>%a@]>" (list ~sep:"," type_param)))
+            typeParameters
+          extends_interface extends
+          print_combined_class ((get_object x), (get_object y))
+      | loc, _ -> failwith_location loc
+        "Unsopprted elements with same name."
+      )
+
+  | (_, VariableDeclaration { VariableDeclaration.
       declarations; _
-    } -> VariableDeclaration.(
+    }), _ -> VariableDeclaration.(
       match declarations with
       | [(_, { Declarator.id; _ })] ->
           fprintf fmt "@[<hv>declare var %a;@]"
             pattern id
       | _ -> todo fmt
     )
+  (* This case squashes an interface with the following VariableDeclaration
+     with same name *)
+  | ((_, InterfaceDeclaration { Interface.
+      id; extends; typeParameters; _
+    }) as x), Some y ->
+      fprintf fmt "@[<v>declare class %a%a%a %a@]"
+        id_ id
+        (opt (non_empty "<@[<h>%a@]>" (list ~sep:"," type_param)))
+          typeParameters
+        extends_interface extends
+        print_combined_class ((get_object x), (get_object y))
 
-  | _, InterfaceDeclaration { Interface.
+  | (_, InterfaceDeclaration { Interface.
       id; body; extends; typeParameters;
-    } ->
+    }), _ ->
       fprintf fmt "@[<v>declare class %a%a%a %a@]"
         id_ id
         (opt (non_empty "<@[<h>%a@]>" (list ~sep:"," type_param))) typeParameters
         extends_interface extends
         object_type (snd body)
 
-  | _, ExportAssignment id ->
+  | (_, ExportAssignment id), _ ->
       fprintf fmt "@[<h>declare var exports: typeof %a;@]"
         id_ id
 
-  | _, AmbientClassDeclaration { AmbientClass.
+  | (_, AmbientClassDeclaration { AmbientClass.
       id; body; typeParameters; extends; implements;
-    } ->
+    }), _ ->
       fprintf fmt "@[<v>declare class %a%a%a%a %a@]"
         id_ id
         (opt (non_empty "<@[<h>%a@]>" (list ~sep:"," type_param))) typeParameters
@@ -559,7 +685,7 @@ and statement scope prefix fmt =
        static B : number;
      }
   *)
-  | _, EnumDeclaration { Enum. name; members } ->
+  | (_, EnumDeclaration { Enum. name; members }), _ ->
     (* TODO: Write a doc explaining difference between enums and our
        approximation for the same *)
     let () = prerr_endline "Warning: The declaration file contains \
@@ -570,13 +696,13 @@ and statement scope prefix fmt =
       (list_ ~sep:";" enum_member) members
 
   (* The following case handles function declaration *)
-  | _, AmbientFunctionDeclaration {AmbientFunctionDeclaration.
-      id; params; returnType; _ } ->
+  | (_, AmbientFunctionDeclaration {AmbientFunctionDeclaration.
+      id; params; returnType; _ }), _ ->
     fprintf fmt "@[<hv>declare function %a(%a)%a;@]"
       id_ id
       (list ~sep:", " pattern) params
       annot returnType
-  | loc, _ -> failwith_location loc "This is not suppoerted yet"
+  | (loc, _), _ -> failwith_location loc "This is not suppoerted yet"
 )
 
 and pattern fmt = Pattern.(function
@@ -705,6 +831,24 @@ and property fmt = Type.Object.(function
     )
 )
 
+(* Appends static to all methods and data members apart from constructor *)
+and property_static fmt = Type.Object.(function
+  | _, { Property.key; value; _ } ->
+    (match key, value with
+      | (Expression.Object.Property.Identifier id, (_,Type.Function value)) ->
+          (if get_identifier_id id = Some "new"
+          then fprintf fmt "@[<hv>%a%a@]"
+          else fprintf fmt "@[<hv>static %a%a@]")
+            id_ id
+            method_type value
+      | (Expression.Object.Property.Identifier id, _) ->
+          fprintf fmt "@[<hv>static %a: %a@]"
+            id_ id
+            type_ value
+      | _ -> todo fmt
+    )
+)
+
 and indexer_ fmt = Type.Object.(function
   | _, { Indexer.id; key; value; } ->
       fprintf fmt "@[<hv>[%a: %a]: %a@]"
@@ -788,3 +932,14 @@ and enum_key fmt = Expression.Object.Property.(function
   | Computed (loc, _) -> failwith_location loc
         "Computed members in enums are not supported by Flow"
 )
+
+(* This squash two objects and print them as one *)
+and print_combined_class fmt = Type.Object.(function
+  | (Some a, Some b) ->
+      fprintf fmt "{@;<0 2>@[<v>%a%a%a%a@]@,}"
+        (list_ ~sep:";" property) a.properties
+        (list ~sep:";" indexer_) a.indexers
+        (list_ ~sep:";" property_static) b.properties
+        (list ~sep:";" indexer_) b.indexers
+  | _ -> failwith "This type of same name interface and var not supported yet"
+  )
