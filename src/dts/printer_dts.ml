@@ -347,7 +347,8 @@ and module_used_statement acc = Statement.(function
        class. Eg.,
      export class C extends M.D { }
   *)
-  | _, AmbientClassDeclaration { AmbientClass. extends; _ } ->
+  | _, AmbientClassDeclaration { AmbientClass. extends; body; _ } ->
+    let acc = module_used_body acc body in
     (match extends with
     | Some (_, t) -> module_used_generic acc t
     | _ -> acc
@@ -356,7 +357,8 @@ and module_used_statement acc = Statement.(function
        interface. Eg.,
      export interface C extends M.D { }
   *)
-  | _, InterfaceDeclaration { Interface. extends; _ } ->
+  | _, InterfaceDeclaration { Interface. extends; body; _ } ->
+    let acc = module_used_body acc body in
     let fold_intermediate x y = module_used_generic x (snd y) in
     List.fold_left fold_intermediate acc extends
   | _ -> acc
@@ -378,6 +380,7 @@ and module_used_type acc = Type.(function
   | _, Generic t -> module_used_generic acc t
   | _, Typeof x ->
     (match x with _, {IdPath.ids; _}-> module_used_ids acc ids)
+  | loc, Object t -> module_used_body acc (loc, t)
   | _ -> acc
 )
 
@@ -392,7 +395,22 @@ and module_used_ids acc = function
   )
   | _ -> acc
 
+(* This is for checking module use within an object body *)
+and module_used_body acc = Type.(function
+| _, {Object. properties; indexers; } ->
+  let fold_intermediate x y = module_used_property x (snd y) in
+  let acc = List.fold_left fold_intermediate acc properties in
+  let fold_intermediate x y = module_used_indexer x (snd y) in
+  List.fold_left fold_intermediate acc indexers
+)
 
+and module_used_property acc = Type.Object.(function
+  | { Property.value; _ } -> module_used_type acc value
+)
+
+and module_used_indexer acc = Type.Object.(function
+  | { Indexer.value; _ } -> module_used_type acc value
+)
 
 (*
   get_modules_to_import returns a list of modules that need to be

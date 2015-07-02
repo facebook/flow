@@ -2,7 +2,7 @@ declare module "M" {
   declare var N: $Exports<'M___N'>;
   declare var x: number;
   declare class C {
-    y: typeof x;
+    y: typeof P.b;
     
   }
   declare var m: typeof N.z;
@@ -19,6 +19,7 @@ declare module "M___N" {
 declare module "P" {
   declare var M: $Exports<'M'>;
   declare var a: typeof M.N.z;
+  declare var b: number;
   
 }
 
