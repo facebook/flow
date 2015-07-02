@@ -2036,20 +2036,10 @@ and dispatch_call p env call_type (fpos, fun_expr as e) el uel =
         let tfun = Reason.Rwitness fty.ft_pos, Tfun fty in
         call p env tfun el []
       | None -> unbound_name env id)
-  | Class_const (CI(class_id_pos, shapes) as class_id, ((_, idx) as method_id))
+  | Class_const (CI(_, shapes) as class_id, ((_, idx) as method_id))
       when shapes = SN.Shapes.cShapes && idx = SN.Shapes.idx ->
-      let env, ty = static_class_id class_id_pos env class_id in
-      let env, fty = class_get ~is_method:true ~is_const:false env ty
-        method_id class_id in
-      (* call the function as declared to validate arity and if input is
-         a shape, but ignore the result and overwrite with custom one *)
-      let (env, res), has_error = Errors.try_with_error
-        (fun () -> call p env fty el uel, false)
-        (fun () -> (env, (Reason.Rwitness p, Tany)), true) in
-      (* if there are errors already stop here - going forward would
-       * report them twice *)
-      if has_error then env, res else
-      begin match el with
+      overload_function p env class_id method_id el uel
+      begin fun env fty res el -> match el with
         | [shape; field] ->
           let env, shape_ty = expr env shape in
           Typing_shapes.idx env fty shape_ty field None
@@ -2059,6 +2049,19 @@ and dispatch_call p env call_type (fpos, fun_expr as e) el uel =
             Typing_shapes.idx env fty shape_ty field
               (Some ((fst default), default_ty))
         | _ -> env, res
+      end
+   | Class_const (CI(_, shapes) as class_id, ((_, key_exists) as method_id))
+      when shapes = SN.Shapes.cShapes && key_exists = SN.Shapes.keyExists ->
+      overload_function p env class_id method_id el uel
+      begin fun env fty res el -> match el with
+        | [shape; field] ->
+          let env, shape_ty = expr env shape in
+          (* try acessing the field, to verify existence, but ignore
+           * the returned type and keep the one coming from function
+           * return type hint *)
+          let env, _ = Typing_shapes.idx env fty shape_ty field None in
+          env, res
+        | _  -> env, res
       end
   | Class_const (CIparent, (_, construct))
     when construct = SN.Members.__construct ->
@@ -3750,3 +3753,19 @@ and typedef_def env_up typedef =
   | pos, Hshape fdm ->
     ignore (check_shape_keys_validity env_up pos (ShapeMap.keys fdm))
   | _ -> ()
+
+(* Calls the method of a class, but allows the f callback to override the
+ * return value type *)
+and overload_function p env class_id method_id el uel f =
+  let env, ty = static_class_id p env class_id in
+  let env, fty = class_get ~is_method:true ~is_const:false env ty
+  method_id class_id in
+  (* call the function as declared to validate arity and input types,
+     but ignore the result and overwrite with custom one *)
+   let (env, res), has_error = Errors.try_with_error
+     (fun () -> call p env fty el uel, false)
+     (fun () -> (env, (Reason.Rwitness p, Tany)), true) in
+   (* if there are errors already stop here - going forward would
+    * report them twice *)
+   if has_error then env, res
+   else f env fty res el

@@ -125,6 +125,7 @@ let builtins = "<?hh // decl\n"^
   "function invariant_violation(...): noreturn;\n" ^
   "abstract final class Shapes {\n" ^
   "  public static function idx(shape() $shape, arraykey $index, $default = null) {}\n" ^
+  "  public static function keyExists(shape() $shape, arraykey $index): bool {}\n" ^
   "}\n"
 
 (*****************************************************************************)
