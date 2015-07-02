@@ -1195,6 +1195,14 @@ let rec assert_ground ?(infer=false) cx skip ids = function
        | None -> ()
       )
 
+  | AnnotT(assert_t, assume_t) ->
+      (* don't ask for an annotation if one is already provided :) *)
+      (** TODO: one of the uses of derivable_reason was to mark type variables
+          that represented annotations so that they could be ignored. Since we
+          can now ignore annotations directly, consider renaming or getting rid
+          of derivable entirely. **)
+      ()
+
   | t -> failwith (streason_of_t t) (** TODO **)
 
 let lookup_module cx m =
@@ -1429,6 +1437,19 @@ let rec __flow cx (l, u) trace =
       | Resolved t2 ->
           rec_flow cx trace (t1, t2)
       );
+
+    (***************)
+    (* annotations *)
+    (***************)
+
+    (** The assert and assume parts of an annotation constrain values flowing in
+        and uses flowing out, respectively **)
+
+    | _, AnnotT(assert_t, _) ->
+      rec_flow cx trace (l, assert_t)
+
+    | AnnotT(_, assume_t), u ->
+      rec_flow cx trace (assume_t, u)
 
     (****************************************************************)
     (* BecomeT unifies a tvar with an incoming concrete lower bound *)
@@ -3096,6 +3117,10 @@ let rec __flow cx (l, u) trace =
     );
   )
 
+(* some types need to be resolved before proceeding further *)
+and needs_resolution = function
+  | OpenT _ | UnionT _ | OptionalT _ | MaybeT _ | AnnotT _ -> true
+  | _ -> false
 
 (**
  * Addition
@@ -3118,7 +3143,9 @@ let rec __flow cx (l, u) trace =
  * TODO: handle symbols (which raise a TypeError, so should be banned)
  *
  **)
-and flow_addition cx trace reason l r u = match (l, r) with
+and flow_addition cx trace reason l r u =
+  if needs_resolution r then rec_flow cx trace (r, AdderT (reason, l, u))
+  else match (l, r) with
   | (StrT _, StrT _)
   | (StrT _, NumT _)
   | (NumT _, StrT _) ->
@@ -3127,10 +3154,6 @@ and flow_addition cx trace reason l r u = match (l, r) with
   | (MixedT _, _)
   | (_, MixedT _) ->
     rec_flow cx trace (MixedT.why reason, u)
-
-  (* l + r === r + l, so this lets complex values of r be decomposed *)
-  | (_, (OpenT _ | UnionT _ | OptionalT _ | MaybeT _)) ->
-    rec_flow cx trace (r, AdderT (reason, l, u))
 
   | ((NumT _ | SingletonNumT _ | BoolT _ | SingletonBoolT _ | NullT _ | VoidT _),
      (NumT _ | SingletonNumT _ | BoolT _ | SingletonBoolT _ | NullT _ | VoidT _)) ->
@@ -3149,9 +3172,9 @@ and flow_addition cx trace reason l r u = match (l, r) with
  *   number <> number = number
  *   string <> string = string
  **)
-and flow_comparator cx trace reason l r = match (l, r) with
-  | (_, (OpenT _ | UnionT _ | OptionalT _ | MaybeT _)) ->
-    rec_flow cx trace (r, ComparatorT (reason, l))
+and flow_comparator cx trace reason l r =
+  if needs_resolution r then rec_flow cx trace (r, ComparatorT (reason, l))
+  else match (l, r) with
   | (StrT _, StrT _) -> ()
   | (_, _) when numeric l && numeric r -> ()
   | (_, _) -> prerr_flow cx trace "Cannot be compared to" l r
@@ -3163,9 +3186,9 @@ and flow_comparator cx trace reason l r = match (l, r) with
  *
  * note: any types may be compared with === (in)equality.
  **)
-and flow_eq cx trace reason l r = match (l, r) with
-  | (_, (OpenT _ | UnionT _ | OptionalT _ | MaybeT _)) ->
-    rec_flow cx trace (r, EqT(reason, l))
+and flow_eq cx trace reason l r =
+  if needs_resolution r then rec_flow cx trace (r, EqT(reason, l))
+  else match (l, r) with
   | (_, _) when equatable cx trace (l, r) -> ()
   | (_, _) -> prerr_flow cx trace "Cannot be compared to" l r
 
@@ -3469,6 +3492,9 @@ and subst cx ?(force=true) (map: Type.t SMap.t) t =
 
   | TypeT (reason, t) ->
     TypeT (reason, subst cx ~force map t)
+
+  | AnnotT (assert_t, assume_t) ->
+    AnnotT (subst cx ~force map assert_t, subst cx ~force map assume_t)
 
   | InstanceT (reason, static, super, instance) ->
     InstanceT (
@@ -4737,10 +4763,23 @@ and mk_typeapp_instance cx reason ?(cache=false) c ts =
    an annotation), and false when expecting a runtime value (e.g., when
    processing an extends). *)
 and mk_instance cx instance_reason ?(for_type=true) c =
-  mk_tvar_derivable_where cx instance_reason (fun t ->
-    let u = if for_type then TypeT(instance_reason,t) else ClassT(t) in
-    flow_opt cx (c, u)
-  )
+  if for_type then
+    (* Make an annotation. Part of this operation is similar to making a runtime
+       value (see below), except that for annotations, we must ensure that
+       values flowing in do not directly flow to uses flowing out. *)
+    let assume_t = mk_tvar_where cx instance_reason (fun t ->
+      (* this part is similar to making a runtime value *)
+      flow_opt cx (c, TypeT(instance_reason,t))
+    ) in
+    let assert_t = mk_tvar_where cx instance_reason (fun t ->
+    (* when assume_t is concrete, unify with assert_t *)
+      flow_opt cx (assume_t, UnifyT(assume_t, t))
+    ) in
+    AnnotT (assert_t, assume_t)
+  else
+    mk_tvar_derivable_where cx instance_reason (fun t ->
+      flow_opt cx (c, ClassT(t))
+    )
 
 (* We want to match against some t, which may either be a concrete
    type, or a tvar that will be concretized by a single incoming
@@ -5045,6 +5084,10 @@ let rec gc cx state = function
 
   | TypeT (_, t) ->
       gc cx state t
+
+  | AnnotT (t1, t2) ->
+      gc cx state t1;
+      gc cx state t2
 
   | SpeculativeMatchFailureT (_, t1, t2) ->
       gc cx state t1;

@@ -4678,12 +4678,12 @@ and mk_extends cx map = function
       | None -> None
       | Some (_, { Ast.Type.ParameterInstantiation.params; }) -> Some params in
       let c = expression cx e in
-      mk_nominal_type cx (reason_of_t c) ~for_type:false map (c, params)
+      mk_nominal_type ~for_type:false cx (reason_of_t c) map (c, params)
 
 (* Given the type of expression C and type arguments T1...Tn, return the type of
    values described by C<T1,...,Tn>, or C when there are no type arguments. *)
 (** See comment on Flow_js.mk_instance for what the for_type flag means. **)
-and mk_nominal_type cx reason ?(for_type=true) map (c, targs) =
+and mk_nominal_type ?(for_type=true) cx reason map (c, targs) =
   match targs with
   | Some ts ->
       let tparams = List.map (convert cx map) ts in

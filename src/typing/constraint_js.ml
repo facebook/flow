@@ -139,6 +139,22 @@ module Type = struct
   (* type aliases *)
   | TypeT of reason * t
 
+  (* annotations *)
+  (** An annotation is characterized by an "assert" type that constrains values
+      flowing in to the annotation, and an "assume" type that constrains uses
+      flowing out of the annotation. These types are logically the same type,
+      and the distinction is unnecessary when they are already
+      concrete. However, when they are not yet concrete, i.e., they are type
+      variables, and having them be the same has the unintended effect of making
+      the annotation "translucent": values flowing in to the annotation and uses
+      flowing out of the annotation interact directly, without necessarily going
+      through the annotation! This causes some spurious errors, especially when
+      annotations are deliberately lenient, and overall reduces the programmer's
+      control over errors via annotations. Thus, we distinguish the assert and
+      assume types while they are type variables, and unify them only once they
+      becomes concrete. **)
+  | AnnotT of t * t
+
   (* failure case for speculative matching *)
   | SpeculativeMatchFailureT of reason * t * t
 
@@ -829,6 +845,7 @@ let string_of_ctor = function
   | AdderT _ -> "AdderT"
   | ComparatorT _ -> "ComparatorT"
   | TypeT _ -> "TypeT"
+  | AnnotT _ -> "AnnotT"
   | BecomeT _ -> "BecomeT"
   | OptionalT _ -> "OptionalT"
   | RestT _ -> "RestT"
@@ -932,6 +949,9 @@ let rec reason_of_t = function
   | TypeT (reason,_)
   | BecomeT (reason, _)
       -> reason
+
+  | AnnotT (_, assume_t) ->
+      reason_of_t assume_t
 
   | ExtendsT (_,t) ->
       prefix_reason "extends " (reason_of_t t)
@@ -1099,6 +1119,7 @@ let rec mod_reason_of_t f = function
   | ComparatorT (reason, t) -> ComparatorT (f reason, t)
 
   | TypeT (reason, t) -> TypeT (f reason, t)
+  | AnnotT (assert_t, assume_t) -> AnnotT (assert_t, mod_reason_of_t f assume_t)
   | BecomeT (reason, t) -> BecomeT (f reason, t)
 
   | OptionalT t -> OptionalT (mod_reason_of_t f t)
@@ -1543,6 +1564,11 @@ let rec _json_of_t stack cx t = Json.(
 
   | TypeT (_, t) -> [
       "result", _json_of_t stack cx t
+    ]
+
+  | AnnotT (t1, t2) -> [
+      "assert", _json_of_t stack cx t1;
+      "assume", _json_of_t stack cx t2
     ]
 
   | BecomeT (_, t) -> [
@@ -2371,6 +2397,11 @@ class ['a] type_visitor = object(self)
   | SingletonBoolT _ -> acc
 
   | TypeT (_, t) -> self#type_ cx acc t
+
+  | AnnotT (t1, t2) ->
+    let acc = self#type_ cx acc t1 in
+    let acc = self#type_ cx acc t2 in
+    acc
 
   | BecomeT (_, t) -> self#type_ cx acc t
 

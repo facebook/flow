@@ -66,6 +66,7 @@ module Type :
       | SingletonBoolT of reason * bool
 
       | TypeT of reason * t
+      | AnnotT of t * t
 
       | SpeculativeMatchFailureT of reason * t * t
 

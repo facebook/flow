@@ -66,7 +66,7 @@ Traces2.js:17:12,25:      . InstanceT [ReactElement]
 Traces2.js:17:12,25:      . . InstanceT [ReactElement]
 Traces2.js:17:12,25:      . . ~> OpenT [ReactElement] comes from
 Traces2.js:17:12,25:      . . . InstanceT [ReactElement]
-Traces2.js:13:16,34:      . . . ~> TypeAppT [type application of identifier ReactElement]
+Traces2.js:17:12,25:      . . . ~> AnnotT [ReactElement]
 
 Traces2.js:10:3,11: property bar
 Property not found in
@@ -79,6 +79,6 @@ Traces2.js:17:12,25:      . InstanceT [ReactElement]
 Traces2.js:17:12,25:      . . InstanceT [ReactElement]
 Traces2.js:17:12,25:      . . ~> OpenT [ReactElement] comes from
 Traces2.js:17:12,25:      . . . InstanceT [ReactElement]
-Traces2.js:13:16,34:      . . . ~> TypeAppT [type application of identifier ReactElement]
+Traces2.js:17:12,25:      . . . ~> AnnotT [ReactElement]
 
 Found 6 errors
