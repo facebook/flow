@@ -1035,7 +1035,7 @@ and statement_decl cx = Ast.Statement.(
   | (loc, With _) ->
       (* TODO disallow or push vars into env? *)
       ()
-
+  | (loc, DeclareTypeAlias { TypeAlias.id; typeParameters; right; } )
   | (loc, TypeAlias { TypeAlias.id; typeParameters; right; } ) ->
       let _, { Ast.Identifier.name; _ } = id in
       let r = mk_reason (spf "type %s" name) loc in
@@ -1451,7 +1451,7 @@ and statement cx = Ast.Statement.(
   | (loc, With _) ->
       (* TODO or disallow? *)
       ()
-
+  | (loc, DeclareTypeAlias { TypeAlias.id; typeParameters; right; } )
   | (loc, TypeAlias { TypeAlias.id; typeParameters; right; } ) ->
       let _, { Ast.Identifier.name; _ } = id in
       let r = mk_reason (spf "type %s" name) loc in
@@ -2163,20 +2163,29 @@ and statement cx = Ast.Statement.(
     toplevels cx elements;
 
     Env_js.pop_env ();
-
-    let exports = Scope.(match get "exports" module_scope with
+    let for_types, exports_ = Scope.(match get "exports" module_scope with
       | Some { specific=exports;_} ->
           (* TODO: what happens when other things are also declared? *)
-          exports
+         SMap.empty(* ???? *), exports
       | None ->
-          let map = SMap.map (
-            fun { specific = export; _ } -> export
-          ) module_scope.entries in
-          Flow_js.mk_object_with_map_proto cx reason map (MixedT reason)
-    ) in
+	 let for_types, nonfor_types =
+	   SMap.partition (fun _ { for_type; _ } -> for_type) module_scope.entries
+	 in
+        let map = SMap.map (
+		      fun { specific = export; _ } -> export
+		    ) nonfor_types in
+        for_types, Flow_js.mk_object_with_map_proto cx reason map (MixedT reason)
+    )
+    in
     let module_t = mk_module_t cx reason in
-    let module_t = merge_commonjs_export cx reason module_t exports in
-    Flow_js.unify cx module_t t
+    let module_t = merge_commonjs_export cx reason module_t exports_ in
+    Flow_js.unify cx module_t t;
+    Flow_js.flow cx
+    		 (module_t,
+    		  SetNamedExportsT(reason,
+				   SMap.map
+				     (fun {Scope.specific = export; _} -> export )
+				     for_types, AnyT.t));
   | (loc, ExportDeclaration {
       ExportDeclaration.default;
       ExportDeclaration.declaration;
