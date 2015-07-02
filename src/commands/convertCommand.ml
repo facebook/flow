@@ -11,20 +11,11 @@
 open CommandUtils
 open Sys_utils
 open Utils
+open Utils_js
 (* conversion *)
 
 let dts_ext = ".d.ts"
 let dts_ext_find_pattern = "*.d.ts"
-
-let call_succeeds try_function function_input =
-  try
-    try_function function_input;
-    true
-  with
-  (* print failwith <msg> command's exception message *)
-  | Failure msg -> let () = prerr_endline msg in
-                   false
-  | _ -> false
 
 let convert_file error_flags outpath file =
   let base = Filename.chop_suffix (Filename.basename file) dts_ext in

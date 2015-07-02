@@ -1,5 +1,6 @@
 open Format
 open Dts_ast
+open Utils
 
 module SSet = Utils.SSet
 
@@ -718,6 +719,15 @@ and id_ fmt = function
         name
         (opt annot) typeAnnotation
 
+(* convert a number identifier to a string *)
+and id_no_num fmt = function
+  | _, { Identifier.name; typeAnnotation; _ } ->
+    let name = try ignore (int_of_string name); spf "%S" name
+      with _ -> name in
+    fprintf fmt "%s%a"
+        name
+        (opt annot) typeAnnotation
+
 and annot fmt =
   fprintf fmt ": %a" type_
 
@@ -821,11 +831,11 @@ and property fmt = Type.Object.(function
     (match key, value with
       | (Expression.Object.Property.Identifier id, (_,Type.Function value)) ->
           fprintf fmt "@[<hv>%a%a@]"
-            id_ id
+            id_no_num id
             method_type value
       | (Expression.Object.Property.Identifier id, _) ->
           fprintf fmt "@[<hv>%a: %a@]"
-            id_ id
+            id_no_num id
             type_ value
       | _ -> todo fmt
     )
@@ -839,11 +849,11 @@ and property_static fmt = Type.Object.(function
           (if get_identifier_id id = Some "new"
           then fprintf fmt "@[<hv>%a%a@]"
           else fprintf fmt "@[<hv>static %a%a@]")
-            id_ id
+            id_no_num id
             method_type value
       | (Expression.Object.Property.Identifier id, _) ->
           fprintf fmt "@[<hv>static %a: %a@]"
-            id_ id
+            id_no_num id
             type_ value
       | _ -> todo fmt
     )

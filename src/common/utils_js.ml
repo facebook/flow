@@ -47,3 +47,13 @@ let time pred msg f =
   let elap = (Unix.gettimeofday ()) -. start in
   if not (pred elap) then () else prerr_endline (msg elap);
   ret
+
+let call_succeeds try_function function_input =
+  try
+    try_function function_input;
+    true
+  with
+  (* print failwith <msg> command's exception message *)
+  | Failure msg -> prerr_endline msg;
+                   false
+  | _ -> false
