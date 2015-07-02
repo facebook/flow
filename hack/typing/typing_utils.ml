@@ -89,7 +89,7 @@ let rec find_pos p_default tyl =
  *)
 (*****************************************************************************)
 
-let get_shape_field_name = Env.get_shape_field_name
+let get_printable_shape_field_name = Env.get_shape_field_name
 
 (* This is used in subtyping and unification. *)
 let apply_shape ~on_common_field ~on_missing_optional_field (env, acc)
@@ -101,11 +101,18 @@ let apply_shape ~on_common_field ~on_missing_optional_field (env, acc)
     | None ->
         let pos1 = Reason.to_pos r1 in
         let pos2 = Reason.to_pos r2 in
-        Errors.missing_field pos2 pos1 (get_shape_field_name name);
+        Errors.missing_field pos2 pos1 (get_printable_shape_field_name name);
         (env, acc)
     | Some ty2 ->
         on_common_field (env, acc) name ty1 ty2
   end fdm1 (env, acc)
+
+and shape_field_name p field =
+  let open Nast in match field with
+    | String name -> SFlit name
+    | Class_const (CI x, y) -> SFclass_const (x, y)
+    | _ -> Errors.invalid_shape_field_name p;
+      SFlit (p, "")
 
 (*****************************************************************************)
 (* Try to unify all the types in a intersection *)

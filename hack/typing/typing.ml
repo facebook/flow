@@ -1479,12 +1479,6 @@ and convert_array_as_tuple env ty2 =
   then env, (r2, Tany)
   else env, ty2
 
-and shape_field_name p = function
-  | String name -> SFlit name
-  | Class_const (CI x, y) -> SFclass_const (x, y)
-  | _ -> Errors.invalid_shape_field_name p;
-    SFlit (p, "")
-
 and shape_field_pos = function
   | SFlit (p, _) -> p
   | SFclass_const ((cls_pos, _), (member_pos, _)) -> Pos.btw cls_pos member_pos
@@ -1681,7 +1675,7 @@ and assign p env e1 ty2 =
        * When that is the case we want to add the field to its type.
        *)
       let env, shape_ty = expr env shape in
-      let field = shape_field_name p1 e in
+      let field = TUtils.shape_field_name p1 e in
       let env, shape_ty = TUtils.grow_shape p e1 field ty2 env shape_ty in
       let env, _ty = set_valid_rvalue p env lvar shape_ty in
 
@@ -2014,7 +2008,7 @@ and dispatch_call p env call_type (fpos, fun_expr as e) el uel =
                 (r_fty, Tarray(Some(tr), None))))
         | _ -> env, fty in
       call p env fty el []
-  | Id ((_, "\\idx") as id) ->
+  | Id ((_, idx) as id) when idx = SN.FB.idx ->
       (* Directly call get_fun so that we can muck with the type before
        * instantiation -- much easier to work in terms of Tgeneric Tk/Tv than
        * trying to figure out which Tvar is which. *)
@@ -2042,6 +2036,30 @@ and dispatch_call p env call_type (fpos, fun_expr as e) el uel =
         let tfun = Reason.Rwitness fty.ft_pos, Tfun fty in
         call p env tfun el []
       | None -> unbound_name env id)
+  | Class_const (CI(class_id_pos, shapes) as class_id, ((_, idx) as method_id))
+      when shapes = SN.Shapes.cShapes && idx = SN.Shapes.idx ->
+      let env, ty = static_class_id class_id_pos env class_id in
+      let env, fty = class_get ~is_method:true ~is_const:false env ty
+        method_id class_id in
+      (* call the function as declared to validate arity and if input is
+         a shape, but ignore the result and overwrite with custom one *)
+      let (env, res), has_error = Errors.try_with_error
+        (fun () -> call p env fty el uel, false)
+        (fun () -> (env, (Reason.Rwitness p, Tany)), true) in
+      (* if there are errors already stop here - going forward would
+       * report them twice *)
+      if has_error then env, res else
+      begin match el with
+        | [shape; field] ->
+          let env, shape_ty = expr env shape in
+          Typing_shapes.idx env fty shape_ty field None
+        | [shape; field; default] ->
+            let env, shape_ty = expr env shape in
+            let env, default_ty = expr env default in
+            Typing_shapes.idx env fty shape_ty field
+              (Some ((fst default), default_ty))
+        | _ -> env, res
+      end
   | Class_const (CIparent, (_, construct))
     when construct = SN.Members.__construct ->
       call_parent_construct p env el uel
@@ -2300,12 +2318,13 @@ and array_get is_lvalue p env ty1 ety1 e2 ty2 =
       )
   | Tshape (_, fdm) ->
     let p, e2' = e2 in
-    let field = shape_field_name p e2' in
+    let field = TUtils.shape_field_name p e2' in
     (match ShapeMap.get field fdm with
-      | None -> Errors.undefined_field p (TUtils.get_shape_field_name field);
-              env, (Reason.Rwitness p, Tany)
-          | Some ty -> env, ty
-          )
+      | None ->
+        Errors.undefined_field p (TUtils.get_printable_shape_field_name field);
+        env, (Reason.Rwitness p, Tany)
+      | Some ty -> env, ty
+    )
   | Toption _ ->
       Errors.null_container p
         (Reason.to_string

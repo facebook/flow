@@ -122,7 +122,10 @@ let builtins = "<?hh // decl\n"^
   "function rand($x, $y): int;\n" ^
   "function invariant($x, ...): void;\n" ^
   "function exit(int $exit_code_or_message = 0): noreturn;\n" ^
-  "function invariant_violation(...): noreturn;\n"
+  "function invariant_violation(...): noreturn;\n" ^
+  "abstract final class Shapes {\n" ^
+  "  public static function idx(shape() $shape, arraykey $index, $default = null) {}\n" ^
+  "}\n"
 
 (*****************************************************************************)
 (* Helpers *)

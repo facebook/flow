@@ -225,4 +225,11 @@ module FB = struct
   let fgenva                 = "genva"
   let fgen_array_rec         = "gen_array_rec"
 
+  let idx                    = "\\idx"
+
+end
+
+module Shapes = struct
+  let cShapes                = "\\Shapes"
+  let idx                    = "idx"
 end
