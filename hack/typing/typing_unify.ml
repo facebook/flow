@@ -236,14 +236,6 @@ and unify_ env r1 ty1 r2 ty2 =
   | Tobject, Tclass _
   | Tclass _, Tobject -> env, Tobject
   | Tshape (fields_known1, fdm1), Tshape (fields_known2, fdm2)  ->
-      if fields_known1 <> fields_known2 then begin
-        let pos1 = Reason.to_pos r1 in
-        let pos2 = Reason.to_pos r2 in
-        if not fields_known1 then
-          Errors.shape_fields_unknown pos1 pos2
-        else
-          Errors.shape_fields_unknown pos2 pos1
-      end;
       let on_common_field (env, acc) name ty1 ty2 =
         let env, ty = unify env ty1 ty2 in
         env, Nast.ShapeMap.add name ty acc in
@@ -259,7 +251,9 @@ and unify_ env r1 ty1 r2 ty2 =
         ~on_common_field
         ~on_missing_optional_field
         (env, res) (r2, fields_known2, fdm2) (r1, fields_known1, fdm1) in
-      env, Tshape (fields_known1 && fields_known2, res)
+        (* After doing apply_shape in both directions we can be sure that
+         * fields_known1 = fields_known2 *)
+      env, Tshape (fields_known1, res)
   | (Tany | Tmixed | Tarray (_, _) | Tprim _ | Toption _
       | Tvar _ | Tabstract (_, _) | Tclass (_, _) | Ttuple _ | Tanon (_, _)
       | Tfun _ | Tunresolved _ | Tobject | Tshape _), _ ->

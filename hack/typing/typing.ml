@@ -1260,9 +1260,9 @@ and expr_ ~in_cond ~(valkind: [> `lvalue | `rvalue | `other ]) env (p, e) =
       (* allow_inter adds a type-variable *)
       let env, fdm = ShapeMap.map_env TUtils.unresolved env fdm in
       let env = check_shape_keys_validity env p (ShapeMap.keys fdm) in
-      (* "fields known" set to true, because this shape is constructed
+      (* Fields are fully known, because this shape is constructed
        * using shape keyword and we know exactly what fields are set. *)
-      env, (Reason.Rwitness p, Tshape (true, fdm))
+      env, (Reason.Rwitness p, Tshape (FieldsFullyKnown, fdm))
 
 and class_const env p (cid, mid) =
   TUtils.process_static_find_ref cid mid;
@@ -2069,12 +2069,12 @@ and dispatch_call p env call_type (fpos, fun_expr as e) el uel =
    | Class_const (CI(_, shapes) as class_id, ((_, remove_key) as method_id))
       when shapes = SN.Shapes.cShapes && remove_key = SN.Shapes.removeKey ->
       overload_function p env class_id method_id el uel
-      begin fun env fty res el -> match el with
+      begin fun env _ res el -> match el with
         | [shape; field] -> begin match shape with
             | (_, Lvar (_, lvar)) ->
               let env, shape_ty = expr env shape in
               let env, shape_ty =
-                Typing_shapes.remove_key p env fty shape_ty field in
+                Typing_shapes.remove_key p env shape_ty field in
               let env, _ = set_valid_rvalue p env lvar shape_ty in
               env, res
             | _ ->

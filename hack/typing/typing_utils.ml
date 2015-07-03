@@ -92,11 +92,39 @@ let get_printable_shape_field_name = Env.get_shape_field_name
 
 (* This is used in subtyping and unification. *)
 let apply_shape ~on_common_field ~on_missing_optional_field (env, acc)
-  (r1, _, fdm1) (r2, fields_known2, fdm2) =
+  (r1, fields_known1, fdm1) (r2, fields_known2, fdm2) =
+  begin match fields_known1, fields_known2 with
+    | FieldsFullyKnown, FieldsPartiallyKnown _  ->
+        let pos1 = Reason.to_pos r1 in
+        let pos2 = Reason.to_pos r2 in
+        Errors.shape_fields_unknown pos2 pos1
+    | FieldsPartiallyKnown unset_fields1,
+      FieldsPartiallyKnown unset_fields2 ->
+        ShapeMap.iter begin fun name unset_pos ->
+          match ShapeMap.get name unset_fields2 with
+            | Some _ -> ()
+            | None ->
+                let pos2 = Reason.to_pos r2 in
+                Errors.shape_field_unset unset_pos pos2
+                  (get_printable_shape_field_name name);
+        end unset_fields1
+    | _ -> ()
+  end;
   ShapeMap.fold begin fun name ty1 (env, acc) ->
     match ShapeMap.get name fdm2 with
-    | None when fields_known2 && is_option env ty1 ->
-        on_missing_optional_field (env, acc) name ty1
+    | None when is_option env ty1 ->
+        let can_omit = match fields_known2 with
+          | FieldsFullyKnown -> true
+          | FieldsPartiallyKnown unset_fields ->
+              ShapeMap.mem name unset_fields in
+        if can_omit then
+          on_missing_optional_field (env, acc) name ty1
+        else
+          let pos1 = Reason.to_pos r1 in
+          let pos2 = Reason.to_pos r2 in
+          Errors.missing_optional_field pos2 pos1
+            (get_printable_shape_field_name name);
+          (env, acc)
     | None ->
         let pos1 = Reason.to_pos r1 in
         let pos2 = Reason.to_pos r2 in

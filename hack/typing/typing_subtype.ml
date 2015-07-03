@@ -479,11 +479,6 @@ and sub_type_with_uenv env (uenv_super, ty_super) (uenv_sub, ty_sub) =
       )
   | (r_super, Tshape (fields_known_super, fdm_super)),
       (r_sub, Tshape (fields_known_sub, fdm_sub)) ->
-      if (not fields_known_sub) && fields_known_super then begin
-        let pos1 = Reason.to_pos r_sub in
-        let pos2 = Reason.to_pos r_super in
-        Errors.shape_fields_unknown pos1 pos2
-      end;
       fst (TUtils.apply_shape
         ~on_common_field:(fun (env, acc) _ x y -> sub_type env x y, acc)
         ~on_missing_optional_field:(fun acc _ _ -> acc)

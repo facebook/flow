@@ -28,7 +28,7 @@ class type ['a] type_visitor_type = object
   method on_tanon : 'a -> locl fun_arity -> Ident.t -> 'a
   method on_tunresolved : 'a -> locl ty list -> 'a
   method on_tobject : 'a -> 'a
-  method on_tshape : 'a -> bool -> 'b ty Nast.ShapeMap.t -> 'a
+  method on_tshape : 'a -> shape_fields_known -> 'b ty Nast.ShapeMap.t -> 'a
   method on_taccess : 'a -> taccess_type -> 'a
   method on_tclass : 'a -> Nast.sid -> locl ty list -> 'a
 end
@@ -71,7 +71,8 @@ class virtual ['a] type_visitor : ['a] type_visitor_type = object(this)
   method on_tanon acc _ _ = acc
   method on_tunresolved acc tyl = List.fold_left this#on_type acc tyl
   method on_tobject acc = acc
-  method on_tshape: type a. _ -> bool -> a ty Nast.ShapeMap.t -> _ =
+  method on_tshape: type a. _ -> shape_fields_known
+    -> a ty Nast.ShapeMap.t -> _ =
     fun acc _ fdm ->
     let f _ v acc = this#on_type acc v in
     Nast.ShapeMap.fold f fdm acc

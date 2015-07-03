@@ -227,9 +227,18 @@ let rec debug stack env (r, ty) =
         | _, ty -> debug stack env ty)
   | Tobject -> o "object"
   | Tshape (fields_known, fdm) ->
-      o "shape<fields ";
-      o (if fields_known then "fully" else "partially");
-      o " known>(";
+      o "shape<";
+      begin match fields_known with
+        | FieldsFullyKnown -> o "FieldsFullyKnown";
+        | FieldsPartiallyKnown unset_fields -> begin
+            o "FieldsPartiallyKnown(unset fields:";
+              ShapeMap.iter begin fun k _ ->
+                o (get_shape_field_name k); o " "
+              end unset_fields;
+            o ")"
+          end
+      end;
+      o ">(";
       ShapeMap.iter begin fun k v ->
         o (get_shape_field_name k); o " => "; debug stack env v
       end fdm;

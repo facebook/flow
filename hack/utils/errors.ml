@@ -340,6 +340,8 @@ module Typing                               = struct
   let invalid_shape_field_name_number       = 4137 (* DONT MODIFY!!!! *)
   let shape_fields_unknown                  = 4138 (* DONT MODIFY!!!! *)
   let invalid_shape_remove_key              = 4139 (* DONT MODIFY!!!! *)
+  let missing_optional_field                = 4140 (* DONT MODIFY!!!! *)
+  let shape_field_unset                     = 4141 (* DONT MODIFY!!!! *)
   (* EXTEND HERE WITH NEW VALUES IF NEEDED *)
 end
 
@@ -977,9 +979,19 @@ let shape_field_type_mismatch key_pos witness_pos key_ty witness_ty =
 let missing_field pos1 pos2 name =
   add_list Typing.missing_field (
     (pos1, "The field '"^name^"' is missing")::
-    (if pos2 != Pos.none
-      then [pos2, "The field '"^name^"' is defined"]
-      else []))
+    [pos2, "The field '"^name^"' is defined"])
+
+let missing_optional_field pos1 pos2 name =
+  add_list Typing.missing_optional_field
+    (* We have the position of shape type that is marked as optional -
+     * explain why we can't omit it despite this.*)
+    (if pos2 <> Pos.none then (
+      (pos1, "The field '"^name^"' may be set to an unknown type. " ^
+              "Explicitly null out the field, or remove it " ^
+              "(with Shapes::removeKey(...))")::
+      [pos2, "The field '"^name^"' is defined as optional"])
+   else
+      [pos1, "The field '"^name^"' is missing"])
 
 let shape_fields_unknown pos1 pos2 =
   add_list Typing.shape_fields_unknown
@@ -988,6 +1000,13 @@ let shape_fields_unknown pos1 pos2 =
             "those listed in its declaration.";
      pos2, "It is incompatible with a shape created using \"shape\" "^
            "constructor, which has all the fields known"]
+
+let shape_field_unset pos1 pos2 name =
+  add_list Typing.shape_field_unset (
+    [(pos1, "The field '"^name^"' was unset here");
+     (pos2, "The field '"^name^"' might be present in this shape because of " ^
+            "structural subtyping")]
+  )
 
 let invalid_shape_remove_key p =
   add Typing.invalid_shape_remove_key p

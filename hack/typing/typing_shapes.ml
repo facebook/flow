@@ -46,6 +46,12 @@ let rec shrink_shape pos field_name env shape =
   let _, shape = Env.expand_type env shape in
   match shape with
   | _, Tshape (fields_known, fields) ->
+      (* remember that we have unset this field *)
+      let fields_known = match fields_known with
+        | FieldsFullyKnown ->
+            FieldsFullyKnown
+        | FieldsPartiallyKnown unset_fields ->
+            FieldsPartiallyKnown (ShapeMap.add field_name pos unset_fields) in
       let fields = ShapeMap.remove field_name fields in
       let result = Reason.Rwitness pos, Tshape (fields_known, fields) in
       env, result
@@ -62,10 +68,10 @@ let idx env fty shape_ty field default =
   let field_name = TUtils.shape_field_name (fst field) (snd field) in
   let fake_shape = (
     (* Rnone because we don't want the fake shape to show up in messages about
-     * field non existing. Errors.missing_field filters them out *)
+     * field non existing. Errors.missing_optional_field filters them out *)
     Reason.Rnone,
     Tshape (
-      false,
+      FieldsPartiallyKnown Nast.ShapeMap.empty,
       Nast.ShapeMap.singleton field_name (Reason.Rnone, Toption res)
     )
   ) in
@@ -79,10 +85,6 @@ let idx env fty shape_ty field default =
     | Some (default_pos, default_ty) ->
       Type.sub_type default_pos Reason.URparam env default_ty res, res
 
-let remove_key p env fty shape_ty field  =
-  (* try acessing the field, to verify existence, but ignore
-   * the returned type and keep the one coming from function
-   * return type hint *)
-  let env, _ = idx env fty shape_ty field None in
+let remove_key p env shape_ty field  =
   let field_name = TUtils.shape_field_name (fst field) (snd field) in
   shrink_shape p field_name env shape_ty

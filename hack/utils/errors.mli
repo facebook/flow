@@ -248,6 +248,8 @@ val shape_field_class_mismatch : Pos.t -> Pos.t -> string -> string -> unit
 val shape_field_type_mismatch : Pos.t -> Pos.t -> string -> string -> unit
 val shape_fields_unknown: Pos.t -> Pos.t  -> unit
 val invalid_shape_remove_key : Pos.t -> unit
+val missing_optional_field : Pos.t -> Pos.t -> string -> unit
+val shape_field_unset : Pos.t -> Pos.t -> string -> unit
 val using_internal_class : Pos.t -> string -> unit
 val nullsafe_not_needed : Pos.t -> (Pos.t * string) list -> unit
 val trivial_strict_eq : Pos.t -> string -> (Pos.t * string) list

@@ -123,7 +123,16 @@ module CompareTypes = struct
           | Some v2 ->
               ty acc v1 v2
         end fdm1 acc in
-        subst, same && (fields_known1 = fields_known2)
+        begin match fields_known1, fields_known2 with
+          | FieldsPartiallyKnown unset_fields1,
+            FieldsPartiallyKnown unset_fields2 ->
+              ShapeMap.fold begin fun name unset_pos1 acc ->
+                match ShapeMap.get name unset_fields2 with
+                  | None -> default
+                  | Some unset_pos2 -> pos acc unset_pos1 unset_pos2
+               end unset_fields1 (subst, same)
+          | _ -> subst, same && (fields_known1 = fields_known2)
+        end
     | (Tany | Tmixed | Tarray (_, _) | Tfun _ | Taccess (_, _) | Tgeneric (_, _)
        | Toption _ | Tprim _ | Tshape _| Tapply (_, _) | Ttuple _ | Tthis
       ), _ -> default
