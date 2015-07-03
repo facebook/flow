@@ -29,7 +29,7 @@ function countLeaves(tree: BinaryTree): number {
 }
 ```
 
-<!—truncate-->
+<!--truncate-->
 
 ### The problem
 
