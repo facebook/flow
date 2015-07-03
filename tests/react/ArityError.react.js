@@ -3,7 +3,7 @@
  */
 var React = require('react');
 var AudienceInsightsContainer = React.createClass({
-  renderComponent(AudienceInsights: ReactClass): any {
+  renderComponent(AudienceInsights: ReactClass): ReactElement {
     return <AudienceInsights />;
   },
 });

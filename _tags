@@ -1,0 +1,2 @@
+<**/*.ml*>: warn(-27), warn_error_A
+<hack/utils/*.ml*>: warn(-3)

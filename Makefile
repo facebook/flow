@@ -36,32 +36,27 @@ endif
 ################################################################################
 
 MODULES=\
-  src/stubs\
   src/commands\
   src/common\
-  src/embedded\
   src/dts\
-  src/typing\
+  src/embedded\
   src/parser\
-  src/server\
   src/parsing\
-  hack/utils\
-  hack/client\
-  hack/socket\
-  hack/server\
-  hack/stubs\
-  hack/typing\
-  hack/naming\
-  hack/parsing\
+  src/server\
+  src/stubs\
+  src/typing\
   hack/deps\
-  hack/heap\
+  hack/dfind\
   hack/globals\
+  hack/heap\
+  hack/parsing\
   hack/procs\
   hack/search\
-  hack/hhi\
-  hack/dfind\
+  hack/socket\
+  hack/stubs\
   hack/third-party/avl\
   hack/third-party/core\
+  hack/utils\
   hack/$(INOTIFY)\
   hack/$(FSNOTIFY)
 
@@ -111,12 +106,17 @@ clean:
 build-flow: build-flow-native-deps build-flowlib-archive
 	ocamlbuild  -no-links  $(INCLUDE_OPTS) $(LIB_OPTS) -lflags "$(LINKER_FLAGS)" src/flow.native
 
+build-flow-debug: build-flow-native-deps build-flowlib-archive
+	ocamlbuild -lflags -custom -no-links $(INCLUDE_OPTS) $(LIB_OPTS) -lflags "$(LINKER_FLAGS)" src/flow.d.byte
+	mkdir -p bin
+	cp _build/src/flow.d.byte bin/flow
+
 build-flow-native-deps: build-flow-stubs
 	ocamlbuild -ocamlc "ocamlopt $(EXTRA_INCLUDE_OPTS) $(CC_OPTS)"\
 		$(NATIVE_OBJECT_FILES)
 
 build-flow-stubs:
-	echo 'const char* const BuildInfo_kRevision = "${SHA}";' > hack/utils/get_build_id.gen.c
+	echo "const char* const BuildInfo_kRevision = \"$$(git rev-parse HEAD)\";" > hack/utils/get_build_id.gen.c
 
 build-flowlib-archive:
 	mkdir -p bin

@@ -8,6 +8,9 @@
  *
  *)
 
+open Core
+open Utils
+
 (*****************************************************************************)
 (* Helper function, splits the content of a file into a list of lines.  *)
 (*****************************************************************************)
@@ -40,37 +43,40 @@ let split_lines content =
  *)
 (*****************************************************************************)
 
-type filename = Relative_path.t
+type filename = Path.t
 type interval = int * int
 type file_diff = filename * interval list
 
 module ParseDiff: sig
 
-  val go: string -> file_diff list
+  val go: Path.t -> string -> file_diff list
 
 end = struct
 
-  type filename = Relative_path.t
+  type filename = Path.t
   type interval = int * int
   type file_diff = filename * interval list
 
   type env = {
-      (* The file we are currently parsing (None for '/dev/null') *)
-      mutable file: string option;
+    (* The prefix of the files in this diff *)
+    prefix : Path.t;
 
-      (* The list of lines that have been modified *)
-      mutable modified: int list;
+    (* The file we are currently parsing (None for '/dev/null') *)
+    mutable file: string option;
 
-      (* The current line *)
-      mutable line: int;
+    (* The list of lines that have been modified *)
+    mutable modified: int list;
 
-      (* The accumulator (for the result) *)
-      mutable result: file_diff list;
-    }
+    (* The current line *)
+    mutable line: int;
+
+    (* The accumulator (for the result) *)
+    mutable result: file_diff list;
+  }
 
   (* The entry point *)
-  let rec go content =
-    let env = { file = None; modified = []; line = 0; result = [] } in
+  let rec go prefix content =
+    let env = { prefix; file = None; modified = []; line = 0; result = [] } in
     let lines = split_lines content in
     start env lines;
     List.rev env.result
@@ -129,13 +135,13 @@ end = struct
 
   and add_file env =
     (* Given a list of modified lines => returns a list of intervals *)
-    let lines_modified = List.rev_map (fun x -> (x, x)) env.modified in
+    let lines_modified = List.rev_map env.modified (fun x -> (x, x)) in
     let lines_modified = normalize_intervals [] lines_modified in
     (* Adds the file to the list of results *)
     match env.file with
     | None -> ()
     | Some filename ->
-        let path = Relative_path.concat Relative_path.Root filename in
+        let path = Path.concat env.prefix filename in
         env.result <- (path, lines_modified) :: env.result
 
   (* Merges intervals when necessary.
@@ -294,83 +300,89 @@ let mk_time_string {Unix.tm_sec; tm_min; tm_hour; tm_mday; tm_mon; tm_year; _} =
 let print_file_header filename =
   let mtime = Unix.gmtime ((Unix.stat filename).Unix.st_mtime) in
   let now = Unix.gmtime (Unix.time ()) in
-  Printf.printf "--- %s\t%s\n" filename (mk_time_string mtime);
-  Printf.printf "+++ %s\t%s\n" filename (mk_time_string now)
+  Tty.printf Tty.(Bold Default) "--- %s\t%s\n" filename (mk_time_string mtime);
+  Tty.printf Tty.(Bold Default) "+++ %s\t%s\n" filename (mk_time_string now)
 
 let print_hunk (old_start_line, new_start_line, old_lines, new_lines) =
   let old_range = List.length old_lines in
   let new_range = List.length new_lines in
-  Printf.printf "@@ -%d,%d +%d,%d @@\n"
+  Tty.printf Tty.(Normal Cyan) "@@ -%d,%d +%d,%d @@\n"
     old_start_line old_range new_start_line new_range;
-  List.iter (Printf.printf "-%s\n") old_lines;
-  List.iter (Printf.printf "+%s\n") new_lines
+  List.iter old_lines (Tty.printf Tty.(Normal Red) "-%s\n");
+  List.iter new_lines (Tty.printf Tty.(Normal Green) "+%s\n")
 
 (*****************************************************************************)
 (* Applies the changes to a list of lines:
- * -) 'outc' the output channel that we are printing to
- * -) 'line_number' the current input line_number (not output!)
- * -) 'blocks' the list of indivisible blocks that should be replaced
+ * -) 'blocks' the list of indivisible blocks of formatted content
  *     (cf TextBlocks)
- * -) 'lines' the remaining lines to be treated
+ * -) 'lines' the lines in the pre-formatted file
  *)
 (*****************************************************************************)
-
-let apply_blocks outc blocks lines =
-  let rec loop acc old_lineno new_lineno blocks lines =
+let apply_blocks ~should_patch filename blocks lines =
+  let buf = Buffer.create 1024 in
+  let add_line buf s = Buffer.add_string buf s; Buffer.add_char buf '\n' in
+  let first_hunk = ref true in
+  let rec loop old_lineno new_lineno blocks lines =
     match blocks, lines with
     (* We reached the end of the input file. *)
-    | _, [] -> acc
+    | _, [] -> ()
 
     (* We have no more modifications for that file. *)
     | [], line :: lines ->
-        output_string outc line;
-        output_char outc '\n';
-        loop acc (old_lineno + 1) (new_lineno + 1) blocks lines
+        add_line buf line;
+        loop (old_lineno + 1) (new_lineno + 1) blocks lines
 
     (* We have not reached the beginning of the block yet. *)
     | (start_block, _, _) :: _, line :: lines when old_lineno < start_block ->
-        output_string outc line;
-        output_char outc '\n';
-        loop acc (old_lineno + 1) (new_lineno + 1) blocks lines
+        add_line buf line;
+        loop (old_lineno + 1) (new_lineno + 1) blocks lines
 
     (* We found a block that must be replaced! *)
     | (start_block, end_block, new_content) :: blocks, lines ->
-        output_string outc new_content;
         (* Cut the old content. *)
         let old_lines, lines =
-          Core_list.split_n lines (end_block - start_block + 1) in
+          List.split_n lines (end_block - start_block + 1) in
         let new_lines = split_lines new_content in
-        let acc =
-          (* only add a hunk if it is nonempty *)
-          if old_lines <> new_lines
-          then (start_block, new_lineno, old_lines, new_lines) :: acc
-          else acc in
+        let hunk = (start_block, new_lineno, old_lines, new_lines) in
         let new_lineno = new_lineno + (List.length new_lines) in
-        loop acc (end_block + 1) new_lineno blocks lines
+        (* only show nonempty hunks *)
+        if old_lines = new_lines
+        then Buffer.add_string buf new_content
+        else begin
+          if !first_hunk then begin
+            print_file_header filename;
+            first_hunk := false;
+          end;
+          print_hunk hunk;
+          if should_patch (old_lines, new_lines)
+          then Buffer.add_string buf new_content
+          else List.iter old_lines (add_line buf);
+        end;
+        loop (end_block + 1) new_lineno blocks lines
   in
-  List.rev (loop [] 1 1 blocks lines)
+  loop 1 1 blocks lines;
+  Buffer.contents buf
 
 (*****************************************************************************)
 (* Formats a diff (in place) *)
 (*****************************************************************************)
 
-let parse_diff diff_text =
-  ParseDiff.go diff_text
+let parse_diff prefix diff_text =
+  ParseDiff.go prefix diff_text
 
-let rec apply modes in_place ~diff:file_and_lines_modified =
-  List.iter begin fun (filepath, modified_lines) ->
-    let filename = Relative_path.to_absolute filepath in
-    let file_content = Sys_utils.cat filename in
-    apply_file modes in_place filepath file_content modified_lines
-  end file_and_lines_modified
+let rec apply modes apply_mode ~diff:file_and_lines_modified =
+  List.iter file_and_lines_modified begin fun (filepath, modified_lines) ->
+    let file_content = Path.cat filepath in
+    apply_file modes apply_mode filepath file_content modified_lines
+  end
 
-and apply_file modes in_place filepath file_content modified_lines =
-  let filename = Relative_path.to_absolute filepath in
+and apply_file modes apply_mode filepath file_content modified_lines =
+  let filename = Path.to_string filepath in
   let result =
     Format_hack.program_with_source_metadata modes filepath file_content in
   match result with
   | Format_hack.Success formatted_content ->
-      apply_formatted in_place filename formatted_content file_content
+      apply_formatted apply_mode filepath formatted_content file_content
         modified_lines
   | Format_hack.Disabled_mode ->
       Printf.fprintf stderr "PHP FILE: skipping %s\n" filename
@@ -379,18 +391,35 @@ and apply_file modes in_place filepath file_content modified_lines =
   | Format_hack.Internal_error ->
       Printf.fprintf stderr "*** PANIC *** Internal error!: %s\n" filename
 
-and apply_formatted in_place filename formatted_content file_content
+and apply_formatted apply_mode filepath formatted_content file_content
     modified_lines =
   let blocks = TextBlocks.make formatted_content in
   let blocks = matching_blocks [] modified_lines blocks in
   let lines = split_lines file_content in
-  try
-    let outc = open_out (if in_place then filename else "/dev/null") in
-    let hunks = apply_blocks outc blocks lines in
-    close_out outc;
-    if List.length hunks <> 0 then begin
-      print_file_header filename;
-      List.iter print_hunk hunks;
-    end;
-  with Sys_error _ ->
-    Printf.fprintf stderr "Error: could not modify file %s\n" filename
+  let filename = Path.to_string filepath in
+  let should_patch =
+    if apply_mode <> Format_mode.Patch
+    then fun _ -> true
+    else fun (old_lines, new_lines) ->
+      let choice = Tty.read_choice "Apply this patch?" ['y'; 'n'; 'q'] in
+      FormatEventLogger.patch_choice filename (old_lines, new_lines) choice;
+      match choice with
+      | 'y' -> true
+      | 'n' -> false
+      | 'q' -> raise Exit
+      | _ -> assert false
+  in
+  let formatted =
+    try Some (apply_blocks ~should_patch filename blocks lines)
+    with Exit -> None
+  in
+  match formatted with
+  | None -> ()
+  | Some _ when apply_mode = Format_mode.Print -> ()
+  | Some content ->
+      try
+        let outc = open_out filename in
+        output_string outc content;
+        close_out outc
+      with Sys_error _ ->
+        Printf.eprintf "Error: could not modify file %s\n" filename

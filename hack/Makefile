@@ -1,6 +1,3 @@
-# Copyright (c) 2014, Facebook, Inc.
-# All rights reserved.
-
 ################################################################################
 #                            Variables to override                             #
 ################################################################################
@@ -36,48 +33,54 @@ endif
 ################################################################################
 
 MODULES=\
-  utils\
   client\
-  socket\
-  server\
-  stubs\
-  typing\
-  naming\
-  parsing\
-  format\
   deps\
-  heap\
-  globals\
-  procs\
-  search\
-  hhi\
   dfind\
+  format\
+  globals\
   h2tp/common\
   h2tp/mapper\
-  h2tp/unparser\
   h2tp/test\
+  h2tp/unparser\
   h2tp\
+  heap\
+  hhi\
+  naming\
+  parsing\
+  procs\
+  search\
+  server\
+  socket\
+  stubs\
   third-party/avl\
   third-party/core\
-  $(INOTIFY)\
-  $(FSNOTIFY)
+  typing\
+  utils\
+  $(FSNOTIFY)\
+  $(INOTIFY)
 
 NATIVE_OBJECT_FILES=\
   heap/hh_shared.o\
-  utils/realpath.o\
-  $(INOTIFY)/$(notdir $(INOTIFY))_stubs.o\
-  utils/nproc.o\
   hhi/hhi_elf.o\
   utils/get_build_id.gen.o\
-  utils/get_build_id.o
+  utils/get_build_id.o\
+  utils/nproc.o\
+  utils/realpath.o\
+  $(INOTIFY)/$(notdir $(INOTIFY))_stubs.o
 
 OCAML_LIBRARIES=\
-  unix\
-  str
+  str\
+  unix
 
 NATIVE_LIBRARIES=\
-  $(ELF)\
-  pthread
+  pthread\
+  $(ELF)
+
+TARGETS=_build/hh_server.native _build/hh_client.native _build/hh_single_type_check.native \
+		_build/hh_format.native _build/h2tp.native _build/test_unparser.native
+
+# Find all source files (all files not in _build dir)
+ALL_SRC_FILES=$(call rwildcard,$(patsubst _build,,$(wildcard *)),*.*)
 
 ################################################################################
 #                                    Rules                                     #
@@ -94,6 +97,8 @@ FRAMEWORK_OPTS=$(foreach framework, $(FRAMEWORKS),-cclib -framework -cclib $(fra
 
 LINKER_FLAGS=$(NATIVE_OBJECT_FILES) $(NATIVE_LIB_OPTS) $(EXTRA_LIB_OPTS) \
 	     $(EXTRA_NATIVE_LIB_OPTS) $(FRAMEWORK_OPTS) $(SECTCREATE)
+# Function to recursively find files, eg: $(call rwildcard,dir/to/look/in/,*.c)
+rwildcard=$(wildcard $1$2) $(foreach d,$(wildcard $1*),$(call rwildcard,$d/,$2))
 
 all: build-hhi-archive build-hack copy-hack-files
 
@@ -102,19 +107,31 @@ clean:
 	find ../bin -mindepth 1 -not -path ../bin/README -delete
 	rm -f utils/get_build_id.gen.c
 
-build-hack: build-hack-native-deps build-hhi-archive
-	ocamlbuild -no-links $(INCLUDE_OPTS) $(LIB_OPTS) \
-		-lflags "$(LINKER_FLAGS)" \
-		hh_server.native hh_client.native hh_single_type_check.native \
-		hh_format.native h2tp.native test_unparser.native
+build-hack: $(TARGETS) build-hhi-archive
+
+# All targets are built in one time, so no parallelization is necessary
+.NOTPARALLEL: $(TARGETS)
+# As there is no efficient way to calculate the dependencies of
+# the targets, we make them dependent on all files. In doing this
+# we ensure that no rebuild is necessary if nothing has changed
+$(TARGETS): $(ALL_SRC_FILES)
+	# build-hack-native-deps is a dependency of $(TARGETS) but as it is phony
+	# we place it here to avoid unnecessary rebuilds
+	$(MAKE) build-hack-native-deps build-hhi-archive
+	ocamlbuild -no-links -cflag -g $(INCLUDE_OPTS) $(LIB_OPTS) \
+		-lflags "-g $(LINKER_FLAGS)" \
+		$(patsubst _build/%,%,$(TARGETS))
+	# Touching the targets is necessary because the ocaml build
+	# doesn't change the modification dates of the targets if
+	# the new binaries are exactly the same as the old ones
+	touch $(TARGETS)
 
 build-hack-native-deps: build-hack-stubs
-	# ocamlbuild before 4.00 does not pass thru cflags when building native C
-	# objects, because they're not important, right? So use this super ugly hack.
-	ocamlbuild -ocamlc "ocamlopt $(EXTRA_INCLUDE_OPTS) $(EXTRA_CC_OPTS)" $(NATIVE_OBJECT_FILES)
+	ocamlbuild -cflags "-g $(EXTRA_INCLUDE_OPTS) $(EXTRA_CC_OPTS)" $(NATIVE_OBJECT_FILES)
 
 build-hack-stubs:
-	echo "const char* const BuildInfo_kRevision = \"$$(git rev-parse HEAD)\";" > utils/get_build_id.gen.c
+	REV="const char* const BuildInfo_kRevision = \"$$(git rev-parse HEAD)\";"; \
+	if [ "$$REV" != "$$(cat utils/get_build_id.gen.c)" ]; then echo "$$REV" > utils/get_build_id.gen.c; fi
 
 build-hhi-archive:
 	mkdir -p ../bin
@@ -136,6 +153,7 @@ test: build-hack copy-hack-files
 	python3 ../test/verify.py --program ../bin/hh_single_type_check ../test/autocomplete
 	python3 ../test/verify.py --program ../bin/hh_single_type_check ../test/color
 	python3 ../test/verify.py --program ../bin/hh_single_type_check ../test/coverage
+	python3 ../test/verify.py --program ../bin/hh_single_type_check ../test/dumpsymbolinfo
 	python3 ../test/verify.py --program ../bin/hh_format ../test/format
 	python3 ../test/verify.py --program ../bin/hh_single_type_check ../test/suggest
 	python3 ../test/verify.py --program ../bin/hh_single_type_check ../test/typecheck

@@ -8,7 +8,7 @@
  *
  *)
 
-let identify content line char =
+let go content line char =
   let result = ref None in
   IdentifySymbolService.attach_hooks result line char;
   let funs, classes = ServerIdeUtils.declare Relative_path.default content in
@@ -18,7 +18,3 @@ let identify content line char =
   match !result with
   | Some result -> Utils.strip_ns result.IdentifySymbolService.name
   | _ -> ""
-
-let go content line char oc =
-  let result = identify content line char in
-  Printf.fprintf oc "%s\n" result; flush oc

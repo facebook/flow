@@ -8,19 +8,34 @@
  *
  *)
 
-val pos_range : Pos.t -> int * int * int * int
-
-val print_reason_color: first:bool -> Pos.t * string -> unit
-
-val print_error_color: Errors.error -> unit
-
 type level = ERROR | WARNING
+type message = (Reason_js.reason * string)
+type error = level * message list * message list
 
-type error = level * (Reason_js.reason * string) list
+type flags = {
+  color: Tty.color_mode;
+  one_line: bool;
+  show_all_errors: bool;
+}
+
+val default_flags : flags
+
+val format_reason_color: ?first:bool -> ?one_line:bool -> Loc.t * string ->
+  (Tty.style * string) list
+
+val print_reason_color:
+  first:bool ->
+  one_line:bool ->
+  color:Tty.color_mode ->
+  message ->
+  unit
+
+val print_error_color:
+  one_line:bool -> color:Tty.color_mode -> error -> unit
 
 val file_of_error : error -> string
 
-val pos_to_json : Pos.t -> (string * Hh_json.json) list
+val json_of_loc : Loc.t -> (string * Hh_json.json) list
 
 module Error :
   sig
@@ -32,21 +47,23 @@ module Error :
    traces may share endpoints, and produce the same error *)
 module ErrorSet : Set.S with type elt = error
 
-(******* TODO move to hack structure throughout ********)
+module ErrorSuppressions : sig
+  type t
 
-val flow_error_to_hack_error : error -> Errors.error
+  val empty : t
+  val add : Loc.t -> t -> t
+  val union : t -> t -> t
+  val check : error -> t -> (bool * t)
+  val unused : t -> Loc.t list
+end
 
-val parse_error_to_flow_error :
-  (Spider_monkey_ast.Loc.t * Parse_error.t) -> error
+val parse_error_to_flow_error : (Loc.t * Parse_error.t) -> error
 
-val parse_error_to_hack_error :
-  (Spider_monkey_ast.Loc.t * Parse_error.t) -> Errors.error
-
-val to_list : ErrorSet.t -> Errors.error list
+val to_list : ErrorSet.t -> error list
 
 (******* Error output functionality working on Hack's error *******)
 
-val print_errorl : bool -> Errors.error list -> out_channel -> unit
+val print_errorl : bool -> error list -> out_channel -> unit
 
 (* Human readable output *)
-val print_error_summary : bool -> Errors.error list -> unit
+val print_error_summary: flags:flags -> error list -> unit

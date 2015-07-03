@@ -18,4 +18,7 @@
  *)
 (*****************************************************************************)
 
-val fully_expand: Typing_env.env -> Typing_defs.ty -> Typing_defs.ty
+val fully_expand:
+  Typing_env.env ->
+  Typing_defs.locl Typing_defs.ty ->
+  Typing_defs.locl Typing_defs.ty

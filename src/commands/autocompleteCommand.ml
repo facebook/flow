@@ -14,9 +14,29 @@
 
 open CommandUtils
 
-type env = {
-  file: ServerProt.file_input;
-  option_values : command_params;
+let spec = {
+  CommandSpec.
+  name = "autocomplete";
+  doc = "Queries autocompletion information";
+  usage = Printf.sprintf
+    "Usage: %s autocomplete [OPTION] [FILE] [LINE COLUMN]...\n\n\
+      Queries autocompletion information.\n\n\
+      If line and column is specified, then the magic autocomplete token is\n\
+      automatically inserted at the specified position.\n\n\
+      Example usage:\n\
+      \t%s autocomplete < foo.js\n\
+      \t%s autocomplete path/to/foo.js < foo.js
+      \t%s autocomplete 12 35 < foo.js\n"
+      CommandUtils.exe_name
+      CommandUtils.exe_name
+      CommandUtils.exe_name
+      CommandUtils.exe_name;
+  args = CommandSpec.ArgSpec.(
+    empty
+    |> server_flags
+    |> json_flags
+    |> anon "args" (optional (list_of string)) ~doc:"[FILE] [LINE COL]"
+  )
 }
 
 let add_autocomplete_token contents line column =
@@ -32,56 +52,40 @@ let add_autocomplete_token contents line column =
     ) else line_str
   )
 
-let parse_args () =
-  let option_values, options = create_command_options true in
-  let options = sort_opts options in
-  let usage =  Printf.sprintf
-    "Usage: %s autocomplete [OPTION] [FILE] [LINE COLUMN]...\n\n\
-    Queries autocompletion information.\n\n\
-    If line and column is specified, then the magic autocomplete token is\n\
-    automatically inserted at the specified position.\n\n\
-    Example usage:\n\
-    \t%s autocomplete < foo.js\n\
-    \t%s autocomplete path/to/foo.js < foo.js
-    \t%s autocomplete 12 35 < foo.js"
-    CommandUtils.exe_name
-    CommandUtils.exe_name
-    CommandUtils.exe_name
-    CommandUtils.exe_name in
-  let args = ClientArgs.parse_without_command options usage "autocomplete" in
-  let file = match args with
-  | [] ->
+let parse_args = function
+  | None
+  | Some [] ->
       ServerProt.FileContent (None,
-                              ClientUtils.read_stdin_to_string ())
-  | [filename] ->
+                              Sys_utils.read_stdin_to_string ())
+  | Some [filename] ->
       let filename = get_path_of_file filename in
       ServerProt.FileContent (Some filename,
-                              ClientUtils.read_stdin_to_string ())
-  | [line; column] ->
+                              Sys_utils.read_stdin_to_string ())
+  | Some [line; column] ->
       let line = int_of_string line in
       let column = int_of_string column in
-      let contents = ClientUtils.read_stdin_to_string () in
+      let contents = Sys_utils.read_stdin_to_string () in
       ServerProt.FileContent (None,
                               add_autocomplete_token contents line column)
-  | [filename; line; column] ->
+  | Some [filename; line; column] ->
       let line = int_of_string line in
       let column = int_of_string column in
-      let contents = ClientUtils.read_stdin_to_string () in
+      let contents = Sys_utils.read_stdin_to_string () in
       let filename = get_path_of_file filename in
       ServerProt.FileContent (Some filename,
                               add_autocomplete_token contents line column)
   | _ ->
-      Arg.usage options usage; exit 2 in
-  { file; option_values; }
+      CommandSpec.usage spec; exit 2
 
 module Json = Hh_json
 
-let main { file; option_values; } =
+let main option_values json args () =
+  let file = parse_args args in
   let root = guess_root (ServerProt.path_of_input file) in
   let ic, oc = connect_with_autostart option_values root in
   ServerProt.cmd_to_channel oc (ServerProt.AUTOCOMPLETE file);
   let completions = Marshal.from_channel ic in
-  if !(option_values.json)
+  if json
   then (
     let results =
       List.map AutocompleteService_js.autocomplete_result_to_json completions
@@ -95,6 +99,4 @@ let main { file; option_values; } =
     ) completions
   )
 
-let name = "autocomplete"
-let doc = "Queries autocompletion information"
-let run () = main (parse_args ())
+let command = CommandSpec.command spec main

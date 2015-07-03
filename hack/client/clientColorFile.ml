@@ -50,8 +50,8 @@ let to_json input =
 
 let go file_input output_json pos_level_l =
   let str = match file_input with
-    | ServerMsg.FileName filename -> Sys_utils.cat filename
-    | ServerMsg.FileContent content -> content
+    | ServerUtils.FileName filename -> Sys_utils.cat filename
+    | ServerUtils.FileContent content -> content
   in
   let results = ColorFile.go str pos_level_l in
   if output_json then

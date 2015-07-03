@@ -11,40 +11,61 @@
 open Utils
 open Sys_utils
 
+module Json = Hh_json
+
+let version = "0.13.1"
+
 type moduleSystem = Node | Haste
 
 type options = {
   moduleSystem: moduleSystem;
-  traces: bool;
+  module_name_mappers: (Str.regexp * string) list;
+  suppress_comments: Str.regexp list;
+  suppress_types: SSet.t;
+  traces: int;
+  strip_root: bool;
+  log_file: Path.t;
 }
 
-module PathMap : MapSig with type key = Path.path
+module PathMap : MapSig with type key = Path.t
 = MyMap(struct
-  type t = Path.path
+  type t = Path.t
   let compare p1 p2 =
-    String.compare (Path.string_of_path p1) (Path.string_of_path p2)
+    String.compare (Path.to_string p1) (Path.to_string p2)
 end)
 
 type config = {
   (* file blacklist *)
   excludes: (string * Str.regexp) list;
   (* non-root include paths. may contain wildcards *)
-  includes: Path.path list;
+  includes: Path.t list;
   (* stems extracted from includes *)
-  include_stems: Path.path list;
+  include_stems: Path.t list;
   (* map from include_stems to list of (original path, regexified path) *)
   include_map: ((string * Str.regexp) list) PathMap.t;
   (* library paths. no wildcards *)
-  libs: Path.path list;
+  libs: Path.t list;
   (* config options *)
   options: options;
   (* root path *)
-  root: Path.path;
+  root: Path.t;
 }
 
-let default_options = {
-  moduleSystem = Node;
-  traces = false;
+let default_log_file root =
+  let tmp_dir = Tmp.get_dir() in
+  let root_part = Path.slash_escaped_string_of_path root in
+  Path.make (Printf.sprintf "%s/%s.log" tmp_dir root_part)
+
+let default_module_system = Node
+
+let default_options root = {
+  moduleSystem = default_module_system;
+  module_name_mappers = [];
+  suppress_comments = [];
+  suppress_types = SSet.empty;
+  traces = 0;
+  strip_root = false;
+  log_file = default_log_file root;
 }
 
 module Pp : sig
@@ -59,10 +80,10 @@ end = struct
     List.iter (fun ex -> (fprintf o "%s\n" (fst ex))) excludes
 
   let includes o includes =
-    List.iter (fun inc -> (fprintf o "%s\n" (Path.string_of_path inc))) includes
+    List.iter (fun inc -> (fprintf o "%s\n" (Path.to_string inc))) includes
 
   let libs o libs =
-    List.iter (fun lib -> (fprintf o "%s\n" (Path.string_of_path lib))) libs
+    List.iter (fun lib -> (fprintf o "%s\n" (Path.to_string lib))) libs
 
   let options =
     let opt o name value = fprintf o "%s=%s\n" name value
@@ -71,8 +92,10 @@ end = struct
       | Node -> "node"
       | Haste -> "haste"
 
-    in fun o options ->
-      if options.moduleSystem <> default_options.moduleSystem
+    in fun o config ->
+      let options = config.options in
+      let default_opts = default_options config.root in
+      if options.moduleSystem <> default_opts.moduleSystem
       then opt o "module.system" (module_system options.moduleSystem)
 
   let config o config =
@@ -86,7 +109,7 @@ end = struct
     libs o config.libs;
     fprintf o "\n";
     section_header o "options";
-    options o config.options
+    options o config
 end
 
 let empty_config root = {
@@ -95,7 +118,7 @@ let empty_config root = {
   include_stems = [];
   include_map = PathMap.empty;
   libs = [];
-  options = default_options;
+  options = (default_options root);
   root;
 }
 
@@ -110,24 +133,31 @@ let group_into_sections lines =
       if Str.string_match is_section_header line 0
       then begin
         let sections = (section, List.rev lines)::sections in
-        let section = Str.matched_group 1 line in
-        if SSet.mem section seen
-        then error ln (spf "contains duplicate section: \"%s\"" section);
-        SSet.add section seen, sections, ((ln, section), [])
+        let section_name = Str.matched_group 1 line in
+        if SSet.mem section_name seen
+        then error ln (spf "contains duplicate section: \"%s\"" section_name);
+        SSet.add section_name seen, sections, ((ln, section_name), [])
       end else
         seen, sections, (section, (ln, line)::lines)
     ) (SSet.empty, [], ((0, ""), [])) lines in
-  List.rev (section::sections)
+  let (section, section_lines) = section in
+  List.rev ((section, List.rev section_lines)::sections)
 
-(* given a path, return the max prefix not containing a wildcard *)
+(* given a path, return the max prefix not containing a wildcard
+   or a terminal filename.
+ *)
 let path_stem =
   let wc = Str.regexp "^[^*?]*[*?]" in
   (fun path ->
-    let path_str = Path.string_of_path path in
+    (* strip filename *)
+    let path = if Path.file_exists path && not (Path.is_directory path)
+      then Path.parent path else path in
+    let path_str = Path.to_string path in
+    (* strip back to non-wc prefix *)
     let stem = if Str.string_match wc path_str 0
-    then Filename.dirname (Str.matched_string path_str)
+      then Filename.dirname (Str.matched_string path_str)
     else path_str in
-    Path.mk_path stem)
+    Path.make stem)
 
 let dir_sep = Str.regexp_string Filename.dir_sep
 
@@ -137,7 +167,7 @@ let path_patt =
   let star2 = Str.regexp_string "**" in
   let qmark = Str.regexp_string "?" in
   fun path ->
-    let str = Path.string_of_path path in
+    let str = Path.to_string path in
     (* because we accept both * and **, convert in 2 steps *)
     let results = Str.full_split star2 str in
     let results = List.map (fun r -> match r with
@@ -151,8 +181,12 @@ let path_patt =
 
 (* helper - eliminate noncanonical entries where possible.
    no other normalization is done *)
-let fixup_path p = if Path.is_normalized p then p else
-  let s = Path.string_of_path p in
+let fixup_path p =
+  let s = Path.to_string p in
+  let is_normalized = match realpath s with
+      | Some s' -> s' = s
+      | None -> false in
+  if is_normalized then p else
   let abs = not (Filename.is_relative s) in
   let entries = Str.split_delim dir_sep s in
   let rec loop revbase entries =
@@ -170,12 +204,12 @@ let fixup_path p = if Path.is_normalized p then p else
   let entries = loop [] entries in
   let s = List.fold_left Filename.concat "" entries in
   let s = if abs then Filename.dir_sep ^ s else s in
-  Path.mk_path s
+  Path.make s
 
 let make_path_absolute config path =
   if Filename.is_relative path
   then Path.concat config.root path
-  else Path.mk_path path
+  else Path.make path
 
 (* parse include lines and set config's
    includes (a list of path specs) and
@@ -190,7 +224,7 @@ let parse_includes config lines =
   let include_stems, include_map = List.fold_left (fun (stems, map) path ->
     let stem = path_stem path in
     let patt = path_patt path in
-    let pstr = Path.string_of_path path in
+    let pstr = Path.to_string path in
     match PathMap.get stem map with
       | None ->
           let map = PathMap.add stem [pstr, patt] map in
@@ -205,7 +239,7 @@ let parse_includes config lines =
 (* find a prefix for f in a list of paths, or none *)
 let rec find_prefix f = function
 | [] -> None
-| h :: _ when str_starts_with f (Path.string_of_path h) -> Some h
+| h :: _ when str_starts_with f (Path.to_string h) -> Some h
 | h :: t -> find_prefix f t
 
 (* find a match for f in a list of patterns, or none *)
@@ -222,6 +256,11 @@ let is_included config f =
       let patts = PathMap.find_unsafe stem config.include_map in
       match_patt f patts != None
 
+(* true if path matches one of our excludes *)
+let is_excluded config =
+  let list = List.map snd config.excludes in
+  fun path -> List.exists (fun rx -> Str.string_match rx path 0) list
+
 let parse_libs config lines =
   let libs = lines
   |> List.map (fun (ln, line) -> String.trim line)
@@ -236,75 +275,196 @@ let parse_excludes config lines =
   |> List.map (fun s -> (s, Str.regexp s)) in
   { config with excludes; }
 
-module OptionsParser : sig
-  type t
-  type option_parser
-  (* Parses a list of lines into an options object *)
-  val parse : t -> (int * string) list -> options
-  (* Pass configure a list of option names and option parsers *)
-  val configure : (string * option_parser) list -> t
-
-  (******* Option parser constructors ********)
-  val enum : (string * 'a) list -> (options -> 'a -> options) -> option_parser
-end = struct
+module OptionsParser = struct
   type option_parser = (options -> string -> (int * string) -> options)
   type t = option_parser SMap.t
+  type option_flag =
+    | ALLOW_DUPLICATE
+  type option_entry = {
+    flags: option_flag list;
+    _parser: option_parser;
+  }
 
   let map_add map (key, value) = SMap.add key value map
 
   let configure configuration =
     List.fold_left map_add SMap.empty configuration
 
+  let unescape opt (ln, value) =
+    try Scanf.unescaped value
+    with Scanf.Scan_failure reason ->
+      let msg = spf "Invalid ocaml string for %s: %s" opt reason in
+      error ln msg
+
+  let raw_string option_setter =
+    fun options opt (ln, value) ->
+      (* Process escape characters as if the string were written in ocaml *)
+      let unescaped_value = unescape opt (ln, value) in
+      option_setter options (ln, unescaped_value)
+
+  let regexp option_setter =
+    fun options opt (ln, value) ->
+      try
+        (* Process escape characters as if the string were written in ocaml *)
+        let unescaped_value = unescape opt (ln, value) in
+        let r = Str.regexp unescaped_value in
+        option_setter options (ln, r)
+      with Failure reason ->
+        let msg = spf "Invalid regex for %s: %s" opt reason in
+        error ln msg
+
+  (* Generic option parser constructor. Makes an option parser given a string
+     description `supported` of the target datatype and a partial function
+     `converter` that parsers strings to that datatype. *)
+  let generic (supported, converter) option_setter =
+    fun options opt (ln, value) ->
+      match converter value with
+      | Some value -> option_setter options (ln, value)
+      | None ->
+          let msg = spf
+            "Unsupported value for %s: \"%s\"\nSupported values: %s"
+            opt value supported in
+          error ln msg
+
+  (* Option parser constructor for finite sets. Reuses the generic option parser
+     constructor, passing the appropriate `supported` and `converter`. *)
   let enum values option_setter =
     let map = List.fold_left map_add SMap.empty values in
-    fun options opt (ln, value) ->
-      if SMap.mem value map
-      then option_setter options (SMap.find_unsafe value map)
-      else
-        let supported = values
+    let converter = fun value -> SMap.get value map in
+    let supported = values
           |> List.map fst
           |> List.map (spf "\"%s\"")
           |> String.concat ", " in
-        let msg = spf
-          "Unsupported enum value for %s: \"%s\"\nSupprted values: %s"
-          opt value supported in
-        error ln msg
+    generic (supported, converter) option_setter
+
+  let str_to_str_mapper option_setter =
+    fun options opt (ln, value) ->
+      let value = String.trim value in
+
+      let regexp_str = "^'\\([^']*\\)'[ \t]*->[ \t]*'\\([^']*\\)'$" in
+      let regexp = Str.regexp regexp_str in
+      (if not (Str.string_match regexp value 0) then
+        error ln (
+          "Expected a mapping of form: " ^
+          "'single-quoted-string' -> 'single-quoted-string'"
+        )
+      );
+
+      let left = Str.matched_group 1 value in
+      let right = Str.matched_group 2 value in
+
+      option_setter options (ln, (left, right))
+
+  let contains_flag flags flag =
+    List.fold_left (fun contains_flag maybe_flag ->
+      (maybe_flag = flag) || contains_flag
+    ) false flags
 
   let parse_line p (options, seen) (ln, line) =
-    if Str.string_match (Str.regexp "^\\([a-zA-Z.]+\\)=\\(.*\\)$") line 0
+    if Str.string_match (Str.regexp "^\\([a-zA-Z._]+\\)=\\(.*\\)$") line 0
     then
       let opt = Str.matched_group 1 line in
-      let seen = if SSet.mem opt seen
-        then error ln (spf "Duplicate option: \"%s\"" opt)
-        else SSet.add opt seen in
       if SMap.mem opt p
       then
-        let options =
-          (SMap.find_unsafe opt p) options opt (ln, (Str.matched_group 2 line))
-        in options, seen
+        let opt_entry = SMap.find_unsafe opt p in
+        let allows_dupes = contains_flag opt_entry.flags ALLOW_DUPLICATE in
+        let seen = if SSet.mem opt seen && not allows_dupes
+          then error ln (spf "Duplicate option: \"%s\"" opt)
+          else SSet.add opt seen
+        in
+        let _parser = opt_entry._parser in
+        let options = _parser options opt (ln, (Str.matched_group 2 line)) in
+        (options, seen)
       else error ln (spf "Unsupported option: \"%s\"" opt)
     else error ln "Unable to parse line"
 
-  let parse p lines =
+  let parse config p lines =
     let seen = SSet.empty in
     let options, _ =
-      List.fold_left (parse_line p) (default_options, seen) lines in
+      List.fold_left (parse_line p) (default_options config.root, seen) lines in
     options
 end
 
 let options_parser = OptionsParser.configure [
-  "module.system", OptionsParser.enum (["node", Node; "haste", Haste]) (fun
-    options moduleSystem -> { options with moduleSystem });
-  "traces", OptionsParser.enum (["true", true; "false", false]) (fun
-    options traces -> { options with traces });
+  ("suppress_comment", OptionsParser.({
+    flags = [ALLOW_DUPLICATE];
+    _parser = regexp (fun options (ln, suppress_comment) ->
+      let suppress_comments = suppress_comment::(options.suppress_comments) in
+      { options with suppress_comments; }
+    );
+  }));
+
+  ("suppress_type", OptionsParser.({
+    flags = [ALLOW_DUPLICATE];
+    _parser = raw_string (fun options (ln, suppress_type) ->
+      let suppress_types = options.suppress_types in
+      if SSet.mem suppress_type suppress_types
+      then error ln (spf "Duplicate suppress_type value %s" suppress_type);
+      let suppress_types = SSet.add suppress_type suppress_types in
+      { options with suppress_types; }
+    );
+  }));
+
+  ("log.file", OptionsParser.({
+    flags = [];
+    _parser = generic
+      ("string", fun s -> Some (Path.make s))
+      (fun opts (_, log_file) -> { opts with log_file });
+  }));
+
+  ("module.system", OptionsParser.({
+    flags = [];
+    _parser = enum ["node", Node; "haste", Haste] (fun opts (_, moduleSystem) ->
+      {opts with moduleSystem}
+    );
+  }));
+
+  ("module.name_mapper", OptionsParser.({
+    flags = [ALLOW_DUPLICATE];
+    _parser = str_to_str_mapper (fun options (ln, (pattern, template)) ->
+      let rewriter = (Str.regexp pattern, template) in
+      let module_name_mappers = options.module_name_mappers @ [rewriter] in
+      {options with module_name_mappers }
+    );
+  }));
+
+  ("traces", OptionsParser.({
+    flags = [];
+    _parser = generic
+      ("integer", fun s -> try Some (int_of_string s) with _ -> None)
+      (fun opts (_, traces) -> { opts with traces });
+  }));
+
+  ("strip_root", OptionsParser.({
+    flags = [];
+    _parser = generic
+      ("true, false", fun s -> try Some (bool_of_string s) with _ -> None)
+      (fun opts (_, strip_root) -> { opts with strip_root });
+  }));
 ]
 
 let parse_options config lines =
   let lines = lines
     |> List.map (fun (ln, line) -> ln, String.trim line)
     |> List.filter (fun (ln, s) -> s <> "") in
-  let options = OptionsParser.parse options_parser lines in
+  let options = OptionsParser.parse config options_parser lines in
   { config with options }
+
+let assert_version (ln, line) =
+  if line <> version
+  then error ln (
+    spf
+      "Wrong version of Flow. The config specifies version %s but this is version %s"
+      line
+      version
+  )
+
+let parse_version config lines =
+  lines
+    |> List.map (fun (ln, line) -> ln, String.trim line)
+    |> List.filter (fun (ln, s) -> s <> "")
+    |> List.iter assert_version;
+  config
 
 let parse_section config ((section_ln, section), lines) =
   match section, lines with
@@ -315,6 +475,7 @@ let parse_section config ((section_ln, section), lines) =
   | "ignore", _ -> parse_excludes config lines
   | "libs", _ -> parse_libs config lines
   | "options", _ -> parse_options config lines
+  | "version", _ -> parse_version config lines
   | _ -> error section_ln (spf "Unsupported config section: \"%s\"" section)
 
 let parse config lines =
@@ -322,12 +483,12 @@ let parse config lines =
   List.fold_left parse_section config sections
 
 let fullpath root =
-  Path.string_of_path (Path.concat root ".flowconfig")
+  Path.to_string (Path.concat root ".flowconfig")
 
 let read root =
   let filename = fullpath root in
   let lines = cat_no_fail filename |> split_lines in
-  let lines = List.mapi (fun i line -> (i+1, line)) lines in
+  let lines = List.mapi (fun i line -> (i+1, String.trim line)) lines in
   let config = empty_config root in
   parse config lines
 
@@ -356,3 +517,8 @@ let get root =
   | Some config ->
       assert (root = config.root);
       config
+
+let get_unsafe () =
+  match !cache with
+  | Some config -> config
+  | none -> failwith "No config loaded"

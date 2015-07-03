@@ -9,8 +9,7 @@
  *)
 
 module type OPTION_PARSER = sig
-  val parse : unit -> ServerArgs.options
-  val get_flow_options : unit -> Types_js.options
+  val parse : unit -> Options.options
 end
 
 module TI = Type_inference_js
@@ -21,19 +20,13 @@ struct
   open Utils
   open Sys_utils
   open ServerEnv
+  open ServerUtils
 
   module EventLogger = FlowEventLogger
 
   let name = "flow server"
 
-  (* to support multiple roots, all relative paths in flow
-     are absolute paths with a dummy prefix  *)
-  let config_filename () = Relative_path.(
-    let relp = concat Root ".flowconfig" in
-    let s = to_absolute relp in
-    create Dummy s)
-
-  let load_config () = ServerConfig.default_config
+  let config_path root = Path.concat root ".flowconfig"
 
   (* This determines whether the current config file is compatible with the
    * config that this server was initialized with. Returning false means
@@ -42,31 +35,35 @@ struct
 
   let parse_options = OptionParser.parse
 
-  let get_errors _ = Types_js.get_errors ()
-
   let preinit () =
     (* Do some initialization before creating workers, so that each worker is
      * forked with this information already available. Finding lib files is one
      * example *)
-    let flow_options = OptionParser.get_flow_options () in
+    let flow_options = OptionParser.parse () in
     Types_js.init_modes flow_options;
     (* Force flowlib files to be extracted and their location saved before workers
      * fork, so everyone can know about the same flowlib path. *)
-    ignore (Flowlib.get_flowlib_root ())
+    ignore (Flowlib.get_flowlib_root ());
+    Parsing_service_js.call_on_success SearchService_js.update
 
   let init genv env =
-    let flow_options = OptionParser.get_flow_options () in
-    let env = Types_js.server_init genv env flow_options in
+    if not (Options.is_check_mode genv.ServerEnv.options) then (
+      (* write binary path and version to server log *)
+      Hh_logger.log "executable=%s" Sys.executable_name;
+      Hh_logger.log "version=%s" FlowConfig.version);
+    (* start the server *)
+    let env = Types_js.server_init genv env in
+    let files =
+      ServerEnv.PathMap.fold (fun fn _ acc ->
+        ServerEnv.PathSet.add fn acc
+      ) env.ServerEnv.files_info ServerEnv.PathSet.empty in
+    SearchService_js.update_from_master files;
     env
 
   let run_once_and_exit genv env =
     match env.ServerEnv.errorl with
       | [] -> exit 0
       | _ -> exit 2
-
-  let marshal _ = ()
-
-  let unmarshal _ = ()
 
   let incorrect_hash oc =
     ServerProt.response_to_channel oc ServerProt.SERVER_OUT_OF_DATE;
@@ -76,7 +73,7 @@ struct
     exit 4
 
   let status_log env =
-    if List.length (get_errors env) = 0
+    if List.length (Types_js.get_errors ()) = 0
     then Printf.printf "Status: OK\n"
     else Printf.printf "Status: Error\n";
     flush stdout
@@ -91,8 +88,8 @@ struct
     flush oc
 
   let print_status genv env client_root oc =
-    let server_root = ServerArgs.root genv.options in
-    if not (Path.equal server_root client_root)
+    let server_root = Options.root genv.options in
+    if server_root <> client_root
     then begin
       let msg = ServerProt.DIRECTORY_MISMATCH {
         ServerProt.server=server_root;
@@ -101,8 +98,8 @@ struct
       ServerProt.response_to_channel oc msg;
       Printf.printf "Status: Error\n";
       Printf.printf "server_dir=%s, client_dir=%s\n"
-        (Path.string_of_path server_root)
-        (Path.string_of_path client_root);
+        (Path.to_string server_root)
+        (Path.to_string client_root);
       Printf.printf "%s is not listening to the same directory. Exiting.\n"
         name;
       exit 5
@@ -110,18 +107,18 @@ struct
     flush stdout;
     (* TODO: check status.directory *)
     status_log env;
-    let errors = get_errors env in
+    let errors = Types_js.get_errors () in
     EventLogger.check_response errors;
     send_errorl errors oc
 
-  let die_nicely oc =
+  let die_nicely genv oc =
     ServerProt.response_to_channel oc ServerProt.SERVER_DYING;
     EventLogger.killed ();
     Printf.printf "Status: Error\n";
     Printf.printf "Sent KILL command by client. Dying.\n";
-    (match !ServerDfind.dfind_pid with
-    | Some pid -> Unix.kill pid Sys.sigterm;
-    | None -> failwith "Dfind died before we could kill it"
+    (match genv.ServerEnv.dfind with
+    | Some handle -> Unix.kill (DfindLib.pid handle) Sys.sigterm;
+    | None -> ()
     );
     die ()
 
@@ -157,20 +154,42 @@ struct
     in
     send_errorl (Errors_js.to_list errors) oc
 
-  (* our infer implementation uses a different type for file_input, we stub
-     the (unused) public interface to avoid issues *)
-  let infer env (file_input, line, col) oc =
-    ()
-
-  let mk_pos file line col =
+  let mk_loc file line col =
     {
-      Pos.
-      pos_file = Relative_path.create Relative_path.Dummy file;
-      pos_start = Reason_js.lexpos file line col;
-      pos_end = Reason_js.lexpos file line (col+1);
+      Loc.
+      source = Some file;
+      start = { Loc.line; column = col; offset = 0; };
+      _end = { Loc.line; column = col + 1; offset = 0; };
     }
 
   let infer_type (file_input, line, col) oc =
+    let file = ServerProt.file_input_get_filename file_input in
+    let (err, resp) =
+    (try
+       let content = ServerProt.file_input_get_content file_input in
+       let cx = match Types_js.typecheck_contents content file with
+       | Some cx, _ -> cx
+       | _, errors  -> failwith "Couldn't parse file" in
+      let loc = mk_loc file line col in
+      let (loc, ground_t, possible_ts) = TI.query_type cx loc in
+      let ty = match ground_t with
+        | None -> None
+        | Some t -> Some (Constraint_js.string_of_t cx t)
+      in
+      let reasons =
+        possible_ts
+        |> List.map Constraint_js.reason_of_t
+      in
+      (None, Some (loc, ty, reasons))
+    with exn ->
+      let loc = mk_loc file line col in
+      let err = (loc, Printexc.to_string exn) in
+      (Some err, None)
+    ); in
+    Marshal.to_channel oc (err, resp) [];
+    flush oc
+
+  let dump_types file_input oc =
     let file = ServerProt.file_input_get_filename file_input in
     let (err, resp) =
     (try
@@ -181,23 +200,12 @@ struct
             (match Types_js.typecheck_contents content file with
             | Some cx, _ -> cx
             | _, errors  -> failwith "Couldn't parse file") in
-      let file = cx.Constraint_js.file in
-      let pos = mk_pos file line col in
-      let (pos, ground_t, possible_ts) = TI.query_type cx pos in
-      let ty = match ground_t with
-        | None -> None
-        | Some t -> Some (Constraint_js.string_of_t cx t)
-      in
-      let reasons =
-        possible_ts
-        |> List.map Constraint_js.reason_of_t
-      in
-      (None, Some (pos, ty, reasons))
+      (None, Some (TI.dump_types cx))
     with exn ->
-      let pos = mk_pos file line col in
-      let err = (pos, Printexc.to_string exn) in
+      let loc = mk_loc file 0 0 in
+      let err = (loc, Printexc.to_string exn) in
       (Some err, None)
-    ); in
+    ) in
     Marshal.to_channel oc (err, resp) [];
     flush oc
 
@@ -232,7 +240,7 @@ struct
     let suggest_for_file result_map file =
       (try
          let (file, region) = parse_suggest_cmd file in
-         let file = Path.string_of_path (Path.mk_path file) in
+         let file = Path.to_string (Path.make file) in
          let cx = Types_js.merge_strict_file file in
          let content = cat file in
          let lines = Str.split_delim (Str.regexp "\n") content in
@@ -274,7 +282,7 @@ struct
   let port =
     let port_for_file result_map file =
       (try
-        let file = Path.string_of_path (Path.mk_path file) in
+        let file = Path.to_string (Path.make file) in
         let ast = Parsing_service_js.get_ast_unsafe file in
         let content = cat file in
         let lines = Str.split_delim (Str.regexp "\n") content in
@@ -311,8 +319,8 @@ struct
 
   let get_def (file_input, line, col) oc =
     let file = ServerProt.file_input_get_filename file_input in
-    let pos = mk_pos file line col in
-    let state = GetDef_js.getdef_set_hooks pos in
+    let loc = mk_loc file line col in
+    let state = GetDef_js.getdef_set_hooks loc in
     (try
       let content = ServerProt.file_input_get_content file_input in
       let cx = match Types_js.typecheck_contents content file with
@@ -374,13 +382,20 @@ struct
     output_string oc "Not supported\n";
     flush oc
 
+  let search query oc =
+    let results = SearchService_js.query query in
+    Marshal.to_channel oc results [];
+    flush oc
+
   let respond genv env ~client ~msg =
-    let _, oc = client in
+    let oc = client.oc in
     match msg with
     | ServerProt.AUTOCOMPLETE fn ->
         autocomplete fn oc
     | ServerProt.CHECK_FILE fn ->
         check_file fn oc
+    | ServerProt.DUMP_TYPES fn ->
+        dump_types fn oc
     | ServerProt.ERROR_OUT_OF_DATE ->
         incorrect_hash oc
     | ServerProt.FIND_MODULES module_names ->
@@ -394,79 +409,58 @@ struct
     | ServerProt.INFER_TYPE (fn, line, char) ->
         infer_type (fn, line, char) oc
     | ServerProt.KILL ->
-        die_nicely oc
+        die_nicely genv oc
     | ServerProt.PING ->
         ServerProt.response_to_channel oc ServerProt.PONG
     | ServerProt.PORT (files) ->
         port files oc
+    | ServerProt.SEARCH query ->
+        search query oc
     | ServerProt.STATUS client_root ->
         print_status genv env client_root oc
     | ServerProt.SUGGEST (files) ->
         suggest files oc
 
-  let handle_connection_ genv env socket =
-    let cli, _ = Unix.accept socket in
-    let ic = Unix.in_channel_of_descr cli in
-    let oc = Unix.out_channel_of_descr cli in
-    let client = ic, oc in
-    let msg = ServerProt.cmd_from_channel ic in
-    let finished, _, _ = Unix.select [cli] [] [] 0.0 in
-    (if finished <> [] then () else begin
-      ServerPeriodical.stamp_connection();
-      respond genv env ~client ~msg;
-      (try Unix.close cli with e ->
-        Printf.fprintf stderr "Error: %s\n" (Printexc.to_string e);
-        flush stderr);
-    end)
-
-  let handle_connection genv env socket =
-    try handle_connection_ genv env socket
-    with
-    | Unix.Unix_error (e, _, _) ->
-        flush stdout
-    | e ->
-        flush stdout
-
-  (* Note: this single-file entry point is only called by
-     ServerMain.load currently, which Flow doesn't support.
-     so we ignore include paths here for now. *)
-  let filter_update genv _env update =
-    let flowconfig_path =
-      FlowConfig.fullpath (ServerArgs.root genv.ServerEnv.options) in
-    let abs = Relative_path.to_absolute update in
-    Files_js.is_flow_file abs || abs = flowconfig_path
+  let handle_client genv env client =
+    let msg = ServerProt.cmd_from_channel client.ic in
+    respond genv env ~client ~msg;
+    client.close ()
 
   let get_watch_paths options =
-    let config = FlowConfig.get (ServerArgs.root options) in
+    let config = FlowConfig.get (Options.root options) in
     config.FlowConfig.include_stems
 
   (* filter a set of updates coming from dfind and return
-     a Relative_path.Set. updates may be coming in from
+     a ServerEnv.PathSet. updates may be coming in from
      the root, or an include path. *)
   let process_updates genv env updates =
-    let root = ServerArgs.root (genv.ServerEnv.options) in
+    let root = Options.root (genv.ServerEnv.options) in
     let is_flow_file =
       let config_path = FlowConfig.fullpath root in
       fun f -> Files_js.is_flow_file f || f = config_path
     in
     let config = FlowConfig.get root in
-    let sroot = Path.string_of_path root in
+    let sroot = Path.to_string root in
     SSet.fold (fun f acc ->
       if is_flow_file f &&
         (* note: is_included may be expensive. check in-root match first. *)
         (str_starts_with f sroot || FlowConfig.is_included config f)
-      then Relative_path.(Set.add (create Dummy f) acc)
+      then ServerEnv.PathSet.add (Path.make f) acc
       else acc
-    ) updates Relative_path.Set.empty
+    ) updates ServerEnv.PathSet.empty
+
+  (* XXX: can some of the logic in process_updates be moved here? *)
+  let should_recheck _update = true
 
   (* on notification, execute client commands or recheck files *)
   let recheck genv env updates =
     let diff_js = updates in
-    if Relative_path.Set.is_empty diff_js
+    if ServerEnv.PathSet.is_empty diff_js
     then env
-    else
-      let diff_js = Relative_path.Set.fold (fun x a ->
-        SSet.add (Relative_path.to_absolute x) a) diff_js SSet.empty in
+    else begin
+      SearchService_js.clear updates;
+      let diff_js = ServerEnv.PathSet.fold (fun x a ->
+        SSet.add (Path.to_string x) a) diff_js SSet.empty in
       (* TEMP: if library files change, stop the server *)
       let modified_lib_files = SSet.inter diff_js (Files_js.get_lib_files ()) in
       if not (SSet.is_empty modified_lib_files)
@@ -478,12 +472,11 @@ struct
           name;
         exit 4
       end;
-      let options = OptionParser.get_flow_options () in
+      let server_env = Types_js.recheck genv env diff_js in
+      SearchService_js.update_from_master updates;
+      server_env
+    end
 
-      let n = SSet.cardinal diff_js in
-      prerr_endlinef "recheck %d files:" n;
-      let _ = SSet.fold (fun f i ->
-        prerr_endlinef "%d/%d: %s" i n f; i + 1) diff_js 1 in
+  let post_recheck_hook _genv _old_env _new_env _updates = ()
 
-      Types_js.recheck genv env diff_js options
 end

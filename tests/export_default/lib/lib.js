@@ -4,3 +4,6 @@ declare module M {
 declare module N {
     declare var x: number;
 }
+declare module Q {
+    declare var exports: $Exports<'M'>;
+}

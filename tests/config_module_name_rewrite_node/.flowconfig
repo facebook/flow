@@ -1,0 +1,23 @@
+[ignore]
+
+[include]
+
+[libs]
+
+[options]
+module.system=node
+
+module.name_mapper='1Doesnt\(Exist\)' -> '\1s'
+module.name_mapper='1Doesnt\(Exist\)'-> '\1s2'
+
+module.name_mapper='2Doesnt\(Exist\)' ->'\1s3'
+module.name_mapper='2Doesnt\(Exist\)'->'\1s'
+
+module.name_mapper='3Doesnt\(Exist\)' -> '\1s4'
+module.name_mapper='3Doesnt\(Exist\)' -> '\1s'
+
+module.name_mapper='4Doesnt\(Exist\)' -> '\1s'
+module.name_mapper='4Doesnt\(Exist\)' -> '\1s2'
+
+module.name_mapper='5Doesnt\(Exist\)' -> '\1s5'
+module.name_mapper='5Doesnt\(Exist\)' -> '\1s'
