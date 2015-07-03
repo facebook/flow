@@ -1065,18 +1065,20 @@ and expr_ ~in_cond ~(valkind: [> `lvalue | `rvalue | `other ]) env (p, e) =
   | Binop (Ast.Eq None, e1, e2) ->
       let env, ty2 = raw_expr in_cond env e2 in
       assign p env e1 ty2
-  | Binop ((Ast.AMpamp | Ast.BArbar as c), e1, e2) ->
-      let c = c = Ast.AMpamp in
+  | Binop ((Ast.AMpamp | Ast.BArbar as bop), e1, e2) ->
+      let c = bop = Ast.AMpamp in
       let lenv = env.Env.lenv in
-      let env, _ = expr env e1 in
+      let env, ty1 = expr env e1 in
       let env = condition env c e1 in
-      let env, _ = raw_expr in_cond env e2 in
+      let env, ty2 = raw_expr in_cond env e2 in
       let env = { env with Env.lenv = lenv } in
+      Typing_hooks.dispatch_binop_hook p bop ty1 ty2;
       env, (Reason.Rlogic_ret p, Tprim Tbool)
   | Binop (bop, e1, e2) ->
       let env, ty1 = raw_expr in_cond env e1 in
       let env, ty2 = raw_expr in_cond env e2 in
       let env, ty = binop in_cond p env bop (fst e1) ty1 (fst e2) ty2 in
+      Typing_hooks.dispatch_binop_hook p bop ty1 ty2;
       env, ty
   | Unop (uop, e) ->
       let env, ty = raw_expr in_cond env e in

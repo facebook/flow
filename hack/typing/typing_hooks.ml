@@ -8,6 +8,16 @@
  *
  *)
 
+let binop_hooks:
+  (
+    Pos.t ->
+    Ast.bop ->
+    Typing_defs.locl Typing_defs.ty ->
+    Typing_defs.locl Typing_defs.ty ->
+    unit
+  ) list ref
+  = ref []
+
 let (id_hooks: (Pos.t * string -> Typing_env.env -> unit) list ref) = ref []
 
 let (smethod_hooks: (Typing_defs.class_type -> Pos.t * string ->
@@ -56,6 +66,9 @@ let attach_smethod_hook hook =
 
 let attach_cmethod_hook hook =
   cmethod_hooks := hook :: !cmethod_hooks
+
+let attach_binop_hook hook =
+  binop_hooks := hook :: !binop_hooks
 
 let attach_id_hook hook =
   id_hooks := hook :: !id_hooks
@@ -114,6 +127,9 @@ let attach_class_def_hook enter_hook exit_hook =
       exit_class_def_hooks := hook :: !exit_class_def_hooks
   | None -> ()
 
+let dispatch_binop_hook p bop ty1 ty2 =
+  List.iter begin fun hook -> hook p bop ty1 ty2 end !binop_hooks
+
 let dispatch_id_hook id env =
   List.iter begin fun hook -> hook id env end !id_hooks
 
@@ -165,6 +181,7 @@ let dispatch_exit_class_def_hook cls cls_type =
   List.iter begin fun hook -> hook cls cls_type end !exit_class_def_hooks
 
 let remove_all_hooks () =
+  binop_hooks := [];
   id_hooks := [];
   cmethod_hooks := [];
   smethod_hooks := [];

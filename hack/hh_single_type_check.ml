@@ -283,8 +283,10 @@ let handle_mode mode filename nenv files_info errors lint_errors ai_results =
   | Color ->
       Relative_path.Map.iter begin fun fn fileinfo ->
         if fn = builtins_filename then () else begin
-          let result = ServerColorFile.get_level_list
-            (fun () -> ignore (ServerIdeUtils.check_defs nenv fileinfo); fn) in
+          let result = ServerColorFile.get_level_list begin fun () ->
+            ignore @@ Typing_check_utils.check_defs nenv fileinfo;
+            fn
+          end in
           print_colored fn result;
         end
       end files_info
@@ -327,7 +329,7 @@ let handle_mode mode filename nenv files_info errors lint_errors ai_results =
   | Suggest
   | Errors ->
       let errors = Relative_path.Map.fold begin fun _ fileinfo errors ->
-        errors @ ServerIdeUtils.check_defs nenv fileinfo
+        errors @ Typing_check_utils.check_defs nenv fileinfo
       end files_info errors in
       if mode = Suggest
       then Relative_path.Map.iter suggest_and_print files_info;
@@ -347,7 +349,7 @@ let main_hack { filename; mode; } =
   let outer_do f = match mode with
     | Ai ->
        let ai_results, inner_results =
-         Ai.do_ ServerIdeUtils.check_defs filename in
+         Ai.do_ Typing_check_utils.check_defs filename in
        ai_results, [], inner_results
     | _ ->
        let lint_results, inner_results = Lint.do_ f in

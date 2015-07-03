@@ -107,16 +107,11 @@ with e ->
   report_error e;
   ()
 
-let check_defs nenv {FileInfo.funs; classes; typedefs; _} =
-  fst (Errors.do_ (fun () ->
-    List.iter (fun (_, x) -> Typing_check_service.type_fun nenv x) funs;
-    List.iter (fun (_, x) -> Typing_check_service.type_class nenv x) classes;
-    List.iter (fun (_, x) -> Typing_check_service.check_typedef x) typedefs;
-  ))
-
 let recheck nenv fileinfo_l =
   SharedMem.invalidate_caches();
-  List.iter (fun defs -> ignore (check_defs nenv defs)) fileinfo_l
+  List.iter begin fun defs ->
+    ignore @@ Typing_check_utils.check_defs nenv defs
+  end fileinfo_l
 
 let check_file_input tcopt files_info fi =
   match fi with

@@ -46,7 +46,7 @@ let accumulate_types defs =
       Hashtbl.replace type_acc (p, kind) ty) expr_kind_opt))
     (fun () ->
       let nenv = Naming.empty (TypecheckerOptions.permissive) in
-      ignore (ServerIdeUtils.check_defs nenv defs));
+      ignore (Typing_check_utils.check_defs nenv defs));
   type_acc
 
 (* Returns a list of (file_name, assoc list of counts) *)

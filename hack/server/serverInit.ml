@@ -53,7 +53,7 @@ let init_hack genv env get_next =
 
   let errorl5, failed5 = if is_ai_mode then
       Hh_logger.measure "Ai" begin fun () ->
-        Ai.go ServerIdeUtils.check_defs files_info nenv
+        Ai.go Typing_check_utils.check_defs files_info nenv
       end
     else
       [], Relative_path.Set.empty in
