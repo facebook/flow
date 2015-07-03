@@ -1205,8 +1205,8 @@ and statement_decl cx = Ast.Statement.(
         | ImportDeclaration.ImportTypeof -> "import typeof", true
         | ImportDeclaration.ImportValue -> "import", false
       ) in
-      (
-        match default with
+
+      (match default with
         | Some(_, local_ident) ->
           let local_name = local_ident.Ast.Identifier.name in
           let reason_str =
@@ -1219,47 +1219,45 @@ and statement_decl cx = Ast.Statement.(
             (Scope.create_entry ~for_type:isType tvar tvar (Some loc))
           in
           Env_js.init_var cx local_name env_entry
-        | None -> (
-          match specifier with
-          | Some(ImportDeclaration.Named(_, named_specifiers)) ->
-            let init_specifier (specifier_loc, specifier) = (
-              let (loc, remote_ident) =
-                specifier.ImportDeclaration.NamedSpecifier.id
-              in
-              let remote_name = remote_ident.Ast.Identifier.name in
-              let (local_name, reason) = (
-                match specifier.ImportDeclaration.NamedSpecifier.name with
-                | Some(_, { Ast.Identifier.name = local_name; _; }) ->
-                  let reason_str =
-                    spf "%s { %s as %s }" import_str remote_name local_name
-                  in
-                  (local_name, (mk_reason reason_str loc))
-                | None ->
-                  let reason_str = spf "%s { %s }" import_str remote_name in
-                  (remote_name, (mk_reason reason_str loc))
-              ) in
-              let tvar = Flow_js.mk_tvar cx reason in
-              let env_entry =
-                Scope.create_entry ~for_type:isType tvar tvar (Some specifier_loc)
-              in
-              Env_js.init_var cx local_name env_entry;
-            ) in
-            List.iter init_specifier named_specifiers
-          | Some(ImportDeclaration.NameSpace(_, (loc, local_ident))) ->
-            let local_name = local_ident.Ast.Identifier.name in
-            let reason =
-              mk_reason (spf "%s * as %s" import_str local_name) loc
+        | None -> ()
+      );
+
+      (match specifier with
+        | Some(ImportDeclaration.Named(_, named_specifiers)) ->
+          let init_specifier (specifier_loc, specifier) = (
+            let (loc, remote_ident) =
+              specifier.ImportDeclaration.NamedSpecifier.id
             in
+            let remote_name = remote_ident.Ast.Identifier.name in
+            let (local_name, reason) = (
+              match specifier.ImportDeclaration.NamedSpecifier.name with
+              | Some(_, { Ast.Identifier.name = local_name; _; }) ->
+                let reason_str =
+                  spf "%s { %s as %s }" import_str remote_name local_name
+                in
+                (local_name, (mk_reason reason_str loc))
+              | None ->
+                let reason_str = spf "%s { %s }" import_str remote_name in
+                (remote_name, (mk_reason reason_str loc))
+            ) in
             let tvar = Flow_js.mk_tvar cx reason in
             let env_entry =
-              Scope.create_entry ~for_type:isType tvar tvar (Some loc)
+              Scope.create_entry ~for_type:isType tvar tvar (Some specifier_loc)
             in
-            Env_js.init_var cx local_name env_entry
-          | None -> failwith (
-            "Parser error: Non-default imports must always have a " ^
-            "specifier!"
-          )
-        )
+            Env_js.init_var cx local_name env_entry;
+          ) in
+          List.iter init_specifier named_specifiers
+        | Some(ImportDeclaration.NameSpace(_, (loc, local_ident))) ->
+          let local_name = local_ident.Ast.Identifier.name in
+          let reason =
+            mk_reason (spf "%s * as %s" import_str local_name) loc
+          in
+          let tvar = Flow_js.mk_tvar cx reason in
+          let env_entry =
+            Scope.create_entry ~for_type:isType tvar tvar (Some loc)
+          in
+          Env_js.init_var cx local_name env_entry
+        | None -> ()
       )
 )
 
@@ -2458,68 +2456,65 @@ and statement cx = Ast.Statement.(
             loc
           in
           set_imported_binding reason local_name imported_t
-        | None -> (
-          match specifier with
-          | Some(ImportDeclaration.Named(_, named_specifiers)) ->
-            let import_specifier (specifier_loc, specifier) = (
-              let (remote_ident_loc, remote_ident) =
-                specifier.ImportDeclaration.NamedSpecifier.id
-              in
-              let remote_name = remote_ident.Ast.Identifier.name in
+        | None -> ()
+      );
 
-              let get_reason_str =
-                spf "\"%s\" export of \"%s\"" remote_name module_name
-              in
-
-              let (local_name, get_reason, set_reason) = (
-                match specifier.ImportDeclaration.NamedSpecifier.name with
-                | Some(local_ident_loc, { Ast.Identifier.name = local_name; _; }) ->
-                  let get_reason = mk_reason get_reason_str remote_ident_loc in
-                  let set_reason = mk_reason
-                    (spf "%s { %s as %s }" import_str remote_name local_name)
-                    specifier_loc
-                  in
-                  (local_name, get_reason, set_reason)
-                | None ->
-                  let get_reason = mk_reason get_reason_str specifier_loc in
-                  let set_reason = mk_reason
-                    (spf "%s { %s }" import_str remote_name)
-                    specifier_loc
-                  in
-                  (remote_name, get_reason, set_reason)
-              ) in
-              let imported_t = get_imported_t get_reason set_reason remote_name in
-
-              set_imported_binding get_reason local_name imported_t
-            ) in
-            List.iter import_specifier named_specifiers
-          | Some(ImportDeclaration.NameSpace(_, (ident_loc, local_ident))) ->
-            let local_name = local_ident.Ast.Identifier.name in
-            let reason = mk_reason
-              (spf "%s * as %s" import_str local_name)
-              ident_loc
+      (match specifier with
+        | Some(ImportDeclaration.Named(_, named_specifiers)) ->
+          let import_specifier (specifier_loc, specifier) = (
+            let (remote_ident_loc, remote_ident) =
+              specifier.ImportDeclaration.NamedSpecifier.id
             in
-            if isType then (
-              (**
-               * TODO: `import type * as` really doesn't make much sense with
-               *        our current CommonJS interop table. Here we support
-               *        this in the same way we treat import-default as a
-               *        temporary means of transitioning our old interop table
-               *        to the new one. Once the transition is finished, we
-               *        should make `import type * as` a hard error.
-               *)
-              let module_ = Module_js.imported_module cx.file module_name in
-              let module_type = require cx module_ module_name source_loc in
-              set_imported_binding reason local_name module_type
-            ) else (
-              set_imported_binding reason local_name module_ns_tvar
-            )
-          | None ->
-            failwith (
-              "Parser error: Non-default imports must always have a " ^
-              "specifier!"
-            )
-        )
+            let remote_name = remote_ident.Ast.Identifier.name in
+
+            let get_reason_str =
+              spf "\"%s\" export of \"%s\"" remote_name module_name
+            in
+
+            let (local_name, get_reason, set_reason) = (
+              match specifier.ImportDeclaration.NamedSpecifier.name with
+              | Some(local_ident_loc, { Ast.Identifier.name = local_name; _; }) ->
+                let get_reason = mk_reason get_reason_str remote_ident_loc in
+                let set_reason = mk_reason
+                  (spf "%s { %s as %s }" import_str remote_name local_name)
+                  specifier_loc
+                in
+                (local_name, get_reason, set_reason)
+              | None ->
+                let get_reason = mk_reason get_reason_str specifier_loc in
+                let set_reason = mk_reason
+                  (spf "%s { %s }" import_str remote_name)
+                  specifier_loc
+                in
+                (remote_name, get_reason, set_reason)
+            ) in
+            let imported_t = get_imported_t get_reason set_reason remote_name in
+
+            set_imported_binding get_reason local_name imported_t
+          ) in
+          List.iter import_specifier named_specifiers
+        | Some(ImportDeclaration.NameSpace(_, (ident_loc, local_ident))) ->
+          let local_name = local_ident.Ast.Identifier.name in
+          let reason = mk_reason
+            (spf "%s * as %s" import_str local_name)
+            ident_loc
+          in
+          if isType then (
+            (**
+             * TODO: `import type * as` really doesn't make much sense with
+             *        our current CommonJS interop table. Here we support
+             *        this in the same way we treat import-default as a
+             *        temporary means of transitioning our old interop table
+             *        to the new one. Once the transition is finished, we
+             *        should make `import type * as` a hard error.
+             *)
+            let module_ = Module_js.imported_module cx.file module_name in
+            let module_type = require cx module_ module_name source_loc in
+            set_imported_binding reason local_name module_type
+          ) else (
+            set_imported_binding reason local_name module_ns_tvar
+          )
+        | None -> ()
       )
 )
 

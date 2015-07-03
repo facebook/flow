@@ -251,3 +251,21 @@ var aq2: string = numberValue2_renamed2; // Error: number ~> string
 var numberValue7 = require("ES6_ExportAllFrom_Intermediary2").numberValue1;
 var ar1: number = numberValue7;
 var ar2: string = numberValue7; // Error: number ~> string
+
+////////////////////////////////////////////////////////
+// == ES6 Default+Named -> ES6 import Default+Named== //
+////////////////////////////////////////////////////////
+
+import defaultNum, {str as namedStr} from "./ES6_DefaultAndNamed";
+
+var as1: number = defaultNum;
+var as2: string = defaultNum; // Error: number ~> string
+
+var as3: string = namedStr;
+var as4: number = namedStr; // Error: string ~> number
+
+////////////////////////////////////////
+// == Side-effect only ES6 imports == //
+////////////////////////////////////////
+
+import "./SideEffects";
