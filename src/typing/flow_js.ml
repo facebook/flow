@@ -1195,7 +1195,7 @@ let rec assert_ground ?(infer=false) cx skip ids = function
        | None -> ()
       )
 
-  | AnnotT(assert_t, assume_t) ->
+  | AnnotT (sink_t, source_t) ->
       (* don't ask for an annotation if one is already provided :) *)
       (** TODO: one of the uses of derivable_reason was to mark type variables
           that represented annotations so that they could be ignored. Since we
@@ -1442,14 +1442,17 @@ let rec __flow cx (l, u) trace =
     (* annotations *)
     (***************)
 
-    (** The assert and assume parts of an annotation constrain values flowing in
-        and uses flowing out, respectively **)
+    (* The sink component of an annotation constrains values flowing
+       into the annotated site. *)
 
-    | _, AnnotT(assert_t, _) ->
-      rec_flow cx trace (l, assert_t)
+    | _, AnnotT (sink_t, _) ->
+      rec_flow cx trace (l, sink_t)
 
-    | AnnotT(_, assume_t), u ->
-      rec_flow cx trace (assume_t, u)
+    (* The source component of an annotation flows out of the annotated
+       site to downstream uses. *)
+
+    | AnnotT (_, source_t), u ->
+      rec_flow cx trace (source_t, u)
 
     (****************************************************************)
     (* BecomeT unifies a tvar with an incoming concrete lower bound *)
@@ -3493,8 +3496,8 @@ and subst cx ?(force=true) (map: Type.t SMap.t) t =
   | TypeT (reason, t) ->
     TypeT (reason, subst cx ~force map t)
 
-  | AnnotT (assert_t, assume_t) ->
-    AnnotT (subst cx ~force map assert_t, subst cx ~force map assume_t)
+  | AnnotT (sink_t, source_t) ->
+    AnnotT (subst cx ~force map sink_t, subst cx ~force map source_t)
 
   | InstanceT (reason, static, super, instance) ->
     InstanceT (
@@ -4764,18 +4767,19 @@ and mk_typeapp_instance cx reason ?(cache=false) c ts =
    processing an extends). *)
 and mk_instance cx instance_reason ?(for_type=true) c =
   if for_type then
-    (* Make an annotation. Part of this operation is similar to making a runtime
-       value (see below), except that for annotations, we must ensure that
-       values flowing in do not directly flow to uses flowing out. *)
-    let assume_t = mk_tvar_where cx instance_reason (fun t ->
+    (* Make an annotation. Part of this operation is similar to making
+       a runtime value type (see below), except that for annotations,
+       we must ensure that values flowing into the annotated site do
+       not interact with downstream uses of it. *)
+    let source_t = mk_tvar_where cx instance_reason (fun t ->
       (* this part is similar to making a runtime value *)
       flow_opt cx (c, TypeT(instance_reason,t))
     ) in
-    let assert_t = mk_tvar_where cx instance_reason (fun t ->
-    (* when assume_t is concrete, unify with assert_t *)
-      flow_opt cx (assume_t, UnifyT(assume_t, t))
+    let sink_t = mk_tvar_where cx instance_reason (fun t ->
+      (* when source_t is concrete, unify with sink_t *)
+      flow_opt cx (source_t, UnifyT(source_t, t))
     ) in
-    AnnotT (assert_t, assume_t)
+    AnnotT (sink_t, source_t)
   else
     mk_tvar_derivable_where cx instance_reason (fun t ->
       flow_opt cx (c, ClassT(t))

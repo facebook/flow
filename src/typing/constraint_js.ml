@@ -140,19 +140,65 @@ module Type = struct
   | TypeT of reason * t
 
   (* annotations *)
-  (** An annotation is characterized by an "assert" type that constrains values
-      flowing in to the annotation, and an "assume" type that constrains uses
-      flowing out of the annotation. These types are logically the same type,
-      and the distinction is unnecessary when they are already
-      concrete. However, when they are not yet concrete, i.e., they are type
-      variables, and having them be the same has the unintended effect of making
-      the annotation "translucent": values flowing in to the annotation and uses
-      flowing out of the annotation interact directly, without necessarily going
-      through the annotation! This causes some spurious errors, especially when
-      annotations are deliberately lenient, and overall reduces the programmer's
-      control over errors via annotations. Thus, we distinguish the assert and
-      assume types while they are type variables, and unify them only once they
-      becomes concrete. **)
+  (**
+      A type that annotates a storage location performs two functions:
+      * it constrains the types of values stored into the location
+      * it masks the actual type of values retrieved from the location,
+      giving instead a pro forma type which all such values are
+      considered as having.
+
+      In the former role, the annotated type behaves as an upper bound
+      interacting with inflowing lower bounds - these interactions may
+      occur e.g. as a result of values being stored to type-annotated
+      variables, or arguments flowing to type-annotated parameters.
+
+      In the latter role, the annotated type behaves as a lower bound,
+      flowing to sites where values stored in the annotated location are
+      used (such as users of a variable, or users of a parameter within
+      a function body).
+
+      When a type annotation resolves immediately to a concrete type
+      (say, number = NumT or string = StrT), this single type would
+      suffice to perform both roles. However, when an annotation has
+      not yet been resolved, we can't simply use a type variable as a
+      placeholder as we can elsewhere.
+
+      TL;DR type variables are conductors; annotated types are insulators. :)
+
+      For an annotated type, we must collect incoming lower bounds and
+      downstream upper bounds without allowing them to interact with each
+      other. If we did, the annotation would be "translucent", leaking
+      type information about incoming values - failing to perform the
+      second of the two roles noted above.
+
+      Using a single type variable would allow exactly this propagation:
+      it's essentially what type variables do.
+
+      To accomplish the desired insulation we represent an annotation with
+      a pair of type variables: a "sink" that collects lower bounds flowing
+      into the annotation, and a "source" that collects downstream uses of
+      the annotated location as upper bounds.
+
+      The source tvar is linked to the unresolved definition's tvar.
+      When that definition is resolved, the concrete type will flow
+      into the annotation's source tvar as a lower bound.
+      At that point two things will happen:
+
+      * the source tvar will (as usual) evaluate the concrete definition
+      against its accumulated upper bounds - this checks downstream use
+      sites for compatibility with the annotated type.
+
+      * a UnifyT edge, put in place at the time the AnnotT was built,
+      will trigger a unification of the source and sink tvars. Critically,
+      this will cause the concrete definition type to appear in the sink
+      as an upper bound, prompting the check of all inflowing lower bounds
+      against it.
+
+      Of course, inflowing lower bounds and downstream upper bounds may
+      continue to accumulate following this unification. As they do,
+      they'll be checked against their respective sides of the bonded pair
+      as usual.
+  **)
   | AnnotT of t * t
 
   (* failure case for speculative matching *)
