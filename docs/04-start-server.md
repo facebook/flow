@@ -1,0 +1,70 @@
+---
+id: cli
+title: Using the CLI
+layout: docs
+permalink: /docs/cli.html
+prev: cli.html
+---
+
+The flow command line tool is made to be easy-to-use for the simple case.
+
+Just using the command `flow` will type-check your current directory if the `.flowconfig` file is present.
+A flow server will automatically be started if needed.
+
+However, the cli tool gives you a more control if you want, and also has the ability to provide tools to build your own IDE plug-ins which work like [Nuclide](http://nuclide.io).
+
+To find out more about the CLI just type:
+
+```
+flow --help
+```
+
+This will give you information about everything that flow can do. Running this command should print something like this:
+
+```
+Usage: flow [COMMAND]
+
+Valid values for COMMAND:
+  ast             Print the AST
+  autocomplete    Queries autocompletion information
+  check           Does a full Flow check and prints the results
+  check-contents  Run typechecker on contents from stdin
+  find-module     Shows filenames for one or more modules
+  get-def         Gets the definition location of a variable or property
+  get-importers   Gets a list of all importers for one or more given modules
+  get-imports     Get names of all modules imported by one or more given modules
+  init            Initializes a directory to be used as a flow root directory
+  port            Shows ported type annotations for given files
+  search          Searches a pattern
+  server          Runs a Flow server in the foreground
+  single          Does a single-threaded check (testing)
+  start           Starts a Flow server
+  status          (default) Shows current Flow errors by asking the Flow server
+  stop            Stops a Flow server
+  suggest         Shows type annotation suggestions for given files
+  type-at-pos     Shows the type at a given file and position
+
+Default values if unspecified:
+  COMMAND	status
+
+Status command options:
+  --color            Display terminal output in color. never, always, auto (default: auto)
+  --from             Specify client (for use by editor plugins)
+  --help             This list of options
+  --json             Output results in JSON format
+  --no-auto-start    If the server if it is not running, do not start it; just exit
+  --one-line         Escapes newlines so that each error prints on one line
+  --retries          Set the number of retries. (default: 3)
+  --retry-if-init    retry if the server is initializing (default: true)
+  --show-all-errors  Print all errors (the default is to truncate after 50 errors)
+  --timeout          Maximum time to wait, in seconds
+  --version          Print version number and exit
+```
+
+You can then, further dig into particular COMMANDS by adding using the `--help` flag.
+
+So for example, if you want to know more about how the autocomplete works, you can use this command:
+
+```
+flow autocomplete --help
+```
