@@ -64,7 +64,7 @@
     title: Primitives
   - id: declarations
     title: Declarations
-- title: CLI documentation
+- title: CLI
   items:
-  - id: start-server
-    title: Start Flow Server
+  - id: cli
+    title: Using the CLI
