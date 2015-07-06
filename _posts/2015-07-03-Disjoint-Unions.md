@@ -20,11 +20,11 @@ type BinaryTree =
   { kind: "leaf", value: number } |
   { kind: "branch", left: BinaryTree, right: BinaryTree }
 
-function countLeaves(tree: BinaryTree): number {
+function sumLeaves(tree: BinaryTree): number {
   if (tree.kind === "leaf") {
-    return 1;
+    return tree.value;
   } else {
-    return countLeaves(tree.left) + countLeaves(tree.right);
+    return sumLeaves(tree.left) + sumLeaves(tree.right);
   }
 }
 ```
