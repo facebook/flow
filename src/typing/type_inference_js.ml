@@ -3178,12 +3178,6 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
   | Call {
       Call.callee = _, Identifier (_, { Ast.Identifier.name = "merge"; _ });
       arguments
-    }
-      (* TODO: require *)
-  | Call {
-      Call.callee = _, Identifier (_,
-        { Ast.Identifier.name = "mergeObjects"; _ });
-      arguments
     } ->
       (* TODO: require *)
       let argts = List.map (expression_or_spread cx) arguments in
