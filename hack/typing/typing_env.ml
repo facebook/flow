@@ -217,13 +217,13 @@ let rec debug stack env (r, ty) =
   | Tvar x ->
       let env, x = get_var env x in
       if ISet.mem x stack
-      then o (Ident.debug x)
+      then o (Ident.debug ~normalize:get_printable_tvar_id x)
       else
         let stack = ISet.add x stack in
         let _, y = get_var env x in
         o "["; o (string_of_int (get_printable_tvar_id y)); o "]";
         (match get_type env x with
-        | _, (_, Tany) -> o (Ident.debug x)
+        | _, (_, Tany) -> o (Ident.debug ~normalize:get_printable_tvar_id x)
         | _, ty -> debug stack env ty)
   | Tobject -> o "object"
   | Tshape (fields_known, fdm) ->
