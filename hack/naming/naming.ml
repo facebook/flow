@@ -840,6 +840,9 @@ and hint_id ~allow_this ~allow_retonly env is_static_var (p, x as id) hl =
             Errors.this_must_be_return p
         );
         N.Hany
+    | x when x = SN.Classes.cClassname && (List.length hl) <> 1 ->
+        Errors.classname_param p;
+        N.Hprim N.Tstring
     | _ when String.lowercase x = SN.Typehints.this ->
         Errors.lowercase_this p x;
         N.Hany

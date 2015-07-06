@@ -297,6 +297,9 @@ and sub_type_with_uenv env (uenv_super, ty_super) (uenv_sub, ty_sub) =
   | (_, Tabstract (AKgeneric (_, Some _), _)),
       (_, Tabstract (AKgeneric _, _)) ->
       typevars_subtype env (uenv_super, ety_super) (uenv_sub, ety_sub)
+  | (_, Tclass ((_, stringish), _)), (_, Tabstract (ak, _))
+    when stringish = SN.Classes.cStringish &&
+      AbstractKind.is_classname ak -> env
   | (p_super, (Tclass (x_super, tyl_super) as ty_super_)),
       (p_sub, (Tclass (x_sub, tyl_sub) as ty_sub_))
       when Typing_env.get_enum_constraint (snd x_sub) = None  ->
@@ -383,6 +386,8 @@ and sub_type_with_uenv env (uenv_super, ty_super) (uenv_sub, ty_sub) =
   | (_, Tmixed), _ -> env
   | (_, Tprim Nast.Tnum), (_, Tprim (Nast.Tint | Nast.Tfloat)) -> env
   | (_, Tprim Nast.Tarraykey), (_, Tprim (Nast.Tint | Nast.Tstring)) -> env
+  | (_, Tprim Nast.Tstring), (_, Tabstract (ak, _))
+    when AbstractKind.is_classname ak -> env
   | (_, Tclass ((_, coll), [tv_super])), (_, Tarray (ty3, ty4))
     when (coll = SN.Collections.cTraversable ||
         coll = SN.Collections.cContainer) ->
@@ -483,6 +488,7 @@ and sub_type_with_uenv env (uenv_super, ty_super) (uenv_sub, ty_sub) =
   | (_, Tabstract (AKnewtype (name_super, tyl_super), _)),
     (_, Tabstract (AKnewtype (name_sub, tyl_sub), _))
     when name_super = name_sub ->
+    (* XXX: is a special case needed for 'classname' ? *)
       let td = Env.get_typedef env name_super in
       (match td with
       | Some (DefsDB.Typedef.Ok (_, tparams, _, _, _)) ->
@@ -575,6 +581,9 @@ and sub_string p env ty2 =
       List.fold_left (sub_string p) env tyl
   | (_, Tprim _) ->
       env
+  | (_, Tabstract (ak, _)) when AbstractKind.is_classname ak ->
+    (* A classname is the string 'Foo' obtained via Foo::class *)
+    env
   | (_, Tabstract (_, Some ty)) ->
       sub_string p env ty
   | (r2, Tclass (x, _)) ->

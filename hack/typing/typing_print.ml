@@ -53,15 +53,17 @@ module ErrorString = struct
     | Tanon _    -> "a function"
     | Tfun _     -> "a function"
     | Tgeneric (x, _)    -> "a value of generic type "^x
+    | Tabstract (ak, _)
+        when AbstractKind.is_classname ak -> "a classname string"
     | Tabstract (ak, cstr) -> abstract ak cstr
-    | Tclass ((_, x), _) ->
-       "an object of type "^(strip_ns x)
+    | Tclass ((_, x), _) -> "an object of type "^(strip_ns x)
+    | Tapply ((_, x), _)
+        when x = SN.Classes.cClassname -> "a classname string"
     | Tapply ((_, x), _) -> "an object of type "^(strip_ns x)
     | Tobject            -> "an object"
     | Tshape _           -> "a shape"
     | Taccess (root_ty, ids) -> tconst root_ty ids
     | Tthis -> "the type 'this'"
-
 
   and array: type a. a ty option * a ty option -> _ = function
     | None, None     -> "an array"

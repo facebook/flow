@@ -21,6 +21,7 @@ module Env = Typing_env
 module TUtils = Typing_utils
 module Inst = Typing_instantiate
 module Phase = Typing_phase
+module SN = Naming_special_names
 
 (*****************************************************************************)
 (* Helpers *)
@@ -303,12 +304,13 @@ let check_consts env parent_class class_ psubst subst =
   let env, consts = instantiate_members subst env consts in
   let check_const_override = check_override env ~check_for_const:true parent_class class_ in
   SMap.iter begin fun const_name parent_const ->
-    match SMap.get const_name consts with
-      | Some const -> check_const_override parent_const const
-      | None ->
-        let parent_pos = Reason.to_pos (fst parent_const.ce_type) in
-        Errors.member_not_implemented const_name parent_pos
-          class_.tc_pos parent_class.tc_pos
+    if const_name <> SN.Members.mClass then
+      match SMap.get const_name consts with
+        | Some const -> check_const_override parent_const const
+        | None ->
+          let parent_pos = Reason.to_pos (fst parent_const.ce_type) in
+          Errors.member_not_implemented const_name parent_pos
+            class_.tc_pos parent_class.tc_pos;
   end pconsts;
   ()
 
@@ -352,4 +354,4 @@ let check_implements env parent_type type_ =
         (fun errorl ->
           let p_name_pos, p_name_str = parent_name in
           let name_pos, name_str = name in
-          Errors.override p_name_pos p_name_str name_pos name_str errorl)
+          Errors.bad_decl_override p_name_pos p_name_str name_pos name_str errorl)

@@ -40,6 +40,7 @@ module Classes = struct
 
   let cStringish = "\\Stringish"
   let cXHPChild = "\\XHPChild"
+  let cClassname = "\\classname"
 end
 
 module Collections = struct

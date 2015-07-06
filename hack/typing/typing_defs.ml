@@ -417,6 +417,10 @@ module AbstractKind = struct
          | `cls c -> c
          | `expr i -> "<expr#"^string_of_int i^">" in
        String.concat "::" (dt::ids)
+  let is_classname = function
+    | AKnewtype (name, _) -> (name = Naming_special_names.Classes.cClassname)
+    | AKgeneric _ -> false
+    | AKdependent _ -> false
 end
 
 (*****************************************************************************)

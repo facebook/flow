@@ -54,6 +54,7 @@ val this_no_argument : Pos.t -> unit
 val this_hint_outside_class : Pos.t -> unit
 val this_must_be_return : Pos.t -> unit
 val lowercase_this : Pos.t -> string -> unit
+val classname_param : Pos.t -> unit
 val tparam_with_tparam : Pos.t -> string -> unit
 val shadowed_type_param : Pos.t -> Pos.t -> string -> unit
 val missing_typehint : Pos.t -> unit
@@ -228,7 +229,7 @@ val case_fallthrough : Pos.t -> Pos.t -> unit
 val default_fallthrough : Pos.t -> unit
 val visibility_extends : string -> Pos.t -> Pos.t -> string -> unit
 val member_not_implemented : string -> Pos.t -> Pos.t -> Pos.t -> unit
-val override : Pos.t -> string -> Pos.t -> string -> error -> unit
+val bad_decl_override : Pos.t -> string -> Pos.t -> string -> error -> unit
 val missing_constructor : Pos.t -> unit
 val enum_constant_type_bad : Pos.t -> Pos.t -> string -> Pos.t list -> unit
 val enum_type_bad : Pos.t -> string -> Pos.t list -> unit

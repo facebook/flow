@@ -127,7 +127,8 @@ let builtins = "<?hh // decl\n"^
   "  public static function idx(shape() $shape, arraykey $index, $default = null) {}\n" ^
   "  public static function keyExists(shape() $shape, arraykey $index): bool {}\n" ^
   "  public static function removeKey(shape() $shape, arraykey $index): void {}\n" ^
-  "}\n"
+  "}\n" ^
+  "newtype classname<+T> = string;\n"
 
 (*****************************************************************************)
 (* Helpers *)

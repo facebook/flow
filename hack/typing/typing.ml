@@ -2911,17 +2911,18 @@ and static_class_id p env = function
       let env, ty = expr env e in
       let env, ty = TUtils.fold_unresolved env ty in
       let _, ty = Env.expand_type env ty in
-      let ty =
-        match TUtils.get_base_type ty with
+      let ty = match TUtils.get_base_type ty with
+        | _, Tabstract (AKnewtype (classname, [ty]), _) when
+            classname = SN.Classes.cClassname -> ty
         | _, Tabstract (_, Some (_, Tclass _))
         | _, Tclass _ -> ty
         | _, (Tany | Tmixed | Tarray (_, _) | Toption _
-          | Tprim _ | Tvar _ | Tfun _ | Tabstract (_, _) | Ttuple _
-          | Tanon (_, _) | Tunresolved _ | Tobject | Tshape _
-          ) ->
-            if Env.get_mode env = FileInfo.Mstrict
-            then Errors.dynamic_class p;
-            Reason.Rnone, Tany
+                 | Tprim _ | Tvar _ | Tfun _ | Tabstract (_, _) | Ttuple _
+                 | Tanon (_, _) | Tunresolved _ | Tobject | Tshape _
+        ) ->
+          if Env.get_mode env = FileInfo.Mstrict
+          then Errors.dynamic_class p;
+          Reason.Rnone, Tany
       in env, ty
 
 and call_construct p env class_ params el uel cid =
