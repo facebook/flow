@@ -84,6 +84,7 @@ and tprim =
   | Tbool
   | Tfloat
   | Tstring
+  | Tclassname of string (* C::class *)
   | Tresource
   | Tnum
   | Tarraykey

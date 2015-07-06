@@ -385,8 +385,9 @@ and sub_type_with_uenv env (uenv_super, ty_super) (uenv_sub, ty_sub) =
     end
   | (_, Tmixed), _ -> env
   | (_, Tprim Nast.Tnum), (_, Tprim (Nast.Tint | Nast.Tfloat)) -> env
-  | (_, Tprim Nast.Tarraykey), (_, Tprim (Nast.Tint | Nast.Tstring)) -> env
-  | (_, Tprim Nast.Tstring), (_, Tabstract (ak, _))
+  | (_, Tprim Nast.Tarraykey), (_, Tprim (Nast.Tint | Nast.Tstring | Nast.Tclassname _)) -> env
+  | (_, Tprim Nast.Tstring), (_, Tprim (Nast.Tclassname _)) -> env
+  | (_, Tprim (Nast.Tstring | Nast.Tarraykey)), (_, Tabstract (ak, _))
     when AbstractKind.is_classname ak -> env
   | (_, Tclass ((_, coll), [tv_super])), (_, Tarray (ty3, ty4))
     when (coll = SN.Collections.cTraversable ||
@@ -414,13 +415,10 @@ and sub_type_with_uenv env (uenv_super, ty_super) (uenv_sub, ty_sub) =
               sub_type env tv_super ty4
           )
       )
-  | (_, Tclass ((_, stringish), _)), (_, Tprim Nast.Tstring)
+  | (_, Tclass ((_, stringish), _)), (_, Tprim (Nast.Tstring | Nast.Tclassname _))
     when stringish = SN.Classes.cStringish -> env
   | (_, Tclass ((_, xhp_child), _)), (_, Tarray _)
-  | (_, Tclass ((_, xhp_child), _)), (_, Tprim Nast.Tint)
-  | (_, Tclass ((_, xhp_child), _)), (_, Tprim Nast.Tfloat)
-  | (_, Tclass ((_, xhp_child), _)), (_, Tprim Nast.Tstring)
-  | (_, Tclass ((_, xhp_child), _)), (_, Tprim Nast.Tnum)
+  | (_, Tclass ((_, xhp_child), _)), (_, Tprim (Nast.Tint | Nast.Tfloat | Nast.Tstring | Nast.Tclassname _ | Nast.Tnum))
     when xhp_child = SN.Classes.cXHPChild -> env
   | (_, (Tarray (Some ty_super, None))), (_, (Tarray (Some ty_sub, None))) ->
       sub_type env ty_super ty_sub
@@ -485,10 +483,16 @@ and sub_type_with_uenv env (uenv_super, ty_super) (uenv_sub, ty_sub) =
         (env, None)
         (r_super, fields_known_super, fdm_super)
         (r_sub, fields_known_sub, fdm_sub))
+  | (_, Tabstract (AKnewtype (name_classname, [tyl1]), _)),
+    (r_sub, Tprim (Nast.Tclassname name_cls))
+    when name_classname = SN.Classes.cClassname ->
+    (* XXX: Do we need to look up the class and add missing Tanys? *)
+    let p_sub = Reason.to_pos r_sub in
+    let ty_cls = r_sub, Tclass ((p_sub, name_cls), []) in
+    sub_type env tyl1 ty_cls
   | (_, Tabstract (AKnewtype (name_super, tyl_super), _)),
     (_, Tabstract (AKnewtype (name_sub, tyl_sub), _))
     when name_super = name_sub ->
-    (* XXX: is a special case needed for 'classname' ? *)
       let td = Env.get_typedef env name_super in
       (match td with
       | Some (DefsDB.Typedef.Ok (_, tparams, _, _, _)) ->

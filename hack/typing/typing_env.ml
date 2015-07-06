@@ -203,6 +203,7 @@ let rec debug stack env (r, ty) =
       | Tbool -> o "Tbool"
       | Tfloat -> o "Tfloat"
       | Tstring -> o "Tstring"
+      | Tclassname s -> o "Tclassname<"; o s; o ">"
       | Tnum -> o "Tnum"
       | Tresource -> o "Tresource"
       | Tarraykey -> o "Tarraykey"
