@@ -25,7 +25,7 @@ val flow: context -> (Type.t * Type.t) -> unit
 
 val unify: context -> Type.t -> Type.t -> unit
 
-val master_cx: context
+val master_cx: unit -> context
 
 module Cache: sig
   val clear: unit -> unit
@@ -103,7 +103,7 @@ val fresh_context:
 
 (* builtins *)
 
-val builtins: Type.t
+val builtins: unit -> Type.t
 val get_builtin: context -> string -> reason -> Type.t
 val lookup_builtin: context -> string -> reason -> reason option -> Type.t -> unit
 val get_builtin_type: context -> reason -> string -> Type.t

@@ -455,7 +455,8 @@ let merge_strict workers files opts =
     (fun t -> spf "merged (strict) %d files in %f" (List.length files) t)
     (fun () ->
       (* NOTE: master_cx will only be saved once per server lifetime *)
-      ContextHeap.add Flow_js.master_cx.file Flow_js.master_cx;
+      let master_cx = Flow_js.master_cx () in
+      ContextHeap.add master_cx.file master_cx;
       (* returns parallel lists of filenames and errorsets *)
       let (files, errsets) = MultiWorker.call
         workers
@@ -465,8 +466,8 @@ let merge_strict workers files opts =
         ~next: (Bucket.make_20 files) in
       (* collect master context errors *)
       let (files, errsets) = (
-        Flow_js.master_cx.file :: files,
-        Flow_js.master_cx.errors :: errsets
+        master_cx.file :: files,
+        master_cx.errors :: errsets
       ) in
       (* save *)
       save_errors_or_suppressions merge_errors files errsets
@@ -496,10 +497,11 @@ let merge_nonstrict partition opts =
       (* typecheck intrinsics--temp code *)
       let forget file errs = () in
       ignore (Init_js.init forget forget forget);
+      let master_cx = Flow_js.master_cx () in
       (* collect master context errors *)
       let (files, errsets) = (
-        Flow_js.master_cx.file :: files,
-        Flow_js.master_cx.errors :: errsets
+        master_cx.file :: files,
+        master_cx.errors :: errsets
       ) in
       (* save *)
       save_errors_or_suppressions merge_errors files errsets
@@ -655,7 +657,8 @@ let recheck genv env modified =
     then prerr_endlinef "%d/%d: %s" i n f; i + 1) modified 1 in
 
   (* clear errors for modified files and master *)
-  clear_errors (Flow_js.master_cx.file :: SSet.elements modified);
+  let master_cx = Flow_js.master_cx () in
+  clear_errors (master_cx.file :: SSet.elements modified);
 
   (* track deleted files, remove from modified set *)
   let deleted = SSet.filter (fun f -> not (Sys.file_exists f)) modified in
@@ -693,7 +696,7 @@ let recheck genv env modified =
   let removed_modules = Module.remove_files to_clear in
 
   (* TODO elsewhere or delete *)
-  Flow_js.master_cx.errors <- Errors_js.ErrorSet.empty;
+  master_cx.errors <- Errors_js.ErrorSet.empty;
 
   (* recheck *)
   let freshparsed_list = SSet.elements freshparsed in

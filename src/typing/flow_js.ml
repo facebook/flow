@@ -1222,22 +1222,36 @@ let enforce_strict cx id constraints =
 (* builtins *)
 (**************)
 
-(* created in the master process, populated and saved to ContextHeap.
-   forked workers will have an empty replica from the master, but it's useless.
-   should only be accessed through ContextHeap. *)
-let master_cx = new_context (Files_js.get_flowlib_root ()) Files_js.lib_module
+(* created in the master process (see Server.preinit), populated and saved to
+   ContextHeap. forked workers will have an empty replica from the master, but
+   it's useless. should only be accessed through ContextHeap. *)
+let master_cx =
+  let cx_ = ref None in
+  fun () -> match !cx_ with
+  | None ->
+    let cx = new_context (Files_js.get_flowlib_root ()) Files_js.lib_module in
+    cx_ := Some cx;
+    cx
+  | Some cx -> cx
 
-(* builtins is similarly created in the master and replicated on fork.
-   this is critical under the current somewhat fragile scheme, as all
-   contexts agree on the id of this type var, and builtins are imported
-   via this agreement between master_cx and others *)
-let builtins = mk_tvar master_cx (builtin_reason "module")
+(* builtins is similarly created in the master (see Server.preinit) and
+   replicated on fork. this is critical under the current somewhat fragile
+   scheme, as all contexts agree on the id of this type var, and builtins are
+   imported via this agreement between master_cx and others *)
+let builtins =
+  let builtins_ = ref None in
+  fun () -> match !builtins_ with
+  | None ->
+    let b = mk_tvar (master_cx ()) (builtin_reason "module") in
+    builtins_ := Some b;
+    b
+  | Some b -> b
 
 (* new contexts are prepared here, so we can install shared tvars *)
 let fresh_context ?(checked=false) ?(weak=false) ~file ~_module =
   let cx = new_context ~file ~_module ~checked ~weak in
   (* add types for pervasive builtins *)
-  let reason, id = open_tvar builtins in
+  let reason, id = open_tvar (builtins ()) in
   cx.graph <- cx.graph |> IMap.add id (new_unresolved_root ());
   cx
 
@@ -4747,11 +4761,11 @@ and string_key s reason =
 
 and get_builtin cx x reason =
   mk_tvar_where cx reason (fun builtin ->
-    flow_opt cx (builtins, GetT(reason,x,builtin))
+    flow_opt cx (builtins (), GetT(reason,x,builtin))
   )
 
 and lookup_builtin cx x reason strict builtin =
-  flow_opt cx (builtins, LookupT(reason,strict,x,builtin))
+  flow_opt cx (builtins (), LookupT(reason,strict,x,builtin))
 
 and get_builtin_typeapp cx reason x ts =
   TypeAppT(get_builtin cx x reason, ts)
@@ -4868,7 +4882,7 @@ and resolve_builtin_class cx = function
 
 and set_builtin cx x t =
   let reason = builtin_reason x in
-  flow_opt cx (builtins, SetT(reason,x,t))
+  flow_opt cx (builtins (), SetT(reason,x,t))
 
 (* Wrapper functions around __flow that manage traces. Use these functions for
    all recursive calls in the implementation of __flow. *)
@@ -5313,7 +5327,7 @@ let cleanup cx state =
 let do_gc cx ms =
   if cx.checked then (
     let state = new gc_state ~mode:OptRecursive in
-    List.iter (gc cx state) (builtins::(List.map (lookup_module cx) ms));
+    List.iter (gc cx state) ((builtins ())::(List.map (lookup_module cx) ms));
     cleanup cx state;
   )
 

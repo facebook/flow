@@ -88,8 +88,8 @@ let init_lib save_parse_errors save_infer_errors save_suppressions =
 let init save_parse_errors save_infer_errors save_suppressions =
   let res = init_lib save_parse_errors save_infer_errors save_suppressions in
   Flow_js.Cache.clear();
-  let cx = Flow_js.master_cx in
+  let cx = Flow_js.master_cx () in
   let reason = Reason_js.builtin_reason "module" in
   let builtin_module = Type_inference_js.mk_object cx reason in
-  Flow_js.(flow cx (builtin_module, builtins));
+  Flow_js.(flow cx (builtin_module, builtins ()));
   res
