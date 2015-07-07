@@ -117,7 +117,7 @@ let autocomplete_id id env = autocomplete_token Autocomplete.Acid (Some env) id
 
 let autocomplete_hint = autocomplete_token Autocomplete.Actype None
 
-let autocomplete_new cid env =
+let autocomplete_new cid env _ =
   match cid with
   | Nast.CI sid -> autocomplete_token Autocomplete.Acnew (Some env) sid
   | _ -> ()

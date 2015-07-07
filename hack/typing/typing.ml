@@ -1173,7 +1173,7 @@ and expr_ ~in_cond ~(valkind: [> `lvalue | `rvalue | `other ]) env (p, e) =
       Async.overload_extract_from_awaitable env p rty
   | Special_func func -> special_func env p func
   | New (c, el, uel) ->
-      Typing_hooks.dispatch_new_id_hook c env;
+      Typing_hooks.dispatch_new_id_hook c env p;
       TUtils.process_static_find_ref c (p, SN.Members.__construct);
       let check_not_abstract = true in
       let env, ty = new_object ~check_not_abstract p env c el uel in

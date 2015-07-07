@@ -34,7 +34,8 @@ let (lvar_hooks: (Pos.t * Ident.t -> Typing_env.env ->
 let (fun_call_hooks: ((string option * Typing_defs.locl Typing_defs.ty) list ->
                       Pos.t list -> Typing_env.env -> unit) list ref) = ref []
 
-let (new_id_hooks: (Nast.class_id-> Typing_env.env -> unit) list ref) = ref []
+let (new_id_hooks: (Nast.class_id-> Typing_env.env ->
+                    Pos.t -> unit) list ref) = ref []
 
 let (fun_id_hooks: (Pos.t * string -> unit) list ref) = ref []
 
@@ -147,8 +148,8 @@ let dispatch_lvar_hook id env =
 let dispatch_fun_call_hooks ft_params posl env =
   List.iter begin fun hook -> hook ft_params posl env end !fun_call_hooks
 
-let dispatch_new_id_hook cid env =
-  List.iter begin fun hook -> hook cid env end !new_id_hooks
+let dispatch_new_id_hook cid env p =
+  List.iter begin fun hook -> hook cid env p end !new_id_hooks
 
 let dispatch_fun_id_hook id =
   List.iter begin fun hook -> hook id end !fun_id_hooks
