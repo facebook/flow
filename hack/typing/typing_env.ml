@@ -435,6 +435,7 @@ let with_return env f =
 let is_static env = env.genv.static
 let get_self env = env.genv.self
 let get_self_id env = env.genv.self_id
+let is_outside_class env = (env.genv.self_id = "")
 let get_parent env = env.genv.parent
 
 let get_fn_kind env = env.genv.fun_kind

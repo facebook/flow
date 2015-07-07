@@ -85,6 +85,7 @@ val grow_super : env -> bool
 val invert_grow_super : env -> (env -> env) -> env
 val get_self : env -> locl ty
 val get_self_id : env -> string
+val is_outside_class : env -> bool
 val get_parent : env -> decl ty
 val get_fn_kind : env -> Ast.fun_kind
 val get_file : env -> Relative_path.t

@@ -1320,6 +1320,17 @@ and class_const env p (cid, mid) =
         | CIstatic | CIvar _ -> ();
         | _ -> Errors.abstract_const_usage p (Reason.to_pos r) n; ()
       in env, const_ty
+    | r, Tprim (Tclassname name) when (snd mid) = SN.Members.mClass ->
+      (* X::class is a Tclassname; $foo::class is a classname<Foo> *)
+      (match cid with
+        | CIstatic | CIvar _ | CIparent ->
+          let r_witness = Reason.Rwitness p in
+          let cls_ty = r, Tclass ((Reason.to_pos r, name), []) in
+          let classname_ty = r_witness,
+            Tabstract (AKnewtype (SN.Classes.cClassname, [cls_ty]), None) in
+          env, classname_ty
+        | CI _ | CIself  -> env, const_ty
+      )
     | _ ->
       env, const_ty
 
@@ -1902,6 +1913,12 @@ and dispatch_call p env call_type (fpos, fun_expr as e) el uel =
   | Id (_, x) when SSet.mem x Naming.predef_tests ->
       let env, _ = expr env (List.hd el) in
       env, (Reason.Rwitness p, Tprim Tbool)
+  | Id (cp, get_called_class) when
+      get_called_class = SN.StdlibFunctions.get_called_class
+      && el = [] && uel = [] ->
+    (* get_called_class fetches the late-bound class *)
+    if Env.is_outside_class env then Errors.static_outside_class p;
+    class_const env p (CIstatic, (cp, SN.Members.mClass))
   | Id ((_, array_filter) as id)
       when array_filter = SN.StdlibFunctions.array_filter && el <> [] && uel = [] ->
       (* dispatch the call to typecheck the arguments *)
@@ -2984,7 +3001,7 @@ and is_visible env vis cid =
   let self_id = Env.get_self_id env in
   match vis with
   | Vpublic -> None
-  | Vprivate _ when self_id = "" ->
+  | Vprivate _ when (Env.is_outside_class env) ->
     Some ("You cannot access this member", "This member is private")
   | Vprivate x ->
     (match cid with
@@ -3032,7 +3049,7 @@ and is_visible env vis cid =
       | Some (CI _)
       | None -> None)
   | Vprotected x when x = self_id -> None
-  | Vprotected _ when self_id = "" ->
+  | Vprotected _ when (Env.is_outside_class env) ->
     Some ("You cannot access this member", "This member is protected")
   | Vprotected x ->
     let my_class = Env.get_class env self_id in
