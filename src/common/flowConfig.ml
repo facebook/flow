@@ -451,13 +451,20 @@ let parse_options config lines =
   { config with options }
 
 let assert_version (ln, line) =
-  if line <> version
-  then error ln (
-    spf
-      "Wrong version of Flow. The config specifies version %s but this is version %s"
-      line
-      version
-  )
+  try
+    if not (Semver.satisfies line version)
+    then error ln (
+      spf
+        "Wrong version of Flow. The config specifies version %s but this is version %s"
+        line
+        version
+    )
+  with Semver.Parse_error _ ->
+    error ln (
+      spf
+        "Expected version to match %%d.%%d.%%d, with an optional leading ^, got %s"
+        line
+    )
 
 let parse_version config lines =
   lines
