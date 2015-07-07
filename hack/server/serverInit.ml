@@ -47,13 +47,16 @@ let init_hack genv env get_next =
 
   Hh_logger.log "Heap size: %d" (SharedMem.heap_size ());
 
-  let errorl4, failed4 = Hh_logger.measure "Type-check" begin fun () ->
-    Typing_check_service.go genv.workers nenv fast
-  end in
+  let errorl4, failed4 = if not is_ai_mode then
+      Hh_logger.measure "Type-check" begin fun () ->
+        Typing_check_service.go genv.workers nenv fast
+      end
+    else
+      [],  Relative_path.Set.empty in
 
   let errorl5, failed5 = if is_ai_mode then
       Hh_logger.measure "Ai" begin fun () ->
-        Ai.go Typing_check_utils.check_defs files_info nenv
+        Ai.go Typing_check_utils.check_defs genv.workers files_info nenv
       end
     else
       [], Relative_path.Set.empty in
