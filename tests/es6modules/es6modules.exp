@@ -295,4 +295,12 @@ es6modules.js:251:20,74: number
 This type is incompatible with
 es6modules.js:253:10,15: string
 
-Found 67 errors
+es6modules.js:259:8,17: number
+This type is incompatible with
+es6modules.js:262:10,15: string
+
+es6modules.js:259:21,23: string
+This type is incompatible with
+es6modules.js:265:10,15: number
+
+Found 69 errors
