@@ -15,6 +15,7 @@ type options = {
   opt_should_detach : bool;
   opt_debug : bool;
   opt_verbose : bool;
+  opt_verbose_indent: bool;
   opt_all : bool;
   opt_weak : bool;
   opt_traces : int;
@@ -35,3 +36,4 @@ let is_check_mode opts = opts.opt_check_mode
 let log_file opts = opts.opt_log_file
 let root opts = opts.opt_root
 let should_detach opts = opts.opt_should_detach
+let should_indent_verbose opts = opts.opt_verbose_indent

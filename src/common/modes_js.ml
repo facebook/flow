@@ -11,6 +11,7 @@
 type modes = {
   mutable debug: bool;
   mutable verbose: bool;
+  mutable verbose_indent: bool;
   mutable all: bool;
   mutable weak_by_default: bool;
   mutable traces: int;
@@ -25,6 +26,7 @@ type modes = {
 let modes = {
   debug = false;
   verbose = false;
+  verbose_indent = false;
   all = false;
   weak_by_default = false;
   traces = 0;
@@ -37,4 +39,3 @@ let modes = {
 }
 
 let debug_string f = if modes.debug then prerr_endline (f ())
-let verbose_string f = if modes.verbose then prerr_endline (f ())

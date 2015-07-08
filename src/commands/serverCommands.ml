@@ -37,6 +37,8 @@ module OptionParser(Config : CONFIG) = struct
         ~doc:"Print debug info during typecheck"
     |> flag "--verbose" no_arg
         ~doc:"Print verbose info during typecheck"
+    |> flag "--verbose-indent" no_arg
+        ~doc:"Indent verbose info during typecheck (implies --verbose)"
     |> flag "--all" no_arg
         ~doc:"Typecheck all files, not just @flow"
     |> flag "--weak" no_arg
@@ -100,8 +102,8 @@ module OptionParser(Config : CONFIG) = struct
   }
 
   let result = ref None
-  let main error_flags json profile quiet log_file debug verbose all
-           weak traces strip_root lib no_flowlib root () =
+  let main error_flags json profile quiet log_file debug verbose verbose_indent
+           all weak traces strip_root lib no_flowlib root () =
     let root = CommandUtils.guess_root root in
     let flowconfig = FlowConfig.get root in
     let opt_module = FlowConfig.(match flowconfig.options.moduleSystem with
@@ -136,7 +138,8 @@ module OptionParser(Config : CONFIG) = struct
       Options.opt_root = root;
       Options.opt_should_detach = Config.(mode = Detach);
       Options.opt_debug = debug;
-      Options.opt_verbose = verbose;
+      Options.opt_verbose = verbose || verbose_indent;
+      Options.opt_verbose_indent = verbose_indent;
       Options.opt_all = all;
       Options.opt_weak = weak;
       Options.opt_traces;

@@ -1388,11 +1388,16 @@ let rec __flow cx (l, u) trace =
        polymorphic definitions.) *)
     not_expect_bound l; not_expect_bound u;
 
-    (if modes.verbose
-     then prerr_endlinef
-        "\n# (%d) %s ~>\n# %s"
+    (if modes.verbose then
+      let indent = if modes.verbose_indent
+        then String.make ((trace_depth trace - 1) * 2) ' '
+        else "" in
+      prerr_endlinef
+        "\n%s# (%d) %s ~>\n%s# %s"
+        indent
         (Unix.getpid ())
         (dump_reason (reason_of_t l))
+        indent
         (dump_reason (reason_of_t u)));
 
     if ground_subtype (l,u) then ()

@@ -34,6 +34,7 @@ type results = SSet.t * string list * Errors_js.error list list
 let init_modes opts = Options.(
   modes.debug <- opts.opt_debug;
   modes.verbose <- opts.opt_verbose;
+  modes.verbose_indent <- should_indent_verbose opts;
   modes.all <- opts.opt_all;
   modes.weak_by_default <- opts.opt_weak;
   modes.traces <- opts.opt_traces;

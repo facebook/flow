@@ -29,6 +29,8 @@ let spec = {
         ~doc:"Print debug info during typecheck"
     |> flag "--verbose" no_arg
         ~doc:"Print verbose info during typecheck"
+    |> flag "--verbose-indent" no_arg
+        ~doc:"Indent verbose info during typecheck (implies --verbose)"
     |> flag "--json" no_arg
         ~doc:"Output errors in JSON format"
     |> flag "--profile" no_arg
@@ -47,7 +49,7 @@ let spec = {
   )
 }
 
-let main all weak debug verbose json profile quiet module_
+let main all weak debug verbose verbose_indent json profile quiet module_
          lib no_flowlib error_flags root () =
   let opt_libs = match lib with
   | None -> []
@@ -73,7 +75,8 @@ let main all weak debug verbose json profile quiet module_
     Options.opt_all = all;
     Options.opt_weak = weak;
     Options.opt_debug = debug;
-    Options.opt_verbose = verbose;
+    Options.opt_verbose = verbose || verbose_indent;
+    Options.opt_verbose_indent = verbose_indent;
     Options.opt_strict = true;
     Options.opt_traces = 0;
     Options.opt_json = json;
