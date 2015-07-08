@@ -483,7 +483,7 @@ and get_header env =
 
 and ignore_toplevel ~attr acc env terminate =
   match L.token env.file env.lb with
-  | x when terminate x ->
+  | x when terminate x || x = Teof ->
       L.back env.lb;
       acc
   | Tltlt ->
@@ -549,7 +549,7 @@ and ignore_toplevel ~attr acc env terminate =
 
 and toplevel acc env terminate =
   match L.token env.file env.lb with
-  | x when terminate x ->
+  | x when terminate x || x = Teof ->
       L.back env.lb;
       List.rev acc
   | Tsc ->
@@ -3728,7 +3728,7 @@ and namespace env =
     | _ -> L.back env.lb; Pos.make env.file env.lb, "" in
   match L.token env.file env.lb with
   | Tlcb ->
-      let body = tl [] env (fun x -> x = Trcb) in
+      let body = tl [] env (fun x -> x = Trcb || x = Teof) in
       expect env Trcb;
       id, body
   | Tsc when (snd id) = "" ->
