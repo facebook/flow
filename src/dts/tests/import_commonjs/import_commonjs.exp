@@ -1,0 +1,12 @@
+
+import_commonjs.js:3:19,30: property y
+Error:
+import_commonjs.js:3:9,14: string
+This type is incompatible with
+[LIB] import_commonjs.js:13:18,23: number
+
+import_commonjs.js:5:8,13: number
+This type is incompatible with
+[LIB] import_commonjs.js:33:18,20: C
+
+Found 2 errors

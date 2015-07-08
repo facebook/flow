@@ -1,0 +1,36 @@
+declare module "module-P" {
+  declare var P: $Exports<'module-P___P'>;
+  declare class D {
+    
+  }
+  declare var exports: typeof P;
+  
+}
+declare module "module-P___P" {
+  declare var module$HYPHEN$P: $Exports<'module-P'>;
+  declare var N: $Exports<'module-P___P___N'>;
+  declare var D : typeof module$HYPHEN$P.D;
+  declare var x: number;
+  declare class C {
+    y: typeof x;
+    
+  }
+  declare var m: typeof N.z;
+  
+}
+declare module "module-P___P___N" {
+  declare var module$HYPHEN$P: $Exports<'module-P'>;
+  declare var P: $Exports<'module-P___P'>;
+  declare var x : typeof P.x;
+  declare var C : typeof P.C;
+  declare var m : typeof P.m;
+  declare var D : typeof module$HYPHEN$P.D;
+  declare var z: typeof x;
+  
+}
+declare module "M" {
+  declare var P: $Exports<'module-P'>;
+  declare var m: P.C;
+  
+}
+

@@ -4,6 +4,18 @@ open Utils
 
 module SSet = Utils.SSet
 
+(* get_line_number returns a line number corresponding to a
+   location *)
+
+let get_line_number = Loc. (function
+  | { start; _ } -> start.line
+)
+
+let strip_quotes = Str.global_replace (Str.regexp "'\\|\"") ""
+
+let failwith_location loc str = failwith (
+  String.concat "" [sprintf "Line %d: " (get_line_number loc); str] )
+
 (* contents of an option type *)
 let contents = function
   | Some x -> x
@@ -36,6 +48,34 @@ and get_identifier_pattern = Pattern.(function
 and get_identifier_id = function
   | _, { Identifier.name; _ } ->
       Some name
+
+(* returns argument of a require expression *)
+and get_identifier_require = Expression.(function
+  | _, Call {Call. arguments; _ } -> get_identifier_arguments arguments
+  | loc, _ -> None
+)
+
+(* return argument from a singleton list of arguments *)
+and get_identifier_arguments = function
+  | h :: [] -> get_identifier_expression_or_spread h
+  | _ -> None
+
+and get_identifier_expression_or_spread = function
+  | Expression.Expression e -> get_identifier_expression e
+  | _ -> None
+
+and get_identifier_expression = Expression.(function
+  | _, Let l -> get_identifier_let l
+  | _, Literal l -> get_identifier_literal l
+  | _ -> None
+)
+
+and get_identifier_let = Expression.(function
+  | {Let. body; _} -> get_identifier_expression body
+)
+
+and get_identifier_literal = function
+  | {Literal. raw; _ } -> Some raw
 
 let same_name x y =
   let x = get_identifier x in
@@ -156,17 +196,6 @@ let todo fmt =
     assert (not fail_on_todo);
     fprintf fmt "@[%s@]"
       "#######"
-
-
-(* get_line_number returns a line number corresponding to a
-   location *)
-
-let get_line_number = Loc. (function
-  | { start; _ } -> start.line
-)
-
-let failwith_location loc str = failwith (
-  String.concat "" [sprintf "Line %d: " (get_line_number loc); str] )
 
 
 (* generate_mangled_name generates a new name for an inner level
@@ -721,7 +750,18 @@ and statement scope prefix fmt =
       id_ id
       (list ~sep:", " pattern) params
       annot returnType
-  | (loc, _), _ -> failwith_location loc "This is not suppoerted yet"
+
+  (* The following handles Typescript's commonjs import statements like:
+
+     import M = require("M");
+  *)
+  | (loc, ImportDeclaration {Import. id; entity; _} ), _ ->
+      import_module fmt (
+        contents (get_identifier_id id),
+        strip_quotes (contents (get_identifier_require entity))
+      )
+
+  | (loc, _), _ -> failwith_location loc "This is not supported yet"
 )
 
 and pattern fmt = Pattern.(function
