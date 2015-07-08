@@ -1,7 +1,13 @@
 
-A.js:12:7,9: string
+A.js:13:7,9: string
 This type is incompatible with
 A.js:6:12,15: boolean
+
+A.js:14:1,6: function call
+Error:
+A.js:14:3,5: string
+This type is incompatible with
+A.js:9:14,20: boolean
 
 C.js:9:3,8: function call
 Error:
@@ -57,7 +63,7 @@ G.js:1:19,24: string
 
 G.js:3:1,10: call of method length
 Function cannot be called on
-G.js:1:19,24: string
+G.js:3:1,10: number
 
 G.js:6:1,17: assignment of property length
 Error:
@@ -67,6 +73,6 @@ This type is incompatible with
 
 G.js:7:1,10: call of method length
 Function cannot be called on
-[LIB] core.js:161:13,18: number
+G.js:7:1,10: string
 
-Found 13 errors
+Found 14 errors

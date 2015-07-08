@@ -703,6 +703,14 @@ module Scope = struct
   let update f scope =
     scope.entries <- SMap.mapi f scope.entries
 
+  (* use passed f to update or remove scope entries *)
+  let update_opt f scope =
+    scope.entries <- SMap.fold (fun name entry acc ->
+      match f name entry with
+      | Some entry -> SMap.add name entry acc
+      | None -> acc
+    ) scope.entries SMap.empty
+
   (* run passed f on all scope entries *)
   let iter f scope =
     SMap.iter f scope.entries
@@ -734,6 +742,50 @@ module Scope = struct
     def_loc = loc;
     for_type;
   }
+
+  (* common logic for manipulating entries.
+     this is higher-level than the rest of this module, which
+     is essentially type-agnostic. it's here because it's
+     used by both Env and Flow, and Ocaml dep management ugh. *)
+
+  (* refinement keys - soon to depart *)
+
+  let refinement_key names =
+    "$REFI " ^ (String.concat "." names)
+
+  let is_refinement name =
+    (String.length name) >= 5 && (String.sub name 0 5) = "$REFI"
+
+  (* Given a name, an entry, and a function for making a new
+     specific type from the entry's current general type,
+     return an entry with specific type replaced, subject to the
+     following conditions (which should only need to be understood here):
+
+     * refinements are always cleared outright.
+
+       Unlike real variables, a heap refinement pseudovar can simply be removed
+       on a havoc, since its "general type" resides in the underlying object
+       whose property is being refined. In the absence of a refinement entry,
+       lookups of such properties will resolve to GetT operations in the usual
+       way.
+
+       (Note: shortly, entries will become ADTs to reflect such structural
+       differences - heap refinements, among others, will lose their general
+       type fields entirely.)
+
+     * internal names (.this, .super, .return, .exports) are read-only,
+       and are never modified.
+
+     make_specific is optional. if not passed, non-internal var entries
+     are left untouched.
+   *)
+  let havoc_entry ?make_specific name entry =
+    if is_refinement name then None
+    else if is_internal_name name then Some entry
+    else match make_specific with
+    | None -> Some entry
+    | Some f -> Some { entry with specific = f entry.general }
+
 end
 
 (***************************************)

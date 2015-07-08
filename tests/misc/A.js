@@ -11,4 +11,4 @@ module.exports.fn = f;
 
 A.y = "?";
 A.x = A.y;
-f(A.x);
+f(A.x); // A.x is now a string, by def assign

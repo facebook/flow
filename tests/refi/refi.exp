@@ -31,19 +31,15 @@ heap.js:5:22,24: undefined
 This type is incompatible with
 heap.js:5:13,18: string
 
-heap.js:37:17,22: null
+heap.js:40:24,26: null
 This type is incompatible with
 heap.js:40:15,20: string
 
-heap.js:37:17,22: undefined
+heap.js:40:24,26: undefined
 This type is incompatible with
 heap.js:40:15,20: string
 
-heap.js:45:17,22: null
-This type is incompatible with
-heap.js:48:15,20: string
-
-heap.js:45:17,22: undefined
+heap.js:47:13,16: null
 This type is incompatible with
 heap.js:48:15,20: string
 
@@ -95,4 +91,4 @@ null_tests.js:101:7,12: undefined
 This type is incompatible with
 null_tests.js:147:16,21: string
 
-Found 24 errors
+Found 23 errors

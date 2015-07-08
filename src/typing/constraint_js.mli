@@ -296,6 +296,8 @@ module Scope : sig
 
   val update: (string -> entry -> entry) -> t -> unit
 
+  val update_opt: (string -> entry -> entry option) -> t -> unit
+
   val iter: (string -> entry -> unit) -> t -> unit
 
   val add: string -> entry -> t -> unit
@@ -308,11 +310,21 @@ module Scope : sig
 
   val get_unsafe: string -> t -> entry
 
-  val create_entry :
+  val create_entry:
     ?for_type: bool ->
     Type.t -> Type.t ->
     Loc.t option ->
     entry
+
+  val refinement_key: string list -> string
+
+  val is_refinement: string -> bool
+
+  val havoc_entry:
+    ?make_specific:(Type.t -> Type.t) ->
+    string ->
+    entry ->
+    entry option
 
 end
 

@@ -1,16 +1,4 @@
 
-This.js:10:1,9: function call
-Error:
-This.js:3:25,25: number
-This type is incompatible with
-This.js:6:16,21: string
-
-This.js:20:1,9: function call
-Error:
-This.js:4:39,39: number
-This type is incompatible with
-This.js:6:16,21: string
-
 This.js:29:10,15: string
 This type is incompatible with
 This.js:28:17,22: number
@@ -50,4 +38,4 @@ arrows.js:24:17,18: string
 This type is incompatible with
 arrows.js:19:10,15: number
 
-Found 11 errors
+Found 9 errors

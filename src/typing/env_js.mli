@@ -57,7 +57,9 @@ val set_var: ?for_type:bool -> context -> string -> Type.t ->
 val init_var: context -> string -> Scope.entry -> unit
 val init_declare_fun: context -> string -> Scope.entry -> unit
 
-val refine_with_pred: context -> reason ->
+val add_direct_refinement: context -> string -> reason -> Type.t -> unit
+
+val refine_with_preds: context -> reason ->
   Type.predicate SMap.t ->
   Type.t SMap.t ->
   unit

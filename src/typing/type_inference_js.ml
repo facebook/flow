@@ -395,31 +395,28 @@ let pattern_decl cx t =
 
 (* type refinements on expressions - wraps Env_js API *)
 module Refinement : sig
-
-  (* if expression is syntactically eligible for type refinement,
-     return Some (access key), otherwise None.
-     Eligible expressions are simple ids and chains of property lookups
-     from an id base *)
   val key : Ast.Expression.t -> string option
-
-  (* get type refinement for expression, if it exists *)
   val get : context -> Ast.Expression.t -> reason -> Type.t option
-
 end = struct
+
   type expr = Id of string | Chain of string list | Other
 
   (* get id or chain of property names from conforming expressions *)
   let rec prop_chain = Ast.Expression.(function
+
+  (* treat this as a property chain, in terms of refinement lifetime *)
   | _, This ->
-      (* treat this as a property chain, in terms of refinement lifetime *)
       Chain [internal_name "this"]
+
+  (* ditto super *)
   | _, Identifier (_, { Ast.Identifier.name; _ })
       when name != "undefined" ->
-      (* treat super as a property chain, in terms of refinement lifetime *)
       (match name with
         | "super" -> Chain [internal_name "super"]
         | _ -> Id name
       )
+
+  (* foo.bar.baz -> Chain [bar; baz; foo] *)
   | _, Member { Member._object;
      property = Member.PropertyIdentifier (_ , { Ast.Identifier.name; _ });
      _ } -> (
@@ -428,16 +425,25 @@ end = struct
         | Chain names -> Chain (name :: names)
         | Other -> Other
       )
+
+  (* other LHSes unsupported currently/here *)
   | _ ->
       Other
   )
 
+  (* if expression is syntactically eligible for type refinement,
+     return Some (access key), otherwise None.
+     Eligible expressions are simple ids and chains of property lookups
+     from an id base *)
   let key e =
     match prop_chain e with
+      (* unqualified names are passed through *)
       | Id name -> Some name
+      (* prop chains are sent to Env_js for mangling *)
       | Chain names -> Some (Env_js.refinement_key (List.rev names))
       | Other -> None
 
+  (* get type refinement for expression, if it exists *)
   let get cx e r =
     match key e with
     | Some k -> Env_js.get_refinement cx k r
@@ -1339,7 +1345,7 @@ and statement cx = Ast.Statement.(
   *)
   | (loc, If { If.test; consequent; alternate }) ->
       let reason = mk_reason "if" loc in
-      let _, pred, not_pred, xts = predicate_of_condition cx test in
+      let _, preds, not_preds, xts = predicates_of_condition cx test in
       let ctx =  Env_js.get_scopes () in
       let oldset = Env_js.clear_changeset () in
 
@@ -1347,7 +1353,7 @@ and statement cx = Ast.Statement.(
 
       let then_ctx = Env_js.clone_scopes ctx in
       Env_js.update_env cx then_ctx;
-      Env_js.refine_with_pred cx reason pred xts;
+      Env_js.refine_with_preds cx reason preds xts;
 
       mark_exception_handler
         (fun () -> statement cx consequent)
@@ -1355,7 +1361,7 @@ and statement cx = Ast.Statement.(
 
       let else_ctx = Env_js.clone_scopes ctx in
       Env_js.update_env cx else_ctx;
-      Env_js.refine_with_pred cx reason not_pred xts;
+      Env_js.refine_with_preds cx reason not_preds xts;
       (match alternate with
         | None -> ()
         | Some st ->
@@ -1485,7 +1491,7 @@ and statement cx = Ast.Statement.(
         if !default then None (* TODO: error when case follows default *)
         else (
           let reason = mk_reason "case" loc in
-          let _, pred, not_pred, xtypes = match test with
+          let _, preds, not_preds, xtypes = match test with
           | None ->
               default := true;
               UndefT.t, SMap.empty, SMap.empty, SMap.empty
@@ -1495,12 +1501,16 @@ and statement cx = Ast.Statement.(
                 left = discriminant;
                 right = expr;
               }) in
-              predicate_of_condition cx fake_ast
+              predicates_of_condition cx fake_ast
           in
 
+          (* env of new case inherits background accumulation... *)
           let case_ctx = Env_js.clone_scopes !fallthrough_ctx in
           Env_js.update_env cx case_ctx;
-          Env_js.refine_with_pred cx reason pred xtypes;
+          (* ...and adds test refinement... *)
+          Env_js.refine_with_preds cx reason preds xtypes;
+          (* ...and merges with previous case, which will have been
+             cleared if it exited the switch *)
           merge_with_last_ctx cx reason case_ctx (Env_js.peek_changeset ());
 
           let exception_ = ref None in
@@ -1508,8 +1518,9 @@ and statement cx = Ast.Statement.(
             toplevels cx consequent
           ) exception_;
 
+          (* swap in background ctx and add negatives of this case's preds *)
           Env_js.update_env cx !fallthrough_ctx;
-          Env_js.refine_with_pred cx reason not_pred xtypes;
+          Env_js.refine_with_preds cx reason not_preds xtypes;
 
           last_ctx := Some case_ctx;
           !exception_
@@ -1725,15 +1736,15 @@ and statement cx = Ast.Statement.(
       Env_js.update_env cx do_ctx;
       (* do_ctx = Pre' *)
       (* ENV = [do_ctx] *)
-      let _, pred, not_pred, xtypes =
-        predicate_of_condition cx test in
+      let _, preds, not_preds, xtypes =
+        predicates_of_condition cx test in
 
       let body_ctx = Env_js.clone_scopes do_ctx in
       Env_js.update_env cx body_ctx;
       (* body_ctx = Pre' *)
       (* ENV = [body_ctx] *)
 
-      Env_js.refine_with_pred cx reason pred xtypes;
+      Env_js.refine_with_preds cx reason preds xtypes;
       (* body_ctx = Pre' & c *)
 
       let exception_ = ref None in
@@ -1751,7 +1762,7 @@ and statement cx = Ast.Statement.(
       (* Pre' > Post' *)
 
       Env_js.update_env cx do_ctx;
-      Env_js.refine_with_pred cx reason not_pred xtypes;
+      Env_js.refine_with_preds cx reason not_preds xtypes;
       if Abnormal.swap (Abnormal.Break None) save_break_exn
       then Env_js.havoc_vars newset;
       (* ENV = [ctx] *)
@@ -1795,14 +1806,14 @@ and statement cx = Ast.Statement.(
       if Abnormal.swap (Abnormal.Continue None) save_continue_exn
       then Env_js.(havoc_vars (peek_changeset ()));
 
-      let _, pred, not_pred, xtypes =
-        predicate_of_condition cx test in
+      let _, preds, not_preds, xtypes =
+        predicates_of_condition cx test in
       (* body_ctx = Post' *)
 
       let done_ctx = Env_js.clone_scopes body_ctx in
       (* done_ctx = Post' *)
 
-      Env_js.refine_with_pred cx reason pred xtypes;
+      Env_js.refine_with_preds cx reason preds xtypes;
       (* body_ctx = Post' & c *)
 
       let newset = Env_js.merge_changeset oldset in
@@ -1810,7 +1821,7 @@ and statement cx = Ast.Statement.(
       (* Pre' > Post' & c *)
 
       Env_js.update_env cx done_ctx;
-      Env_js.refine_with_pred cx reason not_pred xtypes;
+      Env_js.refine_with_preds cx reason not_preds xtypes;
       if Abnormal.swap (Abnormal.Break None) save_break_exn
       then Env_js.havoc_vars newset;
       (* ENV = [done_ctx] *)
@@ -1850,16 +1861,16 @@ and statement cx = Ast.Statement.(
       let do_ctx = Env_js.clone_scopes ctx in
       Env_js.update_env cx do_ctx;
 
-      let _, pred, not_pred, xtypes = match test with
+      let _, preds, not_preds, xtypes = match test with
         | None ->
             UndefT.t, SMap.empty, SMap.empty, SMap.empty (* TODO: prune the "not" case *)
         | Some expr ->
-            predicate_of_condition cx expr
+            predicates_of_condition cx expr
       in
 
       let body_ctx = Env_js.clone_scopes do_ctx in
       Env_js.update_env cx body_ctx;
-      Env_js.refine_with_pred cx reason pred xtypes;
+      Env_js.refine_with_preds cx reason preds xtypes;
 
       ignore_exception_handler (fun () -> statement cx body);
 
@@ -1876,7 +1887,7 @@ and statement cx = Ast.Statement.(
       Env_js.copy_env cx reason (ctx, body_ctx) newset;
 
       Env_js.update_env cx do_ctx;
-      Env_js.refine_with_pred cx reason not_pred xtypes;
+      Env_js.refine_with_preds cx reason not_preds xtypes;
       if Abnormal.swap (Abnormal.Break None) save_break_exn
       then Env_js.havoc_vars newset
 
@@ -1906,8 +1917,8 @@ and statement cx = Ast.Statement.(
       let body_ctx = Env_js.clone_scopes ctx in
       Env_js.update_env cx body_ctx;
 
-      let _, pred, _, xtypes = predicate_of_condition cx right in
-      Env_js.refine_with_pred cx reason pred xtypes;
+      let _, preds, _, xtypes = predicates_of_condition cx right in
+      Env_js.refine_with_preds cx reason preds xtypes;
 
       (match left with
         | ForIn.LeftDeclaration (_, {
@@ -1964,8 +1975,8 @@ and statement cx = Ast.Statement.(
       let body_ctx = Env_js.clone_scopes ctx in
       Env_js.update_env cx body_ctx;
 
-      let _, pred, _, xtypes = predicate_of_condition cx right in
-      Env_js.refine_with_pred cx reason pred xtypes;
+      let _, preds, _, xtypes = predicates_of_condition cx right in
+      Env_js.refine_with_preds cx reason preds xtypes;
 
       (match left with
         | ForOf.LeftDeclaration (_, {
@@ -2711,7 +2722,7 @@ and spread cx (loc, e) =
   RestT tvar
 
 (* NOTE: the is_cond flag is only used when checking the type of conditions in
-   `predicate_of_condition`: see comments on function `condition`. *)
+   `predicates_of_condition`: see comments on function `condition`. *)
 and expression ?(is_cond=false) cx (loc, e) =
   let t = expression_ ~is_cond cx loc e in
   Hashtbl.replace cx.type_table loc t;
@@ -3131,8 +3142,8 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
         Abnormal.set Abnormal.Throw
       | (Expression cond)::arguments ->
         ignore (List.map (expression_or_spread cx) arguments);
-        let _, pred, not_pred, xtypes = predicate_of_condition cx cond in
-        Env_js.refine_with_pred cx reason pred xtypes
+        let _, preds, not_preds, xtypes = predicates_of_condition cx cond in
+        Env_js.refine_with_preds cx reason preds xtypes
       | _ ->
         let msg = "unsupported arguments in call to invariant()" in
         Flow_js.add_error cx [mk_reason "" loc, msg]
@@ -3208,18 +3219,18 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
 
   | Conditional { Conditional.test; consequent; alternate } ->
       let reason = mk_reason "conditional" loc in
-      let _, pred, not_pred, xtypes = predicate_of_condition cx test in
+      let _, preds, not_preds, xtypes = predicates_of_condition cx test in
       let ctx =  Env_js.get_scopes () in
       let oldset = Env_js.clear_changeset () in
 
       let then_ctx = Env_js.clone_scopes ctx in
       Env_js.update_env cx then_ctx;
-      Env_js.refine_with_pred cx reason pred xtypes;
+      Env_js.refine_with_preds cx reason preds xtypes;
       let t1 = expression cx consequent in
 
       let else_ctx = Env_js.clone_scopes ctx in
       Env_js.update_env cx else_ctx;
-      Env_js.refine_with_pred cx reason not_pred xtypes;
+      Env_js.refine_with_preds cx reason not_preds xtypes;
       let t2 = expression cx alternate in
 
       let newset = Env_js.merge_changeset oldset in
@@ -3484,7 +3495,7 @@ and binary cx loc = Ast.Expression.Binary.(function
 
 and logical cx loc = Ast.Expression.Logical.(function
   | { operator = Or; left; right } ->
-      let t1, _, not_map, xtypes = predicate_of_condition cx left in
+      let t1, _, not_map, xtypes = predicates_of_condition cx left in
       let reason = mk_reason "||" loc in
       let t2 = Env_js.refine_env cx reason not_map xtypes
         (fun () -> expression cx right)
@@ -3494,7 +3505,7 @@ and logical cx loc = Ast.Expression.Logical.(function
       )
 
   | { operator = And; left; right } ->
-      let t1, map, _, xtypes = predicate_of_condition cx left in
+      let t1, map, _, xtypes = predicates_of_condition cx left in
       let reason = mk_reason "&&" loc in
       let t2 = Env_js.refine_env cx reason map xtypes
         (fun () -> expression cx right)
@@ -3520,11 +3531,20 @@ and assignment_lhs cx = Ast.Pattern.(function
   | _ -> assert false
 )
 
+(* traverse assignment expressions *)
 and assignment cx loc = Ast.Expression.(function
 
+  (* r = e *)
   | (r, Assignment.Assign, e) ->
+
+      (* compute the type of the RHS. this is what we return *)
       let t = expression cx e in
+
+      (* update env, add constraints arising from LHS structure,
+         handle special cases, etc. *)
       (match r with
+
+        (* module.exports = e *)
         | _, Ast.Pattern.Expression (_, Member {
             Member._object = _, Ast.Expression.Identifier (_,
               { Ast.Identifier.name = "module"; _ });
@@ -3536,6 +3556,7 @@ and assignment cx loc = Ast.Expression.(function
             mark_exports_type cx reason (CommonJSModule(Some(loc)));
             set_module_exports cx reason t
 
+        (* super.name = e *)
         | _, Ast.Pattern.Expression (_, Member {
             Member._object = _, Identifier (_,
               { Ast.Identifier.name = "super"; _ });
@@ -3548,22 +3569,48 @@ and assignment cx loc = Ast.Expression.(function
             let super = super_ cx reason in
             Flow_js.flow cx (super, SetT(reason, name, t))
 
-        | _, Ast.Pattern.Expression (_, Member {
+        (* _object.name = e *)
+        | _, Ast.Pattern.Expression ((_, Member {
             Member._object;
             property = Member.PropertyIdentifier (ploc,
               { Ast.Identifier.name; _ });
             _
-          }) ->
-            let reason = mk_reason
-              (spf "assignment of property %s" name) loc in
+          }) as expr) ->
             let o = expression cx _object in
-            if Type_inference_hooks_js.dispatch_member_hook cx name ploc o
-            then ()
-            else (
+            (* if we fire this hook, it means the assignment is a sham. *)
+            if not (Type_inference_hooks_js.dispatch_member_hook cx name ploc o)
+            then (
+              let reason = mk_reason
+                (spf "assignment of property %s" name) loc in
+
+              (* flow type to object property itself *)
+              Flow_js.flow cx (o, SetT (reason, name, t));
+
+              (* types involved in the assignment itself are computed
+                 in pre-havoc environment. it's the assignment itself
+                 which clears refis *)
+              (* TODO: havoc refinements for this prop name only *)
               Env_js.havoc_heap_refinements ();
-              Flow_js.flow cx (o, SetT (reason, name, t))
+
+              (* add type refinement if LHS is a pattern we handle *)
+              match Refinement.key expr with
+              | Some key ->
+                (* NOTE: currently, we allow property refinements to propagate
+                   even if they may turn out to be invalid w.r.t. the
+                   underlying object type. If invalid, of course, they produce
+                   errors, but in the future we may want to prevent the
+                   invalid types from flowing downstream as well.
+                   Doing so would require that we defer any subseuqnt flow
+                   call that are sensitive to the refined type until the
+                   object and refinement types - `o` and `t` here - are
+                   fully resolved.
+                 *)
+                Env_js.add_direct_refinement cx key reason t
+              | None ->
+                ()
             )
 
+        (* _object[index] = e *)
         | _, Ast.Pattern.Expression (_, Member {
             Member._object;
             property = Member.PropertyExpression index;
@@ -3572,14 +3619,21 @@ and assignment cx loc = Ast.Expression.(function
             let reason = mk_reason "assignment of computed property/element" loc in
             let a = expression cx _object in
             let i = expression cx index in
-            Flow_js.flow cx (a, SetElemT (reason, i, t))
+            Flow_js.flow cx (a, SetElemT (reason, i, t));
 
+            (* types involved in the assignment itself are computed
+               in pre-havoc environment. it's the assignment itself
+               which clears refis *)
+            Env_js.havoc_heap_refinements ();
+
+        (* other r structures are handled as destructuring assignments *)
         | _ ->
             destructuring_assignment cx t r
       );
       t
 
   | (r, Assignment.PlusAssign, e) ->
+      (* r += e *)
       let reason = mk_reason "+=" loc in
       let rt = assignment_lhs cx r in
       let et = expression cx e in
@@ -3600,6 +3654,7 @@ and assignment cx loc = Ast.Expression.(function
   | (r, Assignment.BitXorAssign, e)
   | (r, Assignment.BitAndAssign, e)
     ->
+      (* r (numop)= e *)
       let t = NumT.at loc in
       let rt = assignment_lhs cx r in
       let et = expression cx e in
@@ -4191,7 +4246,7 @@ and react_create_class cx loc class_props = Ast.Expression.(
    - map of refinements which hold if the test is false
    - map of unrefined types for lvalues found in refinement maps
  *)
-and predicate_of_condition cx e = Ast.(Expression.(
+and predicates_of_condition cx e = Ast.(Expression.(
 
   (* refinement key if expr is eligible, along with unrefined type *)
   let refinable_lvalue e =
@@ -4514,9 +4569,9 @@ and predicate_of_condition cx e = Ast.(Expression.(
   (* test1 && test2 *)
   | loc, Logical { Logical.operator = Logical.And; left; right } ->
       let reason = mk_reason "&&" loc in
-      let t1, map1, not_map1, xts1 = predicate_of_condition cx left in
+      let t1, map1, not_map1, xts1 = predicates_of_condition cx left in
       let t2, map2, not_map2, xts2 = Env_js.refine_env cx reason map1 xts1
-        (fun () -> predicate_of_condition cx right)
+        (fun () -> predicates_of_condition cx right)
       in
       (
         Flow_js.mk_tvar_where cx reason (fun t ->
@@ -4530,9 +4585,9 @@ and predicate_of_condition cx e = Ast.(Expression.(
   (* test1 || test2 *)
   | loc, Logical { Logical.operator = Logical.Or; left; right } ->
       let reason = mk_reason "||" loc in
-      let t1, map1, not_map1, xts1 = predicate_of_condition cx left in
+      let t1, map1, not_map1, xts1 = predicates_of_condition cx left in
       let t2, map2, not_map2, xts2 = Env_js.refine_env cx reason not_map1 xts1
-        (fun () -> predicate_of_condition cx right)
+        (fun () -> predicates_of_condition cx right)
       in
       (
         Flow_js.mk_tvar_where cx reason (fun t ->
@@ -4545,7 +4600,7 @@ and predicate_of_condition cx e = Ast.(Expression.(
 
   (* !test *)
   | loc, Unary { Unary.operator = Unary.Not; argument; _ } ->
-      let (t, map, not_map, xts) = predicate_of_condition cx argument in
+      let (t, map, not_map, xts) = predicates_of_condition cx argument in
       (BoolT.at loc, not_map, map, xts)
 
   (* fallthrough case: evaluate test expr, no refinements *)
@@ -5484,7 +5539,7 @@ let infer_core cx statements =
           none with source = Some cx.file
         }), msg]
     | exc ->
-        let msg = Printexc.to_string exc in
+        let msg = fmt_exc exc in
         Flow_js.add_warning cx [mk_reason "" Loc.({
           none with source = Some cx.file
         }), msg]

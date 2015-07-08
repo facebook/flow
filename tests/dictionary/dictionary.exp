@@ -67,11 +67,11 @@ test.js:1:23,28: number
 This type is incompatible with
 test.js:1:47,52: string
 
-test.js:7:12,23: number
+test.js:6:12,23: number
 This type is incompatible with
 test.js:2:42,47: string
 
-test_client.js:5:10,21: number
+test_client.js:4:10,21: number
 This type is incompatible with
 test.js:2:42,47: string
 

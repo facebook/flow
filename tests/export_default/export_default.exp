@@ -9,7 +9,7 @@ This type is incompatible with
 
 test.js:5:7,12: string
 This type is incompatible with
-[LIB] lib.js:5:20,25: number
+[LIB] lib.js:6:20,25: number
 
 test.js:5:9,11: number
 This type is incompatible with
@@ -19,7 +19,7 @@ test.js:7:7,12: function call
 Error:
 test.js:7:7,12: string
 This type is incompatible with
-[LIB] lib.js:5:20,25: number
+[LIB] lib.js:7:20,25: number
 
 test.js:7:7,12: function call
 Error:

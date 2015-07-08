@@ -49,6 +49,42 @@ hasOwnProperty.js:4:3,7: call of method y
 Function cannot be called on possibly undefined value
 hasOwnProperty.js:3:20,29: undefined
 
+heap_defassign.js:3:26,31: string
+This type is incompatible with
+heap_defassign.js:10:12,17: number
+
+heap_defassign.js:3:26,31: string
+This type is incompatible with
+heap_defassign.js:16:12,17: number
+
+heap_defassign.js:3:26,31: string
+This type is incompatible with
+heap_defassign.js:22:12,17: number
+
+heap_defassign.js:3:26,31: string
+This type is incompatible with
+heap_defassign.js:30:12,17: number
+
+heap_defassign.js:3:26,31: string
+This type is incompatible with
+heap_defassign.js:38:12,17: number
+
+heap_defassign.js:3:26,31: string
+This type is incompatible with
+heap_defassign.js:62:16,21: number
+
+heap_defassign.js:3:26,31: string
+This type is incompatible with
+heap_defassign.js:73:12,17: number
+
+heap_defassign.js:62:25,29: string
+This type is incompatible with
+heap_defassign.js:62:16,21: number
+
+heap_defassign.js:65:20,24: number
+This type is incompatible with
+heap_defassign.js:65:11,16: string
+
 mixed.js:8:5,18: function call
 Error:
 mixed.js:6:17,21: number
@@ -367,4 +403,4 @@ void.js:85:7,12: undefined
 This type is incompatible with
 void.js:85:7,19: number
 
-Found 85 errors
+Found 94 errors

@@ -14,8 +14,10 @@ This type is incompatible with
 class_statics.js:2:14,19: number
 
 class_statics.js:7:1,6: call of method g
-Property not found in
-class_statics.js:1:7,7: statics of C
+Error:
+class_statics.js:7:5,5: number
+This type is incompatible with
+class_statics.js:6:18,23: string
 
 class_statics.js:10:1,7: assignment of property x
 Error:

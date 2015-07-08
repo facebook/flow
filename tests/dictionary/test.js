@@ -3,8 +3,7 @@ type QueryFunction = (params: Params) => string;
 
 var o: { foo: QueryFunction } = {
   foo(params) {
-    params.count = params.oops;
-    return params.count;
+    return params.count; // error, number ~/~ string
   }
 };
 
