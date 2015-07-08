@@ -11,7 +11,7 @@ The flow command line tool is made to be easy-to-use for the simple case.
 Just using the command `flow` will type-check your current directory if the `.flowconfig` file is present.
 A flow server will automatically be started if needed.
 
-However, the cli tool gives you a more control if you want, and also has the ability to provide tools to build your own IDE plug-ins which work like [Nuclide](http://nuclide.io).
+The CLI tool also provides several other options and commands that allow you to control the server and build tools that integrate with Flow. For example, this is how the [Nuclide](http://nuclide.io) editor integrates with Flow to provide autocompletion, type errors, etc in it's UI.
 
 To find out more about the CLI just type:
 
