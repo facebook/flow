@@ -754,12 +754,22 @@ and statement scope prefix fmt =
   (* The following handles Typescript's commonjs import statements like:
 
      import M = require("M");
+
+     TODO: handle other import notations as well.
   *)
   | (loc, ImportDeclaration {Import. id; entity; _} ), _ ->
       import_module fmt (
         contents (get_identifier_id id),
         strip_quotes (contents (get_identifier_require entity))
       )
+  (* The following handles type aliases.
+     Eg. : type T = number | string;
+     TODO: walk through typealiases while computing module_used etc.
+  *)
+  | (loc, TypeAlias {TypeAlias.left; right } ), _ ->
+    fprintf fmt "@[<hv>type %a = %a;@]"
+      generic_type (snd left)
+      type_ right
 
   | (loc, _), _ -> failwith_location loc "This is not supported yet"
 )
