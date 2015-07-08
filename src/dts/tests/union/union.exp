@@ -1,0 +1,6 @@
+
+union.js:2:9,14: number
+This type is incompatible with
+[LIB] union.js:1:25,30: string
+
+Found 1 error

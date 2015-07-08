@@ -814,6 +814,8 @@ and type_ fmt = Type.(function
   | _, Generic t -> generic_type fmt t
   | _, Typeof x -> fprintf fmt "typeof %a"
     id_path x
+  | _, Intersection l -> (list ~sep:" & " type_) fmt l
+  | _, Union l -> (list ~sep:" | " type_) fmt l
   | _ -> todo fmt
 )
 
