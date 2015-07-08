@@ -31,6 +31,8 @@ let spec = {
     empty
     |> server_flags
     |> json_flags
+    |> flag "--strip-root" no_arg
+        ~doc:"Print paths without the root"
     |> flag "--path" (optional string)
         ~doc:"Specify (fake) path to file when reading data from stdin"
     |> anon "file" (optional string) ~doc:"[FILE]"
@@ -64,7 +66,8 @@ let string_of_loc loc = Loc.(
       Utils.spf "%s:%d:%d-%d" file line start end_
 )
 
-let handle_error (loc, err) json =
+let handle_error (loc, err) json strip =
+  let loc = strip loc in
   if json
   then (
     let loc = Errors_js.json_of_loc loc in
@@ -76,16 +79,17 @@ let handle_error (loc, err) json =
   );
   flush stderr
 
-let handle_response types json =
+let handle_response types json strip =
   if json
   then (
     let lst = types |> List.map (fun (loc, str, reasons) ->
+      let loc = strip loc in
       Json.JAssoc (
         ("type", Json.JString str) ::
         ("reasons", Json.JList (List.map (fun r ->
           Json.JAssoc (
             ("desc", Json.JString (Reason_js.desc_of_reason r)) ::
-            (Errors_js.json_of_loc (Reason_js.loc_of_reason r))
+            (Errors_js.json_of_loc (strip (Reason_js.loc_of_reason r)))
           )
         ) reasons)) ::
         (Errors_js.json_of_loc loc)
@@ -96,6 +100,7 @@ let handle_response types json =
   ) else (
     let out = types
       |> List.map (fun (loc, str, reasons) ->
+        let loc = strip loc in
         (Utils.spf "%s: %s" (string_of_loc loc) str)
       )
       |> String.concat "\n"
@@ -104,7 +109,7 @@ let handle_response types json =
   );
   flush stdout
 
-let main option_values json path filename () =
+let main option_values json strip_root path filename () =
   let file = get_file path filename in
   let root = guess_root (ServerProt.path_of_input file) in
   let ic, oc = connect_with_autostart option_values root in
@@ -112,8 +117,8 @@ let main option_values json path filename () =
     (ServerProt.DUMP_TYPES file);
 
   match (Marshal.from_channel ic) with
-  | (Some err, None) -> handle_error err json
-  | (None, Some resp) -> handle_response resp json
+  | (Some err, None) -> handle_error err json (relativize strip_root root)
+  | (None, Some resp) -> handle_response resp json (relativize strip_root root)
   | (_, _) -> assert false
 
 let command = CommandSpec.command spec main
