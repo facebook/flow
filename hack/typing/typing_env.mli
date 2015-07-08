@@ -99,8 +99,6 @@ val set_parent : env -> decl ty -> env
 val set_static : env -> env
 val set_mode : env -> FileInfo.mode -> env
 val set_root : env -> Typing_deps.Dep.variant -> env
-val set_is_constructor : env -> env
-val is_constructor : env -> bool
 val get_mode : env -> FileInfo.mode
 val is_strict : env -> bool
 val is_decl : env -> bool

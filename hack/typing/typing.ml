@@ -2848,13 +2848,7 @@ and call_construct p env class_ params el uel cid =
       fst (lfold expr env el)
     | Some { ce_visibility = vis; ce_type = m; _ } ->
       check_visibility p env (Reason.to_pos (fst m), vis) None;
-      (* If calling parent::__construct() within another constructor the
-       * type we are constructing is really the late static type so we
-       * switch CIparent to CIstatic when filling type holes for type constants
-       *)
-      let cid =
-        if cid = CIparent && Env.is_constructor env
-        then CIstatic else cid in
+      let cid = if cid = CIparent then CIstatic else cid in
       let env, cid_ty = static_class_id p env cid in
       let ety_env = {
         type_expansions = [];
@@ -3673,7 +3667,6 @@ and class_constr_def env c =
   match c.c_constructor with
   | None -> ()
   | Some m ->
-     let env = Env.set_is_constructor env in
      method_def env m
 
 and class_implements_type env c1 ctype2 =
@@ -3731,9 +3724,17 @@ and method_def env m =
   Typing_hooks.dispatch_enter_method_def_hook m;
   let env = { env with Env.lenv = Env.empty_local } in
   let env = Env.set_local env this (Env.get_self env) in
-  let env, ret = (match m.m_ret with
+  let env, ret = match m.m_ret with
     | None -> env, (Reason.Rwitness (fst m.m_name), Tany)
-    | Some ret -> Typing_hint.hint_locl ~ensure_instantiable:true env ret) in
+    | Some ret ->
+        let env, ret = Typing_hint.hint ~ensure_instantiable:true env ret in
+        (* If a 'this' type appears it needs to be compatiable with the
+         * late static type
+         *)
+        let ety_env =
+          { (Phase.env_with_self env) with
+            from_class = Some CIstatic } in
+        Phase.localize ~ety_env env ret in
   let m_params = match m.m_variadic with
     | FVvariadicArg param -> param :: m.m_params
     | _ -> m.m_params

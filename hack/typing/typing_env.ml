@@ -60,7 +60,6 @@ and genv = {
   self_id : string;
   self    : locl ty;
   static  : bool;
-  is_constructor : bool;
   fun_kind : Ast.fun_kind;
   anons   : anon IMap.t;
   droot   : Typing_deps.Dep.variant option;
@@ -276,7 +275,6 @@ let empty tcopt file = {
     self_id = "";
     self    = Reason.none, Tany;
     static  = false;
-    is_constructor = false;
     parent  = Reason.none, Tany;
     fun_kind = Ast.FSync;
     anons   = IMap.empty;
@@ -427,7 +425,6 @@ let with_return env f =
   let env = f env in
   set_return env ret
 
-let is_constructor env = env.genv.is_constructor
 let is_static env = env.genv.static
 let get_self env = env.genv.self
 let get_self_id env = env.genv.self_id
@@ -492,11 +489,6 @@ let set_mode env mode =
 let set_root env root =
   let genv = env.genv in
   let genv = { genv with droot = Some root } in
-  { env with genv = genv }
-
-let set_is_constructor env =
-  let genv = env.genv in
-  let genv = { genv with is_constructor = true } in
   { env with genv = genv }
 
 let get_mode env = env.genv.mode

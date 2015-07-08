@@ -78,9 +78,10 @@ and expand env r (root, ids) =
 and expand_ env (root_reason, root_ty as root) =
   match env.ids with
   | [] ->
-      env, make_dependent_type env.dep_tys root
+      env, ExprDepTy.apply env.dep_tys root
   | head::tail -> begin match root_ty with
       | Tany -> env, root
+      | Tabstract (AKdependent (`cls _, []), Some ty)
       | Tabstract (AKnewtype (_, _), Some ty) | Toption ty -> expand_ env ty
       | Tclass ((class_pos, class_name), _) ->
           let env, ty =
@@ -144,7 +145,7 @@ and create_root_from_type_constant env class_pos class_name root_ty (pos, tconst
              *)
             let ety_env =
               { ety_env with
-                this_ty = make_dependent_type env.dep_tys root_ty;
+                this_ty = ExprDepTy.apply env.dep_tys root_ty;
                 from_class = None; } in
             let tenv, ty = Phase.localize ~ety_env env.tenv ty in
             { env with dep_tys = []; tenv = tenv }, ty
@@ -199,21 +200,6 @@ and get_typeconst env class_pos class_name pos tconst =
     Some ({ env.ety_env with type_expansions = expansions }, typeconst)
   with
     Exit -> None
-
-and make_dependent_type dep_tys ty =
-  List.fold_left begin fun ty (r, dep_ty) ->
-    (* If it is a expression dependent type we want to explain what
-     * expression it was derived from.
-     *)
-    let reason = match fst dep_ty with
-      | `expr _ | `static ->
-          let pos = Reason.to_pos r in
-          let name = ExprDepTy.to_string (fst dep_ty, []) in
-          Reason.Rexpr_dep_type (fst ty, pos, name)
-      | _ ->
-          fst ty in
-    reason, Tabstract (AKdependent dep_ty, Some ty)
-  end ty dep_tys
 
 (*****************************************************************************)
 (* Exporting *)
