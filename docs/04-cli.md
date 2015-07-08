@@ -3,7 +3,7 @@ id: cli
 title: Using the CLI
 layout: docs
 permalink: /docs/cli.html
-prev: cli.html
+prev: declarations.html
 ---
 
 The flow command line tool is made to be easy-to-use for the simple case.
