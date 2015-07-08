@@ -10,9 +10,9 @@
 
 external realpath: string -> string option = "hh_realpath"
 
-let open_in_no_fail fn = 
+let open_in_no_fail fn =
   try open_in fn
-  with e -> 
+  with e ->
     let e = Printexc.to_string e in
     Printf.fprintf stderr "Could not open_in: '%s' (%s)\n" fn e;
     exit 3
@@ -25,7 +25,7 @@ let close_in_no_fail fn ic =
 
 let open_out_no_fail fn =
   try open_out fn
-  with e -> 
+  with e ->
     let e = Printexc.to_string e in
     Printf.fprintf stderr "Could not open_out: '%s' (%s)\n" fn e;
     exit 3
@@ -119,3 +119,66 @@ let read_stdin_to_string () =
     assert false
   with End_of_file ->
     Buffer.contents buf
+
+
+(**
+ * Like Python's os.path.expanduser, though probably doesn't cover some cases.
+ * Roughly follow's bash's tilde expansion:
+ * http://www.gnu.org/software/bash/manual/html_node/Tilde-Expansion.html
+ *
+ * ~/foo -> /home/bob/foo if $HOME = "/home/bob"
+ * ~joe/foo -> /home/joe/foo if joe's home is /home/joe
+ *)
+let expanduser path =
+  Str.substitute_first
+    (Str.regexp "^~\\([^/]*\\)")
+    begin fun s ->
+      match Str.matched_group 1 s with
+        | "" ->
+          begin try Unix.getenv "HOME"
+          with Not_found -> (Unix.getpwuid (Unix.getuid())).Unix.pw_dir end
+        | unixname ->
+          try (Unix.getpwnam unixname).Unix.pw_dir
+          with Not_found -> Str.matched_string s end
+    path
+
+(* Turns out it's surprisingly complex to figure out the path to the current
+   executable, which we need in order to extract its embedded libraries. If
+   argv[0] is a path, then we can use that; sometimes it's just the exe name,
+   so we have to search $PATH for it the same way shells do. for example:
+   https://www.gnu.org/software/bash/manual/html_node/Command-Search-and-Execution.html
+
+   There are other options which might be more reliable when they exist, like
+   using the `_` env var set by bash, or /proc/self/exe on Linux, but they are
+   not portable. *)
+let executable_path : unit -> string =
+  let executable_path_ = ref None in
+  let dir_sep = Filename.dir_sep.[0] in
+  let search_path path =
+    let paths =
+      try Str.split (Str.regexp_string ":") (Sys.getenv "PATH")
+      with _ -> failwith "Unable to determine executable path"
+    in
+    let path = List.fold_left (fun acc p ->
+      match acc with
+      | Some _ -> acc
+      | None -> realpath (expanduser (Filename.concat p path))
+    ) None paths
+    in
+    match path with
+    | Some path -> path
+    | None -> failwith "Unable to determine executable path"
+  in
+  fun () -> match !executable_path_ with
+  | Some path -> path
+  | None ->
+      let path = Sys.executable_name in
+      let path =
+        if String.contains path dir_sep then
+          match realpath path with
+          | Some path -> path
+          | None -> failwith "Unable to determine executable path"
+        else search_path path
+      in
+      executable_path_ := Some path;
+      path

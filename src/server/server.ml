@@ -51,7 +51,7 @@ struct
   let init genv env =
     if not (Options.is_check_mode genv.ServerEnv.options) then (
       (* write binary path and version to server log *)
-      Hh_logger.log "executable=%s" Sys.executable_name;
+      Hh_logger.log "executable=%s" (Sys_utils.executable_path ());
       Hh_logger.log "version=%s" FlowConfig.version);
     (* start the server *)
     let env = Types_js.server_init genv env in

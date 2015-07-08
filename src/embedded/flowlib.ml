@@ -32,13 +32,16 @@ let extract data =
   Path.concat path "lib"
 
 let extract_embedded () =
-  Utils.opt_map extract (get_embedded_flowlib_data Sys.executable_name)
+  Sys_utils.executable_path ()
+  |> get_embedded_flowlib_data
+  |> Utils.opt_map extract
 
 (* Look for the flowlib.tar.gz in the place where it normally resides, so that we
  * support debugging binaries that don't have the section embedded, such as
  * bytecode builds. *)
 let extract_external () =
-  let path = (Filename.dirname Sys.executable_name) ^ "/flowlib.tar.gz" in
+  let path =
+    (Filename.dirname (Sys_utils.executable_path ())) ^ "/flowlib.tar.gz" in
   if Sys.file_exists path then Some (extract (Sys_utils.cat path)) else None
 
 let get_flowlib_root_impl () =

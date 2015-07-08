@@ -14,26 +14,10 @@ type t = string
 
 let dummy_path : t = ""
 
-(**
- * Like Python's os.path.expanduser, though probably doesn't cover some cases.
- * Roughly follow's bash's tilde expansion:
- * http://www.gnu.org/software/bash/manual/html_node/Tilde-Expansion.html
- *
- * ~/foo -> /home/bob/foo if $HOME = "/home/bob"
- * ~joe/foo -> /home/joe/foo if joe's home is /home/joe
- *)
-let expanduser path =
-  Str.substitute_first
-    (Str.regexp "^~\\([^/]*\\)")
-    begin fun s ->
-      match Str.matched_group 1 s with
-        | "" ->
-          begin try Unix.getenv "HOME"
-          with Not_found -> (Unix.getpwuid (Unix.getuid())).Unix.pw_dir end
-        | unixname ->
-          try (Unix.getpwnam unixname).Unix.pw_dir
-          with Not_found -> Str.matched_string s end
-    path
+let cat = Sys_utils.cat
+let compare = Pervasives.compare
+let dirname = Filename.dirname
+let expanduser = Sys_utils.expanduser
 
 (**
  * Resolves a path (using realpath)
@@ -55,11 +39,6 @@ let to_string path = path
 
 let concat path more =
   make (Printf.sprintf "%s/%s" path more)
-
-let compare = Pervasives.compare
-
-let cat = Sys_utils.cat
-let dirname = Filename.dirname
 
 let parent path =
   if is_directory path
