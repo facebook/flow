@@ -97,8 +97,11 @@ module ExprDepTy = struct
         should_apply ~seen env ty
     | Tunresolved tyl ->
         List.exists (should_apply ~seen env) tyl
-    | Tclass _ ->
-        true
+    | Tclass ((_, x), _) ->
+        let class_ = Env.get_class env x in
+        Option.value_map class_
+          ~default:false
+          ~f:(fun {tc_final; _} -> not tc_final)
     | Tanon _ | Tobject | Tmixed | Tprim _ | Tshape _ | Ttuple _
     | Tarray _ | Tfun _ | Tabstract (_, None) | Tany ->
         false

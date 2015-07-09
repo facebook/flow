@@ -56,6 +56,10 @@ let rec is_option env ty =
       List.exists (is_option env) tyl
   | _ -> false
 
+let is_class ty = match snd ty with
+  | Tclass _ -> true
+  | _ -> false
+
 (*****************************************************************************)
 (* Gets the base type of an abstract type *)
 (*****************************************************************************)

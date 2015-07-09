@@ -1183,7 +1183,7 @@ and expr_ ~in_cond ~(valkind: [> `lvalue | `rvalue | `other ]) env (p, e) =
       let check_not_abstract = true in
       let env, ty = new_object ~check_not_abstract p env c el uel in
       let env = Env.forget_members env p in
-      env, ty
+      env, ExprDepTy.make env c ty
   | Cast ((_, Harray (None, None)), _) when Env.is_strict env ->
       Errors.array_cast p;
       env, (Reason.Rwitness p, Tany)
@@ -3206,9 +3206,11 @@ and binop in_cond p env bop p1 ty1 p2 ty2 =
   | Ast.Lt | Ast.Lte  | Ast.Gt  | Ast.Gte  ->
       let ty_num = (Reason.Rcomp p, Tprim Nast.Tnum) in
       let ty_string = (Reason.Rcomp p, Tprim Nast.Tstring) in
+      let ty_datetime =
+        (Reason.Rcomp p, Tclass ((p, SN.Classes.cDateTime), [])) in
       let both_sub ty =
         SubType.is_sub_type env ty ty1 && SubType.is_sub_type env ty ty2 in
-      if both_sub ty_num || both_sub ty_string
+      if both_sub ty_num || both_sub ty_string || both_sub ty_datetime
       then env, (Reason.Rcomp p, Tprim Tbool)
       else
         (* TODO this is questionable; PHP's semantics for conversions with "<"

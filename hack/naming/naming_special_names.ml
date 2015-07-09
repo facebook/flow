@@ -33,6 +33,7 @@ module Classes = struct
 
   let cException = "\\Exception"
   let cStdClass = "\\stdClass"
+  let cDateTime = "\\DateTime"
 
   let cAsyncIterator = "\\AsyncIterator"
   let cAsyncKeyedIterator = "\\AsyncKeyedIterator"

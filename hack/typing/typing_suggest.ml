@@ -199,6 +199,7 @@ and normalize_ = function
     with Exit -> Tarray (None, None)
   end
   | Tabstract (AKgeneric (_, _), _) as x -> x
+  | Tabstract (AKdependent _, Some ty) -> normalize_ (snd ty)
   | Toption (_, (Toption (_, _) as ty)) -> normalize_ ty
   | Toption (_, Tprim Nast.Tvoid) -> raise Exit
   | Toption ty -> Toption (normalize ty)

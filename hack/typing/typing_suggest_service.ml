@@ -73,6 +73,13 @@ let resolve_types acc collated_values =
     let reason = Typing_reason.Rnone in
     let ureason = Typing_reason.URnone in
     let any = reason, Typing_defs.Tany in
+    let strip_dependent_types ty =
+      match snd ty with
+      | Typing_defs.Tabstract (
+          Typing_defs.AKdependent (`cls _, []), Some ty
+        ) -> ty
+      | _ -> ty in
+    let tyl = List.map strip_dependent_types tyl in
     let env, type_ =
       try
         Errors.try_ begin fun () ->

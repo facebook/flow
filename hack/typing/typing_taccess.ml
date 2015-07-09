@@ -130,11 +130,11 @@ and expand_ env (root_reason, root_ty as root) =
 and create_root_from_type_constant env class_pos class_name root_ty (pos, tconst) =
   match get_typeconst env class_pos class_name pos tconst with
   | None -> env, (fst root_ty, Tany)
-  | Some (ety_env, typeconst) ->
+  | Some (env, typeconst) ->
       let env =
         { env with
           trail = (`cls class_name, List.map snd env.ids)::env.trail } in
-      let ety_env = { ety_env with this_ty = root_ty; from_class = None } in
+      let ety_env = { env.ety_env with this_ty = root_ty; from_class = None } in
       begin
         match typeconst with
         | { ttc_type = Some ty; _ }
@@ -190,14 +190,22 @@ and get_typeconst env class_pos class_name pos tconst =
      *)
     let cur_tconst = `cls class_name, List.map snd env.ids in
     let seen = ExprDepTy.to_string cur_tconst in
-    let expansions = (pos, seen)::env.ety_env.type_expansions in
+    let type_expansions = (pos, seen)::env.ety_env.type_expansions in
     if List.mem seen (List.map snd env.ety_env.type_expansions) then
       begin
-        let seen = expansions |> List.map snd |> List.rev in
+        let seen = type_expansions |> List.map snd |> List.rev in
         Errors.cyclic_typeconst (fst typeconst.ttc_name) seen;
         raise Exit
       end;
-    Some ({ env.ety_env with type_expansions = expansions }, typeconst)
+    (* If the class is final then we do not need to create dependent types
+     * because the type constant cannot be overridden by a child class
+     *)
+    let env =
+      { env with
+        ety_env = { env.ety_env with type_expansions };
+        dep_tys = if class_.tc_final then []  else env.dep_tys;
+      } in
+    Some (env, typeconst)
   with
     Exit -> None
 

@@ -503,9 +503,10 @@ and sub_type_with_uenv env (uenv_super, ty_super) (uenv_sub, ty_sub) =
       (* If the error is not due to an expression dependent type out a simpler
        * error message.
        *)
-      let explain_dep_type = match snd ty_super with
-        | Tabstract (AKdependent _, _) -> true
-        | _ -> false in
+      let explain_dep_type = match snd ty_super, dt with
+        | _, ((`static | `this | `cls _), _) -> false
+        | Tabstract (AKdependent _, _), _ -> true
+        | _, _ -> false in
       let sub _ =
         if explain_dep_type then
           Errors.try_
