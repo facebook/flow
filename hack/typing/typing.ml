@@ -33,6 +33,7 @@ module SN           = Naming_special_names
 module TAccess      = Typing_taccess
 module Phase        = Typing_phase
 module TSubst       = Typing_subst
+module ExprDepTy    = Typing_dependent_type.ExprDepTy
 
 (*****************************************************************************)
 (* Debugging *)
@@ -842,7 +843,8 @@ and expr_ ~in_cond ~(valkind: [> `lvalue | `rvalue | `other ]) env (p, e) =
       let r = Reason.Rwitness p in
       let ty = (r, ty) in
       let ty = r, TUtils.this_of ty in
-      env, ty
+      (* '$this' always refers to the late bound static type *)
+      env, ExprDepTy.make env CIstatic ty
   | Assert (AE_assert e) ->
       let env = condition env true e in
       env, (Reason.Rwitness p, Tprim Tvoid)
@@ -2824,7 +2826,7 @@ and static_class_id p env = function
       let env, ty = TUtils.fold_unresolved env ty in
       let _, ty = Env.expand_type env ty in
       let ty =
-        match ty with
+        match TUtils.get_base_type ty with
         | _, Tabstract (_, Some (_, Tclass _))
         | _, Tclass _ -> ty
         | _, (Tany | Tmixed | Tarray (_, _) | Toption _
@@ -2899,8 +2901,7 @@ and is_visible env vis cid =
       | Some (CIvar e) ->
           let env, ty = expr env e in
           let _, ty = Env.expand_type env ty in
-          begin match ty with
-            | _, Tabstract (_, Some (_, Tclass ((_, c), _)))
+          begin match TUtils.get_base_type ty with
             | _, Tclass ((_, c), _) ->
                 (match Env.get_class env c with
                 | Some {tc_final = true; _} -> None

@@ -289,15 +289,10 @@ and sub_type_with_uenv env (uenv_super, ty_super) (uenv_sub, ty_sub) =
 (****************************************************************************)
 (* ### End Tunresolved madness ### *)
 (****************************************************************************)
-  | (r, Tabstract (AKdependent d1, Some ty_super)),
+  | (_, Tabstract (AKdependent d1, Some ty_super)),
     (_, Tabstract (AKdependent d2, Some ty_sub))
     when d1 = d2 ->
-     Errors.try_
-      (fun () ->
-        sub_type_with_uenv env (uenv_super, ty_super) (uenv_sub, ty_sub))
-      (fun l ->
-        let x = ExprDepTy.to_string d1 in
-        Reason.explain_generic_constraint env.Env.pos r x l; env)
+      sub_type_with_uenv env (uenv_super, ty_super) (uenv_sub, ty_sub)
   | (_, Tabstract (AKgeneric _, _)), (_, Tabstract (AKgeneric _, Some _))
   | (_, Tabstract (AKgeneric (_, Some _), _)),
       (_, Tabstract (AKgeneric _, _)) ->
@@ -505,16 +500,25 @@ and sub_type_with_uenv env (uenv_super, ty_super) (uenv_sub, ty_sub) =
         )
         (fun _ -> sub_type_with_uenv env (uenv_super, ty_super) (uenv_sub, x))
   | _, (r_sub, Tabstract (AKdependent dt, Some ty)) ->
+      (* If the error is not due to an expression dependent type out a simpler
+       * error message.
+       *)
+      let explain_dep_type = match snd ty_super with
+        | Tabstract (AKdependent _, _) -> true
+        | _ -> false in
       let sub _ =
-        Errors.try_
-          (fun () ->
-            sub_type_with_uenv env (uenv_super, ty_super) (uenv_sub, ty)
-          )
-          (fun l ->
-            let x = ExprDepTy.to_string dt in
-            Reason.explain_generic_constraint env.Env.pos r_sub x l;
-            env
-          ) in
+        if explain_dep_type then
+          Errors.try_
+            (fun () ->
+              sub_type_with_uenv env (uenv_super, ty_super) (uenv_sub, ty)
+            )
+            (fun l ->
+              let x = ExprDepTy.to_string dt in
+              Reason.explain_generic_constraint env.Env.pos r_sub x l;
+              env
+            )
+        else
+          sub_type_with_uenv env (uenv_super, ty_super) (uenv_sub, ty) in
       Errors.try_
         (fun () -> fst (
           Unify.unify_with_uenv env (uenv_super, ty_super) (uenv_sub, ty_sub)))
