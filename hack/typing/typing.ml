@@ -690,7 +690,34 @@ and case_list_ parent_lenv ty env = function
           (both_are_sub_types env ty_arraykey ty ty2)
         then env, ty
         else Type.unify (fst e) Reason.URnone env ty ty2 in
+      (* Since this block is not terminal we will end up falling through to the
+       * next block. This means the lenv will include what our current
+       * environment is, intersected (or integrated?) with the environment
+       * after executing the block. Example:
+       *
+       *  $x = 0; // $x = int
+       *  switch (0) {
+       *    case 1:
+       *      $x = ''; // $x = string
+       *      // FALLTHROUGH
+       *    case 2:
+       *      $x; // $x = int & string
+       *    ...
+       *)
+      let lenv1 = env.Env.lenv in
       let env = block env b in
+      (* PERF: If the case is empty or a Noop then we do not need to intersect
+       * the lenv since they will be the same.
+       *
+       * This saves the cost of intersecting the lenv for the common pattern of
+       *   case 1:
+       *   case 2:
+       *   case 3:
+       *   ...
+       *)
+      let env = match b with
+        | [] | [Noop] -> env
+        | _ -> LEnv.intersect env parent_lenv lenv1 env.Env.lenv in
       case_list_ parent_lenv ty env rl
 
 and catch parent_lenv after_try env (ety, exn, b) =
