@@ -271,6 +271,8 @@ let type_check genv env =
   let errorl = List.rev (List.rev_append errorl' errorl) in
 
   Hh_logger.log "Total: %f\n%!" ((Unix.gettimeofday ()) -. start_t);
+  let total_rechecked_count = Relative_path.Set.cardinal to_recheck in
+  HackEventLogger.recheck_once_end start_t total_rechecked_count;
 
   (* Done, that's the new environment *)
   { files_info = files_info;
