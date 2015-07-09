@@ -57,7 +57,7 @@ let get_root ?(config=".hhconfig") path_opt =
 let parse_check_args cmd =
   (* arg parse output refs *)
   let mode = ref MODE_UNSPECIFIED in
-  let retries = ref 15 in
+  let retries = ref 800 in
   let output_json = ref false in
   let retry_if_init = ref true in
   let no_load = ref false in
@@ -198,7 +198,7 @@ let parse_check_args cmd =
     "--json", Arg.Set output_json,
       " output json for machine consumption. (default: false)";
     "--retries", Arg.Set_int retries,
-      " set the number of retries. (default: 15)";
+      spf " set the number of retries. (default: %d)" !retries;
     "--retry-if-init", Arg.Bool (fun x -> retry_if_init := x),
       " retry if the server is initializing (default: true)";
     "--no-load", Arg.Set no_load,
