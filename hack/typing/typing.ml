@@ -1617,6 +1617,7 @@ and assign p env e1 ty2 =
               fst (assign p env lvalue ty2)
             end env el tyl in
             env, (Reason.Rwitness p1, Tprim Tvoid)
+      | _, Tabstract (_, Some ty2) -> assign p env e1 ty2
       | _, (Tmixed | Tarray (_, _) | Toption _ | Tprim _
         | Tvar _ | Tfun _ | Tabstract (_, _) | Tanon (_, _)
         | Tunresolved _ | Tclass (_, _) | Tobject | Tshape _) ->
