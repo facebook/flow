@@ -810,6 +810,7 @@ and expr_ ~in_cond ~(valkind: [> `lvalue | `rvalue | `other ]) env (p, e) =
   | ValCollection (name, el) ->
       let env, x = TUtils.in_var env (Reason.Rnone, Tunresolved []) in
       let env, tyl = lmap expr env el in
+      let env, tyl = lmap Typing_env.unbind env tyl in
       let env, tyl = lfold TUtils.unresolved env tyl in
       let env, v = fold_left_env (Type.unify p Reason.URvector) env x tyl in
       let tvector = Tclass ((p, name), [v]) in
@@ -818,7 +819,9 @@ and expr_ ~in_cond ~(valkind: [> `lvalue | `rvalue | `other ]) env (p, e) =
   | KeyValCollection (name, l) ->
       let kl, vl = List.split l in
       let env, kl = lfold expr env kl in
+      let env, kl = lmap Typing_env.unbind env kl in
       let env, vl = lfold expr env vl in
+      let env, vl = lmap Typing_env.unbind env vl in
       let env, k = TUtils.in_var env (Reason.Rnone, Tunresolved []) in
       let env, v = TUtils.in_var env (Reason.Rnone, Tunresolved []) in
       let env, kl = lfold TUtils.unresolved env kl in
@@ -1707,7 +1710,9 @@ and assign_simple pos env e1 ty2 =
 
 and array_field_value env = function
   | Nast.AFvalue x
-  | Nast.AFkvalue (_, x) -> expr env x
+  | Nast.AFkvalue (_, x) ->
+      let env, ty = expr env x in
+      Typing_env.unbind env ty
 
 and yield_field_value env x = array_field_value env x
 
@@ -1715,7 +1720,8 @@ and array_field_key env = function
   | Nast.AFvalue (p, _) ->
       env, (Reason.Rwitness p, Tprim Tint)
   | Nast.AFkvalue (x, _) ->
-      expr env x
+      let env, ty = expr env x in
+      Typing_env.unbind env ty
 
 and yield_field_key env = function
   | Nast.AFvalue (p, _) ->
