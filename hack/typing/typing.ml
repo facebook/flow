@@ -2115,9 +2115,9 @@ and dispatch_call p env call_type (fpos, fun_expr as e) el uel =
              * defined on the parent class, but $this is still the child class.
              * We can deal with this by hijacking the continuation that
              * calculates the SN.Typehints.this type *)
-            let k_lhs _ =
-              Reason.Rwitness fpos, TUtils.this_of (Env.get_self env)
-            in
+            let this_ty = ExprDepTy.make env CIstatic
+              (Reason.Rwitness fpos, TUtils.this_of (Env.get_self env)) in
+            let k_lhs _ = this_ty in
             let env, method_, _ =
               obj_get_ ~is_method:true ~nullsafe:None env ty1 CIparent m
               begin fun (env, fty, _) ->
@@ -2444,9 +2444,14 @@ and class_contains_smethod env cty (_pos, mid) =
     | Tunresolved _ | Tobject | Tshape _)-> None
 
 and class_get ~is_method ~is_const env cty (p, mid) cid =
+  let env, this_ty =
+    if is_method then
+      this_for_method env cid cty
+    else
+      env, cty in
   let ety_env = {
     type_expansions = [];
-    this_ty = cty;
+    this_ty = this_ty;
     substs = SMap.empty;
     from_class = Some cid;
   } in
@@ -2769,6 +2774,37 @@ and trait_most_concrete_req_class trait env =
         | Some c -> Some (c, ty)
       )
   ) trait.tc_req_ancestors None
+
+(* When invoking a method the class_id is used to determine what class we
+ * lookup the method in, but the type of 'this' will be the late bound type.
+ * For example:
+ *
+ *  class C {
+ *    public static function get(): this { return new static(); }
+ *
+ *    public static function alias(): this { return self::get(); }
+ *  }
+ *
+ *  In C::alias, when we invoke self::get(), 'self' is resolved to the class
+ *  in the lexical scope (C), so call C::get. However the method is executed in
+ *  the current context, so static inside C::get will be resolved to the late
+ *  bound type (get_called_class() within C::alias).
+ *
+ *  This means when determining the type of this, CIparent and CIself should be
+ *  changed to CIstatic. For the other cases of C::get() or $c::get(), we only
+ *  look at the left hand side of the '::' and use the type type associated
+ *  with it.
+ *
+ *  Thus C::get() will return a type C, while $c::get() will return the same
+ *  type as $c.
+ *)
+and this_for_method env cid default_ty = match cid with
+  | CIparent | CIself | CIstatic ->
+      let p = Reason.to_pos (fst default_ty) in
+      let env, ty = static_class_id p env CIstatic in
+      env, ExprDepTy.make env CIstatic ty
+  | _ ->
+      env, default_ty
 
 and static_class_id p env = function
   | CIparent ->
