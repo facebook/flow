@@ -17,7 +17,7 @@ module IMap = Map.Make (struct
   let compare = (-)
 end)
 
-let debug = ref false
+let track_names = ref false
 let foo = 0
 let trace = ref IMap.empty
 let origin = ref IMap.empty
@@ -25,13 +25,13 @@ let origin_id = ref IMap.empty
 
 let make x =
   let res = hh_counter_next () in
-  if !debug then
+  if !track_names then
     trace := IMap.add res x !trace ;
   res
 
 let fresh x =
   let res = hh_counter_next () in
-  if !debug then begin
+  if !track_names then begin
     let name = IMap.find x !trace in
     trace := IMap.add res name !trace ;
   end;
@@ -39,7 +39,7 @@ let fresh x =
 
 let tmp () =
   let res = hh_counter_next () in
-  if !debug then begin
+  if !track_names then begin
     trace := IMap.add res ("__tmp"^string_of_int res) !trace ;
   end;
   res
@@ -92,6 +92,11 @@ let full x =
   if md = ""
   then v
   else md ^ "_" ^ v
+
+let get_name x =
+  assert (!track_names);
+  try IMap.find x !trace
+  with Not_found -> assert false
 
 let set_name x y =
   trace := IMap.add x y !trace
