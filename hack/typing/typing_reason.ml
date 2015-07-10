@@ -21,6 +21,7 @@ type t =
   | Raccess          of Pos.t
   | Rarith           of Pos.t
   | Rarith_ret       of Pos.t
+  | Rarray_plus_ret  of Pos.t
   | Rstring2         of Pos.t
   | Rcomp            of Pos.t
   | Rconcat          of Pos.t
@@ -78,6 +79,7 @@ let rec to_string prefix r =
   | Raccess          _ -> [(p, prefix ^ " because one of its elements is accessed")]
   | Rarith           _ -> [(p, prefix ^ " because this is used in an arithmetic operation")]
   | Rarith_ret       _ -> [(p, prefix ^ " because this is the result of an arithmetic operation")]
+  | Rarray_plus_ret  _ -> [(p, prefix ^ " because this is the result of adding arrays")]
   | Rstring2         _ -> [(p, prefix ^ " because this is used in a string")]
   | Rcomp            _ -> [(p, prefix ^ " because this is the result of a comparison")]
   | Rconcat          _ -> [(p, prefix ^ " because this is used in a string concatenation")]
@@ -174,6 +176,7 @@ and to_pos = function
   | Raccess   p -> p
   | Rarith       p -> p
   | Rarith_ret   p -> p
+  | Rarray_plus_ret p -> p
   | Rstring2     p -> p
   | Rcomp        p -> p
   | Rconcat      p -> p

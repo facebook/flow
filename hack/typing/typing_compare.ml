@@ -284,6 +284,7 @@ module TraversePos(ImplementPos: sig val pos: Pos.t -> Pos.t end) = struct
     | Raccess p              -> Raccess (pos p)
     | Rarith p               -> Rarith (pos p)
     | Rarith_ret p           -> Rarith_ret (pos p)
+    | Rarray_plus_ret p      -> Rarray_plus_ret (pos p)
     | Rstring2 p             -> Rstring2 (pos p)
     | Rcomp p                -> Rcomp (pos p)
     | Rconcat p              -> Rconcat (pos p)

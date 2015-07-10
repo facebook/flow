@@ -3235,6 +3235,20 @@ and binop in_cond p env bop p1 ty1 p2 ty2 =
       let env, ety1 = Env.expand_type env ty1 in
       let env, ety2 = Env.expand_type env ty2 in
       (match ety1, ety2 with
+      (* For array<V1>+array<V2> and array<K1,V1>+array<K2,V2>, allow
+       * the addition to produce a supertype. (We could also handle
+       * when they have mismatching annotations, but we get better error
+       * messages if we just let those get unified in the next case. *)
+      | (_, Tarray (Some _, (Some _ as t1b))), (_, Tarray (Some _, Some _))
+      | (_, Tarray (Some _, (None as t1b))), (_, Tarray (Some _, None)) ->
+         let env, a_sup = TUtils.in_var env (Reason.Rnone, Tunresolved []) in
+         let env, b_sup = opt
+           (fun env _ -> TUtils.in_var env (Reason.Rnone, Tunresolved []))
+           env t1b in
+         let res_ty = Reason.Rarray_plus_ret p, Tarray (Some a_sup, b_sup) in
+         let env = Type.sub_type p1 Reason.URnone env res_ty ety1 in
+         let env = Type.sub_type p2 Reason.URnone env res_ty ety2 in
+         env, res_ty
       | (_, Tarray _), (_, Tarray _)
       | (_, Tany), (_, Tarray _)
       | (_, Tarray _), (_, Tany) ->
