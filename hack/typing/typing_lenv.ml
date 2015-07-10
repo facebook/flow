@@ -45,10 +45,14 @@ let intersect env parent_lenv (fake1, locals1) (fake2, locals2) =
   let fake_members = intersect_fake fake1 fake2 in
   let _, parent_locals = parent_lenv in
   let env, locals =
-    IMap.fold begin fun local_id (all_types1, ty1) (env, locals) ->
+    IMap.fold begin fun local_id (all_types1, ty1, eid1) (env, locals) ->
       match IMap.get local_id locals2 with
       | None -> env, locals
-      | Some (all_types2, ty2) ->
+      | Some (all_types2, ty2, eid2) ->
+          (* If the local has different expression ids then we generate a
+           * new one when interecting
+           *)
+          let eid = if eid1 = eid2 then eid1 else Ident.tmp() in
           let env, ty1 = TUtils.unresolved env ty1 in
           let env, ty2 = TUtils.unresolved env ty2 in
           let (all_small, all_large) =
@@ -60,7 +64,7 @@ let intersect env parent_lenv (fake1, locals1) (fake2, locals2) =
               if List.mem ty acc then acc else ty::acc
             end all_large all_small in
           let env, ty = Type.unify Pos.none Reason.URnone env ty1 ty2 in
-          env, IMap.add local_id (all_types, ty) locals
+          env, IMap.add local_id (all_types, ty, eid) locals
     end locals1 (env, parent_locals)
   in
   { env with Env.lenv = fake_members, locals }
@@ -100,16 +104,20 @@ let intersect env parent_lenv (fake1, locals1) (fake2, locals2) =
  *)
 let integrate env (_parent_fake, parent_locals) (child_fake, child_locals) =
   let locals =
-    IMap.fold begin fun local_id (child_all_types, child_ty) locals ->
+    IMap.fold begin fun local_id (child_all_types, child_ty, child_eid) locals ->
       match IMap.get local_id locals with
-      | None -> IMap.add local_id (child_all_types, child_ty) locals
-      | Some (parent_all_types, _) when child_all_types == parent_all_types ->
-          IMap.add local_id (child_all_types, child_ty) locals
-      | Some (parent_all_types, _) ->
+      | None ->
+          IMap.add local_id (child_all_types, child_ty, child_eid) locals
+      | Some (parent_all_types, _, parent_eid)
+            when child_all_types == parent_all_types ->
+          let eid = if child_eid = parent_eid then child_eid else Ident.tmp() in
+          IMap.add local_id (child_all_types, child_ty, eid) locals
+      | Some (parent_all_types, _, parent_eid) ->
+          let eid = if child_eid = parent_eid then child_eid else Ident.tmp() in
           let all_types = List.fold_left begin fun all_types ty ->
             if List.exists ((=) ty) all_types then all_types else ty::all_types
           end child_all_types parent_all_types in
-          IMap.add local_id (all_types, child_ty) locals
+          IMap.add local_id (all_types, child_ty, eid) locals
     end child_locals parent_locals
   in
   { env with Env.lenv = child_fake, locals }
@@ -139,15 +147,24 @@ let fully_integrate env (parent_fake_members, parent_locals) =
   let child_fake_members, child_locals = env.Env.lenv in
   let fake_members = intersect_fake parent_fake_members child_fake_members in
   let env, locals =
-    IMap.fold begin fun local_id (child_all_types, _) (env, locals) ->
-      let parent_all_types =
+    IMap.fold begin fun local_id (child_all_types,_, child_eid) (env, locals) ->
+      let parent_all_types, parent_eid =
         match IMap.get local_id parent_locals with
-        | None -> []
-        | Some (parent_all_types, _) -> parent_all_types
+        | None -> [], -1
+        | Some (parent_all_types, _, parent_eid) ->
+            parent_all_types, parent_eid
       in
-      if child_all_types == parent_all_types
+      if child_all_types == parent_all_types && parent_eid = child_eid
       then env, locals
+      else if child_all_types == parent_all_types
+      then
+        match IMap.get local_id parent_locals with
+        | None -> env, locals
+        | Some (_, parent_ty, _) ->
+            let lcl = parent_all_types, parent_ty, Ident.tmp() in
+            env, IMap.add local_id lcl locals
       else
+        let eid = if child_eid = parent_eid then child_eid else Ident.tmp() in
         let env, child_all_types = lfold TUtils.unresolved env child_all_types in
         let env, ty =
           match child_all_types with
@@ -158,7 +175,7 @@ let fully_integrate env (parent_fake_members, parent_locals) =
                 Type.unify Pos.none Reason.URnone env ty_acc ty
               end (env, first) rest
         in
-        env, IMap.add local_id (ty :: parent_all_types, ty) locals
+        env, IMap.add local_id (ty :: parent_all_types, ty, eid) locals
     end child_locals (env, parent_locals)
   in
   { env with Env.lenv = fake_members, locals }

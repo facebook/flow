@@ -762,7 +762,7 @@ and bind_as_expr env ty aexpr =
       | Await_as_v (_, ev) -> fst (assign p env ev ty2)
       | As_kv ((_, Lvar (_, k)), ev)
       | Await_as_kv (_, (_, Lvar (_, k)), ev) ->
-          let env = Env.set_local env k (Reason.Rnone, Tmixed) in
+          let env, _ = set_valid_rvalue p env k (Reason.Rnone, Tmixed) in
           fst (assign p env ev ty2)
       | _ -> (* TODO Probably impossible, should check that *)
           env
@@ -773,7 +773,7 @@ and bind_as_expr env ty aexpr =
       | Await_as_v (_, ev) -> fst (assign p env ev ty2)
       | As_kv ((_, Lvar (_, k)), ev)
       | Await_as_kv (_, (_, Lvar (_, k)), ev) ->
-          let env = Env.set_local env k ty1 in
+          let env, _ = set_valid_rvalue p env k ty1 in
           fst (assign p env ev ty2)
       | _ -> (* TODO Probably impossible, should check that *)
           env
@@ -1096,7 +1096,20 @@ and expr_ ~in_cond ~(valkind: [> `lvalue | `rvalue | `other ]) env (p, e) =
       env, ty
   | Binop (Ast.Eq None, e1, e2) ->
       let env, ty2 = raw_expr in_cond env e2 in
-      assign p env e1 ty2
+      let env, ty = assign p env e1 ty2 in
+      (* If we are assigning a local variable to another local variable then
+       * the expression ID associated with e2 is transferred to e1
+       *)
+      (match e1, e2 with
+      | (_, Lvar (_, x1)), (_, Lvar (_, x2)) ->
+          let eid2 = Env.get_local_expr_id env x2 in
+          let env =
+            Option.value_map
+              eid2 ~default:env
+              ~f:(Env.set_local_expr_id env x1) in
+          env, ty
+      | _ -> env, ty
+      )
   | Binop ((Ast.AMpamp | Ast.BArbar as bop), e1, e2) ->
       let c = bop = Ast.AMpamp in
       let lenv = env.Env.lenv in
@@ -1591,6 +1604,10 @@ and check_valid_rvalue p env ty =
 and set_valid_rvalue p env x ty =
   let ty = check_valid_rvalue p env ty in
   let env = Env.set_local env x ty in
+  (* We are assigning a new value to the local variable, so we need to
+   * generate a new expression id
+   *)
+  let env = Env.set_local_expr_id env x (Ident.tmp()) in
   env, ty
 
 and assign p env e1 ty2 =

@@ -34,11 +34,19 @@ module ExprDepTy = struct
       | N.CI (p, cls) -> p, `cls cls
       | N.CIstatic -> pos, `static
       | N.CIvar (p, N.This) -> p, `static
-          (* For almost all expressions we generate a new identifier. In the
-           * future, we might be able to do some local analysis to determine
-           * if two given expressions refer to the same Late Static Bound Type,
-           * but for now we do this since it is easy and sound.
-           *)
+      (* If it is a local variable then we look up the expression id associated
+       * with it. If one doesn't exist we generate a new one. We are being
+       * conservative here because the new expression id we create isn't
+       * added to the local enviornment.
+       *)
+      | N.CIvar (p, N.Lvar (_, x)) ->
+          let eid = match Env.get_local_expr_id env x with
+            | Some eid -> eid
+            | None -> Ident.tmp() in
+          p, `expr eid
+      (* If all else fails we generate a new identifier for our expression
+       * dependent type.
+       *)
       | N.CIvar (p, _) -> p, new_() in
     Reason.Rwitness p, (dep, [])
 

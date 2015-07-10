@@ -21,7 +21,8 @@ type fake_members = {
   invalid : SSet.t;
   valid : SSet.t;
 }
-type local = locl ty list * locl ty
+type expression_id = Ident.t
+type local = locl ty list * locl ty * expression_id
 type local_env = fake_members * local IMap.t
 type env = {
   pos : Pos.t;
@@ -120,6 +121,8 @@ module FakeMembers :
 val unbind : env -> locl ty -> env * locl ty
 val set_local : env -> Ident.t -> locl ty -> env
 val get_local : env -> Ident.t -> env * locl ty
+val set_local_expr_id : env -> Ident.t -> expression_id -> env
+val get_local_expr_id : env -> Ident.t -> expression_id option
 val freeze_local_env : env -> env
 val anon : local_env -> env -> (env -> env * locl ty) -> env * locl ty
 val in_loop : env -> (env -> env) -> env

@@ -34,8 +34,14 @@ type fake_members = {
   invalid   : SSet.t;
   valid     : SSet.t;
 }
-
-type local = locl ty list * locl ty
+(* Along with a type, each local variable has a expression id associated with
+ * it. This is used when generating expression dependent types for the 'this'
+ * type. The idea is that if two local variables have the same expression_id
+ * then they refer to the same late bound type, and thus have compatible
+ * 'this' types.
+ *)
+type expression_id = Ident.t
+type local = locl ty list * locl ty * expression_id
 type local_env = fake_members * local IMap.t
 
 type env = {
@@ -644,24 +650,25 @@ let rec unbind seen env ty =
 
 let unbind = unbind []
 
-(* We maintain 2 states for a local, all the types that the
- * local ever had (cf integrate in typing.ml), and the type
- * that the local currently has.
+(* We maintain 3 states for a local, all the types that the
+ * local ever had (cf integrate in typing.ml), the type
+ * that the local currently has, and an expression_id generated from
+ * the last assignment to this local.
  *)
 let set_local env x new_type =
   let fake_members, locals = env.lenv in
   let env, new_type = unbind env new_type in
-  let all_types =
+  let all_types, expr_id =
     match IMap.get x locals with
-    | None -> []
-    | Some (x, _) -> x
+    | None -> [], Ident.tmp()
+    | Some (x, _, y) -> x, y
   in
   let all_types =
     if List.exists (fun x -> x = new_type) all_types
     then all_types
     else new_type :: all_types
   in
-  let local = all_types, new_type in
+  let local = all_types, new_type, expr_id in
   let locals = IMap.add x local locals in
   let env = { env with lenv = fake_members, locals } in
   env
@@ -670,7 +677,21 @@ let get_local env x =
   let lcl = IMap.get x (snd env.lenv) in
   match lcl with
   | None -> env, (Reason.Rnone, Tany)
-  | Some (_, x) -> env, x
+  | Some (_, x, _) -> env, x
+
+let set_local_expr_id env x new_eid =
+  let fake_members, locals = env.lenv in
+  match IMap.get x locals with
+  | Some (all_types, type_, eid) when eid <> new_eid ->
+      let local = all_types, type_, new_eid in
+      let locals = IMap.add x local locals in
+      let env = { env with lenv = fake_members, locals } in
+      env
+  | _ -> env
+
+let get_local_expr_id env x =
+  let lcl = IMap.get x (snd env.lenv) in
+  Option.map lcl ~f:(fun (_, _, x) -> x)
 
 (*****************************************************************************)
 (* This function is called when we are about to type-check a block that will
@@ -704,7 +725,7 @@ let get_local env x =
 
 let freeze_local_env env =
   let (members, locals) = env.lenv in
-  let locals = IMap.map (fun (_, type_) -> [type_], type_) locals in
+  let locals = IMap.map (fun (_, type_, eid) -> [type_], type_, eid) locals in
   let lenv = members, locals in
   { env with lenv = lenv }
 
