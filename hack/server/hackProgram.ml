@@ -14,8 +14,6 @@ open ServerEnv
 module Server = ServerFunctors
 
 module Program : Server.SERVER_PROGRAM = struct
-  module EventLogger = HackEventLogger
-
   let name = "hh_server"
 
   let config_filename_ =

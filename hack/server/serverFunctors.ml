@@ -17,19 +17,6 @@ module List = Core_list
 exception State_not_found
 
 module type SERVER_PROGRAM = sig
-  module EventLogger : sig
-    val init: Path.t -> float -> unit
-    val init_done: string -> unit
-    val load_script_done: unit -> unit
-    val load_read_end: string -> unit
-    val load_recheck_end: float -> int -> unit
-    val load_failed: string -> unit
-    val lock_lost: Path.t -> string -> unit
-    val lock_stolen: Path.t -> string -> unit
-    val out_of_date: unit -> unit
-    val recheck_end: float -> int -> int -> unit
-  end
-
   val preinit : unit -> unit
   val init : genv -> env -> env
   val run_once_and_exit : genv -> env -> unit
@@ -120,7 +107,7 @@ end = struct
       let client_build_id = input_line ic in
       if client_build_id <> Build_id.build_id_ohai then begin
         msg_to_channel oc Build_id_mismatch;
-        Program.EventLogger.out_of_date ();
+        HackEventLogger.out_of_date ();
         Printf.eprintf "Status: Error\n";
         Printf.eprintf "%s is out of date. Exiting.\n" Program.name;
         exit 4
@@ -187,11 +174,11 @@ end = struct
     while true do
       if not (Lock.check root "lock") then begin
         Hh_logger.log "Lost %s lock; reacquiring.\n" Program.name;
-        Program.EventLogger.lock_lost root "lock";
+        HackEventLogger.lock_lost root "lock";
         if not (Lock.grab root "lock")
         then
           Hh_logger.log "Failed to reacquire lock; terminating.\n";
-          Program.EventLogger.lock_stolen root "lock";
+          HackEventLogger.lock_stolen root "lock";
           die()
       end;
       ServerPeriodical.call_before_sleeping();
@@ -200,7 +187,7 @@ end = struct
       let loop_count, rechecked_count, new_env = recheck_loop genv !env in
       env := new_env;
       if rechecked_count > 0
-      then Program.EventLogger.recheck_end start_t loop_count rechecked_count;
+      then HackEventLogger.recheck_end start_t loop_count rechecked_count;
       if has_client then handle_connection genv !env socket;
       ServerEnv.invoke_async_queue ();
       EventLogger.flush ();
@@ -212,7 +199,7 @@ end = struct
     Program.unmarshal chan;
     close_in chan;
     SharedMem.load (filename^".sharedmem");
-    Program.EventLogger.load_read_end filename;
+    HackEventLogger.load_read_end filename;
     let to_recheck =
       List.rev_append (BuildMain.get_all_targets ()) to_recheck in
     let paths_to_recheck =
@@ -224,7 +211,7 @@ end = struct
     let start_t = Unix.time () in
     let env, rechecked = recheck genv env updates in
     let rechecked_count = Relative_path.Set.cardinal rechecked in
-    Program.EventLogger.load_recheck_end start_t rechecked_count;
+    HackEventLogger.load_recheck_end start_t rechecked_count;
     env
 
   let run_load_script genv env cmd =
@@ -254,32 +241,32 @@ end = struct
       Hh_logger.log
         "Load state found at %s. %d files to recheck\n%!"
         state_fn (List.length to_recheck);
-      Program.EventLogger.load_script_done ();
+      HackEventLogger.load_script_done ();
       let env = load genv state_fn to_recheck in
-      Program.EventLogger.init_done "load";
+      HackEventLogger.init_done "load";
       env
     with
     | State_not_found ->
         Hh_logger.log "Load state not found!";
         Hh_logger.log "Starting from a fresh state instead...";
         let env = Program.init genv env in
-        Program.EventLogger.init_done "load_state_not_found";
+        HackEventLogger.init_done "load_state_not_found";
         env
     | e ->
         let msg = Printexc.to_string e in
         Hh_logger.log "Load error: %s" msg;
         Printexc.print_backtrace stderr;
         Hh_logger.log "Starting from a fresh state instead...";
-        Program.EventLogger.load_failed msg;
+        HackEventLogger.load_failed msg;
         let env = Program.init genv env in
-        Program.EventLogger.init_done "load_error";
+        HackEventLogger.init_done "load_error";
         env
 
   let create_program_init genv env = fun () ->
     match ServerConfig.load_script genv.config with
     | None ->
         let env = Program.init genv env in
-        Program.EventLogger.init_done "fresh";
+        HackEventLogger.init_done "fresh";
         env
     | Some load_script ->
         run_load_script genv env load_script
@@ -293,7 +280,7 @@ end = struct
      * does not expose the underlying file descriptor to C code; so we use
      * a separate ".sharedmem" file. *)
     SharedMem.save (fn^".sharedmem");
-    Program.EventLogger.init_done "save"
+    HackEventLogger.init_done "save"
 
   (* The main entry point of the daemon
   * the only trick to understand here, is that env.modified is the set
@@ -303,7 +290,7 @@ end = struct
   *)
   let main options config =
     let root = ServerArgs.root options in
-    Program.EventLogger.init root (Unix.time ());
+    HackEventLogger.init root (Unix.time ());
     Program.preinit ();
     SharedMem.init (ServerConfig.sharedmem_config config);
     (* this is to transform SIGPIPE in an exception. A SIGPIPE can happen when
