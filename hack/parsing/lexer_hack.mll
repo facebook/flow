@@ -285,7 +285,7 @@ let float =
   (digit+ ('e'|'E') ('+'?|'-') digit+)
 let unsafe = "//" ws* "UNSAFE" [^'\n']*
 let unsafeexpr_start = "/*" ws* "UNSAFE_EXPR"
-let fixme_start = "/*" ws* "HH_FIXME"
+let fixme_start = "/*" ws* ("HH_FIXME" | "HH_IGNORE_ERROR")
 let fallthrough = "//" ws* "FALLTHROUGH" [^'\n']*
 
 rule token file = parse
