@@ -1536,7 +1536,8 @@ and instantiable_cid p env cid =
            * ClassImplementingInterface::class may be passed. The solution
            * is likely something like concrete_classname<Interface>, which
            * Interface::class would not be *)
-          env)
+          env
+      )
     | Some ((pos, name), class_, _) when
            class_.tc_kind = Ast.Cabstract && class_.tc_final ->
        Errors.uninstantiable_class pos class_.tc_pos name; env
@@ -3515,9 +3516,9 @@ and condition env tparamet =
         | Some cid ->
           let env, obj_ty = static_class_id (fst e2) env cid in
           (match obj_ty with
-            | _, Tabstract (AKdependent (`this, []), Some (_, Tclass _)) ->
-              let env = Env.set_local env x obj_ty in
-              env
+            | _, Tabstract (AKdependent (`this, []), Some (_, Tclass _))
+            | _, Tabstract (AKgeneric _, Some (_, Tclass _)) ->
+              Env.set_local env x obj_ty
             | _, Tclass ((_, cid as _c), _) ->
               let class_ = Env.get_class env cid in
               (match class_ with
