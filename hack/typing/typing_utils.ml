@@ -88,8 +88,8 @@ let simplified_uerror env ty1 ty2 =
   let simplify = match snd ty1, snd ty2 with
     | Tabstract (AKdependent (`static, []), _), Tclass _
     | Tclass _, Tabstract (AKdependent (`static, []), _) -> false
-    | Tabstract (AKdependent _, _), _
-    | _, Tabstract (AKdependent _, _) -> true
+    | Tabstract (AKdependent _, Some _), _
+    | _, Tabstract (AKdependent _, Some _) -> true
     | _, _ -> false in
   (* We unify the base types to see if that produces an error, if not then
    * we use the standard unification error
