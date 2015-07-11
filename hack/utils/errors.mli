@@ -52,7 +52,7 @@ val object_cast: Pos.t -> string -> unit
 val unset_cast: Pos.t -> unit
 val this_no_argument : Pos.t -> unit
 val this_hint_outside_class : Pos.t -> unit
-val this_must_be_return : Pos.t -> unit
+val this_type_forbidden : Pos.t -> unit
 val lowercase_this : Pos.t -> string -> unit
 val classname_param : Pos.t -> unit
 val tparam_with_tparam : Pos.t -> string -> unit

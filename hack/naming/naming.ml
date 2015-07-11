@@ -721,14 +721,15 @@ let make_env old_env ~funs ~classes ~typedefs ~consts =
 
 let rec hint
     ?(is_static_var=false)
-    ?(allow_this=false)
+    ?(forbid_this=false)
     ?(allow_retonly=false) env (p, h) =
-  p, hint_ ~allow_this ~allow_retonly is_static_var p env h
+  p, hint_ ~forbid_this ~allow_retonly is_static_var p env h
 
-and hint_ ~allow_this ~allow_retonly is_static_var p env x =
-  let hint = hint ~is_static_var ~allow_this in
+and hint_ ~forbid_this ~allow_retonly is_static_var p env x =
+  let hint = hint ~is_static_var ~forbid_this in
   match x with
-  | Htuple hl -> N.Htuple (List.map (hint ~allow_retonly env) hl)
+  | Htuple hl ->
+    N.Htuple (List.map (hint ~allow_retonly env) hl)
   | Hoption h ->
     (* void/noreturn are permitted for Typing.option_return_only_typehint *)
     N.Hoption (hint ~allow_retonly env h)
@@ -736,7 +737,7 @@ and hint_ ~allow_this ~allow_retonly is_static_var p env x =
     N.Hfun (List.map (hint env) hl, opt,
             hint ~allow_retonly:true env h)
   | Happly ((p, x) as id, hl) ->
-    let hint_id = hint_id ~allow_this ~allow_retonly env is_static_var id hl in
+    let hint_id = hint_id ~forbid_this ~allow_retonly env is_static_var id hl in
     (match hint_id with
     | N.Hprim _ | N.Hmixed ->
       if hl <> [] then Errors.unexpected_type_arguments p
@@ -761,7 +762,7 @@ and hint_ ~allow_this ~allow_retonly is_static_var p env x =
       | x when x = SN.Classes.cStatic || x = SN.Classes.cParent ->
           Errors.invalid_type_access_root root; N.Hany
         | _ ->
-          (match hint_id ~allow_this ~allow_retonly env is_static_var root [] with
+          (match hint_id ~forbid_this ~allow_retonly env is_static_var root [] with
           | N.Hthis | N.Happly _ as h -> h
           | _ -> Errors.invalid_type_access_root root; N.Hany
           )
@@ -777,7 +778,7 @@ and hint_ ~allow_this ~allow_retonly is_static_var p env x =
       end ShapeMap.empty fdl
   end
 
-and hint_id ~allow_this ~allow_retonly env is_static_var (p, x as id) hl =
+and hint_id ~forbid_this ~allow_retonly env is_static_var (p, x as id) hl =
   Naming_hooks.dispatch_hint_hook id;
   let params = (fst env).type_params in
   if   is_alok_type_name id && not (SMap.mem x params)
@@ -787,7 +788,7 @@ and hint_id ~allow_this ~allow_retonly env is_static_var (p, x as id) hl =
   (* some common Xhp screw ups *)
   if   (x = "Xhp") || (x = ":Xhp") || (x = "XHP")
   then Errors.disallowed_xhp_type p x;
-  match try_castable_hint ~allow_this env p x hl with
+  match try_castable_hint ~forbid_this env p x hl with
   | Some h -> h
   | None -> begin
     match x with
@@ -822,7 +823,7 @@ and hint_id ~allow_this ~allow_retonly env is_static_var (p, x as id) hl =
     | x when x = SN.Typehints.resource -> N.Hprim N.Tresource
     | x when x = SN.Typehints.arraykey -> N.Hprim N.Tarraykey
     | x when x = SN.Typehints.mixed -> N.Hmixed
-    | x when x = SN.Typehints.this && allow_this ->
+    | x when x = SN.Typehints.this && not forbid_this ->
         if hl != []
         then Errors.this_no_argument p;
         (match (fst env).current_cls with
@@ -837,7 +838,7 @@ and hint_id ~allow_this ~allow_retonly env is_static_var (p, x as id) hl =
         | None ->
             Errors.this_hint_outside_class p
         | Some _ ->
-            Errors.this_must_be_return p
+            Errors.this_type_forbidden p
         );
         N.Hany
     | x when x = SN.Classes.cClassname && (List.length hl) <> 1 ->
@@ -851,47 +852,16 @@ and hint_id ~allow_this ~allow_retonly env is_static_var (p, x as id) hl =
         Errors.tparam_with_tparam p x;
         N.Habstr (x, get_constraint env x)
     | _ ->
-        (* In the future, when we have proper covariant support, we can
-         * allow SN.Typehints.this to instantiate any covariant type variable.
-         * For example, let us pretend that we have this defined:
-         *
-         *   interface IFoo<read Tread, write Twrite>
-         *
-         * IFoo<this, int> and IFoo<IFoo<this, int>, int> are ok
-         * IFoo<int, this> and IFoo<int, IFoo<this>> are not ok
-         *
-         * For now, we're hardcoding the fact that all type variables for
-         * Awaitable and WaitHandle are covariant (well, there's only one
-         * type variable, but yeah...). We turn on allow_this in
-         * Awaitable and WaitHandle cases to support members that look
-         * like:
-         *
-         *   private ?WaitHandle<this> wh = ...; // e.g. generic preparables
-         *)
-      let (_, cname) as name = Env.class_name env id in
-      let gen_read_api_covariance =
-        (cname = SN.FB.cGenReadApi || cname = SN.FB.cGenReadIdxApi) in
-      let privacy_policy_contravariance =
-        (cname = SN.FB.cPrivacyPolicyBaseBase
-         || cname = SN.FB.cPrivacyPolicyBase
-         || cname = SN.FB.cPrivacyPolicy) in
-      let data_type_covariance =
-        (cname = SN.FB.cDataType || cname = SN.FB.cDataTypeImplProvider) in
-      let awaitable_covariance =
-        (cname = SN.Classes.cAwaitable || cname = SN.Classes.cWaitHandle
-         || cname = SN.Classes.cWaitableWaitHandle) in
-      let allow_this = allow_this &&
-        (awaitable_covariance || gen_read_api_covariance ||
-         privacy_policy_contravariance || data_type_covariance) in
-      N.Happly (name, hintl ~allow_this ~allow_retonly:true env hl)
+       let name = Env.class_name env id in
+        N.Happly (name, hintl ~forbid_this ~allow_retonly:true env hl)
   end
 
 (* Hints that are valid both as casts and type annotations.  Neither
  * casts nor annotations are a strict subset of the other: For
  * instance, 'object' is not a valid annotation.  Thus callers will
  * have to handle the remaining cases. *)
-and try_castable_hint ?(allow_this=false) env p x hl =
-  let hint = hint ~allow_this ~allow_retonly:false in
+and try_castable_hint ?(forbid_this=false) env p x hl =
+  let hint = hint ~forbid_this ~allow_retonly:false in
   let canon = String.lowercase x in
   let opt_hint = match canon with
     | nm when nm = SN.Typehints.int    -> Some (N.Hprim N.Tint)
@@ -931,10 +901,10 @@ and get_constraint env tparam =
   let env = genv, lenv in
   Option.map gen_constraint (constraint_ env)
 
-and constraint_ env (ck, h) = ck, hint env h
+and constraint_ ?(forbid_this=false) env (ck, h) = ck, hint ~forbid_this env h
 
-and hintl ~allow_this ~allow_retonly env l =
-  List.map (hint ~allow_this ~allow_retonly env) l
+and hintl ~forbid_this ~allow_retonly env l =
+  List.map (hint ~forbid_this ~allow_retonly env) l
 
 (*****************************************************************************)
 (* All the methods and static methods of an interface are "implicitly"
@@ -1005,7 +975,7 @@ and class_ nenv c =
   let prop_names  = List.fold_right SSet.add prop_names SSet.empty in
   let sm_names = List.map (fun x -> snd x.N.m_name) smethods in
   let sm_names = List.fold_right SSet.add sm_names SSet.empty in
-  let parents  = List.map (hint ~allow_this:true ~allow_retonly:false env) c.c_extends in
+  let parents  = List.map (hint ~allow_retonly:false env) c.c_extends in
   let parents  = match c.c_kind with
     (* Make enums implicitly extend the BuiltinEnum class in order to provide
      * utility methods. *)
@@ -1023,10 +993,13 @@ and class_ nenv c =
   let xhp_attr_uses = List.fold_right (xhp_attr_use env) c.c_body [] in
   let req_implements, req_extends = List.fold_right
     (class_require env c.c_kind) c.c_body ([], []) in
-  let tparam_l  = type_paraml env c.c_tparams in
+  (* Setting a class type parameters constraint to the 'this' type is weird
+   * so lets forbid it for now.
+   *)
+  let tparam_l  = type_paraml ~forbid_this:true env c.c_tparams in
   let consts   = List.fold_right (class_const env) c.c_body [] in
   let typeconsts = List.fold_right (class_typeconst env) c.c_body [] in
-  let implements = List.map (hint ~allow_this:true env) c.c_implements in
+  let implements = List.map (hint env) c.c_implements in
   let constructor = List.fold_left (constructor env) None c.c_body in
   let constructor, methods, smethods =
     interface c constructor methods smethods in
@@ -1100,11 +1073,11 @@ and enum_ env e =
     N.e_constraint = opt_map (hint env) e.e_constraint;
   }
 
-and type_paraml env tparams =
+and type_paraml ?(forbid_this = false) env tparams =
   let _, ret = List.fold_left
     (fun (seen, tparaml) ((_, (p, name), _) as tparam) ->
       match SMap.get name seen with
-      | None -> (SMap.add name p seen, (type_param env tparam)::tparaml)
+      | None -> (SMap.add name p seen, (type_param ~forbid_this env tparam)::tparaml)
       | Some pos ->
           Errors.shadowed_type_param p pos name;
           seen, tparaml
@@ -1113,10 +1086,10 @@ and type_paraml env tparams =
     tparams in
   List.rev ret
 
-and type_param env (variance, param_name, cstr_opt) =
+and type_param ~forbid_this env (variance, param_name, cstr_opt) =
   variance,
   param_name,
-  Option.map cstr_opt (constraint_ env)
+  Option.map cstr_opt (constraint_ ~forbid_this env)
 
 and class_use env x acc =
   match x with
@@ -1125,7 +1098,7 @@ and class_use env x acc =
   | AbsConst _ -> acc
   | ClassUse h ->
     hint_no_typedef env h;
-    hint ~allow_this:true env h :: acc
+    hint env h :: acc
   | XhpAttrUse _ -> acc
   | ClassTraitRequire _ -> acc
   | ClassVars _ -> acc
@@ -1141,7 +1114,7 @@ and xhp_attr_use env x acc =
   | ClassUse _ -> acc
   | XhpAttrUse h ->
     hint_no_typedef env h;
-    hint ~allow_this:true env h :: acc
+    hint env h :: acc
   | ClassTraitRequire _ -> acc
   | ClassVars _ -> acc
   | XhpAttr _ -> acc
@@ -1162,14 +1135,14 @@ and class_require env c_kind x acc =
   | ClassTraitRequire (MustExtend, h) ->
     hint_no_typedef env h;
     let acc_impls, acc_exts = acc in
-    (acc_impls, hint ~allow_this:true env h :: acc_exts)
+    (acc_impls, hint env h :: acc_exts)
   | ClassTraitRequire (MustImplement, h) when c_kind <> Ast.Ctrait ->
     let () = Errors.invalid_req_implements (fst h) in
     acc
   | ClassTraitRequire (MustImplement, h) ->
     hint_no_typedef env h;
     let acc_impls, acc_exts = acc in
-    (hint ~allow_this:true env h :: acc_impls, acc_exts)
+    (hint env h :: acc_impls, acc_exts)
   | ClassVars _ -> acc
   | XhpAttr _ -> acc
   | Method _ -> acc
@@ -1213,7 +1186,12 @@ and class_prop_static env x acc =
   | Const _ -> acc
   | AbsConst _ -> acc
   | ClassVars (kl, h, cvl) when List.mem Static kl ->
-    let h = opt_map (hint ~is_static_var:true env) h in
+    (* Static variables are shared for all classes in the hierarchy.
+     * This makes the 'this' type completely unsafe as a type for a
+     * static variable. See test/typecheck/this_tparam_static.php as
+     * an example of what can occur.
+     *)
+    let h = opt_map (hint ~forbid_this:true ~is_static_var:true env) h in
     let cvl = List.map (class_prop_ env) cvl in
     let cvl = List.map (fill_prop kl h) cvl in
     cvl @ acc
@@ -1232,8 +1210,8 @@ and class_prop env x acc =
   | AbsConst _ -> acc
   | ClassVars (kl, h, cvl) when not (List.mem Static kl) ->
     (* there are no covariance issues with private members *)
-    let allow_this = (List.mem Private kl) in
-    let h = opt_map (hint ~allow_this:allow_this env) h in
+    let forbid_this = false (*not (List.mem Private kl)*) in
+    let h = opt_map (hint ~forbid_this env) h in
     let cvl = List.map (class_prop_ env) cvl in
     let cvl = List.map (fill_prop kl h) cvl in
     cvl @ acc
@@ -1356,12 +1334,12 @@ and const_defl h env l = List.map (const_def h env) l
 and const_def h env (x, e) =
   check_constant_expr e;
   let new_const = Env.new_const env x in
-  let h = opt_map (hint ~allow_this:true env) h in
+  let h = opt_map (hint env) h in
   h, new_const, Some (expr env e)
 
 and abs_const_def env h x =
   let new_const = Env.new_const env x in
-  let h = opt_map (hint ~allow_this:true env) h in
+  let h = opt_map (hint env) h in
   h, new_const, None
 
 and class_prop_ env (x, e) =
@@ -1418,7 +1396,7 @@ and typeconst env t =
         None
     | h -> h
   in
-  let type_ = opt_map (hint ~allow_this:true env) hint_ in
+  let type_ = opt_map (hint env) hint_ in
   N.({ c_tconst_name = name;
        c_tconst_constraint = constr;
        c_tconst_type = type_;
@@ -1430,16 +1408,13 @@ and method_ genv m =
   let genv = extend_params genv m.m_tparams in
   let env = genv, Env.empty_local() in
   (* Cannot use 'this' if it is a public instance method *)
-  let allow_this = not genv.in_instance_method ||
-    not (List.mem Public m.m_kind) in
-  let variadicity, paraml = fun_paraml ~allow_this env m.m_params in
+  let variadicity, paraml = fun_paraml env m.m_params in
   let name = Env.new_const env m.m_name in
   let acc = false, false, N.Public in
   let final, abs, vis = List.fold_left kind acc m.m_kind in
   List.iter check_constraint m.m_tparams;
   let tparam_l = type_paraml env m.m_tparams in
-
-  let ret = opt_map (hint ~allow_this:true ~allow_retonly:true env) m.m_ret in
+  let ret = opt_map (hint ~allow_retonly:true env) m.m_ret in
   let f_kind = m.m_fun_kind in
   let body = (match genv.in_mode with
     | FileInfo.Mdecl ->
@@ -1476,10 +1451,10 @@ and kind (final, abs, vis) = function
   | Public -> final, abs, N.Public
   | Protected -> final, abs, N.Protected
 
-and fun_paraml ?(allow_this=false) env l =
+and fun_paraml env l =
   let _names = List.fold_left check_repetition SSet.empty l in
   let variadicity, l = determine_variadicity env l in
-  variadicity, List.map (fun_param ~allow_this env) l
+  variadicity, List.map (fun_param env) l
 
 and determine_variadicity env l =
   match l with
@@ -1495,10 +1470,10 @@ and determine_variadicity env l =
       let variadicity, rl = determine_variadicity env rl in
       variadicity, x :: rl
 
-and fun_param ?(allow_this=false) env param =
+and fun_param env param =
   let x = Env.new_lvar env param.param_id in
   let eopt = opt_map (expr env) param.param_expr in
-  let ty = opt_map (hint ~allow_this env) param.param_hint in
+  let ty = opt_map (hint env) param.param_hint in
   { N.param_hint = ty;
     param_is_reference = param.param_is_reference;
     param_is_variadic = param.param_is_variadic;
@@ -1541,7 +1516,7 @@ and fun_ nenv f =
   let genv = Env.make_fun_decl_genv nenv tparams f in
   let lenv = Env.empty_local () in
   let env = genv, lenv in
-  let h = opt_map (hint ~allow_this:true ~allow_retonly:true env) f.f_ret in
+  let h = opt_map (hint ~allow_retonly:true env) f.f_ret in
   let variadicity, paraml = fun_paraml env f.f_params in
   let x = Env.fun_id env f.f_name in
   List.iter check_constraint f.f_tparams;
@@ -2113,7 +2088,7 @@ and expr_ env = function
   | Ref (p, e_) -> expr_ env e_
 
 and expr_lambda env f =
-  let h = opt_map (hint ~allow_this:true ~allow_retonly:true env) f.f_ret in
+  let h = opt_map (hint ~allow_retonly:true env) f.f_ret in
   let previous_unsafe = !((snd env).has_unsafe) in
   (* save unsafe and yield state *)
   (snd env).has_unsafe := false;

@@ -521,11 +521,10 @@ let this_hint_outside_class pos =
    add Naming.this_hint_outside_class pos
     "Cannot use \"this\" outside of a class"
 
-let this_must_be_return pos =
-  add Naming.this_must_be_return pos
-    "The type \"this\" can only be used as a return type, \
-     to instantiate a covariant type variable, \
-     or as a private non-static member variable"
+let this_type_forbidden pos =
+ add Naming.this_must_be_return pos
+    "The type \"this\" cannot be used as a constraint on a classes generic, \
+     or as the type of a static member variable"
 
 let lowercase_this pos type_ =
   add Naming.lowercase_this pos (
