@@ -418,7 +418,9 @@ module AbstractKind = struct
          | `this -> SN.Typehints.this
          | `static -> "<"^SN.Classes.cStatic^">"
          | `cls c -> c
-         | `expr i -> "<expr#"^string_of_int i^">" in
+         | `expr i ->
+             let display_id = Reason.get_expr_display_id i in
+             "<expr#"^string_of_int display_id^">" in
        String.concat "::" (dt::ids)
   let is_classname = function
     | AKnewtype (name, _) -> (name = Naming_special_names.Classes.cClassname)

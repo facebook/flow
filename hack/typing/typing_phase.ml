@@ -100,7 +100,8 @@ let rec localize_with_env ~ety_env env (dty: decl ty) =
        | Reason.Rexpr_dep_type (_, pos, s), ty ->
            Reason.Rexpr_dep_type (r, pos, s), ty
        | reason, ty when ety_env.from_class <> None -> reason, ty
-       | reason, ty -> Reason.Rinstantiate (reason, "this", r), ty in
+       | reason, ty ->
+           Reason.Rinstantiate (reason, SN.Typehints.this, r), ty in
      let ty =
        match ety_env.from_class with
        | Some cid -> ExprDepTy.make env cid ty

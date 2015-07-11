@@ -17,60 +17,59 @@ module ExprDepTy = struct
 
   let to_string dt = AbstractKind.to_string (AKdependent dt)
 
-  let new_() = `expr (Ident.tmp())
+  let new_() =
+    let eid = Ident.tmp() in
+    Reason.ERexpr eid, `expr eid
 
-  let from_cid env pos cid =
-    let p, dep = match cid with
+  let from_cid env reason cid =
+    let pos = Reason.to_pos reason in
+    let pos, expr_dep_reason, dep = match cid with
       | N.CIparent ->
           (match Env.get_parent env with
-           | _, Tapply ((_, cls), _) -> pos, `cls cls
-           | _, _ -> pos, new_()
+          | _, Tapply ((_, cls), _) ->
+              pos, Reason.ERparent cls, `cls cls
+          | _, _ ->
+              let ereason, dep = new_() in
+              pos, ereason, dep
           )
       | N.CIself ->
           (match Env.get_self env with
-           | _, Tclass ((_, cls), _) -> pos, `cls cls
-           | _, _ -> pos, new_()
+          | _, Tclass ((_, cls), _) ->
+              pos, Reason.ERself cls, `cls cls
+          | _, _ ->
+              let ereason, dep = new_() in
+              pos, ereason, dep
           )
-      | N.CI (p, cls) -> p, `cls cls
-      | N.CIstatic -> pos, `static
-      | N.CIvar (p, N.This) -> p, `static
+      | N.CI (p, cls) ->
+          p, Reason.ERclass cls, `cls cls
+      | N.CIstatic ->
+          pos, Reason.ERstatic, `static
+      | N.CIvar (p, N.This) ->
+          p, Reason.ERstatic, `static
       (* If it is a local variable then we look up the expression id associated
        * with it. If one doesn't exist we generate a new one. We are being
        * conservative here because the new expression id we create isn't
        * added to the local enviornment.
        *)
       | N.CIvar (p, N.Lvar (_, x)) ->
-          let eid = match Env.get_local_expr_id env x with
-            | Some eid -> eid
-            | None -> Ident.tmp() in
-          p, `expr eid
+          let ereason, dep = match Env.get_local_expr_id env x with
+            | Some eid -> Reason.ERexpr eid, `expr eid
+            | None -> new_() in
+          p, ereason, dep
       (* If all else fails we generate a new identifier for our expression
        * dependent type.
        *)
-      | N.CIvar (p, _) -> p, new_() in
-    Reason.Rwitness p, (dep, [])
+      | N.CIvar (p, _) ->
+          let ereason, dep = new_() in
+          p, ereason, dep in
+    (Reason.Rexpr_dep_type (reason, pos, expr_dep_reason), (dep, []))
 
   (* Takes the given list of dependent types and applies it to the given
    * locl ty to create a new locl ty
    *)
   let apply dep_tys ty =
     List.fold_left begin fun ty (r, dep_ty) ->
-      (* If it is a expression dependent type we want to explain what
-       * expression it was derived from.
-       *)
-      let reason = match fst dep_ty with
-        | `expr _ | `static ->
-            (match r with
-             | Reason.Rexpr_dep_type (_, pos, name) ->
-                 Reason.Rexpr_dep_type (fst ty, pos, name)
-             | _ ->
-                 let pos = Reason.to_pos r in
-                 let name = to_string (fst dep_ty, []) in
-                 Reason.Rexpr_dep_type (fst ty, pos, name)
-            )
-        | _ ->
-            fst ty in
-      reason, Tabstract (AKdependent dep_ty, Some ty)
+      r, Tabstract (AKdependent dep_ty, Some ty)
     end ty dep_tys
 
   (* We do not want to create a new expression dependent type if the type is
@@ -134,9 +133,8 @@ module ExprDepTy = struct
    *)
   (****************************************************************************)
   let make env cid cid_ty =
-    let pos = Reason.to_pos (fst cid_ty) in
     if should_apply env cid_ty then
-      apply [from_cid env pos cid] cid_ty
+      apply [from_cid env (fst cid_ty) cid] cid_ty
     else
       cid_ty
 end

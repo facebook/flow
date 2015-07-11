@@ -50,17 +50,21 @@ let empty_env env ety_env ids = {
 }
 
 let rec expand_with_env ety_env env reason root ids =
-  let expand_env = empty_env env ety_env ids in
-  let env, ty = expand_ expand_env root in
-  let reason = Reason.Rtype_access(
-    reason,
-    env.trail
-    |> List.rev
-    |> List.map (compose strip_ns ExprDepTy.to_string ),
-    fst ty
-  ) in
-  let ty = reason, snd ty in
-  expand_env.tenv, (expand_env.ety_env, ty)
+  let env = empty_env env ety_env ids in
+  let env, (root_r, root_ty) = expand_ env root in
+  let trail = env.trail
+              |> List.rev
+              |> List.map (compose strip_ns ExprDepTy.to_string) in
+  let reason_func r =
+    let r = match r with
+      | Reason.Rexpr_dep_type (_, p, e) ->
+          Reason.Rexpr_dep_type (root_r, p, e)
+      | _ -> r in
+    Reason.Rtype_access(reason, trail, r) in
+  let ty = reason_func root_r, root_ty in
+  let deps = List.map (fun (x, y) -> reason_func x, y) env.dep_tys in
+  let ty = ExprDepTy.apply deps ty in
+  env.tenv, (env.ety_env, ty)
 
 and expand env r (root, ids) =
   let ety_env = Phase.env_with_self env in
@@ -78,7 +82,7 @@ and expand env r (root, ids) =
 and expand_ env (root_reason, root_ty as root) =
   match env.ids with
   | [] ->
-      env, ExprDepTy.apply env.dep_tys root
+      env, root
   | head::tail -> begin match root_ty with
       | Tany -> env, root
       | Tabstract (AKdependent (`cls _, []), Some ty)

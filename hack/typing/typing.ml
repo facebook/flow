@@ -346,6 +346,8 @@ and bind_param env (_, ty1) param =
 (* Now we are actually checking stuff! *)
 (*****************************************************************************)
 and fun_def env nenv _ f =
+  (* reset the expression dependent display ids for each function body *)
+  Reason.expr_display_id_map := IMap.empty;
   Typing_hooks.dispatch_enter_fun_def_hook f;
   let nb = Naming.func_body nenv f in
   NastCheck.fun_ env f nb;
@@ -3905,6 +3907,8 @@ and class_var_def env is_static c cv =
       ()
 
 and method_def env m =
+  (* reset the expression dependent display ids for each method body *)
+  Reason.expr_display_id_map := IMap.empty;
   Typing_hooks.dispatch_enter_method_def_hook m;
   let env = { env with Env.lenv = Env.empty_local } in
   let env = Env.set_local env this (Env.get_self env) in

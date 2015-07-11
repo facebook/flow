@@ -179,6 +179,7 @@ val type_param_arity : Pos.t -> string -> string -> unit
 val cyclic_typedef : Pos.t -> unit
 val type_arity_mismatch : Pos.t -> string -> Pos.t -> string -> unit
 val this_final : Pos.t * string -> Pos.t -> error -> unit
+val exact_class_final : Pos.t * string -> Pos.t -> error -> unit
 val tuple_arity_mismatch : Pos.t -> string -> Pos.t -> string -> unit
 val fun_arity_mismatch : Pos.t -> Pos.t -> unit
 val discarded_awaitable : Pos.t -> Pos.t -> unit
@@ -284,6 +285,7 @@ val try_add_err : Pos.t -> string -> (unit -> 'a) -> (unit -> 'a) -> 'a
 val do_ : (unit -> 'a) -> error list * 'a
 val ignore_ : (unit -> 'a) -> 'a
 val try_when :
-  (unit -> unit) -> when_:(unit -> bool) -> do_:(error -> unit) -> unit
+  (unit -> 'a) -> when_:(unit -> bool) -> do_:(error -> unit) -> 'a
 val has_no_errors : (unit -> 'a) -> bool
+val must_error : (unit -> unit) -> (unit -> unit) -> unit
 val to_absolute : error -> Pos.absolute error_

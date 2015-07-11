@@ -8,6 +8,8 @@
  *
  *)
 
+open Utils
+
 (* The reason why something is expected to have a certain type *)
 type t =
   | Rnone
@@ -58,9 +60,16 @@ type t =
   | Rinstantiate     of t * string * t
   | Rarray_filter    of Pos.t * t
   | Rtype_access     of t * string list * t
-  | Rexpr_dep_type   of t * Pos.t * string
+  | Rexpr_dep_type   of t * Pos.t * expr_dep_type_reason
   | Rnullsafe_op     of Pos.t (* ?-> operator is used *)
   | Rtconst_no_cstr  of Nast.sid
+
+and expr_dep_type_reason =
+  | ERexpr of int
+  | ERstatic
+  | ERclass of string
+  | ERparent of string
+  | ERself of string
 
 (* Translate a reason to a (pos, string) list, suitable for error_l. This
  * previously returned a string, however the need to return multiple lines with
@@ -152,15 +161,15 @@ let rec to_string prefix r =
       array<Tk, Tv>, and Container<Tv> to array<arraykey, Tv>. \
       Single argument calls additionally remove nullability from Tv.")]
   | Rtype_access (r_orig, expansions, r_expanded) ->
+      let expand_prefix =
+        if List.length expansions = 1 then
+          "  resulting from expanding the type constant "
+        else
+          "  resulting from expanding a type constant as follows:\n    " in
       (to_string prefix r_orig) @
-      (to_string
-        ("  resulting from expanding a type constant as follows:\n    "
-        ^String.concat " -> " expansions)
-        r_expanded
-      )
-  | Rexpr_dep_type (r, p, n) ->
-      (p, "  where '"^n^"' is a reference to this expression") ::
-      (to_string prefix r)
+      (to_string (expand_prefix^String.concat " -> " expansions) r_expanded)
+  | Rexpr_dep_type (r, p, e) ->
+      (to_string prefix r) @ [p, "  "^expr_dep_type_reason_string e]
   | Rtconst_no_cstr (_, n) ->
      [(p, prefix ^ " because the type constant "^n^" has no constraints")]
 
@@ -216,6 +225,34 @@ and to_pos = function
   | Rexpr_dep_type (r, _, _) -> to_pos r
   | Rnullsafe_op p -> p
   | Rtconst_no_cstr (p, _) -> p
+
+(* This is a mapping from internal expression ids to a standardized int.
+ * Used for outputting cleaner error messages to users
+ *)
+and expr_display_id_map = ref IMap.empty
+and get_expr_display_id id =
+  let map = !expr_display_id_map in
+  match IMap.get id map with
+  | Some n -> n
+  | None ->
+      let n = (IMap.cardinal map) + 1 in
+      expr_display_id_map := IMap.add id n map;
+      n
+
+and expr_dep_type_reason_string = function
+  | ERexpr id ->
+      let did = get_expr_display_id id in
+      "where '<expr#"^string_of_int did^">' is a reference to this expression"
+  | ERstatic ->
+      "where '<static>' refers to the late bound type of the enclosing class"
+  | ERclass c ->
+      "where the class '"^(strip_ns c)^"' was referenced here"
+  | ERparent p ->
+      "where the class '"^(strip_ns p)^"' (the parent of the enclosing) \
+       class was referenced here"
+  | ERself c ->
+      "where the class '"^(strip_ns c)^"' was referenced here via the keyword \
+       'self'"
 
 type ureason =
   | URnone
@@ -325,11 +362,5 @@ let none = Rnone
 (*****************************************************************************)
 
 let explain_generic_constraint p_inst reason name error =
-  match reason with
-  | Rtype_access (_, _, _) | Rexpr_dep_type _ ->
-      let msgl =
-        to_string ("Considering the constraint on '"^name^"'") reason in
-      Errors.explain_type_constant msgl error
-  | reason ->
-      let pos = to_pos reason in
-      Errors.explain_constraint p_inst pos name error
+  let pos = to_pos reason in
+  Errors.explain_constraint p_inst pos name error

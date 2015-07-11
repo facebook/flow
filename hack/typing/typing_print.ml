@@ -17,7 +17,7 @@ open Utils
 open Typing_defs
 
 module SN = Naming_special_names
-
+module Reason = Typing_reason
 (*****************************************************************************)
 (* Computes the string representing a type in an error message.
  * We generally don't want to show the whole type. If an error was due
@@ -74,19 +74,19 @@ module ErrorString = struct
 
   and abstract ak cstr =
     let x = strip_ns @@ AbstractKind.to_string ak in
-    let base, cstr =
-      match ak with
-      | AKdependent (`cls _, []) | AKnewtype (_, _) ->
-          "an object of type "^x, None
-      | AKgeneric (_, _) -> "a value of generic type "^x, None
-      | AKdependent (`this, []) -> "the type 'this'", cstr
-      | AKdependent ((`static | `expr _), _) ->
-          "the expression dependent type "^x, cstr
-      | AKdependent (_, _::_) -> "the abstract type constant "^x, cstr in
-    Option.fold
-      cstr
-      ~init:base
-      ~f:(fun init ty -> init^"\n  that is compatible with "^type_ (snd ty))
+    match ak, cstr with
+    | AKnewtype (_, _), _ -> "an object of type "^x
+    | AKgeneric (_, _), _ -> "a value of generic type "^x
+    | AKdependent (`cls c, []), Some (_, ty) ->
+        type_ ty^" (known to be exactly the class '"^strip_ns c^"')"
+    | AKdependent ((`static | `expr _), _), _ ->
+        "the expression dependent type "^x
+    | AKdependent (_, _::_), _ -> "the abstract type constant "^x
+    | AKdependent _, _ ->
+        "the type '"^x^"'"
+        ^Option.value_map cstr ~default:""
+          ~f:(fun (_, ty) -> "\n  that is compatible with "^type_ ty)
+
   and unresolved l =
     let l = List.map snd l in
     let l = List.map type_ l in

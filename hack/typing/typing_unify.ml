@@ -176,7 +176,7 @@ and unify_ env r1 ty1 r2 ty2 =
         | None -> env, None
         | Some (env, cstr) -> env, Some cstr in
       env, Tabstract (ak1, tcstr)
-  | Tabstract (AKdependent (_, _),
+  | Tabstract (AKdependent (expr_dep, _),
       Some (_, Tclass ((_, x) as id, _) as ty)), _ ->
       let class_ = Env.get_class env x in
       (* For final class C, there is no difference between abstract<X> and X.
@@ -189,7 +189,7 @@ and unify_ env r1 ty1 r2 ty2 =
           env, snd ty
       | _ ->
           (Errors.try_when
-             (fun () -> TUtils.uerror r1 ty1 r2 ty2)
+             (fun () -> TUtils.simplified_uerror env (r1, ty1) (r2, ty2))
              ~when_: begin fun () ->
                match ty2 with
                | Tclass ((_, y), _) -> y = x
@@ -198,7 +198,12 @@ and unify_ env r1 ty1 r2 ty2 =
                | Tanon (_, _) | Tfun _ | Tunresolved _ | Tobject
                | Tshape _ -> false
              end
-             ~do_:(fun error -> Errors.this_final id (Reason.to_pos r1) error)
+             ~do_: begin fun error ->
+               if expr_dep = `cls x then
+                 Errors.exact_class_final id (Reason.to_pos r2) error
+               else
+                 Errors.this_final id (Reason.to_pos r2) error
+             end
           );
           env, Tany
         )
@@ -306,7 +311,7 @@ and unify_ env r1 ty1 r2 ty2 =
           | _ -> () in
         add env ty1;
         add env ty2;
-        TUtils.uerror r1 ty1 r2 ty2;
+        TUtils.simplified_uerror env (r1, ty1) (r2, ty2);
         env, Tany
 
 and unify_arities ~ellipsis_is_variadic anon_arity func_arity : bool =

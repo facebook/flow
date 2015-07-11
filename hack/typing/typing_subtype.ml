@@ -309,6 +309,24 @@ and sub_type_with_uenv env (uenv_super, ty_super) (uenv_sub, ty_sub) =
         { uenv_sub with
           TUEnv.dep_tys = (r, d)::uenv_sub.TUEnv.dep_tys } in
       sub_type_with_uenv env (uenv_super, ty_super) (uenv_sub, ty_sub)
+  | (_, Tabstract (AKdependent d1, _)),
+    (r, Tabstract (AKdependent d2, Some sub)) when d1 <> d2 ->
+      let uenv_sub =
+        { uenv_sub with
+          TUEnv.dep_tys = (r, d2)::uenv_sub.TUEnv.dep_tys } in
+      (* If an error occurred while subtyping, we produce a unification error
+       * so we get the full information on how the dependent type was
+       * generated
+       *)
+      Errors.try_when
+        (fun () ->
+          sub_type_with_uenv env (uenv_super, ty_super) (uenv_sub, sub))
+        ~when_: begin fun () ->
+          match TUtils.get_base_type ty_super, sub with
+          | (_, Tclass ((_, x), _)), (_, Tclass ((_, y), _)) when x = y -> false
+          | _, _ -> true
+        end
+        ~do_: (fun _ -> TUtils.simplified_uerror env ty_super ty_sub)
   | (_, Tabstract (AKgeneric _, _)), (_, Tabstract (AKgeneric _, Some _))
   | (_, Tabstract (AKgeneric (_, Some _), _)),
       (_, Tabstract (AKgeneric _, _)) ->
@@ -528,34 +546,15 @@ and sub_type_with_uenv env (uenv_super, ty_super) (uenv_sub, ty_sub) =
             Unify.unify_with_uenv env (uenv_super, ty_super) (uenv_sub, ty_sub)
         )
         (fun _ -> sub_type_with_uenv env (uenv_super, ty_super) (uenv_sub, x))
-  | _, (r_sub, Tabstract (AKdependent dt, Some ty)) ->
-      (* If the error is not due to an expression dependent type out a simpler
-       * error message.
-       *)
-      let explain_dep_type = match snd ty_super, dt with
-        | _, ((`static | `this | `cls _), _) -> false
-        | Tabstract (AKdependent _, _), _ -> true
-        | _, _ -> false in
-      let sub _ =
-        let uenv_sub =
-          { uenv_sub with
-            TUEnv.dep_tys = (r_sub, dt)::uenv_sub.TUEnv.dep_tys } in
-        if explain_dep_type then
-          Errors.try_
-            (fun () ->
-              sub_type_with_uenv env (uenv_super, ty_super) (uenv_sub, ty)
-            )
-            (fun l ->
-              let x = ExprDepTy.to_string dt in
-              Reason.explain_generic_constraint env.Env.pos r_sub x l;
-              env
-            )
-        else
-          sub_type_with_uenv env (uenv_super, ty_super) (uenv_sub, ty) in
+  | _, (r, Tabstract (AKdependent d, Some ty)) ->
       Errors.try_
         (fun () -> fst (
           Unify.unify_with_uenv env (uenv_super, ty_super) (uenv_sub, ty_sub)))
-        sub
+        (fun _ ->
+          let uenv_sub =
+            { uenv_sub with
+              TUEnv.dep_tys = (r, d)::uenv_sub.TUEnv.dep_tys } in
+          sub_type_with_uenv env (uenv_super, ty_super) (uenv_sub, ty))
   (* Handle enums with subtyping constraints. *)
   | _, (_, (Tclass ((_, x), [])))
     when Typing_env.get_enum_constraint x <> None ->
