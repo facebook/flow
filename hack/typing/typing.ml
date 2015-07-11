@@ -1236,7 +1236,11 @@ and expr_ ~in_cond ~(valkind: [> `lvalue | `rvalue | `other ]) env (p, e) =
   | Efun (f, _idl) ->
       NastCheck.fun_ env f (Nast.assert_named_body f.f_body);
       let env, ft = fun_decl_in_env env f in
-      let ety_env = Phase.env_with_self env in
+      (* When creating a closure, the 'this' type will mean the late bound type
+       * of the current enclosing class
+       *)
+      let ety_env =
+        { (Phase.env_with_self env) with from_class = Some CIstatic } in
       let env, ft = Phase.localize_ft ~ety_env env ft in
       (* check for recursive function calls *)
       let anon = anon_make env.Env.lenv p f in
@@ -1403,7 +1407,16 @@ and anon_make anon_lenv p f =
         let env, hret =
           match f.f_ret with
           | None -> TUtils.in_var env (Reason.Rnone, Tunresolved [])
-          | Some x -> Typing_hint.hint_locl env x in
+          | Some x ->
+              let env, ret =
+                Typing_hint.hint ~ensure_instantiable:true env x in
+              (* If a 'this' type appears it needs to be compatible with the
+               * late static type
+               *)
+              let ety_env =
+                { (Phase.env_with_self env) with
+                  from_class = Some CIstatic } in
+              Phase.localize ~ety_env env ret in
         let env = Env.set_return env hret in
         let env = Env.set_fn_kind env f.f_fun_kind in
         let env = block env nb.fnb_nast in
@@ -3148,10 +3161,10 @@ and call_ pos env fty el uel =
       pos pos_def (List.length el + List.length uel) ft.ft_arity in
     let env, var_param = variadic_param env ft in
     let env, tyl = lmap expr env el in
-    let pos_tyl = List.combine (List.map fst el) tyl in
+    let e_tyl = List.combine el tyl in
     let todos = ref [] in
     let env = wfold_left_default (call_param todos) (env, var_param)
-      ft.ft_params pos_tyl in
+      ft.ft_params e_tyl in
     let env, _ = lmap unpack_expr env uel in
     let env = fold_fun_list env !todos in
     Typing_hooks.dispatch_fun_call_hooks ft.ft_params (List.map fst (el @ uel)) env;
@@ -3176,12 +3189,20 @@ and call_ pos env fty el uel =
     env, (Reason.Rnone, Tany)
   )
 
-and call_param todos env (name, x) (pos, arg_ty) =
+and call_param todos env (name, x) ((pos, _ as e), arg_ty) =
   (match name with
   | None -> ()
   | Some name -> Typing_suggest.save_param name env x arg_ty
   );
   let arg_ty = check_valid_rvalue pos env arg_ty in
+
+  (* When checking params the type 'x' may be expression dependent. Since
+   * we store the expression id in the local env for Lvar, we want to apply
+   * it in this case.
+   *)
+  let dep_ty = match snd e with
+    | Lvar _ -> ExprDepTy.make env (CIvar e) arg_ty
+    | _ -> arg_ty in
   (* We solve for Tanon types after all the other params because we want to
    * typecheck the lambda bodies with as much type information as possible. For
    * example, in array_map(fn, x), we might be able to use the type of x to
@@ -3199,7 +3220,7 @@ and call_param todos env (name, x) (pos, arg_ty) =
   | _, (Tany | Tmixed | Tarray (_, _) | Toption _ | Tprim _
     | Tvar _ | Tfun _ | Tabstract (_, _) | Tclass (_, _) | Ttuple _
     | Tunresolved _ | Tobject | Tshape _) ->
-    Type.sub_type pos Reason.URparam env x arg_ty
+    Type.sub_type pos Reason.URparam env x dep_ty
 
 and bad_call p ty =
   Errors.bad_call p (Typing_print.error ty)
@@ -3516,9 +3537,23 @@ and condition env tparamet =
         | Some cid ->
           let env, obj_ty = static_class_id (fst e2) env cid in
           (match obj_ty with
-            | _, Tabstract (AKdependent (`this, []), Some (_, Tclass _))
             | _, Tabstract (AKgeneric _, Some (_, Tclass _)) ->
               Env.set_local env x obj_ty
+            | _, Tabstract (AKdependent (`this, []), Some (_, Tclass _)) ->
+              let obj_ty =
+                (* Technically instanceof static is not strong enough to prove
+                 * that a type is exactly the same as the late bound type.
+                 * For now we allow this lie to exist. To solve
+                 * this we either need to create a new type that means
+                 * subtype of static or provide a way of specifying exactly
+                 * the late bound type i.e. $x::class === static::class
+                 *)
+                if cid = CIstatic then
+                  ExprDepTy.make env CIstatic obj_ty
+                else
+                  obj_ty in
+              let env = Env.set_local env x obj_ty in
+              env
             | _, Tclass ((_, cid as _c), _) ->
               let class_ = Env.get_class env cid in
               (match class_ with

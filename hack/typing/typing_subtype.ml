@@ -289,9 +289,25 @@ and sub_type_with_uenv env (uenv_super, ty_super) (uenv_sub, ty_sub) =
 (****************************************************************************)
 (* ### End Tunresolved madness ### *)
 (****************************************************************************)
-  | (_, Tabstract (AKdependent d1, Some ty_super)),
-    (_, Tabstract (AKdependent d2, Some ty_sub))
-    when d1 = d2 ->
+  | (r1, Tabstract (AKdependent d1, Some ty_super)),
+    (r2, Tabstract (AKdependent d2, Some ty_sub))
+        when d1 = d2 ->
+      let uenv_super =
+        { uenv_super with
+          TUEnv.dep_tys = (r1, d1)::uenv_super.TUEnv.dep_tys } in
+      let uenv_sub =
+        { uenv_sub with
+          TUEnv.dep_tys = (r2, d2)::uenv_sub.TUEnv.dep_tys } in
+      sub_type_with_uenv env (uenv_super, ty_super) (uenv_sub, ty_sub)
+  (* This is sort of a hack because our handling of Toption is highly
+   * dependent on how the type is structured. When we see a bare
+   * dependent type we strip it off at this point since it shouldn't be
+   * relevant to subtyping any more.
+   *)
+  | _, (r, Tabstract (AKdependent (`expr _, [] as d), Some ty_sub)) ->
+      let uenv_sub =
+        { uenv_sub with
+          TUEnv.dep_tys = (r, d)::uenv_sub.TUEnv.dep_tys } in
       sub_type_with_uenv env (uenv_super, ty_super) (uenv_sub, ty_sub)
   | (_, Tabstract (AKgeneric _, _)), (_, Tabstract (AKgeneric _, Some _))
   | (_, Tabstract (AKgeneric (_, Some _), _)),
@@ -333,7 +349,7 @@ and sub_type_with_uenv env (uenv_super, ty_super) (uenv_sub, ty_sub) =
                       let ety_env = {
                         type_expansions = [];
                         substs = SMap.empty;
-                        this_ty = ty_sub;
+                        this_ty = ExprDepTy.apply uenv_sub.TUEnv.dep_tys ty_sub;
                         from_class = None;
                       } in
                       let env, elt_type =
@@ -371,7 +387,7 @@ and sub_type_with_uenv env (uenv_super, ty_super) (uenv_sub, ty_sub) =
                   let ety_env = {
                     type_expansions = [];
                     substs = TSubst.make class_.tc_tparams tyl_sub;
-                    this_ty = Reason.none, TUtils.this_of ty_sub;
+                    this_ty = ExprDepTy.apply uenv_sub.TUEnv.dep_tys ty_sub;
                     from_class = None;
                   } in
                   let env, up_obj = Phase.localize ~ety_env env up_obj in
@@ -442,19 +458,22 @@ and sub_type_with_uenv env (uenv_super, ty_super) (uenv_sub, ty_sub) =
   | (_, Toption ty_super), (_, Toption ty_sub) ->
       let uenv_super = {
         TUEnv.non_null = true;
-        TUEnv.seen_tvars = seen_tvars_super
+        TUEnv.seen_tvars = seen_tvars_super;
+        TUEnv.dep_tys = uenv_super.TUEnv.dep_tys;
       } in
       let uenv_sub = {
         TUEnv.non_null = true;
-        TUEnv.seen_tvars = seen_tvars_sub
+        TUEnv.seen_tvars = seen_tvars_sub;
+        TUEnv.dep_tys = uenv_sub.TUEnv.dep_tys;
       } in
       sub_type_with_uenv env (uenv_super, ty_super) (uenv_sub, ty_sub)
-  | (_, Toption ty_super), _ ->
+  | (_, Toption ty_opt), _ ->
       let uenv_super = {
         TUEnv.non_null = true;
-        TUEnv.seen_tvars = seen_tvars_super
+        TUEnv.seen_tvars = seen_tvars_super;
+        TUEnv.dep_tys = uenv_super.TUEnv.dep_tys;
       } in
-      sub_type_with_uenv env (uenv_super, ty_super) (uenv_sub, ty_sub)
+      sub_type_with_uenv env (uenv_super, ty_opt) (uenv_sub, ty_sub)
   | (_, Ttuple tyl_super), (_, Ttuple tyl_sub)
     when List.length tyl_super = List.length tyl_sub ->
     wfold_left2 sub_type env tyl_super tyl_sub
@@ -518,6 +537,9 @@ and sub_type_with_uenv env (uenv_super, ty_super) (uenv_sub, ty_sub) =
         | Tabstract (AKdependent _, _), _ -> true
         | _, _ -> false in
       let sub _ =
+        let uenv_sub =
+          { uenv_sub with
+            TUEnv.dep_tys = (r_sub, dt)::uenv_sub.TUEnv.dep_tys } in
         if explain_dep_type then
           Errors.try_
             (fun () ->
@@ -546,7 +568,7 @@ and sub_type_with_uenv env (uenv_super, ty_super) (uenv_sub, ty_sub) =
            let ety_env = {
              type_expansions = [];
              substs = SMap.empty;
-             this_ty = Reason.none, TUtils.this_of ty_sub;
+             this_ty = ExprDepTy.apply uenv_sub.TUEnv.dep_tys ty_sub;
              from_class = None;
            } in
            let env, base = Phase.localize ~ety_env env base in

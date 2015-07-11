@@ -101,6 +101,10 @@ let rec localize_with_env ~ety_env env (dty: decl ty) =
            Reason.Rexpr_dep_type (r, pos, s), ty
        | reason, ty when ety_env.from_class <> None -> reason, ty
        | reason, ty -> Reason.Rinstantiate (reason, "this", r), ty in
+     let ty =
+       match ety_env.from_class with
+       | Some cid -> ExprDepTy.make env cid ty
+       | _ -> ty in
      env, (ety_env, ty)
   | r, Tarray (ty1, ty2) ->
       let env, ty1 = opt (localize ~ety_env) env ty1 in
@@ -149,12 +153,8 @@ let rec localize_with_env ~ety_env env (dty: decl ty) =
   | r, Ttuple tyl ->
      let env, tyl = lfold (localize ~ety_env) env tyl in
      env, (ety_env, (r, Ttuple tyl))
-  | r, Taccess ((_, orig_root as root_ty), ids) ->
+  | r, Taccess (root_ty, ids) ->
       let env, root_ty = localize ~ety_env env root_ty in
-      let root_ty =
-        match ety_env.from_class with
-        | Some cid when orig_root = Tthis -> ExprDepTy.make env cid root_ty
-        | _ -> root_ty in
       TUtils.expand_typeconst ety_env env r root_ty ids
   | r, Tshape (fields_known, tym) ->
      let env, tym = ShapeMap.map_env (localize ~ety_env) env tym in
