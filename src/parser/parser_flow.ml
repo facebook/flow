@@ -213,6 +213,7 @@ end = struct
     val _type : env -> Ast.Type.t
     val type_parameter_declaration : env -> Ast.Type.ParameterDeclaration.t option
     val type_parameter_instantiation : env -> Ast.Type.ParameterInstantiation.t option
+    val generic : env -> Loc.t * Ast.Type.Generic.t
     val return_type : env -> Ast.Type.annotation option
     val _object : ?allow_static:bool -> env -> Loc.t * Type.Object.t
     val function_param_list : env -> Type.Function.Param.t option * Type.Function.Param.t list
@@ -320,7 +321,9 @@ end = struct
           let t = primary env in
           Loc.btwn start_loc (fst t), Type.Typeof t
       | T_LBRACKET -> tuple env
-      | T_IDENTIFIER -> generic env
+      | T_IDENTIFIER ->
+          let loc, g = generic env in
+          loc, Type.Generic g
       | T_STRING (loc, value, raw, octal)  ->
           if octal then strict_error env Error.StrictOctalLiteral;
           Expect.token env (T_STRING (loc, value, raw, octal));
@@ -498,7 +501,7 @@ end = struct
       | _ ->
           Type (union_with env
                   (intersection_with env
-                    (postfix_with env (generic_with_identifier env id)))
+                    (postfix_with env (generic_type_with_identifier env id)))
                 )
 
     and function_or_group env =
@@ -688,9 +691,9 @@ end = struct
             }))
           end else None
 
-    and generic env = generic_with_identifier env (Parse.identifier env)
+    and generic env = raw_generic_with_identifier env (Parse.identifier env)
 
-    and generic_with_identifier =
+    and raw_generic_with_identifier =
       let rec identifier env (q_loc, qualification) =
         if Peek.token env = T_PERIOD
         then begin
@@ -711,10 +714,14 @@ end = struct
         let loc = match typeParameters with
         | None -> id_loc
         | Some (loc, _) -> Loc.btwn id_loc loc in
-        loc, Type.(Generic Generic.({
+        loc, Type.Generic.({
           id;
           typeParameters;
-        }))
+        })
+
+    and generic_type_with_identifier env id =
+      let loc, generic = raw_generic_with_identifier env id in
+      loc, Type.Generic generic
 
     and return_type env =
       match Peek.token env with
@@ -735,6 +742,7 @@ end = struct
     let _object ?(allow_static=false) env = wrap (_object ~allow_static) env
     let function_param_list = wrap function_param_list
     let annotation = wrap annotation
+    let generic = wrap generic
   end
 
   module Declaration = struct
@@ -2801,15 +2809,7 @@ end = struct
        which are subsumed by `type` and `declare class` *)
     and interface =
       let rec extends env acc =
-        let id = Parse.identifier env in
-        let typeParameters = Type.type_parameter_instantiation env in
-        let loc = match typeParameters with
-        | None -> fst id
-        | Some (loc, _) -> Loc.btwn (fst id) loc in
-        let extend = loc, Statement.Interface.Extends.({
-          id;
-          typeParameters;
-        }) in
+        let extend = Type.generic env in
         let acc = extend::acc in
         match Peek.token env with
         | T_COMMA ->
@@ -2845,15 +2845,7 @@ end = struct
       (* This is identical to `interface` *)
       let declare_class =
         let rec extends env acc =
-          let id = Parse.identifier env in
-          let typeParameters = Type.type_parameter_instantiation env in
-          let loc = match typeParameters with
-          | None -> fst id
-          | Some (loc, _) -> Loc.btwn (fst id) loc in
-          let extend = loc, Statement.Interface.Extends.({
-            id;
-            typeParameters;
-          }) in
+          let extend = Type.generic env in
           let acc = extend::acc in
           match Peek.token env with
           | T_COMMA ->

@@ -345,18 +345,11 @@ and Statement : sig
     }
   end
   module Interface : sig
-    module Extends : sig
-      type t = Loc.t * t'
-      and t' = {
-        id: Identifier.t;
-        typeParameters: Type.ParameterInstantiation.t option;
-      }
-    end
     type t = {
       id: Identifier.t;
       typeParameters: Type.ParameterDeclaration.t option;
       body: Loc.t * Type.Object.t;
-      extends: Extends.t list;
+      extends: (Loc.t * Type.Generic.t) list;
     }
   end
   module DeclareVariable : sig

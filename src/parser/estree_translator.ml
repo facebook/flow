@@ -654,10 +654,14 @@ end with type t = Impl.t) = struct
     |]
   )
 
-  and interface_extends (loc, extends) = Statement.Interface.Extends.(
+  and interface_extends (loc, g) = Type.Generic.(
+    let id = match g.id with
+    | Identifier.Unqualified id -> identifier id
+    | Identifier.Qualified q -> generic_type_qualified_identifier q
+    in
     node "InterfaceExtends" loc [|
-      "id", identifier extends.id;
-      "typeParameters", option type_parameter_instantiation extends.typeParameters;
+      "id", id;
+      "typeParameters", option type_parameter_instantiation g.typeParameters;
     |]
   )
 

@@ -4725,11 +4725,10 @@ and mk_extends cx map = function
       root
   | (None, _) ->
       assert false (* type args with no head expr *)
-  | (Some e, targs) ->
+  | (Some c, targs) ->
       let params = match targs with
       | None -> None
       | Some (_, { Ast.Type.ParameterInstantiation.params; }) -> Some params in
-      let c = expression cx e in
       mk_nominal_type ~for_type:false cx (reason_of_t c) map (c, params)
 
 (* Given the type of expression C and type arguments T1...Tn, return the type of
@@ -4955,7 +4954,7 @@ and mk_class cx loc reason_c = Ast.Class.(function { id=_; body; superClass;
   let id = Flow_js.mk_nominal cx in
 
   (* super: D<X> *)
-  let extends = superClass, superTypeParameters in
+  let extends = opt_map (expression cx) superClass, superTypeParameters in
   let super = mk_extends cx type_params_map extends in
   let super_static = ClassT (super) in
 
@@ -5099,9 +5098,11 @@ and mk_interface cx reason_i typeparams map (sfmap, smmap, fmap, mmap) extends s
   let extends =
     match extends with
     | [] -> (None,None)
-    | (loc,{Ast.Statement.Interface.Extends.id; typeParameters})::_ ->
+    | (loc, {Ast.Type.Generic.id = qualification; typeParameters})::_ ->
         (* TODO: multiple extends *)
-        Some (loc,Ast.Expression.Identifier id), typeParameters
+        let c = convert_qualification ~for_type:false cx
+          "extends" qualification in
+        Some c, typeParameters
   in
   let super = mk_extends cx map extends in
   let super_static = ClassT(super) in

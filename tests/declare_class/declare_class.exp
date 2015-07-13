@@ -1,4 +1,10 @@
 
+[LIB] test.js: Library type error:
+[LIB] test.js: inconsistent use of library definitions
+[LIB] test.js:8:10,15: string
+This type is incompatible with
+[LIB] test.js:2:10,15: number
+
 declare_class.js:6:1,8: assignment of property x
 Error:
 declare_class.js:6:7,8: string
@@ -11,4 +17,4 @@ declare_class.js:7:7,8: string
 This type is incompatible with
 declare_class.js:3:19,24: number
 
-Found 2 errors
+Found 3 errors
