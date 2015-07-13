@@ -145,16 +145,20 @@ let json_of_loc loc = Json.(Loc.(
 
 (* reason constructors, accessors, etc. *)
 
-(* The current test_id is included in every new reason. *)
-let mk_reason desc loc = {
-  test_id = TestID.current();
+let mk_reason_with_test_id test_id desc loc = {
+  test_id;
   derivable = false;
   desc;
   loc;
 }
 
+(* The current test_id is included in every new reason. *)
+let mk_reason desc loc =
+  mk_reason_with_test_id (TestID.current()) desc loc
+
+(* Lift a string to a reason. Usually used as a dummy reason. *)
 let reason_of_string s =
-  mk_reason s Loc.none
+  mk_reason_with_test_id None s Loc.none
 
 let loc_of_reason r = r.loc
 

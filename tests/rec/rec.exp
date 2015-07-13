@@ -1,4 +1,12 @@
 
+issue-598.js:7:19,24: number
+This type is incompatible with
+issue-598.js:7:31,36: string
+
+issue-598.js:7:31,36: string
+This type is incompatible with
+issue-598.js:7:19,24: number
+
 test.js:3:27,30: P
 This type is incompatible with
 test.js:9:9,14: number
@@ -27,4 +35,4 @@ test3.js:10:13,25: function type
 Callable signature not found in
 test3.js:9:13,21: object type
 
-Found 7 errors
+Found 9 errors

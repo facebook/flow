@@ -127,73 +127,6 @@ end = struct
   let set _ops = ops := _ops
 end
 
-(* We maintain a stack of entries representing type applications processed
-   during calls to flow, for the purpose of terminating unbounded expansion of
-   type applications. Intuitively, we may have a potential infinite loop when
-   processing a type application leads to another type application with the same
-   root, but expanding type arguments. The entries in a stack contain
-   approximate measurements that allow us to detect such expansion.
-
-   An entry representing a type application with root C and type args T1,...,Tn
-   is of the form (C, [A1,...,An]), where each Ai is a list of the roots of type
-   applications nested in Ti. We consider a stack to indicate a potential
-   infinite loop when the top of the stack is (C, [A1,...,An]) and there is
-   another entry (C, [B1,...,Bn]) in the stack, such that each Bi is non-empty
-   and is contained in Ai. *)
-
-module TypeAppExpansion : sig
-  type entry
-  val push : context -> (Type.t * Type.t list) -> unit
-  val pop : unit -> unit
-  val get : unit -> entry list
-  val set : entry list -> unit
-  val loop : unit -> bool
-end = struct
-  type entry = Type.t * TypeSet.t list
-  let stack = ref ([]: entry list)
-
-  (* visitor to collect roots of type applications nested in a type *)
-  class roots_collector = object
-    inherit [TypeSet.t] type_visitor as super
-
-    method! type_ cx acc t = match t with
-    | TypeAppT (c, _) -> super#type_ cx (TypeSet.add c acc) t
-    | _ -> super#type_ cx acc t
-  end
-  let collect_roots cx = (new roots_collector)#type_ cx TypeSet.empty
-  let push cx (c, ts) =
-    stack := (c, List.map (collect_roots cx) ts) :: !stack
-  let pop () = stack := List.tl !stack
-  let get () = !stack
-  let set _stack = stack := _stack
-
-  (* Util to stringify a list, given a separator string and a function that maps
-     elements of the list to strings. Should probably be moved somewhere else
-     for general reuse. *)
-  let string_of_list list sep f =
-    list |> List.map f |> String.concat sep
-
-  (* show entries in the stack *)
-  let dump_stack () =
-    string_of_list !stack "\n" (fun (c, tss) ->
-      spf "%s<%s>" (desc_of_t c) (
-        string_of_list tss "," (fun ts ->
-          spf "[%s]" (string_of_list (TypeSet.elements ts) ";" desc_of_t)
-        )))
-
-  (* loop detector *)
-  let loop =
-    let contains ts1 ts2 =
-      not (TypeSet.is_empty ts1) && TypeSet.subset ts1 ts2
-    in fun () ->
-      match !stack with
-      | [] -> false
-      | (c, tss)::prev_stack ->
-        prev_stack |> List.exists (fun (prev_c, prev_tss) ->
-          c = prev_c && (List.for_all2 contains prev_tss tss)
-      )
-end
-
 let silent_warnings = false
 
 exception FlowError of (reason * string) list
@@ -1279,15 +1212,103 @@ let debug_flow (l,u) =
 (* instantiation utils *)
 (***********************)
 
-(* Make a type argument for a given type parameter, given a reason. Note that
-   not all type arguments are tvars; the following function is used only when
-   polymorphic types need to be implicitly instantiated, because there was no
-   explicit instantiation (via a type application), or when we want to cache a
-   unique instantiation and unify it with other explicit instantiations. *)
-let mk_targ cx (typeparam, reason_op) =
-  mk_tvar cx (
-    prefix_reason (spf "type parameter %s of " typeparam.name) reason_op
-  )
+module ImplicitTypeArgument = struct
+  (* helpers *)
+  let add_typeparam_prefix s = spf "type parameter%s" s
+  let has_typeparam_prefix s =
+    (String.length s) >= 14 && (String.sub s 0 14) = "type parameter"
+
+  (* Make a type argument for a given type parameter, given a reason. Note that
+     not all type arguments are tvars; the following function is used only when
+     polymorphic types need to be implicitly instantiated, because there was no
+     explicit instantiation (via a type application), or when we want to cache a
+     unique instantiation and unify it with other explicit instantiations. *)
+  let mk_targ cx (typeparam, reason_op) =
+    let prefix_desc = add_typeparam_prefix (spf " %s of " typeparam.name) in
+    mk_tvar cx (prefix_reason prefix_desc reason_op)
+
+  (* Abstract a type argument that is created by implicit instantiation
+     above. Sometimes, these type arguments are involved in type expansion loops,
+     so we abstract them to detect such loops. *)
+  let abstract_targ tvar =
+    let reason, _ = open_tvar tvar in
+    let desc = desc_of_reason reason in
+    if has_typeparam_prefix desc
+    then Some (OpenT (reason_of_string desc, 0))
+    else None
+end
+
+(* We maintain a stack of entries representing type applications processed
+   during calls to flow, for the purpose of terminating unbounded expansion of
+   type applications. Intuitively, we may have a potential infinite loop when
+   processing a type application leads to another type application with the same
+   root, but expanding type arguments. The entries in a stack contain
+   approximate measurements that allow us to detect such expansion.
+
+   An entry representing a type application with root C and type args T1,...,Tn
+   is of the form (C, [A1,...,An]), where each Ai is a list of the roots of type
+   applications nested in Ti. We consider a stack to indicate a potential
+   infinite loop when the top of the stack is (C, [A1,...,An]) and there is
+   another entry (C, [B1,...,Bn]) in the stack, such that each Bi is non-empty
+   and is contained in Ai. *)
+
+module TypeAppExpansion : sig
+  type entry
+  val push_unless_loop : context -> (Type.t * Type.t list) -> bool
+  val pop : unit -> unit
+  val get : unit -> entry list
+  val set : entry list -> unit
+
+end = struct
+  type entry = Type.t * TypeSet.t list
+  let stack = ref ([]: entry list)
+
+  (* visitor to collect roots of type applications nested in a type *)
+  class roots_collector = object
+    inherit [TypeSet.t] type_visitor as super
+
+    method! type_ cx acc t = match t with
+    | TypeAppT (c, _) -> super#type_ cx (TypeSet.add c acc) t
+    | OpenT _ -> (match ImplicitTypeArgument.abstract_targ t with
+      | None -> acc
+      | Some t -> TypeSet.add t acc
+      )
+    | _ -> super#type_ cx acc t
+  end
+  let collect_roots cx = (new roots_collector)#type_ cx TypeSet.empty
+
+  (* Util to stringify a list, given a separator string and a function that maps
+     elements of the list to strings. Should probably be moved somewhere else
+     for general reuse. *)
+  let string_of_list list sep f =
+    list |> List.map f |> String.concat sep
+
+  (* show entries in the stack *)
+  let dump_stack () =
+    string_of_list !stack "\n" (fun (c, tss) ->
+      spf "%s<%s>" (desc_of_t c) (
+        string_of_list tss "," (fun ts ->
+          spf "[%s]" (string_of_list (TypeSet.elements ts) ";" desc_of_t)
+        )))
+
+  (* Detect whether pushing would cause a loop. Push only if no loop is
+     detected, and return whether push happened. *)
+  let push_unless_loop =
+    let contains ts1 ts2 =
+      not (TypeSet.is_empty ts1) && TypeSet.subset ts1 ts2
+    in
+    fun cx (c, ts) ->
+      let tss = List.map (collect_roots cx) ts in
+      let loop = !stack |> List.exists (fun (prev_c, prev_tss) ->
+        c = prev_c && (List.for_all2 contains prev_tss tss)
+      ) in
+      if loop then false
+      else (stack := (c, tss) :: !stack; true)
+
+  let pop () = stack := List.tl !stack
+  let get () = !stack
+  let set _stack = stack := _stack
+end
 
 module Cache = struct
   (* Cache that remembers pairs of types that are passed to __flow__. *)
@@ -1318,7 +1339,7 @@ module Cache = struct
       try
         Hashtbl.find cache (typeparam.reason, reason_op)
       with _ ->
-        let t = mk_targ cx (typeparam, reason_op) in
+        let t = ImplicitTypeArgument.mk_targ cx (typeparam, reason_op) in
         Hashtbl.add cache (typeparam.reason, reason_op) t;
         t
   end
@@ -1848,10 +1869,10 @@ let rec __flow cx (l, u) trace =
     (* type applications *)
     (*********************)
 
-    (* Sometimes a polymorphic class may have a field or method whose return
-       type is a type application on the same polymorphic class, but
-       expanded. See Array#concat, e.g. It is not unusual for programmers to
-       reuse variables, assigning the result of a field get or a method call on
+    (* Sometimes a polymorphic class may have a polymorphic method whose return
+       type is a type application on the same polymorphic class, possibly
+       expanded. See Array#map or Array#concat, e.g. It is not unusual for
+       programmers to reuse variables, assigning the result of a method call on
        a variable to itself, in which case we could get into cycles of unbounded
        instantiation. We use caching to cut these cycles. Caching relies on
        reasons (see module Cache.I). This is OK since intuitively, there should
@@ -1867,14 +1888,13 @@ let rec __flow cx (l, u) trace =
        because substitution of type parameters in def types does not affect
        their reasons, so we'd trivially lose precision. *)
 
-    | (TypeAppT(c,ts), (GetT _ | MethodT _)) ->
+    | (TypeAppT(c,ts), MethodT _) ->
         let reason_op = reason_of_t u in
         let t = mk_typeapp_instance cx reason_op ~cache:true c ts in
         rec_flow cx trace (t, u)
 
     | (TypeAppT(c,ts), _) ->
-        if not (TypeAppExpansion.loop()) then (
-          TypeAppExpansion.push cx (c, ts);
+        if TypeAppExpansion.push_unless_loop cx (c, ts) then (
           let reason = reason_of_t u in
           let t = mk_typeapp_instance cx reason c ts in
           rec_flow cx trace (t, u);
@@ -1882,8 +1902,7 @@ let rec __flow cx (l, u) trace =
         )
 
     | (_, TypeAppT(c,ts)) ->
-        if not (TypeAppExpansion.loop()) then (
-          TypeAppExpansion.push cx (c, ts);
+        if TypeAppExpansion.push_unless_loop cx (c, ts) then (
           let reason = reason_of_t l in
           let t = mk_typeapp_instance cx reason c ts in
           rec_flow cx trace (l, t);
@@ -3614,7 +3633,7 @@ and cache_instantiate cx trace cache (typeparam, reason_op) t =
 and instantiate_poly ?(weak=false) cx trace reason_op (xs,t) =
   let ts = xs |> List.map (fun typeparam ->
     if weak then AnyT.why reason_op
-    else mk_targ cx (typeparam, reason_op)
+    else ImplicitTypeArgument.mk_targ cx (typeparam, reason_op)
   )
   in
   instantiate_poly_with_targs cx trace reason_op (xs,t) ts
