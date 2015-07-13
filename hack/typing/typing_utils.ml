@@ -194,8 +194,7 @@ let rec member_inter env ty tyl acc =
       Errors.try_
         begin fun () ->
           let env, ty = unify env x ty in
-          let env, res = flatten_unresolved env ty rl in
-          env, List.rev_append acc res
+          env, List.rev_append acc (ty :: rl)
         end
         begin fun _ ->
           member_inter env ty rl (x :: acc)

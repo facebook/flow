@@ -228,7 +228,13 @@ and unify_ env r1 ty1 r2 ty2 =
         env, Ttuple tyl
   | Tmixed, Tmixed -> env, Tmixed
   | Tanon (_, id1), Tanon (_, id2) when id1 = id2 -> env, ty1
-  | Tanon _, Tanon _ -> env, Tunresolved [r1, ty1; r2, ty2]
+  | Tanon _, Tanon _ ->
+      (* This could be smarter, but the only place where we currently compare
+       * two anonymous functions is when trying to normalize intersection -
+       * saying that they never unify will just keep the intersection
+       * unchanged, which is always a valid option. *)
+      TUtils.uerror r1 ty1 r2 ty2;
+      env, Tany
   | Tfun ft, Tanon (anon_arity, id)
   | Tanon (anon_arity, id), Tfun ft ->
       (match Env.get_anonymous env id with
