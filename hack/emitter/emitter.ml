@@ -161,10 +161,8 @@ let emit_main classes =
   let env = emit_enter env ".main" [] "" "" in
 
   (* emit def classes *)
-  let env, _ = List.fold_left begin fun (env, i) _ ->
-      let env = emit_DefCls env i in
-      env, i+1
-    end (env, 0) classes in
+  let env =
+    Core_list.foldi ~f:(fun i env _ -> emit_DefCls env i) ~init:env classes in
 
   (* emit debugging test *)
   let env = emit_test_call env in

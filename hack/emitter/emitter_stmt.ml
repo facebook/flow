@@ -9,11 +9,14 @@
  *)
 
 
-open Nast
+module N = Nast
 open Utils
 
 open Emitter_core
-open Emitter_expr
+let is_empty_block = function
+  | [] | [N.Noop] -> true
+  | _ -> false
+
 
 (* Emit bytecode for a block. Stack should start and end empty.
  * Returns whether the block is terminal. *)
@@ -25,18 +28,23 @@ let rec emit_block env stmts =
  * Returns whether the statement is terminal. *)
 and emit_stmt env stmt =
   match stmt with
-  | Noop -> env, false
-  | Return (_, ret) ->
-    let env = match ret with Some e -> emit_expr env e
+  | N.Noop | N.Fallthrough -> env, false
+
+  | N.Return (_, ret) ->
+    let env = match ret with Some e -> Emitter_expr.emit_expr env e
                            | None -> emit_Null env in
     emit_RetC env, true
-  | Expr e ->
-    emit_ignored_expr env e, false
 
-  | If (e, btrue, bfalse) ->
+  | N.Break _ -> emit_Jmp env env.break_target, true
+  | N.Continue _ -> emit_Jmp env env.continue_target, true
+
+  | N.Expr e ->
+    Emitter_expr.emit_ignored_expr env e, false
+
+  | N.If (e, btrue, bfalse) ->
     let env, false_label, end_label = fresh_labels_2 env in
     (* emit cond and jump to false case *)
-    let env = emit_cond env e false false_label in
+    let env = Emitter_expr.emit_cond env e false false_label in
 
     (* emit true case and unconditional jump after false case *)
     let env, true_terminal = emit_block env btrue in
@@ -54,14 +62,14 @@ and emit_stmt env stmt =
 
     env, true_terminal && false_terminal
 
-  | While (etest, body) ->
+  | N.While (etest, body) ->
     let env, top_label, break_label, cont_label = fresh_labels_3 env in
 
     (* we duplicate the condition for while loops *)
     (* XXX: should we always do this? *)
 
     (* emit cond and jmp past loop *)
-    let env = emit_cond env etest false break_label in
+    let env = Emitter_expr.emit_cond env etest false break_label in
 
     (* emit loop body *)
     let env = emit_label env top_label in
@@ -70,12 +78,12 @@ and emit_stmt env stmt =
 
     (* emit the test again *)
     let env = emit_label env cont_label in
-    let env = emit_cond env etest true top_label in
+    let env = Emitter_expr.emit_cond env etest true top_label in
     let env = emit_label env break_label in
 
     env, false
 
-  | Do (body, etest) ->
+  | N.Do (body, etest) ->
     let env, top_label, break_label, cont_label = fresh_labels_3 env in
 
     (* emit loop body *)
@@ -85,22 +93,22 @@ and emit_stmt env stmt =
 
     (* emit the test *)
     let env = emit_label env cont_label in
-    let env = emit_cond env etest true top_label in
+    let env = Emitter_expr.emit_cond env etest true top_label in
     let env = emit_label env break_label in
 
     env, false
 
-  | For (einit, etest, estep, body) ->
+  | N.For (einit, etest, estep, body) ->
     let env, top_label, break_label, cont_label = fresh_labels_3 env in
 
     (* we duplicate the condition for for loops *)
     (* XXX: should we always do this? *)
 
     (* emit init *)
-    let env = emit_ignored_expr env einit in
+    let env = Emitter_expr.emit_ignored_expr env einit in
 
     (* emit test and conditional jmp past loop *)
-    let env = emit_cond env etest false break_label in
+    let env = Emitter_expr.emit_cond env etest false break_label in
 
     (* emit loop body *)
     let env = emit_label env top_label in
@@ -109,23 +117,19 @@ and emit_stmt env stmt =
 
     (* emit the step *)
     let env = emit_label env cont_label in
-    let env = emit_ignored_expr env estep in
+    let env = Emitter_expr.emit_ignored_expr env estep in
 
     (* emit the test again *)
-    let env = emit_cond env etest true top_label in
+    let env = Emitter_expr.emit_cond env etest true top_label in
     let env = emit_label env break_label in
 
     env, false
 
-
-  | Break _ -> emit_Jmp env env.break_target, true
-  | Continue _ -> emit_Jmp env env.continue_target, true
-
-  | Throw (is_terminal, e) ->
-    let env = emit_expr env e in
+  | N.Throw (is_terminal, e) ->
+    let env = Emitter_expr.emit_expr env e in
     emit_Throw env, is_terminal
 
-  | Try (try_body, catches, finally_body) ->
+  | N.Try (try_body, catches, finally_body) ->
     let env, target = fresh_label env in
     let env, catch_labels = lmap (fun env _ -> fresh_catch env) env catches in
     let catches = List.combine catch_labels catches in
@@ -180,8 +184,7 @@ and emit_stmt env stmt =
 
     env, false
 
-  | Static_var _
-  | Switch _
-  | Foreach _
-  | Fallthrough ->
+  | N.Static_var _
+  | N.Switch _
+  | N.Foreach _ ->
     unimpl "statement"; assert false

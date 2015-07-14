@@ -20,10 +20,6 @@ let is_lval expr =
   | Lvar _  | Obj_get _ | Array_get _ -> true
   | _ -> false
 
-let is_empty_block = function
-  | [] | [Noop] -> true
-  | _ -> false
-
 (* Emit a conditional branch based on an expression. jump_if indicates
  * whether to jump when the condition is true or false.
  * This is its own thing so that we can efficiently handle !/&&/||
@@ -127,16 +123,14 @@ and emit_ctor_lhs env class_id nargs =
 and emit_call env args uargs =
   let all_args = args @ uargs in
   let nargs = List.length all_args in
-  let env, _ = List.fold_left begin fun (env, i) arg ->
-      let env = if is_lval (snd arg) then
+  let env = Core_list.foldi ~f:begin fun i env arg ->
+      if is_lval (snd arg) then
         let env, lval = emit_lval env arg in
         emit_FPassLval env i lval
       else
         let env, flavor = emit_flavored_expr env arg in
         emit_FPass env flavor i
-      in
-      env, i+1
-    end (env, 0) all_args in
+    end ~init:env all_args in
   if uargs = []
   then emit_FCall env nargs
   else emit_FCallUnpack env nargs
@@ -148,7 +142,7 @@ and emit_ignored_expr env e =
 
 (* emit code to evaluate an expression that might have a non-Cell flavor;
  * certain operations want to handle this; most will just call
- * emit_expr or emit_ignored_expr with will automatically unbox/pop
+ * emit_expr or emit_ignored_expr which will automatically unbox/pop
  * R flavored things. *)
 and emit_flavored_expr env (_, expr_ as expr) =
   match expr_ with

@@ -120,7 +120,12 @@ let new_env () = {
   cleanups = [];
 }
 
-let start_new_function env = { env with next_label = 0 }
+let start_new_function env =
+  let nenv = new_env () in
+  { nenv with
+    reversed_output = env.reversed_output;
+    indent = env.indent
+  }
 
 let fresh_id pre env =
   { env with next_label = env.next_label+1 },
@@ -163,9 +168,11 @@ let with_targets env continue_target break_target f arg =
              break_target = old_break }, x
 
 (* Writer like things *)
+let emit_str_raw env s =
+  { env with reversed_output = s :: env.reversed_output }
 let emit_str env s =
   let s = String.make (2*env.indent) ' ' ^ s in
-  { env with reversed_output = s :: env.reversed_output }
+  emit_str_raw env s
 let emit_strs env ss = emit_str env (String.concat " " ss)
 let emit_op_strs env ss = emit_strs env ss
 let get_output env = String.concat "\n" (List.rev env.reversed_output)
@@ -198,7 +205,7 @@ let emit_op1e s env arg1 = emit_op_strs env [s; quote_str arg1]
 let emit_op1i s env arg1 = emit_op_strs env [s; string_of_int arg1]
 let emit_op2ie s env arg1 arg2 =
   emit_op_strs env [s; string_of_int arg1; quote_str arg2]
-let emit_op2ies s env arg1 arg2 arg3 =
+let emit_op3ies s env arg1 arg2 arg3 =
   emit_op_strs env [s; string_of_int arg1; quote_str arg2; arg3]
 let emit_op1l s env arg1 =
   let t, a, _ = fmt_lval arg1 in
@@ -234,7 +241,7 @@ let emit_Null =           emit_op0    "Null"
 let emit_FPushFunc =      emit_op1i   "FPushFunc"
 let emit_FPushFuncD =     emit_op2ie  "FPushFuncD"
 let emit_FPushCtorD =     emit_op2ie  "FPushCtorD"
-let emit_FPushObjMethodD =emit_op2ies "FPushObjMethodD"
+let emit_FPushObjMethodD =emit_op3ies "FPushObjMethodD"
 let emit_FPassLval =      emit_op2il  "FPass"
 let emit_FCall =          emit_op1i   "FCall"
 let emit_FCallUnpack =    emit_op1i   "FCallUnpack"
