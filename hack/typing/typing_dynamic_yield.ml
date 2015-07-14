@@ -66,28 +66,7 @@ let rec decl env methods =
                 let acc = add get_name ce' acc in
                 env, acc
               ))
-          | None ->
-            (match parse_get_name name with
-              | None -> env, acc
-              | Some base ->
-                let gen_name = "gen"^base in
-                (* Define genFoo(), which is Awaitable<T> if getFoo() is T *
-                 * If getFoo() is Tany, then genFoo() is Awaitable<Tany> *)
-                let ce_r, ft = extract_fun_t ce in
-                let p = Reason.to_pos (fst ft.ft_ret) in
-                let gen_r =
-                  Reason.Rdynamic_yield (p, ft.ft_pos, gen_name, name) in
-                let deprec_msg = Printf.sprintf
-                  ("The pseudo-method %s is deprecated; instead of relying on "
-                   ^^ "DynamicYield::__call, call %s directly") gen_name name in
-                let gen_ty = ce_r, Tfun {ft with
-                  ft_ret = gen_r, Tapply ((p, SN.Classes.cAwaitable), [ft.ft_ret]);
-                  ft_deprecated = Some deprec_msg
-                } in
-                let ce' = {ce with ce_type = gen_ty; ce_synthesized = true} in
-                let acc = add gen_name ce' acc in
-                env, acc
-            )
+          | None -> env, acc
         )
     )
   end methods (env, methods)
@@ -111,9 +90,6 @@ and extract_fun_t ce =
              | Toption _ | Tapply (_, _) | Ttuple _ | Tshape _
              | Taccess (_, _) | Tthis
     ) -> assert false)
-
-and parse_get_name name =
-  remove_prefix "get" name
 
 and parse_gen_name name =
   remove_prefix "gen" name
