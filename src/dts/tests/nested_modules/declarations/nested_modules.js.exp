@@ -23,4 +23,9 @@ declare module "P" {
   declare var b: number;
   
 }
+declare module "F" {
+  declare var M: $Exports<'M'>;
+  declare function successor(n: typeof M.x): typeof M.x;
+  
+}
 

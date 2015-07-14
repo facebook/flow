@@ -13,3 +13,7 @@ declare module P {
     export var a : typeof M.N.z
     export var b : number
 }
+
+declare module F {
+    export function successor(n: typeof M.x) : typeof M.x
+}

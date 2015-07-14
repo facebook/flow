@@ -388,6 +388,17 @@ and module_used_statement acc = Statement.(function
     let acc = module_used_body acc body in
     let fold_intermediate x y = module_used_generic x (snd y) in
     List.fold_left fold_intermediate acc extends
+  (* This case checks for function declaration's parameters and returnType.
+    Eg.,
+          export function f(x: M.C): typeof P.x
+    This would return "M" :: "P" :: []
+  *)
+  | _, AmbientFunctionDeclaration{ AmbientFunctionDeclaration. params;
+      returnType; _ } ->
+    let acc = module_used_type acc returnType in
+    let fold_intermediate x y = module_used_pattern x y in
+    List.fold_left fold_intermediate acc params
+
   | _ -> acc
 )
 
@@ -417,6 +428,7 @@ and module_used_generic acc = Type.(function
 )
 
 and module_used_ids acc = function
+  | [x] -> acc
   | x :: xs ->  ( match x with
     | _, {Identifier. name; _ } -> SSet.add name acc
   )
