@@ -58,8 +58,9 @@ let lmember (base, mem) =
 
 (* *)
 let get_lid_name (_, id) = Ident.get_name id
-(* ok, I am pretty sure the strings are preescaped, so we just quote them *)
 let quote_str s = "\"" ^ s ^ "\""
+(* XXX: ocaml and php probably don't have exactly the same escaping rules *)
+let escape_str = String.escaped
 (* XXX: actually convert the int to decimal *)
 let fmt_int s = s
 (* XXX: what format conversions do we need to do? *)
@@ -260,6 +261,7 @@ let emit_AddElemC =       emit_op0    "AddElemC"
 let emit_Throw =          emit_op0    "Throw"
 let emit_Catch =          emit_op0    "Catch"
 let emit_Unwind =         emit_op0    "Unwind"
+let emit_Print =          emit_op0    "Print"
 
 let emit_bool env = function | true -> emit_op0 "True" env
                              | false -> emit_op0 "False" env

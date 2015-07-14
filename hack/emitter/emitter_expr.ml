@@ -32,6 +32,14 @@ let rec emit_cond env (_, expr_ as expr) jump_if target =
     emit_shortcircuit env e1 e2 jump_if target false
   | Binop (Ast.BArbar, e1, e2) ->
     emit_shortcircuit env e1 e2 jump_if target true
+  (* handling true/false makes things like while (true) nicer *)
+  (* PERF: maybe we should check for other manifestly true/false things?
+   * is while (1) an idiom? *)
+  | True | False ->
+    let cond_true = expr_ = True in
+    if cond_true = jump_if then
+    emit_Jmp env target else
+    env
   | _ ->
     let env = emit_expr env expr in
     emit_cjmp env jump_if target
@@ -120,7 +128,7 @@ and emit_ctor_lhs env class_id nargs =
 (* emit code to push args and call a function after the thing being
  * called has already been pushed; doesn't do any stack adjustment
  * after the call *)
-and emit_call env args uargs =
+and emit_args_and_call env args uargs =
   let all_args = args @ uargs in
   let nargs = List.length all_args in
   let env = Core_list.foldi ~f:begin fun i env arg ->
@@ -140,17 +148,34 @@ and emit_ignored_expr env e =
   let env, flavor = emit_flavored_expr env e in
   emit_Pop env flavor
 
+(* Just emit a normal call *)
+and emit_normal_call env ef args uargs =
+  let nargs = List.length args + List.length uargs in
+  let env = emit_call_lhs env ef nargs in
+  let env = emit_args_and_call env args uargs in
+  env, FR
+
+and emit_call env ef args uargs =
+  match snd ef with
+  | Id (_, echo) when echo = SN.SpecialFunctions.echo ->
+    let nargs = List.length args in
+    let env = Core_list.foldi ~f:begin fun i env arg ->
+       let env = emit_expr env arg in
+       let env = emit_Print env in
+       if i = nargs-1 then env else emit_PopC env
+    end ~init:env args in
+    env, FC
+  (* TODO: a billion other builtins *)
+
+  | _ -> emit_normal_call env ef args uargs
+
 (* emit code to evaluate an expression that might have a non-Cell flavor;
  * certain operations want to handle this; most will just call
  * emit_expr or emit_ignored_expr which will automatically unbox/pop
  * R flavored things. *)
 and emit_flavored_expr env (_, expr_ as expr) =
   match expr_ with
-  | Call (Cnormal, ef, args, uargs) ->
-    let nargs = List.length args + List.length uargs in
-    let env = emit_call_lhs env ef nargs in
-    let env = emit_call env args uargs in
-    env, FR
+  | Call (Cnormal, ef, args, uargs) -> emit_call env ef args uargs
   | Call (Cuser_func, _, _, _) -> unimpl "call_user_func"; assert false
 
   (* For most things, just fall back to emit_expr *)
@@ -257,7 +282,7 @@ and emit_expr env (_, expr_ as expr) =
   | New (cls, args, uargs) ->
     let nargs = List.length args + List.length uargs in
     let env = emit_ctor_lhs env cls nargs in
-    let env = emit_call env args uargs in
+    let env = emit_args_and_call env args uargs in
     emit_PopR env
 
   (* comma operator: evaluate all the expressions, ignoring all but the last *)
@@ -271,7 +296,7 @@ and emit_expr env (_, expr_ as expr) =
 
   | Int (_, n) -> emit_Int env (fmt_int n)
   | Float (_, x) -> emit_Float env (fmt_float x)
-  | String (_, s)
+  | String (_, s) -> emit_String env (escape_str s)
   | String2 ([], s) -> emit_String env s
   | Null -> emit_Null env
   | True -> emit_bool env true
