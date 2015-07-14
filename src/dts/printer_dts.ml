@@ -267,10 +267,8 @@ and extract_module acc prefix = Statement.(function
 and get_name prefix = function
   | _ , { IdPath.ids; _} -> append_name prefix ids
 
-and append_name prefix = function
-  | [x] -> id_name prefix x
-  | _ -> failwith
-    "FLow only supports module declaration with one identifier"
+and append_name prefix =
+  function x -> String.concat "." (List.map (id_name prefix) x)
 
 and id_name prefix = function
   | _, { Identifier.name; _ } -> generate_mangled_name name prefix

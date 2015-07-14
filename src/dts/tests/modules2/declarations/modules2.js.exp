@@ -1,0 +1,9 @@
+declare module "M.N" {
+  declare var x: number;
+  declare class C {
+    y: typeof x;
+    
+  }
+  
+}
+
