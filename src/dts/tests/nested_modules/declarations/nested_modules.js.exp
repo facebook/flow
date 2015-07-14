@@ -28,4 +28,10 @@ declare module "F" {
   declare function successor(n: typeof M.x): typeof M.x;
   
 }
+declare module "T" {
+  declare var M: $Exports<'M'>;
+  declare type AnyThing = number | string | M.C;
+  declare function identity(x: AnyThing): AnyThing;
+  
+}
 

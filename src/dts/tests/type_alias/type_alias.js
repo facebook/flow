@@ -1,3 +1,4 @@
 // @flow
-var a : number = x;
-var b : typeof x = 5;
+var M = require('M');
+var a : number = M.x;
+var b : typeof M.x = 5;

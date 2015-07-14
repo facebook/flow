@@ -17,3 +17,8 @@ declare module P {
 declare module F {
     export function successor(n: typeof M.x) : typeof M.x
 }
+
+declare module T {
+    type AnyThing = number | string | M.C
+    export function identity(x: AnyThing) : AnyThing
+}

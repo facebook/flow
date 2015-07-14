@@ -1,6 +1,6 @@
 
-type_alias.js:2:9,14: number
+type_alias.js:3:9,14: number
 This type is incompatible with
-[LIB] type_alias.js:1:27,32: string
+[LIB] type_alias.js:2:37,42: string
 
 Found 1 error
