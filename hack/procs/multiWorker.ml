@@ -63,35 +63,3 @@ let call workers ~job ~merge ~neutral ~next =
           end (Worker.select workers);
         done;
         !acc
-
-module type Proc = sig
-  type env
-  type input
-  type output
-
-  val neutral: output
-  val job: env -> output -> input list -> output
-  val merge: output -> output -> output
-  val make_next: input list -> (unit -> input list)
-end
-
-module type S = sig
-  type env
-  type input
-  type output
-
-  val run: Worker.t list option -> env -> input list -> output
-end
-
-module Make = functor(Proc: Proc) -> struct
-  type env = Proc.env
-  type input = Proc.input
-  type output = Proc.output
-
-  let run workers env input_list =
-    let job = Proc.job env in
-    let merge = Proc.merge in
-    let neutral = Proc.neutral in
-    let next = Proc.make_next input_list in
-    call workers ~job ~merge ~neutral ~next
-end

@@ -20,27 +20,3 @@ val call :
   merge:('b -> 'b -> 'b) -> neutral:'b ->
   next:'a nextlist ->
  'b
-
-module type Proc = sig
-  type env
-  type input
-  type output
-
-  val neutral: output
-  val job: env -> output -> input list -> output
-  val merge: output -> output -> output
-  val make_next: input list -> (unit -> input list)
-end
-
-module type S = sig
-  type env
-  type input
-  type output
-
-  val run: Worker.t list option -> env -> input list -> output
-end
-
-module Make: functor (Proc: Proc) -> S 
-with type env = Proc.env
-with type input = Proc.input 
-with type output = Proc.output
