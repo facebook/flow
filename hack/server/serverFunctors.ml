@@ -172,14 +172,10 @@ end = struct
     let root = ServerArgs.root genv.options in
     let env = ref env in
     while true do
-      if not (Lock.check root "lock") then begin
-        Hh_logger.log "Lost %s lock; reacquiring.\n" Program.name;
-        HackEventLogger.lock_lost root "lock";
-        if not (Lock.grab root "lock")
-        then
-          Hh_logger.log "Failed to reacquire lock; terminating.\n";
-          HackEventLogger.lock_stolen root "lock";
-          die()
+      if not (Lock.grab root "lock") then begin
+        Hh_logger.log "Lost lock; terminating.\n%!";
+        HackEventLogger.lock_stolen root "lock";
+        die()
       end;
       ServerPeriodical.call_before_sleeping();
       let has_client = sleep_and_check socket in

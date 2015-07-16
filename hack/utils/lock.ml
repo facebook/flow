@@ -25,6 +25,13 @@ let lock_name root file =
     let root_part = Path.slash_escaped_string_of_path root in
     Printf.sprintf "%s/%s.%s" tmp_dir root_part file
 
+let register_lock lock_file =
+  Sys_utils.with_umask 0o111 begin fun () ->
+    let fd = Unix.descr_of_out_channel (open_out lock_file) in
+    lock_fds := SMap.add lock_file fd !lock_fds;
+    fd
+  end
+
 (**
  * Grab or check if a file lock is available.
  *
@@ -34,13 +41,29 @@ let _operations root op file : bool =
   try
     let lock_file = lock_name root file in
     let fd = match SMap.get lock_file !lock_fds with
-      | None ->
-          Sys_utils.with_umask 0o111 begin fun () ->
-            let fd = Unix.descr_of_out_channel (open_out lock_file) in
-            lock_fds := SMap.add lock_file fd !lock_fds;
+      | None -> register_lock lock_file
+      | Some fd ->
+          let st = Unix.fstat fd in
+          let identical_file =
+            try
+              (* Note: I'm carefully avoiding opening another fd to the
+               * lock_file when doing this check, because closing any file
+               * descriptor to a given file will release the locks on *all*
+               * file descriptors that point to that file. Fortunately, stat()
+               * gets us our information without opening a fd *)
+              let current_st = Unix.stat lock_file in
+              Unix.(st.st_dev = current_st.st_dev &&
+                st.st_ino = current_st.st_ino)
+            with _ ->
+              false
+          in
+          if not identical_file then begin
+            (* Looks like someone (tmpwatch?) deleted the lock file; just
+             * create another one *)
+            Unix.close fd;
+            register_lock lock_file
+          end else
             fd
-          end
-      | Some fd -> fd
     in
     let _ = Unix.lockf fd op 1 in
     true
