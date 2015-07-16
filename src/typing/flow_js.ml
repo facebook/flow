@@ -2343,12 +2343,36 @@ let rec __flow cx (l, u) trace =
     (* matching shapes of objects *)
     (******************************)
 
-    | (_, ShapeT (o2)) ->
-        let reason = reason_of_t o2 in
-        rec_flow cx trace (l, ObjAssignT(reason, o2, AnyT.t, [], false))
+    (** When something of type ShapeT(o) is used, it behaves like it had type o.
 
-    | (ShapeT (o1), _) ->
-        rec_flow cx trace (o1, u)
+        On the other hand, things that can be passed to something of type
+        ShapeT(o) must be "subobjects" of o: they may have fewer properties, but
+        those properties should be transferable to o.
+
+        Because a property x with a type OptionalT(t) could be considered
+        missing or having type t, we consider such a property to be transferable
+        if t is a subtype of x's type in o. Otherwise, the property should be
+        assignable to o.
+
+        TODO: The type constructors ShapeT, DiffT, ObjAssignT, ObjRestT express
+        related meta-operations on objects. Considate these meta-operations and
+        ensure consistency of their semantics. **)
+
+    | (ShapeT (o), _) ->
+        rec_flow cx trace (o, u)
+
+    | (ObjT (_, { props_tmap = mapr; _ }), ShapeT (proto)) ->
+        let reason = reason_of_t proto in
+        iter_props cx mapr (fun x t ->
+          let reason = prefix_reason (spf "prop %s of " x) reason in
+          let tvar = mk_tvar cx reason in
+          rec_flow cx trace (t, OptionalT(tvar));
+          rec_flow cx trace (proto, SetT (reason, x, tvar));
+        )
+
+    | (_, ShapeT (o)) ->
+        let reason = reason_of_t o in
+        rec_flow cx trace (l, ObjAssignT(reason, o, AnyT.t, [], false))
 
     | (_, DiffT (o1, o2)) ->
         let reason = reason_of_t o2 in
