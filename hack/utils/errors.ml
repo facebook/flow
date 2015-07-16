@@ -523,7 +523,7 @@ let this_hint_outside_class pos =
 
 let this_type_forbidden pos =
  add Naming.this_must_be_return pos
-    "The type \"this\" cannot be used as a constraint on a classes generic, \
+    "The type \"this\" cannot be used as a constraint on a class' generic, \
      or as the type of a static member variable"
 
 let lowercase_this pos type_ =

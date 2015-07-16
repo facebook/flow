@@ -1209,9 +1209,7 @@ and class_prop env x acc =
   | Const _ -> acc
   | AbsConst _ -> acc
   | ClassVars (kl, h, cvl) when not (List.mem Static kl) ->
-    (* there are no covariance issues with private members *)
-    let forbid_this = false (*not (List.mem Private kl)*) in
-    let h = opt_map (hint ~forbid_this env) h in
+    let h = opt_map (hint env) h in
     let cvl = List.map (class_prop_ env) cvl in
     let cvl = List.map (fill_prop kl h) cvl in
     cvl @ acc
