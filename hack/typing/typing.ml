@@ -1782,12 +1782,13 @@ and assign p env e1 ty2 =
       let env, shape_ty = expr env shape in
       let field = TUtils.shape_field_name p1 e in
       let env, shape_ty =
-        Typing_shapes.grow_shape p e1 field ty2 env shape_ty in
+        Typing_shapes.grow_shape p e1 field (Env.fresh_type()) env shape_ty in
       let env, _ty = set_valid_rvalue p env lvar shape_ty in
 
-      (* We still need to call assign_simple, because shape_ty could be more
-       * than just a shape. It could be an unresolved type where some elements
-       * are shapes and some others are not.
+      (* We still need to call assign_simple in order to bind the freshly
+       * created variable in added shape field. Moreover, it's needed because
+       * shape_ty could be more than just a shape. It could be an unresolved
+       * type where some elements are shapes and some others are not.
        *)
       assign_simple p env e1 ty2
   | _, This ->
