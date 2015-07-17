@@ -48,15 +48,15 @@ The declarations for `C` and `M` have global scope. This means that the name `C`
 directly in any file, and the module `M` can be required in any file.
 
 Declarations can be thought of as interfaces.
-The implementation details of `foo()`, for 
-example, does does not need to be known by Flow: just the types it exposes is enough. 
+The implementation details of `foo()`, for
+example, should not be known by Flow: just the types it exposes is enough.
 
 > NOTE
 >
 > The interfaces can be declared in any file you choose, as long as they are in a directory 
 outside the paths monitored by `.flowconfig`.
 
-To use code in declared files, tell the Flow server about it. Assume the code above is defined in `/lib/flow/`
+To use code in declared files, tell the Flow server about it. Assuming the code above is defined in `/lib/flow/`, you can issue the following command:
 
 ```bbcode
 flow start --lib /lib/flow/
