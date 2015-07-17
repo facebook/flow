@@ -194,7 +194,7 @@ let parse_options () =
     mode = !mode;
   }
 
-let suggest_and_print fn { FileInfo.funs; classes; typedefs; consts; _ } =
+let suggest_and_print nenv fn { FileInfo.funs; classes; typedefs; consts; _ } =
   let make_set =
     List.fold_left (fun acc (_, x) -> SSet.add x acc) SSet.empty in
   let n_funs = make_set funs in
@@ -203,7 +203,7 @@ let suggest_and_print fn { FileInfo.funs; classes; typedefs; consts; _ } =
   let n_consts = make_set consts in
   let names = { FileInfo.n_funs; n_classes; n_types; n_consts } in
   let fast = Relative_path.Map.add fn names Relative_path.Map.empty in
-  let patch_map = Typing_suggest_service.go None fast in
+  let patch_map = Typing_suggest_service.go None nenv fast in
   match Relative_path.Map.get fn patch_map with
     | None -> ()
     | Some l -> begin
@@ -343,7 +343,7 @@ let handle_mode mode filename nenv files_info errors lint_errors ai_results =
         errors @ Typing_check_utils.check_defs nenv fileinfo
       end files_info errors in
       if mode = Suggest
-      then Relative_path.Map.iter suggest_and_print files_info;
+      then Relative_path.Map.iter (suggest_and_print nenv) files_info;
       if errors <> []
       then (error (List.hd errors); exit 2)
       else

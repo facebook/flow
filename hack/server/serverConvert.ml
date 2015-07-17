@@ -296,7 +296,7 @@ let select_files env dirname =
 let infer_types genv env dirname =
   let fast = select_files env dirname in
   let fast = FileInfo.simplify_fast fast in
-  Typing_suggest_service.go genv.workers fast
+  Typing_suggest_service.go genv.workers env.nenv fast
 
 (* Tries to apply the patches one by one, rolls back if it failed. *)
 let apply_patches tried_patches (genv:ServerEnv.genv) env continue patches =
