@@ -344,6 +344,7 @@ module Typing                               = struct
   let invalid_shape_remove_key              = 4139 (* DONT MODIFY!!!! *)
   let missing_optional_field                = 4140 (* DONT MODIFY!!!! *)
   let shape_field_unset                     = 4141 (* DONT MODIFY!!!! *)
+  let abstract_concrete_override            = 4142 (* DONT MODIFY!!!! *)
   (* EXTEND HERE WITH NEW VALUES IF NEEDED *)
 end
 
@@ -1566,6 +1567,12 @@ let cyclic_typeconst pos sl =
 
 let this_lvalue pos =
   add Typing.this_lvalue pos "Cannot assign a value to $this"
+
+let abstract_concrete_override pos parent_pos tconst_name =
+  add_list Typing.abstract_concrete_override ([
+    pos, "Cannot re-declare member " ^ tconst_name ^ " as abstract";
+    parent_pos, "Previously defined here"
+  ])
 
 (*****************************************************************************)
 (* Typing decl errors *)

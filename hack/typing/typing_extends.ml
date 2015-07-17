@@ -240,19 +240,26 @@ let check_constructors env parent_class class_ psubst subst =
  * the parent's type constant.
  *)
 let tconst_subsumption env parent_typeconst child_typeconst =
-  let pos = fst child_typeconst.ttc_name in
+  let pos, name = child_typeconst.ttc_name in
   let parent_pos = fst parent_typeconst.ttc_name in
+  let parent_is_concrete = Option.is_some parent_typeconst.ttc_type in
   let is_final =
     Option.is_none parent_typeconst.ttc_constraint &&
-    Option.is_some parent_typeconst.ttc_type in
+    parent_is_concrete in
 
   (* Check that the child's constraint is compatible with the parent. If the
    * parent has a constraint then the child must also have a constraint if it
    * is abstract
    *)
   let child_is_abstract = Option.is_none child_typeconst.ttc_type in
+  if parent_is_concrete && child_is_abstract then
+    (* It is valid for abstract class to extend a concrete class, but it cannot
+     * redefine already concrete members as abstract.
+     * See typecheck/tconst/subsume_tconst5.php test case for example. *)
+    Errors.abstract_concrete_override pos parent_pos name;
+
   let default = Reason.Rtconst_no_cstr child_typeconst.ttc_name,
-                Tgeneric (snd child_typeconst.ttc_name, None) in
+                Tgeneric (name, None) in
   let child_cstr =
     if child_is_abstract
     then Some (Option.value child_typeconst.ttc_constraint ~default)
