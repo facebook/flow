@@ -906,8 +906,13 @@ end = Comment
 and Class : sig
   module Method : sig
     type t = Loc.t * t'
+    and kind =
+      | Constructor
+      | Method
+      | Get
+      | Set
     and t' = {
-      kind: Expression.Object.Property.kind;
+      kind: kind;
       key: Expression.Object.Property.key;
       value: Loc.t * Expression.Function.t;
       static: bool;
@@ -917,7 +922,8 @@ and Class : sig
     type t = Loc.t * t'
     and t' = {
       key: Expression.Object.Property.key;
-      typeAnnotation: Type.annotation;
+      value: Expression.t option;
+      typeAnnotation: Type.annotation option;
       static: bool;
     }
   end

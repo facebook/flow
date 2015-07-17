@@ -2182,5 +2182,122 @@ module.exports = {
     'var x = async\ny => y': {
       'body.length': 2,
     },
-  }
+  },
+  'Class Method Kinds': {
+    'class Kind { foo() {} }': {
+      'body.0.body.body.0.kind': 'method',
+    },
+    'class Kind { "foo"() {} }': {
+      'body.0.body.body.0.kind': 'method',
+    },
+    'class Kind { constructor() {} }': {
+      'body.0.body.body.0.kind': 'constructor',
+    },
+    'class Kind { "constructor"() {} }': {
+      'body.0.body.body.0.kind': 'constructor',
+    },
+    'class Kind { get a() {} }': {
+      'body.0.body.body.0.kind': 'get',
+    },
+    'class Kind { get "a"() {} }': {
+      'body.0.body.body.0.kind': 'get',
+    },
+    'class Kind { set a(x) {} }': {
+      'body.0.body.body.0.kind': 'set',
+    },
+    'class Kind { set "a"(x) {} }': {
+      'body.0.body.body.0.kind': 'set',
+    },
+  },
+  'Class Properties': {
+    'class Properties { x; }': {
+      'body.0.body.body': [{
+        'type': 'ClassProperty',
+        'key.name': 'x',
+        'typeAnnotation': null,
+        'value': null,
+        'static': false,
+        'computed': false,
+      }]
+    },
+    'class Properties { x: string; }': {
+      'body.0.body.body': [{
+        'type': 'ClassProperty',
+        'key.name': 'x',
+        'typeAnnotation.typeAnnotation.type': 'StringTypeAnnotation',
+        'value': null,
+        'static': false,
+        'computed': false,
+      }]
+    },
+    'class Properties { x = "hello"; }': {
+      'body.0.body.body': [{
+        'type': 'ClassProperty',
+        'key.name': 'x',
+        'typeAnnotation': null,
+        'value.value': "hello",
+        'static': false,
+        'computed': false,
+      }]
+    },
+    'class Properties { x: string = "hello"; }': {
+      'body.0.body.body': [{
+        'type': 'ClassProperty',
+        'key.name': 'x',
+        'typeAnnotation.typeAnnotation.type': 'StringTypeAnnotation',
+        'value.value': "hello",
+        'static': false,
+        'computed': false,
+      }]
+    },
+    'class Properties { static x; }': {
+      'body.0.body.body': [{
+        'type': 'ClassProperty',
+        'key.name': 'x',
+        'typeAnnotation': null,
+        'value': null,
+        'static': true,
+        'computed': false,
+      }]
+    },
+    'class Properties { static x: string; }': {
+      'body.0.body.body': [{
+        'type': 'ClassProperty',
+        'key.name': 'x',
+        'typeAnnotation.typeAnnotation.type': 'StringTypeAnnotation',
+        'value': null,
+        'static': true,
+        'computed': false,
+      }]
+    },
+    'class Properties { static x = "hello"; }': {
+      'body.0.body.body': [{
+        'type': 'ClassProperty',
+        'key.name': 'x',
+        'typeAnnotation': null,
+        'value.value': "hello",
+        'static': true,
+        'computed': false,
+      }]
+    },
+    'class Properties { static x: string = "hello"; }': {
+      'body.0.body.body': [{
+        'type': 'ClassProperty',
+        'key.name': 'x',
+        'typeAnnotation.typeAnnotation.type': 'StringTypeAnnotation',
+        'value.value': "hello",
+        'static': true,
+        'computed': false,
+      }]
+    },
+    'class Properties { static [x]: string = "hello"; }': {
+      'body.0.body.body': [{
+        'type': 'ClassProperty',
+        'typeAnnotation.typeAnnotation.type': 'StringTypeAnnotation',
+        'value.value': "hello",
+        'static': true,
+        'computed': true,
+      }]
+    },
+  },
 };

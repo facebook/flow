@@ -1,6 +1,6 @@
 var flow = require("./../flow_parser.js");
 var util = require("util");
-var ast_types = require("ast-types");
+var ast_types = require("./esprima_ast_types.js");
 
 function new_env() {
   var diffs = {};

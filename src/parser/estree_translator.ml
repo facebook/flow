@@ -613,24 +613,22 @@ end with type t = Impl.t) = struct
 
   and class_method (loc, method_) =
     let { Class.Method.key; value; kind; static; } = method_ in
-    Expression.Object.Property.(
-      let key, computed = (match key with
+    let key, computed = Expression.Object.Property.(match key with
       | Literal lit -> literal lit, false
       | Identifier id -> identifier id, false
       | Computed expr -> expression expr, true) in
-      let kind = match kind with
-      | Init -> "init"
+    let kind = Class.Method.(match kind with
+      | Constructor -> "constructor"
+      | Method -> "method"
       | Get -> "get"
-      | Set -> "set"
-      in
-      node "MethodDefinition" loc [|
-        "key", key;
-        "value", function_expression value;
-        "kind", string kind;
-        "static", bool static;
-        "computed", bool computed;
-      |]
-    )
+      | Set -> "set") in
+    node "MethodDefinition" loc [|
+      "key", key;
+      "value", function_expression value;
+      "kind", string kind;
+      "static", bool static;
+      "computed", bool computed;
+    |]
 
   and class_property (loc, prop) = Class.Property.(
     let key, computed = (match prop.key with
@@ -639,7 +637,8 @@ end with type t = Impl.t) = struct
     | Expression.Object.Property.Computed expr -> expression expr, true) in
     node "ClassProperty" loc [|
       "key", key;
-      "typeAnnotation", type_annotation prop.typeAnnotation;
+      "value", option expression prop.value;
+      "typeAnnotation", option type_annotation prop.typeAnnotation;
       "computed", bool computed;
       "static", bool prop.static;
     |]

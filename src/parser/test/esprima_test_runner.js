@@ -5,7 +5,7 @@
 var esprima = require("esprima-fb");
 var flow = require("../flow_parser.js");
 var util = require("util");
-var ast_types = require("ast-types");
+var ast_types = require("./esprima_ast_types.js");
 
 function new_env() {
   var diffs = {};
@@ -183,6 +183,20 @@ function handleSpecialObjectCompare(esprima, flow, env) {
         esprima.implements = [];
       }
       break;
+    case "ClassBody":
+      // esprima-fb is pretty out of date here. The 4 kinds should be
+      // "constructor", "method", "get" and "set"
+      for (var i = 0; i < esprima.body.length; i++) {
+        var body = esprima.body[i];
+        if (body && body.type == "MethodDefinition") {
+          if (body.key.name === "constructor") {
+            body.kind = "constructor";
+          } else if (body.kind === "init" || body.kind === "") {
+            body.kind = "method";
+          }
+        }
+      }
+      break;
     case 'ArrayPattern':
       // Esprima has the wrong node type for spread elements in an array pattern
       for (var i = 0; i < esprima.elements.length; i++) {
@@ -197,8 +211,11 @@ function handleSpecialObjectCompare(esprima, flow, env) {
     case 'ObjectTypeProperty':
     case 'ObjectTypeIndexer':
     case 'ObjectTypeCallProperty':
+      esprima.static = esprima.static || false;
+      break;
     case 'ClassProperty':
       esprima.static = esprima.static || false;
+      esprima.value = null;
       break;
     case 'ArrowFunctionExpression':
       esprima.returnType = null;

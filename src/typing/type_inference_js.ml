@@ -4781,7 +4781,7 @@ and mk_signature cx reason_c c_type_params_map superClass body = Ast.Class.(
           { Ast.Identifier.name; _ });
         value = _, { Ast.Expression.Function.params; defaults; rest;
           returnType; typeParameters; body; _ };
-        kind = Ast.Expression.Object.Property.Init;
+        kind = Method.Method | Method.Constructor;
         static;
       }) ->
 
@@ -4810,10 +4810,17 @@ and mk_signature cx reason_c c_type_params_map superClass body = Ast.Class.(
     | Body.Property (loc, {
         Property.key = Ast.Expression.Object.Property.Identifier
           (_, { Ast.Identifier.name; _ });
-        typeAnnotation = (_, typeAnnotation);
+        typeAnnotation;
+        value;
         static;
       }) ->
-        let t = convert cx c_type_params_map typeAnnotation in
+        if value <> None
+        then begin
+          let msg = "class property initializers are not yet supported" in
+          Flow_js.add_error cx [mk_reason "" loc, msg]
+        end;
+        let r = mk_reason (spf "class property %s" name) loc in
+        let t = mk_type_annotation_ cx c_type_params_map r typeAnnotation in
         if static
         then
           SMap.add name t sfields,
@@ -4828,8 +4835,8 @@ and mk_signature cx reason_c c_type_params_map superClass body = Ast.Class.(
 
     (* get/set *)
     | Body.Method (loc, {
-        Method.kind = Ast.Expression.Object.Property.Get
-                    | Ast.Expression.Object.Property.Set;
+        Method.kind = Method.Get
+                    | Method.Set;
         _
       }) ->
         let msg = "get/set properties not yet supported" in
@@ -4839,7 +4846,6 @@ and mk_signature cx reason_c c_type_params_map superClass body = Ast.Class.(
     (* literal LHS *)
     | Body.Method (loc, {
         Method.key = Ast.Expression.Object.Property.Literal _;
-        Method.kind = Ast.Expression.Object.Property.Init;
         _
       })
     | Body.Property (loc, {
@@ -4853,7 +4859,6 @@ and mk_signature cx reason_c c_type_params_map superClass body = Ast.Class.(
     (* computed LHS *)
     | Body.Method (loc, {
         Method.key = Ast.Expression.Object.Property.Computed _;
-        Method.kind = Ast.Expression.Object.Property.Init;
         _
       })
     | Body.Property (loc, {
@@ -4876,7 +4881,7 @@ and mk_class_elements cx instance_info static_info body = Ast.Class.(
           { Ast.Identifier.name; _ });
         value = _, { Ast.Expression.Function.params; defaults; rest;
           returnType; typeParameters; body; async; _ };
-        kind = Ast.Expression.Object.Property.Init;
+        kind = Method.Method | Method.Constructor;
         static;
       }) ->
       let this, super, method_sigs =
