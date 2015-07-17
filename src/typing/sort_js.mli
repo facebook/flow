@@ -14,4 +14,5 @@ open Utils
    cyclic, as well as a topologically sorted list of key lists where any keys in
    a list only depend on keys in a subsequent list
 *)
-val topsort: (string * SSet.t) SMap.t -> (bool * string list list)
+val topsort: SSet.t SMap.t -> string list list IMap.t
+val log: string list list IMap.t -> unit

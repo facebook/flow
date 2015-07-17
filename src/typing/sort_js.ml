@@ -14,104 +14,145 @@ open Utils
 (* topological sort of module dependencies *)
 (*******************************************)
 
-type topsort_state = {
-  mutable not_yet_visited: (string * SSet.t) SMap.t;
-  mutable cycle: bool;
-
-  mutable stack: string list;
-  mutable count: int;
-  mutable visit_order: int SMap.t;
-  mutable links: int SMap.t;
-  mutable heights: int SMap.t;
-}
-
-let tsort = {
-  not_yet_visited = SMap.empty;
-  cycle = false;
-
-  stack = [];
-  count = 0;
-  visit_order = SMap.empty;
-  links = SMap.empty;
-  heights = SMap.empty;
-}
-
-(* See:
+(* For a detailed description of the algorithm, see:
    http://en.wikipedia.org/wiki/Tarjan's_strongly_connected_components_algorithm
-*)
-let rec tarjan () =
-  try
-    let (m,_) = SMap.choose tsort.not_yet_visited in
-    strongconnected m |> ignore;
-    tarjan ()
-  with _ ->
-    ()
 
-and strongconnected m =
-  tsort.visit_order <- tsort.visit_order |> SMap.add m tsort.count;
-  let (_,local_requires) = SMap.find_unsafe m tsort.not_yet_visited in
-  tsort.not_yet_visited <- SMap.remove m tsort.not_yet_visited;
-  tsort.links <- tsort.links |> SMap.add m tsort.count;
-  tsort.count <- tsort.count + 1;
-  tsort.stack <- m :: tsort.stack;
+   The code below is mostly a transcription of the above. In addition to
+   computing strongly connected components, we also compute their "heights": the
+   height of a strongly connected component is the length of the longest path of
+   strongly connected components from it in the residual graph. *)
 
+(** Nodes are modules. Edges are dependencies. **)
+type topsort_state = {
+  (* nodes not yet visited *)
+  mutable not_yet_visited: SSet.t SMap.t;
+  (* number of nodes visited *)
+  mutable visit_count: int;
+  (* visit ordering *)
+  mutable indices: int SMap.t;
+  (* nodes in a strongly connected component *)
+  mutable stack: string list;
+  (* back edges to earliest visited nodes *)
+  mutable lowlinks: int SMap.t;
+  (* heights *)
+  mutable heights: int SMap.t;
+  (* components *)
+  mutable components: string list SMap.t;
+}
+
+let initial_state modules = {
+  not_yet_visited = modules;
+  visit_count = 0;
+  indices = SMap.empty;
+  stack = [];
+  lowlinks = SMap.empty;
+  heights = SMap.empty;
+  components = SMap.empty;
+}
+
+(* Compute strongly connected component for module m with requires rs. *)
+let rec strongconnect state m rs =
+  let i = state.visit_count in
+  state.visit_count <- i + 1;
+
+  (* visit m *)
+  state.indices <- SMap.add m i state.indices;
+  state.not_yet_visited <- SMap.remove m state.not_yet_visited;
+
+  (* push on stack *)
+  state.stack <- m :: state.stack;
+
+  (* initialize lowlink *)
+  let lowlink = ref i in
+
+  (* initialize height *)
   let height = ref 0 in
-  local_requires |> SSet.iter (fun r ->
-    if (SMap.mem r tsort.not_yet_visited) then (
-      height := max !height (strongconnected r);
-      let link_m = SMap.find_unsafe m tsort.links in
-      let link_r = SMap.find_unsafe r tsort.links in
-      tsort.links <- tsort.links |> SMap.add m (min link_m link_r)
-    )
-    else if (List.mem r tsort.stack) then (
-      let link_m = SMap.find_unsafe m tsort.links in
-      let index_r = SMap.find_unsafe r tsort.visit_order in
-      tsort.links <- tsort.links |> SMap.add m (min link_m index_r)
-    )
-    else
-      height := max !height (try SMap.find_unsafe r tsort.heights with _ -> 0)
+
+  (* for each require r in rs: *)
+  rs |> SSet.iter (fun r ->
+    match SMap.get r state.not_yet_visited with
+    | Some rs_ ->
+        (* recursively compute strongly connected component of r *)
+        let h = strongconnect state r rs_ in
+
+        (* update height with that of r *)
+        height := max !height h;
+
+        (* update lowlink with that of r *)
+        let lowlink_r = SMap.find_unsafe r state.lowlinks in
+        lowlink := min !lowlink lowlink_r
+
+    | None ->
+        if (List.mem r state.stack) then
+          (** either back edge, or cross edge where strongly connected component
+              is not yet complete **)
+          (* update lowlink with index of r *)
+          let index_r = SMap.find_unsafe r state.indices in
+          lowlink := min !lowlink index_r
+        else
+          match SMap.get r state.heights with
+          | Some h ->
+              (** cross edge where strongly connected component is complete **)
+              (* update height *)
+              height := max !height h
+          | None -> ()
   );
 
-  let link_m = SMap.find_unsafe m tsort.links in
-  let index_m = SMap.find_unsafe m tsort.visit_order in
-  if (link_m = index_m) then (
-    component m (!height+1);
-    (!height+1)
+  state.lowlinks <- SMap.add m !lowlink state.lowlinks;
+  if (!lowlink = i) then (
+    (* strongly connected component *)
+    let h = !height + 1 in
+    let c = component state m h in
+    state.components <- SMap.add m c state.components;
+    h
   )
   else !height
 
-and component m h =
-  let m_ = List.hd tsort.stack in
-  tsort.stack <- List.tl tsort.stack;
-  tsort.heights <- tsort.heights |> SMap.add m_ h;
-  if (m <> m_) then  (
-    prerr_endline (spf "CYCLE %s -> %s" m m_);
-    tsort.cycle <- true;
-    component m h
-  )
+(* Return component strongly connected to m. *)
+and component state m h =
+  (* pop stack until m is found *)
+  let m_ = List.hd state.stack in
+  state.stack <- List.tl state.stack;
+  state.heights <- state.heights |> SMap.add m_ h;
+  if (m = m_) then []
+  else m_ :: (component state m h)
 
-let height_map modules =
-  SMap.fold (fun m height -> fun map ->
-    let (file, _) = SMap.find_unsafe m modules in
-    let files = try IMap.find_unsafe height map with _ -> [] in
-    map |> IMap.add height (file::files)
-  ) tsort.heights IMap.empty
+(** main loop **)
+let tarjan state =
+  while not (SMap.is_empty state.not_yet_visited) do
+    (* choose a node, compute its strongly connected component *)
+    (** NOTE: this choice is non-deterministic, so any computations that depend
+        on the visit order, such as heights, are in general non-repeatable. **)
+    let m, rs = SMap.choose state.not_yet_visited in
+    strongconnect state m rs |> ignore
+  done
 
-let sort_by_height modules =
-  IMap.fold (fun h files -> fun partition ->
-    Printf.printf "HEIGHT %d: %d\n" h (List.length files);
-    files :: partition
-  ) (height_map modules) []
+(* Order nodes by their computed heights. It is guaranteed that height ordering
+   implies topological sort ordering; in particular, nodes at a particular
+   height are guaranteed to only depend on nodes at lower heights, so we can
+   partition nodes by their heights, and run a series of parallel jobs, one for
+   each partition, by height. *)
+let partition heights components =
+  SMap.fold (fun m c map ->
+    let mc = m::c in
+    let height = SMap.find_unsafe m heights in
+    match IMap.get height map with
+    | None -> IMap.add height [mc] map
+    | Some mcs -> IMap.add height (mc::mcs) map
+  ) components IMap.empty
 
 let topsort modules =
-  tsort.not_yet_visited <- modules;
-  tsort.cycle <- false;
+  let state = initial_state modules in
+  tarjan state;
+  partition state.heights state.components
 
-  tsort.stack <- [];
-  tsort.count <- 0;
-  tsort.visit_order <- SMap.empty;
-  tsort.links <- SMap.empty;
-  tsort.heights <- SMap.empty;
-
-  tarjan ();
-  (tsort.cycle, sort_by_height modules)
+let log =
+  IMap.iter (fun h mcs ->
+    List.iter (fun mc ->
+      (* Show cycles, which are components with more than one node. *)
+      if List.length mc > 1
+      then
+        prerr_endlinef "cycle detected among the following modules:\n\t%s"
+          (String.concat "\n\t" mc)
+    ) mcs;
+  )

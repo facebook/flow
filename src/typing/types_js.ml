@@ -235,9 +235,12 @@ let collate_errors files =
   let all = SMap.fold distrib_errs !module_errors all in
   all_errors := all
 
+let profile_and_not_quiet opts =
+  Options.(opts.opt_profile && not opts.opt_quiet)
+
 let wraptime opts pred msg f =
-  if opts.Options.opt_quiet || not opts.Options.opt_profile then f ()
-  else time pred msg f
+  if profile_and_not_quiet opts then time pred msg f
+  else f()
 
 let checktime opts limit msg f =
   wraptime opts (fun t -> t > limit) msg f
@@ -506,12 +509,10 @@ let merge_nonstrict partition opts =
 (* calculate module dependencies *)
 let calc_dependencies files =
   let deps = List.fold_left (fun err_map file ->
-    let { Module._module = m; required = reqs; _ } =
-      Module.get_module_info file in
-    SMap.add m (file, reqs) err_map
+    let { Module._module; required; _ } = Module.get_module_info file in
+    SMap.add _module required err_map
   ) SMap.empty files in
-  let (_, partition) = Sort_js.topsort deps in
-  partition
+  Sort_js.topsort deps
 
 (* commit newly inferred and removed modules, collect errors. *)
 let commit_modules inferred removed =
@@ -538,14 +539,19 @@ let typecheck workers files removed unparsed opts make_merge_input =
   (* call supplied function to calculate closure of modules to merge *)
   match make_merge_input inferred with
   | true, to_merge ->
+    let partition = calc_dependencies to_merge in
+    if profile_and_not_quiet opts then Sort_js.log partition;
     (if modes.strict then (
       try
         merge_strict workers to_merge opts
       with exc ->
         prerr_endline (Printexc.to_string exc)
      ) else (
-      let partition = calc_dependencies to_merge in
-      merge_nonstrict partition opts
+      let levels =
+        IMap.fold (fun i mcs levels ->
+          (List.concat mcs)::levels
+        ) partition [] in
+      merge_nonstrict levels opts;
     ));
     (* collate errors by origin *)
     collate_errors to_merge;
