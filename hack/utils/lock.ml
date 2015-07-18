@@ -28,7 +28,8 @@ let lock_name root file =
 let register_lock lock_file =
   Sys_utils.with_umask 0o111 begin fun () ->
     let fd = Unix.descr_of_out_channel (open_out lock_file) in
-    lock_fds := SMap.add lock_file fd !lock_fds;
+    let st = Unix.fstat fd in
+    lock_fds := SMap.add lock_file (fd, st) !lock_fds;
     fd
   end
 
@@ -42,8 +43,7 @@ let _operations root op file : bool =
     let lock_file = lock_name root file in
     let fd = match SMap.get lock_file !lock_fds with
       | None -> register_lock lock_file
-      | Some fd ->
-          let st = Unix.fstat fd in
+      | Some (fd, st) ->
           let identical_file =
             try
               (* Note: I'm carefully avoiding opening another fd to the
