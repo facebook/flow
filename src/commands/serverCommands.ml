@@ -124,8 +124,6 @@ module OptionParser(Config : CONFIG) = struct
       | None -> FlowConfig.(flowconfig.options.traces) in
     let opt_strip_root = strip_root ||
       FlowConfig.(flowconfig.options.strip_root) in
-    let opt_munge_underscores = (not no_underscore_munge) ||
-      FlowConfig.(flowconfig.options.munge_underscores) in
     let opt_log_file = match log_file with
       | Some s ->
           let dirname = Path.make (Filename.dirname s) in
@@ -158,7 +156,7 @@ module OptionParser(Config : CONFIG) = struct
       Options.opt_module;
       Options.opt_libs;
       Options.opt_no_flowlib = no_flowlib;
-      Options.opt_munge_underscores = opt_munge_underscores;
+      Options.opt_munge_underscores = (not no_underscore_munge);
     };
     ()
 
