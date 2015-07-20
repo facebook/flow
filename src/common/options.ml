@@ -29,6 +29,7 @@ type options = {
   opt_log_file: Path.t;
   opt_no_flowlib: bool;
   opt_module_name_mappers: (Str.regexp * string) list;
+  opt_munge_underscores: bool;
 }
 
 let error_flags opts = opts.opt_error_flags
