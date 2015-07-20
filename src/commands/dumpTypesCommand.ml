@@ -62,6 +62,8 @@ let string_of_loc loc = Loc.(
       Utils.spf "%s:0:0" file
     else if line = loc._end.line && start - end_ = 1 then
       Utils.spf "%s:%d:%d" file line start
+    else if line != loc._end.line then
+      Utils.spf "%s:%d:%d,%d:%d" file line start loc._end.line end_
     else
       Utils.spf "%s:%d:%d-%d" file line start end_
 )
