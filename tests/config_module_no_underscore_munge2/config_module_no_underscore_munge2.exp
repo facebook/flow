@@ -1,0 +1,26 @@
+
+chain.js:4:15,20: number
+This type is incompatible with
+chain.js:20:15,20: string
+
+chain.js:5:22,27: number
+This type is incompatible with
+chain.js:21:22,27: string
+
+chain.js:20:15,20: string
+This type is incompatible with
+chain.js:4:15,20: number
+
+chain.js:21:22,27: string
+This type is incompatible with
+chain.js:5:22,27: number
+
+chain.js:27:15,20: string
+This type is incompatible with
+chain.js:10:15,20: number
+
+chain.js:30:22,27: number
+This type is incompatible with
+chain.js:13:22,27: string
+
+Found 6 errors
