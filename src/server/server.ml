@@ -22,8 +22,6 @@ struct
   open ServerEnv
   open ServerUtils
 
-  module EventLogger = FlowEventLogger
-
   let name = "flow server"
 
   let config_path root = Path.concat root ".flowconfig"
@@ -69,7 +67,7 @@ struct
 
   let incorrect_hash oc =
     ServerProt.response_to_channel oc ServerProt.SERVER_OUT_OF_DATE;
-    EventLogger.out_of_date ();
+    FlowEventLogger.out_of_date ();
     Printf.printf     "Status: Error\n";
     Printf.printf     "%s is out of date. Exiting.\n" name;
     exit 4
@@ -110,12 +108,12 @@ struct
     (* TODO: check status.directory *)
     status_log env;
     let errors = Types_js.get_errors () in
-    EventLogger.check_response errors;
+    FlowEventLogger.check_response errors;
     send_errorl errors oc
 
   let die_nicely genv oc =
     ServerProt.response_to_channel oc ServerProt.SERVER_DYING;
-    EventLogger.killed ();
+    FlowEventLogger.killed ();
     Printf.printf "Status: Error\n";
     Printf.printf "Sent KILL command by client. Dying.\n";
     (match genv.ServerEnv.dfind with

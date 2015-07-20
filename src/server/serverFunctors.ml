@@ -17,19 +17,6 @@ module List = Core_list
 exception State_not_found
 
 module type SERVER_PROGRAM = sig
-  module EventLogger : sig
-    val init: Path.t -> float -> unit
-    val init_done: string -> unit
-    val load_script_done: unit -> unit
-    val load_read_end: string -> unit
-    val load_recheck_end: float -> int -> unit
-    val load_failed: string -> unit
-    val lock_lost: Path.t -> string -> unit
-    val lock_stolen: Path.t -> string -> unit
-    val out_of_date: unit -> unit
-    val recheck_end: float -> int -> int -> unit
-  end
-
   val preinit : unit -> unit
   val init : genv -> env -> env
   val run_once_and_exit : genv -> env -> unit
@@ -110,7 +97,7 @@ end = struct
       let client_build_id = input_line ic in
       if client_build_id <> Build_id.build_id_ohai then begin
         msg_to_channel oc Build_id_mismatch;
-        Program.EventLogger.out_of_date ();
+        FlowEventLogger.out_of_date ();
         Printf.eprintf "Status: Error\n";
         Printf.eprintf "%s is out of date. Exiting.\n" Program.name;
         exit 4
@@ -177,11 +164,11 @@ end = struct
     while true do
       if not (Lock.check root "lock") then begin
         Hh_logger.log "Lost %s lock; reacquiring.\n" Program.name;
-        Program.EventLogger.lock_lost root "lock";
+        FlowEventLogger.lock_lost root "lock";
         if not (Lock.grab root "lock")
         then
           Hh_logger.log "Failed to reacquire lock; terminating.\n";
-          Program.EventLogger.lock_stolen root "lock";
+          FlowEventLogger.lock_stolen root "lock";
           die()
       end;
       ServerPeriodical.call_before_sleeping();
@@ -190,7 +177,7 @@ end = struct
       let loop_count, rechecked_count, new_env = recheck_loop genv !env in
       env := new_env;
       if rechecked_count > 0
-      then Program.EventLogger.recheck_end start_t loop_count rechecked_count;
+      then FlowEventLogger.recheck_end start_t loop_count rechecked_count;
       if has_client then handle_connection genv !env socket;
       ServerEnv.invoke_async_queue ();
       EventLogger.flush ();
@@ -198,7 +185,7 @@ end = struct
 
   let create_program_init genv env = fun () ->
     let env = Program.init genv env in
-    Program.EventLogger.init_done "fresh";
+    FlowEventLogger.init_done "fresh";
     env
 
   (* The main entry point of the daemon
@@ -209,7 +196,7 @@ end = struct
   *)
   let main options =
     let root = Options.root options in
-    Program.EventLogger.init root (Unix.time ());
+    FlowEventLogger.init root (Unix.time ());
     Program.preinit ();
     SharedMem.(init default_config);
     (* this is to transform SIGPIPE in an exception. A SIGPIPE can happen when
