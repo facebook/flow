@@ -65,6 +65,9 @@ let escape_str = String.escaped
 let fmt_int s = s
 (* XXX: what format conversions do we need to do? *)
 let fmt_float s = s
+let fmt_str_vec v = "<" ^ String.concat " " v ^ ">"
+let fmt_vec f v = "<" ^ String.concat " " (List.map f v) ^ ">"
+
 
 (* *)
 
@@ -103,21 +106,33 @@ let fmt_lval lval =
 (*** Environment manipulation ***)
 type label = string
 
-type env = {
+type nonlocal_actions = {
+  continue_action: is_initial:bool -> env -> env;
+  break_action: is_initial:bool -> env -> env;
+  return_action: has_value:bool -> is_initial:bool -> env -> env;
+}
+and env = {
   reversed_output: string list;
   indent: int;
   next_label: int;
-  continue_target: label;
-  break_target: label;
+  num_iterators: int;
+  next_iterator: int; (* iterators allocated in a stack discipline *)
+  nonlocal: nonlocal_actions;
   cleanups: (env -> env) list;
 }
 
+let empty_nonlocal_actions = {
+  continue_action = (fun ~is_initial:_ _ -> assert false);
+  break_action = (fun ~is_initial:_ _ -> assert false);
+  return_action = (fun ~has_value:_ ~is_initial:_ _ -> assert false);
+}
 let new_env () = {
   reversed_output = [];
   indent = 0;
   next_label = 0;
-  continue_target = "BOGUS";
-  break_target = "BOGUS";
+  num_iterators = 0;
+  next_iterator = 0;
+  nonlocal = empty_nonlocal_actions;
   cleanups = [];
 }
 
@@ -136,6 +151,12 @@ let fresh_catch = fresh_id "C"
 let fresh_faultlet = fresh_id "F"
 let fresh_defvar = fresh_id "DV"
 
+(* XXX: these are all wrong; we actually want unnamed variables,
+ * but this works well enough for now *)
+let fresh_tempvar = fresh_id "$___"
+let get_ret_var env = env, "$___ret"
+let get_nonlocal_var env = env, "$___nonlocal"
+
 let fresh_labels_2 env =
   let env, a_label = fresh_label env in
   let env, b_label = fresh_label env in
@@ -145,6 +166,16 @@ let fresh_labels_3 env =
   let env, c_label = fresh_label env in
   env, a_label, b_label, c_label
 
+let fresh_iterator env =
+  { env with
+    next_iterator = env.next_iterator+1;
+    num_iterators = if env.next_iterator < env.num_iterators then
+                    env.num_iterators else
+                    env.num_iterators+1
+  }, env.next_iterator
+let free_iterator env i =
+  assert (env.next_iterator = i+1);
+  { env with next_iterator = env.next_iterator-1 }
 
 let enter_construct env = { env with indent = env.indent+1 }
 let exit_construct env = { env with indent = env.indent-1 }
@@ -160,13 +191,10 @@ let with_indent env indent f arg =
   let old = env.indent in
   let env = f { env with indent = indent } arg in
   { env with indent = old }
-let with_targets env continue_target break_target f arg =
-  let old_continue = env.continue_target in
-  let old_break = env.break_target in
-  let env, x = f { env with continue_target = continue_target;
-                            break_target = break_target } arg in
-  { env with continue_target = old_continue;
-             break_target = old_break }, x
+let with_actions env nonlocal f arg =
+  let old_nonlocal = env.nonlocal in
+  let env, x = f { env with nonlocal = nonlocal } arg in
+  { env with nonlocal = old_nonlocal }, x
 
 (* Writer like things *)
 let emit_str_raw env s =
@@ -223,6 +251,14 @@ let emit_op2il s env arg1 arg2 =
   let t, a, _ = fmt_lval arg2 in
   emit_op_strs env [s^t; string_of_int arg1; a]
 
+let emit_op3iter s env arg1 arg2 = function
+  | [id] ->
+    emit_op_strs env [s; string_of_int arg1; arg2; id]
+  | [id1; id2] ->
+    emit_op_strs env [s ^ "K"; string_of_int arg1; arg2; id1; id2]
+  | _ -> assert false
+
+
 
 let emit_label env l = with_indent env (env.indent-1) emit_str (l^":")
 
@@ -230,7 +266,11 @@ let emit_label env l = with_indent env (env.indent-1) emit_str (l^":")
 let emit_SetOp =          emit_op2ls_screwy "SetOp"
 let emit_IncDec =         emit_op2ls_screwy "IncDec"
 let emit_CGet =           emit_op1l   "CGet"
+let emit_CGetL =          emit_op1s   "CGetL"
+let emit_IssetL =         emit_op1s   "IssetL"
+let emit_UnsetL =         emit_op1s   "UnsetL"
 let emit_Set =            emit_op1l   "Set"
+let emit_SetL =           emit_op1s   "SetL"
 let emit_RetC =           emit_op0    "RetC"
 let emit_PopC =           emit_op0    "PopC"
 let emit_PopR =           emit_op0    "PopR"
@@ -262,6 +302,15 @@ let emit_Throw =          emit_op0    "Throw"
 let emit_Catch =          emit_op0    "Catch"
 let emit_Unwind =         emit_op0    "Unwind"
 let emit_Print =          emit_op0    "Print"
+let emit_IterInit =       emit_op3iter "IterInit"
+let emit_IterNext =       emit_op3iter "IterNext"
+let emit_IterFree =       emit_op1i   "IterFree"
+
+let emit_Switch env labels base bound =
+  emit_op_strs env ["Switch"; fmt_str_vec labels; string_of_int base; bound]
+let emit_IterBreak env iters label =
+  let fmt_iter i = "(Iter) " ^ string_of_int i in
+  emit_op_strs env ["IterBreak"; fmt_vec fmt_iter iters; label]
 
 let emit_bool env = function | true -> emit_op0 "True" env
                              | false -> emit_op0 "False" env

@@ -151,6 +151,10 @@ let opt_map f = function
   | None -> None
   | Some x -> Some (f x)
 
+let opt_fold f env = function
+  | None -> env
+  | Some x -> f env x
+
 let rec lmap f env l =
   match l with
   | [] -> env, []

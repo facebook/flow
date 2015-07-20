@@ -16,11 +16,22 @@ open Utils
 
 open Emitter_core
 
+let emit_func_body_code env body =
+  let acts = { empty_nonlocal_actions
+               with return_action = Emitter_stmt.default_return_action } in
+  let env, terminal =
+    with_actions env acts Emitter_stmt.emit_block body.fnb_nast in
+  let env = if terminal then env else
+            Emitter_stmt.default_return_action
+              ~has_value:false ~is_initial:true env in
+  env, ()
+
 let emit_func_body env body =
-  let env, terminal = Emitter_stmt.emit_block env body.fnb_nast in
-  if terminal then env else
-  let env = emit_Null env in
-  emit_RetC env
+  let env, output, () = collect_output env emit_func_body_code body in
+  (* output an iterator count *)
+  let env = match env.num_iterators with 0 -> env
+    | n -> emit_strs env [".numiters"; string_of_int n; ";"] in
+  emit_str_raw env output
 
 let emit_param p =
   assert (not p.param_is_reference); (* actually right *)
