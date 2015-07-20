@@ -1970,17 +1970,59 @@ module.exports = {
           'name': 'T',
         }
       ]
-    }
+    },
+    '/*::type F = /* inner escaped comment *-/ number;*/': {
+      'body': [
+        {
+          'type': 'TypeAlias',
+          'id.name': 'F',
+          'typeParameters': null,
+          'right': {
+            'type': 'NumberTypeAnnotation',
+          },
+        }
+      ],
+      'comments': [
+        {
+          'type': 'Block',
+          'value': ' inner escaped comment '
+        }
+      ]
+    },
+    '/*flow-include type F = /* inner escaped comment *-/ number;*/': {
+      'body': [
+        {
+          'type': 'TypeAlias',
+          'id.name': 'F',
+          'typeParameters': null,
+          'right': {
+            'type': 'NumberTypeAnnotation',
+          },
+        }
+      ],
+      'comments': [
+        {
+          'type': 'Block',
+          'value': ' inner escaped comment '
+        }
+      ]
+    },
+    'var a/*: /* inner escaped comment *-/ number*/;': {
+      'body': [
+        {'type': 'VariableDeclaration'}
+      ],
+      'comments': [
+        {
+          'type': 'Block',
+          'value': ' inner escaped comment '
+        }
+      ]
+    },
   },
   'Invalid Type Annotations In Comments': {
     '/*: */': {
       'errors': {
         '0.message': 'Unexpected token /*:',
-      }
-    },
-    '/*:: /* */': {
-      'errors': {
-        '0.message': 'Unexpected token /*',
       }
     },
     '/*:: /*: */': {
@@ -2012,7 +2054,12 @@ module.exports = {
       'errors': {
         '0.message': 'Unexpected end of input',
       }
-    }
+    },
+    '/*:: type PowerGlove = /* bad means good */ soBad; */': {
+      'errors': {
+        '0.message': 'Unexpected token `*/`. Did you mean `*-/`?'
+      }
+    },
   },
   'Trailing commas': {
     'Math.max(a, b, c,)': {},
@@ -2300,4 +2347,13 @@ module.exports = {
       }]
     },
   },
+  'Comments': {
+    // Regression test: "/*" should be allowed inside block comments
+    '/* /* */': {
+      'comments': [{
+        type: 'Block',
+        value: ' /* ',
+      }]
+    },
+  }
 };

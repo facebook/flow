@@ -354,6 +354,9 @@
   let unexpected_error env loc value =
     lex_error env loc (Parse_error.UnexpectedToken value)
 
+  let unexpected_error_w_suggest env loc value suggest =
+    lex_error env loc (Parse_error.UnexpectedTokenWithSuggestion (value, suggest))
+
   let illegal env loc = lex_error env loc (Parse_error.UnexpectedToken "ILLEGAL")
 
   let illegal_number env lexbuf word token =
@@ -577,14 +580,10 @@ rule token env = parse
                          unicode_fix_cols lexbuf;
                          token env lexbuf }
   | "/*"               {
-                         if env.lex_in_comment_syntax
-                         then unexpected_error env (lb_to_loc lexbuf) "/*"
-                         else begin
-                           let start = lb_to_loc lexbuf in
-                           let buf = Buffer.create 127 in
-                           let _end = comment env buf lexbuf in
-                           save_comment env start _end buf true
-                         end;
+                            let start = lb_to_loc lexbuf in
+                            let buf = Buffer.create 127 in
+                            let _end = comment env buf lexbuf in
+                            save_comment env start _end buf true;
                          token env lexbuf
                        }
   | "/*" whitespace* (":" | "::" | "flow-include" as escape_type) as pattern
@@ -726,14 +725,10 @@ and type_token env = parse
                          unicode_fix_cols lexbuf;
                          type_token env lexbuf }
   | "/*"               {
-                         if env.lex_in_comment_syntax
-                         then unexpected_error env (lb_to_loc lexbuf) "/*"
-                         else begin
-                           let start = lb_to_loc lexbuf in
-                           let buf = Buffer.create 127 in
-                           let _end = comment env buf lexbuf in
-                           save_comment env start _end buf true
-                         end;
+                            let start = lb_to_loc lexbuf in
+                            let buf = Buffer.create 127 in
+                            let _end = comment env buf lexbuf in
+                            save_comment env start _end buf true;
                          type_token env lexbuf
                        }
   | "/*" whitespace* (":" | "::" | "flow-include" as escape_type) as pattern
@@ -944,7 +939,20 @@ and comment env buf = parse
   | '\n'               { Lexing.new_line lexbuf;
                          Buffer.add_char buf '\n';
                          comment env buf lexbuf }
-  | "*/"               { lb_to_loc lexbuf }
+  | "*/"               { 
+                         let loc = lb_to_loc lexbuf in
+                         if env.lex_in_comment_syntax
+                         then unexpected_error_w_suggest env loc "*/" "*-/";
+                         loc
+                       }
+  | "*-/"              { 
+                         if env.lex_in_comment_syntax
+                         then lb_to_loc lexbuf
+                         else (
+                           Buffer.add_string buf "*-/";
+                           comment env buf lexbuf
+                         )
+                       }
   | _  as c            { Buffer.add_char buf c;
                          comment env buf lexbuf }
 

@@ -10,6 +10,7 @@
 
 type t =
   | UnexpectedToken of string
+  | UnexpectedTokenWithSuggestion of string * string
   | UnexpectedNumber
   | UnexpectedString
   | UnexpectedIdentifier
@@ -66,6 +67,10 @@ module PP =
   struct
     let error = function
       | UnexpectedToken token->  "Unexpected token "^token
+      | UnexpectedTokenWithSuggestion (token, suggestion) ->  
+          Printf.sprintf "Unexpected token `%s`. Did you mean `%s`?"
+            token
+            suggestion
       | UnexpectedNumber ->  "Unexpected number"
       | UnexpectedString ->  "Unexpected string"
       | UnexpectedIdentifier ->  "Unexpected identifier"
