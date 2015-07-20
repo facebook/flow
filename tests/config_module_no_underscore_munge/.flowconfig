@@ -5,3 +5,4 @@
 [libs]
 
 [options]
+munge_underscores=true

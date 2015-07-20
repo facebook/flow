@@ -60,7 +60,7 @@ let default_log_file root =
 let default_module_system = Node
 
 let default_options root = {
-  munge_underscores = true;
+  munge_underscores = false;
   moduleSystem = default_module_system;
   module_name_mappers = [];
   suppress_comments = [];

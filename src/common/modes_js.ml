@@ -37,7 +37,7 @@ let modes = {
   quiet = true;
   profile = false;
   no_flowlib = false;
-  munge_underscores = true;
+  munge_underscores = false;
 }
 
 let debug_string f = if modes.debug then prerr_endline (f ())

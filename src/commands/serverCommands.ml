@@ -51,8 +51,8 @@ module OptionParser(Config : CONFIG) = struct
         ~doc:"Specify one or more library paths, comma separated"
     |> flag "--no-flowlib" no_arg
         ~doc:"Do not include embedded declarations"
-    |> flag "--no-underscore-munge" no_arg
-        ~doc:"Do not treat class properties with leading underscores as private data"
+    |> flag "--munge-underscore-members" no_arg
+        ~doc:"Treat any class member name with a leading underscore as private"
     |> anon "root" (optional string) ~doc:"Root directory"
   )
 
@@ -105,7 +105,7 @@ module OptionParser(Config : CONFIG) = struct
 
   let result = ref None
   let main error_flags json profile quiet log_file debug verbose verbose_indent
-           all weak traces strip_root lib no_flowlib no_underscore_munge root () =
+           all weak traces strip_root lib no_flowlib munge_underscore_members root () =
     let root = CommandUtils.guess_root root in
     let flowconfig = FlowConfig.get root in
     let opt_module = FlowConfig.(match flowconfig.options.moduleSystem with
@@ -124,14 +124,8 @@ module OptionParser(Config : CONFIG) = struct
       | None -> FlowConfig.(flowconfig.options.traces) in
     let opt_strip_root = strip_root ||
       FlowConfig.(flowconfig.options.strip_root) in
-    let opt_munge_underscores =
-      (* CLI (no-underscore-munge) File (munge_underscores) Mode (munge_underscores)
-         1 (override File)         1                        0
-         1 (override File)         0                        0
-         0 (defer to File)         1                        1
-         0 (defer to File)         0                        0 *)
-      (not no_underscore_munge) &&
-        FlowConfig.(flowconfig.options.munge_underscores) in
+    let opt_munge_underscores = munge_underscore_members ||
+      FlowConfig.(flowconfig.options.munge_underscores) in
     let opt_log_file = match log_file with
       | Some s ->
           let dirname = Path.make (Filename.dirname s) in
