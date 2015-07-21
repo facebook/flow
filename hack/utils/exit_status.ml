@@ -29,11 +29,11 @@ let exit t =
     | Ok -> 0
     | Build_error -> 2
     | Build_terminated -> 1
-    | Checkpoint_error -> 7
+    | Checkpoint_error -> 8
     | Input_error -> 1
     | Kill_error -> 1
     | No_server_running -> 6
-    | Out_of_time -> 1
+    | Out_of_time -> 7
     | Out_of_retries -> 7
     | Server_already_exists -> 77
     | Server_initializing -> 1
