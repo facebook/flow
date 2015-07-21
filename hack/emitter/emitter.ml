@@ -107,11 +107,41 @@ let fmt_class_list op classes =
 let emit_use env use =
   emit_strs env [".use"; fmt_class_hint use ^ ";"]
 
+let emit_pinit env = function
+  | [] -> env
+  | vars ->
+    let options = ["public"; "private"; "mayusevv"] in
+    let env = emit_enter env ".method" options "86pinit" (fmt_params []) in
+
+    let fmt_var_init env (name, expr) =
+      let env, skip_label = fresh_label env in
+      let env = emit_CheckProp env name in
+      let env = emit_cjmp env true skip_label in
+      let env = Emitter_expr.emit_expr env expr in
+      let env = emit_InitProp env name "NonStatic" in
+      emit_label env skip_label
+    in
+    let env = List.fold_left fmt_var_init env vars in
+
+    let env = emit_Null env in
+    let env = emit_RetC env in
+    let env = emit_exit env in
+    env
+
+(* Returns None if the case has been handled, and Some (name, expr) if
+ * it still needs to be taken care of in a pinit *)
 let emit_var env var =
-  (* Only handle simple cases. In particular, only uninitialized vars! *)
-  assert (var.cv_final = false && var.cv_is_xhp = false && var.cv_expr = None);
+  assert (var.cv_final = false); (* props can't be final *)
+  assert (var.cv_is_xhp = false);
   let options = fmt_options [fmt_visibility var.cv_visibility] in
-  emit_strs env [".property"; options; snd var.cv_id; "="; "\"\"\"N;\"\"\";"]
+  let fmt_prop v =
+    emit_strs env [".property"; options; snd var.cv_id; "="; v^";"] in
+  match var.cv_expr with
+  | None -> fmt_prop "\"\"\"N;\"\"\"", None
+  | Some expr ->
+    match Emitter_lit.fmt_lit expr with
+    | Some lit -> fmt_prop lit, None
+    | None -> fmt_prop "uninit", Some (snd var.cv_id, expr)
 
 let class_kind_options  = function
   | Ast.Cabstract -> ["abstract"]
@@ -148,13 +178,17 @@ let emit_class nenv x =
 
 
   let env = List.fold_left emit_use env cls.c_uses in
-  let env = List.fold_left emit_var env cls.c_vars in
+  let env, uninit_vars = lmap emit_var env cls.c_vars in
+  let uninit_vars = Core_list.filter_map uninit_vars ~f:(fun x->x) in
   let env = List.fold_left emit_method env cls.c_methods in
 
+  (* Now for 86* stuff *)
   let env = match cls.c_constructor with
             | None -> emit_default_ctor env "86ctor"
                                         (cls.c_kind = Ast.Cinterface)
             | Some m -> emit_method_ env m "86ctor" in
+
+  let env = emit_pinit env uninit_vars in
 
   let env = emit_exit env in
 

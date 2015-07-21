@@ -61,6 +61,7 @@ let get_lid_name (_, id) = Ident.get_name id
 let quote_str s = "\"" ^ s ^ "\""
 (* XXX: ocaml and php probably don't have exactly the same escaping rules *)
 let escape_str = String.escaped
+let unescape_str = Scanf.unescaped
 (* XXX: actually convert the int to decimal *)
 let fmt_int s = s
 (* XXX: what format conversions do we need to do? *)
@@ -234,6 +235,8 @@ let emit_op1e s env arg1 = emit_op_strs env [s; quote_str arg1]
 let emit_op1i s env arg1 = emit_op_strs env [s; string_of_int arg1]
 let emit_op2ie s env arg1 arg2 =
   emit_op_strs env [s; string_of_int arg1; quote_str arg2]
+let emit_op2es s env arg1 arg2 =
+  emit_op_strs env [s; quote_str arg1; arg2]
 let emit_op3ies s env arg1 arg2 arg3 =
   emit_op_strs env [s; string_of_int arg1; quote_str arg2; arg3]
 let emit_op1l s env arg1 =
@@ -305,6 +308,8 @@ let emit_Print =          emit_op0    "Print"
 let emit_IterInit =       emit_op3iter "IterInit"
 let emit_IterNext =       emit_op3iter "IterNext"
 let emit_IterFree =       emit_op1i   "IterFree"
+let emit_CheckProp =      emit_op1e   "CheckProp"
+let emit_InitProp =       emit_op2es  "InitProp"
 
 let emit_Switch env labels base bound =
   emit_op_strs env ["Switch"; fmt_str_vec labels; string_of_int base; bound]
