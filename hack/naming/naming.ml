@@ -1929,26 +1929,36 @@ and expr_ env = function
       | [] -> Errors.naming_too_few_arguments p; N.Any
       | el -> N.List (exprl env el)
       )
-  | Call ((p, Id (_, cn)), el, uel) when cn = SN.FB.fgena ->
-      arg_unpack_unexpected uel ;
-      (match el with
-      | [e] -> N.Special_func (N.Gena (expr env e))
-      | _ -> Errors.gena_arity p; N.Any
-      )
-  | Call ((p, Id (_, cn)), el, uel) when cn = SN.FB.fgenva ->
-      arg_unpack_unexpected uel ;
-      if List.length el < 1
-      then (Errors.genva_arity p; N.Any)
-      else N.Special_func (N.Genva (exprl env el))
-  | Call ((p, Id (_, cn)), el, uel) when cn = SN.FB.fgen_array_rec ->
-      arg_unpack_unexpected uel ;
-      (match el with
-      | [e] -> N.Special_func (N.Gen_array_rec (expr env e))
-      | _ -> Errors.gen_array_rec_arity p; N.Any
-      )
   | Call ((p, Id f), el, uel) ->
-      N.Call (N.Cnormal, (p, N.Id (Env.fun_id env f)),
-              exprl env el, exprl env uel)
+      let qualified = Env.fun_id env f in
+      let cn = snd qualified in
+      (* The above special cases (fun, inst_meth, meth_caller, class_meth, and
+       * friends) are magical language constructs, which we should check before
+       * calling fun_id and looking up the function and doing namespace
+       * normalization. However, gena, genva, etc are actual functions that
+       * actually exist, we just need to handle them specially here, during
+       * naming. Note that most of the function special cases, such as idx, are
+       * actually handled in typing, and don't require naming magic. *)
+      if cn = SN.FB.fgena then begin
+        arg_unpack_unexpected uel ;
+        (match el with
+        | [e] -> N.Special_func (N.Gena (expr env e))
+        | _ -> Errors.gena_arity p; N.Any
+        )
+      end else if cn = SN.FB.fgenva then begin
+        arg_unpack_unexpected uel ;
+        if List.length el < 1
+        then (Errors.genva_arity p; N.Any)
+        else N.Special_func (N.Genva (exprl env el))
+      end else if cn = SN.FB.fgen_array_rec then begin
+        arg_unpack_unexpected uel ;
+        (match el with
+        | [e] -> N.Special_func (N.Gen_array_rec (expr env e))
+        | _ -> Errors.gen_array_rec_arity p; N.Any
+        )
+      end else
+        N.Call (N.Cnormal, (p, N.Id qualified),
+                exprl env el, exprl env uel)
   (* Handle nullsafe instance method calls here. Because Obj_get is used
      for both instance property access and instance method calls, we need
      to match the entire "Call(Obj_get(..), ..)" pattern here so that we

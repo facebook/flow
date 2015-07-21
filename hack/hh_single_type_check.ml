@@ -134,7 +134,10 @@ let builtins = "<?hh // decl\n"^
   "  public static function removeKey(shape() $shape, arraykey $index): void {}\n" ^
   "}\n" ^
   "newtype classname<+T> = string;\n" ^
-  "function var_dump($x): void;\n"
+  "function var_dump($x): void;\n" ^
+  "function gena();\n" ^
+  "function genva();\n" ^
+  "function gen_array_rec();\n"
 
 (*****************************************************************************)
 (* Helpers *)
