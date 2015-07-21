@@ -9,4 +9,10 @@ modules.js:6:9,14: string
 This type is incompatible with
 [LIB] modules.js:2:18,23: number
 
-Found 2 errors
+modules.js:8:19,30: call of method get_y
+Error:
+modules.js:8:10,15: string
+This type is incompatible with
+[LIB] modules.js:12:27,31: number
+
+Found 3 errors

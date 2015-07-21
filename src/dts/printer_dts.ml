@@ -13,6 +13,8 @@ let get_line_number = Loc. (function
 
 let strip_quotes = Str.global_replace (Str.regexp "'\\|\"") ""
 
+let if_true = fun x y -> if x then y else []
+
 let failwith_location loc str = failwith (
   String.concat "" [sprintf "Line %d: " (get_line_number loc); str] )
 
@@ -209,6 +211,17 @@ let generate_mangled_name name prefix =
 let clean_mangled_name mangled_name =
   Str.global_substitute (Str.regexp ".*___") (fun _ -> "") mangled_name
 
+(* rename_global_module is used to rename modules defined globally while
+   when they are used in global non module statements. Also these modules are
+   imported in global using this name.
+   This name isn't supposed to be used in implementation files. Purpose is just
+   to mimic TypeScript within the declaration environment.
+*)
+let rename_global_module = fun x -> spf "G_%s" x
+
+let rec rename_reference name = function
+| [] -> name
+| x :: xs -> if x = name then rename_global_module x else rename_reference x xs
 (* Function to convert an arbitrary module name to a valid javascript
    identifier. Change this later as need be.
    Right now it just convert "-" to "$HYPHEN$". *)
@@ -616,9 +629,22 @@ let rec program fmt (_, stmts, _) =
   let scope = get_modules_in_scope [] prefix stmts in
   let modules = filter_modules prefix [] scope stmts in
   let not_modules = filter_not_modules stmts in
-  fprintf fmt "@[<v>%a%a@]@."
+  let list_possible_modules = get_modules_used not_modules in
+  let list_modules_used = get_modules_to_import scope list_possible_modules in
+
+  fprintf fmt "@[<v>%a%a%a@]@."
     print_modules modules
-    (look_ahead ~sep:"" (statement scope prefix)) not_modules
+    (* We import all the top level module as global identifiers.
+       But rename the rename/garble the identifier. Renaming serves two
+       purposes:
+       1. No name clashes due the fact that TS has two namespaces and Flow has
+          only ony.
+       2. In flow we do not wan't modules to be accessbile outside the module
+          without explicitly importing them. Since we garble the names, it is
+          somewhat hidden.
+    *)
+    (list_ ~sep:"" (import_module true)) list_modules_used
+    (look_ahead ~sep:"" (statement true scope prefix)) not_modules
 
 (*
   print_modules calls print_module in a DFS order. It can easily be
@@ -656,9 +682,9 @@ and print_module scope imports prefix fmt = Statement.(function
 
     fprintf fmt "@[<v>declare module \"%s\" {@;<0 2>@[<v>%a%a%a@]@,}@]"
       (generate_mangled_name name prefix)
-      (list_ ~sep:"" import_module) list_modules_used
+      (list_ ~sep:"" (import_module false)) list_modules_used
       (list_ ~sep:"" import_members) imports
-      (look_ahead ~sep:"" (statement new_scope new_prefix))
+      (look_ahead ~sep:"" (statement false new_scope new_prefix))
       (filter_not_modules body)
 
   | loc, ExportModuleDeclaration { ExportModule.name; body; } ->
@@ -673,13 +699,19 @@ and print_module scope imports prefix fmt = Statement.(function
         get_modules_to_import new_scope list_possible_modules in
       fprintf fmt "@[<v>declare module \"%s\" {@;<0 2>@[<v>%a%a@]@,}@]"
         name
-        (list_ ~sep:"" import_module) list_modules_used
-        (look_ahead ~sep:"" (statement scope prefix))
+        (list_ ~sep:"" (import_module false)) list_modules_used
+        (look_ahead ~sep:"" (statement false scope prefix))
         (filter_not_modules body)
 
   | loc, _ -> failwith_location loc "Module declaration expected here"
 )
-and statement scope prefix fmt =
+
+(*
+  identifier "scope" contains all a list of modules which are in scope and are
+  used in the following statements.
+  "if_true is_global scope" retuns "scope" iff current scope is global.
+*)
+and statement is_global scope prefix fmt =
   Statement.(function
   (* This case sqashes a variable with the following interface
      with same name *)
@@ -687,12 +719,14 @@ and statement scope prefix fmt =
       | _, InterfaceDeclaration { Interface.
         id; extends; typeParameters; _
         } ->
+        let scope = (if_true is_global scope) in
         fprintf fmt "@[<v>declare class %a%a%a %a@]"
-          id_ id
-          (opt (non_empty "<@[<h>%a@]>" (list ~sep:"," type_param)))
+          (id_ scope) id
+          (opt (non_empty "<@[<h>%a@]>" (list ~sep:"," (type_param scope))))
             typeParameters
-          extends_interface extends
-          print_combined_class ((get_object x), (get_object y))
+          (extends_interface scope) extends
+          (print_combined_class scope)
+          ((get_object x), (get_object y))
       | loc, _ -> failwith_location loc
         "Unsopprted elements with same name."
       )
@@ -703,7 +737,7 @@ and statement scope prefix fmt =
       match declarations with
       | [(_, { Declarator.id; _ })] ->
           fprintf fmt "@[<hv>declare var %a;@]"
-            pattern id
+            (pattern (if_true is_global scope)) id
       | _ -> todo fmt
     )
   (* This case squashes an interface with the following VariableDeclaration
@@ -711,35 +745,41 @@ and statement scope prefix fmt =
   | ((_, InterfaceDeclaration { Interface.
       id; extends; typeParameters; _
     }) as x), Some y ->
+      let scope = (if_true is_global scope) in
       fprintf fmt "@[<v>declare class %a%a%a %a@]"
-        id_ id
-        (opt (non_empty "<@[<h>%a@]>" (list ~sep:"," type_param)))
+        (id_ scope) id
+        (opt (non_empty "<@[<h>%a@]>" (list ~sep:"," (type_param scope))))
           typeParameters
-        extends_interface extends
-        print_combined_class ((get_object x), (get_object y))
+        (extends_interface scope) extends
+        (print_combined_class scope)
+        ((get_object x), (get_object y))
 
   | (_, InterfaceDeclaration { Interface.
       id; body; extends; typeParameters;
     }), _ ->
+      let scope = (if_true is_global scope) in
       fprintf fmt "@[<v>declare class %a%a%a %a@]"
-        id_ id
-        (opt (non_empty "<@[<h>%a@]>" (list ~sep:"," type_param))) typeParameters
-        extends_interface extends
-        object_type (snd body)
+        (id_ scope) id
+        (opt (non_empty "<@[<h>%a@]>" (list ~sep:"," (type_param scope))))
+          typeParameters
+        (extends_interface scope) extends
+        (object_type scope) (snd body)
 
   | (_, ExportAssignment id), _ ->
       fprintf fmt "@[<h>declare var exports: typeof %a;@]"
-        id_ id
+        (id_ scope) id
 
   | (_, AmbientClassDeclaration { AmbientClass.
       id; body; typeParameters; extends; implements;
     }), _ ->
+      let scope = (if_true is_global scope) in
       fprintf fmt "@[<v>declare class %a%a%a%a %a@]"
-        id_ id
-        (opt (non_empty "<@[<h>%a@]>" (list ~sep:"," type_param))) typeParameters
-        extends_class extends
-        implements_class implements
-        object_type (snd body)
+        (id_ scope) id
+        (opt (non_empty "<@[<h>%a@]>" (list ~sep:"," (type_param scope))))
+          typeParameters
+        (extends_class scope) extends
+        (implements_class scope) implements
+        (object_type scope) (snd body)
 
   (* The following case converts an enum declaration to a class with
       static members of type "number"
@@ -763,16 +803,17 @@ and statement scope prefix fmt =
        enums.\nEnums are converted to class with static members. More\
        details here : <url for doc>\n" in
     fprintf fmt "@[<v>declare class %a {@;<0 2>@[<v>%a@]@,}@]"
-      id_ name
+      (id_ []) name
       (list_ ~sep:";" enum_member) members
 
   (* The following case handles function declaration *)
   | (_, AmbientFunctionDeclaration {AmbientFunctionDeclaration.
       id; params; returnType; _ }), _ ->
+    let scope = (if_true is_global scope) in
     fprintf fmt "@[<hv>declare function %a(%a)%a;@]"
-      id_ id
-      (list ~sep:", " pattern) params
-      annot returnType
+      (id_ scope) id
+      (list ~sep:", " (pattern scope)) params
+      (annot scope) returnType
 
   (* The following handles Typescript's commonjs import statements like:
 
@@ -781,7 +822,7 @@ and statement scope prefix fmt =
      TODO: handle other import notations as well.
   *)
   | (loc, ImportDeclaration {Import. id; entity; _} ), _ ->
-      import_module fmt (
+      (import_module false) fmt (
         contents (get_identifier_id id),
         strip_quotes (contents (get_identifier_require entity))
       )
@@ -789,71 +830,92 @@ and statement scope prefix fmt =
      Eg. : type T = number | string;
   *)
   | (loc, TypeAlias {TypeAlias.left; right } ), _ ->
+    let scope = (if_true is_global scope) in
     fprintf fmt "@[<hv>declare type %a = %a;@]"
-      generic_type (snd left)
-      type_ right
+      (generic_type []) (snd left)
+      (type_ scope) right
 
   | (loc, _), _ -> failwith_location loc "This is not supported yet"
 )
 
-and pattern fmt = Pattern.(function
+(* From here on "scope" is [] unless its global scope *)
+
+and pattern scope fmt = Pattern.(function
   | _, Identifier id ->
-      id_ fmt id
+      (id_ scope) fmt id
   | _ ->
       todo fmt
 )
 
-and id_ fmt = function
+(* id_scope is differnet from id_ in one respect. It renames the identifier
+   if it matches with any of the modules in "scope".
+*)
+and id_scope scope fmt = function
+  | _, { Identifier.name; typeAnnotation; _ } ->
+      fprintf fmt "%s%a"
+        (rename_reference name scope)
+        (opt (annot scope)) typeAnnotation
+
+and id_ scope fmt = function
   | _, { Identifier.name; typeAnnotation; _ } ->
       fprintf fmt "%s%a"
         name
-        (opt annot) typeAnnotation
+        (opt (annot scope)) typeAnnotation
 
 (* convert a number identifier to a string *)
-and id_no_num fmt = function
+and id_no_num scope fmt = function
   | _, { Identifier.name; typeAnnotation; _ } ->
     let name = try ignore (int_of_string name); spf "%S" name
       with _ -> name in
     fprintf fmt "%s%a"
         name
-        (opt annot) typeAnnotation
+        (opt (annot scope)) typeAnnotation
 
-and annot fmt =
-  fprintf fmt ": %a" type_
+and annot scope fmt =
+  fprintf fmt ": %a" (type_ scope)
 
-and generic_type fmt = Type.(function
+and generic_type scope fmt = Type.(function
   | { Generic.id; typeArguments; } ->
       fprintf fmt "@[%a%a@]"
-        id_path id
-        (non_empty "<%a>" (list ~sep:"," type_)) typeArguments
+        (id_path scope) id
+        (non_empty "<%a>" (list ~sep:"," (type_ scope))) typeArguments
 )
 
-(********************* TODO ************************)
-and id_path fmt = function
+(* id_path renames the first identifier if its a list of length more than
+    one. Ofcourse, renaming happens only if the identifier is present
+    in "scope".
+*)
+and id_path scope fmt = function
   | _, { IdPath.ids; _ } ->
-      fprintf fmt "@[<h>%a@]"
-        (list ~sep:"." id_) ids
+      (match ids with
+        | [x] -> fprintf fmt "@[<h>%a@]" (id_ scope) x
+        | (x :: xs) -> fprintf fmt "@[<h>%a.%a@]"
+                        (id_scope scope) x
+                        (list ~sep:"." (id_ scope)) xs
+        | _ -> fprintf fmt "@[<h>%a@]" (list ~sep:"." (id_ scope)) ids
+      )
 
-and type_ fmt = Type.(function
+
+and type_ scope fmt = Type.(function
   | _, Any -> fprintf fmt "any"
   | _, Void -> fprintf fmt "void"
   | _, Number -> fprintf fmt "number"
   | _, String -> fprintf fmt "string"
   | _, Boolean -> fprintf fmt "boolean"
-  | _, Function t -> function_type fmt t
-  | _, Object t -> object_type fmt t
-  | _, Array t -> array_type fmt t
-  | _, Generic t -> generic_type fmt t
+  | _, Function t -> function_type scope fmt t
+  | _, Object t -> object_type scope fmt t
+  | _, Array t -> array_type scope fmt t
+  | _, Generic t -> generic_type scope fmt t
   | _, Typeof x -> fprintf fmt "typeof %a"
-    id_path x
-  | _, Intersection l -> (list ~sep:" & " type_) fmt l
-  | _, Union l -> (list ~sep:" | " type_) fmt l
+    (id_path scope) x
+  | _, Intersection l -> (list ~sep:" & " (type_ scope)) fmt l
+  | _, Union l -> (list ~sep:" | " (type_ scope)) fmt l
   | _ -> todo fmt
 )
 
-and type_param fmt = Type.(function
+and type_param scope fmt = Type.(function
   | { Param.id; _ } ->
-      id_ fmt id
+      (id_ scope) fmt id
 )
 
 (* A class can only extend one class unlike interfaces which can
@@ -870,22 +932,24 @@ and type_param fmt = Type.(function
    an optional property. This is handled in the extends_class_ function.
 
 *)
-and extends_class fmt = function
+and extends_class scope fmt = function
   | None -> ()
   | Some (_, t) ->
       fprintf fmt "@[ extends %a@]"
-        generic_type t
+        (generic_type scope) t
 
 (* This helper function is for handling extend statement in an
    interface declration. Since an interface can extend more than one
    interfaces, we have a list of interfaces which are extended by the
    current interface.
 *)
-and extends_interface fmt = function
+
+(* INC : WORKING HERE *)
+and extends_interface scope fmt = function
   | [] -> ()
   | [_, t] ->
       fprintf fmt "@[ extends %a@]"
-        generic_type t
+        (generic_type scope) t
   | _ -> todo fmt
 
 (* Implements_class is a helper function to print "implements"
@@ -903,111 +967,114 @@ and extends_interface fmt = function
 
 (* implements_class currently does nothing, uncomment the commented
    lines when "implements" is supported on the flow side *)
-and implements_class fmt = function
+and implements_class scope fmt = function
 (*  | [] -> ()
   | [_, t] ->
       fprintf fmt "@[ implements %a@]"
-        generic_type t
+        (generic_type scope) t
   | _ -> todo fmt *)
   | _ -> ()
 
-and object_type fmt = Type.(function
+and object_type scope fmt = Type.(function
   | { Object.properties; indexers; } ->
       fprintf fmt "{@;<0 2>@[<v>%a%a@]@,}"
-        (list_ ~sep:";" property) properties
-        (list ~sep:";" indexer_) indexers
+        (list_ ~sep:";" (property scope)) properties
+        (list ~sep:";" (indexer_ scope)) indexers
 )
 
-and property fmt = Type.Object.(function
+and property scope fmt = Type.Object.(function
   | _, { Property.key; value; _ } ->
     (match key, value with
       | (Expression.Object.Property.Identifier id, (_,Type.Function value)) ->
           fprintf fmt "@[<hv>%a%a@]"
-            id_no_num id
-            method_type value
+            (id_no_num scope) id
+            (method_type scope) value
       | (Expression.Object.Property.Identifier id, _) ->
           fprintf fmt "@[<hv>%a: %a@]"
-            id_no_num id
-            type_ value
+            (id_no_num scope) id
+            (type_ scope) value
       | _ -> todo fmt
     )
 )
 
 (* Appends static to all methods and data members apart from constructor *)
-and property_static fmt = Type.Object.(function
+and property_static scope fmt = Type.Object.(function
   | _, { Property.key; value; _ } ->
     (match key, value with
       | (Expression.Object.Property.Identifier id, (_,Type.Function value)) ->
           (if get_identifier_id id = Some "new"
           then fprintf fmt "@[<hv>%a%a@]"
           else fprintf fmt "@[<hv>static %a%a@]")
-            id_no_num id
-            method_type value
+            (id_no_num scope) id
+            (method_type scope) value
       | (Expression.Object.Property.Identifier id, _) ->
           fprintf fmt "@[<hv>static %a: %a@]"
-            id_no_num id
-            type_ value
+            (id_no_num scope) id
+            (type_ scope) value
       | _ -> todo fmt
     )
 )
 
-and indexer_ fmt = Type.Object.(function
+and indexer_ scope fmt = Type.Object.(function
   | _, { Indexer.id; key; value; } ->
       fprintf fmt "@[<hv>[%a: %a]: %a@]"
-        id_ id
-        type_ key
-        type_ value
+        (id_ scope) id
+        (type_ scope) key
+        (type_ scope) value
 )
 
-and array_type fmt t =
+and array_type scope fmt t =
   fprintf fmt "Array<%a>"
-    type_ t
+    (type_ scope) t
 
-and function_type fmt = Type.(function
+and function_type scope fmt = Type.(function
   | { Function.typeParameters; params; rest; returnType; } ->
       fprintf fmt "%a(@;<0 2>@[<hv>%a%a@]@,) => %a"
-        (non_empty "<@[<h>%a@]>" (list ~sep:"," type_param)) typeParameters
-        (list ~sep:", " param) params
-        (opt (rest_ ~follows:(params <> []))) rest
-        type_ returnType
+        (non_empty "<@[<h>%a@]>" (list ~sep:"," (type_param scope)))
+          typeParameters
+        (list ~sep:", " (param scope)) params
+        (opt (rest_ ~follows:(params <> []) scope)) rest
+        (type_ scope) returnType
 )
 
-and method_type fmt = Type.(function
+and method_type scope fmt = Type.(function
   | { Function.typeParameters; params; rest; returnType; } ->
       fprintf fmt "%a(@;<0 2>@[<hv>%a%a@]@,): %a"
-        (non_empty "<@[<h>%a@]>" (list ~sep:"," type_param)) typeParameters
-        (list ~sep:", " param) params
-        (opt (rest_ ~follows:(params <> []))) rest
-        type_ returnType
+        (non_empty "<@[<h>%a@]>" (list ~sep:"," (type_param scope)))
+          typeParameters
+        (list ~sep:", " (param scope)) params
+        (opt (rest_ ~follows:(params <> []) scope)) rest
+        (type_ scope) returnType
 )
 
-and param fmt = Type.Function.(function
+and param scope fmt = Type.Function.(function
   | _, { Param.name; typeAnnotation; optional } ->
     if optional
     then fprintf fmt "%a?: %a"
-      id_ name
-      type_ typeAnnotation
+      (id_ scope) name
+      (type_ scope) typeAnnotation
     else fprintf fmt "%a: %a"
-      id_ name
-      type_ typeAnnotation
+      (id_ scope) name
+      (type_ scope) typeAnnotation
 )
 
-and rest_ ?(follows=false) fmt = Type.Function.(function
+and rest_ ?(follows=false) scope fmt = Type.Function.(function
   | _, { Param.name; typeAnnotation; _ } ->
     let sep = if follows then ", " else "" in
     fprintf fmt "%s...%a: %a"
       sep
-        id_ name
-      type_ typeAnnotation
+        (id_ scope) name
+      (type_ scope) typeAnnotation
 )
 
 (* This prints the import module statement. Since currently, the flow
    parser does not parse import statements inside a module
    declaration, we use this hack of $Exports
 *)
-and import_module fmt = function
+and import_module is_global fmt = function
   | (x, y) -> fprintf fmt "declare var %s: $Exports<'%s'>;"
-    (module_to_identifier x) y
+    ((if is_global then rename_global_module else fun x -> x)
+       (module_to_identifier x)) y
 
 (* This prints the import member from module. Since currently, the flow
    parser does not parse import statements inside a module
@@ -1027,7 +1094,7 @@ and enum_member fmt = Statement.Enum.(function
    be to strip off the computation part and just print the
    identifier. *)
 and enum_key fmt = Expression.Object.Property.(function
-  | Identifier id -> id_ fmt id
+  | Identifier id -> (id_ []) fmt id
   (* TODO: Handle the next line as error rather than raising an exception*)
   | Literal (loc, _) -> failwith_location loc
     "Literals are not allowed in Enums"
@@ -1036,12 +1103,12 @@ and enum_key fmt = Expression.Object.Property.(function
 )
 
 (* This squash two objects and print them as one *)
-and print_combined_class fmt = Type.Object.(function
+and print_combined_class scope fmt = Type.Object.(function
   | (Some a, Some b) ->
       fprintf fmt "{@;<0 2>@[<v>%a%a%a%a@]@,}"
-        (list_ ~sep:";" property) a.properties
-        (list ~sep:";" indexer_) a.indexers
-        (list_ ~sep:";" property_static) b.properties
-        (list ~sep:";" indexer_) b.indexers
+        (list_ ~sep:";" (property scope)) a.properties
+        (list ~sep:";" (indexer_ scope)) a.indexers
+        (list_ ~sep:";" (property_static scope)) b.properties
+        (list ~sep:";" (indexer_ scope)) b.indexers
   | _ -> failwith "This type of same name interface and var not supported yet"
   )
