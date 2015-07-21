@@ -21,7 +21,7 @@ class B extends A {
   static _sProperty: string;
 
   constructor() {
-    //super();
+    super();
     this._property1 = "another string";
   }
   _method1(): string {
