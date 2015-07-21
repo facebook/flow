@@ -18,6 +18,7 @@ let version = "0.13.1"
 type moduleSystem = Node | Haste
 
 type options = {
+  munge_underscores: bool;
   moduleSystem: moduleSystem;
   module_name_mappers: (Str.regexp * string) list;
   suppress_comments: Str.regexp list;
@@ -59,6 +60,7 @@ let default_log_file root =
 let default_module_system = Node
 
 let default_options root = {
+  munge_underscores = false;
   moduleSystem = default_module_system;
   module_name_mappers = [];
   suppress_comments = [];
@@ -426,6 +428,13 @@ let options_parser = OptionsParser.configure [
       let module_name_mappers = options.module_name_mappers @ [rewriter] in
       {options with module_name_mappers }
     );
+  }));
+
+  ("munge_underscores", OptionsParser.({
+    flags = [];
+    _parser = generic
+      ("true, false", fun s -> try Some (bool_of_string s) with _ -> None)
+      (fun opts (_, munge_underscores) -> { opts with munge_underscores });
   }));
 
   ("traces", OptionsParser.({

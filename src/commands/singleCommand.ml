@@ -43,6 +43,8 @@ let spec = {
         ~doc:"Specify a library path"
     |> flag "--no-flowlib" no_arg
         ~doc:"Do not include embedded declarations"
+    |> flag "--munge-underscore-members" no_arg
+        ~doc:"Treat any class member name with a leading underscore as private"
     |> error_flags
     |> anon "root" (required string)
         ~doc:"Root"
@@ -50,7 +52,7 @@ let spec = {
 }
 
 let main all weak debug verbose verbose_indent json profile quiet module_
-         lib no_flowlib error_flags root () =
+         lib no_flowlib munge_underscore_members error_flags root () =
   let opt_libs = match lib with
   | None -> []
   | Some lib -> [Path.make lib]
@@ -65,6 +67,9 @@ let main all weak debug verbose verbose_indent json profile quiet module_
 
   let config_root = CommandUtils.guess_root (Some(root)) in
   let flowconfig = FlowConfig.get config_root in
+
+  let munge_underscores = munge_underscore_members ||
+      FlowConfig.(flowconfig.options.munge_underscores) in
 
   let options = {
     Options.opt_error_flags = error_flags;
@@ -89,6 +94,7 @@ let main all weak debug verbose verbose_indent json profile quiet module_
     );
     Options.opt_libs;
     Options.opt_no_flowlib = no_flowlib;
+    Options.opt_munge_underscores = munge_underscores;
   } in
 
   if ! Sys.interactive

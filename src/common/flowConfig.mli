@@ -10,6 +10,7 @@
 type moduleSystem = Node | Haste
 
 type options = {
+  munge_underscores: bool;
   moduleSystem: moduleSystem;
   module_name_mappers: (Str.regexp * string) list;
   suppress_comments: Str.regexp list;

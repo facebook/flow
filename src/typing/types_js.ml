@@ -44,6 +44,7 @@ let init_modes opts = Options.(
   modes.quiet <- opts.opt_quiet;
   modes.profile <- opts.opt_profile;
   modes.no_flowlib <- opts.opt_no_flowlib;
+  modes.munge_underscores <- opts.opt_munge_underscores;
   (* TODO: confirm that only master uses strip_root, otherwise set it! *)
   Module_js.init opts;
   Files_js.init opts.opt_libs

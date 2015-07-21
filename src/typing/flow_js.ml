@@ -3801,7 +3801,8 @@ and ensure_prop_ cx trace strict mapr x proto reason_obj reason_op =
 and lookup_prop cx trace l reason strict x t =
   let l =
     (* munge names beginning with single _ *)
-    if (Str.string_match (Str.regexp_string "_") x 0) &&
+    if (modes.munge_underscores &&
+      Str.string_match (Str.regexp_string "_") x 0) &&
       not (Str.string_match (Str.regexp_string "__") x 0)
     then MixedT (reason_of_t l)
     else l
