@@ -1397,10 +1397,17 @@ let trait_final pos =
   add Typing.trait_final pos
     "Traits cannot be final"
 
-let implement_abstract pos1 pos2 kind x =
+let implement_abstract ~is_final pos1 pos2 kind x =
   let name = "abstract "^kind^" '"^x^"'" in
+  let msg1 =
+    if is_final then
+      "This class was declared as final. It must provide an implementation \
+       for the "^name
+    else
+      "This class must be declared abstract, or provide an implementation \
+       for the "^name in
   add_list Typing.implement_abstract [
-    pos1, "This class must be declared abstract, or provide an implementation for the "^name;
+    pos1, msg1;
     pos2, "Declaration is here";
   ]
 

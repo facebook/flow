@@ -3721,13 +3721,15 @@ and check_parent class_def class_type parent_type =
   else ()
 
 and check_parent_abstract position parent_type class_type =
+  let is_final = class_type.tc_final in
   if parent_type.tc_kind = Ast.Cabstract &&
-    class_type.tc_kind <> Ast.Cabstract
+    (class_type.tc_kind <> Ast.Cabstract || is_final)
   then begin
-    check_extend_abstract_meth position class_type.tc_methods;
-    check_extend_abstract_meth position class_type.tc_smethods;
-    check_extend_abstract_const position class_type.tc_consts;
-    check_extend_abstract_typeconst position class_type.tc_typeconsts;
+    check_extend_abstract_meth ~is_final position class_type.tc_methods;
+    check_extend_abstract_meth ~is_final position class_type.tc_smethods;
+    check_extend_abstract_const ~is_final position class_type.tc_consts;
+    check_extend_abstract_typeconst
+      ~is_final position class_type.tc_typeconsts;
   end else ()
 
 and class_def env_up nenv _ c =
@@ -3766,12 +3768,13 @@ and class_def_ env_up c tc =
   let self = get_self_from_c env c in
   List.iter (check_implements_tparaml env) impl;
   let env, parent = class_def_parent env c tc in
-  if tc.tc_kind = Ast.Cnormal && tc.tc_members_fully_known
+  let is_final = tc.tc_final in
+  if (tc.tc_kind = Ast.Cnormal || is_final) && tc.tc_members_fully_known
   then begin
-    check_extend_abstract_meth pc tc.tc_methods;
-    check_extend_abstract_meth pc tc.tc_smethods;
-    check_extend_abstract_const pc tc.tc_consts;
-    check_extend_abstract_typeconst pc tc.tc_typeconsts;
+    check_extend_abstract_meth ~is_final pc tc.tc_methods;
+    check_extend_abstract_meth ~is_final pc tc.tc_smethods;
+    check_extend_abstract_const ~is_final pc tc.tc_consts;
+    check_extend_abstract_typeconst ~is_final pc tc.tc_typeconsts;
   end;
   let env, self = Phase.localize_with_self env self in
   let env = Env.set_self env self in
@@ -3796,11 +3799,11 @@ and class_def_ env_up c tc =
   List.iter (method_def env) c.c_static_methods;
   Typing_hooks.dispatch_exit_class_def_hook c tc
 
-and check_extend_abstract_meth p smap =
+and check_extend_abstract_meth ~is_final p smap =
   SMap.iter begin fun x ce ->
     match ce.ce_type with
     | r, Tfun { ft_abstract = true; _ } ->
-        Errors.implement_abstract p (Reason.to_pos r) "method" x
+        Errors.implement_abstract ~is_final p (Reason.to_pos r) "method" x
     | _, (Tany | Tmixed | Tarray (_, _) | Tgeneric (_,_) | Toption _ | Tprim _
           | Tfun _ | Tapply (_, _) | Ttuple _ | Tshape _ | Taccess (_, _)
           | Tthis
@@ -3809,17 +3812,17 @@ and check_extend_abstract_meth p smap =
 
 (* Type constants must be bound to a concrete type for non-abstract classes.
  *)
-and check_extend_abstract_typeconst p smap =
+and check_extend_abstract_typeconst ~is_final p smap =
   SMap.iter begin fun x tc ->
     if tc.ttc_type = None then
-      Errors.implement_abstract p (fst tc.ttc_name) "type constant" x
+      Errors.implement_abstract ~is_final p (fst tc.ttc_name) "type constant" x
   end smap
 
-and check_extend_abstract_const p smap =
+and check_extend_abstract_const ~is_final p smap =
   SMap.iter begin fun x ce ->
     match ce.ce_type with
     | r, Tgeneric _ ->
-      Errors.implement_abstract p (Reason.to_pos r) "constant" x
+      Errors.implement_abstract ~is_final p (Reason.to_pos r) "constant" x
     | _, (Tany | Tmixed | Tarray (_, _) | Toption _ | Tprim _ | Tfun _
           | Tapply (_, _) | Ttuple _ | Tshape _ | Taccess (_, _) | Tthis
          ) -> ()
