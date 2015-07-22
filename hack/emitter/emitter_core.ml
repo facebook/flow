@@ -58,10 +58,14 @@ let lmember (base, mem) =
 
 (* *)
 let get_lid_name (_, id) = Ident.get_name id
-let quote_str s = "\"" ^ s ^ "\""
 (* XXX: ocaml and php probably don't have exactly the same escaping rules *)
 let escape_str = String.escaped
 let unescape_str = Scanf.unescaped
+(* Whenever we need to emit a quoted string, we escape it.
+ * This means that places that for String2, which has preescaped strings,
+ * we need to *unescape* before passing the string to core emitting functions.
+ * This is a little silly, but it keeps the interface consistent. *)
+let quote_str s = "\"" ^ escape_str s ^ "\""
 (* XXX: actually convert the int to decimal *)
 let fmt_int s = s
 (* XXX: what format conversions do we need to do? *)
@@ -227,7 +231,7 @@ let run_cleanups env =
  * to change that if necessary. *)
 
 (* uses hokey abbreviations for opcode types:
- * s = string, e = string needing quoting, i = int, l = lval;
+ * s = string, e = string needing quoting+escaping, i = int, l = lval;
  * lvals get special handling and can emit different opcodes *)
 let emit_op0 s env = emit_op_strs env [s]
 let emit_op1s s env arg1 = emit_op_strs env [s; arg1]

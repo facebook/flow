@@ -68,6 +68,7 @@ and emit_member env (_, expr_ as expr) =
   | Lvar id -> env, Mlocal id
   | Int (_, n) -> env, Mint n
   | String (_, s) -> env, Mstring s
+  | String2 ([], s) -> env, Mstring (unescape_str s)
   | _ ->
     let env = emit_expr env expr in
     env, Mexpr
@@ -296,8 +297,8 @@ and emit_expr env (_, expr_ as expr) =
 
   | Int (_, n) -> emit_Int env (fmt_int n)
   | Float (_, x) -> emit_Float env (fmt_float x)
-  | String (_, s) -> emit_String env (escape_str s)
-  | String2 ([], s) -> emit_String env s
+  | String (_, s) -> emit_String env s
+  | String2 ([], s) -> emit_String env (unescape_str s)
   | Null -> emit_Null env
   | True -> emit_bool env true
   | False -> emit_bool env false
