@@ -18,10 +18,10 @@
  * - hh_server.ml:       contains mostly the ugly inotify code.
  *
  * Parser code:
- * The parser is written using lex & yacc. It only supports a subset of PHP by
- * design.
- * - parsing/lexer.mll:  the lexer (lex)
- * - parsing/parser.mly: the parser (yacc)
+ * The parser was written using yacc, now it's a recursive descent parser.
+ * The lexer still uses lex. It only supports a subset of PHP by design.
+ * - parsing/lexer_hack.mll:  the lexer (lex)
+ * - parsing/parser_hack.ml: the recursive descent parser
  *
  * Naming:
  * Naming consists in "solving" all the names (making sure every
@@ -48,8 +48,5 @@
  *      implementation matches their signature (assuming that all other
  *      signatures are correct).
  *)
-open ServerFunctors
 
-module HackServer = ServerMain (HackProgram.Program)
-
-let () = HackServer.start ()
+let () = ServerMain.start ()
