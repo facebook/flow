@@ -11,7 +11,7 @@ namespace.js:11:28,29: string
 This type is incompatible with
 namespace.js:11:7,12: number
 
-namespace.js:15:16,17: string
+namespace.js:15:14,19: array literal
 This type is incompatible with
 namespace.js:13:12,30: union type
 

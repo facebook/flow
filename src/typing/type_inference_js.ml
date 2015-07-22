@@ -582,12 +582,6 @@ let rec convert cx map = Ast.Type.(function
 
   | loc, Union ts ->
       let ts = List.map (convert cx map) ts in
-      (* "Flatten" out any unions in this union, like
-       * var a: number | (string | bool) *)
-      let ts = List.map (function
-        | UnionT (r, ts) -> ts
-        | t -> [t]) ts in
-      let ts = List.flatten ts in
       UnionT (mk_reason "union type" loc, ts)
 
   | loc, Intersection ts ->
