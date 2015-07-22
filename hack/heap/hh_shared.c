@@ -109,20 +109,27 @@
 
 static size_t global_size_b;
 static size_t heap_size;
+
 // XXX: DEP_POW and HASHTBL_POW are not configurable because we take a ~2% perf
 // hit by doing so, likely because the compiler does some constant folding.
 // Should revisit this if / when we switch to compiling with an optimization
-// level higher than -O0.
+// level higher than -O0. In lieu of that, let's use a define so we don't use
+// absurd amounts of RAM for OSS users.
+#ifdef OSS_SMALL_HH_TABLE_POWS
+#define DEP_POW         17
+#define HASHTBL_POW     18
+#else
+#define DEP_POW         26
+#define HASHTBL_POW     23
+#endif
 
 /* Convention: .*_B = Size in bytes. */
 
 /* Used for the dependency hashtable */
-#define DEP_POW         26
 #define DEP_SIZE        (1ul << DEP_POW)
 #define DEP_SIZE_B      (DEP_SIZE * sizeof(value))
 
 /* Used for the shared hashtable */
-#define HASHTBL_POW     23
 #define HASHTBL_SIZE    (1ul << HASHTBL_POW)
 #define HASHTBL_SIZE_B  (HASHTBL_SIZE * sizeof(helt_t))
 
