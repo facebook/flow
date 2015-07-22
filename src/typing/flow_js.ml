@@ -2184,7 +2184,6 @@ let rec __flow cx (l, u) trace =
       | PredicateT _
 
       *)
-
       let weak = match u with
         (* Implicitly instantiating polymorphic types in annotations leads to
            confusing errors. In particular, when multiple instantiations of a
@@ -2546,6 +2545,9 @@ let rec __flow cx (l, u) trace =
 
     | InstanceT (_, _, super, _), GetT (_, "__proto__", t) ->
       rec_flow cx trace (super, t)
+
+    | InstanceT _ as inst, GetT(reason_op, "constructor", tout) ->
+      rec_flow cx trace (ClassT inst, tout)
 
     | InstanceT (reason_c, static, super, instance),
       GetT (reason_op, x, tout) ->
@@ -4022,9 +4024,9 @@ and predicate cx trace t (l,p) = match (l,p) with
   | (r, NotP(RightP(b, l))) ->
     binary_predicate cx trace false b l r t
 
-  (***********************)
+  (************************)
   (* typeof _ ~ "boolean" *)
-  (***********************)
+  (************************)
 
   | (MixedT r, IsP "boolean") ->
     rec_flow cx trace (BoolT.why r, t)
@@ -4103,9 +4105,9 @@ and predicate cx trace t (l,p) = match (l,p) with
   | (_, NotP(IsP "array")) ->
     filter cx trace t l (not_ is_array)
 
-  (***********************)
+  (**************************)
   (* typeof _ ~ "undefined" *)
-  (***********************)
+  (**************************)
 
   | (_, IsP "undefined") ->
     rec_flow cx trace (filter_undefined l, t)
