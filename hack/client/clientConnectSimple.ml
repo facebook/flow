@@ -41,7 +41,7 @@ let get_cstate (ic, oc) =
   with e ->
     Unix.shutdown_connection ic;
     close_in_noerr ic;
-    Result.Error Server_busy
+    raise e
 
 let verify_cstate ic = function
   | ServerUtils.Connection_ok -> Result.Ok ()
@@ -65,12 +65,12 @@ let connect_once root =
     Sys_utils.with_timeout 1
       ~on_timeout:(fun _ -> raise Exit)
       ~do_:begin fun () ->
-        ok_if_true (server_exists root) ~error:Server_missing >>= fun () ->
         establish_connection root >>= fun (ic, oc) ->
         get_cstate (ic, oc) >>= verify_cstate ic >>= fun () ->
         Ok (ic, oc)
       end
   with _ ->
-    if not (Lock.check root "init")
+    if not (server_exists root) then Result.Error Server_missing
+    else if not (Lock.check root "init")
     then Result.Error Server_initializing
     else Result.Error Server_busy

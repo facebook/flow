@@ -55,7 +55,6 @@ let rec connect env retries =
       end
   | Result.Error CCS.Server_busy ->
       Printf.eprintf "hh_server is busy, retrying... %s%!" (Tty.spinner());
-      Unix.sleep 1;
       connect env (Option.map retries (fun x -> x - 1))
   | Result.Error CCS.Build_id_mismatch ->
       Printf.eprintf begin
@@ -78,7 +77,6 @@ let rec connect env retries =
       if env.retry_if_init
       then begin
         Printf.eprintf " Retrying... %s%!" (Tty.spinner());
-        Unix.sleep 1;
         connect env retries
       end else begin
         Printf.eprintf " Not retrying since --retry-if-init is false.\n%!";
