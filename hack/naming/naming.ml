@@ -753,11 +753,7 @@ and hint_ ~forbid_this ~allow_retonly is_static_var p env x =
              Errors.self_outside_class pos;
              N.Hany
           | Some (cid, _) ->
-             let tparaml = (fst env).type_paraml in
-             let tparaml = List.map begin fun (param_pos, param_name) ->
-               param_pos, N.Habstr (param_name, get_constraint env param_name)
-             end tparaml in
-             N.Happly (cid, tparaml)
+             N.Happly (cid, [])
           )
       | x when x = SN.Classes.cStatic || x = SN.Classes.cParent ->
           Errors.invalid_type_access_root root; N.Hany
