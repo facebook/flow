@@ -62,6 +62,11 @@ let is_abstract_method x =
   | _, Tfun x when x.ft_abstract -> true
   | _ ->  false
 
+let should_keep_old_sig sig_ old_sig =
+  (not (is_abstract_method old_sig) && is_abstract_method sig_)
+  || (is_abstract_method old_sig = is_abstract_method sig_
+     && not (old_sig.ce_synthesized) && sig_.ce_synthesized)
+
 let add_method name sig_ methods =
   match (fst sig_.ce_type), sig_.ce_synthesized with
     | Reason.Rdynamic_yield _, true ->
@@ -75,10 +80,7 @@ let add_method name sig_ methods =
             (* The method didn't exist so far, let's add it *)
             SMap.add name sig_ methods
           | Some old_sig ->
-            if ((not (is_abstract_method old_sig) && is_abstract_method sig_)
-                || (is_abstract_method old_sig = is_abstract_method sig_
-                   && not (old_sig.ce_synthesized) && sig_.ce_synthesized))
-
+            if should_keep_old_sig sig_ old_sig
             (* The then-branch of this if is encountered when the method being
              * added shouldn't *actually* be added. When's that?
              * In isolation, we can say that
@@ -159,7 +161,7 @@ let add_typeconst name sig_ typeconsts =
 let add_constructor (cstr, cstr_consist) (acc, acc_consist) =
   let ce = match cstr, acc with
     | None, _ -> acc
-    | Some ce, Some acce when ce.ce_synthesized && not acce.ce_synthesized ->
+    | Some ce, Some acce when should_keep_old_sig ce acce ->
       acc
     | _ -> cstr
   in ce, cstr_consist || acc_consist

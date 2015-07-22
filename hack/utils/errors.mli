@@ -276,7 +276,8 @@ val ambiguous_inheritance: Pos.t -> string -> string -> error -> unit
 val cyclic_typeconst : Pos.t -> string list -> unit
 val explain_contravariance : Pos.t -> string -> error -> unit
 val this_lvalue : Pos.t -> unit
-val abstract_concrete_override : Pos.t -> Pos.t -> string -> unit
+val abstract_concrete_override:
+  Pos.t -> Pos.t -> [< `method_ | `typeconst |`constant]-> unit
 
 val to_json : Pos.absolute error_ -> Hh_json.json
 val to_string : Pos.absolute error_ -> string

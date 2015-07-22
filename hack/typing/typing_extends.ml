@@ -97,6 +97,11 @@ let check_types_for_const env parent_type class_type =
     | Tgeneric (_, Some (Ast.Constraint_as, fty_parent)), _ ->
       (* const definition constrained by parent abstract const *)
       ignore (Phase.sub_type_decl env fty_parent class_type)
+    | _, Tgeneric(_, _) ->
+      (* Trying to override concrete type with an abstract one *)
+      let pos = Reason.to_pos (fst class_type) in
+      let parent_pos = Reason.to_pos (fst parent_type) in
+      Errors.abstract_concrete_override pos parent_pos `constant;
     | (_, _) ->
       (* types should be the same *)
       ignore (Phase.unify_decl env parent_type class_type)
@@ -256,7 +261,7 @@ let tconst_subsumption env parent_typeconst child_typeconst =
     (* It is valid for abstract class to extend a concrete class, but it cannot
      * redefine already concrete members as abstract.
      * See typecheck/tconst/subsume_tconst5.php test case for example. *)
-    Errors.abstract_concrete_override pos parent_pos name;
+    Errors.abstract_concrete_override pos parent_pos `typeconst;
 
   let default = Reason.Rtconst_no_cstr child_typeconst.ttc_name,
                 Tgeneric (name, None) in

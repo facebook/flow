@@ -82,6 +82,11 @@ let rec subtype_funs_generic ~check_return env r_super ft_super r_sub ft_sub =
  * parameters as unresolved, instead it should stay as a Tgeneric.
  *)
 and subtype_method ~check_return env r_super ft_super r_sub ft_sub =
+  if not ft_super.ft_abstract && ft_sub.ft_abstract then
+    (* It is valid for abstract class to extend a concrete class, but it cannot
+     * redefine already concrete members as abstract.
+     * See override_abstract_concrete.php test case for example. *)
+    Errors.abstract_concrete_override ft_sub.ft_pos ft_super.ft_pos `method_;
   let ety_env = Phase.env_with_self env in
   let env, ft_super_no_tvars =
     Phase.localize_ft ~ety_env ~instantiate_tparams:false env ft_super in

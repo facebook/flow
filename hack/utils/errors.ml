@@ -1568,9 +1568,13 @@ let cyclic_typeconst pos sl =
 let this_lvalue pos =
   add Typing.this_lvalue pos "Cannot assign a value to $this"
 
-let abstract_concrete_override pos parent_pos tconst_name =
+let abstract_concrete_override pos parent_pos kind =
+  let kind_str = match kind with
+    | `method_ -> "method"
+    | `typeconst -> "type constant"
+    | `constant -> "constant" in
   add_list Typing.abstract_concrete_override ([
-    pos, "Cannot re-declare member " ^ tconst_name ^ " as abstract";
+    pos, "Cannot re-declare this " ^ kind_str ^ " as abstract";
     parent_pos, "Previously defined here"
   ])
 
