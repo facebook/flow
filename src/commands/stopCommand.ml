@@ -12,6 +12,10 @@
 (* flow stop command *)
 (***********************************************************************)
 
+module CCS = ClientConnectSimple
+
+exception FailedToKill
+
 let spec = {
   CommandSpec.
   name = "stop";
@@ -28,32 +32,79 @@ let spec = {
   )
 }
 
-module FlowConfig : ClientStop.STOP_CONFIG = struct
-  type response = ServerProt.response
+let is_expected = function
+  | ServerProt.SERVER_DYING
+  | ServerProt.SERVER_OUT_OF_DATE ->
+      true
+  | _ ->
+      false
 
-  let server_desc = "Flow"
+let kill (ic, oc) =
+  ServerProt.cmd_to_channel oc ServerProt.KILL;
+  ServerProt.response_from_channel ic
 
-  let server_name = "flow"
+let nice_kill (ic, oc) root =
+  Printf.eprintf "Attempting to nicely kill server for %s\n%!"
+    (Path.to_string root);
+  let response = kill (ic, oc) in
+  if is_expected response then begin
+    let i = ref 0 in
+    while CCS.server_exists root do
+      incr i;
+      if !i < 5 then ignore @@ Unix.sleep 1
+      else raise FailedToKill
+    done;
+    Printf.eprintf "Successfully killed server for %s\n%!"
+      (Path.to_string root)
+  end else begin
+    Printf.fprintf stderr "Unexpected response from the server: %s\n"
+      (ServerProt.response_to_string response);
+    raise FailedToKill
+  end
 
-  let kill (ic, oc) =
-    ServerProt.cmd_to_channel oc ServerProt.KILL;
-    ServerProt.response_from_channel ic
+let mean_kill root =
+  Printf.fprintf stderr "Attempting to meanly kill server for %s\n%!"
+    (Path.to_string root);
+  let pids =
+    try PidLog.get_pids root
+    with PidLog.FailedToGetPids -> Printf.fprintf stderr
+        "Unable to figure out pids of running Flow server. \
+        Try manually killing it with 'pkill %s' (be careful on shared \
+        devservers)\n%!"
+        CommandUtils.exe_name;
+      raise FailedToKill
+  in
+  List.iter (fun (pid, reason) ->
+    try Unix.kill pid 9
+    with Unix.Unix_error (Unix.ESRCH, "kill", _) ->
+      (* no such process *)
+      ()
+  ) pids;
+  ignore(Unix.sleep 1);
+  if CCS.server_exists root
+  then raise FailedToKill
+  else Printf.fprintf stderr "Successfully killed server for %s\n%!"
+    (Path.to_string root)
 
-  let response_to_string = ServerProt.response_to_string
-
-  let is_expected = function
-    | ServerProt.SERVER_DYING
-    | ServerProt.SERVER_OUT_OF_DATE ->
-        true
-    | _ ->
-        false
-
-end
-
-module FlowStopCommand = ClientStop.StopCommand (FlowConfig)
-
-let main root () = FlowStopCommand.kill_server {
-    ClientStop.root = CommandUtils.guess_root root;
-  }
+let main root () =
+  let root = CommandUtils.guess_root root in
+  let root_s = Path.to_string root in
+  match CCS.connect_once root with
+  | Result.Ok conn ->
+      begin
+        try nice_kill conn root
+        with FailedToKill ->
+          Printf.eprintf "Failed to kill server nicely for %s\n%!" root_s;
+          exit 1
+      end
+  | Result.Error CCS.Server_missing ->
+      Printf.eprintf "Error: no server to kill for %s\n%!" root_s
+  | Result.Error CCS.Build_id_mismatch ->
+      Printf.eprintf "Successfully killed server for %s\n%!" root_s
+  | Result.Error (CCS.Server_busy | CCS.Server_initializing) ->
+      try mean_kill root
+      with FailedToKill ->
+        Printf.eprintf "Failed to kill server meanly for %s\n%!" root_s;
+        exit 1
 
 let command = CommandSpec.command spec main
