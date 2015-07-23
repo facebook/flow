@@ -157,6 +157,47 @@ let emit_var env ~is_static var =
     | Some lit -> fmt_prop lit, None
     | None -> fmt_prop "uninit", Some (snd var.cv_id, expr)
 
+(* the constant init function doesn't actually "init" anything;
+ * it takes the name of a constant as an argument and returns the
+ *  value *)
+let emit_const_init env = function
+  | [] -> env
+  | consts ->
+    let name = "86cinit" in
+    let options = ["private"; "static"; "mayusevv"] in
+    let env = emit_enter env ".method" options name "($constName)" in
+
+    let nconsts = List.length consts in
+    let emit_case i env (name, expr) =
+      let is_last = i = nconsts-1 in
+
+      let env, skip_label = fresh_label env in
+      (* Don't emit the test for the last one *)
+      let env = if is_last then env else
+          (* Is this the constant we are looking for? *)
+          let env = emit_CGetL env "$constName" in
+          let env = emit_String env name in
+          let env = emit_binop env Ast.Eqeq in
+          emit_cjmp env false skip_label
+      in
+      (* Emit the constant and return it *)
+      let env = Emitter_expr.emit_expr env expr in
+      let env = emit_RetC env in
+      if is_last then env else emit_label env skip_label
+    in
+    let env = Core_list.foldi ~f:emit_case ~init:env consts in
+    let env = emit_exit env in
+    env
+
+let emit_const env (_, (_, name), opt_expr) =
+  match opt_expr with
+  | None -> env, None
+  | Some expr ->
+    let fmt_const v = emit_strs env [".const"; ""; name; "="; v^";"] in
+    match Emitter_lit.fmt_lit expr with
+    | Some lit -> fmt_const lit, None
+    | None -> fmt_const "uninit", Some (name, expr)
+
 let class_kind_options  = function
   | Ast.Cabstract -> ["abstract"]
   | Ast.Cnormal -> []
@@ -172,7 +213,6 @@ let emit_class nenv x =
   (* we only handle a very limited range of things right now *)
   assert (cls.c_is_xhp = false &&
           cls.c_xhp_attr_uses = [] &&
-          cls.c_consts = [] &&
           cls.c_typeconsts = [] &&
           cls.c_user_attributes = [] &&
           cls.c_enum = None);
@@ -214,9 +254,11 @@ let emit_class nenv x =
   let env = List.fold_left (emit_method ~is_static:false) env cls.c_methods in
   let env =
     List.fold_left (emit_method ~is_static:true) env cls.c_static_methods in
+  let env, uninit_consts = lmap emit_const env cls.c_consts in
 
   let uninit_vars = Core_list.filter_map uninit_vars ~f:(fun x->x) in
   let uninit_svars = Core_list.filter_map uninit_svars ~f:(fun x->x) in
+  let uninit_consts = Core_list.filter_map uninit_consts ~f:(fun x->x) in
 
   (* Now for 86* stuff *)
   let env = match cls.c_constructor with
@@ -226,6 +268,7 @@ let emit_class nenv x =
 
   let env = emit_prop_init env ~is_static:false uninit_vars in
   let env = emit_prop_init env ~is_static:true uninit_svars in
+  let env = emit_const_init env uninit_consts in
 
   let env = emit_exit env in
 

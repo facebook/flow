@@ -249,6 +249,8 @@ let emit_op2ie s env arg1 arg2 =
   emit_op_strs env [s; string_of_int arg1; quote_str arg2]
 let emit_op2es s env arg1 arg2 =
   emit_op_strs env [s; quote_str arg1; arg2]
+let emit_op2ee s env arg1 arg2 =
+  emit_op_strs env [s; quote_str arg1; quote_str arg2]
 let emit_op3ies s env arg1 arg2 arg3 =
   emit_op_strs env [s; string_of_int arg1; quote_str arg2; arg3]
 let emit_op3iee s env arg1 arg2 arg3 =
@@ -302,6 +304,8 @@ let emit_FPushCtorD =     emit_op2ie  "FPushCtorD"
 let emit_FPushObjMethodD =emit_op3ies "FPushObjMethodD"
 let emit_FPushClsMethod = emit_op1i   "FPushClsMethod"
 let emit_FPushClsMethodD =emit_op3iee "FPushClsMethodD"
+let emit_ClsCns =         emit_op1e   "ClsCns"
+let emit_ClsCnsD =        emit_op2ee  "ClsCnsD"
 let emit_FPassLval =      emit_op2il  "FPass"
 let emit_FCall =          emit_op1i   "FCall"
 let emit_FCallUnpack =    emit_op1i   "FCallUnpack"

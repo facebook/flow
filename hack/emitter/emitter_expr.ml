@@ -392,6 +392,12 @@ and emit_expr env (_, expr_ as expr) =
     let env = emit_expr env e in
     emit_cast env h
 
+  | Class_const (cid, (_, field)) ->
+    (match fmt_class_id env cid with
+    | Some class_name -> emit_ClsCnsD env field class_name
+    | None -> let env = emit_class_id env cid in
+              emit_ClsCns env field)
+
   | Shape _
   | ValCollection _
   | KeyValCollection _
@@ -402,7 +408,6 @@ and emit_expr env (_, expr_ as expr) =
   | Method_id _
   | Method_caller _
   | Smethod_id _
-  | Class_const _
   | Special_func _
   | Yield_break
   | Yield _
