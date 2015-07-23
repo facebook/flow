@@ -16,8 +16,7 @@ open Emitter_core
 
 let is_lval expr =
   match expr with
-  (* XXX: other lvals! *)
-  | Lvar _  | Obj_get _ | Array_get _ | Class_get _ -> true
+  | Lvar _  | Obj_get _ | Array_get _ | Class_get _ | Lplaceholder _ -> true
   | _ -> false
 
 (* Try to convert a class id into a static string; if we can't, return None *)
@@ -71,9 +70,20 @@ and emit_shortcircuit env e1 e2 jump_if target shortcircuit_on =
   let env = emit_cond env e2 jump_if target in
   emit_label env shortcircuit_label
 
+and emit_expr_to_var env (_, expr_ as expr) =
+  match expr_ with
+  | Lvar id -> env, None, get_lid_name id
+  | _ ->
+    let env = emit_expr env expr in
+    let env, id = fresh_tempvar env in
+    let env = emit_SetL env id in
+    let env = emit_PopC env in
+    let env, label = fresh_faultlet env in
+    env, Some label, id
+
 and emit_member env (_, expr_ as expr) =
   match expr_ with
-  | Lvar id -> env, Mlocal id
+  | Lvar id -> env, Mlocal (get_lid_name id)
   | Int (_, n) -> env, Mint n
   | String (_, s) -> env, Mstring s
   | String2 ([], s) -> env, Mstring (unescape_str s)
@@ -99,7 +109,8 @@ and emit_base env (_, expr_ as expr) =
  * at the "top level" of lval emitting.  *)
 and emit_lval_inner env (_, expr_) =
   match expr_ with
-  | Lvar id -> env, Llocal id
+  | Lvar id -> env, llocal id
+  | Lplaceholder (_, s) -> env, Llocal s
   | Array_get (e1, maybe_e2) ->
     let env, base = emit_base env e1 in
     let env, member = (match maybe_e2 with
@@ -152,6 +163,65 @@ and emit_class_id env cid =
     | CIvar e ->
       let env = emit_expr env e in
       emit_AGetC env
+
+and emit_assignment env obop e1 e2 =
+  match e1 with
+  (* Destructuring assignment needs to be handled very differently. *)
+  | _, List _ ->
+    assert (obop = None);
+
+    (* build up a list of pairings that tell us what assignments to do;
+     * we build pairs of (lval, path in array) *)
+    let rec collect_assignments path = function
+      | _, List es ->
+        let collect i e =
+          collect_assignments ((MTelem, Mint (string_of_int i)) :: path) e in
+        Core_list.concat_mapi ~f:collect es
+      | e -> [e, path]
+    in
+    let assignments = collect_assignments [] e1 in
+
+    (* First we emit all the lvals. We do this first so any effects will
+     * happen left to right. *)
+    let emit_lhs env (lhs, path) =
+      let env, lval = emit_lval env lhs in
+      env, (lval, path)
+    in
+    let env, assignments = lmap emit_lhs env assignments in
+
+    (* Store off the rhs to a (maybe temporary) local *)
+    let env, opt_faultlet, id = emit_expr_to_var env e2 in
+    let env = opt_fold emit_fault_enter env opt_faultlet in
+
+    (* Assign to all the components *)
+    let base = Blval (Llocal id) in
+    let emit_assign (lval, path) env =
+      let env = emit_CGet env (Lmember (base, path)) in
+      let env = emit_Set env lval in
+      emit_PopC env
+    in
+    (* Assignment is now done right to left, popping whatever we set up
+     * off the stack. *)
+    let env = List.fold_right emit_assign assignments env in
+
+    (* And push the variable back to give the expr its value *)
+    let env = emit_CGetL env id in
+
+    (* we need to unset the variable when we leave *)
+    let env = opt_fold emit_fault_exit env opt_faultlet in
+    let cleanup env = emit_UnsetL env id in
+    let env = opt_fold (emit_fault_cleanup ~cleanup:cleanup) env opt_faultlet in
+
+    env
+
+  (* Regular assignment is more straightforward. *)
+  | _ ->
+    let env, lval = emit_lval env e1 in
+    let env = emit_expr env e2 in
+    (match obop with
+    | None -> emit_Set env lval
+    | Some bop -> emit_SetOp env lval (fmt_eq_binop bop))
+
 
 and emit_call_lhs env (_, expr_ as expr) nargs =
   match expr_ with
@@ -250,6 +320,7 @@ and emit_expr env (_, expr_ as expr) =
     emit_UnboxR env
 
   (* N.B: duplicate with is_lval but we want to exhaustiveness check  *)
+  | Lplaceholder _
   | Lvar _
   | Obj_get _
   | Array_get _
@@ -258,15 +329,7 @@ and emit_expr env (_, expr_ as expr) =
     emit_CGet env lval
 
   (* Assignment is technically a binop, although it is weird. *)
-  | Binop (Ast.Eq _, (_, List _), _) ->
-    unimpl "destructuring assignment"; assert false
-
-  | Binop (Ast.Eq obop, e1, e2) ->
-    let env, lval = emit_lval env e1 in
-    let env = emit_expr env e2 in
-    (match obop with
-    | None -> emit_Set env lval
-    | Some bop -> emit_SetOp env lval (fmt_eq_binop bop))
+  | Binop (Ast.Eq obop, e1, e2) -> emit_assignment env obop e1 e2
 
   | Binop ((Ast.AMpamp | Ast.BArbar) as bop, _, _) ->
     (* emit_cond generates better code when the jump is being done on
@@ -380,7 +443,7 @@ and emit_expr env (_, expr_ as expr) =
     let env = emit_expr env e in
     emit_Clone env
 
-  | Any | Lplaceholder _ -> bug "what even is this"; assert false
+  | Any -> bug "what even is this"; assert false
   | List _ -> bug "list on RHS"; assert false
 
   | String2 _ -> unimpl "String2 going to take ast changes"; assert false

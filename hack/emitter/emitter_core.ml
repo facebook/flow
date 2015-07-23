@@ -30,7 +30,7 @@ type flavor =
  * instruction. *)
 type member =
   | Mexpr
-  | Mlocal of Nast.id
+  | Mlocal of string
   | Mint of string
   | Mstring of string
   | Mappend
@@ -40,7 +40,7 @@ type member_type =
   | MTprop
 
 type lval =
-  | Llocal of Nast.id
+  | Llocal of string
   (* Indexing and projection operations *)
   (* This list is stored reversed because ~functional programming~ *)
   | Lmember of base * (member_type * member) list
@@ -73,6 +73,7 @@ let fmt_float s = s
 let fmt_str_vec v = "<" ^ String.concat " " v ^ ">"
 let fmt_vec f v = "<" ^ String.concat " " (List.map f v) ^ ">"
 
+let llocal id = Llocal (get_lid_name id)
 
 (* *)
 
@@ -80,7 +81,7 @@ let fmt_member mem =
   match mem with
   | MTelem, Mexpr -> "EC"
   | MTelem, Mint s -> "EI:"^fmt_int s
-  | MTelem, Mlocal id -> "EL:"^get_lid_name id
+  | MTelem, Mlocal id -> "EL:"^id
   | MTelem, Mappend -> "W"
   | MTelem, Mstring s -> "ET:"^quote_str s
   | MTprop, Mstring s -> "PT:"^quote_str s
@@ -90,7 +91,7 @@ let fmt_base base =
   match base with
   | Bexpr -> "C"
   | Bthis -> "H"
-  | Blval (Llocal id) -> "L:"^get_lid_name id
+  | Blval (Llocal id) -> "L:"^id
   | Blval (Lsprop _) -> "SC"
   | Blval (Lmember _) -> bug "invalid base"; assert false
 
@@ -100,7 +101,7 @@ let fmt_base base =
  * using this (argh!) *)
 let fmt_lval lval =
   match lval with
-  | Llocal id -> "L", get_lid_name id, false
+  | Llocal id -> "L", id, false
   | Lsprop _ -> "S", "", false
   | Lmember (base, mems) ->
     "M",
@@ -438,3 +439,25 @@ let emit_exit env =
   let env = exit_construct env in
   let env = emit_str env "}" in
   env
+
+(* Some stuff for managing faultlets/fault regions *)
+let make_opt_faultlet env need_faultlet =
+  if need_faultlet then
+  let env, label = fresh_faultlet env in env, Some label else
+  env, None
+
+let emit_fault_enter env label = emit_enter env ".try_fault" [] label ""
+
+let emit_fault_exit env _ = emit_exit env
+
+let emit_fault_cleanup ?faultlet_extras:(extra=(fun env -> env))
+                       ~cleanup:f
+                       env label =
+  let env = f env in
+  let emit_faultlet env =
+    let env = emit_label env label in
+    let env = extra env in
+    let env = f env in
+    emit_Unwind env
+  in
+  add_cleanup env emit_faultlet
