@@ -2184,6 +2184,7 @@ let rec __flow cx (l, u) trace =
       | PredicateT _
 
       *)
+
       let weak = match u with
         (* Implicitly instantiating polymorphic types in annotations leads to
            confusing errors. In particular, when multiple instantiations of a
