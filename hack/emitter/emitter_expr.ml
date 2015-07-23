@@ -17,8 +17,16 @@ open Emitter_core
 let is_lval expr =
   match expr with
   (* XXX: other lvals! *)
-  | Lvar _  | Obj_get _ | Array_get _ -> true
+  | Lvar _  | Obj_get _ | Array_get _ | Class_get _ -> true
   | _ -> false
+
+(* Try to convert a class id into a static string; if we can't, return None *)
+let fmt_class_id env cid =
+  match cid with
+  | CIparent -> env.parent_name
+  | CIself -> env.self_name
+  | CI (_, s) -> Some (strip_ns s)
+  | CIstatic | CIvar _ -> None
 
 (* Emit a conditional branch based on an expression. jump_if indicates
  * whether to jump when the condition is true or false.
@@ -77,17 +85,19 @@ and emit_base env (_, expr_ as expr) =
   match expr_ with
   | This -> env, Bthis
   | _ when is_lval expr_ ->
-    let env, lval = emit_lval env expr in
+    let env, lval = emit_lval_inner env expr in
     env, Blval lval
   | _ ->
     let env = emit_expr env expr in
     env, Bexpr
 
-(* emit code for an lval that we may be either reading or writing from
- * and return a descriptor for the lval.
- * May push values on the stack that will be consumed when the lval
- * is accessed. *)
-and emit_lval env (_, expr_) =
+(* This is the main guts of lval emitting. It does all the work of
+ * eval emitting except for emitting the class id when operating
+ * on a static property. This is because for member instructions on
+ * static props, the class id needs to come *last* on the stack,
+ * after everything else. (Argh.) So we save it and emit it
+ * at the "top level" of lval emitting.  *)
+and emit_lval_inner env (_, expr_) =
   match expr_ with
   | Lvar id -> env, Llocal id
   | Array_get (e1, maybe_e2) ->
@@ -99,10 +109,49 @@ and emit_lval env (_, expr_) =
   | Obj_get (e1, (_, Id (_, id)), _null_flavor_TODO) ->
     let env, base = emit_base env e1 in
     env, lmember (base, (MTprop, Mstring id))
-
   | Obj_get _ -> unimpl "Obj_get with non-Id rhs???"; assert false
 
+  | Class_get (cid, (_, field)) ->
+    let field_name = lstrip field "$" in
+    let env = emit_String env field_name in
+    env, Lsprop cid
+
   | _ -> bug "emit_lval: not an lvalue"; assert false
+
+(* emit code for an lval that we may be either reading or writing from
+ * and return a descriptor for the lval.
+ * May push values on the stack that will be consumed when the lval
+ * is accessed. *)
+and emit_lval env expr =
+  let env, lval = emit_lval_inner env expr in
+  (* If we are operating on a static prop, emit the class id now,
+   * which needs to come last... *)
+  let env = match lval with
+    | Lsprop cid
+    | Lmember (Blval (Lsprop cid), _) ->
+      emit_class_id env cid
+    | _ -> env
+  in
+  env, lval
+
+
+and emit_class_id env cid =
+  (* if we have a static name for the class, use that *)
+  match fmt_class_id env cid with
+  | Some s ->
+    let env = emit_String env s in
+    emit_AGetC env
+  (* otherwise we need to dynamically find the class *)
+  | None ->
+    match cid with
+    | CI _ -> assert false
+    | CIparent -> emit_Parent env
+    | CIself -> emit_Self env
+    | CIstatic -> emit_LateBoundCls env
+    | CIvar (_, Lvar id) -> emit_AGetL env (get_lid_name id)
+    | CIvar e ->
+      let env = emit_expr env e in
+      emit_AGetC env
 
 and emit_call_lhs env (_, expr_ as expr) nargs =
   match expr_ with
@@ -111,6 +160,13 @@ and emit_call_lhs env (_, expr_ as expr) nargs =
   | Obj_get (obj, (_, Id (_, name)), null_flavor) ->
     let env = emit_method_base env obj in
     emit_FPushObjMethodD env nargs name (fmt_null_flavor null_flavor)
+  | Class_const (cid, (_, field)) ->
+    (match fmt_class_id env cid with
+    | Some class_name -> emit_FPushClsMethodD env nargs field class_name
+    | None -> let env = emit_String env field in
+              let env = emit_class_id env cid in
+              emit_FPushClsMethod env nargs)
+
   (* what all is even allowed here? *)
   | _ ->
     let env = emit_expr env expr in
@@ -196,7 +252,8 @@ and emit_expr env (_, expr_ as expr) =
   (* N.B: duplicate with is_lval but we want to exhaustiveness check  *)
   | Lvar _
   | Obj_get _
-  | Array_get _ ->
+  | Array_get _
+  | Class_get _ ->
     let env, lval = emit_lval env expr in
     emit_CGet env lval
 
@@ -345,7 +402,6 @@ and emit_expr env (_, expr_ as expr) =
   | Method_id _
   | Method_caller _
   | Smethod_id _
-  | Class_get _
   | Class_const _
   | Special_func _
   | Yield_break

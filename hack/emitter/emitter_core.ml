@@ -44,7 +44,7 @@ type lval =
   (* Indexing and projection operations *)
   (* This list is stored reversed because ~functional programming~ *)
   | Lmember of base * (member_type * member) list
-  (* XXX: static props (hack strict doesn't support globals, I think) *)
+  | Lsprop of Nast.class_id
 and base =
   | Blval of lval
   | Bexpr
@@ -91,6 +91,7 @@ let fmt_base base =
   | Bexpr -> "C"
   | Bthis -> "H"
   | Blval (Llocal id) -> "L:"^get_lid_name id
+  | Blval (Lsprop _) -> "SC"
   | Blval (Lmember _) -> bug "invalid base"; assert false
 
 (* returns the suffix to use on opcodes operating on the lval,
@@ -100,6 +101,7 @@ let fmt_base base =
 let fmt_lval lval =
   match lval with
   | Llocal id -> "L", get_lid_name id, false
+  | Lsprop _ -> "S", "", false
   | Lmember (base, mems) ->
     "M",
     "<" ^ fmt_base base ^ " " ^
@@ -124,6 +126,8 @@ and env = {
   next_iterator: int; (* iterators allocated in a stack discipline *)
   nonlocal: nonlocal_actions;
   cleanups: (env -> env) list;
+  self_name: string option;
+  parent_name: string option;
 }
 
 let empty_nonlocal_actions = {
@@ -139,13 +143,17 @@ let new_env () = {
   next_iterator = 0;
   nonlocal = empty_nonlocal_actions;
   cleanups = [];
+  self_name = None;
+  parent_name = None;
 }
 
 let start_new_function env =
   let nenv = new_env () in
   { nenv with
     reversed_output = env.reversed_output;
-    indent = env.indent
+    indent = env.indent;
+    self_name = env.self_name;
+    parent_name = env.parent_name;
   }
 
 let fresh_id pre env =
@@ -243,6 +251,8 @@ let emit_op2es s env arg1 arg2 =
   emit_op_strs env [s; quote_str arg1; arg2]
 let emit_op3ies s env arg1 arg2 arg3 =
   emit_op_strs env [s; string_of_int arg1; quote_str arg2; arg3]
+let emit_op3iee s env arg1 arg2 arg3 =
+  emit_op_strs env [s; string_of_int arg1; quote_str arg2; quote_str arg3]
 let emit_op1l s env arg1 =
   let t, a, _ = fmt_lval arg1 in
   emit_op_strs env [s^t; a]
@@ -290,6 +300,8 @@ let emit_FPushFunc =      emit_op1i   "FPushFunc"
 let emit_FPushFuncD =     emit_op2ie  "FPushFuncD"
 let emit_FPushCtorD =     emit_op2ie  "FPushCtorD"
 let emit_FPushObjMethodD =emit_op3ies "FPushObjMethodD"
+let emit_FPushClsMethod = emit_op1i   "FPushClsMethod"
+let emit_FPushClsMethodD =emit_op3iee "FPushClsMethodD"
 let emit_FPassLval =      emit_op2il  "FPass"
 let emit_FCall =          emit_op1i   "FCall"
 let emit_FCallUnpack =    emit_op1i   "FCallUnpack"
@@ -314,6 +326,11 @@ let emit_IterNext =       emit_op3iter "IterNext"
 let emit_IterFree =       emit_op1i   "IterFree"
 let emit_CheckProp =      emit_op1e   "CheckProp"
 let emit_InitProp =       emit_op2es  "InitProp"
+let emit_LateBoundCls =   emit_op0    "LateBoundCls"
+let emit_Self =           emit_op0    "Self"
+let emit_Parent =         emit_op0    "Parent"
+let emit_AGetL =          emit_op1s   "AGetL"
+let emit_AGetC =          emit_op0    "AGetC"
 
 let emit_Switch env labels base bound =
   emit_op_strs env ["Switch"; fmt_str_vec labels; string_of_int base; bound]

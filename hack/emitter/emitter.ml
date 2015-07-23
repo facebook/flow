@@ -68,7 +68,7 @@ let emit_fun nenv x =
   get_output env
 
 (* XXX: *lots* of duplication from emit_fun *)
-let emit_method_ env m name =
+let emit_method_ env ~is_static m name =
   let env = start_new_function env in
   let nb = assert_named_body m.m_body in
 
@@ -77,6 +77,7 @@ let emit_method_ env m name =
 
   let options = bool_option "abstract" m.m_abstract @
                 bool_option "final" m.m_final @
+                bool_option "static" is_static @
                 [fmt_visibility m.m_visibility; "mayusevv"] in
   let env = emit_enter env ".method" options name
                        (fmt_params m.m_params) in
@@ -84,7 +85,7 @@ let emit_method_ env m name =
   let env = run_cleanups env in
   let env = emit_exit env in
   env
-let emit_method env m = emit_method_ env m (snd m.m_name)
+let emit_method env ~is_static m = emit_method_ ~is_static env m (snd m.m_name)
 let emit_default_ctor env name abstract =
   let options = bool_option "abstract" abstract @ ["public"; "mayusevv"] in
   let env = emit_enter env ".method" options name (fmt_params []) in
@@ -111,18 +112,25 @@ let fmt_extends_list classes =
 let emit_use env use =
   emit_strs env [".use"; fmt_class_hint use ^ ";"]
 
-let emit_pinit env = function
+let emit_prop_init env ~is_static = function
   | [] -> env
   | vars ->
-    let options = ["public"; "private"; "mayusevv"] in
-    let env = emit_enter env ".method" options "86pinit" (fmt_params []) in
+    let name, flag, extra_opts =
+      if is_static then
+        "86sinit", "Static", ["static"]
+      else
+        "86pinit", "NonStatic", []
+    in
+
+    let options = ["private"; "mayusevv"] @ extra_opts in
+    let env = emit_enter env ".method" options name (fmt_params []) in
 
     let fmt_var_init env (name, expr) =
       let env, skip_label = fresh_label env in
       let env = emit_CheckProp env name in
       let env = emit_cjmp env true skip_label in
       let env = Emitter_expr.emit_expr env expr in
-      let env = emit_InitProp env name "NonStatic" in
+      let env = emit_InitProp env name flag in
       emit_label env skip_label
     in
     let env = List.fold_left fmt_var_init env vars in
@@ -134,12 +142,14 @@ let emit_pinit env = function
 
 (* Returns None if the case has been handled, and Some (name, expr) if
  * it still needs to be taken care of in a pinit *)
-let emit_var env var =
+let emit_var env ~is_static var =
   assert (var.cv_final = false); (* props can't be final *)
   assert (var.cv_is_xhp = false);
-  let options = fmt_options [fmt_visibility var.cv_visibility] in
+  let options = bool_option "static" is_static @
+                [fmt_visibility var.cv_visibility] in
   let fmt_prop v =
-    emit_strs env [".property"; options; snd var.cv_id; "="; v^";"] in
+    emit_strs env
+      [".property"; fmt_options options; snd var.cv_id; "="; v^";"] in
   match var.cv_expr with
   | None -> fmt_prop "\"\"\"N;\"\"\"", None
   | Some expr ->
@@ -164,8 +174,6 @@ let emit_class nenv x =
           cls.c_xhp_attr_uses = [] &&
           cls.c_consts = [] &&
           cls.c_typeconsts = [] &&
-          cls.c_static_vars = [] &&
-          cls.c_static_methods = [] &&
           cls.c_user_attributes = [] &&
           cls.c_enum = None);
 
@@ -181,22 +189,43 @@ let emit_class nenv x =
   let extends_list = fmt_extends_list extends in
   let implements_list = fmt_implements_list implements in
 
-  let env = emit_enter env ".class" options (strip_ns x)
+  let name = strip_ns x in
+  let self_name, parent_name = match cls.c_kind with
+    (* interfaces don't have code so we don't need the names;
+     * traits can make self and parent calls to things that are actually
+     * in a class that uses them, so we don't use the name *)
+    | Ast.Cinterface | Ast.Ctrait -> None, None
+    | Ast.Cabstract | Ast.Cnormal | Ast.Cenum  ->
+      Some name,
+      match cls.c_extends with
+        | [] -> None
+        | [x] -> Some (fmt_class_hint x)
+        | _ -> assert false in
+  let env = { env with self_name; parent_name } in
+
+  let env = emit_enter env ".class" options name
                        (extends_list^implements_list) in
 
 
   let env = List.fold_left emit_use env cls.c_uses in
-  let env, uninit_vars = lmap emit_var env cls.c_vars in
+  let env, uninit_vars = lmap (emit_var ~is_static:false) env cls.c_vars in
+  let env, uninit_svars =
+    lmap (emit_var ~is_static:true) env cls.c_static_vars in
+  let env = List.fold_left (emit_method ~is_static:false) env cls.c_methods in
+  let env =
+    List.fold_left (emit_method ~is_static:true) env cls.c_static_methods in
+
   let uninit_vars = Core_list.filter_map uninit_vars ~f:(fun x->x) in
-  let env = List.fold_left emit_method env cls.c_methods in
+  let uninit_svars = Core_list.filter_map uninit_svars ~f:(fun x->x) in
 
   (* Now for 86* stuff *)
   let env = match cls.c_constructor with
             | None -> emit_default_ctor env "86ctor"
                                         (cls.c_kind = Ast.Cinterface)
-            | Some m -> emit_method_ env m "86ctor" in
+            | Some m -> emit_method_ ~is_static:false env m "86ctor" in
 
-  let env = emit_pinit env uninit_vars in
+  let env = emit_prop_init env ~is_static:false uninit_vars in
+  let env = emit_prop_init env ~is_static:true uninit_svars in
 
   let env = emit_exit env in
 
