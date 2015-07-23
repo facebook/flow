@@ -164,8 +164,24 @@ and emit_class_id env cid =
       let env = emit_expr env e in
       emit_AGetC env
 
+and requires_empty_stack = function
+  | _, Await _ | _, Yield _ -> true
+  | _ -> false
+
 and emit_assignment env obop e1 e2 =
-  match e1 with
+  let env, opt_outer_faultlet, rhs_tag =
+    if requires_empty_stack e2 then
+      let env, faultlet = fresh_faultlet env in
+      let env, temp = fresh_tempvar env in
+      let env = emit_expr env e2 in
+      let env = emit_SetL env temp in
+      let env = emit_PopC env in
+      let env = emit_fault_enter env faultlet in
+      env, Some faultlet, Some temp
+    else
+      env, None, None
+  in
+  let env = match e1 with
   (* Destructuring assignment needs to be handled very differently. *)
   | _, List _ ->
     assert (obop = None);
@@ -190,7 +206,9 @@ and emit_assignment env obop e1 e2 =
     let env, assignments = lmap emit_lhs env assignments in
 
     (* Store off the rhs to a (maybe temporary) local *)
-    let env, opt_faultlet, id = emit_expr_to_var env e2 in
+    let env, opt_faultlet, id = match rhs_tag with
+      | None -> emit_expr_to_var env e2
+      | Some id -> env, None, id in
     let env = opt_fold emit_fault_enter env opt_faultlet in
 
     (* Assign to all the components *)
@@ -205,22 +223,37 @@ and emit_assignment env obop e1 e2 =
     let env = List.fold_right emit_assign assignments env in
 
     (* And push the variable back to give the expr its value *)
-    let env = emit_CGetL env id in
+    let env = if opt_outer_faultlet = None && opt_faultlet = None then
+        emit_CGetL env id else
+        emit_PushL env id
+    in
 
     (* we need to unset the variable when we leave *)
     let env = opt_fold emit_fault_exit env opt_faultlet in
     let cleanup env = emit_UnsetL env id in
-    let env = opt_fold (emit_fault_cleanup ~cleanup:cleanup) env opt_faultlet in
+    let env = opt_fold (emit_fault_cleanup ~faultlet_extras:cleanup)
+                env opt_faultlet in
 
     env
 
   (* Regular assignment is more straightforward. *)
   | _ ->
     let env, lval = emit_lval env e1 in
-    let env = emit_expr env e2 in
+    let env = match rhs_tag with
+      | None -> emit_expr env e2
+      | Some tmp -> emit_PushL env tmp in
     (match obop with
     | None -> emit_Set env lval
     | Some bop -> emit_SetOp env lval (fmt_eq_binop bop))
+
+  in
+
+  let env = opt_fold emit_fault_exit env opt_outer_faultlet in
+  let cleanup env = emit_UnsetL env (unsafe_opt rhs_tag) in
+  let env = opt_fold (emit_fault_cleanup ~faultlet_extras:cleanup)
+                env opt_outer_faultlet in
+
+  env
 
 
 and emit_call_lhs env (_, expr_ as expr) nargs =
@@ -461,6 +494,19 @@ and emit_expr env (_, expr_ as expr) =
     | None -> let env = emit_class_id env cid in
               emit_ClsCns env field)
 
+  | Await e ->
+    (* XXX: await only works in certain contexts but Hack doesn't actually
+     * check for this! *)
+    let env, skip_label = fresh_label env in
+    let env = emit_expr env e in
+
+    (* Await opcode can't handle nulls so we have to check *)
+    let env = emit_Dup env in
+    let env = emit_IsTypeC env "Null" in
+    let env = emit_cjmp env true skip_label in
+    let env = emit_Await env env.next_iterator in
+    emit_label env skip_label
+
   | Shape _
   | ValCollection _
   | KeyValCollection _
@@ -474,7 +520,6 @@ and emit_expr env (_, expr_ as expr) =
   | Special_func _
   | Yield_break
   | Yield _
-  | Await _
   | InstanceOf _
   | Efun _
   | Xml _

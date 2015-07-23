@@ -48,19 +48,23 @@ let fmt_visibility vis =
   | Private -> "private"
   | Protected  -> "protected"
 
+let fmt_fun_kind = function
+  | Ast.FSync -> ""
+  | Ast.FAsync -> " isAsync"
+  | Ast.FGenerator | Ast.FAsyncGenerator -> unimpl "generators"; assert false
 
 let emit_fun nenv x =
   let f = Naming_heap.FunHeap.find_unsafe x in
   let nb = Naming.func_body nenv f in
 
   assert (f.f_user_attributes = [] &&
-          f.f_variadic = FVnonVariadic && f.f_fun_kind = Ast.FSync);
+          f.f_variadic = FVnonVariadic);
 
   let env = new_env () in
 
   let options = ["mayusevv"] in
-  let env = emit_enter env ".function" options (strip_ns x)
-                       (fmt_params f.f_params) in
+  let post = fmt_params f.f_params ^ fmt_fun_kind f.f_fun_kind in
+  let env = emit_enter env ".function" options (strip_ns x) post in
   let env = emit_func_body env nb in
   let env = run_cleanups env in
   let env = emit_exit env in
@@ -73,14 +77,14 @@ let emit_method_ env ~is_static m name =
   let nb = assert_named_body m.m_body in
 
   assert (m.m_user_attributes = [] &&
-          m.m_variadic = FVnonVariadic && m.m_fun_kind = Ast.FSync);
+          m.m_variadic = FVnonVariadic);
 
   let options = bool_option "abstract" m.m_abstract @
                 bool_option "final" m.m_final @
                 bool_option "static" is_static @
                 [fmt_visibility m.m_visibility; "mayusevv"] in
-  let env = emit_enter env ".method" options name
-                       (fmt_params m.m_params) in
+  let post = fmt_params m.m_params ^ fmt_fun_kind m.m_fun_kind in
+  let env = emit_enter env ".method" options name post in
   let env = emit_func_body env nb in
   let env = run_cleanups env in
   let env = emit_exit env in

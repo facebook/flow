@@ -287,6 +287,7 @@ let emit_SetOp =          emit_op2ls_screwy "SetOp"
 let emit_IncDec =         emit_op2ls_screwy "IncDec"
 let emit_CGet =           emit_op1l   "CGet"
 let emit_CGetL =          emit_op1s   "CGetL"
+let emit_PushL =          emit_op1s   "PushL"
 let emit_IssetL =         emit_op1s   "IssetL"
 let emit_UnsetL =         emit_op1s   "UnsetL"
 let emit_Set =            emit_op1l   "Set"
@@ -336,6 +337,8 @@ let emit_Self =           emit_op0    "Self"
 let emit_Parent =         emit_op0    "Parent"
 let emit_AGetL =          emit_op1s   "AGetL"
 let emit_AGetC =          emit_op0    "AGetC"
+let emit_Await =          emit_op1i   "Await"
+let emit_IsTypeC =        emit_op1s   "IsTypeC"
 
 let emit_Switch env labels base bound =
   emit_op_strs env ["Switch"; fmt_str_vec labels; string_of_int base; bound]
@@ -451,7 +454,7 @@ let emit_fault_enter env label = emit_enter env ".try_fault" [] label ""
 let emit_fault_exit env _ = emit_exit env
 
 let emit_fault_cleanup ?faultlet_extras:(extra=(fun env -> env))
-                       ~cleanup:f
+                       ?cleanup:(f=(fun env->env))
                        env label =
   let env = f env in
   let emit_faultlet env =
