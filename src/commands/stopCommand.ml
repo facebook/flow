@@ -12,8 +12,6 @@
 (* flow stop command *)
 (***********************************************************************)
 
-module CCS = ClientConnectSimple
-
 exception FailedToKill
 
 let spec = {
@@ -49,7 +47,7 @@ let nice_kill (ic, oc) root =
   let response = kill (ic, oc) in
   if is_expected response then begin
     let i = ref 0 in
-    while CCS.server_exists root do
+    while CommandUtils.server_exists root do
       incr i;
       if !i < 5 then ignore @@ Unix.sleep 1
       else raise FailedToKill
@@ -81,7 +79,7 @@ let mean_kill root =
       ()
   ) pids;
   ignore(Unix.sleep 1);
-  if CCS.server_exists root
+  if CommandUtils.server_exists root
   then raise FailedToKill
   else Printf.fprintf stderr "Successfully killed server for %s\n%!"
     (Path.to_string root)
@@ -89,19 +87,21 @@ let mean_kill root =
 let main root () =
   let root = CommandUtils.guess_root root in
   let root_s = Path.to_string root in
-  match CCS.connect_once root with
-  | Result.Ok conn ->
-      begin
-        try nice_kill conn root
-        with FailedToKill ->
-          Printf.eprintf "Failed to kill server nicely for %s\n%!" root_s;
-          exit 1
-      end
-  | Result.Error CCS.Server_missing ->
+  try
+    let conn = CommandUtils.connect root in
+    begin
+      try nice_kill conn root
+      with FailedToKill ->
+        Printf.eprintf "Failed to kill server nicely for %s\n%!" root_s;
+        exit 1
+    end
+  with
+  | CommandExceptions.Server_missing ->
       Printf.eprintf "Error: no server to kill for %s\n%!" root_s
-  | Result.Error CCS.Build_id_mismatch ->
+  | CommandExceptions.Server_out_of_date ->
       Printf.eprintf "Successfully killed server for %s\n%!" root_s
-  | Result.Error (CCS.Server_busy | CCS.Server_initializing) ->
+  | CommandExceptions.Server_busy
+  | CommandExceptions.Server_initializing ->
       try mean_kill root
       with FailedToKill ->
         Printf.eprintf "Failed to kill server meanly for %s\n%!" root_s;
