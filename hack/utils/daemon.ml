@@ -43,7 +43,7 @@ let make_pipe () =
   let oc = Unix.out_channel_of_descr descr_out in
   ic, oc
 
-let fork ?log_name (f : ('a, 'b) channel_pair -> unit) :
+let fork ?log_file (f : ('a, 'b) channel_pair -> unit) :
     ('b, 'a) handle =
   let parent_in, child_out = make_pipe () in
   let child_in, parent_out = make_pipe () in
@@ -55,9 +55,8 @@ let fork ?log_name (f : ('a, 'b) channel_pair -> unit) :
       let fd = Unix.openfile "/dev/null" [Unix.O_RDONLY; Unix.O_CREAT] 0o777 in
       Unix.dup2 fd Unix.stdin;
       Unix.close fd;
-      let fn = Option.value_map log_name ~default:"/dev/null" ~f:
+      let fn = Option.value_map log_file ~default:"/dev/null" ~f:
         begin fun fn ->
-          let fn = Printf.sprintf "%s/%s.daemon" (Tmp.get_dir ()) fn in
           begin try Sys.rename fn (fn ^ ".old") with _ -> () end;
           fn
         end in

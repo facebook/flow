@@ -25,7 +25,7 @@ val descr_of_in_channel : 'a in_channel -> Unix.file_descr
 val descr_of_out_channel : 'a out_channel -> Unix.file_descr
 
 (* Fork and run a function that communicates via the typed channels *)
-val fork : ?log_name:string -> (('a, 'b) channel_pair -> unit) ->
+val fork : ?log_file:string -> (('a, 'b) channel_pair -> unit) ->
   ('b, 'a) handle
 
 (* for unit tests *)
