@@ -219,7 +219,7 @@ let connect root =
         raise CommandExceptions.Server_out_of_date in
   ic, oc
 
-let rec connect_helper autostart retries retry_if_init root =
+let rec connect_with_autostart server_flags root =
   check_timeout ();
   try
     connect root
@@ -227,27 +227,27 @@ let rec connect_helper autostart retries retry_if_init root =
   | CommandExceptions.Server_initializing ->
       let init_msg = "flow server still initializing. If it was " ^
                      "just started this can take some time." in
-      if retry_if_init
+      if server_flags.retry_if_init
       then (
         Printf.fprintf stderr "%s Retrying... %s\r%!" init_msg (Tty.spinner());
         sleep 1;
-        connect_helper autostart retries retry_if_init root
+        connect_with_autostart server_flags root
       ) else (
         Printf.fprintf stderr "%s Try again...\n%!" init_msg;
         exit 2
       )
   | CommandExceptions.Server_cant_connect ->
-      retry autostart retries retry_if_init root
+      retry server_flags root
         1 "Error: could not connect to flow server, retrying..."
   | CommandExceptions.Server_busy ->
-      retry autostart retries retry_if_init root
+      retry server_flags root
         1 "Error: flow server is busy, retrying..."
   | CommandExceptions.Server_out_of_date
   | CommandExceptions.Server_missing ->
-    if autostart
+    if not server_flags.no_auto_start
     then (
       start_flow_server root;
-      retry autostart retries retry_if_init root
+      retry server_flags root
         3 "The flow server will be ready in a moment."
     ) else (
       prerr_endline (Utils.spf
@@ -257,24 +257,19 @@ let rec connect_helper autostart retries retry_if_init root =
     )
   | _ -> Printf.fprintf stderr "Something went wrong :(\n%!"; exit 2
 
-and retry autostart retries retry_if_init root delay message =
+and retry server_flags root delay message =
   check_timeout ();
+  let retries = server_flags.retries in
   if retries > 0
   then (
     prerr_endline message;
     sleep delay;
-    let retries = retries - 1 in
-    connect_helper autostart retries retry_if_init root
+    let server_flags = { server_flags with retries = retries - 1 } in
+    connect_with_autostart server_flags root
   ) else (
     prerr_endline "Out of retries, exiting!";
     exit 2
   )
-
-let connect_with_autostart command_values =
-  connect_helper
-    (not command_values.no_auto_start)
-    command_values.retries
-    command_values.retry_if_init
 
 let rec search_for_root config start recursion_limit : Path.t option =
   let fs_root = Path.make "/" in
