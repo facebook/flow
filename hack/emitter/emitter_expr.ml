@@ -265,7 +265,7 @@ and emit_expr env (_, expr_ as expr) =
     emit_BitNot env
   | Unop (Ast.Unot, e) ->
     let env = emit_expr env e in
-    emit_BitNot env
+    emit_Not env
   (* unary + and - use math with zero *)
   | Unop (Ast.Uplus, e) ->
     let env = emit_Int env "0" in

@@ -98,11 +98,15 @@ let emit_default_ctor env name abstract =
 let fmt_class_hint = function
   | _, Happly ((_, cls), _) -> strip_ns cls
   | _ -> bug "class hint not apply??"; assert false
-let fmt_class_list op classes =
+let fmt_implements_list classes =
   match classes with
   | [] -> ""
-  | [x] -> " " ^ op ^ " " ^ fmt_class_hint x
-  | xs ->  " " ^ op ^ " (" ^ String.concat " " (List.map fmt_class_hint xs) ^")"
+  | xs -> " implements (" ^ String.concat " " (List.map fmt_class_hint xs) ^")"
+let fmt_extends_list classes =
+  match classes with
+  | [] -> ""
+  | [x] -> " extends " ^ fmt_class_hint x
+  | _ -> bug "nonempty extends list"; assert false
 
 let emit_use env use =
   emit_strs env [".use"; fmt_class_hint use ^ ";"]
@@ -168,10 +172,14 @@ let emit_class nenv x =
   let options = bool_option "final" cls.c_final @
                 class_kind_options cls.c_kind in
 
-  let extend_tag = if cls.c_kind = Ast.Cinterface
-                   then "implements" else "extends" in
-  let extends_list = fmt_class_list extend_tag cls.c_extends in
-  let implements_list = fmt_class_list "implements" cls.c_implements in
+  (* The "extends" list of an interface is "implements" to hhvm *)
+  let implements, extends = match cls.c_kind with
+    | Ast.Cinterface -> cls.c_extends, []
+    | Ast.Cabstract | Ast.Cnormal | Ast.Ctrait | Ast.Cenum ->
+      cls.c_implements, cls.c_extends in
+
+  let extends_list = fmt_extends_list extends in
+  let implements_list = fmt_implements_list implements in
 
   let env = emit_enter env ".class" options (strip_ns x)
                        (extends_list^implements_list) in
