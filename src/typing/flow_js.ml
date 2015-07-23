@@ -1158,7 +1158,7 @@ let master_cx =
   let cx_ = ref None in
   fun () -> match !cx_ with
   | None ->
-    let cx = new_context (Files_js.get_flowlib_root ()) Files_js.lib_module in
+    let cx = new_context Files_js.global_file_name Files_js.lib_module in
     cx_ := Some cx;
     cx
   | Some cx -> cx
@@ -3137,7 +3137,12 @@ let rec __flow cx (l, u) trace =
             possible deluge of shadow properties on Object.prototype, since it
             is shared by every object. **)
         rec_flow cx trace (get_builtin_type cx reason "Object", u)
-      else if Files_js.is_lib_file_or_flowlib_root (abs_path_of_reason reason)
+
+      (* if we're looking something up on the global/builtin object, then tweak
+         the error to say that `x` doesn't exist. We can tell this is the global
+         object because that should be the only object created with
+         `builtin_reason` instead of an actual location (see `Init_js.init`). *)
+      else if is_builtin_reason reason
       then
         let msg =
           if is_internal_module_name x
@@ -3252,12 +3257,6 @@ and flow_eq cx trace reason l r =
   else match (l, r) with
   | (_, _) when equatable cx trace (l, r) -> ()
   | (_, _) -> prerr_flow cx trace "Cannot be compared to" l r
-
-and abs_path_of_reason r =
-  let loc = loc_of_reason r in
-  match Loc.(loc.source) with
-  | Some filename -> filename
-  | None -> ""
 
 and is_object_prototype_method = function
   | "hasOwnProperty"

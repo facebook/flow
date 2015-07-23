@@ -205,8 +205,11 @@ let derivable_reason r =
   { r with derivable = true }
 
 let builtin_reason x =
-  mk_reason x Loc.({ none with source = Some (Files_js.get_flowlib_root ()) })
+  mk_reason x Loc.({ none with source = Some Files_js.global_file_name })
   |> derivable_reason
+
+let is_builtin_reason r =
+  r.loc.Loc.source = Some Files_js.global_file_name
 
 (* reasons compare on their locations *)
 let compare r1 r2 =
@@ -246,7 +249,9 @@ let strip_root reason path = Loc.(
   let source = match loc.source with
   | None -> None
   | Some file -> Some (
-    if Files_js.is_lib_file_or_flowlib_root file
+    if file = Files_js.global_file_name
+    then "[LIB]"
+    else if Files_js.is_lib_file file
     then spf "[LIB] %s" (Filename.basename file)
     else Files_js.relative_path
       (spf "%s%s" (Path.to_string path) Filename.dir_sep) file

@@ -418,7 +418,7 @@ let merge_strict_file file =
   (* always use cache to read contexts, instead of directly
      using ContextHeap; otherwise bad things will happen. *)
   let cx = cache#read file in
-  let master_cx = cache#read (Files_js.get_flowlib_root ()) in
+  let master_cx = cache#read Files_js.global_file_name in
   merge_strict_context cache cx master_cx
 
 let typecheck_contents contents filename =
@@ -426,7 +426,7 @@ let typecheck_contents contents filename =
   | OK ast ->
       let cx = TI.infer_ast ast filename true in
       let cache = new context_cache in
-      let master_cx = cache#read (Files_js.get_flowlib_root ()) in
+      let master_cx = cache#read Files_js.global_file_name in
       Some (merge_strict_context cache cx master_cx), cx.errors
   | Err errors ->
       None, errors

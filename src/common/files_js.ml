@@ -13,6 +13,8 @@
 open Utils
 open Modes_js
 
+let global_file_name = "(global)"
+
 let flow_extensions = [
     ".js"  ;      (* Standard JavaScript files *)
     ".jsx" ;      (* JavaScript files with JSX *)
@@ -37,19 +39,6 @@ let lib_files = ref None
 let get_lib_files () = match !lib_files with
 | None -> SSet.empty
 | Some files -> files
-
-let flowlib_root = ref None
-
-let get_flowlib_root () =
-  match !flowlib_root with
-  | Some root -> root
-  | None ->
-      let root = match Flowlib.get_flowlib_root () with
-      | None ->
-          print_endline "Could not locate flowlib files"; exit 1
-      | Some root -> Path.to_string root in
-      flowlib_root := Some root;
-      root
 
 let realpath path = match Sys_utils.realpath path with
 | Some path -> path
@@ -177,7 +166,12 @@ let init libs =
   | None -> (
     let libs = if Modes_js.modes.no_flowlib
       then libs
-      else (Path.make (get_flowlib_root ()))::libs
+      else
+        let root = match Flowlib.get_flowlib_root () with
+        | None -> print_endline "Could not locate flowlib files"; exit 1
+        | Some root -> root
+        in
+        root::libs
     in
     let libs = if libs = []
       then SSet.empty
@@ -194,9 +188,6 @@ let init libs =
 
 let is_lib_file p =
   SSet.mem p (get_lib_files ())
-
-let is_lib_file_or_flowlib_root p =
-  p = get_flowlib_root () || is_lib_file p
 
 let lib_module = ""
 
