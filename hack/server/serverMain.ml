@@ -235,7 +235,10 @@ let handle_connection_ genv env socket =
       msg_to_channel oc Connection_ok;
     let client = { ic; oc; close } in
     Program.handle_client genv env client
-  with e ->
+  with
+  | Sys_error("Broken pipe") ->
+    close ()
+  | e ->
     let msg = Printexc.to_string e in
     EventLogger.master_exception msg;
     Printf.fprintf stderr "Error: %s\n%!" msg;
