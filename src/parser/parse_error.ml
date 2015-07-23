@@ -57,6 +57,7 @@ type t =
   | ParameterAfterRestParameter
   | AsyncGenerator
   | DeclareAsync
+  | CallableClass
 
 exception Error of (Loc.t * t) list
 
@@ -120,4 +121,5 @@ module PP =
           "Rest parameter must be final parameter of an argument list"
       | AsyncGenerator -> "A function may not be both async and a generator"
       | DeclareAsync -> "async is an implementation detail and isn't necessary for your declare function statement. It is sufficient for your declare function to just have a Promise return type."
+      | CallableClass -> "Class may not be called as a function"
   end
