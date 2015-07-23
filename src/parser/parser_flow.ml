@@ -2379,9 +2379,10 @@ end = struct
       Expect.token env T_CLASS;
       let obj_loc, c = Type._object ~allow_static:true env in
       let loc = Loc.btwn start_loc obj_loc (* Do I need to dig out the right bound? *) in
-      match c.Ast.Type.Object.callProperties with
-        | [] -> loc, Ast.Type.Object c
-        | _ -> error env (Error.CallableClass); loc, Ast.Type.Object c
+      let properties = c.Ast.Type.Object.properties in
+      let indexers = c.Ast.Type.Object.indexers in
+      if c.Ast.Type.Object.callProperties <> [] then error env (Error.CallableClass);
+      loc, Ast.Type.(Class Class.({ properties; indexers; }))
 
     let key = key ~allow_computed_key:false
   end

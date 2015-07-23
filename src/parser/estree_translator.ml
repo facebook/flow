@@ -828,6 +828,7 @@ end with type t = Impl.t) = struct
     | Nullable t -> nullable_type loc t
     | Function fn -> function_type (loc, fn)
     | Object o -> object_type (loc, o)
+    | Class c -> class_type (loc, c)
     | Array t -> array_type loc t
     | Generic g -> generic_type (loc, g)
     | Union u -> union_type (loc, u)
@@ -908,6 +909,37 @@ end with type t = Impl.t) = struct
     node "ObjectTypeCallProperty" loc [|
       "value", function_type callProperty.value;
       "static", bool callProperty.static;
+    |]
+  )
+
+  and class_type (loc, c) = Type.Class.(
+    node "ClassTypeAnnotation" loc [|
+      "properties", array_of_list class_type_property c.properties;
+      "indexers", array_of_list class_type_indexer c.indexers;
+    |]
+  )
+
+  and class_type_property (loc, prop) = Type.Object.Property.(
+    let key = match prop.key with
+    | Expression.Object.Property.Literal lit -> literal lit
+    | Expression.Object.Property.Identifier id -> identifier id
+    | Expression.Object.Property.Computed _ ->
+      failwith "There should not be computed class type property keys"
+    in
+    node "ClassTypeProperty" loc [|
+      "key", key;
+      "value", _type prop.value;
+      "optional", bool prop.optional;
+      "static", bool prop.static;
+    |]
+  )
+
+  and class_type_indexer (loc, indexer) = Type.Object.Indexer.(
+    node "ClassTypeIndexer" loc [|
+      "id", identifier indexer.id;
+      "key", _type indexer.key;
+      "value", _type indexer.value;
+      "static", bool indexer.static;
     |]
   )
 
