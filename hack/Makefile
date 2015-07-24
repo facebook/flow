@@ -77,7 +77,8 @@ NATIVE_LIBRARIES=\
   pthread\
   $(ELF)
 
-TARGETS=_build/hh_server.native _build/hh_client.native _build/hh_single_type_check.native \
+TARGETS=_build/hh_server.native _build/hh_client.native \
+		_build/hh_single_type_check.native _build/hh_emitter.native \
 		_build/hh_format.native _build/h2tp.native _build/test_unparser.native
 
 # Find all source files (all files not in _build dir)
@@ -147,6 +148,7 @@ else
 endif
 	cp _build/hh_client.native ../bin/hh_client
 	cp _build/hh_single_type_check.native ../bin/hh_single_type_check
+	cp _build/hh_emitter.native ../bin/hh_emitter
 	cp _build/hh_format.native ../bin/hh_format
 	cp _build/h2tp/h2tp.native ../bin/h2tp
 

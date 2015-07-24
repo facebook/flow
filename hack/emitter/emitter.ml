@@ -292,7 +292,7 @@ let emit_test_call env =
   let env = emit_FCall env 0 in
   emit_PopR env
 
-let emit_main classes =
+let emit_main ~is_test classes =
   let env = new_env () in
   let env = emit_enter env ".main" [] "" "" in
 
@@ -301,7 +301,7 @@ let emit_main classes =
     Core_list.foldi ~f:(fun i env _ -> emit_DefCls env i) ~init:env classes in
 
   (* emit debugging test *)
-  let env = emit_test_call env in
+  let env = if is_test then emit_test_call env else env in
 
   (* emit the expected return *)
   let env = emit_Int env "1" in
@@ -310,11 +310,11 @@ let emit_main classes =
   let env = emit_exit env in
   Printf.printf "%s\n\n" (get_output env)
 
-let emit_file nenv {FileInfo.file_mode; funs; classes; _} () =
-  if file_mode <> Some FileInfo.Mstrict then () else
+let emit_file ~is_test nenv {FileInfo.file_mode; funs; classes; _} =
+  assert (file_mode = Some FileInfo.Mstrict);
   let fun_code = List.map (fun (_, x) -> emit_fun nenv x) funs in
   let class_code = List.map (fun (_, x) -> emit_class nenv x) classes in
 
-  emit_main classes;
+  emit_main ~is_test classes;
   List.iter (Printf.printf "%s\n\n") fun_code;
   List.iter (Printf.printf "%s\n\n") class_code
