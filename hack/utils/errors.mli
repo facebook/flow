@@ -279,6 +279,9 @@ val explain_contravariance : Pos.t -> string -> error -> unit
 val this_lvalue : Pos.t -> unit
 val abstract_concrete_override:
   Pos.t -> Pos.t -> [< `method_ | `typeconst |`constant]-> unit
+val local_variable_modified_and_used : Pos.t -> Pos.t list -> unit
+val local_variable_modified_twice : Pos.t -> Pos.t list -> unit
+val assign_during_case : Pos.t -> unit
 
 val to_json : Pos.absolute error_ -> Hh_json.json
 val to_string : Pos.absolute error_ -> string

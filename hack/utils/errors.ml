@@ -345,6 +345,9 @@ module Typing                               = struct
   let missing_optional_field                = 4140 (* DONT MODIFY!!!! *)
   let shape_field_unset                     = 4141 (* DONT MODIFY!!!! *)
   let abstract_concrete_override            = 4142 (* DONT MODIFY!!!! *)
+  let local_variable_modifed_and_used       = 4143 (* DONT MODIFY!!!! *)
+  let local_variable_modifed_twice          = 4144 (* DONT MODIFY!!!! *)
+  let assign_during_case                    = 4145 (* DONT MODIFY!!!! *)
   (* EXTEND HERE WITH NEW VALUES IF NEEDED *)
 end
 
@@ -1700,6 +1703,23 @@ let explain_contravariance pos c_name error =
                 "with respect to " ^ strip_ns c_name in
   let code, msgl = error in
   add_list code (msgl @ [pos, message])
+
+let local_variable_modified_and_used pos_modified pos_used_l =
+  let used_msg p = p, "And accessed here" in
+  add_list Typing.local_variable_modifed_and_used
+           ((pos_modified, "Unsequenced modification and access to local \
+                            variable. Modified here") ::
+            List.map used_msg pos_used_l)
+let local_variable_modified_twice pos_modified pos_modified_l =
+  let modified_msg p = p, "And also modified here" in
+  add_list Typing.local_variable_modifed_twice
+           ((pos_modified, "Unsequenced modifications to local variable. \
+                            Modified here") ::
+            List.map modified_msg pos_modified_l)
+let assign_during_case p =
+  add Typing.assign_during_case p
+    "Don't assign to variables inside of case labels"
+
 
 (*****************************************************************************)
 (* Convert relative paths to absolute. *)

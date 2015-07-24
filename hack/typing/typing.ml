@@ -334,6 +334,7 @@ and check_param env param (_, ty) =
 
 and bind_param env (_, ty1) param =
   let env, ty2 = opt expr env param.param_expr in
+  Option.iter param.param_expr Typing_sequencing.sequence_check_expr;
   let ty2 = match ty2 with
     | None    -> Reason.none, Tany
     | Some ty -> ty
@@ -393,6 +394,7 @@ and fun_ ?(abstract=false) env hret pos named_body f_kind =
     let env = Env.set_return env hret in
     let env = Env.set_fn_kind env f_kind in
     let env = block env named_body.fnb_nast in
+    Typing_sequencing.sequence_check_block named_body.fnb_nast;
     let ret = Env.get_return env in
     let env =
       if Nast_terminality.Terminal.block named_body.fnb_nast ||
@@ -1378,6 +1380,7 @@ and anon_bind_opt_param env param =
       bind_param env (None, ty) param
   | Some default ->
       let env, ty = expr env default in
+      Typing_sequencing.sequence_check_expr default;
       bind_param env (None, ty) param
 
 and anon_check_param env param =
