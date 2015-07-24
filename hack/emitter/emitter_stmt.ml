@@ -171,7 +171,7 @@ and emit_stmt env stmt =
       | N.As_v (_, N.Lvar id) -> env, [get_lid_name id]
       | N.As_kv ((_, N.Lvar id1), (_, N.Lvar id2)) ->
         env, [get_lid_name id2; get_lid_name id1]
-      | _ -> unimpl "await bindings"; assert false
+      | _ -> unimpl "await bindings"
     in
 
     let env = emit_IterInit env iter break_label id in
@@ -414,4 +414,4 @@ and emit_stmt env stmt =
 
     env, false
 
-  | N.Static_var _ -> unimpl "static variable"; assert false
+  | N.Static_var _ -> unimpl "static variables"

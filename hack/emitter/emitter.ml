@@ -45,7 +45,8 @@ let emit_func_body env m =
 
 let emit_param p =
   assert (not p.param_is_reference); (* actually right *)
-  assert (not p.param_is_variadic && p.param_expr = None);
+  if p.param_is_variadic then unimpl "variadic params";
+  if p.param_expr <> None then unimpl "default args";
   get_lid_name p.param_id
 
 let fmt_params params =
@@ -76,8 +77,9 @@ let fmt_fun_tags env m =
 let emit_method_or_func env ~is_method ~is_static m name =
   let env = start_new_function env in
 
-  assert (m.m_user_attributes = [] &&
-          m.m_variadic = FVnonVariadic);
+
+  if m.m_user_attributes <> [] then unimpl "function user attributes";
+  if m.m_variadic != FVnonVariadic then unimpl "variadic functions";
 
   (* We actually emit the body first, but save the output, so we can
    * gather data on what occurs in the function. *)
@@ -134,7 +136,7 @@ let emit_default_ctor env name abstract =
  * but I *think* it needs to be an apply? *)
 let fmt_class_hint = function
   | _, Happly ((_, cls), _) -> strip_ns cls
-  | _ -> bug "class hint not apply??"; assert false
+  | _ -> bug "class hint not apply??"
 let fmt_implements_list classes =
   match classes with
   | [] -> ""
@@ -143,7 +145,7 @@ let fmt_extends_list classes =
   match classes with
   | [] -> ""
   | [x] -> " extends " ^ fmt_class_hint x
-  | _ -> bug "nonempty extends list"; assert false
+  | _ -> bug "nonempty extends list"
 
 let emit_use env use =
   emit_strs env [".use"; fmt_class_hint use ^ ";"]
@@ -180,7 +182,7 @@ let emit_prop_init env ~is_static = function
  * it still needs to be taken care of in a pinit *)
 let emit_var env ~is_static var =
   assert (var.cv_final = false); (* props can't be final *)
-  assert (var.cv_is_xhp = false);
+  if var.cv_is_xhp then unimpl "xhp props";
   let options = bool_option "static" is_static @
                 [fmt_visibility var.cv_visibility] in
   let fmt_prop v =
@@ -239,19 +241,18 @@ let class_kind_options  = function
   | Ast.Cnormal -> []
   | Ast.Cinterface -> ["interface"]
   | Ast.Ctrait -> ["final"; "trait"]
-  | Ast.Cenum -> unimpl "enum not supported"; assert false
+  | Ast.Cenum -> unimpl "first class enums"
 
 let emit_class nenv x =
   let cls = Naming_heap.ClassHeap.find_unsafe x in
   let cls = Naming.class_meth_bodies nenv cls in
   let env = new_env () in
 
-  (* we only handle a very limited range of things right now *)
-  assert (cls.c_is_xhp = false &&
-          cls.c_xhp_attr_uses = [] &&
-          cls.c_typeconsts = [] &&
-          cls.c_user_attributes = [] &&
-          cls.c_enum = None);
+  (* still have a handful of unimplemented bits *)
+  if cls.c_is_xhp then unimpl "xhp";
+  if cls.c_xhp_attr_uses <> [] then unimpl "xhp attr uses";
+  if cls.c_typeconsts <> [] then unimpl "type constants";
+  if cls.c_user_attributes <> [] then unimpl "class user attributes";
 
   let options = bool_option "final" cls.c_final @
                 class_kind_options cls.c_kind in

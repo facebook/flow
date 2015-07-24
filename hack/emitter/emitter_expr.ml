@@ -120,14 +120,14 @@ and emit_lval_inner env (_, expr_) =
   | Obj_get (e1, (_, Id (_, id)), _null_flavor_TODO) ->
     let env, base = emit_base env e1 in
     env, lmember (base, (MTprop, Mstring id))
-  | Obj_get _ -> unimpl "Obj_get with non-Id rhs???"; assert false
+  | Obj_get _ -> unimpl "Obj_get with non-Id rhs???"
 
   | Class_get (cid, (_, field)) ->
     let field_name = lstrip field "$" in
     let env = emit_String env field_name in
     env, Lsprop cid
 
-  | _ -> bug "emit_lval: not an lvalue"; assert false
+  | _ -> bug "emit_lval: not an lvalue"
 
 (* emit code for an lval that we may be either reading or writing from
  * and return a descriptor for the lval.
@@ -283,7 +283,7 @@ and emit_method_base env (_, expr_ as expr) =
 and emit_ctor_lhs env class_id nargs =
   match class_id with
   | CI (_, name) -> emit_FPushCtorD env nargs (strip_ns name)
-  | _ -> unimpl "unsupported constructor lhs"; assert false
+  | _ -> unimpl "unsupported constructor lhs"
 
 (* emit code to push args and call a function after the thing being
  * called has already been pushed; doesn't do any stack adjustment
@@ -336,7 +336,7 @@ and emit_call env ef args uargs =
 and emit_flavored_expr env (_, expr_ as expr) =
   match expr_ with
   | Call (Cnormal, ef, args, uargs) -> emit_call env ef args uargs
-  | Call (Cuser_func, _, _, _) -> unimpl "call_user_func"; assert false
+  | Call (Cuser_func, _, _, _) -> unimpl "call_user_func"
 
   (* For most things, just fall back to emit_expr *)
   | _ -> emit_expr env expr, FC
@@ -476,10 +476,11 @@ and emit_expr env (_, expr_ as expr) =
     let env = emit_expr env e in
     emit_Clone env
 
-  | Any -> bug "what even is this"; assert false
-  | List _ -> bug "list on RHS"; assert false
+  | Any -> bug "what even is this"
+  | List _ -> bug "list on RHS"
 
-  | String2 _ -> unimpl "String2 going to take ast changes"; assert false
+  (* probably going to take AST changes *)
+  | String2 _ -> unimpl "double-quoted string interpolation"
 
   (* XXX: is this right?? *)
   | This -> emit_BareThis env "Notice"
@@ -526,19 +527,18 @@ and emit_expr env (_, expr_ as expr) =
   | Yield_break ->
     env.nonlocal.return_action ~is_initial:true ~has_value:false env
 
-  | Shape _
-  | ValCollection _
-  | KeyValCollection _
-  | Pair _
+  | Shape _ -> unimpl "Shape"
+  | ValCollection _ -> unimpl "ValCollection"
+  | KeyValCollection _ -> unimpl "KeyValCollection"
+  | Pair _ -> unimpl "Pair"
 
-  | Id _
-  | Fun_id _
-  | Method_id _
-  | Method_caller _
-  | Smethod_id _
-  | Special_func _
-  | InstanceOf _
-  | Efun _
-  | Xml _
-  | Assert _
-    -> unimpl "expression"; assert false
+  | Id _ -> unimpl "Id"
+  | Fun_id _ -> unimpl "Fun_id"
+  | Method_id _ -> unimpl "Method_id"
+  | Method_caller _ -> unimpl "Method_caller"
+  | Smethod_id _ -> unimpl "Smethod_id"
+  | Special_func _ -> unimpl "Special_func"
+  | InstanceOf _ -> unimpl "InstanceOf"
+  | Efun _ -> unimpl "Efun"
+  | Xml _ -> unimpl "Xml"
+  | Assert _ -> unimpl "Assert"

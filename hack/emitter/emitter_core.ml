@@ -13,10 +13,10 @@
 open Utils
 
 let unimpl s =
-  Printf.eprintf "UNIMPLEMENTED: %s\n" s
+  Printf.eprintf "UNIMPLEMENTED: %s\n" s; assert false
 (* anything that trips this should have passed the typechecker, I think. *)
 let bug s =
-  Printf.eprintf "BUG: %s\n" s
+  Printf.eprintf "BUG: %s\n" s; assert false
 
 (*** Types associated with translation ***)
 
@@ -85,7 +85,7 @@ let fmt_member mem =
   | MTelem, Mappend -> "W"
   | MTelem, Mstring s -> "ET:"^quote_str s
   | MTprop, Mstring s -> "PT:"^quote_str s
-  | MTprop, _ -> unimpl "unsupported member??"; assert false
+  | MTprop, _ -> unimpl "unsupported member??"
 
 let fmt_base base =
   match base with
@@ -93,7 +93,7 @@ let fmt_base base =
   | Bthis -> "H"
   | Blval (Llocal id) -> "L:"^id
   | Blval (Lsprop _) -> "SC"
-  | Blval (Lmember _) -> bug "invalid base"; assert false
+  | Blval (Lmember _) -> bug "invalid base"
 
 (* returns the suffix to use on opcodes operating on the lval,
  * the argument describing the lval,
@@ -395,7 +395,7 @@ let fmt_binop bop =
   | Ast.Gtgt -> "Shr"
   | Ast.Percent -> "Mod"
   | Ast.Xor -> "Xor"
-  | Ast.Eq _ | Ast.AMpamp | Ast.BArbar -> bug "nonstandard binop"; assert false
+  | Ast.Eq _ | Ast.AMpamp | Ast.BArbar -> bug "nonstandard binop"
 
 let emit_binop env bop = emit_op0 (fmt_binop bop) env
 
@@ -405,7 +405,7 @@ let fmt_inc_dec_unop bop =
   | Ast.Udecr -> "PreDec"
   | Ast.Upincr -> "PostInc"
   | Ast.Updecr -> "PostDec"
-  | _ -> bug "non inc/dec unop"; assert false
+  | _ -> bug "non inc/dec unop"
 
 (* These have different names and I don't understand why. *)
 let fmt_eq_binop bop =
@@ -424,7 +424,7 @@ let fmt_eq_binop bop =
   | Ast.Xor -> "XorEqual"
   | Ast.Eq _ | Ast.AMpamp | Ast.BArbar | Ast.Eqeq
   | Ast.EQeqeq | Ast.Diff | Ast.Diff2 | Ast.Lt
-  | Ast.Lte | Ast.Gt | Ast.Gte -> bug "not a eq binop"; assert false
+  | Ast.Lte | Ast.Gt | Ast.Gte -> bug "not a eq binop"
 
 (* XXX: what all casts do we allow? *)
 let fmt_cast (_, h) =
@@ -435,7 +435,7 @@ let fmt_cast (_, h) =
   | Nast.Hprim Nast.Tstring -> "String"
   | Nast.Harray _ -> "Array"
   | Nast.Happly _ -> "Object" (* XXX *)
-  | _ -> bug "cast we don't understand"; assert false
+  | _ -> bug "cast we don't understand"
 
 let emit_cast env h = emit_op0 ("Cast" ^ fmt_cast h) env
 
