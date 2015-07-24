@@ -344,7 +344,7 @@ and emit_flavored_expr env (_, expr_ as expr) =
 (* emit code to evaluate an expression;
  * doesn't rely on the incoming stack state, leaves the value of the
  * expression on the stack as a cell. *)
-and emit_expr env (_, expr_ as expr) =
+and emit_expr env (pos, expr_ as expr) =
   match expr_ with
   (* Calls produce flavor R, so emit it and then unbox *)
   | Call (_, _, _, _) ->
@@ -477,7 +477,6 @@ and emit_expr env (_, expr_ as expr) =
     emit_Clone env
 
   | Any -> bug "what even is this"
-  | List _ -> bug "list on RHS"
 
   (* probably going to take AST changes *)
   | String2 _ -> unimpl "double-quoted string interpolation"
@@ -527,10 +526,53 @@ and emit_expr env (_, expr_ as expr) =
   | Yield_break ->
     env.nonlocal.return_action ~is_initial:true ~has_value:false env
 
-  | Shape _ -> unimpl "Shape"
-  | ValCollection _ -> unimpl "ValCollection"
-  | KeyValCollection _ -> unimpl "KeyValCollection"
-  | Pair _ -> unimpl "Pair"
+  | List es ->
+    (* List here represents tuple(...). Compile to an array. *)
+    let array = pos, Array (List.map (fun e -> AFvalue e) es) in
+    emit_expr env array
+
+  | Shape smap ->
+    (* Compile to an array. *)
+    let shape_field_to_expr = function
+      | SFlit (pos, _ as s) -> pos, String s
+      | SFclass_const ((pos, _ as id), s) -> pos, Class_const (CI id, s)
+    in
+    (* The doc comment says only use in testing code but this is
+     * /actually/ the right thing here *)
+    let shape_fields =
+      List.map (fun (k, v) -> (shape_field_to_expr k, v))
+        (ShapeMap.elements smap) in
+    (* Sort the fields by their position in order to have the same insertion
+     * order as HHVM. Sigh. *)
+    let shape_fields = List.sort
+      (fun ((p1, _), _) ((p2, _), _) -> Pos.compare p1 p2)
+      shape_fields in
+    let afields = List.map (fun (k, v) -> AFkvalue (k, v)) shape_fields in
+    let array = pos, Array afields in
+    emit_expr env array
+
+
+  (* TODO: use ColFromArray when possible *)
+  | ValCollection (col, es) ->
+    let col_id = Emitter_consts.get_collection_id (strip_ns col) in
+    let env = emit_NewCol env col_id in
+    let emit_entry env e =
+        let env = emit_expr env e in
+        emit_ColAddNewElemC env
+    in
+    List.fold_left emit_entry env es
+  | KeyValCollection (col, fields) ->
+    let col_id = Emitter_consts.get_collection_id (strip_ns col) in
+    let env = emit_NewCol env col_id in
+    let emit_field env (ek, ev) =
+        let env = emit_expr env ek in
+        let env = emit_expr env ev in
+        emit_MapAddElemC env
+    in
+    List.fold_left emit_field env fields
+  | Pair (e1, e2) ->
+    emit_expr env (pos, ValCollection ("\\Pair", [e1; e2]))
+
 
   | Id _ -> unimpl "Id"
   | Fun_id _ -> unimpl "Fun_id"
