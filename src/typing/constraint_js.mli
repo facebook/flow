@@ -32,6 +32,7 @@ module Type :
 
       | FunT of reason * static * prototype * funtype
       | ObjT of reason * objtype
+      | ClsT of reason * clstype
       | ArrT of reason * t * t list
 
       | ClassT of t
@@ -179,6 +180,14 @@ module Type :
       methods_tmap: int;
       mixins: bool;
       structural: bool;
+    }
+    and clstype = {
+      ct_type_args: t SMap.t;
+      ct_arg_polarities: polarity SMap.t;
+      ct_fields_tmap: int;
+      ct_methods_tmap: int;
+      ct_sfields_tmap: int;
+      ct_smethods_tmap: int;
     }
     and exporttypes = {
       exports_tmap: int;

@@ -71,6 +71,7 @@ module Type = struct
 
   | FunT of reason * static * prototype * funtype
   | ObjT of reason * objtype
+  | ClsT of reason * clstype
   | ArrT of reason * t * t list
 
   (* type of a class *)
@@ -364,6 +365,15 @@ module Type = struct
     methods_tmap: int;
     mixins: bool;
     structural: bool;
+  }
+
+  and clstype = {
+    ct_type_args: t SMap.t;
+    ct_arg_polarities: polarity SMap.t;
+    ct_fields_tmap: int;
+    ct_methods_tmap: int;
+    ct_sfields_tmap: int;
+    ct_smethods_tmap: int;
   }
 
   and exporttypes = {
@@ -929,6 +939,7 @@ let string_of_ctor = function
   | BoundT _ -> "BoundT"
   | ExistsT _ -> "ExistsT"
   | ObjT _ -> "ObjT"
+  | ClsT _ -> "ClsT"
   | ArrT _ -> "ArrT"
   | ClassT _ -> "ClassT"
   | InstanceT _ -> "InstanceT"
@@ -1020,6 +1031,7 @@ let rec reason_of_t = function
       reason
 
   | ObjT (reason,_)
+  | ClsT (reason,_)
   | ArrT (reason,_,_)
       -> reason
 
@@ -1197,6 +1209,7 @@ let rec mod_reason_of_t f = function
     BoundT { reason = f reason; name; bound; polarity }
   | ExistsT reason -> ExistsT (f reason)
   | ObjT (reason, ot) -> ObjT (f reason, ot)
+  | ClsT (reason, ct) -> ClsT (f reason, ct)
   | ArrT (reason, t, ts) -> ArrT (f reason, t, ts)
 
   | ClassT t -> ClassT (mod_reason_of_t f t)
@@ -1403,6 +1416,9 @@ let rec type_printer override fallback enclosure cx t =
         in
         spf "{%s%s}" props indexer
 
+    | ClsT (reason, _) ->
+        desc_of_reason reason (*TJP: clone of InstanceT. I assume that InstanceT has a very robust reason; does ClsT?*)
+
     | ArrT (_, t, ts) ->
         (*(match ts with
         | [] -> *)spf "Array<%s>" (pp EnclosureNone cx t)
@@ -1597,6 +1613,10 @@ and _json_of_t_impl json_cx t = Json.(
 
   | ObjT (_, objtype) -> [
       "type", json_of_objtype json_cx objtype
+    ]
+
+  | ClsT (_, clstype) -> [
+      "type", json_of_clstype json_cx clstype
     ]
 
   | ArrT (_, elemt, tuplet) -> [
@@ -1926,6 +1946,26 @@ and json_of_funtype_impl json_cx funtype = Json.(
   ])
 )
 
+and json_of_clstype json_cx = check_depth json_of_clstype_impl json_cx
+and json_of_clstype_impl json_cx clstype = Json.(
+  JAssoc [
+    "typeArgs", json_of_tmap json_cx clstype.ct_type_args;
+    "argPolarities", json_of_polarity_map json_cx clstype.ct_arg_polarities;
+    "fieldTypes",
+      (let tmap = IMap.find_unsafe clstype.ct_fields_tmap json_cx.cx.property_maps in
+       json_of_tmap json_cx tmap);
+    "methodTypes",
+      (let tmap = IMap.find_unsafe clstype.ct_methods_tmap json_cx.cx.property_maps in
+       json_of_tmap json_cx tmap);
+    "staticFieldTypes",
+      (let tmap = IMap.find_unsafe clstype.ct_sfields_tmap json_cx.cx.property_maps in
+       json_of_tmap json_cx tmap);
+    "staticMethodTypes",
+      (let tmap = IMap.find_unsafe clstype.ct_smethods_tmap json_cx.cx.property_maps in
+       json_of_tmap json_cx tmap);
+  ]
+)
+
 and json_of_insttype json_cx = check_depth json_of_insttype_impl json_cx
 and json_of_insttype_impl json_cx insttype = Json.(
   JAssoc [
@@ -2252,6 +2292,12 @@ let rec is_printed_type_parsable_impl weak cx enclosure = function
           )
         ) prop_map is_printable
 
+  (*
+   * TJP:  It ought to be anyway.  I think this stuff is useful for
+   * autocompletion, etc., so don't worry about it.  For now.
+   *)
+  | ClsT _ -> true
+
   | InstanceT _
     ->
       true
@@ -2482,6 +2528,10 @@ class ['a] type_visitor = object(self)
     let acc = self#type_ cx acc proto_t in
     acc
 
+  | ClsT (_, clstype) ->
+    let acc = self#cls_type cx acc clstype in
+    acc
+
   | ArrT (_, t, ts) ->
     let acc = self#type_ cx acc t in
     let acc = self#list (self#type_ cx) acc ts in
@@ -2618,6 +2668,14 @@ class ['a] type_visitor = object(self)
     let acc = self#smap (self#type_ cx) acc type_args in
     let acc = self#props cx acc fields_tmap in
     let acc = self#props cx acc methods_tmap in
+    acc
+
+  method private cls_type cx acc { ct_type_args; ct_fields_tmap; ct_methods_tmap; ct_sfields_tmap; ct_smethods_tmap; _ } =
+    let acc = self#smap (self#type_ cx) acc ct_type_args in
+    let acc = self#props cx acc ct_fields_tmap in
+    let acc = self#props cx acc ct_methods_tmap in
+    let acc = self#props cx acc ct_sfields_tmap in
+    let acc = self#props cx acc ct_smethods_tmap in
     acc
 
   method private export_types cx acc { exports_tmap; cjs_export } =

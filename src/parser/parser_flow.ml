@@ -2371,18 +2371,20 @@ end = struct
       }))
 
     let class_type env =
-      (*
-       * Missing handling for the optional name value prior to open bracket (for
-       * self references).
-       *)
       let start_loc = Peek.loc env in
       Expect.token env T_CLASS;
-      let obj_loc, c = Type._object ~allow_static:true env in
+      let id, typeParameters = match Peek.token env with
+        | T_EXTENDS -> error env (Error.UnexpectedToken T_EXTENDS); None, None
+        | T_LESS_THAN (*TJP: I like the prospect of syntax `class<T: A> {...}` for interfaces. Instead match expectations :( *)
+        | T_LCURLY -> None, None
+        | _ ->
+            let id = Some (Parse.identifier env) in
+            let typeParameters = Type.type_parameter_declaration env in
+            id, typeParameters in
+      let obj_loc, body = Type._object ~allow_static:true env in
       let loc = Loc.btwn start_loc obj_loc (* Do I need to dig out the right bound? *) in
-      let properties = c.Ast.Type.Object.properties in
-      let indexers = c.Ast.Type.Object.indexers in
-      if c.Ast.Type.Object.callProperties <> [] then error env (Error.CallableClass);
-      loc, Ast.Type.(Class Class.({ properties; indexers; }))
+      if body.Ast.Type.Object.callProperties <> [] then error env (Error.CallableClass);
+      loc, Ast.Type.(Class Class.({ id; typeParameters; body; }))
 
     let key = key ~allow_computed_key:false
   end
