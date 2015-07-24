@@ -53,26 +53,8 @@ let fmt_fun_kind = function
   | Ast.FAsync -> " isAsync"
   | Ast.FGenerator | Ast.FAsyncGenerator -> unimpl "generators"; assert false
 
-let emit_fun nenv x =
-  let f = Naming_heap.FunHeap.find_unsafe x in
-  let nb = Naming.func_body nenv f in
 
-  assert (f.f_user_attributes = [] &&
-          f.f_variadic = FVnonVariadic);
-
-  let env = new_env () in
-
-  let options = ["mayusevv"] in
-  let post = fmt_params f.f_params ^ fmt_fun_kind f.f_fun_kind in
-  let env = emit_enter env ".function" options (strip_ns x) post in
-  let env = emit_func_body env nb in
-  let env = run_cleanups env in
-  let env = emit_exit env in
-
-  get_output env
-
-(* XXX: *lots* of duplication from emit_fun *)
-let emit_method_ env ~is_static m name =
+let emit_method_or_func env ~is_method ~is_static m name =
   let env = start_new_function env in
   let nb = assert_named_body m.m_body in
 
@@ -82,14 +64,39 @@ let emit_method_ env ~is_static m name =
   let options = bool_option "abstract" m.m_abstract @
                 bool_option "final" m.m_final @
                 bool_option "static" is_static @
-                [fmt_visibility m.m_visibility; "mayusevv"] in
+                bool_option (fmt_visibility m.m_visibility) is_method @
+                ["mayusevv"] in
   let post = fmt_params m.m_params ^ fmt_fun_kind m.m_fun_kind in
-  let env = emit_enter env ".method" options name post in
+  let tag = if is_method then ".method" else ".function" in
+  let env = emit_enter env tag options name post in
   let env = emit_func_body env nb in
   let env = run_cleanups env in
   let env = emit_exit env in
   env
+
+let emit_method_ env ~is_static m name =
+  emit_method_or_func env ~is_method:true ~is_static m name
 let emit_method env ~is_static m = emit_method_ ~is_static env m (snd m.m_name)
+
+let emit_fun nenv x =
+  let f = Naming_heap.FunHeap.find_unsafe x in
+  let nb = Naming.func_body nenv f in
+  (* Make a dummy method structure so we can share code with method handling *)
+  let dummy_method = {
+    (* Things we don't really have *)
+    m_final = true; m_abstract = false; m_visibility = Public;
+    (* Copy the rest over *)
+    m_name = f.f_name; m_tparams = f.f_tparams; m_variadic = f.f_variadic;
+    m_params = f.f_params; m_body = NamedBody nb; m_fun_kind = f.f_fun_kind;
+    m_user_attributes = f.f_user_attributes; m_ret = f.f_ret } in
+
+  let env = new_env () in
+  let env =
+    emit_method_or_func env ~is_method:false ~is_static:false
+      dummy_method (strip_ns x) in
+  get_output env
+
+
 let emit_default_ctor env name abstract =
   let options = bool_option "abstract" abstract @ ["public"; "mayusevv"] in
   let env = emit_enter env ".method" options name (fmt_params []) in
