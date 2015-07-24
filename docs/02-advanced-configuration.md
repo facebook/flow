@@ -47,15 +47,15 @@ The `[options]` heading in a `.flowconfig` file can contain several key-value pa
 - `log.file` (string): the path to the log file (defaults to `/tmp/flow/<escaped root path>.log`)
 - `module.name_mapper` (regex -> string): specify a regular expression to match against module names, and a replacement value, separated by a `->`.
 
-  For example:
+    For example:
+    
+    ```
+    module.name_mapper: '^image![a-zA-Z0-9$_]+$' -> 'ImageStub'
+    ```
   
-  ```
-  module.name_mapper: '^image![a-zA-Z0-9$_]+$' -> 'ImageStub'
-  ```
+    makes Flow treat `require('image!foo.jpg')` as if it was `require('ImageStub')`.
   
-  makes Flow treat `require('image!foo.jpg')` as if it was `require('ImageStub')`.
-  
-  (**note:** you can specify `module.name_mapper` multiple times)
+    (**note:** you can specify `module.name_mapper` multiple times)
 
 - `module.system` (`node` | `haste`): the module system to use to resolve `import` and `require`
 
@@ -66,21 +66,21 @@ The `[options]` heading in a `.flowconfig` file can contain several key-value pa
 - `strip_root` (boolean): set this to `true` to always strip the root directory from file paths in error messages
 
 - `suppress_comment` (regex): defines a magical comment that suppresses any Flow errors on the following line. For example:
-
-  ```
-  suppress_comment: \\(.\\|\n\\)*\\$FlowFixMe
-  ```
+    
+    ```
+    suppress_comment: \\(.\\|\n\\)*\\$FlowFixMe
+    ```
+    
+    will match a comment like this:
   
-  will match a comment like this:
+    ```
+    // $FlowFixMe: suppressing this error until we can refactor
+    var x : string = 123;
+    ```
+    
+    and suppress the error. If there is no error on the next line (the suppresion is unnecessary), an "Unused suppression" error will be shown instead.
   
-  ```
-  // $FlowFixMe: suppressing this error until we can refactor
-  var x : string = 123;
-  ```
-  
-  and suppress the error. If there is no error on the next line (the suppresion is unnecessary), an "Unused suppression" error will be shown instead.
-  
-  **Note:** you can specify `suppress_comment` multiple times. We recommend defining something like `$FlowFixMe` (for type errors that need to be fixed) in addition to `$FlowIssue` (to suppress errors caused by bugs in Flow).
+    **Note:** you can specify `suppress_comment` multiple times. We recommend defining something like `$FlowFixMe` (for type errors that need to be fixed) in addition to `$FlowIssue` (to suppress errors caused by bugs in Flow).
 
 ### Example
 
