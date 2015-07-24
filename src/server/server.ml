@@ -39,9 +39,6 @@ struct
      * example *)
     let flow_options = OptionParser.parse () in
     Types_js.init_modes flow_options;
-    (* Force flowlib files to be extracted and their location saved before workers
-     * fork, so everyone can know about the same flowlib path. *)
-    ignore (Flowlib.get_flowlib_root ());
     ignore (Flow_js.master_cx ());
     ignore (Flow_js.builtins ());
     Parsing_service_js.call_on_success SearchService_js.update
