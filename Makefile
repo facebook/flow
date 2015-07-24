@@ -120,7 +120,7 @@ build-flow-stubs:
 
 build-flowlib-archive:
 	mkdir -p bin
-	tar czf bin/flowlib.tar.gz lib
+	cd lib && tar czf ../bin/flowlib.tar.gz ./* && cd ..
 
 copy-flow-files: build-flow $(FILES_TO_COPY)
 	mkdir -p bin
