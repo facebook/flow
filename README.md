@@ -19,7 +19,9 @@ Flow is written in OCaml (OCaml 4.01.0 or higher is required) and (on Linux) req
 
 For example, on Ubuntu 14.04 and similar systems:
 
-    sudo apt-get install ocaml libelf-dev
+```
+sudo apt-get install ocaml libelf-dev
+```
 
 Once you have these dependencies, building Flow just requires running
 
@@ -45,15 +47,15 @@ For example: `bash runtests.sh bin/flow class | grep -v 'Skipping directory'`
 
 Flow is simple to install: all you need is the `flow` binary on your PATH and you're good to go. 
 
-## Using Homebrew
+### Using Homebrew
 
-Flow for [Homebrew](http://brew.sh/) is available:
+Installing Flow with [Homebrew](http://brew.sh/) package manager:
 
 ```
 brew install flow
 ```
 
-## Using OPAM
+### Using OPAM
 
 You can also build and install flow via the OCaml [OPAM](https://opam.ocaml.org) package manager with one command:
 
@@ -77,7 +79,7 @@ Check out http://flowtype.org for documentation and examples.
 ## Join the Flow community
 * Website: [http://flowtype.org/](http://flowtype.org/)
 * irc: #flowtype on Freenode
-* Twitter: @flowtype and #flowtype to keep up with the latest Flow news.
+* Twitter: follow [@flowtype](https://twitter.com/flowtype) and [#flowtype](https://twitter.com/hashtag/flowtype) to keep up with the latest Flow news.
 
 ## License
 Flow is BSD-licensed. We also provide an additional patent grant.
