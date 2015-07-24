@@ -98,8 +98,9 @@ and Type : sig
 
   module Class : sig
     type t = {
-      properties: Type.Object.Property.t list;
-      indexers: Type.Object.Indexer.t list;
+      id: Identifier.t option;
+      typeParameters: Type.ParameterDeclaration.t option;
+      body: Type.Object.t;
     }
   end
 
