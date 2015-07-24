@@ -20,6 +20,18 @@ class L {
   }
 }
 
+function Sim(b: string) {
+  this.b = b;
+}
+
+Sim.create2 = function () {
+  return new L("a string");
+}
+
+Sim.prototype.someMethod = function (k: string): void {
+  this.b = k;
+}
+
 function newC<T: K | L>(i: T): T {
   if (i instanceof K) {
     return new i.constructor(5);
@@ -40,6 +52,10 @@ var k = new K(1);
 var kp = newC(k);
 var kpp = staticC(k);
 
-var ell = new L("asdf");
+var ell = new L("ell");
 var ellp = newC(ell);
 var ellpp = staticC(ell);
+
+ell.constructor = Sim;
+var s = new ell.constructor("s");
+s.someMethod("set"); // OK (if constructor assignment ever works)
