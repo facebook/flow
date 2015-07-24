@@ -114,6 +114,13 @@ let fmt_lval lval =
 (*** Environment manipulation ***)
 type label = string
 
+(* information we need to gather about a function while emitting it *)
+type function_props = {
+  is_pair_generator: bool;
+  (* I think this struct is likely to grow, and if it only has one element
+   * ocaml will warn when doing updates on it with "with"... *)
+  dummy_warning_suppression: unit;
+}
 type nonlocal_actions = {
   continue_action: is_initial:bool -> env -> env;
   break_action: is_initial:bool -> env -> env;
@@ -125,12 +132,17 @@ and env = {
   next_label: int;
   num_iterators: int;
   next_iterator: int; (* iterators allocated in a stack discipline *)
+  function_props: function_props;
   nonlocal: nonlocal_actions;
   cleanups: (env -> env) list;
   self_name: string option;
   parent_name: string option;
 }
 
+let default_function_props = {
+  is_pair_generator = false;
+  dummy_warning_suppression = ();
+}
 let empty_nonlocal_actions = {
   continue_action = (fun ~is_initial:_ _ -> assert false);
   break_action = (fun ~is_initial:_ _ -> assert false);
@@ -142,6 +154,7 @@ let new_env () = {
   next_label = 0;
   num_iterators = 0;
   next_iterator = 0;
+  function_props = default_function_props;
   nonlocal = empty_nonlocal_actions;
   cleanups = [];
   self_name = None;
@@ -222,8 +235,8 @@ let get_output env = String.concat "\n" (List.rev env.reversed_output)
 
 let collect_output env f arg =
   let old = env.reversed_output in
-  let env, res = f { env with reversed_output = [] } arg in
-  { env with reversed_output = old }, get_output env, res
+  let env = f { env with reversed_output = [] } arg in
+  { env with reversed_output = old }, get_output env
 
 (* Cleanup handling; unfortunate? *)
 (* XXX: doc rationale?? *)
@@ -339,6 +352,9 @@ let emit_AGetL =          emit_op1s   "AGetL"
 let emit_AGetC =          emit_op0    "AGetC"
 let emit_Await =          emit_op1i   "Await"
 let emit_IsTypeC =        emit_op1s   "IsTypeC"
+let emit_CreateCont =     emit_op0    "CreateCont"
+let emit_Yield =          emit_op0    "Yield"
+let emit_YieldK =         emit_op0    "YieldK"
 
 let emit_Switch env labels base bound =
   emit_op_strs env ["Switch"; fmt_str_vec labels; string_of_int base; bound]

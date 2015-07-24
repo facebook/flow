@@ -1,4 +1,4 @@
-(**
+(*
  * Copyright (c) 2015, Facebook, Inc.
  * All rights reserved.
  *
@@ -16,7 +16,17 @@ open Utils
 
 open Emitter_core
 
-let emit_func_body_code env body =
+let emit_generator_prologue env m =
+  match m.m_fun_kind with
+    | Ast.FGenerator | Ast.FAsyncGenerator ->
+      let env = emit_CreateCont env in
+      emit_PopC env
+    | Ast.FSync | Ast.FAsync -> env
+
+let emit_func_body_code env m =
+  let body = assert_named_body m.m_body in
+  let env = emit_generator_prologue env m in
+
   let acts = { empty_nonlocal_actions
                with return_action = Emitter_stmt.default_return_action } in
   let env, terminal =
@@ -24,10 +34,10 @@ let emit_func_body_code env body =
   let env = if terminal then env else
             Emitter_stmt.default_return_action
               ~has_value:false ~is_initial:true env in
-  env, ()
+  env
 
-let emit_func_body env body =
-  let env, output, () = collect_output env emit_func_body_code body in
+let emit_func_body env m =
+  let env, output = collect_output env emit_func_body_code m in
   (* output an iterator count *)
   let env = match env.num_iterators with 0 -> env
     | n -> emit_strs env [".numiters"; string_of_int n; ";"] in
@@ -48,28 +58,43 @@ let fmt_visibility vis =
   | Private -> "private"
   | Protected  -> "protected"
 
-let fmt_fun_kind = function
+(* XXX: HHVM outputs "isPairGenerator" as metadata here for things
+ * that yield pairs; this prevents the VM from assuming keys are
+ * integers when there is a yield without a key. The typechecker will
+ * prevent yielding without a key when we are generating pairs, so I
+ * think we can get away with this, but may want to do it anyways. *)
+let fmt_fun_tags env m =
+  (match m.m_fun_kind with
   | Ast.FSync -> ""
   | Ast.FAsync -> " isAsync"
-  | Ast.FGenerator | Ast.FAsyncGenerator -> unimpl "generators"; assert false
+  | Ast.FGenerator -> " isGenerator"
+  | Ast.FAsyncGenerator -> " isGenerator isAsync") ^
+  (if env.function_props.is_pair_generator then
+      " isPairGenerator" else "")
 
 
 let emit_method_or_func env ~is_method ~is_static m name =
   let env = start_new_function env in
-  let nb = assert_named_body m.m_body in
 
   assert (m.m_user_attributes = [] &&
           m.m_variadic = FVnonVariadic);
+
+  (* We actually emit the body first, but save the output, so we can
+   * gather data on what occurs in the function. *)
+  let env, body_output =
+    collect_output env
+      (fun env -> with_indent env (env.indent+1) emit_func_body) m in
+
 
   let options = bool_option "abstract" m.m_abstract @
                 bool_option "final" m.m_final @
                 bool_option "static" is_static @
                 bool_option (fmt_visibility m.m_visibility) is_method @
                 ["mayusevv"] in
-  let post = fmt_params m.m_params ^ fmt_fun_kind m.m_fun_kind in
+  let post = fmt_params m.m_params ^ fmt_fun_tags env m in
   let tag = if is_method then ".method" else ".function" in
   let env = emit_enter env tag options name post in
-  let env = emit_func_body env nb in
+  let env = emit_str_raw env body_output in
   let env = run_cleanups env in
   let env = emit_exit env in
   env

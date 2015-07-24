@@ -507,6 +507,25 @@ and emit_expr env (_, expr_ as expr) =
     let env = emit_Await env env.next_iterator in
     emit_label env skip_label
 
+  | Yield af ->
+    (match af with
+    | AFvalue e ->
+      let env = emit_expr env e in
+      emit_Yield env
+    | AFkvalue (ek, ev) ->
+      (* mark that we are a pair generator *)
+      let function_props =
+        { env.function_props with is_pair_generator = true } in
+      let env = { env with function_props } in
+
+      let env = emit_expr env ek in
+      let env = emit_expr env ev in
+      emit_YieldK env)
+
+  (* Just return null *)
+  | Yield_break ->
+    env.nonlocal.return_action ~is_initial:true ~has_value:false env
+
   | Shape _
   | ValCollection _
   | KeyValCollection _
@@ -518,8 +537,6 @@ and emit_expr env (_, expr_ as expr) =
   | Method_caller _
   | Smethod_id _
   | Special_func _
-  | Yield_break
-  | Yield _
   | InstanceOf _
   | Efun _
   | Xml _
