@@ -2351,8 +2351,8 @@ module.exports = {
     // Regression test: "/*" should be allowed inside block comments
     '/* /* */': {
       'comments': [{
-        type: 'Block',
-        value: ' /* ',
+        'type': 'Block',
+        'value': ' /* ',
       }]
     },
   }

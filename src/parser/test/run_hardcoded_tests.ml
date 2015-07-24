@@ -115,6 +115,9 @@ end = struct
           ) rest child in
           (name, tree)
         end
+    | Property (loc, _) ->
+      prerr_endline ("ERROR: unexpected spec format at " ^ (Loc.string loc));
+      exit 1
     | _ -> prerr_endline "ERROR: unexpected spec format"; exit 1
   )
 
