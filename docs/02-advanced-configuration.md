@@ -78,7 +78,7 @@ The `[options]` heading in a `.flowconfig` file can contain several key-value pa
   var x : string = 123;
   ```
   
-  and suppress the error.
+  and suppress the error. If there is no error on the next line (the suppresion is unnecessary), an "Unused suppression" error will be shown instead.
   
   **Note:** you can specify `suppress_comment` multiple times. We recommend defining something like `$FlowFixMe` (for type errors that need to be fixed) in addition to `$FlowIssue` (to suppress errors caused by bugs in Flow).
 
