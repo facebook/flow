@@ -1500,7 +1500,7 @@ and new_object ~check_not_abstract p env c el uel =
                 type_expansions = [];
                 substs = SMap.empty;
                 this_ty = obj_ty;
-                from_class = Some CIstatic;
+                from_class = None;
               } in
               let _, ce_type = Phase.localize ~ety_env env ce.ce_type in
               ignore (check_abstract_parent_meth SN.Members.__construct p ce_type)
@@ -2821,9 +2821,8 @@ and obj_get_ ~is_method ~nullsafe env ty1 cid (p, s as id)
       | (Tmixed | Tarray (_, _) | Tprim _ | Toption _
             | Tvar _ | Tabstract (_, _) | Ttuple _ | Tanon (_, _)
             | Tfun _ | Tunresolved _ | Tshape _) as ty ->
-        let ty = Typing_print.error ty in
-        let r = Reason.to_string ("This is "^ty) (fst ety1) in
-        Errors.non_object_member s p r;
+        Errors.non_object_member
+          s p (Typing_print.error ty) (Reason.to_pos (fst ety1));
         env, (fst ety1, Tany), None
   end
 

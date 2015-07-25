@@ -36,7 +36,7 @@ let (sub_type_ref: sub_type ref) = ref not_implemented
 let sub_type x = !sub_type_ref x
 
 type expand_typeconst =
-  expand_env -> Env.env -> Reason.t -> decl ty -> Nast.sid list ->
+  expand_env -> Env.env -> Reason.t -> locl ty -> Nast.sid list ->
   Env.env * ety
 let (expand_typeconst_ref: expand_typeconst ref) = ref not_implemented
 let expand_typeconst x = !expand_typeconst_ref x
