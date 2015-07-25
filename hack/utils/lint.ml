@@ -30,6 +30,10 @@ type 'a t = {
   severity : severity;
   pos : 'a Pos.pos;
   message : string;
+  (* Normally, lint warnings and lint advice only get shown by arcanist if the
+   * lines they are raised on overlap with lines changed in a diff. This
+   * flag bypasses that behavior *)
+  bypass_changed_lines : bool;
 }
 
 let (lint_list: Relative_path.t t list option ref) = ref None
@@ -37,23 +41,23 @@ let (lint_list: Relative_path.t t list option ref) = ref None
 let get_code {code; _} = code
 let get_pos {pos; _} = pos
 
-let add code severity pos message =
+let add ?(bypass_changed_lines=false) code severity pos message =
   if !Errors.is_hh_fixme pos code then () else begin
-    let lint = { code; severity; pos; message } in
+    let lint = { code; severity; pos; message; bypass_changed_lines } in
     match !lint_list with
     | Some lst -> lint_list := Some (lint :: lst)
     (* by default, we ignore lint errors *)
     | None -> ()
   end
 
-let to_absolute {code; severity; pos; message} =
-  {code; severity; pos = Pos.to_absolute pos; message}
+let to_absolute ({pos; _} as lint) =
+  {lint with pos = Pos.to_absolute pos}
 
 let to_string lint =
   let code = Errors.error_code_to_string lint.code in
   Printf.sprintf "%s\n%s (%s)" (Pos.string lint.pos) lint.message code
 
-let to_json {pos; code; severity; message} =
+let to_json {pos; code; severity; message; bypass_changed_lines} =
   let open Hh_json in
   let line, scol, ecol = Pos.info_pos pos in
   JAssoc [ "descr", JString message;
@@ -62,7 +66,8 @@ let to_json {pos; code; severity; message} =
            "line",  JInt line;
            "start", JInt scol;
            "end",   JInt ecol;
-           "code",  JInt code
+           "code",  JInt code;
+           "bypass_changed_lines", JBool bypass_changed_lines;
          ]
 
 module Codes = struct
