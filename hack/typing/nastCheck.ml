@@ -404,13 +404,14 @@ and check_is_trait env (h : hint) =
 
 and interface c =
   let enforce_no_body = begin fun m ->
-    (match m.m_body with
-      | UnnamedBody { fub_ast = [] ; _}
-      | NamedBody { fnb_nast = [] ; _} ->
-        if m.m_visibility <> Public
-        then Errors.not_public_interface (fst m.m_name)
-        else ()
-      | _ -> Errors.abstract_body (fst m.m_name)) end in
+    match m.m_body with
+    | UnnamedBody { fub_ast = [] ; _}
+    | NamedBody { fnb_nast = [] ; _} ->
+      if m.m_visibility <> Public
+      then Errors.not_public_interface (fst m.m_name)
+      else ()
+    | _ -> Errors.abstract_body (fst m.m_name)
+  end in
   (* make sure that interfaces only have empty public methods *)
   List.iter enforce_no_body (c.c_static_methods @ c.c_methods);
   (* make sure constructor has no body *)

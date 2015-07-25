@@ -105,6 +105,7 @@ let check_types_for_const env parent_type class_type =
     | (_, _) ->
       (* types should be the same *)
       ignore (Phase.unify_decl env parent_type class_type)
+
 (* An abstract member can be declared in multiple ancestors. Sometimes these
  * declarations can be different, but yet compatible depending on which ancestor
  * we inherit the member from. For example:
@@ -172,7 +173,7 @@ let check_members check_private env parent_class class_ parent_members members =
     | Some class_elt  ->
       check_override env parent_class class_ parent_class_elt class_elt
     | None -> ()
- end parent_members
+  end parent_members
 
 (*****************************************************************************)
 (* Before checking that a class implements an interface, we have to
@@ -294,7 +295,7 @@ let tconst_subsumption env parent_typeconst child_typeconst =
 (* For type constants we need to check that a child respects the
  * constraints specified by its parent.  *)
 let check_typeconsts env parent_class class_ =
-    let parent_pos, parent_class, _ = parent_class in
+  let parent_pos, parent_class, _ = parent_class in
   let pos, class_, _ = class_ in
   let ptypeconsts = parent_class.tc_typeconsts in
   let typeconsts = class_.tc_typeconsts in

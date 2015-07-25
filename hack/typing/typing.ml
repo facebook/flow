@@ -3477,11 +3477,11 @@ and condition env tparamet =
               (_, Null), e)
   | r, Binop ((Ast.Eqeq | Ast.EQeqeq as bop),
               e, (_, Null)) when not tparamet ->
-                let env, x_ty = expr env e in
-                let env, x_ty = Env.expand_type env x_ty in
-                let env =
-                  if bop == Ast.Eqeq then check_null_wtf env r x_ty else env in
-                condition_var_non_null env e
+      let env, x_ty = expr env e in
+      let env, x_ty = Env.expand_type env x_ty in
+      let env =
+        if bop == Ast.Eqeq then check_null_wtf env r x_ty else env in
+      condition_var_non_null env e
   | (p, (Lvar _ | Obj_get _ | Class_get _) as e) ->
       let env, ty = expr env e in
       let env, ety = Env.expand_type env ty in
@@ -3590,11 +3590,11 @@ and condition env tparamet =
       end
   | _, Binop ((Ast.Eqeq | Ast.EQeqeq), e, (_, Null))
   | _, Binop ((Ast.Eqeq | Ast.EQeqeq), (_, Null), e) ->
-    let env, _ = expr env e in
-    env
+      let env, _ = expr env e in
+      env
   | e ->
-    let env, _ = expr env e in
-    env
+      let env, _ = expr env e in
+      env
 
 and is_instance_var = function
   | _, (Lvar _ | This) -> true

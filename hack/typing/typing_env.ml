@@ -46,7 +46,7 @@ type local_env = fake_members * local IMap.t
 
 type env = {
   pos     : Pos.t      ;
-  tenv    : locl ty  IMap.t ;
+  tenv    : locl ty IMap.t ;
   subst   : int IMap.t ;
   lenv    : local_env  ;
   genv    : genv       ;
@@ -260,9 +260,9 @@ and debugl stack env x =
 let debug env ty = debug ISet.empty env ty; print_newline()
 
 let empty_fake_members = {
-    last_call = None;
-    invalid   = SSet.empty;
-    valid     = SSet.empty;
+  last_call = None;
+  invalid   = SSet.empty;
+  valid     = SSet.empty;
 }
 
 let empty_local = empty_fake_members, IMap.empty

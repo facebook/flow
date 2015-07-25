@@ -21,9 +21,9 @@ let lock_fds = ref SMap.empty
  *)
 
 let lock_name root file =
-    let tmp_dir = Tmp.get_dir () in
-    let root_part = Path.slash_escaped_string_of_path root in
-    Printf.sprintf "%s/%s.%s" tmp_dir root_part file
+  let tmp_dir = Tmp.get_dir () in
+  let root_part = Path.slash_escaped_string_of_path root in
+  Printf.sprintf "%s/%s.%s" tmp_dir root_part file
 
 let register_lock lock_file =
   Sys_utils.with_umask 0o111 begin fun () ->
