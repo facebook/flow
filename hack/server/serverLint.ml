@@ -43,15 +43,7 @@ let lint _acc fnl =
     let errs, () =
       Lint.do_ begin fun () ->
         Errors.ignore_ begin fun () ->
-          let {Parser_hack.file_mode; comments; ast} =
-            Parser_hack.from_file fn in
-          let funs, classes, typedefs, consts = Ast_utils.get_defs ast in
-          Parser_heap.ParserHeap.add fn ast;
-          (* naming and typing currently don't produce any lint errors *)
-          let fi =
-            {FileInfo.file_mode; funs; classes; typedefs; consts; comments;
-             consider_names_just_for_autoload = false} in
-          Linting_service.lint fn fi
+          Linting_service.lint fn (Sys_utils.cat (Relative_path.to_absolute fn))
         end
       end in
     errs @ acc

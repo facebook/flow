@@ -189,11 +189,11 @@ module ElaborateDefs = struct
     | Typedef t -> nsenv, [Typedef {t with
         t_id = elaborate_id_no_autos nsenv t.t_id;
         t_namespace = nsenv;
-    }]
+      }]
     | Constant cst -> nsenv, [Constant {cst with
         cst_name = elaborate_id_no_autos nsenv cst.cst_name;
         cst_namespace = nsenv;
-    }]
+      }]
     | other -> nsenv, [other]
 
   and program nsenv p =
