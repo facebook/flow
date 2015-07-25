@@ -2372,9 +2372,10 @@ end = struct
 
     let class_type env =
       let start_loc = Peek.loc env in
+      let name = Peek.value env in
       Expect.token env T_CLASS;
       let id, typeParameters = match Peek.token env with
-        | T_EXTENDS -> error env (Error.UnexpectedToken T_EXTENDS); None, None
+        | T_EXTENDS -> error env (Error.UnexpectedToken name); None, None
         | T_LESS_THAN (*TJP: I like the prospect of syntax `class<T: A> {...}` for interfaces. Instead match expectations :( *)
         | T_LCURLY -> None, None
         | _ ->
