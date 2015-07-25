@@ -13,12 +13,8 @@
 (* Handling where our temporary files go *)
 (*****************************************************************************)
 
-let temp_dir_name =
-  let dir = Filename.temp_dir_name in
-  if dir.[String.length dir - 1] <> '/' then dir ^ "/" else dir
-
 let get_dir () =
-  let tmp_dir = temp_dir_name ^ SysConfig.temp_base in
+  let tmp_dir = "/tmp/" ^ SysConfig.temp_base in
   (* Emulate "mkdir -p", i.e., no error if already exists. *)
   Sys_utils.with_umask 0 begin fun () ->
     (* Don't set sticky bit since the socket opening code wants to remove any
