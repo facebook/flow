@@ -69,7 +69,9 @@ let connect_once root =
         get_cstate (ic, oc) >>= verify_cstate ic >>= fun () ->
         Ok (ic, oc)
       end
-  with _ ->
+  with
+  | Exit_status.Exit_with _  as e -> raise e
+  | _ ->
     if not (server_exists root) then Result.Error Server_missing
     else if not (Lock.check root "init")
     then Result.Error Server_initializing
