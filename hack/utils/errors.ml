@@ -348,6 +348,7 @@ module Typing                               = struct
   let local_variable_modifed_and_used       = 4143 (* DONT MODIFY!!!! *)
   let local_variable_modifed_twice          = 4144 (* DONT MODIFY!!!! *)
   let assign_during_case                    = 4145 (* DONT MODIFY!!!! *)
+  let access_abstract_typeconst             = 4146 (* DONT MODIFY!!!! *)
   (* EXTEND HERE WITH NEW VALUES IF NEEDED *)
 end
 
@@ -1022,6 +1023,12 @@ let invalid_shape_remove_key p =
   add Typing.invalid_shape_remove_key p
     "You can only unset fields of local variables"
 
+let access_abstract_typeconst class_ pos tconst decl_pos =
+  let name = strip_ns @@ class_^"::"^tconst in
+  add_list Typing.access_abstract_typeconst
+    [pos, "Cannot directly access the abstract type constant "^name;
+     decl_pos, name^" was declared abstract here"]
+
 let explain_constraint p_inst pos name (error : error) =
   let inst_msg = "Some type constraint(s) here are violated" in
   let code, msgl = error in
@@ -1534,15 +1541,11 @@ let null_member s pos r =
 ] @ r
 )
 
-let non_object_member s pos1 ty pos2 =
-  add_list Typing.non_object_member [
-  pos1,
-  ("You are trying to access the member "^s^
-   " but this is not an object, it is "^
-   ty);
-  pos2,
-  "Check this out"
-]
+let non_object_member s pos1 r =
+  let msg =
+    "You are trying to access the member "^s^" but this is not an object." in
+  add_list Typing.non_object_member
+    ((pos1, msg)::r)
 
 let null_container p null_witness =
   add_list Typing.null_container (

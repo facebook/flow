@@ -92,6 +92,12 @@ type env = expand_env
 (*****************************************************************************)
 
 let rec localize_with_env ~ety_env env (dty: decl ty) =
+  let try_expand f =
+    Errors.try_add_err
+      (Reason.to_pos (fst dty))
+      ("Error while expanding "^Typing_print.error (snd dty)^":")
+      f
+      (fun () -> env, (ety_env, (fst dty, Tany))) in
   match dty with
   | _, (Tany | Tmixed | Tprim _ ) as x -> env, (ety_env, x)
   | r, Tthis ->
@@ -146,8 +152,11 @@ let rec localize_with_env ~ety_env env (dty: decl ty) =
      let env, ft = localize_ft ~ety_env env ft in
      env, (ety_env, (r, Tfun ft))
   | r, Tapply ((_, x), argl) when Env.is_typedef x ->
-     let env, argl = lfold (localize ~ety_env) env argl in
-     TUtils.expand_typedef ety_env env r x argl
+      try_expand
+        (fun () ->
+          let env, argl = lfold (localize ~ety_env) env argl in
+          TUtils.expand_typedef ety_env env r x argl
+        )
   | r, Tapply (cls, tyl) ->
      let env, tyl = lfold (localize ~ety_env) env tyl in
      env, (ety_env, (r, Tclass (cls, tyl)))
@@ -155,8 +164,7 @@ let rec localize_with_env ~ety_env env (dty: decl ty) =
      let env, tyl = lfold (localize ~ety_env) env tyl in
      env, (ety_env, (r, Ttuple tyl))
   | r, Taccess (root_ty, ids) ->
-      let env, root_ty = localize ~ety_env env root_ty in
-      TUtils.expand_typeconst ety_env env r root_ty ids
+      try_expand (fun () -> TUtils.expand_typeconst ety_env env r root_ty ids)
   | r, Tshape (fields_known, tym) ->
      let env, tym = ShapeMap.map_env (localize ~ety_env) env tym in
      env, (ety_env, (r, Tshape (fields_known, tym)))

@@ -36,21 +36,24 @@ type env = {
    * is the constrained type then the final type will also be a dependent type.
    *)
   dep_tys : (Reason.t * dependent_type) list;
+  orig_root : decl ty;
   (* The remaining type constants we need to expand *)
-  ids : Nast.sid list;
+  ids : Nast.sid list * Nast.sid list;
 }
 
-let empty_env env ety_env ids = {
+let empty_env env ety_env orig_root ids = {
   tenv = env;
   ety_env = ety_env;
   trail = [];
   seen_tvar = ISet.empty;
   dep_tys = [];
-  ids = ids;
+  orig_root = orig_root;
+  ids = [], ids;
 }
 
-let rec expand_with_env ety_env env reason root ids =
-  let env = empty_env env ety_env ids in
+let rec expand_with_env ety_env env reason orig_root ids =
+  let env, (ety_env, root) = Phase.localize_with_env ~ety_env env orig_root in
+  let env = empty_env env ety_env orig_root ids in
   let env, (root_r, root_ty) = expand_ env root in
   let trail = env.trail
               |> List.rev
@@ -68,7 +71,6 @@ let rec expand_with_env ety_env env reason root ids =
 
 and expand env r (root, ids) =
   let ety_env = Phase.env_with_self env in
-  let env, (ety_env, root) = Phase.localize_with_env ~ety_env env root in
   let env, (_, ty) = expand_with_env ety_env env r root ids in
   env, ty
 
@@ -80,18 +82,41 @@ and expand env r (root, ids) =
  * we do not recurse infinitely.
  *)
 and expand_ env (root_reason, root_ty as root) =
+  let taccess () =
+    let ty = Taccess (env.orig_root, List.rev @@ fst env.ids) in
+    Typing_print.error ty in
   match env.ids with
-  | [] ->
+  | _, [] ->
       env, root
-  | head::tail -> begin match root_ty with
+  | expanded_ids, head::tail -> begin match root_ty with
       | Tany -> env, root
       | Tabstract (AKdependent (`cls _, []), Some ty)
       | Tabstract (AKnewtype (_, _), Some ty) | Toption ty -> expand_ env ty
       | Tclass ((class_pos, class_name), _) ->
           let env, ty =
-            create_root_from_type_constant
-              env class_pos class_name root head in
-          expand_ { env with ids = tail } ty
+            Errors.try_
+              (fun () -> create_root_from_type_constant
+                env class_pos class_name root head)
+              begin fun error ->
+                let root = Typing_print.error root_ty in
+                let explain pos x =
+                  let msg = pos, "We believe "^x^" expands to "^root
+                                 ^" for the following reason:" in
+                  let msgl = Reason.to_string ("This is "^root) root_reason in
+                  msg::msgl in
+                let msgl =
+                  match env.orig_root, expanded_ids with
+                  | (r, Tthis), [] ->
+                      explain (Reason.to_pos r) (Typing_print.error Tthis)
+                  | (r, _), (last_pos, _)::_ ->
+                      let pos = Pos.btw (Reason.to_pos r) last_pos in
+                      explain pos (taccess ())
+                  | _ -> [] in
+                Errors.explain_type_constant msgl error;
+                env, (root_reason, Tany)
+              end in
+          let ids = head::expanded_ids, tail in
+          expand_ { env with ids } ty
       | Tabstract (AKgeneric (s, _), Some ty) ->
           (* Expanding a generic creates a dependent type *)
           let dep_ty = `cls s, [] in
@@ -119,7 +144,11 @@ and expand_ env (root_reason, root_ty as root) =
       | Tarray (_, _) | Tfun _ | Tabstract (_, _) ->
           let pos, tconst = head in
           let ty = Typing_print.error root_ty in
-          Errors.non_object_member tconst (Reason.to_pos root_reason) ty pos;
+          let reason =
+            Reason.to_string
+              ("This is "^ty^" (resulting from expanding "^taccess()^")")
+              root_reason in
+          Errors.non_object_member tconst pos reason;
           env, (root_reason, Tany)
      end
 
@@ -137,7 +166,7 @@ and create_root_from_type_constant env class_pos class_name root_ty (pos, tconst
   | Some (env, typeconst) ->
       let env =
         { env with
-          trail = (`cls class_name, List.map snd env.ids)::env.trail } in
+          trail = (`cls class_name, List.map snd (snd env.ids))::env.trail } in
       let ety_env = { env.ety_env with this_ty = root_ty; from_class = None } in
       begin
         match typeconst with
@@ -153,6 +182,10 @@ and create_root_from_type_constant env class_pos class_name root_ty (pos, tconst
                 from_class = None; } in
             let tenv, ty = Phase.localize ~ety_env env.tenv ty in
             { env with dep_tys = []; tenv = tenv }, ty
+        | { ttc_type = None; _ } when env.dep_tys = [] ->
+            let decl_pos = fst typeconst.ttc_name in
+            Errors.access_abstract_typeconst class_name pos tconst decl_pos;
+            env, (Reason.Rwitness decl_pos, Tany)
         | {ttc_constraint = Some cstr; _} ->
             let tenv, cstr = Phase.localize ~ety_env env.tenv cstr in
             let dep_ty = Reason.Rwitness (fst typeconst.ttc_name),
@@ -192,7 +225,7 @@ and get_typeconst env class_pos class_name pos tconst =
      * with the remaining ids that we need to expand. If we encounter the same
      * class name + ids that means we have entered a cycle.
      *)
-    let cur_tconst = `cls class_name, List.map snd env.ids in
+    let cur_tconst = `cls class_name, List.map snd (snd env.ids) in
     let seen = ExprDepTy.to_string cur_tconst in
     let type_expansions = (pos, seen)::env.ety_env.type_expansions in
     if List.mem seen (List.map snd env.ety_env.type_expansions) then

@@ -63,6 +63,7 @@ module ErrorString = struct
     | Tapply ((_, x), _) -> "an object of type "^(strip_ns x)
     | Tobject            -> "an object"
     | Tshape _           -> "a shape"
+    | Taccess (root_ty, []) -> type_ (snd root_ty)
     | Taccess (root_ty, ids) -> tconst root_ty ids
     | Tthis -> "the type 'this'"
 
@@ -99,26 +100,15 @@ module ErrorString = struct
     | [x]     -> x
     | x :: rl -> x^" or "^unresolved_ rl
 
-  and tconst: type a. a ty -> _ -> _ = fun root_ty ids ->
-    let f x =
-      let x =
-        if String.contains x '<'
-        then "this"
-        else x
-      in
-      List.fold_left (fun acc (_, sid) -> acc^"::"^sid)
-        ("the type constant "^strip_ns x) ids in
-    match snd root_ty with
-    | Tgeneric (x, _) -> f x
-    | Tapply ((_, x), _) -> f x
-    | Tclass ((_, x), _) -> f x
-    | Tabstract (ak, _) -> f @@ AbstractKind.to_string ak
-    | Taccess _ as x ->
-        List.fold_left (fun acc (_, sid) -> acc^"::"^sid)
-          (type_ x) ids
-     | _ ->
-         "a type constant"
-
+  and tconst root_ty ids =
+    let root =
+      match snd root_ty with
+      | Tgeneric (x, _) -> x
+      | Tapply ((_, x), _) -> x
+      | Tthis -> "this"
+      | _ -> "_" in
+    List.fold_left (fun acc (_, sid) -> acc^"::"^sid)
+      ("the type constant "^strip_ns root) ids
 end
 
 (*****************************************************************************)

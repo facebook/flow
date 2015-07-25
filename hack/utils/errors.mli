@@ -188,7 +188,7 @@ val gena_expects_array : Pos.t -> Pos.t -> string -> unit
 val unify_error : (Pos.t * string) list -> (Pos.t * string) list -> unit
 val static_dynamic : Pos.t -> Pos.t -> string -> unit
 val null_member : string -> Pos.t -> (Pos.t * string) list -> unit
-val non_object_member : string -> Pos.t -> string -> Pos.t -> unit
+val non_object_member : string -> Pos.t -> (Pos.t * string) list -> unit
 val null_container : Pos.t -> (Pos.t * string) list -> unit
 val option_mixed : Pos.t -> unit
 val declared_covariant : Pos.t -> Pos.t -> (Pos.t * string) list -> unit
@@ -282,6 +282,7 @@ val abstract_concrete_override:
 val local_variable_modified_and_used : Pos.t -> Pos.t list -> unit
 val local_variable_modified_twice : Pos.t -> Pos.t list -> unit
 val assign_during_case : Pos.t -> unit
+val access_abstract_typeconst : string -> Pos.t -> string -> Pos.t -> unit
 
 val to_json : Pos.absolute error_ -> Hh_json.json
 val to_string : Pos.absolute error_ -> string
