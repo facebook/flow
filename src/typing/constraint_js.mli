@@ -35,7 +35,7 @@ module Type :
       | ClsT of reason * clstype
       | ArrT of reason * t * t list
 
-      | ClassT of t
+      | ShiftT of t
       | InstanceT of reason * static * super * insttype
 
       | OptionalT of t
@@ -181,13 +181,15 @@ module Type :
       mixins: bool;
       structural: bool;
     }
+    and prop_tmaps = {
+      fields: int;
+      methods: int;
+    }
     and clstype = {
       ct_type_args: t SMap.t;
       ct_arg_polarities: polarity SMap.t;
-      ct_fields_tmap: int;
-      ct_methods_tmap: int;
-      ct_sfields_tmap: int;
-      ct_smethods_tmap: int;
+      ct_props: prop_tmaps;
+      ct_statics: prop_tmaps option;
     }
     and exporttypes = {
       exports_tmap: int;

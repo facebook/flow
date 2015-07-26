@@ -74,8 +74,8 @@ module Type = struct
   | ClsT of reason * clstype
   | ArrT of reason * t * t list
 
-  (* type of a class *)
-  | ClassT of t
+  (* general mod for types *)
+  | ShiftT of t
   (* type of an instance of a class *)
   | InstanceT of reason * static * super * insttype
 
@@ -367,13 +367,16 @@ module Type = struct
     structural: bool;
   }
 
+  and prop_tmaps = {
+    fields: int;
+    methods: int;
+  }
+
   and clstype = {
     ct_type_args: t SMap.t;
     ct_arg_polarities: polarity SMap.t;
-    ct_fields_tmap: int;
-    ct_methods_tmap: int;
-    ct_sfields_tmap: int;
-    ct_smethods_tmap: int;
+    ct_props: prop_tmaps;
+    ct_statics: prop_tmaps option;
   }
 
   and exporttypes = {
@@ -941,7 +944,7 @@ let string_of_ctor = function
   | ObjT _ -> "ObjT"
   | ClsT _ -> "ClsT"
   | ArrT _ -> "ArrT"
-  | ClassT _ -> "ClassT"
+  | ShiftT _ -> "ShiftT"
   | InstanceT _ -> "InstanceT"
   | SummarizeT _ -> "SummarizeT"
   | SuperT _ -> "SuperT"
@@ -1035,8 +1038,16 @@ let rec reason_of_t = function
   | ArrT (reason,_,_)
       -> reason
 
-  | ClassT t ->
+(*
+ * TJP: This is a good bottleneck to find all things `ShiftT`.  Prefixes should
+ * probably be refined ("instance" is to "class", as "?" is to "interface").
+ *)
+  | ShiftT (ClsT _ as t) ->
+      prefix_reason "interface type: " (reason_of_t t)
+  | ShiftT (InstanceT _ as t) ->
       prefix_reason "class type: " (reason_of_t t)
+  | ShiftT t ->
+      prefix_reason "shifted type: " (reason_of_t t)
 
   | InstanceT (reason,_,_,_)
   | SuperT (reason,_)
@@ -1212,7 +1223,7 @@ let rec mod_reason_of_t f = function
   | ClsT (reason, ct) -> ClsT (f reason, ct)
   | ArrT (reason, t, ts) -> ArrT (f reason, t, ts)
 
-  | ClassT t -> ClassT (mod_reason_of_t f t)
+  | ShiftT t -> ShiftT (mod_reason_of_t f t)
   | InstanceT (reason, st, su, inst) -> InstanceT (f reason, st, su, inst)
   | SuperT (reason, inst) -> SuperT (f reason, inst)
   | ExtendsT (t, tc) -> ExtendsT (t, mod_reason_of_t f tc)
@@ -1417,7 +1428,7 @@ let rec type_printer override fallback enclosure cx t =
         spf "{%s%s}" props indexer
 
     | ClsT (reason, _) ->
-        desc_of_reason reason (*TJP: clone of InstanceT. I assume that InstanceT has a very robust reason; does ClsT?*)
+        desc_of_reason reason
 
     | ArrT (_, t, ts) ->
         (*(match ts with
@@ -1486,7 +1497,7 @@ let rec type_printer override fallback enclosure cx t =
         else "=" ^ type_s
 
     (* The following types are not syntax-supported *)
-    | ClassT t ->
+    | ShiftT (InstanceT _ as t) ->
         spf "[class: %s]" (pp EnclosureNone cx t)
 
     | TypeT (_, t) ->
@@ -1624,8 +1635,8 @@ and _json_of_t_impl json_cx t = Json.(
       "tupleType", JList (List.map (_json_of_t json_cx) tuplet)
     ]
 
-  | ClassT t -> [
-      "type", _json_of_t json_cx t
+  | ShiftT t -> [
+      "shifted", _json_of_t json_cx t
     ]
 
   | InstanceT (_, static, super, instance) -> [
@@ -1946,24 +1957,27 @@ and json_of_funtype_impl json_cx funtype = Json.(
   ])
 )
 
-and json_of_clstype json_cx = check_depth json_of_clstype_impl json_cx
-and json_of_clstype_impl json_cx clstype = Json.(
+and json_of_prop_tmaps json_cx prop_types= Json.(
   JAssoc [
-    "typeArgs", json_of_tmap json_cx clstype.ct_type_args;
-    "argPolarities", json_of_polarity_map json_cx clstype.ct_arg_polarities;
     "fieldTypes",
-      (let tmap = IMap.find_unsafe clstype.ct_fields_tmap json_cx.cx.property_maps in
+      (let tmap = IMap.find_unsafe prop_types.fields json_cx.cx.property_maps in
        json_of_tmap json_cx tmap);
     "methodTypes",
-      (let tmap = IMap.find_unsafe clstype.ct_methods_tmap json_cx.cx.property_maps in
-       json_of_tmap json_cx tmap);
-    "staticFieldTypes",
-      (let tmap = IMap.find_unsafe clstype.ct_sfields_tmap json_cx.cx.property_maps in
-       json_of_tmap json_cx tmap);
-    "staticMethodTypes",
-      (let tmap = IMap.find_unsafe clstype.ct_smethods_tmap json_cx.cx.property_maps in
+      (let tmap = IMap.find_unsafe prop_types.methods json_cx.cx.property_maps in
        json_of_tmap json_cx tmap);
   ]
+)
+
+and json_of_clstype json_cx = check_depth json_of_clstype_impl json_cx
+and json_of_clstype_impl json_cx clstype = Json.(
+  JAssoc ([
+    "typeArgs", json_of_tmap json_cx clstype.ct_type_args;
+    "argPolarities", json_of_polarity_map json_cx clstype.ct_arg_polarities;
+    "props", json_of_prop_tmaps json_cx clstype.ct_props;
+  ] @ (match clstype.ct_statics with
+      | None -> []
+      | Some statics -> ["statics", json_of_prop_tmaps json_cx statics])
+  )
 )
 
 and json_of_insttype json_cx = check_depth json_of_insttype_impl json_cx
@@ -2326,7 +2340,7 @@ let rec is_printed_type_parsable_impl weak cx enclosure = function
   | TypeT (_, t)
   | LowerBoundT t
   | UpperBoundT t
-  | ClassT t
+  | ShiftT (InstanceT _ as t)
     when weak
     ->
       is_printed_type_parsable_impl weak cx EnclosureNone t
@@ -2537,7 +2551,7 @@ class ['a] type_visitor = object(self)
     let acc = self#list (self#type_ cx) acc ts in
     acc
 
-  | ClassT t -> self#type_ cx acc t
+  | ShiftT t -> self#type_ cx acc t
 
   | InstanceT (_, static, super, insttype) ->
     let acc = self#type_ cx acc static in
@@ -2670,13 +2684,17 @@ class ['a] type_visitor = object(self)
     let acc = self#props cx acc methods_tmap in
     acc
 
-  method private cls_type cx acc { ct_type_args; ct_fields_tmap; ct_methods_tmap; ct_sfields_tmap; ct_smethods_tmap; _ } =
-    let acc = self#smap (self#type_ cx) acc ct_type_args in
-    let acc = self#props cx acc ct_fields_tmap in
-    let acc = self#props cx acc ct_methods_tmap in
-    let acc = self#props cx acc ct_sfields_tmap in
-    let acc = self#props cx acc ct_smethods_tmap in
+  method private prop_tmaps cx acc { fields; methods; } =
+    let acc = self#props cx acc fields in
+    let acc = self#props cx acc methods in
     acc
+
+  method private cls_type cx acc { ct_type_args; ct_props; ct_statics; _ } =
+    let acc = self#smap (self#type_ cx) acc ct_type_args in
+    let acc = self#prop_tmaps cx acc ct_props in
+    (match ct_statics with
+    | Some statics -> self#prop_tmaps cx acc statics
+    | None -> acc)
 
   method private export_types cx acc { exports_tmap; cjs_export } =
     let acc = self#props cx acc exports_tmap in
