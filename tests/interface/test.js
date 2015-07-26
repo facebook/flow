@@ -16,7 +16,11 @@ function m1(a: AI): number {
 }
 
 function sm1(a: AI): string {
-  return a.constructor.sMethod1();
+  return a.constructor.sMethodAsdf();
+  /*
+   * This passes?! It should map constructor to the class--I think that this is
+   * related to my unmerged PR.
+   */
   /*
    * `class` prefix on the type declaration clarifies that `constructor` exists
    * (ES6 default or spec'ed above).  For an object, the Object constructor
@@ -45,16 +49,17 @@ class A {
     return "a string";
   }
 }
-
+/*
 class B {
   method1(): string {
     return "no good";
   }
   static sMethod1(): number {
-    return "no good";
+    return 7;
   }
 }
-
+*/
+/*
 var a = new A();
 var n1: number = m1(a);
 var s1: string = sm1(a);
@@ -66,3 +71,4 @@ n1 = m1(b);
 s1 = sm1(b);
 s2 = cs1(B);
 n2 = cn1(B);
+*/
