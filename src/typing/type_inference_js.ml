@@ -761,7 +761,7 @@ let rec convert cx map = Ast.Type.(function
       (* Class<T> is the type of the class whose instances are of type T *)
       | "Class" ->
         check_type_param_arity cx loc typeParameters 1 (fun () ->
-          ClassT(convert cx map (List.hd typeParameters))
+          ShiftT(convert cx map (List.hd typeParameters))
         )
 
       | "Function" | "function" ->
@@ -809,7 +809,7 @@ let rec convert cx map = Ast.Type.(function
         let params = if typeParameters = []
           then None else Some typeParameters in
         let c = identifier ~for_type:true cx name loc in
-        mk_nominal_type cx reason map (c, params)
+        mk_nominal_type cx reason map (c, params) (*Abstract type yields TypeT(r, ClsT(...))*)
     )
 
   (* TODO: unsupported generators *)
@@ -875,7 +875,7 @@ let rec convert cx map = Ast.Type.(function
     ObjT (mk_reason "object type" loc,
       Flow_js.mk_objecttype ~flags dict pmap proto)
 
-  | loc, Class ({ Class.id; typeParameters; body; } as c) -> (* TJP: remove `Class.` prefix *)
+  | loc, Class ({ Class.id; typeParameters; body; } as c) ->
     let class_loc, name = extract_class_type_name loc c in
     let creason = mk_reason name loc in
     let typeparams, map, (sfmap, smmap, fmap, mmap) =
@@ -887,10 +887,14 @@ let rec convert cx map = Ast.Type.(function
     let cls_type = {
       ct_type_args = map;
       ct_arg_polarities;
-      ct_fields_tmap = Flow_js.mk_propmap cx fmap;
-      ct_methods_tmap = Flow_js.mk_propmap cx mmap;
-      ct_sfields_tmap = Flow_js.mk_propmap cx sfmap;
-      ct_smethods_tmap = Flow_js.mk_propmap cx smmap;
+      ct_props = {
+        fields = Flow_js.mk_propmap cx fmap;
+        methods = Flow_js.mk_propmap cx mmap;
+      };
+      ct_statics = Some {
+        fields = Flow_js.mk_propmap cx sfmap;
+        methods = Flow_js.mk_propmap cx smmap;
+      };
     } in
 
     if typeparams = []
@@ -900,11 +904,6 @@ let rec convert cx map = Ast.Type.(function
      * TJP: Verify that nonsealeds get indexer compatibility checked in addition
      * to method/field compatibility.  What is the trigger?  Emulate it with
      * ClsT
-     *)
-    (*
-     * TJP: Verify that `type_args` gets populated by Generic wrapping.  As of
-     * this writing, I haven't touched Generic.  That's fine, though; as a proof
-     * of concept, non-generics only is okay.
      *)
 
   | loc, Exists ->
@@ -1036,9 +1035,13 @@ and mk_singleton_boolean reason b =
  * in prep for main pass
  ********************************************************************)
 
+(*
+ * TJP: TODO: Attach interfaces to scopes (everything has been automagic--verify
+ * that Type.Class doesn't require any special treatment).
+ *)
+
 (* TODO: detect structural misuses abnormal control flow constructs *)
 and statement_decl cx = Ast.Statement.(
-(*TJP This generates a scope for declarations.  I don't think so, but by analogy I may need a Class handler.*)
   (* helpers *)
   let var_declarator cx (loc, { VariableDeclaration.Declarator.id; init }) =
     Ast.(match id with
@@ -3333,7 +3336,7 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
       (* TODO: require *)
       let argts = List.map (expression_or_spread cx) arguments in
       let reason = mk_reason "object" loc in
-      ClassT (spread_objects cx reason argts)
+      ShiftT (spread_objects cx reason argts)
 
   | Call {
       Call.callee = _, Identifier (_,
@@ -4371,7 +4374,7 @@ and react_create_class cx loc class_props = Ast.Expression.(
   let instance = InstanceT (reason_component,!static,super,itype) in
   Flow_js.flow cx (instance, this);
 
-  ClassT(instance)
+  ShiftT(instance)
 )
 
 (* given an expression found in a test position, notices certain
@@ -5218,7 +5221,7 @@ and mk_class = Ast.Class.(
   (* super: D<X> *)
   let extends = opt_map (expression cx) superClass, superTypeParameters in
   let super = mk_extends cx type_params_map extends in
-  let super_static = ClassT (super) in
+  let super_static = ShiftT (super) in
 
   let static_reason = prefix_reason "statics of " reason_c in
 
@@ -5370,9 +5373,9 @@ and mk_class = Ast.Class.(
 
   if (typeparams = [])
   then
-    ClassT this
+    ShiftT this
   else
-    PolyT(typeparams, ClassT this)
+    PolyT(typeparams, ShiftT this)
 )
 
 (* Processes a declare class. The fact that we process an interface the same way
@@ -5397,7 +5400,7 @@ and mk_interface cx reason_i typeparams map (sfmap, smmap, fmap, mmap) extends s
         Some c, typeParameters
   in
   let super = mk_extends cx map extends in
-  let super_static = ClassT(super) in
+  let super_static = ShiftT(super) in
 
   let static_reason = prefix_reason "statics of " reason_i in
 
@@ -5465,8 +5468,8 @@ and mk_interface cx reason_i typeparams map (sfmap, smmap, fmap, mmap) extends s
   let this = InstanceT (reason_i, static, super, instance) in
 
   if typeparams = []
-  then ClassT(this)
-  else PolyT (typeparams, ClassT(this))
+  then ShiftT(this)
+  else PolyT (typeparams, ShiftT(this))
 
 (* Given a function declaration and types for `this` and `super`, extract a
    signature consisting of type parameters, parameter types, parameter names,
