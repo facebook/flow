@@ -19,7 +19,11 @@ do
         [[ -z $filter || $name =~ $filter ]]
     then
         # check this dir
-        echo "Testing directory: ${name}"
+        if [ -t 1 ]; then
+          printf "\x1b[39;1m[ ] RUN:\x1b[39;0m  %s\x1b[0m\r" $name
+        else
+          printf "[ ] RUN:  %s\r" $name
+        fi
         out_file="${name}.out"
         err_file="${name}.err"
 
@@ -69,7 +73,11 @@ do
         if [ -s $diff_file ]
         then
             (( failed++ ))
-            echo "FAILED: ${name}"
+            if [ -t 1 ]; then
+              printf "\x1b[31;1m[✗] FAIL:\x1b[39;0m %s\x1b[0m\n" $name
+            else
+              printf "[✗] FAIL: %s\n" $name
+            fi
             cat $err_file
             if [ -t 1 ] ; then
                 esc=$(echo -e "\x1b")
@@ -80,17 +88,35 @@ do
             fi
         else
             (( passed++ ))
-            echo "PASSED: ${name}"
+            if [ -t 1 ]; then
+              printf "\x1b[32;1m[✓] PASS:\x1b[39;0m %s\x1b[0m\n" $name
+            else
+              printf "[✓] PASS: %s\n" $name
+            fi
             rm -f $out_file
             rm -f $err_file
             rm -f $diff_file
         fi
     else
         (( skipped++ ))
-        echo "Skipping directory: ${name}"
+        if [ -t 1 ]; then
+          printf "\x1b[33;1m[-] SKIP:\x1b[39;0m %s\x1b[0m\n" $name
+        else
+          printf "[-] SKIP: %s\n" $name
+        fi
     fi
     cd ../..
 done
 echo
-echo "Passed: ${passed}, Failed: ${failed}, Skipped: ${skipped}"
+if [ -t 1 ]; then
+  if [ $failed -eq 0 ]; then
+    printf "\x1b[39;1mPassed: %d, Failed: %d, Skipped: %d\x1b[0m\n" \
+      $passed $failed $skipped
+  else
+    printf "\x1b[39;1mPassed: %d, \x1b[37;41;1mFailed: %d\x1b[39;49;1m, Skipped: %d\x1b[0m\n" \
+      $passed $failed $skipped
+  fi
+else
+  echo "Passed: ${passed}, Failed: ${failed}, Skipped: ${skipped}"
+fi
 exit ${failed}
