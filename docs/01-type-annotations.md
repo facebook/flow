@@ -3,8 +3,8 @@ id: type-annotations
 title: Type Annotations
 layout: docs
 permalink: /docs/type-annotations.html
-prev: coming-soon.html
-next: base-types.html
+prev: quick-reference.html
+next: variables.html
 ---
 
 JavaScript is inherently a dynamically-typed language. As such, explicitly
@@ -19,7 +19,7 @@ var x = add(3, '0');
 console.log(x);
 {% endhighlight %}
 
-What is the value of `x`? `3`? `30`? `undefined`? The answer is `30`, and, in most
+What is the value of `x`? `3`? `"30"`? `undefined`? The answer is `"30"`, and, in most
 cases, this probably not the behavior you would prefer.
 
 Flow helps mitigate these sort of subtle bugs by trying to keep your code sane
@@ -31,10 +31,11 @@ Type annotations are generally prefixed by `:`. And they can be placed on
 function parameters, function return types and variable declarations. e.g.,
 
 {% highlight javascript linenos=table %}
-function foo(a: mixed, b: number): void { ... }
-var x: boolean;
+function foo(a: string, b: number): void { ... }
+var x: boolean = someBool;
 class Bar {
   y: string;
+  someMethod(a: number): string { ... }
 }
 {% endhighlight %}
 
@@ -69,9 +70,13 @@ Running the type checker against the above code will yield type errors
 since we have explicitly typed all parameters and variables.
 
 ```bbcode
+file.js:5:17,27: function call
+Error:
 file.js:5:24,26: string
 This type is incompatible with
-  file.js:2:34,39: number
+file.js:2:34,39: number
+
+Found 1 error
 ```
 
 ## Type Annotation Requirements
@@ -101,8 +106,7 @@ This type is incompatible with
 
 ### Module Boundaries
 
-However, explicit type annotations are required at all module boundaries.
-Flow's inference engine stops there.
+Flow requires annotations at the boundaries of modules. This allows Flow to analyze modules in isolation which improves the performance of checking types across module boundaries. Coincidentally we've found that this helps to improve the self-documenting nature of module interfaces as well
 
 {% highlight javascript linenos=table %}
 /**
@@ -125,9 +129,7 @@ var size = require('./Size');
 var result = size(null);
 {% endhighlight %}
 
-Type annotations are required in `Size.js` because `UseSize.js` is calling the
-`size()` function from outside the module and that crosses the inference
-boundary.
+Type annotations are required for the `size` function in `Size.js` because `UseSize.js` imports it and thus crosses the module boundary and isn't inferred.
 
 ```bbcode
 UseSize.js:6:19,22: null
@@ -135,7 +137,7 @@ This type is incompatible with
   Size.js:5:22,27: string
 ```
 
-## `any`
+## `any` Annotations
 
 `any` is a special type annotation that represents the universal dynamic type.
 `any` can flow to any other type, and vice-versa. `any` is basically the "get
@@ -145,5 +147,6 @@ in your way, but you know your program is correct.
 ## Bottom Line
 
 You can type annotate all your code. That would be the most expressive and
-self-documenting approach. However, Flow does a lot of type inference inside
-modules. It only requires type annotations across module boundaries.
+self-documenting approach. However, Flow does a lot of type inference for you to 
+alleviate this requirement when it becomes a burden. The only place that you must 
+annotate types is where those types go across module boundaries.
