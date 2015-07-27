@@ -21,9 +21,9 @@ let lock_fds = ref SMap.empty
  *)
 
 let name root file =
-    let tmp_dir = Tmp.get_dir () in
-    let root_part = Path.slash_escaped_string_of_path root in
-    Printf.sprintf "%s/%s.%s" tmp_dir root_part file
+  let tmp_dir = Tmp.get_dir () in
+  let root_part = Path.slash_escaped_string_of_path root in
+  Printf.sprintf "%s/%s.%s" tmp_dir root_part file
 
 let register_lock lock_file =
   Sys_utils.with_umask 0o111 begin fun () ->
@@ -56,12 +56,12 @@ let _operations lock_file op : bool =
             with _ ->
               false
           in
-          if not identical_file then begin
-            (* Looks like someone (tmpwatch?) deleted the lock file; just
-             * create another one *)
-            Unix.close fd;
-            register_lock lock_file
-          end else
+          if not identical_file then
+            (* Looks like someone (tmpwatch?) deleted the lock file; don't
+             * create another one, because our socket is probably gone too.
+             * We are dead in the water. *)
+            raise Exit
+          else
             fd
     in
     let _ = Unix.lockf fd op 1 in

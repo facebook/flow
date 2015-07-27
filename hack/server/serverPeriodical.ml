@@ -86,9 +86,15 @@ let exit_if_unused() =
 (*****************************************************************************)
 (* The registered jobs *)
 (*****************************************************************************)
-let init (root_dir:Path.t) =
+let init (root : Path.t) =
   let jobs = [
     Periodical.one_day  , exit_if_unused;
     Periodical.one_day  , Hhi.touch;
+    (* try_touch wraps Unix.utimes, which doesn't open/close any fds, so we
+     * won't lose our lock by doing this. *)
+    Periodical.one_day  ,
+      (fun () -> Sys_utils.try_touch (Lock.name root "lock"));
+    Periodical.one_day  ,
+      (fun () -> Sys_utils.try_touch (Socket.get_path root));
   ] in
   List.iter (fun (period, cb) -> Periodical.register_callback period cb) jobs

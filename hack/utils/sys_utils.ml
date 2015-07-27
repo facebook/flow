@@ -217,3 +217,6 @@ let write_file ~file s =
 
 let filemtime file =
   (Unix.stat file).Unix.st_mtime
+
+let try_touch file =
+  try Unix.utimes file 0.0 0.0 with _ -> ()
