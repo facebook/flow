@@ -6,9 +6,10 @@ type AI = class {
    * ES6 spec, or does the ctor remain unbound?  I think that it should remain
    * unbound.
    */
-  constructor(): void;
+//  constructor(): void;
   method1(): number;
   static sMethod1(): string;
+//  static sMethodK(): number;
 }
 
 function m1(a: AI): number {
@@ -32,8 +33,8 @@ function sm1(a: AI): string {
    */
 }
 
-function cs1(A: Class<AI>): string {
-  return A.sMethod1();
+function cs1(K: Class<Ap>): string {
+  return K.sMethod1();
 }
 
 function cn1(A: Class<AI>): number {
@@ -48,8 +49,17 @@ class A {
   static sMethod1(): string {
     return "a string";
   }
+  static unnecMethod(): number {
+    return 5;
+  }
 }
-/*
+
+class Ap extends A {
+  unnecMethod(): string {
+    return "boring";
+  }
+}
+
 class B {
   method1(): string {
     return "no good";
@@ -58,14 +68,13 @@ class B {
     return 7;
   }
 }
-*/
-/*
+
 var a = new A();
 var n1: number = m1(a);
 var s1: string = sm1(a);
 var s2: string = cs1(A);
+/*
 var n2: number = cn1(A);
-
 var b = new B();
 n1 = m1(b);
 s1 = sm1(b);

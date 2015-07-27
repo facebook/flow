@@ -2314,70 +2314,7 @@ let rec __flow cx (l, u) trace =
           then dictionary cx trace (string_key s reason1) t1 dict2
         );
       rec_flow cx trace (l, u_)
-(*
-    | (ObjT (reason1, {props_tmap = flds1; proto_t; flags; dict_t = dict1; _ }),
-       ObjT (reason2, {props_tmap = flds2; proto_t = u_; dict_t = dict2; _ }))
-      ->
-      (* if inflowing type is literal (thus guaranteed to be
-         unaliased), propertywise subtyping is sound *)
-      let desc1 = (desc_of_reason reason1) in
-      let lit =
-        (desc1 = "object literal")
-        || (desc1 = "function")
-        || (desc1 = "arrow function")
-        || (desc1 = "frozen object literal")
-        || (Str.string_match (Str.regexp ".*React") desc1 0)
-      in
 
-      (* If both are dictionaries, ensure the keys and values are compatible
-         with each other. *)
-      (match dict1, dict2 with
-        | Some {key = k1; value = v1; _}, Some {key = k2; value = v2; _} ->
-            dictionary cx trace k1 v1 dict2;
-            dictionary cx trace k2 v2 dict1
-        | _ -> ());
-
-      (* Properties in u must either exist in l, or match l's indexer. *)
-      iter_props_ cx flds2
-        (fun s -> fun t2 ->
-          if (not(has_prop cx flds1 s))
-          then
-            (* property doesn't exist in inflowing type *)
-            let reason2 = replace_reason (spf "property %s" s) reason2 in
-            match t2 with
-            | OptionalT t1 when flags.exact ->
-              (* if property is marked optional or otherwise has a maybe type,
-                 and if inflowing type is exact (i.e., it is not an
-                 annotation), then it is ok to relax the requirement that the
-                 property be found immediately; instead, we constrain future
-                 lookups of the property in inflowing type *)
-              dictionary cx trace (string_key s reason2) t1 dict1;
-              rec_flow cx trace (l, LookupT (reason2, None, s, t1))
-            | _ ->
-              (* otherwise, we do strict lookup of property in prototype *)
-              rec_flow cx trace (proto_t, LookupT (reason2, Some reason1, s, t2))
-          (* TODO: instead, consider extending inflowing type with s:t2 when it
-             is not sealed *)
-          else
-            let t1 = read_prop cx flds1 s in
-            flow_to_mutable_child cx trace lit t1 t2);
-      (* Any properties in l but not u must match indexer *)
-      iter_props_ cx flds1
-        (fun s -> fun t1 ->
-          if (not(has_prop cx flds2 s))
-          then dictionary cx trace (string_key s reason1) t1 dict2
-        );
-      rec_flow cx trace (l, u_)
-*)
-(*TJP: THIS IS THE SPOT*)
-(*    | ClsT,ClsT
-    | ClsT,ObjT (*TJP: This case will require sorting through constructor
-                  behavior--since it's in type space (immutable), I expect this
-                  to be very simple in the end.*)
-    | InstanceT,ClsT (*TJP: I think that this is the case buried within
-                       intersections that does the typical checking.*)
-    | ClassT,ClsT (*TJP: No big deal(?) Verify that the static props and instance props align*)
-*)
     | (InstanceT (reason1, _, super, { fields_tmap; methods_tmap; _ }),
        ObjT (reason2, {props_tmap = flds2; proto_t = u_; _ }))
       ->
@@ -2403,14 +2340,14 @@ let rec __flow cx (l, u) trace =
     (* TODO Try and remove this. We're not sure why this case should exist but
      * it does seem to be triggered in www. *)
     | (ObjT _,
-       InstanceT (reason1, _, super, {
+       InstanceT (_, _, super, {
          fields_tmap;
          methods_tmap;
          structural = false;
          _;
        }))
       ->
-      structural_subtype cx trace l (reason1, super, fields_tmap, methods_tmap)
+      structural_subtype cx trace l (super, fields_tmap, methods_tmap)
 
 
     (****************************************)
@@ -2481,6 +2418,61 @@ let rec __flow cx (l, u) trace =
     (* instances of classes follow declared hierarchy *)
     (**************************************************)
 
+    | InstanceT _, ClsT (_, { ct_props = { fields; methods; }; }) ->
+      let reason = reason_of_t l in
+      let fields_tmap = find_props cx fields in
+      let methods_tmap = find_props cx methods in
+      let props = SMap.union fields_tmap methods_tmap in
+      props |> SMap.iter
+          (fun name t ->
+            let lookup_reason = replace_reason (spf "property %s" name) (reason_of_t t) in
+            rec_flow cx trace (l, LookupT (lookup_reason, Some reason, name, t))
+          );
+
+(*TJP!!!: THIS IS THE SPOT*)
+(* Is AnnotT yielding this stuff backwards?  NO.  Lookup unification is
+   symmetrizing, resulting in the reverse direction.  Why is it unifing these
+   types?  Because Annot (ClsT) is messing up the `structural_subtyp` algorithm
+   below?  Some unspoken preconditions?
+*)
+
+    | ClsT (ct_reason, { ct_type_args; ct_arg_polarities; ct_statics = Some s; _; }),
+      InstanceT (_, statics, super, { fields_tmap; methods_tmap; })
+      ->
+      (*
+       * TJP: Verify that every instance member is a clst member.  This is
+       * insufficient, though.  The ClsT must also be a member of an
+       * intersection that contains a subtype of the InstanceT.
+       *)
+      Pervasives.print_endline "ClsT cannot flow into InstanceT--a strategy that accepts these may emerge around ClsT members of an Intersection";
+      (* TJP: Need `type_args` checking analogous to `flow_type_args` (I think
+         that `flow_type_args` exploits the existence of a common ancestor, so
+         this version will need to be more general :( *)
+      structural_subtype cx trace l (super, fields_tmap, methods_tmap);
+      let cls_statics = {
+        ct_type_args;
+        ct_arg_polarities;
+        ct_props = s;
+        ct_statics = None;
+      } in
+      let static_cls_t = ClsT (ct_reason, cls_statics) in
+      rec_flow cx trace (static_cls_t, statics)
+
+    | ClsT (ct_reason, { ct_props; ct_statics = None; _; }),
+      InstanceT (_, _, ShiftT (super), { fields_tmap; methods_tmap; })
+      ->
+      structural_subtype cx trace l (super, fields_tmap, methods_tmap);
+
+(*    | ClsT,ClsT
+    | ClsT,ObjT (*TJP: This case will require sorting through constructor
+                  behavior--since it's in type space (immutable), I expect this
+                  to be very simple in the end.*)
+    | InstanceT,ClsT (*TJP: I think that this is the case buried within
+                       intersections that does the typical checking.*)
+    | ClassT,ClsT (*TJP: No big deal(?) Verify that the static props and instance props align*)
+*)
+
+
     | (InstanceT (_, _, _, instance),
        InstanceT (_, _, _, instance_super))
       when not instance_super.structural
@@ -2494,7 +2486,7 @@ let rec __flow cx (l, u) trace =
       then
         flow_type_args cx trace instance instance_super
       else
-        rec_flow cx trace (super, u)
+        rec_flow cx trace (super, u) (*TJP: Recur up the inheritance hierarchy*)
 
     (***************************************************************)
     (* Enable structural subtyping for upperbounds like interfaces *)
@@ -2614,6 +2606,18 @@ let rec __flow cx (l, u) trace =
     (********************************************************)
     (* instances of classes may have their fields looked up *)
     (********************************************************)
+
+    | ClsT (reason_ct, { ct_props = { fields; methods}; }),
+      LookupT (_, _, x, t)
+      ->
+      let fields = find_props cx fields in
+      let methods = find_props cx methods in
+      (match SMap.get x (SMap.union fields methods) with
+      | None ->
+        rec_flow cx trace (MixedT reason_ct, u)
+      | Some tx ->
+        rec_unify cx trace t tx
+      );
 
     | InstanceT(reason, _, super, instance),
       LookupT (reason_op, strict, x, t)
@@ -3623,7 +3627,7 @@ and mk_strict sealed is_dict reason_o reason_op =
   then None
   else Some reason_o
 
-and structural_subtype cx trace lower (upper_reason, super, fields_tmap, methods_tmap) =
+and structural_subtype cx trace lower (super, fields_tmap, methods_tmap) =
   let lower_reason = reason_of_t lower in
   let fields_tmap = find_props cx fields_tmap in
   let methods_tmap = find_props cx methods_tmap in
@@ -3632,7 +3636,7 @@ and structural_subtype cx trace lower (upper_reason, super, fields_tmap, methods
   flds2 |> SMap.iter
       (fun s t2 ->
         let lookup_reason = replace_reason (spf "property %s" s) (reason_of_t t2) in
-        rec_flow cx trace (lower, LookupT (lookup_reason, Some lower_reason, s, t2))
+        rec_flow cx trace (lower, LookupT (lookup_reason, Some lower_reason, s, t2))  (*Lookup `s` on `lower` and unify its type with t2*)
       );
   rec_flow cx trace (lower, super)
 
@@ -4815,6 +4819,7 @@ and rec_unify cx trace t1 t2 =
   | (ArrT (_, t1, ts1), ArrT (_, t2, ts2)) ->
     array_unify cx trace (ts1,t1, ts2,t2)
 
+(*TJP: Examine this, and then generalize*)
   | (ObjT (reason1, {props_tmap = flds1; dict_t = dict1; _}),
      ObjT (reason2, {props_tmap = flds2; dict_t = dict2; _})) ->
 
@@ -4858,7 +4863,8 @@ and rec_unify cx trace t1 t2 =
    and we're missing some opportunities for nested unification. *)
 
 and naive_unify cx trace t1 t2 =
-  rec_flow cx trace (t1,t2); rec_flow cx trace (t2,t1)
+  rec_flow cx trace (t2,t1);
+  rec_flow cx trace (t1,t2)
 
 and flow_prop_to_dict cx trace k v dict prop_reason dict_reason =
   match dict with
