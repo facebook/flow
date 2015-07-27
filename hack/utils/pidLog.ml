@@ -13,7 +13,7 @@ let log_oc = ref None
 let init root =
   assert (!log_oc = None);
   Sys_utils.with_umask 0o111 begin fun () ->
-    log_oc := Some (open_out (Lock.lock_name root "pids"))
+    log_oc := Some (open_out (Lock.name root "pids"))
   end
 
 let log ?reason pid =
@@ -28,7 +28,7 @@ exception FailedToGetPids
 
 let get_pids root =
   try
-    let ic = open_in (Lock.lock_name root "pids") in
+    let ic = open_in (Lock.name root "pids") in
     let results = ref [] in
     begin try
       while true do

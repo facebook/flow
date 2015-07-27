@@ -20,10 +20,10 @@ let lock_fds = ref SMap.empty
  * 2. giving a way to hh_client to check if a server is running.
  *)
 
-let lock_name root file =
-  let tmp_dir = Tmp.get_dir () in
-  let root_part = Path.slash_escaped_string_of_path root in
-  Printf.sprintf "%s/%s.%s" tmp_dir root_part file
+let name root file =
+    let tmp_dir = Tmp.get_dir () in
+    let root_part = Path.slash_escaped_string_of_path root in
+    Printf.sprintf "%s/%s.%s" tmp_dir root_part file
 
 let register_lock lock_file =
   Sys_utils.with_umask 0o111 begin fun () ->
@@ -38,9 +38,8 @@ let register_lock lock_file =
  *
  * Returns true if the lock is/was available, false otherwise.
  *)
-let _operations root op file : bool =
+let _operations lock_file op : bool =
   try
-    let lock_file = lock_name root file in
     let fd = match SMap.get lock_file !lock_fds with
       | None -> register_lock lock_file
       | Some (fd, st) ->
@@ -73,20 +72,17 @@ let _operations root op file : bool =
 (**
  * Grabs the file lock and returns true if it the lock was grabbed
  *)
-let grab root file : bool =
-  _operations root Unix.F_TLOCK file
+let grab lock_file : bool = _operations lock_file Unix.F_TLOCK
 
 (**
  * Releases a file lock.
  *)
-let release root file : bool =
-  _operations root Unix.F_ULOCK file
+let release lock_file : bool = _operations lock_file Unix.F_ULOCK
 
 (**
  * Gets the server instance-unique integral fd for a given lock file.
  *)
-let fd_of root file : int =
-  let lock_file = lock_name root file in
+let fd_of lock_file : int =
   match SMap.get lock_file !lock_fds with
     | None -> -1
     | Some fd -> Obj.magic fd
@@ -95,5 +91,4 @@ let fd_of root file : int =
  * Check if the file lock is available without grabbing it.
  * Returns true if the lock is free.
  *)
-let check root file : bool =
-  _operations root Unix.F_TEST file
+let check lock_file : bool = _operations lock_file Unix.F_TEST

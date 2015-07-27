@@ -32,14 +32,14 @@ end = struct
     exit 1
 
   let grab_lock root =
-    if not (Lock.grab root "lock")
+    if not (Lock.grab (Lock.name root "lock"))
     then other_server_running()
 
   let grab_init_lock root =
-    ignore(Lock.grab root "init")
+    ignore(Lock.grab (Lock.name root "init"))
 
   let release_init_lock root =
-    ignore(Lock.release root "init")
+    ignore(Lock.release (Lock.name root "init"))
 
   (* This code is only executed when the options --check is NOT present *)
   let go options init_fun =
@@ -297,7 +297,7 @@ let serve genv env socket =
   let root = ServerArgs.root genv.options in
   let env = ref env in
   while true do
-    if not (Lock.grab root "lock") then
+    if not (Lock.grab (Lock.name root "lock")) then
       (Hh_logger.log "Lost lock; terminating.\n%!";
        HackEventLogger.lock_stolen root "lock";
        die());

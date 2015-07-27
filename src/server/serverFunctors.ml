@@ -49,14 +49,14 @@ end = struct
     exit 1
 
   let grab_lock root =
-    if not (Lock.grab root "lock")
+    if not (Lock.grab (Lock.name root "lock"))
     then other_server_running()
 
   let grab_init_lock root =
-    ignore(Lock.grab root "init")
+    ignore(Lock.grab (Lock.name root "init"))
 
   let release_init_lock root =
-    ignore(Lock.release root "init")
+    ignore(Lock.release (Lock.name root "init"))
 
   (* This code is only executed when the options --check is NOT present *)
   let go options init_fun =
@@ -162,10 +162,10 @@ end = struct
     let root = Options.root genv.options in
     let env = ref env in
     while true do
-      if not (Lock.check root "lock") then begin
+      if not (Lock.check (Lock.name root "lock")) then begin
         Hh_logger.log "Lost %s lock; reacquiring.\n" Program.name;
         FlowEventLogger.lock_lost root "lock";
-        if not (Lock.grab root "lock")
+        if not (Lock.grab (Lock.name root "lock"))
         then
           Hh_logger.log "Failed to reacquire lock; terminating.\n";
           FlowEventLogger.lock_stolen root "lock";

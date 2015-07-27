@@ -43,7 +43,7 @@ let start_server env =
   let rec wait_loop () =
     Unix.sigsuspend old_mask;
     (* NB: SIGUSR1 is now blocked again. *)
-    if env.wait && not (Lock.check env.root "init") then
+    if env.wait && not (Lock.check (Lock.name env.root "init")) then
       wait_loop ()
     else
       ()

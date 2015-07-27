@@ -14,7 +14,7 @@ type error =
   | Server_busy
   | Build_id_mismatch
 
-let server_exists root = not (Lock.check root "lock")
+let server_exists root = not (Lock.check (Lock.name root "lock"))
 
 let wait_on_server_restart ic =
   try
@@ -73,6 +73,6 @@ let connect_once root =
   | Exit_status.Exit_with _  as e -> raise e
   | _ ->
     if not (server_exists root) then Result.Error Server_missing
-    else if not (Lock.check root "init")
+    else if not (Lock.check (Lock.name root "init"))
     then Result.Error Server_initializing
     else Result.Error Server_busy
