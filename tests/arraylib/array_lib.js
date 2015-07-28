@@ -40,3 +40,12 @@ function reduce_test() {
     return a.concat(b);
   });
 }
+
+function from_test() {
+  var a: Array<string> = Array.from([1, 2, 3], function(val, index) {
+    return index % 2 ? "foo" : String(val);
+  });
+  var b: Array<string> = Array.from([1, 2, 3], function(val) {
+    return String(val);
+  });
+}
