@@ -60,8 +60,8 @@ module Type = struct
 
   (* TODO: constant types *)
 
-  | NumT of reason * number_literal option
-  | StrT of reason * literal
+  | NumT of reason * number_literal literal
+  | StrT of reason * string literal
   | BoolT of reason * bool option
   | UndefT of reason
   | MixedT of reason
@@ -315,7 +315,12 @@ module Type = struct
   (* e1.key === e2 *)
   | SentinelProp of string
 
-  and literal = string option
+  and 'a literal =
+    | Literal of 'a
+    | Truthy
+    | Falsy
+    | AnyLiteral
+
   and number_literal = (float * string)
 
   (* used by FunT and CallT *)
@@ -502,12 +507,12 @@ end
 
 module NumT = Primitive (struct
   let desc = "number"
-  let make r = NumT (r, None)
+  let make r = NumT (r, AnyLiteral)
 end)
 
 module StrT = Primitive (struct
   let desc = "string"
-  let make r = StrT (r, None)
+  let make r = StrT (r, AnyLiteral)
 end)
 
 module BoolT = Primitive (struct
@@ -1548,14 +1553,18 @@ let rec _json_of_t stack cx t = Json.(
 
   | NumT (_, lit) ->
     begin match lit with
-    | Some (_, raw) -> ["literal", JString raw]
-    | None -> []
+    | Literal (_, raw) -> ["literal", JString raw]
+    | Truthy
+    | Falsy
+    | AnyLiteral -> []
     end
 
   | StrT (_, lit) ->
     begin match lit with
-    | Some s -> ["literal", JString s]
-    | None -> []
+    | Literal s -> ["literal", JString s]
+    | Truthy
+    | Falsy
+    | AnyLiteral -> []
     end
 
   | BoolT (_, b) ->
@@ -2041,11 +2050,15 @@ and dump_t_ =
   let override stack cx t = match t with
     | OpenT (r, id) -> Some (dump_tvar stack cx r id)
     | NumT (r, lit) -> Some (match lit with
-        | Some (_, raw) -> spf "NumT(%s)" raw
-        | None -> "NumT")
+        | Literal (_, raw) -> spf "NumT(%s)" raw
+        | Truthy -> spf "NumT(truthy)"
+        | Falsy -> spf "NumT(0)"
+        | AnyLiteral -> "NumT")
     | StrT (r, c) -> Some (match c with
-        | Some s -> spf "StrT(%S)" s
-        | None -> "StrT")
+        | Literal s -> spf "StrT(%S)" s
+        | Truthy -> spf "StrT(truthy)"
+        | Falsy -> spf "StrT(falsy)"
+        | AnyLiteral -> "StrT")
     | BoolT (r, c) -> Some (match c with
         | Some b -> spf "BoolT(%B)" b
         | None -> "BoolT")

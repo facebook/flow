@@ -123,8 +123,10 @@ let summarize cx t = match t with
      optimization in that they avoid creation of fresh type
      variables. Semantically, we could have the above case fire unconditionally,
      since the fresh type variable is unified in all cases. *)
-  | StrT (reason, Some _) -> StrT.why reason
-  | NumT (reason, Some _) -> NumT.why reason
+  | StrT (reason, AnyLiteral) -> t
+  | StrT (reason, _) -> StrT.why reason
+  | NumT (reason, AnyLiteral) -> t
+  | NumT (reason, _) -> NumT.why reason
   | _ -> t
 
 let mk_module_t cx reason = ModuleT(
@@ -312,7 +314,7 @@ let rec destructuring cx t f = Ast.Pattern.(function
         | Some (Element ((loc, _) as p)) ->
             let i = NumT (
               mk_reason "number" loc,
-              Some (float i, string_of_int i)
+              Literal (float i, string_of_int i)
             ) in
             let tvar = Flow_js.mk_tvar cx reason in
             Flow_js.flow cx (t, GetElemT(reason,i,tvar));
@@ -3014,7 +3016,7 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
       | [argt] ->
         let reason = mk_reason "new Array(..)" loc in
         Flow_js.flow cx
-          (argt, NumT (replace_reason "array length" reason, None));
+          (argt, NumT (replace_reason "array length" reason, AnyLiteral));
         let element_reason = replace_reason "array element" reason in
         let t = Flow_js.mk_tvar cx element_reason in
         ArrT (reason, t, [])
@@ -3372,8 +3374,8 @@ and literal cx loc lit = Ast.Literal.(match lit.value with
   | String s ->
     let lit =
       if reflective s || non_identifier s
-      then None
-      else Some s
+      then AnyLiteral
+      else Literal s
     in
       StrT (mk_reason "string" loc, lit)
 
@@ -3387,7 +3389,7 @@ and literal cx loc lit = Ast.Literal.(match lit.value with
       UnionT (reason, [null; Flow_js.mk_tvar cx reason])
 
   | Number f ->
-      NumT (mk_reason "number" loc, Some (f, lit.raw))
+      NumT (mk_reason "number" loc, Literal (f, lit.raw))
 
   | RegExp rx ->
       Flow_js.get_builtin_type cx (mk_reason "regexp" loc) "RegExp"

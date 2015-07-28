@@ -21,8 +21,8 @@ module Type :
     type t =
         OpenT of reason * ident
 
-      | NumT of reason * number_literal option
-      | StrT of reason * literal
+      | NumT of reason * number_literal literal
+      | StrT of reason * string literal
       | BoolT of reason * bool option
       | UndefT of reason
       | MixedT of reason
@@ -136,7 +136,12 @@ module Type :
         Instanceof
       | SentinelProp of string
 
-    and literal = string option
+    and 'a literal =
+      | Literal of 'a
+      | Truthy
+      | Falsy
+      | AnyLiteral
+
     and number_literal = (float * string)
 
     and funtype = {

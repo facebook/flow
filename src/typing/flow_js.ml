@@ -1742,10 +1742,10 @@ let rec __flow cx (l, u) trace =
     (* summary types forget literal information *)
     (********************************************)
 
-    | (StrT (_, Some _), SummarizeT (reason, t)) ->
+    | (StrT (_, (Literal _ | Truthy | Falsy)), SummarizeT (reason, t)) ->
       rec_unify cx trace (StrT.why reason) t
 
-    | (NumT (_, Some _), SummarizeT (reason, t)) ->
+    | (NumT (_, (Literal _ | Truthy | Falsy)), SummarizeT (reason, t)) ->
       rec_unify cx trace (NumT.why reason) t
 
     | (_, SummarizeT (reason, t)) ->
@@ -1936,16 +1936,16 @@ let rec __flow cx (l, u) trace =
     (* string singletons *)
     (**********************)
 
-    | (StrT (_, Some x), SingletonStrT (_, key)) ->
+    | (StrT (_, Literal x), SingletonStrT (_, key)) ->
         if x <> key then
           let msg = spf "Expected string literal %s, got %s instead" key x in
           prerr_flow cx trace msg l u
 
-    | (StrT (_, None), SingletonStrT (_, key)) ->
+    | (StrT (_, (Truthy | Falsy | AnyLiteral)), SingletonStrT (_, key)) ->
       prerr_flow cx trace (spf "Expected string literal %s" key) l u
 
     | (SingletonStrT (reason, key), _) ->
-      rec_flow cx trace (StrT(reason, Some key), u)
+      rec_flow cx trace (StrT(reason, Literal key), u)
 
     (*********************)
     (* number singletons *)
@@ -1955,17 +1955,17 @@ let rec __flow cx (l, u) trace =
         looks like a single number literal. This contrasts with
         `NumT(_, Some num)`, which starts out representing `num` but allows any
         number, whereas `SingletonNumT` accepts only exactly that value. **)
-    | (NumT (_, Some (x, _)), SingletonNumT (_, (y, _))) ->
+    | (NumT (_, Literal (x, _)), SingletonNumT (_, (y, _))) ->
         (* this equality check is ok for now because we don't do arithmetic *)
         if x <> y then
           let msg = spf "Expected number literal %.16g, got %.16g instead" y x in
           prerr_flow cx trace msg l u
 
-    | (NumT (_, None), SingletonNumT (_, (y, _))) ->
+    | (NumT (_, (Truthy | Falsy | AnyLiteral)), SingletonNumT (_, (y, _))) ->
       prerr_flow cx trace (spf "Expected number literal %.16g" y) l u
 
     | (SingletonNumT (reason, lit), _) ->
-      rec_flow cx trace (NumT(reason, Some lit), u)
+      rec_flow cx trace (NumT(reason, Literal lit), u)
 
     (**********************)
     (* boolean singletons *)
@@ -1991,12 +1991,12 @@ let rec __flow cx (l, u) trace =
     (* keys (NOTE: currently we only support string keys *)
     (*****************************************************)
 
-    | (StrT (reason_s, Some x), KeysT (reason_op, o)) ->
+    | (StrT (reason_s, Literal x), KeysT (reason_op, o)) ->
       let reason_op = replace_reason (spf "string literal %s" x) reason_s in
       (* check that o has key x *)
       rec_flow cx trace (o, HasKeyT(reason_op,x))
 
-    | (StrT (_, None), KeysT _) ->
+    | (StrT (_, (Truthy | Falsy | AnyLiteral)), KeysT _) ->
       prerr_flow cx trace "Expected string literal" l u
 
     | (KeysT (reason1, o1), _) ->
@@ -2031,7 +2031,7 @@ let rec __flow cx (l, u) trace =
     | (ObjT (reason, { props_tmap = mapr; _ }), GetKeysT(_,key)) ->
       (* flow each key of l to key *)
       iter_props cx mapr (fun x tv ->
-        let t = StrT (reason, Some x) in
+        let t = StrT (reason, Literal x) in
         rec_flow cx trace (t, key)
       )
 
@@ -2040,7 +2040,7 @@ let rec __flow cx (l, u) trace =
       let methods_tmap = find_props cx instance.methods_tmap in
       let fields = SMap.union fields_tmap methods_tmap in
       fields |> SMap.iter (fun x tv ->
-        let t = StrT (reason, Some x) in
+        let t = StrT (reason, Literal x) in
         rec_flow cx trace (t, key)
       )
 
@@ -2829,7 +2829,7 @@ let rec __flow cx (l, u) trace =
       ->
       rec_flow cx trace (key, ElemT(reason_op, l, LowerBoundT tout))
 
-    | (StrT (_, Some x), ElemT(reason_op, (ObjT _ as o), t)) ->
+    | (StrT (_, Literal x), ElemT(reason_op, (ObjT _ as o), t)) ->
       (match t with
       | UpperBoundT tin -> rec_flow cx trace (o, SetT(reason_op,x,tin))
       | LowerBoundT tout -> rec_flow cx trace (o, GetT(reason_op,x,tout))
@@ -2852,7 +2852,7 @@ let rec __flow cx (l, u) trace =
        ElemT(reason_op, ArrT(_, value, ts), t))
       ->
       let value = match literal with
-      | Some (float_value, _) ->
+      | Literal (float_value, _) ->
           begin try
             float_value
             |> int_of_float
@@ -2860,7 +2860,7 @@ let rec __flow cx (l, u) trace =
           with _ ->
             value
           end
-      | None -> value
+      | _ -> value
       in
       (match t with
       | UpperBoundT tin -> rec_flow cx trace (tin, value)
@@ -3869,15 +3869,15 @@ and filter_exists = function
   | NullT r
   | VoidT r
   | BoolT (r, Some false)
-  | StrT (r, Some "")
-  | NumT (r, Some (0., _)) -> UndefT r
+  | StrT (r, (Literal "" | Falsy))
+  | NumT (r, (Literal (0., _) | Falsy)) -> UndefT r
 
   (* unknown things become truthy *)
   | MaybeT t -> t
   | OptionalT t -> filter_exists t
   | BoolT (r, None) -> BoolT (r, Some true)
-  | StrT (r, None) -> StrT (r, Some "truthy") (* hmmmm *)
-  | NumT (r, None) -> NumT (r, Some (1., "truthy")) (* hmmmm *)
+  | StrT (r, AnyLiteral) -> StrT (r, Truthy)
+  | NumT (r, AnyLiteral) -> NumT (r, Truthy)
 
   (* truthy things pass through *)
   | t -> t
@@ -3887,26 +3887,26 @@ and filter_not_exists t = match t with
   | NullT _
   | VoidT _
   | BoolT (_, Some false)
-  | StrT (_, Some "")
-  | NumT (_, Some (0., _)) -> t
+  | StrT (_, (Literal "" | Falsy))
+  | NumT (_, (Literal (0., _) | Falsy)) -> t
 
   (* truthy things get removed *)
   | BoolT (r, Some _)
-  | StrT (r, Some _)
+  | StrT (r, (Literal _ | Truthy))
   | ArrT (r, _, _)
   | ObjT (r, _)
   | AnyObjT r
   | FunT (r, _, _, _)
   | AnyFunT r
-  | NumT (r, Some _) -> UndefT r
+  | NumT (r, (Literal _ | Truthy)) -> UndefT r
 
   (* unknown boolies become falsy *)
   | MaybeT t ->
     let reason = reason_of_t t in
     UnionT (reason, [NullT.why reason; VoidT.why reason])
   | BoolT (r, None) -> BoolT (r, Some false)
-  | StrT (r, None) -> StrT (r, Some "")
-  | NumT (r, None) -> NumT (r, Some (0., "0"))
+  | StrT (r, AnyLiteral) -> StrT (r, Falsy)
+  | NumT (r, AnyLiteral) -> NumT (r, Falsy)
 
   (* things that don't track truthiness pass through *)
   | t -> t
@@ -4302,10 +4302,10 @@ and sentinel_prop_test key cx trace result = function
       set up so that filtering ultimately only depends on what flows to
       result. **)
   (* obj.key ===/!== string value *)
-  | (sense, (ObjT (_, { props_tmap; _}) as obj), StrT (_, Some value)) ->
+  | (sense, (ObjT (_, { props_tmap; _}) as obj), StrT (_, Literal value)) ->
       (match read_prop_opt cx props_tmap key with
         | Some (SingletonStrT (_, v))
-        | Some (StrT (_, Some v)) when (value = v) != sense ->
+        | Some (StrT (_, Literal v)) when (value = v) != sense ->
             (* provably unreachable, so prune *)
             ()
         | _ ->
@@ -4316,10 +4316,10 @@ and sentinel_prop_test key cx trace result = function
       )
 
   (* obj.key ===/!== number value *)
-  | (sense, (ObjT (_, { props_tmap; _}) as obj), NumT (_, Some (value, _))) ->
+  | (sense, (ObjT (_, { props_tmap; _}) as obj), NumT (_, Literal (value, _))) ->
       (match read_prop_opt cx props_tmap key with
         | Some (SingletonNumT (_, (v, _)))
-        | Some (NumT (_, Some (v, _))) when (value = v) != sense ->
+        | Some (NumT (_, Literal (v, _))) when (value = v) != sense ->
             (* provably unreachable, so prune *)
             ()
         | _ ->
@@ -4788,7 +4788,7 @@ and dictionary cx trace keyt valuet = function
   | Some { key; value; _ } ->
       rec_flow cx trace (keyt, key);
       begin match keyt with
-      | StrT (_, Some str) ->
+      | StrT (_, Literal str) ->
         (* Object.prototype methods are exempt from the dictionary rules *)
         if not (is_object_prototype_method str)
         then rec_flow cx trace (valuet, value)
@@ -4799,7 +4799,7 @@ and dictionary cx trace keyt valuet = function
 and string_key s reason =
   let key_reason =
     replace_reason (spf "property name \"%s\" is a string" s) reason in
-  StrT (key_reason, Some s)
+  StrT (key_reason, Literal s)
 
 (* builtins, contd. *)
 
