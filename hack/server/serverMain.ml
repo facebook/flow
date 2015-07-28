@@ -27,14 +27,6 @@ module MainInit : sig
     (unit -> env) ->    (* init function to run while we have init lock *)
     env
 end = struct
-  let other_server_running() =
-    Hh_logger.log "Error: another server is already running?\n";
-    exit 1
-
-  let grab_lock root =
-    if not (Lock.grab (Lock.name root "lock"))
-    then other_server_running()
-
   let grab_init_lock root =
     ignore(Lock.grab (Lock.name root "init"))
 
@@ -48,7 +40,6 @@ end = struct
       | None -> ()
       | Some pid -> (try Unix.kill pid Sys.sigusr1 with _ -> ()) in
     let t = Unix.gettimeofday () in
-    grab_lock root;
     Hh_logger.log "Initializing Server (This might take some time)";
     grab_init_lock root;
     send_signal ();
@@ -438,6 +429,12 @@ let main options config =
     Option.iter (ServerArgs.save_filename genv.options) (save genv env);
     Program.run_once_and_exit genv env
   else
+    (* Make sure to lock the lockfile before doing *anything*, especially
+     * opening the socket. *)
+    if not (Lock.grab (Lock.name root "lock")) then begin
+      Hh_logger.log "Error: another server is already running?\n";
+      exit 1;
+    end;
     (* Open up a server on the socket before we go into MainInit -- the client
      * will try to connect to the socket as soon as we lock the init lock. We
      * need to have the socket open now (even if we won't actually accept
