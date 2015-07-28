@@ -570,6 +570,10 @@ let find_child_modules acc prefix imports scope = Statement.(function
   If run on module M, expand_imports returns ("x", "M") :: ("A", "M") :: []
 *)
 
+let rec shadow x = function
+| [] -> []
+| (a, b) :: xs -> if x = a then shadow x xs else (a, b) :: (shadow x xs)
+
 let rec expand_imports imports = Statement.(function
   | _, ModuleDeclaration{Module. body; id; _ } ->
     let name = get_name [] id in
@@ -612,7 +616,83 @@ and expand_imports_pattern acc name = Pattern.(function
 )
 
 and expand_imports_id acc name= function
-  | _, { Identifier. name = import; _ } -> (import, name) :: acc
+  | _, { Identifier. name = import; _ } -> (import, name) :: (shadow import acc)
+
+
+(*
+  Find a list of non module statements declared within the current module. And
+  remove those identifier (shadow) from the list of imports
+
+  Cases handled:
+    1. Variable Declaration
+    2. Class Declaration
+    3. Interference Declaration
+    4, Enum Declaration
+
+  TODO:
+    1. Function Declaration
+
+  "imports" is a list of pairs (a, b) where 'a' is the non module entity to be
+  imported and 'b' is the of the module whose context 'a' is declared.
+
+  Eg.
+  module M {
+    variable x : string
+    variable y : number
+    module N {
+      variable x : number
+      class A { }
+      module N {
+
+      }
+    }
+
+  If run on module N, shadow_imports returns [("y", "M")] instead of
+  ("x", "M") :: ("y", "M") :: []
+*)
+
+let rec shadow_imports imports = Statement.(function
+  | _, ModuleDeclaration{Module. body; _ } ->
+    shadow_imports_statements imports body
+  | _, ExportModuleDeclaration{ExportModule. body; _ } ->
+    shadow_imports_statements imports body
+  | loc, _ -> failwith_location loc
+    "Unexpected statement. A module declaration was expexted"
+)
+
+and shadow_imports_statements acc = function
+  | [] -> acc
+  | x :: xs ->
+    shadow_imports_statement (shadow_imports_statements acc xs) x
+
+and shadow_imports_statement acc = Statement.(function
+  | loc, VariableDeclaration { VariableDeclaration.
+      declarations; _
+    } -> VariableDeclaration.(
+      match declarations with
+      | [(_, {Declarator.id; _})] ->
+        shadow_imports_pattern acc id
+      | _ -> failwith_location loc
+        "Only single declarator handled currently"
+    )
+  | _, AmbientClassDeclaration { AmbientClass. id; _ } ->
+    shadow_imports_id acc id
+  | _, InterfaceDeclaration { Interface. id; _ } ->
+    shadow_imports_id acc id
+  | _, EnumDeclaration { Enum. name; members } ->
+    shadow_imports_id acc name
+  | _ -> acc
+)
+
+and shadow_imports_pattern acc = Pattern.(function
+  | _, Identifier id -> shadow_imports_id acc id
+  | loc, _ -> failwith_location loc
+    "Only identifier allowed in variable declaration"
+)
+
+and shadow_imports_id acc = function
+  | _, { Identifier. name; _ } -> shadow name acc
+
 
 
 
@@ -655,7 +735,7 @@ and print_modules fmt = function
   | [] -> ()
   | (prefix, imports, scope, x) :: xs ->
     fprintf fmt "%a@,%a"
-      (print_module scope imports prefix) x
+      (print_module scope (shadow_imports imports x) prefix) x
       print_modules
       (find_child_modules xs prefix (expand_imports imports x) scope x)
 

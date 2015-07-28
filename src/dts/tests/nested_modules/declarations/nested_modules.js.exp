@@ -2,6 +2,8 @@ declare module "M" {
   declare var P: $Exports<'P'>;
   declare var N: $Exports<'M___N'>;
   declare var x: number;
+  declare var y: string;
+  declare var z: string;
   declare class C {
     y: typeof P.b;
     
@@ -12,6 +14,7 @@ declare module "M" {
 declare module "M___N" {
   declare var M: $Exports<'M'>;
   declare var x : typeof M.x;
+  declare var y : typeof M.y;
   declare var C : typeof M.C;
   declare var m : typeof M.m;
   declare var z: typeof x;

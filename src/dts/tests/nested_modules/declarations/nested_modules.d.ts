@@ -1,5 +1,7 @@
 declare module M {
     export var x: number
+    export var y: string
+    export var z: string
     export class C {
         y : typeof P.b
     }

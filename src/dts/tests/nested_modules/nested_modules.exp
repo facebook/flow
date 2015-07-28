@@ -1,30 +1,34 @@
 
 nested_modules.js:6:9,14: string
 This type is incompatible with
-[LIB] nested_modules.js:14:26,28: number
+[LIB] nested_modules.js:16:26,28: number
 
 nested_modules.js:8:18,21: property y
 Error:
 nested_modules.js:8:9,14: string
 This type is incompatible with
-[LIB] nested_modules.js:6:15,17: number
+[LIB] nested_modules.js:8:15,17: number
 
 nested_modules.js:9:20,33: call of method successor
 Error:
 nested_modules.js:9:11,16: string
 This type is incompatible with
-[LIB] nested_modules.js:28:53,55: number
+[LIB] nested_modules.js:31:53,55: number
 
 nested_modules.js:10:30,44: call of method identity
 Error:
 nested_modules.js:9:11,16: string
 This type is incompatible with
-[LIB] nested_modules.js:33:27,32: number
+[LIB] nested_modules.js:36:27,32: number
 
 nested_modules.js:10:30,44: call of method identity
 Error:
 nested_modules.js:9:11,16: string
 This type is incompatible with
-[LIB] nested_modules.js:33:45,47: C
+[LIB] nested_modules.js:36:45,47: C
 
-Found 5 errors
+nested_modules.js:11:9,14: string
+This type is incompatible with
+[LIB] nested_modules.js:16:26,28: number
+
+Found 6 errors
