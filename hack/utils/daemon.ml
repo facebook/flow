@@ -57,6 +57,7 @@ let fork ?log_file (f : ('a, 'b) channel_pair -> unit) :
       Unix.close fd;
       let fn = Option.value_map log_file ~default:"/dev/null" ~f:
         begin fun fn ->
+          Tmp.mkdir (Filename.dirname fn);
           begin try Sys.rename fn (fn ^ ".old") with _ -> () end;
           fn
         end in

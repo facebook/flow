@@ -64,7 +64,7 @@ let mean_kill root =
   Printf.fprintf stderr "Attempting to meanly kill server for %s\n%!"
     (Path.to_string root);
   let pids =
-    try PidLog.get_pids root
+    try PidLog.get_pids (FlowConfig.pids_file root)
     with PidLog.FailedToGetPids -> Printf.fprintf stderr
         "Unable to figure out pids of running Flow server. \
         Try manually killing it with 'pkill %s' (be careful on shared \

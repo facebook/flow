@@ -49,14 +49,14 @@ end = struct
     exit 1
 
   let grab_lock root =
-    if not (Lock.grab (Lock.name root "lock"))
+    if not (Lock.grab (FlowConfig.lock_file root))
     then other_server_running()
 
   let grab_init_lock root =
-    ignore(Lock.grab (Lock.name root "init"))
+    ignore(Lock.grab (FlowConfig.init_file root))
 
   let release_init_lock root =
-    ignore(Lock.release (Lock.name root "init"))
+    ignore(Lock.release (FlowConfig.init_file root))
 
   (* This code is only executed when the options --check is NOT present *)
   let go options init_fun =
@@ -162,13 +162,14 @@ end = struct
     let root = Options.root genv.options in
     let env = ref env in
     while true do
-      if not (Lock.check (Lock.name root "lock")) then begin
+      let lock_file = FlowConfig.lock_file root in
+      if not (Lock.check lock_file) then begin
         Hh_logger.log "Lost %s lock; reacquiring.\n" Program.name;
-        FlowEventLogger.lock_lost root "lock";
-        if not (Lock.grab (Lock.name root "lock"))
+        FlowEventLogger.lock_lost lock_file;
+        if not (Lock.grab lock_file)
         then
           Hh_logger.log "Failed to reacquire lock; terminating.\n";
-          FlowEventLogger.lock_stolen root "lock";
+          FlowEventLogger.lock_stolen lock_file;
           die()
       end;
       ServerPeriodical.call_before_sleeping();
@@ -203,7 +204,7 @@ end = struct
     * someone C-c the client.
     *)
     Sys.set_signal Sys.sigpipe Sys.Signal_ignore;
-    PidLog.init root;
+    PidLog.init (FlowConfig.pids_file root);
     PidLog.log ~reason:"main" (Unix.getpid());
     let watch_paths = root :: Program.get_watch_paths options in
     let genv =
@@ -216,7 +217,7 @@ end = struct
       Program.run_once_and_exit genv env
     else
       let env = MainInit.go options program_init in
-      let socket = Socket.init_unix_socket root in
+      let socket = Socket.init_unix_socket (FlowConfig.socket_file root) in
       serve genv env socket
 
   let daemonize options =

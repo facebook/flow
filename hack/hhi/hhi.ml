@@ -29,7 +29,7 @@ let touch () =
  * handling in general, really). Running the server as root is likely to be a
  * security risk. Be careful. *)
 let extract data =
-  let tmpdir = Path.make (Tmp.temp_dir "hhi") in
+  let tmpdir = Path.make (Tmp.temp_dir GlobalConfig.tmp_dir "hhi") in
   let oc = Unix.open_process_out ("tar xzC " ^ (Path.to_string tmpdir)) in
   output_string oc data;
   flush oc;

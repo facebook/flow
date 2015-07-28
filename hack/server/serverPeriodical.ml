@@ -92,9 +92,11 @@ let init (root : Path.t) =
     Periodical.one_day  , Hhi.touch;
     (* try_touch wraps Unix.utimes, which doesn't open/close any fds, so we
      * won't lose our lock by doing this. *)
-    Periodical.one_day  ,
-      (fun () -> Sys_utils.try_touch (Lock.name root "lock"));
-    Periodical.one_day  ,
-      (fun () -> Sys_utils.try_touch (Socket.get_path root));
+    Periodical.one_day  , (fun () ->
+      Sys_utils.try_touch (GlobalConfig.lock_file root)
+    );
+    Periodical.one_day  , (fun () ->
+      Sys_utils.try_touch (Socket.get_path (GlobalConfig.socket_file root))
+    );
   ] in
   List.iter (fun (period, cb) -> Periodical.register_callback period cb) jobs

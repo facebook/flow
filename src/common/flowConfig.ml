@@ -52,10 +52,24 @@ type config = {
   root: Path.t;
 }
 
-let default_log_file root =
-  let tmp_dir = Tmp.get_dir() in
+let tmp_dir = "/tmp/flow/"
+
+let file_of_root root extension =
+  let tmp_dir = if tmp_dir.[String.length tmp_dir - 1] <> '/'
+    then tmp_dir ^ "/"
+    else tmp_dir in
+  Tmp.mkdir tmp_dir; (* TODO: move this to places that write this file *)
   let root_part = Path.slash_escaped_string_of_path root in
-  Path.make (Printf.sprintf "%s/%s.log" tmp_dir root_part)
+  Printf.sprintf "%s%s.%s" tmp_dir root_part extension
+
+let init_file root = file_of_root root "init"
+let lock_file root = file_of_root root "lock"
+let pids_file root = file_of_root root "pids"
+let socket_file root = file_of_root root "sock"
+
+let default_log_file root =
+  let root_part = Path.slash_escaped_string_of_path root in
+  Path.make (Printf.sprintf "%s%s.log" tmp_dir root_part)
 
 let default_module_system = Node
 

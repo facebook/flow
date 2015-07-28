@@ -167,7 +167,7 @@ let init libs =
     let libs = if Modes_js.modes.no_flowlib
       then libs
       else
-        let root = Path.make (Tmp.temp_dir "flowlib") in
+        let root = Path.make (Tmp.temp_dir FlowConfig.tmp_dir "flowlib") in
         if Flowlib.extract_flowlib root
         then root::libs
         else (print_endline "Could not locate flowlib files"; exit 1)

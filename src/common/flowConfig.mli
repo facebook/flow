@@ -45,6 +45,12 @@ val get: Path.t -> config
 val get_unsafe: unit -> config
 val fullpath: Path.t -> string
 
+val tmp_dir: string
+val init_file: Path.t -> string
+val lock_file: Path.t -> string
+val pids_file: Path.t -> string
+val socket_file: Path.t -> string
+
 val init: Path.t -> string list -> unit
 
 val version: string

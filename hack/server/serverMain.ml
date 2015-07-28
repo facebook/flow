@@ -28,10 +28,10 @@ module MainInit : sig
     env
 end = struct
   let grab_init_lock root =
-    ignore(Lock.grab (Lock.name root "init"))
+    ignore(Lock.grab (GlobalConfig.init_file root))
 
   let release_init_lock root =
-    ignore(Lock.release (Lock.name root "init"))
+    ignore(Lock.release (GlobalConfig.init_file root))
 
   (* This code is only executed when the options --check is NOT present *)
   let go options init_fun =
@@ -111,8 +111,9 @@ module Program : SERVER_PROGRAM =
       let js_next_files = Find.make_next_files FindUtils.is_js dir in
       fun () -> php_next_files () @ js_next_files ()
 
-    let stamp_file = Tmp.get_dir() ^ "/stamp"
+    let stamp_file = GlobalConfig.tmp_dir ^ "/stamp"
     let touch_stamp () =
+      Tmp.mkdir (Filename.dirname stamp_file);
       Sys_utils.with_umask
         0o111
         (fun () ->
@@ -288,9 +289,10 @@ let serve genv env socket =
   let root = ServerArgs.root genv.options in
   let env = ref env in
   while true do
-    if not (Lock.grab (Lock.name root "lock")) then
+    let lock_file = GlobalConfig.lock_file root in
+    if not (Lock.grab lock_file) then
       (Hh_logger.log "Lost lock; terminating.\n%!";
-       HackEventLogger.lock_stolen root "lock";
+       HackEventLogger.lock_stolen lock_file;
        die());
     ServerPeriodical.call_before_sleeping();
     let has_client = sleep_and_check socket in
@@ -416,7 +418,7 @@ let main options config =
    * someone C-c the client.
    *)
   Sys.set_signal Sys.sigpipe Sys.Signal_ignore;
-  PidLog.init root;
+  PidLog.init (GlobalConfig.pids_file root);
   PidLog.log ~reason:"main" (Unix.getpid());
   let watch_paths = root :: Program.get_watch_paths options in
   let genv = ServerEnvBuild.make_genv options config watch_paths in
@@ -431,7 +433,7 @@ let main options config =
   else
     (* Make sure to lock the lockfile before doing *anything*, especially
      * opening the socket. *)
-    if not (Lock.grab (Lock.name root "lock")) then begin
+    if not (Lock.grab (GlobalConfig.lock_file root)) then begin
       Hh_logger.log "Error: another server is already running?\n";
       exit 1;
     end;
@@ -441,14 +443,9 @@ let main options config =
      * connections until init is done) so that the client can try to use the
      * socket and get blocked on it -- otherwise, trying to open a socket with
      * no server on the other end is an immediate error. *)
-    let socket = Socket.init_unix_socket root in
+    let socket = Socket.init_unix_socket (GlobalConfig.socket_file root) in
     let env = MainInit.go options program_init in
     serve genv env socket
-
-let get_log_file root =
-  let tmp_dir = Tmp.get_dir() in
-  let root_part = Path.slash_escaped_string_of_path root in
-  Printf.sprintf "%s/%s.log" tmp_dir root_part
 
 let daemonize options =
   let open Unix in
@@ -464,7 +461,7 @@ let daemonize options =
          let fd = openfile "/dev/null" [O_RDONLY; O_CREAT] 0o777 in
          dup2 fd stdin;
          close fd;
-         let file = get_log_file (ServerArgs.root options) in
+         let file = GlobalConfig.log_file (ServerArgs.root options) in
          (try Sys.rename file (file ^ ".old") with _ -> ());
          let fd = openfile file [O_WRONLY; O_CREAT; O_APPEND] 0o666 in
          dup2 fd stdout;
@@ -477,8 +474,8 @@ let daemonize options =
     begin
       (* let original parent exit *)
       Printf.eprintf "Spawned %s (child pid=%d)\n" (Program.name) pid;
-      Printf.eprintf
-        "Logs will go to %s\n%!" (get_log_file (ServerArgs.root options));
+      Printf.eprintf "Logs will go to %s\n%!"
+        (GlobalConfig.log_file (ServerArgs.root options));
       raise Exit
     end
 

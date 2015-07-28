@@ -22,3 +22,17 @@ let ordered_cache_capacity = 1000
 (* Configures only the workers. Workers can have more relaxed GC configs as
  * they are short-lived processes *)
 let gc_control = Gc.get ()
+
+(* Where to write temp files *)
+let tmp_dir = "/tmp/hh_server/"
+
+let file_of_root root extension =
+  Tmp.mkdir tmp_dir; (* TODO: move this to places that write this file *)
+  let root_part = Path.slash_escaped_string_of_path root in
+  Printf.sprintf "%s%s.%s" tmp_dir root_part extension
+
+let init_file root = file_of_root root "init"
+let log_file root = file_of_root root "log"
+let lock_file root = file_of_root root "lock"
+let pids_file root = file_of_root root "pids"
+let socket_file root = file_of_root root "sock"

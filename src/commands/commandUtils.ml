@@ -165,7 +165,7 @@ let start_flow_server root =
     | _ -> (Printf.fprintf stderr "Could not start flow server!\n"; exit 77)
 
 
-let server_exists root = not (Lock.check (Lock.name root "lock"))
+let server_exists root = not (Lock.check (FlowConfig.lock_file root))
 
 let wait_on_server_restart ic =
   try
@@ -186,7 +186,7 @@ let connect root =
   then raise CommandExceptions.Server_missing;
   let ic, oc, cstate =
     try
-      let sock_name = Socket.get_path root in
+      let sock_name = Socket.get_path (FlowConfig.socket_file root) in
       let sockaddr = Unix.ADDR_UNIX sock_name in
       let ic, oc = Unix.open_connection sockaddr in
       try
@@ -198,7 +198,7 @@ let connect root =
         close_in_noerr ic;
         raise e
     with _ ->
-      if not (Lock.check (Lock.name root "init"))
+      if not (Lock.check (FlowConfig.init_file root))
       then raise CommandExceptions.Server_initializing
       else raise CommandExceptions.Server_cant_connect
   in

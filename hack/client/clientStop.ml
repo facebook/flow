@@ -56,7 +56,7 @@ module StopCommand (Config : STOP_CONFIG) : STOP_COMMAND = struct
     Printf.fprintf stderr "Attempting to meanly kill server for %s\n%!"
       (Path.to_string env.root);
     let pids =
-      try PidLog.get_pids env.root
+      try PidLog.get_pids (GlobalConfig.pids_file env.root)
       with PidLog.FailedToGetPids ->
         Printf.fprintf stderr "Unable to figure out pids of running %s server. \
           Try manually killing it with 'pkill %s' (be careful on shared \

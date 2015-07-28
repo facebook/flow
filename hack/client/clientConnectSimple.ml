@@ -14,7 +14,7 @@ type error =
   | Server_busy
   | Build_id_mismatch
 
-let server_exists root = not (Lock.check (Lock.name root "lock"))
+let server_exists root = not (Lock.check (GlobalConfig.lock_file root))
 
 let wait_on_server_restart ic =
   try
@@ -29,7 +29,7 @@ let wait_on_server_restart ic =
      ()
 
 let establish_connection root =
-  let sock_name = Socket.get_path root in
+  let sock_name = Socket.get_path (GlobalConfig.socket_file root) in
   let sockaddr = Unix.ADDR_UNIX sock_name in
   Result.Ok (Unix.open_connection sockaddr)
 
@@ -73,6 +73,6 @@ let connect_once root =
   | Exit_status.Exit_with _  as e -> raise e
   | _ ->
     if not (server_exists root) then Result.Error Server_missing
-    else if not (Lock.check (Lock.name root "init"))
+    else if not (Lock.check (GlobalConfig.init_file root))
     then Result.Error Server_initializing
     else Result.Error Server_busy
