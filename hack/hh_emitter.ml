@@ -17,6 +17,7 @@ open Utils
 type options = {
   filename : string;
   is_test : bool;
+  read_stdin : bool;
 }
 
 (*****************************************************************************)
@@ -32,6 +33,7 @@ let die str =
 let parse_options () =
   let fn_ref = ref None in
   let is_test_ref = ref false in
+  let read_stdin_ref = ref false in
 
   let usage = Printf.sprintf "Usage: %s filename\n" Sys.argv.(0) in
   let set_flag x () = x := true in
@@ -40,6 +42,10 @@ let parse_options () =
     "--test",
       Arg.Unit (set_flag is_test_ref),
       "Emit a call to test() in the file's pseudomain (for testing)";
+    "--stdin",
+      Arg.Unit (set_flag read_stdin_ref),
+      "Read the input code from stdin instead of from the file; " ^
+        "(filename still required for debug info etc)";
   ] in
   Arg.parse options (fun fn -> fn_ref := Some fn) usage;
   let fn = match !fn_ref with
@@ -47,14 +53,17 @@ let parse_options () =
     | None -> die usage in
   { filename = fn;
     is_test = !is_test_ref;
+    read_stdin = !read_stdin_ref;
   }
 
 (*****************************************************************************)
 (* Main body *)
 (*****************************************************************************)
-let emit_file ~is_test filename () =
+let emit_file { filename; read_stdin; is_test } () =
   let filename = Relative_path.create Relative_path.Dummy filename in
-  let contents = Sys_utils.cat (Relative_path.to_absolute filename) in
+  let contents =
+    if read_stdin then Sys_utils.read_stdin_to_string () else
+      Sys_utils.cat (Relative_path.to_absolute filename) in
 
   (* Parse the file and pull out the parts we need *)
   let parsed_file = Parser_hack.program filename contents  in
@@ -86,7 +95,7 @@ let emit_file ~is_test filename () =
   Emitter.emit_file ~is_test nenv file_info
 
 
-let main_hack { filename; is_test } =
+let main_hack options =
   EventLogger.init (Daemon.devnull ()) 0.0;
   SharedMem.(init default_config);
 
@@ -97,7 +106,7 @@ let main_hack { filename; is_test } =
   (* Wrap everything with error ignoring; we have "strict mode hack"
    * as a precondition for the emitter but there will likely be naming
    * errors when emitting a file from a project. *)
-  Errors.ignore_ (emit_file ~is_test filename)
+  Errors.ignore_ (emit_file options)
 
 
 (* command line driver *)
