@@ -10,9 +10,10 @@
 type moduleSystem = Node | Haste
 
 type options = {
-  munge_underscores: bool;
+  enable_unsafe_getters_and_setters: bool;
   moduleSystem: moduleSystem;
   module_name_mappers: (Str.regexp * string) list;
+  munge_underscores: bool;
   suppress_comments: Str.regexp list;
   suppress_types: Utils.SSet.t;
   traces: int;

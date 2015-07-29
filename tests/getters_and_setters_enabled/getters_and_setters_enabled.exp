@@ -1,0 +1,122 @@
+
+class.js:8:41,41: number
+This type is incompatible with
+class.js:41:27,32: string
+
+class.js:9:35,40: number
+This type is incompatible with
+class.js:42:27,32: string
+
+class.js:18:44,49: null
+This type is incompatible with
+class.js:19:43,48: number
+
+class.js:18:44,49: undefined
+This type is incompatible with
+class.js:19:43,48: number
+
+class.js:18:44,49: null
+This type is incompatible with
+class.js:52:35,40: number
+
+class.js:18:44,49: undefined
+This type is incompatible with
+class.js:52:35,40: number
+
+class.js:23:53,58: null
+This type is incompatible with
+class.js:22:52,57: number
+
+class.js:23:53,58: undefined
+This type is incompatible with
+class.js:22:52,57: number
+
+class.js:25:45,50: number
+This type is incompatible with
+class.js:26:45,50: string
+
+class.js:26:45,50: string
+This type is incompatible with
+class.js:25:45,50: number
+
+class.js:29:43,49: string
+This type is incompatible with
+class.js:54:34,39: number
+
+class.js:49:1,36: assignment of property goodSetterNoAnnotation
+Error:
+class.js:49:30,36: string
+This type is incompatible with
+class.js:5:8,13: number
+
+class.js:50:1,38: assignment of property goodSetterWithAnnotation
+Error:
+class.js:50:32,38: string
+This type is incompatible with
+class.js:12:35,40: number
+
+class.js:55:1,34: assignment of property propOverriddenWithSetter
+Error:
+class.js:55:32,34: number
+This type is incompatible with
+class.js:32:35,40: string
+
+object.js:12:41,41: number
+This type is incompatible with
+object.js:41:27,32: string
+
+object.js:13:35,40: number
+This type is incompatible with
+object.js:42:27,32: string
+
+object.js:22:44,49: null
+This type is incompatible with
+object.js:23:43,48: number
+
+object.js:22:44,49: undefined
+This type is incompatible with
+object.js:23:43,48: number
+
+object.js:22:44,49: null
+This type is incompatible with
+object.js:51:35,40: number
+
+object.js:22:44,49: undefined
+This type is incompatible with
+object.js:51:35,40: number
+
+object.js:26:53,58: null
+This type is incompatible with
+object.js:25:52,57: number
+
+object.js:26:53,58: undefined
+This type is incompatible with
+object.js:25:52,57: number
+
+object.js:28:42,42: A
+This type is incompatible with
+object.js:29:42,42: B
+
+object.js:31:51,51: B
+This type is incompatible with
+object.js:59:51,56: number
+
+object.js:32:51,51: A
+This type is incompatible with
+object.js:31:51,51: B
+
+object.js:48:30,36: string
+This type is incompatible with
+object.js:5:8,13: number
+
+object.js:49:32,38: string
+This type is incompatible with
+object.js:16:35,40: number
+
+react.js:7:5,25: 
+get/set properties not supported for React propTypes
+
+react.js:8:5,36: 
+get/set properties not supported for React propTypes
+
+Found 29 errors

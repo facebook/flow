@@ -1947,7 +1947,12 @@ end = struct
       let async = false in
       let generator = Declaration.generator env async in
       let _, key = key env in
-      let typeParameters = Type.type_parameter_declaration env in
+      (* It's not clear how type params on getters & setters would make sense
+       * in Flow's type system. Since this is a Flow syntax extension, we might
+       * as well disallow it until we need it *)
+      let typeParameters = Ast.Expression.Object.Property.(match kind with
+      | Get | Set -> None
+      | _ -> Type.type_parameter_declaration env) in
       Expect.token env T_LPAREN;
       let params = Ast.Expression.Object.Property.(match kind with
       | Get -> []
@@ -2001,12 +2006,14 @@ end = struct
               "get"; _}) as key)) ->
               (match Peek.token env with
               | T_COLON
+              | T_LESS_THAN
               | T_LPAREN -> init env start_loc key false false
               | _ -> get env start_loc)
           | false, false, (_, (Property.Identifier (_, { Ast.Identifier.name =
               "set"; _}) as key)) ->
               (match Peek.token env with
               | T_COLON
+              | T_LESS_THAN
               | T_LPAREN -> init env start_loc key false false
               | _ -> set env start_loc)
           | async, generator, (_, key) ->
@@ -2296,11 +2303,19 @@ end = struct
         | false, false,
           (_, (Identifier (_, { Identifier.name = "get"; _ }) as key)) ->
             (match Peek.token env with
+            | T_LESS_THAN
+            | T_COLON
+            | T_ASSIGN
+            | T_SEMICOLON
             | T_LPAREN -> init env start_loc key async generator static
             | _ -> get env start_loc static )
         | false, false,
           (_, (Identifier (_, { Identifier.name = "set"; _ }) as key)) ->
             (match Peek.token env with
+            | T_LESS_THAN
+            | T_COLON
+            | T_ASSIGN
+            | T_SEMICOLON
             | T_LPAREN -> init env start_loc key async generator static
             | _ -> set env start_loc static)
         | _, _, (_, key) ->

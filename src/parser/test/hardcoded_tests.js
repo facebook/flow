@@ -1405,6 +1405,17 @@ module.exports = {
         }
       }
     },
+    // No generics for getters and setters
+    '({ get foo<T>() {} })': {
+      'errors': {
+        '0.message': 'Unexpected token <',
+      },
+    },
+    '({ set foo<T>(newFoo) {} })': {
+      'errors': {
+        '0.message': 'Unexpected token <',
+      },
+    },
   },
   'Invalid JSX Syntax': {
     '(<div />) < x;': {
@@ -2345,6 +2356,36 @@ module.exports = {
         'static': true,
         'computed': true,
       }]
+    },
+    'class Properties { get; }': {
+      'body.0.body.body.0.key.name': 'get',
+    },
+    'class Properties { get: string; }': {
+      'body.0.body.body.0.key.name': 'get',
+    },
+    'class Properties { get = 123; }': {
+      'body.0.body.body.0.key.name': 'get',
+    },
+    'class Properties { get<T>() {} }': {
+      'body.0.body.body.0.key.name': 'get',
+    },
+    'class Properties { get() {} }': {
+      'body.0.body.body.0.key.name': 'get',
+    },
+    'class Properties { set; }': {
+      'body.0.body.body.0.key.name': 'set',
+    },
+    'class Properties { set: string; }': {
+      'body.0.body.body.0.key.name': 'set',
+    },
+    'class Properties { set = 123; }': {
+      'body.0.body.body.0.key.name': 'set',
+    },
+    'class Properties { set<T>() {} }': {
+      'body.0.body.body.0.key.name': 'set',
+    },
+    'class Properties { set() {} }': {
+      'body.0.body.body.0.key.name': 'set',
     },
   },
   'Comments': {

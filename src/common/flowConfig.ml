@@ -18,9 +18,10 @@ let version = "0.13.1"
 type moduleSystem = Node | Haste
 
 type options = {
-  munge_underscores: bool;
+  enable_unsafe_getters_and_setters: bool;
   moduleSystem: moduleSystem;
   module_name_mappers: (Str.regexp * string) list;
+  munge_underscores: bool;
   suppress_comments: Str.regexp list;
   suppress_types: SSet.t;
   traces: int;
@@ -74,9 +75,10 @@ let default_log_file root =
 let default_module_system = Node
 
 let default_options root = {
-  munge_underscores = false;
+  enable_unsafe_getters_and_setters = false;
   moduleSystem = default_module_system;
   module_name_mappers = [];
+  munge_underscores = false;
   suppress_comments = [];
   suppress_types = SSet.empty;
   traces = 0;
@@ -342,6 +344,9 @@ module OptionsParser = struct
             opt value supported in
           error ln msg
 
+  let boolean =
+    generic ("true, false", fun s -> try Some (bool_of_string s) with _ -> None)
+
   (* Option parser constructor for finite sets. Reuses the generic option parser
      constructor, passing the appropriate `supported` and `converter`. *)
   let enum values option_setter =
@@ -446,9 +451,16 @@ let options_parser = OptionsParser.configure [
 
   ("munge_underscores", OptionsParser.({
     flags = [];
-    _parser = generic
-      ("true, false", fun s -> try Some (bool_of_string s) with _ -> None)
-      (fun opts (_, munge_underscores) -> { opts with munge_underscores });
+    _parser = boolean
+      (fun opts (_, munge_underscores) ->
+        { opts with munge_underscores });
+  }));
+
+  ("unsafe.enable_getters_and_setters", OptionsParser.({
+    flags = [];
+    _parser = boolean
+      (fun opts (_, enable_unsafe_getters_and_setters) ->
+        { opts with enable_unsafe_getters_and_setters });
   }));
 
   ("traces", OptionsParser.({
@@ -460,8 +472,7 @@ let options_parser = OptionsParser.configure [
 
   ("strip_root", OptionsParser.({
     flags = [];
-    _parser = generic
-      ("true, false", fun s -> try Some (bool_of_string s) with _ -> None)
+    _parser = boolean
       (fun opts (_, strip_root) -> { opts with strip_root });
   }));
 ]
