@@ -165,8 +165,10 @@ let emit_prop_init env ~is_static = function
 
     let fmt_var_init env (name, expr) =
       let env, skip_label = fresh_label env in
-      let env = emit_CheckProp env name in
-      let env = emit_cjmp env true skip_label in
+      let env = if is_static then env else
+        let env = emit_CheckProp env name in
+        emit_cjmp env true skip_label
+      in
       let env = Emitter_expr.emit_expr env expr in
       let env = emit_InitProp env name flag in
       emit_label env skip_label
