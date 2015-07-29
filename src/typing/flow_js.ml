@@ -2388,6 +2388,25 @@ let rec __flow cx (l, u) trace =
       let lit = (desc_of_reason r1) = "array literal" in
       array_flow cx trace lit (ts1, t1, ts2, t2)
 
+    (**************************************************)
+    (* instances of classes follow declared hierarchy *)
+    (**************************************************)
+
+    | (InstanceT (_, _, _, instance),
+       InstanceT (_, _, _, instance_super))
+      when not instance_super.structural
+        || instance.class_id = instance_super.class_id ->
+      rec_flow cx trace (l, ExtendsT(l,u))
+
+    | (InstanceT (_,_,super,instance),
+       ExtendsT(_, InstanceT (_,_,_,instance_super))) ->
+
+      if instance.class_id = instance_super.class_id
+      then
+        flow_type_args cx trace instance instance_super
+      else
+        rec_flow cx trace (super, u)
+
     (***************************************************************)
     (* Enable structural subtyping for upperbounds like interfaces *)
     (***************************************************************)
@@ -2401,22 +2420,6 @@ let rec __flow cx (l, u) trace =
        }))
       ->
       structural_subtype cx trace l (reason1, super, fields_tmap, methods_tmap)
-
-    (**************************************************)
-    (* instances of classes follow declared hierarchy *)
-    (**************************************************)
-
-    | (InstanceT _, InstanceT _) ->
-      rec_flow cx trace (l, ExtendsT(l,u))
-
-    | (InstanceT (_,_,super,instance),
-       ExtendsT(_, InstanceT (_,_,_,instance_super))) ->
-
-      if instance.class_id = instance_super.class_id
-      then
-        flow_type_args cx trace instance instance_super
-      else
-        rec_flow cx trace (super, u)
 
     (********************************************************)
     (* runtime types derive static types through annotation *)
