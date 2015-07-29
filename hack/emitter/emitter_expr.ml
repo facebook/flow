@@ -325,6 +325,12 @@ and emit_call env ef args uargs =
        if i = nargs-1 then env else emit_PopC env
     end ~init:env args in
     env, FC
+  | Id (_, idx) when idx = SN.FB.idx ->
+    let env = List.fold_left emit_expr env args in
+    (* If there are two arguments, add Null as a third *)
+    let env = if List.length args = 2 then emit_Null env else env in
+    let env = emit_Idx env in
+    env, FC
   (* TODO: a billion other builtins *)
 
   | _ -> emit_normal_call env ef args uargs
@@ -333,10 +339,19 @@ and emit_call env ef args uargs =
  * certain operations want to handle this; most will just call
  * emit_expr or emit_ignored_expr which will automatically unbox/pop
  * R flavored things. *)
-and emit_flavored_expr env (_, expr_ as expr) =
+and emit_flavored_expr env (pos, expr_ as expr) =
   match expr_ with
   | Call (Cnormal, ef, args, uargs) -> emit_call env ef args uargs
   | Call (Cuser_func, _, _, _) -> unimpl "call_user_func"
+
+  | Special_func f ->
+    let f, args = match f with
+      | Gena e -> SN.FB.fgena, [e]
+      | Genva es -> SN.FB.fgenva, es
+      | Gen_array_rec e -> SN.FB.fgen_array_rec, [e]
+      | Gen_array_va_rec _ -> bug "Gen_array_va_rec not a thing?"
+    in
+    emit_call env (pos, Id (pos, f)) args []
 
   (* For most things, just fall back to emit_expr *)
   | _ -> emit_expr env expr, FC
@@ -347,7 +362,8 @@ and emit_flavored_expr env (_, expr_ as expr) =
 and emit_expr env (pos, expr_ as expr) =
   match expr_ with
   (* Calls produce flavor R, so emit it and then unbox *)
-  | Call (_, _, _, _) ->
+  | Call (_, _, _, _)
+  | Special_func _ ->
     let env, flavor = emit_flavored_expr env expr in
     assert (flavor = FR);
     emit_UnboxR env
@@ -579,7 +595,6 @@ and emit_expr env (pos, expr_ as expr) =
   | Method_id _ -> unimpl "Method_id"
   | Method_caller _ -> unimpl "Method_caller"
   | Smethod_id _ -> unimpl "Smethod_id"
-  | Special_func _ -> unimpl "Special_func"
   | InstanceOf _ -> unimpl "InstanceOf"
   | Efun _ -> unimpl "Efun"
   | Xml _ -> unimpl "Xml"

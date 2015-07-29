@@ -358,6 +358,7 @@ let emit_IsTypeC =        emit_op1s   "IsTypeC"
 let emit_CreateCont =     emit_op0    "CreateCont"
 let emit_Yield =          emit_op0    "Yield"
 let emit_YieldK =         emit_op0    "YieldK"
+let emit_Idx =            emit_op0    "Idx"
 
 let emit_Switch env labels base bound =
   emit_op_strs env ["Switch"; fmt_str_vec labels; string_of_int base; bound]
