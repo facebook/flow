@@ -138,19 +138,18 @@ and create_root_from_type_constant env class_pos class_name root_ty (pos, tconst
       let env =
         { env with
           trail = (`cls class_name, List.map snd env.ids)::env.trail } in
-      let ety_env = { env.ety_env with this_ty = root_ty; from_class = None } in
+      (* The type constant itself may contain a 'this' type so we need to
+       * change the this_ty in the environment to be the root as an
+       * expression dependent type.
+       *)
+      let ety_env =
+        { env.ety_env with
+          this_ty = ExprDepTy.apply env.dep_tys root_ty;
+          from_class = None; } in
       begin
         match typeconst with
         | { ttc_type = Some ty; _ }
             when typeconst.ttc_constraint = None || env.dep_tys = [] ->
-            (* We are choosing the assigned type. The assigned type itself
-             * may contain a 'this' type so we need to change the this_ty in
-             * the environment to be the root as a dependent type.
-             *)
-            let ety_env =
-              { ety_env with
-                this_ty = ExprDepTy.apply env.dep_tys root_ty;
-                from_class = None; } in
             let tenv, ty = Phase.localize ~ety_env env.tenv ty in
             { env with dep_tys = []; tenv = tenv }, ty
         | {ttc_constraint = Some cstr; _} ->
