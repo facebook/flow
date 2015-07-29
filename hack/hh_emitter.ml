@@ -92,7 +92,7 @@ let emit_file { filename; read_stdin; is_test } () =
   Typing_decl.make_env nenv all_classes filename;
 
   (* Actually emit. *)
-  Emitter.emit_file ~is_test nenv file_info
+  Emitter.emit_file ~is_test nenv filename file_info
 
 
 let main_hack options =

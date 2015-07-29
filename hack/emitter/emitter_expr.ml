@@ -476,7 +476,7 @@ and emit_expr env (pos, expr_ as expr) =
     let env = emit_expr env e in
     emit_Clone env
 
-  | Any -> bug "what even is this"
+  | Any -> unimpl "UNSAFE_EXPR/import/??"
 
   (* probably going to take AST changes *)
   | String2 _ -> unimpl "double-quoted string interpolation"

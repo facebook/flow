@@ -25,6 +25,7 @@ let emit_generator_prologue env m =
 
 let emit_func_body_code env m =
   let body = assert_named_body m.m_body in
+  if body.fnb_unsafe then unimpl "UNSAFE";
   let env = emit_generator_prologue env m in
 
   let acts = { empty_nonlocal_actions
@@ -59,11 +60,6 @@ let fmt_visibility vis =
   | Private -> "private"
   | Protected  -> "protected"
 
-(* XXX: HHVM outputs "isPairGenerator" as metadata here for things
- * that yield pairs; this prevents the VM from assuming keys are
- * integers when there is a yield without a key. The typechecker will
- * prevent yielding without a key when we are generating pairs, so I
- * think we can get away with this, but may want to do it anyways. *)
 let fmt_fun_tags env m =
   (match m.m_fun_kind with
   | Ast.FSync -> ""
@@ -73,12 +69,16 @@ let fmt_fun_tags env m =
   (if env.function_props.is_pair_generator then
       " isPairGenerator" else "")
 
+let fmt_user_attributes attrs =
+  String.concat " "
+    (List.sort compare (List.map (fun x -> snd (x.ua_name)) attrs))
 
 let emit_method_or_func env ~is_method ~is_static m name =
   let env = start_new_function env in
 
-
-  if m.m_user_attributes <> [] then unimpl "function user attributes";
+  if m.m_user_attributes <> [] then
+    unimpl ("function user attributes: " ^
+               fmt_user_attributes m.m_user_attributes);
   if m.m_variadic != FVnonVariadic then unimpl "variadic functions";
 
   (* We actually emit the body first, but save the output, so we can
@@ -105,7 +105,7 @@ let emit_method_ env ~is_static m name =
   emit_method_or_func env ~is_method:true ~is_static m name
 let emit_method env ~is_static m = emit_method_ ~is_static env m (snd m.m_name)
 
-let emit_fun nenv x =
+let emit_fun nenv env (_, x) =
   let f = Naming_heap.FunHeap.find_unsafe x in
   let nb = Naming.func_body nenv f in
   (* Make a dummy method structure so we can share code with method handling *)
@@ -117,11 +117,11 @@ let emit_fun nenv x =
     m_params = f.f_params; m_body = NamedBody nb; m_fun_kind = f.f_fun_kind;
     m_user_attributes = f.f_user_attributes; m_ret = f.f_ret } in
 
-  let env = new_env () in
+  let env = start_new_function env in
   let env =
     emit_method_or_func env ~is_method:false ~is_static:false
       dummy_method (strip_ns x) in
-  get_output env
+  emit_str env ""
 
 
 let emit_default_ctor env name abstract =
@@ -243,16 +243,18 @@ let class_kind_options  = function
   | Ast.Ctrait -> ["final"; "trait"]
   | Ast.Cenum -> unimpl "first class enums"
 
-let emit_class nenv x =
+let emit_class nenv env (_, x) =
   let cls = Naming_heap.ClassHeap.find_unsafe x in
   let cls = Naming.class_meth_bodies nenv cls in
-  let env = new_env () in
+  let env = start_new_function env in
 
   (* still have a handful of unimplemented bits *)
   if cls.c_is_xhp then unimpl "xhp";
   if cls.c_xhp_attr_uses <> [] then unimpl "xhp attr uses";
   if cls.c_typeconsts <> [] then unimpl "type constants";
-  if cls.c_user_attributes <> [] then unimpl "class user attributes";
+  if cls.c_user_attributes <> [] then
+    unimpl ("class user attributes: " ^
+               fmt_user_attributes cls.c_user_attributes);
 
   let options = bool_option "final" cls.c_final @
                 class_kind_options cls.c_kind in
@@ -309,7 +311,7 @@ let emit_class nenv x =
 
   let env = emit_exit env in
 
-  get_output env
+  emit_str env ""
 
 
 (* Bogusly emit a call to a hardcoded test function *)
@@ -318,8 +320,8 @@ let emit_test_call env =
   let env = emit_FCall env 0 in
   emit_PopR env
 
-let emit_main ~is_test classes =
-  let env = new_env () in
+let emit_main env ~is_test classes =
+  let env = start_new_function env in
   let env = emit_enter env ".main" [] "" "" in
 
   (* emit def classes *)
@@ -334,13 +336,19 @@ let emit_main ~is_test classes =
   let env = emit_RetC env in
 
   let env = emit_exit env in
-  Printf.printf "%s\n\n" (get_output env)
+  emit_str env ""
 
-let emit_file ~is_test nenv {FileInfo.file_mode; funs; classes; _} =
+let emit_file ~is_test nenv filename
+    {FileInfo.file_mode; funs; classes; _} =
   assert (file_mode = Some FileInfo.Mstrict);
-  let fun_code = List.map (fun (_, x) -> emit_fun nenv x) funs in
-  let class_code = List.map (fun (_, x) -> emit_class nenv x) classes in
 
-  emit_main ~is_test classes;
-  List.iter (Printf.printf "%s\n\n") fun_code;
-  List.iter (Printf.printf "%s\n\n") class_code
+  let env = new_env () in
+
+  let env = emit_strs env
+    [".filepath"; quote_str (Relative_path.to_absolute filename) ^ ";\n"] in
+  let env = emit_main env ~is_test classes in
+  let env = List.fold_left (emit_fun nenv) env funs in
+  let env = List.fold_left (emit_class nenv) env classes in
+
+  let output = get_output env in
+  Printf.printf "%s\n" output
