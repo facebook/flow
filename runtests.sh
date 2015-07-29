@@ -39,6 +39,7 @@ do
         #
         cmd="check"
         all=" --all"
+        stdin=""
         if [ -e ".testconfig" ]
         then
             # cmd
@@ -52,6 +53,8 @@ do
             then
                 all=""
             fi
+            # stdin
+            stdin="$(awk '$1=="stdin:"{print $2}' .testconfig)"
         fi
 
         # run test
@@ -61,7 +64,14 @@ do
             $FLOW check . $all --strip-root --show-all-errors 1> $out_file 2> $err_file
         else
             # otherwise, run specified flow command, then kill the server
-            $FLOW $cmd 1> $out_file 2> $err_file
+
+            # If there's stdin, then direct that in
+            if [ "$stdin" != "" ]
+            then
+                $FLOW $cmd < $stdin 1> $out_file 2> $err_file
+              else
+                $FLOW $cmd 1> $out_file 2> $err_file
+            fi
             $FLOW stop . 1> /dev/null 2>&1
         fi
         diff_file="${name}.diff"

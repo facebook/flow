@@ -165,7 +165,7 @@ let filter_suppressed_errors = Errors_js.(
 
 let strip_root_from_reason_list root list =
   List.map (
-    fun (reason, s) -> (Reason_js.strip_root reason root, s)
+    fun (reason, s) -> (Reason_js.strip_root root reason, s)
   ) list
 
 let strip_root_from_error root error =

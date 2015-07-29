@@ -69,4 +69,5 @@ val do_patch: string list -> (int * int * string) list -> string
 
 val same_scope: reason -> reason -> bool
 
-val strip_root: reason -> Path.t -> reason
+val strip_root: Path.t -> reason -> reason
+val strip_root_from_loc: Path.t -> Loc.t -> Loc.t

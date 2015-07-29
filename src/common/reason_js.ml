@@ -244,8 +244,7 @@ let repos_reason loc reason =
   mk_reason (desc_of_reason reason) loc
 
 (* helper: strip root from positions *)
-let strip_root reason path = Loc.(
-  let loc = loc_of_reason reason in
+let strip_root_from_loc root loc = Loc.(
   let source = match loc.source with
   | None -> None
   | Some file -> Some (
@@ -254,8 +253,11 @@ let strip_root reason path = Loc.(
     else if Files_js.is_lib_file file
     then spf "[LIB] %s" (Filename.basename file)
     else Files_js.relative_path
-      (spf "%s%s" (Path.to_string path) Filename.dir_sep) file
+      (spf "%s%s" (Path.to_string root) Filename.dir_sep) file
   ) in
-  let loc = { loc with source } in
-  repos_reason loc reason
+  { loc with source }
 )
+
+let strip_root root reason =
+  let loc = strip_root_from_loc root (loc_of_reason reason) in
+  repos_reason loc reason

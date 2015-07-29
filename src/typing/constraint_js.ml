@@ -2331,7 +2331,7 @@ let prep_path r =
   if not (Modes_js.modes.strip_root) then r
   else
     let path = FlowConfig.((get_unsafe ()).root) in
-    Reason_js.strip_root r path
+    Reason_js.strip_root path r
 
 let pos_len r =
   let r = prep_path r in

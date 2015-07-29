@@ -35,6 +35,8 @@ let spec = {
     empty
     |> server_flags
     |> json_flags
+    |> flag "--strip-root" no_arg
+        ~doc:"Print paths without the root"
     |> anon "args" (optional (list_of string)) ~doc:"[FILE] [LINE COL]"
   )
 }
@@ -79,16 +81,23 @@ let parse_args = function
 
 module Json = Hh_json
 
-let main option_values json args () =
+let main option_values json strip_root args () =
   let file = parse_args args in
   let root = guess_root (ServerProt.path_of_input file) in
+  let flowconfig = FlowConfig.get root in
+  let strip_root = strip_root || FlowConfig.(flowconfig.options.strip_root) in
+  let loc_preprocessor = if strip_root
+    then Reason_js.strip_root_from_loc root
+    else fun loc -> loc in
   let ic, oc = connect_with_autostart option_values root in
   ServerProt.cmd_to_channel oc (ServerProt.AUTOCOMPLETE file);
   let completions = Marshal.from_channel ic in
   if json
   then (
     let results =
-      List.map AutocompleteService_js.autocomplete_result_to_json completions
+      List.map
+        (AutocompleteService_js.autocomplete_result_to_json loc_preprocessor)
+        completions
     in
     print_endline (Json.json_to_string (Json.JList results))
   ) else (

@@ -33,7 +33,7 @@ type complete_autocomplete_result = {
     func_details : func_details_result option;
   }
 
-let autocomplete_result_to_json result =
+let autocomplete_result_to_json loc_preprocessor result =
   let func_param_to_json param =
     Json.JAssoc [
       "name", Json.JString param.param_name;
@@ -48,7 +48,7 @@ let autocomplete_result_to_json result =
            ]
      | None -> Json.JNull
   in
-  let loc = result.res_loc in
+  let loc = loc_preprocessor result.res_loc in
   let name = result.res_name in
   let ty = result.res_ty in
   Json.JAssoc (
