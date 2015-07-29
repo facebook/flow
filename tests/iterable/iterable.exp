@@ -17,7 +17,7 @@ caching_bug.js:21:62,67: string
 
 map.js:13:55,60: string
 This type is incompatible with
-[LIB] core.js:314:28,33: tuple type
+[LIB] core.js:315:28,33: tuple type
 
 set.js:13:28,33: string
 This type is incompatible with

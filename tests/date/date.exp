@@ -9,42 +9,42 @@ date.js:18:1,12: constructor call
 Error:
 date.js:18:10,11: object literal
 This type is incompatible with
-[LIB] core.js:216:25,39: union type
+[LIB] core.js:217:25,39: union type
 
 date.js:19:1,19: constructor call
 Error:
 date.js:19:16,18: string
 This type is incompatible with
-[LIB] core.js:216:50,55: number
+[LIB] core.js:217:50,55: number
 
 date.js:20:1,23: constructor call
 Error:
 date.js:20:19,22: string
 This type is incompatible with
-[LIB] core.js:216:64,69: number
+[LIB] core.js:217:64,69: number
 
 date.js:21:1,27: constructor call
 Error:
 date.js:21:23,26: string
 This type is incompatible with
-[LIB] core.js:216:79,84: number
+[LIB] core.js:217:79,84: number
 
 date.js:22:1,31: constructor call
 Error:
 date.js:22:27,30: string
 This type is incompatible with
-[LIB] core.js:216:96,101: number
+[LIB] core.js:217:96,101: number
 
 date.js:23:1,35: constructor call
 Error:
 date.js:23:31,34: string
 This type is incompatible with
-[LIB] core.js:216:113,118: number
+[LIB] core.js:217:113,118: number
 
 date.js:24:1,40: constructor call
 Error:
 date.js:24:35,39: string
 This type is incompatible with
-[LIB] core.js:216:135,140: number
+[LIB] core.js:217:135,140: number
 
 Found 8 errors

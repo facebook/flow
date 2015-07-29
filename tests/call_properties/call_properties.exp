@@ -69,6 +69,6 @@ F.js:6:23,28: number
 
 F.js:9:41,51: call of method toFixed
 Property not found in
-[LIB] core.js:167:1,195:1: String
+[LIB] core.js:167:1,196:1: String
 
 Found 17 errors

@@ -3,25 +3,25 @@ overload.js:1:18,28: call of method match
 Error:
 overload.js:1:9,14: number
 This type is incompatible with
-[LIB] core.js:176:43,48: string
+[LIB] core.js:177:43,48: string
 
 overload.js:1:18,28: call of method match
 Error:
 overload.js:1:27,27: number
 This type is incompatible with
-[LIB] core.js:176:19,33: union type
+[LIB] core.js:177:19,33: union type
 
 overload.js:2:18,36: call of method match
 Error:
 overload.js:2:9,14: number
 This type is incompatible with
-[LIB] core.js:176:43,48: string
+[LIB] core.js:177:43,48: string
 
 overload.js:4:18,36: call of method split
 Error:
 overload.js:4:9,14: number
 This type is incompatible with
-[LIB] core.js:183:62,67: string
+[LIB] core.js:184:62,67: string
 
 test2.js:7:2,16: string
 This type is incompatible with

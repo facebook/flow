@@ -13,7 +13,7 @@ libtest.js:3:16,35: property name
 Error:
 libtest.js:3:7,12: number
 This type is incompatible with
-[LIB] core.js:268:11,16: string
+[LIB] core.js:269:11,16: string
 
 libtest.js:4:16,30: function call
 Error:

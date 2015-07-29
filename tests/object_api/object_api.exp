@@ -81,7 +81,7 @@ object_prototype.js:122:25,33: property valueOf
 Error:
 object_prototype.js:122:16,21: number
 This type is incompatible with
-[LIB] core.js:222:5,21: function type
+[LIB] core.js:223:5,21: function type
 
 object_prototype.js:126:16,21: number
 This type is incompatible with
@@ -91,13 +91,13 @@ object_prototype.js:150:32,47: property toLocaleString
 Error:
 object_prototype.js:150:23,28: number
 This type is incompatible with
-[LIB] core.js:219:5,28: function type
+[LIB] core.js:220:5,28: function type
 
 object_prototype.js:151:39,54: property toLocaleString
 Error:
 object_prototype.js:151:30,35: number
 This type is incompatible with
-[LIB] core.js:219:23,28: string
+[LIB] core.js:220:23,28: string
 
 object_prototype.js:155:23,28: number
 This type is incompatible with

@@ -1,8 +1,8 @@
 
 async.js: inconsistent use of library definitions
-[LIB] core.js:351:1,378:1: Promise
+[LIB] core.js:352:1,379:1: Promise
 This type is incompatible with
-[LIB] core.js:381:31,44: union type
+[LIB] core.js:382:31,44: union type
 
 async.js:12:10,10: number
 This type is incompatible with
@@ -10,20 +10,20 @@ async.js:11:30,33: boolean
 
 async.js:45:22,25: undefined
 This type is incompatible with
-[LIB] core.js:351:1,378:1: Promise
+[LIB] core.js:352:1,379:1: Promise
 
 async2.js: inconsistent use of library definitions
-[LIB] core.js:351:1,378:1: Promise
+[LIB] core.js:352:1,379:1: Promise
 This type is incompatible with
-[LIB] core.js:381:31,44: union type
+[LIB] core.js:382:31,44: union type
 
 async2.js:29:21,24: undefined
 This type is incompatible with
-[LIB] core.js:351:1,378:1: Promise
+[LIB] core.js:352:1,379:1: Promise
 
 async2.js:43:28,31: undefined
 This type is incompatible with
-[LIB] core.js:351:1,378:1: Promise
+[LIB] core.js:352:1,379:1: Promise
 
 async2.js:48:3,17: undefined
 This type is incompatible with
@@ -33,13 +33,13 @@ async3.js:23:11,21: await
 Error:
 async3.js:27:10,15: number
 This type is incompatible with
-[LIB] core.js:351:1,378:1: Promise
+[LIB] core.js:352:1,379:1: Promise
 
 async3.js:23:11,21: await
 Error:
 async3.js:31:10,15: string
 This type is incompatible with
-[LIB] core.js:351:1,378:1: Promise
+[LIB] core.js:352:1,379:1: Promise
 
 await_not_in_async.js:5:9,9: Unexpected number
 

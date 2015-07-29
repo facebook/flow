@@ -3,78 +3,78 @@ promise.js:10:1,17:2: call of method then
 Error:
 promise.js:11:11,11: number
 This type is incompatible with
-[LIB] core.js:353:25,38: union type
+[LIB] core.js:354:25,38: union type
 
 promise.js:21:11,23:4: constructor call
 Error:
 promise.js:22:13,13: number
 This type is incompatible with
-[LIB] core.js:353:25,38: union type
+[LIB] core.js:354:25,38: union type
 
 promise.js:32:13,34:6: constructor call
 Error:
 promise.js:33:15,15: number
 This type is incompatible with
-[LIB] core.js:353:25,38: union type
+[LIB] core.js:354:25,38: union type
 
 promise.js:42:1,55:2: call of method then
 Error:
 promise.js:44:13,14: number
 This type is incompatible with
-[LIB] core.js:353:25,38: union type
+[LIB] core.js:354:25,38: union type
 
 promise.js:106:1,109:2: call of method then
 Error:
 promise.js:106:17,17: number
 This type is incompatible with
-[LIB] core.js:371:32,45: union type
+[LIB] core.js:372:32,45: union type
 
 promise.js:112:17,34: call of method resolve
 Error:
 promise.js:112:33,33: number
 This type is incompatible with
-[LIB] core.js:371:32,45: union type
+[LIB] core.js:372:32,45: union type
 
 promise.js:118:33,50: call of method resolve
 Error:
 promise.js:118:49,49: number
 This type is incompatible with
-[LIB] core.js:371:32,45: union type
+[LIB] core.js:372:32,45: union type
 
 promise.js:148:1,153:4: call of method then
 Error:
 promise.js:149:32,37: string
 This type is incompatible with
-[LIB] core.js:358:33,46: union type
+[LIB] core.js:359:33,46: union type
 
 promise.js:157:32,54: call of method resolve
 Error:
 promise.js:157:48,53: string
 This type is incompatible with
-[LIB] core.js:371:32,45: union type
+[LIB] core.js:372:32,45: union type
 
 promise.js:165:48,70: call of method resolve
 Error:
 promise.js:165:64,69: string
 This type is incompatible with
-[LIB] core.js:371:32,45: union type
+[LIB] core.js:372:32,45: union type
 
 promise.js:188:1,193:4: call of method then
 Error:
 promise.js:189:33,38: string
 This type is incompatible with
-[LIB] core.js:368:34,48: union type
+[LIB] core.js:369:34,48: union type
 
 promise.js:197:33,55: call of method resolve
 Error:
 promise.js:197:49,54: string
 This type is incompatible with
-[LIB] core.js:371:32,45: union type
+[LIB] core.js:372:32,45: union type
 
 promise.js:205:49,71: call of method resolve
 Error:
 promise.js:205:65,70: string
 This type is incompatible with
-[LIB] core.js:371:32,45: union type
+[LIB] core.js:372:32,45: union type
 
 Found 13 errors
