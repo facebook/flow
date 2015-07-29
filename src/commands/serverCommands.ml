@@ -53,6 +53,7 @@ module OptionParser(Config : CONFIG) = struct
         ~doc:"Do not include embedded declarations"
     |> flag "--munge-underscore-members" no_arg
         ~doc:"Treat any class member name with a leading underscore as private"
+    |> temp_dir_flag
     |> anon "root" (optional string) ~doc:"Root directory"
   )
 
@@ -105,7 +106,8 @@ module OptionParser(Config : CONFIG) = struct
 
   let result = ref None
   let main error_flags json profile quiet log_file debug verbose verbose_indent
-           all weak traces strip_root lib no_flowlib munge_underscore_members root () =
+           all weak traces strip_root lib no_flowlib munge_underscore_members
+           temp_dir root () =
     let root = CommandUtils.guess_root root in
     let flowconfig = FlowConfig.get root in
     let opt_module = FlowConfig.(match flowconfig.options.moduleSystem with
@@ -134,6 +136,10 @@ module OptionParser(Config : CONFIG) = struct
       | None ->
           FlowConfig.(flowconfig.options.log_file)
     in
+    let opt_temp_dir = match temp_dir with
+    | Some x -> x
+    | None -> FlowConfig.default_temp_dir (* TODO: add flowconfig option *)
+    in
 
     result := Some {
       Options.opt_check_mode = Config.(mode = Check);
@@ -159,6 +165,7 @@ module OptionParser(Config : CONFIG) = struct
       Options.opt_libs;
       Options.opt_no_flowlib = no_flowlib;
       Options.opt_munge_underscores = opt_munge_underscores;
+      Options.opt_temp_dir;
     };
     ()
 

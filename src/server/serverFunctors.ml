@@ -48,27 +48,28 @@ end = struct
     Hh_logger.log "Error: another server is already running?\n";
     exit 1
 
-  let grab_lock root =
-    if not (Lock.grab (FlowConfig.lock_file root))
+  let grab_lock ~tmp_dir root =
+    if not (Lock.grab (FlowConfig.lock_file ~tmp_dir root))
     then other_server_running()
 
-  let grab_init_lock root =
-    ignore(Lock.grab (FlowConfig.init_file root))
+  let grab_init_lock ~tmp_dir root =
+    ignore(Lock.grab (FlowConfig.init_file ~tmp_dir root))
 
-  let release_init_lock root =
-    ignore(Lock.release (FlowConfig.init_file root))
+  let release_init_lock ~tmp_dir root =
+    ignore(Lock.release (FlowConfig.init_file ~tmp_dir root))
 
   (* This code is only executed when the options --check is NOT present *)
   let go options init_fun =
     let root = Options.root options in
+    let tmp_dir = Options.temp_dir options in
     let t = Unix.gettimeofday () in
-    grab_lock root;
+    grab_lock ~tmp_dir root;
     Hh_logger.log "Initializing Server (This might take some time)";
-    grab_init_lock root;
+    grab_init_lock ~tmp_dir root;
     (* note: we only run periodical tasks on the root, not extras *)
     ServerPeriodical.init root;
     let env = init_fun () in
-    release_init_lock root;
+    release_init_lock ~tmp_dir root;
     Hh_logger.log "Server is READY";
     let t' = Unix.gettimeofday () in
     Hh_logger.log "Took %f seconds to initialize." (t' -. t);
@@ -160,9 +161,10 @@ end = struct
 
   let serve genv env socket =
     let root = Options.root genv.options in
+    let tmp_dir = Options.temp_dir genv.options in
     let env = ref env in
     while true do
-      let lock_file = FlowConfig.lock_file root in
+      let lock_file = FlowConfig.lock_file ~tmp_dir root in
       if not (Lock.check lock_file) then begin
         Hh_logger.log "Lost %s lock; reacquiring.\n" Program.name;
         FlowEventLogger.lock_lost lock_file;
@@ -194,6 +196,7 @@ end = struct
   *)
   let main options =
     let root = Options.root options in
+    let tmp_dir = Options.temp_dir options in
     FlowEventLogger.init_server root;
     Program.preinit ();
     SharedMem.(init default_config);
@@ -201,7 +204,7 @@ end = struct
     * someone C-c the client.
     *)
     Sys.set_signal Sys.sigpipe Sys.Signal_ignore;
-    PidLog.init (FlowConfig.pids_file root);
+    PidLog.init (FlowConfig.pids_file ~tmp_dir root);
     PidLog.log ~reason:"main" (Unix.getpid());
     let watch_paths = root :: Program.get_watch_paths options in
     let genv =
@@ -214,7 +217,7 @@ end = struct
       Program.run_once_and_exit genv env
     else
       let env = MainInit.go options program_init in
-      let socket = Socket.init_unix_socket (FlowConfig.socket_file root) in
+      let socket = Socket.init_unix_socket (FlowConfig.socket_file ~tmp_dir root) in
       serve genv env socket
 
   let daemonize options =

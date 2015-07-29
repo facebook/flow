@@ -21,6 +21,7 @@ type options = {
   log_file: Path.t;
 }
 
+val default_temp_dir: string
 val default_module_system: moduleSystem
 val default_options: Path.t -> options
 
@@ -46,11 +47,10 @@ val get: Path.t -> config
 val get_unsafe: unit -> config
 val fullpath: Path.t -> string
 
-val tmp_dir: string
-val init_file: Path.t -> string
-val lock_file: Path.t -> string
-val pids_file: Path.t -> string
-val socket_file: Path.t -> string
+val init_file: tmp_dir:string -> Path.t -> string
+val lock_file: tmp_dir:string -> Path.t -> string
+val pids_file: tmp_dir:string -> Path.t -> string
+val socket_file: tmp_dir:string -> Path.t -> string
 
 val init: Path.t -> string list -> unit
 

@@ -30,6 +30,7 @@ type options = {
   opt_no_flowlib: bool;
   opt_module_name_mappers: (Str.regexp * string) list;
   opt_munge_underscores: bool;
+  opt_temp_dir: string;
 }
 
 let error_flags opts = opts.opt_error_flags
@@ -38,3 +39,4 @@ let log_file opts = opts.opt_log_file
 let root opts = opts.opt_root
 let should_detach opts = opts.opt_should_detach
 let should_indent_verbose opts = opts.opt_verbose_indent
+let temp_dir opts = opts.opt_temp_dir

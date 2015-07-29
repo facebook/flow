@@ -160,14 +160,14 @@ let get_all =
   in
   fun next -> get_all_rec next SSet.empty
 
-let init libs =
+let init ~tmp_dir libs =
   match !lib_files with
   | Some libs -> ()
   | None -> (
     let libs = if Modes_js.modes.no_flowlib
       then libs
       else
-        let root = Path.make (Tmp.temp_dir FlowConfig.tmp_dir "flowlib") in
+        let root = Path.make (Tmp.temp_dir tmp_dir "flowlib") in
         if Flowlib.extract_flowlib root
         then root::libs
         else (print_endline "Could not locate flowlib files"; exit 1)

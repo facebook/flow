@@ -110,6 +110,12 @@ let json_flags prev = CommandSpec.ArgSpec.(
   |> flag "--json" no_arg ~doc:"Output results in JSON format"
 )
 
+let temp_dir_flag prev = CommandSpec.ArgSpec.(
+  prev
+  |> flag "--temp-dir" string
+      ~doc:"Directory in which to store temp files (default: /tmp/flow/)"
+)
+
 (* relativize a loc's source path to a given root whenever strip_root is set *)
 let relativize strip_root root loc =
   if not strip_root then loc else Loc.({
@@ -124,9 +130,10 @@ type command_params = {
   retry_if_init : bool;
   timeout : int;
   no_auto_start : bool;
+  temp_dir : string;
 }
 
-let collect_server_flags main timeout from retries retry_if_init no_auto_start =
+let collect_server_flags main timeout from retries retry_if_init no_auto_start temp_dir =
   let default def = function
   | Some x -> x
   | None -> def in
@@ -136,6 +143,7 @@ let collect_server_flags main timeout from retries retry_if_init no_auto_start =
     retry_if_init = (default true retry_if_init);
     timeout = (default 0 timeout);
     no_auto_start = no_auto_start;
+    temp_dir = (default FlowConfig.default_temp_dir temp_dir);
   }
 
 
@@ -152,20 +160,27 @@ let server_flags prev = CommandSpec.ArgSpec.(
       ~doc:"retry if the server is initializing (default: true)"
   |> flag "--no-auto-start" no_arg
       ~doc:"If the server if it is not running, do not start it; just exit"
+  |> temp_dir_flag
 )
 
-let start_flow_server root =
+let start_flow_server ?temp_dir root =
   Printf.fprintf stderr "Flow server launched for %s\n%!"
     (Path.to_string root);
-  let flow_server = Printf.sprintf "%s start %s 1>&2"
+  let temp_dir_arg = match temp_dir with
+  | Some dir -> Printf.sprintf "--temp-dir=%s " (Filename.quote dir)
+  | None -> ""
+  in
+  let flow_server = Printf.sprintf "%s start %s%s 1>&2"
     (Filename.quote (Sys.argv.(0)))
+    temp_dir_arg
     (Filename.quote (Path.to_string root)) in
   match Unix.system flow_server with
     | Unix.WEXITED 0 -> ()
     | _ -> (Printf.fprintf stderr "Could not start flow server!\n"; exit 77)
 
 
-let server_exists root = not (Lock.check (FlowConfig.lock_file root))
+let server_exists ~tmp_dir root =
+  not (Lock.check (FlowConfig.lock_file ~tmp_dir root))
 
 let wait_on_server_restart ic =
   try
@@ -181,12 +196,12 @@ let wait_on_server_restart ic =
      ()
 
 (* Function connecting to hh_server *)
-let connect root =
-  if not (server_exists root)
+let connect ~tmp_dir root =
+  if not (server_exists ~tmp_dir root)
   then raise CommandExceptions.Server_missing;
   let ic, oc, cstate =
     try
-      let sock_name = Socket.get_path (FlowConfig.socket_file root) in
+      let sock_name = Socket.get_path (FlowConfig.socket_file ~tmp_dir root) in
       let sockaddr = Unix.ADDR_UNIX sock_name in
       let ic, oc = Unix.open_connection sockaddr in
       try
@@ -198,7 +213,7 @@ let connect root =
         close_in_noerr ic;
         raise e
     with _ ->
-      if not (Lock.check (FlowConfig.init_file root))
+      if not (Lock.check (FlowConfig.init_file ~tmp_dir root))
       then raise CommandExceptions.Server_initializing
       else raise CommandExceptions.Server_cant_connect
   in
@@ -222,7 +237,7 @@ let connect root =
 let rec connect_with_autostart server_flags root =
   check_timeout ();
   try
-    connect root
+    connect ~tmp_dir:server_flags.temp_dir root
   with
   | CommandExceptions.Server_initializing ->
       let init_msg = "flow server still initializing. If it was " ^
@@ -246,7 +261,7 @@ let rec connect_with_autostart server_flags root =
   | CommandExceptions.Server_missing ->
     if not server_flags.no_auto_start
     then (
-      start_flow_server root;
+      start_flow_server ~temp_dir:server_flags.temp_dir root;
       retry server_flags root
         3 "The flow server will be ready in a moment."
     ) else (

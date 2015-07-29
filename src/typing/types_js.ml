@@ -47,7 +47,7 @@ let init_modes opts = Options.(
   modes.munge_underscores <- opts.opt_munge_underscores;
   (* TODO: confirm that only master uses strip_root, otherwise set it! *)
   Module_js.init opts;
-  Files_js.init opts.opt_libs
+  Files_js.init ~tmp_dir:(Options.temp_dir opts) opts.opt_libs
 )
 
 (****************** shared context heap *********************)

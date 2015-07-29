@@ -46,13 +46,14 @@ let spec = {
     |> flag "--munge-underscore-members" no_arg
         ~doc:"Treat any class member name with a leading underscore as private"
     |> error_flags
+    |> temp_dir_flag
     |> anon "root" (required string)
         ~doc:"Root"
   )
 }
 
 let main all weak debug verbose verbose_indent json profile quiet module_
-         lib no_flowlib munge_underscore_members error_flags root () =
+         lib no_flowlib munge_underscore_members error_flags temp_dir root () =
   let opt_libs = match lib with
   | None -> []
   | Some lib -> [Path.make lib]
@@ -70,6 +71,11 @@ let main all weak debug verbose verbose_indent json profile quiet module_
 
   let munge_underscores = munge_underscore_members ||
       FlowConfig.(flowconfig.options.munge_underscores) in
+
+  let opt_temp_dir = match temp_dir with
+  | Some x -> x
+  | None -> FlowConfig.default_temp_dir (* TODO: add flowconfig option *)
+  in
 
   let options = {
     Options.opt_error_flags = error_flags;
@@ -95,6 +101,7 @@ let main all weak debug verbose verbose_indent json profile quiet module_
     Options.opt_libs;
     Options.opt_no_flowlib = no_flowlib;
     Options.opt_munge_underscores = munge_underscores;
+    Options.opt_temp_dir;
   } in
 
   if ! Sys.interactive
