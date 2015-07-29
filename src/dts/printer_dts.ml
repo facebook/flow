@@ -838,7 +838,7 @@ and statement is_global scope prefix fmt =
       id; body; extends; typeParameters;
     }), _ ->
       let scope = (if_true is_global scope) in
-      fprintf fmt "@[<v>declare class %a%a%a %a@]"
+      fprintf fmt "@[<v>declare interface %a%a%a %a@]"
         (id_ scope) id
         (opt (non_empty "<@[<h>%a@]>" (list ~sep:"," (type_param scope))))
           typeParameters

@@ -19,6 +19,7 @@ converted=0
 checked=0
 cd $ROOT
 printf "[libs]\n" >.flowconfig
+printf "// @flow" > test.js
 for dir in $ROOT/*/
 do
     dir=${dir%*/}

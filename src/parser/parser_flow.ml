@@ -21,13 +21,13 @@ let is_future_reserved = function
   | "enum"
   | "export"
   | "extends"
+  | "interface"
   | "import"
   | "super" -> true
   | _ -> false
 
 let is_strict_reserved = function
   | "implements"
-  | "interface"
   | "package"
   | "private"
   | "protected"
@@ -2838,8 +2838,8 @@ end = struct
         Parse.statement env
       end
 
-    (* TODO: deprecate `interface`; somewhat confusingly, it plays two roles,
-       which are subsumed by `type` and `declare class` *)
+      (* TODO: deprecate `interface`; somewhat confusingly, it plays two roles,
+         which are subsumed by `type` and `declare class` *)
     and interface =
       let rec extends env acc =
         let extend = Type.generic env in
@@ -2899,6 +2899,35 @@ end = struct
           let body = Type._object ~allow_static:true env in
           let loc = Loc.btwn start_loc (fst body) in
           loc, Statement.(DeclareClass Interface.({
+            id;
+            typeParameters;
+            body;
+            extends;
+          })) in
+
+      let declare_interface =
+        let rec extends env acc =
+          let extend = Type.generic env in
+          let acc = extend::acc in
+          match Peek.token env with
+          | T_COMMA ->
+            Expect.token env T_COMMA;
+            extends env acc
+          | _ -> List.rev acc
+
+        in fun env start_loc ->
+          let env = env |> with_strict true in
+          Expect.token env T_INTERFACE;
+          let id = Parse.identifier env in
+          let typeParameters = Type.type_parameter_declaration env in
+          let extends = if Peek.token env = T_EXTENDS
+            then begin
+              Expect.token env T_EXTENDS;
+              extends env []
+            end else [] in
+          let body = Type._object env in
+          let loc = Loc.btwn start_loc (fst body) in
+          loc, Statement.(InterfaceDeclaration Interface.({
             id;
             typeParameters;
             body;
@@ -2999,6 +3028,9 @@ end = struct
         | T_CLASS ->
             Expect.token env T_DECLARE;
             declare_class env start_loc
+        | T_INTERFACE ->
+            Expect.token env T_DECLARE;
+            declare_interface env start_loc
         | T_TYPE ->
             Expect.token env T_DECLARE;
             declare_type_alias env start_loc
