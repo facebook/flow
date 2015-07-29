@@ -5427,51 +5427,6 @@ let analyze_dependencies cx ins out =
     find_dependencies dep_map ins out
   ) else SSet.empty
 
-(* TODO: Think of a better place to put this *)
-let rec extract_members cx this_t =
-  match this_t with
-  | MaybeT t ->
-      (* TODO: do we want to autocomplete when the var could be null? *)
-      (*extract_members cx t*)
-      SMap.empty
-  | InstanceT (reason, _, super,
-              {fields_tmap = fields;
-               methods_tmap = methods;
-               _}) ->
-      let fields = find_props cx fields in
-      let methods = find_props cx methods in
-      let super_t = resolve_type cx super in
-      let members = SMap.union fields methods in
-      let super_flds = extract_members cx super_t in
-      SMap.union super_flds members
-  | ObjT (_, {props_tmap = flds; proto_t = proto; _}) ->
-      let proto_t = resolve_type cx proto in
-      let prot_members = extract_members cx proto_t in
-      let members = find_props cx flds in
-      SMap.union prot_members members
-  | TypeAppT (c, ts) ->
-      let c = resolve_type cx c in
-      let inst_t = instantiate_poly_t cx c ts in
-      let inst_t = instantiate_type inst_t in
-      extract_members cx inst_t
-  | PolyT (type_params, sub_type) ->
-      (* TODO: replace type parameters with stable/proper names? *)
-      extract_members cx sub_type
-  | ClassT (InstanceT (_, static, _, _)) ->
-      let static_t = resolve_type cx static in
-      extract_members cx static_t
-  | ClassT t ->
-      (* TODO: Can this happen? *)
-      extract_members cx t
-  | IntersectionT (r, ts)
-  | UnionT (r, ts) ->
-      let ts = List.map (resolve_type cx) ts in
-      let members = List.map (extract_members cx) ts in
-      intersect_members cx members
-  | _ ->
-      (* TODO: What types could come up here which we need to handle? *)
-      SMap.empty
-
 and intersect_members cx members =
   match members with
   | [] -> SMap.empty
@@ -5489,3 +5444,85 @@ and intersect_members cx members =
       SMap.map (List.fold_left (fun acc x ->
           merge_type cx (acc, x)
         ) UndefT.t) map
+
+(* It's kind of lame that Autocomplete is in this module, but it uses a bunch
+ * of internal APIs so for now it's easier to keep it here than to expose those
+ * APIs *)
+module Autocomplete : sig
+  type member_result =
+    | Success of Type.t SMap.t
+    | FailureMaybeType
+    | FailureUnhandledType of Type.t
+
+  val map_of_member_result: member_result -> Type.t SMap.t
+
+  val extract_members: context -> Type.t -> member_result
+
+end = struct
+
+  type member_result =
+    | Success of Type.t SMap.t
+    | FailureMaybeType
+    | FailureUnhandledType of Type.t
+
+  let map_of_member_result = function
+    | Success map -> map
+    | FailureMaybeType
+    | FailureUnhandledType _ ->
+        SMap.empty
+
+  (* TODO: Think of a better place to put this *)
+  let rec extract_members cx this_t =
+    match this_t with
+    | MaybeT t ->
+        (* TODO: do we want to autocomplete when the var could be null? *)
+        FailureMaybeType
+    | InstanceT (reason, _, super,
+                {fields_tmap = fields;
+                methods_tmap = methods;
+                _}) ->
+        let fields = find_props cx fields in
+        let methods = find_props cx methods in
+        let super_t = resolve_type cx super in
+        let members = SMap.union fields methods in
+        let super_flds = extract_members_as_map cx super_t in
+        Success (SMap.union super_flds members)
+    | ObjT (_, {props_tmap = flds; proto_t = proto; _}) ->
+        let proto_t = resolve_type cx proto in
+        let prot_members = extract_members_as_map cx proto_t in
+        let members = find_props cx flds in
+        Success (SMap.union prot_members members)
+    | TypeAppT (c, ts) ->
+        let c = resolve_type cx c in
+        let inst_t = instantiate_poly_t cx c ts in
+        let inst_t = instantiate_type inst_t in
+        extract_members cx inst_t
+    | PolyT (type_params, sub_type) ->
+        (* TODO: replace type parameters with stable/proper names? *)
+        extract_members cx sub_type
+    | ClassT (InstanceT (_, static, _, _)) ->
+        let static_t = resolve_type cx static in
+        extract_members cx static_t
+    | ClassT t ->
+        (* TODO: Can this happen? *)
+        extract_members cx t
+    | IntersectionT (r, ts) ->
+        (* Intersection type should autocomplete for every property of every type
+        * in the intersection *)
+        let ts = List.map (resolve_type cx) ts in
+        let members = List.map (extract_members_as_map cx) ts in
+        Success (List.fold_left SMap.union SMap.empty members)
+    | UnionT (r, ts) ->
+        (* Union type should autocomplete for only the properties that are in
+        * every type in the intersection *)
+        let ts = List.map (resolve_type cx) ts in
+        let members = List.map (extract_members_as_map cx) ts in
+        Success (intersect_members cx members)
+    | _ ->
+        (* TODO: What types could come up here which we need to handle? *)
+        FailureUnhandledType this_t
+
+  and extract_members_as_map cx this_t =
+    let member_result = extract_members cx this_t in
+    map_of_member_result member_result
+end

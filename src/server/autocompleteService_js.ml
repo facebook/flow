@@ -114,19 +114,31 @@ let autocomplete_filter_members members =
     not (Reason_js.is_internal_name key)
   ) members
 
-let autocomplete_member cx this =
-  let this_t = Flow_js.resolve_type cx this in
+let autocomplete_member cx this = Flow_js.(
+  let this_t = resolve_type cx this in
   (* Resolve primitive types to their internal class type. We do this to allow
      autocompletion on these too. *)
-  let this_t = Flow_js.resolve_builtin_class cx this_t in
-  let result_map = Flow_js.extract_members cx this_t in
+  let this_t = resolve_builtin_class cx this_t in
+  let result = Autocomplete.extract_members cx this_t in
+
+  let result_str, json_data = Autocomplete.(Hh_json.(match result with
+    | Success _ -> "SUCCESS", JAssoc []
+    | FailureMaybeType -> "FAILURE_NULLABLE", JAssoc []
+    | FailureUnhandledType t -> "FAILURE_UNHANDLED_TYPE", JAssoc [
+      "type", Constraint_js.json_of_t ~depth:3 cx t;
+    ])) in
+  FlowEventLogger.autocomplete_member_result result_str json_data;
+
+  let result_map = Autocomplete.map_of_member_result result in
+
   let result_map = autocomplete_filter_members result_map in
   let result_map = SMap.mapi (fun name t ->
       let loc = loc_of_t t in
-      let gt = Flow_js.printified_type cx t in
+      let gt = printified_type cx t in
       autocomplete_create_result cx name gt loc
     ) result_map in
   List.rev (SMap.values result_map)
+)
 
 let autocomplete_id cx env =
   Utils.SMap.fold Scope.(fun key value acc ->

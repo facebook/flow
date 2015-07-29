@@ -129,5 +129,13 @@ val printify_type: context -> Type.t -> Type.t
 (* returns a grounded(, normalized) and printified version of the type *)
 val printified_type: context -> Type.t -> Type.t
 
-(* class/ojc *)
-val extract_members: context -> Type.t -> Type.t SMap.t
+module Autocomplete : sig
+  type member_result =
+    | Success of Type.t SMap.t
+    | FailureMaybeType
+    | FailureUnhandledType of Type.t
+
+  val map_of_member_result: member_result -> Type.t SMap.t
+
+  val extract_members: context -> Type.t -> member_result
+end
