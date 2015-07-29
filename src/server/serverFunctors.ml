@@ -174,11 +174,8 @@ end = struct
       end;
       ServerPeriodical.call_before_sleeping();
       let has_client = sleep_and_check socket in
-      let start_t = Unix.time () in
       let loop_count, rechecked_count, new_env = recheck_loop genv !env in
       env := new_env;
-      if rechecked_count > 0
-      then FlowEventLogger.recheck_end start_t loop_count rechecked_count;
       if has_client then handle_connection genv !env socket;
       ServerEnv.invoke_async_queue ();
       EventLogger.flush ();
@@ -186,7 +183,7 @@ end = struct
 
   let create_program_init genv env = fun () ->
     let env = Program.init genv env in
-    FlowEventLogger.init_done "fresh";
+    FlowEventLogger.init_done ();
     env
 
   (* The main entry point of the daemon
@@ -197,7 +194,7 @@ end = struct
   *)
   let main options =
     let root = Options.root options in
-    FlowEventLogger.init root (Unix.time ());
+    FlowEventLogger.init_server root;
     Program.preinit ();
     SharedMem.(init default_config);
     (* this is to transform SIGPIPE in an exception. A SIGPIPE can happen when

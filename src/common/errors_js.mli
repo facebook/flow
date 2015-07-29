@@ -61,6 +61,8 @@ val parse_error_to_flow_error : (Loc.t * Parse_error.t) -> error
 
 val to_list : ErrorSet.t -> error list
 
+val json_of_errors : Error.t list -> Hh_json.json
+
 (******* Error output functionality working on Hack's error *******)
 
 val print_errorl : bool -> error list -> out_channel -> unit

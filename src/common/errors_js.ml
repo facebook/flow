@@ -209,7 +209,7 @@ let to_list errors = ErrorSet.elements errors
 (******* Error output functionality working on Hack's error *******)
 
 (* adapted from Errors.to_json to output multi-line errors properly *)
-let to_json (error : error) = Json.(
+let json_of_error (error : error) = Json.(
   let level, messages, trace_reasons = error in
   let level_str = match level with
   | ERROR -> "error"
@@ -225,6 +225,8 @@ let to_json (error : error) = Json.(
   JAssoc [ "message", JList elts ]
 )
 
+let json_of_errors errors = Json.JList (List.map json_of_error errors)
+
 let print_errorl_json oc el =
   let res =
     if el = [] then
@@ -233,9 +235,8 @@ let print_errorl_json oc el =
                     "version", Json.JString Build_id.build_id_ohai;
                   ]
     else
-      let errors_json = List.map to_json el in
       Json.JAssoc [ "passed", Json.JBool false;
-                    "errors", Json.JList errors_json;
+                    "errors", json_of_errors el;
                     "version", Json.JString Build_id.build_id_ohai;
                   ]
   in
