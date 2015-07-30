@@ -217,6 +217,8 @@ and _ ty_ =
 and abstract_kind =
     (* newtype foo<T1, T2> ... *)
   | AKnewtype of string * locl ty list
+    (* enum foo ... *)
+  | AKenum of string
     (* <T super C> ; None if 'as' constrained *)
   | AKgeneric of string * locl ty option
     (* see dependent_type *)
@@ -412,6 +414,7 @@ module AbstractKind = struct
   let to_string = function
     | AKnewtype (name, _) -> name
     | AKgeneric (name, _) -> name
+    | AKenum name -> "enum "^(Utils.strip_ns name)
     | AKdependent (dt, ids) ->
        let dt =
          match dt with
@@ -424,6 +427,7 @@ module AbstractKind = struct
        String.concat "::" (dt::ids)
   let is_classname = function
     | AKnewtype (name, _) -> (name = Naming_special_names.Classes.cClassname)
+    | AKenum _ -> false
     | AKgeneric _ -> false
     | AKdependent _ -> false
 end

@@ -95,71 +95,75 @@ let rec localize_with_env ~ety_env env (dty: decl ty) =
   match dty with
   | _, (Tany | Tmixed | Tprim _ ) as x -> env, (ety_env, x)
   | r, Tthis ->
-     let ty = match ety_env.this_ty with
-       | Reason.Rnone, ty -> r, ty
-       | Reason.Rexpr_dep_type (_, pos, s), ty ->
-           Reason.Rexpr_dep_type (r, pos, s), ty
-       | reason, ty when ety_env.from_class <> None -> reason, ty
-       | reason, ty ->
-           Reason.Rinstantiate (reason, SN.Typehints.this, r), ty in
-     let ty =
-       match ety_env.from_class with
-       | Some cid -> ExprDepTy.make env cid ty
-       | _ -> ty in
-     env, (ety_env, ty)
+      let ty = match ety_env.this_ty with
+        | Reason.Rnone, ty -> r, ty
+        | Reason.Rexpr_dep_type (_, pos, s), ty ->
+            Reason.Rexpr_dep_type (r, pos, s), ty
+        | reason, ty when ety_env.from_class <> None -> reason, ty
+        | reason, ty ->
+            Reason.Rinstantiate (reason, SN.Typehints.this, r), ty in
+      let ty =
+        match ety_env.from_class with
+        | Some cid -> ExprDepTy.make env cid ty
+        | _ -> ty in
+      env, (ety_env, ty)
   | r, Tarray (ty1, ty2) ->
       let env, ty1 = opt (localize ~ety_env) env ty1 in
       let env, ty2 = opt (localize ~ety_env) env ty2 in
       env, (ety_env, (r, Tarray (ty1, ty2)))
   | r, Tgeneric (x, cstr_opt) ->
-     (match SMap.get x ety_env.substs with
+      (match SMap.get x ety_env.substs with
       | Some x_ty ->
-         let env =
-           match cstr_opt with
-           | Some (ck, ty) ->
-              let env, ty = localize ~ety_env env ty in
-              TSubst.add_check_constraint_todo env r x ck ty x_ty
-           | None -> env
-         in
-         env, (ety_env, (Reason.Rinstantiate (fst x_ty, x, r), snd x_ty))
+          let env =
+            match cstr_opt with
+            | Some (ck, ty) ->
+                let env, ty = localize ~ety_env env ty in
+                TSubst.add_check_constraint_todo env r x ck ty x_ty
+            | None -> env
+          in
+          env, (ety_env, (Reason.Rinstantiate (fst x_ty, x, r), snd x_ty))
       | None ->
-         (match cstr_opt with
-         | None ->
-             env, (ety_env, (r, Tabstract (AKgeneric (x, None), None)))
-         | Some (Ast.Constraint_as, ty) ->
-             let env, ty = localize ~ety_env env ty in
-             env, (ety_env, (r, Tabstract (AKgeneric (x, None), Some ty)))
-         | Some (Ast.Constraint_super, ty) ->
-             let env, ty = localize ~ety_env env ty in
-             env, (ety_env, (r, Tabstract (AKgeneric (x, Some ty), None)))
-         )
-     )
+          (match cstr_opt with
+          | None ->
+              env, (ety_env, (r, Tabstract (AKgeneric (x, None), None)))
+          | Some (Ast.Constraint_as, ty) ->
+              let env, ty = localize ~ety_env env ty in
+              env, (ety_env, (r, Tabstract (AKgeneric (x, None), Some ty)))
+          | Some (Ast.Constraint_super, ty) ->
+              let env, ty = localize ~ety_env env ty in
+              env, (ety_env, (r, Tabstract (AKgeneric (x, Some ty), None)))
+          )
+      )
   | r, Toption ty ->
-      let env, ty = localize ~ety_env env ty in
-      let ty_ =
-        if TUtils.is_option env ty then
-          snd ty
-        else
-          Toption ty in
-      env, (ety_env, (r, ty_))
+       let env, ty = localize ~ety_env env ty in
+       let ty_ =
+         if TUtils.is_option env ty then
+           snd ty
+         else
+           Toption ty in
+       env, (ety_env, (r, ty_))
   | r, Tfun ft ->
-     let env, ft = localize_ft ~ety_env env ft in
-     env, (ety_env, (r, Tfun ft))
+      let env, ft = localize_ft ~ety_env env ft in
+      env, (ety_env, (r, Tfun ft))
   | r, Tapply ((_, x), argl) when Env.is_typedef x ->
-     let env, argl = lfold (localize ~ety_env) env argl in
-     TUtils.expand_typedef ety_env env r x argl
+      let env, argl = lfold (localize ~ety_env) env argl in
+      TUtils.expand_typedef ety_env env r x argl
+  | r, Tapply ((_, x), _argl) when Env.is_enum x ->
+      (* if argl <> [], nastInitCheck would have raised an error *)
+      let env, cstr = opt (localize ~ety_env) env (Env.get_enum_constraint x) in
+      env, (ety_env, (r, Tabstract (AKenum x, cstr)))
   | r, Tapply (cls, tyl) ->
-     let env, tyl = lfold (localize ~ety_env) env tyl in
-     env, (ety_env, (r, Tclass (cls, tyl)))
+      let env, tyl = lfold (localize ~ety_env) env tyl in
+      env, (ety_env, (r, Tclass (cls, tyl)))
   | r, Ttuple tyl ->
-     let env, tyl = lfold (localize ~ety_env) env tyl in
-     env, (ety_env, (r, Ttuple tyl))
+      let env, tyl = lfold (localize ~ety_env) env tyl in
+      env, (ety_env, (r, Ttuple tyl))
   | r, Taccess (root_ty, ids) ->
       let env, root_ty = localize ~ety_env env root_ty in
       TUtils.expand_typeconst ety_env env r root_ty ids
   | r, Tshape (fields_known, tym) ->
-     let env, tym = ShapeMap.map_env (localize ~ety_env) env tym in
-     env, (ety_env, (r, Tshape (fields_known, tym)))
+      let env, tym = ShapeMap.map_env (localize ~ety_env) env tym in
+      env, (ety_env, (r, Tshape (fields_known, tym)))
 
 and localize ~ety_env env ty =
   let env, (_, ty) = localize_with_env ~ety_env env ty in

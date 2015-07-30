@@ -76,6 +76,7 @@ module ErrorString = struct
     let x = strip_ns @@ AbstractKind.to_string ak in
     match ak, cstr with
     | AKnewtype (_, _), _ -> "an object of type "^x
+    | AKenum _, _ -> "a value of "^x
     | AKgeneric (_, _), _ -> "a value of generic type "^x
     | AKdependent (`cls c, []), Some (_, ty) ->
         type_ ty^" (known to be exactly the class '"^strip_ns c^"')"
@@ -153,7 +154,7 @@ module Suggest = struct
     | Tapply ((_, cid), [x]) -> (Utils.strip_ns cid)^"<"^type_ x^">"
     | Tapply ((_, cid), l)   -> (Utils.strip_ns cid)^"<"^list l^">"
     | Tclass ((_, cid), []) -> Utils.strip_ns cid
-    | Tabstract (AKnewtype (cid, []), _)  -> Utils.strip_ns cid
+    | Tabstract ((AKnewtype (cid, []) | AKenum cid), _) -> Utils.strip_ns cid
     | Tclass ((_, cid), [x]) -> (Utils.strip_ns cid)^"<"^type_ x^">"
     | Tabstract (AKnewtype (cid, [x]), _) ->
         (Utils.strip_ns cid)^"<"^type_ x^">"

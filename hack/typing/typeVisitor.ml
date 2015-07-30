@@ -59,6 +59,7 @@ class virtual ['a] type_visitor : ['a] type_visitor_type = object(this)
     let acc =
       match ak with
       | AKnewtype (_, tyl) -> List.fold_left this#on_type acc tyl
+      | AKenum _name -> acc
       | AKgeneric (_, super) ->
           Option.fold ~f:this#on_type ~init:acc super
       | AKdependent (_, _) -> acc in

@@ -94,6 +94,7 @@ module ExprDepTy = struct
     | Tabstract (
         (AKgeneric _
         | AKnewtype _
+        | AKenum _
         | AKdependent (`this, [])
         ), Some ty) ->
         should_apply ~seen env ty

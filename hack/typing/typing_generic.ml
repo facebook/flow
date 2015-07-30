@@ -28,7 +28,7 @@ end = struct
 
   let rec ty (_, x) = ty_ x
   and ty_ = function
-    | Tabstract (AKdependent (_, _), cstr) -> ty_opt cstr
+    | Tabstract ((AKdependent (_, _) | AKenum _), cstr) -> ty_opt cstr
     | Tabstract (AKgeneric (x, _), _) -> raise (Found x)
     | Tanon _ | Tany | Tmixed | Tprim _ -> ()
     | Tarray (ty1, ty2) ->

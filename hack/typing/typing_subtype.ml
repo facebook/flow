@@ -544,7 +544,7 @@ and sub_type_with_uenv env (uenv_super, ty_super) (uenv_sub, ty_sub) =
           subtype_tparams env name_super variancel tyl_super tyl_sub
       | _ -> env
       )
-  | _, (_, Tabstract (AKnewtype (_, _), Some x)) ->
+  | _, (_, Tabstract ((AKnewtype (_, _) | AKenum _), Some x)) ->
       Errors.try_
         (fun () ->
           fst @@
@@ -560,24 +560,6 @@ and sub_type_with_uenv env (uenv_super, ty_super) (uenv_sub, ty_sub) =
             { uenv_sub with
               TUEnv.dep_tys = (r, d)::uenv_sub.TUEnv.dep_tys } in
           sub_type_with_uenv env (uenv_super, ty_super) (uenv_sub, ty))
-  (* Handle enums with subtyping constraints. *)
-  | _, (_, (Tclass ((_, x), [])))
-    when Typing_env.get_enum_constraint x <> None ->
-    (match Typing_env.get_enum_constraint x with
-      | Some base ->
-        (* Handling is the same as abstracts with as *)
-        Errors.try_
-          (fun () -> fst (Unify.unify env ty_super ty_sub))
-          (fun _ ->
-           let ety_env = {
-             type_expansions = [];
-             substs = SMap.empty;
-             this_ty = ExprDepTy.apply uenv_sub.TUEnv.dep_tys ty_sub;
-             from_class = None;
-           } in
-           let env, base = Phase.localize ~ety_env env base in
-           sub_type env ty_super base)
-      | None -> assert false)
   (* If all else fails we fall back to the super/as constraint on a generics. *)
   | _, (r_sub, Tabstract (AKgeneric (x, _), Some ty_sub)) ->
       (Errors.try_
@@ -611,9 +593,13 @@ and sub_string p env ty2 =
       List.fold_left (sub_string p) env tyl
   | (_, Tprim _) ->
       env
+  | (_, Tabstract (AKenum _, _)) ->
+      (* Enums are either ints or strings, and so can always be used in a
+       * stringish context *)
+      env
   | (_, Tabstract (ak, _)) when AbstractKind.is_classname ak ->
-    (* A classname is the string 'Foo' obtained via Foo::class *)
-    env
+      (* A classname is the string 'Foo' obtained via Foo::class *)
+      env
   | (_, Tabstract (_, Some ty)) ->
       sub_string p env ty
   | (r2, Tclass (x, _)) ->
@@ -624,10 +610,7 @@ and sub_string p env ty2 =
           (* A Stringish is a string or an object with a __toString method
            * that will be converted to a string *)
           when tc.tc_name = SN.Classes.cStringish
-          || SMap.mem SN.Classes.cStringish tc.tc_ancestors
-          (* Apply enum means that we're dealing with enum values,
-           * which are primitives (int/string) *)
-          || tc.tc_kind = Ast.Cenum ->
+          || SMap.mem SN.Classes.cStringish tc.tc_ancestors ->
         env
       | Some _ ->
         Errors.object_string p (Reason.to_pos r2);

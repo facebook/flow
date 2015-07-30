@@ -74,7 +74,7 @@ let check_valid_array_key_type f_fail ~allow_any:allow_any env p t =
   (match t' with
     | Tprim (Tint | Tstring | Tclassname _) -> ()
     (* Enums have to be valid array keys *)
-    | Tclass ((_, x), _) when Typing_env.is_enum x -> ()
+    | Tabstract (AKenum _, _) -> ()
     | Tany when allow_any -> ()
     | Tany | Tmixed | Tarray (_, _) | Tprim _ | Toption _
       | Tvar _ | Tabstract (_, _) | Tclass (_, _) | Ttuple _ | Tanon (_, _)
@@ -121,7 +121,7 @@ let enum_class_check env tc consts const_types =
           | Tmixed -> ()
           | Tprim Tint | Tprim Tstring | Tprim Tarraykey -> ()
           (* Allow enums in terms of other enums *)
-          | Tclass ((_, x), _) when Typing_env.is_enum x -> ()
+          | Tabstract (AKenum _, _) -> ()
           (* Don't tell anyone, but we allow type params too, since there are
            * Enum subclasses that need to do that *)
           | Tabstract (AKgeneric (_, _), _) -> ()

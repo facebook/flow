@@ -631,12 +631,11 @@ and check_exhaustiveness env pos ty caselist =
       List.fold_left begin fun env ty ->
         check_exhaustiveness env pos ty caselist
       end env tyl
-    | Tclass ((_, id), _) ->
-      (match Env.get_enum id with
-        | Some tc -> Typing_enum.check_enum_exhaustiveness pos tc caselist
-        | None -> ());
+    | Tabstract (AKenum id, _) ->
+      let tc = unsafe_opt @@ Env.get_enum id in
+      Typing_enum.check_enum_exhaustiveness pos tc caselist;
       env
-    | Tany | Tmixed | Tarray (_, _) | Toption _ | Tprim _
+    | Tany | Tmixed | Tarray (_, _) | Tclass _ | Toption _ | Tprim _
     | Tvar _ | Tfun _ | Tabstract (_, _) | Ttuple _ | Tanon (_, _)
     | Tobject | Tshape _ -> env
 
@@ -1564,8 +1563,8 @@ and instantiable_cid p env cid =
     | None | Some _ -> env)
 
 and exception_ty pos env ty =
-    let exn_ty = Reason.Rthrow pos, Tclass ((pos, SN.Classes.cException), []) in
-    Type.sub_type pos (Reason.URthrow) env exn_ty ty
+  let exn_ty = Reason.Rthrow pos, Tclass ((pos, SN.Classes.cException), []) in
+  Type.sub_type pos (Reason.URthrow) env exn_ty ty
 
 (* While converting code from PHP to Hack, some arrays are used
  * as tuples. Example: array('', 0). Since the elements have
@@ -3781,7 +3780,12 @@ and class_def_ env_up c tc =
     check_extend_abstract_const ~is_final pc tc.tc_consts;
     check_extend_abstract_typeconst ~is_final pc tc.tc_typeconsts;
   end;
-  let env, self = Phase.localize_with_self env self in
+  (* For enums, localize makes self:: into an abstract type, which we don't
+   * want *)
+  let env, self = match c.c_kind with
+    | Ast.Cenum -> env, (fst self, Tclass (c.c_name, []))
+    | Ast.Cinterface | Ast.Cabstract | Ast.Ctrait
+    | Ast.Cnormal -> Phase.localize_with_self env self in
   let env = Env.set_self env self in
   let env = Env.set_parent env parent in
   let env = match parent_id with
