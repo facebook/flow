@@ -1481,13 +1481,15 @@ let rec __flow cx (l, u) trace =
     (* The sink component of an annotation constrains values flowing
        into the annotated site. *)
 
-    | _, AnnotT (sink_t, _) ->
+    | _, AnnotT (sink_t, _)
+    | ShiftT(l), ShiftT(AnnotT (sink_t, _)) ->
       rec_flow cx trace (l, sink_t)
 
     (* The source component of an annotation flows out of the annotated
        site to downstream uses. *)
 
-    | AnnotT (_, source_t), u ->
+    | AnnotT (_, source_t), u
+    | ShiftT(AnnotT (_, source_t)), ShiftT(u) ->
       rec_flow cx trace (source_t, u)
 
     (****************************************************************)
@@ -2095,10 +2097,6 @@ let rec __flow cx (l, u) trace =
     (**********************)
     (* intersection types *)
     (**********************)
-(*
- * TJP: See my code where intersection checking doesn't commute--it might be
- * relevant to get passing tests.
- *)
 
     | (_, IntersectionT(_,ts)) ->
       ts |> List.iter (fun t -> rec_flow cx trace (l,t))
@@ -2106,12 +2104,14 @@ let rec __flow cx (l, u) trace =
     (** To check that IntersectionT(_, ts) may flow to the concrete type u, we
         try each type in ts in turn. The types in ts may be type variables, but
         by routing them through SpeculativeMatchFailureT, we ensure that they
-        are tried only when their concrete definitions are available. Note that (*TJP: Verify that interface specs are not being filtered--generic interfaces used without specialization should default to `any` for consistency.*)
+        are tried only when their concrete definitions are available. Note that
         unlike unions, the different branches of intersections are usually not
         distinct at the top level (e.g., they may all be function types, or
         object types): instead, they are assumed to be disjoint in their parts,
         so we must suffiently concretize parts of u to make the disjointness
         evident when the different branches are tried; see below. *)
+(*TJP: Verify that interface specs are not being filtered--generic interfaces
+  used without specialization should default to `any` for consistency.*)
 
     | (t1, SpeculativeMatchFailureT(r,t,t2)) ->
       (* Reached when trying to match t1&t with t2. We speculatively match t1
@@ -2485,12 +2485,6 @@ let rec __flow cx (l, u) trace =
 
     | (TypeT(_,l), TypeT(_,u)) ->
       rec_unify cx trace l u
-
-    | ShiftT(l), ShiftT(AnnotT _ as annot) ->
-      rec_flow cx trace (l, annot)
-
-    | ShiftT(AnnotT _ as annot), ShiftT(u) ->
-      rec_flow cx trace (annot, u)
 
     | ShiftT(l), ShiftT(u) ->
       rec_unify cx trace l u
