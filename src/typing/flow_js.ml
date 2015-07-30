@@ -2470,7 +2470,7 @@ let rec __flow cx (l, u) trace =
          _;
        }))
       ->
-      structural_subtype cx trace l (reason1, super, fields_tmap, methods_tmap)
+      structural_subtype cx trace l (super, fields_tmap, methods_tmap)
 
     (********************************************************)
     (* runtime types derive static types through annotation *)
@@ -5654,10 +5654,10 @@ end = struct
     | PolyT (type_params, sub_type) ->
         (* TODO: replace type parameters with stable/proper names? *)
         extract_members cx sub_type
-    | ClassT (InstanceT (_, static, _, _)) ->
+    | ShiftT (InstanceT (_, static, _, _)) ->
         let static_t = resolve_type cx static in
         extract_members cx static_t
-    | ClassT t ->
+    | ShiftT t ->
         (* TODO: Can this happen? *)
         extract_members cx t
     | IntersectionT (r, ts) ->
