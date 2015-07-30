@@ -1,3 +1,24 @@
+###v0.14.0
+
+Likely to cause new Flow errors:
+
+- Assignment now triggers a refinement. If you have a variable that is a `?string` and you assign 'hello' to it, Flow refines its type to 'string'.
+
+Likely to fix old Flow errors:
+
+- We now treat missing type parameters as `any`. For example, previously `ReactElement` was treated as `ReactElement<*, *, *>`. Now it's treated as `ReactElement<any, any, any>`.
+
+Misc:
+
+- Basic unsafe support for getters & setters, gated behind the config option `unsafe.enable_getters_and_setters`
+- Support for block comments inside of Flow's comment syntax
+- Disable by default munging of class property names that start with an underscore, with an option to enable it
+- Lots of small internal fixes and merged PRs
+- Basic semver support for the .flowconfig version
+- Support for `declare type` in lib files
+- Type annotations are now opaque - other types will not flow through them
+- You can configure the tmp dir that Flow uses
+
 ###v0.13.1
 
 Likely to cause new Flow errors:
