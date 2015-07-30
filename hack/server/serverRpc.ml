@@ -25,7 +25,6 @@ type _ t =
   | REFACTOR : ServerRefactor.action -> ServerRefactor.patch list t
   | DUMP_SYMBOL_INFO : string list -> SymbolInfoService.result t
   | ARGUMENT_INFO : string * int * int -> ServerArgumentInfo.result t
-  | PROLOG : string t
   | SEARCH : string * string -> ServerSearch.result t
   | COVERAGE_COUNTS : string -> ServerCoverageMetric.result t
   | LINT : string list -> ServerLint.result t
@@ -63,7 +62,6 @@ let handle : type a. genv -> env -> a t -> a =
         SymbolInfoService.go genv.workers file_list env
     | ARGUMENT_INFO (contents, line, col) ->
         ServerArgumentInfo.go genv env contents line col
-    | PROLOG -> PrologMain.go genv env
     | SEARCH (query, type_) -> ServerSearch.go query type_
     | COVERAGE_COUNTS path -> ServerCoverageMetric.go path genv env
     | LINT fnl -> ServerLint.go genv fnl

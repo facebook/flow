@@ -24,7 +24,6 @@ type mode =
   | DumpSymbolInfo
   | Errors
   | Lint
-  | Prolog
   | Suggest
 
 type options = {
@@ -178,9 +177,6 @@ let parse_options () =
     "--lint",
       Arg.Unit (set_mode Lint),
       "Produce lint errors";
-    "--prolog",
-      Arg.Unit (set_mode Prolog),
-      "Produce prolog facts";
     "--suggest",
       Arg.Unit (set_mode Suggest),
       "Suggest missing typehints";
@@ -279,13 +275,6 @@ let print_coverage fn type_acc =
   let counts = ServerCoverageMetric.count_exprs fn type_acc in
   ClientCoverageMetric.go ~json:false (Some (Leaf counts))
 
-let print_prolog nenv files_info =
-  let facts = Relative_path.Map.fold begin fun _ file_info acc ->
-    let { FileInfo.funs; classes; typedefs; consts; _ } = file_info in
-    Prolog.facts_of_defs acc nenv funs classes typedefs consts
-  end files_info [] in
-  PrologMain.output_facts stdout facts
-
 let handle_mode mode filename nenv files_contents files_info errors ai_results =
   match mode with
   | Ai -> ()
@@ -340,8 +329,6 @@ let handle_mode mode filename nenv files_contents files_info errors ai_results =
         exit 2
       end
       else Printf.printf "No lint errors\n"
-  | Prolog ->
-      print_prolog nenv files_info
   | Suggest
   | Errors ->
       let errors = Relative_path.Map.fold begin fun _ fileinfo errors ->

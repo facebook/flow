@@ -56,7 +56,6 @@ let () =
         | ClientCommand.CStop env -> HackClientStop.main env
         | ClientCommand.CRestart env -> ClientRestart.main env
         | ClientCommand.CBuild env -> ClientBuild.main env
-        | ClientCommand.CProlog env -> ClientProlog.main env
     with Exit_status.Exit_with es -> es
   in
   HackEventLogger.client_finish log_cmd (Exit_status.to_string exit_status);

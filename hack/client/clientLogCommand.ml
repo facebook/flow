@@ -33,4 +33,3 @@ type log_command =
   | LCStop of Path.t
   | LCRestart of Path.t
   | LCBuild of Path.t * build_kind
-  | LCProlog of Path.t

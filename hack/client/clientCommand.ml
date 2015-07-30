@@ -14,7 +14,6 @@ type command =
   | CStop of ClientStop.env
   | CRestart of ClientStart.env
   | CBuild of ClientBuild.env
-  | CProlog of ClientProlog.env
 
 type command_keyword =
   | CKCheck
@@ -22,5 +21,4 @@ type command_keyword =
   | CKStop
   | CKRestart
   | CKBuild
-  | CKProlog
   | CKNone

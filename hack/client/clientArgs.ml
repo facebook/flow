@@ -28,7 +28,6 @@ let parse_command () =
   | "stop" -> CKStop
   | "restart" -> CKRestart
   | "build" -> CKBuild
-  | "prolog" -> CKProlog
   | _ -> CKNone
 
 let parse_without_command options usage command =
@@ -386,21 +385,6 @@ let parse_build_args () =
     }
   }
 
-let parse_prolog_args () =
-  let usage =
-    Printf.sprintf
-      "Usage: %s prolog [WWW-ROOT]\n\
-      run prolog interpreter on code database\n"
-      Sys.argv.(0) in
-  let options = [] in
-  let args = parse_without_command options usage "prolog" in
-  let root =
-    match args with
-    | [x] -> get_root (Some x)
-    | _ -> Printf.printf "%s\n" usage; exit 2
-  in
-  CProlog { ClientProlog.root = root; }
-
 let parse_args () =
   match parse_command () with
     | CKNone
@@ -409,4 +393,3 @@ let parse_args () =
     | CKStop -> parse_stop_args ()
     | CKRestart -> parse_restart_args ()
     | CKBuild -> parse_build_args ()
-    | CKProlog -> parse_prolog_args ()
