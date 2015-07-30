@@ -1481,7 +1481,7 @@ let rec __flow cx (l, u) trace =
     (* The sink component of an annotation constrains values flowing
        into the annotated site. *)
 
-    | _, AnnotT (sink_t, _)
+    | l, AnnotT (sink_t, _)
     | ShiftT(l), ShiftT(AnnotT (sink_t, _)) ->
       rec_flow cx trace (l, sink_t)
 
