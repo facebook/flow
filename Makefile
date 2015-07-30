@@ -124,7 +124,6 @@ build-flowlib-archive:
 
 copy-flow-files: build-flow $(FILES_TO_COPY)
 	mkdir -p bin
-	cp -r examples bin/examples
 ifeq ($(OS), Linux)
 	objcopy --add-section flowlib=bin/flowlib.tar.gz _build/src/flow.native bin/flow
 else
