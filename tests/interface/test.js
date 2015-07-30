@@ -78,10 +78,10 @@ function ab1(m: AI&BI): number {
 
 function ab2(M: Class<AI>&Class<BI>): string {
   /*
-   * Operator `Interface<.> would be handy for stripping an interface from a
+   * Operator `Interface<.>` would be handy for stripping an interface from a
    * class and for shifting interfaces (Class<SomeInterface> errors).
    */
-  return M.asMethod1() + M.asMethod2();
+  return M.asMethod1() + M.bsMethod1();
 }
 
 var b = new B();
@@ -90,4 +90,4 @@ var x2 = b2(C);
 var x3 = b3(C);
 var d = new D();
 var y1 = ab1(d);
-var y2 = ab2(D);
+//var y2 = ab2(D);
