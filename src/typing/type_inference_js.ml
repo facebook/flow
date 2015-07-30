@@ -401,30 +401,43 @@ module Refinement : sig
   val get : context -> Ast.Expression.t -> reason -> Type.t option
 end = struct
 
-  type expr = Id of string | Chain of string list | Other
+  type part = Id of string | Index of string
+  type expr = Chain of part list | Other
 
   (* get id or chain of property names from conforming expressions *)
   let rec prop_chain = Ast.Expression.(function
 
   (* treat this as a property chain, in terms of refinement lifetime *)
   | _, This ->
-      Chain [internal_name "this"]
+      Chain [Id (internal_name "this")]
 
   (* ditto super *)
   | _, Identifier (_, { Ast.Identifier.name; _ })
       when name != "undefined" ->
       (match name with
-        | "super" -> Chain [internal_name "super"]
-        | _ -> Id name
+        | "super" -> Chain [Id (internal_name "super")]
+        | _ -> Chain [Id name]
       )
 
-  (* foo.bar.baz -> Chain [bar; baz; foo] *)
+  (* foo.bar.baz -> Chain [Id baz; Id bar; Id foo] *)
   | _, Member { Member._object;
      property = Member.PropertyIdentifier (_ , { Ast.Identifier.name; _ });
      _ } -> (
       match prop_chain _object with
-        | Id base -> Chain [name; base]
-        | Chain names -> Chain (name :: names)
+        | Chain names -> Chain ((Id name) :: names)
+        | Other -> Other
+      )
+
+  (* foo.bar[baz] -> Chain [Index baz; Id bar; Id foo] *)
+  | _, Member {
+      Member._object; property = Member.PropertyExpression index; _
+    } -> (
+      match prop_chain _object with
+        | Chain names ->
+          begin match key index with
+          | Some name -> Chain ((Index name) :: names)
+          | None -> Other
+          end
         | Other -> Other
       )
 
@@ -437,12 +450,14 @@ end = struct
      return Some (access key), otherwise None.
      Eligible expressions are simple ids and chains of property lookups
      from an id base *)
-  let key e =
+  and key e =
     match prop_chain e with
-      (* unqualified names are passed through *)
-      | Id name -> Some name
-      (* prop chains are sent to Env_js for mangling *)
-      | Chain names -> Some (Env_js.refinement_key (List.rev names))
+      | Chain parts ->
+          let names = parts
+          |> List.map (function Id x -> x | Index x -> spf "[%s]" x)
+          |> List.rev
+          in
+          Some (Env_js.refinement_key names)
       | Other -> None
 
   (* get type refinement for expression, if it exists *)
@@ -2881,10 +2896,14 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
       _
     } ->
       let reason = mk_reason "access of computed property/element" loc in
-      let tobj = expression cx _object in
-      let tind = expression cx index in
-      Flow_js.mk_tvar_where cx reason (fun t ->
-        Flow_js.flow cx (tobj, GetElemT(reason, tind, t))
+      (match Refinement.get cx (loc, e) reason with
+      | Some t -> t
+      | None ->
+        let tobj = expression cx _object in
+        let tind = expression cx index in
+        Flow_js.mk_tvar_where cx reason (fun t ->
+          Flow_js.flow cx (tobj, GetElemT(reason, tind, t))
+        )
       )
 
   | Member {

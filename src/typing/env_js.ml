@@ -23,8 +23,11 @@ open Scope
 (* helpers *)
 
 (* refinement keys *)
-let refinement_key names =
-  "$REFI " ^ (String.concat "." names)
+let refinement_key = function
+  (* unqualified names are passed through *)
+  | [name] -> name
+  (* prop chains get mangled *)
+  | names -> "$REFI " ^ (String.concat "." names)
 
 let is_refinement name =
   (String.length name) >= 5 && (String.sub name 0 5) = "$REFI"

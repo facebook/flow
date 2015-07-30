@@ -5,6 +5,6 @@ test.js:5:12,17: string
 
 test.js:6:5,15: assignment of property y
 Property not found in
-test.js:3:7,9: Foo
+test.js:6:5,8: Foo
 
 Found 2 errors

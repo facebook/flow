@@ -321,8 +321,6 @@ module Scope : sig
     Loc.t option ->
     entry
 
-  val refinement_key: string list -> string
-
   val is_refinement: string -> bool
 
   val havoc_entry:

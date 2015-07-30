@@ -755,9 +755,6 @@ module Scope = struct
 
   (* refinement keys - soon to depart *)
 
-  let refinement_key names =
-    "$REFI " ^ (String.concat "." names)
-
   let is_refinement name =
     (String.length name) >= 5 && (String.sub name 0 5) = "$REFI"
 

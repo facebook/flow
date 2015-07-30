@@ -67,6 +67,6 @@ test.js:41:17,22: string
 
 test.js:42:5,14: call of method bar
 Property not found in
-test.js:39:7,7: statics of E
+test.js:42:5,8: statics of E
 
 Found 15 errors
