@@ -1038,10 +1038,6 @@ let rec reason_of_t = function
   | ArrT (reason,_,_)
       -> reason
 
-(*
- * TJP: This is a good bottleneck to find all things `ShiftT`.  Prefixes should
- * probably be refined ("instance" is to "class", as "?" is to "interface").
- *)
   | ShiftT (ClsT _ as t) ->
       prefix_reason "interface type: " (reason_of_t t)
   | ShiftT (InstanceT _ as t) ->
@@ -1499,6 +1495,9 @@ let rec type_printer override fallback enclosure cx t =
     (* The following types are not syntax-supported *)
     | ShiftT (InstanceT _ as t) ->
         spf "[class: %s]" (pp EnclosureNone cx t)
+
+    | ShiftT (ClsT _ as t) ->
+        spf "[interface: %s]" (pp EnclosureNone cx t)
 
     | TypeT (_, t) ->
         spf "[type: %s]" (pp EnclosureNone cx t)

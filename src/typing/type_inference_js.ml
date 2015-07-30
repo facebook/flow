@@ -809,11 +809,12 @@ let rec convert cx map = Ast.Type.(function
         let params = if typeParameters = []
           then None else Some typeParameters in
         let c = identifier ~for_type:true cx name loc in
-        mk_nominal_type cx reason map (c, params) (*Abstract type yields TypeT(r, ClsT(...))*)
+        mk_nominal_type cx reason map (c, params)
     )
 
   (* TODO: unsupported generators *)
   | loc, Function { Function.params; returnType; rest; typeParameters } ->
+(*TJP: This is probably setting up the Class<Interface> case incorrectly on typeParameters*)
     let typeparams, map_ = mk_type_param_declarations cx ~map typeParameters in
     let map = SMap.fold SMap.add map_ map in
 
@@ -854,7 +855,29 @@ let rec convert cx map = Ast.Type.(function
     if (typeparams = []) then ft else PolyT(typeparams, ft)
 
   | loc, Object { Object.properties; indexers; callProperties; } ->
-    let map_ = mk_properties_map cx map loc properties in
+    let map_ = List.fold_left (fun map_ ->
+      Object.Property.(fun (loc, { key; value; optional; _ }) ->
+        (match key with
+          | Ast.Expression.Object.Property.Literal
+              (_, { Ast.Literal.value = Ast.Literal.String name; _ })
+          | Ast.Expression.Object.Property.Identifier
+              (_, { Ast.Identifier.name; _ }) ->
+              let t = convert cx map value in
+              if optional
+              then
+                (* wrap types of optional properties, just like we do for
+                   optional parameters *)
+                SMap.add name (OptionalT t) map_
+              else
+                SMap.add name t map_
+          | _ ->
+            let msg = "Unsupported key in object type" in
+            Flow_js.add_error cx [mk_reason "" loc, msg];
+            map_
+        )
+      )
+    ) SMap.empty properties
+    in
     let map_ = match callProperties with
       | [] -> map_
       | [loc, { Object.CallProperty.value = (_, ft); _; }] ->
@@ -868,7 +891,23 @@ let rec convert cx map = Ast.Type.(function
           SMap.add "$call" (IntersectionT (callable_reason, fts)) map_
     in
     (* Seal an object type unless it specifies an indexer. *)
-    let sealed, dict = mk_indexer cx map loc indexers in
+    let sealed, dict = Object.Indexer.(
+      match indexers with
+      | [(_, { id = (_, { Ast.Identifier.name; _ }); key; value; _; })] ->
+          let keyt = convert cx map key in
+          let valuet = convert cx map value in
+          false,
+          Some { Constraint_js.Type.
+            dict_name = Some name;
+            key = keyt;
+            value = valuet
+          }
+      | [] ->
+          true,
+          None
+      (* TODO *)
+      | _ -> failwith "Unimplemented: multiple indexers"
+    ) in
     let pmap = Flow_js.mk_propmap cx map_ in
     let proto = MixedT (reason_of_string "Object") in
     let flags = { sealed; exact = not sealed; frozen = false; } in
@@ -900,11 +939,6 @@ let rec convert cx map = Ast.Type.(function
     if typeparams = []
     then ClsT (creason, cls_type)
     else PolyT (typeparams, ClsT (creason, cls_type))
-    (*
-     * TJP: Verify that nonsealeds get indexer compatibility checked in addition
-     * to method/field compatibility.  What is the trigger?  Emulate it with
-     * ClsT
-     *)
 
   | loc, Exists ->
     (* Do not evaluate existential type variables when map is non-empty. This
@@ -929,50 +963,6 @@ and convert_qualification ?(for_type=true) cx reason_prefix = Ast.Type.Generic.I
     let loc, { Ast.Identifier.name; _ } = id in
     let reason = mk_reason (spf "%s '%s'" reason_prefix name) loc in
     Env_js.get_var ~for_type cx name reason
-)
-
-and mk_properties_map cx map loc properties = Ast.Type.Object.Property.(
-  List.fold_left (fun map_ ->
-    (fun (loc, { key; value; optional; _ }) ->
-      (match key with
-        | Ast.Expression.Object.Property.Literal
-            (_, { Ast.Literal.value = Ast.Literal.String name; _ })
-        | Ast.Expression.Object.Property.Identifier
-            (_, { Ast.Identifier.name; _ }) ->
-            let t = convert cx map value in
-            if optional
-            then
-              (* wrap types of optional properties, just like we do for
-                 optional parameters *)
-              SMap.add name (OptionalT t) map_
-            else
-              SMap.add name t map_
-        | _ ->
-          let msg = "Unsupported key" in
-          Flow_js.add_error cx [mk_reason "" loc, msg];
-          map_
-      )
-    )
-  ) SMap.empty properties
-)
-
-and mk_indexer cx map loc indexers = Ast.Type.Object.Indexer.(
-  (* Seal an object type unless it specifies an indexer. *)
-  match indexers with
-  | [(_, { id = (_, { Ast.Identifier.name; _ }); key; value; _; })] ->
-      let keyt = convert cx map key in
-      let valuet = convert cx map value in
-      false, (* Non-sealed *)
-      Some { Constraint_js.Type.
-        dict_name = Some name;
-        key = keyt;
-        value = valuet
-      }
-  | [] ->
-      true, (* Sealed *)
-      None
-  (* TODO *)
-  | _ -> failwith "Unimplemented: multiple indexers"
 )
 
 and mk_rest cx = function
@@ -1034,11 +1024,6 @@ and mk_singleton_boolean reason b =
  * declarations and populating variable environment (scope stack)
  * in prep for main pass
  ********************************************************************)
-
-(*
- * TJP: TODO: Attach interfaces to scopes (everything has been automagic--verify
- * that Type.Class doesn't require any special treatment).
- *)
 
 (* TODO: detect structural misuses abnormal control flow constructs *)
 and statement_decl cx = Ast.Statement.(
@@ -1104,8 +1089,8 @@ and statement_decl cx = Ast.Statement.(
   | (loc, With _) ->
       (* TODO disallow or push vars into env? *)
       ()
-  | (loc, DeclareTypeAlias { TypeAlias.id; typeParameters; right; } )
-  | (loc, TypeAlias { TypeAlias.id; typeParameters; right; } ) ->
+  | (loc, DeclareTypeAlias { TypeAlias.id; typeParameters; _; } )
+  | (loc, TypeAlias { TypeAlias.id; typeParameters; _; } ) ->
       let _, { Ast.Identifier.name; _ } = id in
       let r = mk_reason (spf "type %s" name) loc in
       let tvar = Flow_js.mk_tvar cx r in
@@ -1525,10 +1510,6 @@ and statement cx = Ast.Statement.(
       let typeparams, type_params_map =
         mk_type_param_declarations cx typeParameters in
       let t = convert cx type_params_map right in
-      (*
-       * TJP: Entry point where aliases get bound--I assume that inline type
-       * declarations follow the same path (`convert`).
-       *)
       let type_ =
         if typeparams = []
         then TypeT (r, t)
