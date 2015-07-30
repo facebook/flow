@@ -14,19 +14,31 @@ module SN = Naming_special_names
 
 module FuncTerm = Typing_heap.FuncTerminality
 
+let static_meth_terminal env ci meth_id =
+  let class_name = match ci with
+    | CI cls_id -> Some (snd cls_id)
+    | CIself | CIstatic -> Some (Typing_env.get_self_id env)
+    | CIparent -> Some (Typing_env.get_parent_id env)
+    | CIvar _ -> None (* we declared the types, but didn't check the bodies yet
+                       so can't tell anything here *)
+  in match class_name with
+    | Some class_name -> FuncTerm.raise_exit_if_terminal
+        (FuncTerm.get_static_meth class_name (snd meth_id))
+    | None -> ()
+
 (* Module coded with an exception, if we find a terminal statement we
  * throw the exception Exit.
  *)
 module Terminal: sig
-  val case: case -> bool
-  val block: block -> bool
+  val case: Typing_env.env -> case -> bool
+  val block: Typing_env.env -> block -> bool
 
 end = struct
 
-  let rec terminal inside_case stl =
-    List.iter (terminal_ inside_case) stl
+  let rec terminal env inside_case stl =
+    List.iter (terminal_ env inside_case) stl
 
-  and terminal_ inside_case = function
+  and terminal_ env inside_case = function
     | Break _ -> if inside_case then () else raise Exit
     | Continue _
     | Throw _
@@ -36,16 +48,15 @@ end = struct
       -> raise Exit
     | Expr (_, Call (Cnormal, (_, Id (_, fun_name)), _, _)) ->
       FuncTerm.raise_exit_if_terminal (FuncTerm.get_fun fun_name)
-    | Expr (_, Call (Cnormal, (_, Class_const (CI cls_id, meth_id)), _, _)) ->
-      FuncTerm.raise_exit_if_terminal
-        (FuncTerm.get_static_meth (snd cls_id) (snd meth_id))
-    | If ((_, True), b1, _) -> terminal inside_case b1
-    | If ((_, False), _, b2) -> terminal inside_case b2
+    | Expr (_, Call (Cnormal, (_, Class_const (ci, meth_id)), _, _)) ->
+      static_meth_terminal env ci meth_id
+    | If ((_, True), b1, _) -> terminal env inside_case b1
+    | If ((_, False), _, b2) -> terminal env inside_case b2
     | If (_, b1, b2) ->
-      (try terminal inside_case b1; () with Exit ->
-        terminal inside_case b2)
+      (try terminal env inside_case b1; () with Exit ->
+        terminal env inside_case b2)
     | Switch (_, cl) ->
-      terminal_cl cl
+      terminal_cl env cl
     | Try (b, catch_list, _) ->
       (* Note: return inside a finally block is allowed in PHP and
        * overrides any return in try or catch. It is an error in <?hh,
@@ -54,8 +65,8 @@ end = struct
        * no good case I (eletuchy) could think of for why one would
        * write *always* throwing code inside a finally block.
        *)
-      (try terminal inside_case b; () with Exit ->
-        terminal_catchl inside_case catch_list)
+      (try terminal env inside_case b; () with Exit ->
+        terminal_catchl env inside_case catch_list)
     | While ((_, True), b)
     | Do (b, (_, True))
     | For ((_, Expr_list []), (_, Expr_list []), (_, Expr_list []), b) ->
@@ -69,52 +80,53 @@ end = struct
     | Expr _
     | Static_var _ -> ()
 
-  and terminal_catchl inside_case = function
+  and terminal_catchl env inside_case = function
     | [] -> raise Exit
     | (_, _, x) :: rl ->
       (try
-         terminal inside_case x
+         terminal env inside_case x
        with Exit ->
-         terminal_catchl inside_case rl
+         terminal_catchl env inside_case rl
       )
 
-  and terminal_cl = function
+  and terminal_cl env = function
     (* Empty list case should only be when switch statement is malformed and has
        no case or default blocks *)
     | [] -> ()
-    | [Case (_, b)] | [Default b] -> terminal true b
+    | [Case (_, b)] | [Default b] -> terminal env true b
     | Case (_, b) :: rl ->
       (try
-         terminal true b;
+         terminal env true b;
           (* TODO check this *)
          if List.exists (function Break _ -> true | _ -> false) b
          then ()
          else raise Exit
-       with Exit -> terminal_cl rl)
+       with Exit -> terminal_cl env rl)
     | Default b :: rl ->
-      (try terminal true b with Exit -> terminal_cl rl)
+      (try terminal env true b with Exit ->
+        terminal_cl env rl)
 
-  and terminal_case = function
-    | Case (_, b) | Default b -> terminal true b
+  and terminal_case env = function
+    | Case (_, b) | Default b -> terminal env true b
 
-  let block stl =
-    try terminal false stl; false with Exit -> true
+  let block env stl =
+    try terminal env false stl; false with Exit -> true
 
-  let case c =
-    try terminal_case c; false with Exit -> true
+  let case env c =
+    try terminal_case env c; false with Exit -> true
 
 end
 
 (* TODO jwatzman #3076304 convert this and Terminal to visitor pattern to
  * remove copy-pasta *)
 module SafeCase: sig
-  val check: Pos.t -> case list -> unit
+  val check: Pos.t -> Typing_env.env -> case list -> unit
 end = struct
 
-  let rec terminal stl =
-    List.iter (terminal_) stl
+  let rec terminal env stl =
+    List.iter (terminal_ env) stl
 
-  and terminal_ = function
+  and terminal_ env = function
     | Fallthrough
     | Break _
     | Continue _
@@ -124,19 +136,19 @@ end = struct
     | Expr (_, Assert (AE_assert (_, False))) -> raise Exit
     | Expr (_, Call (Cnormal, (_, Id (_, fun_name)), _, _)) ->
       FuncTerm.raise_exit_if_terminal (FuncTerm.get_fun fun_name)
-    | Expr (_, Call (Cnormal, (_, Class_const (CI cls_id, meth_id)), _, _)) ->
-      FuncTerm.raise_exit_if_terminal
-        (FuncTerm.get_static_meth (snd cls_id) (snd meth_id))
-    | If ((_, True), b1, _) -> terminal b1
-    | If ((_, False), _, b2) -> terminal b2
+    | Expr (_, Call (Cnormal, (_, Class_const (ci, meth_id)), _, _)) ->
+      static_meth_terminal env ci meth_id
+    | If ((_, True), b1, _) -> terminal env b1
+    | If ((_, False), _, b2) -> terminal env b2
     | If (_, b1, b2) ->
-      (try terminal b1; () with Exit -> terminal b2)
+      (try terminal env b1; () with Exit -> terminal env b2)
     | Switch (_, cl) ->
-      terminal_cl cl
+      terminal_cl env cl
     | Try (b, catches, _) ->
       (* NOTE: contents of finally block are not executed in normal flow, so
        * they cannot contribute to terminality *)
-      (try terminal b; () with Exit -> terminal_catchl catches)
+      (try terminal env b; ()
+        with Exit -> terminal_catchl env catches)
     | Do _
     | While _
     | For _
@@ -145,32 +157,32 @@ end = struct
     | Expr _
     | Static_var _ -> ()
 
-  and terminal_catchl = function
+  and terminal_catchl env = function
     | [] -> raise Exit
     | (_, _, x) :: rl ->
       (try
-         terminal x
+         terminal env x
        with Exit ->
-         terminal_catchl rl
+         terminal_catchl env rl
       )
 
-  and terminal_cl = function
+  and terminal_cl env = function
     (* Empty list case should only be when switch statement is malformed and has
        no case or default blocks *)
     | [] -> ()
-    | [Case (_, b)] | [Default b] -> terminal b
+    | [Case (_, b)] | [Default b] -> terminal env b
     | Case (_, b) :: rl ->
       (try
-         terminal b;
+         terminal env b;
           (* TODO check this *)
          if List.exists (function Break _ -> true | _ -> false) b
          then ()
          else raise Exit
-       with Exit -> terminal_cl rl)
+       with Exit -> terminal_cl env rl)
     | Default b :: rl ->
-      (try terminal b with Exit -> terminal_cl rl)
+      (try terminal env b with Exit -> terminal_cl env rl)
 
-  let check p = function
+  let check p env = function
     | [] -> () (* Skip empty cases so we can use tl below *)
     | cl -> List.iter begin fun c ->
       try match c with
@@ -178,11 +190,11 @@ end = struct
         | Case (_, [])
         | Default [] -> ()
         | Case (e, b) -> begin
-          terminal b;
+          terminal env b;
           Errors.case_fallthrough p (fst e)
         end
         | Default b -> begin
-          terminal b;
+          terminal env b;
           Errors.default_fallthrough p
         end
       with Exit -> ()

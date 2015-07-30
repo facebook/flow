@@ -397,7 +397,7 @@ and fun_ ?(abstract=false) env hret pos named_body f_kind =
     Typing_sequencing.sequence_check_block named_body.fnb_nast;
     let ret = Env.get_return env in
     let env =
-      if Nast_terminality.Terminal.block named_body.fnb_nast ||
+      if Nast_terminality.Terminal.block env named_body.fnb_nast ||
         abstract ||
         named_body.fnb_unsafe ||
         !auto_complete
@@ -452,8 +452,8 @@ and stmt env = function
       let env   = condition env false e in
       let env   = block env b2 in
       let lenv2 = env.Env.lenv in
-      let terminal1 = Nast_terminality.Terminal.block b1 in
-      let terminal2 = Nast_terminality.Terminal.block b2 in
+      let terminal1 = Nast_terminality.Terminal.block env b1 in
+      let terminal2 = Nast_terminality.Terminal.block env b2 in
       if terminal1 && terminal2
       then
         let env = LEnv.integrate env parent_lenv lenv1 in
@@ -576,7 +576,7 @@ and stmt env = function
       let env = LEnv.fully_integrate env parent_lenv in
       condition env false e2
   | Switch (e, cl) ->
-      Nast_terminality.SafeCase.check (fst e) cl;
+      Nast_terminality.SafeCase.check (fst e) env cl;
       let env, ty = expr env e in
       Async.enforce_not_awaitable env (fst e) ty;
       let env = check_exhaustiveness env (fst e) ty cl in
@@ -650,9 +650,10 @@ and try_catch (tb, cl) env =
   let env = block env tb in
   let after_try = env.Env.lenv in
   let env, catchl = lfold (catch parent_lenv after_try) env cl in
-  let terml = List.map (fun (_, _, b) -> Nast_terminality.Terminal.block b) cl in
+  let terml = List.map (fun (_, _, b) ->
+    Nast_terminality.Terminal.block env b) cl in
   let lenvl = after_try :: catchl in
-  let terml = Nast_terminality.Terminal.block tb :: terml in
+  let terml = Nast_terminality.Terminal.block env tb :: terml in
   LEnv.intersect_list env parent_lenv lenvl terml
 
 and case_list_ parent_lenv ty env = function
@@ -663,7 +664,7 @@ and case_list_ parent_lenv ty env = function
        * anywhere but in the last position :) Should fix all of this as well
        * as totality detection for switch. *)
     let env = block env b in
-    env, [Nast_terminality.Terminal.case (Default b), env.Env.lenv]
+    env, [Nast_terminality.Terminal.case env (Default b), env.Env.lenv]
   | Case (e, b) :: rl ->
     (* TODO - we should consider handling the comparisons the same
      * way as Binop Ast.EqEq, since case statements work using ==
@@ -676,7 +677,7 @@ and case_list_ parent_lenv ty env = function
     let both_are_sub_types env tprim ty1 ty2 =
       (SubType.is_sub_type env tprim ty1) &&
       (SubType.is_sub_type env tprim ty2) in
-    if Nast_terminality.Terminal.block b then
+    if Nast_terminality.Terminal.block env b then
       let env, ty2 = expr env e in
       let env, _ =
         if (both_are_sub_types env ty_num ty ty2) ||
@@ -686,7 +687,7 @@ and case_list_ parent_lenv ty env = function
       let env = block env b in
       let lenv = env.Env.lenv in
       let env, rl = case_list parent_lenv ty env rl in
-      env, (Nast_terminality.Terminal.case (Case (e, b)), lenv) :: rl
+      env, (Nast_terminality.Terminal.case env (Case (e, b)), lenv) :: rl
     else
       let env, ty2 = expr env e in
       let env, _ =
@@ -1247,7 +1248,7 @@ and expr_ ~in_cond ~(valkind: [> `lvalue | `rvalue | `other ]) env (p, e) =
         { (Phase.env_with_self env) with from_class = Some CIstatic } in
       let env, ft = Phase.localize_ft ~ety_env env ft in
       (* check for recursive function calls *)
-      let anon = anon_make env.Env.lenv p f in
+      let anon = anon_make env p f in
       let env, anon_id = Env.add_anonymous env anon in
       let env = Errors.try_with_error
         (fun () ->
@@ -1393,7 +1394,8 @@ and anon_check_param env param =
       let env = Type.sub_type hint_pos Reason.URhint env hty paramty in
       env
 
-and anon_make anon_lenv p f =
+and anon_make tenv p f =
+  let anon_lenv = tenv.Env.lenv in
   let is_typing_self = ref false in
   let nb = Nast.assert_named_body f.f_body in
   fun env tyl ->
@@ -1426,7 +1428,7 @@ and anon_make anon_lenv p f =
         let env = Env.set_fn_kind env f.f_fun_kind in
         let env = block env nb.fnb_nast in
         let env =
-          if Nast_terminality.Terminal.block nb.fnb_nast
+          if Nast_terminality.Terminal.block tenv nb.fnb_nast
             || nb.fnb_unsafe || !auto_complete
           then env
           else fun_implicit_return env p hret nb.fnb_nast f.f_fun_kind
@@ -3705,12 +3707,12 @@ and class_def_parent env class_def class_type =
       | Some parent_type -> check_parent class_def class_type parent_type
       | None -> ());
       let env, parent_ty = Typing_hint.hint env parent_ty in
-      env, parent_ty
+      env, Some x, parent_ty
   (* The only case where we have more than one parent class is when
    * dealing with interfaces and interfaces cannot use parent.
    *)
   | _ :: _
-  | _ -> env, (Reason.Rnone, Tany)
+  | _ -> env, None, (Reason.Rnone, Tany)
 
 and check_parent class_def class_type parent_type =
   let position = fst class_def.c_name in
@@ -3770,7 +3772,7 @@ and class_def_ env_up c tc =
   Typing_variance.class_ (snd c.c_name) tc impl;
   let self = get_self_from_c env c in
   List.iter (check_implements_tparaml env) impl;
-  let env, parent = class_def_parent env c tc in
+  let env, parent_id, parent = class_def_parent env c tc in
   let is_final = tc.tc_final in
   if (tc.tc_kind = Ast.Cnormal || is_final) && tc.tc_members_fully_known
   then begin
@@ -3782,6 +3784,9 @@ and class_def_ env_up c tc =
   let env, self = Phase.localize_with_self env self in
   let env = Env.set_self env self in
   let env = Env.set_parent env parent in
+  let env = match parent_id with
+    | None -> env
+    | Some parent_id -> Env.set_parent_id env parent_id in
   if tc.tc_final then begin
     match c.c_kind with
     | Ast.Cinterface -> Errors.interface_final (fst c.c_name)

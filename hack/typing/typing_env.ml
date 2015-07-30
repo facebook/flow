@@ -62,6 +62,7 @@ and genv = {
   tcopt   : TypecheckerOptions.t;
   mode    : FileInfo.mode;
   return  : locl ty;
+  parent_id : string;
   parent  : decl ty;
   self_id : string;
   self    : locl ty;
@@ -282,6 +283,7 @@ let empty tcopt file = {
     self_id = "";
     self    = Reason.none, Tany;
     static  = false;
+    parent_id = "";
     parent  = Reason.none, Tany;
     fun_kind = Ast.FSync;
     anons   = IMap.empty;
@@ -437,6 +439,7 @@ let get_self env = env.genv.self
 let get_self_id env = env.genv.self_id
 let is_outside_class env = (env.genv.self_id = "")
 let get_parent env = env.genv.parent
+let get_parent_id env = env.genv.parent_id
 
 let get_fn_kind env = env.genv.fun_kind
 
@@ -477,6 +480,11 @@ let set_self_id env x =
 let set_self env x =
   let genv = env.genv in
   let genv = { genv with self = x } in
+  { env with genv = genv }
+
+let set_parent_id env x =
+  let genv = env.genv in
+  let genv = { genv with parent_id = x } in
   { env with genv = genv }
 
 let set_parent env x =

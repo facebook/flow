@@ -65,6 +65,7 @@ module Env = struct
   type t = {
     methods : method_status ref SMap.t ;
     props   : SSet.t ;
+    tenv    : Typing_env.env ;
   }
 
   (* If we need to call parent::__construct, we treat it as if it were
@@ -82,6 +83,10 @@ module Env = struct
           | _ -> props
         )
       | _ -> props
+
+  let parent_id c = match c.c_extends with
+    | [(_, Happly ((_, parent_id), _))] -> Some parent_id
+    | _ -> None
 
   let parent tenv props c =
     if c.c_mode = FileInfo.Mdecl then props
@@ -131,13 +136,17 @@ module Env = struct
 
   let rec make tenv c =
     let tenv = Typing_env.set_root tenv (Typing_deps.Dep.Class (snd c.c_name)) in
+    let tenv = Typing_env.set_self_id tenv (snd c.c_name) in
+    let tenv = match parent_id c with
+      | None -> tenv
+      | Some parent_id -> Typing_env.set_parent_id tenv parent_id in
     let methods = List.fold_left method_ SMap.empty c.c_methods in
     let adder = begin fun cv acc -> SSet.add (snd cv.cv_id) acc end in
     let props =
       List.fold_left (prop_needs_init adder) SSet.empty c.c_vars in
     let props = parent_props tenv props c in
     let props = parent tenv props c in
-    { methods = methods; props = props }
+    { methods = methods; props = props; tenv = tenv }
 
   and method_ acc m =
     if m.m_visibility <> Private then acc else
@@ -253,8 +262,8 @@ and stmt env acc st =
     | Static_var el -> List.fold_left expr acc el
     | If (e1, b1, b2) ->
       let acc = expr acc e1 in
-      let is_term1 = Nast_terminality.Terminal.block b1 in
-      let is_term2 = Nast_terminality.Terminal.block b2 in
+      let is_term1 = Nast_terminality.Terminal.block env.tenv b1 in
+      let is_term2 = Nast_terminality.Terminal.block env.tenv b2 in
       let b1 = block acc b1 in
       let b2 = block acc b2 in
       if is_term1
@@ -272,7 +281,8 @@ and stmt env acc st =
     | Switch (e, cl) ->
       let acc = expr acc e in
       let _ = List.map (case acc) cl in
-      let cl = List.filter (function c -> not (Nast_terminality.Terminal.case c)) cl in
+      let cl = List.filter (function c ->
+        not (Nast_terminality.Terminal.case env.tenv c)) cl in
       let cl = List.map (case acc) cl in
       let c = inter_list cl in
       SSet.union acc c
@@ -283,7 +293,8 @@ and stmt env acc st =
       let c = block acc b in
       let f = block acc fb in
       let _ = List.map (catch acc) cl in
-      let cl = List.filter (fun (_, _, b) -> not (Nast_terminality.Terminal.block b)) cl in
+      let cl = List.filter (fun (_, _, b) ->
+        not (Nast_terminality.Terminal.block env.tenv b)) cl in
       let cl = List.map (catch acc) cl in
       let c = inter_list (c :: cl) in
       (* the finally block executes even if *none* of try and catch do *)
