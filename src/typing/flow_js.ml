@@ -2539,22 +2539,11 @@ let rec __flow cx (l, u) trace =
     (* "statics" can be read *)
     (*************************)
 
-    | ClsT (reason, {
-        ct_type_args;
-        ct_arg_polarities;
-        ct_statics = Some { fields; methods; }
-      }),
+    | ClsT (reason, ({ ct_statics = Some statics; _; } as ct)),
       GetT (_, "statics", t)
       ->
-      let c = ClsT (prefix_reason "statics of " reason, {
-        ct_type_args;
-        ct_arg_polarities;
-        ct_props = {
-          fields;
-          methods;
-        };
-        ct_statics = None;
-      }) in
+      let cls_statics = { ct with ct_props = statics; ct_statics = None; } in
+      let c = ClsT (prefix_reason "statics of " reason, cls_statics) in
       rec_flow cx trace (c, t)
 
     | ClsT (reason, { ct_statics = None; _; }),
