@@ -2406,7 +2406,9 @@ let rec __flow cx (l, u) trace =
     (* instances of classes follow declared hierarchy *)
     (**************************************************)
 
-    | InstanceT _, ClsT (_, { ct_props = { fields; methods; }; }) ->
+    | InstanceT (_, i_statics, _, _),
+      ClsT (ct_reason, ({ ct_props = { fields; methods; }; ct_statics; _; } as ct))
+      ->
       let reason = reason_of_t l in
       let fields_tmap = find_props cx fields in
       let methods_tmap = find_props cx methods in
@@ -2418,25 +2420,26 @@ let rec __flow cx (l, u) trace =
             let lookup_reason = replace_reason (spf "property %s" name) (reason_of_t t) in
             rec_flow cx trace (l, LookupT (lookup_reason, Some reason, name, t))
           );
-(* TJP: This needs to examine statics too.  It misses them currently. *)
+      (match ct_statics with
+        | Some statics ->
+          let cls_statics = { ct with ct_props = statics; ct_statics = None; } in
+          let static_cls_t = ClsT(prefix_reason "statics of " ct_reason, cls_statics) in
+          rec_flow cx trace (i_statics, static_cls_t)
+        | None -> ()) (*TJP: refactor to `extract...`?*)
 
-    | ClsT (ct_reason, ({ ct_statics = Some s; _; } as ct)),
-      InstanceT (_, statics, super, { fields_tmap; methods_tmap; })
+    | ClsT (ct_reason, ({ ct_statics; _; } as ct)),
+      InstanceT (_, i_statics, i_super, { fields_tmap; methods_tmap; })
       ->
-      (* TJP: Need `type_args` checking analogous to `flow_type_args` (I think
-         that `flow_type_args` exploits the existence of a common ancestor, so
-         this version will need to be more general :( *)
-      structural_subtype cx trace l (super, fields_tmap, methods_tmap);
-(* TJP: Consolidate with the following guard.  If ct_statics is a Some, then
-   recur with ct_statics as None.  If ct_statics is None, then done. *)
-      let cls_statics = { ct with ct_props = s; ct_statics = None; } in
-      let static_cls_t = ClsT (ct_reason, cls_statics) in
-      rec_flow cx trace (static_cls_t, statics)
-
-    | ClsT (ct_reason, { ct_props; ct_statics = None; _; }),
-      InstanceT (_, _, ShiftT (super), { fields_tmap; methods_tmap; })
-      ->
-      structural_subtype cx trace l (super, fields_tmap, methods_tmap);
+(* TJP: Need `type_args` checking analogous to `flow_type_args` (I think that
+   `flow_type_args` exploits the existence of a common ancestor, so this version
+   will need to be more general :( *)
+      structural_subtype cx trace l (i_super, fields_tmap, methods_tmap);
+      (match ct_statics with
+        | Some statics ->
+          let cls_statics = { ct with ct_props = statics; ct_statics = None; } in
+          let static_cls_t = ClsT(prefix_reason "statics of " ct_reason, cls_statics) in
+          rec_flow cx trace (static_cls_t, i_statics)
+        | None -> ())
 
 (*TJP: ClsT,ObjT and ObjT,ClsT?*)
 
