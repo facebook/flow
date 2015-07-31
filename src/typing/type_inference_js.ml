@@ -1769,11 +1769,7 @@ and statement cx = Ast.Statement.(
       Env_js.refine_with_preds cx reason preds xtypes;
       (* body_ctx = Pre' & c *)
 
-      let exception_ = ref None in
-      ignore_break_continue_exception_handler
-        (fun () -> statement cx body)
-        None
-        (save_handler exception_);
+      ignore_exception_handler (fun () -> statement cx body);
       (* body_ctx = Post' *)
 
       let newset = Env_js.merge_changeset oldset in
@@ -1786,11 +1782,9 @@ and statement cx = Ast.Statement.(
       Env_js.update_env cx do_ctx;
       Env_js.refine_with_preds cx reason not_preds xtypes;
       if Abnormal.swap (Abnormal.Break None) save_break_exn
-      then Env_js.havoc_vars newset;
+      then Env_js.havoc_vars newset
       (* ENV = [ctx] *)
       (* ctx = Pre' * ~c *)
-
-      raise_exception !exception_
 
   (***************************************************************************)
   (* Refinements for `do-while` are derived by the following Hoare logic rule:
