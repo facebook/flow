@@ -1892,7 +1892,6 @@ let rec __flow cx (l, u) trace =
        because substitution of type parameters in def types does not affect
        their reasons, so we'd trivially lose precision. *)
 
-(*TJP: For specialization by AnnotT, the unification problem of `ShiftT ~> ShiftT` again*)
     | (TypeAppT(c,ts), MethodT _) ->
         let reason_op = reason_of_t u in
         let t = mk_typeapp_instance cx reason_op ~cache:true c ts in
@@ -2504,8 +2503,6 @@ let rec __flow cx (l, u) trace =
     (*********************************************************)
     (* class types derive instance types (with constructors) *)
     (*********************************************************)
-
-(*TJP: Consider TypeT,AnnotT and AnnotT,TypeT.  Is this where I need to constrain AnnotT?*)
 
     | ShiftT (this),
       ConstructorT (reason_op, args, t) ->
