@@ -3081,7 +3081,17 @@ module.exports = {
         'a b;',
         'if.a;',
         'a if;',
-        'a class;',
+        {
+          content: 'a class;',
+          explanation: 'class is no longer a future reserved word',
+          expected_differences: {
+            'root.errors.0.message': {
+              type: 'Wrong error message',
+              expected: 'Unexpected reserved word',
+              actual: 'Unexpected token class',
+            },
+          },
+        },
         'break\n',
         'break 1;',
         'continue\n',
@@ -5308,7 +5318,17 @@ module.exports = {
           }
         }
       },
-      'declare module A { export default 1 +1; }',
+      {
+        content: 'declare module A { export default 1 +1; }',
+        explanation: 'export is no longer a future reserved word',
+        expected_differences: {
+            'root.errors.0.message': {
+              type: 'Wrong error message',
+              expected: 'Unexpected reserved word',
+              actual: 'Unexpected token export',
+            },
+        },
+      },
     ],
     'Type Grouping': [
       'var a: (number)',

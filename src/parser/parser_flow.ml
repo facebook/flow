@@ -17,16 +17,11 @@ module SSet = Set.Make(String)
 module SMap = Map.Make(String)
 
 let is_future_reserved = function
-  | "class"
-  | "enum"
-  | "export"
-  | "extends"
-  | "interface"
-  | "import"
-  | "super" -> true
+  | "enum" -> true
   | _ -> false
 
 let is_strict_reserved = function
+  | "interface"
   | "implements"
   | "package"
   | "private"
@@ -73,7 +68,10 @@ module Peek = struct
   let identifier ?(i=0) env =
     let name = value ~i env in
     match token ~i env with
-    | _ when is_strict_reserved name || is_restricted name -> true
+    | _ when
+      is_strict_reserved name ||
+      is_restricted name ||
+      is_future_reserved name-> true
     | T_LET
     | T_TYPE
     | T_OF

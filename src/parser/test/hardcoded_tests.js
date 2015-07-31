@@ -1416,6 +1416,26 @@ module.exports = {
         '0.message': 'Unexpected token <',
       },
     },
+    '1 + enum': {
+      'errors': {
+        '0.message': 'Unexpected reserved word',
+      }
+    },
+    'enum = 42': {
+      'errors': {
+        '0.message': 'Unexpected reserved word',
+      }
+    },
+    'var enum': {
+      'errors': {
+        '0.message': 'Unexpected reserved word',
+      }
+    },
+    'function hello() { "use strict"; var enum; }': {
+      'errors': {
+        '0.message': 'Unexpected reserved word',
+      }
+    },
   },
   'Invalid JSX Syntax': {
     '(<div />) < x;': {
@@ -1754,7 +1774,7 @@ module.exports = {
     },
     'declare module A { export default function foo() {} }': {
       'errors': {
-        '0.message': 'Unexpected reserved word',
+        '0.message': 'Unexpected token export',
       }
     },
   },
