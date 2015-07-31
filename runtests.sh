@@ -4,6 +4,23 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
 else
   FLOW=$(readlink -f $1)
 fi
+if [ -t 1 ]; then
+  COLOR_RESET="\x1b[0m"
+  COLOR_DEFAULT="\x1b[39;49;0m"
+  COLOR_DEFAULT_BOLD="\x1b[39;49;1m"
+  COLOR_RED_BOLD="\x1b[31;1m"
+  COLOR_GREEN_BOLD="\x1b[32;1m"
+  COLOR_YELLOW_BOLD="\x1b[33;1m"
+  COLOR_WHITE_ON_RED_BOLD="\x1b[37;41;1m"
+else
+  COLOR_RESET=""
+  COLOR_DEFAULT=""
+  COLOR_DEFAULT_BOLD=""
+  COLOR_RED_BOLD=""
+  COLOR_GREEN_BOLD=""
+  COLOR_YELLOW_BOLD=""
+  COLOR_WHITE_ON_RED_BOLD=""
+fi
 cd "$(dirname "${BASH_SOURCE[0]}")"
 passed=0
 failed=0
@@ -19,7 +36,8 @@ do
         [[ -z $filter || $name =~ $filter ]]
     then
         # check this dir
-        echo "Testing directory: ${name}"
+        printf "%b[ ] RUN:%b  %s%b\r" \
+          $COLOR_DEFAULT_BOLD $COLOR_DEFAULT $name $COLOR_RESET
         out_file="${name}.out"
         err_file="${name}.err"
 
@@ -79,7 +97,8 @@ do
         if [ -s $diff_file ]
         then
             (( failed++ ))
-            echo "FAILED: ${name}"
+            printf "%b[✗] FAIL:%b %s%b\n" \
+              $COLOR_RED_BOLD $COLOR_DEFAULT $name $COLOR_RESET
             cat $err_file
             if [ -t 1 ] ; then
                 esc=$(echo -e "\x1b")
@@ -90,17 +109,28 @@ do
             fi
         else
             (( passed++ ))
-            echo "PASSED: ${name}"
+            printf "%b[✓] PASS:%b %s%b\n" \
+              $COLOR_GREEN_BOLD $COLOR_DEFAULT $name $COLOR_RESET
             rm -f $out_file
             rm -f $err_file
             rm -f $diff_file
         fi
     else
         (( skipped++ ))
-        echo "Skipping directory: ${name}"
+        printf "%b[-] SKIP:%b %s%b\n" \
+          $COLOR_YELLOW_BOLD $COLOR_DEFAULT $name $COLOR_RESET
     fi
     cd ../..
 done
 echo
-echo "Passed: ${passed}, Failed: ${failed}, Skipped: ${skipped}"
+if [ $failed -eq 0 ]; then
+  printf "%bPassed: %d, Failed: %d, Skipped: %d%b\n" \
+    $COLOR_DEFAULT_BOLD $passed $failed $skipped $COLOR_RESET
+else
+  printf "%bPassed: %d, %bFailed: %d%b, Skipped: %d%b\n" \
+    $COLOR_DEFAULT_BOLD $passed \
+    $COLOR_WHITE_ON_RED_BOLD $failed \
+    $COLOR_DEFAULT_BOLD $skipped \
+    $COLOR_RESET
+fi
 exit ${failed}
