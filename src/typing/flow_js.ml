@@ -1892,12 +1892,14 @@ let rec __flow cx (l, u) trace =
        because substitution of type parameters in def types does not affect
        their reasons, so we'd trivially lose precision. *)
 
+(*TJP: For specialization by AnnotT, the unification problem of `ShiftT ~> ShiftT` again*)
     | (TypeAppT(c,ts), MethodT _) ->
         let reason_op = reason_of_t u in
         let t = mk_typeapp_instance cx reason_op ~cache:true c ts in
         rec_flow cx trace (t, u)
 
-    | (TypeAppT(c,ts), _) ->
+    | (ShiftT (TypeAppT(c,ts)), ShiftT u)
+    | (TypeAppT(c,ts), u) ->
         if TypeAppExpansion.push_unless_loop cx (c, ts) then (
           let reason = reason_of_t u in
           let t = mk_typeapp_instance cx reason c ts in
@@ -1905,13 +1907,8 @@ let rec __flow cx (l, u) trace =
           TypeAppExpansion.pop ()
         )
 
-(* TJP: How does PolyT factor into this?  PolyT for definition, and TypeAppT for
-   specialization? `c` is type and `ts` is type args (presumably to PolyT).  Is
-   TypeAppT relevant for types?  Or is it only interested in concrete types that
-   are generic, e.g. `function a<T>(k: T): void` and `class C<T> {...}`
-*)
-    | (_, TypeAppT(c,ts)) ->
-      (*Admits type aliases and PolyTs?*)
+    | (ShiftT l, ShiftT (TypeAppT(c,ts)))
+    | (l, TypeAppT(c,ts)) ->
         if TypeAppExpansion.push_unless_loop cx (c, ts) then (
           let reason = reason_of_t l in
           let t = mk_typeapp_instance cx reason c ts in
@@ -2341,8 +2338,8 @@ let rec __flow cx (l, u) trace =
          _;
        }))
       ->
-      structural_subtype cx trace l (super, fields_tmap, methods_tmap)
-
+      structural_subtype cx trace l (fields_tmap, methods_tmap);
+      rec_flow cx trace (l, super)
 
     (****************************************)
     (* You can cast an object to a function *)
@@ -2406,42 +2403,20 @@ let rec __flow cx (l, u) trace =
     (* instances of classes follow declared hierarchy *)
     (**************************************************)
 
-    | InstanceT (_, i_statics, _, _),
-      ClsT (ct_reason, ({ ct_props = { fields; methods; }; ct_statics; _; } as ct))
-      ->
-      let reason = reason_of_t l in
-      let fields_tmap = find_props cx fields in
-      let methods_tmap = find_props cx methods in
-      let props = SMap.union fields_tmap methods_tmap in
-      props |> SMap.iter
-          (fun name t ->
-(* TJP: How should Ctor be handled.  It's bad manners to define a ctor on an
-   interface, but Flow is a type checker, not a manners imposer.*)
-            let lookup_reason = replace_reason (spf "property %s" name) (reason_of_t t) in
-            rec_flow cx trace (l, LookupT (lookup_reason, Some reason, name, t))
-          );
-      (match ct_statics with
-        | Some statics ->
-          let cls_statics = { ct with ct_props = statics; ct_statics = None; } in
-          let static_cls_t = ClsT(prefix_reason "statics of " ct_reason, cls_statics) in
-          rec_flow cx trace (i_statics, static_cls_t)
-        | None -> ()) (*TJP: refactor to `extract...`?*)
-
     | ClsT (ct_reason, ({ ct_statics; _; } as ct)),
       InstanceT (_, i_statics, i_super, { fields_tmap; methods_tmap; })
       ->
 (* TJP: Need `type_args` checking analogous to `flow_type_args` (I think that
    `flow_type_args` exploits the existence of a common ancestor, so this version
    will need to be more general :( *)
-      structural_subtype cx trace l (i_super, fields_tmap, methods_tmap);
+      structural_subtype cx trace l (fields_tmap, methods_tmap);
+      rec_flow cx trace (l, i_super);
       (match ct_statics with
         | Some statics ->
           let cls_statics = { ct with ct_props = statics; ct_statics = None; } in
           let static_cls_t = ClsT(prefix_reason "statics of " ct_reason, cls_statics) in
           rec_flow cx trace (static_cls_t, i_statics)
         | None -> ())
-
-(*TJP: ClsT,ObjT and ObjT,ClsT?*)
 
     | (InstanceT (_, _, _, instance),
        InstanceT (_, _, _, instance_super))
@@ -2470,7 +2445,40 @@ let rec __flow cx (l, u) trace =
          _;
        }))
       ->
-      structural_subtype cx trace l (super, fields_tmap, methods_tmap)
+      structural_subtype cx trace l (fields_tmap, methods_tmap);
+      rec_flow cx trace (l, super)
+
+(*TJP: ClsT,ObjT and ObjT,ClsT?*)
+
+    | InstanceT (_, i_statics, _, _),
+      ClsT (ct_reason, ({ ct_props = { fields; methods; }; ct_statics; _; } as ct))
+      ->
+      let reason = reason_of_t l in
+      let fields_tmap = find_props cx fields in
+      let methods_tmap = find_props cx methods in
+      let props = SMap.union fields_tmap methods_tmap in
+      props |> SMap.iter
+          (fun name t ->
+(* TJP: How should Ctor be handled.  It's bad manners to define a ctor on an
+   interface, but Flow is a type checker, not a manners imposer.*)
+            let lookup_reason = replace_reason (spf "property %s" name) (reason_of_t t) in
+            rec_flow cx trace (l, LookupT (lookup_reason, Some reason, name, t))
+          );
+      (match ct_statics with
+        | Some statics ->
+          let cls_statics = { ct with ct_props = statics; ct_statics = None; } in
+          let static_cls_t = ClsT(prefix_reason "statics of " ct_reason, cls_statics) in (*TJP: refactor the 'static from nonstatic' to a function*)
+          rec_flow cx trace (i_statics, static_cls_t)
+        | None -> ()) (*TJP: refactor to `extract...`?*)
+
+    | (ClsT (_, ({ ct_props; ct_statics; } as ct)), ClsT (ct_reason, u)) ->
+      structural_subtype cx trace l (ct_props.fields, ct_props.methods);
+      (match ct_statics with
+        | Some statics ->
+          let cls_statics = { ct with ct_props = statics; ct_statics = None; } in
+          let static_cls_t = ClsT(prefix_reason "statics of " ct_reason, cls_statics) in
+          structural_subtype cx trace static_cls_t (statics.fields, statics.methods)
+        | None -> ())
 
     (********************************************************)
     (* runtime types derive static types through annotation *)
@@ -2545,11 +2553,6 @@ let rec __flow cx (l, u) trace =
       let cls_statics = { ct with ct_props = statics; ct_statics = None; } in
       let c = ClsT (prefix_reason "statics of " reason, cls_statics) in
       rec_flow cx trace (c, t)
-
-    | ClsT (reason, { ct_statics = None; _; }),
-      GetT (_, "statics", t)
-      ->
-      assert false; (*This shouldn't ever happen....*)
 
     | InstanceT (_, static, _, _), GetT (_, "statics", t) ->
       rec_flow cx trace (static, t)
@@ -3573,7 +3576,7 @@ and mk_strict sealed is_dict reason_o reason_op =
   then None
   else Some reason_o
 
-and structural_subtype cx trace lower (super, fields_tmap, methods_tmap) =
+and structural_subtype cx trace lower (fields_tmap, methods_tmap) =
   let lower_reason = reason_of_t lower in
   let fields_tmap = find_props cx fields_tmap in
   let methods_tmap = find_props cx methods_tmap in
@@ -3584,7 +3587,6 @@ and structural_subtype cx trace lower (super, fields_tmap, methods_tmap) =
         let lookup_reason = replace_reason (spf "property %s" s) (reason_of_t t2) in
         rec_flow cx trace (lower, LookupT (lookup_reason, Some lower_reason, s, t2))
       );
-  rec_flow cx trace (lower, super)
 
 (*****************)
 (* substitutions *)
@@ -3662,7 +3664,15 @@ and subst cx ?(force=true) (map: Type.t SMap.t) t =
       proto_t = subst cx ~force map proto
     })
 
-(*TJP: `ClsT` case needed here*)
+  | ClsT (reason, clstype) ->
+    let special = { clstype with
+      ct_type_args = clstype.ct_type_args |> SMap.map (subst cx ~force map);
+      ct_props = subst_proptmaps cx force map clstype.ct_props;
+      ct_statics = (match clstype.ct_statics with
+        | None -> None
+        | Some statics -> Some (subst_proptmaps cx force map statics));
+    } in
+    ClsT (reason, special)
 
   | ArrT (reason, t, ts) ->
     ArrT (reason,
@@ -3738,6 +3748,12 @@ and subst_propmap cx force map id =
   if pmap_ = pmap then id
   else mk_propmap cx pmap_
 
+and subst_proptmaps cx force map { fields; methods; } =
+  {
+    fields = subst_propmap cx force map fields;
+    methods = subst_propmap cx force map methods;
+  }
+
 and typeapp_arity_mismatch cx expected_num reason =
   let msg = spf "wrong number of type arguments (expected %d)" expected_num in
   add_error cx [reason, msg];
@@ -3753,10 +3769,7 @@ and instantiate_poly_with_targs cx trace reason_op ?(cache=false) (xs,t) ts =
   truncated excess?*)
   )
   else
-(*TJP: Take a hard look at this.  `type A<T> = class {...}` errors by prior
-  branch, right?  `type A<T> = class<T> {...}` ok (parser needs extension to
-  accept, right?). `type A<T> = class K<T> {...}` ok, but need to insert `K`
-  into the environment, right?.*)
+(*TJP: `type A<T> = class K<T> {...}` => insert `K` into the environment, right?*)
     let map =
       List.fold_left2
         (fun map typeparam t ->
@@ -4665,7 +4678,7 @@ and add_lower_edges cx trace ?(opt=false) (id1, bounds1) (id2, bounds2) =
 (* unification *)
 (***************)
 
-(* Chain a root to another root. If both roots are unresolved, this amounts to
+(* Chain a rosot to another root. If both roots are unresolved, this amounts to
    copying over the bounds of one root to another, and adding all the
    connections necessary when two non-unifiers flow to each other. If one or
    both of the roots are resolved, they effectively act like the corresponding
