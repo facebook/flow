@@ -125,11 +125,6 @@ function e2(n: EI<B>): string {
   return b.bMethod1() + b.bMethod2();
 }
 
-type GI<T> = class Id<U> { // class<U> currently rejected by parser, right?
-  gMethod1(): U;
-  static gsMethod1(): U;
-};
-
 var b: BI = new B();
 var x1 = b1(b);
 var x2 = b2(C);
