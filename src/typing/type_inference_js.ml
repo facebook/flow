@@ -814,7 +814,6 @@ let rec convert cx map = Ast.Type.(function
 
   (* TODO: unsupported generators *)
   | loc, Function { Function.params; returnType; rest; typeParameters } ->
-(*TJP: This is probably setting up the Class<Interface> case incorrectly on typeParameters*)
     let typeparams, map_ = mk_type_param_declarations cx ~map typeParameters in
     let map = SMap.fold SMap.add map_ map in
 
@@ -917,14 +916,16 @@ let rec convert cx map = Ast.Type.(function
   | loc, Class ({ Class.id; typeParameters; body; } as c) ->
     let class_loc, name = extract_class_type_name loc c in
     let creason = mk_reason name loc in
-    let typeparams, map, (sfmap, smmap, fmap, mmap) =
-      object_with_statics cx creason name class_loc typeParameters body in
+    let typeparams, map_ = mk_type_param_declarations cx ~map typeParameters in
+    let map = SMap.fold SMap.add map_ map in
+    let (sfmap, smmap, fmap, mmap) =
+      object_with_statics cx creason name class_loc typeparams map body in
     let ct_arg_polarities = map |> SMap.map (fun t -> match t with
     | BoundT { polarity; _ } -> polarity
     | _ -> assert_false (spf "Expected BoundT but found %s" (string_of_ctor t))) in
 
     let cls_type = {
-      ct_type_args = map;
+      ct_type_args = map; (*TJP: Verify that I don't want the original set or something*)
       ct_arg_polarities;
       ct_props = {
         fields = Flow_js.mk_propmap cx fmap;
@@ -2114,8 +2115,13 @@ and statement cx = Ast.Statement.(
     }) as stmt ->
     let _, { Ast.Identifier.name; _ } = id in
     let reason = mk_reason name loc in
-    let typeparams, map, properties =
-      object_with_statics cx reason name loc typeParameters body in
+    let typeparams, map =
+      (* TODO excise the Promise/PromisePolyfill special-case ASAP *)
+      if (name = "Promise" || name = "PromisePolyfill") &&
+        List.length (extract_type_param_declarations typeParameters) = 1
+      then mk_type_param_declarations cx typeParameters ~polarities:[Positive]
+      else mk_type_param_declarations cx typeParameters in
+    let properties = object_with_statics cx reason name loc typeparams map body in
     let
       is_interface = match stmt with
       | (_, InterfaceDeclaration _) -> true
@@ -2663,15 +2669,8 @@ and object_ cx props = Ast.Expression.Object.(
   !spread
 )
 
-and object_with_statics cx reason id_name loc typeParameters =
+and object_with_statics cx reason id_name loc typeparams map =
   Ast.Type.Object.(fun { properties; indexers; callProperties } ->
-    (* TODO excise the Promise/PromisePolyfill special-case ASAP *)
-    let typeparams, map =
-      if (id_name = "Promise" || id_name = "PromisePolyfill") &&
-        List.length (extract_type_param_declarations typeParameters) = 1
-      then mk_type_param_declarations cx typeParameters ~polarities:[Positive]
-      else mk_type_param_declarations cx typeParameters in
-
     let sfmap, smmap, fmap, mmap = List.fold_left Ast.Type.Object.Property.(
       fun (sfmap_, smmap_, fmap_, mmap_)
         (loc, { key; value; static; _method; _ }) -> (* TODO: optional *)
@@ -2743,7 +2742,7 @@ and object_with_statics cx reason id_name loc typeParameters =
       | Some _ ->
         mmap
     in
-    typeparams, map, (sfmap, smmap, fmap, mmap)
+    (sfmap, smmap, fmap, mmap)
   )
 
 and variable cx (loc, vdecl) = Ast.(
