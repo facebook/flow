@@ -9,6 +9,6 @@ functions.js:3:17,28: function call
 Error:
 functions.js:3:8,13: string
 This type is incompatible with
-[LIB] functions.js:2:1,5:1: C
+[LIB] functions.js:2:1,4:1: C
 
 Found 2 errors

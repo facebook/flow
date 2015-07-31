@@ -3,6 +3,6 @@ export_modules.js:3:19,30: property y
 Error:
 export_modules.js:3:9,14: string
 This type is incompatible with
-[LIB] export_modules.js:13:18,23: number
+[LIB] export_modules.js:18:18,23: number
 
 Found 1 error

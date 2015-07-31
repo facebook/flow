@@ -7,12 +7,12 @@ modules.js:5:22,24: property y
 Error:
 modules.js:6:9,14: string
 This type is incompatible with
-[LIB] modules.js:2:18,23: number
+[LIB] modules.js:3:18,23: number
 
 modules.js:8:19,30: call of method get_y
 Error:
 modules.js:8:10,15: string
 This type is incompatible with
-[LIB] modules.js:12:27,31: number
+[LIB] modules.js:11:27,31: number
 
 Found 3 errors

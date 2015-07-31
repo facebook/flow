@@ -7,6 +7,6 @@ modules2.js:5:22,24: property y
 Error:
 modules2.js:6:9,14: string
 This type is incompatible with
-[LIB] modules2.js:2:18,23: number
+[LIB] modules2.js:3:18,23: number
 
 Found 2 errors

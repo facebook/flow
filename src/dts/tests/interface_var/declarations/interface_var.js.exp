@@ -3,6 +3,5 @@ declare class adult {
   age: number;
   static minage: number;
   new(): adult;
-  
 }
 

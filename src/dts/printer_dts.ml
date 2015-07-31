@@ -151,13 +151,25 @@ let rec list_ ?(sep="") f fmt = function
         (list_ ~sep f) xs
   | [] -> ()
 
+let rec list_end ?(sep="") f fmt = function
+  | [x] ->
+      fprintf fmt "%a%s"
+        f x
+        sep
+  | x::xs ->
+      fprintf fmt "%a%s@,%a"
+        f x
+        sep
+        (list_end ~sep f) xs
+  | [] -> ()
+
 let rec _list ?(sep="") f fmt = function
   | [x] ->
       fprintf fmt "@,%a%s"
         f x
         sep
   | x::xs ->
-      fprintf fmt "@,%a%s%a"
+      fprintf fmt "@,%a%s@,%a"
         f x
         sep
         (_list ~sep f) xs
@@ -168,7 +180,7 @@ let rec _list ?(sep="") f fmt = function
    declarations which can be squashed together as a class. *)
 let rec look_ahead ?(sep="") f fmt = function
   | [x] ->
-      fprintf fmt "%a%s@,"
+      fprintf fmt "%a%s"
         f (x, None)
         sep
   | x::y::xs ->
@@ -700,15 +712,25 @@ and print_module scope imports prefix fmt = Statement.(function
         assist step 2.
   *)
 
-  | _, ModuleDeclaration { Module.id; body; } ->
+  | loc, ModuleDeclaration { Module.id; body; } ->
     let name = get_name [] id in
     let new_prefix = List.append prefix [name] in
     let new_scope = get_modules_in_scope scope new_prefix body in
     let list_modules_used = get_modules_to_import new_scope prefix body in
-    fprintf fmt "@[<v>declare module \"%s\" {@;<0 2>@[<v>%a%a%a@]@,}@]"
+
+    let print_header fmt = function _ ->
+      match list_modules_used, imports with
+      | [], [] -> ()
+      | _ -> fprintf fmt "%s@,%a%a%s@,"
+        "// ** IMPORTS TO EMULATE NESTING **"
+        (list_ ~sep:"" (import_module false)) list_modules_used
+        (list_ ~sep:"" import_members) imports
+        "// ** END OF IMPORTS SECTION **"
+    in
+    fprintf fmt "@[<v>%s@,declare module %S {@;<0 2>@[<v>%a%a@]@,}@]"
+      (spf "// Module declared on line %d in .d.ts file" (get_line_number loc))
       (generate_mangled_name name prefix)
-      (list_ ~sep:"" (import_module false)) list_modules_used
-      (list_ ~sep:"" import_members) imports
+      print_header ()
       (statements false new_scope new_prefix) (filter_not_modules body)
 
   | loc, ExportModuleDeclaration { ExportModule.name; body; } ->
@@ -719,9 +741,19 @@ and print_module scope imports prefix fmt = Statement.(function
     else
       let new_scope = get_modules_in_scope scope [name] body in
       let list_modules_used = get_modules_to_import new_scope prefix body in
-      fprintf fmt "@[<v>declare module \"%s\" {@;<0 2>@[<v>%a%a@]@,}@]"
+      let print_header fmt = function _ ->
+        match list_modules_used  with
+        | [] -> ()
+        | _ -> fprintf fmt "%s@,%a%s@,"
+          "// ** IMPORTS TO EMULATE NESTING **"
+          (list_ ~sep:"" (import_module false)) list_modules_used
+          "// ** END OF IMPORTS SECTION **"
+      in
+      fprintf fmt "@[<v>%s@,declare module %S {@;<0 2>@[<v>%a%a@]@,}@]"
+        (spf "// Module declared on line %d in .d.ts file"
+          (get_line_number loc))
         name
-        (list_ ~sep:"" (import_module false)) list_modules_used
+        print_header ()
         (statements false scope prefix) (filter_not_modules body)
 
   | loc, _ -> failwith_location loc "Module declaration expected here"
@@ -814,15 +846,17 @@ and statement is_global scope prefix fmt =
        static B : number;
      }
   *)
-  | (_, EnumDeclaration { Enum. name; members }), _ ->
+  | (loc, EnumDeclaration { Enum. name; members }), _ ->
     (* TODO: Write a doc explaining difference between enums and our
        approximation for the same *)
     let () = prerr_endline "Warning: The declaration file contains \
        enums.\nEnums are converted to class with static members. More\
        details here : <url for doc>\n" in
-    fprintf fmt "@[<v>declare class %a {@;<0 2>@[<v>%a@]@,}@]"
+    fprintf fmt "@[<v>%s@,declare class %a {@;<0 2>@[<v>%a@]@,}@]"
+      (spf "// This was originally an Enum. See line %d in .d.ts file."
+        (get_line_number loc))
       (id_ []) name
-      (list_ ~sep:";" enum_member) members
+      (list ~sep:"" enum_member) members
 
   (* The following case handles function declaration *)
   | (_, AmbientFunctionDeclaration {AmbientFunctionDeclaration.
@@ -996,8 +1030,8 @@ and implements_class scope fmt = function
 and object_type scope fmt = Type.(function
   | { Object.properties; indexers; } ->
       fprintf fmt "{@;<0 2>@[<v>%a%a@]@,}"
-        (list_ ~sep:";" (property scope)) properties
-        (list ~sep:";" (indexer_ scope)) indexers
+        (list_end ~sep:";" (property scope)) properties
+        (_list ~sep:";" (indexer_ scope)) indexers
 )
 
 and property scope fmt = Type.Object.(function
@@ -1104,7 +1138,7 @@ and import_members fmt = function
 (* The following helper function prints a member of enum as a static
    memeber of the corresponding class. *)
 and enum_member fmt = Statement.Enum.(function
-  | _, { Member. name; _ } -> fprintf fmt "static %a : number"
+  | _, { Member. name; _ } -> fprintf fmt "static %a : number;"
     enum_key name
 )
 
@@ -1123,10 +1157,10 @@ and enum_key fmt = Expression.Object.Property.(function
 (* This squash two objects and print them as one *)
 and print_combined_class scope fmt = Type.Object.(function
   | (Some a, Some b) ->
-      fprintf fmt "{@;<0 2>@[<v>%a%a%a%a@]@,}"
-        (list_ ~sep:";" (property scope)) a.properties
-        (list ~sep:";" (indexer_ scope)) a.indexers
-        (list_ ~sep:";" (property_static scope)) b.properties
-        (list ~sep:";" (indexer_ scope)) b.indexers
+      fprintf fmt "{@;<0 2>@[<v>%a%a@,%a%a@]@,}"
+        (list_end ~sep:";" (property scope)) a.properties
+        (_list ~sep:";" (indexer_ scope)) a.indexers
+        (list_end ~sep:";" (property_static scope)) b.properties
+        (_list ~sep:";" (indexer_ scope)) b.indexers
   | _ -> failwith "This type of same name interface and var not supported yet"
   )

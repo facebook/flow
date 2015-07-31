@@ -3,6 +3,6 @@ enums.js:8:13,19: property R
 Error:
 enums.js:4:8,13: string
 This type is incompatible with
-[LIB] enums.js:2:14,19: number
+[LIB] enums.js:3:14,19: number
 
 Found 1 error

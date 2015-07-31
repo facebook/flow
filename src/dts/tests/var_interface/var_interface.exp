@@ -1,6 +1,6 @@
 
 var_interface.js:2:15,20: number
 This type is incompatible with
-[LIB] var_interface.js:1:1,7:1: class type: adult
+[LIB] var_interface.js:1:1,6:1: class type: adult
 
 Found 1 error

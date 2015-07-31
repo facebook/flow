@@ -1,6 +1,6 @@
+// Module declared on line 1 in .d.ts file
 declare module "M" {
   declare type NumString = number | string;
   declare var x: NumString;
-  
 }
 
