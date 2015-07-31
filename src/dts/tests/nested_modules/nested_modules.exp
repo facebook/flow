@@ -13,19 +13,19 @@ nested_modules.js:9:20,33: call of method successor
 Error:
 nested_modules.js:9:11,16: string
 This type is incompatible with
-[LIB] nested_modules.js:31:53,55: number
+[LIB] nested_modules.js:33:53,55: number
 
 nested_modules.js:10:30,44: call of method identity
 Error:
 nested_modules.js:9:11,16: string
 This type is incompatible with
-[LIB] nested_modules.js:36:27,32: number
+[LIB] nested_modules.js:39:27,32: number
 
 nested_modules.js:10:30,44: call of method identity
 Error:
 nested_modules.js:9:11,16: string
 This type is incompatible with
-[LIB] nested_modules.js:36:45,47: C
+[LIB] nested_modules.js:39:45,47: C
 
 nested_modules.js:11:9,14: string
 This type is incompatible with

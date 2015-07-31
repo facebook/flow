@@ -230,7 +230,7 @@ let module_to_identifier =
   Str.global_replace (Str.regexp "-") "$HYPHEN$" ;;
 
 (* get_modules_in_scope computes the list of modules which are
-   declared int he cuurent scope. In particular we shall use it to
+   declared in the cuurent scope. In particular we shall use it to
    find a list of modules in global scope.
 
    declare module M {
@@ -477,14 +477,16 @@ and module_used_indexer acc = Type.Object.(function
   | { Indexer.value; _ } -> module_used_type acc value
 )
 
-(*
-  get_modules_to_import returns a list of modules that need to be
-  imported. An element of this list is a tuple of two strings A and
-  B. A refers to the name by which the module is to be referred to in the
-  current scope and B refers to the name to which the module is be
-  referred to in the global scope.
+(* get_modules_to_import returns a list of modules that need to be imported. An
+   element of this list is a tuple of two strings A and B. A refers to the name
+   by which the module is to be referred to in the current scope and B refers to
+   the name to which the module is be referred to in the global
+   scope. Ultimately we want to emit something like `import * as A from B`.
 *)
-let get_modules_to_import scope set =
+let get_modules_to_import scope prefix stmts =
+  (* set of possible module names M that appear as M.x or M.N in body *)
+  let set_possible_modules =
+    SSet.union (get_modules_used stmts) (Utils.set_of_list prefix) in
   (* find_module matches name of a module with all the modules in
      scope by stripping of the prefix *)
   let rec find_module name = function
@@ -498,130 +500,47 @@ let get_modules_to_import scope set =
     | None -> acc
     | Some x -> x :: acc
   in
-  SSet.fold (fold_intermediate scope) set []
-
-
+  SSet.fold (fold_intermediate scope) set_possible_modules []
 
 (*
   The following two functions filter out module and not_module
   statements from a list of statements respectively.
 *)
-let rec filter_modules prefix imports scope = Statement.(function
-  | [] -> []
-  |  x :: xs -> match x with
-    | _, ModuleDeclaration _ ->
-      (prefix, imports, scope, x) :: (filter_modules prefix imports scope xs)
-    | _, ExportModuleDeclaration _ ->
-      (prefix, imports, scope, x) :: (filter_modules prefix imports scope xs)
-    | _ -> filter_modules prefix imports scope xs
-)
 
-let rec filter_not_modules = Statement.(function
-  | [] -> []
-  |  x :: xs -> match x with
-    | _, ModuleDeclaration _ -> filter_not_modules xs
-    | _, ExportModuleDeclaration _ -> filter_not_modules xs
-    | _ -> x :: (filter_not_modules xs)
-)
+let is_module = (Statement.(function
+  | _, (ModuleDeclaration _ | ExportModuleDeclaration _) -> true
+  | _ -> false
+))
+
+let filter_modules =
+  List.filter is_module
+
+let filter_not_modules =
+  List.filter (fun x -> not (is_module x))
 
 (*
   Find a list of modules declared within the current module. If you
   only consider the module nodes in the AST then, this is just the
   find_child function of a tree.
 *)
-let find_child_modules acc prefix imports scope = Statement.(function
+let find_child_modules prefix scope = Statement.(function
   | _, ModuleDeclaration { Module.id; body; } ->
     let new_prefix = List.append prefix [get_name [] id] in
     let new_scope = get_modules_in_scope scope new_prefix body in
-    List.append (filter_modules new_prefix imports new_scope body) acc
+    new_prefix, new_scope, filter_modules body
   | _, ExportModuleDeclaration { ExportModule.name; body; } ->
     let new_scope = get_modules_in_scope scope [name] body in
-    List.append (filter_modules [name] imports new_scope body) acc
+    [name], new_scope, filter_modules body
   | loc, _  -> failwith_location loc
     "Unexpected statement. A module declaration was expected"
 )
-
-(*
-  Find a list of non module statements declared within the current module. And
-  append it in imports.
-
-  Cases handled:
-    1. Variable Declaration
-    2. Class Declaration
-    3. Interference Declaration
-    4, Enum Declaration
-
-  TODO:
-    1. Function Declaration
-
-  "imports" is a list of pairs (a, b) where 'a' is the non module entity to be
-  imported and 'b' is the of the module whose context 'a' is declared.
-
-  Eg.
-
-  module M {
-    variable x : number
-    class A { }
-    module N {
-
-    }
-  }
-
-  If run on module M, expand_imports returns ("x", "M") :: ("A", "M") :: []
-*)
 
 let rec shadow x = function
 | [] -> []
 | (a, b) :: xs -> if x = a then shadow x xs else (a, b) :: (shadow x xs)
 
-let rec expand_imports imports = Statement.(function
-  | _, ModuleDeclaration{Module. body; id; _ } ->
-    let name = get_name [] id in
-    expand_imports_statements imports name body
-  | _, ExportModuleDeclaration{ExportModule. body; name; _ } ->
-    let name = module_to_identifier name in
-    expand_imports_statements imports name body
-  | loc, _ -> failwith_location loc
-    "Unexpected statement. A module declaration was expexted"
-)
-
-and expand_imports_statements acc name = function
-  | [] -> acc
-  | x :: xs ->
-    expand_imports_statement (expand_imports_statements acc name xs) name x
-
-and expand_imports_statement acc name = Statement.(function
-  | loc, VariableDeclaration { VariableDeclaration.
-      declarations; _
-    } -> VariableDeclaration.(
-      match declarations with
-      | [(_, {Declarator.id; _})] ->
-        expand_imports_pattern acc name id
-      | _ -> failwith_location loc
-        "Only single declarator handled currently"
-    )
-  | _, AmbientClassDeclaration { AmbientClass. id; _ } ->
-    expand_imports_id acc name id
-  | _, InterfaceDeclaration { Interface. id; _ } ->
-    expand_imports_id acc name id
-  | _, EnumDeclaration { Enum. name = id; members } ->
-    expand_imports_id acc name id
-  | _ -> acc
-)
-
-and expand_imports_pattern acc name = Pattern.(function
-  | _, Identifier id -> expand_imports_id acc name id
-  | loc, _ -> failwith_location loc
-    "Only identifier allowed in variable declaration"
-)
-
-and expand_imports_id acc name= function
-  | _, { Identifier. name = import; _ } -> (import, name) :: (shadow import acc)
-
-
 (*
-  Find a list of non module statements declared within the current module. And
-  remove those identifier (shadow) from the list of imports
+  Find a list of non module statements declared within the current module.
 
   Cases handled:
     1. Variable Declaration
@@ -631,70 +550,49 @@ and expand_imports_id acc name= function
 
   TODO:
     1. Function Declaration
-
-  "imports" is a list of pairs (a, b) where 'a' is the non module entity to be
-  imported and 'b' is the of the module whose context 'a' is declared.
-
-  Eg.
-  module M {
-    variable x : string
-    variable y : number
-    module N {
-      variable x : number
-      class A { }
-      module N {
-
-      }
-    }
-
-  If run on module N, shadow_imports returns [("y", "M")] instead of
-  ("x", "M") :: ("y", "M") :: []
 *)
 
-let rec shadow_imports imports = Statement.(function
-  | _, ModuleDeclaration{Module. body; _ } ->
-    shadow_imports_statements imports body
-  | _, ExportModuleDeclaration{ExportModule. body; _ } ->
-    shadow_imports_statements imports body
+let rec collect_names = Statement.(function
+  | _, ModuleDeclaration{Module. body; id; _ } ->
+    let name = get_name [] id in
+    name, collect_names_statements body
+  | _, ExportModuleDeclaration{ExportModule. body; name; _ } ->
+    let name = module_to_identifier name in
+    name, collect_names_statements body
   | loc, _ -> failwith_location loc
     "Unexpected statement. A module declaration was expexted"
 )
 
-and shadow_imports_statements acc = function
-  | [] -> acc
-  | x :: xs ->
-    shadow_imports_statement (shadow_imports_statements acc xs) x
+and collect_names_statements xs =
+  List.fold_left collect_names_statement [] xs
 
-and shadow_imports_statement acc = Statement.(function
+and collect_names_statement acc = Statement.(function
   | loc, VariableDeclaration { VariableDeclaration.
       declarations; _
     } -> VariableDeclaration.(
       match declarations with
       | [(_, {Declarator.id; _})] ->
-        shadow_imports_pattern acc id
+        collect_names_pattern acc id
       | _ -> failwith_location loc
         "Only single declarator handled currently"
     )
   | _, AmbientClassDeclaration { AmbientClass. id; _ } ->
-    shadow_imports_id acc id
+    collect_names_id acc id
   | _, InterfaceDeclaration { Interface. id; _ } ->
-    shadow_imports_id acc id
+    collect_names_id acc id
   | _, EnumDeclaration { Enum. name; members } ->
-    shadow_imports_id acc name
+    collect_names_id acc name
   | _ -> acc
 )
 
-and shadow_imports_pattern acc = Pattern.(function
-  | _, Identifier id -> shadow_imports_id acc id
+and collect_names_pattern acc = Pattern.(function
+  | _, Identifier id -> collect_names_id acc id
   | loc, _ -> failwith_location loc
     "Only identifier allowed in variable declaration"
 )
 
-and shadow_imports_id acc = function
-  | _, { Identifier. name; _ } -> shadow name acc
-
-
-
+and collect_names_id acc = function
+  | _, { Identifier. name; _ } -> name :: acc
 
 (*
   To handle flatten nested modules, we decopes the AST into modules
@@ -705,15 +603,21 @@ and shadow_imports_id acc = function
 
 let rec program fmt (_, stmts, _) =
   Format.set_margin 80;
+  (* list of ancestor modules *)
   let prefix  = [] in
+  (* get modules in current scope, passing prefix *)
   let scope = get_modules_in_scope [] prefix stmts in
-  let modules = filter_modules prefix [] scope stmts in
-  let not_modules = filter_not_modules stmts in
-  let list_possible_modules = get_modules_used not_modules in
-  let list_modules_used = get_modules_to_import scope list_possible_modules in
+  (* Collect modules in current scope, attaching the current environment to each
+     module. The current environment consists of prefix, imports (empty in the
+     global scope), and scope. *)
+  let modules, not_modules = List.partition is_module stmts in
+  (* Final list of modules to import, filtering out names that are not module
+     names in scope. Each entry is a pair; see comment on
+     `get_modules_to_import` for details. *)
+  let list_modules_used = get_modules_to_import scope prefix not_modules in
 
   fprintf fmt "@[<v>%a%a%a@]@."
-    print_modules modules
+    (print_modules prefix [] scope) modules
     (* We import all the top level module as global identifiers.
        But rename the rename/garble the identifier. Renaming serves two
        purposes:
@@ -724,20 +628,65 @@ let rec program fmt (_, stmts, _) =
           somewhat hidden.
     *)
     (list_ ~sep:"" (import_module true)) list_modules_used
-    (look_ahead ~sep:"" (statement true scope prefix)) not_modules
+    (statements true scope prefix) not_modules
 
 (*
   print_modules calls print_module in a DFS order. It can easily be
-  converted to BFS order by changing find_child_moduels.
+  converted to BFS order by changing find_child_modules.
 *)
 
-and print_modules fmt = function
-  | [] -> ()
-  | (prefix, imports, scope, x) :: xs ->
+(* TODO: fix comment
+
+   And remove those identifier (shadow) from the list of imports "imports" is a
+   list of pairs (a, b) where 'a' is the non module entity to be imported and 'b'
+   is the of the module whose context 'a' is declared.
+
+   Eg.
+   module M {
+   variable x : string
+   variable y : number
+   module N {
+   variable x : number
+   class A { }
+   module N {
+
+   }
+   }
+
+   If run on module N, collect_names returns [("y", "M")] instead of
+   ("x", "M") :: ("y", "M") :: []
+
+   And append it in imports.
+
+   Eg.
+
+   module M {
+   variable x : number
+   class A { }
+   module N {
+
+   }
+   }
+
+   If run on module M, expand_imports returns ("x", "M") :: ("A", "M") :: []
+
+*)
+
+and print_modules prefix imports scope fmt xs =
+  list ~sep:"" (print_dfs_module prefix imports scope) fmt xs
+
+and print_dfs_module prefix imports scope fmt x =
+    let name, names = collect_names x in
+    let set_names = Utils.set_of_list names in
+    let imports =
+      List.filter (fun (x, y) -> not (SSet.mem x set_names)) imports in
+    let name_names = List.map (fun x -> x, name) names in
+    let expanded_imports = List.rev_append name_names imports in
+    let new_prefix, new_scope, child_modules =
+      find_child_modules prefix scope x in
     fprintf fmt "%a@,%a"
-      (print_module scope (shadow_imports imports x) prefix) x
-      print_modules
-      (find_child_modules xs prefix (expand_imports imports x) scope x)
+      (print_module scope imports prefix) x
+      (print_modules new_prefix expanded_imports new_scope) child_modules
 
 and print_module scope imports prefix fmt = Statement.(function
 
@@ -755,17 +704,12 @@ and print_module scope imports prefix fmt = Statement.(function
     let name = get_name [] id in
     let new_prefix = List.append prefix [name] in
     let new_scope = get_modules_in_scope scope new_prefix body in
-    let list_possible_modules =
-      SSet.union (get_modules_used body) (Utils.set_of_list prefix) in
-    let list_modules_used =
-      get_modules_to_import new_scope list_possible_modules in
-
+    let list_modules_used = get_modules_to_import new_scope prefix body in
     fprintf fmt "@[<v>declare module \"%s\" {@;<0 2>@[<v>%a%a%a@]@,}@]"
       (generate_mangled_name name prefix)
       (list_ ~sep:"" (import_module false)) list_modules_used
       (list_ ~sep:"" import_members) imports
-      (look_ahead ~sep:"" (statement false new_scope new_prefix))
-      (filter_not_modules body)
+      (statements false new_scope new_prefix) (filter_not_modules body)
 
   | loc, ExportModuleDeclaration { ExportModule.name; body; } ->
     (* ExportModuleDeclaration is allowed only in global scope, that
@@ -774,14 +718,11 @@ and print_module scope imports prefix fmt = Statement.(function
       "Export Module Declaration allowed only in the global scope"
     else
       let new_scope = get_modules_in_scope scope [name] body in
-      let list_possible_modules = get_modules_used body in
-      let list_modules_used =
-        get_modules_to_import new_scope list_possible_modules in
+      let list_modules_used = get_modules_to_import new_scope prefix body in
       fprintf fmt "@[<v>declare module \"%s\" {@;<0 2>@[<v>%a%a@]@,}@]"
         name
         (list_ ~sep:"" (import_module false)) list_modules_used
-        (look_ahead ~sep:"" (statement false scope prefix))
-        (filter_not_modules body)
+        (statements false scope prefix) (filter_not_modules body)
 
   | loc, _ -> failwith_location loc "Module declaration expected here"
 )
@@ -791,25 +732,35 @@ and print_module scope imports prefix fmt = Statement.(function
   used in the following statements.
   "if_true is_global scope" retuns "scope" iff current scope is global.
 *)
+
+and squash x y is_global scope prefix fmt =
+  Statement.(match x, y with
+  | (_, InterfaceDeclaration {
+      Interface.id; extends; typeParameters; _
+     }),
+    (_, VariableDeclaration _) ->
+    let scope = (if_true is_global scope) in
+    fprintf fmt "@[<v>declare class %a%a%a %a@]"
+      (id_ scope) id
+      (opt (non_empty "<@[<h>%a@]>" (list ~sep:"," (type_param scope))))
+      typeParameters
+      (extends_interface scope) extends
+      (print_combined_class scope)
+      ((get_object x), (get_object y))
+  | (loc, _), _ -> failwith_location loc
+    "Unsupported elements with same name."
+  )
+
+and statements is_global scope prefix =
+  look_ahead ~sep:"" (statement is_global scope prefix)
+
 and statement is_global scope prefix fmt =
   Statement.(function
   (* This case sqashes a variable with the following interface
-     with same name *)
-  | ((_, VariableDeclaration _) as y), Some x -> (match x with
-      | _, InterfaceDeclaration { Interface.
-        id; extends; typeParameters; _
-        } ->
-        let scope = (if_true is_global scope) in
-        fprintf fmt "@[<v>declare class %a%a%a %a@]"
-          (id_ scope) id
-          (opt (non_empty "<@[<h>%a@]>" (list ~sep:"," (type_param scope))))
-            typeParameters
-          (extends_interface scope) extends
-          (print_combined_class scope)
-          ((get_object x), (get_object y))
-      | loc, _ -> failwith_location loc
-        "Unsopprted elements with same name."
-      )
+     with same name, or vice versa *)
+  | ((_, VariableDeclaration _) as y), Some x
+  | ((_, InterfaceDeclaration _) as x), Some y ->
+    squash x y is_global scope prefix fmt
 
   | (_, VariableDeclaration { VariableDeclaration.
       declarations; _
@@ -820,19 +771,6 @@ and statement is_global scope prefix fmt =
             (pattern (if_true is_global scope)) id
       | _ -> todo fmt
     )
-  (* This case squashes an interface with the following VariableDeclaration
-     with same name *)
-  | ((_, InterfaceDeclaration { Interface.
-      id; extends; typeParameters; _
-    }) as x), Some y ->
-      let scope = (if_true is_global scope) in
-      fprintf fmt "@[<v>declare class %a%a%a %a@]"
-        (id_ scope) id
-        (opt (non_empty "<@[<h>%a@]>" (list ~sep:"," (type_param scope))))
-          typeParameters
-        (extends_interface scope) extends
-        (print_combined_class scope)
-        ((get_object x), (get_object y))
 
   | (_, InterfaceDeclaration { Interface.
       id; body; extends; typeParameters;

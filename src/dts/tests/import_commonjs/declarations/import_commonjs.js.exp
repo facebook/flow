@@ -28,6 +28,7 @@ declare module "module-P___P___N" {
   declare var z: typeof x;
   
 }
+
 declare module "M" {
   declare var P: $Exports<'module-P'>;
   declare var m: P.C;

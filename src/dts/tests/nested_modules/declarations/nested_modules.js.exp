@@ -20,17 +20,20 @@ declare module "M___N" {
   declare var z: typeof x;
   
 }
+
 declare module "P" {
   declare var M: $Exports<'M'>;
   declare var a: typeof M.N.z;
   declare var b: number;
   
 }
+
 declare module "F" {
   declare var M: $Exports<'M'>;
   declare function successor(n: typeof M.x): typeof M.x;
   
 }
+
 declare module "T" {
   declare var M: $Exports<'M'>;
   declare type AnyThing = number | string | M.C;

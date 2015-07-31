@@ -7,6 +7,6 @@ This type is incompatible with
 
 import_commonjs.js:5:8,13: number
 This type is incompatible with
-[LIB] import_commonjs.js:33:18,20: C
+[LIB] import_commonjs.js:34:18,20: C
 
 Found 2 errors
