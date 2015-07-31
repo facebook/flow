@@ -34,6 +34,7 @@ val print_error_color:
   one_line:bool -> color:Tty.color_mode -> error -> unit
 
 val file_of_error : error -> string
+val loc_of_error : error -> Loc.t
 
 val json_of_loc : Loc.t -> (string * Hh_json.json) list
 
@@ -55,6 +56,7 @@ module ErrorSuppressions : sig
   val union : t -> t -> t
   val check : error -> t -> (bool * t)
   val unused : t -> Loc.t list
+  val cardinal : t -> int
 end
 
 val parse_error_to_flow_error : (Loc.t * Parse_error.t) -> error

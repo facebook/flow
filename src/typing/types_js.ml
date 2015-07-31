@@ -100,65 +100,86 @@ let clear_errors files =
     merge_errors := SMap.remove file !merge_errors;
     module_errors := SMap.remove file !module_errors;
     error_suppressions := SMap.remove file !error_suppressions;
+    all_errors := SMap.empty
   ) files
+
+(* helper - save an error set into a global error map.
+   clear mapping if errorset is empty *)
+let save_errset mapref file errset =
+  mapref := if Errors_js.ErrorSet.cardinal errset = 0
+    then SMap.remove file !mapref
+    else SMap.add file errset !mapref
 
 (* given a reference to a error map (files to errorsets), and
    two parallel lists of such, save the latter into the former. *)
-let save_errors_or_suppressions mapref files errsets =
-  List.iter2 (fun file errset ->
-    mapref := SMap.add file errset !mapref
-  ) files errsets
+let save_errors mapref files errsets =
+  List.iter2 (save_errset mapref) files errsets
 
 let save_errormap mapref errmap =
-  SMap.iter (fun file errset ->
-    mapref := SMap.add file errset !mapref
-  ) errmap
+  SMap.iter (save_errset mapref) errmap
+
+(* given a reference to a error suppression map (files to
+   error suppressions), and two parallel lists of such,
+   save the latter into the former. *)
+let save_suppressions mapref files errsups = Errors_js.(
+  List.iter2 (fun file errsup ->
+    mapref := if ErrorSuppressions.cardinal errsup = 0
+      then SMap.remove file !mapref
+      else SMap.add file errsup !mapref
+  ) files errsups
+)
 
 (* distribute errors from a set into a filename-indexed map,
    based on position info contained in error, not incoming key *)
-let distrib_errs _ eset emap = Errors_js.(
-  ErrorSet.fold (fun e emap ->
-    let file = file_of_error e in
-    let errs = match SMap.get file emap with
-    | Some set -> ErrorSet.add e set
-    | None -> ErrorSet.singleton e in
-    SMap.add file errs emap
-  ) eset emap
-)
+let distrib_errs = Errors_js.(
 
+  let distrib_error orig_file error error_map =
+    let file = file_of_error error in
+    match SMap.get file error_map with
+    | None ->
+      SMap.add file (ErrorSet.singleton error) error_map
+    | Some error_set ->
+      if ErrorSet.mem error error_set
+      then error_map
+      else SMap.add file (ErrorSet.add error error_set) error_map
+  in
+
+  fun _file file_errors error_map ->
+    ErrorSet.fold (distrib_error _file) file_errors error_map
+)
 (* Given all the errors as a map from file => errorset
  * 1) Filter out the suppressed errors from the error sets
  * 2) Remove files with empty errorsets from the map
  * 3) Add errors for unused suppressions
  * 4) Properly distribute the new errors
  *)
-let filter_suppressed_errors = Errors_js.(
+let filter_suppressed_errors emap = Errors_js.(
   let suppressions = ref ErrorSuppressions.empty in
 
   let filter_suppressed_error error =
     let (suppressed, sups) = ErrorSuppressions.check error !suppressions in
     suppressions := sups;
     not suppressed
+  in
 
-  in fun emap ->
-    suppressions := SMap.fold
-      (fun _key -> ErrorSuppressions.union)
-      !error_suppressions
-      ErrorSuppressions.empty;
+  suppressions := SMap.fold
+    (fun _key -> ErrorSuppressions.union)
+    !error_suppressions
+    ErrorSuppressions.empty;
 
-    let emap = emap
-      |> SMap.map (ErrorSet.filter filter_suppressed_error)
-      |> SMap.filter (fun k v -> not (ErrorSet.is_empty v)) in
+  let emap = emap
+    |> SMap.map (ErrorSet.filter filter_suppressed_error)
+    |> SMap.filter (fun k v -> not (ErrorSet.is_empty v)) in
 
-    (* For each unused suppression, create an error *)
-    let unused_suppression_errors = List.fold_left
-      (fun errset loc ->
-        let reason = Reason_js.mk_reason "Error suppressing comment" loc in
-        let err = Flow_js.new_error [(reason, "Unused suppression")] in
-        ErrorSet.add err errset
-      )
-      ErrorSet.empty
-      (ErrorSuppressions.unused !suppressions) in
+  (* For each unused suppression, create an error *)
+  let unused_suppression_errors = List.fold_left
+    (fun errset loc ->
+      let reason = Reason_js.mk_reason "Error suppressing comment" loc in
+      let err = Flow_js.new_error [(reason, "Unused suppression")] in
+      ErrorSet.add err errset
+    )
+    ErrorSet.empty
+    (ErrorSuppressions.unused !suppressions) in
 
     distrib_errs "" unused_suppression_errors emap
 )
@@ -299,8 +320,8 @@ let infer workers files opts =
         ~neutral: ([], [], [])
         ~merge: rev_append_triple
         ~next: (Bucket.make_20 files) in
-      save_errors_or_suppressions infer_errors files errors;
-      save_errors_or_suppressions error_suppressions files suppressions;
+      save_errors infer_errors files errors;
+      save_suppressions error_suppressions files suppressions;
 
       files
     )
@@ -379,17 +400,17 @@ let rec merge_requires cache cx rs =
     if Module.module_exists r && checked r then
       let file = Module.get_file r in
       match cache#find file with
-      | Some cx_ ->
+      | Some req_cx ->
           cxs,
-          (cx_, cx)::implementations,
+          (req_cx, cx) :: implementations,
           declarations
       | None ->
-          let cx_ = cache#read file in
-          let (cxs_, implementations_, declarations_) =
-            merge_requires cache cx_ cx_.strict_required in
-          List.rev_append cxs_ (cx_::cxs),
-          List.rev_append implementations_ ((cx_,cx)::implementations),
-          merge_decls declarations_ declarations
+          let req_cx = cache#read file in
+          let (merged_cxs, merged_impls, merged_decls) =
+            merge_requires cache req_cx req_cx.strict_required in
+          List.rev_append merged_cxs (req_cx :: cxs),
+          List.rev_append merged_impls ((req_cx, cx) :: implementations),
+          merge_decls merged_decls declarations
     else
       cxs,
       implementations,
@@ -470,7 +491,7 @@ let merge_strict workers files opts =
         master_cx.errors :: errsets
       ) in
       (* save *)
-      save_errors_or_suppressions merge_errors files errsets
+      save_errors merge_errors files errsets
     )
 
 (* *)
@@ -504,7 +525,7 @@ let merge_nonstrict partition opts =
         master_cx.errors :: errsets
       ) in
       (* save *)
-      save_errors_or_suppressions merge_errors files errsets
+      save_errors merge_errors files errsets
   )
 
 (* calculate module dependencies *)
@@ -592,30 +613,31 @@ let typecheck workers files removed unparsed opts make_merge_input =
   - sig(M) is M plus the closure of strict_required(M), i.e.
     all modules which might contribute to M's signature, directly
     or indirectly
+
   Given a module M and a set of modules S,
   - M's signature depends on S if any module in sig(M) is in S
   - M depends on S if M is in S, or if the signature of any module
     in required(M) depends on S.
  *)
-let rec file_depends_on memo modules f =
-  let { Module._module; required; _ } = Module.get_module_info f in
-  SSet.mem _module modules ||
-    SSet.exists (sig_depends_on memo modules) required
+let file_depends_on =
 
-and sig_depends_on memo modules m =
-  match SMap.get m !memo with
-  | Some b -> b
-  | None ->
-    let b = SSet.mem m modules || (
+  let rec sig_depends_on stack modules m =
+    SSet.mem m modules || (
       Module.module_exists m && (
         let f = Module.get_file m in
-        let { Module.strict_required; _ } = Module.get_module_info f in
-        memo := SMap.add m false !memo;
-        SSet.exists (sig_depends_on memo modules) strict_required
+        not (SSet.mem f stack) && (
+          let stack = SSet.add f stack in
+          let { Module.strict_required; _ } = Module.get_module_info f in
+          SSet.exists (sig_depends_on stack modules) strict_required
+        )
       )
-    ) in
-    memo := SMap.add m b !memo;
-    b
+    )
+  in
+
+  fun modules f ->
+    let { Module._module; required; _ } = Module.get_module_info f in
+    SSet.mem _module modules ||
+      SSet.exists (sig_depends_on SSet.empty modules) required
 
 (* The following computation is likely inefficient; it tries to narrow down
    a potentially large set of unmodified files to a potentially small set of
@@ -633,9 +655,8 @@ let deps unmodified inferred_files removed_modules =
   let touched_modules = SSet.fold (fun file mods ->
     SSet.add (Module.get_module_name file) mods
   ) inferred_files removed_modules in
-  (* now, add any untouched files that depend on these *)
-  let memo = ref SMap.empty in
-  SSet.filter (file_depends_on memo touched_modules) unmodified
+  (* return untouched files that depend on these *)
+  SSet.filter (file_depends_on touched_modules) unmodified
 
 (* We maintain the following invariant across rechecks: The keyset of
    `files_info` contains files that parsed successfully in the previous
@@ -675,7 +696,7 @@ let recheck genv env modified =
     Parsing_service_js.reparse genv.ServerEnv.workers modified
       (fun () -> init_modes options)
   in
-  save_errors_or_suppressions parse_errors freshparse_fail freshparse_errors;
+  save_errors parse_errors freshparse_fail freshparse_errors;
 
   (* get old (unmodified, undeleted) files that were parsed successfully *)
   let old_parsed = ServerEnv.PathMap.fold (fun k _ a ->
@@ -746,7 +767,7 @@ let full_check workers parse_next opts =
     Parsing_service_js.parse workers parse_next
       (fun () -> init_modes opts)
   in
-  save_errors_or_suppressions parse_errors error_files errors;
+  save_errors parse_errors error_files errors;
 
   let files = SSet.elements parsed in
   let checked = typecheck workers files SSet.empty error_files opts (
@@ -754,10 +775,10 @@ let full_check workers parse_next opts =
       (* after local inference and before merge, bring in libraries *)
       (* if any fail to parse, our return value will suppress merge *)
       let lib_files = Init_js.init
-        (fun file errs -> save_errors_or_suppressions parse_errors [file] [errs])
-        (fun file errs -> save_errors_or_suppressions infer_errors [file] [errs])
+        (fun file errs -> save_errors parse_errors [file] [errs])
+        (fun file errs -> save_errors infer_errors [file] [errs])
         (fun file sups ->
-          save_errors_or_suppressions error_suppressions [file] [sups])
+          save_suppressions error_suppressions [file] [sups])
       in
       (* Note: if any libs failed, return false and files to report errors for.
          (other errors will be suppressed.)
@@ -789,7 +810,7 @@ let server_init genv env =
     match errors with
     | None -> ()
     | Some error ->
-      save_errors_or_suppressions infer_errors [package] [error]
+      save_errors infer_errors [package] [error]
   );
 
   let get_next = Files_js.make_next_files root in

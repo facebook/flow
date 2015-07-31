@@ -197,6 +197,9 @@ module ErrorSuppressions = struct
 
   (* Get's the locations of the suppression comments that are yet unused *)
   let unused { unused; _; } = SpanMap.values unused
+
+  let cardinal { suppressions; unused } =
+    SpanMap.cardinal suppressions + SpanMap.cardinal unused
 end
 
 let parse_error_to_flow_error (loc, err) =
