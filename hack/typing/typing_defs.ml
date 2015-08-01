@@ -404,6 +404,12 @@ type expand_env = {
 
 type ety = expand_env * locl ty
 
+let has_expanded {type_expansions; _} x =
+  List.exists begin function
+    | (_, x') when x = x' -> true
+    | _ -> false
+  end type_expansions
+
 (* The identifier for this *)
 let this = Ident.make "$this"
 

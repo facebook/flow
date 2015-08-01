@@ -26,7 +26,7 @@ module Phase = Typing_phase
 
 let expand_typedef_ ?force_expand:(force_expand=false) ety_env env r x argl =
   let pos = Reason.to_pos r in
-  if List.mem x (List.map snd ety_env.type_expansions)
+  if Typing_defs.has_expanded ety_env x
   then begin
       Errors.cyclic_typedef pos;
       env, (ety_env, (r, Tany))

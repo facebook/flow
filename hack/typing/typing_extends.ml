@@ -367,4 +367,7 @@ let check_implements env parent_type type_ =
         (fun errorl ->
           let p_name_pos, p_name_str = parent_name in
           let name_pos, name_str = name in
-          Errors.bad_decl_override p_name_pos p_name_str name_pos name_str errorl)
+          if snd parent_name = SN.Classes.cHH_BuiltinEnum
+          then Errors.bad_enum_decl name_pos errorl
+          else Errors.bad_decl_override p_name_pos p_name_str name_pos name_str
+            errorl)

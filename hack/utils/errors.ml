@@ -348,6 +348,7 @@ module Typing                               = struct
   let local_variable_modifed_and_used       = 4143 (* DONT MODIFY!!!! *)
   let local_variable_modifed_twice          = 4144 (* DONT MODIFY!!!! *)
   let assign_during_case                    = 4145 (* DONT MODIFY!!!! *)
+  let cyclic_enum_constraint                = 4146 (* DONT MODIFY!!!! *)
   (* EXTEND HERE WITH NEW VALUES IF NEEDED *)
 end
 
@@ -894,6 +895,15 @@ let bad_decl_override parent_pos parent_name pos name (error: error) =
   (* This is a cascading error message *)
   let code, msgl = error in
   add_list code (msg1 :: msg2 :: msgl)
+
+let bad_enum_decl pos (error: error) =
+  let msg = pos,
+    "This enum declaration is invalid.\n\
+    Read the following to see why:"
+  in
+  (* This is a cascading error message *)
+  let code, msgl = error in
+  add_list code (msg :: msgl)
 
 let missing_constructor pos =
   add Typing.missing_constructor pos
@@ -1710,16 +1720,20 @@ let local_variable_modified_and_used pos_modified pos_used_l =
            ((pos_modified, "Unsequenced modification and access to local \
                             variable. Modified here") ::
             List.map used_msg pos_used_l)
+
 let local_variable_modified_twice pos_modified pos_modified_l =
   let modified_msg p = p, "And also modified here" in
   add_list Typing.local_variable_modifed_twice
            ((pos_modified, "Unsequenced modifications to local variable. \
                             Modified here") ::
             List.map modified_msg pos_modified_l)
+
 let assign_during_case p =
   add Typing.assign_during_case p
     "Don't assign to variables inside of case labels"
 
+let cyclic_enum_constraint pos =
+  add Typing.cyclic_enum_constraint pos "Cyclic enum constraint"
 
 (*****************************************************************************)
 (* Convert relative paths to absolute. *)

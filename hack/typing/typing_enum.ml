@@ -136,7 +136,7 @@ let enum_class_check env tc consts const_types =
         let env = (match ty_constraint with
           | Some ty ->
              let env, ty = Phase.localize ~ety_env env ty in
-            Typing_ops.sub_type tc.tc_pos Reason.URenum_cstr env ty ty_exp
+             Typing_ops.sub_type tc.tc_pos Reason.URenum_cstr env ty ty_exp
           | None -> env) in
 
         List.fold_left2 (enum_check_const ty_exp) env consts const_types
