@@ -242,8 +242,22 @@ and file_exists path =
     in SSet.mem (Filename.basename path) files
   )
 
+(!!)
 let resolve_symlinks path =
   Path.to_string (Path.make path)
+(!!)
+let relative r =
+  Str.string_match Files_js.dir_sep r 0
+  || Str.string_match Files_js.current_dir_name r 0
+  || Str.string_match Files_js.parent_dir_name r 0
+
+let path_if_exists path =
+  if file_exists path then Some path
+  else None
+
+let path_is_file path =
+  file_exists path && not (Sys.is_directory path)
+(!!)
 
 (*******************************)
 
@@ -316,11 +330,6 @@ module Node = struct
       if dir = parent_dir then None
       else node_module (Filename.dirname dir) r
     )
-
-  let relative r =
-    Str.string_match Files_js.dir_sep r 0
-    || Str.string_match Files_js.current_dir_name r 0
-    || Str.string_match Files_js.parent_dir_name r 0
 
   let resolve_import file import_str =
     let dir = Filename.dirname file in
@@ -468,15 +477,67 @@ module Haste: MODULE_SYSTEM = struct
 
 end
 
+(****************** Flat module system **********************)
+
+module Flat: MODULE_SYSTEM = struct
+  (* Absolute module names based at the .flowconfig root *)
+
+  let exported_module file comments = file
+  let guess_exported_module file _content = file
+
+  let resolve path =
+    let path = Path.to_string path in
+    if Files_js.is_flow_file path
+    then path_if_exists path
+    else seqf
+      (fun ext -> path_if_exists (path ^ ext))
+      Files_js.flow_extensions
+
+  let resolve_relative root_path rel_path =
+    let path = Files_js.normalize_path root_path rel_path in
+    resolve (Path.make path)
+
+  let resolve_import file import_str =
+    let dir = Filename.dirname file in
+    if relative import_str
+    then resolve_relative dir import_str
+    else (match !flow_options with
+    | None -> assert_false (spf
+        ("Attempted to resolve an absolute import (%s) before the flow_options " ^^
+         "were provided to Module_js.ml :(")
+        import_str
+      )
+    | Some({ Options.opt_root = root}) ->
+      resolve (Path.concat root import_str)
+    )
+
+  let imported_module file import_str =
+    let candidates = module_name_candidates import_str in
+    let choose_candidate chosen candidate =
+      match chosen with
+      | Some(c) -> chosen
+      | None -> resolve_import file candidate
+    in
+    match List.fold_left choose_candidate None candidates with
+    | Some(str) -> str
+    | None -> import_str
+
+  (* Using a base directory analogous to Node's `node_modules`, so the same
+     singleton invariant holds. *)
+  let choose_provider = Node.choose_provider
+
+end
+
 (****************** module system switch *********************)
 
 (* Switch between module systems, based on environment. We could eventually use
    functors, but that seems like overkill at this point. *)
 
 let module_system_table =
-  let table = Hashtbl.create 2 in
+  let table = Hashtbl.create 3 in
   Hashtbl.add table "node" (module Node: MODULE_SYSTEM);
   Hashtbl.add table "haste" (module Haste: MODULE_SYSTEM);
+  Hashtbl.add table "flat" (module Flat: MODULE_SYSTEM);
   table
 
 let module_system = ref (module Node: MODULE_SYSTEM)

@@ -116,7 +116,8 @@ module OptionParser(Config : CONFIG) = struct
     let flowconfig = FlowConfig.get root in
     let opt_module = FlowConfig.(match flowconfig.options.moduleSystem with
     | Node -> "node"
-    | Haste -> "haste") in
+    | Haste -> "haste"
+    | Flat -> "flat") in
     let opt_libs = FlowConfig.(match lib with
     | None -> flowconfig.libs
     | Some libs ->
