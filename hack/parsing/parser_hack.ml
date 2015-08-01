@@ -683,7 +683,6 @@ and attribute_remain env =
        * TODO #4890694 remove this. *)
       let attr_compat = function
         | "ConsistentConstruct" -> "__ConsistentConstruct"
-        | "Override" -> "__Override"
         | "UNSAFE_Construct" -> "__UNSAFE_Construct"
         | x -> x in
       let pos = Pos.make env.file env.lb in
