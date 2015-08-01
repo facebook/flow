@@ -682,7 +682,6 @@ and attribute_remain env =
       (* Temporary backwards compat for renaming these attributes.
        * TODO #4890694 remove this. *)
       let attr_compat = function
-        | "ConsistentConstruct" -> "__ConsistentConstruct"
         | "UNSAFE_Construct" -> "__UNSAFE_Construct"
         | x -> x in
       let pos = Pos.make env.file env.lb in
