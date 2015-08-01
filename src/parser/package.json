@@ -1,6 +1,7 @@
 {
   "name": "flow-parser",
-  "version": "0.6.0",
+  "version": "0.7.0",
+  "license": "BSD-3-Clause",
   "description": "JavaScript parser written in OCaml. Produces SpiderMonkey AST",
   "author": {
     "name": "Gabe Levi",
