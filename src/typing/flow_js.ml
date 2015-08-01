@@ -2265,8 +2265,8 @@ let rec __flow cx (l, u) trace =
 
       (* Properties in u must either exist in l, or match l's indexer. *)
       iter_props_ cx flds2
-        (fun s -> fun t2 ->
-          if (not(has_prop cx flds1 s))
+        (fun s t2 ->
+          if not (has_prop cx flds1 s)
           then
             (* property doesn't exist in inflowing type *)
             let reason2 = replace_reason (spf "property %s" s) reason2 in
@@ -2274,11 +2274,11 @@ let rec __flow cx (l, u) trace =
             | OptionalT t1 when flags.exact ->
               (* if property is marked optional or otherwise has a maybe type,
                  and if inflowing type is exact (i.e., it is not an
-                 annotation), then it is ok to relax the requirement that the
-                 property be found immediately; instead, we constrain future
-                 lookups of the property in inflowing type *)
+                 annotation), then we add it to the inflowing type as
+                 an optional property, as well as ensuring compatibility
+                 with dictionary constraints if present *)
               dictionary cx trace (string_key s reason2) t1 dict1;
-              rec_flow cx trace (l, LookupT (reason2, None, s, t1))
+              write_prop cx flds1 s t2;
             | _ ->
               (* otherwise, we do strict lookup of property in prototype *)
               rec_flow cx trace (proto_t, LookupT (reason2, Some reason1, s, t2))
@@ -2718,7 +2718,8 @@ let rec __flow cx (l, u) trace =
     }),
        LookupT(reason_op,strict,x,t_other))
       ->
-      let t = ensure_prop cx strict mapr x proto reason_obj reason_op trace in
+      let t = ensure_prop_for_read cx strict mapr x proto
+        reason_obj reason_op trace in
       rec_flow cx trace (t, UnifyT(t, t_other))
 
     (*****************************************)
@@ -2741,9 +2742,10 @@ let rec __flow cx (l, u) trace =
       if flags.frozen then
         prerr_flow cx trace "Mutation not allowed on" l u
       else
-        let strict = mk_strict
+        let strict_reason = mk_strict_lookup_reason
           flags.sealed (dict_t <> None) reason_o reason_op in
-        let t = ensure_prop_ cx trace strict mapr x proto reason_o reason_op in
+        let t = ensure_prop_for_write cx trace strict_reason mapr x proto
+          reason_o reason_op in
         dictionary cx trace (string_key x reason_op) t dict_t;
         rec_flow cx trace (tin,t)
 
@@ -2759,8 +2761,10 @@ let rec __flow cx (l, u) trace =
 
     | ObjT (reason_o, { flags; props_tmap = mapr; proto_t = proto; dict_t }),
       GetT (reason_op, x, tout) ->
-      let strict = mk_strict flags.sealed (dict_t <> None) reason_o reason_op in
-      let t = ensure_prop cx strict mapr x proto reason_o reason_op trace in
+      let strict = mk_strict_lookup_reason
+        flags.sealed (dict_t <> None) reason_o reason_op in
+      let t = ensure_prop_for_read cx strict mapr x proto
+        reason_o reason_op trace in
       dictionary cx trace (string_key x reason_op) t dict_t;
       (* move property type to read site *)
       let t = repos_t_from_reason reason_op t in
@@ -2780,8 +2784,10 @@ let rec __flow cx (l, u) trace =
     }),
        MethodT(reason_op,x,funtype))
       ->
-      let strict = mk_strict flags.sealed (dict_t <> None) reason_o reason_op in
-      let t = ensure_prop cx strict mapr x proto reason_o reason_op trace in
+      let strict = mk_strict_lookup_reason
+        flags.sealed (dict_t <> None) reason_o reason_op in
+      let t = ensure_prop_for_read cx strict mapr x proto
+        reason_o reason_op trace in
       dictionary cx trace (string_key x reason_op) t dict_t;
       let callt = CallT (reason_op, funtype) in
       rec_flow cx trace (t, callt)
@@ -3126,7 +3132,7 @@ let rec __flow cx (l, u) trace =
         absence of strict_reason in the following two pattern matches.
         Strictness derives from whether the object is sealed and was
         created in the same scope in which the lookup occurs - see
-        mk_strict below (TODO rename). The failure of a strict lookup
+        mk_strict_lookup_reason below. The failure of a strict lookup
         to find the desired property causes an error; a non-strict one
         does not.
      *)
@@ -3453,7 +3459,7 @@ and flow_type_args cx trace instance instance_super =
    originate in different scopes. The enforcement is done via the returned
    "blame token" that is used when looking up properties of objects in the
    prototype chain as part of that operation. *)
-and mk_strict sealed is_dict reason_o reason_op =
+and mk_strict_lookup_reason sealed is_dict reason_o reason_op =
   if (is_dict || (not sealed && Reason_js.same_scope reason_o reason_op))
   then None
   else Some reason_o
@@ -3766,9 +3772,11 @@ and concretize_parts cx trace l u done_list = function
 
 (* property lookup functions in objects and instances *)
 
-and ensure_prop cx strict mapr x proto reason_obj reason_op trace =
+and ensure_prop_for_read cx strict mapr x proto reason_obj reason_op trace =
   match read_prop_opt cx mapr x with
+  (* map contains property x at type t *)
   | Some t -> t
+  (* otherwise, check for/maybe add shadow property *)
   | None ->
     let t =
       match read_prop_opt cx mapr (internal_name x) with
@@ -3777,28 +3785,30 @@ and ensure_prop cx strict mapr x proto reason_obj reason_op trace =
     in
     t |> recurse_proto cx strict proto reason_op x trace
 
-and ensure_prop_ cx trace strict mapr x proto reason_obj reason_op =
+and ensure_prop_for_write cx trace strict mapr x proto reason_obj reason_op =
   match read_prop_opt cx mapr x with
+  (* map contains property x at type t *)
   | Some t -> t
+  (* otherwise, error if strict, else unshadow/add prop *)
   | None -> (
-      match strict with
-      | Some reason_o ->
-        prmsg_flow cx
-          Errors_js.ERROR
-          trace
-          "Property not found in"
-          (reason_op, reason_o);
-        AnyT.t
-      | None ->
-        let t =
-          if has_prop cx mapr (internal_name x)
-          then read_and_delete_prop cx mapr (internal_name x) |> (fun t ->
-            write_prop cx mapr x t; t
-          )
-          else intro_prop_ cx reason_obj x mapr
-        in
-        t |> recurse_proto cx None proto reason_op x trace
-  )
+    match strict with
+    | Some reason_o ->
+      prmsg_flow cx
+        Errors_js.ERROR
+        trace
+        "Property not found in"
+        (reason_op, reason_o);
+      AnyT.t
+    | None ->
+      let t =
+        if has_prop cx mapr (internal_name x)
+        then read_and_delete_prop cx mapr (internal_name x) |> (fun t ->
+          write_prop cx mapr x t; t
+        )
+        else intro_prop_ cx reason_obj x mapr
+      in
+      t |> recurse_proto cx None proto reason_op x trace
+    )
 
 and lookup_prop cx trace l reason strict x t =
   let l =

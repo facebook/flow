@@ -8,7 +8,7 @@ var o3: { x: number; y?: string; } = ({ x: 0, y: 0 }: { x: number; });
 var s3: string = o3.y || ""; // error
 
 var o5 = { x: 0, ...{} };
-var s5: string = o5.y; // ok (spread makes object literals extensible)
+var s5: string = o5.y; // error: y may be undefined
 
 var o6: { x: number; [_:any]:any } = { x: 0 };
 var s6: string = o6.y; // ok  (indexers make object types extensible)
