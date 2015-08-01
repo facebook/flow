@@ -12,10 +12,7 @@ open Typing_defs
 
 module Env = Typing_env
 module TUtils = Typing_utils
-module TDef = Typing_tdef
-module Inst = Typing_instantiate
 module TUEnv = Typing_unification_env
-module TAccess = Typing_taccess
 
 (* Most code -- notably the cases in unify_ -- do *not* need to thread through
  * the uenv, since for example just because we know an array<foo, bar> can't

@@ -240,7 +240,7 @@ and dependent_type =
   (* Type that is the subtype of the late bound type within a class. *)
   [ `this
   (* The late bound type within a class. It is the type of 'new static()' and
-   * '$this'. This is different than the 'this' type. The 'this' type isn't
+   * '$this'. This is different from the 'this' type. The 'this' type isn't
    * quite strong enough in some cases. It means you are a subtype of the late
    * bound class, but there are instances where you need the exact type.
    * We may not need both since the only way to make something of type 'this'

@@ -121,7 +121,7 @@ module ExprDepTy = struct
    * here is a high level break down:
    *
    * 1) When a class member "bar" is accessed via "[CID]->bar" or "[CID]::bar"
-   * we resolves "<this>" in the type of "bar" to "<[CID]>"
+   * we resolve "<this>" in the type of "bar" to "<[CID]>"
    *
    * 2) When typing a method, we resolve "<this>" in the return type to
    * "this"

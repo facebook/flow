@@ -13,17 +13,13 @@ open Typing_defs
 open Typing_dependent_type
 
 module Reason = Typing_reason
-module Inst = Typing_instantiate
 module Unify = Typing_unify
 module Env = Typing_env
 module DefsDB = Typing_heap
-module TDef = Typing_tdef
 module TSubst = Typing_subst
 module TUtils = Typing_utils
 module TUEnv = Typing_unification_env
-module ShapeMap = Nast.ShapeMap
 module SN = Naming_special_names
-module TAccess = Typing_taccess
 module Phase = Typing_phase
 
 (* This function checks that the method ft_sub can be used to replace
