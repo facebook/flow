@@ -485,22 +485,21 @@ module Flat: MODULE_SYSTEM = struct
   let exported_module file comments = file
   let guess_exported_module file _content = file
 
-  let resolve path =
-    let path = Path.to_string path in
+  let find_first_valid path =
     if Files_js.is_flow_file path
     then path_if_exists path
     else seqf
       (fun ext -> path_if_exists (path ^ ext))
       Files_js.flow_extensions
 
-  let resolve_relative root_path rel_path =
+  let find_relative root_path rel_path =
     let path = Files_js.normalize_path root_path rel_path in
-    resolve (Path.make path)
+    find_first_valid path
 
-  let resolve_import file import_str =
+  let find_import file import_str =
     let dir = Filename.dirname file in
     if relative import_str
-    then resolve_relative dir import_str
+    then find_relative dir import_str
     else (match !flow_options with
     | None -> assert_false (spf
         ("Attempted to resolve an absolute import (%s) before the flow_options " ^^
@@ -508,7 +507,8 @@ module Flat: MODULE_SYSTEM = struct
         import_str
       )
     | Some({ Options.opt_root = root}) ->
-      resolve (Path.concat root import_str)
+      let path = Path.concat root import_str in
+      find_first_valid (Path.to_string path)
     )
 
   let imported_module file import_str =
@@ -516,11 +516,11 @@ module Flat: MODULE_SYSTEM = struct
     let choose_candidate chosen candidate =
       match chosen with
       | Some(c) -> chosen
-      | None -> resolve_import file candidate
+      | None -> find_import file candidate
     in
     match List.fold_left choose_candidate None candidates with
-    | Some(str) -> str
-    | None -> import_str
+    | Some(str) -> Path.to_string (Path.make str)
+    | None -> Path.to_string (Path.make import_str)
 
   (* Using a base directory analogous to Node's `node_modules`, so the same
      singleton invariant holds. *)
