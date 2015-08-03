@@ -8,8 +8,9 @@
  *
  *)
 
-open Utils
 open Ast
+open Core
+open Utils
 
 module FuncTerm = Typing_heap.FuncTerminality
 
@@ -19,7 +20,7 @@ module FuncTerm = Typing_heap.FuncTerminality
  * exposes a lot of errors in www unfortunately -- we should bite the bullet on
  * fixing switch all the way when we do that, most likely though -- see tasks
  * #3140431 and #2813555. *)
-let rec terminal nsenv ~in_try stl = List.iter (terminal_ nsenv ~in_try) stl
+let rec terminal nsenv ~in_try stl = List.iter stl (terminal_ nsenv ~in_try)
 and terminal_ nsenv ~in_try = function
   | Throw _ when not in_try -> raise Exit
   | Throw _ -> ()
@@ -43,7 +44,7 @@ and terminal_ nsenv ~in_try = function
   | Try (b, catch_l, finb) ->
     (* return is not allowed in finally, so we can ignore fb *)
     (terminal nsenv ~in_try:true b;
-     List.iter (terminal_catch nsenv ~in_try) catch_l)
+     List.iter catch_l (terminal_catch nsenv ~in_try))
   | Do _
   | While _
   | For _
@@ -63,7 +64,7 @@ and terminal_cl nsenv ~in_try = function
   | Case (_, b) :: rl ->
       (try
         terminal nsenv ~in_try b;
-        if List.exists (function Break _ -> true | _ -> false) b
+        if List.exists b (function Break _ -> true | _ -> false)
         then ()
         else raise Exit
       with Exit -> terminal_cl nsenv ~in_try rl)
@@ -94,7 +95,7 @@ module GetLocals = struct
     | (p, Lvar (_, x)) ->
       let nsenv, m = acc in
       nsenv, SMap.add x p m
-    | _, List lv -> List.fold_left lvalue acc lv
+    | _, List lv -> List.fold_left lv ~init:acc ~f:lvalue
     (* Ref forms a local inside a foreach *)
     | (_, Ref (p, Lvar (_, x))) ->
       let nsenv, m = acc in
@@ -134,21 +135,21 @@ module GetLocals = struct
         smap_union acc m
       end
     | Switch (e, cl) ->
-      let cl = List.filter begin function
+      let cl = List.filter cl begin function
         | Case (_, b)
         | Default b -> not (is_terminal nsenv b)
-      end cl in
+      end in
       let cl = casel nsenv cl in
       let c = smap_inter_list cl in
       smap_union acc c
     | Try (b, cl, f) ->
       let _, c = block (nsenv, SMap.empty) b in
-      let cl = List.filter (fun (_, _, b) -> not (is_terminal nsenv b)) cl in
-      let lcl = List.map (catch nsenv) cl in
+      let cl = List.filter cl (fun (_, _, b) -> not (is_terminal nsenv b)) in
+      let lcl = List.map cl (catch nsenv) in
       let c = smap_inter_list (c :: lcl) in
       smap_union acc c
 
-  and block acc l = List.fold_left stmt acc l
+  and block acc l = List.fold_left l ~init:acc ~f:stmt
 
   and casel nsenv = function
     | [] -> []
@@ -186,11 +187,11 @@ module HintCycle = struct
     | Happly (_, hl) ->
         hintl stack params hl
     | Hshape l ->
-        List.iter (fun (_, x) -> hint stack params x) l
+        List.iter l (fun (_, x) -> hint stack params x)
     (* do we need to do anything here? probably when we add type params *)
     | Haccess (_, _, _) -> ()
 
-  and hintl stack params l = List.iter (hint stack params) l
+  and hintl stack params l = List.iter l (hint stack params)
 
   let check_constraint cstrs (_, _, cstr_opt) =
     match cstr_opt with

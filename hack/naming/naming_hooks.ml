@@ -8,6 +8,7 @@
  *
  *)
 
+open Core
 open Utils
 
 let (hint_hooks: (Pos.t * string -> unit) list ref) = ref []
@@ -32,16 +33,16 @@ let attach_fun_named_hook hook =
   fun_named_hooks := hook :: !fun_named_hooks
 
 let dispatch_hint_hook id =
-  List.iter begin fun hook -> hook id end !hint_hooks
+  List.iter !hint_hooks begin fun hook -> hook id end
 
 let dispatch_lvar_hook ident id locals =
-  List.iter begin fun hook -> hook ident id locals end !lvar_hooks
+  List.iter !lvar_hooks begin fun hook -> hook ident id locals end
 
 let dispatch_class_named_hook class_ =
-  List.iter begin fun hook -> hook class_ end !class_named_hooks
+  List.iter !class_named_hooks begin fun hook -> hook class_ end
 
 let dispatch_fun_named_hook fun_ =
-  List.iter begin fun hook -> hook fun_ end !fun_named_hooks
+  List.iter !fun_named_hooks begin fun hook -> hook fun_ end
 
 let remove_all_hooks () =
   hint_hooks := [];

@@ -8,17 +8,17 @@
  *
  *)
 
+open Core
 open Nast
 open Utils
 
 module SN = Naming_special_names
 
 let mem x xs =
-  List.exists (fun { ua_name; _ } -> x = snd ua_name) xs
+  List.exists xs (fun { ua_name; _ } -> x = snd ua_name)
 
 let find x xs =
-  try Some (List.find (fun { ua_name; _ } -> x = snd ua_name) xs)
-  with Not_found -> None
+  List.find xs (fun { ua_name; _ } -> x = snd ua_name)
 
 let deprecated ~kind (_, name) attrs =
   let attr = find SN.UserAttributes.uaDeprecated attrs in

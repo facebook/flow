@@ -8,6 +8,7 @@
  *
  *)
 
+open Core
 open Nast
 
 type eval_error =
@@ -86,14 +87,14 @@ let rec static_string_exn ~allow_consts cclass = function
   | p, _ -> raise (Not_static_exn p)
 
 and get_const s cclass class_ =
-    let (_, (p, _), cst_expr_opt) =
-      try
-        List.find (fun (_, (_, id), _) -> id = s) class_.c_consts
-      with Not_found ->
-        raise Type_error_exn in
-    match cst_expr_opt with
-    | Some cst_expr -> static_string_exn ~allow_consts:true cclass cst_expr
-    | None -> raise (Not_static_exn p)
+  let (_, (p, _), cst_expr_opt) =
+    try
+      List.find_exn class_.c_consts ~f:(fun (_, (_, id), _) -> id = s)
+    with Not_found ->
+      raise Type_error_exn in
+  match cst_expr_opt with
+  | Some cst_expr -> static_string_exn ~allow_consts:true cclass cst_expr
+  | None -> raise (Not_static_exn p)
 
 let static_string ~allow_consts cclass expr =
   try Result.Ok (static_string_exn ~allow_consts cclass expr) with
