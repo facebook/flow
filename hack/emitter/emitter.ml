@@ -185,17 +185,26 @@ let emit_prop_init env ~is_static = function
 let emit_var env ~is_static var =
   assert (var.cv_final = false); (* props can't be final *)
   if var.cv_is_xhp then unimpl "xhp props";
-  let options = bool_option "static" is_static @
-                [fmt_visibility var.cv_visibility] in
-  let fmt_prop v =
+  let fmt_prop options v =
     emit_strs env
       [".property"; fmt_options options; snd var.cv_id; "="; v^";"] in
+  let options = bool_option "static" is_static @
+                [fmt_visibility var.cv_visibility] in
   match var.cv_expr with
-  | None -> fmt_prop "\"\"\"N;\"\"\"", None
+  | None -> fmt_prop options "\"\"\"N;\"\"\"", None
   | Some expr ->
     match Emitter_lit.fmt_lit expr with
-    | Some lit -> fmt_prop lit, None
-    | None -> fmt_prop "uninit", Some (snd var.cv_id, expr)
+    | Some lit -> fmt_prop options lit, None
+    | None ->
+      (* If we can't generate a static initializer, set deep_init,
+       * which says that the data can't just get memcpy()'d to new
+       * objects. This is only necessary for non-static props, since
+       * static ones would only need to do the init once anyways.
+       * XXX: This a little stricter than emitter.cpp, which I think
+       * can emit 86pinit's for certain things that it then doesn't
+       * mark deep_init (see requiresDeepInit). *)
+      let options = bool_option "deep_init" (not is_static) @ options in
+      fmt_prop options "uninit", Some (snd var.cv_id, expr)
 
 (* the constant init function doesn't actually "init" anything;
  * it takes the name of a constant as an argument and returns the
