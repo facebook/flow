@@ -8,6 +8,8 @@
  *
  *)
 
+open Core
+
 module SSet = Set.Make(String)
 exception Error of string * int
 
@@ -38,15 +40,15 @@ let init roots =
     fsevents = Fsevents.init ();
     wpaths   = SSet.empty;
   } in
-  List.iter (fun root ->
+  List.iter roots begin fun root ->
     ignore (Fsevents.add_watch env.fsevents root)
-  ) roots;
+  end;
   env
 
 let read env =
   List.map
-    (fun (path, wpath) -> {path; wpath;})
     (Fsevents.read_events env.fsevents)
+    (fun (path, wpath) -> {path; wpath;})
 
 module FDMap = Map.Make(
   struct type t = Unix.file_descr let compare = compare end
@@ -62,10 +64,12 @@ let invoke_callback fdmap fd  =
 let select env ?(read_fdl=[]) ?(write_fdl=[]) ~timeout callback =
   let callback () = callback (Unix.handle_unix_error read env) in
   let read_fdl = (Fsevents.get_event_fd env.fsevents, callback) :: read_fdl in
-  let read_callbacks = List.fold_left make_callback FDMap.empty read_fdl in
-  let write_callbacks = List.fold_left make_callback FDMap.empty write_fdl in
+  let read_callbacks =
+    List.fold_left ~f:make_callback ~init:FDMap.empty read_fdl in
+  let write_callbacks =
+    List.fold_left ~f:make_callback ~init:FDMap.empty write_fdl in
   let read_ready, write_ready, _ =
-    Unix.select (List.map fst read_fdl) (List.map fst write_fdl) [] timeout
+    Unix.select (List.map read_fdl fst) (List.map write_fdl fst) [] timeout
   in
-  List.iter (invoke_callback write_callbacks) write_ready;
-  List.iter (invoke_callback read_callbacks) read_ready
+  List.iter write_ready (invoke_callback write_callbacks);
+  List.iter read_ready (invoke_callback read_callbacks)
