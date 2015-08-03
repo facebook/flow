@@ -1111,19 +1111,28 @@ module.exports = {
   'ES6: Modules': {
     'export class {}': {
       'body.0.declaration': {
-        'type': 'ClassExpression'
+        'type': 'ClassExpression',
+        'exportKind': 'value'
       }
     },
     'export default class {}': {
       'body.0.declaration': {
-        'type': 'ClassExpression'
+        'type': 'ClassExpression',
+        'exportKind': 'value'
       }
     },
     'export default class A {}': {
       'body.0.declaration': {
-        'type': 'ClassDeclaration'
+        'type': 'ClassDeclaration',
+        'exportKind': 'value'
       }
-    }
+    },
+    'export type A = number': {
+      'body.0.declaration': {
+        'type': 'TypeAlias',
+        'exportKind': 'type'
+      }
+    },
   },
   'Declare Statements': {
     'declare var foo': {

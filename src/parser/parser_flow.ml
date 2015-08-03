@@ -3124,8 +3124,9 @@ end = struct
                 declaration;
                 specifiers = None;
                 source = None;
+                exportKind = ExportValue;
               }
-          | T_TYPE ->
+          | T_TYPE when (Peek.token env ~i:1) <> T_LCURLY ->
               (* export type ... *)
               let type_alias = type_alias env in
               let end_loc = fst type_alias in
@@ -3134,6 +3135,7 @@ end = struct
                 declaration = Some (Declaration type_alias);
                 specifiers = None;
                 source = None;
+                exportKind = ExportType;
               }
           | T_LET
           | T_CONST
@@ -3150,6 +3152,7 @@ end = struct
                 declaration;
                 specifiers = None;
                 source = None;
+                exportKind = ExportValue;
               }
           | T_MULT ->
               let loc = Peek.loc env in
@@ -3166,8 +3169,14 @@ end = struct
                 declaration = None;
                 specifiers;
                 source;
+                exportKind = ExportValue;
               }
           | _ ->
+              let exportKind = (
+                match Peek.token env with
+                | T_TYPE -> Eat.token env; ExportType
+                | _ -> ExportValue
+              ) in
               Expect.token env T_LCURLY;
               let specifiers = Some (ExportSpecifiers (specifiers env [])) in
               let end_loc = Peek.loc env in
@@ -3187,6 +3196,7 @@ end = struct
                 declaration = None;
                 specifiers;
                 source;
+                exportKind;
               }
           )
 

@@ -276,11 +276,17 @@ end with type t = Impl.t) = struct
         | None ->
             array [||]
         in
+        let exportKind = (
+          match export.exportKind with
+          | ExportType -> "type"
+          | ExportValue -> "value"
+        ) in
         node "ExportDeclaration" loc [|
           "default", bool export.default;
           "declaration", declaration;
           "specifiers", specifiers;
           "source", option literal export.source;
+          "exportKind", string exportKind;
         |]
       )
     | loc, ImportDeclaration import -> ImportDeclaration.(

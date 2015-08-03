@@ -385,11 +385,15 @@ and Statement : sig
     type specifier =
       | ExportSpecifiers of Specifier.t list
       | ExportBatchSpecifier of Loc.t
+    type exportKind =
+      | ExportType
+      | ExportValue
     type t = {
       default: bool;
       declaration: declaration option;
       specifiers: specifier option;
       source: (Loc.t * Literal.t) option; (* This will always be a string *)
+      exportKind: exportKind;
     }
   end
   module ImportDeclaration : sig
