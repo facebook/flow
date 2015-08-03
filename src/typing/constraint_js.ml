@@ -1352,6 +1352,10 @@ let rec type_printer override fallback enclosure cx t =
     match t with
     | BoundT typeparam -> typeparam.name
 
+    | SingletonStrT (_, s) -> spf "'%s'" s
+    | SingletonNumT (_, (_, raw)) -> raw
+    | SingletonBoolT (_, b) -> string_of_bool b
+
     (* reasons for VoidT use "undefined" for more understandable error output.
        For parsable types we need to use "void" though, thus overwrite it. *)
     | VoidT _ -> "void"

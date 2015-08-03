@@ -576,6 +576,13 @@ and ground_type_impl cx ids t = match t with
   | MixedT _ -> MixedT.t
   | AnyT _ -> AnyT.t
 
+  | SingletonStrT (_, s) ->
+    SingletonStrT (reason_of_string "string singleton", s)
+  | SingletonNumT (_, n) ->
+    SingletonNumT (reason_of_string "number singleton", n)
+  | SingletonBoolT (_, b) ->
+    SingletonBoolT (reason_of_string "boolean singleton", b)
+
   | FunT (_, _, _, ft) ->
       let tins = List.map (ground_type_impl cx ids) ft.params_tlist in
       let params_names = ft.params_names in
