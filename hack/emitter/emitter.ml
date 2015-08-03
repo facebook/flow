@@ -354,4 +354,7 @@ let emit_file ~is_test nenv filename
   let env = List.fold_left (emit_class nenv) env classes in
 
   let output = get_output env in
-  Printf.printf "%s\n" output
+  Printf.printf "%s\n" output;
+  (* Dump all the output to a log file if HH_EMITTER_LOG set *)
+  try Sys_utils.append_file ~file:(Sys.getenv "HH_EMITTER_LOG") output
+  with _ -> ()
