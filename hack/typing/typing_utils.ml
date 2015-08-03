@@ -8,6 +8,7 @@
  *
  *)
 
+open Core
 open Typing_defs
 
 module N = Nast
@@ -53,7 +54,7 @@ let rec is_option env ty =
   match snd ety with
   | Toption _ -> true
   | Tunresolved tyl ->
-      List.exists (is_option env) tyl
+      List.exists tyl (is_option env)
   | _ -> false
 
 let is_class ty = match snd ty with
@@ -232,9 +233,9 @@ let fold_unresolved env ty =
   | _, Tunresolved (x :: rl) ->
       (try
         let env, acc =
-          List.fold_left begin fun (env, acc) ty ->
+          List.fold_left rl ~f:begin fun (env, acc) ty ->
             Errors.try_ (fun () -> unify env acc ty) (fun _ -> raise Exit)
-          end (env, x) rl in
+          end ~init:(env, x) in
         env, acc
       with Exit ->
         env, ty

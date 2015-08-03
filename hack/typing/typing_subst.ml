@@ -8,8 +8,9 @@
  *
  *)
 
-open Utils
+open Core
 open Typing_defs
+open Utils
 
 module TUtils = Typing_utils
 module N = Nast
@@ -46,7 +47,7 @@ let make tparams tyl =
   in
   let subst = ref SMap.empty in
   let tyl = ref tyl in
-  List.iter (make_subst_tparam subst tyl) tparams;
+  List.iter tparams (make_subst_tparam subst tyl);
   !subst
 
 let check_constraint env ck cstr_ty ty =

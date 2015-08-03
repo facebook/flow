@@ -8,6 +8,7 @@
  *
  *)
 
+open Core
 open Utils
 
 (*****************************************************************************)
@@ -109,7 +110,8 @@ let check_files nenv fast (errors, failed) fnl =
       !Utils.log msg;
       result)
     else check_file nenv in
-  let errors, failed = List.fold_left (check_file fast) (errors, failed) fnl in
+  let errors, failed = List.fold_left fnl
+    ~f:(check_file fast) ~init:(errors, failed) in
   errors, failed
 
 let load_and_check_files acc fnl =

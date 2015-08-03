@@ -8,6 +8,7 @@
  *
  *)
 
+open Core
 open Utils
 open Typing_defs
 open Typing_dependent_type
@@ -263,9 +264,9 @@ and sub_type_with_uenv env (uenv_super, ty_super) (uenv_sub, ty_sub) =
       fst (Unify.unify_with_uenv env (uenv_super, ty_super) (uenv_sub, ty_sub))
   | _, (_, Tunresolved tyl) when Env.grow_super env ->
       let uenv_sub = {uenv_sub with TUEnv.seen_tvars = seen_tvars_sub} in
-      List.fold_left begin fun env x ->
+      List.fold_left tyl ~f:begin fun env x ->
         sub_type_with_uenv env (uenv_super, ty_super) (uenv_sub, x)
-      end env tyl
+      end ~init:env
 (****************************************************************************)
 (* Repeat the previous 3 cases but with the super / sub order reversed *)
 (****************************************************************************)
@@ -278,9 +279,9 @@ and sub_type_with_uenv env (uenv_super, ty_super) (uenv_sub, ty_sub) =
       fst (Unify.unify_with_uenv env (uenv_super, ty_super) (uenv_sub, ty_sub))
   | (_, Tunresolved tyl), _ when not (Env.grow_super env) ->
       let uenv_super = {uenv_super with TUEnv.seen_tvars = seen_tvars_super} in
-      List.fold_left begin fun env x ->
+      List.fold_left tyl ~f:begin fun env x ->
         sub_type_with_uenv env (uenv_super, x) (uenv_sub, ty_sub)
-      end env tyl
+      end ~init:env
 (****************************************************************************)
 (* OCaml doesn't inspect `when` clauses when checking pattern matching
  * exhaustiveness, so just assert false here *)
@@ -346,7 +347,7 @@ and sub_type_with_uenv env (uenv_super, ty_super) (uenv_sub, ty_sub) =
         | None -> fst (Unify.unify env ety_super ety_sub)
         | Some { tc_tparams; _} ->
             let variancel =
-              List.map (fun (variance, _, _) -> variance) tc_tparams
+              List.map tc_tparams (fun (variance, _, _) -> variance)
             in
             subtype_tparams env cid_super variancel tyl_super tyl_sub
       else fst (Unify.unify env ety_super ety_sub)
@@ -388,7 +389,7 @@ and sub_type_with_uenv env (uenv_super, ty_super) (uenv_sub, ty_sub) =
                   (* We handle the case where a generic A<T> is used as A *)
                   let tyl_sub =
                     if tyl_sub = [] && not (Env.is_strict env)
-                    then List.map (fun _ -> (p_sub, Tany)) class_.tc_tparams
+                    then List.map class_.tc_tparams (fun _ -> (p_sub, Tany))
                     else tyl_sub
                   in
                   if List.length class_.tc_tparams <> List.length tyl_sub
@@ -535,7 +536,7 @@ and sub_type_with_uenv env (uenv_super, ty_super) (uenv_sub, ty_sub) =
       (match td with
       | Some (DefsDB.Typedef.Ok (_, tparams, _, _, _)) ->
           let variancel =
-            List.map (fun (variance, _, _) -> variance) tparams
+            List.map tparams (fun (variance, _, _) -> variance)
           in
           subtype_tparams env name_super variancel tyl_super tyl_sub
       | _ -> env
@@ -586,7 +587,7 @@ and sub_string p env ty2 =
   match ety2 with
   | (_, Toption ty2) -> sub_string p env ty2
   | (_, Tunresolved tyl) ->
-      List.fold_left (sub_string p) env tyl
+      List.fold_left tyl ~f:(sub_string p) ~init:env
   | (_, Tprim _) ->
       env
   | (_, Tabstract (AKenum _, _)) ->

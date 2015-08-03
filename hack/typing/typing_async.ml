@@ -7,6 +7,7 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  *)
+open Core
 open Typing_defs
 
 module Reason = Typing_reason
@@ -46,13 +47,13 @@ let rec overload_extract_from_awaitable env p opt_ty_maybe =
   | _, Tunresolved tyl ->
     (* If we cannot fold the intersection into a single type, we need to look at
      * all the types *)
-    let env, rtyl = List.fold_right begin fun ty (env, rtyl) ->
+    let env, rtyl = List.fold_right ~f:begin fun ty (env, rtyl) ->
       let env, rty = overload_extract_from_awaitable env p ty in
       (* We have the invariant we'll never have Tunresolved[Tunresolved], but
        * the recursive call above can remove a layer of Awaitable, so we need
        * to flatten any Tunresolved that may have been inside. *)
       TUtils.flatten_unresolved env rty rtyl
-    end tyl (env, []) in
+    end tyl ~init:(env, []) in
     env, (r, Tunresolved rtyl)
   | _, (Tany | Tmixed | Tarray (_, _) | Tprim _ | Toption _
     | Tvar _ | Tfun _ | Tabstract (_, _) | Tclass (_, _) | Ttuple _
@@ -73,10 +74,10 @@ let rec overload_extract_from_awaitable env p opt_ty_maybe =
   )
 
 let overload_extract_from_awaitable_list env p tyl =
-  List.fold_right begin fun ty (env, rtyl) ->
+  List.fold_right ~f:begin fun ty (env, rtyl) ->
     let env, rty =  overload_extract_from_awaitable env p ty in
     env, rty::rtyl
-  end tyl (env, [])
+  end tyl ~init:(env, [])
 
 let gena env p ty =
   match snd (TUtils.fold_unresolved env ty) with
@@ -129,10 +130,10 @@ let rec gen_array_rec env p ty =
          *
          * In this case the value type in the array will be unresolved; we need
          * to check all the types in the unresolved. *)
-        let env, rtyl = List.fold_right begin fun ty (env, rtyl) ->
+        let env, rtyl = List.fold_right ~f:begin fun ty (env, rtyl) ->
           let env, ty = is_array env ty in
           env, ty::rtyl
-        end tyl (env, []) in
+        end tyl ~init:(env, []) in
         env, (r, Tunresolved rtyl)
       end
       | _, (Tany | Tmixed | Tprim _ | Toption _ | Tvar _
@@ -168,8 +169,8 @@ and gen_array_va_rec env p tyl =
       | Tobject | Tshape _) ->
       overload_extract_from_awaitable env p ty) in
 
-  let env, rtyl = List.fold_right begin fun ty (env, rtyl) ->
+  let env, rtyl = List.fold_right ~f:begin fun ty (env, rtyl) ->
     let env, ty = gen_array_va_rec' env ty in
     env, ty::rtyl
-  end tyl (env, []) in
+  end tyl ~init:(env, []) in
   env, (Reason.Rwitness p, Ttuple rtyl)

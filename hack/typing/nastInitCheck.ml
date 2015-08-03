@@ -10,9 +10,10 @@
 
 
 (* module checking that all the class members are properly initialized *)
-open Utils
+open Core
 open Nast
 open Typing_defs
+open Utils
 
 module SN = Naming_special_names
 
@@ -92,7 +93,8 @@ module Env = struct
     if c.c_mode = FileInfo.Mdecl then props
     else
       if c.c_kind = Ast.Ctrait
-      then List.fold_left (add_parent_construct c tenv) props c.c_req_extends
+      then List.fold_left c.c_req_extends
+        ~f:(add_parent_construct c tenv) ~init:props
       else match c.c_extends with
       | [] -> props
       | parent_hint :: _ -> add_parent_construct c tenv props parent_hint
@@ -108,14 +110,14 @@ module Env = struct
     end
 
   let parent_props tenv acc c =
-    List.fold_left begin fun acc parent ->
+    List.fold_left (c.c_extends @ c.c_uses) ~f:begin fun acc parent ->
       match parent with _, Happly ((_, parent), _) ->
         let tc = Typing_env.get_class tenv parent in
         (match tc with
           | None -> acc
           | Some { tc_deferred_init_members = members; _ } -> SSet.union members acc)
         | _ -> acc
-    end acc (c.c_extends @ c.c_uses)
+    end ~init:acc
 
   (* return a tuple of the private init-requiring props of the class
    * and the other init-requiring props of the class and its ancestors *)
@@ -129,7 +131,8 @@ module Env = struct
         private_props, (SSet.add cname hierarchy_props)
     end in
     let acc = (SSet.empty, SSet.empty) in
-    let priv_props, props = List.fold_left (prop_needs_init adder) acc c.c_vars in
+    let priv_props, props =
+      List.fold_left ~f:(prop_needs_init adder) ~init:acc c.c_vars in
     let props = parent_props tenv props c in
     let props = parent tenv props c in
     priv_props, props
@@ -140,10 +143,10 @@ module Env = struct
     let tenv = match parent_id c with
       | None -> tenv
       | Some parent_id -> Typing_env.set_parent_id tenv parent_id in
-    let methods = List.fold_left method_ SMap.empty c.c_methods in
+    let methods = List.fold_left ~f:method_ ~init:SMap.empty c.c_methods in
     let adder = begin fun cv acc -> SSet.add (snd cv.cv_id) acc end in
     let props =
-      List.fold_left (prop_needs_init adder) SSet.empty c.c_vars in
+      List.fold_left ~f:(prop_needs_init adder) ~init:SSet.empty c.c_vars in
     let props = parent_props tenv props c in
     let props = parent tenv props c in
     { methods = methods; props = props; tenv = tenv }
@@ -233,7 +236,7 @@ and assign_expr env acc e1 =
     | _, Obj_get ((_, This), (_, Id (_, y)), _) ->
       assign env acc y
     | _, List el ->
-      List.fold_left (assign_expr env) acc el
+      List.fold_left ~f:(assign_expr env) ~init:acc el
     | _ -> acc
 
 and stmt env acc st =
@@ -244,7 +247,7 @@ and stmt env acc st =
   match st with
     | Expr (_, Call (Cnormal, (_, Class_const (CIparent, (_, m))), el, _uel))
         when m = SN.Members.__construct ->
-      let acc = List.fold_left expr acc el in
+      let acc = List.fold_left ~f:expr ~init:acc el in
       assign env acc parent_init_prop
     | Expr e -> expr acc e
     | Break _ -> acc
@@ -259,7 +262,7 @@ and stmt env acc st =
       if are_all_init env acc
       then acc
       else raise (InitReturn acc)
-    | Static_var el -> List.fold_left expr acc el
+    | Static_var el -> List.fold_left ~f:expr ~init:acc el
     | If (e1, b1, b2) ->
       let acc = expr acc e1 in
       let is_term1 = Nast_terminality.Terminal.block env.tenv b1 in
@@ -280,10 +283,10 @@ and stmt env acc st =
       expr acc e1
     | Switch (e, cl) ->
       let acc = expr acc e in
-      let _ = List.map (case acc) cl in
-      let cl = List.filter (function c ->
-        not (Nast_terminality.Terminal.case env.tenv c)) cl in
-      let cl = List.map (case acc) cl in
+      let _ = List.map cl (case acc) in
+      let cl = List.filter cl (function c ->
+        not (Nast_terminality.Terminal.case env.tenv c)) in
+      let cl = List.map cl (case acc) in
       let c = inter_list cl in
       SSet.union acc c
     | Foreach (e, _, _) ->
@@ -292,10 +295,10 @@ and stmt env acc st =
     | Try (b, cl, fb) ->
       let c = block acc b in
       let f = block acc fb in
-      let _ = List.map (catch acc) cl in
-      let cl = List.filter (fun (_, _, b) ->
-        not (Nast_terminality.Terminal.block env.tenv b)) cl in
-      let cl = List.map (catch acc) cl in
+      let _ = List.map cl (catch acc) in
+      let cl = List.filter cl (fun (_, _, b) ->
+        not (Nast_terminality.Terminal.block env.tenv b)) in
+      let cl = List.map cl (catch acc) in
       let c = inter_list (c :: cl) in
       (* the finally block executes even if *none* of try and catch do *)
       let acc = SSet.union acc f in
@@ -304,13 +307,13 @@ and stmt env acc st =
   | Noop -> acc
 
 and toplevel env acc l =
-  try List.fold_left (stmt env) acc l
+  try List.fold_left ~f:(stmt env) ~init:acc l
   with InitReturn acc -> acc
 
 and block env acc l =
   let acc_before_block = acc in
   try
-    List.fold_left (stmt env) acc l
+    List.fold_left ~f:(stmt env) ~init:acc l
   with InitReturn _ ->
     (* The block has a return statement, forget what was initialized in it *)
     raise (InitReturn acc_before_block)
@@ -324,7 +327,7 @@ and check_all_init p env acc =
     then Errors.call_before_init p cv
   end env.props
 
-and exprl env acc l = List.fold_left (expr env) acc l
+and exprl env acc l = List.fold_left ~f:(expr env) ~init:acc l
 and expr env acc (p, e) = expr_ env acc p e
 and expr_ env acc p e =
   let expr = expr env in
@@ -334,9 +337,9 @@ and expr_ env acc p e =
   let fun_paraml = fun_paraml env in
   match e with
   | Any -> acc
-  | Array fdl -> List.fold_left afield acc fdl
+  | Array fdl -> List.fold_left ~f:afield ~init:acc fdl
   | ValCollection (_, el) -> exprl acc el
-  | KeyValCollection (_, fdl) -> List.fold_left field acc fdl
+  | KeyValCollection (_, fdl) -> List.fold_left ~f:field ~init:acc fdl
   | This -> check_all_init p env acc; acc
   | Fun_id _
   | Method_id _
@@ -379,13 +382,13 @@ and expr_ env acc p e =
     let el =
       match e with
         | _, Id (_, fun_name) when is_whitelisted fun_name ->
-          List.filter begin function
+          List.filter el begin function
             | _, This -> false
             | _ -> true
-          end el
+          end
         | _ -> el
     in
-    let acc = List.fold_left expr acc el in
+    let acc = List.fold_left ~f:expr ~init:acc el in
     expr acc e
   | True
   | False
@@ -438,7 +441,7 @@ and expr_ env acc p e =
       (* We don't need to analyze the body of closures *)
       acc
   | Xml (_, l, el) ->
-      let l = List.map snd l in
+      let l = List.map l snd in
       let acc = exprl acc l in
       exprl acc el
   | Shape fdm ->
@@ -470,4 +473,4 @@ and fun_param env acc param =
   | None -> acc
   | Some x -> expr env acc x
 
-and fun_paraml env acc l = List.fold_left (fun_param env) acc l
+and fun_paraml env acc l = List.fold_left ~f:(fun_param env) ~init:acc l

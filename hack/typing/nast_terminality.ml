@@ -8,6 +8,7 @@
  *
  *)
 
+open Core
 open Nast
 
 module SN = Naming_special_names
@@ -36,7 +37,7 @@ module Terminal: sig
 end = struct
 
   let rec terminal env inside_case stl =
-    List.iter (terminal_ env inside_case) stl
+    List.iter stl (terminal_ env inside_case)
 
   and terminal_ env inside_case = function
     | Break _ -> if inside_case then () else raise Exit
@@ -98,7 +99,7 @@ end = struct
       (try
          terminal env true b;
           (* TODO check this *)
-         if List.exists (function Break _ -> true | _ -> false) b
+         if List.exists b (function Break _ -> true | _ -> false)
          then ()
          else raise Exit
        with Exit -> terminal_cl env rl)
@@ -124,7 +125,7 @@ module SafeCase: sig
 end = struct
 
   let rec terminal env stl =
-    List.iter (terminal_ env) stl
+    List.iter stl (terminal_ env)
 
   and terminal_ env = function
     | Fallthrough
@@ -175,7 +176,7 @@ end = struct
       (try
          terminal env b;
           (* TODO check this *)
-         if List.exists (function Break _ -> true | _ -> false) b
+         if List.exists b (function Break _ -> true | _ -> false)
          then ()
          else raise Exit
        with Exit -> terminal_cl env rl)
@@ -184,19 +185,20 @@ end = struct
 
   let check p env = function
     | [] -> () (* Skip empty cases so we can use tl below *)
-    | cl -> List.iter begin fun c ->
-      try match c with
-        (* Allow empty cases to fall through *)
-        | Case (_, [])
-        | Default [] -> ()
-        | Case (e, b) -> begin
-          terminal env b;
-          Errors.case_fallthrough p (fst e)
-        end
-        | Default b -> begin
-          terminal env b;
-          Errors.default_fallthrough p
-        end
-      with Exit -> ()
-    end (List.tl (List.rev cl)) (* Skip the last case *)
+    | cl -> (* Skip the last case *)
+      List.iter (List.tl_exn (List.rev cl)) begin fun c ->
+        try match c with
+          (* Allow empty cases to fall through *)
+          | Case (_, [])
+          | Default [] -> ()
+          | Case (e, b) -> begin
+            terminal env b;
+            Errors.case_fallthrough p (fst e)
+          end
+          | Default b -> begin
+            terminal env b;
+            Errors.default_fallthrough p
+          end
+        with Exit -> ()
+      end
 end

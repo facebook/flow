@@ -7,8 +7,9 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  *)
-open Utils
+open Core
 open Typing_defs
+open Utils
 
 module Env = Typing_env
 module TUtils = Typing_utils
@@ -43,7 +44,8 @@ and unify_with_uenv env (uenv1, ty1) (uenv2, ty2) =
       let p1 = TUtils.find_pos (Reason.to_pos r) tyl in
       let str_ty = Typing_print.error ty_ in
       let r = Reason.Rcoerced (p1, env.Env.pos, str_ty) in
-      let env = List.fold_left (fun env x -> TUtils.sub_type env ty x) env tyl in
+      let env = List.fold_left tyl
+        ~f:(fun env x -> TUtils.sub_type env ty x) ~init:env in
       env, (r, ty_)
   | (_, Toption ty1), _ when uenv1.TUEnv.non_null ->
       unify_with_uenv env (uenv1, ty1) (uenv2, ty2)
@@ -119,12 +121,12 @@ and unify_ env r1 ty1 r2 ty2 =
         (* We handle the case where a generic A<T> is used as A *)
         let argl1 =
           if argl1 = [] && not (Env.is_strict env)
-          then List.map (fun _ -> (r1, Tany)) argl2
+          then List.map argl2 (fun _ -> (r1, Tany))
           else argl1
         in
         let argl2 =
           if argl2 = [] && not (Env.is_strict env)
-          then List.map (fun _ -> (r1, Tany)) argl1
+          then List.map argl1 (fun _ -> (r1, Tany))
           else argl2
         in
         if List.length argl1 <> List.length argl2

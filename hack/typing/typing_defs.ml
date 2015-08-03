@@ -8,7 +8,7 @@
  *
  *)
 
-
+open Core
 open Utils
 
 module Reason = Typing_reason
@@ -405,10 +405,10 @@ type expand_env = {
 type ety = expand_env * locl ty
 
 let has_expanded {type_expansions; _} x =
-  List.exists begin function
+  List.exists type_expansions begin function
     | (_, x') when x = x' -> true
     | _ -> false
-  end type_expansions
+  end
 
 (* The identifier for this *)
 let this = Ident.make "$this"

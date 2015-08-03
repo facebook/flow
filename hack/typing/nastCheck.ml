@@ -22,11 +22,12 @@
 *)
 
 
-open Utils
+open Autocomplete
+open Core
 open Nast
 open Typing_defs
 open Typing_deps
-open Autocomplete
+open Utils
 
 module Env = Typing_env
 
@@ -146,11 +147,11 @@ module CheckFunctionType = struct
         liter expr f_type el;
         ()
     | _, List el ->
-      liter expr f_type el;
-      ()
+        liter expr f_type el;
+        ()
     | _, Pair (e1, e2) ->
-      expr2 f_type (e1, e2);
-      ()
+        expr2 f_type (e1, e2);
+        ()
     | _, Expr_list el ->
         liter expr f_type el;
         ()
@@ -202,7 +203,7 @@ module CheckFunctionType = struct
         | Gen_array_va_rec el -> liter expr f_type el);
       ()
     | _, Xml (_, attrl, el) ->
-        List.iter (fun (_, e) -> expr f_type e) attrl;
+        List.iter attrl (fun (_, e) -> expr f_type e);
         liter expr f_type el;
         ()
     | _, Assert (AE_assert e) ->
@@ -259,7 +260,7 @@ and func env f named_body =
     t_is_finally = false;
   } in
   maybe hint env f.f_ret;
-  List.iter (fun_param env) f.f_params;
+  List.iter f.f_params (fun_param env);
   block env named_body.fnb_nast;
   CheckFunctionType.block f.f_fun_kind named_body.fnb_nast
 
@@ -272,11 +273,11 @@ and hint_ env p = function
   | Harray (ty1, ty2) ->
       maybe hint env ty1;
       maybe hint env ty2
-  | Htuple hl -> List.iter (hint env) hl
+  | Htuple hl -> List.iter hl (hint env)
   | Hoption h ->
       hint env h; ()
   | Hfun (hl,_, h) ->
-      List.iter (hint env) hl;
+      List.iter hl (hint env);
       hint env h;
       ()
   | Happly ((_, x), hl) when Typing_env.is_typedef x ->
@@ -300,7 +301,7 @@ and hint_ env p = function
 and check_params env p x params hl =
   let arity = List.length params in
   check_arity env p x arity (List.length hl);
-  List.iter (hint env) hl;
+  List.iter hl (hint env);
 
 and check_arity env p tname arity size =
   if size = arity then () else
@@ -413,7 +414,7 @@ and interface c =
     | _ -> Errors.abstract_body (fst m.m_name)
   end in
   (* make sure that interfaces only have empty public methods *)
-  List.iter enforce_no_body (c.c_static_methods @ c.c_methods);
+  List.iter (c.c_static_methods @ c.c_methods) enforce_no_body;
   (* make sure constructor has no body *)
   Option.iter c.c_constructor enforce_no_body;
   (* make sure that interfaces don't have any member variables *)
@@ -446,26 +447,26 @@ and check_no_class_tparams class_tparams (pos, ty)  =
   let check_tparams = check_no_class_tparams class_tparams in
   let maybe_check_tparams = maybe check_no_class_tparams class_tparams in
   let matches_class_tparam tp_name =
-    List.iter begin fun (_, (c_tp_pos, c_tp_name), _) ->
+    List.iter class_tparams begin fun (_, (c_tp_pos, c_tp_name), _) ->
       if c_tp_name = tp_name
       then Errors.typeconst_depends_on_external_tparam pos c_tp_pos c_tp_name
-    end class_tparams in
+    end in
   match ty with
     | Hany | Hmixed | Hprim _ | Hthis -> ()
     (* We have found a type parameter. Make sure its name does not match
      * a name in class_tparams *)
     | Habstr (tparam_name, cstr_opt) ->
-        maybe_check_tparams (opt_map snd cstr_opt);
+        maybe_check_tparams (Option.map cstr_opt snd);
         matches_class_tparam tparam_name
     | Harray (ty1, ty2) ->
         maybe_check_tparams ty1;
         maybe_check_tparams ty2
-    | Htuple tyl -> List.iter check_tparams tyl
+    | Htuple tyl -> List.iter tyl check_tparams
     | Hoption ty_ -> check_tparams ty_
     | Hfun (tyl, _, ty_) ->
-        List.iter check_tparams tyl;
+        List.iter tyl check_tparams;
         check_tparams ty_
-    | Happly (_, tyl) -> List.iter check_tparams tyl
+    | Happly (_, tyl) -> List.iter tyl check_tparams
     | Hshape fdl -> ShapeMap.iter (fun _ v -> check_tparams v) fdl
     | Haccess (root_ty, _) ->
         check_tparams root_ty

@@ -8,7 +8,7 @@
  *
  *)
 
-open Utils
+open Core
 open Typing_defs
 
 class type ['a] type_visitor_type = object
@@ -43,34 +43,35 @@ class virtual ['a] type_visitor : ['a] type_visitor_type = object(this)
     let acc = Option.fold ~f:this#on_type ~init:acc ty2_opt in
     acc
   method on_tgeneric acc _ cstr =
-    Option.fold ~f:this#on_type ~init:acc (opt_map snd cstr)
+    Option.fold ~f:this#on_type ~init:acc (Option.map cstr snd)
   method on_toption: type a. _ -> a ty -> _ =
     fun acc ty -> this#on_type acc ty
   method on_tprim acc _ = acc
   method on_tvar acc _ = acc
   method on_tfun: type a. _ -> a fun_type -> _ =
     fun acc {ft_params; ft_tparams; ft_ret; _} ->
-    let acc = List.fold_left this#on_type acc (List.map snd ft_params) in
-    let tparams = List.map (fun (_, _, x) -> opt_map snd x) ft_tparams in
-    let acc = List.fold_left (fun acc tp ->
-      Option.fold ~f:this#on_type ~init:acc tp) acc tparams in
+    let acc =
+      List.fold_left ~f:this#on_type ~init:acc (List.map ft_params snd) in
+    let tparams = List.map ft_tparams (fun (_, _, x) -> Option.map x snd) in
+    let acc = List.fold_left tparams ~f:(fun acc tp ->
+      Option.fold ~f:this#on_type ~init:acc tp) ~init:acc in
     this#on_type acc ft_ret
   method on_tabstract acc ak ty_opt =
     let acc =
       match ak with
-      | AKnewtype (_, tyl) -> List.fold_left this#on_type acc tyl
+      | AKnewtype (_, tyl) -> List.fold_left tyl ~f:this#on_type ~init:acc
       | AKenum _name -> acc
       | AKgeneric (_, super) ->
           Option.fold ~f:this#on_type ~init:acc super
       | AKdependent (_, _) -> acc in
     let acc = Option.fold ~f:this#on_type ~init:acc ty_opt in
     acc
-  method on_tapply acc _ tyl = List.fold_left this#on_type acc tyl
+  method on_tapply acc _ tyl = List.fold_left tyl ~f:this#on_type ~init:acc
   method on_taccess acc (root, _ids) = this#on_type acc root
   method on_ttuple: type a. _ -> a ty list -> _ =
-    fun acc tyl -> List.fold_left this#on_type acc tyl
+    fun acc tyl -> List.fold_left tyl ~f:this#on_type ~init:acc
   method on_tanon acc _ _ = acc
-  method on_tunresolved acc tyl = List.fold_left this#on_type acc tyl
+  method on_tunresolved acc tyl = List.fold_left tyl ~f:this#on_type ~init:acc
   method on_tobject acc = acc
   method on_tshape: type a. _ -> shape_fields_known
     -> a ty Nast.ShapeMap.t -> _ =
@@ -78,7 +79,7 @@ class virtual ['a] type_visitor : ['a] type_visitor_type = object(this)
     let f _ v acc = this#on_type acc v in
     Nast.ShapeMap.fold f fdm acc
   method on_tclass acc _ tyl =
-    List.fold_left this#on_type acc tyl
+    List.fold_left tyl ~f:this#on_type ~init:acc
   method on_type: type a. _ -> a ty -> _ = fun acc x ->
     match x with
     | _, Tany -> this#on_tany acc

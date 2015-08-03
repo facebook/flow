@@ -8,7 +8,7 @@
  *
  *)
 
-
+open Core
 open Utils
 open Typing_defs
 open Nast
@@ -187,13 +187,13 @@ let rec debug stack env (r, ty) =
   | Tabstract (AKnewtype (x, argl), _)
   | Tclass ((_, x), argl) ->
       Printf.printf "App %s" x;
-      o "<"; List.iter (fun x -> debug stack env x; o ", ") argl;
+      o "<"; List.iter argl (fun x -> debug stack env x; o ", ");
       o ">"
   | Tany -> o "X"
   | Tanon _ -> o "anonymous"
   | Tfun ft ->
       o "fun ";
-      List.iter (fun (_, x) -> debug stack env x; o ", ") ft.ft_params;
+      List.iter ft.ft_params (fun (_, x) -> debug stack env x; o ", ");
       o " -> ";
       debug stack env ft.ft_ret
   | Toption ty -> o "option("; debug stack env ty; o ")"
@@ -648,7 +648,7 @@ end
 
 let rec unbind seen env ty =
   let env, ty = expand_type env ty in
-  if List.mem ty seen
+  if List.mem seen ty
   then env, ty
   else
     let seen = ty :: seen in
@@ -674,7 +674,7 @@ let set_local env x new_type =
     | Some (x, _, y) -> x, y
   in
   let all_types =
-    if List.exists (fun x -> x = new_type) all_types
+    if List.exists all_types (fun x -> x = new_type)
     then all_types
     else new_type :: all_types
   in

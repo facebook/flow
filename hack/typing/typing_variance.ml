@@ -8,8 +8,9 @@
  *
  *)
 
-open Utils
+open Core
 open Typing_defs
+open Utils
 
 module SN = Naming_special_names
 
@@ -110,9 +111,9 @@ let reason_stack_to_string variance reason_stack =
     (computer_science)\
     "
     variance
-    begin List.fold_right begin fun (_, _, pvariance) acc ->
+    begin List.fold_right reason_stack ~f:begin fun (_, _, pvariance) acc ->
       (variance_to_sign pvariance)^acc
-    end reason_stack ""
+    end ~init:""
     end
 
 let reason_to_string ~sign (_, descr, variance) =
@@ -148,7 +149,7 @@ let detailed_message variance pos stack =
       [p, reason_to_string ~sign:false r]
   | _ ->
       (pos, reason_stack_to_string variance stack) ::
-      List.map (fun (p, _, _ as r) -> p, reason_to_string ~sign:true r) stack
+      List.map stack (fun (p, _, _ as r) -> p, reason_to_string ~sign:true r)
 
 (*****************************************************************************)
 (* Debug *)
@@ -293,13 +294,13 @@ let check_variance env tparam =
   | Vcovariant _, Vcovariant _
   | Vcontravariant _, Vcontravariant _ -> ()
   | Vcovariant stack1, (Vcontravariant stack2 | Vinvariant (_, stack2)) ->
-      let (pos1, _, _) = List.hd stack1 in
-      let (pos2, _, _) = List.hd stack2 in
+      let (pos1, _, _) = List.hd_exn stack1 in
+      let (pos2, _, _) = List.hd_exn stack2 in
       let emsg = detailed_message "contravariant (-)" pos2 stack2 in
       Errors.declared_covariant pos1 pos2 emsg
   | Vcontravariant stack1, (Vcovariant stack2 | Vinvariant (stack2, _)) ->
-      let (pos1, _, _) = List.hd stack1 in
-      let (pos2, _, _) = List.hd stack2 in
+      let (pos1, _, _) = List.hd_exn stack1 in
+      let (pos2, _, _) = List.hd_exn stack2 in
       let emsg = detailed_message "covariant (+)" pos2 stack2 in
       Errors.declared_contravariant pos1 pos2 emsg
 
@@ -330,7 +331,7 @@ let get_class_variance root (pos, class_name) =
           | None -> []
           | Some { tc_tparams; _ } -> tc_tparams
       in
-      List.map make_tparam_variance tparams
+      List.map tparams make_tparam_variance
 
 (*****************************************************************************)
 (* The entry point (for classes). *)
@@ -340,10 +341,10 @@ let rec class_ class_name class_type impl =
   let root = Typing_deps.Dep.Class class_name in
   let tparams = class_type.tc_tparams in
   let env = SMap.empty in
-  let env = List.fold_left (type_ root Vboth) env impl in
+  let env = List.fold_left impl ~f:(type_ root Vboth) ~init:env in
   let env = SMap.fold (class_member root) class_type.tc_props env in
   let env = SMap.fold (class_method root) class_type.tc_methods env in
-  List.iter (check_variance env) tparams
+  List.iter tparams (check_variance env)
 
 (*****************************************************************************)
 (* The entry point (for typedefs). *)
@@ -357,7 +358,7 @@ and typedef type_name =
       let pos = Reason.to_pos (fst ty) in
       let reason_covariant = [pos, Rtypedef, Pcovariant] in
       let env = type_ root (Vcovariant reason_covariant) env ty in
-      List.iter (check_variance env) tparams
+      List.iter tparams (check_variance env)
   | _ -> ()
 
 and class_member root _member_name member env =
@@ -375,10 +376,11 @@ and class_method root _method_name method_ env =
   | _ ->
       match method_.ce_type with
       | _, Tfun { ft_tparams; ft_params; ft_ret; _ } ->
-          let env = List.fold_left begin fun env (_, (_, tparam_name), _) ->
-            SMap.remove tparam_name env
-          end env ft_tparams in
-          let env = List.fold_left (fun_param root) env ft_params in
+          let env = List.fold_left ft_tparams
+            ~f:begin fun env (_, (_, tparam_name), _) ->
+              SMap.remove tparam_name env
+            end ~init:env in
+          let env = List.fold_left ~f:(fun_param root) ~init:env ft_params in
           let env = fun_ret root env ft_ret in
           env
       | _ -> assert false
@@ -400,7 +402,7 @@ and type_option root variance env = function
   | Some ty -> type_ root variance env ty
 
 and type_list root variance env tyl =
-  List.fold_left (type_ root variance) env tyl
+  List.fold_left ~f:(type_ root variance) ~init:env tyl
 
 and type_ root variance env (reason, ty) =
   match ty with
@@ -439,12 +441,12 @@ and type_ root variance env (reason, ty) =
       type_ root variance env ty
   | Tprim _ -> env
   | Tfun ft ->
-      let env = List.fold_left begin fun env (_, (r, _ as ty)) ->
+      let env = List.fold_left ~f:begin fun env (_, (r, _ as ty)) ->
         let pos = Reason.to_pos r in
         let reason = pos, Rfun_parameter, Pcontravariant in
         let variance = flip reason variance in
         type_ root variance env ty
-      end env ft.ft_params
+      end ~init:env ft.ft_params
       in
       let ret_pos = Reason.to_pos (fst ft.ft_ret) in
       let ret_variance = ret_pos, Rfun_return, Pcovariant in

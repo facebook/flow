@@ -32,8 +32,9 @@
  *)
 (*****************************************************************************)
 
-open Utils
+open Core
 open Nast
+open Utils
 
 module Env = Typing_env
 
@@ -109,9 +110,9 @@ end = struct
       method! on_expr acc (_, e_ as e) =
         match e_ with
         | Binop (Ast.Eq _, (p, List el), x2) ->
-            List.fold_left begin fun acc e ->
+            List.fold_left ~f:begin fun acc e ->
               this#on_expr acc (p, Binop (Ast.Eq None, e, x2))
-            end acc el
+            end ~init:acc el
         | Binop (Ast.Eq _, x1, x2) ->
             this#on_assign acc x1 x2
         | _ -> parent#on_expr acc e
@@ -158,7 +159,7 @@ end = struct
       let visited = SMap.add k 0 visited in
       let kl = AliasMap.get k aliases in
       let visited, depth_l = lfold (key aliases) visited kl in
-      let my_depth = 1 + List.fold_left max 0 depth_l in
+      let my_depth = 1 + List.fold_left ~f:max ~init:0 depth_l in
       SMap.add k my_depth visited, my_depth
 
   let get aliases = snd (fold aliases)
