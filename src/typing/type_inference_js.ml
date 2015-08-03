@@ -5179,7 +5179,7 @@ and mk_class = Ast.Class.(
   let id = Flow_js.mk_nominal cx in
 
   (* super: D<X> *)
-  let extends = opt_map (expression cx) superClass, superTypeParameters in
+  let extends = opt_map (expression cx) superClass,  superTypeParameters in
   let super = mk_extends cx type_params_map extends in
   let super_static = ClassT (super) in
 

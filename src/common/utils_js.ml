@@ -63,3 +63,7 @@ let call_succeeds try_function function_input =
 let fmt_exc exc = Printexc.((to_string exc) ^ "\n" ^ (get_backtrace ()))
 
 let fmt_file_exc file exc = file ^ ": " ^ (fmt_exc exc)
+
+let opt_map f = function
+  | None -> None
+  | Some x -> Some (f x)
