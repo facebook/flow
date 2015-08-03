@@ -671,6 +671,9 @@ and ground_type_impl cx ids t = match t with
   | AnnotT (t1, t2) ->
       AnnotT (ground_type_impl cx ids t1, ground_type_impl cx ids t2)
 
+  | KeysT (_, t) ->
+      KeysT (reason_of_string "key set", ground_type_impl cx ids t)
+
   | _ ->
     (** TODO **)
     failwith (spf "Unsupported type in ground_type_impl: %s" (string_of_ctor t))
