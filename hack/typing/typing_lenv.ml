@@ -8,6 +8,7 @@
  *
  *)
 
+open Core
 open Utils
 
 module Env = Typing_env
@@ -56,13 +57,13 @@ let intersect env parent_lenv (fake1, locals1) (fake2, locals2) =
           let env, ty1 = TUtils.unresolved env ty1 in
           let env, ty2 = TUtils.unresolved env ty2 in
           let (all_small, all_large) =
-            if (List.length all_types1) < (List.length all_types2)
+            if List.length all_types1 < List.length all_types2
             then (all_types1, all_types2)
             else (all_types2, all_types1) in
           let all_types =
-            List.fold_left begin fun acc ty ->
-              if List.mem ty acc then acc else ty::acc
-            end all_large all_small in
+            List.fold_left ~f:begin fun acc ty ->
+              if List.mem acc ty then acc else ty::acc
+            end ~init:all_large all_small in
           let env, ty = Type.unify Pos.none Reason.URnone env ty1 ty2 in
           env, IMap.add local_id (all_types, ty, eid) locals
     end locals1 (env, parent_locals)
@@ -114,9 +115,9 @@ let integrate env (_parent_fake, parent_locals) (child_fake, child_locals) =
           IMap.add local_id (child_all_types, child_ty, eid) locals
       | Some (parent_all_types, _, parent_eid) ->
           let eid = if child_eid = parent_eid then child_eid else Ident.tmp() in
-          let all_types = List.fold_left begin fun all_types ty ->
-            if List.exists ((=) ty) all_types then all_types else ty::all_types
-          end child_all_types parent_all_types in
+          let all_types = List.fold_left ~f:begin fun all_types ty ->
+            if List.exists all_types ((=) ty) then all_types else ty::all_types
+          end ~init:child_all_types parent_all_types in
           IMap.add local_id (all_types, child_ty, eid) locals
     end child_locals parent_locals
   in
@@ -124,18 +125,19 @@ let integrate env (_parent_fake, parent_locals) (child_fake, child_locals) =
 
 (* Same as intersect, but with a list of local environments *)
 let intersect_list env parent_lenv envl terml =
-  let env, lenvl = List.fold_right2 begin fun lenv is_term (env, lenv_acc) ->
-    if is_term
-    then integrate env parent_lenv lenv, lenv_acc
-    else env, lenv :: lenv_acc
-  end envl terml (env, []) in
+  let env, lenvl =
+    List.fold_right ~f:begin fun (lenv, is_term) (env, lenv_acc) ->
+      if is_term
+      then integrate env parent_lenv lenv, lenv_acc
+      else env, lenv :: lenv_acc
+    end (List.zip_exn envl terml) ~init:(env, []) in
   (match lenvl with
   | [] -> env
   | [x] -> { env with Env.lenv = x }
   | lenv1 :: rl ->
-      List.fold_left begin fun env lenv2 ->
+      List.fold_left ~f:begin fun env lenv2 ->
         intersect env parent_lenv env.Env.lenv lenv2
-      end { env with Env.lenv = lenv1 } rl
+      end ~init:{ env with Env.lenv = lenv1 } rl
   )
 
 (* Function that changes the types of locals to a more conservative value.
@@ -171,9 +173,9 @@ let fully_integrate env (parent_fake_members, parent_locals) =
           | [] -> assert false
           | [first] -> env, first
           | first :: rest ->
-              List.fold_left begin fun (env, ty_acc) ty ->
+              List.fold_left ~f:begin fun (env, ty_acc) ty ->
                 Type.unify Pos.none Reason.URnone env ty_acc ty
-              end (env, first) rest
+              end ~init:(env, first) rest
         in
         env, IMap.add local_id (ty :: parent_all_types, ty, eid) locals
     end child_locals (env, parent_locals)

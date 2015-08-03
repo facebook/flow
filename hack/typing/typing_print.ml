@@ -13,8 +13,9 @@
 (* Pretty printing of types *)
 (*****************************************************************************)
 
-open Utils
+open Core
 open Typing_defs
+open Utils
 
 module SN = Naming_special_names
 module Reason = Typing_reason
@@ -89,9 +90,9 @@ module ErrorString = struct
           ~f:(fun (_, ty) -> "\n  that is compatible with "^type_ ty)
 
   and unresolved l =
-    let l = List.map snd l in
-    let l = List.map type_ l in
-    let s = List.fold_right SSet.add l SSet.empty in
+    let l = List.map l snd in
+    let l = List.map l type_ in
+    let s = List.fold_right l ~f:SSet.add ~init:SSet.empty in
     let l = SSet.elements s in
     unresolved_ l
 
@@ -107,16 +108,16 @@ module ErrorString = struct
         then "this"
         else x
       in
-      List.fold_left (fun acc (_, sid) -> acc^"::"^sid)
-        ("the type constant "^strip_ns x) ids in
+      List.fold_left ~f:(fun acc (_, sid) -> acc^"::"^sid)
+        ~init:("the type constant "^strip_ns x) ids in
     match snd root_ty with
     | Tgeneric (x, _) -> f x
     | Tapply ((_, x), _) -> f x
     | Tclass ((_, x), _) -> f x
     | Tabstract (ak, _) -> f @@ AbstractKind.to_string ak
     | Taccess _ as x ->
-        List.fold_left (fun acc (_, sid) -> acc^"::"^sid)
-          (type_ x) ids
+        List.fold_left ~f:(fun acc (_, sid) -> acc^"::"^sid)
+          ~init:(type_ x) ids
      | _ ->
          "a type constant"
 
@@ -173,8 +174,9 @@ module Suggest = struct
         (match x with
          | None -> "..."
          | Some x ->
-            List.fold_left (fun acc (_, sid) -> acc^"::"^sid)
-                           (strip_ns x) ids
+            List.fold_left ids
+              ~f:(fun acc (_, sid) -> acc^"::"^sid)
+              ~init:(strip_ns x)
         )
 
   and list: type a. a ty list -> string = function
@@ -230,7 +232,8 @@ module Full = struct
     | Tgeneric (s, _) -> o s
     | Taccess (root_ty, ids) ->
         k root_ty;
-        o (List.fold_left (fun acc (_, sid) -> acc ^ "::" ^ sid) "" ids)
+        o (List.fold_left ids
+          ~f:(fun acc (_, sid) -> acc ^ "::" ^ sid) ~init:"")
     | Toption x -> o "?"; k x
     | Tprim x -> prim o x
     | Tvar n when ISet.mem n st -> o "[rec]"
@@ -351,7 +354,7 @@ module PrintClass = struct
     (constraint_ty_opt cstr_opt)
 
   let tparam_list l =
-    List.fold_right (fun x acc -> tparam x^", "^acc) l ""
+    List.fold_right l ~f:(fun x acc -> tparam x^", "^acc) ~init:""
 
   let class_elt ce =
     let vis =
@@ -419,9 +422,9 @@ module PrintClass = struct
     end m ""
 
   let user_attribute_list xs =
-    List.fold_left begin fun acc { Nast.ua_name; _ } ->
+    List.fold_left xs ~f:begin fun acc { Nast.ua_name; _ } ->
       acc^"("^snd ua_name^": expr) "
-    end "" xs
+    end ~init:""
 
   let constructor (ce_opt, consist) =
     let consist_str = if consist then " (consistent in hierarchy)" else "" in
@@ -487,7 +490,7 @@ module PrintFun = struct
     | Fellipsis min -> Printf.sprintf "variadic: ...-style (Hack); min: %d" min
 
   let fparams l =
-    List.fold_right (fun x acc -> (fparam x)^acc) l ""
+    List.fold_right l ~f:(fun x acc -> (fparam x)^acc) ~init:""
 
   let fun_type f =
     let ft_pos = PrintClass.pos f.ft_pos in

@@ -8,6 +8,7 @@
  *
  *)
 
+open Core
 open Typing_defs
 open Typing_dependent_type
 open Utils
@@ -52,9 +53,7 @@ let empty_env env ety_env ids = {
 let rec expand_with_env ety_env env reason root ids =
   let env = empty_env env ety_env ids in
   let env, (root_r, root_ty) = expand_ env root in
-  let trail = env.trail
-              |> List.rev
-              |> List.map (compose strip_ns ExprDepTy.to_string) in
+  let trail = List.rev_map env.trail (compose strip_ns ExprDepTy.to_string) in
   let reason_func r =
     let r = match r with
       | Reason.Rexpr_dep_type (_, p, e) ->
@@ -62,7 +61,7 @@ let rec expand_with_env ety_env env reason root ids =
       | _ -> r in
     Reason.Rtype_access(reason, trail, r) in
   let ty = reason_func root_r, root_ty in
-  let deps = List.map (fun (x, y) -> reason_func x, y) env.dep_tys in
+  let deps = List.map env.dep_tys (fun (x, y) -> reason_func x, y) in
   let ty = ExprDepTy.apply deps ty in
   env.tenv, (env.ety_env, ty)
 
@@ -137,7 +136,7 @@ and create_root_from_type_constant env class_pos class_name root_ty (pos, tconst
   | Some (env, typeconst) ->
       let env =
         { env with
-          trail = (`cls class_name, List.map snd env.ids)::env.trail } in
+          trail = (`cls class_name, List.map env.ids snd)::env.trail } in
       (* The type constant itself may contain a 'this' type so we need to
        * change the this_ty in the environment to be the root as an
        * expression dependent type.
@@ -160,14 +159,14 @@ and create_root_from_type_constant env class_pos class_name root_ty (pos, tconst
              * type.
              *)
             let dep_tys =
-              List.map (fun (r, (d, s)) -> r, (d, s @ [tconst])) env.dep_tys in
+              List.map env.dep_tys (fun (r, (d, s)) -> r, (d, s @ [tconst])) in
             { env with dep_tys = dep_ty::dep_tys; tenv = tenv }, cstr
         | _ ->
             let ty =
               Reason.Rwitness (fst typeconst.ttc_name),
               Tabstract (AKdependent (`cls class_name, [tconst]), None) in
             let dep_tys =
-              List.map (fun (r, (d, s)) -> r, (d, s @ [tconst])) env.dep_tys in
+              List.map env.dep_tys (fun (r, (d, s)) -> r, (d, s @ [tconst])) in
             { env with dep_tys = dep_tys }, ty
       end
 
@@ -191,12 +190,12 @@ and get_typeconst env class_pos class_name pos tconst =
      * with the remaining ids that we need to expand. If we encounter the same
      * class name + ids that means we have entered a cycle.
      *)
-    let cur_tconst = `cls class_name, List.map snd env.ids in
+    let cur_tconst = `cls class_name, List.map env.ids snd in
     let seen = ExprDepTy.to_string cur_tconst in
     let type_expansions = (pos, seen)::env.ety_env.type_expansions in
-    if List.mem seen (List.map snd env.ety_env.type_expansions) then
+    if List.mem (List.map env.ety_env.type_expansions snd) seen then
       begin
-        let seen = type_expansions |> List.map snd |> List.rev in
+        let seen = List.rev_map type_expansions snd in
         Errors.cyclic_typeconst (fst typeconst.ttc_name) seen;
         raise Exit
       end;

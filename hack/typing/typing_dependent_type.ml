@@ -8,6 +8,7 @@
  *
  *)
 
+open Core
 open Typing_defs
 open Utils
 
@@ -68,9 +69,9 @@ module ExprDepTy = struct
    * locl ty to create a new locl ty
    *)
   let apply dep_tys ty =
-    List.fold_left begin fun ty (r, dep_ty) ->
+    List.fold_left dep_tys ~f:begin fun ty (r, dep_ty) ->
       r, Tabstract (AKdependent dep_ty, Some ty)
-    end ty dep_tys
+    end ~init:ty
 
   (* We do not want to create a new expression dependent type if the type is
    * already expression dependent. However if the type is Tunresolved that
@@ -104,7 +105,7 @@ module ExprDepTy = struct
         let env, seen, ty = Env.expand_type_recorded env seen ty in
         should_apply ~seen env ty
     | Tunresolved tyl ->
-        List.exists (should_apply ~seen env) tyl
+        List.exists tyl (should_apply ~seen env)
     | Tclass ((_, x), _) ->
         let class_ = Env.get_class env x in
         Option.value_map class_

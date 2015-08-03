@@ -16,6 +16,7 @@
  * work to do. We need calculate what must be re-checked.
  *)
 (*****************************************************************************)
+open Core
 open Typing_deps
 open Utils
 
@@ -61,8 +62,7 @@ let on_the_fly_decl_file nenv all_classes (errors, failed) fn =
       Typing_decl.make_env nenv all_classes fn
     end
   in
-  List.fold_left
-    begin fun (errors, failed) error ->
+  List.fold_left decl_errors ~f:begin fun (errors, failed) error ->
     (* It is important to add the file that is the cause of the failure.
      * What can happen is that during a declaration phase, we realize
      * that a parent class is outdated. When this happens, we redeclare
@@ -75,7 +75,7 @@ let on_the_fly_decl_file nenv all_classes (errors, failed) fn =
       let failed = Relative_path.Set.add file_with_error failed in
       let failed = Relative_path.Set.add fn failed in
       error :: errors, failed
-    end (errors, failed) decl_errors
+    end ~init:(errors, failed)
 
 (*****************************************************************************)
 (* Given a set of classes, compare the old and the new type and deduce
@@ -136,10 +136,9 @@ let compute_gconsts_deps old_gconsts (to_redecl, to_recheck) gconsts =
 (*****************************************************************************)
 
 let redeclare_files nenv all_classes filel =
-  List.fold_left
-    (on_the_fly_decl_file nenv all_classes)
-    ([], Relative_path.Set.empty)
-    filel
+  List.fold_left filel
+    ~f:(on_the_fly_decl_file nenv all_classes)
+    ~init:([], Relative_path.Set.empty)
 
 let otf_decl_files nenv all_classes filel =
   SharedMem.invalidate_caches();
@@ -148,8 +147,10 @@ let otf_decl_files nenv all_classes filel =
   errors, failed
 
 let compute_deps fast filel =
-  let infol = List.map (fun fn -> Relative_path.Map.find_unsafe fn fast) filel in
-  let names = List.fold_left FileInfo.merge_names FileInfo.empty_names infol in
+  let infol =
+    List.map filel (fun fn -> Relative_path.Map.find_unsafe fn fast) in
+  let names =
+    List.fold_left infol ~f:FileInfo.merge_names ~init:FileInfo.empty_names in
   let { FileInfo.n_classes; n_funs; n_types; n_consts } = names in
   let acc = DepSet.empty, DepSet.empty in
   (* Fetching everything at once is faster *)

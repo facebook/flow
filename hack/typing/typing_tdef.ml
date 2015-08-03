@@ -8,8 +8,9 @@
  *
  *)
 
-open Utils
+open Core
 open Typing_defs
+open Utils
 
 module Reason = Typing_reason
 module Env    = Typing_env
@@ -100,7 +101,7 @@ let rec force_expand_typedef:
   | ty ->
      let env, ty =
        Phase.localize_phase ~ety_env env (phase ty) in
-     env, ty, ety_env.type_expansions |> List.map fst |> List.rev
+     env, ty, List.rev_map ety_env.type_expansions fst
 
 (*****************************************************************************)
 (*****************************************************************************)

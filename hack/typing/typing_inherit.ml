@@ -16,9 +16,10 @@
  *)
 (*****************************************************************************)
 
-open Utils
+open Core
 open Nast
 open Typing_defs
+open Utils
 
 module Env = Typing_env
 module Inst = Typing_instantiate
@@ -204,7 +205,7 @@ let constructor env subst (cstr, consistent) = match cstr with
 
 let map_inherited f inh =
   {
-    ih_cstr     = (opt_map f (fst inh.ih_cstr)), (snd inh.ih_cstr);
+    ih_cstr     = (Option.map (fst inh.ih_cstr) f), (snd inh.ih_cstr);
     ih_typeconsts = inh.ih_typeconsts;
     ih_consts   = SMap.map f inh.ih_consts;
     ih_props    = SMap.map f inh.ih_props;
@@ -356,7 +357,7 @@ let from_parent env c =
       | _ -> c.c_extends
   in
   let env, inherited_l = lfold (from_class c) env extends in
-  env, List.fold_right add_inherited inherited_l empty
+  env, List.fold_right ~f:add_inherited inherited_l ~init:empty
 
 let from_requirements c (env, acc) reqs =
   let env, inherited = from_class c env reqs in
@@ -384,14 +385,15 @@ let from_interface_constants (env, acc) impls =
 let make env c =
   (* members inherited from parent class ... *)
   let acc = from_parent env c in
-  let acc = List.fold_left (from_requirements c) acc c.c_req_extends in
+  let acc = List.fold_left ~f:(from_requirements c) ~init:acc c.c_req_extends in
   (* ... are overridden with those inherited from used traits *)
-  let acc = List.fold_left (from_trait c) acc c.c_uses in
-  let acc = List.fold_left from_xhp_attr_use acc c.c_xhp_attr_uses in
+  let acc = List.fold_left ~f:(from_trait c) ~init:acc c.c_uses in
+  let acc = List.fold_left ~f:from_xhp_attr_use ~init:acc c.c_xhp_attr_uses in
   (* todo: what about the same constant defined in different interfaces
    * we implement? We should forbid and say "constant already defined".
    * to julien: where is the logic that check for duplicated things?
    * todo: improve constant handling, see task #2487051
    *)
-  let acc = List.fold_left from_interface_constants acc c.c_req_implements in
-  List.fold_left from_interface_constants acc c.c_implements
+  let acc =
+    List.fold_left ~f:from_interface_constants ~init:acc c.c_req_implements in
+  List.fold_left ~f:from_interface_constants ~init:acc c.c_implements

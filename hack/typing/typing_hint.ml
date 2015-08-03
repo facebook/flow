@@ -11,9 +11,10 @@
 (*****************************************************************************)
 (* Converts a type hint into a type  *)
 (*****************************************************************************)
-open Utils
-open Typing_defs
+open Core
 open Nast
+open Typing_defs
+open Utils
 
 module Env = Typing_env
 
@@ -66,7 +67,7 @@ class virtual ['a] hint_visitor: ['a] hint_visitor_type = object(this)
   method on_mixed acc = acc
   method on_this acc = acc
   method on_tuple acc hl =
-    List.fold_left this#on_hint acc (hl:Nast.hint list)
+    List.fold_left ~f:this#on_hint ~init:acc (hl:Nast.hint list)
 
   method on_abstr acc _ = function
     | None -> acc
@@ -88,12 +89,12 @@ class virtual ['a] hint_visitor: ['a] hint_visitor_type = object(this)
   method on_option acc h = this#on_hint acc h
 
   method on_fun acc hl _ h =
-    let acc = List.fold_left this#on_hint acc hl in
+    let acc = List.fold_left ~f:this#on_hint ~init:acc hl in
     let acc = this#on_hint acc h in
     acc
 
   method on_apply acc _ (hl:Nast.hint list) =
-    let acc = List.fold_left this#on_hint acc hl in
+    let acc = List.fold_left ~f:this#on_hint ~init:acc hl in
     acc
 
   method on_shape acc hm =
@@ -141,18 +142,18 @@ let check_instantiable (env:Env.env) (h:Nast.hint) =
   CheckInstantiability.check env h
 
 let check_params_instantiable (env:Env.env) (params:Nast.fun_param list)=
-  List.fold_left (begin fun env param ->
+  List.fold_left params ~f:begin fun env param ->
     match (param.param_hint) with
       | None -> env
       | Some h -> check_instantiable env h
-  end) env params
+  end ~init:env
 
 let check_tparams_instantiable (env:Env.env) (tparams:Nast.tparam list) =
-  List.fold_left (begin fun env (_variance, _sid, cstr_opt) ->
+  List.fold_left tparams ~f:begin fun env (_variance, _sid, cstr_opt) ->
     match cstr_opt with
       | None -> env
       | Some (_ck, h) -> check_instantiable env h
-  end) env tparams
+  end ~init:env
 
 (* Unpacking a hint for typing *)
 
@@ -198,7 +199,7 @@ and hint_ p env = function
       env, Toption h
   | Hfun (hl, b, h) ->
       let env, paraml = lfold hint env hl in
-      let paraml = List.map (fun x -> None, x) paraml in
+      let paraml = List.map paraml (fun x -> None, x) in
       let env, ret = hint env h in
       let arity_min = List.length paraml in
       let arity = if b

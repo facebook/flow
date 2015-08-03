@@ -40,9 +40,9 @@
  *
  *)
 
-open Utils
+open Core
 open Nast
-
+open Utils
 
 type env = {
   (* tracking will be set when we are under an unsequenced operation
@@ -74,7 +74,7 @@ let use_local env id =
  * the "atomic" lvals that are being assigned to. *)
 let unpack_lvals e =
   let rec unpack acc = function
-    | _, List es -> List.fold_left unpack acc es
+    | _, List es -> List.fold_left ~f:unpack ~init:acc es
     | e -> e :: acc
   in List.rev (unpack [] e)
 
@@ -99,7 +99,7 @@ let used_variables_visitor =
     match e_ with
     | Binop (Ast.Eq None, e1, e2) ->
       let _, not_vars = Core_list.partition_map ~f:get_lvar (unpack_lvals e1) in
-      let acc = List.fold_left this#on_expr acc not_vars in
+      let acc = List.fold_left ~f:this#on_expr ~init:acc not_vars in
       this#on_expr acc e2
     | _ -> parent#on_expr acc e
   end
@@ -127,17 +127,17 @@ let sequence_visitor ~require_used used_vars =
   let check_unsequenced env1 env2 =
     let id_matches (_p1, x1) (_p2, x2) = x1 = x2 in
     let check_write_conflicts reads writes (p, _ as id) =
-        let conflicting_reads = List.filter (id_matches id) reads in
-        let conflicting_writes = List.filter (id_matches id) writes in
+        let conflicting_reads = List.filter reads (id_matches id) in
+        let conflicting_writes = List.filter writes (id_matches id) in
 
         (* Ignore conflicts when writing to variables that are never read
          * in order to support the idiom where pointless variable
          * assignments are used as documentation. *)
         let conflicting_writes =
           if not require_used then conflicting_writes else
-          List.filter (fun (_, x) -> ISet.mem x used_vars) conflicting_writes in
+          List.filter conflicting_writes (fun (_, x) -> ISet.mem x used_vars) in
 
-        let cleanup = List.map fst in
+        let cleanup = List.map ~f:fst in
         if conflicting_reads <> [] then
         Errors.local_variable_modified_and_used p (cleanup conflicting_reads);
         if conflicting_writes <> [] then
@@ -148,10 +148,10 @@ let sequence_visitor ~require_used used_vars =
     let reads1, writes1 = List.rev env1.used, List.rev env1.assigned in
     let reads2, writes2 = List.rev env2.used, List.rev env2.assigned in
 
-    List.iter (check_write_conflicts reads2 writes2) writes1;
+    List.iter writes1 (check_write_conflicts reads2 writes2);
     (* Only check writes2 for conflicts with the reads from env1,
      * since we've already checked for write/write conflicts. *)
-    List.iter (check_write_conflicts reads1 []) writes2
+    List.iter writes2 (check_write_conflicts reads1 [])
   in
 
   let merge_unsequenced env env1 env2 =
@@ -162,9 +162,10 @@ let sequence_visitor ~require_used used_vars =
   in
 
   let merge_unsequenced_list envs =
-    List.fold_left (fun env1 env2 -> check_unsequenced env1 env2;
-                                     merge env1 env2)
-                   tracking_env envs
+    List.fold_left envs ~f:begin fun env1 env2 ->
+      check_unsequenced env1 env2;
+      merge env1 env2
+    end ~init:tracking_env
   in
 
   (* And now the actual visitor object *)
@@ -197,10 +198,10 @@ let sequence_visitor ~require_used used_vars =
       (* Build separate envs for the direct variable assignments and
        * for the other lvals assigned to. We treat all these lvals
        * as unsequenced. *)
-      let lvar_envs = List.map (assign_local tracking_env) lvars in
+      let lvar_envs = List.map lvars (assign_local tracking_env) in
       let lhs_var_env = merge_unsequenced_list lvar_envs in
 
-      let lval_expr_envs = List.map (this#on_expr tracking_env) lval_exprs in
+      let lval_expr_envs = List.map lval_exprs (this#on_expr tracking_env) in
       let lval_expr_env = merge_unsequenced_list lval_expr_envs in
 
       let rhs_env = this#on_expr tracking_env e2 in
@@ -236,7 +237,7 @@ let sequence_visitor ~require_used used_vars =
       (* Ignore the current environment and start fresh. *)
       let _acc = this#on_block empty_env nb.fnb_nast in
       (* we use all the variables we are capturing *)
-      List.fold_left use_local env idl
+      List.fold_left ~f:use_local ~init:env idl
 
     | _ -> parent#on_expr env e
 
@@ -252,7 +253,7 @@ let sequence_visitor ~require_used used_vars =
       acc
     | Case (e, b) ->
       let env = this#on_expr tracking_env e in
-      List.iter (fun (p, _) -> Errors.assign_during_case p) env.assigned;
+      List.iter env.assigned (fun (p, _) -> Errors.assign_during_case p);
       let acc = this#on_block acc b in
       acc
   end

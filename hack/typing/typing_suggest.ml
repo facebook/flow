@@ -11,8 +11,9 @@
 
 (** Module used to suggest type annotations when they are missing
 *)
-open Utils
+open Core
 open Typing_defs
+open Utils
 
 let compare_types x y =
   let tcopt = TypecheckerOptions.permissive in
@@ -131,7 +132,7 @@ let rec my_unify depth env ty1 ty2 =
       with _ -> (r, Tarray (None, None)))
   | (_, Tunresolved tyl), ty2
   | ty2, (_, Tunresolved tyl) ->
-      List.fold_left (my_unify env) ty2 tyl
+      List.fold_left tyl ~f:(my_unify env) ~init:ty2
   | (r, _), _ -> snd (TUtils.fold_unresolved env (r, Tunresolved [ty1; ty2]))
 
 (** returns the classes/interfaces implemented by a class
@@ -158,34 +159,35 @@ let rec normalize (r, ty) = r, normalize_ ty
 and normalize_ = function
   | Tunresolved [x] -> snd (normalize x)
   | Tunresolved tyl
-    when List.exists (function _, Toption _ -> true | _ -> false) tyl ->
-      let tyl = List.map (function _, Toption ty -> ty | x -> x) tyl in
+    when List.exists tyl (function _, Toption _ -> true | _ -> false) ->
+      let tyl = List.map tyl (function _, Toption ty -> ty | x -> x) in
       normalize_ (Toption (Reason.Rnone, Tunresolved tyl))
   | Tunresolved tyl
-    when List.exists (function _, (Tany | Tunresolved []) -> true | _ -> false) tyl ->
-      let tyl = List.filter begin function
+    when List.exists tyl
+    (function _, (Tany | Tunresolved []) -> true | _ -> false) ->
+      let tyl = List.filter tyl begin function
         |  _, (Tany |  Tunresolved []) -> false
         | _, (Tmixed | Tarray (_, _) | Tprim _ | Toption _
           | Tvar _ | Tabstract (_, _) | Tclass (_, _) | Ttuple _
           | Tanon (_, _) | Tfun _ | Tunresolved _ | Tobject | Tshape _
              ) -> true
-      end tyl in
+      end in
       normalize_ (Tunresolved tyl)
   | Tunresolved ((_, Tclass (x, [])) :: rl) ->
       (* If we have A & B & C where all the elements are classes
        * we try to find a unique common ancestor.
        *)
-      let rl = List.map begin function
+      let rl = List.map rl begin function
         | _, Tclass (x, []) -> x
         | _, (Tany | Tmixed | Tarray (_, _) | Tprim _
           | Toption _ | Tvar _ | Tabstract (_, _) | Tclass (_, _) | Ttuple _
           | Tanon (_, _) | Tfun _ | Tunresolved _ | Tobject
           | Tshape _) -> raise Exit
-      end rl in
+      end in
       let x_imp = get_implements x in
-      let set = List.fold_left begin fun x_imp x ->
+      let set = List.fold_left rl ~f:begin fun x_imp x ->
         SSet.inter x_imp (get_implements x)
-      end x_imp rl in
+      end ~init:x_imp in
       (* is it unique? *)
       if SSet.cardinal set = 1
       then Tclass ((Pos.none, SSet.choose set), [])
@@ -195,7 +197,7 @@ and normalize_ = function
   | Tunresolved _ | Tany -> raise Exit
   | Tmixed -> Tmixed                       (* ' with Nothing (mixed type) *)
   | Tarray (k, v) -> begin
-    try Tarray (opt_map normalize k, opt_map normalize v)
+    try Tarray (Option.map k normalize, Option.map v normalize)
     with Exit -> Tarray (None, None)
   end
   | Tabstract (AKgeneric (_, _), _) as x -> x
@@ -224,8 +226,8 @@ and normalize_ = function
         then ":"^name
         else name
       in
-      Tclass ((pos, name), List.map normalize tyl)
-  | Ttuple tyl -> Ttuple (List.map normalize tyl)
+      Tclass ((pos, name), List.map tyl normalize)
+  | Ttuple tyl -> Ttuple (List.map tyl normalize)
   | Tanon _ -> raise Exit
   | Tobject -> raise Exit
   | Tabstract _ -> raise Exit

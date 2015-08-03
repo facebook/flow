@@ -8,10 +8,10 @@
  *
  *)
 
-
-open Utils
+open Core
 open Typing_defs
 open Typing_dependent_type
+open Utils
 
 module Env = Typing_env
 module TUtils = Typing_utils
@@ -192,11 +192,11 @@ and localize_ft ?(instantiate_tparams=true) ~ety_env env ft =
     then let env, tvarl = lfold TUtils.unresolved_tparam env ft.ft_tparams in
          let ft_subst = TSubst.make ft.ft_tparams tvarl in
          env, SMap.union ft_subst ety_env.substs
-    else env, List.fold_left begin fun subst (_, (_, x), _) ->
+    else env, List.fold_left ft.ft_tparams ~f:begin fun subst (_, (_, x), _) ->
       SMap.remove x subst
-    end ety_env.substs ft.ft_tparams in
+    end ~init:ety_env.substs in
   let ety_env = {ety_env with substs = substs} in
-  let names, params = List.split ft.ft_params in
+  let names, params = List.unzip ft.ft_params in
   let env, params = lfold (localize ~ety_env) env params in
   let env, arity = match ft.ft_arity with
     | Fvariadic (min, (name, var_ty)) ->
@@ -204,7 +204,7 @@ and localize_ft ?(instantiate_tparams=true) ~ety_env env ft =
        env, Fvariadic (min, (name, var_ty))
     | Fellipsis _ | Fstandard (_, _) as x -> env, x in
   let env, ret = localize ~ety_env env ft.ft_ret in
-  let params = List.map2 (fun x y -> x, y) names params in
+  let params = List.map2_exn names params (fun x y -> x, y) in
   env, { ft with ft_arity = arity; ft_params = params; ft_ret = ret }
 
 let localize_phase ~ety_env env phase_ty =

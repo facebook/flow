@@ -12,6 +12,8 @@
 (*****************************************************************************)
 (* Module declaring the types in parallel *)
 (*****************************************************************************)
+
+open Core
 open Utils
 
 (* The set of files that failed *)
@@ -52,7 +54,7 @@ let decl_file all_classes nenv (errorl, failed) fn =
 
 let decl_files (errors, failed) fnl =
   let all_classes, nenv = TypeDeclarationStore.load() in
-  List.fold_left (decl_file all_classes nenv) (errors, failed) fnl
+  List.fold_left fnl ~f:(decl_file all_classes nenv) ~init:(errors, failed)
 
 (*****************************************************************************)
 (* Merges the results (used by the master) *)

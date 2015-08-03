@@ -14,9 +14,10 @@
  * have the proper type, and restricts what types can be used for enums.
  *)
 (*****************************************************************************)
+open Core
 open Nast
-open Utils
 open Typing_defs
+open Utils
 
 module SN = Naming_special_names
 module Phase = Typing_phase
@@ -139,7 +140,7 @@ let enum_class_check env tc consts const_types =
              Typing_ops.sub_type tc.tc_pos Reason.URenum_cstr env ty ty_exp
           | None -> env) in
 
-        List.fold_left2 (enum_check_const ty_exp) env consts const_types
+        List.fold2_exn ~f:(enum_check_const ty_exp) ~init:env consts const_types
 
     | None -> env
 
@@ -176,14 +177,14 @@ let get_constant tc (seen, has_default) = function
 
 let check_enum_exhaustiveness pos tc caselist =
   let (seen, has_default) =
-    List.fold_left (get_constant tc) (SMap.empty, false) caselist in
+    List.fold_left ~f:(get_constant tc) ~init:(SMap.empty, false) caselist in
   let consts = SMap.remove SN.Members.mClass tc.tc_consts in
   let all_cases_handled = SMap.cardinal seen = SMap.cardinal consts in
   match (all_cases_handled, has_default) with
     | false, false ->
       let const_list = SMap.keys consts in
       let unhandled =
-        List.filter (function k -> not (SMap.mem k seen)) const_list in
+        List.filter const_list (function k -> not (SMap.mem k seen)) in
       Errors.enum_switch_nonexhaustive pos unhandled tc.tc_pos
     | true, true -> Errors.enum_switch_redundant_default pos tc.tc_pos
     | _ -> ()
