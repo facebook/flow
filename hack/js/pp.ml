@@ -16,6 +16,8 @@
  * affect xhpizer. I hope to be able to merge these two files back together.
  *)
 
+open Core
+
 (*****************************************************************************)
 (* Types *)
 (*****************************************************************************)
@@ -98,7 +100,7 @@ let print env x =
   else env.print x
 
 let spaces env =
-  for i = 1 to List.hd env.margin do
+  for i = 1 to List.hd_exn env.margin do
     print env " ";
   done
 
@@ -127,10 +129,10 @@ let space_or_nl env =
 
 let push env =
   env.pushed <- true;
-  env.margin <- List.hd env.margin + 2 :: env.margin
+  env.margin <- List.hd_exn env.margin + 2 :: env.margin
 
 let pop env =
-  env.margin <- List.tl env.margin
+  env.margin <- List.tl_exn env.margin
 
 let nest env f =
   push env;
@@ -232,12 +234,12 @@ let try_hard env f =
     else f { env with level = 0 }
 
 let cut_list env f l =
-  List.iter (
+  List.iter l (
     fun x ->
       choice_right env
         (fun env -> f env x)
         (fun env -> newline env; spaces env; f env x)
-  ) l
+  )
 
 
 let list env f opar l sep cpar =

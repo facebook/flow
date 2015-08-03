@@ -13,6 +13,8 @@
  *
  *)
 
+open Core
+
 type json =
     JList of json list
   | JBool of bool
@@ -25,13 +27,13 @@ type json =
 let rec to_js_object json =
   match json with
   | JList l ->
-      let l = List.map to_js_object l in
+      let l = List.map l to_js_object in
       let l = Array.of_list l in
       Js.Unsafe.inject (Js.array l)
   | JAssoc l ->
-      let l = List.map begin fun (k, v) ->
+      let l = List.map l begin fun (k, v) ->
         k, to_js_object v
-      end l in
+      end in
       let l = Array.of_list l in
       Js.Unsafe.obj l
   | JBool b -> Js.Unsafe.inject (Js.bool b)

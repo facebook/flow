@@ -8,6 +8,7 @@
  *
  *)
 
+open Core
 open Coverage_level
 open Utils
 open Hh_json
@@ -35,7 +36,7 @@ let error el =
                "internal_error", JBool false;
              ]
     else
-      let errors_json = List.map (compose Errors.to_json Errors.to_absolute) el
+      let errors_json = List.map el (compose Errors.to_json Errors.to_absolute)
       in JAssoc [ "passed",         JBool false;
                   "errors",         JList errors_json;
                   "internal_error", JBool false;
@@ -62,14 +63,14 @@ let type_class nenv x fn =
     ()
 
 let make_funs_classes ast =
-  List.fold_left begin fun (funs, classes, typedefs, consts) def ->
+  List.fold_left ast ~f:begin fun (funs, classes, typedefs, consts) def ->
     match def with
     | Ast.Fun f -> f.Ast.f_name :: funs, classes, typedefs, consts
     | Ast.Class c -> funs, c.Ast.c_name :: classes, typedefs, consts
     | Ast.Typedef td -> funs, classes, td.Ast.t_id :: typedefs, consts
     | Ast.Constant cst -> funs, classes, typedefs, cst.Ast.cst_name :: consts
     | _ -> funs, classes, typedefs, consts
-  end ([], [], [], []) ast
+  end ~init:([], [], [], [])
 
 let rec get_sub_classes classes =
   let sub_classes = SMap.fold (fun x _ acc -> SSet.add x acc) classes SSet.empty in
@@ -92,14 +93,14 @@ let declare_file fn content =
     try Hashtbl.find globals fn
     with Not_found -> true, [], []
   in
-  List.iter begin fun (_, fname) ->
-      Naming_heap.FunHeap.remove fname;
-      Typing_env.Funs.remove fname;
-  end old_funs;
-  List.iter begin fun (_, cname) ->
+  List.iter old_funs begin fun (_, fname) ->
+    Naming_heap.FunHeap.remove fname;
+    Typing_env.Funs.remove fname;
+  end;
+  List.iter old_classes begin fun (_, cname) ->
     Naming_heap.ClassHeap.remove cname;
     Typing_env.Classes.remove cname;
-  end old_classes;
+  end;
   try
     Autocomplete.auto_complete := false;
     let {Parser_hack.file_mode; comments; ast} =
@@ -113,9 +114,9 @@ let declare_file fn content =
       Hashtbl.replace globals fn (is_php, funs, classes);
       let nenv = Naming.empty TypecheckerOptions.permissive in
       let nenv = Naming.make_env nenv ~funs ~classes ~typedefs ~consts in
-      let all_classes = List.fold_right begin fun (_, cname) acc ->
+      let all_classes = List.fold_right classes ~f:begin fun (_, cname) acc ->
         SMap.add cname (Relative_path.Set.singleton fn) acc
-      end classes SMap.empty in
+      end ~init:SMap.empty in
       Typing_decl.make_env nenv all_classes fn;
       let sub_classes = get_sub_classes all_classes in
       SSet.iter begin fun cname ->
@@ -171,12 +172,12 @@ let hh_check fn =
         let funs, classes, typedefs, consts = make_funs_classes ast in
         let nenv = Naming.empty TypecheckerOptions.permissive in
         let nenv = Naming.make_env nenv ~funs ~classes ~typedefs ~consts in
-        let all_classes = List.fold_right begin fun (_, cname) acc ->
+        let all_classes = List.fold_right classes ~f:begin fun (_, cname) acc ->
           SMap.add cname (Relative_path.Set.singleton fn) acc
-        end classes SMap.empty in
+        end ~init:SMap.empty in
         Typing_decl.make_env nenv all_classes fn;
-        List.iter (fun (_, fname) -> type_fun nenv fname fn) funs;
-        List.iter (fun (_, cname) -> type_class nenv cname fn) classes;
+        List.iter funs (fun (_, fname) -> type_fun nenv fname fn);
+        List.iter classes (fun (_, cname) -> type_class nenv cname fn);
         error []
         end
         begin fun l ->
@@ -203,7 +204,7 @@ let hh_auto_complete fn =
   try
     let ast = Parser_heap.ParserHeap.find_unsafe fn in
     Errors.ignore_ begin fun () ->
-      List.iter begin fun def ->
+      List.iter ast begin fun def ->
         match def with
         | Ast.Fun f ->
             let nenv, tenv = permissive_empty_envs fn in
@@ -217,7 +218,7 @@ let hh_auto_complete fn =
             let res = Typing.class_def tenv nenv (snd c.Nast.c_name) c in
             res
         | _ -> ()
-      end ast;
+      end;
     end;
     let completion_type_str =
       match !Autocomplete.argument_global_type with
@@ -229,10 +230,10 @@ let hh_auto_complete fn =
       | None -> "none" in
     let result = AutocompleteService.get_results [] [] in
     let result =
-      List.map AutocompleteService.autocomplete_result_to_json result
+      List.map result AutocompleteService.autocomplete_result_to_json
     in
     AutocompleteService.detach_hooks();
-    to_js_object (JAssoc [ "completions",     JList result;
+    to_js_object (JAssoc [ "completions",    JList result;
                           "completion_type", JString completion_type_str;
                           "internal_error",  JBool false;
                         ])
@@ -249,7 +250,7 @@ let hh_get_method_at_position fn line char =
   try
     let ast = Parser_heap.ParserHeap.find_unsafe fn in
     Errors.ignore_ begin fun () ->
-      List.iter begin fun def ->
+      List.iter ast begin fun def ->
         match def with
         | Ast.Fun f ->
             let nenv, tenv = permissive_empty_envs fn in
@@ -261,7 +262,7 @@ let hh_get_method_at_position fn line char =
             let res = Typing.class_def tenv nenv (snd c.Nast.c_name) c in
             res
         | _ -> ()
-      end ast;
+      end;
     end;
     IdentifySymbolService.detach_hooks ();
     let result =
@@ -313,7 +314,7 @@ let hh_get_deps =
           )
       end
     end deps;
-    to_js_object (JAssoc [ "deps",           JList !result;
+    to_js_object (JAssoc [ "deps",          JList !result;
                           "internal_error", JBool false;
                         ])
 
@@ -335,7 +336,7 @@ let hh_find_lvar_refs file line char =
     let tcopt = TypecheckerOptions.permissive in
     Errors.ignore_ begin fun () ->
       (* We only need to name to find references to locals *)
-      List.iter begin fun def ->
+      List.iter ast begin fun def ->
         match def with
         | Ast.Fun f ->
             let nenv = Naming.empty tcopt in
@@ -346,13 +347,13 @@ let hh_find_lvar_refs file line char =
             let _ = Naming.class_ nenv c in
             ()
         | _ -> ()
-      end ast;
+      end;
     end;
     FindLocalsService.detach_hooks ();
     let res_list =
-      List.map (compose Pos.json Pos.to_absolute) (get_result ()) in
+      List.map (get_result ()) (compose Pos.json Pos.to_absolute) in
     to_js_object (JAssoc [ "positions",      JList res_list;
-                          "internal_error", JBool false;
+                           "internal_error", JBool false;
                         ])
   with _ ->
     FindLocalsService.detach_hooks ();
@@ -386,13 +387,13 @@ let hh_file_summary fn =
   try
     let ast = Parser_heap.ParserHeap.find_unsafe fn in
     let outline = FileOutline.outline_ast ast in
-    let res_list = List.map begin fun (pos, name, type_) ->
+    let res_list = List.map outline begin fun (pos, name, type_) ->
       JAssoc [ "name", JString name;
                "type", JString type_;
                "pos",  Pos.json pos;
              ]
-      end outline in
-    to_js_object (JAssoc [ "summary",          JList res_list;
+      end in
+    to_js_object (JAssoc [ "summary",         JList res_list;
                           "internal_error",   JBool false;
                         ])
   with _ ->
@@ -409,17 +410,18 @@ let hh_hack_coloring fn =
   let result = Hashtbl.fold (fun p ty xs ->
     (Pos.info_raw p, level_of_type (p, ty)) :: xs) type_acc [] in
   let result = ColorFile.go (Hashtbl.find files fn) result in
-  let result = List.map (fun input ->
-                        match input with
-                        | (Some lvl, str) -> (string_of_level lvl, str)
-                        | (None, str) -> ("default", str)
-                        ) result in
-  let result = List.map (fun (checked, text) ->
-                        JAssoc [ "checked", JString checked;
-                                 "text",    JString text;
-                               ]) result in
-  to_js_object (JAssoc [ "coloring",       JList result;
-                        "internal_error", JBool false;
+  let result = List.map result begin fun input ->
+    match input with
+    | (Some lvl, str) -> (string_of_level lvl, str)
+    | (None, str) -> ("default", str)
+  end in
+  let result = List.map result begin fun (checked, text) ->
+    JAssoc [ "checked", JString checked;
+             "text",    JString text;
+           ]
+  end in
+  to_js_object (JAssoc [ "coloring",      JList result;
+                         "internal_error", JBool false;
                       ])
 
 let hh_get_method_calls fn =
@@ -427,14 +429,14 @@ let hh_get_method_calls fn =
   Typing_defs.accumulate_method_calls_result := [];
   ignore (hh_check fn);
   let results = !Typing_defs.accumulate_method_calls_result in
-  let results = List.map begin fun (p, name) ->
+  let results = List.map results begin fun (p, name) ->
     JAssoc [ "method_name", JString name;
              "pos",         Pos.json (Pos.to_absolute p);
            ]
-    end results in
+  end in
   Typing_defs.accumulate_method_calls := false;
   Typing_defs.accumulate_method_calls_result := [];
-  to_js_object (JAssoc [ "method_calls",   JList results;
+  to_js_object (JAssoc [ "method_calls",  JList results;
                         "internal_error", JBool false;
                       ])
 
@@ -445,16 +447,16 @@ let hh_arg_info fn line char =
   let fn = Relative_path.create Relative_path.Root fn in
   let _, funs, classes = Hashtbl.find globals fn in
   Errors.ignore_ begin fun () ->
-    List.iter begin fun (_, f_name) ->
+    List.iter funs begin fun (_, f_name) ->
       let nenv, tenv = permissive_empty_envs fn in
       let f = Naming_heap.FunHeap.find_unsafe f_name in
       Typing.fun_def tenv nenv f_name f
-    end funs;
-    List.iter begin fun (_, c_name) ->
+    end;
+    List.iter classes begin fun (_, c_name) ->
       let nenv, tenv = permissive_empty_envs fn in
       let c = Naming_heap.ClassHeap.find_unsafe c_name in
       Typing.class_def tenv nenv c_name c
-    end classes;
+    end;
   end;
   let result = ArgumentInfoService.get_result() in
   let result = match result with

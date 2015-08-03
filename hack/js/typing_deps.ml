@@ -20,6 +20,7 @@
  * dependency the client has seen.
  *)
 
+open Core
 open Utils
 
 (* If we're currently adding a dependency. This should be false if we're adding
@@ -134,20 +135,20 @@ let add_list table k v =
 let add_files_report_changes fast =
   let has_changed = ref false in
   SMap.iter begin fun fn (funs_in_file, classes_in_file) ->
-    List.iter begin fun (_, fid) ->
-      if not (List.mem fn (get_list !ifuns fid))
+    List.iter funs_in_file begin fun (_, fid) ->
+      if not (List.mem (get_list !ifuns fid) fn)
       then begin
         has_changed := true;
         ifuns := add_list !ifuns fid fn;
       end
-    end funs_in_file;
-    List.iter begin fun (_, cid) ->
-      if not (List.mem fn (get_list !iclasses cid))
+    end;
+    List.iter classes_in_file begin fun (_, cid) ->
+      if not (List.mem (get_list !iclasses cid) fn)
       then begin
         has_changed := true;
         iclasses := add_list !iclasses cid fn;
       end
-    end classes_in_file;
+    end;
   end fast;
   !has_changed
 
@@ -161,10 +162,10 @@ let get_files_to_rename fast =
    * any conflict.
    *)
   let acc = ref SSet.empty in
-  let add l = List.iter (fun x -> acc := SSet.add x !acc) l in
+  let add l = List.iter l (fun x -> acc := SSet.add x !acc) in
   SMap.iter begin fun filename (fun_idl, class_idl) ->
-    List.iter (fun (_, fid) -> add (get_list !ifuns fid)) fun_idl;
-    List.iter (fun (_, cid) -> add (get_list !iclasses cid)) class_idl;
+    List.iter fun_idl (fun (_, fid) -> add (get_list !ifuns fid));
+    List.iter class_idl (fun (_, cid) -> add (get_list !iclasses cid));
   end fast;
   let prev = SMap.fold (fun x _ acc -> SSet.add x acc) fast SSet.empty in
   SSet.diff !acc prev
@@ -174,7 +175,7 @@ let get_additional_files deps =
   let acc = SSet.empty in
   let add env x acc =
     let files = get_list env x in
-    List.fold_left (fun acc x -> SSet.add x acc) acc files
+    List.fold_left files ~f:(fun acc x -> SSet.add x acc) ~init:acc
   in
   let acc = SSet.fold (add !ifuns) funs acc in
   let acc = SSet.fold (add !iclasses) classes acc in
