@@ -1756,7 +1756,7 @@ and xhp_class_attribute env =
   Try.one_line env
     (xhp_class_attribute_impl ~enum_list_elts:(list_comma_single expr))
     (xhp_class_attribute_impl ~enum_list_elts:
-      (fun env -> right env (list_comma_multi_nl ~trailing:true expr)))
+      (fun env -> right env (list_comma_multi_nl ~trailing:false expr)))
 
 and xhp_class_attribute_impl ~enum_list_elts env =
   let curr_pos = !(env.abs_pos) in
