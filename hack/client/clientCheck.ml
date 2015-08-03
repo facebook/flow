@@ -8,6 +8,7 @@
  *
  *)
 
+open Core
 open ClientEnv
 open Utils
 
@@ -58,7 +59,7 @@ let main args =
   match args.mode with
   | MODE_LIST_FILES ->
       let infol = get_list_files conn args in
-      List.iter (Printf.printf "%s\n") infol;
+      List.iter infol (Printf.printf "%s\n");
       Exit_status.Ok
   | MODE_LIST_MODES ->
       let ic, oc = conn in
@@ -188,7 +189,7 @@ let main args =
       let error_list = Cmd.rpc conn Rpc.STATUS in
       if args.output_json || args.from <> "" || error_list = []
       then ServerError.print_errorl args.output_json error_list stdout
-      else List.iter ClientCheckStatus.print_error_color error_list;
+      else List.iter error_list ClientCheckStatus.print_error_color;
       if error_list = [] then Exit_status.Ok else Exit_status.Type_error
   | MODE_SHOW classname ->
       let ic, oc = conn in
@@ -200,13 +201,13 @@ let main args =
       ClientSearch.go results args.output_json;
       Exit_status.Ok
   | MODE_LINT fnl ->
-      let fnl = List.fold_left begin fun acc fn ->
+      let fnl = List.fold_left fnl ~f:begin fun acc fn ->
         match Sys_utils.realpath fn with
         | Some path -> path :: acc
         | None ->
             prerr_endlinef "Could not find file '%s'" fn;
             acc
-      end [] fnl in
+      end ~init:[] in
       let results = Cmd.rpc conn @@ Rpc.LINT fnl in
       ClientLint.go results args.output_json;
       Exit_status.Ok
@@ -222,7 +223,7 @@ let main args =
       begin
         match results with
         | Some results ->
-            List.iter print_endline results;
+            List.iter results print_endline;
             Exit_status.Ok
         | None ->
             Exit_status.Checkpoint_error

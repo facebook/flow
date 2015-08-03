@@ -8,6 +8,7 @@
  *
  *)
 
+open Core
 module SS = HackSearchService
 module Json = Hh_json
 module SUtils = SearchUtils
@@ -40,12 +41,12 @@ let scope_string_from_type result_type =
     | _ -> ""
 
 let print_results results =
-  List.iter begin fun res ->
+  List.iter results begin fun res ->
     let pos_string = Pos.string res.SUtils.pos in
     let desc_string = desc_string_from_type res.SUtils.result_type in
     print_endline
       (pos_string^" "^(Utils.strip_ns res.SUtils.name)^", "^desc_string);
-  end results
+  end
 
 let result_to_json res =
   let desc_string = desc_string_from_type res.SUtils.result_type in
@@ -63,7 +64,7 @@ let result_to_json res =
               ]
 
 let print_results_json results =
-  let results = Json.JList (List.map result_to_json results) in
+  let results = Json.JList (List.map results result_to_json) in
   print_endline (Json.json_to_string results)
 
 let go results output_json =

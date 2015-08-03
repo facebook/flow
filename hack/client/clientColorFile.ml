@@ -8,6 +8,7 @@
  *
  *)
 
+open Core
 open Coverage_level
 
 module C = Tty
@@ -30,18 +31,18 @@ let replace_color input =
   | (None, str) -> (default_color, str)
 
 let replace_colors input =
-  List.map replace_color input
+  List.map input replace_color
 
 let to_json input =
-  let entries = List.map (fun (clr, text) ->
-                          let color_string = match clr with
-                          | Some lvl -> string_of_level lvl
-                          | None -> "default" in
-                          Json.JAssoc [ "color", Json.JString color_string;
-                                        "text",  Json.JString text;
-                                      ]
-                         ) input
-  in
+  let entries = List.map input begin fun (clr, text) ->
+    let color_string = match clr with
+      | Some lvl -> string_of_level lvl
+      | None -> "default"
+    in Json.JAssoc [
+      "color", Json.JString color_string;
+      "text",  Json.JString text;
+    ]
+  end in
   Json.JList entries
 
 (*****************************************************************************)

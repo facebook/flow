@@ -8,6 +8,7 @@
  *
  *)
 
+open Core
 module Json = Hh_json
 
 let pos_to_json pos =
@@ -27,7 +28,7 @@ let cls_or_mthd_to_json name pos p_name =
   ]
 
 let to_json input =
-  let entries = List.map begin fun res ->
+  let entries = List.map input begin fun res ->
     Json.JAssoc [
       "origin", cls_or_mthd_to_json
         res.MethodJumps.orig_name
@@ -38,7 +39,7 @@ let to_json input =
         res.MethodJumps.dest_pos
         res.MethodJumps.dest_p_name;
     ]
-    end input in
+  end in
   Json.JList entries
 
 let print_json res =
@@ -52,7 +53,7 @@ let readable_place name pos p_name =
   else (readable^" "^(Utils.strip_ns name))
 
 let print_readable res find_children =
-  List.iter begin fun res ->
+  List.iter res begin fun res ->
     let origin_readable = readable_place
         res.MethodJumps.orig_name
         res.MethodJumps.orig_pos
@@ -63,7 +64,7 @@ let print_readable res find_children =
         res.MethodJumps.dest_p_name in
     let extended = "inherited "^(if find_children then "by" else "from") in
     print_endline (origin_readable^"\n    "^extended^" "^dest_readable);
-  end res;
+  end;
   ()
 
 let go res find_children output_json =

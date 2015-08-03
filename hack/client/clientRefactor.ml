@@ -8,6 +8,7 @@
  *
  *)
 
+open Core
 open ClientEnv
 open Utils
 module Json = Hh_json
@@ -60,7 +61,7 @@ let write_patches_to_buffer buf original_content patch_list =
     i := !i + size
   in
   
-  List.iter begin fun res ->
+  List.iter patch_list begin fun res ->
     let pos = get_pos res in
     let char_start, char_end = Pos.info_raw pos in
     add_original_content (char_start - 1);
@@ -72,7 +73,7 @@ let write_patches_to_buffer buf original_content patch_list =
           i := char_end
       | ServerRefactor.Remove _ ->
           i := char_end
-  end patch_list;
+  end;
   add_original_content (String.length original_content - 1)
 
 let apply_patches_to_file fn patch_list =
@@ -117,7 +118,7 @@ let patch_to_json res =
 let print_patches_json file_map =
   let entries = SMap.fold begin fun fn patch_list acc ->
     Json.JAssoc [ "filename", Json.JString fn;
-                  "patches",  Json.JList (List.map patch_to_json patch_list);
+                  "patches",  Json.JList (List.map patch_list patch_to_json);
                 ] :: acc
   end file_map [] in
   print_endline (Json.json_to_string (Json.JList entries))
@@ -153,7 +154,8 @@ let go conn args =
     | _ -> raise Exit in
     
     let patches = ServerCommand.rpc conn @@ ServerRpc.REFACTOR command in
-    let file_map = List.fold_left map_patches_to_filename SMap.empty patches in
+    let file_map = List.fold_left patches
+      ~f:map_patches_to_filename ~init:SMap.empty in
     if args.output_json
     then print_patches_json file_map
     else apply_patches file_map

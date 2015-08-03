@@ -8,15 +8,18 @@
  *
  *)
 
+open Core
 open Coverage_level
 open Hh_json
 open Utils
 
-let result_to_json r = JAssoc (SMap.elements r |>
-  List.map (fun (kind, counts) ->
-    let counts = JAssoc (CLMap.elements counts |>
-      List.map (fun (k, v) -> string_of_level k, JInt v)) in
-    kind, counts))
+let result_to_json r = JAssoc begin
+  List.map (SMap.elements r) begin fun (kind, counts) ->
+    let counts = JAssoc (List.map (CLMap.elements counts)
+        (fun (k, v) -> string_of_level k, JInt v)) in
+    kind, counts
+  end
+end
 
 let rec entry_to_json = function
   | Leaf r -> JAssoc [
