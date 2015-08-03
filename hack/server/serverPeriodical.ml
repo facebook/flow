@@ -96,7 +96,7 @@ let init (root : Path.t) =
       Sys_utils.try_touch (GlobalConfig.lock_file root)
     );
     Periodical.one_day  , (fun () ->
-      Sys_utils.try_touch (Socket.get_path (GlobalConfig.socket_file root))
+      Sys_utils.try_touch (Socket.get_path GlobalConfig.tmp_dir root)
     );
   ] in
   List.iter (fun (period, cb) -> Periodical.register_callback period cb) jobs
