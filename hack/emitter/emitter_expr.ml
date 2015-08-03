@@ -365,8 +365,9 @@ and emit_expr env (pos, expr_ as expr) =
   | Call (_, _, _, _)
   | Special_func _ ->
     let env, flavor = emit_flavored_expr env expr in
-    assert (flavor = FR);
-    emit_UnboxR env
+    (* Some builtin functions actually produce C, so we only unbox
+     * if it is really an R. *)
+    if flavor = FR then emit_UnboxR env else env
 
   (* N.B: duplicate with is_lval but we want to exhaustiveness check  *)
   | Lplaceholder _
