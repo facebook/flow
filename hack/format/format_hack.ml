@@ -2326,10 +2326,6 @@ and rhs_assign env =
         space env; expr env
     | _ ->
         back env;
-        try_word env "await" begin fun env ->
-          space env;
-          last_token env
-        end;
         keep_best env
           begin fun env ->
             let line = !(env.line) in
