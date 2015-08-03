@@ -8,6 +8,7 @@
  *
  *)
 
+open Core
 
 (**********************************)
 (* Handling dependencies *)
@@ -76,9 +77,9 @@ module Graph = struct
 
   let get x =
     let l = hh_get_dep x in
-    List.fold_left begin fun acc node ->
+    List.fold_left l ~f:begin fun acc node ->
       DepSet.add node acc
-    end DepSet.empty l
+    end ~init:DepSet.empty
 end
 
 (*****************************************************************************)
@@ -145,15 +146,15 @@ let update_files fast =
          file_mode = _;
          consider_names_just_for_autoload = _;
         } = info in
-    let funs = List.fold_left begin fun acc (_, fun_id) ->
+    let funs = List.fold_left funs ~f:begin fun acc (_, fun_id) ->
       DepSet.add (Dep.make (Dep.Fun fun_id)) acc
-    end DepSet.empty funs in
-    let classes = List.fold_left begin fun acc (_, class_id) ->
+    end ~init:DepSet.empty in
+    let classes = List.fold_left classes ~f:begin fun acc (_, class_id) ->
       DepSet.add (Dep.make (Dep.Class class_id)) acc
-    end DepSet.empty classes in
-    let classes = List.fold_left begin fun acc (_, type_id) ->
+    end ~init:DepSet.empty in
+    let classes = List.fold_left typedefs ~f:begin fun acc (_, type_id) ->
       DepSet.add (Dep.make (Dep.Class type_id)) acc
-    end classes typedefs in
+    end ~init:classes in
     let defs = DepSet.union funs classes in
     DepSet.iter begin fun def ->
       let previous =
