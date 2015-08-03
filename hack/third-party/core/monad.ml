@@ -2,6 +2,17 @@ module type Basic = sig
   type 'a t
   val bind : 'a t -> ('a -> 'b t) -> 'b t
   val return : 'a -> 'a t
+
+  (* The [map] argument to [Monad.Make] says how to implement the monad's [map] function.
+     [`Define_using_bind] means to define [map t ~f = bind t (fun a -> return (f a))].
+     [`Custom] overrides the default implementation, presumably with something more
+     efficient.
+
+     Some other functions returned by [Monad.Make] are defined in terms of [map], so
+     passing in a more efficient [map] will improve their efficiency as well. *)
+  val map : [ `Define_using_bind
+            | `Custom of ('a t -> f:('a -> 'b) -> 'b t)
+            ]
 end
 
 module type Infix = sig
@@ -45,22 +56,26 @@ end
 
 module Make (M : Basic) : S with type 'a t := 'a M.t = struct
 
-  let bind = M.bind
-
+  let bind   = M.bind
   let return = M.return
+
+  let map_via_bind ma ~f = M.bind ma (fun a -> M.return (f a))
+
+  let map =
+    match M.map with
+    | `Define_using_bind -> map_via_bind
+    | `Custom x -> x
 
   module Monad_infix = struct
 
     let (>>=) = bind
 
-    let (>>|) t f = t >>= fun a -> return (f a)
+    let (>>|) t f = map t ~f
   end
 
   include Monad_infix
 
   let join t = t >>= fun t' -> t'
-
-  let map t ~f = t >>| f
 
   let ignore t = map t ~f:(fun _ -> ())
 
@@ -86,6 +101,9 @@ end
 module type Basic2 = sig
   type ('a, 'd) t
   val bind : ('a, 'd) t -> ('a -> ('b, 'd) t) -> ('b, 'd) t
+  val map : [ `Define_using_bind
+            | `Custom of (('a, 'd) t -> f:('a -> 'b) -> ('b, 'd) t)
+            ]
   val return : 'a -> ('a, _) t
 end
 
@@ -143,22 +161,26 @@ end
 
 module Make2 (M : Basic2) : S2 with type ('a, 'd) t := ('a, 'd) M.t = struct
 
-  let bind = M.bind
-
+  let bind   = M.bind
   let return = M.return
+
+  let map_via_bind ma ~f = M.bind ma (fun a -> M.return (f a))
+
+  let map =
+    match M.map with
+    | `Define_using_bind -> map_via_bind
+    | `Custom x -> x
 
   module Monad_infix = struct
 
     let (>>=) = bind
 
-    let (>>|) t f = t >>= fun a -> return (f a)
+    let (>>|) t f = map t ~f
   end
 
   include Monad_infix
 
   let join t = t >>= fun t' -> t'
-
-  let map t ~f = t >>| f
 
   let ignore t = map t ~f:(fun _ -> ())
 
