@@ -60,7 +60,7 @@ let string_of_loc loc = Loc.(
     let end_ = loc._end.column in
     if line <= 0 then
       Utils.spf "%s:0:0" file
-    else if line = loc._end.line && start - end_ = 1 then
+    else if line = loc._end.line && start = end_ then
       Utils.spf "%s:%d:%d" file line start
     else if line != loc._end.line then
       Utils.spf "%s:%d:%d,%d:%d" file line start loc._end.line end_

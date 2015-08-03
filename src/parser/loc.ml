@@ -73,4 +73,9 @@ let string loc =
   else Printf.sprintf "File %S, line %d column %d - line %d column %d:"
     source loc.start.line loc.start.column loc._end.line loc._end.column
 
-let compare loc1 loc2 = String.compare (string loc1) (string loc2)
+let compare loc1 loc2 =
+  Pervasives.compare
+    (loc1.source, loc1.start.line, loc1.start.column,
+     loc1._end.line, loc1._end.column)
+    (loc2.source, loc2.start.line, loc2.start.column,
+     loc2._end.line, loc2._end.column)
