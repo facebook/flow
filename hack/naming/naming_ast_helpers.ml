@@ -143,12 +143,9 @@ module GetLocals = struct
       smap_union acc c
     | Try (b, cl, f) ->
       let _, c = block (nsenv, SMap.empty) b in
+      let cl = List.filter (fun (_, _, b) -> not (is_terminal nsenv b)) cl in
       let lcl = List.map (catch nsenv) cl in
-      let tcl = List.map (fun (_, _, b) -> is_terminal nsenv b) cl in
-      let cl = List.fold_right2 begin fun x y acc ->
-        if y then acc else x :: acc
-      end lcl tcl [] in
-      let c = smap_inter_list (c :: cl) in
+      let c = smap_inter_list (c :: lcl) in
       smap_union acc c
 
   and block acc l = List.fold_left stmt acc l
