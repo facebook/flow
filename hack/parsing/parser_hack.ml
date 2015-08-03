@@ -7,8 +7,9 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  *)
-open Lexer_hack
 open Ast
+open Core
+open Lexer_hack
 
 module L = Lexer_hack
 
@@ -177,10 +178,10 @@ let rec check_modifiers env pos abstract final = function
   | _ :: rl -> check_modifiers env pos abstract final rl
 
 let check_visibility env pos l =
-  if List.exists begin function
+  if List.exists l begin function
     | Private | Public | Protected | Static -> true
     | _ -> false
-  end l
+  end
   then ()
   else error_at env pos
       "Parse error. You are missing public, private or protected."
@@ -212,7 +213,7 @@ let check_modifiers env pos l =
   ()
 
 let check_not_final env pos modifiers =
-  if List.exists (function Final -> true | _ -> false) modifiers
+  if List.exists modifiers (function Final -> true | _ -> false)
   then error_at env pos "class variable cannot be final";
   ()
 
@@ -233,7 +234,7 @@ let rec check_lvalue env = function
   | pos, Call ((_, Id (_, "tuple")), _, _) ->
       error_at env pos
         "Tuple cannot be used as an lvalue. Maybe you meant List?"
-  | _, List el -> List.iter (check_lvalue env) el
+  | _, List el -> List.iter el (check_lvalue env)
   | pos, (Array _ | Shape _ | Collection _
   | Null | True | False | Id _ | Clone _
   | Class_const _ | Call _ | Int _ | Float _
@@ -310,11 +311,11 @@ let get_priority =
   let ptable = Hashtbl.create 23 in
   (* Lowest priority = 0 *)
   let priority = ref 0 in
-  List.iter begin fun (assoc, tokl) ->
-    List.iter begin fun token ->
+  List.iter priorities begin fun (assoc, tokl) ->
+    List.iter tokl begin fun token ->
       (* Associates operator => (associativity, priority) *)
       Hashtbl.add ptable token (assoc, !priority)
-    end tokl;
+    end;
     (* This is a bit subtle:
      *
      * The difference in priority between 2 lines should be 2, not 1.
@@ -333,7 +334,7 @@ let get_priority =
      *                                 "+" sign.
      *)
     priority := !priority + 2
-  end priorities;
+  end;
   fun tok ->
     assert (Hashtbl.mem ptable tok);
     Hashtbl.find ptable tok
@@ -429,8 +430,7 @@ let rec program ?(elaborate_namespaces = true) file content =
   L.comment_list := [];
   L.fixmes := Utils.IMap.empty;
   Parser_heap.HH_FIXMES.add env.file fixmes;
-  if !(env.errors) <> []
-  then Errors.parsing_error (List.hd (List.rev !(env.errors)));
+  Option.iter (List.last !(env.errors)) Errors.parsing_error;
   let ast = if elaborate_namespaces
     then Namespaces.elaborate_defs ast
     else ast in
@@ -628,14 +628,14 @@ and toplevel_word ~attr env = function
       let consts = class_const_def env in
       (match consts with
       | Const (h, cstl) ->
-          List.map (fun (x, y) -> Constant {
+          List.map cstl begin fun (x, y) -> Constant {
             cst_mode = env.mode;
             cst_kind = Cst_const;
             cst_name = x;
             cst_type = h;
             cst_value = y;
             cst_namespace = Namespace_env.empty;
-          }) cstl
+          } end
       | _ -> assert false)
   | r when is_import r ->
       let pos = Pos.make env.file env.lb in
@@ -1024,11 +1024,12 @@ and hint_apply_or_access_remainder env id_list =
         begin match List.rev id_list with
           | [id] ->
               let params = class_hint_params env in
-              let id = List.hd id_list in
               fst id, Happly (id, params)
           | id1 :: id2 :: ids ->
               let pos1 = fst id1 in
-              let pos2 = List.fold_left (fun _acc (p, _) -> p) (fst id2) ids in
+              let pos2 = List.fold_left ids
+                ~init:(fst id2)
+                ~f:(fun _acc (p, _) -> p) in
               Pos.btw pos1 pos2, Haccess (id1, id2, ids)
           | [] ->
               error_expect env "identifier";
@@ -2897,7 +2898,7 @@ and collection_field_list_remain env =
 (*****************************************************************************)
 
 and is_import r =
-  List.mem r ["require"; "require_once"; "include"; "include_once"]
+  List.mem ["require"; "require_once"; "include"; "include_once"] r
 
 and expr_import r env start =
   let flavor = match r with

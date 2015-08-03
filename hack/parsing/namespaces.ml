@@ -9,6 +9,7 @@
  *)
 
 open Ast
+open Core
 open Namespace_env
 
 module SMap = Utils.SMap
@@ -73,7 +74,7 @@ let autoimport_funcs = [
 
 let autoimport_set =
   let autoimport_list = autoimport_classes @ autoimport_funcs in
-  List.fold_left (fun s e -> SSet.add e s) SSet.empty autoimport_list
+  List.fold_left autoimport_list ~init:SSet.empty ~f:(fun s e -> SSet.add e s)
 (* NOTE that the runtime is able to distinguish between class and
    function names when auto-importing *)
 let is_autoimport_name id = SSet.mem id autoimport_set
@@ -170,16 +171,17 @@ module ElaborateDefs = struct
         nsenv, program new_nsenv prog
       end
     | NamespaceUse l -> begin
-        let map = List.fold_left begin fun map (id1, id2) ->
-          SMap.add (snd id2) (snd id1) map
-        end nsenv.ns_uses l in
+        let map =
+          List.fold_left l ~init:nsenv.ns_uses ~f:begin fun map (id1, id2) ->
+            SMap.add (snd id2) (snd id1) map
+          end in
         {nsenv with ns_uses = map}, []
       end
     | Class c -> nsenv, [Class {c with
         c_name = elaborate_id_no_autos nsenv c.c_name;
-        c_extends = List.map (hint nsenv) c.c_extends;
-        c_implements = List.map (hint nsenv) c.c_implements;
-        c_body = List.map (class_def nsenv) c.c_body;
+        c_extends = List.map c.c_extends (hint nsenv);
+        c_implements = List.map c.c_implements (hint nsenv);
+        c_body = List.map c.c_body (class_def nsenv);
         c_namespace = nsenv;
       }]
     | Fun f -> nsenv, [Fun {f with
@@ -197,10 +199,11 @@ module ElaborateDefs = struct
     | other -> nsenv, [other]
 
   and program nsenv p =
-    let _, acc = List.fold_left begin fun (nsenv, acc) item ->
-      let nsenv, item = def nsenv item in
-      nsenv, item :: acc
-    end (nsenv, []) p in
+    let _, acc =
+      List.fold_left p ~init:(nsenv, []) ~f:begin fun (nsenv, acc) item ->
+        let nsenv, item = def nsenv item in
+        nsenv, item :: acc
+      end in
     List.concat (List.rev acc)
 end
 

@@ -8,6 +8,8 @@
  *
  *)
 
+open Core
+
 (*****************************************************************************)
 (* Dependencies *)
 (*****************************************************************************)
@@ -23,7 +25,7 @@ module AddDeps = struct
   module Dep = Typing_deps.Dep
   open Ast
 
-  let rec program defl = List.iter def defl
+  let rec program defl = List.iter defl def
 
   and def = function
     | Class c -> class_ c
@@ -32,9 +34,9 @@ module AddDeps = struct
 
   and class_ c =
     let name = snd c.c_name in
-    List.iter (hint name) c.c_extends;
-    List.iter (hint name) c.c_implements;
-    List.iter (class_def name) c.c_body
+    List.iter c.c_extends (hint name);
+    List.iter c.c_implements (hint name);
+    List.iter c.c_body (class_def name)
 
   and class_def root = function
     | ClassUse h -> hint root h
@@ -136,7 +138,7 @@ let parse_files acc fnl =
       !Utils.log msg;
       result)
     else parse in
-  List.fold_left parse acc fnl
+  List.fold_left fnl ~init:acc ~f:parse
 
 let parse_parallel workers get_next =
   MultiWorker.call

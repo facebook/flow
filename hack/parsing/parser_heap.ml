@@ -8,6 +8,8 @@
  *
  *)
 
+open Core
+
 (*****************************************************************************)
 (* Table containing all the HH_FIXMEs found in the source code.
  * Associates: filename => line_number, error_node_number map
@@ -55,8 +57,8 @@ let find_class_in_file file_name class_name =
   match ParserHeap.get file_name with
   | None -> None
   | Some defs ->
-      List.fold_left begin fun acc def ->
+      List.fold_left defs ~init:None ~f:begin fun acc def ->
         match def with
         | Ast.Class c when snd c.Ast.c_name = class_name -> Some c
         | _ -> acc
-      end None defs
+      end
