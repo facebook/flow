@@ -8,6 +8,7 @@
  *
  *)
 
+open Core
 open ServerEnv
 open Utils
 
@@ -17,7 +18,7 @@ module RP = Relative_path
 type result = string Lint.t list
 
 let output_json oc el =
-  let errors_json = List.map Lint.to_json el in
+  let errors_json = List.map el Lint.to_json in
   let res =
     Json.JAssoc [ "errors", Json.JList errors_json;
                   "version", Json.JString Build_id.build_id_ohai;
@@ -31,15 +32,15 @@ let output_text oc el =
   if el = []
   then output_string oc "No lint errors!\n"
   else begin
-    let sl = List.map Lint.to_string el in
-    List.iter begin fun s ->
+    let sl = List.map el Lint.to_string in
+    List.iter sl begin fun s ->
       Printf.fprintf oc "%s\n%!" s;
-    end sl
+    end
   end;
   flush oc
 
 let lint _acc fnl =
-  List.fold_left begin fun acc fn ->
+  List.fold_left fnl ~f:begin fun acc fn ->
     let errs, () =
       Lint.do_ begin fun () ->
         Errors.ignore_ begin fun () ->
@@ -47,25 +48,25 @@ let lint _acc fnl =
         end
       end in
     errs @ acc
-  end [] fnl
+  end ~init:[]
 
 let lint_all genv code =
   let root = ServerArgs.root genv.options in
   let next = compose
-    (rev_rev_map (RP.create RP.Root))
+    (List.map ~f:(RP.create RP.Root))
     (Find.make_next_files FindUtils.is_php root) in
   let errs = MultiWorker.call
     genv.workers
     ~job:(fun acc fnl ->
       let lint_errs = lint acc fnl in
-      List.filter (fun err -> Lint.get_code err = code) lint_errs)
+      List.filter lint_errs (fun err -> Lint.get_code err = code))
     ~merge:List.rev_append
     ~neutral:[]
     ~next in
-  rev_rev_map Lint.to_absolute errs
+  List.map errs Lint.to_absolute
 
 let go genv fnl =
-  let fnl = rev_rev_map (Relative_path.create Relative_path.Root) fnl in
+  let fnl = List.map fnl (Relative_path.create Relative_path.Root) in
   let errs =
     if List.length fnl > 10
     then
@@ -80,4 +81,4 @@ let go genv fnl =
   let errs = List.sort begin fun x y ->
     Pos.compare (Lint.get_pos x) (Lint.get_pos y)
   end errs in
-  rev_rev_map Lint.to_absolute errs
+  List.map errs Lint.to_absolute

@@ -8,8 +8,9 @@
  *
  *)
 
-open Utils
+open Core
 open Typing_defs
+open Utils
 
 module Phase = Typing_phase
 
@@ -73,7 +74,7 @@ let autocomplete_result_to_json res =
     match details with
      | Some fd -> Hh_json.JAssoc [ "min_arity", Hh_json.JInt fd.min_arity;
              "return_type", Hh_json.JString fd.return_ty;
-             "params", Hh_json.JList (List.map func_param_to_json fd.params);
+             "params", Hh_json.JList (List.map fd.params func_param_to_json);
            ]
      | None -> Hh_json.JNull
   in
@@ -214,7 +215,7 @@ let compute_complete_global funs classes =
   let gname = strip_suffix gname in
   let result_count = ref 0 in
   try
-    List.iter begin fun name ->
+    List.iter classes begin fun name ->
       if !result_count > 100 then raise Exit;
       if str_starts_with (strip_ns name) gname
       then match (Typing_env.Classes.get name) with
@@ -239,7 +240,7 @@ let compute_complete_global funs classes =
                   in
                   add_result_with_desc s (Phase.decl ty) desc)
         | _ -> ()
-    end classes;
+    end;
     if should_complete_fun completion_type
     then begin
       (* Disgusting hack alert!
@@ -271,7 +272,7 @@ let compute_complete_global funs classes =
             if String.contains_from gname start '\\'
             then None else Some (strip_all_ns gname)
       in
-      List.iter begin fun name ->
+      List.iter funs begin fun name ->
         if !result_count > 100 then raise Exit;
         let stripped_name = strip_ns name in
         let matches_gname = str_starts_with stripped_name gname in
@@ -288,7 +289,7 @@ let compute_complete_global funs classes =
             in
             add_result stripped_name (Phase.decl ty)
           | _ -> ()
-      end funs
+      end
     end
   with Exit -> ()
 
@@ -306,11 +307,11 @@ let process_fun_call fun_args used_args env =
          * happen on the way up because autocomplete pos needs to get set
          * before this is called *)
         let argument_index = ref (-1) in
-        List.iteri begin fun index arg ->
+        List.iteri used_args begin fun index arg ->
           if is_target pos arg then argument_index := index;
-        end used_args;
+        end;
         begin try
-          let _, arg_ty = List.nth fun_args !argument_index in
+          let _, arg_ty = List.nth_exn fun_args !argument_index in
           ac_type := Some arg_ty
         with
           | Failure _ ->
@@ -358,7 +359,7 @@ let get_results funs classes =
       let tcopt = TypecheckerOptions.permissive in
       Typing_env.empty tcopt Relative_path.default
   in
-  let results = List.map begin fun x ->
+  let results = List.map results begin fun x ->
     let env, ty = match x.ty with
       | DeclTy ty -> Phase.localize_with_self env ty
       | LoclTy ty -> env, ty
@@ -381,7 +382,7 @@ let get_results funs classes =
         Some {
           return_ty = Typing_print.full_strip_ns env ft.ft_ret;
           min_arity = arity_min ft.ft_arity;
-          params    = List.map param_to_record ft.ft_params @
+          params    = List.map ft.ft_params param_to_record @
             (match ft.ft_arity with
                | Fellipsis _ -> let empty = (None, (Reason.none, Tany)) in
                                 [param_to_record ~is_variadic:true empty]
@@ -399,7 +400,7 @@ let get_results funs classes =
       expected_ty  = expected_ty;
       func_details = func_details;
     }
-  end results in
+  end in
   List.sort result_compare results
 
 let reset () =

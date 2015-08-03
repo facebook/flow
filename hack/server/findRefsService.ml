@@ -8,6 +8,7 @@
  *
  *)
 
+open Core
 open Utils
 
 let process_fun_id results_acc target_fun id =
@@ -69,9 +70,9 @@ let find_child_classes target_class_name files_info files =
     (try
       let { FileInfo.classes; _ } =
         Relative_path.Map.find_unsafe fn files_info in
-      List.fold_left begin fun acc cid ->
-         check_if_extends_class target_class_name (snd cid) acc
-        end acc classes
+      List.fold_left classes ~init:acc ~f:begin fun acc cid ->
+        check_if_extends_class target_class_name (snd cid) acc
+      end
     with Not_found ->
       acc)
   end files SSet.empty
@@ -140,11 +141,11 @@ let get_definitions target_classes target_method =
         match Naming_heap.ClassHeap.get class_name with
         | Some class_ ->
             let methods = class_.Nast.c_methods @ class_.Nast.c_static_methods in
-            List.fold_left begin fun acc method_ ->
+            List.fold_left methods ~init:acc ~f:begin fun acc method_ ->
               let mid = method_.Nast.m_name in
               if (snd mid) = method_name then ((snd mid), (fst mid)) :: acc
               else acc
-            end acc methods
+            end
         | None -> acc
       end classes []
   | Some classes, None ->

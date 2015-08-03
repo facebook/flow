@@ -8,6 +8,7 @@
  *
  *)
 
+open Core
 open Utils
 
 type t = {
@@ -48,7 +49,7 @@ let config_user_attributes config =
     | None -> None
     | Some s ->
       let custom_attrs = Str.split config_list_regexp s in
-      Some (List.fold_right SSet.add custom_attrs SSet.empty)
+      Some (List.fold_right custom_attrs ~f:SSet.add ~init:SSet.empty)
 
 let load config_filename =
   let config = Config_file.parse (Relative_path.to_absolute config_filename) in

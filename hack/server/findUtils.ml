@@ -8,6 +8,8 @@
  *
  *)
 
+open Core
+
 (*****************************************************************************)
 (* The file extensions we are interested in *)
 (*****************************************************************************)
@@ -28,7 +30,7 @@ let is_dot_file path =
 
 let is_php path =
   not (is_dot_file path) &&
-  List.exists (Filename.check_suffix path) extensions &&
+  List.exists extensions (Filename.check_suffix path) &&
   not (is_directory path) &&
   not (FilesToIgnore.should_ignore path)
 

@@ -8,9 +8,11 @@
  *
  *)
 
+open Core
+
 type result =
   (Pos.absolute, HackSearchService.search_result_type) SearchUtils.term list
 
 let go query type_ =
   let results = HackSearchService.MasterApi.query query type_ in
-  List.map SearchUtils.to_absolute results
+  List.map results SearchUtils.to_absolute

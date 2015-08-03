@@ -8,6 +8,8 @@
  *
  *)
 
+open Core
+
 type result = {
   pos: string Pos.pos;
   type_: string;
@@ -30,7 +32,7 @@ let transform_map type_map =
 (* Find the best match type in the list sequentially *)
 let find_match_pos_in_list match_pos types_list =
   let find_result =
-    List.fold_left begin fun acc (pos, type_str) ->
+    List.fold_left types_list ~f:begin fun acc (pos, type_str) ->
       match acc with
       | Some (type_pos, _) ->
           (* There is already a match one see if this is better *)
@@ -44,7 +46,7 @@ let find_match_pos_in_list match_pos types_list =
             Some (pos, type_str)
           else
             None
-    end None types_list in
+    end ~init:None in
     match find_result with
     | Some (pos, value) -> value
     | None -> ""
@@ -58,7 +60,7 @@ let find_match_pos_in_list match_pos types_list =
 let generate_types lvar_map type_map =
   let line_map = transform_map type_map in
   let lvar_pos_list = Pos.Map.keys lvar_map in
-  List.rev_map begin fun lvar_pos ->
+  List.rev_map lvar_pos_list begin fun lvar_pos ->
     let key = SymbolUtils.get_key lvar_pos in
     let types_in_line = SymbolUtils.LineMap.get key line_map in
     let lvar_type = match types_in_line with
@@ -69,7 +71,7 @@ let generate_types lvar_map type_map =
       pos = SymbolUtils.pos_to_relative lvar_pos;
       type_ = lvar_type;
     }
-  end lvar_pos_list
+  end
 
 let process_symbol_type result_map type_ pos env =
   let type_str = Typing_print.strip_ns env type_ in

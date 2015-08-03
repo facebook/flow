@@ -7,6 +7,8 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  *)
+
+open Core
 open Utils
 
 (*****************************************************************************)
@@ -46,15 +48,15 @@ let declare path content =
       let {Parser_hack.file_mode; comments; ast} =
         Parser_hack.program path content
       in
-      let funs, classes = List.fold_left begin fun (funs, classes) def ->
+      let funs, classes = List.fold_left ast ~f:begin fun (funs, classes) def ->
         match def with
           | Ast.Fun f -> SSet.add (snd f.Ast.f_name) funs, classes
           | Ast.Class c -> funs, SSet.add (snd c.Ast.c_name) classes
           | _ -> funs, classes
-      end (SSet.empty, SSet.empty) ast in
+      end ~init:(SSet.empty, SSet.empty) in
       oldify_funs funs;
       oldify_classes classes;
-      List.iter begin fun def ->
+      List.iter ast begin fun def ->
         match def with
         | Ast.Fun f ->
             let tcopt = TypecheckerOptions.permissive in
@@ -72,7 +74,7 @@ let declare path content =
             Typing_decl.class_decl tcopt c;
             ()
         | _ -> ()
-      end ast;
+      end;
       !declared_funs, !declared_classes
     end
   with e ->
@@ -83,7 +85,7 @@ let fix_file_and_def path content = try
   Errors.ignore_ begin fun () ->
     let {Parser_hack.file_mode; comments; ast} =
       Parser_hack.program path content in
-    List.iter begin fun def ->
+    List.iter ast begin fun def ->
       match def with
       | Ast.Fun f ->
           let tcopt = TypecheckerOptions.permissive in
@@ -101,7 +103,7 @@ let fix_file_and_def path content = try
           let res = Typing.class_def tenv nenv (snd c.Nast.c_name) c in
           res
       | _ -> ()
-    end ast;
+    end;
   end
 with e ->
   report_error e;
@@ -109,9 +111,9 @@ with e ->
 
 let recheck nenv fileinfo_l =
   SharedMem.invalidate_caches();
-  List.iter begin fun defs ->
+  List.iter fileinfo_l begin fun defs ->
     ignore @@ Typing_check_utils.check_defs nenv defs
-  end fileinfo_l
+  end
 
 let check_file_input tcopt files_info fi =
   match fi with

@@ -8,9 +8,7 @@
  *
  *)
 
-
-(*****************************************************************************)
-(*****************************************************************************)
+open Core
 open Utils
 open ServerEnv
 
@@ -19,9 +17,9 @@ open ServerEnv
 (*****************************************************************************)
 
 let print_defs prefix defs =
-  List.iter begin fun (_, fname) ->
+  List.iter defs begin fun (_, fname) ->
     Printf.printf "  %s %s\n" prefix fname;
-  end defs
+  end
 
 let print_fast_pos fast_pos =
   SMap.iter begin fun x (funs, classes) ->
@@ -48,7 +46,7 @@ let print_fast fast =
 (*****************************************************************************)
 
 let set_of_idl l =
-  List.fold_left (fun acc (_, x) -> SSet.add x acc) SSet.empty l
+  List.fold_left l ~f:(fun acc (_, x) -> SSet.add x acc) ~init:SSet.empty
 
 (*****************************************************************************)
 (* We want add all the declarations that were present in a file *before* the

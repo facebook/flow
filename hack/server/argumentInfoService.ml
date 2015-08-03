@@ -8,6 +8,7 @@
  *
  *)
 
+open Core
 
 let argument_info_target = ref (-1, -1)
 let argument_info_result = ref None
@@ -18,14 +19,16 @@ let process_fun_call fun_args used_args env =
     start_line = line && start_col <= char_pos && char_pos - 1 <= end_col
   in
   if !argument_info_result = None then
-    List.iteri begin fun index arg ->
+    List.iteri used_args begin fun index arg ->
       if is_target !argument_info_target arg
       then begin
-        argument_info_result := Some (index, List.map begin fun (x,y) ->
-          x, Typing_print.full_strip_ns env y
-        end fun_args);
+        argument_info_result := Some begin
+          index, List.map fun_args begin fun (x,y) ->
+            x, Typing_print.full_strip_ns env y
+          end
+        end;
       end
-    end used_args
+    end
 
 let get_result () =
   !argument_info_result
@@ -39,7 +42,7 @@ let detach_hooks () =
   Typing_hooks.remove_all_hooks()
 
 let to_json (pos, expected) =
-  let expected = List.map begin fun (name, type_) ->
+  let expected = List.map expected begin fun (name, type_) ->
     let name = match name with
       | Some str1 -> Hh_json.JString str1
       | None -> Hh_json.JNull
@@ -47,7 +50,7 @@ let to_json (pos, expected) =
     Hh_json.JAssoc [ "name",  name;
                      "type",  Hh_json.JString type_;
                    ]
-  end expected in
+  end in
   [ "cursor_arg_index", Hh_json.JInt pos;
     "args",             Hh_json.JList expected;
   ]

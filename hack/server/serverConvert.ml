@@ -7,8 +7,10 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  *)
-open Utils
+
+open Core
 open Sys_utils
+open Utils
 
 (*****************************************************************************)
 (* Pretty prints a patch *)
@@ -47,9 +49,9 @@ let file_data = ref (Relative_path.Map.empty :
 
 let split_and_number content =
   let lines = split_lines content in
-  let (_, numbered_lines) = List.fold_left begin fun (n, acc) line ->
+  let (_, numbered_lines) = List.fold_left lines ~f:begin fun (n, acc) line ->
     n+1, (n, line)::acc
-  end (1, []) lines in
+  end ~init:(1, []) in
   List.rev numbered_lines
 
 let read_file_raw fn =
@@ -63,10 +65,10 @@ let read_file fn =
 
 let write_file fn numbered_lines =
   let buf = Buffer.create 256 in
-  List.iter begin fun (lnum, line) ->
+  List.iter numbered_lines begin fun (lnum, line) ->
     Buffer.add_string buf line;
     Buffer.add_char buf '\n'
-  end numbered_lines;
+  end;
   let abs_fn = Relative_path.to_absolute fn in
   let oc = open_out_no_fail abs_fn in
   output_string oc (Buffer.contents buf);
@@ -137,7 +139,7 @@ let rec search_and_insert indent type_ head = function
       Printf.printf
         "\n-%s\n+%s\n"
         line_content
-        (String.concat "\n" (List.map snd patched_lines));
+        (String.concat "\n" (List.map patched_lines snd));
       List.rev_append head (patched_lines @ rl)
   | x :: rl -> search_and_insert indent type_ (x :: head) rl
 
@@ -304,7 +306,7 @@ let apply_patches tried_patches (genv:ServerEnv.genv) env continue patches =
   let tenv = Typing_env.empty tcopt Relative_path.default in
   file_data := Relative_path.Map.empty;
   Relative_path.Map.iter begin fun fn patchl ->
-    List.iter begin fun (line, k, type_ as patch) ->
+    List.iter patchl begin fun (line, k, type_ as patch) ->
       if Hashtbl.mem tried_patches (fn, patch) then () else
       let go patch =
         let errors, new_env = apply_patch genv !env fn patch in
@@ -321,7 +323,7 @@ let apply_patches tried_patches (genv:ServerEnv.genv) env continue patches =
           go (add_return line type_string)
       | Typing_suggest.Kmember name ->
           go (add_member name line type_string)
-    end patchl
+    end
   end patches;
   ()
 

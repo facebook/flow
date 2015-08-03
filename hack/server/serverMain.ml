@@ -8,6 +8,7 @@
  *
  *)
 
+open Core
 open Sys_utils
 open ServerEnv
 open ServerUtils
@@ -140,9 +141,9 @@ module Program : SERVER_PROGRAM =
       let root = ServerArgs.root genv.options in
       let hhi_root = Hhi.get_hhi_root () in
       let next_files_hhi =
-        compose (rev_rev_map (RP.create RP.Hhi)) (make_next_files hhi_root) in
+        compose (List.map ~f:(RP.create RP.Hhi)) (make_next_files hhi_root) in
       let next_files_root =
-        compose (rev_rev_map (RP.create RP.Root)) (make_next_files root)
+        compose (List.map ~f:(RP.create RP.Root)) (make_next_files root)
       in
       let next_files = fun () ->
         match next_files_hhi () with
@@ -155,7 +156,7 @@ module Program : SERVER_PROGRAM =
     let run_once_and_exit genv env =
       ServerError.print_errorl
         (ServerArgs.json_mode genv.options)
-        (List.map Errors.to_absolute env.errorl) stdout;
+        (List.map env.errorl Errors.to_absolute) stdout;
       match ServerArgs.convert genv.options with
       | None ->
          exit (if env.errorl = [] then 0 else 1)

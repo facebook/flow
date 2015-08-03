@@ -8,6 +8,7 @@
  *
  *)
 
+open Core
 open Utils
 
 let checkpoints = ref SMap.empty
@@ -28,8 +29,8 @@ let retrieve_checkpoint x =
   | Some files ->
       Some(
         List.map
-          Relative_path.to_absolute
           (Relative_path.Set.elements files)
+          Relative_path.to_absolute
       )
   | None -> None
 

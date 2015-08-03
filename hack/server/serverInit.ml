@@ -8,6 +8,7 @@
  *
  *)
 
+open Core
 open ServerEnv
 
 (* Initialization of the server *)
@@ -62,9 +63,9 @@ let init_hack genv env get_next =
       [], Relative_path.Set.empty in
 
   let failed =
-    List.fold_right Relative_path.Set.union
-      [failed1; failed2; failed3; failed4; failed5]
-      Relative_path.Set.empty in
+    List.fold_right [failed1; failed2; failed3; failed4; failed5]
+      ~f:Relative_path.Set.union
+      ~init:Relative_path.Set.empty in
   let env = { env with files_info = files_info; nenv = nenv } in
 
   SharedMem.init_done();
@@ -79,8 +80,9 @@ let init_hack genv env get_next =
   Hh_logger.log "Hashtable load factor: %d / %d (%.02f)"
     used_slots slots load_factor;
 
-  let errorl = List.fold_right List.rev_append
-      [errorl1; errorl2; errorl3; errorl4; errorl5] [] in
+  let errorl = List.fold_right [errorl1; errorl2; errorl3; errorl4; errorl5]
+    ~f:List.rev_append
+    ~init:[] in
   env, errorl, failed
 
 (* entry point *)

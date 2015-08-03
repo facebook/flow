@@ -8,6 +8,7 @@
  *
  *)
 
+open Core
 open Utils
 
 type action =
@@ -21,7 +22,7 @@ let add_ns name =
   if name.[0] = '\\' then name else "\\" ^ name
 
 let strip_ns results =
-  List.map begin fun (s, p) -> ((Utils.strip_ns s), p) end results
+  List.map results (fun (s, p) -> ((Utils.strip_ns s), p))
 
 let search class_names method_name include_defs files genv env =
   (* Get all the references to the provided method name and classes in the files *)
@@ -68,5 +69,5 @@ let get_refs_with_defs action genv env =
 
 let go action genv env =
   let res = get_refs action false genv env in
-  let res = rev_rev_map (fun (r, pos) -> (r, Pos.to_absolute pos)) res in
+  let res = List.map res (fun (r, pos) -> (r, Pos.to_absolute pos)) in
   res

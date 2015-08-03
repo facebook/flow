@@ -8,6 +8,8 @@
  *
  *)
 
+open Core
+
 type patch =
   | Insert of insert_patch
   | Remove of Pos.absolute
@@ -34,12 +36,12 @@ let go action genv env =
         ServerFindRefs.Function old_name, new_name in
   
   let refs = ServerFindRefs.get_refs_with_defs find_refs_action genv env in
-  let changes = List.fold_left begin fun acc x ->
+  let changes = List.fold_left refs ~f:begin fun acc x ->
     let replacement = {
       pos  = Pos.to_absolute (snd x);
       text = new_name;
     } in
     let patch = Replace replacement in
     patch :: acc
-  end [] refs in
+  end ~init:[] in
   changes
