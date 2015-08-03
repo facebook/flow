@@ -466,7 +466,7 @@ and emit_expr env (pos, expr_ as expr) =
       emit_expr env last)
 
   | Int (_, n) -> emit_Int env (fmt_int n)
-  | Float (_, x) -> emit_Float env (fmt_float x)
+  | Float (_, x) -> emit_Double env (fmt_float x)
   | String (_, s) -> emit_String env s
   | String2 ([], s) -> emit_String env (unescape_str s)
   | Null -> emit_Null env

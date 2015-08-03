@@ -57,6 +57,13 @@ let lmember (base, mem) =
   | _ -> Lmember (base, [mem])
 
 (* *)
+(* php ints are *almost* ocaml ints, except octal is 0o in ocaml *)
+let parse_php_int s =
+  let is_octal =
+    String.length s > 1 && s.[0] = '0' && s.[1] <> 'x' && s.[1] <> 'b' in
+  if is_octal then Int64.of_string ("0o" ^ s) else Int64.of_string s
+
+(* *)
 let get_lid_name (_, id) = Ident.get_name id
 (* XXX: ocaml and php probably don't have exactly the same escaping rules *)
 let escape_str = String.escaped
@@ -66,8 +73,7 @@ let unescape_str = Scanf.unescaped
  * we need to *unescape* before passing the string to core emitting functions.
  * This is a little silly, but it keeps the interface consistent. *)
 let quote_str s = "\"" ^ escape_str s ^ "\""
-(* XXX: actually convert the int to decimal *)
-let fmt_int s = s
+let fmt_int s = Int64.to_string (parse_php_int s)
 (* XXX: what format conversions do we need to do? *)
 let fmt_float s = s
 let fmt_str_vec v = "<" ^ String.concat " " v ^ ">"
@@ -311,7 +317,7 @@ let emit_PopR =           emit_op0    "PopR"
 let emit_UnboxR =         emit_op0    "UnboxR"
 let emit_String =         emit_op1e   "String"
 let emit_Int =            emit_op1s   "Int"
-let emit_Float =          emit_op1s   "Float"
+let emit_Double =         emit_op1s   "Double"
 let emit_Null =           emit_op0    "Null"
 let emit_FPushFunc =      emit_op1i   "FPushFunc"
 let emit_FPushFuncD =     emit_op2ie  "FPushFuncD"
