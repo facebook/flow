@@ -13,6 +13,7 @@
 (* Code relative to the client/server communication *)
 (*****************************************************************************)
 
+open Core
 open DfindEnv
 open Utils
 
@@ -52,14 +53,14 @@ let (process_fsnotify_event:
   dirty
 
 let run_daemon roots (ic, oc) =
-  let roots = List.map Path.to_string roots in
+  let roots = List.map roots Path.to_string in
   let env = DfindEnv.make roots in
-  List.iter (DfindAddFile.path env) roots;
+  List.iter roots (DfindAddFile.path env);
   let acc = ref SSet.empty in
   let descr_in = Daemon.descr_of_in_channel ic in
   while true do
     let fsnotify_callback events =
-      acc := List.fold_left (process_fsnotify_event env) !acc events
+      acc := List.fold_left events ~f:(process_fsnotify_event env) ~init:!acc
     in
     let message_in_callback () =
       (* XXX can we just select() on the writability of the oc? *)

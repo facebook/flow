@@ -12,6 +12,7 @@
 (*****************************************************************************)
 (* Adds a new file or directory to the environment *)
 (*****************************************************************************)
+open Core
 open DfindEnv
 open DfindMaybe
 open Utils
@@ -76,7 +77,7 @@ module ISet = Set.Make (struct type t = int let compare = compare end)
 (* This used to be an environment variable, but it is too complicated
  * for now. Hardcoding! Yay!
 *)
-let blacklist = List.map Str.regexp [
+let blacklist = List.map ~f:Str.regexp [
   ".*/wiki/images/.*";
   ".*/\\.git";
   ".*/\\.svn";
@@ -85,11 +86,11 @@ let blacklist = List.map Str.regexp [
 
 let is_blacklisted path =
   try
-    List.iter begin fun re ->
+    List.iter blacklist begin fun re ->
       if Str.string_match re path 0
       then raise Exit
       else ()
-    end blacklist;
+    end;
     false
   with Exit -> true
 
