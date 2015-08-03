@@ -8,6 +8,7 @@
  *
  *)
 
+open Core
 open Utils
 
 (*****************************************************************************)
@@ -28,7 +29,7 @@ exception Format_error
 
 let debug () fnl =
   let modes = [Some FileInfo.Mstrict; Some FileInfo.Mpartial] in
-  List.fold_left begin fun () (filepath : Path.t) ->
+  List.iter fnl begin fun (filepath : Path.t) ->
     try
       let content = Sys_utils.cat (filepath :> string) in
 
@@ -108,12 +109,12 @@ let debug () fnl =
         Printf.eprintf "Format error: %s\n%!" (filepath :> string);
     | Exit ->
         ()
-  end () fnl
+  end
 
 let debug_directory dir =
   let path = Path.make dir in
   let next = compose
-    (rev_rev_map Path.make)
+    (List.map ~f:Path.make)
     (Find.make_next_files FindUtils.is_php path) in
   let workers = Worker.make GlobalConfig.nbr_procs GlobalConfig.gc_control in
   MultiWorker.call
@@ -197,7 +198,7 @@ let format_in_place modes (filepath : Path.t) =
   | Format_hack.Internal_error ->
       Some "Internal error\n"
   | Format_hack.Parsing_error errorl ->
-      Some (Errors.to_string (Errors.to_absolute (List.hd errorl)))
+      Some (Errors.to_string (Errors.to_absolute (List.hd_exn errorl)))
   | Format_hack.Disabled_mode ->
       None
 
@@ -206,16 +207,16 @@ let format_in_place modes (filepath : Path.t) =
 (*****************************************************************************)
 
 let job_in_place modes acc fnl =
-  List.fold_left begin fun acc filename ->
+  List.fold_left fnl ~f:begin fun acc filename ->
     match format_in_place modes filename with
     | None -> acc
     | Some err -> err :: acc
-  end acc fnl
+  end ~init:acc
 
 let directory modes dir =
   let path = Path.make dir in
   let next = compose
-    (rev_rev_map Path.make)
+    (List.map ~f:Path.make)
     (Find.make_next_files FindUtils.is_php path) in
   let workers = Worker.make GlobalConfig.nbr_procs GlobalConfig.gc_control in
   let messages =
@@ -226,7 +227,7 @@ let directory modes dir =
       ~merge:List.rev_append
       ~next
   in
-  List.iter (Printf.fprintf stderr "%s\n") messages
+  List.iter messages (Printf.eprintf "%s\n")
 
 (*****************************************************************************)
 (* Applies the formatter directly to a string. *)
@@ -241,7 +242,7 @@ let format_string modes file from to_ content =
       exit 2
   | Format_hack.Parsing_error error ->
       Printf.fprintf stderr "Parsing error\n%s\n%!"
-        (Errors.to_string (Errors.to_absolute (List.hd error)));
+        (Errors.to_string (Errors.to_absolute (List.hd_exn error)));
       exit 2
   | Format_hack.Disabled_mode ->
       exit 0
