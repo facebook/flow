@@ -263,6 +263,7 @@ and emit_call_lhs env (_, expr_ as expr) nargs =
   | Obj_get (obj, (_, Id (_, name)), null_flavor) ->
     let env = emit_method_base env obj in
     emit_FPushObjMethodD env nargs name (fmt_null_flavor null_flavor)
+
   | Class_const (cid, (_, field)) ->
     (match fmt_class_id env cid with
     | Some class_name -> emit_FPushClsMethodD env nargs field class_name
@@ -504,6 +505,14 @@ and emit_expr env (pos, expr_ as expr) =
   | Cast (h, e) ->
     let env = emit_expr env e in
     emit_cast env h
+
+  (* handle ::class; just emit the name if we have it,
+   * otherwise use NameA to get it *)
+  | Class_const (cid, (_, "class")) ->
+    (match fmt_class_id env cid with
+    | Some class_name -> emit_String env class_name
+    | None -> let env = emit_class_id env cid in
+              emit_NameA env)
 
   | Class_const (cid, (_, field)) ->
     (match fmt_class_id env cid with
