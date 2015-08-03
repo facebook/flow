@@ -268,13 +268,6 @@ let rec list_last f1 f2 =
     | [x] -> f2 x
     | x :: rl -> f1 x; list_last f1 f2 rl
 
-let rec uniq = function
-  | [] -> []
-  | [x] -> [x]
-  | x :: (y :: _ as l) when x = y -> uniq l
-  | x :: rl -> x :: uniq rl
-
-
 let is_prefix_dir dir fn =
   let prefix = dir ^ Filename.dir_sep in
   String.length fn > String.length prefix &&

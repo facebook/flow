@@ -42,7 +42,7 @@ let print_errorl use_json el oc =
     then output_string oc "No errors!\n"
     else
       let sl = List.map ~f:Errors.to_string el in
-      let sl = uniq (List.sort ~cmp:String.compare sl) in
+      let sl = List.dedup ~compare:String.compare sl in
       List.iter ~f:begin fun s ->
         if !debug then begin
           output_string stdout s;

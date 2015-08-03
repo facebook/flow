@@ -1505,7 +1505,7 @@ and uselist_lambda f =
   let lenv = { lenv with unbound_mode = UBMFunc handle_unbound } in
   let env = genv, lenv in
   ignore (expr_lambda env f);
-  uniq !to_capture
+  List.dedup !to_capture
 
 and fun_ nenv f =
   let tparams = make_constraints f.f_tparams in

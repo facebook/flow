@@ -274,7 +274,7 @@ let print_errorl use_json el oc =
     then output_string oc "No errors!\n"
     else
       let sl = List.map to_string el in
-      let sl = Utils.uniq (List.sort String.compare sl) in
+      let sl = Utils_js.uniq (List.sort String.compare sl) in
       List.iter begin fun s ->
         if !Utils.debug then begin
           output_string stdout s;
