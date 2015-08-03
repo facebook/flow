@@ -8,6 +8,8 @@
  *
  *)
 
+open Core
+
 module Make(S : SearchUtils.Searchable) = struct
   module Fuzzy = FuzzySearchService.Make(S)
   module Trie = TrieSearchService.Make(S)
@@ -52,7 +54,7 @@ module Make(S : SearchUtils.Searchable) = struct
 
     let query input type_ =
       let is_fuzzy_indexed = match type_ with
-        | Some ty -> List.mem ty S.fuzzy_types
+        | Some ty -> List.mem S.fuzzy_types ty
         | None -> true
       in
       let trie_results = match type_, is_fuzzy_indexed with
@@ -65,10 +67,10 @@ module Make(S : SearchUtils.Searchable) = struct
         | None, _ -> Fuzzy.query input type_
         | _ -> []
       in
-      let res = List.merge begin fun a b ->
+      let res = List.merge fuzzy_results trie_results ~cmp:begin fun a b ->
         (snd a) - (snd b)
-      end fuzzy_results trie_results in
+      end in
       let res = Utils.cut_after 50 res in
-      List.map fst res
+      List.map res fst
   end
 end

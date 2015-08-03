@@ -8,6 +8,7 @@
  *
  *)
 
+open Core
 open Utils
 
 module Make(S : SearchUtils.Searchable) = struct
@@ -65,10 +66,10 @@ module Make(S : SearchUtils.Searchable) = struct
 
     let update fn trie_defs =
       SearchUpdates.add fn trie_defs;
-      let trie_keys = List.fold_left begin fun acc def ->
+      let trie_keys = List.fold_left trie_defs ~f:begin fun acc def ->
         let key = simplify_key (fst def) in
         SSet.add key acc
-      end SSet.empty trie_defs in
+      end ~init:SSet.empty in
       let trie_keys = SSet.elements trie_keys in
       SearchKeys.add fn trie_keys
   end
@@ -128,11 +129,11 @@ module Make(S : SearchUtils.Searchable) = struct
      *  (so we can remove them from the trie) *)
     let remove_fn fn key empty_keys =
       let current_val = lookup key in
-      let new_val = List.fold_left begin fun acc file ->
+      let new_val = List.fold_left current_val ~f:begin fun acc file ->
         if file= fn
         then acc
         else (file :: acc)
-      end [] current_val in
+      end ~init:[] in
       replace key new_val;
       if new_val == [] then SSet.add key empty_keys else empty_keys
 
@@ -147,12 +148,12 @@ module Make(S : SearchUtils.Searchable) = struct
         with Not_found -> [] (* This shouldn't actually happen *)
       in
       (* Compute diff between old and new keys for this file*)
-      let old_keys_set = List.fold_left begin fun acc file ->
+      let old_keys_set = List.fold_left old_keys ~f:begin fun acc file ->
         SSet.add file acc
-      end SSet.empty old_keys in
-      let new_keys_set = List.fold_left begin fun acc file ->
+      end ~init:SSet.empty in
+      let new_keys_set = List.fold_left new_keys ~f:begin fun acc file ->
         SSet.add file acc
-      end SSet.empty new_keys in
+      end ~init:SSet.empty in
       let to_add = SSet.diff new_keys_set old_keys_set in
       let to_remove = SSet.diff old_keys_set new_keys_set in
 
@@ -192,12 +193,12 @@ module Make(S : SearchUtils.Searchable) = struct
         with Not_found -> []
       in
       (* Get set of filenames that contain results for those keys *)
-      let files = List.fold_left begin fun acc key ->
+      let files = List.fold_left keys ~f:begin fun acc key ->
         let filenames = Hashtbl.find !main_index key in
-        List.fold_left begin fun acc fn ->
+        List.fold_left filenames ~f:begin fun acc fn ->
           Relative_path.Set.add fn acc
-        end acc filenames
-      end Relative_path.Set.empty keys in
+        end ~init:acc
+      end ~init:Relative_path.Set.empty in
       let results = ref [] in
       (* for every file, look in shared memory for all the results the file
        * contains. anything where the key starts with the full search
@@ -207,7 +208,7 @@ module Make(S : SearchUtils.Searchable) = struct
           try SearchUpdates.find_unsafe fn
           with Not_found -> []
         in
-        List.iter begin fun (key, res) ->
+        List.iter defs begin fun (key, res) ->
           (* Now we're comparing results in shared memory. These keys
            * have not been simplified, so we check if they start with
            * the full search term *)
@@ -218,7 +219,7 @@ module Make(S : SearchUtils.Searchable) = struct
               else (String.length key) * 2
             in
             results := (res, score) :: !results
-        end defs
+        end
       end files;
       let res = List.sort begin fun a b ->
         (snd a) - (snd b)

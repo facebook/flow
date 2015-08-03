@@ -8,6 +8,7 @@
  *
  *)
 
+open Core
 open Utils
 
 module Make(S : SearchUtils.Searchable) = struct
@@ -289,9 +290,9 @@ let update fn fuzzy_defs =
   SearchKeyToTermMap.add fn fuzzy_defs;
   let fuzzy_keys = TMap.fold begin fun key value acc ->
     let terms_for_key = SMap.keys value in
-    let terms_for_key = List.fold_left begin fun acc x ->
+    let terms_for_key = List.fold_left terms_for_key ~f:begin fun acc x ->
       SSet.add x acc
-    end SSet.empty terms_for_key in
+    end ~init:SSet.empty in
     TMap.add key terms_for_key acc
   end fuzzy_defs TMap.empty in
   SearchKeys.add fn fuzzy_keys
@@ -300,9 +301,9 @@ let update fn fuzzy_defs =
 let index_files files =
   if TMap.is_empty !term_indexes
   then begin
-    term_indexes := List.fold_left begin fun acc x ->
+    term_indexes := List.fold_left all_types ~f:begin fun acc x ->
       TMap.add x (Hashtbl.create 30) acc
-    end TMap.empty all_types
+    end ~init:TMap.empty
   end;
   Relative_path.Set.iter begin fun file ->
     let new_terms = try SearchKeys.find_unsafe file
@@ -343,7 +344,7 @@ let get_terms needle type_ =
       with Not_found -> []
     end
     | None -> begin
-      List.fold_left begin fun acc type_ ->
+      List.fold_left all_types ~f:begin fun acc type_ ->
         let letter_val = get_index_for_type type_ in
         try
           let hset = Hashtbl.find letter_val key in
@@ -351,7 +352,7 @@ let get_terms needle type_ =
             (term, type_) :: acc
           end hset acc
         with Not_found -> acc
-      end [] all_types
+      end ~init:[]
     end
   with Invalid_argument _ -> [] (* Catches if the query is an empty string *)
 
@@ -359,7 +360,7 @@ let get_terms needle type_ =
  * i.e. use the previously built `term_lookup` table so we can return
  * `term` objects instead of just relevant strings *)
 let get_terms_from_string_and_type strings =
-  List.fold_left begin fun acc ((str, type_), score) ->
+  List.fold_left strings ~f:begin fun acc ((str, type_), score) ->
     let files =
       try Hashtbl.find !term_lookup str
       with Not_found -> Relative_path.Set.empty
@@ -376,17 +377,17 @@ let get_terms_from_string_and_type strings =
         in
 
         let term_list = SMap.find_unsafe str term_map in
-        List.fold_left begin fun acc term ->
+        List.fold_left term_list ~f:begin fun acc term ->
           (term, score) :: acc
-        end acc term_list
+        end ~init:acc
       with Not_found -> acc
     end files acc
-  end [] strings
+  end ~init:[]
 
 let query needle type_ =
   let needle = strip_special_characters needle in
   let terms = get_terms needle type_ in
-  let terms = List.fold_left begin fun acc (term, type_) ->
+  let terms = List.fold_left terms ~f:begin fun acc (term, type_) ->
     if check_if_matches_uppercase_chars needle term then
       ((term, type_), 0) :: acc
     else
@@ -408,7 +409,7 @@ let query needle type_ =
           ((term, type_), (snd cs)) :: acc
         else
           acc
-  end [] terms in
+  end ~init:[] in
   let terms = List.sort begin fun a b ->
     (snd a) - (snd b)
   end terms in
