@@ -177,7 +177,7 @@ let rec debug stack env (r, ty) =
   (match r with Reason.Rlost_info _ -> o "~lost" | _ -> ());
   match ty with
   | Tunresolved tyl -> o "intersect("; debugl stack env tyl; o ")"
-  | Ttuple _ -> o "tuple"
+  | Ttuple tyl -> o "tuple("; debugl stack env tyl; o ")"
   | Tarray (None, None) -> o "array"
   | Tarray (Some x, None) -> o "array<"; debug stack env x; o ">"
   | Tarray (Some x, Some y) -> o "array<"; debug stack env x; o ", ";
@@ -247,7 +247,7 @@ let rec debug stack env (r, ty) =
       end;
       o ">(";
       ShapeMap.iter begin fun k v ->
-        o (get_shape_field_name k); o " => "; debug stack env v
+        o (get_shape_field_name k); o " => "; debug stack env v; o ", ";
       end fdm;
       o ")"
 
