@@ -13,10 +13,10 @@
 open Utils
 
 let unimpl s =
-  Printf.eprintf "UNIMPLEMENTED: %s\n" s; assert false
-(* anything that trips this should have passed the typechecker, I think. *)
+  Printf.eprintf "UNIMPLEMENTED: %s\n" s; exit 1
+(* anything that trips this shouldn't have passed the typechecker, I think. *)
 let bug s =
-  Printf.eprintf "BUG: %s\n" s; assert false
+  Printf.eprintf "BUG: %s\n" s; exit 1
 
 (*** Types associated with translation ***)
 

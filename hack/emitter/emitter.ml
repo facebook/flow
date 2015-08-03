@@ -341,8 +341,10 @@ let emit_main env ~is_test classes =
   emit_str env ""
 
 let emit_file ~is_test nenv filename
-    {FileInfo.file_mode; funs; classes; _} =
+    {FileInfo.file_mode; funs; classes; typedefs; consts; _} =
   assert (file_mode = Some FileInfo.Mstrict);
+  if typedefs <> [] then unimpl "typedefs";
+  if consts <> [] then unimpl "global consts";
 
   let env = new_env () in
 
