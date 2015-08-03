@@ -8,6 +8,8 @@
  *
  *)
 
+open Core
+
 let log_oc = ref None
 
 let init pids_file =

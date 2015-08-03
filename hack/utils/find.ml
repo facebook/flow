@@ -16,11 +16,13 @@
  * to find the list of files to analyze.
  *)
 
+open Core
+
 let escape_spaces = Str.global_replace (Str.regexp " ") "\\ "
 
 let paths_to_path_string paths =
-  let stringed_paths = List.map Path.to_string paths in
-  let escaped_paths =  List.map escape_spaces stringed_paths in
+  let stringed_paths = List.map paths Path.to_string in
+  let escaped_paths =  List.map stringed_paths escape_spaces in
   String.concat " " escaped_paths
 
 let find_with_name paths pattern =

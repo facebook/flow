@@ -8,6 +8,8 @@
  *
  *)
 
+open Core
+
 let () = Random.self_init ()
 let debug = ref false
 let profile = ref false
@@ -185,12 +187,12 @@ let imap_union m1 m2 = IMap.fold IMap.add m1 m2
 let smap_inter_list = function
   | [] -> SMap.empty
   | x :: rl ->
-      List.fold_left smap_inter x rl
+      List.fold_left rl ~f:smap_inter ~init:x
 
 let imap_inter_list = function
   | [] -> IMap.empty
   | x :: rl ->
-      List.fold_left imap_inter x rl
+      List.fold_left rl ~f:imap_inter ~init:x
 
 (* This is a significant misnomer... you may want fold_left_env instead. *)
 let lfold = lmap
@@ -241,7 +243,7 @@ let safe_ios p s =
   with _ -> None
 
 let sl l =
-  List.fold_right (^) l ""
+  List.fold_right l ~f:(^) ~init:""
 
 let soi = string_of_int
 
@@ -257,12 +259,12 @@ let unsafe_opt_note note = function
 
 let unsafe_opt x = unsafe_opt_note "unsafe_opt got None" x
 
-let liter f env l = List.iter (f env) l
+let liter f env l = List.iter l (f env)
 
 let inter_list = function
   | [] -> SSet.empty
   | x :: rl ->
-      List.fold_left SSet.inter x rl
+      List.fold_left rl ~f:SSet.inter ~init:x
 
 let rec list_last f1 f2 =
   function
@@ -303,8 +305,8 @@ let iter_n_acc n f acc =
   done;
   !acc
 
-let set_of_list list =
-  List.fold_right SSet.add list SSet.empty
+let set_of_list l =
+  List.fold_right l ~f:SSet.add ~init:SSet.empty
 
 (* \A\B\C -> A\B\C *)
 let strip_ns s =
@@ -362,7 +364,7 @@ let rec iter2_shortest f l1 l2 =
 let rev_rev_map f l = List.rev (List.rev_map f l)
 
 let fold_fun_list acc fl =
-  List.fold_left (|>) acc fl
+  List.fold_left fl ~f:(|>) ~init:acc
 
 let compose f g x = f (g x)
 

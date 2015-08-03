@@ -8,8 +8,9 @@
  *
  *)
 
-open Utils
+open Core
 open Sys_utils
+open Utils
 
 type t = string SMap.t
 
@@ -21,7 +22,7 @@ type t = string SMap.t
 let parse fn =
   let contents = cat fn in
   let lines = Str.split (Str.regexp "\n") contents in
-  List.fold_left (fun acc line ->
+  List.fold_left lines ~f:begin fun acc line ->
     if String.trim line = "" || (String.length line > 0 && line.[0] = '#')
     then acc
     else
@@ -29,4 +30,4 @@ let parse fn =
       match parts with
       | [k; v] -> SMap.add (String.trim k) (String.trim v) acc
       | _ -> raise (Failure ("failed to parse config file "^fn));
-  ) SMap.empty lines
+  end ~init:SMap.empty

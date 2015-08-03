@@ -8,6 +8,8 @@
  *
  *)
 
+open Core
+
 external realpath: string -> string option = "hh_realpath"
 
 let open_in_no_fail fn =
@@ -158,11 +160,11 @@ let executable_path : unit -> string =
       try Str.split (Str.regexp_string ":") (Sys.getenv "PATH")
       with _ -> failwith "Unable to determine executable path"
     in
-    let path = List.fold_left (fun acc p ->
+    let path = List.fold_left paths ~f:begin fun acc p ->
       match acc with
       | Some _ -> acc
       | None -> realpath (expanduser (Filename.concat p path))
-    ) None paths
+    end ~init:None
     in
     match path with
     | Some path -> path

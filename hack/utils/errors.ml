@@ -8,6 +8,7 @@
  *
  *)
 
+open Core
 open Utils
 
 (*****************************************************************************)
@@ -47,7 +48,7 @@ let add code pos msg =
   add_error (code, [pos, msg])
 
 let add_list code pos_msg_l =
-  let pos = fst (List.hd pos_msg_l) in
+  let pos = fst (List.hd_exn pos_msg_l) in
   if !is_hh_fixme pos code then () else
   add_error (code, pos_msg_l)
 
@@ -56,7 +57,7 @@ let add_list code pos_msg_l =
 (*****************************************************************************)
 
 let get_code (error: 'a error_) = ((fst error): error_code)
-let get_pos (error : error) = fst (List.hd (snd error))
+let get_pos (error : error) = fst (List.hd_exn (snd error))
 let to_list (error : 'a error_) = snd error
 
 let make_error code (x: (Pos.t * string) list) = ((code, x): error)
@@ -913,7 +914,7 @@ let typedef_trail_entry pos =
   pos, "Typedef definition comes from here"
 
 let add_with_trail code errs trail =
-  add_list code (errs @ List.map typedef_trail_entry trail)
+  add_list code (errs @ List.map trail typedef_trail_entry)
 
 let enum_constant_type_bad pos ty_pos ty trail =
   add_with_trail Typing.enum_constant_type_bad
@@ -1581,7 +1582,7 @@ let declared_contravariant pos1 pos2 emsg =
  )
 
 let cyclic_typeconst pos sl =
-  let sl = List.map strip_ns sl in
+  let sl = List.map sl strip_ns in
   add Typing.cyclic_typeconst pos
     ("Cyclic type constant:\n  "^String.concat " -> " sl)
 
@@ -1659,8 +1660,8 @@ let generic_at_runtime p =
 
 let trivial_strict_eq p b left right left_trail right_trail =
   let msg = "This expression is always "^b in
-  let left_trail = List.map typedef_trail_entry left_trail in
-  let right_trail = List.map typedef_trail_entry right_trail in
+  let left_trail = List.map left_trail typedef_trail_entry in
+  let right_trail = List.map right_trail typedef_trail_entry in
   add_list Typing.trivial_strict_eq
     ((p, msg) :: left @ left_trail @ right @ right_trail)
 
@@ -1719,14 +1720,14 @@ let local_variable_modified_and_used pos_modified pos_used_l =
   add_list Typing.local_variable_modifed_and_used
            ((pos_modified, "Unsequenced modification and access to local \
                             variable. Modified here") ::
-            List.map used_msg pos_used_l)
+            List.map pos_used_l used_msg)
 
 let local_variable_modified_twice pos_modified pos_modified_l =
   let modified_msg p = p, "And also modified here" in
   add_list Typing.local_variable_modifed_twice
            ((pos_modified, "Unsequenced modifications to local variable. \
                             Modified here") ::
-            List.map modified_msg pos_modified_l)
+            List.map pos_modified_l modified_msg)
 
 let assign_during_case p =
   add Typing.assign_during_case p
@@ -1740,7 +1741,7 @@ let cyclic_enum_constraint pos =
 (*****************************************************************************)
 
 let to_absolute (code, msg_l) =
-  let msg_l = List.map (fun (p, s) -> Pos.to_absolute p, s) msg_l in
+  let msg_l = List.map msg_l (fun (p, s) -> Pos.to_absolute p, s) in
   code, msg_l
 
 (*****************************************************************************)
@@ -1748,17 +1749,16 @@ let to_absolute (code, msg_l) =
 (*****************************************************************************)
 
 let to_json ((error_code, msgl) : Pos.absolute error_) = Hh_json.(
-  let elts = List.map (fun (p, w) ->
-                        let line, scol, ecol = Pos.info_pos p in
-                        JAssoc [ "descr", JString w;
-                                 "path",  JString p.Pos.pos_file;
-                                 "line",  JInt line;
-                                 "start", JInt scol;
-                                 "end",   JInt ecol;
-                                 "code",  JInt error_code
-                               ]
-                      ) msgl
-  in
+  let elts = List.map msgl begin fun (p, w) ->
+    let line, scol, ecol = Pos.info_pos p in
+    JAssoc [ "descr", JString w;
+             "path",  JString p.Pos.pos_file;
+             "line",  JInt line;
+             "start", JInt scol;
+             "end",   JInt ecol;
+             "code",  JInt error_code
+           ]
+  end in
   JAssoc [ "message", JList elts ]
 )
 
@@ -1772,10 +1772,10 @@ let to_string ((error_code, msgl) : Pos.absolute error_) : string =
         Printf.sprintf "%s\n%s (%s)\n"
           (Pos.string pos1) msg1 error_code
       end;
-      List.iter begin fun (p, w) ->
+      List.iter rest_of_error begin fun (p, w) ->
         let msg = Printf.sprintf "%s\n%s\n" (Pos.string p) w in
         Buffer.add_string buf msg
-      end rest_of_error
+      end
   );
   Buffer.contents buf
 
