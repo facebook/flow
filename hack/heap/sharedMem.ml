@@ -8,6 +8,7 @@
  *
  *)
 
+open Core
 open Utils
 
 type config = {
@@ -573,7 +574,7 @@ end
 
 let invalidate_callback_list = ref []
 let invalidate_caches () =
-  List.iter begin fun callback -> callback() end !invalidate_callback_list
+  List.iter !invalidate_callback_list begin fun callback -> callback() end
 
 (*****************************************************************************)
 (* A functor returning an implementation of the S module with caching.
