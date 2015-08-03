@@ -1469,6 +1469,8 @@ let rec type_printer override fallback enclosure cx t =
         then type_s
         else "=" ^ type_s
 
+    | AnnotT (_, t) -> pp EnclosureNone cx t
+
     (* The following types are not syntax-supported *)
     | ClassT t ->
         spf "[class: %s]" (pp EnclosureNone cx t)
@@ -1507,7 +1509,9 @@ let string_of_t_ =
     | NullT _ -> Some (desc_of_reason (reason_of_t t))
     | _ -> None
   in
-  let fallback t = assert_false (string_of_ctor t) in
+  let fallback t =
+    assert_false (spf "Missing printer for %s" (string_of_ctor t))
+  in
   fun enclosure cx t ->
     type_printer override fallback enclosure cx t
 

@@ -661,7 +661,12 @@ and ground_type_impl cx ids t = match t with
   | DiffT (t1, t2) ->
       DiffT (ground_type_impl cx ids t1, ground_type_impl cx ids t2)
 
-  | _ -> assert false (** TODO **)
+  | AnnotT (t1, t2) ->
+      AnnotT (ground_type_impl cx ids t1, ground_type_impl cx ids t2)
+
+  | _ ->
+    (** TODO **)
+    failwith (spf "Unsupported type in ground_type_impl: %s" (string_of_ctor t))
 
 and lookup_type_ cx ids id =
   if ISet.mem id ids then assert false
