@@ -101,9 +101,9 @@ let emit_method_or_func env ~is_method ~is_static m name =
   let env = emit_exit env in
   env
 
-let emit_method_ env ~is_static m name =
-  emit_method_or_func env ~is_method:true ~is_static m name
-let emit_method env ~is_static m = emit_method_ ~is_static env m (snd m.m_name)
+let emit_method env ~is_static m =
+  emit_method_or_func env ~is_method:true ~is_static
+    m (snd m.m_name)
 
 let emit_fun nenv env (_, x) =
   let f = Naming_heap.FunHeap.find_unsafe x in
@@ -303,9 +303,8 @@ let emit_class nenv env (_, x) =
 
   (* Now for 86* stuff *)
   let env = match cls.c_constructor with
-            | None -> emit_default_ctor env "86ctor"
-                                        (cls.c_kind = Ast.Cinterface)
-            | Some m -> emit_method_ ~is_static:false env m "86ctor" in
+            | None -> emit_str env ".default_ctor;"
+            | Some m -> emit_method ~is_static:false env m in
 
   let env = emit_prop_init env ~is_static:false uninit_vars in
   let env = emit_prop_init env ~is_static:true uninit_svars in
