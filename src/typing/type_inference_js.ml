@@ -1597,9 +1597,14 @@ and statement cx = Ast.Statement.(
          expression's type T to Promise<T> *)
       let t = if Env_js.in_async_scope ()
         then
+          (* Unwrap and wrap t with a Promise by returning whatever
+             Promise.resolve(t) returns. *)
           let reason = mk_reason "async return" loc in
-          let promise = Env_js.get_var ~for_type:true cx "Promise" reason in
-          TypeAppT (promise, [t])
+          let promise = Env_js.get_var cx "Promise" reason in
+          Flow_js.mk_tvar_where cx reason (fun tvar ->
+            let call = Flow_js.mk_methodtype promise [t] tvar in
+            Flow_js.flow cx (promise, MethodT (reason, "resolve", call))
+          )
         else t
       in
       Flow_js.flow cx (t, ret);
@@ -3527,6 +3532,9 @@ and unary cx loc = Ast.Expression.Unary.(function
       BoolT.at loc
 
   | { operator = Await; argument; _ } ->
+    (** TODO: await should look up Promise in the environment instead of going
+        directly to the core definition. Otherwise, the following won't work
+        with a polyfilled Promise! **)
     (* see declaration of $await in core.js:
        if argument is a Promise<T>, then (await argument) returns T.
        otherwise it just returns the argument type.
