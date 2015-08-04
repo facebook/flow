@@ -58,6 +58,18 @@ let lmember (base, mem) =
   | _ -> Lmember (base, [mem])
 
 (* *)
+(* not all of the header kinds are collections, but the typechecker
+ * won't pass bogus ones *)
+let get_collection_id s =
+  match SMap.get (strip_ns s) Emitter_consts.header_kind_values with
+    | Some i -> i
+    | None -> bug "invalid collection name"
+let get_aliased_name k = match SMap.get k Emitter_consts.aliases with
+  | Some v  -> v
+  | None -> k
+
+
+(* *)
 (* php ints are *almost* ocaml ints, except octal is 0o in ocaml *)
 let parse_php_int s =
   let is_octal =
@@ -65,6 +77,7 @@ let parse_php_int s =
   if is_octal then Int64.of_string ("0o" ^ s) else Int64.of_string s
 
 (* *)
+let fmt_name s = get_aliased_name (strip_ns s)
 let get_lid_name (_, id) = Ident.get_name id
 (* XXX: ocaml and php probably don't have exactly the same escaping rules *)
 let escape_str = String.escaped

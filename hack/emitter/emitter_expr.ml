@@ -25,7 +25,7 @@ let fmt_class_id env cid =
   match cid with
   | CIparent -> env.parent_name
   | CIself -> env.self_name
-  | CI (_, s) -> Some (strip_ns s)
+  | CI (_, s) -> Some (fmt_name s)
   | CIstatic | CIvar _ -> None
 
 (* Emit a conditional branch based on an expression. jump_if indicates
@@ -260,7 +260,7 @@ and emit_assignment env obop e1 e2 =
 and emit_call_lhs env (_, expr_ as expr) nargs =
   match expr_ with
   | Id (_, name)
-  | Fun_id (_, name) -> emit_FPushFuncD env nargs (strip_ns name)
+  | Fun_id (_, name) -> emit_FPushFuncD env nargs (fmt_name name)
   | Obj_get (obj, (_, Id (_, name)), null_flavor) ->
     let env = emit_method_base env obj in
     emit_FPushObjMethodD env nargs name (fmt_null_flavor null_flavor)
@@ -284,7 +284,7 @@ and emit_method_base env (_, expr_ as expr) =
 
 and emit_ctor_lhs env class_id nargs =
   match class_id with
-  | CI (_, name) -> emit_FPushCtorD env nargs (strip_ns name)
+  | CI (_, name) -> emit_FPushCtorD env nargs (fmt_name name)
   | _ -> unimpl "unsupported constructor lhs"
 
 (* emit code to push args and call a function after the thing being
@@ -581,7 +581,7 @@ and emit_expr env (pos, expr_ as expr) =
 
   (* TODO: use ColFromArray when possible *)
   | ValCollection (col, es) ->
-    let col_id = Emitter_consts.get_collection_id (strip_ns col) in
+    let col_id = get_collection_id col in
     let env = emit_NewCol env col_id in
     let emit_entry env e =
         let env = emit_expr env e in
@@ -589,7 +589,7 @@ and emit_expr env (pos, expr_ as expr) =
     in
     List.fold_left ~f:emit_entry ~init:env es
   | KeyValCollection (col, fields) ->
-    let col_id = Emitter_consts.get_collection_id (strip_ns col) in
+    let col_id = get_collection_id col in
     let env = emit_NewCol env col_id in
     let emit_field env (ek, ev) =
         let env = emit_expr env ek in

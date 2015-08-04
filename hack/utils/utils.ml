@@ -294,6 +294,9 @@ let iter_n_acc n f acc =
   done;
   !acc
 
+let map_of_list list =
+  List.fold_left ~f:(fun m (k, v) -> SMap.add k v m) ~init:SMap.empty list
+
 let set_of_list l =
   List.fold_right l ~f:SSet.add ~init:SSet.empty
 

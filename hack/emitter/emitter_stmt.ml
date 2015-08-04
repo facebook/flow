@@ -226,7 +226,7 @@ and emit_stmt env stmt =
     let catches = List.zip_exn catch_labels catches in
 
     let fmt_catch_hdr (label, ((_, cls), _, _)) =
-      "(" ^ strip_ns cls ^ " " ^ label ^ ")" in
+      "(" ^ fmt_name cls ^ " " ^ label ^ ")" in
     let catch_hdrs = String.concat " " (List.rev_map catches fmt_catch_hdr) in
 
     (* If we have a finally, generate a finally label

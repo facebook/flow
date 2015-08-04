@@ -26,8 +26,86 @@ let header_kinds = [
 let header_kind_values = List.foldi
   ~f:(fun i m kind -> SMap.add kind i m) ~init:SMap.empty header_kinds
 
-(* not all of the header kinds are collections, but type typechecker
- * won't pass bogus ones *)
-let get_collection_id s = match SMap.get s header_kind_values with
-  | Some i -> i
-  | None -> Emitter_core.bug "invalid collection name"
+(* HHVM has a lot of automatic aliases for types, functions, and classes.
+ * Most are just automatically pulling things in from HH. *)
+(* XXX: this is expedient but we will need to do something better to
+ * keep this synced eventually *)
+let aliases_to_hh = [
+  (* From Parser::onCall in hphp/compiler/parser/parser.cpp *)
+  "fun";
+  "meth_caller";
+  "class_meth";
+  "inst_meth";
+  "invariant_callback_register";
+  "invariant";
+  "invariant_violation";
+  "idx";
+  "asio_get_current_context_idx";
+  "asio_get_running_in_context";
+  "asio_get_running";
+  "xenon_get_data";
+  "objprof_get_strings";
+  "objprof_get_data";
+  "objprof_get_paths";
+  "objprof_start";
+  "server_warmup_status";
+  (* From Parser::getAutoAliasedClassName in hphp/compiler/parser/parser.cpp *)
+  "AsyncIterator";
+  "AsyncKeyedIterator";
+  "Traversable";
+  "Container";
+  "KeyedTraversable";
+  "KeyedContainer";
+  "Iterator";
+  "KeyedIterator";
+  "Iterable";
+  "KeyedIterable";
+  "Collection";
+  "Vector";
+  "Map";
+  "Set";
+  "Pair";
+  "ImmVector";
+  "ImmMap";
+  "ImmSet";
+  "InvariantException";
+  "IMemoizeParam";
+  "Shapes";
+  "Awaitable";
+  "AsyncGenerator";
+  "WaitHandle";
+  "StaticWaitHandle";
+  "WaitableWaitHandle";
+  "ResumableWaitHandle";
+  "AsyncFunctionWaitHandle";
+  "AsyncGeneratorWaitHandle";
+  "AwaitAllWaitHandle";
+  "GenArrayWaitHandle";
+  "GenMapWaitHandle";
+  "GenVectorWaitHandle";
+  "ConditionWaitHandle";
+  "RescheduleWaitHandle";
+  "SleepWaitHandle";
+  "bool";
+  "int";
+  "float";
+  "num";
+  "arraykey";
+  "string";
+  "resource";
+  "mixed";
+  "noreturn";
+  "void";
+  "this";
+]
+
+let aliases =
+  map_of_list @@
+  List.map ~f:(fun x -> x, "HH\\" ^ x) aliases_to_hh @ [
+  (* From Parser::getAutoAliasedClassName in hphp/compiler/parser/parser.cpp *)
+  "classname", "HH\\string";
+  "boolean", "HH\\bool";
+  "integer", "HH\\int";
+  "double", "HH\\float";
+  "real", "HH\\float";
+  ]

@@ -121,7 +121,7 @@ let emit_fun nenv env (_, x) =
   let env = start_new_function env in
   let env =
     emit_method_or_func env ~is_method:false ~is_static:false
-      dummy_method (strip_ns x) in
+      dummy_method (fmt_name x) in
   emit_str env ""
 
 
@@ -136,7 +136,7 @@ let emit_default_ctor env name abstract =
 (* extends lists and things are hints,
  * but I *think* it needs to be an apply? *)
 let fmt_class_hint = function
-  | _, Happly ((_, cls), _) -> strip_ns cls
+  | _, Happly ((_, cls), _) -> fmt_name cls
   | _ -> bug "class hint not apply??"
 let fmt_implements_list classes =
   match classes with
@@ -280,7 +280,7 @@ let emit_class nenv env (_, x) =
   let extends_list = fmt_extends_list extends in
   let implements_list = fmt_implements_list implements in
 
-  let name = strip_ns x in
+  let name = fmt_name x in
   let self_name, parent_name = match cls.c_kind with
     (* interfaces don't have code so we don't need the names;
      * traits can make self and parent calls to things that are actually
