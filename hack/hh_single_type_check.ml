@@ -135,7 +135,14 @@ let builtins = "<?hh // decl\n"^
   "function var_dump($x): void;\n" ^
   "function gena();\n" ^
   "function genva();\n" ^
-  "function gen_array_rec();\n"
+  "function gen_array_rec();\n"^
+  "function is_int(mixed $x): bool {}\n"^
+  "function is_bool(mixed $x): bool {}\n"^
+  "function is_float(mixed $x): bool {}\n"^
+  "function is_string(mixed $x): bool {}\n"^
+  "function is_null(mixed $x): bool {}\n"^
+  "function is_array(mixed $x): bool {}\n"^
+  "function is_resource(mixed $x): bool {}\n"
 
 (*****************************************************************************)
 (* Helpers *)

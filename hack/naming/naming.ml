@@ -167,37 +167,13 @@ let get_classes env =
   SMap.fold (fun key _ acc -> key :: acc) (fst env.iclasses) []
 
 (*****************************************************************************)
-(* Predefined names *)
-(*****************************************************************************)
-
-let predef_funs = ref SMap.empty
-let predef_funnames = ref SMap.empty
-let predef_fun x =
-  let var = Pos.none, Ident.make x in
-  let canon_x = canon_key x in
-  predef_funs := SMap.add x var !predef_funs;
-  predef_funnames := SMap.add canon_x x !predef_funnames;
-  x
-
-let is_int    = predef_fun SN.StdlibFunctions.is_int
-let is_bool   = predef_fun SN.StdlibFunctions.is_bool
-let is_array  = predef_fun SN.StdlibFunctions.is_array
-let is_float  = predef_fun SN.StdlibFunctions.is_float
-let is_string = predef_fun SN.StdlibFunctions.is_string
-let is_null   = predef_fun SN.StdlibFunctions.is_null
-let is_resource = predef_fun SN.StdlibFunctions.is_resource
-
-let predef_tests = set_of_list
-  [is_int; is_bool; is_float; is_string; is_null; is_array; is_resource]
-
-(*****************************************************************************)
 (* Empty (initial) environments *)
 (*****************************************************************************)
 
 let empty tcopt = {
   itcopt    = tcopt;
   iclasses  = SMap.empty, SMap.empty;
-  ifuns     = !predef_funs, !predef_funnames;
+  ifuns     = SMap.empty, SMap.empty;
   itypedefs = SMap.empty;
   iconsts   = SMap.empty;
 }
@@ -584,7 +560,6 @@ module Env = struct
       y
 
   let new_fun_id genv x =
-    if SMap.mem (snd x) !predef_funs then () else
     ignore (resilient_new_canon_var genv.funs x)
 
   let new_class_id genv x =
@@ -618,7 +593,6 @@ end
 (* Updating the environment *)
 (*****************************************************************************)
 let remove_decls env (funs, classes, typedefs, consts) =
-  let funs = SSet.diff funs predef_tests in
   let canonicalize_set = (fun elt acc -> SSet.add (canon_key elt) acc) in
   let class_namekeys = SSet.fold canonicalize_set classes SSet.empty in
   let typedef_namekeys = SSet.fold canonicalize_set typedefs SSet.empty in

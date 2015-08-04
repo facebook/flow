@@ -1932,9 +1932,6 @@ and dispatch_call p env call_type (fpos, fun_expr as e) el uel =
             env, (Reason.Rwitness p, Tany)
           end;
         | _ -> env, (Reason.Rwitness p, Tprim Tvoid))
-  | Id (_, x) when SSet.mem x Naming.predef_tests ->
-      let env, _ = expr env (List.hd_exn el) in
-      env, (Reason.Rwitness p, Tprim Tbool)
   | Id (cp, get_called_class) when
       get_called_class = SN.StdlibFunctions.get_called_class
       && el = [] && uel = [] ->
@@ -3516,22 +3513,22 @@ and condition env tparamet =
       let env = condition env false e2 in
       env
   | _, Call (Cnormal, (_, Id (_, f)), [lv], [])
-    when tparamet && f = Naming.is_array ->
+    when tparamet && f = SN.StdlibFunctions.is_array ->
       is_array env lv
   | _, Call (Cnormal, (_, Id (_, f)), [lv], [])
-    when tparamet && f = Naming.is_int ->
+    when tparamet && f = SN.StdlibFunctions.is_int ->
       is_type env lv Tint
   | _, Call (Cnormal, (_, Id (_, f)), [lv], [])
-    when tparamet && f = Naming.is_bool ->
+    when tparamet && f = SN.StdlibFunctions.is_bool ->
       is_type env lv Tbool
   | _, Call (Cnormal, (_, Id (_, f)), [lv], [])
-    when tparamet && f = Naming.is_float ->
+    when tparamet && f = SN.StdlibFunctions.is_float ->
       is_type env lv Tfloat
   | _, Call (Cnormal, (_, Id (_, f)), [lv], [])
-    when tparamet && f = Naming.is_string ->
+    when tparamet && f = SN.StdlibFunctions.is_string ->
       is_type env lv Tstring
   | _, Call (Cnormal, (_, Id (_, f)), [lv], [])
-    when tparamet && f = Naming.is_resource ->
+    when tparamet && f = SN.StdlibFunctions.is_resource ->
       is_type env lv Tresource
   | _, Unop (Ast.Unot, e) ->
       condition env (not tparamet) e
