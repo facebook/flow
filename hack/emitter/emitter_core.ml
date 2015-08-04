@@ -76,8 +76,16 @@ let parse_php_int s =
     String.length s > 1 && s.[0] = '0' && s.[1] <> 'x' && s.[1] <> 'b' in
   if is_octal then Int64.of_string ("0o" ^ s) else Int64.of_string s
 
+(* XXX: wouldn't work for xhp things in namespaces... *)
+let fix_xhp_name s =
+  if String.length s = 0 || s.[0] <> ':' then s else
+    "xhp_" ^
+      lstrip s ":" |>
+      Str.global_replace (Str.regexp ":") "__" |>
+      Str.global_replace (Str.regexp "-") "_"
+
 (* *)
-let fmt_name s = get_aliased_name (strip_ns s)
+let fmt_name s = fix_xhp_name (get_aliased_name (strip_ns s))
 let get_lid_name (_, id) = Ident.get_name id
 (* XXX: ocaml and php probably don't have exactly the same escaping rules *)
 let escape_str = String.escaped
