@@ -122,7 +122,7 @@ do
         if [ -s $diff_file ]
         then
             (( failed++ ))
-            print_fail $name
+            print_failure $name
             cat $err_file
             if [ -t 1 ] ; then
                 esc=$(echo -e "\x1b")
