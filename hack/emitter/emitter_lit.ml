@@ -10,6 +10,7 @@
 
 (* Formatting for literals *)
 
+open Core
 open Nast
 open Utils
 

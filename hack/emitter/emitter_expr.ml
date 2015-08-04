@@ -8,8 +8,9 @@
  *
  *)
 
-open Nast
+open Core
 open Utils
+open Nast
 
 open Emitter_core
 
@@ -192,7 +193,7 @@ and emit_assignment env obop e1 e2 =
       | _, List es ->
         let collect i e =
           collect_assignments ((MTelem, Mint (string_of_int i)) :: path) e in
-        Core_list.concat_mapi ~f:collect es
+        List.concat_mapi ~f:collect es
       | e -> [e, path]
     in
     let assignments = collect_assignments [] e1 in
@@ -220,7 +221,7 @@ and emit_assignment env obop e1 e2 =
     in
     (* Assignment is now done right to left, popping whatever we set up
      * off the stack. *)
-    let env = List.fold_right emit_assign assignments env in
+    let env = List.fold_right ~f:emit_assign ~init:env assignments in
 
     (* And push the variable back to give the expr its value *)
     let env = if opt_outer_faultlet = None && opt_faultlet = None then
@@ -292,7 +293,7 @@ and emit_ctor_lhs env class_id nargs =
 and emit_args_and_call env args uargs =
   let all_args = args @ uargs in
   let nargs = List.length all_args in
-  let env = Core_list.foldi ~f:begin fun i env arg ->
+  let env = List.foldi ~f:begin fun i env arg ->
       if is_lval (snd arg) then
         let env, lval = emit_lval env arg in
         emit_FPassLval env i lval
@@ -320,14 +321,14 @@ and emit_call env ef args uargs =
   match snd ef with
   | Id (_, echo) when echo = SN.SpecialFunctions.echo ->
     let nargs = List.length args in
-    let env = Core_list.foldi ~f:begin fun i env arg ->
+    let env = List.foldi ~f:begin fun i env arg ->
        let env = emit_expr env arg in
        let env = emit_Print env in
        if i = nargs-1 then env else emit_PopC env
     end ~init:env args in
     env, FC
   | Id (_, idx) when idx = SN.FB.idx ->
-    let env = List.fold_left emit_expr env args in
+    let env = List.fold_left ~f:emit_expr ~init:env args in
     (* If there are two arguments, add Null as a third *)
     let env = if List.length args = 2 then emit_Null env else env in
     let env = emit_Idx env in
@@ -462,8 +463,8 @@ and emit_expr env (pos, expr_ as expr) =
     (match List.rev es with
     | [] -> env
     | last :: rest ->
-      let env =
-        List.fold_right (fun e env -> emit_ignored_expr env e) rest env in
+      let env = List.fold_right
+        ~f:(fun e env -> emit_ignored_expr env e) ~init:env rest in
       emit_expr env last)
 
   | Int (_, n) -> emit_Int env (fmt_int n)
@@ -488,7 +489,7 @@ and emit_expr env (pos, expr_ as expr) =
         let env = emit_expr env ev in
         emit_AddElemC env
     in
-    List.fold_left emit_afield env afields
+    List.fold_left ~f:emit_afield ~init:env afields
 
   | Clone e ->
     let env = emit_expr env e in
@@ -554,7 +555,7 @@ and emit_expr env (pos, expr_ as expr) =
 
   | List es ->
     (* List here represents tuple(...). Compile to an array. *)
-    let array = pos, Array (List.map (fun e -> AFvalue e) es) in
+    let array = pos, Array (List.map ~f:(fun e -> AFvalue e) es) in
     emit_expr env array
 
   | Shape smap ->
@@ -566,14 +567,14 @@ and emit_expr env (pos, expr_ as expr) =
     (* The doc comment says only use in testing code but this is
      * /actually/ the right thing here *)
     let shape_fields =
-      List.map (fun (k, v) -> (shape_field_to_expr k, v))
+      List.map ~f:(fun (k, v) -> (shape_field_to_expr k, v))
         (ShapeMap.elements smap) in
     (* Sort the fields by their position in order to have the same insertion
      * order as HHVM. Sigh. *)
     let shape_fields = List.sort
       (fun ((p1, _), _) ((p2, _), _) -> Pos.compare p1 p2)
       shape_fields in
-    let afields = List.map (fun (k, v) -> AFkvalue (k, v)) shape_fields in
+    let afields = List.map ~f:(fun (k, v) -> AFkvalue (k, v)) shape_fields in
     let array = pos, Array afields in
     emit_expr env array
 
@@ -586,7 +587,7 @@ and emit_expr env (pos, expr_ as expr) =
         let env = emit_expr env e in
         emit_ColAddNewElemC env
     in
-    List.fold_left emit_entry env es
+    List.fold_left ~f:emit_entry ~init:env es
   | KeyValCollection (col, fields) ->
     let col_id = Emitter_consts.get_collection_id (strip_ns col) in
     let env = emit_NewCol env col_id in
@@ -595,7 +596,7 @@ and emit_expr env (pos, expr_ as expr) =
         let env = emit_expr env ev in
         emit_MapAddElemC env
     in
-    List.fold_left emit_field env fields
+    List.fold_left ~f:emit_field ~init:env fields
   | Pair (e1, e2) ->
     emit_expr env (pos, ValCollection ("\\Pair", [e1; e2]))
 

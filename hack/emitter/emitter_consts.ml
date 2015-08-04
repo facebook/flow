@@ -10,6 +10,7 @@
 
 (* Various constants and the like; normally copied from HHVM *)
 
+open Core
 open Utils
 
 (* the enum values from hphp/runtime/base/header-kind.h;
@@ -22,7 +23,7 @@ let header_kinds = [
   "ResumableFrame"; "NativeData";
   "SmallMalloc"; "BigMalloc"; "BigObj"; "Free"; "Hole"
 ]
-let header_kind_values = Core_list.foldi
+let header_kind_values = List.foldi
   ~f:(fun i m kind -> SMap.add kind i m) ~init:SMap.empty header_kinds
 
 (* not all of the header kinds are collections, but type typechecker

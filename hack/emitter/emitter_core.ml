@@ -10,6 +10,7 @@
 
 (* This contains the underlying data structures and hhas emitting routines. *)
 
+open Core
 open Utils
 
 let unimpl s =
@@ -77,7 +78,7 @@ let fmt_int s = Int64.to_string (parse_php_int s)
 (* XXX: what format conversions do we need to do? *)
 let fmt_float s = s
 let fmt_str_vec v = "<" ^ String.concat " " v ^ ">"
-let fmt_vec f v = "<" ^ String.concat " " (List.map f v) ^ ">"
+let fmt_vec f v = "<" ^ String.concat " " (List.map ~f v) ^ ">"
 
 let llocal id = Llocal (get_lid_name id)
 
@@ -112,7 +113,7 @@ let fmt_lval lval =
   | Lmember (base, mems) ->
     "M",
     "<" ^ fmt_base base ^ " " ^
-    String.concat " " (List.rev_map fmt_member mems) ^
+    String.concat " " (List.rev_map ~f:fmt_member mems) ^
     ">",
     true
 
@@ -248,7 +249,7 @@ let collect_output env f arg =
 (* XXX: doc rationale?? *)
 let add_cleanup env f = { env with cleanups = f :: env.cleanups }
 let run_cleanups env =
-  let env = List.fold_right (fun f env -> f env) env.cleanups env in
+  let env = List.fold_right ~f:(fun f env -> f env) ~init:env env.cleanups in
   { env with cleanups = [] }
 
 (*** opcode emitting functions ***)

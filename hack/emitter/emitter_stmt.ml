@@ -8,9 +8,9 @@
  *
  *)
 
-
-module N = Nast
+open Core
 open Utils
+module N = Nast
 
 open Emitter_core
 
@@ -55,8 +55,8 @@ let is_empty_block = function
 (* Emit bytecode for a block. Stack should start and end empty.
  * Returns whether the block is terminal. *)
 let rec emit_block env stmts =
-  List.fold_left (fun (env, _) stmt -> emit_stmt env stmt)
-                 (env, false) stmts
+  List.fold_left ~f:(fun (env, _) stmt -> emit_stmt env stmt)
+                 ~init:(env, false) stmts
 
 (* Emit bytecode for a statement. Stack should start and end empty.
  * Returns whether the statement is terminal. *)
@@ -223,11 +223,11 @@ and emit_stmt env stmt =
   | N.Try (try_body, catches, finally_body) ->
     let env, target = fresh_label env in
     let env, catch_labels = lmap (fun env _ -> fresh_catch env) env catches in
-    let catches = List.combine catch_labels catches in
+    let catches = List.zip_exn catch_labels catches in
 
     let fmt_catch_hdr (label, ((_, cls), _, _)) =
       "(" ^ strip_ns cls ^ " " ^ label ^ ")" in
-    let catch_hdrs = String.concat " " (List.rev_map fmt_catch_hdr catches) in
+    let catch_hdrs = String.concat " " (List.rev_map catches fmt_catch_hdr) in
 
     (* If we have a finally, generate a finally label
      * and output a try_fault handler *)
@@ -255,7 +255,7 @@ and emit_stmt env stmt =
         emit_Jmp env target
       in
 
-      let env = Core_list.foldi ~f:emit_catch ~init:env catches in
+      let env = List.foldi ~f:emit_catch ~init:env catches in
       env, ()
     in
 
@@ -331,7 +331,7 @@ and emit_stmt env stmt =
         !had_ret, env.nonlocal.return_action ~has_value:(!had_value)
       ] in
       let env, targets = lmap assign_label env targets in
-      let active_targets = List.filter (fun (_, (had, _)) -> had) targets in
+      let active_targets = List.filter ~f:(fun (_, (had, _)) -> had) targets in
 
       (* Which of break/return/continue are actually used? *)
       let env = match active_targets with
@@ -355,10 +355,10 @@ and emit_stmt env stmt =
             if not had then env else
             f ~is_initial:false env
           in
-          let labels = List.map fst targets in
+          let labels = List.map ~f:fst targets in
           let env = emit_CGetL env id in
           let env = emit_Switch env labels 0 "Unbounded" in
-          List.fold_left emit_target env targets
+          List.fold_left ~f:emit_target ~init:env targets
         in
         emit_label env out_label
       in
@@ -370,7 +370,7 @@ and emit_stmt env stmt =
 
   (* TODO: support Switch/SSwitch *)
   | N.Switch (e, cases) ->
-    let cases, defaults = Core_list.partition_map ~f:begin function
+    let cases, defaults = List.partition_map ~f:begin function
       | N.Case (e, b) -> `Fst (e, b)
       | N.Default b -> `Snd b
     end cases in
@@ -390,13 +390,13 @@ and emit_stmt env stmt =
       let env = emit_binop env (Ast.Eqeq) in
       emit_cjmp env true label
     in
-    let env = List.fold_left emit_compare env cases in
+    let env = List.fold_left ~f:emit_compare ~init:env cases in
     (* emit either a jump to the default or a jump to the end *)
     let env = match defaults with | [def_label, _] -> emit_Jmp env def_label
                                   | _ -> emit_Jmp env end_label in
 
     (* emit the actual blocks *)
-    let case_blocks = List.map (fun (l, (_, b)) -> l, b) cases in
+    let case_blocks = List.map ~f:(fun (l, (_, b)) -> l, b) cases in
     let all_blocks = case_blocks @ defaults in
     let emit_block env (label, body) =
       let env = emit_label env label in
@@ -404,7 +404,7 @@ and emit_stmt env stmt =
       let env, _ = with_targets env end_label end_label emit_block body in
       env
     in
-    let env = List.fold_left emit_block env all_blocks in
+    let env = List.fold_left ~f:emit_block ~init:env all_blocks in
 
     let env = opt_fold emit_fault_exit env opt_faultlet in
     let env = emit_label env end_label in

@@ -11,8 +11,9 @@
 (* Entry point to the experimental Hack based bytecode emitter. Contains
  * code for emitting "top level" constructs like classes andfunctions. *)
 
-open Nast
+open Core
 open Utils
+open Nast
 
 open Emitter_core
 
@@ -51,7 +52,7 @@ let emit_param p =
   get_lid_name p.param_id
 
 let fmt_params params =
-  let param_names = List.map emit_param params in
+  let param_names = List.map ~f:emit_param params in
   "(" ^ String.concat ", " param_names ^ ")"
 
 let fmt_visibility vis =
@@ -71,7 +72,7 @@ let fmt_fun_tags env m =
 
 let fmt_user_attributes attrs =
   String.concat " "
-    (List.sort compare (List.map (fun x -> snd (x.ua_name)) attrs))
+    (List.sort compare (List.map ~f:(fun x -> snd (x.ua_name)) attrs))
 
 let emit_method_or_func env ~is_method ~is_static m name =
   let env = start_new_function env in
@@ -140,7 +141,7 @@ let fmt_class_hint = function
 let fmt_implements_list classes =
   match classes with
   | [] -> ""
-  | xs -> " implements (" ^ String.concat " " (List.map fmt_class_hint xs) ^")"
+  | xs -> " implements ("^String.concat " " (List.map ~f:fmt_class_hint xs)^")"
 let fmt_extends_list classes =
   match classes with
   | [] -> ""
@@ -173,7 +174,7 @@ let emit_prop_init env ~is_static = function
       let env = emit_InitProp env name flag in
       emit_label env skip_label
     in
-    let env = List.fold_left fmt_var_init env vars in
+    let env = List.fold_left ~f:fmt_var_init ~init:env vars in
 
     let env = emit_Null env in
     let env = emit_RetC env in
@@ -234,7 +235,7 @@ let emit_const_init env = function
       let env = emit_RetC env in
       if is_last then env else emit_label env skip_label
     in
-    let env = Core_list.foldi ~f:emit_case ~init:env consts in
+    let env = List.foldi ~f:emit_case ~init:env consts in
     let env = emit_exit env in
     env
 
@@ -297,18 +298,19 @@ let emit_class nenv env (_, x) =
                        (extends_list^implements_list) in
 
 
-  let env = List.fold_left emit_use env cls.c_uses in
+  let env = List.fold_left ~f:emit_use ~init:env cls.c_uses in
   let env, uninit_vars = lmap (emit_var ~is_static:false) env cls.c_vars in
   let env, uninit_svars =
     lmap (emit_var ~is_static:true) env cls.c_static_vars in
-  let env = List.fold_left (emit_method ~is_static:false) env cls.c_methods in
   let env =
-    List.fold_left (emit_method ~is_static:true) env cls.c_static_methods in
+    List.fold_left ~f:(emit_method ~is_static:false) ~init:env cls.c_methods in
+  let env = List.fold_left ~f:(emit_method ~is_static:true) ~init:env
+    cls.c_static_methods in
   let env, uninit_consts = lmap emit_const env cls.c_consts in
 
-  let uninit_vars = Core_list.filter_map uninit_vars ~f:(fun x->x) in
-  let uninit_svars = Core_list.filter_map uninit_svars ~f:(fun x->x) in
-  let uninit_consts = Core_list.filter_map uninit_consts ~f:(fun x->x) in
+  let uninit_vars = List.filter_map uninit_vars ~f:(fun x->x) in
+  let uninit_svars = List.filter_map uninit_svars ~f:(fun x->x) in
+  let uninit_consts = List.filter_map uninit_consts ~f:(fun x->x) in
 
   (* Now for 86* stuff *)
   let env = match cls.c_constructor with
@@ -336,7 +338,7 @@ let emit_main env ~is_test classes =
 
   (* emit def classes *)
   let env =
-    Core_list.foldi ~f:(fun i env _ -> emit_DefCls env i) ~init:env classes in
+    List.foldi ~f:(fun i env _ -> emit_DefCls env i) ~init:env classes in
 
   (* emit debugging test *)
   let env = if is_test then emit_test_call env else env in
@@ -359,8 +361,8 @@ let emit_file ~is_test nenv filename
   let env = emit_strs env
     [".filepath"; quote_str (Relative_path.to_absolute filename) ^ ";\n"] in
   let env = emit_main env ~is_test classes in
-  let env = List.fold_left (emit_fun nenv) env funs in
-  let env = List.fold_left (emit_class nenv) env classes in
+  let env = List.fold_left ~f:(emit_fun nenv) ~init:env funs in
+  let env = List.fold_left ~f:(emit_class nenv) ~init:env classes in
 
   let output = get_output env in
   Printf.printf "%s\n" output;
