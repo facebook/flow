@@ -309,11 +309,12 @@ end = struct
       inherit [bool] TypeVisitor.type_visitor
       method! on_tany _ = true
       method! on_tarray acc ty1_opt ty2_opt =
-        (* Check for array without its value type parameter specified *)
-        (match ty2_opt with
-        | None -> true
-        | Some ty -> this#on_type acc ty) ||
-        (Option.fold ~f:this#on_type ~init:acc ty1_opt)
+        (* Check for array without its type parameters specified *)
+        match ty1_opt, ty2_opt with
+        | None, None -> true
+        | _ ->
+          (Option.fold ~f:this#on_type ~init:acc ty1_opt) ||
+          (Option.fold ~f:this#on_type ~init:acc ty2_opt)
     end
   let check ty = visitor#on_type false ty
 end
