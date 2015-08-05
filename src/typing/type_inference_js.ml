@@ -2721,13 +2721,18 @@ and object_prop cx map = Ast.Expression.Object.(function
 and prop_map_of_object cx props =
   List.fold_left (object_prop cx) SMap.empty props
 
-and object_ cx props = Ast.Expression.Object.(
-  List.fold_left (fun (map, spreads) t -> match t with
+and object_ cx reason ?(allow_sealed=true) props = Ast.Expression.Object.(
+  let map, spread = List.fold_left (fun (map, spreads) t -> match t with
     | SpreadProperty (loc, { SpreadProperty.argument }) ->
         let spread = expression cx argument in
         object_prop cx map t, spread::spreads
     | t -> object_prop cx map t, spreads
-  ) (SMap.empty, []) props
+  ) (SMap.empty, []) props in
+  let sealed = allow_sealed && spread = [] && not (SMap.is_empty map) in
+  let o =
+    Flow_js.mk_object_with_map_proto cx reason ~sealed map (MixedT reason)
+  in
+  chain_objects cx reason o spread
 )
 
 and variable cx (loc, vdecl) = Ast.(
@@ -2979,9 +2984,7 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
 
   | Object { Object.properties } ->
     let reason = mk_reason "object literal" loc in
-    let map, spread = object_ cx properties in
-    let sealed = (spread = [] && not (SMap.is_empty map)) in
-    extended_object cx reason ~sealed map spread
+    object_ cx reason properties
 
   | Array { Array.elements } -> (
     let reason = mk_reason "array literal" loc in
@@ -3786,12 +3789,6 @@ and assignment cx loc = Ast.Expression.(function
 and spread_objects cx reason those =
   chain_objects cx reason (mk_object cx reason) those
 
-and extended_object cx reason ~sealed map spread =
-  let o =
-    Flow_js.mk_object_with_map_proto cx reason ~sealed map (MixedT reason)
-  in
-  chain_objects cx reason o spread
-
 and clone_object_with_excludes cx reason this that excludes =
   Flow_js.mk_tvar_where cx reason (fun tvar ->
     Flow_js.flow cx (
@@ -4193,8 +4190,7 @@ and react_create_class cx loc class_props = Ast.Expression.(
           value = _, Object { Object.properties };
           _ }) ->
         let reason = mk_reason "statics" nloc in
-        let map, spread = object_ cx properties in
-        static := extended_object cx reason ~sealed:false map spread;
+        static := object_ cx reason ~allow_sealed:false properties;
         fmap, mmap
 
       (* propTypes *)
