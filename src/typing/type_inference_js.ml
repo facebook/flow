@@ -102,17 +102,6 @@ let (>>) f g = fun x -> g (f (x))
 let mk_object cx reason =
   Flow_js.mk_object_with_proto cx reason (MixedT reason)
 
-let extended_object cx reason ~sealed map spread =
-  let o =
-    Flow_js.mk_object_with_map_proto cx reason ~sealed map (MixedT reason)
-  in
-  match spread with
-  | None -> o
-  | Some other ->
-      Flow_js.mk_tvar_where cx reason (fun t ->
-        Flow_js.flow cx (other, ObjAssignT (reason, o, t, [], false))
-      )
-
 let summarize cx t = match t with
   | OpenT _ ->
       let reason = reason_of_t t in
