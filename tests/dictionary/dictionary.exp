@@ -47,13 +47,9 @@ incompatible.js:26:17,19: number
 This type is incompatible with
 incompatible.js:25:41,46: string
 
-incompatible.js:31:43,55: property foo
-Property not found in
-incompatible.js:32:10,10: object type
-
-incompatible.js:36:43,78: property foo
-Property not found in
-incompatible.js:37:10,10: object type
+incompatible.js:36:72,77: string
+This type is incompatible with
+incompatible.js:36:33,38: number
 
 incompatible.js:41:23,45: some property
 Property not found in
@@ -63,9 +59,9 @@ incompatible.js:46:46,68: some property
 Property not found in
 incompatible.js:46:23,35: object type
 
-test.js:1:23,28: number
+incompatible.js:55:4,8: number
 This type is incompatible with
-test.js:1:47,52: string
+incompatible.js:55:11,16: string
 
 test.js:6:12,23: number
 This type is incompatible with
@@ -75,4 +71,4 @@ test_client.js:4:10,21: number
 This type is incompatible with
 test.js:2:42,47: string
 
-Found 19 errors
+Found 18 errors

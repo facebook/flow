@@ -5,6 +5,7 @@ var o1: {[key: Key1]: number} = {
 };
 o1.foo; // OK
 o1.qux; // error: qux not found
+o1.toString(); // ok
 
 type R = {foo: any, bar: any};
 type Key2 = $Keys<R>; // another way to make an enum type, with unknown key set

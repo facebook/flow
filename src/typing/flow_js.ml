@@ -2295,8 +2295,12 @@ let rec __flow cx (l, u) trace =
               dictionary cx trace (string_key s reason2) t1 dict1;
               write_prop cx flds1 s t2;
             | _ ->
-              (* otherwise, we do strict lookup of property in prototype *)
-              rec_flow cx trace (proto_t, LookupT (reason2, Some reason1, s, t2))
+              (* otherwise, we ensure compatibility with dictionary constraints
+                 if present, and look up the property in the prototype *)
+              dictionary cx trace (string_key s reason2) t2 dict1;
+              (* if l is NOT a dictionary, then do a strict lookup *)
+              let strict = if dict1 = None then Some reason1 else None in
+              rec_flow cx trace (proto_t, LookupT (reason2, strict, s, t2))
           (* TODO: instead, consider extending inflowing type with s:t2 when it
              is not sealed *)
           else
@@ -2304,7 +2308,7 @@ let rec __flow cx (l, u) trace =
             flow_to_mutable_child cx trace lit t1 t2);
       (* Any properties in l but not u must match indexer *)
       iter_props_ cx flds1
-        (fun s -> fun t1 ->
+        (fun s t1 ->
           if (not(has_prop cx flds2 s))
           then dictionary cx trace (string_key s reason1) t1 dict2
         );
@@ -2726,14 +2730,10 @@ let rec __flow cx (l, u) trace =
     (* objects may have their fields looked up *)
     (*******************************************)
 
-    | (ObjT (reason_obj, {
-      props_tmap = mapr;
-      proto_t = proto;
-      _
-    }),
+    | (ObjT (reason_obj, { props_tmap = mapr; proto_t = proto; dict_t; _ }),
        LookupT(reason_op,strict,x,t_other))
       ->
-      let t = ensure_prop_for_read cx strict mapr x proto
+      let t = ensure_prop_for_read cx strict mapr x proto dict_t
         reason_obj reason_op trace in
       rec_flow cx trace (t, UnifyT(t, t_other))
 
@@ -2778,9 +2778,8 @@ let rec __flow cx (l, u) trace =
       GetT (reason_op, x, tout) ->
       let strict = mk_strict_lookup_reason
         flags.sealed (dict_t <> None) reason_o reason_op in
-      let t = ensure_prop_for_read cx strict mapr x proto
+      let t = ensure_prop_for_read cx strict mapr x proto dict_t
         reason_o reason_op trace in
-      dictionary cx trace (string_key x reason_op) t dict_t;
       (* move property type to read site *)
       let t = repos_t_from_reason reason_op t in
       rec_flow cx trace (t, tout);
@@ -2801,9 +2800,8 @@ let rec __flow cx (l, u) trace =
       ->
       let strict = mk_strict_lookup_reason
         flags.sealed (dict_t <> None) reason_o reason_op in
-      let t = ensure_prop_for_read cx strict mapr x proto
+      let t = ensure_prop_for_read cx strict mapr x proto dict_t
         reason_o reason_op trace in
-      dictionary cx trace (string_key x reason_op) t dict_t;
       let callt = CallT (reason_op, funtype) in
       rec_flow cx trace (t, callt)
 
@@ -3787,8 +3785,20 @@ and concretize_parts cx trace l u done_list = function
 
 (* property lookup functions in objects and instances *)
 
-and ensure_prop_for_read cx strict mapr x proto reason_obj reason_op trace =
-  match read_prop_opt cx mapr x with
+and ensure_prop_for_read cx strict mapr x proto dict_t reason_obj reason_op trace =
+  let t = match (read_prop_opt cx mapr x, dict_t) with
+  | Some t, _ -> Some t
+  | None, Some { key; value; _ } ->
+    (* Object.prototype methods are exempt from the dictionary rules *)
+    if is_object_prototype_method x
+    then None
+    else (
+      rec_flow cx trace (string_key x reason_op, key);
+      Some value
+    )
+  | None, None -> None
+  in
+  match t with
   (* map contains property x at type t *)
   | Some t -> t
   (* otherwise, check for/maybe add shadow property *)
