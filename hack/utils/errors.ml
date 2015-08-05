@@ -350,6 +350,7 @@ module Typing                               = struct
   let local_variable_modifed_twice          = 4144 (* DONT MODIFY!!!! *)
   let assign_during_case                    = 4145 (* DONT MODIFY!!!! *)
   let cyclic_enum_constraint                = 4146 (* DONT MODIFY!!!! *)
+  let unpacking_disallowed                  = 4147 (* DONT MODIFY!!!! *)
   (* EXTEND HERE WITH NEW VALUES IF NEEDED *)
 end
 
@@ -1262,6 +1263,11 @@ let unset_nonidx_in_strict pos msgs =
   add_list Typing.unset_nonidx_in_strict
     ([pos, "In strict mode, unset is banned except on array indexing"] @
      msgs)
+
+let unpacking_disallowed_builtin_function pos name =
+  let name = Utils.strip_ns name in
+  add Typing.unpacking_disallowed pos
+    ("Arg unpacking is disallowed for "^name)
 
 let array_get_arity pos1 name pos2 =
   add_list Typing.array_get_arity [

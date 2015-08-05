@@ -1903,13 +1903,15 @@ and dispatch_call p env call_type (fpos, fun_expr as e) el uel =
         pseudo_func = SN.PseudoFunctions.isset
         || pseudo_func = SN.PseudoFunctions.empty ->
     let env, _ = lfold expr env el in
-    let env, _ = lfold unpack_expr env uel in
+    if uel <> [] then
+      Errors.unpacking_disallowed_builtin_function p pseudo_func;
     if Env.is_strict env then
       Errors.isset_empty_in_strict p pseudo_func;
     env, (Reason.Rwitness p, Tprim Tbool)
   | Id (_, pseudo_func) when pseudo_func = SN.PseudoFunctions.unset ->
      let env, _ = lfold expr env el in
-     let env, _ = lfold unpack_expr env uel in
+     if uel <> [] then
+       Errors.unpacking_disallowed_builtin_function p pseudo_func;
      let env = if Env.is_strict env then
        (match el, uel with
          | [(_, Array_get (ea, Some _))], [] ->
@@ -3130,14 +3132,36 @@ and call pos env fty el uel =
   let env = fold_fun_list env env.Env.todo in
   env, ty
 
-and unpack_expr env e =
-  let pos = fst e in
-  let unpack_r = Reason.Runpack_param pos in
-  let env, ty_elt = expr env e in
-  let container_ty = (unpack_r, Tclass ((pos, SN.Collections.cContainer),
-                                        [unpack_r, Tany])) in
-  let env = Type.sub_type pos Reason.URparam env container_ty ty_elt in
-  env, ty_elt
+(* Enforces that e is unpackable. If e is a tuple, appends its unpacked types
+ * into the e_tyl returned.
+ *)
+and unpack_expr env e_tyl e =
+  let env, ety = expr env e in
+  (match ety with
+  | _, Ttuple tyl ->
+      (* Todo: Check that tuples are allowed - that is, disallow a tuple
+       * unpacking after an array unpacking.
+       *)
+      let unpacked_e_tyl = List.map tyl (fun ty -> e, ty) in
+      env, e_tyl @ unpacked_e_tyl, true
+  | _ ->
+    let pos = fst e in
+    let unpack_r = Reason.Runpack_param pos in
+    let container_ty = (unpack_r, Tclass ((pos, SN.Collections.cContainer),
+                                          [unpack_r, Tany])) in
+    let env = Type.sub_type pos Reason.URparam env container_ty ety in
+    env, e_tyl, false
+  )
+
+(* Unpacks uel. If tuples are found, unpacked types are appended to the
+ * e_tyl returned.
+ *)
+and unpack_exprl env e_tyl uel =
+  List.fold_left uel ~init:(env, e_tyl, false)
+    ~f: begin fun (env, e_tyl, unpacked_tuple) e ->
+      let env, e_tyl, is_tuple = unpack_expr env e_tyl e in
+      (env, e_tyl, is_tuple || unpacked_tuple)
+    end
 
 and call_ pos env fty el uel =
   let env, efty = Env.expand_type env fty in
@@ -3162,15 +3186,23 @@ and call_ pos env fty el uel =
     let env, ft = Typing_exts.retype_magic_func env ft el in
     check_deprecated pos ft;
     let pos_def = Reason.to_pos r2 in
-    let () = check_arity ~check_min:(uel = [])
-      pos pos_def (List.length el + List.length uel) ft.ft_arity in
     let env, var_param = variadic_param env ft in
     let env, tyl = lmap expr env el in
     let e_tyl = List.zip_exn el tyl in
+    let env, e_tyl, unpacked_tuple = unpack_exprl env e_tyl uel in
+    let arity = if unpacked_tuple
+      then List.length e_tyl
+      (* Each array unpacked corresponds with at least 1 param. *)
+      else List.length el + List.length uel in
+    (* If we unpacked an array, we don't check arity exactly. Since each
+     * unpacked array consumes 1 or many parameters, it is nonsensical to say
+     * that not enough args were passed in (so we don't do the min check).
+     *)
+    let () = check_arity ~check_min:(uel = [] || unpacked_tuple)
+      pos pos_def arity ft.ft_arity in
     let todos = ref [] in
     let env = wfold_left_default (call_param todos) (env, var_param)
       ft.ft_params e_tyl in
-    let env, _ = lmap unpack_expr env uel in
     let env = fold_fun_list env !todos in
     Typing_hooks.dispatch_fun_call_hooks
       ft.ft_params (List.map (el @ uel) fst) env;
