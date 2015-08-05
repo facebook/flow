@@ -246,9 +246,17 @@ let rec debug stack env (r, ty) =
           end
       end;
       o ">(";
-      ShapeMap.iter begin fun k v ->
-        o (get_shape_field_name k); o " => "; debug stack env v; o ", ";
-      end fdm;
+      let cmp = (fun (k1, _) (k2, _) ->
+         compare (get_shape_field_name k1) (get_shape_field_name k2)) in
+      let fields = List.sort ~cmp (ShapeMap.elements fdm) in
+      let o_field = (fun (k, v) ->
+         o (get_shape_field_name k); o " => "; debug stack env v;)
+      in
+      (match fields with
+      | [] -> ()
+      | f::l ->
+         o_field f;
+         List.iter l (fun f -> o ", "; o_field f;));
       o ")"
 
 and debugl stack env x =
