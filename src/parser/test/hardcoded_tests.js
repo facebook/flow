@@ -1112,25 +1112,21 @@ module.exports = {
     'export class {}': {
       'body.0.declaration': {
         'type': 'ClassExpression',
-        'exportKind': 'value'
       }
     },
     'export default class {}': {
       'body.0.declaration': {
         'type': 'ClassExpression',
-        'exportKind': 'value'
       }
     },
     'export default class A {}': {
       'body.0.declaration': {
         'type': 'ClassDeclaration',
-        'exportKind': 'value'
       }
     },
     'export type A = number': {
       'body.0.declaration': {
         'type': 'TypeAlias',
-        'exportKind': 'type'
       }
     },
   },
