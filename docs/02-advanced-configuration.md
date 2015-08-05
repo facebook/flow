@@ -50,7 +50,7 @@ The `[options]` heading in a `.flowconfig` file can contain several key-value pa
     For example:
     
     ```
-    module.name_mapper: '^image![a-zA-Z0-9$_]+$' -> 'ImageStub'
+    module.name_mapper= '^image![a-zA-Z0-9$_]+$' -> 'ImageStub'
     ```
   
     makes Flow treat `require('image!foo.jpg')` as if it was `require('ImageStub')`.
@@ -68,7 +68,7 @@ The `[options]` heading in a `.flowconfig` file can contain several key-value pa
 - `suppress_comment` (regex): defines a magical comment that suppresses any Flow errors on the following line. For example:
     
     ```
-    suppress_comment: \\(.\\|\n\\)*\\$FlowFixMe
+    suppress_comment= \\(.\\|\n\\)*\\$FlowFixMe
     ```
     
     will match a comment like this:
