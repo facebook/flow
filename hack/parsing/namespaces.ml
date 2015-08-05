@@ -65,15 +65,19 @@ let autoimport_classes = [
   "ConditionWaitHandle";
   "RescheduleWaitHandle";
   "SleepWaitHandle";
-  "ExternalThreadEventWaitHandle"
+  "ExternalThreadEventWaitHandle";
 ]
 let autoimport_funcs = [
   "invariant";
   "invariant_violation"
 ]
+let autoimport_types = [
+  "classname"
+]
 
 let autoimport_set =
-  let autoimport_list = autoimport_classes @ autoimport_funcs in
+  let autoimport_list
+    = autoimport_classes @ autoimport_funcs @ autoimport_types in
   List.fold_left autoimport_list ~init:SSet.empty ~f:(fun s e -> SSet.add e s)
 (* NOTE that the runtime is able to distinguish between class and
    function names when auto-importing *)
