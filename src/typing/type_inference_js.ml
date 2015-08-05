@@ -2600,129 +2600,134 @@ and raise_exception exn_ = match exn_ with
   | Some exn -> Abnormal.raise_exn exn
   | _ -> ()
 
-and object_ cx props = Ast.Expression.Object.(
-  let spread = ref [] in
-  List.fold_left (fun map -> function
-
-    (* name = function expr *)
-    | Property (loc, { Property.kind = Property.Init;
-                       key = Property.Identifier (_, {
-                         Ast.Identifier.name; typeAnnotation; _ });
-                       value = (vloc, Ast.Expression.Function func);
-                       _ }) ->
-        Ast.Expression.Function.(
-          let { params; defaults; rest; body;
-                returnType; typeParameters; id; async; _ } = func
-          in
-          let reason = mk_reason "function" vloc in
-          let this = Flow_js.mk_tvar cx (replace_reason "this" reason) in
-          let ft = mk_function id cx ~async reason typeParameters
-            (params, defaults, rest) returnType body this
-          in
-          Hashtbl.replace cx.type_table vloc ft;
-          SMap.add name ft map
-        )
-
-    (* name = non-function expr *)
-    | Property (loc, { Property.kind = Property.Init;
-        key =
-          Property.Identifier (_, { Ast.Identifier.name; _ }) |
-          Property.Literal (_, {
-            Ast.Literal.value = Ast.Literal.String name;
-            _;
-          });
-                     value = v;
+and object_prop cx map = Ast.Expression.Object.(function
+  (* name = function expr *)
+  | Property (loc, { Property.kind = Property.Init;
+                     key = Property.Identifier (_, {
+                       Ast.Identifier.name; typeAnnotation; _ });
+                     value = (vloc, Ast.Expression.Function func);
                      _ }) ->
-      let t = expression cx v in
-      SMap.add name t map
-
-    (* literal LHS *)
-    | Property (loc, { Property.key = Property.Literal _; _ }) ->
-      let msg = "non-string literal property keys not supported" in
-      Flow_js.add_error cx [mk_reason "" loc, msg];
-      map
-
-
-    (* With the enable_unsafe_getters_and_setters option set, we enable some
-     * unsafe support for getters and setters. The main unsafe bit is that we
-     * don't properly havok refinements when getter and setter methods are called.
-     * When used in objects, they're a little strange. Technically the getter's
-     * return type and the setter's param type don't have to be the same.
-     *
-     * To properly model this, we should keep track of which properties have
-     * getters and setters. However, for now we'll be a little overly strict
-     * and just enforce that any property that has had a getter and a setter
-     * should just let the setter's param type flow to the getter's return type.
-     *)
-
-    (* unsafe getter property *)
-    | Property (loc, {
-        Property.kind = Property.Get;
-        key = Property.Identifier (_, { Ast.Identifier.name; typeAnnotation; _ });
-        value = (vloc, Ast.Expression.Function func);
-        _ })
-      when are_getters_and_setters_enabled () ->
       Ast.Expression.Function.(
-        let { body; returnType; _ } = func in
-        let reason = mk_reason "getter function" vloc in
-        let this = Flow_js.mk_tvar cx (replace_reason "this" reason) in
-        let function_type = mk_function None cx ~async:false reason None
-          ([], [], None) returnType body this
+        let { params; defaults; rest; body;
+              returnType; typeParameters; id; async; _ } = func
         in
-        let return_t = extract_getter_type function_type in
-        let map, prop_t = (match SMap.get name map with
-        | Some prop_t -> map, prop_t
-        | _ ->
-          let prop_t =
-            Flow_js.mk_tvar cx (mk_reason "getter/setter property" vloc) in
-          SMap.add name prop_t map, prop_t) in
-        Flow_js.unify cx prop_t return_t;
-        map
+        let reason = mk_reason "function" vloc in
+        let this = Flow_js.mk_tvar cx (replace_reason "this" reason) in
+        let ft = mk_function id cx ~async reason typeParameters
+          (params, defaults, rest) returnType body this
+        in
+        Hashtbl.replace cx.type_table vloc ft;
+        SMap.add name ft map
       )
 
-    (* unsafe setter property *)
-    | Property (loc, {
-      Property.kind = Property.Set;
-        key = Property.Identifier (_, { Ast.Identifier.name; typeAnnotation; _ });
-        value = (vloc, Ast.Expression.Function func);
-        _ })
-      when are_getters_and_setters_enabled () ->
-      Ast.Expression.Function.(
-        let { params; defaults; body; returnType; _ } = func in
-        let reason = mk_reason "setter function" vloc in
-        let this = Flow_js.mk_tvar cx (replace_reason "this" reason) in
-        let function_type = mk_function None cx ~async:false reason None
-          (params, defaults, None) returnType body this
-        in
-        let param_t = extract_setter_type function_type in
-        let map, prop_t = (match SMap.get name map with
-        | Some prop_t -> map, prop_t
-        | _ ->
-          let prop_t =
-            Flow_js.mk_tvar cx (mk_reason "getter/setter property" vloc) in
-          SMap.add name prop_t map, prop_t) in
-        Flow_js.unify cx prop_t param_t;
-        map
-      )
+  (* name = non-function expr *)
+  | Property (loc, { Property.kind = Property.Init;
+      key =
+        Property.Identifier (_, { Ast.Identifier.name; _ }) |
+        Property.Literal (_, {
+          Ast.Literal.value = Ast.Literal.String name;
+          _;
+        });
+                   value = v;
+                   _ }) ->
+    let t = expression cx v in
+    SMap.add name t map
 
-    | Property (loc, { Property.kind = Property.Get | Property.Set; _ }) ->
-      let msg = "get/set properties not yet supported" in
-      Flow_js.add_error cx [mk_reason "" loc, msg];
+  (* literal LHS *)
+  | Property (loc, { Property.key = Property.Literal _; _ }) ->
+    let msg = "non-string literal property keys not supported" in
+    Flow_js.add_error cx [mk_reason "" loc, msg];
+    map
+
+
+  (* With the enable_unsafe_getters_and_setters option set, we enable some
+   * unsafe support for getters and setters. The main unsafe bit is that we
+   * don't properly havok refinements when getter and setter methods are called.
+   * When used in objects, they're a little strange. Technically the getter's
+   * return type and the setter's param type don't have to be the same.
+   *
+   * To properly model this, we should keep track of which properties have
+   * getters and setters. However, for now we'll be a little overly strict
+   * and just enforce that any property that has had a getter and a setter
+   * should just let the setter's param type flow to the getter's return type.
+   *)
+
+  (* unsafe getter property *)
+  | Property (loc, {
+      Property.kind = Property.Get;
+      key = Property.Identifier (_, { Ast.Identifier.name; typeAnnotation; _ });
+      value = (vloc, Ast.Expression.Function func);
+      _ })
+    when are_getters_and_setters_enabled () ->
+    Ast.Expression.Function.(
+      let { body; returnType; _ } = func in
+      let reason = mk_reason "getter function" vloc in
+      let this = Flow_js.mk_tvar cx (replace_reason "this" reason) in
+      let function_type = mk_function None cx ~async:false reason None
+        ([], [], None) returnType body this
+      in
+      let return_t = extract_getter_type function_type in
+      let map, prop_t = (match SMap.get name map with
+      | Some prop_t -> map, prop_t
+      | _ ->
+        let prop_t =
+          Flow_js.mk_tvar cx (mk_reason "getter/setter property" vloc) in
+        SMap.add name prop_t map, prop_t) in
+      Flow_js.unify cx prop_t return_t;
       map
+    )
 
-    (* computed LHS *)
-    | Property (loc, { Property.key = Property.Computed _; _ }) ->
-      let msg = "computed property keys not supported" in
-      Flow_js.add_error cx [mk_reason "" loc, msg];
+  (* unsafe setter property *)
+  | Property (loc, {
+    Property.kind = Property.Set;
+      key = Property.Identifier (_, { Ast.Identifier.name; typeAnnotation; _ });
+      value = (vloc, Ast.Expression.Function func);
+      _ })
+    when are_getters_and_setters_enabled () ->
+    Ast.Expression.Function.(
+      let { params; defaults; body; returnType; _ } = func in
+      let reason = mk_reason "setter function" vloc in
+      let this = Flow_js.mk_tvar cx (replace_reason "this" reason) in
+      let function_type = mk_function None cx ~async:false reason None
+        (params, defaults, None) returnType body this
+      in
+      let param_t = extract_setter_type function_type in
+      let map, prop_t = (match SMap.get name map with
+      | Some prop_t -> map, prop_t
+      | _ ->
+        let prop_t =
+          Flow_js.mk_tvar cx (mk_reason "getter/setter property" vloc) in
+        SMap.add name prop_t map, prop_t) in
+      Flow_js.unify cx prop_t param_t;
       map
+    )
 
-    (* spread prop *)
+  | Property (loc, { Property.kind = Property.Get | Property.Set; _ }) ->
+    let msg = "get/set properties not yet supported" in
+    Flow_js.add_error cx [mk_reason "" loc, msg];
+    map
+
+  (* computed LHS *)
+  | Property (loc, { Property.key = Property.Computed _; _ }) ->
+    let msg = "computed property keys not supported" in
+    Flow_js.add_error cx [mk_reason "" loc, msg];
+    map
+
+  (* spread prop *)
+  | SpreadProperty (loc, { SpreadProperty.argument }) ->
+    map
+)
+
+and prop_map_of_object cx props =
+  List.fold_left (object_prop cx) SMap.empty props
+
+and object_ cx props = Ast.Expression.Object.(
+  List.fold_left (fun (map, spreads) t -> match t with
     | SpreadProperty (loc, { SpreadProperty.argument }) ->
-      spread := (expression cx argument)::!spread;
-      map
-
-  ) SMap.empty props,
-  !spread
+        let spread = expression cx argument in
+        object_prop cx map t, spread::spreads
+    | t -> object_prop cx map t, spreads
+  ) (SMap.empty, []) props
 )
 
 and variable cx (loc, vdecl) = Ast.(
@@ -4746,7 +4751,7 @@ and static_method_call_Object cx loc m args_ = Ast.Expression.(
   | ("create", [ Expression e;
                  Expression (_, Object { Object.properties }) ]) ->
     let proto = expression cx e in
-    let pmap, _ = object_ cx properties in
+    let pmap = prop_map_of_object cx properties in
     let map = pmap |> SMap.mapi (fun x spec ->
       let reason = prefix_reason (spf ".%s of " x) reason in
       Flow_js.mk_tvar_where cx reason (fun tvar ->
@@ -4784,7 +4789,7 @@ and static_method_call_Object cx loc m args_ = Ast.Expression.(
   | ("defineProperties", [ Expression e;
                          Expression (_, Object { Object.properties }) ]) ->
     let o = expression cx e in
-    let pmap, _ = object_ cx properties in
+    let pmap = prop_map_of_object cx properties in
     pmap |> SMap.iter (fun x spec ->
       let reason = prefix_reason (spf ".%s of " x) reason in
       let tvar = Flow_js.mk_tvar cx reason in
