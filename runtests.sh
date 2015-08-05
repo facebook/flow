@@ -21,6 +21,14 @@ else
   COLOR_YELLOW_BOLD=""
   COLOR_WHITE_ON_RED_BOLD=""
 fi
+print_failure() {
+    printf "%b[✗] FAIL:%b %s%b\n" \
+      $COLOR_RED_BOLD $COLOR_DEFAULT $1 $COLOR_RESET
+}
+print_skip() {
+    printf "%b[-] SKIP:%b %s%b\n" \
+      $COLOR_YELLOW_BOLD $COLOR_DEFAULT $1 $COLOR_RESET
+}
 cd "$(dirname "${BASH_SOURCE[0]}")"
 passed=0
 failed=0
@@ -32,9 +40,26 @@ do
     cd $dir
     name=${dir##*/}
     exp_file="${name}.exp"
-    if [ -e ".flowconfig" ] && [ -e $exp_file ] &&
-        [[ -z $filter || $name =~ $filter ]]
+    if [[ -z $filter || $name =~ $filter ]]
     then
+        if ([ ! -e $exp_file ] || [ ! -e ".flowconfig" ])
+        then
+            cd ../..
+            if [ $name = "auxiliary" ] ||
+               [ $name = "callable" ] ||
+               [ $name = "suggest" ]
+            then
+                (( skipped++ ))
+                print_skip $name
+                continue;
+            else
+                (( failed++ ))
+                print_failure $name
+                printf "Missing $name.exp file or .flowconfig file\n"
+                continue;
+            fi
+        fi
+
         # check this dir
         printf "%b[ ] RUN:%b  %s%b\r" \
           $COLOR_DEFAULT_BOLD $COLOR_DEFAULT $name $COLOR_RESET
@@ -97,8 +122,7 @@ do
         if [ -s $diff_file ]
         then
             (( failed++ ))
-            printf "%b[✗] FAIL:%b %s%b\n" \
-              $COLOR_RED_BOLD $COLOR_DEFAULT $name $COLOR_RESET
+            print_failure $name
             cat $err_file
             if [ -t 1 ] ; then
                 esc=$(echo -e "\x1b")
@@ -117,8 +141,7 @@ do
         fi
     else
         (( skipped++ ))
-        printf "%b[-] SKIP:%b %s%b\n" \
-          $COLOR_YELLOW_BOLD $COLOR_DEFAULT $name $COLOR_RESET
+        print_skip $name
     fi
     cd ../..
 done
