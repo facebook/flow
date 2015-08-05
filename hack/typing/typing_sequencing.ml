@@ -98,7 +98,7 @@ let used_variables_visitor =
   method! on_expr acc (_, e_ as e) =
     match e_ with
     | Binop (Ast.Eq None, e1, e2) ->
-      let _, not_vars = Core_list.partition_map ~f:get_lvar (unpack_lvals e1) in
+      let _, not_vars = List.partition_map (unpack_lvals e1) get_lvar in
       let acc = List.fold_left ~f:this#on_expr ~init:acc not_vars in
       this#on_expr acc e2
     | _ -> parent#on_expr acc e
@@ -193,7 +193,7 @@ let sequence_visitor ~require_used used_vars =
       (* Unpack any list(...) destructuring and separate out locals
        * we are assigning to from other lvals. *)
       let lvars, lval_exprs =
-        Core_list.partition_map ~f:get_lvar (unpack_lvals e1) in
+        List.partition_map (unpack_lvals e1) get_lvar in
 
       (* Build separate envs for the direct variable assignments and
        * for the other lvals assigned to. We treat all these lvals

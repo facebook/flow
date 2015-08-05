@@ -316,14 +316,13 @@ let load genv filename to_recheck =
   SharedMem.load (filename^".sharedmem");
   HackEventLogger.load_read_end filename;
   let to_recheck =
-    Core_list.rev_append (BuildMain.get_all_targets ()) to_recheck in
+    List.rev_append (BuildMain.get_all_targets ()) to_recheck in
   let paths_to_recheck =
-    Core_list.map ~f:(Relative_path.concat Relative_path.Root) to_recheck in
+    List.map to_recheck (Relative_path.concat Relative_path.Root) in
   let updates =
-    Core_list.fold_left
+    List.fold_left paths_to_recheck
       ~f:(fun acc update -> Relative_path.Set.add update acc)
-      ~init:Relative_path.Set.empty
-      paths_to_recheck in
+      ~init:Relative_path.Set.empty in
   let start_t = Unix.time () in
   let env, rechecked = recheck genv env updates in
   let rechecked_count = Relative_path.Set.cardinal rechecked in
@@ -364,7 +363,7 @@ let run_load_script genv env cmd =
     in
     Hh_logger.log
       "Load state found at %s. %d files to recheck\n%!"
-      state_fn (Core_list.length to_recheck);
+      state_fn (List.length to_recheck);
     HackEventLogger.load_script_done ();
     let env = load genv state_fn to_recheck in
     HackEventLogger.init_done "load";
