@@ -448,45 +448,16 @@ let main options config =
     let env = MainInit.go options program_init in
     serve genv env socket
 
-let daemonize options =
-  let open Unix in
-  (* detach ourselves from the parent process *)
-  let pid = Fork.fork() in
-  if pid == 0 then
-    begin
-      ignore(setsid());
-      with_umask
-        0o111
-        (fun () ->
-         (* close stdin/stdout/stderr *)
-         let fd = openfile "/dev/null" [O_RDONLY; O_CREAT] 0o777 in
-         dup2 fd stdin;
-         close fd;
-         let file = GlobalConfig.log_file (ServerArgs.root options) in
-         (try Sys.rename file (file ^ ".old") with _ -> ());
-         let fd = openfile file [O_WRONLY; O_CREAT; O_APPEND] 0o666 in
-         dup2 fd stdout;
-         dup2 fd stderr;
-         close fd
-        )
-    (* child process is ready *)
-    end
-  else
-    begin
-      (* let original parent exit *)
-      Printf.eprintf "Spawned %s (child pid=%d)\n" (Program.name) pid;
-      Printf.eprintf "Logs will go to %s\n%!"
-        (GlobalConfig.log_file (ServerArgs.root options));
-      raise Exit
-    end
-
 let start () =
   let options = Program.parse_options () in
   Relative_path.set_path_prefix Relative_path.Root (ServerArgs.root options);
   let config = Program.load_config () in
-  try
-    if ServerArgs.should_detach options
-    then daemonize options;
-    main options config
-  with Exit ->
-    ()
+  if ServerArgs.should_detach options then begin
+    let log_file = GlobalConfig.log_file (ServerArgs.root options) in
+    let {Daemon.pid; _} = Daemon.fork ~log_file begin fun (_ic, _oc) ->
+      ignore @@ Unix.setsid ();
+      main options config
+    end in
+    Printf.eprintf "Spawned %s (child pid=%d)\n" Program.name pid;
+    Printf.eprintf "Logs will go to %s\n%!" log_file;
+  end else main options config
