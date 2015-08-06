@@ -76,13 +76,16 @@
  */
 /*****************************************************************************/
 
+
+#include <caml/memory.h>
+#include <caml/alloc.h>
+#include <caml/fail.h>
+
+#ifndef _WIN32
 /* define CAML_NAME_SPACE to ensure all the caml imports are prefixed with
  * 'caml_' */
 #define CAML_NAME_SPACE
 #include <assert.h>
-#include <caml/memory.h>
-#include <caml/alloc.h>
-#include <caml/fail.h>
 #include <fcntl.h>
 #include <pthread.h>
 #include <signal.h>
@@ -95,12 +98,12 @@
 #include <sys/stat.h>
 #include <sys/syscall.h>
 #include <sys/types.h>
-#include <unistd.h>
-
 #ifndef NO_LZ4
 #include <lz4.h>
 #include <lz4hc.h>
 #endif
+
+#include <unistd.h>
 
 /*****************************************************************************/
 /* Config settings (essentially constants, so they don't need to live in shared
@@ -999,3 +1002,81 @@ void hh_remove(value key) {
   assert(hashtbl[slot].hash == get_hash(key));
   hashtbl[slot].addr = NULL;
 }
+
+#else // _WIN32
+// CAGO: some of theses functions will be the same as in linux version
+
+void hh_add(value key, value data) {}
+void hh_add_dep(value ocaml_dep) {}
+void hh_call_after_init() {}
+void hh_collect() {}
+void hh_move(value key1, value key2) {}
+void hh_remove(value key) {}
+void hh_save(value out_filename) {}
+void hh_shared_clear() {}
+void hh_shared_init(value global_size_val, value heap_size_val) {}
+void hh_load(value in_filename) {}
+void hh_shared_store(value data) {}
+void hh_worker_init() {}
+
+value hh_counter_next() {
+  CAMLparam0();
+  caml_failwith("'hh_counter_next` is not implemented in `hh_shared.c`.");
+  CAMLreturn(Val_unit);
+}
+
+value hh_dep_slots() {
+  CAMLparam0();
+  caml_failwith("'hh_dep_slots` is not implemented in `hh_shared.c`.");
+  CAMLreturn(Val_unit);
+}
+
+value hh_dep_used_slots() {
+  CAMLparam0();
+  caml_failwith("'hh_dep_used_slots` is not implemented in `hh_shared.c`.");
+  CAMLreturn(Val_unit);
+}
+
+value hh_get(value key) {
+  CAMLparam1(key);
+  caml_failwith("'hh_get` is not implemented in `hh_shared.c`.");
+  CAMLreturn(Val_unit);
+}
+
+value hh_get_dep(value dep) {
+  CAMLparam1(dep);
+  caml_failwith("'hh_get_dep` is not implemented in `hh_shared.c`.");
+  CAMLreturn(Val_unit);
+}
+
+value hh_hash_slots() {
+  CAMLparam0();
+  caml_failwith("'hh_hash_slots` is not implemented in `hh_shared.c`.");
+  CAMLreturn(Val_unit);
+}
+
+value hh_hash_used_slots() {
+  CAMLparam0();
+  caml_failwith("'hh_hash_used_slots` is not implemented in `hh_shared.c`.");
+  CAMLreturn(Val_unit);
+}
+
+value hh_heap_size() {
+  CAMLparam0();
+  caml_failwith("'hh_heap_size` is not implemented in `hh_shared.c`.");
+  CAMLreturn(Val_unit);
+}
+
+value hh_mem(value key) {
+  CAMLparam1(key);
+  caml_failwith("'hh_mem` is not implemented in `hh_shared.c`.");
+  CAMLreturn(Val_unit);
+}
+
+value hh_shared_load() {
+  CAMLparam0();
+  caml_failwith("'hh_shared_load` is not implemented in `hh_shared.c`.");
+  CAMLreturn(Val_unit);
+}
+
+#endif

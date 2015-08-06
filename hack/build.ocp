@@ -1,0 +1,458 @@
+(**
+ * Copyright (c) 2015, Facebook, Inc.
+ * All rights reserved.
+ *
+ * This source code is licensed under the BSD-style license found in the
+ * LICENSE file in the "hack" directory of this source tree. An additional grant
+ * of patent rights can be found in the PATENTS file in the same directory.
+ *
+ *)
+
+comp = [ "-thread" ]
+link = [ "-thread" ]
+
+if debug then {
+  comp += [ "-g" ]
+  link += [ "-g" ]
+}
+
+if os_type = "linux" then {
+  cclib = [ "-lelf" ]
+}
+
+if have_lz4 then {
+  cclib += [ "-llz4" ]
+} else {
+  ccopt += [ "-DNO_LZ4" ]
+}
+
+requires = [ "unix" "str" "threads" ]
+
+begin library "hh-third-party"
+
+  files = [
+    "third-party/core/caml.ml"
+    "third-party/core/commutative_group.ml"
+    "third-party/core/container.ml"
+    "third-party/core/core_printf.ml"
+    "third-party/core/monad.ml"
+    "third-party/core/polymorphic_compare.ml"
+    "third-party/core/poly.ml"
+    "third-party/core/core_list.ml"
+    "third-party/core/option.ml"
+    "third-party/core/result.ml"
+    "third-party/avl/monoidAvl.ml"
+  ]
+end
+
+begin library "hh-fsnotify-linux"
+  if not (system = "linux" && os_type = "Unix") then enabled = false
+  cclib = [ "-lelf" ]
+  files = [
+    "third-party/inotify/inotify_stubs.c"
+    "third-party/inotify/inotify.ml"
+    "fsnotify_linux/fsnotify.ml"
+  ]
+  requires = [ "hh-utils-core" ]
+end
+
+begin library "hh-fsnotify-darwin"
+  if not (system = "macosx" && os_type = "Unix") then enabled = false
+  cclib = [
+    "-sectcreate" "-__text" "hhi" "%{ROOTPROJECT_FULL_SRC_DIR}%/bin/hhi.tar.gz"
+    "-framework" "CoreServices"
+    "-framework" "CoreFoundation"
+  ]
+  files = [
+    "fsevents/fsevents_stubs.c"
+    "fsevents/fsevents.ml"
+    "fsnotify_darwin/fsnotify.ml"
+  ]
+  requires += [ "ROOTPROJECT" ]
+end
+
+begin library "hh-fsnotify-win"
+  if not (os_type = "Win32") then enabled = false
+  requires += [ "ROOTPROJECT" ]
+  files = [ "fsnotify_win/fsnotify.ml" ]
+end
+
+begin library "hh-fsnotify"
+  if os_type = "Win32" then {
+    requires = [ "hh-fsnotify-win" ]
+  } else if system = "linux" then {
+    requires = [ "hh-fsnotify-linux" ]
+  } else {
+    requires = [ "hh-fsnotify-darwin" ]
+  }
+end
+
+begin library "hh-utils-core"
+  requires = [ "hh-third-party" ]
+  files = [ "utils/core.ml" ]
+end
+
+begin library "hh-utils-common"
+  requires += [ "hh-third-party" "hh-utils-core" "hh-fsnotify" ]
+  files = [
+    "heap/hh_shared.c"
+
+    "utils/get_build_id.gen.c"
+    "utils/get_build_id.c"
+    "utils/nproc.c"
+    "utils/realpath.c"
+    "utils/hh_json.ml"
+    "utils/ident.ml"
+    "utils/utils.ml"
+    "utils/sys_utils.ml"
+    "utils/path.ml"
+    "utils/relative_path.ml"
+    "utils/pos.ml"
+    "utils/errors.ml"
+    "utils/lint.ml"
+    "utils/config_file.ml"
+  ]
+end
+
+begin library "hh-utils"
+  requires += [ "hh-utils-common" ]
+  files = [
+    "utils/tmp.ml"
+    "utils/lock.ml"
+    "utils/pidLog.ml"
+    "utils/fork.ml"
+    "utils/daemon.ml"
+    "utils/build_id.ml"
+    "utils/wwwroot.ml"
+    "utils/tty.ml"
+    "utils/printSignal.ml"
+    "utils/trie.ml"
+    "utils/find.ml"
+    "utils/hh_logger.ml"
+    "utils/exit_status.ml"
+  ]
+end
+
+begin library "hh-deps"
+  requires += [ "hh-third-party" "hh-utils" ]
+  files = [
+    "deps/fileInfo.ml"
+    "deps/typing_deps.ml"
+  ]
+end
+
+begin library "hh-stubs"
+  requires += [ "hh-utils" ]
+  files = [
+    "stubs/eventLogger.ml"
+    "stubs/hackEventLogger.ml"
+    "stubs/filesToIgnore.ml"
+    "stubs/linting_service.ml"
+    "stubs/prologMain.ml"
+    "stubs/buildMain.ml"
+    "stubs/prolog.ml"
+  ]
+end
+
+begin library "hh-heap"
+  requires += [ "hh-third-party"  "hh-utils" "hh-stubs" ]
+
+  files = [
+    "heap/prefix.ml"
+    "heap/value.ml"
+    "heap/sharedMem.ml"
+    "heap/globalStorage.ml"
+  ]
+end
+
+begin library "hh-globals"
+  requires += [ "hh-third-party" "hh-utils" ]
+
+  files = [
+    "globals/autocomplete.ml"
+    "globals/ide.ml"
+    "globals/globalConfig.ml"
+  ]
+end
+
+begin library "hh-procs"
+  requires += [ "hh-third-party" "hh-utils" "hh-heap" "hh-globals" ]
+
+  files = [
+    "procs/worker.ml"
+    "procs/multiWorker.ml"
+    "procs/bucket.ml"
+  ]
+end
+
+begin library "hh-parsing"
+  requires += [ "hh-third-party" "hh-utils" "hh-deps" "hh-heap"
+                "hh-globals"  "hh-procs" ]
+  files = [
+    "parsing/namespace_env.ml"
+    "parsing/ast.ml"
+    "parsing/lexer_hack.mll"
+    "parsing/namespaces.ml"
+    "parsing/parser_heap.ml"
+    "parsing/parser_hack.ml"
+    "parsing/parsing_hooks.ml"
+    "parsing/ast_utils.ml"
+    "parsing/parsing_service.ml"
+  ]
+end
+
+begin library "hh-typing-base"
+  requires += [ "hh-utils" "hh-parsing" ]
+  files = [
+    "naming/naming_special_names.ml"
+    "typing/typing_reason.ml"
+    "typing/typing_defs.ml"
+    "typing/typing_heap.ml"
+    "naming/naming_hooks.ml"
+    "naming/naming_ast_helpers.ml"
+    "naming/typecheckerOptions.ml"
+    "naming/nast.ml"
+    "naming/naming.ml"
+  ]
+end
+
+begin library "hh-dfind"
+  requires += [ "hh-third-party" "hh-fsnotify" "hh-utils" ]
+  files = [
+    "dfind/dfindEnv.ml"
+    "dfind/dfindMaybe.ml"
+    "dfind/dfindAddFile.ml"
+    "dfind/dfindServer.ml"
+    "dfind/dfindLib.ml"
+  ]
+end
+
+begin library "hh-naming"
+  requires += [ "hh-typing-base" ]
+
+  files = [
+    "naming/naming_heap.ml"
+    "naming/nast_eval.ml"
+    "naming/attributes.ml"
+    "naming/nastVisitor.ml"
+  ]
+end
+
+begin library "hh-typing"
+  requires += [ "hh-naming" ]
+  files = [
+    "typing/typing_env.ml"
+    "typing/typing_hooks.ml"
+    "typing/typing_print.ml"
+    "typing/nastCheck.ml"
+    "typing/nast_terminality.ml"
+    "typing/typeVisitor.ml"
+    "typing/typing_dependent_type.ml"
+    "typing/typing_expand.ml"
+    "typing/typing_generic.ml"
+    "typing/typing_utils.ml"
+    "typing/typing_subst.ml"
+    "typing/typing_phase.ml"
+    "typing/typing_instantiate.ml"
+    "typing/typing_taccess.ml"
+    "typing/typing_tdef.ml"
+    "typing/typing_unification_env.ml"
+    "typing/typing_unify.ml"
+    "typing/typing_subtype.ml"
+    "typing/typing_ops.ml"
+    "typing/typing_suggest.ml"
+    "typing/nastInitCheck.ml"
+    "typing/typingEqualityCheck.ml"
+    "typing/typing_alias.ml"
+    "typing/typing_async.ml"
+    "typing/typing_enum.ml"
+    "typing/typing_hint.ml"
+    "typing/typing_extends.ml"
+    "typing/typing_exts.ml"
+    "typing/typing_lenv.ml"
+    "typing/typing_shapes.ml"
+    "typing/typing_variance.ml"
+    "typing/typing_sequencing.ml"
+    "typing/typing.ml"
+    "typing/typing_dynamic_yield.ml"
+    "typing/typing_inherit.ml"
+    "typing/typing_decl.ml"
+    "typing/typing_decl_service.ml"
+    "typing/typing_check_service.ml"
+    "typing/typing_check_utils.ml"
+    "typing/typing_compare.ml"
+    "typing/coverage_level.ml"
+    "typing/typing_redecl_service.ml"
+    "typing/typing_suggest_service.ml"
+  ]
+end
+
+begin library "hh-search"
+  requires += [ "hh-utils" "hh-heap"  "hh-parsing" ]
+  files = [
+    "search/searchUtils.ml"
+    "search/fuzzySearchService.ml"
+    "search/trieSearchService.ml"
+    "search/searchService.ml"
+    "search/hackSearchService.ml"
+  ]
+end
+
+begin library "hh-stubs-ai"
+  requires += [ "hh-typing-base" ]
+  files = [
+    "stubs/ai.ml"
+  ]
+end
+
+begin library "hh-socket"
+  requires += [ "hh-utils" ]
+  files = [
+    "socket/socket.ml"
+  ]
+end
+
+begin library "hh-hhi"
+  requires += [ "hh-globals" "hh-utils" ]
+  files = [
+    "hhi/hhi_elf.c"
+    "hhi/hhi.ml"
+  ]
+end
+
+begin library "hh-server-base"
+  requires += [ "hh-third-party" "hh-utils" "hh-typing"  "hh-search"
+                "hh-stubs" "hh-stubs-ai"  "hh-socket" "hh-dfind" "hh-hhi" ]
+  files = [
+    "server/serverConfig.ml"
+    "server/serverArgs.ml"
+    "server/serverEnv.ml"
+    "server/serverUtils.ml"
+    "server/argumentInfoService.ml"
+    "server/autocompleteService.ml"
+    "server/fileOutline.ml"
+    "server/serverIdeUtils.ml"
+    "server/findRefsService.ml"
+    "server/findUtils.ml"
+    "server/identifySymbolService.ml"
+    "server/inferAtPosService.ml"
+    "server/methodJumps.ml"
+    "server/serverArgumentInfo.ml"
+    "server/serverAutoComplete.ml"
+    "server/serverBuild.ml"
+    "server/serverCheckpoint.ml"
+    "server/serverColorFile.ml"
+    "server/serverCoverageMetric.ml"
+    "server/serverError.ml"
+    "server/serverFindRefs.ml"
+    "server/serverIdentifyFunction.ml"
+    "server/serverInferType.ml"
+    "server/serverLint.ml"
+    "server/serverRefactor.ml"
+    "server/serverSearch.ml"
+    "server/symbolUtils.ml"
+    "server/symbolFunCallService.ml"
+    "server/symbolTypeService.ml"
+    "server/symbolInfoService.ml"
+    "server/serverRpc.ml"
+    "server/serverTypeCheck.ml"
+    "server/serverCommand.ml"
+    "server/serverConvert.ml"
+  ]
+end
+
+begin library "hh-server"
+  requires += [
+    "hh-third-party" "hh-utils" "hh-typing"
+    "hh-search"  "hh-stubs"  "hh-stubs-ai"
+    "hh-socket"  "hh-dfind" "hh-server-base"
+  ]
+  files = [
+    "server/serverEnvBuild.ml"
+    "server/serverPeriodical.ml"
+    "server/serverInit.ml"
+    "server/serverMain.ml"
+  ]
+end
+
+begin library "hh-client"
+  requires += [
+    "hh-deps"  "hh-heap"  "hh-parsing"
+    "hh-globals"  "hh-search"  "hh-stubs"
+    "hh-socket"  "hh-server-base"
+  ]
+  files = [
+    "client/clientConnectSimple.ml"
+    "client/clientStop.ml"
+    "client/hackClientStop.ml"
+    "client/clientStart.ml"
+    "client/clientConnect.ml"
+    "client/clientLogCommand.ml"
+    "client/clientBuild.ml"
+    "client/clientEnv.ml"
+    "client/clientCommand.ml"
+    "client/clientArgs.ml"
+    "client/clientArgumentInfo.ml"
+    "client/clientAutocomplete.ml"
+    "client/clientCheckStatus.ml"
+    "client/colorFile.ml"
+    "client/clientColorFile.ml"
+    "client/clientCoverageMetric.ml"
+    "client/clientFindRefs.ml"
+    "client/clientLint.ml"
+    "client/clientMethodJumps.ml"
+    "client/clientOutline.ml"
+    "client/clientRefactor.ml"
+    "client/clientSearch.ml"
+    "client/clientSymbolInfo.ml"
+    "client/clientTypeAtPos.ml"
+    "client/clientCheck.ml"
+    "client/clientLogCommandUtils.ml"
+    "client/clientRestart.ml"
+  ]
+end
+
+begin program "hh_client"
+  requires += [ "hh-client" ]
+  files = [ "hh_client.ml" ]
+end
+
+begin program "hh_server"
+  requires += [ "hh-server" ]
+  files = [ "hh_server.ml" ]
+end
+
+begin library "hh-emitter"
+  requires += [ "hh-naming" ]
+
+  files = [
+    "emitter/emitter_core.ml"
+    "emitter/emitter_consts.ml"
+    "emitter/emitter_expr.ml"
+    "emitter/emitter_lit.ml"
+    "emitter/emitter_stmt.ml"
+    "emitter/emitter.ml"
+  ]
+end
+
+begin library "hh-format"
+  requires += [ "hh-typing-base" ]
+  files = [
+    "stubs/formatEventLogger.ml"
+    "format/format_hack.ml"
+    "format/format_diff.ml"
+    "format/format_mode.ml"
+  ]
+end
+
+begin program "hh_format"
+  requires += [ "hh-format" "hh-client" ]
+  files = [ "hh_format.ml" ]
+end
+
+begin program "hh_single_type_check"
+  requires += [ "hh-client"  "hh-emitter" ]
+  files = [
+    "hh_single_type_check.ml"
+  ]
+end
