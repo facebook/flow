@@ -47,13 +47,16 @@ let spec = {
         ~doc:"Treat any class member name with a leading underscore as private"
     |> error_flags
     |> temp_dir_flag
+    |> from_flag
     |> anon "root" (required string)
         ~doc:"Root"
   )
 }
 
 let main all weak debug verbose verbose_indent json profile quiet module_
-         lib no_flowlib munge_underscore_members error_flags temp_dir root () =
+         lib no_flowlib munge_underscore_members error_flags temp_dir from root
+         () =
+  FlowEventLogger.set_from from;
   let opt_libs = match lib with
   | None -> []
   | Some lib -> [Path.make lib]

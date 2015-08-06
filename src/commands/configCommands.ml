@@ -17,6 +17,7 @@ module Init = struct
         CommandUtils.exe_name;
     args = CommandSpec.ArgSpec.(
       empty
+      |> CommandUtils.from_flag
       |> flag "--options" (optional string)
           ~doc:"Semicolon-delimited list of key=value pairs"
       |> anon "root" (optional string)
@@ -24,7 +25,8 @@ module Init = struct
     )
   }
 
-  let main options root () =
+  let main from options root () =
+    FlowEventLogger.set_from from;
     let root = match root with
     | None -> Sys.getcwd () |> Path.make
     | Some root -> Path.make root
