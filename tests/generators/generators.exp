@@ -1,0 +1,50 @@
+
+generators.js:3:9,10: string
+This type is incompatible with
+generators.js:1:35,40: number
+
+generators.js:6:46,51: number
+This type is incompatible with
+generators.js:14:10,15: string
+
+generators.js:23:10,11: string
+This type is incompatible with
+generators.js:22:46,51: number
+
+generators.js:27:27,27: number
+This type is incompatible with
+generators.js:30:36,41: string
+
+generators.js:31:23,42: call of method next
+Error:
+generators.js:31:41,41: number
+This type is incompatible with
+generators.js:27:11,17: boolean
+
+generators.js:31:23,48: property value
+Error:
+generators.js:28:10,11: string
+This type is incompatible with
+generators.js:35:22,28: boolean
+
+generators.js:70:32,33: string
+This type is incompatible with
+generators.js:66:13,18: number
+
+generators.js:74:11,12: string
+This type is incompatible with
+generators.js:80:8,13: number
+
+generators.js:85:12,13: string
+This type is incompatible with
+generators.js:88:10,15: number
+
+generators.js:95:33,34: string
+This type is incompatible with
+[LIB] core.js:307:37,40: undefined
+
+generators.js:97:45,50: number
+This type is incompatible with
+generators.js:101:8,13: string
+
+Found 11 errors
