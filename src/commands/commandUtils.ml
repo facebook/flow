@@ -177,9 +177,13 @@ let start_flow_server ?temp_dir root =
   | Some dir -> Printf.sprintf "--temp-dir=%s " (Filename.quote dir)
   | None -> ""
   in
-  let flow_server = Printf.sprintf "%s start %s%s 1>&2"
+  let from_arg = match FlowEventLogger.((get_context ()).from) with
+  | Some from -> Printf.sprintf "--from='%s' " from
+  | None -> "" in
+  let flow_server = Printf.sprintf "%s start %s%s%s 1>&2"
     (Filename.quote (Sys.argv.(0)))
     temp_dir_arg
+    from_arg
     (Filename.quote (Path.to_string root)) in
   match Unix.system flow_server with
     | Unix.WEXITED 0 -> ()
