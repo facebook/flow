@@ -8,6 +8,25 @@
  *
  *)
 
+type logging_context = {
+  argv: string;
+  command: string option;
+  from: string option;
+  root: string option;
+  start_time: float;
+}
+
+let get_context _ = {
+  argv = "";
+  command = None;
+  from = None;
+  root = None;
+  start_time = 0.0;
+}
+let set_command _ = ()
+let set_from _ = ()
+let set_root _ = ()
+
 let status_response _ = ()
 let init_server _ = ()
 let init_done _ = ()
@@ -16,4 +35,4 @@ let killed _ = ()
 let lock_lost _ = ()
 let lock_stolen _ = ()
 let out_of_date _ = ()
-let autocomplete_member_result _ _ = ()
+let autocomplete_member_result _ _ _ = ()

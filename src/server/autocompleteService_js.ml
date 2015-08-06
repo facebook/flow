@@ -114,7 +114,7 @@ let autocomplete_filter_members members =
     not (Reason_js.is_internal_name key)
   ) members
 
-let autocomplete_member cx this = Flow_js.(
+let autocomplete_member client_logging_context cx this = Flow_js.(
   let this_t = resolve_type cx this in
   (* Resolve primitive types to their internal class type. We do this to allow
      autocompletion on these too. *)
@@ -127,7 +127,10 @@ let autocomplete_member cx this = Flow_js.(
     | FailureUnhandledType t -> "FAILURE_UNHANDLED_TYPE", JAssoc [
       "type", Constraint_js.json_of_t ~depth:3 cx t;
     ])) in
-  FlowEventLogger.autocomplete_member_result result_str json_data;
+  FlowEventLogger.autocomplete_member_result
+    client_logging_context
+    result_str
+    json_data;
 
   let result_map = Autocomplete.map_of_member_result result in
 
@@ -168,12 +171,12 @@ let autocomplete_id cx env =
       )
     ) env []
 
-let autocomplete_get_results cx state =
+let autocomplete_get_results client_logging_context cx state =
   (* FIXME: See #5375467 *)
   Flow_js.suggested_type_cache := IMap.empty;
   match !state with
   | Some Acid (env) ->
       autocomplete_id cx env
   | Some Acmem (this) ->
-      autocomplete_member cx this
+      autocomplete_member client_logging_context cx this
   | _ -> []

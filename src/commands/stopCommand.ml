@@ -27,6 +27,7 @@ let spec = {
   args = CommandSpec.ArgSpec.(
     empty
     |> CommandUtils.temp_dir_flag
+    |> CommandUtils.from_flag
     |> anon "root" (optional string) ~doc:"Root directory"
   )
 }
@@ -85,13 +86,14 @@ let mean_kill ~tmp_dir root =
   else Printf.fprintf stderr "Successfully killed server for %s\n%!"
     (Path.to_string root)
 
-let main temp_dir root () =
+let main temp_dir from root () =
   let root = CommandUtils.guess_root root in
   let root_s = Path.to_string root in
   let tmp_dir = match temp_dir with
   | Some x -> x
   | None -> FlowConfig.default_temp_dir (* TODO: add flowconfig option *)
   in
+  FlowEventLogger.set_from from;
   try
     let conn = CommandUtils.connect ~tmp_dir root in
     begin

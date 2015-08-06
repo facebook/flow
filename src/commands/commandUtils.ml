@@ -116,6 +116,12 @@ let temp_dir_flag prev = CommandSpec.ArgSpec.(
       ~doc:"Directory in which to store temp files (default: /tmp/flow/)"
 )
 
+let from_flag prev = CommandSpec.ArgSpec.(
+  prev
+  |> flag "--from" (optional string)
+      ~doc:"Specify client (for use by editor plugins)"
+)
+
 (* relativize a loc's source path to a given root whenever strip_root is set *)
 let relativize strip_root root loc =
   if not strip_root then loc else Loc.({
@@ -133,10 +139,12 @@ type command_params = {
   temp_dir : string;
 }
 
-let collect_server_flags main timeout from retries retry_if_init no_auto_start temp_dir =
+let collect_server_flags
+  main timeout retries retry_if_init no_auto_start temp_dir from =
   let default def = function
   | Some x -> x
   | None -> def in
+  FlowEventLogger.set_from from;
   main {
     from = (default "" from);
     retries = (default 3 retries);
@@ -152,8 +160,6 @@ let server_flags prev = CommandSpec.ArgSpec.(
   |> collect collect_server_flags
   |> flag "--timeout" (optional int)
       ~doc:"Maximum time to wait, in seconds"
-  |> flag "--from" (optional string)
-      ~doc:"Specify client (for use by editor plugins)"
   |> flag "--retries" (optional int)
       ~doc:"Set the number of retries. (default: 3)"
   |> flag "--retry-if-init" (optional bool)
@@ -161,6 +167,7 @@ let server_flags prev = CommandSpec.ArgSpec.(
   |> flag "--no-auto-start" no_arg
       ~doc:"If the server if it is not running, do not start it; just exit"
   |> temp_dir_flag
+  |> from_flag
 )
 
 let start_flow_server ?temp_dir root =
@@ -309,6 +316,7 @@ let guess_root dir_or_file =
       else Filename.dirname dir_or_file in
     match search_for_root ".flowconfig" (Path.make dir) 50 with
     | Some root ->
+        FlowEventLogger.set_root (Some (Path.to_string root));
         root
     | None ->
         Printf.fprintf stderr "Could not find a .flowconfig in %s or any \

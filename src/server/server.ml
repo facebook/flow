@@ -119,7 +119,7 @@ struct
     );
     die ()
 
-  let autocomplete file_input oc =
+  let autocomplete command_context file_input oc =
     let path, content = match file_input with
       | ServerProt.FileName _ -> failwith "Not implemented"
       | ServerProt.FileContent (_, content) ->
@@ -132,7 +132,7 @@ struct
           | Some cx, _ -> cx
           | _, errors  -> failwith "Couldn't parse file")
         in
-        AutocompleteService_js.autocomplete_get_results cx state
+        AutocompleteService_js.autocomplete_get_results command_context cx state
       with exn ->
         prerr_endlinef "Couldn't autocomplete\n%s" (Printexc.to_string exn);
         []
@@ -383,9 +383,10 @@ struct
 
   let respond genv env ~client ~msg =
     let oc = client.oc in
-    match msg with
+    let { ServerProt.client_logging_context; command; } = msg in
+    match command with
     | ServerProt.AUTOCOMPLETE fn ->
-        autocomplete fn oc
+        autocomplete client_logging_context fn oc
     | ServerProt.CHECK_FILE fn ->
         check_file fn oc
     | ServerProt.DUMP_TYPES fn ->
