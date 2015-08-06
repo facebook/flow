@@ -448,16 +448,24 @@ let main options config =
     let env = MainInit.go options program_init in
     serve genv env socket
 
+let monitor_daemon options f =
+  let log_file = GlobalConfig.log_file (ServerArgs.root options) in
+  let {Daemon.pid; _} = Daemon.fork begin fun (_ic, _oc) ->
+    ignore @@ Unix.setsid ();
+    let {Daemon.pid; _} = Daemon.fork ~log_file f in
+    let _pid, proc_stat = Unix.waitpid [] pid in
+    (match proc_stat with
+    | Unix.WEXITED 0 -> ()
+    | _ -> HackEventLogger.bad_exit proc_stat)
+  end in
+  Printf.eprintf "Spawned %s (child pid=%d)\n" Program.name pid;
+  Printf.eprintf "Logs will go to %s\n%!" log_file;
+  ()
+
 let start () =
   let options = Program.parse_options () in
   Relative_path.set_path_prefix Relative_path.Root (ServerArgs.root options);
   let config = Program.load_config () in
-  if ServerArgs.should_detach options then begin
-    let log_file = GlobalConfig.log_file (ServerArgs.root options) in
-    let {Daemon.pid; _} = Daemon.fork ~log_file begin fun (_ic, _oc) ->
-      ignore @@ Unix.setsid ();
-      main options config
-    end in
-    Printf.eprintf "Spawned %s (child pid=%d)\n" Program.name pid;
-    Printf.eprintf "Logs will go to %s\n%!" log_file;
-  end else main options config
+  if ServerArgs.should_detach options
+  then monitor_daemon options (fun (_ic, _oc) -> main options config)
+  else main options config
