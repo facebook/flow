@@ -3436,7 +3436,6 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
           Env_js.push_env cx scope;
           let class_t = mk_class cx loc reason c in
           Env_js.pop_env ();
-          Hashtbl.replace cx.type_table loc class_t;
           Flow_js.flow cx (class_t, tvar);
           class_t;
       | None -> mk_class cx loc reason c)
