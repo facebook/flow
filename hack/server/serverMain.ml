@@ -122,7 +122,6 @@ module Program : SERVER_PROGRAM =
           * function since that will fail if the stamp file doesn't exist. *)
          close_out (open_out stamp_file)
         )
-
     let touch_stamp_errors l1 l2 =
       (* We don't want to needlessly touch the stamp file if the error list is
        * the same and nothing has changed, but we also don't want to spend a ton
@@ -444,7 +443,7 @@ let main options config =
      * connections until init is done) so that the client can try to use the
      * socket and get blocked on it -- otherwise, trying to open a socket with
      * no server on the other end is an immediate error. *)
-    let socket = Socket.init_unix_socket GlobalConfig.tmp_dir root in
+    let socket = Socket.init_unix_socket (GlobalConfig.socket_file root) in
     let env = MainInit.go options program_init in
     serve genv env socket
 

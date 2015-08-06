@@ -66,6 +66,7 @@ let file_of_root ~tmp_dir root extension =
 let init_file ~tmp_dir root = file_of_root ~tmp_dir root "init"
 let lock_file ~tmp_dir root = file_of_root ~tmp_dir root "lock"
 let pids_file ~tmp_dir root = file_of_root ~tmp_dir root "pids"
+let socket_file ~tmp_dir root = file_of_root ~tmp_dir root "sock"
 
 let default_log_file root =
   let root_part = Path.slash_escaped_string_of_path root in

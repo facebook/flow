@@ -212,7 +212,7 @@ let connect ~tmp_dir root =
   then raise CommandExceptions.Server_missing;
   let ic, oc, cstate =
     try
-      let sock_name = Socket.get_path tmp_dir root in
+      let sock_name = Socket.get_path (FlowConfig.socket_file ~tmp_dir root) in
       let sockaddr = Unix.ADDR_UNIX sock_name in
       let ic, oc = Unix.open_connection sockaddr in
       try

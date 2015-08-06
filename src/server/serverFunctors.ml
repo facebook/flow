@@ -217,7 +217,7 @@ end = struct
       Program.run_once_and_exit genv env
     else
       let env = MainInit.go options program_init in
-      let socket = Socket.init_unix_socket tmp_dir root in
+      let socket = Socket.init_unix_socket (FlowConfig.socket_file ~tmp_dir root) in
       serve genv env socket
 
   let daemonize options =
