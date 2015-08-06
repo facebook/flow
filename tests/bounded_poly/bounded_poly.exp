@@ -1,4 +1,8 @@
 
+ctor.js:59:1,21: assignment of property constructor
+Property not found in
+ctor.js:13:7,7: L
+
 test.js:3:21,21: number
 This type is incompatible with
 test.js:3:12,17: string
@@ -25,4 +29,4 @@ test.js:23:23,23: number
 This type is incompatible with
 test.js:22:10,15: string
 
-Found 6 errors
+Found 7 errors
