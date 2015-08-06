@@ -3,8 +3,16 @@ test3.js:1:14,15: string
 This type is incompatible with
 test3.js:8:8,13: number
 
+test3.js:1:14,15: string
+This type is incompatible with
+test3.js:17:8,14: boolean
+
 test3.js:2:14,15: string
 This type is incompatible with
 test3.js:9:8,13: number
 
-Found 2 errors
+test3.js:12:14,16: number
+This type is incompatible with
+test3.js:17:8,14: boolean
+
+Found 4 errors
