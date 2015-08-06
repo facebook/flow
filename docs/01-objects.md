@@ -235,7 +235,7 @@ value type of the map.
 
 Viewing an object as a map does not preclude viewing it as a record. However,
 for such an object, the value type of the map does not interfere with the
-types of the properties of the record. This is potentially unsound, but we
+types of the properties of the record. This is a potentially unsound, but we
 admit it because a sound design would necessarily lead to severe imprecision
 in the types of properties.
 
