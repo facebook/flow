@@ -45,14 +45,15 @@ let emit_func_body env m =
     | n -> emit_strs env [".numiters"; string_of_int n; ";"] in
   emit_str_raw env output
 
-let emit_param p =
+let emit_param ~tparams p =
   assert (not p.param_is_reference); (* actually right *)
   if p.param_is_variadic then unimpl "variadic params";
   if p.param_expr <> None then unimpl "default args";
+  Emitter_types.fmt_hint ~tparams ~always_extended:false p.param_hint ^
   get_lid_name p.param_id
 
-let fmt_params params =
-  let param_names = List.map ~f:emit_param params in
+let fmt_params ?(tparams=[]) params =
+  let param_names = List.map ~f:(emit_param ~tparams) params in
   "(" ^ String.concat ", " param_names ^ ")"
 
 let fmt_visibility vis =
@@ -74,7 +75,12 @@ let fmt_user_attributes attrs =
   String.concat " "
     (List.sort compare (List.map ~f:(fun x -> snd (x.ua_name)) attrs))
 
-let emit_method_or_func env ~is_method ~is_static m name =
+(* Emit a method or a function. m, the method, might actually just be
+ * a dummy that was built from a function. We need tparams (which will be
+ * any tparams that come from the class) because formatting types needs
+ * a list of the bound tparams. *)
+let emit_method_or_func env ~is_method ~is_static ~tparams m name =
+  let tparams = tparams @ m.m_tparams in
   let env = start_new_function env in
 
   if m.m_user_attributes <> [] then
@@ -94,16 +100,21 @@ let emit_method_or_func env ~is_method ~is_static m name =
                 bool_option "static" is_static @
                 bool_option (fmt_visibility m.m_visibility) is_method @
                 ["mayusevv"] in
-  let post = fmt_params m.m_params ^ fmt_fun_tags env m in
+  let post = fmt_params ~tparams m.m_params ^ fmt_fun_tags env m in
   let tag = if is_method then ".method" else ".function" in
-  let env = emit_enter env tag options name post in
+
+  (* return type hints are always "extended" because php doesn't have them *)
+  let type_and_name =
+    Emitter_types.fmt_hint ~tparams ~always_extended:true m.m_ret ^ name in
+  let env = emit_enter env tag options type_and_name post in
   let env = emit_str_raw env body_output in
   let env = run_cleanups env in
   let env = emit_exit env in
   env
 
-let emit_method env ~is_static m =
+let emit_method env ~is_static ~cls m =
   emit_method_or_func env ~is_method:true ~is_static
+    ~tparams:(fst cls.c_tparams)
     m (snd m.m_name)
 
 let emit_fun nenv env (_, x) =
@@ -121,7 +132,7 @@ let emit_fun nenv env (_, x) =
   let env = start_new_function env in
   let env =
     emit_method_or_func env ~is_method:false ~is_static:false
-      dummy_method (fmt_name x) in
+      ~tparams:[] dummy_method (fmt_name x) in
   emit_str env ""
 
 
@@ -302,9 +313,9 @@ let emit_class nenv env (_, x) =
   let env, uninit_vars = lmap (emit_var ~is_static:false) env cls.c_vars in
   let env, uninit_svars =
     lmap (emit_var ~is_static:true) env cls.c_static_vars in
-  let env =
-    List.fold_left ~f:(emit_method ~is_static:false) ~init:env cls.c_methods in
-  let env = List.fold_left ~f:(emit_method ~is_static:true) ~init:env
+  let env = List.fold_left ~f:(emit_method ~is_static:false ~cls) ~init:env
+    cls.c_methods in
+  let env = List.fold_left ~f:(emit_method ~is_static:true ~cls) ~init:env
     cls.c_static_methods in
   let env, uninit_consts = lmap emit_const env cls.c_consts in
 
@@ -315,7 +326,7 @@ let emit_class nenv env (_, x) =
   (* Now for 86* stuff *)
   let env = match cls.c_constructor with
             | None -> emit_str env ".default_ctor;"
-            | Some m -> emit_method ~is_static:false env m in
+            | Some m -> emit_method ~is_static:false ~cls env m in
 
   let env = emit_prop_init env ~is_static:false uninit_vars in
   let env = emit_prop_init env ~is_static:true uninit_svars in
