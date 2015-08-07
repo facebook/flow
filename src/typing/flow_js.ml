@@ -129,7 +129,7 @@ end
 
 let silent_warnings = false
 
-exception FlowError of (reason * string) list
+exception FlowError of Errors_js.message list
 
 let add_output cx level ?(trace_reasons=[]) message_list =
   if !throw_on_error
@@ -137,10 +137,12 @@ let add_output cx level ?(trace_reasons=[]) message_list =
     raise (FlowError message_list)
   ) else (
     (if modes.debug then
-      prerr_endlinef "\nadd_output cx.file = %S\n%s" cx.file (
-        String.concat "\n" (
-          List.map (fun (r, s) -> spf "r: [%s] s = %S" (dump_reason r) s)
-            message_list)));
+      prerr_endlinef "\nadd_output cx.file = %S\n%s" cx.file
+        (message_list
+        |> List.map (fun (loc, s) ->
+             spf "loc: [%s] s = %S" (string_of_loc loc) s
+           )
+        |> String.concat "\n"));
     let error = level, message_list, trace_reasons in
     if level = Errors_js.ERROR || not silent_warnings then
     cx.errors <- Errors_js.ErrorSet.add error cx.errors
@@ -269,7 +271,7 @@ let prmsg_flow_trace_reasons cx level trace_reasons msg (r1, r2) =
     (* NOTE: We include the operation's reason in the error message only if it
        is distinct from the reasons of the endpoints. *)
     let desc = (desc_of_reason r) ^ "\nError:" in
-    [r, desc]
+    [loc_of_reason r, desc]
   | _ ->
     if lib_reason r1 && lib_reason r2
     then
@@ -277,18 +279,20 @@ let prmsg_flow_trace_reasons cx level trace_reasons msg (r1, r2) =
          the code that uses those endpoints inconsistently is useless, we point
          to the file containing that code instead. Ideally, improvements in
          error reporting would cause this case to never arise. *)
-      let r = mk_reason "" Loc.({ none with source = Some cx.file }) in
-      [r, "inconsistent use of library definitions"]
+      let loc = Loc.({ none with source = Some cx.file }) in
+      [loc, "inconsistent use of library definitions"]
     else []
   in
   let message_list =
-    if (loc_of_reason r2 = Loc.none)
+    let loc1, loc2 = loc_of_reason r1, loc_of_reason r2 in
+    let desc1, desc2 = desc_of_reason r1, desc_of_reason r2 in
+    if (loc2 = Loc.none)
     then [
-      r1, spf "%s\n%s %s" (desc_of_reason r1) msg (desc_of_reason r2)
+      loc1, spf "%s\n%s %s" desc1 msg desc2
     ]
     else [
-      r1, spf "%s\n%s" (desc_of_reason r1) msg;
-      r2, (desc_of_reason r2)
+      loc1, spf "%s\n%s" desc1 msg;
+      loc2, desc2
     ]
   in
   add_output cx level ~trace_reasons (info @ message_list)
@@ -298,7 +302,7 @@ let prmsg_flow_trace_reasons cx level trace_reasons msg (r1, r2) =
 let make_trace_reasons trace =
   if modes.traces = 0 then [] else
     reasons_of_trace ~level:modes.traces trace
-    |> List.map (fun r -> r, desc_of_reason r)
+    |> List.map (fun r -> loc_of_reason r, desc_of_reason r)
 
 (* format an error or warning and add it to flow's output.
    here we gate trace output on global settings *)
@@ -319,7 +323,7 @@ let prmsg_flow cx level trace msg (r1, r2) =
 let prerr_flow_full_trace cx trace msg l u =
   let trace_reasons =
     reasons_of_trace ~level:(trace_depth trace + 1) ~tab:0 trace
-    |> List.map (fun r -> r, desc_of_reason r)
+    |> List.map (fun r -> loc_of_reason r, desc_of_reason r)
   in
   prmsg_flow_trace_reasons cx
     Errors_js.ERROR
@@ -347,7 +351,7 @@ let tweak_output list =
   List.map (fun (reason, msg) ->
     let desc = desc_of_reason reason in
     let dmsg = if msg = "" then desc else spf "%s\n%s" desc msg in
-    reason, dmsg
+    loc_of_reason reason, dmsg
   ) list
 
 let add_msg cx ?trace level list =
@@ -1053,7 +1057,7 @@ let rec assert_ground ?(infer=false) cx skip ids = function
   | OpenT (reason_open, id) ->
       let message_list = [
       (* print out id to debug *)
-        reason_open,
+        loc_of_reason reason_open,
         spf "%s\nMissing annotation" (desc_of_reason reason_open)
       ] in
       add_output cx Errors_js.WARNING message_list

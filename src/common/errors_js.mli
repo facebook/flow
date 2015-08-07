@@ -9,7 +9,7 @@
  *)
 
 type level = ERROR | WARNING
-type message = (Reason_js.reason * string)
+type message = (Loc.t * string)
 type error = level * message list * message list
 
 type flags = {

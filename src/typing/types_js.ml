@@ -186,7 +186,7 @@ let filter_suppressed_errors emap = Errors_js.(
 
 let strip_root_from_reason_list root list =
   List.map (
-    fun (reason, s) -> (Reason_js.strip_root root reason, s)
+    fun (loc, s) -> (Reason_js.strip_root_from_loc root loc, s)
   ) list
 
 let strip_root_from_error root error =
