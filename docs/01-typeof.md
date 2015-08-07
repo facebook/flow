@@ -27,8 +27,8 @@ Take the following code example:
 {% highlight javascript linenos=table %}
 /* @flow */
 class X {}
-var a = X; // b infers its type from X
-var b: typeof X; // b has the same type as X. It is the same as b
+var a = X; // a infers its type from X
+var b: typeof X; // b has the same type as X. It is the same as a
 {% endhighlight %}
 
 There is no real advantage of using `typeof` for variable typing in the above 
