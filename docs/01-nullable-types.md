@@ -60,12 +60,6 @@ In this code, after the `if`-statement Flow infers that `o` is not `null` (it
 either was `null` before the `if`-statement but is now an object, or was not
 `null` before the `if`-statement). So the code typechecks.
 
-> NOTE
->
-> It is important to note that we used `==` instead of `===` to do a `null` check.
-> This ensures that we also check for `undefined`, which is considered part of a maybe type.
-> Using `=== null` instead would require yet another `=== undefined` to cover all cases. 
-
 This illustrates an interesting feature of Flow: it understands the effects of
 some dynamic type tests and can adjust the types of local variables
 accordingly (in technical terms, Flow's analysis is path-sensitive).
@@ -88,15 +82,13 @@ explicitly passing around the non-`null` value in your code, and if you are
 careful enough it should be possible to satisfy Flow without doing additional
 `null` checks.
 
-## Undefined Values and Optional Types
+## Undefined Values
 
 Undefined values, just like `null`, can cause issues too. Unfortunately,
 undefined values are ubiquitous in JavaScript and it is hard to avoid them
 without severely affecting the usability of the language. For example, arrays
 can have holes for elements; object properties can be dynamically added and
-removed. Flow ignores the possibility of `undefined` resulting from object property and array element
-accesses. Being stricter would force the programmer to do `undefined` checks (like `null` checks) on each dereference of
+removed. Flow makes a tradeoff in this case: it detects `undefined` local variables
+and return values, but ignores the possibility of `undefined` resulting from object property and array element
+accesses. Being stricter would force the programmer to do undefined checks (like `null` checks) on each dereference of
 an array element or object property to get anything useful done.
-
-However, Flow does detect `undefined` local variables
-and return values, and it considers optional parameters and properties to possibly be `undefined`. As such, uses of these types must be guarded by `undefined` checks to avoid errors.
