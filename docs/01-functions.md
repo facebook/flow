@@ -67,6 +67,8 @@ bar('h', 'e', 'l', 'l', 'o');
 Calls are matched against function signatures following the usual rules of
 argument matching while taking into account optional/rest parameters.
 
+When checking the body of a function, types of optional parameters are considered [optional](http://flowtype.org/docs/nullable-types.html#_) unless default values are provided.
+
 ### Too Few Arguments
 
 Flow produces an error whenever a call provides too few arguments to a
@@ -131,7 +133,9 @@ correct one for a given call. In fact, the addition operator is a special case
 of an overloaded function that returns number in some cases and string in
 others, based on the types of its arguments.
 
-To express such signatures, Flow provides a syntax for union types:
+Sometimes, multiple signatures are not needed to express overloading: the signatures can 
+be coalesced using [union types](http://flowtype.org/docs/union-intersection-types.html#_). 
+Flow provides the following syntax for union types:
 
 `T1 | .. | Tn`
 

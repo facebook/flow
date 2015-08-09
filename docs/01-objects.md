@@ -78,6 +78,28 @@ sayHello(mySampleData);
 sayHello({message: 'Hi', isAwesome: false});
 {% endhighlight %}
 
+## Optional properties
+
+Object types can have optional properties. The following code shows how
+optional properties allow objects with missing properties to be typed.
+
+{% highlight javascript linenos=table %}
+/* @flow */
+var obj: { a: string; b?: number } = { a: "hello" };
+{% endhighlight %}
+
+When optional properties are accessed, Flow tracks the fact that they could
+be `undefined`, and reports errors when they are used as is.
+
+{% highlight javascript linenos=table %}
+/* @flow */
+var obj: { a: string; b?: number } = { a: "hello" };
+obj.b * 10 // error: undefined is incompatible with number
+{% endhighlight %}
+
+One way to avoid errors is to dynamically check that an optional property exists
+before using it. See [nullable types](http://flowtype.org/docs/nullable-types.html#_) for details.
+
 ## Constructor Functions and Prototype Objects
 
 Another way of creating objects in JavaScript is by using `new` on
@@ -140,7 +162,8 @@ For example, the following code typechecks:
 function foo(p) { p.x = 42; }
 function bar(q) { q.f(); }
 
-var o = { f() { return this.x; } };
+var o = { };
+o.f = function() { return this.x; };
 
 bar(o);
 foo(o);
@@ -156,7 +179,8 @@ Fortunately, though, the following code does not typecheck:
 function foo(p) { p.x = 42; }
 function bar(q) { q.f(); }
 
-var o = { f() { return this.x; } };
+var o = { };
+o.f = function() { return this.x; };
 
 foo(o);
 var x: string = bar(o);
@@ -171,7 +195,17 @@ This type is incompatible with
 In other words, Flow knows enough to infer that whenever the `x` property of
 `o` does exist, it is a number, so a `string` should not be expected.
 
-### Cautious Flexibility
+## Sealed object types
+
+Unfortunately, supporting dynamically added properties means that Flow can miss
+errors where the programmer accesses a non-existent property by mistake. Thus, Flow
+also supports sealed object types, where accesses of non-existent properties are reported
+as errors.
+
+When object types appear as annotatations, they are considered sealed. Also, non-empty
+object literals are considered to have sealed object types. In fact, the only cases where
+an object type is not sealed are when it describes an empty object literal (to be extended
+by adding properties to it), an object literal with [spread properties](https://github.com/sebmarkbage/ecmascript-rest-spread), or when it describes a map (see below).
 
 Overall, the weaker guarantee for dynamically added properties is a small cost
 to pay for the huge increase in flexibility it affords. Specifically, it
@@ -183,7 +217,7 @@ initialization is complete.
 
 In any case, for most objects you can altogether avoid adding properties
 dynamically, in which case you get stronger guarantees. Furthermore, as
-described below, object type annotations are sealed, so you can always force
+described above, object type annotations are sealed, so you can always force
 sealing by going through an annotation (and sealing is enforced at module
 boundaries).
 

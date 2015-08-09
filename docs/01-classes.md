@@ -129,12 +129,12 @@ correct for any instantiation of `X`. Thus, when class `D` extends `C<number>`
 , Flow can conclude that the latter has a method with signature `bar(): number`
 , and (as usual) check that it matches the type of `bar` in `D`.
 
-### Polymorphism and Static Properties
+Type parameters can optionally specify constraints that are enforced on
+instantiation. Such constraints can be assumed to hold in the body of
+a polymorphic class definition. See [this blog post on bounded polymorphism](http://flowtype.org/blog/2015/03/12/Bounded-Polymorphism.html) for details.
 
-Polymorphism does not apply to static properties. This is because,
-even though there may be multiple instances of a class whose types may differ
-in their instantiations of the type parameter, there is only one class
-definition, and thus only one set of static properties, at run time.
+### Polymorphism and Invariance
+
 Polymorphic classes are invariant in their type parameters, which means that
 an expression of type `C<T>` may flow to a location typed `C<U>` only when `T`
 and `U` are subtypes of each other.
