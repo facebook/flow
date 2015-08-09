@@ -12,14 +12,15 @@
 (**
  * Checks if x is a www directory by looking for ".hhconfig".
  *)
-let is_www_directory ?(config=".hhconfig") (path : Path.t) : bool =
+let is_www_directory ?(config=".hhconfig") (path : Path.path) : bool =
    let arcconfig = Path.concat path config in
    Path.file_exists arcconfig
 
-let assert_www_directory ?(config=".hhconfig") (path : Path.t) : unit =
+let assert_www_directory ?(config=".hhconfig") (path : Path.path) : unit =
    if not (Path.file_exists path && Path.is_directory path)
    then begin
-     Printf.eprintf "Error: %s is not a directory\n%!" (Path.to_string path);
+     Printf.fprintf stderr "Error: %s is not a directory\n" (Path.string_of_path path);
+     flush stderr;
      exit 1
    end;
    if not (is_www_directory ~config path)
@@ -29,7 +30,7 @@ let assert_www_directory ?(config=".hhconfig") (path : Path.t) : unit =
  or any of its parent directories. \
  Do you have a %s in your code's root directory?\n"
        config
-       (Path.to_string path)
+       (Path.string_of_path path)
        config;
      flush stderr;
      exit 1

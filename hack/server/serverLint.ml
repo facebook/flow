@@ -10,6 +10,7 @@
 
 open ServerEnv
 open Utils
+open Sys_utils
 
 module Json = Hh_json
 module RP = Relative_path
@@ -57,11 +58,11 @@ let lint _acc fnl =
     errs @ acc
   end [] fnl
 
-let lint_all genv code =
+let lint_all genv code oc =
   let root = ServerArgs.root genv.options in
   let next = compose
     (rev_rev_map (RP.create RP.Root))
-    (Find.make_next_files FindUtils.is_php root) in
+    (Find.make_next_files_php root) in
   let errs = MultiWorker.call
     genv.workers
     ~job:(fun acc fnl ->
@@ -70,9 +71,18 @@ let lint_all genv code =
     ~merge:List.rev_append
     ~neutral:[]
     ~next in
-  rev_rev_map Lint.to_absolute errs
+  let errs = rev_rev_map Lint.to_absolute errs in
+  Marshal.to_channel oc (errs : result) [];
+  flush oc
 
-let go genv fnl =
+let go genv fnl oc =
+  let fnl = List.fold_left begin fun acc fn ->
+    match realpath fn with
+    | Some path -> path :: acc
+    | None ->
+        Printf.fprintf stderr "Could not find file '%s'" fn;
+        acc
+  end [] fnl in
   let fnl = rev_rev_map (Relative_path.create Relative_path.Root) fnl in
   let errs =
     if List.length fnl > 10
@@ -88,4 +98,6 @@ let go genv fnl =
   let errs = List.sort begin fun x y ->
     Pos.compare (Lint.get_pos x) (Lint.get_pos y)
   end errs in
-  rev_rev_map Lint.to_absolute errs
+  let errs = rev_rev_map Lint.to_absolute errs in
+  Marshal.to_channel oc (errs : result) [];
+  flush oc

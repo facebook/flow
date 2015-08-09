@@ -1,46 +1,26 @@
 
 locals.js:1:7,12: string
 This type is incompatible with
-locals.js:2:7,12: number
+  locals.js:2:7,12: number
 
 locals.js:1:16,16: number
 This type is incompatible with
-locals.js:1:7,12: string
+  locals.js:1:7,12: string
 
 locals.js:2:7,12: number
 This type is incompatible with
-locals.js:1:7,12: string
+  locals.js:1:7,12: string
 
 locals.js:2:16,16: number
 This type is incompatible with
-locals.js:1:7,12: string
-
-locals.js:10:16,21: number
-This type is incompatible with
-locals.js:12:16,19: boolean
-
-locals.js:10:25,30: string
-This type is incompatible with
-locals.js:12:16,19: boolean
+  locals.js:1:7,12: string
 
 locals.js:12:16,19: boolean
 This type is incompatible with
-locals.js:10:16,30: union type
+  locals.js:10:16,30: union type
 
 locals.js:12:23,26: boolean
 This type is incompatible with
-locals.js:10:16,30: union type
+  locals.js:10:16,30: union type
 
-locals.js:14:5,10: function call
-Error:
-locals.js:10:16,21: number
-This type is incompatible with
-locals.js:6:17,20: boolean
-
-locals.js:14:5,10: function call
-Error:
-locals.js:10:25,30: string
-This type is incompatible with
-locals.js:6:17,20: boolean
-
-Found 10 errors
+Found 6 errors

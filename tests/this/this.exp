@@ -1,53 +1,35 @@
 
-This.js:10:1,9: function call
-Error:
 This.js:3:25,25: number
 This type is incompatible with
-This.js:6:16,21: string
+  This.js:6:16,21: string
 
-This.js:20:1,9: function call
-Error:
 This.js:4:39,39: number
 This type is incompatible with
-This.js:6:16,21: string
+  This.js:6:16,21: string
+
+This.js:29:10,15: property x
+Property cannot be accessed on global object
 
 This.js:29:10,15: string
 This type is incompatible with
-This.js:28:17,22: number
+  This.js:28:17,22: number
 
 This.js:33:21,37: number
 This type is incompatible with
-This.js:33:12,17: string
-
-This.js:36:12,15: function call
-Error:
-This.js:29:10,15: property x
-Property cannot be accessed on global object
+  This.js:33:12,17: string
 
 This.js:41:10,15: property x
 Property cannot be accessed on global object
 
-This.js:48:29,34: string
-This type is incompatible with
-This.js:47:17,22: number
-
-This.js:53:21,37: number
-This type is incompatible with
-This.js:53:12,17: string
-
-This.js:56:12,15: function call
-Error:
 This.js:48:29,34: property x
 Property cannot be accessed on global object
 
-arrows.js:1:7,7: C
+This.js:48:29,34: string
 This type is incompatible with
-arrows.js:12:7,7: D
+  This.js:47:17,22: number
 
-arrows.js:24:7,19: super.foo(...)
-Error:
-arrows.js:24:17,18: string
+This.js:53:21,37: number
 This type is incompatible with
-arrows.js:19:10,15: number
+  This.js:53:12,17: string
 
-Found 11 errors
+Found 9 errors

@@ -15,7 +15,8 @@ type prefix =
   | Hhi
   | Dummy
 
-val set_path_prefix : prefix -> Path.t -> unit
+val path_of_prefix : prefix -> string
+val set_path_prefix : prefix -> string -> unit
 
 module S : sig
   type t

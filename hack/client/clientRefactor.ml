@@ -9,6 +9,7 @@
  *)
 
 open ClientEnv
+open ClientUtils
 open Utils
 module Json = Hh_json
 
@@ -22,9 +23,9 @@ let compare_pos pos1 pos2 =
   else 0
 
 let get_pos = function
-  | ServerRefactor.Insert patch
-  | ServerRefactor.Replace patch -> patch.ServerRefactor.pos
-  | ServerRefactor.Remove p -> p
+  | ServerMsg.Insert patch
+  | ServerMsg.Replace patch -> patch.ServerMsg.pos
+  | ServerMsg.Remove p -> p
 
 let compare_result res1 res2 =
   compare_pos (get_pos res1) (get_pos res2)
@@ -65,12 +66,12 @@ let write_patches_to_buffer buf original_content patch_list =
     let char_start, char_end = Pos.info_raw pos in
     add_original_content (char_start - 1);
     match res with
-      | ServerRefactor.Insert patch ->
-          Buffer.add_string buf patch.ServerRefactor.text
-      | ServerRefactor.Replace patch ->
-          Buffer.add_string buf patch.ServerRefactor.text;
+      | ServerMsg.Insert patch ->
+          Buffer.add_string buf patch.ServerMsg.text
+      | ServerMsg.Replace patch ->
+          Buffer.add_string buf patch.ServerMsg.text;
           i := char_end
-      | ServerRefactor.Remove _ ->
+      | ServerMsg.Remove _ ->
           i := char_end
   end patch_list;
   add_original_content (String.length original_content - 1)
@@ -95,11 +96,11 @@ let apply_patches file_map =
 
 let patch_to_json res =
   let type_, replacement = match res with
-    | ServerRefactor.Insert patch ->
-        "insert", patch.ServerRefactor.text
-    | ServerRefactor.Replace patch ->
-        "replace", patch.ServerRefactor.text
-    | ServerRefactor.Remove _ ->
+    | ServerMsg.Insert patch ->
+        "insert", patch.ServerMsg.text
+    | ServerMsg.Replace patch ->
+        "replace", patch.ServerMsg.text
+    | ServerMsg.Remove _ ->
         "remove", ""
   in
   let pos = get_pos res in
@@ -122,7 +123,7 @@ let print_patches_json file_map =
   end file_map [] in
   print_endline (Json.json_to_string (Json.JList entries))
 
-let go conn args =
+let go args =
   try
     print_endline ("WARNING: This tool will only refactor references in "^
         "typed, hack code. Its results should be manually verified. "^
@@ -139,20 +140,23 @@ let go conn args =
     | "1" -> 
       let class_name = input_prompt "Enter class name: " in
       let new_name = input_prompt "Enter a new name for this class: " in
-      ServerRefactor.ClassRename (class_name, new_name)
+      ServerMsg.ClassRename (class_name, new_name)
     | "2" ->
       let fun_name = input_prompt "Enter function name: " in
       let new_name = input_prompt "Enter a new name for this function: " in
-      ServerRefactor.FunctionRename (fun_name, new_name)
+      ServerMsg.FunctionRename (fun_name, new_name)
     | "3" ->
       let class_name = input_prompt "Enter class name: " in
       let method_name = input_prompt "Enter method name: " in
       let new_name =
           input_prompt ("Enter a new name for this method: "^class_name^"::") in
-      ServerRefactor.MethodRename (class_name, method_name, new_name)
+      ServerMsg.MethodRename (class_name, method_name, new_name)
     | _ -> raise Exit in
     
-    let patches = ServerCommand.rpc conn @@ ServerRpc.REFACTOR command in
+    let ic, oc = connect args.root in
+    let command = ServerMsg.REFACTOR command in
+    ServerMsg.cmd_to_channel oc command;
+    let patches : ServerRefactor.result = Marshal.from_channel ic in
     let file_map = List.fold_left map_patches_to_filename SMap.empty patches in
     if args.output_json
     then print_patches_json file_map

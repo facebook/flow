@@ -1,39 +1,18 @@
 
 /* @providesModule Sigma */
 
-class A { a() {} }
+class A { }
 
-class B extends A { b() {} }
-
-class C extends B { c() {} }
+class B extends A { }
 
 function bar(x:B) {
-  if (x instanceof A) {
-    x.a();
-    x.c(); // error
-  } else {
-    x++; // no error, since unreachable (x: B implies x: A)
-  }
+  if (x instanceof A) { x(); }
+  else { x(); }
 }
 
 function foo(x:A) {
-  if (x instanceof C) {
-    x.a();
-    x.b();
-    x.c();
-    x.d(); // error
-  } else {
-    x.a();
-    x.c(); // error
-  }
-}
-
-
-class D { d() {} }
-
-function foo(x:D) {
-  if (x instanceof A) {
-    // unreachable, TODO: this shouldn't throw
+  if (x instanceof B) {
+    bar(x);
   }
 }
 

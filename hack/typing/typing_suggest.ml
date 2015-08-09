@@ -15,8 +15,7 @@ open Utils
 open Typing_defs
 
 let compare_types x y =
-  let tcopt = TypecheckerOptions.permissive in
-  let tenv = Typing_env.empty tcopt Relative_path.default in
+  let tenv = Typing_env.empty Relative_path.default in
   String.compare
     (Typing_print.full tenv x) (Typing_print.full tenv y)
 
@@ -37,8 +36,8 @@ module TUtils = Typing_utils
 (* List of types found in a file. *)
 (*****************************************************************************)
 
-let (types: (Env.env * Pos.t * hint_kind * locl ty) list ref) = ref []
-let (initialized_members: (SSet.t SMap.t) ref) = ref SMap.empty
+let (types: (Env.env * Pos.t * hint_kind * Typing_defs.ty) list ref) = ref []
+let (initalized_members: (SSet.t SMap.t) ref) = ref SMap.empty
 
 let add_type env pos k type_ =
   let new_type = (
@@ -46,7 +45,7 @@ let add_type env pos k type_ =
      * types part of the codebase at a time in worker threads. Fortunately we
      * don't actually need the whole env, so just keep the parts we do need for
      * typing, which *are* serializable. *)
-    {(Env.empty TypecheckerOptions.permissive Relative_path.default) with
+    {(Env.empty Relative_path.default) with
      Env.tenv = env.Env.tenv; Env.subst = env.Env.subst},
     pos,
     k,
@@ -69,9 +68,9 @@ let save_type hint_kind env x arg =
             let x_pos = Reason.to_pos (fst x) in
             add_type env x_pos hint_kind arg;
         )
-    | _, (Tmixed | Tarray (_, _) | Tprim _ | Toption _
-      | Tvar _ | Tabstract (_, _) | Tclass (_, _) | Ttuple _ | Tanon (_, _)
-      | Tfun _ | Tunresolved _ | Tobject | Tshape _) -> ()
+    | _, (Tmixed | Tarray (_, _) | Tprim _ | Tgeneric (_, _) | Toption _
+      | Tvar _ | Tabstract (_, _, _) | Tapply (_, _) | Ttuple _ | Tanon (_, _)
+      | Tfun _ | Tunresolved _ | Tobject | Tshape _ | Taccess (_, _)) -> ()
   end
 
 let save_return env x arg = save_type Kreturn env x arg
@@ -87,8 +86,8 @@ let save_param name env x arg = save_type (Kparam name) env x arg
  * }
  *
  *)
-let uninitialized_member cname mname env x arg = if !is_suggest_mode then begin
-  match SMap.get cname !initialized_members with
+let uninitalized_member cname mname env x arg = if !is_suggest_mode then begin
+  match SMap.get cname !initalized_members with
     (* No static initalizer and no initalization in the constructor means that
      * this variable can be used before it's written to, and thus must be
      * nullable. *)
@@ -96,7 +95,7 @@ let uninitialized_member cname mname env x arg = if !is_suggest_mode then begin
       if not (SSet.mem mname inits)
       then save_member mname env x (fst x, Toption arg)
 
-    (* Some constructions, such as traits, don't calculate initialized members.
+    (* Some constructions, such as traits, don't calculate initalized members.
      * TODO: this will suggest wrong types for some member variables defined in
      * traits, since they might be nullable, but that depends on the constructor
      * of the class that includes the trait (!). Not sure how to deal with this
@@ -104,8 +103,8 @@ let uninitialized_member cname mname env x arg = if !is_suggest_mode then begin
     | None -> ()
 end
 
-let save_initialized_members cname inits = if !is_suggest_mode then begin
-  initialized_members := SMap.add cname inits !initialized_members
+let save_initalized_members cname inits = if !is_suggest_mode then begin
+  initalized_members := SMap.add cname inits !initalized_members
 end
 
 (* Normally, when we unify ?int and int, we don't want
@@ -145,10 +144,10 @@ let get_implements (_, x) =
       SMap.fold begin fun _ ty set ->
         match ty with
         | _, Tapply ((_, x), []) -> SSet.add x set
-        | _, (Tany | Tmixed | Tarray (_, _) | Tprim _ | Tgeneric (_, _) | Tfun _
-          | Toption _ | Tapply (_, _) | Ttuple _ | Tshape _ | Taccess (_, _)
-          | Tthis) ->
-          raise Exit
+        | _, (Tany | Tmixed | Tarray (_, _) | Tprim _ | Tgeneric (_, _)
+          | Toption _ | Tvar _ | Tabstract (_, _, _) | Tapply (_, _) | Ttuple _
+          | Tanon (_, _) | Tfun _ | Tunresolved _ | Tobject
+          | Tshape _ | Taccess (_, _)) -> raise Exit
       end tyl SSet.empty
 
 (** normalizes a "guessed" type. We basically want to bailout whenever
@@ -165,22 +164,22 @@ and normalize_ = function
     when List.exists (function _, (Tany | Tunresolved []) -> true | _ -> false) tyl ->
       let tyl = List.filter begin function
         |  _, (Tany |  Tunresolved []) -> false
-        | _, (Tmixed | Tarray (_, _) | Tprim _ | Toption _
-          | Tvar _ | Tabstract (_, _) | Tclass (_, _) | Ttuple _
+        | _, (Tmixed | Tarray (_, _) | Tprim _ | Tgeneric (_, _) | Toption _
+          | Tvar _ | Tabstract (_, _, _) | Tapply (_, _) | Ttuple _
           | Tanon (_, _) | Tfun _ | Tunresolved _ | Tobject | Tshape _
-             ) -> true
+          | Taccess (_, _)) -> true
       end tyl in
       normalize_ (Tunresolved tyl)
-  | Tunresolved ((_, Tclass (x, [])) :: rl) ->
+  | Tunresolved ((_, Tapply (x, [])) :: rl) ->
       (* If we have A & B & C where all the elements are classes
        * we try to find a unique common ancestor.
        *)
       let rl = List.map begin function
-        | _, Tclass (x, []) -> x
-        | _, (Tany | Tmixed | Tarray (_, _) | Tprim _
-          | Toption _ | Tvar _ | Tabstract (_, _) | Tclass (_, _) | Ttuple _
+        | _, Tapply (x, []) -> x
+        | _, (Tany | Tmixed | Tarray (_, _) | Tprim _ | Tgeneric (_, _)
+          | Toption _ | Tvar _ | Tabstract (_, _, _) | Tapply (_, _) | Ttuple _
           | Tanon (_, _) | Tfun _ | Tunresolved _ | Tobject
-          | Tshape _) -> raise Exit
+          | Tshape _ | Taccess (_, _)) -> raise Exit
       end rl in
       let x_imp = get_implements x in
       let set = List.fold_left begin fun x_imp x ->
@@ -188,7 +187,7 @@ and normalize_ = function
       end x_imp rl in
       (* is it unique? *)
       if SSet.cardinal set = 1
-      then Tclass ((Pos.none, SSet.choose set), [])
+      then Tapply ((Pos.none, SSet.choose set), [])
       else raise Exit
   | Tunresolved (x :: (y :: _ as rl)) when compare_types x y = 0 ->
       normalize_ (Tunresolved rl)
@@ -198,32 +197,33 @@ and normalize_ = function
     try Tarray (opt_map normalize k, opt_map normalize v)
     with Exit -> Tarray (None, None)
   end
-  | Tabstract (AKgeneric (_, _), _) as x -> x
+  | Tgeneric _ as x -> x
   | Toption (_, (Toption (_, _) as ty)) -> normalize_ ty
   | Toption (_, Tprim Nast.Tvoid) -> raise Exit
   | Toption ty -> Toption (normalize ty)
   | Tprim _ as ty -> ty
   | Tvar _ -> raise Exit
   | Tfun _ -> raise Exit
-  | Tclass ((pos, name), tyl) when name.[0] = '\\' && String.rindex name '\\' = 0 ->
+  | Taccess (_, _) -> raise Exit
+  | Tapply ((pos, name), tyl) when name.[0] = '\\' && String.rindex name '\\' = 0 ->
       (* TODO this transform isn't completely legit; can cause a reference into
        * the global namespace to suddenly refer to a different class in the
        * local one. Figure something else out that doesn't involve spamming '\'
        * across FB code, maybe? See if anyone complains on GitHub? I have no
        * idea how bad this is in practice, I'm kinda hoping it's okay. *)
-      normalize_ (Tclass ((pos, strip_ns name), tyl))
-  | Tclass ((pos1, "Awaitable"), [(_, Toption (pos2, Tprim Nast.Tvoid))]) ->
+      normalize_ (Tapply ((pos, strip_ns name), tyl))
+  | Tapply ((pos1, "Awaitable"), [(_, Toption (pos2, Tprim Nast.Tvoid))]) ->
       (* Special case: Awaitable<?void> is nonsensical, but often
        * Awaitable<void> works. *)
-      Tclass ((pos1, "Awaitable"), [(pos2, Tprim Nast.Tvoid)])
-  | Tclass ((pos, name), tyl) ->
+      Tapply ((pos1, "Awaitable"), [(pos2, Tprim Nast.Tvoid)])
+  | Tapply ((pos, name), tyl) ->
       (* Handling xhp names *)
       let name =
         if String.contains name ':' && name.[0] <> ':'
         then ":"^name
         else name
       in
-      Tclass ((pos, name), List.map normalize tyl)
+      Tapply ((pos, name), List.map normalize tyl)
   | Ttuple tyl -> Ttuple (List.map normalize tyl)
   | Tanon _ -> raise Exit
   | Tobject -> raise Exit
