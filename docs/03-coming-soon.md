@@ -4,14 +4,14 @@ title: Future Plans
 layout: docs
 permalink: /docs/coming-soon.html
 prev: underscore.html
-next: quick-reference.html
+next: type-annotations.html
 ---
 
 Flow is still in early stages, and we're iterating fast. Here's a (partial) list of features we're planning to add soon. As always, if you run into any bugs or have any feature requests, just let us know by filing issues on GitHub! 
 
 * Support for converting existing TypeScript declaration files (.d.ts) for common libraries on DefinitelyTyped.org to Flow declarations.
 
-* <del>ES6 module support</del> EDIT: Available as of Flow v0.7
+* ES6 module support
 
 * Compiling the Flow checker to JavaScript using js\_of\_ocaml
 
