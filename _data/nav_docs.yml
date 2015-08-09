@@ -32,10 +32,10 @@
     title: Future plans
 - title: Language Reference
   items:
+  - id: quick-reference
+    title: Quick Reference
   - id: type-annotations
     title: Type Annotations
-  - id: base-types
-    title: Base Types
   - id: variables
     title: Variables
   - id: arrays
@@ -64,3 +64,7 @@
     title: Primitives
   - id: declarations
     title: Declarations
+- title: CLI
+  items:
+  - id: cli
+    title: Using the CLI
