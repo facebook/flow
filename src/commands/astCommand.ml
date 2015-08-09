@@ -27,6 +27,7 @@ let spec = {
     empty
     |> flag "--pretty" no_arg
         ~doc:"Pretty-print JSON output"
+    |> CommandUtils.from_flag
     |> anon "file" (optional string) ~doc:"[FILE]"
   )
 }
@@ -51,7 +52,8 @@ let get_file = function
   | Some filename -> ServerProt.FileName (CommandUtils.expand_path filename)
   | None -> ServerProt.FileContent (None, Sys_utils.read_stdin_to_string ())
 
-let main pretty filename () =
+let main pretty from filename () =
+  FlowEventLogger.set_from from;
   let file = get_file filename in
   let content = ServerProt.file_input_get_content file in
   let module Translate = Estree_translator.Translate (JsonTranslator) in

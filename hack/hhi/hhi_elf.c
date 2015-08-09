@@ -8,8 +8,11 @@
  *
  */
 
+
 #include <caml/memory.h>
 #include <caml/alloc.h>
+
+#ifndef _WIN32
 #include <fcntl.h>
 #include <string.h>
 #include <sys/stat.h>
@@ -148,4 +151,13 @@ fail_early:
   CAMLreturn(NONE);
 }
 
+#endif
+
+#else
+#include <caml/fail.h>
+value get_embedded_hhi_data(value filename) {
+  CAMLparam1(filename);
+  caml_failwith("'get_embedded_hhi_data` is not implemented in `hhi_elf.c`.");
+  CAMLreturn(Val_unit);
+}
 #endif

@@ -54,6 +54,7 @@ module OptionParser(Config : CONFIG) = struct
     |> flag "--munge-underscore-members" no_arg
         ~doc:"Treat any class member name with a leading underscore as private"
     |> temp_dir_flag
+    |> from_flag
     |> anon "root" (optional string) ~doc:"Root directory"
   )
 
@@ -107,7 +108,8 @@ module OptionParser(Config : CONFIG) = struct
   let result = ref None
   let main error_flags json profile quiet log_file debug verbose verbose_indent
            all weak traces strip_root lib no_flowlib munge_underscore_members
-           temp_dir root () =
+           temp_dir from root () =
+    FlowEventLogger.set_from from;
     let root = CommandUtils.guess_root root in
     let flowconfig = FlowConfig.get root in
     let opt_module = FlowConfig.(match flowconfig.options.moduleSystem with

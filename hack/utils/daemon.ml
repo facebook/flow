@@ -52,19 +52,22 @@ let fork ?log_file (f : ('a, 'b) channel_pair -> unit) :
   | 0 -> (* child *)
       close_in parent_in;
       close_out parent_out;
-      let fd = Unix.openfile "/dev/null" [Unix.O_RDONLY; Unix.O_CREAT] 0o777 in
-      Unix.dup2 fd Unix.stdin;
-      Unix.close fd;
-      let fn = Option.value_map log_file ~default:"/dev/null" ~f:
-        begin fun fn ->
-          Tmp.mkdir (Filename.dirname fn);
-          begin try Sys.rename fn (fn ^ ".old") with _ -> () end;
-          fn
-        end in
-      let fd = Unix.openfile fn [Unix.O_WRONLY; Unix.O_CREAT] 0o666 in
-      Unix.dup2 fd Unix.stdout;
-      Unix.dup2 fd Unix.stderr;
-      Unix.close fd;
+      Sys_utils.with_umask 0o111 begin fun () ->
+        let fd =
+          Unix.openfile "/dev/null" [Unix.O_RDONLY; Unix.O_CREAT] 0o777 in
+        Unix.dup2 fd Unix.stdin;
+        Unix.close fd;
+        let fn = Option.value_map log_file ~default:"/dev/null" ~f:
+          begin fun fn ->
+            Tmp.mkdir (Filename.dirname fn);
+            begin try Sys.rename fn (fn ^ ".old") with _ -> () end;
+            fn
+          end in
+        let fd = Unix.openfile fn [Unix.O_WRONLY; Unix.O_CREAT] 0o666 in
+        Unix.dup2 fd Unix.stdout;
+        Unix.dup2 fd Unix.stderr;
+        Unix.close fd;
+      end;
       f (child_in, child_out);
       exit 0
   | pid -> (* parent *)

@@ -129,7 +129,7 @@ end
 
 let silent_warnings = false
 
-exception FlowError of (reason * string) list
+exception FlowError of Errors_js.message list
 
 let add_output cx level ?(trace_reasons=[]) message_list =
   if !throw_on_error
@@ -137,10 +137,12 @@ let add_output cx level ?(trace_reasons=[]) message_list =
     raise (FlowError message_list)
   ) else (
     (if modes.debug then
-      prerr_endlinef "\nadd_output cx.file = %S\n%s" cx.file (
-        String.concat "\n" (
-          List.map (fun (r, s) -> spf "r: [%s] s = %S" (dump_reason r) s)
-            message_list)));
+      prerr_endlinef "\nadd_output cx.file = %S\n%s" cx.file
+        (message_list
+        |> List.map (fun (loc, s) ->
+             spf "loc: [%s] s = %S" (string_of_loc loc) s
+           )
+        |> String.concat "\n"));
     let error = level, message_list, trace_reasons in
     if level = Errors_js.ERROR || not silent_warnings then
     cx.errors <- Errors_js.ErrorSet.add error cx.errors
@@ -269,7 +271,7 @@ let prmsg_flow_trace_reasons cx level trace_reasons msg (r1, r2) =
     (* NOTE: We include the operation's reason in the error message only if it
        is distinct from the reasons of the endpoints. *)
     let desc = (desc_of_reason r) ^ "\nError:" in
-    [r, desc]
+    [loc_of_reason r, desc]
   | _ ->
     if lib_reason r1 && lib_reason r2
     then
@@ -277,18 +279,20 @@ let prmsg_flow_trace_reasons cx level trace_reasons msg (r1, r2) =
          the code that uses those endpoints inconsistently is useless, we point
          to the file containing that code instead. Ideally, improvements in
          error reporting would cause this case to never arise. *)
-      let r = mk_reason "" Loc.({ none with source = Some cx.file }) in
-      [r, "inconsistent use of library definitions"]
+      let loc = Loc.({ none with source = Some cx.file }) in
+      [loc, "inconsistent use of library definitions"]
     else []
   in
   let message_list =
-    if (loc_of_reason r2 = Loc.none)
+    let loc1, loc2 = loc_of_reason r1, loc_of_reason r2 in
+    let desc1, desc2 = desc_of_reason r1, desc_of_reason r2 in
+    if (loc2 = Loc.none)
     then [
-      r1, spf "%s\n%s %s" (desc_of_reason r1) msg (desc_of_reason r2)
+      loc1, spf "%s\n%s %s" desc1 msg desc2
     ]
     else [
-      r1, spf "%s\n%s" (desc_of_reason r1) msg;
-      r2, (desc_of_reason r2)
+      loc1, spf "%s\n%s" desc1 msg;
+      loc2, desc2
     ]
   in
   add_output cx level ~trace_reasons (info @ message_list)
@@ -298,7 +302,7 @@ let prmsg_flow_trace_reasons cx level trace_reasons msg (r1, r2) =
 let make_trace_reasons trace =
   if modes.traces = 0 then [] else
     reasons_of_trace ~level:modes.traces trace
-    |> List.map (fun r -> r, desc_of_reason r)
+    |> List.map (fun r -> loc_of_reason r, desc_of_reason r)
 
 (* format an error or warning and add it to flow's output.
    here we gate trace output on global settings *)
@@ -319,7 +323,7 @@ let prmsg_flow cx level trace msg (r1, r2) =
 let prerr_flow_full_trace cx trace msg l u =
   let trace_reasons =
     reasons_of_trace ~level:(trace_depth trace + 1) ~tab:0 trace
-    |> List.map (fun r -> r, desc_of_reason r)
+    |> List.map (fun r -> loc_of_reason r, desc_of_reason r)
   in
   prmsg_flow_trace_reasons cx
     Errors_js.ERROR
@@ -347,7 +351,7 @@ let tweak_output list =
   List.map (fun (reason, msg) ->
     let desc = desc_of_reason reason in
     let dmsg = if msg = "" then desc else spf "%s\n%s" desc msg in
-    reason, dmsg
+    loc_of_reason reason, dmsg
   ) list
 
 let add_msg cx ?trace level list =
@@ -1053,7 +1057,7 @@ let rec assert_ground ?(infer=false) cx skip ids = function
   | OpenT (reason_open, id) ->
       let message_list = [
       (* print out id to debug *)
-        reason_open,
+        loc_of_reason reason_open,
         spf "%s\nMissing annotation" (desc_of_reason reason_open)
       ] in
       add_output cx Errors_js.WARNING message_list
@@ -2295,8 +2299,12 @@ let rec __flow cx (l, u) trace =
               dictionary cx trace (string_key s reason2) t1 dict1;
               write_prop cx flds1 s t2;
             | _ ->
-              (* otherwise, we do strict lookup of property in prototype *)
-              rec_flow cx trace (proto_t, LookupT (reason2, Some reason1, s, t2))
+              (* otherwise, we ensure compatibility with dictionary constraints
+                 if present, and look up the property in the prototype *)
+              dictionary cx trace (string_key s reason2) t2 dict1;
+              (* if l is NOT a dictionary, then do a strict lookup *)
+              let strict = if dict1 = None then Some reason1 else None in
+              rec_flow cx trace (proto_t, LookupT (reason2, strict, s, t2))
           (* TODO: instead, consider extending inflowing type with s:t2 when it
              is not sealed *)
           else
@@ -2304,7 +2312,7 @@ let rec __flow cx (l, u) trace =
             flow_to_mutable_child cx trace lit t1 t2);
       (* Any properties in l but not u must match indexer *)
       iter_props_ cx flds1
-        (fun s -> fun t1 ->
+        (fun s t1 ->
           if (not(has_prop cx flds2 s))
           then dictionary cx trace (string_key s reason1) t1 dict2
         );
@@ -2726,14 +2734,10 @@ let rec __flow cx (l, u) trace =
     (* objects may have their fields looked up *)
     (*******************************************)
 
-    | (ObjT (reason_obj, {
-      props_tmap = mapr;
-      proto_t = proto;
-      _
-    }),
+    | (ObjT (reason_obj, { props_tmap = mapr; proto_t = proto; dict_t; _ }),
        LookupT(reason_op,strict,x,t_other))
       ->
-      let t = ensure_prop_for_read cx strict mapr x proto
+      let t = ensure_prop_for_read cx strict mapr x proto dict_t
         reason_obj reason_op trace in
       rec_flow cx trace (t, UnifyT(t, t_other))
 
@@ -2778,9 +2782,8 @@ let rec __flow cx (l, u) trace =
       GetT (reason_op, x, tout) ->
       let strict = mk_strict_lookup_reason
         flags.sealed (dict_t <> None) reason_o reason_op in
-      let t = ensure_prop_for_read cx strict mapr x proto
+      let t = ensure_prop_for_read cx strict mapr x proto dict_t
         reason_o reason_op trace in
-      dictionary cx trace (string_key x reason_op) t dict_t;
       (* move property type to read site *)
       let t = repos_t_from_reason reason_op t in
       rec_flow cx trace (t, tout);
@@ -2801,9 +2804,8 @@ let rec __flow cx (l, u) trace =
       ->
       let strict = mk_strict_lookup_reason
         flags.sealed (dict_t <> None) reason_o reason_op in
-      let t = ensure_prop_for_read cx strict mapr x proto
+      let t = ensure_prop_for_read cx strict mapr x proto dict_t
         reason_o reason_op trace in
-      dictionary cx trace (string_key x reason_op) t dict_t;
       let callt = CallT (reason_op, funtype) in
       rec_flow cx trace (t, callt)
 
@@ -3787,8 +3789,20 @@ and concretize_parts cx trace l u done_list = function
 
 (* property lookup functions in objects and instances *)
 
-and ensure_prop_for_read cx strict mapr x proto reason_obj reason_op trace =
-  match read_prop_opt cx mapr x with
+and ensure_prop_for_read cx strict mapr x proto dict_t reason_obj reason_op trace =
+  let t = match (read_prop_opt cx mapr x, dict_t) with
+  | Some t, _ -> Some t
+  | None, Some { key; value; _ } ->
+    (* Object.prototype methods are exempt from the dictionary rules *)
+    if is_object_prototype_method x
+    then None
+    else (
+      rec_flow cx trace (string_key x reason_op, key);
+      Some value
+    )
+  | None, None -> None
+  in
+  match t with
   (* map contains property x at type t *)
   | Some t -> t
   (* otherwise, check for/maybe add shadow property *)

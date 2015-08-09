@@ -43,15 +43,27 @@ type command =
 | SEARCH of string
 | SUGGEST of string list
 
+type command_with_context = {
+  client_logging_context: FlowEventLogger.logging_context;
+  command: command;
+}
+
 let cmd_to_channel (oc:out_channel) (cmd:command): unit =
+  let command = {
+    client_logging_context = FlowEventLogger.get_context ();
+    command = cmd;
+  } in
   Printf.fprintf oc "%s\n" Build_id.build_id_ohai;
-  Marshal.to_channel oc cmd [];
+  Marshal.to_channel oc command [];
   flush oc
 
-let cmd_from_channel (ic:in_channel): command =
+let cmd_from_channel (ic:in_channel): command_with_context =
   let s = input_line ic in
   if s <> Build_id.build_id_ohai
-  then ERROR_OUT_OF_DATE
+  then {
+    client_logging_context = FlowEventLogger.get_context ();
+    command = ERROR_OUT_OF_DATE;
+  }
   else Marshal.from_channel ic
 
 type directory_mismatch = {

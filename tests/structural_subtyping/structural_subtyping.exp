@@ -27,8 +27,16 @@ obj.js:6:6,11: property x
 Property not found in
 obj.js:11:30,31: object literal
 
+obj.js:6:6,11: string
+This type is incompatible with
+obj.js:18:39,44: number
+
 obj.js:10:35,37: number
 This type is incompatible with
 obj.js:6:6,11: string
 
-Found 8 errors
+obj.js:18:39,44: number
+This type is incompatible with
+obj.js:6:6,11: string
+
+Found 10 errors

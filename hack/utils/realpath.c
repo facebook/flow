@@ -7,11 +7,15 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  */
+
+
 #include <caml/mlvalues.h>
 #include <caml/memory.h>
 #include <caml/alloc.h>
 #include <limits.h>
 #include <stdlib.h>
+
+#ifndef _WIN32
 
 #define Val_none Val_int(0)
 
@@ -41,3 +45,16 @@ hh_realpath(value v) {
     CAMLreturn(Val_some(caml_copy_string(output)));
   }
 }
+
+#else
+
+#include <caml/fail.h>
+
+CAMLprim value
+hh_realpath(value v) {
+  CAMLparam1(v);
+  caml_failwith("TODO: 'hh_realpath` is not implemented in `realpath.c`.");
+  CAMLreturn(Val_unit);
+}
+
+#endif

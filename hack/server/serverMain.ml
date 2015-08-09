@@ -122,7 +122,6 @@ module Program : SERVER_PROGRAM =
           * function since that will fail if the stamp file doesn't exist. *)
          close_out (open_out stamp_file)
         )
-
     let touch_stamp_errors l1 l2 =
       (* We don't want to needlessly touch the stamp file if the error list is
        * the same and nothing has changed, but we also don't want to spend a ton
@@ -444,49 +443,28 @@ let main options config =
      * connections until init is done) so that the client can try to use the
      * socket and get blocked on it -- otherwise, trying to open a socket with
      * no server on the other end is an immediate error. *)
-    let socket = Socket.init_unix_socket GlobalConfig.tmp_dir root in
+    let socket = Socket.init_unix_socket (GlobalConfig.socket_file root) in
     let env = MainInit.go options program_init in
     serve genv env socket
 
-let daemonize options =
-  let open Unix in
-  (* detach ourselves from the parent process *)
-  let pid = Fork.fork() in
-  if pid == 0 then
-    begin
-      ignore(setsid());
-      with_umask
-        0o111
-        (fun () ->
-         (* close stdin/stdout/stderr *)
-         let fd = openfile "/dev/null" [O_RDONLY; O_CREAT] 0o777 in
-         dup2 fd stdin;
-         close fd;
-         let file = GlobalConfig.log_file (ServerArgs.root options) in
-         (try Sys.rename file (file ^ ".old") with _ -> ());
-         let fd = openfile file [O_WRONLY; O_CREAT; O_APPEND] 0o666 in
-         dup2 fd stdout;
-         dup2 fd stderr;
-         close fd
-        )
-    (* child process is ready *)
-    end
-  else
-    begin
-      (* let original parent exit *)
-      Printf.eprintf "Spawned %s (child pid=%d)\n" (Program.name) pid;
-      Printf.eprintf "Logs will go to %s\n%!"
-        (GlobalConfig.log_file (ServerArgs.root options));
-      raise Exit
-    end
+let monitor_daemon options f =
+  let log_file = GlobalConfig.log_file (ServerArgs.root options) in
+  let {Daemon.pid; _} = Daemon.fork begin fun (_ic, _oc) ->
+    ignore @@ Unix.setsid ();
+    let {Daemon.pid; _} = Daemon.fork ~log_file f in
+    let _pid, proc_stat = Unix.waitpid [] pid in
+    (match proc_stat with
+    | Unix.WEXITED 0 -> ()
+    | _ -> HackEventLogger.bad_exit proc_stat)
+  end in
+  Printf.eprintf "Spawned %s (child pid=%d)\n" Program.name pid;
+  Printf.eprintf "Logs will go to %s\n%!" log_file;
+  ()
 
 let start () =
   let options = Program.parse_options () in
   Relative_path.set_path_prefix Relative_path.Root (ServerArgs.root options);
   let config = Program.load_config () in
-  try
-    if ServerArgs.should_detach options
-    then daemonize options;
-    main options config
-  with Exit ->
-    ()
+  if ServerArgs.should_detach options
+  then monitor_daemon options (fun (_ic, _oc) -> main options config)
+  else main options config

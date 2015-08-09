@@ -202,7 +202,7 @@ module NastCheck                            = struct
   let typeconst_assigned_tparam             = 3028 (* DONT MODIFY!!!! *)
   let abstract_with_typeconst               = 3029 (* DONT MODIFY!!!! *)
   let constructor_required                  = 3030 (* DONT MODIFY!!!! *)
-
+  let interface_with_partial_typeconst      = 3031 (* DONT MODIFY!!!! *)
   (* EXTEND HERE WITH NEW VALUES IF NEEDED *)
 end
 
@@ -778,6 +778,10 @@ let typeconst_depends_on_external_tparam pos ext_pos ext_name =
 let typeconst_assigned_tparam pos tp_name =
   add NastCheck.typeconst_assigned_tparam pos
     (tp_name ^" is a type parameter. It cannot be assigned to a type constant")
+
+let interface_with_partial_typeconst tconst_pos =
+  add NastCheck.interface_with_partial_typeconst tconst_pos
+    "An interface cannot contain a partially abstract type constant"
 
 let return_in_gen p =
   add NastCheck.return_in_gen p

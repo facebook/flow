@@ -428,7 +428,12 @@ and interface c =
   | hd::_ ->
     let pos = fst (hd.cv_id) in
     Errors.interface_with_static_member_variable pos
-  | _ -> ()
+  | _ -> ();
+  (* make sure interfaces do not contain partially abstract type constants *)
+  List.iter c.c_typeconsts begin fun tc ->
+    if tc.c_tconst_constraint <> None && tc.c_tconst_type <> None then
+      Errors.interface_with_partial_typeconst (fst tc.c_tconst_name)
+  end
 
 and class_const env (h, _, e) =
   maybe hint env h;

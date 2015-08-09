@@ -27,17 +27,17 @@ function foo(
   return x;
 }
 
-// error: foo not guaranteed to exist in x
+// OK, since we assume dictionaries have every key
 function foo(x: {[key: string]: number}): {foo: number} {
   return x;
 }
 
-// error: foo not guaranteed to exist in x
+// error: foo can't exist in x
 function foo(x: {[key: string]: number}): {[key: string]: number, foo: string} {
   return x;
 }
 
-// error, some prop in x could be incompatible
+// error, some prop in x could be incompatible (covariance)
 function foo(x: Array<{[key: string]: number}>): Array<{foo: number}> {
   return x;
 }
@@ -45,4 +45,13 @@ function foo(x: Array<{[key: string]: number}>): Array<{foo: number}> {
 // error, some prop in return could be incompatible
 function foo(x: Array<{foo: number}>): Array<{[key: string]: number}> {
   return x;
+}
+
+function foo(x: {bar: string, [key: string]: number}) {
+  (x.bar: string);
+}
+
+function foo(x: {[key: string]: number}) {
+  (x.foo: string); // error
+  (x.foo: number);
 }

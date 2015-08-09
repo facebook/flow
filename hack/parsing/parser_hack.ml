@@ -679,13 +679,8 @@ and attribute env =
 and attribute_remain env =
   match L.token env.file env.lb with
   | Tword ->
-      (* Temporary backwards compat for renaming these attributes.
-       * TODO #4890694 remove this. *)
-      let attr_compat = function
-        | "UNSAFE_Construct" -> "__UNSAFE_Construct"
-        | x -> x in
       let pos = Pos.make env.file env.lb in
-      let ua_name = pos, attr_compat (Lexing.lexeme env.lb) in
+      let ua_name = pos, Lexing.lexeme env.lb in
       let ua_params = attribute_parameters env in
       let attr = { ua_name; ua_params } in
       attr :: attribute_list_remain env

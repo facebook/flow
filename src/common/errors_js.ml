@@ -12,7 +12,7 @@ module C = Tty
 module Json = Hh_json
 
 type level = ERROR | WARNING
-type message = (Reason_js.reason * string)
+type message = (Loc.t * string)
 type error = level * message list (* message *) * message list (* trace *)
 
 type flags = {
@@ -74,8 +74,7 @@ let format_reason_color
   ]
 )
 
-let print_reason_color ~first ~one_line ~color ((reason, s): message) =
-  let loc = Reason_js.loc_of_reason reason in
+let print_reason_color ~first ~one_line ~color ((loc, s): message) =
   let to_print = format_reason_color ~first ~one_line (loc, s) in
   (if first then Printf.printf "\n");
   C.print ~color_mode:color to_print
@@ -89,7 +88,7 @@ let print_error_color ~one_line ~color e =
 let loc_of_error err =
   let _, messages, _ = err in
   match messages with
-  | (reason, _) :: _ -> Reason_js.loc_of_reason reason
+  | (loc, _) :: _ -> loc
   | _ -> Loc.none
 
 let file_of_error err =
@@ -110,12 +109,16 @@ let json_of_loc loc = Loc.(
   then second reason's position. If all positions match then first message,
   then second message, etc
   TODO may not work for everything... *)
+(** TODO: This function is pretty weird, it delays comparing messages until all
+    locations are compared, and then compares messages in reverse order. This
+    behavior is quiet likely unintended. We should fix this and, more
+    importantly, try to make it efficient. **)
 let compare =
   let rec compare_message_lists ml1 ml2 k_compare_messages =
     match ml1, ml2 with
     | [], [] -> k_compare_messages ()
-    | (r1, m1)::rest1, (r2, m2)::rest2 ->
-        (match Reason_js.compare r1 r2 with
+    | (loc1, m1)::rest1, (loc2, m2)::rest2 ->
+        (match Pervasives.compare loc1 loc2 with
         | 0 ->
             let k_compare_messages' () =
               match String.compare m1 m2 with
@@ -171,9 +174,7 @@ module ErrorSuppressions = struct
     unused = SpanMap.union a.unused b.unused;
   }
 
-  let check_reason ((result, { suppressions; unused; }) as acc) reason =
-    let loc = Reason_js.loc_of_reason reason in
-
+  let check_loc ((result, { suppressions; unused; }) as acc) loc =
     (* We only want to check the starting position of the reason *)
     let loc = Loc.({ loc with _end = loc.start; }) in
     if SpanMap.mem loc suppressions
@@ -186,8 +187,8 @@ module ErrorSuppressions = struct
    *)
   let rec check_error_messages acc = function
     | [] -> acc
-    | (reason, error_message)::errors ->
-        let acc = check_reason acc reason in
+    | (loc, error_message)::errors ->
+        let acc = check_loc acc loc in
         check_error_messages acc errors
 
   (* Checks if an error should be suppressed. *)
@@ -203,9 +204,8 @@ module ErrorSuppressions = struct
 end
 
 let parse_error_to_flow_error (loc, err) =
-  let reason = Reason_js.mk_reason "" loc in
   let msg = Parse_error.PP.error err in
-  ERROR, [reason, msg], []
+  ERROR, [loc, msg], []
 
 let to_list errors = ErrorSet.elements errors
 
@@ -219,10 +219,10 @@ let json_of_error (error : error) = Json.(
   | WARNING -> "warning"
   in
   let messages = append_trace_reasons messages trace_reasons in
-  let elts = List.map (fun (reason, w) ->
+  let elts = List.map (fun (loc, w) ->
       JAssoc (("descr", Json.JString w) ::
               ("level", Json.JString level_str) ::
-              (json_of_loc (Reason_js.loc_of_reason reason)))
+              (json_of_loc loc))
     ) messages
   in
   JAssoc [ "message", JList elts ]
@@ -253,13 +253,11 @@ let to_string (error : error) : string =
   let buf = Buffer.create 50 in
   (match msgl with
   | [] -> assert false
-  | (reason1, msg1) :: rest_of_error ->
-      let loc1 = Reason_js.loc_of_reason reason1 in
+  | (loc1, msg1) :: rest_of_error ->
       Buffer.add_string buf begin
         Printf.sprintf "%s\n%s\n" (Reason_js.string_of_loc loc1) msg1
       end;
-      List.iter begin fun (reason, w) ->
-        let loc = Reason_js.loc_of_reason reason in
+      List.iter begin fun (loc, w) ->
         let msg = Printf.sprintf "%s\n%s\n" (Reason_js.string_of_loc loc) w
         in Buffer.add_string buf msg
       end rest_of_error
