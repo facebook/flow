@@ -1,20 +1,18 @@
 
-proto.js:7:16,20: call of method m
-Error:
+proto.js:8:7,11: string
+This type is incompatible with
+  proto.js:3:7,12: number
+
+proto.js:8:7,11: string
+This type is incompatible with
+  proto.js:7:7,12: number
+
 proto.js:10:42,46: boolean
 This type is incompatible with
-proto.js:7:7,12: number
-
-proto.js:8:7,11: string
-This type is incompatible with
-proto.js:3:7,12: number
-
-proto.js:8:7,11: string
-This type is incompatible with
-proto.js:7:7,12: number
+  proto.js:7:7,12: number
 
 sealed.js:3:1,7: assignment of property z
 Property not found in
-proto.js:14:18,25: object type
+  proto.js:14:18,25: object type
 
 Found 4 errors

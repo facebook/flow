@@ -77,12 +77,3 @@ function void_prop_side_effect_rev(x: { x: ?number }) {
     var y = x.x * 1000;
   }
 }
-
-function void_bogus_comparison() {
-  if (100 * void(0)) {
-    return;
-  }
-  if (void(0) * 100) {
-    return;
-  }
-}

@@ -42,29 +42,24 @@ and def =
   | NamespaceUse of (id * id) list
 
 and typedef = {
-  t_id: id;
-  t_tparams: tparam list;
-  t_constraint: tconstraint;
-  t_kind: typedef_kind;
-  t_user_attributes: user_attribute list;
-  t_namespace: Namespace_env.env;
-  t_mode: FileInfo.mode;
+    t_id: id;
+    t_tparams: tparam list;
+    t_constraint: tconstraint;
+    t_kind: typedef_kind;
+    t_namespace: Namespace_env.env;
+    t_mode: FileInfo.mode;
 }
 
 and gconst = {
-  cst_mode: FileInfo.mode;
-  cst_kind: cst_kind;
-  cst_name: id;
-  cst_type: hint option;
-  cst_value: expr;
-  cst_namespace: Namespace_env.env;
-}
+    cst_mode: FileInfo.mode;
+    cst_kind: cst_kind;
+    cst_name: id;
+    cst_type: hint option;
+    cst_value: expr;
+    cst_namespace: Namespace_env.env;
+  }
 
-and constraint_kind =
-  | Constraint_as
-  | Constraint_super
-
-and tparam = variance * id * (constraint_kind * hint) option
+and tparam = variance * id * hint option
 
 and tconstraint = hint option
 
@@ -73,19 +68,19 @@ and typedef_kind =
   | NewType of hint
 
 and class_ = {
-  c_mode: FileInfo.mode;
-  c_user_attributes: user_attribute list;
-  c_final: bool;
-  c_kind: class_kind;
-  c_is_xhp: bool;
-  c_name: id;
-  c_tparams: tparam list;
-  c_extends: hint list;
-  c_implements: hint list;
-  c_body: class_elt list;
-  c_namespace: Namespace_env.env;
-  c_enum: enum_ option;
-}
+    c_mode: FileInfo.mode;
+    c_user_attributes: user_attribute list;
+    c_final: bool;
+    c_kind: class_kind;
+    c_is_xhp: bool;
+    c_name: id;
+    c_tparams: tparam list;
+    c_extends: hint list;
+    c_implements: hint list;
+    c_body: class_elt list;
+    c_namespace: Namespace_env.env;
+    c_enum: enum_ option;
+  }
 
 and enum_ = {
   e_base       : hint;
@@ -201,15 +196,9 @@ and fun_ = {
   f_namespace       : Namespace_env.env;
 }
 
-and fun_decl_kind =
-  | FDeclAsync
-  | FDeclSync
-
 and fun_kind =
-  | FSync
   | FAsync
-  | FGenerator
-  | FAsyncGenerator
+  | FSync
 
 and hint = Pos.t * hint_
 and hint_ =

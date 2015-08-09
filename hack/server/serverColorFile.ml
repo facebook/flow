@@ -19,7 +19,9 @@ let get_level_list check =
     (Pos.info_raw p, level_of_type (p, ty)) :: xs) type_acc [] in
   result
 
-let go env f_in =
-  get_level_list begin fun () ->
-    ServerIdeUtils.check_file_input env.ServerEnv.nenv env.ServerEnv.files_info f_in
-  end
+let go env f_in oc =
+  let result = get_level_list (fun () ->
+    ServerIdeUtils.check_file_input env.ServerEnv.files_info f_in
+  ) in
+  Marshal.to_channel oc (result : result) [];
+  flush oc

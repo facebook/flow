@@ -9,8 +9,8 @@
  *)
 
 open Utils
-open Utils_js
 open Sys_utils
+module Errors = Errors_js
 module Reason = Reason_js
 module Ast = Spider_monkey_ast
 
@@ -18,7 +18,7 @@ module Ast = Spider_monkey_ast
 type results =
   SSet.t *                  (* successfully parsed files *)
   string list *             (* list of failed files *)
-  Errors_js.ErrorSet.t list (* parallel list of error sets *)
+  Errors.ErrorSet.t list    (* parallel list of error sets *)
 
 (**************************** internal *********************************)
 
@@ -41,46 +41,29 @@ let match_flow content file =
 let in_flow content file =
   Modes_js.(modes.all) || match_flow content file
 
-let (parser_hook: (string -> Ast.program -> unit) list ref) = ref []
-let call_on_success f = parser_hook := f :: !parser_hook
-
-let execute_hook file ast =
-  let ast = match ast with
-  | None ->
-      let empty_ast, _ = Parser_flow.parse_program true (Some file) "" in
-      empty_ast
-  | Some ast -> ast
-  in
-  try
-    List.iter (fun callback -> callback file ast) !parser_hook
-  with e ->
-    Printf.printf
-      "Hook failed: %s
-      (you can restart the server with OCAMLRUNPARAM=b to see a stack trace)\n"
-      (Printexc.to_string e);
-    Printexc.print_backtrace stdout
-
-let delete_file fn =
-  execute_hook fn None
-
 let do_parse ?(keep_errors=false) content file =
   try (
     let ast, parse_errors = Parser_flow.program_file content file in
     assert (parse_errors = []);
-    OK ast
+    Some ast, None
   )
   with
   | Parse_error.Error parse_errors ->
-    let converted = List.fold_left (fun acc err ->
-      Errors_js.(ErrorSet.add (parse_error_to_flow_error err) acc)
-    ) Errors_js.ErrorSet.empty parse_errors in
-    Err converted
+    if keep_errors || in_flow content file then
+      let converted = List.fold_left (fun acc err ->
+        Errors.(ErrorSet.add (parse_error_to_flow_error err) acc)
+      ) Errors.ErrorSet.empty parse_errors in
+      None, Some converted
+    else None, None
   | e ->
-    let s = Printexc.to_string e in
-    let msg = spf "unexpected parsing exception: %s" s in
-    let reason = Reason.mk_reason "" Loc.({ none with source = Some file }) in
-    let err = Errors_js.ERROR, [reason, msg], [] in
-    Err (Errors_js.ErrorSet.singleton err)
+    if keep_errors || in_flow content file then
+      let s = Printexc.to_string e in
+      let msg = spf "unexpected parsing exception: %s" s in
+      let reason = Reason.new_reason "" (Pos.make_from
+        (Relative_path.create Relative_path.Dummy file)) in
+      let err = Errors.ERROR, [reason, msg] in
+      None, Some (Errors.ErrorSet.singleton err)
+    else None, None
 
 (* parse file, store AST to shared heap on success.
  * Add success/error info to passed accumulator. *)
@@ -88,19 +71,21 @@ let reducer init_modes (ok, fails, errors) file =
   init_modes ();
   let content = cat file in
   match (do_parse content file) with
-  | OK ast ->
+  | Some ast, None ->
       ParserHeap.add file ast;
-      execute_hook file (Some ast);
       (SSet.add file ok, fails, errors)
-  | Err converted ->
-      execute_hook file None;
+  | None, Some converted ->
       (ok, file :: fails, converted :: errors)
+  | None, None ->
+      (ok, fails, errors)
+  | _ -> assert false
 
 (* merge is just memberwise union/concat of results *)
 let merge (ok1, fail1, errors1) (ok2, fail2, errors2) =
   (SSet.union ok1 ok2, fail1 @ fail2, errors1 @ errors2)
 
 (***************************** public ********************************)
+
 
 let parse workers next init_modes =
   let t = Unix.gettimeofday () in
@@ -129,5 +114,4 @@ let get_ast_unsafe file =
   ParserHeap.find_unsafe file
 
 let remove_asts files =
-  ParserHeap.remove_batch files;
-  SSet.iter delete_file files
+  ParserHeap.remove_batch files

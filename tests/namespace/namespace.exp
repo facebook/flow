@@ -1,22 +1,22 @@
 
 client.js:3:19,24: number
 This type is incompatible with
-client.js:3:10,15: string
+  client.js:3:10,15: string
 
 namespace.js:2:13,18: number
 This type is incompatible with
-namespace.js:3:23,28: string
+  namespace.js:3:23,28: string
 
 namespace.js:11:28,29: string
 This type is incompatible with
-namespace.js:11:7,12: number
+  namespace.js:11:7,12: number
 
 namespace.js:15:16,17: string
 This type is incompatible with
-namespace.js:13:12,30: union type
+  namespace.js:13:12,30: union type
 
-namespace.js:17:26,27: string
+namespace.js:18:25,26: string
 This type is incompatible with
-namespace.js:17:30,35: number
+  namespace.js:17:29,34: number
 
 Found 5 errors

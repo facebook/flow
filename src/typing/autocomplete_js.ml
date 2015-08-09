@@ -11,7 +11,7 @@
 open Constraint_js
 
 type autocomplete_type =
-| Acid of (Scope.entry Utils.SMap.t)
+| Acid of (block_entry Utils.SMap.t)
 | Acmem of (Type.t)
 
 let autocomplete_suffix = "AUTO332"
@@ -24,7 +24,7 @@ let is_autocomplete x =
 let autocomplete_id state cx name loc =
   if is_autocomplete name
   then (
-    state := Some (Acid (Env_js.all_entries ()));
+    state := Some (Acid (Env_js.flat_env ()));
     true
   ) else
     false

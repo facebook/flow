@@ -8,6 +8,8 @@
  *
  *)
 
+open CommandInfo
+
 (***********************************************************************)
 (* flow shell is just a simple command-dispatching main *)
 (***********************************************************************)
@@ -15,67 +17,70 @@
 module FlowShell : sig
   val main : unit -> unit
 end = struct
+  type command =
+    | AUTOCOMPLETE
+    | CHECK
+    | CHECK_CONTENTS
+    | CONFIG_INIT
+    | CONVERT
+    | FIND_MODULE
+    | GET_DEF
+    | GET_IMPORTERS
+    | GET_IMPORTS
+    | PORT
+    | SERVER
+    | SINGLE
+    | START
+    | STATUS
+    | STOP
+    | SUGGEST
+    | TYPE_AT_POS
+    | DEFAULT
 
   (* normal commands *)
   let commands = [
-    AstCommand.command;
-    AutocompleteCommand.command;
-    ServerCommands.Check.command;
-    CheckContentsCommand.command;
-    ConvertCommand.command;
-    FindModuleCommand.command;
-    GetDefCommand.command;
-    GetImportersCommand.command;
-    GetImportsCommand.command;
-    ConfigCommands.Init.command;
-    PortCommand.command;
-    ServerCommands.Server.command;
-    SingleCommand.command;
-    SearchCommand.command;
-    ServerCommands.Start.command;
-    StopCommand.command;
-    SuggestCommand.command;
-    TypeAtPosCommand.command;
-    DumpTypesCommand.command;
+    AUTOCOMPLETE,   (module AutocompleteCommand : COMMAND);
+    CHECK,          (module ServerCommands.Check);
+    CHECK_CONTENTS, (module CheckContentsCommand);
+    CONVERT,        (module ConvertCommand);
+    FIND_MODULE,    (module FindModuleCommand);
+    GET_DEF,        (module GetDefCommand);
+    GET_IMPORTERS,  (module GetImportersCommand);
+    GET_IMPORTS,    (module GetImportsCommand);
+    CONFIG_INIT,    (module ConfigCommands.Init);
+    PORT,           (module PortCommand);
+    SERVER,         (module ServerCommands.Server);
+    SINGLE,         (module SingleCommand);
+    START,          (module ServerCommands.Start);
+    STOP,           (module StopCommand);
+    SUGGEST,        (module SuggestCommand);
+    TYPE_AT_POS,    (module TypeAtPosCommand);
   ]
 
   (* status commands, which need a list of other commands *)
-  module StatusCommand = StatusCommands.Status(struct
-    let commands = commands
-  end)
-  let commands = StatusCommand.command :: commands
+  let commands =
+    (STATUS, (
+      module StatusCommands.Status(struct
+        let commands = mk_list commands
+      end) : COMMAND
+    )) :: commands
 
-  module DefaultCommand = StatusCommands.Default(struct
-    let commands = commands
-  end)
-  let commands = DefaultCommand.command :: commands
+  let commands =
+    (DEFAULT, (
+      module StatusCommands.Default(struct
+        let commands = mk_list commands
+      end) : COMMAND)
+    ) :: commands
 
-  module ShellCommand = ShellCompleteCommand.Command(struct
-    let commands = commands
-  end)
-  let commands = ShellCommand.command :: commands
 
   let main () =
     Sys.set_signal Sys.sigpipe Sys.Signal_ignore;
-    let default_command = DefaultCommand.command in
-    let argv = Array.to_list Sys.argv in
-    let default = CommandSpec.name default_command in
-    let (command, argv) = match argv with
-    | [] -> failwith "Expected command"
-    | cmd::[] -> (default_command, cmd::default::[])
-    | cmd::next::rest ->
-        let subcmd = String.lowercase next in
-        try
-          let command = List.find (fun command ->
-            (CommandSpec.name command) = subcmd
-          ) commands in
-          (command, argv)
-        with Not_found ->
-          (default_command, cmd::default::next::rest)
-    in
-    let command_string = CommandSpec.name command in
+    let (command, command_string) = parse_command commands in
+    let command = (match command with None -> DEFAULT | Some cmd -> cmd) in
     FlowEventLogger.init_flow_command command_string;
-    CommandSpec.run command argv
+    let the_module = get_command_module commands command in
+    let module Command = (val the_module : COMMAND) in
+    Command.run ()
 
 end
 

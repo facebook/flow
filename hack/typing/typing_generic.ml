@@ -21,19 +21,20 @@ module ShapeMap = Nast.ShapeMap
 module IsGeneric: sig
 
   (* Give back the name and position of a generic if found *)
-  val ty: locl ty -> string option
+  val ty: ty -> string option
 end = struct
 
   exception Found of string
 
   let rec ty (_, x) = ty_ x
   and ty_ = function
-    | Tabstract (AKdependent (_, _), cstr) -> ty_opt cstr
-    | Tabstract (AKgeneric (x, _), _) -> raise (Found x)
-    | Tanon _ | Tany | Tmixed | Tprim _ -> ()
+    | Tgeneric ("this", ty) -> ty_opt ty
+    | Tgeneric (x, _) -> raise (Found x)
+    | Tanon _ | Taccess _
+    | Tany | Tmixed | Tprim _ -> ()
     | Tarray (ty1, ty2) ->
         ty_opt ty1; ty_opt ty2
-    | Tvar _ -> assert false (* Expansion got rid of Tvars ... *)
+    | Tvar _ -> () (* Expansion got rid of Tvars ... *)
     | Toption x -> ty x
     | Tfun fty ->
         List.iter ty (List.map snd fty.ft_params);
@@ -41,13 +42,13 @@ end = struct
         (match fty.ft_arity with
           | Fvariadic (_min, (_name, var_ty)) -> ty var_ty
           | _ -> ())
-    | Tabstract (AKnewtype (_, tyl), x) ->
+    | Tabstract (_, tyl, x) ->
         List.iter ty tyl; ty_opt x
+    | Tapply (_, tyl)
     | Ttuple tyl -> List.iter ty tyl
-    | Tclass (_, tyl)
     | Tunresolved tyl -> List.iter ty tyl
     | Tobject -> ()
-    | Tshape (_, fdm) ->
+    | Tshape fdm ->
         ShapeMap.iter (fun _ v -> ty v) fdm
 
   and ty_opt = function None -> () | Some x -> ty x
@@ -55,6 +56,82 @@ end = struct
   let ty x = try ty x; None with Found x -> Some x
 
 end
+
+let rename env old_name new_name ty_to_rename =
+  let rec ty env (r, t) = (match t with
+    | Tgeneric (x, ty) ->
+        let name = if x = old_name then new_name else x in
+        let env, ty = ty_opt env ty in
+        env, (r, Tgeneric (name, ty))
+    | Tanon _
+    | Tany | Tmixed | Tprim _-> env, (r, t)
+    | Tarray (ty1, ty2) ->
+        let env, ty1 = ty_opt env ty1 in
+        let env, ty2 = ty_opt env ty2 in
+        env, (r, Tarray (ty1, ty2))
+    | Tvar n ->
+        let env, t = Env.get_type env n in
+        let n' = Env.fresh() in
+        let env = Env.rename env n n' in
+        let env, t = ty env t in
+        let env = Env.add env n' t in
+        env, (r, Tvar n')
+    | Toption x ->
+        let env, x = ty env x in
+        env, (r, Toption x)
+    | Tfun fty ->
+        let env, params = List.fold_right (fun (s_opt, t) (env, params) ->
+          let env, t= ty env t in
+          env, (s_opt, t)::params
+        ) fty.ft_params (env, []) in
+        let env, ret = ty env fty.ft_ret in
+        let env, arity = match fty.ft_arity with
+          | Fvariadic (min, (s_opt, t)) ->
+            let env, t = ty env t in
+            env, Fvariadic (min, (s_opt, t))
+          | x -> env, x
+        in
+        env, (r, Tfun { fty with
+          ft_arity = arity;
+          ft_params = params;
+          ft_ret = ret;
+        })
+    | Tabstract (id, l, x) ->
+        let env, l = tyl env l in
+        let env, x = ty_opt env x in
+        env, (r, Tabstract (id, l, x))
+    | Tapply (id, l) ->
+        let env, l = tyl env l in
+        env, (r, Tapply(id, l))
+    | Taccess (x, ids) ->
+        let env, x = ty env x in
+        env, (r, Taccess(x, ids))
+    | Ttuple l ->
+        let env, l = tyl env l in
+        env, (r, Ttuple l)
+    | Tunresolved l ->
+        let env, l = tyl env l in
+        env, (r, Tunresolved l)
+    | Tobject -> env, (r, Tobject)
+    | Tshape fdm ->
+        let env, fdm = ShapeMap.fold (fun k v (env, fdm) ->
+          let env, v = ty env v in
+          env, ShapeMap.add k v fdm
+        ) fdm (env, ShapeMap.empty) in
+        env, (r, Tshape fdm ))
+
+  and ty_opt env = function
+    | None -> env, None
+    | Some x ->
+        let env, x = ty env x in
+        env, Some x
+
+  and tyl env l = List.fold_right (fun t (env, l) ->
+    let env, t = ty env t in
+    env, t::l
+  ) l (env, [])
+
+  in ty env ty_to_rename
 
 (* Function making sure that a type can be generalized, in our case it just
  * means the type should be monomorphic

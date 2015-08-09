@@ -6,7 +6,7 @@ function foo(x:{y?:() => void}) {
     x.y(); // ok
   }
   if (x.hasOwnProperty('z')) {
-    x.z(); // unreachable, so allowed
+    x.z(); // doesn't exist
   }
 }
 
