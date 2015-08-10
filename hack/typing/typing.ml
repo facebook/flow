@@ -2676,6 +2676,10 @@ and member_not_found pos ~is_method class_ member_name r =
     | Some (def_pos, v) ->
         error (`did_you_mean (def_pos, v))
 
+(* The type of the object member is passed into the continuation k. This is
+ * useful for typing nullsafed method calls. Consider `$x?->f()`: obj_get will
+ * pass `k` the type of f, and `k` will typecheck the method call and return
+ * the method's return type. obj_get then wraps that type in a Toption. *)
 and obj_get ~is_method ~nullsafe env ty1 cid id k =
   let env =
     match nullsafe with
