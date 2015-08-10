@@ -8,6 +8,7 @@
  *
  *)
 
+open Core
 
 (** Module consisting of the special names known to the typechecker *)
 
@@ -226,4 +227,18 @@ module Shapes = struct
   let idx                    = "idx"
   let keyExists              = "keyExists"
   let removeKey              = "removeKey"
+end
+
+module Superglobals = struct
+  let globals = "$GLOBALS"
+
+  let all_superglobals =
+    [globals ; "$_SERVER"; "$_GET"; "$_POST"; "$_FILES";
+     "$_COOKIE"; "$_SESSION"; "$_REQUEST"; "$_ENV"
+    ]
+
+  let is_superglobal =
+    let h = Hashtbl.create 23 in
+    List.iter all_superglobals (fun x -> Hashtbl.add h x true);
+    fun x -> Hashtbl.mem h x
 end

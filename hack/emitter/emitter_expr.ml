@@ -13,6 +13,7 @@ open Utils
 open Nast
 
 open Emitter_core
+module SN = Naming_special_names
 
 
 let is_lval expr =
@@ -110,6 +111,17 @@ and emit_base env (_, expr_ as expr) =
  * at the "top level" of lval emitting.  *)
 and emit_lval_inner env (_, expr_) =
   match expr_ with
+  (* superglobals *)
+  | Lvar id when SN.Superglobals.is_superglobal (get_lid_name id) ->
+    let env = emit_String env (lstrip (get_lid_name id) "$") in
+    env, Lglobal
+  (* indexes into $GLOBALS: ignore the $GLOBALS and emit the index
+   * as the global  *)
+  | Array_get ((_, Lvar id), Some e)
+      when (get_lid_name id = SN.Superglobals.globals) ->
+    let env = emit_expr env e in
+    env, Lglobal
+
   | Lvar id -> env, llocal id
   | Lplaceholder (_, s) -> env, Llocal s
   | Array_get (e1, maybe_e2) ->

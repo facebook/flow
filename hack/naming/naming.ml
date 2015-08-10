@@ -354,15 +354,6 @@ module Env = struct
     | Some p' -> Errors.different_scope p x p'
     | None -> ()
 
-  let is_superglobal =
-    let l = [
-      "$GLOBALS"; "$_SERVER"; "$_GET"; "$_POST"; "$_FILES";
-      "$_COOKIE"; "$_SESSION"; "$_REQUEST"; "$_ENV"
-    ] in
-    let h = Hashtbl.create 23 in
-    List.iter l (fun x -> Hashtbl.add h x true);
-    fun x -> Hashtbl.mem h x
-
   (* Adds a local variable, without any check *)
   let add_lvar (_, lenv) (_, name) (p, x) =
     lenv.locals := SMap.add name (p, x) !(lenv.locals)
@@ -406,7 +397,7 @@ module Env = struct
   (* Function used to name a local variable *)
   let lvar (genv, env) (p, x) =
     let p, ident =
-      if is_superglobal x && genv.in_mode = FileInfo.Mpartial
+      if SN.Superglobals.is_superglobal x && genv.in_mode = FileInfo.Mpartial
       then p, Ident.tmp()
       else
         let lcl = SMap.get x !(env.locals) in

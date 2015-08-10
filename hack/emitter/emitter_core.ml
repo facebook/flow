@@ -46,6 +46,7 @@ type lval =
   (* This list is stored reversed because ~functional programming~ *)
   | Lmember of base * (member_type * member) list
   | Lsprop of Nast.class_id
+  | Lglobal
 and base =
   | Blval of lval
   | Bexpr
@@ -121,6 +122,7 @@ let fmt_base base =
   | Bthis -> "H"
   | Blval (Llocal id) -> "L:"^id
   | Blval (Lsprop _) -> "SC"
+  | Blval Lglobal -> "GC"
   | Blval (Lmember _) -> bug "invalid base"
 
 (* returns the suffix to use on opcodes operating on the lval,
@@ -131,6 +133,7 @@ let fmt_lval lval =
   match lval with
   | Llocal id -> "L", id, false
   | Lsprop _ -> "S", "", false
+  | Lglobal -> "G", "", false
   | Lmember (base, mems) ->
     "M",
     "<" ^ fmt_base base ^ " " ^
