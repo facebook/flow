@@ -1213,7 +1213,8 @@ and expr_ ~in_cond ~(valkind: [> `lvalue | `rvalue | `other ]) env (p, e) =
         | Ast.FAsyncGenerator ->
             Reason.Ryield_asyncgen p,
             Tclass ((p, SN.Classes.cAsyncGenerator), [key; value; send])
-        | _ -> assert false in (* Naming should never allow this *)
+        | Ast.FSync | Ast.FAsync ->
+            failwith "Parsing should never allow this" in
       let env =
         Type.sub_type p (Reason.URyield) env (Env.get_return env) rty in
       let env = Env.forget_members env p in

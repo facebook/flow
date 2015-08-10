@@ -86,7 +86,7 @@ let expand_typedef ety_env env r x argl = expand_typedef_ ety_env env r x argl
 (* Expand a typedef, smashing abstraction and collecting a trail
  * of where the typedefs come from. *)
 let rec force_expand_typedef:
-  type a. phase:a Phase.t -> ety_env:_ -> _ -> a ty -> _=
+  type a. phase:a Phase.t -> ety_env:_ -> _ -> a ty -> _ =
   fun ~phase ~ety_env env t ->
   match t with
   | r, Tapply ((_, x), argl) when Typing_env.is_typedef x ->
