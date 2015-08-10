@@ -255,7 +255,7 @@ function foo(x: { y: ?string }): string {
 function bar(x: ?string): string {
   function baz() { /* this doesn't mutate x */ }
   if (x) {
-    bar();
+    baz();
     return x; // error: Flow doesn't know that
   } else {
     return "default";
