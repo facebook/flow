@@ -1331,17 +1331,6 @@ and class_const env p (cid, mid) =
         | CIstatic | CIvar _ -> ();
         | _ -> Errors.abstract_const_usage p (Reason.to_pos r) n; ()
       in env, const_ty
-    | r, Tprim (Tclassname name) when (snd mid) = SN.Members.mClass ->
-      (* X::class is a Tclassname; $foo::class is a classname<Foo> *)
-      (match cid with
-        | CIstatic | CIvar _ | CIparent ->
-          let r_witness = Reason.Rwitness p in
-          let cls_ty = r, Tclass ((Reason.to_pos r, name), []) in
-          let classname_ty = r_witness,
-            Tabstract (AKnewtype (SN.Classes.cClassname, [cls_ty]), None) in
-          env, classname_ty
-        | CI _ | CIself  -> env, const_ty
-      )
     | _ ->
       env, const_ty
 

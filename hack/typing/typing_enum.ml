@@ -73,7 +73,7 @@ let check_valid_array_key_type f_fail ~allow_any:allow_any env p t =
   let env, (r, t'), trail =
     Typing_tdef.force_expand_typedef ~ety_env env t in
   (match t' with
-    | Tprim (Tint | Tstring | Tclassname _) -> ()
+    | Tprim (Tint | Tstring) -> ()
     (* Enums have to be valid array keys *)
     | Tabstract (AKenum _, _) -> ()
     | Tany when allow_any -> ()

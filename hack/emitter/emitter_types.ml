@@ -24,7 +24,6 @@ let fmt_prim x =
   | N.Tbool   -> "HH\\bool"
   | N.Tfloat  -> "HH\\float"
   | N.Tstring -> "HH\\string"
-  | N.Tclassname _ -> "HH\\string"
   | N.Tnum    -> "HH\\num"
   | N.Tresource -> "HH\\resource"
   | N.Tarraykey -> "HH\\arraykey"

@@ -41,10 +41,8 @@ let rec assert_nontrivial p bop env ty1 ty2 =
   match ty1, ty2 with
   | (_, Tprim N.Tnum),               (_, Tprim (N.Tint | N.Tfloat))
   | (_, Tprim (N.Tint | N.Tfloat)),  (_, Tprim N.Tnum) -> ()
-  | (_, Tprim N.Tstring),            (_, Tprim (N.Tclassname _))
-  | (_, Tprim (N.Tclassname _)),     (_, Tprim N.Tstring) -> ()
-  | (_, Tprim N.Tarraykey),          (_, Tprim (N.Tint | N.Tstring | N.Tclassname _))
-  | (_, Tprim (N.Tint | N.Tstring | N.Tclassname _)), (_, Tprim N.Tarraykey) -> ()
+  | (_, Tprim N.Tarraykey),          (_, Tprim (N.Tint | N.Tstring))
+  | (_, Tprim (N.Tint | N.Tstring)), (_, Tprim N.Tarraykey) -> ()
   | (r, Tprim N.Tnoreturn), _
   | _, (r, Tprim N.Tnoreturn) ->
       Errors.noreturn_usage p (Reason.to_string ("This always throws or exits") r)
