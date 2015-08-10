@@ -1522,22 +1522,9 @@ and new_object ~check_not_abstract p env c el uel =
           env, c_ty
   )
 
-and instanceof_naming = function
-  | (_, Id (pos_c, name_c)) ->
-    let cid = match name_c with
-      | x when x = SN.Classes.cParent -> CIparent
-      | x when x = SN.Classes.cSelf   -> CIself
-      | x when x = SN.Classes.cStatic -> CIstatic
-      | _ -> CI (pos_c, name_c)
-    in Some cid
-  | (_, Lvar _) as e ->
-    let cid = CIvar e in
-    Some cid
-  | _ -> None
-
 and instanceof_in_env p (env:Env.env) (e1:Nast.expr) (e2:Nast.expr) =
   let env, _ = expr env e1 in
-  match instanceof_naming e2 with
+  match TUtils.instanceof_naming e2 with
     | Some cid ->
       instantiable_cid p env cid
     | None ->
@@ -3576,7 +3563,7 @@ and condition env tparamet =
       let env, (p, x) = get_instance_var env ivar in
       let env, x_ty = Env.get_local env x in
       let env, x_ty = Env.expand_type env x_ty in (* We don't want to modify x *)
-      begin match instanceof_naming e2 with
+      begin match TUtils.instanceof_naming e2 with
         | None ->
           let env, _ = expr env e2 in
           Env.set_local env x (Reason.Rwitness p, Tobject)

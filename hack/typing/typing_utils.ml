@@ -258,6 +258,22 @@ let unresolved env ty =
   | _ -> in_var env (fst ty, Tunresolved [ty])
 
 (*****************************************************************************)
+(* *)
+(*****************************************************************************)
+let instanceof_naming = function
+  | (_, N.Id (pos_c, name_c)) ->
+    let cid = match name_c with
+      | x when x = SN.Classes.cParent -> N.CIparent
+      | x when x = SN.Classes.cSelf   -> N.CIself
+      | x when x = SN.Classes.cStatic -> N.CIstatic
+      | _ -> N.CI (pos_c, name_c)
+    in Some cid
+  | (_, N.Lvar _) as e ->
+    let cid = N.CIvar e in
+    Some cid
+  | _ -> None
+
+(*****************************************************************************)
 (* Function checking if an array is used as a tuple *)
 (*****************************************************************************)
 

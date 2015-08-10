@@ -392,6 +392,8 @@ let emit_Yield =          emit_op0    "Yield"
 let emit_YieldK =         emit_op0    "YieldK"
 let emit_Idx =            emit_op0    "Idx"
 let emit_NameA =          emit_op0    "NameA"
+let emit_InstanceOf =     emit_op0    "InstanceOf"
+let emit_InstanceOfD =    emit_op1e   "InstanceOfD"
 
 let emit_Switch env labels base bound =
   emit_op_strs env ["Switch"; fmt_str_vec labels; string_of_int base; bound]

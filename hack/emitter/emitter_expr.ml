@@ -612,13 +612,33 @@ and emit_expr env (pos, expr_ as expr) =
   | Pair (e1, e2) ->
     emit_expr env (pos, ValCollection ("\\Pair", [e1; e2]))
 
+  | InstanceOf (e, cls) ->
+    let env = emit_expr env e in
+    let cid = match Typing_utils.instanceof_naming cls with
+        | Some cid -> cid
+        | None -> CIvar cls (* this is a lie, but harmless *) in
+
+    (match fmt_class_id env cid with
+      | Some class_name -> emit_InstanceOfD env class_name
+      | None ->
+        (* Annoyingly, the InstanceOf instruction doesn't want a classref
+         * but instead wants a string or an object. So if we have a CIvar,
+         * emit it directly, to avoid doing AGet* immediately followed by
+         * NameA.... *)
+        let env = match cid with
+          | CI _ -> assert false
+          | CIvar e -> emit_expr env e
+          | CIparent | CIself | CIstatic ->
+            let env = emit_class_id env cid in
+            emit_NameA env in
+        emit_InstanceOf env)
+
 
   | Id _ -> unimpl "Id"
   | Fun_id _ -> unimpl "Fun_id"
   | Method_id _ -> unimpl "Method_id"
   | Method_caller _ -> unimpl "Method_caller"
   | Smethod_id _ -> unimpl "Smethod_id"
-  | InstanceOf _ -> unimpl "InstanceOf"
   | Efun _ -> unimpl "Efun"
   | Xml _ -> unimpl "Xml"
   | Assert _ -> unimpl "Assert"
