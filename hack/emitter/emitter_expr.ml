@@ -130,9 +130,9 @@ and emit_lval_inner env (_, expr_) =
       | Some e2 -> emit_member env e2
       | None -> env, Mappend) in
     env, lmember (base, (MTelem, member))
-  | Obj_get (e1, (_, Id (_, id)), _null_flavor_TODO) ->
+  | Obj_get (e1, (_, Id (_, id)), null_flavor) ->
     let env, base = emit_base env e1 in
-    env, lmember (base, (MTprop, Mstring id))
+    env, lmember (base, (MTprop null_flavor, Mstring id))
   | Obj_get _ -> unimpl "Obj_get with non-Id rhs???"
 
   | Class_get (cid, (_, field)) ->

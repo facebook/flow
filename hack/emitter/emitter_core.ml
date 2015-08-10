@@ -38,7 +38,7 @@ type member =
 
 type member_type =
   | MTelem
-  | MTprop
+  | MTprop of Nast.og_null_flavor
 
 type lval =
   | Llocal of string
@@ -113,8 +113,9 @@ let fmt_member mem =
   | MTelem, Mlocal id -> "EL:"^id
   | MTelem, Mappend -> "W"
   | MTelem, Mstring s -> "ET:"^quote_str s
-  | MTprop, Mstring s -> "PT:"^quote_str s
-  | MTprop, _ -> unimpl "unsupported member??"
+  | MTprop Nast.OG_nullthrows, Mstring s -> "PT:"^quote_str s
+  | MTprop Nast.OG_nullsafe, Mstring s -> "QT:"^quote_str s
+  | MTprop _, _ -> unimpl "unsupported member??"
 
 let fmt_base base =
   match base with
