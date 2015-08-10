@@ -208,13 +208,6 @@ and localize_ft ?(instantiate_tparams=true) ~ety_env env ft =
   let env, ret = localize ~ety_env env ft.ft_ret in
   env, { ft with ft_arity = arity; ft_params = params; ft_ret = ret }
 
-let localize_phase ~ety_env env phase_ty =
-  match phase_ty with
-  | DeclTy ty ->
-     localize ~ety_env env ty
-  | LoclTy ty ->
-     env, ty
-
 let env_with_self env =
   {
     type_expansions = [];
