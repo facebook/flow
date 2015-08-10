@@ -64,6 +64,8 @@ This illustrates an interesting feature of Flow: it understands the effects of
 some dynamic type tests and can adjust the types of local variables
 accordingly (in technical terms, Flow's analysis is path-sensitive).
 
+Read more about <a href="/docs/dynamic-type-tests.html">dynamic type tests</a>.
+
 ## Maybe and Objects
 
 In addition to being able to adjust types of local variables, Flow can sometimes
