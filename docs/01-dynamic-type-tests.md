@@ -44,7 +44,7 @@ function bar(x: ?string): string {
 }
 {% endhighlight %}
 
-Read more about <a href="docs/nullable-types.html">Maybe Types</a>.
+Read more about <a href="/docs/nullable-types.html">Maybe Types</a>.
 
 ### Truthiness and Existance
 
