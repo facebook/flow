@@ -414,5 +414,10 @@ let _ =
   if ! Sys.interactive
   then ()
   else
+    (* On windows, setting 'binary mode' avoids to output CRLF on
+       stdout.  The 'text mode' would not hurt the user in general, but
+       it breaks the testsuite where the output is compared to the
+       expected one (i.e. in given file without CRLF). *)
+    set_binary_mode_out stdout true;
     let options = parse_options () in
     main_hack options

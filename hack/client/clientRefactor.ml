@@ -37,13 +37,6 @@ let map_patches_to_filename acc res =
   | Some lst -> SMap.add fn (res :: lst) acc
   | None -> SMap.add fn [res] acc
 
-let read_file_to_string fn = 
-  let ic = open_in fn in
-  let len = in_channel_length ic in
-  let buf = Buffer.create len in
-  Buffer.add_channel buf ic len;
-  Buffer.contents buf
-
 let write_string_to_file fn str =
   let oc = open_out fn in
   output_string oc str;
@@ -60,7 +53,6 @@ let write_patches_to_buffer buf original_content patch_list =
     Buffer.add_string buf str_to_write;
     i := !i + size
   in
-  
   List.iter patch_list begin fun res ->
     let pos = get_pos res in
     let char_start, char_end = Pos.info_raw pos in
@@ -77,7 +69,7 @@ let write_patches_to_buffer buf original_content patch_list =
   add_original_content (String.length original_content - 1)
 
 let apply_patches_to_file fn patch_list =
-  let old_content = read_file_to_string fn in
+  let old_content = Sys_utils.cat fn in
   let buf = Buffer.create (String.length old_content) in
   let patch_list = List.sort compare_result patch_list in
   write_patches_to_buffer buf old_content patch_list;
@@ -137,7 +129,7 @@ let go conn args =
 
     let refactor_type = input_line stdin in
     let command = match refactor_type with
-    | "1" -> 
+    | "1" ->
       let class_name = input_prompt "Enter class name: " in
       let new_name = input_prompt "Enter a new name for this class: " in
       ServerRefactor.ClassRename (class_name, new_name)
@@ -152,7 +144,7 @@ let go conn args =
           input_prompt ("Enter a new name for this method: "^class_name^"::") in
       ServerRefactor.MethodRename (class_name, method_name, new_name)
     | _ -> raise Exit in
-    
+
     let patches = ServerCommand.rpc conn @@ ServerRpc.REFACTOR command in
     let file_map = List.fold_left patches
       ~f:map_patches_to_filename ~init:SMap.empty in
