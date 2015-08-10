@@ -233,4 +233,3 @@ let main args =
         Exit_status.Ok
       else
         Exit_status.Checkpoint_error
-  | MODE_UNSPECIFIED -> assert false
