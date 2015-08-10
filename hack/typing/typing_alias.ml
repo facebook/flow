@@ -91,17 +91,14 @@ end = struct
 
   let get = Dep.get
 
-  let is_local = function
-    | Lvar _
-    | Obj_get ((_, (This | Lvar _)), (_, Id _), _)
-    | Class_get _  -> true
-    | _ -> false
-
   let local_to_string = function
-    | Lvar (_, x) -> Ident.to_string x
-    | Obj_get (x, (_, Id (_, y)), _) -> Env.FakeMembers.make_id x y
-    | Class_get (x, (_, y)) -> Env.FakeMembers.make_static_id x y
-    | _ -> assert false
+    | Lvar (_, x) ->
+        Some (Ident.to_string x)
+    | Obj_get ((_, (This | Lvar _) as x), (_, Id (_, y)), _) ->
+        Some (Env.FakeMembers.make_id x y)
+    | Class_get (x, (_, y)) ->
+        Some (Env.FakeMembers.make_static_id x y)
+    | _ -> None
 
   let visitor =
     object(this)
@@ -118,9 +115,9 @@ end = struct
         | _ -> parent#on_expr acc e
 
       method on_assign acc (_, e1) e2 =
-        if is_local e1
-        then Dep.expr (local_to_string e1) acc e2
-        else acc
+        Option.value_map (local_to_string e1) ~f:begin fun s ->
+          Dep.expr s acc e2
+        end ~default:acc
 
       method! on_efun acc _ _ = acc
     end
