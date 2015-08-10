@@ -583,8 +583,7 @@ and stmt env = function
       let env = check_exhaustiveness env (fst e) ty cl in
       let parent_lenv = env.Env.lenv in
       let env, cl = case_list parent_lenv ty env cl in
-      let terml, lenvl = List.unzip cl in
-      LEnv.intersect_list env parent_lenv lenvl terml
+      LEnv.intersect_list env parent_lenv cl
   | Foreach (e1, e2, b) as st ->
       let env, ty1 = expr env e1 in
       let env, ty1 = TUtils.fold_unresolved env ty1 in
@@ -649,12 +648,14 @@ and try_catch (tb, cl) env =
   let env = Env.freeze_local_env env in
   let env = block env tb in
   let after_try = env.Env.lenv in
-  let env, catchl = lfold (catch parent_lenv after_try) env cl in
-  let terml = List.map cl (fun (_, _, b) ->
-    Nast_terminality.Terminal.block env b) in
-  let lenvl = after_try :: catchl in
-  let terml = Nast_terminality.Terminal.block env tb :: terml in
-  LEnv.intersect_list env parent_lenv lenvl terml
+  let env, term_lenv_l = lmap begin fun env (_, _, b as catch_block) ->
+    let env, lenv = catch parent_lenv after_try env catch_block in
+    let term = Nast_terminality.Terminal.block env b in
+    env, (term, lenv)
+  end env cl in
+  let term_lenv_l =
+    (Nast_terminality.Terminal.block env tb, after_try) :: term_lenv_l in
+  LEnv.intersect_list env parent_lenv term_lenv_l
 
 and case_list_ parent_lenv ty env = function
   | [] -> env, []
@@ -3192,8 +3193,10 @@ and call_ pos env fty el uel =
     check_deprecated pos ft;
     let pos_def = Reason.to_pos r2 in
     let env, var_param = variadic_param env ft in
-    let env, tyl = lmap expr env el in
-    let e_tyl = List.zip_exn el tyl in
+    let env, e_tyl = lmap begin fun env e ->
+      let env, ty = expr env e in
+      env, (e, ty)
+    end env el in
     let env, e_tyl, unpacked_tuple = unpack_exprl env e_tyl uel in
     let arity = if unpacked_tuple
       then List.length e_tyl

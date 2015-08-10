@@ -124,14 +124,15 @@ let integrate env (_parent_fake, parent_locals) (child_fake, child_locals) =
   { env with Env.lenv = child_fake, locals }
 
 (* Same as intersect, but with a list of local environments *)
-let intersect_list env parent_lenv envl terml =
-  let env, lenvl =
-    List.fold_right ~f:begin fun (lenv, is_term) (env, lenv_acc) ->
-      if is_term
-      then integrate env parent_lenv lenv, lenv_acc
-      else env, lenv :: lenv_acc
-    end (List.zip_exn envl terml) ~init:(env, []) in
-  (match lenvl with
+let intersect_list env parent_lenv term_lenv_l =
+  let to_integrate, to_intersect =
+    List.partition_map term_lenv_l begin fun (term, lenv) ->
+      if term then `Fst lenv else `Snd lenv
+    end in
+  let env = List.fold_left to_integrate ~f:begin fun env lenv ->
+    integrate env parent_lenv lenv
+  end ~init:env in
+  (match to_intersect with
   | [] -> env
   | [x] -> { env with Env.lenv = x }
   | lenv1 :: rl ->
