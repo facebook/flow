@@ -351,6 +351,7 @@ module Typing                               = struct
   let assign_during_case                    = 4145 (* DONT MODIFY!!!! *)
   let cyclic_enum_constraint                = 4146 (* DONT MODIFY!!!! *)
   let unpacking_disallowed                  = 4147 (* DONT MODIFY!!!! *)
+  let invalid_classname                     = 4148 (* DONT MODIFY!!!! *)
   (* EXTEND HERE WITH NEW VALUES IF NEEDED *)
 end
 
@@ -1745,6 +1746,9 @@ let assign_during_case p =
 
 let cyclic_enum_constraint pos =
   add Typing.cyclic_enum_constraint pos "Cyclic enum constraint"
+
+let invalid_classname p =
+  add Typing.invalid_classname p "Not a valid class name"
 
 (*****************************************************************************)
 (* Convert relative paths to absolute. *)

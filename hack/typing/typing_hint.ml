@@ -113,6 +113,11 @@ end
  * phase is complete. *)
 module CheckInstantiability = struct
 
+  let validate_classname = function
+    | _, (Happly _ | Hthis | Hany | Hmixed | Habstr _ | Haccess _) -> ()
+    | p, (Htuple _ | Harray _ | Hprim _ | Hoption _ | Hfun _ | Hshape _) ->
+        Errors.invalid_classname p
+
   let visitor =
   object
     inherit [Env.env] hint_visitor as super
@@ -124,9 +129,9 @@ module CheckInstantiability = struct
         | Some {tc_kind = Ast.Ctrait; tc_name; tc_pos; _} ->
           Errors.uninstantiable_class usage_pos tc_pos tc_name
         | _ -> ()) in
-      if n <> SN.Classes.cClassname
-      then super#on_apply env (usage_pos, n) hl
-      else env
+      if n = SN.Classes.cClassname
+      then (Option.iter (List.hd hl) validate_classname; env)
+      else super#on_apply env (usage_pos, n) hl
 
     method! on_abstr _env _ _ =
       (* there should be no need to descend into abstract params, as
