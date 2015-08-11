@@ -21,13 +21,16 @@ let is_lval expr =
   | Lvar _  | Obj_get _ | Array_get _ | Class_get _ | Lplaceholder _ -> true
   | _ -> false
 
-(* Try to convert a class id into a static string; if we can't, return None *)
-let fmt_class_id env cid =
-  match cid with
-  | CIparent -> env.parent_name
-  | CIself -> env.self_name
-  | CI (_, s) -> Some (fmt_name s)
-  | CIstatic | CIvar _ -> None
+let resolve_class_id env = function
+  | CIparent ->
+      Option.value_map env.parent_name
+        ~default:(RCdynamic `parent) ~f:(fun x -> RCstatic x)
+  | CIself ->
+      Option.value_map env.self_name
+        ~default:(RCdynamic `self) ~f:(fun x -> RCstatic x)
+  | CI (_, s) -> RCstatic (fmt_name s)
+  | CIstatic -> RCdynamic `static
+  | CIvar e -> RCdynamic (`var e)
 
 (* Emit a conditional branch based on an expression. jump_if indicates
  * whether to jump when the condition is true or false.
@@ -153,29 +156,25 @@ and emit_lval env expr =
   let env = match lval with
     | Lsprop cid
     | Lmember (Blval (Lsprop cid), _) ->
-      emit_class_id env cid
+      emit_class_id env (resolve_class_id env cid)
     | _ -> env
   in
   env, lval
 
+and emit_dynamic_class_id env = function
+  | `parent -> emit_Parent env
+  | `self -> emit_Self env
+  | `static -> emit_LateBoundCls env
+  | `var (_, Lvar id) -> emit_AGetL env (get_lid_name id)
+  | `var e ->
+    let env = emit_expr env e in
+    emit_AGetC env
 
-and emit_class_id env cid =
-  (* if we have a static name for the class, use that *)
-  match fmt_class_id env cid with
-  | Some s ->
+and emit_class_id env = function
+  | RCstatic s ->
     let env = emit_String env s in
     emit_AGetC env
-  (* otherwise we need to dynamically find the class *)
-  | None ->
-    match cid with
-    | CI _ -> assert false
-    | CIparent -> emit_Parent env
-    | CIself -> emit_Self env
-    | CIstatic -> emit_LateBoundCls env
-    | CIvar (_, Lvar id) -> emit_AGetL env (get_lid_name id)
-    | CIvar e ->
-      let env = emit_expr env e in
-      emit_AGetC env
+  | RCdynamic dyid -> emit_dynamic_class_id env dyid
 
 and requires_empty_stack = function
   | _, Await _ | _, Yield _ -> true
@@ -278,11 +277,12 @@ and emit_call_lhs env (_, expr_ as expr) nargs =
     emit_FPushObjMethodD env nargs name (fmt_null_flavor null_flavor)
 
   | Class_const (cid, (_, field)) ->
-    (match fmt_class_id env cid with
-    | Some class_name -> emit_FPushClsMethodD env nargs field class_name
-    | None -> let env = emit_String env field in
-              let env = emit_class_id env cid in
-              emit_FPushClsMethod env nargs)
+    (match resolve_class_id env cid with
+    | RCstatic class_name -> emit_FPushClsMethodD env nargs field class_name
+    | RCdynamic dyid ->
+        let env = emit_String env field in
+        let env = emit_dynamic_class_id env dyid in
+        emit_FPushClsMethod env nargs)
 
   (* what all is even allowed here? *)
   | _ ->
@@ -522,16 +522,18 @@ and emit_expr env (pos, expr_ as expr) =
   (* handle ::class; just emit the name if we have it,
    * otherwise use NameA to get it *)
   | Class_const (cid, (_, "class")) ->
-    (match fmt_class_id env cid with
-    | Some class_name -> emit_String env class_name
-    | None -> let env = emit_class_id env cid in
-              emit_NameA env)
+    (match resolve_class_id env cid with
+    | RCstatic class_name -> emit_String env class_name
+    | RCdynamic dyid ->
+      let env = emit_dynamic_class_id env dyid in
+      emit_NameA env)
 
   | Class_const (cid, (_, field)) ->
-    (match fmt_class_id env cid with
-    | Some class_name -> emit_ClsCnsD env field class_name
-    | None -> let env = emit_class_id env cid in
-              emit_ClsCns env field)
+    (match resolve_class_id env cid with
+    | RCstatic class_name -> emit_ClsCnsD env field class_name
+    | RCdynamic dyid ->
+      let env = emit_dynamic_class_id env dyid in
+      emit_ClsCns env field)
 
   | Await e ->
     (* XXX: await only works in certain contexts but Hack doesn't actually
@@ -618,18 +620,17 @@ and emit_expr env (pos, expr_ as expr) =
         | Some cid -> cid
         | None -> CIvar cls (* this is a lie, but harmless *) in
 
-    (match fmt_class_id env cid with
-      | Some class_name -> emit_InstanceOfD env class_name
-      | None ->
+    (match resolve_class_id env cid with
+      | RCstatic class_name -> emit_InstanceOfD env class_name
+      | RCdynamic dyid ->
         (* Annoyingly, the InstanceOf instruction doesn't want a classref
          * but instead wants a string or an object. So if we have a CIvar,
          * emit it directly, to avoid doing AGet* immediately followed by
          * NameA.... *)
-        let env = match cid with
-          | CI _ -> assert false
-          | CIvar e -> emit_expr env e
-          | CIparent | CIself | CIstatic ->
-            let env = emit_class_id env cid in
+        let env = match dyid with
+          | `var e -> emit_expr env e
+          | (`parent | `self | `static) as dyid ->
+            let env = emit_dynamic_class_id env dyid in
             emit_NameA env in
         emit_InstanceOf env)
 

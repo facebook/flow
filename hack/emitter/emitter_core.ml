@@ -52,6 +52,10 @@ and base =
   | Bexpr
   | Bthis
 
+type resolved_class_id =
+  | RCstatic of string
+  | RCdynamic of [ `self | `parent | `static | `var of Nast.expr ]
+
 (* Smart constructor for lmember that flattens things out *)
 let lmember (base, mem) =
   match base with
@@ -65,6 +69,7 @@ let get_collection_id s =
   match SMap.get (strip_ns s) Emitter_consts.header_kind_values with
     | Some i -> i
     | None -> bug "invalid collection name"
+
 let get_aliased_name k = match SMap.get k Emitter_consts.aliases with
   | Some v  -> v
   | None -> k
@@ -141,7 +146,6 @@ let fmt_lval lval =
     String.concat " " (List.rev_map ~f:fmt_member mems) ^
     ">",
     true
-
 
 (*** Environment manipulation ***)
 type label = string
