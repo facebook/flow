@@ -19,6 +19,10 @@ let unimpl s =
 let bug s =
   Printf.eprintf "BUG: %s\n" s; exit 1
 
+(* *)
+let make_varray es = Nast.Array (List.map ~f:(fun e -> Nast.AFvalue e) es)
+let make_kvarray fields =
+  Nast.Array (List.map ~f:(fun (k, v) -> Nast.AFkvalue (k, v)) fields)
 (*** Types associated with translation ***)
 
 type flavor =

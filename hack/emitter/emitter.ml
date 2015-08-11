@@ -73,7 +73,7 @@ let fmt_fun_tags env m =
 
 let fmt_user_attribute attr =
   let array =
-    Pos.none, Array (List.map ~f:(fun e -> AFvalue e) attr.ua_params) in
+    Pos.none, make_varray attr.ua_params in
   let value = match Emitter_lit.fmt_lit array with
     | None -> bug "user attribute value not a literal"
     | Some e -> e in
@@ -219,11 +219,14 @@ let emit_prop_init env ~is_static = function
 (* Returns None if the case has been handled, and Some (name, expr) if
  * it still needs to be taken care of in a pinit *)
 let emit_var env ~is_static var =
-  assert (var.cv_final = false); (* props can't be final *)
-  if var.cv_is_xhp then unimpl "xhp props";
+  (* XHP props aren't real props; ignore them here. *)
+  if var.cv_is_xhp then env, None else
+
   let fmt_prop options v =
     emit_strs env
       [".property"; fmt_options options; snd var.cv_id; "="; v^";"] in
+
+  assert (var.cv_final = false); (* props can't be final *)
   let options = bool_option "static" is_static @
                 [fmt_visibility var.cv_visibility] in
   match var.cv_expr with
@@ -306,11 +309,13 @@ let handle_class_attrs env cls =
 let emit_class nenv env (_, x) =
   let cls = Naming_heap.ClassHeap.find_unsafe x in
   let cls = Naming.class_meth_bodies nenv cls in
+
+  (* make any adjustments to the class that are needed for xhp *)
+  let cls = Emitter_xhp.convert_class cls in
+
   let env = start_new_function env in
 
   (* still have a handful of unimplemented bits *)
-  if cls.c_is_xhp then unimpl "xhp";
-  if cls.c_xhp_attr_uses <> [] then unimpl "xhp attr uses";
   if cls.c_typeconsts <> [] then unimpl "type constants";
 
   let env = handle_class_attrs env cls in
@@ -344,7 +349,6 @@ let emit_class nenv env (_, x) =
 
   let env = emit_enter env ".class" options name
                        (extends_list^implements_list) in
-
 
   let env = List.fold_left ~f:emit_use ~init:env cls.c_uses in
   let env, uninit_vars = lmap (emit_var ~is_static:false) env cls.c_vars in

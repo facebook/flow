@@ -15,10 +15,12 @@ open Nast
 open Emitter_core
 module SN = Naming_special_names
 
+let is_xhp_prop = function | _, Id (_, s) -> s.[0] = ':' | _ -> false
 
 let is_lval expr =
   match expr with
-  | Lvar _  | Obj_get _ | Array_get _ | Class_get _ | Lplaceholder _ -> true
+  | Lvar _  | Array_get _ | Class_get _ | Lplaceholder _ -> true
+  | Obj_get (_, prop, _) -> not (is_xhp_prop prop)
   | _ -> false
 
 let resolve_class_id env = function
@@ -366,6 +368,12 @@ and emit_flavored_expr env (pos, expr_ as expr) =
     in
     emit_call env (pos, Id (pos, f)) args []
 
+  (* this is just XHP Obj_get. it is in emit_flavored_expr because it
+   * desguars to function calls *)
+  | Obj_get (e, prop, nf) when is_xhp_prop prop ->
+    let desugared = Emitter_xhp.convert_obj_get pos (e, prop, nf) in
+    emit_flavored_expr env desugared
+
   (* For most things, just fall back to emit_expr *)
   | _ -> emit_expr env expr, FC
 
@@ -380,6 +388,10 @@ and emit_expr env (pos, expr_ as expr) =
     let env, flavor = emit_flavored_expr env expr in
     (* Some builtin functions actually produce C, so we only unbox
      * if it is really an R. *)
+    if flavor = FR then emit_UnboxR env else env
+  (* XHP props are *not* lvalues *)
+  | Obj_get (_, prop, _) when is_xhp_prop prop ->
+    let env, flavor = emit_flavored_expr env expr in
     if flavor = FR then emit_UnboxR env else env
 
   (* N.B: duplicate with is_lval but we want to exhaustiveness check  *)
@@ -569,7 +581,7 @@ and emit_expr env (pos, expr_ as expr) =
 
   | List es ->
     (* List here represents tuple(...). Compile to an array. *)
-    let array = pos, Array (List.map ~f:(fun e -> AFvalue e) es) in
+    let array = pos, make_varray es in
     emit_expr env array
 
   | Shape smap ->
@@ -588,8 +600,7 @@ and emit_expr env (pos, expr_ as expr) =
     let shape_fields = List.sort
       (fun ((p1, _), _) ((p2, _), _) -> Pos.compare p1 p2)
       shape_fields in
-    let afields = List.map ~f:(fun (k, v) -> AFkvalue (k, v)) shape_fields in
-    let array = pos, Array afields in
+    let array = pos, make_kvarray shape_fields in
     emit_expr env array
 
 
@@ -634,6 +645,9 @@ and emit_expr env (pos, expr_ as expr) =
             emit_NameA env in
         emit_InstanceOf env)
 
+  | Xml (id, attrs, children) ->
+    let desugared = Emitter_xhp.convert_xml pos (id, attrs, children) in
+    emit_expr env desugared
 
   | Id _ -> unimpl "Id"
   | Fun_id _ -> unimpl "Fun_id"
@@ -641,5 +655,4 @@ and emit_expr env (pos, expr_ as expr) =
   | Method_caller _ -> unimpl "Method_caller"
   | Smethod_id _ -> unimpl "Smethod_id"
   | Efun _ -> unimpl "Efun"
-  | Xml _ -> unimpl "Xml"
   | Assert _ -> unimpl "Assert"
