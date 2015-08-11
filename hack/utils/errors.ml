@@ -1726,6 +1726,12 @@ let explain_contravariance pos c_name error =
   let code, msgl = error in
   add_list code (msgl @ [pos, message])
 
+let explain_invariance pos c_name suggestion error =
+  let message = "Considering that this type argument is invariant "^
+                  "with respect to " ^ strip_ns c_name ^ suggestion in
+  let code, msgl = error in
+  add_list code (msgl @ [pos, message])
+
 let local_variable_modified_and_used pos_modified pos_used_l =
   let used_msg p = p, "And accessed here" in
   add_list Typing.local_variable_modifed_and_used
