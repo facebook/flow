@@ -2594,14 +2594,14 @@ and class_get_ ~is_method ~is_const ~ety_env env cty (p, mid) =
                 Phase.localize ~ety_env env method_ in
               env, method_)
       )
-  | _, Tany ->
+  | _, (Tany | Tabstract _) ->
       (match Env.get_mode env with
       | FileInfo.Mstrict -> Errors.expected_class p
       | FileInfo.Mdecl | FileInfo.Mpartial -> ()
       );
       env, (Reason.Rnone, Tany)
   | _, (Tmixed | Tarray (_, _) | Toption _ | Tprim _ | Tvar _
-    | Tfun _ | Tabstract (_, _) | Ttuple _ | Tanon (_, _) | Tunresolved _
+    | Tfun _ | Ttuple _ | Tanon (_, _) | Tunresolved _
     | Tobject | Tshape _) ->
       Errors.expected_class p;
       env, (Reason.Rnone, Tany)
@@ -2955,14 +2955,11 @@ and static_class_id p env = function
           | _, Tabstract (AKnewtype (classname, [the_cls]), _) when
               classname = SN.Classes.cClassname ->
             resolve_ety the_cls
-          | _, Tabstract (_, Some (_, Tclass _))
+          | _, Tabstract (AKgeneric _, _)
           | _, Tclass _ -> ety
-          | _, Tabstract (_, _) ->
-            Reason.Rnone, Tany
           | _, (Tany | Tmixed | Tarray (_, _) | Toption _
-                   | Tprim _ | Tvar _ | Tfun _ |
-                           (* Tabstract (_, _) |  *)
-                       Ttuple _
+                   | Tprim _ | Tvar _ | Tfun _ | Ttuple _
+                   | Tabstract ((AKenum _ | AKdependent _ | AKnewtype _), _)
                    | Tanon (_, _) | Tunresolved _ | Tobject | Tshape _
           ) ->
             if Env.get_mode env = FileInfo.Mstrict
@@ -3559,7 +3556,7 @@ and condition env tparamet =
         | Some cid ->
           let env, obj_ty = static_class_id (fst e2) env cid in
           (match obj_ty with
-            | _, Tabstract (AKgeneric _, Some (_, Tclass _)) ->
+            | _, Tabstract (AKgeneric _, _) ->
               Env.set_local env x obj_ty
             | _, Tabstract (AKdependent (`this, []), Some (_, Tclass _)) ->
               let obj_ty =
