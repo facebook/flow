@@ -69,8 +69,13 @@ let print_one ?(color_mode=Color_Auto) c s =
   let should_color = match color_mode with
     | Color_Always -> true
     | Color_Never -> false
-    | Color_Auto -> Unix.isatty Unix.stdout && Sys.getenv "TERM" <> "dumb"
-  in
+    | Color_Auto ->
+      begin
+        match Sys_utils.getenv_term () with
+          | None -> false
+          | Some term ->
+            Unix.isatty Unix.stdout && term <> "dumb"
+      end in
   if should_color
   then Printf.printf "\x1b[%sm%s\x1b[0m" (style_num c) (s)
   else Printf.printf "%s" s
