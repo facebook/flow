@@ -27,6 +27,9 @@ val unify: context -> Type.t -> Type.t -> unit
 
 val master_cx: unit -> context
 
+(* constraint utils *)
+val filter_optional: context -> ?trace:trace -> reason -> Type.t -> Type.t
+
 module Cache: sig
   val clear: unit -> unit
 end

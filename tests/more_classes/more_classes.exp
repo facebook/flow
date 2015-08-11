@@ -1,4 +1,8 @@
 
+Foo.js:10:5,14: assignment of property x
+Property cannot be assigned on possibly undefined value
+Foo.js:10:5,8: uninitialized this (expected super constructor call)
+
 Foo.js:13:16,16: parameter z
 Missing annotation
 
@@ -17,4 +21,4 @@ Foo.js:13:19,24: number
 Qux.js:7:8,8: return
 Missing annotation
 
-Found 4 errors
+Found 5 errors

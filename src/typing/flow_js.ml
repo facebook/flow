@@ -2380,9 +2380,8 @@ let rec __flow cx (l, u) trace =
         let reason = reason_of_t proto in
         iter_props cx mapr (fun x t ->
           let reason = prefix_reason (spf "prop %s of " x) reason in
-          let tvar = mk_tvar cx reason in
-          rec_flow cx trace (t, OptionalT(tvar));
-          rec_flow cx trace (proto, SetT (reason, x, tvar));
+          let t = filter_optional cx ~trace reason t in
+          rec_flow cx trace (proto, SetT (reason, x, t));
         )
 
     | (_, ShapeT (o)) ->
@@ -4018,6 +4017,12 @@ and filter_not_false = function
   | BoolT (r, Some false) -> UndefT r
   | BoolT (r, None) -> BoolT (r, Some true)
   | t -> t
+
+(* filter out undefined from a type *)
+and filter_optional cx ?trace reason opt_t =
+  mk_tvar_where cx reason (fun t ->
+    flow_opt cx ?trace (opt_t, OptionalT(t))
+  )
 
 and predicate cx trace t (l,p) = match (l,p) with
 

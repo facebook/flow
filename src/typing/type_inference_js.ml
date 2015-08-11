@@ -3219,6 +3219,11 @@ and expression_ ~is_cond cx type_params_map loc e = Ast.Expression.(match e with
     } ->
       let argts = List.map (expression_or_spread cx type_params_map) arguments in
       let reason = mk_reason "super(...)" loc in
+
+      (* switch back env entries for this and super from undefined *)
+      define_internal cx reason "this";
+      define_internal cx reason "super";
+
       let super = super_ cx reason in
       Flow_js.mk_tvar_where cx reason (fun t ->
         Flow_js.flow cx (super,
@@ -4480,6 +4485,7 @@ and predicates_of_condition cx type_params_map e = Ast.(Expression.(
   match e with
 
   (* ids, member expressions *)
+  | _, This
   | _, Identifier _
   | _, Member _ -> (
       match refinable_lvalue e with
@@ -5088,8 +5094,12 @@ and mk_class_elements cx instance_info static_info body = Ast.Class.(
         let param_types_map =
           param_types_map |> SMap.map (Flow_js.subst cx map_) in
         let ret = Flow_js.subst cx map_ ret in
-
-        mk_body None cx type_params_map ~async
+        (* determine if we are in a derived constructor *)
+        let derived_ctor = match super with
+          | MixedT _ -> false
+          | _ -> name = "constructor"
+        in
+        mk_body None cx type_params_map ~async ~derived_ctor
           param_types_map param_loc_map ret body this super;
       );
       ignore (Abnormal.swap Abnormal.Return save_return_exn);
@@ -5482,7 +5492,39 @@ and is_void cx = function
 and mk_upper_bound cx locs name t =
   Scope.create_entry t t (SMap.get name locs)
 
-and mk_body id cx type_params_map ~async param_types_map param_locs_map ret body this super =
+(* When in a derived constructor, initialize this and super to undefined. *)
+and initialize_this_super derived_ctor this super scope = Scope.(
+  if derived_ctor then (
+    let undefined =
+      let msg = "uninitialized this (expected super constructor call)" in
+        VoidT (replace_reason msg (reason_of_t this))
+    in
+      undefine_internal "this" undefined this scope;
+      undefine_internal "super" undefined super scope
+  )
+  else (
+      add (internal_name "this") (create_entry this this None) scope;
+      add (internal_name "super") (create_entry super super None) scope
+  )
+)
+
+(* For internal names, we can afford to initialize with undefined and fatten the
+   declared type to allow undefined. This works because we always look up the
+   flow-sensitive type of internals, and don't havoc them. However, the same
+   trick wouldn't work for normal uninitialized locals, e.g., so it cannot be
+   used in general to track definite assignments. *)
+and undefine_internal x undefined t scope = Scope.(
+  add (internal_name x) (create_entry undefined (OptionalT(t)) None) scope
+)
+
+(* Switch back to the declared type for an internal name. *)
+and define_internal cx reason x =
+  let ix = internal_name x in
+  let opt = Env_js.get_var_declared_type cx ix reason in
+  Env_js.set_var cx ix (Flow_js.filter_optional cx reason opt) reason
+
+and mk_body id cx type_params_map ~async ?(derived_ctor=false)
+    param_types_map param_locs_map ret body this super =
   let ctx =  Env_js.get_scopes () in
   let new_ctx = Env_js.clone_scopes ctx in
   Env_js.update_env cx new_ctx;
@@ -5501,9 +5543,8 @@ and mk_body id cx type_params_map ~async param_types_map param_locs_map ret body
     | Some (loc, { Ast.Identifier.name; _ }) ->
       let entry = create_entry (AnyT.at loc) (AnyT.at loc) None in
       add name entry scope);
-    (* special bindings for super, this, return value slot *)
-    add (internal_name "super") (create_entry super super None) scope;
-    add (internal_name "this") (create_entry this this None) scope;
+    (* special bindings for this, super, and return value slot *)
+    initialize_this_super derived_ctor this super scope;
     add (internal_name "return") (create_entry ret ret None) scope;
     scope
   ) in
