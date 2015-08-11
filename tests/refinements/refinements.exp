@@ -176,12 +176,12 @@ This type is incompatible with
 not.js:5:5,7: number
 
 not.js:11:5,8: access of computed property/element
-Computed property/element cannot be accessed on possibly null value
-not.js:9:18,23: null
-
-not.js:11:5,8: access of computed property/element
 Computed property/element cannot be accessed on
 not.js:9:18,23: number
+
+not.js:11:5,8: access of computed property/element
+Computed property/element cannot be accessed on possibly null value
+not.js:9:18,23: null
 
 not.js:11:5,8: access of computed property/element
 Computed property/element cannot be accessed on possibly undefined value

@@ -12,8 +12,15 @@ module C = Tty
 module Json = Hh_json
 
 type level = ERROR | WARNING
-type message = (Loc.t * string)
+type message =
+  | BlameM of Loc.t * string
+  | CommentM of string
 type error = level * message list (* message *) * message list (* trace *)
+
+type pp_message = Loc.t * string
+let to_pp = function
+  | BlameM (loc, s) -> loc, s
+  | CommentM s -> Loc.none, s
 
 type flags = {
   color: Tty.color_mode;
@@ -27,22 +34,24 @@ let default_flags = {
   show_all_errors = false;
 }
 
+let message_of_reason reason =
+  Reason_js.(BlameM (loc_of_reason reason, desc_of_reason reason))
+
+let message_of_string s =
+  CommentM s
+
 let append_trace_reasons message_list trace_reasons =
   match trace_reasons with
   | [] -> message_list
   | _ ->
-      let rev_list = List.rev message_list in
-      let head = List.hd rev_list in
-      let head = fst head, snd head ^ "\nError path:" in
-      let rev_list = head :: List.tl rev_list in
-      let message_list = List.rev rev_list in
-      message_list @ trace_reasons
+    message_list @ ((message_of_string "Error path:")::trace_reasons)
 
 let format_reason_color
   ?(first=false)
   ?(one_line=false)
-  ((loc, s): Loc.t * string)
+  (message: message)
 = Loc.(
+  let loc, s = to_pp message in
   let l0, c0 = loc.start.line, loc.start.column + 1 in
   let l1, c1 = loc._end.line, loc._end.column in
   let err_clr  = if first then C.Normal C.Red else C.Normal C.Green in
@@ -52,30 +61,30 @@ let format_reason_color
 
   let s = if one_line then Str.global_replace (Str.regexp "\n") "\\n" s else s in
 
-  [file_clr, match loc.source with Some filename -> filename | None -> ""]
-  @ (if l0 > 0 && c0 > 0 && l1 > 0 && c1 > 0 then [
-      (C.Normal C.Default, ":");
-      (line_clr,           string_of_int l0);
-      (C.Normal C.Default, ":");
-      (col_clr,            string_of_int c0);
-      (C.Normal C.Default, ",")
-    ]
-    @ (if l0 < l1 then [
+  let loc_format =
+    (match loc.source with Some filename -> [file_clr, filename] | None -> []) @
+      (if l0 > 0 && c0 > 0 && l1 > 0 && c1 > 0 then [
+        (C.Normal C.Default, ":");
+        (line_clr,           string_of_int l0);
+        (C.Normal C.Default, ":");
+        (col_clr,            string_of_int c0);
+        (C.Normal C.Default, ",")
+       ] @ (if l0 < l1 then [
         (line_clr,           string_of_int l1);
         (C.Normal C.Default, ":")
-      ] else [])
-    @ [
-      (col_clr,            string_of_int c1)
-    ] else [])
-  @ [
-    (C.Normal C.Default, ": ");
+       ] else []) @ [
+        (col_clr,            string_of_int c1)
+      ] else []) in
+  let s_format = [
     (err_clr,            s);
     (C.Normal C.Default, if one_line then "\\n" else "\n");
-  ]
+  ] in
+  if loc_format = [] then s_format
+  else loc_format @ ((C.Normal C.Default, ": ")::s_format)
 )
 
-let print_reason_color ~first ~one_line ~color ((loc, s): message) =
-  let to_print = format_reason_color ~first ~one_line (loc, s) in
+let print_reason_color ~first ~one_line ~color (message: message) =
+  let to_print = format_reason_color ~first ~one_line message in
   (if first then Printf.printf "\n");
   C.print ~color_mode:color to_print
 
@@ -88,7 +97,9 @@ let print_error_color ~one_line ~color e =
 let loc_of_error err =
   let _, messages, _ = err in
   match messages with
-  | (loc, _) :: _ -> loc
+  | message :: _ ->
+      let loc, _ = to_pp message in
+      loc
   | _ -> Loc.none
 
 let file_of_error err =
@@ -109,28 +120,32 @@ let json_of_loc loc = Loc.(
   then second reason's position. If all positions match then first message,
   then second message, etc
   TODO may not work for everything... *)
-(** TODO: This function is pretty weird, it delays comparing messages until all
-    locations are compared, and then compares messages in reverse order. This
-    behavior is quiet likely unintended. We should fix this and, more
-    importantly, try to make it efficient. **)
 let compare =
-  let rec compare_message_lists ml1 ml2 k_compare_messages =
-    match ml1, ml2 with
-    | [], [] -> k_compare_messages ()
-    | (loc1, m1)::rest1, (loc2, m2)::rest2 ->
-        (match Pervasives.compare loc1 loc2 with
-        | 0 ->
-            let k_compare_messages' () =
-              match String.compare m1 m2 with
-              | 0 -> k_compare_messages ()
-              | i -> i
-            in compare_message_lists rest1 rest2 k_compare_messages'
-        | i -> i)
+  let seq k1 k2 = fun () ->
+    match k1 () with
+    | 0 -> k2 ()
+    | i -> i
+  in
+  let cmp x1 x2 () =
+    Pervasives.compare x1 x2
+  in
+  let rec compare_message_lists k = function
+    | [], [] -> k ()
     | [], _ -> -1
-    | _ -> 1
+    | _, [] -> 1
+    | CommentM(_)::_, BlameM(_)::_ -> -1
+    | BlameM(_)::_, CommentM(_)::_ -> 1
 
-  in fun (lx, ml1, _) (ly, ml2, _) ->
-    compare_message_lists ml1 ml2 (fun () -> 0)
+    | CommentM(m1)::rest1, CommentM(m2)::rest2 ->
+        compare_message_lists (seq k (cmp m1 m2)) (rest1, rest2)
+
+    | BlameM(loc1, m1)::rest1, BlameM(loc2, m2)::rest2 ->
+        seq (cmp loc1 loc2) (fun () ->
+          compare_message_lists (seq k (cmp m1 m2)) (rest1, rest2)
+        ) ()
+  in
+  fun (lx, ml1, _) (ly, ml2, _) ->
+    compare_message_lists (fun () -> 0) (ml1, ml2)
 
 module Error = struct
   type t = error
@@ -187,7 +202,8 @@ module ErrorSuppressions = struct
    *)
   let rec check_error_messages acc = function
     | [] -> acc
-    | (loc, error_message)::errors ->
+    | message::errors ->
+        let loc, _ = to_pp message in
         let acc = check_loc acc loc in
         check_error_messages acc errors
 
@@ -205,7 +221,7 @@ end
 
 let parse_error_to_flow_error (loc, err) =
   let msg = Parse_error.PP.error err in
-  ERROR, [loc, msg], []
+  ERROR, [BlameM (loc, msg)], []
 
 let to_list errors = ErrorSet.elements errors
 
@@ -219,7 +235,8 @@ let json_of_error (error : error) = Json.(
   | WARNING -> "warning"
   in
   let messages = append_trace_reasons messages trace_reasons in
-  let elts = List.map (fun (loc, w) ->
+  let elts = List.map (fun message ->
+      let loc, w = to_pp message in
       JAssoc (("descr", Json.JString w) ::
               ("level", Json.JString level_str) ::
               (json_of_loc loc))
@@ -253,11 +270,13 @@ let to_string (error : error) : string =
   let buf = Buffer.create 50 in
   (match msgl with
   | [] -> assert false
-  | (loc1, msg1) :: rest_of_error ->
+  | message1 :: rest_of_error ->
+      let loc1, msg1 = to_pp message1 in
       Buffer.add_string buf begin
         Printf.sprintf "%s\n%s\n" (Reason_js.string_of_loc loc1) msg1
       end;
-      List.iter begin fun (loc, w) ->
+      List.iter begin fun message ->
+        let loc, w = to_pp message in
         let msg = Printf.sprintf "%s\n%s\n" (Reason_js.string_of_loc loc) w
         in Buffer.add_string buf msg
       end rest_of_error

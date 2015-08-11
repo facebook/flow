@@ -184,10 +184,12 @@ let filter_suppressed_errors emap = Errors_js.(
     distrib_errs "" unused_suppression_errors emap
 )
 
-let strip_root_from_reason_list root list =
-  List.map (
-    fun (loc, s) -> (Reason_js.strip_root_from_loc root loc, s)
+let strip_root_from_reason_list root list = Errors_js.(
+  List.map (function
+    | BlameM (loc, s) -> BlameM (Reason_js.strip_root_from_loc root loc, s)
+    | CommentM s -> CommentM s
   ) list
+)
 
 let strip_root_from_error root error =
   let level, list, trace_reasons = error in

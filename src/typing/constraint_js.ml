@@ -2375,7 +2375,7 @@ let prep_path r =
 let pos_len r =
   let r = prep_path r in
   let loc = loc_of_reason r in
-  let fmt = Errors_js.format_reason_color (loc, "") in
+  let fmt = Errors_js.(format_reason_color (BlameM (loc, ""))) in
   let str = String.concat "" (List.map snd fmt) in
   String.length str
 

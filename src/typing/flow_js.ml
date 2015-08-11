@@ -139,7 +139,8 @@ let add_output cx level ?(trace_reasons=[]) message_list =
     (if modes.debug then
       prerr_endlinef "\nadd_output cx.file = %S\n%s" cx.file
         (message_list
-        |> List.map (fun (loc, s) ->
+        |> List.map (fun message ->
+             let loc, s = Errors_js.to_pp message in
              spf "loc: [%s] s = %S" (string_of_loc loc) s
            )
         |> String.concat "\n"));
@@ -244,10 +245,6 @@ and havoc_ctx_ = function
 (* print utils *)
 (***************)
 
-let string_of_flow r1 r2 =
-  spf "%s\nis incompatible with\n%s"
-    (string_of_reason r1) (string_of_reason r2)
-
 let lib_reason r =
   let loc = loc_of_reason r in
   match Loc.(loc.source) with
@@ -265,13 +262,12 @@ let ordered_reasons l u =
 
 (* format an error or warning and add it to flow's output.
    here preformatted trace output is passed directly as an argument *)
-let prmsg_flow_trace_reasons cx level trace_reasons msg (r1, r2) =
+let prmsg_flow_trace_reasons cx level trace_reasons msg (r1, r2) = Errors_js.(
   let info = match Ops.peek () with
   | Some r when r != r1 && r != r2 ->
     (* NOTE: We include the operation's reason in the error message only if it
        is distinct from the reasons of the endpoints. *)
-    let desc = (desc_of_reason r) ^ "\nError:" in
-    [loc_of_reason r, desc]
+    [message_of_reason r; message_of_string "Error:"]
   | _ ->
     if lib_reason r1 && lib_reason r2
     then
@@ -280,29 +276,24 @@ let prmsg_flow_trace_reasons cx level trace_reasons msg (r1, r2) =
          to the file containing that code instead. Ideally, improvements in
          error reporting would cause this case to never arise. *)
       let loc = Loc.({ none with source = Some cx.file }) in
-      [loc, "inconsistent use of library definitions"]
+      [BlameM (loc, "inconsistent use of library definitions")]
     else []
   in
-  let message_list =
-    let loc1, loc2 = loc_of_reason r1, loc_of_reason r2 in
-    let desc1, desc2 = desc_of_reason r1, desc_of_reason r2 in
-    if (loc2 = Loc.none)
-    then [
-      loc1, spf "%s\n%s %s" desc1 msg desc2
-    ]
-    else [
-      loc1, spf "%s\n%s" desc1 msg;
-      loc2, desc2
-    ]
+  let message_list = [
+    message_of_reason r1;
+    message_of_string msg;
+    message_of_reason r2
+  ]
   in
   add_output cx level ~trace_reasons (info @ message_list)
+)
 
 (* format a trace into list of (reason, desc) pairs used
    downstream for obscure reasons *)
 let make_trace_reasons trace =
   if modes.traces = 0 then [] else
     reasons_of_trace ~level:modes.traces trace
-    |> List.map (fun r -> loc_of_reason r, desc_of_reason r)
+    |> List.map Errors_js.message_of_reason
 
 (* format an error or warning and add it to flow's output.
    here we gate trace output on global settings *)
@@ -323,7 +314,7 @@ let prmsg_flow cx level trace msg (r1, r2) =
 let prerr_flow_full_trace cx trace msg l u =
   let trace_reasons =
     reasons_of_trace ~level:(trace_depth trace + 1) ~tab:0 trace
-    |> List.map (fun r -> loc_of_reason r, desc_of_reason r)
+    |> List.map Errors_js.message_of_reason
   in
   prmsg_flow_trace_reasons cx
     Errors_js.ERROR
@@ -348,11 +339,12 @@ let prwarn_flow cx trace msg l u =
     (ordered_reasons l u)
 
 let tweak_output list =
-  List.map (fun (reason, msg) ->
-    let desc = desc_of_reason reason in
-    let dmsg = if msg = "" then desc else spf "%s\n%s" desc msg in
-    loc_of_reason reason, dmsg
-  ) list
+  List.concat (
+    List.map (fun (reason, msg) -> Errors_js.(
+      [message_of_reason reason]
+      @ (if msg = "" then [] else [message_of_string msg])
+    )) list
+  )
 
 let add_msg cx ?trace level list =
   let trace_reasons = match trace with
@@ -1054,14 +1046,14 @@ let rec assert_ground ?(infer=false) cx skip ids = function
         List.iter (assert_ground cx skip ids) types
       )
 
-  | OpenT (reason_open, id) ->
+  | OpenT (reason_open, id) -> Errors_js.(
       let message_list = [
       (* print out id to debug *)
-        loc_of_reason reason_open,
-        spf "%s\nMissing annotation" (desc_of_reason reason_open)
+        message_of_reason reason_open;
+        message_of_string "Missing annotation"
       ] in
-      add_output cx Errors_js.WARNING message_list
-
+      add_output cx WARNING message_list
+    )
   | NumT _
   | StrT _
   | BoolT _

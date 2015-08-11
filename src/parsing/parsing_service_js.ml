@@ -79,7 +79,7 @@ let do_parse ?(keep_errors=false) content file =
     let s = Printexc.to_string e in
     let msg = spf "unexpected parsing exception: %s" s in
     let loc = Loc.({ none with source = Some file }) in
-    let err = Errors_js.ERROR, [loc, msg], [] in
+    let err = Errors_js.(ERROR, [BlameM (loc, msg)], []) in
     Err (Errors_js.ErrorSet.singleton err)
 
 (* parse file, store AST to shared heap on success.

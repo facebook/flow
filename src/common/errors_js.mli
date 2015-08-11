@@ -9,8 +9,13 @@
  *)
 
 type level = ERROR | WARNING
-type message = (Loc.t * string)
+type message =
+  | BlameM of Loc.t * string
+  | CommentM of string
 type error = level * message list * message list
+
+type pp_message = Loc.t * string
+val to_pp : message -> pp_message
 
 type flags = {
   color: Tty.color_mode;
@@ -20,7 +25,10 @@ type flags = {
 
 val default_flags : flags
 
-val format_reason_color: ?first:bool -> ?one_line:bool -> Loc.t * string ->
+val message_of_reason: Reason_js.reason -> message
+val message_of_string: string -> message
+
+val format_reason_color: ?first:bool -> ?one_line:bool -> message ->
   (Tty.style * string) list
 
 val print_reason_color:
