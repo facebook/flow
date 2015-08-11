@@ -304,8 +304,7 @@ class virtual ['a] nast_visitor: ['a] nast_visitor_type = object(this)
   method on_special_func acc = function
     | Gena e
     | Gen_array_rec e -> this#on_expr acc e
-    | Genva el
-    | Gen_array_va_rec el -> List.fold_left this#on_expr acc el
+    | Genva el -> List.fold_left this#on_expr acc el
 
   method on_yield_break acc = acc
   method on_yield acc e = this#on_afield acc e

@@ -1444,9 +1444,6 @@ and special_func env p func =
   | Gen_array_rec e ->
       let env, ety = expr env e in
       Async.gen_array_rec env p ety
-  | Gen_array_va_rec el ->
-      let env, etyl = lmap expr env el in
-      Async.gen_array_va_rec env p etyl
   ) in
   env, (Reason.Rwitness p, Tclass ((p, SN.Classes.cAwaitable), [ty]))
 

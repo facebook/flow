@@ -196,12 +196,11 @@ module CheckFunctionType = struct
     | Ast.FAsyncGenerator, Await e -> expr f_type e; ()
 
     | _, Special_func func ->
-      (match func with
-        | Gena e
-        | Gen_array_rec e -> expr f_type e
-        | Genva el
-        | Gen_array_va_rec el -> liter expr f_type el);
-      ()
+        (match func with
+          | Gena e
+          | Gen_array_rec e -> expr f_type e
+          | Genva el -> liter expr f_type el);
+        ()
     | _, Xml (_, attrl, el) ->
         List.iter attrl (fun (_, e) -> expr f_type e);
         liter expr f_type el;
@@ -654,14 +653,13 @@ and expr_ env = function
   | Unop (_, e) -> expr env e
   | Yield_break -> ()
   | Special_func func ->
-    (match func with
-      | Gena e
-      | Gen_array_rec e->
-        expr env e
-      | Genva el
-      | Gen_array_va_rec el ->
-        liter expr env el);
-    ()
+      (match func with
+        | Gena e
+        | Gen_array_rec e ->
+          expr env e
+        | Genva el ->
+          liter expr env el);
+      ()
   | Yield e ->
       afield env e;
       ()

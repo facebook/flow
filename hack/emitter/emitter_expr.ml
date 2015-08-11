@@ -363,7 +363,6 @@ and emit_flavored_expr env (pos, expr_ as expr) =
       | Gena e -> SN.FB.fgena, [e]
       | Genva es -> SN.FB.fgenva, es
       | Gen_array_rec e -> SN.FB.fgen_array_rec, [e]
-      | Gen_array_va_rec _ -> bug "Gen_array_va_rec not a thing?"
     in
     emit_call env (pos, Id (pos, f)) args []
 

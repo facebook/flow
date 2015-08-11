@@ -348,7 +348,6 @@ and special_func =
   | Gena of expr
   | Genva of expr list
   | Gen_array_rec of expr
-  | Gen_array_va_rec of expr list
 
 type def =
   | Fun of fun_
