@@ -628,8 +628,8 @@ and ground_type_impl cx ids t = match t with
   | PolyT (xs, t) ->
       PolyT (xs, ground_type_impl cx ids t)
 
-  | ClassT t ->
-      ClassT (ground_type_impl cx ids t)
+  | ShiftT t ->
+      ShiftT (ground_type_impl cx ids t)
 
   | TypeT (_, t) ->
       TypeT (reason_of_string "type",
@@ -1088,7 +1088,7 @@ let rec assert_ground ?(infer=false) cx skip ids = function
       assert_ground cx skip ids t;
       ts |> List.iter (assert_ground cx skip ids)
 
-  | ClassT t -> assert_ground cx skip ids t
+  | ShiftT t -> assert_ground cx skip ids t
 
   | TypeT (reason, t) -> assert_ground cx skip ids t
 
@@ -1500,13 +1500,15 @@ let rec __flow cx (l, u) trace =
     (* The sink component of an annotation constrains values flowing
        into the annotated site. *)
 
-    | _, AnnotT (sink_t, _) ->
+    | l, AnnotT (sink_t, _)
+    | ShiftT(l), ShiftT(AnnotT (sink_t, _)) ->
       rec_flow cx trace (l, sink_t)
 
     (* The source component of an annotation flows out of the annotated
        site to downstream uses. *)
 
-    | AnnotT (_, source_t), u ->
+    | AnnotT (_, source_t), u
+    | ShiftT(AnnotT (_, source_t)), ShiftT(u) ->
       rec_flow cx trace (source_t, u)
 
     (****************************************************************)
@@ -1539,10 +1541,12 @@ let rec __flow cx (l, u) trace =
     (* `import type` creates a properly-parameterized type alias for the *)
     (* remote type -- but only for particular, valid remote types.       *)
     (*********************************************************************)
-    | (ClassT(inst), ImportTypeT(reason, t)) ->
+    | (ShiftT(inst), ImportTypeT(reason, t)) ->
       rec_flow cx trace (TypeT(reason, inst), t)
 
-    | (PolyT(typeparams, ClassT(inst)), ImportTypeT(reason, t)) ->
+    | PolyT(typeparams, ShiftT(inst)),
+      ImportTypeT(reason, t)
+      ->
       rec_flow cx trace (PolyT(typeparams, TypeT(reason, inst)), t)
 
     | (FunT(_, _, prototype, _), ImportTypeT(reason, t)) ->
@@ -1574,7 +1578,7 @@ let rec __flow cx (l, u) trace =
     (* `import typeof` creates a properly-parameterized type alias for the  *)
     (* "typeof" the remote export.                                          *)
     (************************************************************************)
-    | (PolyT(typeparams, ((ClassT _ | FunT _) as lower_t)), ImportTypeofT(reason, t)) ->
+    | PolyT(typeparams, ((ShiftT _ | FunT _) as lower_t)), ImportTypeofT(reason, t) ->
       let typeof_t = mk_typeof_annotation cx ~trace lower_t in
       rec_flow cx trace (PolyT(typeparams, TypeT(reason, typeof_t)), t)
 
@@ -1912,7 +1916,8 @@ let rec __flow cx (l, u) trace =
         let t = mk_typeapp_instance cx reason_op ~cache:true c ts in
         rec_flow cx trace (t, u)
 
-    | (TypeAppT(c,ts), _) ->
+    | (ShiftT (TypeAppT(c,ts)), ShiftT u)
+    | (TypeAppT(c,ts), u) ->
         if TypeAppExpansion.push_unless_loop cx (c, ts) then (
           let reason = reason_of_t u in
           let t = mk_typeapp_instance cx reason c ts in
@@ -1920,7 +1925,8 @@ let rec __flow cx (l, u) trace =
           TypeAppExpansion.pop ()
         )
 
-    | (_, TypeAppT(c,ts)) ->
+    | (ShiftT l, ShiftT (TypeAppT(c,ts)))
+    | (l, TypeAppT(c,ts)) ->
         if TypeAppExpansion.push_unless_loop cx (c, ts) then (
           let reason = reason_of_t l in
           let t = mk_typeapp_instance cx reason c ts in
@@ -2113,12 +2119,14 @@ let rec __flow cx (l, u) trace =
     (** To check that IntersectionT(_, ts) may flow to the concrete type u, we
         try each type in ts in turn. The types in ts may be type variables, but
         by routing them through SpeculativeMatchFailureT, we ensure that they
-        are tried only when their concrete definitionss are available. Note that
+        are tried only when their concrete definitions are available. Note that
         unlike unions, the different branches of intersections are usually not
         distinct at the top level (e.g., they may all be function types, or
         object types): instead, they are assumed to be disjoint in their parts,
         so we must suffiently concretize parts of u to make the disjointness
         evident when the different branches are tried; see below. *)
+(*TJP: Verify that interface specs are not being filtered--generic interfaces
+  used without specialization should default to `any` for consistency.*)
 
     | (t1, SpeculativeMatchFailureT(r,t,t2)) ->
       (* Reached when trying to match t1&t with t2. We speculatively match t1
@@ -2222,6 +2230,7 @@ let rec __flow cx (l, u) trace =
 
            It is always possible to recover implicit instantiation by explicitly
            using `*`. *)
+(*TJP: Does this say that I can specialize with a `*` symbol?*)
         | TypeT _ -> true
         | _ -> false in
       let reason = reason_of_t u in
@@ -2310,6 +2319,7 @@ let rec __flow cx (l, u) trace =
           else
             let t1 = read_prop cx flds1 s in
             flow_to_mutable_child cx trace lit t1 t2);
+
       (* Any properties in l but not u must match indexer *)
       iter_props_ cx flds1
         (fun s t1 ->
@@ -2343,15 +2353,15 @@ let rec __flow cx (l, u) trace =
     (* TODO Try and remove this. We're not sure why this case should exist but
      * it does seem to be triggered in www. *)
     | (ObjT _,
-       InstanceT (reason1, _, super, {
+       InstanceT (_, _, super, {
          fields_tmap;
          methods_tmap;
          structural = false;
          _;
        }))
       ->
-      structural_subtype cx trace l (reason1, super, fields_tmap, methods_tmap)
-
+      structural_subtype cx trace l (fields_tmap, methods_tmap);
+      rec_flow cx trace (l, super)
 
     (****************************************)
     (* You can cast an object to a function *)
@@ -2415,6 +2425,21 @@ let rec __flow cx (l, u) trace =
     (* instances of classes follow declared hierarchy *)
     (**************************************************)
 
+    | ClsT (ct_reason, ({ ct_statics; _; } as ct)),
+      InstanceT (_, i_statics, i_super, { fields_tmap; methods_tmap; })
+      ->
+(* TJP: Need `type_args` checking analogous to `flow_type_args` (I think that
+   `flow_type_args` exploits the existence of a common ancestor, so this version
+   will need to be more general :( *)
+      structural_subtype cx trace l (fields_tmap, methods_tmap);
+      rec_flow cx trace (l, i_super);
+      (match ct_statics with
+        | Some statics ->
+          let cls_statics = { ct with ct_props = statics; ct_statics = None; } in
+          let static_cls_t = ClsT(prefix_reason "statics of " ct_reason, cls_statics) in
+          rec_flow cx trace (static_cls_t, i_statics)
+        | None -> ())
+
     | (InstanceT (_, _, _, instance),
        InstanceT (_, _, _, instance_super))
       when not instance_super.structural
@@ -2442,14 +2467,46 @@ let rec __flow cx (l, u) trace =
          _;
        }))
       ->
-      structural_subtype cx trace l (reason1, super, fields_tmap, methods_tmap)
+      structural_subtype cx trace l (fields_tmap, methods_tmap);
+      rec_flow cx trace (l, super)
+
+(*TJP: ClsT,ObjT and ObjT,ClsT?*)
+
+    | InstanceT (_, i_statics, _, _),
+      ClsT (ct_reason, ({ ct_props = { fields; methods; }; ct_statics; _; } as ct))
+      ->
+      let reason = reason_of_t l in
+      let fields_tmap = find_props cx fields in
+      let methods_tmap = find_props cx methods in
+      let props = SMap.union fields_tmap methods_tmap in
+      props |> SMap.iter
+          (fun name t ->
+(* TJP: How should Ctor be handled.  It's bad manners to define a ctor on an
+   interface, but Flow is a type checker, not a manners imposer.*)
+            let lookup_reason = replace_reason (spf "property %s" name) (reason_of_t t) in
+            rec_flow cx trace (l, LookupT (lookup_reason, Some reason, name, t))
+          );
+      (match ct_statics with
+        | Some statics ->
+          let cls_statics = { ct with ct_props = statics; ct_statics = None; } in
+          let static_cls_t = ClsT(prefix_reason "statics of " ct_reason, cls_statics) in (*TJP: refactor the 'static from nonstatic' to a function*)
+          rec_flow cx trace (i_statics, static_cls_t)
+        | None -> ()) (*TJP: refactor to `extract...`?*)
+
+    | (ClsT (_, ({ ct_props; ct_statics; } as ct)), ClsT (ct_reason, u)) ->
+      structural_subtype cx trace l (ct_props.fields, ct_props.methods);
+      (match ct_statics with
+        | Some statics ->
+          let cls_statics = { ct with ct_props = statics; ct_statics = None; } in
+          let static_cls_t = ClsT(prefix_reason "statics of " ct_reason, cls_statics) in
+          structural_subtype cx trace static_cls_t (statics.fields, statics.methods)
+        | None -> ())
 
     (********************************************************)
     (* runtime types derive static types through annotation *)
     (********************************************************)
 
-    | (ClassT(it), TypeT(r,t)) ->
-      (* a class value annotation becomes the instance type *)
+    | ShiftT(it), TypeT(r,t) ->
       rec_flow cx trace (it, BecomeT (r, t))
 
     | (FunT(reason,_,prototype,_), TypeT(r,t)) ->
@@ -2459,10 +2516,10 @@ let rec __flow cx (l, u) trace =
     | (TypeT(_,l), TypeT(_,u)) ->
       rec_unify cx trace l u
 
-    | (ClassT(l), ClassT(u)) ->
+    | ShiftT(l), ShiftT(u) ->
       rec_unify cx trace l u
 
-    | (FunT(_,static1,prototype,_), ClassT(InstanceT(_,static2,_, _) as u_)) ->
+    | FunT(_,static1,prototype,_), ShiftT(InstanceT(_,static2,_, _) as u_) ->
       rec_unify cx trace static1 static2;
       rec_unify cx trace prototype u_
 
@@ -2470,7 +2527,7 @@ let rec __flow cx (l, u) trace =
     (* class types derive instance types (with constructors) *)
     (*********************************************************)
 
-    | ClassT (this),
+    | ShiftT (this),
       ConstructorT (reason_op, args, t) ->
       let reason_o = replace_reason "constructor return" (reason_of_t this) in
       Ops.push reason_op;
@@ -2510,6 +2567,13 @@ let rec __flow cx (l, u) trace =
     (* "statics" can be read *)
     (*************************)
 
+    | ClsT (reason, ({ ct_statics = Some statics; _; } as ct)),
+      GetT (_, "statics", t)
+      ->
+      let cls_statics = { ct with ct_props = statics; ct_statics = None; } in
+      let c = ClsT (prefix_reason "statics of " reason, cls_statics) in
+      rec_flow cx trace (c, t)
+
     | InstanceT (_, static, _, _), GetT (_, "statics", t) ->
       rec_flow cx trace (static, t)
 
@@ -2521,6 +2585,18 @@ let rec __flow cx (l, u) trace =
     (********************************************************)
     (* instances of classes may have their fields looked up *)
     (********************************************************)
+
+    | ClsT (reason_ct, { ct_props = { fields; methods}; }),
+      LookupT (_, _, x, t)
+      ->
+      let fields = find_props cx fields in
+      let methods = find_props cx methods in
+      (match SMap.get x (SMap.union fields methods) with
+      | None ->
+        rec_flow cx trace (MixedT reason_ct, u)
+      | Some tx ->
+        rec_unify cx trace t tx
+      );
 
     | InstanceT(reason, _, super, instance),
       LookupT (reason_op, strict, x, t)
@@ -2573,6 +2649,21 @@ let rec __flow cx (l, u) trace =
     | InstanceT (_, _, super, _), GetT (_, "__proto__", t) ->
       rec_flow cx trace (super, t)
 
+    | ClsT (reason_c, { ct_props = { fields; methods; }; }),
+      GetT (reason_op, x, tout)
+      ->
+      Ops.push reason_op;
+      let fields_tmap = find_props cx fields in
+      let methods_tmap = find_props cx methods in
+      let fields = SMap.union fields_tmap methods_tmap in
+      let strict = Some reason_c in
+      if SMap.mem x fields (*TJP: Ripe for refactoring.  This is almost verbatim from `get_prop` below.*)
+        then
+        rec_flow cx trace (SMap.find_unsafe x fields, tout)
+      else
+        rec_flow cx trace (MixedT reason_c, LookupT (reason_op, strict, x, LowerBoundT tout)); (*TJP: Copy pasta.  Check the LowerBoundT logic*)
+      Ops.pop ();
+
     | InstanceT (reason_c, static, super, instance),
       GetT (reason_op, x, tout) ->
       Ops.push reason_op;
@@ -2586,6 +2677,24 @@ let rec __flow cx (l, u) trace =
     (********************************)
     (* ... and their methods called *)
     (********************************)
+
+    | ClsT (reason_c, { ct_props = { fields; methods; }; }),
+      MethodT (reason_op, x, funtype)
+      ->
+      Ops.push reason_op;
+      let fields_tmap = find_props cx fields in
+      let methods_tmap = find_props cx methods in
+      let methods = SMap.union fields_tmap methods_tmap in
+      let funt = mk_tvar cx reason_op in
+      let strict = Some reason_c in
+      if SMap.mem x methods
+      then
+        rec_flow cx trace (SMap.find_unsafe x methods, funt)
+      else
+        rec_flow cx trace (MixedT reason_c, LookupT (reason_op, strict, x, LowerBoundT funt)); (*TJP: Copy pasta.  Check the LowerBoundT logic*)
+      let callt = CallT (reason_op, funtype) in
+      rec_flow cx trace (funt, callt);
+      Ops.pop ();
 
     | InstanceT (reason_c, static, super, instance),
       MethodT (reason_op, x, funtype)
@@ -2714,6 +2823,7 @@ let rec __flow cx (l, u) trace =
     (*************************************)
     (* objects can be copied-then-sealed *)
     (*************************************)
+
     | (ObjT (_, { props_tmap = mapr; _ }), ObjSealT (reason, t)) ->
       let src_props = find_props cx mapr in
       let new_obj =
@@ -2917,8 +3027,8 @@ let rec __flow cx (l, u) trace =
       ->
       rec_flow cx trace (t,tout)
 
-    | (ClassT (instance),
-       GetT(reason_op,"prototype",tout))
+    | ShiftT (instance),
+      GetT(reason_op,"prototype",tout)
       ->
       rec_flow cx trace (instance, tout)
 
@@ -3091,7 +3201,7 @@ let rec __flow cx (l, u) trace =
     (* class statics *)
     (*****************)
 
-    | (ClassT instance, _) when object_like_op u ->
+    | (ShiftT instance, _) when object_like_op u ->
       let reason = reason_of_t u in
       let tvar = mk_tvar cx reason in
       rec_flow cx trace (instance, GetT(reason,"statics",tvar));
@@ -3104,7 +3214,10 @@ let rec __flow cx (l, u) trace =
     (* When a class value flows to a function annotation or call site, check for
        the presence of a $call property in the former (as a static) compatible
        with the latter. *)
-    | (ClassT instance, (FunT (reason, _, _, _) | CallT (reason, _))) ->
+(* TJP: ES6 explicitly forbids calling a class as a function--why is this here?
+   That goofball idiom of testing `typeof this === "object"`?  Is there strict-
+   conscious parsing that distinguishes cases?*)
+    | ShiftT _, (FunT (reason, _, _, _) | CallT (reason, _)) ->
       rec_flow cx trace (l, GetT(reason,"$call",u))
 
     (* For a function type to be used as a class type, the following must hold:
@@ -3113,12 +3226,14 @@ let rec __flow cx (l, u) trace =
        - the function's statics should be included in the class's statics
        (typically a function's statics are under-specified, so we don't
        enforce equality)
-       - the class's static $call property type must be a subtype of the
+       - the class's static $call property type must be a subtype of the (*TJP: Huh?  This couples with the policy immediately above.*)
        function type. *)
-    | (FunT (reason, static, prototype, funtype), ClassT instance) ->
-      rec_flow cx trace (instance, prototype);
-      rec_flow cx trace (instance, funtype.this_t);
-      rec_flow cx trace (instance, GetT(reason,"statics",static));
+    | FunT (reason, static, prototype, funtype),
+      ShiftT shiftee
+      ->
+      rec_flow cx trace (shiftee, prototype);
+      rec_flow cx trace (shiftee, funtype.this_t);
+      rec_flow cx trace (shiftee, GetT(reason,"statics",static));
       rec_flow cx trace (u, GetT(reason,"$call",l))
 
     (************)
@@ -3368,7 +3483,7 @@ and numeric = function
   | _ -> false
 
 and object_like = function
-  | ObjT _ | InstanceT _ -> true
+  | ObjT _ | InstanceT _ | ClsT _ -> true
   | t -> function_like t
 
 and object_like_op = function
@@ -3381,7 +3496,7 @@ and object_like_op = function
   | _ -> false
 
 and function_like = function
-  | ClassT _
+  | ShiftT _
   | FunT _ -> true
   | _ -> false
 
@@ -3481,7 +3596,7 @@ and mk_strict_lookup_reason sealed is_dict reason_o reason_op =
   then None
   else Some reason_o
 
-and structural_subtype cx trace lower (upper_reason, super, fields_tmap, methods_tmap) =
+and structural_subtype cx trace lower (fields_tmap, methods_tmap) =
   let lower_reason = reason_of_t lower in
   let fields_tmap = find_props cx fields_tmap in
   let methods_tmap = find_props cx methods_tmap in
@@ -3492,7 +3607,6 @@ and structural_subtype cx trace lower (upper_reason, super, fields_tmap, methods
         let lookup_reason = replace_reason (spf "property %s" s) (reason_of_t t2) in
         rec_flow cx trace (lower, LookupT (lookup_reason, Some lower_reason, s, t2))
       );
-  rec_flow cx trace (lower, super)
 
 (*****************)
 (* substitutions *)
@@ -3504,6 +3618,7 @@ and structural_subtype cx trace lower (upper_reason, super, fields_tmap, methods
     force substitution under polymorphic types. This ensures that existential
     type variables under a polymorphic type remain unevaluated until the
     polymorphic type is applied. **)
+
 and subst cx ?(force=true) (map: Type.t SMap.t) t =
   if SMap.is_empty map then t
   else match t with
@@ -3569,12 +3684,22 @@ and subst cx ?(force=true) (map: Type.t SMap.t) t =
       proto_t = subst cx ~force map proto
     })
 
+  | ClsT (reason, clstype) ->
+    let special = { clstype with
+      ct_type_args = clstype.ct_type_args |> SMap.map (subst cx ~force map);
+      ct_props = subst_proptmaps cx force map clstype.ct_props;
+      ct_statics = (match clstype.ct_statics with
+        | None -> None
+        | Some statics -> Some (subst_proptmaps cx force map statics));
+    } in
+    ClsT (reason, special)
+
   | ArrT (reason, t, ts) ->
     ArrT (reason,
           subst cx ~force map t,
           ts |> List.map (subst cx ~force map))
 
-  | ClassT t -> ClassT (subst cx ~force map t)
+  | ShiftT t -> ShiftT (subst cx ~force map t)
 
   | TypeT (reason, t) ->
     TypeT (reason, subst cx ~force map t)
@@ -3643,6 +3768,12 @@ and subst_propmap cx force map id =
   if pmap_ = pmap then id
   else mk_propmap cx pmap_
 
+and subst_proptmaps cx force map { fields; methods; } =
+  {
+    fields = subst_propmap cx force map fields;
+    methods = subst_propmap cx force map methods;
+  }
+
 and typeapp_arity_mismatch cx expected_num reason =
   let msg = spf "wrong number of type arguments (expected %d)" expected_num in
   add_error cx [reason, msg];
@@ -3654,8 +3785,11 @@ and instantiate_poly_with_targs cx trace reason_op ?(cache=false) (xs,t) ts =
   then (
     typeapp_arity_mismatch cx len_xs reason_op;
     AnyT reason_op
+(*TJP: Wouldn't I get better errors here if I substituted `any` for missings or
+  truncated excess?*)
   )
   else
+(*TJP: `type A<T> = class K<T> {...}` => insert `K` into the environment, right?*)
     let map =
       List.fold_left2
         (fun map typeparam t ->
@@ -3727,6 +3861,7 @@ and try_union cx trace l reason = function
 
 (* try each branch of an intersection in turn *)
 and try_intersection cx trace u reason = function
+(*TJP: Figure out that commutativity problem*)
   | [] -> (* fail: top is the unit of intersections *)
     rec_flow cx trace (MixedT reason, u)
   | t::ts ->
@@ -3738,6 +3873,7 @@ and try_intersection cx trace u reason = function
    to be replaced by concrete types) so that speculation has a chance to fail
    early (and other branches are tried): otherwise, those failures may remain
    latent, and cause spurious errors to be reported. *)
+(*TJP: Forgetting to specify type parameters is an error, right? Flow doesn't assume `any`?*)
 
 (** TODO: Concretization is a general pattern that could be useful elsewhere as
     well. For example, we often have constraints that model "binary" operations,
@@ -4223,15 +4359,15 @@ and instanceof_test cx trace result = function
       it at this stage instead of simply converting (ArrT, InstanceofP c)
       to (InstanceT(Array), InstanceofP c) because this allows c to be resolved
       first. *)
-  | (true, (ArrT (reason, elemt, _) as arr), ClassT(InstanceT _ as a)) ->
+  | (true, (ArrT (reason, elemt, _) as arr), ShiftT(InstanceT _ as a)) ->
 
-    let right = ClassT(ExtendsT(arr, a)) in
+    let right = ShiftT(ExtendsT(arr, a)) in
     let arrt = get_builtin_typeapp cx reason "Array" [elemt] in
     rec_flow cx trace (arrt, PredicateT(LeftP(Instanceof, right), result))
 
-  | (false, (ArrT (reason, elemt, _) as arr), ClassT(InstanceT _ as a)) ->
+  | (false, (ArrT (reason, elemt, _) as arr), ShiftT(InstanceT _ as a)) ->
 
-    let right = ClassT(ExtendsT(arr, a)) in
+    let right = ShiftT(ExtendsT(arr, a)) in
     let arrt = get_builtin_typeapp cx reason "Array" [elemt] in
     rec_flow cx trace (arrt, PredicateT(NotP(LeftP(Instanceof, right)), result))
 
@@ -4254,15 +4390,15 @@ and instanceof_test cx trace result = function
       class. (As a technical tool, we use Extends(_, _) to perform this
       recursion; it is also used elsewhere for running similar recursive
       subclass decisions.) **)
-  | (true, (InstanceT _ as c), ClassT(InstanceT _ as a)) ->
+  | (true, (InstanceT _ as c), ShiftT(InstanceT _ as a)) ->
 
-    predicate cx trace result (ClassT(ExtendsT(c, a)), RightP(Instanceof, c))
+    predicate cx trace result (ShiftT(ExtendsT(c, a)), RightP(Instanceof, c))
 
   (** If C is a subclass of A, then don't refine the type of x. Otherwise,
       refine the type of x to A. (In general, the type of x should be refined to
       C & A, but that's hard to compute.) **)
   | (true, InstanceT (_,_,super_c,instance_c),
-     (ClassT(ExtendsT(c, InstanceT (_,_,_,instance_a))) as right))
+     (ShiftT(ExtendsT(c, InstanceT (_,_,_,instance_a))) as right))
     -> (* TODO: intersection *)
 
     if instance_a.class_id = instance_c.class_id
@@ -4271,7 +4407,7 @@ and instanceof_test cx trace result = function
       (** Recursively check whether super(C) extends A, with enough context. **)
       rec_flow cx trace (super_c, PredicateT(LeftP(Instanceof, right), result))
 
-  | (true, MixedT _, ClassT(ExtendsT (_, a)))
+  | (true, MixedT _, ShiftT(ExtendsT (_, a)))
     ->
     (** We hit the root class, so C is not a subclass of A **)
     rec_flow cx trace (a, result)
@@ -4289,21 +4425,21 @@ and instanceof_test cx trace result = function
       check whether x is _not_ `instanceof` class A. To decide what the
       appropriate refinement for x should be, we need to decide whether C
       extends A, choosing either nothing or C based on the result. **)
-  | (false, (InstanceT _ as c), ClassT(InstanceT _ as a)) ->
+  | (false, (InstanceT _ as c), ShiftT(InstanceT _ as a)) ->
 
-    predicate cx trace result (ClassT(ExtendsT(c, a)), NotP(RightP(Instanceof, c)))
+    predicate cx trace result (ShiftT(ExtendsT(c, a)), NotP(RightP(Instanceof, c)))
 
   (** If C is a subclass of A, then do nothing, since this check cannot
       succeed. Otherwise, don't refine the type of x. **)
   | (false, InstanceT (_,_,super_c,instance_c),
-     (ClassT(ExtendsT(c, InstanceT (_,_,_,instance_a))) as right))
+     (ShiftT(ExtendsT(c, InstanceT (_,_,_,instance_a))) as right))
     ->
 
     if instance_a.class_id = instance_c.class_id
     then ()
     else rec_flow cx trace (super_c, PredicateT(NotP(LeftP(Instanceof, right)), result))
 
-  | (false, MixedT _, ClassT(ExtendsT(c, _)))
+  | (false, MixedT _, ShiftT(ExtendsT(c, _)))
     ->
     (** We hit the root class, so C is not a subclass of A **)
     rec_flow cx trace (c, result)
@@ -4578,7 +4714,7 @@ and add_lower_edges cx trace ?(opt=false) (id1, bounds1) (id2, bounds2) =
 (* unification *)
 (***************)
 
-(* Chain a root to another root. If both roots are unresolved, this amounts to
+(* Chain a rosot to another root. If both roots are unresolved, this amounts to
    copying over the bounds of one root to another, and adding all the
    connections necessary when two non-unifiers flow to each other. If one or
    both of the roots are resolved, they effectively act like the corresponding
@@ -4882,7 +5018,7 @@ and mk_instance cx instance_reason ?(for_type=true) c =
     AnnotT (sink_t, source_t)
   else
     mk_tvar_derivable_where cx instance_reason (fun t ->
-      flow_opt cx (c, ClassT(t))
+      flow_opt cx (c, ShiftT(t))
     )
 
 (* We want to match against some t, which may either be a concrete
@@ -4936,7 +5072,7 @@ and instantiate_poly_t cx t types =
 
 and instantiate_type t =
   match t with
-  | ClassT t -> t
+  | ShiftT t -> t
   | _ -> AnyT.why (reason_of_t t) (* ideally, assert false *)
 
 and static_method_call cx name reason m argts =
@@ -5119,11 +5255,21 @@ let rec gc cx state = function
       );
       gc cx state objtype.proto_t
 
+  | ClsT(_, clstype) ->
+      clstype.ct_type_args |> SMap.iter (fun _ -> gc cx state);
+      iter_props cx clstype.ct_props.fields (fun _ -> gc cx state);
+      iter_props cx clstype.ct_props.methods (fun _ -> gc cx state);
+      (match clstype.ct_statics with
+      | Some statics ->
+        iter_props cx statics.fields (fun _ -> gc cx state);
+        iter_props cx statics.methods (fun _ -> gc cx state)
+      | None -> ())
+
   | ArrT(_, t, ts) ->
       gc cx state t;
       ts |> List.iter (gc cx state);
 
-  | ClassT(t) ->
+  | ShiftT(t) ->
       gc cx state t
 
   | InstanceT(_, static, super, instance) ->
@@ -5512,6 +5658,7 @@ end = struct
 
   (* TODO: Think of a better place to put this *)
   let rec extract_members cx this_t =
+(*TJP: Add ClsT in here*)
     match this_t with
     | MaybeT t ->
         (* TODO: do we want to autocomplete when the var could be null? *)
@@ -5539,10 +5686,10 @@ end = struct
     | PolyT (type_params, sub_type) ->
         (* TODO: replace type parameters with stable/proper names? *)
         extract_members cx sub_type
-    | ClassT (InstanceT (_, static, _, _)) ->
+    | ShiftT (InstanceT (_, static, _, _)) ->
         let static_t = resolve_type cx static in
         extract_members cx static_t
-    | ClassT t ->
+    | ShiftT t ->
         (* TODO: Can this happen? *)
         extract_members cx t
     | IntersectionT (r, ts) ->

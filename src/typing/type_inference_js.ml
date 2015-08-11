@@ -750,7 +750,7 @@ let rec convert cx map = Ast.Type.(function
       (* Class<T> is the type of the class whose instances are of type T *)
       | "Class" ->
         check_type_param_arity cx loc typeParameters 1 (fun () ->
-          ClassT(convert cx map (List.hd typeParameters))
+          ShiftT(convert cx map (List.hd typeParameters))
         )
 
       | "Function" | "function" ->
@@ -902,6 +902,34 @@ let rec convert cx map = Ast.Type.(function
     ObjT (mk_reason "object type" loc,
       Flow_js.mk_objecttype ~flags dict pmap proto)
 
+  | loc, Class ({ Class.id; typeParameters; body; } as c) ->
+    let class_loc, name = extract_class_type_name loc c in
+    let creason = mk_reason name loc in
+    let typeparams, map_ = mk_type_param_declarations cx ~map typeParameters in
+    let map = SMap.fold SMap.add map_ map in
+    let (sfmap, smmap, fmap, mmap) =
+      object_with_statics cx creason name class_loc typeparams map body in
+    let ct_arg_polarities = map |> SMap.map (fun t -> match t with
+    | BoundT { polarity; _ } -> polarity
+    | _ -> assert_false (spf "Expected BoundT but found %s" (string_of_ctor t))) in
+
+    let cls_type = {
+      ct_type_args = map; (*TJP: Verify that I don't want the original set or something*)
+      ct_arg_polarities;
+      ct_props = {
+        fields = Flow_js.mk_propmap cx fmap;
+        methods = Flow_js.mk_propmap cx mmap;
+      };
+      ct_statics = Some {
+        fields = Flow_js.mk_propmap cx sfmap;
+        methods = Flow_js.mk_propmap cx smmap;
+      };
+    } in
+
+    if typeparams = []
+    then ClsT (creason, cls_type)
+    else PolyT (typeparams, ClsT (creason, cls_type))
+
   | loc, Exists ->
     (* Do not evaluate existential type variables when map is non-empty. This
        ensures that existential type variables under a polymorphic type remain
@@ -989,7 +1017,6 @@ and mk_singleton_boolean reason b =
 
 (* TODO: detect structural misuses abnormal control flow constructs *)
 and statement_decl cx = Ast.Statement.(
-
   (* helpers *)
   let var_declarator cx (loc, { VariableDeclaration.Declarator.id; init }) =
     Ast.(match id with
@@ -1052,8 +1079,8 @@ and statement_decl cx = Ast.Statement.(
   | (loc, With _) ->
       (* TODO disallow or push vars into env? *)
       ()
-  | (loc, DeclareTypeAlias { TypeAlias.id; typeParameters; right; } )
-  | (loc, TypeAlias { TypeAlias.id; typeParameters; right; } ) ->
+  | (loc, DeclareTypeAlias { TypeAlias.id; typeParameters; _; } )
+  | (loc, TypeAlias { TypeAlias.id; typeParameters; _; } ) ->
       let _, { Ast.Identifier.name; _ } = id in
       let r = mk_reason (spf "type %s" name) loc in
       let tvar = Flow_js.mk_tvar cx r in
@@ -2068,103 +2095,31 @@ and statement cx = Ast.Statement.(
   | (loc, DeclareClass {
       Interface.id;
       typeParameters;
-      body = (_, { Ast.Type.Object.properties; indexers; callProperties });
+      body = _, ({ Ast.Type.Object.properties; indexers; callProperties } as body);
       extends;
     })
   | (loc, InterfaceDeclaration {
       Interface.id;
       typeParameters;
-      body = (_, { Ast.Type.Object.properties; indexers; callProperties });
+      body = _, ({ Ast.Type.Object.properties; indexers; callProperties } as body);
       extends;
     }) as stmt ->
-    let is_interface = match stmt with
-    | (_, InterfaceDeclaration _) -> true
-    | _ -> false in
-    let _, { Ast.Identifier.name = iname; _ } = id in
-    let reason = mk_reason iname loc in
-
-    (* TODO excise the Promise/PromisePolyfill special-case ASAP *)
+    let _, { Ast.Identifier.name; _ } = id in
+    let reason = mk_reason name loc in
     let typeparams, map =
-      if (iname = "Promise" || iname = "PromisePolyfill") &&
+      (* TODO excise the Promise/PromisePolyfill special-case ASAP *)
+      if (name = "Promise" || name = "PromisePolyfill") &&
         List.length (extract_type_param_declarations typeParameters) = 1
       then mk_type_param_declarations cx typeParameters ~polarities:[Positive]
       else mk_type_param_declarations cx typeParameters in
-
-    let sfmap, smmap, fmap, mmap = List.fold_left Ast.Type.Object.Property.(
-      fun (sfmap_, smmap_, fmap_, mmap_)
-        (loc, { key; value; static; _method; _ }) -> (* TODO: optional *)
-        Ast.Expression.Object.Property.(match key with
-        | Literal (loc, _)
-        | Computed (loc, _) ->
-            let msg = "illegal name" in
-            Flow_js.add_error cx [Reason_js.mk_reason "" loc, msg];
-            (sfmap_, smmap_, fmap_, mmap_)
-
-        | Identifier (loc, { Ast.Identifier.name; _ }) ->
-            let t = convert cx map value in
-            (* check for overloads in static and instance method maps *)
-            let map_ = if static then smmap_ else mmap_ in
-            let t = match SMap.get name map_ with
-              | None -> t
-              | Some (IntersectionT (reason, seen_ts)) ->
-                  IntersectionT (reason, seen_ts @ [t])
-              | Some seen_t ->
-                  IntersectionT (Reason_js.mk_reason iname loc, [seen_t; t])
-            in
-            (* TODO: additionally check that the four maps are disjoint *)
-            (match static, _method with
-            | true, true ->  (sfmap_, SMap.add name t smmap_, fmap_, mmap_)
-            | true, false -> (SMap.add name t sfmap_, smmap_, fmap_, mmap_)
-            | false, true -> (sfmap_, smmap_, fmap_, SMap.add name t mmap_)
-            | false, false -> (sfmap_, smmap_, SMap.add name t fmap_, mmap_)
-            )
-        )
-    ) (SMap.empty, SMap.empty, SMap.empty, SMap.empty) properties
-    in
-    let fmap = Ast.Type.Object.Indexer.(match indexers with
-    | [] -> fmap
-    | [(_, { key; value; _; })] ->
-        let keyt = convert cx map key in
-        let valuet = convert cx map value in
-        fmap |> SMap.add "$key" keyt |> SMap.add "$value" valuet
-    (* TODO *)
-    | _ -> failwith "Unimplemented: multiple indexers")
-    in
-    let calls = callProperties |> List.map (function
-      | loc, { Ast.Type.Object.CallProperty.value = (_, ft); static; } ->
-        (static, convert cx map (loc, Ast.Type.Function ft))
-    ) in
-    let scalls, calls = List.partition fst calls in
-    let smmap = match scalls with
-      | [] -> smmap
-      | [_,t] -> SMap.add "$call" t smmap
-      | _ -> let scalls = List.map snd scalls in
-             SMap.add "$call" (IntersectionT (mk_reason iname loc,
-                                              scalls)) smmap
-    in
-    let mmap = match calls with
-      | [] -> mmap
-      | [_,t] -> SMap.add "$call" t mmap
-      | _ ->
-        let calls = List.map snd calls in
-        SMap.add "$call" (IntersectionT (mk_reason iname loc,
-                                              calls)) mmap
-    in
-    let mmap = match SMap.get "constructor" mmap with
-      | None ->
-        let constructor_funtype =
-          Flow_js.mk_functiontype [] ~params_names:[] VoidT.t in
-        let funt = (FunT (Reason_js.mk_reason "constructor" loc,
-          Flow_js.dummy_static, Flow_js.dummy_prototype, constructor_funtype))
-        in
-        SMap.add "constructor" funt mmap
-      | Some _ ->
-        mmap
-    in
-    let i = mk_interface cx reason typeparams map
-      (sfmap, smmap, fmap, mmap) extends is_interface in
+    let properties = object_with_statics cx reason name loc typeparams map body in
+    let
+      is_interface = match stmt with
+      | (_, InterfaceDeclaration _) -> true
+      | _ -> false in
+    let i = mk_interface cx reason typeparams map properties extends is_interface in
     Hashtbl.replace cx.type_table loc i;
-    Env_js.set_var ~for_type:is_interface cx iname i reason
+    Env_js.set_var ~for_type:is_interface cx name i reason
 
   | (loc, DeclareModule { DeclareModule.id; body; }) ->
     let name = match id with
@@ -2735,6 +2690,82 @@ and object_ cx reason ?(allow_sealed=true) props = Ast.Expression.Object.(
   chain_objects cx reason o spread
 )
 
+and object_with_statics cx reason id_name loc typeparams map =
+  Ast.Type.Object.(fun { properties; indexers; callProperties } ->
+    let sfmap, smmap, fmap, mmap = List.fold_left Ast.Type.Object.Property.(
+      fun (sfmap_, smmap_, fmap_, mmap_)
+        (loc, { key; value; static; _method; _ }) -> (* TODO: optional *)
+        Ast.Expression.Object.Property.(match key with
+        | Literal (loc, _)
+        | Computed (loc, _) ->
+            let msg = "illegal name" in
+            Flow_js.add_error cx [Reason_js.mk_reason "" loc, msg];
+            (sfmap_, smmap_, fmap_, mmap_)
+
+        | Identifier (loc, { Ast.Identifier.name; _ }) ->
+            let t = convert cx map value in
+            (* check for overloads in static and instance method maps *)
+            let map_ = if static then smmap_ else mmap_ in
+            let t = match SMap.get name map_ with
+              | None -> t
+              | Some (IntersectionT (reason, seen_ts)) ->
+                  IntersectionT (reason, seen_ts @ [t])
+              | Some seen_t ->
+                  IntersectionT (Reason_js.mk_reason id_name loc, [seen_t; t])
+            in
+            (* TODO: additionally check that the four maps are disjoint *)
+            (match static, _method with
+            | true, true ->  (sfmap_, SMap.add name t smmap_, fmap_, mmap_)
+            | true, false -> (SMap.add name t sfmap_, smmap_, fmap_, mmap_)
+            | false, true -> (sfmap_, smmap_, fmap_, SMap.add name t mmap_)
+            | false, false -> (sfmap_, smmap_, SMap.add name t fmap_, mmap_)
+            )
+        )
+    ) (SMap.empty, SMap.empty, SMap.empty, SMap.empty) properties
+    in
+    let fmap = Ast.Type.Object.Indexer.(match indexers with
+    | [] -> fmap
+    | [(_, { key; value; _; })] ->
+        let keyt = convert cx map key in
+        let valuet = convert cx map value in
+        fmap |> SMap.add "$key" keyt |> SMap.add "$value" valuet
+    (* TODO *)
+    | _ -> failwith "Unimplemented: multiple indexers")
+    in
+    let calls = callProperties |> List.map (function
+      | loc, { Ast.Type.Object.CallProperty.value = (_, ft); static; } ->
+        (static, convert cx map (loc, Ast.Type.Function ft))
+    ) in
+    let scalls, calls = List.partition fst calls in
+    let smmap = match scalls with
+      | [] -> smmap
+      | [_,t] -> SMap.add "$call" t smmap
+      | _ -> let scalls = List.map snd scalls in
+             SMap.add "$call" (IntersectionT (mk_reason id_name loc,
+                                              scalls)) smmap
+    in
+    let mmap = match calls with
+      | [] -> mmap
+      | [_,t] -> SMap.add "$call" t mmap
+      | _ ->
+        let calls = List.map snd calls in
+        SMap.add "$call" (IntersectionT (mk_reason id_name loc,
+                                              calls)) mmap
+    in
+    let mmap = match SMap.get "constructor" mmap with
+      | None ->
+        let constructor_funtype =
+          Flow_js.mk_functiontype [] ~params_names:[] VoidT.t in
+        let funt = (FunT (Reason_js.mk_reason "constructor" loc,
+          Flow_js.dummy_static, Flow_js.dummy_prototype, constructor_funtype))
+        in
+        SMap.add "constructor" funt mmap
+      | Some _ ->
+        mmap
+    in
+    (sfmap, smmap, fmap, mmap)
+  )
+
 and variable cx (loc, vdecl) = Ast.(
   let { Statement.VariableDeclaration.Declarator.id; init } = vdecl in
   match id with
@@ -3304,7 +3335,7 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
       (* TODO: require *)
       let argts = List.map (expression_or_spread cx) arguments in
       let reason = mk_reason "object" loc in
-      ClassT (spread_objects cx reason argts)
+      ShiftT (spread_objects cx reason argts)
 
   | Call {
       Call.callee = _, Identifier (_,
@@ -4350,7 +4381,7 @@ and react_create_class cx loc class_props = Ast.Expression.(
   let instance = InstanceT (reason_component,!static,super,itype) in
   Flow_js.flow cx (instance, this);
 
-  ClassT(instance)
+  ShiftT(instance)
 )
 
 (* given an expression found in a test position, notices certain
@@ -5120,10 +5151,16 @@ and extract_getter_type = function
   | FunT (_, _, _, { return_t; _; }) -> return_t
   | _ -> failwith "Getter property with unexpected type"
 
-and extract_class_name class_loc  = Ast.Class.(function {id; _;} ->
+and extract_class_name class_loc = Ast.Class.(function {id; _;} ->
   match id with
   | Some(name_loc, {Ast.Identifier.name; _;}) -> (name_loc, name)
   | None -> (class_loc, "<<anonymous class>>")
+)
+
+and extract_class_type_name class_loc = Ast.Type.Class.(function {id; _;} ->
+  match id with
+  | Some(name_loc, {Ast.Identifier.name; _;}) -> (name_loc, name)
+  | None -> (class_loc, "<<anonymous class type>>")
 )
 
 (* Process a class definition, returning a (polymorphic) class type. A class
@@ -5191,7 +5228,7 @@ and mk_class = Ast.Class.(
   (* super: D<X> *)
   let extends = opt_map (expression cx) superClass,  superTypeParameters in
   let super = mk_extends cx type_params_map extends in
-  let super_static = ClassT (super) in
+  let super_static = ShiftT (super) in
 
   let static_reason = prefix_reason "statics of " reason_c in
 
@@ -5343,9 +5380,9 @@ and mk_class = Ast.Class.(
 
   if (typeparams = [])
   then
-    ClassT this
+    ShiftT this
   else
-    PolyT(typeparams, ClassT this)
+    PolyT(typeparams, ShiftT this)
 )
 
 (* Processes a declare class. The fact that we process an interface the same way
@@ -5370,7 +5407,7 @@ and mk_interface cx reason_i typeparams map (sfmap, smmap, fmap, mmap) extends s
         Some c, typeParameters
   in
   let super = mk_extends cx map extends in
-  let super_static = ClassT(super) in
+  let super_static = ShiftT(super) in
 
   let static_reason = prefix_reason "statics of " reason_i in
 
@@ -5438,8 +5475,8 @@ and mk_interface cx reason_i typeparams map (sfmap, smmap, fmap, mmap) extends s
   let this = InstanceT (reason_i, static, super, instance) in
 
   if typeparams = []
-  then ClassT(this)
-  else PolyT (typeparams, ClassT(this))
+  then ShiftT(this)
+  else PolyT (typeparams, ShiftT(this))
 
 (* Given a function declaration and types for `this` and `super`, extract a
    signature consisting of type parameters, parameter types, parameter names,

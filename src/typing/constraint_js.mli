@@ -32,9 +32,10 @@ module Type :
 
       | FunT of reason * static * prototype * funtype
       | ObjT of reason * objtype
+      | ClsT of reason * clstype
       | ArrT of reason * t * t list
 
-      | ClassT of t
+      | ShiftT of t
       | InstanceT of reason * static * super * insttype
 
       | OptionalT of t
@@ -179,6 +180,16 @@ module Type :
       methods_tmap: int;
       mixins: bool;
       structural: bool;
+    }
+    and prop_tmaps = {
+      fields: int;
+      methods: int;
+    }
+    and clstype = {
+      ct_type_args: t SMap.t;
+      ct_arg_polarities: polarity SMap.t;
+      ct_props: prop_tmaps;
+      ct_statics: prop_tmaps option;
     }
     and exporttypes = {
       exports_tmap: int;

@@ -205,6 +205,7 @@ module rec Parse : sig
   val object_key : env -> Loc.t * Ast.Expression.Object.Property.key
   val class_declaration : env -> Ast.Statement.t
   val class_expression : env -> Ast.Expression.t
+  val class_type : env -> Ast.Type.t
   val is_assignable_lhs : Ast.Expression.t -> bool
 end = struct
   module Type : sig
@@ -318,6 +319,7 @@ end = struct
           Expect.token env T_TYPEOF;
           let t = primary env in
           Loc.btwn start_loc (fst t), Type.Typeof t
+      | T_CLASS -> Parse.class_type env
       | T_LBRACKET -> tuple env
       | T_IDENTIFIER ->
           let loc, g = generic env in
@@ -1915,6 +1917,7 @@ end = struct
     val _initializer : env -> Loc.t * Ast.Expression.Object.t
     val class_declaration : env -> Ast.Statement.t
     val class_expression : env -> Ast.Expression.t
+    val class_type : env -> Ast.Type.t
   end = struct
     let key ?allow_computed_key:(allow_computed_key=true) env =
       Ast.Expression.Object.Property.(match Peek.token env with
@@ -2364,6 +2367,23 @@ end = struct
         superTypeParameters;
         implements;
       }))
+
+    let class_type env =
+      let start_loc = Peek.loc env in
+      let name = Peek.value env in
+      Expect.token env T_CLASS;
+      let id, typeParameters = match Peek.token env with
+        | T_EXTENDS -> error env (Error.UnexpectedToken name); None, None
+        | T_LESS_THAN (*TJP: I like the prospect of syntax `class<T: A> {...}` for interfaces. Instead match expectations :( *)
+        | T_LCURLY -> None, None
+        | _ ->
+            let id = Some (Parse.identifier env) in
+            let typeParameters = Type.type_parameter_declaration env in
+            id, typeParameters in
+      let obj_loc, body = Type._object ~allow_static:true env in
+      let loc = Loc.btwn start_loc obj_loc (* Do I need to dig out the right bound? *) in
+      if body.Ast.Type.Object.callProperties <> [] then error env (Error.CallableClass);
+      loc, Ast.Type.(Class Class.({ id; typeParameters; body; }))
 
     let key = key ~allow_computed_key:false
   end
@@ -3808,6 +3828,7 @@ end = struct
   and object_key = Object.key
   and class_declaration = Object.class_declaration
   and class_expression = Object.class_expression
+  and class_type = Object.class_type
   and array_initializer = Expression.array_initializer
 
   and is_assignable_lhs = Expression.is_assignable_lhs

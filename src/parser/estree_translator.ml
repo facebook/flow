@@ -834,6 +834,7 @@ end with type t = Impl.t) = struct
     | Nullable t -> nullable_type loc t
     | Function fn -> function_type (loc, fn)
     | Object o -> object_type (loc, o)
+    | Class c -> class_type (loc, c)
     | Array t -> array_type loc t
     | Generic g -> generic_type (loc, g)
     | Union u -> union_type (loc, u)
@@ -914,6 +915,14 @@ end with type t = Impl.t) = struct
     node "ObjectTypeCallProperty" loc [|
       "value", function_type callProperty.value;
       "static", bool callProperty.static;
+    |]
+  )
+
+  and class_type (loc, c) = Type.Class.(
+    node "ClassTypeAnnotation" loc [|
+      "id", option identifier c.id;
+      "typeParameters", option type_parameter_declaration c.typeParameters;
+      "body", object_type (loc, c.body);
     |]
   )
 

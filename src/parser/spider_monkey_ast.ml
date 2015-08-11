@@ -96,6 +96,14 @@ and Type : sig
     }
   end
 
+  module Class : sig
+    type t = {
+      id: Identifier.t option;
+      typeParameters: Type.ParameterDeclaration.t option;
+      body: Type.Object.t;
+    }
+  end
+
   module Generic : sig
     module Identifier : sig
       type t =
@@ -146,6 +154,7 @@ and Type : sig
     | Nullable of t
     | Function of Function.t
     | Object of Object.t
+    | Class of Class.t
     | Array of t
     | Generic of Generic.t
     | Union of t list
