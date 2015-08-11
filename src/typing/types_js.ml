@@ -621,14 +621,14 @@ let typecheck workers files removed unparsed opts make_merge_input =
  *)
 let file_depends_on =
 
-  let rec sig_depends_on stack modules m =
+  let rec sig_depends_on seen modules m =
     SSet.mem m modules || (
       Module.module_exists m && (
         let f = Module.get_file m in
-        not (SSet.mem f stack) && (
-          let stack = SSet.add f stack in
+        not (SSet.mem f !seen) && (
+          seen := SSet.add f !seen;
           let { Module.strict_required; _ } = Module.get_module_info f in
-          SSet.exists (sig_depends_on stack modules) strict_required
+          SSet.exists (sig_depends_on seen modules) strict_required
         )
       )
     )
@@ -636,8 +636,10 @@ let file_depends_on =
 
   fun modules f ->
     let { Module._module; required; _ } = Module.get_module_info f in
-    SSet.mem _module modules ||
-      SSet.exists (sig_depends_on SSet.empty modules) required
+    SSet.mem _module modules || (
+      let seen = ref SSet.empty in
+      SSet.exists (sig_depends_on seen modules) required
+    )
 
 (* The following computation is likely inefficient; it tries to narrow down
    a potentially large set of unmodified files to a potentially small set of
