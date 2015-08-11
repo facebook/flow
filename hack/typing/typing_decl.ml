@@ -662,8 +662,7 @@ and class_class_decl class_id =
   let pos, name = class_id in
   let reason = Reason.Rclass_class (pos, name) in
   let classname_ty =
-    reason, Tapply ((pos, SN.Classes.cClassname),
-    [reason, Tapply (class_id, [])]) in
+    reason, Tapply ((pos, SN.Classes.cClassname), [reason, Tthis]) in
   {
     ce_final       = false;
     ce_is_xhp_attr = false;
