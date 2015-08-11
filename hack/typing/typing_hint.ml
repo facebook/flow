@@ -124,12 +124,14 @@ module CheckInstantiability = struct
         | Some {tc_kind = Ast.Ctrait; tc_name; tc_pos; _} ->
           Errors.uninstantiable_class usage_pos tc_pos tc_name
         | _ -> ()) in
-      super#on_apply env (usage_pos, n) hl
+      if n <> SN.Classes.cClassname
+      then super#on_apply env (usage_pos, n) hl
+      else env
 
     method! on_abstr _env _ _ =
-        (* there should be no need to descend into abstract params, as
-         * the necessary param checks happen on the declaration of the
-         * constraint *)
+      (* there should be no need to descend into abstract params, as
+       * the necessary param checks happen on the declaration of the
+       * constraint *)
       _env
 
   end
