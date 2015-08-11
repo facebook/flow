@@ -3425,8 +3425,20 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
 
   | Class c ->
       let (name_loc, name) = extract_class_name loc c in
-      let reason = mk_reason name name_loc in
-      mk_class cx loc reason c
+      let reason = mk_reason (spf "class expr %s" name) loc in
+      (match c.Ast.Class.id with
+      | Some id ->
+          let tvar = Flow_js.mk_tvar cx reason in
+          let scope = Scope.fresh () in
+          Scope.add name
+            (Scope.create_entry tvar tvar (Some name_loc))
+            scope;
+          Env_js.push_env cx scope;
+          let class_t = mk_class cx loc reason c in
+          Env_js.pop_env ();
+          Flow_js.flow cx (class_t, tvar);
+          class_t;
+      | None -> mk_class cx loc reason c)
 
   (* TODO *)
   | Yield _
