@@ -731,7 +731,7 @@ and catch parent_lenv after_try env (ety, exn, b) =
   let env = LEnv.fully_integrate env parent_lenv in
   let cid = CI ety in
   let ety_p = (fst ety) in
-  let env = instantiable_cid ety_p env cid in
+  let env, _ = instantiable_cid ety_p env cid in
   let env, ety = static_class_id ety_p env cid in
   let env = exception_ty ety_p env ety in
   let env = Env.set_local env (snd exn) ety in
@@ -1455,7 +1455,7 @@ and requires_consistent_construct = function
   | CI _ -> false
 
 and new_object ~check_not_abstract p env c el uel =
-  let env, class_ = class_id_for_new p env c in
+  let env, class_ = instantiable_cid p env c in
   (match class_ with
   | None ->
       let _ = lmap expr env el in
@@ -1512,31 +1512,37 @@ and instanceof_in_env p (env:Env.env) (e1:Nast.expr) (e2:Nast.expr) =
   let env, _ = expr env e1 in
   match TUtils.instanceof_naming e2 with
     | Some cid ->
-      instantiable_cid p env cid
+      let env, _ = instantiable_cid p env cid in
+      env
     | None ->
       let env, _ = expr env e2 in
       env
 
+(* FIXME: we need to separate our instantiability into two parts. Currently,
+ * all this function is doing is checking if a given type is inhabited --
+ * that is, whether there are runtime values of type T. However,
+ * instantiability should be the stricter notion that T has a runtime
+ * constructor; that is, `new T()` should be valid. In particular, interfaces
+ * are inhabited, but not instantiable.
+ * To make this work with classname, we likely need to add something like
+ * concrete_classname<T>, where T cannot be an interface.
+ * *)
 and instantiable_cid p env cid =
-  let env, class_ = class_id_for_new p env cid in
-  (match class_ with
+  let env, class_id = class_id_for_new p env cid in
+  (match class_id with
     | Some ((pos, name), class_, _) when
            class_.tc_kind = Ast.Ctrait || class_.tc_kind = Ast.Cenum ->
       (match cid with
-        | CI _ -> Errors.uninstantiable_class pos class_.tc_pos name; env
-        | CIstatic | CIparent | CIself -> env
-        | CIvar _ ->
-          (* FIXME: we need to check for instantiability in this case,
-           * but if the variable type is classname<Interface>,
-           * ClassImplementingInterface::class may be passed. The solution
-           * is likely something like concrete_classname<Interface>, which
-           * Interface::class would not be *)
-          env
+        | CI _ | CIvar _ ->
+          Errors.uninstantiable_class pos class_.tc_pos name;
+          env, None
+        | CIstatic | CIparent | CIself -> env, class_id
       )
     | Some ((pos, name), class_, _) when
            class_.tc_kind = Ast.Cabstract && class_.tc_final ->
-       Errors.uninstantiable_class pos class_.tc_pos name; env
-    | None | Some _ -> env)
+       Errors.uninstantiable_class pos class_.tc_pos name;
+       env, None
+    | None | Some _ -> env, class_id)
 
 and exception_ty pos env ty =
   let exn_ty = Reason.Rthrow pos, Tclass ((pos, SN.Classes.cException), []) in
