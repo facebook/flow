@@ -306,7 +306,6 @@ and expr_ =
   | Xml of id * (id * expr) list * expr list
   | Unsafeexpr of expr
   | Import of import_flavor * expr
-  | Ref of expr
 
 and import_flavor =
   | Include
@@ -330,6 +329,7 @@ and uop =
 | Utild
 | Unot | Uplus | Uminus | Uincr
 | Udecr | Upincr | Updecr
+| Uref
 
 and case =
 | Default of block

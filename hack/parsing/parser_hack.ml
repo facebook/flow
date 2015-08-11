@@ -241,13 +241,13 @@ let rec check_lvalue env = function
   | String _ | String2 _ | Yield _ | Yield_break
   | Await _ | Expr_list _ | Cast _ | Unop _
   | Binop _ | Eif _ | InstanceOf _ | New _ | Efun _ | Lfun _ | Xml _
-  | Import _ | Ref _) ->
+  | Import _) ->
       error_at env pos "Invalid lvalue"
 
 (* The bound variable of a foreach can be a reference (but not inside
   a list expression. *)
 let check_foreach_lvalue env = function
-  | (_, Ref e) | e -> check_lvalue env e
+  | (_, Unop (Uref, e)) | e -> check_lvalue env e
 
 (*****************************************************************************)
 (* Operator priorities.
@@ -2626,10 +2626,8 @@ and expr_atomic ~allow_class ~class_const env =
       L.back env.lb;
       let name = identifier env in
       fst name, Id name
-  | Tem | Tincr | Tdecr | Ttild | Tplus | Tminus as op ->
+  | Tem | Tincr | Tdecr | Ttild | Tplus | Tminus | Tamp as op ->
       expr_prefix_unary env pos op
-  | Tamp ->
-      expr_ref env pos
   | Tat ->
       with_priority env Tat expr
   | Tword ->
@@ -3105,6 +3103,7 @@ and expr_cast env start_pos =
 
 and unary_priority = function
   | Tplus | Tminus -> Tincr
+  | Tamp -> Tref
   | x -> x
 
 and expr_prefix_unary env start op =
@@ -3118,6 +3117,7 @@ and expr_prefix_unary env start op =
       | Ttild -> Utild
       | Tplus -> Uplus
       | Tminus -> Uminus
+      | Tamp -> Uref
       | _ -> assert false
     in
     Pos.btw start (fst e), Unop (op, e)
@@ -3493,16 +3493,6 @@ and expr_array_get env e1 =
         expect env Trb;
         let end_ = Pos.make env.file env.lb in
         Pos.btw (fst e1) end_, Array_get (e1, Some e2)
-  end
-
-(*****************************************************************************)
-(* Reference (&$v|&func()|&$obj->prop *)
-(*****************************************************************************)
-
-and expr_ref env start =
-  with_priority env Tref begin fun env ->
-    let e = expr env in
-    Pos.btw start (fst e), Ref e
   end
 
 (*****************************************************************************)

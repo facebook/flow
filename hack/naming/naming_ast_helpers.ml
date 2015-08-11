@@ -97,7 +97,7 @@ module GetLocals = struct
       nsenv, SMap.add x p m
     | _, List lv -> List.fold_left lv ~init:acc ~f:lvalue
     (* Ref forms a local inside a foreach *)
-    | (_, Ref (p, Lvar (_, x))) ->
+    | (_, Unop (Uref, (p, Lvar (_, x)))) ->
       let nsenv, m = acc in
       nsenv, SMap.add x p m
     | _ -> acc

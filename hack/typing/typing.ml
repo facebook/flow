@@ -1780,6 +1780,9 @@ and assign p env e1 ty2 =
   | _, This ->
      Errors.this_lvalue p;
      env, (Reason.Rwitness p, Tany)
+  | _, Unop (Ast.Uref, e1') ->
+    (* references can be "lvalues" in foreach bindings *)
+    assign p env e1' ty2
   | _ ->
       assign_simple p env e1 ty2
 
@@ -3264,6 +3267,9 @@ and unop p env uop ty =
   | Ast.Uminus ->
       (* math operators work with int or floats, so we call sub_type *)
       let env = Type.sub_type p Reason.URnone env (Reason.Rarith p, Tprim Tnum) ty in
+      env, ty
+  | Ast.Uref ->
+      (* We basically just ignore references *)
       env, ty
 
 and binop in_cond p env bop p1 ty1 p2 ty2 =

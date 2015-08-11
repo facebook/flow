@@ -458,8 +458,9 @@ and emit_expr env (pos, expr_ as expr) =
     let env = emit_Int env "0" in
     let env = emit_expr env e in
     emit_binop env (Ast.Minus)
+  | Unop (Ast.Uref, _) -> unimpl "references"
   (* all the rest are pre/post inc/dec *)
-  | Unop (uop, e) ->
+  | Unop ((Ast.Uincr | Ast.Udecr | Ast.Upincr | Ast.Updecr) as uop, e) ->
     let env, lval = emit_lval env e in
     emit_IncDec env lval (fmt_inc_dec_unop uop)
 

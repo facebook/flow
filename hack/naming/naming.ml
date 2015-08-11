@@ -2059,7 +2059,6 @@ and expr_ env = function
       N.Any
   | Import _ ->
       N.Any
-  | Ref (p, e_) -> expr_ env e_
 
 and expr_lambda env f =
   let h = Option.map f.f_ret (hint ~allow_retonly:true env) in
