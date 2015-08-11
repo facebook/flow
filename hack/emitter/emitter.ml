@@ -60,7 +60,7 @@ let fmt_visibility vis =
   match vis with
   | Public -> "public"
   | Private -> "private"
-  | Protected  -> "protected"
+  | Protected -> "protected"
 
 let fmt_fun_tags env m =
   (match m.m_fun_kind with
@@ -71,9 +71,33 @@ let fmt_fun_tags env m =
   (if env.function_props.is_pair_generator then
       " isPairGenerator" else "")
 
-let fmt_user_attributes attrs =
-  String.concat " "
-    (List.sort compare (List.map ~f:(fun x -> snd (x.ua_name)) attrs))
+let fmt_user_attribute attr =
+  let array =
+    Pos.none, Array (List.map ~f:(fun e -> AFvalue e) attr.ua_params) in
+  let value = match Emitter_lit.fmt_lit array with
+    | None -> bug "user attribute value not a literal"
+    | Some e -> e in
+  quote_str (snd attr.ua_name) ^ "(" ^ value ^ ")"
+
+let fmt_user_attributes attrs = List.map ~f:fmt_user_attribute attrs
+
+let is_internal_attribute attr = str_starts_with (snd attr.ua_name) "__"
+
+(* Do whatever special processing for any __ user attrs;
+ * this is mostly just failing on ones we don't expect, but
+ * will eventually involve responding to ones that require codegen
+ * action (like __Memoize) *)
+let handle_func_attrs env m =
+  List.fold_left m.m_user_attributes ~init:env ~f:begin fun env attr->
+    if not (is_internal_attribute attr) then env else
+    let name = snd attr.ua_name in
+    if name = Naming_special_names.UserAttributes.uaOverride ||
+       name = Naming_special_names.UserAttributes.uaConsistentConstruct ||
+       name = Naming_special_names.UserAttributes.uaUnsafeConstruct ||
+       name = Naming_special_names.UserAttributes.uaDeprecated
+    then env
+    else unimpl ("function user attribute: " ^ name)
+  end
 
 (* Emit a method or a function. m, the method, might actually just be
  * a dummy that was built from a function. We need tparams (which will be
@@ -83,10 +107,9 @@ let emit_method_or_func env ~is_method ~is_static ~tparams m name =
   let tparams = tparams @ m.m_tparams in
   let env = start_new_function env in
 
-  if m.m_user_attributes <> [] then
-    unimpl ("function user attributes: " ^
-               fmt_user_attributes m.m_user_attributes);
   if m.m_variadic != FVnonVariadic then unimpl "variadic functions";
+
+  let env = handle_func_attrs env m in
 
   (* We actually emit the body first, but save the output, so we can
    * gather data on what occurs in the function. *)
@@ -99,7 +122,8 @@ let emit_method_or_func env ~is_method ~is_static ~tparams m name =
                 bool_option "final" m.m_final @
                 bool_option "static" is_static @
                 bool_option (fmt_visibility m.m_visibility) is_method @
-                ["mayusevv"] in
+                ["mayusevv"] @
+                fmt_user_attributes m.m_user_attributes in
   let post = fmt_params ~tparams m.m_params ^ fmt_fun_tags env m in
   let tag = if is_method then ".method" else ".function" in
 
@@ -266,6 +290,19 @@ let class_kind_options  = function
   | Ast.Ctrait -> ["final"; "trait"]
   | Ast.Cenum -> unimpl "first class enums"
 
+(* do any handling of user attributes we need
+ * (just failing on ones we don't recognize now) *)
+let handle_class_attrs env cls =
+  List.fold_left cls.c_user_attributes ~init:env ~f:begin fun env attr->
+    if not (is_internal_attribute attr) then env else
+      let name = snd attr.ua_name in
+      if name = Naming_special_names.UserAttributes.uaConsistentConstruct ||
+         name = Naming_special_names.UserAttributes.uaUnsafeConstruct ||
+         name = Naming_special_names.UserAttributes.uaDeprecated
+      then env
+      else unimpl ("function user attribute: " ^ name)
+  end
+
 let emit_class nenv env (_, x) =
   let cls = Naming_heap.ClassHeap.find_unsafe x in
   let cls = Naming.class_meth_bodies nenv cls in
@@ -275,12 +312,12 @@ let emit_class nenv env (_, x) =
   if cls.c_is_xhp then unimpl "xhp";
   if cls.c_xhp_attr_uses <> [] then unimpl "xhp attr uses";
   if cls.c_typeconsts <> [] then unimpl "type constants";
-  if cls.c_user_attributes <> [] then
-    unimpl ("class user attributes: " ^
-               fmt_user_attributes cls.c_user_attributes);
+
+  let env = handle_class_attrs env cls in
 
   let options = bool_option "final" cls.c_final @
-                class_kind_options cls.c_kind in
+                class_kind_options cls.c_kind @
+                fmt_user_attributes cls.c_user_attributes in
 
   (* The "extends" list of an interface is "implements" to hhvm *)
   let implements, extends = match cls.c_kind with
