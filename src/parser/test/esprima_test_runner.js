@@ -76,7 +76,7 @@ function handleSpecialObjectCompare(esprima, flow, env) {
 
   /** TYPE ANNOTATION COMPATIBILITY **/
   if (esprima.hasOwnProperty("typeAnnotation") &&
-      typeof(esprima.typeAnnotation) == "undefined") {
+      typeof esprima.typeAnnotation == "undefined") {
     esprima.typeAnnotation = null;
   }
 
