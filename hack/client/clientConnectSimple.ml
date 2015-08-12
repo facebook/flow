@@ -30,7 +30,14 @@ let wait_on_server_restart ic =
 
 let establish_connection root =
   let sock_name = Socket.get_path (GlobalConfig.socket_file root) in
-  let sockaddr = Unix.ADDR_UNIX sock_name in
+  let sockaddr =
+    if Sys.win32 then
+      let ic = open_in_bin sock_name in
+      let port = input_binary_int ic in
+      close_in ic;
+      Unix.(ADDR_INET (inet_addr_loopback, port))
+    else
+      Unix.ADDR_UNIX sock_name in
   Result.Ok (Unix.open_connection sockaddr)
 
 let get_cstate (ic, oc) =

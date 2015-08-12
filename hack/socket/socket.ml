@@ -14,10 +14,22 @@ let unix_socket sock_name =
     Sys_utils.with_umask 0o111 begin fun () ->
       Tmp.mkdir (Filename.dirname sock_name);
       if Sys.file_exists sock_name then Sys.remove sock_name;
-      let sock = Unix.socket Unix.PF_UNIX Unix.SOCK_STREAM 0 in
+      let domain, addr =
+        if Sys.win32 then
+          Unix.(PF_INET, Unix.ADDR_INET (inet_addr_loopback, 0))
+        else
+          Unix.(PF_UNIX, Unix.ADDR_UNIX sock_name) in
+      let sock = Unix.socket domain Unix.SOCK_STREAM 0 in
       let _ = Unix.setsockopt sock Unix.SO_REUSEADDR true in
-      let _ = Unix.bind sock (Unix.ADDR_UNIX sock_name) in
+      let _ = Unix.bind sock addr in
       let _ = Unix.listen sock 10 in
+      let () =
+        match Unix.getsockname sock with
+        | Unix.ADDR_UNIX _ -> ()
+        | Unix.ADDR_INET (_, port) ->
+            let oc = open_out_bin sock_name in
+            output_binary_int oc port;
+            close_out oc in
       sock
     end
   with Unix.Unix_error (err, _, _) ->
@@ -59,7 +71,7 @@ let get_path path =
         else digest in
       prefix ^ "." ^ digest_part ^ "." ^ suffix
     end else root_part in
-  Printf.sprintf "%s%s%s" dir root_part extension
+  Filename.concat dir (Printf.sprintf "%s%s" root_part extension)
 
 let init_unix_socket www_root_path =
   unix_socket (get_path www_root_path)
