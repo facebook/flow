@@ -364,4 +364,25 @@ let with_context ~enter ~exit ~do_ =
   exit ();
   result
 
-let nonempty_ws_regexp = Str.regexp "[ \n\t\r\012]+"
+(* Squash the whitespace in a string down the way that xhp expects it.
+ * In particular, replace all whitespace with spaces and replace all
+ * strings of multiple spaces with a single space.
+ * Tragically, this is a one line thing with regexps but we don't have
+ * regexps in JS land. *)
+let squash_whitespace s =
+  let len = String.length s in
+  let buf = Bytes.create len in
+  let crush_ws = function
+    | ' ' | '\012' (* seriously no \v?? *) | '\r' | '\n' | '\t' -> ' '
+    | c -> c in
+
+  let rec copy ~in_ws s_idx buf_idx =
+    if s_idx = len then buf_idx else
+      let c = crush_ws s.[s_idx] in
+      let next_is_ws = c = ' ' in
+      let next_buf_idx = if in_ws && next_is_ws then buf_idx else
+          (Bytes.set buf buf_idx c; buf_idx+1) in
+      copy ~in_ws:next_is_ws (s_idx+1) next_buf_idx
+  in
+  let buf_len = copy ~in_ws:false 0 0 in
+  Bytes.sub_string buf 0 buf_len
