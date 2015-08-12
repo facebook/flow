@@ -264,24 +264,25 @@ let print_errorl_json oc el =
   flush oc
 
 (* adapted from Errors.to_string to omit error codes *)
-let to_string (error : error) : string =
-  let level, msgl, trace_reasons = error in
-  let msgl = append_trace_reasons msgl trace_reasons in
-  let buf = Buffer.create 50 in
-  (match msgl with
-  | [] -> assert false
-  | message1 :: rest_of_error ->
-      let loc1, msg1 = to_pp message1 in
-      Buffer.add_string buf begin
-        Printf.sprintf "%s\n%s\n" (Reason_js.string_of_loc loc1) msg1
-      end;
-      List.iter begin fun message ->
-        let loc, w = to_pp message in
-        let msg = Printf.sprintf "%s\n%s\n" (Reason_js.string_of_loc loc) w
-        in Buffer.add_string buf msg
-      end rest_of_error
-  );
-  Buffer.contents buf
+let to_string : error -> string =
+  let endline s = if s = "" then "" else s ^ "\n" in
+  let to_pp_string message =
+    let loc, msg = to_pp message in
+    Printf.sprintf "%s%s" (endline (Reason_js.string_of_loc loc)) (endline msg)
+  in
+  fun error ->
+    let level, msgl, trace_reasons = error in
+    let msgl = append_trace_reasons msgl trace_reasons in
+    let buf = Buffer.create 50 in
+    (match msgl with
+    | [] -> assert false
+    | message1 :: rest_of_error ->
+        Buffer.add_string buf (to_pp_string message1);
+        List.iter begin fun message ->
+          Buffer.add_string buf (to_pp_string message)
+        end rest_of_error
+    );
+    Buffer.contents buf
 
 let print_errorl use_json el oc =
   if use_json then
