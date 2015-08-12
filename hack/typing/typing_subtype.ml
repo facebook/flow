@@ -106,10 +106,12 @@ and subtype_tparams env c_name variancel super_tyl children_tyl =
 
 and invariance_suggestion c_name =
   let open Naming_special_names.Collections in
-  if c_name = cVector || c_name = cImmVector then
+  if c_name = cVector then
     "\nDid you mean ConstVector instead?"
-  else if c_name = cMap || c_name = cImmMap then
+  else if c_name = cMap then
     "\nDid you mean ConstMap instead?"
+  else if c_name = cSet then
+    "\nDid you mean ConstSet instead?"
   else ""
 
 and subtype_tparam env c_name variance (r_super, _ as super) child =
@@ -126,9 +128,13 @@ and subtype_tparam env c_name variance (r_super, _ as super) child =
       Errors.try_
         (fun () -> fst (Unify.unify env super child))
         (fun err ->
-         let pos = Reason.to_pos r_super in
-         let suggestion = invariance_suggestion c_name in
-         Errors.explain_invariance pos c_name suggestion err; env)
+          let suggestion =
+            let s = invariance_suggestion c_name in
+            let try_fun = (fun () ->
+              subtype_tparam env c_name Ast.Covariant super child) in
+            if not (s = "") && Errors.has_no_errors try_fun then s else "" in
+          let pos = Reason.to_pos r_super in
+          Errors.explain_invariance pos c_name suggestion err; env)
 
 (* Distinction b/w sub_type and sub_type_with_uenv similar to unify and
  * unify_with_uenv, see comment there. *)
