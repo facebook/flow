@@ -3582,7 +3582,40 @@ and xhp_attribute_string env start abs_start =
   | _ ->
       xhp_attribute_string env start abs_start
 
+
 and xhp_body pos name env =
+  (* First grab any literal text that appears before the next
+   * bit of markup *)
+  let start = Pos.make env.file env.lb in
+  let abs_start = env.lb.Lexing.lex_curr_pos in
+  let text = xhp_text env start abs_start in
+  (* Now handle any markup *)
+  text @ xhp_body_inner pos name env
+
+(* Grab literal text that appears inside of xhp. *)
+and xhp_text env start abs_start =
+  match L.xhptoken env.file env.lb with
+  (* If we have hit something that is meaningful,
+   * we have to stop collecting literal text and go back
+   * to xhp_body. Grab any text, clean it up, and return. *)
+  | Tlcb | Tlt | Topen_xhp_comment | Teof ->
+    L.back env.lb;
+
+    let len = env.lb.Lexing.lex_curr_pos - abs_start in
+    let pos = Pos.btw start (Pos.make env.file env.lb) in
+
+    let content = String.sub env.lb.Lexing.lex_buffer abs_start len in
+    (* need to squash whitespace down to a single space *)
+    let squished = Str.global_replace Utils.nonempty_ws_regexp " " content in
+    (* if it is empty or all whitespace just ignore it *)
+    if squished = "" || squished = " " then [] else
+      [pos, String (pos, squished)]
+
+  | _ -> xhp_text env start abs_start
+
+(* parses an xhp body where we know that the next token is not
+ * just more literal text *)
+and xhp_body_inner pos name env =
   match L.xhptoken env.file env.lb with
   | Tlcb when env.mode = FileInfo.Mdecl ->
       ignore_body env;
@@ -3597,10 +3630,8 @@ and xhp_body pos name env =
   | Tlt ->
       if is_xhp env
       then
-        (match xhp env with
-        | (_, Xml (_, _, _)) as xml ->
-            xml :: xhp_body pos name env
-        | _ -> xhp_body pos name env)
+        let xml = xhp env in
+        xml :: xhp_body pos name env
       else
         (match L.xhptoken env.file env.lb with
         | Tslash ->
@@ -3615,17 +3646,25 @@ and xhp_body pos name env =
                 error_expect env name;
                 []
               end
-            else xhp_body pos name env
+            else begin
+              error_expect env "closing tag name";
+              xhp_body pos name env
+            end
         | _ ->
+            error_at env pos "Stray < in xhp";
             L.back env.lb;
             xhp_body pos name env
         )
   | Teof ->
       error_at env pos "Xhp tag not closed";
       []
-  | Tword ->
+  (* The lexer returns open comments so that we can notice them and
+   * drop them from our text fields. Parse the comment and continue. *)
+  | Topen_xhp_comment ->
+      xhp_comment env.file env.lb;
       xhp_body pos name env
-  | _ -> xhp_body pos name env
+  (* xhp_body_inner only gets called when one of the above was seen *)
+  | _ -> assert false
 
 (*****************************************************************************)
 (* Typedefs *)

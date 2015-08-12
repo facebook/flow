@@ -363,3 +363,5 @@ let with_context ~enter ~exit ~do_ =
     raise e in
   exit ();
   result
+
+let nonempty_ws_regexp = Str.regexp "[ \n\t\r\012]+"

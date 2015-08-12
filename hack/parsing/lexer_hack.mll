@@ -411,7 +411,9 @@ and xhptoken file = parse
   | '/'                { Tslash      }
   | '\"'               { Tdquote     }
   | word               { Tword       }
-  | "<!--"             { xhp_comment file lexbuf; xhptoken file lexbuf }
+  (* Signal when we've hit a comment so that literal text regions
+   * get broken up by them. *)
+  | "<!--"             { Topen_xhp_comment }
   | _                  { xhptoken file lexbuf }
 
 and xhpattr file = parse
@@ -468,7 +470,7 @@ and fixme_state0 file = parse
                        }
   | ws+                { fixme_state0 file lexbuf
                        }
-  | '\n'               { Lexing.new_line lexbuf;                        
+  | '\n'               { Lexing.new_line lexbuf;
                          fixme_state0 file lexbuf
                        }
   | '['                { fixme_state1 file lexbuf }
