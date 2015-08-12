@@ -273,7 +273,10 @@ let recheck genv old_env updates =
  * rebase, and we don't log the recheck_end event until the update list
  * is no longer getting populated. *)
 let rec recheck_loop i rechecked_count genv env =
-  let raw_updates = DfindLib.get_changes (unsafe_opt genv.dfind) in
+  let raw_updates =
+    match genv.dfind with
+    | None -> SSet.empty
+    | Some dfind -> DfindLib.get_changes dfind in
   if SSet.is_empty raw_updates then
     i, rechecked_count, env
   else

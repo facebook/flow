@@ -123,6 +123,8 @@ let with_umask umask f =
     ~enter:(fun () -> old_umask := Unix.umask umask)
     ~exit:(fun () -> Unix.umask !old_umask)
     ~do_:f
+let with_umask umask f =
+  if Sys.win32 then f () else with_umask umask f
 
 let with_timeout timeout ~on_timeout ~do_ =
   let old_handler = ref Sys.Signal_default in
