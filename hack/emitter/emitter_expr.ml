@@ -363,6 +363,17 @@ and emit_call env ef args uargs =
 and emit_flavored_expr env (pos, expr_ as expr) =
   match expr_ with
   | Call (Cnormal, ef, args, uargs) -> emit_call env ef args uargs
+  | Fun_id s ->
+      emit_call env (pos, Id (pos, "\\fun")) [fst s, String s] []
+  | Method_id (e, s) ->
+      emit_call env (pos, Id (pos, "\\inst_meth"))
+        [e; fst s, String s] []
+  | Smethod_id (s1, s2) ->
+      emit_call env (pos, Id (pos, "\\class_meth"))
+        [fst s1, String s1; fst s2, String s2] []
+  | Method_caller (s1, s2) ->
+      emit_call env (pos, Id (pos, "\\meth_caller"))
+        [fst s1, String s1; fst s2, String s2] []
   | Call (Cuser_func, _, _, _) -> unimpl "call_user_func"
 
   | Special_func f ->
@@ -374,7 +385,7 @@ and emit_flavored_expr env (pos, expr_ as expr) =
     emit_call env (pos, Id (pos, f)) args []
 
   (* this is just XHP Obj_get. it is in emit_flavored_expr because it
-   * desguars to function calls *)
+   * desugars to function calls *)
   | Obj_get (e, prop, nf) when is_xhp_prop prop ->
     let desugared = Emitter_xhp.convert_obj_get pos (e, prop, nf) in
     emit_flavored_expr env desugared
@@ -389,6 +400,7 @@ and emit_expr env (pos, expr_ as expr) =
   match expr_ with
   (* Calls produce flavor R, so emit it and then unbox *)
   | Call (_, _, _, _)
+  | Fun_id _ | Method_id _ | Method_caller _ | Smethod_id _
   | Special_func _ ->
     let env, flavor = emit_flavored_expr env expr in
     (* Some builtin functions actually produce C, so we only unbox
@@ -655,9 +667,5 @@ and emit_expr env (pos, expr_ as expr) =
     emit_expr env desugared
 
   | Id _ -> unimpl "Id"
-  | Fun_id _ -> unimpl "Fun_id"
-  | Method_id _ -> unimpl "Method_id"
-  | Method_caller _ -> unimpl "Method_caller"
-  | Smethod_id _ -> unimpl "Smethod_id"
   | Efun _ -> unimpl "Efun"
   | Assert _ -> unimpl "Assert"
