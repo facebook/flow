@@ -344,6 +344,96 @@ and bind_param env (_, ty1) param =
   let env = Type.sub_type (fst param.param_id) Reason.URhint env ty1 ty2 in
   Env.set_local env (snd param.param_id) ty1
 
+and check_memoizable env param (pname, ty) =
+  let env, ty = Env.expand_type env ty in
+  let p, _ = param.param_id in
+  match ty with
+  | _, Tprim (Tarraykey | Tbool | Tint | Tfloat | Tstring | Tnum)
+  | _, Tmixed
+  | _, Tany ->
+    ()
+  | _, Tprim (Tvoid | Tresource | Tnoreturn) ->
+    let ty_str = Typing_print.error (snd ty) in
+    let msgl = Reason.to_string ("This is "^ty_str) (fst ty) in
+    Errors.invalid_memoized_param p msgl
+  | _, Toption ty ->
+    check_memoizable env param (pname, ty)
+  | _, Tshape (_, fdm) ->
+    ShapeMap.iter begin fun name _ ->
+      match ShapeMap.get name fdm with
+        | Some ty -> check_memoizable env param (pname, ty)
+        | None ->
+            let ty_str = Typing_print.error (snd ty) in
+            let msgl = Reason.to_string ("This is "^ty_str) (fst ty) in
+            Errors.invalid_memoized_param p msgl;
+    end fdm
+  | _, Ttuple tyl ->
+    List.iter tyl begin fun ty ->
+      check_memoizable env param (pname, ty)
+    end
+  | _, Tabstract (AKenum _, _) ->
+    ()
+  | _, Tabstract (AKnewtype (_, _), _) ->
+    let env, t', _ =
+      let ety_env = Phase.env_with_self env in
+      Typing_tdef.force_expand_typedef ~ety_env env ty in
+    check_memoizable env param (pname, t')
+  (* Just accept all generic types for now. Stricter checks to come later. *)
+  | _, Tabstract (AKgeneric _, _) ->
+    ()
+  (* For parameter type 'this::TID' defined by 'type const TID as Bar' checks
+   * Bar recursively.
+   *)
+  | _, Tabstract (AKdependent _, Some ty) ->
+    check_memoizable env param (pname, ty)
+  (* Allow unconstrined dependent type `abstract type const TID` just as we
+   * allow unconstrained generics. *)
+  | _, Tabstract (AKdependent _, None) ->
+    ()
+  (* Handling Tunresolved case here for completeness, even though it
+   * shouldn't be possible to have an unresolved type when checking
+   * the method declaration. No corresponding test case for this.
+   *)
+  | _, Tunresolved tyl ->
+    List.iter tyl begin fun ty ->
+      check_memoizable env param (pname, ty)
+    end
+  (* Allow untyped arrays. *)
+  | _, Tarray (None, None) ->
+      ()
+  | _, Tarray (Some ty, _)
+  | _, Tarray (_, Some ty) ->
+      check_memoizable env param (pname, ty)
+  | _, Tclass (_, _) ->
+    let type_param = Env.fresh_type() in
+    let container_type =
+      Reason.none,
+      Tclass ((Pos.none, SN.Collections.cContainer), [type_param]) in
+    let env, is_container =
+      Errors.try_
+        (fun () ->
+          SubType.sub_type env container_type ty, true)
+        (fun _ -> env, false) in
+    if is_container then
+      check_memoizable env param (pname, type_param)
+    else
+      let r, _ = ty in
+      let memoizable_type =
+        r, Tclass ((Pos.none, SN.Classes.cIMemoizeParam), []) in
+      if SubType.is_sub_type env memoizable_type ty
+      then ()
+      else
+        let ty_str = Typing_print.error (snd ty) in
+        let msgl = Reason.to_string ("This is "^ty_str) (fst ty) in
+        Errors.invalid_memoized_param p msgl;
+  | _, Tfun _
+  | _, Tvar _
+  | _, Tanon (_, _)
+  | _, Tobject ->
+    let ty_str = Typing_print.error (snd ty) in
+    let msgl = Reason.to_string ("This is "^ty_str) (fst ty) in
+    Errors.invalid_memoized_param p msgl
+
 (*****************************************************************************)
 (* Now we are actually checking stuff! *)
 (*****************************************************************************)
@@ -3958,6 +4048,8 @@ and method_def env m =
   if Env.is_strict env then begin
     List.iter2_exn ~f:(check_param env) m_params params;
   end;
+  if Attributes.mem SN.UserAttributes.uaMemoize m.m_user_attributes then
+    List.iter2_exn ~f:(check_memoizable env) m_params params;
   let env = List.fold2_exn ~f:bind_param ~init:env params m_params in
   let nb = Nast.assert_named_body m.m_body in
   let env = fun_ ~abstract:m.m_abstract env ret (fst m.m_name) nb m.m_fun_kind in

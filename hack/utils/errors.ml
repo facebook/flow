@@ -353,6 +353,7 @@ module Typing                               = struct
   let cyclic_enum_constraint                = 4146 (* DONT MODIFY!!!! *)
   let unpacking_disallowed                  = 4147 (* DONT MODIFY!!!! *)
   let invalid_classname                     = 4148 (* DONT MODIFY!!!! *)
+  let invalid_memoized_param                = 4149 (* DONT MODIFY!!!! *)
   (* EXTEND HERE WITH NEW VALUES IF NEEDED *)
 end
 
@@ -1664,6 +1665,13 @@ let missing_assign pos =
 let private_override pos class_id id =
   add Typing.private_override pos ((Utils.strip_ns class_id)^"::"^id
           ^": combining private and override is nonsensical")
+
+let invalid_memoized_param pos ty_reason_msg =
+  add_list Typing.invalid_memoized_param (
+    ty_reason_msg @ [pos,
+      "Parameters to memoized function must be null, bool, int, float, string, \
+      an object deriving IMemoizeParam, or a Container thereof. See also \
+      http://docs.hhvm.com/manual/en/hack.attributes.memoize.php"])
 
 let nullsafe_not_needed p nonnull_witness =
   add_list Typing.nullsafe_not_needed (

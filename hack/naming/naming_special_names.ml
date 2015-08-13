@@ -41,6 +41,7 @@ module Classes = struct
 
   let cStringish = "\\Stringish"
   let cXHPChild = "\\XHPChild"
+  let cIMemoizeParam = "\\IMemoizeParam"
   let cClassname = "\\classname"
 end
 

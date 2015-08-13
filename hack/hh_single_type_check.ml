@@ -142,7 +142,10 @@ let builtins = "<?hh // decl\n"^
   "function is_string(mixed $x): bool {}\n"^
   "function is_null(mixed $x): bool {}\n"^
   "function is_array(mixed $x): bool {}\n"^
-  "function is_resource(mixed $x): bool {}\n"
+  "function is_resource(mixed $x): bool {}\n"^
+  "interface IMemoizeParam {\n"^
+  "  public function getInstanceKey(): string;\n"^
+  "}\n"
 
 (*****************************************************************************)
 (* Helpers *)

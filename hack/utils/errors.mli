@@ -203,6 +203,7 @@ val should_be_override : Pos.t -> string -> string -> unit
 val override_per_trait : Pos.t * string -> string -> Pos.t -> unit
 val missing_assign : Pos.t -> unit
 val private_override : Pos.t -> string -> string -> unit
+val invalid_memoized_param : Pos.t -> (Pos.t * string) list -> unit
 val no_construct_parent : Pos.t -> unit
 val constructor_required : Pos.t * string -> Utils.SSet.t -> unit
 val not_initialized : Pos.t * string -> Utils.SSet.t -> unit
