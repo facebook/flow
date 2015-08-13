@@ -79,7 +79,8 @@ class type ['a] nast_visitor_type = object
   method on_unop : 'a -> Ast.uop -> expr -> 'a
   method on_binop : 'a -> Ast.bop -> expr -> expr -> 'a
   method on_eif : 'a -> expr -> expr option -> expr -> 'a
-  method on_instanceOf : 'a -> expr -> expr -> 'a
+  method on_instanceOf : 'a -> expr -> class_id -> 'a
+  method on_class_id : 'a -> class_id -> 'a
   method on_new : 'a -> class_id -> expr list -> expr list -> 'a
   method on_efun : 'a -> fun_ -> id list -> 'a
   method on_xml : 'a -> sid -> (pstring * expr) list -> expr list -> 'a
@@ -281,8 +282,9 @@ class virtual ['a] nast_visitor: ['a] nast_visitor_type = object(this)
     in
     acc
 
-  method on_class_get acc _ _ = acc
-  method on_class_const acc _ _ = acc
+  method on_class_get acc cid _ = this#on_class_id acc cid
+
+  method on_class_const acc cid _ = this#on_class_id acc cid
 
   method on_call acc _ e el uel =
     let acc = this#on_expr acc e in
@@ -340,10 +342,15 @@ class virtual ['a] nast_visitor: ['a] nast_visitor_type = object(this)
 
   method on_instanceOf acc e1 e2 =
     let acc = this#on_expr acc e1 in
-    let acc = this#on_expr acc e2 in
+    let acc = this#on_class_id acc e2 in
     acc
 
-  method on_new acc _ el uel =
+  method on_class_id acc = function
+    | CIexpr e -> this#on_expr acc e
+    | _ -> acc
+
+  method on_new acc cid el uel =
+    let acc = this#on_class_id acc cid in
     let acc = List.fold_left this#on_expr acc el in
     let acc = List.fold_left this#on_expr acc uel in
     acc

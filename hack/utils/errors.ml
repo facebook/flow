@@ -167,6 +167,7 @@ module Naming                               = struct
   let unexpected_type_arguments             = 2064 (* DONT MODIFY!!!! *)
   let too_many_type_arguments               = 2065 (* DONT MODIFY!!!! *)
   let classname_param                       = 2066 (* DONT MODIFY!!!! *)
+  let invalid_instanceof                    = 2067 (* DONT MODIFY!!!! *)
 
   (* EXTEND HERE WITH NEW VALUES IF NEEDED *)
 end
@@ -543,6 +544,12 @@ let classname_param pos =
   add Naming.classname_param pos
     ("Missing type parameter to classname; classname is entirely"
      ^" meaningless without one")
+
+let invalid_instanceof pos =
+  add Naming.invalid_instanceof pos
+    "This instanceof has an invalid right operand. Only class identifiers, \
+    local variables, accesses of objects / classes / arrays, and function / \
+    method calls are allowed."
 
 let tparam_with_tparam pos x =
   add Naming.tparam_with_tparam pos (

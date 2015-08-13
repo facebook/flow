@@ -928,7 +928,7 @@ and expr_ ~in_cond ~(valkind: [> `lvalue | `rvalue | `other ]) env (p, e) =
     let env, ty1 = expr env instance in
     let env, result, vis =
       obj_get_with_visibility ~is_method:true ~nullsafe:None env ty1
-                              (CIvar instance) meth (fun x -> x) in
+                              (CIexpr instance) meth (fun x -> x) in
     let has_lost_info = Env.FakeMembers.is_invalid env instance (snd meth) in
     if has_lost_info
     then
@@ -1190,7 +1190,7 @@ and expr_ ~in_cond ~(valkind: [> `lvalue | `rvalue | `other ]) env (p, e) =
         ) in
       let env, ty1 = expr env e1 in
       let env, result =
-        obj_get ~is_method:false ~nullsafe env ty1 (CIvar e1) m (fun x -> x) in
+        obj_get ~is_method:false ~nullsafe env ty1 (CIexpr e1) m (fun x -> x) in
       let has_lost_info = Env.FakeMembers.is_invalid env e1 (snd m) in
       if has_lost_info
       then
@@ -1237,9 +1237,10 @@ and expr_ ~in_cond ~(valkind: [> `lvalue | `rvalue | `other ]) env (p, e) =
   | Cast (ty, e) ->
       let env, _ = expr env e in
       Typing_hint.hint_locl env ty
-  | InstanceOf (e1, e2) ->
-    let env = instanceof_in_env p env e1 e2 in
-    env, (Reason.Rwitness p, Tprim Tbool)
+  | InstanceOf (e, cid) ->
+      let env, _ = expr env e in
+      let env, _class = instantiable_cid p env cid in
+      env, (Reason.Rwitness p, Tprim Tbool)
   | Efun (f, _idl) ->
       NastCheck.fun_ env f (Nast.assert_named_body f.f_body);
       let env, ft = fun_decl_in_env env f in
@@ -1328,7 +1329,7 @@ and class_const env p (cid, mid) =
   match const_ty with
     | r, Tabstract (AKgeneric (n, _), _) ->
       let () = match cid with
-        | CIstatic | CIvar _ -> ();
+        | CIstatic | CIexpr _ -> ();
         | _ -> Errors.abstract_const_usage p (Reason.to_pos r) n; ()
       in env, const_ty
     | _ ->
@@ -1449,7 +1450,7 @@ and special_func env p func =
 
 and requires_consistent_construct = function
   | CIstatic -> true
-  | CIvar _ -> true
+  | CIexpr _ -> true
   | CIparent -> false
   | CIself -> false
   | CI _ -> false
@@ -1478,7 +1479,7 @@ and new_object ~check_not_abstract p env c el uel =
       if not (snd class_.tc_construct) then
         (match c with
           | CIstatic -> Errors.new_inconsistent_construct p cname `static
-          | CIvar _ -> Errors.new_inconsistent_construct p cname `classname
+          | CIexpr _ -> Errors.new_inconsistent_construct p cname `classname
           | _ -> ());
       match c with
         | CIstatic ->
@@ -1497,7 +1498,7 @@ and new_object ~check_not_abstract p env c el uel =
             | None -> ());
           env, obj_ty
         | CI _ | CIself -> env, obj_ty
-        | CIvar _ ->
+        | CIexpr _ ->
           let c_ty = r_witness, snd c_ty in
           (* When constructing from a (classname) variable, the variable
            * dictates what the constructed object is going to be. This allows
@@ -1507,16 +1508,6 @@ and new_object ~check_not_abstract p env c el uel =
           let env = SubType.sub_type env obj_ty c_ty in
           env, c_ty
   )
-
-and instanceof_in_env p (env:Env.env) (e1:Nast.expr) (e2:Nast.expr) =
-  let env, _ = expr env e1 in
-  match TUtils.instanceof_naming e2 with
-    | Some cid ->
-      let env, _ = instantiable_cid p env cid in
-      env
-    | None ->
-      let env, _ = expr env e2 in
-      env
 
 (* FIXME: we need to separate our instantiability into two parts. Currently,
  * all this function is doing is checking if a given type is inhabited --
@@ -1533,7 +1524,7 @@ and instantiable_cid p env cid =
     | Some ((pos, name), class_, _) when
            class_.tc_kind = Ast.Ctrait || class_.tc_kind = Ast.Cenum ->
       (match cid with
-        | CI _ | CIvar _ ->
+        | CI _ | CIexpr _ ->
           Errors.uninstantiable_class pos class_.tc_pos name;
           env, None
         | CIstatic | CIparent | CIself -> env, class_id
@@ -2261,7 +2252,7 @@ and dispatch_call p env call_type (fpos, fun_expr as e) el uel =
         let env, fty = Env.expand_type env fty in
         let env, method_ = call p env fty el uel in
         env, method_, None) in
-      obj_get ~is_method ~nullsafe env ty1 (CIvar e1) m fn
+      obj_get ~is_method ~nullsafe env ty1 (CIexpr e1) m fn
   | Fun_id x
   | Id x ->
       Typing_hooks.dispatch_id_hook x env;
@@ -2950,9 +2941,9 @@ and static_class_id p env = function
         let env, params = lfold begin fun env _ ->
           TUtils.in_var env (Reason.Rnone, Tunresolved [])
         end env class_.tc_tparams in
-        env, (Reason.Rwitness p, Tclass (c, params))
+        env, (Reason.Rwitness (fst c), Tclass (c, params))
     )
-  | CIvar e ->
+  | CIexpr e ->
       let env, ty = expr env e in
       let env, ty = TUtils.fold_unresolved env ty in
       let _, ty = Env.expand_type env ty in
@@ -3034,7 +3025,7 @@ and is_visible env vis cid =
               "This member is private")
           | _ ->
             Some ("You cannot access this member", "This member is private"))
-      | Some (CIvar e) ->
+      | Some (CIexpr e) ->
           let env, ty = expr env e in
           let _, ty = Env.expand_type env ty in
           begin match TUtils.get_base_type ty with
@@ -3226,7 +3217,7 @@ and call_param todos env (name, x) ((pos, _ as e), arg_ty) =
    * it in this case.
    *)
   let dep_ty = match snd e with
-    | Lvar _ -> ExprDepTy.make env (CIvar e) arg_ty
+    | Lvar _ -> ExprDepTy.make env (CIexpr e) arg_ty
     | _ -> arg_ty in
   (* We solve for Tanon types after all the other params because we want to
    * typecheck the lambda bodies with as much type information as possible. For
@@ -3554,62 +3545,59 @@ and condition env tparamet =
       is_type env lv Tresource
   | _, Unop (Ast.Unot, e) ->
       condition env (not tparamet) e
-  | _, InstanceOf (ivar, e2) when tparamet && is_instance_var ivar ->
-      let env, (p, x) = get_instance_var env ivar in
+  | p, InstanceOf (ivar, cid) when tparamet && is_instance_var ivar ->
+      let env, (ivar_pos, x) = get_instance_var env ivar in
       let env, x_ty = Env.get_local env x in
       let env, x_ty = Env.expand_type env x_ty in (* We don't want to modify x *)
-      begin match TUtils.instanceof_naming e2 with
-        | None ->
-          let env, _ = expr env e2 in
-          Env.set_local env x (Reason.Rwitness p, Tobject)
-        | Some cid ->
-          let env, obj_ty = static_class_id (fst e2) env cid in
-          (match obj_ty with
-            | _, Tabstract (AKgeneric _, _) ->
-              Env.set_local env x obj_ty
-            | _, Tabstract (AKdependent (`this, []), Some (_, Tclass _)) ->
-              let obj_ty =
-                (* Technically instanceof static is not strong enough to prove
-                 * that a type is exactly the same as the late bound type.
-                 * For now we allow this lie to exist. To solve
-                 * this we either need to create a new type that means
-                 * subtype of static or provide a way of specifying exactly
-                 * the late bound type i.e. $x::class === static::class
-                 *)
-                if cid = CIstatic then
-                  ExprDepTy.make env CIstatic obj_ty
-                else
-                  obj_ty in
-              let env = Env.set_local env x obj_ty in
-              env
-            | _, Tclass ((_, cid as _c), _) ->
-              let class_ = Env.get_class env cid in
-              (match class_ with
-                | None -> Env.set_local env x (Reason.Rwitness p, Tobject)
-                | Some _class ->
-                  if SubType.is_sub_type env obj_ty x_ty
-                  then
-                    (* If the right side of the `instanceof` object is
-                     * a super type of what we already knew. In this case,
-                     * since we already have a more specialized object, we
-                     * don't touch the original object. Check out the unit
-                     * test srecko.php if this is unclear.
-                     *
-                     * Note that if x_ty is Tany, no amount of subtype
-                     * checking will be able to specify it
-                     * further. This is arguably desirable to maintain
-                     * the invariant that removing annotations gets rid
-                     * of typing errors in partial mode (See also
-                     * t3216948).  *)
-                    env
-                  else Env.set_local env x obj_ty
-              )
-            | _, (Tany | Tmixed | Tarray (_, _) | Toption _
-              | Tprim _ | Tvar _ | Tfun _ | Tabstract (_, _) | Ttuple _
-              | Tanon (_, _) | Tunresolved _ | Tobject
-              | Tshape _) -> Env.set_local env x (Reason.Rwitness p, Tobject)
+      (* XXX the position p here is not really correct... it's the position
+       * of the instanceof expression, not the class id. But we don't store
+       * position data for the latter. *)
+      let env, obj_ty = static_class_id p env cid in
+      (match obj_ty with
+        | _, Tabstract (AKgeneric _, _) ->
+          Env.set_local env x obj_ty
+        | _, Tabstract (AKdependent (`this, []), Some (_, Tclass _)) ->
+          let obj_ty =
+            (* Technically instanceof static is not strong enough to prove
+             * that a type is exactly the same as the late bound type.
+             * For now we allow this lie to exist. To solve
+             * this we either need to create a new type that means
+             * subtype of static or provide a way of specifying exactly
+             * the late bound type i.e. $x::class === static::class
+             *)
+            if cid = CIstatic then
+              ExprDepTy.make env CIstatic obj_ty
+            else
+              obj_ty in
+          let env = Env.set_local env x obj_ty in
+          env
+        | _, Tclass ((_, cid as _c), _) ->
+          let class_ = Env.get_class env cid in
+          (match class_ with
+            | None -> Env.set_local env x (Reason.Rwitness ivar_pos, Tobject)
+            | Some _class ->
+              if SubType.is_sub_type env obj_ty x_ty
+              then
+                (* If the right side of the `instanceof` object is
+                 * a super type of what we already knew. In this case,
+                 * since we already have a more specialized object, we
+                 * don't touch the original object. Check out the unit
+                 * test srecko.php if this is unclear.
+                 *
+                 * Note that if x_ty is Tany, no amount of subtype
+                 * checking will be able to specify it
+                 * further. This is arguably desirable to maintain
+                 * the invariant that removing annotations gets rid
+                 * of typing errors in partial mode (See also
+                 * t3216948).  *)
+                env
+              else Env.set_local env x obj_ty
           )
-      end
+        | _, (Tany | Tmixed | Tarray (_, _) | Toption _
+          | Tprim _ | Tvar _ | Tfun _ | Tabstract (_, _) | Ttuple _
+          | Tanon (_, _) | Tunresolved _ | Tobject
+          | Tshape _) -> Env.set_local env x (Reason.Rwitness ivar_pos, Tobject)
+      )
   | _, Binop ((Ast.Eqeq | Ast.EQeqeq), e, (_, Null))
   | _, Binop ((Ast.Eqeq | Ast.EQeqeq), (_, Null), e) ->
       let env, _ = expr env e in

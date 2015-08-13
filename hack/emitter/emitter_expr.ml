@@ -32,7 +32,7 @@ let resolve_class_id env = function
         ~default:(RCdynamic `self) ~f:(fun x -> RCstatic x)
   | CI (_, s) -> RCstatic (fmt_name s)
   | CIstatic -> RCdynamic `static
-  | CIvar e -> RCdynamic (`var e)
+  | CIexpr e -> RCdynamic (`var e)
 
 (* Emit a conditional branch based on an expression. jump_if indicates
  * whether to jump when the condition is true or false.
@@ -642,17 +642,13 @@ and emit_expr env (pos, expr_ as expr) =
   | Pair (e1, e2) ->
     emit_expr env (pos, ValCollection ("\\Pair", [e1; e2]))
 
-  | InstanceOf (e, cls) ->
+  | InstanceOf (e, cid) ->
     let env = emit_expr env e in
-    let cid = match Typing_utils.instanceof_naming cls with
-        | Some cid -> cid
-        | None -> CIvar cls (* this is a lie, but harmless *) in
-
     (match resolve_class_id env cid with
       | RCstatic class_name -> emit_InstanceOfD env class_name
       | RCdynamic dyid ->
         (* Annoyingly, the InstanceOf instruction doesn't want a classref
-         * but instead wants a string or an object. So if we have a CIvar,
+         * but instead wants a string or an object. So if we have a CIexpr,
          * emit it directly, to avoid doing AGet* immediately followed by
          * NameA.... *)
         let env = match dyid with

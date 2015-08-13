@@ -55,6 +55,7 @@ val this_hint_outside_class : Pos.t -> unit
 val this_type_forbidden : Pos.t -> unit
 val lowercase_this : Pos.t -> string -> unit
 val classname_param : Pos.t -> unit
+val invalid_instanceof : Pos.t -> unit
 val tparam_with_tparam : Pos.t -> string -> unit
 val shadowed_type_param : Pos.t -> Pos.t -> string -> unit
 val missing_typehint : Pos.t -> unit

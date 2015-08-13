@@ -272,7 +272,7 @@ and class_id =
   | CIparent
   | CIself
   | CIstatic
-  | CIvar of expr
+  | CIexpr of expr
   | CI of sid
 
 and expr = Pos.t * expr_
@@ -317,7 +317,7 @@ and expr_ =
   | Unop of Ast.uop * expr
   | Binop of Ast.bop * expr * expr
   | Eif of expr * expr option * expr
-  | InstanceOf of expr * expr
+  | InstanceOf of expr * class_id
   | New of class_id * expr list * expr list
   | Efun of fun_ * id list
   | Xml of sid * (pstring * expr) list * expr list
@@ -367,7 +367,7 @@ let class_id_to_str = function
   | CIparent -> SN.Classes.cParent
   | CIself -> SN.Classes.cSelf
   | CIstatic -> SN.Classes.cStatic
-  | CIvar (_, This) -> SN.SpecialIdents.this
-  | CIvar (_, Lvar (_, x)) -> "$"^string_of_int(x)
-  | CIvar _ -> assert false
+  | CIexpr (_, This) -> SN.SpecialIdents.this
+  | CIexpr (_, Lvar (_, x)) -> "$"^string_of_int(x)
+  | CIexpr _ -> assert false
   | CI (_, x) -> x

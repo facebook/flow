@@ -1993,24 +1993,30 @@ and expr_ env = function
       | px, n when n = SN.Classes.cParent ->
         if (fst env).current_cls = None then
           let () = Errors.parent_outside_class p in
-          (px, SN.Classes.cUnknown)
-        else (px, n)
+          N.CI (px, SN.Classes.cUnknown)
+        else N.CIparent
       | px, n when n = SN.Classes.cSelf ->
         if (fst env).current_cls = None then
           let () = Errors.self_outside_class p in
-          (px, SN.Classes.cUnknown)
-        else (px, n)
+          N.CI (px, SN.Classes.cUnknown)
+        else N.CIself
       | px, n when n = SN.Classes.cStatic ->
         if (fst env).current_cls = None then
           let () = Errors.static_outside_class p in
-          (px, SN.Classes.cUnknown)
-        else (px, n)
+          N.CI (px, SN.Classes.cUnknown)
+        else N.CIstatic
       | _ ->
         no_typedef env x;
-        (Env.class_name env x) in
-    N.InstanceOf (expr env e, (p, N.Id id))
-  | InstanceOf (e1, e2) ->
-      N.InstanceOf (expr env e1, expr env e2)
+        N.CI (Env.class_name env x)
+    in
+    N.InstanceOf (expr env e, id)
+  | InstanceOf (e1, (_,
+      (Lvar _ | Obj_get _ | Class_get _ | Class_const _
+      | Array_get _ | Call _) as e2)) ->
+    N.InstanceOf (expr env e1, N.CIexpr (expr env e2))
+  | InstanceOf (_e1, (p, _)) ->
+    Errors.invalid_instanceof p;
+    N.Any
   | New ((_, Id x), el, uel)
   | New ((_, Lvar x), el, uel) ->
     N.New (make_class_id env x, exprl env el, exprl env uel)
@@ -2105,8 +2111,8 @@ and make_class_id env (p, x as cid) =
         let () = Errors.static_outside_class p in
         N.CI (p, SN.Classes.cUnknown)
       else N.CIstatic
-    | x when x = SN.SpecialIdents.this -> N.CIvar (p, N.This)
-    | x when x.[0] = '$' -> N.CIvar (p, N.Lvar (Env.lvar env cid))
+    | x when x = SN.SpecialIdents.this -> N.CIexpr (p, N.This)
+    | x when x.[0] = '$' -> N.CIexpr (p, N.Lvar (Env.lvar env cid))
     | _ -> N.CI (Env.class_name env cid)
 
 and casel env l =
