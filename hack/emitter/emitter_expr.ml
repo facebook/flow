@@ -341,6 +341,10 @@ and emit_call env ef args uargs =
        if i = nargs-1 then env else emit_PopC env
     end ~init:env args in
     env, FC
+  | Id (_, idx) when idx = "\\array_key_exists" && List.length args = 2 ->
+    let env = List.fold_left ~f:emit_expr ~init:env args in
+    let env = emit_AKExists env in
+    env, FC
   | Id (_, idx) when idx = SN.FB.idx &&
       (List.length args = 2 || List.length args = 3) ->
     let env = List.fold_left ~f:emit_expr ~init:env args in
