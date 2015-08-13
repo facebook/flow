@@ -44,7 +44,7 @@ let get_cstate (ic, oc) =
   try
     Printf.fprintf oc "%s\n%!" Build_id.build_id_ohai;
     let cstate : ServerUtils.connection_state = Marshal.from_channel ic in
-    Result.Ok cstate
+    Result.Ok (ic, oc, cstate)
   with e ->
     Unix.shutdown_connection ic;
     close_in_noerr ic;
@@ -73,9 +73,10 @@ let connect_once root =
       ~on_timeout:(fun _ -> raise Exit)
       ~do_:begin fun () ->
         establish_connection root >>= fun (ic, oc) ->
-        get_cstate (ic, oc) >>= verify_cstate ic >>= fun () ->
-        Ok (ic, oc)
-      end
+        get_cstate (ic, oc)
+      end >>= fun (ic, oc, cstate) ->
+      verify_cstate ic cstate >>= fun () ->
+      Ok (ic, oc)
   with
   | Exit_status.Exit_with _  as e -> raise e
   | _ ->

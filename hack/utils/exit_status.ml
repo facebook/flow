@@ -21,6 +21,7 @@ type t =
   | Server_already_exists
   | Server_initializing
   | Type_error
+  | Build_id_mismatch
 
 exception Exit_with of t
 
@@ -38,6 +39,7 @@ let exit t =
     | Server_already_exists -> 77
     | Server_initializing -> 1
     | Type_error -> 2
+    | Build_id_mismatch -> 9
   in
   Pervasives.exit ec
 
@@ -54,3 +56,4 @@ let to_string = function
   | Server_already_exists -> "Server_already_exists"
   | Server_initializing -> "Server_initializing"
   | Type_error -> "Type_error"
+  | Build_id_mismatch -> "Build_id_mismatch"
