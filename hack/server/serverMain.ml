@@ -29,10 +29,10 @@ module MainInit : sig
     env
 end = struct
   let grab_init_lock root =
-    ignore(Lock.grab (GlobalConfig.init_file root))
+    ignore(Lock.grab (ServerFiles.init_file root))
 
   let release_init_lock root =
-    ignore(Lock.release (GlobalConfig.init_file root))
+    ignore(Lock.release (ServerFiles.init_file root))
 
   (* This code is only executed when the options --check is NOT present *)
   let go options init_fun =
@@ -293,7 +293,7 @@ let serve genv env socket =
   let root = ServerArgs.root genv.options in
   let env = ref env in
   while true do
-    let lock_file = GlobalConfig.lock_file root in
+    let lock_file = ServerFiles.lock_file root in
     if not (Lock.grab lock_file) then
       (Hh_logger.log "Lost lock; terminating.\n%!";
        HackEventLogger.lock_stolen lock_file;
@@ -421,7 +421,7 @@ let main options config =
    * someone C-c the client.
    *)
   Sys.set_signal Sys.sigpipe Sys.Signal_ignore;
-  PidLog.init (GlobalConfig.pids_file root);
+  PidLog.init (ServerFiles.pids_file root);
   PidLog.log ~reason:"main" (Unix.getpid());
   let watch_paths = root :: Program.get_watch_paths options in
   let genv = ServerEnvBuild.make_genv options config watch_paths in
@@ -436,7 +436,7 @@ let main options config =
   else
     (* Make sure to lock the lockfile before doing *anything*, especially
      * opening the socket. *)
-    if not (Lock.grab (GlobalConfig.lock_file root)) then begin
+    if not (Lock.grab (ServerFiles.lock_file root)) then begin
       Hh_logger.log "Error: another server is already running?\n";
       exit 1;
     end;
@@ -446,12 +446,12 @@ let main options config =
      * connections until init is done) so that the client can try to use the
      * socket and get blocked on it -- otherwise, trying to open a socket with
      * no server on the other end is an immediate error. *)
-    let socket = Socket.init_unix_socket (GlobalConfig.socket_file root) in
+    let socket = Socket.init_unix_socket (ServerFiles.socket_file root) in
     let env = MainInit.go options program_init in
     serve genv env socket
 
 let monitor_daemon options f =
-  let log_file = GlobalConfig.log_file (ServerArgs.root options) in
+  let log_file = ServerFiles.log_file (ServerArgs.root options) in
   let {Daemon.pid; _} = Daemon.fork begin fun (_ic, _oc) ->
     ignore @@ Unix.setsid ();
     let {Daemon.pid; _} = Daemon.fork ~log_file f in
