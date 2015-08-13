@@ -341,7 +341,8 @@ and emit_call env ef args uargs =
        if i = nargs-1 then env else emit_PopC env
     end ~init:env args in
     env, FC
-  | Id (_, idx) when idx = SN.FB.idx ->
+  | Id (_, idx) when idx = SN.FB.idx &&
+      (List.length args = 2 || List.length args = 3) ->
     let env = List.fold_left ~f:emit_expr ~init:env args in
     (* If there are two arguments, add Null as a third *)
     let env = if List.length args = 2 then emit_Null env else env in
