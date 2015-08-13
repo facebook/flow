@@ -3606,7 +3606,7 @@ and xhp_text env start abs_start =
 
     let content = String.sub env.lb.Lexing.lex_buffer abs_start len in
     (* need to squash whitespace down to a single space *)
-    let squished = Utils.squash_whitespace content in
+    let squished = Regexp_utils.squash_whitespace content in
     (* if it is empty or all whitespace just ignore it *)
     if squished = "" || squished = " " then [] else
       [pos, String (pos, squished)]
