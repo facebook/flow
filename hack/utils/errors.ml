@@ -41,7 +41,7 @@ let add_error error =
   then error_list := error :: !error_list
   else
     (* We have an error, but haven't handled it in any way *)
-    assert false
+    assert_false_log_backtrace ()
 
 let add code pos msg =
   if !is_hh_fixme pos code then () else

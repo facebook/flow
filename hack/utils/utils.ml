@@ -386,3 +386,13 @@ let squash_whitespace s =
   in
   let buf_len = copy ~in_ws:false 0 0 in
   Bytes.sub_string buf 0 buf_len
+
+(* We run with exception backtraces turned off for performance reasons. But for
+ * some kinds of catastrophic exceptions, which we never recover from (so the
+ * performance doesn't matter) we do want the backtrace. "assert false" is one
+ * of such conditions.
+ *)
+let assert_false_log_backtrace () =
+  Printf.eprintf "%s" (Printexc.raw_backtrace_to_string
+    (Printexc.get_callstack 100));
+  assert false
