@@ -44,7 +44,7 @@ let length t = t.pos_end.pos_cnum - t.pos_start.pos_cnum
 let string t =
   let line, start, end_ = info_pos t in
   Printf.sprintf "File %S, line %d, characters %d-%d:"
-    t.pos_file line start end_
+    (String.trim t.pos_file) line start end_
 
 let json pos =
     let line, start, end_ = info_pos pos in

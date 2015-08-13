@@ -111,6 +111,7 @@ begin library "hh-utils-common"
     "utils/errors.ml"
     "utils/lint.ml"
     "utils/config_file.ml"
+    "utils/tail.ml"
   ]
 end
 
@@ -151,6 +152,7 @@ begin library "hh-stubs"
     "stubs/prologMain.ml"
     "stubs/buildMain.ml"
     "stubs/prolog.ml"
+    "stubs/clientMessages.ml"
   ]
 end
 
@@ -423,14 +425,16 @@ begin program "hh_server"
 end
 
 begin library "hh-emitter"
-  requires += [ "hh-naming" ]
+  requires += [ "hh-naming" "hh-typing" ]
 
   files = [
     "emitter/emitter_core.ml"
     "emitter/emitter_consts.ml"
+    "emitter/emitter_xhp.ml"
     "emitter/emitter_expr.ml"
     "emitter/emitter_lit.ml"
     "emitter/emitter_stmt.ml"
+    "emitter/emitter_types.ml"
     "emitter/emitter.ml"
   ]
 end
