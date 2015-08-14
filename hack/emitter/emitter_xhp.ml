@@ -12,6 +12,7 @@ open Core
 open Utils
 module N = Nast
 module C = Emitter_core
+module XC = Emitter_consts.XHPConsts
 
 (* Implementation of XHP. We implement XHP by desugaring down to base
  * language features.
@@ -34,19 +35,40 @@ let convert_prop prop =
     | None -> p, N.Null
     | Some e -> e in
 
+  (* Build the type information that XHP wants:
+   * https://github.com/facebook/xhp-lib/blob/master/INTERNALS.md *)
+  let null = p, N.Null in
+  (* XXX: we can't emit TYPE_ENUM currently since we squashed it down into
+   * int/string/mixed during naming *)
+  let rec get_type hopt = match hopt with
+    | None -> XC.cTYPE_VAR, null
+    | Some (p, h) -> match h with
+        | N.Hoption h -> get_type (Some h)
+        | N.Hprim N.Tstring -> XC.cTYPE_STRING, null
+        | N.Hprim N.Tbool -> XC.cTYPE_BOOL, null
+        | N.Hprim N.Tint -> XC.cTYPE_INTEGER, null
+        | N.Harray _ | N.Htuple _ | N.Hshape _ -> XC.cTYPE_ARRAY, null
+        | N.Habstr (s, _) | N.Happly ((_, s), _) ->
+          XC.cTYPE_OBJECT, (p, N.String (p, C.fmt_name s))
+        | N.Hprim (N.Tvoid | N.Tresource | N.Tnum |
+                   N.Tarraykey | N.Tnoreturn as pr) ->
+          XC.cTYPE_OBJECT, (p, N.String (p, Emitter_types.fmt_prim pr))
+        | N.Hany | N.Hmixed | N.Hthis | N.Hfun _ | N.Haccess _ ->
+          XC.cTYPE_VAR, null
+        | N.Hprim N.Tfloat -> XC.cTYPE_FLOAT, null
+  in
+  let attr_type, type_name = get_type prop.N.cv_type in
   (* The elements of the array are:
    * <type, extra_type, default val, required>
    * type is an value from the XHPAttributeType class,
    * extra_type is a class name or something.
-   * XXX: For now we just totally punt on all of this and report
-   * that all the data is TYPE_VAR=6, which is "mixed", basically.
-   * We also report that nothing is required since the ast doesn't
-   * have the information... *)
+   * XXX: We report that none of the attrs are required since the
+   * nast doesn't have the information currently *)
   Some (
     (p, N.String (p, get_prop_name name)),
     (p, C.make_varray [
-      p, N.Int (p, "6");
-      p, N.Null;
+      p, N.Int (p, string_of_int attr_type);
+      type_name;
       default_val;
       p, N.Int (p, "0");
     ]))
