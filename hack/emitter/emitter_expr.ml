@@ -296,10 +296,12 @@ and emit_method_base env (_, expr_ as expr) =
   | This -> emit_This env
   | _ -> emit_expr env expr
 
-and emit_ctor_lhs env class_id nargs =
-  match class_id with
-  | CI (_, name) -> emit_FPushCtorD env nargs (fmt_name name)
-  | _ -> unimpl "unsupported constructor lhs"
+and emit_ctor_lhs env cid nargs =
+  match resolve_class_id env cid with
+  | RCstatic class_name -> emit_FPushCtorD env nargs class_name
+  | RCdynamic dyid ->
+    let env = emit_dynamic_class_id env dyid in
+    emit_FPushCtor env nargs
 
 (* emit code to push args and call a function after the thing being
  * called has already been pushed; doesn't do any stack adjustment
