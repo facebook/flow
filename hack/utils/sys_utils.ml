@@ -265,3 +265,14 @@ let mkdir_no_fail dir =
      * old sockets it finds, which may be owned by a different user. *)
     try Unix.mkdir dir 0o777 with Unix.Unix_error (Unix.EEXIST, _, _) -> ()
   end
+
+let unlink_no_fail fn =
+  try Unix.unlink fn with Unix.Unix_error (Unix.ENOENT, _, _) -> ()
+
+let splitext filename =
+  let root = Filename.chop_extension filename in
+  let root_length = String.length root in
+  (* -1 because the extension includes the period, e.g. ".foo" *)
+  let ext_length = String.length filename - root_length - 1 in
+  let ext = String.sub filename (root_length + 1) ext_length in
+  root, ext

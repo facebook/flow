@@ -147,7 +147,7 @@ let rec connect env retries tail_env =
 let connect env =
   let tail_env =
     Tail.open_env
-      (ServerFiles.log_file env.root)
+      (ServerFiles.log_link env.root)
       (matches_any_re re_list) in
   let res = connect env env.retries tail_env in
   Tail.close_env tail_env;

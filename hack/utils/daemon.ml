@@ -60,7 +60,6 @@ let fork ?log_file (f : ('a, 'b) channel_pair -> unit) :
         let fn = Option.value_map log_file ~default:"/dev/null" ~f:
           begin fun fn ->
             Sys_utils.mkdir_no_fail (Filename.dirname fn);
-            begin try Sys.rename fn (fn ^ ".old") with _ -> () end;
             fn
           end in
         let fd = Unix.openfile fn [Unix.O_WRONLY; Unix.O_CREAT] 0o666 in

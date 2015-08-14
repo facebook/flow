@@ -451,7 +451,9 @@ let main options config =
     serve genv env socket
 
 let monitor_daemon options f =
-  let log_file = ServerFiles.log_file (ServerArgs.root options) in
+  let log_link = ServerFiles.log_link (ServerArgs.root options) in
+  (try Sys.rename log_link (log_link ^ ".old") with _ -> ());
+  let log_file = ServerFiles.make_link_of_timestamped log_link in
   let {Daemon.pid; _} = Daemon.fork begin fun (_ic, _oc) ->
     ignore @@ Unix.setsid ();
     let {Daemon.pid; _} = Daemon.fork ~log_file f in
@@ -461,7 +463,7 @@ let monitor_daemon options f =
     | _ -> HackEventLogger.bad_exit proc_stat)
   end in
   Printf.eprintf "Spawned %s (child pid=%d)\n" Program.name pid;
-  Printf.eprintf "Logs will go to %s\n%!" log_file;
+  Printf.eprintf "Logs will go to %s\n%!" log_link;
   ()
 
 let start () =
