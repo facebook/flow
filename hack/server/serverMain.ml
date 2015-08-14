@@ -114,7 +114,7 @@ module Program : SERVER_PROGRAM =
 
     let stamp_file = GlobalConfig.tmp_dir ^ "/stamp"
     let touch_stamp () =
-      Tmp.mkdir (Filename.dirname stamp_file);
+      Sys_utils.mkdir_no_fail (Filename.dirname stamp_file);
       Sys_utils.with_umask
         0o111
         (fun () ->

@@ -257,3 +257,11 @@ let filemtime file =
 
 let try_touch file =
   try Unix.utimes file 0.0 0.0 with _ -> ()
+
+(* Emulate "mkdir -p", i.e., no error if already exists. *)
+let mkdir_no_fail dir =
+  with_umask 0 begin fun () ->
+    (* Don't set sticky bit since the socket opening code wants to remove any
+     * old sockets it finds, which may be owned by a different user. *)
+    try Unix.mkdir dir 0o777 with Unix.Unix_error (Unix.EEXIST, _, _) -> ()
+  end

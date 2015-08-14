@@ -10,7 +10,7 @@
 
 let file_of_root root extension =
   (* TODO: move this to places that write this file *)
-  Tmp.mkdir GlobalConfig.tmp_dir;
+  Sys_utils.mkdir_no_fail GlobalConfig.tmp_dir;
   let root_part = Path.slash_escaped_string_of_path root in
   Printf.sprintf "%s%s.%s" GlobalConfig.tmp_dir root_part extension
 

@@ -12,7 +12,7 @@
 let unix_socket sock_name =
   try
     Sys_utils.with_umask 0o111 begin fun () ->
-      Tmp.mkdir (Filename.dirname sock_name);
+      Sys_utils.mkdir_no_fail (Filename.dirname sock_name);
       if Sys.file_exists sock_name then Sys.remove sock_name;
       let domain, addr =
         if Sys.win32 then

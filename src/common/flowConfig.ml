@@ -59,7 +59,8 @@ let file_of_root ~tmp_dir root extension =
   let tmp_dir = if tmp_dir.[String.length tmp_dir - 1] <> '/'
     then tmp_dir ^ "/"
     else tmp_dir in
-  Tmp.mkdir tmp_dir; (* TODO: move this to places that write this file *)
+  (* TODO: move this to places that write this file *)
+  mkdir_no_fail tmp_dir;
   let root_part = Path.slash_escaped_string_of_path root in
   Printf.sprintf "%s%s.%s" tmp_dir root_part extension
 
