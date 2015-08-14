@@ -51,7 +51,7 @@ let _operations lock_file op : bool =
             with _ ->
               false
           in
-          if not identical_file then
+          if not (Sys.win32 || identical_file) then
             (* Looks like someone (tmpwatch?) deleted the lock file; don't
              * create another one, because our socket is probably gone too.
              * We are dead in the water. *)
@@ -59,7 +59,20 @@ let _operations lock_file op : bool =
           else
             fd
     in
-    let _ = Unix.lockf fd op 1 in
+    let _ =
+      try Unix.lockf fd op 1
+      with _ when Sys.win32 && (op = Unix.F_TLOCK || op = Unix.F_TEST) ->
+          (* On Windows, F_TLOCK and F_TEST fail if we have the lock ourself *)
+          (* However, we then are the only one to be able to write there. *)
+          ignore (Unix.lseek fd 0 Unix.SEEK_SET : int);
+          (* If we don't have the lock, the following 'write' will
+             throw an exception. *)
+          let wb = Unix.write fd " " 0 1 in
+          (* When not throwing an exception, the current
+             implementation of `Unix.write` always return `1`. But let's
+             be protective against semantic changes, and better fails
+             than wrongly assume that we own a lock. *)
+          assert (wb = 1) in
     true
   with _ ->
     false
