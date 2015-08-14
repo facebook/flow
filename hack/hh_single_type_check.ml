@@ -17,7 +17,7 @@ open Sys_utils
 (*****************************************************************************)
 
 type mode =
-  | Ai
+  | Ai of string
   | Autocomplete
   | Color
   | Coverage
@@ -166,11 +166,11 @@ let parse_options () =
   let set_mode x () =
     if !mode <> Errors
     then raise (Arg.Bad "only a single mode should be specified")
-    else mode := x
-  in
+    else mode := x in
+  let set_ai x = set_mode (Ai x) () in
   let options = [
     "--ai",
-      Arg.Unit (set_mode Ai),
+      Arg.String (set_ai),
       "Run the abstract interpreter";
     "--auto-complete",
       Arg.Unit (set_mode Autocomplete),
@@ -287,7 +287,7 @@ let print_coverage fn type_acc =
 
 let handle_mode mode filename nenv files_contents files_info errors ai_results =
   match mode with
-  | Ai -> ()
+  | Ai _ -> ()
   | Autocomplete ->
       let file = cat (Relative_path.to_absolute filename) in
       let result = ServerAutoComplete.auto_complete nenv file in
@@ -362,9 +362,9 @@ let main_hack { filename; mode; } =
   SharedMem.(init default_config);
   Hhi.set_hhi_root_for_unit_test (Path.make "/tmp/hhi");
   let outer_do f = match mode with
-    | Ai ->
+    | Ai ai_options ->
         let ai_results, inner_results =
-          Ai.do_ Typing_check_utils.check_defs filename in
+          Ai.do_ Typing_check_utils.check_defs filename ai_options in
         ai_results, inner_results
     | _ ->
         let inner_results = f () in

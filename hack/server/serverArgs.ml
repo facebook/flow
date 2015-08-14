@@ -13,7 +13,7 @@
 (*****************************************************************************)
 
 type options = {
-  ai_mode          : bool;
+  ai_mode          : string option;
   check_mode       : bool;
   json_mode        : bool;
   root             : Path.t;
@@ -35,7 +35,7 @@ let usage = Printf.sprintf "Usage: %s [WWW DIRECTORY]\n" Sys.argv.(0)
 
 module Messages = struct
   let debug         = " debugging mode"
-  let ai            = " run ai and exit"
+  let ai            = " run ai with options"
   let check         = " check and exit"
   let json          = " output errors in json format (arc lint mode)"
   let daemon        = " detach process"
@@ -67,7 +67,7 @@ let parse_options () =
   let from_emacs    = ref false in
   let from_hhclient = ref false in
   let debug         = ref false in
-  let ai_mode       = ref false in
+  let ai_mode       = ref None in
   let check_mode    = ref false in
   let json_mode     = ref false in
   let should_detach = ref false in
@@ -77,11 +77,12 @@ let parse_options () =
   let version       = ref false in
   let waiting_client= ref None in
   let cdir          = fun s -> convert_dir := Some s in
+  let set_ai        = fun s -> ai_mode := Some s in
   let set_save      = fun s -> save := Some s in
   let set_wait      = fun pid -> waiting_client := Some pid in
   let options =
     ["--debug"         , Arg.Set debug         , Messages.debug;
-     "--ai"            , Arg.Set ai_mode       , Messages.ai;
+     "--ai"            , Arg.String set_ai     , Messages.ai;
      "--check"         , Arg.Set check_mode    , Messages.check;
      "--json"          , Arg.Set json_mode     , Messages.json; (* CAREFUL!!! *)
      "--daemon"        , Arg.Set should_detach , Messages.daemon;
@@ -131,7 +132,7 @@ let parse_options () =
 
 (* useful in testing code *)
 let default_options ~root = {
-  ai_mode = false;
+  ai_mode = None;
   check_mode = false;
   json_mode = false;
   root = Path.make root;

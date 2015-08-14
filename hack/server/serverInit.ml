@@ -28,7 +28,7 @@ let init_hack genv env get_next =
     ServerArgs.save_filename genv.options = None
   in
 
-  let is_ai_mode = ServerArgs.ai_mode genv.options in
+  let is_ai_mode = (ServerArgs.ai_mode genv.options) <> None in
 
   if not (is_check_mode || is_ai_mode) then begin
     Typing_deps.update_files files_info;
@@ -56,8 +56,9 @@ let init_hack genv env get_next =
       [],  Relative_path.Set.empty in
 
   let errorl5, failed5 = if is_ai_mode then
+      let optstr = Utils.unsafe_opt (ServerArgs.ai_mode genv.options) in
       Hh_logger.measure "Ai" begin fun () ->
-        Ai.go Typing_check_utils.check_defs genv.workers files_info nenv
+        Ai.go Typing_check_utils.check_defs genv.workers files_info nenv optstr
       end
     else
       [], Relative_path.Set.empty in

@@ -428,7 +428,7 @@ let main options config =
   let env = ServerEnvBuild.make_env options config in
   let program_init = create_program_init genv env in
   let is_check_mode = ServerArgs.check_mode genv.options in
-  let is_ai_mode = ServerArgs.ai_mode genv.options in
+  let is_ai_mode = (ServerArgs.ai_mode genv.options) <> None in
   if is_check_mode || is_ai_mode then
     let env = program_init () in
     Option.iter (ServerArgs.save_filename genv.options) (save genv env);
