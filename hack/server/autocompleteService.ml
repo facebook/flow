@@ -347,61 +347,63 @@ let result_compare a b =
   else 1
 
 let get_results funs classes =
-  let completion_type = !Autocomplete.argument_global_type in
-  if completion_type = Some Autocomplete.Acid ||
-     completion_type = Some Autocomplete.Acnew ||
-     completion_type = Some Autocomplete.Actype
-  then compute_complete_global funs classes;
-  let results = !autocomplete_results in
-  let env = match !ac_env with
-    | Some e -> e
-    | None ->
-      let tcopt = TypecheckerOptions.permissive in
-      Typing_env.empty tcopt Relative_path.default
-  in
-  let results = List.map results begin fun x ->
-    let env, ty = match x.ty with
-      | DeclTy ty -> Phase.localize_with_self env ty
-      | LoclTy ty -> env, ty
+  Errors.ignore_ begin fun() ->
+    let completion_type = !Autocomplete.argument_global_type in
+    if completion_type = Some Autocomplete.Acid ||
+       completion_type = Some Autocomplete.Acnew ||
+       completion_type = Some Autocomplete.Actype
+    then compute_complete_global funs classes;
+    let results = !autocomplete_results in
+    let env = match !ac_env with
+      | Some e -> e
+      | None ->
+        let tcopt = TypecheckerOptions.permissive in
+        Typing_env.empty tcopt Relative_path.default
     in
-    let desc_string = match x.desc with
-      | Some s -> s
-      | None -> Typing_print.full_strip_ns env ty
-    in
-    let func_details = match ty with
-      | (_, Tfun ft) ->
-        let param_to_record ?(is_variadic=false) (name, pty) =
-          {
-            param_name     = (match name with
-                               | Some n -> n
-                               | None -> "");
-            param_ty       = Typing_print.full_strip_ns env pty;
-            param_variadic = is_variadic;
+    let results = List.map results begin fun x ->
+      let env, ty = match x.ty with
+        | DeclTy ty -> Phase.localize_with_self env ty
+        | LoclTy ty -> env, ty
+      in
+      let desc_string = match x.desc with
+        | Some s -> s
+        | None -> Typing_print.full_strip_ns env ty
+      in
+      let func_details = match ty with
+        | (_, Tfun ft) ->
+          let param_to_record ?(is_variadic=false) (name, pty) =
+            {
+              param_name     = (match name with
+                                 | Some n -> n
+                                 | None -> "");
+              param_ty       = Typing_print.full_strip_ns env pty;
+              param_variadic = is_variadic;
+            }
+          in
+          Some {
+            return_ty = Typing_print.full_strip_ns env ft.ft_ret;
+            min_arity = arity_min ft.ft_arity;
+            params    = List.map ft.ft_params param_to_record @
+              (match ft.ft_arity with
+                 | Fellipsis _ -> let empty = (None, (Reason.none, Tany)) in
+                                  [param_to_record ~is_variadic:true empty]
+                 | Fvariadic (_, p) -> [param_to_record ~is_variadic:true p]
+                 | Fstandard _ -> [])
           }
-        in
-        Some {
-          return_ty = Typing_print.full_strip_ns env ft.ft_ret;
-          min_arity = arity_min ft.ft_arity;
-          params    = List.map ft.ft_params param_to_record @
-            (match ft.ft_arity with
-               | Fellipsis _ -> let empty = (None, (Reason.none, Tany)) in
-                                [param_to_record ~is_variadic:true empty]
-               | Fvariadic (_, p) -> [param_to_record ~is_variadic:true p]
-               | Fstandard _ -> [])
-        }
-      | _ -> None
-    in
-    let expected_ty = result_matches_expected_ty ty in
-    let pos = Typing_reason.to_pos (fst ty) in
-    {
-      res_pos      = Pos.to_absolute pos;
-      res_ty       = desc_string;
-      res_name     = x.name;
-      expected_ty  = expected_ty;
-      func_details = func_details;
-    }
-  end in
-  List.sort result_compare results
+        | _ -> None
+      in
+      let expected_ty = result_matches_expected_ty ty in
+      let pos = Typing_reason.to_pos (fst ty) in
+      {
+        res_pos      = Pos.to_absolute pos;
+        res_ty       = desc_string;
+        res_name     = x.name;
+        expected_ty  = expected_ty;
+        func_details = func_details;
+      }
+    end in
+    List.sort result_compare results
+end
 
 let reset () =
   Autocomplete.auto_complete_for_global := "";
