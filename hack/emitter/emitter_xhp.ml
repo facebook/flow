@@ -121,6 +121,21 @@ let make_children_decl_method cls =
   [{ meth with N.m_body = named_body body }]
 
 
+(* Generate the __xhpCategoryDeclaration method from the category. *)
+let make_category_decl_method cls =
+  if cls.N.c_xhp_category = [] then [] else
+
+  let children_decl_meth_name = "__xhpCategoryDeclaration" in
+  (* This just returns an array mapping all of the categories to 1 *)
+  let entries = List.map cls.N.c_xhp_category begin fun (pos, name) ->
+    ((pos, N.String (pos, name)), (pos, N.Int (pos, "1"))) end in
+
+  let p = fst cls.N.c_name in
+  let body = [ N.Return (p, Some (p, C.make_kvarray entries)) ] in
+  let meth = empty_method (p, children_decl_meth_name) in
+  [{ meth with N.m_body = named_body body }]
+
+
 (* Given a class that uses xhp, transform the class to add any
  * methods, etc that we need to implement the xhp stuff.
  * throws all that info away. *)
@@ -128,12 +143,13 @@ let convert_class cls =
   if not cls.N.c_is_xhp then cls else
 
   let xhp_props = List.filter_map ~f:convert_prop cls.N.c_vars in
-  (* TODO: we should also emit __xhpCategoryDeclaration, but we can't
-   * yet because the parser throws away the information *)
-  let new_methods =
-    make_attr_decl_method cls xhp_props @ make_children_decl_method cls in
+  let new_smethods = make_attr_decl_method cls xhp_props in
+  (* These methods are bizarrely not static *)
+  let new_methods = make_children_decl_method cls @
+                    make_category_decl_method cls in
 
-  { cls with N.c_static_methods = new_methods @ cls.N.c_static_methods }
+  { cls with N.c_static_methods = new_smethods @ cls.N.c_static_methods ;
+             N.c_methods = new_methods @ cls.N.c_methods }
 
 
 (* Convert an obj_get on a xhp attribute to a getAttribute call *)

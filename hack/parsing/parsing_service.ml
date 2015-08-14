@@ -43,7 +43,7 @@ module AddDeps = struct
     | XhpAttrUse h -> hint root h
     | ClassTraitRequire (_, h) -> hint root h
     | Attributes _  | Const _ | AbsConst _ | ClassVars _ | XhpAttr _ | Method _
-    | TypeConst _ -> ()
+    | TypeConst _ | XhpCategory _ -> ()
 
   and hint root (_, h) =
     match h with

@@ -104,6 +104,7 @@ and class_ = {
   c_extends        : hint list        ;
   c_uses           : hint list        ;
   c_xhp_attr_uses  : hint list        ;
+  c_xhp_category   : pstring list     ;
   c_req_extends    : hint list        ;
   c_req_implements : hint list        ;
   c_implements     : hint list        ;

@@ -120,6 +120,7 @@ and class_elt =
   | XhpAttr of kind list * hint option * class_var list * bool *
                ((Pos.t * expr list) option)
   | Method of method_
+  | XhpCategory of pstring list
 
 and class_attr =
   | CA_name of id

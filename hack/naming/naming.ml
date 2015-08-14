@@ -953,6 +953,9 @@ and class_ nenv c =
   let uses     = List.fold_right c.c_body ~init:[] ~f:(class_use env) in
   let xhp_attr_uses =
     List.fold_right c.c_body ~init:[] ~f:(xhp_attr_use env) in
+  let xhp_category =
+    Option.value ~default:[] @@
+      List.fold_right c.c_body ~init:None ~f:(xhp_category env) in
   let req_implements, req_extends = List.fold_right c.c_body
     ~init:([], []) ~f:(class_require env c.c_kind) in
   (* Setting a class type parameters constraint to the 'this' type is weird
@@ -982,6 +985,7 @@ and class_ nenv c =
       N.c_extends        = parents;
       N.c_uses           = uses;
       N.c_xhp_attr_uses  = xhp_attr_uses;
+      N.c_xhp_category   = xhp_category;
       N.c_req_extends    = req_extends;
       N.c_req_implements = req_implements;
       N.c_implements     = implements;
@@ -1065,6 +1069,7 @@ and class_use env x acc =
   | ClassTraitRequire _ -> acc
   | ClassVars _ -> acc
   | XhpAttr _ -> acc
+  | XhpCategory _ -> acc
   | Method _ -> acc
   | TypeConst _ -> acc
 
@@ -1080,8 +1085,27 @@ and xhp_attr_use env x acc =
   | ClassTraitRequire _ -> acc
   | ClassVars _ -> acc
   | XhpAttr _ -> acc
+  | XhpCategory _ -> acc
   | Method _ -> acc
   | TypeConst _ -> acc
+
+and xhp_category env x acc =
+  match x with
+  | Attributes _ -> acc
+  | Const _ -> acc
+  | AbsConst _ -> acc
+  | ClassUse _ -> acc
+  | XhpAttrUse _ -> acc
+  | ClassTraitRequire _ -> acc
+  | ClassVars _ -> acc
+  | XhpAttr _ -> acc
+  | XhpCategory cs ->
+    (match acc with
+    | Some _ -> Errors.multiple_xhp_category (fst (List.hd_exn cs)); acc
+    | None -> Some cs)
+  | Method _ -> acc
+  | TypeConst _ -> acc
+
 
 and class_require env c_kind x acc =
   match x with
@@ -1107,6 +1131,7 @@ and class_require env c_kind x acc =
     (hint env h :: acc_impls, acc_exts)
   | ClassVars _ -> acc
   | XhpAttr _ -> acc
+  | XhpCategory _ -> acc
   | Method _ -> acc
   | TypeConst _ -> acc
 
@@ -1119,6 +1144,7 @@ and constructor env acc = function
   | ClassTraitRequire _ -> acc
   | ClassVars _ -> acc
   | XhpAttr _ -> acc
+  | XhpCategory _ -> acc
   | Method ({ m_name = (p, name); _ } as m) when name = SN.Members.__construct ->
       (match acc with
       | None -> Some (method_ (fst env) m)
@@ -1136,6 +1162,7 @@ and class_const env x acc =
   | ClassTraitRequire _ -> acc
   | ClassVars _ -> acc
   | XhpAttr _ -> acc
+  | XhpCategory _ -> acc
   | Method _ -> acc
   | TypeConst _ -> acc
 
@@ -1159,6 +1186,7 @@ and class_prop_static env x acc =
     cvl @ acc
   | ClassVars _ -> acc
   | XhpAttr _ -> acc
+  | XhpCategory _ -> acc
   | Method _ -> acc
   | TypeConst _ -> acc
 
@@ -1218,6 +1246,7 @@ and class_prop env x acc =
     let cvl = List.map cvl (class_prop_ env) in
     let cvl = List.map cvl (fill_prop kl h) in
     cvl @ acc
+  | XhpCategory _ -> acc
   | Method _ -> acc
   | TypeConst _ -> acc
 
@@ -1231,6 +1260,7 @@ and class_static_method env x acc =
   | AbsConst _ -> acc
   | ClassVars _ -> acc
   | XhpAttr _ -> acc
+  | XhpCategory _ -> acc
   | Method m when snd m.m_name = SN.Members.__construct -> acc
   | Method m when List.mem m.m_kind Static -> method_ (fst env) m :: acc
   | Method _ -> acc
@@ -1246,6 +1276,7 @@ and class_method env sids cv_ids x acc =
   | AbsConst _ -> acc
   | ClassVars _ -> acc
   | XhpAttr _ -> acc
+  | XhpCategory _ -> acc
   | Method m when snd m.m_name = SN.Members.__construct -> acc
   | Method m when not (List.mem m.m_kind Static) ->
       let genv = fst env in
@@ -1263,6 +1294,7 @@ and class_typeconst env x acc =
   | ClassTraitRequire _ -> acc
   | ClassVars _ -> acc
   | XhpAttr _ -> acc
+  | XhpCategory _ -> acc
   | Method _ -> acc
   | TypeConst t -> typeconst env t :: acc
 

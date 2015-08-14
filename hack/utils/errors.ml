@@ -204,6 +204,7 @@ module NastCheck                            = struct
   let abstract_with_typeconst               = 3029 (* DONT MODIFY!!!! *)
   let constructor_required                  = 3030 (* DONT MODIFY!!!! *)
   let interface_with_partial_typeconst      = 3031 (* DONT MODIFY!!!! *)
+  let multiple_xhp_category                 = 3032 (* DONT MODIFY!!!! *)
   (* EXTEND HERE WITH NEW VALUES IF NEEDED *)
 end
 
@@ -791,6 +792,10 @@ let typeconst_assigned_tparam pos tp_name =
 let interface_with_partial_typeconst tconst_pos =
   add NastCheck.interface_with_partial_typeconst tconst_pos
     "An interface cannot contain a partially abstract type constant"
+
+let multiple_xhp_category pos =
+  add NastCheck.multiple_xhp_category pos
+    "XHP classes can only contain one category declaration"
 
 let return_in_gen p =
   add NastCheck.return_in_gen p

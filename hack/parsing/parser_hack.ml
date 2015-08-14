@@ -1220,9 +1220,12 @@ and class_defs env =
 
 and class_toplevel_word env word =
   match word with
-  | "category" | "children" ->
+  | "children" ->
       xhp_format env;
       class_defs env
+  | "category" ->
+      let cat = XhpCategory (xhp_category_list env) in
+      cat :: class_defs env
   | "const" ->
       let error_state = !(env.errors) in
       let def =
@@ -1321,8 +1324,6 @@ and trait_require env =
 (*
  * within a class body -->
  *    children ...;
- *    attribute ...;
- *    category ...;
  *)
 (*****************************************************************************)
 
@@ -1330,7 +1331,7 @@ and xhp_format env =
   match L.token env.file env.lb with
   | Tsc -> ()
   | Teof ->
-      error_expect env "end of XHP category/attribute/children declaration";
+      error_expect env "end of XHP children declaration";
       ()
   | Tquote ->
       let pos = Pos.make env.file env.lb in
@@ -1601,6 +1602,35 @@ and xhp_attr_list_remain env =
           L.back env.lb;
           xhp_attr_list env)
   | _ -> error_expect env ";"; []
+
+and xhp_category env =
+  expect env Tpercent;
+  let token = L.xhpname env.file env.lb in
+  let ret =  Pos.make env.file env.lb, Lexing.lexeme env.lb in
+  (match token with | Txhpname -> ()
+                    | _ -> error_expect env "xhp name");
+  ret
+
+and xhp_category_list_remain env =
+  match L.token env.file env.lb with
+  | Tsc ->
+      []
+  | Tcomma ->
+      (match L.token env.file env.lb with
+      | Tsc ->
+          []
+      | _ ->
+          L.back env.lb;
+          xhp_category_list env)
+  | _ -> error_expect env ";"; []
+
+and xhp_category_list env =
+  let error_state = !(env.errors) in
+  let a = xhp_category env in
+  if !(env.errors) != error_state
+    then [a]
+    else [a] @ xhp_category_list_remain env
+
 
 (*****************************************************************************)
 (* Methods *)
