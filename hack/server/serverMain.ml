@@ -412,7 +412,9 @@ let save _genv env fn =
  * type-checker succeeded. So to know if there is some work to be done,
  * we look if env.modified changed.
  *)
-let main options config =
+let daemon_main options =
+  Relative_path.set_path_prefix Relative_path.Root (ServerArgs.root options);
+  let config = Program.load_config () in
   let root = ServerArgs.root options in
   HackEventLogger.init root (Unix.time ());
   Program.preinit ();
@@ -449,26 +451,121 @@ let main options config =
     let env = MainInit.go options program_init in
     serve genv env socket
 
-let monitor_daemon options f =
-  let log_link = ServerFiles.log_link (ServerArgs.root options) in
-  (try Sys.rename log_link (log_link ^ ".old") with _ -> ());
-  let log_file = ServerFiles.make_link_of_timestamped log_link in
-  let {Daemon.pid; _} = Daemon.fork begin fun (_ic, _oc) ->
-    ignore @@ Unix.setsid ();
-    let {Daemon.pid; _} = Daemon.fork ~log_file f in
-    let _pid, proc_stat = Unix.waitpid [] pid in
-    (match proc_stat with
-    | Unix.WEXITED 0 -> ()
-    | _ -> HackEventLogger.bad_exit proc_stat)
-  end in
+
+(** Main entry point(s) for the program.
+
+    In the absence of 'fork' on Windows, we have three distinct entry
+    points. The default one is the 'deamon_main' function. Two
+    alternate entry point may be selected by setting the environment
+    variable "HH_SERVER_MAIN": they are named "Monitor" and "Daemon".
+    (Work-in-progress: later we will add a third entry point for
+     slaves)
+
+    They correspond to the two successive 'fork' on Linux :
+
+    - Monitor: open the log file and create the Daemon.
+    - Demain: just execute 'hh_server' (ignorint the '-d' option).
+
+    On Unix, we do not use this alternate entry points but we use
+    'fork' as usual. *)
+
+let magic_var = "HH_SERVER_MAIN"
+let log_var = "HH_SERVER_LOG"
+let monitor_magic = "Monitor"
+let daemon_magic = "Daemon"
+
+let safe_open fn =
+  Sys_utils.mkdir_no_fail (Filename.dirname fn);
+  begin try
+    (* On Windows, we need to remove the old log file. *)
+    let oldfn = fn ^ ".old" in
+    begin try Sys.remove oldfn with _ -> () end;
+    Sys.rename fn oldfn
+  with _ -> () end;
+  (* In case of the file renaming failed, we use 'O_TRUNC'. *)
+  Unix.openfile fn [Unix.O_RDWR; Unix.O_CREAT; Unix.O_TRUNC] 0o777
+
+(* Alternate entry point "HH_SERVER_MAIN=Monitor" *)
+let monitor_main options log_file =
+  let pid =
+    if Sys.win32 then begin
+      Unix.putenv magic_var daemon_magic;
+      let log_fd = safe_open log_file in
+      let pid =
+        Unix.create_process
+          Sys.executable_name Sys.argv
+          Unix.stdin log_fd log_fd in
+      Unix.close log_fd;
+      pid
+    end else begin
+      ignore @@ Unix.setsid ();
+      match Fork.fork () with
+      | 0 ->
+          let log_fd = safe_open log_file in
+          Unix.dup2 log_fd Unix.stdout;
+          Unix.dup2 log_fd Unix.stderr;
+          Unix.close log_fd;
+          daemon_main options;
+          exit 0
+      | pid -> pid
+    end in
+  let _pid, proc_stat = Unix.waitpid [] pid in
+  match proc_stat with
+  | Unix.WEXITED 0 -> ()
+  | _ -> HackEventLogger.bad_exit proc_stat
+
+let start_daemon options log_link log_file =
+  let pid =
+    if Sys.win32 then begin
+      let null_fd =
+        Unix.openfile
+          Path.(to_string null_path)
+          [Unix.O_RDONLY; Unix.O_CREAT] 0o777 in
+      Unix.putenv magic_var monitor_magic;
+      Unix.putenv log_var log_file;
+      let pid =
+        Unix.create_process
+          Sys.executable_name Sys.argv
+          null_fd Unix.stdout Unix.stderr in
+      Unix.close null_fd;
+      pid
+    end else begin
+      match Fork.fork () with
+      | 0 ->
+          let null_fd =
+            Unix.openfile
+              Path.(to_string null_path)
+              [Unix.O_RDONLY; Unix.O_CREAT] 0o777 in
+          Unix.dup2 null_fd Unix.stdin;
+          Unix.close null_fd;
+          monitor_main options log_file;
+          exit 0
+      | pid -> pid
+    end in
   Printf.eprintf "Spawned %s (child pid=%d)\n" Program.name pid;
-  Printf.eprintf "Logs will go to %s\n%!" log_link;
+  Printf.eprintf "Logs will go to %s\n%!"
+    (if Sys.win32 then log_file else log_link);
   ()
 
+(* Real entry point. *)
 let start () =
+  let magic = try Sys.getenv magic_var with Not_found -> "" in
   let options = Program.parse_options () in
-  Relative_path.set_path_prefix Relative_path.Root (ServerArgs.root options);
-  let config = Program.load_config () in
-  if ServerArgs.should_detach options
-  then monitor_daemon options (fun (_ic, _oc) -> main options config)
-  else main options config
+  let log_link = ServerFiles.log_link (ServerArgs.root options) in
+  (try Sys.rename log_link (log_link ^ ".old") with _ -> ());
+  let log_file =
+    try Sys.getenv log_var
+    with Not_found -> ServerFiles.make_link_of_timestamped log_link in
+  if magic = daemon_magic then
+    daemon_main options
+  else if magic = monitor_magic then
+    monitor_main options log_file
+  else if magic = "" then
+    if ServerArgs.should_detach options then
+      start_daemon options log_link log_file
+    else
+      daemon_main options
+  else begin
+     Printf.eprintf "hh_server: Unknown magic %S\n%!" magic;
+     exit 77
+  end

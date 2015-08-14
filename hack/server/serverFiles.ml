@@ -30,7 +30,10 @@ let make_link_of_timestamped linkname =
     year (tm.tm_mon + 1) tm.tm_mday tm.tm_hour tm.tm_min tm.tm_sec in
   let filename = Printf.sprintf "%s/%s-%s.%s" dir base time_str ext in
   Sys_utils.unlink_no_fail linkname;
-  Unix.symlink filename linkname;
+  if not Sys.win32 then
+    Unix.symlink filename linkname
+  else
+    Sys_utils.write_file ~file:linkname filename;
   filename
 
 let init_file root = path_of_root root "init"
