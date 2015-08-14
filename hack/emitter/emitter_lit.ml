@@ -20,14 +20,15 @@ exception NotLiteral
 
 let rec fmt_lit_exn (_, e) =
   let fmt_str s =
-    "s:" ^ string_of_int (String.length s) ^ ":\\\"" ^ C.escape_str s ^ "\\\";"
+    "s:" ^ string_of_int (String.length s) ^ ":\\\"" ^
+      Php_escaping.escape s ^ "\\\";"
   in
 
   match e with
   | Int (_, s) -> "i:" ^ C.fmt_int s ^ ";"
   | Float (_, x) -> "d:" ^ C.fmt_float x ^ ";"
-  | String (_, s) -> fmt_str s
-  | String2 ([], s) -> fmt_str (C.unescape_str s)
+  | String (_, s) -> fmt_str (Php_escaping.unescape_single s)
+  | String2 ([], s) -> fmt_str (Php_escaping.unescape_double s)
   | Null -> "N;"
   | True -> "b:1;"
   | False -> "b:0;"

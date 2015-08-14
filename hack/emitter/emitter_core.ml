@@ -97,14 +97,15 @@ let fix_xhp_name s =
 (* *)
 let fmt_name s = fix_xhp_name (get_aliased_name (strip_ns s))
 let get_lid_name (_, id) = Ident.get_name id
-(* XXX: ocaml and php probably don't have exactly the same escaping rules *)
-let escape_str = String.escaped
-let unescape_str = Scanf.unescaped
 (* Whenever we need to emit a quoted string, we escape it.
- * This means that places that for String2, which has preescaped strings,
- * we need to *unescape* before passing the string to core emitting functions.
- * This is a little silly, but it keeps the interface consistent. *)
-let quote_str s = "\"" ^ escape_str s ^ "\""
+ * Places that deal with String/String2 literals need to unescape the
+ * literals before passing them to core emitting functions. This seems
+ * a little silly, but:
+ *  1) It keeps the interface consistent
+ *  2) The escaping conventions differ between hhas/single
+ *     quote/double quote
+ *)
+let quote_str s = "\"" ^ Php_escaping.escape s ^ "\""
 let fmt_int s = Int64.to_string (parse_php_int s)
 (* XXX: what format conversions do we need to do? *)
 let fmt_float s = s

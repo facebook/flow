@@ -3639,7 +3639,9 @@ and xhp_text env start abs_start =
     let squished = Regexp_utils.squash_whitespace content in
     (* if it is empty or all whitespace just ignore it *)
     if squished = "" || squished = " " then [] else
-      [pos, String (pos, squished)]
+      (* Need to escape it in case it contains any backslashes... *)
+      let escaped = Php_escaping.escape squished in
+      [pos, String2 ([], (pos, escaped))]
 
   | _ -> xhp_text env start abs_start
 

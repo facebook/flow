@@ -92,8 +92,8 @@ and emit_member env (_, expr_ as expr) =
   match expr_ with
   | Lvar id -> env, Mlocal (get_lid_name id)
   | Int (_, n) -> env, Mint n
-  | String (_, s) -> env, Mstring s
-  | String2 ([], s) -> env, Mstring (unescape_str s)
+  | String (_, s) -> env, Mstring (Php_escaping.unescape_single s)
+  | String2 ([], s) -> env, Mstring (Php_escaping.unescape_double s)
   | _ ->
     let env = emit_expr env expr in
     env, Mexpr
@@ -510,11 +510,11 @@ and emit_expr env (pos, expr_ as expr) =
 
   | Int (_, n) -> emit_Int env (fmt_int n)
   | Float (_, x) -> emit_Double env (fmt_float x)
-  | String (_, s) -> emit_String env s
-  | String2 ([], s) -> emit_String env (unescape_str s)
   | Null -> emit_Null env
   | True -> emit_bool env true
   | False -> emit_bool env false
+  | String (_, s) -> emit_String env (Php_escaping.unescape_single s)
+  | String2 ([], s) -> emit_String env (Php_escaping.unescape_double s)
 
   (* TODO: lots of ways to be better;
    * use NewStructArray/NewArray/NewPackedArray/array lits *)
