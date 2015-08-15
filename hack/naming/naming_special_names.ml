@@ -221,6 +221,8 @@ module FB = struct
 
   let idx                    = "\\idx"
 
+  let cTypeStructure         = "\\TypeStructure"
+
 end
 
 module Shapes = struct

@@ -145,7 +145,19 @@ let builtins = "<?hh // decl\n"^
   "function is_resource(mixed $x): bool {}\n"^
   "interface IMemoizeParam {\n"^
   "  public function getInstanceKey(): string;\n"^
-  "}\n"
+  "}\n"^
+  "type TypeStructure<T> = shape(\n"^
+  "  'kind'=>int,\n"^
+  "  'nullable'=>?bool,\n"^
+  "  'classname'=>?classname<T>,\n"^
+  "  'elem_types' => ?array,\n"^
+  "  'param_types' => ?array,\n"^
+  "  'return_type' => ?array,\n"^
+  "  'generic_types' => ?array,\n"^
+  "  'fields' => ?array,\n"^
+  "  'name' => ?string,\n"^
+  "  'alias' => ?string,\n"^
+  ");\n"
 
 (*****************************************************************************)
 (* Helpers *)
