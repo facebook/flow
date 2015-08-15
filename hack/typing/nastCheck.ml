@@ -30,6 +30,10 @@ open Typing_deps
 open Utils
 
 module Env = Typing_env
+module Inst = Typing_instantiate
+module Phase = Typing_phase
+module TSubst = Typing_subst
+module TUtils = Typing_utils
 
 module CheckFunctionType = struct
   let rec stmt f_type st = match f_type, st with
@@ -224,6 +228,7 @@ type env = {
   class_name: string option;
   class_kind: Ast.class_kind option;
   imm_ctrl_ctx: control_context;
+  typedef_tparams : Nast.tparam list;
   tenv: Env.env;
 }
 
@@ -246,6 +251,7 @@ let rec fun_ tenv f named_body =
     let env = { t_is_finally = false;
                 class_name = None; class_kind = None;
                 imm_ctrl_ctx = Toplevel;
+                typedef_tparams = [];
                 tenv = tenv } in
     func env f named_body
   end
@@ -259,14 +265,22 @@ and func env f named_body =
     t_is_finally = false;
   } in
   maybe hint env f.f_ret;
+  List.iter f.f_tparams (tparam env);
   List.iter f.f_params (fun_param env);
   block env named_body.fnb_nast;
   CheckFunctionType.block f.f_fun_kind named_body.fnb_nast
+
+and tparam env (_, _, cstr_opt) =
+  match cstr_opt with
+  | Some (_, cstr) -> hint env cstr
+  | None -> ()
 
 and hint env (p, h) =
   hint_ env p h
 
 and hint_ env p = function
+  | Habstr (_, Some (_, h)) ->
+      hint env h
   | Hany  | Hmixed  | Habstr _ | Hprim _  | Hthis | Haccess _ ->
       ()
   | Harray (ty1, ty2) ->
@@ -279,18 +293,20 @@ and hint_ env p = function
       List.iter hl (hint env);
       hint env h;
       ()
-  | Happly ((_, x), hl) when Typing_env.is_typedef x ->
+  | Happly ((_, x), hl) as h when Typing_env.is_typedef x ->
       let tdef = Typing_heap.Typedefs.find_unsafe x in
       let params =
         match tdef with
         | Typing_heap.Typedef.Error -> []
         | Typing_heap.Typedef.Ok (_, x, _, _, _) -> x
       in
+      check_happly env.typedef_tparams env.tenv (p, h);
       check_params env p x params hl
-  | Happly ((_, x), hl) ->
+  | Happly ((_, x), hl) as h ->
       (match Env.get_class env.tenv x with
       | None -> ()
       | Some class_ ->
+          check_happly env.typedef_tparams env.tenv (p, h);
           check_params env p x class_.tc_tparams hl
       );
       ()
@@ -308,6 +324,61 @@ and check_arity env p tname arity size =
   let nargs = soi arity in
   Errors.type_arity p tname nargs
 
+and check_happly unchecked_tparams env h =
+  let env = { env with Env.pos = (fst h) } in
+  let env, decl_ty = Typing_hint.hint env h in
+  let env, unchecked_tparams = lfold begin fun env (v, sid, cstr_opt) ->
+    let env, cstr_opt = match cstr_opt with
+      | Some (ck, cstr) ->
+          let env, cstr = Typing_hint.hint env cstr in
+          env, Some (ck, cstr)
+      | _ -> env, None in
+    env, (v, sid, cstr_opt)
+  end env unchecked_tparams in
+  let tyl =
+    List.map
+      unchecked_tparams
+      (fun (_, (p, _), _) -> Reason.Rwitness p, Tany) in
+  let subst = Inst.make_subst unchecked_tparams tyl in
+  let env, decl_ty = Inst.instantiate subst env decl_ty in
+  match decl_ty with
+  | _, Tapply (_, tyl) when tyl <> [] ->
+      let env, locl_ty = Phase.localize_with_self env decl_ty in
+      begin match TUtils.get_base_type locl_ty with
+        | _, Tclass (cls, tyl) ->
+            (match Env.get_class env (snd cls) with
+            | Some { tc_tparams; _ } ->
+                (* We want to instantiate the class type parameters with the
+                 * type list of the class we are localizing. We do not want to
+                 * add any more constraints when we localize the constraints
+                 * stored in the class_type since it may lead to infinite
+                 * recursion
+                 *)
+                let ety_env =
+                  { (Phase.env_with_self env) with
+                    substs = TSubst.make tc_tparams tyl;
+                  } in
+                iter2_shortest begin fun (_, (p, x), cstr_opt) ty ->
+                  match cstr_opt with
+                  | Some (ck, cstr_ty) ->
+                      let r = Reason.Rwitness p in
+                      let env, cstr_ty = Phase.localize ~ety_env env cstr_ty in
+                      ignore @@ Errors.try_
+                        (fun () ->
+                          TSubst.check_constraint env ck cstr_ty ty
+                        )
+                        (fun l ->
+                          Reason.explain_generic_constraint env.Env.pos r x l;
+                          env
+                        )
+                  | None -> ()
+                end tc_tparams tyl
+            | _ -> ()
+            )
+        | _ -> ()
+      end
+  | _ -> ()
+
 and class_ tenv c =
   if !auto_complete then () else begin
   let cname = Some (snd c.c_name) in
@@ -316,6 +387,7 @@ and class_ tenv c =
               class_name = cname;
               class_kind = Some c.c_kind;
               imm_ctrl_ctx = Toplevel;
+              typedef_tparams = [];
               tenv = tenv } in
   let env = { env with tenv = Env.set_mode env.tenv c.c_mode } in
   if c.c_kind = Ast.Cinterface then begin
@@ -324,6 +396,7 @@ and class_ tenv c =
   else begin
     maybe method_ (env, true) c.c_constructor;
   end;
+  List.iter (fst c.c_tparams) (tparam env);
   liter hint env c.c_extends;
   liter hint env c.c_implements;
   liter class_const env c.c_consts;
@@ -732,5 +805,11 @@ let typedef tenv t =
   let env = { t_is_finally = false;
               class_name = None; class_kind = None;
               imm_ctrl_ctx = Toplevel;
+              (* Since typedefs cannot have constraints we shouldn't check
+               * if its type params satisfy the constraints of any tapply it
+               * references.
+               *)
+              typedef_tparams = t.t_tparams;
               tenv = tenv } in
+  maybe hint env t.t_constraint;
   hint env t.t_kind
