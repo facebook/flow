@@ -62,14 +62,15 @@ let fmt_visibility vis =
   | Private -> "private"
   | Protected -> "protected"
 
-let fmt_fun_tags env m =
+let fmt_fun_tags env m ~is_closure =
   (match m.m_fun_kind with
   | Ast.FSync -> ""
   | Ast.FAsync -> " isAsync"
   | Ast.FGenerator -> " isGenerator"
   | Ast.FAsyncGenerator -> " isGenerator isAsync") ^
   (if env.function_props.is_pair_generator then
-      " isPairGenerator" else "")
+      " isPairGenerator" else "") ^
+  (if is_closure then " isClosureBody" else "")
 
 let fmt_user_attribute attr =
   let array =
@@ -99,13 +100,27 @@ let handle_func_attrs env m =
     else unimpl ("function user attribute: " ^ name)
   end
 
+(* For closure upvars, the exact allocation of local variable ids
+ * is very important; they need to come before regular local variables
+ * and be in the same order as the properties, so we emit a
+ * .declvars directive to assign IDs to the closure variables
+ * before any regular locals get assigned IDs. *)
+let emit_closure_vars env = function
+  | None -> env
+  | Some vars ->
+    emit_strs env ([".declvars"] @ vars @ [";"])
+
 (* Emit a method or a function. m, the method, might actually just be
  * a dummy that was built from a function. We need tparams (which will be
  * any tparams that come from the class) because formatting types needs
  * a list of the bound tparams. *)
-let emit_method_or_func env ~is_method ~is_static ~tparams m name =
+let emit_method_or_func env ~is_method ~is_static ~tparams ~full_name
+                        ?(closure_counter=ref 0) (* makes a new ref each time *)
+                        ?closure_vars m name =
   let tparams = tparams @ m.m_tparams in
   let env = start_new_function env in
+  let closure_state = { is_static; full_name; tparams; closure_counter } in
+  let env = { env with closure_state } in
 
   if m.m_variadic != FVnonVariadic then unimpl "variadic functions";
 
@@ -120,43 +135,52 @@ let emit_method_or_func env ~is_method ~is_static ~tparams m name =
 
   let options = bool_option "abstract" m.m_abstract @
                 bool_option "final" m.m_final @
-                bool_option "static" is_static @
+                bool_option "static" (is_method && is_static) @
                 bool_option (fmt_visibility m.m_visibility) is_method @
                 ["mayusevv"] @
                 fmt_user_attributes m.m_user_attributes in
-  let post = fmt_params ~tparams m.m_params ^ fmt_fun_tags env m in
+  let is_closure = closure_vars <> None in
+  let post = fmt_params ~tparams m.m_params ^ fmt_fun_tags env m ~is_closure in
   let tag = if is_method then ".method" else ".function" in
 
   (* return type hints are always "extended" because php doesn't have them *)
   let type_and_name =
     Emitter_types.fmt_hint ~tparams ~always_extended:true m.m_ret ^ name in
   let env = emit_enter env tag options type_and_name post in
+  let env = emit_closure_vars env closure_vars in
   let env = emit_str_raw env body_output in
   let env = run_cleanups env in
   let env = emit_exit env in
   env
 
 let emit_method env ~is_static ~cls m =
+  let name = snd m.m_name in
   emit_method_or_func env ~is_method:true ~is_static
     ~tparams:(fst cls.c_tparams)
-    m (snd m.m_name)
+    ~full_name:(snd cls.c_name ^ "::" ^ name)
+    m name
+
+(* Make a dummy method structure from a fun_ to help share code *)
+let fun_to_method f =
+  {
+    (* Things we don't really have *)
+    m_final = false; m_abstract = false; m_visibility = Public;
+    (* Copy the rest over *)
+    m_name = f.f_name; m_tparams = f.f_tparams; m_variadic = f.f_variadic;
+    m_params = f.f_params; m_body = f.f_body; m_fun_kind = f.f_fun_kind;
+    m_user_attributes = f.f_user_attributes; m_ret = f.f_ret
+  }
 
 let emit_fun nenv env (_, x) =
   let f = Naming_heap.FunHeap.find_unsafe x in
   let nb = Naming.func_body nenv f in
-  (* Make a dummy method structure so we can share code with method handling *)
-  let dummy_method = {
-    (* Things we don't really have *)
-    m_final = true; m_abstract = false; m_visibility = Public;
-    (* Copy the rest over *)
-    m_name = f.f_name; m_tparams = f.f_tparams; m_variadic = f.f_variadic;
-    m_params = f.f_params; m_body = NamedBody nb; m_fun_kind = f.f_fun_kind;
-    m_user_attributes = f.f_user_attributes; m_ret = f.f_ret } in
+  let f = { f with f_body = NamedBody nb } in
+  let dummy_method = fun_to_method f in
 
   let env = start_new_function env in
   let env =
-    emit_method_or_func env ~is_method:false ~is_static:false
-      ~tparams:[] dummy_method (fmt_name x) in
+    emit_method_or_func env ~is_method:false ~is_static:true
+      ~tparams:[] ~full_name:x dummy_method (fmt_name x) in
   emit_str env ""
 
 
@@ -216,15 +240,18 @@ let emit_prop_init env ~is_static = function
     let env = emit_exit env in
     env
 
+
+let emit_prop env name options v =
+  emit_strs env
+    [".property"; fmt_options options; name; "="; v^";"]
+
 (* Returns None if the case has been handled, and Some (name, expr) if
  * it still needs to be taken care of in a pinit *)
 let emit_var env ~is_static var =
   (* XHP props aren't real props; ignore them here. *)
   if var.cv_is_xhp then env, None else
 
-  let fmt_prop options v =
-    emit_strs env
-      [".property"; fmt_options options; snd var.cv_id; "="; v^";"] in
+  let fmt_prop = emit_prop env (snd var.cv_id) in
 
   assert (var.cv_final = false); (* props can't be final *)
   let options = bool_option "static" is_static @
@@ -378,6 +405,44 @@ let emit_class nenv env (_, x) =
   emit_str env ""
 
 
+let emit_closure (name, {full_name; closure_counter; is_static; tparams},
+                  (fun_, vars)) env =
+  let env = start_new_function env in
+  let options = ["no_override"; "unique"] in
+  let extends_list = " extends Closure" in
+  let env = emit_enter env ".class" options name extends_list in
+
+  let names = List.map ~f:get_lid_name vars in
+  (* Emit the free vars as properties *)
+  let env = List.fold_left names ~init:env ~f:begin fun env var ->
+    let prop_name = lstrip var "$" in
+    emit_prop env prop_name ["private"] "uninit"
+  end in
+
+  (* Closures have an extra hidden variable called "0Closure"
+   * (see emitMethodMetadata in emitter.cpp) *)
+  let declvars = "$0Closure" :: names in
+
+  let m = fun_to_method fun_ in
+  let env = emit_method_or_func env ~is_method:true
+    ~closure_vars:declvars
+    ~tparams ~is_static ~full_name ~closure_counter
+    m "__invoke" in
+
+  let env = emit_exit env in
+  emit_str env ""
+
+(* Emit any closure bodies that need to be created *)
+let rec emit_all_closures env =
+  if env.pending_closures = [] then env else
+  (* More closures might be generated as we emit these, so we clear
+   * out the list and then loop at the end. *)
+  let closures = env.pending_closures in
+  let env = { env with pending_closures = [] } in
+  let env = List.fold_right closures ~init:env ~f:emit_closure in
+  emit_all_closures env
+
+
 (* Bogusly emit a call to a hardcoded test function *)
 let emit_test_call env =
   let env = emit_FPushFuncD env 0 "test" in
@@ -415,6 +480,7 @@ let emit_file ~is_test nenv filename
   let env = emit_main env ~is_test classes in
   let env = List.fold_left ~f:(emit_fun nenv) ~init:env funs in
   let env = List.fold_left ~f:(emit_class nenv) ~init:env classes in
+  let env = emit_all_closures env in
 
   let output = get_output env in
   Printf.printf "%s\n" output;

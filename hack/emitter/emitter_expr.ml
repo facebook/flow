@@ -664,6 +664,33 @@ and emit_expr env (pos, expr_ as expr) =
     let desugared = Emitter_xhp.convert_xml pos (id, attrs, children) in
     emit_expr env desugared
 
+  | Efun (fun_, vars) ->
+    let cstate = env.closure_state in
+    incr cstate.closure_counter;
+    let count = !(cstate.closure_counter) in
+    let name = "Closure$" ^ fmt_name cstate.full_name ^
+      (if count > 1 then "#"^string_of_int count else "") in
+
+    (* capture list might have duplicates... *)
+    let vars =
+      List.dedup ~compare:(fun (_, i1) (_, i2) -> compare i1 i2) vars in
+
+    (* The CreateCL opcode constructs a closure object, taking the
+     * closed over variables from the stack. So first we need to
+     * emit all the closed over variables. *)
+    (* We use CUGetL instead of CGetL because it is tolerant of the
+     * variables being unset; unset variables should be propagated to
+     * closures (a variable may be conditionally unset and referenced
+     * conditionally in the closure only in the cases where it wasn't
+     * unset, for example) *)
+    let env = List.fold_left vars ~init:env
+      ~f:(fun env id -> emit_CUGetL env (get_lid_name id)) in
+
+    let env = emit_CreateCl env (List.length vars) name in
+
+    { env with
+      pending_closures = (name, cstate, (fun_, vars)) :: env.pending_closures }
+
+
   | Id _ -> unimpl "Id"
-  | Efun _ -> unimpl "Efun"
   | Assert _ -> unimpl "Assert"

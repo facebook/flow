@@ -162,20 +162,37 @@ type function_props = {
    * ocaml will warn when doing updates on it with "with"... *)
   dummy_warning_suppression: unit;
 }
+(* Tracks information about the enclosing function needed for closures *)
+type closure_state = {
+  full_name: string;
+  is_static: bool;
+  tparams: Nast.tparam list;
+  (* A counter of how many closures appear in inside of the named enclosing
+   * function. Used for naming the closures. Is a reference to allow it to
+   * be shared among closures that will be getting emitted at widely
+   * separated times. *)
+  closure_counter: int ref;
+}
+type pending_closure = string * closure_state * (Nast.fun_ * Nast.id list)
 type nonlocal_actions = {
   continue_action: is_initial:bool -> env -> env;
   break_action: is_initial:bool -> env -> env;
   return_action: has_value:bool -> is_initial:bool -> env -> env;
 }
 and env = {
+  (* Global state *)
   reversed_output: string list;
   indent: int;
+  pending_closures: pending_closure list;
+  (* Function state *)
   next_label: int;
   num_iterators: int;
   next_iterator: int; (* iterators allocated in a stack discipline *)
   function_props: function_props;
   nonlocal: nonlocal_actions;
   cleanups: (env -> env) list;
+  closure_state: closure_state;
+  (* Class state *)
   self_name: string option;
   parent_name: string option;
 }
@@ -192,12 +209,19 @@ let empty_nonlocal_actions = {
 let new_env () = {
   reversed_output = [];
   indent = 0;
+  pending_closures = [];
   next_label = 0;
   num_iterators = 0;
   next_iterator = 0;
   function_props = default_function_props;
   nonlocal = empty_nonlocal_actions;
   cleanups = [];
+  closure_state = {
+    full_name = "__TOPLEVEL";
+    closure_counter = ref 0;
+    tparams = [];
+    is_static = true;
+  };
   self_name = None;
   parent_name = None;
 }
@@ -207,6 +231,7 @@ let start_new_function env =
   { nenv with
     reversed_output = env.reversed_output;
     indent = env.indent;
+    pending_closures = env.pending_closures;
     self_name = env.self_name;
     parent_name = env.parent_name;
   }
@@ -341,6 +366,7 @@ let emit_SetOp =          emit_op2ls_screwy "SetOp"
 let emit_IncDec =         emit_op2ls_screwy "IncDec"
 let emit_CGet =           emit_op1l   "CGet"
 let emit_CGetL =          emit_op1s   "CGetL"
+let emit_CUGetL =         emit_op1s   "CUGetL"
 let emit_PushL =          emit_op1s   "PushL"
 let emit_IssetL =         emit_op1s   "IssetL"
 let emit_UnsetL =         emit_op1s   "UnsetL"
@@ -405,6 +431,7 @@ let emit_AKExists =       emit_op0    "AKExists"
 let emit_NameA =          emit_op0    "NameA"
 let emit_InstanceOf =     emit_op0    "InstanceOf"
 let emit_InstanceOfD =    emit_op1e   "InstanceOfD"
+let emit_CreateCl =       emit_op2ie  "CreateCl"
 
 let emit_Switch env labels base bound =
   emit_op_strs env ["Switch"; fmt_str_vec labels; string_of_int base; bound]
