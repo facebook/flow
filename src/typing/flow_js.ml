@@ -3455,10 +3455,16 @@ and flow_type_args cx trace instance instance_super =
   let { type_args = tmap2; _ } = instance_super in
   tmap1 |> SMap.iter (fun x t1 ->
     let t2 = SMap.find_unsafe x tmap2 in
-    match SMap.find_unsafe x pmap with
-    | Negative -> rec_flow cx trace (t2, t1)
-    | Neutral -> rec_unify cx trace t1 t2
-    | Positive -> rec_flow cx trace (t1, t2)
+    (* type_args contains a mixture of args to type params declared on the
+       instance's class, and args to outer-scope type params.
+       OTOH arg_polarities only holds polarities of declared params.
+       it'll take some upstream refactoring to handle variance to in-scope
+       type params - meanwhile, we fall back to neutral (invariant) *)
+    match SMap.get x pmap with
+    | Some Negative -> rec_flow cx trace (t2, t1)
+    | Some Positive -> rec_flow cx trace (t1, t2)
+    | Some Neutral
+    | None -> rec_unify cx trace t1 t2
   )
 
 (* Indicate whether property checking should be strict for a given object and an
