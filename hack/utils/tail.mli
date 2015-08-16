@@ -10,10 +10,18 @@
 
 type env
 
-val open_env: string -> (string -> bool) -> env
+val create_env: string -> env
+
+val open_env: env -> unit
 
 val close_env: env -> unit
 
-val update: env -> unit
+val update_env: (string -> bool) -> env -> unit
+
+val is_open_env: env -> bool
 
 val last_line: env -> string
+
+val get_lines: env -> string list
+
+val set_lines: env -> string list -> unit

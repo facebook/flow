@@ -10,28 +10,38 @@
 
 type env =
   { filename : string;
-    ic_opt : in_channel option;
-    filter_fn : string -> bool;
-    lines : string Queue.t;
+    mutable ic_opt : in_channel option;
+    mutable lines : string list;
+    mutable last_line : string option;
   }
 
-let open_env filename filter_fn =
-  let ic_opt =
-    try
-      Some(open_in filename)
-    with _ -> begin
-      Printf.eprintf "Couldn't open file %s\n%!" filename;
-      None
+let open_in_opt filename =
+  try
+    Some(open_in filename)
+  with _ ->
+    (Printf.eprintf "Tail.open_in_opt: Couldn't open file %s\n%!" filename;
+     None)
+
+let create_env filename =
+ { filename; ic_opt=None; lines=[]; last_line=None }
+
+let open_env env =
+  match env.ic_opt with
+  | None ->
+      begin
+        env.lines <- [];
+        env.last_line <- None;
+        env.ic_opt <- open_in_opt env.filename;
       end
-  in
-  { filename; ic_opt; filter_fn; lines=Queue.create (); }
+  | Some _ -> ()
 
 let close_env env =
+  env.lines <- [];
   match env.ic_opt with
   | None -> ()
-  | Some ic -> (close_in ic; Queue.clear env.lines)
+  | Some ic -> (close_in ic; env.ic_opt <- None)
 
-let update env =
+let update_env filter_fn env =
   match env.ic_opt with
   | None -> ()
   | Some ic ->
@@ -40,19 +50,28 @@ let update env =
       while !continue do
         try
           line := input_line ic;
-          if env.filter_fn !line then
-            Queue.add !line env.lines;
+          if filter_fn !line then
+            begin
+              env.lines <- !line :: env.lines;
+              env.last_line <- Some(!line)
+            end
+          else
+            env.last_line <- None
         with End_of_file ->
           continue := false;
       done
 
-let last_line env =
+let is_open_env env =
   match env.ic_opt with
-  | None -> ""
-  | Some _ ->
-      if Queue.length env.lines = 1 then
-        Queue.peek env.lines
-      else if Queue.length env.lines > 1 then
-        Queue.take env.lines
-      else
-        ""
+  | None -> false
+  | Some _ -> true
+
+let last_line env =
+  match env.ic_opt, env.last_line with
+  | None, _ -> ""
+  | Some _, None -> ""
+  | Some _, Some l -> l
+
+let get_lines env = env.lines
+
+let set_lines env l = env.lines <- l

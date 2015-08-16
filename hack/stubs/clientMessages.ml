@@ -9,4 +9,4 @@
  *)
 
 let load_state_not_found_msg =
-  "Load state not found. Restart the server?"
+  "WARNING: Load state not found. Restart the Hack server?"
