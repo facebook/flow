@@ -415,8 +415,8 @@ and class_decl tcopt c =
     List.fold_left ~f:(class_const_decl c) ~init:(env, consts) c.c_consts in
   let consts = SMap.add SN.Members.mClass (class_class_decl c.c_name) consts in
   let typeconsts = inherited.Typing_inherit.ih_typeconsts in
-  let env, typeconsts = List.fold_left c.c_typeconsts
-      ~f:(typeconst_decl c) ~init:(env, typeconsts) in
+  let env, typeconsts, consts = List.fold_left c.c_typeconsts
+      ~f:(typeconst_decl c) ~init:(env, typeconsts, consts) in
   let sclass_var = static_class_var_decl c in
   let sprops = inherited.Typing_inherit.ih_sprops in
   let env, sprops = List.fold_left c.c_static_vars
@@ -726,7 +726,23 @@ and visibility cid = function
   | Protected -> Vprotected cid
   | Private   -> Vprivate cid
 
-and typeconst_decl c (env, acc) {
+(* each concrete type constant T = <sometype> implicitly defines a
+class constant with the same name which is TypeStrucure<sometype> *)
+and typeconst_ty_decl pos tc_name decl_ty =
+  let r = Reason.Rwitness pos in
+  let tsid = pos, SN.FB.cTypeStructure in
+  let ts_ty = r, Tapply (tsid, [decl_ty]) in
+  {
+    ce_final       = false;
+    ce_is_xhp_attr = false;
+    ce_override    = false;
+    ce_synthesized = true;
+    ce_visibility  = Vpublic;
+    ce_type        = ts_ty;
+    ce_origin      = tc_name;
+  }
+
+and typeconst_decl c (env, acc, acc2) {
   c_tconst_name = (pos, name);
   c_tconst_constraint = constr;
   c_tconst_type = type_;
@@ -738,10 +754,15 @@ and typeconst_decl c (env, acc) {
         | Ast.Cenum -> `enum
         | _ -> assert false in
       Errors.cannot_declare_constant kind pos c.c_name;
-      env, acc
+      env, acc, acc2
   | Ast.Cinterface | Ast.Cabstract | Ast.Cnormal ->
       let env, constr = opt Typing_hint.hint env constr in
       let env, ty = opt Typing_hint.hint env type_ in
+      let acc2 = (match ty with
+        | None -> acc2
+        | Some decl_ty ->
+          let ts = typeconst_ty_decl pos name decl_ty in
+          SMap.add name ts acc2) in
       let tc = {
         ttc_name = (pos, name);
         ttc_constraint = constr;
@@ -749,7 +770,7 @@ and typeconst_decl c (env, acc) {
         ttc_origin = snd c.c_name;
       } in
       let acc = SMap.add name tc acc in
-      env, acc
+      env, acc, acc2
 
 and method_decl env m =
   let env, arity_min, params = Typing.make_params env true 0 m.m_params in

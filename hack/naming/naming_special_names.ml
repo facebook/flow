@@ -167,6 +167,8 @@ module StdlibFunctions = struct
 
   let array_filter = "\\array_filter"
   let array_map = "\\array_map"
+
+  let type_structure = "\\type_structure"
 end
 
 module Typehints = struct

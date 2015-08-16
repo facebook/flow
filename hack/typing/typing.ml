@@ -32,6 +32,7 @@ module Unify        = Typing_unify
 module TGen         = Typing_generic
 module SN           = Naming_special_names
 module TAccess      = Typing_taccess
+module TS           = Typing_structure
 module Phase        = Typing_phase
 module TSubst       = Typing_subst
 module ExprDepTy    = Typing_dependent_type.ExprDepTy
@@ -1411,11 +1412,12 @@ and expr_ ~in_cond ~(valkind: [> `lvalue | `rvalue | `other ]) env (p, e) =
        * using shape keyword and we know exactly what fields are set. *)
       env, (Reason.Rwitness p, Tshape (FieldsFullyKnown, fdm))
 
-and class_const env p (cid, mid) =
+and class_const ?(incl_tc=false) env p (cid, mid) =
   TUtils.process_static_find_ref cid mid;
   let env, cty = static_class_id p env cid in
   let env, cty = Env.expand_type env cty in
-  let env, const_ty = class_get ~is_method:false ~is_const:true env cty mid cid in
+  let env, const_ty =
+    class_get ~is_method:false ~is_const:true ~incl_tc env cty mid cid in
   match const_ty with
     | r, Tabstract (AKgeneric (n, _), _) ->
       let () = match cid with
@@ -2063,6 +2065,19 @@ and dispatch_call p env call_type (fpos, fun_expr as e) el uel =
                     Some tv)))
                 (fun _ -> env, res)))
       in get_array_filter_return_type env ty
+  | Id (p, type_structure)
+      when type_structure = SN.StdlibFunctions.type_structure
+           && (List.length el = 2) && uel = [] ->
+    (match el with
+     | [e1; e2] ->
+       (match e2 with
+        | p, Nast.String cst ->
+          (* find the class constant implicitly defined by the typeconst *)
+          class_const ~incl_tc:true env p (Nast.CIexpr e1, cst)
+        | _ ->
+          Errors.illegal_type_structure p "second argument is not a string";
+          env, (Reason.Rnone, Tany))
+     | _ -> assert false)
   | Id ((_, array_map) as x)
       when array_map = SN.StdlibFunctions.array_map && el <> [] && uel = [] ->
       let env, fty = fun_type_of_id env x in
@@ -2616,7 +2631,7 @@ and class_contains_smethod env cty (_pos, mid) =
     | Tvar _ | Tfun _ | Tabstract (_, _) | Ttuple _ | Tanon (_, _)
     | Tunresolved _ | Tobject | Tshape _)-> None
 
-and class_get ~is_method ~is_const env cty (p, mid) cid =
+and class_get ~is_method ~is_const ?(incl_tc=false) env cty (p, mid) cid =
   let env, this_ty =
     if is_method then
       this_for_method env cid cty
@@ -2628,12 +2643,12 @@ and class_get ~is_method ~is_const env cty (p, mid) cid =
     substs = SMap.empty;
     from_class = Some cid;
   } in
-  class_get_ ~is_method ~is_const ~ety_env env cty (p, mid)
+  class_get_ ~is_method ~is_const ~ety_env ~incl_tc env cty (p, mid)
 
-and class_get_ ~is_method ~is_const ~ety_env env cty (p, mid) =
+and class_get_ ~is_method ~is_const ~ety_env ?(incl_tc=false) env cty (p, mid) =
   match cty with
   | _, Tabstract (_, Some cty) ->
-      class_get_ ~is_method ~is_const ~ety_env env cty (p, mid)
+      class_get_ ~is_method ~is_const ~ety_env ~incl_tc env cty (p, mid)
   | _, Tclass ((_, c), paraml) ->
       let class_ = Env.get_class env c in
       (match class_ with
@@ -2641,7 +2656,14 @@ and class_get_ ~is_method ~is_const ~ety_env env cty (p, mid) =
       | Some class_ ->
           let smethod =
             if is_const
-            then Env.get_const env class_ mid
+            then (if incl_tc
+                  then Env.get_const env class_ mid
+                  else (match Env.get_typeconst env class_ mid with
+                        | Some _ ->
+                          Errors.illegal_typeconst_direct_access p;
+                          None
+                        | None ->
+                          Env.get_const env class_ mid))
             else Env.get_static_member is_method env class_ mid in
           if !Typing_defs.accumulate_method_calls then
             Typing_defs.accumulate_method_calls_result :=

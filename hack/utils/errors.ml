@@ -355,6 +355,7 @@ module Typing                               = struct
   let unpacking_disallowed                  = 4147 (* DONT MODIFY!!!! *)
   let invalid_classname                     = 4148 (* DONT MODIFY!!!! *)
   let invalid_memoized_param                = 4149 (* DONT MODIFY!!!! *)
+  let illegal_type_structure                = 4150 (* DONT MODIFY!!!! *)
   (* EXTEND HERE WITH NEW VALUES IF NEEDED *)
 end
 
@@ -1775,6 +1776,21 @@ let cyclic_enum_constraint pos =
 
 let invalid_classname p =
   add Typing.invalid_classname p "Not a valid class name"
+
+let illegal_type_structure pos errmsg =
+  let msg =
+    "The two arguments to typc_structure() must be:"
+    ^"\n - first: ValidClassname::class or an object of that class"
+    ^"\n - second: a single-quoted string literal containing the name"
+    ^" of a type constant of that class"
+    ^"\n"^errmsg in
+  add Typing.illegal_type_structure pos msg
+
+let illegal_typeconst_direct_access pos =
+  let msg =
+    "Type constants cannot be directly accessed. "
+    ^"Use type_structure(ValidClassname::class, 'TypeConstName') instead" in
+  add Typing.illegal_type_structure pos msg
 
 (*****************************************************************************)
 (* Convert relative paths to absolute. *)

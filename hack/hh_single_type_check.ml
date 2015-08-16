@@ -157,7 +157,8 @@ let builtins = "<?hh // decl\n"^
   "  'fields' => ?array,\n"^
   "  'name' => ?string,\n"^
   "  'alias' => ?string,\n"^
-  ");\n"
+  ");\n"^
+  "function type_structure($x, $y);\n"
 
 (*****************************************************************************)
 (* Helpers *)
