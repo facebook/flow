@@ -16,10 +16,9 @@ open ServerEnv
 
 let make_genv options config watch_paths =
   let check_mode   = ServerArgs.check_mode options in
-  let ai_mode      = ServerArgs.ai_mode options in
   let gc_control   = ServerConfig.gc_control config in
   Typing_deps.trace :=
-    not check_mode || ai_mode <> None || ServerArgs.convert options <> None ||
+    not check_mode || ServerArgs.convert options <> None ||
     ServerArgs.save_filename options <> None;
   let nbr_procs = GlobalConfig.nbr_procs in
   let workers =
@@ -28,7 +27,7 @@ let make_genv options config watch_paths =
     else
       Some (Worker.make nbr_procs gc_control) in
   let dfind =
-    if Sys.win32 || check_mode || ai_mode <> None then
+    if Sys.win32 || check_mode then
       None
     else
       Some (DfindLib.init watch_paths) in

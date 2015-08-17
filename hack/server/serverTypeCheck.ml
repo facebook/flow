@@ -104,6 +104,15 @@ let reparse fast files_info additional_files =
     | Some _ -> acc
   end additional_files fast
 
+let reparse_infos files_info fast =
+  Relative_path.Map.fold begin fun x _y acc ->
+    try
+      let info = Relative_path.Map.find_unsafe x files_info in
+      if info.FileInfo.consider_names_just_for_autoload then acc else
+      Relative_path.Map.add x info acc
+    with Not_found -> acc
+  end fast Relative_path.Map.empty
+
 (*****************************************************************************)
 (* Removes the names that were defined in the files *)
 (*****************************************************************************)
@@ -263,7 +272,15 @@ let type_check genv env =
     let to_recheck = Relative_path.Set.union to_recheck env.failed_check in
     let fast = reparse fast files_info to_recheck in
     ServerCheckpoint.process_updates fast;
-    Typing_check_service.go genv.workers env.nenv fast
+    let te, tf = Typing_check_service.go genv.workers env.nenv fast in
+    match ServerArgs.ai_mode genv.options with
+    | None -> te, tf
+    | Some optstr ->
+      let fast_infos = reparse_infos files_info fast in
+      let ae, af = Ai.go_incremental
+        Typing_check_utils.check_defs genv.workers fast_infos env.nenv optstr in
+      (List.rev (List.rev_append te ae)),
+      (Relative_path.Set.union af tf)
   end in
 
   let errorl = List.rev (List.rev_append errorl' errorl) in

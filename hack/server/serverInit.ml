@@ -28,9 +28,9 @@ let init_hack genv env get_next =
     ServerArgs.save_filename genv.options = None
   in
 
-  let is_ai_mode = (ServerArgs.ai_mode genv.options) <> None in
+  let ai_mode = ServerArgs.ai_mode genv.options in
 
-  if not (is_check_mode || is_ai_mode) then begin
+  if not is_check_mode then begin
     Typing_deps.update_files files_info;
   end;
 
@@ -48,15 +48,15 @@ let init_hack genv env get_next =
 
   Hh_logger.log "Heap size: %d" (SharedMem.heap_size ());
 
-  let errorl4, failed4 = if not is_ai_mode then
+  let errorl4, failed4 = if ai_mode = None || not is_check_mode then
       Hh_logger.measure "Type-check" begin fun () ->
         Typing_check_service.go genv.workers nenv fast
       end
     else
       [],  Relative_path.Set.empty in
 
-  let errorl5, failed5 = if is_ai_mode then
-      let optstr = Utils.unsafe_opt (ServerArgs.ai_mode genv.options) in
+  let errorl5, failed5 = if ai_mode <> None then
+      let optstr = Utils.unsafe_opt ai_mode in
       Hh_logger.measure "Ai" begin fun () ->
         Ai.go Typing_check_utils.check_defs genv.workers files_info nenv optstr
       end
