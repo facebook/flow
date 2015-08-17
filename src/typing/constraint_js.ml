@@ -2219,6 +2219,9 @@ let rec is_printed_type_parsable_impl weak cx enclosure = function
     ->
       true
 
+  | AnnotT (_, t) ->
+      is_printed_type_parsable_impl weak cx enclosure t
+
   (* Composed types *)
   | MaybeT t
     ->
