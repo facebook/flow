@@ -313,6 +313,15 @@ let emit_const env (_, (_, name), opt_expr) =
     | Some lit -> fmt_const lit, None
     | None -> fmt_const "uninit", Some (name, expr)
 
+let emit_tconst env tconst =
+  match tconst.c_tconst_type with
+  | None -> env
+  | Some _ ->
+    (* TODO: Actually emit the type structure *)
+    let structure = Pos.none, Null in
+    let v = unsafe_opt (Emitter_lit.fmt_lit structure) in
+    emit_strs env [".const"; ""; snd tconst.c_tconst_name; "isType"; "="; v^";"]
+
 let class_kind_options  = function
   | Ast.Cabstract -> ["abstract"]
   | Ast.Cnormal -> []
@@ -341,9 +350,6 @@ let emit_class nenv env (_, x) =
   let cls = Emitter_xhp.convert_class cls in
 
   let env = start_new_function env in
-
-  (* still have a handful of unimplemented bits *)
-  if cls.c_typeconsts <> [] then unimpl "type constants";
 
   let env = handle_class_attrs env cls in
 
@@ -386,6 +392,7 @@ let emit_class nenv env (_, x) =
   let env = List.fold_left ~f:(emit_method ~is_static:true ~cls) ~init:env
     cls.c_static_methods in
   let env, uninit_consts = lmap emit_const env cls.c_consts in
+  let env = List.fold_left ~f:emit_tconst ~init:env cls.c_typeconsts in
 
   let uninit_vars = List.filter_map uninit_vars ~f:(fun x->x) in
   let uninit_svars = List.filter_map uninit_svars ~f:(fun x->x) in
