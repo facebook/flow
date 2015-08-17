@@ -247,7 +247,7 @@ let json_of_error (error : error) = Json.(
 
 let json_of_errors errors = Json.JList (List.map json_of_error errors)
 
-let print_errorl_json oc el =
+let print_error_json oc el =
   let res =
     if el = [] then
       Json.JAssoc [ "passed", Json.JBool true;
@@ -263,14 +263,14 @@ let print_errorl_json oc el =
   output_string oc (Json.json_to_string res);
   flush oc
 
-(* adapted from Errors.to_string to omit error codes *)
-let to_string : error -> string =
+(* for vim and emacs plugins *)
+let print_error_deprecated =
   let endline s = if s = "" then "" else s ^ "\n" in
   let to_pp_string message =
     let loc, msg = to_pp message in
     Printf.sprintf "%s%s" (endline (Reason_js.string_of_loc loc)) (endline msg)
   in
-  fun error ->
+  let to_string (error : error) : string =
     let level, msgl, trace_reasons = error in
     let msgl = append_trace_reasons msgl trace_reasons in
     let buf = Buffer.create 50 in
@@ -283,26 +283,19 @@ let to_string : error -> string =
         end rest_of_error
     );
     Buffer.contents buf
-
-let print_errorl use_json el oc =
-  if use_json then
-    print_errorl_json oc el
-  else begin
-    if el = []
-    then output_string oc "No errors!\n"
-    else
-      let sl = List.map to_string el in
-      let sl = Utils_js.uniq (List.sort String.compare sl) in
-      List.iter begin fun s ->
-        if !Utils.debug then begin
-          output_string stdout s;
-          flush stdout;
-        end;
-        output_string oc s;
-        output_string oc "\n";
-      end sl
-  end;
-  flush oc
+  in
+  fun oc el ->
+    let sl = List.map to_string el in
+    let sl = Utils_js.uniq (List.sort String.compare sl) in
+    List.iter begin fun s ->
+      if !Utils.debug then begin
+        output_string stdout s;
+        flush stdout;
+      end;
+      output_string oc s;
+      output_string oc "\n";
+    end sl;
+    flush oc
 
 (* Human readable output *)
 let print_error_summary ~flags errors =

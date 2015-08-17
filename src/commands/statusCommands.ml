@@ -110,12 +110,18 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
       raise CommandExceptions.Server_directory_mismatch
     | ServerProt.ERRORS e ->
       let error_flags = args.error_flags in
-      if args.output_json || args.from <> ""
-      then Errors_js.print_errorl args.output_json e stdout
-      else Errors_js.print_error_summary ~flags:error_flags e;
+      begin if args.output_json then
+        Errors_js.print_error_json stdout e
+      else if args.from = "vim" || args.from = "emacs" then
+        Errors_js.print_error_deprecated stdout e
+      else
+        Errors_js.print_error_summary ~flags:error_flags e
+      end;
       exit 2
     | ServerProt.NO_ERRORS ->
-      Errors_js.print_errorl args.output_json [] stdout;
+      if args.output_json
+      then Errors_js.print_error_json stdout []
+      else Printf.printf "No errors!\n%!";
       exit 0
     | ServerProt.PONG ->
         Printf.printf "Why on earth did the server respond with a pong?\n%!";

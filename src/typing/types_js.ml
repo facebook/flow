@@ -800,7 +800,7 @@ let full_check workers parse_next opts =
 (* helper - print errors. used in check-and-die runs *)
 let print_errors options errors =
   if options.Options.opt_json
-  then Errors_js.print_errorl true errors stdout
+  then Errors_js.print_error_json stdout errors
   else
     Errors_js.print_error_summary ~flags:(Options.error_flags options) errors
 
