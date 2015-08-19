@@ -47,16 +47,30 @@ let emit_func_body env m =
     | n -> emit_strs env [".numiters"; string_of_int n; ";"] in
   emit_str_raw env output
 
-let emit_param ~tparams p =
+(* returns the param text for this param along with
+ * Some (name, DV id, expr) if there is a default param and None otherwise *)
+let emit_param ~tparams i p =
   assert (not p.param_is_reference); (* actually right *)
   if p.param_is_variadic then unimpl "variadic params";
-  if p.param_expr <> None then unimpl "default args";
-  Emitter_types.fmt_hint_info ~tparams ~always_extended:false p.param_hint ^
-  get_lid_name p.param_id
+  let type_info =
+    Emitter_types.fmt_hint_info ~tparams ~always_extended:false p.param_hint in
+
+  let name = get_lid_name p.param_id in
+  match p.param_expr with
+  | None -> type_info ^ name, None
+  | Some default ->
+    let dv_id = "DV" ^ string_of_int i in
+    (* TODO: emit eval'able php for the argument for reflection *)
+    let phpCode = "(\"\"\"<UNIMPLEMENTED>\"\"\")" in
+    type_info ^ name ^ " = " ^ dv_id ^ phpCode,
+    Some (name, dv_id, default)
 
 let fmt_params ?(tparams=[]) params =
-  let param_names = List.map ~f:(emit_param ~tparams) params in
-  "(" ^ String.concat ", " param_names ^ ")"
+  let param_strs, defaults =
+    List.unzip (List.mapi ~f:(emit_param ~tparams) params) in
+  "(" ^ String.concat ", " param_strs ^ ")",
+  List.filter_opt defaults
+
 
 let fmt_visibility vis =
   match vis with
@@ -112,6 +126,17 @@ let emit_closure_vars env = function
   | Some vars ->
     emit_strs env ([".declvars"] @ vars @ [";"])
 
+let emit_default_inits env top_label inits =
+  let emit_default_init env (id, dv, expr) =
+    let env = emit_label env dv in
+    let env = Emitter_expr.emit_expr env expr in
+    let env = emit_SetL env id in
+    emit_PopC env
+  in
+  let env = List.fold_left ~f:emit_default_init ~init:env inits in
+  if inits = [] then env else
+    emit_JmpNS env top_label
+
 (* Emit a method or a function. m, the method, might actually just be
  * a dummy that was built from a function. We need tparams (which will be
  * any tparams that come from the class) because formatting types needs
@@ -142,15 +167,21 @@ let emit_method_or_func env ~is_method ~is_static ~tparams ~full_name
                 ["mayusevv"] @
                 fmt_user_attributes m.m_user_attributes in
   let is_closure = closure_vars <> None in
-  let post = fmt_params ~tparams m.m_params ^ fmt_fun_tags env m ~is_closure in
+  let param_text, default_args = fmt_params ~tparams m.m_params in
+  let post = param_text ^ fmt_fun_tags env m ~is_closure in
   let tag = if is_method then ".method" else ".function" in
 
   (* return type hints are always "extended" because php doesn't have them *)
   let type_and_name =
     Emitter_types.fmt_hint_info ~tparams ~always_extended:true m.m_ret ^ name in
+
+  let env, top_label = fresh_label env in
+
   let env = emit_enter env tag options type_and_name post in
   let env = emit_closure_vars env closure_vars in
+  let env = emit_label env top_label in
   let env = emit_str_raw env body_output in
+  let env = emit_default_inits env top_label default_args in
   let env = run_cleanups env in
   let env = emit_exit env in
   env
@@ -186,14 +217,6 @@ let emit_fun nenv env (_, x) =
   emit_str env ""
 
 
-let emit_default_ctor env name abstract =
-  let options = bool_option "abstract" abstract @ ["public"; "mayusevv"] in
-  let env = emit_enter env ".method" options name (fmt_params []) in
-  let env = emit_Null env in
-  let env = emit_RetC env in
-  let env = emit_exit env in
-  env
-
 (* extends lists and things are hints,
  * but I *think* it needs to be an apply? *)
 let fmt_class_hint = function
@@ -223,7 +246,7 @@ let emit_prop_init env ~is_static = function
     in
 
     let options = ["private"; "mayusevv"] @ extra_opts in
-    let env = emit_enter env ".method" options name (fmt_params []) in
+    let env = emit_enter env ".method" options name "()" in
 
     let fmt_var_init env (name, expr) =
       let env, skip_label = fresh_label env in
@@ -406,9 +429,9 @@ let emit_class nenv env (_, x) =
   let env, uninit_consts = lmap emit_const env cls.c_consts in
   let env = List.fold_left ~f:emit_tconst ~init:env cls.c_typeconsts in
 
-  let uninit_vars = List.filter_map uninit_vars ~f:(fun x->x) in
-  let uninit_svars = List.filter_map uninit_svars ~f:(fun x->x) in
-  let uninit_consts = List.filter_map uninit_consts ~f:(fun x->x) in
+  let uninit_vars = List.filter_opt uninit_vars in
+  let uninit_svars = List.filter_opt uninit_svars in
+  let uninit_consts = List.filter_opt uninit_consts in
 
   (* Now for 86* stuff *)
   let env = match cls.c_constructor with
