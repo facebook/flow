@@ -356,6 +356,7 @@ module Typing                               = struct
   let invalid_classname                     = 4148 (* DONT MODIFY!!!! *)
   let invalid_memoized_param                = 4149 (* DONT MODIFY!!!! *)
   let illegal_type_structure                = 4150 (* DONT MODIFY!!!! *)
+  let not_nullable_compare_null_trivial     = 4151 (* DONT MODIFY!!!! *)
   (* EXTEND HERE WITH NEW VALUES IF NEEDED *)
 end
 
