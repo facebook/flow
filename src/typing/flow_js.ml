@@ -2722,9 +2722,14 @@ let rec __flow cx (l, u) trace =
     (* objects can be frozen *)
     (*************************)
 
-    | (ObjT (r, objtype), ObjFreezeT (_, t)) ->
+    | (ObjT (reason_o, objtype), ObjFreezeT (reason_op, t)) ->
+      (* make the reason describe the result (e.g. a frozen object literal),
+         but point at the entire Object.freeze call. *)
+      let desc = desc_of_reason reason_o |> spf "frozen %s" in
+      let reason = replace_reason desc reason_op in
+
       let flags = {frozen = true; sealed = true; exact = true;} in
-      let new_obj = ObjT (prefix_reason "frozen " r, {objtype with flags}) in
+      let new_obj = ObjT (reason, {objtype with flags}) in
       rec_flow cx trace (new_obj, t)
 
     (*******************************************)
