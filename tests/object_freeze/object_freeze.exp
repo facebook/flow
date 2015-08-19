@@ -5,9 +5,9 @@ object_freeze.js:4:1,17: assignment of property bar
 Mutation not allowed on
 object_freeze.js:3:25,38: frozen object literal
 
-object_freeze.js:3:11,39: Object.freeze
+object_freeze.js:6:1,34: Object.assign
 Error:
-object_freeze.js:6:1,34: prop bar of Object.assign
+object_freeze.js:6:1,34: prop bar of object literal
 Mutation not allowed on
 object_freeze.js:3:25,38: frozen object literal
 

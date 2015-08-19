@@ -3814,13 +3814,11 @@ and clone_object cx reason this that =
   clone_object_with_excludes cx reason this that []
 
 and chain_objects cx reason this those =
-  let result = ref this in
-  List.iter (fun that ->
-    result := Flow_js.mk_tvar_where cx reason (fun t ->
-      Flow_js.flow cx (!result, ObjAssignT(reason, that, t, [], true));
+  List.fold_left (fun result that ->
+    Flow_js.mk_tvar_where cx reason (fun t ->
+      Flow_js.flow cx (result, ObjAssignT(reason, that, t, [], true));
     )
-  ) those;
-  !result
+  ) this those
 
 and react_ignored_attributes = [ "key"; "ref"; ]
 

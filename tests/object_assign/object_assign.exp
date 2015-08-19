@@ -27,4 +27,20 @@ B.js:12:19,29: string
 This type is incompatible with
 B.js:12:10,15: number
 
-Found 5 errors
+non_objects.js:3:1,32: Object.assign
+Error:
+non_objects.js:3:1,32: prop a of object literal
+Property cannot be assigned on
+non_objects.js:3:15,19: string
+
+non_objects.js:4:1,30: Object.assign
+Error:
+non_objects.js:4:1,30: prop a of object literal
+Property cannot be assigned on
+non_objects.js:4:15,17: number
+
+non_objects.js:5:1,30: Object.assign
+Expected object instead of
+non_objects.js:5:27,29: number
+
+Found 8 errors

@@ -147,13 +147,13 @@ props.js:20:29,33: boolean
 This type is incompatible with
 props.js:5:12,33: string
 
-props.js:20:15,57: React element: TestProps
+props.js:20:15,57: type parameter D of React element: TestProps
 Error:
 props.js:20:29,33: boolean
 This type is incompatible with
 props.js:10:20,21: string
 
-props.js:20:15,57: React element: TestProps
+props.js:20:15,57: type parameter D of React element: TestProps
 Error:
 props.js:20:39,43: boolean
 This type is incompatible with

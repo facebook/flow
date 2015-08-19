@@ -2663,12 +2663,18 @@ let rec __flow cx (l, u) trace =
 
     | (ObjT (reason_, { props_tmap = mapr; _ }),
        ObjAssignT (reason, proto, t, props_to_skip, false)) ->
+      Ops.push reason;
       iter_props cx mapr (fun x t ->
         if not (List.mem x props_to_skip) then (
-          let reason = prefix_reason (spf "prop %s of " x) reason in
-          rec_flow cx trace (proto, SetT (reason, x, t));
+          (* move the reason to the call site instead of the definition, so that
+             it is in the same scope as the Object.assign, so that strictness
+             rules apply. *)
+          let r = prefix_reason (spf "prop %s of " x) reason_ in
+          let r = repos_reason (loc_of_reason reason) r in
+          rec_flow cx trace (proto, SetT (r, x, t));
         );
       );
+      Ops.pop ();
       rec_flow cx trace (proto, t)
 
     | (InstanceT (reason_, _, _, { fields_tmap; methods_tmap; _ }),
