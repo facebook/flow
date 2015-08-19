@@ -17,6 +17,8 @@ open Nast
 
 open Emitter_core
 
+module SN = Naming_special_names
+
 let emit_generator_prologue env m =
   match m.m_fun_kind with
     | Ast.FGenerator | Ast.FAsyncGenerator ->
@@ -49,7 +51,7 @@ let emit_param ~tparams p =
   assert (not p.param_is_reference); (* actually right *)
   if p.param_is_variadic then unimpl "variadic params";
   if p.param_expr <> None then unimpl "default args";
-  Emitter_types.fmt_hint ~tparams ~always_extended:false p.param_hint ^
+  Emitter_types.fmt_hint_info ~tparams ~always_extended:false p.param_hint ^
   get_lid_name p.param_id
 
 let fmt_params ?(tparams=[]) params =
@@ -145,7 +147,7 @@ let emit_method_or_func env ~is_method ~is_static ~tparams ~full_name
 
   (* return type hints are always "extended" because php doesn't have them *)
   let type_and_name =
-    Emitter_types.fmt_hint ~tparams ~always_extended:true m.m_ret ^ name in
+    Emitter_types.fmt_hint_info ~tparams ~always_extended:true m.m_ret ^ name in
   let env = emit_enter env tag options type_and_name post in
   let env = emit_closure_vars env closure_vars in
   let env = emit_str_raw env body_output in
@@ -322,12 +324,18 @@ let emit_tconst env tconst =
     let v = unsafe_opt (Emitter_lit.fmt_lit structure) in
     emit_strs env [".const"; ""; snd tconst.c_tconst_name; "isType"; "="; v^";"]
 
+let emit_enum ~cls env e =
+  emit_strs env [".enum_ty";
+                 Emitter_types.fmt_hint_constraint
+                   ~tparams:(fst cls.c_tparams) ~always_extended:true e.e_base
+                 ^ ";"]
+
 let class_kind_options  = function
   | Ast.Cabstract -> ["abstract"]
   | Ast.Cnormal -> []
   | Ast.Cinterface -> ["interface"]
   | Ast.Ctrait -> ["final"; "trait"]
-  | Ast.Cenum -> unimpl "first class enums"
+  | Ast.Cenum -> ["final"; "enum"]
 
 (* do any handling of user attributes we need
  * (just failing on ones we don't recognize now) *)
@@ -360,7 +368,9 @@ let emit_class nenv env (_, x) =
   (* The "extends" list of an interface is "implements" to hhvm *)
   let implements, extends = match cls.c_kind with
     | Ast.Cinterface -> cls.c_extends, []
-    | Ast.Cabstract | Ast.Cnormal | Ast.Ctrait | Ast.Cenum ->
+    | Ast.Cenum -> [], [Pos.none,
+                        Happly ((Pos.none, SN.Classes.cHH_BuiltinEnum), [])]
+    | Ast.Cabstract | Ast.Cnormal | Ast.Ctrait ->
       cls.c_implements, cls.c_extends in
 
   let extends_list = fmt_extends_list extends in
@@ -383,6 +393,8 @@ let emit_class nenv env (_, x) =
   let env = emit_enter env ".class" options name
                        (extends_list^implements_list) in
 
+  (* Emit all of the main content parts of the class *)
+  let env = opt_fold (emit_enum ~cls) env cls.c_enum in
   let env = List.fold_left ~f:emit_use ~init:env cls.c_uses in
   let env, uninit_vars = lmap (emit_var ~is_static:false) env cls.c_vars in
   let env, uninit_svars =

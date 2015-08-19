@@ -73,22 +73,33 @@ let fmt_maybe_str = function
   | None -> "N"
   | Some s -> C.quote_str s
 
-(* Format a type hint for assembly output. tparams is so that we can
- * distinguish between type variables and class names. We *could* try
- * get this information from Typing_decl, since it has been computed,
- * but to be honest it is simpler to just do it ourselves. *)
-let fmt_hint ~tparams ~always_extended = function
-  | None -> ""
-  | Some t ->
+
+let fmt_hint_inner ~tparams ~always_extended t =
     let tparams = List.map ~f:(fun (_, (_, s), _) -> s) tparams in
 
     let name, flags = hint_info tparams t in
-    (* just punt on the "user type", which is supposed to be a string
-     * with the "actual" annotation, for now *)
-    let user_type = fmt_maybe_str None in
     if flags = [] || name = None then "" else
       (* uniqify the flags *)
       let flags = List.dedup
         (flags @ C.bool_option "extended_hint" always_extended) in
-      "<" ^ user_type ^ " " ^
-        fmt_maybe_str name ^ " " ^ String.concat " " flags ^ "> "
+      fmt_maybe_str name ^ " " ^ String.concat " " flags
+
+
+(* Format a type hint for assembly output when full type-info is wanted.
+ * (TypeConstraint+"userType"). tparams is so that we can
+ * distinguish between type variables and class names. We *could* try
+ * get this information from Typing_decl, since it has been computed,
+ * but to be honest it is simpler to just do it ourselves. *)
+let fmt_hint_info ~tparams ~always_extended = function
+  | None -> ""
+  | Some t ->
+    let core = fmt_hint_inner ~tparams ~always_extended t in
+    let user_type = fmt_maybe_str None in
+    if core = "" then core else
+      "<" ^ user_type ^ " " ^ core ^ ">"
+
+(* Format a hint that only has the constraint part *)
+let fmt_hint_constraint ~tparams ~always_extended t =
+  let core = fmt_hint_inner ~tparams ~always_extended t in
+  if core = "" then core else
+    "<" ^ core ^ ">"
