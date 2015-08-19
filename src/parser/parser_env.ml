@@ -118,6 +118,13 @@ end = struct
       | None -> failwith "Lookahead.peek failed"
 end
 
+type token_sink_result = {
+  token_loc: Loc.t;
+  token: Lexer_flow.token;
+  token_context: lex_mode;
+  token_value: string;
+}
+
 type env = {
   errors            : (Loc.t * Error.t) list ref;
   comments          : Comment.t list ref;
@@ -146,10 +153,11 @@ type env = {
    * places assume that the state here is consistent with having lexed exactly
    * one token of lookahead. This needs to be cleared whenever we advance. *)
   lookahead         : Lookahead.t option ref;
+  token_sink        : (token_sink_result -> unit) option ref;
 }
 
 (* constructor *)
-let init_env lb =
+let init_env ?(token_sink=None) lb =
   let lex_env = new_lex_env lb in
   let lex_env, lookahead = lex lex_env NORMAL_LEX in
   {
@@ -174,6 +182,7 @@ let init_env lb =
     lex_mode_stack    = ref [NORMAL_LEX];
     lex_env           = ref lex_env;
     lookahead         = ref None;
+    token_sink        = ref token_sink;
   }
 
 (* getters: *)
@@ -253,14 +262,37 @@ let lex env mode =
   env.lex_env := lex_env;
   lex_result
 
-let advance env (lex_env, lex_result) lex_mode =
+let advance env (lex_env, lex_result) next_lex_mode =
+  (* If there's a token_sink, emit the lexed token before moving forward *)
+  (match !(env.token_sink) with
+    | None -> ()
+    | Some token_sink ->
+        let {lex_loc; lex_token; lex_value; _;} = lex_result in
+        token_sink {
+          token_loc=lex_loc;
+          token=lex_token;
+          (**
+           * The lex mode is useful because it gives context to some
+           * context-sensitive tokens.
+           *
+           * Some examples of such tokens include:
+           *
+           * `=>` - Part of an arrow function? or part of a type annotation?
+           * `<`  - A less-than? Or an opening to a JSX element?
+           * ...etc...
+           *)
+          token_context=(lex_mode env);
+          token_value=lex_value
+        }
+  );
   let next_lex_result =
     if lex_result.lex_token = T_EOF then
       (* There's no next token, so we don't lex, we just pretend that the EOF is
        * next *)
       lex_result
     else
-      lex env lex_mode in
+      lex env next_lex_mode
+  in
   error_list env lex_result.lex_errors;
   comment_list env lex_result.lex_comments;
   env.last := Some (lex_env, lex_result);
@@ -350,20 +382,41 @@ module Try = struct
     saved_last           : (lex_env * lex_result) option;
     saved_lex_mode_stack : lex_mode list;
     saved_lex_env        : lex_env;
+    token_buffer         : ((token_sink_result -> unit) * token_sink_result Queue.t) option;
   }
 
-  let save_state env = {
-    saved_errors         = !(env.errors);
-    saved_comments       = !(env.comments);
-    saved_lb             =
-      Lexing.({env.lb with lex_abs_pos=env.lb.lex_abs_pos});
-    saved_lookahead      = !(env.single_lookahead);
-    saved_last           = !(env.last);
-    saved_lex_mode_stack = !(env.lex_mode_stack);
-    saved_lex_env        = !(env.lex_env);
-  }
+  let save_state env =
+    let token_buffer =
+      match !(env.token_sink) with
+      | None -> None
+      | Some orig_token_sink ->
+          let buffer = Queue.create () in
+          env.token_sink := Some(fun token_data ->
+            Queue.add token_data buffer
+          );
+          Some(orig_token_sink, buffer)
+    in
+    {
+      saved_errors         = !(env.errors);
+      saved_comments       = !(env.comments);
+      saved_lb             =
+        Lexing.({env.lb with lex_abs_pos=env.lb.lex_abs_pos});
+      saved_lookahead      = !(env.single_lookahead);
+      saved_last           = !(env.last);
+      saved_lex_mode_stack = !(env.lex_mode_stack);
+      saved_lex_env        = !(env.lex_env);
+      token_buffer;
+    }
+
+  let reset_token_sink ~flush env token_buffer_info =
+    match token_buffer_info with
+    | None -> ()
+    | Some(orig_token_sink, token_buffer) ->
+        env.token_sink := Some orig_token_sink;
+        if flush then Queue.iter orig_token_sink token_buffer
 
   let rollback_state env saved_state =
+    reset_token_sink ~flush:false env saved_state.token_buffer;
     env.errors := saved_state.saved_errors;
     env.comments := saved_state.saved_comments;
     env.single_lookahead := saved_state.saved_lookahead;
@@ -388,8 +441,12 @@ module Try = struct
 
     FailedToParse
 
+  let success env saved_state result =
+    reset_token_sink ~flush:true env saved_state.token_buffer;
+    ParsedSuccessfully result
+
   let to_parse env parse =
     let saved_state = save_state env in
-    try ParsedSuccessfully (parse env)
+    try success env saved_state (parse env)
     with Rollback -> rollback_state env saved_state
 end
