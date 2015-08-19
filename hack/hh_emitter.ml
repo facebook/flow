@@ -76,11 +76,6 @@ let emit_file { filename; read_stdin; is_test } () =
 
   if file_mode <> Some FileInfo.Mstrict then
     die "Can only emit files in strict mode\n";
-  (* Even in strict mode, we might have HH_FIXME'd toplevel statements.
-   * It probably wouldn't be too hard to handle this by bundling
-   * them into a dummy function... *)
-  let is_stmt = function | Ast.Stmt s -> true | _ -> false in
-  if List.exists is_stmt ast then Emitter_core.unimpl "toplevel stmts";
 
   Parser_heap.ParserHeap.add filename ast;
 
@@ -97,7 +92,7 @@ let emit_file { filename; read_stdin; is_test } () =
   Typing_decl.make_env nenv all_classes filename;
 
   (* Actually emit. *)
-  Emitter.emit_file ~is_test nenv filename file_info
+  Emitter.emit_file ~is_test nenv filename ast file_info
 
 
 let main_hack options =

@@ -462,19 +462,47 @@ let rec emit_all_closures env =
   emit_all_closures env
 
 
+let emit_typedef _nenv env (_, x) =
+  let typedef = Naming_heap.TypedefHeap.find_unsafe x in
+  emit_strs env [".alias"; fmt_name x; "=";
+                 Emitter_types.fmt_hint_constraint
+                   ~tparams:[] ~always_extended:false typedef.t_kind ^ ";"]
+
 (* Bogusly emit a call to a hardcoded test function *)
 let emit_test_call env =
   let env = emit_FPushFuncD env 0 "test" in
   let env = emit_FCall env 0 in
   emit_PopR env
 
-let emit_main env ~is_test classes =
+let emit_main env ~is_test ast =
   let env = start_new_function env in
   let env = emit_enter env ".main" [] "" "" in
 
-  (* emit def classes *)
-  let env =
-    List.foldi ~f:(fun i env _ -> emit_DefCls env i) ~init:env classes in
+  (* We use the original AST to drive emitting DefTypeAlias and
+   * DefCls, since their order matters and the nast doesn't track
+   * that. (We could have sorted those by pos or something but we'll
+   * want something like this to handle toplevel statements eventually
+   * anyways). *)
+  let rec emit_program env num_classes num_aliases = function
+    | [] -> env
+    | def :: defs ->
+      match def with
+      | Ast.Class _ ->
+        let env = emit_DefCls env num_classes in
+        emit_program env (num_classes+1) num_aliases defs
+      | Ast.Typedef _ ->
+        let env = emit_DefTypeAlias env num_aliases in
+        emit_program env num_classes (num_aliases+1) defs
+      (* It probably wouldn't be too hard to handle this by bundling
+       * them into a dummy function... *)
+      | Ast.Stmt _ -> unimpl "toplevel stmts"
+      | Ast.Namespace (_, ns_defs) ->
+        emit_program env num_classes num_aliases (ns_defs@defs)
+      | Ast.Fun _ | Ast.Constant _ | Ast.NamespaceUse _ ->
+        emit_program env num_classes num_aliases defs
+  in
+
+  let env = emit_program env 0 0 ast in
 
   (* emit debugging test *)
   let env = if is_test then emit_test_call env else env in
@@ -486,23 +514,24 @@ let emit_main env ~is_test classes =
   let env = emit_exit env in
   emit_str env ""
 
-let emit_file ~is_test nenv filename
+let emit_file ~is_test nenv filename ast
     {FileInfo.file_mode; funs; classes; typedefs; consts; _} =
   assert (file_mode = Some FileInfo.Mstrict);
-  if typedefs <> [] then unimpl "typedefs";
   if consts <> [] then unimpl "global consts";
 
   let env = new_env () in
 
   let env = emit_strs env
     [".filepath"; quote_str (Relative_path.to_absolute filename) ^ ";\n"] in
-  let env = emit_main env ~is_test classes in
+  let env = emit_main env ~is_test ast in
   let env = List.fold_left ~f:(emit_fun nenv) ~init:env funs in
   let env = List.fold_left ~f:(emit_class nenv) ~init:env classes in
+  let env = List.fold_left ~f:(emit_typedef nenv) ~init:env typedefs in
   let env = emit_all_closures env in
+  let env = emit_str env "" in
 
   let output = get_output env in
-  Printf.printf "%s\n" output;
+  output_string stdout output;
   (* Dump all the output to a log file if HH_EMITTER_LOG set *)
   try Sys_utils.append_file ~file:(Sys.getenv "HH_EMITTER_LOG") output
   with _ -> ()
