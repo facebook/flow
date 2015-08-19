@@ -413,7 +413,9 @@ let emit_class nenv env (_, x) =
   (* Now for 86* stuff *)
   let env = match cls.c_constructor with
             | None -> emit_str env ".default_ctor;"
-            | Some m -> emit_method ~is_static:false ~cls env m in
+            | Some m ->
+              (* don't emit the mildly bogus return hint for ctors *)
+              emit_method ~is_static:false ~cls env {m with m_ret = None} in
 
   let env = emit_prop_init env ~is_static:false uninit_vars in
   let env = emit_prop_init env ~is_static:true uninit_svars in

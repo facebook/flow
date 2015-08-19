@@ -609,16 +609,9 @@ and emit_expr env (pos, expr_ as expr) =
       | SFlit (pos, _ as s) -> pos, String s
       | SFclass_const ((pos, _ as id), s) -> pos, Class_const (CI id, s)
     in
-    (* The doc comment says only use in testing code but this is
-     * /actually/ the right thing here *)
     let shape_fields =
       List.map ~f:(fun (k, v) -> (shape_field_to_expr k, v))
-        (ShapeMap.elements smap) in
-    (* Sort the fields by their position in order to have the same insertion
-     * order as HHVM. Sigh. *)
-    let shape_fields = List.sort
-      (fun ((p1, _), _) ((p2, _), _) -> Pos.compare p1 p2)
-      shape_fields in
+        (extract_shape_fields smap) in
     let array = pos, make_kvarray shape_fields in
     emit_expr env array
 

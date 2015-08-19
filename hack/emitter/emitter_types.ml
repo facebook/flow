@@ -29,6 +29,50 @@ let fmt_prim x =
   | N.Tarraykey -> "HH\\arraykey"
   | N.Tnoreturn -> "HH\\noreturn"
 
+(* Produce the "userType" bit of the annotation *)
+let rec fmt_hint (_, h) =
+  match h with
+  | N.Hany -> ""
+  | N.Hmixed -> "HH\\mixed"
+  | N.Hthis -> "HH\\this"
+  | N.Hprim prim -> fmt_prim prim
+  | N.Habstr (s, _) -> C.fmt_name s
+
+  | N.Happly ((_, s), []) -> C.fmt_name s
+  | N.Happly ((_, s), args) ->
+    C.fmt_name s ^ "<" ^ String.concat ", " (List.map args fmt_hint) ^ ">"
+
+  | N.Hfun (args, _, ret) ->
+    "(function (" ^ String.concat ", " (List.map args fmt_hint) ^ "): " ^
+      fmt_hint ret ^ ")"
+
+  | N.Htuple hs ->
+    "(" ^ String.concat ", " (List.map hs fmt_hint) ^ ")"
+
+  | N.Haccess (h, accesses) ->
+    fmt_hint h ^ "::" ^ String.concat "::" (List.map accesses snd)
+
+  | N.Hoption t -> "?" ^ fmt_hint t
+
+  | N.Harray (None, None) -> "array"
+  | N.Harray (Some h, None) -> "array<" ^ fmt_hint h ^ ">"
+  | N.Harray (Some h1, Some h2) ->
+    "array<" ^ fmt_hint h1 ^ ", " ^ fmt_hint h2 ^ ">"
+  | N.Harray _ -> C.bug "bogus array"
+  (* We have to say Nast.Hshape instead of N.Hshape because otherwise
+   * OCaml 4.01 reports a type error when trying to call
+   * C.extract_shape_fields. asdf. *)
+  | Nast.Hshape smap ->
+    let fmt_field = function
+      | N.SFlit (_, s) -> "'" ^ s ^ "'"
+      | N.SFclass_const ((_, s1), (_, s2)) -> C.fmt_name s1 ^ "::" ^ s2
+    in
+    let shape_fields =
+      List.map ~f:(fun (k, h) -> fmt_field k ^ "=>" ^ fmt_hint h)
+        (C.extract_shape_fields smap) in
+    "HH\\shape(" ^ String.concat ", " shape_fields ^ ")"
+
+
 (* Given a type hint, break it up into an (optional) underlying
  * "vanilla" name and a set of flags which will be used to construct
  * a runtime TypeConstraint (hphp/runtime/vm/type-constraint.h).
@@ -50,7 +94,8 @@ let fmt_prim x =
 let rec hint_info ~tparams (_, h) =
   match h with
   (* We don't care about mixed/fun/this constraints *)
-  | N.Hany | N.Hmixed | N.Hfun (_, _, _) | N.Hthis -> (None, [])
+  | N.Hany | N.Hmixed | N.Hfun (_, _, _) | N.Hthis
+  | N.Hprim N.Tvoid -> (None, [])
 
   | N.Hprim prim -> Some (fmt_prim prim), ["hh_type"]
 
@@ -78,11 +123,10 @@ let fmt_hint_inner ~tparams ~always_extended t =
     let tparams = List.map ~f:(fun (_, (_, s), _) -> s) tparams in
 
     let name, flags = hint_info tparams t in
-    if flags = [] || name = None then "" else
-      (* uniqify the flags *)
-      let flags = List.dedup
-        (flags @ C.bool_option "extended_hint" always_extended) in
-      fmt_maybe_str name ^ " " ^ String.concat " " flags
+    (* uniqify the flags *)
+    let flags = List.dedup
+      (flags @ C.bool_option "extended_hint" always_extended) in
+    fmt_maybe_str name ^ " " ^ String.concat " " flags
 
 
 (* Format a type hint for assembly output when full type-info is wanted.
@@ -94,12 +138,10 @@ let fmt_hint_info ~tparams ~always_extended = function
   | None -> ""
   | Some t ->
     let core = fmt_hint_inner ~tparams ~always_extended t in
-    let user_type = fmt_maybe_str None in
-    if core = "" then core else
-      "<" ^ user_type ^ " " ^ core ^ ">"
+    let user_type = C.quote_str (fmt_hint t) in
+    "<" ^ user_type ^ " " ^ core ^ "> "
 
 (* Format a hint that only has the constraint part *)
 let fmt_hint_constraint ~tparams ~always_extended t =
   let core = fmt_hint_inner ~tparams ~always_extended t in
-  if core = "" then core else
-    "<" ^ core ^ ">"
+  "<" ^ core ^ ">"

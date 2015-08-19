@@ -19,10 +19,6 @@ let unimpl s =
 let bug s =
   Printf.eprintf "BUG: %s\n" s; exit 1
 
-(* *)
-let make_varray es = Nast.Array (List.map ~f:(fun e -> Nast.AFvalue e) es)
-let make_kvarray fields =
-  Nast.Array (List.map ~f:(fun (k, v) -> Nast.AFkvalue (k, v)) fields)
 (*** Types associated with translation ***)
 
 type flavor =
@@ -558,3 +554,16 @@ let emit_fault_cleanup ?faultlet_extras:(extra=(fun env -> env))
     emit_Unwind env
   in
   add_cleanup env emit_faultlet
+
+
+(* Some ast manipulation stuff that maybe belongs elsewhere *)
+let make_varray es = Nast.Array (List.map ~f:(fun e -> Nast.AFvalue e) es)
+let make_kvarray fields =
+  Nast.Array (List.map ~f:(fun (k, v) -> Nast.AFkvalue (k, v)) fields)
+(* Extract the elements out of a ShapeMap, sorted by position so that
+ * it matches the order it would be in HHVM. Sigh. *)
+let extract_shape_fields smap =
+  let get_pos =
+    function Nast.SFlit (p, _) | Nast.SFclass_const ((p, _), _) -> p in
+  List.sort (fun (k1, _) (k2, _) -> Pos.compare (get_pos k1) (get_pos k2))
+    (Nast.ShapeMap.elements smap)
