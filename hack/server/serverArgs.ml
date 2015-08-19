@@ -21,7 +21,7 @@ type options = {
   convert          : Path.t option;
   no_load          : bool;
   save_filename    : string option;
-  waiting_client   : int option;
+  waiting_client   : out_channel option;
 }
 
 (*****************************************************************************)
@@ -45,8 +45,8 @@ module Messages = struct
   let convert       = " adds type annotations automatically"
   let save          = " save server state to file"
   let no_load       = " don't load from a saved state"
-  let waiting_client= " kill pid with SIGUSR1 when server has begun starting"^
-                      " and again when it's done starting"
+  let waiting_client= " send message to fd/handle when server has begun \
+                      \ starting and again when it's done starting"
 end
 
 (*****************************************************************************)
@@ -79,7 +79,8 @@ let parse_options () =
   let cdir          = fun s -> convert_dir := Some s in
   let set_ai        = fun s -> ai_mode := Some s in
   let set_save      = fun s -> save := Some s in
-  let set_wait      = fun pid -> waiting_client := Some pid in
+  let set_wait      = fun fd ->
+    waiting_client := Some (Handle.to_out_channel fd) in
   let options =
     ["--debug"         , Arg.Set debug         , Messages.debug;
      "--ai"            , Arg.String set_ai     , Messages.ai;

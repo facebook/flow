@@ -101,7 +101,7 @@ begin library "hh-utils-common"
     "utils/get_build_id.c"
     "utils/nproc.c"
     "utils/realpath.c"
-    "utils/hh_json.ml"
+    "utils/handle_stubs.c"
     "utils/ident.ml"
     "utils/utils.ml"
     "utils/sys_utils.ml"
@@ -112,6 +112,7 @@ begin library "hh-utils-common"
     "utils/lint.ml"
     "utils/config_file.ml"
     "utils/tail.ml"
+    "utils/handle.ml"
   ]
 end
 

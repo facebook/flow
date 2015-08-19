@@ -67,6 +67,7 @@ NATIVE_OBJECT_FILES=\
   utils/get_build_id.o\
   utils/nproc.o\
   utils/realpath.o\
+  utils/handle_stubs.o\
   $(INOTIFY)/$(notdir $(INOTIFY))_stubs.o
 
 OCAML_LIBRARIES=\

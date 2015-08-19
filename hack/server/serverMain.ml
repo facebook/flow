@@ -34,22 +34,26 @@ end = struct
   let release_init_lock root =
     ignore(Lock.release (ServerFiles.init_file root))
 
+  let wakeup_client ?(close = false) options msg =
+    match ServerArgs.waiting_client options with
+    | None -> ()
+    | Some oc ->
+        output_string oc (msg ^ "\n");
+        if close then close_out oc else flush oc
+
   (* This code is only executed when the options --check is NOT present *)
   let go options init_fun =
     let root = ServerArgs.root options in
-    let send_signal () = match ServerArgs.waiting_client options with
-      | None -> ()
-      | Some pid -> (try Unix.kill pid Sys.sigusr1 with _ -> ()) in
     let t = Unix.gettimeofday () in
     Hh_logger.log "Initializing Server (This might take some time)";
     grab_init_lock root;
-    send_signal ();
+    wakeup_client options "starting";
     (* note: we only run periodical tasks on the root, not extras *)
     ServerPeriodical.init root;
     let env = init_fun () in
     release_init_lock root;
     Hh_logger.log "Server is READY";
-    send_signal ();
+    wakeup_client ~close:true options "ready";
     let t' = Unix.gettimeofday () in
     Hh_logger.log "Took %f seconds to initialize." (t' -. t);
     env
@@ -103,9 +107,9 @@ module Program : SERVER_PROGRAM =
       (* Force hhi files to be extracted and their location saved before workers
        * fork, so everyone can know about the same hhi path. *)
       ignore (Hhi.get_hhi_root());
-      ignore (
-          Sys.signal Sys.sigusr1 (Sys.Signal_handle Typing.debug_print_last_pos)
-        )
+      if not Sys.win32 then
+        ignore @@
+        Sys.signal Sys.sigusr1 (Sys.Signal_handle Typing.debug_print_last_pos)
 
     let make_next_files dir =
       let php_next_files = Find.make_next_files FindUtils.is_php dir in
@@ -422,7 +426,7 @@ let daemon_main options =
   (* this is to transform SIGPIPE in an exception. A SIGPIPE can happen when
    * someone C-c the client.
    *)
-  Sys.set_signal Sys.sigpipe Sys.Signal_ignore;
+  if not Sys.win32 then Sys.set_signal Sys.sigpipe Sys.Signal_ignore;
   PidLog.init (ServerFiles.pids_file root);
   PidLog.log ~reason:"main" (Unix.getpid());
   let watch_paths = root :: Program.get_watch_paths options in

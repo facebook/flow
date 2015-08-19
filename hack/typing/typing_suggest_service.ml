@@ -33,6 +33,9 @@ let timeout secs f =
   end;
   Sys.set_signal Sys.sigalrm old_handler
 
+let timeout secs f =
+  if Sys.win32 then f () (* TODO *) else timeout secs f
+
 module TypingSuggestFastStore = GlobalStorage.Make(struct
   type t = FileInfo.fast
 end)

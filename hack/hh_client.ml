@@ -43,8 +43,7 @@ let () =
    * detect and handle better than a signal). Ignore SIGUSR1 since we sometimes
    * use that for the server to tell us when it's done initializing, but if we
    * aren't explicitly listening we don't care. *)
-  Sys.set_signal Sys.sigpipe Sys.Signal_ignore;
-  Sys.set_signal Sys.sigusr1 Sys.Signal_ignore;
+  if not Sys.win32 then Sys.set_signal Sys.sigpipe Sys.Signal_ignore;
   let command = ClientArgs.parse_args () in
   let log_cmd = ClientLogCommandUtils.log_command_of_command command in
   HackEventLogger.client_startup log_cmd;
