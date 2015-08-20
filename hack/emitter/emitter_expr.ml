@@ -516,7 +516,19 @@ and emit_expr env (pos, expr_ as expr) =
   | False -> emit_bool env false
   | String (_, s) -> emit_String env s
 
-  | String2 _ -> unimpl "interpolated strings"
+  | String2 [] -> bug "empty String2"
+  (* If we there are multiple parts of the String2, they will get
+   * stringified when they get concatenated. If there is just one
+   * we need to cast it manually. *)
+  | String2 [e] ->
+    let env = emit_expr env e in
+    emit_cast env (Hprim Tstring)
+  | String2 (e1::el) ->
+    let env = emit_expr env e1 in
+    List.fold_left el ~init:env ~f:begin fun env e ->
+      let env = emit_expr env e in
+      emit_binop env Ast.Dot
+    end
 
   (* TODO: lots of ways to be better;
    * use NewStructArray/NewArray/NewPackedArray/array lits *)
@@ -541,7 +553,7 @@ and emit_expr env (pos, expr_ as expr) =
   (* XXX: is this right?? *)
   | This -> emit_BareThis env "Notice"
 
-  | Cast (h, e) ->
+  | Cast ((_, h), e) ->
     let env = emit_expr env e in
     emit_cast env h
 

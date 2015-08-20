@@ -502,7 +502,7 @@ let fmt_eq_binop bop =
   | Ast.Lte | Ast.Gt | Ast.Gte -> bug "not a eq binop"
 
 (* XXX: what all casts do we allow? *)
-let fmt_cast (_, h) =
+let fmt_cast h =
   match h with
   | Nast.Hprim Nast.Tint -> "Int"
   | Nast.Hprim Nast.Tbool -> "Bool"
