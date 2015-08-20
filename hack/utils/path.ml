@@ -18,7 +18,6 @@ let cat = Sys_utils.cat
 let compare = Pervasives.compare
 let dirname = Filename.dirname
 let expanduser = Sys_utils.expanduser
-let null_path = if Sys.win32 then "nul" else "/dev/null"
 
 (**
  * Resolves a path (using realpath)

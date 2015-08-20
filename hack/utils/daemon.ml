@@ -34,8 +34,6 @@ let descr_of_in_channel : 'a in_channel -> Unix.file_descr =
 let descr_of_out_channel : 'a out_channel -> Unix.file_descr =
   Unix.descr_of_out_channel
 
-let null_path = Path.to_string Path.null_path
-
 let make_pipe () =
   let descr_in, descr_out = Unix.pipe () in
   (* close descriptors on exec so they are not leaked *)
@@ -56,10 +54,10 @@ let fork ?log_file (f : ('a, 'b) channel_pair -> unit) :
       close_out parent_out;
       Sys_utils.with_umask 0o111 begin fun () ->
         let fd =
-          Unix.openfile null_path [Unix.O_RDONLY; Unix.O_CREAT] 0o777 in
+          Unix.openfile "/dev/null" [Unix.O_RDONLY; Unix.O_CREAT] 0o777 in
         Unix.dup2 fd Unix.stdin;
         Unix.close fd;
-        let fn = Option.value_map log_file ~default:null_path ~f:
+        let fn = Option.value_map log_file ~default:"/dev/null" ~f:
           begin fun fn ->
             Sys_utils.mkdir_no_fail (Filename.dirname fn);
             fn
@@ -78,6 +76,6 @@ let fork ?log_file (f : ('a, 'b) channel_pair -> unit) :
 
 (* for testing code *)
 let devnull () =
-  let ic = open_in null_path in
-  let oc = open_out null_path in
+  let ic = open_in "/dev/null" in
+  let oc = open_out "/dev/null" in
   {channels = ic, oc; pid = 0}

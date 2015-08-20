@@ -49,4 +49,4 @@
  *      signatures are correct).
  *)
 
-let () = Unix.handle_unix_error ServerMain.start ()
+let () = ServerMain.start ()

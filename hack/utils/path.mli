@@ -12,7 +12,6 @@
 type t = private string
 
 val dummy_path: t
-val null_path: t
 val expanduser: string -> t
 val make: string -> t
 val to_string: t -> string
