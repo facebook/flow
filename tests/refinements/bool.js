@@ -19,3 +19,12 @@ function bar(x: ?bool) {
     }
   }
 }
+
+function baz(x: ?bool) {
+  if (100 * false) {
+    return;
+  }
+  if (false * 100) {
+    return;
+  }
+}

@@ -57,7 +57,8 @@ function new_env() {
 
 function diff_to_string(diff) {
   var expected_str = "";
-  if (typeof diff.expected !== "undefined") {
+  if (typeof diff.expected !== "undefined" ||
+      typeof diff.actual !== "undefined") {
     expected_str =
       ". Expected " + diff.expected + ", got " + diff.actual;
   }
@@ -86,9 +87,6 @@ function handleSpecialObjectCompare(esprima, flow, env) {
   }
 
   switch (esprima.type) {
-    case 'Literal':
-      delete esprima.regex;
-      break;
     case "SwitchStatement":
       // Esprima doesn't support let statements so it doesn't include the
       // lexical field
@@ -202,18 +200,25 @@ function handleSpecialObjectCompare(esprima, flow, env) {
     case 'ClassProperty':
       esprima.static = esprima.static || false;
       break;
+    case 'ArrowFunctionExpression':
+      esprima.returnType = null;
+      esprima.typeParameters = null;
+      break;
   }
 
   switch (esprima.type) {
     case 'FunctionDeclaration':
     case 'FunctionExpression':
-    case 'ArrowFunction':
+    case 'ArrowFunctionExpression':
       if (Array.isArray(esprima.defaults)) {
         for (var i = 0; i < esprima.defaults.length; i++) {
           if (esprima.defaults[i] === undefined) {
             esprima.defaults[i] = null;
           }
         }
+      }
+      if (esprima.async === undefined) {
+        esprima.async = false;
       }
   }
 
@@ -389,17 +394,21 @@ function runTest(test, esprima_opts) {
     compare(esprima_ast, flow_ast, env);
 
     if (flow_errors.length !== 0) {
-      result.passed = false;
-      output("****Unexpected Errors****");
+      env.push_path('errors');
       for (var i = 0; i < flow_errors.length; i++) {
         var e = flow_errors[i];
-        output(
-          "(#" + i + ")",
-          "(line " + e.loc.start.line + ", col " + e.loc.start.column + ") - " +
-          "(line " + e.loc.end.line + ", col " + e.loc.end.column + "): ",
-          e.message
-        );
+        env.push_path(i);
+        env.push_path('column');
+        env.diff("Wrong error column", undefined, e.loc.start.column + 1);
+        env.pop_path();
+        env.push_path('line');
+        env.diff("Wrong error line", undefined, e.loc.start.line);
+        env.pop_path();
+        env.push_path('message');
+        env.diff("Wrong error message", undefined, e.message);
+        env.pop_path();
       }
+      env.pop_path();
     }
 
     var ast_types_errors = env.get_ast_types_errors();

@@ -1,98 +1,98 @@
 
 bound.js:4:10,15: null
 This type is incompatible with
-  bound.js:47:13,18: string
+bound.js:47:13,18: string
 
 bound.js:4:10,15: undefined
 This type is incompatible with
-  bound.js:47:13,18: string
+bound.js:47:13,18: string
 
 bound.js:4:10,15: null
 This type is incompatible with
-  bound.js:53:15,20: string
+bound.js:53:15,20: string
 
 bound.js:4:10,15: undefined
 This type is incompatible with
-  bound.js:53:15,20: string
+bound.js:53:15,20: string
 
 bound.js:9:22,22: null
 This type is incompatible with
-  bound.js:9:13,18: string
+bound.js:9:13,18: string
 
 bound.js:9:22,22: undefined
 This type is incompatible with
-  bound.js:9:13,18: string
+bound.js:9:13,18: string
 
 heap.js:5:22,24: null
 This type is incompatible with
-  heap.js:5:13,18: string
+heap.js:5:13,18: string
 
 heap.js:5:22,24: undefined
 This type is incompatible with
-  heap.js:5:13,18: string
+heap.js:5:13,18: string
 
-heap.js:38:9,11: null
+heap.js:37:17,22: null
 This type is incompatible with
-  heap.js:40:15,20: string
+heap.js:40:15,20: string
 
-heap.js:38:9,11: undefined
+heap.js:37:17,22: undefined
 This type is incompatible with
-  heap.js:40:15,20: string
+heap.js:40:15,20: string
 
-heap.js:46:9,11: null
+heap.js:45:17,22: null
 This type is incompatible with
-  heap.js:48:15,20: string
+heap.js:48:15,20: string
 
-heap.js:46:9,11: undefined
+heap.js:45:17,22: undefined
 This type is incompatible with
-  heap.js:48:15,20: string
+heap.js:48:15,20: string
 
 heap.js:55:22,24: null
 This type is incompatible with
-  heap.js:55:13,18: string
+heap.js:55:13,18: string
 
 heap.js:55:22,24: undefined
 This type is incompatible with
-  heap.js:55:13,18: string
+heap.js:55:13,18: string
 
-heap.js:60:9,11: null
+heap.js:59:17,22: null
 This type is incompatible with
-  heap.js:62:15,20: string
+heap.js:62:15,20: string
 
-heap.js:60:9,11: undefined
+heap.js:59:17,22: undefined
 This type is incompatible with
-  heap.js:62:15,20: string
+heap.js:62:15,20: string
 
 local.js:5:22,22: null
 This type is incompatible with
-  local.js:5:13,18: string
+local.js:5:13,18: string
 
 local.js:5:22,22: undefined
 This type is incompatible with
-  local.js:5:13,18: string
+local.js:5:13,18: string
 
 local.js:45:14,19: null
 This type is incompatible with
-  local.js:47:13,18: string
+local.js:47:13,18: string
 
 local.js:45:14,19: undefined
 This type is incompatible with
-  local.js:47:13,18: string
+local.js:47:13,18: string
 
 local.js:51:14,19: null
 This type is incompatible with
-  local.js:54:15,20: string
+local.js:54:15,20: string
 
 local.js:51:14,19: undefined
 This type is incompatible with
-  local.js:54:15,20: string
+local.js:54:15,20: string
 
 null_tests.js:101:7,12: null
 This type is incompatible with
-  null_tests.js:147:16,21: string
+null_tests.js:147:16,21: string
 
 null_tests.js:101:7,12: undefined
 This type is incompatible with
-  null_tests.js:147:16,21: string
+null_tests.js:147:16,21: string
 
 Found 24 errors

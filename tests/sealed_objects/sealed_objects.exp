@@ -1,14 +1,14 @@
 
 test.js:2:18,21: property y
 Property not found in
-  test.js:2:18,19: object literal
+test.js:2:18,19: object literal
 
 test.js:7:9,34: property y
 Property not found in
-  test.js:7:55,68: object type
+test.js:7:55,68: object type
 
 test.js:19:26,31: string
 This type is incompatible with
-  test.js:19:76,81: number
+test.js:19:76,81: number
 
 Found 3 errors

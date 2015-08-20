@@ -8,25 +8,38 @@
  *
  *)
 
-type result = ServerMsg.patch list
+type patch =
+  | Insert of insert_patch
+  | Remove of Pos.absolute
+  | Replace of insert_patch
 
-let go action genv env oc =
+and insert_patch = {
+  pos: Pos.absolute;
+  text: string;
+}
+
+type action =
+  | ClassRename of string * string (* old_name * new_name *)
+  | MethodRename of string * string * string
+    (* class_name * old_name * new_name*)
+  | FunctionRename of string * string (* old_name * new_name *)
+
+let go action genv env =
   let find_refs_action, new_name = match action with
-    | ServerMsg.ClassRename (old_name, new_name) ->
-        ServerMsg.Class old_name, new_name
-    | ServerMsg.MethodRename (class_name, old_name, new_name) ->
-        ServerMsg.Method (class_name, old_name), new_name
-    | ServerMsg.FunctionRename (old_name, new_name) ->
-        ServerMsg.Function old_name, new_name in
+    | ClassRename (old_name, new_name) ->
+        ServerFindRefs.Class old_name, new_name
+    | MethodRename (class_name, old_name, new_name) ->
+        ServerFindRefs.Method (class_name, old_name), new_name
+    | FunctionRename (old_name, new_name) ->
+        ServerFindRefs.Function old_name, new_name in
   
   let refs = ServerFindRefs.get_refs_with_defs find_refs_action genv env in
   let changes = List.fold_left begin fun acc x ->
     let replacement = {
-                        ServerMsg.pos  = Pos.to_absolute (snd x);
-                        ServerMsg.text = new_name;
-                      } in
-    let patch = ServerMsg.Replace replacement in            
+      pos  = Pos.to_absolute (snd x);
+      text = new_name;
+    } in
+    let patch = Replace replacement in
     patch :: acc
   end [] refs in
-  Marshal.to_channel oc (changes : result) [];
-  flush oc
+  changes

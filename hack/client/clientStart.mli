@@ -9,10 +9,10 @@
  *)
 
 type env = {
-  root: Path.path;
+  root: Path.t;
   wait: bool;
   no_load: bool;
 }
 
-val main : env -> unit
+val main : env -> Exit_status.t
 val start_server : env -> unit

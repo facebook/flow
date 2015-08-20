@@ -57,17 +57,19 @@ let declare path content =
       List.iter begin fun def ->
         match def with
         | Ast.Fun f ->
-            let nenv = Naming.empty in
+            let tcopt = TypecheckerOptions.permissive in
+            let nenv = Naming.empty tcopt in
             let f = Naming.fun_ nenv f in
             let fname = (snd f.Nast.f_name) in
-            Typing.fun_decl f;
+            Typing.fun_decl nenv f;
             declared_funs := SSet.add fname !declared_funs;
         | Ast.Class c ->
-            let nenv = Naming.empty in
+            let tcopt = TypecheckerOptions.permissive in
+            let nenv = Naming.empty tcopt in
             let c = Naming.class_ nenv c in
             let cname = snd c.Nast.c_name in
             declared_classes := SSet.add cname !declared_classes;
-            Typing_decl.class_decl TypecheckerOptions.empty c;
+            Typing_decl.class_decl tcopt c;
             ()
         | _ -> ()
       end ast;
@@ -84,17 +86,19 @@ let fix_file_and_def path content = try
     List.iter begin fun def ->
       match def with
       | Ast.Fun f ->
-          let nenv = Naming.empty in
+          let tcopt = TypecheckerOptions.permissive in
+          let nenv = Naming.empty tcopt in
           let f = Naming.fun_ nenv f in
           let filename = Pos.filename (fst f.Nast.f_name) in
-          let tenv = Typing_env.empty filename in
-          Typing.fun_def tenv (snd f.Nast.f_name) f
+          let tenv = Typing_env.empty tcopt filename in
+          Typing.fun_def tenv nenv (snd f.Nast.f_name) f
       | Ast.Class c ->
-          let nenv = Naming.empty in
+          let tcopt = TypecheckerOptions.permissive in
+          let nenv = Naming.empty tcopt in
           let c = Naming.class_ nenv c in
           let filename = Pos.filename (fst c.Nast.c_name) in
-          let tenv = Typing_env.empty filename in
-          let res = Typing.class_def tenv (snd c.Nast.c_name) c in
+          let tenv = Typing_env.empty tcopt filename in
+          let res = Typing.class_def tenv nenv (snd c.Nast.c_name) c in
           res
       | _ -> ()
     end ast;
@@ -103,28 +107,23 @@ with e ->
   report_error e;
   ()
 
-let check_defs {FileInfo.funs; classes; typedefs; _} =
-  fst (Errors.do_ (fun () ->
-    List.iter (fun (_, x) -> Typing_check_service.type_fun x) funs;
-    List.iter (fun (_, x) -> Typing_check_service.type_class x) classes;
-    List.iter (fun (_, x) -> Typing_check_service.check_typedef x) typedefs;
-  ))
-
-let recheck fileinfo_l =
+let recheck nenv fileinfo_l =
   SharedMem.invalidate_caches();
-  List.iter (fun defs -> ignore (check_defs defs)) fileinfo_l
+  List.iter begin fun defs ->
+    ignore @@ Typing_check_utils.check_defs nenv defs
+  end fileinfo_l
 
-let check_file_input files_info fi =
+let check_file_input tcopt files_info fi =
   match fi with
-  | ServerMsg.FileContent content ->
+  | ServerUtils.FileContent content ->
       let path = Relative_path.default in
       let funs, classes = declare path content in
       fix_file_and_def path content;
       revive funs classes;
       path
-  | ServerMsg.FileName fn ->
+  | ServerUtils.FileName fn ->
       let path = Relative_path.create Relative_path.Root fn in
       let () = match Relative_path.Map.get path files_info with
-      | Some fileinfo -> recheck [fileinfo]
+      | Some fileinfo -> recheck tcopt [fileinfo]
       | None -> () in
       path

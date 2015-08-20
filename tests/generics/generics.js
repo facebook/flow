@@ -24,7 +24,7 @@ class E<X> extends C<X> {
     set(x:X):X { /*return x;*/ this.x = x; return /*this.x; */this.get(); }
 }
 
-var e = new E();
+var e = new E(); // error: too few arguments to inherited constructor
 var x:string = e.set(0);
 
 class F<X> { }
@@ -37,3 +37,7 @@ class H<Z> extends G<Array<Z>> {
 var h1 = new H();
 h1.foo(["..."]);
 var h2:F<Array<Array<Array<number>>>> = h1;
+
+var obj : Object<string, string> = {} // error, arity 0
+var fn : Function<string> = function() { return 'foo'; } // error, arity 0
+var fn : function<string> = function() { return 'foo'; } // error, arity 0

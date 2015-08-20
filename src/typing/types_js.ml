@@ -17,6 +17,7 @@
    mimic all the sweet ways Hack scales. *)
 
 open Utils
+open Utils_js
 open Constraint_js
 open Modes_js
 
@@ -30,71 +31,59 @@ type file_errors = string * Errors_js.error list
  * and parallel list of error lists. *)
 type results = SSet.t * string list * Errors_js.error list list
 
-type options = {
-  opt_debug : bool;
-  opt_all : bool;
-  opt_weak : bool;
-  opt_traces : bool;
-  opt_newtraces : bool;
-  opt_strict : bool;
-  opt_console : bool;
-  opt_json : bool;
-  opt_show_all_errors : bool;
-  opt_quiet : bool;
-  opt_profile : bool;
-  opt_strip_root : bool;
-  opt_module: string;
-  opt_libs: Path.path list;
-  opt_no_flowlib: bool;
-}
-
-let init_modes opts =
+let init_modes opts = Options.(
   modes.debug <- opts.opt_debug;
+  modes.verbose <- opts.opt_verbose;
   modes.all <- opts.opt_all;
   modes.weak_by_default <- opts.opt_weak;
-  modes.traces_enabled <- opts.opt_traces;
-  modes.newtraces_enabled <- opts.opt_newtraces;
+  modes.traces <- opts.opt_traces;
   modes.strict <- opts.opt_strict;
-  modes.console <- opts.opt_console;
   modes.json <- opts.opt_json;
-  modes.show_all_errors <- opts.opt_show_all_errors;
+  modes.strip_root <- opts.opt_strip_root;
   modes.quiet <- opts.opt_quiet;
   modes.profile <- opts.opt_profile;
   modes.no_flowlib <- opts.opt_no_flowlib;
   (* TODO: confirm that only master uses strip_root, otherwise set it! *)
-  Module_js.init (opts.opt_module);
-  Files_js.init (opts.opt_libs)
+  Module_js.init opts;
+  Files_js.init opts.opt_libs
+)
 
 (****************** shared context heap *********************)
 
-(* Performance analysis suggests that we really should use WithCache instead of
-   NoCache for ContextHeap (reads dominate writes). Unfortunately, we cannot do
-   that yet, since we modify contexts locally after reading them from the heap.
-   Proper type substitution instead of context manipulation during merge may
-   eliminate this problem, one way or another.
-*)
-
 (* map from file names to contexts *)
-module ContextHeap = SharedMem.NoCache (String) (struct
+(* NOTE: Entries are cached for performance, since contexts are read a lot more
+   than they are written. But this means that proper care must be taken when
+   reading contexts: in particular, context graphs have mutable bounds, so they
+   must be copied, otherwise bad things will happen. (The cost of copying
+   context graphs is presumably a lot less than deserializing contexts, so the
+   optimization makes sense. *)
+module ContextHeap = SharedMem.WithCache (String) (struct
   type t = context
   let prefix = Prefix.make()
 end)
 
+(* errors are stored by phase,
+   in maps from file path to error set
+ *)
+(* errors encountered during parsing.
+   Note: both @flow and non-@flow files are parsed,
+   and their errors are retained. However, only
+   files referenced as modules from @flow files
+   have their parse errors reported. collate_errors
+   does the filtering *)
+let parse_errors = ref SMap.empty
+(* errors encountered during local inference *)
 let infer_errors = ref SMap.empty
+(* errors encountered during module commit *)
 let module_errors = ref SMap.empty
+(* errors encountered during merge *)
 let merge_errors = ref SMap.empty
+(* error suppressions in the code *)
+let error_suppressions = ref SMap.empty
+(* aggregate error map, built after check or recheck
+   by collate_errors
+ *)
 let all_errors = ref SMap.empty
-
-let get_errors () =
-  let revlist = SMap.fold (
-    fun file errset ret ->
-      Errors_js.ErrorSet.fold (fun flow_err ret ->
-        (Errors_js.flow_error_to_hack_error flow_err) :: ret
-      ) errset ret
-    ) !all_errors []
-  in
-  List.rev revlist
-
 
 (****************** typecheck job helpers *********************)
 
@@ -104,15 +93,24 @@ let get_errors () =
 let clear_errors files =
   List.iter (fun file ->
     debug_string (fun () -> spf "clear errors %s" file);
-    module_errors := SMap.remove file !module_errors;
+    parse_errors := SMap.remove file !parse_errors;
     infer_errors := SMap.remove file !infer_errors;
-    merge_errors := SMap.remove file !merge_errors
+    merge_errors := SMap.remove file !merge_errors;
+    module_errors := SMap.remove file !module_errors;
+    error_suppressions := SMap.remove file !error_suppressions;
   ) files
 
-let save_errors mapref files errsets =
+(* given a reference to a error map (files to errorsets), and
+   two parallel lists of such, save the latter into the former. *)
+let save_errors_or_suppressions mapref files errsets =
   List.iter2 (fun file errset ->
     mapref := SMap.add file errset !mapref
   ) files errsets
+
+let save_errormap mapref errmap =
+  SMap.iter (fun file errset ->
+    mapref := SMap.add file errset !mapref
+  ) errmap
 
 (* quick exception format *)
 let fmt_exc file exc =
@@ -121,30 +119,129 @@ let fmt_exc file exc =
 
 (* distribute errors from a set into a filename-indexed map,
    based on position info contained in error, not incoming key *)
-let distrib_errs file eset emap =
-  Errors_js.ErrorSet.fold (fun e emap ->
-    let file = Errors_js.file_of_error e in
+let distrib_errs _ eset emap = Errors_js.(
+  ErrorSet.fold (fun e emap ->
+    let file = file_of_error e in
     let errs = match SMap.get file emap with
-    | Some set -> Errors_js.ErrorSet.add e set
-    | None -> Errors_js.ErrorSet.singleton e in
+    | Some set -> ErrorSet.add e set
+    | None -> ErrorSet.singleton e in
     SMap.add file errs emap
   ) eset emap
+)
+
+(* Given all the errors as a map from file => errorset
+ * 1) Filter out the suppressed errors from the error sets
+ * 2) Remove files with empty errorsets from the map
+ * 3) Add errors for unused suppressions
+ * 4) Properly distribute the new errors
+ *)
+let filter_suppressed_errors = Errors_js.(
+  let suppressions = ref ErrorSuppressions.empty in
+
+  let filter_suppressed_error error =
+    let (suppressed, sups) = ErrorSuppressions.check error !suppressions in
+    suppressions := sups;
+    not suppressed
+
+  in fun emap ->
+    suppressions := SMap.fold
+      (fun _key -> ErrorSuppressions.union)
+      !error_suppressions
+      ErrorSuppressions.empty;
+
+    let emap = emap
+      |> SMap.map (ErrorSet.filter filter_suppressed_error)
+      |> SMap.filter (fun k v -> not (ErrorSet.is_empty v)) in
+
+    (* For each unused suppression, create an error *)
+    let unused_suppression_errors = List.fold_left
+      (fun errset loc ->
+        let reason = Reason_js.mk_reason "Error suppressing comment" loc in
+        let err = Flow_js.new_error [(reason, "Unused suppression")] in
+        ErrorSet.add err errset
+      )
+      ErrorSet.empty
+      (ErrorSuppressions.unused !suppressions) in
+
+    distrib_errs "" unused_suppression_errors emap
+)
+
+let strip_root_from_reason_list root list =
+  List.map (
+    fun (reason, s) -> (Reason_js.strip_root reason root, s)
+  ) list
+
+let strip_root_from_error root error =
+  let level, list, trace_reasons = error in
+  let list = strip_root_from_reason_list root list in
+  let trace_reasons = strip_root_from_reason_list root trace_reasons in
+  level, list, trace_reasons
+
+(* retrieve a full error list.
+   Library errors are forced to the top of the list.
+   Note: in-place conversion using an array is to avoid
+   memory pressure on pathologically huge error sets, but
+   this may no longer be necessary
+ *)
+let get_errors () =
+  let all = !all_errors in
+  let all = filter_suppressed_errors all in
+
+  (* flatten to list, with lib errors bumped to top *)
+  let lib_files = Files_js.get_lib_files () in
+  let append_errset errset errlist =
+    List.rev_append (Errors_js.ErrorSet.elements errset) errlist
+  in
+  let revlist_libs, revlist_others = SMap.fold (
+    fun file errset (libs, others) ->
+      if SSet.mem file lib_files
+      then append_errset errset libs, others
+      else libs, append_errset errset others
+    ) all ([], [])
+  in
+  let list = List.rev_append revlist_libs (List.rev revlist_others) in
+
+  (* strip root if specified *)
+  if modes.strip_root then (
+    let path = FlowConfig.((get_unsafe ()).root) in
+    (* TODO verify this is still worth doing, otherwise just List.map it *)
+    let ae = Array.of_list list in
+    Array.iteri (fun i error ->
+      ae.(i) <- strip_root_from_error path error
+    ) ae;
+    Array.to_list ae
+  )
+  else list
+
+(* we report parse errors if a file is either a lib file,
+   a checked module, or an unchecked file that's used as a
+   module by a checked file
+ *)
+let filter_unchecked_unused errmap =
+  let is_imported m = match Module.get_reverse_imports m with
+  | Some set -> SSet.cardinal set > 0
+  | None -> false
+  in
+  let lib_files = Files_js.get_lib_files () in
+  SMap.filter Module.(fun file _ ->
+    SSet.mem file lib_files || (
+      let info = get_module_info file in
+      info.checked || is_imported info._module
+    )
+  ) errmap
 
 (* relocate errors to their reported positions,
    combine in single error map *)
-let collate_errors workers files =
-  let all = SMap.fold distrib_errs !merge_errors !infer_errors in
+let collate_errors files =
+  let all = filter_unchecked_unused !parse_errors in
+  let all = SMap.fold distrib_errs !infer_errors all in
+  let all = SMap.fold distrib_errs !merge_errors all in
   let all = SMap.fold distrib_errs !module_errors all in
   all_errors := all
 
 let wraptime opts pred msg f =
-  if opts.opt_quiet || not opts.opt_profile then f () else (
-    let start = Unix.gettimeofday () in
-    let ret = f () in
-    let elap = (Unix.gettimeofday ()) -. start in
-    if not (pred elap) then () else prerr_endline (msg elap);
-    ret
-  )
+  if opts.Options.opt_quiet || not opts.Options.opt_profile then f ()
+  else time pred msg f
 
 let checktime opts limit msg f =
   wraptime opts (fun t -> t > limit) msg f
@@ -155,9 +252,9 @@ let logtime opts msg f =
 (* local inference job:
    takes list of filenames, accumulates into parallel lists of
    filenames, error sets *)
-let infer_job opts (inferred, errsets) files =
+let infer_job opts (inferred, errsets, errsuppressions) files =
   init_modes opts;
-  List.fold_left (fun (inferred, errsets) file ->
+  List.fold_left (fun (inferred, errsets, errsuppressions) file ->
     try checktime opts 1.0
       (fun t -> spf "perf: inferred %S in %f" file t)
       (fun () ->
@@ -167,21 +264,27 @@ let infer_job opts (inferred, errsets) files =
         let cx = TI.infer_module file in
         (* register module info *)
         Module.add_module_info cx;
-        (* note: save and clear errors before storing cx to shared heap *)
+        (* note: save and clear errors and error suppressions before storing
+         * cx to shared heap *)
         let errs = cx.errors in
+        let suppressions = cx.error_suppressions in
         cx.errors <- Errors_js.ErrorSet.empty;
+        cx.error_suppressions <- Errors_js.ErrorSuppressions.empty;
         ContextHeap.add cx.file cx;
-        (* add filename, errorset *)
-        cx.file :: inferred, errs :: errsets
+        (* add filename, errorset, suppressions *)
+        cx.file :: inferred, errs :: errsets, suppressions :: errsuppressions
       )
     with exc ->
       prerr_endlinef "(%d) infer_job THROWS: %s"
         (Unix.getpid()) (fmt_exc file exc);
-      inferred, errsets
-  ) (inferred, errsets) files
+      inferred, errsets, errsuppressions
+  ) (inferred, errsets, errsuppressions) files
 
 let rev_append_pair (x1, y1) (x2, y2) =
   (List.rev_append x1 x2, List.rev_append y1 y2)
+
+let rev_append_triple (x1, y1, z1) (x2, y2, z2) =
+  (List.rev_append x1 x2, List.rev_append y1 y2, List.rev_append z1 z2)
 
 (* local type inference pass.
    Returns a set of sucessfully inferred files.
@@ -190,13 +293,15 @@ let infer workers files opts =
   logtime opts
     (fun t -> spf "inferred %d files in %f" (List.length files) t)
     (fun () ->
-      let files, errors = MultiWorker.call
+      let files, errors, suppressions = MultiWorker.call
         workers
         ~job: (infer_job opts)
-        ~neutral: ([], [])
-        ~merge: rev_append_pair
+        ~neutral: ([], [], [])
+        ~merge: rev_append_triple
         ~next: (Bucket.make_20 files) in
-      save_errors infer_errors files errors;
+      save_errors_or_suppressions infer_errors files errors;
+      save_errors_or_suppressions error_suppressions files suppressions;
+
       files
     )
 
@@ -221,103 +326,121 @@ let check_requires cx =
       let m_name = req in
       let reason = Reason_js.mk_reason m_name loc in
       let tvar = Flow_js.mk_tvar cx reason in
-      Flow_js.lookup_builtin cx (spf "$module__%s" m_name)
+      Flow_js.lookup_builtin cx (Reason_js.internal_module_name m_name)
         reason (Some (Reason_js.builtin_reason m_name)) tvar;
   ) cx.required
 
-(* It would be nice to cache the results of merging requires. However, the naive
-   scheme of letting workers add and get entries to the cache is not
-   concurrency-safe: see sharedMem.mli. This means that to cache merges, we'd
-   actually need to merge things in dependency order. *)
+(* Merging involves looking up a lot of contexts, and due to the graph-structure
+   of dependencies, the same context may be looked up multiple times. We already
+   cache contexts in the shared memory for performance, but context graphs need
+   to be copied because they have mutable bounds. We maintain an additional
+   cache of local copies. Mutating bounds in local copies of context graphs is
+   not only OK, but we rely on it during merging, so it is both safe and
+   necessary to cache the local copies. As a side effect, this probably helps
+   performance too by avoiding redundant copying. *)
+class context_cache = object
+  val cached_infer_contexts = Hashtbl.create 0
 
-(* On the other hand, merging requires itself involves looking up a lot of
-   contexts, and due to the graph-structure of dependencies, the same context
-   may be looked up multiple times. To avoid redundant traffic through shared
-   memory, we can cache these lookups. *)
-let cached_infer_contexts = Hashtbl.create 0
-let cached_infer_context file =
-  try Hashtbl.find cached_infer_contexts file
-  with _ ->
+  (* find a context in the cache *)
+  method find file =
+    try Some (Hashtbl.find cached_infer_contexts file)
+    with _ -> None
+
+  (* read a context from shared memory, copy its graph, and cache the context *)
+  method read file =
     let cx = ContextHeap.find_unsafe file in
-    Hashtbl.replace cached_infer_contexts file cx;
+    let cx = { cx with graph = IMap.map copy_node cx.graph } in
+    Hashtbl.add cached_infer_contexts file cx;
     cx
+
+end
+
+let add_decl (r, cx) declarations =
+  match SMap.get r declarations with
+  | None -> SMap.add r [cx] declarations
+  | Some cxs -> SMap.add r (cx::cxs) declarations
+
+let merge_decls =
+  SMap.merge (fun r cxs1 cxs2 -> match cxs1, cxs2 with
+    | None, None -> None
+    | Some cxs, None | None, Some cxs -> Some cxs
+    | Some cxs1, Some cxs2 -> Some (List.rev_append cxs1 cxs2)
+  )
 
 (* Merging requires for a context returns a dependency graph: (a) the set of
    contexts of transitive strict requires for that context, (b) the set of edges
-   between these and from these to the context. Context lookups are cached. An
+   between these and from these to the context. Contexts are cached. Note also
+   that contexts are updated by side effect, so transitive merging is only
+   performed when a context is first read and placed in the cache. An
    interesting property of this procedure is that it gracefully handles cycles;
    by delaying the actual substitutions, it can detect cycles via caching. *)
-let rec merge_requires cx rs =
-  SSet.fold (fun r (cxs,links,declarations) ->
+let rec merge_requires cache cx rs =
+  SSet.fold (fun r (cxs, implementations, declarations) ->
     if Module.module_exists r && checked r then
       let file = Module.get_file r in
-      try
-        let cx_ = Hashtbl.find cached_infer_contexts file in
-        cxs,
-        (cx_,cx)::links,
-        declarations
-      with _ ->
-        let cx_ = ContextHeap.find_unsafe file in
-        Hashtbl.add cached_infer_contexts file cx_;
-        let (cxs_, links_, declarations_) =
-          merge_requires cx_ cx_.strict_required in
-        List.rev_append cxs_ (cx_::cxs),
-        List.rev_append links_ ((cx_,cx)::links),
-        List.rev_append declarations_ declarations
+      match cache#find file with
+      | Some cx_ ->
+          cxs,
+          (cx_, cx)::implementations,
+          declarations
+      | None ->
+          let cx_ = cache#read file in
+          let (cxs_, implementations_, declarations_) =
+            merge_requires cache cx_ cx_.strict_required in
+          List.rev_append cxs_ (cx_::cxs),
+          List.rev_append implementations_ ((cx_,cx)::implementations),
+          merge_decls declarations_ declarations
     else
       cxs,
-      links,
-      (cx,r)::declarations
-  ) rs ([],[],[])
+      implementations,
+      add_decl (r, cx) declarations
+  ) rs ([],[],SMap.empty)
 
 (* To merge results for a context, check for the existence of its requires,
    compute the dependency graph (via merge_requires), and then compute
    substitutions (via merge_module_strict). A merged context is returned. *)
-let merge_strict_context cx master_cx cache_function =
+let merge_strict_context cache cx master_cx =
   if cx.checked then (
-    Hashtbl.clear cached_infer_contexts;
-
     check_requires cx;
-    cache_function ();
 
-    let cxs, links, declarations = merge_requires cx cx.required in
-    TI.merge_module_strict cx cxs links declarations master_cx;
+    let cxs, impls, decls = merge_requires cache cx cx.required in
+    TI.merge_module_strict cx cxs impls decls master_cx
   ) else (
     (* do nothing on unchecked files *)
   );
   cx
 
+(**********************************)
+(* entry point for merging a file *)
+(**********************************)
 let merge_strict_file file =
-  let cx = ContextHeap.find_unsafe file in
-  let master_cx = ContextHeap.find_unsafe (Files_js.get_flowlib_root ()) in
-  merge_strict_context cx master_cx (fun () -> Hashtbl.add cached_infer_contexts file cx)
-
-let merge_strict_file_with_master file master_cx =
-  let cx = ContextHeap.find_unsafe file in
-  merge_strict_context cx master_cx
-    (fun () -> Hashtbl.add cached_infer_contexts file cx)
+  let cache = new context_cache in
+  (* always use cache to read contexts, instead of directly
+     using ContextHeap; otherwise bad things will happen. *)
+  let cx = cache#read file in
+  let master_cx = cache#read (Files_js.get_flowlib_root ()) in
+  merge_strict_context cache cx master_cx
 
 let typecheck_contents contents filename =
-  match Parsing_service_js.do_parse ~keep_errors:true contents filename with
-  | Some ast, None ->
-      let cx = TI.infer_ast ast filename "-" true in
-      let master_cx = ContextHeap.find_unsafe (Files_js.get_flowlib_root ()) in
-      Some (merge_strict_context cx master_cx (fun () -> ())), cx.errors
-  | _, Some errors ->
+  Parsing_service_js.(match do_parse contents filename with
+  | OK ast ->
+      let cx = TI.infer_ast ast filename true in
+      let cache = new context_cache in
+      let master_cx = cache#read (Files_js.get_flowlib_root ()) in
+      Some (merge_strict_context cache cx master_cx), cx.errors
+  | Err errors ->
       None, errors
-  | _ ->
-      assert false
+  )
 
 (* *)
 let merge_strict_job opts (merged, errsets) files =
   init_modes opts;
-  let master_cx = ContextHeap.find_unsafe (Files_js.get_flowlib_root ()) in
   List.fold_left (fun (merged, errsets) file ->
     try checktime opts 1.0
       (fun t -> spf "perf: merged %S in %f" file t)
       (fun () ->
         (*prerr_endlinef "[%d] MERGE: %s" (Unix.getpid()) file;*)
-        let cx = merge_strict_file_with_master file master_cx in
+        let cx = merge_strict_file file in
         cx.file :: merged, cx.errors :: errsets
       )
     with exc ->
@@ -346,7 +469,7 @@ let merge_strict workers files opts =
         Flow_js.master_cx.errors :: errsets
       ) in
       (* save *)
-      save_errors merge_errors files errsets
+      save_errors_or_suppressions merge_errors files errsets
     )
 
 (* *)
@@ -371,14 +494,15 @@ let merge_nonstrict partition opts =
           acc
       ) ([], []) partition in
       (* typecheck intrinsics--temp code *)
-      Init_js.init (fun file errs -> ());
+      let forget file errs = () in
+      ignore (Init_js.init forget forget forget);
       (* collect master context errors *)
       let (files, errsets) = (
         Flow_js.master_cx.file :: files,
         Flow_js.master_cx.errors :: errsets
       ) in
       (* save *)
-      save_errors merge_errors files errsets
+      save_errors_or_suppressions merge_errors files errsets
   )
 
 (* calculate module dependencies *)
@@ -393,33 +517,45 @@ let calc_dependencies files =
 
 (* commit newly inferred and removed modules, collect errors. *)
 let commit_modules inferred removed =
-  let files, errsets = Module.commit_modules inferred removed in
-  save_errors module_errors files errsets
+  let errmap = Module.commit_modules inferred removed in
+  save_errormap module_errors errmap
 
 (* helper *)
 (* make_merge_input takes list of files produced by infer, and
-   returns list of files to merge (typically an expansion) *)
-let typecheck workers files removed opts make_merge_input =
+   returns (true, list of files to merge (typically an expansion)),
+   or (false, list of files with errors). If the latter, merge is
+   not performed.
+   return a list of files that have been checked.
+ *)
+let typecheck workers files removed unparsed opts make_merge_input =
+  (* TODO remove after lookup overhaul *)
+  Module.clear_filename_cache ();
   (* local inference populates context heap, module info heap *)
   let inferred = infer workers files opts in
+  (* add tracking modules for unparsed files *)
+  List.iter Module.add_unparsed_info unparsed;
   (* create module dependency graph, warn on dupes etc. *)
   commit_modules inferred removed;
   (* SHUTTLE *)
   (* call supplied function to calculate closure of modules to merge *)
-  let to_merge = make_merge_input inferred in
-  (if modes.strict then (
-    try
-      merge_strict workers to_merge opts
-    with exc ->
-      prerr_endline (Printexc.to_string exc)
-   )
-  else
-    let partition = calc_dependencies to_merge in
-    merge_nonstrict partition opts
-  );
-  (* collate errors by origin *)
-  collate_errors workers to_merge;
-  to_merge
+  match make_merge_input inferred with
+  | true, to_merge ->
+    (if modes.strict then (
+      try
+        merge_strict workers to_merge opts
+      with exc ->
+        prerr_endline (Printexc.to_string exc)
+     ) else (
+      let partition = calc_dependencies to_merge in
+      merge_nonstrict partition opts
+    ));
+    (* collate errors by origin *)
+    collate_errors to_merge;
+    to_merge
+  | false, to_collate ->
+    (* collate errors by origin *)
+    collate_errors to_collate;
+    []
 
 (* sketch of baseline incremental alg:
 
@@ -500,15 +636,23 @@ let deps unmodified inferred_files removed_modules =
    `files_info` contains files that parsed successfully in the previous
    phase (which could be the init phase or a previous recheck phase)
 *)
-let recheck genv env modified opts =
-  if not opts.opt_strict
+let recheck genv env modified =
+  let options = genv.ServerEnv.options in
+  if not options.Options.opt_strict
   then failwith "Missing -- strict";
 
-
   (* filter modified files *)
-  let root = ServerArgs.root genv.ServerEnv.options in
+  let root = Options.root options in
   let config = FlowConfig.get root in
   let modified = SSet.filter (Files_js.wanted config) modified in
+
+  let n = SSet.cardinal modified in
+    if n > 0
+    then prerr_endlinef "recheck %d files:" n;
+
+  let _ = SSet.fold (fun f i ->
+    if n > 0
+    then prerr_endlinef "%d/%d: %s" i n f; i + 1) modified 1 in
 
   (* clear errors for modified files and master *)
   clear_errors (Flow_js.master_cx.file :: SSet.elements modified);
@@ -523,13 +667,13 @@ let recheck genv env modified opts =
   (* reparse modified and added files *)
   let freshparsed, freshparse_fail, freshparse_errors =
     Parsing_service_js.reparse genv.ServerEnv.workers modified
-      (fun () -> init_modes opts)
+      (fun () -> init_modes options)
   in
-  save_errors infer_errors freshparse_fail freshparse_errors;
+  save_errors_or_suppressions parse_errors freshparse_fail freshparse_errors;
 
   (* get old (unmodified, undeleted) files that were parsed successfully *)
-  let old_parsed = Relative_path.Map.fold (fun k _ a ->
-    SSet.add (Relative_path.to_absolute k) a)
+  let old_parsed = ServerEnv.PathMap.fold (fun k _ a ->
+    SSet.add (Path.to_string k) a)
     env.ServerEnv.files_info SSet.empty in
   let undeleted_parsed = SSet.diff old_parsed deleted in
   let unmodified_parsed = SSet.diff undeleted_parsed modified in
@@ -553,26 +697,33 @@ let recheck genv env modified opts =
 
   (* recheck *)
   let freshparsed_list = SSet.elements freshparsed in
-  typecheck genv.ServerEnv.workers freshparsed_list removed_modules opts
+  typecheck
+    genv.ServerEnv.workers
+    freshparsed_list
+    removed_modules
+    freshparse_fail
+    options
     (fun inferred ->
       (* need to merge the closure of inferred files and their deps *)
       let inferred_set = set_of_list inferred in
       let unmod_deps = deps unmodified_parsed inferred_set removed_modules in
 
       let n = SSet.cardinal unmod_deps in
-      prerr_endlinef "remerge %d dependent files:" n;
+        if n > 0
+        then prerr_endlinef "remerge %d dependent files:" n;
+
       let _ = SSet.fold (fun f i ->
         prerr_endlinef "%d/%d: %s" i n f; i + 1) unmod_deps 1 in
 
-      SSet.elements (SSet.union unmod_deps inferred_set)
+      true, SSet.elements (SSet.union unmod_deps inferred_set)
     ) |> ignore;
 
   (* for now we populate file_infos with empty def lists *)
   let parsed = SSet.union freshparsed unmodified_parsed in
   let files_info = SSet.fold (fun file info ->
-    let file = Relative_path.create Relative_path.Dummy file in
-    Relative_path.Map.add file Parsing_service.empty_file_info info
-  ) parsed Relative_path.Map.empty in
+    let file = Path.make file in
+    ServerEnv.PathMap.add file Parsing_service.empty_file_info info
+  ) parsed ServerEnv.PathMap.empty in
 
   (* NOTE: unused fields are left in their initial empty state *)
   { env with ServerEnv.files_info = files_info; }
@@ -585,98 +736,65 @@ let full_check workers parse_next opts =
   };
   init_modes opts;
 
-  let parse_results =
+  let parsed, error_files, errors =
     Parsing_service_js.parse workers parse_next
       (fun () -> init_modes opts)
   in
-  let parsed, parse_fails, parse_errors = parse_results in
-  save_errors infer_errors parse_fails parse_errors;
+  save_errors_or_suppressions parse_errors error_files errors;
 
   let files = SSet.elements parsed in
-  let checked = typecheck workers files SSet.empty opts (fun x ->
-    Init_js.init (fun file errs ->
-      save_errors infer_errors [file] [errs]);
-    x
+  let checked = typecheck workers files SSet.empty error_files opts (
+    fun inferred ->
+      (* after local inference and before merge, bring in libraries *)
+      (* if any fail to parse, our return value will suppress merge *)
+      let lib_files = Init_js.init
+        (fun file errs -> save_errors_or_suppressions parse_errors [file] [errs])
+        (fun file errs -> save_errors_or_suppressions infer_errors [file] [errs])
+        (fun file sups ->
+          save_errors_or_suppressions error_suppressions [file] [sups])
+      in
+      (* Note: if any libs failed, return false and files to report errors for.
+         (other errors will be suppressed.)
+         otherwise, return true and files to merge *)
+      let err_libs = List.fold_left (
+        fun acc (file, ok) -> if ok then acc else file :: acc
+      ) [] lib_files in
+      if err_libs != []
+      then false, err_libs
+      else true, inferred
   ) in
 
   (parsed, checked)
 
-(* helper: make relative path from root to file *)
-let relative_path =
-  let split_path = Str.split Files_js.dir_sep in
-  let rec make_relative = function
-    | (dir1::root, dir2::file) when dir1 = dir2 -> make_relative (root, file)
-    | (root, file) ->
-        List.fold_left (fun path _ -> Filename.parent_dir_name::path) file root
-  in
-  fun root file ->
-    make_relative (split_path root, split_path file)
-    |> String.concat Filename.dir_sep
-
-(* helper: strip root from positions *)
-let strip_root p path =
-  Pos.(
-    let { pos_file; pos_start; pos_end } = p in
-    let pos_file = Relative_path.to_absolute pos_file in
-    let pos_file =
-      if Files_js.is_lib_file pos_file
-      then spf "[LIB] %s" (Filename.basename pos_file)
-      else relative_path
-        (spf "%s%s" (Path.string_of_path path) Filename.dir_sep) pos_file
-    in
-    {(make_from (Relative_path.create Relative_path.Dummy pos_file)) with
-      pos_start; pos_end }
-  )
-
 (* helper - print errors. used in check-and-die runs *)
-let print_errors ?root flow_opts =
-  let errors = get_errors () in
-
-  let errors = match root with
-    | Some path ->
-        let ae = Array.of_list errors in
-        Array.iteri (fun i error ->
-          let list = Errors.to_list error in
-          let list =
-            if flow_opts.opt_strip_root
-            then List.map (fun (p,s) -> (strip_root p path, s)) list
-            else list in
-          let e = Errors.make_error 0 list in
-          ae.(i) <- e
-        ) ae;
-        Array.to_list ae
-    | None ->
-        errors
-  in
-
-  if flow_opts.opt_json
+let print_errors options errors =
+  if options.Options.opt_json
   then Errors_js.print_errorl true errors stdout
   else
-    Errors_js.print_error_summary
-      (not Modes_js.modes.show_all_errors)
-      errors
+    Errors_js.print_error_summary ~flags:(Options.error_flags options) errors
 
 (* initialize flow server state, including full check *)
-let server_init genv env flow_opts =
-  let root = ServerArgs.root genv.ServerEnv.options in
+let server_init genv env =
+  let options = genv.ServerEnv.options in
+  let root = Options.root options in
 
-  Files_js.package_json root |> List.iter (fun package ->
+  Files_js.package_json root |> SSet.iter (fun package ->
     let errors = Module_js.add_package package in
     match errors with
     | None -> ()
     | Some error ->
-      save_errors infer_errors [package] [error]
+      save_errors_or_suppressions infer_errors [package] [error]
   );
 
   let get_next = Files_js.make_next_files root in
   let (parsed, checked) =
-    full_check genv.ServerEnv.workers get_next flow_opts in
+    full_check genv.ServerEnv.workers get_next options in
 
   (* for now we populate file_infos with empty def lists *)
   let files_info = SSet.fold (fun file info ->
-    let file = Relative_path.create Relative_path.Dummy file in
-    Relative_path.Map.add file Parsing_service.empty_file_info info
-  ) parsed Relative_path.Map.empty in
+    let file = Path.make file in
+    ServerEnv.PathMap.add file Parsing_service.empty_file_info info
+  ) parsed ServerEnv.PathMap.empty in
 
   (* We ensure an invariant required by recheck, namely that the keyset of
      `files_info` contains files that parsed successfully. *)
@@ -685,10 +803,11 @@ let server_init genv env flow_opts =
 
   SharedMem.init_done();
 
-  if ServerArgs.check_mode genv.ServerEnv.options
+  if Options.is_check_mode options
   then (
-    print_errors ~root flow_opts;
-    { env with ServerEnv.errorl = get_errors () }
+    let errors = get_errors () in
+    print_errors options errors;
+    { env with ServerEnv.errorl = errors }
   ) else (
     env
   )
@@ -696,7 +815,7 @@ let server_init genv env flow_opts =
 (* single command entry point: takes a list of paths,
  * parses and checks serially, prints errs to stdout.
  *)
-let single_main (paths : string list) flow_opts =
-  let get_next = Files_js.make_next_files (Path.mk_path (List.hd paths)) in
-  let _ = full_check None get_next flow_opts in
-  print_errors flow_opts
+let single_main (paths : string list) options =
+  let get_next = Files_js.make_next_files (Path.make (List.hd paths)) in
+  let _ = full_check None get_next options in
+  print_errors options (get_errors ())

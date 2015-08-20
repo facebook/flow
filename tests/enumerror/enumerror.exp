@@ -1,6 +1,14 @@
 
-enumerror.js:21:18,24: string literal PAUSE
+enumerror.js:10:1,26: function call
+Error:
+enumerror.js:10:18,24: string literal PAUSE
 Property not found in
-  enumerror.js:14:37,18:1: object type
+enumerror.js:3:37,7:1: object type
 
-Found 1 error
+enumerror.js:20:1,27: function call
+Error:
+enumerror.js:20:19,25: string literal PAUSE
+Property not found in
+enumerror.js:12:16,16:1: object literal
+
+Found 2 errors

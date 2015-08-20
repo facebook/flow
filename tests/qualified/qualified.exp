@@ -1,6 +1,6 @@
 
 qualified.js:4:13,13: number
 This type is incompatible with
-  qualified.js:4:7,9: C
+qualified.js:4:7,9: C
 
 Found 1 error
