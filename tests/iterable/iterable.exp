@@ -1,0 +1,34 @@
+
+array.js:8:26,31: number
+This type is incompatible with
+array.js:8:37,40: string
+
+array.js:8:37,40: string
+This type is incompatible with
+array.js:8:26,31: number
+
+array.js:10:43,43: number
+This type is incompatible with
+array.js:10:26,31: string
+
+caching_bug.js:21:43,48: number
+This type is incompatible with
+caching_bug.js:21:62,67: string
+
+map.js:13:55,60: string
+This type is incompatible with
+[LIB] core.js:313:28,33: tuple type
+
+set.js:13:28,33: string
+This type is incompatible with
+set.js:13:47,52: number
+
+set.js:13:47,52: number
+This type is incompatible with
+set.js:13:28,33: string
+
+string.js:5:27,32: number
+This type is incompatible with
+[LIB] core.js:168:28,33: string
+
+Found 8 errors

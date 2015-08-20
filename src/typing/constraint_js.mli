@@ -11,9 +11,6 @@
 open Utils
 open Reason_js
 
-val assert_false: string -> 'a
-val __DEBUG__: ?s: string -> (unit -> 'a) -> 'a
-
 type ident = int
 type name = string
 
@@ -24,7 +21,7 @@ module Type :
     type t =
         OpenT of reason * ident
 
-      | NumT of reason * literal
+      | NumT of reason * number_literal option
       | StrT of reason * literal
       | BoolT of reason * bool option
       | UndefT of reason
@@ -46,6 +43,7 @@ module Type :
       | PolyT of typeparam list * t
       | TypeAppT of t * t list
       | BoundT of typeparam
+      | ExistsT of reason
 
       | MaybeT of t
 
@@ -62,21 +60,22 @@ module Type :
       | ShapeT of t
       | DiffT of t * t
 
-      | EnumT of reason * t
-      | RecordT of reason * t
-
-      | CustomClassT of name * t list * t
+      | KeysT of reason * t
+      | SingletonStrT of reason * string
+      | SingletonNumT of reason * number_literal
+      | SingletonBoolT of reason * bool
 
       | TypeT of reason * t
+      | AnnotT of t * t
 
       | SpeculativeMatchFailureT of reason * t * t
 
-      | CJSExportDefaultT of reason * t
+      | ModuleT of reason * exporttypes
 
       | SummarizeT of reason * t
 
       | CallT of reason * funtype
-      | MethodT of reason * name * t * t list * t * int
+      | MethodT of reason * name * funtype
       | SetT of reason * name * t
       | GetT of reason * name * t
       | SetElemT of reason * t * t
@@ -94,39 +93,51 @@ module Type :
       | AndT of reason * t * t
       | OrT of reason * t * t
 
-      | SpecializeT of reason * t list * t
+      | SpecializeT of reason * bool * t list * t
 
       | LookupT of reason * reason option * string * t
 
-      | MarkupT of reason * t * t
-
       | ObjAssignT of reason * t * t * string list * bool
+      | ObjFreezeT of reason * t
       | ObjRestT of reason * string list * t
       | ObjSealT of reason * t
+      | ObjTestT of reason * t * t
 
       | UnifyT of t * t
+      | BecomeT of reason * t
 
       | ConcretizeT of t * t list * t list * t
       | ConcreteT of t
 
-      | KeyT of reason * t
-      | HasT of reason * string
+      | GetKeysT of reason * t
+      | HasKeyT of reason * string
 
       | ElemT of reason * t * t
 
+      | CJSRequireT of reason * t
       | ImportModuleNsT of reason * t
-      | ExportDefaultT of reason * t
+      | ImportTypeT of reason * t
+      | ImportTypeofT of reason * t
+
+      | CJSExtractNamedExportsT of reason * t * t_out
+      | SetCJSExportT of reason * t * t_out
+      | SetNamedExportsT of reason * t SMap.t * t_out
 
     and predicate =
         AndP of predicate * predicate
       | OrP of predicate * predicate
       | NotP of predicate
+      | LeftP of binary_test * t
+      | RightP of binary_test * t
       | ExistsP
-      | InstanceofP of t
-      | ConstructorP of t
       | IsP of string
 
+    and binary_test =
+        Instanceof
+      | SentinelProp of string
+
     and literal = string option
+    and number_literal = (float * string)
 
     and funtype = {
       this_t: t;
@@ -142,6 +153,7 @@ module Type :
       proto_t: prototype;
     }
     and flags = {
+      frozen: bool;
       sealed: bool;
       exact: bool;
     }
@@ -150,29 +162,41 @@ module Type :
       key: t;
       value: t;
     }
+    and polarity =
+      | Negative      (* contravariant *)
+      | Neutral       (* invariant *)
+      | Positive      (* covariant *)
     and insttype = {
       class_id: ident;
       type_args: t SMap.t;
-      fields_tmap: fields;
-      methods_tmap: methods;
+      arg_polarities: polarity SMap.t;
+      fields_tmap: int;
+      methods_tmap: int;
       mixins: bool;
+      structural: bool;
+    }
+    and exporttypes = {
+      exports_tmap: int;
+      cjs_export: t option;
     }
     and typeparam = {
       reason: reason;
       name: string;
       bound: t;
+      polarity: polarity
     }
     and prototype = t
     and static = t
     and super = t
-    and fields = t SMap.t
-    and methods = t SMap.t
+    and properties = t SMap.t
+    and t_out = t
+
     val compare : 'a -> 'a -> int
 
     val open_tvar: t -> (reason * ident)
-    val mk_predicate: (predicate * t) -> t
   end
 
+module TypeSet : Set.S with type elt = Type.t
 module TypeMap : MapSig with type key = Type.t
 
 (***************************************)
@@ -181,50 +205,22 @@ val is_use: Type.t -> bool
 
 (***************************************)
 
-type rule =
-  | FunThis
-  | FunArg of int * int
-  | FunRet
-  | ObjProp of string
-  | ObjKey
-  | ArrIndex
-  | ArrElem
-  | DecomposeNullable
-  | InstantiatePoly
-  | ClassInst
-  | FunInst
-  | FunProto
-  | CopyProto
-  | InstanceProp of string
-  | ObjProto
-  | StrIndex
-  | StrElem
-  | InstanceSuper
-  | Op of string
-  | ReactProps
-  | ReactComponent
-  | LibMethod of string
-  | FunStatics
-  | ClassStatics
-
 type trace
 
-val string_of_trace : string -> bool -> trace -> string
-(* TODO remove *)
-val string_of_trace_old : string -> bool -> trace -> string
-
+val trace_depth : trace -> int
 val unit_trace : Type.t -> Type.t -> trace
-val select_trace: Type.t -> Type.t -> trace -> rule -> trace
+val rec_trace: Type.t -> Type.t -> trace -> trace
 val concat_trace: trace list -> trace
 
-val reasons_of_trace : trace -> reason list
+val reasons_of_trace : ?level:int -> ?tab:int -> trace -> reason list
+val locs_of_trace : trace -> reason list
 
 (***************************************)
 
 module type PrimitiveT = sig
   val desc: string
   val t: Type.t
-  val at: Spider_monkey_ast.Loc.t -> Type.t
+  val at: Loc.t -> Type.t
   val why: reason -> Type.t
   val tag: string -> Type.t
 end
@@ -238,65 +234,135 @@ module AnyT: PrimitiveT
 module NullT: PrimitiveT
 module VoidT: PrimitiveT
 
-type unifier =
+type node =
 | Goto of ident
-| Rank of int
+| Root of root
 
-type bounds = {
+and root = {
+  rank: int;
+  constraints: constraints;
+}
+
+and constraints =
+| Resolved of Type.t
+| Unresolved of bounds
+
+and bounds = {
   mutable lower: trace TypeMap.t;
   mutable upper: trace TypeMap.t;
   mutable lowertvars: trace IMap.t;
   mutable uppertvars: trace IMap.t;
-  mutable unifier: unifier option;
-  mutable solution: Type.t option;
 }
 
-val new_bounds: int -> reason -> bounds
-val copy_bounds: bounds -> bounds
+val new_unresolved_root: unit -> node
+val bounds_of_unresolved_root: node -> bounds
+
+val copy_node: node -> node
 
 (***************************************)
 
-type block_entry = {
-  specific: Type.t;
-  general: Type.t;
-  def_loc: Spider_monkey_ast.Loc.t option;
-  for_type: bool;
-}
-type block = block_entry SMap.t ref
+(* scopes *)
+(* Note: this is basically owned by Env_js, but are here
+   to break circularity between Env_js and Flow_js.
+   Longer-term solution is to break up Flow_js.
+ *)
+module Scope : sig
+
+  type entry = {
+    specific: Type.t;
+    general: Type.t;
+    def_loc: Loc.t option;
+    for_type: bool;
+  }
+
+  type var_scope_attrs = {
+    async: bool
+  }
+
+  type kind = VarScope of var_scope_attrs | LexScope
+
+  type t = {
+    kind: kind;
+    mutable entries: entry SMap.t;
+  }
+
+  val fresh: unit -> t
+
+  val fresh_async: unit -> t
+
+  val fresh_lex: unit -> t
+
+  val clone: t -> t
+
+  val update: (string -> entry -> entry) -> t -> unit
+
+  val iter: (string -> entry -> unit) -> t -> unit
+
+  val add: string -> entry -> t -> unit
+
+  val remove: string -> t -> unit
+
+  val mem: string -> t -> bool
+
+  val get: string -> t -> entry option
+
+  val get_unsafe: string -> t -> entry
+
+  val create_entry :
+    ?for_type: bool ->
+    Type.t -> Type.t ->
+    Loc.t option ->
+    entry
+
+end
+
+(***************************************)
+
 type stack = int list
-
-val create_env_entry :
-  ?for_type: bool ->
-  Type.t -> Type.t ->
-  Spider_monkey_ast.Loc.t option ->
-  block_entry
-
-(***************************************)
 
 (* TODO this has a bunch of stuff in it that should be localized *)
 type context = {
   file: string;
   _module: string;
-  mutable checked: bool;
-  mutable weak: bool;
-  mutable required: SSet.t;
-  mutable require_loc: Spider_monkey_ast.Loc.t SMap.t;
+  checked: bool;
+  weak: bool;
 
-  mutable graph: bounds IMap.t;
-  mutable closures: (stack * block list) IMap.t;
-  mutable property_maps: Type.t SMap.t IMap.t;
+  (* required modules, and map to their locations *)
+  mutable required: SSet.t;
+  mutable require_loc: Loc.t SMap.t;
+  mutable module_exports_type: module_exports_type;
+
+  (* map from tvar ids to nodes (type info structures) *)
+  mutable graph: node IMap.t;
+
+  (* obj types point to mutable property maps *)
+  mutable property_maps: Type.properties IMap.t;
+
+  (* map from closure ids to env snapshots *)
+  mutable closures: (stack * Scope.t list) IMap.t;
+
+  (* map from module names to their types *)
   mutable modulemap: Type.t SMap.t;
 
+  (* A subset of required modules on which the exported type depends *)
   mutable strict_required: SSet.t;
 
   mutable errors: Errors_js.ErrorSet.t;
   mutable globals: SSet.t;
 
-  type_table: (Spider_monkey_ast.Loc.t, Type.t) Hashtbl.t;
-  annot_table: (Pos.t, Type.t) Hashtbl.t;
-}
+  mutable error_suppressions: Errors_js.ErrorSuppressions.t;
 
-val new_context: string -> string -> context
+  type_table: (Loc.t, Type.t) Hashtbl.t;
+  annot_table: (Loc.t, Type.t) Hashtbl.t;
+}
+and module_exports_type =
+  | CommonJSModule of Loc.t option
+  | ESModule
+
+val new_context:
+  ?checked:bool -> ?weak:bool ->
+  file:string -> _module:string ->
+  context
 
 (**************************************)
 
@@ -313,6 +379,10 @@ val repos_t_from_reason : reason -> Type.t -> Type.t
 val reasonless_compare : Type.t -> Type.t -> int
 
 val string_of_t : context -> Type.t -> string
+val json_of_t : context -> Type.t -> Hh_json.json
+val jstr_of_t : context -> Type.t -> string
+val json_of_graph : context -> Hh_json.json
+val jstr_of_graph : context -> string
 val dump_t : context -> Type.t -> string
 
 val parameter_name : context -> string -> Type.t -> string
@@ -323,15 +393,21 @@ val is_printed_param_type_parsable : ?weak:bool -> context -> Type.t -> bool
 
 val string_of_ctor : Type.t -> string
 
+val string_of_scope : context -> Scope.t -> string
+
 (* TEMP *)
 val streason_of_t : Type.t -> string
 
 val desc_of_t : Type.t -> string
 
-val pos_of_t : Type.t -> Pos.t
-val loc_of_t : Type.t -> Spider_monkey_ast.Loc.t
+val loc_of_t : Type.t -> Loc.t
 
 val string_of_predicate : Type.predicate -> string
 
-(* TODO should be in constraint_js, ocaml scoping quirk stymies me for now *)
-val pos_of_predicate : Type.predicate -> Pos.t
+val loc_of_predicate : Type.predicate -> Loc.t
+
+class ['a] type_visitor : object
+  (* Only exposing a few methods for now. *)
+  method type_ : context -> 'a -> Type.t -> 'a
+  method id_ : context -> 'a -> ident -> 'a
+end

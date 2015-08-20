@@ -20,6 +20,7 @@ open Typing_ops
 module Env = Typing_env
 module TUtils = Typing_utils
 module Inst = Typing_instantiate
+module Phase = Typing_phase
 
 (*****************************************************************************)
 (* Helpers *)
@@ -45,8 +46,11 @@ let check_partially_known_method_visibility = true
 (* Rules for visibility *)
 let check_visibility parent_class_elt class_elt =
   match parent_class_elt.ce_visibility, class_elt.ce_visibility with
+  | Vprivate _   , _ ->
+    (* The only time this case should come into play is when the
+     * parent_class_elt comes from a trait *)
+    ()
   | Vpublic      , Vpublic
-  | Vprivate _   , Vprivate _
   | Vprotected _ , Vprotected _
   | Vprotected _ , Vpublic       -> ()
   | _ ->
@@ -57,14 +61,22 @@ let check_visibility parent_class_elt class_elt =
     Errors.visibility_extends vis pos parent_pos parent_vis
 
 (* Check that all the required members are implemented *)
-let check_members_implemented parent_reason reason parent_members members =
+let check_members_implemented check_private parent_reason reason parent_members members =
   SMap.iter begin fun member_name class_elt ->
     match class_elt.ce_visibility with
-    | Vprivate _ -> ()
-    | _ when not (SMap.mem member_name members) ->
+      | Vprivate _ when not check_private -> ()
+      | Vprivate _ ->
+        (* This case cannot be removed as long as we're forced to
+         * check against every extended parent by the fact that // decl
+         * parents aren't fully checked against grandparents; when
+         * (class) extends (class // decl) use (trait), the grandchild
+         * won't have access to private members of the grandparent
+         * trait *)
+        ()
+      | _ when not (SMap.mem member_name members) ->
         let defn_reason = Reason.to_pos (fst class_elt.ce_type) in
         Errors.member_not_implemented member_name parent_reason reason defn_reason
-    | _ -> ()
+      | _ -> ()
   end parent_members
 
 (* When constant is overridden we need to check if the type is
@@ -76,17 +88,17 @@ let check_members_implemented parent_reason reason parent_members members =
 let check_types_for_const env parent_type class_type =
   match (snd parent_type, snd class_type) with
     | Tgeneric (_, None), _ -> ()
-    (* parent abstract constant; no constraints *)
-    | Tgeneric (_, Some fty_parent), Tgeneric (_, Some fty_child) ->
+      (* parent abstract constant; no constraints *)
+    | Tgeneric (_, Some (Ast.Constraint_as, fty_parent)),
+      Tgeneric (_, Some (Ast.Constraint_as, fty_child)) ->
       (* redeclaration of an abstract constant *)
-      ignore (TUtils.sub_type env fty_parent fty_child)
-    | Tgeneric (_, Some fty_parent), _ ->
+      ignore (Phase.sub_type_decl env fty_parent fty_child)
+    | Tgeneric (_, Some (Ast.Constraint_as, fty_parent)), _ ->
       (* const definition constrained by parent abstract const *)
-      ignore (TUtils.sub_type env fty_parent class_type)
+      ignore (Phase.sub_type_decl env fty_parent class_type)
     | (_, _) ->
       (* types should be the same *)
-      ignore (TUtils.unify env parent_type class_type)
-
+      ignore (Phase.unify_decl env parent_type class_type)
 (* An abstract member can be declared in multiple ancestors. Sometimes these
  * declarations can be different, but yet compatible depending on which ancestor
  * we inherit the member from. For example:
@@ -123,27 +135,20 @@ let check_override env ?(ignore_fun_return = false) ?(check_for_const = false)
   if check_vis then check_visibility parent_class_elt class_elt else ();
   let check_params = class_known || check_partially_known_method_params in
   if check_params then
-    (* Replace the parent's this type with the child's. This avoids complaining
-     * about how this as Base and this as Child are different types *)
-    let self = Env.get_self env in
-    let this_ty = fst self, Tgeneric ("this", Some self) in
-    let env, parent_ce_type =
-      Inst.instantiate_this env parent_class_elt.ce_type this_ty in
     if check_for_const
-    then check_types_for_const env parent_ce_type class_elt.ce_type
-    else match parent_ce_type, class_elt.ce_type with
+    then check_types_for_const env parent_class_elt.ce_type class_elt.ce_type
+    else match parent_class_elt.ce_type, class_elt.ce_type with
       | (r_parent, Tfun ft_parent), (r_child, Tfun ft_child) ->
-        let subtype_funs =
-          if (not ignore_fun_return) &&
-            (class_known || check_partially_known_method_returns) then
-            SubType.subtype_funs
-          else SubType.subtype_funs_no_return in
+        let subtype_funs = SubType.subtype_method ~check_return:(
+            (not ignore_fun_return) &&
+            (class_known || check_partially_known_method_returns)
+          ) in
         let check (r1, ft1) (r2, ft2) () = ignore(subtype_funs env r1 ft1 r2 ft2) in
         check_ambiguous_inheritance check (r_parent, ft_parent) (r_child, ft_child)
           (Reason.to_pos r_child) class_ class_elt.ce_origin
       | fty_parent, fty_child ->
         let pos = Reason.to_pos (fst fty_child) in
-        ignore (unify pos Typing_reason.URnone env fty_parent fty_child)
+        ignore (unify_decl pos Typing_reason.URnone env fty_parent fty_child)
 
 (* Privates are only visible in the parent, we don't need to check them *)
 let filter_privates members =
@@ -153,8 +158,9 @@ let filter_privates members =
     else SMap.add name class_elt acc
   end members SMap.empty
 
-let check_members env parent_class class_ parent_members members =
-  let parent_members = filter_privates parent_members in
+let check_members check_private env parent_class class_ parent_members members =
+  let parent_members = if check_private then parent_members
+    else filter_privates parent_members in
   SMap.iter begin fun member_name parent_class_elt ->
     match SMap.get member_name members with
     | Some class_elt  ->
@@ -173,8 +179,8 @@ let instantiate_members subst env members =
   SMap.map_env (Inst.instantiate_ce subst) env members
 
 let make_all_members class_ = [
-  class_.tc_cvars;
-  class_.tc_scvars;
+  class_.tc_props;
+  class_.tc_sprops;
   class_.tc_methods;
   class_.tc_smethods;
 ]
@@ -188,7 +194,6 @@ let default_constructor_ce class_ =
   let pos, name = class_.tc_pos, class_.tc_name in
   let r = Reason.Rwitness pos in (* reason doesn't get used in, e.g. arity checks *)
   let ft = { ft_pos      = pos;
-             ft_unsafe   = false;
              ft_deprecated = None;
              ft_abstract = false;
              ft_arity    = Fstandard (0, 0);
@@ -229,28 +234,59 @@ let check_constructors env parent_class class_ psubst subst =
       | None, _ -> ()
   ) else ()
 
-let tconst_subsumption this_ty env parent_typeconst child_typeconst =
-  match parent_typeconst, child_typeconst with
-  | { ttc_constraint = Some parent_cstr; _},
-      ({ ttc_type = Some child_ty; _ } | { ttc_constraint = Some child_ty; _ }) ->
-    let env, parent_cstr = Inst.instantiate_this env parent_cstr this_ty in
-    ignore (TUtils.sub_type env parent_cstr child_ty)
-  | { ttc_type = Some parent_ty; _ }, { ttc_type = Some child_ty; _ } ->
-    let env, parent_ty = Inst.instantiate_this env parent_ty this_ty in
-    ignore (TUtils.unify env parent_ty child_ty)
-  | _, _ -> ()
+(* Checks if a child is compatible with the type constant of its parent.
+ * This requires the child's constraint and assigned type to be a subtype of
+ * the parent's type constant.
+ *)
+let tconst_subsumption env parent_typeconst child_typeconst =
+  let pos = fst child_typeconst.ttc_name in
+  let parent_pos = fst parent_typeconst.ttc_name in
+  let is_final =
+    Option.is_none parent_typeconst.ttc_constraint &&
+    Option.is_some parent_typeconst.ttc_type in
+
+  (* Check that the child's constraint is compatible with the parent. If the
+   * parent has a constraint then the child must also have a constraint if it
+   * is abstract
+   *)
+  let child_is_abstract = Option.is_none child_typeconst.ttc_type in
+  let default = Reason.Rtconst_no_cstr child_typeconst.ttc_name,
+                Tgeneric (snd child_typeconst.ttc_name, None) in
+  let child_cstr =
+    if child_is_abstract
+    then Some (Option.value child_typeconst.ttc_constraint ~default)
+    else child_typeconst.ttc_constraint in
+  ignore @@ Option.map2
+    parent_typeconst.ttc_constraint
+    child_cstr
+    ~f:(sub_type_decl pos Reason.URsubsume_tconst_cstr env);
+
+  (* Check that the child's assigned type satisifies parent constraint *)
+  ignore @@ Option.map2
+    parent_typeconst.ttc_constraint
+    child_typeconst.ttc_type
+    ~f:(sub_type_decl parent_pos Reason.URtypeconst_cstr env);
+
+  (* If the parent cannot be overridden, we unify the types otherwise we ensure
+   * the child's assigned type is compatible with the parent's *)
+  let check x y =
+    if is_final
+    then ignore(unify_decl pos Reason.URsubsume_tconst_assign env x y)
+    else ignore(sub_type_decl pos Reason.URsubsume_tconst_assign env x y) in
+  ignore @@ Option.map2
+    parent_typeconst.ttc_type
+    child_typeconst.ttc_type
+    ~f:check
 
 (* For type constants we need to check that a child respects the
  * constraints specified by its parent.  *)
 let check_typeconsts env parent_class class_ =
-  let self = Env.get_self env in
-  let this_ty = fst self, Tgeneric ("this", Some self) in
-  let parent_pos, parent_class, _ = parent_class in
+    let parent_pos, parent_class, _ = parent_class in
   let pos, class_, _ = class_ in
   let ptypeconsts = parent_class.tc_typeconsts in
   let typeconsts = class_.tc_typeconsts in
   let tconst_check parent_tconst tconst () =
-    tconst_subsumption this_ty env parent_tconst tconst in
+    tconst_subsumption env parent_tconst tconst in
   SMap.iter begin fun tconst_name parent_tconst ->
     match SMap.get tconst_name typeconsts with
       | Some tconst ->
@@ -289,29 +325,28 @@ let check_class_implements env parent_class class_ =
   check_constructors env parent_class class_ psubst subst;
   let env, pmemberl = lfold (instantiate_members psubst) env pmemberl in
   let env, memberl = lfold (instantiate_members subst) env memberl in
+  let check_privates:bool = (parent_class.tc_kind = Ast.Ctrait) in
   if not fully_known then () else
-    List.iter2 (check_members_implemented parent_pos pos) pmemberl memberl;
-  List.iter2 (check_members env parent_class class_) pmemberl memberl;
+    List.iter2 (check_members_implemented check_privates parent_pos pos) pmemberl memberl;
+  List.iter2 (check_members check_privates env parent_class class_) pmemberl memberl;
   ()
 
 (*****************************************************************************)
 (* The externally visible function *)
 (*****************************************************************************)
 
-let open_class_hint = function
-  | r, Tapply (name, tparaml) -> Reason.to_pos r, name, tparaml
-  | _ -> assert false
-
 let check_implements env parent_type type_ =
-  let parent_pos, parent_name, parent_tparaml = open_class_hint parent_type in
-  let pos, name, tparaml = open_class_hint type_ in
+  let parent_r, parent_name, parent_tparaml =
+    Typing_hint.open_class_hint parent_type in
+  let r, name, tparaml = Typing_hint.open_class_hint type_ in
   let parent_class = Env.get_class env (snd parent_name) in
   let class_ = Env.get_class env (snd name) in
   match parent_class, class_ with
   | None, _ | _, None -> ()
   | Some parent_class, Some class_ ->
-      let parent_class = parent_pos, parent_class, parent_tparaml in
-      let class_ = pos, class_, tparaml in
+      let parent_class =
+        (Reason.to_pos parent_r), parent_class, parent_tparaml in
+      let class_ = (Reason.to_pos r), class_, tparaml in
       Errors.try_
         (fun () -> check_class_implements env parent_class class_)
         (fun errorl ->

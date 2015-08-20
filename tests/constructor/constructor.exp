@@ -1,6 +1,6 @@
 
-constructor.js:6:19,24: number
+constructor.js:6:19,24: return undefined
 This type is incompatible with
-  constructor.js:6:5,28: return undefined
+constructor.js:6:19,24: number
 
 Found 1 error

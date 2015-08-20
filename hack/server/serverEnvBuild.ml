@@ -14,35 +14,25 @@
 (*****************************************************************************)
 open ServerEnv
 
-let make_genv ~multicore options config =
-  let root         = ServerArgs.root options in
+let make_genv options config watch_paths =
   let check_mode   = ServerArgs.check_mode options in
+  let ai_mode      = ServerArgs.ai_mode options in
   let gc_control   = ServerConfig.gc_control config in
   Typing_deps.trace :=
-    not check_mode || ServerArgs.convert options <> None ||
+    not check_mode || not ai_mode || ServerArgs.convert options <> None ||
     ServerArgs.save_filename options <> None;
-  let nbr_procs    = GlobalConfig.nbr_procs in
-  let workers =
-    if multicore then Some (Worker.make nbr_procs gc_control) else None
-  in
-  if not check_mode
-  then begin
-    if not check_mode && not (Lock.check root "lock")
-    then begin
-      Printf.fprintf stderr "Error: another server is already running?\n";
-      exit 1
-    end;
-    ()
-  end;
-  { options      = options;
-    config       = config;
-    workers      = workers;
+  let nbr_procs = GlobalConfig.nbr_procs in
+  let workers = Some (Worker.make nbr_procs gc_control) in
+  let dfind =
+    if check_mode || ai_mode then None else Some (DfindLib.init watch_paths) in
+  { options;
+    config;
+    workers;
+    dfind;
   }
 
 let make_env options config =
-  let nenv = { Naming.empty with
-    Naming.itcopt = ServerConfig.typechecker_options config;
-  } in
+  let nenv = Naming.empty (ServerConfig.typechecker_options config) in
   { nenv;
     files_info     = Relative_path.Map.empty;
     errorl         = [];

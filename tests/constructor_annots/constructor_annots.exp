@@ -1,0 +1,46 @@
+
+constructors.js:2:1,4:1: property m
+Property not found in
+constructors.js:18:28,31: IFoo
+
+constructors.js:3:3,12: assignment of property x
+Error:
+constructors.js:3:12,12: number
+This type is incompatible with
+constructors.js:14:6,12: boolean
+
+constructors.js:3:12,12: number
+This type is incompatible with
+test.js:2:8,13: string
+
+constructors.js:5:9,9: number
+This type is incompatible with
+constructors.js:16:13,19: boolean
+
+constructors.js:16:13,19: boolean
+This type is incompatible with
+test.js:3:8,13: string
+
+test.js:4:17,29: call of method m
+Error:
+constructors.js:6:32,32: number
+This type is incompatible with
+test.js:4:8,13: string
+
+test.js:7:18,29: property x
+Error:
+constructors.js:14:6,12: boolean
+This type is incompatible with
+test.js:7:9,14: string
+
+test.js:8:18,23: property y
+Error:
+constructors.js:16:13,19: boolean
+This type is incompatible with
+test.js:8:9,14: string
+
+test.js:9:18,31: call of method m
+Property not found in
+constructors.js:18:28,31: IFoo
+
+Found 9 errors

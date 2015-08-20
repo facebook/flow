@@ -1,10 +1,14 @@
 
+keyvalue.js:2:17,25: access of computed property/element
+Error:
+keyvalue.js:2:8,13: number
+This type is incompatible with
+[LIB] dom.js:52:22,25: File
+
+keyvalue.js:2:17,25: access of computed property/element
+Error:
 keyvalue.js:2:23,24: string
 This type is incompatible with
-  [LIB] dom.js:52:13,18: number
-
-[LIB] dom.js:52:22,25: File
-This type is incompatible with
-  keyvalue.js:2:8,13: number
+[LIB] dom.js:52:13,18: number
 
 Found 2 errors

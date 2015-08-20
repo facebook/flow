@@ -8,8 +8,7 @@
  *
  *)
 
-open ClientExceptions
-open Sys_utils
+module CCS = ClientConnectSimple
 
 let get_hhserver () =
   let server_next_to_client = (Filename.dirname Sys.argv.(0)) ^ "/hh_server" in
@@ -18,97 +17,70 @@ let get_hhserver () =
   else "hh_server"
 
 type env = {
-  root: Path.path;
+  root: Path.t;
   wait: bool;
   no_load : bool;
 }
 
-let rec wait env =
-  begin try
-    Unix.sleep(1);
-    ignore(ClientUtils.connect env.root);
-    Printf.fprintf stderr "Done waiting!\n%!"
-  with
-  | Server_initializing ->
-    Printf.fprintf stderr "Waiting for server to initialize\n%!";
-    wait env
-  | e ->
-    Printf.fprintf stderr
-      "Error: something went wrong while waiting for the server to start up\n%s\n%!"
-      (Printexc.to_string e);
-    exit 77
-  end
-
 let start_server env =
-  let hh_server = Printf.sprintf "%s -d %s %s"
+  let hh_server = Printf.sprintf "%s -d %s %s --waiting-client %d"
     (Filename.quote (get_hhserver ()))
-    (Filename.quote (Path.string_of_path env.root))
-    (if env.no_load then "--no-load" else "") in
-  Printf.fprintf stderr "Server launched with the following command:\n\t%s\n%!"
+    (Filename.quote (Path.to_string env.root))
+    (if env.no_load then "--no-load" else "")
+    (Unix.getpid ())
+  in
+  Printf.eprintf "Server launched with the following command:\n\t%s\n%!"
     hh_server;
-  let () = match Unix.system hh_server with
+
+  (* Start up the hh_server, and wait on SIGUSR1, which is sent to us at various
+   * stages of the start up process. See if we're in the state we want to be in;
+   * if not, go to sleep again. *)
+  let old_mask = Unix.sigprocmask Unix.SIG_BLOCK [Sys.sigusr1] in
+  (* Have to actually handle and discard the signal -- if it's ignored, it won't
+   * break the sigsuspend. *)
+  let old_handle = Sys.signal Sys.sigusr1 (Sys.Signal_handle (fun _ -> ())) in
+
+  let rec wait_loop () =
+    Unix.sigsuspend old_mask;
+    (* NB: SIGUSR1 is now blocked again. *)
+    if env.wait && not (Lock.check env.root "init") then
+      wait_loop ()
+    else
+      ()
+  in
+
+  (match Unix.system hh_server with
     | Unix.WEXITED 0 -> ()
-    | _ -> Printf.fprintf stderr "Could not start hh_server!\n"; exit 77 in
-  if env.wait then wait env;
+    | _ -> Printf.fprintf stderr "Could not start hh_server!\n"; exit 77);
+  wait_loop ();
+
+  let _ = Sys.signal Sys.sigusr1 old_handle in
+  let _ = Unix.sigprocmask Unix.SIG_SETMASK old_mask in
   ()
 
 let should_start env =
-  if ClientUtils.server_exists env.root
-  then begin
-    try
-      (* Let's ping the server to make sure it's up and not out of date *)
-      let response = with_timeout 6
-        ~on_timeout:(fun _ -> raise Server_busy)
-        ~do_:(fun () ->
-          let ic, oc = ClientUtils.connect env.root in
-          ServerMsg.cmd_to_channel oc ServerMsg.PING;
-          ServerMsg.response_from_channel ic) in
-      match response with
-      | ServerMsg.PONG -> false
-      | ServerMsg.SERVER_OUT_OF_DATE ->
-          Printf.fprintf
-            stderr
-            "Replacing out of date server for %s\n%!"
-            (Path.string_of_path env.root);
-          ignore(Unix.sleep 1);
-          true
-      | ServerMsg.SERVER_DYING
-      | ServerMsg.NO_ERRORS
-      | ServerMsg.ERRORS _
-      | ServerMsg.DIRECTORY_MISMATCH _ ->
-        let r = (ServerMsg.response_to_string response) in
-        failwith ("Unexpected response from the server: "^r)
-    with
-      | Server_busy ->
-          Printf.fprintf
-            stderr
-            "Replacing busy server for %s\n%!"
-            (Path.string_of_path env.root);
-          HackClientStop.kill_server env.root;
-          true
-      | Server_initializing ->
-          Printf.fprintf
-            stderr
-            "Found initializing server for %s\n%!"
-            (Path.string_of_path env.root);
-          false
-      | Server_cant_connect ->
-          Printf.fprintf
-            stderr
-            "Replacing unresponsive server for %s\n%!"
-            (Path.string_of_path env.root);
-          HackClientStop.kill_server env.root;
-          true
-  end else true
+  let root_s = Path.to_string env.root in
+  match CCS.connect_once env.root with
+  | Result.Ok _conn -> false
+  | Result.Error CCS.Server_missing
+  | Result.Error CCS.Build_id_mismatch -> true
+  | Result.Error CCS.Server_initializing ->
+      Printf.eprintf "Found initializing server for %s\n%!" root_s;
+      false
+  | Result.Error CCS.Server_busy ->
+      Printf.eprintf "Replacing unresponsive server for %s\n%!" root_s;
+      HackClientStop.kill_server env.root;
+      true
 
 let main env =
   if should_start env
-  then start_server env
-  else begin
-    Printf.fprintf
-      stderr
+  then begin
+    start_server env;
+    Exit_status.Ok
+  end else begin
+    Printf.eprintf
       "Error: Server already exists for %s\n\
       Use hh_client restart if you want to kill it and start a new one\n%!"
-      (Path.string_of_path env.root);
-    exit 77
+      (Path.to_string env.root);
+    Exit_status.Server_already_exists
   end

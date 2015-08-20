@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2015, Facebook, Inc.
+ *  Copyright (c) 2015, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -8,10 +8,12 @@
  *
  *)
 
-exception Not_static of Pos.t
-(* type errors are already handled by naming / typing code, so the caller can
- * usually ignore them *)
-exception Type_error
+type eval_error =
+  | Not_static of Pos.t
+  | Type_error (* type errors are already handled by naming / typing code,
+                * so the caller can usually ignore them *)
 
-val static_string : Nast.class_ option -> Nast.expr -> Pos.t * string
-val static_string_no_consts : Nast.expr -> Pos.t * string
+val static_string : Nast.class_ option -> Nast.expr ->
+  (Pos.t * string, eval_error) Result.t
+val static_string_no_consts : Nast.expr ->
+  (Pos.t * string, eval_error) Result.t

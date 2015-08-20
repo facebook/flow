@@ -69,7 +69,7 @@ let resolve_types acc collated_values =
       let merged_tenv = IMap.union env.Env.tenv env_acc.Env.tenv in
       let merged_subst = IMap.union env.Env.subst env_acc.Env.subst in
       {env_acc with Env.tenv = merged_tenv; Env.subst = merged_subst}, ty::tyl
-    end envl_tyl (Env.empty fn, []) in
+    end envl_tyl (Env.empty TypecheckerOptions.default fn, []) in
     let reason = Typing_reason.Rnone in
     let ureason = Typing_reason.URnone in
     let any = reason, Typing_defs.Tany in
@@ -96,10 +96,10 @@ let resolve_types acc collated_values =
               end (fun _ -> raise Exit)
             with Timeout -> raise Timeout | _ -> guess_super env tyl guesses in
 
-        let xhp = reason, Typing_defs.Tapply ((Pos.none, "\\:xhp"), []) in
+        let xhp = reason, Typing_defs.Tclass ((Pos.none, "\\:xhp"), []) in
         let xhp_option = reason, Typing_defs.Toption xhp in
         let awaitable ty =
-          reason, Typing_defs.Tapply ((Pos.none, SN.Classes.cAwaitable), [ty]) in
+          reason, Typing_defs.Tclass ((Pos.none, SN.Classes.cAwaitable), [ty]) in
         let awaitable_xhp = awaitable xhp in
         let awaitable_xhp_option = awaitable xhp_option in
 
@@ -181,20 +181,21 @@ let collate_types fast all_types =
 
 let type_fun fn x =
   try
-    let tenv = Env.empty fn in
+    let tcopt = TypecheckerOptions.permissive in
+    let nenv, tenv = Naming.empty tcopt, Env.empty tcopt fn in
     let fun_ = Naming_heap.FunHeap.find_unsafe x in
-    Typing.fun_def tenv x fun_;
+    Typing.fun_def tenv nenv x fun_;
   with Not_found ->
     ()
 
 let type_class fn x =
   try
+    let tcopt = TypecheckerOptions.permissive in
+    let nenv, tenv = Naming.empty tcopt, Env.empty tcopt fn in
     let class_ = Naming_heap.ClassHeap.get x in
-    let tenv = Env.empty fn in
     (match class_ with
     | None -> ()
-    | Some class_ ->
-        Typing.class_def tenv x class_
+    | Some class_ -> Typing.class_def tenv nenv x class_
     )
   with Not_found ->
     ()
@@ -207,7 +208,7 @@ let suggest_files fast fnl =
   SharedMem.invalidate_caches();
   Typing_defs.is_suggest_mode := true;
   Typing_suggest.types := [];
-  Typing_suggest.initalized_members := SMap.empty;
+  Typing_suggest.initialized_members := SMap.empty;
   List.iter begin fun fn ->
     let { FileInfo.n_funs; n_classes; _ } =
       Relative_path.Map.find_unsafe fn fast in
@@ -217,7 +218,7 @@ let suggest_files fast fnl =
   let result = !Typing_suggest.types in
   Typing_defs.is_suggest_mode := false;
   Typing_suggest.types := [];
-  Typing_suggest.initalized_members := SMap.empty;
+  Typing_suggest.initialized_members := SMap.empty;
   result
 
 let suggest_files_worker acc fnl =

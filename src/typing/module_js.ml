@@ -17,6 +17,7 @@
    point inside a function (and when to narrow or widen their types). *)
 
 open Utils
+open Utils_js
 open Sys_utils
 
 module Ast = Spider_monkey_ast
@@ -30,12 +31,47 @@ type info = {
   file: string;             (* file name *)
   _module: string;          (* module name *)
   required: SSet.t;         (* required module names *)
-  require_loc: Spider_monkey_ast.Loc.t SMap.t;  (* statement locations *)
+  require_loc: Loc.t SMap.t;  (* statement locations *)
   strict_required: SSet.t;  (* strict requires (flow to export types) *)
   checked: bool;            (* in flow? *)
+  parsed: bool;             (* if false, it's a tracking record only *)
 }
 
 type mode = ModuleMode_Checked | ModuleMode_Weak | ModuleMode_Unchecked
+
+let flow_options = ref None (*Options.default_options*)
+
+(**
+ * A set of module.name_mapper config entry allows users to specify regexp
+ * matcher strings each with a template string in order to map the names of a
+ * dependency in a JS file to another name before trying to resolve it.
+ *
+ * The user can specify any number of these mappers, but the one that gets
+ * applied to any given module name is the first one whose name matches the
+ * regexp string. For the node module system, we go a step further and only
+ * choose candidates that match the string *and* are a valid, resolvable path.
+ *)
+let module_name_candidates_cache = Hashtbl.create 50
+let module_name_candidates name =
+  if Hashtbl.mem module_name_candidates_cache name then (
+    Hashtbl.find module_name_candidates_cache name
+  ) else (
+    match !flow_options with
+    | None -> assert_false (spf
+        ("Attempted to map module name (%s) before the flow_options were " ^^
+         "provided to Module_js.ml :(")
+        name
+      )
+    | Some(flow_options) ->
+      let mappers = flow_options.Options.opt_module_name_mappers in
+      let map_name mapped_names (regexp, template) =
+        let new_name = Str.global_replace regexp template name in
+        if new_name = name then mapped_names else new_name::mapped_names
+      in
+      let mapped_names = List.rev (name::(List.fold_left map_name [] mappers)) in
+      Hashtbl.add module_name_candidates_cache name mapped_names;
+      mapped_names
+  )
 
 (****************** shared dependency map *********************)
 
@@ -55,22 +91,22 @@ end)
 
 (****************** header parse utils *********************)
 
+let words_rx = Str.regexp "[ \t\n\\*/]+"
+
 (* scan the first node in an AST comment list, using the given
    word-list parser and default result. default is returned if
    parser returns nothing, or comment list is empty.
    Note: 'header' is a bit of a misnomer. we simply call this
    on the comment list returned from the parser, which makes no
    guarantees that the first comment appears before anything else *)
-let parse_header wordlist_parser default =
-  let words = Str.regexp "[ \t\n\\*/]+"
-  in Ast.Comment.(function
-    | [] -> default
-    | (loc, Block s) :: _
-    | (loc, Line s) :: _ ->
-        match wordlist_parser (Str.split words s) with
-        | Some x -> x
-        | None -> default
-  )
+let parse_header wordlist_parser default = Ast.Comment.(function
+| [] -> default
+| (loc, Block s) :: _
+| (loc, Line s) :: _ ->
+  match wordlist_parser (Str.split words_rx s) with
+  | Some x -> x
+  | None -> default
+)
 
 (****************** @flow parser *********************)
 
@@ -86,7 +122,7 @@ let parse_flow = parse_header parse_attributes_flow ModuleMode_Unchecked
 
 (* shared heap for package.json tokens by filename *)
 module PackageHeap = SharedMem.WithCache (String) (struct
-    type t = Spider_monkey_ast.Expression.t SMap.t
+    type t = Ast.Expression.t SMap.t
     let prefix = Prefix.make()
   end)
 
@@ -96,49 +132,35 @@ module ReversePackageHeap = SharedMem.WithCache (String) (struct
     let prefix = Prefix.make()
   end)
 
-let get_key key tokens = Spider_monkey_ast.(
+let get_key key tokens = Ast.(
   match SMap.get (spf "\"%s\"" key) tokens with
   | Some (_, Expression.Literal { Literal.value = Literal.String name; _ }) ->
       Some name
   | _ -> None
 )
 
-(* basic parse of JSON as a JS expression; throws on parse failure *)
-let parse_json json file =
-  let js = spf "(%s)" json in
-  let ast, errors = Parsing_service_js.do_parse ~keep_errors:true js file in
-  Spider_monkey_ast.(match ast with
-    | Some (_, [_, Statement.Expression ({
-        Statement.Expression.expression = _, Expression.Object {
-          Expression.Object.properties = ps
-        }
-      })], _) ->
-        List.fold_left Expression.Object.(fun map -> function
-          | Property (_, {
-              Property.key = Property.Literal (_, { Literal.raw; _ });
-              value;
-              _
-            }) -> SMap.add raw value map
-          | _ -> map
-        ) SMap.empty ps
-    | _ -> SMap.empty
-  ), errors
-
 let add_package package =
   let json = cat package in
-  let tokens, errors = parse_json json package in
+  let tokens, errors = FlowJSON.parse_object json package in
   PackageHeap.add package tokens;
   (match get_key "name" tokens with
   | Some name ->
     ReversePackageHeap.add name (Filename.dirname package)
   | None -> ());
-  errors
+  if List.length errors = 0 then None else
+    let fold_error e_set error =
+      Errors_js.(ErrorSet.add (parse_error_to_flow_error error) e_set)
+    in
+    Some(List.fold_left fold_error Errors_js.ErrorSet.empty errors)
 
 (* Specification of a module system. Currently this signature is sufficient to
    model both Haste and Node, but should be further generalized. *)
 module type MODULE_SYSTEM = sig
   (* Given a file and comments in it, make the name of the module it exports. *)
-  val exported_module: string -> Spider_monkey_ast.Comment.t list -> string
+  val exported_module: string -> Ast.Comment.t list -> string
+
+  (* Given just a file name, guess the name of the module it exports. *)
+  val guess_exported_module: string -> string -> string
 
   (* Given a file and a reference in it to an imported module, make the name of
      the module it refers to. *)
@@ -150,10 +172,10 @@ module type MODULE_SYSTEM = sig
 val choose_provider:
   string ->   (* module name *)
   SSet.t ->   (* set of candidate provider files *)
-  (* parallel lists of error files and error sets (accumulator) *)
-  (string list * ErrorSet.t list) ->
-  (* file, parallel lists of error files and error sets (additive) *)
-  (string * (string list * ErrorSet.t list))
+  (* map from files to error sets (accumulator) *)
+  Errors_js.ErrorSet.t SMap.t ->
+  (* file, error map (accumulator) *)
+  (string * Errors_js.ErrorSet.t SMap.t)
 
 end
 
@@ -171,20 +193,80 @@ let rec seqf f = function
     | None -> seqf f xs)
   | [] -> None
 
+(*********************************)
+
+(* TODO this exists only until we start resolving files using
+   NameHeap. unfortunately that will require more refactoring
+   than it should, since imported_module is currently called
+   during local inference, and simply storing raw module names
+   in cx.required et al and looking them up at merge time appears
+   to violate some well-hidden private agreements. TODO *)
+
+(* only purpose here is to guarantee a case-sensitive file exists
+   and try to keep it from being too horrendously expensive *)
+
+let case_sensitive =
+  not (Sys.file_exists (String.uppercase (Sys.getcwd ())))
+
+(* map of dirs to file lists *)
+let files_in_dir = ref SMap.empty
+
+(* called from Types_js.typecheck, so we rebuild every time *)
+let clear_filename_cache () =
+  files_in_dir := SMap.empty
+
+(* case-sensitive dir_exists  *)
+let rec dir_exists dir =
+  try Sys.is_directory dir && (case_sensitive || file_exists dir)
+  with _ -> false
+
+(* when system is case-insensitive, do our own file exists check *)
+and file_exists path =
+  (* case doesn't matter for "/", ".", "..." and these serve as a base-case for
+   * case-insensitive filesystems *)
+  if (
+    case_sensitive
+    || path = Filename.dir_sep
+    || path = Filename.current_dir_name
+    || path = Filename.parent_dir_name
+  ) then Sys.file_exists path
+  else (
+    let dir = Filename.dirname path in
+    let files = match SMap.get dir !files_in_dir with
+    | Some files -> files
+    | None ->
+        let files = if dir_exists dir
+          then set_of_list (Array.to_list (Sys.readdir dir))
+          else SSet.empty in
+        files_in_dir := SMap.add dir files !files_in_dir;
+        files
+    in SSet.mem (Filename.basename path) files
+  )
+
+(*******************************)
+
 module Node = struct
   let exported_module file comments = file
+  let guess_exported_module file _content = file
 
   let path_if_exists path =
-    if Sys.file_exists path then Some path
+    if file_exists path then Some path
     else None
 
   let path_is_file path =
-    Sys.file_exists path && not (Sys.is_directory path)
+    file_exists path && not (Sys.is_directory path)
 
   let parse_main package =
-    if not (Sys.file_exists package) then None
+    let package = Path.to_string (Path.make package) in (* resolve symlinks *)
+    if not (file_exists package) ||
+      FlowConfig.(is_excluded (get_unsafe ()) package)
+    then None
     else
-      let tokens = package |> PackageHeap.find_unsafe in
+      let tokens = match PackageHeap.get package with
+      | Some tokens -> tokens
+      | None -> failwith (spf
+          "internal error: package %s not found" package)
+      in
       let dir = Filename.dirname package in
       match get_key "main" tokens with
       | None -> None
@@ -201,9 +283,9 @@ module Node = struct
               let path = Filename.concat path "index.js" in
               path_if_exists path)
 
-  let resolve_relative dir r =
-    let path = Files_js.normalize_path dir r in
-    if Files_js.is_flow_file path && path_is_file path
+  let resolve_relative root_path rel_path =
+    let path = Files_js.normalize_path root_path rel_path in
+    if Files_js.is_flow_file path
     then path_if_exists path
     else seq
       (fun () ->
@@ -234,29 +316,35 @@ module Node = struct
     || Str.string_match Files_js.current_dir_name r 0
     || Str.string_match Files_js.parent_dir_name r 0
 
-  let resolve_import file r =
+  let resolve_import file import_str =
     let dir = Filename.dirname file in
-    if relative r
-    then resolve_relative dir r
-    else node_module dir r
+    if relative import_str
+    then resolve_relative dir import_str
+    else node_module dir import_str
 
-  let imported_module file r =
-    let opt_module_name = resolve_import file r in
-    match opt_module_name with
-    | Some r -> r
-    | _ -> r
+  let imported_module file import_str =
+    let candidates = module_name_candidates import_str in
 
-(* in node, file names are module names, as guaranteed by
-   our implementation of exported_name, so anything but a
-   singleton provider set is craziness. *)
-let choose_provider m files errs =
-  match SSet.elements files with
-  | [] ->
-      failwith (spf "internal error: empty provider set for module %S" m)
-  | [f] ->
-      f, errs
-  | files ->
-      failwith (spf "internal error: multiple providers for module %S" m)
+    let choose_candidate chosen candidate =
+      match chosen with
+      | Some(c) -> chosen
+      | None -> resolve_import file candidate
+    in
+    match List.fold_left choose_candidate None candidates with
+    | Some(str) -> str
+    | None -> import_str
+
+  (* in node, file names are module names, as guaranteed by
+     our implementation of exported_name, so anything but a
+     singleton provider set is craziness. *)
+  let choose_provider m files errmap =
+    match SSet.elements files with
+    | [] ->
+        failwith (spf "internal error: empty provider set for module %S" m)
+    | [f] ->
+        f, errmap
+    | files ->
+        failwith (spf "internal error: multiple providers for module %S" m)
 
 end
 
@@ -286,8 +374,25 @@ module Haste: MODULE_SYSTEM = struct
   let exported_module file comments =
     if is_mock file
     then short_module_name_of file
-    else
-      parse_module_name file comments
+    else parse_module_name file comments
+
+  (* grep for "@providesModule foo" when we don't have an AST *)
+  (* TODO instead of this, try retaining ASTs in ParseHeap after errors
+     and parsing them in the usual way *)
+  let grep_provides =
+    let provides_rx = Str.regexp
+      "\\(.\\|\n\\)*@providesModule[ \t]+\\([_a-zA-Z][^ \t\n]*\\)" in
+    let module_name_group = 2 in
+    fun file content ->
+      let content = cat file in
+      if Str.string_match provides_rx content 0
+      then Str.matched_group module_name_group content
+      else file
+
+  let guess_exported_module file content =
+    if is_mock file
+    then short_module_name_of file
+    else grep_provides file content
 
   let expanded_name r =
     match Str.split_delim Files_js.dir_sep r with
@@ -307,40 +412,53 @@ module Haste: MODULE_SYSTEM = struct
         | None -> None
       )
 
-  let imported_module file r =
-    match resolve_import file r with
-    | Some r -> r
-    | None -> Haste_module_preprocessor.preprocess_name r
+  let imported_module file imported_name =
+    let candidates = module_name_candidates imported_name in
 
-(* in haste, many files may provide the same module. here we're also
-   supporting the notion of mock modules - allowed duplicates used as
-   fallbacks. we prefer the non-mock if it exists, otherwise choose an
-   arbitrary mock, if any exist. if multiple non-mock providers exist,
-   we pick one arbitrarily and issue duplicate module warnings for the
-   rest. *)
-let choose_provider m files (errfiles, errsets) =
-  match SSet.elements files with
-  | [] ->
-      failwith (spf "internal error: empty provider set for module %S" m)
-  | [f] ->
-      f, (errfiles, errsets)
-  | files ->
-      let mocks, non_mocks = List.partition is_mock files in
-      match non_mocks with
-      | [] -> List.hd mocks, (errfiles, errsets)
-      | [f] -> f, (errfiles, errsets)
-      | h :: t ->
-          let errfiles, errsets = List.fold_left (fun (errfiles, errsets) f ->
-            let w = Flow.new_warning [
-              Reason.new_reason m (Pos.make_from
-                (Relative_path.create Relative_path.Dummy f)),
-                "Duplicate module provider";
-              Reason.new_reason "current provider"
-                (Pos.make_from (Relative_path.create Relative_path.Dummy h)),
-                ""] in
-            f :: errfiles, (ErrorSet.singleton w) :: errsets
-          ) (errfiles, errsets) t in
-          h, (errfiles, errsets)
+    (**
+     * In Haste, we don't have an autoritative list of all valid module names
+     * until after all modules have been sweeped (because the module name is
+     * specified in the contents of the file). So, unlike the node module
+     * system, we can't run through the list of mapped module names and only
+     * choose the first one that is valid.
+     *
+     * Therefore, for the Haste module system, we simply always pick the first
+     * matching candidate (rather than the first *valid* matching candidate).
+     *)
+    let chosen_candidate = List.hd candidates in
+
+    match resolve_import file chosen_candidate with
+    | Some(name) -> name
+    | None -> chosen_candidate
+
+  (* in haste, many files may provide the same module. here we're also
+     supporting the notion of mock modules - allowed duplicates used as
+     fallbacks. we prefer the non-mock if it exists, otherwise choose an
+     arbitrary mock, if any exist. if multiple non-mock providers exist,
+     we pick one arbitrarily and issue duplicate module warnings for the
+     rest. *)
+  let choose_provider m files errmap =
+    match SSet.elements files with
+    | [] ->
+        failwith (spf "internal error: empty provider set for module %S" m)
+    | [f] ->
+        f, errmap
+    | files ->
+        let mocks, non_mocks = List.partition is_mock files in
+        match non_mocks with
+        | [] -> List.hd mocks, errmap
+        | [f] -> f, errmap
+        | h :: t ->
+            let errmap = List.fold_left (fun acc f ->
+              let w = Flow.new_warning [
+                Reason.mk_reason m Loc.({ none with source = Some f }),
+                  "Duplicate module provider";
+                Reason.mk_reason "current provider"
+                  Loc.({ none with source = Some h }),
+                  ""] in
+              SMap.add f (ErrorSet.singleton w) acc
+            ) errmap t in
+            h, errmap
 
 end
 
@@ -357,20 +475,25 @@ let module_system_table =
 
 let module_system = ref (module Node: MODULE_SYSTEM)
 
-let init specifier =
-  module_system := Hashtbl.find module_system_table specifier
+let init opts =
+  flow_options := Some(opts);
+  module_system := Hashtbl.find module_system_table opts.Options.opt_module
 
 let exported_module file comments =
   let module M = (val !module_system) in
   M.exported_module file comments
 
+let guess_exported_module file comments =
+  let module M = (val !module_system) in
+  M.guess_exported_module file comments
+
 let imported_module file r =
   let module M = (val !module_system) in
   M.imported_module file r
 
-let choose_provider m files errs =
+let choose_provider m files errmap =
   let module M = (val !module_system) in
-  M.choose_provider m files errs
+  M.choose_provider m files errmap
 
 (****************** reverse import utils *********************)
 
@@ -471,7 +594,8 @@ let info_of cx = {
   required = cx.Constraint.required;
   require_loc = cx.Constraint.require_loc;
   strict_required = cx.Constraint.strict_required;
-  checked = cx.Constraint.checked
+  checked = cx.Constraint.checked;
+  parsed = true;
 }
 
 (* during inference, we add per-file module info to the shared heap
@@ -480,6 +604,24 @@ let info_of cx = {
 let add_module_info cx =
   let info = info_of cx in
   InfoHeap.add info.file info
+
+(* We need to track files that have failed to parse. This begins with
+   adding tracking records for unparsed files to InfoHeap. They never
+   become providers - the process of committing modules happens after
+   parsed files are finished with local inference. But since we guess
+   the module names of unparsed files, we're able to tell whether an
+   unparsed file has been required/imported.
+ *)
+let add_unparsed_info file =
+  let content = cat file in
+  let _module = guess_exported_module file content in
+  let checked = Parsing_service_js.in_flow content file in
+  let info = { file; _module; checked; parsed = false;
+    required = SSet.empty;
+    require_loc = SMap.empty;
+    strict_required = SSet.empty;
+  } in
+  InfoHeap.add file info
 
 (* Note that the module provided by a file is always accessible via its full
    path, so that it may be imported by specifying (a part of) that path in any
@@ -567,28 +709,32 @@ let commit_modules inferred removed =
     acc |> SSet.add m |> SSet.add f
   ) removed inferred in
   (* prep for registering new mappings in NameHeap *)
-  let remove, replace, errs = SSet.fold (fun m (rem, rep, errs) ->
+  let remove, replace, errmap = SSet.fold (fun m (rem, rep, errmap) ->
     match get_providers m with
     | ps when SSet.cardinal ps = 0 ->
         Modes.debug_string (fun () -> spf
           "no remaining providers: %S" m);
-        (SSet.add m rem), rep, errs
+        (SSet.add m rem), rep, errmap
     | ps ->
-      let p, errs = choose_provider m ps errs in
+      (* incremental: clear error sets of provider candidates *)
+      let errmap = SSet.fold (fun f acc ->
+        SMap.add f ErrorSet.empty acc) ps errmap in
+      (* now choose provider for m *)
+      let p, errmap = choose_provider m ps errmap in
       match NameHeap.get m with
       | Some f when f = p ->
           Modes.debug_string (fun () -> spf
             "unchanged provider: %S -> %s" m p);
-          rem, rep, errs
+          rem, rep, errmap
       | Some f ->
           Modes.debug_string (fun () -> spf
             "new provider: %S -> %s replaces %s" m p f);
-          (SSet.add m rem), ((m, p) :: rep), errs
+          (SSet.add m rem), ((m, p) :: rep), errmap
       | None ->
           Modes.debug_string (fun () -> spf
             "initial provider %S -> %s" m p);
-          (SSet.add m rem), ((m, p) :: rep), errs
-  ) repick (SSet.empty, [], ([], [])) in
+          (SSet.add m rem), ((m, p) :: rep), errmap
+  ) repick (SSet.empty, [], SMap.empty) in
   (* update NameHeap *)
   NameHeap.remove_batch remove;
   SharedMem.collect ();
@@ -596,7 +742,7 @@ let commit_modules inferred removed =
   (* now that providers are updated, update reverse dependency info *)
   add_reverse_imports inferred;
   Modes.debug_string (fun () -> "*** done committing modules ***");
-  errs
+  errmap
 
 (* remove module mappings for given files, if they exist. Possibilities:
    1. file is current registered module provider for a given module name
@@ -612,14 +758,14 @@ let remove_files files =
   let names = SSet.fold (fun file names ->
       match InfoHeap.get file with
       | Some info ->
-          let { _module = name; required = requires; _ } = info in
-          remove_provider file name;
-          (match NameHeap.get name with
+          let { _module; required; parsed; _ } = info in
+          (if parsed then remove_provider file _module);
+          (match NameHeap.get _module with
           | Some f when f = file -> (
               (* untrack all imports from this file. we only do this for
                  module providers to avoid inconsistencies when there are
                  multiple providers. *)
-              reverse_imports_untrack name requires;
+              reverse_imports_untrack _module required;
               (* when we delete a module and it was never referenced we need
                  to delete it from the reverse import heap. Otherwise, it can
                  still be looked up by using get-imported-by and that is
@@ -627,13 +773,13 @@ let remove_files files =
                  module provider. This makes sure that exsiting modules won't
                  get erased when a duplicate is removed.
               *)
-              match reverse_imports_get name with
+              match reverse_imports_get _module with
               | Some reverse_imports ->
                   if SSet.is_empty reverse_imports
-                  then reverse_imports_clear name
+                  then reverse_imports_clear _module
               | None -> ()
               );
-              names |> SSet.add name |> SSet.add file
+              names |> SSet.add _module |> SSet.add file
           | _ ->
               names
         )

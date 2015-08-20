@@ -1,6 +1,8 @@
 
+regexp.js:2:20,44: call of method test
+Error:
 regexp.js:2:20,44: boolean
 This type is incompatible with
-  regexp.js:2:11,16: number
+regexp.js:2:11,16: number
 
 Found 1 error
