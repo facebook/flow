@@ -561,8 +561,9 @@ and string_backslash file = parse
 
 and string2 file = parse
   | eof                { Teof }
-  | '\n'               { Lexing.new_line lexbuf; string2 file lexbuf }
-  | '\\'               { string_backslash file lexbuf; string2 file lexbuf }
+  | '\n'               { Lexing.new_line lexbuf; Tany }
+  | "\\\n"             { Lexing.new_line lexbuf; Tany }
+  | '\\' _             { Tany }
   | '\"'               { Tdquote }
   | '{'                { Tlcb }
   | '}'                { Trcb }

@@ -987,7 +987,7 @@ and expr_ ~in_cond ~(valkind: [> `lvalue | `rvalue | `other ]) env (p, e) =
       env, (Reason.Rwitness p, Toption ty)
   | String _ ->
       env, (Reason.Rwitness p, Tprim Tstring)
-  | String2 (idl, _) ->
+  | String2 idl ->
       let env = string2 env idl in
       env, (Reason.Rwitness p, Tprim Tstring)
   | Fun_id x ->

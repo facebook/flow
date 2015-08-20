@@ -67,7 +67,7 @@ class type ['a] nast_visitor_type = object
   method on_float : 'a -> pstring -> 'a
   method on_null : 'a -> 'a
   method on_string : 'a -> pstring -> 'a
-  method on_string2 : 'a -> expr list -> string -> 'a
+  method on_string2 : 'a -> expr list -> 'a
   method on_special_func : 'a -> special_func -> 'a
   method on_yield_break : 'a -> 'a
   method on_yield : 'a -> afield -> 'a
@@ -230,7 +230,7 @@ class virtual ['a] nast_visitor: ['a] nast_visitor_type = object(this)
    | Class_get   (cid, id)   -> this#on_class_get acc cid id
    | Class_const (cid, id)   -> this#on_class_const acc cid id
    | Call        (ct, e, el, uel) -> this#on_call acc ct e el uel
-   | String2     (el, s)     -> this#on_string2 acc el s
+   | String2     el          -> this#on_string2 acc el
    | Pair        (e1, e2)    -> this#on_pair acc e1 e2
    | Cast        (hint, e)   -> this#on_cast acc hint e
    | Unop        (uop, e)         -> this#on_unop acc uop e
@@ -299,7 +299,7 @@ class virtual ['a] nast_visitor: ['a] nast_visitor_type = object(this)
   method on_null acc = acc
   method on_string acc _ = acc
 
-  method on_string2 acc el _ =
+  method on_string2 acc el =
     let acc = List.fold_left this#on_expr acc el in
     acc
 

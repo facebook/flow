@@ -284,7 +284,7 @@ and expr_ =
   | Int of pstring
   | Float of pstring
   | String of pstring
-  | String2 of expr list * pstring
+  | String2 of expr list
   | Yield of afield
   | Yield_break
   | Await of expr

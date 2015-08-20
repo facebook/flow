@@ -27,8 +27,7 @@ let rec fmt_lit_exn (_, e) =
   match e with
   | Int (_, s) -> "i:" ^ C.fmt_int s ^ ";"
   | Float (_, x) -> "d:" ^ C.fmt_float x ^ ";"
-  | String (_, s) -> fmt_str (Php_escaping.unescape_single s)
-  | String2 ([], s) -> fmt_str (Php_escaping.unescape_double s)
+  | String (_, s) -> fmt_str s
   | Null -> "N;"
   | True -> "b:1;"
   | False -> "b:0;"

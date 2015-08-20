@@ -125,10 +125,12 @@ let rec const_string_of (env:Env.env) (e:Nast.expr) : Env.env * (Pos.t, string) 
     | Left p, _ -> Left p
     | _, Left p -> Left p in
     match e with
-      | _, Nast.String (_, s) -> env, Right s
-      | _, Nast.String2 (xs, s) ->
-          let env, xs = mapM const_string_of env (List.rev xs) in
-          env, List.fold_right ~f:glue xs ~init:(Right s)
+    | _, Nast.String (_, s) -> env, Right s
+    (* It's an invariant that this is going to fail, but look for the best
+     * evidence *)
+    | p, Nast.String2 xs ->
+        let env, xs = mapM const_string_of env (List.rev xs) in
+        env, List.fold_right ~f:glue xs ~init:(Left p)
     | _, Nast.Binop (Ast.Dot, a, b) ->
         let env, stra = const_string_of env a in
         let env, strb = const_string_of env b in

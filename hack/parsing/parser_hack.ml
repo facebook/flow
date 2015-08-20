@@ -3204,32 +3204,60 @@ and colon_if env e1 =
 (* Strings *)
 (*****************************************************************************)
 
+and make_string env pos content f_unescape =
+  let unescaped =
+    try f_unescape content with
+      | Php_escaping.Invalid_string error -> error_at env pos error; ""
+  in String (pos, unescaped)
+
 and expr_string env start abs_start =
   match L.string env.file env.lb with
   | Tquote ->
       let pos = Pos.btw start (Pos.make env.file env.lb) in
       let len = env.lb.Lexing.lex_curr_pos - abs_start - 1 in
       let content = String.sub env.lb.Lexing.lex_buffer abs_start len in
-      pos, String (pos, content)
+      pos, make_string env pos content Php_escaping.unescape_single
   | Teof ->
       error_at env start "string not closed";
       start, String (start, "")
   | _ -> assert false
 
 and expr_encapsed env start =
-  let abs_start = env.lb.Lexing.lex_curr_pos in
   let pos_start = Pos.make env.file env.lb in
   let el = encapsed_nested pos_start env in
   let pos_end = Pos.make env.file env.lb in
   let pos = Pos.btw pos_start pos_end in
-  let len = env.lb.Lexing.lex_curr_pos - abs_start - 1 in
-  let content = String.sub env.lb.Lexing.lex_buffer abs_start len in
-  pos, String2 (el, (pos, content))
+  (* Represent purely literal strings as just String *)
+  match el with
+  | [] -> pos, String (pos, "")
+  | [_, String (_, s)] -> pos, String (pos, s)
+  | el -> pos, String2 el
 
 and encapsed_nested start env =
+  let abs_start = env.lb.Lexing.lex_curr_pos in
+  (* Advance the lexer so we can get a start position that doesn't
+   * include the opening quote or the last bit of the expression or
+   * whatever. Then rewind it. *)
+  let _ = L.string2 env.file env.lb in
+  let frag_start = Pos.make env.file env.lb in
+  L.back env.lb;
+  encapsed_nested_inner start (frag_start, abs_start) env
+
+and encapsed_text env (start, abs_start) (stop, abs_stop) =
+  let len = abs_stop - abs_start in
+  if len = 0 then [] else
+    let pos = Pos.btw start stop in
+    let content = String.sub env.lb.Lexing.lex_buffer abs_start len in
+    [pos, make_string env pos content Php_escaping.unescape_double]
+
+and encapsed_nested_inner start frag env =
+  let cur_pos = Pos.make env.file env.lb, env.lb.Lexing.lex_curr_pos in
+  (* Get any literal string part that occurs before this point *)
+  let get_text () = encapsed_text env frag cur_pos in
+
   match L.string2 env.file env.lb with
   | Tdquote ->
-      []
+      get_text ()
   | Teof ->
       error_at env start "string not properly closed";
       []
@@ -3250,13 +3278,11 @@ and encapsed_nested start env =
           | _ -> error_expect env "}");
           if !(env.errors) != error_state
           then [e]
-          else e :: encapsed_nested start env
+          else get_text () @ e :: encapsed_nested start env
       | _ ->
           L.back env.lb;
-          encapsed_nested start env
+          encapsed_nested_inner start frag env
       )
-  | Trcb ->
-      encapsed_nested start env
   | Tdollar ->
       (match L.string2 env.file env.lb with
       | Tlcb ->
@@ -3277,10 +3303,10 @@ and encapsed_nested start env =
           expect env Trcb;
           if !(env.errors) != error_state
           then [result]
-          else result :: encapsed_nested start env
+          else get_text () @ result :: encapsed_nested start env
       | _ ->
           L.back env.lb;
-          encapsed_nested start env
+          encapsed_nested_inner start frag env
       )
   | Tlvar ->
       L.back env.lb;
@@ -3288,8 +3314,8 @@ and encapsed_nested start env =
       let e = encapsed_expr env in
       if !(env.errors) != error_state
       then [e]
-      else e :: encapsed_nested start env
-  | _ -> encapsed_nested start env
+      else get_text () @ e :: encapsed_nested start env
+  | _ -> encapsed_nested_inner start frag env
 
 and encapsed_expr env =
   match L.string2 env.file env.lb with
@@ -3498,11 +3524,6 @@ and shape_field_name env =
   match e with
   | String p -> SFlit p
   | Class_const (id, ps) -> SFclass_const (id, ps)
-  | String2 (_, _) ->
-     error env
-           ("Shape field names cannot be strings enclosed by double quotes."
-            ^" Use single quotes instead.");
-     SFlit (pos, "")
   | _ -> error_expect env "string literal or class constant";
     SFlit (pos, "")
 
@@ -3639,9 +3660,7 @@ and xhp_text env start abs_start =
     let squished = Regexp_utils.squash_whitespace content in
     (* if it is empty or all whitespace just ignore it *)
     if squished = "" || squished = " " then [] else
-      (* Need to escape it in case it contains any backslashes... *)
-      let escaped = Php_escaping.escape squished in
-      [pos, String2 ([], (pos, escaped))]
+      [pos, String (pos, squished)]
 
   | _ -> xhp_text env start abs_start
 

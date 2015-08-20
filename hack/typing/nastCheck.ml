@@ -147,7 +147,7 @@ module CheckFunctionType = struct
         ()
     | _, True | _, False | _, Int _
     | _, Float _ | _, Null | _, String _ -> ()
-    | _, String2 (el, _) ->
+    | _, String2 el ->
         liter expr f_type el;
         ()
     | _, List el ->
@@ -720,7 +720,7 @@ and expr_ env = function
       ()
   | True | False | Int _
   | Float _ | Null | String _ -> ()
-  | String2 (el, _) ->
+  | String2 el ->
       liter expr env el;
       ()
   | Unop (_, e) -> expr env e

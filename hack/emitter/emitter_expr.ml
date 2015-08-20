@@ -92,8 +92,7 @@ and emit_member env (_, expr_ as expr) =
   match expr_ with
   | Lvar id -> env, Mlocal (get_lid_name id)
   | Int (_, n) -> env, Mint n
-  | String (_, s) -> env, Mstring (Php_escaping.unescape_single s)
-  | String2 ([], s) -> env, Mstring (Php_escaping.unescape_double s)
+  | String (_, s) -> env, Mstring s
   | _ ->
     let env = emit_expr env expr in
     env, Mexpr
@@ -515,8 +514,9 @@ and emit_expr env (pos, expr_ as expr) =
   | Null -> emit_Null env
   | True -> emit_bool env true
   | False -> emit_bool env false
-  | String (_, s) -> emit_String env (Php_escaping.unescape_single s)
-  | String2 ([], s) -> emit_String env (Php_escaping.unescape_double s)
+  | String (_, s) -> emit_String env s
+
+  | String2 _ -> unimpl "interpolated strings"
 
   (* TODO: lots of ways to be better;
    * use NewStructArray/NewArray/NewPackedArray/array lits *)
@@ -537,11 +537,6 @@ and emit_expr env (pos, expr_ as expr) =
   | Clone e ->
     let env = emit_expr env e in
     emit_Clone env
-
-  | Any -> unimpl "UNSAFE_EXPR/import/??"
-
-  (* probably going to take AST changes *)
-  | String2 _ -> unimpl "double-quoted string interpolation"
 
   (* XXX: is this right?? *)
   | This -> emit_BareThis env "Notice"
@@ -687,3 +682,4 @@ and emit_expr env (pos, expr_ as expr) =
 
   | Id _ -> unimpl "Id"
   | Assert _ -> unimpl "Assert"
+  | Any -> unimpl "UNSAFE_EXPR/import/??"

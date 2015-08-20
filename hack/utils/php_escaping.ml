@@ -24,9 +24,8 @@ let is_oct c = c >= '0' && c <= '7'
 (* This escapes a string using the format understood by the assembler
  * and php serialization. The assembler and php serialization probably
  * don't actually have the same rules but this should safely fit in both.
- * It can also be safely unescaped by unescape_double although it can not
- * actually safely be used as a PHP double quoted string (since it does not
- * escape $). *)
+ * It will escape $ in octal so that it can also be used as a PHP double
+ * string. *)
 let escape s =
   let buf = Buffer.create (String.length s) in
 
@@ -36,6 +35,7 @@ let escape s =
     | '\t' -> Buffer.add_string buf "\\t"
     | '\\' -> Buffer.add_string buf "\\\\"
     | '"' -> Buffer.add_string buf "\\\""
+    | '$' -> Buffer.add_string buf "\\044"
     | c when is_lit_printable c -> Buffer.add_char buf c
     | c -> Buffer.add_string buf (Printf.sprintf "\\%03o" (Char.code c))
   in

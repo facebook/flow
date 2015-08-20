@@ -306,7 +306,7 @@ and expr_ =
   | Float of pstring
   | Null
   | String of pstring
-  | String2 of expr list * string
+  | String2 of expr list
   | Special_func of special_func
   | Yield_break
   | Yield of afield

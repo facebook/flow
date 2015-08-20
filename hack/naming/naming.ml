@@ -1301,8 +1301,7 @@ and class_typeconst env x acc =
 and check_constant_expr (pos, e) =
   match e with
   | Unsafeexpr _ | Id _ | Null | True | False | Int _
-  | Float _ | String _
-  | String2 ([], _) -> ()
+  | Float _ | String _ -> ()
   | Class_const ((_, cls), _) when cls <> "static" -> ()
 
   | Unop ((Uplus | Uminus | Utild | Unot), e) -> check_constant_expr e
@@ -1318,8 +1317,6 @@ and check_constant_expr (pos, e) =
     ignore @@ Option.map e2 check_constant_expr;
     check_constant_expr e3
 
-  | String2 ((var_pos, _) :: _, _) ->
-      Errors.local_const var_pos
   | _ -> Errors.illegal_constant pos
 
 and const_defl h env l = List.map l (const_def h env)
@@ -1790,7 +1787,7 @@ and expr_ env = function
   | Int s -> N.Int s
   | Float s -> N.Float s
   | String s -> N.String s
-  | String2 (idl, (_, s)) -> N.String2 (string2 env (List.rev idl), s)
+  | String2 idl -> N.String2 (string2 env idl)
   | Id x ->
     (match snd x with
       | const when const = SN.PseudoConsts.g__LINE__ -> N.Int x

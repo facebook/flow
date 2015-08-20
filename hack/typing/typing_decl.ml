@@ -619,8 +619,7 @@ and class_const_decl c (env, acc) (h, id, e) =
           Tgeneric (c_name^"::"^name, Some (Ast.Constraint_as, h_ty)))
       | None, Some e -> begin
         let rec infer_const (p, expr_) = match expr_ with
-          | String _
-          | String2 ([], _) -> Reason.Rwitness p, Tprim Tstring
+          | String _ -> Reason.Rwitness p, Tprim Tstring
           | True
           | False -> Reason.Rwitness p, Tprim Tbool
           | Int _ -> Reason.Rwitness p, Tprim Tint
