@@ -227,7 +227,7 @@ let handle_connection_ genv env socket =
        HackEventLogger.out_of_date ();
        Printf.eprintf "Status: Error\n";
        Printf.eprintf "%s is out of date. Exiting.\n" Program.name;
-       exit 4)
+       Exit_status.exit Exit_status.Build_id_mismatch)
     else
       msg_to_channel oc Connection_ok;
     let client = { ic; oc; close } in
@@ -301,7 +301,7 @@ let serve genv env socket =
     if not (Lock.grab lock_file) then
       (Hh_logger.log "Lost lock; terminating.\n%!";
        HackEventLogger.lock_stolen lock_file;
-       die());
+       Exit_status.(exit Lock_stolen));
     ServerPeriodical.call_before_sleeping();
     let has_client = sleep_and_check socket in
     let start_t = Unix.time () in
@@ -441,7 +441,7 @@ let main options config =
      * opening the socket. *)
     if not (Lock.grab (ServerFiles.lock_file root)) then begin
       Hh_logger.log "Error: another server is already running?\n";
-      exit 1;
+      Exit_status.(exit Server_already_exists);
     end;
     (* Open up a server on the socket before we go into MainInit -- the client
      * will try to connect to the socket as soon as we lock the init lock. We

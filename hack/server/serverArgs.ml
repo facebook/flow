@@ -109,13 +109,13 @@ let parse_options () =
   let check_mode = check_mode || !convert_dir <> None in
   let convert = Option.map ~f:Path.make !convert_dir in
   if check_mode && !waiting_client <> None then begin
-    Printf.fprintf stderr "--check is incompatible with wait modes!\n";
-    exit 2
+    Printf.eprintf "--check is incompatible with wait modes!\n";
+    Exit_status.(exit Input_error)
   end;
   (match !root with
   | "" ->
-      Printf.fprintf stderr "You must specify a root directory!\n";
-      exit 2
+      Printf.eprintf "You must specify a root directory!\n";
+      Exit_status.(exit Input_error)
   | _ -> ());
   let root_path = Path.make !root in
   Wwwroot.assert_www_directory root_path;

@@ -79,9 +79,8 @@ let exit_if_unused() =
   let delta: float = Unix.time() -. !last_client_connect in
   if delta > Periodical.one_week
   then begin
-    Printf.fprintf stderr "Exiting server. Last used >7 days ago\n";
-    flush stderr;
-    exit(5)
+    Printf.eprintf "Exiting server. Last used >7 days ago\n";
+    Exit_status.(exit Unused_server)
   end
 
 (*****************************************************************************)
