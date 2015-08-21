@@ -268,7 +268,7 @@ let type_check genv env =
       let ae, af = Ai.go_incremental
         Typing_check_utils.check_defs
         genv.workers fast_infos env.nenv optstr in
-      (List.rev (List.rev_append errorl' ae)),
+      (List.rev_append errorl' ae),
       (Relative_path.Set.union af failed_check)
   in
   let errorl = List.rev (List.rev_append errorl' errorl) in

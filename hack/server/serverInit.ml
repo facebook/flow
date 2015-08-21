@@ -55,6 +55,10 @@ let init_hack genv env get_next =
 
   let errorl5, failed5, t = match ai_mode with
     | Some optstr ->
+        let files_info =
+          Relative_path.Set.fold Relative_path.Map.remove failed2 files_info in
+        let files_info =
+          Relative_path.Set.fold Relative_path.Map.remove failed3 files_info in
         let e, f = Ai.go
           Typing_check_utils.check_defs genv.workers files_info nenv optstr in
         let t = Hh_logger.log_duration "Ai" t in
