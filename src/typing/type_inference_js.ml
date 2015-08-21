@@ -1153,11 +1153,11 @@ and statement_decl cx type_params_map = Ast.Statement.(
 
   | (loc, ClassDeclaration { Ast.Class.id; _ }) -> (
       match id with
-      | Some(id) ->
-        let _, { Ast.Identifier.name; _ } = id in
-        let r = mk_reason (spf "class %s" name) loc in
+      | Some id ->
+        let name_loc, { Ast.Identifier.name; _ } = id in
+        let r = mk_reason (spf "class %s" name) name_loc in
         let tvar = Flow_js.mk_tvar cx r in
-        Env_js.init_var cx name (Scope.create_entry tvar tvar (Some loc))
+        Env_js.init_var cx name (Scope.create_entry tvar tvar (Some name_loc))
       | None -> ()
     )
 
@@ -2238,9 +2238,9 @@ and statement cx type_params_map = Ast.Statement.(
             "Parser Error: Immediate exports of nameless classes can " ^
             "only exist for default exports"
           )
-        | loc, ClassDeclaration({Ast.Class.id=Some(_, id); _;}) ->
+        | loc, ClassDeclaration({Ast.Class.id=Some(name_loc, id); _;}) ->
           let name = id.Ast.Identifier.name in
-          [(spf "class %s() {}" name, loc, name)]
+          [(spf "class %s {}" name, name_loc, name)]
         | _, VariableDeclaration({VariableDeclaration.declarations; _; }) ->
           let decl_to_bindings accum (loc, decl) =
             let id = snd decl.VariableDeclaration.Declarator.id in

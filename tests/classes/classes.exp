@@ -57,4 +57,9 @@ expr.js:29:25,30: class expr Alias
 This type is incompatible with
 expr.js:23:7,11: Alias
 
-Found 15 errors
+loc.js:5:7,9: value binding Foo
+This binding is shadowing
+loc.js:3:1,17: type binding Foo
+which is a different sort of binding
+
+Found 16 errors
