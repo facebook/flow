@@ -946,7 +946,11 @@ end = struct
         then begin
           Expect.token env T_ASSIGN;
           Some (Parse.assignment env)
-        end else None in
+        end else Ast.Pattern.(
+          match id with
+          | _, Identifier _ -> None
+          | loc, _ -> error_at env (loc, Error.NoUninitializedDestructuring); None
+        ) in
         let end_loc = match init with
         | Some expr -> fst expr
         | _ -> fst id in
@@ -992,7 +996,7 @@ end = struct
       Statement.VariableDeclaration.(
         List.iter (function
           | loc, { Declarator.init = None; _ } ->
-              error_at env (loc, Error.NoUnintializedConst)
+              error_at env (loc, Error.NoUninitializedConst)
           | _ -> ()
         ) (snd ret).declarations
       );

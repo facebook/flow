@@ -2799,7 +2799,7 @@ and variable cx type_params_map (loc, vdecl) = Ast.(
               Flow_js.flow cx (t, t_);
               destructuring_assignment cx t_ id
           | None ->
-              ()
+              failwith "Parser Error: Destructuring assignment should always be init."
         )
 )
 
