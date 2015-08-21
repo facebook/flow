@@ -16,6 +16,8 @@ Property not found in
 Sigma.js:19:16,16: A
 
 test.js:11:12,29: property childProp_TYPO
+Error:
+test.js:11:16,29: property childProp_TYPO
 Property not found in
 test.js:5:7,16: ChildClass
 

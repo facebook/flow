@@ -1,14 +1,22 @@
 
-objects.js:4:2,9: access of computed property/element
+objects.js:4:4,6: property foo
 Property not found in
 objects.js:4:2,2: object type
 
-objects.js:6:2,9: string
-This type is incompatible with
-objects.js:6:13,19: boolean
+objects.js:5:4,8: property foo
+Property not found in
+objects.js:5:2,2: object type
 
-objects.js:7:12,16: boolean
+objects.js:7:2,6: string
+This type is incompatible with
+objects.js:7:9,15: boolean
+
+objects.js:8:2,9: string
+This type is incompatible with
+objects.js:8:13,19: boolean
+
+objects.js:9:12,16: boolean
 This type is incompatible with
 objects.js:3:17,22: string
 
-Found 3 errors
+Found 5 errors

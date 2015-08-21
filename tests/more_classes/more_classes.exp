@@ -1,5 +1,5 @@
 
-Foo.js:10:5,14: assignment of property x
+Foo.js:10:10,10: property x
 Property cannot be assigned on possibly undefined value
 Foo.js:10:5,8: uninitialized this (expected super constructor call)
 

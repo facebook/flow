@@ -25,7 +25,7 @@ object_freeze.js:9:14,50: frozen object literal
 
 object_freeze.js:9:14,50: Object.freeze
 Error:
-object_freeze.js:12:1,12: property corge
+object_freeze.js:12:8,12: property corge
 Property not found in
 object_freeze.js:9:14,50: frozen object literal
 

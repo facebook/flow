@@ -63,19 +63,19 @@ optional_param2.js:7:19,33: undefined
 This type is incompatible with
 optional_param2.js:7:9,14: number
 
-undefined.js:8:12,17: property duck
+undefined.js:8:14,17: property duck
 Property cannot be accessed on possibly undefined value
 undefined.js:1:5,5: undefined
 
-undefined.js:8:12,17: property duck
+undefined.js:8:14,17: property duck
 Property cannot be accessed on possibly undefined value
 undefined.js:3:21,29: undefined
 
-undefined2.js:8:12,17: property duck
+undefined2.js:8:14,17: property duck
 Property cannot be accessed on possibly undefined value
 undefined2.js:1:5,5: undefined
 
-undefined2.js:8:12,17: property duck
+undefined2.js:8:14,17: property duck
 Property cannot be accessed on possibly undefined value
 undefined2.js:4:9,11: undefined
 

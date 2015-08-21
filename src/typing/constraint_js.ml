@@ -217,8 +217,8 @@ module Type = struct
   (* operations on runtime values, such as functions, objects, and arrays *)
   | CallT of reason * funtype
   | MethodT of reason * name * funtype
-  | SetT of reason * name * t
-  | GetT of reason * name * t
+  | SetT of reason * proptype * t
+  | GetT of reason * proptype * t
   | SetElemT of reason * t * t
   | GetElemT of reason * t * t
 
@@ -338,6 +338,12 @@ module Type = struct
     props_tmap: int;
     proto_t: prototype;
   }
+
+  and proptype = reason * name
+
+  and sealtype =
+    | UnsealedInFile of string option
+    | Sealed
 
   and flags = {
     frozen: bool;
@@ -1730,7 +1736,7 @@ and _json_of_t_impl json_cx t = Json.(
 
   | SetT (_, name, t)
   | GetT (_, name, t) -> [
-      "propName", JString name;
+      "propName", json_of_proptype json_cx name;
       "propType", _json_of_t json_cx t
     ]
 
@@ -1960,6 +1966,14 @@ and json_of_polarity_map_impl json_cx pmap = Json.(
   JList (List.rev lst)
 )
 
+and json_of_proptype json_cx = check_depth json_of_proptype_impl json_cx
+and json_of_proptype_impl json_cx (reason, literal) = Json.(
+  JAssoc [
+    "reason", json_of_reason reason;
+    "literal", JString literal;
+  ]
+)
+
 and json_of_tmap json_cx = check_depth json_of_tmap_impl json_cx
 and json_of_tmap_impl json_cx bindings = Json.(
   let lst = SMap.fold (fun name t acc ->
@@ -2105,9 +2119,9 @@ and dump_t_ =
     | MixedT _
     | AnyT _
     | NullT _ -> Some (string_of_ctor t)
-    | SetT (_, n, t) ->
+    | SetT (_, (_, n), t) ->
         Some (spf "SetT(%s: %s)" n (dump_t_ stack cx t))
-    | GetT (_, n, t) ->
+    | GetT (_, (_, n), t) ->
         Some (spf "GetT(%s: %s)" n (dump_t_ stack cx t))
     | LookupT (_, _, n, t) ->
         Some (spf "LookupT(%s: %s)" n (dump_t_ stack cx t))

@@ -76,8 +76,8 @@ module Type :
 
       | CallT of reason * funtype
       | MethodT of reason * name * funtype
-      | SetT of reason * name * t
-      | GetT of reason * name * t
+      | SetT of reason * proptype * t
+      | GetT of reason * proptype * t
       | SetElemT of reason * t * t
       | GetElemT of reason * t * t
 
@@ -151,12 +151,20 @@ module Type :
       return_t: t;
       closure_t: int;
     }
+
     and objtype = {
       flags: flags;
       dict_t: dicttype option;
       props_tmap: int;
       proto_t: prototype;
     }
+
+    and proptype = reason * name
+
+    and sealtype =
+      | UnsealedInFile of string option
+      | Sealed
+
     and flags = {
       frozen: bool;
       sealed: bool;

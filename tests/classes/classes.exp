@@ -4,6 +4,8 @@ This type is incompatible with
 C.js:4:9,14: string
 
 D.js:3:1,9: property x
+Error:
+D.js:3:9,9: property x
 Property not found in
 D.js:3:5,5: E
 
@@ -24,10 +26,14 @@ This type is incompatible with
 class_shapes.js:28:7,12: number
 
 class_shapes.js:18:1,3: property b
+Error:
+class_shapes.js:18:3,3: property b
 Property not found in
 class_shapes.js:15:13,21: TestClass
 
 class_shapes.js:20:1,3: property d
+Error:
+class_shapes.js:20:3,3: property d
 Property not found in
 class_shapes.js:15:13,21: TestClass
 

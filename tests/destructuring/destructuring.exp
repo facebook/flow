@@ -69,6 +69,18 @@ destructuring.js:35:27,28: string
 This type is incompatible with
 destructuring.js:35:13,18: number
 
+destructuring.js:38:8,10: property foo
+Property not found in
+destructuring.js:38:15,24: object literal
+
+destructuring.js:39:13,15: property baz
+Property not found in
+destructuring.js:39:20,29: object literal
+
+destructuring.js:45:6,8: property baz
+Property not found in
+destructuring.js:45:4,4: object literal
+
 destructuring_param.js:5:17,17: Strict mode function may not have duplicate parameter names
 
-Found 17 errors
+Found 20 errors
