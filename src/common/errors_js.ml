@@ -266,10 +266,23 @@ let print_error_json oc el =
 (* for vim and emacs plugins *)
 let print_error_deprecated =
   let endline s = if s = "" then "" else s ^ "\n" in
-  let to_pp_string message =
+  let to_pp_string message = Loc.(
     let loc, msg = to_pp message in
-    Printf.sprintf "%s%s" (endline (Reason_js.string_of_loc loc)) (endline msg)
-  in
+    let loc_str = match loc.source with
+    | None -> ""
+    | Some file ->
+      let line = loc.start.line in
+      let start = loc.start.column + 1 in
+      let end_ = loc._end.column in
+      if line <= 0 then
+        Utils.spf "File \"%s\"" file
+      else if line = loc._end.line && start - end_ = 1 then
+        Utils.spf "File \"%s\", line %d, character %d" file line start
+      else
+        Utils.spf "File \"%s\", line %d, characters %d-%d" file line start end_
+    in
+    Printf.sprintf "%s%s" (endline loc_str) (endline msg)
+  ) in
   let to_string (error : error) : string =
     let level, msgl, trace_reasons = error in
     let msgl = append_trace_reasons msgl trace_reasons in

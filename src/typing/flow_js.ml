@@ -141,7 +141,7 @@ let add_output cx level ?(trace_reasons=[]) message_list =
         (message_list
         |> List.map (fun message ->
              let loc, s = Errors_js.to_pp message in
-             spf "loc: [%s] s = %S" (string_of_loc loc) s
+             spf "%s: s = %S" (string_of_loc loc) s
            )
         |> String.concat "\n"));
     let error = level, message_list, trace_reasons in

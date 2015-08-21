@@ -51,23 +51,6 @@ let get_file path = function
       ) in
       ServerProt.FileContent (filename, contents)
 
-let string_of_loc loc = Loc.(
-  match loc.source with
-  | None -> ""
-  | Some file ->
-    let line = loc.start.line in
-    let start = loc.start.column + 1 in
-    let end_ = loc._end.column in
-    if line <= 0 then
-      Utils.spf "%s:0:0" file
-    else if line = loc._end.line && start = end_ then
-      Utils.spf "%s:%d:%d" file line start
-    else if line != loc._end.line then
-      Utils.spf "%s:%d:%d,%d:%d" file line start loc._end.line end_
-    else
-      Utils.spf "%s:%d:%d-%d" file line start end_
-)
-
 let handle_error (loc, err) json strip =
   let loc = strip loc in
   if json
@@ -103,7 +86,7 @@ let handle_response types json strip =
     let out = types
       |> List.map (fun (loc, str, reasons) ->
         let loc = strip loc in
-        (Utils.spf "%s: %s" (string_of_loc loc) str)
+        (Utils.spf "%s: %s" (Reason_js.string_of_loc loc) str)
       )
       |> String.concat "\n"
     in
