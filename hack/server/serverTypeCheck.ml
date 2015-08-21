@@ -207,57 +207,44 @@ let type_check genv env =
   Hh_logger.log "Files to recompute: %d"
     (Relative_path.Set.cardinal env.failed_parsing);
   (* PARSING *)
-  let start_t = Unix.gettimeofday() in
-  let fast_parsed, errorl, failed_parsing =
-    Hh_logger.measure "Parsing" begin fun () ->
-      parsing genv env
-    end in
+  let start_t = Unix.gettimeofday () in
+  let t = start_t in
+  let fast_parsed, errorl, failed_parsing = parsing genv env in
+  let t = Hh_logger.log_duration "Parsing" t in
 
   (* UPDATE FILE INFO *)
   let old_env = env in
   let updates = old_env.failed_parsing in
   let files_info = update_file_info env fast_parsed in
+  let t = Hh_logger.log_duration "Updating deps" t in
 
   (* BUILDING AUTOLOADMAP *)
   !hook_after_parsing genv old_env { env with files_info } updates;
+  let t = Hh_logger.log_duration "Parsing Hook" t in
 
   (* NAMING *)
   let env, errorl', failed_naming, fast =
-    Hh_logger.measure "Naming" begin fun () ->
-      let env, errorl', failed_naming, fast =
-        declare_names env files_info fast_parsed in
+    declare_names env files_info fast_parsed in
 
-      (* COMPUTES WHAT MUST BE REDECLARED  *)
-      let fast = reparse fast files_info env.failed_decl in
-      let fast = add_old_decls env.files_info fast in
-
-      env, errorl', failed_naming, fast
-    end in
-
+  (* COMPUTES WHAT MUST BE REDECLARED  *)
+  let fast = reparse fast files_info env.failed_decl in
+  let fast = add_old_decls env.files_info fast in
   let errorl = List.rev_append errorl' errorl in
+  let t = Hh_logger.log_duration "Naming" t in
 
-  let to_redecl_phase2, to_recheck1 =
-    Hh_logger.measure "Determining changes" begin fun () ->
-      let _, _, to_redecl_phase2, to_recheck1 =
-        Typing_redecl_service.redo_type_decl genv.workers env.nenv fast
-      in
-      let to_redecl_phase2 = Typing_deps.get_files to_redecl_phase2 in
-      let to_recheck1 = Typing_deps.get_files to_recheck1 in
-      to_redecl_phase2, to_recheck1
-    end in
+  let _, _, to_redecl_phase2, to_recheck1 =
+    Typing_redecl_service.redo_type_decl genv.workers env.nenv fast in
+  let to_redecl_phase2 = Typing_deps.get_files to_redecl_phase2 in
+  let to_recheck1 = Typing_deps.get_files to_recheck1 in
+  let t = Hh_logger.log_duration "Determining changes" t in
 
   let fast_redecl_phase2 = reparse fast files_info to_redecl_phase2 in
 
   (* DECLARING TYPES: Phase2 *)
-  let errorl', failed_decl, to_recheck2 =
-    Hh_logger.measure "Type-decl" begin fun () ->
-      let errorl', failed_decl, _to_redecl2, to_recheck2 =
-        Typing_redecl_service.redo_type_decl
-          genv.workers env.nenv fast_redecl_phase2 in
-      let to_recheck2 = Typing_deps.get_files to_recheck2 in
-      errorl', failed_decl, to_recheck2
-    end in
-
+  let errorl', failed_decl, _to_redecl2, to_recheck2 =
+    Typing_redecl_service.redo_type_decl
+      genv.workers env.nenv fast_redecl_phase2 in
+  let to_recheck2 = Typing_deps.get_files to_recheck2 in
   let errorl = List.rev_append errorl' errorl in
 
   (* DECLARING TYPES: merging results of the 2 phases *)
@@ -266,26 +253,28 @@ let type_check genv env =
   let to_recheck = Relative_path.Set.union env.failed_decl to_redecl_phase2 in
   let to_recheck = Relative_path.Set.union to_recheck1 to_recheck in
   let to_recheck = Relative_path.Set.union to_recheck2 to_recheck in
+  let t = Hh_logger.log_duration "Type-decl" t in
 
   (* TYPE CHECKING *)
-  let errorl', failed_check = Hh_logger.measure "Type-check" begin fun () ->
-    let to_recheck = Relative_path.Set.union to_recheck env.failed_check in
-    let fast = reparse fast files_info to_recheck in
-    ServerCheckpoint.process_updates fast;
-    let te, tf = Typing_check_service.go genv.workers env.nenv fast in
-    match ServerArgs.ai_mode genv.options with
-    | None -> te, tf
+  let to_recheck = Relative_path.Set.union to_recheck env.failed_check in
+  let fast = reparse fast files_info to_recheck in
+  ServerCheckpoint.process_updates fast;
+  let errorl', failed_check =
+    Typing_check_service.go genv.workers env.nenv fast in
+  let errorl', failed_check = match ServerArgs.ai_mode genv.options with
+    | None -> errorl', failed_check
     | Some optstr ->
       let fast_infos = reparse_infos files_info fast in
       let ae, af = Ai.go_incremental
-        Typing_check_utils.check_defs genv.workers fast_infos env.nenv optstr in
-      (List.rev (List.rev_append te ae)),
-      (Relative_path.Set.union af tf)
-  end in
-
+        Typing_check_utils.check_defs
+        genv.workers fast_infos env.nenv optstr in
+      (List.rev (List.rev_append errorl' ae)),
+      (Relative_path.Set.union af failed_check)
+  in
   let errorl = List.rev (List.rev_append errorl' errorl) in
+  let t = Hh_logger.log_duration "Type-check" t in
 
-  Hh_logger.log "Total: %f\n%!" ((Unix.gettimeofday ()) -. start_t);
+  Hh_logger.log "Total: %f\n%!" (t -. start_t);
   let total_rechecked_count = Relative_path.Set.cardinal to_recheck in
   HackEventLogger.recheck_once_end start_t total_rechecked_count;
 
