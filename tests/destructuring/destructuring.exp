@@ -69,6 +69,8 @@ destructuring.js:35:27,28: string
 This type is incompatible with
 destructuring.js:35:13,18: number
 
+destructuring_init.js:1:5,9: Destructuring assignment must be initialized
+
 destructuring_param.js:5:17,17: Strict mode function may not have duplicate parameter names
 
-Found 17 errors
+Found 18 errors

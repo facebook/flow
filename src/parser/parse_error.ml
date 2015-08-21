@@ -50,7 +50,8 @@ type t =
   | JSXAttributeValueEmptyExpression
   | InvalidJSXAttributeValue
   | ExpectedJSXClosingTag of string
-  | NoUnintializedConst
+  | NoUninitializedConst
+  | NoUninitializedDestructuring
   | NewlineBeforeArrow
   | StrictFunctionStatement
   | AdjacentJSXElements
@@ -110,7 +111,8 @@ module PP =
       | JSXAttributeValueEmptyExpression -> "JSX attributes must only be assigned a non-empty expression"
       | InvalidJSXAttributeValue -> "JSX value should be either an expression or a quoted JSX text"
       | ExpectedJSXClosingTag name -> "Expected corresponding JSX closing tag for "^name
-      | NoUnintializedConst -> "Const must be initialized"
+      | NoUninitializedConst -> "Const must be initialized"
+      | NoUninitializedDestructuring -> "Destructuring assignment must be initialized"
       | NewlineBeforeArrow ->  "Illegal newline before arrow"
       | StrictFunctionStatement -> "In strict mode code, functions can only be"^
           " declared at top level or immediately within another function."
