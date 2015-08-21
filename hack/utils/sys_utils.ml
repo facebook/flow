@@ -26,6 +26,8 @@ let getenv_term () =
   let term_var = "TERM" in (* This variable does not exist on windows. *)
   try Some (Sys.getenv term_var) with Not_found -> None
 
+let path_sep = if Sys.win32 then ";" else ":"
+
 let getenv_path () =
   let path_var = "PATH" in (* Same variable on windows *)
   try Some (Sys.getenv path_var) with Not_found -> None
@@ -196,7 +198,7 @@ let executable_path : unit -> string =
       match getenv_path () with
         | None -> failwith "Unable to determine executable path"
         | Some paths ->
-          Str.split (Str.regexp_string ":") paths in
+          Str.split (Str.regexp_string path_sep) paths in
     let path = List.fold_left paths ~f:begin fun acc p ->
       match acc with
       | Some _ -> acc

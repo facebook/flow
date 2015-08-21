@@ -52,8 +52,9 @@ let get_path path =
 
   (* It's possible that the directory path is too long. If so, let's give up and
    * use /tmp/ *)
-  let dir = if String.length dir > max_addr_length - min_name_length
-    then "/tmp/"
+  let dir =
+    if String.length dir > max_addr_length - min_name_length
+    then Filename.get_temp_dir_name ()
     else dir in
   let max_root_part_length =
     max_addr_length - (String.length dir) - extension_length in

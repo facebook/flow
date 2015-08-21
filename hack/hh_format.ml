@@ -75,11 +75,8 @@ let debug () fnl =
         Printf.eprintf
           "Applying the formatter twice lead to different results: %s\n%!"
           (filepath :> string);
-        let () = Random.self_init() in
-        let nbr = string_of_int (Random.int 100000) in
-        let tmp = "/tmp/xx_"^nbr in
-        let file1 = tmp^"_1.php" in
-        let file2 = tmp^"_2.php" in
+        let file1 = Filename.temp_file "xx_" "_1.php" in
+        let file2 = Filename.temp_file "xx_" "_2.php" in
         let oc = open_out file1 in
         output_string oc content;
         close_out oc;

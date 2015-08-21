@@ -15,8 +15,6 @@
 #include <limits.h>
 #include <stdlib.h>
 
-#ifndef _WIN32
-
 #define Val_none Val_int(0)
 
 static value
@@ -32,29 +30,24 @@ Val_some( value v )
 CAMLprim value
 hh_realpath(value v) {
   char *input;
+#ifndef _WIN32
   char output[PATH_MAX];
+#else
+  char output[_MAX_PATH];
+#endif
   char *result;
 
   CAMLparam1(v);
 
   input = String_val(v);
+#ifndef _WIN32
   result = realpath(input, output);
+#else
+  result = _fullpath(output, input, _MAX_PATH);
+#endif
   if (result == NULL) {
     CAMLreturn(Val_none);
   } else {
     CAMLreturn(Val_some(caml_copy_string(output)));
   }
 }
-
-#else
-
-#include <caml/fail.h>
-
-CAMLprim value
-hh_realpath(value v) {
-  CAMLparam1(v);
-  caml_failwith("TODO: 'hh_realpath` is not implemented in `realpath.c`.");
-  CAMLreturn(Val_unit);
-}
-
-#endif

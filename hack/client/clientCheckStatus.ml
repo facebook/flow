@@ -39,7 +39,7 @@ let print_reason_color ~(first:bool) ~(code:int) ((p, s): Pos.absolute * string)
   if not first then Printf.printf "  " else ();
   if Unix.isatty Unix.stdout
   then
-    let cwd = Sys.getcwd () ^ "/" in
+    let cwd = Filename.concat (Sys.getcwd ()) "" in
     let file_path = [
       (file_clr, lstrip p.Pos.pos_file cwd);
       (C.Normal C.Default, ":");
