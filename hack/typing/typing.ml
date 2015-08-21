@@ -2073,7 +2073,11 @@ and dispatch_call p env call_type (fpos, fun_expr as e) el uel =
        (match e2 with
         | p, Nast.String cst ->
           (* find the class constant implicitly defined by the typeconst *)
-          class_const ~incl_tc:true env p (Nast.CIexpr e1, cst)
+          let cid = (match e1 with
+            | _, Class_const (cid, (_, x))
+            | _, Class_get (cid, (_, x)) when x = SN.Members.mClass -> cid
+            | _ -> Nast.CIexpr e1) in
+          class_const ~incl_tc:true env p (cid, cst)
         | _ ->
           Errors.illegal_type_structure p "second argument is not a string";
           env, (Reason.Rnone, Tany))
@@ -3953,11 +3957,11 @@ and check_extend_abstract_typeconst ~is_final p smap =
 and check_extend_abstract_const ~is_final p smap =
   SMap.iter begin fun x ce ->
     match ce.ce_type with
-    | r, Tgeneric _ ->
+    | r, Tgeneric _ when not ce.ce_synthesized ->
       Errors.implement_abstract ~is_final p (Reason.to_pos r) "constant" x
     | _, (Tany | Tmixed | Tarray (_, _) | Toption _ | Tprim _ | Tfun _
           | Tapply (_, _) | Ttuple _ | Tshape _ | Taccess (_, _) | Tthis
-         ) -> ()
+          | Tgeneric _) -> ()
   end smap
 
 and typeconst_def env {

@@ -727,10 +727,13 @@ and visibility cid = function
 
 (* each concrete type constant T = <sometype> implicitly defines a
 class constant with the same name which is TypeStrucure<sometype> *)
-and typeconst_ty_decl pos tc_name decl_ty =
+and typeconst_ty_decl pos c_name tc_name ~is_abstract =
   let r = Reason.Rwitness pos in
   let tsid = pos, SN.FB.cTypeStructure in
-  let ts_ty = r, Tapply (tsid, [decl_ty]) in
+  let ts_ty = r, Tapply (tsid, [r, Taccess ((r, Tthis), [pos, tc_name])]) in
+  let ts_ty = if is_abstract
+    then r, Tgeneric (c_name^"::"^tc_name, Some (Ast.Constraint_as, ts_ty))
+    else ts_ty in
   {
     ce_final       = false;
     ce_is_xhp_attr = false;
@@ -757,11 +760,9 @@ and typeconst_decl c (env, acc, acc2) {
   | Ast.Cinterface | Ast.Cabstract | Ast.Cnormal ->
       let env, constr = opt Typing_hint.hint env constr in
       let env, ty = opt Typing_hint.hint env type_ in
-      let acc2 = (match ty with
-        | None -> acc2
-        | Some decl_ty ->
-          let ts = typeconst_ty_decl pos name decl_ty in
-          SMap.add name ts acc2) in
+      let is_abstract = Option.is_none ty in
+      let ts = typeconst_ty_decl pos (snd c.c_name) name ~is_abstract in
+      let acc2 = SMap.add name ts acc2 in
       let tc = {
         ttc_name = (pos, name);
         ttc_constraint = constr;
