@@ -713,7 +713,10 @@ and emit_expr env (pos, expr_ as expr) =
     { env with
       pending_closures = (name, cstate, (fun_, vars)) :: env.pending_closures }
 
+  (* In this context, Id is a global constant *)
+  (* XXX: we should support all the pseudoconstants but Naming translates
+   * them to bogus strings and integers! *)
+  | Id (_, id) -> emit_Cns env id
 
-  | Id _ -> unimpl "Id"
   | Assert _ -> unimpl "Assert"
   | Any -> unimpl "UNSAFE_EXPR/import/??"
