@@ -341,10 +341,6 @@ module Type = struct
 
   and proptype = reason * name
 
-  and sealtype =
-    | UnsealedInFile of string option
-    | Sealed
-
   and flags = {
     frozen: bool;
     sealed: bool;
