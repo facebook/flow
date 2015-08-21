@@ -120,15 +120,7 @@
     | T_BIT_NOT
     | T_INCR
     | T_DECR
-    (* XHP Tokens *)
-    | T_XHP_OPEN_TAG
-    | T_XHP_CLOSE_TAG
-    | T_XHP_GT
-    | T_XHP_SLASH_GT
-    | T_XHP_ATTR
-    | T_XHP_TEXT
     (* Extra tokens *)
-    | T_VIRTUAL_SEMICOLON
     | T_ERROR
     | T_EOF
     (* JSX *)
@@ -271,16 +263,8 @@
     | T_BIT_NOT -> "T_BIT_NOT"
     | T_INCR -> "T_INCR"
     | T_DECR -> "T_DECR"
-    (* XHP Tokens *)
-    | T_XHP_OPEN_TAG -> "T_XHP_OPEN_TAG"
-    | T_XHP_CLOSE_TAG -> "T_XHP_CLOSE_TAG"
-    | T_XHP_GT -> "T_XHP_GT"
-    | T_XHP_SLASH_GT -> "T_XHP_SLASH_GT"
-    | T_XHP_ATTR -> "T_XHP_ATTR"
-    | T_XHP_TEXT -> "T_XHP_TEXT"
     (* Extra tokens *)
     | T_ERROR -> "T_ERROR"
-    | T_VIRTUAL_SEMICOLON -> "T_VIRTUAL_SEMICOLON"
     | T_EOF -> "T_EOF"
     | T_JSX_IDENTIFIER -> "T_JSX_IDENTIFIER"
     | T_JSX_TEXT _ -> "T_JSX_TEXT"
