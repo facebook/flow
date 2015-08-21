@@ -81,11 +81,11 @@ es6modules.js:39:18,43: number
 This type is incompatible with
 es6modules.js:39:9,14: string
 
-es6modules.js:40:1,25: property doesntExist
+es6modules.js:40:15,25: property doesntExist
 Property not found in
 es6modules.js:37:8,20: object literal
 
-es6modules.js:45:1,32: property default
+es6modules.js:45:26,32: property default
 Property not found in
 es6modules.js:45:1,24: object literal
 
@@ -114,6 +114,8 @@ Property not found in
 es6modules.js:59:50,76: exports of "CommonJS_Clobbering_Class"
 
 es6modules.js:63:1,33: property doesntExist
+Error:
+es6modules.js:63:23,33: property doesntExist
 Property not found in
 es6modules.js:61:8,22: Test
 
@@ -147,7 +149,7 @@ es6modules.js:79:9,19: "doesntExist" export of "CommonJS_Named"
 Property not found in
 es6modules.js:79:27,42: exports of "CommonJS_Named"
 
-es6modules.js:92:1,21: property doesntExist
+es6modules.js:92:11,21: property doesntExist
 Property not found in
 es6modules.js:89:28,43: exports of "CommonJS_Named"
 
@@ -227,7 +229,7 @@ es6modules.js:175:9,20: number
 This type is incompatible with
 es6modules.js:177:10,15: string
 
-es6modules.js:183:1,48: property doesntExist
+es6modules.js:183:38,48: property doesntExist
 Property not found in
 es6modules.js:183:1,36: CommonJS exports of "ES6_Default_AnonFunction2"
 

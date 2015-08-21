@@ -9,6 +9,7 @@
  *)
 
 open Core
+open Utils
 
 (**********************************)
 (* Handling dependencies *)
@@ -92,7 +93,7 @@ let add_idep root obj =
   then
     let root =
       match root with
-      | None -> assert false
+      | None -> assert_false_log_backtrace ()
       | Some x -> x
     in
     Graph.add (Dep.make obj) (Dep.make root)

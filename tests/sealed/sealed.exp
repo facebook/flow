@@ -13,7 +13,7 @@ proto.js:8:7,11: string
 This type is incompatible with
 proto.js:7:7,12: number
 
-sealed.js:3:1,7: assignment of property z
+sealed.js:3:3,3: property z
 Property not found in
 proto.js:14:18,25: object type
 

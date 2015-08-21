@@ -241,13 +241,13 @@ let rec check_lvalue env = function
   | String _ | String2 _ | Yield _ | Yield_break
   | Await _ | Expr_list _ | Cast _ | Unop _
   | Binop _ | Eif _ | InstanceOf _ | New _ | Efun _ | Lfun _ | Xml _
-  | Import _ | Ref _) ->
+  | Import _) ->
       error_at env pos "Invalid lvalue"
 
 (* The bound variable of a foreach can be a reference (but not inside
   a list expression. *)
 let check_foreach_lvalue env = function
-  | (_, Ref e) | e -> check_lvalue env e
+  | (_, Unop (Uref, e)) | e -> check_lvalue env e
 
 (*****************************************************************************)
 (* Operator priorities.
@@ -679,13 +679,8 @@ and attribute env =
 and attribute_remain env =
   match L.token env.file env.lb with
   | Tword ->
-      (* Temporary backwards compat for renaming these attributes.
-       * TODO #4890694 remove this. *)
-      let attr_compat = function
-        | "UNSAFE_Construct" -> "__UNSAFE_Construct"
-        | x -> x in
       let pos = Pos.make env.file env.lb in
-      let ua_name = pos, attr_compat (Lexing.lexeme env.lb) in
+      let ua_name = pos, Lexing.lexeme env.lb in
       let ua_params = attribute_parameters env in
       let attr = { ua_name; ua_params } in
       attr :: attribute_list_remain env
@@ -1225,9 +1220,12 @@ and class_defs env =
 
 and class_toplevel_word env word =
   match word with
-  | "category" | "children" ->
+  | "children" ->
       xhp_format env;
       class_defs env
+  | "category" ->
+      let cat = XhpCategory (xhp_category_list env) in
+      cat :: class_defs env
   | "const" ->
       let error_state = !(env.errors) in
       let def =
@@ -1326,8 +1324,6 @@ and trait_require env =
 (*
  * within a class body -->
  *    children ...;
- *    attribute ...;
- *    category ...;
  *)
 (*****************************************************************************)
 
@@ -1335,7 +1331,7 @@ and xhp_format env =
   match L.token env.file env.lb with
   | Tsc -> ()
   | Teof ->
-      error_expect env "end of XHP category/attribute/children declaration";
+      error_expect env "end of XHP children declaration";
       ()
   | Tquote ->
       let pos = Pos.make env.file env.lb in
@@ -1606,6 +1602,35 @@ and xhp_attr_list_remain env =
           L.back env.lb;
           xhp_attr_list env)
   | _ -> error_expect env ";"; []
+
+and xhp_category env =
+  expect env Tpercent;
+  let token = L.xhpname env.file env.lb in
+  let ret =  Pos.make env.file env.lb, Lexing.lexeme env.lb in
+  (match token with | Txhpname -> ()
+                    | _ -> error_expect env "xhp name");
+  ret
+
+and xhp_category_list_remain env =
+  match L.token env.file env.lb with
+  | Tsc ->
+      []
+  | Tcomma ->
+      (match L.token env.file env.lb with
+      | Tsc ->
+          []
+      | _ ->
+          L.back env.lb;
+          xhp_category_list env)
+  | _ -> error_expect env ";"; []
+
+and xhp_category_list env =
+  let error_state = !(env.errors) in
+  let a = xhp_category env in
+  if !(env.errors) != error_state
+    then [a]
+    else [a] @ xhp_category_list_remain env
+
 
 (*****************************************************************************)
 (* Methods *)
@@ -2631,10 +2656,8 @@ and expr_atomic ~allow_class ~class_const env =
       L.back env.lb;
       let name = identifier env in
       fst name, Id name
-  | Tem | Tincr | Tdecr | Ttild | Tplus | Tminus as op ->
+  | Tem | Tincr | Tdecr | Ttild | Tplus | Tminus | Tamp as op ->
       expr_prefix_unary env pos op
-  | Tamp ->
-      expr_ref env pos
   | Tat ->
       with_priority env Tat expr
   | Tword ->
@@ -3110,6 +3133,7 @@ and expr_cast env start_pos =
 
 and unary_priority = function
   | Tplus | Tminus -> Tincr
+  | Tamp -> Tref
   | x -> x
 
 and expr_prefix_unary env start op =
@@ -3123,6 +3147,7 @@ and expr_prefix_unary env start op =
       | Ttild -> Utild
       | Tplus -> Uplus
       | Tminus -> Uminus
+      | Tamp -> Uref
       | _ -> assert false
     in
     Pos.btw start (fst e), Unop (op, e)
@@ -3179,32 +3204,60 @@ and colon_if env e1 =
 (* Strings *)
 (*****************************************************************************)
 
+and make_string env pos content f_unescape =
+  let unescaped =
+    try f_unescape content with
+      | Php_escaping.Invalid_string error -> error_at env pos error; ""
+  in String (pos, unescaped)
+
 and expr_string env start abs_start =
   match L.string env.file env.lb with
   | Tquote ->
       let pos = Pos.btw start (Pos.make env.file env.lb) in
       let len = env.lb.Lexing.lex_curr_pos - abs_start - 1 in
       let content = String.sub env.lb.Lexing.lex_buffer abs_start len in
-      pos, String (pos, content)
+      pos, make_string env pos content Php_escaping.unescape_single
   | Teof ->
       error_at env start "string not closed";
       start, String (start, "")
   | _ -> assert false
 
 and expr_encapsed env start =
-  let abs_start = env.lb.Lexing.lex_curr_pos in
   let pos_start = Pos.make env.file env.lb in
   let el = encapsed_nested pos_start env in
   let pos_end = Pos.make env.file env.lb in
   let pos = Pos.btw pos_start pos_end in
-  let len = env.lb.Lexing.lex_curr_pos - abs_start - 1 in
-  let content = String.sub env.lb.Lexing.lex_buffer abs_start len in
-  pos, String2 (el, (pos, content))
+  (* Represent purely literal strings as just String *)
+  match el with
+  | [] -> pos, String (pos, "")
+  | [_, String (_, s)] -> pos, String (pos, s)
+  | el -> pos, String2 el
 
 and encapsed_nested start env =
+  let abs_start = env.lb.Lexing.lex_curr_pos in
+  (* Advance the lexer so we can get a start position that doesn't
+   * include the opening quote or the last bit of the expression or
+   * whatever. Then rewind it. *)
+  let _ = L.string2 env.file env.lb in
+  let frag_start = Pos.make env.file env.lb in
+  L.back env.lb;
+  encapsed_nested_inner start (frag_start, abs_start) env
+
+and encapsed_text env (start, abs_start) (stop, abs_stop) =
+  let len = abs_stop - abs_start in
+  if len = 0 then [] else
+    let pos = Pos.btw start stop in
+    let content = String.sub env.lb.Lexing.lex_buffer abs_start len in
+    [pos, make_string env pos content Php_escaping.unescape_double]
+
+and encapsed_nested_inner start frag env =
+  let cur_pos = Pos.make env.file env.lb, env.lb.Lexing.lex_curr_pos in
+  (* Get any literal string part that occurs before this point *)
+  let get_text () = encapsed_text env frag cur_pos in
+
   match L.string2 env.file env.lb with
   | Tdquote ->
-      []
+      get_text ()
   | Teof ->
       error_at env start "string not properly closed";
       []
@@ -3225,13 +3278,11 @@ and encapsed_nested start env =
           | _ -> error_expect env "}");
           if !(env.errors) != error_state
           then [e]
-          else e :: encapsed_nested start env
+          else get_text () @ e :: encapsed_nested start env
       | _ ->
           L.back env.lb;
-          encapsed_nested start env
+          encapsed_nested_inner start frag env
       )
-  | Trcb ->
-      encapsed_nested start env
   | Tdollar ->
       (match L.string2 env.file env.lb with
       | Tlcb ->
@@ -3252,10 +3303,10 @@ and encapsed_nested start env =
           expect env Trcb;
           if !(env.errors) != error_state
           then [result]
-          else result :: encapsed_nested start env
+          else get_text () @ result :: encapsed_nested start env
       | _ ->
           L.back env.lb;
-          encapsed_nested start env
+          encapsed_nested_inner start frag env
       )
   | Tlvar ->
       L.back env.lb;
@@ -3263,8 +3314,8 @@ and encapsed_nested start env =
       let e = encapsed_expr env in
       if !(env.errors) != error_state
       then [e]
-      else e :: encapsed_nested start env
-  | _ -> encapsed_nested start env
+      else get_text () @ e :: encapsed_nested start env
+  | _ -> encapsed_nested_inner start frag env
 
 and encapsed_expr env =
   match L.string2 env.file env.lb with
@@ -3473,11 +3524,6 @@ and shape_field_name env =
   match e with
   | String p -> SFlit p
   | Class_const (id, ps) -> SFclass_const (id, ps)
-  | String2 (_, _) ->
-     error env
-           ("Shape field names cannot be strings enclosed by double quotes."
-            ^" Use single quotes instead.");
-     SFlit (pos, "")
   | _ -> error_expect env "string literal or class constant";
     SFlit (pos, "")
 
@@ -3498,16 +3544,6 @@ and expr_array_get env e1 =
         expect env Trb;
         let end_ = Pos.make env.file env.lb in
         Pos.btw (fst e1) end_, Array_get (e1, Some e2)
-  end
-
-(*****************************************************************************)
-(* Reference (&$v|&func()|&$obj->prop *)
-(*****************************************************************************)
-
-and expr_ref env start =
-  with_priority env Tref begin fun env ->
-    let e = expr env in
-    Pos.btw start (fst e), Ref e
   end
 
 (*****************************************************************************)
@@ -3597,7 +3633,40 @@ and xhp_attribute_string env start abs_start =
   | _ ->
       xhp_attribute_string env start abs_start
 
+
 and xhp_body pos name env =
+  (* First grab any literal text that appears before the next
+   * bit of markup *)
+  let start = Pos.make env.file env.lb in
+  let abs_start = env.lb.Lexing.lex_curr_pos in
+  let text = xhp_text env start abs_start in
+  (* Now handle any markup *)
+  text @ xhp_body_inner pos name env
+
+(* Grab literal text that appears inside of xhp. *)
+and xhp_text env start abs_start =
+  match L.xhptoken env.file env.lb with
+  (* If we have hit something that is meaningful,
+   * we have to stop collecting literal text and go back
+   * to xhp_body. Grab any text, clean it up, and return. *)
+  | Tlcb | Tlt | Topen_xhp_comment | Teof ->
+    L.back env.lb;
+
+    let len = env.lb.Lexing.lex_curr_pos - abs_start in
+    let pos = Pos.btw start (Pos.make env.file env.lb) in
+
+    let content = String.sub env.lb.Lexing.lex_buffer abs_start len in
+    (* need to squash whitespace down to a single space *)
+    let squished = Regexp_utils.squash_whitespace content in
+    (* if it is empty or all whitespace just ignore it *)
+    if squished = "" || squished = " " then [] else
+      [pos, String (pos, squished)]
+
+  | _ -> xhp_text env start abs_start
+
+(* parses an xhp body where we know that the next token is not
+ * just more literal text *)
+and xhp_body_inner pos name env =
   match L.xhptoken env.file env.lb with
   | Tlcb when env.mode = FileInfo.Mdecl ->
       ignore_body env;
@@ -3612,10 +3681,8 @@ and xhp_body pos name env =
   | Tlt ->
       if is_xhp env
       then
-        (match xhp env with
-        | (_, Xml (_, _, _)) as xml ->
-            xml :: xhp_body pos name env
-        | _ -> xhp_body pos name env)
+        let xml = xhp env in
+        xml :: xhp_body pos name env
       else
         (match L.xhptoken env.file env.lb with
         | Tslash ->
@@ -3630,17 +3697,25 @@ and xhp_body pos name env =
                 error_expect env name;
                 []
               end
-            else xhp_body pos name env
+            else begin
+              error_expect env "closing tag name";
+              xhp_body pos name env
+            end
         | _ ->
+            error_at env pos "Stray < in xhp";
             L.back env.lb;
             xhp_body pos name env
         )
   | Teof ->
       error_at env pos "Xhp tag not closed";
       []
-  | Tword ->
+  (* The lexer returns open comments so that we can notice them and
+   * drop them from our text fields. Parse the comment and continue. *)
+  | Topen_xhp_comment ->
+      xhp_comment env.file env.lb;
       xhp_body pos name env
-  | _ -> xhp_body pos name env
+  (* xhp_body_inner only gets called when one of the above was seen *)
+  | _ -> assert false
 
 (*****************************************************************************)
 (* Typedefs *)

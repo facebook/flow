@@ -84,7 +84,6 @@ and tprim =
   | Tbool
   | Tfloat
   | Tstring
-  | Tclassname of string (* C::class *)
   | Tresource
   | Tnum
   | Tarraykey
@@ -105,6 +104,7 @@ and class_ = {
   c_extends        : hint list        ;
   c_uses           : hint list        ;
   c_xhp_attr_uses  : hint list        ;
+  c_xhp_category   : pstring list     ;
   c_req_extends    : hint list        ;
   c_req_implements : hint list        ;
   c_implements     : hint list        ;
@@ -273,7 +273,7 @@ and class_id =
   | CIparent
   | CIself
   | CIstatic
-  | CIvar of expr
+  | CIexpr of expr
   | CI of sid
 
 and expr = Pos.t * expr_
@@ -306,7 +306,7 @@ and expr_ =
   | Float of pstring
   | Null
   | String of pstring
-  | String2 of expr list * string
+  | String2 of expr list
   | Special_func of special_func
   | Yield_break
   | Yield of afield
@@ -318,7 +318,7 @@ and expr_ =
   | Unop of Ast.uop * expr
   | Binop of Ast.bop * expr * expr
   | Eif of expr * expr option * expr
-  | InstanceOf of expr * expr
+  | InstanceOf of expr * class_id
   | New of class_id * expr list * expr list
   | Efun of fun_ * id list
   | Xml of sid * (pstring * expr) list * expr list
@@ -349,7 +349,6 @@ and special_func =
   | Gena of expr
   | Genva of expr list
   | Gen_array_rec of expr
-  | Gen_array_va_rec of expr list
 
 type def =
   | Fun of fun_
@@ -369,7 +368,7 @@ let class_id_to_str = function
   | CIparent -> SN.Classes.cParent
   | CIself -> SN.Classes.cSelf
   | CIstatic -> SN.Classes.cStatic
-  | CIvar (_, This) -> SN.SpecialIdents.this
-  | CIvar (_, Lvar (_, x)) -> "$"^string_of_int(x)
-  | CIvar _ -> assert false
+  | CIexpr (_, This) -> SN.SpecialIdents.this
+  | CIexpr (_, Lvar (_, x)) -> "$"^string_of_int(x)
+  | CIexpr _ -> assert false
   | CI (_, x) -> x

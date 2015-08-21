@@ -20,7 +20,7 @@ let static_meth_terminal env ci meth_id =
     | CI cls_id -> Some (snd cls_id)
     | CIself | CIstatic -> Some (Typing_env.get_self_id env)
     | CIparent -> Some (Typing_env.get_parent_id env)
-    | CIvar _ -> None (* we declared the types, but didn't check the bodies yet
+    | CIexpr _ -> None (* we declared the types, but didn't check the bodies yet
                        so can't tell anything here *)
   in match class_name with
     | Some class_name -> FuncTerm.raise_exit_if_terminal

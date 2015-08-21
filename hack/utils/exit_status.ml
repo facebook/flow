@@ -21,6 +21,9 @@ type t =
   | Server_already_exists
   | Server_initializing
   | Type_error
+  | Build_id_mismatch
+  | Unused_server
+  | Lock_stolen
 
 exception Exit_with of t
 
@@ -30,7 +33,7 @@ let exit t =
     | Build_error -> 2
     | Build_terminated -> 1
     | Checkpoint_error -> 8
-    | Input_error -> 1
+    | Input_error -> 10
     | Kill_error -> 1
     | No_server_running -> 6
     | Out_of_time -> 7
@@ -38,6 +41,9 @@ let exit t =
     | Server_already_exists -> 77
     | Server_initializing -> 1
     | Type_error -> 2
+    | Build_id_mismatch -> 9
+    | Unused_server -> 5
+    | Lock_stolen -> 11
   in
   Pervasives.exit ec
 
@@ -54,3 +60,6 @@ let to_string = function
   | Server_already_exists -> "Server_already_exists"
   | Server_initializing -> "Server_initializing"
   | Type_error -> "Type_error"
+  | Build_id_mismatch -> "Build_id_mismatch"
+  | Unused_server -> "Unused_server"
+  | Lock_stolen -> "Lock_stolen"

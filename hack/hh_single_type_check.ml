@@ -17,7 +17,7 @@ open Sys_utils
 (*****************************************************************************)
 
 type mode =
-  | Ai
+  | Ai of string
   | Autocomplete
   | Color
   | Coverage
@@ -142,7 +142,23 @@ let builtins = "<?hh // decl\n"^
   "function is_string(mixed $x): bool {}\n"^
   "function is_null(mixed $x): bool {}\n"^
   "function is_array(mixed $x): bool {}\n"^
-  "function is_resource(mixed $x): bool {}\n"
+  "function is_resource(mixed $x): bool {}\n"^
+  "interface IMemoizeParam {\n"^
+  "  public function getInstanceKey(): string;\n"^
+  "}\n"^
+  "type TypeStructure<T> = shape(\n"^
+  "  'kind'=>int,\n"^
+  "  'nullable'=>?bool,\n"^
+  "  'classname'=>?classname<T>,\n"^
+  "  'elem_types' => ?array,\n"^
+  "  'param_types' => ?array,\n"^
+  "  'return_type' => ?array,\n"^
+  "  'generic_types' => ?array,\n"^
+  "  'fields' => ?array,\n"^
+  "  'name' => ?string,\n"^
+  "  'alias' => ?string,\n"^
+  ");\n"^
+  "function type_structure($x, $y);\n"
 
 (*****************************************************************************)
 (* Helpers *)
@@ -163,11 +179,11 @@ let parse_options () =
   let set_mode x () =
     if !mode <> Errors
     then raise (Arg.Bad "only a single mode should be specified")
-    else mode := x
-  in
+    else mode := x in
+  let set_ai x = set_mode (Ai x) () in
   let options = [
     "--ai",
-      Arg.Unit (set_mode Ai),
+      Arg.String (set_ai),
       "Run the abstract interpreter";
     "--auto-complete",
       Arg.Unit (set_mode Autocomplete),
@@ -284,7 +300,7 @@ let print_coverage fn type_acc =
 
 let handle_mode mode filename nenv files_contents files_info errors ai_results =
   match mode with
-  | Ai -> ()
+  | Ai _ -> ()
   | Autocomplete ->
       let file = cat (Relative_path.to_absolute filename) in
       let result = ServerAutoComplete.auto_complete nenv file in
@@ -352,14 +368,17 @@ let handle_mode mode filename nenv files_contents files_info errors ai_results =
 (*****************************************************************************)
 
 let main_hack { filename; mode; } =
-  ignore (Sys.signal Sys.sigusr1 (Sys.Signal_handle Typing.debug_print_last_pos));
+  if not Sys.win32 then
+    ignore (Sys.signal Sys.sigusr1
+              (Sys.Signal_handle Typing.debug_print_last_pos));
   EventLogger.init (Daemon.devnull ()) 0.0;
   SharedMem.(init default_config);
-  Hhi.set_hhi_root_for_unit_test (Path.make "/tmp/hhi");
+  let tmp_hhi = Path.concat Path.temp_dir_name "hhi" in
+  Hhi.set_hhi_root_for_unit_test tmp_hhi;
   let outer_do f = match mode with
-    | Ai ->
+    | Ai ai_options ->
         let ai_results, inner_results =
-          Ai.do_ Typing_check_utils.check_defs filename in
+          Ai.do_ Typing_check_utils.check_defs filename ai_options in
         ai_results, inner_results
     | _ ->
         let inner_results = f () in
@@ -414,5 +433,10 @@ let _ =
   if ! Sys.interactive
   then ()
   else
+    (* On windows, setting 'binary mode' avoids to output CRLF on
+       stdout.  The 'text mode' would not hurt the user in general, but
+       it breaks the testsuite where the output is compared to the
+       expected one (i.e. in given file without CRLF). *)
+    set_binary_mode_out stdout true;
     let options = parse_options () in
-    main_hack options
+    Unix.handle_unix_error main_hack options

@@ -60,6 +60,7 @@ SRC = \
   typing_inherit.ml\
   typing_variance.ml\
   typing_decl.ml\
+  typing_structure.ml\
   pp.ml\
   colorFile.ml\
   fileOutline.ml\

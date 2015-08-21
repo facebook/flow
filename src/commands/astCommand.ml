@@ -25,6 +25,8 @@ let spec = {
       CommandUtils.exe_name;
   args = CommandSpec.ArgSpec.(
     empty
+    |> flag "--tokens" no_arg
+        ~doc:"Include a list of syntax tokens in the output"
     |> flag "--pretty" no_arg
         ~doc:"Pretty-print JSON output"
     |> CommandUtils.from_flag
@@ -52,20 +54,74 @@ let get_file = function
   | Some filename -> ServerProt.FileName (CommandUtils.expand_path filename)
   | None -> ServerProt.FileContent (None, Sys_utils.read_stdin_to_string ())
 
-let main pretty from filename () =
+module Translate = Estree_translator.Translate (JsonTranslator)
+
+let token_to_json token_result = Loc.(Hh_json.(Parser_env.(
+  let {
+    token_loc=loc;
+    token;
+    token_context;
+    token_value;
+  } = token_result in
+
+  JAssoc [
+    ("type", JString (Lexer_flow.token_to_string token));
+    ("context", JString (
+      match token_context with
+      | NORMAL_LEX -> "normal"
+      | TYPE_LEX -> "type"
+      | JSX_TAG -> "jsxTag"
+      | JSX_CHILD -> "jsxChild"
+    ));
+    ("loc", JAssoc [
+      ("start", JAssoc [
+        ("line", JInt loc.start.line);
+        ("column", JInt loc.start.column);
+      ]);
+      ("end", JAssoc [
+        ("line", JInt loc._end.line);
+        ("column", JInt loc._end.column);
+      ]);
+    ]);
+    ("range", JList [
+      JInt loc.start.offset;
+      JInt loc._end.offset;
+    ]);
+    ("value", JString token_value);
+  ]
+)))
+
+let main include_tokens pretty from filename () =
   FlowEventLogger.set_from from;
   let file = get_file filename in
   let content = ServerProt.file_input_get_content file in
-  let module Translate = Estree_translator.Translate (JsonTranslator) in
-  let results = try
-    let (ocaml_ast, errors) = Parser_flow.program ~fail:false content in
-    match Translate.program ocaml_ast with
-    | Hh_json.JAssoc params ->
-        Hh_json.JAssoc (("errors", Translate.errors errors)::params)
-    | _ -> assert false
-  with Parse_error.Error l ->
-    Hh_json.JAssoc ["errors", Translate.errors l]
+
+  (**
+   * Record token stream into a list when the --tokens flag is passed.
+   * Note that tokens stream in in order, so the list is constructed in reverse
+   * order.
+   *)
+  let tokens = ref [] in
+  let token_sink =
+    if not include_tokens then None else (Some(fun token_data ->
+    tokens := (token_to_json token_data)::!tokens
+  )) in
+
+  let results =
+    try
+      let (ocaml_ast, errors) =
+        Parser_flow.program ~fail:false ~token_sink content
+      in
+      match Translate.program ocaml_ast with
+      | Hh_json.JAssoc params ->
+          let errors_prop = ("errors", Translate.errors errors) in
+          let tokens_prop = ("tokens", Hh_json.JList (List.rev !tokens)) in
+          Hh_json.JAssoc (errors_prop::tokens_prop::params)
+      | _ -> assert false
+    with Parse_error.Error l ->
+      Hh_json.JAssoc ["errors", Translate.errors l]
   in
+
   let json = if pretty
     then Hh_json.json_to_multiline results
     else Hh_json.json_to_string results

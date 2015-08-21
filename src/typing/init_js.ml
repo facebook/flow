@@ -24,12 +24,14 @@ open Sys_utils
    yucky but library errors tend to screw lots of other stuff up,
    so we want them to stand out. They're also forced to the
    top of get_errors () *)
-let add_banner banner err =
+let add_banner banner err = Errors_js.(
   let level, messages, traces = err in
-  let reason, desc = List.hd messages in
-  let banner = reason, banner in
+  let banner = match List.hd messages with
+    | BlameM (loc, desc) -> BlameM (loc, banner)
+    | CommentM desc -> CommentM banner in
   let messages = banner :: messages in
   level, messages, traces
+)
 
 (* parse all library files, as supplied by Files_js.get_lib_files.
    use passed function to report errors.

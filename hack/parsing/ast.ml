@@ -120,6 +120,7 @@ and class_elt =
   | XhpAttr of kind list * hint option * class_var list * bool *
                ((Pos.t * expr list) option)
   | Method of method_
+  | XhpCategory of pstring list
 
 and class_attr =
   | CA_name of id
@@ -283,7 +284,7 @@ and expr_ =
   | Int of pstring
   | Float of pstring
   | String of pstring
-  | String2 of expr list * pstring
+  | String2 of expr list
   | Yield of afield
   | Yield_break
   | Await of expr
@@ -306,7 +307,6 @@ and expr_ =
   | Xml of id * (id * expr) list * expr list
   | Unsafeexpr of expr
   | Import of import_flavor * expr
-  | Ref of expr
 
 and import_flavor =
   | Include
@@ -330,6 +330,7 @@ and uop =
 | Utild
 | Unot | Uplus | Uminus | Uincr
 | Udecr | Upincr | Updecr
+| Uref
 
 and case =
 | Default of block

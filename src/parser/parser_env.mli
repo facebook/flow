@@ -21,12 +21,22 @@ type lex_mode =
   | JSX_TAG
   | JSX_CHILD
 
+type token_sink_result = {
+  token_loc: Loc.t;
+  token: Lexer_flow.token;
+  token_context: lex_mode;
+  token_value: string;
+}
+
 val mode_to_string : lex_mode -> string
 
 type env
 
 (* constructor: *)
-val init_env : Lexing.lexbuf -> env
+val init_env :
+  ?token_sink:(token_sink_result -> unit) option
+  -> Lexing.lexbuf
+  -> env
 
 (* getters: *)
 val strict : env -> bool

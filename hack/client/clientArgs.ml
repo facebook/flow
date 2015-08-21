@@ -14,8 +14,7 @@ open ClientEnv
 open Utils
 
 let rec guess_root config start recursion_limit : Path.t option =
-  let fs_root = Path.make "/" in
-  if start = fs_root then None
+  if start = Path.parent start then None (* Reach fs root, nothing to do. *)
   else if Wwwroot.is_www_directory ~config start then Some start
   else if recursion_limit <= 0 then None
   else guess_root config (Path.parent start) (recursion_limit - 1)
@@ -56,7 +55,7 @@ let get_root ?(config=".hhconfig") path_opt =
  * there, but keep what's there up to date please. *)
 let parse_check_args cmd =
   (* arg parse output refs *)
-  let mode = ref MODE_UNSPECIFIED in
+  let mode = ref None in
   let retries = ref 800 in
   let output_json = ref false in
   let retry_if_init = ref true in
@@ -69,9 +68,9 @@ let parse_check_args cmd =
   (* custom behaviors *)
   let set_from x () = from := x in
   let set_mode x () =
-    if !mode <> MODE_UNSPECIFIED
+    if !mode <> None
     then raise (Arg.Bad "only a single mode should be specified")
-    else mode := x
+    else mode := Some x
   in
 
   (* parse args *)
@@ -170,8 +169,8 @@ let parse_check_args cmd =
       " (mode) show human-readable type info for the given name; output is not meant for machine parsing";
     "--lint", Arg.Rest begin fun fn ->
         mode := match !mode with
-          | MODE_UNSPECIFIED -> MODE_LINT [fn]
-          | MODE_LINT fnl -> MODE_LINT (fn :: fnl)
+          | None -> Some (MODE_LINT [fn])
+          | Some (MODE_LINT fnl) -> Some (MODE_LINT (fn :: fnl))
           | _ -> raise (Arg.Bad "only a single mode should be specified")
       end,
       " (mode) lint the given list of files";
@@ -230,7 +229,6 @@ let parse_check_args cmd =
   end;
 
   (* fixups *)
-  if !mode == MODE_UNSPECIFIED then mode := MODE_STATUS;
   let root =
     match args with
     | [] -> get_root None
@@ -243,7 +241,7 @@ let parse_check_args cmd =
       Printf.fprintf stdout "-*- mode: compilation -*-\n%!"
   in
   CCheck {
-    mode = !mode;
+    mode = Option.value !mode ~default:MODE_STATUS;
     root = root;
     from = !from;
     output_json = !output_json;

@@ -196,23 +196,17 @@ and localize_ft ?(instantiate_tparams=true) ~ety_env env ft =
       SMap.remove x subst
     end ~init:ety_env.substs in
   let ety_env = {ety_env with substs = substs} in
-  let names, params = List.unzip ft.ft_params in
-  let env, params = lfold (localize ~ety_env) env params in
+  let env, params = lfold begin fun env (name, param) ->
+    let env, param = localize ~ety_env env param in
+    env, (name, param)
+  end env ft.ft_params in
   let env, arity = match ft.ft_arity with
     | Fvariadic (min, (name, var_ty)) ->
        let env, var_ty = localize ~ety_env env var_ty in
        env, Fvariadic (min, (name, var_ty))
     | Fellipsis _ | Fstandard (_, _) as x -> env, x in
   let env, ret = localize ~ety_env env ft.ft_ret in
-  let params = List.map2_exn names params (fun x y -> x, y) in
   env, { ft with ft_arity = arity; ft_params = params; ft_ret = ret }
-
-let localize_phase ~ety_env env phase_ty =
-  match phase_ty with
-  | DeclTy ty ->
-     localize ~ety_env env ty
-  | LoclTy ty ->
-     env, ty
 
 let env_with_self env =
   {

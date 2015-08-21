@@ -89,15 +89,6 @@ and unify_var env (r1, uenv1, n1) (r2, uenv2, n2) =
 
 and unify_ env r1 ty1 r2 ty2 =
   match ty1, ty2 with
-  | Tprim (Nast.Tclassname _), Tprim (Nast.Tclassname _) ->
-    env, ty1
-  | Tprim (Nast.Tclassname _), Tprim (Nast.Tstring)
-  | Tprim (Nast.Tstring), Tprim (Nast.Tclassname _) ->
-    (* Tclassname is created solely within class_class_decl; as such, treating
-     * it as interchangeable with a string for the purposes of unification
-     * should be fairly safe. A typical scenario for the unification is array
-     * literals like "array('foo', 'bar', C1::class, ...)" *)
-    env, Tprim (Nast.Tstring)
   | Tprim x, Tprim y ->
     if x == y then env, Tprim x
     else

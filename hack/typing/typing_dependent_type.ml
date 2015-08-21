@@ -45,14 +45,14 @@ module ExprDepTy = struct
           p, Reason.ERclass cls, `cls cls
       | N.CIstatic ->
           pos, Reason.ERstatic, `static
-      | N.CIvar (p, N.This) ->
+      | N.CIexpr (p, N.This) ->
           p, Reason.ERstatic, `static
       (* If it is a local variable then we look up the expression id associated
        * with it. If one doesn't exist we generate a new one. We are being
        * conservative here because the new expression id we create isn't
        * added to the local enviornment.
        *)
-      | N.CIvar (p, N.Lvar (_, x)) ->
+      | N.CIexpr (p, N.Lvar (_, x)) ->
           let ereason, dep = match Env.get_local_expr_id env x with
             | Some eid -> Reason.ERexpr eid, `expr eid
             | None -> new_() in
@@ -60,7 +60,7 @@ module ExprDepTy = struct
       (* If all else fails we generate a new identifier for our expression
        * dependent type.
        *)
-      | N.CIvar (p, _) ->
+      | N.CIexpr (p, _) ->
           let ereason, dep = new_() in
           p, ereason, dep in
     (Reason.Rexpr_dep_type (reason, pos, expr_dep_reason), (dep, []))

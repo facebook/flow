@@ -109,3 +109,17 @@ let aliases =
   "double", "HH\\float";
   "real", "HH\\float";
   ]
+
+
+module XHPConsts = struct
+  (* From https://github.com/facebook/xhp-lib/blob/master/src/core/ReflectionXHPAttribute.php *)
+  let cTYPE_STRING = 1
+  let cTYPE_BOOL = 2
+  let cTYPE_INTEGER = 3
+  let cTYPE_ARRAY = 4
+  let cTYPE_OBJECT = 5
+  let cTYPE_VAR = 6
+  let cTYPE_ENUM = 7
+  let cTYPE_FLOAT = 8
+  let cTYPE_UNSUPPORTED_LEGACY_CALLABLE = 9
+end

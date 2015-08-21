@@ -38,7 +38,7 @@ type member =
 
 type member_type =
   | MTelem
-  | MTprop
+  | MTprop of Nast.og_null_flavor
 
 type lval =
   | Llocal of string
@@ -46,10 +46,15 @@ type lval =
   (* This list is stored reversed because ~functional programming~ *)
   | Lmember of base * (member_type * member) list
   | Lsprop of Nast.class_id
+  | Lglobal
 and base =
   | Blval of lval
   | Bexpr
   | Bthis
+
+type resolved_class_id =
+  | RCstatic of string
+  | RCdynamic of [ `self | `parent | `static | `var of Nast.expr ]
 
 (* Smart constructor for lmember that flattens things out *)
 let lmember (base, mem) =
@@ -64,6 +69,7 @@ let get_collection_id s =
   match SMap.get (strip_ns s) Emitter_consts.header_kind_values with
     | Some i -> i
     | None -> bug "invalid collection name"
+
 let get_aliased_name k = match SMap.get k Emitter_consts.aliases with
   | Some v  -> v
   | None -> k
@@ -87,14 +93,15 @@ let fix_xhp_name s =
 (* *)
 let fmt_name s = fix_xhp_name (get_aliased_name (strip_ns s))
 let get_lid_name (_, id) = Ident.get_name id
-(* XXX: ocaml and php probably don't have exactly the same escaping rules *)
-let escape_str = String.escaped
-let unescape_str = Scanf.unescaped
 (* Whenever we need to emit a quoted string, we escape it.
- * This means that places that for String2, which has preescaped strings,
- * we need to *unescape* before passing the string to core emitting functions.
- * This is a little silly, but it keeps the interface consistent. *)
-let quote_str s = "\"" ^ escape_str s ^ "\""
+ * Places that deal with String/String2 literals need to unescape the
+ * literals before passing them to core emitting functions. This seems
+ * a little silly, but:
+ *  1) It keeps the interface consistent
+ *  2) The escaping conventions differ between hhas/single
+ *     quote/double quote
+ *)
+let quote_str s = "\"" ^ Php_escaping.escape s ^ "\""
 let fmt_int s = Int64.to_string (parse_php_int s)
 (* XXX: what format conversions do we need to do? *)
 let fmt_float s = s
@@ -112,8 +119,9 @@ let fmt_member mem =
   | MTelem, Mlocal id -> "EL:"^id
   | MTelem, Mappend -> "W"
   | MTelem, Mstring s -> "ET:"^quote_str s
-  | MTprop, Mstring s -> "PT:"^quote_str s
-  | MTprop, _ -> unimpl "unsupported member??"
+  | MTprop Nast.OG_nullthrows, Mstring s -> "PT:"^quote_str s
+  | MTprop Nast.OG_nullsafe, Mstring s -> "QT:"^quote_str s
+  | MTprop _, _ -> unimpl "unsupported member??"
 
 let fmt_base base =
   match base with
@@ -121,6 +129,7 @@ let fmt_base base =
   | Bthis -> "H"
   | Blval (Llocal id) -> "L:"^id
   | Blval (Lsprop _) -> "SC"
+  | Blval Lglobal -> "GC"
   | Blval (Lmember _) -> bug "invalid base"
 
 (* returns the suffix to use on opcodes operating on the lval,
@@ -131,13 +140,13 @@ let fmt_lval lval =
   match lval with
   | Llocal id -> "L", id, false
   | Lsprop _ -> "S", "", false
+  | Lglobal -> "G", "", false
   | Lmember (base, mems) ->
     "M",
     "<" ^ fmt_base base ^ " " ^
     String.concat " " (List.rev_map ~f:fmt_member mems) ^
     ">",
     true
-
 
 (*** Environment manipulation ***)
 type label = string
@@ -149,20 +158,37 @@ type function_props = {
    * ocaml will warn when doing updates on it with "with"... *)
   dummy_warning_suppression: unit;
 }
+(* Tracks information about the enclosing function needed for closures *)
+type closure_state = {
+  full_name: string;
+  is_static: bool;
+  tparams: Nast.tparam list;
+  (* A counter of how many closures appear in inside of the named enclosing
+   * function. Used for naming the closures. Is a reference to allow it to
+   * be shared among closures that will be getting emitted at widely
+   * separated times. *)
+  closure_counter: int ref;
+}
+type pending_closure = string * closure_state * (Nast.fun_ * Nast.id list)
 type nonlocal_actions = {
   continue_action: is_initial:bool -> env -> env;
   break_action: is_initial:bool -> env -> env;
   return_action: has_value:bool -> is_initial:bool -> env -> env;
 }
 and env = {
+  (* Global state *)
   reversed_output: string list;
   indent: int;
+  pending_closures: pending_closure list;
+  (* Function state *)
   next_label: int;
   num_iterators: int;
   next_iterator: int; (* iterators allocated in a stack discipline *)
   function_props: function_props;
   nonlocal: nonlocal_actions;
   cleanups: (env -> env) list;
+  closure_state: closure_state;
+  (* Class state *)
   self_name: string option;
   parent_name: string option;
 }
@@ -179,12 +205,19 @@ let empty_nonlocal_actions = {
 let new_env () = {
   reversed_output = [];
   indent = 0;
+  pending_closures = [];
   next_label = 0;
   num_iterators = 0;
   next_iterator = 0;
   function_props = default_function_props;
   nonlocal = empty_nonlocal_actions;
   cleanups = [];
+  closure_state = {
+    full_name = "__TOPLEVEL";
+    closure_counter = ref 0;
+    tparams = [];
+    is_static = true;
+  };
   self_name = None;
   parent_name = None;
 }
@@ -194,6 +227,7 @@ let start_new_function env =
   { nenv with
     reversed_output = env.reversed_output;
     indent = env.indent;
+    pending_closures = env.pending_closures;
     self_name = env.self_name;
     parent_name = env.parent_name;
   }
@@ -328,9 +362,13 @@ let emit_SetOp =          emit_op2ls_screwy "SetOp"
 let emit_IncDec =         emit_op2ls_screwy "IncDec"
 let emit_CGet =           emit_op1l   "CGet"
 let emit_CGetL =          emit_op1s   "CGetL"
+let emit_CUGetL =         emit_op1s   "CUGetL"
 let emit_PushL =          emit_op1s   "PushL"
+let emit_Isset  =         emit_op1l   "Isset"
 let emit_IssetL =         emit_op1s   "IssetL"
+let emit_Unset =          emit_op1l   "Unset"
 let emit_UnsetL =         emit_op1s   "UnsetL"
+let emit_Empty =          emit_op1l   "Empty"
 let emit_Set =            emit_op1l   "Set"
 let emit_SetL =           emit_op1s   "SetL"
 let emit_RetC =           emit_op0    "RetC"
@@ -343,6 +381,7 @@ let emit_Double =         emit_op1s   "Double"
 let emit_Null =           emit_op0    "Null"
 let emit_FPushFunc =      emit_op1i   "FPushFunc"
 let emit_FPushFuncD =     emit_op2ie  "FPushFuncD"
+let emit_FPushCtor =      emit_op1i   "FPushCtor"
 let emit_FPushCtorD =     emit_op2ie  "FPushCtorD"
 let emit_FPushObjMethodD =emit_op3ies "FPushObjMethodD"
 let emit_FPushClsMethod = emit_op1i   "FPushClsMethod"
@@ -353,10 +392,12 @@ let emit_FPassLval =      emit_op2il  "FPass"
 let emit_FCall =          emit_op1i   "FCall"
 let emit_FCallUnpack =    emit_op1i   "FCallUnpack"
 let emit_DefCls =         emit_op1i   "DefCls"
+let emit_DefTypeAlias =   emit_op1i   "DefTypeAlias"
 let emit_NewArray =       emit_op1i   "NewArray"
 let emit_NewMixedArray =  emit_op1i   "NewMixedArray"
 let emit_NewCol =         emit_op1i   "NewCol"
 let emit_Jmp =            emit_op1s   "Jmp"
+let emit_JmpNS =          emit_op1s   "JmpNS"
 let emit_Not =            emit_op0    "Not"
 let emit_BitNot =         emit_op0    "BitNot"
 let emit_Clone =          emit_op0    "Clone"
@@ -387,7 +428,11 @@ let emit_CreateCont =     emit_op0    "CreateCont"
 let emit_Yield =          emit_op0    "Yield"
 let emit_YieldK =         emit_op0    "YieldK"
 let emit_Idx =            emit_op0    "Idx"
+let emit_AKExists =       emit_op0    "AKExists"
 let emit_NameA =          emit_op0    "NameA"
+let emit_InstanceOf =     emit_op0    "InstanceOf"
+let emit_InstanceOfD =    emit_op1e   "InstanceOfD"
+let emit_CreateCl =       emit_op2ie  "CreateCl"
 
 let emit_Switch env labels base bound =
   emit_op_strs env ["Switch"; fmt_str_vec labels; string_of_int base; bound]
@@ -460,7 +505,7 @@ let fmt_eq_binop bop =
   | Ast.Lte | Ast.Gt | Ast.Gte -> bug "not a eq binop"
 
 (* XXX: what all casts do we allow? *)
-let fmt_cast (_, h) =
+let fmt_cast h =
   match h with
   | Nast.Hprim Nast.Tint -> "Int"
   | Nast.Hprim Nast.Tbool -> "Bool"
@@ -513,3 +558,16 @@ let emit_fault_cleanup ?faultlet_extras:(extra=(fun env -> env))
     emit_Unwind env
   in
   add_cleanup env emit_faultlet
+
+
+(* Some ast manipulation stuff that maybe belongs elsewhere *)
+let make_varray es = Nast.Array (List.map ~f:(fun e -> Nast.AFvalue e) es)
+let make_kvarray fields =
+  Nast.Array (List.map ~f:(fun (k, v) -> Nast.AFkvalue (k, v)) fields)
+(* Extract the elements out of a ShapeMap, sorted by position so that
+ * it matches the order it would be in HHVM. Sigh. *)
+let extract_shape_fields smap =
+  let get_pos =
+    function Nast.SFlit (p, _) | Nast.SFclass_const ((p, _), _) -> p in
+  List.sort (fun (k1, _) (k2, _) -> Pos.compare (get_pos k1) (get_pos k2))
+    (Nast.ShapeMap.elements smap)

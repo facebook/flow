@@ -66,6 +66,7 @@ let autoimport_classes = [
   "RescheduleWaitHandle";
   "SleepWaitHandle";
   "ExternalThreadEventWaitHandle";
+  "Shapes";
 ]
 let autoimport_funcs = [
   "invariant";

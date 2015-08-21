@@ -3892,19 +3892,19 @@ end
 (*****************************************************************************)
 (* Entry points *)
 (*****************************************************************************)
-let parse_program fail filename content =
+let parse_program fail ?(token_sink=None) filename content =
   let lb = Lexing.from_string content in
   (match filename with None -> () | Some fn ->
     lb.Lexing.lex_curr_p <-
       { lb.Lexing.lex_curr_p with Lexing.pos_fname = fn });
-  let env = init_env lb in
+  let env = init_env ~token_sink lb in
   let ast = Parse.program env in
   if fail && (errors env) <> []
   then raise (Error.Error (filter_duplicate_errors [] (errors env)));
   ast, List.rev (errors env)
 
-let program ?(fail=true) content =
-  parse_program fail None content
+let program ?(fail=true) ?(token_sink=None) content =
+  parse_program fail ~token_sink None content
 
-let program_file ?(fail=true) content filename =
-  parse_program fail (Some filename) content
+let program_file ?(fail=true) ?(token_sink=None) content filename =
+  parse_program fail ~token_sink (Some filename) content

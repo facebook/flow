@@ -11,6 +11,6 @@
 let init _ _ = ()
 let master_exception _ = ()
 let worker_exception _ = ()
-let sharedmem_gc _ _ = ()
+let sharedmem_gc _ _ _ = ()
 let sharedmem_init_done _ = ()
 let flush _ = ()

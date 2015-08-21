@@ -354,15 +354,6 @@ module Env = struct
     | Some p' -> Errors.different_scope p x p'
     | None -> ()
 
-  let is_superglobal =
-    let l = [
-      "$GLOBALS"; "$_SERVER"; "$_GET"; "$_POST"; "$_FILES";
-      "$_COOKIE"; "$_SESSION"; "$_REQUEST"; "$_ENV"
-    ] in
-    let h = Hashtbl.create 23 in
-    List.iter l (fun x -> Hashtbl.add h x true);
-    fun x -> Hashtbl.mem h x
-
   (* Adds a local variable, without any check *)
   let add_lvar (_, lenv) (_, name) (p, x) =
     lenv.locals := SMap.add name (p, x) !(lenv.locals)
@@ -406,7 +397,7 @@ module Env = struct
   (* Function used to name a local variable *)
   let lvar (genv, env) (p, x) =
     let p, ident =
-      if is_superglobal x && genv.in_mode = FileInfo.Mpartial
+      if SN.Superglobals.is_superglobal x && genv.in_mode = FileInfo.Mpartial
       then p, Ident.tmp()
       else
         let lcl = SMap.get x !(env.locals) in
@@ -962,6 +953,9 @@ and class_ nenv c =
   let uses     = List.fold_right c.c_body ~init:[] ~f:(class_use env) in
   let xhp_attr_uses =
     List.fold_right c.c_body ~init:[] ~f:(xhp_attr_use env) in
+  let xhp_category =
+    Option.value ~default:[] @@
+      List.fold_right c.c_body ~init:None ~f:(xhp_category env) in
   let req_implements, req_extends = List.fold_right c.c_body
     ~init:([], []) ~f:(class_require env c.c_kind) in
   (* Setting a class type parameters constraint to the 'this' type is weird
@@ -991,6 +985,7 @@ and class_ nenv c =
       N.c_extends        = parents;
       N.c_uses           = uses;
       N.c_xhp_attr_uses  = xhp_attr_uses;
+      N.c_xhp_category   = xhp_category;
       N.c_req_extends    = req_extends;
       N.c_req_implements = req_implements;
       N.c_implements     = implements;
@@ -1074,6 +1069,7 @@ and class_use env x acc =
   | ClassTraitRequire _ -> acc
   | ClassVars _ -> acc
   | XhpAttr _ -> acc
+  | XhpCategory _ -> acc
   | Method _ -> acc
   | TypeConst _ -> acc
 
@@ -1089,8 +1085,27 @@ and xhp_attr_use env x acc =
   | ClassTraitRequire _ -> acc
   | ClassVars _ -> acc
   | XhpAttr _ -> acc
+  | XhpCategory _ -> acc
   | Method _ -> acc
   | TypeConst _ -> acc
+
+and xhp_category env x acc =
+  match x with
+  | Attributes _ -> acc
+  | Const _ -> acc
+  | AbsConst _ -> acc
+  | ClassUse _ -> acc
+  | XhpAttrUse _ -> acc
+  | ClassTraitRequire _ -> acc
+  | ClassVars _ -> acc
+  | XhpAttr _ -> acc
+  | XhpCategory cs ->
+    (match acc with
+    | Some _ -> Errors.multiple_xhp_category (fst (List.hd_exn cs)); acc
+    | None -> Some cs)
+  | Method _ -> acc
+  | TypeConst _ -> acc
+
 
 and class_require env c_kind x acc =
   match x with
@@ -1116,6 +1131,7 @@ and class_require env c_kind x acc =
     (hint env h :: acc_impls, acc_exts)
   | ClassVars _ -> acc
   | XhpAttr _ -> acc
+  | XhpCategory _ -> acc
   | Method _ -> acc
   | TypeConst _ -> acc
 
@@ -1128,6 +1144,7 @@ and constructor env acc = function
   | ClassTraitRequire _ -> acc
   | ClassVars _ -> acc
   | XhpAttr _ -> acc
+  | XhpCategory _ -> acc
   | Method ({ m_name = (p, name); _ } as m) when name = SN.Members.__construct ->
       (match acc with
       | None -> Some (method_ (fst env) m)
@@ -1145,6 +1162,7 @@ and class_const env x acc =
   | ClassTraitRequire _ -> acc
   | ClassVars _ -> acc
   | XhpAttr _ -> acc
+  | XhpCategory _ -> acc
   | Method _ -> acc
   | TypeConst _ -> acc
 
@@ -1168,6 +1186,7 @@ and class_prop_static env x acc =
     cvl @ acc
   | ClassVars _ -> acc
   | XhpAttr _ -> acc
+  | XhpCategory _ -> acc
   | Method _ -> acc
   | TypeConst _ -> acc
 
@@ -1227,6 +1246,7 @@ and class_prop env x acc =
     let cvl = List.map cvl (class_prop_ env) in
     let cvl = List.map cvl (fill_prop kl h) in
     cvl @ acc
+  | XhpCategory _ -> acc
   | Method _ -> acc
   | TypeConst _ -> acc
 
@@ -1240,6 +1260,7 @@ and class_static_method env x acc =
   | AbsConst _ -> acc
   | ClassVars _ -> acc
   | XhpAttr _ -> acc
+  | XhpCategory _ -> acc
   | Method m when snd m.m_name = SN.Members.__construct -> acc
   | Method m when List.mem m.m_kind Static -> method_ (fst env) m :: acc
   | Method _ -> acc
@@ -1255,6 +1276,7 @@ and class_method env sids cv_ids x acc =
   | AbsConst _ -> acc
   | ClassVars _ -> acc
   | XhpAttr _ -> acc
+  | XhpCategory _ -> acc
   | Method m when snd m.m_name = SN.Members.__construct -> acc
   | Method m when not (List.mem m.m_kind Static) ->
       let genv = fst env in
@@ -1272,14 +1294,14 @@ and class_typeconst env x acc =
   | ClassTraitRequire _ -> acc
   | ClassVars _ -> acc
   | XhpAttr _ -> acc
+  | XhpCategory _ -> acc
   | Method _ -> acc
   | TypeConst t -> typeconst env t :: acc
 
 and check_constant_expr (pos, e) =
   match e with
   | Unsafeexpr _ | Id _ | Null | True | False | Int _
-  | Float _ | String _
-  | String2 ([], _) -> ()
+  | Float _ | String _ -> ()
   | Class_const ((_, cls), _) when cls <> "static" -> ()
 
   | Unop ((Uplus | Uminus | Utild | Unot), e) -> check_constant_expr e
@@ -1295,8 +1317,6 @@ and check_constant_expr (pos, e) =
     ignore @@ Option.map e2 check_constant_expr;
     check_constant_expr e3
 
-  | String2 ((var_pos, _) :: _, _) ->
-      Errors.local_const var_pos
   | _ -> Errors.illegal_constant pos
 
 and const_defl h env l = List.map l (const_def h env)
@@ -1767,7 +1787,7 @@ and expr_ env = function
   | Int s -> N.Int s
   | Float s -> N.Float s
   | String s -> N.String s
-  | String2 (idl, (_, s)) -> N.String2 (string2 env (List.rev idl), s)
+  | String2 idl -> N.String2 (string2 env idl)
   | Id x ->
     (match snd x with
       | const when const = SN.PseudoConsts.g__LINE__ -> N.Int x
@@ -2002,24 +2022,30 @@ and expr_ env = function
       | px, n when n = SN.Classes.cParent ->
         if (fst env).current_cls = None then
           let () = Errors.parent_outside_class p in
-          (px, SN.Classes.cUnknown)
-        else (px, n)
+          N.CI (px, SN.Classes.cUnknown)
+        else N.CIparent
       | px, n when n = SN.Classes.cSelf ->
         if (fst env).current_cls = None then
           let () = Errors.self_outside_class p in
-          (px, SN.Classes.cUnknown)
-        else (px, n)
+          N.CI (px, SN.Classes.cUnknown)
+        else N.CIself
       | px, n when n = SN.Classes.cStatic ->
         if (fst env).current_cls = None then
           let () = Errors.static_outside_class p in
-          (px, SN.Classes.cUnknown)
-        else (px, n)
+          N.CI (px, SN.Classes.cUnknown)
+        else N.CIstatic
       | _ ->
         no_typedef env x;
-        (Env.class_name env x) in
-    N.InstanceOf (expr env e, (p, N.Id id))
-  | InstanceOf (e1, e2) ->
-      N.InstanceOf (expr env e1, expr env e2)
+        N.CI (Env.class_name env x)
+    in
+    N.InstanceOf (expr env e, id)
+  | InstanceOf (e1, (_,
+      (Lvar _ | Obj_get _ | Class_get _ | Class_const _
+      | Array_get _ | Call _) as e2)) ->
+    N.InstanceOf (expr env e1, N.CIexpr (expr env e2))
+  | InstanceOf (_e1, (p, _)) ->
+    Errors.invalid_instanceof p;
+    N.Any
   | New ((_, Id x), el, uel)
   | New ((_, Lvar x), el, uel) ->
     N.New (make_class_id env x, exprl env el, exprl env uel)
@@ -2068,7 +2094,6 @@ and expr_ env = function
       N.Any
   | Import _ ->
       N.Any
-  | Ref (p, e_) -> expr_ env e_
 
 and expr_lambda env f =
   let h = Option.map f.f_ret (hint ~allow_retonly:true env) in
@@ -2115,8 +2140,8 @@ and make_class_id env (p, x as cid) =
         let () = Errors.static_outside_class p in
         N.CI (p, SN.Classes.cUnknown)
       else N.CIstatic
-    | x when x = SN.SpecialIdents.this -> N.CIvar (p, N.This)
-    | x when x.[0] = '$' -> N.CIvar (p, N.Lvar (Env.lvar env cid))
+    | x when x = SN.SpecialIdents.this -> N.CIexpr (p, N.This)
+    | x when x.[0] = '$' -> N.CIexpr (p, N.Lvar (Env.lvar env cid))
     | _ -> N.CI (Env.class_name env cid)
 
 and casel env l =

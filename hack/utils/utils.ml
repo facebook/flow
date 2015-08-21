@@ -363,3 +363,13 @@ let with_context ~enter ~exit ~do_ =
     raise e in
   exit ();
   result
+
+(* We run with exception backtraces turned off for performance reasons. But for
+ * some kinds of catastrophic exceptions, which we never recover from (so the
+ * performance doesn't matter) we do want the backtrace. "assert false" is one
+ * of such conditions.
+ *)
+let assert_false_log_backtrace () =
+  Printf.eprintf "%s" (Printexc.raw_backtrace_to_string
+    (Printexc.get_callstack 100));
+  assert false

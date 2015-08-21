@@ -50,6 +50,7 @@ val fullpath: Path.t -> string
 val init_file: tmp_dir:string -> Path.t -> string
 val lock_file: tmp_dir:string -> Path.t -> string
 val pids_file: tmp_dir:string -> Path.t -> string
+val socket_file: tmp_dir:string -> Path.t -> string
 
 val init: Path.t -> string list -> unit
 

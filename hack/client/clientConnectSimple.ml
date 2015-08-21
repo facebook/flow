@@ -14,7 +14,7 @@ type error =
   | Server_busy
   | Build_id_mismatch
 
-let server_exists root = not (Lock.check (GlobalConfig.lock_file root))
+let server_exists root = not (Lock.check (ServerFiles.lock_file root))
 
 let wait_on_server_restart ic =
   try
@@ -29,15 +29,22 @@ let wait_on_server_restart ic =
      ()
 
 let establish_connection root =
-  let sock_name = Socket.get_path GlobalConfig.tmp_dir root in
-  let sockaddr = Unix.ADDR_UNIX sock_name in
+  let sock_name = Socket.get_path (ServerFiles.socket_file root) in
+  let sockaddr =
+    if Sys.win32 then
+      let ic = open_in_bin sock_name in
+      let port = input_binary_int ic in
+      close_in ic;
+      Unix.(ADDR_INET (inet_addr_loopback, port))
+    else
+      Unix.ADDR_UNIX sock_name in
   Result.Ok (Unix.open_connection sockaddr)
 
 let get_cstate (ic, oc) =
   try
     Printf.fprintf oc "%s\n%!" Build_id.build_id_ohai;
     let cstate : ServerUtils.connection_state = Marshal.from_channel ic in
-    Result.Ok cstate
+    Result.Ok (ic, oc, cstate)
   with e ->
     Unix.shutdown_connection ic;
     close_in_noerr ic;
@@ -66,13 +73,14 @@ let connect_once root =
       ~on_timeout:(fun _ -> raise Exit)
       ~do_:begin fun () ->
         establish_connection root >>= fun (ic, oc) ->
-        get_cstate (ic, oc) >>= verify_cstate ic >>= fun () ->
-        Ok (ic, oc)
-      end
+        get_cstate (ic, oc)
+      end >>= fun (ic, oc, cstate) ->
+      verify_cstate ic cstate >>= fun () ->
+      Ok (ic, oc)
   with
   | Exit_status.Exit_with _  as e -> raise e
   | _ ->
     if not (server_exists root) then Result.Error Server_missing
-    else if not (Lock.check (GlobalConfig.init_file root))
+    else if not (Lock.check (ServerFiles.init_file root))
     then Result.Error Server_initializing
     else Result.Error Server_busy

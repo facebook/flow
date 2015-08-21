@@ -29,27 +29,31 @@ module MainInit : sig
     env
 end = struct
   let grab_init_lock root =
-    ignore(Lock.grab (GlobalConfig.init_file root))
+    ignore(Lock.grab (ServerFiles.init_file root))
 
   let release_init_lock root =
-    ignore(Lock.release (GlobalConfig.init_file root))
+    ignore(Lock.release (ServerFiles.init_file root))
+
+  let wakeup_client ?(close = false) options msg =
+    match ServerArgs.waiting_client options with
+    | None -> ()
+    | Some oc ->
+        output_string oc (msg ^ "\n");
+        if close then close_out oc else flush oc
 
   (* This code is only executed when the options --check is NOT present *)
   let go options init_fun =
     let root = ServerArgs.root options in
-    let send_signal () = match ServerArgs.waiting_client options with
-      | None -> ()
-      | Some pid -> (try Unix.kill pid Sys.sigusr1 with _ -> ()) in
     let t = Unix.gettimeofday () in
     Hh_logger.log "Initializing Server (This might take some time)";
     grab_init_lock root;
-    send_signal ();
+    wakeup_client options "starting";
     (* note: we only run periodical tasks on the root, not extras *)
     ServerPeriodical.init root;
     let env = init_fun () in
     release_init_lock root;
     Hh_logger.log "Server is READY";
-    send_signal ();
+    wakeup_client ~close:true options "ready";
     let t' = Unix.gettimeofday () in
     Hh_logger.log "Took %f seconds to initialize." (t' -. t);
     env
@@ -103,18 +107,18 @@ module Program : SERVER_PROGRAM =
       (* Force hhi files to be extracted and their location saved before workers
        * fork, so everyone can know about the same hhi path. *)
       ignore (Hhi.get_hhi_root());
-      ignore (
-          Sys.signal Sys.sigusr1 (Sys.Signal_handle Typing.debug_print_last_pos)
-        )
+      if not Sys.win32 then
+        ignore @@
+        Sys.signal Sys.sigusr1 (Sys.Signal_handle Typing.debug_print_last_pos)
 
     let make_next_files dir =
       let php_next_files = Find.make_next_files FindUtils.is_php dir in
       let js_next_files = Find.make_next_files FindUtils.is_js dir in
       fun () -> php_next_files () @ js_next_files ()
 
-    let stamp_file = GlobalConfig.tmp_dir ^ "/stamp"
+    let stamp_file = Filename.concat GlobalConfig.tmp_dir "stamp"
     let touch_stamp () =
-      Tmp.mkdir (Filename.dirname stamp_file);
+      Sys_utils.mkdir_no_fail (Filename.dirname stamp_file);
       Sys_utils.with_umask
         0o111
         (fun () ->
@@ -122,7 +126,6 @@ module Program : SERVER_PROGRAM =
           * function since that will fail if the stamp file doesn't exist. *)
          close_out (open_out stamp_file)
         )
-
     let touch_stamp_errors l1 l2 =
       (* We don't want to needlessly touch the stamp file if the error list is
        * the same and nothing has changed, but we also don't want to spend a ton
@@ -224,7 +227,7 @@ let handle_connection_ genv env socket =
        HackEventLogger.out_of_date ();
        Printf.eprintf "Status: Error\n";
        Printf.eprintf "%s is out of date. Exiting.\n" Program.name;
-       exit 4)
+       Exit_status.exit Exit_status.Build_id_mismatch)
     else
       msg_to_channel oc Connection_ok;
     let client = { ic; oc; close } in
@@ -274,7 +277,10 @@ let recheck genv old_env updates =
  * rebase, and we don't log the recheck_end event until the update list
  * is no longer getting populated. *)
 let rec recheck_loop i rechecked_count genv env =
-  let raw_updates = DfindLib.get_changes (unsafe_opt genv.dfind) in
+  let raw_updates =
+    match genv.dfind with
+    | None -> SSet.empty
+    | Some dfind -> DfindLib.get_changes dfind in
   if SSet.is_empty raw_updates then
     i, rechecked_count, env
   else
@@ -291,11 +297,11 @@ let serve genv env socket =
   let root = ServerArgs.root genv.options in
   let env = ref env in
   while true do
-    let lock_file = GlobalConfig.lock_file root in
+    let lock_file = ServerFiles.lock_file root in
     if not (Lock.grab lock_file) then
       (Hh_logger.log "Lost lock; terminating.\n%!";
        HackEventLogger.lock_stolen lock_file;
-       die());
+       Exit_status.(exit Lock_stolen));
     ServerPeriodical.call_before_sleeping();
     let has_client = sleep_and_check socket in
     let start_t = Unix.time () in
@@ -418,25 +424,24 @@ let main options config =
   (* this is to transform SIGPIPE in an exception. A SIGPIPE can happen when
    * someone C-c the client.
    *)
-  Sys.set_signal Sys.sigpipe Sys.Signal_ignore;
-  PidLog.init (GlobalConfig.pids_file root);
+  if not Sys.win32 then Sys.set_signal Sys.sigpipe Sys.Signal_ignore;
+  PidLog.init (ServerFiles.pids_file root);
   PidLog.log ~reason:"main" (Unix.getpid());
   let watch_paths = root :: Program.get_watch_paths options in
   let genv = ServerEnvBuild.make_genv options config watch_paths in
   let env = ServerEnvBuild.make_env options config in
   let program_init = create_program_init genv env in
   let is_check_mode = ServerArgs.check_mode genv.options in
-  let is_ai_mode = ServerArgs.ai_mode genv.options in
-  if is_check_mode || is_ai_mode then
+  if is_check_mode then
     let env = program_init () in
     Option.iter (ServerArgs.save_filename genv.options) (save genv env);
     Program.run_once_and_exit genv env
   else
     (* Make sure to lock the lockfile before doing *anything*, especially
      * opening the socket. *)
-    if not (Lock.grab (GlobalConfig.lock_file root)) then begin
+    if not (Lock.grab (ServerFiles.lock_file root)) then begin
       Hh_logger.log "Error: another server is already running?\n";
-      exit 1;
+      Exit_status.(exit Server_already_exists);
     end;
     (* Open up a server on the socket before we go into MainInit -- the client
      * will try to connect to the socket as soon as we lock the init lock. We
@@ -444,12 +449,14 @@ let main options config =
      * connections until init is done) so that the client can try to use the
      * socket and get blocked on it -- otherwise, trying to open a socket with
      * no server on the other end is an immediate error. *)
-    let socket = Socket.init_unix_socket GlobalConfig.tmp_dir root in
+    let socket = Socket.init_unix_socket (ServerFiles.socket_file root) in
     let env = MainInit.go options program_init in
     serve genv env socket
 
 let monitor_daemon options f =
-  let log_file = GlobalConfig.log_file (ServerArgs.root options) in
+  let log_link = ServerFiles.log_link (ServerArgs.root options) in
+  (try Sys.rename log_link (log_link ^ ".old") with _ -> ());
+  let log_file = ServerFiles.make_link_of_timestamped log_link in
   let {Daemon.pid; _} = Daemon.fork begin fun (_ic, _oc) ->
     ignore @@ Unix.setsid ();
     let {Daemon.pid; _} = Daemon.fork ~log_file f in
@@ -459,7 +466,7 @@ let monitor_daemon options f =
     | _ -> HackEventLogger.bad_exit proc_stat)
   end in
   Printf.eprintf "Spawned %s (child pid=%d)\n" Program.name pid;
-  Printf.eprintf "Logs will go to %s\n%!" log_file;
+  Printf.eprintf "Logs will go to %s\n%!" log_link;
   ()
 
 let start () =

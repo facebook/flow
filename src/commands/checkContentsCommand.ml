@@ -49,14 +49,16 @@ let main option_values error_flags use_json file () =
   let response = ServerProt.response_from_channel ic in
   match response with
   | ServerProt.ERRORS e ->
-      if use_json || option_values.from <> ""
-      then Errors_js.print_errorl use_json e stdout
+      if use_json
+      then Errors_js.print_error_json stdout e
       else (
         Errors_js.print_error_summary ~flags:error_flags e;
         exit 2
       )
   | ServerProt.NO_ERRORS ->
-      Errors_js.print_errorl use_json [] stdout;
+      if use_json
+      then Errors_js.print_error_json stdout []
+      else Printf.printf "No errors!\n%!";
       exit 0
   | _ ->
       prerr_endline "Unexpected server response!";

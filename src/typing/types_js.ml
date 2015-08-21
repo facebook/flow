@@ -184,10 +184,12 @@ let filter_suppressed_errors emap = Errors_js.(
     distrib_errs "" unused_suppression_errors emap
 )
 
-let strip_root_from_reason_list root list =
-  List.map (
-    fun (reason, s) -> (Reason_js.strip_root root reason, s)
+let strip_root_from_reason_list root list = Errors_js.(
+  List.map (function
+    | BlameM (loc, s) -> BlameM (Reason_js.strip_root_from_loc root loc, s)
+    | CommentM s -> CommentM s
   ) list
+)
 
 let strip_root_from_error root error =
   let level, list, trace_reasons = error in
@@ -621,14 +623,14 @@ let typecheck workers files removed unparsed opts make_merge_input =
  *)
 let file_depends_on =
 
-  let rec sig_depends_on stack modules m =
+  let rec sig_depends_on seen modules m =
     SSet.mem m modules || (
       Module.module_exists m && (
         let f = Module.get_file m in
-        not (SSet.mem f stack) && (
-          let stack = SSet.add f stack in
+        not (SSet.mem f !seen) && (
+          seen := SSet.add f !seen;
           let { Module.strict_required; _ } = Module.get_module_info f in
-          SSet.exists (sig_depends_on stack modules) strict_required
+          SSet.exists (sig_depends_on seen modules) strict_required
         )
       )
     )
@@ -636,8 +638,10 @@ let file_depends_on =
 
   fun modules f ->
     let { Module._module; required; _ } = Module.get_module_info f in
-    SSet.mem _module modules ||
-      SSet.exists (sig_depends_on SSet.empty modules) required
+    SSet.mem _module modules || (
+      let seen = ref SSet.empty in
+      SSet.exists (sig_depends_on seen modules) required
+    )
 
 (* The following computation is likely inefficient; it tries to narrow down
    a potentially large set of unmodified files to a potentially small set of
@@ -796,7 +800,7 @@ let full_check workers parse_next opts =
 (* helper - print errors. used in check-and-die runs *)
 let print_errors options errors =
   if options.Options.opt_json
-  then Errors_js.print_errorl true errors stdout
+  then Errors_js.print_error_json stdout errors
   else
     Errors_js.print_error_summary ~flags:(Options.error_flags options) errors
 

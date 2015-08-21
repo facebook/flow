@@ -320,7 +320,11 @@ let check_consts env parent_class class_ psubst subst =
   SMap.iter begin fun const_name parent_const ->
     if const_name <> SN.Members.mClass then
       match SMap.get const_name consts with
-        | Some const -> check_const_override parent_const const
+        | Some const ->
+          (* skip checks for typeconst derived class constants *)
+          (match SMap.get const_name class_.tc_typeconsts with
+           | None -> check_const_override parent_const const
+           | Some _ -> ())
         | None ->
           let parent_pos = Reason.to_pos (fst parent_const.ce_type) in
           Errors.member_not_implemented const_name parent_pos

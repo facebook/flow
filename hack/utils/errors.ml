@@ -41,7 +41,7 @@ let add_error error =
   then error_list := error :: !error_list
   else
     (* We have an error, but haven't handled it in any way *)
-    assert false
+    assert_false_log_backtrace ()
 
 let add code pos msg =
   if !is_hh_fixme pos code then () else
@@ -167,6 +167,7 @@ module Naming                               = struct
   let unexpected_type_arguments             = 2064 (* DONT MODIFY!!!! *)
   let too_many_type_arguments               = 2065 (* DONT MODIFY!!!! *)
   let classname_param                       = 2066 (* DONT MODIFY!!!! *)
+  let invalid_instanceof                    = 2067 (* DONT MODIFY!!!! *)
 
   (* EXTEND HERE WITH NEW VALUES IF NEEDED *)
 end
@@ -203,6 +204,7 @@ module NastCheck                            = struct
   let abstract_with_typeconst               = 3029 (* DONT MODIFY!!!! *)
   let constructor_required                  = 3030 (* DONT MODIFY!!!! *)
   let interface_with_partial_typeconst      = 3031 (* DONT MODIFY!!!! *)
+  let multiple_xhp_category                 = 3032 (* DONT MODIFY!!!! *)
   (* EXTEND HERE WITH NEW VALUES IF NEEDED *)
 end
 
@@ -351,6 +353,10 @@ module Typing                               = struct
   let assign_during_case                    = 4145 (* DONT MODIFY!!!! *)
   let cyclic_enum_constraint                = 4146 (* DONT MODIFY!!!! *)
   let unpacking_disallowed                  = 4147 (* DONT MODIFY!!!! *)
+  let invalid_classname                     = 4148 (* DONT MODIFY!!!! *)
+  let invalid_memoized_param                = 4149 (* DONT MODIFY!!!! *)
+  let illegal_type_structure                = 4150 (* DONT MODIFY!!!! *)
+  (* RESERVED not_nullable_compare_null_trivial     = 4151 *)
   (* EXTEND HERE WITH NEW VALUES IF NEEDED *)
 end
 
@@ -542,6 +548,12 @@ let classname_param pos =
   add Naming.classname_param pos
     ("Missing type parameter to classname; classname is entirely"
      ^" meaningless without one")
+
+let invalid_instanceof pos =
+  add Naming.invalid_instanceof pos
+    "This instanceof has an invalid right operand. Only class identifiers, \
+    local variables, accesses of objects / classes / arrays, and function / \
+    method calls are allowed."
 
 let tparam_with_tparam pos x =
   add Naming.tparam_with_tparam pos (
@@ -782,6 +794,10 @@ let typeconst_assigned_tparam pos tp_name =
 let interface_with_partial_typeconst tconst_pos =
   add NastCheck.interface_with_partial_typeconst tconst_pos
     "An interface cannot contain a partially abstract type constant"
+
+let multiple_xhp_category pos =
+  add NastCheck.multiple_xhp_category pos
+    "XHP classes can only contain one category declaration"
 
 let return_in_gen p =
   add NastCheck.return_in_gen p
@@ -1657,6 +1673,13 @@ let private_override pos class_id id =
   add Typing.private_override pos ((Utils.strip_ns class_id)^"::"^id
           ^": combining private and override is nonsensical")
 
+let invalid_memoized_param pos ty_reason_msg =
+  add_list Typing.invalid_memoized_param (
+    ty_reason_msg @ [pos,
+      "Parameters to memoized function must be null, bool, int, float, string, \
+      an object deriving IMemoizeParam, or a Container thereof. See also \
+      http://docs.hhvm.com/manual/en/hack.attributes.memoize.php"])
+
 let nullsafe_not_needed p nonnull_witness =
   add_list Typing.nullsafe_not_needed (
   [
@@ -1725,6 +1748,12 @@ let explain_contravariance pos c_name error =
   let code, msgl = error in
   add_list code (msgl @ [pos, message])
 
+let explain_invariance pos c_name suggestion error =
+  let message = "Considering that this type argument is invariant "^
+                  "with respect to " ^ strip_ns c_name ^ suggestion in
+  let code, msgl = error in
+  add_list code (msgl @ [pos, message])
+
 let local_variable_modified_and_used pos_modified pos_used_l =
   let used_msg p = p, "And accessed here" in
   add_list Typing.local_variable_modifed_and_used
@@ -1745,6 +1774,24 @@ let assign_during_case p =
 
 let cyclic_enum_constraint pos =
   add Typing.cyclic_enum_constraint pos "Cyclic enum constraint"
+
+let invalid_classname p =
+  add Typing.invalid_classname p "Not a valid class name"
+
+let illegal_type_structure pos errmsg =
+  let msg =
+    "The two arguments to typc_structure() must be:"
+    ^"\n - first: ValidClassname::class or an object of that class"
+    ^"\n - second: a single-quoted string literal containing the name"
+    ^" of a type constant of that class"
+    ^"\n"^errmsg in
+  add Typing.illegal_type_structure pos msg
+
+let illegal_typeconst_direct_access pos =
+  let msg =
+    "Type constants cannot be directly accessed. "
+    ^"Use type_structure(ValidClassname::class, 'TypeConstName') instead" in
+  add Typing.illegal_type_structure pos msg
 
 (*****************************************************************************)
 (* Convert relative paths to absolute. *)

@@ -34,4 +34,16 @@ corge({b:0});
 
 var {n}:{n: number} = {n: ""}
 
+function test() {
+  var {foo} = {bar: 123}; // error on foo
+  var {bar, baz} = {bar: 123} // error on baz
+}
+
+function test() {
+  var x = {foo: 'abc', bar: 123};
+  var {foo, ...rest} = x;
+  (x.baz: string); // error, baz doesn't exist
+  (rest.baz: string); // no error, rest is unsealed
+}
+
 module.exports = corge;

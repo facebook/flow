@@ -208,6 +208,16 @@ and normalize_inter env tyl1 tyl2 =
       let env, tyl2 = member_inter env x tyl2 [] in
       normalize_inter env rl tyl2
 
+let normalize_inter env tyl1 tyl2 =
+  if List.length tyl1 + List.length tyl2 > 100
+  then
+    (* normalization is O(len(tyl1) * len(tyl2)), so just appending is
+     * a significant perf win here *)
+    env, (List.rev_append tyl1 tyl2)
+  else
+    (* TODO this should probably pass through the uenv *)
+    normalize_inter env tyl1 tyl2
+
 (*****************************************************************************)
 (* *)
 (*****************************************************************************)

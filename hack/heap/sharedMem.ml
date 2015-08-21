@@ -100,9 +100,15 @@ let hash_stats () = {
 
 let collect () =
   let old_size = heap_size () in
+  let start_t = Unix.gettimeofday () in
   hh_collect ();
   let new_size = heap_size () in
-  EventLogger.sharedmem_gc old_size new_size
+  let time_taken = Unix.gettimeofday () -. start_t in
+  if old_size <> new_size then
+    Hh_logger.log
+      "Sharedmem GC: %d bytes before; %d bytes after; in %f seconds"
+      old_size new_size time_taken;
+  EventLogger.sharedmem_gc old_size new_size time_taken
 
 (*****************************************************************************)
 (* Module returning the MD5 of the key. It's because the code in C land

@@ -11,10 +11,13 @@
 module CCS = ClientConnectSimple
 
 let get_hhserver () =
-  let server_next_to_client = (Filename.dirname Sys.argv.(0)) ^ "/hh_server" in
+  let exe_name =
+    if Sys.win32 then "hh_server.exe" else "hh_server" in
+  let server_next_to_client =
+    Path.(to_string @@ concat (dirname executable_name) exe_name) in
   if Sys.file_exists server_next_to_client
   then server_next_to_client
-  else "hh_server"
+  else exe_name
 
 type env = {
   root: Path.t;
@@ -23,40 +26,42 @@ type env = {
 }
 
 let start_server env =
-  let hh_server = Printf.sprintf "%s -d %s %s --waiting-client %d"
-    (Filename.quote (get_hhserver ()))
-    (Filename.quote (Path.to_string env.root))
-    (if env.no_load then "--no-load" else "")
-    (Unix.getpid ())
-  in
-  Printf.eprintf "Server launched with the following command:\n\t%s\n%!"
-    hh_server;
 
-  (* Start up the hh_server, and wait on SIGUSR1, which is sent to us at various
-   * stages of the start up process. See if we're in the state we want to be in;
-   * if not, go to sleep again. *)
-  let old_mask = Unix.sigprocmask Unix.SIG_BLOCK [Sys.sigusr1] in
-  (* Have to actually handle and discard the signal -- if it's ignored, it won't
-   * break the sigsuspend. *)
-  let old_handle = Sys.signal Sys.sigusr1 (Sys.Signal_handle (fun _ -> ())) in
+  (* Create a pipe for synchronization with the server: we will wait
+     until the server finishes its initialisation phase. *)
+  let in_fd, out_fd = Unix.pipe () in
+  let ic = Unix.in_channel_of_descr in_fd in
+
+  let hh_server = get_hhserver () in
+  let hh_server_args =
+    Array.concat [
+      [|hh_server; "-d"; Path.to_string env.root|];
+      if env.no_load then [| "--no-load" |] else [||];
+      [| "--waiting-client"; string_of_int (Handle.get_handle out_fd) |]
+    ] in
+  Printf.eprintf "Server launched with the following command:\n\t%s\n%!"
+    (String.concat " "
+       (Array.to_list (Array.map Filename.quote hh_server_args)));
 
   let rec wait_loop () =
-    Unix.sigsuspend old_mask;
-    (* NB: SIGUSR1 is now blocked again. *)
-    if env.wait && not (Lock.check (GlobalConfig.init_file env.root)) then
-      wait_loop ()
-    else
-      ()
-  in
+    let msg = input_line ic in
+    if env.wait && msg <> "ready" then wait_loop () in
 
-  (match Unix.system hh_server with
-    | Unix.WEXITED 0 -> ()
-    | _ -> Printf.fprintf stderr "Could not start hh_server!\n"; exit 77);
-  wait_loop ();
+  try
+    let server_pid =
+      Unix.(create_process hh_server hh_server_args stdin stdout stderr) in
 
-  let _ = Sys.signal Sys.sigusr1 old_handle in
-  let _ = Unix.sigprocmask Unix.SIG_SETMASK old_mask in
-  ()
+    match Unix.waitpid [] server_pid with
+    | _, Unix.WEXITED 0 ->
+        wait_loop ();
+        close_in ic
+    | _ ->
+        Printf.fprintf stderr "Could not start hh_server!\n";
+        exit 77
+  with _ ->
+    Printf.fprintf stderr "Could not start hh_server!\n";
+    exit 77
+
 
 let should_start env =
   let root_s = Path.to_string env.root in

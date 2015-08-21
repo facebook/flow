@@ -204,7 +204,6 @@ let rec debug stack env (r, ty) =
       | Tbool -> o "Tbool"
       | Tfloat -> o "Tfloat"
       | Tstring -> o "Tstring"
-      | Tclassname s -> o "Tclassname<"; o s; o ">"
       | Tnum -> o "Tnum"
       | Tresource -> o "Tresource"
       | Tarraykey -> o "Tarraykey"
@@ -361,6 +360,12 @@ let get_class_dep env x =
   add_wclass env x;
   add_extends_dependency env x;
   Classes.get x
+
+let get_typeconst env class_ mid =
+  add_wclass env class_.tc_name;
+  let dep = Dep.Const (class_.tc_name, mid) in
+  Typing_deps.add_idep env.genv.droot dep;
+  SMap.get mid class_.tc_typeconsts
 
 (* Used to access class constants. *)
 let get_const env class_ mid =

@@ -21,10 +21,8 @@ let log_raw s =
 (* wraps log_raw in order to take a format string & add a newline *)
 let log fmt = Printf.ksprintf log_raw (fmt^^"\n")
 
-let measure name f =
-  log_raw (name ^ " ... ");
-  let t = Unix.gettimeofday() in
-  let result = f () in
+let log_duration name t =
+  log_raw (name ^ ": ");
   let t2 = Unix.gettimeofday() in
   Printf.eprintf "%f\n%!" (t2 -. t);
-  result
+  t2

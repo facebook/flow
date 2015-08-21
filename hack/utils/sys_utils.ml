@@ -12,8 +12,35 @@ open Core
 
 external realpath: string -> string option = "hh_realpath"
 
+let getenv_user () =
+  let user_var = if Sys.win32 then "USERNAME" else "USER" in
+  let logname_var = "LOGNAME" in
+  try Some (Sys.getenv user_var) with Not_found ->
+  try Some (Sys.getenv logname_var) with Not_found -> None
+
+let getenv_home () =
+  let home_var = if Sys.win32 then "APPDATA" else "HOME" in
+  try Some (Sys.getenv home_var) with Not_found -> None
+
+let getenv_term () =
+  let term_var = "TERM" in (* This variable does not exist on windows. *)
+  try Some (Sys.getenv term_var) with Not_found -> None
+
+let path_sep = if Sys.win32 then ";" else ":"
+
+let getenv_path () =
+  let path_var = "PATH" in (* Same variable on windows *)
+  try Some (Sys.getenv path_var) with Not_found -> None
+
 let open_in_no_fail fn =
   try open_in fn
+  with e ->
+    let e = Printexc.to_string e in
+    Printf.fprintf stderr "Could not open_in: '%s' (%s)\n" fn e;
+    exit 3
+
+let open_in_bin_no_fail fn =
+  try open_in_bin fn
   with e ->
     let e = Printexc.to_string e in
     Printf.fprintf stderr "Could not open_in: '%s' (%s)\n" fn e;
@@ -39,7 +66,7 @@ let close_out_no_fail fn oc =
     exit 3
 
 let cat filename =
-  let ic = open_in filename in
+  let ic = open_in_bin filename in
   let len = in_channel_length ic in
   let buf = Buffer.create len in
   Buffer.add_channel buf ic len;
@@ -48,7 +75,7 @@ let cat filename =
   content
 
 let cat_no_fail filename =
-  let ic = open_in_no_fail filename in
+  let ic = open_in_bin_no_fail filename in
   let len = in_channel_length ic in
   let buf = Buffer.create len in
   Buffer.add_channel buf ic len;
@@ -71,21 +98,21 @@ let restart () =
   Unix.execv cmd argv
 
 let logname_impl () =
-  try Sys.getenv "USER" with Not_found ->
-  try Sys.getenv "LOGNAME" with Not_found ->
-  (* If this function is generally useful, it can be lifted to toplevel in this
-   * file, but this is the only place we need it for now. *)
-  let exec_try_read cmd =
-    let ic = Unix.open_process_in cmd in
-    let out = try Some (input_line ic) with End_of_file -> None in
-    let status = Unix.close_process_in ic in
-    match out, status with
-      | Some _, Unix.WEXITED 0 -> out
-      | _ -> None
-  in
-  try Utils.unsafe_opt (exec_try_read "logname") with Invalid_argument _ ->
-  try Utils.unsafe_opt (exec_try_read "id -un") with Invalid_argument _ ->
-  "[unknown]"
+  match getenv_user () with
+    | Some user -> user
+    | None ->
+      (* If this function is generally useful, it can be lifted to toplevel
+         in this file, but this is the only place we need it for now. *)
+      let exec_try_read cmd =
+        let ic = Unix.open_process_in cmd in
+        let out = try Some (input_line ic) with End_of_file -> None in
+        let status = Unix.close_process_in ic in
+        match out, status with
+          | Some _, Unix.WEXITED 0 -> out
+          | _ -> None in
+      try Utils.unsafe_opt (exec_try_read "logname") with Invalid_argument _ ->
+      try Utils.unsafe_opt (exec_try_read "id -un") with Invalid_argument _ ->
+        "[unknown]"
 
 let logname_ref = ref None
 let logname () =
@@ -98,18 +125,26 @@ let with_umask umask f =
     ~enter:(fun () -> old_umask := Unix.umask umask)
     ~exit:(fun () -> Unix.umask !old_umask)
     ~do_:f
+let with_umask umask f =
+  if Sys.win32 then f () else with_umask umask f
 
 let with_timeout timeout ~on_timeout ~do_ =
   let old_handler = ref Sys.Signal_default in
   let old_timeout = ref 0 in
   Utils.with_context
     ~enter:(fun () ->
-      old_handler := Sys.signal Sys.sigalrm (Sys.Signal_handle on_timeout);
-      old_timeout := Unix.alarm timeout)
+        old_handler := Sys.signal Sys.sigalrm (Sys.Signal_handle on_timeout);
+        old_timeout := Unix.alarm timeout)
     ~exit:(fun () ->
-      ignore (Unix.alarm !old_timeout);
-      Sys.set_signal Sys.sigalrm !old_handler)
+        ignore (Unix.alarm !old_timeout);
+        Sys.set_signal Sys.sigalrm !old_handler)
     ~do_
+
+let with_timeout timeout ~on_timeout ~do_ =
+  if Sys.win32 then
+    do_ () (* TODO *)
+  else
+    with_timeout timeout ~on_timeout ~do_
 
 let read_stdin_to_string () =
   let buf = Buffer.create 4096 in
@@ -136,8 +171,11 @@ let expanduser path =
     begin fun s ->
       match Str.matched_group 1 s with
         | "" ->
-          begin try Unix.getenv "HOME"
-          with Not_found -> (Unix.getpwuid (Unix.getuid())).Unix.pw_dir end
+          begin
+            match getenv_home () with
+              | None -> (Unix.getpwuid (Unix.getuid())).Unix.pw_dir
+              | Some home -> home
+          end
         | unixname ->
           try (Unix.getpwnam unixname).Unix.pw_dir
           with Not_found -> Str.matched_string s end
@@ -157,9 +195,10 @@ let executable_path : unit -> string =
   let dir_sep = Filename.dir_sep.[0] in
   let search_path path =
     let paths =
-      try Str.split (Str.regexp_string ":") (Sys.getenv "PATH")
-      with _ -> failwith "Unable to determine executable path"
-    in
+      match getenv_path () with
+        | None -> failwith "Unable to determine executable path"
+        | Some paths ->
+          Str.split (Str.regexp_string path_sep) paths in
     let path = List.fold_left paths ~f:begin fun acc p ->
       match acc with
       | Some _ -> acc
@@ -204,7 +243,7 @@ let lines_of_file filename =
 
 
 let read_file file =
-  let ic = open_in file  in
+  let ic = open_in_bin file  in
   let size = in_channel_length ic in
   let buf = String.create size in
   really_input ic buf 0 size;
@@ -226,3 +265,22 @@ let filemtime file =
 
 let try_touch file =
   try Unix.utimes file 0.0 0.0 with _ -> ()
+
+(* Emulate "mkdir -p", i.e., no error if already exists. *)
+let mkdir_no_fail dir =
+  with_umask 0 begin fun () ->
+    (* Don't set sticky bit since the socket opening code wants to remove any
+     * old sockets it finds, which may be owned by a different user. *)
+    try Unix.mkdir dir 0o777 with Unix.Unix_error (Unix.EEXIST, _, _) -> ()
+  end
+
+let unlink_no_fail fn =
+  try Unix.unlink fn with Unix.Unix_error (Unix.ENOENT, _, _) -> ()
+
+let splitext filename =
+  let root = Filename.chop_extension filename in
+  let root_length = String.length root in
+  (* -1 because the extension includes the period, e.g. ".foo" *)
+  let ext_length = String.length filename - root_length - 1 in
+  let ext = String.sub filename (root_length + 1) ext_length in
+  root, ext

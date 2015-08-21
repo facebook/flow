@@ -79,9 +79,8 @@ let exit_if_unused() =
   let delta: float = Unix.time() -. !last_client_connect in
   if delta > Periodical.one_week
   then begin
-    Printf.fprintf stderr "Exiting server. Last used >7 days ago\n";
-    flush stderr;
-    exit(5)
+    Printf.eprintf "Exiting server. Last used >7 days ago\n";
+    Exit_status.(exit Unused_server)
   end
 
 (*****************************************************************************)
@@ -94,10 +93,10 @@ let init (root : Path.t) =
     (* try_touch wraps Unix.utimes, which doesn't open/close any fds, so we
      * won't lose our lock by doing this. *)
     Periodical.one_day  , (fun () ->
-      Sys_utils.try_touch (GlobalConfig.lock_file root)
+      Sys_utils.try_touch (ServerFiles.lock_file root)
     );
     Periodical.one_day  , (fun () ->
-      Sys_utils.try_touch (Socket.get_path GlobalConfig.tmp_dir root)
+      Sys_utils.try_touch (Socket.get_path (ServerFiles.socket_file root))
     );
   ] in
   List.iter jobs (fun (period, cb) -> Periodical.register_callback period cb)

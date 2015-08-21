@@ -9,8 +9,13 @@
  *)
 
 type level = ERROR | WARNING
-type message = (Reason_js.reason * string)
+type message =
+  | BlameM of Loc.t * string
+  | CommentM of string
 type error = level * message list * message list
+
+type pp_message = Loc.t * string
+val to_pp : message -> pp_message
 
 type flags = {
   color: Tty.color_mode;
@@ -20,7 +25,10 @@ type flags = {
 
 val default_flags : flags
 
-val format_reason_color: ?first:bool -> ?one_line:bool -> Loc.t * string ->
+val message_of_reason: Reason_js.reason -> message
+val message_of_string: string -> message
+
+val format_reason_color: ?first:bool -> ?one_line:bool -> message ->
   (Tty.style * string) list
 
 val print_reason_color:
@@ -64,10 +72,8 @@ val parse_error_to_flow_error : (Loc.t * Parse_error.t) -> error
 val to_list : ErrorSet.t -> error list
 
 val json_of_errors : Error.t list -> Hh_json.json
-
-(******* Error output functionality working on Hack's error *******)
-
-val print_errorl : bool -> error list -> out_channel -> unit
+val print_error_json : out_channel -> error list -> unit
 
 (* Human readable output *)
 val print_error_summary: flags:flags -> error list -> unit
+val print_error_deprecated: out_channel -> error list -> unit

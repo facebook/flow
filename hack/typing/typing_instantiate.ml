@@ -93,8 +93,10 @@ and instantiate_ subst env x =
       let subst = List.fold_left ~f:begin fun subst (_, (_, x), _) ->
         SMap.remove x subst
       end ~init:subst ft.ft_tparams in
-      let names, params = List.unzip ft.ft_params in
-      let env, params = lfold (instantiate subst) env params in
+      let env, params = lfold begin fun env (name, param) ->
+        let env, param = instantiate subst env param in
+        env, (name, param)
+      end env ft.ft_params in
       let env, arity = match ft.ft_arity with
         | Fvariadic (min, (name, var_ty)) ->
           let env, var_ty = instantiate subst env var_ty in
@@ -102,7 +104,6 @@ and instantiate_ subst env x =
         | Fellipsis _ | Fstandard _ as x -> env, x
       in
       let env, ret = instantiate subst env ft.ft_ret in
-      let params = List.map2_exn names params (fun x y -> x, y) in
       env, Tfun { ft with ft_arity = arity; ft_params = params; ft_ret = ret }
   | Tapply (x, tyl) ->
       let env, tyl = lfold (instantiate subst) env tyl in

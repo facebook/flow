@@ -1,4 +1,38 @@
 
+constructor.js:15:10,10: property y
+Property cannot be accessed on possibly undefined value
+constructor.js:15:5,8: uninitialized this (expected super constructor call)
+
+constructor.js:16:10,10: property x
+Property cannot be accessed on possibly undefined value
+constructor.js:16:5,8: uninitialized this (expected super constructor call)
+
+constructor.js:36:5,14: function call
+Error:
+constructor.js:30:5,5: property y
+Property cannot be accessed on possibly undefined value
+constructor.js:36:10,13: uninitialized this (expected super constructor call)
+
+constructor.js:36:5,14: function call
+Error:
+constructor.js:31:5,5: property x
+Property cannot be accessed on possibly undefined value
+constructor.js:36:10,13: uninitialized this (expected super constructor call)
+
+constructor.js:45:11,11: property x
+Property cannot be accessed on possibly undefined value
+constructor.js:43:7,7: uninitialized this (expected super constructor call)
+
+constructor.js:69:5,15: super(...)
+Error:
+constructor.js:63:5,21: call of method foo
+Method cannot be called on possibly undefined value
+constructor.js:69:11,14: uninitialized this (expected super constructor call)
+
+constructor.js:83:17,26: call of method foo
+Method cannot be called on possibly undefined value
+constructor.js:83:17,20: uninitialized this (expected super constructor call)
+
 super.js:9:5,12: super(...)
 Error:
 super.js:9:11,11: string
@@ -11,6 +45,8 @@ super.js:12:13,13: number
 This type is incompatible with
 super.js:4:7,12: string
 
+super.js:13:12,18: property g
+Error:
 super.js:13:18,18: property g
 Property not found in
 super.js:7:17,17: A
@@ -21,4 +57,4 @@ Missing annotation
 test.js:4:8,8: return
 Missing annotation
 
-Found 5 errors
+Found 12 errors

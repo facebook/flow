@@ -147,13 +147,13 @@ props.js:20:29,33: boolean
 This type is incompatible with
 props.js:5:12,33: string
 
-props.js:20:15,57: React element: TestProps
+props.js:20:15,57: type parameter D of React element: TestProps
 Error:
 props.js:20:29,33: boolean
 This type is incompatible with
 props.js:10:20,21: string
 
-props.js:20:15,57: React element: TestProps
+props.js:20:15,57: type parameter D of React element: TestProps
 Error:
 props.js:20:39,43: boolean
 This type is incompatible with
@@ -185,19 +185,19 @@ props2.js:15:42,42: number
 This type is incompatible with
 props2.js:4:14,35: string
 
-props3.js:49:16,44: property imaginaryType
+props3.js:49:32,44: property imaginaryType
 Property not found in
 [LIB] react.js:86:23,103:1: object type
 
-props3.js:50:16,48: property inRequired
+props3.js:50:39,48: property inRequired
 Property not found in
 [LIB] react.js:81:39,84:1: object type
 
-state.js:19:18,35: property qux
+state.js:19:33,35: property qux
 Property cannot be accessed on possibly null value
 state.js:6:11,26: null
 
-state.js:19:18,35: property qux
+state.js:19:33,35: property qux
 Property cannot be accessed on possibly undefined value
 state.js:6:11,26: undefined
 

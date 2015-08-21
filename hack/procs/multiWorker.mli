@@ -19,4 +19,4 @@ val call :
   job:('b -> 'a list -> 'b) ->
   merge:('b -> 'b -> 'b) -> neutral:'b ->
   next:'a nextlist ->
- 'b
+  'b

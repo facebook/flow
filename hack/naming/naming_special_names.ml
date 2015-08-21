@@ -8,6 +8,7 @@
  *
  *)
 
+open Core
 
 (** Module consisting of the special names known to the typechecker *)
 
@@ -40,6 +41,7 @@ module Classes = struct
 
   let cStringish = "\\Stringish"
   let cXHPChild = "\\XHPChild"
+  let cIMemoizeParam = "\\IMemoizeParam"
   let cClassname = "\\classname"
 end
 
@@ -165,6 +167,8 @@ module StdlibFunctions = struct
 
   let array_filter = "\\array_filter"
   let array_map = "\\array_map"
+
+  let type_structure = "\\type_structure"
 end
 
 module Typehints = struct
@@ -219,6 +223,8 @@ module FB = struct
 
   let idx                    = "\\idx"
 
+  let cTypeStructure         = "\\TypeStructure"
+
 end
 
 module Shapes = struct
@@ -226,4 +232,18 @@ module Shapes = struct
   let idx                    = "idx"
   let keyExists              = "keyExists"
   let removeKey              = "removeKey"
+end
+
+module Superglobals = struct
+  let globals = "$GLOBALS"
+
+  let all_superglobals =
+    [globals ; "$_SERVER"; "$_GET"; "$_POST"; "$_FILES";
+     "$_COOKIE"; "$_SESSION"; "$_REQUEST"; "$_ENV"
+    ]
+
+  let is_superglobal =
+    let h = Hashtbl.create 23 in
+    List.iter all_superglobals (fun x -> Hashtbl.add h x true);
+    fun x -> Hashtbl.mem h x
 end

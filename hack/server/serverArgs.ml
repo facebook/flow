@@ -13,7 +13,7 @@
 (*****************************************************************************)
 
 type options = {
-  ai_mode          : bool;
+  ai_mode          : string option;
   check_mode       : bool;
   json_mode        : bool;
   root             : Path.t;
@@ -21,7 +21,7 @@ type options = {
   convert          : Path.t option;
   no_load          : bool;
   save_filename    : string option;
-  waiting_client   : int option;
+  waiting_client   : out_channel option;
 }
 
 (*****************************************************************************)
@@ -35,7 +35,7 @@ let usage = Printf.sprintf "Usage: %s [WWW DIRECTORY]\n" Sys.argv.(0)
 
 module Messages = struct
   let debug         = " debugging mode"
-  let ai            = " run ai and exit"
+  let ai            = " run ai with options"
   let check         = " check and exit"
   let json          = " output errors in json format (arc lint mode)"
   let daemon        = " detach process"
@@ -45,8 +45,8 @@ module Messages = struct
   let convert       = " adds type annotations automatically"
   let save          = " save server state to file"
   let no_load       = " don't load from a saved state"
-  let waiting_client= " kill pid with SIGUSR1 when server has begun starting"^
-                      " and again when it's done starting"
+  let waiting_client= " send message to fd/handle when server has begun \
+                      \ starting and again when it's done starting"
 end
 
 (*****************************************************************************)
@@ -67,7 +67,7 @@ let parse_options () =
   let from_emacs    = ref false in
   let from_hhclient = ref false in
   let debug         = ref false in
-  let ai_mode       = ref false in
+  let ai_mode       = ref None in
   let check_mode    = ref false in
   let json_mode     = ref false in
   let should_detach = ref false in
@@ -77,11 +77,13 @@ let parse_options () =
   let version       = ref false in
   let waiting_client= ref None in
   let cdir          = fun s -> convert_dir := Some s in
+  let set_ai        = fun s -> ai_mode := Some s in
   let set_save      = fun s -> save := Some s in
-  let set_wait      = fun pid -> waiting_client := Some pid in
+  let set_wait      = fun fd ->
+    waiting_client := Some (Handle.to_out_channel fd) in
   let options =
     ["--debug"         , Arg.Set debug         , Messages.debug;
-     "--ai"            , Arg.Set ai_mode       , Messages.ai;
+     "--ai"            , Arg.String set_ai     , Messages.ai;
      "--check"         , Arg.Set check_mode    , Messages.check;
      "--json"          , Arg.Set json_mode     , Messages.json; (* CAREFUL!!! *)
      "--daemon"        , Arg.Set should_detach , Messages.daemon;
@@ -107,13 +109,13 @@ let parse_options () =
   let check_mode = check_mode || !convert_dir <> None in
   let convert = Option.map ~f:Path.make !convert_dir in
   if check_mode && !waiting_client <> None then begin
-    Printf.fprintf stderr "--check is incompatible with wait modes!\n";
-    exit 2
+    Printf.eprintf "--check is incompatible with wait modes!\n";
+    Exit_status.(exit Input_error)
   end;
   (match !root with
   | "" ->
-      Printf.fprintf stderr "You must specify a root directory!\n";
-      exit 2
+      Printf.eprintf "You must specify a root directory!\n";
+      Exit_status.(exit Input_error)
   | _ -> ());
   let root_path = Path.make !root in
   Wwwroot.assert_www_directory root_path;
@@ -131,7 +133,7 @@ let parse_options () =
 
 (* useful in testing code *)
 let default_options ~root = {
-  ai_mode = false;
+  ai_mode = None;
   check_mode = false;
   json_mode = false;
   root = Path.make root;

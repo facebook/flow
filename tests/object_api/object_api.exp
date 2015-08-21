@@ -29,7 +29,7 @@ object_prototype.js:43:17,22: number
 This type is incompatible with
 [LIB] core.js:46:5,22: function type
 
-object_prototype.js:49:2,30: assignment of property toString
+object_prototype.js:49:7,14: property toString
 Property cannot be assigned on
 object_prototype.js:49:2,4: number
 

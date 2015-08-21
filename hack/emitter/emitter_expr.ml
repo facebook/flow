@@ -13,20 +13,26 @@ open Utils
 open Nast
 
 open Emitter_core
+module SN = Naming_special_names
 
+let is_xhp_prop = function | _, Id (_, s) -> s.[0] = ':' | _ -> false
 
 let is_lval expr =
   match expr with
-  | Lvar _  | Obj_get _ | Array_get _ | Class_get _ | Lplaceholder _ -> true
+  | Lvar _  | Array_get _ | Class_get _ | Lplaceholder _ -> true
+  | Obj_get (_, prop, _) -> not (is_xhp_prop prop)
   | _ -> false
 
-(* Try to convert a class id into a static string; if we can't, return None *)
-let fmt_class_id env cid =
-  match cid with
-  | CIparent -> env.parent_name
-  | CIself -> env.self_name
-  | CI (_, s) -> Some (fmt_name s)
-  | CIstatic | CIvar _ -> None
+let resolve_class_id env = function
+  | CIparent ->
+      Option.value_map env.parent_name
+        ~default:(RCdynamic `parent) ~f:(fun x -> RCstatic x)
+  | CIself ->
+      Option.value_map env.self_name
+        ~default:(RCdynamic `self) ~f:(fun x -> RCstatic x)
+  | CI (_, s) -> RCstatic (fmt_name s)
+  | CIstatic -> RCdynamic `static
+  | CIexpr e -> RCdynamic (`var e)
 
 (* Emit a conditional branch based on an expression. jump_if indicates
  * whether to jump when the condition is true or false.
@@ -87,7 +93,6 @@ and emit_member env (_, expr_ as expr) =
   | Lvar id -> env, Mlocal (get_lid_name id)
   | Int (_, n) -> env, Mint n
   | String (_, s) -> env, Mstring s
-  | String2 ([], s) -> env, Mstring (unescape_str s)
   | _ ->
     let env = emit_expr env expr in
     env, Mexpr
@@ -110,6 +115,17 @@ and emit_base env (_, expr_ as expr) =
  * at the "top level" of lval emitting.  *)
 and emit_lval_inner env (_, expr_) =
   match expr_ with
+  (* superglobals *)
+  | Lvar id when SN.Superglobals.is_superglobal (get_lid_name id) ->
+    let env = emit_String env (lstrip (get_lid_name id) "$") in
+    env, Lglobal
+  (* indexes into $GLOBALS: ignore the $GLOBALS and emit the index
+   * as the global  *)
+  | Array_get ((_, Lvar id), Some e)
+      when (get_lid_name id = SN.Superglobals.globals) ->
+    let env = emit_expr env e in
+    env, Lglobal
+
   | Lvar id -> env, llocal id
   | Lplaceholder (_, s) -> env, Llocal s
   | Array_get (e1, maybe_e2) ->
@@ -118,9 +134,9 @@ and emit_lval_inner env (_, expr_) =
       | Some e2 -> emit_member env e2
       | None -> env, Mappend) in
     env, lmember (base, (MTelem, member))
-  | Obj_get (e1, (_, Id (_, id)), _null_flavor_TODO) ->
+  | Obj_get (e1, (_, Id (_, id)), null_flavor) ->
     let env, base = emit_base env e1 in
-    env, lmember (base, (MTprop, Mstring id))
+    env, lmember (base, (MTprop null_flavor, Mstring id))
   | Obj_get _ -> unimpl "Obj_get with non-Id rhs???"
 
   | Class_get (cid, (_, field)) ->
@@ -141,29 +157,25 @@ and emit_lval env expr =
   let env = match lval with
     | Lsprop cid
     | Lmember (Blval (Lsprop cid), _) ->
-      emit_class_id env cid
+      emit_class_id env (resolve_class_id env cid)
     | _ -> env
   in
   env, lval
 
+and emit_dynamic_class_id env = function
+  | `parent -> emit_Parent env
+  | `self -> emit_Self env
+  | `static -> emit_LateBoundCls env
+  | `var (_, Lvar id) -> emit_AGetL env (get_lid_name id)
+  | `var e ->
+    let env = emit_expr env e in
+    emit_AGetC env
 
-and emit_class_id env cid =
-  (* if we have a static name for the class, use that *)
-  match fmt_class_id env cid with
-  | Some s ->
+and emit_class_id env = function
+  | RCstatic s ->
     let env = emit_String env s in
     emit_AGetC env
-  (* otherwise we need to dynamically find the class *)
-  | None ->
-    match cid with
-    | CI _ -> assert false
-    | CIparent -> emit_Parent env
-    | CIself -> emit_Self env
-    | CIstatic -> emit_LateBoundCls env
-    | CIvar (_, Lvar id) -> emit_AGetL env (get_lid_name id)
-    | CIvar e ->
-      let env = emit_expr env e in
-      emit_AGetC env
+  | RCdynamic dyid -> emit_dynamic_class_id env dyid
 
 and requires_empty_stack = function
   | _, Await _ | _, Yield _ -> true
@@ -266,11 +278,12 @@ and emit_call_lhs env (_, expr_ as expr) nargs =
     emit_FPushObjMethodD env nargs name (fmt_null_flavor null_flavor)
 
   | Class_const (cid, (_, field)) ->
-    (match fmt_class_id env cid with
-    | Some class_name -> emit_FPushClsMethodD env nargs field class_name
-    | None -> let env = emit_String env field in
-              let env = emit_class_id env cid in
-              emit_FPushClsMethod env nargs)
+    (match resolve_class_id env cid with
+    | RCstatic class_name -> emit_FPushClsMethodD env nargs field class_name
+    | RCdynamic dyid ->
+        let env = emit_String env field in
+        let env = emit_dynamic_class_id env dyid in
+        emit_FPushClsMethod env nargs)
 
   (* what all is even allowed here? *)
   | _ ->
@@ -282,10 +295,12 @@ and emit_method_base env (_, expr_ as expr) =
   | This -> emit_This env
   | _ -> emit_expr env expr
 
-and emit_ctor_lhs env class_id nargs =
-  match class_id with
-  | CI (_, name) -> emit_FPushCtorD env nargs (fmt_name name)
-  | _ -> unimpl "unsupported constructor lhs"
+and emit_ctor_lhs env cid nargs =
+  match resolve_class_id env cid with
+  | RCstatic class_name -> emit_FPushCtorD env nargs class_name
+  | RCdynamic dyid ->
+    let env = emit_dynamic_class_id env dyid in
+    emit_FPushCtor env nargs
 
 (* emit code to push args and call a function after the thing being
  * called has already been pushed; doesn't do any stack adjustment
@@ -317,9 +332,9 @@ and emit_normal_call env ef args uargs =
   let env = emit_args_and_call env args uargs in
   env, FR
 
-and emit_call env ef args uargs =
-  match snd ef with
-  | Id (_, echo) when echo = SN.SpecialFunctions.echo ->
+and emit_call env (pos, expr_ as expr) args uargs =
+  match expr_, args with
+  | Id (_, echo), _ when echo = SN.SpecialFunctions.echo ->
     let nargs = List.length args in
     let env = List.foldi ~f:begin fun i env arg ->
        let env = emit_expr env arg in
@@ -327,15 +342,42 @@ and emit_call env ef args uargs =
        if i = nargs-1 then env else emit_PopC env
     end ~init:env args in
     env, FC
-  | Id (_, idx) when idx = SN.FB.idx ->
+  | Id (_, idx), [_; _] when idx = "\\array_key_exists" ->
+    let env = List.fold_left ~f:emit_expr ~init:env args in
+    let env = emit_AKExists env in
+    env, FC
+  | Id (_, idx), ([_; _]|[_; _; _]) when idx = SN.FB.idx ->
     let env = List.fold_left ~f:emit_expr ~init:env args in
     (* If there are two arguments, add Null as a third *)
     let env = if List.length args = 2 then emit_Null env else env in
     let env = emit_Idx env in
     env, FC
+
+  | Id (_, isset), [e] when isset = SN.PseudoFunctions.isset ->
+    let env, lval = emit_lval env e in
+    emit_Isset env lval, FC
+  (* isset on a list is true if they are all true, and shortcircuits.
+   * desugar to && *)
+  | Id (_, isset), (e::es) when isset = SN.PseudoFunctions.isset ->
+    let make_isset arg = pos, Call (Cnormal, expr, arg, []) in
+    let desugared = pos, Binop (Ast.AMpamp, make_isset [e], make_isset es) in
+    emit_expr env desugared, FC
+
+  | Id (_, empty), [e] when empty = SN.PseudoFunctions.empty ->
+    let env, lval = emit_lval env e in
+    emit_Empty env lval, FC
+  | Id (_, unset), _ when unset = SN.PseudoFunctions.unset ->
+    let unset env e =
+      let env, lval = emit_lval env e in
+      emit_Unset env lval
+    in
+    let env = List.fold_left ~f:unset ~init:env args in
+    (* emit a dummy null so the expression has a return value *)
+    emit_Null env, FC
+
   (* TODO: a billion other builtins *)
 
-  | _ -> emit_normal_call env ef args uargs
+  | _ -> emit_normal_call env expr args uargs
 
 (* emit code to evaluate an expression that might have a non-Cell flavor;
  * certain operations want to handle this; most will just call
@@ -344,6 +386,17 @@ and emit_call env ef args uargs =
 and emit_flavored_expr env (pos, expr_ as expr) =
   match expr_ with
   | Call (Cnormal, ef, args, uargs) -> emit_call env ef args uargs
+  | Fun_id s ->
+      emit_call env (pos, Id (pos, "\\fun")) [fst s, String s] []
+  | Method_id (e, s) ->
+      emit_call env (pos, Id (pos, "\\inst_meth"))
+        [e; fst s, String s] []
+  | Smethod_id (s1, s2) ->
+      emit_call env (pos, Id (pos, "\\class_meth"))
+        [fst s1, String s1; fst s2, String s2] []
+  | Method_caller (s1, s2) ->
+      emit_call env (pos, Id (pos, "\\meth_caller"))
+        [fst s1, String s1; fst s2, String s2] []
   | Call (Cuser_func, _, _, _) -> unimpl "call_user_func"
 
   | Special_func f ->
@@ -351,9 +404,14 @@ and emit_flavored_expr env (pos, expr_ as expr) =
       | Gena e -> SN.FB.fgena, [e]
       | Genva es -> SN.FB.fgenva, es
       | Gen_array_rec e -> SN.FB.fgen_array_rec, [e]
-      | Gen_array_va_rec _ -> bug "Gen_array_va_rec not a thing?"
     in
     emit_call env (pos, Id (pos, f)) args []
+
+  (* this is just XHP Obj_get. it is in emit_flavored_expr because it
+   * desugars to function calls *)
+  | Obj_get (e, prop, nf) when is_xhp_prop prop ->
+    let desugared = Emitter_xhp.convert_obj_get pos (e, prop, nf) in
+    emit_flavored_expr env desugared
 
   (* For most things, just fall back to emit_expr *)
   | _ -> emit_expr env expr, FC
@@ -365,10 +423,15 @@ and emit_expr env (pos, expr_ as expr) =
   match expr_ with
   (* Calls produce flavor R, so emit it and then unbox *)
   | Call (_, _, _, _)
+  | Fun_id _ | Method_id _ | Method_caller _ | Smethod_id _
   | Special_func _ ->
     let env, flavor = emit_flavored_expr env expr in
     (* Some builtin functions actually produce C, so we only unbox
      * if it is really an R. *)
+    if flavor = FR then emit_UnboxR env else env
+  (* XHP props are *not* lvalues *)
+  | Obj_get (_, prop, _) when is_xhp_prop prop ->
+    let env, flavor = emit_flavored_expr env expr in
     if flavor = FR then emit_UnboxR env else env
 
   (* N.B: duplicate with is_lval but we want to exhaustiveness check  *)
@@ -447,8 +510,9 @@ and emit_expr env (pos, expr_ as expr) =
     let env = emit_Int env "0" in
     let env = emit_expr env e in
     emit_binop env (Ast.Minus)
+  | Unop (Ast.Uref, _) -> unimpl "references"
   (* all the rest are pre/post inc/dec *)
-  | Unop (uop, e) ->
+  | Unop ((Ast.Uincr | Ast.Udecr | Ast.Upincr | Ast.Updecr) as uop, e) ->
     let env, lval = emit_lval env e in
     emit_IncDec env lval (fmt_inc_dec_unop uop)
 
@@ -469,11 +533,24 @@ and emit_expr env (pos, expr_ as expr) =
 
   | Int (_, n) -> emit_Int env (fmt_int n)
   | Float (_, x) -> emit_Double env (fmt_float x)
-  | String (_, s) -> emit_String env s
-  | String2 ([], s) -> emit_String env (unescape_str s)
   | Null -> emit_Null env
   | True -> emit_bool env true
   | False -> emit_bool env false
+  | String (_, s) -> emit_String env s
+
+  | String2 [] -> bug "empty String2"
+  (* If we there are multiple parts of the String2, they will get
+   * stringified when they get concatenated. If there is just one
+   * we need to cast it manually. *)
+  | String2 [e] ->
+    let env = emit_expr env e in
+    emit_cast env (Hprim Tstring)
+  | String2 (e1::el) ->
+    let env = emit_expr env e1 in
+    List.fold_left el ~init:env ~f:begin fun env e ->
+      let env = emit_expr env e in
+      emit_binop env Ast.Dot
+    end
 
   (* TODO: lots of ways to be better;
    * use NewStructArray/NewArray/NewPackedArray/array lits *)
@@ -495,31 +572,28 @@ and emit_expr env (pos, expr_ as expr) =
     let env = emit_expr env e in
     emit_Clone env
 
-  | Any -> unimpl "UNSAFE_EXPR/import/??"
-
-  (* probably going to take AST changes *)
-  | String2 _ -> unimpl "double-quoted string interpolation"
-
   (* XXX: is this right?? *)
   | This -> emit_BareThis env "Notice"
 
-  | Cast (h, e) ->
+  | Cast ((_, h), e) ->
     let env = emit_expr env e in
     emit_cast env h
 
   (* handle ::class; just emit the name if we have it,
    * otherwise use NameA to get it *)
   | Class_const (cid, (_, "class")) ->
-    (match fmt_class_id env cid with
-    | Some class_name -> emit_String env class_name
-    | None -> let env = emit_class_id env cid in
-              emit_NameA env)
+    (match resolve_class_id env cid with
+    | RCstatic class_name -> emit_String env class_name
+    | RCdynamic dyid ->
+      let env = emit_dynamic_class_id env dyid in
+      emit_NameA env)
 
   | Class_const (cid, (_, field)) ->
-    (match fmt_class_id env cid with
-    | Some class_name -> emit_ClsCnsD env field class_name
-    | None -> let env = emit_class_id env cid in
-              emit_ClsCns env field)
+    (match resolve_class_id env cid with
+    | RCstatic class_name -> emit_ClsCnsD env field class_name
+    | RCdynamic dyid ->
+      let env = emit_dynamic_class_id env dyid in
+      emit_ClsCns env field)
 
   | Await e ->
     (* XXX: await only works in certain contexts but Hack doesn't actually
@@ -555,7 +629,7 @@ and emit_expr env (pos, expr_ as expr) =
 
   | List es ->
     (* List here represents tuple(...). Compile to an array. *)
-    let array = pos, Array (List.map ~f:(fun e -> AFvalue e) es) in
+    let array = pos, make_varray es in
     emit_expr env array
 
   | Shape smap ->
@@ -564,18 +638,10 @@ and emit_expr env (pos, expr_ as expr) =
       | SFlit (pos, _ as s) -> pos, String s
       | SFclass_const ((pos, _ as id), s) -> pos, Class_const (CI id, s)
     in
-    (* The doc comment says only use in testing code but this is
-     * /actually/ the right thing here *)
     let shape_fields =
       List.map ~f:(fun (k, v) -> (shape_field_to_expr k, v))
-        (ShapeMap.elements smap) in
-    (* Sort the fields by their position in order to have the same insertion
-     * order as HHVM. Sigh. *)
-    let shape_fields = List.sort
-      (fun ((p1, _), _) ((p2, _), _) -> Pos.compare p1 p2)
-      shape_fields in
-    let afields = List.map ~f:(fun (k, v) -> AFkvalue (k, v)) shape_fields in
-    let array = pos, Array afields in
+        (extract_shape_fields smap) in
+    let array = pos, make_kvarray shape_fields in
     emit_expr env array
 
 
@@ -600,13 +666,54 @@ and emit_expr env (pos, expr_ as expr) =
   | Pair (e1, e2) ->
     emit_expr env (pos, ValCollection ("\\Pair", [e1; e2]))
 
+  | InstanceOf (e, cid) ->
+    let env = emit_expr env e in
+    (match resolve_class_id env cid with
+      | RCstatic class_name -> emit_InstanceOfD env class_name
+      | RCdynamic dyid ->
+        (* Annoyingly, the InstanceOf instruction doesn't want a classref
+         * but instead wants a string or an object. So if we have a CIexpr,
+         * emit it directly, to avoid doing AGet* immediately followed by
+         * NameA.... *)
+        let env = match dyid with
+          | `var e -> emit_expr env e
+          | (`parent | `self | `static) as dyid ->
+            let env = emit_dynamic_class_id env dyid in
+            emit_NameA env in
+        emit_InstanceOf env)
+
+  | Xml (id, attrs, children) ->
+    let desugared = Emitter_xhp.convert_xml pos (id, attrs, children) in
+    emit_expr env desugared
+
+  | Efun (fun_, vars) ->
+    let cstate = env.closure_state in
+    incr cstate.closure_counter;
+    let count = !(cstate.closure_counter) in
+    let name = "Closure$" ^ fmt_name cstate.full_name ^
+      (if count > 1 then "#"^string_of_int count else "") in
+
+    (* capture list might have duplicates... *)
+    let vars =
+      List.dedup ~compare:(fun (_, i1) (_, i2) -> compare i1 i2) vars in
+
+    (* The CreateCL opcode constructs a closure object, taking the
+     * closed over variables from the stack. So first we need to
+     * emit all the closed over variables. *)
+    (* We use CUGetL instead of CGetL because it is tolerant of the
+     * variables being unset; unset variables should be propagated to
+     * closures (a variable may be conditionally unset and referenced
+     * conditionally in the closure only in the cases where it wasn't
+     * unset, for example) *)
+    let env = List.fold_left vars ~init:env
+      ~f:(fun env id -> emit_CUGetL env (get_lid_name id)) in
+
+    let env = emit_CreateCl env (List.length vars) name in
+
+    { env with
+      pending_closures = (name, cstate, (fun_, vars)) :: env.pending_closures }
+
 
   | Id _ -> unimpl "Id"
-  | Fun_id _ -> unimpl "Fun_id"
-  | Method_id _ -> unimpl "Method_id"
-  | Method_caller _ -> unimpl "Method_caller"
-  | Smethod_id _ -> unimpl "Smethod_id"
-  | InstanceOf _ -> unimpl "InstanceOf"
-  | Efun _ -> unimpl "Efun"
-  | Xml _ -> unimpl "Xml"
   | Assert _ -> unimpl "Assert"
+  | Any -> unimpl "UNSAFE_EXPR/import/??"
