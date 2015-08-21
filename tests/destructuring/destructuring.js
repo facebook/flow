@@ -35,3 +35,6 @@ corge({b:0});
 var {n}:{n: number} = {n: ""}
 
 module.exports = corge;
+
+var {p}:{p:number|string} = ({p:0}:{p:number});
+(function ({p}:{p:number|string}) {})(({p:0}:{p:number}));
