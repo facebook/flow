@@ -17,6 +17,9 @@
  * under get_dir() above. *)
 let temp_dir parent_dir prefix  =
   Sys_utils.mkdir_no_fail parent_dir;
-  let tmpdir = Printf.sprintf "%s/%s_%06x" parent_dir prefix (Random.bits ()) in
+  let tmpdir =
+    Filename.concat
+      parent_dir
+      (Printf.sprintf "%s_%06x" prefix (Random.bits ())) in
   Unix.mkdir tmpdir 0o755;
   tmpdir

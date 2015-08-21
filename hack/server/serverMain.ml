@@ -116,7 +116,7 @@ module Program : SERVER_PROGRAM =
       let js_next_files = Find.make_next_files FindUtils.is_js dir in
       fun () -> php_next_files () @ js_next_files ()
 
-    let stamp_file = GlobalConfig.tmp_dir ^ "/stamp"
+    let stamp_file = Filename.concat GlobalConfig.tmp_dir "stamp"
     let touch_stamp () =
       Sys_utils.mkdir_no_fail (Filename.dirname stamp_file);
       Sys_utils.with_umask

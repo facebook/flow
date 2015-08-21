@@ -332,9 +332,9 @@ and emit_normal_call env ef args uargs =
   let env = emit_args_and_call env args uargs in
   env, FR
 
-and emit_call env ef args uargs =
-  match snd ef with
-  | Id (_, echo) when echo = SN.SpecialFunctions.echo ->
+and emit_call env (pos, expr_ as expr) args uargs =
+  match expr_, args with
+  | Id (_, echo), _ when echo = SN.SpecialFunctions.echo ->
     let nargs = List.length args in
     let env = List.foldi ~f:begin fun i env arg ->
        let env = emit_expr env arg in
@@ -342,20 +342,42 @@ and emit_call env ef args uargs =
        if i = nargs-1 then env else emit_PopC env
     end ~init:env args in
     env, FC
-  | Id (_, idx) when idx = "\\array_key_exists" && List.length args = 2 ->
+  | Id (_, idx), [_; _] when idx = "\\array_key_exists" ->
     let env = List.fold_left ~f:emit_expr ~init:env args in
     let env = emit_AKExists env in
     env, FC
-  | Id (_, idx) when idx = SN.FB.idx &&
-      (List.length args = 2 || List.length args = 3) ->
+  | Id (_, idx), ([_; _]|[_; _; _]) when idx = SN.FB.idx ->
     let env = List.fold_left ~f:emit_expr ~init:env args in
     (* If there are two arguments, add Null as a third *)
     let env = if List.length args = 2 then emit_Null env else env in
     let env = emit_Idx env in
     env, FC
+
+  | Id (_, isset), [e] when isset = SN.PseudoFunctions.isset ->
+    let env, lval = emit_lval env e in
+    emit_Isset env lval, FC
+  (* isset on a list is true if they are all true, and shortcircuits.
+   * desugar to && *)
+  | Id (_, isset), (e::es) when isset = SN.PseudoFunctions.isset ->
+    let make_isset arg = pos, Call (Cnormal, expr, arg, []) in
+    let desugared = pos, Binop (Ast.AMpamp, make_isset [e], make_isset es) in
+    emit_expr env desugared, FC
+
+  | Id (_, empty), [e] when empty = SN.PseudoFunctions.empty ->
+    let env, lval = emit_lval env e in
+    emit_Empty env lval, FC
+  | Id (_, unset), _ when unset = SN.PseudoFunctions.unset ->
+    let unset env e =
+      let env, lval = emit_lval env e in
+      emit_Unset env lval
+    in
+    let env = List.fold_left ~f:unset ~init:env args in
+    (* emit a dummy null so the expression has a return value *)
+    emit_Null env, FC
+
   (* TODO: a billion other builtins *)
 
-  | _ -> emit_normal_call env ef args uargs
+  | _ -> emit_normal_call env expr args uargs
 
 (* emit code to evaluate an expression that might have a non-Cell flavor;
  * certain operations want to handle this; most will just call

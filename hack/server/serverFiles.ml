@@ -14,21 +14,23 @@ let path_of_root root extension =
   (* TODO: move this to places that write this file *)
   Sys_utils.mkdir_no_fail GlobalConfig.tmp_dir;
   let root_part = Path.slash_escaped_string_of_path root in
-  Printf.sprintf "%s%s.%s" GlobalConfig.tmp_dir root_part extension
+  Filename.concat GlobalConfig.tmp_dir (spf "%s.%s" root_part extension)
 
 (* Creates a symlink at <dir>/<linkname.ext> to
  * <dir>/<pluralized ext>/<linkname>-<timestamp>.<ext> *)
 let make_link_of_timestamped linkname =
   let open Unix in
   let dir = Filename.dirname linkname in
+  Sys_utils.mkdir_no_fail dir;
   let base = Filename.basename linkname in
   let base, ext = Sys_utils.splitext base in
-  let dir = spf "%s/%ss" dir ext in
+  let dir = Filename.concat dir (spf "%ss" ext) in
+  Sys_utils.mkdir_no_fail dir;
   let tm = localtime (time ()) in
   let year = tm.tm_year + 1900 in
   let time_str = spf "%d-%02d-%02d-%02d-%02d-%02d"
     year (tm.tm_mon + 1) tm.tm_mday tm.tm_hour tm.tm_min tm.tm_sec in
-  let filename = Printf.sprintf "%s/%s-%s.%s" dir base time_str ext in
+  let filename = Filename.concat dir (spf "%s-%s.%s" base time_str ext) in
   Sys_utils.unlink_no_fail linkname;
   Unix.symlink filename linkname;
   filename

@@ -24,4 +24,6 @@ let ordered_cache_capacity = 1000
 let gc_control = Gc.get ()
 
 (* Where to write temp files *)
-let tmp_dir = "/tmp/hh_server/"
+let tmp_dir =
+  Path.to_string @@
+  Path.concat Path.temp_dir_name "hh_server"

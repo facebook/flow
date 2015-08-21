@@ -42,16 +42,18 @@ let get_files path dir_handle =
       if file = "." || file = ".."
       then ()
       else
-        let path = path ^ "/" ^ file in
+        let path =
+          Path.to_string @@
+          Path.concat (Path.expanduser path) file in
         paths := SSet.add path !paths;
     done;
     assert false
   with _ -> !paths
 
-(* Gets rid of the '/' at the end of a directory name *)
+(* Gets rid of the '/' or '\' at the end of a directory name *)
 let normalize path =
   let size = String.length path in
-  if path.[size - 1] = '/'
+  if Char.escaped path.[size - 1] = Filename.dir_sep
   then String.sub path 0 (size - 1)
   else path
 

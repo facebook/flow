@@ -13,7 +13,7 @@ Required module not found
 require.js:20:1,14: ./D
 Required module not found
 
-require.js:25:1,13: property stringValue
+require.js:25:3,13: property stringValue
 Property not found in
 E.js:6:18,8:1: object literal
 

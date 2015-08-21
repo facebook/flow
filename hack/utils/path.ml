@@ -18,6 +18,9 @@ let cat = Sys_utils.cat
 let compare = Pervasives.compare
 let dirname = Filename.dirname
 let expanduser = Sys_utils.expanduser
+let null_path = if Sys.win32 then "nul" else "/dev/null"
+let temp_dir_name =
+  if Sys.win32 then Filename.get_temp_dir_name () else "/tmp"
 
 (**
  * Resolves a path (using realpath)
@@ -38,11 +41,11 @@ let make path =
 let to_string path = path
 
 let concat path more =
-  make (Printf.sprintf "%s/%s" path more)
+  make (Filename.concat path more)
 
 let parent path =
   if is_directory path
-  then make (path ^ "/../")
+  then make (concat path Filename.parent_dir_name)
   else make (Filename.dirname path)
 
 let output = output_string
@@ -51,6 +54,8 @@ let slash_escaped_string_of_path path =
   let buf = Buffer.create (String.length path) in
   String.iter (fun ch ->
     match ch with
+    | '\\' -> Buffer.add_string buf "zB"
+    | ':' -> Buffer.add_string buf "zC"
     | '/' -> Buffer.add_string buf "zS"
     | '\x00' -> Buffer.add_string buf "z0"
     | 'z' -> Buffer.add_string buf "zZ"
@@ -67,6 +72,8 @@ let path_of_slash_escaped_string str =
       let replacement =
         if i < length - 1 && str.[i] = 'z'
         then match str.[i+1] with
+          | 'B' -> Some '\\'
+          | 'C' -> Some ':'
           | 'S' -> Some '/'
           | '0' -> Some '\x00'
           | 'Z' -> Some 'z'
