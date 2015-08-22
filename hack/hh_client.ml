@@ -52,7 +52,7 @@ let () =
       match command with
         | ClientCommand.CCheck check_env -> ClientCheck.main check_env
         | ClientCommand.CStart env -> ClientStart.main env
-        | ClientCommand.CStop env -> HackClientStop.main env
+        | ClientCommand.CStop env -> ClientStop.main env
         | ClientCommand.CRestart env -> ClientRestart.main env
         | ClientCommand.CBuild env -> ClientBuild.main env
     with Exit_status.Exit_with es -> es

@@ -392,7 +392,6 @@ begin library "hh-client"
   files = [
     "client/clientConnectSimple.ml"
     "client/clientStop.ml"
-    "client/hackClientStop.ml"
     "client/clientStart.ml"
     "client/clientConnect.ml"
     "client/clientLogCommand.ml"

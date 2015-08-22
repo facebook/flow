@@ -74,7 +74,7 @@ let should_start env =
       false
   | Result.Error CCS.Server_busy ->
       Printf.eprintf "Replacing unresponsive server for %s\n%!" root_s;
-      HackClientStop.kill_server env.root;
+      ClientStop.kill_server env.root;
       true
 
 let main env =
