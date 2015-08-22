@@ -851,18 +851,20 @@ void hh_call_after_init() {
  * The collector should only be called by the master.
  */
 /*****************************************************************************/
-void hh_collect() {
+void hh_collect(value aggressive_val) {
 #ifdef _WIN32
   // TODO GRGR
   return;
 #else
+  int aggressive  = Bool_val(aggressive_val);
   int flags       = MAP_PRIVATE | MAP_ANON | MAP_NORESERVE;
   int prot        = PROT_READ | PROT_WRITE;
   char* dest;
   size_t mem_size = 0;
   char* tmp_heap;
 
-  if(used_heap_size() < 2 * heap_init_size) {
+  float space_overhead = aggressive ? 1.2 : 2.0;
+  if(used_heap_size() < (size_t)(space_overhead * heap_init_size)) {
     // We have not grown past twice the size of the initial size
     return;
   }

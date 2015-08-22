@@ -158,7 +158,7 @@ let parsing genv env =
   Parser_heap.ParserHeap.remove_batch env.failed_parsing;
   Parser_heap.HH_FIXMES.remove_batch env.failed_parsing;
   HackSearchService.MasterApi.clear_shared_memory env.failed_parsing;
-  SharedMem.collect();
+  SharedMem.collect `gentle;
   let get_next = Bucket.make (Relative_path.Set.elements env.failed_parsing) in
   Parsing_service.go genv.workers ~get_next
 

@@ -36,7 +36,7 @@ let init config =
  * free data (cf hh_shared.c for the underlying C implementation).
  *)
 (*****************************************************************************)
-external hh_collect: unit -> unit = "hh_collect"
+external hh_collect: bool -> unit = "hh_collect"
 
 (*****************************************************************************)
 (* Serializes the shared memory and writes it to a file *)
@@ -98,10 +98,10 @@ let hash_stats () = {
   slots = hash_slots ();
 }
 
-let collect () =
+let collect (effort : [ `gentle | `aggressive ]) =
   let old_size = heap_size () in
   let start_t = Unix.gettimeofday () in
-  hh_collect ();
+  hh_collect (effort = `aggressive);
   let new_size = heap_size () in
   let time_taken = Unix.gettimeofday () -. start_t in
   if old_size <> new_size then

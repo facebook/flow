@@ -737,7 +737,7 @@ let commit_modules inferred removed =
   ) repick (SSet.empty, [], SMap.empty) in
   (* update NameHeap *)
   NameHeap.remove_batch remove;
-  SharedMem.collect ();
+  SharedMem.collect `gentle;
   List.iter (fun (m, p) -> NameHeap.add m p; NameHeap.add p p) replace;
   (* now that providers are updated, update reverse dependency info *)
   add_reverse_imports inferred;
@@ -790,7 +790,7 @@ let remove_files files =
   (* for infos, remove_batch will ignore missing entries, no need to filter *)
   NameHeap.remove_batch names;
   InfoHeap.remove_batch files;
-  SharedMem.collect ();
+  SharedMem.collect `gentle;
   (* note: only return names of modules actually removed *)
   names
 

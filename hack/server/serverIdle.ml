@@ -19,6 +19,7 @@ type callback =
   | Once of (float ref * (unit -> unit))
 
 module Periodical: sig
+  val always : float
   val one_day: float
   val one_week: float
 
@@ -33,6 +34,7 @@ module Periodical: sig
   val register_callback: callback -> unit
 
 end = struct
+  let always = 0.0
   let one_day = 86400.0
   let one_week = 604800.0
 
@@ -96,6 +98,7 @@ let exit_if_unused() =
 (*****************************************************************************)
 let init (root : Path.t) =
   let jobs = [
+    Periodical.always   , (fun () -> SharedMem.collect `aggressive);
     Periodical.one_day  , exit_if_unused;
     Periodical.one_day  , Hhi.touch;
     (* try_touch wraps Unix.utimes, which doesn't open/close any fds, so we
