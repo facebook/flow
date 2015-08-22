@@ -76,6 +76,9 @@
  */
 /*****************************************************************************/
 
+/* define CAML_NAME_SPACE to ensure all the caml imports are prefixed with
+ * 'caml_' */
+#define CAML_NAME_SPACE
 #include <caml/mlvalues.h>
 #include <caml/unixsupport.h>
 #include <caml/memory.h>
@@ -87,9 +90,6 @@
 #ifdef _WIN32
 #include <windows.h>
 #else
-/* define CAML_NAME_SPACE to ensure all the caml imports are prefixed with
- * 'caml_' */
-#define CAML_NAME_SPACE
 #include <fcntl.h>
 #include <pthread.h>
 #include <signal.h>

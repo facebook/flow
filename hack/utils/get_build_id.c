@@ -7,9 +7,15 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  */
+#define CAML_NAME_SPACE
 #include <caml/memory.h>
 #include <caml/alloc.h>
+
+#include <assert.h>
 #include <string.h>
+
+#define __USE_XOPEN
+#include <time.h>
 
 extern const char* const BuildInfo_kRevision;
 const char* const build_time = __DATE__ " " __TIME__;
@@ -36,4 +42,11 @@ value hh_get_build_id(void) {
   memcpy(String_val(result) + revlen + 1, build_time, timelen);
 
   CAMLreturn(result);
+}
+
+value hh_get_build_time(void) {
+  struct tm tm;
+  char* success = strptime(build_time, "%b %d %Y %H:%M:%S", &tm);
+  assert(success != NULL && "Failed to parse build time");
+  return Val_long(mktime(&tm));
 }
