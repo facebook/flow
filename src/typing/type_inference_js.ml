@@ -1302,15 +1302,7 @@ and toplevels cx stmts =
         trailing |> List.iter Ast.Statement.(fun stmt ->
           match stmt with
           (* function declarations are hoisted, so not unreachable *)
-          | (_, FunctionDeclaration {
-                FunctionDeclaration.id;
-                params; defaults; rest;
-                body;
-                returnType;
-                typeParameters;
-                async;
-                _
-              } ) -> ()
+          | (_, FunctionDeclaration _ ) -> ()
           (* TODO also skip variable declarations if they do not have
                   any assignments *)
           | (loc, _) -> Flow_js.add_warning cx [mk_reason "" loc, msg]
