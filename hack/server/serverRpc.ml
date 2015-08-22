@@ -32,6 +32,7 @@ type _ t =
   | CREATE_CHECKPOINT : string -> unit t
   | RETRIEVE_CHECKPOINT : string -> string list option t
   | DELETE_CHECKPOINT : string -> bool t
+  | STATS : Stats.t t
   | KILL : unit t
 
 let handle : type a. genv -> env -> a t -> a =
@@ -69,4 +70,5 @@ let handle : type a. genv -> env -> a t -> a =
     | CREATE_CHECKPOINT x -> ServerCheckpoint.create_checkpoint x
     | RETRIEVE_CHECKPOINT x -> ServerCheckpoint.retrieve_checkpoint x
     | DELETE_CHECKPOINT x -> ServerCheckpoint.delete_checkpoint x
+    | STATS -> Stats.stats
     | KILL -> ()

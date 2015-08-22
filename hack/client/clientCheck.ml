@@ -233,3 +233,7 @@ let main args =
         Exit_status.Ok
       else
         Exit_status.Checkpoint_error
+  | MODE_STATS ->
+      let stats = Cmd.rpc conn @@ Rpc.STATS in
+      print_string @@ Hh_json.json_to_multiline (Stats.to_json stats);
+      Exit_status.Ok

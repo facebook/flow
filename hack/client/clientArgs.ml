@@ -192,6 +192,9 @@ let parse_check_args cmd =
     "--delete-checkpoint",
       Arg.String (fun x -> set_mode (MODE_DELETE_CHECKPOINT x) ()),
       "";
+    "--stats",
+      Arg.Unit (set_mode MODE_STATS),
+      " display some server statistics";
 
     (* flags *)
     "--json", Arg.Set output_json,

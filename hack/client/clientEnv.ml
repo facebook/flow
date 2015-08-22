@@ -34,6 +34,7 @@ type client_mode =
 | MODE_CREATE_CHECKPOINT of string
 | MODE_RETRIEVE_CHECKPOINT of string
 | MODE_DELETE_CHECKPOINT of string
+| MODE_STATS
 
 type client_check_env = {
   mode: client_mode;
@@ -71,3 +72,4 @@ let mode_to_string = function
   | MODE_CREATE_CHECKPOINT _ -> "MODE_CREATE_CHECKPOINT"
   | MODE_RETRIEVE_CHECKPOINT _ -> "MODE_RETRIEVE_CHECKPOINT"
   | MODE_DELETE_CHECKPOINT _ -> "MODE_DELETE_CHECKPOINT"
+  | MODE_STATS -> "MODE_STATS"

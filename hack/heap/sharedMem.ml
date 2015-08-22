@@ -100,6 +100,7 @@ let hash_stats () = {
 
 let collect (effort : [ `gentle | `aggressive ]) =
   let old_size = heap_size () in
+  Stats.update_max_heap_size old_size;
   let start_t = Unix.gettimeofday () in
   hh_collect (effort = `aggressive);
   let new_size = heap_size () in
