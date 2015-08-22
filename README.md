@@ -35,7 +35,7 @@ This produces a `bin` folder containing the `flow` binary.
 
 ## Running the tests
 
-To run the tests first compile flow using `make`. Then run `bash ./runtests.sh bin/flow`
+To run the tests, first compile flow using `make`. Then run `bash ./runtests.sh bin/flow`
 
 There is a `make test` target that compiles and runs tests.
 
