@@ -74,7 +74,7 @@ module type SERVER_PROGRAM = sig
   val config_filename : unit -> Relative_path.t
   val load_config : unit -> ServerConfig.t
   val validate_config : genv -> bool
-  val handle_client : genv -> env -> client -> unit
+  val handle_client : genv -> env -> (in_channel * out_channel) -> unit
   (* This is a hack for us to save / restore the global state that is not
    * already captured by ServerEnv *)
   val marshal : out_channel -> unit
@@ -214,12 +214,6 @@ let handle_connection_ genv env socket =
   let cli, _ = Unix.accept socket in
   let ic = Unix.in_channel_of_descr cli in
   let oc = Unix.out_channel_of_descr cli in
-  let close () =
-    begin
-      Unix.shutdown cli Unix.SHUTDOWN_ALL;
-      Unix.close cli
-    end
-  in
   try
     let client_build_id = input_line ic in
     if client_build_id <> Build_id.build_id_ohai then
@@ -230,17 +224,16 @@ let handle_connection_ genv env socket =
        Exit_status.exit Exit_status.Build_id_mismatch)
     else
       msg_to_channel oc Connection_ok;
-    let client = { ic; oc; close } in
-    Program.handle_client genv env client
+    Program.handle_client genv env (ic, oc)
   with
   | Sys_error("Broken pipe") ->
-    close ()
+    shutdown_client (ic, oc)
   | e ->
     let msg = Printexc.to_string e in
     EventLogger.master_exception msg;
     Printf.fprintf stderr "Error: %s\n%!" msg;
     Printexc.print_backtrace stderr;
-    close ()
+    shutdown_client (ic, oc)
 
 let handle_connection genv env socket =
   ServerIdle.stamp_connection ();

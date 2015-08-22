@@ -36,10 +36,11 @@ let stream_request oc cmd =
 (****************************************************************************)
 (* Called by the server *)
 (****************************************************************************)
-let stream_response (genv:ServerEnv.genv) env ~client ~cmd =
-  let {ServerUtils.ic = _; oc; close} = client in
+let stream_response (genv:ServerEnv.genv) env (ic, oc) ~cmd =
   match cmd with
-  | LIST_FILES -> ServerEnv.list_files env oc; close ()
+  | LIST_FILES ->
+      ServerEnv.list_files env oc;
+      ServerUtils.shutdown_client (ic, oc)
   | LIST_MODES ->
       Relative_path.Map.iter begin fun fn fileinfo ->
         match Relative_path.prefix fn with
@@ -53,7 +54,7 @@ let stream_response (genv:ServerEnv.genv) env ~client ~cmd =
         | _ -> ()
       end env.ServerEnv.files_info;
       flush oc;
-      close ()
+      ServerUtils.shutdown_client (ic, oc)
   | SHOW name ->
       output_string oc "starting\n";
       SharedMem.invalidate_caches();
@@ -119,11 +120,11 @@ let stream_response (genv:ServerEnv.genv) env ~client ~cmd =
           output_string oc (td_str^"\n")
       );
       flush oc;
-      close ()
+      ServerUtils.shutdown_client (ic, oc)
   | BUILD build_opts ->
       let build_hook = BuildMain.go build_opts genv env oc in
       (match build_hook with
-      | None -> close ()
+      | None -> ServerUtils.shutdown_client (ic, oc)
       | Some build_hook -> begin
         ServerTypeCheck.hook_after_parsing := (fun genv old_env env updates ->
           (* subtle: an exception there (such as writing on a closed pipe)
@@ -134,7 +135,7 @@ let stream_response (genv:ServerEnv.genv) env ~client ~cmd =
           (try
             with_context
               ~enter:(fun () -> ())
-              ~exit:(fun () -> close ())
+              ~exit:(fun () -> ServerUtils.shutdown_client (ic, oc))
               ~do_:(fun () -> build_hook genv old_env env updates);
           with exn ->
             let msg = Printexc.to_string exn in
@@ -147,13 +148,12 @@ let stream_response (genv:ServerEnv.genv) env ~client ~cmd =
 
 let from_channel : type a. in_channel -> a command = Marshal.from_channel
 
-let handle genv env client =
-  let {ServerUtils.ic; oc; close} = client in
+let handle genv env (ic, oc) =
   let msg = from_channel ic in
   match msg with
   | Rpc cmd ->
       let response = ServerRpc.handle genv env cmd in
       Marshal.to_channel oc response [];
       flush oc;
-      close ()
-  | Stream cmd -> stream_response genv env ~client ~cmd
+      ServerUtils.shutdown_client (ic, oc)
+  | Stream cmd -> stream_response genv env (ic, oc) ~cmd
