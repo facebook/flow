@@ -296,13 +296,14 @@ let serve genv env socket =
        HackEventLogger.lock_stolen lock_file;
        Exit_status.(exit Lock_stolen));
     let has_client = sleep_and_check socket in
+    if not has_client && !ServerTypeCheck.hook_after_parsing = None
+    then ServerIdle.go ();
     let start_t = Unix.time () in
     let loop_count, rechecked_count, new_env = recheck_loop genv !env in
     env := new_env;
     if rechecked_count > 0 then
       HackEventLogger.recheck_end start_t loop_count rechecked_count;
     if has_client then handle_connection genv !env socket;
-    ServerIdle.go ();
   done
 
 let load genv filename to_recheck =

@@ -126,24 +126,25 @@ let stream_response (genv:ServerEnv.genv) env (ic, oc) ~cmd =
       (match build_hook with
       | None -> ServerUtils.shutdown_client (ic, oc)
       | Some build_hook -> begin
-        ServerTypeCheck.hook_after_parsing := (fun genv old_env env updates ->
-          (* subtle: an exception there (such as writing on a closed pipe)
-           * will not be caught by handle_connection() because
-           * we have already returned from handle_connection(), hence
-           * this additional try.
-           *)
-          (try
-            with_context
-              ~enter:(fun () -> ())
-              ~exit:(fun () -> ServerUtils.shutdown_client (ic, oc))
-              ~do_:(fun () -> build_hook genv old_env env updates);
-          with exn ->
-            let msg = Printexc.to_string exn in
-            Printf.printf "Exn in build_hook: %s" msg;
-            EventLogger.master_exception msg;
-          );
-          ServerTypeCheck.hook_after_parsing := (fun _ _ _ _ -> ())
-        )
+        ServerTypeCheck.hook_after_parsing :=
+          Some (fun genv old_env env updates ->
+            (* subtle: an exception there (such as writing on a closed pipe)
+             * will not be caught by handle_connection() because
+             * we have already returned from handle_connection(), hence
+             * this additional try.
+             *)
+            (try
+              with_context
+                ~enter:(fun () -> ())
+                ~exit:(fun () -> ServerUtils.shutdown_client (ic, oc))
+                ~do_:(fun () -> build_hook genv old_env env updates);
+            with exn ->
+              let msg = Printexc.to_string exn in
+              Printf.printf "Exn in build_hook: %s" msg;
+              EventLogger.master_exception msg;
+            );
+            ServerTypeCheck.hook_after_parsing := None
+          )
       end)
 
 let from_channel : type a. in_channel -> a command = Marshal.from_channel
@@ -155,5 +156,6 @@ let handle genv env (ic, oc) =
       let response = ServerRpc.handle genv env cmd in
       Marshal.to_channel oc response [];
       flush oc;
-      ServerUtils.shutdown_client (ic, oc)
+      ServerUtils.shutdown_client (ic, oc);
+      if cmd = ServerRpc.KILL then ServerUtils.die_nicely genv
   | Stream cmd -> stream_response genv env (ic, oc) ~cmd

@@ -69,4 +69,4 @@ let handle : type a. genv -> env -> a t -> a =
     | CREATE_CHECKPOINT x -> ServerCheckpoint.create_checkpoint x
     | RETRIEVE_CHECKPOINT x -> ServerCheckpoint.retrieve_checkpoint x
     | DELETE_CHECKPOINT x -> ServerCheckpoint.delete_checkpoint x
-    | KILL -> ServerIdle.async (fun () -> ServerUtils.die_nicely genv)
+    | KILL -> ()

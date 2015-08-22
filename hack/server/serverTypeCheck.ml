@@ -195,7 +195,7 @@ let declare_names env files_info fast_parsed =
 (* Function called after parsing, does nothing by default. *)
 (*****************************************************************************)
 
-let hook_after_parsing = ref (fun _ _ _ _ -> ())
+let hook_after_parsing = ref None
 
 (*****************************************************************************)
 (* Where the action is! *)
@@ -219,7 +219,9 @@ let type_check genv env =
   let t = Hh_logger.log_duration "Updating deps" t in
 
   (* BUILDING AUTOLOADMAP *)
-  !hook_after_parsing genv old_env { env with files_info } updates;
+  Option.iter !hook_after_parsing begin fun f ->
+    f genv old_env { env with files_info } updates
+  end;
   let t = Hh_logger.log_duration "Parsing Hook" t in
 
   (* NAMING *)
