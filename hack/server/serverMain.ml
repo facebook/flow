@@ -49,7 +49,7 @@ end = struct
     grab_init_lock root;
     wakeup_client options "starting";
     (* note: we only run periodical tasks on the root, not extras *)
-    ServerPeriodical.init root;
+    ServerIdle.init root;
     let env = init_fun () in
     release_init_lock root;
     Hh_logger.log "Server is READY";
@@ -243,7 +243,7 @@ let handle_connection_ genv env socket =
     close ()
 
 let handle_connection genv env socket =
-  ServerPeriodical.stamp_connection ();
+  ServerIdle.stamp_connection ();
   try handle_connection_ genv env socket
   with
   | Unix.Unix_error (e, _, _) ->
@@ -302,7 +302,6 @@ let serve genv env socket =
       (Hh_logger.log "Lost lock; terminating.\n%!";
        HackEventLogger.lock_stolen lock_file;
        Exit_status.(exit Lock_stolen));
-    ServerPeriodical.call_before_sleeping();
     let has_client = sleep_and_check socket in
     let start_t = Unix.time () in
     let loop_count, rechecked_count, new_env = recheck_loop genv !env in
@@ -310,8 +309,7 @@ let serve genv env socket =
     if rechecked_count > 0 then
       HackEventLogger.recheck_end start_t loop_count rechecked_count;
     if has_client then handle_connection genv !env socket;
-    ServerEnv.invoke_async_queue ();
-    EventLogger.flush ();
+    ServerIdle.go ();
   done
 
 let load genv filename to_recheck =

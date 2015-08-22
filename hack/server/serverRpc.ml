@@ -39,7 +39,7 @@ let handle : type a. genv -> env -> a t -> a =
     | STATUS ->
         (* Logging can be pretty slow, so do it asynchronously and respond to
          * the client first *)
-        ServerEnv.async begin fun () ->
+        ServerIdle.async begin fun () ->
           HackEventLogger.check_response env.errorl;
         end;
         let el = ServerError.sort_errorl env.errorl in
@@ -69,4 +69,4 @@ let handle : type a. genv -> env -> a t -> a =
     | CREATE_CHECKPOINT x -> ServerCheckpoint.create_checkpoint x
     | RETRIEVE_CHECKPOINT x -> ServerCheckpoint.retrieve_checkpoint x
     | DELETE_CHECKPOINT x -> ServerCheckpoint.delete_checkpoint x
-    | KILL -> ServerEnv.async (fun () -> ServerUtils.die_nicely genv)
+    | KILL -> ServerIdle.async (fun () -> ServerUtils.die_nicely genv)

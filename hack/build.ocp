@@ -377,7 +377,7 @@ begin library "hh-server"
   ]
   files = [
     "server/serverEnvBuild.ml"
-    "server/serverPeriodical.ml"
+    "server/serverIdle.ml"
     "server/serverInit.ml"
     "server/serverMain.ml"
   ]

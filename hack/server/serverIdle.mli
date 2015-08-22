@@ -8,10 +8,10 @@
  *
  *)
 
+(* Called whenever the server is idle *)
+val go: unit -> unit
 
-
-(* Must be called before the main loop goes to sleep *)
-val call_before_sleeping: unit -> unit
+val async: (unit -> unit) -> unit
 
 (* Called every time a client connects *)
 val stamp_connection: unit -> unit
