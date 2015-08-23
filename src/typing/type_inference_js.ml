@@ -1292,6 +1292,7 @@ and toplevels cx stmts =
       if uc < List.length stmts
       then (
         let msg = "unreachable code" in
+        let warn_unreachable loc = Flow_js.add_warning cx [mk_reason "" loc, msg] in
         let rec drop n lst = match (n, lst) with
           | (_, []) -> []
           | (0, l) -> l
@@ -1304,11 +1305,12 @@ and toplevels cx stmts =
           (* variable declarations are hoisted, but associated assignments are not,
              so skip variable declarations with no assignments.
              Note: this does not seem like a practice anyone would use *)
-          | (_, VariableDeclaration d ) when VariableDeclaration.(d.declarations |>
-              List.for_all Declarator.(function
-              | (_, { init = None }) -> true
-              | _ -> false)) -> ()
-          | (loc, _) -> Flow_js.add_warning cx [mk_reason "" loc, msg]
+          | (_, VariableDeclaration d) -> VariableDeclaration.(d.declarations |>
+              List.iter Declarator.(function
+              | (_, { init = Some (loc, _) } ) -> warn_unreachable loc
+              | _ -> ()
+            ))
+          | (loc, _) -> warn_unreachable loc
         )
       );
       Abnormal.raise_exn exn
