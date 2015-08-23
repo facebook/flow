@@ -2,4 +2,7 @@
 unreachable.js:13:3,15:4: 
 unreachable code
 
-Found 1 error
+unreachable.js:21:3,12: 
+unreachable code
+
+Found 2 errors

@@ -1301,8 +1301,13 @@ and toplevels cx stmts =
         trailing |> List.iter Ast.Statement.(function
           (* function declarations are hoisted, so not unreachable *)
           | (_, FunctionDeclaration _ ) -> ()
-          (* TODO also skip variable declarations if they do not have
-                  any assignments *)
+          (* variable declarations are hoisted, but associated assignments are not,
+             so skip variable declarations with no assignments.
+             Note: this does not seem like a practice anyone would use *)
+          | (_, VariableDeclaration d ) when VariableDeclaration.(d.declarations |>
+              List.for_all Declarator.(function
+              | (_, { init = None }) -> true
+              | _ -> false)) -> ()
           | (loc, _) -> Flow_js.add_warning cx [mk_reason "" loc, msg]
         )
       );
