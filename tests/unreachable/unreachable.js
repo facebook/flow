@@ -15,10 +15,13 @@ function foo(x, y) {
   };
 
   // variable declaration is hoisted, should not generate warning
-  var x;
+  var x, y, z;
 
-  // assignment is not hoisted, should generate warning
-  var y = 5;
+  // assignments are not hoisted, should generate 2 warnings
+  var t,
+      u = 5,
+      v,
+      w = 7;
 }
 
 foo(1, 2);
