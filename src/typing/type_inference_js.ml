@@ -1292,15 +1292,13 @@ and toplevels cx stmts =
       if uc < List.length stmts
       then (
         let msg = "unreachable code" in
-        let rec drop n lst =
-          match (n, lst) with
+        let rec drop n lst = match (n, lst) with
           | (_, []) -> []
           | (0, l) -> l
-          | (x, h :: t) -> drop (x-1) t
+          | (x, _ :: t) -> drop (pred x) t
         in
         let trailing = drop uc stmts in
-        trailing |> List.iter Ast.Statement.(fun stmt ->
-          match stmt with
+        trailing |> List.iter Ast.Statement.(function
           (* function declarations are hoisted, so not unreachable *)
           | (_, FunctionDeclaration _ ) -> ()
           (* TODO also skip variable declarations if they do not have
