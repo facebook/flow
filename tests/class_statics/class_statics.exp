@@ -12,6 +12,8 @@ This type is incompatible with
 test.js:11:17,22: string
 
 test.js:7:1,31: assignment of property qux
+Error:
+test.js:7:3,5: property qux
 Property not found in
 test.js:1:7,7: statics of A
 

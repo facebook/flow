@@ -4,6 +4,8 @@ This type is incompatible with
 class_statics.js:9:7,12: number
 
 class_statics.js:6:1,36: assignment of property g
+Error:
+class_statics.js:6:3,3: property g
 Property not found in
 class_statics.js:1:7,7: statics of C
 

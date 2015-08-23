@@ -2550,11 +2550,11 @@ let rec __flow cx (l, u) trace =
     (********************************)
 
     | InstanceT (reason_c, static, super, instance),
-      SetT (reason_op, (_, x), tin) ->
+      SetT (reason_op, (reason_prop, x), tin) ->
       Ops.push reason_op;
       (* methods are immutable, so we hide them from property set operations *)
       let fields = instance.fields_tmap in
-      set_prop cx trace reason_op reason_c super x fields tin;
+      set_prop cx trace reason_prop reason_c super x fields tin;
       Ops.pop ();
 
     (*****************************)
