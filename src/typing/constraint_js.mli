@@ -161,11 +161,16 @@ module Type :
 
     and proptype = reason * name
 
+    and sealtype =
+      | UnsealedInFile of string option
+      | Sealed
+
     and flags = {
       frozen: bool;
-      sealed: bool;
+      sealed: sealtype;
       exact: bool;
     }
+
     and dicttype = {
       dict_name: string option;
       key: t;

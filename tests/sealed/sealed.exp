@@ -17,4 +17,8 @@ sealed.js:3:3,3: property z
 Property not found in
 proto.js:14:18,25: object type
 
-Found 4 errors
+sealed.js:9:3,3: property y
+Property not found in
+function.js:9:18,20: new object
+
+Found 5 errors

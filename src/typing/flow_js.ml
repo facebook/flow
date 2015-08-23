@@ -87,7 +87,11 @@ let mk_functiontype2 tins ?params_names tout j = {
    Types of object literals are exact, but can be sealed or unsealed. Object
    type annotations are sealed but not exact. *)
 
-let default_flags = { sealed = false; exact = true; frozen = false; }
+let default_flags = {
+  sealed = UnsealedInFile None;
+  exact = true;
+  frozen = false;
+}
 
 let mk_objecttype ?(flags=default_flags) dict map proto = {
   flags;
@@ -2489,7 +2493,12 @@ let rec __flow cx (l, u) trace =
       (* TODO: closure *)
       (** create new object **)
       let reason_c = replace_reason "new object" reason in
-      let new_obj = mk_object_with_proto cx reason_c proto in
+      let proto_reason = reason_of_t proto in
+      let sealed = UnsealedInFile (Loc.source (loc_of_reason proto_reason)) in
+      let flags = { default_flags with sealed } in
+      let dict = None in
+      let pmap = mk_propmap cx SMap.empty in
+      let new_obj = ObjT (reason_c, mk_objecttype ~flags dict pmap proto) in
       (** call function with this = new_obj, params = args **)
       rec_flow cx trace (new_obj, this);
       multiflow cx trace reason_op (args, params);
@@ -2728,7 +2737,7 @@ let rec __flow cx (l, u) trace =
       let desc = desc_of_reason reason_o |> spf "frozen %s" in
       let reason = replace_reason desc reason_op in
 
-      let flags = {frozen = true; sealed = true; exact = true;} in
+      let flags = {frozen = true; sealed = Sealed; exact = true;} in
       let new_obj = ObjT (reason, {objtype with flags}) in
       rec_flow cx trace (new_obj, t)
 
@@ -3499,9 +3508,14 @@ and flow_type_args cx trace instance instance_super =
    "blame token" that is used when looking up properties of objects in the
    prototype chain as part of that operation. *)
 and mk_strict_lookup_reason sealed is_dict reason_o reason_op =
-  if (is_dict || (not sealed && Reason_js.same_scope reason_o reason_op))
-  then None
-  else Some reason_o
+  let sealed = not is_dict && match sealed with
+  | Sealed -> true
+  | UnsealedInFile source -> source <> (Loc.source (loc_of_reason reason_op))
+  in
+  if sealed then
+    Some reason_o
+  else
+    None
 
 and structural_subtype cx trace lower (upper_reason, super, fields_tmap, methods_tmap) =
   let lower_reason = reason_of_t lower in
@@ -3713,6 +3727,10 @@ and mk_object_with_proto cx reason proto =
   mk_object_with_map_proto cx reason SMap.empty proto
 
 and mk_object_with_map_proto cx reason ?(sealed=false) ?dict map proto =
+  let sealed =
+    if sealed then Sealed
+    else UnsealedInFile (Loc.source (loc_of_reason reason))
+  in
   let flags = { default_flags with sealed } in
   let pmap = mk_propmap cx map in
   ObjT (reason, mk_objecttype ~flags dict pmap proto)

@@ -901,7 +901,11 @@ let rec convert cx type_params_map = Ast.Type.(function
     ) in
     let pmap = Flow_js.mk_propmap cx props_map in
     let proto = MixedT (reason_of_string "Object") in
-    let flags = { sealed; exact = not sealed; frozen = false; } in
+    let flags = {
+      sealed = if sealed then Sealed else UnsealedInFile (Loc.source loc);
+      exact = not sealed;
+      frozen = false;
+    } in
     ObjT (mk_reason "object type" loc,
       Flow_js.mk_objecttype ~flags dict pmap proto)
 
@@ -4042,7 +4046,7 @@ and mk_proptype cx type_params_map = Ast.Expression.(function
     } ->
       let flags = {
         frozen = false;
-        sealed = false;
+        sealed = UnsealedInFile (Loc.source vloc);
         exact = true
       } in
       let dict = Some {

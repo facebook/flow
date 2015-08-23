@@ -217,9 +217,6 @@ let is_builtin_reason r =
 let compare r1 r2 =
   Pervasives.compare (loc_of_reason r1) (loc_of_reason r2)
 
-let same_scope r1 r2 =
-  r1.loc.Loc.source = r2.loc.Loc.source
-
 (* reason transformers: *)
 
 (* returns reason whose description is prefix-extension of original *)

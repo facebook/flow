@@ -341,9 +341,13 @@ module Type = struct
 
   and proptype = reason * name
 
+  and sealtype =
+    | UnsealedInFile of string option
+    | Sealed
+
   and flags = {
     frozen: bool;
-    sealed: bool;
+    sealed: sealtype;
     exact: bool;
   }
 
@@ -1918,7 +1922,9 @@ and json_of_flags json_cx = check_depth json_of_flags_impl json_cx
 and json_of_flags_impl json_cx flags = Json.(
   JAssoc [
     "frozen", JBool flags.frozen;
-    "sealed", JBool flags.sealed;
+    "sealed", JBool (match flags.sealed with
+      | Sealed -> true
+      | UnsealedInFile _ -> false);
     "exact", JBool flags.exact;
   ]
 )
