@@ -34,6 +34,7 @@ val overflow : Pos.t -> unit
 val unterminated_comment : Pos.t -> unit
 val unterminated_xhp_comment : Pos.t -> unit
 val name_already_bound : string -> Pos.t -> Pos.t -> unit
+val name_is_reserved : string -> Pos.t -> unit
 val method_name_already_bound : Pos.t -> string -> unit
 val error_name_already_bound : string -> string -> Pos.t -> Pos.t -> unit
 val unbound_name : Pos.t -> string -> [< `cls | `func | `const ] -> unit
