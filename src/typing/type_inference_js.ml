@@ -1309,8 +1309,26 @@ and toplevels cx type_params_map stmts =
       if uc < List.length stmts
       then (
         let msg = "unreachable code" in
-        let (loc, _) = List.nth stmts uc in
-        Flow_js.add_warning cx [mk_reason "" loc, msg]
+        let warn_unreachable loc = Flow_js.add_warning cx [mk_reason "" loc, msg] in
+        let rec drop n lst = match (n, lst) with
+          | (_, []) -> []
+          | (0, l) -> l
+          | (x, _ :: t) -> drop (pred x) t
+        in
+        let trailing = drop uc stmts in
+        trailing |> List.iter Ast.Statement.(function
+          (* function declarations are hoisted, so not unreachable *)
+          | (_, FunctionDeclaration _ ) -> ()
+          (* variable declarations are hoisted, but associated assignments are not,
+             so skip variable declarations with no assignments.
+             Note: this does not seem like a practice anyone would use *)
+          | (_, VariableDeclaration d) -> VariableDeclaration.(d.declarations |>
+              List.iter Declarator.(function
+              | (_, { init = Some (loc, _) } ) -> warn_unreachable loc
+              | _ -> ()
+            ))
+          | (loc, _) -> warn_unreachable loc
+        )
       );
       Abnormal.raise_exn exn
     )
