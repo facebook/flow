@@ -1408,6 +1408,18 @@ let not_expect_bound t = match t with
     functions `rec_flow`, `join_flow`, or `flow_opt` (described below) inside
     this module, and the function `flow` outside this module. **)
 let rec __flow cx (l, u) trace =
+  (if modes.verbose then
+    let indent = if modes.verbose_indent
+      then String.make ((trace_depth trace - 1) * 2) ' '
+      else "" in
+    let pid = Unix.getpid () in
+    prerr_endlinef
+      "\n%s[%d] %s (%s) ~>\n%s[%d] %s (%s)"
+      indent pid
+      (dump_reason (reason_of_t l)) (string_of_ctor l)
+      indent pid
+      (dump_reason (reason_of_t u)) (string_of_ctor u));
+
   if not (Cache.FlowConstraint.mem (l,u)) then (
     (* limit recursion depth *)
     RecursionCheck.check trace;
@@ -1419,18 +1431,6 @@ let rec __flow cx (l, u) trace =
        never appear "exposed" in flows. (They can still appear bound inside
        polymorphic definitions.) *)
     not_expect_bound l; not_expect_bound u;
-
-    (if modes.verbose then
-      let indent = if modes.verbose_indent
-        then String.make ((trace_depth trace - 1) * 2) ' '
-        else "" in
-      prerr_endlinef
-        "\n%s# (%d) %s ~>\n%s# %s"
-        indent
-        (Unix.getpid ())
-        (dump_reason (reason_of_t l))
-        indent
-        (dump_reason (reason_of_t u)));
 
     if ground_subtype (l,u) then ()
     else (match (l,u) with
