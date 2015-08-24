@@ -164,7 +164,7 @@ let rec connect env retries start_time tail_env =
            *)
           Tail.close_env tail_env;
           connect env retries start_time tail_env
-        end else raise Exit_status.(Exit_with No_server_running)
+        end else raise Exit_status.(Exit_with Build_id_mismatch)
   | Result.Error CCS.Server_initializing ->
       Printf.eprintf
         "hh_server still initializing; this can take some time.%!";
