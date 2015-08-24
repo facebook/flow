@@ -1,7 +1,7 @@
 
 enum_client.js:6:5,14: string literal LOCATION
 Property not found in
-enum.js:6:18,24: object literal
+enum_client.js:1:15,31: object literal
 
 enum_client.js:10:5,16: string literal name
 Property not found in

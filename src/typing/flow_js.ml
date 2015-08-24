@@ -1731,7 +1731,10 @@ let rec __flow cx (l, u) trace =
     | (ModuleT(_, exports), CJSRequireT(reason, t)) ->
       let cjs_exports = (
         match exports.cjs_export with
-        | Some(t) -> t
+        | Some t ->
+          (* reposition the export to point at the require(), like the object
+             we create below for non-CommonJS exports *)
+          repos_t_from_reason reason t
         | None ->
           let proto = MixedT(reason) in
           let props_smap = find_props cx exports.exports_tmap in

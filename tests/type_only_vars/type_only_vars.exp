@@ -1,5 +1,5 @@
 
-A.js:11:18,14:1: object literal
+bad_shadowing.js:5:25,32: object literal
 This type is incompatible with
 bad_shadowing.js:13:8,13: string
 

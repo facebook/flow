@@ -15,10 +15,10 @@ proto.js:7:7,12: number
 
 sealed.js:3:3,3: property z
 Property not found in
-proto.js:14:18,25: object type
+sealed.js:1:9,26: object type
 
 sealed.js:9:3,3: property y
 Property not found in
-function.js:9:18,20: new object
+sealed.js:6:11,31: new object
 
 Found 5 errors
