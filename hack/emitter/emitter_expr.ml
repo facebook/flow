@@ -278,12 +278,21 @@ and emit_call_lhs env (_, expr_ as expr) nargs =
     emit_FPushObjMethodD env nargs name (fmt_null_flavor null_flavor)
 
   | Class_const (cid, (_, field)) ->
-    (match resolve_class_id env cid with
-    | RCstatic class_name -> emit_FPushClsMethodD env nargs field class_name
-    | RCdynamic dyid ->
-        let env = emit_String env field in
-        let env = emit_dynamic_class_id env dyid in
-        emit_FPushClsMethod env nargs)
+    let emit_dynamic_call env emit_op =
+      let env = emit_String env field in
+      let env = emit_class_id env (resolve_class_id env cid) in
+      emit_op env nargs
+    in
+
+    (match cid with
+    | CI (_, s) -> emit_FPushClsMethodD env nargs field (fmt_name s)
+    | CIself | CIparent ->
+      (* Calls through self:: or parent:: need to be "forwarding"
+       * calls that preserve the late static binding "called class".
+       * FPushClsMethodF is forwarding, the others aren't *)
+      emit_dynamic_call env emit_FPushClsMethodF
+    | CIexpr _ | CIstatic ->
+      emit_dynamic_call env emit_FPushClsMethod)
 
   (* what all is even allowed here? *)
   | _ ->
