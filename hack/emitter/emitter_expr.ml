@@ -534,7 +534,7 @@ and emit_expr env (pos, expr_ as expr) =
   (* comma operator: evaluate all the expressions, ignoring all but the last *)
   | Expr_list es ->
     (match List.rev es with
-    | [] -> env
+    | [] -> emit_Null env (* output a dummy value *)
     | last :: rest ->
       let env = List.fold_right
         ~f:(fun e env -> emit_ignored_expr env e) ~init:env rest in
