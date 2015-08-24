@@ -2595,7 +2595,7 @@ and expr_atomic env =
      expr_atomic env
  | Tword ->
       let word = !(env.last_str) in
-      expr_atomic_word env last word
+      expr_atomic_word env last (String.lowercase word)
  | Tlb ->
      last_token env;
      right env array_body;
