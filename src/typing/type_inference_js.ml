@@ -1324,7 +1324,7 @@ and toplevels cx type_params_map stmts =
              Note: this does not seem like a practice anyone would use *)
           | (_, VariableDeclaration d) -> VariableDeclaration.(d.declarations |>
               List.iter Declarator.(function
-              | (_, { init = Some (loc, _) } ) -> warn_unreachable loc
+              | (_, { init = Some (loc, _); _ } ) -> warn_unreachable loc
               | _ -> ()
             ))
           | (loc, _) -> warn_unreachable loc
