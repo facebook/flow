@@ -25,6 +25,7 @@ type mode =
   | Errors
   | Lint
   | Suggest
+  | NoBuiltins
 
 type options = {
   filename : string;
@@ -34,7 +35,9 @@ type options = {
 let builtins_filename =
   Relative_path.create Relative_path.Dummy "builtins.hhi"
 
-let builtins = "<?hh // decl\n"^
+let what_builtins mode = match mode with
+  NoBuiltins -> ""
+  | _ -> "<?hh // decl\n"^
   "interface Traversable<+Tv> {}\n"^
   "interface Container<+Tv> extends Traversable<Tv> {}\n"^
   "interface Iterator<+Tv> extends Traversable<Tv> {}\n"^
@@ -203,6 +206,9 @@ let parse_options () =
     "--suggest",
       Arg.Unit (set_mode Suggest),
       "Suggest missing typehints";
+    "--no-builtins",
+      Arg.Unit (set_mode NoBuiltins),
+      "Don't use builtins (e.g. ConstSet)";
   ] in
   Arg.parse options (fun fn -> fn_ref := Some fn) usage;
   let fn = match !fn_ref with
@@ -353,6 +359,7 @@ let handle_mode mode filename nenv files_contents files_info errors ai_results =
       end
       else Printf.printf "No lint errors\n"
   | Suggest
+  | NoBuiltins
   | Errors ->
       let errors = Relative_path.Map.fold begin fun _ fileinfo errors ->
         errors @ Typing_check_utils.check_defs nenv fileinfo
@@ -384,6 +391,7 @@ let main_hack { filename; mode; } =
         let inner_results = f () in
         [], inner_results
   in
+  let builtins = what_builtins mode in
   let filename = Relative_path.create Relative_path.Dummy filename in
   let files_contents = file_to_files filename in
   let ai_results, (errors, (nenv, files_info)) =
