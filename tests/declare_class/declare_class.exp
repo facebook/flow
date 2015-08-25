@@ -5,7 +5,7 @@
 This type is incompatible with
 [LIB] test.js:2:10,15: number
 
-declare_class.js:6:1,8: assignment of property x
+declare_class.js:6:1,3: assignment of property x
 Error:
 declare_class.js:6:7,8: string
 This type is incompatible with

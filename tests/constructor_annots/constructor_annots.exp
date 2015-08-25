@@ -3,7 +3,7 @@ constructors.js:2:1,4:1: property m
 Property not found in
 constructors.js:18:28,31: IFoo
 
-constructors.js:3:3,12: assignment of property x
+constructors.js:3:3,8: assignment of property x
 Error:
 constructors.js:3:12,12: number
 This type is incompatible with

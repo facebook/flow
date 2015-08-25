@@ -3701,32 +3701,33 @@ and assignment cx type_params_map loc = Ast.Expression.(function
       (match r with
 
         (* module.exports = e *)
-        | _, Ast.Pattern.Expression (_, Member {
+        | lhs_loc, Ast.Pattern.Expression (_, Member {
             Member._object = _, Ast.Expression.Identifier (_,
               { Ast.Identifier.name = "module"; _ });
             property = Member.PropertyIdentifier (_,
               { Ast.Identifier.name = "exports"; _ });
             _
           }) ->
-            let reason = mk_reason "assignment of module.exports" loc in
-            mark_exports_type cx reason (CommonJSModule(Some(loc)));
+            let reason = mk_reason "assignment of module.exports" lhs_loc in
+            mark_exports_type cx reason (CommonJSModule(Some(lhs_loc)));
             set_module_exports cx reason t
 
         (* super.name = e *)
-        | _, Ast.Pattern.Expression (_, Member {
+        | lhs_loc, Ast.Pattern.Expression (_, Member {
             Member._object = _, Identifier (_,
               { Ast.Identifier.name = "super"; _ });
             property = Member.PropertyIdentifier (ploc,
               { Ast.Identifier.name; _ });
             _
           }) ->
-            let reason = mk_reason (spf "assignment of property %s" name) loc in
+            let reason =
+              mk_reason (spf "assignment of property %s" name) lhs_loc in
             let prop_reason = mk_reason (spf "property %s" name) ploc in
             let super = super_ cx reason in
             Flow_js.flow cx (super, SetT(reason, (prop_reason, name), t))
 
         (* _object.name = e *)
-        | _, Ast.Pattern.Expression ((_, Member {
+        | lhs_loc, Ast.Pattern.Expression ((_, Member {
             Member._object;
             property = Member.PropertyIdentifier (ploc,
               { Ast.Identifier.name; _ });
@@ -3737,7 +3738,7 @@ and assignment cx type_params_map loc = Ast.Expression.(function
             if not (Type_inference_hooks_js.dispatch_member_hook cx name ploc o)
             then (
               let reason = mk_reason
-                (spf "assignment of property %s" name) loc in
+                (spf "assignment of property %s" name) lhs_loc in
               let prop_reason = mk_reason (spf "property %s" name) ploc in
 
               (* flow type to object property itself *)
@@ -3768,12 +3769,13 @@ and assignment cx type_params_map loc = Ast.Expression.(function
             )
 
         (* _object[index] = e *)
-        | _, Ast.Pattern.Expression (_, Member {
+        | lhs_loc, Ast.Pattern.Expression (_, Member {
             Member._object;
             property = Member.PropertyExpression index;
             _
           }) ->
-            let reason = mk_reason "assignment of computed property/element" loc in
+            let reason =
+              mk_reason "assignment of computed property/element" lhs_loc in
             let a = expression cx type_params_map _object in
             let i = expression cx type_params_map index in
             Flow_js.flow cx (a, SetElemT (reason, i, t));

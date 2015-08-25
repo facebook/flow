@@ -65,7 +65,7 @@ G.js:3:1,10: call of method length
 Function cannot be called on
 G.js:3:1,10: number
 
-G.js:6:1,17: assignment of property length
+G.js:6:1,8: assignment of property length
 Error:
 G.js:6:12,17: string
 This type is incompatible with

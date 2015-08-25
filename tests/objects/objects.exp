@@ -19,4 +19,12 @@ objects.js:9:12,16: boolean
 This type is incompatible with
 objects.js:3:17,22: string
 
-Found 5 errors
+objects.js:14:12,14: number
+This type is incompatible with
+objects.js:13:15,20: string
+
+objects.js:15:3,7: property bar
+Property not found in
+objects.js:15:1,1: object type
+
+Found 7 errors

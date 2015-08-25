@@ -43,19 +43,19 @@ class.js:29:43,49: string
 This type is incompatible with
 class.js:54:34,39: number
 
-class.js:49:1,36: assignment of property goodSetterNoAnnotation
+class.js:49:1,26: assignment of property goodSetterNoAnnotation
 Error:
 class.js:49:30,36: string
 This type is incompatible with
 class.js:5:8,13: number
 
-class.js:50:1,38: assignment of property goodSetterWithAnnotation
+class.js:50:1,28: assignment of property goodSetterWithAnnotation
 Error:
 class.js:50:32,38: string
 This type is incompatible with
 class.js:12:35,40: number
 
-class.js:55:1,34: assignment of property propOverriddenWithSetter
+class.js:55:1,28: assignment of property propOverriddenWithSetter
 Error:
 class.js:55:32,34: number
 This type is incompatible with
