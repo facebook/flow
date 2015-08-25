@@ -29,6 +29,11 @@ print_skip() {
     printf "%b[-] SKIP:%b %s%b\n" \
       $COLOR_YELLOW_BOLD $COLOR_DEFAULT $1 $COLOR_RESET
 }
+kill_server() {
+  trap - SIGINT SIGTERM
+  $FLOW stop . 1> /dev/null 2>&1
+  kill $1 $$
+}
 cd "$(dirname "${BASH_SOURCE[0]}")"
 passed=0
 failed=0
@@ -108,6 +113,9 @@ do
         else
             # otherwise, run specified flow command, then kill the server
 
+            trap "kill_server -INT" SIGINT
+            trap "kill_server -TERM" SIGTERM
+
             # If there's stdin, then direct that in
             if [ "$stdin" != "" ]
             then
@@ -116,6 +124,8 @@ do
                 $FLOW $cmd 1> $out_file 2> $err_file
             fi
             $FLOW stop . 1> /dev/null 2>&1
+
+            trap - SIGINT SIGTERM
         fi
         diff_file="${name}.diff"
         diff -u $exp_file $out_file > $diff_file
