@@ -2820,6 +2820,7 @@ and variable cx type_params_map (loc, vdecl) = Ast.(
           | Some expr ->
               let reason = mk_reason "var _" loc in
               let t_ = type_of_pattern id |> mk_type_annotation cx type_params_map reason in
+              let t_ = mod_reason_of_t (prefix_reason "destructured ") t_ in
               let t = expression cx type_params_map expr in
               Flow_js.flow cx (t, t_);
               destructuring_assignment cx t_ id
@@ -5665,6 +5666,7 @@ and mk_params_ret cx type_params_map params (body_loc, ret_type_opt) =
         | loc, _ ->
             let reason = mk_reason "destructuring" loc in
             let t = type_of_pattern param |> mk_type_annotation cx type_params_map reason in
+            let t = mod_reason_of_t (prefix_reason "destructured ") t in
             let (des_tmap, des_lmap) = destructuring_map cx t param in
             t :: tlist, "_" :: pnames,
             SMap.union tmap des_tmap,

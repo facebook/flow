@@ -2265,11 +2265,13 @@ let rec __flow cx (l, u) trace =
       (* if inflowing type is literal (thus guaranteed to be
          unaliased), propertywise subtyping is sound *)
       let desc1 = (desc_of_reason reason1) in
+      let desc2 = (desc_of_reason reason2) in
       let lit =
         (desc1 = "object literal")
         || (desc1 = "function")
         || (desc1 = "arrow function")
         || (desc1 = "frozen object literal")
+        || (Str.string_match (Str.regexp "destructured .*") desc2 0)
         || (Str.string_match (Str.regexp ".*React") desc1 0)
       in
 

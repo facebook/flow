@@ -47,3 +47,6 @@ function test() {
 }
 
 module.exports = corge;
+
+var {p}:{p:number|string} = ({p:0}:{p:number});
+(function ({p}:{p:number|string}) {})(({p:0}:{p:number}));
