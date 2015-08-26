@@ -33,8 +33,8 @@ end)
 
 let () =
   Errors.is_hh_fixme := begin fun pos err_code ->
-    let filename = pos.Pos.pos_file in
-    let line = pos.Pos.pos_start.Lexing.pos_lnum in
+    let filename = Pos.filename pos in
+    let line, _, _ = Pos.info_pos pos in
     match HH_FIXMES.get filename with
     | None -> false
     | Some fixme_map ->

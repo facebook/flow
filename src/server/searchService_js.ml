@@ -28,13 +28,13 @@ let result_to_string (term: (Pos.t, search_result_type) SearchUtils.term) =
 )
 
 let pos_range p = Pos.(Lexing.(
-  p.pos_start.pos_lnum, p.pos_start.pos_cnum + 1,
-    p.pos_end.pos_lnum, p.pos_end.pos_cnum
+  line p, start_cnum p + 1,
+    (pos_end p).pos_lnum, (pos_end p).pos_cnum
 ))
 
 (* TODO: deprecate this in favor of Reason_js.json_of_loc *)
 let pos_to_json pos =
-  let file = Pos.(pos.pos_file) in
+  let file = Pos.filename pos in
   let l0, c0, l1, c1 = pos_range pos in
   [ "path", Json.JString (Relative_path.to_absolute file);
     "line", Json.JInt l0;
@@ -73,10 +73,10 @@ let pos_of_loc loc =
     | None -> assert false
     | Some x -> x
   in
-  { Pos.pos_file = Relative_path.create Relative_path.Dummy fn;
-    Pos.pos_start = lex_pos_of_loc fn loc.Loc.start;
-    Pos.pos_end = lex_pos_of_loc fn loc.Loc._end;
-  }
+  Pos.make_from_lexing_pos
+    ~pos_file:(Relative_path.(create Dummy fn))
+    ~pos_start:(lex_pos_of_loc fn loc.Loc.start)
+    ~pos_end:(lex_pos_of_loc fn loc.Loc._end)
 
 let add_fuzzy_term id type_ acc =
   let loc, id = id in

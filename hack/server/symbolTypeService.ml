@@ -68,7 +68,7 @@ let generate_types lvar_map type_map =
         find_match_pos_in_list lvar_pos types_list
     | None -> "" in
     {
-      pos = SymbolUtils.pos_to_relative lvar_pos;
+      pos = Pos.to_relative_string lvar_pos;
       type_ = lvar_type;
     }
   end

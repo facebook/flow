@@ -50,7 +50,7 @@ let list_files env oc =
   let acc = List.fold_right
     ~f:begin fun error acc ->
       let pos = Errors.get_pos error in
-      Relative_path.Set.add pos.Pos.pos_file acc
+      Relative_path.Set.add (Pos.filename pos) acc
     end
     ~init:Relative_path.Set.empty
     env.errorl in

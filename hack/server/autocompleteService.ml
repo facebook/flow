@@ -264,10 +264,7 @@ let compute_complete_global funs classes =
       let gname_gns = match !Autocomplete.auto_complete_pos with
         | None -> None
         | Some p ->
-            let len =
-              p.Pos.pos_end.Lexing.pos_cnum -
-              p.Pos.pos_start.Lexing.pos_cnum -
-              suffix_len in
+            let len = (Pos.length p) - suffix_len in
             let start = String.length gname - len in
             if String.contains_from gname start '\\'
             then None else Some (strip_all_ns gname)
