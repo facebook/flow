@@ -1810,6 +1810,15 @@ let rec __flow cx (l, u) trace =
     (* logical types *)
     (*****************)
 
+    | (BoolT (r, Some x), NotT(reason, tout))
+    | (SingletonBoolT (r, x), NotT(reason, tout)) ->
+      let reason = replace_reason (spf "boolean value %b" (not x)) reason in
+      let t = BoolT (reason, Some (not x)) in
+      rec_flow cx trace (t, tout)
+
+    | (_, NotT(reason, tout)) ->
+      rec_flow cx trace (BoolT.at (loc_of_reason reason), tout)
+
     | (left, AndT(reason, right, u)) ->
       (* a falsy && b ~> a
          a truthy && b ~> b
@@ -5314,6 +5323,9 @@ let rec gc cx state = function
   | OrT (_, t1, t2) ->
       gc cx state t1;
       gc cx state t2
+
+  | NotT (_, t) ->
+      gc cx state t
 
   | SpecializeT (_, _, ts, t) ->
       ts |> List.iter (gc cx state);

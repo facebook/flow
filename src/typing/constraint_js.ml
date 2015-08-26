@@ -241,6 +241,7 @@ module Type = struct
   (* logical operators *)
   | AndT of reason * t * t
   | OrT of reason * t * t
+  | NotT of reason * t
 
   (* operation on polymorphic types *)
   (** SpecializeT(_, cache, targs, tresult) instantiates a polymorphic type with
@@ -1055,6 +1056,7 @@ let string_of_ctor = function
   | EqT _ -> "EqT"
   | AndT _ -> "AndT"
   | OrT _ -> "OrT"
+  | NotT _ -> "NotT"
   | SpecializeT _ -> "SpecializeT"
   | TypeAppT _ -> "TypeAppT"
   | MaybeT _ -> "MaybeT"
@@ -1147,6 +1149,7 @@ let rec reason_of_t = function
 
   | AndT (reason, _, _)
   | OrT (reason, _, _)
+  | NotT (reason, _)
 
   | TypeT (reason,_)
   | BecomeT (reason, _)
@@ -1334,6 +1337,7 @@ let rec mod_reason_of_t f = function
 
   | AndT (reason, t1, t2) -> AndT (f reason, t1, t2)
   | OrT (reason, t1, t2) -> OrT (f reason, t1, t2)
+  | NotT (reason, t) -> NotT (f reason, t)
 
   | SpecializeT(reason, cache, ts, t) -> SpecializeT (f reason, cache, ts, t)
 
@@ -1878,6 +1882,10 @@ and _json_of_t_impl json_cx t = Json.(
   | OrT (_, right, res) -> [
       "rightType", _json_of_t json_cx right;
       "resultType", _json_of_t json_cx res
+    ]
+
+  | NotT (_, t) -> [
+      "type", _json_of_t json_cx t
     ]
 
   | SpecializeT (_, cache, targs, tvar) -> [
@@ -2738,6 +2746,7 @@ class ['a] type_visitor = object(self)
   | EqT (_, _)
   | AndT (_, _, _)
   | OrT (_, _, _)
+  | NotT (_, _)
   | SpecializeT (_, _, _, _)
   | LookupT (_, _, _, _)
   | ObjAssignT (_, _, _, _, _)

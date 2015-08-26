@@ -27,3 +27,11 @@ function bar(x: MyOwnBooleanLOL): false {
 bar(true);
 bar(false);
 bar(1); // error
+
+function alwaysFalsy(x: boolean): false {
+  if (x) {
+    return !x;
+  } else {
+    return x;
+  }
+}

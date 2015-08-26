@@ -3532,8 +3532,11 @@ and literal cx loc lit = Ast.Literal.(match lit.value with
 (* traverse a unary expression, return result type *)
 and unary cx type_params_map loc = Ast.Expression.Unary.(function
   | { operator = Not; argument; _ } ->
-      ignore (expression cx type_params_map argument);
-      BoolT.at loc
+      let arg = expression cx type_params_map argument in
+      let reason = mk_reason "not operator" loc in
+      Flow_js.mk_tvar_where cx reason (fun t ->
+        Flow_js.flow cx (arg, NotT (reason, t));
+      )
 
   | { operator = Plus; argument; _ } ->
       ignore (expression cx type_params_map argument);

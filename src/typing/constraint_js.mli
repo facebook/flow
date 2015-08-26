@@ -92,6 +92,7 @@ module Type :
       | EqT of reason * t
       | AndT of reason * t * t
       | OrT of reason * t * t
+      | NotT of reason * t
 
       | SpecializeT of reason * bool * t list * t
 

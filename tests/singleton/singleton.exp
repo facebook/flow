@@ -15,8 +15,8 @@ boolean.js:17:24,27: boolean literal true
 Expected boolean literal false, got true instead
 boolean.js:19:35,39: boolean literal false
 
-boolean.js:23:12,13: boolean
-Expected boolean literal false
+boolean.js:23:12,13: boolean value true
+Expected boolean literal false, got true instead
 boolean.js:19:35,39: boolean literal false
 
 boolean.js:29:1,6: function call
