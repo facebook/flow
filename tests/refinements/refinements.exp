@@ -199,6 +199,14 @@ null.js:7:7,10: null
 This type is incompatible with
 null.js:7:7,16: number
 
+property.js:64:12,17: null
+This type is incompatible with
+property.js:61:59,64: string
+
+property.js:64:12,17: undefined
+This type is incompatible with
+property.js:61:59,64: string
+
 refinements.js:2:16,16: number
 This type is incompatible with
 refinements.js:4:15,20: string
@@ -403,4 +411,4 @@ void.js:85:7,12: undefined
 This type is incompatible with
 void.js:85:7,19: number
 
-Found 94 errors
+Found 96 errors

@@ -744,7 +744,7 @@ module Scope = struct
        due to our modeling of this and super as flow-sensitive vars
        in derived constructors.
      *)
-    let havoc make_specific name entry =
+    let havoc ?name make_specific name entry =
       match entry with
       | Value v ->
         if is_internal_name name then entry
@@ -765,6 +765,19 @@ module Scope = struct
           | Prop name -> spf ".%s" name
           | Elem expr -> spf "[%s]" (string_of_key expr)
         ))
+
+    (* true if the given key uses the given property name *)
+    let rec uses_propname propname (base, proj) =
+      proj_uses_propname propname proj
+
+    (* true if the given projection list uses the given property name *)
+    and proj_uses_propname propname = function
+    | Prop name :: tail ->
+      name = propname || proj_uses_propname propname tail
+    | Elem key :: tail ->
+      uses_propname propname key || proj_uses_propname propname tail
+    | [] ->
+      false
 
     let compare = Pervasives.compare
 
@@ -857,15 +870,24 @@ module Scope = struct
   let get_refi name scope =
     KeyMap.get name scope.refis
 
+  (* helper: filter all refis whose expressions involve the given name *)
+  let filter_refis_using_propname propname refis =
+    refis |> KeyMap.filter (fun key _ ->
+      not (Key.uses_propname propname key)
+    )
+
   (* havoc a scope:
-     - clear all refis
+     - if name is not passed, clear all refis. if passed, clear
+       any refis whose expressions involve name
      - make_specific makes a new specific type from a general type.
      if passed, havoc all non-internal var entries using it
    *)
-  let havoc ?make_specific scope =
-    scope.refis <- KeyMap.empty;
+  let havoc ?name ?make_specific scope =
+    scope.refis <- (match name with
+    | Some name -> scope.refis |> (filter_refis_using_propname name)
+    | None -> KeyMap.empty);
     match make_specific with
-    | Some f -> scope |> update_entries (Entry.havoc f)
+    | Some f -> scope |> update_entries (Entry.havoc ~name f)
     | None -> ()
 
 end

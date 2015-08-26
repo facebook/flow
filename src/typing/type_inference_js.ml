@@ -3727,11 +3727,11 @@ and assignment cx type_params_map loc = Ast.Expression.(function
               (* flow type to object property itself *)
               Flow_js.flow cx (o, SetT (reason, (prop_reason, name), t));
 
-              (* types involved in the assignment itself are computed
+              (* types involved in the assignment are computed
                  in pre-havoc environment. it's the assignment itself
                  which clears refis *)
               (* TODO: havoc refinements for this prop name only *)
-              Env_js.havoc_heap_refinements ();
+              Env_js.havoc_heap_refinements_with_propname name;
 
               (* add type refinement if LHS is a pattern we handle *)
               match Refinement.key expr with
@@ -3741,8 +3741,8 @@ and assignment cx type_params_map loc = Ast.Expression.(function
                    underlying object type. If invalid, of course, they produce
                    errors, but in the future we may want to prevent the
                    invalid types from flowing downstream as well.
-                   Doing so would require that we defer any subseuqnt flow
-                   call that are sensitive to the refined type until the
+                   Doing so would require that we defer any subsequent flow
+                   calls that are sensitive to the refined type until the
                    object and refinement types - `o` and `t` here - are
                    fully resolved.
                  *)

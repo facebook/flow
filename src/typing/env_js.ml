@@ -882,10 +882,14 @@ let havoc_vars =
     refis |> KeySet.iter havoc_refi
 
 (* Clear entries for heap refinement pseudovars in env.
+   If name is passed, clear only those refis that depend on it.
    Real variables are left untouched.
  *)
 let havoc_heap_refinements () =
   iter_scopes Scope.havoc
+
+let havoc_heap_refinements_with_propname name =
+  iter_scopes (Scope.havoc ~name)
 
 (* set specific type of every non-internal var in top scope to undefined,
    and clear heap refinements.

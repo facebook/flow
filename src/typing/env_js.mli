@@ -109,6 +109,7 @@ val havoc_all: unit -> unit
 val havoc_vars: changeset -> unit
 
 val havoc_heap_refinements: unit -> unit
+val havoc_heap_refinements_with_propname: string -> unit
 
 val string_of_env: context -> Scope.t list -> string
 

@@ -318,7 +318,7 @@ module Scope: sig
     val declared_type: t -> Type.t
 
     val string_of_kind: t -> string
-    val havoc: (Type.t -> Type.t) -> string -> t -> t
+    val havoc: ?name:string -> (Type.t -> Type.t) -> string -> t -> t
   end
 
   module Key: sig
@@ -369,7 +369,7 @@ module Scope: sig
   val remove_refi: Key.t -> t -> unit
   val get_refi: Key.t -> t -> refi_binding option
 
-  val havoc: ?make_specific: (Type.t -> Type.t) -> t -> unit
+  val havoc: ?name: string -> ?make_specific: (Type.t -> Type.t) -> t -> unit
 
 end
 
