@@ -11,7 +11,7 @@
 open Constraint_js
 
 type autocomplete_type =
-| Acid of (Scope.entry Utils.SMap.t)
+| Acid of (Scope.Entry.t Utils.SMap.t)
 | Acmem of (Type.t)
 
 let autocomplete_suffix = "AUTO332"

@@ -1,0 +1,49 @@
+
+rebinding.js:19:3,18: A
+name is already bound
+rebinding.js:18:3,18: type A
+
+rebinding.js:24:9,9: A
+name is already bound
+rebinding.js:23:3,18: type A
+
+rebinding.js:34:7,7: A
+name is already bound
+rebinding.js:33:3,18: type A
+
+rebinding.js:39:3,3: A
+type alias referenced from value position
+rebinding.js:38:3,18: type A
+
+rebinding.js:45:3,18: A
+name is already bound
+rebinding.js:44:9,9: let A
+
+rebinding.js:50:9,9: A
+name is already bound
+rebinding.js:49:9,9: let A
+
+rebinding.js:60:7,7: A
+name is already bound
+rebinding.js:59:9,9: let A
+
+rebinding.js:94:3,18: A
+name is already bound
+rebinding.js:93:7,7: var A
+
+rebinding.js:99:9,9: A
+name is already bound
+rebinding.js:98:7,7: var A
+
+tdz.js:33:8,8: identifier C
+Could not resolve name
+
+tdz.js:35:13,13: C
+let referenced before declaration
+tdz.js:37:7,7: let C
+
+tdz.js:49:5,13: undefined
+This type is incompatible with
+tdz.js:49:8,13: number
+
+Found 12 errors

@@ -6,6 +6,6 @@ function foo(x: Class<A>): A {
 class B {
   constructor(_: any) { }
 }
-function foo(x: Class<B>): B {
+function bar(x: Class<B>): B {
   return new x(); // error (too few args)
 }

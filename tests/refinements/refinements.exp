@@ -111,19 +111,19 @@ mixed.js:4:25,30: string
 
 mixed.js:32:5,18: function call
 Error:
-mixed.js:30:17,21: null
+mixed.js:30:18,22: null
 This type is incompatible with
 mixed.js:4:25,30: string
 
 mixed.js:32:5,18: function call
 Error:
-mixed.js:30:17,21: object
+mixed.js:30:18,22: object
 This type is incompatible with
 mixed.js:4:25,30: string
 
 mixed.js:38:5,18: function call
 Error:
-mixed.js:36:17,21: array
+mixed.js:36:18,22: array
 This type is incompatible with
 mixed.js:4:25,30: string
 

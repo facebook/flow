@@ -239,9 +239,7 @@ and havoc_ctx_ = function
   | scope::scopes, frame1::stack1, frame2::stack2
     when frame1 = frame2 ->
     (if modes.verbose then prerr_endlinef "HAVOC::%d" frame1);
-    scope |> Scope.(update_opt
-      (havoc_entry ~make_specific:(fun general -> general))
-    );
+    scope |> Scope.havoc ~make_specific:(fun general -> general);
     havoc_ctx_ (scopes, stack1, stack2)
   | _ -> ()
 

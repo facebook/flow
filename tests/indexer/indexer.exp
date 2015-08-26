@@ -1,22 +1,22 @@
 
 A.js:13:10,23: property name "foo" is a string
 This type is incompatible with
-A.js:12:24,29: number
+A.js:12:25,30: number
 
 A.js:18:17,21: string
 This type is incompatible with
-A.js:17:33,38: number
+A.js:17:34,39: number
 
 A.js:23:10,23: property name "foo" is a string
 This type is incompatible with
-A.js:22:24,29: number
+A.js:22:25,30: number
 
 A.js:23:17,21: string
 This type is incompatible with
-A.js:22:33,38: number
+A.js:22:34,39: number
 
 A.js:38:17,21: string
 This type is incompatible with
-A.js:37:46,51: number
+A.js:37:47,52: number
 
 Found 5 errors

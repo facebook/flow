@@ -3,7 +3,8 @@ interface.js:1:22,27: number
 This type is incompatible with
 interface.js:3:8,13: string
 
-interface.js:7:13,13: identifier I
-Could not resolve name
+interface.js:7:13,13: I
+type alias referenced from value position
+interface.js:5:1,26: type I
 
 Found 2 errors

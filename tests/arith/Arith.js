@@ -23,26 +23,26 @@ function foo() {
 }
 
 // test MaybeT(NumT)
-function bar(x: ?number, y: number) {
+function bar0(x: ?number, y: number) {
   num(x + y);
 }
-function bar(x: number, y: ?number) {
+function bar1(x: number, y: ?number) {
   num(x + y);
 }
 
 // test OptionalT(NumT)
-function bar(x?: number, y: number) {
+function bar2(x?: number, y: number) {
   num(x + y);
 }
-function bar(x: number, y?: number) {
+function bar3(x: number, y?: number) {
   num(x + y);
 }
 
 // test OptionalT(MaybeT(NumT))
-function bar(x?: ?number, y: number) {
+function bar4(x?: ?number, y: number) {
   num(x + y);
 }
-function bar(x: number, y?: ?number) {
+function bar5(x: number, y?: ?number) {
   num(x + y);
 }
 

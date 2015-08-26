@@ -15,14 +15,14 @@ function bar(): number {
 }
 
 /* refining globals */
-function fn() {
+function fn0() {
   if (typeof BAZ !== 'undefined' &&
       typeof BAZ.stuff === 'function') {
     BAZ.stuff(123);
   }
   BAZ.stuff(123); // error, refinement is gone
 }
-function fn() {
+function fn1() {
   BAZ.stuff; // error, could be undefined
   if (typeof BAZ !== 'undefined' &&
       typeof BAZ.stuff === 'function') {

@@ -661,14 +661,120 @@ let copy_node node = match node with
 
 module Scope = struct
 
-  (* a scope entry is a symbol binding *)
-  (* TODO separate types, vars, consts... *)
-  type entry = {
-    specific: Type.t;
-    general: Type.t;
-    def_loc: Loc.t option;
-    for_type: bool;
-  }
+  (* entries for vars/lets, consts and types *)
+  module Entry = struct
+
+    type state = Undeclared | Declared | Initialized
+
+    let string_of_state = function
+    | Undeclared -> "Undeclared"
+    | Declared -> "Declared"
+    | Initialized -> "Initialized"
+
+    type value_kind = Const | Let | Var
+
+    let string_of_value_kind = function
+    | Const -> "const" | Let -> "let" | Var -> "var"
+
+    type value_binding = {
+      kind: value_kind;
+      value_state: state;
+      value_loc: Loc.t option;
+      specific: Type.t;
+      general: Type.t;
+    }
+
+    type type_binding = {
+      type_state: state;
+      type_loc: Loc.t option;
+      _type: Type.t;
+    }
+
+    type t =
+    | Value of value_binding
+    | Type of type_binding
+
+    (* constructors *)
+    let new_value kind state specific general value_loc =
+      Value {
+        kind;
+        value_state = state;
+        value_loc;
+        specific;
+        general
+      }
+
+    let new_const ?loc ?(state=Undeclared) t = new_value Const state t t loc
+
+    let new_let ?loc ?(state=Undeclared) t = new_value Let state t t loc
+
+    let new_var ?loc ?(state=Undeclared) ?specific general =
+      let specific = match specific with Some t -> t | None -> general in
+      new_value Var state specific general loc
+
+    let new_type ?loc ?(state=Undeclared) _type =
+      Type {
+        type_state = state;
+        type_loc = loc;
+        _type
+      }
+
+    (* accessors *)
+    let loc = function
+    | Value v -> v.value_loc
+    | Type t -> t.type_loc
+
+    let declared_type = function
+    | Value v -> v.general
+    | Type t -> t._type
+
+    let actual_type = function
+    | Value v -> v.specific
+    | Type t -> t._type
+
+    let string_of_kind = function
+    | Value v -> string_of_value_kind v.kind
+    | Type _ -> "type"
+
+    (* Given a name, an entry, and a function for making a new
+       specific type from a Var entry's current general type,
+       return a new non-internal Value entry with specific type replaced,
+       or the existing entry.
+       Note: we continue to need the is_internal trap here,
+       due to our modeling of this and super as flow-sensitive vars
+       in derived constructors.
+     *)
+    let havoc make_specific name entry =
+      match entry with
+      | Value v ->
+        if is_internal_name name then entry
+        else Value { v with specific = make_specific v.general }
+      | Type _ -> entry
+
+  end
+
+  (* keys for refinements *)
+  module Key = struct
+
+    type proj = Prop of string | Elem of t
+    and t = string * proj list
+
+    let rec string_of_key (base, projs) =
+      base ^ String.concat "" (
+        (List.rev projs) |> List.map (function
+          | Prop name -> spf ".%s" name
+          | Elem expr -> spf "[%s]" (string_of_key expr)
+        ))
+
+    let compare = Pervasives.compare
+
+  end
+
+  module KeySet : Set.S with type elt = Key.t
+  = Set.Make(Key)
+
+  module KeyMap : MapSig with type key = Key.t
+  = MyMap(Key)
 
   (* a var scope corresponds to a runtime activation,
      e.g. a function. *)
@@ -679,120 +785,88 @@ module Scope = struct
   (* var and lexical scopes differ in hoisting behavior
      and auxiliary properties *)
   (* TODO lexical scope support *)
-  type kind = VarScope of var_scope_attrs | LexScope
+  type kind =
+  | VarScope of var_scope_attrs
+  | LexScope
+
+  type refi_binding = {
+    refi_loc: Loc.t option;
+    refined: Type.t;
+    original: Type.t;
+  }
 
   (* a scope is a mutable binding table, plus kind and attributes *)
   (* TODO add in-scope type variable binding table *)
   type t = {
     kind: kind;
-    mutable entries: entry SMap.t;
+    mutable entries: Entry.t SMap.t;
+    mutable refis: refi_binding KeyMap.t
+  }
+
+  let fresh_impl kind = {
+    kind;
+    entries = SMap.empty;
+    refis = KeyMap.empty;
   }
 
   (* return a fresh scope of the most common kind (var, non-async) *)
-  let fresh () = {
-    kind = VarScope { async = false };
-    entries = SMap.empty;
-  }
+  let fresh () = fresh_impl (VarScope { async = false })
 
   (* return a fresh async var scope *)
-  let fresh_async () = {
-    kind = VarScope { async = true };
-    entries = SMap.empty;
-  }
+  let fresh_async () = fresh_impl (VarScope { async = true })
 
   (* return a fresh lexical scope *)
-  let fresh_lex () = {
-    kind = LexScope;
-    entries = SMap.empty;
-  }
+  let fresh_lex () = fresh_impl LexScope
 
   (* clone a scope (snapshots mutable entries) *)
-  let clone { kind; entries } =
-    { kind; entries }
+  let clone { kind; entries; refis } = { kind; entries; refis }
 
-  (* use passed f to update all scope entries *)
-  let update f scope =
-    scope.entries <- SMap.mapi f scope.entries
-
-  (* use passed f to update or remove scope entries *)
-  let update_opt f scope =
-    scope.entries <- SMap.fold (fun name entry acc ->
-      match f name entry with
-      | Some entry -> SMap.add name entry acc
-      | None -> acc
-    ) scope.entries SMap.empty
-
-  (* run passed f on all scope entries *)
-  let iter f scope =
+  (* use passed f to iterate over all scope entries *)
+  let iter_entries f scope =
     SMap.iter f scope.entries
 
+  (* use passed f to update all scope entries *)
+  let update_entries f scope =
+    scope.entries <- SMap.mapi f scope.entries
+
   (* add entry to scope *)
-  let add name entry scope =
+  let add_entry name entry scope =
     scope.entries <- SMap.add name entry scope.entries
 
   (* remove entry from scope *)
-  let remove name scope =
+  let remove_entry name scope =
     scope.entries <- SMap.remove name scope.entries
 
-  (* true iff name is bound in scope *)
-  let mem name scope =
-    SMap.mem name scope.entries
-
   (* get entry from scope, or None *)
-  let get name scope =
+  let get_entry name scope =
     SMap.get name scope.entries
 
-  (* get entry from scope, or fail *)
-  let get_unsafe name scope =
-    SMap.find_unsafe name scope.entries
+  (* use passed f to update all scope refis *)
+  let update_refis f scope =
+    scope.refis <- KeyMap.mapi f scope.refis
 
-  (* create new entry *)
-  let create_entry ?(for_type=false) specific general loc = {
-    specific;
-    general;
-    def_loc = loc;
-    for_type;
-  }
+  (* add refi to scope *)
+  let add_refi key refi scope =
+    scope.refis <- KeyMap.add key refi scope.refis
 
-  (* common logic for manipulating entries.
-     this is higher-level than the rest of this module, which
-     is essentially type-agnostic. it's here because it's
-     used by both Env and Flow, and Ocaml dep management ugh. *)
+  (* remove entry from scope *)
+  let remove_refi key scope =
+    scope.refis <- KeyMap.remove key scope.refis
 
-  (* refinement keys - soon to depart *)
+  (* get entry from scope, or None *)
+  let get_refi name scope =
+    KeyMap.get name scope.refis
 
-  let is_refinement name =
-    (String.length name) >= 5 && (String.sub name 0 5) = "$REFI"
-
-  (* Given a name, an entry, and a function for making a new
-     specific type from the entry's current general type,
-     return an entry with specific type replaced, subject to the
-     following conditions (which should only need to be understood here):
-
-     * refinements are always cleared outright.
-
-       Unlike real variables, a heap refinement pseudovar can simply be removed
-       on a havoc, since its "general type" resides in the underlying object
-       whose property is being refined. In the absence of a refinement entry,
-       lookups of such properties will resolve to GetT operations in the usual
-       way.
-
-       (Note: shortly, entries will become ADTs to reflect such structural
-       differences - heap refinements, among others, will lose their general
-       type fields entirely.)
-
-     * internal names (.this, .super, .return, .exports) are read-only,
-       and are never modified.
-
-     make_specific is optional. if not passed, non-internal var entries
-     are left untouched.
+  (* havoc a scope:
+     - clear all refis
+     - make_specific makes a new specific type from a general type.
+     if passed, havoc all non-internal var entries using it
    *)
-  let havoc_entry ?make_specific name entry =
-    if is_refinement name then None
-    else if is_internal_name name then Some entry
-    else match make_specific with
-    | None -> Some entry
-    | Some f -> Some { entry with specific = f entry.general }
+  let havoc ?make_specific scope =
+    scope.refis <- KeyMap.empty;
+    match make_specific with
+    | Some f -> scope |> update_entries (Entry.havoc f)
+    | None -> ()
 
 end
 
@@ -2345,29 +2419,72 @@ let is_printed_param_type_parsable ?(weak=false) cx t =
 
 (* scopes and types *)
 
-let string_of_scope cx scope = Scope.(
+let string_of_loc_opt = function
+| Some loc -> string_of_loc loc
+| None -> "(none)"
 
-  let string_of_entry cx entry =
-    let pos = match entry.def_loc with
-    | Some loc -> string_of_loc loc
-    | None -> "(none)"
-    in
-    Utils.spf "{ specific: %s; general: %s; def_loc: %s; for_type: %b }"
-      (dump_t cx entry.specific)
-      (dump_t cx entry.general)
-      pos
-      entry.for_type
+let string_of_entry = Scope.(
+
+  let string_of_value cx {
+    Entry.kind; value_state; value_loc; specific; general
+  } =
+    Utils.spf "{ kind: %s; value_state: %s; value_loc: %s; \
+      specific: %s; general: %s }"
+      (Entry.string_of_value_kind kind)
+      (Entry.string_of_state value_state)
+      (string_of_loc_opt value_loc)
+      (dump_t cx specific)
+      (dump_t cx general)
   in
 
+  let string_of_type cx { Entry.type_state; type_loc; _type } =
+    Utils.spf "{ type_state: %s; type_loc: %s; _type: %s }"
+      (Entry.string_of_state type_state)
+      (string_of_loc_opt type_loc)
+      (dump_t cx _type)
+  in
+
+  fun cx -> Entry.(function
+  | Value r -> spf "Value %s" (string_of_value cx r)
+  | Type r -> spf "Type %s" (string_of_type cx r)
+  )
+)
+
+let string_of_scope = Scope.(
+
   let string_of_entries cx entries =
-    SMap.fold (fun k v acc ->
-      (Utils.spf "%s: %s" k (string_of_entry cx v))::acc
+    SMap.fold (fun name entry acc ->
+      (Utils.spf "%s: %s" name (string_of_entry cx entry))
+        :: acc
     ) entries []
     |> String.concat ";\n  "
   in
 
-  Utils.spf "{ entries:\n%s\n}"
-    (string_of_entries cx scope.entries)
+  let string_of_refi cx { refi_loc; refined; original } =
+    Utils.spf "{ refi_loc: %s; refined: %s; original: %s }"
+      (string_of_loc_opt refi_loc)
+      (dump_t cx refined)
+      (dump_t cx original)
+  in
+
+  let string_of_refis cx refis =
+    KeyMap.fold (fun key refi acc ->
+      (Utils.spf "%s: %s" (Key.string_of_key key) (string_of_refi cx refi))
+        :: acc
+    ) refis []
+    |> String.concat ";\n  "
+  in
+
+  let string_of_scope_kind = function
+  | VarScope attrs -> spf "VarScope { async: %b }" attrs.async
+  | LexScope -> "Lex"
+  in
+
+  fun cx scope ->
+    Utils.spf "{ kind: %s;\nentries:\n%s\nrefis:\n%s\n}"
+      (string_of_scope_kind scope.kind)
+      (string_of_entries cx scope.entries)
+      (string_of_refis cx scope.refis)
 )
 
 (*****************************************************************)

@@ -1,7 +1,7 @@
 
 Foo.js:10:10,10: property x
 Property cannot be assigned on possibly undefined value
-Foo.js:10:5,8: uninitialized this (expected super constructor call)
+Foo.js:7:7,9: uninitialized this (expected super constructor call)
 
 Foo.js:13:16,16: parameter z
 Missing annotation

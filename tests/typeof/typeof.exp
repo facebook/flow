@@ -11,7 +11,8 @@ typeof.js:61:26,31: string
 This type is incompatible with
 typeof.js:59:14,19: number
 
-typeof.js:73:15,25: typeof-annotation 'numberAlias'
-Could not resolve name
+typeof.js:73:15,25: numberAlias
+type alias referenced from value position
+typeof.js:67:1,26: type numberAlias
 
 Found 4 errors

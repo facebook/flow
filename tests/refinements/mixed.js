@@ -27,13 +27,13 @@ function fun(x: mixed) {
   }
 }
 
-function obj(x: mixed) {
+function obj0(x: mixed) {
   if (typeof x === "object") {
     takesString(x); // error
   }
 }
 
-function obj(x: mixed) {
+function obj1(x: mixed) {
   if (Array.isArray(x)) {
     takesString(x); // error
   }

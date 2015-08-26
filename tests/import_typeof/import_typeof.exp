@@ -5,8 +5,9 @@ import_typeof.js:10:8,16: ClassFoo1
 This type is incompatible with
 import_typeof.js:9:15,24: class type: ClassFoo1
 
-import_typeof.js:14:5,14: identifier ClassFoo1T
-Could not resolve name
+import_typeof.js:14:5,14: ClassFoo1T
+type alias referenced from value position
+import_typeof.js:9:1,54: type ClassFoo1T
 
 import_typeof.js:24:22,36: constructor call
 Error:
@@ -14,8 +15,9 @@ import_typeof.js:21:9,17: ClassFoo2
 This type is incompatible with
 import_typeof.js:20:16,24: class type: ClassFoo2
 
-import_typeof.js:25:5,14: identifier ClassFoo2T
-Could not resolve name
+import_typeof.js:25:5,14: ClassFoo2T
+type alias referenced from value position
+import_typeof.js:20:16,38: type ClassFoo2T
 
 import_typeof.js:35:22,36: constructor call
 Error:
@@ -32,20 +34,20 @@ ExportCJSNamed_Class.js:7:21,29: class type: ClassFoo4
 import_typeof.js:51:16,24: import typeof { AliasFoo3 }
 `import typeof` can not be used on type-only exports! If you intended to import a type alias, please use `import type` instead.
 
-import_typeof.js:68:15,20: string
+import_typeof.js:68:23,28: string
+This type is incompatible with
+import_typeof.js:65:15,25: number
+
+import_typeof.js:77:21,26: string
 This type is incompatible with
 import_typeof.js:74:16,18: number
 
-import_typeof.js:77:15,20: string
+import_typeof.js:86:27,32: string
 This type is incompatible with
-import_typeof.js:74:16,18: number
+import_typeof.js:83:15,29: number
 
-import_typeof.js:86:15,20: string
+import_typeof.js:95:25,30: string
 This type is incompatible with
-import_typeof.js:74:16,18: number
-
-import_typeof.js:95:15,20: string
-This type is incompatible with
-import_typeof.js:74:16,18: number
+ExportCJSNamed_Number.js:3:15,16: number
 
 Found 11 errors

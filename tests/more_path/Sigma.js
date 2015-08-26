@@ -31,7 +31,7 @@ function foo(x:A) {
 
 class D { d() {} }
 
-function foo(x:D) {
+function baz(x:D) {
   if (x instanceof A) {
     // unreachable, TODO: this shouldn't throw
   }

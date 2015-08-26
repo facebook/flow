@@ -70,7 +70,7 @@ class D extends C {
 }
 
 
-function foo(x: Array<number> | number) {
+function foo0(x: Array<number> | number) {
   if (x instanceof Array) {
     x[0] = 123;
   } else {
@@ -78,7 +78,7 @@ function foo(x: Array<number> | number) {
   }
 }
 
-function foo(x: Array<number> | number) {
+function foo1(x: Array<number> | number) {
   if (x instanceof Array) {
     x++; // error
   } else {

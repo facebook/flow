@@ -143,33 +143,35 @@ let autocomplete_member client_logging_context cx this = Flow_js.(
   List.rev (SMap.values result_map)
 )
 
+(* env is all visible bound names at cursor *)
 let autocomplete_id cx env =
-  Utils.SMap.fold Scope.(fun key value acc ->
-      (* Filter out internal environment variables except for this and
-         super. *)
-      let is_this = key = (Reason_js.internal_name "this") in
-      let is_super = key = (Reason_js.internal_name "super") in
-      if not (is_this || is_super) && Reason_js.is_internal_name key
-      then acc
-      else (
-        let (loc, name) =
-          (* renaming of this/super *)
-          if is_this
-          then (None, "this")
-          else if is_super
-          then (None, "super")
-          else (value.def_loc, key) in
-        let loc = match loc with
-          | Some loc -> loc
-          | None -> Loc.none
-        in
+  Utils.SMap.fold (fun name entry acc ->
+    (* Filter out internal environment variables except for this and
+       super. *)
+    let is_this = name = (Reason_js.internal_name "this") in
+    let is_super = name = (Reason_js.internal_name "super") in
+    if not (is_this || is_super) && Reason_js.is_internal_name name
+    then acc
+    else (
+      let (loc, name) =
+        (* renaming of this/super *)
+        if is_this
+        then (None, "this")
+        else if is_super
+        then (None, "super")
+        else (Scope.Entry.loc entry, name) in
+      let loc = match loc with
+        | Some loc -> loc
+        | None -> Loc.none
+      in
 
-        let type_ = Flow_js.printified_type cx value.specific in
-        let result =
-          autocomplete_create_result cx name type_ loc in
-        result :: acc
-      )
-    ) env []
+      let type_ = Scope.Entry.actual_type entry in
+      let type_ = Flow_js.printified_type cx type_ in
+      let result =
+        autocomplete_create_result cx name type_ loc in
+      result :: acc
+    )
+  ) env []
 
 let autocomplete_get_results client_logging_context cx state =
   (* FIXME: See #5375467 *)

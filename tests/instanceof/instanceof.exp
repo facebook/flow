@@ -17,12 +17,12 @@ instanceof.js:51:50,55: string
 This type is incompatible with
 instanceof.js:4:17,22: number
 
-instanceof.js:81:17,29: array type
+instanceof.js:81:18,30: array type
 This type is incompatible with
 instanceof.js:83:5,7: number
 
 instanceof.js:85:5,8: assignment of computed property/element
 Computed property/element cannot be assigned on
-instanceof.js:81:33,38: number
+instanceof.js:81:34,39: number
 
 Found 5 errors
