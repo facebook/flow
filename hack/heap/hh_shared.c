@@ -596,8 +596,10 @@ void hh_load(value in_filename) {
   size_t revlen = 0;
   read_all(fileno(fp), (void*)&revlen, sizeof revlen);
   char revision[revlen];
-  read_all(fileno(fp), (void*)revision, revlen * sizeof(char));
-  assert(strncmp(revision, BuildInfo_kRevision, revlen) == 0);
+  if (revlen > 0) {
+    read_all(fileno(fp), (void*)revision, revlen * sizeof(char));
+    assert(strncmp(revision, BuildInfo_kRevision, revlen) == 0);
+  }
 
   read_all(fileno(fp), (void*)&heap_init_size, sizeof heap_init_size);
 
