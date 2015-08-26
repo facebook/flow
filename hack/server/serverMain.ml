@@ -410,7 +410,9 @@ let save _genv env fn =
  *)
 let main options config =
   let root = ServerArgs.root options in
-  HackEventLogger.init root (Unix.time ());
+  if Sys_utils.is_test_mode ()
+  then EventLogger.init (Daemon.devnull ()) 0.0
+  else HackEventLogger.init root (Unix.time ());
   Program.preinit ();
   SharedMem.init (ServerConfig.sharedmem_config config);
   (* this is to transform SIGPIPE in an exception. A SIGPIPE can happen when

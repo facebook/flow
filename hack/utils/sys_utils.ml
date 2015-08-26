@@ -284,3 +284,9 @@ let splitext filename =
   let ext_length = String.length filename - root_length - 1 in
   let ext = String.sub filename (root_length + 1) ext_length in
   root, ext
+
+let is_test_mode () =
+  try
+    ignore @@ Sys.getenv "HH_TEST_MODE";
+    true
+  with _ -> false

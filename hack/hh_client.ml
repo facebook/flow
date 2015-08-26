@@ -46,7 +46,9 @@ let () =
   if not Sys.win32 then Sys.set_signal Sys.sigpipe Sys.Signal_ignore;
   let command = ClientArgs.parse_args () in
   let log_cmd = ClientLogCommandUtils.log_command_of_command command in
-  HackEventLogger.client_startup log_cmd;
+  if Sys_utils.is_test_mode ()
+  then EventLogger.init (Daemon.devnull ()) 0.0
+  else HackEventLogger.client_startup log_cmd;
   let exit_status =
     try
       match command with
