@@ -722,9 +722,9 @@ and emit_expr env (pos, expr_ as expr) =
     { env with
       pending_closures = (name, cstate, (fun_, vars)) :: env.pending_closures }
 
+
+  | Id (_, id) when SN.PseudoConsts.is_pseudo_const id -> unimpl "pseudo consts"
   (* In this context, Id is a global constant *)
-  (* XXX: we should support all the pseudoconstants but Naming translates
-   * them to bogus strings and integers! *)
   | Id (_, id) -> emit_Cns env id
 
   | Assert _ -> unimpl "Assert"

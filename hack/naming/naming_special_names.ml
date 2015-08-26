@@ -198,14 +198,23 @@ end
 
 module PseudoConsts = struct
 
-  let g__LINE__      = "__LINE__"
-  let g__CLASS__     = "__CLASS__"
-  let g__TRAIT__     = "__TRAIT__"
-  let g__FILE__      = "__FILE__"
-  let g__DIR__       = "__DIR__"
-  let g__FUNCTION__  = "__FUNCTION__"
-  let g__METHOD__    = "__METHOD__"
-  let g__NAMESPACE__ = "__NAMESPACE__"
+  let g__LINE__      = "\\__LINE__"
+  let g__CLASS__     = "\\__CLASS__"
+  let g__TRAIT__     = "\\__TRAIT__"
+  let g__FILE__      = "\\__FILE__"
+  let g__DIR__       = "\\__DIR__"
+  let g__FUNCTION__  = "\\__FUNCTION__"
+  let g__METHOD__    = "\\__METHOD__"
+  let g__NAMESPACE__ = "\\__NAMESPACE__"
+
+  let all_pseudo_consts = [
+    g__LINE__; g__CLASS__; g__TRAIT__; g__FILE__; g__DIR__;
+    g__FUNCTION__; g__METHOD__; g__NAMESPACE__
+  ]
+  let is_pseudo_const =
+    let h = HashSet.create 23 in
+    List.iter all_pseudo_consts (HashSet.add h);
+    fun x -> HashSet.mem h x
 
 end
 
@@ -243,7 +252,7 @@ module Superglobals = struct
     ]
 
   let is_superglobal =
-    let h = Hashtbl.create 23 in
-    List.iter all_superglobals (fun x -> Hashtbl.add h x true);
-    fun x -> Hashtbl.mem h x
+    let h = HashSet.create 23 in
+    List.iter all_superglobals (HashSet.add h);
+    fun x -> HashSet.mem h x
 end

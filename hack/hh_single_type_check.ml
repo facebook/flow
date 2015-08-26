@@ -161,7 +161,16 @@ let what_builtins mode = match mode with
   "  'name' => ?string,\n"^
   "  'alias' => ?string,\n"^
   ");\n"^
-  "function type_structure($x, $y);\n"
+  "function type_structure($x, $y);\n"^
+  "const int __LINE__ = 0;\n"^
+  "const string __CLASS__ = '';\n"^
+  "const string __TRAIT__ = '';\n"^
+  "const string __FILE__ = '';\n"^
+  "const string __DIR__ = '';\n"^
+  "const string __FUNCTION__ = '';\n"^
+  "const string __METHOD__ = '';\n"^
+  "const string __NAMESPACE__ = '';\n"
+
 
 (*****************************************************************************)
 (* Helpers *)

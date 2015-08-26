@@ -1788,33 +1788,8 @@ and expr_ env = function
   | Float s -> N.Float s
   | String s -> N.String s
   | String2 idl -> N.String2 (string2 env idl)
-  | Id x ->
-    (match snd x with
-      | const when const = SN.PseudoConsts.g__LINE__ -> N.Int x
-      | const when const = SN.PseudoConsts.g__CLASS__ ->
-        (match (fst env).current_cls with
-          | None -> Errors.illegal_CLASS (fst x); N.Any
-          | Some (cid, _) ->
-            (* this isn't quite correct when inside a trait, as
-             * __CLASS__ is replaced by the using class, but it's
-             * sufficient for typechecking purposes (we require
-             * subclass to be compatible with the trait member/method
-             * declarations) *)
-            N.String cid)
-      | const when const = SN.PseudoConsts.g__TRAIT__ ->
-        (match (fst env).current_cls with
-          | Some (cid, Ctrait) -> N.String cid
-          | _ -> Errors.illegal_TRAIT (fst x); N.Any)
-      | const when
-          const = SN.PseudoConsts.g__FILE__
-          || const = SN.PseudoConsts.g__DIR__
-          (* could actually check that we are in a function, method, etc *)
-          || const = SN.PseudoConsts.g__FUNCTION__
-          || const = SN.PseudoConsts.g__METHOD__
-          || const = SN.PseudoConsts.g__NAMESPACE__ ->
-        N.String x
-      | _ -> N.Id (Env.global_const env x)
-      )
+  | Id (pos, const as x) -> N.Id (Env.global_const env x)
+
   | Lvar (_, x) when x = SN.SpecialIdents.this -> N.This
   | Lvar (pos, x) when x = SN.SpecialIdents.placeholder ->
     N.Lplaceholder pos
@@ -1898,6 +1873,17 @@ and expr_ env = function
           (match (expr env e1), (expr env e2) with
           | (_, N.String cl), (_, N.String meth) ->
             N.Smethod_id (Env.class_name env cl, meth)
+          | (_, N.Id (_, const)), (_, N.String meth)
+            when const = SN.PseudoConsts.g__CLASS__  ->
+            (* All of these that use current_cls aren't quite correct
+             * inside a trait, as the class should be the using class.
+             * It's sufficient for typechecking purposes (we require
+             * subclass to be compatible with the trait member/method
+             * declarations).
+             * It *is* a problem for hh_emitter, though. *)
+            (match (fst env).current_cls with
+              | Some (cid, _) -> N.Smethod_id (cid, meth)
+              | None -> Errors.illegal_class_meth p; N.Any)
           | (_, N.Class_const (N.CI cl, (_, mem))), (_, N.String meth)
             when mem = SN.Members.mClass ->
             N.Smethod_id (Env.class_name env cl, meth)
