@@ -1052,12 +1052,12 @@ end = struct
 
       in let error_callback _ _ = raise Try.Rollback
 
-      (** So we may or may not be parsing the first part of an arrow function
-        * (the part before the =>). We might end up parsing that whole thing or
-        * we might end up parsing only part of it and thinking we're done. We
-        * need to look at the next token to figure out if we really parsed an
-        * assignment expression or if this is just the beginning of an arrow
-        * function *)
+      (* So we may or may not be parsing the first part of an arrow function
+       * (the part before the =>). We might end up parsing that whole thing or
+       * we might end up parsing only part of it and thinking we're done. We
+       * need to look at the next token to figure out if we really parsed an
+       * assignment expression or if this is just the beginning of an arrow
+       * function *)
       in let try_assignment_but_not_arrow_function env =
         let env = env |> with_error_callback error_callback in
         let ret = assignment_but_not_arrow_function env in
