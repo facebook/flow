@@ -286,7 +286,7 @@ and expr_ =
   | This
   | Id of sid
   | Lvar of id
-  | Lplaceholder of sid
+  | Lplaceholder of Pos.t
   | Fun_id of sid
   | Method_id of expr * pstring
   (* meth_caller('Class name', 'method name') *)

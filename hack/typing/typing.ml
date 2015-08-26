@@ -1146,7 +1146,7 @@ and expr_ ~in_cond ~(valkind: [> `lvalue | `rvalue | `other ]) env (p, e) =
         )
       )
     )
-  | Lplaceholder (p, _name) ->
+  | Lplaceholder p ->
     let r = Reason.Rplaceholder p in
     let ty = r, Tprim Tvoid in
     env, ty

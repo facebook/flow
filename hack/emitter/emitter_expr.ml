@@ -127,7 +127,7 @@ and emit_lval_inner env (_, expr_) =
     env, Lglobal
 
   | Lvar id -> env, llocal id
-  | Lplaceholder (_, s) -> env, Llocal s
+  | Lplaceholder _ -> env, Llocal SN.SpecialIdents.placeholder
   | Array_get (e1, maybe_e2) ->
     let env, base = emit_base env e1 in
     let env, member = (match maybe_e2 with

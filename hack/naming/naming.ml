@@ -1816,8 +1816,8 @@ and expr_ env = function
       | _ -> N.Id (Env.global_const env x)
       )
   | Lvar (_, x) when x = SN.SpecialIdents.this -> N.This
-  | Lvar ((_pos, x) as sid) when x = SN.SpecialIdents.placeholder ->
-    N.Lplaceholder sid
+  | Lvar (pos, x) when x = SN.SpecialIdents.placeholder ->
+    N.Lplaceholder pos
   | Lvar x ->
       N.Lvar (Env.lvar env x)
   | Obj_get (e1, (p, _ as e2), nullsafe) ->
