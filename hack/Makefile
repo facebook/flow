@@ -197,3 +197,4 @@ do-test:
 		--out-extension .format_out \
 		--expect-extension '' \
 		--flags --root .
+	python3 ../test/integration/runner.py hh_server hh_client
