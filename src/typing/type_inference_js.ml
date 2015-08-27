@@ -4881,11 +4881,6 @@ and mk_nominal_type ?(for_type=true) cx reason type_params_map (c, targs) =
   | None ->
       Flow_js.mk_instance cx reason ~for_type c
 
-and body_loc = Ast.Statement.FunctionDeclaration.(function
-  | BodyBlock (loc, _) -> loc
-  | BodyExpression (loc, _) -> loc
-)
-
 (* Makes signatures for fields and methods in a class. *)
 and mk_signature cx reason_c type_params_map superClass body = Ast.Class.(
   let _, { Body.body = elements } = body in
@@ -4943,7 +4938,7 @@ and mk_signature cx reason_c type_params_map superClass body = Ast.Class.(
         mk_type_param_declarations cx type_params_map typeParameters in
 
       let params_ret = mk_params_ret cx type_params_map
-        (params, defaults, rest) (body_loc body, returnType) in
+        (params, defaults, rest) (body, returnType) in
       let reason_desc = (match kind with
       | Method.Method -> spf "method %s" name
       | Method.Constructor -> "constructor"
@@ -5481,7 +5476,7 @@ and function_decl id cx type_params_map (reason:reason) ~async
     mk_type_param_declarations cx type_params_map type_params in
 
   let (params, pnames, ret, param_types_map, param_types_loc) =
-    mk_params_ret cx type_params_map params (body_loc body, ret) in
+    mk_params_ret cx type_params_map params (body, ret) in
 
   let save_return_exn = Abnormal.swap Abnormal.Return false in
   let save_throw_exn = Abnormal.swap Abnormal.Throw false in
@@ -5615,7 +5610,7 @@ and before_pos loc =
     }
   )
 
-and mk_params_ret cx type_params_map params (body_loc, ret_type_opt) =
+and mk_params_ret cx type_params_map params (body, ret_type_opt) =
 
   let (params, defaults, rest) = params in
   let defaults = if defaults = [] && params <> []
@@ -5683,7 +5678,11 @@ and mk_params_ret cx type_params_map params (body_loc, ret_type_opt) =
             SMap.add name loc param_types_loc)
   in
 
-  let phantom_return_loc = before_pos body_loc in
+  let phantom_return_loc = Ast.Statement.FunctionDeclaration.(match body with
+    | BodyBlock (loc, _) -> before_pos loc
+    | BodyExpression (loc, _) -> loc
+  ) in
+
   let return_type = mk_type_annotation cx type_params_map
     (mk_reason "return" phantom_return_loc) ret_type_opt in
 
