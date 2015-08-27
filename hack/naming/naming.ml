@@ -398,7 +398,7 @@ module Env = struct
   let lvar (genv, env) (p, x) =
     let p, ident =
       if SN.Superglobals.is_superglobal x && genv.in_mode = FileInfo.Mpartial
-      then p, Ident.tmp()
+      then p, Ident.make x
       else
         let lcl = SMap.get x !(env.locals) in
         match lcl with
