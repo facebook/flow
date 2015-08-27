@@ -72,3 +72,6 @@ let run_daemon roots (ic, oc) =
     let timeout = -1.0 in
     Fsnotify.select env.fsnotify ~read_fdl ~timeout fsnotify_callback
   done
+
+let entry_point =
+  Daemon.register_entry_point "dfind" run_daemon

@@ -32,7 +32,7 @@ let make_link_of_timestamped linkname =
     year (tm.tm_mon + 1) tm.tm_mday tm.tm_hour tm.tm_min tm.tm_sec in
   let filename = Filename.concat dir (spf "%s-%s.%s" base time_str ext) in
   Sys_utils.unlink_no_fail linkname;
-  Unix.symlink filename linkname;
+  Sys_utils.symlink filename linkname;
   filename
 
 let init_file root = path_of_root root "init"

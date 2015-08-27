@@ -290,3 +290,15 @@ let is_test_mode () =
     ignore @@ Sys.getenv "HH_TEST_MODE";
     true
   with _ -> false
+
+let symlink =
+  (* Dummy implementation of `symlink` on Windows: we create a text
+     file containing the targeted-file's path. Symlink are available
+     on Windows since Vista, but until Seven (included), one should
+     have administratrive rights in order to create symlink. *)
+  let win32_symlink source dest = write_file ~file:dest source in
+  if Sys.win32 then win32_symlink else Unix.symlink
+
+let setsid =
+  (* Not implemented on Windows. Let's just return the pid *)
+  if Sys.win32 then Unix.getpid else Unix.setsid

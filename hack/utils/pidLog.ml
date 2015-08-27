@@ -15,7 +15,9 @@ let log_oc = ref None
 let init pids_file =
   assert (!log_oc = None);
   Sys_utils.with_umask 0o111 begin fun () ->
-    log_oc := Some (open_out pids_file)
+    let oc = open_out pids_file in
+    log_oc := Some oc;
+    Unix.(set_close_on_exec (descr_of_out_channel oc))
   end
 
 let log ?reason pid =
@@ -46,3 +48,7 @@ let get_pids pids_file =
     List.rev !results
   with Sys_error _ ->
     raise FailedToGetPids
+
+let close () =
+  Option.iter !log_oc ~f:close_out;
+  log_oc := None

@@ -30,6 +30,7 @@ let start_server env =
   (* Create a pipe for synchronization with the server: we will wait
      until the server finishes its initialisation phase. *)
   let in_fd, out_fd = Unix.pipe () in
+  Unix.set_close_on_exec in_fd;
   let ic = Unix.in_channel_of_descr in_fd in
 
   let hh_server = get_hhserver () in
@@ -50,6 +51,7 @@ let start_server env =
   try
     let server_pid =
       Unix.(create_process hh_server hh_server_args stdin stdout stderr) in
+    Unix.close out_fd;
 
     match Unix.waitpid [] server_pid with
     | _, Unix.WEXITED 0 ->

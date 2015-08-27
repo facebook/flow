@@ -34,28 +34,42 @@ end = struct
   let release_init_lock root =
     ignore(Lock.release (ServerFiles.init_file root))
 
-  let wakeup_client ?(close = false) options msg =
-    match ServerArgs.waiting_client options with
-    | None -> ()
-    | Some oc ->
-        output_string oc (msg ^ "\n");
-        if close then close_out oc else flush oc
+  let wakeup_client oc msg =
+    Option.iter oc
+      ~f:(fun oc ->
+          try
+            output_string oc (msg ^ "\n");
+            flush oc
+          with _ ->
+            (* In case the client don't care... *)
+            ())
+
+  let close_waiting_channel oc =
+    Option.iter oc
+      ~f:(fun oc ->
+          try Unix.close (Unix.descr_of_out_channel oc)
+          with exn -> Printf.eprintf "Close: %S\n%!" (Printexc.to_string exn))
 
   (* This code is only executed when the options --check is NOT present *)
   let go options init_fun =
+    let waiting_channel =
+      Option.map
+        (ServerArgs.waiting_client options)
+        ~f:Handle.to_out_channel in
     let root = ServerArgs.root options in
     let t = Unix.gettimeofday () in
     Hh_logger.log "Initializing Server (This might take some time)";
     grab_init_lock root;
-    wakeup_client options "starting";
+    wakeup_client waiting_channel "starting";
     (* note: we only run periodical tasks on the root, not extras *)
     ServerIdle.init root;
     let env = init_fun () in
     release_init_lock root;
     Hh_logger.log "Server is READY";
-    wakeup_client ~close:true options "ready";
+    wakeup_client waiting_channel "ready";
     let t' = Unix.gettimeofday () in
     Hh_logger.log "Took %f seconds to initialize." (t' -. t);
+    close_waiting_channel waiting_channel;
     env
 end
 
@@ -408,11 +422,18 @@ let save _genv env fn =
  * type-checker succeeded. So to know if there is some work to be done,
  * we look if env.modified changed.
  *)
-let main options config =
+let daemon_main options =
+  Relative_path.set_path_prefix Relative_path.Root (ServerArgs.root options);
+  let config = Program.load_config () in
   let root = ServerArgs.root options in
   if Sys_utils.is_test_mode ()
   then EventLogger.init (Daemon.devnull ()) 0.0
   else HackEventLogger.init root (Unix.time ());
+  Option.iter
+    (ServerArgs.waiting_client options)
+    ~f:(fun handle ->
+        let fd = Handle.wrap_handle handle in
+        Unix.set_close_on_exec fd);
   Program.preinit ();
   SharedMem.init (ServerConfig.sharedmem_config config);
   (* this is to transform SIGPIPE in an exception. A SIGPIPE can happen when
@@ -447,26 +468,39 @@ let main options config =
     let env = MainInit.go options program_init in
     serve genv env socket
 
-let monitor_daemon options f =
+let daemon_entry =
+  Daemon.register_entry_point
+    "main"
+    (fun options (_ic, _oc) -> daemon_main options)
+
+let monitor_entry =
+  Daemon.register_entry_point
+    "monitor"
+    (fun (options, log_file) (_ic, _oc) ->
+       ignore (Sys_utils.setsid ());
+       let {Daemon.pid; _} =
+         Daemon.spawn ~log_file daemon_entry options in
+       let _pid, proc_stat = Unix.waitpid [] pid in
+       (match proc_stat with
+        | Unix.WEXITED 0 -> ()
+        | _ -> HackEventLogger.bad_exit proc_stat))
+
+let monitor_daemon options =
   let log_link = ServerFiles.log_link (ServerArgs.root options) in
   (try Sys.rename log_link (log_link ^ ".old") with _ -> ());
   let log_file = ServerFiles.make_link_of_timestamped log_link in
-  let {Daemon.pid; _} = Daemon.fork begin fun (_ic, _oc) ->
-    ignore @@ Unix.setsid ();
-    let {Daemon.pid; _} = Daemon.fork ~log_file f in
-    let _pid, proc_stat = Unix.waitpid [] pid in
-    (match proc_stat with
-    | Unix.WEXITED 0 -> ()
-    | _ -> HackEventLogger.bad_exit proc_stat)
-  end in
+  let {Daemon.pid; _} = Daemon.spawn monitor_entry (options, log_file) in
   Printf.eprintf "Spawned %s (child pid=%d)\n" Program.name pid;
-  Printf.eprintf "Logs will go to %s\n%!" log_link;
+  (* We are not using symlink on Windows (see Sys_utils.symlink),
+     so we announce the `log_file` to the user. The `log_link`
+     is only read by the client. *)
+  Printf.eprintf "Logs will go to %s\n%!"
+    (if Sys.win32 then log_file else log_link);
   ()
 
 let start () =
+  Daemon.check_entry_point (); (* this call might not return *)
   let options = Program.parse_options () in
-  Relative_path.set_path_prefix Relative_path.Root (ServerArgs.root options);
-  let config = Program.load_config () in
   if ServerArgs.should_detach options
-  then monitor_daemon options (fun (_ic, _oc) -> main options config)
-  else main options config
+  then monitor_daemon options
+  else daemon_main options

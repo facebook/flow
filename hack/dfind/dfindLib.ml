@@ -12,7 +12,7 @@ open Utils
 
 type t = (SSet.t, unit) Daemon.handle
 
-let init roots = Daemon.fork (DfindServer.run_daemon roots)
+let init roots = Daemon.spawn DfindServer.entry_point roots
 
 let pid handle = handle.Daemon.pid
 
