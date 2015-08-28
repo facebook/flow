@@ -50,7 +50,7 @@ let emit_func_body env m =
 (* returns the param text for this param along with
  * Some (name, DV id, expr) if there is a default param and None otherwise *)
 let emit_param ~tparams i p =
-  assert (not p.param_is_reference); (* actually right *)
+  if p.param_is_reference then unimpl "reference params";
   if p.param_is_variadic then unimpl "variadic params";
   let type_info =
     Emitter_types.fmt_hint_info ~tparams ~always_extended:false p.param_hint in

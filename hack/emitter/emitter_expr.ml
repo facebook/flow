@@ -384,6 +384,20 @@ and emit_call env (pos, expr_ as expr) args uargs =
     (* emit a dummy null so the expression has a return value *)
     emit_Null env, FC
 
+  (* Functions that call set_frame_metadata need an "86metadata" local
+   * allocated. *)
+  | Id (_, "\\HH\\set_frame_metadata"), _  -> unimpl "set_frame_metadata"
+  (* Different variants of call_user_func;
+   * see emitCallUserFunc in emitter.cpp *)
+  | Id (_, ("\\call_user_func_array" |
+            "\\forward_static_call" |
+            "\\forward_static_call_array" |
+            "\\fb_call_user_func_safe" |
+            "\\fb_call_user_func_array_safe" |
+            "\\fb_call_user_func_safe_return")), _  ->
+    unimpl "call_user_func"
+
+
   (* TODO: a billion other builtins *)
 
   | _ -> emit_normal_call env expr args uargs
