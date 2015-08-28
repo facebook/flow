@@ -16,8 +16,11 @@ type env =
   }
 
 let open_in_opt filename =
+  let open Unix in
   try
-    Some(open_in filename)
+    let fd = openfile filename [O_RDONLY;O_NONBLOCK;O_CREAT] 0o777 in
+    let ic = in_channel_of_descr fd in
+    begin set_binary_mode_in ic false; Some(ic) end
   with _ ->
     (Printf.eprintf "Tail.open_in_opt: Couldn't open file %s\n%!" filename;
      None)
