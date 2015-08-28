@@ -68,7 +68,8 @@ NATIVE_OBJECT_FILES=\
   hack/utils/nproc.o\
   hack/hhi/hhi_elf.o\
   hack/utils/get_build_id.gen.o\
-  hack/utils/get_build_id.o
+  hack/utils/get_build_id.o\
+  hack/utils/handle_stubs.o
 
 OCAML_LIBRARIES=\
   unix\
