@@ -8,6 +8,8 @@
  *
  *)
 
+(* Code for emitting expressions and various related forms (like lvalues) *)
+
 open Core
 open Utils
 open Nast
@@ -512,6 +514,11 @@ and emit_expr env (pos, expr_ as expr) =
     emit_label env end_label
 
   (* Normal binops *)
+  (* HHVM can sometimes evaluate binops (and some other things) right to left
+   * if the LHS is a variable. We don't do this (because it seems silly),
+   * but it wouldn't be that hard to handle. *Most* situations where it
+   * it actually observable are ruled out by the typechecker, but it can
+   * be observed with effectful __toString() methods or HH_FIXME. *)
   | Binop (bop, e1, e2) ->
     let env = emit_expr env e1 in
     let env = emit_expr env e2 in
@@ -562,7 +569,7 @@ and emit_expr env (pos, expr_ as expr) =
   | String (_, s) -> emit_String env s
 
   | String2 [] -> bug "empty String2"
-  (* If we there are multiple parts of the String2, they will get
+  (* If there are multiple parts of the String2, they will get
    * stringified when they get concatenated. If there is just one
    * we need to cast it manually. *)
   | String2 [e] ->

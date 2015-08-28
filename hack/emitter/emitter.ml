@@ -9,7 +9,7 @@
  *)
 
 (* Entry point to the experimental Hack based bytecode emitter. Contains
- * code for emitting "top level" constructs like classes andfunctions. *)
+ * code for emitting "top level" constructs like classes and functions. *)
 
 open Core
 open Utils
