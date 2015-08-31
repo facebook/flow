@@ -930,8 +930,12 @@ and convert_qualification ?(lookup_mode=ForType) cx reason_prefix
 )
 
 and mk_rest cx = function
-  | ArrT(_, t, []) -> RestT t
+  | ArrT (_, t, []) -> RestT t
   | AnyT _ as t -> RestT t
+  | ArrT (r, t, _) ->
+      let msg = "Tuple type should not be used to annotate rest parameters" in
+      Flow_js.add_warning cx [r,msg];
+      RestT t
   | t ->
       (* unify t with Array<e>, return (RestT e) *)
       let reason = prefix_reason "element of " (reason_of_t t) in
