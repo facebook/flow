@@ -193,7 +193,7 @@ if (--times > 0 && func instanceof Function) {
 }
 ```
 
-Similarly this final error is alerting us to calling a variable that may not represent a function. Underscore's author's do indeed check as much in this case, but Flow is not able to determine that that is what the `_.isFunction` is doing.
+Similarly this final error is alerting us to calling a variable that may not represent a function. Underscore's authors do indeed check as much in this case, but Flow is not able to determine that that is what the `_.isFunction` is doing.
 
 ```bbcode
 underscore.js:1310:34,51: call of method call
