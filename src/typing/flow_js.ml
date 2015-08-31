@@ -184,28 +184,28 @@ let mk_tvar_derivable_where cx reason f =
    is a goto node, and it points to another type variable: a linked list of such
    type variables must be traversed until a root is reached. *)
 let rec find_graph cx id =
-  let id, constraints = find_constraints cx id in
+  let _, constraints = find_constraints cx id in
   constraints
 
 and find_constraints cx id =
-  let id, root = find_root cx id in
-  id, root.constraints
+  let root_id, root = find_root cx id in
+  root_id, root.constraints
 
 (* Find the root of a type variable, potentially traversing a chain of type
    variables, while short-circuiting all the type variables in the chain to the
    root during traversal to speed up future traversals. *)
 and find_root cx id =
   match IMap.get id cx.graph with
-  | Some (Goto id_) ->
-      let id_, root_ = find_root cx id_ in
-      replace_node cx id (Goto id_);
-      id_, root_
+  | Some (Goto next_id) ->
+      let root_id, root = find_root cx next_id in
+      if root_id != next_id then replace_node cx id (Goto root_id) else ();
+      root_id, root
 
   | Some (Root root) ->
       id, root
 
   | None ->
-      let msg = spf "tvar %d not found in file %s" id cx.file in
+      let msg = spf "find_root: tvar %d not found in file %s" id cx.file in
       failwith msg
 
 (* Replace the node associated with a type variable in the graph. *)
