@@ -27,6 +27,7 @@ type options = {
   traces: int;
   strip_root: bool;
   log_file: Path.t;
+  max_workers: int;
 }
 
 module PathMap : MapSig with type key = Path.t
@@ -85,6 +86,7 @@ let default_options root = {
   traces = 0;
   strip_root = false;
   log_file = default_log_file root;
+  max_workers = Sys_utils.nbr_procs;
 }
 
 module Pp : sig
@@ -469,6 +471,17 @@ let options_parser = OptionsParser.configure [
     _parser = generic
       ("integer", fun s -> try Some (int_of_string s) with _ -> None)
       (fun opts (_, traces) -> { opts with traces });
+  }));
+
+  ("server.max_workers", OptionsParser.({
+    flags = [];
+    _parser = generic
+      ("non-negative integer", fun s ->
+        try
+          let x = int_of_string s in
+          if x < 0 then None else Some x
+        with _ -> None)
+      (fun opts (_, max_workers) -> { opts with max_workers });
   }));
 
   ("strip_root", OptionsParser.({

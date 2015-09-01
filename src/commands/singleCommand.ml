@@ -105,6 +105,7 @@ let main all weak debug verbose verbose_indent json profile quiet module_
     Options.opt_no_flowlib = no_flowlib;
     Options.opt_munge_underscores = munge_underscores;
     Options.opt_temp_dir;
+    Options.opt_max_workers = 0;
   } in
 
   if ! Sys.interactive

@@ -19,6 +19,7 @@ type options = {
   traces: int;
   strip_root: bool;
   log_file: Path.t;
+  max_workers: int;
 }
 
 val default_temp_dir: string

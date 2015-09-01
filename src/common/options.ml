@@ -31,6 +31,7 @@ type options = {
   opt_module_name_mappers: (Str.regexp * string) list;
   opt_munge_underscores: bool;
   opt_temp_dir: string;
+  opt_max_workers: int;
 }
 
 let error_flags opts = opts.opt_error_flags
@@ -40,3 +41,4 @@ let root opts = opts.opt_root
 let should_detach opts = opts.opt_should_detach
 let should_indent_verbose opts = opts.opt_verbose_indent
 let temp_dir opts = opts.opt_temp_dir
+let max_workers opts = opts.opt_max_workers
