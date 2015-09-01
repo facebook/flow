@@ -384,6 +384,7 @@ let parse_build_args () =
       incremental = !incremental;
       user = Sys_utils.logname ();
       verbose = !verbose;
+      id = Random_id.short_string ();
     }
   }
 

@@ -16,7 +16,7 @@ let init_hack genv env get_next =
 
   let t = Unix.gettimeofday () in
   let files_info, errorl1, failed1 =
-      Parsing_service.go genv.workers ~get_next in
+    Parsing_service.go genv.workers ~get_next in
   let hs = SharedMem.heap_size () in
   Hh_logger.log "Heap size: %d" hs;
   Stats.(stats.init_parsing_heap_size <- hs);

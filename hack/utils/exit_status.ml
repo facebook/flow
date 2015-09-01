@@ -24,6 +24,7 @@ type t =
   | Build_id_mismatch
   | Unused_server
   | Lock_stolen
+  | Interrupted
 
 exception Exit_with of t
 
@@ -44,6 +45,7 @@ let exit t =
     | Build_id_mismatch -> 9
     | Unused_server -> 5
     | Lock_stolen -> 11
+    | Interrupted -> -6
   in
   Pervasives.exit ec
 
@@ -63,3 +65,4 @@ let to_string = function
   | Build_id_mismatch -> "Build_id_mismatch"
   | Unused_server -> "Unused_server"
   | Lock_stolen -> "Lock_stolen"
+  | Interrupted -> "Interrupted"

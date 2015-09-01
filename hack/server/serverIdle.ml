@@ -102,6 +102,7 @@ let init (root : Path.t) =
      * major_slice takes something like ~0.0001s to run, so why not *)
     Periodical.always   , (fun () -> ignore @@ Gc.major_slice 0);
     Periodical.always   , (fun () -> SharedMem.collect `aggressive);
+    Periodical.always   , EventLogger.flush;
     Periodical.one_day  , exit_if_unused;
     Periodical.one_day  , Hhi.touch;
     (* try_touch wraps Unix.utimes, which doesn't open/close any fds, so we
