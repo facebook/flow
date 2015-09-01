@@ -203,13 +203,14 @@ let hook_after_parsing = ref None
 
 let type_check genv env =
 
+  let reparse_count = Relative_path.Set.cardinal env.failed_parsing in
   Printf.eprintf "******************************************\n";
-  Hh_logger.log "Files to recompute: %d"
-    (Relative_path.Set.cardinal env.failed_parsing);
+  Hh_logger.log "Files to recompute: %d" reparse_count;
   (* PARSING *)
   let start_t = Unix.gettimeofday () in
   let t = start_t in
   let fast_parsed, errorl, failed_parsing = parsing genv env in
+  HackEventLogger.recheck_once_parsing_end t reparse_count;
   let t = Hh_logger.log_duration "Parsing" t in
 
   (* UPDATE FILE INFO *)
@@ -278,7 +279,7 @@ let type_check genv env =
 
   Hh_logger.log "Total: %f\n%!" (t -. start_t);
   let total_rechecked_count = Relative_path.Set.cardinal to_recheck in
-  HackEventLogger.recheck_once_end start_t total_rechecked_count;
+  HackEventLogger.recheck_once_end start_t reparse_count total_rechecked_count;
 
   (* Done, that's the new environment *)
   { files_info = files_info;
