@@ -62,7 +62,7 @@ let get_hhi_root () =
       match r with
       | None ->
           print_endline "Could not locate hhi files";
-          exit 1
+          Exit_status.(exit Missing_hhi)
       | Some r ->
           root := Some r;
           Relative_path.set_path_prefix Relative_path.Hhi r;
