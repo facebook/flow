@@ -181,8 +181,12 @@ module Program : SERVER_PROGRAM =
          ServerConvert.go genv env dirname;
          exit 0
 
-    let process_updates _genv _env updates =
-      Relative_path.relativize_set Relative_path.Root updates
+    let process_updates genv _env updates =
+      let root = Path.to_string @@ ServerArgs.root genv.options in
+      (* Because of symlinks, we can have updates from files that aren't in
+       * the .hhconfig directory *)
+      let updates = SSet.filter (fun p -> str_starts_with p root) updates in
+      Relative_path.(relativize_set Root updates)
 
     let should_recheck update =
       FindUtils.is_php (Relative_path.suffix update)
