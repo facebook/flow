@@ -13,8 +13,7 @@
 (* Configuration file *)
 (*****************************************************************************)
 
-external nproc: unit -> int = "nproc"
-let nbr_procs = nproc ()
+let nbr_procs = Sys_utils.nbr_procs
 
 let freq_cache_capacity = 1000
 let ordered_cache_capacity = 1000
