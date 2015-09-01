@@ -98,6 +98,9 @@ let exit_if_unused() =
 (*****************************************************************************)
 let init (root : Path.t) =
   let jobs = [
+    (* I'm not sure explicitly invoking the Gc here is necessary, but
+     * major_slice takes something like ~0.0001s to run, so why not *)
+    Periodical.always   , (fun () -> ignore @@ Gc.major_slice 0);
     Periodical.always   , (fun () -> SharedMem.collect `aggressive);
     Periodical.one_day  , exit_if_unused;
     Periodical.one_day  , Hhi.touch;

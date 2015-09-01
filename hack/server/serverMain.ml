@@ -423,6 +423,10 @@ let save _genv env fn =
  * we look if env.modified changed.
  *)
 let daemon_main options =
+  (* The OCaml default is 500, but we care about minimizing the memory
+   * overhead *)
+  let gc_control = Gc.get () in
+  Gc.set {gc_control with Gc.max_overhead = 200};
   Relative_path.set_path_prefix Relative_path.Root (ServerArgs.root options);
   let config = Program.load_config () in
   let root = ServerArgs.root options in
