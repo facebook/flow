@@ -65,9 +65,10 @@ NATIVE_OBJECT_FILES=\
   hhi/hhi_elf.o\
   utils/get_build_id.gen.o\
   utils/get_build_id.o\
+  utils/handle_stubs.o\
   utils/nproc.o\
   utils/realpath.o\
-  utils/handle_stubs.o\
+  utils/sysinfo.o\
   $(INOTIFY)/$(notdir $(INOTIFY))_stubs.o
 
 OCAML_LIBRARIES=\
