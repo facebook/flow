@@ -291,7 +291,9 @@ let rec recheck_loop i rechecked_count genv env =
   let raw_updates =
     match genv.dfind with
     | None -> SSet.empty
-    | Some dfind -> DfindLib.get_changes dfind in
+    | Some dfind ->
+        (try DfindLib.get_changes dfind with _ -> Exit_status.(exit Dfind_died))
+  in
   if SSet.is_empty raw_updates then
     i, rechecked_count, env
   else

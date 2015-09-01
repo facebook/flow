@@ -53,6 +53,7 @@ let (process_fsnotify_event:
   dirty
 
 let run_daemon roots (ic, oc) =
+  Printexc.record_backtrace true;
   let roots = List.map roots Path.to_string in
   let env = DfindEnv.make roots in
   List.iter roots (DfindAddFile.path env);

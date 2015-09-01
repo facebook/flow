@@ -25,6 +25,7 @@ type t =
   | Unused_server
   | Lock_stolen
   | Interrupted
+  | Dfind_died
 
 exception Exit_with of t
 
@@ -46,6 +47,7 @@ let exit t =
     | Unused_server -> 5
     | Lock_stolen -> 11
     | Interrupted -> -6
+    | Dfind_died -> 99
   in
   Pervasives.exit ec
 
@@ -66,3 +68,4 @@ let to_string = function
   | Unused_server -> "Unused_server"
   | Lock_stolen -> "Lock_stolen"
   | Interrupted -> "Interrupted"
+  | Dfind_died -> "Dfind_died"

@@ -12,7 +12,7 @@ open Utils
 
 type t = (SSet.t, unit) Daemon.handle
 
-let init roots = Daemon.spawn DfindServer.entry_point roots
+let init ?log_file roots = Daemon.spawn ?log_file DfindServer.entry_point roots
 
 let pid handle = handle.Daemon.pid
 
