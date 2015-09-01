@@ -105,13 +105,15 @@ let init (root : Path.t) =
     Periodical.always   , EventLogger.flush;
     Periodical.one_day  , exit_if_unused;
     Periodical.one_day  , Hhi.touch;
-    (* try_touch wraps Unix.utimes, which doesn't open/close any fds, so we
-     * won't lose our lock by doing this. *)
+    (* try_touch wraps Unix.lutimes, which doesn't open/close any fds, so we
+     * won't lose our lock by doing this. We are only touching the top level
+     * of files, however -- we don't want to do it recursively so that old
+     * files under e.g. /tmp/hh_server/logs still get cleaned up. *)
     Periodical.one_day  , (fun () ->
-      Sys_utils.try_touch (ServerFiles.lock_file root)
-    );
-    Periodical.one_day  , (fun () ->
-      Sys_utils.try_touch (Socket.get_path (ServerFiles.socket_file root))
+      Array.iter begin fun fn ->
+        let fn = Filename.concat GlobalConfig.tmp_dir fn in
+        Sys_utils.try_touch ~follow_symlinks:false fn
+      end (Sys.readdir GlobalConfig.tmp_dir);
     );
   ] in
   List.iter jobs begin fun (period, cb) ->
