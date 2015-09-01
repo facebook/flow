@@ -288,21 +288,28 @@ let recheck genv old_env updates =
  * rebase, and we don't log the recheck_end event until the update list
  * is no longer getting populated. *)
 let rec recheck_loop i rechecked_count genv env =
+  let t = Unix.time () in
   let raw_updates =
     match genv.dfind with
     | None -> SSet.empty
     | Some dfind ->
-        (try DfindLib.get_changes dfind with _ -> Exit_status.(exit Dfind_died))
+        (try
+          with_timeout 60
+            ~on_timeout:(fun _ -> Exit_status.(exit Dfind_unresponsive))
+            ~do_:(fun () -> DfindLib.get_changes dfind)
+        with _ -> Exit_status.(exit Dfind_died))
   in
   if SSet.is_empty raw_updates then
     i, rechecked_count, env
-  else
+  else begin
+    HackEventLogger.dfind_returned t (SSet.cardinal raw_updates);
     let updates = Program.process_updates genv env raw_updates in
     let env, rechecked = recheck genv env updates in
     let rechecked_count =
       rechecked_count + (Relative_path.Set.cardinal rechecked)
     in
     recheck_loop (i + 1) rechecked_count genv env
+  end
 
 let recheck_loop = recheck_loop 0 0
 

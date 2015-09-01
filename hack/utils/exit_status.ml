@@ -28,6 +28,7 @@ type t =
   | Socket_error
   | Missing_hhi
   | Dfind_died
+  | Dfind_unresponsive
 
 exception Exit_with of t
 
@@ -52,6 +53,7 @@ let exit t =
     | Missing_hhi -> 97
     | Socket_error -> 98
     | Dfind_died -> 99
+    | Dfind_unresponsive -> 100
   in
   Pervasives.exit ec
 
@@ -75,3 +77,4 @@ let to_string = function
   | Socket_error -> "Socket_error"
   | Missing_hhi -> "Missing_hhi"
   | Dfind_died -> "Dfind_died"
+  | Dfind_unresponsive -> "Dfind_unresponsive"
