@@ -3986,10 +3986,13 @@ and filter_not_exists t = match t with
   | StrT (r, (Literal _ | Truthy))
   | ArrT (r, _, _)
   | ObjT (r, _)
+  | InstanceT (r, _, _, _)
   | AnyObjT r
   | FunT (r, _, _, _)
   | AnyFunT r
   | NumT (r, (Literal _ | Truthy)) -> UndefT r
+
+  | ClassT t -> UndefT (reason_of_t t)
 
   (* unknown boolies become falsy *)
   | MaybeT t ->
