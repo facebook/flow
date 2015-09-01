@@ -933,7 +933,7 @@ and mk_rest cx = function
   | ArrT (_, t, []) -> RestT t
   | AnyT _ as t -> RestT t
   | ArrT (r, t, _) ->
-      let msg = "Tuple type should not be used to annotate rest parameters" in
+      let msg = "rest parameters should be an array type, got a tuple type instead" in
       Flow_js.add_warning cx [r,msg];
       RestT t
   | t ->

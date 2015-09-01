@@ -12,6 +12,6 @@ This type is incompatible with
 function.js:31:10,17: function type
 
 rest.js:8:31,33: tuple type
-Tuple type should not be used to annotate rest parameters
+rest parameters should be an array type, got a tuple type instead
 
 Found 4 errors
