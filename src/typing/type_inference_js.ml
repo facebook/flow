@@ -1157,7 +1157,7 @@ and statement_decl cx type_params_map = Ast.Statement.(
         let name_loc, { Ast.Identifier.name; _ } = id in
         let r = mk_reason (spf "class %s" name) name_loc in
         let tvar = Flow_js.mk_tvar cx r in
-        Env_js.bind_let cx name tvar name_loc
+        Env_js.bind_implicit_let Scope.Entry.ClassNameBinding cx name tvar name_loc
       | None -> ()
     )
 
@@ -2078,10 +2078,16 @@ and statement cx type_params_map = Ast.Statement.(
   | (class_loc, ClassDeclaration c) ->
       let (name_loc, name) = extract_class_name class_loc c in
       let reason = mk_reason name name_loc in
-      Env_js.declare_let cx name reason;
+      Env_js.declare_implicit_let Scope.Entry.ClassNameBinding cx name reason;
       let cls_type = mk_class cx type_params_map class_loc reason c in
       Hashtbl.replace cx.type_table class_loc cls_type;
-      Env_js.init_let cx name ~has_anno:false cls_type reason
+      Env_js.init_implicit_let
+        Scope.Entry.ClassNameBinding
+        cx
+        name
+        ~has_anno:false
+        cls_type
+        reason
 
   | (loc, DeclareClass {
       Interface.id;
@@ -3447,7 +3453,10 @@ and expression_ ~is_cond cx type_params_map loc e = Ast.Expression.(match e with
           let tvar = Flow_js.mk_tvar cx reason in
           let scope = Scope.fresh () in
           Scope.(
-            let entry = Entry.(new_let tvar ~loc:name_loc ~state:Declared) in
+            let implicit = Entry.ClassNameBinding in
+            let entry = Entry.(
+              new_let tvar ~loc:name_loc ~state:Declared ~implicit
+            ) in
             add_entry name entry scope
           );
           Env_js.push_env cx scope;

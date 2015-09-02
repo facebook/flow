@@ -672,10 +672,22 @@ module Scope = struct
     | Declared -> "Declared"
     | Initialized -> "Initialized"
 
-    type value_kind = Const | Let | Var
+    type value_kind =
+      | Const
+      (* Some let bindings are explicit (like you wrote let x = 123) and some
+       * are implicit (like class declarations). For implicit lets, we should
+       * track why this is a let binding for better error messages *)
+      | Let of implicit_let_kinds option
+      | Var
+
+    and implicit_let_kinds =
+      | ClassNameBinding
 
     let string_of_value_kind = function
-    | Const -> "const" | Let -> "let" | Var -> "var"
+    | Const -> "const"
+    | Let None -> "let"
+    | Let (Some ClassNameBinding) -> "class"
+    | Var -> "var"
 
     type value_binding = {
       kind: value_kind;
@@ -707,7 +719,8 @@ module Scope = struct
 
     let new_const ?loc ?(state=Undeclared) t = new_value Const state t t loc
 
-    let new_let ?loc ?(state=Undeclared) t = new_value Let state t t loc
+    let new_let ?loc ?(state=Undeclared) ?implicit t =
+      new_value (Let implicit) state t t loc
 
     let new_var ?loc ?(state=Undeclared) ?specific general =
       let specific = match specific with Some t -> t | None -> general in

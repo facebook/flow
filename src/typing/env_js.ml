@@ -325,6 +325,10 @@ let bind_var ?(state=Entry.Declared) cx name t loc =
 let bind_let ?(state=Entry.Undeclared) cx name t loc =
   bind_entry cx name (Entry.new_let t ~loc ~state)
 
+(* bind implicit let entry *)
+let bind_implicit_let ?(state=Entry.Undeclared) implicit cx name t loc =
+  bind_entry cx name (Entry.new_let t ~implicit ~loc ~state)
+
 (* bind const entry *)
 let bind_const ?(state=Entry.Undeclared) cx name t loc =
   bind_entry cx name (Entry.new_const t ~loc ~state)
@@ -387,7 +391,9 @@ let declare_value_entry kind cx name reason =
     already_bound_error cx name entry reason
   )
 
-let declare_let = declare_value_entry Entry.Let
+let declare_let = declare_value_entry (Entry.Let None)
+let declare_implicit_let implicit =
+  declare_value_entry (Entry.Let (Some implicit))
 let declare_const = declare_value_entry Entry.Const
 
 (* Used to adjust state based on whether there is an annotation.
@@ -440,7 +446,7 @@ let init_value_entry kind cx name ~has_anno specific reason =
   Entry.(match kind, entry with
 
   | Var, Value ({ kind = Var; _ } as v)
-  | Let, Value ({ kind = Let; value_state = Undeclared | Declared; _ } as v)
+  | Let _, Value ({ kind = Let _; value_state = Undeclared | Declared; _ } as v)
   | Const, Value ({ kind = Const; value_state = Undeclared | Declared; _ } as v) ->
     (* NOTE: causes havocing in some cases, so, reentrant *)
     Flow_js.flow cx (specific, v.general);
@@ -457,7 +463,8 @@ let init_value_entry kind cx name ~has_anno specific reason =
   )
 
 let init_var = init_value_entry Entry.Var
-let init_let = init_value_entry Entry.Let
+let init_let = init_value_entry (Entry.Let None)
+let init_implicit_let implicit = init_value_entry (Entry.Let (Some implicit))
 let init_const = init_value_entry Entry.Const
 
 (* update type alias to reflect initialization in code *)
@@ -487,7 +494,7 @@ let pseudo_init_declared_type cx name reason =
 let value_entry_types ~lookup_mode cx name reason entry scope =
   Entry.(match entry with
 
-  | Value { kind = Let | Const; value_state = Undeclared; _ }
+  | Value { kind = Let _ | Const; value_state = Undeclared; _ }
       when lookup_mode = ForValue
       && scope = peek_scope () (* see comment header *)
       ->
@@ -562,7 +569,7 @@ let set_var cx name specific reason =
   let scope, entry = find_entry cx name reason in
   Entry.(match entry with
 
-  | Value ({ kind = Let | Var; _ } as v) ->
+  | Value ({ kind = Let _ | Var; _ } as v) ->
     ignore (add_change_var name);
     (* NOTE: causes havocing in some cases, so, reentrant *)
     Flow_js.flow cx (specific, v.general);

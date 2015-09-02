@@ -288,7 +288,9 @@ module Scope: sig
     type state = Undeclared | Declared | Initialized
     val string_of_state: state -> string
 
-    type value_kind = Const | Let | Var
+    type value_kind = Const | Let of implicit_let_kinds option | Var
+    and implicit_let_kinds = ClassNameBinding
+
     val string_of_value_kind: value_kind -> string
 
     type value_binding = {
@@ -310,7 +312,12 @@ module Scope: sig
     | Type of type_binding
 
     val new_var: ?loc:Loc.t -> ?state:state -> ?specific:Type.t -> Type.t -> t
-    val new_let: ?loc:Loc.t -> ?state:state -> Type.t -> t
+    val new_let:
+        ?loc:Loc.t
+        -> ?state:state
+        -> ?implicit:implicit_let_kinds
+        -> Type.t
+        -> t
     val new_const: ?loc:Loc.t -> ?state:state -> Type.t -> t
     val new_type: ?loc:Loc.t -> ?state:state -> Type.t -> t
 
