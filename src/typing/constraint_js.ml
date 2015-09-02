@@ -1337,7 +1337,8 @@ let rec mod_reason_of_t f = function
   | ComparatorT (reason, t) -> ComparatorT (f reason, t)
 
   | TypeT (reason, t) -> TypeT (f reason, t)
-  | AnnotT (assert_t, assume_t) -> AnnotT (assert_t, mod_reason_of_t f assume_t)
+  | AnnotT (assert_t, assume_t) ->
+      AnnotT (mod_reason_of_t f assert_t, mod_reason_of_t f assume_t)
   | BecomeT (reason, t) -> BecomeT (f reason, t)
 
   | OptionalT t -> OptionalT (mod_reason_of_t f t)
