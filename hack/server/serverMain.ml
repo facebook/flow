@@ -47,7 +47,7 @@ end = struct
   let close_waiting_channel oc =
     Option.iter oc
       ~f:(fun oc ->
-          try Unix.close (Unix.descr_of_out_channel oc)
+          try close_out oc
           with exn -> Printf.eprintf "Close: %S\n%!" (Printexc.to_string exn))
 
   (* This code is only executed when the options --check is NOT present *)
