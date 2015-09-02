@@ -4712,11 +4712,12 @@ and resolve_id cx trace id t =
    flows, number and any. If we replace the flows from/to any with an
    unification with any, we will miss the string/number incompatibility error.
 
-   In the future, we may consider unifying with any-like types to be sometimes
-   desirable / intentional. At that point, we could consider limiting this set
-   to just LowerBoundT and UpperBoundT, which are internal types. *)
+   However, unifying with any-like types to be sometimes desirable /
+   intentional. Thus, we limit the set of types on which unification is banned
+   to just LowerBoundT and UpperBoundT, which are internal types.
+*)
 and any_like = function
-  | LowerBoundT _ | UpperBoundT _ | AnyT _ | AnyObjT _ | AnyFunT _ -> true
+  | LowerBoundT _ | UpperBoundT _ -> true
   | _ -> false
 
 and rec_unify cx trace t1 t2 =
