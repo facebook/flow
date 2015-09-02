@@ -300,15 +300,15 @@ let rec extract_destructured_bindings accum pattern = Ast.Pattern.(
 
 let rec destructuring cx t f = Ast.Pattern.(function
   | loc, Array { Array.elements; _; } -> Array.(
-      let reason = mk_reason "array pattern" loc in
       elements |> List.iteri (fun i -> function
         | Some (Element ((loc, _) as p)) ->
-            let i = NumT (
+            let key = NumT (
               mk_reason "number" loc,
               Literal (float i, string_of_int i)
             ) in
+            let reason = mk_reason (spf "element %d" i) loc in
             let tvar = Flow_js.mk_tvar cx reason in
-            Flow_js.flow cx (t, GetElemT(reason,i,tvar));
+            Flow_js.flow cx (t, GetElemT(reason, key, tvar));
             destructuring cx tvar f p
         | Some (Spread (loc, { SpreadElement.argument })) ->
             error_destructuring cx loc
