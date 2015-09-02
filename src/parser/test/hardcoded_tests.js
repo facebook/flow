@@ -2516,5 +2516,12 @@ module.exports = {
         ]
       }]
     }
+  },
+  'Invalid Decorators': {
+    '@blah': {
+      'errors': {
+        '0.message': 'Unexpected token @',
+      },
+    }
   }
 };

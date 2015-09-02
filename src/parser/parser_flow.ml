@@ -3808,6 +3808,7 @@ end = struct
     | T_STATIC
     | T_IMPORT (* TODO *)
     | T_EXPORT (* TODO *)
+    | T_AT
     | T_ELLIPSIS ->
         error_unexpected env;
         Eat.token env;
