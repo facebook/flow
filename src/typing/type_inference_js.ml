@@ -5587,7 +5587,7 @@ and mk_body id cx type_params_map ~async ?(derived_ctor=false)
     let loc = loc_of_t ret in
     let void_t = if async then
       let reason = mk_reason "return Promise<Unit>" loc in
-      let promise = Env_js.get_var ~lookup_mode:ForType cx "Promise" reason in
+      let promise = Env_js.var_ref ~lookup_mode:ForType cx "Promise" reason in
       TypeAppT (promise, [VoidT.at loc])
     else
       VoidT (mk_reason "return undefined" loc)
