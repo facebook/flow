@@ -19,14 +19,6 @@
 #include <stdio.h>
 #include <pthread.h>
 
-// Basically the ocaml headers and the mac headers are redefining the same
-// types. AFAIK, this is a longstanding bug in the ocaml headers
-// (http://caml.inria.fr/mantis/print_bug_page.php?bug_id=4877). Looking at the
-// OS X headers, the conflicting typehints are gated with these definitions, so
-// this was the easiest workaround for me.
-#define _UINT64
-#define _UINT32
-
 #include <CoreFoundation/CoreFoundation.h>
 #include <CoreServices/CoreServices.h>
 #include <libkern/OSAtomic.h>
