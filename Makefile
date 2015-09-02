@@ -61,15 +61,17 @@ MODULES=\
   hack/$(FSNOTIFY)
 
 NATIVE_OBJECT_FILES=\
-  src/embedded/flowlib_elf.o\
-  hack/heap/hh_shared.o\
-  hack/utils/realpath.o\
   hack/$(INOTIFY_STUBS)\
-  hack/utils/nproc.o\
+  hack/heap/hh_shared.o\
   hack/hhi/hhi_elf.o\
+  hack/utils/files.o\
   hack/utils/get_build_id.gen.o\
   hack/utils/get_build_id.o\
-  hack/utils/handle_stubs.o
+  hack/utils/handle_stubs.o\
+  hack/utils/nproc.o\
+  hack/utils/realpath.o\
+  hack/utils/sysinfo.o\
+  src/embedded/flowlib_elf.o
 
 OCAML_LIBRARIES=\
   unix\
