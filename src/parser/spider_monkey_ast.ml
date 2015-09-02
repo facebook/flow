@@ -920,6 +920,7 @@ and Class : sig
       key: Expression.Object.Property.key;
       value: Loc.t * Expression.Function.t;
       static: bool;
+      decorators: Expression.t list;
     }
   end
   module Property : sig

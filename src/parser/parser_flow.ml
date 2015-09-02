@@ -1916,6 +1916,15 @@ end = struct
     val class_declaration : env -> Ast.Statement.t
     val class_expression : env -> Ast.Expression.t
   end = struct
+    let rec decorator_list env decorators =
+      match Peek.token env with
+      | T_AT ->
+          Eat.token env;
+          let decorators = decorators @ [Expression.left_hand_side env] in
+          decorator_list env decorators
+      | _ ->
+          decorators
+
     let key ?allow_computed_key:(allow_computed_key=true) env =
       Ast.Expression.Object.Property.(match Peek.token env with
       | T_STRING (loc, value, raw, octal) ->
@@ -2208,7 +2217,7 @@ end = struct
     (* In the ES6 draft, all elements are methods. No properties (though there
      * are getter and setters allowed *)
     and class_element =
-      let get env start_loc static =
+      let get env start_loc decorators static =
         let key, (end_loc, _ as value) =
           _method env Ast.Expression.Object.Property.Get in
         Ast.Class.(Body.Method (Loc.btwn start_loc end_loc, Method.({
@@ -2216,9 +2225,10 @@ end = struct
           value;
           kind = Get;
           static;
+          decorators;
         })))
 
-      in let set env start_loc static =
+      in let set env start_loc decorators static =
         let key, (end_loc, _ as value) =
           _method env Ast.Expression.Object.Property.Set in
         Ast.Class.(Body.Method (Loc.btwn start_loc end_loc, Method.({
@@ -2226,9 +2236,10 @@ end = struct
           value;
           kind = Set;
           static;
+          decorators;
         })))
 
-      in let init env start_loc key async generator static =
+      in let init env start_loc decorators key async generator static =
         match Peek.token env with
         | T_COLON
         | T_ASSIGN
@@ -2290,10 +2301,17 @@ end = struct
             value;
             kind;
             static;
+            decorators
           })))
 
       in fun env -> Ast.Expression.Object.Property.(
         let start_loc = Peek.loc env in
+        let decorators =
+          if (parse_options env).experimental_decorators then
+            decorator_list env []
+          else
+            []
+        in
         let static = Expect.maybe env T_STATIC in
         let async = Peek.token ~i:1 env <> T_LPAREN && Declaration.async env in
         let generator = Declaration.generator env async in
@@ -2305,8 +2323,8 @@ end = struct
             | T_COLON
             | T_ASSIGN
             | T_SEMICOLON
-            | T_LPAREN -> init env start_loc key async generator static
-            | _ -> get env start_loc static )
+            | T_LPAREN -> init env start_loc decorators key async generator static
+            | _ -> get env start_loc decorators static )
         | false, false,
           (_, (Identifier (_, { Identifier.name = "set"; _ }) as key)) ->
             (match Peek.token env with
@@ -2314,10 +2332,10 @@ end = struct
             | T_COLON
             | T_ASSIGN
             | T_SEMICOLON
-            | T_LPAREN -> init env start_loc key async generator static
-            | _ -> set env start_loc static)
+            | T_LPAREN -> init env start_loc decorators key async generator static
+            | _ -> set env start_loc decorators static)
         | _, _, (_, key) ->
-            init env start_loc key async generator static
+            init env start_loc decorators key async generator static
       )
 
     let class_declaration env =
@@ -3892,19 +3910,19 @@ end
 (*****************************************************************************)
 (* Entry points *)
 (*****************************************************************************)
-let parse_program fail ?(token_sink=None) filename content =
+let parse_program fail ?(token_sink=None) ?(parse_options=None) filename content =
   let lb = Lexing.from_string content in
   (match filename with None -> () | Some fn ->
     lb.Lexing.lex_curr_p <-
       { lb.Lexing.lex_curr_p with Lexing.pos_fname = fn });
-  let env = init_env ~token_sink lb in
+  let env = init_env ~token_sink ~parse_options lb in
   let ast = Parse.program env in
   if fail && (errors env) <> []
   then raise (Error.Error (filter_duplicate_errors [] (errors env)));
   ast, List.rev (errors env)
 
-let program ?(fail=true) ?(token_sink=None) content =
-  parse_program fail ~token_sink None content
+let program ?(fail=true) ?(token_sink=None) ?(parse_options=None) content =
+  parse_program fail ~token_sink ~parse_options None content
 
-let program_file ?(fail=true) ?(token_sink=None) content filename =
-  parse_program fail ~token_sink (Some filename) content
+let program_file ?(fail=true) ?(token_sink=None) ?(parse_options=None) content filename =
+  parse_program fail ~token_sink ~parse_options (Some filename) content

@@ -33,6 +33,12 @@ function test_section(section) {
       content: content,
       spec: tests[section][content]
     };
+
+    if (test.spec['%parse_options%']) {
+      test.parseOptions = test.spec['%parse_options%'];
+      delete test.spec['%parse_options%'];
+    }
+
     test.dumpAst = argv.dumpAst;
     test.jsonErrors = argv.jsonErrors;
     test.showDifferences = argv.showDifferences;

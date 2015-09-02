@@ -4935,6 +4935,7 @@ and mk_signature cx reason_c type_params_map superClass body = Ast.Class.(
           returnType; typeParameters; body; _ };
         kind;
         static;
+        decorators = _;
       }) ->
 
       (match kind with
@@ -5096,6 +5097,7 @@ and mk_class_elements cx instance_info static_info body = Ast.Class.(
           returnType; typeParameters; body; async; _ };
         static;
         kind;
+        decorators = _;
       }) ->
       let this, super, method_sigs, getter_sigs, setter_sigs =
         if static then static_info else instance_info

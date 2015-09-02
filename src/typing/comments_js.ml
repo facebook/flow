@@ -300,7 +300,8 @@ and meta_statement cmap = Ast.Statement.(function
               { Ast.Identifier.name; _ });
             value = _, { Ast.Expression.Function.params; body; _ };
             kind = Method.Method | Method.Constructor;
-            static = false
+            static = false;
+            decorators = _;
           }) ->
             meta_fbody cmap loc params body
         | _ -> cmap, []

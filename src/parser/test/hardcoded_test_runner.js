@@ -157,8 +157,9 @@ function runTest(test) {
     }
     result.output += "\n";
   }
+  var parseOptions = test.parseOptions || {};
   try {
-    var flow_ast = flow.parse(test.content);
+    var flow_ast = flow.parse(test.content, parseOptions);
   } catch (e) {
     output("Flow exploded:", util.inspect(e, {depth: null}));
     result.passed = false;

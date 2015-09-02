@@ -29,6 +29,7 @@
     | T_PERIOD
     | T_ARROW
     | T_ELLIPSIS
+    | T_AT
     (* Keywords *)
     | T_FUNCTION
     | T_IF
@@ -224,6 +225,7 @@
     | T_PERIOD -> "T_PERIOD"
     | T_ARROW -> "T_ARROW"
     | T_ELLIPSIS -> "T_ELLIPSIS"
+    | T_AT -> "T_AT"
     | T_RSHIFT3_ASSIGN -> "T_RSHIFT3_ASSIGN"
     | T_RSHIFT_ASSIGN -> "T_RSHIFT_ASSIGN"
     | T_LSHIFT_ASSIGN -> "T_LSHIFT_ASSIGN"
@@ -688,6 +690,7 @@ rule token env = parse
   | "=>"               { env, T_ARROW }
   | "/="               { env, T_DIV_ASSIGN }
   | "/"                { env, T_DIV }
+  | "@"                { env, T_AT }
   (* Others *)
   | eof                { if env.lex_in_comment_syntax
                          then lex_error env (lb_to_loc lexbuf) Parse_error.UnexpectedEOS;

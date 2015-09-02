@@ -121,20 +121,84 @@ end = struct
     | _ -> prerr_endline "ERROR: unexpected spec format"; exit 1
   )
 
-  let parse_test = Ast.Expression.Object.(function
-    | Property (_, {
+  let extract_obj_property err_context = Ast.Expression.Object.(function
+    | Property(_, {
         Property.
         kind = Property.Init;
-        key =
-          Property.Literal (_, {
-            Ast.Literal.value = Ast.Literal.String name;
-            _;
-          });
-        value = (_, Ast.Expression.Object { Ast.Expression.Object.properties });
-        _
-      }) -> (name, JAssoc (List.map parse_spec properties))
-    | _ -> prerr_endline "ERROR: unexpected test format"; exit 1
+        key = Property.Literal (_, {
+          Ast.Literal.value = Ast.Literal.String key;
+          _;
+        });
+        value;
+        _;
+      }) -> (key, value)
+    | _ ->
+      let msg =
+        Printf.sprintf
+          "ERROR: Unexpected property format for %s"
+          err_context
+      in
+      prerr_endline msg;
+      exit 1;
   )
+
+  let parse_parseopt _(*opts*) prop = Parser_env.(
+    let (opt_name, value) = extract_obj_property "%parse_options%" prop in
+    let value = match value with
+      | (_, Ast.Expression.Literal {
+          Ast.Literal.value = Ast.Literal.Boolean value;
+          _;
+        }) -> value
+      | _ ->
+          let msg =
+            Printf.sprintf
+              "ERROR: Unexpected value for parse_option('%s'). (should be a bool)"
+              opt_name
+          in
+          prerr_endline msg;
+          exit 1
+    in
+    match opt_name with
+    | "experimental_decorators" -> {
+        experimental_decorators = value;
+      }
+    | _ ->
+      let msg =
+        Printf.sprintf "ERROR: Unexpected parse option: '%s'" opt_name
+      in
+      prerr_endline msg;
+      exit 1
+  )
+
+  let parse_test prop =
+    let (name, value) = extract_obj_property "test" prop in
+    match value with
+    | (_, Ast.Expression.Object { Ast.Expression.Object.properties; }) ->
+        let (specs, parse_opts) = properties |> List.partition (fun p ->
+          fst (extract_obj_property "parsing tests" p) <> "%parse_options%"
+        ) in
+        let parse_opts = if (List.length parse_opts) = 0 then None else (
+          let parse_opts = List.hd parse_opts in
+          let (_, opt_props) =
+            extract_obj_property "%parse_options%" parse_opts
+          in
+          (match opt_props with
+            | (_, Ast.Expression.Object { Ast.Expression.Object.properties; }) ->
+              Some (
+                List.fold_left parse_parseopt Parser_env.default_parse_options properties
+              )
+            | (loc, _) ->
+              let msg =
+                Printf.sprintf
+                  "ERROR: Unexpected %%parse_option%% format: %s"
+                  (Loc.string loc);
+              in
+              prerr_endline msg;
+              exit 1
+          )
+        ) in
+        (name, parse_opts, JAssoc (List.map parse_spec specs))
+    | _ -> prerr_endline "ERROR: unexpected test format"; exit 1
 
   let parse_section = Ast.Expression.Object.(function
     | Property (_, {
@@ -170,14 +234,15 @@ end = struct
 
   let test_section dump json (num_successes, num_failures, failures) (name, tests) =
     print [C.Bold C.White, spf "===%s===\n" name];
-    let num_successes, num_failures, section_failures = List.fold_left (fun (num_successes, num_failures, failures) (content, specs) ->
+    let num_successes, num_failures, section_failures = List.fold_left (fun (num_successes, num_failures, failures) (content, parse_options, specs) ->
+      let _ = parse_options in
       if should_color then begin
         print [
           C.Normal C.Yellow, "RUNNING";
           C.Normal C.Default, spf " %S\r" content;
         ]
       end;
-      let succeeded, output = Hardcoded_test_runner.run dump json content specs in
+      let succeeded, output = Hardcoded_test_runner.run dump json parse_options content specs in
       if succeeded
       then (
         print [
@@ -210,7 +275,7 @@ end = struct
     | Some x ->
       let regex = Str.regexp x in
       List.filter (fun (_, tests) ->
-        List.exists (fun (code, _) ->
+        List.exists (fun (code, _, _) ->
           Str.string_match regex code 0
         ) tests
       ) sections
