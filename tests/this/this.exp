@@ -9,11 +9,11 @@ This.js:33:12,17: string
 
 This.js:36:12,15: function call
 Error:
-This.js:29:15,15: property x
+This.js:29:15,15: property `x`
 Property cannot be accessed on
 global object
 
-This.js:41:15,15: property x
+This.js:41:15,15: property `x`
 Property cannot be accessed on
 global object
 
@@ -27,7 +27,7 @@ This.js:53:12,17: string
 
 This.js:56:12,15: function call
 Error:
-This.js:48:34,34: property x
+This.js:48:34,34: property `x`
 Property cannot be accessed on
 global object
 

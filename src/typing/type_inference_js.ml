@@ -324,7 +324,7 @@ let rec destructuring cx t f = Ast.Pattern.(function
             match prop with
             | { key = Identifier (loc, id); pattern = p; } ->
                 let x = id.Ast.Identifier.name in
-                let reason = mk_reason (spf "property %s" x) loc in
+                let reason = mk_reason (spf "property `%s`" x) loc in
                 xs := x :: !xs;
                 let tvar = Flow_js.mk_tvar cx reason in
                 (* use the same reason for the prop name and the lookup.
@@ -2963,11 +2963,11 @@ and expression_ ~is_cond cx type_params_map loc e = Ast.Expression.(match e with
         { Ast.Identifier.name; _ });
       _
     } ->
-      let expr_reason = mk_reason (spf "property %s" name) loc in
+      let expr_reason = mk_reason (spf "property `%s`" name) loc in
       (match Refinement.get cx (loc, e) expr_reason with
       | Some t -> t
       | None ->
-        let prop_reason = mk_reason (spf "property %s" name) ploc in
+        let prop_reason = mk_reason (spf "property `%s`" name) ploc in
 
         (* TODO: shouldn't this be `mk_reason "super" super_loc`? *)
         let super = super_ cx expr_reason in
@@ -2988,11 +2988,11 @@ and expression_ ~is_cond cx type_params_map loc e = Ast.Expression.(match e with
       property = Member.PropertyIdentifier (ploc, { Ast.Identifier.name; _ });
       _
     } -> (
-      let expr_reason = mk_reason (spf "property %s" name) loc in
+      let expr_reason = mk_reason (spf "property `%s`" name) loc in
       match Refinement.get cx (loc, e) expr_reason with
       | Some t -> t
       | None ->
-        let prop_reason = mk_reason (spf "property %s" name) ploc in
+        let prop_reason = mk_reason (spf "property `%s`" name) ploc in
         let tobj = expression cx type_params_map _object in
         if Type_inference_hooks_js.dispatch_member_hook cx name ploc tobj
         then AnyT.at ploc
@@ -3716,8 +3716,8 @@ and assignment cx type_params_map loc = Ast.Expression.(function
             _
           }) ->
             let reason =
-              mk_reason (spf "assignment of property %s" name) lhs_loc in
-            let prop_reason = mk_reason (spf "property %s" name) ploc in
+              mk_reason (spf "assignment of property `%s`" name) lhs_loc in
+            let prop_reason = mk_reason (spf "property `%s`" name) ploc in
             let super = super_ cx reason in
             Flow_js.flow cx (super, SetT(reason, (prop_reason, name), t))
 
@@ -3733,8 +3733,8 @@ and assignment cx type_params_map loc = Ast.Expression.(function
             if not (Type_inference_hooks_js.dispatch_member_hook cx name ploc o)
             then (
               let reason = mk_reason
-                (spf "assignment of property %s" name) lhs_loc in
-              let prop_reason = mk_reason (spf "property %s" name) ploc in
+                (spf "assignment of property `%s`" name) lhs_loc in
+              let prop_reason = mk_reason (spf "property `%s`" name) ploc in
 
               (* flow type to object property itself *)
               Flow_js.flow cx (o, SetT (reason, (prop_reason, name), t));
@@ -4821,7 +4821,7 @@ and static_method_call_Object cx type_params_map loc m args_ = Ast.Expression.(
     let o = expression cx type_params_map e in
     let spec = expression cx type_params_map config in
     let tvar = Flow_js.mk_tvar cx reason in
-    let prop_reason = mk_reason (spf "property %s" x) ploc in
+    let prop_reason = mk_reason (spf "property `%s`" x) ploc in
     Flow_js.flow cx (spec, GetT(reason, (reason, "value"), tvar));
     Flow_js.flow cx (o, SetT (reason, (prop_reason, x), tvar));
     o
@@ -5026,7 +5026,7 @@ and mk_signature cx reason_c type_params_map superClass body = Ast.Class.(
           let msg = "class property initializers are not yet supported" in
           Flow_js.add_error cx [mk_reason "" loc, msg]
         end;
-        let r = mk_reason (spf "class property %s" name) loc in
+        let r = mk_reason (spf "class property `%s`" name) loc in
         let t = mk_type_annotation cx type_params_map r typeAnnotation in
         if static
         then

@@ -59,7 +59,7 @@ D.js:20:15,49: callable object type
 This type is incompatible with
 D.js:20:53,64: function type
 
-E.js:2:9,28: property someProp
+E.js:2:9,28: property `someProp`
 Property not found in
 E.js:2:32,45: function
 

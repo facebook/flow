@@ -1,7 +1,7 @@
 
-test.js:9:1,5: assignment of property foo
+test.js:9:1,5: assignment of property `foo`
 Error:
-test.js:9:3,5: property foo
+test.js:9:3,5: property `foo`
 Property not found in
 test.js:1:7,7: A
 

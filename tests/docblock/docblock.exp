@@ -1,7 +1,7 @@
 
-docblock.js:34:1,3: assignment of property o
+docblock.js:34:1,3: assignment of property `o`
 Error:
-docblock.js:34:3,3: property o
+docblock.js:34:3,3: property `o`
 Property not found in
 docblock.js:18:7,7: statics of C
 

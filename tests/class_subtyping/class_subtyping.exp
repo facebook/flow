@@ -15,13 +15,13 @@ test3.js:2:35,38: boolean
 
 test4.js:7:1,29: function call
 Error:
-test4.js:5:10,22: property f
+test4.js:5:10,22: property `f`
 Property not found in
 test4.js:7:20,28: object literal
 
 test4.js:13:1,21: function call
 Error:
-test4.js:5:10,22: property f
+test4.js:5:10,22: property `f`
 Property not found in
 test4.js:13:12,20: object literal
 

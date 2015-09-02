@@ -11,9 +11,9 @@ test.js:4:17,22: number
 This type is incompatible with
 test.js:11:17,22: string
 
-test.js:7:1,5: assignment of property qux
+test.js:7:1,5: assignment of property `qux`
 Error:
-test.js:7:3,5: property qux
+test.js:7:3,5: property `qux`
 Property not found in
 test.js:1:7,7: statics of A
 
@@ -21,7 +21,7 @@ test.js:10:13,18: string
 This type is incompatible with
 test.js:2:13,18: number
 
-test.js:13:5,7: assignment of property x
+test.js:13:5,7: assignment of property `x`
 Error:
 test.js:13:11,11: number
 This type is incompatible with
@@ -33,7 +33,7 @@ test.js:15:11,11: number
 This type is incompatible with
 test.js:11:17,22: string
 
-test.js:17:5,7: assignment of property y
+test.js:17:5,7: assignment of property `y`
 Error:
 test.js:17:11,11: number
 This type is incompatible with

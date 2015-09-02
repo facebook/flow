@@ -1237,7 +1237,7 @@ module ImplicitTypeArgument = struct
      explicit instantiation (via a type application), or when we want to cache a
      unique instantiation and unify it with other explicit instantiations. *)
   let mk_targ cx (typeparam, reason_op) =
-    let prefix_desc = add_typeparam_prefix (spf " %s of " typeparam.name) in
+    let prefix_desc = add_typeparam_prefix (spf " `%s` of " typeparam.name) in
     mk_tvar cx (prefix_reason prefix_desc reason_op)
 
   (* Abstract a type argument that is created by implicit instantiation
@@ -2294,7 +2294,7 @@ let rec __flow cx (l, u) trace =
           if not (has_prop cx flds1 s)
           then
             (* property doesn't exist in inflowing type *)
-            let reason2 = replace_reason (spf "property %s" s) reason2 in
+            let reason2 = replace_reason (spf "property `%s`" s) reason2 in
             match t2 with
             | OptionalT t1 when flags.exact ->
               (* if property is marked optional or otherwise has a maybe type,
@@ -2334,7 +2334,7 @@ let rec __flow cx (l, u) trace =
         (fun s -> fun t2 ->
           if (not(SMap.mem s flds1))
           then
-            let reason2 = replace_reason (spf "property %s" s) reason2 in
+            let reason2 = replace_reason (spf "property `%s`" s) reason2 in
             match t2 with
             | OptionalT t1 ->
                 rec_flow cx trace (l, LookupT (reason2, None, s, t1))
@@ -2392,7 +2392,7 @@ let rec __flow cx (l, u) trace =
     | (ObjT (_, { props_tmap = mapr; _ }), ShapeT (proto)) ->
         let reason = reason_of_t proto in
         iter_props cx mapr (fun x t ->
-          let reason = prefix_reason (spf "prop %s of " x) reason in
+          let reason = prefix_reason (spf "prop `%s` of " x) reason in
           let t = filter_optional cx ~trace reason t in
           rec_flow cx trace (proto, SetT (reason, (reason, x), t));
         )
@@ -2687,7 +2687,7 @@ let rec __flow cx (l, u) trace =
           (* move the reason to the call site instead of the definition, so that
              it is in the same scope as the Object.assign, so that strictness
              rules apply. *)
-          let r = prefix_reason (spf "prop %s of " x) reason_ in
+          let r = prefix_reason (spf "prop `%s` of " x) reason_ in
           let r = repos_reason (loc_of_reason reason) r in
           rec_flow cx trace (proto, SetT (r, (r, x), t));
         );
@@ -2876,7 +2876,7 @@ let rec __flow cx (l, u) trace =
       rec_flow cx trace (key, ElemT(reason_op, l, LowerBoundT tout))
 
     | (StrT (reason_x, Literal x), ElemT(reason_op, (ObjT _ as o), t)) ->
-      let reason_x = replace_reason (spf "property %s" x) reason_x in
+      let reason_x = replace_reason (spf "property `%s`" x) reason_x in
       (match t with
       | UpperBoundT tin ->
           rec_flow cx trace (o, SetT(reason_op, (reason_x, x), tin))
@@ -3534,7 +3534,7 @@ and structural_subtype cx trace lower (upper_reason, super, fields_tmap, methods
   let flds2 = SMap.union fields_tmap methods_tmap in
   flds2 |> SMap.iter
       (fun s t2 ->
-        let lookup_reason = replace_reason (spf "property %s" s) (reason_of_t t2) in
+        let lookup_reason = replace_reason (spf "property `%s`" s) (reason_of_t t2) in
         rec_flow cx trace (lower, LookupT (lookup_reason, Some lower_reason, s, t2))
       );
   rec_flow cx trace (lower, super)
@@ -4786,7 +4786,7 @@ and flow_prop_to_dict cx trace k v dict prop_reason dict_reason =
   | Some {key; value; _} ->
     dictionary cx trace (string_key k prop_reason) v dict
   | None ->
-    let prop_reason = replace_reason (spf "property %s" k) prop_reason in
+    let prop_reason = replace_reason (spf "property `%s`" k) prop_reason in
     add_warning cx [
       prop_reason, "Property not found in";
       dict_reason, ""
@@ -4899,7 +4899,7 @@ and dictionary cx trace keyt valuet = function
 
 and string_key s reason =
   let key_reason =
-    replace_reason (spf "property name \"%s\" is a string" s) reason in
+    replace_reason (spf "property `%s` is a string" s) reason in
   StrT (key_reason, Literal s)
 
 (* builtins, contd. *)

@@ -1,5 +1,5 @@
 
-test.js:2:8,23: property foo
+test.js:2:8,23: property `foo`
 Property not found in
 test.js:2:27,27: object type
 

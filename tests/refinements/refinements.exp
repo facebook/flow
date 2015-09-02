@@ -7,11 +7,11 @@ assignment.js:16:14,21: undefined
 This type is incompatible with
 assignment.js:10:12,13:1: object type
 
-assignment.js:22:16,21: property parent
+assignment.js:22:16,21: property `parent`
 Property cannot be accessed on possibly null value
 assignment.js:22:14,14: null
 
-assignment.js:22:16,21: property parent
+assignment.js:22:16,21: property `parent`
 Property cannot be accessed on possibly undefined value
 assignment.js:22:14,14: undefined
 
@@ -291,15 +291,15 @@ tagged_union.js:40:6,10: string literal Maybe
 This type is incompatible with
 tagged_union.js:40:13,24: union type
 
-tagged_union.js:40:8,10: property raw
+tagged_union.js:40:8,10: property `raw`
 Property not found in
 tagged_union.js:27:15,46: object type
 
-tagged_union.js:72:21,21: property A
+tagged_union.js:72:21,21: property `A`
 Property not found in
 tagged_union.js:67:10,31: object type
 
-tagged_union.js:82:17,27: property nationality
+tagged_union.js:82:17,27: property `nationality`
 Property not found in
 tagged_union.js:78:16,32: object type
 
@@ -319,7 +319,7 @@ typeof.js:23:3,16: call of method stuff
 Method cannot be called on possibly undefined value
 [LIB] lib.js:3:50,53: undefined
 
-typeof.js:26:7,11: property stuff
+typeof.js:26:7,11: property `stuff`
 Property cannot be accessed on possibly undefined value
 [LIB] lib.js:3:50,53: undefined
 

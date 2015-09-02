@@ -29,13 +29,13 @@ B.js:12:10,15: number
 
 non_objects.js:3:1,32: Object.assign
 Error:
-non_objects.js:3:1,32: prop a of object literal
+non_objects.js:3:1,32: prop `a` of object literal
 Property cannot be assigned on
 non_objects.js:3:15,19: string
 
 non_objects.js:4:1,30: Object.assign
 Error:
-non_objects.js:4:1,30: prop a of object literal
+non_objects.js:4:1,30: prop `a` of object literal
 Property cannot be assigned on
 non_objects.js:4:15,17: number
 

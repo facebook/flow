@@ -1,17 +1,17 @@
 
-instanceof.js:17:26,30: assignment of property foo
+instanceof.js:17:26,30: assignment of property `foo`
 Error:
 instanceof.js:17:34,39: string
 This type is incompatible with
 instanceof.js:4:17,22: number
 
-instanceof.js:34:30,38: assignment of property foo
+instanceof.js:34:30,38: assignment of property `foo`
 Error:
 instanceof.js:34:42,47: string
 This type is incompatible with
 instanceof.js:4:17,22: number
 
-instanceof.js:51:34,46: assignment of property foo
+instanceof.js:51:34,46: assignment of property `foo`
 Error:
 instanceof.js:51:50,55: string
 This type is incompatible with

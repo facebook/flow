@@ -3,9 +3,9 @@ class_statics.js:3:12,17: string
 This type is incompatible with
 class_statics.js:9:7,12: number
 
-class_statics.js:6:1,3: assignment of property g
+class_statics.js:6:1,3: assignment of property `g`
 Error:
-class_statics.js:6:3,3: property g
+class_statics.js:6:3,3: property `g`
 Property not found in
 class_statics.js:1:7,7: statics of C
 
@@ -21,7 +21,7 @@ class_statics.js:7:5,5: number
 This type is incompatible with
 class_statics.js:6:18,23: string
 
-class_statics.js:10:1,3: assignment of property x
+class_statics.js:10:1,3: assignment of property `x`
 Error:
 class_statics.js:10:7,7: number
 This type is incompatible with

@@ -1,43 +1,43 @@
 
 object_freeze.js:3:11,39: Object.freeze
 Error:
-object_freeze.js:4:1,7: assignment of property bar
+object_freeze.js:4:1,7: assignment of property `bar`
 Mutation not allowed on
 object_freeze.js:3:11,39: frozen object literal
 
 object_freeze.js:6:1,34: Object.assign
 Error:
-object_freeze.js:6:1,34: prop bar of object literal
+object_freeze.js:6:1,34: prop `bar` of object literal
 Mutation not allowed on
 object_freeze.js:3:11,39: frozen object literal
 
 object_freeze.js:9:14,50: Object.freeze
 Error:
-object_freeze.js:10:1,10: assignment of property bar
+object_freeze.js:10:1,10: assignment of property `bar`
 Mutation not allowed on
 object_freeze.js:9:14,50: frozen object literal
 
 object_freeze.js:9:14,50: Object.freeze
 Error:
-object_freeze.js:11:1,10: assignment of property baz
+object_freeze.js:11:1,10: assignment of property `baz`
 Mutation not allowed on
 object_freeze.js:9:14,50: frozen object literal
 
 object_freeze.js:9:14,50: Object.freeze
 Error:
-object_freeze.js:12:8,12: property corge
+object_freeze.js:12:8,12: property `corge`
 Property not found in
 object_freeze.js:9:14,50: frozen object literal
 
 object_freeze.js:9:14,50: Object.freeze
 Error:
-object_freeze.js:13:1,18: assignment of property constructor
+object_freeze.js:13:1,18: assignment of property `constructor`
 Mutation not allowed on
 object_freeze.js:9:14,50: frozen object literal
 
 object_freeze.js:9:14,50: Object.freeze
 Error:
-object_freeze.js:14:1,15: assignment of property toString
+object_freeze.js:14:1,15: assignment of property `toString`
 Mutation not allowed on
 object_freeze.js:9:14,50: frozen object literal
 

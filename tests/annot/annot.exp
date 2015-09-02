@@ -7,7 +7,7 @@ annot.js:6:58,67: string
 This type is incompatible with
 annot.js:6:42,47: number
 
-annot.js:8:10,42: property j
+annot.js:8:10,42: property `j`
 Property not found in
 annot.js:8:46,77: object literal
 
@@ -23,7 +23,7 @@ annot.js:13:28,32: string
 This type is incompatible with
 annot.js:13:12,17: number
 
-annot.js:26:16,56: property foo-bar
+annot.js:26:16,56: property `foo-bar`
 Property not found in
 annot.js:27:25,43: object literal
 
@@ -33,7 +33,7 @@ annot.js:30:23,28: number
 
 annot.js:45:21,51:6: call of method map
 Error:
-annot.js:37:26,72: property path
+annot.js:37:26,72: property `path`
 Property not found in
 annot.js:46:14,50:7: object literal
 

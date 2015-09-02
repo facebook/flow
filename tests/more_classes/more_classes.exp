@@ -1,5 +1,5 @@
 
-Foo.js:10:10,10: property x
+Foo.js:10:10,10: property `x`
 Property cannot be assigned on possibly undefined value
 Foo.js:7:7,9: uninitialized this (expected super constructor call)
 

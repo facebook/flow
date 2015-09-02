@@ -1,7 +1,7 @@
 
-private.js:11:22,28: property _x
+private.js:11:22,28: property `_x`
 Error:
-private.js:11:27,28: property _x
+private.js:11:27,28: property `_x`
 Property not found in
 private.js:8:7,7: B
 

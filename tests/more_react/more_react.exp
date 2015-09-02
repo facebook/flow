@@ -20,8 +20,8 @@ Missing annotation
 
 propTypes.js:15:1,18:2: React element: D
 Error:
-propTypes.js:9:3,11: property name
+propTypes.js:9:3,11: property `name`
 Property not found in
-propTypes.js:15:1,18:2: type parameter D of React element: D
+propTypes.js:15:1,18:2: type parameter `D` of React element: D
 
 Found 6 errors

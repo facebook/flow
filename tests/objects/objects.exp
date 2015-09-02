@@ -1,9 +1,9 @@
 
-objects.js:4:4,6: property foo
+objects.js:4:4,6: property `foo`
 Property not found in
 objects.js:4:2,2: object type
 
-objects.js:5:4,8: property foo
+objects.js:5:4,8: property `foo`
 Property not found in
 objects.js:5:2,2: object type
 
@@ -23,7 +23,7 @@ objects.js:14:12,14: number
 This type is incompatible with
 objects.js:13:15,20: string
 
-objects.js:15:3,7: property bar
+objects.js:15:3,7: property `bar`
 Property not found in
 objects.js:15:1,1: object type
 

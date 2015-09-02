@@ -3,7 +3,7 @@ Bar.js:1:16,16: number
 This type is incompatible with
 test.js:5:12,17: string
 
-test.js:6:10,10: property y
+test.js:6:10,10: property `y`
 Property not found in
 test.js:3:7,9: Foo
 

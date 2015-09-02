@@ -1,25 +1,25 @@
 
-constructor.js:15:10,10: property y
+constructor.js:15:10,10: property `y`
 Property cannot be accessed on possibly undefined value
 constructor.js:12:7,7: uninitialized this (expected super constructor call)
 
-constructor.js:16:10,10: property x
+constructor.js:16:10,10: property `x`
 Property cannot be accessed on possibly undefined value
 constructor.js:12:7,7: uninitialized this (expected super constructor call)
 
 constructor.js:36:5,14: function call
 Error:
-constructor.js:30:5,5: property y
+constructor.js:30:5,5: property `y`
 Property cannot be accessed on possibly undefined value
 constructor.js:33:7,7: uninitialized this (expected super constructor call)
 
 constructor.js:36:5,14: function call
 Error:
-constructor.js:31:5,5: property x
+constructor.js:31:5,5: property `x`
 Property cannot be accessed on possibly undefined value
 constructor.js:33:7,7: uninitialized this (expected super constructor call)
 
-constructor.js:45:11,11: property x
+constructor.js:45:11,11: property `x`
 Property cannot be accessed on possibly undefined value
 constructor.js:43:7,7: uninitialized this (expected super constructor call)
 
@@ -45,9 +45,9 @@ super.js:12:13,13: number
 This type is incompatible with
 super.js:4:7,12: string
 
-super.js:13:12,18: property g
+super.js:13:12,18: property `g`
 Error:
-super.js:13:18,18: property g
+super.js:13:18,18: property `g`
 Property not found in
 super.js:7:17,17: A
 
