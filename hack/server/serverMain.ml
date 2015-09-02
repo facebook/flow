@@ -495,12 +495,15 @@ let monitor_entry =
     "monitor"
     (fun (options, log_file) (_ic, _oc) ->
        ignore (Sys_utils.setsid ());
+       let t = Unix.time () in
        let {Daemon.pid; _} =
          Daemon.spawn ~log_file daemon_entry options in
        let _pid, proc_stat = Unix.waitpid [] pid in
        (match proc_stat with
         | Unix.WEXITED 0 -> ()
-        | _ -> HackEventLogger.bad_exit proc_stat))
+        | _ ->
+            let time_taken = Unix.time () -. t in
+            HackEventLogger.bad_exit time_taken proc_stat))
 
 let monitor_daemon options =
   let log_link = ServerFiles.log_link (ServerArgs.root options) in

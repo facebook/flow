@@ -8,7 +8,7 @@
  *
  *)
 
-let bad_exit _ = ()
+let bad_exit _ _ = ()
 let init _ _ = ()
 let init_done _ = ()
 let load_read_end _ = ()
