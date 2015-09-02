@@ -37,3 +37,4 @@ notifications:
   irc:
     channels:
       - "chat.freenode.net#flowtype"
+    on_success: change
