@@ -1056,10 +1056,10 @@ and statement_decl cx type_params_map = Ast.Statement.(
       ()
   | (loc, DeclareTypeAlias { TypeAlias.id; typeParameters; right; } )
   | (loc, TypeAlias { TypeAlias.id; typeParameters; right; } ) ->
-      let _, { Ast.Identifier.name; _ } = id in
-      let r = mk_reason (spf "type %s" name) loc in
+      let name_loc, { Ast.Identifier.name; _ } = id in
+      let r = mk_reason (spf "type %s" name) name_loc in
       let tvar = Flow_js.mk_tvar cx r in
-      Env_js.bind_type cx name tvar loc
+      Env_js.bind_type cx name tvar name_loc
 
   | (loc, Switch { Switch.discriminant; cases; lexical }) ->
       (* TODO: ensure that default is last *)
@@ -1488,8 +1488,8 @@ and statement cx type_params_map = Ast.Statement.(
       ()
   | (loc, DeclareTypeAlias { TypeAlias.id; typeParameters; right; } )
   | (loc, TypeAlias { TypeAlias.id; typeParameters; right; } ) ->
-      let _, { Ast.Identifier.name; _ } = id in
-      let r = mk_reason (spf "type %s" name) loc in
+      let name_loc, { Ast.Identifier.name; _ } = id in
+      let r = mk_reason (spf "type %s" name) name_loc in
       let typeparams, type_params_map =
         mk_type_param_declarations cx type_params_map typeParameters in
       let t = convert cx type_params_map right in

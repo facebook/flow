@@ -1,21 +1,21 @@
 
-rebinding.js:19:3,18: A
+rebinding.js:19:8,8: A
 name is already bound
-rebinding.js:18:3,18: type A
+rebinding.js:18:8,8: type A
 
 rebinding.js:24:9,9: A
 name is already bound
-rebinding.js:23:3,18: type A
+rebinding.js:23:8,8: type A
 
 rebinding.js:34:7,7: A
 name is already bound
-rebinding.js:33:3,18: type A
+rebinding.js:33:8,8: type A
 
 rebinding.js:39:3,3: A
 type alias referenced from value position
-rebinding.js:38:3,18: type A
+rebinding.js:38:8,8: type A
 
-rebinding.js:45:3,18: A
+rebinding.js:45:8,8: A
 name is already bound
 rebinding.js:44:9,9: class A
 
@@ -27,7 +27,7 @@ rebinding.js:60:7,7: A
 name is already bound
 rebinding.js:59:9,9: class A
 
-rebinding.js:94:3,18: A
+rebinding.js:94:8,8: A
 name is already bound
 rebinding.js:93:7,7: var A
 

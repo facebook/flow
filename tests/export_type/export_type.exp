@@ -25,6 +25,6 @@ types_only.js:3:28,33: number
 
 types_only.js:11:9,23: standaloneType2
 type alias referenced from value position
-types_only.js:10:1,30: type standaloneType2
+types_only.js:10:6,20: type standaloneType2
 
 Found 7 errors

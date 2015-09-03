@@ -13,7 +13,7 @@ bad_shadowing.js:6:19,28: type Baz
 
 bad_shadowing.js:18:5,16: duck
 name is already bound
-bad_shadowing.js:8:1,10:1: type duck
+bad_shadowing.js:8:6,9: type duck
 
 good_shadowing.js:8:5,5: A
 name is already bound
@@ -73,6 +73,6 @@ import_type.js:6:19,28: type Baz
 
 type_alias.js:8:9,11: Foo
 type alias referenced from value position
-type_alias.js:5:1,18: type Foo
+type_alias.js:5:6,8: type Foo
 
 Found 19 errors

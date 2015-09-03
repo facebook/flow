@@ -13,6 +13,6 @@ typeof.js:59:14,19: number
 
 typeof.js:73:15,25: numberAlias
 type alias referenced from value position
-typeof.js:67:1,26: type numberAlias
+typeof.js:67:6,16: type numberAlias
 
 Found 4 errors
