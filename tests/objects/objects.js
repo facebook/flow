@@ -13,3 +13,5 @@ x['foo'+'bar'] = 'derp'; // ok since we can't tell
 var y : {foo: string} = {foo: 'bar'};
 y['foo'] = 123; // error, number !~> string
 y['bar'] = 'abc'; // error, property not found
+
+(y['hasOwnProperty']: string); // error, prototype method is not a string

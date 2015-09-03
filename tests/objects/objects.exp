@@ -27,4 +27,8 @@ objects.js:15:3,7: property `bar`
 Property not found in
 objects.js:15:1,1: object type
 
-Found 7 errors
+objects.js:17:23,28: string
+This type is incompatible with
+[LIB] core.js:43:5,38: function type
+
+Found 8 errors

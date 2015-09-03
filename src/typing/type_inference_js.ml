@@ -3499,32 +3499,10 @@ and func_call cx reason func_t argts =
     Flow_js.flow cx (func_t, CallT(reason, app))
   )
 
-and reflective s =
-  (* could be stricter *)
-  List.mem s [
-    "propertyIsEnumerable";
-    "length";
-    "isPrototypeOf";
-    "hasOwnProperty";
-    "constructor";
-    "valueOf";
-    "toString";
-    "toLocaleString";
-  ]
-
-and non_identifier s =
-  (* should be stricter *)
-  Str.string_match (Str.regexp ".* ") s 0
-
 (* traverse a literal expression, return result type *)
 and literal cx loc lit = Ast.Literal.(match lit.value with
   | String s ->
-    let lit =
-      if reflective s || non_identifier s
-      then AnyLiteral
-      else Literal s
-    in
-      StrT (mk_reason "string" loc, lit)
+      StrT (mk_reason "string" loc, Literal s)
 
   | Boolean b ->
       BoolT (mk_reason "boolean" loc, Some b)

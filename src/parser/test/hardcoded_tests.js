@@ -1528,6 +1528,13 @@ module.exports = {
         'raw': '\'duck\'',
       }
     },
+    'var a: "foo bar"': {
+      'body.0.declarations.0.id.typeAnnotation.typeAnnotation': {
+        'type': 'StringLiteralTypeAnnotation',
+        'value': 'foo bar',
+        'raw': '"foo bar"',
+      }
+    },
   },
   'Invalid String Literal Types': {
     'var a: "\\01"': {
