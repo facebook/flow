@@ -83,8 +83,12 @@ let debug () fnl =
         let oc = open_out file2 in
         output_string oc content2;
         close_out oc;
-        let _ = Sys.command ("diff "^file1^" "^file2) in
-        let _ = Sys.command ("rm "^file1^" "^file2) in
+        if Sys.win32 then
+          ignore (Sys.command ("fc "^file1^" "^file2))
+        else
+          ignore (Sys.command ("diff "^file1^" "^file2));
+        Sys_utils.unlink_no_fail file1;
+        Sys_utils.unlink_no_fail file2;
         flush stdout
       end;
 
