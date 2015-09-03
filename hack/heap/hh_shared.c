@@ -105,6 +105,12 @@
 #include <unistd.h>
 #endif
 
+// The following 'typedef' won't be required anymore
+// when dropping support for OCaml < 4.03
+#ifdef __MINGW64__
+typedef unsigned __int64 uint64_t;
+#endif
+
 #ifndef NO_LZ4
 #include <lz4.h>
 #include <lz4hc.h>
@@ -166,7 +172,7 @@ static size_t heap_size;
 #define SHARED_MEM_INIT 0x500000000000ll
 
 /* As a sanity check when loading from a file */
-static uint64 MAGIC_CONSTANT = 0xfacefacefaceb000ll;
+static uint64_t MAGIC_CONSTANT = 0xfacefacefaceb000ll;
 
 /* The VCS identifier (typically a git hash) of the build */
 extern const char* const BuildInfo_kRevision;
@@ -177,7 +183,7 @@ extern const char* const BuildInfo_kRevision;
 
 /* Cells of the Hashtable */
 typedef struct {
-  uint64 hash;
+  uint64_t hash;
   char* addr;
 } helt_t;
 
@@ -194,8 +200,8 @@ static value* global_storage;
  * The highest 2 bits are unused.
  * The next 31 bits encode the key the lower 31 bits the value.
  */
-static uint64* deptbl;
-static uint64* deptbl_bindings;
+static uint64_t* deptbl;
+static uint64_t* deptbl_bindings;
 
 /* The hashtable containing the shared values. */
 static helt_t* hashtbl;
@@ -232,7 +238,7 @@ value hh_heap_size() {
 
 value hh_hash_used_slots() {
   CAMLparam0();
-  uint64 count = 0;
+  uint64_t count = 0;
   uintptr_t i = 0;
   for (i = 0; i < HASHTBL_SIZE; ++i) {
     if (hashtbl[i].addr != NULL) {
@@ -298,10 +304,10 @@ static void init_shared_globals(char* mem) {
   /* END OF THE SMALL OBJECTS PAGE */
 
   /* Dependencies */
-  deptbl = (uint64*)mem;
+  deptbl = (uint64_t*)mem;
   mem += DEP_SIZE_B;
 
-  deptbl_bindings = (uint64*)mem;
+  deptbl_bindings = (uint64_t*)mem;
   mem += DEP_SIZE_B;
 
   /* Hashtable */
@@ -589,7 +595,7 @@ void hh_load(value in_filename) {
     caml_failwith("Failed to open file");
   }
 
-  uint64 magic = 0;
+  uint64_t magic = 0;
   read_all(fileno(fp), (void*)&magic, sizeof magic);
   assert(magic == MAGIC_CONSTANT);
 
@@ -741,14 +747,14 @@ void hh_shared_clear() {
  */
 /*****************************************************************************/
 
-static int htable_add(uint64* table, unsigned long hash, uint64 value) {
+static int htable_add(uint64_t* table, unsigned long hash, uint64_t value) {
   unsigned long slot = hash & (DEP_SIZE - 1);
 
   while(1) {
     /* It considerably speeds things up to do a normal load before trying using
      * an atomic operation.
      */
-    uint64 slot_val = table[slot];
+    uint64_t slot_val = table[slot];
 
     // The binding exists, done!
     if(slot_val == value)
@@ -771,7 +777,7 @@ static int htable_add(uint64* table, unsigned long hash, uint64 value) {
 }
 
 void hh_add_dep(value ocaml_dep) {
-  uint64 dep  = Long_val(ocaml_dep);
+  uint64_t dep  = Long_val(ocaml_dep);
   unsigned long hash = (dep >> 31) * (dep & ((1ul << 31) - 1));
 
   if(!htable_add(deptbl_bindings, hash, hash)) {
@@ -783,7 +789,7 @@ void hh_add_dep(value ocaml_dep) {
 
 value hh_dep_used_slots() {
   CAMLparam0();
-  uint64 count = 0;
+  uint64_t count = 0;
   uintptr_t slot = 0;
   for (slot = 0; slot < DEP_SIZE; ++slot) {
     if (deptbl[slot]) {
