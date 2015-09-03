@@ -324,11 +324,40 @@ begin library "hh-socket"
 end
 
 begin library "hh-hhi"
-  requires += [ "hh-globals" "hh-utils" ]
+  requires += [ "hh-globals" "hh-utils" "bigarray" ]
   files = [
     "hhi/hhi_elf.c"
+    "hhi/hhi_win32res_stubs.c"
+    "hhi/hhi_win32res.ml"
     "hhi/hhi.ml"
   ]
+  if (os_type = "Win32") then {
+    (* Embed resources *)
+    hhi_source = "../hhi.rc"
+    hhi_target = "%{hh-hhi_FULL_DST_DIR}%/hhi_res.o"
+    cclib = [ hhi_target ]
+    build_rules = [
+      hhi_target (
+        sources = [ hhi_source ]
+        commands = [
+          { "windres"
+            "--preprocessor=x86_64-w64-mingw32-gcc.exe"
+            "--preprocessor-arg=-E"
+            "--preprocessor-arg=-xc-header"
+            hhi_source hhi_target }
+        ]
+        build_target = true
+      )
+    ]
+  } else if (system = "macosx" && os_type = "Unix") then {
+    cclib = [
+      "-sectcreate" "-__text" "hhi"
+      "%{ROOTPROJECT_FULL_SRC_DIR}%/bin/hhi.tar.gz"
+      "-framework" "CoreServices"
+      "-framework" "CoreFoundation"
+    ]
+  }
+
 end
 
 begin library "hh-server-base"

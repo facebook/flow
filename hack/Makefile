@@ -63,6 +63,7 @@ MODULES=\
 NATIVE_OBJECT_FILES=\
   heap/hh_shared.o\
   hhi/hhi_elf.o\
+  hhi/hhi_win32res_stubs.o\
   utils/files.o\
   utils/get_build_id.gen.o\
   utils/get_build_id.o\
@@ -74,7 +75,8 @@ NATIVE_OBJECT_FILES=\
 
 OCAML_LIBRARIES=\
   str\
-  unix
+  unix\
+  bigarray
 
 NATIVE_LIBRARIES=\
   pthread\
@@ -146,8 +148,8 @@ build-hack-stubs:
 	if [ "$$REV" != "$$(cat utils/get_build_id.gen.c 2>/dev/null)" ]; then echo "$$REV" > utils/get_build_id.gen.c; fi
 
 build-hack-stubs-with-ocp:
-	ocaml unix.cma $(ROOT)/scripts/gen_build_id.ml \
-                       $(ROOT)/utils/get_build_id.gen.c
+	cd $(ROOT)/.. && \
+        ocaml unix.cma scripts/gen_build_id.ml src/utils/get_build_id.gen.c
 
 build-hhi-archive:
 	mkdir -p ../bin
