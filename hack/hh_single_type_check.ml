@@ -200,6 +200,9 @@ let parse_options () =
     "--auto-complete",
       Arg.Unit (set_mode Autocomplete),
       "Produce autocomplete suggestions";
+    "--colour",
+      Arg.Unit (set_mode Color),
+      "Produce colour output";
     "--color",
       Arg.Unit (set_mode Color),
       "Produce color output";

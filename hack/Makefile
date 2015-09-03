@@ -189,6 +189,7 @@ test-ocp: build-hack-with-ocp copy-hack-files-ocp
 do-test:
 	python3 ../test/verify.py --program ../bin/hh_single_type_check ../test/autocomplete
 	python3 ../test/verify.py --program ../bin/hh_single_type_check ../test/color
+	python3 ../test/verify.py --program ../bin/hh_single_type_check ../test/colour
 	python3 ../test/verify.py --program ../bin/hh_single_type_check ../test/coverage
 	python3 ../test/verify.py --program ../bin/hh_single_type_check ../test/dumpsymbolinfo
 	python3 ../test/verify.py --program ../bin/hh_format ../test/format
