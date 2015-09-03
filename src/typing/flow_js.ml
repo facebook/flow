@@ -4919,7 +4919,7 @@ and get_builtin_typeapp cx reason x ts =
 and mk_typeapp_instance cx reason ?(cache=false) c ts =
   let t = mk_tvar cx reason in
   flow_opt cx (c, SpecializeT(reason,cache,ts,t));
-  mk_instance cx reason t
+  mk_instance cx (reason_of_t c) t
 
 (* NOTE: the for_type flag is true when expecting a type (e.g., when processing
    an annotation), and false when expecting a runtime value (e.g., when
