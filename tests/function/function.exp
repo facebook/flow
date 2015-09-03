@@ -11,4 +11,7 @@ function.js:31:21,21: object type
 This type is incompatible with
 function.js:31:10,17: function type
 
-Found 3 errors
+rest.js:8:31,33: tuple type
+rest parameters should be an array type, got a tuple type instead
+
+Found 4 errors
