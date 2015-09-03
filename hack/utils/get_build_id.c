@@ -45,8 +45,12 @@ value hh_get_build_id(void) {
 }
 
 value hh_get_build_time(void) {
+#ifdef _WIN32
+  return Val_long(0);
+#else
   struct tm tm;
   char* success = strptime(build_time, "%b %d %Y %H:%M:%S", &tm);
   assert(success != NULL && "Failed to parse build time");
   return Val_long(mktime(&tm));
+#endif
 }

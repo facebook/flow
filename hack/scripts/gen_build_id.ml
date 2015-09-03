@@ -39,7 +39,7 @@ let read_process_output name args =
   let line = input_line out_inch in
   match Unix.waitpid [] pid with
   | _, Unix.WEXITED 0 -> line
-  | _ -> exit 1
+  | _ -> raise (Failure line)
 
 let string_of_file filename =
   with_in_channel filename @@ fun ic ->
@@ -56,7 +56,11 @@ let string_of_file filename =
 
 let () =
   let out_file = Sys.argv.(1) in
-  let rev = read_process_output "git" [|"git"; "rev-parse"; "HEAD"|] in
+  let rev =
+    try read_process_output "git" [|"git"; "rev-parse"; "HEAD"|]
+    with Failure _ ->
+      read_process_output "hg" [|"hg"; "id"; "-i"|]
+  in
   let content =
     Printf.sprintf "const char* const BuildInfo_kRevision = %S;\n" rev in
   let do_dump =
