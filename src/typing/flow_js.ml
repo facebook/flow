@@ -3115,7 +3115,7 @@ let rec __flow cx (l, u) trace =
     (*****************)
 
     | (ClassT instance, _) when object_like_op u ->
-      let reason = reason_of_t u in
+      let reason = prefix_reason "statics of " (reason_of_t instance) in
       let tvar = mk_tvar cx reason in
       rec_flow cx trace (instance, GetT(reason, (reason, "statics"), tvar));
       rec_flow cx trace (tvar,u)
