@@ -173,10 +173,8 @@ let spawn
           fn)  in
   let out_fd =
     Unix.openfile out_path [Unix.O_WRONLY; Unix.O_CREAT; Unix.O_TRUNC] 0o666 in
-  let pid =
-    Unix.create_process
-      Sys.executable_name [|Sys.executable_name|]
-      null_fd out_fd out_fd in
+  let exe = Sys_utils.executable_path () in
+  let pid = Unix.create_process exe [|exe|] null_fd out_fd out_fd in
   Option.iter reason ~f:(fun reason -> PidLog.log ~reason pid);
   Unix.close child_in;
   Unix.close child_out;
