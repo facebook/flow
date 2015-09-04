@@ -45,6 +45,8 @@ MODULES=\
   h2tp/unparser\
   h2tp\
   heap\
+  hh_matcher\
+  hh_matcher/test\
   hhi\
   naming\
   parsing\
@@ -84,7 +86,13 @@ NATIVE_LIBRARIES=\
 
 TARGETS=_build/hh_server.native _build/hh_client.native \
 		_build/hh_single_type_check.native _build/hh_emitter.native \
-		_build/hh_format.native _build/h2tp.native _build/test_unparser.native
+		_build/hh_format.native _build/h2tp.native _build/test_unparser.native \
+		_build/hh_match.native \
+		_build/code_extent_tests.native \
+		_build/matcher_test.native \
+		_build/patcher_api_test.native \
+		_build/patcher_module_test.native \
+		_build/patcher_test.native
 
 # Find all source files (all files not in _build dir)
 ALL_SRC_FILES=$(call rwildcard,$(patsubst _build,,$(wildcard *)),*.*)
@@ -167,6 +175,7 @@ endif
 	cp _build/hh_emitter.native ../bin/hh_emitter
 	cp _build/hh_format.native ../bin/hh_format
 	cp _build/h2tp/h2tp.native ../bin/h2tp
+	cp _build/hh_match.native ../bin/hh_match
 
 copy-hack-files-ocp: build-hack-with-ocp
 	mkdir -p ../bin
@@ -179,13 +188,39 @@ endif
 	cp ../_obuild/hh_single_type_check/hh_single_type_check.asm ../bin/hh_single_type_check
 	cp ../_obuild/hh_format/hh_format.asm ../bin/hh_format
 	cp ../_obuild/h2tp/h2tp.asm ../bin/h2tp
+	cp ../_obuild/hh_match.asm ../bin/hh_match
 
+copy-match-test-files:
+	mkdir -p ../bin
+	cp _build/hh_matcher/test/code_extent_tests.native \
+		../bin/code_extent_test_driver
+	cp _build/hh_matcher/test/matcher_test.native \
+		../bin/hh_match_test_driver
+	cp _build/hh_matcher/test/patcher_module_test.native \
+		../bin/hh_patch_module_test_driver
+	cp _build/hh_matcher/test/patcher_api_test.native \
+		../bin/hh_patch_api_test_driver
+	cp _build/hh_matcher/test/patcher_test.native \
+		../bin/hh_patch_test_driver
+
+copy-match-test-files-ocp:
+	mkdir -p ../bin
+	cp _obuild/hh_matcher/test/code_extent_tests.asm \
+		../bin/code_extent_test_driver
+	cp _obuild/hh_matcher/test/matcher_test.asm \
+		../bin/hh_match_test_driver
+	cp _obuild/hh_matcher/test/patcher_module_test.asm \
+		../bin/hh_patch_module_test_driver
+	cp _obuild/hh_matcher/test/patcher_api_test.asm \
+		../bin/hh_patch_api_test_driver
+	cp _obuild/hh_matcher/test/patcher_test.asm \
+		../bin/hh_patch_test_driver
 
 .PHONY: test test-ocp do-test
-test: build-hack copy-hack-files
+test: build-hack copy-hack-files copy-match-test-files
 	${MAKE} do-test
 
-test-ocp: build-hack-with-ocp copy-hack-files-ocp
+test-ocp: build-hack-with-ocp copy-hack-files-ocp copy match-test-files-ocp
 	${MAKE} do-test
 
 do-test:
@@ -202,4 +237,9 @@ do-test:
 		--out-extension .format_out \
 		--expect-extension '' \
 		--flags --root .
+	python3 ../test/verify.py --program ../bin/code_extent_test_driver ../test/hh_matcher/code_extent
+	python3 ../test/verify.py --program ../bin/hh_match_test_driver ../test/hh_matcher/matcher_tests
+	python3 ../test/verify.py --program ../bin/hh_patch_module_test_driver ../test/hh_matcher/patcher_module_tests
+	python3 ../test/verify.py --program ../bin/hh_patch_api_test_driver ../test/hh_matcher/patcher_api_tests
+	python3 ../test/verify.py --program ../bin/hh_patch_test_driver ../test/hh_matcher/patcher_tests
 	python3 ../test/integration/runner.py hh_server hh_client
