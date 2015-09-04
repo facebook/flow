@@ -250,8 +250,10 @@ module Node = struct
   let guess_exported_module file _content = file
 
   let path_if_exists path =
-    if file_exists path then Some path
-    else None
+    if not (file_exists path) ||
+      FlowConfig.(is_excluded (get_unsafe ()) path)
+    then None
+    else Some path
 
   let path_is_file path =
     file_exists path && not (Sys.is_directory path)
