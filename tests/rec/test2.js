@@ -12,13 +12,13 @@ class A<X> {
   x: A<A<X>>;
 }
 var a_ = new A;
-function foo() {
+function foo0() {
   a_ = a_.x; // terminate despite expanding types
 }
 
 type T<X> = { y: S<X> };
 type S<X> = T<S<X>>;
-function foo(b: S<number>) {
+function foo1(b: S<number>) {
   b = b.y; // terminate despite expanding types, OK
   // S<number> = { y: S<S<number>> }
   // Both S<S<number>> and S<number> expand to { y: { y: ... }}.

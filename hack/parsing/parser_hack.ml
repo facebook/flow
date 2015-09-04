@@ -3661,6 +3661,7 @@ and xhp_text env start abs_start =
     (* if it is empty or all whitespace just ignore it *)
     if squished = "" || squished = " " then [] else
       [pos, String (pos, squished)]
+    (* TODO: xhp can contain html/xhp entities that need to be decoded. *)
 
   | _ -> xhp_text env start abs_start
 

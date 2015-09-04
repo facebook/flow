@@ -63,16 +63,20 @@ MODULES=\
 NATIVE_OBJECT_FILES=\
   heap/hh_shared.o\
   hhi/hhi_elf.o\
+  hhi/hhi_win32res_stubs.o\
+  utils/files.o\
   utils/get_build_id.gen.o\
   utils/get_build_id.o\
+  utils/handle_stubs.o\
   utils/nproc.o\
   utils/realpath.o\
-  utils/handle_stubs.o\
+  utils/sysinfo.o\
   $(INOTIFY)/$(notdir $(INOTIFY))_stubs.o
 
 OCAML_LIBRARIES=\
   str\
-  unix
+  unix\
+  bigarray
 
 NATIVE_LIBRARIES=\
   pthread\
@@ -140,12 +144,12 @@ build-hack-native-deps: build-hack-stubs
 # If you modify this rule, do not forget to edit the file
 # `$(ROOT)/scripts/gen_build_id.ml` used on Windows.
 build-hack-stubs:
-	REV="const char* const BuildInfo_kRevision = \"$$(git rev-parse HEAD)\";"; \
-	if [ "$$REV" != "$$(cat utils/get_build_id.gen.c)" ]; then echo "$$REV" > utils/get_build_id.gen.c; fi
+	REV="const char* const BuildInfo_kRevision = \"$$(git rev-parse HEAD || hg id -i)\";"; \
+	if [ "$$REV" != "$$(cat utils/get_build_id.gen.c 2>/dev/null)" ]; then echo "$$REV" > utils/get_build_id.gen.c; fi
 
 build-hack-stubs-with-ocp:
-	ocaml unix.cma $(ROOT)/scripts/gen_build_id.ml \
-                       $(ROOT)/utils/get_build_id.gen.c
+	cd $(ROOT)/.. && \
+        ocaml unix.cma scripts/gen_build_id.ml src/utils/get_build_id.gen.c
 
 build-hhi-archive:
 	mkdir -p ../bin
@@ -187,6 +191,7 @@ test-ocp: build-hack-with-ocp copy-hack-files-ocp
 do-test:
 	python3 ../test/verify.py --program ../bin/hh_single_type_check ../test/autocomplete
 	python3 ../test/verify.py --program ../bin/hh_single_type_check ../test/color
+	python3 ../test/verify.py --program ../bin/hh_single_type_check ../test/colour
 	python3 ../test/verify.py --program ../bin/hh_single_type_check ../test/coverage
 	python3 ../test/verify.py --program ../bin/hh_single_type_check ../test/dumpsymbolinfo
 	python3 ../test/verify.py --program ../bin/hh_format ../test/format
@@ -197,3 +202,4 @@ do-test:
 		--out-extension .format_out \
 		--expect-extension '' \
 		--flags --root .
+	python3 ../test/integration/runner.py hh_server hh_client

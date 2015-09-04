@@ -72,3 +72,13 @@ function def_assign_within_for(b: boolean, obj: Obj) {
     }
     var z: number = obj.p;      // error, (number | string) ~/~ number
 }
+
+// --- name-sensitive havoc ---
+
+type Obj2 = { q: number | string }
+
+function def_assign_setprop_nohavoc(obj: Obj, obj2: Obj2) {
+    obj.p = 10;                 // (obj.p : number)
+    obj2.q = 'hey';             // doesn't clear refi of .p
+    var x: number = obj.p;      // still ok
+}

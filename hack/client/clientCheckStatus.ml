@@ -41,13 +41,13 @@ let print_reason_color ~(first:bool) ~(code:int) ((p, s): Pos.absolute * string)
   then
     let cwd = Filename.concat (Sys.getcwd ()) "" in
     let file_path = [
-      (file_clr, lstrip p.Pos.pos_file cwd);
+      (file_clr, lstrip (Pos.filename p) cwd);
       (C.Normal C.Default, ":");
     ] in
     C.print (file_path @ to_print)
   else
     let strings = List.map to_print (fun (_,x) -> x) in
-    Printf.printf "%s:" p.Pos.pos_file;
+    Printf.printf "%s:" (Pos.filename p);
     List.iter strings (Printf.printf "%s")
 
 let print_error_color e =

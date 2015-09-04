@@ -1,0 +1,11 @@
+
+unreachable.js:13:13,15:3: 
+unreachable code
+
+unreachable.js:22:11,11: 
+unreachable code
+
+unreachable.js:24:11,11: 
+unreachable code
+
+Found 3 errors

@@ -16,8 +16,10 @@ let init_hack genv env get_next =
 
   let t = Unix.gettimeofday () in
   let files_info, errorl1, failed1 =
-      Parsing_service.go genv.workers ~get_next in
-  Hh_logger.log "Heap size: %d" (SharedMem.heap_size ());
+    Parsing_service.go genv.workers ~get_next in
+  let hs = SharedMem.heap_size () in
+  Hh_logger.log "Heap size: %d" hs;
+  Stats.(stats.init_parsing_heap_size <- hs);
   let t = Hh_logger.log_duration "Parsing" t in
 
   let is_check_mode =
@@ -42,7 +44,9 @@ let init_hack genv env get_next =
   let fast = FileInfo.simplify_fast files_info in
   let fast = Relative_path.Set.fold Relative_path.Map.remove failed2 fast in
   let errorl3, failed3 = Typing_decl_service.go genv.workers nenv fast in
-  Hh_logger.log "Heap size: %d" (SharedMem.heap_size ());
+  let hs = SharedMem.heap_size () in
+  Hh_logger.log "Heap size: %d" hs;
+  Stats.(stats.init_heap_size <- hs);
   let t = Hh_logger.log_duration "Type-decl" t in
 
   let errorl4, failed4, t =
@@ -55,6 +59,10 @@ let init_hack genv env get_next =
 
   let errorl5, failed5, t = match ai_mode with
     | Some optstr ->
+        let files_info =
+          Relative_path.Set.fold Relative_path.Map.remove failed2 files_info in
+        let files_info =
+          Relative_path.Set.fold Relative_path.Map.remove failed3 files_info in
         let e, f = Ai.go
           Typing_check_utils.check_defs genv.workers files_info nenv optstr in
         let t = Hh_logger.log_duration "Ai" t in

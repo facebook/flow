@@ -49,10 +49,16 @@ let throw e =
   |]) in
   Js.Unsafe.call fn fn [| e|]
 
-let parse content =
+let parse_options jsopts = Parser_env.({
+  experimental_decorators =
+    Js.to_bool (Js.Unsafe.get jsopts "experimental_decorators");
+})
+
+let parse content options =
   let content = Js.to_string content in
+  let parse_options = Some (parse_options options) in
   try
-    let (ocaml_ast, errors) = Parser_flow.program ~fail:false content in
+    let (ocaml_ast, errors) = Parser_flow.program ~fail:false ~parse_options content in
     JsTranslator.translation_errors := [];
     let module Translate = Estree_translator.Translate (JsTranslator) in
     let ret = Translate.program ocaml_ast in

@@ -63,7 +63,7 @@ let to_json {pos; code; severity; message; bypass_changed_lines} =
   let line, scol, ecol = Pos.info_pos pos in
   JAssoc [ "descr", JString message;
            "severity", JString (string_of_severity severity);
-           "path",  JString pos.Pos.pos_file;
+           "path",  JString (Pos.filename pos);
            "line",  JInt line;
            "start", JInt scol;
            "end",   JInt ecol;

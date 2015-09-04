@@ -30,11 +30,17 @@ type token_sink_result = {
 
 val mode_to_string : lex_mode -> string
 
+type parse_options = {
+  experimental_decorators: bool;
+}
+val default_parse_options : parse_options
+
 type env
 
 (* constructor: *)
 val init_env :
   ?token_sink:(token_sink_result -> unit) option
+  -> ?parse_options:parse_options option
   -> Lexing.lexbuf
   -> env
 
@@ -58,6 +64,7 @@ val no_in : env -> bool
 val no_call : env -> bool
 val no_let : env -> bool
 val errors : env -> (Loc.t * Parse_error.t) list
+val parse_options : env -> parse_options
 
 (* miscellaneous operations *)
 val last_opt : env -> (lex_result -> 'a) -> 'a option

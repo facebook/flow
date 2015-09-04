@@ -33,7 +33,7 @@ let process_fun_id result_map cur_class cur_caller id =
   result_map := Pos.Map.add pos {
     name = Utils.strip_ns name;
     type_ = Function;
-    pos = SymbolUtils.pos_to_relative pos;
+    pos = Pos.to_relative_string pos;
     caller = caller_str;
   } !result_map
 
@@ -47,7 +47,7 @@ let process_method_id result_map cur_class cur_caller
       result_map := Pos.Map.add pos {
         name = Utils.strip_ns method_fullname;
         type_ = target_type;
-        pos = SymbolUtils.pos_to_relative pos;
+        pos = Pos.to_relative_string pos;
         caller = caller_str;
       } !result_map
   end

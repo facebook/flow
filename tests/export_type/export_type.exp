@@ -23,7 +23,8 @@ types_only.js:5:23,28: string
 This type is incompatible with
 types_only.js:3:28,33: number
 
-types_only.js:11:9,23: export {standaloneType2}
-Could not resolve name
+types_only.js:11:9,23: standaloneType2
+type alias referenced from value position
+types_only.js:10:6,20: type standaloneType2
 
 Found 7 errors

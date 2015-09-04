@@ -8,6 +8,8 @@
  *
  *)
 
+open Utils
+
 (* 800s was chosen because it was above most of the historical p95 of
  * hack server startup times as observed here:
  * https://fburl.com/48825801, see also https://fburl.com/29184831 *)
@@ -35,7 +37,7 @@ let handle_response env ic =
   let finished = ref false in
   let exit_code = ref Exit_status.Ok in
   HackEventLogger.client_begin_work (ClientLogCommand.LCBuild
-    (env.root, build_kind_of env.build_opts));
+    (env.root, build_kind_of env.build_opts, env.build_opts.ServerBuild.id));
   try
     while true do
       let line:ServerBuild.build_progress = Marshal.from_channel ic in
@@ -73,5 +75,10 @@ let main env =
     expiry = None;
     no_load = false;
   } in
-  ServerCommand.(stream_request oc (BUILD env.build_opts));
-  handle_response env ic
+  with_context
+    ~enter:(fun () -> ())
+    ~exit:(fun () ->
+      Printf.eprintf "\nHack build id: %s\n%!" env.build_opts.ServerBuild.id)
+    ~do_:(fun () ->
+      ServerCommand.(stream_request oc (BUILD env.build_opts));
+      handle_response env ic)

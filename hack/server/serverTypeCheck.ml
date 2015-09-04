@@ -158,7 +158,7 @@ let parsing genv env =
   Parser_heap.ParserHeap.remove_batch env.failed_parsing;
   Parser_heap.HH_FIXMES.remove_batch env.failed_parsing;
   HackSearchService.MasterApi.clear_shared_memory env.failed_parsing;
-  SharedMem.collect();
+  SharedMem.collect `gentle;
   let get_next = Bucket.make (Relative_path.Set.elements env.failed_parsing) in
   Parsing_service.go genv.workers ~get_next
 
@@ -195,7 +195,7 @@ let declare_names env files_info fast_parsed =
 (* Function called after parsing, does nothing by default. *)
 (*****************************************************************************)
 
-let hook_after_parsing = ref (fun _ _ _ _ -> ())
+let hook_after_parsing = ref None
 
 (*****************************************************************************)
 (* Where the action is! *)
@@ -203,13 +203,14 @@ let hook_after_parsing = ref (fun _ _ _ _ -> ())
 
 let type_check genv env =
 
+  let reparse_count = Relative_path.Set.cardinal env.failed_parsing in
   Printf.eprintf "******************************************\n";
-  Hh_logger.log "Files to recompute: %d"
-    (Relative_path.Set.cardinal env.failed_parsing);
+  Hh_logger.log "Files to recompute: %d" reparse_count;
   (* PARSING *)
   let start_t = Unix.gettimeofday () in
   let t = start_t in
   let fast_parsed, errorl, failed_parsing = parsing genv env in
+  HackEventLogger.recheck_once_parsing_end t reparse_count;
   let t = Hh_logger.log_duration "Parsing" t in
 
   (* UPDATE FILE INFO *)
@@ -219,7 +220,9 @@ let type_check genv env =
   let t = Hh_logger.log_duration "Updating deps" t in
 
   (* BUILDING AUTOLOADMAP *)
-  !hook_after_parsing genv old_env { env with files_info } updates;
+  Option.iter !hook_after_parsing begin fun f ->
+    f genv old_env { env with files_info } updates
+  end;
   let t = Hh_logger.log_duration "Parsing Hook" t in
 
   (* NAMING *)
@@ -268,7 +271,7 @@ let type_check genv env =
       let ae, af = Ai.go_incremental
         Typing_check_utils.check_defs
         genv.workers fast_infos env.nenv optstr in
-      (List.rev (List.rev_append errorl' ae)),
+      (List.rev_append errorl' ae),
       (Relative_path.Set.union af failed_check)
   in
   let errorl = List.rev (List.rev_append errorl' errorl) in
@@ -276,7 +279,7 @@ let type_check genv env =
 
   Hh_logger.log "Total: %f\n%!" (t -. start_t);
   let total_rechecked_count = Relative_path.Set.cardinal to_recheck in
-  HackEventLogger.recheck_once_end start_t total_rechecked_count;
+  HackEventLogger.recheck_once_end start_t reparse_count total_rechecked_count;
 
   (* Done, that's the new environment *)
   { files_info = files_info;

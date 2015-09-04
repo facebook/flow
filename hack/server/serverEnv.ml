@@ -42,17 +42,6 @@ type env = {
 
 let typechecker_options env = (Naming.typechecker_options env.nenv)
 
-let async_queue : (unit -> unit) list ref = ref []
-
-let async f = async_queue := f :: !async_queue
-
-let invoke_async_queue () =
-  let queue = !async_queue in
-  (* we reset the queue before rather than after invoking the function as
-   * those functions may themselves add more items to the queue *)
-  async_queue := [];
-  List.iter ~f:(fun f -> f ()) queue
-
 (*****************************************************************************)
 (* Listing all the files present in the environment *)
 (*****************************************************************************)
@@ -61,7 +50,7 @@ let list_files env oc =
   let acc = List.fold_right
     ~f:begin fun error acc ->
       let pos = Errors.get_pos error in
-      Relative_path.Set.add pos.Pos.pos_file acc
+      Relative_path.Set.add (Pos.filename pos) acc
     end
     ~init:Relative_path.Set.empty
     env.errorl in

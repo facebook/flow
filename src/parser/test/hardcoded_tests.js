@@ -1528,6 +1528,13 @@ module.exports = {
         'raw': '\'duck\'',
       }
     },
+    'var a: "foo bar"': {
+      'body.0.declarations.0.id.typeAnnotation.typeAnnotation': {
+        'type': 'StringLiteralTypeAnnotation',
+        'value': 'foo bar',
+        'raw': '"foo bar"',
+      }
+    },
   },
   'Invalid String Literal Types': {
     'var a: "\\01"': {
@@ -2421,5 +2428,107 @@ module.exports = {
         'value': ' /* ',
       }]
     },
+  },
+  'Decorators (experimental/early)': {
+    'class Foo { @myDecorator1 @myDecorator2 myMethod() {} }': {
+      '%parse_options%': {
+        "experimental_decorators": true
+      },
+      'body.0.body.body': [{
+        'type': 'MethodDefinition',
+        'decorators': [
+          {'type': 'Identifier', 'name': 'myDecorator1'},
+          {'type': 'Identifier', 'name': 'myDecorator2'},
+        ]
+      }]
+    },
+    'class Foo { @myDecorator1 @myDecorator2 *myMethod() {} }': {
+      '%parse_options%': {
+        "experimental_decorators": true
+      },
+      'body.0.body.body': [{
+        'type': 'MethodDefinition',
+        'decorators': [
+          {'type': 'Identifier', 'name': 'myDecorator1'},
+          {'type': 'Identifier', 'name': 'myDecorator2'},
+        ]
+      }]
+    },
+    'class Foo { @myDecorator1 @myDecorator2 static myMethod() {} }': {
+      '%parse_options%': {
+        "experimental_decorators": true
+      },
+      'body.0.body.body': [{
+        'type': 'MethodDefinition',
+        'decorators': [
+          {'type': 'Identifier', 'name': 'myDecorator1'},
+          {'type': 'Identifier', 'name': 'myDecorator2'},
+        ]
+      }]
+    },
+    'class Foo { @myDecorator1 @myDecorator2 async myMethod() {} }': {
+      '%parse_options%': {
+        "experimental_decorators": true
+      },
+      'body.0.body.body': [{
+        'type': 'MethodDefinition',
+        'decorators': [
+          {'type': 'Identifier', 'name': 'myDecorator1'},
+          {'type': 'Identifier', 'name': 'myDecorator2'},
+        ]
+      }]
+    },
+    'class Foo { @myDecorator1 @myDecorator2 get myProp() {} }': {
+      '%parse_options%': {
+        "experimental_decorators": true
+      },
+      'body.0.body.body': [{
+        'type': 'MethodDefinition',
+        'decorators': [
+          {'type': 'Identifier', 'name': 'myDecorator1'},
+          {'type': 'Identifier', 'name': 'myDecorator2'},
+        ]
+      }]
+    },
+    'class Foo { @myDecorator1 @myDecorator2 set myProp(v) {} }': {
+      '%parse_options%': {
+        "experimental_decorators": true
+      },
+      'body.0.body.body': [{
+        'type': 'MethodDefinition',
+        'decorators': [
+          {'type': 'Identifier', 'name': 'myDecorator1'},
+          {'type': 'Identifier', 'name': 'myDecorator2'},
+        ]
+      }]
+    },
+    'class Foo { @myDecorator("someParam") myMethod() {} }': {
+      '%parse_options%': {
+        "experimental_decorators": true
+      },
+      'body.0.body.body': [{
+        'type': 'MethodDefinition',
+        'decorators': [
+          {
+            'type': 'CallExpression',
+            'callee': {
+              'type': 'Identifier',
+              'name': 'myDecorator'
+            },
+            'arguments': [{
+              'type': 'Literal',
+              'value': 'someParam'
+            }]
+          }
+        ]
+      }]
+    }
+  },
+  'Invalid Decorators': {
+    '@blah': {
+      'errors': {
+        '0.message': 'Unexpected token @',
+      },
+    }
   }
 };

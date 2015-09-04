@@ -241,7 +241,7 @@ let invalidate_heap { FileInfo.n_funs; n_classes; n_types; n_consts } =
   Naming_heap.ClassHeap.remove_batch n_classes;
   Naming_heap.TypedefHeap.remove_batch n_types;
   Naming_heap.ConstHeap.remove_batch n_consts;
-  SharedMem.collect();
+  SharedMem.collect `gentle;
   ()
 
 let remove_old_defs { FileInfo.n_funs; n_classes; n_types; n_consts } =
@@ -249,7 +249,7 @@ let remove_old_defs { FileInfo.n_funs; n_classes; n_types; n_consts } =
   Typing_env.Classes.remove_old_batch n_classes;
   Typing_env.Typedefs.remove_old_batch n_types;
   Typing_env.GConsts.remove_old_batch n_consts;
-  SharedMem.collect();
+  SharedMem.collect `gentle;
   ()
 
 let get_defs fast =

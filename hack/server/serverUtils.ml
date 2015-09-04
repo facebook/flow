@@ -8,11 +8,10 @@
  *
  *)
 
-type client = {
-  ic : in_channel;
-  oc : out_channel;
-  close : unit -> unit;
-}
+let shutdown_client (_ic, oc) =
+  let cli = Unix.descr_of_out_channel oc in
+  Unix.shutdown cli Unix.SHUTDOWN_ALL;
+  Unix.close cli
 
 type connection_state =
   | Connection_ok

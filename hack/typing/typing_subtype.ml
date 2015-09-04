@@ -357,8 +357,7 @@ and sub_type_with_uenv env (uenv_super, ty_super) (uenv_sub, ty_sub) =
     when stringish = SN.Classes.cStringish &&
       AbstractKind.is_classname ak -> env
   | (p_super, (Tclass (x_super, tyl_super) as ty_super_)),
-      (p_sub, (Tclass (x_sub, tyl_sub) as ty_sub_))
-      when Typing_env.get_enum_constraint (snd x_sub) = None  ->
+      (p_sub, (Tclass (x_sub, tyl_sub) as ty_sub_)) ->
     let cid_super, cid_sub = (snd x_super), (snd x_sub) in
     if cid_super = cid_sub then
       if tyl_super <> [] && List.length tyl_super = List.length tyl_sub

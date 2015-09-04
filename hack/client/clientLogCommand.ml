@@ -32,4 +32,4 @@ type log_command =
   | LCStart of Path.t
   | LCStop of Path.t
   | LCRestart of Path.t
-  | LCBuild of Path.t * build_kind
+  | LCBuild of Path.t * build_kind * (* random id *) string

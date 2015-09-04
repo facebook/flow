@@ -92,6 +92,7 @@ module Type :
       | EqT of reason * t
       | AndT of reason * t * t
       | OrT of reason * t * t
+      | NotT of reason * t
 
       | SpecializeT of reason * bool * t list * t
 
@@ -167,9 +168,10 @@ module Type :
 
     and flags = {
       frozen: bool;
-      sealed: bool;
+      sealed: sealtype;
       exact: bool;
     }
+
     and dicttype = {
       dict_name: string option;
       key: t;
@@ -204,13 +206,13 @@ module Type :
     and properties = t SMap.t
     and t_out = t
 
-    val compare : 'a -> 'a -> int
+    val compare: 'a -> 'a -> int
 
     val open_tvar: t -> (reason * ident)
   end
 
-module TypeSet : Set.S with type elt = Type.t
-module TypeMap : MapSig with type key = Type.t
+module TypeSet: Set.S with type elt = Type.t
+module TypeMap: MapSig with type key = Type.t
 
 (***************************************)
 
@@ -220,13 +222,13 @@ val is_use: Type.t -> bool
 
 type trace
 
-val trace_depth : trace -> int
-val unit_trace : Type.t -> Type.t -> trace
+val trace_depth: trace -> int
+val unit_trace: Type.t -> Type.t -> trace
 val rec_trace: Type.t -> Type.t -> trace -> trace
 val concat_trace: trace list -> trace
 
-val reasons_of_trace : ?level:int -> ?tab:int -> trace -> reason list
-val locs_of_trace : trace -> reason list
+val reasons_of_trace: ?level:int -> ?tab:int -> trace -> reason list
+val locs_of_trace: trace -> reason list
 
 (***************************************)
 
@@ -279,63 +281,103 @@ val copy_node: node -> node
    to break circularity between Env_js and Flow_js.
    Longer-term solution is to break up Flow_js.
  *)
-module Scope : sig
+module Scope: sig
 
-  type entry = {
-    specific: Type.t;
-    general: Type.t;
-    def_loc: Loc.t option;
-    for_type: bool;
-  }
+  module Entry: sig
+
+    type state = Undeclared | Declared | Initialized
+    val string_of_state: state -> string
+
+    type value_kind = Const | Let of implicit_let_kinds option | Var
+    and implicit_let_kinds = ClassNameBinding
+
+    val string_of_value_kind: value_kind -> string
+
+    type value_binding = {
+      kind: value_kind;
+      value_state: state;
+      value_loc: Loc.t option;
+      specific: Type.t;
+      general: Type.t;
+    }
+
+    type type_binding = {
+      type_state: state;
+      type_loc: Loc.t option;
+      _type: Type.t;
+    }
+
+    type t =
+    | Value of value_binding
+    | Type of type_binding
+
+    val new_var: ?loc:Loc.t -> ?state:state -> ?specific:Type.t -> Type.t -> t
+    val new_let:
+        ?loc:Loc.t
+        -> ?state:state
+        -> ?implicit:implicit_let_kinds
+        -> Type.t
+        -> t
+    val new_const: ?loc:Loc.t -> ?state:state -> Type.t -> t
+    val new_type: ?loc:Loc.t -> ?state:state -> Type.t -> t
+
+    val loc: t -> Loc.t option
+    val actual_type: t -> Type.t
+    val declared_type: t -> Type.t
+
+    val string_of_kind: t -> string
+    val havoc: ?name:string -> (Type.t -> Type.t) -> string -> t -> t
+  end
+
+  module Key: sig
+    type proj = Prop of string | Elem of t
+    and t = string * proj list
+    val string_of_key: t -> string
+  end
+
+  module KeySet: Set.S with type elt
+  = Key.t
+
+  module KeyMap: MapSig with type key
+  = Key.t
 
   type var_scope_attrs = {
     async: bool
   }
 
-  type kind = VarScope of var_scope_attrs | LexScope
+  type kind =
+  | VarScope of var_scope_attrs
+  | LexScope
+
+  type refi_binding = {
+    refi_loc: Loc.t option;
+    refined: Type.t;
+    original: Type.t;
+  }
 
   type t = {
     kind: kind;
-    mutable entries: entry SMap.t;
+    mutable entries: Entry.t SMap.t;
+    mutable refis: refi_binding KeyMap.t
   }
 
   val fresh: unit -> t
-
   val fresh_async: unit -> t
-
   val fresh_lex: unit -> t
-
   val clone: t -> t
 
-  val update: (string -> entry -> entry) -> t -> unit
+  val iter_entries: (string -> Entry.t -> unit) -> t -> unit
+  val update_entries: (string -> Entry.t -> Entry.t) -> t -> unit
+  val add_entry: string -> Entry.t -> t -> unit
+  val remove_entry: string -> t -> unit
+  val get_entry: string -> t -> Entry.t option
 
-  val update_opt: (string -> entry -> entry option) -> t -> unit
+  val update_refis: (Key.t -> refi_binding -> refi_binding) -> t -> unit
+  val add_refi: Key.t -> refi_binding -> t -> unit
+  val remove_refi: Key.t -> t -> unit
+  val get_refi: Key.t -> t -> refi_binding option
 
-  val iter: (string -> entry -> unit) -> t -> unit
-
-  val add: string -> entry -> t -> unit
-
-  val remove: string -> t -> unit
-
-  val mem: string -> t -> bool
-
-  val get: string -> t -> entry option
-
-  val get_unsafe: string -> t -> entry
-
-  val create_entry:
-    ?for_type: bool ->
-    Type.t -> Type.t ->
-    Loc.t option ->
-    entry
-
-  val is_refinement: string -> bool
-
-  val havoc_entry:
-    ?make_specific:(Type.t -> Type.t) ->
-    string ->
-    entry ->
-    entry option
+  val havoc: ?name: string -> ?make_specific: (Type.t -> Type.t) -> t -> unit
 
 end
 
@@ -391,46 +433,47 @@ val new_context:
 
 (* printing *)
 
-val reason_of_t : Type.t -> reason
+val reason_of_t: Type.t -> reason
 
-val mod_reason_of_t : (reason -> reason) -> Type.t -> Type.t
+val mod_reason_of_t: (reason -> reason) -> Type.t -> Type.t
 
-val to_op_reason : reason -> Type.t -> Type.t
+val to_op_reason: reason -> Type.t -> Type.t
 
-val repos_t_from_reason : reason -> Type.t -> Type.t
+val repos_t_from_reason: reason -> Type.t -> Type.t
 
-val reasonless_compare : Type.t -> Type.t -> int
+val reasonless_compare: Type.t -> Type.t -> int
 
-val string_of_t : context -> Type.t -> string
-val json_of_t : ?depth:int -> context -> Type.t -> Hh_json.json
-val jstr_of_t : ?depth:int -> context -> Type.t -> string
-val json_of_graph : ?depth:int -> context -> Hh_json.json
-val jstr_of_graph : ?depth:int -> context -> string
-val dump_t : context -> Type.t -> string
+val string_of_t: context -> Type.t -> string
+val json_of_t: ?depth:int -> context -> Type.t -> Hh_json.json
+val jstr_of_t: ?depth:int -> context -> Type.t -> string
+val json_of_graph: ?depth:int -> context -> Hh_json.json
+val jstr_of_graph: ?depth:int -> context -> string
+val dump_t: context -> Type.t -> string
 
-val parameter_name : context -> string -> Type.t -> string
-val string_of_param_t : context -> Type.t -> string
+val parameter_name: context -> string -> Type.t -> string
+val string_of_param_t: context -> Type.t -> string
 
-val is_printed_type_parsable : ?weak:bool -> context -> Type.t -> bool
-val is_printed_param_type_parsable : ?weak:bool -> context -> Type.t -> bool
+val is_printed_type_parsable: ?weak:bool -> context -> Type.t -> bool
+val is_printed_param_type_parsable: ?weak:bool -> context -> Type.t -> bool
 
-val string_of_ctor : Type.t -> string
+val string_of_ctor: Type.t -> string
 
-val string_of_scope : context -> Scope.t -> string
+val string_of_entry: context -> Scope.Entry.t -> string
+val string_of_scope: context -> Scope.t -> string
 
 (* TEMP *)
-val streason_of_t : Type.t -> string
+val streason_of_t: Type.t -> string
 
-val desc_of_t : Type.t -> string
+val desc_of_t: Type.t -> string
 
-val loc_of_t : Type.t -> Loc.t
+val loc_of_t: Type.t -> Loc.t
 
-val string_of_predicate : Type.predicate -> string
+val string_of_predicate: Type.predicate -> string
 
-val loc_of_predicate : Type.predicate -> Loc.t
+val loc_of_predicate: Type.predicate -> Loc.t
 
-class ['a] type_visitor : object
+class ['a] type_visitor: object
   (* Only exposing a few methods for now. *)
-  method type_ : context -> 'a -> Type.t -> 'a
-  method id_ : context -> 'a -> ident -> 'a
+  method type_: context -> 'a -> Type.t -> 'a
+  method id_: context -> 'a -> ident -> 'a
 end

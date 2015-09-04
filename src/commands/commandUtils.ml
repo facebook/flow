@@ -187,7 +187,7 @@ let start_flow_server ?temp_dir root =
     (Filename.quote (Path.to_string root)) in
   match Unix.system flow_server with
     | Unix.WEXITED 0 -> ()
-    | _ -> (Printf.fprintf stderr "Could not start flow server!\n"; exit 77)
+    | _ -> (Printf.fprintf stderr "Could not start Flow server!\n"; exit 77)
 
 
 let server_exists ~tmp_dir root =
@@ -251,8 +251,8 @@ let rec connect_with_autostart server_flags root =
     connect ~tmp_dir:server_flags.temp_dir root
   with
   | CommandExceptions.Server_initializing ->
-      let init_msg = "flow server still initializing. If it was " ^
-                     "just started this can take some time." in
+      let init_msg = "Flow server still initializing -- " ^
+                     "this can take some time." in
       if server_flags.retry_if_init
       then (
         Printf.fprintf stderr "%s Retrying... %s\r%!" init_msg (Tty.spinner());
@@ -264,20 +264,20 @@ let rec connect_with_autostart server_flags root =
       )
   | CommandExceptions.Server_cant_connect ->
       retry server_flags root
-        1 "Error: could not connect to flow server, retrying..."
+        1 "Error: could not connect to Flow server, retrying..."
   | CommandExceptions.Server_busy ->
       retry server_flags root
-        1 "Error: flow server is busy, retrying..."
+        1 "Error: Flow server is busy, retrying..."
   | CommandExceptions.Server_out_of_date
   | CommandExceptions.Server_missing ->
     if not server_flags.no_auto_start
     then (
       start_flow_server ~temp_dir:server_flags.temp_dir root;
       retry server_flags root
-        3 "The flow server will be ready in a moment."
+        3 "The Flow server will be ready in a moment."
     ) else (
       prerr_endline (Utils.spf
-          "Error: There is no flow server running in '%s'."
+          "Error: There is no Flow server running in '%s'."
           (Path.to_string root));
       exit 2
     )
@@ -304,7 +304,7 @@ let rec search_for_root config start recursion_limit : Path.t option =
   else if recursion_limit <= 0 then None
   else search_for_root config (Path.parent start) (recursion_limit - 1)
 
-(* Given a valid file or directory, find a valid flow root directory *)
+(* Given a valid file or directory, find a valid Flow root directory *)
 (* NOTE: exists on invalid file or .flowconfig not found! *)
 let guess_root dir_or_file =
   let dir_or_file = match dir_or_file with

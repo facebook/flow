@@ -8,6 +8,8 @@
  *
  *)
 
+(* Code for emitting expressions and various related forms (like lvalues) *)
+
 open Core
 open Utils
 open Nast
@@ -127,7 +129,7 @@ and emit_lval_inner env (_, expr_) =
     env, Lglobal
 
   | Lvar id -> env, llocal id
-  | Lplaceholder (_, s) -> env, Llocal s
+  | Lplaceholder _ -> env, Llocal SN.SpecialIdents.placeholder
   | Array_get (e1, maybe_e2) ->
     let env, base = emit_base env e1 in
     let env, member = (match maybe_e2 with
@@ -278,12 +280,21 @@ and emit_call_lhs env (_, expr_ as expr) nargs =
     emit_FPushObjMethodD env nargs name (fmt_null_flavor null_flavor)
 
   | Class_const (cid, (_, field)) ->
-    (match resolve_class_id env cid with
-    | RCstatic class_name -> emit_FPushClsMethodD env nargs field class_name
-    | RCdynamic dyid ->
-        let env = emit_String env field in
-        let env = emit_dynamic_class_id env dyid in
-        emit_FPushClsMethod env nargs)
+    let emit_dynamic_call env emit_op =
+      let env = emit_String env field in
+      let env = emit_class_id env (resolve_class_id env cid) in
+      emit_op env nargs
+    in
+
+    (match cid with
+    | CI (_, s) -> emit_FPushClsMethodD env nargs field (fmt_name s)
+    | CIself | CIparent ->
+      (* Calls through self:: or parent:: need to be "forwarding"
+       * calls that preserve the late static binding "called class".
+       * FPushClsMethodF is forwarding, the others aren't *)
+      emit_dynamic_call env emit_FPushClsMethodF
+    | CIexpr _ | CIstatic ->
+      emit_dynamic_call env emit_FPushClsMethod)
 
   (* what all is even allowed here? *)
   | _ ->
@@ -374,6 +385,20 @@ and emit_call env (pos, expr_ as expr) args uargs =
     let env = List.fold_left ~f:unset ~init:env args in
     (* emit a dummy null so the expression has a return value *)
     emit_Null env, FC
+
+  (* Functions that call set_frame_metadata need an "86metadata" local
+   * allocated. *)
+  | Id (_, "\\HH\\set_frame_metadata"), _  -> unimpl "set_frame_metadata"
+  (* Different variants of call_user_func;
+   * see emitCallUserFunc in emitter.cpp *)
+  | Id (_, ("\\call_user_func_array" |
+            "\\forward_static_call" |
+            "\\forward_static_call_array" |
+            "\\fb_call_user_func_safe" |
+            "\\fb_call_user_func_array_safe" |
+            "\\fb_call_user_func_safe_return")), _  ->
+    unimpl "call_user_func"
+
 
   (* TODO: a billion other builtins *)
 
@@ -489,6 +514,11 @@ and emit_expr env (pos, expr_ as expr) =
     emit_label env end_label
 
   (* Normal binops *)
+  (* HHVM can sometimes evaluate binops (and some other things) right to left
+   * if the LHS is a variable. We don't do this (because it seems silly),
+   * but it wouldn't be that hard to handle. *Most* situations where it
+   * it actually observable are ruled out by the typechecker, but it can
+   * be observed with effectful __toString() methods or HH_FIXME. *)
   | Binop (bop, e1, e2) ->
     let env = emit_expr env e1 in
     let env = emit_expr env e2 in
@@ -525,7 +555,7 @@ and emit_expr env (pos, expr_ as expr) =
   (* comma operator: evaluate all the expressions, ignoring all but the last *)
   | Expr_list es ->
     (match List.rev es with
-    | [] -> env
+    | [] -> emit_Null env (* output a dummy value *)
     | last :: rest ->
       let env = List.fold_right
         ~f:(fun e env -> emit_ignored_expr env e) ~init:env rest in
@@ -539,7 +569,7 @@ and emit_expr env (pos, expr_ as expr) =
   | String (_, s) -> emit_String env s
 
   | String2 [] -> bug "empty String2"
-  (* If we there are multiple parts of the String2, they will get
+  (* If there are multiple parts of the String2, they will get
    * stringified when they get concatenated. If there is just one
    * we need to cast it manually. *)
   | String2 [e] ->
@@ -714,6 +744,9 @@ and emit_expr env (pos, expr_ as expr) =
       pending_closures = (name, cstate, (fun_, vars)) :: env.pending_closures }
 
 
-  | Id _ -> unimpl "Id"
+  | Id (_, id) when SN.PseudoConsts.is_pseudo_const id -> unimpl "pseudo consts"
+  (* In this context, Id is a global constant *)
+  | Id (_, id) -> emit_Cns env id
+
   | Assert _ -> unimpl "Assert"
   | Any -> unimpl "UNSAFE_EXPR/import/??"

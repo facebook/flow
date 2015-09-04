@@ -54,42 +54,42 @@ function logical2e(): number {
 /**
  * A literal on the left side of &&
  */
-function logical2e(): string {
+function logical2f(): string {
     return 123 && 'foo';
 }
 
 /**
  * A literal on the left side of &&
  */
-function logical2e(): string {
+function logical2g(): string {
     return [1,2,3] && 'foo';
 }
 
 /**
  * A literal on the left side of &&
  */
-function logical2f(x: {a: number}): string {
+function logical2h(x: {a: number}): string {
     return x && 'foo';
 }
 
 /**
  * A literal on the left side of &&
  */
-function logical2g(x: Object): string {
+function logical2i(x: Object): string {
     return x && 'foo';
 }
 
 /**
  * A literal on the left side of &&
  */
-function logical2h(x: (a: number) => number): string {
+function logical2j(x: (a: number) => number): string {
     return x && 'foo';
 }
 
 /**
  * A literal on the left side of &&
  */
-function logical2i(x: Function): string {
+function logical2k(x: Function): string {
     return x && 'foo';
 }
 
@@ -186,7 +186,7 @@ function logical6e(): string {
 /**
  * A literal on the left side of ||
  */
-function logical6e(): number {
+function logical6f(): number {
     return 123 || 'foo';
 }
 

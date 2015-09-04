@@ -618,7 +618,7 @@ end with type t = Impl.t) = struct
     | Property p -> class_property p)
 
   and class_method (loc, method_) =
-    let { Class.Method.key; value; kind; static; } = method_ in
+    let { Class.Method.key; value; kind; static; decorators; } = method_ in
     let key, computed = Expression.Object.Property.(match key with
       | Literal lit -> literal lit, false
       | Identifier id -> identifier id, false
@@ -634,6 +634,7 @@ end with type t = Impl.t) = struct
       "kind", string kind;
       "static", bool static;
       "computed", bool computed;
+      "decorators", array_of_list expression decorators;
     |]
 
   and class_property (loc, prop) = Class.Property.(

@@ -1,9 +1,9 @@
 
-test.js:2:21,21: property y
+test.js:2:21,21: property `y`
 Property not found in
 test.js:2:18,19: object literal
 
-test.js:7:9,34: property y
+test.js:7:9,34: property `y`
 Property not found in
 test.js:7:55,68: object type
 

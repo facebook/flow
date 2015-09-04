@@ -9,7 +9,7 @@
  *)
 
 (* Entry point to the experimental Hack based bytecode emitter. Contains
- * code for emitting "top level" constructs like classes andfunctions. *)
+ * code for emitting "top level" constructs like classes and functions. *)
 
 open Core
 open Utils
@@ -50,7 +50,7 @@ let emit_func_body env m =
 (* returns the param text for this param along with
  * Some (name, DV id, expr) if there is a default param and None otherwise *)
 let emit_param ~tparams i p =
-  assert (not p.param_is_reference); (* actually right *)
+  if p.param_is_reference then unimpl "reference params";
   if p.param_is_variadic then unimpl "variadic params";
   let type_info =
     Emitter_types.fmt_hint_info ~tparams ~always_extended:false p.param_hint in
@@ -445,6 +445,7 @@ let emit_class nenv env (_, x) =
   let env = emit_const_init env uninit_consts in
 
   let env = emit_exit env in
+  let env = { env with self_name = None; parent_name = None; } in
 
   emit_str env ""
 
@@ -467,6 +468,9 @@ let emit_closure (name, {full_name; closure_counter; is_static; tparams},
    * (see emitMethodMetadata in emitter.cpp) *)
   let declvars = "$0Closure" :: names in
 
+  (* Closures don't close over self_name/parent_made, but it would
+   * be nice, possibly. emitter.cpp doesn't, though, and just uses
+   * Self/Parent. *)
   let m = fun_to_method fun_ in
   let env = emit_method_or_func env ~is_method:true
     ~closure_vars:declvars
@@ -540,8 +544,7 @@ let emit_main env ~is_test ast =
   emit_str env ""
 
 let emit_file ~is_test nenv filename ast
-    {FileInfo.file_mode; funs; classes; typedefs; consts; _} =
-  assert (file_mode = Some FileInfo.Mstrict);
+    {FileInfo.funs; classes; typedefs; consts; _} =
   if consts <> [] then unimpl "global consts";
 
   let env = new_env () in

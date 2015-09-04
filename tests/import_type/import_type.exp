@@ -11,20 +11,25 @@ ExportNamed_Class.js:10:27,35: ClassFoo2
 This type is incompatible with
 import_type.js:24:9,14: number
 
-import_type.js:14:5,13: identifier ClassFoo1
-Could not resolve name
+import_type.js:14:5,13: ClassFoo1
+type alias referenced from value position
+import_type.js:9:1,51: type ClassFoo1
 
-import_type.js:25:5,13: identifier ClassFoo2
-Could not resolve name
+import_type.js:25:5,13: ClassFoo2
+type alias referenced from value position
+import_type.js:20:14,22: type ClassFoo2
 
-import_type.js:34:5,14: identifier ClassFoo3T
-Could not resolve name
+import_type.js:34:5,14: ClassFoo3T
+type alias referenced from value position
+import_type.js:31:1,55: type ClassFoo3T
 
-import_type.js:45:5,13: identifier ClassFoo4
-Could not resolve name
+import_type.js:45:5,13: ClassFoo4
+type alias referenced from value position
+import_type.js:40:14,22: type ClassFoo4
 
-import_type.js:47:16,24: typeof-annotation 'ClassFoo5'
-Could not resolve name
+import_type.js:47:16,24: ClassFoo5
+type alias referenced from value position
+import_type.js:40:25,33: type ClassFoo5
 
 import_type.js:56:18,32: function call
 Error:
@@ -32,13 +37,15 @@ ExportNamed_Alias.js:5:26,7:1: object type
 This type is incompatible with
 import_type.js:56:9,14: number
 
-import_type.js:57:16,24: typeof-annotation 'AliasFoo3'
-Could not resolve name
+import_type.js:57:16,24: AliasFoo3
+type alias referenced from value position
+import_type.js:53:14,22: type AliasFoo3
 
 import_type.js:71:14,21: import type { numValue }
 `import type` only works on exported classes, functions, and type aliases!
 
-import_type.js:81:3,11: identifier ClassFoo6
-Could not resolve name
+import_type.js:81:3,11: ClassFoo6
+type alias referenced from value position
+import_type.js:79:1,41: type ClassFoo6
 
 Found 12 errors

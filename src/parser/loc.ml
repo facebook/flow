@@ -79,3 +79,5 @@ let compare loc1 loc2 =
      loc1._end.line, loc1._end.column)
     (loc2.source, loc2.start.line, loc2.start.column,
      loc2._end.line, loc2._end.column)
+
+let source loc = loc.source

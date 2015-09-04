@@ -14,7 +14,7 @@ module Json = Hh_json
 let pos_to_json pos =
   let line, start, end_ = Pos.info_pos pos in
   Json.JAssoc [
-    "file", Json.JString pos.Pos.pos_file;  (* we can't use Pos.json *)
+    "file", Json.JString (Pos.filename pos);  (* we can't use Pos.json *)
     "line", Json.JInt line;
     "char_start", Json.JInt start;
     "char_end", Json.JInt end_;

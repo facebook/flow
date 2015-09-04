@@ -34,28 +34,42 @@ end = struct
   let release_init_lock root =
     ignore(Lock.release (ServerFiles.init_file root))
 
-  let wakeup_client ?(close = false) options msg =
-    match ServerArgs.waiting_client options with
-    | None -> ()
-    | Some oc ->
-        output_string oc (msg ^ "\n");
-        if close then close_out oc else flush oc
+  let wakeup_client oc msg =
+    Option.iter oc
+      ~f:(fun oc ->
+          try
+            output_string oc (msg ^ "\n");
+            flush oc
+          with _ ->
+            (* In case the client don't care... *)
+            ())
+
+  let close_waiting_channel oc =
+    Option.iter oc
+      ~f:(fun oc ->
+          try close_out oc
+          with exn -> Printf.eprintf "Close: %S\n%!" (Printexc.to_string exn))
 
   (* This code is only executed when the options --check is NOT present *)
   let go options init_fun =
+    let waiting_channel =
+      Option.map
+        (ServerArgs.waiting_client options)
+        ~f:Handle.to_out_channel in
     let root = ServerArgs.root options in
     let t = Unix.gettimeofday () in
     Hh_logger.log "Initializing Server (This might take some time)";
     grab_init_lock root;
-    wakeup_client options "starting";
+    wakeup_client waiting_channel "starting";
     (* note: we only run periodical tasks on the root, not extras *)
-    ServerPeriodical.init root;
+    ServerIdle.init root;
     let env = init_fun () in
     release_init_lock root;
     Hh_logger.log "Server is READY";
-    wakeup_client ~close:true options "ready";
+    wakeup_client waiting_channel "ready";
     let t' = Unix.gettimeofday () in
     Hh_logger.log "Took %f seconds to initialize." (t' -. t);
+    close_waiting_channel waiting_channel;
     env
 end
 
@@ -74,7 +88,7 @@ module type SERVER_PROGRAM = sig
   val config_filename : unit -> Relative_path.t
   val load_config : unit -> ServerConfig.t
   val validate_config : genv -> bool
-  val handle_client : genv -> env -> client -> unit
+  val handle_client : genv -> env -> (in_channel * out_channel) -> unit
   (* This is a hack for us to save / restore the global state that is not
    * already captured by ServerEnv *)
   val marshal : out_channel -> unit
@@ -167,8 +181,12 @@ module Program : SERVER_PROGRAM =
          ServerConvert.go genv env dirname;
          exit 0
 
-    let process_updates _genv _env updates =
-      Relative_path.relativize_set Relative_path.Root updates
+    let process_updates genv _env updates =
+      let root = Path.to_string @@ ServerArgs.root genv.options in
+      (* Because of symlinks, we can have updates from files that aren't in
+       * the .hhconfig directory *)
+      let updates = SSet.filter (fun p -> str_starts_with p root) updates in
+      Relative_path.(relativize_set Root updates)
 
     let should_recheck update =
       FindUtils.is_php (Relative_path.suffix update)
@@ -214,12 +232,6 @@ let handle_connection_ genv env socket =
   let cli, _ = Unix.accept socket in
   let ic = Unix.in_channel_of_descr cli in
   let oc = Unix.out_channel_of_descr cli in
-  let close () =
-    begin
-      Unix.shutdown cli Unix.SHUTDOWN_ALL;
-      Unix.close cli
-    end
-  in
   try
     let client_build_id = input_line ic in
     if client_build_id <> Build_id.build_id_ohai then
@@ -230,20 +242,19 @@ let handle_connection_ genv env socket =
        Exit_status.exit Exit_status.Build_id_mismatch)
     else
       msg_to_channel oc Connection_ok;
-    let client = { ic; oc; close } in
-    Program.handle_client genv env client
+    Program.handle_client genv env (ic, oc)
   with
   | Sys_error("Broken pipe") ->
-    close ()
+    shutdown_client (ic, oc)
   | e ->
     let msg = Printexc.to_string e in
     EventLogger.master_exception msg;
     Printf.fprintf stderr "Error: %s\n%!" msg;
     Printexc.print_backtrace stderr;
-    close ()
+    shutdown_client (ic, oc)
 
 let handle_connection genv env socket =
-  ServerPeriodical.stamp_connection ();
+  ServerIdle.stamp_connection ();
   try handle_connection_ genv env socket
   with
   | Unix.Unix_error (e, _, _) ->
@@ -277,19 +288,28 @@ let recheck genv old_env updates =
  * rebase, and we don't log the recheck_end event until the update list
  * is no longer getting populated. *)
 let rec recheck_loop i rechecked_count genv env =
+  let t = Unix.time () in
   let raw_updates =
     match genv.dfind with
     | None -> SSet.empty
-    | Some dfind -> DfindLib.get_changes dfind in
+    | Some dfind ->
+        (try
+          with_timeout 60
+            ~on_timeout:(fun _ -> Exit_status.(exit Dfind_unresponsive))
+            ~do_:(fun () -> DfindLib.get_changes dfind)
+        with _ -> Exit_status.(exit Dfind_died))
+  in
   if SSet.is_empty raw_updates then
     i, rechecked_count, env
-  else
+  else begin
+    HackEventLogger.dfind_returned t (SSet.cardinal raw_updates);
     let updates = Program.process_updates genv env raw_updates in
     let env, rechecked = recheck genv env updates in
     let rechecked_count =
       rechecked_count + (Relative_path.Set.cardinal rechecked)
     in
     recheck_loop (i + 1) rechecked_count genv env
+  end
 
 let recheck_loop = recheck_loop 0 0
 
@@ -302,16 +322,15 @@ let serve genv env socket =
       (Hh_logger.log "Lost lock; terminating.\n%!";
        HackEventLogger.lock_stolen lock_file;
        Exit_status.(exit Lock_stolen));
-    ServerPeriodical.call_before_sleeping();
     let has_client = sleep_and_check socket in
+    if not has_client && !ServerTypeCheck.hook_after_parsing = None
+    then ServerIdle.go ();
     let start_t = Unix.time () in
     let loop_count, rechecked_count, new_env = recheck_loop genv !env in
     env := new_env;
     if rechecked_count > 0 then
       HackEventLogger.recheck_end start_t loop_count rechecked_count;
     if has_client then handle_connection genv !env socket;
-    ServerEnv.invoke_async_queue ();
-    EventLogger.flush ();
   done
 
 let load genv filename to_recheck =
@@ -416,9 +435,22 @@ let save _genv env fn =
  * type-checker succeeded. So to know if there is some work to be done,
  * we look if env.modified changed.
  *)
-let main options config =
+let daemon_main options =
+  (* The OCaml default is 500, but we care about minimizing the memory
+   * overhead *)
+  let gc_control = Gc.get () in
+  Gc.set {gc_control with Gc.max_overhead = 200};
+  Relative_path.set_path_prefix Relative_path.Root (ServerArgs.root options);
+  let config = Program.load_config () in
   let root = ServerArgs.root options in
-  HackEventLogger.init root (Unix.time ());
+  if Sys_utils.is_test_mode ()
+  then EventLogger.init (Daemon.devnull ()) 0.0
+  else HackEventLogger.init root (Unix.time ());
+  Option.iter
+    (ServerArgs.waiting_client options)
+    ~f:(fun handle ->
+        let fd = Handle.wrap_handle handle in
+        Unix.set_close_on_exec fd);
   Program.preinit ();
   SharedMem.init (ServerConfig.sharedmem_config config);
   (* this is to transform SIGPIPE in an exception. A SIGPIPE can happen when
@@ -453,26 +485,42 @@ let main options config =
     let env = MainInit.go options program_init in
     serve genv env socket
 
-let monitor_daemon options f =
+let daemon_entry =
+  Daemon.register_entry_point
+    "main"
+    (fun options (_ic, _oc) -> daemon_main options)
+
+let monitor_entry =
+  Daemon.register_entry_point
+    "monitor"
+    (fun (options, log_file) (_ic, _oc) ->
+       ignore (Sys_utils.setsid ());
+       let t = Unix.time () in
+       let {Daemon.pid; _} =
+         Daemon.spawn ~log_file daemon_entry options in
+       let _pid, proc_stat = Unix.waitpid [] pid in
+       (match proc_stat with
+        | Unix.WEXITED 0 -> ()
+        | _ ->
+            let time_taken = Unix.time () -. t in
+            HackEventLogger.bad_exit time_taken proc_stat))
+
+let monitor_daemon options =
   let log_link = ServerFiles.log_link (ServerArgs.root options) in
   (try Sys.rename log_link (log_link ^ ".old") with _ -> ());
   let log_file = ServerFiles.make_link_of_timestamped log_link in
-  let {Daemon.pid; _} = Daemon.fork begin fun (_ic, _oc) ->
-    ignore @@ Unix.setsid ();
-    let {Daemon.pid; _} = Daemon.fork ~log_file f in
-    let _pid, proc_stat = Unix.waitpid [] pid in
-    (match proc_stat with
-    | Unix.WEXITED 0 -> ()
-    | _ -> HackEventLogger.bad_exit proc_stat)
-  end in
+  let {Daemon.pid; _} = Daemon.spawn monitor_entry (options, log_file) in
   Printf.eprintf "Spawned %s (child pid=%d)\n" Program.name pid;
-  Printf.eprintf "Logs will go to %s\n%!" log_link;
+  (* We are not using symlink on Windows (see Sys_utils.symlink),
+     so we announce the `log_file` to the user. The `log_link`
+     is only read by the client. *)
+  Printf.eprintf "Logs will go to %s\n%!"
+    (if Sys.win32 then log_file else log_link);
   ()
 
 let start () =
+  Daemon.check_entry_point (); (* this call might not return *)
   let options = Program.parse_options () in
-  Relative_path.set_path_prefix Relative_path.Root (ServerArgs.root options);
-  let config = Program.load_config () in
   if ServerArgs.should_detach options
-  then monitor_daemon options (fun (_ic, _oc) -> main options config)
-  else main options config
+  then monitor_daemon options
+  else daemon_main options

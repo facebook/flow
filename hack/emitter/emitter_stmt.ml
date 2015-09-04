@@ -8,6 +8,8 @@
  *
  *)
 
+(* Code for emitting stmts and blocks *)
+
 open Core
 open Utils
 module N = Nast

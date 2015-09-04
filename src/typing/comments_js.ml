@@ -205,7 +205,10 @@ let meta_params params map cmap =
   ) cmap params
 
 let meta_return body map cmap =
-  let bloc = Type_inference_js.body_loc body in
+  let bloc = Ast.Statement.FunctionDeclaration.(match body with
+    | BodyBlock (loc, _) -> loc
+    | BodyExpression (loc, _) -> loc (* probably wrong, it's after the => *)
+  ) in
   match SMap.get (Reason_js.internal_name "return") map with
     | Some t ->
         cmap, [insert_before_with_suffix bloc t " "]
@@ -297,7 +300,8 @@ and meta_statement cmap = Ast.Statement.(function
               { Ast.Identifier.name; _ });
             value = _, { Ast.Expression.Function.params; body; _ };
             kind = Method.Method | Method.Constructor;
-            static = false
+            static = false;
+            decorators = _;
           }) ->
             meta_fbody cmap loc params body
         | _ -> cmap, []

@@ -20,4 +20,5 @@ let log_command_of_command = function
   | C.CRestart env -> LC.LCRestart env.ClientStart.root
   | C.CBuild env ->
      LC.LCBuild (env.ClientBuild.root,
-                 ClientBuild.build_kind_of env.ClientBuild.build_opts)
+                 ClientBuild.build_kind_of env.ClientBuild.build_opts,
+                 env.ClientBuild.build_opts.ServerBuild.id)

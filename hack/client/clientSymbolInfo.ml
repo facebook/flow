@@ -16,15 +16,15 @@ let fun_call_to_json fun_call_results =
   (* List.rev_map is used here for performance purpose(tail recursive) *)
   List.rev_map fun_call_results begin fun item ->
     let item_type =
-      match item.SymbolFunCallService.type_ with
+      match item.type_ with
       | Function        -> "Function"
       | Method          -> "Method"
       | Constructor     -> "Constructor" in
     JAssoc [
-      "name",           JString item.SymbolFunCallService.name;
+      "name",           JString item.name;
       "type",           JString item_type;
-      "pos",            Pos.json item.SymbolFunCallService.pos;
-      "caller",         JString item.SymbolFunCallService.caller;
+      "pos",            Pos.json item.pos;
+      "caller",         JString item.caller;
     ]
   end
 

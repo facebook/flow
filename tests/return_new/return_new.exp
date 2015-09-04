@@ -11,7 +11,7 @@ test.js:8:23,25: new object
 This type is incompatible with
 test.js:8:10,15: number
 
-test2.js:3:6,8: property y
+test2.js:3:6,8: property `y`
 Property not found in
 test2.js:9:2,6: object type
 

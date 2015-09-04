@@ -55,3 +55,21 @@ function d_array(x: {y: Array<?string>}, a: {b: number}): string {
   }
   return "";
 }
+
+// --- name-sensitive havoc ---
+
+function c2(x: {[key: string]: ?string}, y: {z: string}): string {
+  if (x[y.z]) {
+    y.z = "HEY";
+    return x[y.z];  // error
+  }
+  return "";
+}
+
+function c3(x: {[key: string]: ?string}, y: {z: string, a: string}): string {
+  if (x[y.z]) {
+    y.a = "HEY";
+    return x[y.z];  // ok
+  }
+  return "";
+}

@@ -9,5 +9,7 @@
  *)
 
 external get_build_id : unit -> string = "hh_get_build_id"
+external get_build_time : unit -> int = "hh_get_build_time"
 
 let build_id_ohai = get_build_id ()
+let build_time = get_build_time ()

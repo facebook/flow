@@ -12,3 +12,4 @@
 <third-party/avl/*.ml*>: warn(-27)
 <third-party/core/*.ml*>: warn(-32)
 <utils/*.ml*>: warn(-3-27)
+<hhi/hhi_win32res.ml>: warn(-3)

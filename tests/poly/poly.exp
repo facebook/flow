@@ -1,5 +1,5 @@
 
-annot.js:10:38,48: property x
+annot.js:10:38,48: property `x`
 Property not found in
 annot.js:10:20,21: object type
 

@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2014, Facebook, Inc.
+ * Copyright (c) 2015, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -8,6 +8,7 @@
  *
  *)
 
-val main : ClientStop.env -> Exit_status.t
+type index
 
-val kill_server : Path.t -> unit
+val read_index: unit -> index option
+val dump_files: Path.t -> index -> unit

@@ -55,7 +55,7 @@ Traces.js:20:1,10:  . . ~> CallT [function call]
 Traces.js:17:1,43:  . . FunT [function]
 Traces.js:18:21,28: . . ~> CallT [function call]
 
-Traces2.js:6:3,11: property foo
+Traces2.js:6:3,11: property `foo`
 Property not found in
 Traces2.js:10:3,11: propTypes
 Error path:
@@ -64,11 +64,11 @@ Traces2.js:17:12,25:      InstanceT [ReactElement]
 Traces2.js:17:12,25:      . InstanceT [ReactElement]
 [LIB] react.js:68:1,73:1: . ~> InstanceT [ReactElement] comes from
 Traces2.js:17:12,25:      . . InstanceT [ReactElement]
-Traces2.js:17:12,25:      . . ~> OpenT [ReactElement] comes from
+Traces2.js:13:16,34:      . . ~> OpenT [identifier ReactElement] comes from
 Traces2.js:17:12,25:      . . . InstanceT [ReactElement]
-Traces2.js:17:12,25:      . . . ~> AnnotT [ReactElement]
+Traces2.js:13:16,34:      . . . ~> AnnotT [identifier ReactElement]
 
-Traces2.js:10:3,11: property bar
+Traces2.js:10:3,11: property `bar`
 Property not found in
 Traces2.js:6:3,11: propTypes
 Error path:
@@ -77,8 +77,8 @@ Traces2.js:17:12,25:      InstanceT [ReactElement]
 Traces2.js:17:12,25:      . InstanceT [ReactElement]
 [LIB] react.js:68:1,73:1: . ~> InstanceT [ReactElement] comes from
 Traces2.js:17:12,25:      . . InstanceT [ReactElement]
-Traces2.js:17:12,25:      . . ~> OpenT [ReactElement] comes from
+Traces2.js:13:16,34:      . . ~> OpenT [identifier ReactElement] comes from
 Traces2.js:17:12,25:      . . . InstanceT [ReactElement]
-Traces2.js:17:12,25:      . . . ~> AnnotT [ReactElement]
+Traces2.js:13:16,34:      . . . ~> AnnotT [identifier ReactElement]
 
 Found 6 errors

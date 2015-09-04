@@ -164,12 +164,12 @@ end
 
 module Translate = Estree_translator.Translate (JsonTranslator)
 
-let run (dump_ast:bool) (json_errors:bool) (content:string) (spec:json) =
+let run (dump_ast:bool) (json_errors:bool) (parse_options:Parser_env.parse_options option) (content:string) (spec:json) =
   try
     let success = true in
     let output = [] in
 
-    let (ast, errors) = Parser_flow.program ~fail:false content in
+    let (ast, errors) = Parser_flow.program ~fail:false ~parse_options content in
     let json = match Translate.program ast with
     | JAssoc params ->
         JAssoc (("errors", Translate.errors errors)::params)

@@ -398,7 +398,7 @@ module Env = struct
   let lvar (genv, env) (p, x) =
     let p, ident =
       if SN.Superglobals.is_superglobal x && genv.in_mode = FileInfo.Mpartial
-      then p, Ident.tmp()
+      then p, Ident.make x
       else
         let lcl = SMap.get x !(env.locals) in
         match lcl with
@@ -535,6 +535,28 @@ module Env = struct
           SMap.add name pos_and_id env, SMap.add name_key name canon_names;
         pos_and_id
 
+  let check_not_typehint (p, name) =
+    let x = canon_key (Utils.strip_all_ns name) in
+    match x with
+    | x when (
+        x = SN.Typehints.void ||
+        x = SN.Typehints.noreturn ||
+        x = SN.Typehints.int ||
+        x = SN.Typehints.bool ||
+        x = SN.Typehints.float ||
+        x = SN.Typehints.num ||
+        x = SN.Typehints.string ||
+        x = SN.Typehints.resource ||
+        x = SN.Typehints.mixed ||
+        x = SN.Typehints.array ||
+        x = SN.Typehints.arraykey ||
+        x = SN.Typehints.integer ||
+        x = SN.Typehints.boolean ||
+        x = SN.Typehints.double ||
+        x = SN.Typehints.real
+      ) -> Errors.name_is_reserved name p; false
+    | _ -> true
+
   let resilient_new_var env (p, x) =
     if SMap.mem x !env
     then begin
@@ -554,12 +576,17 @@ module Env = struct
     ignore (resilient_new_canon_var genv.funs x)
 
   let new_class_id genv x =
-    ignore (resilient_new_canon_var genv.classes x)
+    if check_not_typehint x then ignore (resilient_new_canon_var genv.classes x)
+    else ()
 
   let new_typedef_id genv x =
-    let v = resilient_new_canon_var genv.classes x in
-    genv.typedefs := SMap.add (snd x) v !(genv.typedefs);
-    ()
+    if check_not_typehint x
+    then begin
+      let v = resilient_new_canon_var genv.classes x in
+      genv.typedefs := SMap.add (snd x) v !(genv.typedefs);
+      ()
+    end
+    else ()
 
   let new_global_const_id genv x =
     let v = resilient_new_var genv.gconsts x in
@@ -1788,36 +1815,11 @@ and expr_ env = function
   | Float s -> N.Float s
   | String s -> N.String s
   | String2 idl -> N.String2 (string2 env idl)
-  | Id x ->
-    (match snd x with
-      | const when const = SN.PseudoConsts.g__LINE__ -> N.Int x
-      | const when const = SN.PseudoConsts.g__CLASS__ ->
-        (match (fst env).current_cls with
-          | None -> Errors.illegal_CLASS (fst x); N.Any
-          | Some (cid, _) ->
-            (* this isn't quite correct when inside a trait, as
-             * __CLASS__ is replaced by the using class, but it's
-             * sufficient for typechecking purposes (we require
-             * subclass to be compatible with the trait member/method
-             * declarations) *)
-            N.String cid)
-      | const when const = SN.PseudoConsts.g__TRAIT__ ->
-        (match (fst env).current_cls with
-          | Some (cid, Ctrait) -> N.String cid
-          | _ -> Errors.illegal_TRAIT (fst x); N.Any)
-      | const when
-          const = SN.PseudoConsts.g__FILE__
-          || const = SN.PseudoConsts.g__DIR__
-          (* could actually check that we are in a function, method, etc *)
-          || const = SN.PseudoConsts.g__FUNCTION__
-          || const = SN.PseudoConsts.g__METHOD__
-          || const = SN.PseudoConsts.g__NAMESPACE__ ->
-        N.String x
-      | _ -> N.Id (Env.global_const env x)
-      )
+  | Id (pos, const as x) -> N.Id (Env.global_const env x)
+
   | Lvar (_, x) when x = SN.SpecialIdents.this -> N.This
-  | Lvar ((_pos, x) as sid) when x = SN.SpecialIdents.placeholder ->
-    N.Lplaceholder sid
+  | Lvar (pos, x) when x = SN.SpecialIdents.placeholder ->
+    N.Lplaceholder pos
   | Lvar x ->
       N.Lvar (Env.lvar env x)
   | Obj_get (e1, (p, _ as e2), nullsafe) ->
@@ -1898,6 +1900,17 @@ and expr_ env = function
           (match (expr env e1), (expr env e2) with
           | (_, N.String cl), (_, N.String meth) ->
             N.Smethod_id (Env.class_name env cl, meth)
+          | (_, N.Id (_, const)), (_, N.String meth)
+            when const = SN.PseudoConsts.g__CLASS__  ->
+            (* All of these that use current_cls aren't quite correct
+             * inside a trait, as the class should be the using class.
+             * It's sufficient for typechecking purposes (we require
+             * subclass to be compatible with the trait member/method
+             * declarations).
+             * It *is* a problem for hh_emitter, though. *)
+            (match (fst env).current_cls with
+              | Some (cid, _) -> N.Smethod_id (cid, meth)
+              | None -> Errors.illegal_class_meth p; N.Any)
           | (_, N.Class_const (N.CI cl, (_, mem))), (_, N.String meth)
             when mem = SN.Members.mClass ->
             N.Smethod_id (Env.class_name env cl, meth)

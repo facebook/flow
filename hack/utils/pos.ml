@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2014, Facebook, Inc.
+ * Copyright (c) 2015, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -41,20 +41,24 @@ let info_pos t =
 let info_raw t = t.pos_start.pos_cnum, t.pos_end.pos_cnum
 let length t = t.pos_end.pos_cnum - t.pos_start.pos_cnum
 
+let start_cnum t = t.pos_start.pos_cnum
+let line t = t.pos_start.pos_lnum
+let end_line t = t.pos_end.pos_lnum
+
 let string t =
   let line, start, end_ = info_pos t in
   Printf.sprintf "File %S, line %d, characters %d-%d:"
     (String.trim t.pos_file) line start end_
 
 let json pos =
-    let line, start, end_ = info_pos pos in
-    let fn = filename pos in
-    Hh_json.JAssoc [
-      "filename",   Hh_json.JString fn;
-      "line",       Hh_json.JInt line;
-      "char_start", Hh_json.JInt start;
-      "char_end",   Hh_json.JInt end_;
-    ]
+  let line, start, end_ = info_pos pos in
+  let fn = filename pos in
+  Hh_json.JAssoc [
+    "filename",   Hh_json.JString fn;
+    "line",       Hh_json.JInt line;
+    "char_start", Hh_json.JInt start;
+    "char_end",   Hh_json.JInt end_;
+  ]
 
 let inside p line char_pos =
   let first_line = p.pos_start.pos_lnum in
@@ -103,6 +107,9 @@ let set_line pos value =
 
 let to_absolute p = { p with pos_file = Relative_path.to_absolute (p.pos_file) }
 
+let to_relative_string p =
+  { p with pos_file = Relative_path.suffix (p.pos_file) }
+
 (* Compare by filename, then tie-break by start position, and finally by the
  * end position *)
 let compare x y =
@@ -116,6 +123,12 @@ let compare x y =
        (fun x y -> compare x.pos_start.pos_lnum y.pos_start.pos_lnum);
        (fun x y -> compare x.pos_start.pos_cnum y.pos_start.pos_cnum);
        (fun x y -> compare x.pos_end.pos_cnum y.pos_end.pos_cnum)]
+
+let pos_start p = p.pos_start
+let pos_end p = p.pos_end
+
+let make_from_lexing_pos ~pos_file ~pos_start ~pos_end =
+  { pos_file; pos_start; pos_end }
 
 module Map = MyMap (struct
   type path = t

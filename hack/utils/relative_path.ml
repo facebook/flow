@@ -71,7 +71,10 @@ let create prefix s =
   let prefix_s = path_of_prefix prefix in
   let prefix_len = String.length prefix_s in
   if not (str_starts_with s prefix_s)
-  then raise (Failure (Printf.sprintf "%s is not a prefix of %s" prefix_s s));
+  then begin
+    Printf.eprintf "%s is not a prefix of %s" prefix_s s;
+    assert_false_log_backtrace ();
+  end;
   prefix, String.sub s prefix_len (String.length s - prefix_len)
 
 let concat prefix s = prefix, s

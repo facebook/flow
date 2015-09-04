@@ -21,7 +21,7 @@ generators.js:31:41,41: number
 This type is incompatible with
 generators.js:27:11,17: boolean
 
-generators.js:31:23,48: property value
+generators.js:31:23,48: property `value`
 Error:
 generators.js:28:10,11: string
 This type is incompatible with

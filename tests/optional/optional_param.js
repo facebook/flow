@@ -9,7 +9,7 @@ function bar(obj: {x?: string}): string {
     return obj.x;
 }
 
-function foo(bar?) {
+function baz(bar?) {
     if (!bar) { return 1; }
     return bar.duck
 }

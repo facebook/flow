@@ -37,7 +37,7 @@ val init: config -> unit
  *)
 (*****************************************************************************)
 
-val collect: unit -> unit
+val collect: [ `gentle | `aggressive ] -> unit
 
 (*****************************************************************************)
 (* Must be called after the initialization of the hack server is over.

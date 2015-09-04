@@ -686,10 +686,21 @@ and expr_ env = function
   | Smethod_id _
   | Method_caller _
   | This
-  | Id _
   | Class_get _
   | Class_const _
   | Lvar _ | Lplaceholder _ -> ()
+  (* Check that __CLASS__ and __TRAIT__ are used appropriately *)
+  | Id (pos, const) ->
+      if SN.PseudoConsts.is_pseudo_const const then
+        if const = SN.PseudoConsts.g__CLASS__ then
+          (match env.class_kind with
+            | Some _ -> ()
+            | _ -> Errors.illegal_CLASS pos)
+        else if const = SN.PseudoConsts.g__TRAIT__ then
+          (match env.class_kind with
+            | Some Ast.Ctrait -> ()
+            | _ -> Errors.illegal_TRAIT pos);
+      ()
   | Array afl ->
       liter afield env afl;
       ()
@@ -775,8 +786,9 @@ and expr_ env = function
       liter expr env uel;
       ()
   | Efun (f, _) ->
-    let body = Nast.assert_named_body f.f_body in
-    func env f body; ()
+      let env = { env with imm_ctrl_ctx = Toplevel } in
+      let body = Nast.assert_named_body f.f_body in
+      func env f body; ()
   | Xml (_, attrl, el) ->
       liter attribute env attrl;
       liter expr env el;

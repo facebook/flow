@@ -12,19 +12,19 @@ type Bar = {
   doStuff: () => void
 }
 
-function bar(x : Bar) {
+function bar0(x : Bar) {
   while (x = x.parent) { // can't assign x to ?Bar
     x.doStuff();
   }
 }
 
-function bar(x : ?Bar) {
+function bar1(x : ?Bar) {
   while (x = x.parent) { // x.parent might be null
     x.doStuff();
   }
 }
 
-function bar(x : Bar) {
+function bar2(x : Bar) {
   var y = x;
   while (y = y.parent) {
     y.doStuff();

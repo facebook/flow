@@ -8,7 +8,7 @@
  *
  *)
 
-let bad_exit _ = ()
+let bad_exit _ _ = ()
 let init _ _ = ()
 let init_done _ = ()
 let load_read_end _ = ()
@@ -25,4 +25,6 @@ let check_response _ = ()
 let build_differs _ _ _ = ()
 let build_same _ _ = ()
 let recheck_end _ _ _ = ()
-let recheck_once_end _ _ = ()
+let recheck_once_end _ _ _ = ()
+let recheck_once_parsing_end _ _ = ()
+let dfind_returned _ _ = ()

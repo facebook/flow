@@ -33,8 +33,8 @@ let unix_socket sock_name =
       sock
     end
   with Unix.Unix_error (err, _, _) ->
-    Printf.fprintf stderr "%s\n" (Unix.error_message err);
-    exit 1
+    Printf.eprintf "%s\n" (Unix.error_message err);
+    Exit_status.(exit Socket_error)
 
 (* So the sockaddr_un structure puts a strict limit on the length of a socket
   * address. This appears to be 104 chars on mac os x and 108 chars on my

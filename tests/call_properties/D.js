@@ -17,6 +17,6 @@ function d(x: { (): string; (x: number): string }): () => string {
 }
 
 // ...but you need at least one
-function d(x: { (): string; (x: number): string }): () => number {
+function e(x: { (): string; (x: number): string }): () => number {
   return x;
 }

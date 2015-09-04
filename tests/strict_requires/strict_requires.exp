@@ -1,11 +1,11 @@
 
-A.js:2:18,18: number
-This type is incompatible with
-D.js:4:8,13: string
-
 B.js:2:25,26: string
 This type is incompatible with
 D.js:3:8,13: number
+
+C.js:3:8,21: number
+This type is incompatible with
+D.js:4:8,13: string
 
 D.js:5:7,11: boolean
 This type is incompatible with

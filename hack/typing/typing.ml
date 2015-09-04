@@ -1146,7 +1146,7 @@ and expr_ ~in_cond ~(valkind: [> `lvalue | `rvalue | `other ]) env (p, e) =
         )
       )
     )
-  | Lplaceholder (p, _name) ->
+  | Lplaceholder p ->
     let r = Reason.Rplaceholder p in
     let ty = r, Tprim Tvoid in
     env, ty
@@ -1333,7 +1333,6 @@ and expr_ ~in_cond ~(valkind: [> `lvalue | `rvalue | `other ]) env (p, e) =
       let env, _class = instantiable_cid p env cid in
       env, (Reason.Rwitness p, Tprim Tbool)
   | Efun (f, _idl) ->
-      NastCheck.fun_ env f (Nast.assert_named_body f.f_body);
       let env, ft = fun_decl_in_env env f in
       (* When creating a closure, the 'this' type will mean the late bound type
        * of the current enclosing class
@@ -2073,7 +2072,11 @@ and dispatch_call p env call_type (fpos, fun_expr as e) el uel =
        (match e2 with
         | p, Nast.String cst ->
           (* find the class constant implicitly defined by the typeconst *)
-          class_const ~incl_tc:true env p (Nast.CIexpr e1, cst)
+          let cid = (match e1 with
+            | _, Class_const (cid, (_, x))
+            | _, Class_get (cid, (_, x)) when x = SN.Members.mClass -> cid
+            | _ -> Nast.CIexpr e1) in
+          class_const ~incl_tc:true env p (cid, cst)
         | _ ->
           Errors.illegal_type_structure p "second argument is not a string";
           env, (Reason.Rnone, Tany))
@@ -3953,11 +3956,11 @@ and check_extend_abstract_typeconst ~is_final p smap =
 and check_extend_abstract_const ~is_final p smap =
   SMap.iter begin fun x ce ->
     match ce.ce_type with
-    | r, Tgeneric _ ->
+    | r, Tgeneric _ when not ce.ce_synthesized ->
       Errors.implement_abstract ~is_final p (Reason.to_pos r) "constant" x
     | _, (Tany | Tmixed | Tarray (_, _) | Toption _ | Tprim _ | Tfun _
           | Tapply (_, _) | Ttuple _ | Tshape _ | Taccess (_, _) | Tthis
-         ) -> ()
+          | Tgeneric _) -> ()
   end smap
 
 and typeconst_def env {

@@ -40,11 +40,11 @@ async function voidoid4(): Promise<void> { // ok
 // return statements are covered in async.js)
 //
 
-async function voidoid4(): void { // error, void != Promise<void>
+async function voidoid5(): void { // error, void != Promise<void>
   console.log("HEY");
 }
 
-async function voidoid5()
+async function voidoid6()
 : Promise<number> { // error, number != void
   console.log("HEY");
 }

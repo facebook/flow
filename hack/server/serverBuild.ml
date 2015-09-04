@@ -27,6 +27,7 @@ type build_opts = {
    * we will probably have hard-to-debug permissions issues, so error out *)
   user: string;
   verbose: bool;
+  id: string;
 }
 
 type build_progress =

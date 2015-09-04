@@ -12,7 +12,7 @@ open Utils
 
 type t
 
-val init : Path.t list -> t
+val init : ?log_file:string -> Path.t list -> t
 val pid : t -> int
 val request_changes : t -> SSet.t
 val get_changes : t -> SSet.t

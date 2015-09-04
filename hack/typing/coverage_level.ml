@@ -58,7 +58,7 @@ let level_of_type fixme_map (p, ty) =
     | _, Typing_defs.Tany -> Unchecked
     | ty when TUtils.HasTany.check ty -> Partial
     | _ -> Checked in
-  let line = p.Pos.pos_start.Lexing.pos_lnum in
+  let line = Pos.line p in
   (* If the line has a HH_FIXME, then mark it as (at most) partially checked *)
   match lvl with
   | Checked when IMap.mem line fixme_map ->

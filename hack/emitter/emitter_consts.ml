@@ -108,6 +108,17 @@ let aliases =
   "integer", "HH\\int";
   "double", "HH\\float";
   "real", "HH\\float";
+  (* These are not defined as aliases in hhvm but I think might as well be.
+   * From EmitterVisitor::emitSystemLibVarEnvFunc
+   * in hphp/compiler/analysis/emitter.cpp *)
+  "extract", "__SystemLib\\extract";
+  "assert", "__SystemLib\\assert";
+  "parse_str", "__SystemLib\\parse_str";
+  "compact", "__SystemLib\\compact_sl";
+  "get_defined_vars", "__SystemLib\\get_defined_vars";
+  "func_get_args", "__SystemLib\\func_get_args_sl";
+  "func_get_arg", "__SystemLib\\func_get_arg_sl";
+  "func_num_args", "__SystemLib\\func_num_arg_";
   ]
 
 

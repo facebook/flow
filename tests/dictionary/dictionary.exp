@@ -31,13 +31,13 @@ incompatible.js:9:26,31: undefined
 This type is incompatible with
 incompatible.js:8:25,30: string
 
-incompatible.js:12:39,44: number
+incompatible.js:12:40,45: number
 This type is incompatible with
-incompatible.js:12:72,77: string
+incompatible.js:12:73,78: string
 
-incompatible.js:12:72,77: string
+incompatible.js:12:73,78: string
 This type is incompatible with
-incompatible.js:12:39,44: number
+incompatible.js:12:40,45: number
 
 incompatible.js:19:42,47: string
 This type is incompatible with
@@ -47,17 +47,17 @@ incompatible.js:26:17,19: number
 This type is incompatible with
 incompatible.js:25:41,46: string
 
-incompatible.js:36:72,77: string
+incompatible.js:36:73,78: string
 This type is incompatible with
-incompatible.js:36:33,38: number
+incompatible.js:36:34,39: number
 
-incompatible.js:41:23,45: some property
+incompatible.js:41:24,46: some property
 Property not found in
-incompatible.js:41:56,68: object type
+incompatible.js:41:57,69: object type
 
-incompatible.js:46:46,68: some property
+incompatible.js:46:47,69: some property
 Property not found in
-incompatible.js:46:23,35: object type
+incompatible.js:46:24,36: object type
 
 incompatible.js:55:4,8: number
 This type is incompatible with

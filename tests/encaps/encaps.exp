@@ -1,7 +1,7 @@
 
-encaps.js:3:14,16: property x
+encaps.js:3:14,16: property `x`
 Error:
-encaps.js:3:16,16: property x
+encaps.js:3:16,16: property `x`
 Property not found in
 encaps.js:2:13,13: A
 

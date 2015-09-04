@@ -116,6 +116,7 @@ let parse_check_args cmd =
       " (mode) list all files with their associated hack modes";
     "--auto-complete", Arg.Unit (set_mode MODE_AUTO_COMPLETE),
       " (mode) auto-completes the text on stdin";
+    "--colour", Arg.String (fun x -> set_mode (MODE_COLORING x) ()), " ";
     "--color", Arg.String (fun x -> set_mode (MODE_COLORING x) ()),
       " (mode) pretty prints the file content showing what is checked (give '-' for stdin)";
     "--coverage", Arg.String (fun x -> set_mode (MODE_COVERAGE x) ()),
@@ -192,6 +193,9 @@ let parse_check_args cmd =
     "--delete-checkpoint",
       Arg.String (fun x -> set_mode (MODE_DELETE_CHECKPOINT x) ()),
       "";
+    "--stats",
+      Arg.Unit (set_mode MODE_STATS),
+      " display some server statistics";
 
     (* flags *)
     "--json", Arg.Set output_json,
@@ -381,6 +385,7 @@ let parse_build_args () =
       incremental = !incremental;
       user = Sys_utils.logname ();
       verbose = !verbose;
+      id = Random_id.short_string ();
     }
   }
 

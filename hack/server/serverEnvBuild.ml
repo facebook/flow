@@ -15,6 +15,7 @@
 open ServerEnv
 
 let make_genv options config watch_paths =
+  let root = ServerArgs.root options in
   let check_mode   = ServerArgs.check_mode options in
   let gc_control   = ServerConfig.gc_control config in
   Typing_deps.trace :=
@@ -30,7 +31,10 @@ let make_genv options config watch_paths =
     if Sys.win32 || check_mode then
       None
     else
-      Some (DfindLib.init watch_paths) in
+      let log_link = ServerFiles.dfind_log root in
+      let log_file = ServerFiles.make_link_of_timestamped log_link in
+      Some (DfindLib.init ~log_file watch_paths)
+  in
   { options;
     config;
     workers;

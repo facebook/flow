@@ -53,6 +53,7 @@ let (process_fsnotify_event:
   dirty
 
 let run_daemon roots (ic, oc) =
+  Printexc.record_backtrace true;
   let roots = List.map roots Path.to_string in
   let env = DfindEnv.make roots in
   List.iter roots (DfindAddFile.path env);
@@ -72,3 +73,6 @@ let run_daemon roots (ic, oc) =
     let timeout = -1.0 in
     Fsnotify.select env.fsnotify ~read_fdl ~timeout fsnotify_callback
   done
+
+let entry_point =
+  Daemon.register_entry_point "dfind" run_daemon

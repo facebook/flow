@@ -53,6 +53,8 @@ module OptionParser(Config : CONFIG) = struct
         ~doc:"Do not include embedded declarations"
     |> flag "--munge-underscore-members" no_arg
         ~doc:"Treat any class member name with a leading underscore as private"
+    |> flag "--max-workers" (optional int)
+        ~doc:"Maximum number of workers to create (capped by number of cores)"
     |> temp_dir_flag
     |> from_flag
     |> anon "root" (optional string) ~doc:"Root directory"
@@ -108,7 +110,7 @@ module OptionParser(Config : CONFIG) = struct
   let result = ref None
   let main error_flags json profile quiet log_file debug verbose verbose_indent
            all weak traces strip_root lib no_flowlib munge_underscore_members
-           temp_dir from root () =
+           max_workers temp_dir from root () =
     FlowEventLogger.set_from from;
     let root = CommandUtils.guess_root root in
     let flowconfig = FlowConfig.get root in
@@ -142,6 +144,11 @@ module OptionParser(Config : CONFIG) = struct
     | Some x -> x
     | None -> FlowConfig.default_temp_dir (* TODO: add flowconfig option *)
     in
+    let opt_max_workers = match max_workers with
+    | Some x -> x
+    | None -> FlowConfig.(flowconfig.options.max_workers)
+    in
+    let opt_max_workers = min opt_max_workers Sys_utils.nbr_procs in
 
     result := Some {
       Options.opt_check_mode = Config.(mode = Check);
@@ -168,6 +175,7 @@ module OptionParser(Config : CONFIG) = struct
       Options.opt_no_flowlib = no_flowlib;
       Options.opt_munge_underscores = opt_munge_underscores;
       Options.opt_temp_dir;
+      Options.opt_max_workers;
     };
     ()
 

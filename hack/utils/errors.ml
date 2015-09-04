@@ -168,6 +168,7 @@ module Naming                               = struct
   let too_many_type_arguments               = 2065 (* DONT MODIFY!!!! *)
   let classname_param                       = 2066 (* DONT MODIFY!!!! *)
   let invalid_instanceof                    = 2067 (* DONT MODIFY!!!! *)
+  let name_is_reserved                      = 2068 (* DONT MODIFY!!!! *)
 
   (* EXTEND HERE WITH NEW VALUES IF NEEDED *)
 end
@@ -416,6 +417,12 @@ let name_already_bound name pos1 pos2 =
     pos2, "Previous definition is here"
 ]
 
+let name_is_reserved name pos =
+  let name = Utils.strip_all_ns name in
+  add Naming.name_is_reserved pos (
+  name^" cannot be used as it is reserved."
+ )
+
 let method_name_already_bound pos name =
   add Naming.method_name_already_bound pos (
   "Method name already bound: "^name
@@ -437,9 +444,9 @@ let error_name_already_bound name name_prev p p_prev =
     "do this by deleting the \"hhi\" directory you copied into your "^
     "project when first starting with Hack." in
   let errs =
-    if (Relative_path.prefix p.Pos.pos_file) = Relative_path.Hhi
+    if (Relative_path.prefix (Pos.filename p)) = Relative_path.Hhi
     then errs @ [p_prev, hhi_msg]
-    else if (Relative_path.prefix p_prev.Pos.pos_file) = Relative_path.Hhi
+    else if (Relative_path.prefix (Pos.filename p_prev)) = Relative_path.Hhi
     then errs @ [p, hhi_msg]
     else errs in
   add_list Naming.error_name_already_bound errs
@@ -1809,7 +1816,7 @@ let to_json ((error_code, msgl) : Pos.absolute error_) = Hh_json.(
   let elts = List.map msgl begin fun (p, w) ->
     let line, scol, ecol = Pos.info_pos p in
     JAssoc [ "descr", JString w;
-             "path",  JString p.Pos.pos_file;
+             "path",  JString (Pos.filename p);
              "line",  JInt line;
              "start", JInt scol;
              "end",   JInt ecol;

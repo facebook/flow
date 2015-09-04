@@ -87,7 +87,11 @@ let mk_functiontype2 tins ?params_names tout j = {
    Types of object literals are exact, but can be sealed or unsealed. Object
    type annotations are sealed but not exact. *)
 
-let default_flags = { sealed = false; exact = true; frozen = false; }
+let default_flags = {
+  sealed = UnsealedInFile None;
+  exact = true;
+  frozen = false;
+}
 
 let mk_objecttype ?(flags=default_flags) dict map proto = {
   flags;
@@ -180,28 +184,28 @@ let mk_tvar_derivable_where cx reason f =
    is a goto node, and it points to another type variable: a linked list of such
    type variables must be traversed until a root is reached. *)
 let rec find_graph cx id =
-  let id, constraints = find_constraints cx id in
+  let _, constraints = find_constraints cx id in
   constraints
 
 and find_constraints cx id =
-  let id, root = find_root cx id in
-  id, root.constraints
+  let root_id, root = find_root cx id in
+  root_id, root.constraints
 
 (* Find the root of a type variable, potentially traversing a chain of type
    variables, while short-circuiting all the type variables in the chain to the
    root during traversal to speed up future traversals. *)
 and find_root cx id =
   match IMap.get id cx.graph with
-  | Some (Goto id_) ->
-      let id_, root_ = find_root cx id_ in
-      replace_node cx id (Goto id_);
-      id_, root_
+  | Some (Goto next_id) ->
+      let root_id, root = find_root cx next_id in
+      if root_id != next_id then replace_node cx id (Goto root_id) else ();
+      root_id, root
 
   | Some (Root root) ->
       id, root
 
   | None ->
-      let msg = spf "tvar %d not found in file %s" id cx.file in
+      let msg = spf "find_root: tvar %d not found in file %s" id cx.file in
       failwith msg
 
 (* Replace the node associated with a type variable in the graph. *)
@@ -235,9 +239,7 @@ and havoc_ctx_ = function
   | scope::scopes, frame1::stack1, frame2::stack2
     when frame1 = frame2 ->
     (if modes.verbose then prerr_endlinef "HAVOC::%d" frame1);
-    scope |> Scope.(update_opt
-      (havoc_entry ~make_specific:(fun general -> general))
-    );
+    scope |> Scope.havoc ~make_specific:(fun general -> general);
     havoc_ctx_ (scopes, stack1, stack2)
   | _ -> ()
 
@@ -1235,7 +1237,7 @@ module ImplicitTypeArgument = struct
      explicit instantiation (via a type application), or when we want to cache a
      unique instantiation and unify it with other explicit instantiations. *)
   let mk_targ cx (typeparam, reason_op) =
-    let prefix_desc = add_typeparam_prefix (spf " %s of " typeparam.name) in
+    let prefix_desc = add_typeparam_prefix (spf " `%s` of " typeparam.name) in
     mk_tvar cx (prefix_reason prefix_desc reason_op)
 
   (* Abstract a type argument that is created by implicit instantiation
@@ -1404,6 +1406,18 @@ let not_expect_bound t = match t with
     functions `rec_flow`, `join_flow`, or `flow_opt` (described below) inside
     this module, and the function `flow` outside this module. **)
 let rec __flow cx (l, u) trace =
+  (if modes.verbose then
+    let indent = if modes.verbose_indent
+      then String.make ((trace_depth trace - 1) * 2) ' '
+      else "" in
+    let pid = Unix.getpid () in
+    prerr_endlinef
+      "\n%s[%d] %s (%s) ~>\n%s[%d] %s (%s)"
+      indent pid
+      (dump_reason (reason_of_t l)) (string_of_ctor l)
+      indent pid
+      (dump_reason (reason_of_t u)) (string_of_ctor u));
+
   if not (Cache.FlowConstraint.mem (l,u)) then (
     (* limit recursion depth *)
     RecursionCheck.check trace;
@@ -1415,18 +1429,6 @@ let rec __flow cx (l, u) trace =
        never appear "exposed" in flows. (They can still appear bound inside
        polymorphic definitions.) *)
     not_expect_bound l; not_expect_bound u;
-
-    (if modes.verbose then
-      let indent = if modes.verbose_indent
-        then String.make ((trace_depth trace - 1) * 2) ' '
-        else "" in
-      prerr_endlinef
-        "\n%s# (%d) %s ~>\n%s# %s"
-        indent
-        (Unix.getpid ())
-        (dump_reason (reason_of_t l))
-        indent
-        (dump_reason (reason_of_t u)));
 
     if ground_subtype (l,u) then ()
     else (match (l,u) with
@@ -1727,7 +1729,10 @@ let rec __flow cx (l, u) trace =
     | (ModuleT(_, exports), CJSRequireT(reason, t)) ->
       let cjs_exports = (
         match exports.cjs_export with
-        | Some(t) -> t
+        | Some t ->
+          (* reposition the export to point at the require(), like the object
+             we create below for non-CommonJS exports *)
+          repos_t_from_reason reason t
         | None ->
           let proto = MixedT(reason) in
           let props_smap = find_props cx exports.exports_tmap in
@@ -1804,6 +1809,15 @@ let rec __flow cx (l, u) trace =
     (*****************)
     (* logical types *)
     (*****************)
+
+    | (BoolT (r, Some x), NotT(reason, tout))
+    | (SingletonBoolT (r, x), NotT(reason, tout)) ->
+      let reason = replace_reason (spf "boolean value %b" (not x)) reason in
+      let t = BoolT (reason, Some (not x)) in
+      rec_flow cx trace (t, tout)
+
+    | (_, NotT(reason, tout)) ->
+      rec_flow cx trace (BoolT.at (loc_of_reason reason), tout)
 
     | (left, AndT(reason, right, u)) ->
       (* a falsy && b ~> a
@@ -2280,7 +2294,7 @@ let rec __flow cx (l, u) trace =
           if not (has_prop cx flds1 s)
           then
             (* property doesn't exist in inflowing type *)
-            let reason2 = replace_reason (spf "property %s" s) reason2 in
+            let reason2 = replace_reason (spf "property `%s`" s) reason2 in
             match t2 with
             | OptionalT t1 when flags.exact ->
               (* if property is marked optional or otherwise has a maybe type,
@@ -2320,7 +2334,7 @@ let rec __flow cx (l, u) trace =
         (fun s -> fun t2 ->
           if (not(SMap.mem s flds1))
           then
-            let reason2 = replace_reason (spf "property %s" s) reason2 in
+            let reason2 = replace_reason (spf "property `%s`" s) reason2 in
             match t2 with
             | OptionalT t1 ->
                 rec_flow cx trace (l, LookupT (reason2, None, s, t1))
@@ -2348,10 +2362,9 @@ let rec __flow cx (l, u) trace =
     (****************************************)
     (* You can cast an object to a function *)
     (****************************************)
-    | (ObjT _, (FunT _ | CallT _)) ->
-      let reason = reason_of_t u in
-      let tvar = mk_tvar cx reason in
-      lookup_prop cx trace l reason (Some (reason_of_t l)) "$call" tvar;
+    | (ObjT (reason, _), (FunT (reason_op, _, _, _) | CallT (reason_op, _))) ->
+      let tvar = mk_tvar cx (suffix_reason " used as a function" reason) in
+      lookup_prop cx trace l reason_op (Some reason) "$call" tvar;
       rec_flow cx trace (tvar, u)
 
     (******************************)
@@ -2379,7 +2392,7 @@ let rec __flow cx (l, u) trace =
     | (ObjT (_, { props_tmap = mapr; _ }), ShapeT (proto)) ->
         let reason = reason_of_t proto in
         iter_props cx mapr (fun x t ->
-          let reason = prefix_reason (spf "prop %s of " x) reason in
+          let reason = prefix_reason (spf "prop `%s` of " x) reason in
           let t = filter_optional cx ~trace reason t in
           rec_flow cx trace (proto, SetT (reason, (reason, x), t));
         )
@@ -2489,7 +2502,12 @@ let rec __flow cx (l, u) trace =
       (* TODO: closure *)
       (** create new object **)
       let reason_c = replace_reason "new object" reason in
-      let new_obj = mk_object_with_proto cx reason_c proto in
+      let proto_reason = reason_of_t proto in
+      let sealed = UnsealedInFile (Loc.source (loc_of_reason proto_reason)) in
+      let flags = { default_flags with sealed } in
+      let dict = None in
+      let pmap = mk_propmap cx SMap.empty in
+      let new_obj = ObjT (reason_c, mk_objecttype ~flags dict pmap proto) in
       (** call function with this = new_obj, params = args **)
       rec_flow cx trace (new_obj, this);
       multiflow cx trace reason_op (args, params);
@@ -2550,11 +2568,11 @@ let rec __flow cx (l, u) trace =
     (********************************)
 
     | InstanceT (reason_c, static, super, instance),
-      SetT (reason_op, (_, x), tin) ->
+      SetT (reason_op, (reason_prop, x), tin) ->
       Ops.push reason_op;
       (* methods are immutable, so we hide them from property set operations *)
       let fields = instance.fields_tmap in
-      set_prop cx trace reason_op reason_c super x fields tin;
+      set_prop cx trace reason_prop reason_c super x fields tin;
       Ops.pop ();
 
     (*****************************)
@@ -2669,7 +2687,7 @@ let rec __flow cx (l, u) trace =
           (* move the reason to the call site instead of the definition, so that
              it is in the same scope as the Object.assign, so that strictness
              rules apply. *)
-          let r = prefix_reason (spf "prop %s of " x) reason_ in
+          let r = prefix_reason (spf "prop `%s` of " x) reason_ in
           let r = repos_reason (loc_of_reason reason) r in
           rec_flow cx trace (proto, SetT (r, (r, x), t));
         );
@@ -2728,7 +2746,7 @@ let rec __flow cx (l, u) trace =
       let desc = desc_of_reason reason_o |> spf "frozen %s" in
       let reason = replace_reason desc reason_op in
 
-      let flags = {frozen = true; sealed = true; exact = true;} in
+      let flags = {frozen = true; sealed = Sealed; exact = true;} in
       let new_obj = ObjT (reason, {objtype with flags}) in
       rec_flow cx trace (new_obj, t)
 
@@ -2766,7 +2784,7 @@ let rec __flow cx (l, u) trace =
         let strict_reason = mk_strict_lookup_reason
           flags.sealed (dict_t <> None) reason_o reason_op in
         let t = ensure_prop_for_write cx trace strict_reason mapr x proto
-          reason_o reason_prop in
+          reason_op reason_prop in
         dictionary cx trace (string_key x reason_op) t dict_t;
         rec_flow cx trace (tin,t)
 
@@ -2858,7 +2876,7 @@ let rec __flow cx (l, u) trace =
       rec_flow cx trace (key, ElemT(reason_op, l, LowerBoundT tout))
 
     | (StrT (reason_x, Literal x), ElemT(reason_op, (ObjT _ as o), t)) ->
-      let reason_x = replace_reason (spf "property %s" x) reason_x in
+      let reason_x = replace_reason (spf "property `%s`" x) reason_x in
       (match t with
       | UpperBoundT tin ->
           rec_flow cx trace (o, SetT(reason_op, (reason_x, x), tin))
@@ -3097,7 +3115,7 @@ let rec __flow cx (l, u) trace =
     (*****************)
 
     | (ClassT instance, _) when object_like_op u ->
-      let reason = reason_of_t u in
+      let reason = prefix_reason "statics of " (reason_of_t instance) in
       let tvar = mk_tvar cx reason in
       rec_flow cx trace (instance, GetT(reason, (reason, "statics"), tvar));
       rec_flow cx trace (tvar,u)
@@ -3499,9 +3517,14 @@ and flow_type_args cx trace instance instance_super =
    "blame token" that is used when looking up properties of objects in the
    prototype chain as part of that operation. *)
 and mk_strict_lookup_reason sealed is_dict reason_o reason_op =
-  if (is_dict || (not sealed && Reason_js.same_scope reason_o reason_op))
-  then None
-  else Some reason_o
+  let sealed = not is_dict && match sealed with
+  | Sealed -> true
+  | UnsealedInFile source -> source <> (Loc.source (loc_of_reason reason_op))
+  in
+  if sealed then
+    Some reason_o
+  else
+    None
 
 and structural_subtype cx trace lower (upper_reason, super, fields_tmap, methods_tmap) =
   let lower_reason = reason_of_t lower in
@@ -3511,7 +3534,7 @@ and structural_subtype cx trace lower (upper_reason, super, fields_tmap, methods
   let flds2 = SMap.union fields_tmap methods_tmap in
   flds2 |> SMap.iter
       (fun s t2 ->
-        let lookup_reason = replace_reason (spf "property %s" s) (reason_of_t t2) in
+        let lookup_reason = replace_reason (spf "property `%s`" s) (reason_of_t t2) in
         rec_flow cx trace (lower, LookupT (lookup_reason, Some lower_reason, s, t2))
       );
   rec_flow cx trace (lower, super)
@@ -3713,6 +3736,10 @@ and mk_object_with_proto cx reason proto =
   mk_object_with_map_proto cx reason SMap.empty proto
 
 and mk_object_with_map_proto cx reason ?(sealed=false) ?dict map proto =
+  let sealed =
+    if sealed then Sealed
+    else UnsealedInFile (Loc.source (loc_of_reason reason))
+  in
   let flags = { default_flags with sealed } in
   let pmap = mk_propmap cx map in
   ObjT (reason, mk_objecttype ~flags dict pmap proto)
@@ -3836,7 +3863,7 @@ and ensure_prop_for_read cx strict mapr x proto dict_t reason_obj reason_op trac
     in
     t |> recurse_proto cx strict proto reason_op x trace
 
-and ensure_prop_for_write cx trace strict mapr x proto reason_obj reason_op =
+and ensure_prop_for_write cx trace strict mapr x proto reason_op reason_prop =
   match read_prop_opt cx mapr x with
   (* map contains property x at type t *)
   | Some t -> t
@@ -3848,7 +3875,7 @@ and ensure_prop_for_write cx trace strict mapr x proto reason_obj reason_op =
         Errors_js.ERROR
         trace
         "Property not found in"
-        (reason_op, reason_o);
+        (reason_prop, reason_o);
       AnyT.t
     | None ->
       let t =
@@ -3856,9 +3883,9 @@ and ensure_prop_for_write cx trace strict mapr x proto reason_obj reason_op =
         then read_and_delete_prop cx mapr (internal_name x) |> (fun t ->
           write_prop cx mapr x t; t
         )
-        else intro_prop_ cx reason_obj x mapr
+        else intro_prop_ cx reason_op x mapr
       in
-      t |> recurse_proto cx None proto reason_op x trace
+      t |> recurse_proto cx None proto reason_prop x trace
     )
 
 and lookup_prop cx trace l reason strict x t =
@@ -3893,9 +3920,8 @@ and intro_prop cx reason_obj x mapr =
     write_prop cx mapr (internal_name x) tvar
   )
 
-and intro_prop_ cx reason_obj x mapr =
-  let reason_prop = prefix_reason (spf ".%s of " x) reason_obj in
-  mk_tvar_where cx reason_prop (fun tvar ->
+and intro_prop_ cx reason_op x mapr =
+  mk_tvar_where cx reason_op (fun tvar ->
     write_prop cx mapr x tvar
   )
 
@@ -3959,10 +3985,13 @@ and filter_not_exists t = match t with
   | StrT (r, (Literal _ | Truthy))
   | ArrT (r, _, _)
   | ObjT (r, _)
+  | InstanceT (r, _, _, _)
   | AnyObjT r
   | FunT (r, _, _, _)
   | AnyFunT r
   | NumT (r, (Literal _ | Truthy)) -> UndefT r
+
+  | ClassT t -> UndefT (reason_of_t t)
 
   (* unknown boolies become falsy *)
   | MaybeT t ->
@@ -4682,11 +4711,12 @@ and resolve_id cx trace id t =
    flows, number and any. If we replace the flows from/to any with an
    unification with any, we will miss the string/number incompatibility error.
 
-   In the future, we may consider unifying with any-like types to be sometimes
-   desirable / intentional. At that point, we could consider limiting this set
-   to just LowerBoundT and UpperBoundT, which are internal types. *)
+   However, unifying with any-like types to be sometimes desirable /
+   intentional. Thus, we limit the set of types on which unification is banned
+   to just LowerBoundT and UpperBoundT, which are internal types.
+*)
 and any_like = function
-  | LowerBoundT _ | UpperBoundT _ | AnyT _ | AnyObjT _ | AnyFunT _ -> true
+  | LowerBoundT _ | UpperBoundT _ -> true
   | _ -> false
 
 and rec_unify cx trace t1 t2 =
@@ -4755,7 +4785,7 @@ and flow_prop_to_dict cx trace k v dict prop_reason dict_reason =
   | Some {key; value; _} ->
     dictionary cx trace (string_key k prop_reason) v dict
   | None ->
-    let prop_reason = replace_reason (spf "property %s" k) prop_reason in
+    let prop_reason = replace_reason (spf "property `%s`" k) prop_reason in
     add_warning cx [
       prop_reason, "Property not found in";
       dict_reason, ""
@@ -4868,7 +4898,7 @@ and dictionary cx trace keyt valuet = function
 
 and string_key s reason =
   let key_reason =
-    replace_reason (spf "property name \"%s\" is a string" s) reason in
+    replace_reason (spf "property `%s` is a string" s) reason in
   StrT (key_reason, Literal s)
 
 (* builtins, contd. *)
@@ -4888,7 +4918,7 @@ and get_builtin_typeapp cx reason x ts =
 and mk_typeapp_instance cx reason ?(cache=false) c ts =
   let t = mk_tvar cx reason in
   flow_opt cx (c, SpecializeT(reason,cache,ts,t));
-  mk_instance cx reason t
+  mk_instance cx (reason_of_t c) t
 
 (* NOTE: the for_type flag is true when expecting a type (e.g., when processing
    an annotation), and false when expecting a runtime value (e.g., when
@@ -5295,6 +5325,9 @@ let rec gc cx state = function
   | OrT (_, t1, t2) ->
       gc cx state t1;
       gc cx state t2
+
+  | NotT (_, t) ->
+      gc cx state t
 
   | SpecializeT (_, _, ts, t) ->
       ts |> List.iter (gc cx state);
