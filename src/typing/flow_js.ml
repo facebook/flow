@@ -2784,7 +2784,7 @@ let rec __flow cx (l, u) trace =
         let strict_reason = mk_strict_lookup_reason
           flags.sealed (dict_t <> None) reason_o reason_op in
         let t = ensure_prop_for_write cx trace strict_reason mapr x proto
-          reason_o reason_prop in
+          reason_op reason_prop in
         dictionary cx trace (string_key x reason_op) t dict_t;
         rec_flow cx trace (tin,t)
 
@@ -3863,7 +3863,7 @@ and ensure_prop_for_read cx strict mapr x proto dict_t reason_obj reason_op trac
     in
     t |> recurse_proto cx strict proto reason_op x trace
 
-and ensure_prop_for_write cx trace strict mapr x proto reason_obj reason_op =
+and ensure_prop_for_write cx trace strict mapr x proto reason_op reason_prop =
   match read_prop_opt cx mapr x with
   (* map contains property x at type t *)
   | Some t -> t
@@ -3875,7 +3875,7 @@ and ensure_prop_for_write cx trace strict mapr x proto reason_obj reason_op =
         Errors_js.ERROR
         trace
         "Property not found in"
-        (reason_op, reason_o);
+        (reason_prop, reason_o);
       AnyT.t
     | None ->
       let t =
@@ -3883,9 +3883,9 @@ and ensure_prop_for_write cx trace strict mapr x proto reason_obj reason_op =
         then read_and_delete_prop cx mapr (internal_name x) |> (fun t ->
           write_prop cx mapr x t; t
         )
-        else intro_prop_ cx reason_obj x mapr
+        else intro_prop_ cx reason_op x mapr
       in
-      t |> recurse_proto cx None proto reason_op x trace
+      t |> recurse_proto cx None proto reason_prop x trace
     )
 
 and lookup_prop cx trace l reason strict x t =
@@ -3920,9 +3920,8 @@ and intro_prop cx reason_obj x mapr =
     write_prop cx mapr (internal_name x) tvar
   )
 
-and intro_prop_ cx reason_obj x mapr =
-  let reason_prop = prefix_reason (spf ".%s of " x) reason_obj in
-  mk_tvar_where cx reason_prop (fun tvar ->
+and intro_prop_ cx reason_op x mapr =
+  mk_tvar_where cx reason_op (fun tvar ->
     write_prop cx mapr x tvar
   )
 
