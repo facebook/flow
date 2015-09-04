@@ -22,6 +22,7 @@ let parse_args() =
   let showpatch = ref false in
   let use_hh_f = ref false in
   let verbose = ref false in
+  let expr_mode = ref false in
   Arg.parse
     [
       "-p", Arg.String (fun x -> pattern := Some x),
@@ -46,10 +47,14 @@ let parse_args() =
 
       "--use_hh_format", Arg.Set use_hh_f,
       "run patches through hh_format after insertion";
+
+      "-e", Arg.Set expr_mode,
+      "Search for a single expression (pattern and target must both be
+       nonstrict and consist of a single statement that is an expression)"
     ]
     (fun file -> files := file :: !files)
     (Printf.sprintf "Usage: %s (filename|directory)" Sys.argv.(0));
-  !files, !pattern, !target, !use_hh_f, !verbose, !showpatch
+  !files, !pattern, !target, !use_hh_f, !verbose, !showpatch, !expr_mode
 
 
 let path_to_relative filepath =
@@ -176,11 +181,15 @@ let directory dir fn =
 
 (* Patches a single file *)
 let patch_file pat_info txt_file : match_ret =
-  let transformations, pattern_ast, format_patches = pat_info in
+  let (transformations, pattern_ast, format_patches), is_expr = pat_info in
+  let patch_fun =
+    if is_expr
+    then Matcher.patch_expr
+    else Matcher.match_and_patch in
   matcher_exception_wrapper
     (fun _ txt_src txt_parse_ret ->
       let new_source =
-        Matcher.match_and_patch
+        patch_fun
           txt_parse_ret.Parser_hack.ast
           (path_to_relative txt_file)
           txt_src
@@ -225,11 +234,15 @@ let patch_job pat_info acc fnl =
 
 (* Does matching over a single file *)
 let match_file env txt_file : match_ret =
-  let (pat_ast, pat_file), print_verbose = env in
+  let (pat_ast, _pat_file), print_verbose, is_expr = env in
+  let match_fun =
+    if is_expr
+    then Matcher.find_matches_expr
+    else Matcher.find_matches in
   matcher_exception_wrapper
     (fun _ txt_src txt_parse_ret ->
      let match_res =
-       Matcher.find_matches
+       match_fun
          txt_parse_ret.Parser_hack.ast
          (path_to_relative txt_file)
          txt_src
@@ -243,12 +256,7 @@ let match_file env txt_file : match_ret =
          if print_verbose
          then
            "\n" ^
-           Matcher.format_matches
-             txt_parse_ret.Parser_hack.ast
-             txt_src
-             (path_to_relative txt_file)
-             pat_ast
-             (path_to_relative pat_file)
+           Matcher.format_matches match_res txt_src
          else "");
          Success end)
     txt_file
@@ -276,7 +284,7 @@ let match_job pat_info acc fnl =
 
 let () =
   SharedMem.(init default_config);
-  let files, pattern, target, format_patches, verbose, showpatch =
+  let files, pattern, target, format_patches, verbose, showpatch, expr_mode =
     parse_args() in
   (* Make sure there's a pattern and a target *)
   let pattern = match pattern with
@@ -286,21 +294,21 @@ let () =
   | None -> begin (* Matching not patching *)
      match files with
      | [dir] when Sys.is_directory dir ->
-        let pat_info = (preproc_match pattern), verbose in
+        let pat_info = (preproc_match pattern), verbose, expr_mode in
         directory dir (match_job pat_info)
      | [filename] ->
         let filepath = Path.make filename in
-        let pat_info = (preproc_match pattern), verbose in
+        let pat_info = (preproc_match pattern), verbose, expr_mode in
         ignore(match_file pat_info filepath)
      | _ ->
         Printf.eprintf "More than one file given\n";
         exit 2 end
   | Some fname -> (* Patching not matching *)
      let target = Path.make fname in
-     let pat_info = preproc_patch pattern target format_patches in
+     let pat_info = (preproc_patch pattern target format_patches), expr_mode in
      if showpatch
      then begin
-       let transfs,_,_ = pat_info in
+       let (transfs,_,_),_ = pat_info in
        let relpat = path_to_relative pattern in
        let strns =
          Patcher.to_string_patch_maps

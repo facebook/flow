@@ -18,14 +18,15 @@ let run_test file : unit =
   else
   (* first file is text, second file is pattern *)
   let (t_file, t_content, t_parser_return) = List.hd parsed_files in
-  let (p_file, _p_content, p_parser_return) = List.hd (List.tl parsed_files) in
+  let (_p_file, _p_content, p_parser_return) = List.hd (List.tl parsed_files) in
   print_endline
     (Matcher.format_matches
-      t_parser_return.Parser_hack.ast
-      t_content
-      t_file
-      p_parser_return.Parser_hack.ast
-      p_file);
+       (Matcher.find_matches
+          t_parser_return.Parser_hack.ast
+          t_file
+          t_content
+          p_parser_return.Parser_hack.ast)
+       t_content);
   end
 
 let _ =

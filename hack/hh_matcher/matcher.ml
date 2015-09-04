@@ -423,6 +423,18 @@ object
     end
 end
 
+(* used to get (in reverse order) all expressions in a file *)
+class expr_finding_visitor () =
+object
+  inherit [expr list] AstVisitor.ast_visitor as super
+
+  method! on_expr acc exp =
+    begin
+      let acc = exp :: acc in
+      super#on_expr acc exp;
+    end
+end
+
 (* these functions must be in this module because I am passing them arguments
    of multiple different types (match list is used on def list, stmt list etc)*)
 module LM =
@@ -1666,6 +1678,39 @@ and match_import_flavor
   then dummy_success_res, env
   else NoMatch, env
 
+(* Gets the expression that is the pattern while verifying the pattern
+   is of the correct form (returning None if the pattern is not) *)
+and get_skipany_expr = function
+  | [Ast.Stmt (Ast.Expr exp)] -> Some exp
+  | _ -> None
+
+(* Tries to match the text with the pattern recursively, trying to match
+   the given expression with any expression in the program specified *)
+and handle_expr_skipany
+      (text : program)
+      (p_expr : expr)
+      (env : matcher_env) :
+      match_result * matcher_env =
+    (* given a chunk of text that was skipped over by a SkipAny
+       find all the possible chunks that could match the SkipAny pattern
+       (all child blocks + self) *)
+    let find_child_text () : expr list =
+      let visitor = new expr_finding_visitor () in
+      visitor#on_program [] text in
+
+    (* given an output of find_child_text, find all the matches,
+       update env if necessary *)
+    let match_child_text
+          (child_text : expr list)
+          (env : matcher_env) : match_result * matcher_env =
+      List.fold_left
+        (fun (res_so_far, env) text_exp ->
+         let text_res, env' = match_expr text_exp p_expr env in
+         (concat_match_results_nodup [res_so_far; text_res]), env')
+        (NoMatch, env)
+        child_text in
+    match_child_text (find_child_text ()) env
+
 and match_expr
       (t_expr : expr)
       (p_expr : expr)
@@ -1900,6 +1945,64 @@ let find_matches
   | Matches result -> result
   | NoMatch -> []
 
+(* function for searching for expressions *)
+let find_matches_expr
+      (text : program)
+      (text_file : Relative_path.t)
+      (text_content : string)
+      (pattern : program) : (ast_node * Lexing.position) list =
+  match get_skipany_expr pattern with
+  | Some pat -> begin
+     let res, _ =
+       handle_expr_skipany
+         text
+         pat
+         { file = text_file;
+           source = text_content;
+           metavars = MetavarMap.empty;
+           transformations =
+             { stmt_delete_list = [];
+               expr_delete_list = [];
+               stmt_transf_map = [];
+               expr_transf_map = [] };
+           patches = PatchSet.empty } in
+     match res with
+     | Matches result -> let _ = print_int (List.length result) in result
+     | NoMatch -> [] end
+  | None -> []
+
+(* function for patching expressions *)
+let patch_expr
+      (text : program)
+      (text_file : Relative_path.t)
+      (text_content : string)
+      (pattern : program)
+      (transformations : patch_maps)
+      ~(use_hh_format : bool) :
+      string option =
+  match get_skipany_expr pattern with
+  | Some pat -> begin
+     let res, env =
+       handle_expr_skipany
+         text
+         pat
+         { file = text_file;
+           source = text_content;
+           metavars = MetavarMap.empty;
+           transformations;
+           patches = PatchSet.empty } in
+     match res with
+     | NoMatch -> None
+     | Matches _ ->
+        if PatchSet.is_empty env.patches
+        then None
+        else
+          Some (Patcher.apply_patches
+                  ~src:text_content
+                  ~patches:(PatchSet.elements env.patches)
+                  ~format_result:use_hh_format) end
+  | None -> None
+
 let match_and_patch
       (text : program)
       (text_file : Relative_path.t)
@@ -1929,12 +2032,8 @@ let match_and_patch
                ~format_result:use_hh_format)
 
 let format_matches
-      (text : program)
-      (text_code : string)
-      (text_file : Relative_path.t)
-      (pattern : program)
-      (_pattern_file : Relative_path.t) : string =
-  let matches = find_matches text text_file text_code pattern in
+      (matches : (ast_node * Lexing.position) list)
+      (text_code : string) : string =
   let match_list =
     sort_and_remove_duplicates
       (fun (m1:(ast_node * Lexing.position))

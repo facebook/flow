@@ -74,12 +74,19 @@ val match_and_patch: program -> Relative_path.t ->
                      patch_maps ->
                      use_hh_format:bool -> string option
 
+(* these do the same thing as the above two methods except they only work on
+   patterns/targets that consist of a single statement that is an expression
+   (to enable the -e option in the hh_matcher) *)
+val find_matches_expr : program -> Relative_path.t ->
+                   string -> program -> (ast_node * Lexing.position) list
+
+val patch_expr: program -> Relative_path.t ->
+                     string -> program ->
+                     patch_maps ->
+                     use_hh_format:bool -> string option
+
 (* gives nice formatted output of the list of matches as a string that
    has all the lines containing a match in order in the form:
-   line num: line *)
-val format_matches :
-  program ->
-  string ->
-  Relative_path.t ->
-  program ->
-  Relative_path.t -> string
+   line num: line
+   given a list of matches and the source file of the text *)
+val format_matches : (ast_node * Lexing.position) list -> string -> string
