@@ -43,4 +43,8 @@ locals.js:10:25,30: string
 This type is incompatible with
 locals.js:6:17,20: boolean
 
-Found 10 errors
+locals.js:20:13,14: string
+This type is incompatible with
+locals.js:17:25,30: number
+
+Found 11 errors

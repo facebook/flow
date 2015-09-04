@@ -13,3 +13,11 @@ function sorry(really: bool) {
     }
     foo(x);
 }
+
+function foo0(b: bool): number {
+  var x = 0;
+  if (b) {
+    var x = ""; // error: string ~> number
+  }
+  return x;
+}
