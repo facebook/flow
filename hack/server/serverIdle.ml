@@ -20,6 +20,7 @@ type callback =
 
 module Periodical: sig
   val always : float
+  val one_hour: float
   val one_day: float
   val one_week: float
 
@@ -35,6 +36,7 @@ module Periodical: sig
 
 end = struct
   let always = 0.0
+  let one_hour = 3600.0
   let one_day = 86400.0
   let one_week = 604800.0
 
@@ -101,6 +103,7 @@ let init (root : Path.t) =
     (* I'm not sure explicitly invoking the Gc here is necessary, but
      * major_slice takes something like ~0.0001s to run, so why not *)
     Periodical.always   , (fun () -> ignore @@ Gc.major_slice 0);
+    Periodical.one_hour *. 3., EventLogger.log_gc_stats;
     Periodical.always   , (fun () -> SharedMem.collect `aggressive);
     Periodical.always   , EventLogger.flush;
     Periodical.one_day  , exit_if_unused;
