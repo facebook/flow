@@ -85,7 +85,7 @@ function *delegate_return_generator() {
     return "";
   }
 
-  var x: number = yield *inner()
+  var x: number = yield *inner(); // error: string ~> number
 }
 
 // only generators can make use of a value passed to next
