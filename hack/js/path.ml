@@ -8,7 +8,4 @@
  *
  *)
 
-type t = string
-let dummy_path = ""
-let make x = x
-let to_string x = x
+let string_of_path x = x

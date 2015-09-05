@@ -8,6 +8,8 @@
  *
  *)
 
+module Ast = Spider_monkey_ast
+
 type t =
   | UnexpectedToken of string
   | UnexpectedNumber
@@ -21,7 +23,6 @@ type t =
   | UnterminatedRegExp
   | InvalidLHSInAssignment
   | InvalidLHSInForIn
-  | InvalidLHSInForOf
   | InvalidLHSInFormalsList
   | MultipleDefaultsInSwitch
   | NoCatchOrFinally
@@ -54,10 +55,8 @@ type t =
   | StrictFunctionStatement
   | AdjacentJSXElements
   | ParameterAfterRestParameter
-  | AsyncGenerator
-  | DeclareAsync
 
-exception Error of (Loc.t * t) list
+exception Error of (Ast.Loc.t * t) list
 
 let error loc e =
   raise (Error [loc, e])
@@ -77,7 +76,6 @@ module PP =
       | UnterminatedRegExp ->  "Invalid regular expression: missing /"
       | InvalidLHSInAssignment ->  "Invalid left-hand side in assignment"
       | InvalidLHSInForIn ->  "Invalid left-hand side in for-in"
-      | InvalidLHSInForOf ->  "Invalid left-hand side in for-of"
       | InvalidLHSInFormalsList -> "Invalid left-hand side in formals list"
       | MultipleDefaultsInSwitch -> "More than one default clause in switch statement"
       | NoCatchOrFinally ->  "Missing catch or finally after try"
@@ -113,6 +111,4 @@ module PP =
           "elements must be wrapped in an enclosing parent tag"
       | ParameterAfterRestParameter ->
           "Rest parameter must be final parameter of an argument list"
-      | AsyncGenerator -> "A function may not be both async and a generator"
-      | DeclareAsync -> "async is an implementation detail and isn't necessary for your declare function statement. It is sufficient for your declare function to just have a Promise return type."
   end

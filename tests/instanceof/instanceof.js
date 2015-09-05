@@ -68,20 +68,3 @@ class D extends C {
     this.s = "yup";
   }
 }
-
-
-function foo(x: Array<number> | number) {
-  if (x instanceof Array) {
-    x[0] = 123;
-  } else {
-    x++;
-  }
-}
-
-function foo(x: Array<number> | number) {
-  if (x instanceof Array) {
-    x++; // error
-  } else {
-    x[0] = 123; // error
-  }
-}

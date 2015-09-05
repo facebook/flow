@@ -1,10 +1,10 @@
 
 Closure.js:11:5,6: number
 This type is incompatible with
-Closure.js:4:22,27: string
+  Closure.js:4:22,27: string
 
 Closure.js:32:5,6: number
 This type is incompatible with
-Closure.js:4:22,27: string
+  Closure.js:4:22,27: string
 
 Found 2 errors

@@ -13,10 +13,10 @@
 
   type token =
     | T_NUMBER of number_type
-    | T_STRING of (Loc.t * string * string * bool) (* loc, value, raw, octal *)
+    | T_STRING of (Ast.Loc.t * string * string * bool) (* loc, value, raw, octal *)
     | T_TEMPLATE_PART of Ast.Expression.TemplateLiteral.Element.t
     | T_IDENTIFIER
-    | T_REGEXP of (Loc.t * string * string) (* /pattern/flags *)
+    | T_REGEXP of (Ast.Loc.t * string * string) (* /pattern/flags *)
     (* Syntax *)
     | T_LCURLY
     | T_RCURLY
@@ -77,9 +77,6 @@
     | T_DEBUGGER
     | T_DECLARE
     | T_TYPE
-    | T_OF
-    | T_ASYNC
-    | T_AWAIT
     (* Operators *)
     | T_RSHIFT3_ASSIGN
     | T_RSHIFT_ASSIGN
@@ -133,7 +130,7 @@
     | T_EOF
     (* JSX *)
     | T_JSX_IDENTIFIER
-    | T_JSX_TEXT of (Loc.t * string * string) (* loc, value, raw *)
+    | T_JSX_TEXT of (Ast.Loc.t * string * string) (* loc, value, raw *)
     (* Type primitives *)
     | T_ANY_TYPE
     | T_BOOLEAN_TYPE
@@ -142,8 +139,6 @@
     | T_VOID_TYPE
 
   and number_type =
-    | BINARY
-    | LEGACY_OCTAL
     | OCTAL
     | NORMAL
 
@@ -218,9 +213,6 @@
     | T_DEBUGGER -> "debugger"
     | T_DECLARE -> "declare"
     | T_TYPE -> "type"
-    | T_OF -> "of"
-    | T_ASYNC -> "async"
-    | T_AWAIT -> "await"
     | T_LCURLY -> "{"
     | T_RCURLY -> "}"
     | T_LPAREN -> "("
@@ -301,7 +293,7 @@
   }
 
   and lex_state = {
-    lex_errors_acc: (Loc.t * Parse_error.t) list;
+    lex_errors_acc: (Ast.Loc.t * Parse_error.t) list;
     lex_comments_acc: Ast.Comment.t list;
   }
 
@@ -318,14 +310,14 @@
 
   type lex_result = {
     lex_token: token;
-    lex_loc: Loc.t;
+    lex_loc: Ast.Loc.t;
     lex_value: string;
-    lex_errors: (Loc.t * Parse_error.t) list;
+    lex_errors: (Ast.Loc.t * Parse_error.t) list;
     lex_comments: Ast.Comment.t list;
     lex_lb_curr_p: Lexing.position;
   }
 
-  let lb_to_loc = Loc.from_lb
+  let lb_to_loc = Ast.Loc.from_lb
 
   let get_result_and_clear_state (env, lex_token) =
     let state = !(env.lex_state) in
@@ -351,7 +343,7 @@
     let lex_errors_acc = (loc, err)::(!(env.lex_state).lex_errors_acc) in
     env.lex_state := { !(env.lex_state) with lex_errors_acc; }
 
-  let unexpected_error env loc value =
+  let unexpected_error env loc value = 
     lex_error env loc (Parse_error.UnexpectedToken value)
 
   let illegal env loc = lex_error env loc (Parse_error.UnexpectedToken "ILLEGAL")
@@ -363,7 +355,7 @@
     env, token
 
   let save_comment env start _end buf multiline = Ast.Comment.(
-    let loc = Loc.btwn start _end in
+    let loc = Ast.Loc.btwn start _end in
     let s = Buffer.contents buf in
     let c = if multiline then Block s else Line s in
     let lex_comments_acc = (loc, c) :: !(env.lex_state).lex_comments_acc in
@@ -446,7 +438,7 @@
       };
       tail;
     }) in
-    env, T_TEMPLATE_PART (Loc.btwn start _end, part)
+    env, T_TEMPLATE_PART (Ast.Loc.btwn start _end, part)
 
   let keywords = Hashtbl.create 53
   let type_keywords = Hashtbl.create 53
@@ -499,9 +491,6 @@
       "debugger", T_DEBUGGER;
       "declare", T_DECLARE;
       "type", T_TYPE;
-      "of", T_OF;
-      "async", T_ASYNC;
-      "await", T_AWAIT;
     ]
   let _ = List.iter (fun (key, token) -> Hashtbl.add type_keywords key token)
     [
@@ -510,8 +499,6 @@
       "any",     T_ANY_TYPE;
       "bool",    T_BOOLEAN_TYPE;
       "boolean", T_BOOLEAN_TYPE;
-      "true",    T_TRUE;
-      "false",   T_FALSE;
       "number",  T_NUMBER_TYPE;
       "string",  T_STRING_TYPE;
       "void",    T_VOID_TYPE;
@@ -529,10 +516,8 @@ let unicode_whitespace =
 let whitespace = [' ' '\t' '\r' '\x0c'] | unicode_whitespace
 
 (* Different ways you can write a number *)
-let binnumber = '0' ['B''b'] ['0''1']+
 let hexnumber = '0' ['X''x'] hex+
-let octnumber = '0' ['O''o'] ['0'-'7']+
-let legacyoctnumber = '0' ['0'-'7']+
+let octnumber = '0' ['0'-'7']+
 let scinumber = ['0'-'9']*'.'?['0'-'9']+['e''E']['-''+']?['0'-'9']+
 let wholenumber = ['0'-'9']+'.'?
 let floatnumber = ['0'-'9']*'.'['0'-'9']+
@@ -577,7 +562,7 @@ rule token env = parse
                          unicode_fix_cols lexbuf;
                          token env lexbuf }
   | "/*"               {
-                         if env.lex_in_comment_syntax
+                         if env.lex_in_comment_syntax 
                          then unexpected_error env (lb_to_loc lexbuf) "/*"
                          else begin
                            let start = lb_to_loc lexbuf in
@@ -588,7 +573,7 @@ rule token env = parse
                          token env lexbuf
                        }
   | "/*" whitespace* (":" | "::" | "flow-include" as escape_type) as pattern
-                       {
+                       { 
                          if env.lex_in_comment_syntax
                          then unexpected_error env (lb_to_loc lexbuf) pattern;
                          let env = { env with lex_in_comment_syntax = true } in
@@ -625,19 +610,13 @@ rule token env = parse
                          Buffer.add_char raw quote;
                          let octal = false in
                          let _end, octal = string_quote env quote buf raw octal lexbuf in
-                         env, T_STRING (Loc.btwn start _end, Buffer.contents buf, Buffer.contents raw, octal)
+                         env, T_STRING (Ast.Loc.btwn start _end, Buffer.contents buf, Buffer.contents raw, octal)
                        }
   | '`'                { lex_template_part env template_part }
   (* Numbers cannot be immediately followed by words *)
-  | binnumber ((letter | ['2'-'9']) alphanumeric* as w)
-                       { illegal_number env lexbuf w (T_NUMBER BINARY) }
-  | binnumber          { env, T_NUMBER BINARY }
   | octnumber ((letter | ['8'-'9']) alphanumeric* as w)
                        { illegal_number env lexbuf w (T_NUMBER OCTAL) }
   | octnumber          { env, T_NUMBER OCTAL }
-  | legacyoctnumber ((letter | ['8'-'9']) alphanumeric* as w)
-                       { illegal_number env lexbuf w (T_NUMBER LEGACY_OCTAL) }
-  | legacyoctnumber    { env, T_NUMBER LEGACY_OCTAL }
   | hexnumber (non_hex_letter alphanumeric* as w)
                        { illegal_number env lexbuf w (T_NUMBER NORMAL) }
   | hexnumber          { env, T_NUMBER NORMAL }
@@ -726,7 +705,7 @@ and type_token env = parse
                          unicode_fix_cols lexbuf;
                          type_token env lexbuf }
   | "/*"               {
-                         if env.lex_in_comment_syntax
+                         if env.lex_in_comment_syntax 
                          then unexpected_error env (lb_to_loc lexbuf) "/*"
                          else begin
                            let start = lb_to_loc lexbuf in
@@ -737,7 +716,7 @@ and type_token env = parse
                          type_token env lexbuf
                        }
   | "/*" whitespace* (":" | "::" | "flow-include" as escape_type) as pattern
-                       {
+                       { 
                          if env.lex_in_comment_syntax
                          then unexpected_error env (lb_to_loc lexbuf) pattern;
                          let env = { env with lex_in_comment_syntax = true } in
@@ -765,40 +744,10 @@ and type_token env = parse
                          Buffer.add_char raw quote;
                          let octal = false in
                          let _end, octal = string_quote env quote buf raw octal lexbuf in
-                         env, T_STRING (Loc.btwn start _end, Buffer.contents buf, Buffer.contents raw, octal)
+                         env, T_STRING (Ast.Loc.btwn start _end, Buffer.contents buf, Buffer.contents raw, octal)
                        }
-
-  (**
-   * Number literals
-   *)
-
-  (* Numbers cannot be immediately followed by words *)
-  | binnumber ((letter | ['2'-'9']) alphanumeric* as w)
-                       { illegal_number env lexbuf w (T_NUMBER BINARY) }
-  | binnumber          { env, T_NUMBER BINARY }
-  | octnumber ((letter | ['8'-'9']) alphanumeric* as w)
-                       { illegal_number env lexbuf w (T_NUMBER OCTAL) }
-  | octnumber          { env, T_NUMBER OCTAL }
-  | legacyoctnumber ((letter | ['8'-'9']) alphanumeric* as w)
-                       { illegal_number env lexbuf w (T_NUMBER LEGACY_OCTAL) }
-  | legacyoctnumber    { env, T_NUMBER LEGACY_OCTAL }
-  | hexnumber (non_hex_letter alphanumeric* as w)
-                       { illegal_number env lexbuf w (T_NUMBER NORMAL) }
-  | hexnumber          { env, T_NUMBER NORMAL }
-  | scinumber (word as w)
-                       { illegal_number env lexbuf w (T_NUMBER NORMAL) }
-  | scinumber          { env, T_NUMBER NORMAL }
-  | (wholenumber | floatnumber) (word as w)
-                       { illegal_number env lexbuf w (T_NUMBER NORMAL) }
-  | wholenumber
-  | floatnumber        { env, T_NUMBER NORMAL }
-
   (* Keyword or Identifier *)
-  (* TODO: Better support for things like @@iterator. At the moment I'm just
-   * declaring it in the type lexer so that declare class and iterators can use
-   * it *)
-  | ("@@"? word) as word
-                       {
+  | word as word       {
                          unicode_fix_cols lexbuf;
                          try env, Hashtbl.find type_keywords word
                          with Not_found -> env, T_IDENTIFIER
@@ -823,9 +772,6 @@ and type_token env = parse
   | ">"                { env, T_GREATER_THAN }
   (* Optional or nullable *)
   | "?"                { env, T_PLING }
-  (* Existential *)
-  | "*"                { env, T_MULT }
-  (* Annotation or bound *)
   | ":"                { env, T_COLON }
   (* Union *)
   | '|'                { env, T_BIT_OR }
@@ -950,7 +896,7 @@ and comment env buf = parse
 
 and line_comment env buf = parse
   | eof                { lb_to_loc lexbuf }
-  | '\n'               { Loc.(
+  | '\n'               { Ast.Loc.(
                             let { source; start; _end = { line; column; offset } }
                              = lb_to_loc lexbuf in
                            Lexing.new_line lexbuf;
@@ -1030,7 +976,7 @@ and lex_jsx_tag env = parse
                         Buffer.add_char raw quote;
                         let value = Buffer.contents buf in
                         let raw = Buffer.contents raw in
-                        env, T_JSX_TEXT (Loc.btwn start _end, value, raw)
+                        env, T_JSX_TEXT (Ast.Loc.btwn start _end, value, raw)
                       }
   | _                 { env, T_ERROR }
 
@@ -1047,7 +993,7 @@ and lex_jsx_child env start buf raw = parse
                         let _end = jsx_text env JSX_CHILD_TEXT buf raw lexbuf in
                         let value = Buffer.contents buf in
                         let raw = Buffer.contents raw in
-                        env, T_JSX_TEXT (Loc.btwn start _end, value, raw)
+                        env, T_JSX_TEXT (Ast.Loc.btwn start _end, value, raw)
                       }
   | eof               { env, T_EOF }
   | '<'               { env, T_LESS_THAN }
@@ -1057,7 +1003,7 @@ and lex_jsx_child env start buf raw = parse
                         let _end = jsx_text env JSX_CHILD_TEXT buf raw lexbuf in
                         let value = Buffer.contents buf in
                         let raw = Buffer.contents raw in
-                        env, T_JSX_TEXT (Loc.btwn start _end, value, raw)
+                        env, T_JSX_TEXT (Ast.Loc.btwn start _end, value, raw)
                       }
 
 and jsx_text env mode buf raw = parse
@@ -1402,13 +1348,13 @@ and template_part env cooked raw = parse
     let flags = regexp_body env buf env.lex_lb in
     let _end = lb_to_loc env.lex_lb in
     let regexp =
-      T_REGEXP (Loc.btwn start _end, Buffer.contents buf, flags) in
+      T_REGEXP (Ast.Loc.btwn start _end, Buffer.contents buf, flags) in
     get_result_and_clear_state (env, regexp)
 
   (* Lexing JSX children requires a string buffer to keep track of whitespace
    * *)
   let lex_jsx_child env =
-    let start = Loc.from_curr_lb env.lex_lb in
+    let start = Ast.Loc.from_curr_lb env.lex_lb in
     let buf = Buffer.create 127 in
     let raw = Buffer.create 127 in
     let env, child = lex_jsx_child env start buf raw env.lex_lb in

@@ -10,11 +10,6 @@
 
 open Utils
 
-type action =
-  | Class of string
-  | Method of string * string
-  | Function of string
-
 type result = (string * Pos.absolute) list
 
 let add_ns name =
@@ -56,17 +51,18 @@ let search_class class_name include_defs genv env =
 
 let get_refs action include_defs genv env =
   match action with
-  | Method (class_name, method_name) ->
+  | ServerMsg.Method (class_name, method_name) ->
       search_method class_name method_name include_defs genv env
-  | Function function_name ->
+  | ServerMsg.Function function_name ->
       search_function function_name include_defs genv env
-  | Class class_name ->
+  | ServerMsg.Class class_name ->
       search_class class_name include_defs genv env
 
 let get_refs_with_defs action genv env =
   get_refs action true genv env
 
-let go action genv env =
+let go action genv env oc =
   let res = get_refs action false genv env in
   let res = rev_rev_map (fun (r, pos) -> (r, Pos.to_absolute pos)) res in
-  res
+  Marshal.to_channel oc (res : result) [];
+  flush oc

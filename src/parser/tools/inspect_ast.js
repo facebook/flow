@@ -17,5 +17,5 @@ if (argv._.length != 1 || argv.help) {
   if (fs.existsSync(content)) {
     content = fs.readFileSync(content).toString();
   }
-  console.log(JSON.stringify(flow.parse(content), null, 2));
+  console.log(util.inspect(flow.parse(content), {showHidden: false, depth: null}));
 }

@@ -1,14 +1,14 @@
 
 function.js:29:19,19: function type
 This type is incompatible with
-function.js:29:10,15: number
+  function.js:29:10,15: number
 
 function.js:30:19,19: function type
 This type is incompatible with
-function.js:30:10,15: string
+  function.js:30:10,15: string
 
 function.js:31:21,21: object type
 This type is incompatible with
-function.js:31:10,17: function type
+  function.js:31:10,17: function type
 
 Found 3 errors

@@ -1,30 +1,22 @@
 
-class_statics.js:3:12,17: string
-This type is incompatible with
-class_statics.js:9:7,12: number
-
-class_statics.js:6:1,36: assignment of property g
-Property not found in
-class_statics.js:1:7,7: statics of C
-
-class_statics.js:6:28,33: call of method f
-Error:
 class_statics.js:6:32,32: string
 This type is incompatible with
-class_statics.js:2:14,19: number
+  class_statics.js:2:14,19: number
 
-class_statics.js:7:1,6: call of method g
-Property not found in
-class_statics.js:1:7,7: statics of C
+class_statics.js:7:5,5: number
+This type is incompatible with
+  class_statics.js:6:18,23: string
 
-class_statics.js:10:1,7: assignment of property x
-Error:
+class_statics.js:9:16,18: string
+This type is incompatible with
+  class_statics.js:9:7,12: number
+
 class_statics.js:10:7,7: number
 This type is incompatible with
-class_statics.js:3:12,17: string
+  class_statics.js:3:12,17: string
 
 funstatics.js:2:41,41: number
 This type is incompatible with
-funstatics.js:5:7,12: string
+  funstatics.js:5:7,12: string
 
-Found 6 errors
+Found 5 errors

@@ -31,4 +31,4 @@ let string_of_signal n =
   | _ when n = Sys.sigttou -> "sigttou"
   | _ when n = Sys.sigvtalrm -> "sigvtalrm"
   | _ when n = Sys.sigprof -> "sigprof"
-  | _ -> Printf.sprintf "unknown signal %d" n
+  | _ -> assert false

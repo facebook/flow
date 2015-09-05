@@ -1,5 +1,0 @@
-[libs]
-libs/
-
-[options]
-module.system=haste
