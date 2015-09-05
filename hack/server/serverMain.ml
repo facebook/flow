@@ -18,6 +18,13 @@ exception State_not_found
 
 let sprintf = Printf.sprintf
 
+type recheck_loop_acc = {
+  rechecked_batches : int;
+  rechecked_count : int;
+  (* includes dependencies *)
+  total_rechecked_count : int;
+}
+
 (*****************************************************************************)
 (* Main initialization *)
 (*****************************************************************************)
@@ -80,7 +87,7 @@ module type SERVER_PROGRAM = sig
   val should_recheck : Relative_path.t -> bool
   (* filter and relativize updated file paths *)
   val process_updates : genv -> env -> SSet.t -> Relative_path.Set.t
-  val recheck: genv -> env -> Relative_path.Set.t -> env
+  val recheck: genv -> env -> Relative_path.Set.t -> env * int
   val post_recheck_hook: genv -> env -> env -> Relative_path.Set.t -> unit
   val parse_options: unit -> ServerArgs.options
   val get_watch_paths: ServerArgs.options -> Path.t list
@@ -193,16 +200,15 @@ module Program : SERVER_PROGRAM =
 
     let recheck genv old_env typecheck_updates =
       if Relative_path.Set.is_empty typecheck_updates then
-        old_env
-      else
+        old_env, 0
+      else begin
         let failed_parsing =
           Relative_path.Set.union typecheck_updates old_env.failed_parsing in
         let check_env = { old_env with failed_parsing = failed_parsing } in
-        let new_env = ServerTypeCheck.check genv check_env in
-        begin
-          touch_stamp_errors old_env.errorl new_env.errorl;
-          new_env
-        end
+        let new_env, total_rechecked = ServerTypeCheck.check genv check_env in
+        touch_stamp_errors old_env.errorl new_env.errorl;
+        new_env, total_rechecked
+      end
 
     let post_recheck_hook = BuildMain.incremental_update
 
@@ -277,9 +283,9 @@ let recheck genv old_env updates =
       (Relative_path.suffix config)
       Program.name;
      exit 4);
-  let env = Program.recheck genv old_env to_recheck in
+  let env, total_rechecked = Program.recheck genv old_env to_recheck in
   Program.post_recheck_hook genv old_env env updates;
-  env, to_recheck
+  env, to_recheck, total_rechecked
 
 (* When a rebase occurs, dfind takes a while to give us the full list of
  * updates, and it often comes in batches. To get an accurate measurement
@@ -287,7 +293,7 @@ let recheck genv old_env updates =
  * right after one rechecking round finishes to be part of the same
  * rebase, and we don't log the recheck_end event until the update list
  * is no longer getting populated. *)
-let rec recheck_loop i rechecked_count genv env =
+let rec recheck_loop acc genv env =
   let t = Unix.time () in
   let raw_updates =
     match genv.dfind with
@@ -300,18 +306,25 @@ let rec recheck_loop i rechecked_count genv env =
         with _ -> Exit_status.(exit Dfind_died))
   in
   if SSet.is_empty raw_updates then
-    i, rechecked_count, env
+    acc, env
   else begin
     HackEventLogger.dfind_returned t (SSet.cardinal raw_updates);
     let updates = Program.process_updates genv env raw_updates in
-    let env, rechecked = recheck genv env updates in
-    let rechecked_count =
-      rechecked_count + (Relative_path.Set.cardinal rechecked)
-    in
-    recheck_loop (i + 1) rechecked_count genv env
+    let env, rechecked, total_rechecked = recheck genv env updates in
+    let acc = {
+      rechecked_batches = acc.rechecked_batches + 1;
+      rechecked_count =
+        acc.rechecked_count + Relative_path.Set.cardinal rechecked;
+      total_rechecked_count = acc.total_rechecked_count + total_rechecked;
+    } in
+    recheck_loop acc genv env
   end
 
-let recheck_loop = recheck_loop 0 0
+let recheck_loop = recheck_loop {
+  rechecked_batches = 0;
+  rechecked_count = 0;
+  total_rechecked_count = 0;
+}
 
 let serve genv env socket =
   let root = ServerArgs.root genv.options in
@@ -323,13 +336,16 @@ let serve genv env socket =
        HackEventLogger.lock_stolen lock_file;
        Exit_status.(exit Lock_stolen));
     let has_client = sleep_and_check socket in
-    if not has_client && !ServerTypeCheck.hook_after_parsing = None
+    let has_parsing_hook = !ServerTypeCheck.hook_after_parsing <> None in
+    if not has_client && not has_parsing_hook
     then ServerIdle.go ();
     let start_t = Unix.time () in
-    let loop_count, rechecked_count, new_env = recheck_loop genv !env in
+    let acc, new_env = recheck_loop genv !env in
     env := new_env;
-    if rechecked_count > 0 then
-      HackEventLogger.recheck_end start_t loop_count rechecked_count;
+    if acc.rechecked_batches > 0 then
+      HackEventLogger.recheck_end start_t
+        has_parsing_hook
+        acc.rechecked_batches acc.rechecked_count acc.total_rechecked_count;
     if has_client then handle_connection genv !env socket;
   done
 
@@ -349,9 +365,9 @@ let load genv filename to_recheck =
       ~f:(fun acc update -> Relative_path.Set.add update acc)
       ~init:Relative_path.Set.empty in
   let start_t = Unix.time () in
-  let env, rechecked = recheck genv env updates in
+  let env, rechecked, total_rechecked = recheck genv env updates in
   let rechecked_count = Relative_path.Set.cardinal rechecked in
-  HackEventLogger.load_recheck_end start_t rechecked_count;
+  HackEventLogger.load_recheck_end start_t rechecked_count total_rechecked;
   env
 
 let run_load_script genv env cmd =
