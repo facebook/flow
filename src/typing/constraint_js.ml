@@ -837,17 +837,10 @@ module Scope = struct
     refis = KeyMap.empty;
   }
 
-  (* return a fresh scope of the most common kind (var, non-async) *)
-  let fresh () =
-    fresh_impl (VarScope { async = false; generator = false })
-
-  (* return a fresh async var scope *)
-  let fresh_async () =
-    fresh_impl (VarScope { async = true; generator = false })
-
-  (* return a fresh generator var scope *)
-  let fresh_generator () =
-    fresh_impl (VarScope { async = false; generator = true })
+  (* return a fresh scope of the most common kind (var) *)
+  let fresh ?(async=false) ?(generator=false) () =
+    assert (not (async && generator));
+    fresh_impl (VarScope { async; generator })
 
   (* return a fresh lexical scope *)
   let fresh_lex () = fresh_impl LexScope

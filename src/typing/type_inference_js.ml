@@ -5594,11 +5594,7 @@ and mk_body id cx type_params_map ~async ~generator ?(derived_ctor=false)
 
   (* create and prepopulate function scope *)
   let function_scope =
-    let scope = Scope.(
-      if async then fresh_async
-      else if generator then fresh_generator
-      else fresh
-    ) () in
+    let scope = Scope.fresh ~async ~generator () in
     (* add param bindings *)
     param_types_map |> SMap.iter (fun name t ->
       let entry = Scope.Entry.(match SMap.get name param_locs_map with
