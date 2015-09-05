@@ -6,4 +6,4 @@ class B extends A {
   qux<X,Y>(x:X,y:Y):X { return x;}
 }
 
-module.exports = B;
+exports = B;

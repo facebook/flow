@@ -10,4 +10,4 @@ function f(x:number) { return x; }
 
 var x:string = f(0);
 
-module.exports = f;
+exports = f;

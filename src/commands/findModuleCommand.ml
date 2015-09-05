@@ -14,36 +14,40 @@
 
 open CommandUtils
 
-module Json = Hh_json
-
-let spec = {
-  CommandSpec.
-  name = "find-module";
-  doc = "Shows filenames for one or more modules";
-  usage = Printf.sprintf
-    "Usage: %s find-module [OPTION]... [FILE]...\n\n\
-      Shows filenames for one or more modules\n\n\
-      Example usage:\n\
-      \t%s find-module FirstModule SecondModule\n"
-      CommandUtils.exe_name
-      CommandUtils.exe_name;
-  args = CommandSpec.ArgSpec.(
-    empty
-    |> server_flags
-    |> json_flags
-    |> anon "modules" (required (list_of string))
-        ~doc:"Module name(s) to find"
-  )
+type env = {
+  modules : string list;
+  option_values : command_params;
 }
 
-let main option_values json modules () =
+let parse_args () =
+  let option_values, options = create_command_options true in
+  let options = sort_opts options in
+  let usage =  Printf.sprintf
+    "Usage: %s find-module [OPTION]... [FILE]...\n\n\
+    Shows filenames for one or more modules\n\n\
+    Example usage:\n\
+    \t%s find-module FirstModule SecondModule"
+    CommandUtils.exe_name
+    CommandUtils.exe_name in
+  let modules = ClientArgs.parse_without_command options usage "find-module" in
+  match modules with
+  | [] ->
+      Printf.fprintf stderr "You must provide at least one module name\n%!";
+      Arg.usage options usage;
+      exit 2
+  | _ -> ();
+  { modules; option_values; }
+
+module Json = Hh_json
+
+let main { modules; option_values; } =
   let root = guess_root (Some (Sys.getcwd ())) in
 
   let ic, oc = connect_with_autostart option_values root in
 
   ServerProt.cmd_to_channel oc (ServerProt.FIND_MODULES modules);
   let response = Marshal.from_channel ic in
-  if json
+  if !(option_values.json)
   then (
     let json_entries =
       Utils.SMap.fold (fun key path json_list ->
@@ -64,4 +68,6 @@ let main option_values json modules () =
     flush stdout
   )
 
-let command = CommandSpec.command spec main
+let name = "find-module"
+let doc = "Shows filenames for one or more modules"
+let run () = main (parse_args ())

@@ -32,7 +32,11 @@ module SN = Naming_special_names
  * of position we are dealing with. This type keeps track of that.
  *)
 type position_descr =
-  | Rtypedef
+  | Rinit                         (* The kind used when no kind makes sense,
+                                   * because no position is available.
+                                   * This can happen with Typedefs not using
+                                   * their type parameter.
+                                   *)
   | Rmember                       (* Instance variable  *)
   | Rtype_parameter               (* The declaration site of a type-parameter
                                    *)
@@ -42,8 +46,6 @@ type position_descr =
                                    * typedef:
                                    * A<T1, ..>, T1 is (Rtype_argument "A")
                                    *)
-  | Rconstraint_as
-  | Rconstraint_super
 
 type position_variance =
   | Pcovariant
@@ -121,8 +123,7 @@ let reason_to_string ~sign (_, descr, variance) =
   else ""
   )^
   match descr with
-  | Rtypedef ->
-      "Aliased types are covariant"
+  | Rinit -> assert false
   | Rmember ->
       "A non private class member is always invariant"
   | Rtype_parameter ->
@@ -136,10 +137,6 @@ let reason_to_string ~sign (_, descr, variance) =
         "This type parameter was declared as %s (cf '%s')"
         (variance_to_string variance)
         name
-  | Rconstraint_super ->
-      "`super` constraints are covariant"
-  | Rconstraint_as ->
-      "`as` constraints are contravariant"
 
 let detailed_message variance pos stack =
   match stack with
@@ -170,7 +167,7 @@ let make_variance reason pos = function
   | Ast.Contravariant ->
       Vcontravariant [pos, reason, Pcontravariant]
   | Ast.Invariant ->
-      Vinvariant ([pos, reason, Pinvariant], [pos, reason, Pinvariant])
+      Vinvariant ([pos, reason, Pcovariant], [pos, reason, Pcontravariant])
 
 (*****************************************************************************)
 (* Adds a new usage of a type to the environment.
@@ -320,13 +317,13 @@ let get_class_variance root (pos, class_name) =
       let dep = Typing_deps.Dep.Class class_name in
       Typing_deps.add_idep (Some root) dep;
       let tparams =
-        if Typing_heap.Typedefs.mem class_name
+        if Typing_env.Typedefs.mem class_name
         then
-          match Typing_heap.Typedefs.get class_name with
-          | Some (Typing_heap.Typedef.Ok (_, tparams, _, _, _)) -> tparams
+          match Typing_env.Typedefs.get class_name with
+          | Some (Typing_env.Typedef.Ok (_, tparams, _, _, _)) -> tparams
           | _ -> []
         else
-          match Typing_heap.Classes.get class_name with
+          match Typing_env.Classes.get class_name with
           | None -> []
           | Some { tc_tparams; _ } -> tc_tparams
       in
@@ -336,12 +333,11 @@ let get_class_variance root (pos, class_name) =
 (* The entry point (for classes). *)
 (*****************************************************************************)
 
-let rec class_ class_name class_type impl =
+let rec class_ class_name class_type =
   let root = Typing_deps.Dep.Class class_name in
   let tparams = class_type.tc_tparams in
   let env = SMap.empty in
-  let env = List.fold_left (type_ root Vboth) env impl in
-  let env = SMap.fold (class_member root) class_type.tc_props env in
+  let env = SMap.fold (class_member root) class_type.tc_cvars env in
   let env = SMap.fold (class_method root) class_type.tc_methods env in
   List.iter (check_variance env) tparams
 
@@ -350,12 +346,12 @@ let rec class_ class_name class_type impl =
 (*****************************************************************************)
 
 and typedef type_name =
-  match Typing_heap.Typedefs.get type_name with
-  | Some (Typing_heap.Typedef.Ok (_, tparams, _cstr, ty, _)) ->
+  match Typing_env.Typedefs.get type_name with
+  | Some (Typing_env.Typedef.Ok (_, tparams, _cstr, ty, _)) ->
       let root = Typing_deps.Dep.Class type_name in
       let env = SMap.empty in
       let pos = Reason.to_pos (fst ty) in
-      let reason_covariant = [pos, Rtypedef, Pcovariant] in
+      let reason_covariant = [pos, Rinit, Pcovariant] in
       let env = type_ root (Vcovariant reason_covariant) env ty in
       List.iter (check_variance env) tparams
   | _ -> ()
@@ -366,7 +362,9 @@ and class_member root _member_name member env =
   | _ ->
       let reason, _ as ty = member.ce_type in
       let pos = Reason.to_pos reason in
-      let variance = make_variance Rmember pos Ast.Invariant in
+      let reason_covariant = [pos, Rmember, Pcovariant] in
+      let reason_contravariant = [pos, Rmember, Pcontravariant] in
+      let variance = Vinvariant (reason_covariant, reason_contravariant) in
       type_ root variance env ty
 
 and class_method root _method_name method_ env =
@@ -410,12 +408,7 @@ and type_ root variance env (reason, ty) =
     let env = type_option root variance env ty1 in
     let env = type_option root variance env ty2 in
     env
-  | Tthis ->
-      (* `this` constraints are bivariant (otherwise any class that used the
-       * `this` type would not be able to use covariant type params) *)
-      env
-  | Tgeneric (_, Some cstr) -> constraint_ root env cstr
-  | Tgeneric (name, None) ->
+  | Tgeneric (name, ty) ->
       let pos = Reason.to_pos reason in
       (* This section makes the position more precise.
        * Say we find a return type that is a tuple (int, int, T).
@@ -434,10 +427,12 @@ and type_ root variance env (reason, ty) =
         | x -> x
       in
       let env = add_variance env name variance in
+      let env = type_option root variance env ty in
       env
   | Toption ty ->
       type_ root variance env ty
   | Tprim _ -> env
+  | Tvar _ -> assert false
   | Tfun ft ->
       let env = List.fold_left begin fun env (_, (r, _ as ty)) ->
         let pos = Reason.to_pos r in
@@ -456,6 +451,10 @@ and type_ root variance env (reason, ty) =
       in
       let env = type_ root variance env ft.ft_ret in
       env
+  | Tabstract (_, tyl, ty) ->
+      let env = type_list root variance env tyl in
+      let env = type_option root variance env ty in
+      env
   | Tapply (_, []) -> env
   | Tapply ((_, name as pos_name), tyl) ->
       let variancel = get_class_variance root pos_name in
@@ -469,85 +468,10 @@ and type_ root variance env (reason, ty) =
       type_list root variance env tyl
   (* when we add type params to type consts might need to change *)
   | Taccess _ -> env
-  | Tshape (_, ty_map) ->
+  | Tanon _ -> assert false
+  | Tunresolved _ -> assert false
+  | Tobject -> env
+  | Tshape ty_map ->
       Nast.ShapeMap.fold begin fun _field_name ty env ->
         type_ root variance env ty
       end ty_map env
-
-(* `as` constraints must be contravariant and `super` constraints covariant. To
- * see why, suppose that we allow the wrong variance:
- *
- *   class Foo<+T> {
- *     public function bar<Tu as T>(Tu $x) {}
- *   }
- *
- * Let A and B be classes, with B a subtype of A. Then
- *
- *   function f(Foo<A> $x) {
- *     $x->(new A());
- *   }
- *
- * typechecks. However, covariance means that we could call `f()` with an
- * instance of B. However, B::bar would expect its argument $x to be a subtype
- * of B, but we would be passing an instance of A to it, which should be a type
- * error. In other words, `as` constraints are upper type bounds, and since
- * subtypes must have more relaxed constraints than their supertypes, `as`
- * constraints must be contravariant. (Reversing this argument shows that
- * `super` constraints must be covariant.)
- *
- * The preceding discussion might lead one to think that the constraints should
- * have the same variance as the class parameter types, i.e. that `as`
- * constraints used in the return type should be covariant. In particular,
- * suppose
- *
- *   class Foo<-T> {
- *     public function bar<Tu as T>(Tu $x): Tu { ... }
- *     public function baz<Tu as T>(): Tu { ... }
- *   }
- *
- *   class A {}
- *   class B extends A {
- *     public function qux() {}
- *   }
- *
- *   function f(Foo<B> $x) {
- *     $x->baz()->qux();
- *   }
- *
- * Now `f($x)` could be a runtime error if `$x` was an instance of Foo<A>, and
- * it seems like we should enforce covariance on Tu. However, the real problem
- * is that constraints apply to _instantiation_, not usage. As far as Hack
- * knows, $x->bar() could be of any type, since we have not provided any clues
- * about how `Tu` should be instantiated. In fact `$x->bar()->whatever()`
- * succeeds as well, because `Tu` is of type Tany -- though in an ideal world
- * we would make it Tmixed in order to ensure soundness. Also, the signature
- * of `baz()` doesn't entirely make sense -- why constrain Tu if it it's only
- * getting used in one place?
- *
- * Thus, if one wants type safety, how `$x` _should_ be used is
- *
- *   function f(Foo<B> $x) {
- *     $x->bar(new B()))->qux();
- *   }
- *
- * Thus we can see that, if `$x` is used correctly (or if we enforced correct
- * use by returning Tmixed for uninstantiated type variables), we would always
- * know the exact type of Tu, and Tu can be validly used in both co- and
- * contravariant positions.
- *
- * Remark: This is far more intuitive if you think about how Vector::concat is
- * typed with its `Tu super T` type in both the parameter and return type
- * positions. Uninstantiated `super` types are less likely to cause confusion,
- * however -- you can't imagine doing very much with a returned value that is
- * some (unspecified) supertype of a class.
- *)
-and constraint_ root env cstr =
-  match cstr with
-  | Ast.Constraint_as, (r, _ as ty) ->
-      let pos = Reason.to_pos r in
-      let reason = pos, Rconstraint_as, Pcontravariant in
-      type_ root (Vcontravariant [reason]) env ty
-  | Ast.Constraint_super, (r, _ as ty) ->
-      let pos = Reason.to_pos r in
-      let reason = pos, Rconstraint_super, Pcovariant in
-      type_ root (Vcovariant [reason]) env ty

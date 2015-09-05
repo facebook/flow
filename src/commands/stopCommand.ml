@@ -12,21 +12,22 @@
 (* flow stop command *)
 (***********************************************************************)
 
-let spec = {
-  CommandSpec.
-  name = "stop";
-  doc = "Stops a Flow server";
-  usage = Printf.sprintf
-    "Usage: %s stop [OPTION]... [ROOT]\n\
+let parse_args () =
+  let usage =
+      "Usage: flow stop [OPTION]... [ROOT]\n\
       Stops a flow server\n\n\
       Flow will search upward for a .flowconfig file, beginning at ROOT.\n\
-      ROOT is assumed to be current directory if unspecified\n"
-      CommandUtils.exe_name;
-  args = CommandSpec.ArgSpec.(
-    empty
-    |> anon "root" (optional string) ~doc:"Root directory"
-  )
-}
+      ROOT is assumed to be current directory if unspecified\n" in
+  let options = [] in
+  let args = ClientArgs.parse_without_command options usage "stop" in
+  let root =
+    match args with
+    | [] -> CommandUtils.guess_root None
+    | [x] -> CommandUtils.guess_root (Some x)
+    | _ ->
+        prerr_endline "Error: please provide at most one root directory";
+        exit 1
+  in { ClientStop.root = root; }
 
 module FlowConfig : ClientStop.STOP_CONFIG = struct
   type response = ServerProt.response
@@ -35,9 +36,10 @@ module FlowConfig : ClientStop.STOP_CONFIG = struct
 
   let server_name = "flow"
 
-  let kill (ic, oc) =
-    ServerProt.cmd_to_channel oc ServerProt.KILL;
-    ServerProt.response_from_channel ic
+  let kill_cmd_to_channel oc =
+    ServerProt.cmd_to_channel oc ServerProt.KILL
+
+  let response_from_channel = ServerProt.response_from_channel
 
   let response_to_string = ServerProt.response_to_string
 
@@ -52,8 +54,7 @@ end
 
 module FlowStopCommand = ClientStop.StopCommand (FlowConfig)
 
-let main root () = FlowStopCommand.kill_server {
-    ClientStop.root = CommandUtils.guess_root root;
-  }
-
-let command = CommandSpec.command spec main
+let name = "stop"
+let doc = "Stops a Flow server"
+let run () =
+  FlowStopCommand.main (parse_args ())

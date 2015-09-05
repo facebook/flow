@@ -9,4 +9,4 @@ var o = { x: 0 }
 
 var x:string = o.x;
 
-module.exports = o;
+exports = o;

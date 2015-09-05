@@ -3,7 +3,6 @@
 [include]
 
 [libs]
-libs/
+lib.js
 
 [options]
-strip_root=true

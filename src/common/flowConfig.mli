@@ -11,45 +11,33 @@ type moduleSystem = Node | Haste
 
 type options = {
   moduleSystem: moduleSystem;
-  module_name_mappers: (Str.regexp * string) list;
-  suppress_comments: Str.regexp list;
-  suppress_types: Utils.SSet.t;
-  traces: int;
-  strip_root: bool;
-  log_file: Path.t;
+  traces: bool;
 }
 
-val default_module_system: moduleSystem
-val default_options: Path.t -> options
-
-module PathMap : Utils.MapSig with type key = Path.t
+module PathMap : Utils.MapSig with type key = Path.path
 
 type config = {
   (* file blacklist *)
   excludes: (string * Str.regexp) list;
   (* user-specified non-root include paths. may contain wildcards *)
-  includes: Path.t list;
+  includes: Path.path list;
   (* stems extracted from includes *)
-  include_stems: Path.t list;
+  include_stems: Path.path list;
   (* map from include_stems to list of (original path, regexified path) *)
   include_map: ((string * Str.regexp) list) PathMap.t;
   (* library paths. no wildcards *)
-  libs: Path.t list;
+  libs: Path.path list;
   (* config options *)
   options: options;
   (* root path *)
-  root: Path.t;
+  root: Path.path;
 }
-val get: Path.t -> config
-val get_unsafe: unit -> config
-val fullpath: Path.t -> string
+val get: Path.path -> config
+val fullpath: Path.path -> string
 
-val init: Path.t -> string list -> unit
+val init: Path.path -> string list -> unit
 
-val version: string
+
 
 (* true if a file path matches an include path in config *)
 val is_included: config -> string -> bool
-
-(* true if a file path matches an exclude (ignore) entry in config *)
-val is_excluded: config -> string -> bool

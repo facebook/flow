@@ -17,79 +17,40 @@
    future. *)
 
 open Utils
-open Utils_js
 open Sys_utils
 
-(* helper - slap a big banner onto an error.
-   yucky but library errors tend to screw lots of other stuff up,
-   so we want them to stand out. They're also forced to the
-   top of get_errors () *)
-let add_banner banner err =
-  let level, messages, traces = err in
-  let reason, desc = List.hd messages in
-  let banner = reason, banner in
-  let messages = banner :: messages in
-  level, messages, traces
+module Ast = Spider_monkey_ast
+module Errors = Errors_js
+module Files = Files_js
+module Flow = Flow_js
+module Reason = Reason_js
+module TI = Type_inference_js
 
-(* parse all library files, as supplied by Files_js.get_lib_files.
-   use passed function to report errors.
-   returns list of (filename, Some ast | None) depending on success.
- *)
-let parse_lib save_parse_errors =
+let parse_lib () =
   Files_js.get_lib_files ()
   |> SSet.elements
   |> List.map (fun lib_file ->
-    try Parsing_service_js.(
+    try (
       let lib_content = cat lib_file in
-      match do_parse lib_content lib_file with
-      | OK ast ->
-        lib_file, Some ast
-      | Err errors ->
-        (* patch a big banner onto each library parse error *)
-        let errors = Errors_js.(ErrorSet.fold (fun err acc ->
-          ErrorSet.add (add_banner "Library parse error:" err) acc
-        ) errors ErrorSet.empty) in
-        save_parse_errors lib_file errors;
-        lib_file, None
+      match (Parsing_service_js.do_parse ~keep_errors:true lib_content lib_file) with
+      | Some ast, _ -> lib_file, ast
+      | _, Some err -> Errors.print_error_summary true (Errors.to_list err); assert false
+      | _ -> assert false
     )
     with _ ->
       failwith (spf "Can't read library definitions file %s, exiting." lib_file)
   )
 
-(* parse all lib files, and do local inference on those successfully parsed.
-   returns list of (filename, success) pairs
- *)
-let init_lib save_parse_errors save_infer_errors save_suppressions =
-  let save_bannerized_infer_errors file errors =
-    let errors = Errors_js.(ErrorSet.fold (fun err acc ->
-      ErrorSet.add (add_banner "Library type error:" err) acc
-    ) errors ErrorSet.empty) in
-    save_infer_errors file errors
-  in
-  (parse_lib save_parse_errors) |> List.fold_left (
-    fun acc (file, ast) ->
-      match ast with
-      | Some (_, statements, comments) ->
-        Type_inference_js.init_lib_file
-          file
-          statements
-          comments
-          (save_bannerized_infer_errors file)
-          (save_suppressions file);
-        (file, true) :: acc
-      | None ->
-        (file, false) :: acc
-    ) []
+let init_lib save_errors =
+  parse_lib () |> List.iter (fun (file, ast) ->
+    let _, statements, _ = ast in
+    Type_inference_js.init file statements (save_errors file)
+  )
 
-(* initialize builtins:
-   parse and do local inference on library files, and set up master context.
-   returns list of (lib file, success) pairs.
- *)
-let init save_parse_errors save_infer_errors save_suppressions =
-  let res = init_lib save_parse_errors save_infer_errors save_suppressions in
-  Flow_js.Cache.clear();
-  let cx = Flow_js.master_cx in
-  let reason = Reason_js.builtin_reason "module" in
-  let builtin_module = Type_inference_js.mk_object cx reason in
-  Flow_js.(flow cx (builtin_module, builtins));
-  res
+let init save_errors =
+  init_lib save_errors;
+  Flow.Cache.clear();
+  let cx = Flow.master_cx in
+  let reason = Reason.builtin_reason "module" in
+  let builtin_module = TI.mk_object cx reason in
+  Flow.unit_flow cx (builtin_module, Flow.builtins)

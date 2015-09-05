@@ -3,16 +3,11 @@
  * @flow
  */
 
-class Base {
-  static baseProp: number;
-}
-
-class Test extends Base {
-  static childProp: number;
-
-  static staticNumber1():number { return 1; }
-  static staticNumber2():number { return 2; }
-  static staticNumber3():number { return 3; }
+class Test {
+  static staticNumber1() { return 1; }
+  static staticNumber2() { return 2; }
+  static staticNumber3() { return 3; }
+  static staticNumber4() { return 4; }
 
   instNumber1():number { return 1; }
   instNumber2():number { return 2; }

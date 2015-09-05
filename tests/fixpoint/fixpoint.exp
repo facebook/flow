@@ -5,49 +5,35 @@ Missing annotation
 Fun.js:8:19,19: return
 Missing annotation
 
-Fun.js:28:1,16: function call
-Error:
 Fun.js:28:11,15: string
 This type is incompatible with
-Fun.js:4:15,20: number
+  Fun.js:4:15,20: number
 
-Fun.js:28:1,16: function call
-Error:
 Fun.js:28:11,15: string
 This type is incompatible with
-Fun.js:5:16,21: number
+  Fun.js:5:16,21: number
 
-Fun.js:28:1,16: function call
-Error:
 Fun.js:28:11,15: string
 This type is incompatible with
-Fun.js:6:25,30: number
+  Fun.js:6:25,30: number
 
 Ycombinator.js:4:12,12: parameter f
 Missing annotation
 
-Ycombinator.js:10:44,47: function call
-Error:
 Ycombinator.js:10:44,47: string
 This type is incompatible with
-Ycombinator.js:10:28,33: number
+  Ycombinator.js:10:28,33: number
 
-Ycombinator.js:10:44,47: function call
-Error:
 Ycombinator.js:10:46,46: number
 This type is incompatible with
-Ycombinator.js:14:20,25: string
+  Ycombinator.js:14:20,25: string
 
-Ycombinator.js:14:44,47: function call
-Error:
 Ycombinator.js:14:44,47: number
 This type is incompatible with
-Ycombinator.js:14:28,33: string
+  Ycombinator.js:14:28,33: string
 
-Ycombinator.js:14:44,47: function call
-Error:
 Ycombinator.js:14:46,46: string
 This type is incompatible with
-Ycombinator.js:10:20,25: number
+  Ycombinator.js:10:20,25: number
 
 Found 10 errors

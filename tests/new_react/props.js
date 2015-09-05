@@ -17,11 +17,4 @@ var TestProps = React.createClass({
     }
 });
 
-var element = <TestProps x={false} y={false} z={false} />; // 3 errors
-
-(element: $jsx);
-(element: $jsx<TestProps>);
-var FooProps = React.createClass({
-    propTypes: { w: React.PropTypes.string.isRequired }
-});
-(element: $jsx<FooProps>);
+var element = <TestProps x={false} y={false} z={false} /> // 3 errors
