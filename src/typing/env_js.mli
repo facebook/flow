@@ -20,6 +20,7 @@ val get_scopes: unit -> Scope.t list
 val clone_scopes: Scope.t list -> Scope.t list
 
 val in_async_scope: unit -> bool
+val in_generator_scope: unit -> bool
 
 val all_entries: unit -> Entry.t SMap.t
 

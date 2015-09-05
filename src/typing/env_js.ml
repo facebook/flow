@@ -97,7 +97,13 @@ let clone_scopes scopes =
 (* TODO will need to walk once LexScopes appear *)
 let in_async_scope () = Scope.(
   match (peek_scope ()).kind with
-  | VarScope { async } -> async
+  | VarScope { async; _ } -> async
+  | _ -> false
+)
+
+let in_generator_scope () = Scope.(
+  match (peek_scope ()).kind with
+  | VarScope { generator; _ } -> generator
   | _ -> false
 )
 

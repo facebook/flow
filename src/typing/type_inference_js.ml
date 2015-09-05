@@ -1599,18 +1599,26 @@ and statement cx type_params_map = Ast.Statement.(
         | None -> void_ loc
         | Some expr -> expression cx type_params_map expr
       in
-      (* if we're in an async function, convert the return
-         expression's type T to Promise<T> *)
-      let t = if Env_js.in_async_scope ()
-        then
-          (* Unwrap and wrap t with a Promise by returning whatever
-             Promise.resolve(t) returns. *)
+      let t =
+        if Env_js.in_async_scope () then
+          (* Convert the return expression's type T to Promise<T>. If the
+           * expression type is itself a Promise<T>, ensure we still return
+           * a Promise<T> via Promise.resolve. *)
           let reason = mk_reason "async return" loc in
           let promise = Env_js.get_var cx "Promise" reason in
           Flow_js.mk_tvar_where cx reason (fun tvar ->
             let call = Flow_js.mk_methodtype promise [t] tvar in
             Flow_js.flow cx (promise, MethodT (reason, "resolve", call))
           )
+        else if Env_js.in_generator_scope () then
+          (* Convert the return expression's type R to Generator<Y,R,N>, where
+           * Y and R are internals, installed earlier. *)
+          let reason = mk_reason "generator return" loc in
+          Flow_js.get_builtin_typeapp cx reason "Generator" [
+            Env_js.get_var cx (internal_name "yield") reason;
+            t;
+            Env_js.get_var cx (internal_name "next") reason
+          ]
         else t
       in
       Flow_js.flow cx (t, ret);
@@ -5105,7 +5113,7 @@ and mk_class_elements cx instance_info static_info body = Ast.Class.(
         Method.key = Ast.Expression.Object.Property.Identifier (_,
           { Ast.Identifier.name; _ });
         value = _, { Ast.Expression.Function.params; defaults; rest;
-          returnType; typeParameters; body; async; _ };
+          returnType; typeParameters; body; async; generator; _ };
         static;
         kind;
         decorators = _;
@@ -5113,8 +5121,6 @@ and mk_class_elements cx instance_info static_info body = Ast.Class.(
       let this, super, method_sigs, getter_sigs, setter_sigs =
         if static then static_info else instance_info
       in
-      let yield = MixedT (mk_reason "no yield" loc) in
-      let next = MixedT (mk_reason "no next" loc) in
 
       let sigs_to_use = match kind with
       | Method.Constructor
@@ -5125,6 +5131,14 @@ and mk_class_elements cx instance_info static_info body = Ast.Class.(
       let reason, typeparams, type_params_map,
            (_, _, ret, param_types_map, param_loc_map) =
         SMap.find_unsafe name sigs_to_use in
+
+      let yield, next = if generator then (
+        Flow_js.mk_tvar cx (prefix_reason "yield of " reason),
+        Flow_js.mk_tvar cx (prefix_reason "next of " reason)
+      ) else (
+        MixedT (replace_reason "no yield" reason),
+        MixedT (replace_reason "no next" reason)
+      ) in
 
       let save_return_exn = Abnormal.swap Abnormal.Return false in
       let save_throw_exn = Abnormal.swap Abnormal.Throw false in
@@ -5139,7 +5153,7 @@ and mk_class_elements cx instance_info static_info body = Ast.Class.(
           | MixedT _ -> false
           | _ -> name = "constructor"
         in
-        mk_body None cx type_params_map ~async ~derived_ctor
+        mk_body None cx type_params_map ~async ~generator ~derived_ctor
           param_types_map param_loc_map ret body this super yield next;
       );
       ignore (Abnormal.swap Abnormal.Return save_return_exn);
@@ -5502,20 +5516,11 @@ and function_decl id cx type_params_map (reason:reason) ~async ~generator
   let (params, pnames, ret, param_types_map, param_types_loc) =
     mk_params_ret cx type_params_map params (body, ret) in
 
-  (* If this is a generator function, the return type annotation can be an
-     application of the Generator type. We don't want to flow the explicit or
-     phantom return type into the Generator typeapp, but we still want to be
-     able to flow the Generator type constructed below into the annotation, so
-     we store off the converted annotation in _ret until then and proceed with a
-     tvar in its place. *)
-  let _ret = ret in
-  let (yield,ret,next) = if generator then (
+  let yield, next = if generator then (
     Flow_js.mk_tvar cx (prefix_reason "yield of " reason),
-    Flow_js.mk_tvar cx (prefix_reason "return of " reason),
     Flow_js.mk_tvar cx (prefix_reason "next of " reason)
   ) else (
     MixedT (replace_reason "no yield" reason),
-    ret,
     MixedT (replace_reason "no next" reason)
   ) in
 
@@ -5528,7 +5533,8 @@ and function_decl id cx type_params_map (reason:reason) ~async ~generator
       param_types_map |> SMap.map (Flow_js.subst cx map_) in
     let ret = Flow_js.subst cx map_ ret in
 
-    mk_body id cx type_params_map ~async param_types_map param_types_loc ret body this super yield next;
+    mk_body id cx type_params_map ~async ~generator
+      param_types_map param_types_loc ret body this super yield next;
   );
 
   ignore (Abnormal.swap Abnormal.Return save_return_exn);
@@ -5537,23 +5543,6 @@ and function_decl id cx type_params_map (reason:reason) ~async ~generator
   let ret =
     if (is_void cx ret)
     then (VoidT.at (loc_of_t ret))
-    else ret
-  in
-
-  (* If this is a generator function, we don't want to use the type from the
-     return statement as the return type of the function. Instead, we want to
-     return a Generator typeapp where the inferred return type flows into the
-     Generator's R type param. Since generator functions can have explicit type
-     annotations, flow the inferred type into the annotation as well. *)
-  let ret =
-    if generator then
-      let t = Flow_js.get_builtin_typeapp
-        cx
-        reason
-        "Generator"
-        [yield; ret; next] in
-      Flow_js.flow cx (t, _ret);
-      t
     else ret
   in
 
@@ -5597,7 +5586,7 @@ and define_internal cx reason x =
   let opt = Env_js.get_var_declared_type cx ix reason in
   Env_js.set_var cx ix (Flow_js.filter_optional cx reason opt) reason
 
-and mk_body id cx type_params_map ~async ?(derived_ctor=false)
+and mk_body id cx type_params_map ~async ~generator ?(derived_ctor=false)
     param_types_map param_locs_map ret body this super yield next =
   let ctx =  Env_js.get_scopes () in
   let new_ctx = Env_js.clone_scopes ctx in
@@ -5606,7 +5595,11 @@ and mk_body id cx type_params_map ~async ?(derived_ctor=false)
 
   (* create and prepopulate function scope *)
   let function_scope =
-    let scope = Scope.(if async then fresh_async else fresh) () in
+    let scope = Scope.(
+      if async then fresh_async
+      else if generator then fresh_generator
+      else fresh
+    ) () in
     (* add param bindings *)
     param_types_map |> SMap.iter (fun name t ->
       let entry = Scope.Entry.(match SMap.get name param_locs_map with
@@ -5651,6 +5644,10 @@ and mk_body id cx type_params_map ~async ?(derived_ctor=false)
       let reason = mk_reason "return Promise<Unit>" loc in
       let promise = Env_js.var_ref ~lookup_mode:ForType cx "Promise" reason in
       TypeAppT (promise, [VoidT.at loc])
+    else if generator then
+      let reason = mk_reason "return Generator<Yield,void,Next>" loc in
+      let ret = VoidT.at loc in
+      Flow_js.get_builtin_typeapp cx reason "Generator" [yield; ret; next]
     else
       VoidT (mk_reason "return undefined" loc)
     in

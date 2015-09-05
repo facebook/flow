@@ -806,7 +806,8 @@ module Scope = struct
   (* a var scope corresponds to a runtime activation,
      e.g. a function. *)
   type var_scope_attrs = {
-    async: bool
+    async: bool;
+    generator: bool
   }
 
   (* var and lexical scopes differ in hoisting behavior
@@ -837,10 +838,16 @@ module Scope = struct
   }
 
   (* return a fresh scope of the most common kind (var, non-async) *)
-  let fresh () = fresh_impl (VarScope { async = false })
+  let fresh () =
+    fresh_impl (VarScope { async = false; generator = false })
 
   (* return a fresh async var scope *)
-  let fresh_async () = fresh_impl (VarScope { async = true })
+  let fresh_async () =
+    fresh_impl (VarScope { async = true; generator = false })
+
+  (* return a fresh generator var scope *)
+  let fresh_generator () =
+    fresh_impl (VarScope { async = false; generator = true })
 
   (* return a fresh lexical scope *)
   let fresh_lex () = fresh_impl LexScope
@@ -2520,7 +2527,8 @@ let string_of_scope = Scope.(
   in
 
   let string_of_scope_kind = function
-  | VarScope attrs -> spf "VarScope { async: %b }" attrs.async
+  | VarScope { async; generator } ->
+      spf "VarScope { async: %b; generator: %b }" async generator
   | LexScope -> "Lex"
   in
 
