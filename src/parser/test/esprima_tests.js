@@ -1,4 +1,16 @@
 module.exports = {
+  todo: {
+    "Whitespace": true,
+    'Invalid unicode related syntax': true,
+    'Invalid Type Annotations': true,
+    'Array Comprehension': true,
+    'Harmony: Modules': true,
+    'Harmony: Invalid Class (strawman)': true,
+    'ES6: Destructured Parameters': true,
+    'ES7 Proposal: Rest Properties' : true,
+    'Harmony Invalid syntax': true,
+  },
+  sections: {
     'Primary Expression': [
         'this\n',
         'null\n',
@@ -5155,7 +5167,7 @@ module.exports = {
       'var x: typeof A[];',
     ],
     'Export': {
-      'esprima_opts': { sourceType: "module" },
+      'options': { sourceType: "module" },
       'tests': [
         'export * from "foo";',
         'export * from "foo"',
@@ -5189,7 +5201,7 @@ module.exports = {
       ]
     },
     'Invalid Exports': {
-      'esprima_opts': { sourceType: "module" },
+      'options': { sourceType: "module" },
       'tests': [
         /* Esprima doesn't parse nameless exported classes yet
         'export class {}',
@@ -5202,7 +5214,7 @@ module.exports = {
       ],
     },
     'Import': {
-      'esprima_opts': { sourceType: "module" },
+      'options': { sourceType: "module" },
       'tests': [
         'import "MyModule";',
         'import defaultbinding from "MyModule";',
@@ -5234,7 +5246,7 @@ module.exports = {
       ],
     },
     'Import Type': {
-      'esprima_opts': { sourceType: "module" },
+      'options': { sourceType: "module" },
       'tests': [
         'import type defaultbinding from "MyModule";',
         'import type * as namespace from "MyModule";',
@@ -5256,7 +5268,7 @@ module.exports = {
       ],
     },
     'Import Typeof': {
-      'esprima_opts': { sourceType: "module" },
+      'options': { sourceType: "module" },
       'tests': [
         'import typeof defaultbinding from "MyModule";',
         'import typeof {} from "MyModule";',
@@ -5665,4 +5677,5 @@ module.exports = {
         'var x = async\ny => y',
         'class A { async bar() { await foo; } }',
     ],
+  }
 };

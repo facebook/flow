@@ -146,7 +146,7 @@ function compare(env, ast, spec) {
   }
 }
 
-function runTest(test) {
+function runTest(test, parse_options, test_options) {
   var result = {
     passed: true,
     output: ""
@@ -157,25 +157,24 @@ function runTest(test) {
     }
     result.output += "\n";
   }
-  var parseOptions = test.parseOptions || {};
   try {
-    var flow_ast = flow.parse(test.content, parseOptions);
+    var flow_ast = flow.parse(test.content, parse_options);
   } catch (e) {
     output("Flow exploded:", util.inspect(e, {depth: null}));
     result.passed = false;
     return result;
   }
-  if (test.dumpAst) {
+  if (test_options.dumpAst) {
     console.log("AST: ", util.inspect(flow_ast, {depth: null, colors: true}));
     output("AST: ", util.inspect(flow_ast, {depth: null, colors: true}));
   }
   var env = new_env();
   var flow_errors = flow_ast.errors;
   check_ast(env, flow_ast);
-  compare(env, flow_ast, test.spec);
+  compare(env, flow_ast, test.expected_ast);
 
   var diffs = env.get_diffs();
-  if (test.jsonErrors) {
+  if (test_options.jsonErrors) {
     diff_to_string = function (e) { return util.inspect(e, { depth: null }); };
   }
   if (diffs.length > 0) {
@@ -198,9 +197,9 @@ function runTest(test) {
     }
   }
 
-  var expected_to_error = test.spec.hasOwnProperty('errors') && test.spec.errors != [];
-  for (var prop in test.spec) {
-    if (test.spec.hasOwnProperty(prop) && prop.match(/^errors\./)) {
+  var expected_to_error = test.expected_ast.hasOwnProperty('errors') && test.expected_ast.errors != [];
+  for (var prop in test.expected_ast) {
+    if (test.expected_ast.hasOwnProperty(prop) && prop.match(/^errors\./)) {
       expected_to_error = true;
       break;
     }
