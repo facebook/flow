@@ -3409,7 +3409,6 @@ and expression_ ~is_cond cx type_params_map loc e = Ast.Expression.(match e with
       params; defaults; rest;
       body;
       async;
-      generator;
       returnType;
       typeParameters;
       _
@@ -3418,7 +3417,7 @@ and expression_ ~is_cond cx type_params_map loc e = Ast.Expression.(match e with
       let reason = mk_reason desc loc in
       let this = this_ cx reason in
       let super = super_ cx reason in
-      mk_arrow id cx type_params_map reason ~async ~generator
+      mk_arrow id cx type_params_map reason ~async ~generator:false
         typeParameters (params, defaults, rest) returnType body this super
 
   | TaggedTemplate {
