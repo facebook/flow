@@ -665,7 +665,20 @@ let merge_env =
         (* ...in which case we can forget them *)
         ()
       (* otherwise, non-refinement uneven distributions are asserts. *)
-      | orig, child1, child2 ->
+      (* TODO:
+         Asserting on all uneven distributions is too strict for now.
+         let_env can interact with path-dependent refinement to leave
+         residual entries in child contexts, when catch blocks combine
+         conditionals and early returns.
+         So for now we need to let extra child entries pass, though we
+         should still assert on extra parent entries.
+         Once let/const/LexScope is in place, we can reimplement let_env
+         in terms of those constructs instead, and the full assert can
+         be reinstated.
+       *)
+      | None, _, _ ->
+        ()
+      | Some _ as orig, child1, child2 ->
         let print_entry_kind_opt = function
         | None -> "None"
         | Some e -> spf "Some %s" (string_of_kind e)
@@ -681,6 +694,7 @@ let merge_env =
       assert_false (spf
         "merge_entry %s: ragged scope lists"
         (string_of_reason reason))
+
   ) in
 
   (* merge a refis bound to key if present. handle uneven distributions.
@@ -766,7 +780,6 @@ let copy_env  = Entry.(
         "copy_env %s: malformed scope lists"
         (string_of_reason reason))
 
-
   in
 
   (* look for and copy refinement in top scope only *)
@@ -834,6 +847,10 @@ let widen_env =
       top_scope |> Scope.update_refis (fun key refi ->
         widen_refi cx reason (Key.string_of_key key) refi)
 
+(* TODO this is legacy, used to simulate lexical scoping.
+   Called from catch block traversal only. Should replace
+   with a LexScope. Also, see TODO in merge_env for correlated
+   change there *)
 (* run passed function with given entry added to scope *)
 (* CAUTION: caller must ensure that name isn't already bound,
    otherwise this will remove the preexisting binding *)
