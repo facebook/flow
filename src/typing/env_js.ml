@@ -343,7 +343,7 @@ let already_bound_error =
 let bind_entry cx name entry =
   (* lex scopes can only hold let/const bindings
    * var scopes can hold all bindings
-   * type entries should not be scoped -- hoist to outermost scope *)
+   * type entries are hoisted to var scope *)
   let rec find_scope = function
     | [] -> assert_false "empty scope list"
     | scope::scopes -> Scope.(
