@@ -99,10 +99,10 @@ let attach_infer_ty_hook hook =
 
 let attach_method_def_hook enter_hook exit_hook =
   assert (enter_hook <> None || exit_hook <> None);
-  match enter_hook with
+  (match enter_hook with
   | Some hook ->
       enter_method_def_hooks := hook :: !enter_method_def_hooks
-  | None -> ();
+  | None -> ());
   match exit_hook with
   | Some hook ->
       exit_method_def_hooks := hook :: !exit_method_def_hooks
@@ -110,10 +110,10 @@ let attach_method_def_hook enter_hook exit_hook =
 
 let attach_fun_def_hook enter_hook exit_hook =
   assert (enter_hook <> None || exit_hook <> None);
-  match enter_hook with
+  (match enter_hook with
   | Some hook ->
       enter_fun_def_hooks := hook :: !enter_fun_def_hooks
-  | None -> ();
+  | None -> ());
   match exit_hook with
   | Some hook ->
       exit_fun_def_hooks := hook :: !exit_fun_def_hooks
@@ -121,10 +121,10 @@ let attach_fun_def_hook enter_hook exit_hook =
 
 let attach_class_def_hook enter_hook exit_hook =
   assert (enter_hook <> None || exit_hook <> None);
-  match enter_hook with
+  (match enter_hook with
   | Some hook ->
       enter_class_def_hooks := hook :: !enter_class_def_hooks
-  | None -> ();
+  | None -> ());
   match exit_hook with
   | Some hook ->
       exit_class_def_hooks := hook :: !exit_class_def_hooks
