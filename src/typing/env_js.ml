@@ -284,9 +284,9 @@ let find_entry cx name reason =
   in
   loop !scopes
 
-(* Look for scope that holds binding for a given name, though the
+(* Search for the scope which binds the given name, through the
    topmost LexScopes and up to the first VarScope. If the entry
-   is not found, still return the VarScope where we terminated. *)
+   is not found, return the VarScope where we terminated. *)
 let find_entry_in_var_scope name =
   let rec loop = function
     | [] -> assert_false "empty scope list"
@@ -298,23 +298,9 @@ let find_entry_in_var_scope name =
   in
   loop !scopes
 
-(* Look for scope that holds binding for a given name, though the
-   topmost LexScopes and up to the first VarScope. If the entry
-   is not found, still return the VarScope where we terminated. *)
-let find_entry_in_var_scope name =
-  let rec loop = function
-    | [] -> assert_false "empty scope list"
-    | scope::scopes ->
-        match Scope.get_entry name scope, scope.kind with
-        | Some entry, _ -> scope, Some entry
-        | None, VarScope _ -> scope, None
-        | None, LexScope -> loop scopes
-  in
-  loop !scopes
-
-(* Look for scope that holds refinement for a given key, through
+(* Search for the scope which holds the given refinement, through
    the topmost LexScopes and up to the first VarScope. If the
-   refinement is not found, return None. *)
+   entry is not found, return the VarScope where we terminated. *)
 let find_refi_in_var_scope key =
   let rec loop = function
     | [] -> assert_false "empty scope list"
