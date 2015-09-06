@@ -62,8 +62,8 @@ open LookupMode
 (****************)
 
 (* the environment is a scope stack, frame stack and changeset stack.
-   currently these are in lockstep, though this may change depending
-   on how lexical scoping is implemented. *)
+   except for lex scopes, these are in lockstep. multiple lex scopes
+   may exist within the same frame and changeset. *)
 
 type 'a stack = 'a list ref
 
@@ -89,17 +89,32 @@ let get_scopes () =
 let iter_scopes f =
   List.iter f !scopes
 
+(* use to walk scope chain up to the topmost var scope *)
+let iter_lex_scopes f =
+  let rec loop = function
+    | [] -> assert_false "empty scope list"
+    | scope::scopes ->
+        f scope;
+        (match scope.kind with
+        | LexScope -> loop scopes
+        | _ -> ())
+  in
+  loop !scopes
+
 (* clone the current scope stack (snapshots entry maps) *)
 let clone_scopes scopes =
   List.map Scope.clone scopes
 
 (* true if current top scope is an async function *)
-(* TODO will need to walk once LexScopes appear *)
-let in_async_scope () = Scope.(
-  match (peek_scope ()).kind with
-  | VarScope { async } -> async
-  | _ -> false
-)
+let in_async_scope () =
+  let rec loop = function
+    | [] -> false
+    | scope::scopes ->
+      (match scope.kind with
+      | VarScope { async } -> async
+      | _ -> loop scopes)
+  in
+  loop !scopes
 
 (* build a map of all var entries - no refis - in the current
    scope stack.
@@ -174,6 +189,18 @@ let pop_env () =
   frames := List.tl !frames;
   changesets := List.tl !changesets
 
+(* push a lex scope but NOT a frame or changeset
+ * scope rag affects merge_env -- see comments *)
+let push_lex () =
+  let scope = Scope.fresh_lex () in
+  scopes := scope :: !scopes
+
+let pop_lex () =
+  scopes := match !scopes with
+  | { kind = LexScope; _ }::scopes -> scopes
+  | [] -> assert_false "empty scope list"
+  | _ -> assert_false "top scope is non-lex"
+
 (* initialize a new environment (once per module) *)
 let init_env cx module_scope =
   clear_env ();
@@ -239,31 +266,64 @@ let cache_global cx name reason global_scope =
   cx.globals <- SSet.add name cx.globals;
   global_scope, entry
 
-(* look for scope that holds binding for a given name.
-   if found, return scope and entry.
-   note that anything we don't resolve otherwise, we add to the
-   global scope after generating a deferred lookup, which may fail
-   later. *)
+(* Look for scope that holds binding for a given name. If found,
+   return scope and entry. Note that anything we don't resolve
+   otherwise, we add to the global scope after generating a
+   deferred lookup, which may fail later. *)
 let find_entry cx name reason =
-
   let rec loop = function
-    | [] ->
-      assert_false "empty scope list"
-
-    | scope :: scopes ->
+    | [] -> assert_false "empty scope list"
+    | scope::scopes ->
       match Scope.get_entry name scope with
-      | Some entry ->
-        scope, entry
-
+      | Some entry -> scope, entry
       | None ->
         (* keep looking until we're at the global scope *)
         match scopes with
-        | [] ->
-          cache_global cx name reason scope
-        | _ ->
-          loop scopes
+        | [] -> cache_global cx name reason scope
+        | _ -> loop scopes
   in
+  loop !scopes
 
+(* Look for scope that holds binding for a given name, though the
+   topmost LexScopes and up to the first VarScope. If the entry
+   is not found, still return the VarScope where we terminated. *)
+let find_entry_in_var_scope name =
+  let rec loop = function
+    | [] -> assert_false "empty scope list"
+    | scope::scopes ->
+        match Scope.get_entry name scope, scope.kind with
+        | Some entry, _ -> scope, Some entry
+        | None, VarScope _ -> scope, None
+        | None, LexScope -> loop scopes
+  in
+  loop !scopes
+
+(* Look for scope that holds binding for a given name, though the
+   topmost LexScopes and up to the first VarScope. If the entry
+   is not found, still return the VarScope where we terminated. *)
+let find_entry_in_var_scope name =
+  let rec loop = function
+    | [] -> assert_false "empty scope list"
+    | scope::scopes ->
+        match Scope.get_entry name scope, scope.kind with
+        | Some entry, _ -> scope, Some entry
+        | None, VarScope _ -> scope, None
+        | None, LexScope -> loop scopes
+  in
+  loop !scopes
+
+(* Look for scope that holds refinement for a given key, through
+   the topmost LexScopes and up to the first VarScope. If the
+   refinement is not found, return None. *)
+let find_refi_in_var_scope key =
+  let rec loop = function
+    | [] -> assert_false "empty scope list"
+    | scope::scopes ->
+        match Scope.get_refi key scope, scope.kind with
+        | Some refi, _ -> Some (scope, refi)
+        | None, VarScope _ -> None
+        | None, LexScope -> loop scopes
+  in
   loop !scopes
 
 (* helpers *)
@@ -293,8 +353,22 @@ let already_bound_error =
    (since multiple declarations - sometimes but not always erroneous -
    may appear in an AST)
  *)
+
 let bind_entry cx name entry =
-  let scope = peek_scope () in
+  (* lex scopes can only hold let/const bindings
+   * var scopes can hold all bindings
+   * type entries should not be scoped -- hoist to outermost scope *)
+  let rec find_scope = function
+    | [] -> assert_false "empty scope list"
+    | scope::scopes -> Scope.(
+      match scope.kind, entry with
+      | LexScope, Entry.Value { Entry.kind = Entry.Let _; _ }
+      | LexScope, Entry.Value { Entry.kind = Entry.Const; _ }
+      | VarScope _, _ -> scope
+      | _ -> find_scope scopes
+    )
+  in
+  let scope = find_scope !scopes in
   match Scope.get_entry name scope with
 
   | None ->
@@ -555,14 +629,13 @@ let var_ref ?(lookup_mode=ForValue ) cx name reason =
 
 (* get refinement entry *)
 let get_refinement cx key reason =
-  let scope = peek_scope () in
-  match Scope.get_refi key scope with
-  | Some { refined; _ } ->
-    let loc = loc_of_reason reason in
-    let t = mod_reason_of_t (repos_reason loc) refined in
-    Some t
+  match find_refi_in_var_scope key with
+  | Some (_, { refined; _ }) ->
+      let loc = loc_of_reason reason in
+      let t = mod_reason_of_t (repos_reason loc) refined in
+      Some t
   | _ ->
-    None
+      None
 
 (* helper: update let or var entry to reflect assignment/initialization *)
 let set_var cx name specific reason =
@@ -638,12 +711,12 @@ let merge_env =
     match env0, env1, env2 with
     | [], [], [] ->
       ()
-    | scope0 :: env0, scope1 :: env1, scope2 :: env2 -> Scope.(
+    | scope0 :: env0_, scope1 :: env1_, scope2 :: env2_ -> Scope.(
       let get = get_entry name in
       match get scope0, get scope1, get scope2 with
       (* entry not found in this scope - recurse *)
       | None, None, None ->
-        merge_entry cx reason (env0, env1, env2) name
+        merge_entry cx reason (env0_, env1_, env2_) name
       (* merge child value types back to original *)
       | Some (Value v as orig),
         Some (Value _ as child1), Some (Value _ as child2) ->
@@ -661,34 +734,28 @@ let merge_env =
           (string_of_reason reason)
           name)
       (* global lookups may leave new entries in one or both child envs *)
-      | None, child1, child2 when env0 = [] ->
+      | None, child1, child2 when env0_ = [] ->
         (* ...in which case we can forget them *)
         ()
-      (* otherwise, non-refinement uneven distributions are asserts. *)
-      (* TODO:
-         Asserting on all uneven distributions is too strict for now.
-         let_env can interact with path-dependent refinement to leave
-         residual entries in child contexts, when catch blocks combine
-         conditionals and early returns.
-         So for now we need to let extra child entries pass, though we
-         should still assert on extra parent entries.
-         Once let/const/LexScope is in place, we can reimplement let_env
-         in terms of those constructs instead, and the full assert can
-         be reinstated.
-       *)
-      | None, _, _ ->
-        ()
-      | Some _ as orig, child1, child2 ->
-        let print_entry_kind_opt = function
-        | None -> "None"
-        | Some e -> spf "Some %s" (string_of_kind e)
-        in assert_false (spf
-          "merge_env %s: non-uniform distribution of entry %s: %s, %s, %s"
-          (string_of_reason reason)
-          name
-          (print_entry_kind_opt orig)
-          (print_entry_kind_opt child1)
-          (print_entry_kind_opt child2))
+      | orig, child1, child2 ->
+        (* lex scopes may be uneven, e.g., catch block in a try statement *)
+        match scope0.kind, scope1.kind, scope2.kind with
+        | VarScope _, LexScope, _ ->
+            merge_entry cx reason (env0, env1_, env2) name
+        | VarScope _, _, LexScope ->
+            merge_entry cx reason (env0, env1, env2_) name
+        (* otherwise, non-refinement uneven distributions are asserts. *)
+        | _ ->
+          let print_entry_kind_opt = function
+          | None -> "None"
+          | Some e -> spf "Some %s" (string_of_kind e)
+          in assert_false (spf
+            "merge_env %s: non-uniform distribution of entry %s: %s, %s, %s"
+            (string_of_reason reason)
+            name
+            (print_entry_kind_opt orig)
+            (print_entry_kind_opt child1)
+            (print_entry_kind_opt child2))
       )
     | _ ->
       assert_false (spf
@@ -837,30 +904,16 @@ let widen_env =
   in
 
   fun cx reason ->
-    let top_scope = peek_scope () in
-    if SMap.cardinal top_scope.entries < 32 then
-      top_scope |> Scope.update_entries Entry.(fun name -> function
-        | Value var -> Value (widen_var cx reason name var)
-        | entry -> entry
-      );
-    if KeyMap.cardinal top_scope.refis < 32 then
-      top_scope |> Scope.update_refis (fun key refi ->
-        widen_refi cx reason (Key.string_of_key key) refi)
-
-(* TODO this is legacy, used to simulate lexical scoping.
-   Called from catch block traversal only. Should replace
-   with a LexScope. Also, see TODO in merge_env for correlated
-   change there *)
-(* run passed function with given entry added to scope *)
-(* CAUTION: caller must ensure that name isn't already bound,
-   otherwise this will remove the preexisting binding *)
-(* also note that this function does not push new frame
-   or changeset *)
-let let_env name entry f =
-  let scope = peek_scope () in
-  Scope.add_entry name entry scope;
-  f ();
-  Scope.remove_entry name scope
+    iter_lex_scopes (fun scope ->
+      if SMap.cardinal scope.entries < 32 then
+        scope |> Scope.update_entries Entry.(fun name -> function
+          | Value var -> Value (widen_var cx reason name var)
+          | entry -> entry
+        );
+      if KeyMap.cardinal scope.refis < 32 then
+        scope |> Scope.update_refis (fun key refi ->
+          widen_refi cx reason (Key.string_of_key key) refi)
+    )
 
 (* The protocol around havoc has changed a few times.
    The following function used to do most of the work, but is now subsumed by
@@ -919,7 +972,9 @@ let havoc_heap_refinements_with_propname name =
    and clear heap refinements.
    TODO rename *)
 let clear_env reason =
-  Scope.havoc (peek_scope ()) ~make_specific:(fun _ -> UndefT reason)
+  iter_lex_scopes (fun scope ->
+    Scope.havoc scope ~make_specific:(fun _ -> UndefT reason)
+  )
 
 let string_of_env cx env =
   String.concat "\n" (List.map (string_of_scope cx) env)
@@ -927,8 +982,10 @@ let string_of_env cx env =
 (* The following functions are used to narrow the type of variables
    based on dynamic checks. *)
 
-(* Directly refine an expression's type to t. This refinement
-   may already be present in the top scope - if so, we overwrite it.
+(* Directly refine an expression's type to t. The refinement is
+   installed into the same scope where the object is bound. A
+   refinement may already be present in this scope - if so, we
+   overwrite it.
 
    However note that we do so at a low level, rather than by using the
    standard set_var mechanism. This is to avoid unwanted reentrancy:
@@ -938,10 +995,11 @@ let string_of_env cx env =
    into clearing the refinement we're in the process of installing.
  *)
 let add_heap_refinement cx key reason refined original =
-  let scope = peek_scope () in
   ignore (add_change_refi key);
   let refi_loc = Some (loc_of_reason reason) in
   let refi = { refi_loc; refined; original } in
+  let base, _ = key in
+  let scope, _ = find_entry_in_var_scope base in
   Scope.add_refi key refi scope
 
 (* add predicate refinements from given preds map to environment.

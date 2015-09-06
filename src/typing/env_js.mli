@@ -39,6 +39,10 @@ val push_env: context -> Scope.t -> unit
 
 val pop_env: unit -> unit
 
+val push_lex: unit -> unit
+
+val pop_lex: unit -> unit
+
 val init_env: context -> Scope.t -> unit
 
 val update_env: context -> Scope.t list -> unit
@@ -123,8 +127,6 @@ val widen_env: context -> reason -> unit
 val copy_env: context -> reason ->
   Scope.t list * Scope.t list ->
   changeset -> unit
-
-val let_env: string -> Entry.t -> (unit -> 'a) -> unit
 
 val havoc_all: unit -> unit
 

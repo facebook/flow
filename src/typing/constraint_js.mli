@@ -289,7 +289,9 @@ module Scope: sig
     val string_of_state: state -> string
 
     type value_kind = Const | Let of implicit_let_kinds option | Var
-    and implicit_let_kinds = ClassNameBinding
+    and implicit_let_kinds =
+      | ClassNameBinding
+      | CatchParamBinding
 
     val string_of_value_kind: value_kind -> string
 
