@@ -300,7 +300,7 @@ let find_entry_in_var_scope name =
 
 (* Search for the scope which holds the given refinement, through
    the topmost LexScopes and up to the first VarScope. If the
-   entry is not found, return the VarScope where we terminated. *)
+   entry is not found, return None. *)
 let find_refi_in_var_scope key =
   let rec loop = function
     | [] -> assert_false "empty scope list"
