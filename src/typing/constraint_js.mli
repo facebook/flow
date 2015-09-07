@@ -329,6 +329,8 @@ module Scope: sig
 
     val string_of_kind: t -> string
     val havoc: ?name:string -> (Type.t -> Type.t) -> string -> t -> t
+
+    val is_lex: t -> bool
   end
 
   module Key: sig
@@ -381,6 +383,7 @@ module Scope: sig
 
   val havoc: ?name: string -> ?make_specific: (Type.t -> Type.t) -> t -> unit
 
+  val is_lex: t -> bool
 end
 
 (***************************************)

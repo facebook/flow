@@ -340,7 +340,7 @@ let already_bound_error =
    may appear in an AST)
  *)
 
-let bind_entry cx name entry =
+let bind_entry cx name entry reason =
   (* lex scopes can only hold let/const bindings
    * var scopes can hold all bindings
    * type entries are hoisted to var scope *)
@@ -370,32 +370,33 @@ let bind_entry cx name entry =
 
     | Value _, _
     | Type _, _ ->
-      (* incompatible or non-redeclarable new and previous entries.
-         we pass these through silently, because any such situation
-         will show up as a corresponding error at init time, and it's
-         simpler (and error info is better) if we raise errors there. *)
-      ()
+      already_bound_error cx name prev reason
     )
 
 (* bind var entry *)
-let bind_var ?(state=Entry.Declared) cx name t loc =
-  bind_entry cx name (Entry.new_var t ~loc ~state)
+let bind_var ?(state=Entry.Declared) cx name t r =
+  let loc = loc_of_reason r in
+  bind_entry cx name (Entry.new_var t ~loc ~state) r
 
 (* bind let entry *)
-let bind_let ?(state=Entry.Undeclared) cx name t loc =
-  bind_entry cx name (Entry.new_let t ~loc ~state)
+let bind_let ?(state=Entry.Undeclared) cx name t r =
+  let loc = loc_of_reason r in
+  bind_entry cx name (Entry.new_let t ~loc ~state) r
 
 (* bind implicit let entry *)
-let bind_implicit_let ?(state=Entry.Undeclared) implicit cx name t loc =
-  bind_entry cx name (Entry.new_let t ~implicit ~loc ~state)
+let bind_implicit_let ?(state=Entry.Undeclared) implicit cx name t r =
+  let loc = loc_of_reason r in
+  bind_entry cx name (Entry.new_let t ~implicit ~loc ~state) r
 
 (* bind const entry *)
-let bind_const ?(state=Entry.Undeclared) cx name t loc =
-  bind_entry cx name (Entry.new_const t ~loc ~state)
+let bind_const ?(state=Entry.Undeclared) cx name t r =
+  let loc = loc_of_reason r in
+  bind_entry cx name (Entry.new_const t ~loc ~state) r
 
 (* bind type entry *)
-let bind_type cx name t loc =
-  bind_entry cx name (Entry.new_type t ~loc ~state:Entry.Declared)
+let bind_type cx name t r =
+  let loc = loc_of_reason r in
+  bind_entry cx name (Entry.new_type t ~loc ~state:Entry.Declared) r
 
 (* vars coming from 'declare' statements are preinitialized *)
 let bind_declare_var = bind_var ~state:Entry.Initialized
@@ -519,7 +520,10 @@ let init_value_entry kind cx name ~has_anno specific reason =
     ) in
     Scope.add_entry name new_entry scope;
   | _ ->
-    already_bound_error cx name entry reason
+    (* Incompatible or non-redeclarable new and previous entries.
+       We will have already issued an error in `bind_value_entry`,
+       so we can prune this case here. *)
+    ()
   )
 
 let init_var = init_value_entry Entry.Var
@@ -536,7 +540,10 @@ let init_type cx name _type reason =
     let new_entry = Type { t with type_state = Initialized; _type } in
     Scope.add_entry name new_entry scope
   | _ ->
-    already_bound_error cx name entry reason
+    (* Incompatible or non-redeclarable new and previous entries.
+       We will have already issued an error in `bind_value_entry`,
+       so we can prune this case here. *)
+    ()
   )
 
 (* used to enforce annotations: see commentary in force_general_type *)
@@ -712,7 +719,7 @@ let merge_env =
         let s2, _ = types child2 scope2 in
         let specific, general = merge_var cx reason name (s0, g0) s1 s2 in
         let entry = Entry.Value { v with specific; general } in
-        Scope.add_entry name entry scope0;
+        add_entry name entry scope0;
       (* type aliases can't be refined or reassigned, shouldn't be here *)
       | Some (Type _), Some (Type _), Some (Type _) ->
         assert_false (spf
@@ -720,28 +727,31 @@ let merge_env =
           (string_of_reason reason)
           name)
       (* global lookups may leave new entries in one or both child envs *)
-      | None, child1, child2 when env0_ = [] ->
+      | None, _, _ when env0_ = [] ->
         (* ...in which case we can forget them *)
         ()
+      (* changeset entry exists only in lex scope *)
+      | None, None, Some e when is_lex scope2 && Entry.is_lex e ->
+        ()
+      | None, Some e, None when is_lex scope1 && Entry.is_lex e ->
+        ()
+      (* walk through uneven lex scopes *)
+      | Some _, Some _, None when is_lex scope2 ->
+        merge_entry cx reason (env0, env1, env2_) name
+      | Some _, None, Some _ when is_lex scope1 ->
+        merge_entry cx reason (env0, env1_, env2) name
+      (* otherwise, non-refinement uneven distributions are asserts. *)
       | orig, child1, child2 ->
-        (* lex scopes may be uneven, e.g., catch block in a try statement *)
-        match scope0.kind, scope1.kind, scope2.kind with
-        | VarScope _, LexScope, _ ->
-            merge_entry cx reason (env0, env1_, env2) name
-        | VarScope _, _, LexScope ->
-            merge_entry cx reason (env0, env1, env2_) name
-        (* otherwise, non-refinement uneven distributions are asserts. *)
-        | _ ->
-          let print_entry_kind_opt = function
-          | None -> "None"
-          | Some e -> spf "Some %s" (string_of_kind e)
-          in assert_false (spf
-            "merge_env %s: non-uniform distribution of entry %s: %s, %s, %s"
-            (string_of_reason reason)
-            name
-            (print_entry_kind_opt orig)
-            (print_entry_kind_opt child1)
-            (print_entry_kind_opt child2))
+        let print_entry_kind_opt = function
+        | None -> "None"
+        | Some e -> spf "Some %s" (string_of_kind e)
+        in assert_false (spf
+          "merge_env %s: non-uniform distribution of entry %s: %s, %s, %s"
+          (string_of_reason reason)
+          name
+          (print_entry_kind_opt orig)
+          (print_entry_kind_opt child1)
+          (print_entry_kind_opt child2))
       )
     | _ ->
       assert_false (spf
@@ -789,7 +799,7 @@ let copy_env  = Entry.(
   let rec copy_entry cx reason (env1, env2) name =
     match env1, env2 with
 
-    | scope1 :: env1, scope2 :: env2 -> Scope.(
+    | scope1 :: env1_, scope2 :: env2_ -> Scope.(
       match get_entry name scope1, get_entry name scope2 with
 
       | Some (Value _ as v1), Some (Value _ as v2) ->
@@ -807,12 +817,24 @@ let copy_env  = Entry.(
 
       | None, None ->
         (* not found, try outer scopes *)
-        copy_entry cx reason (env1, env2) name
+        copy_entry cx reason (env1_, env2_) name
 
       (* global lookups may leave new entries in env2 *)
-      | None, entry2 when env1 = [] ->
+      | None, Some _ when env1_ = [] ->
         (* ...in which case we can forget it *)
         ()
+
+      (* changeset entry exists only in lex scope *)
+      | None, Some e when is_lex scope2 && Entry.is_lex e ->
+        ()
+      | Some e, None when is_lex scope1 && Entry.is_lex e ->
+        ()
+
+      (* walk through uneven lex scopes *)
+      | Some _, None when is_lex scope2 ->
+        copy_entry cx reason (env1, env2_) name
+      | None, Some _ when is_lex scope1 ->
+        copy_entry cx reason (env1_, env2) name
 
       | entry1, entry2 ->
         (* uneven distributions *)

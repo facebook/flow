@@ -49,20 +49,20 @@ val update_env: context -> Scope.t list -> unit
 
 (***)
 
-val bind_var: ?state:Entry.state -> context -> string -> Type.t -> Loc.t -> unit
-val bind_let: ?state:Entry.state -> context -> string -> Type.t -> Loc.t -> unit
+val bind_var: ?state:Entry.state -> context -> string -> Type.t -> reason -> unit
+val bind_let: ?state:Entry.state -> context -> string -> Type.t -> reason -> unit
 val bind_implicit_let:
   ?state:Entry.state
     -> Entry.implicit_let_kinds
     -> context
     -> string
     -> Type.t
-    -> Loc.t
+    -> reason
     -> unit
-val bind_const: ?state:Entry.state -> context -> string -> Type.t -> Loc.t -> unit
-val bind_type: context -> string -> Type.t -> Loc.t -> unit
+val bind_const: ?state:Entry.state -> context -> string -> Type.t -> reason -> unit
+val bind_type: context -> string -> Type.t -> reason -> unit
 
-val bind_declare_var: context -> string -> Type.t -> Loc.t -> unit
+val bind_declare_var: context -> string -> Type.t -> reason -> unit
 val bind_declare_fun: context -> string -> Type.t -> reason -> unit
 
 val declare_const: context -> string -> reason -> unit

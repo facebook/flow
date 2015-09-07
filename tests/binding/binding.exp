@@ -111,6 +111,10 @@ scope.js:16:15,16: string
 This type is incompatible with
 scope.js:12:10,15: number
 
+scope.js:19:11,11: a
+name is already bound
+scope.js:15:11,11: let a
+
 scope.js:42:16,17: string
 This type is incompatible with
 scope.js:41:10,15: number
@@ -134,4 +138,4 @@ tdz.js:49:5,13: undefined
 This type is incompatible with
 tdz.js:49:8,13: number
 
-Found 34 errors
+Found 35 errors

@@ -767,6 +767,13 @@ module Scope = struct
         else Value { v with specific = make_specific v.general }
       | Type _ -> entry
 
+    let is_lex = function
+      | Type _ -> false
+      | Value v ->
+        match v.kind with
+        | Const -> true
+        | Let _ -> true
+        | _ -> false
   end
 
   (* keys for refinements *)
@@ -906,6 +913,10 @@ module Scope = struct
     | Some f -> scope |> update_entries (Entry.havoc ~name f)
     | None -> ()
 
+  let is_lex scope =
+    match scope.kind with
+    | LexScope -> true
+    | _ -> false
 end
 
 (***************************************)
