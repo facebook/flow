@@ -448,6 +448,8 @@ let init_value_entry kind cx name ~has_anno specific reason =
   | Var, Value ({ kind = Var; _ } as v)
   | Let _, Value ({ kind = Let _; value_state = Undeclared | Declared; _ } as v)
   | Const, Value ({ kind = Const; value_state = Undeclared | Declared; _ } as v) ->
+    if kind = Var && v.value_state = Initialized
+    then ignore (add_change_var name);
     (* NOTE: causes havocing in some cases, so, reentrant *)
     Flow_js.flow cx (specific, v.general);
     let value_binding = { v with value_state = Initialized; specific } in
