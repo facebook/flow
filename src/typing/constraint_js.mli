@@ -342,7 +342,8 @@ module Scope: sig
   = Key.t
 
   type var_scope_attrs = {
-    async: bool
+    async: bool;
+    generator: bool
   }
 
   type kind =
@@ -361,8 +362,7 @@ module Scope: sig
     mutable refis: refi_binding KeyMap.t
   }
 
-  val fresh: unit -> t
-  val fresh_async: unit -> t
+  val fresh: ?async:bool -> ?generator:bool -> unit -> t
   val fresh_lex: unit -> t
   val clone: t -> t
 
