@@ -3277,6 +3277,10 @@ and flow_addition cx trace reason l r u =
   | (NumT _, StrT _) ->
     rec_flow cx trace (StrT.why reason, u)
 
+  | (AnyT _, _)
+  | (_, AnyT _) ->
+    rec_flow cx trace (AnyT.why reason, u)
+
   | (MixedT _, _)
   | (_, MixedT _) ->
     rec_flow cx trace (MixedT.why reason, u)

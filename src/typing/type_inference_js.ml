@@ -3606,11 +3606,17 @@ and unary cx type_params_map loc = Ast.Expression.Unary.(function
     func_call cx reason await [arg]
 )
 
-and update cx type_params_map loc = Ast.Expression.Update.(function
-  | { operator; argument; _ } ->
-      let t = NumT.at loc in
-      Flow_js.flow cx (expression cx type_params_map argument, t);
-      t
+and update cx type_params_map loc expr = Ast.Expression.Update.(
+  let et = match expr.argument with
+  | (_, Ast.Expression.Identifier (loc, { Ast.Identifier.name; _ })) ->
+    (* enforce state-based guards for binding update, e.g., const *)
+    identifier ~lookup_mode:ForUpdate cx name loc
+  | _ ->
+    expression cx type_params_map expr.argument
+  in
+  let t = NumT.at loc in
+  Flow_js.flow cx (et, t);
+  t
 )
 
 (* traverse a binary expression, return result type *)
@@ -3693,8 +3699,8 @@ and assignment_lhs cx type_params_map = Ast.Pattern.(function
       error_destructuring cx loc;
       AnyT.at loc
 
-  | loc, Identifier i ->
-      expression cx type_params_map (loc, Ast.Expression.Identifier i)
+  | _, Identifier (loc, { Ast.Identifier.name; _ }) ->
+      identifier ~lookup_mode:ForUpdate cx name loc
 
   | _, Expression ((_, Ast.Expression.Member _) as m) ->
       expression cx type_params_map m

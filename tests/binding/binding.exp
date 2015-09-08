@@ -1,4 +1,52 @@
 
+const.js:4:1,1: x
+const cannot be reassigned
+const.js:1:7,7: const x
+
+const.js:5:1,1: x
+const cannot be reassigned
+const.js:1:7,7: const x
+
+const.js:6:1,1: x
+const cannot be reassigned
+const.js:1:7,7: const x
+
+const.js:7:1,1: x
+const cannot be reassigned
+const.js:1:7,7: const x
+
+const.js:8:1,1: x
+const cannot be reassigned
+const.js:1:7,7: const x
+
+const.js:9:1,1: x
+const cannot be reassigned
+const.js:1:7,7: const x
+
+const.js:10:1,1: x
+const cannot be reassigned
+const.js:1:7,7: const x
+
+const.js:11:1,1: x
+const cannot be reassigned
+const.js:1:7,7: const x
+
+const.js:12:1,1: x
+const cannot be reassigned
+const.js:1:7,7: const x
+
+const.js:13:1,1: x
+const cannot be reassigned
+const.js:1:7,7: const x
+
+const.js:14:1,1: x
+const cannot be reassigned
+const.js:1:7,7: const x
+
+const.js:15:1,1: x
+const cannot be reassigned
+const.js:1:7,7: const x
+
 rebinding.js:16:8,8: A
 name is already bound
 rebinding.js:15:8,8: type A
@@ -146,4 +194,4 @@ tdz.js:49:5,13: undefined
 This type is incompatible with
 tdz.js:49:8,13: number
 
-Found 37 errors
+Found 49 errors

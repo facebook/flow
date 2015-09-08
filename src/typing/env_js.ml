@@ -40,19 +40,22 @@ open Scope
    2. ForValue lookups give errors if they forward reference non-hoisted
       things (lets or consts)
 
-   3. ForType lookups may return values or type aliases, since some values
+   3. ForUpdate lookups give errors in all cases ForValue does, with the
+      additional constraint that the found entry must not be const.
+
+   4. ForType lookups may return values or type aliases, since some values
       also denote types - e.g. a generator function F also denotes the type
       of the objects it creates. Of course many values don't also have a type
       denotation and thus errors in type position. But we don't know the type
       of a symbol during local inference as a rule, so errors of this kind are
       not raised here.
 
-   4. ForTypeof lookups are in fact ForValue lookups, but due to the order in
+   5. ForTypeof lookups are in fact ForValue lookups, but due to the order in
       which AST traversal takes place, these lookups may legitimately violate
       rule #2, hence the need for a special mode.
  *)
 module LookupMode = struct
-  type t = ForValue | ForType | ForTypeof
+  type t = ForValue | ForUpdate | ForType | ForTypeof
 end
 
 open LookupMode
@@ -598,7 +601,7 @@ let value_entry_types ~lookup_mode cx name reason entry scope =
   Entry.(match entry with
 
   | Value { kind; value_state = Undeclared; _ }
-      when lookup_mode = ForValue
+      when (lookup_mode = ForValue || lookup_mode = ForUpdate)
       && not (allow_forward_ref kind)
       && scope = peek_scope () (* see comment header *)
       ->
@@ -607,14 +610,18 @@ let value_entry_types ~lookup_mode cx name reason entry scope =
       (string_of_kind entry) in
     binding_error msg cx name entry reason;
     let t = AnyT.at (entry_loc_unopt entry) in t, t
-(*
-  TODO
 
+  | Value { kind = Const; _ } when lookup_mode = ForUpdate ->
+    let msg = "const cannot be reassigned" in
+    binding_error msg cx name entry reason;
+    let t = AnyT.at (entry_loc_unopt entry) in t, t
+
+  (* TODO
   | Value { kind = Var; value_state = Declared; general; _ }
       when not for_type ->
     (* ref to var from value pos before initialization: undefined *)
-    VoidT.at (entry_loc_unopt entry), general
-*)
+    VoidT.at (entry_loc_unopt entry), general *)
+
   | Value { specific; general; _ } ->
     specific, general
 

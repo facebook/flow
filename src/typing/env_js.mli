@@ -92,7 +92,7 @@ val init_type: context -> string -> Type.t -> reason -> unit
 val pseudo_init_declared_type: context -> string -> reason -> unit
 
 module LookupMode: sig
-  type t = ForValue | ForType | ForTypeof
+  type t = ForValue | ForUpdate | ForType | ForTypeof
 end
 
 val get_var: ?lookup_mode:LookupMode.t -> context -> string ->
