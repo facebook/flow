@@ -167,3 +167,14 @@ function function_block() {
     function a() {}; // error: name already bound
   }
 }
+
+// corner cases
+
+function var_shadow_nested_scope() {
+  {
+    let x = 0;
+    {
+      var x = 0; // error: name already bound
+    }
+  }
+}

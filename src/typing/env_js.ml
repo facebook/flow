@@ -343,6 +343,7 @@ let already_bound_error =
 let bind_entry cx name entry reason =
   (* lex scopes can only hold let/const bindings
    * var scopes can hold all bindings
+   * var scopes can't shadow lex bindings
    * type entries are hoisted to var scope *)
   let rec find_scope = function
     | [] -> assert_false "empty scope list"
@@ -350,39 +351,53 @@ let bind_entry cx name entry reason =
       match scope.kind, entry with
       | LexScope, Entry.Value { Entry.kind = Entry.Let _; _ }
       | LexScope, Entry.Value { Entry.kind = Entry.Const; _ }
-      | VarScope _, _ -> scope
-      | _ -> find_scope scopes
+      | VarScope _, _ ->
+        Some scope
+      | LexScope, Entry.Type _ ->
+        find_scope scopes
+      | LexScope, Entry.Value { Entry.kind = Entry.Var; _ } ->
+        match get_entry name scope with
+        (* nested scope var shadows a lex-scoped lexical *)
+        | Some prev
+          when is_lex scope && Entry.is_lex prev ->
+            already_bound_error cx name prev reason;
+            None
+        (* keep searching for the var's scope *)
+        | _ -> find_scope scopes
     )
   in
-  let scope = find_scope !scopes in
-  match Scope.get_entry name scope with
-
+  match find_scope !scopes with
   | None ->
-    Scope.add_entry name entry scope
+      (* error condition -- error already raised *)
+      ()
+  | Some scope ->
+    match Scope.get_entry name scope with
+    | None ->
+      Scope.add_entry name entry scope
 
-  | Some prev -> Entry.(
-    match entry, prev with
-    (* shadowing var *)
-    | Value { kind = Var; general = general_new; _ },
-      Value { kind = Var; general = general_prev; _ } ->
-        (* leave existing in place, but unify with new *)
-        (* TODO currently we don't step on specific. shouldn't we? *)
-        Flow_js.unify cx general_prev general_new
+    | Some prev -> Entry.(
+      match entry, prev with
+      (* shadowing var *)
+      | Value { kind = Var; general = general_new; _ },
+        Value { kind = Var; general = general_prev; _ } ->
+          (* leave existing in place, but unify with new *)
+          (* TODO currently we don't step on specific. shouldn't we? *)
+          Flow_js.unify cx general_prev general_new
 
-    (* functions can shadow vars/other functions in toplevel *)
-    | Value { kind = Let (Some FunctionBinding);
-              general = general_new; _ },
-      Value { kind = Var | Let (Some FunctionBinding);
-              general = general_prev; _ }
-      when not (Scope.is_lex scope) ->
-        (* leave existing in place, but unify with new *)
-        (* TODO currently we don't step on specific. shouldn't we? *)
-        Flow_js.unify cx general_prev general_new
+      (* functions can shadow vars/other functions in toplevel *)
+      | Value { kind = Let (Some FunctionBinding);
+                general = general_new; _ },
+        Value { kind = Var | Let (Some FunctionBinding);
+                general = general_prev; _ }
+        when not (Scope.is_lex scope) ->
+          (* leave existing in place, but unify with new *)
+          (* TODO currently we don't step on specific. shouldn't we? *)
+          Flow_js.unify cx general_prev general_new
 
-    | Value _, _
-    | Type _, _ ->
-      already_bound_error cx name prev reason
-    )
+      | Value _, _
+      | Type _, _ ->
+        already_bound_error cx name prev reason
+      )
 
 (* bind var entry *)
 let bind_var ?(state=Entry.Declared) cx name t r =

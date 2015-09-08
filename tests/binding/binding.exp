@@ -107,6 +107,10 @@ rebinding.js:167:5,19: a
 name is already bound
 rebinding.js:166:5,19: function a
 
+rebinding.js:177:11,11: x
+name is already bound
+rebinding.js:175:9,9: let x
+
 scope.js:6:13,14: string
 This type is incompatible with
 scope.js:3:10,15: number
@@ -142,4 +146,4 @@ tdz.js:49:5,13: undefined
 This type is incompatible with
 tdz.js:49:8,13: number
 
-Found 36 errors
+Found 37 errors
