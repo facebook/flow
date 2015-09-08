@@ -1,0 +1,8 @@
+
+test.js:4:4,13: Experimental decorator usage
+Decorators are an early stage proposal that may change. Additionally, Flow does not account for the type implications of decorators at this time.
+
+test.js:7:4,8:13: Experimental decorator usage
+Decorators are an early stage proposal that may change. Additionally, Flow does not account for the type implications of decorators at this time.
+
+Found 2 errors

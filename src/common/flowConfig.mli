@@ -9,8 +9,13 @@
  *)
 type moduleSystem = Node | Haste
 
+type experimental_feature_mode =
+  | EXPERIMENTAL_IGNORE
+  | EXPERIMENTAL_WARN
+
 type options = {
   enable_unsafe_getters_and_setters: bool;
+  experimental_decorators: experimental_feature_mode;
   moduleSystem: moduleSystem;
   module_name_mappers: (Str.regexp * string) list;
   munge_underscores: bool;

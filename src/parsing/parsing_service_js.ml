@@ -44,10 +44,18 @@ let in_flow content file =
 let (parser_hook: (string -> Ast.program -> unit) list ref) = ref []
 let call_on_success f = parser_hook := f :: !parser_hook
 
+let parse_options = Some {
+  (**
+   * We always parse decorators. The user-facing config option to ignore/warn
+   * on them happens during inference time so a clean error can be surfaced.
+   *)
+  Parser_env.experimental_decorators = true;
+}
+
 let execute_hook file ast =
   let ast = match ast with
   | None ->
-      let empty_ast, _ = Parser_flow.parse_program true (Some file) "" in
+      let empty_ast, _ = Parser_flow.parse_program true ~parse_options (Some file) "" in
       empty_ast
   | Some ast -> ast
   in
@@ -65,7 +73,7 @@ let delete_file fn =
 
 let do_parse ?(keep_errors=false) content file =
   try (
-    let ast, parse_errors = Parser_flow.program_file content file in
+    let ast, parse_errors = Parser_flow.program_file ~parse_options content file in
     assert (parse_errors = []);
     OK ast
   )

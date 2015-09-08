@@ -17,8 +17,13 @@ let version = "0.14.0"
 
 type moduleSystem = Node | Haste
 
+type experimental_feature_mode =
+  | EXPERIMENTAL_IGNORE
+  | EXPERIMENTAL_WARN
+
 type options = {
   enable_unsafe_getters_and_setters: bool;
+  experimental_decorators: experimental_feature_mode;
   moduleSystem: moduleSystem;
   module_name_mappers: (Str.regexp * string) list;
   munge_underscores: bool;
@@ -78,6 +83,7 @@ let default_module_system = Node
 
 let default_options root = {
   enable_unsafe_getters_and_setters = false;
+  experimental_decorators = EXPERIMENTAL_WARN;
   moduleSystem = default_module_system;
   module_name_mappers = [];
   munge_underscores = false;
@@ -379,13 +385,21 @@ module OptionsParser = struct
 
       option_setter options (ln, (left, right))
 
+  let experimental_feature_flag =
+    generic ("warn, ignore", fun value ->
+      match String.trim value with
+      | "ignore" -> Some EXPERIMENTAL_IGNORE
+      | "warn" -> Some EXPERIMENTAL_WARN
+      | _ -> None
+    )
+
   let contains_flag flags flag =
     List.fold_left (fun contains_flag maybe_flag ->
       (maybe_flag = flag) || contains_flag
     ) false flags
 
   let parse_line p (options, seen) (ln, line) =
-    if Str.string_match (Str.regexp "^\\([a-zA-Z._]+\\)=\\(.*\\)$") line 0
+    if Str.string_match (Str.regexp "^\\([a-zA-Z0-9._]+\\)=\\(.*\\)$") line 0
     then
       let opt = Str.matched_group 1 line in
       if SMap.mem opt p
@@ -410,6 +424,13 @@ module OptionsParser = struct
 end
 
 let options_parser = OptionsParser.configure [
+  ("esproposal.decorators", OptionsParser.({
+    flags = [];
+    _parser = experimental_feature_flag (fun opts (_, value) ->
+      { opts with experimental_decorators = value; }
+    );
+  }));
+
   ("suppress_comment", OptionsParser.({
     flags = [ALLOW_DUPLICATE];
     _parser = regexp (fun options (ln, suppress_comment) ->

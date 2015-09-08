@@ -569,6 +569,30 @@ let are_getters_and_setters_enabled () = FlowConfig.(
   config.options.enable_unsafe_getters_and_setters
 )
 
+let are_decorators_enabled () = FlowConfig.(
+  let config = get_unsafe () in
+  config.options.experimental_decorators
+)
+
+let warn_or_ignore_decorators cx decorators_list = FlowConfig.(
+  if decorators_list = [] then () else
+  match (get_unsafe ()).options.experimental_decorators with
+  | EXPERIMENTAL_IGNORE -> ()
+  | EXPERIMENTAL_WARN ->
+      let first_loc = fst (List.hd decorators_list) in
+      let last_loc =
+        fst (List.nth decorators_list ((List.length decorators_list) - 1))
+      in
+      let loc = Loc.btwn first_loc last_loc in
+      let reason = mk_reason "Experimental decorator usage" loc in
+      Flow_js.add_warning cx [
+        reason,
+        "Decorators are an early stage proposal that may change. " ^
+        "Additionally, Flow does not account for the type implications of " ^
+        "decorators at this time."
+      ]
+)
+
 (**********************************)
 (* Transform annotations to types *)
 (**********************************)
@@ -4917,8 +4941,10 @@ and mk_signature cx reason_c type_params_map superClass body = Ast.Class.(
           returnType; typeParameters; body; _ };
         kind;
         static;
-        decorators = _;
+        decorators;
       }) ->
+
+      warn_or_ignore_decorators cx decorators;
 
       (match kind with
       | Method.Get | Method.Set when not (are_getters_and_setters_enabled ()) ->
@@ -5079,8 +5105,11 @@ and mk_class_elements cx instance_info static_info body = Ast.Class.(
           returnType; typeParameters; body; async; _ };
         static;
         kind;
-        decorators = _;
+        decorators;
       }) ->
+
+      warn_or_ignore_decorators cx decorators;
+
       let this, super, method_sigs, getter_sigs, setter_sigs =
         if static then static_info else instance_info
       in
