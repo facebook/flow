@@ -360,13 +360,24 @@ let bind_entry cx name entry reason =
   | None ->
     Scope.add_entry name entry scope
 
-  | Some prev ->
-    Entry.(match entry, prev with
-    | Value val_new, Value val_prev
-      when val_new.kind = Var && val_prev.kind = Var ->
-      (* leave existing in place, but unify with new *)
-      (* TODO currently we don't step on specific. shouldn't we? *)
-      Flow_js.unify cx val_prev.general val_new.general
+  | Some prev -> Entry.(
+    match entry, prev with
+    (* shadowing var *)
+    | Value { kind = Var; general = general_new; _ },
+      Value { kind = Var; general = general_prev; _ } ->
+        (* leave existing in place, but unify with new *)
+        (* TODO currently we don't step on specific. shouldn't we? *)
+        Flow_js.unify cx general_prev general_new
+
+    (* functions can shadow vars/other functions in toplevel *)
+    | Value { kind = Let (Some FunctionBinding);
+              general = general_new; _ },
+      Value { kind = Var | Let (Some FunctionBinding);
+              general = general_prev; _ }
+      when not (Scope.is_lex scope) ->
+        (* leave existing in place, but unify with new *)
+        (* TODO currently we don't step on specific. shouldn't we? *)
+        Flow_js.unify cx general_prev general_new
 
     | Value _, _
     | Type _, _ ->
@@ -387,6 +398,9 @@ let bind_let ?(state=Entry.Undeclared) cx name t r =
 let bind_implicit_let ?(state=Entry.Undeclared) implicit cx name t r =
   let loc = loc_of_reason r in
   bind_entry cx name (Entry.new_let t ~implicit ~loc ~state) r
+
+let bind_fun ?(state=Entry.Declared) =
+  bind_implicit_let ~state Entry.FunctionBinding
 
 (* bind const entry *)
 let bind_const ?(state=Entry.Undeclared) cx name t r =
@@ -529,6 +543,7 @@ let init_value_entry kind cx name ~has_anno specific reason =
 let init_var = init_value_entry Entry.Var
 let init_let = init_value_entry (Entry.Let None)
 let init_implicit_let implicit = init_value_entry (Entry.Let (Some implicit))
+let init_fun = init_implicit_let ~has_anno:false Entry.FunctionBinding
 let init_const = init_value_entry Entry.Const
 
 (* update type alias to reflect initialization in code *)
@@ -559,10 +574,17 @@ let pseudo_init_declared_type cx name reason =
 
 (* get types from value entry - enforces state-based guards *)
 let value_entry_types ~lookup_mode cx name reason entry scope =
+  (* functions are block-scoped, but also hoisted. forward ref ok *)
+  let allow_forward_ref = Scope.Entry.(function
+    | Var | Let (Some FunctionBinding) -> true
+    | _ -> false
+  ) in
+
   Entry.(match entry with
 
-  | Value { kind = Let _ | Const; value_state = Undeclared; _ }
+  | Value { kind; value_state = Undeclared; _ }
       when lookup_mode = ForValue
+      && not (allow_forward_ref kind)
       && scope = peek_scope () (* see comment header *)
       ->
     (* fwd ref to let/const from value pos: TDZ *)

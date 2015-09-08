@@ -1136,7 +1136,7 @@ and statement_decl cx type_params_map = Ast.Statement.(
         let r = mk_reason (spf "%sfunction %s"
           (if async then "async " else "") name) loc in
         let tvar = Flow_js.mk_tvar cx r in
-        Env_js.bind_var cx name tvar r
+        Env_js.bind_fun cx name tvar r
       | None -> failwith (
           "Flow Error: Nameless function declarations should always be given " ^
           "an implicit name before they get hoisted!"
@@ -2101,7 +2101,7 @@ and statement cx type_params_map = Ast.Statement.(
       Hashtbl.replace cx.type_table loc fn_type;
       (match id with
       | Some(_, {Ast.Identifier.name; _ }) ->
-        Env_js.init_var cx name ~has_anno:false fn_type reason
+        Env_js.init_fun cx name fn_type reason
       | None -> ())
 
   | (loc, DeclareVariable { DeclareVariable.id; })

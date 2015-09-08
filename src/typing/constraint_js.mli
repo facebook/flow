@@ -292,6 +292,7 @@ module Scope: sig
     and implicit_let_kinds =
       | ClassNameBinding
       | CatchParamBinding
+      | FunctionBinding
 
     val string_of_value_kind: value_kind -> string
 

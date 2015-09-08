@@ -59,6 +59,7 @@ val bind_implicit_let:
     -> Type.t
     -> reason
     -> unit
+val bind_fun: ?state:Entry.state -> context -> string -> Type.t -> reason -> unit
 val bind_const: ?state:Entry.state -> context -> string -> Type.t -> reason -> unit
 val bind_type: context -> string -> Type.t -> reason -> unit
 
@@ -84,6 +85,7 @@ val init_implicit_let:
     -> Type.t
     -> reason
     -> unit
+val init_fun: context -> string -> Type.t -> reason -> unit
 val init_const: context -> string -> has_anno:bool -> Type.t -> reason -> unit
 val init_type: context -> string -> Type.t -> reason -> unit
 

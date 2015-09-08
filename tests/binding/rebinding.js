@@ -153,3 +153,17 @@ function var_var() {
   var A = 0;
   var A = 0;       // OK
 }
+
+// function x *
+
+function function_toplevel() {
+  function a() {};
+  function a() {}; // OK
+}
+
+function function_block() {
+  {
+    function a() {};
+    function a() {}; // error: name already bound
+  }
+}

@@ -683,12 +683,14 @@ module Scope = struct
     and implicit_let_kinds =
       | ClassNameBinding
       | CatchParamBinding
+      | FunctionBinding
 
     let string_of_value_kind = function
     | Const -> "const"
     | Let None -> "let"
     | Let (Some ClassNameBinding) -> "class"
     | Let (Some CatchParamBinding) -> "catch"
+    | Let (Some FunctionBinding) -> "function"
     | Var -> "var"
 
     type value_binding = {
