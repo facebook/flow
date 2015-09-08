@@ -2091,7 +2091,28 @@ and statement cx type_params_map = Ast.Statement.(
       let fn_type = mk_function None cx type_params_map reason  ~async
         typeParameters (params, defaults, rest) returnType body this
       in
-      Hashtbl.replace cx.type_table loc fn_type;
+
+      (**
+       * Use the loc for the function name in the types table. When the function
+       * has no name (i.e. for `export default function() ...`), generate a loc
+       * that will span the `function` keyword as a next-best-thing location.
+       *)
+      let type_table_loc =
+        match id with
+        | Some (loc, _) -> loc
+        | None -> Loc.({
+            source = loc.source;
+            start = loc.start;
+            _end = {
+              line = loc.start.line;
+
+              (* len('function') is 8 *)
+              column = loc.start.column + 8;
+              offset = loc.start.offset + 8;
+            };
+          })
+      in
+      Hashtbl.replace cx.type_table type_table_loc fn_type;
       (match id with
       | Some(_, {Ast.Identifier.name; _ }) ->
         Env_js.init_var cx name ~has_anno:false fn_type reason
