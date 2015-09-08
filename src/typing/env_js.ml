@@ -346,7 +346,7 @@ let already_bound_error =
 let bind_entry cx name entry reason =
   (* lex scopes can only hold let/const bindings
    * var scopes can hold all bindings
-   * var scopes can't shadow lex bindings
+   * var bindings can't shadow lex bindings
    * type entries are hoisted to var scope *)
   let rec find_scope = function
     | [] -> assert_false "empty scope list"
