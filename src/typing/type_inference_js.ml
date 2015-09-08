@@ -383,12 +383,6 @@ let destructuring_map cx t p =
   );
   !tmap, !lmap
 
-let pattern_decl cx t =
-  destructuring cx t (fun cx loc name t ->
-    Hashtbl.replace cx.type_table loc t;
-    Env_js.bind_var cx name t loc
-  )
-
 (*
  * type refinements on expressions - wraps Env_js API
  *)
@@ -989,39 +983,42 @@ and mk_singleton_boolean reason b =
  * in prep for main pass
  ********************************************************************)
 
+and variable_decl cx type_params_map loc entry = Ast.Statement.(
+  let value_kind, bind = match entry.VariableDeclaration.kind with
+    | VariableDeclaration.Const -> Scope.Entry.Const, Env_js.bind_const
+    | VariableDeclaration.Let -> Scope.Entry.Let None, Env_js.bind_let
+    | VariableDeclaration.Var -> Scope.Entry.Var, Env_js.bind_var
+  in
+
+  let str_of_kind = Scope.Entry.string_of_value_kind value_kind in
+
+  let declarator loc = Ast.(function
+    | (loc, Pattern.Identifier (_, { Identifier.name; typeAnnotation; _ })) ->
+      let r = mk_reason (spf "%s %s" str_of_kind name) loc in
+      let t = mk_type_annotation cx type_params_map r typeAnnotation in
+      Hashtbl.replace cx.type_table loc t;
+      bind cx name t r
+    | p ->
+      let r = mk_reason (spf "%s _" str_of_kind) loc in
+      let t = type_of_pattern p |> mk_type_annotation cx type_params_map r in
+      p |> destructuring cx t (fun cx loc name t ->
+        Hashtbl.replace cx.type_table loc t;
+        bind cx name t r
+      )
+  ) in
+
+  VariableDeclaration.(entry.declarations |> List.iter (function
+    | (loc, { Declarator.id; _ }) -> declarator loc id
+  ))
+)
+
 (* TODO: detect structural misuses abnormal control flow constructs *)
 and statement_decl cx type_params_map = Ast.Statement.(
 
-  (* helpers *)
-  let var_declarator cx (loc, { VariableDeclaration.Declarator.id; init }) =
-    Ast.(match id with
-    | (loc, Pattern.Identifier (_, { Identifier.name; typeAnnotation; _ })) ->
-        let r = mk_reason (spf "var %s" name) loc in
-        let t = mk_type_annotation cx type_params_map r typeAnnotation in
-        Hashtbl.replace cx.type_table loc t;
-        Env_js.bind_var cx name t loc
-    | p ->
-        let r = mk_reason "var _" loc in
-        let t = type_of_pattern p |> mk_type_annotation cx type_params_map r in
-        pattern_decl cx t p
-    )
-  in
-
-  (* TODO const, let? *)
-  let variable_declaration cx loc { VariableDeclaration.declarations; kind } =
-    match kind with
-    | VariableDeclaration.Const ->
-        let msg = "Unsupported variable declaration: const" in
-        Flow_js.add_error cx [mk_reason "" loc, msg]
-    | VariableDeclaration.Let ->
-        let msg = "Unsupported variable declaration: let" in
-        Flow_js.add_error cx [mk_reason "" loc, msg]
-    | VariableDeclaration.Var ->
-        List.iter (var_declarator cx) declarations
-  in
-
   let block_body cx { Block.body } =
-    List.iter (statement_decl cx type_params_map) body
+    Env_js.push_lex ();
+    List.iter (statement_decl cx type_params_map) body;
+    Env_js.pop_lex ()
   in
 
   let catch_clause cx { Try.CatchClause.body = (_, b); _ } =
@@ -1059,13 +1056,15 @@ and statement_decl cx type_params_map = Ast.Statement.(
       let name_loc, { Ast.Identifier.name; _ } = id in
       let r = mk_reason (spf "type %s" name) name_loc in
       let tvar = Flow_js.mk_tvar cx r in
-      Env_js.bind_type cx name tvar name_loc
+      Env_js.bind_type cx name tvar r
 
   | (loc, Switch { Switch.discriminant; cases; lexical }) ->
       (* TODO: ensure that default is last *)
+      Env_js.push_lex ();
       List.iter (fun (loc, { Switch.Case.test; consequent }) ->
         List.iter (statement_decl cx type_params_map) consequent
-      ) cases
+      ) cases;
+      Env_js.pop_lex ()
 
   | (loc, Return _) -> ()
 
@@ -1095,28 +1094,34 @@ and statement_decl cx type_params_map = Ast.Statement.(
       statement_decl cx type_params_map body
 
   | (loc, For { For.init; test; update; body }) ->
+      Env_js.push_lex ();
       (match init with
         | Some (For.InitDeclaration (loc, decl)) ->
-            variable_declaration cx loc decl
+            variable_decl cx type_params_map loc decl
         | _ -> ()
       );
-      statement_decl cx type_params_map body
+      statement_decl cx type_params_map body;
+      Env_js.pop_lex ()
 
   | (loc, ForIn { ForIn.left; right; body; each }) ->
+      Env_js.push_lex ();
       (match left with
         | ForIn.LeftDeclaration (loc, decl) ->
-            variable_declaration cx loc decl
+            variable_decl cx type_params_map loc decl
         | _ -> ()
       );
-      statement_decl cx type_params_map body
+      statement_decl cx type_params_map body;
+      Env_js.pop_lex ()
 
   | (loc, ForOf { ForOf.left; right; body; }) ->
+      Env_js.push_lex ();
       (match left with
         | ForOf.LeftDeclaration (loc, decl) ->
-            variable_declaration cx loc decl
+            variable_decl cx type_params_map loc decl
         | _ -> ()
       );
-      statement_decl cx type_params_map body
+      statement_decl cx type_params_map body;
+      Env_js.pop_lex ()
 
   | (loc, Let _) ->
       (* TODO *)
@@ -1131,7 +1136,7 @@ and statement_decl cx type_params_map = Ast.Statement.(
         let r = mk_reason (spf "%sfunction %s"
           (if async then "async " else "") name) loc in
         let tvar = Flow_js.mk_tvar cx r in
-        Env_js.bind_var cx name tvar loc
+        Env_js.bind_fun cx name tvar r
       | None -> failwith (
           "Flow Error: Nameless function declarations should always be given " ^
           "an implicit name before they get hoisted!"
@@ -1143,7 +1148,7 @@ and statement_decl cx type_params_map = Ast.Statement.(
       let r = mk_reason (spf "declare %s" name) loc in
       let t = mk_type_annotation cx type_params_map r typeAnnotation in
       Hashtbl.replace cx.type_table loc t;
-      Env_js.bind_declare_var cx name t loc
+      Env_js.bind_declare_var cx name t r
 
   | (loc, DeclareFunction { DeclareFunction.id; }) ->
       let _, { Ast.Identifier.name; typeAnnotation; _; } = id in
@@ -1153,7 +1158,7 @@ and statement_decl cx type_params_map = Ast.Statement.(
       Env_js.bind_declare_fun cx name t r
 
   | (loc, VariableDeclaration decl) ->
-      variable_declaration cx loc decl
+      variable_decl cx type_params_map loc decl
 
   | (loc, ClassDeclaration { Ast.Class.id; _ }) -> (
       match id with
@@ -1161,7 +1166,7 @@ and statement_decl cx type_params_map = Ast.Statement.(
         let name_loc, { Ast.Identifier.name; _ } = id in
         let r = mk_reason (spf "class %s" name) name_loc in
         let tvar = Flow_js.mk_tvar cx r in
-        Env_js.bind_implicit_let Scope.Entry.ClassNameBinding cx name tvar name_loc
+        Env_js.bind_implicit_let Scope.Entry.ClassNameBinding cx name tvar r
       | None -> ()
     )
 
@@ -1175,7 +1180,7 @@ and statement_decl cx type_params_map = Ast.Statement.(
       let tvar = Flow_js.mk_tvar cx r in
       (* interface is a type alias, declare class is a var *)
       Env_js.(if is_interface then bind_type else bind_declare_var)
-        cx name tvar loc
+        cx name tvar r
 
   | (loc, DeclareModule { DeclareModule.id; _ }) ->
       let name = match id with
@@ -1188,7 +1193,7 @@ and statement_decl cx type_params_map = Ast.Statement.(
       let r = mk_reason (spf "module %s" name) loc in
       let t = Flow_js.mk_tvar cx r in
       Hashtbl.replace cx.type_table loc t;
-      Env_js.bind_declare_var cx (internal_module_name name) t loc
+      Env_js.bind_declare_var cx (internal_module_name name) t r
 
   | (_, ExportDeclaration {
       ExportDeclaration.default;
@@ -1237,15 +1242,15 @@ and statement_decl cx type_params_map = Ast.Statement.(
           let reason = mk_reason reason_str loc in
           let tvar = Flow_js.mk_tvar cx reason in
           if isType
-          then Env_js.bind_type cx local_name tvar loc
-          else Env_js.bind_var cx local_name tvar loc
+          then Env_js.bind_type cx local_name tvar reason
+          else Env_js.bind_var cx local_name tvar reason
         | None -> ()
       );
 
       (match specifier with
         | Some(ImportDeclaration.Named(_, named_specifiers)) ->
           let init_specifier (specifier_loc, specifier) = (
-            let (loc, remote_ident) =
+            let (_, remote_ident) =
               specifier.ImportDeclaration.NamedSpecifier.id
             in
             let remote_name = remote_ident.Ast.Identifier.name in
@@ -1255,15 +1260,15 @@ and statement_decl cx type_params_map = Ast.Statement.(
                 let reason_str =
                   spf "%s { %s as %s }" import_str remote_name local_name
                 in
-                (local_name, (mk_reason reason_str loc))
+                (local_name, (mk_reason reason_str specifier_loc))
               | None ->
                 let reason_str = spf "%s { %s }" import_str remote_name in
-                (remote_name, (mk_reason reason_str loc))
+                (remote_name, (mk_reason reason_str specifier_loc))
             ) in
             let tvar = Flow_js.mk_tvar cx reason in
             if isType
-            then Env_js.bind_type cx local_name tvar specifier_loc
-            else Env_js.bind_var cx local_name tvar specifier_loc
+            then Env_js.bind_type cx local_name tvar reason
+            else Env_js.bind_var cx local_name tvar reason
           ) in
           List.iter init_specifier named_specifiers
         | Some(ImportDeclaration.NameSpace(_, (loc, local_ident))) ->
@@ -1273,8 +1278,8 @@ and statement_decl cx type_params_map = Ast.Statement.(
           in
           let tvar = Flow_js.mk_tvar cx reason in
           if isType
-          then Env_js.bind_type cx local_name tvar loc
-          else Env_js.bind_var cx local_name tvar loc
+          then Env_js.bind_type cx local_name tvar reason
+          else Env_js.bind_var cx local_name tvar reason
 
         | None -> ()
       )
@@ -1332,19 +1337,22 @@ and toplevels cx type_params_map stmts =
 and statement cx type_params_map = Ast.Statement.(
 
   let variables cx loc { VariableDeclaration.declarations; kind } =
-    List.iter (variable cx type_params_map) declarations
+    List.iter (variable cx type_params_map kind) declarations
   in
 
   let catch_clause cx { Try.CatchClause.param; guard; body = (_, b) } =
     Ast.Pattern.(match param with
-      | loc, Identifier (_, {
+      | loc, Identifier (name_loc, {
           Ast.Identifier.name; typeAnnotation = None; _
         }) ->
-          let t = Flow_js.mk_tvar cx (mk_reason "catch" loc) in
-          Env_js.let_env
-            name
-            (Scope.Entry.new_var t ~loc)
-            (fun () -> toplevels cx type_params_map b.Block.body)
+          let r = mk_reason "catch" loc in
+          let t = Flow_js.mk_tvar cx r in
+          Env_js.push_lex ();
+          Scope.Entry.(Env_js.bind_implicit_let
+            ~state:Initialized CatchParamBinding cx name t r);
+          List.iter (statement_decl cx type_params_map) b.Block.body;
+          toplevels cx type_params_map b.Block.body;
+          Env_js.pop_lex ()
 
       | loc, Identifier (_, { Ast.Identifier.name; _ }) ->
           let msg = "type annotations for catch params not yet supported" in
@@ -1361,7 +1369,11 @@ and statement cx type_params_map = Ast.Statement.(
   | (loc, Empty) -> ()
 
   | (loc, Block { Block.body }) ->
-      toplevels cx type_params_map body
+      Env_js.push_lex ();
+      List.iter (statement_decl cx type_params_map) body;
+      toplevels cx type_params_map body;
+      Env_js.pop_lex ()
+
 
   | (loc, Expression { Expression.expression = e }) ->
       ignore (expression cx type_params_map e)
@@ -1502,10 +1514,9 @@ and statement cx type_params_map = Ast.Statement.(
       Env_js.init_type cx name type_ r
 
   | (loc, Switch { Switch.discriminant; cases; lexical }) ->
-
       ignore (expression cx type_params_map discriminant);
+      Env_js.push_lex ();
       let save_break_exn = Abnormal.swap (Abnormal.Break None) false in
-
       let default = ref false in
       let ctx =  Env_js.get_scopes () in
       let last_ctx = ref None in
@@ -1547,6 +1558,7 @@ and statement cx type_params_map = Ast.Statement.(
 
           let exception_ = ref None in
           mark_exception_handler (fun () ->
+            List.iter (statement_decl cx type_params_map) consequent;
             toplevels cx type_params_map consequent
           ) exception_;
 
@@ -1589,7 +1601,9 @@ and statement cx type_params_map = Ast.Statement.(
               | _ -> false
             )
             then Abnormal.raise_exn exn
-      )
+      );
+
+      Env_js.pop_lex ()
 
   | (loc, Return { Return.argument }) ->
       let reason = mk_reason "return" loc in
@@ -1684,9 +1698,12 @@ and statement cx type_params_map = Ast.Statement.(
       let exception_catch = ref None in
       let exception_finally = ref None in
 
-      mark_exception_handler
-        (fun () -> toplevels cx type_params_map b.Block.body)
-        exception_try;
+      Env_js.push_lex ();
+      mark_exception_handler (fun () ->
+        List.iter (statement_decl cx type_params_map) b.Block.body;
+        toplevels cx type_params_map b.Block.body
+      ) exception_try;
+      Env_js.pop_lex ();
 
       (* clone end of try as start of finally *)
       let finally_ctx = Env_js.clone_scopes (Env_js.get_scopes ()) in
@@ -1723,14 +1740,21 @@ and statement cx type_params_map = Ast.Statement.(
 
             (* 1. havoc environment, since the catch block may exit anywhere *)
             Env_js.(havoc_vars (peek_changeset ()));
-            mark_exception_handler
-              (fun () -> toplevels cx type_params_map body)
-              exception_finally;
+            Env_js.push_lex ();
+            mark_exception_handler (fun () ->
+              List.iter (statement_decl cx type_params_map) body;
+              toplevels cx type_params_map body
+            ) exception_finally;
+            Env_js.pop_lex ();
 
             (* 2. update environment to the end of try or catch *)
             Env_js.update_env cx finally_ctx;
-            ignore_exception_handler
-              (fun () -> toplevels cx type_params_map body);
+            Env_js.push_lex ();
+            ignore_exception_handler (fun () ->
+              List.iter (statement_decl cx type_params_map) body;
+              toplevels cx type_params_map body
+            );
+            Env_js.pop_lex ()
       );
 
       let newset = Env_js.merge_changeset oldset in
@@ -1876,12 +1900,14 @@ and statement cx type_params_map = Ast.Statement.(
   *)
   (***************************************************************************)
   | (loc, For { For.init; test; update; body }) ->
+      Env_js.push_lex ();
       let reason = mk_reason "for" loc in
       let save_break_exn = Abnormal.swap (Abnormal.Break None) false in
       let save_continue_exn = Abnormal.swap (Abnormal.Continue None) false in
       (match init with
         | None -> ()
         | Some (For.InitDeclaration (loc, decl)) ->
+            variable_decl cx type_params_map loc decl;
             variables cx loc decl
         | Some (For.InitExpression expr) ->
             ignore (expression cx type_params_map expr)
@@ -1923,7 +1949,9 @@ and statement cx type_params_map = Ast.Statement.(
       Env_js.update_env cx do_ctx;
       Env_js.refine_with_preds cx reason not_preds xtypes;
       if Abnormal.swap (Abnormal.Break None) save_break_exn
-      then Env_js.havoc_vars newset
+      then Env_js.havoc_vars newset;
+
+      Env_js.pop_lex ()
 
   (***************************************************************************)
   (* Refinements for `for-in` are derived by the following Hoare logic rule:
@@ -1944,6 +1972,8 @@ and statement cx type_params_map = Ast.Statement.(
       let o = mk_object cx (mk_reason "iteration expected on object" loc) in
       Flow_js.flow cx (t, MaybeT o); (* null/undefined are allowed *)
 
+      Env_js.push_lex ();
+
       let ctx =  Env_js.get_scopes () in
       let oldset = Env_js.clear_changeset () in
       Env_js.widen_env cx reason;
@@ -1955,16 +1985,12 @@ and statement cx type_params_map = Ast.Statement.(
       Env_js.refine_with_preds cx reason preds xtypes;
 
       (match left with
-        | ForIn.LeftDeclaration (_, {
-            VariableDeclaration.declarations = [
-              (loc, {
-                VariableDeclaration.Declarator.id =
-                  (_, Ast.Pattern.Identifier (_, id));
-                _;
-              })
-            ];
-            _;
-          })
+        | ForIn.LeftDeclaration (loc, ({ VariableDeclaration.
+            kind; declarations = [vdecl]
+          } as decl)) ->
+            variable_decl cx type_params_map loc decl;
+            variable cx type_params_map kind ~uninitialized:StrT.at vdecl
+
         | ForIn.LeftExpression (loc, Ast.Expression.Identifier (_, id)) ->
             let name = id.Ast.Identifier.name in
             let reason = mk_reason (spf "for..in %s" name) loc in
@@ -1985,7 +2011,9 @@ and statement cx type_params_map = Ast.Statement.(
 
       Env_js.update_env cx ctx;
       if Abnormal.swap (Abnormal.Break None) save_break_exn
-      then Env_js.havoc_vars newset
+      then Env_js.havoc_vars newset;
+
+      Env_js.pop_lex ()
 
   | (loc, ForOf { ForOf.left; right; body; }) ->
       let reason = mk_reason "for-of" loc in
@@ -2002,6 +2030,8 @@ and statement cx type_params_map = Ast.Statement.(
 
       Flow_js.flow cx (t, o); (* null/undefined are NOT allowed *)
 
+      Env_js.push_lex ();
+
       let ctx =  Env_js.get_scopes () in
       let oldset = Env_js.clear_changeset () in
       Env_js.widen_env cx reason;
@@ -2013,16 +2043,15 @@ and statement cx type_params_map = Ast.Statement.(
       Env_js.refine_with_preds cx reason preds xtypes;
 
       (match left with
-        | ForOf.LeftDeclaration (_, {
-            VariableDeclaration.declarations = [
-              (loc, {
-                VariableDeclaration.Declarator.id =
-                  (_, Ast.Pattern.Identifier (_, id));
-                _;
-              })
-            ];
-            _;
-          })
+        | ForOf.LeftDeclaration (loc, ({ VariableDeclaration.
+            kind; declarations = [vdecl]
+          } as decl)) ->
+            let repos_tvar loc =
+              mod_reason_of_t (repos_reason loc) element_tvar
+            in
+            variable_decl cx type_params_map loc decl;
+            variable cx type_params_map kind ~uninitialized:repos_tvar vdecl
+
         | ForOf.LeftExpression (loc, Ast.Expression.Identifier (_, id)) ->
             let name = id.Ast.Identifier.name in
             let reason = mk_reason (spf "for..of %s" name) loc in
@@ -2043,7 +2072,9 @@ and statement cx type_params_map = Ast.Statement.(
 
       Env_js.update_env cx ctx;
       if Abnormal.swap (Abnormal.Break None) save_break_exn
-      then Env_js.havoc_vars newset
+      then Env_js.havoc_vars newset;
+
+      Env_js.pop_lex ()
 
   | (loc, Let _) ->
       (* TODO *)
@@ -2070,7 +2101,7 @@ and statement cx type_params_map = Ast.Statement.(
       Hashtbl.replace cx.type_table loc fn_type;
       (match id with
       | Some(_, {Ast.Identifier.name; _ }) ->
-        Env_js.init_var cx name ~has_anno:false fn_type reason
+        Env_js.init_fun cx name fn_type reason
       | None -> ())
 
   | (loc, DeclareVariable { DeclareVariable.id; })
@@ -2788,28 +2819,36 @@ and object_ cx type_params_map reason ?(allow_sealed=true) props = Ast.Expressio
   chain_objects cx reason o spread
 )
 
-and variable cx type_params_map (loc, vdecl) = Ast.(
-  let { Statement.VariableDeclaration.Declarator.id; init } = vdecl in
+and variable cx type_params_map kind
+  ?(uninitialized=void_) (loc, vdecl) = Ast.Statement.(
+  let value_kind, init_var = match kind with
+    | VariableDeclaration.Const -> Scope.Entry.Const, Env_js.init_const
+    | VariableDeclaration.Let -> Scope.Entry.Let None, Env_js.init_let
+    | VariableDeclaration.Var -> Scope.Entry.Var, Env_js.init_var
+  in
+  let str_of_kind = Scope.Entry.string_of_value_kind value_kind in
+  let { VariableDeclaration.Declarator.id; init } = vdecl in
   match id with
-    | (loc, Pattern.Identifier (_, { Identifier.
+    | (loc, Ast.Pattern.Identifier (_, { Ast.Identifier.
           name; typeAnnotation; optional
         })) ->
-        let reason = mk_reason (spf "var %s" name) loc in
+        let reason = mk_reason (spf "%s %s" str_of_kind name) loc in
         let has_anno = not (typeAnnotation = None) in
         (match init with
           | Some expr ->
             let rhs = expression cx type_params_map expr in
-            Env_js.init_var cx name ~has_anno rhs reason
+            init_var cx name ~has_anno rhs reason
           | None ->
-            if not optional
-            then Env_js.init_var cx name ~has_anno (void_ loc) reason
+            if not optional then
+              let t = uninitialized loc in
+              init_var cx name ~has_anno t reason
             else if has_anno
             then Env_js.pseudo_init_declared_type cx name reason
         )
     | loc, _ ->
         (match init with
           | Some expr ->
-              let reason = mk_reason "var _" loc in
+              let reason = mk_reason (spf "%s _" str_of_kind) loc in
               let t_ = type_of_pattern id
                 |> mk_type_annotation cx type_params_map reason in
               let t = expression cx type_params_map expr in
@@ -3567,11 +3606,17 @@ and unary cx type_params_map loc = Ast.Expression.Unary.(function
     func_call cx reason await [arg]
 )
 
-and update cx type_params_map loc = Ast.Expression.Update.(function
-  | { operator; argument; _ } ->
-      let t = NumT.at loc in
-      Flow_js.flow cx (expression cx type_params_map argument, t);
-      t
+and update cx type_params_map loc expr = Ast.Expression.Update.(
+  let et = match expr.argument with
+  | (_, Ast.Expression.Identifier (loc, { Ast.Identifier.name; _ })) ->
+    (* enforce state-based guards for binding update, e.g., const *)
+    identifier ~lookup_mode:ForUpdate cx name loc
+  | _ ->
+    expression cx type_params_map expr.argument
+  in
+  let t = NumT.at loc in
+  Flow_js.flow cx (et, t);
+  t
 )
 
 (* traverse a binary expression, return result type *)
@@ -3654,8 +3699,8 @@ and assignment_lhs cx type_params_map = Ast.Pattern.(function
       error_destructuring cx loc;
       AnyT.at loc
 
-  | loc, Identifier i ->
-      expression cx type_params_map (loc, Ast.Expression.Identifier i)
+  | _, Identifier (loc, { Ast.Identifier.name; _ }) ->
+      identifier ~lookup_mode:ForUpdate cx name loc
 
   | _, Expression ((_, Ast.Expression.Member _) as m) ->
       expression cx type_params_map m
