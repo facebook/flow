@@ -7,8 +7,8 @@ var {m} = {m:0};
 ({m} = {m:m});
 
 var obj;
-var {n: obj.x};
-var [obj.x];
+var {n: obj.x} = {n:3};
+var [obj.x] = ['foo'];
 
 function foo({p, z:[r]}) {
     a = p;
