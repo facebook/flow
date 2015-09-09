@@ -761,9 +761,11 @@ let merge_env =
         (* ...in which case we can forget them *)
         ()
       (* changeset entry exists only in lex scope *)
-      | None, None, Some e when is_lex scope2 && Entry.is_lex e ->
+      | None, Some _, Some _ when is_lex scope1 && is_lex scope2 ->
         ()
-      | None, Some e, None when is_lex scope1 && Entry.is_lex e ->
+      | None, Some _, None when is_lex scope1 ->
+        ()
+      | None, None, Some _ when is_lex scope2 ->
         ()
       (* otherwise, non-refinement uneven distributions are asserts. *)
       | orig, child1, child2 ->
