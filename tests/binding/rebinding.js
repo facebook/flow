@@ -178,3 +178,12 @@ function var_shadow_nested_scope() {
     }
   }
 }
+
+function type_shadow_nested_scope() {
+  {
+    let x = 0;
+    {
+      type x = string; // error: name already bound
+    }
+  }
+}

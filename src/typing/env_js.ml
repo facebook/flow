@@ -344,63 +344,49 @@ let already_bound_error =
  *)
 
 let bind_entry cx name entry reason =
-  (* lex scopes can only hold let/const bindings
-   * var scopes can hold all bindings
-   * var bindings can't shadow lex bindings
-   * type entries are hoisted to var scope *)
-  let rec find_scope = function
+  (* iterate top-down through scopes until the appropriate scope for this
+     binding is found, or realize a binding error *)
+  let rec loop = function
     | [] -> assert_false "empty scope list"
     | scope::scopes -> Scope.(
-      match scope.kind, entry with
-      | LexScope, Entry.Value { Entry.kind = Entry.Let _; _ }
-      | LexScope, Entry.Value { Entry.kind = Entry.Const; _ }
-      | VarScope _, _ ->
-        Some scope
-      | LexScope, Entry.Type _ ->
-        find_scope scopes
-      | LexScope, Entry.Value { Entry.kind = Entry.Var; _ } ->
-        match get_entry name scope with
-        (* nested scope var shadows a lex-scoped lexical *)
-        | Some prev
-          when is_lex scope && Entry.is_lex prev ->
-            already_bound_error cx name prev reason;
-            None
-        (* keep searching for the var's scope *)
-        | _ -> find_scope scopes
-    )
+      match get_entry name scope with
+
+      (* if no entry already exists, this might be our scope *)
+      | None -> Entry.(
+        match scope.Scope.kind, entry with
+        (* lex scopes can only hold let/const bindings *)
+        (* var scope can hold all binding types *)
+        | LexScope, Value { kind = Let _; _ }
+        | LexScope, Value { kind = Const; _ }
+        | VarScope _, _ ->
+          add_entry name entry scope
+        (* otherwise, keep looking for our scope *)
+        | _ -> loop scopes)
+
+      (* some rebindings are allowed, but usually an error *)
+      | Some prev ->
+        match scope.kind with
+
+        (* specifically a var scope allows some shadowing *)
+        | VarScope _ -> Entry.(
+          (* funcs/vars can shadow other funcs/vars -- only in var scope *)
+          let can_shadow = function
+            | (Var | Let (Some FunctionBinding)),
+              (Var | Let (Some FunctionBinding)) -> true
+            | _ -> false
+          in
+          match entry, prev with
+          (* good shadowing leaves existing entry, unifies with new *)
+          | Value e, Value p when can_shadow (e.kind, p.kind) ->
+            (* TODO currently we don't step on specific. shouldn't we? *)
+            Flow_js.unify cx p.general e.general
+          (* bad shadowing is a binding error *)
+          | _ -> already_bound_error cx name prev reason)
+
+        (* shadowing in a lex scope is always an error *)
+        | LexScope -> already_bound_error cx name prev reason)
   in
-  match find_scope !scopes with
-  | None ->
-      (* error condition -- error already raised *)
-      ()
-  | Some scope ->
-    match Scope.get_entry name scope with
-    | None ->
-      Scope.add_entry name entry scope
-
-    | Some prev -> Entry.(
-      match entry, prev with
-      (* shadowing var *)
-      | Value { kind = Var; general = general_new; _ },
-        Value { kind = Var; general = general_prev; _ } ->
-          (* leave existing in place, but unify with new *)
-          (* TODO currently we don't step on specific. shouldn't we? *)
-          Flow_js.unify cx general_prev general_new
-
-      (* functions can shadow vars/other functions in toplevel *)
-      | Value { kind = Let (Some FunctionBinding);
-                general = general_new; _ },
-        Value { kind = Var | Let (Some FunctionBinding);
-                general = general_prev; _ }
-        when not (Scope.is_lex scope) ->
-          (* leave existing in place, but unify with new *)
-          (* TODO currently we don't step on specific. shouldn't we? *)
-          Flow_js.unify cx general_prev general_new
-
-      | Value _, _
-      | Type _, _ ->
-        already_bound_error cx name prev reason
-      )
+  loop !scopes
 
 (* bind var entry *)
 let bind_var ?(state=Entry.Declared) cx name t r =
