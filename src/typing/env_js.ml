@@ -824,7 +824,7 @@ let copy_env  = Entry.(
   let rec copy_entry cx reason (env1, env2) name =
     match env1, env2 with
 
-    | scope1 :: env1_, scope2 :: env2_ -> Scope.(
+    | scope1 :: env1, scope2 :: env2 -> Scope.(
       match get_entry name scope1, get_entry name scope2 with
 
       | Some (Value _ as v1), Some (Value _ as v2) ->
@@ -842,10 +842,10 @@ let copy_env  = Entry.(
 
       | None, None ->
         (* not found, try outer scopes *)
-        copy_entry cx reason (env1_, env2_) name
+        copy_entry cx reason (env1, env2) name
 
       (* global lookups may leave new entries in env2 *)
-      | None, Some _ when env1_ = [] ->
+      | None, Some _ when env1 = [] ->
         (* ...in which case we can forget it *)
         ()
 
@@ -854,12 +854,6 @@ let copy_env  = Entry.(
         ()
       | Some e, None when is_lex scope1 && Entry.is_lex e ->
         ()
-
-      (* walk through uneven lex scopes *)
-      | Some _, None when is_lex scope2 ->
-        copy_entry cx reason (env1, env2_) name
-      | None, Some _ when is_lex scope1 ->
-        copy_entry cx reason (env1_, env2) name
 
       | entry1, entry2 ->
         (* uneven distributions *)
