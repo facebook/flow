@@ -39,6 +39,12 @@ function reduce_test() {
   var flattened = [[0, 1], [2, 3], [4, 5]].reduce(function(a, b) {
     return a.concat(b);
   });
+
+  /* Added later, because the above is insufficient */
+
+  // acc is element type of array when no init is provided
+  [""].reduce((acc, str) => acc * str.length); // error, string ~> number
+  [""].reduceRight((acc, str) => acc * str.length); // error, string ~> number
 }
 
 function from_test() {

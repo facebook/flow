@@ -55,7 +55,7 @@ F.js:5:10,17: property `length`
 Error:
 F.js:4:33,38: string
 This type is incompatible with
-[LIB] core.js:161:13,18: number
+[LIB] core.js:173:13,18: number
 
 G.js:2:12,14: number
 This type is incompatible with
@@ -69,7 +69,7 @@ G.js:6:1,8: assignment of property `length`
 Error:
 G.js:6:12,17: string
 This type is incompatible with
-[LIB] core.js:161:13,18: number
+[LIB] core.js:173:13,18: number
 
 G.js:7:1,10: call of method length
 Function cannot be called on

@@ -41,4 +41,12 @@ array_lib.js:21:43,45: string
 This type is incompatible with
 [LIB] core.js:139:31,42: union type
 
-Found 7 errors
+array_lib.js:46:3,45: call of method reduce
+Function cannot be called on
+[LIB] core.js:163:5,10: Array
+
+array_lib.js:47:3,50: call of method reduceRight
+Function cannot be called on
+[LIB] core.js:170:5,15: Array
+
+Found 9 errors
