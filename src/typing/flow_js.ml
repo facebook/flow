@@ -3534,8 +3534,13 @@ and structural_subtype cx trace lower (upper_reason, super, fields_tmap, methods
   let flds2 = SMap.union fields_tmap methods_tmap in
   flds2 |> SMap.iter
       (fun s t2 ->
-        let lookup_reason = replace_reason (spf "property `%s`" s) (reason_of_t t2) in
-        rec_flow cx trace (lower, LookupT (lookup_reason, Some lower_reason, s, t2))
+        match t2 with
+        | OptionalT t2 ->
+          let lookup_reason = replace_reason (spf "optional property `%s`" s) (reason_of_t t2) in
+          rec_flow cx trace (lower, LookupT (lookup_reason, None, s, t2))
+        | _ ->
+          let lookup_reason = replace_reason (spf "property `%s`" s) (reason_of_t t2) in
+          rec_flow cx trace (lower, LookupT (lookup_reason, Some lower_reason, s, t2))
       );
   rec_flow cx trace (lower, super)
 

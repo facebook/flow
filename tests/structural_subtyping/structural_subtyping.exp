@@ -39,4 +39,16 @@ obj.js:18:39,44: number
 This type is incompatible with
 obj.js:6:6,11: string
 
-Found 10 errors
+optional.js:4:6,11: property `a`
+Property not found in
+optional.js:10:26,27: object literal
+
+optional.js:5:7,12: number
+This type is incompatible with
+optional.js:12:43,46: boolean
+
+optional.js:12:43,46: boolean
+This type is incompatible with
+optional.js:5:7,12: number
+
+Found 13 errors

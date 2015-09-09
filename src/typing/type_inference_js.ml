@@ -2172,7 +2172,12 @@ and statement cx type_params_map = Ast.Statement.(
 
     let sfmap, smmap, fmap, mmap = List.fold_left Ast.Type.Object.Property.(
       fun (sfmap_, smmap_, fmap_, mmap_)
-        (loc, { key; value; static; _method; _ }) -> (* TODO: optional *)
+        (loc, { key; value; static; _method; optional; }) ->
+        if optional && _method
+        then begin
+          let msg = "optional methods are not supported" in
+          Flow_js.add_error cx [Reason_js.mk_reason "" loc, msg]
+        end;
         Ast.Expression.Object.Property.(match key with
         | Literal (loc, _)
         | Computed (loc, _) ->
@@ -2182,8 +2187,10 @@ and statement cx type_params_map = Ast.Statement.(
 
         | Identifier (loc, { Ast.Identifier.name; _ }) ->
             let t = convert cx type_params_map value in
+            let t = if optional then OptionalT t else t in
             (* check for overloads in static and instance method maps *)
             let map_ = if static then smmap_ else mmap_ in
+
             let t = match SMap.get name map_ with
               | None -> t
               | Some (IntersectionT (reason, seen_ts)) ->
