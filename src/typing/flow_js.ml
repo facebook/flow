@@ -4867,17 +4867,17 @@ and multiflow_partial cx trace ?strict = function
 
   | ([],[RestT tout]) -> [RestT tout]
 
-  | ([],ts) ->
+  | ([],tout::touts) ->
     (match strict with
     | Some reason_op ->
         let reason = replace_reason
           "undefined (too few arguments, expected default/rest parameters)"
           reason_op
         in
-        ts |> List.iter (fun t -> rec_flow cx trace (VoidT reason, t))
+        rec_flow cx trace (VoidT reason, tout)
     | None -> ()
     );
-    ts
+    multiflow_partial cx trace ?strict ([], touts)
 
   | (tin::tins,tout::touts) ->
     rec_flow cx trace (tin,tout);
