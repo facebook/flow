@@ -1350,8 +1350,13 @@ and statement cx type_params_map = Ast.Statement.(
           Env_js.push_lex ();
           Scope.Entry.(Env_js.bind_implicit_let
             ~state:Initialized CatchParamBinding cx name t r);
-          List.iter (statement_decl cx type_params_map) b.Block.body;
-          toplevels cx type_params_map b.Block.body;
+          Abnormal.exception_handler
+            (fun () ->
+              List.iter (statement_decl cx type_params_map) b.Block.body;
+              toplevels cx type_params_map b.Block.body)
+            (fun exn ->
+              Env_js.pop_lex ();
+              Abnormal.raise_exn exn);
           Env_js.pop_lex ()
 
       | loc, Identifier (_, { Ast.Identifier.name; _ }) ->

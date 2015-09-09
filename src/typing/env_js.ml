@@ -765,11 +765,6 @@ let merge_env =
         ()
       | None, Some e, None when is_lex scope1 && Entry.is_lex e ->
         ()
-      (* walk through uneven lex scopes *)
-      | Some _, Some _, None when is_lex scope2 ->
-        merge_entry cx reason (env0, env1, env2_) name
-      | Some _, None, Some _ when is_lex scope1 ->
-        merge_entry cx reason (env0, env1_, env2) name
       (* otherwise, non-refinement uneven distributions are asserts. *)
       | orig, child1, child2 ->
         let print_entry_kind_opt = function
