@@ -734,12 +734,12 @@ let merge_env =
     match env0, env1, env2 with
     | [], [], [] ->
       ()
-    | scope0 :: env0_, scope1 :: env1_, scope2 :: env2_ -> Scope.(
+    | scope0 :: env0, scope1 :: env1, scope2 :: env2 -> Scope.(
       let get = get_entry name in
       match get scope0, get scope1, get scope2 with
       (* entry not found in this scope - recurse *)
       | None, None, None ->
-        merge_entry cx reason (env0_, env1_, env2_) name
+        merge_entry cx reason (env0, env1, env2) name
       (* merge child value types back to original *)
       | Some (Value v as orig),
         Some (Value _ as child1), Some (Value _ as child2) ->
@@ -757,7 +757,7 @@ let merge_env =
           (string_of_reason reason)
           name)
       (* global lookups may leave new entries in one or both child envs *)
-      | None, _, _ when env0_ = [] ->
+      | None, _, _ when env0 = [] ->
         (* ...in which case we can forget them *)
         ()
       (* changeset entry exists only in lex scope *)
