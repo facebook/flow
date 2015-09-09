@@ -15,9 +15,17 @@ caching_bug.js:21:43,48: number
 This type is incompatible with
 caching_bug.js:21:62,67: string
 
+iterator_result.js:23:16,48: object literal
+This type is incompatible with
+[LIB] core.js:310:37,316:1: union type
+
+iterator_result.js:25:16,23: object literal
+This type is incompatible with
+[LIB] core.js:310:37,316:1: union type
+
 map.js:13:55,60: string
 This type is incompatible with
-[LIB] core.js:335:28,33: tuple type
+[LIB] core.js:338:28,33: tuple type
 
 set.js:13:28,33: string
 This type is incompatible with
@@ -31,4 +39,4 @@ string.js:5:27,32: number
 This type is incompatible with
 [LIB] core.js:180:28,33: string
 
-Found 8 errors
+Found 10 errors

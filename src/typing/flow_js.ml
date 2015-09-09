@@ -3680,12 +3680,15 @@ and subst cx ?(force=true) (map: Type.t SMap.t) t =
   | KeysT(reason, t) ->
     KeysT(reason, subst cx ~force map t)
 
+  | SingletonNumT _
+  | SingletonBoolT _
   | SingletonStrT _ -> t
 
   | ObjAssignT(reason, t1, t2, xs, resolve) ->
     ObjAssignT(reason, subst cx ~force map t1, subst cx ~force map t2, xs, resolve)
 
-  | _ -> assert false (** TODO **)
+  | _ ->
+      failwith (spf "Unhandled type ctor: %s" (string_of_ctor t)) (* TODO *)
 
 and subst_propmap cx force map id =
   let pmap = find_props cx id in
