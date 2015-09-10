@@ -13,7 +13,7 @@ open Sys_utils
 
 module Json = Hh_json
 
-let version = "0.14.0"
+let version = "0.15.0"
 
 type moduleSystem = Node | Haste
 

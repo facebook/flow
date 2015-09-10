@@ -1,3 +1,42 @@
+###v0.15.0
+
+Likely to cause new Flow errors:
+
+- Flow now treats class identifiers as being let bound. You cannot refer to a class before it is defined.
+- If you accidentally use a tuple type instead of an array type for a rest param then Flow will complain
+- You cannot use `this` before `super()` in a derived constructor, per ES6 semantics
+- Our dictionary property (aka indexer property) support is much more robust and catches things it previously missed.
+- We weren't properly enforcing optional properties in `interfaces` and `declare class`. Now we are.
+
+New Features:
+
+- Generators support, courtesy of [@samwgoldman](https://github.com/samwgoldman)
+- # of worker processers is now configurable, defaults to the # of CPUs
+- If Flow knows the value of a boolean expression, then it will know the value of that expression negated.
+- Flow can remember refinements for things like `if(x.y[a.b])`
+- `export type {type1, type2}` syntax
+
+Notable Bug Fixes:
+
+- Fixed issue where Flow would still read package.json for [ignore]'d path
+- Fixed some leaky annotations that let data flow through them
+- Fixed instance and class types to be considered truthy
+- Flow still initializing message now fits in 80 chars, compliments of [@spicyj](https://github.com/spicyj)
+- No longer will report hoisted declarations as unreachable code
+- Fixed issue with how Flow chooses its tmp dir
+- An async function can return a `T` or a `Promise<T>` and it means the same thing
+- Fixed Flow forgetting about optional properties after an assignment refinement
+- Fixed parser issue around future reserved keywords
+- Optional parameters and rest parameters now work better together
+
+Misc:
+
+- Updated error locations. We've spent a lot of time auditing our error locations and trying to move them closer to the actual errors.
+- esproposal.decorators option to tell Flow to parse and ignore decorators
+- Bunch of updates to the libraries
+- Some perf work
+- Test output is colorized
+
 ###v0.14.0
 
 Likely to cause new Flow errors:
