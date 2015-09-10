@@ -217,8 +217,8 @@ module Type = struct
   (* operations on runtime values, such as functions, objects, and arrays *)
   | CallT of reason * funtype
   | MethodT of reason * name * funtype
-  | SetT of reason * proptype * t
-  | GetT of reason * proptype * t
+  | SetPropT of reason * proptype * t
+  | GetPropT of reason * proptype * t
   | SetElemT of reason * t * t
   | GetElemT of reason * t * t
 
@@ -987,8 +987,8 @@ let new_context ?(checked=false) ?(weak=false) ~file ~_module = {
 let is_use = function
   | CallT _
   | MethodT _
-  | SetT _
-  | GetT _
+  | SetPropT _
+  | GetPropT _
   | SetElemT _
   | GetElemT _
   | ConstructorT _
@@ -1053,8 +1053,8 @@ let string_of_ctor = function
   | ExtendsT _ -> "ExtendsT"
   | CallT _ -> "CallT"
   | MethodT _ -> "MethodT"
-  | SetT _ -> "SetT"
-  | GetT _ -> "GetT"
+  | SetPropT _ -> "SetPropT"
+  | GetPropT _ -> "GetPropT"
   | SetElemT _ -> "SetElemT"
   | GetElemT _ -> "GetElemT"
   | ConstructorT _ -> "ConstructorT"
@@ -1149,8 +1149,8 @@ let rec reason_of_t = function
   | CallT (reason, _)
 
   | MethodT (reason,_,_)
-  | SetT (reason,_,_)
-  | GetT (reason,_,_)
+  | SetPropT (reason,_,_)
+  | GetPropT (reason,_,_)
 
   | SetElemT (reason,_,_)
   | GetElemT (reason,_,_)
@@ -1325,8 +1325,8 @@ let rec mod_reason_of_t f = function
   | CallT (reason, ft) -> CallT (f reason, ft)
 
   | MethodT (reason, name, ft) -> MethodT(f reason, name, ft)
-  | SetT (reason, n, t) -> SetT (f reason, n, t)
-  | GetT (reason, n, t) -> GetT (f reason, n, t)
+  | SetPropT (reason, n, t) -> SetPropT (f reason, n, t)
+  | GetPropT (reason, n, t) -> GetPropT (f reason, n, t)
 
   | SetElemT (reason, it, et) -> SetElemT (f reason, it, et)
   | GetElemT (reason, it, et) -> GetElemT (f reason, it, et)
@@ -1848,8 +1848,8 @@ and _json_of_t_impl json_cx t = Json.(
       "funType", json_of_funtype json_cx funtype
     ]
 
-  | SetT (_, name, t)
-  | GetT (_, name, t) -> [
+  | SetPropT (_, name, t)
+  | GetPropT (_, name, t) -> [
       "propName", json_of_proptype json_cx name;
       "propType", _json_of_t json_cx t
     ]
@@ -2239,10 +2239,10 @@ and dump_t_ =
     | MixedT _
     | AnyT _
     | NullT _ -> Some (string_of_ctor t)
-    | SetT (_, (_, n), t) ->
-        Some (spf "SetT(%s: %s)" n (dump_t_ stack cx t))
-    | GetT (_, (_, n), t) ->
-        Some (spf "GetT(%s: %s)" n (dump_t_ stack cx t))
+    | SetPropT (_, (_, n), t) ->
+        Some (spf "SetPropT(%s: %s)" n (dump_t_ stack cx t))
+    | GetPropT (_, (_, n), t) ->
+        Some (spf "GetPropT(%s: %s)" n (dump_t_ stack cx t))
     | LookupT (_, _, n, t) ->
         Some (spf "LookupT(%s: %s)" n (dump_t_ stack cx t))
     | PredicateT (p, t) -> Some (spf "PredicateT(%s | %s)"
@@ -2748,8 +2748,8 @@ class ['a] type_visitor = object(self)
   | SummarizeT (_, _)
   | CallT (_, _)
   | MethodT (_, _, _)
-  | SetT (_, _, _)
-  | GetT (_, _, _)
+  | SetPropT (_, _, _)
+  | GetPropT (_, _, _)
   | SetElemT (_, _, _)
   | GetElemT (_, _, _)
   | ConstructorT (_, _, _)

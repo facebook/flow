@@ -215,7 +215,7 @@ let global_lexicals = [
    have no process for checking the use of a global binding
    against the kind of binding it turns out to be: this global
    scope is simply a proxy; resolution takes place as a result
-   of the GetT types created in the call to Flow_js.get_builtin.
+   of the GetPropT types created in the call to Flow_js.get_builtin.
 
    This means that we have some false negatives, currently.
    Errors that go unreported currently include:
@@ -227,7 +227,7 @@ let global_lexicals = [
    The least complex solution to this will be to process libs
    eagerly, and save the actual scope to check against here
    when doing local checking of modules. Alternatively, we
-   would have to record in the GetT (or an enrichment) enough
+   would have to record in the GetPropT (or an enrichment) enough
    information about what uses were made of the reference to
    flag such errors on the current deferred basis.
    tests/global_ref tracks this issue.

@@ -986,7 +986,7 @@ let rec assume_ground cx ids = function
   | SummarizeT(_,t)
   | CallT(_,{ return_t = t; _ })
   | MethodT(_,_,{ return_t = t; _})
-  | GetT(_,_,t)
+  | GetPropT(_,_,t)
   | GetElemT(_,_,t)
   | ConstructorT(_,_,t)
   | TypeT(_, t)
@@ -2197,8 +2197,8 @@ let rec __flow cx (l, u) trace =
       (* class-like *)
       | TypeT _
       | ConstructorT _
-      | GetT _
-      | SetT _
+      | GetPropT _
+      | SetPropT _
       | MethodT _
 
       (* function-like *)
@@ -2394,7 +2394,7 @@ let rec __flow cx (l, u) trace =
         iter_props cx mapr (fun x t ->
           let reason = prefix_reason (spf "prop `%s` of " x) reason in
           let t = filter_optional cx ~trace reason t in
-          rec_flow cx trace (proto, SetT (reason, (reason, x), t));
+          rec_flow cx trace (proto, SetPropT (reason, (reason, x), t));
         )
 
     | (_, ShapeT (o)) ->
@@ -2519,10 +2519,10 @@ let rec __flow cx (l, u) trace =
     (* "statics" can be read *)
     (*************************)
 
-    | InstanceT (_, static, _, _), GetT (_, (_, "statics"), t) ->
+    | InstanceT (_, static, _, _), GetPropT (_, (_, "statics"), t) ->
       rec_flow cx trace (static, t)
 
-    | MixedT reason, GetT(_, (_, "statics"), u) ->
+    | MixedT reason, GetPropT(_, (_, "statics"), u) ->
       (* MixedT serves as the instance type of the root class, and also as the
          statics of the root class. *)
       rec_flow cx trace (MixedT (prefix_reason "statics of " reason), u)
@@ -2568,7 +2568,7 @@ let rec __flow cx (l, u) trace =
     (********************************)
 
     | InstanceT (reason_c, static, super, instance),
-      SetT (reason_op, (reason_prop, x), tin) ->
+      SetPropT (reason_op, (reason_prop, x), tin) ->
       Ops.push reason_op;
       (* methods are immutable, so we hide them from property set operations *)
       let fields = instance.fields_tmap in
@@ -2579,11 +2579,11 @@ let rec __flow cx (l, u) trace =
     (* ... and their fields read *)
     (*****************************)
 
-    | InstanceT (_, _, super, _), GetT (_, (_, "__proto__"), t) ->
+    | InstanceT (_, _, super, _), GetPropT (_, (_, "__proto__"), t) ->
       rec_flow cx trace (super, t)
 
     | InstanceT (reason_c, static, super, instance),
-      GetT (reason_op, (reason_prop, x), tout) ->
+      GetPropT (reason_op, (reason_prop, x), tout) ->
       Ops.push reason_op;
       let fields_tmap = find_props cx instance.fields_tmap in
       let methods_tmap = find_props cx instance.methods_tmap in
@@ -2689,7 +2689,7 @@ let rec __flow cx (l, u) trace =
              rules apply. *)
           let r = prefix_reason (spf "prop `%s` of " x) reason_ in
           let r = repos_reason (loc_of_reason reason) r in
-          rec_flow cx trace (proto, SetT (r, (r, x), t));
+          rec_flow cx trace (proto, SetPropT (r, (r, x), t));
         );
       );
       Ops.pop ();
@@ -2702,7 +2702,7 @@ let rec __flow cx (l, u) trace =
       let map = SMap.union fields_tmap methods_tmap in
       map |> SMap.iter (fun x t ->
         if not (List.mem x props_to_skip) then (
-          rec_flow cx trace (proto, SetT (reason, (reason, x), t));
+          rec_flow cx trace (proto, SetPropT (reason, (reason, x), t));
         );
       );
       rec_flow cx trace (proto, t)
@@ -2765,7 +2765,7 @@ let rec __flow cx (l, u) trace =
     (* ... and their fields written *)
     (*****************************************)
 
-    | (ObjT (_, {flags; _}), SetT(_, (_, "constructor"), _)) ->
+    | (ObjT (_, {flags; _}), SetPropT(_, (_, "constructor"), _)) ->
       if flags.frozen then prerr_flow cx trace "Mutation not allowed on" l u
 
     (** o.x = ... has the additional effect of o[_] = ... **)
@@ -2776,7 +2776,7 @@ let rec __flow cx (l, u) trace =
       proto_t = proto;
       dict_t;
     }),
-       SetT(reason_op, (reason_prop, x), tin))
+       SetPropT(reason_op, (reason_prop, x), tin))
       ->
       if flags.frozen then
         prerr_flow cx trace "Mutation not allowed on" l u
@@ -2792,14 +2792,14 @@ let rec __flow cx (l, u) trace =
     (* ... and their fields read *)
     (*****************************)
 
-    | ObjT (_, {proto_t = proto; _}), GetT (_, (_, "__proto__"), t) ->
+    | ObjT (_, {proto_t = proto; _}), GetPropT (_, (_, "__proto__"), t) ->
       rec_flow cx trace (proto,t)
 
-    | ObjT _, GetT(reason_op, (_, "constructor"), tout) ->
+    | ObjT _, GetPropT(reason_op, (_, "constructor"), tout) ->
       rec_flow cx trace (AnyT.why reason_op, tout)
 
     | ObjT (reason_o, { flags; props_tmap = mapr; proto_t = proto; dict_t }),
-      GetT (reason_op, (reason_prop, x), tout) ->
+      GetPropT (reason_op, (reason_prop, x), tout) ->
       let strict = mk_strict_lookup_reason
         flags.sealed (dict_t <> None) reason_o reason_op in
       let t = ensure_prop_for_read cx strict mapr x proto dict_t
@@ -2879,9 +2879,9 @@ let rec __flow cx (l, u) trace =
       let reason_x = replace_reason (spf "property `%s`" x) reason_x in
       (match t with
       | UpperBoundT tin ->
-          rec_flow cx trace (o, SetT(reason_op, (reason_x, x), tin))
+          rec_flow cx trace (o, SetPropT(reason_op, (reason_x, x), tin))
       | LowerBoundT tout ->
-          rec_flow cx trace (o, GetT(reason_op, (reason_x, x), tout))
+          rec_flow cx trace (o, GetPropT(reason_op, (reason_x, x), tout))
       | _ -> assert false)
 
     (* if the object is a dictionary, verify it *)
@@ -2916,18 +2916,18 @@ let rec __flow cx (l, u) trace =
       | LowerBoundT tout -> rec_flow cx trace (value, tout)
       | _ -> assert false)
 
-    | (ArrT _, GetT(reason_op, (_, "constructor"), tout)) ->
+    | (ArrT _, GetPropT(reason_op, (_, "constructor"), tout)) ->
       rec_flow cx trace (AnyT.why reason_op, tout)
 
     | (ArrT _,
-       (SetT(_, (_, "constructor"),_) | MethodT(_,"constructor",_))) -> ()
+       (SetPropT(_, (_, "constructor"),_) | MethodT(_,"constructor",_))) -> ()
 
     (***********************************************)
     (* functions may have their prototypes written *)
     (***********************************************)
 
     | (FunT (reason_f,_,t,_),
-       SetT(reason_op, (_, "prototype"), tin))
+       SetPropT(reason_op, (_, "prototype"), tin))
       ->
       rec_flow cx trace (tin, ObjAssignT(reason_op, t, AnyT.t, [], false))
 
@@ -2936,12 +2936,12 @@ let rec __flow cx (l, u) trace =
     (*********************************)
 
     | (FunT (reason_f,_,t,_),
-       GetT(reason_op, (_, "prototype"), tout))
+       GetPropT(reason_op, (_, "prototype"), tout))
       ->
       rec_flow cx trace (t,tout)
 
     | (ClassT (instance),
-       GetT(reason_op, (_, "prototype"), tout))
+       GetPropT(reason_op, (_, "prototype"), tout))
       ->
       rec_flow cx trace (instance, tout)
 
@@ -3077,7 +3077,7 @@ let rec __flow cx (l, u) trace =
     (* Array library call *)
     (**********************)
 
-    | (ArrT (_, t, _), (GetT _ | SetT _ | MethodT _ | LookupT _)) ->
+    | (ArrT (_, t, _), (GetPropT _ | SetPropT _ | MethodT _ | LookupT _)) ->
       let reason = reason_of_t u in
       let arrt = get_builtin_typeapp cx reason "Array" [t] in
       rec_flow cx trace (arrt, u)
@@ -3086,21 +3086,21 @@ let rec __flow cx (l, u) trace =
     (* String library call *)
     (***********************)
 
-    | (StrT (reason, _), (GetT _ | MethodT _ | LookupT _)) ->
+    | (StrT (reason, _), (GetPropT _ | MethodT _ | LookupT _)) ->
       rec_flow cx trace (get_builtin_type cx reason "String",u)
 
     (***********************)
     (* Number library call *)
     (***********************)
 
-    | (NumT (reason, _), (GetT _ | MethodT _ | LookupT _)) ->
+    | (NumT (reason, _), (GetPropT _ | MethodT _ | LookupT _)) ->
       rec_flow cx trace (get_builtin_type cx reason "Number",u)
 
     (***********************)
     (* Boolean library call *)
     (***********************)
 
-    | (BoolT (reason, _), (GetT _ | MethodT _ | LookupT _)) ->
+    | (BoolT (reason, _), (GetPropT _ | MethodT _ | LookupT _)) ->
       rec_flow cx trace (get_builtin_type cx reason "Boolean",u)
 
     (*********************)
@@ -3117,7 +3117,7 @@ let rec __flow cx (l, u) trace =
     | (ClassT instance, _) when object_like_op u ->
       let reason = prefix_reason "statics of " (reason_of_t instance) in
       let tvar = mk_tvar cx reason in
-      rec_flow cx trace (instance, GetT(reason, (reason, "statics"), tvar));
+      rec_flow cx trace (instance, GetPropT(reason, (reason, "statics"), tvar));
       rec_flow cx trace (tvar,u)
 
     (***************************************************************************)
@@ -3128,7 +3128,7 @@ let rec __flow cx (l, u) trace =
        the presence of a $call property in the former (as a static) compatible
        with the latter. *)
     | (ClassT instance, (FunT (reason, _, _, _) | CallT (reason, _))) ->
-      rec_flow cx trace (l, GetT(reason, (reason, "$call"),u))
+      rec_flow cx trace (l, GetPropT(reason, (reason, "$call"),u))
 
     (* For a function type to be used as a class type, the following must hold:
        - the class's instance type must be a subtype of the function's prototype
@@ -3141,8 +3141,8 @@ let rec __flow cx (l, u) trace =
     | (FunT (reason, static, prototype, funtype), ClassT instance) ->
       rec_flow cx trace (instance, prototype);
       rec_flow cx trace (instance, funtype.this_t);
-      rec_flow cx trace (instance, GetT(reason, (reason, "statics"), static));
-      rec_flow cx trace (u, GetT(reason, (reason, "$call"), l))
+      rec_flow cx trace (instance, GetPropT(reason, (reason, "statics"), static));
+      rec_flow cx trace (u, GetPropT(reason, (reason, "$call"), l))
 
     (************)
     (* indexing *)
@@ -3150,13 +3150,13 @@ let rec __flow cx (l, u) trace =
 
     | (InstanceT _, GetElemT (reason, i, t))
       ->
-      rec_flow cx trace (l, SetT(reason, (reason, "$key"), i));
-      rec_flow cx trace (l, GetT(reason, (reason, "$value"), t))
+      rec_flow cx trace (l, SetPropT(reason, (reason, "$key"), i));
+      rec_flow cx trace (l, GetPropT(reason, (reason, "$value"), t))
 
     | (InstanceT _, SetElemT (reason, i, t))
       ->
-      rec_flow cx trace (l, SetT(reason, (reason, "$key"), i));
-      rec_flow cx trace (l, SetT(reason, (reason, "$value"), t))
+      rec_flow cx trace (l, SetPropT(reason, (reason, "$key"), i));
+      rec_flow cx trace (l, SetPropT(reason, (reason, "$value"), t))
 
     (***************)
     (* unsupported *)
@@ -3224,11 +3224,11 @@ let rec __flow cx (l, u) trace =
         msg
         (reason_of_t t, reason_of_t tc)
 
-    (* when unexpected types flow into a GetT/SetT (e.g. void or other
+    (* when unexpected types flow into a GetPropT/SetPropT (e.g. void or other
        non-object-ish things), then use `reason_prop`, which represents the
        reason for the prop itself, not the lookup action. *)
-    | (_, GetT (_, (reason_prop, _), _))
-    | (_, SetT (_, (reason_prop, _), _)) ->
+    | (_, GetPropT (_, (reason_prop, _), _))
+    | (_, SetPropT (_, (reason_prop, _), _)) ->
       prmsg_flow cx
         Errors_js.ERROR
         trace
@@ -3328,8 +3328,8 @@ and is_object_prototype_method = function
 
 (* only on use-types - guard calls with is_use t *)
 and err_operation = function
-  | GetT _ -> "Property cannot be accessed on"
-  | SetT _ -> "Property cannot be assigned on"
+  | GetPropT _ -> "Property cannot be accessed on"
+  | SetPropT _ -> "Property cannot be assigned on"
   | MethodT _ -> "Method cannot be called on"
   | CallT _ -> "Function cannot be called on"
   | ConstructorT _ -> "Constructor cannot be called on"
@@ -3406,7 +3406,7 @@ and object_like = function
   | t -> function_like t
 
 and object_like_op = function
-  | SetT _ | GetT _ | MethodT _ | LookupT _
+  | SetPropT _ | GetPropT _ | MethodT _ | LookupT _
   | SuperT _
   | GetKeysT _ | HasKeyT _
   | ObjAssignT _ | ObjRestT _
@@ -4913,7 +4913,7 @@ and string_key s reason =
 
 and get_builtin cx x reason =
   mk_tvar_where cx reason (fun builtin ->
-    flow_opt cx (builtins (), GetT(reason, (reason, x), builtin))
+    flow_opt cx (builtins (), GetPropT(reason, (reason, x), builtin))
   )
 
 and lookup_builtin cx x reason strict builtin =
@@ -5034,7 +5034,7 @@ and resolve_builtin_class cx = function
 
 and set_builtin cx x t =
   let reason = builtin_reason x in
-  flow_opt cx (builtins (), SetT(reason, (reason, x), t))
+  flow_opt cx (builtins (), SetPropT(reason, (reason, x), t))
 
 (* Wrapper functions around __flow that manage traces. Use these functions for
    all recursive calls in the implementation of __flow. *)
@@ -5285,10 +5285,10 @@ let rec gc cx state = function
       funtype.params_tlist |> List.iter (gc cx state);
       gc cx state funtype.return_t
 
-  | SetT(_, _, t) ->
+  | SetPropT(_, _, t) ->
       gc cx state t
 
-  | GetT(_, _, t) ->
+  | GetPropT(_, _, t) ->
       gc cx state t
 
   | SetElemT(_, i, t) ->

@@ -76,8 +76,8 @@ module Type :
 
       | CallT of reason * funtype
       | MethodT of reason * name * funtype
-      | SetT of reason * proptype * t
-      | GetT of reason * proptype * t
+      | SetPropT of reason * proptype * t
+      | GetPropT of reason * proptype * t
       | SetElemT of reason * t * t
       | GetElemT of reason * t * t
 

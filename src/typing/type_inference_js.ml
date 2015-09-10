@@ -330,7 +330,7 @@ let rec destructuring cx t f = Ast.Pattern.(function
                 (* use the same reason for the prop name and the lookup.
                    given `var {foo} = ...`, `foo` is both. compare to `a.foo`
                    where `foo` is the name and `a.foo` is the lookup. *)
-                Flow_js.flow cx (t, GetT(reason, (reason, x), tvar));
+                Flow_js.flow cx (t, GetPropT(reason, (reason, x), tvar));
                 destructuring cx tvar f p
             | _ ->
               error_destructuring cx loc
@@ -673,7 +673,7 @@ let rec convert cx type_params_map = Ast.Type.(function
     let _, { Ast.Identifier.name; _ } = id in
     let reason = mk_reason name loc in
     let t = Flow_js.mk_tvar_where cx reason (fun t ->
-      Flow_js.flow cx (m, GetT (reason, (reason, name), t));
+      Flow_js.flow cx (m, GetPropT (reason, (reason, name), t));
     ) in
     let typeParameters = extract_type_param_instantiations typeParameters in
     let params = if typeParameters = []
@@ -943,7 +943,7 @@ and convert_qualification ?(lookup_mode=ForType) cx reason_prefix
     let _, { Ast.Identifier.name; _ } = id in
     let reason = mk_reason (spf "%s '<<object>>.%s')" reason_prefix name) loc in
     Flow_js.mk_tvar_where cx reason (fun t ->
-      Flow_js.flow cx (m, GetT (reason, (reason, name), t));
+      Flow_js.flow cx (m, GetPropT (reason, (reason, name), t));
     )
 
   | Unqualified (id) ->
@@ -2465,7 +2465,7 @@ and statement cx type_params_map = Ast.Statement.(
               match source_module_tvar with
               | Some(tvar) ->
                 Flow_js.mk_tvar_where cx reason (fun t ->
-                  Flow_js.flow cx (tvar, GetT(reason, (reason, local_name), t))
+                  Flow_js.flow cx (tvar, GetPropT(reason, (reason, local_name), t))
                 )
               | None ->
                 Env_js.var_ref ~lookup_mode cx local_name reason
@@ -2574,7 +2574,7 @@ and statement cx type_params_map = Ast.Statement.(
         let remote_t = Flow_js.mk_tvar_where cx get_reason (fun t ->
           Flow_js.flow cx (
             module_ns_tvar,
-            GetT(get_reason, (get_reason, remote_export_name), t)
+            GetPropT(get_reason, (get_reason, remote_export_name), t)
           )
         ) in
 
@@ -3040,7 +3040,7 @@ and expression_ ~is_cond cx type_params_map loc e = Ast.Expression.(match e with
         else (
           Flow_js.mk_tvar_where cx expr_reason (fun tvar ->
             Flow_js.flow cx (
-              super, GetT(expr_reason, (prop_reason, name), tvar)
+              super, GetPropT(expr_reason, (prop_reason, name), tvar)
             )
           )
         )
@@ -3789,7 +3789,7 @@ and assignment cx type_params_map loc = Ast.Expression.(function
               mk_reason (spf "assignment of property `%s`" name) lhs_loc in
             let prop_reason = mk_reason (spf "property `%s`" name) ploc in
             let super = super_ cx reason in
-            Flow_js.flow cx (super, SetT(reason, (prop_reason, name), t))
+            Flow_js.flow cx (super, SetPropT(reason, (prop_reason, name), t))
 
         (* _object.name = e *)
         | lhs_loc, Ast.Pattern.Expression ((_, Member {
@@ -3807,7 +3807,7 @@ and assignment cx type_params_map loc = Ast.Expression.(function
               let prop_reason = mk_reason (spf "property `%s`" name) ploc in
 
               (* flow type to object property itself *)
-              Flow_js.flow cx (o, SetT (reason, (prop_reason, name), t));
+              Flow_js.flow cx (o, SetPropT (reason, (prop_reason, name), t));
 
               (* types involved in the assignment are computed
                  in pre-havoc environment. it's the assignment itself
@@ -4422,7 +4422,7 @@ and react_create_class cx type_params_map loc class_props = Ast.Expression.(
       static_reason smap (MixedT static_reason)
   in
   let super_static = Flow_js.mk_tvar_where cx static_reason (fun t ->
-    Flow_js.flow cx (super, GetT(static_reason, (static_reason, "statics"), t));
+    Flow_js.flow cx (super, GetPropT(static_reason, (static_reason, "statics"), t));
   ) in
   Flow_js.flow cx (super_static, override_statics);
   static := clone_object cx static_reason !static super_static;
@@ -4844,7 +4844,7 @@ and get_prop ~is_cond cx reason tobj (prop_reason, name) =
     let get_prop_u =
       if is_cond
       then LookupT (reason, None, name, LowerBoundT t)
-      else GetT (reason, (prop_reason, name), t)
+      else GetPropT (reason, (prop_reason, name), t)
     in
     Flow_js.flow cx (tobj, get_prop_u)
   )
@@ -4864,7 +4864,7 @@ and static_method_call_Object cx type_params_map loc m args_ = Ast.Expression.(
     let map = pmap |> SMap.mapi (fun x spec ->
       let reason = prefix_reason (spf ".%s of " x) reason in
       Flow_js.mk_tvar_where cx reason (fun tvar ->
-        Flow_js.flow cx (spec, GetT(reason, (reason, "value"), tvar));
+        Flow_js.flow cx (spec, GetPropT(reason, (reason, "value"), tvar));
       )
     ) in
     Flow_js.mk_object_with_map_proto cx reason map proto
@@ -4872,7 +4872,7 @@ and static_method_call_Object cx type_params_map loc m args_ = Ast.Expression.(
   | ("getPrototypeOf", [ Expression e ]) ->
     let o = expression cx type_params_map e in
     Flow_js.mk_tvar_where cx reason (fun tvar ->
-      Flow_js.flow cx (o, GetT(reason, (reason, "__proto__"), tvar));
+      Flow_js.flow cx (o, GetPropT(reason, (reason, "__proto__"), tvar));
     )
 
   | (("getOwnPropertyNames" | "keys"), [ Expression e ]) ->
@@ -4892,8 +4892,8 @@ and static_method_call_Object cx type_params_map loc m args_ = Ast.Expression.(
     let spec = expression cx type_params_map config in
     let tvar = Flow_js.mk_tvar cx reason in
     let prop_reason = mk_reason (spf "property `%s`" x) ploc in
-    Flow_js.flow cx (spec, GetT(reason, (reason, "value"), tvar));
-    Flow_js.flow cx (o, SetT (reason, (prop_reason, x), tvar));
+    Flow_js.flow cx (spec, GetPropT(reason, (reason, "value"), tvar));
+    Flow_js.flow cx (o, SetPropT (reason, (prop_reason, x), tvar));
     o
 
   | ("defineProperties", [ Expression e;
@@ -4903,8 +4903,8 @@ and static_method_call_Object cx type_params_map loc m args_ = Ast.Expression.(
     pmap |> SMap.iter (fun x spec ->
       let reason = prefix_reason (spf ".%s of " x) reason in
       let tvar = Flow_js.mk_tvar cx reason in
-      Flow_js.flow cx (spec, GetT(reason, (reason, "value"), tvar));
-      Flow_js.flow cx (o, SetT (reason, (reason, x), tvar));
+      Flow_js.flow cx (spec, GetPropT(reason, (reason, "value"), tvar));
+      Flow_js.flow cx (o, SetPropT (reason, (reason, x), tvar));
     );
     o
 
