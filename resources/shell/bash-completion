@@ -21,6 +21,6 @@ _flow ()
     return 0
   fi
 
-  COMPREPLY=( $(compgen -W "${OPTS}" -- ${CUR}) )
+  COMPREPLY=( $(compgen -f -W "${OPTS}" -- ${CUR}) )
 }
 complete -F _flow -o filenames flow
