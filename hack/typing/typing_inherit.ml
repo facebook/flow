@@ -106,6 +106,21 @@ let add_method name sig_ methods =
 let add_methods methods' acc =
   SMap.fold add_method methods' acc
 
+let add_const name const acc =
+  if const.ce_synthesized
+  then match SMap.get name acc with
+    | None ->
+      SMap.add name const acc
+    | Some existing_const ->
+      match (snd const.ce_type, snd existing_const.ce_type) with
+        | Tgeneric(_, _), Tgeneric(_, _) ->
+          SMap.add name const acc
+        | Tgeneric(_, _), _ ->
+          acc
+        | _, _ ->
+          SMap.add name const acc
+  else SMap.add name const acc
+
 let add_members members acc =
   SMap.fold SMap.add members acc
 
@@ -169,7 +184,7 @@ let add_constructor (cstr, cstr_consist) (acc, acc_consist) =
 
 let add_inherited inherited acc = {
   ih_cstr     = add_constructor inherited.ih_cstr acc.ih_cstr;
-  ih_consts   = add_members inherited.ih_consts acc.ih_consts;
+  ih_consts   = SMap.fold add_const inherited.ih_consts acc.ih_consts;
   ih_typeconsts =
     SMap.fold add_typeconst inherited.ih_typeconsts acc.ih_typeconsts;
   ih_props    = add_members inherited.ih_props acc.ih_props;
