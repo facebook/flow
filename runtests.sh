@@ -135,8 +135,7 @@ do
             # start server
             $FLOW start . --strip-root 1> /dev/null 2>&1
             # wait for server to be READY
-            tail -f "/tmp/flow/$(pwd -P | sed 's/\//zS/g').log" \
-                | awk '/READY/;// { exit }'
+            $FLOW status . 1> /dev/null 2>&1
             if [ "$shell" != "" ]
             then
                 # run test script
