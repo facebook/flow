@@ -43,6 +43,8 @@ module type MapSig = sig
   val empty: 'a t
   val singleton: key -> 'a -> 'a t
   val fold: (key -> 'a -> 'b -> 'b) -> 'a t -> 'b -> 'b
+  val exists: (key -> 'a -> bool) -> 'a t -> bool
+  val for_all: (key -> 'a -> bool) -> 'a t -> bool
   val mem: key -> 'a t -> bool
   val add: key -> 'a -> 'a t -> 'a t
   val get: key -> 'a t -> 'a option
