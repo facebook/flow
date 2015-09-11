@@ -1594,8 +1594,8 @@ and statement cx type_params_map = Ast.Statement.(
         merge_with_last_ctx cx reason default_ctx newset
       );
 
-      if Abnormal.swap (Abnormal.Break None) save_break_exn
-      then Env_js.havoc_vars newset;
+      let did_break = Abnormal.swap (Abnormal.Break None) save_break_exn in
+      if did_break then Env_js.havoc_vars newset;
 
       (* if the default clause exits abnormally and other cases either fall
          through or exit abnormally the same way, then the switch exits
@@ -1612,7 +1612,17 @@ and statement cx type_params_map = Ast.Statement.(
               | _ -> false
             )
             then Abnormal.raise_exn exn
-      )
+      );
+
+      (* in the case where we did have a default but never encountered a break, the
+         changeset accumulated from all of the cases is lost in the Env_js.merge_changeset 
+         call and the variables are never havoc'd, so we need to carry these changes forward *)
+      if (!default && not did_break)
+      then (
+        let reason = mk_reason "switch fallthrough" loc in
+        let last_ctx = match !last_ctx with | Some x -> x | None -> !fallthrough_ctx in
+        Env_js.copy_env cx reason (ctx,last_ctx) newset
+      ); ()
 
   | (loc, Return { Return.argument }) ->
       let reason = mk_reason "return" loc in
