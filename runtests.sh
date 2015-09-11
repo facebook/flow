@@ -74,28 +74,31 @@ do
         # get config flags.
         # for now this is kind of ad-hoc:
         #
-        # 1. default flow command is check. it can be overriden here by supplying
-        # the entire command on a line that begins with "cmd:".
-        # NOTE: we *do not* handle incremental tests yet. for non-check commands,
-        # we assume the command will auto-start a server. we run flow stop after
-        # we get a result.
+        # 1. The default flow command is check with the --all flag. This flag
+        # can be overriden here with the line "all: false". Anything besides
+        # "false" is ignored, and the setting itself is ignored if a command
+        # besides check is run.
         #
-        # 2. the check command normally runs with the --all flag. This can be
-        # overriden here with the line "all: false". Anything besides "false"
-        # is ignored, and the setting itself is ignored if a command besides
-        # check is run.
+        # 2. The default flow command can be overriden here by supplying the
+        # entire command on a line that begins with "cmd:". (Note: for writing
+        # incremental tests, use the option below). A line beginning with
+        # "stdin:" can additionally supply arguments to pass to the command via
+        # standard input. We start the server before running the command and
+        # stop the server after we get a result.
         #
-        cmd="check"
+        # 3. Integration tests that interleave flow commands with file system
+        # commands (for testing incremental checks, e.g.) are written by
+        # supplying the name of a shell script on a line that begins with
+        # "shell:". The shell script is passed the location of the flow binary
+        # as argument ($1). We start the server before running the script and
+        # stop the server after the script exits.
+        #
         all=" --all"
+        shell=""
+        cmd="check"
         stdin=""
         if [ -e ".testconfig" ]
         then
-            # cmd
-            config_cmd="$(awk '$1=="cmd:"{$1="";print}' .testconfig)"
-            if [ "$config_cmd" != "" ]
-            then
-                cmd="$config_cmd"
-            fi
             # all
             if [ "$(awk '$1=="all:"{print $2}' .testconfig)" == "false" ]
             then
@@ -103,6 +106,19 @@ do
             fi
             # stdin
             stdin="$(awk '$1=="stdin:"{print $2}' .testconfig)"
+            # shell
+            config_shell="$(awk '$1=="shell:"{print $2}' .testconfig)"
+            if [ "$config_shell" != "" ]
+            then
+                cmd=""
+                shell="$config_shell"
+            fi
+            # cmd
+            config_cmd="$(awk '$1=="cmd:"{$1="";print}' .testconfig)"
+            if [ "$config_cmd" != "" ]
+            then
+                cmd="$config_cmd"
+            fi
         fi
 
         # run test
@@ -116,13 +132,25 @@ do
             trap "kill_server -INT" SIGINT
             trap "kill_server -TERM" SIGTERM
 
-            # If there's stdin, then direct that in
-            if [ "$stdin" != "" ]
+            # start server
+            $FLOW start . --strip-root 1> /dev/null 2>&1
+            # wait for server to be READY
+            tail -f "/tmp/flow/$(pwd -P | sed 's/\//zS/g').log" \
+                | awk '/READY/;// { exit }'
+            if [ "$shell" != "" ]
             then
-                $FLOW $cmd < $stdin 1> $out_file 2> $err_file
-              else
-                $FLOW $cmd 1> $out_file 2> $err_file
+                # run test script
+                sh $shell $FLOW 1> $out_file 2> $err_file
+            else
+            # If there's stdin, then direct that in
+                if [ "$stdin" != "" ]
+                then
+                    $FLOW $cmd < $stdin 1> $out_file 2> $err_file
+                else
+                    $FLOW $cmd 1> $out_file 2> $err_file
+                fi
             fi
+            # stop server
             $FLOW stop . 1> /dev/null 2>&1
 
             trap - SIGINT SIGTERM
