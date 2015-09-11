@@ -7,7 +7,7 @@ prev: type-annotations.html
 next: arrays.html
 ---
 
-A variable one of the simplest form of code locations. Usually you won't need
+A variable is one of the simplest forms of code location. Usually you won't need
 to annotate variables with types, since they are readily inferred by Flow. But
 you can, if you so choose (e.g. for documentation purposes).
 
