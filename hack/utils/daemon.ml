@@ -74,6 +74,7 @@ end = struct
         name;
     Hashtbl.add entry_points name (Obj.repr f);
     name
+
   let find name =
     try Obj.obj (Hashtbl.find entry_points name)
     with Not_found ->
@@ -106,7 +107,10 @@ type ('param, 'input, 'output) entry = ('param, 'input, 'output) Entry.t
 let exec entry param ic oc =
   let f = Entry.find entry in
   try f param (ic, oc); exit 0
-  with _ -> exit 1
+  with e ->
+    prerr_endline (Printexc.to_string e);
+    Printexc.print_backtrace stderr;
+    exit 2
 
 let register_entry_point = Entry.register
 

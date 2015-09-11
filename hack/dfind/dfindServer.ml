@@ -59,16 +59,16 @@ let run_daemon roots (ic, oc) =
   List.iter roots (DfindAddFile.path env);
   let acc = ref SSet.empty in
   let descr_in = Daemon.descr_of_in_channel ic in
+  let fsnotify_callback events =
+    acc := List.fold_left events ~f:(process_fsnotify_event env) ~init:!acc
+  in
+  let message_in_callback () =
+    (* XXX can we just select() on the writability of the oc? *)
+    let () = Daemon.from_channel ic in
+    Daemon.to_channel oc !acc;
+    acc := SSet.empty
+  in
   while true do
-    let fsnotify_callback events =
-      acc := List.fold_left events ~f:(process_fsnotify_event env) ~init:!acc
-    in
-    let message_in_callback () =
-      (* XXX can we just select() on the writability of the oc? *)
-      let () = Daemon.from_channel ic in
-      Daemon.to_channel oc !acc;
-      acc := SSet.empty
-    in
     let read_fdl = [(descr_in, message_in_callback)] in
     let timeout = -1.0 in
     Fsnotify.select env.fsnotify ~read_fdl ~timeout fsnotify_callback

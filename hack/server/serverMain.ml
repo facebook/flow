@@ -300,7 +300,7 @@ let rec recheck_loop acc genv env =
     | None -> SSet.empty
     | Some dfind ->
         (try
-          with_timeout 60
+          with_timeout 120
             ~on_timeout:(fun _ -> Exit_status.(exit Dfind_unresponsive))
             ~do_:(fun () -> DfindLib.get_changes dfind)
         with _ -> Exit_status.(exit Dfind_died))
