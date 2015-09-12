@@ -448,9 +448,7 @@ let find_a_dup ?(compare=Pervasives.compare) l =
   loop sorted
 
 let count t ~f = Container.fold_count fold t ~f
-(* XXX Not compatible with 3.12
 let sum m t ~f = Container.fold_sum m fold t ~f
-*)
 let min_elt t ~cmp = Container.fold_min fold t ~cmp
 let max_elt t ~cmp = Container.fold_max fold t ~cmp
 

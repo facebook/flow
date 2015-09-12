@@ -7,16 +7,16 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  *)
+
 type modes = {
   mutable debug: bool;
+  mutable verbose: bool;
   mutable all: bool;
   mutable weak_by_default: bool;
-  mutable traces_enabled: bool;
-  mutable newtraces_enabled: bool;
+  mutable traces: int;
   mutable strict: bool;
-  mutable console: bool;
   mutable json: bool;
-  mutable show_all_errors: bool;
+  mutable strip_root: bool;
   mutable quiet : bool;
   mutable profile : bool;
   mutable no_flowlib: bool;
@@ -24,17 +24,17 @@ type modes = {
 
 let modes = {
   debug = false;
+  verbose = false;
   all = false;
   weak_by_default = false;
-  traces_enabled = false;
-  newtraces_enabled = false;
+  traces = 0;
   strict = false;
-  console = false;
   json = false;
-  show_all_errors = false;
+  strip_root = false;
   quiet = true;
   profile = false;
   no_flowlib = false;
 }
 
-let debug_string f = if modes.debug then prerr_endline (f ()) else ()
+let debug_string f = if modes.debug then prerr_endline (f ())
+let verbose_string f = if modes.verbose then prerr_endline (f ())

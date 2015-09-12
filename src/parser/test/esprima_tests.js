@@ -1177,7 +1177,8 @@ module.exports = {
         'x | y ^ z',
         'x | y & z',
         {
-          content: '1 + type + interface + declare + let + eval + super',
+          content: '1 + type + interface + declare + let + eval + super + ' +
+            'async + await',
           explanation: 'Let is fine as an identifier',
           expected_differences: {
             'root.errors': {
@@ -1426,6 +1427,7 @@ module.exports = {
         'eval = 42',
         'arguments = 42',
         'type = 42',
+        'of = 42',
         'interface = 42',
         'declare = 42',
         'x *= 42',
@@ -2106,6 +2108,9 @@ module.exports = {
         'start: for (;;) break start',
         'start: while (true) break start',
         '__proto__: test',
+        'type: 42',
+        'of: 52',
+        'declare: 62',
     ],
 
     'throw statement': [
@@ -2963,7 +2968,18 @@ module.exports = {
         '({ set i(x) { }, set i(x) { } })',
         '((a)) => 42',
         '(a, (b)) => 42',
-        '"use strict"; (eval = 10) => 42',
+        {
+          content: '"use strict"; (eval = 10) => 42',
+          explanation: "This is an arrow function error, not an assignment "+
+            "error",
+          expected_differences: {
+            'root.errors.0.message': {
+              type: 'Wrong error message',
+              expected: 'Assignment to eval or arguments is not allowed in strict mode',
+              actual: 'Parameter name eval or arguments is not allowed in strict mode',
+            },
+          },
+        },
         // strict mode, using eval when IsSimpleParameterList is true
         {
           content: '"use strict"; eval => 42',
@@ -3430,6 +3446,28 @@ module.exports = {
           }
         },
         'class A { foo() { let let } }',
+        {
+          content: 'function foo([a.a]) {}',
+          explanation: 'Esprima is off by one',
+          expected_differences: {
+            'root.errors.0.column': {
+              type: 'Wrong error column',
+              expected: 18,
+              actual: '14-17'
+            },
+          },
+        },
+        {
+          content: 'var f = function ([a.a]) {}',
+          explanation: 'Esprima is off by one',
+          expected_differences: {
+            'root.errors.0.column': {
+              type: 'Wrong error column',
+              expected: 23,
+              actual: '19-22'
+            },
+          },
+        },
     ],
     'Invalid unicode related syntax': [
         'x\\u005c',
@@ -4106,6 +4144,7 @@ module.exports = {
             },
           }
         },
+        'function* f () { var e = () => yield 1; }',
     ],
 
 
@@ -4115,8 +4154,28 @@ module.exports = {
     'Harmony: Iterators': [
         'for(x of list) process(x);',
         'for (var x of list) process(x);',
-        'for (var x = 42 of list) process(x);',
-        'for (let x of list) process(x);'
+        'for (let x of list) process(x);',
+        {
+          content: 'for (var x = 42 of list) process(x);',
+          explanation: "Esprima thinks this is valid, it isn't",
+          expected_differences : {
+            'root.errors.0.column': {
+              type: 'Wrong error column',
+              expected: undefined,
+              actual: 6,
+            },
+            'root.errors.0.line': {
+              type: 'Wrong error line',
+              expected: undefined,
+              actual: 1,
+            },
+            'root.errors.0.message': {
+              type: 'Wrong error message',
+              expected: undefined,
+              actual: 'Invalid left-hand side in for-of',
+            }
+          }
+        }
     ],
 
 
@@ -5158,6 +5217,10 @@ module.exports = {
         'import type from "MyModule"',
         'import type, {} from "MyModule"',
         'import type, * as namespace from "MyModule"',
+
+        // Other pseudo keywords
+        'import of from "MyModule"',
+        'import declare from "MyModule"',
       ],
     },
     'Import Type': {
@@ -5180,6 +5243,26 @@ module.exports = {
         'import type defaultbinding, {x,y} from "MyModule";',
         'import type defaultbinding, {x as z} from "MyModule";',
         'import type defaultbinding, {x, y as z} from "MyModule";',
+      ],
+    },
+    'Import Typeof': {
+      'esprima_opts': { sourceType: "module" },
+      'tests': [
+        'import typeof defaultbinding from "MyModule";',
+        'import typeof {} from "MyModule";',
+        'import typeof defaultbinding, {} from "MyModule";',
+        /* TODO Esprima should support these
+        'import typeof {x,} from "MyModule";',
+        'import typeof defaultbinding, {x,} from "MyModule";',
+        */
+        'import typeof {x} from "MyModule";',
+        'import typeof {x,y} from "MyModule";',
+        'import typeof {x as z} from "MyModule";',
+        'import typeof {x, y as z} from "MyModule";',
+        'import typeof defaultbinding, {x} from "MyModule";',
+        'import typeof defaultbinding, {x,y} from "MyModule";',
+        'import typeof defaultbinding, {x as z} from "MyModule";',
+        'import typeof defaultbinding, {x, y as z} from "MyModule";',
       ],
     },
     'Declare Statements': [
@@ -5488,5 +5571,78 @@ module.exports = {
     'Bounded Polymorphism': [
       'function foo<T: Foo>() {}',
       'class Foo<T: Bar> {}',
+    ],
+    'For Of Loops': [
+        'for(x of list) process(x);',
+        'for (var x of list) process(x);',
+        'for (let x of list) process(x);',
+    ],
+    'Invalid For Of Loops': [
+        {
+          content: 'for (let x = 42 of list) process(x);',
+          explanation: 'Exprima is off by one here location-wise '+
+            'and I like my error here better',
+          expected_differences: {
+            'root.errors.0.column': {
+              type: 'Wrong error column',
+              expected: 16,
+              actual: '5-15',
+            } ,
+            'root.errors.0.message': {
+              type: 'Wrong error message',
+              expected: 'Unexpected identifier',
+              actual: 'Invalid left-hand side in for-of',
+            }
+          }
+        },
+    ],
+    'Async/Await': [
+        'try { foo(); } catch (async) { bar(); }',
+        'try { foo(); } catch (await) { bar(); }',
+        'var x = { async() { bar(); }}',
+        'var x = { set async(v) { }, get async() { return "foo";}, }',
+        'var x = { set await(v) { }, get await() { return "foo";}, }',
+        'class async { }',
+        'class async { async() { } }',
+        'class async { async async() { await foo; } }',
+        'class await { await() { } }',
+        'class A { set async(v) { } get async() { return "foo";} }',
+        'class A { set await(v) { } get await() { return "foo";} }',
+        {
+          content: 'y = async function() { return await bar; } ()',
+          explanation: 'Babel has no problem with this, and it seems ' +
+            'perfectly sensical',
+          expected_differences: {
+            'root.errors': {
+              type: 'Flow found no error',
+              expected: 'Line 1: Unexpected token (',
+              actual: undefined,
+            },
+          },
+        },
+        'async function f() { return 1; }',
+        'async function foo() { await 1; }',
+        'var x = { async m() { await 1; } };',
+        'function async() { }',
+        'async function foo() { return function await() { }; }',
+        {
+          content: 'async function foo() { return await foo + await bar + 5; }',
+          explanation: 'Works in Babel and the spec appears to allow it',
+          expected_differences: {
+            'root.errors': {
+              type: 'Flow found no error',
+              expected: 'Line 1: Unexpected identifier',
+              actual: undefined,
+            },
+          },
+        },
+        'async function foo() { var await = 4; }',
+        'var x = async function bar() { await foo; }',
+        'async function foo() { return await; }',
+        'var x = async (a, b) => await a;',
+        'var x = async a => await a;',
+        'foo(async () => await bar);',
+        'var x = async\ny => y',
+        'class A { async bar() { await foo; } }',
     ],
 };

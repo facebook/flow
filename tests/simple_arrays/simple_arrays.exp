@@ -1,6 +1,6 @@
 
 array.js:4:30,30: number
 This type is incompatible with
-  array.js:8:18,23: string
+array.js:8:18,23: string
 
 Found 1 error

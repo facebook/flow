@@ -14,16 +14,19 @@ open Namespace_env
 module SMap = Utils.SMap
 module SSet = Utils.SSet
 
-(* HHVM automatically imports a few "core" classes into every namespace, mostly
- * collections. Their unqualified names always refer to this global version.
+(* When dealing with an <?hh file, HHVM automatically imports a few
+ * "core" classes into every namespace, mostly collections. Their
+ * unqualified names always refer to this global version.
  *
- * Note that these are technically in the \HH namespace as far as the runtime
- * is concerned, but we treat them as in the global namespace. This is a tiny
- * bit weird, but since Facebook www all runs in the global namespace relying on
- * this autoimport, this makes the most sense there.
+ * Note that these are technically in the \HH namespace as far as the
+ * runtime is concerned, but we treat them as in the global
+ * namespace. This is a tiny bit weird, but since Facebook www all runs
+ * in the global namespace relying on this autoimport, this makes the
+ * most sense there.
  *
- * See hhvm/compiler/parser/parser.cpp Parser::getAutoAliasedClasses for the
- * canonical list. *)
+ * See hhvm/compiler/parser/parser.cpp Parser::getAutoAliasedClasses
+ * for the canonical list of classes and Parser::onCall for the
+ * canonical list of functions. *)
 let autoimport_classes = [
   "Traversable";
   "KeyedTraversable";
@@ -63,9 +66,17 @@ let autoimport_classes = [
   "SleepWaitHandle";
   "ExternalThreadEventWaitHandle"
 ]
+let autoimport_funcs = [
+  "invariant";
+  "invariant_violation"
+]
+
 let autoimport_set =
-  List.fold_left (fun s e -> SSet.add e s) SSet.empty autoimport_classes
-let is_autoimport_class id = SSet.mem id autoimport_set
+  let autoimport_list = autoimport_classes @ autoimport_funcs in
+  List.fold_left (fun s e -> SSet.add e s) SSet.empty autoimport_list
+(* NOTE that the runtime is able to distinguish between class and
+   function names when auto-importing *)
+let is_autoimport_name id = SSet.mem id autoimport_set
 
 let elaborate_into_current_ns nsenv id =
   match nsenv.ns_name with
@@ -83,22 +94,22 @@ let elaborate_into_current_ns nsenv id =
  * normalize identifiers in two phases. Right after parsing, we need to have
  * the class hierarchy normalized so that we can recompute dependencies for
  * incremental mode properly. Other identifiers are normalized during naming.
- * However, we don't do any bookkeeping to determin which we've normalized or
+ * However, we don't do any bookkeeping to determine which we've normalized or
  * not, just relying on the idempotence of this function to make sure everything
  * works out. (Fully qualifying identifiers is of course idempotent, but there
  * used to be other schemes here.)
  *)
-let elaborate_id nsenv (p, id) =
+let elaborate_id_impl ~autoimport nsenv (p, id) =
   (* Go ahead and fully-qualify the name first. *)
   let fully_qualified =
-    if id.[0] = '\\' then id
-    else if is_autoimport_class id then "\\" ^ id
+    if id <> "" && id.[0] = '\\' then id
+    else if autoimport && is_autoimport_name id then "\\" ^ id
     else begin
       (* Expand "use" imports. *)
       let bslash_loc =
         try String.index id '\\' with Not_found -> String.length id in
       let prefix = String.sub id 0 bslash_loc in
-      if prefix = "namespace" then begin
+      if prefix = "namespace" && id <> "namespace" then begin
         (* Strip off the 'namespace\' (including the slash) from id, then
         elaborate back into the current namespace. *)
         let len = (String.length id) - bslash_loc  - 1 in
@@ -115,13 +126,19 @@ let elaborate_id nsenv (p, id) =
     end in
   p, fully_qualified
 
+let elaborate_id = elaborate_id_impl ~autoimport:true
+(* When a name that clashes with an auto-imported name is first being
+ * defined (in its own namespace), it's impressively incorrect to
+ * teleport it's definition into the global namespace *)
+let elaborate_id_no_autos = elaborate_id_impl ~autoimport:false
+
 (* First pass of flattening namespaces, run super early in the pipeline, right
  * after parsing.
  *
  * Fully-qualifies the things we need for Parsing_service.AddDeps -- the classes
  * we extend, traits we use, interfaces we implement; along with classes we
  * define. So that we can also use them to figure out fallback behavior, we also
- * fully-qualifiy functions that we define, even though AddDeps doesn't need
+ * fully-qualify functions that we define, even though AddDeps doesn't need
  * them this early.
  *
  * Note that, since AddDeps doesn't need it, we don't recursively traverse
@@ -159,22 +176,22 @@ module ElaborateDefs = struct
         {nsenv with ns_uses = map}, []
       end
     | Class c -> nsenv, [Class {c with
-        c_name = elaborate_id nsenv c.c_name;
+        c_name = elaborate_id_no_autos nsenv c.c_name;
         c_extends = List.map (hint nsenv) c.c_extends;
         c_implements = List.map (hint nsenv) c.c_implements;
         c_body = List.map (class_def nsenv) c.c_body;
         c_namespace = nsenv;
       }]
     | Fun f -> nsenv, [Fun {f with
-        f_name = elaborate_id nsenv f.f_name;
+        f_name = elaborate_id_no_autos nsenv f.f_name;
         f_namespace = nsenv;
       }]
     | Typedef t -> nsenv, [Typedef {t with
-        t_id = elaborate_id nsenv t.t_id;
+        t_id = elaborate_id_no_autos nsenv t.t_id;
         t_namespace = nsenv;
     }]
     | Constant cst -> nsenv, [Constant {cst with
-        cst_name = elaborate_id nsenv cst.cst_name;
+        cst_name = elaborate_id_no_autos nsenv cst.cst_name;
         cst_namespace = nsenv;
     }]
     | other -> nsenv, [other]

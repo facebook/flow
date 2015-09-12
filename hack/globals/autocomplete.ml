@@ -33,7 +33,7 @@ type autocomplete_type =
 | Acnew
 | Actype
 | Acclass_get
-| Acvar
+| Acprop
 
 let (argument_global_type: autocomplete_type option ref) = ref None
 let auto_complete_for_global = ref ""

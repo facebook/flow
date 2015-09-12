@@ -12,7 +12,9 @@ module C = ClientCommand
 module LC = ClientLogCommand
 
 let log_command_of_command = function
-  | C.CCheck env -> LC.LCCheck (env.ClientEnv.root, env.ClientEnv.from)
+  | C.CCheck env ->
+      let mode = ClientEnv.mode_to_string env.ClientEnv.mode in
+      LC.LCCheck (env.ClientEnv.root, env.ClientEnv.from, mode)
   | C.CStart env -> LC.LCStart env.ClientStart.root
   | C.CStop env -> LC.LCStop env.ClientStop.root
   | C.CRestart env -> LC.LCRestart env.ClientStart.root

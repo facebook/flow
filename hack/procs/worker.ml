@@ -169,7 +169,7 @@ module MakeWorker = struct
       pipe_descr_out = descr_parent_sends;
       pipe_fout = parent_sends_task;
     } = pipe_parent_sends_child_reads in
-    match Fork.fork ~reason:"worker" () with
+    match Fork.fork_and_log ~reason:"worker" () with
     | -1 ->
         failwith "Could not create process"
     | 0 ->
@@ -227,7 +227,7 @@ module MakeWorker = struct
          *)
         let readyl, _, _ = Unix.select [descr_in] [] [] (-1.0) in
         if readyl = [] then exit 0;
-        match Unix.fork() with
+        match Fork.fork() with
         | 0 ->
             (try
               let { job = job; arg = arg } = child_reads_task() in

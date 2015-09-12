@@ -1,6 +1,20 @@
 
 any.js:6:16,21: mixed
 This type is incompatible with
-  any.js:6:7,12: string
+any.js:6:7,12: string
 
-Found 1 error
+flowfixme.js:12:27,33: identifier nnumber
+Could not resolve name
+
+flowfixme.js:15:16,21: mixed
+This type is incompatible with
+flowfixme.js:15:7,12: string
+
+flowissue.js:12:27,33: identifier nnumber
+Could not resolve name
+
+flowissue.js:15:16,21: mixed
+This type is incompatible with
+flowissue.js:15:7,12: string
+
+Found 5 errors

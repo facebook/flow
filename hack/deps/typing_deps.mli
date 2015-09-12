@@ -17,13 +17,12 @@ module Dep :
       | Class of string
       | Fun of string
       | FunName of string
-      | CVar of string * string
-      | SCVar of string * string
+      | Prop of string * string
+      | SProp of string * string
       | Method of string * string
       | SMethod of string * string
       | Cstr of string
       | Extends of string
-      | Injectable
     type t
     val make : variant -> t
     val is_class : t -> bool

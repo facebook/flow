@@ -59,6 +59,41 @@ function logical2e(): string {
 }
 
 /**
+ * A literal on the left side of &&
+ */
+function logical2e(): string {
+    return [1,2,3] && 'foo';
+}
+
+/**
+ * A literal on the left side of &&
+ */
+function logical2f(x: {a: number}): string {
+    return x && 'foo';
+}
+
+/**
+ * A literal on the left side of &&
+ */
+function logical2g(x: Object): string {
+    return x && 'foo';
+}
+
+/**
+ * A literal on the left side of &&
+ */
+function logical2h(x: (a: number) => number): string {
+    return x && 'foo';
+}
+
+/**
+ * A literal on the left side of &&
+ */
+function logical2i(x: Function): string {
+    return x && 'foo';
+}
+
+/**
  * An expression on the left side of &&
  */
 function logical3a(): string { // expected `: boolean`
@@ -452,4 +487,18 @@ function logical17c(x: number): boolean {
  */
 function logical17d(x: number): boolean {
     return (x && 7) == 5;
+}
+
+/**
+ * Expressions on each side that return truthy things
+ */
+function logical18a(x: number, y: number): number {
+    return x - 1 || y - 1;
+}
+
+/**
+ * Sentinel properties should not interfere
+ */
+function logical18b(x: {a: number}, y: {b: number}): number {
+    return x.a - 1 || y.b - 1;
 }

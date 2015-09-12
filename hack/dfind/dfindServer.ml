@@ -20,8 +20,6 @@ open Utils
 (* Processing an fsnotify event *)
 (*****************************************************************************)
 
-(* Die if something unexpected happened *)
-
 let (process_fsnotify_event:
        DfindEnv.t -> SSet.t -> Fsnotify.event
          -> SSet.t) = fun env dirty event ->
@@ -53,41 +51,23 @@ let (process_fsnotify_event:
   let dirty = SSet.union env.new_files dirty in
   dirty
 
-(*****************************************************************************)
-(* Fork and work *)
-(*****************************************************************************)
-
-let daemon_from_pipe env message_in result_out =
+let run_daemon roots (ic, oc) =
+  let roots = List.map Path.to_string roots in
+  let env = DfindEnv.make roots in
+  List.iter (DfindAddFile.path env) roots;
   let acc = ref SSet.empty in
+  let descr_in = Daemon.descr_of_in_channel ic in
   while true do
     let fsnotify_callback events =
       acc := List.fold_left (process_fsnotify_event env) !acc events
-    in let message_in_callback () =
-      let ic = Unix.in_channel_of_descr message_in in
-      let msg = Marshal.from_channel ic in
-      assert (msg = "Go");
-      let result_out = Unix.out_channel_of_descr result_out in
-      Marshal.to_channel result_out !acc [];
-      flush result_out;
+    in
+    let message_in_callback () =
+      (* XXX can we just select() on the writability of the oc? *)
+      let () = Daemon.from_channel ic in
+      Daemon.to_channel oc !acc;
       acc := SSet.empty
-    in let read_fdl = [(message_in, message_in_callback)] in
+    in
+    let read_fdl = [(descr_in, message_in_callback)] in
     let timeout = -1.0 in
     Fsnotify.select env.fsnotify ~read_fdl ~timeout fsnotify_callback
   done
-
-let fork_in_pipe roots =
-  let msg_in, msg_out = Unix.pipe() in
-  let result_in, result_out = Unix.pipe() in
-  match Unix.fork() with
-  | -1 -> failwith "Go get yourself a real computer"
-  | 0 ->
-      Unix.close msg_out;
-      Unix.close result_in;
-      let env = DfindEnv.make roots in
-      List.iter (DfindAddFile.path env) roots;
-      daemon_from_pipe env msg_in result_out;
-      assert false
-  | pid ->
-      Unix.close msg_in;
-      Unix.close result_out;
-      msg_out, result_in, pid

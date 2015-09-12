@@ -11,6 +11,8 @@
 open Coverage_level
 open Utils
 
+module List = Core_list
+
 module FileInfoStore = GlobalStorage.Make(struct
   type t = FileInfo.t Relative_path.Map.t
 end)
@@ -42,21 +44,23 @@ let accumulate_types defs =
       | _ -> None in
     ignore (opt_map (fun kind ->
       Hashtbl.replace type_acc (p, kind) ty) expr_kind_opt))
-    (fun () -> ignore (ServerIdeUtils.check_defs defs));
+    (fun () ->
+      let nenv = Naming.empty (TypecheckerOptions.permissive) in
+      ignore (Typing_check_utils.check_defs nenv defs));
   type_acc
 
 (* Returns a list of (file_name, assoc list of counts) *)
 let get_coverage neutral fnl =
   SharedMem.invalidate_caches();
   let files_info = FileInfoStore.load () in
-  let file_counts = List.map begin fun fn ->
+  let file_counts = List.rev_filter_map ~f:begin fun fn ->
     match Relative_path.Map.get fn files_info with
     | None -> None
     | Some defs ->
         let type_acc = accumulate_types defs in
         let counts = count_exprs fn type_acc in
         Some (fn, counts)
-  end fnl |> cat_opts in
+  end fnl in
   file_counts :: neutral
 
 (* Inserts value v into a trie with the key path_l. At each existing node with
@@ -92,16 +96,16 @@ let mk_trie acc fn_counts_l =
     | None, Some cs -> Some cs
     | None, None -> None) v1 v2 in
   List.fold_left
-    (fun acc (fn, counts) ->
+    ~f:(fun acc (fn, counts) ->
       let path_l = Str.split (Str.regexp "/") fn in
       Some (insert combine path_l counts acc))
-    acc fn_counts_l
+    ~init:acc fn_counts_l
 
 (* Convert an absolute path to one relative to the given root.
  * Returns None if root is not a prefix of path. *)
 let relativize root path =
   (* naive implementation *)
-  let root = Path.string_of_path root ^ "/" in
+  let root = Path.to_string root ^ "/" in
   if str_starts_with path root
   then
     let root_len = String.length root in
@@ -109,12 +113,12 @@ let relativize root path =
   else None
 
 let go_ fn genv env =
-  let path = Path.mk_path fn in
+  let path = Path.make fn in
   let root = Path.parent path in
   let module RP = Relative_path in
   let next_files = compose
     (rev_rev_map (RP.create RP.Root))
-    (Find.make_next_files_php path)
+    (Find.make_next_files FindUtils.is_php path)
   in
   FileInfoStore.store env.ServerEnv.files_info;
   let result =
@@ -126,17 +130,13 @@ let go_ fn genv env =
       ~next:next_files
   in
   FileInfoStore.clear ();
-  let relativize_list = List.map (fun (p, c) ->
+  let relativize_list = List.map ~f:(fun (p, c) ->
     (relativize root (Relative_path.to_absolute p) |> unsafe_opt, c)) in
-  let result = List.map relativize_list result in
-  List.fold_left mk_trie None result
+  let result = List.map ~f:relativize_list result in
+  List.fold_left ~f:mk_trie ~init:None result
 
-let go fn genv env oc =
-  let result =
-    try go_ fn genv env
-    with Failure _ | Invalid_argument _ ->
-      print_string "Coverage collection failed!";
-      None
-  in
-  Marshal.to_channel oc (result : result) [];
-  flush oc
+let go fn genv env =
+  try go_ fn genv env
+  with Failure _ | Invalid_argument _ ->
+    print_string "Coverage collection failed!";
+    None
