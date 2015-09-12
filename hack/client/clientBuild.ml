@@ -25,13 +25,13 @@ let build_kind_of build_opts =
   let module LC = ClientLogCommand in
   let {ServerBuild.steps; no_steps; is_push; incremental; _} = build_opts in
   if steps <> None || no_steps <> None then
-    LC.Steps
+    `Steps
   else if is_push then
-    LC.Push
+    `Push
   else if incremental then
-    LC.Incremental
+    `Incremental
   else
-    LC.Full
+    `Full
 
 let handle_response env ic =
   let finished = ref false in
