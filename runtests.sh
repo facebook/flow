@@ -132,9 +132,7 @@ do
             trap "kill_server -INT" SIGINT
             trap "kill_server -TERM" SIGTERM
 
-            # start server
-            $FLOW start . --strip-root 1> /dev/null 2>&1
-            # wait for server to be READY
+            # start server and wait
             $FLOW status . 1> /dev/null 2>&1
             if [ "$shell" != "" ]
             then
