@@ -409,9 +409,6 @@ type context = {
   (* map from module names to their types *)
   mutable modulemap: Type.t SMap.t;
 
-  (* A subset of required modules on which the exported type depends *)
-  mutable strict_required: SSet.t;
-
   mutable errors: Errors_js.ErrorSet.t;
   mutable globals: SSet.t;
 
@@ -420,6 +417,7 @@ type context = {
   type_table: (Loc.t, Type.t) Hashtbl.t;
   annot_table: (Loc.t, Type.t) Hashtbl.t;
 }
+
 and module_exports_type =
   | CommonJSModule of Loc.t option
   | ESModule
@@ -474,6 +472,8 @@ val loc_of_predicate: Type.predicate -> Loc.t
 
 class ['a] type_visitor: object
   (* Only exposing a few methods for now. *)
-  method type_: context -> 'a -> Type.t -> 'a
-  method id_: context -> 'a -> ident -> 'a
+  method type_ : context -> 'a -> Type.t -> 'a
+  method id_ : context -> 'a -> ident -> 'a
+  method props : context -> 'a -> ident -> 'a
+  method fun_type : context -> 'a -> Type.funtype -> 'a
 end

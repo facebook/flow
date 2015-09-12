@@ -9,6 +9,6 @@ D.js:4:8,13: string
 
 D.js:5:7,11: boolean
 This type is incompatible with
-D.js:4:8,13: string
+C.js:3:8,21: number
 
 Found 3 errors

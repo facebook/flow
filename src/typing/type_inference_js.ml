@@ -221,9 +221,6 @@ let mark_exports_type cx reason new_exports_type = (
   cx.module_exports_type <- new_exports_type
 )
 
-let lookup_module cx m =
-  SMap.find_unsafe m cx.modulemap
-
 (**
  * Given an exported default declaration, identify nameless declarations and
  * name them with a special internal name that can be used to reference them
@@ -5963,9 +5960,8 @@ let cross_module_gc =
 let force_annotations cx =
   let tvar = Flow_js.lookup_module cx cx._module in
   let reason, id = open_tvar tvar in
-  let constraints = Flow_js.find_graph cx id in
   let before = Errors_js.ErrorSet.cardinal cx.errors in
-  Flow_js.enforce_strict cx id constraints;
+  Flow_js.enforce_strict cx id;
   let after = Errors_js.ErrorSet.cardinal cx.errors in
   if (after > before)
   then cx.graph <- cx.graph |>
@@ -6066,30 +6062,33 @@ let infer_ast ast file ?module_name force_check =
     scan_for_suppressions cx comments;
   );
 
-  let module_t = mk_module_t cx reason_exports_module in
-  let module_t = (
-    match cx.module_exports_type with
-    (* CommonJS with a clobbered module.exports *)
-    | CommonJSModule(Some(loc)) ->
-      let module_exports_t = get_module_exports cx reason in
-      let reason = mk_reason "exports" loc in
-      merge_commonjs_export cx reason module_t module_exports_t
+  if checked then (
+    let module_t = mk_module_t cx reason_exports_module in
+    let module_t = (
+      match cx.module_exports_type with
+      (* CommonJS with a clobbered module.exports *)
+      | CommonJSModule(Some(loc)) ->
+        let module_exports_t = get_module_exports cx reason in
+        let reason = mk_reason "exports" loc in
+        merge_commonjs_export cx reason module_t module_exports_t
 
-    (* CommonJS with a mutated 'exports' object *)
-    | CommonJSModule(None) ->
-      merge_commonjs_export cx reason module_t local_exports_var
+      (* CommonJS with a mutated 'exports' object *)
+      | CommonJSModule(None) ->
+        merge_commonjs_export cx reason module_t local_exports_var
 
-    (* Uses standard ES module exports *)
-    | ESModule -> module_t
-  ) in
-  Flow_js.flow cx (module_t, exports cx _module);
+      (* Uses standard ES module exports *)
+      | ESModule -> module_t
+    ) in
+    Flow_js.flow cx (module_t, exports cx _module);
+  ) else (
+    Flow_js.unify cx (exports cx _module) AnyT.t;
+  );
 
   (* insist that whatever type flows into exports is fully annotated *)
   (if modes.strict then force_annotations cx);
 
   let ins = SSet.elements cx.required in
   let out = _module in
-  cx.strict_required <- Flow_js.analyze_dependencies cx ins out;
   if module_name <> None then Flow_js.do_gc cx (out::ins);
 
   cx
@@ -6125,33 +6124,16 @@ let infer_module file =
    So do union N M as long as N may override M for overlapping keys.
 *)
 
-(* aggregate module context data with other module context data *)
-let aggregate_context_data cx cx_other =
+(* Copy context from cx_other to cx *)
+let copy_context cx cx_other =
   cx.closures <-
     IMap.union cx_other.closures cx.closures;
   cx.property_maps <-
     IMap.union cx_other.property_maps cx.property_maps;
   cx.globals <-
-    SSet.union cx_other.globals cx.globals
-
-(* update module graph with other module graph *)
-let update_graph cx cx_other =
-  let _, builtin_id = open_tvar (Flow_js.builtins ()) in
-  let master_node = IMap.find_unsafe builtin_id cx.graph in
-  let master_bounds = bounds_of_unresolved_root master_node in
-  cx_other.graph |> IMap.iter (fun id module_node ->
-    if (id = builtin_id) then (
-      let module_bounds = bounds_of_unresolved_root module_node in
-      master_bounds.uppertvars <- IMap.union
-        module_bounds.uppertvars
-        master_bounds.uppertvars;
-      master_bounds.upper <- TypeMap.union
-        module_bounds.upper
-        master_bounds.upper
-    )
-    else
-      cx.graph <- cx.graph |> IMap.add id module_node
-  )
+    SSet.union cx_other.globals cx.globals;
+  cx.graph <-
+    IMap.union cx_other.graph cx.graph
 
 type direction = Out | In
 
@@ -6173,31 +6155,24 @@ let export_to_master cx m =
 let require_from_master cx m =
   link_module_types Out cx m
 
-(* Copy context from cx_other to cx *)
-let copy_context cx cx_other =
-  aggregate_context_data cx cx_other;
-  update_graph cx cx_other
-
-let copy_context_master cx =
-  copy_context (Flow_js.master_cx ()) cx
-
 (* Connect the builtins object in master_cx to the builtins reference in some
    arbitrary cx. *)
-let implicit_require_strict cx master_cx =
-  let builtins = Flow_js.builtins () in
-  let _, builtin_id = open_tvar builtins in
-  let types = Flow_js.possible_types master_cx builtin_id in
-  types |> List.iter (fun t ->
-    Flow_js.flow cx (t, builtins)
-  )
+let implicit_require_strict cx master_cx cx_to =
+  let from_t = Flow_js.lookup_module master_cx Files_js.lib_module in
+  let to_t = Flow_js.lookup_module cx_to Files_js.lib_module in
+  Flow_js.flow cx (from_t, to_t)
 
 (* Connect the export of cx_from to its import in cx_to. This happens in some
    arbitrary cx, so cx_from and cx_to should have already been copied to cx. *)
-let explicit_impl_require_strict cx (cx_from, cx_to) =
-  let m = cx_from._module in
-  let from_t = Flow_js.lookup_module cx_from m in
+let explicit_impl_require_strict cx (cx_from, r, cx_to) =
+  let from_t =
+    try Flow_js.lookup_module cx_from r
+    with _ ->
+      (* The module exported by cx_from may be imported by path in cx_to *)
+      Flow_js.lookup_module cx_from cx_from._module
+  in
   let to_t =
-    try Flow_js.lookup_module cx_to m
+    try Flow_js.lookup_module cx_to r
     with _ ->
       (* The module exported by cx_from may be imported by path in cx_to *)
       Flow_js.lookup_module cx_to cx_from.file
@@ -6209,38 +6184,76 @@ let explicit_impl_require_strict cx (cx_from, cx_to) =
 let explicit_decl_require_strict cx m cxs_to =
   let reason = reason_of_string m in
   let from_t = Flow_js.mk_tvar cx reason in
+  (* TODO: cache in modulemap *)
   Flow_js.lookup_builtin cx (internal_module_name m) reason None from_t;
   cxs_to |> List.iter (fun cx_to ->
     let to_t = Flow_js.lookup_module cx_to m in
     Flow_js.flow cx (from_t, to_t)
   )
 
-(* Merge context of module with contexts of its implicit requires and explicit
-   requires. The implicit requires are those defined in lib.js (master_cx). For
-   the explicit requires, we need to merge the entire dependency graph: this
-   includes "nodes" (cxs) and edges (implementations and
-   declarations). Intuitively, the operation we really need is "substitution" of
-   known types for unknown type variables. This operation is simulated by the
-   more general procedure of copying and linking graphs. *)
-let merge_module_strict cx cxs implementations declarations master_cx =
+(* Merge a component with its "implicit requires" and "explicit requires." The
+   implicit requires are those defined in libraries. For the explicit
+   requires, we need to merge only those parts of the dependency graph that the
+   component immediately depends on. (We assume that this merging is part of a
+   recursive process that has already handled recursive dependencies.)
+
+   Now, by definition, files in a component can bidirectionally depend only on
+   other files in the component. All other dependencies are unidirectional.
+
+   Let dep_cxs contain the (optimized) contexts of all dependencies that are
+   unidirectional, and let component_cxs contain the contexts of the files in
+   the component. Let master_cx be the (optimized) context of libraries.
+
+   Let implementations contain the dependency edges between contexts in
+   component_cxs and dep_cxs, and declarations contain the dependency edges from
+   component_cxs to master_cx.
+
+   We assume that the first context in component_cxs is that of the leader (cx):
+   this serves as the "host" for the merging. Let the remaining contexts in
+   component_cxs be other_cxs.
+
+   1. Copy dep_cxs, other_cxs, and master_cx to the host cx.
+
+   2. Link the edges in implementations.
+
+   3. Link the edges in declarations.
+
+   4. Link the local references to libraries in master_cx and component_cxs.
+*)
+let merge_component_strict component_cxs dep_cxs
+    implementations declarations master_cx =
+  let cx, other_cxs = List.hd component_cxs, List.tl component_cxs in
   Flow_js.Cache.clear();
 
-  (* First, copy cxs and master_cx to the host cx. *)
-  cxs |> List.iter (copy_context cx);
+  dep_cxs |> List.iter (copy_context cx);
+  other_cxs |> List.iter (copy_context cx);
   copy_context cx master_cx;
 
-  (* Connect links between implementations and requires. Since the host contains
-     copies of all graphs, the links should already be available. *)
   implementations |> List.iter (explicit_impl_require_strict cx);
 
-  (* Connect links between declarations and requires. Since the host contains
-     copies of all graphs, the links should already be available *)
   declarations |> SMap.iter (explicit_decl_require_strict cx);
 
-  (* Connect the builtins object to the builtins reference. Since the builtins
-     reference is shared, this connects the definitions of builtins to their
-     uses in all contexts. *)
-  implicit_require_strict cx master_cx
+  other_cxs |> List.iter (implicit_require_strict cx master_cx);
+  implicit_require_strict cx master_cx cx;
+
+  ()
+
+(* After merging dependencies into a context (but before optimizing the
+   context), it is important to restore the parts of the context that were
+   copied from other, already optimized contexts (dep_cxs and master_cx, see
+   above comment for details on what they mean). Indeed, merging is an
+   imperative process, and there is no guarantee that those parts of the context
+   would have remained unchanged.
+
+   Restoration maintains consistency for "diamond-shaped" dependency relations:
+   it forces two contexts B and C that depend on the same context A to agree on
+   the meaning of the parts of A they share (and that meaning is dictated by A
+   itself), and so some context D that depends on both B and C (and perhaps A
+   too) is never confused when merging them.
+*)
+let restore cx dep_cxs master_cx =
+  dep_cxs |> List.iter (copy_context cx);
+  copy_context cx master_cx
 
 (* variation of infer + merge for lib definitions *)
 let init_lib_file file statements comments save_errors save_suppressions =
@@ -6260,33 +6273,11 @@ let init_lib_file file statements comments save_errors save_suppressions =
     Flow_js.set_builtin cx name (actual_type entry)
   ));
 
-  copy_context_master cx;
+  let master_cx = Flow_js.master_cx () in
+  copy_context master_cx cx;
+  implicit_require_strict master_cx master_cx cx;
 
   let errs = cx.errors in
   cx.errors <- Errors_js.ErrorSet.empty;
   save_errors errs;
   save_suppressions cx.error_suppressions
-
-(* Legacy functions for managing non-strict merges. *)
-(* !!!!!!!!!!! TODO: out of date !!!!!!!!!!!!!!! *)
-
-(* merge module context into master context *)
-let merge_module cx =
-  copy_context_master cx;
-  (* link local and global types for our export and our required's *)
-  export_to_master cx cx._module;
-  SSet.iter (require_from_master cx) cx.required;
-  ()
-
-(* merge all modules at a dependency level, then do xmgc *)
-let merge_module_list cx_list =
-  List.iter merge_module cx_list;
-  let (modules,requires) = cx_list |> ((SSet.empty,SSet.empty) |>
-      List.fold_left (fun (modules,requires) cx ->
-        (SSet.add cx._module modules,
-         SSet.union cx.required requires)
-      )
-  ) in
-  (* cross-module garbage collection *)
-  cross_module_gc (Flow_js.master_cx ()) modules requires;
-  ()

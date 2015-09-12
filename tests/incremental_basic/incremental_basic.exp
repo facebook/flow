@@ -1,0 +1,32 @@
+
+a.js:2:17,17: number
+This type is incompatible with
+a.js:2:8,13: string
+
+b.js:2:9,22: string
+This type is incompatible with
+b.js:3:8,13: number
+
+c.js:2:9,22: number
+This type is incompatible with
+c.js:3:8,13: string
+
+Found 3 errors
+
+a.js:2:17,17: number
+This type is incompatible with
+a.js:2:8,13: string
+
+Found 1 error
+
+b.js:2:9,22: number
+This type is incompatible with
+c.js:3:8,13: string
+
+Found 1 error
+
+c.js:2:9,22: number
+This type is incompatible with
+c.js:3:8,13: string
+
+Found 1 error

@@ -64,6 +64,11 @@ module ContextHeap = SharedMem.WithCache (String) (struct
   let prefix = Prefix.make()
 end)
 
+module SigContextHeap = SharedMem.WithCache (String) (struct
+  type t = context
+  let prefix = Prefix.make()
+end)
+
 (* errors are stored by phase,
    in maps from file path to error set
  *)
@@ -97,11 +102,11 @@ let clear_errors files =
     debug_string (fun () -> spf "clear errors %s" file);
     parse_errors := SMap.remove file !parse_errors;
     infer_errors := SMap.remove file !infer_errors;
-    merge_errors := SMap.remove file !merge_errors;
     module_errors := SMap.remove file !module_errors;
+    merge_errors := SMap.remove file !merge_errors;
     error_suppressions := SMap.remove file !error_suppressions;
-    all_errors := SMap.empty
-  ) files
+  ) files;
+  all_errors := SMap.empty
 
 (* helper - save an error set into a global error map.
    clear mapping if errorset is empty *)
@@ -279,7 +284,7 @@ let infer_job opts (inferred, errsets, errsuppressions) files =
   init_modes opts;
   List.fold_left (fun (inferred, errsets, errsuppressions) file ->
     try checktime opts 1.0
-      (fun t -> spf "perf: inferred %S in %f" file t)
+      (fun t -> spf "perf: inferred %s in %f" file t)
       (fun () ->
         (*prerr_endlinef "[%d] INFER: %s" (Unix.getpid()) file;*)
 
@@ -321,10 +326,9 @@ let infer workers files opts =
         ~job: (infer_job opts)
         ~neutral: ([], [], [])
         ~merge: rev_append_triple
-        ~next: (Bucket.make_20 files) in
+        ~next: (Bucket.make files) in
       save_errors infer_errors files errors;
       save_suppressions error_suppressions files suppressions;
-
       files
     )
 
@@ -332,6 +336,15 @@ let checked m = Module.(
   let info = m |> get_module_file |> unsafe_opt |> get_module_info in
   info.checked
 )
+
+(* A file is considered to implement a required module r only if the file is
+   registered to provide r and the file is checked. Such a file must be merged
+   before any file that requires module r, so this notion naturally gives rise
+   to a dependency ordering among files for merging. *)
+let implementation_file r =
+  if Module.module_exists r && checked r
+  then Some (Module.get_file r)
+  else None
 
 (* warns on missing required modules
    TODO maybe make this suppressable
@@ -353,14 +366,17 @@ let check_requires cx =
         reason (Some (Reason_js.builtin_reason m_name)) tvar;
   ) cx.required
 
-(* Merging involves looking up a lot of contexts, and due to the graph-structure
-   of dependencies, the same context may be looked up multiple times. We already
-   cache contexts in the shared memory for performance, but context graphs need
-   to be copied because they have mutable bounds. We maintain an additional
-   cache of local copies. Mutating bounds in local copies of context graphs is
-   not only OK, but we rely on it during merging, so it is both safe and
-   necessary to cache the local copies. As a side effect, this probably helps
-   performance too by avoiding redundant copying. *)
+let mk_copy_of_context cx = { cx with
+  graph = IMap.map copy_node cx.graph;
+  property_maps = cx.property_maps
+}
+
+(* We already cache contexts in the shared memory for performance, but context
+   graphs need to be copied because they have mutable bounds. We maintain an
+   additional cache of local copies. Mutating bounds in local copies of context
+   graphs is not only OK, but we rely on it during merging, so it is both safe
+   and necessary to cache the local copies. As a side effect, this probably
+   helps performance too by avoiding redundant copying. *)
 class context_cache = object
   val cached_infer_contexts = Hashtbl.create 0
 
@@ -371,11 +387,28 @@ class context_cache = object
 
   (* read a context from shared memory, copy its graph, and cache the context *)
   method read file =
-    let cx = ContextHeap.find_unsafe file in
-    let cx = { cx with graph = IMap.map copy_node cx.graph } in
+    let cx = mk_copy_of_context (ContextHeap.find_unsafe file) in
     Hashtbl.add cached_infer_contexts file cx;
     cx
+end
 
+(* Similar to above, but for "signature contexts." The only differences are that
+   the underlying heap is SigContextHeap instead of ContextHeap, and that `read`
+   returns both the original and the copied version of a context. *)
+class sig_context_cache = object
+  val cached_merge_contexts = Hashtbl.create 0
+
+  (* find a context in the cache *)
+  method find file =
+    try Some (Hashtbl.find cached_merge_contexts file)
+    with _ -> None
+
+  (* read a context from shared memory, copy its graph, and cache the context *)
+  method read file =
+    let orig_cx = SigContextHeap.find_unsafe file in
+    let cx = mk_copy_of_context orig_cx in
+    Hashtbl.add cached_merge_contexts file cx;
+    orig_cx, cx
 end
 
 let add_decl (r, cx) declarations =
@@ -383,165 +416,380 @@ let add_decl (r, cx) declarations =
   | None -> SMap.add r [cx] declarations
   | Some cxs -> SMap.add r (cx::cxs) declarations
 
-let merge_decls =
-  SMap.merge (fun r cxs1 cxs2 -> match cxs1, cxs2 with
-    | None, None -> None
-    | Some cxs, None | None, Some cxs -> Some cxs
-    | Some cxs1, Some cxs2 -> Some (List.rev_append cxs1 cxs2)
-  )
-
-(* Merging requires for a context returns a dependency graph: (a) the set of
-   contexts of transitive strict requires for that context, (b) the set of edges
-   between these and from these to the context. Contexts are cached. Note also
-   that contexts are updated by side effect, so transitive merging is only
-   performed when a context is first read and placed in the cache. An
-   interesting property of this procedure is that it gracefully handles cycles;
-   by delaying the actual substitutions, it can detect cycles via caching. *)
-let rec merge_requires cache cx rs =
-  SSet.fold (fun r (cxs, implementations, declarations) ->
-    if Module.module_exists r && checked r then
-      let file = Module.get_file r in
-      match cache#find file with
-      | Some req_cx ->
-          cxs,
-          (req_cx, cx) :: implementations,
-          declarations
-      | None ->
-          let req_cx = cache#read file in
-          let (merged_cxs, merged_impls, merged_decls) =
-            merge_requires cache req_cx req_cx.strict_required in
-          List.rev_append merged_cxs (req_cx :: cxs),
-          List.rev_append merged_impls ((req_cx, cx) :: implementations),
-          merge_decls merged_decls declarations
-    else
-      cxs,
-      implementations,
-      add_decl (r, cx) declarations
-  ) rs ([],[],SMap.empty)
-
-(* To merge results for a context, check for the existence of its requires,
-   compute the dependency graph (via merge_requires), and then compute
-   substitutions (via merge_module_strict). A merged context is returned. *)
-let merge_strict_context cache cx master_cx =
-  if cx.checked then (
-    check_requires cx;
-
-    let cxs, impls, decls = merge_requires cache cx cx.required in
-    TI.merge_module_strict cx cxs impls decls master_cx
-  ) else (
-    (* do nothing on unchecked files *)
-  );
-  cx
-
 (**********************************)
 (* entry point for merging a file *)
 (**********************************)
+module LeaderHeap = SharedMem.WithCache (String) (struct
+  type t = string
+  let prefix = Prefix.make()
+end)
+
+(* To merge the contexts of a component (component_cxs) with their dependencies,
+   we call the functions `merge_component_strict` and `restore` defined
+   in type_inference_js.ml with appropriate arguments prepared below.
+
+   First, we check the requires of component_cxs.
+
+   Next, we traverse these requires, creating:
+
+   (a) orig_sig_cxs: the original signature contexts of dependencies outside the
+   component.
+
+   (b) sig_cxs: the copied signature contexts of such dependencies.
+
+   (c) impls: edges between contexts in component_cxs and sig_cxs that
+   are labeled with the requires they denote (when implementations of such
+   requires are found).
+
+   (d) decls: edges between contexts in component_cxs and libraries, classified
+   by requires (when implementations of such requires are not found).
+
+   The arguments (b), (c), (d) are passed to `merge_component_strict`, and
+   argument (a) is passed to `restore`.
+*)
+let merge_strict_context cache component_cxs =
+  List.iter check_requires component_cxs;
+  let required = List.fold_left (fun required cx ->
+    SSet.fold (fun r -> add_decl (r, cx)) cx.required required
+  ) SMap.empty component_cxs in
+  let cx = List.hd component_cxs in
+
+  let sig_cache = new sig_context_cache in
+
+  let orig_sig_cxs, sig_cxs, impls, decls =
+    SMap.fold (fun r cxs_to
+      (orig_sig_cxs, sig_cxs, impls, decls) ->
+        match implementation_file r with
+        | Some file ->
+            let impl sig_cx = List.map (fun cx_to -> sig_cx, r, cx_to) cxs_to in
+            begin match cache#find file with
+            | Some sig_cx ->
+                orig_sig_cxs, sig_cxs,
+                List.rev_append (impl sig_cx) impls, decls
+            | None ->
+                let file = LeaderHeap.find_unsafe file in
+                begin match sig_cache#find file with
+                | Some sig_cx ->
+                    orig_sig_cxs, sig_cxs,
+                    List.rev_append (impl sig_cx) impls, decls
+                | None ->
+                    let orig_sig_cx, sig_cx = sig_cache#read file in
+                    orig_sig_cx::orig_sig_cxs, sig_cx::sig_cxs,
+                    List.rev_append (impl sig_cx) impls,
+                    decls
+                end
+            end
+        | None ->
+            (* NOTE: currently we typecheck against libraries only when
+               corresponding implementations are not found or not checked. This
+               will change in the future. *)
+            orig_sig_cxs, sig_cxs, impls, SMap.add r cxs_to decls
+    ) required ([], [], [], SMap.empty)
+  in
+
+  let orig_master_cx, master_cx = sig_cache#read Files_js.global_file_name in
+
+  TI.merge_component_strict component_cxs sig_cxs impls decls master_cx;
+  TI.restore cx orig_sig_cxs orig_master_cx;
+
+  ()
+
+(* Entry point for merging a component *)
+let merge_strict_component component =
+  (* A component may have several files: there's always at least one, and
+     multiple files indicate a cycle. *)
+
+  let file = List.hd component in
+
+  (* We choose file as the leader, and other_files are followers. It is always
+     OK to choose file as leader, as explained below.
+
+     Note that cycles cannot happen between unchecked files. Why? Because files
+     in cycles must have their dependencies recorded, yet dependencies are never
+     recorded for unchecked files.
+
+     It follows that when file is unchecked, there are no other_files! We don't
+     have to worry that some other_file may be checked when file is unchecked.
+
+     It also follows when file is checked, other_files must be checked too!
+  *)
+  let info = Module_js.get_module_info file in
+  if info.Module_js.checked then (
+    let cache = new context_cache in
+    let component_cxs = List.map cache#read component in
+
+    merge_strict_context cache component_cxs;
+
+    Flow_js.ContextOptimizer.sig_context component_cxs;
+    let cx = List.hd component_cxs in
+    let errors = cx.errors in
+    cx.errors <- Errors_js.ErrorSet.empty;
+    SigContextHeap.add file cx;
+    file, errors
+  )
+  else file, Errors_js.ErrorSet.empty
+
+(* Special case of merging a single file. We assume that the file system is in a
+   stable state when this function is called, so that we don't need to worry
+   about cycles, and can simply read the signatures of dependencies. *)
 let merge_strict_file file =
   let cache = new context_cache in
-  (* always use cache to read contexts, instead of directly
-     using ContextHeap; otherwise bad things will happen. *)
   let cx = cache#read file in
-  let master_cx = cache#read Files_js.global_file_name in
-  merge_strict_context cache cx master_cx
+  merge_strict_context cache [cx];
+  cx
 
+(* Another special case, similar assumptions as above. *)
+(** TODO: handle case when file+contents don't agree with file system state **)
 let typecheck_contents contents filename =
   Parsing_service_js.(match do_parse contents filename with
   | OK ast ->
       let cx = TI.infer_ast ast filename true in
       let cache = new context_cache in
-      let master_cx = cache#read Files_js.global_file_name in
-      Some (merge_strict_context cache cx master_cx), cx.errors
+      merge_strict_context cache [cx];
+      Some cx, cx.errors
+
   | Err errors ->
       None, errors
   )
 
-(* *)
-let merge_strict_job opts (merged, errsets) files =
+let merge_strict_job opts (merged, errsets) components =
   init_modes opts;
-  List.fold_left (fun (merged, errsets) file ->
+  List.fold_left (fun (merged, errsets) component ->
+    let file = String.concat "\n\t" component in
     try checktime opts 1.0
-      (fun t -> spf "perf: merged %S in %f" file t)
+      (fun t -> spf "[%d] perf: merged %s in %f" (Unix.getpid()) file t)
       (fun () ->
         (*prerr_endlinef "[%d] MERGE: %s" (Unix.getpid()) file;*)
-        let cx = merge_strict_file file in
-        cx.file :: merged, cx.errors :: errsets
+        let file, errors = merge_strict_component component in
+        file :: merged, errors :: errsets
       )
     with exc ->
-      prerr_endlinef "(%d) merge_strict_job THROWS: %s\n"
-        (Unix.getpid()) (fmt_file_exc file exc);
+      prerr_endlinef "(%d) merge_strict_job THROWS: [%d] %s\n"
+        (Unix.getpid()) (List.length component) (fmt_file_exc file exc);
       (merged, errsets)
-  ) (merged, errsets) files
+  ) (merged, errsets) components
 
-(* *)
-let merge_strict workers files opts =
+(* Custom bucketing scheme for dynamically growing and shrinking workloads when
+   merging files.
+
+   We start out with files that have no dependencies: these files are available
+   for scheduling merge jobs. All other files are "blocked", i.e., they are *not
+   ready* for scheduling.
+
+   NOTE: Scheduling merge jobs too early will cause crashes, since they will
+   need stuff that has not been computed yet! A more sophisticated scheme may be
+   designed to be tolerant to such failures, but the merge process is
+   complicated enough as is. Also, performance-wise blocking does not seem to be
+   an issue because files get unblocked pretty regularly (see below).
+
+   Each blocked file maintains a counter on the number of files blocking
+   them. As files are done, they decrement the counters of other files blocked
+   on them. As soon as some of the counters go to zero, the corresponding files
+   are made available for scheduling.
+
+   Finally, we maintain a counter on the total number of blocked files. When
+   that goes to zero, we prepare to exit!
+
+   The underlying worker management scheme needs to know when to wait for more
+   work vs. when it can safely exit. We signal the former by returning a `None`
+   bucket, and the latter by returning a `Some []` bucket.
+*)
+module MergeStream = struct
+  let max_bucket_size = 500 (* hard-coded, as in Bucket *)
+
+  (* For each leader, maps the number of leaders it is currently blocking on. *)
+  let blocking = Hashtbl.create 0
+  (* Counts the number of blocked leaders. *)
+  let blocked = ref 0
+
+  (* For each leader, maps other leaders that are dependent on it. *)
+  let dependents = ref SMap.empty
+
+  (* stream of files available to schedule *)
+  let stream = ref []
+
+  (* take n files from stream *)
+  let rec take n =
+    if n = 0 then []
+    else match !stream with
+    | [] -> assert false
+    | x::rest ->
+        stream := rest;
+        x::(take (n-1))
+
+  (* leader_map is a map from files to leaders *)
+  (* component_map is a map from leaders to components *)
+  (* dependency_graph is a map from files to dependencies *)
+  let make dependency_graph leader_map component_map =
+    (* TODO: clear or replace state *)
+    let procs = GlobalConfig.nbr_procs in
+    let leader f = SMap.find_unsafe f leader_map in
+    let component f = SMap.find_unsafe f component_map in
+
+    let dependency_dag = SMap.fold (fun f fs dependency_dag ->
+      let leader_f = leader f in
+      let dep_leader_fs = match SMap.get leader_f dependency_dag with
+        | Some dep_leader_fs -> dep_leader_fs
+        | _ -> SSet.empty
+      in
+      let dep_leader_fs = SSet.fold (fun f dep_leader_fs ->
+        let f = leader f in
+        if f = leader_f then dep_leader_fs else SSet.add f dep_leader_fs
+      ) fs dep_leader_fs in
+      SMap.add leader_f dep_leader_fs dependency_dag
+    ) dependency_graph SMap.empty in
+
+    SMap.iter (fun leader_f dep_leader_fs ->
+      let n = SSet.cardinal dep_leader_fs in
+      (* n files block leader_f *)
+      Hashtbl.add blocking leader_f n;
+      if n = 0
+      then (* leader_f isn't blocked, add to stream *)
+        stream := leader_f::!stream
+      else (* one more blocked *)
+        incr blocked
+    ) dependency_dag;
+
+    (* TODO: remember reverse dependencies to quickly calculate remerge sets *)
+    dependents := Sort_js.reverse dependency_dag;
+
+    fun () ->
+      let jobs = List.length !stream in
+      if jobs = 0 && !blocked <> 0 then None
+      else
+        let bucket_size =
+          if jobs < procs * max_bucket_size
+          then 1 + (jobs / procs)
+          else max_bucket_size
+        in
+        let n = min bucket_size jobs in
+        let result = take n |> List.map component in
+        Some result
+
+  (* We know when files are done by having jobs return the files they processed,
+     and trapping the function that joins results. ;), yeah. *)
+  let join =
+    let push leader_fs =
+      List.iter (fun leader_f ->
+        SSet.iter (fun dep_leader_f ->
+          let n = (Hashtbl.find blocking dep_leader_f) - 1 in
+          (* dep_leader blocked on one less *)
+          Hashtbl.replace blocking dep_leader_f n;
+          if n = 0 then
+            (* one less blocked; add dep_leader_f to stream *)
+            (decr blocked; stream := dep_leader_f::!stream)
+        ) (SMap.find_unsafe leader_f !dependents)
+      ) leader_fs
+    in
+    fun res acc ->
+      let leader_fs, _ = res in
+      push leader_fs;
+      rev_append_pair res acc
+
+end
+
+let merge_strict workers dependency_graph partition opts =
+  (* NOTE: master_cx will only be saved once per server lifetime *)
+  let master_cx = Flow_js.master_cx () in
+  (* TODO: we probably don't need to save master_cx in ContextHeap *)
+  ContextHeap.add Files_js.global_file_name master_cx;
+  (* store master signature context to heap *)
+  SigContextHeap.add Files_js.global_file_name master_cx;
+  (* make a map from component leaders to components *)
+  let component_map =
+    let result = ref SMap.empty in
+    IMap.iter (fun _ components ->
+      List.iter (fun component ->
+        result := SMap.add (List.hd component) component !result;
+      ) components;
+    ) partition;
+    !result
+  in
+  (* make a map from files to their component leaders *)
+  let leader_map =
+    let result = ref SMap.empty in
+    component_map |> SMap.iter (fun file component ->
+      component |> List.iter (fun file_ ->
+        result := SMap.add file_ file !result
+      );
+    );
+    !result
+  in
+  (* store leaders to a heap; used when rechecking *)
+  leader_map |> SMap.iter LeaderHeap.add;
   logtime opts
-    (fun t -> spf "merged (strict) %d files in %f" (List.length files) t)
+    (fun t -> spf "merged (strict) in %f" t)
     (fun () ->
-      (* NOTE: master_cx will only be saved once per server lifetime *)
-      let master_cx = Flow_js.master_cx () in
-      ContextHeap.add master_cx.file master_cx;
       (* returns parallel lists of filenames and errorsets *)
-      let (files, errsets) = MultiWorker.call
+      let (files, errsets) = MultiWorker.call_dynamic
         workers
         ~job: (merge_strict_job opts)
         ~neutral: ([], [])
-        ~merge: rev_append_pair
-        ~next: (Bucket.make_20 files) in
+        ~merge: MergeStream.join
+        ~next: (MergeStream.make dependency_graph leader_map component_map) in
       (* collect master context errors *)
       let (files, errsets) = (
         master_cx.file :: files,
         master_cx.errors :: errsets
       ) in
       (* save *)
-      save_errors merge_errors files errsets
+      save_errors merge_errors files errsets;
     )
 
-(* *)
-let merge_nonstrict partition opts =
-  logtime opts
-    (fun t -> spf "merged (nonstrict) %d files in %f"
-      (List.length (List.flatten partition)) t)
-    (fun () ->
-      (* merge all modules by partition *)
-      let (files, errsets) = List.fold_left (fun acc file_list ->
-        try
-          let cx_list = List.map ContextHeap.find_unsafe file_list in
-          TI.merge_module_list cx_list;
-          List.iter check_requires cx_list;
-          List.fold_left (fun (files, errsets) cx ->
-            (cx.file :: files, cx.errors :: errsets)
-          ) acc cx_list
-        with exc ->
-          let files = Printf.sprintf "\n%s\n" (String.concat "\n" file_list) in
-          prerr_endlinef "(%d) merge_module THROWS: %s\n"
-            (Unix.getpid()) (fmt_file_exc files exc);
-          acc
-      ) ([], []) partition in
-      (* typecheck intrinsics--temp code *)
-      let forget file errs = () in
-      ignore (Init_js.init forget forget forget);
-      let master_cx = Flow_js.master_cx () in
-      (* collect master context errors *)
-      let (files, errsets) = (
-        master_cx.file :: files,
-        master_cx.errors :: errsets
-      ) in
-      (* save *)
-      save_errors merge_errors files errsets
+(* Calculate module dependencies. Since this involves a lot of reading from
+   shared memory, it is useful to parallelize this process (leading to big
+   savings in init and recheck times). *)
+
+let calc_dependencies_job =
+  List.fold_left (fun deps file ->
+    let { Module.required; _ } = Module.get_module_info file in
+    let files = SSet.fold (fun r files ->
+      match implementation_file r with
+      | Some f -> SSet.add f files
+      | None -> files
+    ) required SSet.empty in
+    SMap.add file files deps
   )
 
-(* calculate module dependencies *)
-let calc_dependencies files =
-  let deps = List.fold_left (fun err_map file ->
-    let { Module._module; required; _ } = Module.get_module_info file in
-    SMap.add _module required err_map
-  ) SMap.empty files in
-  Sort_js.topsort deps
+let calc_dependencies workers files =
+  let deps = MultiWorker.call
+    workers
+    ~job: calc_dependencies_job
+    ~neutral: SMap.empty
+    ~merge: SMap.union
+    ~next: (Bucket.make files) in
+  SMap.map (SSet.filter (fun f -> SMap.mem f deps)) deps
 
 (* commit newly inferred and removed modules, collect errors. *)
 let commit_modules inferred removed =
   let errmap = Module.commit_modules inferred removed in
   save_errormap module_errors errmap
+
+(* Sanity checks on InfoHeap and NameHeap. Since this is performance-intensive
+   (although it probably doesn't need to be), it is only done under --debug. *)
+let heap_check files = Module.(
+  let ih = Hashtbl.create 0 in
+  let nh = Hashtbl.create 0 in
+  files |> List.iter (fun file ->
+    assert (get_file file = file);
+    let info = get_module_info file in
+    Hashtbl.add ih file info;
+    let m = info.Module._module in
+    let f = get_file m in
+    Hashtbl.add nh m f;
+  );
+  nh |> Hashtbl.iter (fun m f ->
+    assert (get_module_name f = m);
+  );
+  ih |> Hashtbl.iter (fun file info ->
+    let parsed = info.Module.parsed in
+    let checked = info.Module.checked in
+    let required = info.Module.required in
+    assert (parsed);
+    assert (checked || (SSet.is_empty required));
+  );
+  (* *)
+)
 
 (* helper *)
 (* make_merge_input takes list of files produced by infer, and
@@ -563,20 +811,19 @@ let typecheck workers files removed unparsed opts make_merge_input =
   (* call supplied function to calculate closure of modules to merge *)
   match make_merge_input inferred with
   | true, to_merge ->
-    let partition = calc_dependencies to_merge in
+    if opts.Options.opt_debug then heap_check to_merge;
+    let dependency_graph = calc_dependencies workers to_merge in
+    let partition = Sort_js.topsort dependency_graph in
     if profile_and_not_quiet opts then Sort_js.log partition;
     (if modes.strict then (
       try
-        merge_strict workers to_merge opts
+        merge_strict workers dependency_graph partition opts;
+        if profile_and_not_quiet opts then Gc.print_stat stderr;
       with exc ->
         prerr_endline (Printexc.to_string exc)
-     ) else (
-      let levels =
-        IMap.fold (fun i mcs levels ->
-          (List.concat mcs)::levels
-        ) partition [] in
-      merge_nonstrict levels opts;
-    ));
+     ) else
+        failwith "Did you forget to pass the --strict flag?"
+    );
     (* collate errors by origin *)
     collate_errors to_merge;
     to_merge
@@ -608,45 +855,44 @@ let typecheck workers files removed unparsed opts make_merge_input =
         perform substitution of r.export into m.g, producing m.g'
 *)
 
-(* given a module M,
-  - required(M) is the set of all modules required by M
-  - strict_required(M) is the subset of required(M) which contribute
-    items to M's signature (the name is legacy)
-  - sig(M) is M plus the closure of strict_required(M), i.e.
-    all modules which might contribute to M's signature, directly
-    or indirectly
+(* Given a module M,
+   - required(M) is the set of all modules required by M
 
-  Given a module M and a set of modules S,
-  - M's signature depends on S if any module in sig(M) is in S
-  - M depends on S if M is in S, or if the signature of any module
-    in required(M) depends on S.
- *)
+   Given a module M and a set of modules S,
+   - M depends on S if M is in S, or any module in required(M) depends on S.
+
+   Since the set of modules S is fixed in this computation, memoizing which
+   modules M are already known to depend on S greatly speeds up this computation
+   (since many files share the same dependencies). This is particularly
+   important since this is a near-constant cost for every recheck. Going
+   further, this computation can be readily parallelized, since basically it
+   does the same check on a large number of files.
+*)
 let file_depends_on =
-
-  let rec sig_depends_on seen modules m =
-    SSet.mem m modules || (
-      Module.module_exists m && (
-        let f = Module.get_file m in
-        not (SSet.mem f !seen) && (
-          seen := SSet.add f !seen;
-          let { Module.strict_required; _ } = Module.get_module_info f in
-          SSet.exists (sig_depends_on seen modules) strict_required
-        )
-      )
-    )
+  let rec sig_depends_on seen modules memo m =
+    match SMap.get m !memo with
+    | Some result -> result
+    | None ->
+        let result = SSet.mem m modules || (
+          Module.module_exists m && (
+            let f = Module.get_file m in
+            not (SSet.mem f !seen) && (
+              seen := SSet.add f !seen;
+              let { Module.required; _ } = Module.get_module_info f in
+              SSet.exists (sig_depends_on seen modules memo) required
+            )
+          )
+        ) in
+        memo := SMap.add m result !memo;
+        result
   in
 
-  fun modules f ->
+  fun modules memo f ->
     let { Module._module; required; _ } = Module.get_module_info f in
     SSet.mem _module modules || (
       let seen = ref SSet.empty in
-      SSet.exists (sig_depends_on seen modules) required
+      SSet.exists (sig_depends_on seen modules memo) required
     )
-
-(* The following computation is likely inefficient; it tries to narrow down
-   a potentially large set of unmodified files to a potentially small set of
-   files that are affected by a modification, rather than searching in the
-   reverse direction, which might involve smaller sets at each step. *)
 
 (* Files that must be rechecked include those that immediately or recursively
    depend on modules that were added, deleted, or modified as a consequence of
@@ -654,13 +900,23 @@ let file_depends_on =
    from files to modules may not be preserved: deleting files may delete
    modules, adding files may add modules, and modifying files may do both.
 *)
-let deps unmodified inferred_files removed_modules =
+let deps_job touched_modules files unmodified =
+  let memo = ref SMap.empty in
+  List.rev_append files
+    (List.filter (file_depends_on touched_modules memo) unmodified)
+
+let deps workers unmodified inferred_files removed_modules =
   (* touched modules are all that were inferred, re-inferred or removed *)
   let touched_modules = SSet.fold (fun file mods ->
     SSet.add (Module.get_module_name file) mods
   ) inferred_files removed_modules in
   (* return untouched files that depend on these *)
-  SSet.filter (file_depends_on touched_modules) unmodified
+  set_of_list (MultiWorker.call
+    workers
+    ~job: (deps_job touched_modules)
+    ~neutral: []
+    ~merge: List.rev_append
+    ~next: (Bucket.make (SSet.elements unmodified)))
 
 (* We maintain the following invariant across rechecks: The keyset of
    `files_info` contains files that parsed successfully in the previous
@@ -737,7 +993,8 @@ let recheck genv env modified =
     (fun inferred ->
       (* need to merge the closure of inferred files and their deps *)
       let inferred_set = set_of_list inferred in
-      let unmod_deps = deps unmodified_parsed inferred_set removed_modules in
+      let unmod_deps = deps genv.ServerEnv.workers
+        unmodified_parsed inferred_set removed_modules in
 
       let n = SSet.cardinal unmod_deps in
         if n > 0
@@ -746,7 +1003,17 @@ let recheck genv env modified =
       let _ = SSet.fold (fun f i ->
         prerr_endlinef "%d/%d: %s" i n f; i + 1) unmod_deps 1 in
 
-      true, SSet.elements (SSet.union unmod_deps inferred_set)
+      (* clear merge errors for unmodified dependents *)
+      SSet.iter (fun file ->
+        merge_errors := SMap.remove file !merge_errors;
+      ) unmod_deps;
+
+      let to_merge = SSet.union unmod_deps inferred_set in
+      LeaderHeap.remove_batch to_merge;
+      SigContextHeap.remove_batch to_merge;
+      SharedMem.collect `gentle;
+
+      true, SSet.elements to_merge
     ) |> ignore;
 
   (* for now we populate file_infos with empty def lists *)
@@ -761,10 +1028,6 @@ let recheck genv env modified =
 
 (* full typecheck *)
 let full_check workers parse_next opts =
-  Gc.set { (Gc.get ()) with
-   (*  Gc.verbose = 0x01; *)
-    Gc.minor_heap_size = 64_000_000
-  };
   init_modes opts;
 
   let parsed, error_files, errors =

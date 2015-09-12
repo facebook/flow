@@ -982,22 +982,15 @@ let rec assume_ground cx ids = function
 
   (* The subset of operations to crawl. The type variables denoting the results
      of these operations would be ignored by the is_required check in
-     `assert_ground`. *)
-  | SummarizeT(_,t)
-  | CallT(_,{ return_t = t; _ })
-  | MethodT(_,_,{ return_t = t; _})
+     `assert_ground`.
+
+     These are intended to be exactly the operations that might be involved when
+     extracting (parts of) requires/imports. As such, they could be specialized
+     even further (e.g., chained GetPropTs may be disallowed, until nested
+     modules are supported), and they need to be kept in sync as module system
+     conventions evolve. *)
+
   | GetPropT(_,_,t)
-  | GetElemT(_,_,t)
-  | ConstructorT(_,_,t)
-  | TypeT(_, t)
-  | AdderT(_,_,t)
-  | AndT(_,_,t)
-  | OrT(_,_,t)
-  | PredicateT(_,t)
-  | SpecializeT(_,_,_,t)
-  | ObjAssignT(_,_,t,_,_)
-  | ObjRestT(_,_,t)
-  | GetKeysT(_,t)
   | ImportModuleNsT(_,t)
   | CJSRequireT(_,t)
   | ImportTypeT(_,t)
@@ -1023,146 +1016,31 @@ and assume_ground_id cx ids id =
       assume_ground cx ids t
   )
 
-(* Walk the graph from exports and report missing annotations for type variables
-   encountered. Type variables that are in a given list are skipped: these are
-   marked above as depending on `require`d modules. Thus, e.g., when
-   the superclass of an exported class is `require`d, we should not insist on an
-   annotation for the superclass. *)
-
-(* need to consider only "def" types *)
-let rec assert_ground ?(infer=false) cx skip ids = function
-  | BoundT _ -> ()
-
-  (* Type variables that are not forced to be annotated include those that
-     are dependent on requires, or whose reasons indicate that they are
-     derivable. The latter category includes annotations and builtins. *)
-  | OpenT (reason_open, id)
-      when (ISet.mem id skip || is_derivable_reason reason_open)
-        -> ()
-
-  | OpenT (_, id) when infer ->
-      if not (ISet.mem id !ids)
-      then (
-        ids := !ids |> ISet.add id;
-        let types = possible_types cx id in
-        List.iter (assert_ground cx skip ids) types
-      )
-
-  | OpenT (reason_open, id) -> Errors_js.(
-      let message_list = [
-      (* print out id to debug *)
-        message_of_reason reason_open;
-        message_of_string "Missing annotation"
-      ] in
-      add_output cx WARNING message_list
-    )
-  | NumT _
-  | StrT _
-  | BoolT _
-  | UndefT _
-  | MixedT _
-  | AnyT _
-  | NullT _
-  | VoidT _
-    ->
-      ()
-
-  | FunT (reason, _, _, { params_tlist = params; return_t = ret; _ }) ->
-      let f = assert_ground cx skip ids in
-      List.iter f params;
-      f ret
-
-  | PolyT (xs,t) ->
-      assert_ground cx skip ids t
-
-  | ObjT (reason, { props_tmap = id; _ }) ->
-      iter_props cx id (fun _ -> assert_ground ~infer:true cx skip ids)
-
-  | ArrT (reason, t, ts) ->
-      assert_ground cx skip ids t;
-      ts |> List.iter (assert_ground cx skip ids)
-
-  | ClassT t -> assert_ground cx skip ids t
-
-  | TypeT (reason, t) -> assert_ground cx skip ids t
-
-  | InstanceT (reason, static, super, instance) ->
-      let f = assert_ground cx skip ids in
-      iter_props cx instance.fields_tmap (fun _ -> f);
-      iter_props cx instance.methods_tmap (fun _ -> f);
-      f super
-
-  | RestT (t) -> assert_ground cx skip ids t
-
-  | OptionalT (t) -> assert_ground cx skip ids t
-
-  | TypeAppT(c,ts) ->
-      assert_ground ~infer:true cx skip ids c;
-      List.iter (assert_ground cx skip ids) ts
-
-  | MaybeT(t) -> assert_ground cx skip ids t
-
-  | IntersectionT(reason,ts) ->
-      List.iter (assert_ground cx skip ids) ts
-
-  | UnionT(reason,ts) ->
-      List.iter (assert_ground cx skip ids) ts
-
-  | UpperBoundT(t) ->
-      assert_ground cx skip ids t
-
-  | LowerBoundT(t) ->
-      assert_ground cx skip ids t
-
-  | AnyObjT _ -> ()
-  | AnyFunT _ -> ()
-
-  | ShapeT(t) ->
-      assert_ground cx skip ids t
-  | DiffT(t1, t2) ->
-      assert_ground cx skip ids t1;
-      assert_ground cx skip ids t2
-
-  | KeysT(reason,t) ->
-      assert_ground cx skip ids t
-
-  | SingletonStrT _ -> ()
-  | SingletonNumT _ -> ()
-  | SingletonBoolT _ -> ()
-
-  | ModuleT(reason, {exports_tmap; cjs_export}) ->
-      iter_props cx exports_tmap (fun _ -> assert_ground ~infer:true cx skip ids);
-      (match cjs_export with
-       | Some(t) -> assert_ground ~infer:true cx skip ids t
-       | None -> ()
-      )
-
-  | AnnotT (sink_t, source_t) ->
-      (* don't ask for an annotation if one is already provided :) *)
-      (** TODO: one of the uses of derivable_reason was to mark type variables
-          that represented annotations so that they could be ignored. Since we
-          can now ignore annotations directly, consider renaming or getting rid
-          of derivable entirely. **)
-      ()
-
-  | t -> failwith (streason_of_t t) (** TODO **)
-
-let lookup_module cx m =
-  SMap.find_unsafe m cx.modulemap
-
-let enforce_strict cx id constraints =
-  let skip_ids = ref ISet.empty in
-  SSet.iter (fun r ->
-    let tvar = SMap.find_unsafe r cx.modulemap in
-    assume_ground cx skip_ids tvar
-  ) cx.required;
-
-  let ids = ref (ISet.singleton id) in
-  types_of constraints |> List.iter (assert_ground cx !skip_ids ids)
-
 (**************)
 (* builtins *)
 (**************)
+
+(* Every context has a local reference to builtins (along with local references
+   to other modules that are discovered during type checking, such as modules
+   required by it, the module it provides, and so on). *)
+let mk_builtins cx =
+  let builtins = mk_tvar cx (builtin_reason "module") in
+  cx.modulemap <- cx.modulemap |> SMap.add Files_js.lib_module builtins
+
+(* Local references to modules can be looked up. *)
+let lookup_module cx m =
+  SMap.find_unsafe m cx.modulemap
+
+(* The builtins reference is accessed just like references to other modules. *)
+let builtins cx =
+  lookup_module cx Files_js.lib_module
+
+(* new contexts are prepared here, so we can install shared tvars *)
+let fresh_context ?(checked=false) ?(weak=false) ~file ~_module =
+  let cx = new_context ~file ~_module ~checked ~weak in
+  (* add types for pervasive builtins *)
+  mk_builtins cx;
+  cx
 
 (* created in the master process (see Server.preinit), populated and saved to
    ContextHeap. forked workers will have an empty replica from the master, but
@@ -1171,31 +1049,10 @@ let master_cx =
   let cx_ = ref None in
   fun () -> match !cx_ with
   | None ->
-    let cx = new_context Files_js.global_file_name Files_js.lib_module in
+    let cx = fresh_context Files_js.global_file_name Files_js.lib_module in
     cx_ := Some cx;
     cx
   | Some cx -> cx
-
-(* builtins is similarly created in the master (see Server.preinit) and
-   replicated on fork. this is critical under the current somewhat fragile
-   scheme, as all contexts agree on the id of this type var, and builtins are
-   imported via this agreement between master_cx and others *)
-let builtins =
-  let builtins_ = ref None in
-  fun () -> match !builtins_ with
-  | None ->
-    let b = mk_tvar (master_cx ()) (builtin_reason "module") in
-    builtins_ := Some b;
-    b
-  | Some b -> b
-
-(* new contexts are prepared here, so we can install shared tvars *)
-let fresh_context ?(checked=false) ?(weak=false) ~file ~_module =
-  let cx = new_context ~file ~_module ~checked ~weak in
-  (* add types for pervasive builtins *)
-  let reason, id = open_tvar (builtins ()) in
-  cx.graph <- cx.graph |> IMap.add id (new_unresolved_root ());
-  cx
 
 (********)
 
@@ -1328,13 +1185,19 @@ module Cache = struct
   module FlowConstraint = struct
     let cache = Hashtbl.create 0
 
-    let mem (l,u) =
-      try
-        Hashtbl.find cache (l,u);
-        true
-      with _ ->
-        Hashtbl.add cache (l,u) ();
-        false
+    let mem (l,u) = match l,u with
+      (* Don't cache constraints involving type variables, since the
+         corresponding typing rules are already sufficiently robust. *)
+      | OpenT _, _ | _, OpenT _ -> false
+      | _ ->
+        begin
+          try
+            Hashtbl.find cache (l,u);
+            true
+          with _ ->
+            Hashtbl.add cache (l,u) ();
+            false
+        end
   end
 
   (* Cache that limits instantiation of polymorphic definitions. Intuitively,
@@ -1418,7 +1281,7 @@ let rec __flow cx (l, u) trace =
       indent pid
       (dump_reason (reason_of_t u)) (string_of_ctor u));
 
-  if not (Cache.FlowConstraint.mem (l,u)) then (
+  if not (ground_subtype (l,u) || Cache.FlowConstraint.mem (l,u)) then (
     (* limit recursion depth *)
     RecursionCheck.check trace;
 
@@ -1430,8 +1293,7 @@ let rec __flow cx (l, u) trace =
        polymorphic definitions.) *)
     not_expect_bound l; not_expect_bound u;
 
-    if ground_subtype (l,u) then ()
-    else (match (l,u) with
+    match (l,u) with
 
     (******************)
     (* process X ~> Y *)
@@ -3240,7 +3102,6 @@ let rec __flow cx (l, u) trace =
 
     | _ ->
       prerr_flow cx trace (err_msg l u) l u
-    );
   )
 
 (* some types need to be resolved before proceeding further *)
@@ -4566,10 +4427,13 @@ and edges_from_ts cx trace ?(opt=false) ls (id, bounds) =
 (** As an invariant, bounds1.lower should already contain id.bounds.lower for
     each id in bounds1.lowertvars. **)
 and edges_and_flows_to_t cx trace ?(opt=false) (id1, bounds1) t2 =
-  if not (TypeMap.mem t2 bounds1.upper) then (
-    edges_to_t cx trace ~opt (id1, bounds1) t2;
-    flows_to_t cx trace bounds1.lower t2
-  )
+  match t2 with
+  | MixedT _ | AnyT _ -> () (* flows to these types end up having no effect *)
+  | _ ->
+    if not (TypeMap.mem t2 bounds1.upper) then (
+      edges_to_t cx trace ~opt (id1, bounds1) t2;
+      flows_to_t cx trace bounds1.lower t2
+    )
 
 (* for each id in id2 + bounds2.uppertvars:
    id.bounds.lower += t1
@@ -4578,10 +4442,13 @@ and edges_and_flows_to_t cx trace ?(opt=false) (id1, bounds1) t2 =
 (** As an invariant, bounds2.upper should already contain id.bounds.upper for
     each id in bounds2.uppertvars. **)
 and edges_and_flows_from_t cx trace ?(opt=false) t1 (id2, bounds2) =
-  if not (TypeMap.mem t1 bounds2.lower) then (
-    edges_from_t cx trace ~opt t1 (id2, bounds2);
-    flows_from_t cx trace t1 bounds2.upper
-  )
+  match t1 with
+  | UndefT _ | AnyT _ -> () (* flows from these types end up having no effect *)
+  | _ ->
+    if not (TypeMap.mem t1 bounds2.lower) then (
+      edges_from_t cx trace ~opt t1 (id2, bounds2);
+      flows_from_t cx trace t1 bounds2.upper
+    )
 
 (* bounds.uppertvars += id *)
 and add_uppertvar id trace bounds =
@@ -4719,13 +4586,13 @@ and resolve_id cx trace id t =
    flows, number and any. If we replace the flows from/to any with an
    unification with any, we will miss the string/number incompatibility error.
 
-   However, unifying with any-like types to be sometimes desirable /
+   However, unifying with any-like types is sometimes desirable /
    intentional. Thus, we limit the set of types on which unification is banned
    to just LowerBoundT and UpperBoundT, which are internal types.
 *)
-and any_like = function
-  | LowerBoundT _ | UpperBoundT _ -> true
-  | _ -> false
+and ok_unify = function
+  | LowerBoundT _ | UpperBoundT _ -> false
+  | _ -> true
 
 and rec_unify cx trace t1 t2 =
   if t1 = t2 then () else (
@@ -4737,7 +4604,7 @@ and rec_unify cx trace t1 t2 =
   | (OpenT (_,id1), OpenT (_,id2)) ->
     merge_ids cx trace id1 id2
 
-  | (OpenT (_, id), t) | (t, OpenT (_, id)) when not (any_like t) ->
+  | (OpenT (_, id), t) | (t, OpenT (_, id)) when ok_unify t ->
     resolve_id cx trace id t
 
   | (ArrT (_, t1, ts1), ArrT (_, t2, ts2)) ->
@@ -4913,11 +4780,11 @@ and string_key s reason =
 
 and get_builtin cx x reason =
   mk_tvar_where cx reason (fun builtin ->
-    flow_opt cx (builtins (), GetPropT(reason, (reason, x), builtin))
+    flow_opt cx (builtins cx, GetPropT(reason, (reason, x), builtin))
   )
 
 and lookup_builtin cx x reason strict builtin =
-  flow_opt cx (builtins (), LookupT(reason,strict,x,builtin))
+  flow_opt cx (builtins cx, LookupT(reason,strict,x,builtin))
 
 and get_builtin_typeapp cx reason x ts =
   TypeAppT(get_builtin cx x reason, ts)
@@ -5034,7 +4901,7 @@ and resolve_builtin_class cx = function
 
 and set_builtin cx x t =
   let reason = builtin_reason x in
-  flow_opt cx (builtins (), SetPropT(reason, (reason, x), t))
+  flow_opt cx (builtins cx, SetPropT(reason, (reason, x), t))
 
 (* Wrapper functions around __flow that manage traces. Use these functions for
    all recursive calls in the implementation of __flow. *)
@@ -5087,37 +4954,21 @@ let unify cx t1 t2 =
 
 (** Garbage collection (GC) for graphs refers to the act of "marking" reachable
     type variables from a given set of "roots," by following links between type
-    variables and traversing their concrete bounds. There are two GC modes.
+    variables and traversing their concrete bounds.
 
-    - FullRecursive, where we mark all dependencies, including links between
-    type variables.
-
-    - OptRecursive, where we mark only those dependencies that may contribute to
-    errors. In particular, only type variables that are indirectly reachable via
-    concrete bounds are marked; directly reachable type variables via links are
-    not marked, since Flow's algorithm ensures that their concrete bounds are
+    We mark only those dependencies that may contribute to errors. In
+    particular, only type variables that are indirectly reachable via concrete
+    bounds are marked; directly reachable type variables via links are not
+    marked, since Flow's algorithm ensures that their concrete bounds are
     already propagated.
 
-    The two GC modes are used for different purposes. FullRecursive is used for
-    computing "strict requires": the subset of requires that exports depend
-    on. OptRecursive is used for pruning the graph, i.e., removing type
-    variables in a graph that make no difference when the graph is merged with
-    other graphs through its requires and exports.
-
-    NOTE: while OptRecursive and FullRecursive don't have additional semantics
-    attached to them (they only affect marking of type variables), it is
-    important to use them in the proper order. In particular, pruning the graph
-    before computing strict requires would be wrong, since some dependencies
-    that need to be recorded would be removed. **)
-type gc_mode =
-| FullRecursive
-| OptRecursive
+    This is useful for pruning the graph, i.e., removing type variables in a
+    graph that make no difference when the graph is merged with other graphs
+    through its requires and exports. **)
 
 (* State carried by GC, which includes most importantly a set of type variables
    marked as reachable. *)
-class gc_state ~(mode: gc_mode) = object(this)
-  method mode = mode
-
+class gc_state = object(this)
   val mutable _markedset = ISet.empty
 
   method markedset =
@@ -5415,15 +5266,9 @@ and gc_id cx state id =
     if state#mark id then (
       match constraints with
       | Resolved t -> gc cx state t
-      | Unresolved bounds -> match state#mode with
-        | FullRecursive ->
-            bounds.lower |> TypeMap.iter (fun t _ -> gc cx state t);
-            bounds.upper |> TypeMap.iter (fun t _ -> gc cx state t);
-            bounds.lowertvars |> IMap.iter (fun id _ -> gc_id cx state id);
-            bounds.uppertvars |> IMap.iter (fun id _ -> gc_id cx state id);
-        | OptRecursive ->
-            bounds.lower |> TypeMap.iter (fun t _ -> gc cx state t);
-            bounds.upper |> TypeMap.iter (fun t _ -> gc cx state t);
+      | Unresolved bounds ->
+          bounds.lower |> TypeMap.iter (fun t _ -> gc cx state t);
+          bounds.upper |> TypeMap.iter (fun t _ -> gc cx state t);
     )
   );
   state#mark root_id |> ignore
@@ -5481,61 +5326,12 @@ let cleanup cx state =
 (* Main entry point for graph pruning. *)
 let do_gc cx ms =
   if cx.checked then (
-    let state = new gc_state ~mode:OptRecursive in
-    List.iter (gc cx state) ((builtins ())::(List.map (lookup_module cx) ms));
+    let state = new gc_state in
+    List.iter (gc cx state) ((builtins cx)::(List.map (lookup_module cx) ms));
     cleanup cx state;
   )
 
-(* Compute dependencies of a given module endpoint in the graph, storing the
-   results in a map from module names to GC states. *)
-let calc_dep cx dep_map m =
-  let state = new gc_state ~mode:FullRecursive in
-  gc cx state (lookup_module cx m);
-  SMap.add m state dep_map
-
-(* Determine if two module endpoints have a dependency between them. Such a
-   dependency is considered to exist when there is a type variable that is
-   reachable from both module endpoints. *)
-let connected dep_map m1 m2 =
-  let state1 = SMap.find_unsafe m1 dep_map in
-  let state2 = SMap.find_unsafe m2 dep_map in
-  not (ISet.is_empty (ISet.inter state1#markedset state2#markedset))
-
-(* Compute strict requires, i.e., the subset of requires (ins) that the exports
-   (out) depend on. A require is a strict require if there is a dependency
-   between it and the exports, and between it and some other strict require. *)
-let rec find_dependencies dep_map ins out =
-  let some_ins_and_out = walk dep_map (SSet.empty, [out], ins, []) in
-  SSet.remove out some_ins_and_out
-
-(* The recursive computation of strict requires follows a Prim/Dijkstra-style
-   walk over the dependency edges between module endpoints. There is a
-   "frontier" with module endpoints for which not all dependency edges have been
-   explored. Module endpoints in the frontier are processed in turn. When a
-   dependency edge exists between a module endpoint in the frontier and a module
-   endpoint in "candidates", the latter is added to the frontier, otherwise it
-   is saved in "next_round" to be considered for the next module endpoint in the
-   frontier. When all dependency edges for a particular module endpoint in the
-   frontier are processed, it is added to the "result." *)
-and walk dep_map (result, frontier, candidates, next_round) =
-  match frontier, candidates with
-  | x::frontier, y::candidates ->
-      if connected dep_map x y
-      then walk dep_map (result, x::y::frontier, candidates, next_round)
-      else walk dep_map (result, x::frontier, candidates, y::next_round)
-  | x::frontier, [] ->
-      walk dep_map (SSet.add x result, frontier, next_round, [])
-  | [], _ ->
-      result
-
-(* Main entry point for computing strict requires. *)
-let analyze_dependencies cx ins out =
-  if cx.checked then (
-    let dep_map = List.fold_left (calc_dep cx) SMap.empty (out::ins) in
-    find_dependencies dep_map ins out
-  ) else SSet.empty
-
-and intersect_members cx members =
+let intersect_members cx members =
   match members with
   | [] -> SMap.empty
   | _ ->
@@ -5633,4 +5429,271 @@ end = struct
   and extract_members_as_map cx this_t =
     let member_result = extract_members cx this_t in
     map_of_member_result member_result
+
+end
+
+(* Given a type, report missing annotation errors if
+
+   - the given type is a tvar whose id isn't explicitly specified in the given
+   skip set, or isn't explicitly marked as derivable, or if
+
+   - the infer flag is true, and such tvars are reachable from the given tvar
+
+   Type variables that are in the skip set are marked in assume_ground as
+   depending on `require`d modules. Thus, e.g., when the superclass of an
+   exported class is `require`d, we should not insist on an annotation for the
+   superclass.
+*)
+(* need to consider only "def" types *)
+let rec assert_ground ?(infer=false) cx skip ids = function
+  | BoundT _ -> ()
+
+  (* Type variables that are not forced to be annotated include those that
+     are dependent on requires, or whose reasons indicate that they are
+     derivable. The latter category includes annotations and builtins. *)
+  | OpenT (reason_open, id)
+      when (ISet.mem id skip || is_derivable_reason reason_open)
+        -> ()
+
+  (* when the infer flag is set, traverse the types reachable from this tvar,
+     rather than stopping here and reporting a missing annotation. Note that
+     when this function is called recursively on those types, infer will be
+     false. *)
+  | OpenT (_, id) when infer ->
+      assert_ground_id cx skip ids id
+
+  | OpenT (reason_open, id) ->
+      unify cx (OpenT (reason_open, id)) AnyT.t;
+      let message_list = Errors_js.([
+        message_of_reason reason_open;
+        message_of_string "Missing annotation"
+      ]) in
+      add_output cx Errors_js.WARNING message_list
+
+  | NumT _
+  | StrT _
+  | BoolT _
+  | UndefT _
+  | MixedT _
+  | AnyT _
+  | NullT _
+  | VoidT _
+    ->
+      ()
+
+  | FunT (reason, static, prototype, { this_t; params_tlist; return_t; _ }) ->
+      let f = assert_ground cx skip ids in
+      unify cx static AnyT.t;
+      unify cx prototype AnyT.t;
+      unify cx this_t AnyT.t;
+      List.iter f params_tlist;
+      f return_t
+
+  | PolyT (xs,t) ->
+      assert_ground cx skip ids t
+
+  | ObjT (reason, { props_tmap = id; proto_t; _ }) ->
+      unify cx proto_t AnyT.t;
+      iter_props cx id (fun _ -> assert_ground ~infer:true cx skip ids)
+
+  | ArrT (reason, t, ts) ->
+      assert_ground cx skip ids t;
+      ts |> List.iter (assert_ground cx skip ids)
+
+  | ClassT t -> assert_ground cx skip ids t
+
+  | TypeT (reason, t) -> assert_ground cx skip ids t
+
+  | InstanceT (reason, static, super, instance) ->
+      let f = assert_ground cx skip ids in
+      iter_props cx instance.fields_tmap (fun _ -> f);
+      iter_props cx instance.methods_tmap (fun _ -> f);
+      unify cx static AnyT.t;
+      f super
+
+  | RestT (t) -> assert_ground cx skip ids t
+
+  | OptionalT (t) -> assert_ground cx skip ids t
+
+  | TypeAppT(c,ts) ->
+      assert_ground ~infer:true cx skip ids c;
+      List.iter (assert_ground cx skip ids) ts
+
+  | MaybeT(t) -> assert_ground cx skip ids t
+
+  | IntersectionT(reason,ts) ->
+      List.iter (assert_ground cx skip ids) ts
+
+  | UnionT(reason,ts) ->
+      List.iter (assert_ground cx skip ids) ts
+
+  | UpperBoundT(t) ->
+      assert_ground cx skip ids t
+
+  | LowerBoundT(t) ->
+      assert_ground cx skip ids t
+
+  | AnyObjT _ -> ()
+  | AnyFunT _ -> ()
+
+  | ShapeT(t) ->
+      assert_ground cx skip ids t
+  | DiffT(t1, t2) ->
+      assert_ground cx skip ids t1;
+      assert_ground cx skip ids t2
+
+  | KeysT(reason,t) ->
+      assert_ground cx skip ids t
+
+  | SingletonStrT _ -> ()
+  | SingletonNumT _ -> ()
+  | SingletonBoolT _ -> ()
+
+  | ModuleT(reason, {exports_tmap; cjs_export}) ->
+      iter_props cx exports_tmap
+        (fun _ -> assert_ground ~infer:true cx skip ids);
+      (match cjs_export with
+       | Some(t) -> assert_ground ~infer:true cx skip ids t
+       | None -> ()
+      )
+
+  | AnnotT (sink_t, source_t) ->
+      (* don't ask for an annotation if one is already provided :) *)
+      (** TODO: one of the uses of derivable_reason was to mark type variables
+          that represented annotations so that they could be ignored. Since we
+          can now ignore annotations directly, consider renaming or getting rid
+          of derivable entirely. **)
+      ()
+
+  | t -> failwith (streason_of_t t) (** TODO **)
+
+and assert_ground_id cx skip ids id =
+  if not (ISet.mem id !ids)
+  then (
+    ids := !ids |> ISet.add id;
+    match find_graph cx id with
+    | Unresolved { lower; lowertvars; _ } ->
+        TypeMap.keys lower |> List.iter (assert_ground cx skip ids);
+        IMap.keys lowertvars |> List.iter (assert_ground_id cx skip ids);
+    | Resolved t ->
+        assert_ground cx skip ids t
+  )
+
+let enforce_strict cx id =
+  (* First, compute a set of ids to be skipped by calling `assume_ground`. After
+     the call, skip_ids contains precisely those ids that correspond to
+     requires/imports. *)
+  let skip_ids = ref ISet.empty in
+  SSet.iter (fun r ->
+    let tvar = lookup_module cx r in
+    assume_ground cx skip_ids tvar
+  ) cx.required;
+
+  (* With the computed skip_ids, call `assert_ground` to force annotations while
+     walking the graph starting from id. Typically, id corresponds to
+     exports. *)
+  assert_ground_id cx !skip_ids (ref ISet.empty) id
+
+(****************** signature contexts *********************)
+
+(* Once a context is merged with other contexts it depends on, it is ready to be
+   optimized for use by contexts that in turn depend on it. The only interesting
+   part of the context for such use is its exports. Thus, we call a context
+   optimized for such use a "signature context."
+
+   A signature context should contain only descriptions of its exports. Anything
+   that does not contribute to those descriptions are redundant and should be
+   discarded: otherwise, we would end up paying significant hidden costs, in
+   terms of memory (storing in the heap) and time (serializing / deserializing
+   from the heap, garbage collection pauses).
+
+   As it turns out, it is not always possible or even desirable to describe the
+   exports in "closed form" as types: instead, the descriptions take the form of
+   a (mutually) recursive system of "equations" relating type variables to
+   "solved" types, and the types themselves may contain these type variables
+   inside. As indicated above, such descriptions are both necessary (due to
+   recursive types) and desirable (due to sharing, and for cyclically depending
+   contexts, due to the need to deal with the exports of all such contexts at
+   once). This form is quite adequate for type checking (indeed, it can be
+   thought of as merely a condensed form of usual contexts, which already
+   exhibit this "interlinked" behavior).
+
+   Unsurprisingly, since types also make references to some other maps in a
+   context (property maps, closures), these references need to be carried around
+   as well for the descriptions to be complete.
+
+   We can collect compact and complete descriptions of exports by using a custom
+   type visitor that marks relevant things that need to be carried over as it
+   walks the context from its exports. Once the walk is done, we can replace the
+   corresponding parts of the context (graph, property maps, closures) by their
+   reduced forms.
+*)
+module ContextOptimizer = struct
+  type quotient = {
+    reduced_graph : node IMap.t;
+    reduced_property_maps : Type.t SMap.t IMap.t;
+    reduced_closures : (stack * Scope.t list) IMap.t
+  }
+
+  let empty = {
+    reduced_graph = IMap.empty;
+    reduced_property_maps = IMap.empty;
+    reduced_closures = IMap.empty;
+  }
+
+  class context_optimizer = object
+    inherit [quotient] type_visitor as super
+
+    method! id_ cx quotient id =
+      let { reduced_graph; _ } = quotient in
+      if (IMap.mem id reduced_graph) then quotient
+      else
+        let types = possible_types cx id in
+        let t = match types with
+          | [t] -> t
+          | t::_ -> UnionT (reason_of_t t, types)
+          | [] -> AnyT.t in
+        let node = Root { rank = 0; constraints = Resolved t } in
+        let reduced_graph = IMap.add id node reduced_graph in
+        super#type_ cx { quotient with reduced_graph } t
+
+    method! props cx quotient id =
+      let { reduced_property_maps; _ } = quotient in
+      if (IMap.mem id reduced_property_maps) then quotient
+      else
+        let pmap = IMap.find_unsafe id cx.property_maps in
+        let reduced_property_maps = IMap.add id pmap reduced_property_maps in
+        super#props cx { quotient with reduced_property_maps } id
+
+    method! fun_type cx quotient funtype =
+      let id = funtype.closure_t in
+      if id = 0 then super#fun_type cx quotient funtype
+      else
+        let { reduced_closures; _ } = quotient in
+        let closure = IMap.find_unsafe id cx.closures in
+        let reduced_closures = IMap.add id closure reduced_closures in
+        super#fun_type cx { quotient with reduced_closures } funtype
+
+  end
+
+  (* walk a context from a list of exports *)
+  let reduce_context cx exports =
+    let reducer = new context_optimizer in
+    List.fold_left (reducer#type_ cx) empty exports
+
+  let export cx =
+    lookup_module cx cx._module
+
+  (* reduce a context to a "signature context" *)
+  let sig_context component_cxs =
+    let cx, other_cxs = List.hd component_cxs, List.tl component_cxs in
+    let exports = List.map export component_cxs in
+    let quotient = reduce_context cx exports in
+    cx.graph <- quotient.reduced_graph;
+    cx.property_maps <- quotient.reduced_property_maps;
+    cx.closures <- quotient.reduced_closures;
+    other_cxs |> List.iter (fun other_cx ->
+      cx.modulemap <- SMap.add other_cx._module (export other_cx) cx.modulemap
+    )
+
 end

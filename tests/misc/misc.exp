@@ -9,23 +9,15 @@ A.js:14:3,5: string
 This type is incompatible with
 A.js:9:14,20: boolean
 
-C.js:9:3,8: function call
-Error:
-B.js:7:12,16: string
-This type is incompatible with
-A.js:9:14,20: boolean
+C.js:9:7,7: property `b`
+Property not found in
+C.js:4:9,20: new object
 
 C.js:10:3,8: function call
 Error:
 B.js:12:17,17: number
 This type is incompatible with
 A.js:9:14,20: boolean
-
-C.js:11:3,8: call of method fn
-Error:
-B.js:7:12,16: string
-This type is incompatible with
-B.js:10:14,19: number
 
 D.js:11:9,14: call of method fn
 Error:
@@ -75,4 +67,4 @@ G.js:7:1,10: call of method length
 Function cannot be called on
 G.js:7:1,10: string
 
-Found 14 errors
+Found 13 errors

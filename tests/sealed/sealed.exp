@@ -17,8 +17,12 @@ sealed.js:3:3,3: property `z`
 Property not found in
 sealed.js:1:9,26: object type
 
+sealed.js:8:3,3: property `x`
+Property not found in
+sealed.js:6:11,31: new object
+
 sealed.js:9:3,3: property `y`
 Property not found in
 sealed.js:6:11,31: new object
 
-Found 5 errors
+Found 6 errors

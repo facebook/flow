@@ -130,7 +130,7 @@ let parse workers next init_modes =
 let reparse workers files init_modes =
   ParserHeap.remove_batch files;
   SharedMem.collect `gentle;
-  let next = Bucket.make_20 (SSet.elements files) in
+  let next = Bucket.make (SSet.elements files) in
   parse workers next init_modes
 
 let get_ast_unsafe file =

@@ -10,9 +10,9 @@
 
 open Utils
 
-(*******************************************)
-(* topological sort of module dependencies *)
-(*******************************************)
+(*****************************************)
+(* topological sort of file dependencies *)
+(*****************************************)
 
 (* For a detailed description of the algorithm, see:
    http://en.wikipedia.org/wiki/Tarjan's_strongly_connected_components_algorithm
@@ -22,7 +22,7 @@ open Utils
    height of a strongly connected component is the length of the longest path of
    strongly connected components from it in the residual graph. *)
 
-(** Nodes are modules. Edges are dependencies. **)
+(** Nodes are files. Edges are dependencies. **)
 type topsort_state = {
   (* nodes not yet visited *)
   mutable not_yet_visited: SSet.t SMap.t;
@@ -40,8 +40,8 @@ type topsort_state = {
   mutable components: string list SMap.t;
 }
 
-let initial_state modules = {
-  not_yet_visited = modules;
+let initial_state files = {
+  not_yet_visited = files;
   visit_count = 0;
   indices = SMap.empty;
   stack = [];
@@ -50,7 +50,7 @@ let initial_state modules = {
   components = SMap.empty;
 }
 
-(* Compute strongly connected component for module m with requires rs. *)
+(* Compute strongly connected component for file m with requires rs. *)
 let rec strongconnect state m rs =
   let i = state.visit_count in
   state.visit_count <- i + 1;
@@ -141,10 +141,20 @@ let partition heights components =
     | Some mcs -> IMap.add height (mc::mcs) map
   ) components IMap.empty
 
-let topsort modules =
-  let state = initial_state modules in
+let topsort files =
+  let state = initial_state files in
   tarjan state;
   partition state.heights state.components
+
+let reverse files =
+  files
+  |> SMap.map (fun _ -> SSet.empty)
+  |> SMap.fold (fun from_f ->
+       SSet.fold (fun to_f rev_files ->
+         let from_fs = SMap.find_unsafe to_f rev_files in
+         SMap.add to_f (SSet.add from_f from_fs) rev_files
+       )
+      ) files
 
 let log =
   IMap.iter (fun h mcs ->
@@ -152,7 +162,7 @@ let log =
       (* Show cycles, which are components with more than one node. *)
       if List.length mc > 1
       then
-        prerr_endlinef "cycle detected among the following modules:\n\t%s"
+        prerr_endlinef "cycle detected among the following files:\n\t%s"
           (String.concat "\n\t" mc)
     ) mcs;
   )

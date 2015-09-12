@@ -935,9 +935,6 @@ type context = {
   (* map from module names to their types *)
   mutable modulemap: Type.t SMap.t;
 
-  (* A subset of required modules on which the exported type depends *)
-  mutable strict_required: SSet.t;
-
   mutable errors: Errors_js.ErrorSet.t;
   mutable globals: SSet.t;
 
@@ -946,6 +943,7 @@ type context = {
   type_table: (Loc.t, Type.t) Hashtbl.t;
   annot_table: (Loc.t, Type.t) Hashtbl.t;
 }
+
 and module_exports_type =
   | CommonJSModule of Loc.t option
   | ESModule
@@ -967,8 +965,6 @@ let new_context ?(checked=false) ?(weak=false) ~file ~_module = {
   closures = IMap.empty;
   property_maps = IMap.empty;
   modulemap = SMap.empty;
-
-  strict_required = SSet.empty;
 
   errors = Errors_js.ErrorSet.empty;
   globals = SSet.empty;
@@ -2793,13 +2789,13 @@ class ['a] type_visitor = object(self)
     let acc = self#type_ cx acc value in
     acc
 
-  method private props cx acc id =
+  method props cx acc id =
     self#smap (self#type_ cx) acc (IMap.find_unsafe id cx.property_maps)
 
   method private type_param cx acc { bound; _ } =
     self#type_ cx acc bound
 
-  method private fun_type cx acc { this_t; params_tlist; return_t; _} =
+  method fun_type cx acc { this_t; params_tlist; return_t; _ } =
     let acc = self#type_ cx acc this_t in
     let acc = self#list (self#type_ cx) acc params_tlist in
     let acc = self#type_ cx acc return_t in

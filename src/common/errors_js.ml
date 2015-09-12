@@ -116,18 +116,19 @@ let json_of_loc loc = Loc.(
     "end", Json.JInt loc._end.column ]
 )
 
-(* warnings before errors, then first reason's position,
-  then second reason's position. If all positions match then first message,
-  then second message, etc
-  TODO may not work for everything... *)
+(* first reason's position, then second reason's position, etc.; if all
+   positions match then first message, then second message, etc. *)
 let compare =
   let seq k1 k2 = fun () ->
     match k1 () with
     | 0 -> k2 ()
     | i -> i
   in
-  let cmp x1 x2 () =
-    Pervasives.compare x1 x2
+  let loc_cmp x1 x2 () =
+    Loc.compare x1 x2
+  in
+  let string_cmp x1 x2 () =
+    String.compare x1 x2
   in
   let rec compare_message_lists k = function
     | [], [] -> k ()
@@ -137,11 +138,11 @@ let compare =
     | BlameM(_)::_, CommentM(_)::_ -> 1
 
     | CommentM(m1)::rest1, CommentM(m2)::rest2 ->
-        compare_message_lists (seq k (cmp m1 m2)) (rest1, rest2)
+        compare_message_lists (seq k (string_cmp m1 m2)) (rest1, rest2)
 
     | BlameM(loc1, m1)::rest1, BlameM(loc2, m2)::rest2 ->
-        seq (cmp loc1 loc2) (fun () ->
-          compare_message_lists (seq k (cmp m1 m2)) (rest1, rest2)
+        seq (loc_cmp loc1 loc2) (fun () ->
+          compare_message_lists (seq k (string_cmp m1 m2)) (rest1, rest2)
         ) ()
   in
   fun (lx, ml1, _) (ly, ml2, _) ->

@@ -95,7 +95,6 @@ val mk_nominal: context -> int
 
 (* val graph: bounds IMap.t ref *)
 val lookup_module: context -> string -> Type.t
-val analyze_dependencies: context -> string list -> string -> SSet.t
 val do_gc: context -> string list -> unit
 
 (* contexts *)
@@ -106,7 +105,7 @@ val fresh_context:
 
 (* builtins *)
 
-val builtins: unit -> Type.t
+val builtins: context -> Type.t
 val get_builtin: context -> string -> reason -> Type.t
 val lookup_builtin: context -> string -> reason -> reason option -> Type.t -> unit
 val get_builtin_type: context -> reason -> string -> Type.t
@@ -118,7 +117,7 @@ val mk_typeof_annotation: context -> ?trace:trace -> Type.t -> Type.t
 
 (* strict *)
 val check_types: context -> ident -> (Type.t -> bool) -> bool
-val enforce_strict: context -> ident -> constraints -> unit
+val enforce_strict: context -> ident -> unit
 val suggested_type_cache: Type.t IMap.t ref
 val merge_type: context -> (Type.t * Type.t) -> Type.t
 val resolve_type: context -> Type.t -> Type.t
@@ -141,4 +140,8 @@ module Autocomplete : sig
   val map_of_member_result: member_result -> Type.t SMap.t
 
   val extract_members: context -> Type.t -> member_result
+end
+
+module ContextOptimizer: sig
+  val sig_context : context list -> unit
 end

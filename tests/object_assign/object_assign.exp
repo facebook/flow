@@ -17,6 +17,12 @@ B.js:7:11,16: number
 
 B.js:10:20,22: function call
 Error:
+A.js:8:25,26: object literal
+This type is incompatible with
+global object
+
+B.js:10:20,22: function call
+Error:
 B.js:10:20,22: string
 This type is incompatible with
 B.js:10:11,16: number
@@ -43,4 +49,4 @@ non_objects.js:5:1,30: Object.assign
 Expected object instead of
 non_objects.js:5:27,29: number
 
-Found 8 errors
+Found 9 errors

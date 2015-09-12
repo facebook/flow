@@ -20,11 +20,13 @@ val infer_ast:
 
 val infer_module: string -> context
 
-val merge_module_list: context list -> unit
+val merge_component_strict: context list ->
+  context list -> (context * string * context) list ->
+  context list Utils.SMap.t -> context ->
+  unit
 
-val merge_module_strict: context ->
-  context list -> (context * context) list -> context list Utils.SMap.t ->
-  context -> unit
+val restore: context ->
+  context list -> context -> unit
 
 val mk_object: context -> reason -> Type.t
 

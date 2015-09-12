@@ -15,7 +15,6 @@ type info = {
   _module: string;          (* module name *)
   required: SSet.t;         (* required module names *)
   require_loc: Loc.t SMap.t;  (* statement locations *)
-  strict_required: SSet.t;  (* strict requires (flow to export types) *)
   checked: bool;            (* in flow? *)
   parsed: bool;             (* if false, it's a tracking record only *)
 }

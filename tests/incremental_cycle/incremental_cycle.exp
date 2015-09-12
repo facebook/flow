@@ -1,0 +1,48 @@
+
+A.js:4:6,11: number
+This type is incompatible with
+C.js:3:25,29: B
+
+A.js:5:6,11: string
+This type is incompatible with
+B.js:3:25,29: C
+
+B.js:3:25,29: C
+This type is incompatible with
+A.js:5:6,11: string
+
+C.js:3:25,29: B
+This type is incompatible with
+A.js:4:6,11: number
+
+Found 4 errors
+
+A.js:4:6,11: number
+This type is incompatible with
+B.js:5:17,22: string
+
+B.js:5:17,22: string
+This type is incompatible with
+A.js:4:6,11: number
+
+Found 2 errors
+
+A.js:4:6,11: number
+This type is incompatible with
+B.js:5:17,22: string
+
+B.js:5:17,22: string
+This type is incompatible with
+A.js:4:6,11: number
+
+Found 2 errors
+
+A.js:4:6,11: number
+This type is incompatible with
+B.js:6:17,22: string
+
+B.js:6:17,22: string
+This type is incompatible with
+A.js:4:6,11: number
+
+Found 2 errors

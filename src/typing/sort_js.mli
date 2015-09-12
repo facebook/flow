@@ -15,4 +15,5 @@ open Utils
    a list only depend on keys in a subsequent list
 *)
 val topsort: SSet.t SMap.t -> string list list IMap.t
+val reverse: SSet.t SMap.t -> SSet.t SMap.t
 val log: string list list IMap.t -> unit
