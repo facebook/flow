@@ -10,37 +10,19 @@
 
 open Utils
 
-type options = {
-  opt_debug : bool;
-  opt_all : bool;
-  opt_weak : bool;
-  opt_traces : bool;
-  opt_newtraces : bool;
-  opt_strict : bool;
-  opt_console : bool;
-  opt_json : bool;
-  opt_show_all_errors : bool;
-  opt_quiet : bool;
-  opt_profile : bool;
-  opt_strip_root : bool;
-  opt_module: string;
-  opt_libs: Path.path list;
-  opt_no_flowlib: bool;
-}
-
-val init_modes: options -> unit
+val init_modes: Options.options -> unit
 
 (* incremental typecheck entry point *)
-val recheck: ServerEnv.genv -> ServerEnv.env -> SSet.t -> options ->
-  ServerEnv.env
+val recheck: ServerEnv.genv -> ServerEnv.env -> SSet.t -> ServerEnv.env
 
 (* hh_server initial (full) check *)
-val server_init: ServerEnv.genv -> ServerEnv.env -> options -> ServerEnv.env
+val server_init:
+  ServerEnv.genv -> ServerEnv.env -> ServerEnv.env
 
 (* hh_single_type_check entry point, probably to be moved *)
-val single_main: string list -> options -> unit
+val single_main: string list -> Options.options -> unit
 
-val get_errors: unit -> Errors.t
+val get_errors: unit -> Errors_js.error list
 
 val merge_strict_file: string -> Constraint_js.context
 

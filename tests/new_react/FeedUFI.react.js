@@ -13,7 +13,7 @@ var React = require('react');
 var FeedUFI = React.createClass({
   _renderLikeCount: function(
       feedback: any
-  ) {
+  ): ReactElement {
     var props = {
       className: "",
       key: "",

@@ -14,44 +14,38 @@
 
 open CommandUtils
 
-type env = {
-  modules : string list;
-  option_values : command_params;
-}
-
-let parse_args () =
-  let option_values, options = create_command_options true in
-  let options = sort_opts options in
-  let usage =  Printf.sprintf
-    "Usage: %s get-requirements [OPTION]... [FILE]...\n\n\
-    Get names of all modules imported by one or more given modules\n\n\
-    Example usage:\n\
-    \t%s get-imports FirstModule SecondModule"
-    CommandUtils.exe_name
-    CommandUtils.exe_name in
-  let modules = ClientArgs.parse_without_command options usage "get-imports" in
-  match modules with
-  | [] ->
-      Printf.fprintf stderr "You must provide at least one module name\n%!";
-      Arg.usage options usage;
-      exit 2
-  | _ -> ();
-  { modules; option_values; }
-
 module Json = Hh_json
 
-let extract_position req req_locs =
-  let loc = Utils.SMap.find_unsafe req req_locs in
-  Reason_js.pos_of_loc loc
+let spec = {
+  CommandSpec.
+  name = "get-imports";
+  doc = "Get names of all modules imported by one or more given modules";
+  usage = Printf.sprintf
+    "Usage: %s get-requirements [OPTION]... [FILE]...\n\n\
+      Get names of all modules imported by one or more given modules\n\n\
+      Example usage:\n\
+      \t%s get-imports FirstModule SecondModule\n"
+      CommandUtils.exe_name
+      CommandUtils.exe_name;
+  args = CommandSpec.ArgSpec.(
+    empty
+    |> server_flags
+    |> json_flags
+    |> anon "modules" (required (list_of string))
+        ~doc:"Module name(s) to find"
+  )
+}
 
-let main { modules; option_values; } =
+let extract_location req req_locs = Utils.SMap.find_unsafe req req_locs
+
+let main option_values json modules () =
   let root = guess_root (Some (Sys.getcwd ())) in
 
   let ic, oc = connect_with_autostart option_values root in
 
   ServerProt.cmd_to_channel oc (ServerProt.GET_IMPORTS modules);
   let requirements_map, non_flow = Marshal.from_channel ic in
-  if !(option_values.json)
+  if json
   then (
     let json_non_flow =
       Utils.SSet.fold (fun module_name json_list ->
@@ -64,10 +58,10 @@ let main { modules; option_values; } =
       Utils.SMap.fold (fun module_name (requires, req_locs) json_list ->
           let requirements =
             Utils.SSet.fold (fun req json_list ->
-                let pos = extract_position req req_locs in
+                let loc = extract_location req req_locs in
                 Json.JAssoc (
                   ("import", Json.JString req) ::
-                  (Errors_js.pos_to_json pos)
+                  (Errors_js.json_of_loc loc)
                 ) :: json_list
               ) requires [] in
           (module_name, Json.JAssoc [
@@ -86,10 +80,8 @@ let main { modules; option_values; } =
           Utils.SMap.find_unsafe module_name requirements_map in
         Printf.printf "Imports for module '%s':\n" module_name;
         Utils.SSet.iter (fun req ->
-          let pos = extract_position req req_locs in
-          let file = Relative_path.to_absolute Pos.(pos.pos_file) in
-          let l0, c0, l1, c1 = Errors_js.pos_range pos in
-          Printf.printf "\t%s@%s:%d:%d,%d:%d\n" req file l0 c0 l1 c1
+          let loc = extract_location req req_locs in
+          Printf.printf "\t%s@%s\n" req (range_string_of_loc loc)
         ) requirements
       end else if (Utils.SSet.mem module_name non_flow)
       then
@@ -102,6 +94,4 @@ let main { modules; option_values; } =
     flush stdout
   )
 
-let name = "get-imports"
-let doc = "Get names of all modules imported by one or more given modules"
-let run () = main (parse_args ())
+let command = CommandSpec.command spec main

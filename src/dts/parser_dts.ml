@@ -369,18 +369,18 @@ module rec Parse : sig
   val statement_list_with_directives : term_fn:(token->bool) -> env -> Ast.Statement.t list * bool
   val expression : env -> Ast.Expression.t
   val assignment : env -> Ast.Expression.t
-  val object_initializer : env -> Ast.Loc.t * Ast.Expression.Object.t
-  val array_initializer : env -> Ast.Loc.t * Ast.Expression.Array.t
+  val object_initializer : env -> Loc.t * Ast.Expression.Object.t
+  val array_initializer : env -> Loc.t * Ast.Expression.Array.t
   val identifier : ?restricted_error:Error.t -> env -> Ast.Identifier.t
   val identifier_or_reserved_keyword : env -> Ast.Identifier.t
   val identifier_with_type : ?allow_keyword:bool -> env -> Error.t -> Ast.Identifier.t
   val idpath : ?allow_keywords:bool -> env -> Ast.IdPath.t
-  val block_body : env -> Ast.Loc.t * Ast.Statement.Block.t
-  val function_block_body : env -> Ast.Loc.t * Ast.Statement.Block.t * bool
+  val block_body : env -> Loc.t * Ast.Statement.Block.t
+  val function_block_body : env -> Loc.t * Ast.Statement.Block.t * bool
   val pattern : env -> Ast.Expression.t -> Ast.Pattern.t
-  val object_pattern_with_type : env -> (Ast.Loc.t * Ast.Expression.Object.t) -> Ast.Pattern.t
-  val array_pattern_with_type : env -> (Ast.Loc.t * Ast.Expression.Array.t) -> Ast.Pattern.t
-  val object_key : env -> Ast.Loc.t * Ast.Expression.Object.Property.key
+  val object_pattern_with_type : env -> (Loc.t * Ast.Expression.Object.t) -> Ast.Pattern.t
+  val array_pattern_with_type : env -> (Loc.t * Ast.Expression.Array.t) -> Ast.Pattern.t
+  val object_key : env -> Loc.t * Ast.Expression.Object.Property.key
   val class_declaration : env -> Ast.Statement.t
   val class_expression : env -> Ast.Expression.t
   val is_assignable_lhs : Ast.Expression.t -> bool
@@ -512,10 +512,13 @@ end = struct
         | None ->
             let loc, g = generic env in
             loc, Type.Generic g)
-      | T_STRING (loc, value, raw, octal) ->
+      | T_STRING (loc, value, raw, octal)  ->
           if octal then strict_error env Error.StrictOctalLiteral;
           Expect.token env (T_STRING (loc, value, raw, octal));
-          loc, Type.StringLiteral value
+          loc, Type.(StringLiteral StringLiteral.({
+            value;
+            raw;
+          }))
       | T_NEW ->
           constructor_function env
       | _ ->
@@ -1667,14 +1670,15 @@ end = struct
           }))
         in
 
+      (* declare_function now returns an AmbientFunctionDeclaration
+         instead of a VariableDeclaration *)
       let declare_function env start_loc =
         Expect.token env T_FUNCTION;
         let id = Parse.identifier env in
-        let start_sig_loc = Peek.loc env in
         let typeParameters = match Type.type_parameters env with
         | None -> []
         | Some (_, params) -> params in
-        let rest, params = Type.function_param_list env in
+        let params, defaults, rest = Declaration.function_params env in
         (* optional return type anno *)
         let returnType, end_loc = match Peek.token env with
           | T_COLON ->
@@ -1685,29 +1689,18 @@ end = struct
               let loc = Peek.loc env in
               (loc, Ast.Type.Any), loc
         in
-        let loc = Loc.btwn start_sig_loc end_loc in
-        let value = loc, Ast.Type.(Function {Function.
-          params;
-          returnType;
-          rest;
-          typeParameters;
-        }) in
-        let id =
-          Loc.btwn (fst id) end_loc,
-          Ast.Identifier.({(snd id) with typeAnnotation = Some value; })
-        in
         let end_loc = match Peek.semicolon_loc env with
         | None -> end_loc
         | Some end_loc -> end_loc in
         Eat.semicolon env;
         Loc.btwn start_loc end_loc,
-        Statement.(VariableDeclaration VariableDeclaration.({
-          kind = Var;
-          declarations = [
-            fst id, VariableDeclaration.Declarator.({
-              id = fst id, Pattern.Identifier id;
-              init = None;
-            })];
+        Statement.(AmbientFunctionDeclaration AmbientFunctionDeclaration.({
+          id;
+          params;
+          defaults;
+          rest;
+          returnType;
+          typeParameters;
         }))
       in
 
@@ -2733,8 +2726,8 @@ end = struct
   (* A module for parsing various object related things, like object literals
    * and classes *)
   module Object : sig
-    val key : env -> Ast.Loc.t * Ast.Expression.Object.Property.key
-    val _initializer : env -> Ast.Loc.t * Ast.Expression.Object.t
+    val key : env -> Loc.t * Ast.Expression.Object.Property.key
+    val _initializer : env -> Loc.t * Ast.Expression.Object.t
     val class_declaration : env -> Ast.Statement.t
     val class_expression : env -> Ast.Expression.t
   end = struct
@@ -3256,7 +3249,7 @@ end = struct
                  * that actually seems to work pretty well (make sure the string
                  * has the right length)
                  *)
-                let len = Ast.Loc.(loc._end.column - loc.start.column) in
+                let len = Loc.(loc._end.column - loc.start.column) in
                 let strict = env.strict || (str = "use strict" && len = 12) in
                 let string_tokens = string_token::string_tokens in
                 statement_list { env with strict; } term_fn (string_tokens, stmts)

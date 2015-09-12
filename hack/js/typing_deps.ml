@@ -39,13 +39,12 @@ module Dep = struct
     | Class of string
     | Fun of string
     | FunName of string
-    | CVar of string * string
-    | SCVar of string * string
+    | Prop of string * string
+    | SProp of string * string
     | Method of string * string
     | SMethod of string * string
     | Cstr of string
     | Extends of string
-    | Injectable
 
   type variant = t
 
@@ -58,19 +57,18 @@ module Dep = struct
     | Fun s -> "fun:"^s
     | FunName s -> "funname:"^s
     | Const (x, y) -> x^"::(const)"^y
-    | CVar (x, y) -> x^"->$"^y
-    | SCVar (x, y) -> x^"::$"^y
+    | Prop (x, y) -> x^"->$"^y
+    | SProp (x, y) -> x^"::$"^y
     | Method (x, y) -> x^"->"^y
     | SMethod (x, y) -> x^"::"^y
     | Cstr s -> s^"->__construct"
     | Extends s -> "extends:"^s
-    | Injectable -> "injectable"
 end
 
 module DSet = Set.Make(Dep)
 module DMap = MyMap(Dep)
 
-(*    
+(*
 let print_deps deps =
   Printf.printf "Deps: ";
   DSet.iter (fun x -> Printf.printf "%s " (Dep.to_string x)) deps;
@@ -89,12 +87,11 @@ let split_deps deps =
   let funs, classes = SSet.empty, SSet.empty in
   DSet.fold begin fun x (funs, classes) ->
     match x with
-    | Dep.Injectable -> funs, classes
     | Dep.GConst s
     | Dep.GConstName s
     | Dep.Const (s, _)
-    | Dep.CVar (s, _)
-    | Dep.SCVar (s, _)
+    | Dep.Prop (s, _)
+    | Dep.SProp (s, _)
     | Dep.Method (s, _)
     | Dep.SMethod (s, _)
     | Dep.Cstr s
@@ -108,8 +105,8 @@ let split_deps deps =
 let get_dep_id = function
   | Dep.Const (cid, _)
   | Dep.Class cid
-  | Dep.CVar (cid, _)
-  | Dep.SCVar (cid, _)
+  | Dep.Prop (cid, _)
+  | Dep.SProp (cid, _)
   | Dep.Method (cid, _)
   | Dep.Cstr cid
   | Dep.SMethod (cid, _)
@@ -133,7 +130,7 @@ let get_list table x =
 let add_list table k v =
   let l = get_list table k in
   SMap.add k (v :: l) table
-    
+
 let add_files_report_changes fast =
   let has_changed = ref false in
   SMap.iter begin fun fn (funs_in_file, classes_in_file) ->
@@ -146,7 +143,7 @@ let add_files_report_changes fast =
     end funs_in_file;
     List.iter begin fun (_, cid) ->
       if not (List.mem fn (get_list !iclasses cid))
-      then begin 
+      then begin
         has_changed := true;
         iclasses := add_list !iclasses cid fn;
       end
@@ -187,7 +184,7 @@ let get_additional_files deps =
 (* Module keeping track of what object depends on what. *)
 (*****************************************************************************)
 
-let update_igraph deps = 
+let update_igraph deps =
   ()
 
 let add_iedge obj root =
@@ -198,15 +195,14 @@ let extends_igraph = Hashtbl.create 23
 
 let add_idep root obj =
   match obj with
-  | Dep.Injectable -> ()
   | (Dep.FunName _ as x)
   | (Dep.Fun _ as x) -> deps := DSet.add x !deps
   | Dep.GConst s
   | Dep.GConstName s
   | Dep.Const (s, _)
   | Dep.Class s
-  | Dep.CVar (s, _)
-  | Dep.SCVar (s, _)
+  | Dep.Prop (s, _)
+  | Dep.SProp (s, _)
   | Dep.Method (s, _)
   | Dep.SMethod (s, _)
   | Dep.Cstr s ->
@@ -224,16 +220,16 @@ let add_idep root obj =
          * This If makes it so that FileC would not be added in this case.
          *)
       if not !is_dep then deps := DSet.add (Dep.Class s) !deps
-  | Dep.Extends s -> 
+  | Dep.Extends s ->
       (match root with
-      | Some (Dep.Class root) -> 
-          (* We want to remember what needs to be udpated 
+      | Some (Dep.Class root) ->
+          (* We want to remember what needs to be udpated
            * if a super class changes, all the sub_classes
            * have to be updated.
            *)
-          let iext = 
+          let iext =
             try Hashtbl.find extends_igraph s
-            with Not_found -> SSet.empty 
+            with Not_found -> SSet.empty
           in
           let iext = SSet.add root iext in
           Hashtbl.replace extends_igraph s iext

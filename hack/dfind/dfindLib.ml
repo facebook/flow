@@ -7,19 +7,26 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  *)
-(*****************************************************************************)
-(* Library code *)
-(*****************************************************************************)
+
 open Utils
 
-let start roots =
-  let msg_out, result_in, pid = DfindServer.fork_in_pipe roots in
-  (Unix.out_channel_of_descr msg_out,
-  Unix.in_channel_of_descr result_in),
-  pid
+type t = (SSet.t, unit) Daemon.handle
 
-let get_changes (msg_out, result_in) =
-  Marshal.to_channel msg_out "Go" [];
-  flush msg_out;
-  let (result: SSet.t) = Marshal.from_channel result_in in
-  result
+let init roots = Daemon.fork (DfindServer.run_daemon roots)
+
+let pid handle = handle.Daemon.pid
+
+let request_changes {Daemon.channels = (ic, oc); pid = _} =
+  Daemon.to_channel oc ();
+  Daemon.from_channel ic
+
+let get_changes daemon =
+  let rec loop acc =
+    let diff = request_changes daemon in
+    if SSet.is_empty diff
+    then acc
+    else begin
+      let acc = SSet.union diff acc in
+      loop acc
+    end
+  in loop SSet.empty

@@ -1,2 +1,10 @@
 
-Found 0 errors
+test3.js:1:14,15: string
+This type is incompatible with
+test3.js:8:8,13: number
+
+test3.js:2:14,15: string
+This type is incompatible with
+test3.js:9:8,13: number
+
+Found 2 errors

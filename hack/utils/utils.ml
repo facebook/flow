@@ -51,6 +51,7 @@ module type MapSig = sig
   val find_unsafe: key -> 'a t -> 'a
   val is_empty: 'a t -> bool
   val union: 'a t -> 'a t -> 'a t
+  val partition: (key -> 'a -> bool) -> 'a t -> 'a t * 'a t
   val cardinal: 'a t -> int
   val compare: 'a t -> 'a t -> int
   val equal: 'a t -> 'a t -> bool
@@ -58,6 +59,7 @@ module type MapSig = sig
   val merge : (key -> 'a option -> 'b option -> 'c option)
     -> 'a t -> 'b t -> 'c t
   val choose : 'a t -> key * 'a
+  val split: key -> 'a t -> 'a t * 'a option * 'a t
   val keys: 'a t -> key list
   val values: 'a t -> 'a list
 
@@ -141,10 +143,6 @@ let spf = Printf.sprintf
 let print_endlinef fmt = Printf.ksprintf print_endline fmt
 let prerr_endlinef fmt = Printf.ksprintf prerr_endline fmt
 
-let fst3 = function x, _, _ -> x
-let snd3 = function _, x, _ -> x
-let thd3 = function _, _, x -> x
-
 let opt f env = function
   | None -> env, None
   | Some x -> let env, x = f env x in env, Some x
@@ -152,21 +150,6 @@ let opt f env = function
 let opt_map f = function
   | None -> None
   | Some x -> Some (f x)
-
-let opt_map_default f default x =
-  match x with
-  | None -> default
-  | Some x -> f x
-
-let opt_fold_left f x y =
-  match y with
-  | None -> x
-  | Some y -> f x y
-
-let rec cat_opts = function
-  | [] -> []
-  | Some x :: xs -> x :: cat_opts xs
-  | None :: xs -> cat_opts xs
 
 let rec lmap f env l =
   match l with
@@ -204,14 +187,6 @@ let imap_inter_list = function
   | [] -> IMap.empty
   | x :: rl ->
       List.fold_left imap_inter x rl
-
-let partition_smap f m =
-  SMap.fold (
-  fun x ty (acc1, acc2) ->
-    if f x
-    then SMap.add x ty acc1, acc2
-    else acc1, SMap.add x ty acc2
- ) m (SMap.empty, SMap.empty)
 
 (* This is a significant misnomer... you may want fold_left_env instead. *)
 let lfold = lmap
@@ -312,16 +287,6 @@ let try_with_channel oc f1 f2 =
     close_out oc;
     f2 e
 
-let pipe (x : 'a)  (f : 'a -> 'b) : 'b = f x
-let (|>) = pipe
-
-let rec filter_some = function
-  | [] -> []
-  | None :: l -> filter_some l
-  | Some e :: l -> e :: filter_some l
-
-let map_filter f xs = xs |> List.map f |> filter_some
-
 let rec cut_after n = function
   | [] -> []
   | l when n <= 0 -> []
@@ -363,6 +328,18 @@ let str_ends_with long short =
     long = short
   with Invalid_argument _ ->
     false
+
+(* Return a copy of the string with prefixing string removed.
+ * The function is a no-op if it s does not start with prefix.
+ * Modeled after Python's string.lstrip.
+ *)
+let lstrip s prefix =
+  let prefix_length = String.length prefix in
+  if str_starts_with s prefix
+  then String.sub s prefix_length (String.length s - prefix_length)
+  else s
+
+let string_of_char = String.make 1
 
 (*****************************************************************************)
 (* Same as List.iter2, except that we only iterate as far as the shortest

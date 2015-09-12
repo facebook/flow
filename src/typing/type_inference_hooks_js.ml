@@ -8,8 +8,6 @@
  *
  *)
 
-module Ast = Spider_monkey_ast
-
 let id_nop _ _ _ = false
 
 let member_nop _ _ _ _ = false
@@ -19,12 +17,12 @@ let call_nop _ _ _ _ = ()
 type hook_state_t = {
   id_hook:
      (Constraint_js.context ->
-      string -> Ast.Loc.t ->
+      string -> Loc.t ->
       bool);
 
   member_hook:
      (Constraint_js.context ->
-      string -> Ast.Loc.t -> Constraint_js.Type.t ->
+      string -> Loc.t -> Constraint_js.Type.t ->
       bool);
 
 (* TODO: This is inconsistent with the way the id/member hooks work, but we
@@ -32,7 +30,7 @@ type hook_state_t = {
          things a bit *)
   call_hook:
      (Constraint_js.context ->
-      string -> Ast.Loc.t -> Constraint_js.Type.t ->
+      string -> Loc.t -> Constraint_js.Type.t ->
       unit);
 }
 

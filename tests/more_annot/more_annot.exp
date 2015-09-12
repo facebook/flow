@@ -1,6 +1,6 @@
 
 client_object.js:3:16,22: string
 This type is incompatible with
-  client_object.js:3:7,12: number
+client_object.js:3:7,12: number
 
 Found 1 error

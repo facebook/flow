@@ -1,0 +1,12 @@
+
+nested_modules.js:5:9,14: string
+This type is incompatible with
+[LIB] nested_modules.js:14:26,28: number
+
+nested_modules.js:7:18,21: property y
+Error:
+nested_modules.js:7:9,14: string
+This type is incompatible with
+[LIB] nested_modules.js:6:15,17: number
+
+Found 2 errors

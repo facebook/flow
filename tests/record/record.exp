@@ -1,0 +1,18 @@
+
+test.js:4:8,9: string
+This type is incompatible with
+test.js:2:23,28: number
+
+test.js:7:1,6: property name "qux" is a string
+This type is incompatible with
+test.js:1:13,25: union type
+
+test.js:13:1,6: string literal qux
+Property not found in
+test.js:9:10,29: object type
+
+test.js:19:6,34: string literal qux
+Property not found in
+test.js:18:19,44: object type
+
+Found 4 errors

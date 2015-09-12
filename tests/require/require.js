@@ -18,3 +18,8 @@ require("C");
 
 // @providesModule D exists, but not as a filename
 require("./D");
+
+// E exports an object with a numVal property
+var E = require('./E');
+var e_1: number = E.numberValue;
+E.stringValue; // Error: The E exports obj has no 'stringValue' property

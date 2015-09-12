@@ -9,44 +9,15 @@
  *)
 
 open Utils
+open Span
 
 module Ast = Spider_monkey_ast
 
 (**************************)
 
-let string_of_pos p = Ast.Loc.(
-  spf "%d:%d" p.line p.column
-)
-
-let string_of_span span = Ast.Loc.(
-  spf "%s - %s" (string_of_pos span.start) (string_of_pos span._end)
-)
-
-module SpanMap : MapSig with type key = Ast.Loc.t = MyMap(struct
-  type t = Ast.Loc.t
-  let poscmp p0 p1 = Ast.Loc.(
-    match Pervasives.compare p0.line p1.line with
-      | 0 -> Pervasives.compare p0.column p1.column
-      | _ as x -> x
-  )
-  let compare l0 l1 = Ast.Loc.(
-    match poscmp l0.start l1.start with
-      | 1 -> (
-          match poscmp l0._end l1._end with
-            | -1 -> 0
-            | _ -> 1
-          )
-      | _ as x -> x
-  )
-end)
-
 let unwrap_comment = Ast.Comment.(function
   loc, Block str | loc, Line str -> (loc, str)
 )
-
-let make_span startpos endpos = Ast.Loc.({
-  source = None; start = startpos; _end = endpos
-})
 
 let add_comment start _end cloc cstr cmap =
   let span = make_span start _end in
@@ -54,7 +25,7 @@ let add_comment start _end cloc cstr cmap =
 
 let make_comment_map progspan = function
   | [] -> SpanMap.empty
-  | comment :: comments -> Ast.Loc.(
+  | comment :: comments -> Loc.(
       let (lastloc, laststr), map = List.fold_left (
         fun ((prevloc, prevstr), map) c ->
           let nextloc, nextstr = unwrap_comment c in
@@ -74,7 +45,7 @@ let make_comment_map progspan = function
 type dynamic =
   | ParamD of string * string
   | RetD of string
-  | TypeD of Ast.Loc.t * string
+  | TypeD of Loc.t * string
 
 let rec parse_docblock loc = function
   | [t] ->
@@ -188,19 +159,19 @@ let meta_fun cmap loc =
   ) SMap.empty annos in
   cmap, tmap
 
-let insert_before loc t = Ast.Loc.(
+let insert_before loc t = Loc.(
   loc.start.line, loc.start.column, spf ": %s" t
 )
 
-let insert_before_with_suffix loc t suffix = Ast.Loc.(
+let insert_before_with_suffix loc t suffix = Loc.(
   loc.start.line, loc.start.column, spf ": %s%s" t suffix
 )
 
-let insert_after loc t = Ast.Loc.(
+let insert_after loc t = Loc.(
   loc._end.line, loc._end.column, spf ": %s" t
 )
 
-let skip loc = Ast.Loc.(
+let skip loc = Loc.(
   (* NOTE: leave multi-line comments alone for now *)
   let n = if loc.start.line <> loc._end.line then 0
     else loc._end.column - loc.start.column in
@@ -318,9 +289,9 @@ and meta_statement cmap = Ast.Statement.(function
   | loc, Expression { Expression.expression = e } ->
       meta_expression cmap e
 
-  | loc, ClassDeclaration { Class.body; _ } ->
-      let _, { Class.Body.body = elements; _ } = body in
-      concat_fold Class.(fun cmap -> function
+  | loc, ClassDeclaration { Ast.Class.body; _ } ->
+      let _, { Ast.Class.Body.body = elements; _ } = body in
+      concat_fold Ast.Class.(fun cmap -> function
         | Body.Method (loc, {
             Method.key = Ast.Expression.Object.Property.Identifier (_,
               { Ast.Identifier.name; _ });
