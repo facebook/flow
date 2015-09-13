@@ -83,7 +83,7 @@ module ExprDepTy = struct
    *  } else {
    *    $x = new B(); // Dependent type (`cls '\B')
    *  }
-   *  $x; // Tunresolved[(`cls '\A', `cls '\B')
+   *  $x; // Tunresolved[(`cls '\A', `cls '\B')]
    *
    *  // When we call the function below, we need to generate
    *  // A new expression dependent type since

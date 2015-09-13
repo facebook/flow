@@ -92,6 +92,17 @@ let exec_read cmd =
   assert (Unix.close_process_in ic = Unix.WEXITED 0);
   result
 
+let exec_read_lines ?(reverse=false) cmd =
+  let ic = Unix.open_process_in cmd in
+  let result = ref [] in
+  (try
+    while true do
+      result := input_line ic :: !result
+    done;
+  with End_of_file -> ());
+  assert (Unix.close_process_in ic = Unix.WEXITED 0);
+  if not reverse then List.rev !result else !result
+
 let restart () =
   let cmd = Sys.argv.(0) in
   let argv = Sys.argv in

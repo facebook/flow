@@ -501,7 +501,7 @@ let daemon_main options =
     let env = MainInit.go options program_init in
     serve genv env socket
 
-let daemon_entry =
+let main_entry =
   Daemon.register_entry_point
     "main"
     (fun options (_ic, _oc) -> daemon_main options)
@@ -509,17 +509,7 @@ let daemon_entry =
 let monitor_entry =
   Daemon.register_entry_point
     "monitor"
-    (fun (options, log_file) (_ic, _oc) ->
-       ignore (Sys_utils.setsid ());
-       let t = Unix.time () in
-       let {Daemon.pid; _} =
-         Daemon.spawn ~log_file daemon_entry options in
-       let _pid, proc_stat = Unix.waitpid [] pid in
-       (match proc_stat with
-        | Unix.WEXITED 0 -> ()
-        | _ ->
-            let time_taken = Unix.time () -. t in
-            HackEventLogger.bad_exit time_taken proc_stat))
+    (ServerMonitor.go main_entry)
 
 let monitor_daemon options =
   let log_link = ServerFiles.log_link (ServerArgs.root options) in
