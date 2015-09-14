@@ -49,8 +49,6 @@ class.js:108:41,42: string
 This type is incompatible with
 class.js:50:15,20: number
 
-class.js:114:1,44: call of method next
-Error:
 class.js:114:42,43: string
 This type is incompatible with
 [LIB] core.js:322:37,40: undefined
@@ -99,8 +97,6 @@ generators.js:85:12,13: string
 This type is incompatible with
 generators.js:88:10,15: number
 
-generators.js:95:1,35: call of method next
-Error:
 generators.js:95:33,34: string
 This type is incompatible with
 [LIB] core.js:322:37,40: undefined
@@ -109,4 +105,40 @@ generators.js:97:45,50: number
 This type is incompatible with
 generators.js:101:8,13: string
 
-Found 25 errors
+return.js:2:26,50: call of method return
+Error:
+return.js:2:48,49: string
+This type is incompatible with
+return.js:5:25,30: number
+
+return.js:11:1,28: call of method return
+Error:
+return.js:11:26,27: string
+This type is incompatible with
+return.js:9:10,10: number
+
+return.js:16:1,24: call of method return
+Error:
+return.js:16:23,23: number
+This type is incompatible with
+return.js:13:43,48: string
+
+return.js:19:1,25: call of method return
+Error:
+return.js:19:24,24: number
+This type is incompatible with
+return.js:18:46,51: string
+
+throw.js:8:26,49: call of method throw
+Error:
+throw.js:5:12,12: catch
+This type is incompatible with
+throw.js:11:23,29: boolean
+
+throw.js:21:26,49: call of method throw
+Error:
+throw.js:18:11,11: catch
+This type is incompatible with
+throw.js:24:23,29: boolean
+
+Found 31 errors

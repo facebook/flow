@@ -1360,7 +1360,7 @@ and statement cx type_params_map = Ast.Statement.(
       | loc, Identifier (_, {
           Ast.Identifier.name; typeAnnotation = None; _
         }) ->
-          let t = Flow_js.mk_tvar cx (mk_reason "catch" loc) in
+          let t = MixedT (mk_reason "catch" loc) in
           Env_js.let_env
             name
             (Scope.Entry.new_var t ~loc)
@@ -5694,8 +5694,12 @@ and mk_body id cx type_params_map ~async ~generator ?(derived_ctor=false)
       let promise = Env_js.var_ref ~lookup_mode:ForType cx "Promise" reason in
       TypeAppT (promise, [VoidT.at loc])
     else if generator then
-      let reason = mk_reason "return Generator<Yield,void,Next>" loc in
-      let ret = VoidT.at loc in
+      (* The return value for generators can be provided by consumers via the
+         `throw` method, so it isn't correct to infer Return = VoidT in the
+         absence of a return statement. Instead, return a tvar that can go on to
+         accumulate more lower bounds. *)
+      let reason = mk_reason "implicit generator return" loc in
+      let ret = Flow_js.mk_tvar cx reason in
       Flow_js.get_builtin_typeapp cx reason "Generator" [yield; ret; next]
     else
       VoidT (mk_reason "return undefined" loc)
