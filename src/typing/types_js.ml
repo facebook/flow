@@ -622,7 +622,7 @@ module MergeStream = struct
   (* dependency_graph is a map from files to dependencies *)
   let make dependency_graph leader_map component_map =
     (* TODO: clear or replace state *)
-    let procs = GlobalConfig.nbr_procs in
+    let procs = Sys_utils.nbr_procs in
     let leader f = SMap.find_unsafe f leader_map in
     let component f = SMap.find_unsafe f component_map in
 
