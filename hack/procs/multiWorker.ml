@@ -66,8 +66,12 @@ let call workers ~job ~merge ~neutral ~next =
         done;
         !acc
 
+type 'a bucket =
+| Job of 'a list
+| Wait
+
 type 'a nextlist_dynamic =
-  unit -> 'a list option
+  unit -> 'a bucket
 
 (* Mostly a duplicate of the function `single_threaded_call` above, except that
    this function runs job and then merge separately, whereas the other function
@@ -86,13 +90,13 @@ let single_threaded_call_dynamic job merge neutral next =
    * mode.
    *)
   let _ = Marshal.to_string job [Marshal.Closures] in
-  while !x <> Some [] do
+  while !x <> Job [] do
     match !x with
-    | None ->
+    | Wait ->
         (* this state should never be reached in single threaded mode, since
            there is no hope for ever getting out of this state *)
         failwith "stuck!"
-    | Some l ->
+    | Job l ->
         let res = job neutral l in
         acc := merge !acc res;
         x := next()
@@ -113,8 +117,8 @@ let call_dynamic workers ~job ~merge ~neutral ~next =
           List.iter !procs begin fun proc ->
             let bucket_opt = next () in
             match bucket_opt with
-            | None -> waiting_procs := proc::!waiting_procs (* wait *)
-            | Some bucket -> (
+            | Wait -> waiting_procs := proc::!waiting_procs (* wait *)
+            | Job bucket -> (
               if bucket = [] then raise Exit;
               incr busy;
               ignore (Worker.call proc
