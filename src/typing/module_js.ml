@@ -506,7 +506,7 @@ module Flat: MODULE_SYSTEM = struct
          "were provided to Module_js.ml :(")
         import_str
       )
-    | Some({ Options.opt_root = root}) ->
+    | Some({ Options.opt_root = root; _; }) ->
       let path = Path.concat root import_str in
       find_first_valid (Path.to_string path)
     )
