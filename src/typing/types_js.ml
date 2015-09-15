@@ -655,7 +655,7 @@ module MergeStream = struct
 
     fun () ->
       let jobs = List.length !stream in
-      if jobs = 0 && !blocked <> 0 then None
+      if jobs = 0 && !blocked <> 0 then MultiWorker.Wait
       else
         let bucket_size =
           if jobs < procs * max_bucket_size
@@ -664,7 +664,7 @@ module MergeStream = struct
         in
         let n = min bucket_size jobs in
         let result = take n |> List.map component in
-        Some result
+        MultiWorker.Job result
 
   (* We know when files are done by having jobs return the files they processed,
      and trapping the function that joins results. ;), yeah. *)
