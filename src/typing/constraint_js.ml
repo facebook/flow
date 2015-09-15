@@ -805,16 +805,13 @@ module Scope = struct
 
   (* a var scope corresponds to a runtime activation,
      e.g. a function. *)
-  type var_scope_attrs = {
-    async: bool;
-    generator: bool
-  }
+  type function_kind = Ordinary | Async | Generator
 
   (* var and lexical scopes differ in hoisting behavior
      and auxiliary properties *)
   (* TODO lexical scope support *)
   type kind =
-  | VarScope of var_scope_attrs
+  | VarScope of function_kind
   | LexScope
 
   type refi_binding = {
@@ -838,9 +835,8 @@ module Scope = struct
   }
 
   (* return a fresh scope of the most common kind (var) *)
-  let fresh ?(async=false) ?(generator=false) () =
-    assert (not (async && generator));
-    fresh_impl (VarScope { async; generator })
+  let fresh ?(kind=Ordinary) () =
+    fresh_impl (VarScope kind)
 
   (* return a fresh lexical scope *)
   let fresh_lex () = fresh_impl LexScope
@@ -2515,10 +2511,15 @@ let string_of_scope = Scope.(
     |> String.concat ";\n  "
   in
 
+  let string_of_function_kind = function
+  | Ordinary -> "Ordinary"
+  | Async -> "Async"
+  | Generator -> "Generator"
+  in
+
   let string_of_scope_kind = function
-  | VarScope { async; generator } ->
-      spf "VarScope { async: %b; generator: %b }" async generator
-  | LexScope -> "Lex"
+  | VarScope kind -> spf "VarScope %s" (string_of_function_kind kind)
+  | LexScope -> "LexScope"
   in
 
   fun cx scope ->

@@ -544,6 +544,14 @@ let fill_types cx =
 
 (* AST helpers *)
 
+(* translate AST async/generator flags into Scope.function_kind *)
+let function_kind ~async ~generator =
+  match async, generator with
+  | true, true -> assert_false "async && generator"
+  | true, false -> Scope.Async
+  | false, true -> Scope.Generator
+  | false, false -> Scope.Ordinary
+
 let error_type cx loc msg =
   let reason = mk_reason "" loc in
   Flow_js.add_error cx [reason, msg];
@@ -2090,9 +2098,10 @@ and statement cx type_params_map = Ast.Statement.(
       async;
       _
     }) ->
+      let kind = function_kind ~async ~generator in
       let reason = mk_reason "function" loc in
       let this = Flow_js.mk_tvar cx (replace_reason "this" reason) in
-      let fn_type = mk_function None cx type_params_map reason  ~async ~generator
+      let fn_type = mk_function None cx type_params_map reason ~kind
         typeParameters (params, defaults, rest) returnType body this
       in
 
@@ -2720,9 +2729,10 @@ and object_prop cx type_params_map map = Ast.Expression.Object.(function
         let { params; defaults; rest; body;
               returnType; typeParameters; id; async; generator; _ } = func
         in
+        let kind = function_kind ~async ~generator in
         let reason = mk_reason "function" vloc in
         let this = Flow_js.mk_tvar cx (replace_reason "this" reason) in
-        let ft = mk_function id cx type_params_map ~async ~generator reason typeParameters
+        let ft = mk_function id cx type_params_map ~kind reason typeParameters
           (params, defaults, rest) returnType body this
         in
         Hashtbl.replace cx.type_table vloc ft;
@@ -2772,7 +2782,7 @@ and object_prop cx type_params_map map = Ast.Expression.Object.(function
       let { body; returnType; _ } = func in
       let reason = mk_reason "getter function" vloc in
       let this = Flow_js.mk_tvar cx (replace_reason "this" reason) in
-      let function_type = mk_function None cx type_params_map ~async:false ~generator:false reason None
+      let function_type = mk_function None cx type_params_map reason None
         ([], [], None) returnType body this
       in
       let return_t = extract_getter_type function_type in
@@ -2797,7 +2807,7 @@ and object_prop cx type_params_map map = Ast.Expression.Object.(function
       let { params; defaults; body; returnType; _ } = func in
       let reason = mk_reason "setter function" vloc in
       let this = Flow_js.mk_tvar cx (replace_reason "this" reason) in
-      let function_type = mk_function None cx type_params_map ~async:false ~generator:false reason None
+      let function_type = mk_function None cx type_params_map reason None
         (params, defaults, None) returnType body this
       in
       let param_t = extract_setter_type function_type in
@@ -3447,10 +3457,15 @@ and expression_ ~is_cond cx type_params_map loc e = Ast.Expression.(match e with
       typeParameters;
       _
     } ->
-      let desc = (if async then "async " else "") ^ "function" in
+      let kind = function_kind ~async ~generator in
+      let desc = match kind with
+      | Scope.Async -> "async function"
+      | Scope.Generator -> "generator function"
+      | Scope.Ordinary -> "function"
+      in
       let reason = mk_reason desc loc in
       let this = Flow_js.mk_tvar cx (replace_reason "this" reason) in
-      mk_function id cx type_params_map reason ~async ~generator
+      mk_function id cx type_params_map reason ~kind
         typeParameters (params, defaults, rest) returnType body this
 
   | ArrowFunction {
@@ -3462,11 +3477,16 @@ and expression_ ~is_cond cx type_params_map loc e = Ast.Expression.(match e with
       typeParameters;
       _
     } ->
-      let desc = (if async then "async " else "") ^ "arrow function" in
+      let kind = function_kind ~async ~generator:false in
+      let desc = match kind with
+      | Scope.Async -> "async arrow function"
+      | Scope.Generator -> assert_false "generator arrow function"
+      | Scope.Ordinary -> "arrow function"
+      in
       let reason = mk_reason desc loc in
       let this = this_ cx reason in
       let super = super_ cx reason in
-      mk_arrow id cx type_params_map reason ~async ~generator:false
+      mk_arrow id cx type_params_map reason ~kind
         typeParameters (params, defaults, rest) returnType body this super
 
   | TaggedTemplate {
@@ -4329,7 +4349,7 @@ and react_create_class cx type_params_map loc class_props = Ast.Expression.(
             returnType; typeParameters; _ } = func
           in
           let reason = mk_reason "defaultProps" vloc in
-          let t = mk_method cx type_params_map reason ~async:false ~generator:false (params, defaults, rest)
+          let t = mk_method cx type_params_map reason (params, defaults, rest)
             returnType body this (MixedT reason)
           in
           (match t with
@@ -4350,7 +4370,7 @@ and react_create_class cx type_params_map loc class_props = Ast.Expression.(
             returnType; typeParameters; _ } = func
           in
           let reason = mk_reason "initialState" vloc in
-          let t = mk_method cx type_params_map reason ~async:false ~generator:false (params, defaults, rest)
+          let t = mk_method cx type_params_map reason (params, defaults, rest)
             returnType body this (MixedT reason)
           in
           let override_state =
@@ -4372,8 +4392,9 @@ and react_create_class cx type_params_map loc class_props = Ast.Expression.(
           let { params; defaults; rest; body;
             returnType; typeParameters; async; generator; _ } = func
           in
+          let kind = function_kind ~async ~generator in
           let reason = mk_reason "function" vloc in
-          let t = mk_method cx type_params_map reason ~async ~generator (params, defaults, rest)
+          let t = mk_method cx type_params_map reason ~kind (params, defaults, rest)
             returnType body this (MixedT reason)
           in
           fmap, SMap.add name t mmap
@@ -5206,7 +5227,8 @@ and mk_class_elements cx instance_info static_info body = Ast.Class.(
           | MixedT _ -> false
           | _ -> name = "constructor"
         in
-        mk_body None cx type_params_map ~async ~generator ~derived_ctor
+        let function_kind = function_kind ~async ~generator in
+        mk_body None cx type_params_map ~kind:function_kind ~derived_ctor
           param_types_map param_loc_map ret body this super yield next;
       );
       ignore (Abnormal.swap Abnormal.Return save_return_exn);
@@ -5560,7 +5582,7 @@ and mk_interface cx reason_i typeparams type_params_map
    signature consisting of type parameters, parameter types, parameter names,
    and return type, check the body against that signature by adding `this` and
    `super` to the environment, and return the signature. *)
-and function_decl id cx type_params_map (reason:reason) ~async ~generator
+and function_decl id cx type_params_map (reason:reason) ~kind
   type_params params ret body this super =
 
   let typeparams, type_params_map =
@@ -5569,7 +5591,7 @@ and function_decl id cx type_params_map (reason:reason) ~async ~generator
   let (params, pnames, ret, param_types_map, param_types_loc) =
     mk_params_ret cx type_params_map params (body, ret) in
 
-  let yield, next = if generator then (
+  let yield, next = if kind = Scope.Generator then (
     Flow_js.mk_tvar cx (prefix_reason "yield of " reason),
     Flow_js.mk_tvar cx (prefix_reason "next of " reason)
   ) else (
@@ -5586,7 +5608,7 @@ and function_decl id cx type_params_map (reason:reason) ~async ~generator
       param_types_map |> SMap.map (Flow_js.subst cx map_) in
     let ret = Flow_js.subst cx map_ ret in
 
-    mk_body id cx type_params_map ~async ~generator
+    mk_body id cx type_params_map ~kind
       param_types_map param_types_loc ret body this super yield next;
   );
 
@@ -5639,7 +5661,7 @@ and define_internal cx reason x =
   let opt = Env_js.get_var_declared_type cx ix reason in
   Env_js.set_var cx ix (Flow_js.filter_optional cx reason opt) reason
 
-and mk_body id cx type_params_map ~async ~generator ?(derived_ctor=false)
+and mk_body id cx type_params_map ~kind ?(derived_ctor=false)
     param_types_map param_locs_map ret body this super yield next =
   let ctx =  Env_js.get_scopes () in
   let new_ctx = Env_js.clone_scopes ctx in
@@ -5648,7 +5670,7 @@ and mk_body id cx type_params_map ~async ~generator ?(derived_ctor=false)
 
   (* create and prepopulate function scope *)
   let function_scope =
-    let scope = Scope.fresh ~async ~generator () in
+    let scope = Scope.fresh ~kind () in
     (* add param bindings *)
     param_types_map |> SMap.iter (fun name t ->
       let entry = Scope.Entry.(match SMap.get name param_locs_map with
@@ -5689,15 +5711,16 @@ and mk_body id cx type_params_map ~async ~generator ?(derived_ctor=false)
   if not (has_return_exception_handler (fun () -> toplevels cx type_params_map stmts))
   then (
     let loc = loc_of_t ret in
-    let void_t = if async then
+    let void_t = match kind with
+    | Scope.Async ->
       let reason = mk_reason "return Promise<Unit>" loc in
       let promise = Env_js.var_ref ~lookup_mode:ForType cx "Promise" reason in
       TypeAppT (promise, [VoidT.at loc])
-    else if generator then
+    | Scope.Generator ->
       let reason = mk_reason "return Generator<Yield,void,Next>" loc in
       let ret = VoidT.at loc in
       Flow_js.get_builtin_typeapp cx reason "Generator" [yield; ret; next]
-    else
+    | Scope.Ordinary ->
       VoidT (mk_reason "return undefined" loc)
     in
     Flow_js.flow cx (void_t, ret)
@@ -5846,18 +5869,19 @@ and extract_type_param_instantiations = function
   | Some (_, typeParameters) -> typeParameters.Ast.Type.ParameterInstantiation.params
 
 (* Process a function definition, returning a (polymorphic) function type. *)
-and mk_function id cx type_params_map reason ~async ~generator type_params params ret body this =
+and mk_function id cx type_params_map reason ?(kind=Scope.Ordinary)
+  type_params params ret body this =
   (* Normally, functions do not have access to super. *)
   let super = MixedT (replace_reason "empty super object" reason) in
   let signature =
-    function_decl id cx type_params_map reason ~async ~generator type_params params ret body this super
+    function_decl id cx type_params_map reason ~kind type_params params ret body this super
   in
   mk_function_type cx reason this signature
 
 (* Process an arrow function, returning a (polymorphic) function type. *)
-and mk_arrow id cx type_params_map reason ~async ~generator type_params params ret body this super =
+and mk_arrow id cx type_params_map reason ~kind type_params params ret body this super =
   let signature =
-    function_decl id cx type_params_map reason ~async ~generator type_params params ret body this super
+    function_decl id cx type_params_map reason ~kind type_params params ret body this super
   in
   (* Do not expose the type of `this` in the function's type. The call to
      function_decl above has already done the necessary checking of `this` in
@@ -5890,9 +5914,10 @@ and mk_function_type cx reason this signature =
 
 (* This function is around for the sole purpose of modeling some method-like
    behaviors of non-ES6 React classes. It is otherwise deprecated. *)
-and mk_method cx type_params_map reason ~async ~generator params ret body this super =
+and mk_method cx type_params_map reason ?(kind=Scope.Ordinary)
+  params ret body this super =
   let (_,params,pnames,ret) =
-    function_decl None cx type_params_map ~async ~generator reason None params ret body this super
+    function_decl None cx type_params_map ~kind reason None params ret body this super
   in
   FunT (reason, Flow_js.dummy_static, Flow_js.dummy_prototype,
         Flow_js.mk_functiontype2

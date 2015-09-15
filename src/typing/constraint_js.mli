@@ -341,13 +341,10 @@ module Scope: sig
   module KeyMap: MapSig with type key
   = Key.t
 
-  type var_scope_attrs = {
-    async: bool;
-    generator: bool
-  }
+  type function_kind = Ordinary | Async | Generator
 
   type kind =
-  | VarScope of var_scope_attrs
+  | VarScope of function_kind
   | LexScope
 
   type refi_binding = {
@@ -362,7 +359,7 @@ module Scope: sig
     mutable refis: refi_binding KeyMap.t
   }
 
-  val fresh: ?async:bool -> ?generator:bool -> unit -> t
+  val fresh: ?kind:function_kind -> unit -> t
   val fresh_lex: unit -> t
   val clone: t -> t
 

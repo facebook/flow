@@ -93,19 +93,16 @@ let iter_scopes f =
 let clone_scopes scopes =
   List.map Scope.clone scopes
 
-(* true if current top scope is an async function *)
+(* helper - true if the top scope has the given kind *)
 (* TODO will need to walk once LexScopes appear *)
-let in_async_scope () = Scope.(
+let in_scope_kind kind () = Scope.(
   match (peek_scope ()).kind with
-  | VarScope { async; _ } -> async
+  | VarScope k when k = kind -> true
   | _ -> false
 )
 
-let in_generator_scope () = Scope.(
-  match (peek_scope ()).kind with
-  | VarScope { generator; _ } -> generator
-  | _ -> false
-)
+let in_async_scope = in_scope_kind Async
+let in_generator_scope = in_scope_kind Generator
 
 (* build a map of all var entries - no refis - in the current
    scope stack.
