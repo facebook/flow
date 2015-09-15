@@ -86,14 +86,14 @@ let single_threaded_call_dynamic job merge neutral next =
    * mode.
    *)
   let _ = Marshal.to_string job [Marshal.Closures] in
-  while !x != Some [] do
+  while !x <> Some [] do
     match !x with
     | None ->
         (* this state should never be reached in single threaded mode, since
            there is no hope for ever getting out of this state *)
         failwith "stuck!"
     | Some l ->
-      let res = job neutral l in
+        let res = job neutral l in
         acc := merge !acc res;
         x := next()
   done;
