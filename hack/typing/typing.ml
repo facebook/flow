@@ -2285,6 +2285,7 @@ and dispatch_call p env call_type (fpos, fun_expr as e) el uel =
       end
   | Class_const (CIparent, (_, construct))
     when construct = SN.Members.__construct ->
+      Typing_hooks.dispatch_parent_construct_hook env p;
       call_parent_construct p env el uel
   | Class_const (CIparent, m) ->
       let env, ty1 = static_class_id p env CIparent in
