@@ -1082,7 +1082,6 @@ and statement_decl cx type_params_map = Ast.Statement.(
   | (loc, With _) ->
       (* TODO disallow or push vars into env? *)
       ()
-  | (loc, DeclareTypeAlias { TypeAlias.id; typeParameters; right; } )
   | (loc, TypeAlias { TypeAlias.id; typeParameters; right; } ) ->
       let name_loc, { Ast.Identifier.name; _ } = id in
       let r = mk_reason (spf "type %s" name) name_loc in
@@ -1363,6 +1362,109 @@ and statement cx type_params_map = Ast.Statement.(
     List.iter (variable cx type_params_map) declarations
   in
 
+  let interface cx loc structural {
+    Interface.id;
+    typeParameters;
+    body = (_, { Ast.Type.Object.properties; indexers; callProperties });
+    extends;
+    mixins;
+  } =
+    let _, { Ast.Identifier.name = iname; _ } = id in
+    let reason = mk_reason iname loc in
+
+    (* TODO excise the Promise/PromisePolyfill special-case ASAP *)
+    let typeparams, map =
+      if (iname = "Promise" || iname = "PromisePolyfill") &&
+        List.length (extract_type_param_declarations typeParameters) = 1
+      then mk_type_param_declarations cx type_params_map typeParameters
+        ~polarities:[Positive]
+      else mk_type_param_declarations cx type_params_map typeParameters in
+
+    let sfmap, smmap, fmap, mmap = List.fold_left Ast.Type.Object.Property.(
+      fun (sfmap_, smmap_, fmap_, mmap_)
+        (loc, { key; value; static; _method; optional }) ->
+        if optional && _method
+        then begin
+          let msg = "optional methods are not supported" in
+          Flow_js.add_error cx [Reason_js.mk_reason "" loc, msg]
+        end;
+        Ast.Expression.Object.Property.(match key with
+        | Literal (loc, _)
+        | Computed (loc, _) ->
+          let msg = "illegal name" in
+            Flow_js.add_error cx [Reason_js.mk_reason "" loc, msg];
+            (sfmap_, smmap_, fmap_, mmap_)
+
+        | Identifier (loc, { Ast.Identifier.name; _ }) ->
+          let t = convert cx map value in
+          let t = if optional then OptionalT t else t in
+          (* check for overloads in static and instance method maps *)
+          let map_ = if static then smmap_ else mmap_ in
+          let t = match SMap.get name map_ with
+            | None -> t
+            | Some (IntersectionT (reason, seen_ts)) ->
+                  IntersectionT (reason, seen_ts @ [t])
+            | Some seen_t ->
+                  IntersectionT (Reason_js.mk_reason iname loc, [seen_t; t])
+          in
+            (* TODO: additionally check that the four maps are disjoint *)
+            (match static, _method with
+            | true, true ->  (sfmap_, SMap.add name t smmap_, fmap_, mmap_)
+            | true, false -> (SMap.add name t sfmap_, smmap_, fmap_, mmap_)
+            | false, true -> (sfmap_, smmap_, fmap_, SMap.add name t mmap_)
+            | false, false -> (sfmap_, smmap_, SMap.add name t fmap_, mmap_)
+            )
+        )
+    ) (SMap.empty, SMap.empty, SMap.empty, SMap.empty) properties
+    in
+    let fmap = Ast.Type.Object.Indexer.(match indexers with
+      | [] -> fmap
+      | [(_, { key; value; _; })] ->
+        let keyt = convert cx map key in
+        let valuet = convert cx map value in
+        fmap |> SMap.add "$key" keyt |> SMap.add "$value" valuet
+    (* TODO *)
+      | _ -> failwith "Unimplemented: multiple indexers")
+    in
+    let calls = callProperties |> List.map (function
+      | loc, { Ast.Type.Object.CallProperty.value = (_, ft); static; } ->
+        (static, convert cx map (loc, Ast.Type.Function ft))
+    ) in
+    let scalls, calls = List.partition fst calls in
+    let smmap = match scalls with
+      | [] -> smmap
+      | [_,t] -> SMap.add "$call" t smmap
+      | _ -> let scalls = List.map snd scalls in
+             SMap.add "$call" (IntersectionT (mk_reason iname loc,
+                                              scalls)) smmap
+    in
+    let mmap = match calls with
+      | [] -> mmap
+      | [_,t] -> SMap.add "$call" t mmap
+      | _ ->
+        let calls = List.map snd calls in
+        SMap.add "$call" (IntersectionT (mk_reason iname loc,
+                                              calls)) mmap
+    in
+    let mmap = match SMap.get "constructor" mmap with
+      | None ->
+        let constructor_funtype =
+          Flow_js.mk_functiontype [] ~params_names:[] VoidT.t in
+        let funt = (FunT (Reason_js.mk_reason "constructor" loc,
+          Flow_js.dummy_static, Flow_js.dummy_prototype, constructor_funtype))
+        in
+        SMap.add "constructor" funt mmap
+      | Some _ ->
+        mmap
+    in
+    let i = mk_interface cx reason typeparams map
+      (sfmap, smmap, fmap, mmap) extends mixins structural in
+    Hashtbl.replace cx.type_table loc i;
+    (* interface is a type alias, declare class is a var *)
+    Env_js.(if structural then init_type else init_var ~has_anno:false)
+      cx iname i reason
+  in
+
   let catch_clause cx { Try.CatchClause.param; guard; body = (_, b) } =
     Ast.Pattern.(match param with
       | loc, Identifier (_, {
@@ -1514,7 +1616,7 @@ and statement cx type_params_map = Ast.Statement.(
   | (loc, With _) ->
       (* TODO or disallow? *)
       ()
-  | (loc, DeclareTypeAlias { TypeAlias.id; typeParameters; right; } )
+
   | (loc, TypeAlias { TypeAlias.id; typeParameters; right; } ) ->
       let name_loc, { Ast.Identifier.name; _ } = id in
       let r = mk_reason (spf "type %s" name) name_loc in
@@ -2151,115 +2253,11 @@ and statement cx type_params_map = Ast.Statement.(
         cls_type
         reason
 
-  | (loc, DeclareClass {
-      Interface.id;
-      typeParameters;
-      body = (_, { Ast.Type.Object.properties; indexers; callProperties });
-      extends;
-    })
-  | (loc, InterfaceDeclaration {
-      Interface.id;
-      typeParameters;
-      body = (_, { Ast.Type.Object.properties; indexers; callProperties });
-      extends;
-    }) as stmt ->
-    let is_interface = match stmt with
-    | (_, InterfaceDeclaration _) -> true
-    | _ -> false in
-    let _, { Ast.Identifier.name = iname; _ } = id in
-    let reason = mk_reason iname loc in
+  | (loc, DeclareClass decl) ->
+    interface cx loc false decl
 
-    (* TODO excise the Promise/PromisePolyfill special-case ASAP *)
-    let typeparams, type_params_map =
-      if (iname = "Promise" || iname = "PromisePolyfill") &&
-        List.length (extract_type_param_declarations typeParameters) = 1
-      then mk_type_param_declarations cx type_params_map typeParameters ~polarities:[Positive]
-      else mk_type_param_declarations cx type_params_map typeParameters in
-
-    let sfmap, smmap, fmap, mmap = List.fold_left Ast.Type.Object.Property.(
-      fun (sfmap_, smmap_, fmap_, mmap_)
-        (loc, { key; value; static; _method; optional; }) ->
-        if optional && _method
-        then begin
-          let msg = "optional methods are not supported" in
-          Flow_js.add_error cx [Reason_js.mk_reason "" loc, msg]
-        end;
-        Ast.Expression.Object.Property.(match key with
-        | Literal (loc, _)
-        | Computed (loc, _) ->
-            let msg = "illegal name" in
-            Flow_js.add_error cx [Reason_js.mk_reason "" loc, msg];
-            (sfmap_, smmap_, fmap_, mmap_)
-
-        | Identifier (loc, { Ast.Identifier.name; _ }) ->
-            let t = convert cx type_params_map value in
-            let t = if optional then OptionalT t else t in
-            (* check for overloads in static and instance method maps *)
-            let map_ = if static then smmap_ else mmap_ in
-
-            let t = match SMap.get name map_ with
-              | None -> t
-              | Some (IntersectionT (reason, seen_ts)) ->
-                  IntersectionT (reason, seen_ts @ [t])
-              | Some seen_t ->
-                  IntersectionT (Reason_js.mk_reason iname loc, [seen_t; t])
-            in
-            (* TODO: additionally check that the four maps are disjoint *)
-            (match static, _method with
-            | true, true ->  (sfmap_, SMap.add name t smmap_, fmap_, mmap_)
-            | true, false -> (SMap.add name t sfmap_, smmap_, fmap_, mmap_)
-            | false, true -> (sfmap_, smmap_, fmap_, SMap.add name t mmap_)
-            | false, false -> (sfmap_, smmap_, SMap.add name t fmap_, mmap_)
-            )
-        )
-    ) (SMap.empty, SMap.empty, SMap.empty, SMap.empty) properties
-    in
-    let fmap = Ast.Type.Object.Indexer.(match indexers with
-    | [] -> fmap
-    | [(_, { key; value; _; })] ->
-        let keyt = convert cx type_params_map key in
-        let valuet = convert cx type_params_map value in
-        fmap |> SMap.add "$key" keyt |> SMap.add "$value" valuet
-    (* TODO *)
-    | _ -> failwith "Unimplemented: multiple indexers")
-    in
-    let calls = callProperties |> List.map (function
-      | loc, { Ast.Type.Object.CallProperty.value = (_, ft); static; } ->
-        (static, convert cx type_params_map (loc, Ast.Type.Function ft))
-    ) in
-    let scalls, calls = List.partition fst calls in
-    let smmap = match scalls with
-      | [] -> smmap
-      | [_,t] -> SMap.add "$call" t smmap
-      | _ -> let scalls = List.map snd scalls in
-             SMap.add "$call" (IntersectionT (mk_reason iname loc,
-                                              scalls)) smmap
-    in
-    let mmap = match calls with
-      | [] -> mmap
-      | [_,t] -> SMap.add "$call" t mmap
-      | _ ->
-        let calls = List.map snd calls in
-        SMap.add "$call" (IntersectionT (mk_reason iname loc,
-                                              calls)) mmap
-    in
-    let mmap = match SMap.get "constructor" mmap with
-      | None ->
-        let constructor_funtype =
-          Flow_js.mk_functiontype [] ~params_names:[] VoidT.t in
-        let funt = (FunT (Reason_js.mk_reason "constructor" loc,
-          Flow_js.dummy_static, Flow_js.dummy_prototype, constructor_funtype))
-        in
-        SMap.add "constructor" funt mmap
-      | Some _ ->
-        mmap
-    in
-    let i = mk_interface cx reason typeparams type_params_map
-      (sfmap, smmap, fmap, mmap) extends is_interface in
-    Hashtbl.replace cx.type_table loc i;
-    (* interface is a type alias, declare class is a var *)
-    Env_js.(if is_interface then init_type else init_var ~has_anno:false)
-      cx iname i reason
+  | (loc, InterfaceDeclaration decl) ->
+    interface cx loc true decl
 
   | (loc, DeclareModule { DeclareModule.id; body; }) ->
     let name = match id with
@@ -3403,12 +3401,8 @@ and expression_ ~is_cond cx type_params_map loc e = Ast.Expression.(match e with
         { Ast.Identifier.name = "classWithMixins"; _ });
       arguments
     } ->
-      (* TODO: require *)
-      (* TODO: This needs to be fixed. *)
-      let argts = List.map (expression_or_spread cx type_params_map) arguments in
-      Flow_js.mk_tvar_where cx (mk_reason "class" loc) (fun t ->
-        List.iter (fun argt -> Flow_js.flow cx (argt, t)) argts
-      )
+    (* TODO *)
+    AnyT.t
 
   | Call { Call.callee; arguments } ->
       let f = expression cx type_params_map callee in
@@ -4861,7 +4855,7 @@ and get_prop ~is_cond cx reason tobj (prop_reason, name) =
   Flow_js.mk_tvar_where cx reason (fun t ->
     let get_prop_u =
       if is_cond
-      then LookupT (reason, None, name, LowerBoundT t)
+      then LookupT (reason, None, [], name, LowerBoundT t)
       else GetPropT (reason, (prop_reason, name), t)
     in
     Flow_js.flow cx (tobj, get_prop_u)
@@ -4977,6 +4971,25 @@ and mk_nominal_type ?(for_type=true) cx reason type_params_map (c, targs) =
       TypeAppT (c, tparams)
   | None ->
       Flow_js.mk_instance cx reason ~for_type c
+
+and mk_interface_super cx structural reason_c map = function
+  | (Some id, targs) ->
+      let desc = if structural then "extends" else "mixins" in
+      let lookup_mode = if structural then ForType else ForValue in
+      let i = convert_qualification ~lookup_mode cx desc id in
+      let reason = reason_of_t i in
+      let params = match targs with
+      | None -> None
+      | Some (_, { Ast.Type.ParameterInstantiation.params; }) -> Some params in
+      mk_nominal_type cx reason map (i, params)
+  | _ ->
+      let root = MixedT (reason_of_string "Object") in
+      root
+
+and body_loc = Ast.Statement.FunctionDeclaration.(function
+  | BodyBlock (loc, _) -> loc
+  | BodyExpression (loc, _) -> loc
+)
 
 (* Makes signatures for fields and methods in a class. *)
 and mk_signature cx reason_c type_params_map superClass body = Ast.Class.(
@@ -5334,7 +5347,6 @@ and mk_class = Ast.Class.(
     (* map_: [X := T] where T = mixed, _|_ *)
 
     (* super: D<T> *)
-    let super_reason = prefix_reason "super of " reason_c in
     let super = Flow_js.subst cx map_ super in
     let super_static = Flow_js.subst cx map_ super_static in
 
@@ -5394,7 +5406,7 @@ and mk_class = Ast.Class.(
       mixins = false;
       structural = false;
     } in
-    Flow_js.flow cx (super_static, SuperT(super_reason, static_instance));
+    Flow_js.flow cx (super_static, SuperT(reason_c, static_instance));
     let static = InstanceT (
       static_reason,
       MixedT.t,
@@ -5411,7 +5423,7 @@ and mk_class = Ast.Class.(
       mixins = false;
       structural = false;
     } in
-    Flow_js.flow cx (super, SuperT(super_reason, instance));
+    Flow_js.flow cx (super, SuperT(reason_c, instance));
     let this = InstanceT (reason_c,static,super,instance) in
 
     mk_class_elements cx
@@ -5483,32 +5495,51 @@ and mk_class = Ast.Class.(
     PolyT(typeparams, ClassT this)
 )
 
-(* Processes a declare class. The fact that we process an interface the same way
-   as a declare class is legacy, and might change when we have proper support
-   for interfaces. One difference between declare class and interfaces is that
-   the the A ~> B check is structural if B is an interface and nominal if B is
-   a declare class. If you set the structural flag to true, then this interface
-   will be checked structurally *)
+and extract_extends cx structural = function
+  | [] -> [None,None]
+  | [loc, {Ast.Type.Generic.id; typeParameters}] ->
+      [Some id, typeParameters]
+  | (loc, {Ast.Type.Generic.id; typeParameters})::others ->
+      if structural
+      then (Some id, typeParameters)::(extract_extends cx structural others)
+      else
+        let msg = "A class cannot extend multiple classes!" in
+        Flow_js.add_error cx [mk_reason "" loc, msg];
+        []
+
+and extract_mixins cx =
+  List.map (fun (loc, {Ast.Type.Generic.id; typeParameters}) ->
+    (Some id, typeParameters)
+  )
+
+(* Processes a declare class or interface. One difference between a declare
+   class and an interface is that the the A ~> B check is structural if B is an
+   interface and nominal if B is a declare class. If you set the structural flag
+   to true, then this interface will be checked structurally. Another difference
+   is that a declare class may have mixins, but an interface may not. *)
 (* TODO: this function shares a lot of code with mk_class. Sometimes that causes
    bad divergence; e.g., bugs around the handling of generics were fixed in
    mk_class but not in mk_interface. This code should be consolidated soon,
    ideally when we provide full support for interfaces. *)
 and mk_interface cx reason_i typeparams type_params_map
-    (sfmap, smmap, fmap, mmap) extends is_interface =
+    (sfmap, smmap, fmap, mmap) extends mixins structural =
   let id = Flow_js.mk_nominal cx in
-  let extends =
-    match extends with
-    | [] -> None, None
-    | (loc, { Ast.Type.Generic.id = qualification; typeParameters }) :: _ ->
-        (* TODO: multiple extends *)
-        let lookup_mode = if is_interface then ForType else ForValue in
-        let c = convert_qualification ~lookup_mode cx
-          "extends" qualification in
-        Some c, typeParameters
-  in
-  let super = mk_extends cx type_params_map extends in
-  let super_static = ClassT(super) in
 
+  let extends = extract_extends cx structural extends in
+  let mixins = extract_mixins cx mixins in
+  let super_reason = prefix_reason "super of " reason_i in
+  (* mixins override extends *)
+  let interface_supers =
+    List.map (mk_interface_super cx false super_reason type_params_map) mixins @
+    List.map (mk_interface_super cx true super_reason type_params_map) extends
+  in
+  let super = match interface_supers with
+    | [] -> AnyT.t
+    | [t] -> t
+    | ts -> IntersectionT(super_reason, ts)
+  in
+
+  let super_static = ClassT(super) in
   let static_reason = prefix_reason "statics of " reason_i in
 
   let arg_polarities = type_params_map |> SMap.map (fun t -> match t with
@@ -5517,7 +5548,6 @@ and mk_interface cx reason_i typeparams type_params_map
   ) in
 
   Flow_js.generate_tests cx reason_i typeparams (fun map_ ->
-    let super_reason = prefix_reason "super of " reason_i in
     let super = Flow_js.subst cx map_ super in
     let super_static = Flow_js.subst cx map_ super_static in
 
@@ -5533,9 +5563,9 @@ and mk_interface cx reason_i typeparams type_params_map
       fields_tmap = Flow_js.mk_propmap cx sfmap;
       methods_tmap = Flow_js.mk_propmap cx smmap;
       mixins = false;
-      structural = is_interface;
+      structural;
     } in
-    Flow_js.flow cx (super_static, SuperT(super_reason, static_instance));
+    Flow_js.flow cx (super_static, SuperT(reason_i, static_instance));
     let instance = {
       class_id = id;
       type_args = type_params_map |> SMap.map (Flow_js.subst cx map_);
@@ -5543,9 +5573,9 @@ and mk_interface cx reason_i typeparams type_params_map
       fields_tmap = Flow_js.mk_propmap cx fmap;
       methods_tmap = Flow_js.mk_propmap cx mmap;
       mixins = false;
-      structural = is_interface;
+      structural;
     } in
-    Flow_js.flow cx (super, SuperT(super_reason, instance));
+    Flow_js.flow cx (super, SuperT(reason_i, instance));
   );
 
   let static_instance = {
@@ -5555,7 +5585,7 @@ and mk_interface cx reason_i typeparams type_params_map
     fields_tmap = Flow_js.mk_propmap cx sfmap;
     methods_tmap = Flow_js.mk_propmap cx smmap;
     mixins = false;
-    structural = is_interface;
+    structural;
   } in
   let static = InstanceT (
     static_reason,
@@ -5570,7 +5600,7 @@ and mk_interface cx reason_i typeparams type_params_map
     fields_tmap = Flow_js.mk_propmap cx fmap;
     methods_tmap = Flow_js.mk_propmap cx mmap;
     mixins = false;
-    structural = is_interface;
+    structural;
   } in
   let this = InstanceT (reason_i, static, super, instance) in
 

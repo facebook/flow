@@ -1128,7 +1128,6 @@ module TypeAppExpansion : sig
   val pop : unit -> unit
   val get : unit -> entry list
   val set : entry list -> unit
-
 end = struct
   type entry = Type.t * TypeSet.t list
   let stack = ref ([]: entry list)
@@ -2000,6 +1999,38 @@ let rec __flow cx (l, u) trace =
     | (t, ConcretizeT (l, ts1, ts2, u)) ->
       concretize_parts cx trace l u (t::ts2) ts1
 
+    (* special treatment for some operations on intersections *)
+
+    (** lookup of properties **)
+
+    | (IntersectionT (_,ts),
+       LookupT (reason, strict, try_ts_on_failure, s, t)) ->
+      assert (ts <> []);
+      (* Since s could be in any object type in the list ts, we try to look it
+         up in the first element of ts, pushing the rest into the list
+         try_ts_on_failure (see below). *)
+      rec_flow cx trace
+        (List.hd ts,
+         LookupT (reason, strict, (List.tl ts) @ try_ts_on_failure, s, t))
+
+    (** extends **)
+    | (IntersectionT (_,ts),
+       ExtendsT (try_ts_on_failure, l, u)) ->
+      assert (ts <> []);
+      (* Since s could be in any object type in the list ts, we try to look it
+         up in the first element of ts, pushing the rest into the list
+         try_ts_on_failure (see below). *)
+      rec_flow cx trace
+        (List.hd ts,
+         ExtendsT ((List.tl ts) @ try_ts_on_failure, l, u))
+
+    (** consistent override of properties **)
+
+    | (IntersectionT (_,ts), SuperT _) ->
+      List.iter (fun t -> rec_flow cx trace (t, u)) ts
+
+    (* all other constraints on intersections *)
+
     | (IntersectionT (r,ts), _) ->
       concretize_parts cx trace l u [] (parts_to_concretize cx u)
 
@@ -2047,9 +2078,9 @@ let rec __flow cx (l, u) trace =
        overridden with a generic method, as long as the non-generic signature
        can be derived as a specialization of the generic signature. *)
     | (_, PolyT (ids, t)) ->
-      generate_tests cx (reason_of_t l) ids (fun map_ ->
-        rec_flow cx trace (l, subst cx map_ t)
-      )
+        generate_tests cx (reason_of_t l) ids (fun map_ ->
+          rec_flow cx trace (l, subst cx map_ t)
+        )
 
     | (PolyT (ids,t), _) ->
       (* Some observed cases of u are listed below. These look legit, as common
@@ -2172,7 +2203,7 @@ let rec __flow cx (l, u) trace =
               dictionary cx trace (string_key s reason2) t2 dict1;
               (* if l is NOT a dictionary, then do a strict lookup *)
               let strict = if dict1 = None then Some reason1 else None in
-              rec_flow cx trace (proto_t, LookupT (reason2, strict, s, t2))
+              rec_flow cx trace (proto_t, LookupT (reason2, strict, [], s, t2))
           (* TODO: instead, consider extending inflowing type with s:t2 when it
              is not sealed *)
           else
@@ -2199,9 +2230,11 @@ let rec __flow cx (l, u) trace =
             let reason2 = replace_reason (spf "property `%s`" s) reason2 in
             match t2 with
             | OptionalT t1 ->
-                rec_flow cx trace (l, LookupT (reason2, None, s, t1))
+                rec_flow cx trace
+                  (l, LookupT (reason2, None, [], s, t1))
             | _ ->
-                rec_flow cx trace (super, LookupT (reason2, Some reason1, s, t2))
+                rec_flow cx trace
+                  (super, LookupT (reason2, Some reason1, [], s, t2))
           else
             let t1 = SMap.find_unsafe s flds1 in
             rec_unify cx trace t1 t2
@@ -2211,15 +2244,14 @@ let rec __flow cx (l, u) trace =
     (* TODO Try and remove this. We're not sure why this case should exist but
      * it does seem to be triggered in www. *)
     | (ObjT _,
-       InstanceT (reason1, _, super, {
+       InstanceT (_, _, super, {
          fields_tmap;
          methods_tmap;
          structural = false;
          _;
        }))
       ->
-      structural_subtype cx trace l (reason1, super, fields_tmap, methods_tmap)
-
+      structural_subtype cx trace l (super, fields_tmap, methods_tmap)
 
     (****************************************)
     (* You can cast an object to a function *)
@@ -2282,13 +2314,11 @@ let rec __flow cx (l, u) trace =
     (**************************************************)
 
     | (InstanceT (_, _, _, instance),
-       InstanceT (_, _, _, instance_super))
-      when not instance_super.structural
-        || instance.class_id = instance_super.class_id ->
-      rec_flow cx trace (l, ExtendsT(l,u))
+       InstanceT (_, _, _, instance_super)) ->
+      rec_flow cx trace (l, ExtendsT([],l,u))
 
     | (InstanceT (_,_,super,instance),
-       ExtendsT(_, InstanceT (_,_,_,instance_super))) ->
+       ExtendsT(_, _, InstanceT (_,_,_,instance_super))) ->
 
       if instance.class_id = instance_super.class_id
       then
@@ -2301,14 +2331,14 @@ let rec __flow cx (l, u) trace =
     (***************************************************************)
 
     | (_,
-       InstanceT (reason1, _, super, {
+       InstanceT (_, _, super, {
          fields_tmap;
          methods_tmap;
          structural = true;
          _;
        }))
       ->
-      structural_subtype cx trace l (reason1, super, fields_tmap, methods_tmap)
+      structural_subtype cx trace l (super, fields_tmap, methods_tmap)
 
     (********************************************************)
     (* runtime types derive static types through annotation *)
@@ -2385,8 +2415,8 @@ let rec __flow cx (l, u) trace =
       rec_flow cx trace (static, t)
 
     | MixedT reason, GetPropT(_, (_, "statics"), u) ->
-      (* MixedT serves as the instance type of the root class, and also as the
-         statics of the root class. *)
+      (* MixedT not only serves as the instance type of the root class, but also
+         as the statics of the root class. *)
       rec_flow cx trace (MixedT (prefix_reason "statics of " reason), u)
 
     (********************************************************)
@@ -2394,7 +2424,7 @@ let rec __flow cx (l, u) trace =
     (********************************************************)
 
     | InstanceT(reason, _, super, instance),
-      LookupT (reason_op, strict, x, t)
+      LookupT (reason_op, strict, _, x, t)
       ->
       let strict = if instance.mixins then None else strict in
       let pmap = match strict, t with
@@ -2617,7 +2647,7 @@ let rec __flow cx (l, u) trace =
     (*******************************************)
 
     | (ObjT (reason_obj, { props_tmap = mapr; proto_t = proto; dict_t; _ }),
-       LookupT(reason_op,strict,x,t_other))
+       LookupT(reason_op,strict,_,x,t_other))
       ->
       let t = ensure_prop_for_read cx strict mapr x proto dict_t
         reason_obj reason_op trace in
@@ -2882,7 +2912,7 @@ let rec __flow cx (l, u) trace =
           lookup_prop cx trace l reason None x t
         );
         iter_props cx instance.methods_tmap (fun x t ->
-          if (x <> "constructor" && x <> "$call") then
+          if inherited_method x then
             (* we're able to do supertype compatibility in super methods because
                they're immutable *)
             lookup_prop cx trace l reason None x (UpperBoundT t)
@@ -2892,18 +2922,12 @@ let rec __flow cx (l, u) trace =
        SuperT (reason,instance))
       ->
         iter_props cx instance.fields_tmap (fun x t ->
-          rec_flow cx trace (l, LookupT(reason,None,x,t))
+          rec_flow cx trace (l, LookupT(reason,None,[],x,t))
         );
         iter_props cx instance.methods_tmap (fun x t ->
-          if (x <> "constructor") then
-            rec_flow cx trace (l, LookupT(reason,None,x,t))
+          if inherited_method x then
+            rec_flow cx trace (l, LookupT(reason,None,[],x,t))
         )
-
-    (********************************)
-    (* mixed acts as the root class *)
-    (********************************)
-
-    | (MixedT _, SuperT _) -> ()
 
     (***********************************************************)
     (* addition                                                *)
@@ -3039,7 +3063,14 @@ let rec __flow cx (l, u) trace =
         does not.
      *)
 
-    | (MixedT reason, LookupT (reason_op, Some strict_reason, x, _)) ->
+    | (MixedT _,
+       LookupT (reason, strict, next::try_ts_on_failure, s, t)) ->
+      (* When s is not found, we always try to look it up in the next element in
+         the list try_ts_on_failure. *)
+      rec_flow cx trace
+        (next, LookupT (reason, strict, try_ts_on_failure, s, t))
+
+    | (MixedT reason, LookupT (reason_op, Some strict_reason, [], x, _)) ->
 
       if is_object_prototype_method x
       then
@@ -3078,7 +3109,31 @@ let rec __flow cx (l, u) trace =
           msg
           (reason_op, strict_reason)
 
-    | (MixedT _, ExtendsT (t, tc)) ->
+    (* LookupT is a non-strict lookup, never fired *)
+    | (MixedT _, LookupT _) -> ()
+
+    (* SuperT only involves non-strict lookups *)
+    | (MixedT _, SuperT _) -> ()
+
+    (** ExtendsT searches for a nominal superclass. The search terminates with
+        either failure at the root or a structural subtype check. **)
+
+    | (MixedT _, ExtendsT (next::try_ts_on_failure, l, u)) ->
+      (* When seaching for a nominal superclass fails, we always try to look it
+         up in the next element in the list try_ts_on_failure. *)
+      rec_flow cx trace
+        (next, ExtendsT (try_ts_on_failure, l, u))
+
+    | (MixedT _, ExtendsT ([], l, InstanceT (_, _, super, {
+         fields_tmap;
+         methods_tmap;
+         structural = true;
+         _;
+       })))
+      ->
+      structural_subtype cx trace l (super, fields_tmap, methods_tmap)
+
+    | (MixedT _, ExtendsT ([], t, tc)) ->
       let msg = "This type is incompatible with" in
       prmsg_flow cx
         Errors_js.ERROR
@@ -3096,9 +3151,6 @@ let rec __flow cx (l, u) trace =
         trace
         (err_msg l u)
         (reason_prop, reason_of_t l)
-
-    (* LookupT is a non-strict lookup, never fired *)
-    | (MixedT _, LookupT _) -> ()
 
     | _ ->
       prerr_flow cx trace (err_msg l u) l u
@@ -3371,6 +3423,8 @@ and flow_type_args cx trace instance instance_super =
     | None -> rec_unify cx trace t1 t2
   )
 
+and inherited_method x = x <> "constructor" && x <> "$call"
+
 (* Indicate whether property checking should be strict for a given object and an
    operation on it. Strictness is enforced when the object is not a dictionary,
    and it is sealed (e.g., it is a type annotation) or it and the operation
@@ -3387,23 +3441,35 @@ and mk_strict_lookup_reason sealed is_dict reason_o reason_op =
   else
     None
 
-and structural_subtype cx trace lower (upper_reason, super, fields_tmap, methods_tmap) =
+and structural_subtype cx trace lower (super, fields_tmap, methods_tmap) =
   let lower_reason = reason_of_t lower in
   let fields_tmap = find_props cx fields_tmap in
   let methods_tmap = find_props cx methods_tmap in
-  let methods_tmap = SMap.remove "constructor" methods_tmap in
-  let flds2 = SMap.union fields_tmap methods_tmap in
-  flds2 |> SMap.iter
-      (fun s t2 ->
-        match t2 with
-        | OptionalT t2 ->
-          let lookup_reason = replace_reason (spf "optional property `%s`" s) (reason_of_t t2) in
-          rec_flow cx trace (lower, LookupT (lookup_reason, None, s, t2))
-        | _ ->
-          let lookup_reason = replace_reason (spf "property `%s`" s) (reason_of_t t2) in
-          rec_flow cx trace (lower, LookupT (lookup_reason, Some lower_reason, s, t2))
-      );
+  fields_tmap |> SMap.iter (fun s t2 ->
+    match t2 with
+    | OptionalT t2 ->
+      let lookup_reason =
+        replace_reason (spf "optional property `%s`" s) (reason_of_t t2) in
+      rec_flow cx trace
+        (lower,
+         LookupT (lookup_reason, None, [], s, t2))
+    | _ ->
+      let lookup_reason =
+        replace_reason (spf "property `%s`" s) (reason_of_t t2) in
+      rec_flow cx trace
+        (lower,
+         LookupT (lookup_reason, Some lower_reason, [], s, t2))
+  );
+  methods_tmap |> SMap.iter (fun s t2 ->
+    if inherited_method s then
+      let lookup_reason =
+        replace_reason (spf "property %s" s) (reason_of_t t2) in
+      rec_flow cx trace
+        (lower,
+         LookupT (lookup_reason, Some lower_reason, [], s, LowerBoundT (t2)))
+  );
   rec_flow cx trace (lower, super)
+
 
 (*****************)
 (* substitutions *)
@@ -3766,7 +3832,7 @@ and lookup_prop cx trace l reason strict x t =
     then MixedT (reason_of_t l)
     else l
   in
-  rec_flow cx trace (l, LookupT (reason, strict, x, t))
+  rec_flow cx trace (l, LookupT (reason, strict, [], x, t))
 
 and get_prop cx trace reason_op strict super x map tout =
   if SMap.mem x map
@@ -3795,7 +3861,7 @@ and intro_prop_ cx reason_op x mapr =
   )
 
 and recurse_proto cx strict proto reason_op x trace t =
-  rec_flow cx trace (proto, LookupT(reason_op,strict,x,t));
+  rec_flow cx trace (proto, LookupT(reason_op,strict,[],x,t));
   t
 
 (* other utils *)
@@ -4151,13 +4217,13 @@ and instanceof_test cx trace result = function
       first. *)
   | (true, (ArrT (reason, elemt, _) as arr), ClassT(InstanceT _ as a)) ->
 
-    let right = ClassT(ExtendsT(arr, a)) in
+    let right = ClassT(ExtendsT([], arr, a)) in
     let arrt = get_builtin_typeapp cx reason "Array" [elemt] in
     rec_flow cx trace (arrt, PredicateT(LeftP(Instanceof, right), result))
 
   | (false, (ArrT (reason, elemt, _) as arr), ClassT(InstanceT _ as a)) ->
 
-    let right = ClassT(ExtendsT(arr, a)) in
+    let right = ClassT(ExtendsT([], arr, a)) in
     let arrt = get_builtin_typeapp cx reason "Array" [elemt] in
     rec_flow cx trace (arrt, PredicateT(NotP(LeftP(Instanceof, right)), result))
 
@@ -4182,13 +4248,14 @@ and instanceof_test cx trace result = function
       subclass decisions.) **)
   | (true, (InstanceT _ as c), ClassT(InstanceT _ as a)) ->
 
-    predicate cx trace result (ClassT(ExtendsT(c, a)), RightP(Instanceof, c))
+    predicate cx trace result
+      (ClassT(ExtendsT([], c, a)), RightP(Instanceof, c))
 
   (** If C is a subclass of A, then don't refine the type of x. Otherwise,
       refine the type of x to A. (In general, the type of x should be refined to
       C & A, but that's hard to compute.) **)
   | (true, InstanceT (_,_,super_c,instance_c),
-     (ClassT(ExtendsT(c, InstanceT (_,_,_,instance_a))) as right))
+     (ClassT(ExtendsT(_, c, InstanceT (_,_,_,instance_a))) as right))
     -> (* TODO: intersection *)
 
     if instance_a.class_id = instance_c.class_id
@@ -4197,7 +4264,7 @@ and instanceof_test cx trace result = function
       (** Recursively check whether super(C) extends A, with enough context. **)
       rec_flow cx trace (super_c, PredicateT(LeftP(Instanceof, right), result))
 
-  | (true, MixedT _, ClassT(ExtendsT (_, a)))
+  | (true, MixedT _, ClassT(ExtendsT (_, _, a)))
     ->
     (** We hit the root class, so C is not a subclass of A **)
     rec_flow cx trace (a, result)
@@ -4217,19 +4284,21 @@ and instanceof_test cx trace result = function
       extends A, choosing either nothing or C based on the result. **)
   | (false, (InstanceT _ as c), ClassT(InstanceT _ as a)) ->
 
-    predicate cx trace result (ClassT(ExtendsT(c, a)), NotP(RightP(Instanceof, c)))
+    predicate cx trace result
+      (ClassT(ExtendsT([], c, a)), NotP(RightP(Instanceof, c)))
 
   (** If C is a subclass of A, then do nothing, since this check cannot
       succeed. Otherwise, don't refine the type of x. **)
   | (false, InstanceT (_,_,super_c,instance_c),
-     (ClassT(ExtendsT(c, InstanceT (_,_,_,instance_a))) as right))
+     (ClassT(ExtendsT(_, c, InstanceT (_,_,_,instance_a))) as right))
     ->
 
     if instance_a.class_id = instance_c.class_id
     then ()
-    else rec_flow cx trace (super_c, PredicateT(NotP(LeftP(Instanceof, right)), result))
+    else rec_flow cx trace
+      (super_c, PredicateT(NotP(LeftP(Instanceof, right)), result))
 
-  | (false, MixedT _, ClassT(ExtendsT(c, _)))
+  | (false, MixedT _, ClassT(ExtendsT(_, c, _)))
     ->
     (** We hit the root class, so C is not a subclass of A **)
     rec_flow cx trace (c, result)
@@ -4784,7 +4853,7 @@ and get_builtin cx x reason =
   )
 
 and lookup_builtin cx x reason strict builtin =
-  flow_opt cx (builtins cx, LookupT(reason,strict,x,builtin))
+  flow_opt cx (builtins cx, LookupT(reason,strict,[],x,builtin))
 
 and get_builtin_typeapp cx reason x ts =
   TypeAppT(get_builtin cx x reason, ts)
@@ -5159,7 +5228,8 @@ let rec gc cx state = function
       iter_props cx instance.fields_tmap (fun _ -> gc cx state);
       iter_props cx instance.methods_tmap (fun _ -> gc cx state)
 
-  | ExtendsT (t1, t2) ->
+  | ExtendsT (ts, t1, t2) ->
+      ts |> List.iter (gc cx state);
       gc cx state t1;
       gc cx state t2
 
@@ -5192,7 +5262,8 @@ let rec gc cx state = function
       ts |> List.iter (gc cx state);
       gc cx state t
 
-  | LookupT (_, _, _, t) ->
+  | LookupT (_, _, ts, _, t) ->
+      ts |> List.iter (gc cx state);
       gc cx state t
 
   | ObjAssignT (_, t1, t2, _, _) ->

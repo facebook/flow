@@ -634,13 +634,14 @@ end = struct
       in fun ?(allow_static=false) env ->
         let start_loc = Peek.loc env in
         Expect.token env T_LCURLY;
-        let properties, indexers, callProperties = properties ~allow_static env ([], [], []) in
+        let properties, indexers, callProperties =
+          properties ~allow_static env ([], [], []) in
         let end_loc = Peek.loc env in
         Expect.token env T_RCURLY;
         Loc.btwn start_loc end_loc, Type.Object.({
           properties;
           indexers;
-          callProperties;
+          callProperties
         })
 
     and type_parameter_declaration =
@@ -2858,16 +2859,14 @@ end = struct
         Parse.statement env
       end
 
-      (* TODO: deprecate `interface`; somewhat confusingly, it plays two roles,
-         which are subsumed by `type` and `declare class` *)
     and interface =
-      let rec extends env acc =
-        let extend = Type.generic env in
-        let acc = extend::acc in
+      let rec supers env acc =
+        let super = Type.generic env in
+        let acc = super::acc in
         match Peek.token env with
         | T_COMMA ->
             Expect.token env T_COMMA;
-            extends env acc
+            supers env acc
         | _ -> List.rev acc
 
       in fun env ->
@@ -2880,30 +2879,31 @@ end = struct
           let extends = if Peek.token env = T_EXTENDS
           then begin
             Expect.token env T_EXTENDS;
-            extends env []
+            supers env []
           end else [] in
-          let body = Type._object env in
+          let body = Type._object ~allow_static:true env in
           let loc = Loc.btwn start_loc (fst body) in
           loc, Statement.(InterfaceDeclaration Interface.({
             id;
             typeParameters;
             body;
             extends;
+            mixins = [];
           }))
         end else begin
           expression env
         end
 
     and declare =
-      (* This is identical to `interface` *)
+      (* This is identical to `interface`, except that mixins are allowed *)
       let declare_class =
-        let rec extends env acc =
-          let extend = Type.generic env in
-          let acc = extend::acc in
+        let rec supers env acc =
+          let super = Type.generic env in
+          let acc = super::acc in
           match Peek.token env with
           | T_COMMA ->
             Expect.token env T_COMMA;
-            extends env acc
+            supers env acc
           | _ -> List.rev acc
 
         in fun env start_loc ->
@@ -2914,7 +2914,12 @@ end = struct
           let extends = if Peek.token env = T_EXTENDS
             then begin
               Expect.token env T_EXTENDS;
-              extends env []
+              supers env []
+            end else [] in
+          let mixins = if Peek.value env = "mixins"
+            then begin
+              Expect.contextual env "mixins";
+              supers env []
             end else [] in
           let body = Type._object ~allow_static:true env in
           let loc = Loc.btwn start_loc (fst body) in
@@ -2923,56 +2928,8 @@ end = struct
             typeParameters;
             body;
             extends;
+            mixins;
           })) in
-
-      let declare_interface =
-        let rec extends env acc =
-          let extend = Type.generic env in
-          let acc = extend::acc in
-          match Peek.token env with
-          | T_COMMA ->
-            Expect.token env T_COMMA;
-            extends env acc
-          | _ -> List.rev acc
-
-        in fun env start_loc ->
-          let env = env |> with_strict true in
-          Expect.token env T_INTERFACE;
-          let id = Parse.identifier env in
-          let typeParameters = Type.type_parameter_declaration env in
-          let extends = if Peek.token env = T_EXTENDS
-            then begin
-              Expect.token env T_EXTENDS;
-              extends env []
-            end else [] in
-          let body = Type._object env in
-          let loc = Loc.btwn start_loc (fst body) in
-          loc, Statement.(InterfaceDeclaration Interface.({
-            id;
-            typeParameters;
-            body;
-            extends;
-          })) in
-
-      (* This is more or less identical to `type_alias` *)
-      let declare_type_alias env start_loc =
-        Expect.token env T_TYPE;
-        Eat.push_lex_mode env TYPE_LEX;
-        let id = Parse.identifier env in
-        let typeParameters = Type.type_parameter_declaration env in
-        Expect.token env T_ASSIGN;
-        let right = Type._type env in
-        let end_loc = match Peek.semicolon_loc env with
-          | None -> fst right
-          | Some end_loc -> end_loc in
-        Eat.semicolon env;
-        Eat.pop_lex_mode env;
-        Loc.btwn start_loc end_loc, Statement.(DeclareTypeAlias TypeAlias.({
-         id;
-         typeParameters;
-         right;
-        }))
-      in
 
       let declare_function env start_loc =
         Expect.token env T_FUNCTION;
@@ -3036,10 +2993,8 @@ end = struct
           let body_end_loc = Peek.loc env in
           let body_loc = Loc.btwn body_start_loc body_end_loc in
           let body = body_loc, { Statement.Block.body; } in
-          Loc.btwn start_loc (fst body), Statement.(DeclareModule DeclareModule.({
-            id;
-            body;
-          })) in
+          Loc.btwn start_loc (fst body),
+          Statement.(DeclareModule DeclareModule.({ id; body; })) in
 
       fun ?(in_module=false) env ->
         let start_loc = Peek.loc env in
@@ -3050,10 +3005,10 @@ end = struct
             declare_class env start_loc
         | T_INTERFACE ->
             Expect.token env T_DECLARE;
-            declare_interface env start_loc
+            interface env
         | T_TYPE ->
             Expect.token env T_DECLARE;
-            declare_type_alias env start_loc
+            type_alias env;
         | T_FUNCTION ->
             Expect.token env T_DECLARE;
             declare_function env start_loc

@@ -4,7 +4,66 @@ This type is incompatible with
 interface.js:3:8,13: string
 
 interface.js:7:13,13: I
-type alias referenced from value position
+type referenced from value position
 interface.js:5:1,26: type I
 
-Found 2 errors
+test.js:2:19,24: number
+This type is incompatible with
+test.js:6:17,18: string
+
+test.js:2:19,24: number
+This type is incompatible with
+test.js:7:7,12: string
+
+test.js:6:17,18: string
+This type is incompatible with
+test.js:2:19,24: number
+
+test.js:11:25,25: 
+A class cannot extend multiple classes!
+
+test.js:19:10,15: number
+This type is incompatible with
+test.js:19:25,26: string
+
+test.js:19:10,15: number
+This type is incompatible with
+test.js:19:39,40: string
+
+test.js:19:10,15: number
+This type is incompatible with
+test.js:20:7,12: string
+
+test.js:19:10,15: number
+This type is incompatible with
+test.js:22:7,12: string
+
+test.js:19:25,26: string
+This type is incompatible with
+test.js:19:10,15: number
+
+test.js:19:39,40: string
+This type is incompatible with
+test.js:19:10,15: number
+
+test2.js:5:34,34: property `z`
+Property not found in
+test2.js:5:17,17: L
+
+test3.js:1:18,23: number
+This type is incompatible with
+test3.js:3:31,36: string
+
+test3.js:1:30,35: string
+This type is incompatible with
+test3.js:6:9,14: number
+
+test3.js:3:31,36: string
+This type is incompatible with
+test3.js:1:18,23: number
+
+test3.js:3:31,36: string
+This type is incompatible with
+test3.js:5:9,14: number
+
+Found 17 errors

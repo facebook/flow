@@ -1,0 +1,18 @@
+
+test.js:1:31,36: string
+This type is incompatible with
+test.js:20:15,20: number
+
+test.js:1:50,55: number
+This type is incompatible with
+test.js:18:15,20: string
+
+test.js:1:50,55: number
+This type is incompatible with
+test.js:19:15,20: string
+
+test2.js:2:24,24: I
+type referenced from value position
+test2.js:1:9,23: type I
+
+Found 4 errors

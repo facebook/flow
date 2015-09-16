@@ -528,7 +528,7 @@ let read_entry ~lookup_mode ~specific cx name reason =
   Entry.(match entry with
 
   | Type { type_loc; _ } when lookup_mode != ForType ->
-    let msg = "type alias referenced from value position" in
+    let msg = "type referenced from value position" in
     binding_error msg cx name entry reason;
     AnyT.at (entry_loc_unopt entry)
 

@@ -225,7 +225,7 @@ module Type = struct
   (* operations on runtime types, such as classes and functions *)
   | ConstructorT of reason * t list * t
   | SuperT of reason * insttype
-  | ExtendsT of t * t
+  | ExtendsT of t list * t * t
 
   (* overloaded +, could be subsumed by general overloading *)
   | AdderT of reason * t * t
@@ -252,7 +252,18 @@ module Type = struct
   | SpecializeT of reason * bool * t list * t
 
   (* operation on prototypes *)
-  | LookupT of reason * reason option * string * t
+  (** LookupT(_, strict, try_ts_on_failure, x, tresult) looks for property x in
+      an object type, unifying its type with tresult. When x is not found, we
+      have the following cases:
+
+      (1) try_ts_on_failure is not empty, and we try to look for property x in
+      the next object type in that list;
+
+      (2) strict = None, so no error is reported;
+
+      (3) strict = Some reason, so the position in reason is blamed.
+  **)
+  | LookupT of reason * reason option * t list * string * t
 
   (* operations on objects *)
   | ObjAssignT of reason * t * t * string list * bool
@@ -1163,7 +1174,7 @@ let rec reason_of_t = function
   | AnnotT (_, assume_t) ->
       reason_of_t assume_t
 
-  | ExtendsT (_,t) ->
+  | ExtendsT (_,_,t) ->
       prefix_reason "extends " (reason_of_t t)
 
   | OptionalT t ->
@@ -1192,7 +1203,7 @@ let rec reason_of_t = function
   | UnionT (reason, _) ->
       reason
 
-  | LookupT(reason, _, _, _) ->
+  | LookupT(reason, _, _, _, _) ->
       reason
 
   | UnifyT(_,t) ->
@@ -1312,7 +1323,7 @@ let rec mod_reason_of_t f = function
   | ClassT t -> ClassT (mod_reason_of_t f t)
   | InstanceT (reason, st, su, inst) -> InstanceT (f reason, st, su, inst)
   | SuperT (reason, inst) -> SuperT (f reason, inst)
-  | ExtendsT (t, tc) -> ExtendsT (t, mod_reason_of_t f tc)
+  | ExtendsT (ts, t, tc) -> ExtendsT (ts, t, mod_reason_of_t f tc)
 
   | CallT (reason, ft) -> CallT (f reason, ft)
 
@@ -1355,7 +1366,7 @@ let rec mod_reason_of_t f = function
 
   | UnionT (reason, ts) -> UnionT (f reason, ts)
 
-  | LookupT (reason, r2, x, t) -> LookupT (f reason, r2, x, t)
+  | LookupT (reason, r2, ts, x, t) -> LookupT (f reason, r2, ts, x, t)
 
   | UnifyT (t, t2) -> UnifyT (mod_reason_of_t f t, mod_reason_of_t f t2)
 
@@ -1861,7 +1872,7 @@ and _json_of_t_impl json_cx t = Json.(
       "instance", json_of_insttype json_cx instance
     ]
 
-  | ExtendsT (t1, t2) -> [
+  | ExtendsT (_, t1, t2) -> [
       "type1", _json_of_t json_cx t1;
       "type2", _json_of_t json_cx t2
     ]
@@ -1900,7 +1911,7 @@ and _json_of_t_impl json_cx t = Json.(
       "tvar", _json_of_t json_cx tvar
     ]
 
-  | LookupT (_, rstrict, name, t) ->
+  | LookupT (_, rstrict, _, name, t) ->
     (match rstrict with
       | None -> []
       | Some r -> ["strictReason", json_of_reason r]
@@ -2235,7 +2246,7 @@ and dump_t_ =
         Some (spf "SetPropT(%s: %s)" n (dump_t_ stack cx t))
     | GetPropT (_, (_, n), t) ->
         Some (spf "GetPropT(%s: %s)" n (dump_t_ stack cx t))
-    | LookupT (_, _, n, t) ->
+    | LookupT (_, _, ts, n, t) ->
         Some (spf "LookupT(%s: %s)" n (dump_t_ stack cx t))
     | PredicateT (p, t) -> Some (spf "PredicateT(%s | %s)"
         (string_of_predicate p) (dump_t_ stack cx t))
@@ -2751,7 +2762,7 @@ class ['a] type_visitor = object(self)
   | GetElemT (_, _, _)
   | ConstructorT (_, _, _)
   | SuperT (_, _)
-  | ExtendsT (_, _)
+  | ExtendsT (_, _, _)
   | AdderT (_, _, _)
   | ComparatorT (_, _)
   | PredicateT (_, _)
@@ -2760,7 +2771,7 @@ class ['a] type_visitor = object(self)
   | OrT (_, _, _)
   | NotT (_, _)
   | SpecializeT (_, _, _, _)
-  | LookupT (_, _, _, _)
+  | LookupT (_, _, _, _, _)
   | ObjAssignT (_, _, _, _, _)
   | ObjFreezeT (_, _)
   | ObjRestT (_, _, _)

@@ -350,6 +350,7 @@ and Statement : sig
       typeParameters: Type.ParameterDeclaration.t option;
       body: Loc.t * Type.Object.t;
       extends: (Loc.t * Type.Generic.t) list;
+      mixins: (Loc.t * Type.Generic.t) list;
     }
   end
   module DeclareVariable : sig
@@ -453,7 +454,6 @@ and Statement : sig
     | DeclareVariable of DeclareVariable.t
     | DeclareFunction of DeclareFunction.t
     | DeclareClass of Interface.t
-    | DeclareTypeAlias of TypeAlias.t
     | DeclareModule of DeclareModule.t
     | ExportDeclaration of ExportDeclaration.t
     | ImportDeclaration of ImportDeclaration.t

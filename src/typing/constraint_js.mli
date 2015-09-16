@@ -83,7 +83,7 @@ module Type :
 
       | ConstructorT of reason * t list * t
       | SuperT of reason * insttype
-      | ExtendsT of t * t
+      | ExtendsT of t list * t * t
 
       | AdderT of reason * t * t
       | ComparatorT of reason * t
@@ -96,7 +96,7 @@ module Type :
 
       | SpecializeT of reason * bool * t list * t
 
-      | LookupT of reason * reason option * string * t
+      | LookupT of reason * reason option * t list * string * t
 
       | ObjAssignT of reason * t * t * string list * bool
       | ObjFreezeT of reason * t
