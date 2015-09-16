@@ -107,8 +107,7 @@ let add_methods methods' acc =
   SMap.fold add_method methods' acc
 
 let add_const name const acc =
-  if const.ce_synthesized
-  then match SMap.get name acc with
+  match SMap.get name acc with
     | None ->
       SMap.add name const acc
     | Some existing_const ->
@@ -119,7 +118,6 @@ let add_const name const acc =
           acc
         | _, _ ->
           SMap.add name const acc
-  else SMap.add name const acc
 
 let add_members members acc =
   SMap.fold SMap.add members acc
