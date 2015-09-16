@@ -2932,15 +2932,16 @@ and type_could_be_null env ty1 =
     | Tshape _ -> false
 
 and class_id_for_new p env cid =
-  let env, obj = static_class_id p env cid in
-  match obj with
-    | _, Tclass (c, _)
-    | _, Tabstract (AKdependent (`this, []), Some (_, Tclass (c, _)))
-    | _, Tabstract (AKgeneric _, Some (_, Tclass (c, _))) ->
-      let class_ = Env.get_class env (snd c) in
+  let env, ty = static_class_id p env cid in
+  (* Instantiation on an abstract class (e.g. from classname<T>) is via the
+   * base type (to check contructor args), but the actual type `ty` must be
+   * preserved. *)
+  match TUtils.get_base_type ty with
+    | _, Tclass (sid, _) ->
+      let class_ = Env.get_class env (snd sid) in
       env, (match class_ with
         | None -> None
-        | Some class_ -> Some (c, class_, obj)
+        | Some class_ -> Some (sid, class_, ty)
       )
     | _, (Tany | Tmixed | Tarray (_, _) | Toption _ | Tprim _
       | Tvar _ | Tfun _ | Tabstract (_, _) | Ttuple _ | Tanon (_, _)
@@ -3061,15 +3062,15 @@ and static_class_id p env = function
     )
   | CIexpr e ->
       let env, ty = expr env e in
-      let env, ty = TUtils.fold_unresolved env ty in
-      let _, ty = Env.expand_type env ty in
-      let rec resolve_ety = fun ety -> begin
-        match TUtils.get_base_type ety with
+      let rec resolve_ety = fun ty -> begin
+        let env, ty = TUtils.fold_unresolved env ty in
+        let _, ty = Env.expand_type env ty in
+        match TUtils.get_base_type ty with
           | _, Tabstract (AKnewtype (classname, [the_cls]), _) when
               classname = SN.Classes.cClassname ->
             resolve_ety the_cls
           | _, Tabstract (AKgeneric _, _)
-          | _, Tclass _ -> ety
+          | _, Tclass _ -> ty
           | _, (Tany | Tmixed | Tarray (_, _) | Toption _
                    | Tprim _ | Tvar _ | Tfun _ | Ttuple _
                    | Tabstract ((AKenum _ | AKdependent _ | AKnewtype _), _)
