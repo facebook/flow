@@ -861,19 +861,27 @@ let typecheck workers files removed unparsed opts make_merge_input =
    Given a module M and a set of modules S,
    - M depends on S if M is in S, or any module in required(M) depends on S.
 
-   Since the set of modules S is fixed in this computation, memoizing which
-   modules M are already known to depend on S greatly speeds up this computation
-   (since many files share the same dependencies). This is particularly
-   important since this is a near-constant cost for every recheck. Going
-   further, this computation can be readily parallelized, since basically it
-   does the same check on a large number of files.
+   This computation can be readily parallelized, since basically it does the
+   same check on a large number of files.
+
+   Furthermore, since the set of modules S is fixed in this computation,
+   memoizing which modules M are already known to depend on S can speed up this
+   computation. But memoization is tricky. As the computation is set up, results
+   can go from false to true: we're searching for the existence of paths between
+   nodes in a graph via DFS, and at some point a path shows up, even though
+   previous recursive calls that explored a part of the graph may not have
+   discovered a path. Currently, we choose a simple memoization strategy that
+   effectively starts a new DFS per module M that memoizes its result only at
+   the end of the DFS. A more aggressive strategy that also works is memoizing
+   intermediate results when true (but not false), but we leave that trick for
+   later in the interests of simplicity.
 *)
 let file_depends_on =
   let rec sig_depends_on seen modules memo m =
     match SMap.get m !memo with
     | Some result -> result
     | None ->
-        let result = SSet.mem m modules || (
+        SSet.mem m modules || (
           Module.module_exists m && (
             let f = Module.get_file m in
             not (SSet.mem f !seen) && (
@@ -882,9 +890,7 @@ let file_depends_on =
               SSet.exists (sig_depends_on seen modules memo) required
             )
           )
-        ) in
-        memo := SMap.add m result !memo;
-        result
+        )
   in
 
   fun modules memo f ->
@@ -903,7 +909,11 @@ let file_depends_on =
 let deps_job touched_modules files unmodified =
   let memo = ref SMap.empty in
   List.rev_append files
-    (List.filter (file_depends_on touched_modules memo) unmodified)
+    (List.filter (fun m ->
+      let result = file_depends_on touched_modules memo m in
+      memo := SMap.add m result !memo;
+      result
+     ) unmodified)
 
 let deps workers unmodified inferred_files removed_modules =
   (* touched modules are all that were inferred, re-inferred or removed *)
