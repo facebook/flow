@@ -315,7 +315,7 @@ let prmsg_flow cx level trace msg (r1, r2) =
 *)
 let prerr_flow_full_trace cx trace msg l u =
   let trace_reasons =
-    reasons_of_trace ~level:(trace_depth trace + 1) ~tab:0 trace
+    reasons_of_trace ~level:(trace_depth trace + 1) trace
     |> List.map Errors_js.message_of_reason
   in
   prmsg_flow_trace_reasons cx

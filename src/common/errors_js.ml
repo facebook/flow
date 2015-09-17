@@ -44,7 +44,7 @@ let append_trace_reasons message_list trace_reasons =
   match trace_reasons with
   | [] -> message_list
   | _ ->
-    message_list @ ((message_of_string "Error path:")::trace_reasons)
+    message_list @ ((message_of_string "Trace:")::trace_reasons)
 
 let format_reason_color
   ?(first=false)
