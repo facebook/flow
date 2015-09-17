@@ -46,10 +46,14 @@ This type is incompatible with
 test.js:5:17,22: string
 
 test.js:19:5,12: call of method qux
+Error:
+test.js:19:7,9: property `qux`
 Property not found in
 test.js:9:7,7: statics of B
 
 test.js:30:5,12: call of method foo
+Error:
+test.js:30:7,9: property `foo`
 Property not found in
 test.js:28:7,7: statics of D
 
@@ -68,6 +72,8 @@ This type is incompatible with
 test.js:41:17,22: string
 
 test.js:42:5,14: call of method bar
+Error:
+test.js:42:10,12: property `bar`
 Property not found in
 test.js:39:7,7: statics of E
 

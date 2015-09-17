@@ -86,7 +86,7 @@ val mk_object_with_proto : context -> reason -> Type.t -> Type.t
 val mk_object_with_map_proto : context -> reason -> ?sealed:bool ->
   ?dict:Type.dicttype -> (Type.t SMap.t) -> Type.t -> Type.t
 
-val static_method_call: context -> string -> reason -> string
+val static_method_call: context -> string -> reason -> reason -> string
   -> Type.t list -> Type.t
 
 (* ... *)

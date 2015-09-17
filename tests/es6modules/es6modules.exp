@@ -135,7 +135,7 @@ es6modules.js:70:1,24: constructor call
 Constructor cannot be called on
 es6modules.js:69:37,63: exports of "CommonJS_Clobbering_Class"
 
-es6modules.js:71:18,51: call of method staticNumber3
+es6modules.js:71:37,49: property `staticNumber3`
 Property not found in
 es6modules.js:69:37,63: exports of "CommonJS_Clobbering_Class"
 

@@ -1,5 +1,5 @@
 
-c.js:5:1,7: call of method foo
+c.js:5:3,5: property `foo`
 Property not found in
 b.js:4:23,41: object literal
 

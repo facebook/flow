@@ -75,9 +75,9 @@ module Type :
       | SummarizeT of reason * t
 
       | CallT of reason * funtype
-      | MethodT of reason * name * funtype
-      | SetPropT of reason * proptype * t
-      | GetPropT of reason * proptype * t
+      | MethodT of reason * propname * funtype
+      | SetPropT of reason * propname * t
+      | GetPropT of reason * propname * t
       | SetElemT of reason * t * t
       | GetElemT of reason * t * t
 
@@ -160,7 +160,7 @@ module Type :
       proto_t: prototype;
     }
 
-    and proptype = reason * name
+    and propname = reason * name
 
     and sealtype =
       | UnsealedInFile of string option

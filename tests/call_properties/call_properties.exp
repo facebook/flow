@@ -68,6 +68,8 @@ This type is incompatible with
 F.js:6:23,28: number
 
 F.js:9:41,51: call of method toFixed
+Error:
+F.js:9:43,49: property `toFixed`
 Property not found in
 [LIB] core.js:179:1,208:1: String
 

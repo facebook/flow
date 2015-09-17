@@ -216,9 +216,9 @@ module Type = struct
 
   (* operations on runtime values, such as functions, objects, and arrays *)
   | CallT of reason * funtype
-  | MethodT of reason * name * funtype
-  | SetPropT of reason * proptype * t
-  | GetPropT of reason * proptype * t
+  | MethodT of reason * propname * funtype
+  | SetPropT of reason * propname * t
+  | GetPropT of reason * propname * t
   | SetElemT of reason * t * t
   | GetElemT of reason * t * t
 
@@ -351,7 +351,7 @@ module Type = struct
     proto_t: prototype;
   }
 
-  and proptype = reason * name
+  and propname = reason * name
 
   and sealtype =
     | UnsealedInFile of string option
@@ -1915,13 +1915,13 @@ and _json_of_t_impl json_cx t = Json.(
     ]
 
   | MethodT (_, name, funtype) -> [
-      "name", JString name;
+      "name", json_of_propname json_cx name;
       "funType", json_of_funtype json_cx funtype
     ]
 
   | SetPropT (_, name, t)
   | GetPropT (_, name, t) -> [
-      "propName", json_of_proptype json_cx name;
+      "propName", json_of_propname json_cx name;
       "propType", _json_of_t json_cx t
     ]
 
@@ -2157,8 +2157,8 @@ and json_of_polarity_map_impl json_cx pmap = Json.(
   JList (List.rev lst)
 )
 
-and json_of_proptype json_cx = check_depth json_of_proptype_impl json_cx
-and json_of_proptype_impl json_cx (reason, literal) = Json.(
+and json_of_propname json_cx = check_depth json_of_propname_impl json_cx
+and json_of_propname_impl json_cx (reason, literal) = Json.(
   JAssoc [
     "reason", json_of_reason reason;
     "literal", JString literal;

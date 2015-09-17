@@ -1761,7 +1761,8 @@ and statement cx type_params_map = Ast.Statement.(
           let promise = Env_js.get_var cx "Promise" reason in
           Flow_js.mk_tvar_where cx reason (fun tvar ->
             let call = Flow_js.mk_methodtype promise [t] tvar in
-            Flow_js.flow cx (promise, MethodT (reason, "resolve", call))
+            Flow_js.flow cx
+              (promise, MethodT (reason, (reason, "resolve"), call))
           )
         else if Env_js.in_generator_scope () then
           (* Convert the return expression's type R to Generator<Y,R,N>, where
@@ -3273,13 +3274,13 @@ and expression_ ~is_cond cx type_params_map loc e = Ast.Expression.(match e with
       Call.callee = _, Member {
         Member._object = _, Identifier (_,
           { Ast.Identifier.name = "Object"; _ });
-        property = Member.PropertyIdentifier (_,
+        property = Member.PropertyIdentifier (prop_loc,
           { Ast.Identifier.name; _ });
         _
       };
       arguments
     } ->
-      static_method_call_Object cx type_params_map loc name arguments
+      static_method_call_Object cx type_params_map loc prop_loc name arguments
 
   | Call {
       Call.callee = _, Member {
@@ -3295,7 +3296,7 @@ and expression_ ~is_cond cx type_params_map loc e = Ast.Expression.(match e with
 
   | Call {
       Call.callee = _, Member {
-        Member._object = _, Identifier (_,
+        Member._object = _, Identifier (super_loc,
           { Ast.Identifier.name = "super"; _ });
         property = Member.PropertyIdentifier (ploc,
           { Ast.Identifier.name; _ });
@@ -3305,11 +3306,12 @@ and expression_ ~is_cond cx type_params_map loc e = Ast.Expression.(match e with
     } ->
       let argts = List.map (expression_or_spread cx type_params_map) arguments in
       let reason = mk_reason (spf "super.%s(...)" name) loc in
-      let super = super_ cx reason in
+      let super = super_ cx (mk_reason "super" super_loc) in
+      let reason_prop = mk_reason (spf "property `%s`" name) ploc in
       Type_inference_hooks_js.dispatch_call_hook cx name ploc super;
       Flow_js.mk_tvar_where cx reason (fun t ->
-        Flow_js.flow cx (super,
-          MethodT (reason, name, Flow_js.mk_methodtype super argts t));
+        let funtype = Flow_js.mk_methodtype super argts t in
+        Flow_js.flow cx (super, MethodT (reason, (reason_prop, name), funtype))
       )
 
   | Call {
@@ -3344,26 +3346,29 @@ and expression_ ~is_cond cx type_params_map loc e = Ast.Expression.(match e with
           Env_js.havoc_heap_refinements ();
           Flow_js.mk_tvar_where cx reason (fun t ->
             let frame = Env_js.peek_frame () in
+            let reason_prop = mk_reason (spf "property `%s`" name) ploc in
             let app = Flow_js.mk_methodtype2 ot argts t frame in
-            Flow_js.flow cx (ot, MethodT(reason, name, app))
+            Flow_js.flow cx (ot, MethodT(reason, (reason_prop, name), app))
           )
       )
 
   | Call {
-      Call.callee = _, Identifier (_, { Ast.Identifier.name = "super"; _ });
+      Call.callee = _, Identifier (ploc, { Ast.Identifier.name = "super"; _ });
       arguments
     } ->
       let argts = List.map (expression_or_spread cx type_params_map) arguments in
       let reason = mk_reason "super(...)" loc in
+      let super_reason = mk_reason "super" ploc in
 
       (* switch back env entries for this and super from undefined *)
       define_internal cx reason "this";
       define_internal cx reason "super";
 
-      let super = super_ cx reason in
+      let super = super_ cx super_reason in
       Flow_js.mk_tvar_where cx reason (fun t ->
+        let funtype = Flow_js.mk_methodtype super argts t in
         Flow_js.flow cx (super,
-          MethodT(reason, "constructor", Flow_js.mk_methodtype super argts t))
+          MethodT(reason, (super_reason, "constructor"), funtype))
       )
 
   (******************************************)
@@ -4064,10 +4069,12 @@ and jsx_title cx type_params_map openingElement children = Ast.JSX.(
       (* TODO: children *)
       let react = require cx "react" "react" eloc in
       Flow_js.mk_tvar_where cx reason (fun tvar ->
-        Flow_js.flow cx (
-          react,
-          MethodT(reason, "createElement", Flow_js.mk_methodtype react [c;o] tvar)
-        );
+        let reason_createElement = mk_reason "property `createElement`" eloc in
+        Flow_js.flow cx (react, MethodT(
+          reason,
+          (reason_createElement, "createElement"),
+          Flow_js.mk_methodtype react [c;o] tvar
+        ))
       )
 
   | Identifier (_, { Identifier.name }) ->
@@ -4935,7 +4942,7 @@ and get_prop ~is_cond cx reason tobj (prop_reason, name) =
   )
 
 (* TODO: switch to TypeScript specification of Object *)
-and static_method_call_Object cx type_params_map loc m args_ = Ast.Expression.(
+and static_method_call_Object cx type_params_map loc prop_loc m args_ = Ast.Expression.(
   let reason = mk_reason (spf "Object.%s" m) loc in
   match (m, args_) with
   | ("create", [ Expression e ]) ->
@@ -5004,23 +5011,18 @@ and static_method_call_Object cx type_params_map loc m args_ = Ast.Expression.(
     let t = Flow_js.mk_tvar_where cx reason (fun tvar ->
       Flow_js.flow cx (expression cx type_params_map e, ObjFreezeT (reason, tvar));
     ) in
-    Flow_js.static_method_call cx "Object" reason m [t]
+    let reason_prop = mk_reason "property `freeze`" prop_loc in
+    Flow_js.static_method_call cx "Object" reason reason_prop m [t]
 
   (* TODO *)
   | (("seal" | "preventExtensions"), args)
   | ("freeze", args)
 
   | (_, args) ->
+      let reason_prop = mk_reason (spf "property `%s`" m) prop_loc in
       let argts = List.map (expression_or_spread cx type_params_map) args in
-      Flow_js.static_method_call cx "Object" reason m argts
+      Flow_js.static_method_call cx "Object" reason reason_prop m argts
 )
-
-and static_method_call cx name tok m argts =
-  let reason = mk_reason (spf "%s.%s" name m) tok in
-  let cls = Flow_js.get_builtin cx name reason in
-  Flow_js.mk_tvar_where cx reason (fun tvar ->
-    Flow_js.flow cx (cls, MethodT(reason, m, Flow_js.mk_methodtype cls argts tvar));
-  )
 
 and mk_extends cx type_params_map = function
   | (None, None) ->

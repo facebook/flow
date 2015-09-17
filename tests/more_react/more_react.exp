@@ -1,9 +1,13 @@
 
 API.react.js:4:1,20: call of method setProps
+Error:
+API.react.js:4:5,12: property `setProps`
 Property not found in
 JSX.js:8:3,14: ReactElement
 
 API.react.js:5:1,20: call of method setState
+Error:
+API.react.js:5:5,12: property `setState`
 Property not found in
 JSX.js:8:3,14: ReactElement
 

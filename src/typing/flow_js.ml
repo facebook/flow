@@ -2383,9 +2383,10 @@ let rec __flow cx (l, u) trace =
       Ops.push reason_op;
       (* call this.constructor(args) *)
       let ret = mk_tvar_where cx reason_o (fun t ->
+        let funtype = mk_methodtype this args t in
         rec_flow cx trace (
           this,
-          MethodT (reason_op, "constructor", mk_methodtype this args t)
+          MethodT (reason_op, (reason_o, "constructor"), funtype)
         );
       ) in
       (* return this *)
@@ -2500,7 +2501,7 @@ let rec __flow cx (l, u) trace =
     (********************************)
 
     | InstanceT (reason_c, static, super, instance),
-      MethodT (reason_op, x, funtype)
+      MethodT (reason_op, (reason_prop, x), funtype)
       -> (* TODO: closure *)
       Ops.push reason_op;
       let fields_tmap = find_props cx instance.fields_tmap in
@@ -2508,7 +2509,7 @@ let rec __flow cx (l, u) trace =
       let methods = SMap.union fields_tmap methods_tmap in
       let funt = mk_tvar cx reason_op in
       let strict = if instance.mixins then None else Some reason_c in
-      get_prop cx trace reason_op strict super x methods funt;
+      get_prop cx trace reason_prop strict super x methods funt;
       let callt = CallT (reason_op, funtype) in
       rec_flow cx trace (funt, callt);
       Ops.pop ();
@@ -2715,7 +2716,7 @@ let rec __flow cx (l, u) trace =
     (* ... and their methods called *)
     (********************************)
 
-    | (ObjT _, MethodT(_, "constructor", _)) -> ()
+    | (ObjT _, MethodT(_, (_, "constructor"), _)) -> ()
 
     | (ObjT (reason_o, {
       flags;
@@ -2723,12 +2724,12 @@ let rec __flow cx (l, u) trace =
       proto_t = proto;
       dict_t;
     }),
-       MethodT(reason_op,x,funtype))
+       MethodT(reason_op, (reason_prop, x), funtype))
       ->
       let strict = mk_strict_lookup_reason
         flags.sealed (dict_t <> None) reason_o reason_op in
       let t = ensure_prop_for_read cx strict mapr x proto dict_t
-        reason_o reason_op trace in
+        reason_o reason_prop trace in
       let callt = CallT (reason_op, funtype) in
       rec_flow cx trace (t, callt)
 
@@ -2822,8 +2823,9 @@ let rec __flow cx (l, u) trace =
     | (ArrT _, GetPropT(reason_op, (_, "constructor"), tout)) ->
       rec_flow cx trace (AnyT.why reason_op, tout)
 
-    | (ArrT _,
-       (SetPropT(_, (_, "constructor"),_) | MethodT(_,"constructor",_))) -> ()
+    | (ArrT _, SetPropT(_, (_, "constructor"), _))
+    | (ArrT _, MethodT(_, (_, "constructor"), _)) ->
+      ()
 
     (***********************************************)
     (* functions may have their prototypes written *)
@@ -2853,7 +2855,11 @@ let rec __flow cx (l, u) trace =
     (***************************************************************)
 
     | (FunT _,
-       MethodT(reason_op, "call", ({params_tlist=o2::tins2; _} as funtype)))
+       MethodT(
+         reason_op,
+         (_, "call"),
+         ({params_tlist=o2::tins2; _} as funtype)
+       ))
       -> (* TODO: closure *)
 
       let funtype = { funtype with this_t = o2; params_tlist = tins2 } in
@@ -2864,7 +2870,11 @@ let rec __flow cx (l, u) trace =
     (*******************************************)
 
     | (FunT _,
-       MethodT(reason_op,"apply",({params_tlist=[o2;tinsArr2]; _} as funtype)))
+       MethodT(
+         reason_op,
+         (_, "apply"),
+         ({params_tlist=[o2;tinsArr2]; _} as funtype)
+       ))
       -> (* TODO: closure *)
 
       let reason = replace_reason "element of arguments" reason_op in
@@ -2881,7 +2891,8 @@ let rec __flow cx (l, u) trace =
 
     | (FunT (reason,_,_,
              {this_t = o1; params_tlist = tins1; return_t = tout1; _}),
-       MethodT(reason_op ,"bind", ({params_tlist=o2::tins2; _} as funtype)))
+       MethodT(
+         reason_op, (_, "bind"), ({params_tlist=o2::tins2; _} as funtype)))
       -> (* TODO: closure *)
 
         rec_flow cx trace (o2,o1);
@@ -4960,10 +4971,11 @@ and instantiate_type t =
   | ClassT t -> t
   | _ -> AnyT.why (reason_of_t t) (* ideally, assert false *)
 
-and static_method_call cx name reason m argts =
+and static_method_call cx name reason reason_prop m argts =
   let cls = get_builtin cx name reason in
   mk_tvar_where cx reason (fun tvar ->
-    flow_opt cx (cls, MethodT(reason, m, mk_methodtype cls argts tvar))
+    let funtype = mk_methodtype cls argts tvar in
+    flow_opt cx (cls, MethodT(reason, (reason_prop, m), funtype))
   )
 
 (** TODO: this should rather be moved close to ground_type_impl/resolve_type
