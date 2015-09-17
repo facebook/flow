@@ -3773,6 +3773,16 @@ and concretize_parts cx trace l u done_list = function
 
 (* property lookup functions in objects and instances *)
 
+(**
+ * Determines whether a property name should be considered "munged"/private when
+ * the `munge_underscores` config option is set.
+ *)
+and is_munged_prop_name name =
+  modes.munge_underscores
+  && (String.length name >= 2)
+  && name.[0] = '_'
+  && name.[1] <> '_'
+
 and ensure_prop_for_read cx strict mapr x proto dict_t reason_obj reason_op trace =
   let t = match (read_prop_opt cx mapr x, dict_t) with
   | Some t, _ -> Some t
@@ -3826,9 +3836,7 @@ and ensure_prop_for_write cx trace strict mapr x proto reason_op reason_prop =
 and lookup_prop cx trace l reason strict x t =
   let l =
     (* munge names beginning with single _ *)
-    if (modes.munge_underscores &&
-      Str.string_match (Str.regexp_string "_") x 0) &&
-      not (Str.string_match (Str.regexp_string "__") x 0)
+    if is_munged_prop_name x
     then MixedT (reason_of_t l)
     else l
   in
@@ -5576,11 +5584,14 @@ let rec assert_ground ?(infer=false) cx skip ids = function
   | TypeT (reason, t) -> assert_ground cx skip ids t
 
   | InstanceT (reason, static, super, instance) ->
-      let f = assert_ground cx skip ids in
-      iter_props cx instance.fields_tmap (fun _ -> f);
-      iter_props cx instance.methods_tmap (fun _ -> f);
+      let process_element name t =
+        let infer = is_munged_prop_name name in
+        assert_ground cx skip ids ~infer t
+      in
+      iter_props cx instance.fields_tmap process_element;
+      iter_props cx instance.methods_tmap process_element;
       unify cx static AnyT.t;
-      f super
+      assert_ground cx skip ids super
 
   | RestT (t) -> assert_ground cx skip ids t
 
