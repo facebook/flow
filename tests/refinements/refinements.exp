@@ -175,6 +175,10 @@ not.js:3:18,21: undefined
 This type is incompatible with
 not.js:5:5,7: number
 
+not.js:5:5,7: number
+This type is incompatible with
+not.js:3:18,21: boolean
+
 not.js:11:5,8: access of computed property/element
 Computed property/element cannot be accessed on
 not.js:9:18,23: number
@@ -411,4 +415,4 @@ void.js:85:7,12: undefined
 This type is incompatible with
 void.js:85:7,19: number
 
-Found 96 errors
+Found 97 errors

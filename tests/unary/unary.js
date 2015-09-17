@@ -1,21 +1,24 @@
 /* @flow */
 
 function x0(y: string): number {
-  return +y; // ok, + exists solely for coersion
+  return +y; // ok, + exists solely for coercion
 }
 
 function x1(y: string): number {
-  return -y; // error, we don't allow coersion here
+  return -y; // error, we don't allow coercion here
 }
 
 function x2(y: string) {
-  y++; // error, we don't allow coersion here
-  y--; // error, we don't allow coersion here
-  ++y; // error, we don't allow coersion here
-  --y; // error, we don't allow coersion here
-  ~y;  // error, we don't allow coersion here
+  y++; // error, we don't allow coercion here
+  y--; // error, we don't allow coercion here
+  ++y; // error, we don't allow coercion here
+  --y; // error, we don't allow coercion here
 }
 
-function x3(y: string): boolean {
-  return !y; // ok, coersion is allowed
+function x3(y: string) {
+  return ~y;  // error, we don't allow coercion here
+}
+
+function x4(y: string): boolean {
+  return !y; // ok, coercion is allowed
 }

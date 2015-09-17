@@ -7,6 +7,10 @@ Sigma.js:13:5,9: call of method c
 Property not found in
 Sigma.js:10:16,16: B
 
+Sigma.js:15:5,7: number
+This type is incompatible with
+Sigma.js:10:16,16: B
+
 Sigma.js:24:5,9: call of method d
 Property not found in
 Sigma.js:8:7,7: C
@@ -21,4 +25,4 @@ test.js:11:16,29: property `childProp_TYPO`
 Property not found in
 test.js:5:7,16: ChildClass
 
-Found 5 errors
+Found 6 errors

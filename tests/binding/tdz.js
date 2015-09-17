@@ -15,17 +15,57 @@ type T2 = number;
 
 // to be correct, we would
 // - not allow forward refs to lets from value positions,
-// while let was in TDZ.
+// while let is in TDZ.
 // - allow forward refs to lets from type positions.
 //
 // we're wrong in two ways, currently:
-// - for value positions, we currently enforce TDZ only in-scope.
-// this is unsound - a let may remain uninitialized when a lambda runs -
-// but since classes are the only available lets currently, and they
-// used to be vars, we're stricly less unsound than we were. :)
-// however, conservative TDZ needs to be
-// in place before let/const becomes available per se.
-// - for type positions, we currently error on forward refs to any
+// - from value positions, we currently enforce TDZ only in-scope.
+// this is unsound - a let.const may remain uninitialized when a
+// lambda runs. This requires an analysis pass we don't yet have.
+// TODO
+//
+
+function f0() {
+  var v = x * c;  // errors, let + const referenced before decl
+  let x = 0;
+  const c = 0;
+}
+
+function f2() {
+  {
+    var v = x * c; // errors, let + const referenced before decl
+  }
+  let x = 0;
+  const c = 0;
+}
+
+// functions are let-scoped and hoisted
+function f3() {
+  var s: string = foo();          // ok, finds hoisted outer
+  {
+    var n: number = foo();        // ok, finds hoisted inner
+    function foo() { return 0; }
+  }
+  var s2: string = foo();         // ok, hoisted outer not clobbered
+  function foo() { return ""; }
+}
+
+// out-of-scope TDZ not enforced. sometimes right...
+function f3() {
+  function g() { return x + c; }  // ok, g doesn't run in TDZ
+  let x = 0;
+  const c = 0;
+}
+
+// ...sometimes wrong
+function f4() {
+  function g() { return x; }
+  g();          // should error, but doesn't currently
+  let x = 0;
+  const c = 0;
+}
+
+// - from type positions, we currently error on forward refs to any
 // value (i.e., class or function). this is a basic flaw in our
 // phasing of AST traversal, and will be fixed.
 //

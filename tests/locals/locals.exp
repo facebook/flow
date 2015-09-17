@@ -1,4 +1,24 @@
 
+lex.js:8:11,11: number
+This type is incompatible with
+lex.js:11:8,13: string
+
+lex.js:26:4,4: number
+This type is incompatible with
+lex.js:26:8,13: string
+
+lex.js:34:9,9: number
+This type is incompatible with
+lex.js:37:8,13: string
+
+lex.js:45:9,10: string
+This type is incompatible with
+lex.js:48:8,13: number
+
+lex.js:56:9,9: number
+This type is incompatible with
+lex.js:59:8,13: string
+
 locals.js:1:7,12: string
 This type is incompatible with
 locals.js:2:7,12: number
@@ -47,4 +67,4 @@ locals.js:20:13,14: string
 This type is incompatible with
 locals.js:17:25,30: number
 
-Found 11 errors
+Found 16 errors

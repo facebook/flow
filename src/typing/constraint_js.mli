@@ -288,7 +288,10 @@ module Scope: sig
     val string_of_state: state -> string
 
     type value_kind = Const | Let of implicit_let_kinds option | Var
-    and implicit_let_kinds = ClassNameBinding
+    and implicit_let_kinds =
+      | ClassNameBinding
+      | CatchParamBinding
+      | FunctionBinding
 
     val string_of_value_kind: value_kind -> string
 
@@ -326,6 +329,8 @@ module Scope: sig
 
     val string_of_kind: t -> string
     val havoc: ?name:string -> (Type.t -> Type.t) -> string -> t -> t
+
+    val is_lex: t -> bool
   end
 
   module Key: sig
@@ -375,6 +380,7 @@ module Scope: sig
 
   val havoc: ?name: string -> ?make_specific: (Type.t -> Type.t) -> t -> unit
 
+  val is_lex: t -> bool
 end
 
 (***************************************)

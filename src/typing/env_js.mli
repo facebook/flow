@@ -40,26 +40,31 @@ val push_env: context -> Scope.t -> unit
 
 val pop_env: unit -> unit
 
+val push_lex: unit -> unit
+
+val pop_lex: unit -> unit
+
 val init_env: context -> Scope.t -> unit
 
 val update_env: context -> Scope.t list -> unit
 
 (***)
 
-val bind_var: ?state:Entry.state -> context -> string -> Type.t -> Loc.t -> unit
-val bind_let: ?state:Entry.state -> context -> string -> Type.t -> Loc.t -> unit
+val bind_var: ?state:Entry.state -> context -> string -> Type.t -> reason -> unit
+val bind_let: ?state:Entry.state -> context -> string -> Type.t -> reason -> unit
 val bind_implicit_let:
   ?state:Entry.state
     -> Entry.implicit_let_kinds
     -> context
     -> string
     -> Type.t
-    -> Loc.t
+    -> reason
     -> unit
-val bind_const: ?state:Entry.state -> context -> string -> Type.t -> Loc.t -> unit
-val bind_type: context -> string -> Type.t -> Loc.t -> unit
+val bind_fun: ?state:Entry.state -> context -> string -> Type.t -> reason -> unit
+val bind_const: ?state:Entry.state -> context -> string -> Type.t -> reason -> unit
+val bind_type: context -> string -> Type.t -> reason -> unit
 
-val bind_declare_var: context -> string -> Type.t -> Loc.t -> unit
+val bind_declare_var: context -> string -> Type.t -> reason -> unit
 val bind_declare_fun: context -> string -> Type.t -> reason -> unit
 
 val declare_const: context -> string -> reason -> unit
@@ -81,6 +86,7 @@ val init_implicit_let:
     -> Type.t
     -> reason
     -> unit
+val init_fun: context -> string -> Type.t -> reason -> unit
 val init_const: context -> string -> has_anno:bool -> Type.t -> reason -> unit
 val init_type: context -> string -> Type.t -> reason -> unit
 
@@ -124,8 +130,6 @@ val widen_env: context -> reason -> unit
 val copy_env: context -> reason ->
   Scope.t list * Scope.t list ->
   changeset -> unit
-
-val let_env: string -> Entry.t -> (unit -> 'a) -> unit
 
 val havoc_all: unit -> unit
 
