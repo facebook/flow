@@ -10,9 +10,7 @@ function *explicit_return() {
 }
 explicit_return().return(""); // error: string ~> number
 
-function *annot_return(): Generator<void, string, void> {
-  // TODO: No explicit return currently allowed. Should it be?
-}
+function *annot_return(): Generator<void, ?string, void> { }
 annot_return().return(0); // error: number ~> string
 
 declare var declared_return: Generator<void, string, void>;
@@ -23,4 +21,9 @@ function bound_return(
   g: Generator<string, ?string, void>
 ): IteratorResult<string, string> {
   return g.return("");
+}
+
+function *default_void(): Generator<void, string, void> {
+  // no explicit return ~> void return
+  // error: void ~> string
 }

@@ -5695,11 +5695,11 @@ and mk_body id cx type_params_map ~async ~generator ?(derived_ctor=false)
       TypeAppT (promise, [VoidT.at loc])
     else if generator then
       (* The return value for generators can be provided by consumers via the
-         `throw` method, so it isn't correct to infer Return = VoidT in the
-         absence of a return statement. Instead, return a tvar that can go on to
-         accumulate more lower bounds. *)
+         `throw` method, so return a tvar that can go on to accumulate more
+         lower bounds. *)
       let reason = mk_reason "implicit generator return" loc in
       let ret = Flow_js.mk_tvar cx reason in
+      Flow_js.flow cx (VoidT.at loc, ret);
       Flow_js.get_builtin_typeapp cx reason "Generator" [yield; ret; next]
     else
       VoidT (mk_reason "return undefined" loc)

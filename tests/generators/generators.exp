@@ -117,17 +117,21 @@ return.js:11:26,27: string
 This type is incompatible with
 return.js:9:10,10: number
 
-return.js:16:1,24: call of method return
+return.js:14:1,24: call of method return
 Error:
-return.js:16:23,23: number
+return.js:14:23,23: number
 This type is incompatible with
-return.js:13:43,48: string
+return.js:13:44,49: string
 
-return.js:19:1,25: call of method return
+return.js:17:1,25: call of method return
 Error:
-return.js:19:24,24: number
+return.js:17:24,24: number
 This type is incompatible with
-return.js:18:46,51: string
+return.js:16:46,51: string
+
+return.js:26:27,55: undefined
+This type is incompatible with
+return.js:26:43,48: string
 
 throw.js:8:26,49: call of method throw
 Error:
@@ -141,4 +145,4 @@ throw.js:18:11,11: catch
 This type is incompatible with
 throw.js:24:23,29: boolean
 
-Found 31 errors
+Found 32 errors
