@@ -976,6 +976,13 @@ let check_types cx id f =
 (* To avoid complaining about "missing" annotations where external types are
    used in the exported type, we mark requires and their uses as types. *)
 
+(* TODO: All said and done, this strategy to avoid complaining about missing
+   annotations that depend on requires is a hack intended to achieve the ideal
+   of being able to "look up" annotations in required modules, when they're
+   already provided. The latter should be possible if we switch reporting
+   missing annotations from early (during the "infer" phase) to late (during
+   the "merge" phase). *)
+
 let rec assume_ground cx ids = function
   | OpenT(_,id) ->
       assume_ground_id cx ids id
@@ -985,16 +992,20 @@ let rec assume_ground cx ids = function
      `assert_ground`.
 
      These are intended to be exactly the operations that might be involved when
-     extracting (parts of) requires/imports. As such, they could be specialized
-     even further (e.g., chained GetPropTs may be disallowed, until nested
-     modules are supported), and they need to be kept in sync as module system
-     conventions evolve. *)
+     extracting (parts of) requires/imports. As such, they need to be kept in
+     sync as module system conventions evolve. *)
 
-  | GetPropT(_,_,t)
   | ImportModuleNsT(_,t)
   | CJSRequireT(_,t)
   | ImportTypeT(_,t)
   | ImportTypeofT(_,t)
+
+  (* Other common operations that might happen immediately after extracting
+     (parts of) requires/imports. *)
+
+  | GetPropT(_,_,t)
+  | CallT(_,{return_t = t; _})
+  | MethodT(_,_,{return_t = t; _})
 
       -> assume_ground cx ids t
 
