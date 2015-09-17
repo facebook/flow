@@ -1,0 +1,10 @@
+
+foo.js:1:16,21: number
+This type is incompatible with
+qux.js:2:7,8: string
+
+qux.js:2:7,8: string
+This type is incompatible with
+foo.js:1:16,21: number
+
+Found 2 errors

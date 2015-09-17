@@ -242,6 +242,9 @@ and file_exists path =
     in SSet.mem (Filename.basename path) files
   )
 
+let resolve_symlinks path =
+  Path.to_string (Path.make path)
+
 (*******************************)
 
 module Node = struct
@@ -249,16 +252,18 @@ module Node = struct
   let guess_exported_module file _content = file
 
   let path_if_exists path =
+    let path = resolve_symlinks path in
     if not (file_exists path) ||
       FlowConfig.(is_excluded (get_unsafe ()) path)
     then None
     else Some path
 
   let path_is_file path =
+    let path = resolve_symlinks path in
     file_exists path && not (Sys.is_directory path)
 
   let parse_main package =
-    let package = Path.to_string (Path.make package) in (* resolve symlinks *)
+    let package = resolve_symlinks package in
     if not (file_exists package) ||
       FlowConfig.(is_excluded (get_unsafe ()) package)
     then None
