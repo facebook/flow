@@ -1650,6 +1650,7 @@ let rec type_printer override fallback enclosure cx t =
 
     | AnnotT (_, t) -> pp EnclosureNone cx t
     | KeysT (_, t) -> spf "$Keys<%s>" (pp EnclosureNone cx t)
+    | ShapeT t -> spf "$Shape<%s>" (pp EnclosureNone cx t)
 
     (* The following types are not syntax-supported *)
     | ClassT t ->
