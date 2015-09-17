@@ -20,11 +20,14 @@ module Phase = Typing_phase
 (* Check if a comparison is trivially true or false *)
 (*****************************************************************************)
 
-let trivial_comparison_error p bop (r1, ty1) (r2, ty2) trail1 trail2 =
-  let trivial_result = match bop with
+let trivial_result_str bop =
+  match bop with
     | Ast.EQeqeq -> "false"
     | Ast.Diff2 -> "true"
-    | _ -> assert false in
+    | _ -> assert false
+
+let trivial_comparison_error p bop (r1, ty1) (r2, ty2) trail1 trail2 =
+  let trivial_result = trivial_result_str bop in
   let tys1 = Typing_print.error ty1 in
   let tys2 = Typing_print.error ty2 in
   Errors.trivial_strict_eq p trivial_result
@@ -59,3 +62,14 @@ let rec assert_nontrivial p bop env ty1 ty2 =
     | Tvar _ | Tfun _ | Tabstract (_, _) | Tclass (_, _) | Ttuple _
     | Tanon (_, _) | Tunresolved _ | Tobject | Tshape _)
     ), _ -> ()
+
+let assert_nullable p bop env ty =
+  let _, ty = Env.expand_type env ty in
+  match ty with
+  | r, Tarray _ ->
+    let trivial_result = trivial_result_str bop in
+    let ty_str = Typing_print.error (snd ty) in
+    let msgl = Reason.to_string ("This is "^ty_str^" and cannot be null") r in
+    Errors.trivial_strict_not_nullable_compare_null p trivial_result msgl
+  | _, _ ->
+    ()

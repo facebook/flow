@@ -1216,6 +1216,13 @@ and expr_ ~in_cond ~(valkind: [> `lvalue | `rvalue | `other ]) env (p, e) =
       let env = { env with Env.lenv = lenv } in
       Typing_hooks.dispatch_binop_hook p bop ty1 ty2;
       env, (Reason.Rlogic_ret p, Tprim Tbool)
+  | Binop (bop, e, (_, Null))
+  | Binop (bop, (_, Null), e)
+    when Env.is_strict env && (bop = Ast.EQeqeq || bop = Ast.Diff2) ->
+      let _, ty = raw_expr in_cond env e in
+      if not in_cond
+      then TypingEqualityCheck.assert_nullable p bop env ty;
+      env, (Reason.Rcomp p, Tprim Tbool)
   | Binop (bop, e1, e2) ->
       let env, ty1 = raw_expr in_cond env e1 in
       let env, ty2 = raw_expr in_cond env e2 in

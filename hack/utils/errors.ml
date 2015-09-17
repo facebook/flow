@@ -357,7 +357,7 @@ module Typing                               = struct
   let invalid_classname                     = 4148 (* DONT MODIFY!!!! *)
   let invalid_memoized_param                = 4149 (* DONT MODIFY!!!! *)
   let illegal_type_structure                = 4150 (* DONT MODIFY!!!! *)
-  (* RESERVED not_nullable_compare_null_trivial     = 4151 *)
+  let not_nullable_compare_null_trivial     = 4151 (* DONT MODIFY!!!! *)
   (* EXTEND HERE WITH NEW VALUES IF NEEDED *)
 end
 
@@ -1704,6 +1704,11 @@ let trivial_strict_eq p b left right left_trail right_trail =
   let right_trail = List.map right_trail typedef_trail_entry in
   add_list Typing.trivial_strict_eq
     ((p, msg) :: left @ left_trail @ right @ right_trail)
+
+let trivial_strict_not_nullable_compare_null p result type_reason =
+  let msg = "This expression is always "^result in
+  add_list Typing.not_nullable_compare_null_trivial
+    ((p, msg) :: type_reason)
 
 let void_usage p void_witness =
   let msg = "You are using the return value of a void function" in
