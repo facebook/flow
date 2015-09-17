@@ -17,3 +17,10 @@ annot_return().return(0); // error: number ~> string
 
 declare var declared_return: Generator<void, string, void>;
 declared_return.return(0); // error: number ~> string
+
+// IteratorResult return is string because we returned a string
+function bound_return(
+  g: Generator<string, ?string, void>
+): IteratorResult<string, string> {
+  return g.return("");
+}
