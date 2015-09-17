@@ -109,7 +109,7 @@ let collect (effort : [ `gentle | `aggressive ]) =
     Hh_logger.log
       "Sharedmem GC: %d bytes before; %d bytes after; in %f seconds"
       old_size new_size time_taken;
-    EventLogger.sharedmem_gc_ran old_size new_size time_taken
+    EventLogger.sharedmem_gc_ran effort old_size new_size time_taken
   end
 
 (*****************************************************************************)
