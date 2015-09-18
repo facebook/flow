@@ -28,8 +28,7 @@ let is_dot_file path =
 
 let is_php path =
   not (is_dot_file path) &&
-  List.exists extensions (Filename.check_suffix path) &&
-  not (FilesToIgnore.should_ignore path)
+  List.exists extensions (Filename.check_suffix path)
 
 let is_js path =
   not (is_dot_file path) &&

@@ -134,7 +134,8 @@ module Program : SERVER_PROGRAM =
 
     let make_next_files dir =
       Find.make_next_files begin fun f ->
-        FindUtils.is_php f || FindUtils.is_js f
+        (FindUtils.is_php f && not (FilesToIgnore.should_ignore f))
+        || FindUtils.is_js f
       end dir
 
     let stamp_file = Filename.concat GlobalConfig.tmp_dir "stamp"

@@ -83,7 +83,7 @@ let legacy_php_file_info = ref (fun fn ->
  * errorl is a list of errors
  * error_files is Relative_path.Set.t of files that we failed to parse
  *)
-let parse (acc, errorl, error_files, php_files) fn =
+let really_parse (acc, errorl, error_files, php_files) fn =
   let errorl', {Parser_hack.file_mode; comments; ast} =
     Errors.do_ begin fun () ->
       Parser_hack.from_file fn
@@ -116,6 +116,18 @@ let parse (acc, errorl, error_files, php_files) fn =
      *)
     acc, errorl, error_files, php_files
   end
+
+let parse (acc, errorl, error_files, php_files) fn =
+  (* Ugly hack... hack build requires that we keep JS files in our
+   * files_info map, but we don't want to actually read them from disk
+   * because we don't do anything with them. See also
+   * ServerMain.Program.make_next_files *)
+  if FindUtils.is_php (Relative_path.suffix fn) then
+    really_parse (acc, errorl, error_files, php_files) fn
+  else
+    let info = empty_file_info in
+    let acc = Relative_path.Map.add fn info acc in
+    acc, errorl, error_files, php_files
 
 (* Merging the results when the operation is done in parallel *)
 let merge_parse
