@@ -275,14 +275,14 @@ let is_array_as_tuple env ty =
   let env, ety = Env.expand_type env ty in
   let env, ety = fold_unresolved env ety in
   match ety with
-  | _, Tarray (Some elt_type, None) ->
+  | _, Tarraykind AKvec elt_type ->
       let env, normalized_elt_ty = Env.expand_type env elt_type in
       let _env, normalized_elt_ty = fold_unresolved env normalized_elt_ty in
       (match normalized_elt_ty with
       | _, Tunresolved _ -> true
       | _ -> false
       )
-  | _, (Tany | Tmixed | Tarray (_, _) | Tprim _ | Toption _
+  | _, (Tany | Tmixed | Tarraykind _ |  Tprim _ | Toption _
     | Tvar _ | Tabstract (_, _) | Tclass (_, _) | Ttuple _ | Tanon (_, _)
     | Tfun _ | Tunresolved _ | Tobject | Tshape _) -> false
 
@@ -325,6 +325,12 @@ end = struct
         | _ ->
           (Option.fold ~f:this#on_type ~init:acc ty1_opt) ||
           (Option.fold ~f:this#on_type ~init:acc ty2_opt)
+      method! on_tarraykind acc akind =
+        match akind with
+        | AKany -> true
+        | AKvec ty -> this#on_type acc ty
+        | AKmap (tk, tv) ->
+          (this#on_type acc tk) || (this#on_type acc tv)
     end
   let check ty = visitor#on_type false ty
 end

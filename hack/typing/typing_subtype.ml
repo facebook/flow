@@ -443,46 +443,43 @@ and sub_type_with_uenv env (uenv_super, ty_super) (uenv_sub, ty_sub) =
   | (_, Tprim Nast.Tarraykey), (_, Tprim (Nast.Tint | Nast.Tstring)) -> env
   | (_, Tprim (Nast.Tstring | Nast.Tarraykey)), (_, Tabstract (ak, _))
     when AbstractKind.is_classname ak -> env
-  | (_, Tclass ((_, coll), [tv_super])), (_, Tarray (ty3, ty4))
+  | (_, Tclass ((_, coll), [tv_super])), (_, Tarraykind akind)
     when (coll = SN.Collections.cTraversable ||
         coll = SN.Collections.cContainer) ->
-      (match ty3, ty4 with
-      | None, _ -> env
-      | Some ty3, None ->
-          sub_type env tv_super ty3
-      | Some _ty3, Some ty4 ->
-          sub_type env tv_super ty4
+      (match akind with
+      | AKany -> env
+      | AKvec tv ->
+          sub_type env tv_super tv
+      | AKmap (_, tv) ->
+          sub_type env tv_super tv
       )
-  | (_, Tclass ((_, coll), [tk_super; tv_super])), (r, Tarray (ty3, ty4))
+  | (_, Tclass ((_, coll), [tk_super; tv_super])), (r, Tarraykind akind)
     when (coll = SN.Collections.cKeyedTraversable
          || coll = SN.Collections.cKeyedContainer
          || coll = SN.Collections.cIndexish) ->
-      (match ty3 with
-      | None -> env
-      | Some ty3 ->
-          (match ty4 with
-          | None ->
-              let env = sub_type env tk_super (r, Tprim Nast.Tint) in
-              sub_type env tv_super ty3
-          | Some ty4 ->
-              let env = sub_type env tk_super ty3 in
-              sub_type env tv_super ty4
-          )
+      (match akind with
+      | AKany -> env
+      | AKvec tv ->
+        let env = sub_type env tk_super (r, Tprim Nast.Tint) in
+        sub_type env tv_super tv
+      | AKmap (tk, tv) ->
+        let env = sub_type env tk_super tk in
+        sub_type env tv_super tv
       )
   | (_, Tclass ((_, stringish), _)), (_, Tprim Nast.Tstring)
     when stringish = SN.Classes.cStringish -> env
-  | (_, Tclass ((_, xhp_child), _)), (_, Tarray _)
+  | (_, Tclass ((_, xhp_child), _)), (_, Tarraykind _)
   | (_, Tclass ((_, xhp_child), _)), (_, Tprim (Nast.Tint | Nast.Tfloat | Nast.Tstring | Nast.Tnum))
     when xhp_child = SN.Classes.cXHPChild -> env
-  | (_, (Tarray (Some ty_super, None))), (_, (Tarray (Some ty_sub, None))) ->
+  | (_, (Tarraykind (AKvec ty_super))), (_, (Tarraykind (AKvec ty_sub))) ->
       sub_type env ty_super ty_sub
-  | (_, (Tarray (Some tk_super, Some tv_super))), (_, Tarray (Some tk_sub, Some tv_sub)) ->
+  | (_, (Tarraykind (AKmap (tk_super, tv_super)))), (_, Tarraykind AKmap (tk_sub, tv_sub)) ->
       let env = sub_type env tk_super tk_sub in
       sub_type env tv_super tv_sub
-  | (_, Tarray (Some _, Some _)), (reason, Tarray (Some elt_ty, None)) ->
+  | (_, Tarraykind AKmap _), (reason, Tarraykind (AKvec elt_ty)) ->
       let int_reason = Reason.Ridx (Reason.to_pos reason) in
       let int_type = int_reason, Tprim Nast.Tint in
-      sub_type env ty_super (reason, Tarray (Some int_type, Some elt_ty))
+      sub_type env ty_super (reason, Tarraykind (AKmap (int_type, elt_ty)))
   | _, (_, Tany) -> env
   | (_, Tany), _ -> fst (Unify.unify env ty_super ty_sub)
     (* recording seen_tvars for Toption variants to avoid infinte recursion
@@ -583,7 +580,7 @@ and sub_type_with_uenv env (uenv_super, ty_super) (uenv_sub, ty_sub) =
          (fun l ->
            Reason.explain_generic_constraint env.Env.pos r_super x l; env)
       )
-  | (_, (Tarray (_, _) | Tprim _ | Tvar _
+  | (_, (Tarraykind _ | Tprim _ | Tvar _
     | Tabstract (_, _) | Ttuple _ | Tanon (_, _) | Tfun _
     | Tobject | Tshape _ | Tclass (_, _))
     ), _ -> fst (Unify.unify env ty_super ty_sub)
@@ -627,7 +624,7 @@ and sub_string p env ty2 =
   | _, Tany ->
     env (* Unifies with anything *)
   | _, Tobject -> env
-  | _, (Tmixed | Tarray (_, _) | Tvar _ | Tabstract (_, _)
+  | _, (Tmixed | Tarraykind _ | Tvar _ | Tabstract (_, _)
     | Ttuple _ | Tanon (_, _) | Tfun _ | Tshape _) ->
       fst (Unify.unify env (Reason.Rwitness p, Tprim Nast.Tstring) ty2)
 

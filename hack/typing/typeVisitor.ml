@@ -31,6 +31,7 @@ class type ['a] type_visitor_type = object
   method on_tshape : 'a -> shape_fields_known -> 'b ty Nast.ShapeMap.t -> 'a
   method on_taccess : 'a -> taccess_type -> 'a
   method on_tclass : 'a -> Nast.sid -> locl ty list -> 'a
+  method on_tarraykind : 'a -> array_kind -> 'a
 end
 
 class virtual ['a] type_visitor : ['a] type_visitor_type = object(this)
@@ -80,6 +81,13 @@ class virtual ['a] type_visitor : ['a] type_visitor_type = object(this)
     Nast.ShapeMap.fold f fdm acc
   method on_tclass acc _ tyl =
     List.fold_left tyl ~f:this#on_type ~init:acc
+  method on_tarraykind acc array_kind =
+    match array_kind with
+    | AKany -> acc
+    | AKvec ty -> this#on_type acc ty
+    | AKmap (tk, tv) ->
+      let acc = this#on_type acc tk in
+      this#on_type acc tv
   method on_type: type a. _ -> a ty -> _ = fun acc x ->
     match x with
     | _, Tany -> this#on_tany acc
@@ -101,4 +109,5 @@ class virtual ['a] type_visitor : ['a] type_visitor_type = object(this)
     | _, Tobject -> this#on_tobject acc
     | _, Tshape (fields_known, fdm) -> this#on_tshape acc fields_known fdm
     | _, Tclass (cls, tyl) -> this#on_tclass acc cls tyl
+    | _, Tarraykind akind -> this#on_tarraykind acc akind
 end

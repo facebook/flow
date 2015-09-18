@@ -141,7 +141,7 @@ let rec wfold_left_default f (env, def1) l1 l2 =
  *   return $x; // in the environment $x is an int, the code is correct
  * }
  *)
-let make_param_type_ ~phase ~for_body ~default ~localize env param =
+let make_param_type_ ~phase ~for_body ~default ~localize ~var_args env param =
   let param_pos = (fst param.param_id) in
   let env, ty =
     match param.param_hint with
@@ -181,7 +181,7 @@ let make_param_type_ ~phase ~for_body ~default ~localize env param =
        * argument, "f(C ...$args)", $args is an array<C> ... *)
       let r = Reason.Rvar_param param_pos in
       let arr_values = r, t in
-      r, Tarray (Some arr_values, None)
+      var_args r arr_values
     | _, t when param.param_is_variadic ->
       (* ... but when checking a call to such a function: "f($a, $b)",
        * both $a and $b must be of type C *)
@@ -197,6 +197,7 @@ let make_param_ty env reason param =
     ~phase:Phase.decl
     ~for_body:false
     ~default:(fun() -> reason, Tany)
+    ~var_args:(fun r tv -> r, Tarray (Some tv, None))
     ~localize:(fun env ty -> env, ty)
     env param
 
@@ -237,6 +238,7 @@ let make_param_local_ty env param =
     ~for_body:true
     ~default:Env.fresh_type
     ~localize:(Phase.localize ~ety_env)
+    ~var_args:(fun r tv -> r, Tarraykind (AKvec tv))
     env param
 
 let rec fun_decl nenv f =
@@ -400,10 +402,10 @@ and check_memoizable env param (pname, ty) =
       check_memoizable env param (pname, ty)
     end
   (* Allow untyped arrays. *)
-  | _, Tarray (None, None) ->
+  | _, Tarraykind AKany ->
       ()
-  | _, Tarray (Some ty, _)
-  | _, Tarray (_, Some ty) ->
+  | _, Tarraykind (AKvec ty)
+  | _, Tarraykind (AKmap(_, ty)) ->
       check_memoizable env param (pname, ty)
   | _, Tclass (_, _) ->
     let type_param = Env.fresh_type() in
@@ -596,7 +598,7 @@ and stmt env = function
           let env, rty = TUtils.unresolved env rty in
           let env, _ = Type.unify pos Reason.URreturn env expected_return rty in
           env
-      | _, (Tany | Tmixed | Tarray (_,_) | Toption _ | Tprim _
+      | _, (Tany | Tmixed | Tarraykind _ | Toption _ | Tprim _
         | Tvar _ | Tfun _ | Tabstract (_, _) | Tclass (_, _) | Ttuple _
         | Tanon (_, _) | Tobject | Tshape _) ->
           Typing_suggest.save_return env expected_return rty;
@@ -726,7 +728,7 @@ and check_exhaustiveness env pos ty caselist =
       let tc = unsafe_opt @@ Env.get_enum id in
       Typing_enum.check_enum_exhaustiveness pos tc caselist;
       env
-    | Tany | Tmixed | Tarray (_, _) | Tclass _ | Toption _ | Tprim _
+    | Tany | Tmixed | Tarraykind _ | Tclass _ | Toption _ | Tprim _
     | Tvar _ | Tfun _ | Tabstract (_, _) | Ttuple _ | Tanon (_, _)
     | Tobject | Tshape _ -> env
 
@@ -875,7 +877,7 @@ and bind_as_expr env ty aexpr =
       | _ -> (* TODO Probably impossible, should check that *)
           env
       )
-  | _, (Tany | Tmixed | Tarray (_, _)  | Toption _ | Tprim _
+  | _, (Tany | Tmixed | Tarraykind _  | Toption _ | Tprim _
     | Tvar _ | Tfun _ | Tabstract (_, _) | Tclass (_, _) | Ttuple _
     | Tanon (_, _) | Tunresolved _ | Tobject | Tshape _
        ) -> assert false
@@ -900,7 +902,7 @@ and lvalue env e =
 and expr_ ~in_cond ~(valkind: [> `lvalue | `rvalue | `other ]) env (p, e) =
   match e with
   | Any -> env, (Reason.Rwitness p, Tany)
-  | Array [] -> env, (Reason.Rwitness p, Tarray (None, None))
+  | Array [] -> env, (Reason.Rwitness p, Tarraykind AKany)
   | Array (x :: rl as l) ->
       check_consistent_fields x rl;
       let env, value = TUtils.in_var env (Reason.Rnone, Tunresolved []) in
@@ -920,7 +922,7 @@ and expr_ ~in_cond ~(valkind: [> `lvalue | `rvalue | `other ]) env (p, e) =
       in
       (match x with
       | Nast.AFvalue _ ->
-          env, (Reason.Rwitness p, Tarray (Some value, None))
+          env, (Reason.Rwitness p, Tarraykind (AKvec value))
       | Nast.AFkvalue _ ->
           let env, key = TUtils.in_var env (Reason.Rnone, Tunresolved []) in
           let env, keys =
@@ -929,7 +931,7 @@ and expr_ ~in_cond ~(valkind: [> `lvalue | `rvalue | `other ]) env (p, e) =
             fold_left_env (apply_for_env_fold TUtils.unresolved) env [] keys in
           let unify_key = Type.unify p Reason.URarray_key in
           let env, key = fold_left_env unify_key env key keys in
-          env, (Reason.Rwitness p, Tarray (Some key, Some value))
+          env, (Reason.Rwitness p, Tarraykind (AKmap (key, value)))
       )
   | ValCollection (name, el) ->
       let env, x = TUtils.in_var env (Reason.Rnone, Tunresolved []) in
@@ -1758,12 +1760,12 @@ and assign p env e1 ty2 =
             assign (fst e) env e elt_type
           end env el in
           env, ty2
-      | _, Tarray (Some elt_type, None) ->
+      | _, Tarraykind (AKvec elt_type) ->
           let env, _ = lfold begin fun env e ->
             assign (fst e) env e elt_type
           end env el in
           env, ty2
-      | r, Tarray (None, None)
+      | r, Tarraykind AKany
       | r, Tany ->
           let env, _ = lfold begin fun env e ->
             assign (fst e) env e (r, Tany)
@@ -1795,7 +1797,7 @@ and assign p env e1 ty2 =
             end ~init:env in
             env, (Reason.Rwitness p1, Tprim Tvoid)
       | _, Tabstract (_, Some ty2) -> assign p env e1 ty2
-      | _, (Tmixed | Tarray (_, _) | Toption _ | Tprim _
+      | _, (Tmixed | Tarraykind _ | Toption _ | Tprim _
         | Tvar _ | Tfun _ | Tabstract (_, _) | Tanon (_, _)
         | Tunresolved _ | Tclass (_, _) | Tobject | Tshape _) ->
           assign_simple p env e1 ty2
@@ -1943,7 +1945,7 @@ and call_parent_construct pos env el uel =
               else Errors.undefined_parent pos;
               default
             | None -> assert false)
-        | _, (Tany | Tmixed | Tarray (_, _) | Toption _
+        | _, (Tany | Tmixed | Tarraykind _ | Toption _
               | Tprim _ | Tfun _ | Ttuple _ | Tshape _ | Tvar _
               | Tabstract (_, _) | Tanon (_, _) | Tunresolved _ | Tobject
              ) ->
@@ -1957,7 +1959,7 @@ and check_abstract_parent_meth mname pos fty =
 
 and is_abstract_ft fty = match fty with
   | _r, Tfun { ft_abstract = true; _ } -> true
-  | _r, (Tany | Tmixed | Tarray (_, _) | Toption _ | Tprim _
+  | _r, (Tany | Tmixed | Tarraykind _ | Toption _ | Tprim _
             | Tvar _ | Tfun _ | Tclass (_, _) | Tabstract (_, _) | Ttuple _
             | Tanon _ | Tunresolved _ | Tobject | Tshape _
         )
@@ -1991,7 +1993,7 @@ and dispatch_call p env call_type (fpos, fun_expr as e) el uel =
            let env, ty = expr env ea in
            Errors.try_
              (fun () -> SubType.sub_type
-                          env (Reason.Rnone, Tarray (None, None)) ty)
+                          env (Reason.Rnone, Tarraykind AKany) ty)
              (fun _ ->
               let env, (r, ety) = Env.expand_type env ty in
               Errors.unset_nonidx_in_strict
@@ -2030,11 +2032,11 @@ and dispatch_call p env call_type (fpos, fun_expr as e) el uel =
       let rec get_array_filter_return_type env ty =
         let env, ety = Env.expand_type env ty in
         (match ety with
-        | (_, Tarray (None, None)) as array_type ->
+        | (_, Tarraykind AKany) as array_type ->
             env, array_type
-        | (r, Tarray (Some tv, None)) ->
+        | (r, Tarraykind (AKvec tv)) ->
             let env, tv = get_value_type env tv in
-            env, (r, Tarray (Some tv, None))
+            env, (r, Tarraykind (AKvec tv))
         | (r, Tunresolved x) ->
             let env, x = lmap get_array_filter_return_type env x in
             env, (r, Tunresolved x)
@@ -2052,10 +2054,10 @@ and dispatch_call p env call_type (fpos, fun_expr as e) el uel =
                 ) in
                 let env = SubType.sub_type env keyed_container ety in
                 let env, tv = get_value_type env tv in
-                env, (r, Tarray (
-                  Some (explain_array_filter tk),
-                  Some tv)
-                ))
+                env, (r, Tarraykind (AKmap (
+                  (explain_array_filter tk),
+                  tv)
+                )))
               (fun _ -> Errors.try_
                 (fun () ->
                   let container = (
@@ -2066,9 +2068,9 @@ and dispatch_call p env call_type (fpos, fun_expr as e) el uel =
                   ) in
                   let env = SubType.sub_type env container ety in
                   let env, tv = get_value_type env tv in
-                  env, (r, Tarray (
-                    Some (explain_array_filter (r, Tprim Tarraykey)),
-                    Some tv)))
+                  env, (r, Tarraykind (AKmap (
+                    (explain_array_filter (r, Tprim Tarraykey)),
+                    tv))))
                 (fun _ -> env, res)))
       in get_array_filter_return_type env ty
   | Id (p, type_structure)
@@ -2148,10 +2150,10 @@ and dispatch_call p env call_type (fpos, fun_expr as e) el uel =
           let rec build_output_container
             (env:Env.env) (x:locl ty) : (Env.env * (locl ty -> locl ty)) =
             let env, x = Env.expand_type env x in (match x with
-              | (_, Tarray (None, None)) as array_type ->
+              | (_, Tarraykind AKany) as array_type ->
                 env, (fun _ -> array_type)
-              | (r, Tarray (_, None)) ->
-                env, (fun tr -> (r, Tarray (Some(tr), None)) )
+              | (r, Tarraykind AKvec _) ->
+                env, (fun tr -> (r, Tarraykind (AKvec(tr))) )
               | ((_, Tany) as any) ->
                 env, (fun _ -> any)
               | (r, Tunresolved x) ->
@@ -2167,10 +2169,9 @@ and dispatch_call p env call_type (fpos, fun_expr as e) el uel =
                     )
                   ) in
                   let env = SubType.sub_type env vector x in
-                  env, (fun tr -> (r, Tarray (
-                    Some(tr),
-                    None)
-                  )) in
+                  env, (fun tr -> (r, Tarraykind (
+                    AKvec(tr)
+                  ))) in
                 let try_keyed_container env =
                   let keyed_container = (
                     r_fty,
@@ -2179,10 +2180,10 @@ and dispatch_call p env call_type (fpos, fun_expr as e) el uel =
                     )
                   ) in
                   let env = SubType.sub_type env keyed_container x in
-                  env, (fun tr -> (r, Tarray (
-                    Some(tk),
-                    Some(tr))
-                  )) in
+                  env, (fun tr -> (r, Tarraykind (AKmap (
+                    tk,
+                    tr
+                  )))) in
                 let try_container env =
                   let container = (
                     r_fty,
@@ -2191,9 +2192,9 @@ and dispatch_call p env call_type (fpos, fun_expr as e) el uel =
                     )
                   ) in
                   let env = SubType.sub_type env container x in
-                  env, (fun tr -> (r, Tarray (
-                    Some((r, Tprim Tarraykey)),
-                    Some(tr)))) in
+                  env, (fun tr -> (r, Tarraykind (AKmap (
+                    (r, Tprim Tarraykey),
+                    tr)))) in
                 Errors.try_
                   (fun () ->
                     try_vector  env)
@@ -2215,7 +2216,7 @@ and dispatch_call p env call_type (fpos, fun_expr as e) el uel =
               env, build_function output_container
             | _ ->
               env, build_function (fun tr ->
-                (r_fty, Tarray(Some(tr), None))))
+                (r_fty, Tarraykind (AKvec(tr)))))
         | _ -> env, fty in
       call p env fty el []
   | Id ((_, idx) as id) when idx = SN.FB.idx ->
@@ -2418,7 +2419,7 @@ and array_get is_lvalue p env ty1 ety1 e2 ty2 =
       end env tyl
       in
       env, (fst ety1, Tunresolved tyl)
-  | Tarray (Some ty, None) ->
+  | Tarraykind (AKvec ty) ->
       let ty1 = Reason.Ridx (fst e2), Tprim Tint in
       let env = Type.sub_type p Reason.URarray_get env ty1 ty2 in
       env, ty
@@ -2489,7 +2490,7 @@ and array_get is_lvalue p env ty1 ety1 e2 ty2 =
       when is_lvalue &&
         (cn = SN.Collections.cConstVector || cn = SN.Collections.cImmVector) ->
     error_const_mutation env p ety1
-  | Tarray (Some k, Some v) ->
+  | Tarraykind (AKmap (k, v)) ->
       let env, ty2 = TUtils.unresolved env ty2 in
       let env, _ = Type.unify p Reason.URarray_get env k ty2 in
       (* The values in the array are not consistent
@@ -2499,11 +2500,11 @@ and array_get is_lvalue p env ty1 ety1 e2 ty2 =
       let env, ev = Env.expand_type env ev in
       (match ev with
       | _, Tunresolved _ -> env, (Reason.Rwitness p, Tany)
-      | _, (Tany | Tmixed | Tarray (_, _) | Toption _
+      | _, (Tany | Tmixed | Tarraykind _ | Toption _
         | Tprim _ | Tvar _ | Tfun _ | Tclass (_, _) | Tabstract (_, _)
         | Ttuple _ | Tanon _ | Tobject | Tshape _) -> env, v
       )
-  | Tany | Tarray (None, None) -> env, (Reason.Rnone, Tany)
+  | Tany | Tarraykind AKany -> env, (Reason.Rnone, Tany)
   | Tprim Tstring ->
       let ty = Reason.Rwitness p, Tprim Tstring in
       let env, ty = Type.unify p Reason.URnone env ty1 ty in
@@ -2572,7 +2573,7 @@ and array_get is_lvalue p env ty1 ety1 e2 ty2 =
       Errors.try_
         (fun () -> array_get is_lvalue p env ty ety e2 ty2)
         (fun _ -> error_array env p ety1)
-  | Tmixed | Tarray (_, _) | Tprim _ | Tvar _ | Tfun _
+  | Tmixed | Tprim _ | Tvar _ | Tfun _
   | Tabstract (_, _) | Tclass (_, _) | Tanon (_, _) ->
       error_array env p ety1
 
@@ -2580,7 +2581,7 @@ and array_append is_lvalue p env ty1 =
   let env, ty1 = TUtils.fold_unresolved env ty1 in
   let env, ety1 = Env.expand_type env ty1 in
   match snd ety1 with
-  | Tany | Tarray (None, None) -> env, (Reason.Rnone, Tany)
+  | Tany | Tarraykind AKany -> env, (Reason.Rnone, Tany)
   | Tclass ((_, n), [ty])
       when n = SN.Collections.cVector || n = SN.Collections.cSet ->
       env, ty
@@ -2596,7 +2597,7 @@ and array_append is_lvalue p env ty1 =
       (* Handle the case where "Map" was used as a typehint without
          type parameters *)
       env, (Reason.Rmap_append p, Tclass ((p, SN.Collections.cPair), []))
-  | Tarray (Some ty, None) ->
+  | Tarraykind (AKvec ty) ->
       env, ty
   | Tobject ->
       if Env.is_strict env
@@ -2606,7 +2607,7 @@ and array_append is_lvalue p env ty1 =
       Errors.try_
         (fun () -> array_append is_lvalue p env ty)
         (fun _ -> error_array_append env p ety1)
-  | Tmixed | Tarray (_, _) | Toption _ | Tprim _
+  | Tmixed | Tarraykind _ | Toption _ | Tprim _
   | Tvar _ | Tfun _ | Tabstract (_, _) | Tclass (_, _) | Ttuple _
   | Tanon (_, _) | Tunresolved _ | Tshape _ ->
       error_array_append env p ety1
@@ -2638,7 +2639,7 @@ and class_contains_smethod env cty (_pos, mid) =
       | Some class_ ->
           Env.get_static_member true env class_ mid
       )
-  | _, (Tany | Tmixed | Tarray (_, _) | Toption _ | Tprim _
+  | _, (Tany | Tmixed | Tarraykind _ | Toption _ | Tprim _
     | Tvar _ | Tfun _ | Tabstract (_, _) | Ttuple _ | Tanon (_, _)
     | Tunresolved _ | Tobject | Tshape _)-> None
 
@@ -2720,7 +2721,7 @@ and class_get_ ~is_method ~is_const ~ety_env ?(incl_tc=false) env cty (p, mid) =
       | FileInfo.Mdecl | FileInfo.Mpartial -> ()
       );
       env, (Reason.Rnone, Tany)
-  | _, (Tmixed | Tarray (_, _) | Toption _ | Tprim _ | Tvar _
+  | _, (Tmixed | Tarraykind _ | Toption _ | Tprim _ | Tvar _
     | Tfun _ | Ttuple _ | Tanon (_, _) | Tunresolved _
     | Tobject | Tshape _) ->
       Errors.expected_class p;
@@ -2840,7 +2841,7 @@ and obj_get_ ~is_method ~nullsafe env ty1 cid (p, s as id)
           );
         k (env, (fst ety1, Tany), None)
     end
-  | _, (Tany | Tmixed | Tarray (_, _) | Tprim _ | Tvar _
+  | _, (Tany | Tmixed | Tarraykind _ | Tprim _ | Tvar _
     | Tfun _ | Tabstract (_, _) | Tclass (_, _) | Ttuple _ | Tanon (_, _)
     | Tobject | Tshape _) -> k begin
     match snd ety1 with
@@ -2921,7 +2922,7 @@ and obj_get_ ~is_method ~nullsafe env ty1 cid (p, s as id)
         )
       | Tobject
       | Tany -> env, (fst ety1, Tany), None
-      | (Tmixed | Tarray (_, _) | Tprim _ | Toption _
+      | (Tmixed | Tarraykind _ | Tprim _ | Toption _
             | Tvar _ | Tabstract (_, _) | Ttuple _ | Tanon (_, _)
             | Tfun _ | Tunresolved _ | Tshape _) as ty ->
         Errors.non_object_member
@@ -2934,7 +2935,7 @@ and type_could_be_null env ty1 =
   match (snd ety1) with
     | Tabstract (_, Some ty) -> type_could_be_null env ty
     | Toption _ | Tabstract (_, None) | Tunresolved _ | Tmixed | Tany -> true
-    | Tarray (_, _) | Tprim _ | Tvar _ | Tfun _
+    | Tarraykind _ | Tprim _ | Tvar _ | Tfun _
     | Tclass (_, _) | Ttuple _ | Tanon (_, _) | Tobject
     | Tshape _ -> false
 
@@ -2950,7 +2951,7 @@ and class_id_for_new p env cid =
         | None -> None
         | Some class_ -> Some (sid, class_, ty)
       )
-    | _, (Tany | Tmixed | Tarray (_, _) | Toption _ | Tprim _
+    | _, (Tany | Tmixed | Tarraykind _ | Toption _ | Tprim _
       | Tvar _ | Tfun _ | Tabstract (_, _) | Ttuple _ | Tanon (_, _)
       | Tunresolved _ | Tobject | Tshape _) -> env, None
 
@@ -3040,7 +3041,7 @@ and static_class_id p env = function
             (* parent is still technically the same object. *)
             env, (r, TUtils.this_of (r, snd parent))
           )
-      | _, (Tany | Tmixed | Tarray (_, _) | Toption _ | Tprim _
+      | _, (Tany | Tmixed | Tarraykind _ | Toption _ | Tprim _
             | Tfun _ | Ttuple _ | Tshape _ | Tvar _
             | Tanon (_, _) | Tunresolved _ | Tabstract (_, _) | Tobject
            ) ->
@@ -3078,7 +3079,7 @@ and static_class_id p env = function
             resolve_ety the_cls
           | _, Tabstract (AKgeneric _, _)
           | _, Tclass _ -> ty
-          | _, (Tany | Tmixed | Tarray (_, _) | Toption _
+          | _, (Tany | Tmixed | Tarraykind _ | Toption _
                    | Tprim _ | Tvar _ | Tfun _ | Ttuple _
                    | Tabstract ((AKenum _ | AKdependent _ | AKnewtype _), _)
                    | Tanon (_, _) | Tunresolved _ | Tobject | Tshape _
@@ -3160,7 +3161,7 @@ and is_visible env vis cid =
                   ("Private members cannot be accessed dynamically. "
                      ^"Did you mean to use 'self::'?"),
                     "This member is private"))
-            | _, (Tany | Tmixed | Tarray (_, _) | Toption _
+            | _, (Tany | Tmixed | Tarraykind _ | Toption _
               | Tprim _ | Tvar _ | Tfun _ | Tabstract (_, _) | Ttuple _
               | Tanon (_, _) | Tunresolved _ | Tobject
               | Tshape _) -> assert false
@@ -3321,7 +3322,7 @@ and call_ pos env fty el uel =
         let () = check_arity pos fpos (List.length tyl) arity in
         let tyl = List.map tyl (fun x -> None, x) in
         anon env tyl)
-  | _, Tarray _ when not (Env.is_strict env) ->
+  | _, Tarraykind _ when not (Env.is_strict env) ->
     (* Relaxing call_user_func to work with an array in partial mode *)
     env, (Reason.Rnone, Tany)
   | _, ty ->
@@ -3357,7 +3358,7 @@ and call_param todos env (name, x) ((pos, _ as e), arg_ty) =
       todos := (fun env ->
                 Type.sub_type pos Reason.URparam env x arg_ty) :: !todos;
       env
-  | _, (Tany | Tmixed | Tarray (_, _) | Toption _ | Tprim _
+  | _, (Tany | Tmixed | Tarraykind _ | Toption _ | Tprim _
     | Tvar _ | Tfun _ | Tabstract (_, _) | Tclass (_, _) | Ttuple _
     | Tunresolved _ | Tobject | Tshape _) ->
     Type.sub_type pos Reason.URparam env x dep_ty
@@ -3404,22 +3405,25 @@ and binop in_cond p env bop p1 ty1 p2 ty2 =
        * the addition to produce a supertype. (We could also handle
        * when they have mismatching annotations, but we get better error
        * messages if we just let those get unified in the next case. *)
-      | (_, Tarray (Some _, (Some _ as t1b))), (_, Tarray (Some _, Some _))
-      | (_, Tarray (Some _, (None as t1b))), (_, Tarray (Some _, None)) ->
-         let env, a_sup = TUtils.in_var env (Reason.Rnone, Tunresolved []) in
-         let env, b_sup = opt
-           (fun env _ -> TUtils.in_var env (Reason.Rnone, Tunresolved []))
-           env t1b in
-         let res_ty = Reason.Rarray_plus_ret p, Tarray (Some a_sup, b_sup) in
-         let env = Type.sub_type p1 Reason.URnone env res_ty ety1 in
-         let env = Type.sub_type p2 Reason.URnone env res_ty ety2 in
-         env, res_ty
-      | (_, Tarray _), (_, Tarray _)
-      | (_, Tany), (_, Tarray _)
-      | (_, Tarray _), (_, Tany) ->
+      | (_, Tarraykind (AKmap _ as ak)), (_, Tarraykind (AKmap _))
+      | (_, Tarraykind (AKvec _ as ak)), (_, Tarraykind (AKvec _)) ->
+          let env, a_sup = TUtils.in_var env (Reason.Rnone, Tunresolved []) in
+          let env, b_sup = TUtils.in_var env (Reason.Rnone, Tunresolved []) in
+          let res_ty = Reason.Rarray_plus_ret p, Tarraykind (
+            match ak with
+              | AKvec _ -> AKvec a_sup
+              | AKmap _ -> AKmap (a_sup, b_sup)
+              | _ -> assert false
+          ) in
+          let env = Type.sub_type p1 Reason.URnone env res_ty ety1 in
+          let env = Type.sub_type p2 Reason.URnone env res_ty ety2 in
+          env, res_ty
+      | (_, Tarraykind _), (_, Tarraykind _)
+      | (_, Tany), (_, Tarraykind _)
+      | (_, Tarraykind _), (_, Tany) ->
           let env, ty = Type.unify p Reason.URnone env ty1 ty2 in
           env, ty
-      | (_, (Tany | Tmixed | Tarray (_, _) | Toption _
+      | (_, (Tany | Tmixed | Tarraykind _ | Toption _
         | Tprim _ | Tvar _ | Tfun _ | Tabstract (_, _) | Tclass (_, _)
         | Ttuple _ | Tanon (_, _) | Tunresolved _ | Tobject | Tshape _
             )
@@ -3444,7 +3448,7 @@ and binop in_cond p env bop p1 ty1 p2 ty2 =
       | (_, Tprim Tint), (_, Tprim Tint) ->
           (* Both sides are integers, then integer: 1 - 1 -> int *)
           env, (Reason.Rarith_ret p, Tprim Tint)
-      | (_, (Tany | Tmixed | Tarray (_, _) | Toption _
+      | (_, (Tany | Tmixed | Tarraykind _ | Toption _
         | Tprim _ | Tvar _ | Tfun _ | Tabstract (_, _) | Tclass (_, _)
         | Ttuple _ | Tanon (_, _) | Tunresolved _ | Tobject | Tshape _
             )
@@ -3460,7 +3464,7 @@ and binop in_cond p env bop p1 ty1 p2 ty2 =
       let env, ety2 = expand_num_type env p2 ty2 in
       (match ety1, ety2 with
       | (r, Tprim Tfloat), _ | _, (r, Tprim Tfloat) -> env, (r, Tprim Tfloat)
-      | (_, (Tany | Tmixed | Tarray (_, _) | Toption _
+      | (_, (Tany | Tmixed | Tarraykind _ | Toption _
         | Tprim _ | Tvar _ | Tfun _ | Tabstract (_, _) | Tclass (_, _)
         | Ttuple _ | Tanon (_, _) | Tunresolved _ | Tobject | Tshape _
         )
@@ -3471,7 +3475,7 @@ and binop in_cond p env bop p1 ty1 p2 ty2 =
       let env, ety2 = expand_num_type env p2 ty2 in
       (match ety1, ety2 with
       | (r, Tprim Tfloat), _ | _, (r, Tprim Tfloat) -> env, (r, Tprim Tfloat)
-      | (_, (Tany | Tmixed | Tarray (_, _) | Toption _
+      | (_, (Tany | Tmixed | Tarraykind _ | Toption _
         | Tprim _ | Tvar _ | Tfun _ | Tabstract (_, _) | Tclass (_, _)
         | Ttuple _ | Tanon (_, _) | Tunresolved _ | Tobject | Tshape _
         )
@@ -3491,7 +3495,7 @@ and binop in_cond p env bop p1 ty1 p2 ty2 =
           let env, _ = Type.unify p Reason.URnone env ty1 (Reason.Rlogic_ret p1, Tprim Tbool) in
           let env, _ = Type.unify p Reason.URnone env ty2 (Reason.Rlogic_ret p1, Tprim Tbool) in
           env, (Reason.Rlogic_ret p, Tprim Tbool)
-      | (_, (Tany | Tmixed | Tarray (_, _) | Toption _
+      | (_, (Tany | Tmixed | Tarraykind _ | Toption _
         | Tprim _ | Tvar _ | Tfun _ | Tabstract (_, _) | Tclass (_, _)
         | Ttuple _ | Tanon (_, _) | Tunresolved _ | Tobject | Tshape _
         )
@@ -3559,7 +3563,7 @@ and non_null ?expanded:(expanded=ISet.empty) env ty =
   | r, Tabstract (ak, Some ty) ->
       let env, ty = non_null ~expanded env ty in
       env, (r, Tabstract (ak, Some ty))
-  | _, (Tany | Tmixed | Tarray (_, _) | Tprim _ | Tvar _
+  | _, (Tany | Tmixed | Tarraykind _ | Tprim _ | Tvar _
     | Tabstract (_, _) | Tclass (_, _) | Ttuple _ | Tanon (_, _) | Tfun _
     | Tobject | Tshape _) ->
       env, ty
@@ -3623,9 +3627,9 @@ and condition env tparamet =
       let env, ty = expr env e in
       let env, ety = Env.expand_type env ty in
       (match ety with
-      | _, Tarray (None, None)
+      | _, Tarraykind AKany
       | _, Tprim Tbool -> env
-      | _, (Tany | Tmixed | Tarray (_, _) | Toption _
+      | _, (Tany | Tmixed | Tarraykind _ | Toption _
         | Tprim _ | Tvar _ | Tfun _ | Tabstract (_, _) | Tclass (_, _)
         | Ttuple _ | Tanon (_, _) | Tunresolved _ | Tobject | Tshape _
         ) ->
@@ -3717,7 +3721,7 @@ and condition env tparamet =
                 env
               else Env.set_local env x obj_ty
           )
-        | _, (Tany | Tmixed | Tarray (_, _) | Toption _
+        | _, (Tany | Tmixed | Tarraykind _ | Toption _
           | Tprim _ | Tvar _ | Tfun _ | Tabstract (_, _) | Ttuple _
           | Tanon (_, _) | Tunresolved _ | Tobject
           | Tshape _) -> Env.set_local env x (Reason.Rwitness ivar_pos, Tobject)
@@ -3761,11 +3765,11 @@ and check_null_wtf env p ty =
             Errors.sketchy_null_check p
           | _, Tprim _ ->
             Errors.sketchy_null_check_primitive p
-          | _, (Tarray (_, _) | Toption _ | Tvar _ | Tfun _
+          | _, (Tarraykind _ | Toption _ | Tvar _ | Tfun _
           | Tabstract (_, _) | Tclass (_, _) | Ttuple _ | Tanon (_, _)
           | Tunresolved _ | Tobject | Tshape _ ) -> ());
         env
-      | _, (Tany | Tmixed | Tarray (_, _) | Tprim _ | Tvar _
+      | _, (Tany | Tmixed | Tarraykind _ | Tprim _ | Tvar _
         | Tfun _ | Tabstract (_, _) | Tclass (_, _) | Ttuple _ | Tanon (_, _)
         | Tunresolved _ | Tobject | Tshape _ ) -> env
 
@@ -3784,12 +3788,12 @@ and is_type env e tprim =
 and is_array env = function
   | p, Class_get (cname, (_, member_name)) ->
       let env, local = Env.FakeMembers.make_static p env cname member_name in
-      Env.set_local env local (Reason.Rwitness p, Tarray (None, None))
+      Env.set_local env local (Reason.Rwitness p, Tarraykind AKany)
   | p, Obj_get ((_, This | _, Lvar _ as obj), (_, Id (_, member_name)), _) ->
       let env, local = Env.FakeMembers.make p env obj member_name in
-      Env.set_local env local (Reason.Rwitness p, Tarray (None, None))
+      Env.set_local env local (Reason.Rwitness p, Tarraykind AKany)
   | _, Lvar (p, x) ->
-      Env.set_local env x (Reason.Rwitness p, Tarray (None, None))
+      Env.set_local env x (Reason.Rwitness p, Tarraykind AKany)
   | _ -> env
 
 and string2 env idl =

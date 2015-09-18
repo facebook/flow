@@ -178,11 +178,10 @@ let rec debug stack env (r, ty) =
   match ty with
   | Tunresolved tyl -> o "intersect("; debugl stack env tyl; o ")"
   | Ttuple tyl -> o "tuple("; debugl stack env tyl; o ")"
-  | Tarray (None, None) -> o "array"
-  | Tarray (Some x, None) -> o "array<"; debug stack env x; o ">"
-  | Tarray (Some x, Some y) -> o "array<"; debug stack env x; o ", ";
+  | Tarraykind AKany -> o "array"
+  | Tarraykind (AKvec x) -> o "array<"; debug stack env x; o ">"
+  | Tarraykind (AKmap (x, y)) -> o "array<"; debug stack env x; o ", ";
       debug stack env y; o ">"
-  | Tarray _ -> assert false
   | Tmixed -> o "mixed"
   | Tabstract (AKnewtype (x, argl), _)
   | Tclass ((_, x), argl) ->

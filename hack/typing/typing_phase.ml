@@ -108,9 +108,18 @@ let rec localize_with_env ~ety_env env (dty: decl ty) =
         | _ -> ty in
       env, (ety_env, ty)
   | r, Tarray (ty1, ty2) ->
-      let env, ty1 = opt (localize ~ety_env) env ty1 in
-      let env, ty2 = opt (localize ~ety_env) env ty2 in
-      env, (ety_env, (r, Tarray (ty1, ty2)))
+      let env, ty = match ty1, ty2 with
+        | None, None -> env, Tarraykind AKany
+        | Some tv, None ->
+            let env, tv = localize ~ety_env env tv in
+            env, Tarraykind (AKvec tv)
+        | Some tk, Some tv ->
+            let env, tk = localize ~ety_env env tk in
+            let env, tv = localize ~ety_env env tv in
+            env, Tarraykind (AKmap (tk, tv))
+        | None, Some _ ->
+            failwith "Invalid array declaration type" in
+      env, (ety_env, (r, ty))
   | r, Tgeneric (x, cstr_opt) ->
       (match SMap.get x ety_env.substs with
       | Some x_ty ->

@@ -112,7 +112,7 @@ module ExprDepTy = struct
           ~default:false
           ~f:(fun {tc_final; _} -> not tc_final)
     | Tanon _ | Tobject | Tmixed | Tprim _ | Tshape _ | Ttuple _
-    | Tarray _ | Tfun _ | Tabstract (_, None) | Tany ->
+    | Tarraykind _ | Tfun _ | Tabstract (_, None) | Tany ->
         false
 
   (****************************************************************************)

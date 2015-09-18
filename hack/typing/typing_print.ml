@@ -46,6 +46,11 @@ module ErrorString = struct
     | Tany               -> "an untyped value"
     | Tunresolved l      -> unresolved l
     | Tarray (x, y)      -> array (x, y)
+    | Tarraykind AKany   -> array (None, None)
+    | Tarraykind (AKvec x)
+                         -> array (Some x, None)
+    | Tarraykind (AKmap (x, y))
+                         -> array (Some x, Some y)
     | Ttuple _           -> "a tuple"
     | Tmixed             -> "a mixed value"
     | Toption _          -> "a nullable type"
@@ -138,6 +143,7 @@ module Suggest = struct
   let rec type_: type a. a ty -> string = fun (_, ty) ->
     match ty with
     | Tarray _               -> "array"
+    | Tarraykind _           -> "array"
     | Tthis                  -> SN.Typehints.this
     | Tunresolved _          -> "..."
     | Ttuple (l)             -> "("^list l^")"
@@ -221,9 +227,12 @@ module Full = struct
     | Tany -> o "_"
     | Tthis -> o SN.Typehints.this
     | Tmixed -> o "mixed"
+    | Tarraykind AKany -> o "array"
     | Tarray (None, None) -> o "array"
+    | Tarraykind (AKvec x) -> o "array<"; k x; o ">"
     | Tarray (Some x, None) -> o "array<"; k x; o ">"
     | Tarray (Some x, Some y) -> o "array<"; k x; o ", "; k y; o ">"
+    | Tarraykind (AKmap (x, y)) -> o "array<"; k x; o ", "; k y; o ">"
     | Tarray (None, Some _) -> assert false
     | Tclass ((_, s), []) -> o s
     | Tapply ((_, s), []) -> o s

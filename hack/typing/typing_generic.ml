@@ -32,8 +32,12 @@ end = struct
     | Tabstract ((AKdependent (_, _) | AKenum _), cstr) -> ty_opt cstr
     | Tabstract (AKgeneric (x, _), _) -> raise (Found x)
     | Tanon _ | Tany | Tmixed | Tprim _ -> ()
-    | Tarray (ty1, ty2) ->
-        ty_opt ty1; ty_opt ty2
+    | Tarraykind akind ->
+      begin match akind with
+        | AKany -> ()
+        | AKvec tv -> ty tv
+        | AKmap (tk, tv) -> ty tk; ty tv
+      end
     | Tvar _ -> assert false (* Expansion got rid of Tvars ... *)
     | Toption x -> ty x
     | Tfun fty ->

@@ -115,7 +115,7 @@ and expand_ env (root_reason, root_ty as root) =
           let env = { env with tenv = tenv; seen_tvar = seen } in
           expand_ env ty
       | Tanon _ | Tobject | Tmixed | Tprim _ | Tshape _ | Ttuple _
-      | Tarray (_, _) | Tfun _ | Tabstract (_, _) ->
+      | Tarraykind _ | Tfun _ | Tabstract (_, _) ->
           let pos, tconst = head in
           let ty = Typing_print.error root_ty in
           Errors.non_object_member tconst (Reason.to_pos root_reason) ty pos;

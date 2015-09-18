@@ -54,6 +54,14 @@ and _ ty_ =
   (* Name of class, name of type const, remaining names of type consts *)
   | Taccess : taccess_type -> decl ty_
 
+  (* The type of the various forms of "array":
+   * Tarray (None, None)         => "array"
+   * Tarray (Some ty, None)      => "array<ty>"
+   * Tarray (Some ty1, Some ty2) => "array<ty1, ty2>"
+   * Tarray (None, Some ty)      => [invalid]
+   *)
+  | Tarray : decl ty option * decl ty option -> decl ty_
+
   (*========== Following Types Exist in Both Phases ==========*)
   (* "Any" is the type of a variable with a missing annotation, and "mixed" is
    * the type of a variable annotated as "mixed". THESE TWO ARE VERY DIFFERENT!
@@ -79,14 +87,6 @@ and _ ty_ =
    *)
   | Tany
   | Tmixed
-
-  (* The type of the various forms of "array":
-   * Tarray (None, None)         => "array"
-   * Tarray (Some ty, None)      => "array<ty>"
-   * Tarray (Some ty1, Some ty2) => "array<ty1, ty2>"
-   * Tarray (None, Some ty)      => [invalid]
-   *)
-  | Tarray : 'phase ty option * 'phase ty option -> 'phase ty_
 
   (* Nullable, called "option" in the ML parlance. *)
   | Toption : 'phase ty -> 'phase ty_
@@ -210,6 +210,16 @@ and _ ty_ =
 
   (* An instance of a class or interface, ty list are the arguments *)
   | Tclass : Nast.sid * locl ty list -> locl ty_
+
+  (* Localized version of Tarray *)
+  | Tarraykind : array_kind -> locl ty_
+
+and array_kind =
+  (* Those three types directly correspond to their decl level counterparts:
+   * array, array<_> and array<_, _> *)
+  | AKany
+  | AKvec of locl ty
+  | AKmap of locl ty * locl ty
 
 (* An abstract type derived from either a newtype, a type parameter, or some
  * dependent type

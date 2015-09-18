@@ -36,10 +36,15 @@ let rec fully_expand seen env (r, ty) =
 and fully_expand_ seen env = function
   | Tvar _ -> assert false
   | Tmixed | Tany | Tanon _ | Tprim _ as x -> x
-  | Tarray (ty1, ty2) ->
-      let ty1 = fully_expand_opt seen env ty1 in
-      let ty2 = fully_expand_opt seen env ty2 in
-      Tarray (ty1, ty2)
+  | Tarraykind akind ->
+    let akind =  match akind with
+      | AKany -> AKany
+      | AKvec ty -> AKvec (fully_expand seen env ty)
+      | AKmap (tk, tv) ->
+        let tk = fully_expand seen env tk in
+        let tv = fully_expand seen env tv in
+        AKmap (tk, tv) in
+    Tarraykind akind
   | Ttuple tyl ->
       Ttuple (List.map tyl (fully_expand seen env))
   | Tunresolved tyl ->

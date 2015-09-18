@@ -60,7 +60,7 @@ let check_constraint env ck cstr_ty ty =
        *)
       env
   | Tany, _ -> fst (TUtils.unify env cstr_ty ty)
-  | (Tmixed | Tarray (_, _) | Tprim _ | Toption _ | Tvar _
+  | (Tmixed | Tarraykind _ | Tprim _ | Toption _ | Tvar _
     | Tabstract (_, _) | Tclass (_, _) | Ttuple _ | Tanon (_, _) | Tfun _
     | Tunresolved _ | Tobject | Tshape _
     ), _ -> begin

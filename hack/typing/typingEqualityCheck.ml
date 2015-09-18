@@ -58,7 +58,7 @@ let rec assert_nontrivial p bop env ty1 ty2 =
   | (_, Toption ty1), (_, Tprim _ as ty2)
   | (_, Tprim _ as ty1), (_, Toption ty2) ->
       assert_nontrivial p bop env ty1 ty2
-  | (_, (Tany | Tmixed | Tarray (_, _) | Tprim _ | Toption _
+  | (_, (Tany | Tmixed | Tarraykind _ | Tprim _ | Toption _
     | Tvar _ | Tfun _ | Tabstract (_, _) | Tclass (_, _) | Ttuple _
     | Tanon (_, _) | Tunresolved _ | Tobject | Tshape _)
     ), _ -> ()
@@ -66,7 +66,7 @@ let rec assert_nontrivial p bop env ty1 ty2 =
 let assert_nullable p bop env ty =
   let _, ty = Env.expand_type env ty in
   match ty with
-  | r, Tarray _ ->
+  | r, Tarraykind _ ->
     let trivial_result = trivial_result_str bop in
     let ty_str = Typing_print.error (snd ty) in
     let msgl = Reason.to_string ("This is "^ty_str^" and cannot be null") r in

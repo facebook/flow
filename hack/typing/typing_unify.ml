@@ -94,16 +94,16 @@ and unify_ env r1 ty1 r2 ty2 =
     else
       let () = TUtils.uerror r1 ty1 r2 ty2 in
       env, Tany
-  | Tarray (None, None), (Tarray _ as ty)
-  | (Tarray _ as ty), Tarray (None, None) ->
+  | Tarraykind AKany, (Tarraykind _ as ty)
+  | (Tarraykind _ as ty), Tarraykind AKany ->
       env, ty
-  | Tarray (Some ty1, None), Tarray (Some ty2, None) ->
+  | Tarraykind AKvec ty1, Tarraykind AKvec ty2 ->
       let env, ty = unify env ty1 ty2 in
-      env, Tarray (Some ty, None)
-  | Tarray (Some ty1, Some ty2), Tarray (Some ty3, Some ty4) ->
+      env, Tarraykind (AKvec ty)
+  | Tarraykind AKmap (ty1, ty2), Tarraykind AKmap (ty3, ty4) ->
       let env, ty1 = unify env ty1 ty3 in
       let env, ty2 = unify env ty2 ty4 in
-      env, Tarray (Some ty1, Some ty2)
+      env, Tarraykind (AKmap (ty1, ty2))
   | Tfun ft1, Tfun ft2 ->
       let env, ft = unify_funs env r1 ft1 r2 ft2 in
       env, Tfun ft
@@ -183,7 +183,7 @@ and unify_ env r1 ty1 r2 ty2 =
              ~when_: begin fun () ->
                match ty2 with
                | Tclass ((_, y), _) -> y = x
-               | Tany | Tmixed | Tarray (_, _) | Tprim _
+               | Tany | Tmixed | Tarraykind _ | Tprim _
                | Toption _ | Tvar _ | Tabstract (_, _) | Ttuple _
                | Tanon (_, _) | Tfun _ | Tunresolved _ | Tobject
                | Tshape _ -> false
@@ -199,8 +199,8 @@ and unify_ env r1 ty1 r2 ty2 =
         )
   | _, Tabstract (AKdependent (_, _), Some (_, Tclass _)) ->
       unify_ env r2 ty2 r1 ty1
-  | (Ttuple _ as ty), Tarray (None, None)
-  | Tarray (None, None), (Ttuple _ as ty) ->
+  | (Ttuple _ as ty), Tarraykind AKany
+  | Tarraykind AKany, (Ttuple _ as ty) ->
       env, ty
   | Ttuple tyl1, Ttuple tyl2 ->
       let size1 = List.length tyl1 in
@@ -261,7 +261,7 @@ and unify_ env r1 ty1 r2 ty2 =
         (* After doing apply_shape in both directions we can be sure that
          * fields_known1 = fields_known2 *)
       env, Tshape (fields_known1, res)
-  | (Tany | Tmixed | Tarray (_, _) | Tprim _ | Toption _
+  | (Tany | Tmixed | Tarraykind _ | Tprim _ | Toption _
       | Tvar _ | Tabstract (_, _) | Tclass (_, _) | Ttuple _ | Tanon (_, _)
       | Tfun _ | Tunresolved _ | Tobject | Tshape _), _ ->
         (* Make sure to add a dependency on any classes referenced here, even if

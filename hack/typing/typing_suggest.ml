@@ -70,7 +70,7 @@ let save_type hint_kind env x arg =
             let x_pos = Reason.to_pos (fst x) in
             add_type env x_pos hint_kind arg;
         )
-    | _, (Tmixed | Tarray (_, _) | Tprim _ | Toption _
+    | _, (Tmixed | Tarraykind _ | Tprim _ | Toption _
       | Tvar _ | Tabstract (_, _) | Tclass (_, _) | Ttuple _ | Tanon (_, _)
       | Tfun _ | Tunresolved _ | Tobject | Tshape _) -> ()
   end
@@ -127,9 +127,9 @@ let rec my_unify depth env ty1 ty2 =
   | (r, Toption ty1), ty2
   | ty2, (r, Toption ty1) ->
       r, Toption (my_unify env ty1 ty2)
-  | (r, Tarray _), (_, Tarray _) ->
+  | (r, Tarraykind _), (_, Tarraykind _) ->
       (try snd (Typing_ops.unify Pos.none Typing_reason.URnone env ty1 ty2)
-      with _ -> (r, Tarray (None, None)))
+      with _ -> (r, Tarraykind AKany))
   | (_, Tunresolved tyl), ty2
   | ty2, (_, Tunresolved tyl) ->
       List.fold_left tyl ~f:(my_unify env) ~init:ty2
@@ -167,7 +167,7 @@ and normalize_ = function
     (function _, (Tany | Tunresolved []) -> true | _ -> false) ->
       let tyl = List.filter tyl begin function
         |  _, (Tany |  Tunresolved []) -> false
-        | _, (Tmixed | Tarray (_, _) | Tprim _ | Toption _
+        | _, (Tmixed | Tarraykind _ | Tprim _ | Toption _
           | Tvar _ | Tabstract (_, _) | Tclass (_, _) | Ttuple _
           | Tanon (_, _) | Tfun _ | Tunresolved _ | Tobject | Tshape _
              ) -> true
@@ -179,7 +179,7 @@ and normalize_ = function
        *)
       let rl = List.map rl begin function
         | _, Tclass (x, []) -> x
-        | _, (Tany | Tmixed | Tarray (_, _) | Tprim _
+        | _, (Tany | Tmixed | Tarraykind _ | Tprim _
           | Toption _ | Tvar _ | Tabstract (_, _) | Tclass (_, _) | Ttuple _
           | Tanon (_, _) | Tfun _ | Tunresolved _ | Tobject
           | Tshape _) -> raise Exit
@@ -196,9 +196,14 @@ and normalize_ = function
       normalize_ (Tunresolved rl)
   | Tunresolved _ | Tany -> raise Exit
   | Tmixed -> Tmixed                       (* ' with Nothing (mixed type) *)
-  | Tarray (k, v) -> begin
-    try Tarray (Option.map k normalize, Option.map v normalize)
-    with Exit -> Tarray (None, None)
+  | Tarraykind akind -> begin
+    try
+      Tarraykind (match akind with
+        | AKany -> AKany
+        | AKvec tk -> AKvec (normalize tk)
+        | AKmap (tk, tv) -> AKmap (normalize tk, normalize tv)
+      )
+    with Exit -> Tarraykind AKany
   end
   | Tabstract (AKgeneric (_, _), _) as x -> x
   | Tabstract (AKdependent _, Some ty) -> normalize_ (snd ty)
