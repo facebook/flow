@@ -263,7 +263,7 @@ module Full = struct
     | Tapply ((_, s), tyl) -> o s; o "<"; list k tyl; o ">"
     | Ttuple tyl -> o "("; list k tyl; o ")"
     | Tanon _ -> o "[fun]"
-    | Tunresolved tyl -> list_sep o "& " k tyl
+    | Tunresolved tyl -> list_sep o " | " k tyl
     | Tobject -> o "object"
     | Tshape _ -> o "[shape]"
 
