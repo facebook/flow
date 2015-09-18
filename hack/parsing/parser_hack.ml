@@ -3238,9 +3238,10 @@ and encapsed_nested start env =
   (* Advance the lexer so we can get a start position that doesn't
    * include the opening quote or the last bit of the expression or
    * whatever. Then rewind it. *)
-  let _ = L.string2 env.file env.lb in
-  let frag_start = Pos.make env.file env.lb in
-  L.back env.lb;
+  let frag_start = look_ahead env (fun env ->
+    let _ = L.string2 env.file env.lb in
+    Pos.make env.file env.lb
+  ) in
   encapsed_nested_inner start (frag_start, abs_start) env
 
 and encapsed_text env (start, abs_start) (stop, abs_stop) =
