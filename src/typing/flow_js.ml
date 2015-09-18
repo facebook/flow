@@ -1006,6 +1006,7 @@ let rec assume_ground cx ids = function
   | GetPropT(_,_,t)
   | CallT(_,{return_t = t; _})
   | MethodT(_,_,{return_t = t; _})
+  | ConstructorT(_,_,t)
 
       -> assume_ground cx ids t
 
