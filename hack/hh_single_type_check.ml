@@ -17,7 +17,7 @@ open Sys_utils
 (*****************************************************************************)
 
 type mode =
-  | Ai of string
+  | Ai of Ai_options.prepared
   | Autocomplete
   | Color
   | Coverage
@@ -193,7 +193,7 @@ let parse_options () =
     if !mode <> Errors
     then raise (Arg.Bad "only a single mode should be specified")
     else mode := x in
-  let set_ai x = set_mode (Ai x) () in
+  let set_ai x = set_mode (Ai (Ai_options.prepare x)) () in
   let options = [
     "--ai",
       Arg.String (set_ai),

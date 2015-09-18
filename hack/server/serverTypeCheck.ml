@@ -266,11 +266,11 @@ let type_check genv env =
     Typing_check_service.go genv.workers env.nenv fast in
   let errorl', failed_check = match ServerArgs.ai_mode genv.options with
     | None -> errorl', failed_check
-    | Some optstr ->
+    | Some ai_opt ->
       let fast_infos = reparse_infos files_info fast in
       let ae, af = Ai.go_incremental
         Typing_check_utils.check_defs
-        genv.workers fast_infos env.nenv optstr in
+        genv.workers fast_infos env.nenv ai_opt in
       (List.rev_append errorl' ae),
       (Relative_path.Set.union af failed_check)
   in

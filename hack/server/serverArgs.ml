@@ -13,7 +13,7 @@
 (*****************************************************************************)
 
 type options = {
-  ai_mode          : string option;
+  ai_mode          : Ai_options.prepared option;
   check_mode       : bool;
   json_mode        : bool;
   root             : Path.t;
@@ -77,7 +77,7 @@ let parse_options () =
   let version       = ref false in
   let waiting_client= ref None in
   let cdir          = fun s -> convert_dir := Some s in
-  let set_ai        = fun s -> ai_mode := Some s in
+  let set_ai        = fun s -> ai_mode := Some (Ai_options.prepare s) in
   let set_save      = fun s -> save := Some s in
   let set_wait      = fun fd -> waiting_client := Some fd in
   let options =
