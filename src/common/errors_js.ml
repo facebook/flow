@@ -131,12 +131,114 @@ let print_reason_color ~first ~one_line ~color (message: message) =
   (if first then Printf.printf "\n");
   C.print ~color_mode:color to_print
 
+
 let print_error_color ~one_line ~color (e : error) =
   let {kind; messages; trace} = e in
   let messages = prepend_kind_message messages kind in
   let messages = append_trace_reasons messages trace in
   print_reason_color ~first:true ~one_line ~color (List.hd messages);
   List.iter (print_reason_color ~first:false ~one_line ~color) (List.tl messages)
+
+let file_location_style text = (C.Underline C.Default, text)
+let default_style text = (C.Normal C.Default, text)
+let source_fragment_style text = (C.Normal C.Default, text)
+let error_fragment_style text = (C.Normal C.Red, text)
+let line_number_style text = (C.Dim C.Default, text)
+
+(* TODO: Not sure how to handle the usecase when flow reads file content from stdin *)
+let load_file f =
+  let ic = open_in f in
+  let n = in_channel_length ic in
+  let s = Bytes.create n in
+  really_input ic s 0 n;
+  close_in ic;
+  (s)
+
+(* TODO: Add proper support for relative path, for example ../../.. *)
+let relative_path filename =
+  let pwd = (Sys.getcwd ()) ^ "/" in
+  Str.global_replace (Str.regexp_string pwd) "" filename
+
+let highlight_error_in_line line c0 c1 =
+  let prefix = String.sub line 0 c0 in
+  let fragment = String.sub line c0 (c1 - c0) in
+  let suffix = String.sub line c1 ((String.length line) - c1) in
+  [
+    source_fragment_style prefix;
+    error_fragment_style fragment;
+    source_fragment_style suffix;
+  ]
+
+let print_file_at_location main_file loc s = Loc.(
+  let l0 = loc.start.line in
+  let l1 = loc._end.line in
+  let c0 = loc.start.column in
+  let c1 = loc._end.column in
+  match loc.source with
+    | Some filename ->
+      let content = load_file filename in
+      let lines = Str.split (Str.regexp "^") content in
+      let code_line = if (List.length lines) >= l0 then List.nth lines (l0 - 1) else "" in
+      let code_line = Str.global_replace (Str.regexp_string "\n") "" code_line in
+      let highlighted_line = if (l1 == l0) && (String.length code_line) > 0
+        then highlight_error_in_line code_line c0 c1
+        else [source_fragment_style code_line]
+      in
+      let padding_size = max 0 (50 - (String.length code_line)) in
+      let padding = String.make padding_size ' ' in
+      let see_another_file = if filename == main_file then [(default_style "")] else
+        [
+          default_style ". See: ";
+          file_location_style (relative_path filename);
+          file_location_style (":" ^ (string_of_int l0))
+        ]
+      in
+      line_number_style (Printf.sprintf "%3d: " l0) ::
+      highlighted_line @
+      [default_style (Printf.sprintf "%s ← %s" padding s)] @
+      see_another_file @
+      [default_style "\n"]
+
+    | None -> [default_style (Printf.sprintf "%s\n" s)]
+)
+
+let print_message_nice main_file message =
+  let loc, s = to_pp message in
+  print_file_at_location main_file loc s
+
+let print_error_header message = Loc.(
+  let loc, _ = to_pp message in
+  let filename = match loc.source with
+    | Some filename -> filename
+    | None -> ""
+  in
+  let relfilename = relative_path filename in
+  [
+    file_location_style (Printf.sprintf "%s" relfilename);
+    default_style "\n"
+  ]
+)
+
+let append_comment blame comment =
+  match blame with
+  | BlameM(loc, s) ->
+    (match comment with
+    | "Error:" -> BlameM(loc, s) (* Almost everywhere we have "Error:" that hurts readability *)
+    | comment -> BlameM(loc, s ^ ". " ^ comment))
+  | CommentM(_) -> failwith "should not be comment"
+
+(* TODO: Having a bunch of List.rev's is clowny, there must be another way *)
+let maybe_combine_message_text messages message =
+  match message with
+    | BlameM (_, _) -> messages @ [message]
+    | CommentM s ->
+      match List.rev messages with
+      | x :: xs -> (List.rev xs) @ [append_comment x s]
+      | _ -> failwith "can't append comment to nonexistent blame"
+
+(* This function merges CommentM messages into previous BlameM messages *)
+let merge_comments_into_blames messages =
+  List.fold_left maybe_combine_message_text [] messages
 
 let loc_of_error (err: error) =
   let {messages; _} = err in
@@ -145,6 +247,25 @@ let loc_of_error (err: error) =
       let loc, _ = to_pp message in
       loc
   | _ -> Loc.none
+
+let file_of_error err =
+  let loc = loc_of_error err in
+  match loc.Loc.source with Some filename -> filename | None -> ""
+
+(* TODO: Is this actually needed? Does it make sense with the new format? *)
+let remove_newlines (color, text) =
+  (color, Str.global_replace (Str.regexp "\n") "\\n" text)
+
+let print_error_color ~one_line ~color error =
+  let level, messages, trace_reasons = error in
+  let messages = append_trace_reasons messages trace_reasons in
+  let messages = merge_comments_into_blames messages in
+  let header = print_error_header (List.hd messages) in
+  let main_file = file_of_error error in
+  let formatted_messages = List.map (print_message_nice main_file) messages in
+  let to_print = header @ (List.concat formatted_messages) in
+  let to_print = if one_line then List.map remove_newlines to_print else to_print in
+  C.print ~color_mode:color (to_print @ [default_style "\n"])
 
 (* TODO: deprecate this in favor of Reason_js.json_of_loc *)
 let json_of_loc loc = Loc.(
