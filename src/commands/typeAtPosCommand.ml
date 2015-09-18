@@ -35,6 +35,8 @@ let spec = {
         ~doc:"Print paths without the root"
     |> flag "--path" (optional string)
         ~doc:"Specify (fake) path to file when reading data from stdin"
+    |> flag "--raw" no_arg
+        ~doc:"Output raw represenation of type (implies --json)"
     |> anon "args" (required (list_of string)) ~doc:"[FILE] LINE COL"
   )
 }
@@ -116,12 +118,16 @@ let handle_error (loc, err) json strip =
   );
   flush stderr
 
-let main option_values json strip_root path args () =
+let main option_values json strip_root path raw args () =
+  let json = json || raw in
+  let type_format = ServerProt.(
+    if raw then InternalTypeFormat else ExternalTypeFormat
+  ) in
   let (file, line, column) = parse_args path args in
   let root = guess_root (ServerProt.path_of_input file) in
   let ic, oc = connect_with_autostart option_values root in
   ServerProt.cmd_to_channel oc
-    (ServerProt.INFER_TYPE (file, line, column));
+    (ServerProt.INFER_TYPE (file, line, column, type_format));
   match (Marshal.from_channel ic) with
   | (Some err, None) -> handle_error err json (relativize strip_root root)
   | (None, Some resp) -> handle_response resp json (relativize strip_root root)

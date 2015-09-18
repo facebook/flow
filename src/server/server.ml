@@ -158,7 +158,16 @@ struct
       _end = { Loc.line; column = col + 1; offset = 0; };
     }
 
-  let infer_type (file_input, line, col) oc =
+  let infer_type (file_input, line, col, format) oc =
+    let printer = match format with
+      | ServerProt.InternalTypeFormat ->
+          (* Print raw representation of type as json; as it turns out, the json
+             gets cut off at a specified depth, so pass the maximum possible
+             depth to avoid that. *)
+          Constraint_js.jstr_of_t ~depth:max_int
+      | ServerProt.ExternalTypeFormat ->
+          (* Print type using Flow type syntax *)
+          Constraint_js.string_of_t in
     let file = ServerProt.file_input_get_filename file_input in
     let (err, resp) =
     (try
@@ -170,7 +179,7 @@ struct
       let (loc, ground_t, possible_ts) = TI.query_type cx loc in
       let ty = match ground_t with
         | None -> None
-        | Some t -> Some (Constraint_js.string_of_t cx t)
+        | Some t -> Some (printer cx t)
       in
       let reasons =
         possible_ts
@@ -400,8 +409,8 @@ struct
         get_importers module_names oc
     | ServerProt.GET_IMPORTS module_names ->
         get_imports module_names oc
-    | ServerProt.INFER_TYPE (fn, line, char) ->
-        infer_type (fn, line, char) oc
+    | ServerProt.INFER_TYPE (fn, line, char, format) ->
+        infer_type (fn, line, char, format) oc
     | ServerProt.KILL ->
         die_nicely genv oc
     | ServerProt.PING ->
