@@ -133,9 +133,9 @@ module Program : SERVER_PROGRAM =
         Sys.signal Sys.sigusr1 (Sys.Signal_handle Typing.debug_print_last_pos)
 
     let make_next_files dir =
-      let php_next_files = Find.make_next_files FindUtils.is_php dir in
-      let js_next_files = Find.make_next_files FindUtils.is_js dir in
-      fun () -> php_next_files () @ js_next_files ()
+      Find.make_next_files begin fun f ->
+        FindUtils.is_php f || FindUtils.is_js f
+      end dir
 
     let stamp_file = Filename.concat GlobalConfig.tmp_dir "stamp"
     let touch_stamp () =

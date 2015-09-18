@@ -22,8 +22,6 @@ let extensions = [
   ".xhp"  ; (* XHP extensions *)
 ]
 
-let is_directory path = try Sys.is_directory path with Sys_error _ -> false
-
 let is_dot_file path =
   let filename = Filename.basename path in
   String.length filename > 0 && filename.[0] = '.'
@@ -31,10 +29,8 @@ let is_dot_file path =
 let is_php path =
   not (is_dot_file path) &&
   List.exists extensions (Filename.check_suffix path) &&
-  not (is_directory path) &&
   not (FilesToIgnore.should_ignore path)
 
 let is_js path =
   not (is_dot_file path) &&
-  Filename.check_suffix path ".js" &&
-  not (is_directory path)
+  Filename.check_suffix path ".js"

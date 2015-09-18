@@ -44,7 +44,7 @@ let find_with_name paths pattern =
 
 let make_next_files filter ?(others=[]) root =
   let paths = paths_to_path_string (root::others) in
-  let ic = Unix.open_process_in ("find "^paths) in
+  let ic = Unix.open_process_in ("find "^paths^" -type f") in
   let done_ = ref false in
   (* This is subtle, but to optimize latency, we open the process and
    * then return a closure immediately. That way 'find' gets started
