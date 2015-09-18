@@ -169,7 +169,8 @@ let what_builtins mode = match mode with
   "const string __DIR__ = '';\n"^
   "const string __FUNCTION__ = '';\n"^
   "const string __METHOD__ = '';\n"^
-  "const string __NAMESPACE__ = '';\n"
+  "const string __NAMESPACE__ = '';\n"^
+  "interface Indexish<+Tk, +Tv> extends KeyedContainer<Tk, Tv> {}\n"
 
 
 (*****************************************************************************)

@@ -2420,7 +2420,7 @@ and array_get is_lvalue p env ty1 ety1 e2 ty2 =
       env, (fst ety1, Tunresolved tyl)
   | Tarray (Some ty, None) ->
       let ty1 = Reason.Ridx (fst e2), Tprim Tint in
-      let env, _ = Type.unify p Reason.URarray_get env ty2 ty1 in
+      let env = Type.sub_type p Reason.URarray_get env ty1 ty2 in
       env, ty
   | Tclass ((_, cn) as id, argl)
     when cn = SN.Collections.cVector ->
@@ -2428,7 +2428,7 @@ and array_get is_lvalue p env ty1 ety1 e2 ty2 =
         | [ty] -> ty
         | _ -> arity_error id; Reason.Rwitness p, Tany in
       let ty1 = Reason.Ridx_vector (fst e2), Tprim Tint in
-      let env, _ = Type.unify p Reason.URvector_get env ty2 ty1 in
+      let env = Type.sub_type p Reason.URvector_get env ty1 ty2 in
       env, ty
   | Tclass ((_, cn) as id, argl)
       when cn = SN.Collections.cMap
@@ -2454,7 +2454,7 @@ and array_get is_lvalue p env ty1 ety1 e2 ty2 =
             let any = (Reason.Rwitness p, Tany) in
             any, any
       in
-      let env, _ = Type.unify p Reason.URmap_get env k ty2 in
+      let env = Type.sub_type p Reason.URmap_get env k ty2 in
       env, v
   | Tclass ((_, cn), _)
       when is_lvalue &&
@@ -2470,7 +2470,7 @@ and array_get is_lvalue p env ty1 ety1 e2 ty2 =
             let any = (Reason.Rwitness p, Tany) in
             any, any
       in
-      let env, _ = Type.unify p Reason.URcontainer_get env k ty2 in
+      let env = Type.sub_type p Reason.URcontainer_get env k ty2 in
       env, v
   | Tclass ((_, cn) as id, argl)
       when not is_lvalue &&
