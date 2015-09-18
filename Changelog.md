@@ -1,3 +1,24 @@
+###v0.16.0
+
+Likely to cause new Flow errors:
+
+- Some module exports that didn't require annotations before may now require annotations
+
+New Features:
+
+- Let/const support! Finally! (Huge props to [@samwgoldman](https://github.com/samwgoldman)...again :] )
+- Support for `mixins` on `declare class` library definitions
+
+Notable Bug Fixes:
+
+- Improvements to types inferred from switch cases that fall through to a default cause
+- Further improvements on symlink support
+
+Misc:
+
+- *Significant* performance improvements (both for initial start-up time and running re-calculation time)
+- Improved `--traces` output
+
 ###v0.15.0
 
 Likely to cause new Flow errors:
