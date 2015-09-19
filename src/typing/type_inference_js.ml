@@ -1011,7 +1011,9 @@ and mk_singleton_boolean reason b =
  * in prep for main pass
  ********************************************************************)
 
-and variable_decl cx type_params_map loc entry = Ast.Statement.(
+and variable_decl cx type_params_map loc ?(implicit_init=false) entry =
+  Ast.Statement.(
+
   let value_kind, bind = match entry.VariableDeclaration.kind with
     | VariableDeclaration.Const -> Scope.Entry.Const, Env_js.bind_const
     | VariableDeclaration.Let -> Scope.Entry.Let None, Env_js.bind_let
@@ -1031,7 +1033,9 @@ and variable_decl cx type_params_map loc entry = Ast.Statement.(
       let t = type_of_pattern p |> mk_type_annotation cx type_params_map r in
       p |> destructuring cx t (fun cx loc name t ->
         Hashtbl.replace cx.type_table loc t;
-        bind cx name t r
+        if implicit_init
+        then bind ~state:Scope.Entry.Declared cx name t r
+        else bind cx name t r
       )
   ) in
 
@@ -1134,7 +1138,7 @@ and statement_decl cx type_params_map = Ast.Statement.(
       Env_js.push_lex ();
       (match left with
         | ForIn.LeftDeclaration (loc, decl) ->
-            variable_decl cx type_params_map loc decl
+            variable_decl cx type_params_map loc ~implicit_init:true decl
         | _ -> ()
       );
       statement_decl cx type_params_map body;
@@ -1144,7 +1148,7 @@ and statement_decl cx type_params_map = Ast.Statement.(
       Env_js.push_lex ();
       (match left with
         | ForOf.LeftDeclaration (loc, decl) ->
-            variable_decl cx type_params_map loc decl
+            variable_decl cx type_params_map loc ~implicit_init:true decl
         | _ -> ()
       );
       statement_decl cx type_params_map body;
@@ -2146,7 +2150,7 @@ and statement cx type_params_map = Ast.Statement.(
         | ForIn.LeftDeclaration (loc, ({ VariableDeclaration.
             kind; declarations = [vdecl]
           } as decl)) ->
-            variable_decl cx type_params_map loc decl;
+            variable_decl cx type_params_map loc ~implicit_init:true decl;
             variable cx type_params_map kind ~uninitialized:StrT.at vdecl
 
         | ForIn.LeftExpression (loc, Ast.Expression.Identifier (_, id)) ->
@@ -2207,7 +2211,7 @@ and statement cx type_params_map = Ast.Statement.(
             let repos_tvar loc =
               mod_reason_of_t (repos_reason loc) element_tvar
             in
-            variable_decl cx type_params_map loc decl;
+            variable_decl cx type_params_map loc ~implicit_init:true decl;
             variable cx type_params_map kind ~uninitialized:repos_tvar vdecl
 
         | ForOf.LeftExpression (loc, Ast.Expression.Identifier (_, id)) ->
@@ -2930,17 +2934,19 @@ and variable cx type_params_map kind
             then Env_js.pseudo_init_declared_type cx name reason
         )
     | loc, _ ->
-        (match init with
-          | Some expr ->
-              let reason = mk_reason (spf "%s _" str_of_kind) loc in
-              let t_ = type_of_pattern id
-                |> mk_type_annotation cx type_params_map reason in
-              let t = expression cx type_params_map expr in
-              Flow_js.flow cx (t, t_);
-              destructuring_assignment cx t_ id
-          | None ->
-              failwith "Parser Error: Destructuring assignment should always be init."
-        )
+        let reason = mk_reason (spf "%s _" str_of_kind) loc in
+        let typeAnnotation = type_of_pattern id in
+        let has_anno = not (typeAnnotation = None) in
+        let t_ = typeAnnotation
+          |> mk_type_annotation cx type_params_map reason in
+        let t = match init with
+          | Some expr -> expression cx type_params_map expr
+          | None -> uninitialized loc in
+        Flow_js.flow cx (t, t_);
+        destructuring cx t (fun cx loc name t ->
+          let reason = mk_reason (spf "%s %s" str_of_kind name) loc in
+          init_var cx name ~has_anno t reason
+        ) id
 )
 
 and array_element cx type_params_map undef_loc el = Ast.Expression.(

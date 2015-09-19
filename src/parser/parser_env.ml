@@ -151,6 +151,7 @@ type env = {
   no_let            : bool;
   allow_yield       : bool;
   allow_await       : bool;
+  implicit_init     : bool; (* for-of/for-in init is implied by RHS *)
   error_callback    : (env -> Error.t -> unit) option;
   lex_mode_stack    : lex_mode list ref;
   (* lex_env is the lex_env after the single lookahead has been lexed *)
@@ -191,6 +192,7 @@ let init_env ?(token_sink=None) ?(parse_options=None) lb =
     no_let            = false;
     allow_yield       = true;
     allow_await       = false;
+    implicit_init     = false;
     error_callback    = None;
     lex_mode_stack    = ref [NORMAL_LEX];
     lex_env           = ref lex_env;
@@ -216,6 +218,7 @@ let allow_await env = env.allow_await
 let no_in env = env.no_in
 let no_call env = env.no_call
 let no_let env = env.no_let
+let implicit_init env = env.implicit_init
 let errors env = !(env.errors)
 let parse_options env = env.parse_options
 
@@ -260,6 +263,7 @@ let with_no_in no_in env = { env with no_in }
 let with_in_switch in_switch env = { env with in_switch }
 let with_in_export in_export env = { env with in_export }
 let with_no_call no_call env = { env with no_call }
+let with_implicit_init implicit_init env = { env with implicit_init }
 let with_error_callback error_callback env =
   { env with error_callback = Some error_callback }
 

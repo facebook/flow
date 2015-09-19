@@ -2530,5 +2530,60 @@ module.exports = {
         '0.message': 'Unexpected token @',
       },
     }
+  },
+  'Valid uninitialized destructured bindings': {
+    'function x({ foo }) {}': {},
+    'var x = function({ foo }) {}': {},
+    'var x = ({ foo }) => {}': {},
+    'for (var { foo } of xs) {}': {},
+    'for (let { foo } of xs) {}': {},
+    'for (const { foo } of xs) {}': {},
+    'for (var { foo } in xs) {}': {},
+    'for (let { foo } in xs) {}': {},
+    'for (const { foo } in xs) {}': {}
+  },
+  'Invalid uninitialized destructured bindings': {
+    'for (var { foo };;) {}': {
+      'errors': {
+        '0': {
+          'message': 'Destructuring assignment must be initialized',
+          'loc.start.column': 9,
+          'loc.end.column': 16
+        }
+      }
+    },
+    'for (let { foo };;) {}': {
+      'errors': {
+        '0': {
+          'message': 'Destructuring assignment must be initialized',
+          'loc.start.column': 9,
+          'loc.end.column': 16
+        }
+      }
+    },
+    'for (const { foo };;) {}': {
+      'errors': {
+        '0': {
+          'message': 'Destructuring assignment must be initialized',
+          'loc.start.column': 11,
+          'loc.end.column': 18
+        }
+      }
+    }
+  },
+  'Valid uninitialized const bindings': {
+    'for (const x in xs) {}': {},
+    'for (const x of xs) {}': {}
+  },
+  'Invalid uninitialized const bindings': {
+    'for (const x;;) {}': {
+      'errors': {
+        '0': {
+          'message': 'Const must be initialized',
+          'loc.start.column': 11,
+          'loc.end.column': 12
+        }
+      }
+    }
   }
 };

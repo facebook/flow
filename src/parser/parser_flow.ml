@@ -950,7 +950,10 @@ end = struct
         end else Ast.Pattern.(
           match id with
           | _, Identifier _ -> None
-          | loc, _ -> error_at env (loc, Error.NoUninitializedDestructuring); None
+          | loc, _ ->
+              if (not (implicit_init env))
+              then error_at env (loc, Error.NoUninitializedDestructuring);
+              None
         ) in
         let end_loc = match init with
         | Some expr -> fst expr
@@ -997,7 +1000,8 @@ end = struct
       Statement.VariableDeclaration.(
         List.iter (function
           | loc, { Declarator.init = None; _ } ->
-              error_at env (loc, Error.NoUninitializedConst)
+              if (not (implicit_init env))
+              then error_at env (loc, Error.NoUninitializedConst)
           | _ -> ()
         ) (snd ret).declarations
       );
@@ -2504,23 +2508,28 @@ end = struct
             if not (Parse.is_assignable_lhs (loc, expr))
             then error_at env (loc, err)
         | _ -> error env err
-      )
+      ) in
 
-      in fun env ->
-        let start_loc = Peek.loc env in
-        Expect.token env T_FOR;
-        Expect.token env T_LPAREN;
-        let init = match Peek.token env with
+      let init env =
+        let env = env |> with_no_in true in
+        match Peek.token env with
         | T_SEMICOLON -> None
         | T_LET ->
-            let decl = Declaration._let (env |> with_no_in true)  in
+            let decl = Declaration._let env in
+            Some (Statement.For.InitDeclaration decl)
+        | T_CONST ->
+            let decl = Declaration.const env in
             Some (Statement.For.InitDeclaration decl)
         | T_VAR ->
-            let decl = Declaration.var (env |> with_no_in true) in
+            let decl = Declaration.var env in
             Some (Statement.For.InitDeclaration decl)
         | _ ->
-            let expr = Parse.expression (env |> with_no_in true |> with_no_let true) in
-            Some (Statement.For.InitExpression expr) in
+            let expr = Parse.expression (env |> with_no_let true) in
+            Some (Statement.For.InitExpression expr)
+      in
+
+      let try_forin_or_forof start_loc env =
+        let init = init (env |> with_implicit_init true) in
         match Peek.token env with
         | T_IN ->
             assert_can_be_forin_or_forof env Error.InvalidLHSInForIn init;
@@ -2556,7 +2565,18 @@ end = struct
               body;
             }))
         | _ ->
+            raise Try.Rollback
+      in
+
+      fun env ->
+        let start_loc = Peek.loc env in
+        Expect.token env T_FOR;
+        Expect.token env T_LPAREN;
+        match Try.to_parse env (try_forin_or_forof start_loc) with
+        | Try.ParsedSuccessfully expr -> expr
+        | Try.FailedToParse ->
             (* This is a for loop *)
+            let init = init env in
             Expect.token env T_SEMICOLON;
             let test = match Peek.token env with
             | T_SEMICOLON -> None
