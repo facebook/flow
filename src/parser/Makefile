@@ -5,8 +5,11 @@ DIR:=$(dir $(abspath $(lastword $(MAKEFILE_LIST))))
 TOP=$(DIR)../..
 
 NATIVE_OBJECT_FILES=\
-	hack/heap/hh_shared.o \
-	hack/utils/realpath.o
+	hack/heap/hh_shared.o\
+	hack/utils/files.o\
+	hack/utils/nproc.o\
+	hack/utils/realpath.o\
+	hack/utils/sysinfo.o
 
 all: build-parser
 
@@ -32,7 +35,7 @@ _build/src/parser/test/run_hardcoded_tests.native:
 		$(NATIVE_OBJECT_FILES); \
 	ocamlbuild \
 		-build-dir src/parser/_build \
-		-I hack/heap -I hack/utils -I src/parser \
+		-I hack/heap -I hack/utils -I hack/third-party/core -I src/parser \
 	 	-lib unix -lib str \
 	 	-lflags "$(NATIVE_OBJECT_FILES)" \
 		src/parser/test/run_hardcoded_tests.native
