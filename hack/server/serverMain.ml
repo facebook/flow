@@ -18,11 +18,17 @@ exception State_not_found
 
 let sprintf = Printf.sprintf
 
-type recheck_loop_acc = {
+type recheck_loop_stats = {
   rechecked_batches : int;
   rechecked_count : int;
   (* includes dependencies *)
   total_rechecked_count : int;
+}
+
+let empty_recheck_loop_stats = {
+  rechecked_batches = 0;
+  rechecked_count = 0;
+  total_rechecked_count = 0;
 }
 
 (*****************************************************************************)
@@ -338,6 +344,7 @@ let recheck_loop = recheck_loop {
 let serve genv env socket =
   let root = ServerArgs.root genv.options in
   let env = ref env in
+  let last_stats = ref empty_recheck_loop_stats in
   while true do
     let lock_file = ServerFiles.lock_file root in
     if not (Lock.grab lock_file) then
@@ -347,20 +354,32 @@ let serve genv env socket =
     let has_client = sleep_and_check socket in
     let has_parsing_hook = !ServerTypeCheck.hook_after_parsing <> None in
     if not has_client && not has_parsing_hook
-    then ServerIdle.go ();
+    then
+      (* Ugly hack: We want GC_SHAREDMEM_RAN to record the last rechecked
+       * count so that we can figure out if the largest reclamations
+       * correspond to massive rebases. However, the logging call is done in
+       * the SharedMem module, which doesn't know anything about Server stuff.
+       * So we wrap the call here. *)
+      HackEventLogger.with_rechecked_stats
+        !last_stats.rechecked_batches
+        !last_stats.rechecked_count
+        !last_stats.total_rechecked_count
+        ServerIdle.go;
     let start_t = Unix.time () in
     let update_id = Random_id.short_string () in
-    let acc, new_env =
+    let stats, new_env =
       HackEventLogger.with_id ~stage:`Recheck update_id begin fun () ->
         recheck_loop genv !env
       end in
     env := new_env;
-    if acc.rechecked_count > 0 then begin
-      HackEventLogger.recheck_end start_t
-        has_parsing_hook
-        acc.rechecked_batches acc.rechecked_count acc.total_rechecked_count;
+    if stats.rechecked_count > 0 then begin
+      HackEventLogger.recheck_end start_t has_parsing_hook
+        stats.rechecked_batches
+        stats.rechecked_count
+        stats.total_rechecked_count;
       Hh_logger.log "Recheck id: %s" update_id
     end;
+    last_stats := stats;
     if has_client then handle_connection genv !env socket;
   done
 

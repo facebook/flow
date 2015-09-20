@@ -104,6 +104,7 @@ begin library "hh-utils-common"
     "utils/nproc.c"
     "utils/realpath.c"
     "utils/sysinfo.c"
+    "utils/findUtils.ml"
     "utils/ident.ml"
     "utils/utils.ml"
     "utils/hh_json.ml"
@@ -313,6 +314,7 @@ begin library "hh-stubs-ai"
   requires += [ "hh-typing-base" ]
   files = [
     "stubs/ai.ml"
+    "stubs/ai_options.ml"
   ]
 end
 
@@ -374,7 +376,6 @@ begin library "hh-server-base"
     "server/fileOutline.ml"
     "server/serverIdeUtils.ml"
     "server/findRefsService.ml"
-    "server/findUtils.ml"
     "server/identifySymbolService.ml"
     "server/inferAtPosService.ml"
     "server/methodJumps.ml"
