@@ -310,7 +310,7 @@ let recheck genv old_env updates =
  * rebase, and we don't log the recheck_end event until the update list
  * is no longer getting populated. *)
 let rec recheck_loop acc genv env =
-  let t = Unix.time () in
+  let t = Unix.gettimeofday () in
   let raw_updates =
     match genv.dfind with
     | None -> SSet.empty
@@ -346,6 +346,7 @@ let serve genv env socket =
   let root = ServerArgs.root genv.options in
   let env = ref env in
   let last_stats = ref empty_recheck_loop_stats in
+  let recheck_id = ref (Random_id.short_string ()) in
   while true do
     let lock_file = ServerFiles.lock_file root in
     if not (Lock.grab lock_file) then
@@ -355,7 +356,7 @@ let serve genv env socket =
     let has_client = sleep_and_check socket in
     let has_parsing_hook = !ServerTypeCheck.hook_after_parsing <> None in
     if not has_client && not has_parsing_hook
-    then
+    then begin
       (* Ugly hack: We want GC_SHAREDMEM_RAN to record the last rechecked
        * count so that we can figure out if the largest reclamations
        * correspond to massive rebases. However, the logging call is done in
@@ -366,19 +367,18 @@ let serve genv env socket =
         !last_stats.rechecked_count
         !last_stats.total_rechecked_count
         ServerIdle.go;
-    let start_t = Unix.time () in
-    let update_id = Random_id.short_string () in
-    let stats, new_env =
-      HackEventLogger.with_id ~stage:`Recheck update_id begin fun () ->
-        recheck_loop genv !env
-      end in
+      recheck_id := Random_id.short_string ();
+    end;
+    let start_t = Unix.gettimeofday () in
+    HackEventLogger.with_id ~stage:`Recheck !recheck_id @@ fun () ->
+    let stats, new_env = recheck_loop genv !env in
     env := new_env;
     if stats.rechecked_count > 0 then begin
       HackEventLogger.recheck_end start_t has_parsing_hook
         stats.rechecked_batches
         stats.rechecked_count
         stats.total_rechecked_count;
-      Hh_logger.log "Recheck id: %s" update_id
+      Hh_logger.log "Recheck id: %s" !recheck_id
     end;
     last_stats := stats;
     if has_client then handle_connection genv !env socket;
