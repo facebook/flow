@@ -15,6 +15,7 @@ open ServerUtils
 open Utils
 
 exception State_not_found
+exception Load_state_disabled
 
 let sprintf = Printf.sprintf
 
@@ -424,6 +425,7 @@ let run_load_script genv env cmd =
           try input_line ic
           with End_of_file -> raise State_not_found
         in
+        if state_fn = "DISABLED" then raise Load_state_disabled;
         let to_recheck = ref [] in
         begin
           try
@@ -453,6 +455,11 @@ let run_load_script genv env cmd =
      Hh_logger.log "Starting from a fresh state instead...";
      let env = Program.init genv env in
      HackEventLogger.init_done "load_state_not_found";
+     env
+  | Load_state_disabled ->
+     Hh_logger.log "Load state disabled!";
+     let env = Program.init genv env in
+     HackEventLogger.init_done "load_state_disabled";
      env
   | e ->
      let msg = Printexc.to_string e in
