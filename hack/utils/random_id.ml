@@ -17,7 +17,7 @@ let () =
   assert (String.length base64_alphabet = 64)
 
 let short_string () =
-  let r = ref (Random.bits ()) in
+  let r = ref ((Random.bits () lsl 30) lor Random.bits ()) in
   let cs = ref [] in
   while !r > 0 do
     let c = base64_alphabet.[!r mod 64] in

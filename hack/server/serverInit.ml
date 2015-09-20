@@ -20,6 +20,8 @@ let init_hack genv env get_next =
   let hs = SharedMem.heap_size () in
   Hh_logger.log "Heap size: %d" hs;
   Stats.(stats.init_parsing_heap_size <- hs);
+  (* TODO: log a count of the number of files parsed... 0 is a placeholder *)
+  HackEventLogger.parsing_end t hs  ~parsed_count:0;
   let t = Hh_logger.log_duration "Parsing" t in
 
   let is_check_mode =
@@ -33,12 +35,14 @@ let init_hack genv env get_next =
 
   let t = if is_check_mode then t else begin
     Typing_deps.update_files files_info;
+    HackEventLogger.updating_deps_end t;
     Hh_logger.log_duration "Updating deps" t
   end in
 
   let errorl2, failed2, nenv =
     Relative_path.Map.fold
       Naming.ndecl_file files_info ([], Relative_path.Set.empty, env.nenv) in
+  HackEventLogger.naming_end t;
   let t = Hh_logger.log_duration "Naming" t in
 
   let fast = FileInfo.simplify_fast files_info in
@@ -47,11 +51,13 @@ let init_hack genv env get_next =
   let hs = SharedMem.heap_size () in
   Hh_logger.log "Heap size: %d" hs;
   Stats.(stats.init_heap_size <- hs);
+  HackEventLogger.type_decl_end t;
   let t = Hh_logger.log_duration "Type-decl" t in
 
   let errorl4, failed4, t =
     if ai_mode = None || not is_check_mode then
       let e, f = Typing_check_service.go genv.workers nenv fast in
+      HackEventLogger.type_check_end t;
       let t = Hh_logger.log_duration "Type-check" t in
       e, f, t
     else

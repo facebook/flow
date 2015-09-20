@@ -210,19 +210,23 @@ let type_check genv env =
   let start_t = Unix.gettimeofday () in
   let t = start_t in
   let fast_parsed, errorl, failed_parsing = parsing genv env in
-  HackEventLogger.recheck_once_parsing_end t reparse_count;
+  let hs = SharedMem.heap_size () in
+  Hh_logger.log "Heap size: %d" hs;
+  HackEventLogger.parsing_end t hs ~parsed_count:reparse_count;
   let t = Hh_logger.log_duration "Parsing" t in
 
   (* UPDATE FILE INFO *)
   let old_env = env in
   let updates = old_env.failed_parsing in
   let files_info = update_file_info env fast_parsed in
+  HackEventLogger.updating_deps_end t;
   let t = Hh_logger.log_duration "Updating deps" t in
 
   (* BUILDING AUTOLOADMAP *)
   Option.iter !hook_after_parsing begin fun f ->
     f genv old_env { env with files_info } updates
   end;
+  HackEventLogger.parsing_hook_end t;
   let t = Hh_logger.log_duration "Parsing Hook" t in
 
   (* NAMING *)
@@ -233,12 +237,16 @@ let type_check genv env =
   let fast = reparse fast files_info env.failed_decl in
   let fast = add_old_decls env.files_info fast in
   let errorl = List.rev_append errorl' errorl in
+  HackEventLogger.naming_end t;
   let t = Hh_logger.log_duration "Naming" t in
 
   let _, _, to_redecl_phase2, to_recheck1 =
     Typing_redecl_service.redo_type_decl genv.workers env.nenv fast in
   let to_redecl_phase2 = Typing_deps.get_files to_redecl_phase2 in
   let to_recheck1 = Typing_deps.get_files to_recheck1 in
+  let hs = SharedMem.heap_size () in
+  Hh_logger.log "Heap size: %d" hs;
+  HackEventLogger.first_redecl_end t hs;
   let t = Hh_logger.log_duration "Determining changes" t in
 
   let fast_redecl_phase2 = reparse fast files_info to_redecl_phase2 in
@@ -256,6 +264,9 @@ let type_check genv env =
   let to_recheck = Relative_path.Set.union env.failed_decl to_redecl_phase2 in
   let to_recheck = Relative_path.Set.union to_recheck1 to_recheck in
   let to_recheck = Relative_path.Set.union to_recheck2 to_recheck in
+  let hs = SharedMem.heap_size () in
+  Hh_logger.log "Heap size: %d" hs;
+  HackEventLogger.second_redecl_end t hs;
   let t = Hh_logger.log_duration "Type-decl" t in
 
   (* TYPE CHECKING *)
@@ -275,6 +286,7 @@ let type_check genv env =
       (Relative_path.Set.union af failed_check)
   in
   let errorl = List.rev (List.rev_append errorl' errorl) in
+  HackEventLogger.type_check_end t;
   let t = Hh_logger.log_duration "Type-check" t in
 
   Hh_logger.log "Total: %f\n%!" (t -. start_t);
