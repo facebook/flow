@@ -65,6 +65,9 @@ let run_daemon roots (ic, oc) =
   let message_in_callback () =
     (* XXX can we just select() on the writability of the oc? *)
     let () = Daemon.from_channel ic in
+    let count = SSet.cardinal !acc in
+    if count > 0
+    then Hh_logger.log "Sending %d file updates\n%!" count;
     Daemon.to_channel oc !acc;
     acc := SSet.empty
   in

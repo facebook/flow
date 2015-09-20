@@ -78,3 +78,8 @@ let to_string = function
   | Missing_hhi -> "Missing_hhi"
   | Dfind_died -> "Dfind_died"
   | Dfind_unresponsive -> "Dfind_unresponsive"
+
+let unpack = function
+  | Unix.WEXITED n -> "exit", n
+  | Unix.WSIGNALED n -> "signaled", n
+  | Unix.WSTOPPED n -> "stopped", n
