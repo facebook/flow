@@ -1011,9 +1011,7 @@ and mk_singleton_boolean reason b =
  * in prep for main pass
  ********************************************************************)
 
-and variable_decl cx type_params_map loc ?(implicit_init=false) entry =
-  Ast.Statement.(
-
+and variable_decl cx type_params_map loc entry = Ast.Statement.(
   let value_kind, bind = match entry.VariableDeclaration.kind with
     | VariableDeclaration.Const -> Scope.Entry.Const, Env_js.bind_const
     | VariableDeclaration.Let -> Scope.Entry.Let None, Env_js.bind_let
@@ -1033,9 +1031,7 @@ and variable_decl cx type_params_map loc ?(implicit_init=false) entry =
       let t = type_of_pattern p |> mk_type_annotation cx type_params_map r in
       p |> destructuring cx t (fun cx loc name t ->
         Hashtbl.replace cx.type_table loc t;
-        if implicit_init
-        then bind ~state:Scope.Entry.Declared cx name t r
-        else bind cx name t r
+        bind cx name t r
       )
   ) in
 
@@ -1138,7 +1134,7 @@ and statement_decl cx type_params_map = Ast.Statement.(
       Env_js.push_lex ();
       (match left with
         | ForIn.LeftDeclaration (loc, decl) ->
-            variable_decl cx type_params_map loc ~implicit_init:true decl
+            variable_decl cx type_params_map loc decl
         | _ -> ()
       );
       statement_decl cx type_params_map body;
@@ -1148,7 +1144,7 @@ and statement_decl cx type_params_map = Ast.Statement.(
       Env_js.push_lex ();
       (match left with
         | ForOf.LeftDeclaration (loc, decl) ->
-            variable_decl cx type_params_map loc ~implicit_init:true decl
+            variable_decl cx type_params_map loc decl
         | _ -> ()
       );
       statement_decl cx type_params_map body;
@@ -2150,7 +2146,7 @@ and statement cx type_params_map = Ast.Statement.(
         | ForIn.LeftDeclaration (loc, ({ VariableDeclaration.
             kind; declarations = [vdecl]
           } as decl)) ->
-            variable_decl cx type_params_map loc ~implicit_init:true decl;
+            variable_decl cx type_params_map loc decl;
             variable cx type_params_map kind ~uninitialized:StrT.at vdecl
 
         | ForIn.LeftExpression (loc, Ast.Expression.Identifier (_, id)) ->
@@ -2211,7 +2207,7 @@ and statement cx type_params_map = Ast.Statement.(
             let repos_tvar loc =
               mod_reason_of_t (repos_reason loc) element_tvar
             in
-            variable_decl cx type_params_map loc ~implicit_init:true decl;
+            variable_decl cx type_params_map loc decl;
             variable cx type_params_map kind ~uninitialized:repos_tvar vdecl
 
         | ForOf.LeftExpression (loc, Ast.Expression.Identifier (_, id)) ->
