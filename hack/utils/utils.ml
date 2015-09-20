@@ -341,6 +341,13 @@ let lstrip s prefix =
 
 let string_of_char = String.make 1
 
+let rpartition s c =
+  let sep_idx = String.rindex s c in
+  let first = String.sub s 0 sep_idx in
+  let second =
+    String.sub s (sep_idx + 1) (String.length s - sep_idx - 1) in
+  first, second
+
 (*****************************************************************************)
 (* Same as List.iter2, except that we only iterate as far as the shortest
  * of both lists.
