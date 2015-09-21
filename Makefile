@@ -14,6 +14,8 @@ EXTRA_LIB_PATHS=
 
 OS=$(shell uname -s)
 
+FLOWLIB=bin/flowlib.tar.gz
+
 ifeq ($(OS), Linux)
   INOTIFY=third-party/inotify
   INOTIFY_STUBS=$(INOTIFY)/inotify_stubs.o
@@ -28,7 +30,7 @@ ifeq ($(OS), Darwin)
   FSNOTIFY=fsnotify_darwin
   ELF=
   FRAMEWORKS=CoreServices CoreFoundation
-  SECTCREATE=-cclib -sectcreate -cclib __text -cclib flowlib -cclib $(abspath bin/flowlib.tar.gz)
+  SECTCREATE=-cclib -sectcreate -cclib __text -cclib flowlib -cclib $(abspath $(FLOWLIB))
 endif
 
 ################################################################################
@@ -99,17 +101,17 @@ FRAMEWORK_OPTS=$(foreach framework, $(FRAMEWORKS),-cclib -framework -cclib $(fra
 LINKER_FLAGS=$(NATIVE_OBJECT_FILES) $(NATIVE_LIB_OPTS) $(EXTRA_LIB_OPTS) $(FRAMEWORK_OPTS) $(SECTCREATE)
 
 
-all: build-flowlib-archive build-flow copy-flow-files
+all: $(FLOWLIB) build-flow copy-flow-files
 
 clean:
 	ocamlbuild -clean
 	rm -rf bin
 	rm -f hack/utils/get_build_id.gen.c
 
-build-flow: build-flow-native-deps build-flowlib-archive
+build-flow: build-flow-native-deps $(FLOWLIB)
 	ocamlbuild  -no-links  $(INCLUDE_OPTS) $(LIB_OPTS) -lflags "$(LINKER_FLAGS)" src/flow.native
 
-build-flow-debug: build-flow-native-deps build-flowlib-archive
+build-flow-debug: build-flow-native-deps $(FLOWLIB)
 	ocamlbuild -lflags -custom -no-links $(INCLUDE_OPTS) $(LIB_OPTS) -lflags "$(LINKER_FLAGS)" src/flow.d.byte
 	mkdir -p bin
 	cp _build/src/flow.d.byte bin/flow
@@ -121,14 +123,22 @@ build-flow-native-deps: build-flow-stubs
 build-flow-stubs:
 	echo "const char* const BuildInfo_kRevision = \"$$(git rev-parse HEAD 2>/dev/null || hg identify -i)\";" > hack/utils/get_build_id.gen.c
 
-build-flowlib-archive:
+# We only rebuild the flowlib archive if any of the libs have changed. If the
+# archive has changed, then the incremental build needs to re-embed it into the
+# binary. Unfortunately we rely on ocamlbuild to embed the archive on OSX and
+# ocamlbuild isn't smart enough to understand dependencies outside of its
+# automatic-dependency stuff.
+$(FLOWLIB): $(wildcard lib/*)
 	mkdir -p bin
-	cd lib && tar czf ../bin/flowlib.tar.gz ./* && cd ..
+	tar czf $@ -C lib .
+ifeq ($(OS), Darwin)
+	rm -f _build/src/flow.d.byte _build/src/flow.native
+endif
 
 copy-flow-files: build-flow $(FILES_TO_COPY)
 	mkdir -p bin
 ifeq ($(OS), Linux)
-	objcopy --add-section flowlib=bin/flowlib.tar.gz _build/src/flow.native bin/flow
+	objcopy --add-section flowlib=$(FLOWLIB) _build/src/flow.native bin/flow
 else
 	cp _build/src/flow.native bin/flow
 endif
