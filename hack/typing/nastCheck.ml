@@ -475,6 +475,55 @@ and check_is_trait env (h : hint) =
   | _ -> failwith "assertion failure: trait isn't an Happly"
   )
 
+(* Class properties can only be initialized with a static literal expression. *)
+and check_class_property_initialization prop =
+  (* Only do the check if property is initialized. *)
+  Option.iter prop.cv_expr ~f:begin fun e ->
+    let rec rec_assert_static_literal e =
+      match (snd e) with
+      | Any | Shape _
+      | Id _ | Class_const _ | True | False | Int _ | Float _
+      | Null | String _ ->
+        ()
+      | Array field_list ->
+        List.iter field_list begin function
+          | AFvalue expr -> rec_assert_static_literal expr
+          | AFkvalue (expr1, expr2) ->
+              rec_assert_static_literal expr1;
+              rec_assert_static_literal expr2;
+        end
+      | List el
+      | Expr_list el
+      | String2 el
+      | ValCollection (_, el) ->
+        List.iter el begin function e ->
+          rec_assert_static_literal e;
+        end
+      | Pair (expr1, expr2)
+      | Binop (_, expr1, expr2) ->
+        rec_assert_static_literal expr1;
+        rec_assert_static_literal expr2;
+      | KeyValCollection (_, field_list) ->
+        List.iter field_list begin function (expr1, expr2) ->
+          rec_assert_static_literal expr1;
+          rec_assert_static_literal expr2;
+        end
+      | Cast (_, e)
+      | Unop (_, e) ->
+        rec_assert_static_literal e;
+      | Eif (expr1, optional_expr, expr2) ->
+        rec_assert_static_literal expr1;
+        Option.iter optional_expr rec_assert_static_literal;
+        rec_assert_static_literal expr2;
+      | This | Lvar _ | Lplaceholder _ | Fun_id _ | Method_id _
+      | Method_caller _ | Smethod_id _ | Obj_get _ | Array_get _ | Class_get _
+      | Call _ | Special_func _ | Yield_break | Yield _
+      | Await _ | InstanceOf _ | New _ | Efun _ | Xml _ | Assert _ | Clone _ ->
+        Errors.class_property_only_static_literal (fst e)
+    in
+    rec_assert_static_literal e;
+  end
+
 and interface c =
   let enforce_no_body = begin fun m ->
     match m.m_body with
@@ -549,6 +598,7 @@ and check_no_class_tparams class_tparams (pos, ty)  =
         check_tparams root_ty
 
 and class_var env cv =
+  check_class_property_initialization cv;
   let hint_env =
     (* If this is an XHP attribute and we're in strict mode,
        relax to partial mode to allow the use of generic

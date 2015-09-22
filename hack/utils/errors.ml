@@ -358,6 +358,7 @@ module Typing                               = struct
   let invalid_memoized_param                = 4149 (* DONT MODIFY!!!! *)
   let illegal_type_structure                = 4150 (* DONT MODIFY!!!! *)
   let not_nullable_compare_null_trivial     = 4151 (* DONT MODIFY!!!! *)
+  let class_property_only_static_literal    = 4152 (* DONT MODIFY!!!! *)
   (* EXTEND HERE WITH NEW VALUES IF NEEDED *)
 end
 
@@ -1804,6 +1805,11 @@ let illegal_typeconst_direct_access pos =
     "Type constants cannot be directly accessed. "
     ^"Use type_structure(ValidClassname::class, 'TypeConstName') instead" in
   add Typing.illegal_type_structure pos msg
+
+let class_property_only_static_literal pos =
+  let msg =
+    "Initialization of class property must be a static literal expression." in
+  add Typing.class_property_only_static_literal pos msg
 
 (*****************************************************************************)
 (* Convert relative paths to absolute. *)
