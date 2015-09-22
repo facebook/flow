@@ -63,7 +63,6 @@ val allow_await: env -> bool
 val no_in : env -> bool
 val no_call : env -> bool
 val no_let : env -> bool
-val implicit_init : env -> bool
 val errors : env -> (Loc.t * Parse_error.t) list
 val parse_options : env -> parse_options
 
@@ -94,7 +93,6 @@ val with_no_in : bool -> env -> env
 val with_in_switch : bool -> env -> env
 val with_in_export : bool -> env -> env
 val with_no_call : bool -> env -> env
-val with_implicit_init : bool -> env -> env
 val with_error_callback : (env -> Parse_error.t -> unit) -> env -> env
 
 val without_error_callback : env -> env

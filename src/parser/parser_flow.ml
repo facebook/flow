@@ -943,69 +943,68 @@ end = struct
     let variable_declaration_list =
       let variable_declaration env =
         let id = pattern env Error.StrictVarName in
-        let init = if Peek.token env = T_ASSIGN
+        let init, errs = if Peek.token env = T_ASSIGN
         then begin
           Expect.token env T_ASSIGN;
-          Some (Parse.assignment env)
+          Some (Parse.assignment env), []
         end else Ast.Pattern.(
           match id with
-          | _, Identifier _ -> None
-          | loc, _ ->
-              if (not (implicit_init env))
-              then error_at env (loc, Error.NoUninitializedDestructuring);
-              None
+          | _, Identifier _ -> None, []
+          | loc, _ -> None, [(loc, Error.NoUninitializedDestructuring)]
         ) in
         let end_loc = match init with
         | Some expr -> fst expr
         | _ -> fst id in
-        Loc.btwn (fst id) end_loc, Ast.Statement.VariableDeclaration.Declarator.({
+        (Loc.btwn (fst id) end_loc, Ast.Statement.VariableDeclaration.Declarator.({
           id;
           init;
-        })
+        })), errs
 
-      in let rec helper env acc =
-        let acc = (variable_declaration env)::acc in
+      in let rec helper env decls errs =
+        let decl, errs_ = variable_declaration env in
+        let decls = decl::decls in
+        let errs = errs @ errs_ in
         if Peek.token env = T_COMMA
         then begin
           Expect.token env T_COMMA;
-          helper env acc
+          helper env decls errs
         end else
-          let end_loc = match acc with
+          let end_loc = match decls with
           | (loc, _)::_ -> loc
           | _ -> Loc.none in
-          let declarations = List.rev acc in
-          let start_loc = match acc with
+          let declarations = List.rev decls in
+          let start_loc = match decls with
           | (loc, _)::_ -> loc
           | _ -> Loc.none in
-          Loc.btwn start_loc end_loc, declarations
+          Loc.btwn start_loc end_loc, declarations, errs
 
-      in fun env -> helper env []
+      in fun env -> helper env [] []
 
     let declarations token kind env =
       let start_loc = Peek.loc env in
       Expect.token env token;
-      let loc, declarations = variable_declaration_list env in
-      Loc.btwn start_loc loc, Statement.VariableDeclaration.({
+      let loc, declarations, errs = variable_declaration_list env in
+      (Loc.btwn start_loc loc, Statement.VariableDeclaration.({
         kind;
         declarations;
-      })
+      })), errs
 
     let var = declarations T_VAR Statement.VariableDeclaration.Var
 
     let const env =
       let env = env |> with_no_let true in
-      let ret =
+      let (loc, variable), errs =
         declarations T_CONST Statement.VariableDeclaration.Const env in
       (* Make sure all consts defined are initialized *)
-      Statement.VariableDeclaration.(
-        List.iter (function
+      let errs = Statement.VariableDeclaration.(
+        List.fold_left (fun errs decl ->
+          match decl with
           | loc, { Declarator.init = None; _ } ->
-              if (not (implicit_init env))
-              then error_at env (loc, Error.NoUninitializedConst)
-          | _ -> ()
-        ) (snd ret).declarations
-      );
-      ret
+              (loc, Error.NoUninitializedConst)::errs
+          | _ -> errs
+        ) errs variable.declarations
+      ) in
+      (loc, variable), errs
 
     let _let env =
       let env = env |> with_no_let true in
@@ -1013,7 +1012,7 @@ end = struct
 
     let variable env =
       let start_loc = Peek.loc env in
-      let end_loc, variable = match Peek.token env with
+      let (end_loc, variable), errs = match Peek.token env with
       | T_CONST -> const env
       | T_LET   -> _let env
       | T_VAR   -> var env
@@ -1021,7 +1020,7 @@ end = struct
           error_unexpected env;
           (* We need to return something. This is as good as anything else *)
           var env in
-      Loc.btwn start_loc end_loc, Statement.VariableDeclaration variable
+      (Loc.btwn start_loc end_loc, Statement.VariableDeclaration variable), errs
   end
 
   module Expression = struct
@@ -2510,26 +2509,28 @@ end = struct
         | _ -> error env err
       ) in
 
-      let init env =
-        let env = env |> with_no_in true in
-        match Peek.token env with
-        | T_SEMICOLON -> None
-        | T_LET ->
-            let decl = Declaration._let env in
-            Some (Statement.For.InitDeclaration decl)
-        | T_CONST ->
-            let decl = Declaration.const env in
-            Some (Statement.For.InitDeclaration decl)
-        | T_VAR ->
-            let decl = Declaration.var env in
-            Some (Statement.For.InitDeclaration decl)
-        | _ ->
-            let expr = Parse.expression (env |> with_no_let true) in
-            Some (Statement.For.InitExpression expr)
-      in
+      fun env ->
+        let start_loc = Peek.loc env in
+        Expect.token env T_FOR;
+        Expect.token env T_LPAREN;
 
-      let try_forin_or_forof start_loc env =
-        let init = init (env |> with_implicit_init true) in
+        let init, errs =
+          match Peek.token env with
+          | T_SEMICOLON -> None, []
+          | T_LET ->
+              let decl, errs = Declaration._let (env |> with_no_in true) in
+              Some (Statement.For.InitDeclaration decl), errs
+          | T_CONST ->
+              let decl, errs = Declaration.const (env |> with_no_in true) in
+              Some (Statement.For.InitDeclaration decl), errs
+          | T_VAR ->
+              let decl, errs = Declaration.var (env |> with_no_in true) in
+              Some (Statement.For.InitDeclaration decl), errs
+          | _ ->
+              let expr = Parse.expression (env |> with_no_in true |> with_no_let true) in
+              Some (Statement.For.InitExpression expr), []
+        in
+
         match Peek.token env with
         | T_IN ->
             assert_can_be_forin_or_forof env Error.InvalidLHSInForIn init;
@@ -2565,18 +2566,8 @@ end = struct
               body;
             }))
         | _ ->
-            raise Try.Rollback
-      in
-
-      fun env ->
-        let start_loc = Peek.loc env in
-        Expect.token env T_FOR;
-        Expect.token env T_LPAREN;
-        match Try.to_parse env (try_forin_or_forof start_loc) with
-        | Try.ParsedSuccessfully expr -> expr
-        | Try.FailedToParse ->
             (* This is a for loop *)
-            let init = init env in
+            errs |> List.iter (error_at env);
             Expect.token env T_SEMICOLON;
             let test = match Peek.token env with
             | T_SEMICOLON -> None
@@ -2746,11 +2737,12 @@ end = struct
       }));
 
     and var_or_const env =
-      let start_loc, declaration = Declaration.variable env in
+      let (start_loc, declaration), errs = Declaration.variable env in
       let end_loc = match Peek.semicolon_loc env with
       | None -> start_loc
       | Some end_loc -> end_loc in
       Eat.semicolon env;
+      errs |> List.iter (error_at env);
       Loc.btwn start_loc end_loc, declaration
 
     and _let env =
@@ -2760,7 +2752,7 @@ end = struct
       then begin
         (* Let statement *)
         Expect.token env T_LPAREN;
-        let end_loc, declarations =
+        let end_loc, declarations, errs =
           Declaration.variable_declaration_list (env |> with_no_let true) in
         let head = List.map
           (fun (_, {Ast.Statement.VariableDeclaration.Declarator.id; init;}) ->
@@ -2772,13 +2764,14 @@ end = struct
         | None -> end_loc
         | Some end_loc -> end_loc in
         Eat.semicolon env;
+        errs |> List.iter (error_at env);
         Loc.btwn start_loc end_loc, Statement.(Let Let.({
           head;
           body;
         }))
       end else begin
         (* Let declaration *)
-        let end_loc, declarations =
+        let end_loc, declarations, errs =
           Declaration.variable_declaration_list (env |> with_no_let true) in
         let declaration =
           Ast.(Statement.VariableDeclaration Statement.VariableDeclaration.({
@@ -2789,6 +2782,7 @@ end = struct
         | None -> end_loc
         | Some end_loc -> end_loc in
         Eat.semicolon env;
+        errs |> List.iter (error_at env);
         Loc.btwn start_loc end_loc, declaration
       end
 
