@@ -8,7 +8,6 @@
  *
  *)
 
-open Constraint_js
 open Utils
 
 type getdef_type =
@@ -60,11 +59,11 @@ let getdef_get_result cx state =
         Flow_js.Autocomplete.map_of_member_result member_result in
       (match SMap.get name result_map with
       | Some t ->
-          loc_of_t t
+          Type.loc_of_t t
       | None ->
           Loc.none)
   | Some Gdrequire name ->
-      let module_name = Module_js.imported_module cx.file name in
+      let module_name = Module_js.imported_module cx.Constraint_js.file name in
       let f = Module_js.get_module_file module_name in
       (match f with
       | Some file -> Loc.({ none with source = Some file })

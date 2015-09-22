@@ -183,7 +183,7 @@ struct
       in
       let reasons =
         possible_ts
-        |> List.map Constraint_js.reason_of_t
+        |> List.map Type.reason_of_t
       in
       (None, Some (loc, ty, reasons))
     with exn ->

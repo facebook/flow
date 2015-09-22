@@ -136,7 +136,7 @@ let autocomplete_member client_logging_context cx this = Flow_js.(
 
   let result_map = autocomplete_filter_members result_map in
   let result_map = SMap.mapi (fun name t ->
-      let loc = loc_of_t t in
+      let loc = Type.loc_of_t t in
       let gt = printified_type cx t in
       autocomplete_create_result cx name gt loc
     ) result_map in

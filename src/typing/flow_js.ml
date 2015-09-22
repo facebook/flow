@@ -5671,7 +5671,7 @@ let rec assert_ground ?(infer=false) cx skip ids = function
           of derivable entirely. **)
       ()
 
-  | t -> failwith (streason_of_t t) (** TODO **)
+  | t -> failwith (string_of_reason (reason_of_t t)) (** TODO **)
 
 and assert_ground_id cx skip ids id =
   if not (ISet.mem id !ids)

@@ -514,7 +514,7 @@ let dump_types cx =
     let ground_t = Flow_js.printified_type cx t in
     let possible_ts = Flow_js.possible_types_of_type cx t in
     let possible_reasons = possible_ts
-      |> List.map Constraint_js.reason_of_t
+      |> List.map reason_of_t
     in
     (loc, string_of_t cx ground_t, possible_reasons)::list
   ) cx.type_table [] in
@@ -905,7 +905,7 @@ let rec convert cx type_params_map = Ast.Type.(function
           let keyt = convert cx type_params_map key in
           let valuet = convert cx type_params_map value in
           false,
-          Some { Constraint_js.Type.
+          Some { Type.
             dict_name = Some name;
             key = keyt;
             value = valuet

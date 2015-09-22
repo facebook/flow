@@ -24,7 +24,7 @@ type hook_state_t = {
 
   member_hook:
      (Constraint_js.context ->
-      string -> Loc.t -> Constraint_js.Type.t ->
+      string -> Loc.t -> Type.t ->
       bool);
 
 (* TODO: This is inconsistent with the way the id/member hooks work, but we
@@ -32,7 +32,7 @@ type hook_state_t = {
          things a bit *)
   call_hook:
      (Constraint_js.context ->
-      string -> Loc.t -> Constraint_js.Type.t ->
+      string -> Loc.t -> Type.t ->
       unit);
 
   require_hook:
