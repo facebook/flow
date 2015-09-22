@@ -47,6 +47,18 @@ const.js:15:1,1: x
 const cannot be reassigned
 const.js:1:7,7: const x
 
+const.js:19:9,11: string
+This type is incompatible with
+const.js:21:7,12: number
+
+const.js:20:18,22: string
+This type is incompatible with
+const.js:22:7,12: number
+
+const.js:25:14,16: string
+This type is incompatible with
+const.js:26:9,14: number
+
 rebinding.js:16:8,8: A
 name is already bound
 rebinding.js:15:8,8: type A
@@ -214,4 +226,4 @@ tdz.js:89:5,13: undefined
 This type is incompatible with
 tdz.js:89:8,13: number
 
-Found 54 errors
+Found 57 errors

@@ -2931,17 +2931,19 @@ and variable cx type_params_map kind
             then Env_js.pseudo_init_declared_type cx name reason
         )
     | loc, _ ->
-        (match init with
-          | Some expr ->
-              let reason = mk_reason (spf "%s _" str_of_kind) loc in
-              let t_ = type_of_pattern id
-                |> mk_type_annotation cx type_params_map reason in
-              let t = expression cx type_params_map expr in
-              Flow_js.flow cx (t, t_);
-              destructuring_assignment cx t_ id
-          | None ->
-              failwith "Parser Error: Destructuring assignment should always be init."
-        )
+        let reason = mk_reason (spf "%s _" str_of_kind) loc in
+        let typeAnnotation = type_of_pattern id in
+        let has_anno = not (typeAnnotation = None) in
+        let t_ = typeAnnotation
+          |> mk_type_annotation cx type_params_map reason in
+        let t = match init with
+          | Some expr -> expression cx type_params_map expr
+          | None -> uninitialized loc in
+        Flow_js.flow cx (t, t_);
+        destructuring cx t (fun cx loc name t ->
+          let reason = mk_reason (spf "%s %s" str_of_kind name) loc in
+          init_var cx name ~has_anno t reason
+        ) id
 )
 
 and array_element cx type_params_map undef_loc el = Ast.Expression.(
