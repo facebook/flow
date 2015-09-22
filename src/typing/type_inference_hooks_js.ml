@@ -14,6 +14,8 @@ let member_nop _ _ _ _ = false
 
 let call_nop _ _ _ _ = ()
 
+let require_nop _ _ _ = ()
+
 type hook_state_t = {
   id_hook:
      (Constraint_js.context ->
@@ -32,12 +34,18 @@ type hook_state_t = {
      (Constraint_js.context ->
       string -> Loc.t -> Constraint_js.Type.t ->
       unit);
+
+  require_hook:
+     (Constraint_js.context ->
+      string -> Loc.t ->
+      unit);
 }
 
 let nop_hook_state = {
   id_hook = id_nop;
   member_hook = member_nop;
   call_hook = call_nop;
+  require_hook = require_nop;
 }
 
 let hook_state = ref nop_hook_state
@@ -51,6 +59,9 @@ let set_member_hook hook =
 let set_call_hook hook =
   hook_state := { !hook_state with call_hook = hook }
 
+let set_require_hook hook =
+  hook_state := { !hook_state with require_hook = hook }
+
 let reset_hooks () =
   hook_state := nop_hook_state
 
@@ -62,3 +73,6 @@ let dispatch_member_hook cx name loc this_t =
 
 let dispatch_call_hook cx name loc this_t =
   !hook_state.call_hook cx name loc this_t
+
+let dispatch_require_hook cx name loc =
+  !hook_state.require_hook cx name loc

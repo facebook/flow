@@ -306,16 +306,9 @@ struct
       Marshal.to_channel oc patches [];
       flush oc
 
-  let find_modules module_names oc =
-    let response =
-      List.fold_left (fun module_map module_name ->
-        match Module_js.get_module_file module_name with
-        | Some file ->
-            SMap.add module_name file module_map
-        | None ->
-            module_map
-        ) SMap.empty module_names
-    in
+  let find_module (moduleref, filename) oc =
+    let module_name = Module_js.imported_module filename moduleref in
+    let response = Module_js.get_module_file module_name in
     Marshal.to_channel oc response [];
     flush oc
 
@@ -401,8 +394,8 @@ struct
         dump_types fn oc
     | ServerProt.ERROR_OUT_OF_DATE ->
         incorrect_hash oc
-    | ServerProt.FIND_MODULES module_names ->
-        find_modules module_names oc
+    | ServerProt.FIND_MODULE (moduleref, filename) ->
+        find_module (moduleref, filename) oc
     | ServerProt.GET_DEF (fn, line, char) ->
         get_def (fn, line, char) oc
     | ServerProt.GET_IMPORTERS module_names ->

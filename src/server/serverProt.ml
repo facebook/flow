@@ -35,7 +35,7 @@ type command =
 | CHECK_FILE of file_input
 | DUMP_TYPES of file_input
 | ERROR_OUT_OF_DATE
-| FIND_MODULES of string list
+| FIND_MODULE of string * string
 | GET_DEF of file_input * int * int (* filename, line, char *)
 | GET_IMPORTERS of string list
 | GET_IMPORTS of string list

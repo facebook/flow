@@ -14,6 +14,7 @@ open Utils
 type getdef_type =
 | Gdloc of Loc.t
 | Gdmem of (string * Type.t)
+| Gdrequire of string
 
 let getdef_id (state, loc1) cx name loc2 =
   if Reason_js.in_range loc1 loc2
@@ -43,6 +44,12 @@ let getdef_call (state, loc1) cx name loc2 this_t =
     state := Some (Gdmem (name, this_t))
   )
 
+let getdef_require (state, loc1) cx name loc2 =
+  if (Reason_js.in_range loc1 loc2)
+  then (
+    state := Some (Gdrequire (name))
+  )
+
 let getdef_get_result cx state =
   match !state with
   | Some Gdloc (loc) -> loc
@@ -56,6 +63,12 @@ let getdef_get_result cx state =
           loc_of_t t
       | None ->
           Loc.none)
+  | Some Gdrequire name ->
+      let module_name = Module_js.imported_module cx.file name in
+      let f = Module_js.get_module_file module_name in
+      (match f with
+      | Some file -> Loc.({ none with source = Some file })
+      | None -> Loc.none)
   | _ ->
       Loc.none
 
@@ -64,6 +77,7 @@ let getdef_set_hooks pos =
   Type_inference_hooks_js.set_id_hook (getdef_id (state, pos));
   Type_inference_hooks_js.set_member_hook (getdef_member (state, pos));
   Type_inference_hooks_js.set_call_hook (getdef_call (state, pos));
+  Type_inference_hooks_js.set_require_hook (getdef_require (state, pos));
   state
 
 let getdef_unset_hooks () =

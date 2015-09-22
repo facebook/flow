@@ -145,6 +145,7 @@ let mark_dependency cx module_ loc = (
 
 let require cx m m_name loc =
   mark_dependency cx m loc;
+  Type_inference_hooks_js.dispatch_require_hook cx m_name loc;
   let reason = mk_reason (spf "CommonJS exports of \"%s\"" m) loc in
   Flow_js.mk_tvar_where cx reason (fun t ->
     Flow_js.flow cx (
