@@ -47,15 +47,15 @@ const.js:15:1,1: x
 const cannot be reassigned
 const.js:1:7,7: const x
 
-const.js:19:9,11: string
+const.js:21:2,4: string
 This type is incompatible with
 const.js:21:7,12: number
 
-const.js:20:18,22: string
+const.js:22:2,4: string
 This type is incompatible with
 const.js:22:7,12: number
 
-const.js:25:14,16: string
+const.js:26:4,6: string
 This type is incompatible with
 const.js:26:9,14: number
 
