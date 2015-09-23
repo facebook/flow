@@ -69,7 +69,7 @@ new_react.js:5:5,13: propTypes
 This type is incompatible with
 new_react.js:18:18,23: string
 
-new_react.js:15:23,35: initialState
+new_react.js:15:22,22: initial state of React component
 Error:
 new_react.js:3:9,27:2: state of React component
 Expected object instead of

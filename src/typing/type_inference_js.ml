@@ -4457,15 +4457,24 @@ and react_create_class cx type_params_map loc class_props = Ast.Expression.(
           let { params; defaults; rest; body;
             returnType; typeParameters; _ } = func
           in
-          let reason = mk_reason "initialState" vloc in
+          let reason = mk_reason "initial state of React component" vloc in
           let t = mk_method cx type_params_map reason (params, defaults, rest)
             returnType body this (MixedT reason)
+          in
+          (* since the call to getInitialState happens internally, we need to
+             fake a location to pretend the call happened. using the position
+             of the return type makes it act like an IIFE. *)
+          let ret_reason = match t with
+          | FunT (_, _, _, { return_t; _ }) ->
+            repos_reason (loc_of_t return_t) reason
+          | _ ->
+            reason
           in
           let override_state =
             ObjAssignT(reason_state, state, AnyT.t, [], false)
           in
           Flow_js.flow cx (t,
-            CallT (reason,
+            CallT (ret_reason,
               Flow_js.mk_functiontype [] override_state));
           fmap, mmap
         )
