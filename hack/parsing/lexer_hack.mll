@@ -99,6 +99,7 @@ type token =
   | Tlambda
   | Tem
   | Tqm
+  | Tqmqm
   | Tamp
   | Ttild
   | Tincr
@@ -213,6 +214,7 @@ let token_to_string = function
   | Tlambda       -> "==>"
   | Tem           -> "!"
   | Tqm           -> "?"
+  | Tqmqm         -> "??"
   | Tamp          -> "&"
   | Ttild         -> "~"
   | Tincr         -> "++"
@@ -376,6 +378,7 @@ rule token file = parse
   | "==>"              { Tlambda      }
   | '!'                { Tem          }
   | '?'                { Tqm          }
+  | "??"               { Tqmqm        }
   | '&'                { Tamp         }
   | '~'                { Ttild        }
   | "++"               { Tincr        }
@@ -691,6 +694,7 @@ and format_token = parse
   | "==>"              { Tlambda       }
   | '!'                { Tem           }
   | '?'                { Tqm           }
+  | "??"               { Tqmqm         }
   | '&'                { Tamp          }
   | '~'                { Ttild         }
   | "++"               { Tincr         }

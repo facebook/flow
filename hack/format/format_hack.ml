@@ -2534,6 +2534,8 @@ and expr_remain lowest env =
        *   ...
        *)
       1
+  | Tqmqm ->
+      expr_binop lowest "??" Tqmqm env
   | Tword when !(env.last_str) = "xor" ->
       expr_binop lowest "xor" Txor env
   | Tword when !(env.last_str) = "instanceof" ->

@@ -1260,6 +1260,11 @@ and expr_ ~in_cond ~(valkind: [> `lvalue | `rvalue | `other ]) env (p, e) =
       let env, ty1 = TUtils.unresolved env ty1 in
       let env, ty2 = TUtils.unresolved env ty2 in
       Unify.unify env ty1 ty2
+  | NullCoalesce (e1, e2) ->
+      (* Desugar `$a ?? $b` into `$a !== null ? $a : $b` *)
+      let c = (p, Binop (Ast.Diff2, e1, (p, Null))) in
+      let eif = (p, Eif (c, Some e1, e2)) in
+      expr env eif
   | Class_const (cid, mid) -> class_const env p (cid, mid)
   | Class_get (x, (_, y))
       when Env.FakeMembers.get_static env x y <> None ->

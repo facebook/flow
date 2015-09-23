@@ -168,7 +168,10 @@ module CheckFunctionType = struct
         ()
     | _, Eif (e1, Some e2, e3) ->
         liter expr f_type [e1; e2; e3];
-      ()
+        ()
+    | _, NullCoalesce (e1, e2) ->
+        liter expr f_type [e1; e2];
+        ()
     | _, New (_, el, uel) ->
       liter expr f_type el;
       liter expr f_type uel;
@@ -515,6 +518,9 @@ and check_class_property_initialization prop =
         rec_assert_static_literal expr1;
         Option.iter optional_expr rec_assert_static_literal;
         rec_assert_static_literal expr2;
+      | NullCoalesce (expr1, expr2) ->
+        rec_assert_static_literal expr1;
+        rec_assert_static_literal expr2;
       | This | Lvar _ | Lplaceholder _ | Fun_id _ | Method_id _
       | Method_caller _ | Smethod_id _ | Obj_get _ | Array_get _ | Class_get _
       | Call _ | Special_func _ | Yield_break | Yield _
@@ -826,6 +832,10 @@ and expr_ env = function
       expr env e1;
       expr env e2;
       expr env e3;
+      ()
+  | NullCoalesce (e1, e2) ->
+      expr env e1;
+      expr env e2;
       ()
   | Assert (AE_assert e)
   | InstanceOf (e, _) ->

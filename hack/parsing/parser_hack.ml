@@ -240,8 +240,8 @@ let rec check_lvalue env = function
   | Class_const _ | Call _ | Int _ | Float _
   | String _ | String2 _ | Yield _ | Yield_break
   | Await _ | Expr_list _ | Cast _ | Unop _
-  | Binop _ | Eif _ | InstanceOf _ | New _ | Efun _ | Lfun _ | Xml _
-  | Import _) ->
+  | Binop _ | Eif _ | NullCoalesce _ | InstanceOf _ | New _ | Efun _ | Lfun _
+  | Xml _ | Import _) ->
       error_at env pos "Invalid lvalue"
 
 (* The bound variable of a foreach can be a reference (but not inside
@@ -276,6 +276,7 @@ let priorities = [
   (Left, [Tcomma]);
   (Right, [Tprint]);
   (Left, [Tqm; Tcolon]);
+  (Right, [Tqmqm]);
   (Left, [Tbarbar]);
   (Left, [Txor]);
   (Left, [Tampamp]);
@@ -2464,6 +2465,8 @@ and expr_remain env e1 =
       expr_array_get env e1
   | Tqm ->
       expr_if env e1
+  | Tqmqm ->
+      expr_null_coalesce env e1
   | Tword when Lexing.lexeme env.lb = "instanceof" ->
       expr_instanceof env e1
   | Tword when Lexing.lexeme env.lb = "and" ->
@@ -3199,6 +3202,15 @@ and colon_if env e1 =
   let e2 = expr env in
   Pos.btw (fst e1) (fst e2), Eif (e1, None, e2)
 
+(*****************************************************************************)
+(* Null coalesce expression: _??_ *)
+(*****************************************************************************)
+
+and expr_null_coalesce env e1 =
+  reduce env e1 Tqmqm begin fun e1 env ->
+    let e2 = expr env in
+    btw e1 e2, NullCoalesce (e1, e2)
+  end
 
 (*****************************************************************************)
 (* Strings *)

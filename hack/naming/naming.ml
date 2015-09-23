@@ -2030,6 +2030,10 @@ and expr_ env = function
       let e2opt = oexpr env e2opt in
       let e3 = expr env e3 in
       N.Eif (e1, e2opt, e3)
+  | NullCoalesce (e1, e2) ->
+      let e1 = expr env e1 in
+      let e2 = expr env e2 in
+      N.NullCoalesce (e1, e2)
   | InstanceOf (e, (p, Id x)) ->
     let id = match x with
       | px, n when n = SN.Classes.cParent ->

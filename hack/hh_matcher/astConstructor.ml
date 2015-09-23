@@ -178,6 +178,9 @@ object(this)
       Eif (list_to_single this#on_expr env e1,
            handle_option (list_to_single @@ this#on_expr) env e2o,
            list_to_single this#on_expr env e3)
+   | NullCoalesce (e1, e2) ->
+      NullCoalesce (list_to_single this#on_expr env e1,
+                    list_to_single this#on_expr env e2)
    | InstanceOf  (e1, e2)         ->
       InstanceOf (list_to_single this#on_expr env e1,
                   list_to_single this#on_expr env e2)

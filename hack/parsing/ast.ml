@@ -294,6 +294,7 @@ and expr_ =
   | Unop of uop * expr
   | Binop of bop * expr * expr
   | Eif of expr * expr option * expr
+  | NullCoalesce of expr * expr
   | InstanceOf of expr * expr
   | New of expr * expr list * expr list
   (* Traditional PHP-style closure with a use list. Each use element is

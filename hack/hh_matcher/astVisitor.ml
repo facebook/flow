@@ -42,6 +42,7 @@ class type ['a] ast_visitor_type = object
   method on_do : 'a -> block -> expr -> 'a
   method on_efun : 'a -> fun_ -> (id * bool) list -> 'a
   method on_eif : 'a -> expr -> expr option -> expr -> 'a
+  method on_nullCoalesce : 'a -> expr -> expr -> 'a
   method on_expr : 'a -> expr -> 'a
   method on_expr_ : 'a -> expr_ -> 'a
   method on_expr_list : 'a -> expr list -> 'a
@@ -271,6 +272,7 @@ class virtual ['a] ast_visitor: ['a] ast_visitor_type = object(this)
    | Unop        (uop, e)         -> this#on_unop acc uop e
    | Binop       (bop, e1, e2)    -> this#on_binop acc bop e1 e2
    | Eif         (e1, e2, e3)     -> this#on_eif acc e1 e2 e3
+   | NullCoalesce (e1, e2)     -> this#on_nullCoalesce acc e1 e2
    | InstanceOf  (e1, e2)         -> this#on_instanceOf acc e1 e2
    | New         (e, el, uel)   -> this#on_new acc e el uel
    | Efun        (f, idl)         -> this#on_efun acc f idl
@@ -368,6 +370,11 @@ class virtual ['a] ast_visitor: ['a] ast_visitor_type = object(this)
       | Some e -> this#on_expr acc e
     in
     let acc = this#on_expr acc e3 in
+    acc
+
+  method on_nullCoalesce acc e1 e2 =
+    let acc = this#on_expr acc e1 in
+    let acc = this#on_expr acc e2 in
     acc
 
   method on_instanceOf acc e1 e2 =

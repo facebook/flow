@@ -318,6 +318,7 @@ and expr_ =
   | Unop of Ast.uop * expr
   | Binop of Ast.bop * expr * expr
   | Eif of expr * expr option * expr
+  | NullCoalesce of expr * expr
   | InstanceOf of expr * class_id
   | New of class_id * expr list * expr list
   | Efun of fun_ * id list

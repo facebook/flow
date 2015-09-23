@@ -513,6 +513,13 @@ and emit_expr env (pos, expr_ as expr) =
 
     emit_label env end_label
 
+  | NullCoalesce (etrue, efalse) ->
+      (* Desugar `$a ?? $b` into `isset($a) ? $a : $b` *)
+      let c = pos, Call (Cnormal, (pos, (Id (pos, SN.PseudoFunctions.isset))),
+                         [etrue], []) in
+      let eif = (pos, Eif (c, Some etrue, efalse)) in
+      emit_expr env eif
+
   (* Normal binops *)
   (* HHVM can sometimes evaluate binops (and some other things) right to left
    * if the LHS is a variable. We don't do this (because it seems silly),

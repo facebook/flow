@@ -79,6 +79,7 @@ class type ['a] nast_visitor_type = object
   method on_unop : 'a -> Ast.uop -> expr -> 'a
   method on_binop : 'a -> Ast.bop -> expr -> expr -> 'a
   method on_eif : 'a -> expr -> expr option -> expr -> 'a
+  method on_nullCoalesce : 'a -> expr -> expr -> 'a
   method on_instanceOf : 'a -> expr -> class_id -> 'a
   method on_class_id : 'a -> class_id -> 'a
   method on_new : 'a -> class_id -> expr list -> expr list -> 'a
@@ -236,6 +237,7 @@ class virtual ['a] nast_visitor: ['a] nast_visitor_type = object(this)
    | Unop        (uop, e)         -> this#on_unop acc uop e
    | Binop       (bop, e1, e2)    -> this#on_binop acc bop e1 e2
    | Eif         (e1, e2, e3)     -> this#on_eif acc e1 e2 e3
+   | NullCoalesce (e1, e2)     -> this#on_nullCoalesce acc e1 e2
    | InstanceOf  (e1, e2)         -> this#on_instanceOf acc e1 e2
    | New         (cid, el, uel)   -> this#on_new acc cid el uel
    | Efun        (f, idl)         -> this#on_efun acc f idl
@@ -338,6 +340,11 @@ class virtual ['a] nast_visitor: ['a] nast_visitor_type = object(this)
       | Some e -> this#on_expr acc e
     in
     let acc = this#on_expr acc e3 in
+    acc
+
+  method on_nullCoalesce acc e1 e2 =
+    let acc = this#on_expr acc e1 in
+    let acc = this#on_expr acc e2 in
     acc
 
   method on_instanceOf acc e1 e2 =
