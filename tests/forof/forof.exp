@@ -1,25 +1,25 @@
 
-forof.js:5:31,36: number
+forof.js:7:6,6: number
 This type is incompatible with
 forof.js:7:9,14: string
 
-forof.js:11:43,48: number
+forof.js:13:6,6: number
 This type is incompatible with
 forof.js:13:9,14: string
 
+forof.js:25:6,6: string
+This type is incompatible with
 forof.js:25:9,14: number
-This type is incompatible with
-[LIB] core.js:180:28,33: string
 
+forof.js:32:6,9: tuple type
+This type is incompatible with
 forof.js:32:12,17: number
-This type is incompatible with
-[LIB] core.js:338:28,33: tuple type
 
+forof.js:39:6,9: tuple type
+This type is incompatible with
 forof.js:39:12,17: number
-This type is incompatible with
-[LIB] core.js:338:28,33: tuple type
 
-forof.js:43:28,33: string
+forof.js:45:6,6: string
 This type is incompatible with
 forof.js:45:9,14: number
 

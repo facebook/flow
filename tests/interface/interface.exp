@@ -1,5 +1,5 @@
 
-interface.js:1:22,27: number
+interface.js:3:17,25: number
 This type is incompatible with
 interface.js:3:8,13: string
 
@@ -48,7 +48,7 @@ test.js:19:10,15: number
 
 test2.js:5:34,34: property `z`
 Property not found in
-test2.js:5:17,17: L
+test2.js:5:32,32: L
 
 test3.js:1:18,23: number
 This type is incompatible with
@@ -62,7 +62,7 @@ test3.js:3:31,36: string
 This type is incompatible with
 test3.js:1:18,23: number
 
-test3.js:3:31,36: string
+test3.js:5:4,6: string
 This type is incompatible with
 test3.js:5:9,14: number
 

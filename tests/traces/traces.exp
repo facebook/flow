@@ -1,100 +1,120 @@
 
 Traces.js:4:1,5: function call
 Error:
-Traces.js:4:4,4: number
+Traces.js:3:21,21: number
 This type is incompatible with
 Traces.js:2:15,20: string
 Trace:
 * path 1:
-Traces.js:4:4,4:   NumT [number]
-Traces.js:3:13,13: ~> OpenT [parameter x] (from path 2)
-Traces.js:3:21,21: OpenT [parameter x]
-Traces.js:2:15,20: ~> StrT [string] (from [not shown])
+Traces.js:3:21,21: NumT [number]
+Traces.js:2:15,20: ~> StrT [string] (from path 2)
 * path 2:
-Traces.js:4:1,2:   FunT [function]
-Traces.js:4:1,5:   ~> CallT [function call]
+Traces.js:3:21,21: NumT [number]
+Traces.js:3:21,21: ~> OpenT [identifier x] (from path 3)
+Traces.js:3:21,21: ~> ReposLowerT [identifier x] (from [not shown])
+* path 3:
+Traces.js:4:4,4:   NumT [number]
+Traces.js:3:13,13: ~> OpenT [parameter x] (from [not shown])
+Traces.js:3:21,21: ~> ReposLowerT [identifier x]
 
 Traces.js:9:1,12: function call
 Error:
-Traces.js:9:11,11: number
+Traces.js:8:27,27: number
 This type is incompatible with
 Traces.js:7:25,30: string
 Trace:
 * path 1:
-Traces.js:9:11,11: NumT [number]
-Traces.js:8:16,16: ~> OpenT [parameter y] (from path 2)
-Traces.js:8:27,27: OpenT [parameter y]
-Traces.js:7:25,30: ~> StrT [string] (from [not shown])
+Traces.js:8:27,27: NumT [number]
+Traces.js:7:25,30: ~> StrT [string] (from path 2)
 * path 2:
-Traces.js:9:1,2:   FunT [function]
-Traces.js:9:1,12:  ~> CallT [function call]
+Traces.js:8:27,27: NumT [number]
+Traces.js:8:27,27: ~> OpenT [identifier y] (from path 3)
+Traces.js:8:27,27: ~> ReposLowerT [identifier y] (from [not shown])
+* path 3:
+Traces.js:9:11,11: NumT [number]
+Traces.js:8:16,16: ~> OpenT [parameter y] (from [not shown])
+Traces.js:8:27,27: ~> ReposLowerT [identifier y]
 
 Traces.js:14:1,32: function call
 Error:
-Traces.js:12:22,27: string
+Traces.js:14:25,25: string
 This type is incompatible with
 Traces.js:14:25,29: number
 Trace:
 * path 1:
-Traces.js:12:22,27: StrT [string]
-Traces.js:14:13,13: ~> OpenT [parameter x] (from path 2)
-Traces.js:14:25,25: OpenT [parameter x]
+Traces.js:14:25,25: StrT [string]
+Traces.js:14:25,25: ~> OpenT [identifier x] (from path 2)
 Traces.js:14:25,29: ~> NumT [number]
 * path 2:
-Traces.js:14:4,31:  FunT [function]
-Traces.js:13:13,16: ~> OpenT [parameter xlam] (from path 3)
-Traces.js:13:24,27: OpenT [parameter xlam]
-Traces.js:12:19,38: ~> FunT [function type] (from [not shown])
+Traces.js:12:22,27: StrT [string]
+Traces.js:14:13,13: ~> OpenT [parameter x] (from path 3)
+Traces.js:14:25,25: ~> ReposLowerT [identifier x]
 * path 3:
-Traces.js:14:1,2:   FunT [function]
-Traces.js:14:1,32:  ~> CallT [function call]
+Traces.js:12:22,27: StrT [string]
+Traces.js:12:22,27: ~> ReposLowerT [string] (from [not shown])
+
+Traces.js:14:1,32: function call
+Error:
+Traces.js:14:29,29: string
+This type is incompatible with
+Traces.js:14:25,29: number
+Trace:
+* path 1:
+Traces.js:14:29,29: StrT [string]
+Traces.js:14:29,29: ~> OpenT [identifier x] (from path 2)
+Traces.js:14:25,29: ~> NumT [number]
+* path 2:
+Traces.js:12:22,27: StrT [string]
+Traces.js:14:13,13: ~> OpenT [parameter x] (from path 3)
+Traces.js:14:29,29: ~> ReposLowerT [identifier x]
+* path 3:
+Traces.js:12:22,27: StrT [string]
+Traces.js:12:22,27: ~> ReposLowerT [string] (from [not shown])
 
 Traces.js:20:1,10: function call
 Error:
-Traces.js:17:22,27: string
+Traces.js:19:29,29: string
 This type is incompatible with
 Traces.js:19:29,33: number
 Trace:
 * path 1:
-Traces.js:17:22,27: StrT [string]
-Traces.js:19:17,17: ~> OpenT [parameter n] (from path 2)
-Traces.js:19:29,29: OpenT [parameter n]
+Traces.js:19:29,29: StrT [string]
+Traces.js:19:29,29: ~> OpenT [identifier n] (from path 2)
 Traces.js:19:29,33: ~> NumT [number]
 * path 2:
-Traces.js:20:4,9:   FunT [function]
-Traces.js:18:13,16: ~> OpenT [parameter xlam] (from path 3)
-Traces.js:18:24,27: OpenT [parameter xlam]
-Traces.js:17:19,38: ~> FunT [function type] (from [not shown])
+Traces.js:17:22,27: StrT [string]
+Traces.js:19:17,17: ~> OpenT [parameter n] (from path 3)
+Traces.js:19:29,29: ~> ReposLowerT [identifier n]
 * path 3:
-Traces.js:20:1,2:   FunT [function]
-Traces.js:20:1,10:  ~> CallT [function call]
+Traces.js:17:22,27: StrT [string]
+Traces.js:17:22,27: ~> ReposLowerT [string] (from [not shown])
 
 Traces2.js:6:3,11: property `foo`
 Property not found in
 Traces2.js:10:3,11: propTypes
 Trace:
 * path 1:
-Traces2.js:17:12,25:      InstanceT [ReactElement]
-[LIB] react.js:68:1,73:1: ~> ExtendsT [extends ReactElement] (from path 2)
+Traces2.js:17:12,25: InstanceT [ReactElement]
+Traces2.js:13:16,34: ~> ExtendsT [extends ReactElement] (from path 2)
 * path 2:
-Traces2.js:17:12,25:      InstanceT [ReactElement]
-[LIB] react.js:68:1,73:1: ~> InstanceT [ReactElement] (from path 3)
+Traces2.js:17:12,25: InstanceT [ReactElement]
+Traces2.js:13:16,34: ~> InstanceT [ReactElement] (from path 3)
 * path 3:
-Traces2.js:17:12,25:      InstanceT [ReactElement]
-Traces2.js:13:16,34:      ~> OpenT [identifier ReactElement] (from [not shown])
+Traces2.js:13:16,34: ReposUpperT [identifier ReactElement]
+Traces2.js:13:16,34: ~> InstanceT [ReactElement] (from [not shown])
 
 Traces2.js:10:3,11: property `bar`
 Property not found in
 Traces2.js:6:3,11: propTypes
 Trace:
 * path 1:
-Traces2.js:17:12,25:      InstanceT [ReactElement]
-[LIB] react.js:68:1,73:1: ~> ExtendsT [extends ReactElement] (from path 2)
+Traces2.js:17:12,25: InstanceT [ReactElement]
+Traces2.js:13:16,34: ~> ExtendsT [extends ReactElement] (from path 2)
 * path 2:
-Traces2.js:17:12,25:      InstanceT [ReactElement]
-[LIB] react.js:68:1,73:1: ~> InstanceT [ReactElement] (from path 3)
+Traces2.js:17:12,25: InstanceT [ReactElement]
+Traces2.js:13:16,34: ~> InstanceT [ReactElement] (from path 3)
 * path 3:
-Traces2.js:17:12,25:      InstanceT [ReactElement]
-Traces2.js:13:16,34:      ~> OpenT [identifier ReactElement] (from [not shown])
+Traces2.js:13:16,34: ReposUpperT [identifier ReactElement]
+Traces2.js:13:16,34: ~> InstanceT [ReactElement] (from [not shown])
 
-Found 6 errors
+Found 7 errors

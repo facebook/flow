@@ -675,9 +675,8 @@ let get_var_declared_type ?(lookup_mode=ForValue) =
 (* get var type, with location of given reason used in type's reason *)
 (* TODO remove once positions in __flow are fully worked out *)
 let var_ref ?(lookup_mode=ForValue ) cx name reason =
-  let t = get_var ~lookup_mode cx name reason in
-  let loc = loc_of_reason reason in
-  mod_reason_of_t (repos_reason loc) t
+  get_var ~lookup_mode cx name reason
+  |> Flow_js.reposition cx reason
 
 (* get refinement entry *)
 let get_refinement cx key reason =

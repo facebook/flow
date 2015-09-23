@@ -1,13 +1,13 @@
 
 array_lib.js:5:9,54: call of method map
 Error:
-array_lib.js:4:10,10: number
+array_lib.js:5:34,34: number
 This type is incompatible with
 array_lib.js:2:16,21: string
 
 array_lib.js:5:9,54: call of method map
 Error:
-array_lib.js:5:45,50: string
+array_lib.js:8:17,20: string
 This type is incompatible with
 array_lib.js:8:8,13: number
 
@@ -43,10 +43,10 @@ This type is incompatible with
 
 array_lib.js:46:3,45: call of method reduce
 Function cannot be called on
-[LIB] core.js:163:5,10: Array
+array_lib.js:46:3,45: Array
 
 array_lib.js:47:3,50: call of method reduceRight
 Function cannot be called on
-[LIB] core.js:170:5,15: Array
+array_lib.js:47:3,50: Array
 
 Found 9 errors

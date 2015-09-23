@@ -7,11 +7,11 @@ enum_client.js:10:5,16: string literal name
 Property not found in
 enum_client.js:8:23,35: object type
 
-enum_client.js:14:24,28: string
+enum_client.js:17:19,38: string
 This type is incompatible with
 enum_client.js:17:10,15: number
 
-enum_client.js:20:14,15: number
+enum_client.js:21:18,35: number
 This type is incompatible with
 enum_client.js:21:9,14: string
 

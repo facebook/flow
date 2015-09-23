@@ -9,11 +9,11 @@ import_class.js:3:15,16: string
 This type is incompatible with
 export_class.js:3:20,25: number
 
-objects.js:1:25,25: number
+objects.js:5:17,23: number
 This type is incompatible with
 objects.js:5:8,13: string
 
-objects.js:7:25,30: string
+objects.js:13:17,24: string
 This type is incompatible with
 objects.js:13:8,13: number
 

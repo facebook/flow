@@ -15,6 +15,6 @@ poly.js:23:11,19: function call
 Error:
 poly.js:24:3,5: function call
 Function cannot be called on
-poly.js:23:18,18: U
+poly.js:24:3,3: U
 
 Found 4 errors

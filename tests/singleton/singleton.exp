@@ -11,7 +11,7 @@ boolean.js:15:35,39: boolean
 Expected boolean literal true, got false instead
 boolean.js:10:41,44: boolean literal true
 
-boolean.js:17:24,27: boolean literal true
+boolean.js:21:12,12: boolean literal true
 Expected boolean literal false, got true instead
 boolean.js:19:35,39: boolean literal false
 
@@ -23,7 +23,7 @@ boolean.js:29:1,6: function call
 Error:
 boolean.js:29:5,5: number
 This type is incompatible with
-boolean.js:17:24,35: union type
+boolean.js:19:17,31: union type
 
 number.js:8:1,13: function call
 Error:
@@ -35,6 +35,6 @@ number.js:19:1,6: function call
 Error:
 number.js:19:5,5: number
 This type is incompatible with
-number.js:11:12,16: union type
+number.js:13:19,21: union type
 
 Found 7 errors

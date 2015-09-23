@@ -76,6 +76,8 @@ type t =
   | GetPropT of reason * propname * t
   | SetElemT of reason * t * t
   | GetElemT of reason * t * t
+  | ReposLowerT of reason * t
+  | ReposUpperT of reason * t
 
   | ConstructorT of reason * t list * t
   | SuperT of reason * insttype

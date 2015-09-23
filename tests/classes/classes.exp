@@ -9,10 +9,6 @@ D.js:3:9,9: property `x`
 Property not found in
 D.js:3:5,5: E
 
-class_shapes.js:3:12,8:1: property `b`
-Property not found in
-class_shapes.js:15:13,21: TestClass
-
 class_shapes.js:4:6,11: string
 This type is incompatible with
 class_shapes.js:27:6,11: number
@@ -29,13 +25,17 @@ class_shapes.js:18:1,3: property `b`
 Error:
 class_shapes.js:18:3,3: property `b`
 Property not found in
-class_shapes.js:15:13,21: TestClass
+class_shapes.js:18:1,1: TestClass
 
 class_shapes.js:20:1,3: property `d`
 Error:
 class_shapes.js:20:3,3: property `d`
 Property not found in
-class_shapes.js:15:13,21: TestClass
+class_shapes.js:20:1,1: TestClass
+
+class_shapes.js:22:9,11: property `b`
+Property not found in
+class_shapes.js:22:15,15: TestClass
 
 class_shapes.js:27:6,11: number
 This type is incompatible with
@@ -55,13 +55,13 @@ Could not resolve name
 expr.js:17:8,10: identifier Qux
 Could not resolve name
 
-expr.js:24:14,28:1: class expr Alias
+expr.js:29:21,32: class expr Alias
 This type is incompatible with
-expr.js:23:7,11: Alias
+expr.js:29:13,17: Alias
 
-expr.js:29:25,30: class expr Alias
+expr.js:30:21,36: class expr Alias
 This type is incompatible with
-expr.js:23:7,11: Alias
+expr.js:30:13,17: Alias
 
 loc.js:5:7,9: Foo
 name is already bound

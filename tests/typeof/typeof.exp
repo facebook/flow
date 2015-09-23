@@ -1,9 +1,9 @@
 
 typeof.js:43:19,26: class type: MyClass1
 This type is incompatible with
-typeof.js:11:7,14: MyClass1
+typeof.js:43:8,15: MyClass1
 
-typeof.js:53:30,37: MyClass2
+typeof.js:53:26,39: MyClass2
 This type is incompatible with
 typeof.js:45:7,14: class type: MyClass2
 

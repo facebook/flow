@@ -2920,8 +2920,10 @@ and variable cx type_params_map kind
         let reason = mk_reason (spf "%s %s" str_of_kind name) loc in
         let has_anno = not (typeAnnotation = None) in
         (match init with
-          | Some expr ->
+          | Some ((rhs_loc, _) as expr) ->
+            let rhs_reason = mk_reason (spf "assignment of var %s" name) rhs_loc in
             let rhs = expression cx type_params_map expr in
+            let rhs = Flow_js.reposition cx rhs_reason rhs in
             init_var cx name ~has_anno rhs reason
           | None ->
             if not optional then

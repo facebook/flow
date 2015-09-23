@@ -13,21 +13,21 @@ classes.js:5:19,24: number
 
 classes.js:24:15,28: property `y_`
 Property not found in
-classes.js:5:14,26: object type
+classes.js:9:10,14: object type
 
 classes.js:39:1,16: assignment of property `defaultProps`
 Error:
 classes.js:39:20,20: number
 This type is incompatible with
-classes.js:3:21,23: object type
+classes.js:10:24,35: object type
 
 classes.js:40:15,20: number
 This type is incompatible with
-[LIB] react.js:16:1,49:1: ReactComponent
+[LIB] type_aliases.js:4:28,48: ReactComponent
 
 classes.js:40:25,30: React element: Foo
 Error:
-classes.js:4:14,26: property `x`
+classes.js:8:10,14: property `x`
 Property not found in
 classes.js:40:25,30: type parameter `D` of React element: Foo
 
@@ -35,7 +35,7 @@ classes.js:40:25,30: React element: Foo
 Error:
 classes.js:40:15,20: number
 This type is incompatible with
-[LIB] react.js:16:1,49:1: ReactComponent
+[LIB] type_aliases.js:4:28,48: ReactComponent
 
 classes.js:58:21,32: number
 This type is incompatible with
@@ -47,7 +47,7 @@ classes.js:44:17,77:2: state of React component
 
 classes.js:80:22,27: number
 This type is incompatible with
-[LIB] react.js:16:1,49:1: ReactComponent
+[LIB] type_aliases.js:4:28,48: ReactComponent
 
 classes.js:80:32,43: React element: FooLegacy
 Error:
@@ -59,21 +59,21 @@ classes.js:80:32,43: React element: FooLegacy
 Error:
 classes.js:80:22,27: number
 This type is incompatible with
-[LIB] react.js:16:1,49:1: ReactComponent
-
-new_react.js:3:9,27:2: state of React component
-This type is incompatible with
-new_react.js:17:18,23: string
-
-new_react.js:5:5,13: propTypes
-This type is incompatible with
-new_react.js:18:18,23: string
+[LIB] type_aliases.js:4:28,48: ReactComponent
 
 new_react.js:15:22,22: initial state of React component
 Error:
 new_react.js:3:9,27:2: state of React component
 Expected object instead of
-new_react.js:15:32,32: number
+new_react.js:15:22,22: number
+
+new_react.js:17:27,36: state of React component
+This type is incompatible with
+new_react.js:17:18,23: string
+
+new_react.js:18:27,36: propTypes
+This type is incompatible with
+new_react.js:18:18,23: string
 
 new_react.js:19:27,38: number
 This type is incompatible with
@@ -103,9 +103,9 @@ new_react.js:5:5,13: property `x`
 Property not found in
 new_react.js:30:16,19: type parameter `D` of React element: C
 
-new_react.js:32:8,13: number
+new_react.js:32:17,29: string
 This type is incompatible with
-[LIB] react.js:47:23,28: string
+new_react.js:32:8,13: number
 
 propTypes.js:13:1,16:4: React element: C
 Error:
@@ -169,7 +169,7 @@ props.js:25:5,13: property `w`
 Property not found in
 props.js:4:5,13: propTypes
 
-props2.js:9:41,46: number
+props2.js:14:25,38: number
 This type is incompatible with
 props2.js:14:16,21: string
 
@@ -187,25 +187,25 @@ props2.js:4:14,35: string
 
 props3.js:49:32,44: property `imaginaryType`
 Property not found in
-[LIB] react.js:86:23,103:1: object type
+props3.js:49:16,30: object type
 
 props3.js:50:39,48: property `inRequired`
 Property not found in
-[LIB] react.js:81:39,84:1: object type
+props3.js:50:16,37: object type
 
 state.js:19:33,35: property `qux`
 Property cannot be accessed on possibly null value
-state.js:6:11,26: null
+state.js:19:18,31: null
 
 state.js:19:33,35: property `qux`
 Property cannot be accessed on possibly undefined value
-state.js:6:11,26: undefined
+state.js:19:18,31: undefined
 
-state3.js:4:39,44: string
+state3.js:11:25,36: boolean
 This type is incompatible with
 state3.js:11:16,21: number
 
-state3.js:14:16,20: boolean
+state3.js:11:25,36: string
 This type is incompatible with
 state3.js:11:16,21: number
 

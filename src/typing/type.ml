@@ -214,6 +214,8 @@ type t =
   | GetPropT of reason * propname * t
   | SetElemT of reason * t * t
   | GetElemT of reason * t * t
+  | ReposLowerT of reason * t
+  | ReposUpperT of reason * t
 
   (* operations on runtime types, such as classes and functions *)
   | ConstructorT of reason * t list * t
@@ -501,6 +503,7 @@ end)
 let is_use = function
   | CallT _
   | MethodT _
+  | ReposLowerT _
   | SetPropT _
   | GetPropT _
   | SetElemT _
@@ -600,6 +603,9 @@ let rec reason_of_t = function
   | TypeT (reason,_)
   | BecomeT (reason, _)
       -> reason
+
+  | ReposLowerT (reason, _) -> reason
+  | ReposUpperT (reason, _) -> reason
 
   | AnnotT (_, assume_t) ->
       reason_of_t assume_t
@@ -739,6 +745,8 @@ let rec mod_reason_of_t f = function
   | CallT (reason, ft) -> CallT (f reason, ft)
 
   | MethodT (reason, name, ft) -> MethodT(f reason, name, ft)
+  | ReposLowerT (reason, t) -> ReposLowerT (f reason, t)
+  | ReposUpperT (reason, t) -> ReposUpperT (f reason, t)
   | SetPropT (reason, n, t) -> SetPropT (f reason, n, t)
   | GetPropT (reason, n, t) -> GetPropT (f reason, n, t)
 
@@ -866,6 +874,8 @@ let string_of_ctor = function
   | ExtendsT _ -> "ExtendsT"
   | CallT _ -> "CallT"
   | MethodT _ -> "MethodT"
+  | ReposLowerT _ -> "ReposLowerT"
+  | ReposUpperT _ -> "ReposUpperT"
   | SetPropT _ -> "SetPropT"
   | GetPropT _ -> "GetPropT"
   | SetElemT _ -> "SetElemT"

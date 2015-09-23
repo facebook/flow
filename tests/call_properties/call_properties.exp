@@ -71,6 +71,6 @@ F.js:9:41,51: call of method toFixed
 Error:
 F.js:9:43,49: property `toFixed`
 Property not found in
-[LIB] core.js:179:1,208:1: String
+F.js:9:41,41: String
 
 Found 17 errors

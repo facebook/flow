@@ -17,7 +17,7 @@ class.js:6:6,11: string
 
 class.js:18:6,11: property `y`
 Property not found in
-class.js:23:38,53: ClassWithXString
+class.js:23:34,55: ClassWithXString
 
 obj.js:6:6,11: string
 This type is incompatible with

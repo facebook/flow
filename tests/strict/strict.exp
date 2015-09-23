@@ -8,7 +8,7 @@ Missing annotation
 fun.js:8:21,21: return
 Missing annotation
 
-fun.js:8:31,31: number
+fun.js:11:16,19: number
 This type is incompatible with
 fun.js:11:7,12: string
 

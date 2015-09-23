@@ -1,9 +1,9 @@
 
-B.js:2:25,26: string
+D.js:3:17,21: string
 This type is incompatible with
 D.js:3:8,13: number
 
-C.js:3:8,21: number
+D.js:4:17,19: number
 This type is incompatible with
 D.js:4:8,13: string
 

@@ -1,13 +1,9 @@
 
-Sigma.js:4:7,7: A
-This type is incompatible with
-Sigma.js:34:16,16: D
-
 Sigma.js:13:5,9: call of method c
 Error:
 Sigma.js:13:7,7: property `c`
 Property not found in
-Sigma.js:10:16,16: B
+Sigma.js:13:5,5: B
 
 Sigma.js:15:5,7: number
 This type is incompatible with
@@ -17,18 +13,22 @@ Sigma.js:24:5,9: call of method d
 Error:
 Sigma.js:24:7,7: property `d`
 Property not found in
-Sigma.js:8:7,7: C
+Sigma.js:24:5,5: C
 
 Sigma.js:27:5,9: call of method c
 Error:
 Sigma.js:27:7,7: property `c`
 Property not found in
-Sigma.js:19:16,16: A
+Sigma.js:27:5,5: A
+
+Sigma.js:35:20,20: A
+This type is incompatible with
+Sigma.js:34:16,16: D
 
 test.js:11:12,29: property `childProp_TYPO`
 Error:
 test.js:11:16,29: property `childProp_TYPO`
 Property not found in
-test.js:5:7,16: ChildClass
+test.js:11:12,14: ChildClass
 
 Found 6 errors

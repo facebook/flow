@@ -43,7 +43,7 @@ Missing annotation
 
 optional.js:7:39,44: function call
 Error:
-optional.js:7:16,22: string
+optional.js:7:43,43: string
 This type is incompatible with
 optional.js:4:13,18: number
 
@@ -59,7 +59,7 @@ optional.js:10:14,15: number
 This type is incompatible with
 optional.js:7:30,35: string
 
-optional_param2.js:7:19,33: undefined
+optional_param2.js:7:31,32: undefined
 This type is incompatible with
 optional_param2.js:7:9,14: number
 
@@ -77,18 +77,10 @@ optional_param4.js:3:38,43: string
 
 undefined.js:8:14,17: property `duck`
 Property cannot be accessed on possibly undefined value
-undefined.js:1:5,5: undefined
-
-undefined.js:8:14,17: property `duck`
-Property cannot be accessed on possibly undefined value
-undefined.js:3:21,29: undefined
+undefined.js:8:12,12: undefined
 
 undefined2.js:8:14,17: property `duck`
 Property cannot be accessed on possibly undefined value
-undefined2.js:1:5,5: undefined
+undefined2.js:8:12,12: undefined
 
-undefined2.js:8:14,17: property `duck`
-Property cannot be accessed on possibly undefined value
-undefined2.js:4:9,11: undefined
-
-Found 21 errors
+Found 19 errors

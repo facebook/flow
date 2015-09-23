@@ -7,19 +7,19 @@ issue-598.js:7:31,36: string
 This type is incompatible with
 issue-598.js:7:19,24: number
 
-test.js:3:27,30: P
-This type is incompatible with
-test.js:9:9,14: number
-
-test.js:5:10,15: number
+test.js:6:2,4: number
 This type is incompatible with
 test.js:6:7,12: string
 
-test.js:5:10,15: number
+test.js:9:2,6: P
+This type is incompatible with
+test.js:9:9,14: number
+
+test.js:13:2,8: number
 This type is incompatible with
 test.js:13:11,16: string
 
-test.js:15:19,27: P
+test.js:16:2,8: P
 This type is incompatible with
 test.js:16:11,16: string
 
@@ -31,8 +31,8 @@ test2.js:30:24,29: string
 This type is incompatible with
 test2.js:30:12,17: number
 
-test3.js:10:13,25: function type
+test3.js:12:35,43: function type
 Callable signature not found in
-test3.js:9:13,21: object type
+test3.js:10:19,25: object type
 
 Found 9 errors

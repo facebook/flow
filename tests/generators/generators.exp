@@ -5,7 +5,7 @@ class.js:4:11,12: string
 This type is incompatible with
 class.js:2:28,33: number
 
-class.js:7:39,44: number
+class.js:15:8,8: number
 This type is incompatible with
 class.js:15:12,17: string
 
@@ -17,27 +17,13 @@ class.js:24:12,13: string
 This type is incompatible with
 class.js:23:39,44: number
 
-class.js:28:29,29: number
-This type is incompatible with
-class.js:87:45,50: string
-
-class.js:57:13,14: string
-This type is incompatible with
-class.js:111:8,13: number
-
-class.js:65:14,15: string
+class.js:68:21,34: string
 This type is incompatible with
 class.js:68:12,17: number
 
-class.js:76:38,43: number
+class.js:87:41,41: number
 This type is incompatible with
-class.js:117:8,13: string
-
-class.js:89:23,51: call of method next
-Error:
-class.js:29:12,13: string
-This type is incompatible with
-class.js:93:22,28: boolean
+class.js:87:45,50: string
 
 class.js:89:23,51: call of method next
 Error:
@@ -45,9 +31,19 @@ class.js:89:50,50: number
 This type is incompatible with
 class.js:28:13,19: boolean
 
+class.js:89:23,51: call of method next
+Error:
+class.js:93:4,18: string
+This type is incompatible with
+class.js:93:22,28: boolean
+
 class.js:108:41,42: string
 This type is incompatible with
 class.js:50:15,20: number
+
+class.js:111:4,4: string
+This type is incompatible with
+class.js:111:8,13: number
 
 class.js:114:1,44: call of method next
 Error:
@@ -55,11 +51,15 @@ class.js:114:42,43: string
 This type is incompatible with
 [LIB] core.js:322:37,40: undefined
 
+class.js:117:4,4: number
+This type is incompatible with
+class.js:117:8,13: string
+
 generators.js:3:9,10: string
 This type is incompatible with
 generators.js:1:35,40: number
 
-generators.js:6:46,51: number
+generators.js:14:6,6: number
 This type is incompatible with
 generators.js:14:10,15: string
 
@@ -71,15 +71,9 @@ generators.js:23:10,11: string
 This type is incompatible with
 generators.js:22:46,51: number
 
-generators.js:27:27,27: number
+generators.js:30:32,32: number
 This type is incompatible with
 generators.js:30:36,41: string
-
-generators.js:31:23,42: call of method next
-Error:
-generators.js:28:10,11: string
-This type is incompatible with
-generators.js:35:22,28: boolean
 
 generators.js:31:23,42: call of method next
 Error:
@@ -87,15 +81,21 @@ generators.js:31:41,41: number
 This type is incompatible with
 generators.js:27:11,17: boolean
 
+generators.js:31:23,42: call of method next
+Error:
+generators.js:35:4,18: string
+This type is incompatible with
+generators.js:35:22,28: boolean
+
 generators.js:70:32,33: string
 This type is incompatible with
 generators.js:66:13,18: number
 
-generators.js:74:11,12: string
+generators.js:80:4,4: string
 This type is incompatible with
 generators.js:80:8,13: number
 
-generators.js:85:12,13: string
+generators.js:88:19,32: string
 This type is incompatible with
 generators.js:88:10,15: number
 
@@ -105,7 +105,7 @@ generators.js:95:33,34: string
 This type is incompatible with
 [LIB] core.js:322:37,40: undefined
 
-generators.js:97:45,50: number
+generators.js:101:4,4: number
 This type is incompatible with
 generators.js:101:8,13: string
 

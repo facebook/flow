@@ -1,5 +1,5 @@
 
-test.js:9:16,21: string
+test.js:13:12,12: string
 This type is incompatible with
 test.js:13:12,14: number
 

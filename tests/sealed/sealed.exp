@@ -1,28 +1,28 @@
 
-proto.js:7:16,20: call of method m
-Error:
-proto.js:10:42,46: boolean
-This type is incompatible with
-proto.js:7:7,12: number
-
-proto.js:8:7,11: string
+proto.js:3:16,18: string
 This type is incompatible with
 proto.js:3:7,12: number
 
-proto.js:8:7,11: string
+proto.js:7:16,20: string
+This type is incompatible with
+proto.js:7:7,12: number
+
+proto.js:7:16,20: call of method m
+Error:
+proto.js:7:16,20: boolean
 This type is incompatible with
 proto.js:7:7,12: number
 
 sealed.js:3:3,3: property `z`
 Property not found in
-sealed.js:1:9,26: object type
+sealed.js:3:1,1: object type
 
 sealed.js:8:3,3: property `x`
 Property not found in
-sealed.js:6:11,31: new object
+sealed.js:8:1,1: new object
 
 sealed.js:9:3,3: property `y`
 Property not found in
-sealed.js:6:11,31: new object
+sealed.js:9:1,1: new object
 
 Found 6 errors

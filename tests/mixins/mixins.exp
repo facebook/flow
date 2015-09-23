@@ -1,5 +1,5 @@
 
-Bar.js:1:16,16: number
+test.js:5:21,26: number
 This type is incompatible with
 test.js:5:12,17: string
 

@@ -1,5 +1,9 @@
 
-switch.js:23:19,20: string
+switch.js:28:13,13: string
+This type is incompatible with
+switch.js:28:13,15: number
+
+switch.js:28:15,15: string
 This type is incompatible with
 switch.js:28:13,15: number
 
@@ -11,11 +15,11 @@ switch_default_fallthrough.js:11:13,13: number
 This type is incompatible with
 switch_default_fallthrough.js:6:13,14: string
 
-switch_default_fallthrough.js:23:13,13: number
+switch_default_fallthrough.js:32:6,6: number
 This type is incompatible with
 switch_default_fallthrough.js:32:10,15: string
 
-switch_default_fallthrough.js:28:13,13: number
+switch_default_fallthrough.js:33:6,6: number
 This type is incompatible with
 switch_default_fallthrough.js:33:10,15: string
 
@@ -23,4 +27,4 @@ switch_default_fallthrough.js:35:12,14: string
 This type is incompatible with
 switch_default_fallthrough.js:17:25,30: number
 
-Found 6 errors
+Found 7 errors

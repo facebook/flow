@@ -1,17 +1,15 @@
 
-async.js:12:3,11: async return
-Error:
 async.js:12:10,10: number
 This type is incompatible with
 [LIB] core.js:390:32,45: union type
 
-async.js:30:30,35: number
+async.js:31:10,16: number
 This type is incompatible with
 [LIB] core.js:390:32,45: union type
 
-async.js:45:22,25: undefined
+async.js:45:22,25: Promise
 This type is incompatible with
-[LIB] core.js:375:1,403:1: Promise
+async.js:45:22,25: undefined
 
 async2.js:6:3,12: async return
 Error:
@@ -19,13 +17,13 @@ async2.js:6:10,11: number
 This type is incompatible with
 [LIB] core.js:390:32,45: union type
 
+async2.js:23:26,26: Promise
+This type is incompatible with
 async2.js:29:21,24: undefined
-This type is incompatible with
-[LIB] core.js:375:1,403:1: Promise
 
-async2.js:43:28,31: undefined
+async2.js:43:28,31: Promise
 This type is incompatible with
-[LIB] core.js:375:1,403:1: Promise
+async2.js:43:28,31: undefined
 
 async2.js:48:3,17: undefined
 This type is incompatible with
@@ -33,9 +31,9 @@ async2.js:48:11,16: number
 
 async3.js:23:11,21: await
 Error:
-async3.js:12:10,11: number
+async3.js:31:19,19: number
 This type is incompatible with
-[LIB] core.js:390:32,45: union type
+async3.js:31:10,15: string
 
 await_not_in_async.js:5:9,9: Unexpected number
 

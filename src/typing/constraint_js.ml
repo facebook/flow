@@ -720,6 +720,11 @@ and _json_of_t_impl json_cx t = Json.(
       "funType", json_of_funtype json_cx funtype
     ]
 
+  | ReposLowerT (_, t)
+  | ReposUpperT (_, t) -> [
+      "type", _json_of_t json_cx t
+    ]
+
   | SetPropT (_, name, t)
   | GetPropT (_, name, t) -> [
       "propName", json_of_propname json_cx name;
@@ -1632,6 +1637,8 @@ class ['a] type_visitor = object(self)
   | SummarizeT (_, _)
   | CallT (_, _)
   | MethodT (_, _, _)
+  | ReposLowerT (_, _)
+  | ReposUpperT (_, _)
   | SetPropT (_, _, _)
   | GetPropT (_, _, _)
   | SetElemT (_, _, _)

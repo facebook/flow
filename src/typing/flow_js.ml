@@ -999,6 +999,7 @@ let rec assume_ground cx ids = function
   | CJSRequireT(_,t)
   | ImportTypeT(_,t)
   | ImportTypeofT(_,t)
+  | ReposLowerT (_, t)
 
   (* Other common operations that might happen immediately after extracting
      (parts of) requires/imports. *)
@@ -1360,6 +1361,15 @@ let rec __flow cx (l, u) trace =
           rec_flow cx trace (t1, t2)
       );
 
+    (*************************)
+    (* repositioning, part 1 *)
+    (*************************)
+
+    (* Repositions a concrete upper bound using the reason stored in the lower
+       bound. This can be used to store a reason as it flows through a tvar. *)
+    | (ReposUpperT (reason, l), u) ->
+      rec_flow cx trace (l, repos_t_from_reason reason u)
+
     (***************)
     (* annotations *)
     (***************)
@@ -1368,19 +1378,21 @@ let rec __flow cx (l, u) trace =
        into the annotated site. *)
 
     | _, AnnotT (sink_t, _) ->
-      rec_flow cx trace (l, sink_t)
+      let reason = reason_of_t sink_t in
+      rec_flow cx trace (ReposUpperT (reason, l), sink_t)
 
     (* The source component of an annotation flows out of the annotated
        site to downstream uses. *)
 
     | AnnotT (_, source_t), u ->
-      rec_flow cx trace (source_t, u)
+      let reason = reason_of_t source_t in
+      rec_flow cx trace (reposition ~trace cx reason source_t, u)
 
     (****************************************************************)
     (* BecomeT unifies a tvar with an incoming concrete lower bound *)
     (****************************************************************)
-    | _, BecomeT (_, t) ->
-      rec_unify cx trace l t
+    | _, BecomeT (reason, t) ->
+      rec_unify cx trace (reposition ~trace cx reason l) t
 
     (************************************************)
     (* bound variables are equal only to themselves *)
@@ -1605,7 +1617,7 @@ let rec __flow cx (l, u) trace =
         | Some t ->
           (* reposition the export to point at the require(), like the object
              we create below for non-CommonJS exports *)
-          repos_t_from_reason reason t
+          reposition ~trace cx reason t
         | None ->
           let proto = MixedT(reason) in
           let props_smap = find_props cx exports.exports_tmap in
@@ -2043,6 +2055,12 @@ let rec __flow cx (l, u) trace =
 
     (* all other constraints on intersections *)
 
+    (* This duplicates the (_, ReposLowerT u) near the end of this pattern match
+       but has to appear here to preempt the (IntersectionT, _) in between so
+       that we reposition the entire intersection. *)
+    | (IntersectionT _, ReposLowerT (reason_op, u)) ->
+      rec_flow cx trace (repos_t_from_reason reason_op l, u)
+
     | (IntersectionT (r,ts), _) ->
       concretize_parts cx trace l u [] (parts_to_concretize cx u)
 
@@ -2057,6 +2075,12 @@ let rec __flow cx (l, u) trace =
     | (PolyT (ids,t), SpecializeT(reason,cache,ts,tvar)) ->
       let t_ = instantiate_poly_with_targs cx trace reason ~cache (ids,t) ts in
       rec_flow cx trace (t_, tvar)
+
+    (* PolyT doesn't have a position since it takes on the position of the upper
+       bound, so it doesn't need to be repositioned. This case is necessary to
+       prevent the wildcard (PolyT, _) below from firing too early. *)
+    | (PolyT _, ReposLowerT (_, u)) ->
+      rec_flow cx trace (l, u)
 
     (* When do we consider a polymorphic type <X:U> T to be a subtype of another
        polymorphic type <X:U'> T'? This is the subject of a long line of
@@ -2162,7 +2186,7 @@ let rec __flow cx (l, u) trace =
       rec_flow cx trace (o2,o1);
       multiflow cx trace reason_callsite (tins2,tins1);
       (* relocate the function's return type at the call site TODO remove? *)
-      let t1 = repos_t_from_reason reason_callsite t1 in
+      let t1 = reposition ~trace cx reason_callsite t1 in
       rec_flow cx trace (t1,t2);
       havoc_ctx cx i j;
       Ops.pop ()
@@ -2494,7 +2518,7 @@ let rec __flow cx (l, u) trace =
       let methods_tmap = find_props cx instance.methods_tmap in
       let fields = SMap.union fields_tmap methods_tmap in
       let strict = if instance.mixins then None else Some reason_c in
-      get_prop cx trace reason_prop strict super x fields tout;
+      get_prop cx trace reason_prop reason_op strict super x fields tout;
       Ops.pop ();
 
     (********************************)
@@ -2510,7 +2534,7 @@ let rec __flow cx (l, u) trace =
       let methods = SMap.union fields_tmap methods_tmap in
       let funt = mk_tvar cx reason_op in
       let strict = if instance.mixins then None else Some reason_c in
-      get_prop cx trace reason_prop strict super x methods funt;
+      get_prop cx trace reason_prop reason_op strict super x methods funt;
       let callt = CallT (reason_op, funtype) in
       rec_flow cx trace (funt, callt);
       Ops.pop ();
@@ -2710,8 +2734,7 @@ let rec __flow cx (l, u) trace =
       let t = ensure_prop_for_read cx strict mapr x proto dict_t
         reason_o reason_prop trace in
       (* move property type to read site *)
-      let t = repos_t_from_reason reason_op t in
-      rec_flow cx trace (t, tout);
+      rec_flow cx trace (t, ReposLowerT (reason_op, tout))
 
     (********************************)
     (* ... and their methods called *)
@@ -3066,6 +3089,17 @@ let rec __flow cx (l, u) trace =
       ->
       rec_flow cx trace (l, SetPropT(reason, (reason, "$key"), i));
       rec_flow cx trace (l, SetPropT(reason, (reason, "$value"), t))
+
+    (*************************)
+    (* repositioning, part 2 *)
+    (*************************)
+
+    (* waits for a lower bound to become concrete, and then repositions it to
+       the location stored in the ReposLowerT, which is usually the location
+       where that lower bound was used; the lower bound's location (which is
+       being overwritten) is where it was defined. *)
+    | (_, ReposLowerT (reason_op, t)) ->
+      rec_flow cx trace (repos_t_from_reason reason_op l, t)
 
     (***************)
     (* unsupported *)
@@ -3865,12 +3899,12 @@ and lookup_prop cx trace l reason strict x t =
   in
   rec_flow cx trace (l, LookupT (reason, strict, [], x, t))
 
-and get_prop cx trace reason_op strict super x map tout =
+and get_prop cx trace reason_prop reason_op strict super x map tout =
   if SMap.mem x map
   then
-    rec_flow cx trace (SMap.find_unsafe x map, tout)
+    rec_flow cx trace (SMap.find_unsafe x map, ReposLowerT (reason_op, tout))
   else
-    lookup_prop cx trace super reason_op strict x (LowerBoundT tout)
+    lookup_prop cx trace super reason_prop strict x (LowerBoundT tout)
 
 and set_prop cx trace reason_op reason_c super x map tin =
   let map = find_props cx map in
@@ -4855,7 +4889,18 @@ and multiflow_partial cx trace ?strict = function
     multiflow_partial cx trace ?strict ([], touts)
 
   | (tin::tins,tout::touts) ->
-    rec_flow cx trace (tin,tout);
+    (* flow `tin` (param) to `tout` (argument). normally, `tin` is passed
+       through a `ReposLowerT` to make sure that the concrete type points at
+       the param's location. however, if `tin` is an implicit type argument
+       (e.g. the `x` in `function foo<T>(x: T)`), then don't reposition it
+       because implicit type args have no explicit location to point at.
+       instead, let it flow through transparently, so that we point at the
+       place that constrained the type arg. this is pretty hacky. *)
+    let tout =
+      if ImplicitTypeArgument.has_typeparam_prefix (desc_of_t tin) then tout
+      else ReposLowerT (reason_of_t tin, tout)
+    in
+    rec_flow cx trace (tin, tout);
     multiflow_partial cx trace ?strict (tins,touts)
 
 and dictionary cx trace keyt valuet = function
@@ -4941,6 +4986,18 @@ and become cx ?trace r t = match t with
   | _ ->
     (* optimization: if t is already concrete, become t immediately :) *)
     t
+
+and reposition cx ?trace reason t = match t with
+  | OpenT (r, _) ->
+    let mk_tvar_where = if is_derivable_reason r
+      then mk_tvar_derivable_where
+      else mk_tvar_where
+    in
+    mk_tvar_where cx reason (fun tvar ->
+      flow_opt cx ?trace (t, ReposLowerT (reason, tvar))
+    )
+  | _ ->
+    repos_t_from_reason reason t
 
 (* given the type of a value v, return the type term
    representing the `typeof v` annotation expression *)
@@ -5222,6 +5279,9 @@ let rec gc cx state = function
         | None -> ()
       )
 
+  | ReposUpperT (_, t) ->
+      gc cx state t
+
   (** use types **)
 
   | SummarizeT (_, t) ->
@@ -5236,6 +5296,9 @@ let rec gc cx state = function
       gc cx state funtype.this_t;
       funtype.params_tlist |> List.iter (gc cx state);
       gc cx state funtype.return_t
+
+  | ReposLowerT (_, t) ->
+      gc cx state t
 
   | SetPropT(_, _, t) ->
       gc cx state t

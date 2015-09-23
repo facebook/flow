@@ -1,5 +1,5 @@
 
-value.js:2:10,10: number
+value.js:3:16,21: number
 This type is incompatible with
 value.js:3:7,12: string
 

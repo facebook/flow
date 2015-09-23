@@ -1,17 +1,17 @@
 
-generics.js:11:11,11: T
-This type is incompatible with
-generics.js:20:7,12: number
-
-generics.js:18:18,18: number
+generics.js:19:16,18: number
 This type is incompatible with
 generics.js:19:7,12: string
 
-generics.js:27:9,15: undefined (too few arguments, expected default/rest parameters)
+generics.js:20:16,18: T
+This type is incompatible with
+generics.js:20:7,12: number
+
+generics.js:28:16,23: number
 This type is incompatible with
 generics.js:28:7,12: string
 
-generics.js:28:22,22: number
+generics.js:28:16,23: undefined (too few arguments, expected default/rest parameters)
 This type is incompatible with
 generics.js:28:7,12: string
 

@@ -1,2 +1,2 @@
-{"type":"number","reasons":[{"desc":"number","path":"import.js","line":2,"endline":2,"start":11,"end":12}],"path":"test.js","line":5,"endline":5,"start":1,"end":3}
-{"type":"{\n  \"reason\":{\n    \"pos\":{\"file\":\"\",\"start\":{\"line\":0,\"col\":0},\"end\":{\"line\":0,\"col\":0}},\n    \"desc\":\"number\"\n  },\n  \"kind\":\"NumT\"\n}","reasons":[{"desc":"number","path":"import.js","line":2,"endline":2,"start":11,"end":12}],"path":"test.js","line":5,"endline":5,"start":1,"end":3}
+{"type":"number","reasons":[{"desc":"number","path":"test.js","line":5,"endline":5,"start":1,"end":3}],"path":"test.js","line":5,"endline":5,"start":1,"end":3}
+{"type":"{\n  \"reason\":{\n    \"pos\":{\"file\":\"\",\"start\":{\"line\":0,\"col\":0},\"end\":{\"line\":0,\"col\":0}},\n    \"desc\":\"number\"\n  },\n  \"kind\":\"NumT\"\n}","reasons":[{"desc":"number","path":"test.js","line":5,"endline":5,"start":1,"end":3}],"path":"test.js","line":5,"endline":5,"start":1,"end":3}

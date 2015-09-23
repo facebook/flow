@@ -3,7 +3,7 @@ advanced_arrows.js:7:34,34: number
 This type is incompatible with
 advanced_arrows.js:7:24,29: string
 
-advanced_arrows.js:11:8,11: string
+advanced_arrows.js:11:2,12: string
 This type is incompatible with
 advanced_arrows.js:11:15,20: number
 

@@ -1,9 +1,9 @@
 
-Closure.js:11:5,6: number
+Closure.js:10:11,11: number
 This type is incompatible with
 Closure.js:4:22,27: string
 
-Closure.js:32:5,6: number
+Closure.js:31:11,11: number
 This type is incompatible with
 Closure.js:4:22,27: string
 

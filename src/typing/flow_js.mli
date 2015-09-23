@@ -25,6 +25,8 @@ val flow: context -> (Type.t * Type.t) -> unit
 
 val unify: context -> Type.t -> Type.t -> unit
 
+val reposition: context -> ?trace:trace -> reason -> Type.t -> Type.t
+
 val master_cx: unit -> context
 
 (* constraint utils *)

@@ -23,7 +23,7 @@ annot.js:13:28,32: string
 This type is incompatible with
 annot.js:13:12,17: number
 
-annot.js:26:16,56: property `foo-bar`
+annot.js:27:15,21: property `foo-bar`
 Property not found in
 annot.js:27:25,43: object literal
 

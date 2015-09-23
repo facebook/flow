@@ -9,13 +9,13 @@ constructors.js:5:9,9: number
 This type is incompatible with
 constructors.js:19:13,19: boolean
 
-constructors.js:19:13,19: boolean
-This type is incompatible with
-test.js:3:8,13: string
-
 test.js:2:27,27: property `x`
 Property not found in
-constructors.js:10:15,17: new object
+test.js:2:21,23: new object
+
+test.js:3:17,21: boolean
+This type is incompatible with
+test.js:3:8,13: string
 
 test.js:4:17,29: call of method m
 Error:
@@ -25,13 +25,13 @@ test.js:4:8,13: string
 
 test.js:7:18,29: property `x`
 Error:
-constructors.js:17:6,12: boolean
+test.js:7:18,29: boolean
 This type is incompatible with
 test.js:7:9,14: string
 
 test.js:8:18,23: property `y`
 Error:
-constructors.js:19:13,19: boolean
+test.js:8:18,23: boolean
 This type is incompatible with
 test.js:8:9,14: string
 

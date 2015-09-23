@@ -1,13 +1,13 @@
 
-test.js:1:25,26: object literal
+test.js:2:19,27: object literal
 This type is incompatible with
 test.js:2:10,15: number
 
-test.js:5:23,25: new object
+test.js:5:19,27: new object
 This type is incompatible with
 test.js:5:10,15: number
 
-test.js:8:23,25: new object
+test.js:8:19,27: new object
 This type is incompatible with
 test.js:8:10,15: number
 

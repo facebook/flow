@@ -11,23 +11,23 @@ A.js:9:14,20: boolean
 
 C.js:9:7,7: property `b`
 Property not found in
-C.js:4:9,20: new object
+C.js:9:5,5: new object
 
 C.js:10:3,8: function call
 Error:
-B.js:12:17,17: number
+C.js:10:5,7: number
 This type is incompatible with
 A.js:9:14,20: boolean
 
 D.js:11:9,14: call of method fn
 Error:
-D.js:9:7,10: boolean
+D.js:6:30,35: boolean
 This type is incompatible with
 D.js:6:14,19: string
 
 D.js:12:1,4: function call
 Error:
-D.js:11:9,14: string
+D.js:12:3,3: string
 This type is incompatible with
 A.js:9:14,20: boolean
 
@@ -45,9 +45,9 @@ F.js:1:26,37: number
 
 F.js:5:10,17: property `length`
 Error:
-F.js:4:33,38: string
+F.js:5:10,17: number
 This type is incompatible with
-[LIB] core.js:173:13,18: number
+F.js:4:33,38: string
 
 G.js:2:12,14: number
 This type is incompatible with

@@ -1,7 +1,7 @@
 
 1/f.js:8:1,4: function call
 Error:
-1/f.js:5:9,12: null
+1/f.js:3:27,27: null
 This type is incompatible with
 1/f.js:3:24,27: number
 
@@ -19,7 +19,7 @@ Missing annotation
 
 2/A.js:10:12,32: function call
 Error:
-2/A.js:4:6,11: number
+2/A.js:10:21,31: number
 This type is incompatible with
 2/A.js:14:22,27: string
 

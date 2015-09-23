@@ -63,7 +63,7 @@ logical.js:348:18,21: boolean
 This type is incompatible with
 logical.js:346:24,29: number
 
-logical.js:361:13,17: boolean
+logical.js:363:12,12: boolean
 This type is incompatible with
 logical.js:356:24,29: number
 

@@ -5,7 +5,7 @@ issue-198.js:5:16,28: string
 This type is incompatible with
 [LIB] core.js:382:33,46: union type
 
-issue-324.js:3:7,9: Bar
+issue-324.js:6:13,15: Bar
 This type is incompatible with
 issue-324.js:5:13,24: union type
 
@@ -13,12 +13,16 @@ union.js:2:5,5: number
 This type is incompatible with
 union.js:1:17,33: union type
 
-union.js:4:7,7: C
+union.js:8:13,19: D
 This type is incompatible with
-union.js:5:7,7: D
+union.js:8:9,9: C
 
-union.js:5:7,7: D
+union.js:9:19,19: C
 This type is incompatible with
-union.js:4:7,7: C
+union.js:9:19,19: D
 
-Found 5 errors
+union.js:9:19,19: D
+This type is incompatible with
+union.js:9:19,19: C
+
+Found 6 errors

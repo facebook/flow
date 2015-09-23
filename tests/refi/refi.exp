@@ -1,20 +1,4 @@
 
-bound.js:4:10,15: null
-This type is incompatible with
-bound.js:47:13,18: string
-
-bound.js:4:10,15: undefined
-This type is incompatible with
-bound.js:47:13,18: string
-
-bound.js:4:10,15: null
-This type is incompatible with
-bound.js:53:15,20: string
-
-bound.js:4:10,15: undefined
-This type is incompatible with
-bound.js:53:15,20: string
-
 bound.js:9:22,22: null
 This type is incompatible with
 bound.js:9:13,18: string
@@ -22,6 +6,22 @@ bound.js:9:13,18: string
 bound.js:9:22,22: undefined
 This type is incompatible with
 bound.js:9:13,18: string
+
+bound.js:47:22,22: null
+This type is incompatible with
+bound.js:47:13,18: string
+
+bound.js:47:22,22: undefined
+This type is incompatible with
+bound.js:47:13,18: string
+
+bound.js:53:24,24: null
+This type is incompatible with
+bound.js:53:15,20: string
+
+bound.js:53:24,24: undefined
+This type is incompatible with
+bound.js:53:15,20: string
 
 heap.js:5:22,24: null
 This type is incompatible with
@@ -51,11 +51,11 @@ heap.js:55:22,24: undefined
 This type is incompatible with
 heap.js:55:13,18: string
 
-heap.js:59:17,22: null
+heap.js:62:24,26: null
 This type is incompatible with
 heap.js:62:15,20: string
 
-heap.js:59:17,22: undefined
+heap.js:62:24,26: undefined
 This type is incompatible with
 heap.js:62:15,20: string
 
@@ -83,27 +83,27 @@ local.js:5:22,22: undefined
 This type is incompatible with
 local.js:5:13,18: string
 
-local.js:45:14,19: null
+local.js:47:22,22: null
 This type is incompatible with
 local.js:47:13,18: string
 
-local.js:45:14,19: undefined
+local.js:47:22,22: undefined
 This type is incompatible with
 local.js:47:13,18: string
 
-local.js:51:14,19: null
+local.js:54:24,24: null
 This type is incompatible with
 local.js:54:15,20: string
 
-local.js:51:14,19: undefined
+local.js:54:24,24: undefined
 This type is incompatible with
 local.js:54:15,20: string
 
-null_tests.js:101:7,12: null
+null_tests.js:150:14,20: null
 This type is incompatible with
 null_tests.js:147:16,21: string
 
-null_tests.js:101:7,12: undefined
+null_tests.js:150:14,20: undefined
 This type is incompatible with
 null_tests.js:147:16,21: string
 

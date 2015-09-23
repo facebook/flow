@@ -1,11 +1,11 @@
 
 assignment.js:16:14,21: null
 This type is incompatible with
-assignment.js:10:12,13:1: object type
+assignment.js:15:19,21: object type
 
 assignment.js:16:14,21: undefined
 This type is incompatible with
-assignment.js:10:12,13:1: object type
+assignment.js:15:19,21: object type
 
 assignment.js:22:16,21: property `parent`
 Property cannot be accessed on possibly null value
@@ -17,19 +17,19 @@ assignment.js:22:14,14: undefined
 
 bool.js:12:3,6: access of computed property/element
 Computed property/element cannot be accessed on possibly null value
-bool.js:3:18,21: null
+bool.js:12:3,3: null
 
 bool.js:12:3,6: access of computed property/element
 Computed property/element cannot be accessed on possibly undefined value
-bool.js:3:18,21: undefined
+bool.js:12:3,3: undefined
 
 bool.js:18:7,10: access of computed property/element
 Computed property/element cannot be accessed on possibly null value
-bool.js:15:18,21: null
+bool.js:18:7,7: null
 
 bool.js:18:7,10: access of computed property/element
 Computed property/element cannot be accessed on possibly undefined value
-bool.js:15:18,21: undefined
+bool.js:18:7,7: undefined
 
 bool.js:24:13,17: boolean
 This type is incompatible with
@@ -41,41 +41,33 @@ bool.js:27:7,17: number
 
 cond_prop.js:11:10,37: function call
 Error:
-cond_prop.js:7:16,17: object type
+cond_prop.js:11:25,36: object type
 This type is incompatible with
-cond_prop.js:3:13,41: union type
+cond_prop.js:9:34,37: union type
 
 hasOwnProperty.js:4:3,7: call of method y
 Function cannot be called on possibly undefined value
 hasOwnProperty.js:3:20,29: undefined
 
-heap_defassign.js:3:26,31: string
+heap_defassign.js:10:21,25: string
 This type is incompatible with
 heap_defassign.js:10:12,17: number
 
-heap_defassign.js:3:26,31: string
+heap_defassign.js:16:21,25: string
 This type is incompatible with
 heap_defassign.js:16:12,17: number
 
-heap_defassign.js:3:26,31: string
+heap_defassign.js:22:21,25: string
 This type is incompatible with
 heap_defassign.js:22:12,17: number
 
-heap_defassign.js:3:26,31: string
+heap_defassign.js:30:21,25: string
 This type is incompatible with
 heap_defassign.js:30:12,17: number
 
-heap_defassign.js:3:26,31: string
+heap_defassign.js:38:21,25: string
 This type is incompatible with
 heap_defassign.js:38:12,17: number
-
-heap_defassign.js:3:26,31: string
-This type is incompatible with
-heap_defassign.js:62:16,21: number
-
-heap_defassign.js:3:26,31: string
-This type is incompatible with
-heap_defassign.js:73:12,17: number
 
 heap_defassign.js:62:25,29: string
 This type is incompatible with
@@ -85,93 +77,97 @@ heap_defassign.js:65:20,24: number
 This type is incompatible with
 heap_defassign.js:65:11,16: string
 
+heap_defassign.js:73:21,25: string
+This type is incompatible with
+heap_defassign.js:73:12,17: number
+
 mixed.js:8:5,18: function call
 Error:
-mixed.js:6:17,21: number
+mixed.js:8:17,17: number
 This type is incompatible with
 mixed.js:4:25,30: string
 
 mixed.js:14:5,18: function call
 Error:
-mixed.js:12:17,21: string
+mixed.js:14:17,17: string
 This type is incompatible with
 mixed.js:3:25,30: number
 
 mixed.js:20:5,18: function call
 Error:
-mixed.js:18:18,22: boolean
+mixed.js:20:17,17: boolean
 This type is incompatible with
 mixed.js:4:25,30: string
 
 mixed.js:26:5,18: function call
 Error:
-mixed.js:24:17,21: function
+mixed.js:26:17,17: function
 This type is incompatible with
 mixed.js:4:25,30: string
 
 mixed.js:32:5,18: function call
 Error:
-mixed.js:30:18,22: null
+mixed.js:32:17,17: null
 This type is incompatible with
 mixed.js:4:25,30: string
 
 mixed.js:32:5,18: function call
 Error:
-mixed.js:30:18,22: object
+mixed.js:32:17,17: object
 This type is incompatible with
 mixed.js:4:25,30: string
 
 mixed.js:38:5,18: function call
 Error:
-mixed.js:36:18,22: array
+mixed.js:38:17,17: array
 This type is incompatible with
 mixed.js:4:25,30: string
 
 mixed.js:44:5,18: function call
 Error:
-mixed.js:42:19,23: undefined
+mixed.js:44:17,17: undefined
 This type is incompatible with
 mixed.js:4:25,30: string
 
 mixed.js:50:5,18: function call
 Error:
-mixed.js:48:19,23: null
+mixed.js:50:17,17: null
 This type is incompatible with
 mixed.js:4:25,30: string
 
 mixed.js:56:5,18: function call
 Error:
-mixed.js:54:19,23: null
+mixed.js:56:17,17: null
 This type is incompatible with
 mixed.js:4:25,30: string
 
 mixed.js:56:5,18: function call
 Error:
-mixed.js:54:19,23: undefined
+mixed.js:56:17,17: undefined
 This type is incompatible with
 mixed.js:4:25,30: string
 
 mixed.js:62:5,18: function call
 Error:
-mixed.js:60:19,23: boolean
+mixed.js:62:17,17: boolean
 This type is incompatible with
 mixed.js:4:25,30: string
 
 mixed.js:68:5,18: function call
 Error:
-mixed.js:66:20,24: boolean
+mixed.js:68:17,17: boolean
 This type is incompatible with
 mixed.js:4:25,30: string
 
-not.js:3:18,21: boolean
+not.js:5:5,5: boolean
 This type is incompatible with
 not.js:5:5,7: number
 
-not.js:3:18,21: null
+not.js:5:5,5: null
 This type is incompatible with
 not.js:5:5,7: number
 
-not.js:3:18,21: undefined
+not.js:5:5,5: undefined
 This type is incompatible with
 not.js:5:5,7: number
 
@@ -181,19 +177,19 @@ not.js:3:18,21: boolean
 
 not.js:11:5,8: access of computed property/element
 Computed property/element cannot be accessed on
-not.js:9:18,23: number
+not.js:11:5,5: number
 
 not.js:11:5,8: access of computed property/element
 Computed property/element cannot be accessed on possibly null value
-not.js:9:18,23: null
+not.js:11:5,5: null
 
 not.js:11:5,8: access of computed property/element
 Computed property/element cannot be accessed on possibly undefined value
-not.js:9:18,23: undefined
+not.js:11:5,5: undefined
 
 not.js:21:5,8: access of computed property/element
 Computed property/element cannot be accessed on
-not.js:15:19,24: number
+not.js:21:5,5: number
 
 null.js:4:13,16: null
 This type is incompatible with
@@ -211,35 +207,31 @@ property.js:64:12,17: undefined
 This type is incompatible with
 property.js:61:59,64: string
 
-refinements.js:2:16,16: number
+refinements.js:4:24,24: number
 This type is incompatible with
 refinements.js:4:15,20: string
 
-refinements.js:2:20,23: null
+refinements.js:7:20,20: boolean
 This type is incompatible with
 refinements.js:7:11,16: string
 
-refinements.js:5:13,17: boolean
+refinements.js:7:20,20: null
 This type is incompatible with
 refinements.js:7:11,16: string
 
-refinements.js:11:16,16: number
+refinements.js:13:24,24: null
 This type is incompatible with
 refinements.js:13:15,20: string
 
-refinements.js:11:20,23: null
+refinements.js:13:24,24: number
 This type is incompatible with
 refinements.js:13:15,20: string
 
-refinements.js:14:13,17: boolean
+refinements.js:16:20,20: boolean
 This type is incompatible with
 refinements.js:16:11,16: string
 
-refinements.js:24:13,19: string
-This type is incompatible with
-refinements.js:33:15,20: number
-
-refinements.js:27:13,19: string
+refinements.js:33:24,24: string
 This type is incompatible with
 refinements.js:33:15,20: number
 
@@ -247,35 +239,35 @@ refinements.js:36:20,20: number
 This type is incompatible with
 refinements.js:36:11,16: string
 
-refinements.js:40:21,21: number
+refinements.js:43:24,24: number
 This type is incompatible with
 refinements.js:43:15,20: string
 
-refinements.js:40:25,28: null
+refinements.js:45:20,20: boolean
 This type is incompatible with
 refinements.js:45:11,16: string
 
-refinements.js:42:14,18: boolean
+refinements.js:45:20,20: null
 This type is incompatible with
 refinements.js:45:11,16: string
 
-refinements.js:50:13,17: boolean
+refinements.js:54:20,20: boolean
 This type is incompatible with
 refinements.js:54:11,16: number
 
-switch.js:3:29,34: number
+switch.js:8:14,17: number
 This type is incompatible with
 switch.js:3:38,43: string
 
 switch.js:27:14,20: access of computed property/element
 Computed property/element cannot be accessed on
-switch.js:23:30,35: number
+switch.js:27:14,17: number
 
 switch.js:37:14,20: access of computed property/element
 Computed property/element cannot be accessed on
-switch.js:33:30,35: number
+switch.js:37:14,17: number
 
-switch.js:43:22,27: string
+switch.js:51:15,18: string
 This type is incompatible with
 switch.js:51:15,20: number
 
@@ -297,21 +289,21 @@ tagged_union.js:40:13,24: union type
 
 tagged_union.js:40:8,10: property `raw`
 Property not found in
-tagged_union.js:27:15,46: object type
+tagged_union.js:40:6,6: object type
 
 tagged_union.js:72:21,21: property `A`
 Property not found in
-tagged_union.js:67:10,31: object type
+tagged_union.js:72:19,19: object type
 
 tagged_union.js:82:17,27: property `nationality`
 Property not found in
-tagged_union.js:78:16,32: object type
+tagged_union.js:80:25,31: object type
 
 typeof.js:5:5,8: access of computed property/element
 Computed property/element cannot be accessed on
-typeof.js:3:17,20: boolean
+typeof.js:5:5,5: boolean
 
-typeof.js:10:11,14: null
+typeof.js:12:12,12: null
 This type is incompatible with
 typeof.js:9:17,22: number
 
@@ -321,21 +313,21 @@ Function cannot be called on possibly undefined value
 
 typeof.js:23:3,16: call of method stuff
 Method cannot be called on possibly undefined value
-[LIB] lib.js:3:50,53: undefined
+typeof.js:23:3,5: undefined
 
 typeof.js:26:7,11: property `stuff`
 Property cannot be accessed on possibly undefined value
-[LIB] lib.js:3:50,53: undefined
+typeof.js:26:3,5: undefined
 
 typeof.js:30:5,18: call of method stuff
 Function cannot be called on possibly undefined value
 [LIB] lib.js:3:27,45: undefined
 
-undef.js:29:29,34: null
+undef.js:31:13,13: null
 This type is incompatible with
 undef.js:31:13,20: number
 
-undef.js:35:33,38: null
+undef.js:38:13,13: null
 This type is incompatible with
 undef.js:38:13,20: number
 
@@ -347,11 +339,11 @@ undef.js:48:39,44: null
 This type is incompatible with
 undef.js:51:13,22: number
 
-undef.js:64:46,51: null
+undef.js:69:13,13: null
 This type is incompatible with
 undef.js:69:13,20: number
 
-undef.js:64:46,51: undefined
+undef.js:69:13,13: undefined
 This type is incompatible with
 undef.js:69:13,20: number
 
@@ -365,21 +357,21 @@ undef.js:77:7,21: number
 
 union.js:7:5,8: access of computed property/element
 Computed property/element cannot be accessed on
-union.js:3:23,26: boolean
+union.js:7:5,5: boolean
 
 union.js:13:5,8: access of computed property/element
 Computed property/element cannot be accessed on
-union.js:3:14,19: number
+union.js:13:5,5: number
 
 union.js:19:5,8: access of computed property/element
 Computed property/element cannot be accessed on
-union.js:3:14,19: number
+union.js:19:5,5: number
 
-void.js:29:28,33: null
+void.js:31:13,13: null
 This type is incompatible with
 void.js:31:13,20: number
 
-void.js:35:32,37: null
+void.js:38:13,13: null
 This type is incompatible with
 void.js:38:13,20: number
 
@@ -391,11 +383,11 @@ void.js:48:37,42: null
 This type is incompatible with
 void.js:51:13,22: number
 
-void.js:55:35,40: undefined
+void.js:56:32,32: undefined
 This type is incompatible with
 void.js:56:32,39: number
 
-void.js:61:39,44: undefined
+void.js:62:32,32: undefined
 This type is incompatible with
 void.js:62:32,39: number
 
@@ -415,4 +407,4 @@ void.js:85:7,12: undefined
 This type is incompatible with
 void.js:85:7,19: number
 
-Found 97 errors
+Found 95 errors

@@ -1,15 +1,15 @@
 
-iter.js:1:9,20: array literal
+iter.js:7:15,15: array literal
 This type is incompatible with
 iter.js:7:1,9:1: iteration expected on object
-
-iter.js:1:9,20: array literal
-This type is incompatible with
-iter.js:22:1,24:1: iteration expected on object
 
 iter.js:8:9,12: access of computed property/element
 Element cannot be accessed with
 iter.js:8:11,11: string
+
+iter.js:22:20,20: array literal
+This type is incompatible with
+iter.js:22:1,24:1: iteration expected on object
 
 iter.js:23:9,12: access of computed property/element
 Element cannot be accessed with

@@ -1,7 +1,7 @@
 
 import_declare_type.js:11:15,20: string
 This type is incompatible with
-[LIB] DeclareModule_TypeAlias.js:6:24,29: number
+import_declare_type.js:11:9,11: number
 
 import_declare_type.js:12:9,11: identifier toz
 Could not resolve name

@@ -17,7 +17,7 @@ This.js:41:15,15: property `x`
 Property cannot be accessed on
 global object
 
-This.js:48:29,34: string
+This.js:49:12,15: string
 This type is incompatible with
 This.js:47:17,22: number
 
@@ -31,9 +31,9 @@ This.js:48:34,34: property `x`
 Property cannot be accessed on
 global object
 
-arrows.js:1:7,7: C
+arrows.js:16:2,2: C
 This type is incompatible with
-arrows.js:12:7,7: D
+arrows.js:16:5,5: D
 
 arrows.js:24:7,19: super.foo(...)
 Error:

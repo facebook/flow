@@ -1,5 +1,5 @@
 
-conditional.js:22:11,16: number
+conditional.js:23:24,24: number
 This type is incompatible with
 conditional.js:20:15,20: string
 

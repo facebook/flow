@@ -17,7 +17,7 @@ B.js:7:11,16: number
 
 B.js:10:20,22: function call
 Error:
-A.js:8:25,26: object literal
+A.js:13:19,21: object literal
 This type is incompatible with
 global object
 

@@ -1,27 +1,27 @@
 
 importer.js:11:23,28: string
 This type is incompatible with
-types_only.js:3:28,33: number
+importer.js:11:8,19: number
 
 importer.js:14:26,31: string
 This type is incompatible with
-types_only.js:7:24,29: number
+importer.js:14:8,22: number
 
 importer.js:17:18,23: string
 This type is incompatible with
-types_only2.js:3:23,28: number
+importer.js:17:8,14: number
 
 importer.js:20:18,23: string
 This type is incompatible with
-types_only2.js:4:23,28: number
+importer.js:20:8,14: number
 
 importer.js:24:18,23: string
 This type is incompatible with
-cjs_with_types.js:3:23,28: number
+importer.js:24:8,14: number
 
 types_only.js:5:23,28: string
 This type is incompatible with
-types_only.js:3:28,33: number
+types_only.js:5:8,19: number
 
 types_only.js:11:9,23: standaloneType2
 type referenced from value position

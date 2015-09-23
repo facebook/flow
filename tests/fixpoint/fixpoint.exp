@@ -7,19 +7,19 @@ Missing annotation
 
 Fun.js:28:1,16: function call
 Error:
-Fun.js:28:11,15: string
+Fun.js:20:15,15: string
 This type is incompatible with
 Fun.js:4:15,20: number
 
 Fun.js:28:1,16: function call
 Error:
-Fun.js:28:11,15: string
+Fun.js:21:35,35: string
 This type is incompatible with
 Fun.js:5:16,21: number
 
 Fun.js:28:1,16: function call
 Error:
-Fun.js:28:11,15: string
+Fun.js:21:43,43: string
 This type is incompatible with
 Fun.js:6:25,30: number
 
