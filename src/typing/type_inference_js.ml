@@ -2891,17 +2891,41 @@ and prop_map_of_object cx type_params_map props =
   List.fold_left (object_prop cx type_params_map) SMap.empty props
 
 and object_ cx type_params_map reason ?(allow_sealed=true) props = Ast.Expression.Object.(
-  let map, spread = List.fold_left (fun (map, spreads) t -> match t with
-    | SpreadProperty (loc, { SpreadProperty.argument }) ->
-        let spread = expression cx type_params_map argument in
-        object_prop cx type_params_map map t, spread::spreads
-    | t -> object_prop cx type_params_map map t, spreads
-  ) (SMap.empty, []) props in
-  let sealed = allow_sealed && spread = [] && not (SMap.is_empty map) in
-  let o =
+  let mk_object ?(sealed=false) map =
     Flow_js.mk_object_with_map_proto cx reason ~sealed map (MixedT reason)
   in
-  chain_objects cx reason o spread
+  let mk_spread from_obj to_obj =
+    Flow_js.mk_tvar_where cx reason (fun t ->
+      Flow_js.flow cx (to_obj, ObjAssignT(reason, from_obj, t, [], true));
+    )
+  in
+  let map, result = List.fold_left (fun (map, result) t -> match t with
+    | SpreadProperty (loc, { SpreadProperty.argument }) ->
+        let spread = expression cx type_params_map argument in
+        let result = match result with
+        | None ->
+          let obj = mk_object map in
+          mk_spread spread obj
+        | Some result ->
+          let obj = if not (SMap.is_empty map)
+            then mk_spread (mk_object map) result
+            else result in
+          mk_spread spread obj
+        in
+        SMap.empty, Some result
+    | t ->
+        object_prop cx type_params_map map t, result
+  ) (SMap.empty, None) props in
+  match result with
+  (* no spreads *)
+  | None ->
+      let sealed = allow_sealed && not (SMap.is_empty map) in
+      mk_object ~sealed map
+  (* some spreads *)
+  | Some result ->
+      if SMap.is_empty map
+      then result
+      else mk_spread (mk_object map) result
 )
 
 and variable cx type_params_map kind

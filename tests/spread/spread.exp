@@ -15,4 +15,8 @@ test3.js:17:18,20: string
 This type is incompatible with
 test3.js:17:8,14: boolean
 
-Found 4 errors
+test6.js:10:5,30: property `abc`
+Property not found in
+test6.js:10:2,2: object literal
+
+Found 5 errors
