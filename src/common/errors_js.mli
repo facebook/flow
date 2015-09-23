@@ -76,4 +76,5 @@ val print_error_json : out_channel -> error list -> unit
 
 (* Human readable output *)
 val print_error_summary: flags:flags -> error list -> unit
+val string_of_loc_deprecated: Loc.t -> string
 val print_error_deprecated: out_channel -> error list -> unit

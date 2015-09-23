@@ -86,6 +86,8 @@ let main option_values json strip_root path args () =
     let json = Json.json_to_string json in
     print_endline json;
   ) else
-    print_endline (range_string_of_loc loc)
+    if option_values.from = "vim" || option_values.from = "emacs"
+    then print_endline (Errors_js.string_of_loc_deprecated loc)
+    else print_endline (range_string_of_loc loc)
 
 let command = CommandSpec.command spec main

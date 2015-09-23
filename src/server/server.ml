@@ -243,8 +243,10 @@ struct
       (try
          let (file, region) = parse_suggest_cmd file in
          let file = Path.to_string (Path.make file) in
-         let cx = Types_js.merge_strict_file file in
          let content = cat file in
+         let cx = match Types_js.typecheck_contents content file with
+           | Some cx, _ -> cx
+           | _, errors  -> failwith "Couldn't parse file" in
          let lines = Str.split_delim (Str.regexp "\n") content in
          let insertions =
            TI.fill_types cx
