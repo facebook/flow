@@ -664,12 +664,17 @@ let dynamic_class pos =
   add Typing.dynamic_class pos
     "Don't use dynamic classes"
 
-let uninstantiable_class usage_pos decl_pos name =
+let uninstantiable_class usage_pos decl_pos name reason_msgl =
   let name = strip_ns name in
-  add_list Typing.uninstantiable_class [
+  let msgl = [
     usage_pos, (name^" is uninstantiable");
     decl_pos, "Declaration is here"
-  ]
+  ] in
+  let msgl = match reason_msgl with
+    | (reason_pos, reason_str) :: tail ->
+      (reason_pos, reason_str^" which must be instantiable") :: tail @ msgl
+    | _ -> msgl in
+  add_list Typing.uninstantiable_class msgl
 
 let abstract_const_usage usage_pos decl_pos name =
   let name = strip_ns name in

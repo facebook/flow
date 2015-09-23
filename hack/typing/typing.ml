@@ -1569,8 +1569,8 @@ and new_object ~check_not_abstract p env c el uel =
       env, (Reason.Runknown_class p, Tobject)
   | Some (cname, class_, c_ty) ->
       if check_not_abstract && class_.tc_abstract
-        && not (requires_consistent_construct c)
-      then Errors.uninstantiable_class p class_.tc_pos class_.tc_name;
+        && not (requires_consistent_construct c) then
+        uninstantiable_error p c class_.tc_pos class_.tc_name p c_ty;
       let env, params = lfold begin fun env _ ->
         TUtils.in_var env (Reason.Rnone, Tunresolved [])
       end env class_.tc_tparams in
@@ -1626,19 +1626,27 @@ and new_object ~check_not_abstract p env c el uel =
 and instantiable_cid p env cid =
   let env, class_id = class_id_for_new p env cid in
   (match class_id with
-    | Some ((pos, name), class_, _) when
+    | Some ((pos, name), class_, c_ty) when
            class_.tc_kind = Ast.Ctrait || class_.tc_kind = Ast.Cenum ->
       (match cid with
-        | CI _ | CIexpr _ ->
-          Errors.uninstantiable_class pos class_.tc_pos name;
+        | CIexpr _ | CI _ ->
+          uninstantiable_error p cid class_.tc_pos name pos c_ty;
           env, None
         | CIstatic | CIparent | CIself -> env, class_id
       )
-    | Some ((pos, name), class_, _) when
+    | Some ((pos, name), class_, c_ty) when
            class_.tc_kind = Ast.Cabstract && class_.tc_final ->
-       Errors.uninstantiable_class pos class_.tc_pos name;
-       env, None
+      uninstantiable_error p cid class_.tc_pos name pos c_ty;
+      env, None
     | None | Some _ -> env, class_id)
+
+and uninstantiable_error reason_pos cid c_tc_pos c_name c_usage_pos c_ty =
+  let reason_msgl = match cid with
+    | CIexpr _ ->
+      let ty_str = "This would be "^Typing_print.error (snd c_ty) in
+      [(reason_pos, ty_str)]
+    | _ -> [] in
+  Errors.uninstantiable_class c_usage_pos c_tc_pos c_name reason_msgl
 
 and exception_ty pos env ty =
   let exn_ty = Reason.Rthrow pos, Tclass ((pos, SN.Classes.cException), []) in

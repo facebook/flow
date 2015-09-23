@@ -127,7 +127,7 @@ module CheckInstantiability = struct
         | Some {tc_kind = Ast.Cabstract; tc_final = true;
                 tc_name; tc_pos; _}
         | Some {tc_kind = Ast.Ctrait; tc_name; tc_pos; _} ->
-          Errors.uninstantiable_class usage_pos tc_pos tc_name
+          Errors.uninstantiable_class usage_pos tc_pos tc_name []
         | _ -> ()) in
       if n = SN.Classes.cClassname
       then (Option.iter (List.hd hl) validate_classname; env)
