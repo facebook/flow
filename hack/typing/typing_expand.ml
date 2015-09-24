@@ -39,6 +39,7 @@ and fully_expand_ seen env = function
   | Tarraykind akind ->
     let akind =  match akind with
       | AKany -> AKany
+      | AKempty -> AKempty
       | AKvec ty -> AKvec (fully_expand seen env ty)
       | AKmap (tk, tv) ->
         let tk = fully_expand seen env tk in

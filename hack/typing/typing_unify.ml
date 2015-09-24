@@ -94,8 +94,8 @@ and unify_ env r1 ty1 r2 ty2 =
     else
       let () = TUtils.uerror r1 ty1 r2 ty2 in
       env, Tany
-  | Tarraykind AKany, (Tarraykind _ as ty)
-  | (Tarraykind _ as ty), Tarraykind AKany ->
+  | Tarraykind (AKany | AKempty), (Tarraykind _ as ty)
+  | (Tarraykind _ as ty), Tarraykind (AKany | AKempty) ->
       env, ty
   | Tarraykind AKvec ty1, Tarraykind AKvec ty2 ->
       let env, ty = unify env ty1 ty2 in
@@ -199,8 +199,8 @@ and unify_ env r1 ty1 r2 ty2 =
         )
   | _, Tabstract (AKdependent (_, _), Some (_, Tclass _)) ->
       unify_ env r2 ty2 r1 ty1
-  | (Ttuple _ as ty), Tarraykind AKany
-  | Tarraykind AKany, (Ttuple _ as ty) ->
+  | (Ttuple _ as ty), Tarraykind (AKany | AKempty)
+  | Tarraykind (AKany | AKempty), (Ttuple _ as ty) ->
       env, ty
   | Ttuple tyl1, Ttuple tyl2 ->
       let size1 = List.length tyl1 in

@@ -220,6 +220,8 @@ and array_kind =
   | AKany
   | AKvec of locl ty
   | AKmap of locl ty * locl ty
+  (* This is a type created when we see array() literal *)
+  | AKempty
 
 (* An abstract type derived from either a newtype, a type parameter, or some
  * dependent type

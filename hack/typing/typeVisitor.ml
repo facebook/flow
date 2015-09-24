@@ -84,6 +84,7 @@ class virtual ['a] type_visitor : ['a] type_visitor_type = object(this)
   method on_tarraykind acc array_kind =
     match array_kind with
     | AKany -> acc
+    | AKempty -> acc
     | AKvec ty -> this#on_type acc ty
     | AKmap (tk, tv) ->
       let acc = this#on_type acc tk in

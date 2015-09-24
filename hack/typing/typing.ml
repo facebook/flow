@@ -402,7 +402,8 @@ and check_memoizable env param (pname, ty) =
       check_memoizable env param (pname, ty)
     end
   (* Allow untyped arrays. *)
-  | _, Tarraykind AKany ->
+  | _, Tarraykind AKany
+  | _, Tarraykind AKempty ->
       ()
   | _, Tarraykind (AKvec ty)
   | _, Tarraykind (AKmap(_, ty)) ->
@@ -902,7 +903,7 @@ and lvalue env e =
 and expr_ ~in_cond ~(valkind: [> `lvalue | `rvalue | `other ]) env (p, e) =
   match e with
   | Any -> env, (Reason.Rwitness p, Tany)
-  | Array [] -> env, (Reason.Rwitness p, Tarraykind AKany)
+  | Array [] -> env, (Reason.Rwitness p, Tarraykind AKempty)
   | Array (x :: rl as l) ->
       check_consistent_fields x rl;
       let env, value = TUtils.in_var env (Reason.Rnone, Tunresolved []) in
@@ -1779,6 +1780,7 @@ and assign p env e1 ty2 =
           end env el in
           env, ty2
       | r, Tarraykind AKany
+      | r, Tarraykind AKempty
       | r, Tany ->
           let env, _ = lfold begin fun env e ->
             assign (fst e) env e (r, Tany)
@@ -2045,7 +2047,7 @@ and dispatch_call p env call_type (fpos, fun_expr as e) el uel =
       let rec get_array_filter_return_type env ty =
         let env, ety = Env.expand_type env ty in
         (match ety with
-        | (_, Tarraykind AKany) as array_type ->
+        | (_, Tarraykind (AKany | AKempty)) as array_type ->
             env, array_type
         | (r, Tarraykind (AKvec tv)) ->
             let env, tv = get_value_type env tv in
@@ -2163,7 +2165,7 @@ and dispatch_call p env call_type (fpos, fun_expr as e) el uel =
           let rec build_output_container
             (env:Env.env) (x:locl ty) : (Env.env * (locl ty -> locl ty)) =
             let env, x = Env.expand_type env x in (match x with
-              | (_, Tarraykind AKany) as array_type ->
+              | (_, Tarraykind (AKany | AKempty)) as array_type ->
                 env, (fun _ -> array_type)
               | (r, Tarraykind AKvec _) ->
                 env, (fun tr -> (r, Tarraykind (AKvec(tr))) )
@@ -2517,7 +2519,7 @@ and array_get is_lvalue p env ty1 ety1 e2 ty2 =
         | Tprim _ | Tvar _ | Tfun _ | Tclass (_, _) | Tabstract (_, _)
         | Ttuple _ | Tanon _ | Tobject | Tshape _) -> env, v
       )
-  | Tany | Tarraykind AKany -> env, (Reason.Rnone, Tany)
+  | Tany | Tarraykind (AKany | AKempty)-> env, (Reason.Rnone, Tany)
   | Tprim Tstring ->
       let ty = Reason.Rwitness p, Tprim Tstring in
       let env, ty = Type.unify p Reason.URnone env ty1 ty in
@@ -2594,7 +2596,7 @@ and array_append is_lvalue p env ty1 =
   let env, ty1 = TUtils.fold_unresolved env ty1 in
   let env, ety1 = Env.expand_type env ty1 in
   match snd ety1 with
-  | Tany | Tarraykind AKany -> env, (Reason.Rnone, Tany)
+  | Tany | Tarraykind (AKany | AKempty) -> env, (Reason.Rnone, Tany)
   | Tclass ((_, n), [ty])
       when n = SN.Collections.cVector || n = SN.Collections.cSet ->
       env, ty
@@ -3640,7 +3642,7 @@ and condition env tparamet =
       let env, ty = expr env e in
       let env, ety = Env.expand_type env ty in
       (match ety with
-      | _, Tarraykind AKany
+      | _, Tarraykind (AKany | AKempty)
       | _, Tprim Tbool -> env
       | _, (Tany | Tmixed | Tarraykind _ | Toption _
         | Tprim _ | Tvar _ | Tfun _ | Tabstract (_, _) | Tclass (_, _)

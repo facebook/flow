@@ -35,6 +35,7 @@ end = struct
     | Tarraykind akind ->
       begin match akind with
         | AKany -> ()
+        | AKempty -> ()
         | AKvec tv -> ty tv
         | AKmap (tk, tv) -> ty tk; ty tv
       end

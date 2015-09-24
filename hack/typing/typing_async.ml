@@ -81,7 +81,7 @@ let overload_extract_from_awaitable_list env p tyl =
 
 let gena env p ty =
   match snd (TUtils.fold_unresolved env ty) with
-  | _, Tarraykind AKany ->
+  | _, Tarraykind (AKany | AKempty) ->
     env, ty
   | r, Tarraykind (AKvec ty1) ->
     let env, ty1 = overload_extract_from_awaitable env p ty1 in

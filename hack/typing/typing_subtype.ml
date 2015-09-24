@@ -448,6 +448,7 @@ and sub_type_with_uenv env (uenv_super, ty_super) (uenv_sub, ty_sub) =
         coll = SN.Collections.cContainer) ->
       (match akind with
       | AKany -> env
+      | AKempty -> env
       | AKvec tv ->
           sub_type env tv_super tv
       | AKmap (_, tv) ->
@@ -459,6 +460,7 @@ and sub_type_with_uenv env (uenv_super, ty_super) (uenv_sub, ty_sub) =
          || coll = SN.Collections.cIndexish) ->
       (match akind with
       | AKany -> env
+      | AKempty -> env
       | AKvec tv ->
         let env = sub_type env tk_super (r, Tprim Nast.Tint) in
         sub_type env tv_super tv

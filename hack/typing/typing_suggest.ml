@@ -200,6 +200,7 @@ and normalize_ = function
     try
       Tarraykind (match akind with
         | AKany -> AKany
+        | AKempty -> AKempty
         | AKvec tk -> AKvec (normalize tk)
         | AKmap (tk, tv) -> AKmap (normalize tk, normalize tv)
       )
