@@ -33,11 +33,8 @@ open Type
    meaningful in all contexts. This part of the design should be revisited:
    perhaps the data types can be refactored to make them more specialized. *)
 
-(* Methods may use a dummy statics object type to carry properties. We do not
-   want to encourage this pattern, but we also don't want to block uses of this
-   pattern. Thus, we compromise by not tracking the property types. *)
 let dummy_static =
-  AnyObjT (reason_of_string "object type for statics")
+  MixedT (reason_of_string "empty statics object")
 
 let dummy_prototype =
   MixedT (reason_of_string "empty prototype object")
