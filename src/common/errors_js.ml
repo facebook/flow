@@ -146,19 +146,11 @@ let source_fragment_style text = (C.Normal C.Default, text)
 let error_fragment_style text = (C.Normal C.Red, text)
 let line_number_style text = (C.Dim C.Default, text)
 
-(* TODO: Not sure how to handle the usecase when flow reads file content from stdin *)
-let load_file f =
-  let ic = open_in f in
-  let n = in_channel_length ic in
-  let s = Bytes.create n in
-  really_input ic s 0 n;
-  close_in ic;
-  (s)
-
-(* TODO: Add proper support for relative path, for example ../../.. *)
 let relative_path filename =
-  let pwd = (Sys.getcwd ()) ^ "/" in
-  Str.global_replace (Str.regexp_string pwd) "" filename
+  let relname = Files_js.relative_path (Sys.getcwd ()) filename in
+  if String.length relname < String.length filename
+    then relname
+    else filename
 
 let highlight_error_in_line line c0 c1 =
   let prefix = String.sub line 0 c0 in
@@ -177,8 +169,8 @@ let print_file_at_location main_file loc s = Loc.(
   let c1 = loc._end.column in
   match loc.source with
     | Some filename ->
-      let content = load_file filename in
-      let lines = Str.split (Str.regexp "^") content in
+      let content = Sys_utils.cat filename in
+      let lines = Str.split_delim (Str.regexp "\n") content in
       let code_line = if (List.length lines) >= l0 then List.nth lines (l0 - 1) else "" in
       let code_line = Str.global_replace (Str.regexp_string "\n") "" code_line in
       let highlighted_line = if (l1 == l0) && (String.length code_line) > 0
