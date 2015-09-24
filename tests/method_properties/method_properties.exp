@@ -11,4 +11,12 @@ test.js:7:3,3: property `x`
 Property not found in
 test.js:1:7,7: statics of C
 
-Found 2 errors
+test.js:8:13,13: property `x`
+Property cannot be accessed on
+empty statics object
+
+test.js:9:7,7: property `x`
+Property cannot be accessed on
+empty statics object
+
+Found 4 errors
