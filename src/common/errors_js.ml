@@ -33,12 +33,14 @@ type flags = {
   color: Tty.color_mode;
   one_line: bool;
   show_all_errors: bool;
+  old_output_format: bool;
 }
 
 let default_flags = {
   color = Tty.Color_Auto;
   one_line = false;
   show_all_errors = false;
+  old_output_format = false;
 }
 
 let message_of_reason reason =
@@ -131,8 +133,7 @@ let print_reason_color ~first ~one_line ~color (message: message) =
   (if first then Printf.printf "\n");
   C.print ~color_mode:color to_print
 
-
-let print_error_color ~one_line ~color (e : error) =
+let print_error_color_old ~one_line ~color (e : error) =
   let {kind; messages; trace} = e in
   let messages = prepend_kind_message messages kind in
   let messages = append_trace_reasons messages trace in
@@ -256,7 +257,7 @@ let file_of_error err =
 let remove_newlines (color, text) =
   (color, Str.global_replace (Str.regexp "\n") "\\n" text)
 
-let print_error_color ~one_line ~color error =
+let print_error_color_new ~one_line ~color error =
   let level, messages, trace_reasons = error in
   let messages = append_trace_reasons messages trace_reasons in
   let messages = merge_comments_into_blames messages in
@@ -490,6 +491,10 @@ let print_error_summary ~flags errors =
   let truncate = not (flags.show_all_errors) in
   let one_line = flags.one_line in
   let color = flags.color in
+  let print_error_color = if flags.old_output_format
+    then print_error_color_old
+    else print_error_color_new
+  in
   let print_error_if_not_truncated curr e =
     (if not(truncate) || curr < 50 then print_error_color ~one_line ~color e);
     curr + 1

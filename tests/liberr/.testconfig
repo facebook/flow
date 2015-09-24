@@ -1,1 +1,1 @@
-cmd: status
+cmd: status --old-output-format

@@ -28,6 +28,7 @@ type flags = {
   color: Tty.color_mode;
   one_line: bool;
   show_all_errors: bool;
+  old_output_format: bool;
 }
 
 val default_flags : flags
@@ -47,7 +48,7 @@ val print_reason_color:
   message ->
   unit
 
-val print_error_color:
+val print_error_color_new:
   one_line:bool -> color:Tty.color_mode -> error -> unit
 
 val loc_of_error : error -> Loc.t
