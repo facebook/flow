@@ -217,7 +217,12 @@ let append_comment blame comment =
   | BlameM(loc, s) ->
     (match comment with
     | "Error:" -> BlameM(loc, s) (* Almost everywhere we have "Error:" that hurts readability *)
-    | comment -> BlameM(loc, s ^ ". " ^ comment))
+    | comment ->
+      let combined_comment = if String.length s > 0
+        then s ^ ". " ^ comment
+        else comment
+      in
+      BlameM(loc, combined_comment))
   | CommentM(_) -> failwith "should not be comment"
 
 (* TODO: Having a bunch of List.rev's is clowny, there must be another way *)
