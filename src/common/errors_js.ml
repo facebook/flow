@@ -225,18 +225,17 @@ let append_comment blame comment =
       BlameM(loc, combined_comment))
   | CommentM(_) -> failwith "should not be comment"
 
-(* TODO: Having a bunch of List.rev's is clowny, there must be another way *)
 let maybe_combine_message_text messages message =
   match message with
-    | BlameM (_, _) -> messages @ [message]
+    | BlameM (_, _) -> message :: messages
     | CommentM s ->
-      match List.rev messages with
-      | x :: xs -> (List.rev xs) @ [append_comment x s]
+      match messages with
+      | x :: xs -> (append_comment x s) :: xs
       | _ -> failwith "can't append comment to nonexistent blame"
 
 (* This function merges CommentM messages into previous BlameM messages *)
 let merge_comments_into_blames messages =
-  List.fold_left maybe_combine_message_text [] messages
+  List.fold_left maybe_combine_message_text [] messages |> List.rev
 
 let loc_of_error (err: error) =
   let {messages; _} = err in
