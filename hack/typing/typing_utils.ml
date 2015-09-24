@@ -170,10 +170,19 @@ let apply_shape ~on_common_field ~on_missing_optional_field (env, acc)
         on_common_field (env, acc) name ty1 ty2
   end fdm1 (env, acc)
 
-and shape_field_name p field =
+and shape_field_name env p field =
   let open Nast in match field with
     | String name -> SFlit name
     | Class_const (CI x, y) -> SFclass_const (x, y)
+    | Class_const (CIself, y) ->
+      let _, c_ty = Env.get_self env in
+      (match c_ty with
+      | Tclass (sid, _) ->
+        SFclass_const(sid, y)
+      | _ ->
+        Errors.expected_class p;
+        (* Should never get here. But we have to return something anyway *)
+        SFlit (p, "self"))
     | _ -> Errors.invalid_shape_field_name p;
       SFlit (p, "")
 

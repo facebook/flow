@@ -65,7 +65,7 @@ let rec shrink_shape pos field_name env shape =
 let idx env fty shape_ty field default =
   let env, shape_ty = Env.expand_type env shape_ty in
   let env, res = Typing_utils.in_var env (Reason.Rnone, Tunresolved []) in
-  let field_name = TUtils.shape_field_name (fst field) (snd field) in
+  let field_name = TUtils.shape_field_name env (fst field) (snd field) in
   let fake_shape = (
     (* Rnone because we don't want the fake shape to show up in messages about
      * field non existing. Errors.missing_optional_field filters them out *)
@@ -86,5 +86,5 @@ let idx env fty shape_ty field default =
       Type.sub_type default_pos Reason.URparam env default_ty res, res
 
 let remove_key p env shape_ty field  =
-  let field_name = TUtils.shape_field_name (fst field) (snd field) in
+  let field_name = TUtils.shape_field_name env (fst field) (snd field) in
   shrink_shape p field_name env shape_ty

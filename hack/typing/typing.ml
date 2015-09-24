@@ -1870,7 +1870,7 @@ and assign p env e1 ty2 =
        * When that is the case we want to add the field to its type.
        *)
       let env, shape_ty = expr env shape in
-      let field = TUtils.shape_field_name p1 e in
+      let field = TUtils.shape_field_name env p1 e in
       let env, shape_ty =
         Typing_shapes.grow_shape p e1 field (Env.fresh_type()) env shape_ty in
       let env, _ty = set_valid_rvalue p env lvar shape_ty in
@@ -2563,7 +2563,7 @@ and array_get is_lvalue p env ty1 ety1 e2 ty2 =
       )
   | Tshape (_, fdm) ->
     let p, e2' = e2 in
-    let field = TUtils.shape_field_name p e2' in
+    let field = TUtils.shape_field_name env p e2' in
     (match ShapeMap.get field fdm with
       | None ->
         Errors.undefined_field p (TUtils.get_printable_shape_field_name field);
