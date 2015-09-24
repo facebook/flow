@@ -5552,7 +5552,7 @@ and mk_class = Ast.Class.(
 
     mk_class_elements cx
       (this, super, methods_, getters_, setters_)
-      (static, super_static, smethods_, sgetters_, ssetters_)
+      (ClassT this, super_static, smethods_, sgetters_, ssetters_)
       body;
   );
 
