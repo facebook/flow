@@ -1,11 +1,11 @@
 
 async.js:12:10,10: number
 This type is incompatible with
-[LIB] core.js:390:32,45: union type
+[LIB] core.js:393:32,45: union type
 
 async.js:31:10,16: number
 This type is incompatible with
-[LIB] core.js:390:32,45: union type
+[LIB] core.js:393:32,45: union type
 
 async.js:45:22,25: Promise
 This type is incompatible with
@@ -15,7 +15,7 @@ async2.js:6:3,12: async return
 Error:
 async2.js:6:10,11: number
 This type is incompatible with
-[LIB] core.js:390:32,45: union type
+[LIB] core.js:393:32,45: union type
 
 async2.js:23:26,26: Promise
 This type is incompatible with
