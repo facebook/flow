@@ -574,6 +574,11 @@ let are_decorators_enabled () = FlowConfig.(
   config.options.experimental_decorators
 )
 
+let are_class_property_initializers_enabled() = FlowConfig.(
+  let config = get_unsafe () in
+  config.options.experimental_class_property_initializers
+)
+
 let warn_or_ignore_decorators cx decorators_list = FlowConfig.(
   if decorators_list = [] then () else
   match (get_unsafe ()).options.experimental_decorators with
@@ -591,6 +596,14 @@ let warn_or_ignore_decorators cx decorators_list = FlowConfig.(
         "Additionally, Flow does not account for the type implications of " ^
         "decorators at this time."
       ]
+)
+
+let warn_or_ignore_class_property_initializers cx loc = FlowConfig.(
+  match (get_unsafe ()).options.experimental_class_property_initializers with
+  | EXPERIMENTAL_IGNORE -> ()
+  | EXPERIMENTAL_WARN ->
+      let msg = "class property initializers are not yet supported" in
+      Flow_js.add_warning cx [mk_reason "" loc, msg]
 )
 
 (**********************************)
@@ -5250,8 +5263,7 @@ and mk_signature cx reason_c type_params_map superClass body = Ast.Class.(
       }) ->
         if value <> None
         then begin
-          let msg = "class property initializers are not yet supported" in
-          Flow_js.add_error cx [mk_reason "" loc, msg]
+          warn_or_ignore_class_property_initializers cx loc;
         end;
         let r = mk_reason (spf "class property `%s`" name) loc in
         let t = mk_type_annotation cx type_params_map r typeAnnotation in

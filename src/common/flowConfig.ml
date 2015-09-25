@@ -24,6 +24,7 @@ type experimental_feature_mode =
 type options = {
   enable_unsafe_getters_and_setters: bool;
   experimental_decorators: experimental_feature_mode;
+  experimental_class_property_initializers: experimental_feature_mode;
   moduleSystem: moduleSystem;
   module_name_mappers: (Str.regexp * string) list;
   munge_underscores: bool;
@@ -84,6 +85,7 @@ let default_module_system = Node
 let default_options root = {
   enable_unsafe_getters_and_setters = false;
   experimental_decorators = EXPERIMENTAL_WARN;
+  experimental_class_property_initializers = EXPERIMENTAL_WARN;
   moduleSystem = default_module_system;
   module_name_mappers = [];
   munge_underscores = false;
@@ -428,6 +430,13 @@ let options_parser = OptionsParser.configure [
     flags = [];
     _parser = experimental_feature_flag (fun opts (_, value) ->
       { opts with experimental_decorators = value; }
+    );
+  }));
+
+  ("esproposal.class_property_initializers", OptionsParser.({
+    flags = [];
+    _parser = experimental_feature_flag (fun opts (_, value) ->
+      { opts with experimental_class_property_initializers = value; }
     );
   }));
 
