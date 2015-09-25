@@ -8,8 +8,6 @@
  *
  *)
 
-open Utils_js
-
 module C = Tty
 module Json = Hh_json
 

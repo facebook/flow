@@ -20,7 +20,6 @@
    how convoluted the flow between them is. *)
 
 open Utils
-open Utils_js
 module Ast = Spider_monkey_ast
 module Json = Hh_json
 

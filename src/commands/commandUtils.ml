@@ -8,8 +8,6 @@
  *
  *)
 
-open Utils_js
-
 let print_version () =
   Utils.print_endlinef
     "Flow, a static type checker for JavaScript, version %s"
