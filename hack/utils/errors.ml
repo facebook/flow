@@ -332,7 +332,7 @@ module Typing                               = struct
   let strict_members_not_known              = 4123 (* DONT MODIFY!!!! *)
   let generic_at_runtime                    = 4124 (* DONT MODIFY!!!! *)
   let dynamic_class                         = 4125 (* DONT MODIFY!!!! *)
-  let attribute_arity                       = 4126 (* DONT MODIFY!!!! *)
+  let attribute_too_many_arguments          = 4126 (* DONT MODIFY!!!! *)
   let attribute_param_type                  = 4127 (* DONT MODIFY!!!! *)
   let deprecated_use                        = 4128 (* DONT MODIFY!!!! *)
   let abstract_const_usage                  = 4129 (* DONT MODIFY!!!! *)
@@ -359,6 +359,7 @@ module Typing                               = struct
   let illegal_type_structure                = 4150 (* DONT MODIFY!!!! *)
   let not_nullable_compare_null_trivial     = 4151 (* DONT MODIFY!!!! *)
   let class_property_only_static_literal    = 4152 (* DONT MODIFY!!!! *)
+  let attribute_too_few_arguments           = 4153 (* DONT MODIFY!!!! *)
   (* EXTEND HERE WITH NEW VALUES IF NEEDED *)
 end
 
@@ -1724,10 +1725,16 @@ let noreturn_usage p noreturn_witness =
   let msg = "You are using the return value of a noreturn function" in
   add_list Typing.noreturn_usage ((p, msg) :: noreturn_witness)
 
-let attribute_arity pos x n =
+let attribute_too_few_arguments pos x n =
   let n = string_of_int n in
-  add Typing.attribute_arity pos (
-    "The attribute "^x^" expects "^n^" parameters"
+  add Typing.attribute_too_few_arguments pos (
+    "The attribute "^x^" expects at least "^n^" arguments"
+  )
+
+let attribute_too_many_arguments pos x n =
+  let n = string_of_int n in
+  add Typing.attribute_too_many_arguments pos (
+    "The attribute "^x^" expects at most "^n^" arguments"
   )
 
 let attribute_param_type pos x =

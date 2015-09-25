@@ -277,7 +277,8 @@ val typeconst_assigned_tparam : Pos.t -> string -> unit
 val invalid_type_access_root : (Pos.t * string) -> unit
 val duplicate_user_attribute : (Pos.t * string) -> Pos.t -> unit
 val unbound_attribute_name : Pos.t -> string -> unit
-val attribute_arity : Pos.t -> string -> int -> unit
+val attribute_too_many_arguments : Pos.t -> string -> int -> unit
+val attribute_too_few_arguments : Pos.t -> string -> int -> unit
 val attribute_param_type : Pos.t -> string -> unit
 val deprecated_use : Pos.t -> Pos.t -> string -> unit
 val abstract_with_typeconst : (Pos.t * string) -> unit
