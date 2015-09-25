@@ -42,6 +42,7 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
         |> CommandUtils.server_flags
         |> CommandUtils.json_flags
         |> CommandUtils.error_flags
+        |> CommandUtils.strip_root_flag
         |> dummy false (* match --version below *)
         |> anon "root" (optional string) ~doc:"Root directory"
       )
@@ -81,6 +82,7 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
         |> CommandUtils.server_flags
         |> CommandUtils.json_flags
         |> CommandUtils.error_flags
+        |> CommandUtils.strip_root_flag
         |> flag "--version" no_arg
             ~doc:"Print version number and exit"
         |> anon "root" (optional string) ~doc:"Root directory"
@@ -92,6 +94,7 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
     from: string;
     output_json: bool;
     error_flags: Errors_js.flags;
+    strip_root: bool;
   }
 
   let rec check_status (args:env) server_flags =
@@ -108,14 +111,18 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
         (Path.to_string d.ServerProt.client);
       flush stdout;
       raise CommandExceptions.Server_directory_mismatch
-    | ServerProt.ERRORS e ->
+    | ServerProt.ERRORS errors ->
       let error_flags = args.error_flags in
+      let errors = if args.strip_root
+        then Errors_js.strip_root_from_errors args.root errors
+        else errors
+      in
       begin if args.output_json then
-        Errors_js.print_error_json stdout e
+        Errors_js.print_error_json stdout errors
       else if args.from = "vim" || args.from = "emacs" then
-        Errors_js.print_error_deprecated stdout e
+        Errors_js.print_error_deprecated stdout errors
       else
-        Errors_js.print_error_summary ~flags:error_flags e
+        Errors_js.print_error_summary ~flags:error_flags errors
       end;
       exit 2
     | ServerProt.NO_ERRORS ->
@@ -151,7 +158,7 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
       exit 2
     end
 
-  let main server_flags json error_flags version root () =
+  let main server_flags json error_flags strip_root version root () =
     if version then (
       CommandUtils.print_version ();
       exit 0
@@ -160,11 +167,16 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
     let root = CommandUtils.guess_root root in
     let timeout_arg = server_flags.CommandUtils.timeout in
     if timeout_arg > 0 then CommandUtils.set_timeout timeout_arg;
+
+    let flowconfig = FlowConfig.get root in
+    let strip_root = strip_root || FlowConfig.(flowconfig.options.strip_root) in
+
     let env = {
       root;
       from = server_flags.CommandUtils.from;
       output_json = json;
       error_flags;
+      strip_root;
     } in
     check_status env server_flags
 end

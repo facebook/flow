@@ -35,6 +35,8 @@ val default_flags : flags
 val message_of_reason: Reason_js.reason -> message
 val message_of_string: string -> message
 
+val strip_root_from_errors: Path.t -> error list -> error list
+
 val format_reason_color: ?first:bool -> ?one_line:bool -> message ->
   (Tty.style * string) list
 

@@ -40,5 +40,6 @@ let log_file opts = opts.opt_log_file
 let root opts = opts.opt_root
 let should_detach opts = opts.opt_should_detach
 let should_indent_verbose opts = opts.opt_verbose_indent
+let should_strip_root opts = opts.opt_strip_root
 let temp_dir opts = opts.opt_temp_dir
 let max_workers opts = opts.opt_max_workers

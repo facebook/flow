@@ -65,6 +65,26 @@ let append_trace_reasons message_list trace_reasons =
   | _ ->
     message_list @ ((message_of_string "Trace:")::trace_reasons)
 
+let strip_root_from_reason_list root messages =
+  List.map (function
+    | BlameM (loc, s) -> BlameM (Reason_js.strip_root_from_loc root loc, s)
+    | CommentM s -> CommentM s
+  ) messages
+
+let strip_root_from_error root error =
+  let {messages; trace; _} = error in
+  let messages = strip_root_from_reason_list root messages in
+  let trace = strip_root_from_reason_list root trace in
+  {error with messages; trace;}
+
+let strip_root_from_errors root errors =
+  (* TODO verify this is still worth doing, otherwise just List.map it *)
+  let ae = Array.of_list errors in
+  Array.iteri (fun i error ->
+    ae.(i) <- strip_root_from_error root error
+  ) ae;
+  Array.to_list ae
+
 let format_reason_color
   ?(first=false)
   ?(one_line=false)

@@ -198,19 +198,6 @@ let filter_suppressed_errors emap = Errors_js.(
     distrib_errs "" unused_suppression_errors emap
 )
 
-let strip_root_from_reason_list root list = Errors_js.(
-  List.map (function
-    | BlameM (loc, s) -> BlameM (Reason_js.strip_root_from_loc root loc, s)
-    | CommentM s -> CommentM s
-  ) list
-)
-
-let strip_root_from_error root error =
-  let {Errors_js.messages; trace; _} = error in
-  let messages = strip_root_from_reason_list root messages in
-  let trace = strip_root_from_reason_list root trace in
-  Errors_js.({error with messages; trace;})
-
 (* retrieve a full error list.
    Library errors are forced to the top of the list.
    Note: in-place conversion using an array is to avoid
@@ -232,19 +219,7 @@ let get_errors () =
       else libs, append_errset errset others
     ) all ([], [])
   in
-  let list = List.rev_append revlist_libs (List.rev revlist_others) in
-
-  (* strip root if specified *)
-  if modes.strip_root then (
-    let path = FlowConfig.((get_unsafe ()).root) in
-    (* TODO verify this is still worth doing, otherwise just List.map it *)
-    let ae = Array.of_list list in
-    Array.iteri (fun i error ->
-      ae.(i) <- strip_root_from_error path error
-    ) ae;
-    Array.to_list ae
-  )
-  else list
+  List.rev_append revlist_libs (List.rev revlist_others)
 
 (* we report parse errors if a file is either a lib file,
    a checked module, or an unchecked file that's used as a
@@ -1096,6 +1071,14 @@ let full_check workers parse_next opts =
 
 (* helper - print errors. used in check-and-die runs *)
 let print_errors options errors =
+  let errors =
+    if Options.should_strip_root options then (
+      let root = FlowConfig.((get_unsafe ()).root) in
+      Errors_js.strip_root_from_errors root errors
+    )
+    else errors
+  in
+
   if options.Options.opt_json
   then Errors_js.print_error_json stdout errors
   else

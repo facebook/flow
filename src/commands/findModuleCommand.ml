@@ -31,8 +31,7 @@ let spec = {
     empty
     |> server_flags
     |> json_flags
-    |> flag "--strip-root" no_arg
-        ~doc:"Print paths without the root"
+    |> strip_root_flag
     |> anon "module" (required string)
         ~doc:"Module reference to resolve"
     |> anon "file" (required string)

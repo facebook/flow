@@ -45,8 +45,6 @@ module OptionParser(Config : CONFIG) = struct
         ~doc:"Typecheck with weak inference, assuming dynamic types by default"
     |> flag "--traces" (optional int)
         ~doc:"Outline an error path up to a specified level"
-    |> flag "--strip-root" no_arg
-        ~doc:"Print paths without the root"
     |> flag "--lib" (optional string)
         ~doc:"Specify one or more library paths, comma separated"
     |> flag "--no-flowlib" no_arg
@@ -55,6 +53,7 @@ module OptionParser(Config : CONFIG) = struct
         ~doc:"Treat any class member name with a leading underscore as private"
     |> flag "--max-workers" (optional int)
         ~doc:"Maximum number of workers to create (capped by number of cores)"
+    |> strip_root_flag
     |> temp_dir_flag
     |> from_flag
     |> anon "root" (optional string) ~doc:"Root directory"
@@ -109,8 +108,8 @@ module OptionParser(Config : CONFIG) = struct
 
   let result = ref None
   let main error_flags json profile quiet log_file debug verbose verbose_indent
-           all weak traces strip_root lib no_flowlib munge_underscore_members
-           max_workers temp_dir from root () =
+           all weak traces lib no_flowlib munge_underscore_members max_workers
+           strip_root temp_dir from root () =
     FlowEventLogger.set_from from;
     let root = CommandUtils.guess_root root in
     let flowconfig = FlowConfig.get root in

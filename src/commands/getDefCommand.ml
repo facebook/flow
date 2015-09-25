@@ -31,8 +31,7 @@ let spec = {
     empty
     |> server_flags
     |> json_flags
-    |> flag "--strip-root" no_arg
-        ~doc:"Print paths without the root"
+    |> strip_root_flag
     |> flag "--path" (optional string)
         ~doc:"Specify (fake) path to file when reading data from stdin"
     |> anon "args" (required (list_of string)) ~doc:"[FILE] LINE COL"

@@ -122,20 +122,16 @@ let from_flag prev = CommandSpec.ArgSpec.(
       ~doc:"Specify client (for use by editor plugins)"
 )
 
+let strip_root_flag prev = CommandSpec.ArgSpec.(
+  prev
+  |> flag "--strip-root" no_arg
+      ~doc:"Print paths without the root"
+)
+
 (* relativize a loc's source path to a given root whenever strip_root is set *)
 let relativize strip_root root loc =
   if not strip_root then loc
-  else
-    let root_str = Path.to_string root in
-    Loc.({
-      loc with source = match loc.source with
-      | Some SourceFile source ->
-        Some (SourceFile (Files_js.relative_path root_str source))
-      | Some LibFile source ->
-        Some (LibFile (Files_js.relative_path root_str source))
-      | Some Builtins -> Some Builtins
-      | None -> None
-    })
+  else Reason_js.strip_root_from_loc root loc
 
 type command_params = {
   from : string;
