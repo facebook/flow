@@ -127,9 +127,11 @@ type token_sink_result = {
 
 type parse_options = {
   experimental_decorators: bool;
+  experimental_class_property_initializers: bool;
 }
 let default_parse_options = {
   experimental_decorators = false;
+  experimental_class_property_initializers = false;
 }
 
 type env = {

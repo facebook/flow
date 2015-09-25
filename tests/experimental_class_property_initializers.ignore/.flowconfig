@@ -1,0 +1,2 @@
+[options]
+esproposal.class_property_initializers=ignore

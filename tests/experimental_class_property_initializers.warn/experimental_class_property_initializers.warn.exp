@@ -1,0 +1,8 @@
+
+test.js:7:3,30: 
+class property initializers are not yet supported
+
+test.js:8:3,44: 
+class property initializers are not yet supported
+
+Found 2 errors

@@ -32,6 +32,7 @@ val mode_to_string : lex_mode -> string
 
 type parse_options = {
   experimental_decorators: bool;
+  experimental_class_property_initializers: bool;
 }
 val default_parse_options : parse_options
 

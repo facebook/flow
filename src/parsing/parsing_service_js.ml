@@ -51,10 +51,12 @@ let call_on_success f = parser_hook := f :: !parser_hook
 
 let parse_options = Some {
   (**
-   * We always parse decorators. The user-facing config option to ignore/warn
-   * on them happens during inference time so a clean error can be surfaced.
+   * We always parse experimental features. The user-facing config option to
+   * ignore/warn on them happens during inference time so a clean error can be
+   * surfaced.
    *)
   Parser_env.experimental_decorators = true;
+  Parser_env.experimental_class_property_initializers = true;
 }
 
 let execute_hook file ast =
