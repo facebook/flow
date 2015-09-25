@@ -18,6 +18,7 @@ module Server = ServerFunctors
 module FlowProgram (OptionParser : OPTION_PARSER) : Server.SERVER_PROGRAM =
 struct
   open Utils
+  open Utils_js
   open Sys_utils
   open ServerEnv
   open ServerUtils
@@ -127,6 +128,7 @@ struct
     let state = Autocomplete_js.autocomplete_set_hooks () in
     let results =
       try
+        let path = Loc.SourceFile path in
         let cx = (match Types_js.typecheck_contents content path with
           | Some cx, _ -> cx
           | _, errors  -> failwith "Couldn't parse file")
@@ -145,6 +147,7 @@ struct
     let errors = match file_input with
     | ServerProt.FileName _ -> failwith "Not implemented"
     | ServerProt.FileContent (_, content) ->
+        let file = Loc.SourceFile file in
         (match Types_js.typecheck_contents content file with
         | _, errors -> errors)
     in
@@ -169,12 +172,13 @@ struct
           (* Print type using Flow type syntax *)
           Constraint_js.string_of_t in
     let file = ServerProt.file_input_get_filename file_input in
+    let file = Loc.SourceFile file in
     let (err, resp) =
     (try
-       let content = ServerProt.file_input_get_content file_input in
-       let cx = match Types_js.typecheck_contents content file with
-       | Some cx, _ -> cx
-       | _, errors  -> failwith "Couldn't parse file" in
+      let content = ServerProt.file_input_get_content file_input in
+      let cx = match Types_js.typecheck_contents content file with
+      | Some cx, _ -> cx
+      | _, errors  -> failwith "Couldn't parse file" in
       let loc = mk_loc file line col in
       let (loc, ground_t, possible_ts) = TI.query_type cx loc in
       let ty = match ground_t with
@@ -196,12 +200,13 @@ struct
 
   let dump_types file_input oc =
     let file = ServerProt.file_input_get_filename file_input in
+    let file = Loc.SourceFile file in
     let (err, resp) =
     (try
-      let content = ServerProt.file_input_get_content file_input in
-      let cx = match Types_js.typecheck_contents content file with
-      | Some cx, _ -> cx
-      | _, errors  -> failwith "Couldn't parse file" in
+       let content = ServerProt.file_input_get_content file_input in
+       let cx = match Types_js.typecheck_contents content file with
+       | Some cx, _ -> cx
+       | _, errors  -> failwith "Couldn't parse file" in
       (None, Some (TI.dump_types cx))
     with exn ->
       let loc = mk_loc file 0 0 in
@@ -244,7 +249,8 @@ struct
          let (file, region) = parse_suggest_cmd file in
          let file = Path.to_string (Path.make file) in
          let content = cat file in
-         let cx = match Types_js.typecheck_contents content file with
+         let file_loc = Loc.SourceFile file in
+         let cx = match Types_js.typecheck_contents content file_loc with
            | Some cx, _ -> cx
            | _, errors  -> failwith "Couldn't parse file" in
          let lines = Str.split_delim (Str.regexp "\n") content in
@@ -287,7 +293,7 @@ struct
     let port_for_file result_map file =
       (try
         let file = Path.to_string (Path.make file) in
-        let ast = Parsing_service_js.get_ast_unsafe file in
+        let ast = Parsing_service_js.get_ast_unsafe (Loc.SourceFile file) in
         let content = cat file in
         let lines = Str.split_delim (Str.regexp "\n") content in
         let insertions = Comments_js.meta_program ast in
@@ -309,13 +315,15 @@ struct
       flush oc
 
   let find_module (moduleref, filename) oc =
-    let module_name = Module_js.imported_module filename moduleref in
-    let response = Module_js.get_module_file module_name in
+    let file = Loc.SourceFile filename in
+    let module_name = Module_js.imported_module file moduleref in
+    let response: filename option = Module_js.get_module_file module_name in
     Marshal.to_channel oc response [];
     flush oc
 
   let get_def (file_input, line, col) oc =
-    let file = ServerProt.file_input_get_filename file_input in
+    let filename = ServerProt.file_input_get_filename file_input in
+    let file = Loc.SourceFile filename in
     let loc = mk_loc file line col in
     let state = GetDef_js.getdef_set_hooks loc in
     (try
@@ -329,7 +337,7 @@ struct
     with exn ->
       prerr_endlinef
         "Could not get definition for %s:%d:%d\n%s"
-        file line col
+        filename line col
         (Printexc.to_string exn)
     );
     GetDef_js.getdef_unset_hooks ();
@@ -457,20 +465,23 @@ struct
     then env
     else begin
       SearchService_js.clear updates;
-      let diff_js = ServerEnv.PathSet.fold (fun x a ->
-        SSet.add (Path.to_string x) a) diff_js SSet.empty in
+      let all_libs = Files_js.get_lib_files () in
+      let libs, files = ServerEnv.PathSet.fold (fun x (libs, files) ->
+        let file = Path.to_string x in
+        if SSet.mem file all_libs then SSet.add file libs, files
+        else libs, FilenameSet.add (Loc.SourceFile file) files
+      ) diff_js (SSet.empty, FilenameSet.empty) in
       (* TEMP: if library files change, stop the server *)
-      let modified_lib_files = SSet.inter diff_js (Files_js.get_lib_files ()) in
-      if not (SSet.is_empty modified_lib_files)
+      if not (SSet.is_empty libs)
       then begin
         Printf.printf "Status: Error\n%!";
-        SSet.iter (Printf.printf "Modified lib file: %s\n%!") modified_lib_files;
+        SSet.iter (Printf.printf "Modified lib file: %s\n%!") libs;
         Printf.printf
           "%s is out of date. Exiting.\n%!"
           name;
         exit 4
       end;
-      let server_env = Types_js.recheck genv env diff_js in
+      let server_env = Types_js.recheck genv env files in
       SearchService_js.update_from_master updates;
       server_env
     end

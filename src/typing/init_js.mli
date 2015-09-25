@@ -14,7 +14,7 @@
    to Types_js, where error management stuff lives.
  *)
 val init :
-  (string -> Errors_js.ErrorSet.t -> unit) ->
-  (string -> Errors_js.ErrorSet.t -> unit) ->
-  (string -> Errors_js.ErrorSuppressions.t -> unit) ->
-  (string * bool) list
+  (Loc.filename -> Errors_js.ErrorSet.t -> unit) ->
+  (Loc.filename -> Errors_js.ErrorSet.t -> unit) ->
+  (Loc.filename -> Errors_js.ErrorSuppressions.t -> unit) ->
+  (Loc.filename * bool) list

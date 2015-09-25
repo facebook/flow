@@ -297,7 +297,9 @@
     lex_lb_curr_p: Lexing.position;
   }
 
-  let lb_to_loc = Loc.from_lb
+  let lb_to_loc lexbuf =
+    let source = Loc.LibFile Lexing.(lexbuf.lex_curr_p.pos_fname) in
+    Loc.from_lb (Some source) lexbuf
 
   let get_result_and_clear_state lb lex_token =
     let state = !lex_state in
@@ -1279,7 +1281,8 @@ and template_part cooked raw = parse
   (* Lexing JSX children requires a string buffer to keep track of whitespace
    * *)
   let lex_jsx_child lexbuf =
-    let start = Loc.from_curr_lb lexbuf in
+    let source = Loc.LibFile Lexing.(lexbuf.lex_curr_p.pos_fname) in
+    let start = Loc.from_curr_lb (Some source) lexbuf in
     let buf = Buffer.create 127 in
     let raw = Buffer.create 127 in
     let child = lex_jsx_child start buf raw lexbuf in

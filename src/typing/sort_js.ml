@@ -9,6 +9,7 @@
  *)
 
 open Utils
+open Utils_js
 
 (*****************************************)
 (* topological sort of file dependencies *)
@@ -25,29 +26,29 @@ open Utils
 (** Nodes are files. Edges are dependencies. **)
 type topsort_state = {
   (* nodes not yet visited *)
-  mutable not_yet_visited: SSet.t SMap.t;
+  mutable not_yet_visited: FilenameSet.t FilenameMap.t;
   (* number of nodes visited *)
   mutable visit_count: int;
   (* visit ordering *)
-  mutable indices: int SMap.t;
+  mutable indices: int FilenameMap.t;
   (* nodes in a strongly connected component *)
-  mutable stack: string list;
+  mutable stack: filename list;
   (* back edges to earliest visited nodes *)
-  mutable lowlinks: int SMap.t;
+  mutable lowlinks: int FilenameMap.t;
   (* heights *)
-  mutable heights: int SMap.t;
+  mutable heights: int FilenameMap.t;
   (* components *)
-  mutable components: string list SMap.t;
+  mutable components: filename list FilenameMap.t;
 }
 
 let initial_state files = {
   not_yet_visited = files;
   visit_count = 0;
-  indices = SMap.empty;
+  indices = FilenameMap.empty;
   stack = [];
-  lowlinks = SMap.empty;
-  heights = SMap.empty;
-  components = SMap.empty;
+  lowlinks = FilenameMap.empty;
+  heights = FilenameMap.empty;
+  components = FilenameMap.empty;
 }
 
 (* Compute strongly connected component for file m with requires rs. *)
@@ -56,8 +57,8 @@ let rec strongconnect state m rs =
   state.visit_count <- i + 1;
 
   (* visit m *)
-  state.indices <- SMap.add m i state.indices;
-  state.not_yet_visited <- SMap.remove m state.not_yet_visited;
+  state.indices <- FilenameMap.add m i state.indices;
+  state.not_yet_visited <- FilenameMap.remove m state.not_yet_visited;
 
   (* push on stack *)
   state.stack <- m :: state.stack;
@@ -69,8 +70,8 @@ let rec strongconnect state m rs =
   let height = ref 0 in
 
   (* for each require r in rs: *)
-  rs |> SSet.iter (fun r ->
-    match SMap.get r state.not_yet_visited with
+  rs |> FilenameSet.iter (fun r ->
+    match FilenameMap.get r state.not_yet_visited with
     | Some rs_ ->
         (* recursively compute strongly connected component of r *)
         let h = strongconnect state r rs_ in
@@ -79,7 +80,7 @@ let rec strongconnect state m rs =
         height := max !height h;
 
         (* update lowlink with that of r *)
-        let lowlink_r = SMap.find_unsafe r state.lowlinks in
+        let lowlink_r = FilenameMap.find_unsafe r state.lowlinks in
         lowlink := min !lowlink lowlink_r
 
     | None ->
@@ -87,10 +88,10 @@ let rec strongconnect state m rs =
           (** either back edge, or cross edge where strongly connected component
               is not yet complete **)
           (* update lowlink with index of r *)
-          let index_r = SMap.find_unsafe r state.indices in
+          let index_r = FilenameMap.find_unsafe r state.indices in
           lowlink := min !lowlink index_r
         else
-          match SMap.get r state.heights with
+          match FilenameMap.get r state.heights with
           | Some h ->
               (** cross edge where strongly connected component is complete **)
               (* update height *)
@@ -98,12 +99,12 @@ let rec strongconnect state m rs =
           | None -> ()
   );
 
-  state.lowlinks <- SMap.add m !lowlink state.lowlinks;
+  state.lowlinks <- FilenameMap.add m !lowlink state.lowlinks;
   if (!lowlink = i) then (
     (* strongly connected component *)
     let h = !height + 1 in
     let c = component state m h in
-    state.components <- SMap.add m c state.components;
+    state.components <- FilenameMap.add m c state.components;
     h
   )
   else !height
@@ -113,17 +114,17 @@ and component state m h =
   (* pop stack until m is found *)
   let m_ = List.hd state.stack in
   state.stack <- List.tl state.stack;
-  state.heights <- state.heights |> SMap.add m_ h;
+  state.heights <- state.heights |> FilenameMap.add m_ h;
   if (m = m_) then []
   else m_ :: (component state m h)
 
 (** main loop **)
 let tarjan state =
-  while not (SMap.is_empty state.not_yet_visited) do
+  while not (FilenameMap.is_empty state.not_yet_visited) do
     (* choose a node, compute its strongly connected component *)
     (** NOTE: this choice is non-deterministic, so any computations that depend
         on the visit order, such as heights, are in general non-repeatable. **)
-    let m, rs = SMap.choose state.not_yet_visited in
+    let m, rs = FilenameMap.choose state.not_yet_visited in
     strongconnect state m rs |> ignore
   done
 
@@ -133,9 +134,9 @@ let tarjan state =
    partition nodes by their heights, and run a series of parallel jobs, one for
    each partition, by height. *)
 let partition heights components =
-  SMap.fold (fun m c map ->
+  FilenameMap.fold (fun m c map ->
     let mc = m::c in
-    let height = SMap.find_unsafe m heights in
+    let height = FilenameMap.find_unsafe m heights in
     match IMap.get height map with
     | None -> IMap.add height [mc] map
     | Some mcs -> IMap.add height (mc::mcs) map
@@ -148,11 +149,11 @@ let topsort files =
 
 let reverse files =
   files
-  |> SMap.map (fun _ -> SSet.empty)
-  |> SMap.fold (fun from_f ->
-       SSet.fold (fun to_f rev_files ->
-         let from_fs = SMap.find_unsafe to_f rev_files in
-         SMap.add to_f (SSet.add from_f from_fs) rev_files
+  |> FilenameMap.map (fun _ -> FilenameSet.empty)
+  |> FilenameMap.fold (fun from_f ->
+       FilenameSet.fold (fun to_f rev_files ->
+         let from_fs = FilenameMap.find_unsafe to_f rev_files in
+         FilenameMap.add to_f (FilenameSet.add from_f from_fs) rev_files
        )
       ) files
 
@@ -162,7 +163,10 @@ let log =
       (* Show cycles, which are components with more than one node. *)
       if List.length mc > 1
       then
-        prerr_endlinef "cycle detected among the following files:\n\t%s"
-          (String.concat "\n\t" mc)
+        let files = mc
+        |> List.map string_of_filename
+        |> String.concat "\n\t"
+        in
+        prerr_endlinef "cycle detected among the following files:\n\t%s" files
     ) mcs;
   )

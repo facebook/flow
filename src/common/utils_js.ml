@@ -24,6 +24,13 @@
 
 open Utils
 
+(* alias stuff from `Loc` so that it can be used by doing `open Utils_js`
+   instead of `open Loc`, which pollutes too much. *)
+type filename = Loc.filename
+let string_of_filename = Loc.string_of_filename
+module FilenameSet = Set.Make(Loc.FilenameKey)
+module FilenameMap = Utils.MyMap(Loc.FilenameKey)
+
 (* ok-or-error type *)
 type ('a,'b) ok_or_err = OK of 'a | Err of 'b
 

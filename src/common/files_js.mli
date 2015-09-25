@@ -10,7 +10,6 @@
 
 (* utilities for supported filenames *)
 
-val global_file_name: string
 val flow_extensions: string list
 
 val is_flow_file: string -> bool
@@ -21,7 +20,6 @@ val init: tmp_dir:string -> Path.t list -> unit
 (* names of library files defining builtins *)
 val get_lib_files: unit -> Utils.SSet.t
 
-val is_lib_file: string -> bool
 val lib_module: string
 
 (* regexp for Filename constants *)

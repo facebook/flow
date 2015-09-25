@@ -20,6 +20,7 @@
    how convoluted the flow between them is. *)
 
 open Utils
+open Utils_js
 module Ast = Spider_monkey_ast
 module Json = Hh_json
 
@@ -116,8 +117,8 @@ let do_patch lines insertions =
 
 let string_of_loc loc = Loc.(
   match loc.source with
-  | None -> ""
-  | Some file ->
+  | None | Some Builtins -> ""
+  | Some LibFile file | Some SourceFile file ->
     let line = loc.start.line in
     let start = loc.start.column + 1 in
     let end_ = loc._end.column in
@@ -133,7 +134,9 @@ let string_of_loc loc = Loc.(
 
 let json_of_loc loc = Json.(Loc.(
   JAssoc [
-    "file", JString (match loc.source with Some x -> x | None -> "");
+    "file", (match loc.source with
+      | Some x -> JString (string_of_filename x)
+      | None -> JString ""); (* TODO: return JNull *)
     "start", JAssoc [
       "line", JInt loc.start.line;
       "col", JInt loc.start.column;
@@ -207,11 +210,11 @@ let derivable_reason r =
   { r with derivable = true }
 
 let builtin_reason x =
-  mk_reason x Loc.({ none with source = Some Files_js.global_file_name })
+  mk_reason x Loc.({ none with source = Some Builtins })
   |> derivable_reason
 
 let is_builtin_reason r =
-  r.loc.Loc.source = Some Files_js.global_file_name
+  r.loc.Loc.source = Some Loc.Builtins
 
 (* reasons compare on their locations *)
 let compare r1 r2 =
@@ -246,14 +249,13 @@ let repos_reason loc reason =
 let strip_root_from_loc root loc = Loc.(
   let source = match loc.source with
   | None -> None
-  | Some file -> Some (
-    if file = Files_js.global_file_name
-    then "[LIB]"
-    else if Files_js.is_lib_file file
-    then spf "[LIB] %s" (Filename.basename file)
-    else Files_js.relative_path
-      (spf "%s%s" (Path.to_string root) Filename.dir_sep) file
-  ) in
+  | Some Builtins -> Some Builtins
+  | Some LibFile file ->
+    Some (LibFile (spf "[LIB] %s" (Filename.basename file)))
+  | Some SourceFile file ->
+    let root_str = spf "%s%s" (Path.to_string root) Filename.dir_sep in
+    Some (SourceFile (Files_js.relative_path root_str file))
+  in
   { loc with source }
 )
 

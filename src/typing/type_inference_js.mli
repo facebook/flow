@@ -10,15 +10,16 @@
 
 open Reason_js
 open Constraint_js
+open Utils_js
 
 val infer_ast:
   Spider_monkey_ast.program ->
-  string ->                     (* filename *)
+  filename ->                   (* filename *)
   ?module_name: string ->       (* module name *)
   bool ->                       (* force_check *)
   context
 
-val infer_module: string -> context
+val infer_module: filename -> context
 
 val merge_component_strict: context list ->
   context list -> (context * string * context) list ->
@@ -37,7 +38,7 @@ val dump_types: context -> (Loc.t * string * Reason_js.reason list) list
 val fill_types: context -> (int * int * string) list
 
 val init_lib_file:
-  string ->
+  filename ->
   Spider_monkey_ast.Statement.t list ->
   Spider_monkey_ast.Comment.t list ->
   (Errors_js.ErrorSet.t -> unit) ->

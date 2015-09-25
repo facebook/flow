@@ -281,6 +281,7 @@
 (* Errors *)
 (*****************************************************************************)
   type lex_env = {
+    lex_source            : Loc.filename option;
     lex_lb                : Lexing.lexbuf;
     lex_in_comment_syntax : bool;
     lex_state             : lex_state ref;
@@ -296,7 +297,8 @@
     lex_comments_acc = [];
   }
 
-  let new_lex_env lex_lb = {
+  let new_lex_env lex_source lex_lb = {
+    lex_source;
     lex_lb;
     lex_in_comment_syntax = false;
     lex_state = ref empty_lex_state;
@@ -323,7 +325,7 @@
     | T_TEMPLATE_PART (loc, part) ->
         loc, Ast.Expression.TemplateLiteral.Element.(part.value.raw)
     | T_REGEXP (loc, pattern, flags) -> loc, "/" ^ pattern ^ "/" ^ flags
-    | _ -> lb_to_loc env.lex_lb, Lexing.lexeme env.lex_lb in
+    | _ -> lb_to_loc env.lex_source env.lex_lb, Lexing.lexeme env.lex_lb in
     env, {
       lex_token;
       lex_loc;
@@ -346,7 +348,7 @@
   let illegal env loc = lex_error env loc (Parse_error.UnexpectedToken "ILLEGAL")
 
   let illegal_number env lexbuf word token =
-    let loc = lb_to_loc lexbuf in
+    let loc = lb_to_loc env.lex_source lexbuf in
     yyback (String.length word) lexbuf;
     illegal env loc;
     env, token
@@ -424,7 +426,7 @@
     | JSX_CHILD_TEXT
 
   let lex_template_part env template_part =
-    let start = lb_to_loc env.lex_lb in
+    let start = lb_to_loc env.lex_source env.lex_lb in
     let cooked = Buffer.create 127 in
     let raw = Buffer.create 127 in
     let _end, tail = template_part env cooked raw env.lex_lb in
@@ -560,13 +562,13 @@ rule token env = parse
                          Lexing.new_line lexbuf;
                          token env lexbuf
                        }
-  | '\\'               { illegal env (lb_to_loc lexbuf);
+  | '\\'               { illegal env (lb_to_loc env.lex_source lexbuf);
                          token env lexbuf }
   | whitespace+        {
                          unicode_fix_cols lexbuf;
                          token env lexbuf }
   | "/*"               {
-                            let start = lb_to_loc lexbuf in
+                            let start = lb_to_loc env.lex_source lexbuf in
                             let buf = Buffer.create 127 in
                             let _end = comment env buf lexbuf in
                             save_comment env start _end buf true;
@@ -574,21 +576,25 @@ rule token env = parse
                        }
   | "/*" whitespace* (":" | "::" | "flow-include" as escape_type) as pattern
                        {
-                         if env.lex_in_comment_syntax
-                         then unexpected_error env (lb_to_loc lexbuf) pattern;
+                         let () = if env.lex_in_comment_syntax then
+                           let loc = lb_to_loc env.lex_source lexbuf in
+                           unexpected_error env loc pattern
+                         in
                          let env = { env with lex_in_comment_syntax = true } in
                          match escape_type with
                          | ":" -> env, T_COLON
                          | _ -> token env lexbuf
                        }
   | "*/"               {
-                         if not env.lex_in_comment_syntax
-                         then unexpected_error env (lb_to_loc lexbuf) "*/";
+                         let () = if not env.lex_in_comment_syntax then
+                           let loc = lb_to_loc env.lex_source lexbuf in
+                           unexpected_error env loc "*/"
+                         in
                          let env = { env with lex_in_comment_syntax = false } in
                          token env lexbuf
                        }
   | "//"               {
-                         let start = lb_to_loc lexbuf in
+                         let start = lb_to_loc env.lex_source lexbuf in
                          let buf = Buffer.create 127 in
                          let _end = line_comment env buf lexbuf in
                          save_comment env start _end buf false;
@@ -604,7 +610,7 @@ rule token env = parse
                        }
   (* Values *)
   | ("'"|'"') as quote {
-                         let start= lb_to_loc lexbuf in
+                         let start = lb_to_loc env.lex_source lexbuf in
                          let buf = Buffer.create 127 in
                          let raw = Buffer.create 127 in
                          Buffer.add_char raw quote;
@@ -692,10 +698,12 @@ rule token env = parse
   | "/"                { env, T_DIV }
   | "@"                { env, T_AT }
   (* Others *)
-  | eof                { if env.lex_in_comment_syntax
-                         then lex_error env (lb_to_loc lexbuf) Parse_error.UnexpectedEOS;
+  | eof                { let () = if env.lex_in_comment_syntax then
+                           let loc = lb_to_loc env.lex_source lexbuf in
+                           lex_error env loc Parse_error.UnexpectedEOS
+                         in
                          env, T_EOF }
-  | _                  { illegal env (lb_to_loc lexbuf);
+  | _                  { illegal env (lb_to_loc env.lex_source lexbuf);
                          env, T_ERROR }
 
 (* There are some tokens that never show up in a type and which can cause
@@ -712,7 +720,7 @@ and type_token env = parse
                          unicode_fix_cols lexbuf;
                          type_token env lexbuf }
   | "/*"               {
-                            let start = lb_to_loc lexbuf in
+                            let start = lb_to_loc env.lex_source lexbuf in
                             let buf = Buffer.create 127 in
                             let _end = comment env buf lexbuf in
                             save_comment env start _end buf true;
@@ -720,28 +728,32 @@ and type_token env = parse
                        }
   | "/*" whitespace* (":" | "::" | "flow-include" as escape_type) as pattern
                        {
-                         if env.lex_in_comment_syntax
-                         then unexpected_error env (lb_to_loc lexbuf) pattern;
+                         let () = if env.lex_in_comment_syntax then
+                           let loc = lb_to_loc env.lex_source lexbuf in
+                           unexpected_error env loc pattern
+                         in
                          let env = { env with lex_in_comment_syntax = true } in
                          match escape_type with
                          | ":" -> env, T_COLON
                          | _ -> type_token env lexbuf
                        }
   | "*/"               {
-                         if not env.lex_in_comment_syntax
-                         then unexpected_error env (lb_to_loc lexbuf) "*/";
+                         let () = if not env.lex_in_comment_syntax then
+                           let loc = lb_to_loc env.lex_source lexbuf in
+                           unexpected_error env loc "*/"
+                         in
                          let env = { env with lex_in_comment_syntax = false } in
                          type_token env lexbuf
                        }
   | "//"               {
-                         let start = lb_to_loc lexbuf in
+                         let start = lb_to_loc env.lex_source lexbuf in
                          let buf = Buffer.create 127 in
                          let _end = line_comment env buf lexbuf in
                          save_comment env start _end buf true;
                          type_token env lexbuf
                        }
   | ("'"|'"') as quote {
-                         let start= lb_to_loc lexbuf in
+                         let start = lb_to_loc env.lex_source lexbuf in
                          let buf = Buffer.create 127 in
                          let raw = Buffer.create 127 in
                          Buffer.add_char raw quote;
@@ -820,8 +832,10 @@ and type_token env = parse
   (* Type alias *)
   | '='                { env, T_ASSIGN }
   (* Others *)
-  | eof                { if env.lex_in_comment_syntax
-                         then lex_error env (lb_to_loc lexbuf) Parse_error.UnexpectedEOS;
+  | eof                { let () = if env.lex_in_comment_syntax then
+                           let loc = lb_to_loc env.lex_source lexbuf in
+                           lex_error env loc Parse_error.UnexpectedEOS
+                         in
                          env, T_EOF }
   | _                  { env, T_ERROR }
 
@@ -830,7 +844,7 @@ and type_token env = parse
 and string_quote env q buf raw octal = parse
     | ("'"|'"') as q'    {  Buffer.add_char raw q';
                           if q = q'
-                          then lb_to_loc lexbuf, octal
+                          then lb_to_loc env.lex_source lexbuf, octal
                           else begin
                             Buffer.add_char buf q';
                             string_quote env q buf raw octal lexbuf
@@ -841,9 +855,9 @@ and string_quote env q buf raw octal = parse
                          Buffer.add_string raw (Lexing.lexeme lexbuf);
                          string_quote env q buf raw octal lexbuf }
   | ('\n' | eof) as x  { Buffer.add_string raw x;
-                         illegal env (lb_to_loc lexbuf);
+                         illegal env (lb_to_loc env.lex_source lexbuf);
                          Buffer.add_string buf x;
-                         lb_to_loc lexbuf, octal
+                         lb_to_loc env.lex_source lexbuf, octal
                        }
   | _ as x             { Buffer.add_char raw x;
                          Buffer.add_char buf x;
@@ -908,12 +922,12 @@ and string_escape env buf = parse
                         let code = int_of_string ("0x"^hex_code) in
                         (* 11.8.4.1 *)
                         if code > 1114111
-                        then illegal env (lb_to_loc lexbuf);
+                        then illegal env (lb_to_loc env.lex_source lexbuf);
                         List.iter (Buffer.add_char buf) (utf16to8 code);
                         false
                       }
   | ['u''x''0'-'7'] as c
-                      { illegal env (lb_to_loc lexbuf);
+                      { illegal env (lb_to_loc env.lex_source lexbuf);
                         Buffer.add_char buf c;
                         false }
   | line_terminator_sequence
@@ -921,20 +935,20 @@ and string_escape env buf = parse
   | _ as c            { Buffer.add_char buf c; false }
 
 and comment env buf = parse
-  | eof                { illegal env (lb_to_loc lexbuf);
-                         lb_to_loc lexbuf }
+  | eof                { illegal env (lb_to_loc env.lex_source lexbuf);
+                         lb_to_loc env.lex_source lexbuf }
   | '\n'               { Lexing.new_line lexbuf;
                          Buffer.add_char buf '\n';
                          comment env buf lexbuf }
-  | "*/"               { 
-                         let loc = lb_to_loc lexbuf in
+  | "*/"               {
+                         let loc = lb_to_loc env.lex_source lexbuf in
                          if env.lex_in_comment_syntax
                          then unexpected_error_w_suggest env loc "*/" "*-/";
                          loc
                        }
-  | "*-/"              { 
+  | "*-/"              {
                          if env.lex_in_comment_syntax
-                         then lb_to_loc lexbuf
+                         then lb_to_loc env.lex_source lexbuf
                          else (
                            Buffer.add_string buf "*-/";
                            comment env buf lexbuf
@@ -944,10 +958,10 @@ and comment env buf = parse
                          comment env buf lexbuf }
 
 and line_comment env buf = parse
-  | eof                { lb_to_loc lexbuf }
+  | eof                { lb_to_loc env.lex_source lexbuf }
   | '\n'               { Loc.(
                             let { source; start; _end = { line; column; offset } }
-                             = lb_to_loc lexbuf in
+                             = lb_to_loc env.lex_source lexbuf in
                            Lexing.new_line lexbuf;
                            { source; start; _end
                              = { line; column = column - 1; offset = offset - 1; } }
@@ -956,10 +970,12 @@ and line_comment env buf = parse
                          line_comment env buf lexbuf }
 
 and regexp_body env buf = parse
-  | eof               { lex_error env (lb_to_loc lexbuf) Parse_error.UnterminatedRegExp;
+  | eof               { let loc = lb_to_loc env.lex_source lexbuf in
+                        lex_error env loc Parse_error.UnterminatedRegExp;
                         "" }
   | '\\' line_terminator_sequence
-                      { lex_error env (lb_to_loc lexbuf) Parse_error.UnterminatedRegExp;
+                      { let loc = lb_to_loc env.lex_source lexbuf in
+                        lex_error env loc Parse_error.UnterminatedRegExp;
                         "" }
   | ( '\\' _ ) as s   { Buffer.add_string buf s;
                         regexp_body env buf lexbuf }
@@ -970,7 +986,8 @@ and regexp_body env buf = parse
                         regexp_class buf lexbuf;
                         regexp_body env buf lexbuf }
   | line_terminator_sequence
-                      { lex_error env (lb_to_loc lexbuf) Parse_error.UnterminatedRegExp;
+                      { let loc = lb_to_loc env.lex_source lexbuf in
+                        lex_error env loc Parse_error.UnterminatedRegExp;
                         "" }
   | _ as c            { Buffer.add_char buf c;
                         regexp_body env buf lexbuf }
@@ -992,12 +1009,12 @@ and lex_jsx_tag env = parse
                         lex_jsx_tag env lexbuf }
   | whitespace+       { unicode_fix_cols lexbuf;
                         lex_jsx_tag env lexbuf }
-  | "//"              { let start = lb_to_loc lexbuf in
+  | "//"              { let start = lb_to_loc env.lex_source lexbuf in
                         let buf = Buffer.create 127 in
                         let _end = line_comment env buf lexbuf in
                         save_comment env start _end buf true;
                         lex_jsx_tag env lexbuf }
-  | "/*"              { let start = lb_to_loc lexbuf in
+  | "/*"              { let start = lb_to_loc env.lex_source lexbuf in
                         let buf = Buffer.create 127 in
                         let _end = comment env buf lexbuf in
                         save_comment env start _end buf true;
@@ -1014,7 +1031,7 @@ and lex_jsx_tag env = parse
                         env, T_JSX_IDENTIFIER }
   | ('\''|'"') as quote
                       {
-                        let start= lb_to_loc lexbuf in
+                        let start = lb_to_loc env.lex_source lexbuf in
                         let buf = Buffer.create 127 in
                         let raw = Buffer.create 127 in
                         Buffer.add_char raw quote;
@@ -1060,19 +1077,19 @@ and jsx_text env mode buf raw = parse
                       { match mode, c with
                         | JSX_SINGLE_QUOTED_TEXT, '\''
                         | JSX_DOUBLE_QUOTED_TEXT, '"' ->
-                            lb_to_loc lexbuf
+                            lb_to_loc env.lex_source lexbuf
                         | JSX_CHILD_TEXT, ('<' | '{') ->
                             (* Don't actually want to consume these guys
                              * yet...they're not part of the JSX text *)
                             back lexbuf;
-                            lb_to_loc lexbuf
+                            lb_to_loc env.lex_source lexbuf
                         | _ ->
                             Buffer.add_char raw c;
                             Buffer.add_char buf c;
                             jsx_text env mode buf raw lexbuf
                       }
-  | eof               { illegal env (lb_to_loc lexbuf);
-                        lb_to_loc lexbuf
+  | eof               { illegal env (lb_to_loc env.lex_source lexbuf);
+                        lb_to_loc env.lex_source lexbuf
                       }
   | line_terminator_sequence as lt
                       { Buffer.add_string raw lt;
@@ -1360,10 +1377,10 @@ and jsx_text env mode buf raw = parse
                         jsx_text env mode buf raw lexbuf }
 
 and template_part env cooked raw = parse
-  | eof               { illegal env (lb_to_loc lexbuf);
-                        lb_to_loc lexbuf, true }
-  | '`'               { lb_to_loc lexbuf, true }
-  | "${"              { lb_to_loc lexbuf, false }
+  | eof               { illegal env (lb_to_loc env.lex_source lexbuf);
+                        lb_to_loc env.lex_source lexbuf, true }
+  | '`'               { lb_to_loc env.lex_source lexbuf, true }
+  | "${"              { lb_to_loc env.lex_source lexbuf, false }
   | '\\'              { Buffer.add_char raw '\\';
                         let _ = string_escape env cooked lexbuf in
                         Buffer.add_string raw (Lexing.lexeme lexbuf);
@@ -1389,13 +1406,13 @@ and template_part env cooked raw = parse
   let lex_regexp env prefix =
     (* At this point we already lex'd the /, so we can get the position of the
      * last lexed token as the start location *)
-    let start= lb_to_loc env.lex_lb in
+    let start = lb_to_loc env.lex_source env.lex_lb in
     let buf = Buffer.create 127 in
     (* For regexps like /=/, we parse the /= as T_DIV_ASSIGN, so we just parse
      * the regexp knowing that the pattern has the "=" prefix *)
     Buffer.add_string buf prefix;
     let flags = regexp_body env buf env.lex_lb in
-    let _end = lb_to_loc env.lex_lb in
+    let _end = lb_to_loc env.lex_source env.lex_lb in
     let regexp =
       T_REGEXP (Loc.btwn start _end, Buffer.contents buf, flags) in
     get_result_and_clear_state (env, regexp)
@@ -1403,7 +1420,7 @@ and template_part env cooked raw = parse
   (* Lexing JSX children requires a string buffer to keep track of whitespace
    * *)
   let lex_jsx_child env =
-    let start = Loc.from_curr_lb env.lex_lb in
+    let start = Loc.from_curr_lb env.lex_source env.lex_lb in
     let buf = Buffer.create 127 in
     let raw = Buffer.create 127 in
     let env, child = lex_jsx_child env start buf raw env.lex_lb in

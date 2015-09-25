@@ -349,7 +349,7 @@ and objtype = {
 and propname = reason * name
 
 and sealtype =
-  | UnsealedInFile of string option
+  | UnsealedInFile of Loc.filename option
   | Sealed
 
 and flags = {

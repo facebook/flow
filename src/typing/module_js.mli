@@ -9,9 +9,10 @@
  *)
 
 open Utils
+open Utils_js
 
 type info = {
-  file: string;             (* file name *)
+  file: filename;           (* file name *)
   _module: string;          (* module name *)
   required: SSet.t;         (* required module names *)
   require_loc: Loc.t SMap.t;  (* statement locations *)
@@ -29,44 +30,44 @@ val parse_flow: Spider_monkey_ast.Comment.t list -> mode
 val init: Options.options -> unit
 
 (* export and import functions for the module system *)
-val exported_module: string -> Spider_monkey_ast.Comment.t list -> string
-val imported_module: string -> string -> string
+val exported_module: filename -> Spider_monkey_ast.Comment.t list -> string
+val imported_module: filename -> string -> string
 
 val module_exists: string -> bool
 
-val get_file: string -> string
+val get_file: string -> filename
 
 (* given a module name, returns either (Some filename) or None *)
-val get_module_file: string -> string option
+val get_module_file: string -> filename option
 
 (* given a filename, returns module info. unsafe *)
-val get_module_info: string -> info
+val get_module_info: filename -> info
 
 (* given a filename, returns module name *)
-val get_module_name: string -> string
+val get_module_name: filename -> string
 
 (* for a list of files add all imports for reverse import tracking *)
-val add_reverse_imports: string list -> unit
+val add_reverse_imports: filename list -> unit
 
 (* given a module name, returns Some set of modules importing it or None *)
 val get_reverse_imports: string -> SSet.t option
 
 (* commit new and removed modules, after local inference *)
 val commit_modules:
-  string list ->                (* inferred modules *)
-  SSet.t ->                     (* removed files *)
-  Errors_js.ErrorSet.t SMap.t   (* filenames to error sets *)
+  filename list ->                    (* inferred modules *)
+  SSet.t ->                           (* removed files *)
+  Errors_js.ErrorSet.t FilenameMap.t  (* filenames to error sets *)
 
 (* add file represented by context to module info store *)
 val add_module_info: Constraint_js.context -> unit
 
 (* add info for unparsed file to module info store *)
-val add_unparsed_info: string -> unit
+val add_unparsed_info: filename -> unit
 
 (* remove module info being tracked for given file set;
    returns the set of modules removed
 *)
-val remove_files: SSet.t -> SSet.t
+val remove_files: FilenameSet.t -> SSet.t
 
 val add_package: string -> Errors_js.ErrorSet.t option
 

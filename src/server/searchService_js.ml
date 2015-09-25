@@ -8,6 +8,8 @@
  *
  *)
 
+open Utils_js
+
 module Ast = Spider_monkey_ast
 module Json = Hh_json
 
@@ -71,7 +73,7 @@ let pos_of_loc loc =
   let fn =
     match loc.Loc.source with
     | None -> assert false
-    | Some x -> x
+    | Some x -> string_of_filename x
   in
   Pos.make_from_lexing_pos
     ~pos_file:(Relative_path.(create Dummy fn))
@@ -86,6 +88,7 @@ let add_fuzzy_term id type_ acc =
 
 (* Called by a worker after the file is parsed *)
 let update fn ast =
+  let fn = string_of_filename fn in
   let fn = Relative_path.create Relative_path.Dummy fn in
   let _location, stmt_l, _commands = ast in
   let fuzzy_defs, trie_defs =

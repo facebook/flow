@@ -141,7 +141,8 @@ let add_output cx level ?(trace_reasons=[]) message_list =
     raise (FlowError message_list)
   ) else (
     (if modes.debug then
-      prerr_endlinef "\nadd_output cx.file = %S\n%s" cx.file
+      prerr_endlinef "\nadd_output cx.file = %S\n%s"
+        (string_of_filename cx.file)
         (message_list
         |> List.map (fun message ->
              let loc, s = Errors_js.to_pp message in
@@ -205,7 +206,9 @@ and find_root cx id =
       id, root
 
   | None ->
-      let msg = spf "find_root: tvar %d not found in file %s" id cx.file in
+      let msg = spf "find_root: tvar %d not found in file %s" id
+        (string_of_filename cx.file)
+      in
       failwith msg
 
 (* Replace the node associated with a type variable in the graph. *)
@@ -249,9 +252,11 @@ and havoc_ctx_ = function
 
 let lib_reason r =
   let loc = loc_of_reason r in
-  match Loc.(loc.source) with
-  | Some filename -> Files_js.is_lib_file filename
-  | None -> false
+  Loc.(match loc.source with
+  | Some LibFile _ -> true
+  | Some Builtins -> true
+  | Some SourceFile _ -> false
+  | None -> false)
 
 let ordered_reasons l u =
   let rl = reason_of_t l in
@@ -1062,7 +1067,7 @@ let master_cx =
   let cx_ = ref None in
   fun () -> match !cx_ with
   | None ->
-    let cx = fresh_context Files_js.global_file_name Files_js.lib_module in
+    let cx = fresh_context Loc.Builtins Files_js.lib_module in
     cx_ := Some cx;
     cx
   | Some cx -> cx
@@ -3451,7 +3456,7 @@ and generate_tests cx reason typeparams each =
 and mk_nominal cx =
   let nominal = mk_id () in
   (if modes.verbose then prerr_endlinef
-      "NOM %d %s" nominal cx.file);
+      "NOM %d %s" nominal (string_of_filename cx.file));
   nominal
 
 and unify_map cx trace tmap1 tmap2 =

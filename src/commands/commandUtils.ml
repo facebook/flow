@@ -8,6 +8,8 @@
  *
  *)
 
+open Utils_js
+
 let print_version () =
   Utils.print_endlinef
     "Flow, a static type checker for JavaScript, version %s"
@@ -124,11 +126,18 @@ let from_flag prev = CommandSpec.ArgSpec.(
 
 (* relativize a loc's source path to a given root whenever strip_root is set *)
 let relativize strip_root root loc =
-  if not strip_root then loc else Loc.({
-    loc with source = match loc.source with
-    | Some source -> Some (Files_js.relative_path (Path.to_string root) source)
-    | None -> None
-  })
+  if not strip_root then loc
+  else
+    let root_str = Path.to_string root in
+    Loc.({
+      loc with source = match loc.source with
+      | Some SourceFile source ->
+        Some (SourceFile (Files_js.relative_path root_str source))
+      | Some LibFile source ->
+        Some (LibFile (Files_js.relative_path root_str source))
+      | Some Builtins -> Some Builtins
+      | None -> None
+    })
 
 type command_params = {
   from : string;
@@ -349,7 +358,10 @@ let get_path_of_file file =
     Path.to_string path
 
 let range_string_of_loc loc = Loc.(
-  let file = match loc.source with Some file -> file | None -> "" in
+  let file = match loc.source with
+  | Some file -> string_of_filename file
+  | None -> ""
+  in
   let l0, c0 = loc.start.line, loc.start.column + 1 in
   let l1, c1 = loc._end.line, loc._end.column in
   Utils.spf "%s:%d:%d,%d:%d" file l0 c0 l1 c1

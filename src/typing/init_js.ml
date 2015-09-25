@@ -40,9 +40,10 @@ let add_banner banner err = Errors_js.(
 let parse_lib save_parse_errors =
   Files_js.get_lib_files ()
   |> SSet.elements
-  |> List.map (fun lib_file ->
+  |> List.map (fun lib_filename ->
     try Parsing_service_js.(
-      let lib_content = cat lib_file in
+      let lib_content = cat lib_filename in
+      let lib_file = Loc.LibFile lib_filename in
       match do_parse lib_content lib_file with
       | OK ast ->
         lib_file, Some ast
@@ -54,8 +55,9 @@ let parse_lib save_parse_errors =
         save_parse_errors lib_file errors;
         lib_file, None
     )
-    with _ ->
-      failwith (spf "Can't read library definitions file %s, exiting." lib_file)
+    with _ -> failwith (
+      spf "Can't read library definitions file %s, exiting." lib_filename
+    )
   )
 
 (* parse all lib files, and do local inference on those successfully parsed.

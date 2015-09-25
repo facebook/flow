@@ -46,11 +46,13 @@ let main option_values json strip_root moduleref filename () =
   let ic, oc = connect_with_autostart option_values root in
 
   ServerProt.cmd_to_channel oc (ServerProt.FIND_MODULE (moduleref, filename));
-  let response = Marshal.from_channel ic in
+  let response: Loc.filename option = Marshal.from_channel ic in
   let result = match response with
-    | Some file ->
+    | Some Loc.LibFile file
+    | Some Loc.SourceFile file ->
         if strip_root then Files_js.relative_path (Path.to_string root) file
         else file
+    | Some Loc.Builtins -> "(global)"
     | None -> "(unknown)" in
   if json
   then (

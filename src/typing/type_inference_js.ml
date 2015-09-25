@@ -6354,7 +6354,7 @@ let explicit_impl_require_strict cx (cx_from, r, cx_to) =
     try Flow_js.lookup_module cx_to r
     with _ ->
       (* The module exported by cx_from may be imported by path in cx_to *)
-      Flow_js.lookup_module cx_to cx_from.file
+      Flow_js.lookup_module cx_to (string_of_filename cx_from.file)
   in
   Flow_js.flow cx (from_t, to_t)
 

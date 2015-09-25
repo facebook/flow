@@ -9,11 +9,12 @@
  *)
 
 open Utils
+open Utils_js
 
 (* given a map from keys to dependencies, returns whether the dependencies are
    cyclic, as well as a topologically sorted list of key lists where any keys in
    a list only depend on keys in a subsequent list
 *)
-val topsort: SSet.t SMap.t -> string list list IMap.t
-val reverse: SSet.t SMap.t -> SSet.t SMap.t
-val log: string list list IMap.t -> unit
+val topsort: FilenameSet.t FilenameMap.t -> filename list list IMap.t
+val reverse: FilenameSet.t FilenameMap.t -> FilenameSet.t FilenameMap.t
+val log: filename list list IMap.t -> unit

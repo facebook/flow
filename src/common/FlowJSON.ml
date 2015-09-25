@@ -3,7 +3,11 @@ open Utils
 module Ast = Spider_monkey_ast
 
 let parse json filename =
-  let (ast, errors) = Parser_flow.program_file ~fail:false (spf "(%s)" json) filename in
+  let (ast, errors) = Parser_flow.program_file
+    ~fail:false
+    (spf "(%s)" json)
+    (Some filename)
+  in
   let ast_expr = Ast.(match ast with
     | (_, [(_, Statement.Expression({
         Statement.Expression.expression;

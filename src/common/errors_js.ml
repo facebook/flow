@@ -8,6 +8,8 @@
  *
  *)
 
+open Utils_js
+
 module C = Tty
 module Json = Hh_json
 
@@ -61,8 +63,12 @@ let format_reason_color
 
   let s = if one_line then Str.global_replace (Str.regexp "\n") "\\n" s else s in
 
+  let source = match loc.source with
+  | Some LibFile filename | Some SourceFile filename -> [file_clr, filename]
+  | None | Some Builtins -> []
+  in
   let loc_format =
-    (match loc.source with Some filename -> [file_clr, filename] | None -> []) @
+    source @
       (if l0 > 0 && c0 > 0 && l1 > 0 && c1 > 0 then [
         (C.Normal C.Default, ":");
         (line_clr,           string_of_int l0);
@@ -102,14 +108,13 @@ let loc_of_error err =
       loc
   | _ -> Loc.none
 
-let file_of_error err =
-  let loc = loc_of_error err in
-  match loc.Loc.source with Some filename -> filename | None -> ""
-
 (* TODO: deprecate this in favor of Reason_js.json_of_loc *)
 let json_of_loc loc = Loc.(
-  let file = match loc.source with Some filename -> filename | None -> "" in
-  [ "path", Json.JString file;
+  let file = match loc.source with
+  | Some x -> Json.JString (string_of_filename x)
+  | None -> Json.JString "" (* TODO: return Json.JNull *)
+  in
+  [ "path", file;
     "line", Json.JInt loc.start.line;
     "endline", Json.JInt loc._end.line;
     "start", Json.JInt (loc.start.column + 1);
@@ -267,8 +272,8 @@ let print_error_json oc el =
 (* for vim and emacs plugins *)
 let string_of_loc_deprecated loc = Loc.(
   match loc.source with
-    | None -> ""
-    | Some file ->
+    | None | Some Builtins -> ""
+    | Some LibFile file | Some SourceFile file ->
       let line = loc.start.line in
       let start = loc.start.column + 1 in
       let end_ = loc._end.column in

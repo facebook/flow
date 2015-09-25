@@ -3634,7 +3634,7 @@ end = struct
   let rec program env =
     let stmts = module_body_with_directives env (fun _ -> false) in
     let loc = match stmts with
-    | [] -> Loc.from_lb (lb env)
+    | [] -> Loc.from_lb (source env) (lb env)
     | _ -> Loc.btwn (fst (List.hd stmts)) (fst (List.hd (List.rev stmts))) in
     Expect.eof env;
     let comments = List.rev (comments env) in
@@ -3886,10 +3886,13 @@ end
 (*****************************************************************************)
 let parse_program fail ?(token_sink=None) ?(parse_options=None) filename content =
   let lb = Lexing.from_string content in
-  (match filename with None -> () | Some fn ->
-    lb.Lexing.lex_curr_p <-
-      { lb.Lexing.lex_curr_p with Lexing.pos_fname = fn });
-  let env = init_env ~token_sink ~parse_options lb in
+  (match filename with
+    | None | Some Loc.Builtins -> ()
+    | Some Loc.LibFile fn | Some Loc.SourceFile fn ->
+      lb.Lexing.lex_curr_p <- {
+        lb.Lexing.lex_curr_p with Lexing.pos_fname = fn
+      });
+  let env = init_env ~token_sink ~parse_options filename lb in
   let ast = Parse.program env in
   if fail && (errors env) <> []
   then raise (Error.Error (filter_duplicate_errors [] (errors env)));
@@ -3899,4 +3902,4 @@ let program ?(fail=true) ?(token_sink=None) ?(parse_options=None) content =
   parse_program fail ~token_sink ~parse_options None content
 
 let program_file ?(fail=true) ?(token_sink=None) ?(parse_options=None) content filename =
-  parse_program fail ~token_sink ~parse_options (Some filename) content
+  parse_program fail ~token_sink ~parse_options filename content

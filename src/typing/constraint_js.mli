@@ -9,6 +9,7 @@
  *)
 
 open Utils
+open Utils_js
 open Reason_js
 
 type ident = int
@@ -57,7 +58,7 @@ type stack = int list
 
 (* TODO this has a bunch of stuff in it that should be localized *)
 type context = {
-  file: string;
+  file: filename;
   _module: string;
   checked: bool;
   weak: bool;
@@ -94,7 +95,7 @@ and module_exports_type =
 
 val new_context:
   ?checked:bool -> ?weak:bool ->
-  file:string -> _module:string ->
+  file:filename -> _module:string ->
   context
 
 (**************************************)

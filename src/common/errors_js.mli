@@ -41,7 +41,6 @@ val print_reason_color:
 val print_error_color:
   one_line:bool -> color:Tty.color_mode -> error -> unit
 
-val file_of_error : error -> string
 val loc_of_error : error -> Loc.t
 
 val json_of_loc : Loc.t -> (string * Hh_json.json) list

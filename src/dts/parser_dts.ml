@@ -3209,7 +3209,9 @@ end = struct
   let rec program env =
     let stmts, _ = statement_list_with_directives ~term_fn:(fun _ -> false) env in
     let loc = match stmts with
-    | [] -> Loc.from_lb env.lb
+    | [] ->
+      let source = Loc.LibFile Lexing.(env.lb.lex_curr_p.pos_fname) in
+      Loc.from_lb (Some source) env.lb
     | _ -> Loc.btwn (fst (List.hd stmts)) (fst (List.hd (List.rev stmts))) in
     Expect.eof env;
     let comments = List.rev !(env.comments) in

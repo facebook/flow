@@ -9,6 +9,7 @@
  *)
 
 open Utils
+open Utils_js
 open Reason_js
 open Constraint_js
 
@@ -102,7 +103,7 @@ val do_gc: context -> string list -> unit
 (* contexts *)
 val fresh_context:
   ?checked:bool -> ?weak:bool ->
-  file:string -> _module:string ->
+  file:filename -> _module:string ->
   context
 
 (* builtins *)

@@ -14,8 +14,13 @@ type position = {
   offset: int;
 }
 
+type filename =
+  | LibFile of string
+  | SourceFile of string
+  | Builtins
+
 type t = {
-  source: string option;
+  source: filename option;
   start: position;
   _end: position;
 }
@@ -26,11 +31,9 @@ let none = {
   _end = { line = 0; column = 0; offset = 0; };
 }
 
-let from_lb_p start _end = Lexing.(
+let from_lb_p source start _end = Lexing.(
   {
-    source = if start.pos_fname = ""
-      then None
-      else Some (start.pos_fname);
+    source;
     start = {
       line = start.pos_lnum;
       column = start.pos_cnum - start.pos_bol;
@@ -45,16 +48,16 @@ let from_lb_p start _end = Lexing.(
 )
 
 (* Returns the position for the token that was just lexed *)
-let from_lb lb = Lexing.(
+let from_lb source lb = Lexing.(
   let start = lexeme_start_p lb in
   let _end = lexeme_end_p lb in
-  from_lb_p start _end
+  from_lb_p source start _end
 )
 
 (* Returns the position that the lexer is currently about to lex *)
-let from_curr_lb lb = Lexing.(
+let from_curr_lb source lb = Lexing.(
   let curr = lb.lex_curr_p in
-  from_lb_p curr curr
+  from_lb_p source curr curr
 )
 
 let btwn loc1 loc2 = {
@@ -63,10 +66,15 @@ let btwn loc1 loc2 = {
   _end = loc2._end;
 }
 
+let string_of_filename = function
+  | LibFile x | SourceFile x -> x
+  | Builtins -> "(global)"
+
 let string loc =
   let source = match loc.source with
+  | Some file -> string_of_filename file
   | None -> ""
-  | Some source -> source in
+  in
   if loc.start.line = loc._end.line
   then Printf.sprintf "File %S, line %d, column %d-%d:"
     source loc.start.line loc.start.column loc._end.column
@@ -81,3 +89,10 @@ let compare loc1 loc2 =
      loc2._end.line, loc2._end.column)
 
 let source loc = loc.source
+
+(* implements OrderedType and SharedMem.UserKeyType *)
+module FilenameKey = struct
+  type t = filename
+  let to_string = string_of_filename
+  let compare = Pervasives.compare
+end

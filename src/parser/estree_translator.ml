@@ -47,8 +47,14 @@ end with type t = Impl.t) = struct
     |]
 
   let loc location =
+    let source = match Loc.source location with
+    | Some Loc.LibFile src
+    | Some Loc.SourceFile src -> string src
+    | Some Loc.Builtins -> string "(global)"
+    | None -> null
+    in
     obj [|
-      "source", option (fun x -> string x) location.Loc.source;
+      "source", source;
       "start", position location.Loc.start;
       "end", position location.Loc._end;
     |]

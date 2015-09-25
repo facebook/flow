@@ -13,8 +13,6 @@
 open Utils
 open Modes_js
 
-let global_file_name = "(global)"
-
 let flow_extensions = [
     ".js"  ;      (* Standard JavaScript files *)
     ".jsx" ;      (* JavaScript files with JSX *)

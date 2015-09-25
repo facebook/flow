@@ -41,6 +41,7 @@ type env
 val init_env :
   ?token_sink:(token_sink_result -> unit) option
   -> ?parse_options:parse_options option
+  -> Loc.filename option
   -> Lexing.lexbuf
   -> env
 
@@ -65,6 +66,7 @@ val no_call : env -> bool
 val no_let : env -> bool
 val errors : env -> (Loc.t * Parse_error.t) list
 val parse_options : env -> parse_options
+val source : env -> Loc.filename option
 
 (* miscellaneous operations *)
 val last_opt : env -> (lex_result -> 'a) -> 'a option

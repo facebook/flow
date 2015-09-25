@@ -16,14 +16,14 @@ module Ast = Spider_monkey_ast
 
 (* results of parse job, returned by parse and reparse *)
 type results =
-  SSet.t *                  (* successfully parsed files *)
-  string list *             (* list of failed files *)
+  FilenameSet.t *           (* successfully parsed files *)
+  filename list *           (* list of failed files *)
   Errors_js.ErrorSet.t list (* parallel list of error sets *)
 
 (**************************** internal *********************************)
 
 (* shared heap for parsed ASTs by filename *)
-module ParserHeap = SharedMem.WithCache (String) (struct
+module ParserHeap = SharedMem.WithCache (Loc.FilenameKey) (struct
     type t = Spider_monkey_ast.program
     let prefix = Prefix.make()
   end)
@@ -35,13 +35,18 @@ let flow_check_regexp = (Str.regexp "\\(.\\|\n\\)*@flow")
 let is_flow content =
   Str.string_match flow_check_regexp content 0
 
+let is_lib_file = Loc.(function
+| LibFile _ -> true
+| Builtins -> true
+| SourceFile _ -> false)
+
 let match_flow content file =
-  (Files_js.is_lib_file file) || is_flow content
+  is_lib_file file || is_flow content
 
 let in_flow content file =
   Modes_js.(modes.all) || match_flow content file
 
-let (parser_hook: (string -> Ast.program -> unit) list ref) = ref []
+let (parser_hook: (filename -> Ast.program -> unit) list ref) = ref []
 let call_on_success f = parser_hook := f :: !parser_hook
 
 let parse_options = Some {
@@ -55,8 +60,8 @@ let parse_options = Some {
 let execute_hook file ast =
   let ast = match ast with
   | None ->
-      let empty_ast, _ = Parser_flow.parse_program true ~parse_options (Some file) "" in
-      empty_ast
+     let empty_ast, _ = Parser_flow.parse_program true ~parse_options (Some file) "" in
+     empty_ast
   | Some ast -> ast
   in
   try
@@ -73,7 +78,8 @@ let delete_file fn =
 
 let do_parse ?(keep_errors=false) content file =
   try (
-    let ast, parse_errors = Parser_flow.program_file ~parse_options content file in
+    let ast, parse_errors = Parser_flow.program_file
+      ~parse_options content (Some file) in
     assert (parse_errors = []);
     OK ast
   )
@@ -94,19 +100,19 @@ let do_parse ?(keep_errors=false) content file =
  * Add success/error info to passed accumulator. *)
 let reducer init_modes (ok, fails, errors) file =
   init_modes ();
-  let content = cat file in
+  let content = cat (string_of_filename file) in
   match (do_parse content file) with
   | OK ast ->
       ParserHeap.add file ast;
       execute_hook file (Some ast);
-      (SSet.add file ok, fails, errors)
+      (FilenameSet.add file ok, fails, errors)
   | Err converted ->
       execute_hook file None;
       (ok, file :: fails, converted :: errors)
 
 (* merge is just memberwise union/concat of results *)
 let merge (ok1, fail1, errors1) (ok2, fail2, errors2) =
-  (SSet.union ok1 ok2, fail1 @ fail2, errors1 @ errors2)
+  (FilenameSet.union ok1 ok2, fail1 @ fail2, errors1 @ errors2)
 
 (***************************** public ********************************)
 
@@ -115,14 +121,14 @@ let parse workers next init_modes =
   let ok, fail, errors = MultiWorker.call
     workers
     ~job: (List.fold_left (reducer init_modes))
-    ~neutral: (SSet.empty, [], [])
+    ~neutral: (FilenameSet.empty, [], [])
     ~merge: merge
     ~next: next in
 
   if Modes_js.(modes.profile) && not Modes_js.(modes.quiet) then
     let t2 = Unix.gettimeofday () in
     prerr_endlinef "parsed %d + %d files in %f"
-      (SSet.cardinal ok) (List.length fail) (t2 -. t)
+      (FilenameSet.cardinal ok) (List.length fail) (t2 -. t)
   else ();
 
   (ok, fail, errors)
@@ -130,7 +136,7 @@ let parse workers next init_modes =
 let reparse workers files init_modes =
   ParserHeap.remove_batch files;
   SharedMem.collect `gentle;
-  let next = Bucket.make (SSet.elements files) in
+  let next = Bucket.make (FilenameSet.elements files) in
   parse workers next init_modes
 
 let get_ast_unsafe file =
@@ -138,4 +144,4 @@ let get_ast_unsafe file =
 
 let remove_asts files =
   ParserHeap.remove_batch files;
-  SSet.iter delete_file files
+  FilenameSet.iter delete_file files

@@ -8,12 +8,12 @@
  *
  *)
 
-open Utils
+open Utils_js
 
 val init_modes: Options.options -> unit
 
 (* incremental typecheck entry point *)
-val recheck: ServerEnv.genv -> ServerEnv.env -> SSet.t -> ServerEnv.env
+val recheck: ServerEnv.genv -> ServerEnv.env -> FilenameSet.t -> ServerEnv.env
 
 (* hh_server initial (full) check *)
 val server_init:
@@ -24,9 +24,9 @@ val single_main: string list -> Options.options -> unit
 
 val get_errors: unit -> Errors_js.error list
 
-val merge_strict_file: string -> Constraint_js.context
+val merge_strict_file: filename -> Constraint_js.context
 
 val typecheck_contents:
   string ->               (* contents *)
-  string ->               (* fake file-/module name *)
+  filename ->             (* fake file-/module name *)
   Constraint_js.context option * Errors_js.ErrorSet.t

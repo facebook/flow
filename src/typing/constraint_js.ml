@@ -240,7 +240,7 @@ let copy_node node = match node with
 type stack = int list
 
 type context = {
-  file: string;
+  file: filename;
   _module: string;
   checked: bool;
   weak: bool;

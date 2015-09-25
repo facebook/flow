@@ -162,16 +162,17 @@ type env = {
   lookahead         : Lookahead.t option ref;
   token_sink        : (token_sink_result -> unit) option ref;
   parse_options     : parse_options;
+  source            : Loc.filename option;
 }
 
 (* constructor *)
-let init_env ?(token_sink=None) ?(parse_options=None) lb =
+let init_env ?(token_sink=None) ?(parse_options=None) source lb =
   let parse_options =
     match parse_options with
     | Some opts -> opts
     | None -> default_parse_options
   in
-  let lex_env = new_lex_env lb in
+  let lex_env = new_lex_env source lb in
   let lex_env, lookahead = lex lex_env NORMAL_LEX in
   {
     errors            = ref [];
@@ -197,6 +198,7 @@ let init_env ?(token_sink=None) ?(parse_options=None) lb =
     lookahead         = ref None;
     token_sink        = ref token_sink;
     parse_options;
+    source;
   }
 
 (* getters: *)
@@ -218,6 +220,7 @@ let no_call env = env.no_call
 let no_let env = env.no_let
 let errors env = !(env.errors)
 let parse_options env = env.parse_options
+let source env = env.source
 
 (* mutators: *)
 let error_at env (loc, e) =
