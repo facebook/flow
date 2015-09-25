@@ -135,7 +135,7 @@ let silent_warnings = false
 
 exception FlowError of Errors_js.message list
 
-let add_output cx level ?(trace_reasons=[]) message_list =
+let add_output cx error_kind ?(trace_reasons=[]) message_list =
   if !throw_on_error
   then (
     raise (FlowError message_list)
@@ -149,9 +149,15 @@ let add_output cx level ?(trace_reasons=[]) message_list =
              spf "%s: s = %S" (string_of_loc loc) s
            )
         |> String.concat "\n"));
-    let error = level, message_list, trace_reasons in
-    if level = Errors_js.ERROR || not silent_warnings then
-    cx.errors <- Errors_js.ErrorSet.add error cx.errors
+    let error = Errors_js.({
+      kind = error_kind;
+      messages = message_list;
+      trace = trace_reasons
+    }) in
+    if error_kind = Errors_js.ParseError ||
+       error_kind = Errors_js.InferError ||
+       not silent_warnings
+    then cx.errors <- Errors_js.ErrorSet.add error cx.errors
   )
 
 (* tvars *)
@@ -324,7 +330,7 @@ let prerr_flow_full_trace cx trace msg l u =
     |> List.map Errors_js.message_of_reason
   in
   prmsg_flow_trace_reasons cx
-    Errors_js.ERROR
+    Errors_js.InferError
     trace_reasons
     msg
     (ordered_reasons l u)
@@ -332,7 +338,7 @@ let prerr_flow_full_trace cx trace msg l u =
 (* format an error and add it to flow's output *)
 let prerr_flow cx trace msg l u =
   prmsg_flow cx
-    Errors_js.ERROR
+    Errors_js.InferError
     trace
     msg
     (ordered_reasons l u)
@@ -340,7 +346,7 @@ let prerr_flow cx trace msg l u =
 (* format a warning and add it to flow's output *)
 let prwarn_flow cx trace msg l u =
   prmsg_flow cx
-    Errors_js.WARNING
+    Errors_js.InferWarning
     trace
     msg
     (ordered_reasons l u)
@@ -361,17 +367,23 @@ let add_msg cx ?trace level list =
   add_output cx level ?trace_reasons (tweak_output list)
 
 (* for outside calls *)
-let new_warning list =
-  Errors_js.WARNING, tweak_output list, []
+let new_warning list = Errors_js.({
+  kind = InferWarning;
+  messages = tweak_output list;
+  trace = []
+})
 
 let add_warning cx ?trace list =
-  add_msg cx ?trace Errors_js.WARNING list
+  add_msg cx ?trace Errors_js.InferWarning list
 
-let new_error list =
-  Errors_js.ERROR, tweak_output list, []
+let new_error list = Errors_js.({
+  kind = InferError;
+  messages = tweak_output list;
+  trace = []
+})
 
 let add_error cx ?trace list =
-  add_msg cx ?trace Errors_js.ERROR list
+  add_msg cx ?trace Errors_js.InferError list
 
 (********************************************************************)
 
@@ -1924,7 +1936,7 @@ let rec __flow cx (l, u) trace =
       if has_prop cx mapr x then ()
       else
         prmsg_flow cx
-          Errors_js.ERROR
+          Errors_js.InferError
           trace
           "Property not found in"
           (reason_op, reason_o)
@@ -1937,7 +1949,7 @@ let rec __flow cx (l, u) trace =
       | Some tx -> ()
       | None ->
         prmsg_flow cx
-          Errors_js.ERROR
+          Errors_js.InferError
           trace
           "Property not found in"
           (reason_op, reason_o)
@@ -3166,7 +3178,7 @@ let rec __flow cx (l, u) trace =
           else "Property not found in"
         in
         prmsg_flow cx
-          Errors_js.ERROR
+          Errors_js.InferError
           trace
           msg
           (reason_op, strict_reason)
@@ -3198,7 +3210,7 @@ let rec __flow cx (l, u) trace =
     | (MixedT _, ExtendsT ([], t, tc)) ->
       let msg = "This type is incompatible with" in
       prmsg_flow cx
-        Errors_js.ERROR
+        Errors_js.InferError
         trace
         msg
         (reason_of_t t, reason_of_t tc)
@@ -3209,7 +3221,7 @@ let rec __flow cx (l, u) trace =
     | (_, GetPropT (_, (reason_prop, _), _))
     | (_, SetPropT (_, (reason_prop, _), _)) ->
       prmsg_flow cx
-        Errors_js.ERROR
+        Errors_js.InferError
         trace
         (err_msg l u)
         (reason_prop, reason_of_t l)
@@ -3879,7 +3891,7 @@ and ensure_prop_for_write cx trace strict mapr x proto reason_op reason_prop =
     match strict with
     | Some reason_o ->
       prmsg_flow cx
-        Errors_js.ERROR
+        Errors_js.InferError
         trace
         "Property not found in"
         (reason_prop, reason_o);
@@ -5639,7 +5651,7 @@ let rec assert_ground ?(infer=false) cx skip ids = function
         message_of_reason reason_open;
         message_of_string "Missing annotation"
       ]) in
-      add_output cx Errors_js.WARNING message_list
+      add_output cx Errors_js.InferWarning message_list
 
   | NumT _
   | StrT _

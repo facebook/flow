@@ -11,11 +11,18 @@
 module C = Tty
 module Json = Hh_json
 
-type level = ERROR | WARNING
 type message =
   | BlameM of Loc.t * string
   | CommentM of string
-type error = level * message list (* message *) * message list (* trace *)
+type error_kind =
+  | ParseError
+  | InferError
+  | InferWarning
+type error = {
+  kind: error_kind;
+  messages: message list;
+  trace: message list;
+}
 
 type pp_message = Loc.t * string
 let to_pp = function
@@ -39,6 +46,18 @@ let message_of_reason reason =
 
 let message_of_string s =
   CommentM s
+
+let prepend_kind_message messages kind =
+  match List.hd messages with
+  | BlameM ({Loc.source = Some Loc.LibFile _; _} as loc, _) ->
+      let header = match kind with
+      | ParseError -> "Library parse error:"
+      | InferError -> "Library type error:"
+      (* TODO: we don't publicly distinguish warnings vs errors right now *)
+      | InferWarning -> "Library type error:"
+      in
+      BlameM (loc, header) :: messages
+  | _ -> messages
 
 let append_trace_reasons message_list trace_reasons =
   match trace_reasons with
@@ -92,14 +111,15 @@ let print_reason_color ~first ~one_line ~color (message: message) =
   (if first then Printf.printf "\n");
   C.print ~color_mode:color to_print
 
-let print_error_color ~one_line ~color e =
-  let level, messages, trace_reasons = e in
-  let messages = append_trace_reasons messages trace_reasons in
+let print_error_color ~one_line ~color (e : error) =
+  let {kind; messages; trace} = e in
+  let messages = prepend_kind_message messages kind in
+  let messages = append_trace_reasons messages trace in
   print_reason_color ~first:true ~one_line ~color (List.hd messages);
   List.iter (print_reason_color ~first:false ~one_line ~color) (List.tl messages)
 
-let loc_of_error err =
-  let _, messages, _ = err in
+let loc_of_error (err: error) =
+  let {messages; _} = err in
   match messages with
   | message :: _ ->
       let loc, _ = to_pp message in
@@ -148,7 +168,7 @@ let compare =
           compare_message_lists (seq k (string_cmp m1 m2)) (rest1, rest2)
         ) ()
   in
-  fun (lx, ml1, _) (ly, ml2, _) ->
+  fun {messages = ml1; _} {messages = ml2; _} ->
     compare_message_lists (fun () -> 0) (ml1, ml2)
 
 module Error = struct
@@ -212,9 +232,9 @@ module ErrorSuppressions = struct
         check_error_messages acc errors
 
   (* Checks if an error should be suppressed. *)
-  let check err suppressions =
-    let _, message_list, _ = err in
-    check_error_messages (false, suppressions) message_list
+  let check (err: error) suppressions =
+    let {messages; _} = err in
+    check_error_messages (false, suppressions) messages
 
   (* Get's the locations of the suppression comments that are yet unused *)
   let unused { unused; _; } = SpanMap.values unused
@@ -223,9 +243,11 @@ module ErrorSuppressions = struct
     SpanMap.cardinal suppressions + SpanMap.cardinal unused
 end
 
-let parse_error_to_flow_error (loc, err) =
-  let msg = Parse_error.PP.error err in
-  ERROR, [BlameM (loc, msg)], []
+let parse_error_to_flow_error (loc, err) = {
+  kind = ParseError;
+  messages = [BlameM (loc, Parse_error.PP.error err)];
+  trace = []
+}
 
 let to_list errors = ErrorSet.elements errors
 
@@ -233,20 +255,24 @@ let to_list errors = ErrorSet.elements errors
 
 (* adapted from Errors.to_json to output multi-line errors properly *)
 let json_of_error (error : error) = Json.(
-  let level, messages, trace_reasons = error in
-  let level_str = match level with
-  | ERROR -> "error"
-  | WARNING -> "warning"
+  let {kind; messages; trace} = error in
+  let kind_str, severity_str = match kind with
+  | ParseError -> "parse", "error"
+  | InferError -> "infer", "error"
+  | InferWarning -> "infer", "warning"
   in
-  let messages = append_trace_reasons messages trace_reasons in
+  let messages = append_trace_reasons messages trace in
   let elts = List.map (fun message ->
       let loc, w = to_pp message in
       JAssoc (("descr", Json.JString w) ::
-              ("level", Json.JString level_str) ::
+              ("level", Json.JString severity_str) ::
               (json_of_loc loc))
     ) messages
   in
-  JAssoc [ "message", JList elts ]
+  JAssoc [
+    "message", JList elts;
+    "kind", JString kind_str;
+  ]
 )
 
 let json_of_errors errors = Json.JList (List.map json_of_error errors)
@@ -291,10 +317,10 @@ let print_error_deprecated =
     Printf.sprintf "%s%s" (endline loc_str) (endline msg)
   in
   let to_string (error : error) : string =
-    let level, msgl, trace_reasons = error in
-    let msgl = append_trace_reasons msgl trace_reasons in
+    let {messages; trace; _} = error in
+    let messages = append_trace_reasons messages trace in
     let buf = Buffer.create 50 in
-    (match msgl with
+    (match messages with
     | [] -> assert false
     | message1 :: rest_of_error ->
         Buffer.add_string buf (to_pp_string message1);

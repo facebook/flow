@@ -206,10 +206,10 @@ let strip_root_from_reason_list root list = Errors_js.(
 )
 
 let strip_root_from_error root error =
-  let level, list, trace_reasons = error in
-  let list = strip_root_from_reason_list root list in
-  let trace_reasons = strip_root_from_reason_list root trace_reasons in
-  level, list, trace_reasons
+  let {Errors_js.messages; trace; _} = error in
+  let messages = strip_root_from_reason_list root messages in
+  let trace = strip_root_from_reason_list root trace in
+  Errors_js.({error with messages; trace;})
 
 (* retrieve a full error list.
    Library errors are forced to the top of the list.

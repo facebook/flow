@@ -20,19 +20,6 @@ open Utils
 open Utils_js
 open Sys_utils
 
-(* helper - slap a big banner onto an error.
-   yucky but library errors tend to screw lots of other stuff up,
-   so we want them to stand out. They're also forced to the
-   top of get_errors () *)
-let add_banner banner err = Errors_js.(
-  let level, messages, traces = err in
-  let banner = match List.hd messages with
-    | BlameM (loc, desc) -> BlameM (loc, banner)
-    | CommentM desc -> CommentM banner in
-  let messages = banner :: messages in
-  level, messages, traces
-)
-
 (* parse all library files, as supplied by Files_js.get_lib_files.
    use passed function to report errors.
    returns list of (filename, Some ast | None) depending on success.
@@ -48,10 +35,6 @@ let parse_lib save_parse_errors =
       | OK ast ->
         lib_file, Some ast
       | Err errors ->
-        (* patch a big banner onto each library parse error *)
-        let errors = Errors_js.(ErrorSet.fold (fun err acc ->
-          ErrorSet.add (add_banner "Library parse error:" err) acc
-        ) errors ErrorSet.empty) in
         save_parse_errors lib_file errors;
         lib_file, None
     )
@@ -64,12 +47,6 @@ let parse_lib save_parse_errors =
    returns list of (filename, success) pairs
  *)
 let init_lib save_parse_errors save_infer_errors save_suppressions =
-  let save_bannerized_infer_errors file errors =
-    let errors = Errors_js.(ErrorSet.fold (fun err acc ->
-      ErrorSet.add (add_banner "Library type error:" err) acc
-    ) errors ErrorSet.empty) in
-    save_infer_errors file errors
-  in
   (parse_lib save_parse_errors) |> List.fold_left (
     fun acc (file, ast) ->
       match ast with
@@ -78,7 +55,7 @@ let init_lib save_parse_errors save_infer_errors save_suppressions =
           file
           statements
           comments
-          (save_bannerized_infer_errors file)
+          (save_infer_errors file)
           (save_suppressions file);
         (file, true) :: acc
       | None ->

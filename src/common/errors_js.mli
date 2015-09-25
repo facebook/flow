@@ -8,11 +8,18 @@
  *
  *)
 
-type level = ERROR | WARNING
 type message =
   | BlameM of Loc.t * string
   | CommentM of string
-type error = level * message list * message list
+type error_kind =
+  | ParseError
+  | InferError
+  | InferWarning
+type error = {
+  kind: error_kind;
+  messages: message list;
+  trace: message list;
+}
 
 type pp_message = Loc.t * string
 val to_pp : message -> pp_message
