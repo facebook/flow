@@ -171,7 +171,7 @@ let print_file_at_location main_file loc s = Loc.(
     | Some filename ->
       let content = Sys_utils.cat filename in
       let lines = Str.split_delim (Str.regexp "\n") content in
-      let code_line = if (List.length lines) >= l0 then List.nth lines (l0 - 1) else "" in
+      let code_line = if (List.length lines) >= l0 && (l0 > 0) then List.nth lines (l0 - 1) else "" in
       let code_line = Str.global_replace (Str.regexp_string "\n") "" code_line in
       let highlighted_line = if (l1 == l0) && (String.length code_line) > 0
         then highlight_error_in_line code_line c0 c1
