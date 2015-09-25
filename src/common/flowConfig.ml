@@ -27,6 +27,7 @@ type options = {
   moduleSystem: moduleSystem;
   module_name_mappers: (Str.regexp * string) list;
   munge_underscores: bool;
+  module_file_exts: string list;
   suppress_comments: Str.regexp list;
   suppress_types: SSet.t;
   traces: int;
@@ -87,6 +88,7 @@ let default_options root = {
   moduleSystem = default_module_system;
   module_name_mappers = [];
   munge_underscores = false;
+  module_file_exts = [];
   suppress_comments = [];
   suppress_types = SSet.empty;
   traces = 0;
@@ -423,6 +425,10 @@ module OptionsParser = struct
     options
 end
 
+let file_extension = Str.regexp "^\\(\\.[^ \t\\.]+\\)+$"
+
+let default_file_exts = [".js"; ".jsx"]
+
 let options_parser = OptionsParser.configure [
   ("esproposal.decorators", OptionsParser.({
     flags = [];
@@ -487,6 +493,16 @@ let options_parser = OptionsParser.configure [
         { opts with enable_unsafe_getters_and_setters });
   }));
 
+  ("module.file_ext", OptionsParser.({
+    flags = [ALLOW_DUPLICATE];
+    _parser = raw_string (fun options (ln, file_ext) ->
+      if Str.string_match file_extension file_ext 0 then
+	let module_file_exts = file_ext :: options.module_file_exts in
+	{ options with module_file_exts }
+      else
+	error ln (spf "'%s' is not a valid file extension." file_ext)
+  )}));
+   
   ("traces", OptionsParser.({
     flags = [];
     _parser = generic
@@ -517,6 +533,10 @@ let parse_options config lines =
     |> List.map (fun (ln, line) -> ln, String.trim line)
     |> List.filter (fun (ln, s) -> s <> "") in
   let options = OptionsParser.parse config options_parser lines in
+  if options.module_file_exts = [] then
+    let options = { options with module_file_exts = default_file_exts } in
+    { config with options }
+  else
   { config with options }
 
 let assert_version (ln, line) =
@@ -564,8 +584,15 @@ let fullpath root =
 let read root =
   let filename = fullpath root in
   let lines = cat_no_fail filename |> split_lines in
+  let config =
+    if List.exists ((=) "module.file_ext") lines then
+      empty_config root
+    else
+      let options =
+	{ (default_options root) with module_file_exts = default_file_exts } in
+      { (empty_config root) with options }
+  in
   let lines = List.mapi (fun i line -> (i+1, String.trim line)) lines in
-  let config = empty_config root in
   parse config lines
 
 let init root options =
@@ -597,4 +624,4 @@ let get root =
 let get_unsafe () =
   match !cache with
   | Some config -> config
-  | none -> failwith "No config loaded"
+  | None -> failwith "No config loaded"

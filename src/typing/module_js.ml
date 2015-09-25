@@ -38,7 +38,19 @@ type info = {
 
 type mode = ModuleMode_Checked | ModuleMode_Weak | ModuleMode_Unchecked
 
-let flow_options = ref None (*Options.default_options*)
+let flow_options : Options.options option ref = ref None (*Options.default_options*)
+
+let get_flow_options () =
+  match !flow_options with
+  | Some opts -> opts
+  | None ->
+     assert_false ("Attempted to use flow_options before " ^
+                  "Modules_js was initialized.")
+
+let get_config_options () =
+  let root = (get_flow_options ()).Options.opt_root in
+  let config = FlowConfig.get root in
+  FlowConfig.(config.options)
 
 (**
  * A set of module.name_mapper config entry allows users to specify regexp
@@ -55,21 +67,15 @@ let module_name_candidates name =
   if Hashtbl.mem module_name_candidates_cache name then (
     Hashtbl.find module_name_candidates_cache name
   ) else (
-    match !flow_options with
-    | None -> assert_false (spf
-        ("Attempted to map module name (%s) before the flow_options were " ^^
-         "provided to Module_js.ml :(")
-        name
-      )
-    | Some(flow_options) ->
-      let mappers = flow_options.Options.opt_module_name_mappers in
-      let map_name mapped_names (regexp, template) =
-        let new_name = Str.global_replace regexp template name in
-        if new_name = name then mapped_names else new_name::mapped_names
-      in
-      let mapped_names = List.rev (name::(List.fold_left map_name [] mappers)) in
-      Hashtbl.add module_name_candidates_cache name mapped_names;
-      mapped_names
+    let flow_options = get_flow_options () in
+    let mappers = flow_options.Options.opt_module_name_mappers in
+    let map_name mapped_names (regexp, template) =
+      let new_name = Str.global_replace regexp template name in
+      if new_name = name then mapped_names else new_name::mapped_names
+    in
+    let mapped_names = List.rev (name::(List.fold_left map_name [] mappers)) in
+    Hashtbl.add module_name_candidates_cache name mapped_names;
+    mapped_names
   )
 
 (****************** shared dependency map *********************)
@@ -277,37 +283,42 @@ module Node = struct
       match get_key "main" tokens with
       | None -> None
       | Some file ->
-          let path = Files_js.normalize_path dir file in
-          if path_is_file path
-          then Some path
-          else seq
-            (fun () ->
-              seqf
+         let opts = get_config_options () in
+         let path = Files_js.normalize_path dir file in
+         if path_is_file path
+         then Some path
+         else
+	   seq
+	     (fun () ->
+	      seqf
                 (fun ext -> path_if_exists (path ^ ext))
-                Files_js.flow_extensions)
-            (fun () ->
-              let path = Filename.concat path "index.js" in
-              path_if_exists path)
+                (FlowConfig.(opts.module_file_exts)))
+	     (fun () ->
+	      let path = Filename.concat path "index.js" in
+	      path_if_exists path)
 
   let resolve_relative root_path rel_path =
     let path = Files_js.normalize_path root_path rel_path in
+    let opts = get_config_options () in
     if Files_js.is_flow_file path
     then path_if_exists path
-    else seq
-      (fun () ->
-        seqf
-          (fun ext -> path_if_exists (path ^ ext))
-          Files_js.flow_extensions
-      )
-      (fun () -> seq
-          (fun () ->
-            let package = Filename.concat path "package.json" in
-            parse_main package)
-          (fun () ->
-            let path = Filename.concat path "index.js" in
-            path_if_exists path
-          )
-      )
+    else
+      seq
+	(fun () ->
+         seqf
+           (fun ext -> path_if_exists (path ^ ext))
+           (FlowConfig.(opts.module_file_exts))
+	)
+	(fun () ->
+	 seq
+	   (fun () ->
+	    let package = Filename.concat path "package.json" in
+	    parse_main package)
+	   (fun () ->
+	    let path = Filename.concat path "index.js" in
+	    path_if_exists path
+	   )
+	)
 
   let rec node_module dir r = seq
     (fun () -> resolve_relative dir (spf "node_modules%s%s" Filename.dir_sep r))

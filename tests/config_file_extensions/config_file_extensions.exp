@@ -1,0 +1,8 @@
+
+test.es6:9:1,20: function call
+Error:
+test.es6:9:5,19: string
+This type is incompatible with
+test.es6:6:10,15: number
+
+Found 1 error
