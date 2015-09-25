@@ -5250,7 +5250,7 @@ and mk_signature cx reason_c type_params_map superClass body = Ast.Class.(
       }) ->
         if value <> None
         then begin
-          let msg = "class property initializers are not yet supported" in
+          let msg = "class property initializers are not yet supported (https://github.com/facebook/flow/issues/850)" in
           Flow_js.add_error cx [mk_reason "" loc, msg]
         end;
         let r = mk_reason (spf "class property `%s`" name) loc in
