@@ -1,4 +1,12 @@
 
+conversion.js:10:2,18: function call
+Function cannot be called on
+conversion.js:10:2,18: Object
+
+conversion.js:18:9,19: function call
+Function cannot be called on
+conversion.js:18:9,19: Object
+
 objects.js:4:4,6: property `foo`
 Property not found in
 objects.js:4:2,2: object type
@@ -31,4 +39,4 @@ objects.js:17:2,20: function type
 This type is incompatible with
 objects.js:17:23,28: string
 
-Found 8 errors
+Found 10 errors

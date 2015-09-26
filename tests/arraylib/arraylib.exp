@@ -27,19 +27,19 @@ array_lib.js:21:24,46: call of method concat
 Error:
 array_lib.js:21:33,35: string
 This type is incompatible with
-[LIB] core.js:139:31,42: union type
+[LIB] core.js:144:31,42: union type
 
 array_lib.js:21:24,46: call of method concat
 Error:
 array_lib.js:21:38,40: string
 This type is incompatible with
-[LIB] core.js:139:31,42: union type
+[LIB] core.js:144:31,42: union type
 
 array_lib.js:21:24,46: call of method concat
 Error:
 array_lib.js:21:43,45: string
 This type is incompatible with
-[LIB] core.js:139:31,42: union type
+[LIB] core.js:144:31,42: union type
 
 array_lib.js:46:3,45: call of method reduce
 Function cannot be called on

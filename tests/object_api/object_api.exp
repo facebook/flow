@@ -23,7 +23,7 @@ object_prototype.js:39:33,42: property `toString`
 Error:
 object_prototype.js:39:24,29: number
 This type is incompatible with
-[LIB] core.js:46:17,22: string
+[LIB] core.js:51:17,22: string
 
 object_prototype.js:43:26,35: function type
 This type is incompatible with
@@ -37,13 +37,13 @@ object_prototype.js:51:2,21: call of method toString
 Error:
 object_prototype.js:51:16,20: string
 This type is incompatible with
-[LIB] core.js:74:22,27: number
+[LIB] core.js:79:22,27: number
 
 object_prototype.js:52:2,20: call of method toString
 Error:
 object_prototype.js:52:16,19: null
 This type is incompatible with
-[LIB] core.js:74:22,27: number
+[LIB] core.js:79:22,27: number
 
 object_prototype.js:71:32,47: property `hasOwnProperty`
 Error:
@@ -55,7 +55,7 @@ object_prototype.js:72:51,66: property `hasOwnProperty`
 Error:
 object_prototype.js:72:42,47: number
 This type is incompatible with
-[LIB] core.js:43:32,38: boolean
+[LIB] core.js:48:32,38: boolean
 
 object_prototype.js:76:32,47: function type
 This type is incompatible with
@@ -71,7 +71,7 @@ object_prototype.js:98:3,24: property `propertyIsEnumerable`
 Error:
 object_prototype.js:97:48,53: number
 This type is incompatible with
-[LIB] core.js:44:38,44: boolean
+[LIB] core.js:49:38,44: boolean
 
 object_prototype.js:102:38,59: function type
 This type is incompatible with
@@ -97,7 +97,7 @@ object_prototype.js:151:39,54: property `toLocaleString`
 Error:
 object_prototype.js:151:30,35: number
 This type is incompatible with
-[LIB] core.js:233:23,28: string
+[LIB] core.js:238:23,28: string
 
 object_prototype.js:155:32,47: function type
 This type is incompatible with
