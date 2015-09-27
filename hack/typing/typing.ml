@@ -886,9 +886,8 @@ and bind_as_expr env ty aexpr =
 and expr env e =
   raw_expr ~in_cond:false env e
 
-and raw_expr ~in_cond env e =
+and raw_expr ~in_cond ?valkind:(valkind=`other) env e =
   debug_last_pos := fst e;
-  let valkind = `other in
   let env, ty = expr_ ~in_cond ~valkind env e in
   let () = match !expr_hook with
     | Some f -> f e (Typing_expand.fully_expand env ty)
@@ -900,7 +899,10 @@ and lvalue env e =
   let valkind = `lvalue in
   expr_ ~in_cond:false ~valkind env e
 
-and expr_ ~in_cond ~(valkind: [> `lvalue | `rvalue | `other ]) env (p, e) =
+and expr_
+  ~in_cond
+  ~(valkind: [> `lvalue | `lvalue_subexpr | `other ])
+  env (p, e) =
   match e with
   | Any -> env, (Reason.Rwitness p, Tany)
   | Array [] -> env, (Reason.Rwitness p, Tarraykind AKempty)
@@ -1171,11 +1173,11 @@ and expr_ ~in_cond ~(valkind: [> `lvalue | `rvalue | `other ]) env (p, e) =
       let ty = Reason.Rwitness p, Ttuple tyl in
       env, ty
   | Array_get (e, None) ->
-      let env, ty1 = expr env e in
+      let env, ty1 = promote_akempty_to_akvec p env e valkind in
       let is_lvalue = (valkind == `lvalue) in
       array_append is_lvalue p env ty1
   | Array_get (e1, Some e2) ->
-      let env, ty1 = expr env e1 in
+      let env, ty1 = promote_akempty_to_akmap p env e1 valkind in
       let env, ty1 = TUtils.fold_unresolved env ty1 in
       let env, ety1 = Env.expand_type env ty1 in
       let env, ty2 = expr env e2 in
@@ -4148,3 +4150,48 @@ and overload_function p env class_id method_id el uel f =
     * report them twice *)
    if has_error then env, res
    else f env fty res el
+
+and promote_akempty_to_akvec p env e valkind =
+  let get_akvec = (fun env ->
+    let env, value = TUtils.in_var env (Reason.Rnone, Tunresolved []) in
+    env, (Reason.Rappend p, Tarraykind (AKvec value))
+  ) in
+  promote_akempty p env e valkind get_akvec
+
+and promote_akempty_to_akmap p env e valkind =
+  let get_akmap = (fun env ->
+    let env, key = TUtils.in_var env (Reason.Rnone, Tunresolved []) in
+    let env, value = TUtils.in_var env (Reason.Rnone, Tunresolved []) in
+    env, (Reason.Rused_as_map p, Tarraykind (AKmap (key, value)))
+  ) in
+  promote_akempty p env e valkind get_akmap
+
+and promote_akempty p env e valkind get_promoted_type =
+  match valkind with
+    | `lvalue | `lvalue_subexpr ->
+      let env, ty1 =
+        raw_expr ~valkind:`lvalue_subexpr ~in_cond:false env e in
+      let env, ty1 = promote_akempty_ env ty1 get_promoted_type in
+      begin match e with
+        | (_, Lvar (_, x)) ->
+          (* promote_akempty_ has updated type AKempty in ty1 typevars, but we
+             need to update the local variable type too *)
+          set_valid_rvalue p env x ty1
+        | _ -> env, ty1
+      end
+    | _ ->
+      expr env e
+
+and promote_akempty_ env ty get_promoted_type =
+  match ty with
+    | (_, Tarraykind AKempty) -> get_promoted_type env
+    | (r, Tunresolved tyl) ->
+      let env, tyl =
+        lmap (fun env x -> promote_akempty_ env x get_promoted_type) env tyl in
+      env, (r, Tunresolved tyl)
+    | (_, Tvar n) ->
+      let env, ty = Env.get_type env n in
+      let env, ty = promote_akempty_ env ty get_promoted_type in
+      let env = Env.add env n ty in
+      env, ty
+    | _ -> env, ty

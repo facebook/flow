@@ -64,6 +64,7 @@ type t =
   | Rexpr_dep_type   of t * Pos.t * expr_dep_type_reason
   | Rnullsafe_op     of Pos.t (* ?-> operator is used *)
   | Rtconst_no_cstr  of Nast.sid
+  | Rused_as_map     of Pos.t
 
 and expr_dep_type_reason =
   | ERexpr of int
@@ -173,6 +174,7 @@ let rec to_string prefix r =
       (to_string prefix r) @ [p, "  "^expr_dep_type_reason_string e]
   | Rtconst_no_cstr (_, n) ->
       [(p, prefix ^ " because the type constant "^n^" has no constraints")]
+  | Rused_as_map _ -> [(p, prefix ^ " because it is used as map here")]
 
 and to_pos = function
   | Rnone     -> Pos.none
@@ -226,6 +228,7 @@ and to_pos = function
   | Rexpr_dep_type (r, _, _) -> to_pos r
   | Rnullsafe_op p -> p
   | Rtconst_no_cstr (p, _) -> p
+  | Rused_as_map p -> p
 
 (* This is a mapping from internal expression ids to a standardized int.
  * Used for outputting cleaner error messages to users
