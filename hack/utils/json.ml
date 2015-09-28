@@ -91,7 +91,7 @@ let eat_ws env c =
     let err_msg = Printf.sprintf "eat_ws: expected %c, saw %c" c c' in
     syntax_error env err_msg
 
-let eat  env c =
+let eat env c =
   skip_blank_chars env;
   let c' = peek env in
   if c' = c then
@@ -136,13 +136,17 @@ let js_string env =
   let buf = Buffer.create 128 in
   let rec loop env =
     let c = peek env in
-    if c <> '"' then
-      begin
+    match c with
+    | '"' -> JSON_String (Buffer.contents buf)
+    | '\\' ->
+        env.pos <- env.pos + 1;
+        let c' = peek env in
+        env.pos <- env.pos + 1;
+        Buffer.add_char buf c';
+        loop env
+    | _ ->
         buf_eat_all buf env c;
         loop env
-      end
-    else
-      JSON_String(Buffer.contents buf)
   in
   eat env '"';
   if peek env = '"' then
