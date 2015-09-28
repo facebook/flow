@@ -76,11 +76,11 @@ let execute_hook file ast =
 let delete_file fn =
   execute_hook fn None
 
-let do_parse ?(keep_errors=false) content file =
+let do_parse ?(fail=true) content file =
   try (
-    let ast, parse_errors = Parser_flow.program_file
-      ~parse_options content (Some file) in
-    assert (parse_errors = []);
+    let ast, parse_errors =
+      Parser_flow.program_file ~fail ~parse_options content (Some file) in
+    if fail then assert (parse_errors = []);
     OK ast
   )
   with

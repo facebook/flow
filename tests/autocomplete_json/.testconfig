@@ -1,2 +1,0 @@
-cmd: autocomplete --json --strip-root foo.js 10 5
-stdin: foo.js

@@ -523,7 +523,7 @@ let merge_strict_file file =
 (* Another special case, similar assumptions as above. *)
 (** TODO: handle case when file+contents don't agree with file system state **)
 let typecheck_contents contents filename =
-  Parsing_service_js.(match do_parse contents filename with
+  Parsing_service_js.(match do_parse ~fail:false contents filename with
   | OK ast ->
       let cx = TI.infer_ast ast filename true in
       let cache = new context_cache in

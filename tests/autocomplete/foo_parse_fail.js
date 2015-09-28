@@ -7,4 +7,4 @@ var obj = {
   str: 'hello',
 };
 
-obj.
+console.log(obj.

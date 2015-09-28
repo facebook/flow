@@ -45,7 +45,7 @@ val call_on_success: (filename -> Spider_monkey_ast.program -> unit) -> unit
 
 (* parse contents of a file *)
 val do_parse:
-  ?keep_errors:bool ->
+  ?fail:bool ->
   string ->                 (* contents of the file *)
   filename ->               (* filename *)
   (Spider_monkey_ast.program, Errors_js.ErrorSet.t) ok_or_err
