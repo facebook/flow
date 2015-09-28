@@ -15,7 +15,7 @@ module Json = Hh_json
 
 let version = "0.16.0"
 
-type moduleSystem = Node | Haste
+type moduleSystem = Node | Haste | Flat
 
 type experimental_feature_mode =
   | EXPERIMENTAL_IGNORE
@@ -118,6 +118,7 @@ end = struct
     in let module_system = function
       | Node -> "node"
       | Haste -> "haste"
+      | Flat -> "flat"
 
     in fun o config ->
       let options = config.options in
@@ -459,7 +460,7 @@ let options_parser = OptionsParser.configure [
 
   ("module.system", OptionsParser.({
     flags = [];
-    _parser = enum ["node", Node; "haste", Haste] (fun opts (_, moduleSystem) ->
+    _parser = enum ["node", Node; "haste", Haste; "flat", Flat] (fun opts (_, moduleSystem) ->
       {opts with moduleSystem}
     );
   }));

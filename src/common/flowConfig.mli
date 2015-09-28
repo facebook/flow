@@ -7,7 +7,7 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  *)
-type moduleSystem = Node | Haste
+type moduleSystem = Node | Haste | Flat
 
 type experimental_feature_mode =
   | EXPERIMENTAL_IGNORE

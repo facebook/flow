@@ -245,22 +245,27 @@ and file_exists path =
 let resolve_symlinks path =
   Path.to_string (Path.make path)
 
+let relative r =
+  Str.string_match Files_js.dir_sep r 0
+  || Str.string_match Files_js.current_dir_name r 0
+  || Str.string_match Files_js.parent_dir_name r 0
+
+let path_if_exists path =
+  let path = resolve_symlinks path in
+  if not (file_exists path) ||
+    FlowConfig.(is_excluded (get_unsafe ()) path)
+  then None
+  else Some path
+
+let path_is_file path =
+  let path = resolve_symlinks path in
+  file_exists path && not (Sys.is_directory path)
+
 (*******************************)
 
 module Node = struct
   let exported_module file comments = string_of_filename file
   let guess_exported_module file _content = string_of_filename file
-
-  let path_if_exists path =
-    let path = resolve_symlinks path in
-    if not (file_exists path) ||
-      FlowConfig.(is_excluded (get_unsafe ()) path)
-    then None
-    else Some path
-
-  let path_is_file path =
-    let path = resolve_symlinks path in
-    file_exists path && not (Sys.is_directory path)
 
   let parse_main package =
     let package = resolve_symlinks package in
@@ -316,11 +321,6 @@ module Node = struct
       if dir = parent_dir then None
       else node_module (Filename.dirname dir) r
     )
-
-  let relative r =
-    Str.string_match Files_js.dir_sep r 0
-    || Str.string_match Files_js.current_dir_name r 0
-    || Str.string_match Files_js.parent_dir_name r 0
 
   let resolve_import file import_str =
     let dir = Filename.dirname file in
@@ -476,15 +476,67 @@ module Haste: MODULE_SYSTEM = struct
 
 end
 
+(****************** Flat module system **********************)
+
+module Flat: MODULE_SYSTEM = struct
+  (* Absolute module names based at the .flowconfig root *)
+
+  let exported_module file comments = file
+  let guess_exported_module file _content = file
+
+  let find_first_valid path =
+    if Files_js.is_flow_file path
+    then path_if_exists path
+    else seqf
+      (fun ext -> path_if_exists (path ^ ext))
+      Files_js.flow_extensions
+
+  let find_relative root_path rel_path =
+    let path = Files_js.normalize_path root_path rel_path in
+    find_first_valid path
+
+  let find_import file import_str =
+    let dir = Filename.dirname file in
+    if relative import_str
+    then find_relative dir import_str
+    else (match !flow_options with
+    | None -> assert_false (spf
+        ("Attempted to resolve an absolute import (%s) before the flow_options " ^^
+         "were provided to Module_js.ml :(")
+        import_str
+      )
+    | Some({ Options.opt_root = root; _; }) ->
+      let path = Path.concat root import_str in
+      find_first_valid (Path.to_string path)
+    )
+
+  let imported_module file import_str =
+    let candidates = module_name_candidates import_str in
+    let choose_candidate chosen candidate =
+      match chosen with
+      | Some(c) -> chosen
+      | None -> find_import file candidate
+    in
+    match List.fold_left choose_candidate None candidates with
+    | Some(str) -> Path.to_string (Path.make str)
+    | None -> Path.to_string (Path.make import_str)
+
+  (* Using a base directory analogous to Node's `node_modules`, so the same
+     singleton invariant holds. *)
+  let choose_provider = Node.choose_provider
+
+end
+
 (****************** module system switch *********************)
 
 (* Switch between module systems, based on environment. We could eventually use
    functors, but that seems like overkill at this point. *)
 
 let module_system_table =
-  let table = Hashtbl.create 2 in
+  let table = Hashtbl.create 3 in
   Hashtbl.add table "node" (module Node: MODULE_SYSTEM);
   Hashtbl.add table "haste" (module Haste: MODULE_SYSTEM);
+  Hashtbl.add table "flat" (module Flat: MODULE_SYSTEM);
   table
 
 let module_system = ref (module Node: MODULE_SYSTEM)
