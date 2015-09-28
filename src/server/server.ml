@@ -161,16 +161,7 @@ struct
       _end = { Loc.line; column = col + 1; offset = 0; };
     }
 
-  let infer_type (file_input, line, col, format) oc =
-    let printer = match format with
-      | ServerProt.InternalTypeFormat ->
-          (* Print raw representation of type as json; as it turns out, the json
-             gets cut off at a specified depth, so pass the maximum possible
-             depth to avoid that. *)
-          Constraint_js.jstr_of_t ~depth:max_int
-      | ServerProt.ExternalTypeFormat ->
-          (* Print type using Flow type syntax *)
-          Constraint_js.string_of_t in
+  let infer_type (file_input, line, col, include_raw) oc =
     let file = ServerProt.file_input_get_filename file_input in
     let file = Loc.SourceFile file in
     let (err, resp) =
@@ -181,15 +172,23 @@ struct
       | _, errors  -> failwith "Couldn't parse file" in
       let loc = mk_loc file line col in
       let (loc, ground_t, possible_ts) = TI.query_type cx loc in
-      let ty = match ground_t with
-        | None -> None
-        | Some t -> Some (printer cx t)
+      let ty, raw_type = match ground_t with
+        | None -> None, None
+        | Some t ->
+            let ty = Some (Constraint_js.string_of_t cx t) in
+            let raw_type =
+              if include_raw then
+                Some (Constraint_js.jstr_of_t ~depth:max_int cx t)
+              else
+                None
+            in
+            ty, raw_type
       in
       let reasons =
         possible_ts
         |> List.map Type.reason_of_t
       in
-      (None, Some (loc, ty, reasons))
+      (None, Some (loc, ty, raw_type, reasons))
     with exn ->
       let loc = mk_loc file line col in
       let err = (loc, Printexc.to_string exn) in
@@ -412,8 +411,8 @@ struct
         get_importers module_names oc
     | ServerProt.GET_IMPORTS module_names ->
         get_imports module_names oc
-    | ServerProt.INFER_TYPE (fn, line, char, format) ->
-        infer_type (fn, line, char, format) oc
+    | ServerProt.INFER_TYPE (fn, line, char, include_raw) ->
+        infer_type (fn, line, char, include_raw) oc
     | ServerProt.KILL ->
         die_nicely genv oc
     | ServerProt.PING ->

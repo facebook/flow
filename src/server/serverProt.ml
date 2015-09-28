@@ -12,10 +12,6 @@ type file_input =
 | FileName of string
 | FileContent of string option * string (* filename, content *)
 
-type type_format =
-| InternalTypeFormat
-| ExternalTypeFormat
-
 let path_of_input = function
 | FileName f -> Some f
 | FileContent (Some f, _) -> Some f
@@ -39,8 +35,8 @@ type command =
 | GET_DEF of file_input * int * int (* filename, line, char *)
 | GET_IMPORTERS of string list
 | GET_IMPORTS of string list
-| INFER_TYPE of file_input * int * int * type_format (* filename|content, line,
-                                                        char, type format *)
+| INFER_TYPE of file_input * int * int * bool (* filename|content, line,
+                                                        char, include raw *)
 | KILL
 | PING
 | PORT of string list
