@@ -111,25 +111,25 @@ generators.js:101:8,13: string
 
 return.js:4:13,27: call of method return
 Error:
-return.js:4:24,26: number
-Expected number literal 456, got 123 instead
-return.js:6:15,17: number literal 456
-
-return.js:4:13,27: call of method return
-Error:
 return.js:5:4,11: boolean literal true
 Expected boolean literal false, got true instead
 return.js:5:14,18: boolean literal false
 
+return.js:4:13,27: call of method return
+Error:
+return.js:6:4,12: number
+Expected number literal 456, got 123 instead
+return.js:6:15,17: number literal 456
+
 throw.js:9:26,49: call of method throw
 Error:
-throw.js:3:11,11: number
+throw.js:11:4,21: number
 This type is incompatible with
 throw.js:11:25,30: string
 
 throw.js:22:26,49: call of method throw
 Error:
-throw.js:16:11,11: number
+throw.js:24:4,21: number
 This type is incompatible with
 throw.js:24:24,29: string
 
