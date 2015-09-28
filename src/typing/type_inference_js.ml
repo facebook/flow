@@ -5361,6 +5361,7 @@ and mk_class_elements cx instance_info static_info body = Ast.Class.(
         let ret = Flow_js.subst cx map_ ret in
         (* determine if we are in a derived constructor *)
         let derived_ctor = match super with
+          | ClassT (MixedT _) -> false
           | MixedT _ -> false
           | _ -> name = "constructor"
         in
@@ -5552,7 +5553,7 @@ and mk_class = Ast.Class.(
 
     mk_class_elements cx
       (this, super, methods_, getters_, setters_)
-      (static, super_static, smethods_, sgetters_, ssetters_)
+      (ClassT this, super_static, smethods_, sgetters_, ssetters_)
       body;
   );
 

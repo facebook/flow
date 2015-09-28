@@ -18,11 +18,17 @@ class B extends A {
     B.bar(0); // error
     B.qux(0); // error
   }
+  static create(): A {
+    return new this();
+  }
 }
 
 class C<X> {
   static x: X;
   static bar(x: X) { }
+  static create(): C {
+    return new this();
+  }
 }
 
 class D extends C<string> {
@@ -33,6 +39,7 @@ class D extends C<string> {
   }
 }
 
+var d: C = D.create();
 (new A: typeof A);
 (B: typeof A);
 
