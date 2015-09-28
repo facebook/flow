@@ -1,0 +1,27 @@
+(**
+ * Copyright (c) 2015, Facebook, Inc.
+ * All rights reserved.
+ *
+ * This source code is licensed under the BSD-style license found in the
+ * LICENSE file in the "hack" directory of this source tree. An additional grant
+ * of patent rights can be found in the PATENTS file in the same directory.
+ *
+ *)
+
+
+(**
+ * Json parsing and pretty printing library.
+ *)
+
+type json =
+    JSON_Object of (string * json) list
+  | JSON_Array of json list
+  | JSON_String of string
+  | JSON_Number of string
+  | JSON_Bool of bool
+  | JSON_Null
+
+val json_to_string : json -> string
+val json_to_multiline : json -> string
+val json_of_string : ?strict:bool -> string -> json
+val json_of_file : ?strict:bool -> string -> json
