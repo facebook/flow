@@ -37,6 +37,8 @@ Caveats:
  (+) Numbers are just stored as strings
  *)
 
+open Core
+
 type json =
   | JSON_Object of (string * json) list
   | JSON_Array of json list
@@ -291,9 +293,9 @@ let buf_concat ~buf ~lb ~rb ~sep ~concat_elt l =
    | [] -> ()
    | elt :: elts ->
        concat_elt buf elt;
-       List.iter
-         (fun e -> Buffer.add_string buf sep; concat_elt buf e)
-         elts);
+       List.iter elts begin fun e ->
+         Buffer.add_string buf sep; concat_elt buf e
+       end);
   Buffer.add_string buf rb
 
 let add_char buf c = Buffer.add_char buf c
@@ -345,16 +347,15 @@ let json_to_multiline json =
     if String.length single < 80 then single else
     match json with
     | JSON_Array l ->
-        let nl = List.map (loop (indent ^ "  ")) l in
+        let nl = List.map l (loop (indent ^ "  ")) in
         "[\n" ^ indent ^ "  " ^ (String.concat (",\n" ^ indent ^ "  ") nl) ^
           "\n" ^ indent ^ "]"
     | JSON_Object l ->
        let nl =
-         List.map
+         List.map l
            (fun (k, v) ->
             indent ^ "  " ^ (json_to_string (JSON_String k)) ^ ":" ^
               (loop (indent ^ "  ") v))
-           l
        in
         "{\n" ^ (String.concat ",\n" nl) ^ "\n" ^ indent ^ "}"
     | _ -> single
