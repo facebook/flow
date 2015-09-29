@@ -29,7 +29,7 @@ classes.js:40:25,30: React element: Foo
 Error:
 classes.js:8:10,14: property `x`
 Property not found in
-classes.js:40:25,30: type parameter `D` of React element: Foo
+classes.js:40:25,30: type parameter `DefaultProps` of React element: Foo
 
 classes.js:40:25,30: React element: Foo
 Error:
@@ -53,7 +53,7 @@ classes.js:80:32,43: React element: FooLegacy
 Error:
 classes.js:47:3,11: property `x`
 Property not found in
-classes.js:80:32,43: type parameter `D` of React element: FooLegacy
+classes.js:80:32,43: type parameter `DefaultProps` of React element: FooLegacy
 
 classes.js:80:32,43: React element: FooLegacy
 Error:
@@ -101,7 +101,7 @@ new_react.js:30:16,19: React element: C
 Error:
 new_react.js:5:5,13: property `x`
 Property not found in
-new_react.js:30:16,19: type parameter `D` of React element: C
+new_react.js:30:16,19: type parameter `DefaultProps` of React element: C
 
 new_react.js:32:17,29: string
 This type is incompatible with
@@ -147,13 +147,13 @@ props.js:20:29,33: boolean
 This type is incompatible with
 props.js:5:12,33: string
 
-props.js:20:15,57: type parameter `D` of React element: TestProps
+props.js:20:15,57: type parameter `DefaultProps` of React element: TestProps
 Error:
 props.js:20:29,33: boolean
 This type is incompatible with
 props.js:10:20,21: string
 
-props.js:20:15,57: type parameter `D` of React element: TestProps
+props.js:20:15,57: type parameter `DefaultProps` of React element: TestProps
 Error:
 props.js:20:39,43: boolean
 This type is incompatible with
