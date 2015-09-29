@@ -2408,6 +2408,12 @@ let rec __flow cx (l, u) trace =
     | (TypeT(_,l), TypeT(_,u)) ->
       rec_unify cx trace l u
 
+    (* non-class/function values used in annotations are errors *)
+    | _, TypeT _ ->
+      prerr_flow cx trace
+        "Ineligible value used in/as type annotation (did you forget 'typeof'?)"
+        l u
+
     | (ClassT(l), ClassT(u)) ->
       rec_unify cx trace l u
 
@@ -3121,12 +3127,6 @@ let rec __flow cx (l, u) trace =
     (***************)
     (* unsupported *)
     (***************)
-
-    | (MixedT _, TypeT _) ->
-      prwarn_flow cx trace
-        (spf "instance of class accessing unknown property: %s"
-           (desc_of_t u))
-        u l
 
     (** Lookups can be strict or non-strict, as denoted by the presence or
         absence of strict_reason in the following two pattern matches.

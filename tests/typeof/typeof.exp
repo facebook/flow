@@ -15,4 +15,8 @@ typeof.js:73:15,25: numberAlias
 type referenced from value position
 typeof.js:67:6,16: type numberAlias
 
-Found 4 errors
+typeof.js:82:18,20: object literal
+Ineligible value used in/as type annotation (did you forget 'typeof'?)
+typeof.js:82:18,20: Map
+
+Found 5 errors

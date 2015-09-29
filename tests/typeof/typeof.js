@@ -71,3 +71,12 @@ type numberAlias = number;
 // is suboptimal - just 'cannot resolve name'. TODO.
 //
 var f: typeof numberAlias = 42; // Error: 'typeof <<type-alias>>' makes no sense...
+
+/**
+ * Use of a non-class/non-function value in type annotation.
+ * These provoke a specific error, not just the generic
+ * "type is incompatible"
+ */
+
+ var Map = { "A": "this is A", "B": "this is B", "C": "this is C" };
+ var keys: $Keys<Map> = "A";  // Error: ineligible value used in type anno
