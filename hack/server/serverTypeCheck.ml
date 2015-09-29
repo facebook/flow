@@ -294,7 +294,8 @@ let type_check genv env =
   HackEventLogger.recheck_once_end start_t reparse_count total_rechecked_count;
 
   (* Done, that's the new environment *)
-  let new_env = { files_info = files_info;
+  let new_env = {
+    files_info;
     nenv = env.nenv;
     errorl = errorl;
     failed_parsing = Relative_path.Set.union failed_naming failed_parsing;

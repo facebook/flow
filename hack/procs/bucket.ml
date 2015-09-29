@@ -18,7 +18,7 @@
  * hurts *)
 (****************************************************************************)
 
-let make bucket_size jobs =
+let make_ bucket_size jobs =
   let i = ref 0 in
   fun () ->
     let bucket_size = min (Array.length jobs - !i) bucket_size in
@@ -26,15 +26,12 @@ let make bucket_size jobs =
     i := bucket_size + !i;
     Array.to_list result
 
-let make_with_bucket_size max_bucket_size jobs =
+let make ?(max_size=500) jobs =
   let jobs = Array.of_list jobs in
   let nbr_procs = GlobalConfig.nbr_procs in
   let bucket_size =
-    if Array.length jobs < nbr_procs * max_bucket_size
+    if Array.length jobs < nbr_procs * max_size
     then max 1 (1 + ((Array.length jobs) / nbr_procs))
-    else max_bucket_size
+    else max_size
   in
-  make bucket_size jobs
-
-let make jobs = make_with_bucket_size 500 jobs
-let make_20 jobs = make_with_bucket_size 20 jobs
+  make_ bucket_size jobs
