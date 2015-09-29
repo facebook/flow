@@ -7,7 +7,7 @@ advanced_arrows.js:11:2,12: string
 This type is incompatible with
 advanced_arrows.js:11:15,20: number
 
-arrows.js:7:14,60: call of method sort
+arrows.js:7:14,60: call of method `sort`
 Error:
 arrows.js:7:37,59: string
 This type is incompatible with

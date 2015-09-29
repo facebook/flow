@@ -1,5 +1,5 @@
 
-regexp.js:2:20,44: call of method test
+regexp.js:2:20,44: call of method `test`
 Error:
 regexp.js:2:20,44: boolean
 This type is incompatible with

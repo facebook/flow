@@ -1,17 +1,17 @@
 
-array.js:2:9,42: call of method map
+array.js:2:9,42: call of method `map`
 Error:
 array.js:3:17,20: number
 This type is incompatible with
 array.js:3:8,13: string
 
-array.js:7:13,53: call of method map
+array.js:7:13,53: call of method `map`
 Error:
 array.js:8:20,27: string
 This type is incompatible with
 array.js:8:11,16: number
 
-array.js:15:20,29: call of method get
+array.js:15:20,29: call of method `get`
 Error:
 array.js:15:20,29: string
 This type is incompatible with

@@ -1,17 +1,17 @@
 
-infer.js:5:15,17: parameter arg
+infer.js:5:15,17: parameter `arg`
 Missing annotation
 
 infer.js:5:19,19: return
 Missing annotation
 
-infer.js:12:15,17: parameter arg
+infer.js:12:15,17: parameter `arg`
 Missing annotation
 
 infer.js:12:19,19: return
 Missing annotation
 
-infer.js:21:15,17: parameter arg
+infer.js:21:15,17: parameter `arg`
 Missing annotation
 
 infer.js:21:19,19: return

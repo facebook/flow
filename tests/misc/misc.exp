@@ -19,7 +19,7 @@ C.js:10:5,7: number
 This type is incompatible with
 A.js:9:14,20: boolean
 
-D.js:11:9,14: call of method fn
+D.js:11:9,14: call of method `fn`
 Error:
 D.js:6:30,35: boolean
 This type is incompatible with
@@ -31,7 +31,7 @@ D.js:12:3,3: string
 This type is incompatible with
 A.js:9:14,20: boolean
 
-E.js:8:1,11: call of method fn
+E.js:8:1,11: call of method `fn`
 Error:
 E.js:8:6,10: boolean
 This type is incompatible with
@@ -53,7 +53,7 @@ G.js:2:12,14: number
 This type is incompatible with
 G.js:1:19,24: string
 
-G.js:3:1,10: call of method length
+G.js:3:1,10: call of method `length`
 Function cannot be called on
 G.js:3:1,10: number
 
@@ -63,7 +63,7 @@ G.js:6:12,17: string
 This type is incompatible with
 [LIB] core.js:179:13,18: number
 
-G.js:7:1,10: call of method length
+G.js:7:1,10: call of method `length`
 Function cannot be called on
 G.js:7:1,10: string
 

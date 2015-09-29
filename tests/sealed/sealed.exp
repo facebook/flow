@@ -7,7 +7,7 @@ proto.js:7:16,20: string
 This type is incompatible with
 proto.js:7:7,12: number
 
-proto.js:7:16,20: call of method m
+proto.js:7:16,20: call of method `m`
 Error:
 proto.js:7:16,20: boolean
 This type is incompatible with

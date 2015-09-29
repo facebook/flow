@@ -1,11 +1,11 @@
 
-API.react.js:4:1,20: call of method setProps
+API.react.js:4:1,20: call of method `setProps`
 Error:
 API.react.js:4:5,12: property `setProps`
 Property not found in
 API.react.js:4:1,3: ReactElement
 
-API.react.js:5:1,20: call of method setState
+API.react.js:5:1,20: call of method `setState`
 Error:
 API.react.js:5:5,12: property `setState`
 Property not found in
@@ -18,10 +18,10 @@ App.react.js:36:14,14: number
 This type is incompatible with
 App.react.js:10:16,21: string
 
-propTypes.js:15:1,18:2: React element: D
+propTypes.js:15:1,18:2: React element: `D`
 Error:
 propTypes.js:9:3,11: property `name`
 Property not found in
-propTypes.js:15:1,18:2: type parameter `D` of React element: D
+propTypes.js:15:1,18:2: type parameter `D` of React element: `D`
 
 Found 5 errors

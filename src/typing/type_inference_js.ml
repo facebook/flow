@@ -79,9 +79,9 @@ end = struct
   let string = function
     | Return -> "return"
     | Throw -> "throw"
-    | Break (Some lbl) -> spf "break %s" lbl
+    | Break (Some lbl) -> spf "break `%s`" lbl
     | Break None -> "break"
-    | Continue (Some lbl) -> spf "continue %s" lbl
+    | Continue (Some lbl) -> spf "continue `%s`" lbl
     | Continue None -> "continue"
 
 end
@@ -368,7 +368,7 @@ and type_of_pattern = Ast.Pattern.(function
 (* instantiate pattern visitor for assignments *)
 let destructuring_assignment cx t =
   destructuring cx t (fun cx loc name t ->
-    let reason = mk_reason (spf "assignment of identifier %s" name) loc in
+    let reason = mk_reason (spf "assignment of identifier `%s`" name) loc in
     Env_js.set_var cx name t reason
   )
 
@@ -758,7 +758,7 @@ let rec convert cx type_params_map = Ast.Type.(function
         check_type_param_arity cx loc typeParameters 1 (fun () ->
           match List.hd typeParameters with
           | _, StringLiteral { StringLiteral.value; _ } ->
-              let reason = (mk_reason (spf "exports of module %s" value) loc) in
+              let reason = (mk_reason (spf "exports of module `%s`" value) loc) in
               let remote_module_t =
                 Env_js.get_var_declared_type cx (internal_module_name value) reason
               in
@@ -948,7 +948,7 @@ and convert_qualification ?(lookup_mode=ForType) cx reason_prefix
 
   | Unqualified (id) ->
     let loc, { Ast.Identifier.name; _ } = id in
-    let reason = mk_reason (spf "%s '%s'" reason_prefix name) loc in
+    let reason = mk_reason (spf "%s `%s`" reason_prefix name) loc in
     Env_js.get_var ~lookup_mode cx name reason
 )
 
@@ -991,15 +991,15 @@ and mk_keys_type reason keys =
   | _ -> UnionT (reason, List.map (mk_singleton_string reason) keys)
 
 and mk_singleton_string reason key =
-  let reason = replace_reason (spf "string literal %s" key) reason in
+  let reason = replace_reason (spf "string literal `%s`" key) reason in
   SingletonStrT (reason, key)
 
 and mk_singleton_number reason num raw =
-  let reason = replace_reason (spf "number literal %.16g" num) reason in
+  let reason = replace_reason (spf "number literal `%.16g`" num) reason in
   SingletonNumT (reason, (num, raw))
 
 and mk_singleton_boolean reason b =
-  let reason = replace_reason (spf "boolean literal %b" b) reason in
+  let reason = replace_reason (spf "boolean literal `%b`" b) reason in
   SingletonBoolT (reason, b)
 
 (************)
@@ -1023,7 +1023,7 @@ and variable_decl cx type_params_map loc entry = Ast.Statement.(
 
   let declarator loc = Ast.(function
     | (loc, Pattern.Identifier (_, { Identifier.name; typeAnnotation; _ })) ->
-      let r = mk_reason (spf "%s %s" str_of_kind name) loc in
+      let r = mk_reason (spf "%s `%s`" str_of_kind name) loc in
       let t = mk_type_annotation cx type_params_map r typeAnnotation in
       Hashtbl.replace cx.type_table loc t;
       bind cx name t r
@@ -1082,7 +1082,7 @@ and statement_decl cx type_params_map = Ast.Statement.(
       ()
   | (loc, TypeAlias { TypeAlias.id; typeParameters; right; } ) ->
       let name_loc, { Ast.Identifier.name; _ } = id in
-      let r = mk_reason (spf "type %s" name) name_loc in
+      let r = mk_reason (spf "type `%s`" name) name_loc in
       let tvar = Flow_js.mk_tvar cx r in
       Env_js.bind_type cx name tvar r
 
@@ -1192,7 +1192,7 @@ and statement_decl cx type_params_map = Ast.Statement.(
       match id with
       | Some id ->
         let name_loc, { Ast.Identifier.name; _ } = id in
-        let r = mk_reason (spf "class %s" name) name_loc in
+        let r = mk_reason (spf "class `%s`" name) name_loc in
         let tvar = Flow_js.mk_tvar cx r in
         Env_js.bind_implicit_let Scope.Entry.ClassNameBinding cx name tvar r
       | None -> ()
@@ -1204,7 +1204,7 @@ and statement_decl cx type_params_map = Ast.Statement.(
       | (_, InterfaceDeclaration _) -> true
       | _ -> false in
       let _, { Ast.Identifier.name; _ } = id in
-      let r = mk_reason (spf "class %s" name) loc in
+      let r = mk_reason (spf "class `%s`" name) loc in
       let tvar = Flow_js.mk_tvar cx r in
       (* interface is a type alias, declare class is a var *)
       Env_js.(if is_interface then bind_type else bind_declare_var)
@@ -1218,7 +1218,7 @@ and statement_decl cx type_params_map = Ast.Statement.(
       | _ ->
           (* The only literals that we should see as module names are strings *)
           assert false in
-      let r = mk_reason (spf "module %s" name) loc in
+      let r = mk_reason (spf "module `%s`" name) loc in
       let t = Flow_js.mk_tvar cx r in
       Hashtbl.replace cx.type_table loc t;
       Env_js.bind_declare_var cx (internal_module_name name) t r
@@ -1640,7 +1640,7 @@ and statement cx type_params_map = Ast.Statement.(
 
   | (loc, TypeAlias { TypeAlias.id; typeParameters; right; } ) ->
       let name_loc, { Ast.Identifier.name; _ } = id in
-      let r = mk_reason (spf "type %s" name) name_loc in
+      let r = mk_reason (spf "type `%s`" name) name_loc in
       let typeparams, type_params_map =
         mk_type_param_declarations cx type_params_map typeParameters in
       let t = convert cx type_params_map right in
@@ -2152,7 +2152,7 @@ and statement cx type_params_map = Ast.Statement.(
 
         | ForIn.LeftExpression (loc, Ast.Expression.Identifier (_, id)) ->
             let name = id.Ast.Identifier.name in
-            let reason = mk_reason (spf "for..in %s" name) loc in
+            let reason = mk_reason (spf "for..in `%s`" name) loc in
             Env_js.set_var cx name (StrT.at loc) reason
 
         | _ ->
@@ -2213,7 +2213,7 @@ and statement cx type_params_map = Ast.Statement.(
 
         | ForOf.LeftExpression (loc, Ast.Expression.Identifier (_, id)) ->
             let name = id.Ast.Identifier.name in
-            let reason = mk_reason (spf "for..of %s" name) loc in
+            let reason = mk_reason (spf "for..of `%s`" name) loc in
             Env_js.set_var cx name element_tvar reason
 
         | _ ->
@@ -2321,7 +2321,7 @@ and statement cx type_params_map = Ast.Statement.(
         assert false in
     let _, { Ast.Statement.Block.body = elements } = body in
 
-    let reason = mk_reason (spf "module %s" name) loc in
+    let reason = mk_reason (spf "module `%s`" name) loc in
     let t = Env_js.get_var_declared_type cx (internal_module_name name) reason in
 
     let module_scope = Scope.fresh () in
@@ -2340,7 +2340,7 @@ and statement cx type_params_map = Ast.Statement.(
 
       | Some _ ->
         assert_false (
-          spf "non-var exports entry in declared module %s" name)
+          spf "non-var exports entry in declared module `%s`" name)
 
       | None ->
         let for_types, nonfor_types = SMap.partition (
@@ -2945,7 +2945,7 @@ and variable cx type_params_map kind
         let has_anno = not (typeAnnotation = None) in
         (match init with
           | Some ((rhs_loc, _) as expr) ->
-            let rhs_reason = mk_reason (spf "assignment of var %s" name) rhs_loc in
+            let rhs_reason = mk_reason (spf "assignment of var `%s`" name) rhs_loc in
             let rhs = expression cx type_params_map expr in
             let rhs = Flow_js.reposition cx rhs_reason rhs in
             init_var cx name ~has_anno rhs reason
@@ -3038,7 +3038,7 @@ and identifier ?(lookup_mode=ForValue) cx name loc =
     if name = "undefined"
     then void_ loc
     else (
-      let reason = mk_reason (spf "identifier %s" name) loc in
+      let reason = mk_reason (spf "identifier `%s`" name) loc in
       let t = Env_js.var_ref ~lookup_mode cx name reason in
       t
     )
@@ -3365,7 +3365,7 @@ and expression_ ~is_cond cx type_params_map loc e = Ast.Expression.(match e with
     } ->
       (* method call *)
       let argts = List.map (expression_or_spread cx type_params_map) arguments in
-      let reason = mk_reason (spf "call of method %s" name) loc in
+      let reason = mk_reason (spf "call of method `%s`" name) loc in
       let ot = expression cx type_params_map _object in
       Type_inference_hooks_js.dispatch_call_hook cx name ploc ot;
       (match Refinement.get cx callee reason with
@@ -3613,7 +3613,7 @@ and expression_ ~is_cond cx type_params_map loc e = Ast.Expression.(match e with
 
   | Class c ->
       let (name_loc, name) = extract_class_name loc c in
-      let reason = mk_reason (spf "class expr %s" name) loc in
+      let reason = mk_reason (spf "class expr `%s`" name) loc in
       (match c.Ast.Class.id with
       | Some id ->
           let tvar = Flow_js.mk_tvar cx reason in
@@ -4064,7 +4064,7 @@ and jsx_title cx type_params_map openingElement children = Ast.JSX.(
   match name with
 
   | Identifier (_, { Identifier.name }) when name = String.capitalize name ->
-      let reason = mk_reason (spf "React element: %s" name) eloc in
+      let reason = mk_reason (spf "React element: `%s`" name) eloc in
       let c = Env_js.get_var cx name reason in
       let map = ref SMap.empty in
       let spread = ref None in
@@ -5177,10 +5177,10 @@ and mk_signature cx reason_c type_params_map superClass body = Ast.Class.(
       let params_ret = mk_params_ret cx type_params_map
         (params, defaults, rest) (body, returnType) in
       let reason_desc = (match kind with
-      | Method.Method -> spf "method %s" name
+      | Method.Method -> spf "method `%s`" name
       | Method.Constructor -> "constructor"
-      | Method.Get -> spf "getter for %s" name
-      | Method.Set -> spf "setter for %s" name) in
+      | Method.Get -> spf "getter for `%s`" name
+      | Method.Set -> spf "setter for `%s`" name) in
       let reason_m = mk_reason reason_desc loc in
       let method_sig = reason_m, typeparams, type_params_map, params_ret in
 
@@ -5912,7 +5912,7 @@ and mk_params_ret cx type_params_map params (body, ret_type_opt) =
         | loc, Identifier (_, {
             Ast.Identifier.name; typeAnnotation; optional
           }) ->
-            let reason = mk_reason (spf "parameter %s" name) loc in
+            let reason = mk_reason (spf "parameter `%s`" name) loc in
             let t = mk_type_annotation cx type_params_map reason typeAnnotation in
             (match default with
               | None ->
@@ -5955,7 +5955,7 @@ and mk_params_ret cx type_params_map params (body, ret_type_opt) =
                 param_types_map,
                 param_types_loc
       | Some (loc, { Ast.Identifier.name; typeAnnotation; _ }) ->
-          let reason = mk_reason (spf "rest parameter %s" name) loc in
+          let reason = mk_reason (spf "rest parameter `%s`" name) loc in
           let t = mk_type_annotation cx type_params_map reason typeAnnotation in
           ((mk_rest cx t) :: rev_param_types_list,
             name :: rev_param_names,
@@ -6096,7 +6096,7 @@ and mine_fields cx type_params_map body fields =
         if (SMap.mem name map)
         then map
         else
-          let desc = (spf "field %s constructor init" name) in
+          let desc = (spf "field `%s` constructor init" name) in
           let t = mk_type cx type_params_map (mk_reason desc loc) None in
           SMap.add name t map
     | _ ->
@@ -6204,7 +6204,7 @@ let infer_ast ast file ?module_name force_check =
   let cx = Flow_js.fresh_context ~file ~_module ~checked ~weak in
 
   let reason_exports_module =
-    reason_of_string (spf "exports of module %s" _module) in
+    reason_of_string (spf "exports of module `%s`" _module) in
 
   let local_exports_var = Flow_js.mk_tvar cx reason_exports_module in
 

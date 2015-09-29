@@ -215,7 +215,7 @@ tdz.js:36:17,17: c
 const referenced before declaration
 tdz.js:39:9,9: const c
 
-tdz.js:73:8,8: identifier C
+tdz.js:73:8,8: identifier `C`
 Could not resolve name
 
 tdz.js:75:13,13: C

@@ -49,17 +49,17 @@ class_shapes.js:31:6,11: number
 This type is incompatible with
 class_shapes.js:5:6,11: string
 
-expr.js:14:13,15: identifier Baz
+expr.js:14:13,15: identifier `Baz`
 Could not resolve name
 
-expr.js:17:8,10: identifier Qux
+expr.js:17:8,10: identifier `Qux`
 Could not resolve name
 
-expr.js:29:21,32: class expr Alias
+expr.js:29:21,32: class expr `Alias`
 This type is incompatible with
 expr.js:29:13,17: Alias
 
-expr.js:30:21,36: class expr Alias
+expr.js:30:21,36: class expr `Alias`
 This type is incompatible with
 expr.js:30:13,17: Alias
 

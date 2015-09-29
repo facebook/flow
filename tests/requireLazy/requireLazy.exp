@@ -15,10 +15,10 @@ requireLazy.js:14:22,35: number
 This type is incompatible with
 requireLazy.js:14:13,18: string
 
-requireLazy.js:17:20,20: identifier A
+requireLazy.js:17:20,20: identifier `A`
 Could not resolve name
 
-requireLazy.js:18:20,20: identifier B
+requireLazy.js:18:20,20: identifier `B`
 Could not resolve name
 
 requireLazy.js:20:1,13: 

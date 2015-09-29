@@ -17,7 +17,7 @@ unsupported destructuring
 destructuring.js:11:6,10: 
 unsupported destructuring
 
-destructuring.js:15:9,9: identifier z
+destructuring.js:15:9,9: identifier `z`
 Could not resolve name
 
 destructuring.js:18:1,19: function call

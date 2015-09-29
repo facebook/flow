@@ -25,11 +25,11 @@ constructor.js:43:7,7: uninitialized this (expected super constructor call)
 
 constructor.js:69:5,15: super(...)
 Error:
-constructor.js:63:5,21: call of method foo
+constructor.js:63:5,21: call of method `foo`
 Method cannot be called on possibly undefined value
 constructor.js:63:5,15: uninitialized this (expected super constructor call)
 
-constructor.js:83:17,26: call of method foo
+constructor.js:83:17,26: call of method `foo`
 Method cannot be called on possibly undefined value
 constructor.js:81:7,7: uninitialized this (expected super constructor call)
 

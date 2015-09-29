@@ -2,7 +2,7 @@
 annot.js:1:9,34: ./unknown_class
 Required module not found
 
-annot.js:5:7,7: parameter x
+annot.js:5:7,7: parameter `x`
 Missing annotation
 
 fun.js:8:21,21: return

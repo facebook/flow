@@ -25,13 +25,13 @@ classes.js:40:15,20: number
 This type is incompatible with
 [LIB] type_aliases.js:4:28,48: ReactComponent
 
-classes.js:40:25,30: React element: Foo
+classes.js:40:25,30: React element: `Foo`
 Error:
 classes.js:8:10,14: property `x`
 Property not found in
-classes.js:40:25,30: type parameter `D` of React element: Foo
+classes.js:40:25,30: type parameter `D` of React element: `Foo`
 
-classes.js:40:25,30: React element: Foo
+classes.js:40:25,30: React element: `Foo`
 Error:
 classes.js:40:15,20: number
 This type is incompatible with
@@ -49,13 +49,13 @@ classes.js:80:22,27: number
 This type is incompatible with
 [LIB] type_aliases.js:4:28,48: ReactComponent
 
-classes.js:80:32,43: React element: FooLegacy
+classes.js:80:32,43: React element: `FooLegacy`
 Error:
 classes.js:47:3,11: property `x`
 Property not found in
-classes.js:80:32,43: type parameter `D` of React element: FooLegacy
+classes.js:80:32,43: type parameter `D` of React element: `FooLegacy`
 
-classes.js:80:32,43: React element: FooLegacy
+classes.js:80:32,43: React element: `FooLegacy`
 Error:
 classes.js:80:22,27: number
 This type is incompatible with
@@ -91,23 +91,23 @@ new_react.js:21:9,23: access of computed property/element
 Computed property/element cannot be accessed on possibly undefined value
 new_react.js:21:9,20: undefined
 
-new_react.js:29:15,26: React element: C
+new_react.js:29:15,26: React element: `C`
 Error:
 new_react.js:29:23,23: number
 This type is incompatible with
 new_react.js:6:12,33: string
 
-new_react.js:30:16,19: React element: C
+new_react.js:30:16,19: React element: `C`
 Error:
 new_react.js:5:5,13: property `x`
 Property not found in
-new_react.js:30:16,19: type parameter `D` of React element: C
+new_react.js:30:16,19: type parameter `D` of React element: `C`
 
 new_react.js:32:17,29: string
 This type is incompatible with
 new_react.js:32:8,13: number
 
-propTypes.js:13:1,16:4: React element: C
+propTypes.js:13:1,16:4: React element: `C`
 Error:
 propTypes.js:6:35,9:6: property `label`
 Property not found in
@@ -141,25 +141,25 @@ props.js:16:25,36: undefined
 This type is incompatible with
 props.js:16:16,21: string
 
-props.js:20:15,57: React element: TestProps
+props.js:20:15,57: React element: `TestProps`
 Error:
 props.js:20:29,33: boolean
 This type is incompatible with
 props.js:5:12,33: string
 
-props.js:20:15,57: type parameter `D` of React element: TestProps
+props.js:20:15,57: type parameter `D` of React element: `TestProps`
 Error:
 props.js:20:29,33: boolean
 This type is incompatible with
 props.js:10:20,21: string
 
-props.js:20:15,57: type parameter `D` of React element: TestProps
+props.js:20:15,57: type parameter `D` of React element: `TestProps`
 Error:
 props.js:20:39,43: boolean
 This type is incompatible with
 props.js:10:27,27: number
 
-props.js:20:15,57: React element: TestProps
+props.js:20:15,57: React element: `TestProps`
 Error:
 props.js:20:49,53: boolean
 This type is incompatible with
@@ -173,13 +173,13 @@ props2.js:14:25,38: number
 This type is incompatible with
 props2.js:14:16,21: string
 
-props2.js:15:16,46: React element: C
+props2.js:15:16,46: React element: `C`
 Error:
 props2.js:9:41,46: number
 This type is incompatible with
 props2.js:5:14,35: string
 
-props2.js:15:16,46: React element: C
+props2.js:15:16,46: React element: `C`
 Error:
 props2.js:15:42,42: number
 This type is incompatible with

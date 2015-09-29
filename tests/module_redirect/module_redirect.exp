@@ -1,13 +1,13 @@
 
-D.js:6:20,31: module A
+D.js:6:20,31: module `A`
 This type is incompatible with
 D.js:6:11,16: string
 
-D.js:7:20,31: module A
+D.js:7:20,31: module `A`
 This type is incompatible with
 D.js:7:11,16: string
 
-D.js:8:20,31: module A
+D.js:8:20,31: module `A`
 This type is incompatible with
 D.js:8:11,16: string
 

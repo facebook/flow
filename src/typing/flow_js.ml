@@ -1714,7 +1714,7 @@ let rec __flow cx (l, u) trace =
 
     | (BoolT (r, Some x), NotT(reason, tout))
     | (SingletonBoolT (r, x), NotT(reason, tout)) ->
-      let reason = replace_reason (spf "boolean value %b" (not x)) reason in
+      let reason = replace_reason (spf "boolean value `%b`" (not x)) reason in
       let t = BoolT (reason, Some (not x)) in
       rec_flow cx trace (t, tout)
 
@@ -1865,11 +1865,11 @@ let rec __flow cx (l, u) trace =
 
     | (StrT (_, Literal x), SingletonStrT (_, key)) ->
         if x <> key then
-          let msg = spf "Expected string literal %s, got %s instead" key x in
+          let msg = spf "Expected string literal `%s`, got `%s` instead" key x in
           prerr_flow cx trace msg l u
 
     | (StrT (_, (Truthy | Falsy | AnyLiteral)), SingletonStrT (_, key)) ->
-      prerr_flow cx trace (spf "Expected string literal %s" key) l u
+      prerr_flow cx trace (spf "Expected string literal `%s`" key) l u
 
     | (SingletonStrT (reason, key), _) ->
       rec_flow cx trace (StrT(reason, Literal key), u)
@@ -1885,11 +1885,11 @@ let rec __flow cx (l, u) trace =
     | (NumT (_, Literal (x, _)), SingletonNumT (_, (y, _))) ->
         (* this equality check is ok for now because we don't do arithmetic *)
         if x <> y then
-          let msg = spf "Expected number literal %.16g, got %.16g instead" y x in
+          let msg = spf "Expected number literal `%.16g`, got `%.16g` instead" y x in
           prerr_flow cx trace msg l u
 
     | (NumT (_, (Truthy | Falsy | AnyLiteral)), SingletonNumT (_, (y, _))) ->
-      prerr_flow cx trace (spf "Expected number literal %.16g" y) l u
+      prerr_flow cx trace (spf "Expected number literal `%.16g`" y) l u
 
     | (SingletonNumT (reason, lit), _) ->
       rec_flow cx trace (NumT(reason, Literal lit), u)
@@ -1905,11 +1905,11 @@ let rec __flow cx (l, u) trace =
         accepts only exactly that value. **)
     | (BoolT (_, Some x), SingletonBoolT (_, y)) ->
         if x <> y then
-          let msg = spf "Expected boolean literal %b, got %b instead" y x in
+          let msg = spf "Expected boolean literal `%b`, got `%b` instead" y x in
           prerr_flow cx trace msg l u
 
     | (BoolT (_, None), SingletonBoolT (_, y)) ->
-      prerr_flow cx trace (spf "Expected boolean literal %b" y) l u
+      prerr_flow cx trace (spf "Expected boolean literal `%b`" y) l u
 
     | (SingletonBoolT (reason, b), _) ->
       rec_flow cx trace (BoolT(reason, Some b), u)
@@ -1919,7 +1919,7 @@ let rec __flow cx (l, u) trace =
     (*****************************************************)
 
     | (StrT (reason_s, Literal x), KeysT (reason_op, o)) ->
-      let reason_op = replace_reason (spf "string literal %s" x) reason_s in
+      let reason_op = replace_reason (spf "string literal `%s`" x) reason_s in
       (* check that o has key x *)
       rec_flow cx trace (o, HasKeyT(reason_op,x))
 
@@ -3537,7 +3537,7 @@ and structural_subtype cx trace lower (super, fields_tmap, methods_tmap) =
   methods_tmap |> SMap.iter (fun s t2 ->
     if inherited_method s then
       let lookup_reason =
-        replace_reason (spf "property %s" s) (reason_of_t t2) in
+        replace_reason (spf "property `%s`" s) (reason_of_t t2) in
       rec_flow cx trace
         (lower,
          LookupT (lookup_reason, Some lower_reason, [], s, LowerBoundT (t2)))

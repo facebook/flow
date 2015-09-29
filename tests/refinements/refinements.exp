@@ -45,7 +45,7 @@ cond_prop.js:11:25,36: object type
 This type is incompatible with
 cond_prop.js:9:34,37: union type
 
-hasOwnProperty.js:4:3,7: call of method y
+hasOwnProperty.js:4:3,7: call of method `y`
 Function cannot be called on possibly undefined value
 hasOwnProperty.js:3:20,29: undefined
 
@@ -271,19 +271,19 @@ switch.js:51:15,18: string
 This type is incompatible with
 switch.js:51:15,20: number
 
-tagged_union.js:20:12,28: call of method charAt
+tagged_union.js:20:12,28: call of method `charAt`
 Method cannot be called on possibly undefined value
 tagged_union.js:20:12,18: undefined
 
-tagged_union.js:34:30,36: string literal Bad
-Expected string literal Good, got Bad instead
-tagged_union.js:34:39,44: string literal Good
+tagged_union.js:34:30,36: string literal `Bad`
+Expected string literal `Good`, got `Bad` instead
+tagged_union.js:34:39,44: string literal `Good`
 
-tagged_union.js:35:9,13: string literal Maybe
-Expected string literal No, got Maybe instead
-tagged_union.js:35:16,19: string literal No
+tagged_union.js:35:9,13: string literal `Maybe`
+Expected string literal `No`, got `Maybe` instead
+tagged_union.js:35:16,19: string literal `No`
 
-tagged_union.js:40:6,10: string literal Maybe
+tagged_union.js:40:6,10: string literal `Maybe`
 This type is incompatible with
 tagged_union.js:40:13,24: union type
 
@@ -307,11 +307,11 @@ typeof.js:12:12,12: null
 This type is incompatible with
 typeof.js:9:17,22: number
 
-typeof.js:23:3,16: call of method stuff
+typeof.js:23:3,16: call of method `stuff`
 Function cannot be called on possibly undefined value
 [LIB] lib.js:3:27,45: undefined
 
-typeof.js:23:3,16: call of method stuff
+typeof.js:23:3,16: call of method `stuff`
 Method cannot be called on possibly undefined value
 typeof.js:23:3,5: undefined
 
@@ -319,7 +319,7 @@ typeof.js:26:7,11: property `stuff`
 Property cannot be accessed on possibly undefined value
 typeof.js:26:3,5: undefined
 
-typeof.js:30:5,18: call of method stuff
+typeof.js:30:5,18: call of method `stuff`
 Function cannot be called on possibly undefined value
 [LIB] lib.js:3:27,45: undefined
 

@@ -1,5 +1,5 @@
 
-A.js:13:19,27: call of method foo
+A.js:13:19,27: call of method `foo`
 Error:
 A.js:13:19,27: string
 This type is incompatible with
@@ -9,7 +9,7 @@ A.js:21:20,29: string
 This type is incompatible with
 A.js:21:11,16: number
 
-B.js:7:20,31: call of method foo
+B.js:7:20,31: call of method `foo`
 Error:
 B.js:7:20,31: string
 This type is incompatible with
@@ -27,7 +27,7 @@ B.js:10:20,22: string
 This type is incompatible with
 B.js:10:11,16: number
 
-B.js:12:19,29: call of method foo
+B.js:12:19,29: call of method `foo`
 Error:
 B.js:12:19,29: string
 This type is incompatible with

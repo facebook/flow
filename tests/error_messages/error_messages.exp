@@ -1,5 +1,5 @@
 
-errors.js:1:12,17: identifier define
+errors.js:1:12,17: identifier `define`
 Could not resolve name
 
 Found 1 error

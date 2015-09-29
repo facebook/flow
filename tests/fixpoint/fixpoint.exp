@@ -1,5 +1,5 @@
 
-Fun.js:8:14,17: parameter fold
+Fun.js:8:14,17: parameter `fold`
 Missing annotation
 
 Fun.js:8:19,19: return
@@ -23,7 +23,7 @@ Fun.js:21:43,43: string
 This type is incompatible with
 Fun.js:6:25,30: number
 
-Ycombinator.js:4:12,12: parameter f
+Ycombinator.js:4:12,12: parameter `f`
 Missing annotation
 
 Ycombinator.js:10:44,47: function call

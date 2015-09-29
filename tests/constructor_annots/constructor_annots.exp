@@ -17,7 +17,7 @@ test.js:3:17,21: boolean
 This type is incompatible with
 test.js:3:8,13: string
 
-test.js:4:17,29: call of method m
+test.js:4:17,29: call of method `m`
 Error:
 test.js:4:17,29: number
 This type is incompatible with
@@ -35,7 +35,7 @@ test.js:8:18,23: boolean
 This type is incompatible with
 test.js:8:9,14: string
 
-test.js:9:18,31: call of method m
+test.js:9:18,31: call of method `m`
 Error:
 test.js:9:18,31: number
 This type is incompatible with

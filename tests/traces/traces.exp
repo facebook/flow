@@ -10,12 +10,12 @@ Traces.js:3:21,21: NumT [number]
 Traces.js:2:15,20: ~> StrT [string] (from path 2)
 * path 2:
 Traces.js:3:21,21: NumT [number]
-Traces.js:3:21,21: ~> OpenT [identifier x] (from path 3)
-Traces.js:3:21,21: ~> ReposLowerT [identifier x] (from [not shown])
+Traces.js:3:21,21: ~> OpenT [identifier `x`] (from path 3)
+Traces.js:3:21,21: ~> ReposLowerT [identifier `x`] (from [not shown])
 * path 3:
 Traces.js:4:4,4:   NumT [number]
-Traces.js:3:13,13: ~> OpenT [parameter x] (from [not shown])
-Traces.js:3:21,21: ~> ReposLowerT [identifier x]
+Traces.js:3:13,13: ~> OpenT [parameter `x`] (from [not shown])
+Traces.js:3:21,21: ~> ReposLowerT [identifier `x`]
 
 Traces.js:9:1,12: function call
 Error:
@@ -28,12 +28,12 @@ Traces.js:8:27,27: NumT [number]
 Traces.js:7:25,30: ~> StrT [string] (from path 2)
 * path 2:
 Traces.js:8:27,27: NumT [number]
-Traces.js:8:27,27: ~> OpenT [identifier y] (from path 3)
-Traces.js:8:27,27: ~> ReposLowerT [identifier y] (from [not shown])
+Traces.js:8:27,27: ~> OpenT [identifier `y`] (from path 3)
+Traces.js:8:27,27: ~> ReposLowerT [identifier `y`] (from [not shown])
 * path 3:
 Traces.js:9:11,11: NumT [number]
-Traces.js:8:16,16: ~> OpenT [parameter y] (from [not shown])
-Traces.js:8:27,27: ~> ReposLowerT [identifier y]
+Traces.js:8:16,16: ~> OpenT [parameter `y`] (from [not shown])
+Traces.js:8:27,27: ~> ReposLowerT [identifier `y`]
 
 Traces.js:14:1,32: function call
 Error:
@@ -43,12 +43,12 @@ Traces.js:14:25,29: number
 Trace:
 * path 1:
 Traces.js:14:25,25: StrT [string]
-Traces.js:14:25,25: ~> OpenT [identifier x] (from path 2)
+Traces.js:14:25,25: ~> OpenT [identifier `x`] (from path 2)
 Traces.js:14:25,29: ~> NumT [number]
 * path 2:
 Traces.js:12:22,27: StrT [string]
-Traces.js:14:13,13: ~> OpenT [parameter x] (from path 3)
-Traces.js:14:25,25: ~> ReposLowerT [identifier x]
+Traces.js:14:13,13: ~> OpenT [parameter `x`] (from path 3)
+Traces.js:14:25,25: ~> ReposLowerT [identifier `x`]
 * path 3:
 Traces.js:12:22,27: StrT [string]
 Traces.js:12:22,27: ~> ReposLowerT [string] (from [not shown])
@@ -61,12 +61,12 @@ Traces.js:14:25,29: number
 Trace:
 * path 1:
 Traces.js:14:29,29: StrT [string]
-Traces.js:14:29,29: ~> OpenT [identifier x] (from path 2)
+Traces.js:14:29,29: ~> OpenT [identifier `x`] (from path 2)
 Traces.js:14:25,29: ~> NumT [number]
 * path 2:
 Traces.js:12:22,27: StrT [string]
-Traces.js:14:13,13: ~> OpenT [parameter x] (from path 3)
-Traces.js:14:29,29: ~> ReposLowerT [identifier x]
+Traces.js:14:13,13: ~> OpenT [parameter `x`] (from path 3)
+Traces.js:14:29,29: ~> ReposLowerT [identifier `x`]
 * path 3:
 Traces.js:12:22,27: StrT [string]
 Traces.js:12:22,27: ~> ReposLowerT [string] (from [not shown])
@@ -79,12 +79,12 @@ Traces.js:19:29,33: number
 Trace:
 * path 1:
 Traces.js:19:29,29: StrT [string]
-Traces.js:19:29,29: ~> OpenT [identifier n] (from path 2)
+Traces.js:19:29,29: ~> OpenT [identifier `n`] (from path 2)
 Traces.js:19:29,33: ~> NumT [number]
 * path 2:
 Traces.js:17:22,27: StrT [string]
-Traces.js:19:17,17: ~> OpenT [parameter n] (from path 3)
-Traces.js:19:29,29: ~> ReposLowerT [identifier n]
+Traces.js:19:17,17: ~> OpenT [parameter `n`] (from path 3)
+Traces.js:19:29,29: ~> ReposLowerT [identifier `n`]
 * path 3:
 Traces.js:17:22,27: StrT [string]
 Traces.js:17:22,27: ~> ReposLowerT [string] (from [not shown])
@@ -100,7 +100,7 @@ Traces2.js:13:16,34: ~> ExtendsT [extends ReactElement] (from path 2)
 Traces2.js:17:12,25: InstanceT [ReactElement]
 Traces2.js:13:16,34: ~> InstanceT [ReactElement] (from path 3)
 * path 3:
-Traces2.js:13:16,34: ReposUpperT [identifier ReactElement]
+Traces2.js:13:16,34: ReposUpperT [identifier `ReactElement`]
 Traces2.js:13:16,34: ~> InstanceT [ReactElement] (from [not shown])
 
 Traces2.js:10:3,11: property `bar`
@@ -114,7 +114,7 @@ Traces2.js:13:16,34: ~> ExtendsT [extends ReactElement] (from path 2)
 Traces2.js:17:12,25: InstanceT [ReactElement]
 Traces2.js:13:16,34: ~> InstanceT [ReactElement] (from path 3)
 * path 3:
-Traces2.js:13:16,34: ReposUpperT [identifier ReactElement]
+Traces2.js:13:16,34: ReposUpperT [identifier `ReactElement`]
 Traces2.js:13:16,34: ~> InstanceT [ReactElement] (from [not shown])
 
 Found 7 errors

@@ -25,13 +25,13 @@ class.js:87:41,41: number
 This type is incompatible with
 class.js:87:45,50: string
 
-class.js:89:23,51: call of method next
+class.js:89:23,51: call of method `next`
 Error:
 class.js:89:50,50: number
 This type is incompatible with
 class.js:28:13,19: boolean
 
-class.js:89:23,51: call of method next
+class.js:89:23,51: call of method `next`
 Error:
 class.js:93:4,18: string
 This type is incompatible with
@@ -45,7 +45,7 @@ class.js:111:4,4: string
 This type is incompatible with
 class.js:111:8,13: number
 
-class.js:114:1,44: call of method next
+class.js:114:1,44: call of method `next`
 Error:
 class.js:114:42,43: string
 This type is incompatible with
@@ -75,13 +75,13 @@ generators.js:30:32,32: number
 This type is incompatible with
 generators.js:30:36,41: string
 
-generators.js:31:23,42: call of method next
+generators.js:31:23,42: call of method `next`
 Error:
 generators.js:31:41,41: number
 This type is incompatible with
 generators.js:27:11,17: boolean
 
-generators.js:31:23,42: call of method next
+generators.js:31:23,42: call of method `next`
 Error:
 generators.js:35:4,18: string
 This type is incompatible with
@@ -99,7 +99,7 @@ generators.js:88:19,32: string
 This type is incompatible with
 generators.js:88:10,15: number
 
-generators.js:95:1,35: call of method next
+generators.js:95:1,35: call of method `next`
 Error:
 generators.js:95:33,34: string
 This type is incompatible with
@@ -109,25 +109,25 @@ generators.js:101:4,4: number
 This type is incompatible with
 generators.js:101:8,13: string
 
-return.js:4:13,27: call of method return
+return.js:4:13,27: call of method `return`
 Error:
-return.js:5:4,11: boolean literal true
-Expected boolean literal false, got true instead
-return.js:5:14,18: boolean literal false
+return.js:5:4,11: boolean literal `true`
+Expected boolean literal `false`, got `true` instead
+return.js:5:14,18: boolean literal `false`
 
-return.js:4:13,27: call of method return
+return.js:4:13,27: call of method `return`
 Error:
 return.js:6:4,12: number
-Expected number literal 456, got 123 instead
-return.js:6:15,17: number literal 456
+Expected number literal `456`, got `123` instead
+return.js:6:15,17: number literal `456`
 
-throw.js:9:26,49: call of method throw
+throw.js:9:26,49: call of method `throw`
 Error:
 throw.js:11:4,21: number
 This type is incompatible with
 throw.js:11:25,30: string
 
-throw.js:22:26,49: call of method throw
+throw.js:22:26,49: call of method `throw`
 Error:
 throw.js:24:4,21: number
 This type is incompatible with

@@ -67,13 +67,13 @@ es6modules.js:63:23,33: property `doesntExist`
 Property not found in
 es6modules.js:63:5,19: Test
 
-es6modules.js:65:18,48: call of method staticNumber2
+es6modules.js:65:18,48: call of method `staticNumber2`
 Error:
 es6modules.js:65:18,48: number
 This type is incompatible with
 es6modules.js:65:9,14: string
 
-es6modules.js:67:18,52: call of method instNumber1
+es6modules.js:67:18,52: call of method `instNumber1`
 Error:
 es6modules.js:67:18,52: number
 This type is incompatible with
@@ -87,7 +87,7 @@ es6modules.js:71:37,49: property `staticNumber3`
 Property not found in
 es6modules.js:71:18,35: exports of "CommonJS_Clobbering_Class"
 
-es6modules.js:73:18,63: call of method instNumber2
+es6modules.js:73:18,63: call of method `instNumber2`
 Error:
 es6modules.js:73:18,63: number
 This type is incompatible with
@@ -137,13 +137,13 @@ es6modules.js:111:18,37: number
 This type is incompatible with
 es6modules.js:111:9,14: string
 
-es6modules.js:115:18,53: call of method givesANum
+es6modules.js:115:18,53: call of method `givesANum`
 Error:
 es6modules.js:115:18,53: number
 This type is incompatible with
 es6modules.js:115:9,14: string
 
-es6modules.js:119:18,54: call of method givesANum
+es6modules.js:119:18,54: call of method `givesANum`
 Error:
 es6modules.js:119:18,54: number
 This type is incompatible with
@@ -179,7 +179,7 @@ es6modules.js:147:18,31: number
 This type is incompatible with
 es6modules.js:147:9,14: string
 
-es6modules.js:151:18,53: call of method givesANumber
+es6modules.js:151:18,53: call of method `givesANumber`
 Error:
 es6modules.js:151:18,53: number
 This type is incompatible with
@@ -229,13 +229,13 @@ es6modules.js:191:19,38: number
 This type is incompatible with
 es6modules.js:191:10,15: string
 
-es6modules.js:195:19,54: call of method givesANum
+es6modules.js:195:19,54: call of method `givesANum`
 Error:
 es6modules.js:195:19,54: number
 This type is incompatible with
 es6modules.js:195:10,15: string
 
-es6modules.js:199:19,55: call of method givesANum
+es6modules.js:199:19,55: call of method `givesANum`
 Error:
 es6modules.js:199:19,55: number
 This type is incompatible with
@@ -263,7 +263,7 @@ es6modules.js:222:19,33: number
 This type is incompatible with
 es6modules.js:222:10,15: string
 
-es6modules.js:226:19,55: call of method givesANumber
+es6modules.js:226:19,55: call of method `givesANumber`
 Error:
 es6modules.js:226:19,55: number
 This type is incompatible with

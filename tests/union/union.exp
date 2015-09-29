@@ -1,5 +1,5 @@
 
-issue-198.js:1:9,10:6: call of method then
+issue-198.js:1:9,10:6: call of method `then`
 Error:
 issue-198.js:5:16,28: string
 This type is incompatible with

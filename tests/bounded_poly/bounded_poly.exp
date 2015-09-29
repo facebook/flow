@@ -19,7 +19,7 @@ test.js:23:17,24: string
 This type is incompatible with
 test.js:23:8,13: number
 
-test.js:23:17,24: call of method qux
+test.js:23:17,24: call of method `qux`
 Error:
 test.js:23:23,23: number
 This type is incompatible with

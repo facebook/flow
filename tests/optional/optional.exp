@@ -35,10 +35,10 @@ optional.js:1:23,23: undefined
 This type is incompatible with
 optional.js:1:23,27: number
 
-optional.js:7:14,14: parameter x
+optional.js:7:14,14: parameter `x`
 Missing annotation
 
-optional.js:7:27,27: element of rest parameter y
+optional.js:7:27,27: element of rest parameter `y`
 Missing annotation
 
 optional.js:7:39,44: function call
