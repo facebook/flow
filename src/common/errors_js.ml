@@ -162,6 +162,16 @@ let highlight_error_in_line line c0 c1 =
     source_fragment_style suffix;
   ]
 
+(* TODO: Ideally this would also work if the file was read from stdin *)
+let read_line_in_file line filename =
+  let content = try Sys_utils.cat filename with
+    | Sys_error _ -> ""
+  in
+  let lines = Str.split_delim (Str.regexp "\n") content in
+  if (List.length lines) > line && (line >= 0)
+    then List.nth lines line
+    else ""
+
 let print_file_at_location main_file loc s = Loc.(
   let l0 = loc.start.line in
   let l1 = loc._end.line in
@@ -170,11 +180,8 @@ let print_file_at_location main_file loc s = Loc.(
   match loc.source with
     | Some LibFile filename
     | Some SourceFile filename ->
-      let content = Sys_utils.cat filename in
-      let lines = Str.split_delim (Str.regexp "\n") content in
-      let code_line = if (List.length lines) >= l0 && (l0 > 0) then List.nth lines (l0 - 1) else "" in
-      let code_line = Str.global_replace (Str.regexp_string "\n") "" code_line in
-      let highlighted_line = if (l1 == l0) && (String.length code_line) > 0
+      let code_line = read_line_in_file (l0 - 1) filename in
+      let highlighted_line = if (l1 == l0) && (String.length code_line) >= c1
         then highlight_error_in_line code_line c0 c1
         else [source_fragment_style code_line]
       in
