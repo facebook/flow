@@ -622,8 +622,12 @@ end = struct
                   typeAnnotation = None;
                 }) in
               false, static_key
-          | true, _ -> true, Parse.object_key env
-          | false, _ -> false, Parse.object_key env in
+          | _ ->
+              Eat.push_lex_mode env NORMAL_LEX;
+              let key = Parse.object_key env in
+              Eat.pop_lex_mode env;
+              static, key
+          in
           let property = match Peek.token env with
           | T_LESS_THAN
           | T_LPAREN -> method_property env start_loc static key

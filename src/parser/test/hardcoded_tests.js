@@ -1291,6 +1291,24 @@ module.exports = {
         }
       ]
     },
+    'declare class A { static implements: number; implements: number }': {
+      'body.0': {
+        'type': 'DeclareClass',
+        'id.name': 'A',
+        'body.properties': [
+          {
+            'key.name': 'implements',
+            'value.type': 'NumberTypeAnnotation',
+            'static': true,
+          },
+          {
+            'key.name': 'implements',
+            'value.type': 'NumberTypeAnnotation',
+            'static': false,
+          },
+        ],
+      },
+    },
   },
   'Invalid syntax': {
     // Duplicates are forbidden if IsSimpleParameterList is false, and rest
