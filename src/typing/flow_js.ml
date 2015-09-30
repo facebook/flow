@@ -33,11 +33,8 @@ open Type
    meaningful in all contexts. This part of the design should be revisited:
    perhaps the data types can be refactored to make them more specialized. *)
 
-(* Methods may use a dummy statics object type to carry properties. We do not
-   want to encourage this pattern, but we also don't want to block uses of this
-   pattern. Thus, we compromise by not tracking the property types. *)
 let dummy_static =
-  AnyObjT (reason_of_string "object type for statics")
+  MixedT (reason_of_string "empty statics object")
 
 let dummy_prototype =
   MixedT (reason_of_string "empty prototype object")
@@ -2533,6 +2530,9 @@ let rec __flow cx (l, u) trace =
 
     | InstanceT (_, _, super, _), GetPropT (_, (_, "__proto__"), t) ->
       rec_flow cx trace (super, t)
+
+    | InstanceT _ as instance, GetPropT (_, (_, "constructor"), t) ->
+      rec_flow cx trace (ClassT instance, t)
 
     | InstanceT (reason_c, static, super, instance),
       GetPropT (reason_op, (reason_prop, x), tout) ->
