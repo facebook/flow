@@ -234,7 +234,7 @@ Example:
 
 ```javascript
 var a: String = new String('hai!'); // Valid!
-var b: string = 'hai!'; // Type error!
+var b: String = 'hai!'; // Type error!
 ```
 <sub><a href="#built-in-primitive-types">Back To Top</a></sub>
 
