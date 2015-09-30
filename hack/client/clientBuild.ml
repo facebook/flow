@@ -21,23 +21,13 @@ type env = {
   build_opts : ServerBuild.build_opts;
 }
 
-let build_kind_of build_opts =
-  let module LC = ClientLogCommand in
-  let {ServerBuild.steps; no_steps; is_push; incremental; _} = build_opts in
-  if steps <> None || no_steps <> None then
-    `Steps
-  else if is_push then
-    `Push
-  else if incremental then
-    `Incremental
-  else
-    `Full
-
 let handle_response env ic =
   let finished = ref false in
   let exit_code = ref Exit_status.Ok in
   HackEventLogger.client_begin_work (ClientLogCommand.LCBuild
-    (env.root, build_kind_of env.build_opts, env.build_opts.ServerBuild.id));
+    (env.root,
+    ServerBuild.build_type_of env.build_opts,
+    env.build_opts.ServerBuild.id));
   try
     while true do
       let line:ServerBuild.build_progress = Marshal.from_channel ic in

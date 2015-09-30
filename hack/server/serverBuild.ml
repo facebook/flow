@@ -34,3 +34,14 @@ type build_progress =
   | BUILD_PROGRESS of string
   | BUILD_ERROR of string
   | BUILD_FINISHED
+
+let build_type_of build_opts =
+  let {steps; no_steps; is_push; incremental; _} = build_opts in
+  if steps <> None || no_steps <> None then
+    `Steps
+  else if is_push then
+    `Push
+  else if incremental then
+    `Incremental
+  else
+    `Full
