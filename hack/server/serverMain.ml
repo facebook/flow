@@ -507,7 +507,7 @@ let daemon_main options =
   let root = ServerArgs.root options in
   if Sys_utils.is_test_mode ()
   then EventLogger.init (Daemon.devnull ()) 0.0
-  else HackEventLogger.init root (Unix.time ());
+  else HackEventLogger.init root (Unix.gettimeofday ());
   Option.iter
     (ServerArgs.waiting_client options)
     ~f:(fun handle ->
