@@ -1,7 +1,7 @@
 
 test.js:1:7,7: A
 This type is incompatible with
-test.js:37:2,2: B
+test.js:48:2,2: B
 
 test.js:2:13,18: number
 This type is incompatible with
@@ -16,6 +16,10 @@ Error:
 test.js:7:3,5: property `qux`
 Property not found in
 test.js:1:7,7: statics of A
+
+test.js:9:7,7: B
+This type is incompatible with
+test.js:25:23,28: number
 
 test.js:10:13,18: string
 This type is incompatible with
@@ -51,30 +55,30 @@ test.js:19:7,9: property `qux`
 Property not found in
 test.js:9:7,7: statics of B
 
-test.js:30:5,12: call of method `foo`
+test.js:40:5,12: call of method `foo`
 Error:
-test.js:30:7,9: property `foo`
+test.js:40:7,9: property `foo`
 Property not found in
-test.js:28:7,7: statics of D
+test.js:38:7,7: statics of D
 
-test.js:32:5,12: call of method `bar`
+test.js:42:5,12: call of method `bar`
 Error:
-test.js:32:11,11: number
+test.js:42:11,11: number
 This type is incompatible with
-test.js:28:19,24: string
+test.js:38:19,24: string
 
-test.js:36:6,6: A
+test.js:47:6,6: A
 This type is incompatible with
 test.js:1:7,7: class type: A
 
-test.js:42:5,14: call of method `bar`
+test.js:53:5,14: call of method `bar`
 Error:
-test.js:42:10,12: property `bar`
+test.js:53:10,12: property `bar`
 Property not found in
-test.js:39:7,7: statics of E
+test.js:50:7,7: statics of E
 
-test.js:43:12,17: number
+test.js:54:12,17: number
 This type is incompatible with
-test.js:41:17,22: string
+test.js:52:17,22: string
 
-Found 15 errors
+Found 16 errors
