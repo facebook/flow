@@ -2534,6 +2534,9 @@ let rec __flow cx (l, u) trace =
     | InstanceT (_, _, super, _), GetPropT (_, (_, "__proto__"), t) ->
       rec_flow cx trace (super, t)
 
+    | InstanceT _ as instance, GetPropT (_, (_, "constructor"), t) ->
+      rec_flow cx trace (ClassT instance, t)
+
     | InstanceT (reason_c, static, super, instance),
       GetPropT (reason_op, (reason_prop, x), tout) ->
       Ops.push reason_op;
