@@ -9,10 +9,6 @@ class.js:15:8,8: number
 This type is incompatible with
 class.js:15:12,17: string
 
-class.js:23:39,44: number
-This type is incompatible with
-class.js:24:12,13: string
-
 class.js:24:12,13: string
 This type is incompatible with
 class.js:23:39,44: number
@@ -62,10 +58,6 @@ generators.js:1:35,40: number
 generators.js:14:6,6: number
 This type is incompatible with
 generators.js:14:10,15: string
-
-generators.js:22:46,51: number
-This type is incompatible with
-generators.js:23:10,11: string
 
 generators.js:23:10,11: string
 This type is incompatible with
@@ -133,4 +125,4 @@ throw.js:24:4,21: number
 This type is incompatible with
 throw.js:24:24,29: string
 
-Found 29 errors
+Found 27 errors

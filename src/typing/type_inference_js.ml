@@ -1387,6 +1387,10 @@ and statement cx type_params_map = Ast.Statement.(
         List.length (extract_type_param_declarations typeParameters) = 1
       then mk_type_param_declarations cx type_params_map typeParameters
         ~polarities:[Positive]
+      else if (iname = "Generator") &&
+        List.length (extract_type_param_declarations typeParameters) = 3
+      then mk_type_param_declarations cx type_params_map typeParameters
+        ~polarities:[Positive; Positive; Negative]
       else mk_type_param_declarations cx type_params_map typeParameters in
 
     let sfmap, smmap, fmap, mmap = List.fold_left Ast.Type.Object.Property.(
