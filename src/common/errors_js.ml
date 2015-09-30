@@ -227,7 +227,7 @@ let print_error_header message =
   let filename = file_of_location loc in
   let relfilename = relative_path filename in
   [
-    file_location_style (Printf.sprintf "%s" relfilename);
+    file_location_style (Printf.sprintf "%s:%d" relfilename Loc.(loc.start.line));
     default_style "\n"
   ]
 
@@ -252,11 +252,9 @@ let maybe_combine_message_text messages message =
       | x :: xs -> (append_comment x s) :: xs
       | _ -> failwith "can't append comment to nonexistent blame"
 
-(* This function merges CommentM messages into previous BlameM messages *)
 let merge_comments_into_blames messages =
   List.fold_left maybe_combine_message_text [] messages |> List.rev
 
-(* TODO: Is this actually needed? Does it make sense with the new format? *)
 let remove_newlines (color, text) =
   (color, Str.global_replace (Str.regexp "\n") "\\n" text)
 
