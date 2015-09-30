@@ -5343,14 +5343,6 @@ and mk_class_elements cx instance_info static_info body = Ast.Class.(
            (_, _, ret, param_types_map, param_loc_map) =
         SMap.find_unsafe name sigs_to_use in
 
-      let yield, next = if generator then (
-        Flow_js.mk_tvar cx (prefix_reason "yield of " reason),
-        Flow_js.mk_tvar cx (prefix_reason "next of " reason)
-      ) else (
-        MixedT (replace_reason "no yield" reason),
-        MixedT (replace_reason "no next" reason)
-      ) in
-
       let save_return_exn = Abnormal.swap Abnormal.Return false in
       let save_throw_exn = Abnormal.swap Abnormal.Throw false in
       Flow_js.generate_tests cx reason typeparams (fun map_ ->
@@ -5365,6 +5357,13 @@ and mk_class_elements cx instance_info static_info body = Ast.Class.(
           | _ -> name = "constructor"
         in
         let function_kind = function_kind ~async ~generator in
+        let yield, next = if generator then (
+          Flow_js.mk_tvar cx (prefix_reason "yield of " reason),
+          Flow_js.mk_tvar cx (prefix_reason "next of " reason)
+        ) else (
+          MixedT (replace_reason "no yield" reason),
+          MixedT (replace_reason "no next" reason)
+        ) in
         mk_body None cx type_params_map ~kind:function_kind ~derived_ctor
           param_types_map param_loc_map ret body this super yield next;
       );
@@ -5745,14 +5744,6 @@ and function_decl id cx type_params_map (reason:reason) ~kind
   let (params, pnames, ret, param_types_map, param_types_loc) =
     mk_params_ret cx type_params_map params (body, ret) in
 
-  let yield, next = if kind = Scope.Generator then (
-    Flow_js.mk_tvar cx (prefix_reason "yield of " reason),
-    Flow_js.mk_tvar cx (prefix_reason "next of " reason)
-  ) else (
-    MixedT (replace_reason "no yield" reason),
-    MixedT (replace_reason "no next" reason)
-  ) in
-
   let save_return_exn = Abnormal.swap Abnormal.Return false in
   let save_throw_exn = Abnormal.swap Abnormal.Throw false in
   Flow_js.generate_tests cx reason typeparams (fun map_ ->
@@ -5761,6 +5752,14 @@ and function_decl id cx type_params_map (reason:reason) ~kind
     let param_types_map =
       param_types_map |> SMap.map (Flow_js.subst cx map_) in
     let ret = Flow_js.subst cx map_ ret in
+
+    let yield, next = if kind = Scope.Generator then (
+      Flow_js.mk_tvar cx (prefix_reason "yield of " reason),
+      Flow_js.mk_tvar cx (prefix_reason "next of " reason)
+    ) else (
+      MixedT (replace_reason "no yield" reason),
+      MixedT (replace_reason "no next" reason)
+    ) in
 
     mk_body id cx type_params_map ~kind
       param_types_map param_types_loc ret body this super yield next;

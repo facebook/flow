@@ -80,6 +80,20 @@ class GeneratorExamples {
   *delegate_return_iterable(xs: Array<number>) {
     var x: void = yield *xs // ok: Iterator has no yield value
   }
+
+  *generic_yield<Y>(y: Y): Generator<Y,void,void> {
+    yield y;
+  }
+
+  *generic_return<R>(r: R): Generator<void,R,void> {
+    return r;
+  }
+
+  *generic_next<N>(): Generator<void,N,N> {
+    var n = yield undefined;
+    invariant(n != null);
+    return n;
+  }
 }
 
 var examples = new GeneratorExamples();
