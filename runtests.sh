@@ -97,12 +97,18 @@ do
         shell=""
         cmd="check"
         stdin=""
+        stderr_dest="$err_file"
         if [ -e ".testconfig" ]
         then
             # all
             if [ "$(awk '$1=="all:"{print $2}' .testconfig)" == "false" ]
             then
                 all=""
+            fi
+            # ignore_stderr
+            if [ "$(awk '$1=="ignore_stderr:"{print $2}' .testconfig)" == "false" ]
+            then
+                stderr_dest="$out_file"
             fi
             # stdin
             stdin="$(awk '$1=="stdin:"{print $2}' .testconfig)"
@@ -125,7 +131,7 @@ do
         if [ "$cmd" == "check" ]
         then
             # default command is check with configurable --all
-            $FLOW check . $all --strip-root --show-all-errors 1> $out_file 2> $err_file
+            $FLOW check . $all --strip-root --show-all-errors 1> $out_file 2> $stderr_dest
         else
             # otherwise, run specified flow command, then kill the server
 
@@ -137,14 +143,14 @@ do
             if [ "$shell" != "" ]
             then
                 # run test script
-                sh $shell $FLOW 1> $out_file 2> $err_file
+                sh $shell $FLOW 1> $out_file 2> $stderr_dest
             else
             # If there's stdin, then direct that in
                 if [ "$stdin" != "" ]
                 then
-                    $FLOW $cmd < $stdin 1> $out_file 2> $err_file
+                    $FLOW $cmd < $stdin 1> $out_file 2> $stderr_dest
                 else
-                    $FLOW $cmd 1> $out_file 2> $err_file
+                    $FLOW $cmd 1> $out_file 2> $stderr_dest
                 fi
             fi
             # stop server

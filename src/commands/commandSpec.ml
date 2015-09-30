@@ -321,17 +321,15 @@ let main spec fn argv =
     | _ -> failwith "Missing subcommand"
   with
   | Show_help ->
-      prerr_endline (usage_string spec);
-      exit 0
+      FlowExitStatus.(exit ~msg:(usage_string spec) Ok)
   | Failed_to_parse msg ->
-      prerr_endline (Utils.spf
+      let msg = Utils.spf
         "%s: %s\n%s"
         (Filename.basename Sys.executable_name)
         msg
         (usage_string spec)
-      );
-      (* EX_USAGE -- command line usage error -- from glibc's sysexits.h *)
-      exit 64
+      in
+      FlowExitStatus.(exit ~msg Commandline_usage_error)
 
 let raw_command spec main = {
   cmdname = spec.name;

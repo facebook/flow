@@ -99,8 +99,10 @@ let main temp_dir from root () =
     begin
       try nice_kill conn ~tmp_dir root
       with FailedToKill ->
-        Printf.eprintf "Failed to kill server nicely for %s\n%!" root_s;
-        exit 1
+        let msg = Utils.spf
+          "Failed to kill server nicely for %s\n%!"
+          root_s in
+        FlowExitStatus.(exit ~msg Kill_error)
     end
   with
   | CommandExceptions.Server_missing ->
@@ -111,7 +113,9 @@ let main temp_dir from root () =
   | CommandExceptions.Server_initializing ->
       try mean_kill ~tmp_dir root
       with FailedToKill ->
-        Printf.eprintf "Failed to kill server meanly for %s\n%!" root_s;
-        exit 1
+        let msg = Utils.spf
+          "Failed to kill server meanly for %s"
+          root_s in
+        FlowExitStatus.(exit ~msg Kill_error)
 
 let command = CommandSpec.command spec main

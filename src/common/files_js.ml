@@ -168,7 +168,10 @@ let init ~tmp_dir libs =
         let root = Path.make (Tmp.temp_dir tmp_dir "flowlib") in
         if Flowlib.extract_flowlib root
         then root::libs
-        else (print_endline "Could not locate flowlib files"; exit 1)
+        else begin
+          let msg = "Could not locate flowlib files" in
+          FlowExitStatus.(exit ~msg Could_not_find_flowconfig)
+        end
     in
     let libs = if libs = []
       then SSet.empty

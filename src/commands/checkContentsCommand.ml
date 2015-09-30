@@ -53,15 +53,15 @@ let main option_values error_flags use_json file () =
       then Errors_js.print_error_json stdout e
       else (
         Errors_js.print_error_summary ~flags:error_flags e;
-        exit 2
+        FlowExitStatus.(exit Type_error)
       )
   | ServerProt.NO_ERRORS ->
       if use_json
       then Errors_js.print_error_json stdout []
       else Printf.printf "No errors!\n%!";
-      exit 0
+      FlowExitStatus.(exit Ok)
   | _ ->
-      prerr_endline "Unexpected server response!";
-      exit (-1)
+      let msg = "Unexpected server response!" in
+      FlowExitStatus.(exit ~msg Unknown_error)
 
 let command = CommandSpec.command spec main

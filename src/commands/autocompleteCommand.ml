@@ -76,7 +76,8 @@ let parse_args = function
       ServerProt.FileContent (Some filename,
                               add_autocomplete_token contents line column)
   | _ ->
-      CommandSpec.usage spec; exit 2
+      CommandSpec.usage spec;
+      FlowExitStatus.(exit Commandline_usage_error)
 
 module Json = Hh_json
 

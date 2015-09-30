@@ -46,7 +46,7 @@ end = struct
 
   let other_server_running() =
     Hh_logger.log "Error: another server is already running?\n";
-    exit 1
+    FlowExitStatus.(exit Lock_stolen)
 
   let grab_lock ~tmp_dir root =
     if not (Lock.grab (FlowConfig.lock_file ~tmp_dir root))
@@ -101,7 +101,7 @@ end = struct
         FlowEventLogger.out_of_date ();
         Printf.eprintf "Status: Error\n";
         Printf.eprintf "%s is out of date. Exiting.\n" Program.name;
-        exit 4
+        FlowExitStatus.(exit Build_id_mismatch)
       end else msg_to_channel oc Connection_ok;
       let client = { ic; oc; close } in
       Program.handle_client genv env client
@@ -135,7 +135,7 @@ end = struct
         "%s changed in an incompatible way; please restart %s.\n"
         (Path.to_string config)
         Program.name;
-      exit 4;
+      FlowExitStatus.(exit Server_out_of_date)
     end;
     let env = Program.recheck genv old_env to_recheck in
     Program.post_recheck_hook genv old_env env updates;

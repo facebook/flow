@@ -150,8 +150,8 @@ let empty_config root = {
 }
 
 let error ln msg =
-  Printf.printf ".flowconfig:%d %s\n" ln msg;
-  exit 4
+  let msg = spf ".flowconfig:%d %s\n" ln msg in
+  FlowExitStatus.(exit ~msg Invalid_flowconfig)
 
 let group_into_sections lines =
   let is_section_header = Str.regexp "^\\[\\(.*\\)\\]$" in
@@ -572,8 +572,8 @@ let init root options =
   let file = fullpath root in
   if Sys.file_exists file
   then begin
-    Printf.printf "Error: \"%s\" already exists!\n%!" file;
-    exit 4
+    let msg = spf "Error: \"%s\" already exists!\n%!" file in
+    FlowExitStatus.(exit ~msg Invalid_flowconfig)
   end;
   let options_lines = List.map (fun s -> (1, s)) options in
   let config = parse_options (empty_config root) options_lines in

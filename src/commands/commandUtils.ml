@@ -23,8 +23,7 @@ let expand_path file =
     if Path.file_exists path
     then Path.to_string path
     else begin
-      Printf.printf "File not found\n";
-      exit 2
+      FlowExitStatus.(exit ~msg:"File not found" Input_error)
     end
 
 (* line split/transform utils *)
@@ -67,8 +66,7 @@ let set_timeout max_wait_time_seconds =
   global_kill_time := Some (Unix.time() +. (float_of_int max_wait_time_seconds))
 
 let timeout_go_boom () =
-  print_endline "Timeout exceeded, exiting";
-  exit 3
+  FlowExitStatus.(exit ~msg:"Timeout exceeded, exiting" Out_of_time)
 
 let check_timeout () =
   match !global_kill_time with
@@ -188,9 +186,12 @@ let start_flow_server ?temp_dir root =
     temp_dir_arg
     from_arg
     (Filename.quote (Path.to_string root)) in
-  match Unix.system flow_server with
+  let status = Unix.system flow_server in
+  match status with
     | Unix.WEXITED 0 -> ()
-    | _ -> (Printf.fprintf stderr "Could not start Flow server!\n"; exit 77)
+    | _ ->
+        let msg = "Could not start Flow server!" in
+        FlowExitStatus.(exit ~msg (Server_start_failed status))
 
 
 let server_exists ~tmp_dir root =
@@ -262,8 +263,8 @@ let rec connect_with_autostart server_flags root =
         sleep 1;
         connect_with_autostart server_flags root
       ) else (
-        Printf.fprintf stderr "%s Try again...\n%!" init_msg;
-        exit 2
+        let msg = Utils.spf "%s Try again...\n%!" init_msg in
+        FlowExitStatus.(exit ~msg Server_initializing)
       )
   | CommandExceptions.Server_cant_connect ->
       retry server_flags root
@@ -279,12 +280,13 @@ let rec connect_with_autostart server_flags root =
       retry server_flags root
         3 "The Flow server will be ready in a moment."
     ) else (
-      prerr_endline (Utils.spf
+      let msg = Utils.spf
           "Error: There is no Flow server running in '%s'."
-          (Path.to_string root));
-      exit 2
+          (Path.to_string root) in
+      FlowExitStatus.(exit ~msg No_server_running)
     )
-  | _ -> Printf.fprintf stderr "Something went wrong :(\n%!"; exit 2
+  | _ ->
+      FlowExitStatus.(exit ~msg:"Something went wrong :(" Unknown_error)
 
 and retry server_flags root delay message =
   check_timeout ();
@@ -296,8 +298,7 @@ and retry server_flags root delay message =
     let server_flags = { server_flags with retries = retries - 1 } in
     connect_with_autostart server_flags root
   ) else (
-    prerr_endline "Out of retries, exiting!";
-    exit 2
+    FlowExitStatus.(exit ~msg:"Out of retries, exiting!" Out_of_retries)
   )
 
 let rec search_for_root config start recursion_limit : Path.t option =
@@ -314,9 +315,11 @@ let guess_root dir_or_file =
   | Some dir_or_file -> dir_or_file
   | None -> "." in
   if not (Sys.file_exists dir_or_file) then (
-    Printf.fprintf stderr "Could not find file or directory %s; canceling \
-    search for .flowconfig.\nSee \"flow init --help\" for more info\n%!" dir_or_file;
-    exit 2
+    let msg = Utils.spf
+      "Could not find file or directory %s; canceling \
+      search for .flowconfig.\nSee \"flow init --help\" for more info"
+      dir_or_file in
+    FlowExitStatus.(exit ~msg Could_not_find_flowconfig)
   ) else (
     let dir = if Sys.is_directory dir_or_file
       then dir_or_file
@@ -326,9 +329,11 @@ let guess_root dir_or_file =
         FlowEventLogger.set_root (Some (Path.to_string root));
         root
     | None ->
-        Printf.fprintf stderr "Could not find a .flowconfig in %s or any \
-        of its parent directories.\nSee \"flow init --help\" for more info\n%!" dir;
-        exit 2
+        let msg = Utils.spf
+          "Could not find a .flowconfig in %s or any \
+          of its parent directories.\nSee \"flow init --help\" for more info\n%!"
+          dir in
+        FlowExitStatus.(exit ~msg Could_not_find_flowconfig)
   )
 
 (* convert 1,1 based line/column to 1,0 for internal use *)

@@ -124,19 +124,20 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
       else
         Errors_js.print_error_summary ~flags:error_flags errors
       end;
-      exit 2
+      FlowExitStatus.(exit Type_error)
     | ServerProt.NO_ERRORS ->
       if args.output_json
       then Errors_js.print_error_json stdout []
       else Printf.printf "No errors!\n%!";
-      exit 0
+      FlowExitStatus.(exit Ok)
     | ServerProt.PONG ->
-        Printf.printf "Why on earth did the server respond with a pong?\n%!";
-        exit 2
+      let msg = "Why on earth did the server respond with a pong?" in
+      FlowExitStatus.(exit ~msg Unknown_error)
     | ServerProt.SERVER_DYING ->
-      Printf.printf "Server has been killed for %s\n"
-        (Path.to_string args.root);
-      exit 2
+      let msg = Utils.spf
+        "Server has been killed for %s"
+        (Path.to_string args.root) in
+      FlowExitStatus.(exit ~msg Server_dying)
     | ServerProt.SERVER_OUT_OF_DATE ->
       if server_flags.CommandUtils.no_auto_start
       then Printf.printf "%s is outdated, killing it.\n" name
@@ -153,15 +154,13 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
       Printf.fprintf stderr "%s\n%!" msg;
       CommandUtils.sleep sleep;
       check_status env { server_flags with CommandUtils.retries = retries - 1 }
-    end else begin
-      Printf.fprintf stderr "Out of retries, exiting!\n%!";
-      exit 2
-    end
+    end else
+      FlowExitStatus.(exit ~msg:"Out of retries, exiting!" Out_of_retries)
 
   let main server_flags json error_flags strip_root version root () =
     if version then (
       CommandUtils.print_version ();
-      exit 0
+      FlowExitStatus.(exit Ok)
     );
 
     let root = CommandUtils.guess_root root in

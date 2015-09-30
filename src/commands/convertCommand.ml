@@ -95,8 +95,13 @@ let convert path recurse error_flags outpath =
     ) in
   print_endlinef "Total Errors: %d\nTotal Files: %d\nSuccessful Conversions: %d"
     nerrs total_files successful_converts;
-  (* exit code = number of unsuccessful coversions *)
-  exit (total_files - successful_converts)
+  let num_failed_conversions = total_files - successful_converts in
+  if num_failed_conversions = 0
+  then FlowExitStatus.(exit Ok)
+  else begin
+    let msg = spf "Failed to convert %d files" num_failed_conversions in
+    FlowExitStatus.(exit ~msg Unknown_error)
+  end
 
 (* command wiring *)
 

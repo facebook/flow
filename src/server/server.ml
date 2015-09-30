@@ -59,15 +59,15 @@ struct
 
   let run_once_and_exit genv env =
     match env.ServerEnv.errorl with
-      | [] -> exit 0
-      | _ -> exit 2
+      | [] -> FlowExitStatus.(exit Ok)
+      | _ -> FlowExitStatus.(exit Type_error)
 
   let incorrect_hash oc =
     ServerProt.response_to_channel oc ServerProt.SERVER_OUT_OF_DATE;
     FlowEventLogger.out_of_date ();
     Printf.printf     "Status: Error\n";
     Printf.printf     "%s is out of date. Exiting.\n" name;
-    exit 4
+    FlowExitStatus.(exit Server_out_of_date)
 
   let status_log env =
     if List.length (Types_js.get_errors ()) = 0
@@ -99,7 +99,7 @@ struct
         (Path.to_string client_root);
       Printf.printf "%s is not listening to the same directory. Exiting.\n"
         name;
-      exit 5
+      FlowExitStatus.(exit Server_client_directory_mismatch)
     end;
     flush stdout;
     (* TODO: check status.directory *)
@@ -478,7 +478,7 @@ struct
         Printf.printf
           "%s is out of date. Exiting.\n%!"
           name;
-        exit 4
+        FlowExitStatus.(exit Server_out_of_date)
       end;
       let server_env = Types_js.recheck genv env files in
       SearchService_js.update_from_master updates;
