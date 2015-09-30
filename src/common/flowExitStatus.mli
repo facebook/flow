@@ -25,5 +25,3 @@ type t =
 exception Exit_with of t
 
 val exit: ?msg:string -> t -> 'a
-val to_string: t -> string
-val unpack_process_status: Unix.process_status -> string * int

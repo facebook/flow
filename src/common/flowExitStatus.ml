@@ -122,4 +122,5 @@ let exit ?msg t =
   (match msg with
   | Some msg -> prerr_endline msg
   | None -> ());
+  FlowEventLogger.exit msg (to_string t);
   Pervasives.exit (error_code t)

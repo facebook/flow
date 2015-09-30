@@ -83,3 +83,5 @@ end = struct
 end
 
 let _ = FlowShell.main ()
+(* If we haven't exited yet, let's exit now for logging's sake *)
+let _ = FlowExitStatus.(exit Ok)

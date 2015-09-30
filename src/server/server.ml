@@ -105,7 +105,7 @@ struct
     (* TODO: check status.directory *)
     status_log env;
     let errors = Types_js.get_errors () in
-    FlowEventLogger.status_response errors;
+    FlowEventLogger.status_response (Errors_js.json_of_errors errors);
     send_errorl errors oc
 
   let die_nicely genv oc =
