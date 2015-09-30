@@ -168,7 +168,8 @@ let print_file_at_location main_file loc s = Loc.(
   let c0 = loc.start.column in
   let c1 = loc._end.column in
   match loc.source with
-    | Some filename ->
+    | Some LibFile filename
+    | Some SourceFile filename ->
       let content = Sys_utils.cat filename in
       let lines = Str.split_delim (Str.regexp "\n") content in
       let code_line = if (List.length lines) >= l0 && (l0 > 0) then List.nth lines (l0 - 1) else "" in
@@ -192,6 +193,7 @@ let print_file_at_location main_file loc s = Loc.(
       see_another_file @
       [default_style "\n"]
 
+    | Some Builtins
     | None -> [default_style (Printf.sprintf "%s\n" s)]
 )
 
@@ -199,18 +201,35 @@ let print_message_nice main_file message =
   let loc, s = to_pp message in
   print_file_at_location main_file loc s
 
-let print_error_header message = Loc.(
-  let loc, _ = to_pp message in
-  let filename = match loc.source with
-    | Some filename -> filename
+let file_of_location loc =
+  match loc.Loc.source with
+    | Some Loc.LibFile filename
+    | Some Loc.SourceFile filename -> filename
+    | Some Loc.Builtins -> ""
     | None -> ""
-  in
+
+
+let loc_of_error (err: error) =
+  let {messages; _} = err in
+  match messages with
+  | message :: _ ->
+      let loc, _ = to_pp message in
+      loc
+  | _ -> Loc.none
+
+let file_of_error err =
+  let loc = loc_of_error err in
+  file_of_location loc
+
+
+let print_error_header message =
+  let loc, _ = to_pp message in
+  let filename = file_of_location loc in
   let relfilename = relative_path filename in
   [
     file_location_style (Printf.sprintf "%s" relfilename);
     default_style "\n"
   ]
-)
 
 let append_comment blame comment =
   match blame with
@@ -237,25 +256,14 @@ let maybe_combine_message_text messages message =
 let merge_comments_into_blames messages =
   List.fold_left maybe_combine_message_text [] messages |> List.rev
 
-let loc_of_error (err: error) =
-  let {messages; _} = err in
-  match messages with
-  | message :: _ ->
-      let loc, _ = to_pp message in
-      loc
-  | _ -> Loc.none
-
-let file_of_error err =
-  let loc = loc_of_error err in
-  match loc.Loc.source with Some filename -> filename | None -> ""
-
 (* TODO: Is this actually needed? Does it make sense with the new format? *)
 let remove_newlines (color, text) =
   (color, Str.global_replace (Str.regexp "\n") "\\n" text)
 
-let print_error_color_new ~one_line ~color error =
-  let level, messages, trace_reasons = error in
-  let messages = append_trace_reasons messages trace_reasons in
+let print_error_color_new ~one_line ~color (error : error) =
+  let {kind; messages; trace} = error in
+  let messages = prepend_kind_message messages kind in
+  let messages = append_trace_reasons messages trace in
   let messages = merge_comments_into_blames messages in
   let header = print_error_header (List.hd messages) in
   let main_file = file_of_error error in
