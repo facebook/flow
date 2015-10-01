@@ -244,9 +244,8 @@ sound.
 
 function foo(x: { y: ?string }): string {
   if (x.y) {
-    var y = x.y;
     console.log("*obviously* this doesn't mutate x");
-    return y; // error: Flow doesn't know that
+    return x.y; // error: Flow doesn't know that
   } else {
     return "default";
   }
