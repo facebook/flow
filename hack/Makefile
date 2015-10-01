@@ -243,4 +243,4 @@ do-test:
 	python3 ../test/verify.py --program ../bin/hh_patch_module_test_driver ../test/hh_matcher/patcher_module_tests
 	python3 ../test/verify.py --program ../bin/hh_patch_api_test_driver ../test/hh_matcher/patcher_api_tests
 	python3 ../test/verify.py --program ../bin/hh_patch_test_driver ../test/hh_matcher/patcher_tests
-	python3 ../test/integration/runner.py hh_server hh_client
+	python3 ../test/integration/runner.py ../bin/hh_server ../bin/hh_client
