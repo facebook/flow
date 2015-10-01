@@ -1652,7 +1652,7 @@ end = struct
             set_lex_env env lex_env;
             Eat.advance env (lex_env, lex_result) NORMAL_LEX;
             let loc, part = match lex_result.lex_token with
-            | T_TEMPLATE_PART (loc, part) -> loc, part
+            | T_TEMPLATE_PART ((loc, part), _) -> loc, part
             | _ -> assert false in
             let quasis = (loc, part)::quasis in
             if part.Expression.TemplateLiteral.Element.tail
@@ -1670,8 +1670,8 @@ end = struct
             }) in
             fst expr, List.rev (imaginary_quasi::quasis), List.rev expressions
 
-      in fun env head ->
-        Expect.token env (T_TEMPLATE_PART head);
+      in fun env ((head, _) as part) ->
+        Expect.token env (T_TEMPLATE_PART part);
         let start_loc = fst head in
         let end_loc, quasis, expressions =
           if (snd head).Expression.TemplateLiteral.Element.tail

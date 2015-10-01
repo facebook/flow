@@ -14,7 +14,7 @@
   type token =
     | T_NUMBER of number_type
     | T_STRING of (Loc.t * string * string * bool) (* loc, value, raw, octal *)
-    | T_TEMPLATE_PART of Ast.Expression.TemplateLiteral.Element.t
+    | T_TEMPLATE_PART of (Ast.Expression.TemplateLiteral.Element.t * string)
     | T_IDENTIFIER
     | T_REGEXP of (Loc.t * string * string) (* /pattern/flags *)
     (* Syntax *)
@@ -322,8 +322,8 @@
     | T_STRING (loc, _, raw, _) ->
         loc, raw
     | T_JSX_TEXT (loc, _, raw) -> loc, raw
-    | T_TEMPLATE_PART (loc, part) ->
-        loc, Ast.Expression.TemplateLiteral.Element.(part.value.raw)
+    | T_TEMPLATE_PART ((loc, _), raw_text) ->
+        loc, raw_text 
     | T_REGEXP (loc, pattern, flags) -> loc, "/" ^ pattern ^ "/" ^ flags
     | _ -> lb_to_loc env.lex_source env.lex_lb, Lexing.lexeme env.lex_lb in
     env, {
@@ -428,16 +428,18 @@
   let lex_template_part env template_part =
     let start = lb_to_loc env.lex_source env.lex_lb in
     let cooked = Buffer.create 127 in
+    let uncooked = Buffer.create 127 in
     let raw = Buffer.create 127 in
-    let _end, tail = template_part env cooked raw env.lex_lb in
+    Buffer.add_string raw (Lexing.lexeme env.lex_lb);
+    let _end, tail = template_part env cooked uncooked raw env.lex_lb in
     let part = Ast.Expression.TemplateLiteral.({
       Element.value = {
         Element.cooked = Buffer.contents cooked;
-        raw = Buffer.contents raw;
+        raw = Buffer.contents uncooked;
       };
       tail;
     }) in
-    env, T_TEMPLATE_PART (Loc.btwn start _end, part)
+    env, T_TEMPLATE_PART ((Loc.btwn start _end, part), Buffer.contents raw)
 
   let keywords = Hashtbl.create 53
   let type_keywords = Hashtbl.create 53
@@ -1375,31 +1377,39 @@ and jsx_text env mode buf raw = parse
                         Buffer.add_char buf c;
                         jsx_text env mode buf raw lexbuf }
 
-and template_part env cooked raw = parse
+and template_part env cooked uncooked raw = parse
   | eof               { illegal env (lb_to_loc env.lex_source lexbuf);
                         lb_to_loc env.lex_source lexbuf, true }
-  | '`'               { lb_to_loc env.lex_source lexbuf, true }
-  | "${"              { lb_to_loc env.lex_source lexbuf, false }
-  | '\\'              { Buffer.add_char raw '\\';
+  | '`'               { Buffer.add_char raw '`'; 
+                        lb_to_loc env.lex_source lexbuf, true }
+  | "${"              { Buffer.add_string raw "${"; 
+                        lb_to_loc env.lex_source lexbuf, false }
+  | '\\'              { Buffer.add_char uncooked '\\';
+                        Buffer.add_char raw '\\';
                         let _ = string_escape env cooked lexbuf in
-                        Buffer.add_string raw (Lexing.lexeme lexbuf);
-                        template_part env cooked raw lexbuf }
+                        let str = Lexing.lexeme lexbuf in
+                        Buffer.add_string uncooked str;
+                        Buffer.add_string raw str;
+                        template_part env cooked uncooked raw lexbuf }
   (* ECMAScript 6th Syntax, 11.8.6.1 Static Semantics: TV’s and TRV’s
    * Long story short, <LF> is 0xA, <CR> is 0xA, and <CR><LF> is 0xA
    * *)
   | "\r\n" as lf
-                      { Buffer.add_string raw lf;
+                      { Buffer.add_string uncooked lf;
+                        Buffer.add_string raw lf;
                         Buffer.add_string cooked "\n";
                         Lexing.new_line lexbuf;
-                        template_part env cooked raw lexbuf }
+                        template_part env cooked uncooked raw lexbuf }
   | ("\n" | "\r") as lf
-                      { Buffer.add_char raw lf;
+                      { Buffer.add_char uncooked lf;
+                        Buffer.add_char raw lf;
                         Buffer.add_char cooked '\n';
                         Lexing.new_line lexbuf;
-                        template_part env cooked raw lexbuf }
-  | _ as c            { Buffer.add_char raw c;
+                        template_part env cooked uncooked raw lexbuf }
+  | _ as c            { Buffer.add_char uncooked c;
+                        Buffer.add_char raw c;
                         Buffer.add_char cooked c;
-                        template_part env cooked raw lexbuf }
+                        template_part env cooked uncooked raw lexbuf }
 
 {
   let lex_regexp env prefix =
