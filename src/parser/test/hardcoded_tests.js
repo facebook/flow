@@ -1598,7 +1598,21 @@ module.exports = {
         'value': 123,
         'raw': '0o173',
       }
-    }
+    },
+    'var a: -123': {
+      'body.0.declarations.0.id.typeAnnotation.typeAnnotation': {
+        'type': 'NumberLiteralTypeAnnotation',
+        'value': -123,
+        'raw': '-123',
+      }
+    },
+    'var a: - 123': {
+      'body.0.declarations.0.id.typeAnnotation.typeAnnotation': {
+        'type': 'NumberLiteralTypeAnnotation',
+        'value': -123,
+        'raw': '- 123',
+      }
+    },
   },
   'Invalid Number Literal Types': {
     'var a: 0173': {
@@ -1607,7 +1621,14 @@ module.exports = {
           'message': 'Octal literals are not allowed in strict mode.',
         }
       ],
-    }
+    },
+    'var a: 123-3': {
+      'errors': [
+        {
+          'message': 'Unexpected token -',
+        }
+      ],
+    },
   },
   'Boolean Literal Types': {
     'var a: true': {

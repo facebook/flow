@@ -17,3 +17,7 @@ function bar(num: Foo): number {
 bar(1);
 bar(2);
 bar(3); // error
+
+type ComparatorResult = -1 | 0 | 1
+function sort(fn: (x: any, y: any) => ComparatorResult) {}
+sort((x, y) => -1);

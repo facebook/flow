@@ -329,19 +329,11 @@ end = struct
             value;
             raw;
           }))
-      | T_NUMBER number_type ->
+      | T_NUMBER_SINGLETON_TYPE (number_type, value) ->
           let raw = Peek.value env in
-          Expect.token env (T_NUMBER number_type);
-          let value = match number_type with
-          | LEGACY_OCTAL ->
-            strict_error env Error.StrictOctalLiteral;
-            float (int_of_string ("0o"^raw))
-          | BINARY
-          | OCTAL ->
-            float (int_of_string raw)
-          | NORMAL ->
-            float_of_string raw
-          in
+          Expect.token env (T_NUMBER_SINGLETON_TYPE (number_type, value));
+          if number_type = LEGACY_OCTAL
+          then strict_error env Error.StrictOctalLiteral;
           loc, Type.(NumberLiteral NumberLiteral.({
             value;
             raw;

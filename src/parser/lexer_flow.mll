@@ -131,6 +131,7 @@
     | T_ANY_TYPE
     | T_BOOLEAN_TYPE
     | T_NUMBER_TYPE
+    | T_NUMBER_SINGLETON_TYPE of number_type * float
     | T_STRING_TYPE
     | T_VOID_TYPE
 
@@ -274,6 +275,7 @@
     | T_ANY_TYPE -> "T_ANY_TYPE"
     | T_BOOLEAN_TYPE -> "T_BOOLEAN_TYPE"
     | T_NUMBER_TYPE -> "T_NUMBER_TYPE"
+    | T_NUMBER_SINGLETON_TYPE _ -> "T_NUMBER_SINGLETON_TYPE"
     | T_STRING_TYPE -> "T_STRING_TYPE"
     | T_VOID_TYPE -> "T_VOID_TYPE"
 
@@ -420,6 +422,20 @@
         Char.chr code;
       ]
 
+  let mk_num_singleton number_type num neg =
+    (* convert singleton number type into a float *)
+    let value = match number_type with
+    | LEGACY_OCTAL ->
+      float (int_of_string ("0o"^num))
+    | BINARY
+    | OCTAL ->
+      float (int_of_string num)
+    | NORMAL ->
+      float_of_string num
+    in
+    let value = if neg = "" then value else ~-.value in
+    T_NUMBER_SINGLETON_TYPE (number_type, value)
+
   type jsx_text_mode =
     | JSX_SINGLE_QUOTED_TEXT
     | JSX_DOUBLE_QUOTED_TEXT
@@ -557,6 +573,10 @@ let single_escape_character = ['\'''"''\\''b''f''n''r''t''v']
 let htmlentity = "quot" | "amp" | "apos" | "lt" | "gt" | "nbsp" | "iexcl" | "cent" | "pound" | "curren" | "yen" | "brvbar" | "sect" | "uml" | "copy" | "ordf" | "laquo" | "not" | "shy" | "reg" | "macr" | "deg" | "plusmn" | "sup2" | "sup3" | "acute" | "micro" | "para" | "middot" | "cedil" | "sup1" | "ordm" | "raquo" | "frac14" | "frac12" | "frac34" | "iquest" | "Agrave" | "Aacute" | "Acirc" | "Atilde" | "Auml" | "Aring" | "AElig" | "Ccedil" | "Egrave" | "Eacute" | "Ecirc" | "Euml" | "Igrave" | "Iacute" | "Icirc" | "Iuml" | "ETH" | "Ntilde" | "Ograve" | "Oacute" | "Ocirc" | "Otilde" | "Ouml" | "times" | "Oslash" | "Ugrave" | "Uacute" | "Ucirc" | "Uuml" | "Yacute" | "THORN" | "szlig" | "agrave" | "aacute" | "acirc" | "atilde" | "auml" | "aring" | "aelig" | "ccedil" | "egrave" | "eacute" | "ecirc" | "euml" | "igrave" | "iacute" | "icirc" | "iuml" | "eth" | "ntilde" | "ograve" | "oacute" | "ocirc" | "otilde" | "ouml" | "divide" | "oslash" | "ugrave" | "uacute" | "ucirc" | "uuml" | "yacute" | "thorn" | "yuml" | "OElig" | "oelig" | "Scaron" | "scaron" | "Yuml" | "fnof" | "circ" | "tilde" | "Alpha" | "Beta" | "Gamma" | "Delta" | "Epsilon" | "Zeta" | "Eta" | "Theta" | "Iota" | "Kappa" | "Lambda" | "Mu" | "Nu" | "Xi" | "Omicron" | "Pi" | "Rho" | "Sigma" | "Tau" | "Upsilon" | "Phi" | "Chi" | "Psi" | "Omega" | "alpha" | "beta" | "gamma" | "delta" | "epsilon" | "zeta" | "eta" | "theta" | "iota" | "kappa" | "lambda" | "mu" | "nu" | "xi" | "omicron" | "pi" | "rho" | "sigmaf" | "sigma" | "tau" | "upsilon" | "phi" | "chi" | "psi" | "omega" | "thetasym" | "upsih" | "piv" | "ensp" | "emsp" | "thinsp" | "zwnj" | "zwj" | "lrm" | "rlm" | "ndash" | "mdash" | "lsquo" | "rsquo" | "sbquo" | "ldquo" | "rdquo" | "bdquo" | "dagger" | "Dagger" | "bull" | "hellip" | "permil" | "prime" | "Prime" | "lsaquo" | "rsaquo" | "oline" | "frasl" | "euro" | "image" | "weierp" | "real" | "trade" | "alefsym" | "larr" | "uarr" | "rarr" | "darr" | "harr" | "crarr" | "lArr" | "uArr" | "rArr" | "dArr" | "hArr" | "forall" | "part" | "exist" | "empty" | "nabla" | "isin" | "notin" | "ni" | "prod" | "sum" | "minus" | "lowast" | "radic" | "prop" | "infin" | "ang" | "and" | "or" | "cap" | "cup" | "'int'" | "there4" | "sim" | "cong" | "asymp" | "ne" | "equiv" | "le" | "ge" | "sub" | "sup" | "nsub" | "sube" | "supe" | "oplus" | "otimes" | "perp" | "sdot" | "lceil" | "rceil" | "lfloor" | "rfloor" | "lang" | "rang" | "loz" | "spades" | "clubs" | "hearts" | "diams"
 *)
 let htmlentity = alphanumeric alphanumeric alphanumeric? alphanumeric? alphanumeric? alphanumeric? alphanumeric? alphanumeric?
+
+(* minus sign in front of negative numbers
+   (only for types! regular numbers use T_MINUS!) *)
+let neg = '-' whitespace*
 
 rule token env = parse
   (* Ignored *)
@@ -772,25 +792,31 @@ and type_token env = parse
    *)
 
   (* Numbers cannot be immediately followed by words *)
-  | binnumber ((letter | ['2'-'9']) alphanumeric* as w)
-                       { illegal_number env lexbuf w (T_NUMBER BINARY) }
-  | binnumber          { env, T_NUMBER BINARY }
-  | octnumber ((letter | ['8'-'9']) alphanumeric* as w)
-                       { illegal_number env lexbuf w (T_NUMBER OCTAL) }
-  | octnumber          { env, T_NUMBER OCTAL }
-  | legacyoctnumber ((letter | ['8'-'9']) alphanumeric* as w)
-                       { illegal_number env lexbuf w (T_NUMBER LEGACY_OCTAL) }
-  | legacyoctnumber    { env, T_NUMBER LEGACY_OCTAL }
-  | hexnumber (non_hex_letter alphanumeric* as w)
-                       { illegal_number env lexbuf w (T_NUMBER NORMAL) }
-  | hexnumber          { env, T_NUMBER NORMAL }
-  | scinumber (word as w)
-                       { illegal_number env lexbuf w (T_NUMBER NORMAL) }
-  | scinumber          { env, T_NUMBER NORMAL }
-  | (wholenumber | floatnumber) (word as w)
-                       { illegal_number env lexbuf w (T_NUMBER NORMAL) }
-  | wholenumber
-  | floatnumber        { env, T_NUMBER NORMAL }
+  | (neg? as neg) (binnumber as num) ((letter | ['2'-'9']) alphanumeric* as w)
+      { illegal_number env lexbuf w (mk_num_singleton BINARY num neg) }
+  | (neg? as neg) (binnumber as num)
+      { env, mk_num_singleton BINARY num neg }
+  | (neg? as neg) (octnumber as num) ((letter | ['8'-'9']) alphanumeric* as w)
+      { illegal_number env lexbuf w (mk_num_singleton OCTAL num neg) }
+  | (neg? as neg) (octnumber as num)
+      { env, mk_num_singleton OCTAL num neg }
+  | (neg? as neg) (legacyoctnumber as num) ((letter | ['8'-'9']) alphanumeric* as w)
+      { illegal_number env lexbuf w (mk_num_singleton LEGACY_OCTAL num neg) }
+  | (neg? as neg) (legacyoctnumber as num)
+      { env, mk_num_singleton LEGACY_OCTAL num neg }
+  | (neg? as neg) (hexnumber as num) (non_hex_letter alphanumeric* as w)
+      { illegal_number env lexbuf w (mk_num_singleton NORMAL num neg) }
+  | (neg? as neg) (hexnumber as num)
+      { env, mk_num_singleton NORMAL num neg }
+  | (neg? as neg) (scinumber as num) (word as w)
+      { illegal_number env lexbuf w (mk_num_singleton NORMAL num neg) }
+  | (neg? as neg) (scinumber as num)
+      { env, mk_num_singleton NORMAL num neg }
+  | (neg? as neg) ((wholenumber | floatnumber) as num) (word as w)
+      { illegal_number env lexbuf w (mk_num_singleton NORMAL num neg) }
+  | (neg? as neg) (wholenumber as num)
+  | (neg? as neg) (floatnumber as num)
+      { env, mk_num_singleton NORMAL num neg }
 
   (* Keyword or Identifier *)
   | word as word       {

@@ -226,6 +226,8 @@ type t =
   | AdderT of reason * t * t
   (* overloaded relational operator, could be subsumed by general overloading *)
   | ComparatorT of reason * t
+  (* unary minus operator on numbers, allows negative number literals *)
+  | UnaryMinusT of reason * t
 
   (* operation specifying a type refinement via a predicate *)
   | PredicateT of predicate * t
@@ -524,6 +526,7 @@ let is_use = function
   | ObjRestT _
   | ObjSealT _
   | ObjTestT _
+  | UnaryMinusT _
   | UnifyT _
   | GetKeysT _
   | HasKeyT _
@@ -595,6 +598,7 @@ let rec reason_of_t = function
 
   | AdderT (reason,_,_)
   | ComparatorT (reason,_)
+  | UnaryMinusT (reason, _)
 
   | AndT (reason, _, _)
   | OrT (reason, _, _)
@@ -757,6 +761,7 @@ let rec mod_reason_of_t f = function
 
   | AdderT (reason, rt, lt) -> AdderT (f reason, rt, lt)
   | ComparatorT (reason, t) -> ComparatorT (f reason, t)
+  | UnaryMinusT (reason, t) -> UnaryMinusT (f reason, t)
 
   | TypeT (reason, t) -> TypeT (f reason, t)
   | AnnotT (assert_t, assume_t) ->
@@ -905,6 +910,7 @@ let string_of_ctor = function
   | ObjRestT _ -> "ObjRestT"
   | ObjSealT _ -> "ObjSealT"
   | ObjTestT _ -> "ObjTestT"
+  | UnaryMinusT _ -> "UnaryMinusT"
   | UpperBoundT _ -> "UpperBoundT"
   | LowerBoundT _ -> "LowerBoundT"
   | AnyObjT _ -> "AnyObjT"

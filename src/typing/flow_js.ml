@@ -3024,6 +3024,26 @@ let rec __flow cx (l, u) trace =
       flow_eq cx trace reason l r;
       Ops.pop ()
 
+    (************************)
+    (* unary minus operator *)
+    (************************)
+
+    | (NumT (_, lit), UnaryMinusT (reason_op, t_out)) ->
+      let num = match lit with
+      | Literal (value, raw) ->
+        let raw_len = String.length raw in
+        let raw = if raw_len > 0 && raw.[0] = '-'
+          then String.sub raw 1 (raw_len - 1)
+          else "-" ^ raw
+        in
+        NumT (reason_op, Literal (~-. value, raw))
+      | AnyLiteral
+      | Truthy
+      | Falsy ->
+        l
+      in
+      rec_flow cx trace (num, t_out)
+
     (**************************************)
     (* types may be refined by predicates *)
     (**************************************)
@@ -3337,6 +3357,7 @@ and err_operation = function
   | LookupT _ -> "Property not found in"
   | GetKeysT _ -> "Expected object instead of"
   | HasKeyT _ -> "Property not found in"
+  | UnaryMinusT _ -> "Expected number instead of"
   (* unreachable or unclassified use-types. until we have a mechanical way
      to verify that all legit use types are listed above, we can't afford
      to throw on a use type, so mark the error instead *)
@@ -5397,6 +5418,9 @@ let rec gc cx state = function
   | ObjTestT (_, t1, t2) ->
       gc cx state t1;
       gc cx state t2
+
+  | UnaryMinusT (_, t) ->
+      gc cx state t
 
   | UnifyT (t1, t2) ->
       gc cx state t1;

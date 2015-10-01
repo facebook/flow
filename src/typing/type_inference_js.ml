@@ -3723,7 +3723,13 @@ and unary cx type_params_map loc = Ast.Expression.Unary.(function
       ignore (expression cx type_params_map argument);
       NumT.at loc
 
-  | { operator = Minus; argument; _ }
+  | { operator = Minus; argument; _ } ->
+      let arg = expression cx type_params_map argument in
+      let reason = mk_reason "unary minus operator" loc in
+      Flow_js.mk_tvar_where cx reason (fun t ->
+        Flow_js.flow cx (arg, UnaryMinusT (reason, t));
+      )
+
   | { operator = BitNot; argument; _ } ->
       let t = NumT.at loc in
       Flow_js.flow cx (expression cx type_params_map argument, t);

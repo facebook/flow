@@ -1,7 +1,7 @@
 
+unary.js:8:10,11: unary minus operator
+Expected number instead of
 unary.js:8:11,11: string
-This type is incompatible with
-unary.js:8:10,11: number
 
 unary.js:12:3,3: string
 This type is incompatible with

@@ -15,4 +15,8 @@ enum_client.js:21:18,35: number
 This type is incompatible with
 enum_client.js:21:9,14: string
 
-Found 4 errors
+number.js:6:10,11: unary minus operator
+Expected number instead of
+number.js:6:11,11: string
+
+Found 5 errors

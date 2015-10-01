@@ -760,6 +760,10 @@ and _json_of_t_impl json_cx t = Json.(
       "type", _json_of_t json_cx t
     ]
 
+  | UnaryMinusT (_, t) -> [
+      "type", _json_of_t json_cx t
+    ]
+
   | PredicateT (p, t) -> [
       "pred", json_of_pred json_cx p;
       "type", _json_of_t json_cx t
@@ -1660,6 +1664,7 @@ class ['a] type_visitor = object(self)
   | ObjRestT (_, _, _)
   | ObjSealT (_, _)
   | ObjTestT (_, _, _)
+  | UnaryMinusT (_, _)
   | UnifyT (_, _)
   | ConcretizeT (_, _, _, _)
   | ConcreteT _

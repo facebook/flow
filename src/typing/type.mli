@@ -85,6 +85,7 @@ type t =
 
   | AdderT of reason * t * t
   | ComparatorT of reason * t
+  | UnaryMinusT of reason * t
 
   | PredicateT of predicate * t
   | EqT of reason * t

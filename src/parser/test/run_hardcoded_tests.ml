@@ -77,6 +77,13 @@ end = struct
         JBool value
     | (_, Literal { Ast.Literal.value = Ast.Literal.Null; _ }) ->
         JNull
+    | (_, Unary { Unary.operator = Unary.Minus;
+                  prefix = true;
+                  argument = (_, Literal {
+                    Ast.Literal.value = Ast.Literal.Number num; _
+                  });
+                }) ->
+        JFloat (~-. num)
     | (_, Binary { Binary.operator = Binary.Plus; left; right; }) ->
         let left_json = parse_spec_value left in
         let right_json = parse_spec_value right in
