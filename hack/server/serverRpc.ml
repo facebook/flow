@@ -38,11 +38,7 @@ type _ t =
 let handle : type a. genv -> env -> a t -> a =
   fun genv env -> function
     | STATUS ->
-        (* Logging can be pretty slow, so do it asynchronously and respond to
-         * the client first *)
-        ServerIdle.async begin fun () ->
-          HackEventLogger.check_response env.errorl;
-        end;
+        HackEventLogger.check_response env.errorl;
         let el = ServerError.sort_errorl env.errorl in
         List.map ~f:Errors.to_absolute el
     | COVERAGE_LEVELS fn -> ServerColorFile.go env fn
