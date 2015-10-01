@@ -8,7 +8,7 @@
  *
  *)
 
-val make_next_files:
+val make_next_files: ?name: string ->
   (string -> bool) -> ?others: Path.t list -> Path.t ->
   (unit -> string list)
 

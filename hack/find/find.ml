@@ -42,10 +42,11 @@ let find_with_name paths pattern =
 (* Main entry point *)
 (*****************************************************************************)
 
-let make_next_files filter ?(others=[]) root =
+let make_next_files ?(name="") filter ?(others=[]) root =
   let paths = paths_to_path_string (root::others) in
   let ic = Unix.open_process_in ("find "^paths^" -type f") in
   let done_ = ref false in
+  let time_taken = ref 0.0 in
   (* This is subtle, but to optimize latency, we open the process and
    * then return a closure immediately. That way 'find' gets started
    * in parallel and will be ready when we need to get the list of
@@ -57,6 +58,7 @@ let make_next_files filter ?(others=[]) root =
     (* see multiWorker.mli, this is the protocol for nextfunc *)
     then []
     else
+      let t = Unix.gettimeofday () in
       let result = ref [] in
       let i = ref 0 in
       try
@@ -68,8 +70,12 @@ let make_next_files filter ?(others=[]) root =
             incr i;
           end
         done;
-        List.rev !result
+        let result = List.rev !result in
+        time_taken := !time_taken +. (Unix.gettimeofday () -. t);
+        result
       with End_of_file ->
         done_ := true;
+        EventLogger.find_done ~time_taken:!time_taken ~name;
+        Hh_logger.log "Spent %.2fs indexing %s files" !time_taken name;
         (try ignore (Unix.close_process_in ic) with _ -> ());
         !result

@@ -37,6 +37,7 @@ MODULES=\
   deps\
   dfind\
   emitter\
+  find\
   format\
   globals\
   h2tp/common\

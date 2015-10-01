@@ -147,8 +147,8 @@ module Program : SERVER_PROGRAM =
         ignore @@
         Sys.signal Sys.sigusr1 (Sys.Signal_handle Typing.debug_print_last_pos)
 
-    let make_next_files dir =
-      Find.make_next_files begin fun f ->
+    let make_next_files ~name dir =
+      Find.make_next_files ~name begin fun f ->
         (FindUtils.is_php f && not (FilesToIgnore.should_ignore f))
         || FindUtils.is_js f
       end dir
@@ -180,10 +180,12 @@ module Program : SERVER_PROGRAM =
       let module RP = Relative_path in
       let root = ServerArgs.root genv.options in
       let hhi_root = Hhi.get_hhi_root () in
-      let next_files_hhi =
-        compose (List.map ~f:(RP.create RP.Hhi)) (make_next_files hhi_root) in
-      let next_files_root =
-        compose (List.map ~f:(RP.create RP.Root)) (make_next_files root)
+      let next_files_hhi = compose
+        (List.map ~f:(RP.create RP.Hhi))
+        (make_next_files ~name:"hhi" hhi_root) in
+      let next_files_root = compose
+        (List.map ~f:(RP.create RP.Root))
+        (make_next_files ~name:"root" root)
       in
       let next_files = fun () ->
         match next_files_hhi () with

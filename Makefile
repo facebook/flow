@@ -49,6 +49,7 @@ MODULES=\
   src/typing\
   hack/deps\
   hack/dfind\
+  hack/find\
   hack/globals\
   hack/heap\
   hack/parsing\
