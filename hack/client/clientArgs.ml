@@ -64,6 +64,7 @@ let parse_check_args cmd =
   let autostart = ref true in
   let from = ref "" in
   let version = ref false in
+  let logname = ref false in
 
   (* custom behaviors *)
   let set_from x () = from := x in
@@ -179,6 +180,8 @@ let parse_check_args cmd =
       " (mode) find all occurrences of lint with the given error code";
     "--version", Arg.Set version,
       " (mode) show version and exit\n";
+    "--logname", Arg.Set logname,
+      " (mode) show log filename and exit\n";
     (* Create a checkpoint which can be used to retrieve changed files later *)
     "--create-checkpoint", Arg.String (fun x -> set_mode (MODE_CREATE_CHECKPOINT x) ()),
       "";
@@ -241,6 +244,13 @@ let parse_check_args cmd =
         Printf.fprintf stderr "Error: please provide at most one www directory\n%!";
         exit 1;
   in
+
+  if !logname then begin
+    let log_link = ServerFiles.log_link root in
+    print_endline log_link;
+    exit 0;
+  end;
+
   let () = if (!from) = "emacs" then
       Printf.fprintf stdout "-*- mode: compilation -*-\n%!"
   in
