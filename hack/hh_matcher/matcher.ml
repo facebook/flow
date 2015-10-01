@@ -12,6 +12,8 @@ open Ast
 open Patcher
 open Hh_match_utils
 
+module List = Core_list
+
 (* ========================= TYPES =========================== *)
 
 (* for processing php identifiers such that we can use them
@@ -35,6 +37,10 @@ type id_type =
 type metavar_tgt =
   | NodeList of ast_node list
   | Literal of string
+
+type skipany_ast_node =
+  | SkipanyBlock of block
+  | SkipanyExpr of expr
 
 (* Put patches in a set because it is common for many of the same
    patch to be put in the environment when patterns include SkipAny
@@ -115,26 +121,26 @@ let _contains_match = function
 let concat_match_results_nodup
       (results : match_result list) : match_result =
     List.fold_left
-    (fun res_acc new_res ->
-     match res_acc, new_res with
-     | Matches matches_so_far , Matches new_matches ->
-        Matches (List.rev_append new_matches matches_so_far)
-     | Matches _, NoMatch -> res_acc
-     | NoMatch, Matches  _ -> new_res
-     | NoMatch, NoMatch -> NoMatch)
-    NoMatch
+    ~f:(fun res_acc new_res ->
+        match res_acc, new_res with
+        | Matches matches_so_far , Matches new_matches ->
+          Matches (List.rev_append new_matches matches_so_far)
+        | Matches _, NoMatch -> res_acc
+        | NoMatch, Matches  _ -> new_res
+        | NoMatch, NoMatch -> NoMatch)
+    ~init:NoMatch
     results
 
 let concat_match_results (results : match_result list) : match_result =
   List.fold_left
-    (fun res_acc new_res ->
-     match res_acc, new_res with
-     | Matches matches_so_far , Matches new_matches ->
-        Matches (matches_so_far @ new_matches)
-     | Matches _, NoMatch -> res_acc
-     | NoMatch, Matches  _ -> new_res
-     | NoMatch, NoMatch -> NoMatch)
-    NoMatch
+    ~f:(fun res_acc new_res ->
+        match res_acc, new_res with
+        | Matches matches_so_far , Matches new_matches ->
+          Matches (matches_so_far @ new_matches)
+        | Matches _, NoMatch -> res_acc
+        | NoMatch, Matches  _ -> new_res
+        | NoMatch, NoMatch -> NoMatch)
+    ~init:NoMatch
     results
 
 let find_substring to_search substring =
@@ -233,17 +239,17 @@ class metavar_instantiating_ctr (env : matcher_env) = object
             (* Verify that the list is homogenous, If it is,
                replace the statement with it *)
             if List.exists
-                 (function
-                   | Hh_match_utils.Stmt _ -> false
-                   | _ -> true) vals
+                 ~f:(function
+                     | Hh_match_utils.Stmt _ -> false
+                     | _ -> true) vals
             then super#on_stmt env s
             else
               List.map
-                (function
-                  | Hh_match_utils.Stmt mvar_val -> mvar_val
-                  | _ ->
-                     failwith ("should never happen unless you" ^
-                           " metavariables are broken")) vals
+                ~f:(function
+                    | Hh_match_utils.Stmt mvar_val -> mvar_val
+                    | _ ->
+                       failwith ("should never happen unless you" ^
+                             " metavariables are broken")) vals
          | _ -> super#on_stmt env s
          with Not_found -> super#on_stmt env s end
       | _ -> super#on_stmt env s
@@ -257,16 +263,16 @@ class metavar_instantiating_ctr (env : matcher_env) = object
          match mval with
          | NodeList vals ->
             if List.exists
-                 (function
-                   | Hh_match_utils.Expr _ -> false
-                   | _ -> true) vals
+                 ~f:(function
+                     | Hh_match_utils.Expr _ -> false
+                     | _ -> true) vals
             then super#on_expr env e
             else
               List.map
-                (function
-                  | Hh_match_utils.Expr mvar_val -> mvar_val
-                  | _ -> failwith ("should never happen unless you" ^
-                           " metavariables are broken")) vals
+                ~f:(function
+                    | Hh_match_utils.Expr mvar_val -> mvar_val
+                    | _ -> failwith ("should never happen unless you" ^
+                             " metavariables are broken")) vals
          | _ -> super#on_expr env e
          with Not_found -> super#on_expr env e end
       | _ -> super#on_expr env e
@@ -289,7 +295,7 @@ let stmt_to_text env stmts =
   (* instantiate relevant metavariables *)
   stmts |>
     List.map
-      ((new metavar_instantiating_ctr env)#on_stmt ()) |>
+      ~f:((new metavar_instantiating_ctr env)#on_stmt ()) |>
     List.concat |> Unparser.Unparse.u_naked_block |>
     Unparsed.to_string
 
@@ -298,7 +304,7 @@ let expr_to_text env exprs =
   (* instantiate relevant metavariables *)
   exprs |>
     List.map
-      ((new metavar_instantiating_ctr env)#on_expr ()) |>
+      ~f:((new metavar_instantiating_ctr env)#on_expr ()) |>
     List.concat |>
     (fun expr_list -> Expr_list expr_list) |>
     Unparser.Unparse.u_expr_ |>
@@ -541,7 +547,7 @@ module LM =
           | Some key, Some to_node_fn ->
              if MetavarMap.mem key env.metavars then env
              else
-               let mapped_nodes = List.map to_node_fn skipped_text in
+               let mapped_nodes = List.map ~f:to_node_fn skipped_text in
                { env with
                  metavars =
                    MetavarMap.add
@@ -729,7 +735,7 @@ module LM =
             range_adjustment_fn = adjust_fn } in
         res, { env with patches = PatchSet.add newpatch env.patches } in
       (* check if the element is in the list of nodes to be deleted*)
-      if List.exists (fun to_del -> pat_elem == to_del) delete_list
+      if List.exists ~f:(fun to_del -> pat_elem == to_del) delete_list
       then
         create_patch ""
       (* check if we have a relevant transformation*)
@@ -1420,10 +1426,11 @@ and try_match
           (pattern : stmt list)
           (env : matcher_env) : match_result * matcher_env =
       List.fold_left
-        (fun (res_so_far, env) text_blk ->
-         let text_res, env' = match_stmt (Block text_blk) (Block pattern) env in
-         (concat_match_results_nodup [res_so_far; text_res]), env')
-        (NoMatch, env)
+        ~f:(fun (res_so_far, env) text_blk ->
+            let text_res, env' =
+              match_stmt (Block text_blk) (Block pattern) env in
+            (concat_match_results_nodup [res_so_far; text_res]), env')
+        ~init:(NoMatch, env)
         child_text in
 
     (* Try to match a SkipAny: match sa_pattern over all children of
@@ -1678,38 +1685,90 @@ and match_import_flavor
   then dummy_success_res, env
   else NoMatch, env
 
-(* Gets the expression that is the pattern while verifying the pattern
-   is of the correct form (returning None if the pattern is not) *)
-and get_skipany_expr = function
-  | [Ast.Stmt (Ast.Expr exp)] -> Some exp
-  | _ -> None
-
 (* Tries to match the text with the pattern recursively, trying to match
-   the given expression with any expression in the program specified *)
-and handle_expr_skipany
+   the given pattern in the program specified *)
+and handle_skipany
       (text : program)
-      (p_expr : expr)
-      (env : matcher_env) :
-      match_result * matcher_env =
+      (pat : skipany_ast_node)
+      (env : matcher_env) : match_result * matcher_env =
     (* given a chunk of text that was skipped over by a SkipAny
        find all the possible chunks that could match the SkipAny pattern
        (all child blocks + self) *)
-    let find_child_text () : expr list =
-      let visitor = new expr_finding_visitor () in
-      visitor#on_program [] text in
+    let find_child_text visitor = visitor#on_program [] text in
 
     (* given an output of find_child_text, find all the matches,
        update env if necessary *)
     let match_child_text
-          (child_text : expr list)
+          (child_text)
+          (pat)
+          (match_fn)
           (env : matcher_env) : match_result * matcher_env =
       List.fold_left
-        (fun (res_so_far, env) text_exp ->
-         let text_res, env' = match_expr text_exp p_expr env in
-         (concat_match_results_nodup [res_so_far; text_res]), env')
-        (NoMatch, env)
+        ~f:(fun (res_so_far, env) text_node ->
+            let text_res, env' = match_fn text_node pat env in
+            (concat_match_results_nodup [res_so_far; text_res]), env')
+        ~init:(NoMatch, env)
         child_text in
-    match_child_text (find_child_text ()) env
+
+    match pat with
+    | SkipanyExpr e -> match_child_text
+      (find_child_text (new expr_finding_visitor ())) e match_expr env
+    | SkipanyBlock b -> match_child_text
+      (find_child_text (new block_finding_visitor ())) b
+      match_statements_in_block env
+
+and handle_expr_skipany
+      (text : program)
+      (p_expr : expr)
+      (env : matcher_env) : match_result * matcher_env =
+    handle_skipany text (SkipanyExpr p_expr) env
+
+and handle_stmt_skipany
+      (text : program)
+      (p_stmts : block)
+      (env : matcher_env) : match_result * matcher_env =
+    handle_skipany text (SkipanyBlock p_stmts) env
+
+(* Finds all matches of the statement list p_stmts inside the block t_block *)
+and match_statements_in_block
+      (t_block : block)
+      (p_stmts : stmt list)
+      (env : matcher_env) : (match_result * matcher_env) =
+  let p_len = List.length p_stmts in
+
+  (* Walk through a list of statements and check at each one if the sequence of
+     statements starting there matches the pattern *)
+  let rec find_matching_sublists t_stmts env : match_result list * matcher_env =
+    match t_stmts with
+    | [] -> ([], env)
+    | _::t_stmts' as stmts ->
+      let t_stmts = List.take stmts p_len in
+      (* Produces an option on a list of matched statements and the matching
+         environment.  If there is one statement that isn't matched by the
+         pattern this will be None *)
+      let rec match_stmt_lists t_stmts p_stmts env =
+        match (t_stmts, p_stmts) with
+        | ([], []) -> Some ([], env)
+        | (ts::t_stmts', ps::p_stmts') -> begin
+          match match_stmt ts ps env with
+          | (NoMatch, _) -> None
+          | (m, env') -> begin
+            match match_stmt_lists t_stmts' p_stmts' env' with
+            | None -> None
+            | Some (l, env'') -> Some (m :: l, env'') end
+          end
+        | _ -> None in
+
+      let (matches, env') = match match_stmt_lists t_stmts p_stmts env with
+        | None -> ([], env)
+        | Some p -> p in
+
+      (* Collapse match results into one match, and recurse *)
+      let (l, e) = find_matching_sublists t_stmts' env' in
+      (concat_match_results_nodup matches :: l, e) in
+
+  let matches, env' = find_matching_sublists t_block env in
+  (concat_match_results_nodup matches, env')
 
 and match_expr
       (t_expr : expr)
@@ -1945,45 +2004,76 @@ let find_matches
   | Matches result -> result
   | NoMatch -> []
 
+(* takes a program that consists of a single toplevel block i.e. a pattern used
+   with the -s switch, and returns a list of that blocks' statements *)
+let get_skipany_stmt = function
+  | [Ast.Stmt (Ast.Block stmts)] -> Some stmts
+  | _ -> None
+
+let find_matches_expr_or_stmt
+      (text : program)
+      (text_file : Relative_path.t)
+      (text_content : string)
+      (pattern : program)
+      (skipany_fn)
+      (skipany_handler_fn) : (ast_node * Lexing.position) list =
+  match skipany_fn pattern with
+    | Some stmts -> begin
+        let res, _ =
+          skipany_handler_fn text stmts
+            { file = text_file;
+              source = text_content;
+              metavars = MetavarMap.empty;
+              transformations =
+                { stmt_delete_list = [];
+                  expr_delete_list = [];
+                  stmt_transf_map = [];
+                  expr_transf_map = [] };
+              patches = PatchSet.empty } in
+       match res with
+       | Matches result -> let _ =
+         print_int (List.length result);
+         print_string " " in result
+       | NoMatch -> [] end
+    | None -> []
+
+(* function for searching for statements *)
+let find_matches_stmt
+      (text : program)
+      (text_file : Relative_path.t)
+      (text_content : string)
+      (pattern : program) : (ast_node * Lexing.position) list =
+  find_matches_expr_or_stmt text text_file text_content pattern get_skipany_stmt
+    handle_stmt_skipany
+
+(* Gets the expression that is the pattern while verifying the pattern
+   is of the correct form (returning None if the pattern is not) *)
+let get_skipany_expr = function
+  | [Ast.Stmt (Ast.Expr exp)] -> Some exp
+  | _ -> None
+
 (* function for searching for expressions *)
 let find_matches_expr
       (text : program)
       (text_file : Relative_path.t)
       (text_content : string)
       (pattern : program) : (ast_node * Lexing.position) list =
-  match get_skipany_expr pattern with
-  | Some pat -> begin
-     let res, _ =
-       handle_expr_skipany
-         text
-         pat
-         { file = text_file;
-           source = text_content;
-           metavars = MetavarMap.empty;
-           transformations =
-             { stmt_delete_list = [];
-               expr_delete_list = [];
-               stmt_transf_map = [];
-               expr_transf_map = [] };
-           patches = PatchSet.empty } in
-     match res with
-     | Matches result -> let _ = print_int (List.length result) in result
-     | NoMatch -> [] end
-  | None -> []
+  find_matches_expr_or_stmt text text_file text_content pattern get_skipany_expr
+    handle_expr_skipany
 
-(* function for patching expressions *)
-let patch_expr
+(* general patching function for statements and expressions *)
+let patch_expr_or_stmt
       (text : program)
       (text_file : Relative_path.t)
       (text_content : string)
       (pattern : program)
       (transformations : patch_maps)
-      ~(use_hh_format : bool) :
-      string option =
-  match get_skipany_expr pattern with
+      ~(use_hh_format : bool)
+      (patch_fn) (skipany_fn): string option =
+  match skipany_fn pattern with
   | Some pat -> begin
      let res, env =
-       handle_expr_skipany
+       patch_fn
          text
          pat
          { file = text_file;
@@ -2002,6 +2092,29 @@ let patch_expr
                   ~patches:(PatchSet.elements env.patches)
                   ~format_result:use_hh_format) end
   | None -> None
+
+(* function for patching statements *)
+let patch_stmt
+      (text : program)
+      (text_file : Relative_path.t)
+      (text_content : string)
+      (pattern : program)
+      (transformations : patch_maps)
+      ~(use_hh_format : bool) : string option =
+  patch_expr_or_stmt text text_file text_content pattern transformations
+    use_hh_format handle_stmt_skipany get_skipany_stmt
+
+(* function for patching expressions *)
+let patch_expr
+      (text : program)
+      (text_file : Relative_path.t)
+      (text_content : string)
+      (pattern : program)
+      (transformations : patch_maps)
+      ~(use_hh_format : bool) :
+      string option =
+  patch_expr_or_stmt text text_file text_content pattern transformations
+    use_hh_format handle_expr_skipany get_skipany_expr
 
 let match_and_patch
       (text : program)
@@ -2053,6 +2166,4 @@ let format_matches
       (String.sub text_code bol_pos (eol_pos - bol_pos)) in
   (String.concat
      "\n"
-     (List.map
-        format_single_match
-        match_list))
+     (List.map ~f:format_single_match match_list))

@@ -126,6 +126,11 @@ let exists2_exn l1 l2 ~f =
 
 let mem ?(equal = (=)) t a = List.exists t ~f:(equal a)
 
+(* This is a copy of the standard library assq function. *)
+let rec assq x = function
+    [] -> raise Not_found
+  | (a,b)::l -> if a == x then b else assq x l
+
 (* This is a copy of the code from the standard library, with an extra eta-expansion to
    avoid creating partial closures (showed up for List.filter in profiling). *)
 let rev_filter t ~f =

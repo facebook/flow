@@ -8,8 +8,7 @@
  *
  *)
 
-open Core
-open Utils
+ module List = Core_list
 
 (*****************************************************************************)
 (* Parsing the command line *)
@@ -23,6 +22,7 @@ let parse_args() =
   let use_hh_f = ref false in
   let verbose = ref false in
   let expr_mode = ref false in
+  let stmt_mode = ref false in
   Arg.parse
     [
       "-p", Arg.String (fun x -> pattern := Some x),
@@ -50,11 +50,16 @@ let parse_args() =
 
       "-e", Arg.Set expr_mode,
       "Search for a single expression (pattern and target must both be
-       nonstrict and consist of a single statement that is an expression)"
+       nonstrict and consist of a single statement that is an expression)";
+
+      "-s", Arg.Set stmt_mode,
+      "Search for a sequence of statments (pattern and target must consist of a
+       single block containing a sequence of statements)"
     ]
     (fun file -> files := file :: !files)
     (Printf.sprintf "Usage: %s (filename|directory)" Sys.argv.(0));
-  !files, !pattern, !target, !use_hh_f, !verbose, !showpatch, !expr_mode
+  !files, !pattern, !target, !use_hh_f, !verbose, !showpatch, !expr_mode,
+  !stmt_mode
 
 
 let path_to_relative filepath =
@@ -88,11 +93,11 @@ let parse_file file : match_ret * string * Parser_hack.parser_return =
         (* Get a nice string to display about the parsing exception *)
         ParsingException
           (List.fold_left
-             (Common_exns.flatten_error
-                (Common_exns.ParseErrors parsing_errors))
              ~f:(fun so_far str_pair ->
                  so_far ^ "\n" ^ fst str_pair ^ " " ^ snd str_pair)
-             ~init:"")
+             ~init:""
+             (Common_exns.flatten_error
+                (Common_exns.ParseErrors parsing_errors)))
       else Success in
   (pr, content, parser_output)
 
@@ -134,7 +139,6 @@ let hh_match_job
       (fn : a -> Path.t -> match_ret) : int =
   try
   List.fold_left
-    fnl
     ~f:(fun acc filename ->
         try
           (* try to do the patch *)
@@ -151,6 +155,7 @@ let hh_match_job
           print_endline ("\nexception on file " ^ (Path.to_string filename));
           acc end)
     ~init:0
+    fnl
   with _ ->
        let _ = print_endline "failed on job" in
        acc
@@ -159,7 +164,7 @@ let hh_match_job
    them off to worker threads *)
 let directory dir fn =
   let path = Path.make dir in
-  let next = compose
+  let next = Utils.compose
     (List.map ~f:Path.make)
     (Find.make_next_files FindUtils.is_php path) in
   let workers = Worker.make GlobalConfig.nbr_procs GlobalConfig.gc_control in
@@ -181,10 +186,13 @@ let directory dir fn =
 
 (* Patches a single file *)
 let patch_file pat_info txt_file : match_ret =
-  let (transformations, pattern_ast, format_patches), is_expr = pat_info in
+  let (transformations, pattern_ast, format_patches), is_expr, is_stmt =
+    pat_info in
   let patch_fun =
     if is_expr
     then Matcher.patch_expr
+    else if is_stmt
+    then Matcher.patch_stmt
     else Matcher.match_and_patch in
   matcher_exception_wrapper
     (fun _ txt_src txt_parse_ret ->
@@ -233,11 +241,13 @@ let patch_job pat_info acc fnl =
 (*****************************************************************************)
 
 (* Does matching over a single file *)
-let match_file env txt_file : match_ret =
-  let (pat_ast, _pat_file), print_verbose, is_expr = env in
+let match_file pat_info txt_file : match_ret =
+  let (pat_ast, _pat_file), print_verbose, is_expr, is_stmt = pat_info in
   let match_fun =
     if is_expr
     then Matcher.find_matches_expr
+    else if is_stmt
+    then Matcher.find_matches_stmt
     else Matcher.find_matches in
   matcher_exception_wrapper
     (fun _ txt_src txt_parse_ret ->
@@ -284,8 +294,8 @@ let match_job pat_info acc fnl =
 
 let () =
   SharedMem.(init default_config);
-  let files, pattern, target, format_patches, verbose, showpatch, expr_mode =
-    parse_args() in
+  let files, pattern, target, format_patches, verbose, showpatch, expr_mode,
+    stmt_mode = parse_args() in
   (* Make sure there's a pattern and a target *)
   let pattern = match pattern with
     | None -> Printf.eprintf "No pattern specified\n"; exit 2
@@ -294,35 +304,34 @@ let () =
   | None -> begin (* Matching not patching *)
      match files with
      | [dir] when Sys.is_directory dir ->
-        let pat_info = (preproc_match pattern), verbose, expr_mode in
+        let pat_info = (preproc_match pattern), verbose, expr_mode, stmt_mode in
         directory dir (match_job pat_info)
      | [filename] ->
         let filepath = Path.make filename in
-        let pat_info = (preproc_match pattern), verbose, expr_mode in
+        let pat_info = (preproc_match pattern), verbose, expr_mode, stmt_mode in
         ignore(match_file pat_info filepath)
      | _ ->
         Printf.eprintf "More than one file given\n";
         exit 2 end
   | Some fname -> (* Patching not matching *)
      let target = Path.make fname in
-     let pat_info = (preproc_patch pattern target format_patches), expr_mode in
+     let pat_info =
+       (preproc_patch pattern target format_patches), expr_mode, stmt_mode in
      if showpatch
      then begin
-       let (transfs,_,_),_ = pat_info in
+       let (transfs,_,_),_,_ = pat_info in
        let relpat = path_to_relative pattern in
        let strns =
          Patcher.to_string_patch_maps
            transfs relpat (Sys_utils.cat (Relative_path.to_absolute relpat)) in
        print_endline "Stmt transformations:";
        List.fold_left
-         ~f:(fun _ before ->
-             print_endline before)
+         ~f:(fun _ before -> print_endline before)
          ~init:()
          (fst strns);
        print_endline "Expr transformations:";
        List.fold_left
-         ~f:(fun _ before ->
-             print_endline before)
+         ~f:(fun _ before -> print_endline before)
          ~init:()
          (snd strns) end
      else
