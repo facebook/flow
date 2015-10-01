@@ -2975,7 +2975,8 @@ and variable cx type_params_map kind
 and array_element cx type_params_map undef_loc el = Ast.Expression.(
   match el with
   | Some (Expression e) -> expression cx type_params_map e
-  | Some (Spread (_, { SpreadElement.argument })) -> spread cx type_params_map argument
+  | Some (Spread (_, { SpreadElement.argument })) ->
+      array_element_spread cx type_params_map argument
   | None -> UndefT.at undef_loc
 )
 
@@ -2984,12 +2985,15 @@ and expression_or_spread cx type_params_map = Ast.Expression.(function
   | Spread (_, { SpreadElement.argument }) -> spread cx type_params_map argument
 )
 
-and spread cx type_params_map (loc, e) =
+and array_element_spread cx type_params_map (loc, e) =
   let arr = expression cx type_params_map (loc, e) in
   let reason = mk_reason "spread operand" loc in
-  let tvar = Flow_js.mk_tvar cx reason in
-  Flow_js.flow cx (arr, ArrT (reason, tvar, []));
-  RestT tvar
+  Flow_js.mk_tvar_where cx reason (fun tvar ->
+    Flow_js.flow cx (arr, ArrT (reason, tvar, []));
+  )
+
+and spread cx type_params_map (loc, e) =
+  RestT (array_element_spread cx type_params_map (loc, e))
 
 (* NOTE: the is_cond flag is only used when checking the type of conditions in
    `predicates_of_condition`: see comments on function `condition`. *)
@@ -3172,14 +3176,9 @@ and expression_ ~is_cond cx type_params_map loc e = Ast.Expression.(match e with
         (* tset is set of distinct (mod reason) elem types *)
         (* tlist is reverse list of element types if tup, else [] *)
         let tup, tset, tlist = List.fold_left (fun (tup, tset, tlist) elem ->
-          let tup, elemt = match elem with
-          | Some (Expression e) ->
-              tup, expression cx type_params_map e
-          | Some (Spread (_, { SpreadElement.argument })) ->
-              false, spread cx type_params_map argument
-          | None ->
-              tup, UndefT.at loc
-          in
+          let elemt = array_element cx type_params_map loc elem in
+
+          let tup = match elem with Some (Spread _) -> false | _ -> tup in
           let elemt = if tup then elemt else summarize cx elemt in
           tup,
           TypeExSet.add elemt tset,
