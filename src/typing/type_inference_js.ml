@@ -5133,6 +5133,13 @@ and mk_signature cx reason_c type_params_map superClass body = Ast.Class.(
         (* TODO: Does this distinction matter for the type checker? *)
         SMap.empty
   in
+
+  let default_sfields =
+    let reason = prefix_reason "`name` property of" reason_c in
+    SMap.singleton "name" (StrT.why reason)
+
+  in
+
   (* NOTE: We used to mine field declarations from field assignments in a
      constructor as a convenience, but it was not worth it: often, all that did
      was exchange a complaint about a missing field for a complaint about a
@@ -5300,7 +5307,7 @@ and mk_signature cx reason_c type_params_map superClass body = Ast.Class.(
         Flow_js.add_error cx [mk_reason "" loc, msg];
         sfields, smethods, sgetters, ssetters, fields, methods, getters, setters
   ) (
-    SMap.empty,      (* sfields *)
+    default_sfields, (* sfields *)
     SMap.empty,      (* smethods *)
     SMap.empty,      (* sgetters *)
     SMap.empty,      (* ssetters *)
