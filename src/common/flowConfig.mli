@@ -19,6 +19,7 @@ type options = {
   moduleSystem: moduleSystem;
   module_name_mappers: (Str.regexp * string) list;
   munge_underscores: bool;
+  module_file_exts: string list;
   suppress_comments: Str.regexp list;
   suppress_types: Utils.SSet.t;
   traces: int;

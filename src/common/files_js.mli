@@ -10,7 +10,7 @@
 
 (* utilities for supported filenames *)
 
-val flow_extensions: string list
+val global_file_name: string
 
 val is_flow_file: string -> bool
 
