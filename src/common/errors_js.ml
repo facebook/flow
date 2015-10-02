@@ -145,6 +145,8 @@ let default_style text = (C.Normal C.Default, text)
 let source_fragment_style text = (C.Normal C.Default, text)
 let error_fragment_style text = (C.Normal C.Red, text)
 let line_number_style text = (C.Dim C.Default, text)
+let comment_style text = (C.Dim C.Default, text)
+let comment_file_style text = (C.DimUnderline C.Default, text)
 
 let relative_path filename =
   let relname = Files_js.relative_path (Sys.getcwd ()) filename in
@@ -180,23 +182,28 @@ let print_file_at_location main_file loc s = Loc.(
   match loc.source with
     | Some LibFile filename
     | Some SourceFile filename ->
+      let line_number_text = Printf.sprintf "%3d: " l0 in
       let code_line = read_line_in_file (l0 - 1) filename in
       let highlighted_line = if (l1 == l0) && (String.length code_line) >= c1
         then highlight_error_in_line code_line c0 c1
         else [source_fragment_style code_line]
       in
-      let padding_size = max 0 (50 - (String.length code_line)) in
+      let padding_size = (String.length line_number_text) + c0 in
       let padding = String.make padding_size ' ' in
+      let underline_size = if l1 == l0
+        then max 1 (c1 - c0)
+        else 1
+      in
+      let underline = String.make underline_size '^' in
       let see_another_file = if filename == main_file then [(default_style "")] else
         [
-          default_style ". See: ";
-          file_location_style (relative_path filename);
-          file_location_style (":" ^ (string_of_int l0))
+          comment_style ". See: ";
+          comment_file_style (Printf.sprintf "%s:%d" (relative_path filename) l0)
         ]
       in
-      line_number_style (Printf.sprintf "%3d: " l0) ::
+      line_number_style line_number_text ::
       highlighted_line @
-      [default_style (Printf.sprintf "%s ← %s" padding s)] @
+      [comment_style (Printf.sprintf "\n%s%s %s" padding underline s)] @
       see_another_file @
       [default_style "\n"]
 
