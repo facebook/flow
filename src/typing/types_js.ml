@@ -536,24 +536,36 @@ let typecheck_contents contents filename =
       None, errors
   )
 
+type merge_job_status =
+| MergeSuccess of filename
+| MergeFailure of filename
+
+let filename_of_merge_job_status = function
+  | MergeSuccess fn -> fn
+  | MergeFailure fn -> fn
+
+let add_successful_filename merge_job_status fns = match merge_job_status with
+  | MergeSuccess fn -> fn::fns
+  | MergeFailure fn -> fns
+
 let merge_strict_job opts (merged, errsets) (components: filename list list) =
   init_modes opts;
   List.fold_left (fun (merged, errsets) (component: filename list) ->
-    let file = component
+    let files = component
     |> List.map string_of_filename
     |> String.concat "\n\t"
     in
     try checktime opts 1.0
-      (fun t -> spf "[%d] perf: merged %s in %f" (Unix.getpid()) file t)
+      (fun t -> spf "[%d] perf: merged %s in %f" (Unix.getpid()) files t)
       (fun () ->
         (*prerr_endlinef "[%d] MERGE: %s" (Unix.getpid()) file;*)
         let file, errors = merge_strict_component component in
-        file :: merged, errors :: errsets
+        MergeSuccess(file) :: merged, errors :: errsets
       )
     with exc ->
       prerr_endlinef "(%d) merge_strict_job THROWS: [%d] %s\n"
-        (Unix.getpid()) (List.length component) (fmt_file_exc file exc);
-      (merged, errsets)
+        (Unix.getpid()) (List.length component) (fmt_file_exc files exc);
+      (MergeFailure(List.hd component) :: merged, errsets)
   ) (merged, errsets) components
 
 (* Custom bucketing scheme for dynamically growing and shrinking workloads when
@@ -671,7 +683,7 @@ module MergeStream = struct
     in
     fun res acc ->
       let leader_fs, _ = res in
-      push leader_fs;
+      push (List.map filename_of_merge_job_status leader_fs);
       rev_append_pair res acc
 
 end
@@ -709,12 +721,13 @@ let merge_strict workers dependency_graph partition opts =
     (fun t -> spf "merged (strict) in %f" t)
     (fun () ->
       (* returns parallel lists of filenames and errorsets *)
-      let (files, errsets) = MultiWorker.call_dynamic
+      let (statuses, errsets) = MultiWorker.call_dynamic
         workers
         ~job: (merge_strict_job opts)
         ~neutral: ([], [])
         ~merge: MergeStream.join
         ~next: (MergeStream.make dependency_graph leader_map component_map) in
+      let files = List.fold_right add_successful_filename statuses [] in
       (* collect master context errors *)
       let (files, errsets) = (
         master_cx.file :: files,
