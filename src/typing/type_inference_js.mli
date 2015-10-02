@@ -33,7 +33,11 @@ val mk_object: context -> reason -> Type.t
 
 val query_type: context -> Loc.t -> Loc.t * Type.t option * Type.t list
 
-val dump_types: context -> (Loc.t * string * Reason_js.reason list) list
+val dump_types:
+  (Constraint_js.context -> Type.t -> string) ->
+  (Constraint_js.context -> Type.t -> string option) ->
+  context ->
+  (Loc.t * string * string option * Reason_js.reason list) list
 
 val fill_types: context -> (int * int * string) list
 

@@ -197,7 +197,17 @@ struct
     Marshal.to_channel oc (err, resp) [];
     flush oc
 
-  let dump_types file_input oc =
+  let dump_types file_input include_raw oc =
+    (* Print type using Flow type syntax *)
+    let printer = Constraint_js.string_of_t in
+    (* Print raw representation of types as json; as it turns out, the
+       json gets cut off at a specified depth, so pass the maximum
+       possible depth to avoid that. *)
+    let raw_printer c t =
+      if include_raw
+        then Some (Constraint_js.jstr_of_t ~depth:max_int c t)
+        else None
+      in
     let file = ServerProt.file_input_get_filename file_input in
     let file = Loc.SourceFile file in
     let (err, resp) =
@@ -206,7 +216,7 @@ struct
        let cx = match Types_js.typecheck_contents content file with
        | Some cx, _ -> cx
        | _, errors  -> failwith "Couldn't parse file" in
-      (None, Some (TI.dump_types cx))
+      (None, Some (TI.dump_types printer raw_printer cx))
     with exn ->
       let loc = mk_loc file 0 0 in
       let err = (loc, Printexc.to_string exn) in
@@ -399,8 +409,8 @@ struct
         autocomplete client_logging_context fn oc
     | ServerProt.CHECK_FILE fn ->
         check_file fn oc
-    | ServerProt.DUMP_TYPES fn ->
-        dump_types fn oc
+    | ServerProt.DUMP_TYPES (fn, format) ->
+        dump_types fn format oc
     | ServerProt.ERROR_OUT_OF_DATE ->
         incorrect_hash oc
     | ServerProt.FIND_MODULE (moduleref, filename) ->

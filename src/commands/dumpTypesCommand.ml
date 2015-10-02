@@ -34,6 +34,8 @@ let spec = {
     |> strip_root_flag
     |> flag "--path" (optional string)
         ~doc:"Specify (fake) path to file when reading data from stdin"
+    |> flag "--raw" no_arg
+        ~doc:"Output raw representation of types (implies --json)"
     |> anon "file" (optional string) ~doc:"[FILE]"
   )
 }
@@ -66,9 +68,9 @@ let handle_error (loc, err) json strip =
 let handle_response types json strip =
   if json
   then (
-    let lst = types |> List.map (fun (loc, str, reasons) ->
+    let lst = types |> List.map (fun (loc, str, raw_t, reasons) ->
       let loc = strip loc in
-      Json.JAssoc (
+      let json_assoc = (
         ("type", Json.JString str) ::
         ("reasons", Json.JList (List.map (fun r ->
           Json.JAssoc (
@@ -77,13 +79,18 @@ let handle_response types json strip =
           )
         ) reasons)) ::
         (Errors_js.json_of_loc loc)
-      )
+      ) in
+      let json_assoc = match raw_t with
+        | None -> json_assoc
+        | Some raw_t -> ("raw_type", Json.JString raw_t) :: json_assoc
+      in
+      Json.JAssoc json_assoc
     ) in
     let json = Json.json_to_string (Json.JList lst) in
     output_string stdout (json^"\n")
   ) else (
     let out = types
-      |> List.map (fun (loc, str, reasons) ->
+      |> List.map (fun (loc, str, _, reasons) ->
         let loc = strip loc in
         (Utils.spf "%s: %s" (Reason_js.string_of_loc loc) str)
       )
@@ -93,12 +100,13 @@ let handle_response types json strip =
   );
   flush stdout
 
-let main option_values json strip_root path filename () =
+let main option_values json strip_root path include_raw filename () =
+  let json = json || include_raw in
   let file = get_file path filename in
   let root = guess_root (ServerProt.path_of_input file) in
   let ic, oc = connect_with_autostart option_values root in
   ServerProt.cmd_to_channel oc
-    (ServerProt.DUMP_TYPES file);
+    (ServerProt.DUMP_TYPES (file, include_raw));
 
   match (Marshal.from_channel ic) with
   | (Some err, None) -> handle_error err json (relativize strip_root root)

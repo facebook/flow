@@ -508,7 +508,7 @@ let query_type cx loc =
   ) cx.type_table;
   !result
 
-let dump_types cx =
+let dump_types printer raw_printer cx =
   Flow_js.suggested_type_cache := IMap.empty;
   let lst = Hashtbl.fold (fun loc t list ->
     let ground_t = Flow_js.printified_type cx t in
@@ -516,10 +516,10 @@ let dump_types cx =
     let possible_reasons = possible_ts
       |> List.map reason_of_t
     in
-    (loc, string_of_t cx ground_t, possible_reasons)::list
+    (loc, printer cx ground_t, raw_printer cx ground_t, possible_reasons)::list
   ) cx.type_table [] in
   lst |> List.sort (fun
-    (a_loc, _, _) (b_loc, _, _) -> Loc.compare a_loc b_loc
+    (a_loc, _, _, _) (b_loc, _, _, _) -> Loc.compare a_loc b_loc
   )
 
 (********)

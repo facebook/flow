@@ -1,1 +1,1 @@
-cmd: dump-types --strip-root --json test.js
+shell: test.sh
