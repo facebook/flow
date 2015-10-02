@@ -105,6 +105,16 @@ let rec filter_duplicate_errors acc = function
     filter_duplicate_errors acc rl
 | x :: rl -> filter_duplicate_errors (x :: acc) rl
 
+let unexpected_error = function
+  | T_EOF, _ -> Error.UnexpectedEOS
+  | T_NUMBER _, _ -> Error.UnexpectedNumber
+  | T_JSX_TEXT _, _
+  | T_STRING _, _ -> Error.UnexpectedString
+  | T_IDENTIFIER, _ -> Error.UnexpectedIdentifier
+  | _, word when is_future_reserved word -> Error.UnexpectedReserved
+  | _, word when is_strict_reserved word -> Error.StrictReservedWord
+  | _, value -> Error.UnexpectedToken value
+
 let error_unexpected env =
   let lookahead = lookahead env in
   (* So normally we consume the lookahead lex result when Eat.advance is
@@ -114,15 +124,7 @@ let error_unexpected env =
    * unexpected token *)
   error_list env (lookahead.lex_errors);
   clear_lookahead_errors env;
-  error env (match lookahead.lex_token, lookahead.lex_value with
-  | T_EOF, _ -> Error.UnexpectedEOS
-  | T_NUMBER _, _ -> Error.UnexpectedNumber
-  | T_JSX_TEXT _, _
-  | T_STRING _, _ -> Error.UnexpectedString
-  | T_IDENTIFIER, _ -> Error.UnexpectedIdentifier
-  | _, word when is_future_reserved word -> Error.UnexpectedReserved
-  | _, word when is_strict_reserved word -> Error.StrictReservedWord
-  | _, value -> Error.UnexpectedToken value)
+  error env (unexpected_error (lookahead.lex_token, lookahead.lex_value))
 
 (* Consume zero or more tokens *)
 module Eat : sig
@@ -194,7 +196,7 @@ module rec Parse : sig
   val object_initializer : env -> Loc.t * Ast.Expression.Object.t
   val array_initializer : env -> Loc.t * Ast.Expression.Array.t
   val identifier : ?restricted_error:Error.t -> env -> Ast.Identifier.t
-  val identifier_or_reserved_keyword : env -> Ast.Identifier.t
+  val identifier_or_reserved_keyword : env -> (Ast.Identifier.t * (Loc.t * Error.t) option)
   val identifier_with_type : env -> Error.t -> Ast.Identifier.t
   val block_body : env -> Loc.t * Ast.Statement.Block.t
   val function_block_body : env -> Loc.t * Ast.Statement.Block.t * bool
@@ -405,7 +407,7 @@ end = struct
 
     and function_param_list_without_parens =
       let param env =
-        let name = Parse.identifier_or_reserved_keyword env in
+        let name, _ = Parse.identifier_or_reserved_keyword env in
         function_param_with_id env name
 
       in let rec param_list env acc =
@@ -454,7 +456,7 @@ end = struct
           | Some t ->
               (* Don't know if this is (number) or (number: number) (the first is
               * a type the second is a param) *)
-            let name = Parse.identifier_or_reserved_keyword env in
+            let name, _ = Parse.identifier_or_reserved_keyword env in
             match Peek.token env with
             | T_PLING
             | T_COLON ->
@@ -577,7 +579,7 @@ end = struct
 
       in let indexer_property env start_loc static =
         Expect.token env T_LBRACKET;
-        let id = Parse.identifier_or_reserved_keyword env in
+        let id, _ = Parse.identifier_or_reserved_keyword env in
         Expect.token env T_COLON;
         let key = _type env in
         Expect.token env T_RBRACKET;
@@ -1426,7 +1428,7 @@ end = struct
           })))
       | T_PERIOD ->
           Expect.token env T_PERIOD;
-          let id = identifier_or_reserved_keyword env in
+          let id, _ = identifier_or_reserved_keyword env in
           call env (Loc.btwn (fst left) (fst id), Expression.(Member Member.({
             _object  = left;
             property = PropertyIdentifier id;
@@ -1513,7 +1515,7 @@ end = struct
           })))
       | T_PERIOD ->
           Expect.token env T_PERIOD;
-          let id = identifier_or_reserved_keyword env in
+          let id, _ = identifier_or_reserved_keyword env in
           call env (Loc.btwn (fst left) (fst id), Expression.(Member Member.({
             _object  = left;
             property = PropertyIdentifier id;
@@ -1846,9 +1848,11 @@ end = struct
      * x.if
      *)
     and identifier_or_reserved_keyword env =
-      match Peek.token env with
-      | T_IDENTIFIER -> Parse.identifier env
-      | _ -> (match Peek.token env with
+      let { lex_token; lex_value; lex_loc; _ } = lookahead env in
+      match lex_token with
+      | T_IDENTIFIER -> Parse.identifier env, None
+      | _ ->
+        let err = match Peek.token env with
         | T_FUNCTION
         | T_IF
         | T_IN
@@ -1903,17 +1907,18 @@ end = struct
         | T_VOID_TYPE
         | T_ASYNC
         | T_AWAIT
-        | T_DEBUGGER -> ()
+        | T_DEBUGGER ->
+            Some (lex_loc, unexpected_error (lex_token, lex_value))
         | _ ->
-            error_unexpected env);
-        let loc = Peek.loc env in
-        let name = Peek.value env in
+            error_unexpected env;
+            None
+        in
         Eat.token env;
-        loc, Identifier.({
-          name;
+        (lex_loc, Identifier.({
+          name = lex_value;
           typeAnnotation = None;
           optional = false;
-        })
+        })), err
   end
 
   (* A module for parsing various object related things, like object literals
@@ -1954,7 +1959,7 @@ end = struct
           Expect.token env T_RBRACKET;
           Loc.btwn start_loc end_loc, Ast.Expression.Object.Property.Computed expr
       | _ ->
-          let id = Expression.identifier_or_reserved_keyword env in
+          let id, _ = Expression.identifier_or_reserved_keyword env in
           fst id, Identifier id)
 
     let _method env kind =
@@ -3062,19 +3067,19 @@ end = struct
               error_unexpected env;
               ret
 
-        in let rec specifiers env acc =
+        in let rec specifiers_and_errs env specifiers errs =
           match Peek.token env with
           | T_EOF
           | T_RCURLY ->
-              List.rev acc
+              List.rev specifiers, List.rev errs
           | _ ->
-              let id = Parse.identifier env in
-              let name, end_loc = if Peek.value env = "as"
+              let id, err = Parse.identifier_or_reserved_keyword env in
+              let name, err, end_loc = if Peek.value env = "as"
               then begin
                 Expect.contextual env "as";
-                let name = Parse.identifier env in
-                Some name, fst name
-              end else None, fst id in
+                let name, err = Parse.identifier_or_reserved_keyword env in
+                Some name, err, fst name
+              end else None, err, fst id in
               let loc = Loc.btwn (fst id) end_loc in
               let specifier = loc, {
                 Statement.ExportDeclaration.Specifier.id;
@@ -3082,7 +3087,10 @@ end = struct
               } in
               if Peek.token env = T_COMMA
               then Expect.token env T_COMMA;
-              specifiers env (specifier::acc)
+              let errs = match err with
+              | Some err -> err::errs
+              | None -> errs in
+              specifiers_and_errs env (specifier::specifiers) errs
 
         in fun env ->
           let env = env |> with_strict true |> with_in_export true in
@@ -3169,12 +3177,16 @@ end = struct
                 | _ -> ExportValue
               ) in
               Expect.token env T_LCURLY;
-              let specifiers = Some (ExportSpecifiers (specifiers env [])) in
+              let specifiers, errs = specifiers_and_errs env [] [] in
+              let specifiers = Some (ExportSpecifiers specifiers) in
               let end_loc = Peek.loc env in
               Expect.token env T_RCURLY;
               let source = if Peek.value env = "from"
               then Some (source env)
-              else None in
+              else begin
+                errs |> List.iter (error_at env);
+                None
+              end in
               let end_loc = match Peek.semicolon_loc env with
               | Some loc -> loc
               | None ->
@@ -3213,13 +3225,18 @@ end = struct
           | T_EOF
           | T_RCURLY -> List.rev acc
           | _ ->
-              let id = Parse.identifier env in
+              let id, err = Parse.identifier_or_reserved_keyword env in
               let end_loc, name = if Peek.value env = "as"
               then begin
                 Expect.contextual env "as";
                 let name = Parse.identifier env in
                 fst name, Some name
-              end else fst id, None in
+              end else begin
+                (match err with
+                | Some err -> error_at env err
+                | None -> ());
+                fst id, None
+              end in
               let loc = Loc.btwn (fst id) end_loc in
               let specifier =
                 loc, Statement.ImportDeclaration.NamedSpecifier.({
