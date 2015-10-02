@@ -3388,23 +3388,17 @@ and err_msg l u =
   else "This type is incompatible with"
 
 and ground_subtype = function
+  (* tvars are not considered ground, so they're not part of this relation *)
+  | (OpenT _, _) | (_, OpenT _) -> false
 
   | (NumT _,NumT _)
-
   | (StrT _,StrT _)
-
   | (BoolT _, BoolT _)
-
   | (NullT _, NullT _)
-
   | (VoidT _, VoidT _)
-
   | (UndefT _,_)
-
   | (_,MixedT _)
-
   | (AnyT _,_)
-
   | (_,AnyT _)
     -> true
 
@@ -4610,13 +4604,10 @@ and edges_from_ts cx trace ?(opt=false) ls (id, bounds) =
 (** As an invariant, bounds1.lower should already contain id.bounds.lower for
     each id in bounds1.lowertvars. **)
 and edges_and_flows_to_t cx trace ?(opt=false) (id1, bounds1) t2 =
-  match t2 with
-  | MixedT _ | AnyT _ -> () (* flows to these types end up having no effect *)
-  | _ ->
-    if not (TypeMap.mem t2 bounds1.upper) then (
-      edges_to_t cx trace ~opt (id1, bounds1) t2;
-      flows_to_t cx trace bounds1.lower t2
-    )
+  if not (TypeMap.mem t2 bounds1.upper) then (
+    edges_to_t cx trace ~opt (id1, bounds1) t2;
+    flows_to_t cx trace bounds1.lower t2
+  )
 
 (* for each id in id2 + bounds2.uppertvars:
    id.bounds.lower += t1
@@ -4625,13 +4616,10 @@ and edges_and_flows_to_t cx trace ?(opt=false) (id1, bounds1) t2 =
 (** As an invariant, bounds2.upper should already contain id.bounds.upper for
     each id in bounds2.uppertvars. **)
 and edges_and_flows_from_t cx trace ?(opt=false) t1 (id2, bounds2) =
-  match t1 with
-  | UndefT _ | AnyT _ -> () (* flows from these types end up having no effect *)
-  | _ ->
-    if not (TypeMap.mem t1 bounds2.lower) then (
-      edges_from_t cx trace ~opt t1 (id2, bounds2);
-      flows_from_t cx trace t1 bounds2.upper
-    )
+  if not (TypeMap.mem t1 bounds2.lower) then (
+    edges_from_t cx trace ~opt t1 (id2, bounds2);
+    flows_from_t cx trace t1 bounds2.upper
+  )
 
 (* bounds.uppertvars += id *)
 and add_uppertvar id trace bounds =
