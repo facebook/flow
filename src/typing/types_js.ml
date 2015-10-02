@@ -147,7 +147,9 @@ let distrib_errs = Errors_js.(
   let distrib_error orig_file error error_map =
     let file = match Loc.source (loc_of_error error) with
     | Some x -> x
-    | None -> assert false
+    | None ->
+        assert_false (spf "distrib_errs: no source for error: %s"
+          (Hh_json.json_to_multiline (json_of_errors [error])));
     in
     match FilenameMap.get file error_map with
     | None ->

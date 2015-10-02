@@ -4906,7 +4906,7 @@ and predicates_of_condition cx type_params_map e = Ast.(Expression.(
         property = Member.PropertyIdentifier (_,
           { Identifier.name = "hasOwnProperty"; _});
         _ };
-      arguments = [Expression (_, Literal
+      arguments = [Expression (arg_loc, Literal
         { Ast.Literal.value = Ast.Literal.String x; _ }
       )]
     } -> (
@@ -4914,7 +4914,7 @@ and predicates_of_condition cx type_params_map e = Ast.(Expression.(
       let fake_ast = callee_loc, Ast.Expression.Member {
         Member._object;
         property = Member.PropertyIdentifier (
-          Loc.none, {
+          arg_loc, {
             Identifier.name = x;
             typeAnnotation = None;
             optional = false;

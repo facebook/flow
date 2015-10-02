@@ -154,6 +154,14 @@ let add_output cx error_kind ?(trace_reasons=[]) message_list =
       messages = message_list;
       trace = trace_reasons
     }) in
+
+    (* catch no-loc errors early, before they get into error map *)
+    Errors_js.(
+      if Loc.source (loc_of_error error) = None
+      then assert_false (spf "add_output: no source for error: %s"
+        (Hh_json.json_to_multiline (json_of_errors [error])))
+    );
+
     if error_kind = Errors_js.ParseError ||
        error_kind = Errors_js.InferError ||
        not silent_warnings
