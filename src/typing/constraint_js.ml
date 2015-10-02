@@ -1344,10 +1344,6 @@ let is_printed_param_type_parsable ?(weak=false) cx t =
 
 (* scopes and types *)
 
-let string_of_loc_opt = function
-| Some loc -> string_of_loc loc
-| None -> "(none)"
-
 let string_of_entry = Scope.(
 
   let string_of_value cx {
@@ -1357,7 +1353,7 @@ let string_of_entry = Scope.(
       specific: %s; general: %s }"
       (Entry.string_of_value_kind kind)
       (Entry.string_of_state value_state)
-      (string_of_loc_opt value_loc)
+      (string_of_loc value_loc)
       (dump_t cx specific)
       (dump_t cx general)
   in
@@ -1365,7 +1361,7 @@ let string_of_entry = Scope.(
   let string_of_type cx { Entry.type_state; type_loc; _type } =
     Utils.spf "{ type_state: %s; type_loc: %s; _type: %s }"
       (Entry.string_of_state type_state)
-      (string_of_loc_opt type_loc)
+      (string_of_loc type_loc)
       (dump_t cx _type)
   in
 
@@ -1387,7 +1383,7 @@ let string_of_scope = Scope.(
 
   let string_of_refi cx { refi_loc; refined; original } =
     Utils.spf "{ refi_loc: %s; refined: %s; original: %s }"
-      (string_of_loc_opt refi_loc)
+      (string_of_loc refi_loc)
       (dump_t cx refined)
       (dump_t cx original)
   in

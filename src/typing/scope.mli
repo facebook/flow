@@ -26,14 +26,14 @@ module Entry: sig
   type value_binding = {
     kind: value_kind;
     value_state: state;
-    value_loc: Loc.t option;
+    value_loc: Loc.t;
     specific: Type.t;
     general: Type.t;
   }
 
   type type_binding = {
     type_state: state;
-    type_loc: Loc.t option;
+    type_loc: Loc.t;
     _type: Type.t;
   }
 
@@ -41,17 +41,17 @@ module Entry: sig
   | Value of value_binding
   | Type of type_binding
 
-  val new_var: ?loc:Loc.t -> ?state:state -> ?specific:Type.t -> Type.t -> t
+  val new_var: loc:Loc.t -> ?state:state -> ?specific:Type.t -> Type.t -> t
   val new_let:
-      ?loc:Loc.t
+      loc:Loc.t
       -> ?state:state
       -> ?implicit:implicit_let_kinds
       -> Type.t
       -> t
-  val new_const: ?loc:Loc.t -> ?state:state -> Type.t -> t
-  val new_type: ?loc:Loc.t -> ?state:state -> Type.t -> t
+  val new_const: loc:Loc.t -> ?state:state -> Type.t -> t
+  val new_type: loc:Loc.t -> ?state:state -> Type.t -> t
 
-  val loc: t -> Loc.t option
+  val loc: t -> Loc.t
   val actual_type: t -> Type.t
   val declared_type: t -> Type.t
 
@@ -80,7 +80,7 @@ type kind =
 | LexScope
 
 type refi_binding = {
-  refi_loc: Loc.t option;
+  refi_loc: Loc.t;
   refined: Type.t;
   original: Type.t;
 }

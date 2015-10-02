@@ -5806,8 +5806,10 @@ and initialize_this_super derived_ctor this super scope = Scope.(
       undefine_internal "super" undefined super scope
   )
   else (
-    add_entry (internal_name "this") (Entry.new_var this) scope;
-    add_entry (internal_name "super") (Entry.new_var super) scope;
+    let loc = loc_of_t this in
+    add_entry (internal_name "this") (Entry.new_var ~loc this) scope;
+    let loc = loc_of_t super in
+    add_entry (internal_name "super") (Entry.new_var ~loc super) scope;
   )
 )
 
@@ -5818,7 +5820,8 @@ and initialize_this_super derived_ctor this super scope = Scope.(
    used in general to track definite assignments. *)
 and undefine_internal x undefined t scope = Scope.(
   (* TODO state uninitialized *)
-  let entry = Entry.new_var ~specific:undefined (OptionalT t) in
+  let loc = loc_of_t t in
+  let entry = Entry.new_var ~loc ~specific:undefined (OptionalT t) in
   add_entry (internal_name x) entry scope
 )
 
@@ -5840,26 +5843,28 @@ and mk_body id cx type_params_map ~kind ?(derived_ctor=false)
     let scope = Scope.fresh ~kind () in
     (* add param bindings *)
     param_types_map |> SMap.iter (fun name t ->
-      let entry = Scope.Entry.(match SMap.get name param_locs_map with
-        | Some loc -> new_var t ~loc
-        | None -> new_var t
-      ) in
-      Scope.add_entry name entry scope);
+      let loc = match SMap.get name param_locs_map with
+        | Some loc -> loc
+        | None -> loc_of_t t
+      in
+      let entry = Scope.Entry.new_var ~loc t in
+      Scope.add_entry name entry scope
+    );
     (* early-add our own name binding for recursive calls *)
     (match id with
     | None -> ()
     | Some (loc, { Ast.Identifier.name; _ }) ->
-      let entry = Scope.Entry.new_var (AnyT.at loc) in
+      let entry = Scope.Entry.new_var ~loc (AnyT.at loc) in
       Scope.add_entry name entry scope);
     (* special bindings for this, super, and return value slot *)
     initialize_this_super derived_ctor this super scope;
     Scope.(
-      let yield_entry = Entry.(new_const ~state:Initialized yield) in
-      let next_entry = Entry.(new_const ~state:Initialized next) in
-      let ret_entry = Entry.(new_const ~state:Initialized ret) in
-      add_entry (internal_name "yield") yield_entry scope;
-      add_entry (internal_name "next") next_entry scope;
-      add_entry (internal_name "return") ret_entry scope
+      let new_entry t =
+        Entry.(new_const ~loc:(loc_of_t t) ~state:Initialized t)
+      in
+      add_entry (internal_name "yield") (new_entry yield) scope;
+      add_entry (internal_name "next") (new_entry next) scope;
+      add_entry (internal_name "return") (new_entry ret) scope
     );
     scope
   in
@@ -6225,12 +6230,13 @@ let infer_ast ast file ?module_name force_check =
     let scope = Scope.fresh () in
 
     Scope.(add_entry "exports"
-      (Entry.new_var local_exports_var)
+      (Entry.new_var ~loc:(loc_of_t local_exports_var) local_exports_var)
       scope);
 
     Scope.(add_entry (internal_name "exports")
       (Entry.new_var
-        ~specific:(UndefT (reason_of_string "undefined exports"))
+        ~loc:(loc_of_reason reason_exports_module)
+        ~specific:(UndefT (replace_reason "undefined exports" reason_exports_module))
         (AnyT reason_exports_module))
       scope);
 

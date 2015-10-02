@@ -21,11 +21,7 @@ let getdef_id (state, loc1) cx name loc2 =
     let env = Env_js.all_entries () in
     match SMap.get name env with
     | Some entry ->
-      (match Scope.Entry.loc entry with
-      | Some loc ->
-        state := Some (Gdloc (loc))
-      | None ->
-        ())
+        state := Some (Gdloc (Scope.Entry.loc entry))
     | None ->
       ());
   false

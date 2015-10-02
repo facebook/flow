@@ -156,13 +156,10 @@ let autocomplete_id cx env =
       let (loc, name) =
         (* renaming of this/super *)
         if is_this
-        then (None, "this")
+        then (Loc.none, "this")
         else if is_super
-        then (None, "super")
-        else (Scope.Entry.loc entry, name) in
-      let loc = match loc with
-        | Some loc -> loc
-        | None -> Loc.none
+        then (Loc.none, "super")
+        else (Scope.Entry.loc entry, name)
       in
 
       let type_ = Scope.Entry.actual_type entry in

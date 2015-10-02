@@ -52,14 +52,14 @@ module Entry = struct
   type value_binding = {
     kind: value_kind;
     value_state: state;
-    value_loc: Loc.t option;
+    value_loc: Loc.t;
     specific: Type.t;
     general: Type.t;
   }
 
   type type_binding = {
     type_state: state;
-    type_loc: Loc.t option;
+    type_loc: Loc.t;
     _type: Type.t;
   }
 
@@ -77,16 +77,16 @@ module Entry = struct
       general
     }
 
-  let new_const ?loc ?(state=Undeclared) t = new_value Const state t t loc
+  let new_const ~loc ?(state=Undeclared) t = new_value Const state t t loc
 
-  let new_let ?loc ?(state=Undeclared) ?implicit t =
+  let new_let ~loc ?(state=Undeclared) ?implicit t =
     new_value (Let implicit) state t t loc
 
-  let new_var ?loc ?(state=Undeclared) ?specific general =
+  let new_var ~loc ?(state=Undeclared) ?specific general =
     let specific = match specific with Some t -> t | None -> general in
     new_value Var state specific general loc
 
-  let new_type ?loc ?(state=Undeclared) _type =
+  let new_type ~loc ?(state=Undeclared) _type =
     Type {
       type_state = state;
       type_loc = loc;
@@ -182,7 +182,7 @@ type kind =
 | LexScope
 
 type refi_binding = {
-  refi_loc: Loc.t option;
+  refi_loc: Loc.t;
   refined: Type.t;
   original: Type.t;
 }

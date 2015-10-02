@@ -272,7 +272,8 @@ let cache_global cx name reason global_scope =
     then MixedT (reason_of_string "global object")
     else Flow_js.get_builtin cx name reason)
   in
-  let entry = Scope.Entry.(new_var t ~state:Initialized) in
+  let loc = loc_of_reason reason in
+  let entry = Entry.new_var t ~loc ~state:Entry.Initialized in
   Scope.add_entry name entry global_scope;
   cx.globals <- SSet.add name cx.globals;
   global_scope, entry
@@ -324,13 +325,10 @@ let find_refi_in_var_scope key =
   loop !scopes
 
 (* helpers *)
-let entry_loc_unopt entry =
-  match Entry.loc entry with None -> Loc.none | Some loc -> loc
-
 let entry_reason name entry =
   mk_reason
     (spf "%s %s" (Entry.string_of_kind entry) name)
-    (entry_loc_unopt entry)
+    (Entry.loc entry)
 
 let binding_error msg cx name entry reason =
   let reason1 = replace_reason name reason in
@@ -629,7 +627,7 @@ let value_entry_types ~lookup_mode cx name reason entry scope =
     let msg = spf "%s referenced before declaration"
       (string_of_kind entry) in
     binding_error msg cx name entry reason;
-    let t = AnyT.at (entry_loc_unopt entry) in t, t
+    let t = AnyT.at (Entry.loc entry) in t, t
 
   (* TODO
   | Value { kind = Var; value_state = Declared; general; _ }
@@ -651,7 +649,7 @@ let read_entry ~lookup_mode ~specific cx name reason =
   | Type { type_loc; _ } when lookup_mode != ForType ->
     let msg = "type referenced from value position" in
     binding_error msg cx name entry reason;
-    AnyT.at (entry_loc_unopt entry)
+    AnyT.at (Entry.loc entry)
 
   | Type t ->
     t._type
@@ -1053,7 +1051,7 @@ let string_of_env cx env =
  *)
 let add_heap_refinement cx key reason refined original =
   ignore (add_change_refi key);
-  let refi_loc = Some (loc_of_reason reason) in
+  let refi_loc = loc_of_reason reason in
   let refi = { refi_loc; refined; original } in
   let base, _ = key in
   let scope, _ = find_entry_in_var_scope base in
