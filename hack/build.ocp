@@ -58,6 +58,7 @@ end
 
 begin library "hh-fsnotify-darwin"
   if not (system = "macosx" && os_type = "Unix") then enabled = false
+  requires += [ "ROOTPROJECT" ]
   cclib = [
     "-sectcreate" "-__text" "hhi" "%{ROOTPROJECT_FULL_SRC_DIR}%/bin/hhi.tar.gz"
     "-framework" "CoreServices"
@@ -68,13 +69,16 @@ begin library "hh-fsnotify-darwin"
     "fsevents/fsevents.ml"
     "fsnotify_darwin/fsnotify.ml"
   ]
-  requires += [ "ROOTPROJECT" ]
+  requires += [ "hh-utils-core" ]
 end
 
 begin library "hh-fsnotify-win"
   if not (os_type = "Win32") then enabled = false
-  requires += [ "ROOTPROJECT" ]
-  files = [ "fsnotify_win/fsnotify.ml" ]
+  files = [
+    "fsnotify_win/fsnotify_stubs.c"
+    "fsnotify_win/fsnotify.ml"
+  ]
+  requires += [ "hh-utils-core" ]
 end
 
 begin library "hh-fsnotify"
@@ -135,7 +139,6 @@ begin library "hh-utils"
     "utils/tty.ml"
     "utils/printSignal.ml"
     "utils/trie.ml"
-    "utils/find.ml"
     "utils/stats.ml"
     "utils/hh_logger.ml"
     "utils/exit_status.ml"
@@ -163,6 +166,14 @@ begin library "hh-stubs"
     "stubs/buildMain.ml"
     "stubs/prolog.ml"
     "stubs/clientMessages.ml"
+  ]
+end
+
+begin library "hh-find"
+  requires += [ "hh-utils-common" "hh-stubs" "hh-third-party" ]
+  files = [
+    "find/find.mli"
+    "find/find.ml"
   ]
 end
 
@@ -364,7 +375,7 @@ begin library "hh-hhi"
 end
 
 begin library "hh-server-base"
-  requires += [ "hh-third-party" "hh-utils" "hh-typing"  "hh-search"
+  requires += [ "hh-third-party" "hh-utils" "hh-find" "hh-typing"  "hh-search"
                 "hh-stubs" "hh-stubs-ai"  "hh-socket" "hh-dfind" "hh-hhi" ]
   files = [
     "server/serverFiles.ml"
