@@ -4331,6 +4331,17 @@ and mk_proptype cx type_params_map = Ast.Expression.(function
       let map = SMap.union amap (SMap.map (fun t -> OptionalT t) omap) in
       Flow_js.mk_object_with_map_proto cx reason ?dict map (MixedT reason)
 
+  (* Support for FB-specific ReactPropTypes validators. *)
+  (** TODO: instead, route to custom lib defs, somehow...details of which have
+      not been set up or even worked out yet. **)
+  | vloc, Member { Member.
+      property = Member.PropertyIdentifier
+        (_, {Ast.Identifier.name = "Fbt"; _ });
+      _
+    } ->
+      (* We assume that there is a Fbt type defined in the global scope. *)
+      Flow_js.get_builtin_type cx (mk_reason "Fbt" vloc) "Fbt"
+
   | vloc, _ -> AnyT.at vloc
 )
 
