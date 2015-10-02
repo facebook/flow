@@ -36,6 +36,8 @@ type flags = {
   old_output_format: bool;
 }
 
+type stdin_file = (string * string) option
+
 let default_flags = {
   color = Tty.Color_Auto;
   one_line = false;
@@ -164,17 +166,28 @@ let highlight_error_in_line line c0 c1 =
     source_fragment_style suffix;
   ]
 
-(* TODO: Ideally this would also work if the file was read from stdin *)
-let read_line_in_file line filename =
-  let content = try Sys_utils.cat filename with
+let read_file_safe filename =
+  try Sys_utils.cat filename with
     | Sys_error _ -> ""
+
+let dbg a =
+  Printf.printf "%s\n" a;
+  a
+
+let read_line_in_file line filename stdin_file =
+  let content = match stdin_file with
+    | Some (stdin_filename, content) ->
+      if stdin_filename = filename
+        then content
+        else read_file_safe filename
+    | None -> read_file_safe filename
   in
   let lines = Str.split_delim (Str.regexp "\n") content in
   if (List.length lines) > line && (line >= 0)
     then List.nth lines line
     else ""
 
-let print_file_at_location main_file loc s = Loc.(
+let print_file_at_location stdin_file main_file loc s = Loc.(
   let l0 = loc.start.line in
   let l1 = loc._end.line in
   let c0 = loc.start.column in
@@ -183,7 +196,7 @@ let print_file_at_location main_file loc s = Loc.(
     | Some LibFile filename
     | Some SourceFile filename ->
       let line_number_text = Printf.sprintf "%3d: " l0 in
-      let code_line = read_line_in_file (l0 - 1) filename in
+      let code_line = read_line_in_file (l0 - 1) filename stdin_file in
       let highlighted_line = if (l1 == l0) && (String.length code_line) >= c1
         then highlight_error_in_line code_line c0 c1
         else [source_fragment_style code_line]
@@ -211,9 +224,9 @@ let print_file_at_location main_file loc s = Loc.(
     | None -> [default_style (Printf.sprintf "%s\n" s)]
 )
 
-let print_message_nice main_file message =
+let print_message_nice stdin_file main_file message =
   let loc, s = to_pp message in
-  print_file_at_location main_file loc s
+  print_file_at_location stdin_file main_file loc s
 
 let file_of_location loc =
   match loc.Loc.source with
@@ -272,14 +285,14 @@ let merge_comments_into_blames messages =
 let remove_newlines (color, text) =
   (color, Str.global_replace (Str.regexp "\n") "\\n" text)
 
-let print_error_color_new ~one_line ~color (error : error) =
+let print_error_color_new ~stdin_file:stdin_file ~one_line ~color (error : error) =
   let {kind; messages; trace} = error in
   let messages = prepend_kind_message messages kind in
   let messages = append_trace_reasons messages trace in
   let messages = merge_comments_into_blames messages in
   let header = print_error_header (List.hd messages) in
   let main_file = file_of_error error in
-  let formatted_messages = List.map (print_message_nice main_file) messages in
+  let formatted_messages = List.map (print_message_nice stdin_file main_file) messages in
   let to_print = header @ (List.concat formatted_messages) in
   let to_print = if one_line then List.map remove_newlines to_print else to_print in
   C.print ~color_mode:color (to_print @ [default_style "\n"])
@@ -502,14 +515,14 @@ let print_error_deprecated =
     flush oc
 
 (* Human readable output *)
-let print_error_summary ~flags errors =
+let print_error_summary ~flags ?stdin_file:(stdin_file=None) errors =
   let error_or_errors n = if n != 1 then "errors" else "error" in
   let truncate = not (flags.show_all_errors) in
   let one_line = flags.one_line in
   let color = flags.color in
   let print_error_color = if flags.old_output_format
     then print_error_color_old
-    else print_error_color_new
+    else print_error_color_new ~stdin_file:stdin_file
   in
   let print_error_if_not_truncated curr e =
     (if not(truncate) || curr < 50 then print_error_color ~one_line ~color e);
