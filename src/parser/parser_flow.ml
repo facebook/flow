@@ -105,7 +105,7 @@ let rec filter_duplicate_errors acc = function
     filter_duplicate_errors acc rl
 | x :: rl -> filter_duplicate_errors (x :: acc) rl
 
-let unexpected_error = function
+let get_unexpected_error = function
   | T_EOF, _ -> Error.UnexpectedEOS
   | T_NUMBER _, _ -> Error.UnexpectedNumber
   | T_JSX_TEXT _, _
@@ -124,7 +124,7 @@ let error_unexpected env =
    * unexpected token *)
   error_list env (lookahead.lex_errors);
   clear_lookahead_errors env;
-  error env (unexpected_error (lookahead.lex_token, lookahead.lex_value))
+  error env (get_unexpected_error (lookahead.lex_token, lookahead.lex_value))
 
 (* Consume zero or more tokens *)
 module Eat : sig
@@ -1852,7 +1852,7 @@ end = struct
       match lex_token with
       | T_IDENTIFIER -> Parse.identifier env, None
       | _ ->
-        let err = match Peek.token env with
+        let err = match lex_token with
         | T_FUNCTION
         | T_IF
         | T_IN
@@ -1908,7 +1908,7 @@ end = struct
         | T_ASYNC
         | T_AWAIT
         | T_DEBUGGER ->
-            Some (lex_loc, unexpected_error (lex_token, lex_value))
+            Some (lex_loc, get_unexpected_error (lex_token, lex_value))
         | _ ->
             error_unexpected env;
             None
