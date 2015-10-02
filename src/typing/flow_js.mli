@@ -39,6 +39,7 @@ end
 
 val mk_tvar: context -> reason -> Type.t
 val mk_tvar_where: context -> reason -> (Type.t -> unit) -> Type.t
+val mk_tvar_derivable_where: context -> reason -> (Type.t -> unit) -> Type.t
 
 val get_builtin_typeapp: context -> reason -> string -> Type.t list -> Type.t
 
