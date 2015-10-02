@@ -2629,5 +2629,22 @@ module.exports = {
         }
       }
     }
+  },
+  'Valid export/import reserved words': {
+    'export { default } from "foo"': {},
+    'export { default as foo } from "foo"': {},
+    'export { foo as default } from "foo"': {},
+    'import { default as foo } from "foo"': {}
+  },
+  'Invalid export/import reserved words': {
+    'export { default }': {
+      'errors.0.message': 'Unexpected token default'
+    },
+    'import { default } from "foo"': {
+      'errors.0.message': 'Unexpected token default'
+    },
+    'import { foo as default } from "foo"': {
+      'errors.0.message': 'Unexpected token default'
+    }
   }
 };
