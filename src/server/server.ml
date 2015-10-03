@@ -178,7 +178,7 @@ struct
             let ty = Some (Constraint_js.string_of_t cx t) in
             let raw_type =
               if include_raw then
-                Some (Constraint_js.jstr_of_t ~depth:max_int cx t)
+                Some (Constraint_js.jstr_of_t ~depth:10 cx t)
               else
                 None
             in
