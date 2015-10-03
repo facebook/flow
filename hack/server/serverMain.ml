@@ -417,26 +417,33 @@ let run_load_script genv env cmd =
       "Load state found at %s. %d files to recheck\n%!"
       state_fn (List.length to_recheck);
     HackEventLogger.load_script_done t;
-    let env = load genv state_fn to_recheck in
-    env, "load"
-  with
-  | State_not_found ->
-     Hh_logger.log "Load state not found!";
-     Hh_logger.log "Starting from a fresh state instead...";
-     let env = Program.init genv env in
-     env, "load_state_not_found"
-  | Load_state_disabled ->
-     Hh_logger.log "Load state disabled!";
-     let env = Program.init genv env in
-     env, "load_state_disabled";
-  | e ->
-     let msg = Printexc.to_string e in
-     Hh_logger.log "Load error: %s" msg;
-     Printexc.print_backtrace stderr;
-     Hh_logger.log "Starting from a fresh state instead...";
-     HackEventLogger.load_failed msg;
-     let env = Program.init genv env in
-     env, "load_error"
+    let init_type = "load" in
+    let env = HackEventLogger.with_init_type init_type begin fun () ->
+      load genv state_fn to_recheck
+    end in
+    env, init_type
+  with e -> begin
+    let init_type = match e with
+      | State_not_found ->
+        Hh_logger.log "Load state not found!";
+        Hh_logger.log "Starting from a fresh state instead...";
+        "load_state_not_found"
+      | Load_state_disabled ->
+        Hh_logger.log "Load state disabled!";
+        "load_state_disabled"
+      | e ->
+        let msg = Printexc.to_string e in
+        Hh_logger.log "Load error: %s" msg;
+        Printexc.print_backtrace stderr;
+        Hh_logger.log "Starting from a fresh state instead...";
+        HackEventLogger.load_failed msg;
+        "load_error"
+    in
+    let env = HackEventLogger.with_init_type init_type begin fun () ->
+      Program.init genv env
+    end in
+    env, init_type
+  end
 
 let program_init genv env =
   let env, init_type =
