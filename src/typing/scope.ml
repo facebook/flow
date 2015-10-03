@@ -120,6 +120,8 @@ module Entry = struct
    *)
   let havoc ?name make_specific name entry =
     match entry with
+    | Value { kind = Const; _ } ->
+        entry
     | Value v ->
       if Reason_js.is_internal_name name then entry
       else Value { v with specific = make_specific v.general }
