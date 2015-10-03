@@ -20,9 +20,13 @@ type options = {
   should_detach    : bool;
   convert          : Path.t option;
   no_load          : bool;
-  save_filename    : string option;
+  save_filename    : (state_kind * string) option;
   waiting_client   : Handle.handle option;
 }
+
+and state_kind =
+  | Complete
+  | Mini
 
 (*****************************************************************************)
 (* Usage code *)
@@ -44,6 +48,7 @@ module Messages = struct
   let from_hhclient = " passed from hh_client"
   let convert       = " adds type annotations automatically"
   let save          = " save server state to file"
+  let save_mini     = " save mini server state to file"
   let no_load       = " don't load from a saved state"
   let waiting_client= " send message to fd/handle when server has begun \
                       \ starting and again when it's done starting"
@@ -78,7 +83,8 @@ let parse_options () =
   let waiting_client= ref None in
   let cdir          = fun s -> convert_dir := Some s in
   let set_ai        = fun s -> ai_mode := Some (Ai_options.prepare s) in
-  let set_save      = fun s -> save := Some s in
+  let set_save      = fun s -> save := Some (Complete, s) in
+  let set_save_mini = fun s -> save := Some (Mini, s) in
   let set_wait      = fun fd -> waiting_client := Some fd in
   let options =
     ["--debug"         , Arg.Set debug         , Messages.debug;
@@ -92,6 +98,7 @@ let parse_options () =
      "--from-hhclient" , Arg.Set from_hhclient , Messages.from_hhclient;
      "--convert"       , Arg.String cdir       , Messages.convert;
      "--save"          , Arg.String set_save   , Messages.save;
+     "--save-mini"     , Arg.String set_save_mini, Messages.save_mini;
      "--no-load"       , Arg.Set no_load       , Messages.no_load;
      "--version"       , Arg.Set version       , "";
      "--waiting-client", Arg.Int set_wait      , Messages.waiting_client;

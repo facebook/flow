@@ -43,10 +43,14 @@ external hh_collect: bool -> unit = "hh_collect"
 (*****************************************************************************)
 external save: string -> unit = "hh_save"
 
+external save_dep_table: string -> unit = "hh_save_dep_table"
+
 (*****************************************************************************)
 (* Loads the shared memory by reading from a file *)
 (*****************************************************************************)
 external load: string -> unit = "hh_load"
+
+external load_dep_table: string -> unit = "hh_load_dep_table"
 
 (*****************************************************************************)
 (* The size of the dynamically allocated shared memory section *)

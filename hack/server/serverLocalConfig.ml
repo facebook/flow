@@ -9,25 +9,30 @@
  *)
 
 open Config_file.Getters
+open Utils
 
 type t = {
   use_watchman: bool;
-  placeholder: unit;
+  load_mini_script: Path.t option;
 }
 
 let default = {
   use_watchman = false;
-  placeholder = ();
+  load_mini_script = None;
 }
 
-let path = "/etc/hh.conf"
+let path =
+  let dir = try Sys.getenv "HH_LOCALCONF_PATH" with _ -> "/etc" in
+  Filename.concat dir "hh.conf"
 
 let load_ fn =
   let config = Config_file.parse fn in
   let use_watchman = bool_ "use_watchman" ~default:false config in
+  let load_mini_script =
+    Option.map (SMap.get "load_mini_script" config) Path.make in
   {
     use_watchman;
-    placeholder = ();
+    load_mini_script;
   }
 
 let load () =

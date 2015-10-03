@@ -52,10 +52,14 @@ val init_done: unit -> unit
 (*****************************************************************************)
 val save: string -> unit
 
+val save_dep_table: string -> unit
+
 (*****************************************************************************)
 (* Loads the shared memory by reading from a file *)
 (*****************************************************************************)
 val load: string -> unit
+
+val load_dep_table: string -> unit
 
 (*****************************************************************************)
 (* The size of the dynamically allocated shared memory section *)

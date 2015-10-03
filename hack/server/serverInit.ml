@@ -27,7 +27,7 @@ let make_next_files genv : Relative_path.t MultiWorker.nextlist =
     | x -> x
 
 (* Initialization of the server *)
-let init_hack genv env =
+let init_hack ?wait_for_deps genv env =
   let t = Unix.gettimeofday () in
   let get_next = make_next_files genv in
   HackEventLogger.indexing_end t;
@@ -41,6 +41,13 @@ let init_hack genv env =
   (* TODO: log a count of the number of files parsed... 0 is a placeholder *)
   HackEventLogger.parsing_end t hs  ~parsed_count:0;
   let t = Hh_logger.log_duration "Parsing" t in
+
+  Option.iter wait_for_deps begin fun f ->
+    let start_t, end_t = f () in
+    HackEventLogger.load_deps_end start_t end_t;
+    let time_taken = end_t -. start_t in
+    Hh_logger.log "Loading deps took %.2fs" time_taken;
+  end;
 
   let is_check_mode =
     ServerArgs.check_mode genv.options &&
@@ -118,8 +125,8 @@ let init_hack genv env =
   env, errorl, failed
 
 (* entry point *)
-let init genv env =
-  let env, errorl, failed = init_hack genv env in
+let init ?wait_for_deps genv env =
+  let env, errorl, failed = init_hack ?wait_for_deps genv env in
   let env = { env with errorl = errorl;
               failed_parsing = failed } in
   env
