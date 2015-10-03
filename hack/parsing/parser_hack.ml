@@ -3268,6 +3268,11 @@ and encapsed_nested_inner start frag env =
   (* Get any literal string part that occurs before this point *)
   let get_text () = encapsed_text env frag cur_pos in
 
+  (* We need to save the lexbuf here because L.string2 can match across
+   * newlines, changing the line number in the process. Thus, L.back will
+   * not restore us to a valid state; we need restore_lexbuf_state for that.
+   *)
+  let saved = save_lexbuf_state env.lb in
   match L.string2 env.file env.lb with
   | Tdquote ->
       get_text ()
@@ -3277,13 +3282,14 @@ and encapsed_nested_inner start frag env =
   | Tlcb when env.mode = FileInfo.Mdecl ->
       encapsed_nested start env
   | Tlcb ->
+      let saved = save_lexbuf_state env.lb in
       (match L.string2 env.file env.lb with
       | Tdollar ->
           error env "{ not supported";
-          L.back env.lb;
+          restore_lexbuf_state env.lb saved;
           encapsed_nested start env
       | Tlvar ->
-          L.back env.lb;
+          restore_lexbuf_state env.lb saved;
           let error_state = !(env.errors) in
           let e = expr env in
           (match L.string2 env.file env.lb with
@@ -3293,10 +3299,11 @@ and encapsed_nested_inner start frag env =
           then [e]
           else get_text () @ e :: encapsed_nested start env
       | _ ->
-          L.back env.lb;
+          restore_lexbuf_state env.lb saved;
           encapsed_nested_inner start frag env
       )
   | Tdollar ->
+      let saved = save_lexbuf_state env.lb in
       (match L.string2 env.file env.lb with
       | Tlcb ->
           if env.mode = FileInfo.Mstrict
@@ -3318,11 +3325,11 @@ and encapsed_nested_inner start frag env =
           then [result]
           else get_text () @ result :: encapsed_nested start env
       | _ ->
-          L.back env.lb;
+          restore_lexbuf_state env.lb saved;
           encapsed_nested_inner start frag env
       )
   | Tlvar ->
-      L.back env.lb;
+      restore_lexbuf_state env.lb saved;
       let error_state = !(env.errors) in
       let e = encapsed_expr env in
       if !(env.errors) != error_state
