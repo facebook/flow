@@ -24,6 +24,8 @@ type genv = {
     (* Each time this is called, it should return the files that have changed
      * since the last invocation *)
     notifier         : unit -> SSet.t;
+    (* If daemons are spawned as part of the init process, wait for them here *)
+    wait_until_ready : unit -> unit;
   }
 
 (*****************************************************************************)

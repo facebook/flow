@@ -10,11 +10,15 @@
 
 open Utils
 
-type t = (SSet.t, unit) Daemon.handle
+type t = (DfindServer.msg, unit) Daemon.handle
 
-let init ?log_file roots = Daemon.spawn ?log_file DfindServer.entry_point roots
+let init ?log_file (scuba_table, roots) =
+  Daemon.spawn ?log_file DfindServer.entry_point (scuba_table, roots)
 
 let pid handle = handle.Daemon.pid
+
+let wait_until_ready {Daemon.channels = (ic, _oc); pid = _} =
+  assert (Daemon.from_channel ic = DfindServer.Ready)
 
 let request_changes {Daemon.channels = (ic, oc); pid = _} =
   Daemon.to_channel oc ();
@@ -22,7 +26,10 @@ let request_changes {Daemon.channels = (ic, oc); pid = _} =
 
 let get_changes daemon =
   let rec loop acc =
-    let diff = request_changes daemon in
+    let diff =
+      match request_changes daemon with
+      | DfindServer.Updates s -> s
+      | DfindServer.Ready -> assert false in
     if SSet.is_empty diff
     then acc
     else begin

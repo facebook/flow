@@ -23,7 +23,9 @@ let make_genv ~multicore options watch_paths =
     then Some (Worker.make nbr_procs gc_control)
     else None
   in
-  let dfind = if check_mode then None else Some (DfindLib.init watch_paths) in
+  let dfind =
+    if check_mode then None
+    else Some (DfindLib.init ("flow_server_events", watch_paths)) in
   { options;
     workers;
     dfind;

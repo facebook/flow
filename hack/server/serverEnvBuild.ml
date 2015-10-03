@@ -35,7 +35,7 @@ let make_genv options config local_config =
         Some (Watchman.init root)
       with e -> Hh_logger.exc e; None
   in
-  let indexer, notifier =
+  let indexer, notifier, wait_until_ready =
     match watchman with
     | Some watchman ->
       let files = Watchman.get_all_files watchman in
@@ -43,12 +43,16 @@ let make_genv options config local_config =
         Bucket.make ~max_size:1000 (List.filter filter files) in
       let notifier () = Watchman.get_changes watchman in
       HackEventLogger.set_use_watchman ();
-      indexer, notifier
+      (* We don't have an easy way to wait for watchman's init crawl to
+       * finish *)
+      let wait_until_ready () = () in
+      indexer, notifier, wait_until_ready
     | None ->
       let indexer filter = Find.make_next_files filter root in
       let log_link = ServerFiles.dfind_log root in
       let log_file = ServerFiles.make_link_of_timestamped log_link in
-      let dfind = DfindLib.init ~log_file [root] in
+      let dfind =
+        DfindLib.init ~log_file (GlobalConfig.scuba_table_name, [root]) in
       let notifier () =
         begin try
           Sys_utils.with_timeout 120
@@ -58,13 +62,15 @@ let make_genv options config local_config =
           Exit_status.(exit Dfind_died)
         end
       in
-      indexer, notifier
+      let wait_until_ready () = DfindLib.wait_until_ready dfind in
+      indexer, notifier, wait_until_ready
   in
   { options;
     config;
     workers;
     indexer;
     notifier;
+    wait_until_ready;
   }
 
 let make_env options config =

@@ -10,4 +10,8 @@
 
 open Utils
 
-val entry_point: (Path.t list, unit, SSet.t) Daemon.entry
+type msg =
+  | Ready
+  | Updates of SSet.t
+
+val entry_point: ((string * Path.t list), unit, msg) Daemon.entry

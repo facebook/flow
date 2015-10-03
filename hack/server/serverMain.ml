@@ -418,20 +418,17 @@ let run_load_script genv env cmd =
       state_fn (List.length to_recheck);
     HackEventLogger.load_script_done t;
     let env = load genv state_fn to_recheck in
-    HackEventLogger.init_done "load";
-    env
+    env, "load"
   with
   | State_not_found ->
      Hh_logger.log "Load state not found!";
      Hh_logger.log "Starting from a fresh state instead...";
      let env = Program.init genv env in
-     HackEventLogger.init_done "load_state_not_found";
-     env
+     env, "load_state_not_found"
   | Load_state_disabled ->
      Hh_logger.log "Load state disabled!";
      let env = Program.init genv env in
-     HackEventLogger.init_done "load_state_disabled";
-     env
+     env, "load_state_disabled";
   | e ->
      let msg = Printexc.to_string e in
      Hh_logger.log "Load error: %s" msg;
@@ -439,17 +436,22 @@ let run_load_script genv env cmd =
      Hh_logger.log "Starting from a fresh state instead...";
      HackEventLogger.load_failed msg;
      let env = Program.init genv env in
-     HackEventLogger.init_done "load_error";
-     env
+     env, "load_error"
 
-let create_program_init genv env = fun () ->
-  match ServerConfig.load_script genv.config with
-  | None ->
-     let env = Program.init genv env in
-     HackEventLogger.init_done "fresh";
-     env
-  | Some load_script ->
-      run_load_script genv env load_script
+let program_init genv env =
+  let env, init_type =
+    match ServerConfig.load_script genv.config with
+    | None ->
+        let env = Program.init genv env in
+        env, "fresh"
+    | Some load_script ->
+        run_load_script genv env load_script
+  in
+  Hh_logger.log "Waiting for daemon(s) to be ready...";
+  genv.wait_until_ready ();
+  HackEventLogger.init_really_end init_type;
+  env
+
 
 let save _genv env fn =
   let chan = open_out_no_fail fn in
@@ -460,7 +462,7 @@ let save _genv env fn =
    * does not expose the underlying file descriptor to C code; so we use
    * a separate ".sharedmem" file. *)
   SharedMem.save (fn^".sharedmem");
-  HackEventLogger.init_done "save"
+  HackEventLogger.init_end "save"
 
 (* The main entry point of the daemon
  * the only trick to understand here, is that env.modified is the set
@@ -495,10 +497,9 @@ let daemon_main options =
   PidLog.log ~reason:"main" (Unix.getpid());
   let genv = ServerEnvBuild.make_genv options config local_config in
   let env = ServerEnvBuild.make_env options config in
-  let program_init = create_program_init genv env in
   let is_check_mode = ServerArgs.check_mode genv.options in
   if is_check_mode then
-    let env = program_init () in
+    let env = program_init genv env in
     Option.iter (ServerArgs.save_filename genv.options) (save genv env);
     Program.run_once_and_exit genv env
   else
@@ -515,7 +516,7 @@ let daemon_main options =
      * socket and get blocked on it -- otherwise, trying to open a socket with
      * no server on the other end is an immediate error. *)
     let socket = Socket.init_unix_socket (ServerFiles.socket_file root) in
-    let env = MainInit.go options program_init in
+    let env = MainInit.go options (fun () -> program_init genv env) in
     serve genv env socket
 
 let main_entry =

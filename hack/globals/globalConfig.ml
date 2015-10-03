@@ -22,6 +22,8 @@ let ordered_cache_capacity = 1000
  * they are short-lived processes *)
 let gc_control = Gc.get ()
 
+let scuba_table_name = "hh_server_events"
+
 (* Where to write temp files *)
 let tmp_dir =
   Path.to_string @@

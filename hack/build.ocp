@@ -240,7 +240,7 @@ begin library "hh-typing-base"
 end
 
 begin library "hh-dfind"
-  requires += [ "hh-third-party" "hh-fsnotify" "hh-utils" ]
+  requires += [ "hh-third-party" "hh-fsnotify" "hh-utils" "hh-stubs" ]
   files = [
     "dfind/dfindEnv.ml"
     "dfind/dfindMaybe.ml"
