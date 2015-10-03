@@ -217,6 +217,7 @@ end = struct
       Program.run_once_and_exit genv env
     else
       let env = MainInit.go options program_init in
+      DfindLib.wait_until_ready (unsafe_opt genv.dfind);
       let socket = Socket.init_unix_socket (FlowConfig.socket_file ~tmp_dir root) in
       serve genv env socket
 
