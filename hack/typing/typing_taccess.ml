@@ -180,7 +180,7 @@ and get_typeconst env class_pos class_name pos tconst =
           Errors.unbound_name_typing class_pos class_name;
           raise Exit
       | Some c -> c in
-    let typeconst = match SMap.get tconst class_.tc_typeconsts with
+    let typeconst = match Env.get_typeconst env.tenv class_ tconst with
       | None ->
           Errors.smember_not_found
             `class_typeconst pos (class_.tc_pos, class_name) tconst `no_hint;

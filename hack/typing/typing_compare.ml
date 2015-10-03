@@ -510,7 +510,7 @@ module ClassDiff = struct
     let typeconsts_diff = smap class1.tc_typeconsts class2.tc_typeconsts in
     let is_unchanged = is_unchanged && SSet.is_empty typeconsts_diff in
     let acc =
-      add_inverted_deps acc (fun x -> Dep.Class (cid^"::"^x)) typeconsts_diff in
+      add_inverted_deps acc (fun x -> Dep.Const (cid, x)) typeconsts_diff in
 
     acc, is_unchanged
 
@@ -561,8 +561,8 @@ let rec get_extend_deps_ trace cid_hash to_redecl =
       then
         let to_redecl = DepSet.add obj acc in
         get_extend_deps_ trace obj to_redecl
-    else to_redecl
-  end ideps to_redecl
+      else to_redecl
+    end ideps to_redecl
   end
 
 (*****************************************************************************)

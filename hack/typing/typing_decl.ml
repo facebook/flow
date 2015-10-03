@@ -726,7 +726,7 @@ and visibility cid = function
   | Private   -> Vprivate cid
 
 (* each concrete type constant T = <sometype> implicitly defines a
-class constant with the same name which is TypeStrucure<sometype> *)
+class constant with the same name which is TypeStructure<sometype> *)
 and typeconst_ty_decl pos c_name tc_name ~is_abstract =
   let r = Reason.Rwitness pos in
   let tsid = pos, SN.FB.cTypeStructure in
