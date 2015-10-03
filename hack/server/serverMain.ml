@@ -105,7 +105,6 @@ module type SERVER_PROGRAM = sig
   val recheck: genv -> env -> Relative_path.Set.t -> env * int
   val post_recheck_hook: genv -> env -> env -> Relative_path.Set.t -> unit
   val parse_options: unit -> ServerArgs.options
-  val get_watch_paths: ServerArgs.options -> Path.t list
   val name: string
   val config_filename : unit -> Relative_path.t
   val load_config : unit -> ServerConfig.t
@@ -147,12 +146,6 @@ module Program : SERVER_PROGRAM =
         ignore @@
         Sys.signal Sys.sigusr1 (Sys.Signal_handle Typing.debug_print_last_pos)
 
-    let make_next_files ~name dir =
-      Find.make_next_files ~name begin fun f ->
-        (FindUtils.is_php f && not (FilesToIgnore.should_ignore f))
-        || FindUtils.is_js f
-      end dir
-
     let stamp_file = Filename.concat GlobalConfig.tmp_dir "stamp"
     let touch_stamp () =
       Sys_utils.mkdir_no_fail (Filename.dirname stamp_file);
@@ -177,21 +170,7 @@ module Program : SERVER_PROGRAM =
       then touch_stamp ()
 
     let init genv env =
-      let module RP = Relative_path in
-      let root = ServerArgs.root genv.options in
-      let hhi_root = Hhi.get_hhi_root () in
-      let next_files_hhi = compose
-        (List.map ~f:(RP.create RP.Hhi))
-        (make_next_files ~name:"hhi" hhi_root) in
-      let next_files_root = compose
-        (List.map ~f:(RP.create RP.Root))
-        (make_next_files ~name:"root" root)
-      in
-      let next_files = fun () ->
-        match next_files_hhi () with
-        | [] -> next_files_root ()
-        | x -> x in
-      let env = ServerInit.init genv env next_files in
+      let env = ServerInit.init genv env in
       touch_stamp ();
       env
 
@@ -231,8 +210,6 @@ module Program : SERVER_PROGRAM =
     let post_recheck_hook = BuildMain.incremental_update
 
     let parse_options = ServerArgs.parse_options
-
-    let get_watch_paths _options = []
 
     let marshal chan =
       Typing_deps.marshal chan;
@@ -313,20 +290,11 @@ let recheck genv old_env updates =
  * is no longer getting populated. *)
 let rec recheck_loop acc genv env =
   let t = Unix.gettimeofday () in
-  let raw_updates =
-    match genv.dfind with
-    | None -> SSet.empty
-    | Some dfind ->
-        (try
-          with_timeout 120
-            ~on_timeout:(fun _ -> Exit_status.(exit Dfind_unresponsive))
-            ~do_:(fun () -> DfindLib.get_changes dfind)
-        with _ -> Exit_status.(exit Dfind_died))
-  in
+  let raw_updates = genv.notifier () in
   if SSet.is_empty raw_updates then
     acc, env
   else begin
-    HackEventLogger.dfind_returned t (SSet.cardinal raw_updates);
+    HackEventLogger.notifier_returned t (SSet.cardinal raw_updates);
     let updates = Program.process_updates genv env raw_updates in
     let env, rechecked, total_rechecked = recheck genv env updates in
     let acc = {
@@ -507,6 +475,7 @@ let daemon_main options =
   Gc.set {gc_control with Gc.max_overhead = 200};
   Relative_path.set_path_prefix Relative_path.Root (ServerArgs.root options);
   let config = Program.load_config () in
+  let local_config = ServerLocalConfig.load () in
   let root = ServerArgs.root options in
   if Sys_utils.is_test_mode ()
   then EventLogger.init (Daemon.devnull ()) 0.0
@@ -524,8 +493,7 @@ let daemon_main options =
   if not Sys.win32 then Sys.set_signal Sys.sigpipe Sys.Signal_ignore;
   PidLog.init (ServerFiles.pids_file root);
   PidLog.log ~reason:"main" (Unix.getpid());
-  let watch_paths = root :: Program.get_watch_paths options in
-  let genv = ServerEnvBuild.make_genv options config watch_paths in
+  let genv = ServerEnvBuild.make_genv options config local_config in
   let env = ServerEnvBuild.make_env options config in
   let program_init = create_program_init genv env in
   let is_check_mode = ServerArgs.check_mode genv.options in

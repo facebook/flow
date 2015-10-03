@@ -31,3 +31,13 @@ let parse fn =
       | [k; v] -> SMap.add (String.trim k) (String.trim v) acc
       | _ -> raise (Failure ("failed to parse config file "^fn));
   end ~init:SMap.empty
+
+module Getters = struct
+
+  let int_ key ~default config =
+    Option.value_map (SMap.get key config) ~default ~f:int_of_string
+
+  let bool_ key ~default config =
+    Option.value_map (SMap.get key config) ~default ~f:bool_of_string
+
+end

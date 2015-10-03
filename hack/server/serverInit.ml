@@ -10,11 +10,29 @@
 
 open Core
 open ServerEnv
+open Utils
+
+(* Return all the files that we need to typecheck *)
+let make_next_files genv : Relative_path.t MultiWorker.nextlist =
+  let next_files_root = compose
+    (List.map ~f:(Relative_path.(create Root)))
+    (genv.indexer ServerEnv.file_filter) in
+  let hhi_root = Hhi.get_hhi_root () in
+  let next_files_hhi = compose
+    (List.map ~f:(Relative_path.(create Hhi)))
+    (Find.make_next_files ~name:"hhi" FindUtils.is_php hhi_root) in
+  fun () ->
+    match next_files_hhi () with
+    | [] -> next_files_root ()
+    | x -> x
 
 (* Initialization of the server *)
-let init_hack genv env get_next =
-
+let init_hack genv env =
   let t = Unix.gettimeofday () in
+  let get_next = make_next_files genv in
+  HackEventLogger.indexing_end t;
+  let t = Hh_logger.log_duration "Indexing" t in
+
   let files_info, errorl1, failed1 =
     Parsing_service.go genv.workers ~get_next in
   let hs = SharedMem.heap_size () in
@@ -100,8 +118,8 @@ let init_hack genv env get_next =
   env, errorl, failed
 
 (* entry point *)
-let init genv env next_files =
-  let env, errorl, failed = init_hack genv env next_files in
+let init genv env =
+  let env, errorl, failed = init_hack genv env in
   let env = { env with errorl = errorl;
               failed_parsing = failed } in
   env

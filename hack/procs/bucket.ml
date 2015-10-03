@@ -18,6 +18,8 @@
  * hurts *)
 (****************************************************************************)
 
+type 'a t = unit -> 'a list
+
 let make_ bucket_size jobs =
   let i = ref 0 in
   fun () ->

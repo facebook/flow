@@ -27,12 +27,11 @@ type file_input =
   | FileName of string
   | FileContent of string
 
-let die_nicely genv =
+let die_nicely () =
   HackEventLogger.killed ();
   Printf.printf "Status: Error\n";
   Printf.printf "Sent KILL command by client. Dying.\n";
-  (match genv.ServerEnv.dfind with
-  | Some handle -> Unix.kill (DfindLib.pid handle) Sys.sigterm;
-  | None -> ()
-  );
+  (* XXX when we exit, the dfind process will attempt to read from the broken
+   * pipe and then exit with SIGPIPE, so it is unnecessary to kill it
+   * explicitly *)
   exit 0

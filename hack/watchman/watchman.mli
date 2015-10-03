@@ -8,8 +8,12 @@
  *
  *)
 
-(* will parse, name, typecheck, the next set of files
- * and refresh the environment and update the many shared heaps
- *)
-val init:
-  ServerEnv.genv -> ServerEnv.env -> ServerEnv.env
+open Utils
+
+type env
+
+val init: Path.t -> env
+
+val get_all_files: env -> string list
+
+val get_changes: env -> SSet.t

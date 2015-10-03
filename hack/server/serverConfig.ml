@@ -9,6 +9,7 @@
  *)
 
 open Core
+open Config_file.Getters
 open Utils
 
 type t = {
@@ -20,12 +21,6 @@ type t = {
   sharedmem_config : SharedMem.config;
   tc_options       : TypecheckerOptions.t;
 }
-
-let int_ key ~default config =
-  Option.value_map (SMap.get key config) ~default ~f:int_of_string
-
-let bool_ key ~default config =
-  Option.value_map (SMap.get key config) ~default ~f:bool_of_string
 
 let make_gc_control config =
   let {Gc.minor_heap_size; space_overhead; _} = GlobalConfig.gc_control in

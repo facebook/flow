@@ -26,3 +26,6 @@ let log_duration name t =
   let t2 = Unix.gettimeofday() in
   Printf.eprintf "%f\n%!" (t2 -. t);
   t2
+
+let exc e =
+  log_raw (Printexc.to_string e ^ "\n")

@@ -157,5 +157,5 @@ let handle genv env (ic, oc) =
       Marshal.to_channel oc response [];
       flush oc;
       ServerUtils.shutdown_client (ic, oc);
-      if cmd = ServerRpc.KILL then ServerUtils.die_nicely genv
+      if cmd = ServerRpc.KILL then ServerUtils.die_nicely ()
   | Stream cmd -> stream_response genv env (ic, oc) ~cmd

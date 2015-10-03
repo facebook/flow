@@ -372,3 +372,17 @@ let json_of_string ?(strict=true) s =
 
 let json_of_file ?(strict=true) filename =
   json_of_string (string_of_file filename)
+
+let int_ n = JSON_Number (string_of_int n)
+
+let get_object_exn = function
+  | JSON_Object o -> o
+  | _ -> assert false
+
+let get_array_exn = function
+  | JSON_Array a -> a
+  | _ -> assert false
+
+let get_string_exn = function
+  | JSON_String s -> s
+  | _ -> assert false

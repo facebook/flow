@@ -9,6 +9,7 @@
  *)
 
 open Core
+open Utils
 
 (*****************************************************************************)
 (* The "static" environment, initialized first and then doesn't change *)
@@ -18,7 +19,11 @@ type genv = {
     options          : ServerArgs.options;
     config           : ServerConfig.t;
     workers          : Worker.t list option;
-    dfind            : DfindLib.t option;
+    (* Returns the list of files under .hhconfig, subject to a filter *)
+    indexer          : (string -> bool) -> string MultiWorker.nextlist;
+    (* Each time this is called, it should return the files that have changed
+     * since the last invocation *)
+    notifier         : unit -> SSet.t;
   }
 
 (*****************************************************************************)
@@ -41,6 +46,10 @@ type env = {
   }
 
 let typechecker_options env = (Naming.typechecker_options env.nenv)
+
+let file_filter f =
+  (FindUtils.is_php f && not (FilesToIgnore.should_ignore f))
+  || FindUtils.is_js f
 
 (*****************************************************************************)
 (* Listing all the files present in the environment *)

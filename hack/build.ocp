@@ -250,6 +250,14 @@ begin library "hh-dfind"
   ]
 end
 
+begin library "hh-watchman"
+  requires += [ "hh-third-party" "hh-procs" "hh-utils" "hh-stubs" ]
+  files = [
+    "watchman/watchman.mli"
+    "watchman/watchman.ml"
+  ]
+end
+
 begin library "hh-naming"
   requires += [ "hh-typing-base" ]
 
@@ -402,6 +410,7 @@ begin library "hh-server-base"
     "server/serverIdentifyFunction.ml"
     "server/serverInferType.ml"
     "server/serverLint.ml"
+    "server/serverLocalConfig.ml"
     "server/serverMonitor.ml"
     "server/serverRefactor.ml"
     "server/serverSearch.ml"
@@ -421,7 +430,7 @@ begin library "hh-server"
   requires += [
     "hh-third-party" "hh-utils" "hh-typing"
     "hh-search"  "hh-stubs"  "hh-stubs-ai"
-    "hh-socket"  "hh-dfind" "hh-server-base"
+    "hh-socket"  "hh-dfind" "hh-watchman" "hh-server-base"
   ]
   files = [
     "server/serverEnvBuild.ml"

@@ -117,7 +117,7 @@ let go_ fn genv env =
   let module RP = Relative_path in
   let next_files = compose
     (List.map ~f:(RP.create RP.Root))
-    (Find.make_next_files FindUtils.is_php path)
+    (genv.ServerEnv.indexer FindUtils.is_php)
   in
   FileInfoStore.store env.ServerEnv.files_info;
   let result =
