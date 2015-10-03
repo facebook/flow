@@ -11,51 +11,6 @@
 open Core
 
 (*****************************************************************************)
-(* Dependencies *)
-(*****************************************************************************)
-
-(* Module adding the dependencies related to inheritance.
- * We need a complete accurate graph of dependencies related to inheritance.
- * Because without them, we can't recompute the set of files that must be
- * rechecked when something changes.
- * It is safer for us to add them as soon as possible, that's why we add
- * them just after parsing, because that's as soon as it gets.
- *)
-module AddDeps = struct
-  module Dep = Typing_deps.Dep
-  open Ast
-
-  let rec program defl = List.iter defl def
-
-  and def = function
-    | Class c -> class_ c
-    | Fun _  | Stmt _  | Typedef _ | Constant _ -> ()
-    | Namespace _ | NamespaceUse _ -> assert false
-
-  and class_ c =
-    let name = snd c.c_name in
-    List.iter c.c_extends (hint name);
-    List.iter c.c_implements (hint name);
-    List.iter c.c_body (class_def name)
-
-  and class_def root = function
-    | ClassUse h -> hint root h
-    | XhpAttrUse h -> hint root h
-    | ClassTraitRequire (_, h) -> hint root h
-    | Attributes _  | Const _ | AbsConst _ | ClassVars _ | XhpAttr _ | Method _
-    | TypeConst _ | XhpCategory _ -> ()
-
-  and hint root (_, h) =
-    match h with
-    | Happly ((_, parent), _) ->
-        Typing_deps.add_idep (Some (Dep.Class root)) (Dep.Extends parent)
-    | Hoption _ | Hfun _ | Htuple _ | Hshape _ | Haccess _ -> ()
-
-
-end
-
-
-(*****************************************************************************)
 (* Helpers *)
 (*****************************************************************************)
 
@@ -91,7 +46,6 @@ let really_parse (acc, errorl, error_files, php_files) fn =
   in
   Parsing_hooks.dispatch_file_parsed_hook fn ast;
   if file_mode <> None then begin
-    AddDeps.program ast;
     let funs, classes, typedefs, consts = Ast_utils.get_defs ast in
     Parser_heap.ParserHeap.add fn ast;
     let defs =

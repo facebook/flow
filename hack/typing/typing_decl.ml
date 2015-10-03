@@ -920,4 +920,6 @@ let name_and_declare_types_program nenv all_classes prog =
 let make_env nenv all_classes fn =
   match Parser_heap.ParserHeap.get fn with
   | None -> ()
-  | Some prog -> name_and_declare_types_program nenv all_classes prog
+  | Some prog ->
+      Typing_decl_deps.add prog;
+      name_and_declare_types_program nenv all_classes prog
