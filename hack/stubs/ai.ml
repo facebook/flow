@@ -12,3 +12,33 @@ let do_ _ _ _ =
   [], ([], (Naming.empty TypecheckerOptions.default, Relative_path.Map.empty))
 let go _ _ _ _ _ = [], Relative_path.Set.empty
 let go_incremental _ _ _ _ _ =  [], Relative_path.Set.empty
+
+module InfoService = struct
+  type target_type =
+    | Function
+    | Method
+    | Constructor
+
+  type fun_call = {
+    name: string;
+    type_: target_type;
+    pos: Pos.absolute;
+    caller: string;
+    callees: string list; (* includes overrides, etc. *)
+  }
+
+  type throws = {
+    thrower: string; (* the name of a function or method that throws/leaks *)
+    exceptions: string list; (* names of types of thrown exceptions *)
+  }
+
+  type result = {
+    fun_calls: fun_call list;
+    throws: throws list;
+  }
+
+  let empty_result = { fun_calls = []; throws = [] }
+
+  let go _ _ _ _ _ = empty_result
+
+end

@@ -24,6 +24,7 @@ type _ t =
   | FIND_REFS : ServerFindRefs.action -> ServerFindRefs.result t
   | REFACTOR : ServerRefactor.action -> ServerRefactor.patch list t
   | DUMP_SYMBOL_INFO : string list -> SymbolInfoService.result t
+  | DUMP_AI_INFO : string list -> Ai.InfoService.result t
   | ARGUMENT_INFO : string * int * int -> ServerArgumentInfo.result t
   | SEARCH : string * string -> ServerSearch.result t
   | COVERAGE_COUNTS : string -> ServerCoverageMetric.result t
@@ -57,6 +58,9 @@ let handle : type a. genv -> env -> a t -> a =
     | REFACTOR refactor_action -> ServerRefactor.go refactor_action genv env
     | DUMP_SYMBOL_INFO file_list ->
         SymbolInfoService.go genv.workers file_list env
+    | DUMP_AI_INFO file_list ->
+        Ai.InfoService.go (Typing_check_utils.check_defs) genv.workers
+          file_list (ServerArgs.ai_mode genv.options) env.nenv
     | ARGUMENT_INFO (contents, line, col) ->
         ServerArgumentInfo.go genv env contents line col
     | SEARCH (query, type_) -> ServerSearch.go query type_

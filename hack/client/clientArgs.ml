@@ -139,6 +139,10 @@ let parse_check_args cmd =
        *    ]
        *  Note: results list can be in any order *)
       "";
+    "--dump-ai-info", Arg.String (fun files ->
+        set_mode (MODE_DUMP_AI_INFO files) ()),
+        (* Just like --dump-symbol-info, but uses the AI to obtain info *)
+        "";
     "--identify-function", Arg.String (fun x -> set_mode (MODE_IDENTIFY_FUNCTION x) ()),
       " (mode) print the full function name at the position [line:character] of the text on stdin";
     "--refactor", Arg.Unit (set_mode MODE_REFACTOR),

@@ -109,6 +109,9 @@ let main args =
   | MODE_DUMP_SYMBOL_INFO files ->
       ClientSymbolInfo.go conn files expand_path;
       Exit_status.Ok
+  | MODE_DUMP_AI_INFO files ->
+      ClientAiInfo.go conn files expand_path;
+      Exit_status.Ok
   | MODE_REFACTOR ->
       ClientRefactor.go conn args;
       Exit_status.Ok
