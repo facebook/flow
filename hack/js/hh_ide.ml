@@ -45,19 +45,19 @@ let error el =
 
 (*****************************************************************************)
 
-let type_fun nenv x fn =
+let type_fun x fn =
   try
-    let tenv = Typing_env.empty (Naming.typechecker_options nenv) fn in
+    let tenv = Typing_env.empty fn in
     let fun_ = Naming_heap.FunHeap.find_unsafe x in
-    Typing.fun_def tenv nenv x fun_;
+    Typing.fun_def tenv x fun_;
   with Not_found ->
     ()
 
-let type_class nenv x fn =
+let type_class x fn =
   try
-    let tenv = Typing_env.empty (Naming.typechecker_options nenv) fn in
     let class_ = Naming_heap.ClassHeap.find_unsafe x in
-    Typing.class_def tenv nenv x class_
+    let tenv = Typing_env.empty fn in
+    Typing.class_def tenv x class_
   with Not_found ->
     ()
 
@@ -111,8 +111,7 @@ let declare_file fn content =
     then begin
       let funs, classes, typedefs, consts = make_funs_classes ast in
       Hashtbl.replace globals fn (is_php, funs, classes);
-      let nenv = Naming.empty TypecheckerOptions.permissive in
-      let nenv = Naming.make_env nenv ~funs ~classes ~typedefs ~consts in
+      let nenv = Naming.make_env Naming.empty ~funs ~classes ~typedefs ~consts in
       let all_classes = List.fold_right begin fun (_, cname) acc ->
         SMap.add cname (Relative_path.Set.singleton fn) acc
       end classes SMap.empty in
@@ -121,7 +120,7 @@ let declare_file fn content =
       SSet.iter begin fun cname ->
         match Naming_heap.ClassHeap.get cname with
         | None -> ()
-        | Some c -> Typing_decl.class_decl (Naming.typechecker_options nenv) c
+        | Some c -> Typing_decl.class_decl TypecheckerOptions.empty c
       end sub_classes
     end
     else Hashtbl.replace globals fn (false, [], [])
@@ -169,33 +168,20 @@ let hh_check fn =
         begin fun () ->
         let ast = Parser_heap.ParserHeap.find_unsafe fn in
         let funs, classes, typedefs, consts = make_funs_classes ast in
-        let nenv = Naming.empty TypecheckerOptions.permissive in
-        let nenv = Naming.make_env nenv ~funs ~classes ~typedefs ~consts in
+        let nenv =
+          Naming.make_env Naming.empty ~funs ~classes ~typedefs ~consts
+        in
         let all_classes = List.fold_right begin fun (_, cname) acc ->
           SMap.add cname (Relative_path.Set.singleton fn) acc
         end classes SMap.empty in
         Typing_decl.make_env nenv all_classes fn;
-        List.iter (fun (_, fname) -> type_fun nenv fname fn) funs;
-        List.iter (fun (_, cname) -> type_class nenv cname fn) classes;
+        List.iter (fun (_, fname) -> type_fun fname fn) funs;
+        List.iter (fun (_, cname) -> type_class cname fn) classes;
         error []
         end
         begin fun l ->
           error [l]
         end
-
-let hh_check_syntax fn content =
-  let fn = Relative_path.create Relative_path.Root fn in
-  let errors, _ = Errors.do_ begin fun () ->
-    Parser_hack.program fn content
-  end in
-  error errors
-
-
-let permissive_empty_envs fn =
-  let tcopt = TypecheckerOptions.permissive in
-  let nenv = Naming.empty tcopt in
-  let tenv = Typing_env.empty tcopt fn in
-  (nenv, tenv)
 
 let hh_auto_complete fn =
   let fn = Relative_path.create Relative_path.Root fn in
@@ -206,15 +192,16 @@ let hh_auto_complete fn =
       List.iter begin fun def ->
         match def with
         | Ast.Fun f ->
-            let nenv, tenv = permissive_empty_envs fn in
+            let nenv = Naming.empty in
+            let tenv = Typing_env.empty fn in
             let f = Naming.fun_ nenv f in
-            Typing.fun_def tenv nenv (snd f.Nast.f_name) f
+            Typing.fun_def tenv (snd f.Nast.f_name) f
         | Ast.Class c ->
-            let nenv, tenv = permissive_empty_envs fn in
-            let tcopt = Naming.typechecker_options nenv in
+            let nenv = Naming.empty in
+            let tenv = Typing_env.empty fn in
             let c = Naming.class_ nenv c in
-            Typing_decl.class_decl tcopt c;
-            let res = Typing.class_def tenv nenv (snd c.Nast.c_name) c in
+            Typing_decl.class_decl TypecheckerOptions.empty c;
+            let res = Typing.class_def tenv (snd c.Nast.c_name) c in
             res
         | _ -> ()
       end ast;
@@ -225,7 +212,7 @@ let hh_auto_complete fn =
       | Some Autocomplete.Acnew -> "new"
       | Some Autocomplete.Actype -> "type"
       | Some Autocomplete.Acclass_get -> "class_get"
-      | Some Autocomplete.Acprop -> "var"
+      | Some Autocomplete.Acvar -> "var"
       | None -> "none" in
     let result = AutocompleteService.get_results [] [] in
     let result =
@@ -252,13 +239,15 @@ let hh_get_method_at_position fn line char =
       List.iter begin fun def ->
         match def with
         | Ast.Fun f ->
-            let nenv, tenv = permissive_empty_envs fn in
+            let nenv = Naming.empty in
+            let tenv = Typing_env.empty fn in
             let f = Naming.fun_ nenv f in
-            Typing.fun_def tenv nenv (snd f.Nast.f_name) f
+            Typing.fun_def tenv (snd f.Nast.f_name) f
         | Ast.Class c ->
-            let nenv, tenv = permissive_empty_envs fn in
+            let nenv = Naming.empty in
+            let tenv = Typing_env.empty fn in
             let c = Naming.class_ nenv c in
-            let res = Typing.class_def tenv nenv (snd c.Nast.c_name) c in
+            let res = Typing.class_def tenv (snd c.Nast.c_name) c in
             res
         | _ -> ()
       end ast;
@@ -332,17 +321,16 @@ let hh_find_lvar_refs file line char =
   try
     let get_result = FindLocalsService.attach_hooks line char in
     let ast = Parser_heap.ParserHeap.find_unsafe file in
-    let tcopt = TypecheckerOptions.permissive in
     Errors.ignore_ begin fun () ->
       (* We only need to name to find references to locals *)
       List.iter begin fun def ->
         match def with
         | Ast.Fun f ->
-            let nenv = Naming.empty tcopt in
+            let nenv = Naming.empty in
             let _ = Naming.fun_ nenv f in
             ()
         | Ast.Class c ->
-            let nenv = Naming.empty tcopt in
+            let nenv = Naming.empty in
             let _ = Naming.class_ nenv c in
             ()
         | _ -> ()
@@ -446,14 +434,14 @@ let hh_arg_info fn line char =
   let _, funs, classes = Hashtbl.find globals fn in
   Errors.ignore_ begin fun () ->
     List.iter begin fun (_, f_name) ->
-      let nenv, tenv = permissive_empty_envs fn in
+      let tenv = Typing_env.empty fn in
       let f = Naming_heap.FunHeap.find_unsafe f_name in
-      Typing.fun_def tenv nenv f_name f
+      Typing.fun_def tenv f_name f
     end funs;
     List.iter begin fun (_, c_name) ->
-      let nenv, tenv = permissive_empty_envs fn in
+      let tenv = Typing_env.empty fn in
       let c = Naming_heap.ClassHeap.find_unsafe c_name in
-      Typing.class_def tenv nenv c_name c
+      Typing.class_def tenv c_name c
     end classes;
   end;
   let result = ArgumentInfoService.get_result() in
@@ -470,7 +458,7 @@ let hh_arg_info fn line char =
 let hh_format contents start end_ =
   let modes = [Some FileInfo.Mstrict; Some FileInfo.Mpartial] in
   let result =
-    Format_hack.region modes Path.dummy_path start end_ contents in
+    Format_hack.region modes Relative_path.default start end_ contents in
   let error, result, internal_error = match result with
     | Format_hack.Disabled_mode -> "Php_or_decl", "", false
     | Format_hack.Parsing_error _ -> "Parsing_error", "", false
@@ -499,9 +487,8 @@ let js_wrap_string_2 func =
   Js.wrap_callback f
 
 let () =
-  Relative_path.set_path_prefix Relative_path.Root (Path.make "/");
+  Relative_path.set_path_prefix Relative_path.Root "/";
   Js.Unsafe.set Js.Unsafe.global "hh_check_file" (js_wrap_string_1 hh_check);
-  Js.Unsafe.set Js.Unsafe.global "hh_check_syntax" (js_wrap_string_2 hh_check_syntax);
   Js.Unsafe.set Js.Unsafe.global "hh_add_file" (js_wrap_string_2 hh_add_file);
   Js.Unsafe.set Js.Unsafe.global "hh_add_dep" (js_wrap_string_2 hh_add_dep);
   Js.Unsafe.set Js.Unsafe.global "hh_auto_complete" (js_wrap_string_1 hh_auto_complete);

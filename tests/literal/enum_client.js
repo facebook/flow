@@ -1,11 +1,11 @@
 var APIKeys = require('./enum');
 // object that maps "AGE" to "age", "NAME" to "name"
 
-function foo(x: $Keys<typeof APIKeys>) { }
+function foo(x: $Enum<typeof APIKeys>) { }
 foo("AGE");
 foo("LOCATION"); // error
 
-function bar(x: $Keys<{age: number}>) { }
+function bar(x: $Enum<{age: number}>) { }
 bar(APIKeys.AGE); // not an error: APIKeys.AGE = "age"
 bar(APIKeys.NAME); // error: since "NAME" is not in the smaller enum
 

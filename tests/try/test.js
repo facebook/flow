@@ -31,5 +31,5 @@ function qux() {
         throw -1;
     } finally {
     }
-    x(); // unreachable
+    x();
 }

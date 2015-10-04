@@ -9,23 +9,18 @@
  *)
 
 
-type t = private string
+type path
 
-val dummy_path: t
-val make: string -> t
-val to_string: t -> string
-val file_exists: t -> bool
-val is_directory: t -> bool
-val compare: t -> t -> int
-val concat: t -> string -> t
-val chdir: t -> unit
-val dirname: t -> t
-val getcwd: unit -> t
-val output: out_channel -> t -> unit
-val remove: t -> unit
-val parent: t -> t
-val executable_name: t
-val cat: t -> string
+val dummy_path: path
+val mk_path: string -> path
+val string_of_path: path -> string
+val equal: path -> path -> bool
+val file_exists: path -> bool
+val is_directory: path -> bool
+val is_normalized: path -> bool
+val concat: path -> string -> path
+val remove: path -> unit
+val parent: path -> path
 
-val slash_escaped_string_of_path: t -> string
-val path_of_slash_escaped_string: string -> t
+val slash_escaped_string_of_path: path -> string
+val path_of_slash_escaped_string: string -> path

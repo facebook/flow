@@ -1,9 +1,0 @@
-
-A.js:14:1,38: Error suppressing comment
-Unused suppression
-
-A.js:16:21,23: number
-This type is incompatible with
-A.js:16:12,17: string
-
-Found 2 errors

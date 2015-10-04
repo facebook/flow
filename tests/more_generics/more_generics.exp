@@ -1,20 +1,18 @@
 
 poly.js:3:36,36: T
 This type is incompatible with
-poly.js:3:1,39: some incompatible instantiation of S
+  poly.js:3:1,39: some incompatible instantiation of S
 
 poly.js:10:15,15: T
 This type is incompatible with
-poly.js:10:1,41: some incompatible instantiation of T
+  poly.js:10:1,41: some incompatible instantiation of T
 
 poly.js:20:34,39: array type
 This type is incompatible with
-poly.js:20:1,42: some incompatible instantiation of R
+  poly.js:20:1,42: some incompatible instantiation of R
 
-poly.js:23:11,19: function call
-Error:
 poly.js:24:3,5: function call
 Function cannot be called on
-poly.js:23:18,18: U
+  poly.js:23:18,18: U
 
 Found 4 errors

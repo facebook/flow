@@ -28,12 +28,13 @@ module Dep = struct
     | Class of string
     | Fun of string
     | FunName of string
-    | Prop of string * string
-    | SProp of string * string
+    | CVar of string * string
+    | SCVar of string * string
     | Method of string * string
     | SMethod of string * string
     | Cstr of string
     | Extends of string
+    | Injectable
 
   type t = int
 
@@ -107,8 +108,8 @@ let get_ideps x =
 let get_bazooka x =
   match x with
   | Dep.Const (cid, _)
-  | Dep.Prop (cid, _)
-  | Dep.SProp (cid, _)
+  | Dep.CVar (cid, _)
+  | Dep.SCVar (cid, _)
   | Dep.Method (cid, _)
   | Dep.Cstr cid
   | Dep.SMethod (cid, _)
@@ -118,6 +119,7 @@ let get_bazooka x =
   | Dep.FunName fid -> get_ideps (Dep.FunName fid)
   | Dep.GConst cid -> get_ideps (Dep.GConst cid)
   | Dep.GConstName cid -> get_ideps (Dep.GConstName cid)
+  | Dep.Injectable -> DepSet.empty
 
 (*****************************************************************************)
 (* Module keeping track which files contain the toplevel definitions. *)

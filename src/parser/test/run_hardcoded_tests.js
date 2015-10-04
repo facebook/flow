@@ -119,7 +119,6 @@ function go() {
         }
       }
     }
-    process.exit(1);
   }
 }
 

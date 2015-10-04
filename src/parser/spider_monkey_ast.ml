@@ -13,6 +13,75 @@
  * https://developer.mozilla.org/en-US/docs/SpiderMonkey/Parser_API
  *)
 
+module Loc = struct
+  type position = {
+    line: int;
+    column: int;
+    offset: int;
+  }
+
+  type t = {
+    source: string option;
+    start: position;
+    _end: position;
+  }
+
+  let none = {
+    source = None;
+    start = { line = 0; column = 0; offset = 0; };
+    _end = { line = 0; column = 0; offset = 0; };
+  }
+
+  let from_lb_p start _end = Lexing.(
+    {
+      source = if start.pos_fname = ""
+        then None
+        else Some (start.pos_fname);
+      start = {
+        line = start.pos_lnum;
+        column = start.pos_cnum - start.pos_bol;
+        offset = start.pos_cnum;
+      };
+      _end = {
+        line = _end.pos_lnum;
+        column = max 0 (_end.pos_cnum - _end.pos_bol);
+        offset = _end.pos_cnum;
+      }
+    }
+  )
+
+  (* Returns the position for the token that was just lexed *)
+  let from_lb lb = Lexing.(
+    let start = lexeme_start_p lb in
+    let _end = lexeme_end_p lb in
+    from_lb_p start _end
+  )
+
+  (* Returns the position that the lexer is currently about to lex *)
+  let from_curr_lb lb = Lexing.(
+    let curr = lb.lex_curr_p in
+    from_lb_p curr curr
+  )
+
+  let btwn loc1 loc2 = {
+    source = loc1.source;
+    start = loc1.start;
+    _end = loc2._end;
+  }
+
+  let string loc =
+    let source = match loc.source with
+    | None -> ""
+    | Some source -> source in
+    if loc.start.line = loc._end.line
+    then Printf.sprintf "File %S, line %d, column %d-%d:"
+      source loc.start.line loc.start.column loc._end.column
+    else Printf.sprintf "File %S, line %d column %d - line %d column %d:"
+      source loc.start.line loc.start.column loc._end.line loc._end.column
+
+  let compare loc1 loc2 = String.compare (string loc1) (string loc2)
+end
+
 module rec Identifier : sig
   type t = Loc.t * t'
   and t' = {
@@ -120,20 +189,6 @@ and Type : sig
     }
   end
 
-  module NumberLiteral : sig
-    type t = {
-      value: float;
-      raw: string;
-    }
-  end
-
-  module BooleanLiteral : sig
-    type t = {
-      value: bool;
-      raw: string;
-    }
-  end
-
   type t = Loc.t * t'
   (* Yes, we could add a little complexity here to show that Any and Void
    * should never be declared nullable, but that check can happen later *)
@@ -153,9 +208,6 @@ and Type : sig
     | Typeof of t
     | Tuple of t list
     | StringLiteral of StringLiteral.t
-    | NumberLiteral of NumberLiteral.t
-    | BooleanLiteral of BooleanLiteral.t
-    | Exists
 
   (* Type.annotation is a concrete syntax node with a location that starts at
    * the colon and ends after the type. For example, "var a: number", the
@@ -269,7 +321,6 @@ and Statement : sig
       defaults: Expression.t option list;
       rest: Identifier.t option;
       body: body;
-      async: bool;
       generator: bool;
       expression: bool;
       returnType: Type.annotation option;
@@ -344,6 +395,49 @@ and Statement : sig
       body: Statement.t;
     }
   end
+  module Class : sig
+    module Method : sig
+      type t = Loc.t * t'
+      and t' = {
+        kind: Expression.Object.Property.kind;
+        key: Expression.Object.Property.key;
+        value: Loc.t * Expression.Function.t;
+        static: bool;
+      }
+    end
+    module Property : sig
+      type t = Loc.t * t'
+      and t' = {
+        key: Expression.Object.Property.key;
+        typeAnnotation: Type.annotation;
+        static: bool;
+      }
+    end
+    module Implements : sig
+      type t = Loc.t * t'
+      and t' = {
+        id: Identifier.t;
+        typeParameters: Type.ParameterInstantiation.t option;
+      }
+    end
+    module Body : sig
+      type element =
+        | Method of Method.t
+        | Property of Property.t
+      type t = Loc.t * t'
+      and t' = {
+        body: element list;
+      }
+    end
+    type t = {
+      id: Identifier.t option;
+      body: Body.t;
+      superClass: Expression.t option;
+      typeParameters: Type.ParameterDeclaration.t option;
+      superTypeParameters: Type.ParameterInstantiation.t option;
+      implements: Implements.t list;
+    }
+  end
   module Interface : sig
     module Extends : sig
       type t = Loc.t * t'
@@ -410,15 +504,11 @@ and Statement : sig
     type specifier =
       | Named of Loc.t * (NamedSpecifier.t list)
       | NameSpace of (Loc.t * Identifier.t)
-    type importKind =
-      | ImportType
-      | ImportTypeof
-      | ImportValue
     type t = {
       default: Identifier.t option;
       specifier: specifier option;
       source: (Loc.t * Literal.t ); (* String literal *)
-      importKind: importKind;
+      isType: bool;
     }
   end
   module Expression : sig
@@ -456,7 +546,6 @@ and Statement : sig
     | DeclareVariable of DeclareVariable.t
     | DeclareFunction of DeclareFunction.t
     | DeclareClass of Interface.t
-    | DeclareTypeAlias of TypeAlias.t
     | DeclareModule of DeclareModule.t
     | ExportDeclaration of ExportDeclaration.t
     | ImportDeclaration of ImportDeclaration.t
@@ -544,7 +633,6 @@ and Expression : sig
       defaults: Expression.t option list;
       rest: Identifier.t option;
       body: Statement.FunctionDeclaration.body;
-      async: bool;
       generator: bool;
       expression: bool;
       returnType: Type.annotation option;
@@ -558,11 +646,8 @@ and Expression : sig
       defaults: Expression.t option list;
       rest: Identifier.t option;
       body: Statement.FunctionDeclaration.body;
-      async: bool;
       generator: bool;
       expression: bool;
-      returnType: Type.annotation option;
-      typeParameters: Type.ParameterDeclaration.t option;
     }
   end
   module Sequence : sig
@@ -579,7 +664,6 @@ and Expression : sig
       | Typeof
       | Void
       | Delete
-      | Await
     type t = {
       operator: operator;
       prefix: bool;
@@ -716,6 +800,16 @@ and Expression : sig
       body: Expression.t;
     }
   end
+  module Class : sig
+    type t = {
+      id: Identifier.t option;
+      body: Statement.Class.Body.t;
+      superClass: Expression.t option;
+      typeParameters: Type.ParameterDeclaration.t option;
+      superTypeParameters: Type.ParameterInstantiation.t option;
+      implements: Statement.Class.Implements.t list;
+    }
+  end
   module TypeCast : sig
     type t = {
       expression: Expression.t;
@@ -749,7 +843,7 @@ and Expression : sig
     | TemplateLiteral of TemplateLiteral.t
     | TaggedTemplate of TaggedTemplate.t
     | JSXElement of JSX.element
-    | Class of Class.t
+    | Class of Expression.Class.t
     | TypeCast of TypeCast.t
 end = Expression
 
@@ -909,49 +1003,5 @@ and Comment : sig
     | Block of string
     | Line of string
 end = Comment
-
-and Class : sig
-  module Method : sig
-    type t = Loc.t * t'
-    and t' = {
-      kind: Expression.Object.Property.kind;
-      key: Expression.Object.Property.key;
-      value: Loc.t * Expression.Function.t;
-      static: bool;
-    }
-  end
-  module Property : sig
-    type t = Loc.t * t'
-    and t' = {
-      key: Expression.Object.Property.key;
-      typeAnnotation: Type.annotation;
-      static: bool;
-    }
-  end
-  module Implements : sig
-    type t = Loc.t * t'
-    and t' = {
-      id: Identifier.t;
-      typeParameters: Type.ParameterInstantiation.t option;
-    }
-  end
-  module Body : sig
-    type element =
-      | Method of Method.t
-      | Property of Property.t
-    type t = Loc.t * t'
-    and t' = {
-      body: element list;
-    }
-  end
-  type t = {
-    id: Identifier.t option;
-    body: Class.Body.t;
-    superClass: Expression.t option;
-    typeParameters: Type.ParameterDeclaration.t option;
-    superTypeParameters: Type.ParameterInstantiation.t option;
-    implements: Class.Implements.t list;
-  }
-end = Class
 
 type program = Loc.t * Statement.t list * Comment.t list

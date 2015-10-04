@@ -1,9 +1,11 @@
 
-1/f.js:8:1,4: function call
-Error:
 1/f.js:5:9,12: null
 This type is incompatible with
-1/f.js:3:24,27: number
+  1/f.js:3:24,27: number
+
+2/A.js:4:6,11: number
+This type is incompatible with
+  2/A.js:14:22,27: string
 
 2/A.js:5:15,15: parameter x
 Missing annotation
@@ -16,11 +18,5 @@ Missing annotation
 
 2/A.js:9:19,19: return
 Missing annotation
-
-2/A.js:10:12,32: function call
-Error:
-2/A.js:4:6,11: number
-This type is incompatible with
-2/A.js:14:22,27: string
 
 Found 6 errors

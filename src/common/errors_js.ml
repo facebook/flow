@@ -11,48 +11,21 @@
 module C = Tty
 module Json = Hh_json
 
-type level = ERROR | WARNING
-type message = (Reason_js.reason * string)
-type error = level * message list (* message *) * message list (* trace *)
+let pos_range p = Pos.(Lexing.(
+  p.pos_start.pos_lnum, p.pos_start.pos_cnum + 1,
+    p.pos_end.pos_lnum, p.pos_end.pos_cnum
+))
 
-type flags = {
-  color: Tty.color_mode;
-  one_line: bool;
-  show_all_errors: bool;
-}
-
-let default_flags = {
-  color = Tty.Color_Auto;
-  one_line = false;
-  show_all_errors = false;
-}
-
-let append_trace_reasons message_list trace_reasons =
-  match trace_reasons with
-  | [] -> message_list
-  | _ ->
-      let rev_list = List.rev message_list in
-      let head = List.hd rev_list in
-      let head = fst head, snd head ^ "\nError path:" in
-      let rev_list = head :: List.tl rev_list in
-      let message_list = List.rev rev_list in
-      message_list @ trace_reasons
-
-let format_reason_color
-  ?(first=false)
-  ?(one_line=false)
-  ((loc, s): Loc.t * string)
-= Loc.(
-  let l0, c0 = loc.start.line, loc.start.column + 1 in
-  let l1, c1 = loc._end.line, loc._end.column in
+let print_reason_color ~(first:bool) ((p, s): Pos.t * string) = Pos.(
+  let l0, c0, l1, c1 = pos_range p in
   let err_clr  = if first then C.Normal C.Red else C.Normal C.Green in
   let file_clr = if first then C.Bold C.Blue else C.Bold C.Magenta in
   let line_clr = C.Normal C.Yellow in
   let col_clr  = C.Normal C.Cyan in
 
-  let s = if one_line then Str.global_replace (Str.regexp "\n") "\\n" s else s in
-
-  [file_clr, match loc.source with Some filename -> filename | None -> ""]
+  let to_print = [
+    (file_clr, Relative_path.to_absolute p.pos_file)
+  ]
   @ (if l0 > 0 && c0 > 0 && l1 > 0 && c1 > 0 then [
       (C.Normal C.Default, ":");
       (line_clr,           string_of_int l0);
@@ -70,41 +43,42 @@ let format_reason_color
   @ [
     (C.Normal C.Default, ": ");
     (err_clr,            s);
-    (C.Normal C.Default, if one_line then "\\n" else "\n");
-  ]
+    (C.Normal C.Default, "\n");
+  ] in
+
+  if not first then Printf.printf "  " else Printf.printf "\n";
+  if Unix.isatty Unix.stdout && Sys.getenv "TERM" <> "dumb"
+  then
+    C.print to_print
+  else
+    let strings = List.map (fun (_,x) -> x) to_print in
+    List.iter (Printf.printf "%s") strings
 )
 
-let print_reason_color ~first ~one_line ~color ((reason, s): message) =
-  let loc = Reason_js.loc_of_reason reason in
-  let to_print = format_reason_color ~first ~one_line (loc, s) in
-  (if first then Printf.printf "\n");
-  C.print ~color_mode:color to_print
+let print_error_color (e:Errors.error) =
+  let e = Errors.to_list e in
+  print_reason_color ~first:true (List.hd e);
+  List.iter (print_reason_color ~first:false) (List.tl e)
 
-let print_error_color ~one_line ~color e =
-  let level, messages, trace_reasons = e in
-  let messages = append_trace_reasons messages trace_reasons in
-  print_reason_color ~first:true ~one_line ~color (List.hd messages);
-  List.iter (print_reason_color ~first:false ~one_line ~color) (List.tl messages)
+type level = ERROR | WARNING
 
-let loc_of_error err =
-  let _, messages, _ = err in
-  match messages with
-  | (reason, _) :: _ -> Reason_js.loc_of_reason reason
-  | _ -> Loc.none
+type error = level * (Reason_js.reason * string) list
 
 let file_of_error err =
-  let loc = loc_of_error err in
-  match loc.Loc.source with Some filename -> filename | None -> ""
+  let _, messages = err in
+  let pos = match messages with
+  | (reason, _) :: _ -> Reason_js.pos_of_reason reason
+  | _ -> Pos.none in
+  Relative_path.to_absolute pos.Pos.pos_file
 
-(* TODO: deprecate this in favor of Reason_js.json_of_loc *)
-let json_of_loc loc = Loc.(
-  let file = match loc.source with Some filename -> filename | None -> "" in
-  [ "path", Json.JString file;
-    "line", Json.JInt loc.start.line;
-    "endline", Json.JInt loc._end.line;
-    "start", Json.JInt (loc.start.column + 1);
-    "end", Json.JInt loc._end.column ]
-)
+let pos_to_json pos =
+  let file = Pos.(pos.pos_file) in
+  let l0, c0, l1, c1 = pos_range pos in
+  [ "path", Json.JString (Relative_path.to_absolute file);
+    "line", Json.JInt l0;
+    "endline", Json.JInt l1;
+    "start", Json.JInt c0;
+    "end", Json.JInt c1 ]
 
 (* warnings before errors, then first reason's position,
   then second reason's position. If all positions match then first message,
@@ -126,7 +100,7 @@ let compare =
     | [], _ -> -1
     | _ -> 1
 
-  in fun (lx, ml1, _) (ly, ml2, _) ->
+  in fun (lx, ml1) (ly, ml2) ->
     compare_message_lists ml1 ml2 (fun () -> 0)
 
 module Error = struct
@@ -138,89 +112,41 @@ end
    traces may share endpoints, and produce the same error *)
 module ErrorSet = Set.Make(Error)
 
-(* This is a data structure used to track what locations are being suppressed
- * and which suppressions have yet to be used.
- *)
-module ErrorSuppressions = struct
-  open Span
-  module Ast = Spider_monkey_ast
+(******* TODO move to hack structure throughout ********)
 
-  type error_suppressions = Loc.t SpanMap.t
-  type t = {
-    suppressions: error_suppressions;
-    unused: error_suppressions;
-  }
-
-  let empty = {
-    suppressions = SpanMap.empty;
-    unused = SpanMap.empty;
-  }
-
-  let add loc { suppressions; unused; } = Loc.(
-    let start = { loc.start with line = loc._end.line + 1; column = 0 } in
-    let _end = { loc._end with line = loc._end.line + 2; column = 0 } in
-    let suppression_loc = { loc with start; _end; } in
-    {
-      suppressions = SpanMap.add suppression_loc loc suppressions;
-      unused = SpanMap.add suppression_loc loc unused;
-    }
-  )
-
-  let union a b = {
-    suppressions = SpanMap.union a.suppressions b.suppressions;
-    unused = SpanMap.union a.unused b.unused;
-  }
-
-  let check_reason ((result, { suppressions; unused; }) as acc) reason =
-    let loc = Reason_js.loc_of_reason reason in
-
-    (* We only want to check the starting position of the reason *)
-    let loc = Loc.({ loc with _end = loc.start; }) in
-    if SpanMap.mem loc suppressions
-    then true, { suppressions; unused = SpanMap.remove loc unused}
-    else acc
-
-  (* We need to check every reason in the error message in order to figure out
-   * which suppressions are really unused...that's why we don't shortcircuit as
-   * soon as we find a matching error suppression
-   *)
-  let rec check_error_messages acc = function
-    | [] -> acc
-    | (reason, error_message)::errors ->
-        let acc = check_reason acc reason in
-        check_error_messages acc errors
-
-  (* Checks if an error should be suppressed. *)
-  let check err suppressions =
-    let _, message_list, _ = err in
-    check_error_messages (false, suppressions) message_list
-
-  (* Get's the locations of the suppression comments that are yet unused *)
-  let unused { unused; _; } = SpanMap.values unused
-end
+let flow_error_to_hack_error flow_err =
+  let level, messages = flow_err in
+  let message_list = List.map (fun (reason, message) ->
+    Reason_js.pos_of_reason reason, message
+  ) messages in
+  Errors.make_error 0 message_list
 
 let parse_error_to_flow_error (loc, err) =
   let reason = Reason_js.mk_reason "" loc in
   let msg = Parse_error.PP.error err in
-  ERROR, [reason, msg], []
+  ERROR, [reason, msg]
 
-let to_list errors = ErrorSet.elements errors
+let parse_error_to_hack_error parse_err =
+  flow_error_to_hack_error (parse_error_to_flow_error parse_err)
+
+let to_list errors =
+  let revlist =
+    ErrorSet.fold (fun flow_err ret ->
+        (flow_error_to_hack_error flow_err) :: ret
+      ) errors []
+  in
+  List.rev revlist
 
 (******* Error output functionality working on Hack's error *******)
 
 (* adapted from Errors.to_json to output multi-line errors properly *)
-let to_json (error : error) = Json.(
-  let level, messages, trace_reasons = error in
-  let level_str = match level with
-  | ERROR -> "error"
-  | WARNING -> "warning"
-  in
-  let messages = append_trace_reasons messages trace_reasons in
-  let elts = List.map (fun (reason, w) ->
+let to_json (error : Errors.error) = Json.(
+  let error_code = Errors.get_code error in
+  let elts = List.map (fun (p, w) ->
       JAssoc (("descr", Json.JString w) ::
-              ("level", Json.JString level_str) ::
-              (json_of_loc (Reason_js.loc_of_reason reason)))
-    ) messages
+              ("code",  Json.JInt error_code) ::
+              (pos_to_json p))
+    ) (Errors.to_list error)
   in
   JAssoc [ "message", JList elts ]
 )
@@ -243,20 +169,17 @@ let print_errorl_json oc el =
   flush oc
 
 (* adapted from Errors.to_string to omit error codes *)
-let to_string (error : error) : string =
-  let level, msgl, trace_reasons = error in
-  let msgl = append_trace_reasons msgl trace_reasons in
+let to_string (e : Errors.error) : string =
+  let msgl = Errors.to_list e in
   let buf = Buffer.create 50 in
   (match msgl with
   | [] -> assert false
-  | (reason1, msg1) :: rest_of_error ->
-      let loc1 = Reason_js.loc_of_reason reason1 in
+  | (pos1, msg1) :: rest_of_error ->
       Buffer.add_string buf begin
-        Printf.sprintf "%s\n%s\n" (Reason_js.string_of_loc loc1) msg1
+        Printf.sprintf "%s\n%s\n" (Pos.string (Pos.to_absolute pos1)) msg1
       end;
-      List.iter begin fun (reason, w) ->
-        let loc = Reason_js.loc_of_reason reason in
-        let msg = Printf.sprintf "%s\n%s\n" (Reason_js.string_of_loc loc) w
+      List.iter begin fun (p, w) ->
+        let msg = Printf.sprintf "%s\n%s\n" (Pos.string (Pos.to_absolute p)) w
         in Buffer.add_string buf msg
       end rest_of_error
   );
@@ -283,13 +206,10 @@ let print_errorl use_json el oc =
   flush oc
 
 (* Human readable output *)
-let print_error_summary ~flags errors =
+let print_error_summary truncate errors =
   let error_or_errors n = if n != 1 then "errors" else "error" in
-  let truncate = not (flags.show_all_errors) in
-  let one_line = flags.one_line in
-  let color = flags.color in
   let print_error_if_not_truncated curr e =
-    (if not(truncate) || curr < 50 then print_error_color ~one_line ~color e);
+    (if not(truncate) || curr < 50 then print_error_color e);
     curr + 1
   in
   let total =

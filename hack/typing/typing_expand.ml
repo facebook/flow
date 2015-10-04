@@ -34,7 +34,7 @@ let rec fully_expand seen env (r, ty) =
 
 and fully_expand_ seen env = function
   | Tvar _ -> assert false
-  | Tmixed | Tany | Tanon _ | Tprim _ as x -> x
+  | Tmixed | Tgeneric _ | Tany | Tanon _ | Tprim _ as x -> x
   | Tarray (ty1, ty2) ->
       let ty1 = fully_expand_opt seen env ty1 in
       let ty2 = fully_expand_opt seen env ty2 in
@@ -56,23 +56,17 @@ and fully_expand_ seen env = function
         | x -> x
       in
       Tfun { ft with ft_params = params; ft_arity = arity; ft_ret = ret }
-  | Tabstract (AKgeneric (x, super), cstr) ->
-      let super = fully_expand_opt seen env super in
-      let cstr = fully_expand_opt seen env cstr in
-      Tabstract (AKgeneric (x, super), cstr)
-  | Tabstract (AKnewtype (x, tyl), cstr) ->
+  | Taccess (_, _) as ty -> ty
+  | Tabstract (x, tyl, cstr) ->
       let tyl = List.map (fully_expand seen env) tyl in
       let cstr = fully_expand_opt seen env cstr in
-      Tabstract (AKnewtype (x, tyl), cstr)
-  | Tabstract (ak, cstr) ->
-      let cstr = fully_expand_opt seen env cstr in
-      Tabstract (ak, cstr)
-  | Tclass (x, tyl) ->
-     let tyl = List.map (fully_expand seen env) tyl in
-     Tclass (x, tyl)
+      Tabstract (x, tyl, cstr)
+  | Tapply (x, tyl) ->
+      let tyl = List.map (fully_expand seen env) tyl in
+      Tapply (x, tyl)
   | Tobject as x -> x
-  | Tshape (fields_known, fdm) ->
-      Tshape (fields_known, (Nast.ShapeMap.map (fully_expand seen env) fdm))
+  | Tshape fdm ->
+      Tshape (Nast.ShapeMap.map (fully_expand seen env) fdm)
 
 and fully_expand_opt seen env x = opt_map (fully_expand seen env) x
 

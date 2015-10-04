@@ -8,16 +8,14 @@
  *
  *)
 
-open CommandUtils
 open Sys_utils
-open Utils
-open Utils_js
+
 (* conversion *)
 
 let dts_ext = ".d.ts"
 let dts_ext_find_pattern = "*.d.ts"
 
-let convert_file error_flags outpath file =
+let convert_file outpath file =
   let base = Filename.chop_suffix (Filename.basename file) dts_ext in
   let outpath = match outpath with
     | None -> Filename.dirname file | Some p -> p in
@@ -27,34 +25,25 @@ let convert_file error_flags outpath file =
   let ast, errors = Parser_dts.program_file ~fail:false content file in
   if errors = []
   then (
+    Printf.printf "...no errors!\n%!";
     let oc = open_out outfile in
-    if
-      let fmt = Format.formatter_of_out_channel oc in
-      call_succeeds (Printer_dts.program fmt) ast
-    then
-      let () = Printf.printf "No errors!\n\n" in
-      close_out oc;
-      0, 1, 1
-    else
-      let () = Printf.printf "No errors!\n\n" in
-      Printf.printf "Conversion was not successful!\n\n";
-      close_out oc;
-      Sys.remove outfile;
-      0, 0, 1
+    Printer_dts.program (Format.formatter_of_out_channel oc) ast;
+    close_out oc;
+    0
   ) else (
     let n = List.length errors in
     Printf.printf "%d errors:\n" n;
-    let flow_errors = List.map (fun e ->
-      Errors_js.parse_error_to_flow_error e
-    ) errors in
-    Errors_js.print_error_summary ~flags:error_flags flow_errors;
-    n, 0, 1
+    List.iter (fun e ->
+      let e = Errors_js.parse_error_to_hack_error e in
+      Errors_js.print_error_color e
+    ) errors;
+    n
   )
 
   (* Printer_dts.program *)
 
 let find_files_recursive path =
-  Find.find_with_name [Path.make path] dts_ext_find_pattern
+  Find.find_with_name [Path.mk_path path] dts_ext_find_pattern
 
 let find_files path =
   Array.fold_left (fun acc f ->
@@ -65,71 +54,72 @@ let find_files path =
 
 let sum f = List.fold_left (fun n i -> n + f i) 0
 
-(* sum_triple adds triples (3-tuples) in a list obtained by applying
-   function f on a list of inputs (similar to sum function which adds
-   integers instead of triples) *)
-let sum_triple f = List.fold_left (
-  fun (x,y,z) i ->
-    let a, b, c = f i
-    in (a+x, b+y, c+z)) (0, 0, 0)
-
-let convert_dir outpath path recurse error_flags =
+let convert_dir outpath path recurse =
   let dts_files = if recurse
     then find_files_recursive path
     else find_files path in
   (* List.fold_left (convert_file outpath) dts_files *)
-  sum_triple (convert_file error_flags outpath) dts_files
+  sum (convert_file outpath) dts_files
 
-let convert path recurse error_flags outpath =
-  let nerrs, successful_converts, total_files  =
-    if Filename.check_suffix path dts_ext then (
-      let outpath = match outpath with
-        | None -> Some (Filename.dirname path)
-        | _ -> outpath
-      in
-      convert_file error_flags outpath path
-    ) else (
-      if recurse && outpath != None then
-        failwith "output path not available when recursive";
-      convert_dir outpath path recurse error_flags
-    ) in
-  print_endlinef "Total Errors: %d\nTotal Files: %d\nSuccessful Conversions: %d"
-    nerrs total_files successful_converts;
-  (* exit code = number of unsuccessful coversions *)
-  exit (total_files - successful_converts)
+let convert path recurse outpath =
+  let nerrs = if Filename.check_suffix path dts_ext then (
+    let outpath = match outpath with
+      | None -> Some (Filename.dirname path)
+      | _ -> outpath
+    in
+    convert_file outpath path
+  ) else (
+    if recurse && outpath != None then
+      failwith "output path not available when recursive";
+    convert_dir outpath path recurse
+  ) in
+  Printf.printf "%d total errors\n%!" nerrs
 
 (* command wiring *)
 
-let spec = {
-  CommandSpec.
-  name = "convert";
-  doc = "";
-  usage = Printf.sprintf
-    "Usage: %s convert [DIR]\n\n\
-      Convert *.d.ts in DIR if supplied, or current directory.\n\
-      foo.d.ts is written to foo.js\n"
-      CommandUtils.exe_name;
-  args = CommandSpec.ArgSpec.(
-    empty
-    |> error_flags
-    |> flag "--output" (optional string)
-        ~doc:"Output path (not available when recursive)"
-    |> flag "--r" no_arg
-        ~doc:"Recurse into subdirectories"
-    |> anon "dir" (optional string)
-        ~doc:"Directory (default: current directory)"
-  )
+type env = {
+  path : string;
+  recurse : bool;
+  outpath : string option;
 }
 
-let main error_flags outpath recurse dir () =
-  let path = match dir with
-  | None -> "."
-  | Some path -> path
+let parse_args () =
+  let outpath = ref None in
+  let recurse = ref false in
+  let options = CommandUtils.sort_opts [
+    "--output", Arg.String (fun s -> outpath := Some s),
+      " Output path (not available when recursive)";
+    "--r", CommandUtils.arg_set_unit recurse,
+      " Recurse into subdirectories";
+  ] in
+  let usage = Printf.sprintf "Usage: %s convert [DIR]\n\n\
+  Convert *.d.ts in DIR if supplied, or current directory.\n\
+  foo.d.ts is written to foo.js" CommandUtils.exe_name in
+  let args = ClientArgs.parse_without_command options usage "convert" in
+  let path = match args with
+    | [] -> "."
+    | [path] -> path
+    | _ ->
+      Arg.usage options usage;
+      exit 2
   in
+  { path; recurse = !recurse; outpath = !outpath }
+
+let die str =
+  let oc = stderr in
+  output_string oc str;
+  close_out oc;
+  exit 2
+
+let main { path; recurse; outpath; } =
   if ! Sys.interactive
   then ()
   else
-    SharedMem.(init default_config);
-    convert path recurse error_flags outpath
+    SharedMem.init();
+    Errors.try_
+      (fun () -> convert path recurse outpath)
+      (fun l -> die (Errors.to_string (Errors.to_absolute l)))
 
-let command = CommandSpec.command spec main
+let name = "convert"
+let doc = ""
+let run () = main (parse_args ())
