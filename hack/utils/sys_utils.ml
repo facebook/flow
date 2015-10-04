@@ -68,27 +68,10 @@ let restart () =
   let argv = Sys.argv in
   Unix.execv cmd argv
 
-let logname_impl () =
+let logname =
   try Sys.getenv "USER" with Not_found ->
   try Sys.getenv "LOGNAME" with Not_found ->
-  (* If this function is generally useful, it can be lifted to toplevel in this
-   * file, but this is the only place we need it for now. *)
-  let exec_try_read cmd =
-    let ic = Unix.open_process_in cmd in
-    let out = try Some (input_line ic) with End_of_file -> None in
-    let status = Unix.close_process_in ic in
-    match out, status with
-      | Some _, Unix.WEXITED 0 -> out
-      | _ -> None
-  in
-  try Utils.unsafe_opt (exec_try_read "logname") with Invalid_argument _ ->
-  try Utils.unsafe_opt (exec_try_read "id -un") with Invalid_argument _ ->
-  "[unknown]"
-
-let logname_ref = ref None
-let logname () =
-  if !logname_ref = None then logname_ref := Some (logname_impl ());
-  Utils.unsafe_opt !logname_ref
+  exec_read "logname"
 
 let with_umask umask f =
   let old_umask = ref 0 in
@@ -108,14 +91,3 @@ let with_timeout timeout ~on_timeout ~do_ =
       ignore (Unix.alarm !old_timeout);
       Sys.set_signal Sys.sigalrm !old_handler)
     ~do_
-
-let read_stdin_to_string () =
-  let buf = Buffer.create 4096 in
-  try
-    while true do
-      Buffer.add_string buf (input_line stdin);
-      Buffer.add_char buf '\n'
-    done;
-    assert false
-  with End_of_file ->
-    Buffer.contents buf

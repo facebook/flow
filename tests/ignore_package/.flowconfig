@@ -1,8 +1,0 @@
-[ignore]
-.*node_modules/underscore.*
-
-[include]
-
-[libs]
-
-[options]

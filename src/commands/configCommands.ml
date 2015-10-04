@@ -1,39 +1,41 @@
 module Init = struct
-  let spec = {
-    CommandSpec.
-    name = "init";
-    doc = "Initializes a directory to be used as a flow root directory";
-    usage = Printf.sprintf
-      "Usage: %s init [ROOT]\n\
-        Initializes a directory to be used as a flow root directory\n\n\
-        e.g. %s init /path/to/root\n\
-        or %s init\n\
-        or %s init --options \"optionA=123;optionB=456\"\n\n\
-        If the root is not specified it is assumed to be the current working directory\n\n\
-        This command will create and initialize /path/to/root/.flowconfig\n"
-        CommandUtils.exe_name
-        CommandUtils.exe_name
-        CommandUtils.exe_name
-        CommandUtils.exe_name;
-    args = CommandSpec.ArgSpec.(
-      empty
-      |> flag "--options" (optional string)
-          ~doc:"Semicolon-delimited list of key=value pairs"
-      |> anon "root" (optional string)
-          ~doc:"Root directory (default: current working directory)"
-    )
+  type env = {
+    root : Path.path;
+    configOptions: string list;
   }
 
-  let main options root () =
-    let root = match root with
-    | None -> Sys.getcwd () |> Path.make
-    | Some root -> Path.make root
-    in
-    let options = match options with
+  let parse_args () =
+    let config_options = ref None in
+    let options = CommandUtils.sort_opts [
+      "--options", CommandUtils.arg_set_string config_options,
+        " Initialize with these options. Multiple options are semicolon delimited";
+    ] in
+    let usage = Printf.sprintf
+      "Usage: %s init [ROOT]\n\
+       Initializes a directory to be used as a flow root directory\n\n\
+       e.g. %s init /path/to/root\n\
+       or %s init\n\
+       or %s init --options \"optionA=123;optionB=456\"\n\n\
+       If the root is not specified it is assumed to be the current working directory\n\n\
+       This command will create and initialize /path/to/root/.flowconfig"
+       CommandUtils.exe_name
+       CommandUtils.exe_name
+       CommandUtils.exe_name
+       CommandUtils.exe_name in
+    let args = ClientArgs.parse_without_command options usage "init" in
+    let root = match args with
+    | [] -> Sys.getcwd () |> Path.mk_path
+    | [root] -> Path.mk_path root
+    | _      -> Arg.usage options usage; exit 2 in
+    let configOptions = match !config_options with
     | None -> []
-    | Some str -> Str.split (Str.regexp ";") str
-    in
-    FlowConfig.init root options
+    | Some str -> Str.split (Str.regexp ";") str in
+    { root; configOptions; }
 
-  let command = CommandSpec.command spec main
+  let main env =
+    FlowConfig.init env.root env.configOptions
+
+  let name = "init"
+  let doc = "Initializes a directory to be used as a flow root directory"
+  let run () = main (parse_args ())
 end

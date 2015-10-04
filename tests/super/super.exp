@@ -1,24 +1,14 @@
 
-super.js:9:5,12: super(...)
-Error:
 super.js:9:11,11: string
 This type is incompatible with
-super.js:3:17,22: number
+  super.js:3:17,22: number
 
-super.js:12:5,14: super.f(...)
-Error:
 super.js:12:13,13: number
 This type is incompatible with
-super.js:4:7,12: string
+  super.js:4:7,12: string
 
 super.js:13:18,18: property g
 Property not found in
-super.js:7:17,17: A
+  super.js:7:17,17: A
 
-test.js:3:16,16: return
-Missing annotation
-
-test.js:4:8,8: return
-Missing annotation
-
-Found 5 errors
+Found 3 errors

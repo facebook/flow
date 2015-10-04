@@ -27,6 +27,5 @@ var C = React.createClass({
 })
 
 var element = <C x = {0}/>;
-var element_ = <C/>;
 
 var x: number = C.displayName;

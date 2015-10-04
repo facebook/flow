@@ -1,10 +1,10 @@
 
 value.js:2:10,10: number
 This type is incompatible with
-value.js:3:7,12: string
+  value.js:3:7,12: string
 
 value.js:6:14,20: string
 This type is incompatible with
-value.js:5:27,32: number
+  value.js:5:27,32: number
 
 Found 2 errors

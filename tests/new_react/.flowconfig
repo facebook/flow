@@ -1,5 +1,3 @@
-[libs]
-fakelib
-
 [options]
 module.system=haste
+

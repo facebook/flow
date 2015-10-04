@@ -18,13 +18,16 @@ let process_fun_call fun_args used_args env =
     start_line = line && start_col <= char_pos && char_pos - 1 <= end_col
   in
   if !argument_info_result = None then
-    List.iteri begin fun index arg ->
+    let index = ref 0 in
+    (* Would use iteri but not available in 3.12. *)
+    List.iter begin fun arg ->
       if is_target !argument_info_target arg
       then begin
-        argument_info_result := Some (index, List.map begin fun (x,y) ->
+        argument_info_result := Some (!index, List.map begin fun (x,y) ->
           x, Typing_print.full_strip_ns env y
         end fun_args);
-      end
+      end;
+      index := !index + 1
     end used_args
 
 let get_result () =

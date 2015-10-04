@@ -34,11 +34,11 @@ module SN = Naming_special_names
  *)
 exception InitReturn of SSet.t
 
-type prop_status =
+type cvar_status =
   | Vnull (* The value is still potentially null *)
   | Vinit (* Yay! it has been initialized *)
 
-let parent_init_prop = "parent::" ^ SN.Members.__construct
+let parent_init_cvar = "parent::__construct"
 
 (* Module initializing the environment
    Originally, every class member has 2 possible states,
@@ -59,91 +59,73 @@ module Env = struct
     (* We already computed this method *)
     | Done
 
-    (* We have never computed this private method before *)
-    | Todo of func_body
+    (* We have never computed this private bethod before *)
+    | Todo of body_block
 
   type t = {
     methods : method_status ref SMap.t ;
-    props   : SSet.t ;
+    cvars   : SSet.t ;
   }
 
   (* If we need to call parent::__construct, we treat it as if it were
    * a class variable that needs to be initialized. It's a bit hacky
    * but it works. The idea here is that if the parent needs to be
    * initialized, we add a phony class variable. *)
-  let add_parent_construct c tenv props parent_hint =
+  let add_parent_construct c tenv cvars parent_hint =
     match parent_hint with
       | (_, Happly ((_, parent), _)) ->
         let class_ = Typing_env.get_class tenv parent in
         (match class_ with
           | Some class_ when
               class_.Typing_defs.tc_need_init && c.c_constructor <> None
-              -> SSet.add parent_init_prop props
-          | _ -> props
+              -> SSet.add parent_init_cvar cvars
+          | _ -> cvars
         )
-      | _ -> props
+      | _ -> cvars
 
-  let parent tenv props c =
-    if c.c_mode = FileInfo.Mdecl then props
+  let parent tenv cvars c =
+    if c.c_mode = FileInfo.Mdecl then cvars
     else
       if c.c_kind = Ast.Ctrait
-      then List.fold_left (add_parent_construct c tenv) props c.c_req_extends
+      then List.fold_left (add_parent_construct c tenv) cvars c.c_req_extends
       else match c.c_extends with
-      | [] -> props
-      | parent_hint :: _ -> add_parent_construct c tenv props parent_hint
-
-  let prop_needs_init add_to_acc acc cv =
-    if cv.cv_is_xhp then acc else begin
-      match cv.cv_type with
-        | None
-        | Some (_, Hoption _)
-        | Some (_, Hmixed) -> acc
-        | Some _ when cv.cv_expr = None -> add_to_acc cv acc
-        | Some _ -> acc
-    end
-
-  let parent_props tenv acc c =
-    List.fold_left begin fun acc parent ->
-      match parent with _, Happly ((_, parent), _) ->
-        let tc = Typing_env.get_class tenv parent in
-        (match tc with
-          | None -> acc
-          | Some { tc_deferred_init_members = members; _ } -> SSet.union members acc)
-        | _ -> acc
-    end acc (c.c_extends @ c.c_uses)
-
-  (* return a tuple of the private init-requiring props of the class
-   * and the other init-requiring props of the class and its ancestors *)
-  let classify_props_for_decl tenv c =
-    let tenv = Typing_env.set_root tenv (Typing_deps.Dep.Class (snd c.c_name)) in
-    let adder = begin fun cv (private_props, hierarchy_props) ->
-      let cname = snd cv.cv_id in
-      if cv.cv_visibility = Private then
-        (SSet.add cname private_props), hierarchy_props
-      else
-        private_props, (SSet.add cname hierarchy_props)
-    end in
-    let acc = (SSet.empty, SSet.empty) in
-    let priv_props, props = List.fold_left (prop_needs_init adder) acc c.c_vars in
-    let props = parent_props tenv props c in
-    let props = parent tenv props c in
-    priv_props, props
+      | [] -> cvars
+      | parent_hint :: _ -> add_parent_construct c tenv cvars parent_hint
 
   let rec make tenv c =
     let tenv = Typing_env.set_root tenv (Typing_deps.Dep.Class (snd c.c_name)) in
     let methods = List.fold_left method_ SMap.empty c.c_methods in
-    let adder = begin fun cv acc -> SSet.add (snd cv.cv_id) acc end in
-    let props =
-      List.fold_left (prop_needs_init adder) SSet.empty c.c_vars in
-    let props = parent_props tenv props c in
-    let props = parent tenv props c in
-    { methods = methods; props = props }
+    let cvars = List.fold_left cvar SSet.empty c.c_vars in
+    let cvars = parent_cvars tenv cvars c in
+    let cvars = parent tenv cvars c in
+    { methods = methods; cvars = cvars }
 
   and method_ acc m =
     if m.m_visibility <> Private then acc else
       let name = snd m.m_name in
       let acc = SMap.add name (ref (Todo m.m_body)) acc in
       acc
+
+  and cvar acc cv =
+    if cv.cv_is_xhp then acc else begin
+      let cname = snd cv.cv_id in
+      match cv.cv_type with
+        | Some (_, Hoption _) | Some (_, Hmixed) | None -> acc
+        | _ ->
+          match cv.cv_expr with
+            | Some _ -> acc
+            | _ -> SSet.add cname acc
+    end
+
+  and parent_cvars tenv acc c =
+    List.fold_left begin fun acc parent ->
+      match parent with _, Happly ((_, parent), _) ->
+        let tc = Typing_env.get_class tenv parent in
+        (match tc with
+          | None -> acc
+          | Some { tc_members_init = members; _ } -> SSet.union members acc)
+        | _ -> acc
+    end acc (c.c_extends @ c.c_uses)
 
   let get_method env m =
     SMap.get m env.methods
@@ -162,59 +144,58 @@ let is_whitelisted = function
   | x when x = SN.StdlibFunctions.get_class -> true
   | _ -> false
 
-let rec class_decl ~has_own_cstr tenv c =
-  if not has_own_cstr && (c.c_kind = Ast.Ctrait || c.c_kind = Ast.Cabstract)
+let rec class_decl tenv c =
+  if c.c_kind = Ast.Ctrait || c.c_kind = Ast.Cabstract
   then
-    (* private properties cannot be initialized without a constructor *)
-    let priv_props, props = Env.classify_props_for_decl tenv c in
-    if priv_props <> SSet.empty && (c.c_kind = Ast.Cabstract) then
-      (* XXX: should priv_props be checked for a trait?
-       *  see chown_privates in typing_inherit *)
-      Errors.constructor_required c.c_name priv_props;
-    SSet.union priv_props props
+    let env = Env.make tenv c in
+    let inits = constructor env c.c_constructor in
+    let cvars = env.cvars in
+    SSet.fold begin fun x acc ->
+      if SSet.mem x inits then acc else SSet.add x acc
+    end cvars SSet.empty
   else SSet.empty
 
 and class_ tenv c =
-  if c.c_mode = FileInfo.Mdecl then () else
+  if c.c_mode = FileInfo.Mdecl then () else begin
   match c.c_constructor with
   | _ when c.c_kind = Ast.Cinterface -> ()
-  | Some { m_body = NamedBody { fnb_unsafe = true; _ }; _ } -> ()
-  | _ -> (
-    let p = match c.c_constructor with
-      | Some m -> fst m.m_name
-      | None -> fst c.c_name
-    in
-    let env = Env.make tenv c in
-    let inits = constructor env c.c_constructor in
+  | Some { m_unsafe = true; _ } -> ()
+  | _ ->
+      let p =
+        match c.c_constructor with
+        | Some m -> fst m.m_name
+        | None -> fst c.c_name
+      in
+      let env = Env.make tenv c in
+      let inits = constructor env c.c_constructor in
 
-    let check_inits = begin fun () ->
-      let uninit_props = SSet.diff env.props inits in
-      if SSet.empty <> uninit_props then begin
-        if SSet.mem parent_init_prop uninit_props then
-          Errors.no_construct_parent p
-        else
-          Errors.not_initialized (p, snd c.c_name) uninit_props
+      Typing_suggest.save_initalized_members (snd c.c_name) inits;
+      (* When the class is abstract, and it has a constructor the only
+       * thing we care about is that the constructor calls
+       * parent::__construct if it is needed. Because after that, it
+       * won't be reachable in the sub-classes anymore. *)
+      if c.c_kind = Ast.Ctrait || c.c_kind = Ast.Cabstract
+      then begin
+        let has_constructor = c.c_constructor <> None in
+        let needs_parent_call = SSet.mem parent_init_cvar env.cvars in
+        let is_calling_parent = SSet.mem parent_init_cvar inits in
+        if has_constructor && needs_parent_call && not is_calling_parent
+        then Errors.not_initialized (p, parent_init_cvar);
       end
-    end in
-
-    Typing_suggest.save_initialized_members (snd c.c_name) inits;
-    if c.c_kind = Ast.Ctrait || c.c_kind = Ast.Cabstract
-    then begin
-      let has_constructor = match c.c_constructor with
-        | None -> false
-        | Some m when m.m_abstract -> false
-        | Some _ -> true in
-      if has_constructor then check_inits () else ()
-    end
-    else check_inits ()
-  )
+      else begin
+        SSet.iter begin fun x ->
+          if not (SSet.mem x inits)
+          then Errors.not_initialized (p, x);
+        end env.cvars
+      end
+  end
 
 and constructor env cstr =
   match cstr with
     | None -> SSet.empty
-    | Some cstr ->
-      let b = Nast.assert_named_body cstr.m_body in
-      toplevel env SSet.empty b.fnb_nast
+    | Some cstr -> match cstr.m_body with
+        | NamedBody b -> toplevel env SSet.empty b
+        | UnnamedBody _ -> (* FIXME FIXME *) SSet.empty
 
 and assign _env acc x =
   SSet.add x acc
@@ -233,10 +214,9 @@ and stmt env acc st =
   let catch = catch env in
   let case = case env in
   match st with
-    | Expr (_, Call (Cnormal, (_, Class_const (CIparent, (_, m))), el, _uel))
-        when m = SN.Members.__construct ->
+    | Expr (_, Call (Cnormal, (_, Class_const (CIparent, _)), el, _uel)) ->
       let acc = List.fold_left expr acc el in
-      assign env acc parent_init_prop
+      assign env acc parent_init_cvar
     | Expr e -> expr acc e
     | Break _ -> acc
     | Continue _ -> acc
@@ -305,13 +285,13 @@ and block env acc l =
     raise (InitReturn acc_before_block)
 
 and are_all_init env set =
-  SSet.fold (fun cv acc -> SSet.mem cv set && acc) env.props true
+  SSet.fold (fun cv acc -> SSet.mem cv set && acc) env.cvars true
 
 and check_all_init p env acc =
   SSet.iter begin fun cv ->
     if not (SSet.mem cv acc)
     then Errors.call_before_init p cv
-  end env.props
+  end env.cvars
 
 and exprl env acc l = List.fold_left (expr env) acc l
 and expr env acc (p, e) = expr_ env acc p e
@@ -332,9 +312,9 @@ and expr_ env acc p e =
   | Smethod_id _
   | Method_caller _
   | Id _ -> acc
-  | Lvar _ | Lplaceholder _ -> acc
+  | Lvar _ -> acc
   | Obj_get ((_, This), (_, Id (_, vx as v)), _) ->
-      if SSet.mem vx env.props && not (SSet.mem vx acc)
+      if SSet.mem vx env.cvars && not (SSet.mem vx acc)
       then (Errors.read_before_write v; acc)
       else acc
   | Clone e -> expr acc e
@@ -359,10 +339,24 @@ and expr_ env acc p e =
           | Done -> acc
           | Todo b ->
             method_ := Done;
-            let fb = Nast.assert_named_body b in
-            toplevel env acc fb.fnb_nast
+            (match b with
+              | NamedBody b -> toplevel env acc b
+              | UnnamedBody _b -> (* FIXME *) acc
+            )
           )
       )
+  | Assert (AE_invariant_violation (e, el)) ->
+    let el =
+      match e with
+        | _, Id (_, fun_name) when is_whitelisted fun_name ->
+          List.filter begin function
+            | _, This -> false
+            | _ -> true
+          end el
+        | _ -> el
+    in
+    let acc = List.fold_left expr acc el in
+    expr acc e
   | Call (_, e, el, uel) ->
     let el = el @ uel in
     let el =
@@ -414,6 +408,11 @@ and expr_ env acc p e =
   | Binop (_, e1, e2) ->
       let acc = expr acc e1 in
       expr acc e2
+  | Assert (AE_invariant (e1, e2, el)) ->
+      let acc = expr acc e1 in
+      let acc = expr acc e2 in
+      let acc = exprl acc el in
+      acc
   | Eif (e1, None, e3) ->
       let acc = expr acc e1 in
       expr acc e3

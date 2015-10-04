@@ -12,9 +12,9 @@ open ClientCommand
 open ClientEnv
 open Utils
 
-let rec guess_root config start recursion_limit : Path.t option =
-  let fs_root = Path.make "/" in
-  if start = fs_root then None
+let rec guess_root config start recursion_limit : Path.path option =
+  let fs_root = Path.mk_path "/" in
+  if Path.equal start fs_root then None
   else if Wwwroot.is_www_directory ~config start then Some start
   else if recursion_limit <= 0 then None
   else guess_root config (Path.parent start) (recursion_limit - 1)
@@ -42,7 +42,7 @@ let get_root ?(config=".hhconfig") path_opt =
   let start_str = match path_opt with
     | None -> "."
     | Some s -> s in
-  let start_path = Path.make start_str in
+  let start_path = Path.mk_path start_str in
   let root = match guess_root config start_path 50 with
     | None -> start_path
     | Some r -> r in
@@ -57,14 +57,13 @@ let get_root ?(config=".hhconfig") path_opt =
 let parse_check_args cmd =
   (* arg parse output refs *)
   let mode = ref MODE_UNSPECIFIED in
-  let retries = ref 15 in
+  let retries = ref 3 in
   let output_json = ref false in
   let retry_if_init = ref true in
   let no_load = ref false in
   let timeout = ref None in
   let autostart = ref true in
   let from = ref "" in
-  let version = ref false in
 
   (* custom behaviors *)
   let set_from x () = from := x in
@@ -125,19 +124,6 @@ let parse_check_args cmd =
       " (mode) finds references of the provided method name";
     "--find-class-refs", Arg.String (fun x -> set_mode (MODE_FIND_CLASS_REFS x) ()),
       " (mode) finds references of the provided class name";
-    "--dump-symbol-info", Arg.String (fun files ->
-        set_mode (MODE_DUMP_SYMBOL_INFO files) ()
-        ),
-      (*  Input format:
-       *  The file list can either be "-" which accepts the input from stdin
-       *  separated by newline(for long list) or directly from command line
-       *  separated by semicolon.
-       *  Output format:
-       *    [
-       *      "function_calls": list of fun_calls;
-       *    ]
-       *  Note: results list can be in any order *)
-      "";
     "--identify-function", Arg.String (fun x -> set_mode (MODE_IDENTIFY_FUNCTION x) ()),
       " (mode) print the full function name at the position [line:character] of the text on stdin";
     "--refactor", Arg.Unit (set_mode MODE_REFACTOR),
@@ -177,28 +163,14 @@ let parse_check_args cmd =
       " (mode) lint the given list of files";
     "--lint-all", Arg.Int (fun x -> set_mode (MODE_LINT_ALL x) ()),
       " (mode) find all occurrences of lint with the given error code";
-    "--version", Arg.Set version,
+    "--version", Arg.Unit (set_mode MODE_VERSION),
       " (mode) show version and exit\n";
-    (* Create a checkpoint which can be used to retrieve changed files later *)
-    "--create-checkpoint", Arg.String (fun x -> set_mode (MODE_CREATE_CHECKPOINT x) ()),
-      "";
-    (* Retrieve changed files since input checkpoint.
-     * Output is separated by newline.
-     * Exit code will be non-zero if no checkpoint is found *)
-    "--retrieve-checkpoint",
-      Arg.String (fun x -> set_mode (MODE_RETRIEVE_CHECKPOINT x) ()),
-      "";
-    (* Delete an existing checkpoint.
-     * Exitcode will be non-zero if no checkpoint is found *)
-    "--delete-checkpoint",
-      Arg.String (fun x -> set_mode (MODE_DELETE_CHECKPOINT x) ()),
-      "";
 
     (* flags *)
     "--json", Arg.Set output_json,
       " output json for machine consumption. (default: false)";
     "--retries", Arg.Set_int retries,
-      " set the number of retries. (default: 15)";
+      " set the number of retries. (default: 3)";
     "--retry-if-init", Arg.Bool (fun x -> retry_if_init := x),
       " retry if the server is initializing (default: true)";
     "--no-load", Arg.Set no_load,
@@ -223,11 +195,6 @@ let parse_check_args cmd =
       " (deprecated) equivalent to --from check_trunk";
   ] in
   let args = parse_without_command options usage "check" in
-
-  if !version then begin
-    print_endline Build_id.build_id_ohai;
-    exit 0;
-  end;
 
   (* fixups *)
   if !mode == MODE_UNSPECIFIED then mode := MODE_STATUS;
@@ -368,8 +335,7 @@ let parse_build_args () =
   in
   CBuild { ClientBuild.
     root = root;
-    wait = !wait;
-    build_opts = { ServerBuild.
+    build_opts = { ServerMsg.
       steps = !steps;
       no_steps = !no_steps;
       run_scripts = !run_scripts;
@@ -381,8 +347,9 @@ let parse_build_args () =
       clean_before_build = !clean_before_build;
       check = !check;
       incremental = !incremental;
-      user = Sys_utils.logname ();
+      user = Sys_utils.logname;
       verbose = !verbose;
+      wait = !wait;
     }
   }
 

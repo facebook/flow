@@ -27,7 +27,7 @@ type func_details_result = {
 
 (* Results ready to be displayed to the user *)
 type complete_autocomplete_result = {
-    res_loc      : Loc.t;
+    res_pos      : Pos.t;
     res_ty       : string;
     res_name     : string;
     func_details : func_details_result option;
@@ -48,14 +48,14 @@ let autocomplete_result_to_json result =
            ]
      | None -> Json.JNull
   in
-  let loc = result.res_loc in
+  let pos = result.res_pos in
   let name = result.res_name in
   let ty = result.res_ty in
   Json.JAssoc (
     ("name", Json.JString name) ::
     ("type", Json.JString ty) ::
     ("func_details", func_details_to_json result.func_details) ::
-    (Errors_js.json_of_loc loc)
+    (Errors_js.pos_to_json pos)
   )
 
 let print_type cx type_ =
@@ -63,7 +63,7 @@ let print_type cx type_ =
   then string_of_t cx type_
   else ""
 
-let rec autocomplete_create_result cx name type_ loc =
+let rec autocomplete_create_result cx name type_ pos =
   Type.(match type_ with
   | FunT (_, _, _, {params_tlist = params;
                     params_names = pnames;
@@ -82,20 +82,20 @@ let rec autocomplete_create_result cx name type_ loc =
         { param_name; param_ty }
       ) pnames params in
       let return = print_type cx return in
-      { res_loc = loc;
+      { res_pos = pos;
         res_name = name;
         res_ty = (print_type cx type_);
         func_details = Some { params; return_ty = return } }
   | PolyT (type_params, sub_type) ->
-      let result = autocomplete_create_result cx name sub_type loc in
+      let result = autocomplete_create_result cx name sub_type pos in
       (* This is not exactly pretty but we need to replace the type to
          be sure to use the same format for poly types as print_type *)
-      { res_loc = result.res_loc;
+      { res_pos = result.res_pos;
         res_name = result.res_name;
         res_ty = (print_type cx type_);
         func_details = result.func_details; }
   | _ ->
-      { res_loc = loc;
+      { res_pos = pos;
         res_name = name;
         res_ty = (print_type cx type_);
         func_details = None }
@@ -122,14 +122,14 @@ let autocomplete_member cx this =
   let result_map = Flow_js.extract_members cx this_t in
   let result_map = autocomplete_filter_members result_map in
   let result_map = SMap.mapi (fun name t ->
-      let loc = loc_of_t t in
+      let pos = pos_of_t t in
       let gt = Flow_js.printified_type cx t in
-      autocomplete_create_result cx name gt loc
+      autocomplete_create_result cx name gt pos
     ) result_map in
   List.rev (SMap.values result_map)
 
 let autocomplete_id cx env =
-  Utils.SMap.fold Scope.(fun key value acc ->
+  Utils.SMap.fold (fun key value acc ->
       (* Filter out internal environment variables except for this and
          super. *)
       let is_this = key = (Reason_js.internal_name "this") in
@@ -144,14 +144,14 @@ let autocomplete_id cx env =
           else if is_super
           then (None, "super")
           else (value.def_loc, key) in
-        let loc = match loc with
-          | Some loc -> loc
-          | None -> Loc.none
+        let pos = match loc with
+          | Some loc -> Reason_js.pos_of_loc loc
+          | None -> Pos.none
         in
 
         let type_ = Flow_js.printified_type cx value.specific in
         let result =
-          autocomplete_create_result cx name type_ loc in
+          autocomplete_create_result cx name type_ pos in
         result :: acc
       )
     ) env []

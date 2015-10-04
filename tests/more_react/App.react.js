@@ -19,7 +19,7 @@ var App = React.createClass({
     return {z:0}; // infer state.z: number
   },
 
-  handler: function() {
+  handler: function(event) {
     this.setState({z:42}); // ok
   },
 

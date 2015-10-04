@@ -1,9 +1,9 @@
 
 errors.js:1:12,17: identifier define
-Could not resolve name
+Unknown global name
 
 errors.js:3:1,9: function call
 Callable signature not found in
-[LIB] core.js:27:1,49:1: statics of Object
+  [LIB] core.js:27:1,44:1: statics of Object
 
 Found 2 errors
