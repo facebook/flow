@@ -1,10 +1,10 @@
 
 class_static.js:9:17,23: string
 This type is incompatible with
-class_static.js:9:8,13: number
+  class_static.js:9:8,13: number
 
 class_static.js:10:17,23: string
 This type is incompatible with
-class_static.js:10:8,13: number
+  class_static.js:10:8,13: number
 
 Found 2 errors

@@ -9,4 +9,4 @@
  *)
 
 let output_facts _ _ = ()
-let go _ _ = ""
+let go _ _ _ = ""

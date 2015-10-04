@@ -9,7 +9,6 @@
  *)
 
 open Utils
-open Utils_js
 
 (* results of parse job, returned by parse and reparse *)
 (* NOTE: same as Types_js.results, should factor to common upstream *)
@@ -39,17 +38,9 @@ val get_ast_unsafe: string -> Spider_monkey_ast.program
 (* remove asts for given file set. *)
 val remove_asts: SSet.t -> unit
 
-(* Adds a hook called every time a file has been successfully parsed.
- * When a file is deleted, the hook is called with an empty Ast.
- *)
-val call_on_success: (string -> Spider_monkey_ast.program -> unit) -> unit
-
 (* parse contents of a file *)
 val do_parse:
-  ?keep_errors:bool ->
+  ?keep_errors:bool ->      (* force to keep parsing errors *)
   string ->                 (* contents of the file *)
   string ->                 (* filename *)
-  (Spider_monkey_ast.program, Errors_js.ErrorSet.t) ok_or_err
-
-(* true if file is in flow, i.e. is to be checked. CAUTION expensive *)
-val in_flow: string -> string -> bool
+  (Spider_monkey_ast.program option * Errors_js.ErrorSet.t option)

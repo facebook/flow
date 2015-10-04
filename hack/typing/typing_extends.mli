@@ -14,6 +14,4 @@
 (*****************************************************************************)
 
 val check_implements:
-    Typing_env.env ->
-    Typing_defs.decl Typing_defs.ty ->
-    Typing_defs.decl Typing_defs.ty -> unit
+    Typing_env.env -> Typing_defs.ty -> Typing_defs.ty -> unit

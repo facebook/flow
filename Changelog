@@ -1,0 +1,241 @@
+v0.8.0
+
+- Bump version to 0.8.0
+- [PR #356] Add React.version to lib/react.js
+- [PR #331] node http.get() implementation
+- Fixes for indexers in object types and objects used as dictionaries
+- Flow server speedup
+- Support both commas and semicolons in object type patterns
+- Fix object assign for unresolved objects
+- Add prerr_endlinef
+- Fix support for the mixin pattern of specifying super
+- Incremental typechecking fix
+- Fix up promises interface definition + more tests
+- Perf win by loading master_cx once per job
+- Support for-in of null and undefined
+- Support typeof x === 'boolean'
+- Refine true and false literals
+- Fix refinement unit test
+- Type declarations for Geolocation interface
+- [PR #321] Support for React.cloneElement in 0.13
+- Refine simple assignments (things like while (x = x.parent) { x.doStuff(); })
+
+v0.7.0
+
+- Bump version to 0.7.0
+- Initial support for ES6 import/export (with CommonJS interop)
+- Updates to CSS/CSSOM interface definitions
+- propTypes in React components now dictate the concrete type signature for this.props
+- Show errors in type-at-pos output
+- Flow now watches include paths specified in .flowconfig for file changes
+- Interpret `x != undefined` and `x != null` as the same refinement
+- Use Object.prototype.hasOwnProperty() calls as a refinement
+- Updates to Element and HTMLElement interface definitions
+
+v0.6.0
+
+- Bump version to 0.6.0
+- Also watch for changes in include paths
+- Fix the Function type to be any function
+- Add Symbol global name to libs
+- Support trailing commas in parser
+- Make methods immutable
+- Remove tuple array length limit
+- [PR #315] Implement more PropTypes
+- Update componentWillReceive spec
+- Unsuppress library errors
+
+v0.5.0
+
+- Bump version to 0.5.0
+- Add HTMLAnchorElement
+- [PR #295] Add one of proptype
+- Update the parser to work with the new esprima-fb & ast-types
+- [PR #299] Declare prompt function (fixes #204)
+- [PR #303] Add String.prototype.endsWith()
+- quick fix for react/es6 notation
+- extend scope of type params to following bounds
+- reasonless shortcut
+- Add React.findDOMNode to lib/react.js
+- move command documentation into each command
+- fix path in --help usage example
+- fix predicate filtering of null and undefined
+- [PR #292] Types for React synthetic events
+- basic support for bounded polymorphism
+- infer falsiness
+- node haste module support
+- add Abnormal.string
+
+v0.4.0
+
+** Flow comments should be ready for use **
+
+- Bump version to 0.4.0
+- [PR #259] Add declaration for Document.execCommand()
+- [PR #265] flow status --json should exit 2 on errors
+- Fix issue with switch statement breaks
+- abnormal exit effects of fall-through cases in switch
+- Let AnyObjT flow to KeyT
+- invariant(false, ...) always throws
+- Improve the "Object" annotations
+- sealed object literals
+- fix return types which could be undefined
+- Support type annotations in comments
+- [PR #263] disable colors when TERM=dumb
+- Add lint checks for TRUE / FALSE / NULL
+- class subtyping
+- array literal inference
+- Add unsafe_xhp typechecker option
+- work around false positive conflict markers
+- Better dumping types for debugging
+
+v0.3.0
+
+** Type casts and import type should be ready for use **
+
+- Bump version to 0.3.0
+- Move haste module name preprocessing into module_js
+- [PR #260] Add SyntheticEvent to lib/react.js
+- Add import type to Flow
+- [Parser] Add esprima tests for typecasts
+- Add support for a module name preprocessor that can re-write require()d module names
+- [Parser] Support import types
+- Allow absolute paths for [libs] and [include]
+- prepare flow-parser to be published to npm
+- [PR #247] Resubmit #113 this fixes #155
+- [PR #246] Fixes #195
+
+v0.2.0
+
+- Bump version to 0.2.0
+- Fix refinement of optional nullable types
+- Typecast expressions (warning - not added to strip out transform yet)
+- treat throw as similar to return
+- Switch from React to react (React still included until https://github.com/facebook/react/pull/3031)
+- Fix types for sessionStorage and Storage
+- tighter type for undefined values
+- no lib paths fix
+- Fix exporting types for builtin modules
+- Add Number.isNaN and Number.isSafeInteger type annotations
+- Optional properties in objects & optional type revamp
+
+v0.1.6
+
+- Bump version to 0.1.6
+- declare modules that redefine exports instead of exporting multiple things
+- Object spread race condition fix
+- Fix fallback path to flowlib.tar.gz
+- [Parser] Type grouping bug fix
+- Add Object.is
+- uncomment `delete` method signatures
+- Add MAX_SAFE_INTEGER and MIN_SAFE_INTEGER to Number
+- make param annotations strict upper bounds 
+
+v0.1.5
+
+- Bump version to 0.1.5
+- [PR #223] from commonlisp/master
+- [PR #221] from teppeis/Javascript-to-JavaScript
+- Better types for React.PropTypes
+- Make React a module
+- Check PropTypes as a normal object too
+- Better support for object call properties
+- Add range/offset information to Ast.Loc.t
+- ignored react attributes key & ref passed in spread properties
+- ignored react attributes key & ref
+- Add some checks when upper bound object type has indexer
+- fix type arg arity exception
+- add traces to .flowconfig
+- fix error message when undeclared prop is set by jsx
+- [Parser] Actually test ArrayTypeAnnotation
+- Fix problem with returns in catch
+- JSX with spread attributes
+- Incremental mode fix
+- Add missing constructors to TypedArray declarations
+- [Parser] Update Flow's test suite to match updated esprima
+
+v0.1.4
+
+- Bump Flow version to 0.1.4
+- [Flow] Unbreak the open source build
+- [PR #200] from fmahnke/node_http_interface
+- [PR #203] from rsolomo/node-net-isip
+- [PR #201] from unknownexception/patch-1
+- [Flow] Fill out Map definition
+- try-catch
+- missing annotation errors for type aliases
+- Type refinement fixes for early return
+
+v0.1.3
+
+- Handle strict undefined checks.
+- Add theoretical support to print tuple types properly.
+- Relax the callback type in Array.prototype.forEach
+- Add basic autocomplete support for React classes.
+- [Hack] Kill shell.ml entirely.
+- Handle spread attributes in JSX syntax.
+- [Parser] Allow most keywords as types
+- Add Array.from to lib file
+- [#161]: String literal keys for object type aliases
+- Generalize mock module handling under Haste a bit.
+- Improve autocomplete type printing
+- misc cleanup
+- [Parser] Improve type keywords
+- [Parser] Stop vendoring in ast-types
+- Add an ocaml wrapper for find path1 ... pathN -name pattern
+- Restart if a known lib file changes
+- Add ProgressEvent definition and update two onprogress types
+- [Hack] Add client time to server start time.
+- Improve control flow type refinements
+- [Hack] Reduce dependencies on ParserHeap.
+- Exit server on config change for now rather than restart to avoid some bugs
+- [Parser] ArrowFunction object & array patterns must be wrapped with parens
+- Properly functorize logging code too
+- [Hack] Make GC parameters configurable.
+- Refinements on method calls
+- [Hack] Log whether we are loading from a saved state in INIT_END.
+- [Hack] Improve error handling for saved states.
+- [PR #137] from sverrejoh/master
+- [PR #150] from unknownexception/fix/dom.js
+- [PR #146] from k-bx/master
+- [PR #151] from unknownexception/feature/no_flowlib
+- [PR #144] from rsolomo/node-assert
+- [PR #191] from Shraymonks/HTMLBaseElement
+- [PR #145] from rsolomo/node-util
+- [PR #192] from Shraymonks/HTMLScriptElement
+- Add ES6 String.prototype.contains
+- Add Promise.prototype.done() to Flow lib
+
+v0.1.2
+
+- [#78] Fallback to index.js if no main attribute in package.json
+- [#82] Added ES6 functions to the Math object
+- [#94] Start a node stdlib interface file
+- [#98] Declare optional parameters according to HTML standard
+- [#108] Add buffer class to node.js interface
+- [#115] Some more node std libs
+- The module system can now be specified in the .flowconfig file
+- Libraries can now be specified in the .flowconfig file
+- Multiple library paths can be specified
+- Added a command to typecheck a file passed on standard input (for IDEs)
+- Added HTMLInputElement to the standard library
+- Improvements to type printing in flow suggest and other commands
+- Fixes to various issues where parser errors were being suppressed
+
+v0.1.1
+
+- [Issue #4] Typecheck .jsx files
+- [Issue #22] Return a nonzero exit code from 'flow check' if there are errors
+- [IRC report] Autostart the Flow server on all commands
+- Improve the printing of types in 'flow suggest'
+- Add a --timeout option to all commands
+- [PR #27] Clearer error message when 'flow init' hasn't been run
+- [PR #39] Fix to Emacs bindings
+- [PR #53] Support node modules that end in .js
+- [PR #59] Fix example
+- [PR #65] Fix dependencies in flux-chat example
+- [PR #66] Add type definitions for HTMLCanvasElement
+
+v0.1.0
+
+Initial release

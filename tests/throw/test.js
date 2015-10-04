@@ -12,11 +12,3 @@ function g(a: ?string) {
     }
     return a*1; // a is not null
 }
-
-function h(x: number): string {
-  if (x) {
-    return 'foo';
-  } else {
-    throw new Error();
-  }
-}

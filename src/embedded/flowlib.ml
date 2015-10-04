@@ -15,7 +15,7 @@ external get_embedded_flowlib_data : string -> string option =
 let root = ref None
 
 let touch_root r =
-  let r = Path.to_string r in
+  let r = Path.string_of_path r in
   ignore (Unix.system ("find \"" ^ r ^ "\" -name \"*.js\" -exec touch '{}' ';'"))
 
 (* There are several verify-use race conditions here (and in Hack's file
@@ -23,8 +23,8 @@ let touch_root r =
  * security risk. Be careful. *)
 let extract data =
   let tmpdir = Tmp.temp_dir "flowlib" in
-  let path = Path.make tmpdir in
-  let oc = Unix.open_process_out ("tar xzC " ^ (Path.to_string path)) in
+  let path = Path.mk_path tmpdir in
+  let oc = Unix.open_process_out ("tar xzC " ^ (Path.string_of_path path)) in
   output_string oc data;
   flush oc;
   ignore (Unix.close_process_out oc);

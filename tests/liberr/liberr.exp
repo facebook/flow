@@ -1,13 +1,5 @@
 
-[LIB] parse_error.js:8:3,9: Library parse error:
-[LIB] parse_error.js:8:3,9: Unexpected identifier
-
-[LIB] type_error.js:2:34,38: Library type error:
-[LIB] type_error.js:2:34,38: 
+[LIB] lib.js:1:34,38: 
 Incorrect number of type parameters (expected 1)
 
-a.js:5:17,17: number
-This type is incompatible with
-a.js:5:8,13: string
-
-Found 3 errors
+Found 1 error

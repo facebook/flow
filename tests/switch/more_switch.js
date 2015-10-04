@@ -15,12 +15,3 @@ function bar(x) {
     }
     1;
 }
-
-function baz(x): number {
-  switch (x) {
-    case 0: break;
-    case 1: return 1;
-    default: throw new Error('hi');
-  }
-  return 2;
-}

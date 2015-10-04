@@ -1,14 +1,14 @@
 
 type.js:2:19,23: string
 This type is incompatible with
-type.js:1:16,21: number
+  type.js:1:16,21: number
 
 type.js:3:19,23: string
 This type is incompatible with
-type.js:1:16,21: number
+  type.js:1:16,21: number
 
 type.js:6:11,15: string
 This type is incompatible with
-type.js:5:10,15: number
+  type.js:5:10,15: number
 
 Found 3 errors

@@ -33,7 +33,7 @@ type env = {
 val canon_key: String.t -> String.t
 
 (* The empty naming environment *)
-val empty: TypecheckerOptions.t -> env
+val empty: env
 
 (* Function building the original naming environment.
  * This pass "declares" all the global names. The only checks done
@@ -62,12 +62,6 @@ val uselist_lambda: Ast.fun_ -> string list
 
 (* Solves the local names of a class *)
 val class_: env -> Ast.class_ -> Nast.class_
-
-(* Solves the local names in a function body *)
-val func_body: env -> Nast.fun_ -> Nast.func_named_body
-
-(* Solves the local names in class method bodies *)
-val class_meth_bodies: env -> Nast.class_ -> Nast.class_
 
 (* Solves the local names in an typedef *)
 val typedef: env -> Ast.typedef -> Nast.typedef

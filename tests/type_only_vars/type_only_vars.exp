@@ -1,65 +1,65 @@
 
 A.js:11:18,14:1: object literal
 This type is incompatible with
-bad_shadowing.js:13:8,13: string
+  bad_shadowing.js:13:8,13: string
 
-bad_shadowing.js:6:14,16: import type { Foo }
+A.js:12:8,10: class type: Foo
 This type is incompatible with
-bad_shadowing.js:14:10,15: string
+  bad_shadowing.js:14:10,15: string
 
-bad_shadowing.js:6:19,28: import type { Bar as Baz }
+A.js:13:8,10: class type: Bar
 This type is incompatible with
-bad_shadowing.js:15:10,15: string
+  bad_shadowing.js:15:10,15: string
 
 bad_shadowing.js:8:1,10:1: type duck
 This type is incompatible with
-bad_shadowing.js:18:11,16: string
+  bad_shadowing.js:18:11,16: string
 
 bad_shadowing.js:13:5,13: value binding A
 This binding is shadowing
-bad_shadowing.js:5:18,18: type binding A
+  bad_shadowing.js:5:18,18: type binding A
 which is a different sort of binding
 
 bad_shadowing.js:14:5,15: value binding Foo
 This binding is shadowing
-bad_shadowing.js:6:14,16: type binding Foo
+  bad_shadowing.js:6:14,16: type binding Foo
 which is a different sort of binding
 
 bad_shadowing.js:15:5,15: value binding Baz
 This binding is shadowing
-bad_shadowing.js:6:19,28: type binding Baz
+  bad_shadowing.js:6:19,28: type binding Baz
 which is a different sort of binding
 
 bad_shadowing.js:18:5,16: value binding duck
 This binding is shadowing
-bad_shadowing.js:8:1,10:1: type binding duck
+  bad_shadowing.js:8:1,10:1: type binding duck
 which is a different sort of binding
 
 good_shadowing.js:8:5,5: value binding A
 This binding is shadowing
-good_shadowing.js:5:18,18: type binding A
+  good_shadowing.js:5:18,18: type binding A
 which is a different sort of binding
 
 good_shadowing.js:9:5,7: value binding Foo
 This binding is shadowing
-good_shadowing.js:6:14,16: type binding Foo
+  good_shadowing.js:6:14,16: type binding Foo
 which is a different sort of binding
 
 good_shadowing.js:10:5,7: value binding Baz
 This binding is shadowing
-good_shadowing.js:6:19,28: type binding Baz
+  good_shadowing.js:6:19,28: type binding Baz
 which is a different sort of binding
 
 import_type.js:11:9,9: identifier A
-Could not resolve name
+Unknown global name
 
 import_type.js:12:9,11: identifier Foo
-Could not resolve name
+Unknown global name
 
 import_type.js:13:9,11: identifier Baz
-Could not resolve name
+Unknown global name
 
 type_alias.js:8:9,11: identifier Foo
-Could not resolve name
+Unknown global name
 
 Found 15 errors

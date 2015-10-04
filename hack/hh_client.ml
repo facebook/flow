@@ -39,25 +39,18 @@
  *)
 
 let () =
-  (* Ignore SIGPIPE since we might get a serer hangup and don't care (can
-   * detect and handle better than a signal). Ignore SIGUSR1 since we sometimes
-   * use that for the server to tell us when it's done initializing, but if we
-   * aren't explicitly listening we don't care. *)
   Sys.set_signal Sys.sigpipe Sys.Signal_ignore;
-  Sys.set_signal Sys.sigusr1 Sys.Signal_ignore;
   let command = ClientArgs.parse_args () in
   let log_cmd = ClientLogCommandUtils.log_command_of_command command in
-  HackEventLogger.client_startup log_cmd;
-  let exit_status =
-    try
-      match command with
-        | ClientCommand.CCheck check_env -> ClientCheck.main check_env
-        | ClientCommand.CStart env -> ClientStart.main env
-        | ClientCommand.CStop env -> HackClientStop.main env
-        | ClientCommand.CRestart env -> ClientRestart.main env
-        | ClientCommand.CBuild env -> ClientBuild.main env
-        | ClientCommand.CProlog env -> ClientProlog.main env
-    with Exit_status.Exit_with es -> es
-  in
-  HackEventLogger.client_finish log_cmd (Exit_status.to_string exit_status);
-  Exit_status.exit exit_status
+  EventLogger.client_startup log_cmd;
+  begin match command with
+    | ClientCommand.CCheck check_env ->
+        ClientCheck.main check_env check_env.ClientEnv.retries;
+    | ClientCommand.CStart env -> ClientStart.main env
+    | ClientCommand.CStop env -> HackClientStop.main env
+    | ClientCommand.CRestart env -> ClientRestart.main env
+    | ClientCommand.CBuild env -> ClientBuild.main env
+    | ClientCommand.CProlog env -> ClientProlog.main env
+  end;
+  EventLogger.client_finish log_cmd;
+  ()

@@ -1,5 +1,3 @@
 [options]
 module.system=haste
 
-suppress_type=$FlowIssue
-suppress_type=$FlowFixMe

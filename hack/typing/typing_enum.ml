@@ -19,7 +19,6 @@ open Utils
 open Typing_defs
 
 module SN = Naming_special_names
-module Phase = Typing_phase
 
 (* Figures out if a class needs to be treated like an enum and if so returns
  * Some(base, type, constraint), where base is the underlying type of the
@@ -68,17 +67,15 @@ let member_type env member_ce =
  * (int or string), blowing through typedefs to do it. Takes a function
  * to call to report the error if it isn't. *)
 let check_valid_array_key_type f_fail ~allow_any:allow_any env p t =
-  let ety_env = Phase.env_with_self env in
-  let env, (r, t'), trail =
-    Typing_tdef.force_expand_typedef ~phase:Phase.locl ~ety_env env t in
+  let env, (r, t'), trail = Typing_tdef.force_expand_typedef env t in
   (match t' with
     | Tprim Tint | Tprim Tstring -> ()
     (* Enums have to be valid array keys *)
-    | Tclass ((_, x), _) when Typing_env.is_enum x -> ()
+    | Tapply ((_, x), _) when Typing_env.is_enum x -> ()
     | Tany when allow_any -> ()
-    | Tany | Tmixed | Tarray (_, _) | Tprim _ | Toption _
-      | Tvar _ | Tabstract (_, _) | Tclass (_, _) | Ttuple _ | Tanon (_, _)
-      | Tfun _ | Tunresolved _ | Tobject | Tshape _ ->
+    | Tany | Tmixed | Tarray (_, _) | Tprim _ | Tgeneric (_, _) | Toption _
+      | Tvar _ | Tabstract (_, _, _) | Tapply (_, _) | Ttuple _ | Tanon (_, _)
+      | Tfun _ | Tunresolved _ | Tobject | Tshape _ | Taccess (_, _) ->
         f_fail p (Reason.to_pos r) (Typing_print.error t') trail);
   env
 
@@ -103,11 +100,8 @@ let enum_check_const ty_exp env (_, (p, _), _) t =
 let enum_class_check env tc consts const_types =
   match is_enum (tc.tc_pos, tc.tc_name) tc.tc_enum_type tc.tc_ancestors with
     | Some (ty_exp, _, ty_constraint) ->
-        let ety_env = Phase.env_with_self env in
-        let phase = Phase.decl in
         let env, (r, ty_exp'), trail =
-          Typing_tdef.force_expand_typedef ~phase ~ety_env env ty_exp in
-        let env, ty_exp = Phase.localize ~ety_env env ty_exp in
+          Typing_tdef.force_expand_typedef env ty_exp in
         (match ty_exp' with
           (* We disallow first-class enums from being non-exact types, because
            * a switch on such an enum can lead to very unexpected results,
@@ -121,21 +115,20 @@ let enum_class_check env tc consts const_types =
           | Tmixed -> ()
           | Tprim Tint | Tprim Tstring | Tprim Tarraykey -> ()
           (* Allow enums in terms of other enums *)
-          | Tclass ((_, x), _) when Typing_env.is_enum x -> ()
+          | Tapply ((_, x), _) when Typing_env.is_enum x -> ()
           (* Don't tell anyone, but we allow type params too, since there are
            * Enum subclasses that need to do that *)
-          | Tabstract (AKgeneric (_, _), _) -> ()
+          | Tgeneric _ -> ()
           | Tany | Tarray (_, _) | Tprim _ | Toption _ | Tvar _
-            | Tabstract (_, _) | Tclass (_, _) | Ttuple _ | Tanon (_, _)
-            | Tunresolved _ | Tobject | Tfun _ | Tshape _ ->
-              Errors.enum_type_bad (Reason.to_pos r)
-                (Typing_print.error ty_exp') trail);
+            | Tabstract (_, _, _) | Tapply (_, _) | Ttuple _ | Tanon (_, _)
+            | Tunresolved _ | Tobject | Tfun _ | Tshape _
+            | Taccess (_, _) -> Errors.enum_type_bad (Reason.to_pos r)
+                   (Typing_print.error ty_exp') trail);
 
         (* Make sure that if a constraint was given that the base type is
          * actually a subtype of it. *)
         let env = (match ty_constraint with
           | Some ty ->
-             let env, ty = Phase.localize ~ety_env env ty in
             Typing_ops.sub_type tc.tc_pos Reason.URenum_cstr env ty ty_exp
           | None -> env) in
 
