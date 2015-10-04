@@ -8,6 +8,8 @@
  *
  *)
 
+open Utils
+
 (* A "unification environment" to track certain metadata about the unification
  * or subtyping of a type that isn't captured by the type itself. This is
  * currently managed manually by unify and sub_type, but TODO we should probably
@@ -21,16 +23,10 @@ type uenv = {
    * Toption[Tunresolved[Toption]] or similar. *)
   non_null: bool;
 
-  (* unify/sub_type are careful to make sure they don't get stuck in an infinite
-   * loop expanding recursive types, but most other code isn't (and actually
-   * doesn't care about Tvar at all). Keep track of the Tvar's we've hit in
-   * those other functions so we aren't infinitely recursive.
-   * TODO implement this as part of the aforementioned "apply" function. *)
-   (* tvar_seen: ISet.t; *)
-
-  (* Silence warnings when overwriting the non_null field, since it's currently
-   * the only field, but may not always be that way. *)
-  placeholder: unit
+  (* Keep track of the Tvar's we've hit in those other functions so we aren't
+   * infinitely recursive. TODO implement this as part of the aforementioned
+   * "apply" function. *)
+  seen_tvars: ISet.t;
 }
 
-let empty = { non_null = false; placeholder = () }
+let empty = { non_null = false; seen_tvars = ISet.empty }

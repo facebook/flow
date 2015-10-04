@@ -8,20 +8,14 @@
  *
  *)
 
-type t = {
-  load_script         : string option;
-  load_script_timeout : int;
-  (* Configures only the workers. Workers can have more relaxed GC configs as
-   * they are short-lived processes *)
-  gc_control          : Gc.control;
-  tc_options          : TypecheckerOptions.t;
-}
+type t
 
 val load : Relative_path.t -> t
 
 val default_config : t
 
-val load_script         : t -> string option
+val load_script         : t -> Path.t option
 val load_script_timeout : t -> int
 val gc_control          : t -> Gc.control
+val sharedmem_config    : t -> SharedMem.config
 val typechecker_options : t -> TypecheckerOptions.t

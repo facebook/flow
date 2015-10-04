@@ -16,4 +16,4 @@ val call_before_sleeping: unit -> unit
 (* Called every time a client connects *)
 val stamp_connection: unit -> unit
 
-val init: Path.path -> unit
+val init: Path.t -> unit

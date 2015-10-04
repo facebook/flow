@@ -196,17 +196,15 @@ let hook_after_parsing = ref (fun _ _ _ _ -> ())
 
 let type_check genv env =
 
-  Printf.printf "******************************************\n";
-  Printf.printf "Files to recompute: %d\n"
+  Printf.eprintf "******************************************\n";
+  Hh_logger.log "Files to recompute: %d"
     (Relative_path.Set.cardinal env.failed_parsing);
-  flush stdout;
   (* PARSING *)
   let start_t = Unix.gettimeofday() in
-  let t = start_t in
-  let fast_parsed, errorl, failed_parsing = parsing genv env in
-  let t2 = Unix.gettimeofday() in
-  Printf.printf "Parsing: %f\n%!" (t2 -. t);
-  let t = t2 in
+  let fast_parsed, errorl, failed_parsing =
+    Hh_logger.measure "Parsing" begin fun () ->
+      parsing genv env
+    end in
 
   (* UPDATE FILE INFO *)
   let old_env = env in
@@ -218,41 +216,42 @@ let type_check genv env =
 
   (* NAMING *)
   let env, errorl', failed_naming, fast =
-    declare_names env files_info fast_parsed in
+    Hh_logger.measure "Naming" begin fun () ->
+      let env, errorl', failed_naming, fast =
+        declare_names env files_info fast_parsed in
+
+      (* COMPUTES WHAT MUST BE REDECLARED  *)
+      let fast = reparse fast files_info env.failed_decl in
+      let fast = add_old_decls env.files_info fast in
+
+      env, errorl', failed_naming, fast
+    end in
+
   let errorl = List.rev_append errorl' errorl in
-  let nenv = env.nenv in
 
-  (* COMPUTES WHAT MUST BE REDECLARED  *)
-  let fast = reparse fast files_info env.failed_decl in
-  let fast = add_old_decls env.files_info fast in
-
-  let t2 = Unix.gettimeofday() in
-  Printf.printf "Naming: %f\n%!" (t2 -. t);
-  let t = t2 in
-
-  let _, _, to_redecl_phase2, to_recheck1 =
-    Typing_redecl_service.redo_type_decl
-      ~update_pos:true genv.workers nenv fast in
-  let t2 = Unix.gettimeofday() in
-  Printf.printf "Determining changes: %f\n%!" (t2 -. t);
-  let t = t2 in
-
-  let to_redecl_phase2 = Typing_deps.get_files to_redecl_phase2 in
-  let to_recheck1 = Typing_deps.get_files to_recheck1 in
+  let to_redecl_phase2, to_recheck1 =
+    Hh_logger.measure "Determining changes" begin fun () ->
+      let _, _, to_redecl_phase2, to_recheck1 =
+        Typing_redecl_service.redo_type_decl genv.workers env.nenv fast
+      in
+      let to_redecl_phase2 = Typing_deps.get_files to_redecl_phase2 in
+      let to_recheck1 = Typing_deps.get_files to_recheck1 in
+      to_redecl_phase2, to_recheck1
+    end in
 
   let fast_redecl_phase2 = reparse fast files_info to_redecl_phase2 in
 
   (* DECLARING TYPES: Phase2 *)
-  let errorl', failed_decl, to_redecl2, to_recheck2 =
-    Typing_redecl_service.redo_type_decl
-      ~update_pos:false genv.workers nenv fast_redecl_phase2 in
-
-  let t2 = Unix.gettimeofday() in
-  Printf.printf "Type-decl: %f\n%!" (t2 -. t);
-  let t = t2 in
+  let errorl', failed_decl, to_recheck2 =
+    Hh_logger.measure "Type-decl" begin fun () ->
+      let errorl', failed_decl, _to_redecl2, to_recheck2 =
+        Typing_redecl_service.redo_type_decl
+          genv.workers env.nenv fast_redecl_phase2 in
+      let to_recheck2 = Typing_deps.get_files to_recheck2 in
+      errorl', failed_decl, to_recheck2
+    end in
 
   let errorl = List.rev_append errorl' errorl in
-  let to_recheck2 = Typing_deps.get_files to_recheck2 in
 
   (* DECLARING TYPES: merging results of the 2 phases *)
   let fast =
@@ -262,20 +261,20 @@ let type_check genv env =
   let to_recheck = Relative_path.Set.union to_recheck2 to_recheck in
 
   (* TYPE CHECKING *)
-  let to_recheck = Relative_path.Set.union to_recheck env.failed_check in
-  let fast = reparse fast files_info to_recheck in
-  let errorl', failed_check = Typing_check_service.go genv.workers fast in
+  let errorl', failed_check = Hh_logger.measure "Type-check" begin fun () ->
+    let to_recheck = Relative_path.Set.union to_recheck env.failed_check in
+    let fast = reparse fast files_info to_recheck in
+    ServerCheckpoint.process_updates fast;
+    Typing_check_service.go genv.workers env.nenv fast
+  end in
 
   let errorl = List.rev (List.rev_append errorl' errorl) in
 
-  let t2 = Unix.gettimeofday() in
-  Printf.printf "Type-check: %f\n%!" (t2 -. t);
-
-  Printf.printf "Total: %f\n%!" (t2 -. start_t);
+  Hh_logger.log "Total: %f\n%!" ((Unix.gettimeofday ()) -. start_t);
 
   (* Done, that's the new environment *)
   { files_info = files_info;
-    nenv = nenv;
+    nenv = env.nenv;
     errorl = errorl;
     failed_parsing = Relative_path.Set.union failed_naming failed_parsing;
     failed_decl = failed_decl;

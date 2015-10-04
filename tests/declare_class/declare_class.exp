@@ -1,10 +1,14 @@
 
+declare_class.js:6:1,8: assignment of property x
+Error:
 declare_class.js:6:7,8: string
 This type is incompatible with
-  declare_class.js:2:15,20: number
+declare_class.js:2:15,20: number
 
+declare_class.js:7:1,9: call of method foo
+Error:
 declare_class.js:7:7,8: string
 This type is incompatible with
-  declare_class.js:3:19,24: number
+declare_class.js:3:19,24: number
 
 Found 2 errors

@@ -23,8 +23,8 @@ type inherited = {
   ih_cstr     : class_elt option * bool;
   ih_consts   : class_elt SMap.t ;
   ih_typeconsts : typeconst_type SMap.t ;
-  ih_cvars    : class_elt SMap.t ;
-  ih_scvars   : class_elt SMap.t ;
+  ih_props    : class_elt SMap.t ;
+  ih_sprops   : class_elt SMap.t ;
   ih_methods  : class_elt SMap.t ;
   ih_smethods : class_elt SMap.t ;
 }

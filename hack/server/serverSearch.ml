@@ -11,8 +11,6 @@
 type result =
   (Pos.absolute, HackSearchService.search_result_type) SearchUtils.term list
 
-let go query type_ oc =
+let go query type_ =
   let results = HackSearchService.MasterApi.query query type_ in
-  let results = List.map SearchUtils.to_absolute results in
-  Marshal.to_channel oc (results : result) [];
-  flush oc
+  List.map SearchUtils.to_absolute results

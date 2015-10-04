@@ -32,6 +32,7 @@ let string_of_prefix = function
   | Dummy -> ""
 
 let set_path_prefix prefix v =
+  let v = Path.to_string v in
   assert (String.length v > 0);
   (* Ensure that there is a trailing slash *)
   let v =

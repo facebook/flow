@@ -1,3 +1,4 @@
+/* @flow */
 function foo(x:string) { }
 
 var a = [0];
@@ -10,3 +11,32 @@ var e:Array<string> = a.reverse();
 
 var f = [""];
 var g:number = f.map(function () { return 0; })[0];
+
+var h: Array<number> = [1,2,3];
+var i: Array<string> = ['a', 'b', 'c'];
+var j: Array<number | string> = h.concat(i);
+var k: Array<number> = h.concat(h);
+var l: Array<number> = h.concat(1,2,3);
+var m: Array<number | string> = h.concat('a', 'b', 'c');
+var n: Array<number> = h.concat('a', 'b', 'c'); // Error
+
+function reduce_test() {
+  /* Adapted from the following source:
+   * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/Reduce
+   */
+  [0, 1, 2, 3, 4].reduce(function(previousValue, currentValue, index, array) {
+    return previousValue + currentValue + array[index];
+  });
+
+  [0, 1, 2, 3, 4].reduce(function(previousValue, currentValue, index, array) {
+    return previousValue + currentValue + array[index];
+  }, 10);
+
+  var total = [0, 1, 2, 3].reduce(function(a, b) {
+    return a + b;
+  });
+
+  var flattened = [[0, 1], [2, 3], [4, 5]].reduce(function(a, b) {
+    return a.concat(b);
+  });
+}

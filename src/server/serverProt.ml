@@ -29,6 +29,7 @@ let file_input_get_content = function
 type command =
 | AUTOCOMPLETE of file_input
 | CHECK_FILE of file_input
+| DUMP_TYPES of file_input
 | ERROR_OUT_OF_DATE
 | FIND_MODULES of string list
 | GET_DEF of file_input * int * int (* filename, line, char *)
@@ -38,7 +39,8 @@ type command =
 | KILL
 | PING
 | PORT of string list
-| STATUS of Path.path
+| STATUS of Path.t
+| SEARCH of string
 | SUGGEST of string list
 
 let cmd_to_channel (oc:out_channel) (cmd:command): unit =
@@ -53,13 +55,13 @@ let cmd_from_channel (ic:in_channel): command =
   else Marshal.from_channel ic
 
 type directory_mismatch = {
-  server: Path.path;
-  client: Path.path;
+  server: Path.t;
+  client: Path.t;
 }
 
 type response =
 | DIRECTORY_MISMATCH of directory_mismatch
-| ERRORS of Errors.error list
+| ERRORS of Errors_js.error list
 | NO_ERRORS
 | PONG
 | SERVER_DYING

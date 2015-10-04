@@ -1,0 +1,8 @@
+declare class adult {
+  height: number;
+  age: number;
+  static minage: number;
+  new(): adult;
+  
+}
+
