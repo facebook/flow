@@ -20,6 +20,7 @@ module Classes = struct
 
   let cAwaitable = "\\Awaitable"
   let cWaitHandle = "\\WaitHandle"
+  let cWaitableWaitHandle = "\\WaitableWaitHandle"
   let cGenerator = "\\Generator"
   let cAsyncGenerator = "\\AsyncGenerator"
   let cFormatString = "\\FormatString" (* deprecated - defined in user code *)
@@ -130,6 +131,13 @@ module SpecialFunctions = struct
 
 end
 
+module SpecialIdents = struct
+
+  let this = "$this"
+  let placeholder = "$_"
+
+end
+
 module PseudoFunctions = struct
 
   let empty = "\\empty"
@@ -168,11 +176,6 @@ module Typehints = struct
   let mixed    = "mixed"
   let this     = "this"
 
-  (* Place holder type that will be filled later. This is used for implementing
-   * the path dependent type for type accesses
-   *)
-  let type_hole = "<this>"
-
   let int     = "int"
   let bool    = "bool"
   let float   = "float"
@@ -182,8 +185,6 @@ module Typehints = struct
   let boolean = "boolean"
   let double  = "double"
   let real    = "real"
-
-  let shape = "shape"
 
   let object_cast = "object"
   let unset_cast = "unset"
@@ -224,4 +225,13 @@ module FB = struct
   let fgenva                 = "genva"
   let fgen_array_rec         = "gen_array_rec"
 
+  let idx                    = "\\idx"
+
+end
+
+module Shapes = struct
+  let cShapes                = "\\Shapes"
+  let idx                    = "idx"
+  let keyExists              = "keyExists"
+  let removeKey              = "removeKey"
 end

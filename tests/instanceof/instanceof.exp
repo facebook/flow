@@ -1,14 +1,28 @@
 
+instanceof.js:17:26,39: assignment of property foo
+Error:
 instanceof.js:17:34,39: string
 This type is incompatible with
-  instanceof.js:4:17,22: number
+instanceof.js:4:17,22: number
 
+instanceof.js:34:30,47: assignment of property foo
+Error:
 instanceof.js:34:42,47: string
 This type is incompatible with
-  instanceof.js:4:17,22: number
+instanceof.js:4:17,22: number
 
+instanceof.js:51:34,55: assignment of property foo
+Error:
 instanceof.js:51:50,55: string
 This type is incompatible with
-  instanceof.js:4:17,22: number
+instanceof.js:4:17,22: number
 
-Found 3 errors
+instanceof.js:81:17,29: array type
+This type is incompatible with
+instanceof.js:83:5,7: number
+
+instanceof.js:85:5,14: assignment of computed property/element
+Computed property/element cannot be assigned on
+instanceof.js:81:33,38: number
+
+Found 5 errors

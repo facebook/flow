@@ -1,0 +1,6 @@
+
+numbered_keys.js:2:18,23: number
+This type is incompatible with
+numbered_keys.js:2:9,14: string
+
+Found 1 error

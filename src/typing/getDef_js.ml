@@ -12,15 +12,15 @@ open Constraint_js
 open Utils
 
 type getdef_type =
-| Gdloc of (Spider_monkey_ast.Loc.t)
+| Gdloc of Loc.t
 | Gdmem of (string * Type.t)
 
-let getdef_id (state, pos) cx name loc =
-  if Reason_js.in_range pos loc
+let getdef_id (state, loc1) cx name loc2 =
+  if Reason_js.in_range loc1 loc2
   then (
-    let env = Env_js.flat_env () in
+    let env = Env_js.all_entries () in
     match SMap.get name env with
-    | Some {def_loc;_} ->
+    | Some { Scope.def_loc; _ } ->
         (match def_loc with
         | Some loc ->
             state := Some (Gdloc (loc))
@@ -31,33 +31,32 @@ let getdef_id (state, pos) cx name loc =
   );
   false
 
-let getdef_member (state, pos) cx name loc this_t =
-  if (Reason_js.in_range pos loc)
+let getdef_member (state, loc1) cx name loc2 this_t =
+  if (Reason_js.in_range loc1 loc2)
   then (
     state := Some (Gdmem (name, this_t))
   );
   false
 
-let getdef_call (state, pos) cx name loc this_t =
-  if (Reason_js.in_range pos loc)
+let getdef_call (state, loc1) cx name loc2 this_t =
+  if (Reason_js.in_range loc1 loc2)
   then (
     state := Some (Gdmem (name, this_t))
   )
 
 let getdef_get_result cx state =
   match !state with
-  | Some Gdloc (loc) ->
-      Reason_js.pos_of_loc loc
+  | Some Gdloc (loc) -> loc
   | Some Gdmem (name, this) ->
       let this_t = Flow_js.resolve_type cx this in
       let result_map = Flow_js.extract_members cx this_t in
       (match SMap.get name result_map with
       | Some t ->
-          pos_of_t t
+          loc_of_t t
       | None ->
-          Pos.none)
+          Loc.none)
   | _ ->
-      Pos.none
+      Loc.none
 
 let getdef_set_hooks pos =
   let state = ref None in

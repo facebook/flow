@@ -32,13 +32,13 @@ module Env = Typing_env
 
 module CheckFunctionType = struct
   let rec stmt f_type st = match f_type, st with
-    | FSync, Return (_, None)
-    | FAsync, Return (_, None) -> ()
-    | FSync, Return (_, Some e)
-    | FAsync, Return (_, Some e) ->
+    | Ast.FSync, Return (_, None)
+    | Ast.FAsync, Return (_, None) -> ()
+    | Ast.FSync, Return (_, Some e)
+    | Ast.FAsync, Return (_, Some e) ->
         expr f_type e;
         ()
-    | (FGenerator | FAsyncGenerator), Return (p, e) ->
+    | (Ast.FGenerator | Ast.FAsyncGenerator), Return (p, e) ->
         (match e with
         None -> ()
         | Some _ -> Errors.return_in_gen p);
@@ -68,7 +68,7 @@ module CheckFunctionType = struct
     | _, Switch (_, cl) ->
         liter case f_type cl;
         ()
-    | (FSync | FGenerator), Foreach (_, (Await_as_v (p, _) | Await_as_kv (p, _, _)), _) ->
+    | (Ast.FSync | Ast.FGenerator), Foreach (_, (Await_as_v (p, _) | Await_as_kv (p, _, _)), _) ->
         Errors.await_in_sync_function p;
         ()
     | _, Foreach (_, _, b) ->
@@ -113,7 +113,8 @@ module CheckFunctionType = struct
     | _, Id _
     | _, Class_get _
     | _, Class_const _
-    | _, Lvar _ -> ()
+    | _, Lvar _
+    | _, Lplaceholder _ -> ()
     | _, Array afl ->
         liter afield f_type afl;
         ()
@@ -175,23 +176,23 @@ module CheckFunctionType = struct
         ()
     | _, Efun _ -> ()
 
-    | FGenerator, Yield_break
-    | FAsyncGenerator, Yield_break -> ()
-    | FGenerator, Yield af
-    | FAsyncGenerator, Yield af -> afield f_type af; ()
+    | Ast.FGenerator, Yield_break
+    | Ast.FAsyncGenerator, Yield_break -> ()
+    | Ast.FGenerator, Yield af
+    | Ast.FAsyncGenerator, Yield af -> afield f_type af; ()
 
     (* Should never happen -- presence of yield should make us FGenerator or
      * FAsyncGenerator. *)
-    | FSync, Yield_break
-    | FAsync, Yield_break
-    | FSync, Yield _
-    | FAsync, Yield _ -> assert false
+    | Ast.FSync, Yield_break
+    | Ast.FAsync, Yield_break
+    | Ast.FSync, Yield _
+    | Ast.FAsync, Yield _ -> assert false
 
-    | FGenerator, Await _
-    | FSync, Await _ -> Errors.await_in_sync_function p
+    | Ast.FGenerator, Await _
+    | Ast.FSync, Await _ -> Errors.await_in_sync_function p
 
-    | FAsync, Await e
-    | FAsyncGenerator, Await e -> expr f_type e; ()
+    | Ast.FAsync, Await e
+    | Ast.FAsyncGenerator, Await e -> expr f_type e; ()
 
     | _, Special_func func ->
       (match func with
@@ -206,12 +207,6 @@ module CheckFunctionType = struct
         ()
     | _, Assert (AE_assert e) ->
         expr f_type e;
-        ()
-    | _, Assert (AE_invariant_violation (e, el)) ->
-        liter expr f_type (e :: el);
-        ()
-    | _, Assert (AE_invariant (e1, e2, el)) ->
-        liter expr f_type (e1 :: e2 :: el);
         ()
     | _, Shape fdm ->
         ShapeMap.iter (fun _ v -> expr f_type v) fdm;
@@ -265,14 +260,14 @@ and func env f named_body =
   } in
   maybe hint env f.f_ret;
   List.iter (fun_param env) f.f_params;
-  block env named_body;
-  CheckFunctionType.block f.f_fun_kind named_body
+  block env named_body.fnb_nast;
+  CheckFunctionType.block f.f_fun_kind named_body.fnb_nast
 
 and hint env (p, h) =
   hint_ env p h
 
 and hint_ env p = function
-  | Hany  | Hmixed  | Habstr _ | Hprim _  | Haccess _ ->
+  | Hany  | Hmixed  | Habstr _ | Hprim _  | Hthis | Haccess _ ->
       ()
   | Harray (ty1, ty2) ->
       maybe hint env ty1;
@@ -285,11 +280,11 @@ and hint_ env p = function
       hint env h;
       ()
   | Happly ((_, x), hl) when Typing_env.is_typedef x ->
-      let tdef = Typing_env.Typedefs.find_unsafe x in
+      let tdef = Typing_heap.Typedefs.find_unsafe x in
       let params =
         match tdef with
-        | Typing_env.Typedef.Error -> []
-        | Typing_env.Typedef.Ok (_, x, _, _, _) -> x
+        | Typing_heap.Typedef.Error -> []
+        | Typing_heap.Typedef.Ok (_, x, _, _, _) -> x
       in
       check_params env p x params hl
   | Happly ((_, x), hl) ->
@@ -332,7 +327,7 @@ and class_ tenv c =
   liter hint env c.c_extends;
   liter hint env c.c_implements;
   liter class_const env c.c_consts;
-  liter typeconst (env, c.c_tparams) c.c_typeconsts;
+  liter typeconst (env, (fst c.c_tparams)) c.c_typeconsts;
   liter class_var env c.c_static_vars;
   liter class_var env c.c_vars;
   liter method_ (env, true) c.c_static_methods;
@@ -410,12 +405,13 @@ and check_is_trait env (h : hint) =
 and interface c =
   (* make sure that interfaces only have empty public methods *)
   List.iter begin fun m ->
-    if m.m_body <> (UnnamedBody []) && m.m_body <> (NamedBody [])
-    then Errors.abstract_body (fst m.m_name)
-    else ();
-    if m.m_visibility <> Public
-    then Errors.not_public_interface (fst m.m_name)
-    else ()
+    (match m.m_body with
+      | UnnamedBody { fub_ast = [] ; _}
+      | NamedBody { fnb_nast = [] ; _} ->
+        if m.m_visibility <> Public
+        then Errors.not_public_interface (fst m.m_name)
+        else ()
+      | _ -> Errors.abstract_body (fst m.m_name))
   end (c.c_static_methods @ c.c_methods);
   (* make sure that interfaces don't have any member variables *)
   match c.c_vars with
@@ -452,11 +448,11 @@ and check_no_class_tparams class_tparams (pos, ty)  =
       then Errors.typeconst_depends_on_external_tparam pos c_tp_pos c_tp_name
     end class_tparams in
   match ty with
-    | Hany | Hmixed | Hprim _ -> ()
+    | Hany | Hmixed | Hprim _ | Hthis -> ()
     (* We have found a type parameter. Make sure its name does not match
      * a name in class_tparams *)
-    | Habstr (tparam_name, ty_) ->
-        maybe_check_tparams ty_;
+    | Habstr (tparam_name, cstr_opt) ->
+        maybe_check_tparams (opt_map snd cstr_opt);
         matches_class_tparam tparam_name
     | Harray (ty1, ty2) ->
         maybe_check_tparams ty1;
@@ -500,12 +496,12 @@ and method_ (env, is_static) m =
   let named_body = assert_named_body m.m_body in
   check__toString m is_static;
   liter fun_param env m.m_params;
-  block env named_body;
+  block env named_body.fnb_nast;
   maybe hint env m.m_ret;
-  CheckFunctionType.block m.m_fun_kind named_body;
-  if m.m_abstract && named_body <> []
+  CheckFunctionType.block m.m_fun_kind named_body.fnb_nast;
+  if m.m_abstract && named_body.fnb_nast <> []
   then Errors.abstract_with_body m.m_name;
-  if not (Env.is_decl env.tenv) && not m.m_abstract && named_body = []
+  if not (Env.is_decl env.tenv) && not m.m_abstract && named_body.fnb_nast = []
   then Errors.not_abstract_without_body m.m_name;
   (match env.class_name with
   | Some cname ->
@@ -612,7 +608,7 @@ and expr_ env = function
   | Id _
   | Class_get _
   | Class_const _
-  | Lvar _ -> ()
+  | Lvar _ | Lplaceholder _ -> ()
   | Array afl ->
       liter afield env afl;
       ()
@@ -677,10 +673,6 @@ and expr_ env = function
       hint env h;
       expr env e;
       ()
-  | Assert (AE_invariant (e1, e2, el)) ->
-      expr env e1;
-      expr env e2;
-      liter expr env el
   | Binop (_, e1, e2) ->
       expr env e1;
       expr env e2;
@@ -694,9 +686,6 @@ and expr_ env = function
       expr env e2;
       expr env e3;
       ()
-  | Assert (AE_invariant_violation (e, el)) ->
-      expr env e;
-      liter expr env el
   | Assert (AE_assert e)
   | InstanceOf (e, _) ->
       expr env e;
@@ -732,9 +721,9 @@ and attribute env (_, e) =
   expr env e;
   ()
 
-let typedef tenv (_, _, h) =
+let typedef tenv t =
   let env = { t_is_finally = false;
               class_name = None; class_kind = None;
               imm_ctrl_ctx = Toplevel;
               tenv = tenv } in
-  hint env h
+  hint env t.t_kind

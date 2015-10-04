@@ -6,4 +6,4 @@ function f(u,v?):number { return u; }
 var export_f: (u: number) => number = f;
 
 //exports = export_o;
-exports = export_f;
+module.exports = export_f;

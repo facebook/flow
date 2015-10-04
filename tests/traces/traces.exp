@@ -1,18 +1,84 @@
 
+Traces.js:4:1,5: function call
+Error:
 Traces.js:4:4,4: number
 This type is incompatible with
-  Traces.js:2:15,20: string
+Traces.js:2:15,20: string
+Error path:
+Traces.js:4:4,4:   NumT [number]
+Traces.js:2:15,20: ~> StrT [string] comes from
+Traces.js:4:1,2:   . FunT [function]
+Traces.js:4:1,5:   . ~> CallT [function call]
+Traces.js:2:1,25:  . FunT [function]
+Traces.js:3:18,22: . ~> CallT [function call]
 
+Traces.js:9:1,12: function call
+Error:
 Traces.js:9:11,11: number
 This type is incompatible with
-  Traces.js:7:25,30: string
+Traces.js:7:25,30: string
+Error path:
+Traces.js:9:11,11: NumT [number]
+Traces.js:7:25,30: ~> StrT [string] comes from
+Traces.js:9:1,2:   . FunT [function]
+Traces.js:9:1,12:  . ~> CallT [function call]
+Traces.js:7:1,35:  . FunT [function]
+Traces.js:8:21,28: . ~> CallT [function call]
 
+Traces.js:14:1,32: function call
+Error:
 Traces.js:12:22,27: string
 This type is incompatible with
-  Traces.js:14:25,29: number
+Traces.js:14:25,29: number
+Error path:
+Traces.js:12:22,27: StrT [string]
+Traces.js:14:25,29: ~> NumT [number] comes from
+Traces.js:14:4,31:  . FunT [function]
+Traces.js:12:19,38: . ~> FunT [function type] comes from
+Traces.js:14:1,2:   . . FunT [function]
+Traces.js:14:1,32:  . . ~> CallT [function call]
+Traces.js:12:1,43:  . . FunT [function]
+Traces.js:13:21,28: . . ~> CallT [function call]
 
+Traces.js:20:1,10: function call
+Error:
 Traces.js:17:22,27: string
 This type is incompatible with
-  Traces.js:19:29,33: number
+Traces.js:19:29,33: number
+Error path:
+Traces.js:17:22,27: StrT [string]
+Traces.js:19:29,33: ~> NumT [number] comes from
+Traces.js:20:4,9:   . FunT [function]
+Traces.js:17:19,38: . ~> FunT [function type] comes from
+Traces.js:20:1,2:   . . FunT [function]
+Traces.js:20:1,10:  . . ~> CallT [function call]
+Traces.js:17:1,43:  . . FunT [function]
+Traces.js:18:21,28: . . ~> CallT [function call]
 
-Found 4 errors
+Traces2.js:6:3,11: property foo
+Property not found in
+Traces2.js:10:3,11: propTypes
+Error path:
+Traces2.js:17:12,25:      InstanceT [ReactElement]
+[LIB] react.js:68:1,73:1: ~> ExtendsT [extends ReactElement] comes from
+Traces2.js:17:12,25:      . InstanceT [ReactElement]
+[LIB] react.js:68:1,73:1: . ~> InstanceT [ReactElement] comes from
+Traces2.js:17:12,25:      . . InstanceT [ReactElement]
+Traces2.js:17:12,25:      . . ~> OpenT [ReactElement] comes from
+Traces2.js:17:12,25:      . . . InstanceT [ReactElement]
+Traces2.js:17:12,25:      . . . ~> AnnotT [ReactElement]
+
+Traces2.js:10:3,11: property bar
+Property not found in
+Traces2.js:6:3,11: propTypes
+Error path:
+Traces2.js:17:12,25:      InstanceT [ReactElement]
+[LIB] react.js:68:1,73:1: ~> ExtendsT [extends ReactElement] comes from
+Traces2.js:17:12,25:      . InstanceT [ReactElement]
+[LIB] react.js:68:1,73:1: . ~> InstanceT [ReactElement] comes from
+Traces2.js:17:12,25:      . . InstanceT [ReactElement]
+Traces2.js:17:12,25:      . . ~> OpenT [ReactElement] comes from
+Traces2.js:17:12,25:      . . . InstanceT [ReactElement]
+Traces2.js:17:12,25:      . . . ~> AnnotT [ReactElement]
+
+Found 6 errors

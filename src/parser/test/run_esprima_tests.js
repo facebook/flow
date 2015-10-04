@@ -9,10 +9,8 @@ var todo = {
   "Whitespace": true,
   'Invalid unicode related syntax': true,
   'Invalid Type Annotations': true,
-  'ES6: Numeric Literal': true,
   'Array Comprehension': true,
   'Harmony: Modules': true,
-  'Harmony: Iterators': true,
   'Harmony: Invalid Class (strawman)': true,
   'ES6: Destructured Parameters': true,
   'ES7 Proposal: Rest Properties' : true,
@@ -162,6 +160,7 @@ function go() {
       }
     }
     console.log("%d/%d tests passed", num_successes, num_successes + num_failures);
+    process.exit(1);
   }
 }
 

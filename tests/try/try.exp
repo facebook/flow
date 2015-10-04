@@ -1,13 +1,19 @@
 
+return.js:28:3,15: 
+unreachable code
+
+return.js:64:3,8: 
+unreachable code
+
 test.js:12:5,7: function call
 Function cannot be called on
-  test.js:5:13,14: string
+test.js:5:13,14: string
 
 test.js:13:5,7: function call
 Callable signature not found in
-  test.js:13:5,5: object literal
+test.js:13:5,5: object literal
 
 test.js:34:5,8: 
 unreachable code
 
-Found 3 errors
+Found 5 errors

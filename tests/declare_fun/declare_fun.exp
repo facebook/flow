@@ -1,0 +1,6 @@
+
+test.js:7:6,10: boolean
+This type is incompatible with
+test.js:7:14,17: undefined
+
+Found 1 error

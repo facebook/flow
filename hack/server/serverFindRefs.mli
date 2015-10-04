@@ -8,10 +8,14 @@
  *
  *)
 
+type action =
+  | Class of string
+  | Method of string * string
+  | Function of string
+
 type result = (string * Pos.absolute) list
 
-val get_refs_with_defs : ServerMsg.find_refs_action -> ServerEnv.genv ->
+val get_refs_with_defs : action -> ServerEnv.genv ->
   ServerEnv.env -> (Naming_heap.FunHeap.key * Pos.t) list
 
-val go : ServerMsg.find_refs_action -> ServerEnv.genv -> ServerEnv.env ->
-  out_channel -> unit
+val go : action -> ServerEnv.genv -> ServerEnv.env -> result

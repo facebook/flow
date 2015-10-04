@@ -17,6 +17,10 @@ There are binary distributions for Mac OS X and many variants of Linux; you can 
 
 Flow is written in OCaml (OCaml 4.01.0 or higher is required) and (on Linux) requires libelf. You can install OCaml on Mac OS X and Linux by following the instructions at [ocaml.org](https://ocaml.org/docs/install.html). 
 
+For example, on Ubuntu 14.04 and similar systems:
+
+    sudo apt-get install ocaml libelf-dev
+
 Once you have these dependencies, building Flow just requires running
 
 ```
@@ -27,9 +31,27 @@ This produces a `bin` folder containing the `flow` binary.
 
 *Note: at this time, the OCaml dependency prevents us from adding Flow to [npm](http://npmjs.org). Try [flow-bin](https://www.npmjs.org/package/flow-bin) if you need a npm binary wrapper.*
 
+## Running the tests
+
+To run the tests first compile flow using `make`. Then run `bash ./runtests.sh bin/flow`
+
+There is a `make test` target that compiles and runs tests.
+
+To run a subset of the tests you can pass a second argument to the `runtests.sh` file.
+
+For example: `bash runtests.sh bin/flow class | grep -v 'Skipping directory'`
+
 ## Installing Flow
 
 Flow is simple to install: all you need is the `flow` binary on your PATH and you're good to go. 
+
+## Using Homebrew
+
+Flow for [Homebrew](http://brew.sh/) is available:
+
+```
+brew install flow
+```
 
 ## Using OPAM
 

@@ -7,50 +7,47 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  *)
-open Utils
 
 val with_expr_hook:
-  (Nast.expr -> Typing_defs.ty -> unit) -> (unit -> 'a) -> 'a
+  (Nast.expr -> Typing_defs.locl Typing_defs.ty -> unit) -> (unit -> 'a) -> 'a
 
 val debug_print_last_pos:
   'a -> unit
 
 val fun_decl:
-  Nast.fun_ -> unit
+  Naming.env -> Nast.fun_ -> unit
 
 val gconst_decl:
-  Nast.gconst -> unit
+  TypecheckerOptions.t -> Nast.gconst -> unit
 
 val fun_def:
-  Typing_env.env -> 'a -> Nast.fun_ -> unit
+  Typing_env.env -> Naming.env -> 'a -> Nast.fun_ -> unit
 val class_def:
-  Typing_env.env -> 'a -> Nast.class_ -> unit
+  Typing_env.env -> Naming.env -> 'a -> Nast.class_ -> unit
 val typedef_def:
-  Typing_env.env -> string -> Nast.typedef -> unit
+  Typing_env.env -> Nast.typedef -> unit
 
 val expr:
-  Typing_env.env -> Nast.expr -> Typing_env.env * Typing_defs.ty
+  Typing_env.env -> Nast.expr ->
+  Typing_env.env * Typing_defs.locl Typing_defs.ty
+
+val ret_from_fun_kind: Pos.t -> Ast.fun_kind -> Typing_defs.decl Typing_defs.ty
 
 val make_param_ty:
   Typing_env.env -> Typing_reason.t -> Nast.fun_param ->
-  Typing_env.env * (string option * Typing_defs.ty)
+  Typing_env.env * (string option * Typing_defs.decl Typing_defs.ty)
 
 val make_params:
   Typing_env.env -> bool -> int -> Nast.fun_param list ->
-  Typing_env.env * int * Typing_defs.fun_params
+  Typing_env.env * int * Typing_defs.decl Typing_defs.fun_params
 
 val type_param:
   Typing_env.env -> Nast.tparam ->
   Typing_env.env * Typing_defs.tparam
 
-val get_implements:
-  with_checks:bool ->
-  this:Typing_defs.ty ->
-  Typing_env.env ->
-  Nast.hint ->
-  Typing_env.env * (Typing_defs.ty SMap.t * Typing_defs.ty SMap.t)
-
-val get_self_from_c: Typing_env.env -> Nast.class_ -> Typing_defs.ty
+val get_self_from_c:
+  Typing_env.env -> Nast.class_ ->
+  Typing_defs.decl Typing_defs.ty
 
 val is_visible:
   Typing_env.env ->

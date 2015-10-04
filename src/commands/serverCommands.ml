@@ -12,145 +12,177 @@
 (* server commands *)
 (***********************************************************************)
 
+open CommandUtils
+
 type mode = Check | Normal | Detach
 
 module type CONFIG = sig
   val mode : mode
 end
 
-module OptionParser(Config : CONFIG) : Server.OPTION_PARSER = struct
+module OptionParser(Config : CONFIG) = struct
+  let cmdname = match Config.mode with
+  | Check -> "check"
+  | Normal -> "server"
+  | Detach -> "start"
+
+  let cmddoc = match Config.mode with
+  | Check -> "Does a full Flow check and prints the results"
+  | Normal -> "Runs a Flow server in the foreground"
+  | Detach -> "Starts a Flow server"
+
+  let common_args prev = CommandSpec.ArgSpec.(
+    prev
+    |> flag "--debug" no_arg
+        ~doc:"Print debug info during typecheck"
+    |> flag "--verbose" no_arg
+        ~doc:"Print verbose info during typecheck"
+    |> flag "--all" no_arg
+        ~doc:"Typecheck all files, not just @flow"
+    |> flag "--weak" no_arg
+        ~doc:"Typecheck with weak inference, assuming dynamic types by default"
+    |> flag "--traces" (optional int)
+        ~doc:"Outline an error path up to a specified level"
+    |> flag "--strip-root" no_arg
+        ~doc:"Print paths without the root"
+    |> flag "--lib" (optional string)
+        ~doc:"Specify one or more library paths, comma separated"
+    |> flag "--no-flowlib" no_arg
+        ~doc:"Do not include embedded declarations"
+    |> anon "root" (optional string) ~doc:"Root directory"
+  )
+
+  let args = match Config.mode with
+  | Check -> CommandSpec.ArgSpec.(
+      empty
+      |> error_flags
+      |> flag "--json" no_arg
+          ~doc:"Output errors in JSON format"
+      |> flag "--profile" no_arg
+          ~doc:"Output profiling information"
+      |> flag "--quiet" no_arg
+          ~doc:"Suppress info messages to stdout (included in --json)"
+      |> dummy None  (* log-file *)
+      |> common_args
+    )
+  | Normal -> CommandSpec.ArgSpec.(
+      empty
+      |> dummy Errors_js.default_flags (* error_flags *)
+      |> dummy false (* json *)
+      |> dummy false (* profile *)
+      |> dummy false (* quiet *)
+      |> dummy None  (* log-file *)
+      |> common_args
+    )
+  | Detach -> CommandSpec.ArgSpec.(
+      empty
+      |> dummy Errors_js.default_flags (* error_flags *)
+      |> dummy false (* json *)
+      |> dummy false (* profile *)
+      |> dummy false (* quiet *)
+      |> flag "--log-file" string
+          ~doc:"Path to log file (default: /tmp/flow/<escaped root path>.log)"
+      |> common_args
+    )
+
+  let spec = {
+    CommandSpec.
+    name = cmdname;
+    doc = cmddoc;
+    args;
+    usage = Printf.sprintf
+      "Usage: %s %s [OPTION]... [ROOT]\n\
+        %s\n\n\
+        Flow will search upward for a .flowconfig file, beginning at ROOT.\n\
+        ROOT is assumed to be the current directory if unspecified.\n\
+        A server will be started if none is running over ROOT.\n"
+        exe_name cmdname cmddoc;
+  }
+
   let result = ref None
-  let do_parse () =
+  let main error_flags json profile quiet log_file debug verbose all
+           weak traces strip_root lib no_flowlib root () =
+    let root = CommandUtils.guess_root root in
+    let flowconfig = FlowConfig.get root in
+    let opt_module = FlowConfig.(match flowconfig.options.moduleSystem with
+    | Node -> "node"
+    | Haste -> "haste") in
+    let opt_libs = FlowConfig.(match lib with
+    | None -> flowconfig.libs
+    | Some libs ->
+        let libs = libs
+        |> Str.split (Str.regexp ",")
+        |> List.map Path.make in
+        libs @ flowconfig.libs
+    ) in
+    let opt_traces = match traces with
+      | Some level -> level
+      | None -> FlowConfig.(flowconfig.options.traces) in
+    let opt_strip_root = strip_root ||
+      FlowConfig.(flowconfig.options.strip_root) in
+    let opt_log_file = match log_file with
+      | Some s ->
+          let dirname = Path.make (Filename.dirname s) in
+          let basename = Filename.basename s in
+          Path.concat dirname basename
+      | None ->
+          FlowConfig.(flowconfig.options.log_file)
+    in
+
+    result := Some {
+      Options.opt_check_mode = Config.(mode = Check);
+      Options.opt_error_flags = error_flags;
+      Options.opt_log_file = opt_log_file;
+      Options.opt_root = root;
+      Options.opt_should_detach = Config.(mode = Detach);
+      Options.opt_debug = debug;
+      Options.opt_verbose = verbose;
+      Options.opt_all = all;
+      Options.opt_weak = weak;
+      Options.opt_traces;
+      Options.opt_strict = true;
+      Options.opt_json = json;
+      Options.opt_quiet = quiet || json;
+      Options.opt_module_name_mappers = FlowConfig.(
+        flowconfig.options.module_name_mappers
+      );
+      Options.opt_profile = profile;
+      Options.opt_strip_root;
+      Options.opt_module;
+      Options.opt_libs;
+      Options.opt_no_flowlib = no_flowlib;
+    };
+    ()
+
+  let rec parse () =
     match !result with
     | Some result -> result
     | None ->
-      let debug = ref false in
-      let all = ref false in
-      let weak = ref false in
-      let traces = ref false in
-      let console = ref false in
-      let json = ref false in
-      let show_all_errors = ref false in
-      let quiet = ref false in
-      let profile = ref false in
-      let strip_root = ref false in
-      let lib = ref None in
-      let no_flowlib = ref false in
-      let variant_opts = match Config.mode with
-      | Check -> [
-        "--json", CommandUtils.arg_set_unit json,
-          " Output errors in JSON format";
-        "--show-all-errors", CommandUtils.arg_set_unit show_all_errors,
-          " Print all errors (the default is to truncate after 50 errors)";
-        "--profile", CommandUtils.arg_set_unit profile,
-          " Output profiling information";
-        "--quiet", CommandUtils.arg_set_unit quiet,
-          " Suppress info messages to stdout (included in --json)"; ]
-      | _ -> [] in
-      let options = CommandUtils.sort_opts (List.append variant_opts [
-        "--debug", CommandUtils.arg_set_unit debug,
-          " Print debug info during typecheck";
-        "--all", CommandUtils.arg_set_unit all,
-          " Typecheck all files, not just @flow";
-        "--weak", CommandUtils.arg_set_unit weak,
-          " Typecheck with weak inference, assuming dynamic types by default";
-        "--traces", CommandUtils.arg_set_unit traces,
-          " Outline an error path";
-        "--strip-root", CommandUtils.arg_set_unit strip_root,
-          " Print paths without the root";
-        "--lib", CommandUtils.arg_set_string lib,
-          " Specify one or more library paths, comma separated";
-        "--no-flowlib", CommandUtils.arg_set_unit no_flowlib,
-          " Do not include embedded declarations";
-      ]) in
-      let cmdname = match Config.mode with
-        | Check -> "check" | Normal -> "server" | Detach -> "start"
-      in
-      let usage = (Printf.sprintf "Usage: %s %s [OPTION]... [ROOT]\n"
-        CommandUtils.exe_name cmdname)
-      ^
-      (match Config.mode with
-      | Check -> "Does a full Flow check and prints the results\n\n"
-      | Normal -> "Runs a Flow server in the foreground\n\n"
-      | Detach -> "Starts a Flow server\n\n")
-      ^
-      "Flow will search upward for a .flowconfig file, beginning at ROOT.\n\
-      ROOT is assumed to be the current directory if unspecified.\n\
-      A server will be started if none is running over ROOT.\n"
-      in
-      let args = ClientArgs.parse_without_command options usage cmdname in
-      let root = match args with
-      | [] -> CommandUtils.guess_root None
-      | [x] -> CommandUtils.guess_root (Some x)
-      | _ -> Arg.usage options usage; exit 2 in
-      let flowconfig = FlowConfig.get root in
-      let opt_module = FlowConfig.(match flowconfig.options.moduleSystem with
-      | Node -> "node"
-      | Haste -> "haste") in
-      let opt_libs = FlowConfig.(match !lib with
-      | None -> flowconfig.libs
-      | Some libs ->
-          let libs = libs
-          |> Str.split (Str.regexp ",")
-          |> List.map Path.mk_path in
-          libs @ flowconfig.libs
-      ) in
-      let opt_traces = !traces || FlowConfig.(flowconfig.options.traces) in
-
-      (* hack opts and flow opts: latter extends the former *)
-      let ret = ({
-        ServerArgs.check_mode    = Config.(mode = Check);
-        ServerArgs.json_mode     = !json;
-        ServerArgs.root          = root;
-        ServerArgs.should_detach = Config.(mode = Detach);
-        ServerArgs.convert       = None;
-        ServerArgs.no_load       = false;
-        ServerArgs.save_filename = None;
-      },
-      {
-        Types_js.opt_debug = !debug;
-        Types_js.opt_all = !all;
-        Types_js.opt_weak = !weak;
-        Types_js.opt_traces;
-        Types_js.opt_newtraces = false;
-        Types_js.opt_strict = true;
-        Types_js.opt_console = !console;
-        Types_js.opt_json = !json;
-        Types_js.opt_show_all_errors = !show_all_errors;
-        Types_js.opt_quiet = !quiet || !json;
-        Types_js.opt_profile = !profile;
-        Types_js.opt_strip_root = !strip_root;
-        Types_js.opt_module;
-        Types_js.opt_libs;
-        Types_js.opt_no_flowlib = !no_flowlib;
-      }) in
-      result := Some ret;
-      ret
-
-  let parse () = fst (do_parse ())
-  let get_flow_options () = snd (do_parse ())
+        let argv = Array.to_list Sys.argv in
+        CommandSpec.main spec main argv;
+        parse ()
 end
 
-module Main (Config : CONFIG) =
-  ServerFunctors.ServerMain (Server.FlowProgram (OptionParser (Config)))
+module Main (OptionParser : Server.OPTION_PARSER) =
+  ServerFunctors.ServerMain (Server.FlowProgram (OptionParser))
 
 module Check = struct
-  module Main = Main (struct let mode = Check end)
-  let name = "check"
-  let doc = "Does a full Flow check and prints the results"
-  let run = Main.start
+  module OptionParser = OptionParser (struct let mode = Check end)
+  module Main = Main (OptionParser)
+  let spec = OptionParser.spec
+  let command = CommandSpec.raw_command spec (fun argv -> Main.start ())
 end
 
 module Server = struct
-  module Main = Main (struct let mode = Normal end)
-  let name = "server"
-  let doc = "Runs a Flow server (not normally invoked from the command line)"
-  let run = Main.start
+  module OptionParser = OptionParser (struct let mode = Normal end)
+  module Main = Main (OptionParser)
+  let spec = OptionParser.spec
+  let command = CommandSpec.raw_command spec (fun argv -> Main.start ())
 end
 
 module Start = struct
-  module Main = Main (struct let mode = Detach end)
-  let name = "start"
-  let doc = "Starts a Flow server"
-  let run = Main.start
+  module OptionParser = OptionParser (struct let mode = Detach end)
+  module Main = Main (OptionParser)
+  let spec = OptionParser.spec
+  let command = CommandSpec.raw_command spec (fun argv -> Main.start ())
 end

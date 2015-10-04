@@ -1,18 +1,18 @@
 
 enum_client.js:6:5,14: string literal LOCATION
 Property not found in
-  enum.js:6:18,24: object literal
+enum.js:6:18,24: object literal
 
 enum_client.js:10:5,16: string literal name
 Property not found in
-  enum_client.js:8:23,35: object type
+enum_client.js:8:23,35: object type
 
 enum_client.js:14:24,28: string
 This type is incompatible with
-  enum_client.js:17:10,15: number
+enum_client.js:17:10,15: number
 
 enum_client.js:20:14,15: number
 This type is incompatible with
-  enum_client.js:21:9,14: string
+enum_client.js:21:9,14: string
 
 Found 4 errors

@@ -1,17 +1,15 @@
-//function foo<U> (x: Array<U> | U): Array<U> { return []; }
-
-//var x1:number = foo(0)[0];
-//var x2:string = foo([0])[0];
-
 function bar(x: Document | string): void { }
 bar(0);
 
 class C { }
 class D { }
-var E = C || D;
-var c:C = new E();
-function qux(e: E | string) { }
-qux(new C);
+function CD(b) {
+  var E = b? C: D;
+  var c:C = new E(); // error, since E could be D, and D is not a subtype of C
+  function qux(e: E) { } // this annotation is an error: is it C, or is it D?
+  function qux2(e: C | D) { } // OK
+  qux2(new C);
+}
 
 declare class F {
     foo(x: number):void;
