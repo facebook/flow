@@ -1,10 +1,10 @@
 
 test.js:5:39,42: intersection type
 This type is incompatible with
-test.js:5:12,35: object type
+  test.js:5:12,35: object type
 
 test.js:9:43,46: intersection type
 This type is incompatible with
-test.js:9:12,39: function type
+  test.js:9:12,39: function type
 
 Found 2 errors

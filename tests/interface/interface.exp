@@ -1,9 +1,6 @@
 
 interface.js:1:22,27: number
 This type is incompatible with
-interface.js:3:8,13: string
+  interface.js:3:8,13: string
 
-interface.js:7:13,13: identifier I
-Could not resolve name
-
-Found 2 errors
+Found 1 error

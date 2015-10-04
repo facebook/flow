@@ -8,6 +8,4 @@
  *
  *)
 
-open Utils
-
-val run_daemon: Path.t list -> (unit, SSet.t) Daemon.channel_pair -> unit
+val fork_in_pipe: string list -> Unix.file_descr * Unix.file_descr * int

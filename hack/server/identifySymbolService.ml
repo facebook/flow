@@ -44,13 +44,13 @@ let process_method result_ref is_target_fun c_name id =
            }
   end
 
-let process_method_id result_ref is_target_fun class_ id _ _ ~is_method =
+let process_method_id result_ref is_target_fun class_ id _ _ =
   let class_name = class_.Typing_defs.tc_name in
   process_method result_ref is_target_fun class_name id
 
 let process_constructor result_ref is_target_fun class_ _ p =
   process_method_id
-    result_ref is_target_fun class_ (p, "__construct") () () ~is_method:true
+    result_ref is_target_fun class_ (p, "__construct") () ()
 
 let process_fun_id result_ref is_target_fun id =
   if is_target_fun (fst id)

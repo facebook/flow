@@ -10,7 +10,7 @@
 
 type result = int * (string option * string) list
 
-let go genv env content line char =
+let go genv env oc content line char =
   ArgumentInfoService.attach_hooks (line, char);
   let funs, classes = ServerIdeUtils.declare Relative_path.default content in
   ServerIdeUtils.fix_file_and_def Relative_path.default content;
@@ -21,4 +21,5 @@ let go genv env content line char =
   in
   ArgumentInfoService.detach_hooks();
   ServerIdeUtils.revive funs classes;
-  pos, expected
+  Marshal.to_channel oc ((pos, expected) : result) [];
+  flush oc

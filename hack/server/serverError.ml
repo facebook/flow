@@ -12,7 +12,6 @@
 (*****************************************************************************)
 (* Error module                                                              *)
 (*****************************************************************************)
-open Core
 open Utils
 module Json = Hh_json
 
@@ -24,7 +23,7 @@ let print_errorl_json oc el =
                     "version", Json.JString Build_id.build_id_ohai;
                   ]
     else
-      let errors_json = List.map ~f:Errors.to_json el in
+      let errors_json = List.map Errors.to_json el in
       Json.JAssoc [ "passed", Json.JBool false;
                     "errors", Json.JList errors_json;
                     "version", Json.JString Build_id.build_id_ohai;
@@ -41,9 +40,9 @@ let print_errorl use_json el oc =
     if el = []
     then output_string oc "No errors!\n"
     else
-      let sl = List.map ~f:Errors.to_string el in
-      let sl = uniq (List.sort ~cmp:String.compare sl) in
-      List.iter ~f:begin fun s ->
+      let sl = List.map Errors.to_string el in
+      let sl = uniq (List.sort String.compare sl) in
+      List.iter begin fun s ->
         if !debug then begin
           output_string stdout s;
           flush stdout;
@@ -54,7 +53,15 @@ let print_errorl use_json el oc =
   end;
   flush oc
 
-let sort_errorl el =
-  List.sort ~cmp:begin fun x y ->
-    Pos.compare (Errors.get_pos x) (Errors.get_pos y)
-  end el
+let send_errorl el oc =
+  if el = []
+  then
+    ServerMsg.response_to_channel oc ServerMsg.NO_ERRORS
+  else begin
+    let el = List.sort begin fun x y ->
+      Pos.compare (Errors.get_pos x) (Errors.get_pos y)
+    end el in
+    let el = rev_rev_map Errors.to_absolute el in
+    ServerMsg.response_to_channel oc (ServerMsg.ERRORS el);
+  end;
+  flush oc

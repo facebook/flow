@@ -1,82 +1,35 @@
 var React = require('React');
 
-type DefaultProps = { };
-type Props = { x: number };
-type State = { y: number };
-
 class Foo extends React.Component {
-  props: Props;
-  state: State;
-  static defaultProps: DefaultProps;
+    is_mounted: boolean;
+    props: { x: number };
+    state: { y: number };
 
-  is_mounted: boolean;
+    static bar(): void {}
 
-  static bar(): void {}
+    qux(): void {
+        var _: string = this.props.x;
+    }
 
-  qux(): void {
-    var _: string = this.props.x;
-  }
+    getInitialState(): { y: string } {
+        return { y: "" };
+    }
 
-  getInitialState(): { y: string } {
-    return { y: "" };
-  }
+    setState(o: { y_: string }): void { }
 
-  setState(o: { y_: string }): void { }
+    componentDidMount(): void {
+        this.is_mounted = true;
+    }
 
-  componentDidMount(): void {
-    this.is_mounted = true;
-  }
-
-  componentWillReceiveProps(
-    nextProps: Object,
-    nextContext: any
-  ): void {
-    this.qux();
-  }
-
+    componentWillReceiveProps(
+        nextProps: Object,
+        nextContext: any
+    ): void {
+        this.qux();
+    }
 }
 
 Foo.defaultProps = 0;
-var foo: $jsx<number> = <Foo/>;
+var foo = <Foo/>;
 
 Foo.bar();
-
-var FooLegacy = React.createClass({
-  is_mounted: (undefined: ?boolean),
-
-  propTypes: {
-    x: React.PropTypes.number.isRequired
-  },
-
-  getDefaultProps(): DefaultProps { return {} },
-
-  statics: {
-    bar(): void {}
-  },
-
-  qux(): void {
-    var _: string = this.props.x;
-  },
-
-  getInitialState(): { y: string } {
-    return { y: "" };
-  },
-
-  setState(o: { y_: string }): void { },
-
-  componentDidMount(): void {
-    this.is_mounted = true;
-  },
-
-  componentWillReceiveProps(
-    nextProps: Object,
-    nextContext: any
-  ): void {
-    this.qux();
-  },
-});
-
-FooLegacy.defaultProps = 0; // TODO: should be error
-var foo_legacy: $jsx<number> = <FooLegacy/>;
-
-FooLegacy.bar();

@@ -17,13 +17,12 @@ module L = Lexer_hack
 (*****************************************************************************)
 
 type env = {
-  file      : Relative_path.t;
-  mode      : FileInfo.mode;
-  priority  : int;
-  lb        : Lexing.lexbuf;
-  errors    : (Pos.t * string) list ref;
-  in_generator : bool ref;
-}
+    file      : Relative_path.t;
+    mode      : FileInfo.mode;
+    priority  : int;
+    lb        : Lexing.lexbuf;
+    errors    : (Pos.t * string) list ref;
+  }
 
 let init_env file lb = {
   file     = file;
@@ -31,7 +30,6 @@ let init_env file lb = {
   priority = 0;
   lb       = lb;
   errors   = ref [];
-  in_generator = ref false;
 }
 
 type parser_return = {
@@ -397,7 +395,7 @@ let variable env =
       Pos.make env.file env.lb, Lexing.lexeme env.lb
   | _ ->
       error_expect env "variable";
-      Pos.make env.file env.lb, "$_" (* SpecialIdents.placeholder *)
+      Pos.make env.file env.lb, "$_"
 
 (* &$variable *)
 let ref_variable env =
@@ -607,17 +605,31 @@ and toplevel_word ~attr env = function
       [Class class_]
   | "async" ->
       expect_word env "function";
-      let fun_ = fun_ ~attr ~sync:FDeclAsync env in
+      let fun_ = fun_ ~attr ~sync:FAsync env in
       [Fun fun_]
   | "function" ->
-      let fun_ = fun_ ~attr ~sync:FDeclSync env in
+      let fun_ = fun_ ~attr ~sync:FSync env in
       [Fun fun_]
   | "newtype" ->
-      let typedef_ = typedef ~attr ~is_abstract:true env in
-      [Typedef typedef_]
+      let id, tparaml, tconstraint, typedef = typedef env in
+      [Typedef {
+          t_id = id;
+          t_tparams = tparaml;
+          t_constraint = tconstraint;
+          t_kind = NewType typedef;
+          t_namespace = Namespace_env.empty;
+          t_mode = env.mode;
+      }]
   | "type" ->
-      let typedef_ = typedef ~attr ~is_abstract:false env in
-      [Typedef typedef_]
+      let id, tparaml, tconstraint, typedef = typedef env in
+      [Typedef {
+          t_id = id;
+          t_tparams = tparaml;
+          t_constraint = tconstraint;
+          t_kind = Alias typedef;
+          t_namespace = Namespace_env.empty;
+          t_mode = env.mode;
+      }]
   | "namespace" ->
       let id, body = namespace env in
       [Namespace (id, body)]
@@ -714,23 +726,23 @@ and attribute_list_remain env =
 (* Functions *)
 (*****************************************************************************)
 
-and fun_ ~attr ~(sync:fun_decl_kind) env =
+and fun_ ~attr ~sync env =
   let is_ref = ref_opt env in
-  if is_ref && sync = FDeclAsync
+  if is_ref && sync = FAsync
     then error env ("Asynchronous function cannot return reference");
   let name = identifier env in
   let tparams = class_params env in
   let params = parameter_list env in
   let ret = hint_return_opt env in
-  let is_generator, body_stmts = function_body env in
+  let body = function_body env in
   { f_name = name;
     f_tparams = tparams;
     f_params = params;
     f_ret = ret;
     f_ret_by_ref = is_ref;
-    f_body = body_stmts;
+    f_body = body;
     f_user_attributes = attr;
-    f_fun_kind = fun_kind sync is_generator;
+    f_fun_kind = sync;
     f_mode = env.mode;
     f_mtime = 0.0;
     f_namespace = Namespace_env.empty;
@@ -747,7 +759,7 @@ and class_ ~attr ~final ~kind env =
   let cextends    =
     if kind = Ctrait then []
     else class_extends ~single:(kind <> Cinterface) env in
-  let cimplements = class_implements kind env in
+  let cimplements = class_implements env in
   let cbody       = class_body env in
   let result =
     { c_mode            = env.mode;
@@ -841,16 +853,11 @@ and class_extends ~single env =
       error_expect env "{";
       []
 
-and class_implements kind env =
+and class_implements env =
   match L.token env.file env.lb with
   | Tword ->
       (match Lexing.lexeme env.lb with
-      | "implements" ->
-         let impl = class_extends_list env in
-         if kind = Cinterface then begin
-           error env "Expected: extends; Got implements"; []
-         end else
-           impl
+      | "implements" -> class_extends_list env
       | "extends" -> L.back env.lb; []
       | s -> error env ("Expected: implements; Got: "^s); []
       )
@@ -934,9 +941,8 @@ and class_param_name env =
 
 and class_parameter_constraint env =
   match L.token env.file env.lb with
-  | Tword when Lexing.lexeme env.lb = "as" -> Some (Constraint_as, hint env)
-  | Tword when Lexing.lexeme env.lb = "super" ->
-      Some (Constraint_super, hint env)
+  | Tword when Lexing.lexeme env.lb = "as" ->
+      Some (hint env)
   | _ -> L.back env.lb; None
 
 (*****************************************************************************)
@@ -981,9 +987,6 @@ and hint env =
       let e = hint env in
       Pos.btw start (fst e), Hoption e
   (* A<_> *)(* :XHPNAME *)
-  | Tword when Lexing.lexeme env.lb = "shape" ->
-      let pos = Pos.make env.file env.lb in
-      pos, Hshape (hint_shape_field_list env pos)
   | Tword | Tcolon when Lexing.lexeme env.lb <> "function" ->
       L.back env.lb;
       hint_apply_or_access env []
@@ -1625,13 +1628,13 @@ and class_member_word env ~attrs ~modifiers = function
         then error env ("Asynchronous function cannot return reference");
       let fun_name = identifier env in
       let method_ =
-        method_ env ~modifiers ~attrs ~sync:FDeclAsync is_ref fun_name in
+        method_ env ~modifiers ~attrs ~sync:FAsync is_ref fun_name in
       Method method_
   | "function" ->
       let is_ref = ref_opt env in
       let fun_name = identifier env in
       let method_ =
-        method_ env ~modifiers ~attrs ~sync:FDeclSync is_ref fun_name in
+        method_ env ~modifiers ~attrs ~sync:FSync is_ref fun_name in
       Method method_
   | _ ->
       L.back env.lb;
@@ -1659,12 +1662,12 @@ and typeconst_def env ~is_abstract =
     tconst_type = type_;
   }
 
-and method_ env ~modifiers ~attrs ~(sync:fun_decl_kind) is_ref pname =
+and method_ env ~modifiers ~attrs ~sync is_ref pname =
   let pos, name = pname in
   let tparams = class_params env in
   let params = parameter_list env in
   let ret = hint_return_opt env in
-  let is_generator, body_stmts = function_body env in
+  let body = function_body env in
   let ret = method_implicit_return env pname ret in
   if name = "__destruct" && params <> []
   then error_at env pos "Destructor must not have any parameters.";
@@ -1673,10 +1676,10 @@ and method_ env ~modifiers ~attrs ~(sync:fun_decl_kind) is_ref pname =
     m_params = params;
     m_ret = ret;
     m_ret_by_ref = is_ref;
-    m_body = body_stmts;
+    m_body = body;
     m_kind = modifiers;
     m_user_attributes = attrs;
-    m_fun_kind = fun_kind sync is_generator;
+    m_fun_kind = sync;
   }
 
 (*****************************************************************************)
@@ -1744,76 +1747,51 @@ and param_implicit_field vis p =
 
 and function_body env =
   match L.token env.file env.lb with
-  | Tsc ->
-    false, []
+  | Tsc -> []
   | Tlcb ->
-    let previous_in_generator = !(env.in_generator) in
-    env.in_generator := false;
-    let statements = (match env.mode with
+      (match env.mode with
       | FileInfo.Mdecl ->
-        ignore_body env;
-        (* This is a hack for the type-checker to make a distinction
-         * Between function foo(); and function foo() {}
-         *)
-        [Noop]
+          ignore_body env;
+          (* This is a hack for the type-checker to make a distinction
+           * Between function foo(); and function foo() {}
+           *)
+          [Noop]
       | _ ->
-        (match statement_list env with
+          (match statement_list env with
           | [] -> [Noop]
           | x -> x)
-    ) in
-    let in_generator = !(env.in_generator) in
-    env.in_generator := previous_in_generator ;
-    in_generator, statements
-  | _ ->
-    error_expect env "{";
-    false, []
-
-and fun_kind sync (has_yield:bool) =
-  match sync, has_yield with
-    | FDeclAsync, true -> FAsyncGenerator
-    | FDeclSync, true -> FGenerator
-    | FDeclAsync, false -> FAsync
-    | FDeclSync, false -> FSync
+      )
+  | _ -> error_expect env "{"; []
 
 and ignore_body env =
   match L.token env.file env.lb with
   | Tlcb -> ignore_body env; ignore_body env
   | Trcb -> ()
   | Tquote ->
-    let pos = Pos.make env.file env.lb in
-    let abs_pos = env.lb.Lexing.lex_curr_pos in
-    ignore (expr_string env pos abs_pos);
-    ignore_body env
+      let pos = Pos.make env.file env.lb in
+      let abs_pos = env.lb.Lexing.lex_curr_pos in
+      ignore (expr_string env pos abs_pos);
+      ignore_body env
   | Tdquote ->
-    let pos = Pos.make env.file env.lb in
-    ignore (expr_encapsed env pos);
-    ignore_body env
+      let pos = Pos.make env.file env.lb in
+      ignore (expr_encapsed env pos);
+      ignore_body env
   | Theredoc ->
-    ignore (expr_heredoc env);
-    ignore_body env
-  | Tword when (Lexing.lexeme env.lb) = "yield" ->
-    env.in_generator := true;
-    ignore_body env
+      ignore (expr_heredoc env);
+      ignore_body env
   | Tword when (Lexing.lexeme env.lb) = "function" && peek env = Tlp ->
-    (* this covers the async case as well *)
-    let pos = Pos.make env.file env.lb in
-    with_ignored_yield env
-      (fun () -> ignore (expr_anon_fun env pos ~sync:FDeclSync));
-    ignore_body env
+  (* this covers the async case as well *)
+      let pos = Pos.make env.file env.lb in
+      ignore (expr_anon_fun env pos ~sync:FSync);
+      ignore_body env
   | Tlp ->
-    with_ignored_yield env
-      (fun () -> ignore (try_short_lambda env));
-    ignore_body env
+      ignore (try_short_lambda env);
+      ignore_body env
   | Tlt when is_xhp env ->
-    ignore (xhp env);
-    ignore_body env
+      ignore (xhp env);
+      ignore_body env
   | Teof -> error_expect env "}"; ()
   | _ -> ignore_body env
-
-and with_ignored_yield env fn =
-  let previous_in_generator = !(env.in_generator) in
-  let () = fn () in
-  env.in_generator := previous_in_generator; ()
 
 (*****************************************************************************)
 (* Statements *)
@@ -2515,28 +2493,26 @@ and lambda_expr_body : env -> block = fun env ->
   let (p, e1) = expr env in
   [Return (p, (Some (p, e1)))]
 
-and lambda_body ~sync env params ret =
-  let is_generator, body_stmts =
-    (if peek env = Tlcb
-     then function_body env
-     (* as of Apr 2015, a lambda expression body can't contain a yield *)
-     else false, (lambda_expr_body env))
+and lambda_body env params ret ~sync =
+  let body =
+    if peek env = Tlcb
+    then function_body env
+    else lambda_expr_body env
   in
-  let f_fun_kind = fun_kind sync is_generator in
   let f = {
     f_name = (Pos.none, ";anonymous");
     f_tparams = [];
     f_params = params;
     f_ret = ret;
     f_ret_by_ref = false;
-    f_body = body_stmts;
+    f_body = body;
     f_user_attributes = [];
-    f_fun_kind;
+    f_fun_kind = sync;
     f_mode = env.mode;
     f_mtime = 0.0;
     f_namespace = Namespace_env.empty;
   }
-  in Lfun f
+  in Lfun f;
 
 and make_lambda_param : id -> fun_param = fun var_id ->
   {
@@ -2549,9 +2525,9 @@ and make_lambda_param : id -> fun_param = fun var_id ->
     param_user_attributes = [];
   }
 
-and lambda_single_arg ~(sync:fun_decl_kind) env var_id : expr_ =
+and lambda_single_arg env var_id ~sync =
   expect env Tlambda;
-  lambda_body ~sync env [make_lambda_param var_id] None
+  lambda_body env [make_lambda_param var_id] None ~sync
 
 and try_short_lambda env =
   try_parse env begin fun env ->
@@ -2569,7 +2545,7 @@ and try_short_lambda env =
       then None
       else begin
         drop env;
-        Some (lambda_body ~sync:FDeclSync env param_list ret)
+        Some (lambda_body env param_list ret ~sync:FSync)
       end
     end
   end
@@ -2626,8 +2602,8 @@ and expr_atomic ~allow_class ~class_const env =
       let tok_value = Lexing.lexeme env.lb in
       let var_id = (pos, tok_value) in
       pos, if peek env = Tlambda
-        then lambda_single_arg ~sync:FDeclSync env var_id
-        else Lvar var_id
+           then lambda_single_arg env var_id ~sync:FSync
+           else Lvar var_id
   | Tcolon ->
       L.back env.lb;
       let name = identifier env in
@@ -2694,13 +2670,12 @@ and expr_atomic_word ~allow_class ~class_const env pos = function
   | "async" ->
       expr_anon_async env pos
   | "function" ->
-      expr_anon_fun env pos ~sync:FDeclSync
+      expr_anon_fun env pos ~sync:FSync
   | name when is_collection env ->
       expr_collection env pos name
   | "await" ->
       expr_await env pos
   | "yield" ->
-      env.in_generator := true;
       expr_yield env pos
   | "clone" ->
       expr_clone env pos
@@ -2836,9 +2811,6 @@ and expr_call_list_remain env =
       let unpack_e = expr { env with priority = 0 } in
       (* no regular params after an unpack *)
       (match L.token env.file env.lb with
-        | Tcomma ->
-            expect env Trp;
-            [], [unpack_e]
         | Trp -> [], [unpack_e]
         | _ -> error_expect env ")"; [], [unpack_e])
     | _ ->
@@ -2973,38 +2945,38 @@ and expr_php_list env start =
 and expr_anon_async env pos =
   match L.token env.file env.lb with
   | Tword when Lexing.lexeme env.lb = "function" ->
-      expr_anon_fun env pos ~sync:FDeclAsync
+      expr_anon_fun env pos ~sync:FAsync
   | Tlvar ->
       let var_pos = Pos.make env.file env.lb in
-      pos, lambda_single_arg ~sync:FDeclAsync env (var_pos, Lexing.lexeme env.lb)
+      pos, lambda_single_arg env (var_pos, Lexing.lexeme env.lb) ~sync:FAsync
   | Tlp ->
       let param_list = parameter_list_remain env in
       let ret = hint_return_opt env in
       expect env Tlambda;
-      pos, lambda_body ~sync:FDeclAsync env param_list ret
+      pos, lambda_body env param_list ret ~sync:FAsync
   | Tlcb -> (* async { ... } *)
       L.back env.lb;
-      let lambda = pos, lambda_body ~sync:FDeclAsync env [] None in
+      let lambda = pos, lambda_body env [] None ~sync:FAsync in
       pos, Call (lambda, [], [])
   | _ ->
       L.back env.lb;
       pos, Id (pos, "async")
 
-and expr_anon_fun env pos ~(sync:fun_decl_kind) =
+and expr_anon_fun env pos ~sync =
   let env = { env with priority = 0 } in
   let params = parameter_list env in
   let ret = hint_return_opt env in
   let use = function_use env in
-  let is_generator, body_stmts = function_body env in
+  let body = function_body env in
   let f = {
     f_name = (Pos.none, ";anonymous");
     f_tparams = [];
     f_params = params;
     f_ret = ret;
     f_ret_by_ref = false;
-    f_body = body_stmts;
+    f_body = body;
     f_user_attributes = [];
-    f_fun_kind = fun_kind sync is_generator;
+    f_fun_kind = sync;
     f_mode = env.mode;
     f_mtime = 0.0;
     f_namespace = Namespace_env.empty;
@@ -3474,11 +3446,6 @@ and shape_field_name env =
   match e with
   | String p -> SFlit p
   | Class_const (id, ps) -> SFclass_const (id, ps)
-  | String2 (_, _) ->
-     error env
-           ("Shape field names cannot be strings enclosed by double quotes."
-            ^" Use single quotes instead.");
-     SFlit (pos, "")
   | _ -> error_expect env "string literal or class constant";
     SFlit (pos, "")
 
@@ -3647,23 +3614,14 @@ and xhp_body pos name env =
 (* Typedefs *)
 (*****************************************************************************)
 
-and typedef ~attr ~is_abstract env =
+and typedef env =
   let id = identifier env in
   let tparams = class_params env in
   let tconstraint = typedef_constraint env in
   expect env Teq;
-  let td = hint env in
+  let td = typedef_body env in
   expect env Tsc;
-  let kind = if is_abstract then NewType td else Alias td in
-  {
-    t_id = id;
-    t_tparams = tparams;
-    t_constraint = tconstraint;
-    t_kind = kind;
-    t_user_attributes = attr;
-    t_namespace = Namespace_env.empty;
-    t_mode = env.mode;
-  }
+  id, tparams, tconstraint, td
 
 and typedef_constraint env =
   match L.token env.file env.lb with
@@ -3673,34 +3631,36 @@ and typedef_constraint env =
       L.back env.lb;
       None
 
-and hint_shape_field_list env shape_keyword_pos =
+and typedef_body env =
   match L.token env.file env.lb with
-  | Tlp -> hint_shape_field_list_remain env
-  | _ ->
-    L.back env.lb;
-    error_at env shape_keyword_pos "\"shape\" is an invalid type; you need to \
-    declare and use a specific shape type.";
-    []
+  | Tword when Lexing.lexeme env.lb = "shape" ->
+      let pos = Pos.make env.file env.lb in
+      pos, Hshape (typedef_shape_field_list env)
+  | _ -> L.back env.lb; hint env
 
-and hint_shape_field_list_remain env =
+and typedef_shape_field_list env =
+  expect env Tlp;
+  typedef_shape_field_list_remain env
+
+and typedef_shape_field_list_remain env =
   match L.token env.file env.lb with
   | Trp -> []
   | _ ->
       L.back env.lb;
       let error_state = !(env.errors) in
-      let fd = hint_shape_field env in
+      let fd = typedef_shape_field env in
       match L.token env.file env.lb with
       | Trp ->
           [fd]
       | Tcomma ->
           if !(env.errors) != error_state
           then [fd]
-          else fd :: hint_shape_field_list_remain env
+          else fd :: typedef_shape_field_list_remain env
       | _ ->
           error_expect env ")";
           [fd]
 
-and hint_shape_field env =
+and typedef_shape_field env =
   let name = shape_field_name env in
   expect env Tsarrow;
   let ty = hint env in

@@ -1,16 +1,14 @@
 
 encaps.js:3:14,16: property x
 Property not found in
-encaps.js:2:13,13: A
+  encaps.js:2:13,13: A
 
-encaps.js:9:10,22: encaps tag
-Error:
+encaps.js:7:12,12: number
+This type is incompatible with
+  encaps.js:9:10,22: string
+
 encaps.js:9:10,22: string
 This type is incompatible with
-encaps.js:6:11,16: number
-
-encaps.js:16:2,7: string
-This type is incompatible with
-encaps.js:16:10,15: number
+  encaps.js:6:11,16: number
 
 Found 3 errors

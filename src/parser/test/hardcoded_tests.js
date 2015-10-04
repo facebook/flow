@@ -1121,7 +1121,7 @@ module.exports = {
     },
     'export default class A {}': {
       'body.0.declaration': {
-        'type': 'ClassDeclaration'
+        'type': 'ClassExpression'
       }
     }
   },
@@ -1502,68 +1502,6 @@ module.exports = {
       ],
     }
   },
-  'Number Literal Types': {
-    'var a: 123': {
-      'body.0.declarations.0.id.typeAnnotation.typeAnnotation': {
-        'type': 'NumberLiteralTypeAnnotation',
-        'value': 123,
-        'raw': '123',
-      }
-    },
-    'var a: 123.0': {
-      'body.0.declarations.0.id.typeAnnotation.typeAnnotation': {
-        'type': 'NumberLiteralTypeAnnotation',
-        'value': 123,
-        'raw': '123.0',
-      }
-    },
-    'var a: 0x7B': {
-      'body.0.declarations.0.id.typeAnnotation.typeAnnotation': {
-        'type': 'NumberLiteralTypeAnnotation',
-        'value': 123,
-        'raw': '0x7B',
-      }
-    },
-    'var a: 0b1111011': {
-      'body.0.declarations.0.id.typeAnnotation.typeAnnotation': {
-        'type': 'NumberLiteralTypeAnnotation',
-        'value': 123,
-        'raw': '0b1111011',
-      }
-    },
-    'var a: 0o173': {
-      'body.0.declarations.0.id.typeAnnotation.typeAnnotation': {
-        'type': 'NumberLiteralTypeAnnotation',
-        'value': 123,
-        'raw': '0o173',
-      }
-    }
-  },
-  'Invalid Number Literal Types': {
-    'var a: 0173': {
-      'errors': [
-        {
-          'message': 'Octal literals are not allowed in strict mode.',
-        }
-      ],
-    }
-  },
-  'Boolean Literal Types': {
-    'var a: true': {
-      'body.0.declarations.0.id.typeAnnotation.typeAnnotation': {
-        'type': 'BooleanLiteralTypeAnnotation',
-        'value': true,
-        'raw': 'true',
-      }
-    },
-    'var a: false': {
-      'body.0.declarations.0.id.typeAnnotation.typeAnnotation': {
-        'type': 'BooleanLiteralTypeAnnotation',
-        'value': false,
-        'raw': 'false',
-      }
-    }
-  },
   'Member Type': {
     'var a : A.B': {
       'body.0.declarations.0.id.typeAnnotation.typeAnnotation': {
@@ -1660,54 +1598,6 @@ module.exports = {
           'type': 'ObjectPattern',
         }
       ]
-    },
-    '(x: number): number => x': {
-      'body.0.expression': {
-        'params': [
-          {
-            'name': 'x',
-            'typeAnnotation.typeAnnotation.type': 'NumberTypeAnnotation',
-          },
-        ],
-        'returnType.typeAnnotation.type': 'NumberTypeAnnotation',
-      },
-    },
-    '<T>(x: T): T => x': {
-      'body.0.expression.typeParameters.params': [
-        {
-          'name': 'T',
-        }
-      ],
-    },
-  },
-  'Invalid Arrow Functions': {
-    'var f = x: number => 42': {
-      'errors': {
-        '0.message': 'Unexpected token :',
-      }
-    },
-    'label: typeThatIsActuallyAnParam => 42': {
-      'body': [
-        {
-          'type': 'LabeledStatement',
-          'body.expression.type': 'ArrowFunctionExpression',
-        },
-      ],
-    },
-    '<T>x => 42': {
-      'errors': {
-        '0.message': 'Unexpected token ILLEGAL',
-      },
-    },
-    '*x => x': {
-      'errors': {
-        '0.message': 'Unexpected token *',
-      },
-    },
-    '*(x) => x': {
-      'errors': {
-        '0.message': 'Unexpected token *',
-      },
     },
   },
   'Declare Module': {
@@ -2045,142 +1935,8 @@ module.exports = {
     },
     'var f = (a, ...b,) => b.concat(a);': {
       'errors': {
-        '0.message': 'Unexpected token ...',
+        '0.message': 'Rest parameter must be final parameter of an argument list',
       }
     },
   },
-  'Invalid For Of Loops': {
-    'for (var x = 42 of list) process(x);': {
-      'errors': {
-        '0.message': 'Invalid left-hand side in for-of',
-      },
-    },
-  },
-  'Async/Await': {
-    'async: while (async) { continue async; }': {},
-    'await: while (await) { continue await; }': {},
-    'var await = { await }': {},
-    'var async = { async }': {},
-    'var async = { async : foo }': {},
-    'async function f() { var await = { await : async function foo() {} } }':
-      {},
-    'async function f(async, await) { var x = await async; return x; }': {},
-    'function f() { return await; }': {},
-    'async function f() { return await; }': {
-      'errors': {
-        // inside an async function, await is considered a keyword
-        '0.message': 'Unexpected token ;',
-      },
-    },
-    'function f(x: async) : async { return x; }': {},
-    'declare async function foo() : T': {
-      'errors': {
-        '0.message': "async is an implementation detail and isn't necessary " +
-          "for your declare function statement. It is sufficient for your " +
-          "declare function to just have a Promise return type.",
-      },
-    },
-    'declare async function async(async : async) : async': {
-      'errors': {
-        '0.message': "async is an implementation detail and isn't necessary " +
-          "for your declare function statement. It is sufficient for your " +
-          "declare function to just have a Promise return type.",
-      },
-    },
-    'declare async function await(await : await) : await': {
-      'errors': {
-        '0.message': "async is an implementation detail and isn't necessary " +
-          "for your declare function statement. It is sufficient for your " +
-          "declare function to just have a Promise return type.",
-      },
-    },
-    'declare function foo() : Promise<async>': {},
-    'declare function foo() : Promise<await>': {},
-    'declare function async() : bar': {},
-    'async function foo() { var await = 4; }': {},
-    'async function foo() { var await = 4; return await; }': {
-      'errors': {
-        '0.message': 'Unexpected token ;',
-      },
-    },
-    // esprima chokes on these
-    'export const async = 5': {},
-    'export const await = 5': {},
-    'export const foo = async function() { }': {},
-    'export const foo = async () => y': {},
-    'export function async() { }': {},
-    'export function await() { }': {},
-    'export async function foo(x) { await x; }': {},
-    "import async from 'foo'": {},
-    "import await from 'foo'": {},
-  },
-  'Invalid Async Generators': {
-    'async function *foo() {}' : {
-      'errors': {
-        '0.message': 'A function may not be both async and a generator',
-      },
-    },
-    'async function *ft<T>(a: T): void {}' : {
-      'errors': {
-        '0.message': 'A function may not be both async and a generator',
-      },
-    },
-    'class C { async *m() {} }' : {
-      'errors': {
-        '0.message': 'A function may not be both async and a generator',
-      },
-    },
-    'class C { async *mt<T>(a: T): void {} }' : {
-      'errors': {
-        '0.message': 'A function may not be both async and a generator',
-      },
-    },
-    'class C { static async *m(a): void {} }' : {
-      'errors': {
-        '0.message': 'A function may not be both async and a generator',
-      },
-    },
-    'class C { static async *mt<T>(a: T): void {} }' : {
-      'errors': {
-        '0.message': 'A function may not be both async and a generator',
-      },
-    },
-    'var e = async function *() {};' : {
-      'errors': {
-        '0.message': 'A function may not be both async and a generator',
-      },
-    },
-    'var et = async function*<T> (a: T): void {};' : {
-      'errors': {
-        '0.message': 'A function may not be both async and a generator',
-      },
-    },
-    'var n = new async function*() {};' : {
-      'errors': {
-        '0.message': 'A function may not be both async and a generator',
-      },
-    },
-  },
-  'Async Arrow Functions': {
-    'var x = async () => await promise;': {},
-    'var x = async (a) => await a;': {},
-    'var x = async a => await a;': {},
-    'var x = async => async + 1;': {},
-    'var x = async (a => a + 1);': {},
-    'var x = async(x)': {},
-    'var x = async (a, b) => await a + b;': {
-      'body.0.declarations.0.init.body': {
-        'type': 'BinaryExpression',
-      },
-    },
-    'var x = async (a, b, c, d, e, f, g) => await a + await b + c + d + e + f + g;': {},
-    'var x = 1 y => y': {
-      'errors': {
-        '0.message': 'Unexpected identifier',
-      },
-    },
-    'var x = async\ny => y': {
-      'body.length': 2,
-    },
-  }
 };

@@ -86,7 +86,7 @@ let exit_if_unused() =
 (*****************************************************************************)
 (* The registered jobs *)
 (*****************************************************************************)
-let init (root_dir:Path.t) =
+let init (root_dir:Path.path) =
   let jobs = [
     Periodical.one_day  , exit_if_unused;
     Periodical.one_day  , Hhi.touch;
