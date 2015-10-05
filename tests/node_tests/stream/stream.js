@@ -1,6 +1,7 @@
 /* @flow */
 
 var child_process = require('child_process');
+var fs = require('fs');
 var ls = child_process.spawn('ls');
 
 var data = "foo";
@@ -16,3 +17,6 @@ ls.stdin.end(data);
 ls.stdin.end(data, "utf-8");
 ls.stdin.end(data, () => {});
 ls.stdin.end(data, "utf-8", () => {});
+
+var ws = fs.createWriteStream('/dev/null');
+ls.stdout.pipe(ws).end();
