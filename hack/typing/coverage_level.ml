@@ -8,6 +8,7 @@
  *
  *)
 
+open Typing_defs
 open Utils
 
 module TUtils = Typing_utils
@@ -55,7 +56,8 @@ type 'a trie =
 
 let level_of_type fixme_map (p, ty) =
   let lvl = match ty with
-    | _, Typing_defs.Tany -> Unchecked
+    | _, Tany -> Unchecked
+    | _, Tobject -> Partial
     | ty when TUtils.HasTany.check ty -> Partial
     | _ -> Checked in
   let line = Pos.line p in
