@@ -46,9 +46,12 @@ let get_flow_options () =
      assert_false ("Attempted to use flow_options before " ^
                   "Modules_js was initialized.")
 
-let get_config_options () =
+let get_flow_config () =
   let root = (get_flow_options ()).Options.opt_root in
-  let config = FlowConfig.get root in
+  FlowConfig.get root
+
+let get_config_options () =
+  let config = get_flow_config () in
   FlowConfig.(config.options)
 
 let replace_name_mapper_template_tokens =
@@ -646,15 +649,31 @@ let add_module_info cx =
    unparsed file has been required/imported.
  *)
 let add_unparsed_info ~force_check file =
-  let filename = Loc.(match file with
-  | LibFile filename | SourceFile filename -> filename
+  let filename, gradual = Loc.(match file with
+  | LibFile filename ->
+      filename, false
+  | SourceFile filename ->
+      filename, (FlowConfig.is_gradual (get_flow_config ()) filename)
   | Builtins -> assert false
   ) in
   let content = cat filename in
   let _module = guess_exported_module file content in
+
+  (*  -------------------------------------------
+      |  in [gradual]  |  header   |  checked?  |
+      -------------------------------------------
+      |        Y       |  @flow    |     Y      |
+      |        Y       |  @noflow  |     N      |
+      |        Y       |    --     |     N      |
+      |        N       |  @flow    |     Y      |
+      |        N       |  @noflow  |     N      |
+      |        N       |    --     |     Y      |
+      ------------------------------------------- *)
   let checked =
-    (force_check && not (Parsing_service_js.is_noflow content)) ||
-    Parsing_service_js.in_flow content file in
+    force_check ||
+    (gradual && Parsing_service_js.in_flow content file) ||
+    (not gradual && not (Parsing_service_js.is_noflow content))
+  in
   let info = { file; _module; checked; parsed = false;
     required = SSet.empty;
     require_loc = SMap.empty;

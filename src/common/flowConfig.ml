@@ -24,7 +24,6 @@ type experimental_feature_mode =
 type options = {
   enable_unsafe_getters_and_setters: bool;
   experimental_decorators: experimental_feature_mode;
-  gradual: bool;
   moduleSystem: moduleSystem;
   module_name_mappers: (Str.regexp * string) list;
   munge_underscores: bool;
@@ -44,15 +43,22 @@ module PathMap : MapSig with type key = Path.t
     String.compare (Path.to_string p1) (Path.to_string p2)
 end)
 
+type path_matcher = {
+  (* list of paths to match against. may contain wildcards *)
+  paths: Path.t list;
+  (* stems extracted from paths *)
+  stems: Path.t list;
+  (* map from stems to list of (original path, regexified path) *)
+  stem_map: ((string * Str.regexp) list) PathMap.t;
+}
+
 type config = {
   (* file blacklist *)
   excludes: (string * Str.regexp) list;
   (* non-root include paths. may contain wildcards *)
-  includes: Path.t list;
-  (* stems extracted from includes *)
-  include_stems: Path.t list;
-  (* map from include_stems to list of (original path, regexified path) *)
-  include_map: ((string * Str.regexp) list) PathMap.t;
+  includes: path_matcher;
+  (* gradually typed files *)
+  gradual: path_matcher;
   (* library paths. no wildcards *)
   libs: Path.t list;
   (* config options *)
@@ -86,7 +92,6 @@ let default_module_system = Node
 let default_options root = {
   enable_unsafe_getters_and_setters = false;
   experimental_decorators = EXPERIMENTAL_WARN;
-  gradual = false;
   moduleSystem = default_module_system;
   module_name_mappers = [];
   munge_underscores = false;
@@ -113,6 +118,9 @@ end = struct
   let includes o includes =
     List.iter (fun inc -> (fprintf o "%s\n" (Path.to_string inc))) includes
 
+  let gradual o gradual =
+    List.iter (fun path -> (fprintf o "%s\n" (Path.to_string path))) gradual
+
   let libs o libs =
     List.iter (fun lib -> (fprintf o "%s\n" (Path.to_string lib))) libs
 
@@ -134,7 +142,10 @@ end = struct
     excludes o config.excludes;
     fprintf o "\n";
     section_header o "include";
-    includes o config.includes;
+    includes o config.includes.paths;
+    fprintf o "\n";
+    section_header o "gradual";
+    gradual o config.gradual.paths;
     fprintf o "\n";
     section_header o "libs";
     libs o config.libs;
@@ -145,9 +156,16 @@ end
 
 let empty_config root = {
   excludes = [];
-  includes = [];
-  include_stems = [];
-  include_map = PathMap.empty;
+  includes = {
+    paths = [];
+    stems = [];
+    stem_map = PathMap.empty;
+  };
+  gradual = {
+    paths = [];
+    stems = [];
+    stem_map = PathMap.empty;
+  };
   libs = [];
   options = (default_options root);
   root;
@@ -242,17 +260,14 @@ let make_path_absolute config path =
   then Path.concat config.root path
   else Path.make path
 
-(* parse include lines and set config's
-   includes (a list of path specs) and
-   include_map (a map from stems to (spec, regex) pairs *)
-let parse_includes config lines =
-  let includes = lines
+let parse_path_matcher config lines =
+  let paths = lines
     |> List.map (fun (ln, line) -> String.trim line)
     |> List.filter (fun s -> s <> "")
     |> List.map (make_path_absolute config)
     |> List.map fixup_path
   in
-  let include_stems, include_map = List.fold_left (fun (stems, map) path ->
+  let stems, stem_map = List.fold_left (fun (stems, map) path ->
     let stem = path_stem path in
     let patt = path_patt path in
     let pstr = Path.to_string path in
@@ -263,9 +278,16 @@ let parse_includes config lines =
       | Some entries ->
           let map = PathMap.add stem ((pstr, patt) :: entries) map in
           stems, map
-  ) ([], PathMap.empty) includes
+  ) ([], PathMap.empty) paths
   in
-  { config with includes; include_stems; include_map; }
+  { paths; stems; stem_map; }
+
+(* parse include lines and set config's
+   includes (a list of path specs) and
+   include_map (a map from stems to (spec, regex) pairs *)
+let parse_includes config lines =
+  let includes = parse_path_matcher config lines in
+  { config with includes; }
 
 (* find a prefix for f in a list of paths, or none *)
 let rec find_prefix f = function
@@ -279,13 +301,17 @@ let rec match_patt f = function
 | (path, patt) :: _ when Str.string_match patt f 0 -> Some path
 | (path, patt) :: t -> match_patt f t
 
-(* try to find a match for f in our include paths *)
-let is_included config f =
-  match find_prefix f config.include_stems with
+let matches_path_matcher path_matcher f =
+  match find_prefix f path_matcher.stems with
   | None -> false
   | Some stem ->
-      let patts = PathMap.find_unsafe stem config.include_map in
+      let patts = PathMap.find_unsafe stem path_matcher.stem_map in
       match_patt f patts != None
+
+(* try to find a match for f in our include paths *)
+let is_included config f = matches_path_matcher config.includes f
+(* true if path matches one of our `gradual` regexes *)
+let is_gradual config f = matches_path_matcher config.gradual f
 
 (* true if path matches one of our excludes *)
 let is_excluded config =
@@ -305,6 +331,10 @@ let parse_excludes config lines =
   |> List.filter (fun s -> s <> "")
   |> List.map (fun s -> (s, Str.regexp s)) in
   { config with excludes; }
+
+let parse_gradual config lines =
+  let gradual = parse_path_matcher config lines in
+  { config with gradual; }
 
 module OptionsParser = struct
   type option_parser = (options -> string -> (int * string) -> options)
@@ -437,12 +467,6 @@ let options_parser = OptionsParser.configure [
     _parser = experimental_feature_flag (fun opts (_, value) ->
       { opts with experimental_decorators = value; }
     );
-  }));
-
-  ("gradual", OptionsParser.({
-    flags = [];
-    _parser = boolean
-      (fun opts (_, gradual) -> { opts with gradual });
   }));
 
   ("suppress_comment", OptionsParser.({
@@ -586,6 +610,7 @@ let parse_section config ((section_ln, section), lines) =
       error ln "Unexpected config line not in any section"
   | "include", _ -> parse_includes config lines
   | "ignore", _ -> parse_excludes config lines
+  | "gradual", _ -> parse_gradual config lines
   | "libs", _ -> parse_libs config lines
   | "options", _ -> parse_options config lines
   | "version", _ -> parse_version config lines

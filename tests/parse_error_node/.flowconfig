@@ -1,2 +1,2 @@
-[options]
-gradual=true
+[gradual]
+**

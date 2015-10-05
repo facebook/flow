@@ -443,7 +443,7 @@ struct
 
   let get_watch_paths options =
     let config = FlowConfig.get (Options.root options) in
-    config.FlowConfig.include_stems
+    FlowConfig.(config.includes.stems)
 
   (* filter a set of updates coming from dfind and return
      a ServerEnv.PathSet. updates may be coming in from

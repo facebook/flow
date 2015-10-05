@@ -550,6 +550,11 @@ let check_type_param_arity cx loc params n f =
     let msg = spf "Incorrect number of type parameters (expected %n)" n in
     error_type cx loc msg
 
+let is_gradual = function
+  | Loc.LibFile _ -> false
+  | Loc.Builtins -> false
+  | Loc.SourceFile file -> FlowConfig.is_gradual (FlowConfig.get_unsafe ()) file
+
 let is_suppress_type type_name = FlowConfig.(
   let config = get_unsafe () in
   SSet.mem type_name config.options.suppress_types
@@ -6218,7 +6223,7 @@ let infer_ast ?module_name ~force_check ~weak_by_default ~verbose ast file =
 
   let checked, weak =
     let open Module_js in
-    let default_mode = if force_check
+    let default_mode = if force_check || not (is_gradual file)
       then ModuleMode_Checked
       else ModuleMode_Unchecked
     in
