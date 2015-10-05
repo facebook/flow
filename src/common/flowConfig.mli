@@ -16,6 +16,7 @@ type experimental_feature_mode =
 type options = {
   enable_unsafe_getters_and_setters: bool;
   experimental_decorators: experimental_feature_mode;
+  gradual: bool;
   moduleSystem: moduleSystem;
   module_name_mappers: (Str.regexp * string) list;
   munge_underscores: bool;

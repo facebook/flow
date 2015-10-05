@@ -2,6 +2,7 @@
  * Parse errors but not in flow and not imported.
  * Should see no parse errors for this file.
  * @providesModule Bar
+ * @noflow
  */
 function f(s:string):string { ### // illegal token
   return s;

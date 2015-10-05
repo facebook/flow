@@ -125,10 +125,12 @@ let parse_header wordlist_parser default = Ast.Comment.(function
 let rec parse_attributes_flow = function
   | "@flow" :: "weak" :: _ -> Some ModuleMode_Weak
   | "@flow" :: _ -> Some ModuleMode_Checked
+  | "@noflow" :: _ -> Some ModuleMode_Unchecked
   | _ :: xs -> parse_attributes_flow xs
   | [] -> None
 
-let parse_flow = parse_header parse_attributes_flow ModuleMode_Unchecked
+let parse_flow ~default_mode comments =
+  parse_header parse_attributes_flow default_mode comments
 
 (** module systems **)
 
@@ -650,7 +652,9 @@ let add_unparsed_info ~force_check file =
   ) in
   let content = cat filename in
   let _module = guess_exported_module file content in
-  let checked = force_check || Parsing_service_js.in_flow content file in
+  let checked =
+    (force_check && not (Parsing_service_js.is_noflow content)) ||
+    Parsing_service_js.in_flow content file in
   let info = { file; _module; checked; parsed = false;
     required = SSet.empty;
     require_loc = SMap.empty;

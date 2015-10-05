@@ -113,6 +113,7 @@ module OptionParser(Config : CONFIG) = struct
     FlowEventLogger.set_from from;
     let root = CommandUtils.guess_root root in
     let flowconfig = FlowConfig.get root in
+    let opt_all = all || FlowConfig.(flowconfig.options.gradual = false) in
     let opt_module = FlowConfig.(match flowconfig.options.moduleSystem with
     | Node -> "node"
     | Haste -> "haste") in
@@ -163,7 +164,7 @@ module OptionParser(Config : CONFIG) = struct
       Options.opt_should_detach = Config.(mode = Detach);
       Options.opt_debug = debug;
       Options.opt_verbose;
-      Options.opt_all = all;
+      Options.opt_all;
       Options.opt_weak = weak;
       Options.opt_traces;
       Options.opt_json = json;

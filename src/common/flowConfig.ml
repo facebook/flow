@@ -24,6 +24,7 @@ type experimental_feature_mode =
 type options = {
   enable_unsafe_getters_and_setters: bool;
   experimental_decorators: experimental_feature_mode;
+  gradual: bool;
   moduleSystem: moduleSystem;
   module_name_mappers: (Str.regexp * string) list;
   munge_underscores: bool;
@@ -85,6 +86,7 @@ let default_module_system = Node
 let default_options root = {
   enable_unsafe_getters_and_setters = false;
   experimental_decorators = EXPERIMENTAL_WARN;
+  gradual = false;
   moduleSystem = default_module_system;
   module_name_mappers = [];
   munge_underscores = false;
@@ -435,6 +437,12 @@ let options_parser = OptionsParser.configure [
     _parser = experimental_feature_flag (fun opts (_, value) ->
       { opts with experimental_decorators = value; }
     );
+  }));
+
+  ("gradual", OptionsParser.({
+    flags = [];
+    _parser = boolean
+      (fun opts (_, gradual) -> { opts with gradual });
   }));
 
   ("suppress_comment", OptionsParser.({

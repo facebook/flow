@@ -6216,13 +6216,20 @@ let infer_ast ?module_name ~force_check ~weak_by_default ~verbose ast file =
 
   let loc, statements, comments = ast in
 
-  let checked, weak = Module_js.(match parse_flow comments with
-  | ModuleMode_Checked ->
-    true, weak_by_default
-  | ModuleMode_Weak ->
-    true, true
-  | ModuleMode_Unchecked ->
-    force_check, weak_by_default) in
+  let checked, weak =
+    let open Module_js in
+    let default_mode = if force_check
+      then ModuleMode_Checked
+      else ModuleMode_Unchecked
+    in
+    match parse_flow ~default_mode comments with
+    | ModuleMode_Checked ->
+      true, weak_by_default
+    | ModuleMode_Weak ->
+      true, true
+    | ModuleMode_Unchecked ->
+      false, weak_by_default
+  in
 
   let _module = match module_name with
     | Some _module -> _module

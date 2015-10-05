@@ -31,9 +31,10 @@ module ParserHeap = SharedMem.WithCache (Loc.FilenameKey) (struct
 (* . matches any character except the newline, so this is a little more
  * complicated than one might think *)
 let flow_check_regexp = (Str.regexp "\\(.\\|\n\\)*@flow")
+let noflow_check_regexp = (Str.regexp "\\(.\\|\n\\)*@noflow")
 
-let is_flow content =
-  Str.string_match flow_check_regexp content 0
+let is_flow content = Str.string_match flow_check_regexp content 0
+let is_noflow content = Str.string_match noflow_check_regexp content 0
 
 let is_lib_file = Loc.(function
 | LibFile _ -> true

@@ -74,10 +74,7 @@ do
         # get config flags.
         # for now this is kind of ad-hoc:
         #
-        # 1. The default flow command is check with the --all flag. This flag
-        # can be overriden here with the line "all: false". Anything besides
-        # "false" is ignored, and the setting itself is ignored if a command
-        # besides check is run.
+        # 1. The default flow command is check.
         #
         # 2. The default flow command can be overriden here by supplying the
         # entire command on a line that begins with "cmd:". (Note: for writing
@@ -93,18 +90,12 @@ do
         # as argument ($1). We start the server before running the script and
         # stop the server after the script exits.
         #
-        all=" --all"
         shell=""
         cmd="check"
         stdin=""
         stderr_dest="$err_file"
         if [ -e ".testconfig" ]
         then
-            # all
-            if [ "$(awk '$1=="all:"{print $2}' .testconfig)" == "false" ]
-            then
-                all=""
-            fi
             # ignore_stderr
             if [ "$(awk '$1=="ignore_stderr:"{print $2}' .testconfig)" == "false" ]
             then
@@ -130,8 +121,8 @@ do
         # run test
         if [ "$cmd" == "check" ]
         then
-            # default command is check with configurable --all
-            $FLOW check . $all --strip-root --show-all-errors --old-output-format 1> $out_file 2> $stderr_dest
+            # default command is check
+            $FLOW check . --strip-root --show-all-errors --old-output-format 1> $out_file 2> $stderr_dest
         else
             # otherwise, run specified flow command, then kill the server
 
