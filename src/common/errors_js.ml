@@ -170,10 +170,6 @@ let read_file_safe filename =
   try Sys_utils.cat filename with
     | Sys_error _ -> ""
 
-let dbg a =
-  Printf.printf "%s\n" a;
-  a
-
 let read_line_in_file line filename stdin_file =
   let content = match stdin_file with
     | Some (stdin_filename, content) ->
