@@ -47,7 +47,8 @@ let convert_file error_flags outpath file =
     let flow_errors = List.map (fun e ->
       Errors_js.parse_error_to_flow_error e
     ) errors in
-    Errors_js.print_error_summary ~flags:error_flags flow_errors;
+    let root = Path.dummy_path in
+    Errors_js.print_error_summary ~flags:error_flags ~root flow_errors;
     n, 0, 1
   )
 

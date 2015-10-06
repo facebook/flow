@@ -57,7 +57,11 @@ let main option_values error_flags use_json file () =
           | ServerProt.FileContent (Some (path), contents) -> Some (path, contents)
           | _ -> None
         in
-        Errors_js.print_error_summary ~flags:error_flags ~stdin_file:stdin_file e;
+        Errors_js.print_error_summary
+          ~flags:error_flags
+          ~stdin_file:stdin_file
+          ~root
+          e;
         FlowExitStatus.(exit Type_error)
       )
   | ServerProt.NO_ERRORS ->

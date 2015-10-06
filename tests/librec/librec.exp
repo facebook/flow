@@ -3,6 +3,6 @@ libtest.js:2:1,8: function call
 Error:
 libtest.js:2:5,7: number
 This type is incompatible with
-[LIB] libB.js:1:25,30: string
+[LIB] lib/B/libB.js:1:25,30: string
 
 Found 1 error

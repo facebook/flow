@@ -122,7 +122,7 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
       else if args.from = "vim" || args.from = "emacs" then
         Errors_js.print_error_deprecated stdout errors
       else
-        Errors_js.print_error_summary ~flags:error_flags errors
+        Errors_js.print_error_summary ~flags:error_flags ~root:args.root errors
       end;
       FlowExitStatus.(exit Type_error)
     | ServerProt.NO_ERRORS ->

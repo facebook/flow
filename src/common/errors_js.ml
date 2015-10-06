@@ -183,14 +183,57 @@ let read_line_in_file line filename stdin_file =
     then List.nth lines line
     else ""
 
-let print_file_at_location stdin_file main_file loc s = Loc.(
+let normalize_filename ~root filename =
+  if Filename.is_relative filename
+  then Path.to_string (Path.concat root filename)
+  else filename
+
+let file_of_source ~root source =
+  match source with
+    | Some Loc.LibFile filename ->
+        let filename_length = String.length filename in
+        let filename =
+          if filename_length > 6 && String.sub filename 0 6 = "[LIB] "
+          then String.sub filename 6 (filename_length - 6)
+          else filename in
+        Some (normalize_filename ~root filename)
+    | Some Loc.SourceFile filename ->
+        Some (normalize_filename ~root filename)
+    | Some Loc.Builtins -> None
+    | None -> None
+
+let print_file_at_location ~root stdin_file main_file loc s = Loc.(
   let l0 = loc.start.line in
   let l1 = loc._end.line in
   let c0 = loc.start.column in
   let c1 = loc._end.column in
-  match loc.source with
-    | Some LibFile filename
-    | Some SourceFile filename ->
+  let filename = file_of_source ~root loc.source in
+  let using_stdin, stdin_file = match stdin_file with
+  | Some (stdin_filename, content) ->
+      let stdin_filename = normalize_filename ~root stdin_filename in
+      (Some stdin_filename) = filename, Some (stdin_filename, content)
+  | _ -> false, stdin_file in
+
+  match using_stdin, filename with
+  | _, None ->
+    [
+      comment_style (Printf.sprintf "%s" s);
+      default_style "\n";
+    ]
+  | false, Some fn when not (Sys.file_exists fn) ->
+      let original_filename = match loc.source with
+      | Some Loc.LibFile filename
+      | Some Loc.SourceFile filename -> filename
+      | Some Loc.Builtins
+      | None -> failwith "Should only have lib and source files at this point"
+      in
+    [
+      comment_style (Printf.sprintf "%s" s);
+      comment_style ". See: ";
+      comment_file_style (Printf.sprintf "%s:%d" (relative_path original_filename) l0);
+      default_style "\n";
+    ]
+  | _, Some filename ->
       let line_number_text = Printf.sprintf "%3d: " l0 in
       let code_line = read_line_in_file (l0 - 1) filename stdin_file in
       let highlighted_line = if (l1 == l0) && (String.length code_line) >= c1
@@ -215,22 +258,11 @@ let print_file_at_location stdin_file main_file loc s = Loc.(
       [comment_style (Printf.sprintf "\n%s%s %s" padding underline s)] @
       see_another_file @
       [default_style "\n"]
-
-    | Some Builtins
-    | None -> [default_style (Printf.sprintf "%s\n" s)]
 )
 
-let print_message_nice stdin_file main_file message =
+let print_message_nice ~root stdin_file main_file message =
   let loc, s = to_pp message in
-  print_file_at_location stdin_file main_file loc s
-
-let file_of_location loc =
-  match loc.Loc.source with
-    | Some Loc.LibFile filename
-    | Some Loc.SourceFile filename -> filename
-    | Some Loc.Builtins -> ""
-    | None -> ""
-
+  print_file_at_location ~root stdin_file main_file loc s
 
 let loc_of_error (err: error) =
   let {messages; _} = err in
@@ -240,15 +272,17 @@ let loc_of_error (err: error) =
       loc
   | _ -> Loc.none
 
-let file_of_error err =
+let file_of_error ~root err =
   let loc = loc_of_error err in
-  file_of_location loc
+  file_of_source ~root loc.Loc.source
 
 
-let print_error_header message =
+let print_error_header ~root message =
   let loc, _ = to_pp message in
-  let filename = file_of_location loc in
-  let relfilename = relative_path filename in
+  let filename = file_of_source ~root loc.Loc.source in
+  let relfilename = match filename with
+  | Some fn -> relative_path fn
+  | None -> "[No file]" in
   [
     file_location_style (Printf.sprintf "%s:%d" relfilename Loc.(loc.start.line));
     default_style "\n"
@@ -281,14 +315,16 @@ let merge_comments_into_blames messages =
 let remove_newlines (color, text) =
   (color, Str.global_replace (Str.regexp "\n") "\\n" text)
 
-let print_error_color_new ~stdin_file:stdin_file ~one_line ~color (error : error) =
+let print_error_color_new ~stdin_file:stdin_file ~one_line ~color ~root (error : error) =
   let {kind; messages; trace} = error in
   let messages = prepend_kind_message messages kind in
   let messages = append_trace_reasons messages trace in
   let messages = merge_comments_into_blames messages in
-  let header = print_error_header (List.hd messages) in
-  let main_file = file_of_error error in
-  let formatted_messages = List.map (print_message_nice stdin_file main_file) messages in
+  let header = print_error_header ~root (List.hd messages) in
+  let main_file = match file_of_error ~root error with
+  | Some filename -> filename
+  | None -> "[No file]" in
+  let formatted_messages = List.map (print_message_nice ~root stdin_file main_file) messages in
   let to_print = header @ (List.concat formatted_messages) in
   let to_print = if one_line then List.map remove_newlines to_print else to_print in
   C.print ~color_mode:color (to_print @ [default_style "\n"])
@@ -511,14 +547,14 @@ let print_error_deprecated =
     flush oc
 
 (* Human readable output *)
-let print_error_summary ~flags ?stdin_file:(stdin_file=None) errors =
+let print_error_summary ~flags ?stdin_file:(stdin_file=None) ~root errors =
   let error_or_errors n = if n != 1 then "errors" else "error" in
   let truncate = not (flags.show_all_errors) in
   let one_line = flags.one_line in
   let color = flags.color in
   let print_error_color = if flags.old_output_format
     then print_error_color_old
-    else print_error_color_new ~stdin_file:stdin_file
+    else print_error_color_new ~stdin_file:stdin_file ~root
   in
   let print_error_if_not_truncated curr e =
     (if not(truncate) || curr < 50 then print_error_color ~one_line ~color e);

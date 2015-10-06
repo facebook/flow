@@ -1097,7 +1097,10 @@ let print_errors options errors =
   if options.Options.opt_json
   then Errors_js.print_error_json stdout errors
   else
-    Errors_js.print_error_summary ~flags:(Options.error_flags options) errors
+    Errors_js.print_error_summary
+      ~flags:(Options.error_flags options)
+      ~root:(Options.root options)
+      errors
 
 (* initialize flow server state, including full check *)
 let server_init genv env =
