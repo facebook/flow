@@ -373,7 +373,7 @@ let rec type_printer override fallback enclosure cx t =
            |> SMap.elements
            |> List.filter (fun (x,_) -> not (Reason_js.is_internal_name x))
            |> List.rev
-           |> List.map (fun (x,t) -> x ^ ": " ^ (pp EnclosureNone cx t) ^ ";")
+           |> List.map (fun (x,t) -> x ^ ": " ^ (pp EnclosureNone cx t) ^ ",")
            |> String.concat " "
         in
         let indexer =
@@ -388,7 +388,7 @@ let rec type_printer override fallback enclosure cx t =
                 | None -> "_"
                 | Some name -> name
               in
-              (spf "%s[%s: %s]: %s;"
+              (spf "%s[%s: %s]: %s,"
                 indexer_prefix
                 dict_name
                 (pp EnclosureNone cx key)
