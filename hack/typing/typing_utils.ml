@@ -276,6 +276,16 @@ let unresolved env ty =
   | _, Tunresolved _ -> in_var env ety
   | _ -> in_var env (fst ty, Tunresolved [ty])
 
+let unwrap_class_or_interface_hint = function
+  | (_, N.Happly ((pos, class_name), type_parameters)) ->
+      pos, class_name, type_parameters
+  | p, N.Habstr(_, _) ->
+      Errors.expected_class ~suffix:"or interface but got a generic" p;
+      Pos.none, "", []
+  | p, _ ->
+      Errors.expected_class ~suffix:"or interface" p;
+      Pos.none, "", []
+
 (*****************************************************************************)
 (* Function checking if an array is used as a tuple *)
 (*****************************************************************************)

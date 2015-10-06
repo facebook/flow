@@ -138,7 +138,7 @@ val undefined_field : Pos.t -> string -> unit
 val array_access : Pos.t -> Pos.t -> string -> unit
 val array_append : Pos.t -> Pos.t -> string -> unit
 val const_mutation : Pos.t -> Pos.t -> string -> unit
-val expected_class : Pos.t -> unit
+val expected_class : ?suffix:string -> Pos.t -> unit
 val smember_not_found :
   [< `class_constant | `class_variable | `static_method | `class_typeconst] ->
   Pos.t ->

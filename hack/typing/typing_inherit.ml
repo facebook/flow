@@ -195,11 +195,6 @@ let add_inherited inherited acc = {
 (* Helpers *)
 (*****************************************************************************)
 
-let desugar_class_hint = function
-  | (_, Happly ((pos, class_name), type_parameters)) ->
-      pos, class_name, type_parameters
-  | _ -> assert false
-
 let check_arity pos class_name class_type class_parameters =
   let arity = List.length class_type.tc_tparams in
   if List.length class_parameters <> arity
@@ -322,7 +317,8 @@ let inherit_hack_xhp_attrs_only env p class_name class_type argl =
 (*****************************************************************************)
 
 let from_class c env hint =
-  let pos, class_name, class_params = desugar_class_hint hint in
+  let pos, class_name, class_params =
+    TUtils.unwrap_class_or_interface_hint hint in
   let env, class_params = lfold Typing_hint.hint env class_params in
   let class_type = Env.get_class_dep env class_name in
   match class_type with
@@ -335,7 +331,8 @@ let from_class c env hint =
 
 (* mostly copy paste of from_class *)
 let from_class_constants_only env hint =
-  let pos, class_name, class_params = desugar_class_hint hint in
+  let pos, class_name, class_params =
+    TUtils.unwrap_class_or_interface_hint hint in
   let env, class_params = lfold Typing_hint.hint env class_params in
   let class_type = Env.get_class_dep env class_name in
   match class_type with
@@ -347,7 +344,8 @@ let from_class_constants_only env hint =
     inherit_hack_class_constants_only env pos class_name class_ class_params
 
 let from_class_xhp_attrs_only env hint =
-  let pos, class_name, class_params = desugar_class_hint hint in
+  let pos, class_name, class_params =
+    TUtils.unwrap_class_or_interface_hint hint in
   let env, class_params = lfold Typing_hint.hint env class_params in
   let class_type = Env.get_class_dep env class_name in
   match class_type with

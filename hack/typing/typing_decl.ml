@@ -85,10 +85,8 @@ let check_extend_kind parent_pos parent_kind child_pos child_kind =
  * is_complete: true if all the parents live in Hack
  *)
 (*****************************************************************************)
-let desugar_class_hint = function
-  | (_, Happly ((pos, class_name), type_parameters)) ->
-    pos, class_name, type_parameters
-  | _ -> assert false
+
+(*-------------------------- begin copypasta *)
 
 let check_arity pos class_name class_type class_parameters =
   let arity = List.length class_type.tc_tparams in
@@ -118,7 +116,7 @@ let add_grand_parents_or_traits parent_pos class_nast acc parent_type =
   env, extends, parent_type.tc_members_fully_known && is_complete, is_trait
 
 let get_class_parent_or_trait class_nast (env, parents, is_complete, is_trait) hint =
-  let parent_pos, parent, _ = desugar_class_hint hint in
+  let parent_pos, parent, _ = TUtils.unwrap_class_or_interface_hint hint in
   let parents = SSet.add parent parents in
   let parent_type = Env.get_class_dep env parent in
   match parent_type with
@@ -180,7 +178,8 @@ let merge_single_req env subst inc_req_ty existing_req_opt
  * of trait methods *)
 let merge_parent_class_reqs class_nast impls
     (env, req_ancestors, req_ancestors_extends) parent_hint =
-  let parent_pos, parent_name, parent_params = desugar_class_hint parent_hint in
+  let parent_pos, parent_name, parent_params =
+    TUtils.unwrap_class_or_interface_hint parent_hint in
   let env, parent_params = lfold Typing_hint.hint env parent_params in
   let parent_type = Env.get_class_dep env parent_name in
 
@@ -226,7 +225,8 @@ let merge_parent_class_reqs class_nast impls
 
 let declared_class_req class_nast impls (env, requirements, req_extends) hint =
   let env, req_ty = Typing_hint.hint env hint in
-  let req_pos, req_name, req_params = desugar_class_hint hint in
+  let req_pos, req_name, req_params =
+    TUtils.unwrap_class_or_interface_hint hint in
   let env, _ = lfold Typing_hint.hint env req_params in
   let req_type = Env.get_class_dep env req_name in
 

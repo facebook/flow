@@ -430,7 +430,10 @@ and check_is_interface (env, error_verb) (x : hint) =
         | Some { tc_name; _ } ->
           Errors.non_interface (fst x) tc_name error_verb
       )
-    | _ -> failwith "assertion failure: interface isn't a Happly"
+    | Habstr (_, _) ->
+      Errors.non_interface (fst x) "generic" error_verb
+    | _ ->
+      Errors.non_interface (fst x) "invalid type hint" error_verb
 
 (** Make sure that the given hint points to a non-final class *)
 and check_is_class env (x : hint) =
@@ -448,7 +451,10 @@ and check_is_class env (x : hint) =
         | Some { tc_kind; tc_name; _ } ->
           Errors.requires_non_class (fst x) tc_name (Ast.string_of_class_kind tc_kind)
       )
-    | _ -> failwith "assertion failure: interface isn't a Happly"
+    | Habstr (name, _) ->
+      Errors.requires_non_class (fst x) name "a generic"
+    | _ ->
+      Errors.requires_non_class (fst x) "This" "an invalid type hint"
 
 (**
    * Make sure that all "use"s are with traits, and not

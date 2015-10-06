@@ -1339,9 +1339,11 @@ let const_mutation pos1 pos2 ty =
      then [(pos2, "This is " ^ ty)]
      else [])
 
-let expected_class pos =
-  add Typing.expected_class pos
-    "Was expecting a class"
+let expected_class ?suffix:(suffix="") pos =
+  let suffix = match suffix with
+  | "" -> ""
+  | str -> " "^str in
+  add Typing.expected_class pos ("Was expecting a class"^suffix)
 
 let snot_found_hint = function
   | `no_hint ->
