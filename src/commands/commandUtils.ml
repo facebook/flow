@@ -82,7 +82,7 @@ let sleep seconds =
         then timeout_go_boom ()
         else Unix.sleep seconds
 
-let collect_error_flags main color one_line show_all_errors =
+let collect_error_flags main color one_line show_all_errors old_output_format =
   let color = match color with
   | Some "never" -> Tty.Color_Never
   | Some "always" -> Tty.Color_Always
@@ -90,7 +90,7 @@ let collect_error_flags main color one_line show_all_errors =
   | None -> Tty.Color_Auto
   | _ -> assert false (* the enum type enforces this *)
   in
-  main { Errors_js.color; one_line; show_all_errors; }
+  main { Errors_js.color; one_line; show_all_errors; old_output_format; }
 
 let error_flags prev = CommandSpec.ArgSpec.(
   prev
@@ -101,6 +101,8 @@ let error_flags prev = CommandSpec.ArgSpec.(
       ~doc:"Escapes newlines so that each error prints on one line"
   |> flag "--show-all-errors" no_arg
       ~doc:"Print all errors (the default is to truncate after 50 errors)"
+  |> flag "--old-output-format" no_arg
+      ~doc:"Use old output format (absolute file names, line and column numbers)"
 )
 
 let json_flags prev = CommandSpec.ArgSpec.(

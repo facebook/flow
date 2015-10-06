@@ -22,6 +22,9 @@ type raw_color =
 type style =
   | Normal of raw_color
   | Bold of raw_color
+  | Dim of raw_color
+  | Underline of raw_color
+  | DimUnderline of raw_color
   | NormalWithBG of raw_color * raw_color
   | BoldWithBG of raw_color * raw_color
 
