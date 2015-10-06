@@ -881,19 +881,19 @@ let typecheck workers files removed unparsed opts make_merge_input =
 *)
 let file_depends_on =
   let rec sig_depends_on seen modules memo m =
-    match SMap.get m !memo with
-    | Some result -> result
-    | None ->
-        SSet.mem m modules || (
-          Module.module_exists m && (
-            let f = Module.get_file m in
-            not (FilenameSet.mem f !seen) && (
-              seen := FilenameSet.add f !seen;
-              let { Module.required; _ } = Module.get_module_info f in
-              SSet.exists (sig_depends_on seen modules memo) required
-            )
+    SSet.mem m modules || (
+      Module.module_exists m && (
+        let f = Module.get_file m in
+        match FilenameMap.get f !memo with
+        | Some result -> result
+        | None ->
+          not (FilenameSet.mem f !seen) && (
+            seen := FilenameSet.add f !seen;
+            let { Module.required; _ } = Module.get_module_info f in
+            SSet.exists (sig_depends_on seen modules memo) required
           )
         )
+      )
   in
 
   fun modules memo f ->
@@ -902,7 +902,7 @@ let file_depends_on =
       let seen = ref FilenameSet.empty in
       SSet.exists (sig_depends_on seen modules memo) required
     ) in
-    memo := SMap.add _module result !memo;
+    memo := FilenameMap.add f result !memo;
     result
 
 (* Files that must be rechecked include those that immediately or recursively
@@ -912,7 +912,7 @@ let file_depends_on =
    modules, adding files may add modules, and modifying files may do both.
 *)
 let deps_job touched_modules files unmodified =
-  let memo = ref SMap.empty in
+  let memo = ref FilenameMap.empty in
   List.rev_append files
     (List.filter (file_depends_on touched_modules memo) unmodified)
 
