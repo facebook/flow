@@ -33,12 +33,16 @@ type flags = {
   color: Tty.color_mode;
   one_line: bool;
   show_all_errors: bool;
+  old_output_format: bool;
 }
+
+type stdin_file = (string * string) option
 
 let default_flags = {
   color = Tty.Color_Auto;
   one_line = false;
   show_all_errors = false;
+  old_output_format = false;
 }
 
 let message_of_reason reason =
@@ -131,12 +135,102 @@ let print_reason_color ~first ~one_line ~color (message: message) =
   (if first then Printf.printf "\n");
   C.print ~color_mode:color to_print
 
-let print_error_color ~one_line ~color (e : error) =
+let print_error_color_old ~one_line ~color (e : error) =
   let {kind; messages; trace} = e in
   let messages = prepend_kind_message messages kind in
   let messages = append_trace_reasons messages trace in
   print_reason_color ~first:true ~one_line ~color (List.hd messages);
   List.iter (print_reason_color ~first:false ~one_line ~color) (List.tl messages)
+
+let file_location_style text = (C.Underline C.Default, text)
+let default_style text = (C.Normal C.Default, text)
+let source_fragment_style text = (C.Normal C.Default, text)
+let error_fragment_style text = (C.Normal C.Red, text)
+let line_number_style text = (C.Bold C.Default, text)
+let comment_style text = (C.Bold C.Default, text)
+let comment_file_style text = (C.BoldUnderline C.Default, text)
+
+let relative_path filename =
+  let relname = Files_js.relative_path (Sys.getcwd ()) filename in
+  if String.length relname < String.length filename
+    then relname
+    else filename
+
+let highlight_error_in_line line c0 c1 =
+  let prefix = String.sub line 0 c0 in
+  let fragment = String.sub line c0 (c1 - c0) in
+  let suffix = String.sub line c1 ((String.length line) - c1) in
+  [
+    source_fragment_style prefix;
+    error_fragment_style fragment;
+    source_fragment_style suffix;
+  ]
+
+let read_file_safe filename =
+  try Sys_utils.cat filename with
+    | Sys_error _ -> ""
+
+let read_line_in_file line filename stdin_file =
+  let content = match stdin_file with
+    | Some (stdin_filename, content) ->
+      if stdin_filename = filename
+        then content
+        else read_file_safe filename
+    | None -> read_file_safe filename
+  in
+  let lines = Str.split_delim (Str.regexp "\n") content in
+  if (List.length lines) > line && (line >= 0)
+    then List.nth lines line
+    else ""
+
+let print_file_at_location stdin_file main_file loc s = Loc.(
+  let l0 = loc.start.line in
+  let l1 = loc._end.line in
+  let c0 = loc.start.column in
+  let c1 = loc._end.column in
+  match loc.source with
+    | Some LibFile filename
+    | Some SourceFile filename ->
+      let line_number_text = Printf.sprintf "%3d: " l0 in
+      let code_line = read_line_in_file (l0 - 1) filename stdin_file in
+      let highlighted_line = if (l1 == l0) && (String.length code_line) >= c1
+        then highlight_error_in_line code_line c0 c1
+        else [source_fragment_style code_line]
+      in
+      let padding_size = (String.length line_number_text) + c0 in
+      let padding = String.make padding_size ' ' in
+      let underline_size = if l1 == l0
+        then max 1 (c1 - c0)
+        else 1
+      in
+      let underline = String.make underline_size '^' in
+      let see_another_file = if filename == main_file then [(default_style "")] else
+        [
+          comment_style ". See: ";
+          comment_file_style (Printf.sprintf "%s:%d" (relative_path filename) l0)
+        ]
+      in
+      line_number_style line_number_text ::
+      highlighted_line @
+      [comment_style (Printf.sprintf "\n%s%s %s" padding underline s)] @
+      see_another_file @
+      [default_style "\n"]
+
+    | Some Builtins
+    | None -> [default_style (Printf.sprintf "%s\n" s)]
+)
+
+let print_message_nice stdin_file main_file message =
+  let loc, s = to_pp message in
+  print_file_at_location stdin_file main_file loc s
+
+let file_of_location loc =
+  match loc.Loc.source with
+    | Some Loc.LibFile filename
+    | Some Loc.SourceFile filename -> filename
+    | Some Loc.Builtins -> ""
+    | None -> ""
+
 
 let loc_of_error (err: error) =
   let {messages; _} = err in
@@ -145,6 +239,59 @@ let loc_of_error (err: error) =
       let loc, _ = to_pp message in
       loc
   | _ -> Loc.none
+
+let file_of_error err =
+  let loc = loc_of_error err in
+  file_of_location loc
+
+
+let print_error_header message =
+  let loc, _ = to_pp message in
+  let filename = file_of_location loc in
+  let relfilename = relative_path filename in
+  [
+    file_location_style (Printf.sprintf "%s:%d" relfilename Loc.(loc.start.line));
+    default_style "\n"
+  ]
+
+let append_comment blame comment =
+  match blame with
+  | BlameM(loc, s) ->
+    (match comment with
+    | "Error:" -> BlameM(loc, s) (* Almost everywhere we have "Error:" that hurts readability *)
+    | comment ->
+      let combined_comment = if String.length s > 0
+        then s ^ ". " ^ comment
+        else comment
+      in
+      BlameM(loc, combined_comment))
+  | CommentM(_) -> failwith "should not be comment"
+
+let maybe_combine_message_text messages message =
+  match message with
+    | BlameM (_, _) -> message :: messages
+    | CommentM s ->
+      match messages with
+      | x :: xs -> (append_comment x s) :: xs
+      | _ -> failwith "can't append comment to nonexistent blame"
+
+let merge_comments_into_blames messages =
+  List.fold_left maybe_combine_message_text [] messages |> List.rev
+
+let remove_newlines (color, text) =
+  (color, Str.global_replace (Str.regexp "\n") "\\n" text)
+
+let print_error_color_new ~stdin_file:stdin_file ~one_line ~color (error : error) =
+  let {kind; messages; trace} = error in
+  let messages = prepend_kind_message messages kind in
+  let messages = append_trace_reasons messages trace in
+  let messages = merge_comments_into_blames messages in
+  let header = print_error_header (List.hd messages) in
+  let main_file = file_of_error error in
+  let formatted_messages = List.map (print_message_nice stdin_file main_file) messages in
+  let to_print = header @ (List.concat formatted_messages) in
+  let to_print = if one_line then List.map remove_newlines to_print else to_print in
+  C.print ~color_mode:color (to_print @ [default_style "\n"])
 
 (* TODO: deprecate this in favor of Reason_js.json_of_loc *)
 let json_of_loc loc = Loc.(
@@ -364,11 +511,15 @@ let print_error_deprecated =
     flush oc
 
 (* Human readable output *)
-let print_error_summary ~flags errors =
+let print_error_summary ~flags ?stdin_file:(stdin_file=None) errors =
   let error_or_errors n = if n != 1 then "errors" else "error" in
   let truncate = not (flags.show_all_errors) in
   let one_line = flags.one_line in
   let color = flags.color in
+  let print_error_color = if flags.old_output_format
+    then print_error_color_old
+    else print_error_color_new ~stdin_file:stdin_file
+  in
   let print_error_if_not_truncated curr e =
     (if not(truncate) || curr < 50 then print_error_color ~one_line ~color e);
     curr + 1

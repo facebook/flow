@@ -25,6 +25,10 @@ type raw_color =
 type style =
   | Normal of raw_color
   | Bold of raw_color
+  | Dim of raw_color
+  | Underline of raw_color
+  | BoldUnderline of raw_color
+  | DimUnderline of raw_color
   | NormalWithBG of raw_color * raw_color
   | BoldWithBG of raw_color * raw_color
 
@@ -62,6 +66,10 @@ let color_num = function
 let style_num = function
   | Normal c -> color_num c
   | Bold c   -> color_num c ^ ";1"
+  | Dim c    -> color_num c ^ ";2"
+  | Underline c -> color_num c ^ ";4"
+  | BoldUnderline c -> color_num c ^ ";1;4"
+  | DimUnderline c -> color_num c ^ ";2;4"
   | NormalWithBG (text, bg) -> (text_num text) ^ ";" ^ (background_num bg)
   | BoldWithBG (text, bg) -> (text_num text) ^ ";" ^ (background_num bg) ^ ";1"
 

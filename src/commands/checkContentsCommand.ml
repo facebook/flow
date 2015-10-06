@@ -52,7 +52,12 @@ let main option_values error_flags use_json file () =
       if use_json
       then Errors_js.print_error_json stdout e
       else (
-        Errors_js.print_error_summary ~flags:error_flags e;
+        let stdin_file = match file with
+          | ServerProt.FileContent (None, contents) -> Some ("-", contents)
+          | ServerProt.FileContent (Some (path), contents) -> Some (path, contents)
+          | _ -> None
+        in
+        Errors_js.print_error_summary ~flags:error_flags ~stdin_file:stdin_file e;
         FlowExitStatus.(exit Type_error)
       )
   | ServerProt.NO_ERRORS ->

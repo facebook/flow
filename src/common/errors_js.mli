@@ -28,7 +28,10 @@ type flags = {
   color: Tty.color_mode;
   one_line: bool;
   show_all_errors: bool;
+  old_output_format: bool;
 }
+
+type stdin_file = (string * string) option
 
 val default_flags : flags
 
@@ -47,8 +50,8 @@ val print_reason_color:
   message ->
   unit
 
-val print_error_color:
-  one_line:bool -> color:Tty.color_mode -> error -> unit
+val print_error_color_new:
+  stdin_file:stdin_file -> one_line:bool -> color:Tty.color_mode -> error -> unit
 
 val loc_of_error : error -> Loc.t
 
@@ -83,6 +86,6 @@ val json_of_errors : Error.t list -> Hh_json.json
 val print_error_json : out_channel -> error list -> unit
 
 (* Human readable output *)
-val print_error_summary: flags:flags -> error list -> unit
+val print_error_summary: flags:flags -> ?stdin_file:stdin_file -> error list -> unit
 val string_of_loc_deprecated: Loc.t -> string
 val print_error_deprecated: out_channel -> error list -> unit
