@@ -35,19 +35,19 @@ let init_modes opts = Options.(
   modes.debug <- opts.opt_debug;
   modes.verbose <- opts.opt_verbose;
   modes.verbose_indent <- should_indent_verbose opts;
-  modes.all <- opts.opt_all;
-  modes.weak_by_default <- opts.opt_weak;
   modes.traces <- opts.opt_traces;
   modes.strict <- opts.opt_strict;
   modes.json <- opts.opt_json;
   modes.strip_root <- opts.opt_strip_root;
   modes.quiet <- opts.opt_quiet;
   modes.profile <- opts.opt_profile;
-  modes.no_flowlib <- opts.opt_no_flowlib;
   modes.munge_underscores <- opts.opt_munge_underscores;
   (* TODO: confirm that only master uses strip_root, otherwise set it! *)
   Module_js.init opts;
-  Files_js.init ~tmp_dir:(Options.temp_dir opts) opts.opt_libs
+  Files_js.init
+    ~tmp_dir:(Options.temp_dir opts)
+    ~include_default_libs:(not opts.opt_no_flowlib)
+    opts.opt_libs
 )
 
 let is_lib_file f = match f with
@@ -266,6 +266,8 @@ let logtime opts msg f =
    filenames, error sets *)
 let infer_job opts (inferred, errsets, errsuppressions) files =
   init_modes opts;
+  let force_check = Options.all opts in
+  let weak_by_default = Options.weak_by_default opts in
   List.fold_left (fun (inferred, errsets, errsuppressions) file ->
     try checktime opts 1.0
       (fun t -> spf "perf: inferred %s in %f" (string_of_filename file) t)
@@ -273,7 +275,7 @@ let infer_job opts (inferred, errsets, errsuppressions) files =
         (*prerr_endlinef "[%d] INFER: %s" (Unix.getpid()) file;*)
 
         (* infer produces a context for this module *)
-        let cx = TI.infer_module file in
+        let cx = TI.infer_module ~force_check ~weak_by_default file in
         (* register module info *)
         Module.add_module_info cx;
         (* note: save and clear errors and error suppressions before storing
@@ -527,7 +529,11 @@ let merge_strict_file file =
 let typecheck_contents contents filename =
   Parsing_service_js.(match do_parse ~fail:false contents filename with
   | OK ast ->
-      let cx = TI.infer_ast ast filename true in
+      let cx = TI.infer_ast
+        ~force_check:true
+        ~weak_by_default:false
+        ast filename
+      in
       let cache = new context_cache in
       merge_strict_context cache [cx];
       Some cx, cx.errors
@@ -807,7 +813,8 @@ let typecheck workers files removed unparsed opts make_merge_input =
   (* local inference populates context heap, module info heap *)
   let inferred = infer workers files opts in
   (* add tracking modules for unparsed files *)
-  List.iter Module.add_unparsed_info unparsed;
+  let force_check = Options.all opts in
+  List.iter (Module.add_unparsed_info ~force_check) unparsed;
   (* create module dependency graph, warn on dupes etc. *)
   commit_modules inferred removed;
   (* SHUTTLE *)

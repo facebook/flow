@@ -6214,18 +6214,18 @@ let scan_for_suppressions =
       | _ -> ()) comments
 
 (* build module graph *)
-let infer_ast ast file ?module_name force_check =
+let infer_ast ?module_name ~force_check ~weak_by_default ast file =
   Flow_js.Cache.clear();
 
   let loc, statements, comments = ast in
 
   let checked, weak = Module_js.(match parse_flow comments with
   | ModuleMode_Checked ->
-    true, modes.weak_by_default
+    true, weak_by_default
   | ModuleMode_Weak ->
     true, true
   | ModuleMode_Unchecked ->
-    force_check, modes.weak_by_default) in
+    force_check, weak_by_default) in
 
   let _module = match module_name with
     | Some _module -> _module
@@ -6319,11 +6319,11 @@ let get_comment_header (_, stmts, comments) =
 (* Given a filename, retrieve the parsed AST, derive a module name,
    and invoke the local (infer) pass. This will build and return a
    fresh context object for the module. *)
-let infer_module file =
+let infer_module ~force_check ~weak_by_default file =
   let ast = Parsing_service_js.get_ast_unsafe file in
   let comments = get_comment_header ast in
   let module_name = Module_js.exported_module file comments in
-  infer_ast ast file ~module_name modes.all
+  infer_ast ~module_name ~force_check ~weak_by_default ast file
 
 (* Map.union: which is faster, union M N or union N M when M > N?
    union X Y = fold add X Y which means iterate over X, adding to Y

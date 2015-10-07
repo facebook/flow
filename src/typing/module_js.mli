@@ -62,7 +62,7 @@ val commit_modules:
 val add_module_info: Constraint_js.context -> unit
 
 (* add info for unparsed file to module info store *)
-val add_unparsed_info: filename -> unit
+val add_unparsed_info: force_check:bool -> filename -> unit
 
 (* remove module info being tracked for given file set;
    returns the set of modules removed

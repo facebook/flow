@@ -13,13 +13,18 @@ open Constraint_js
 open Utils_js
 
 val infer_ast:
+  ?module_name: string ->
+  force_check: bool ->
+  weak_by_default: bool ->
   Spider_monkey_ast.program ->
-  filename ->                   (* filename *)
-  ?module_name: string ->       (* module name *)
-  bool ->                       (* force_check *)
+  filename ->
   context
 
-val infer_module: filename -> context
+val infer_module:
+  force_check:bool ->
+  weak_by_default: bool ->
+  filename ->
+  context
 
 val merge_component_strict: context list ->
   context list -> (context * string * context) list ->

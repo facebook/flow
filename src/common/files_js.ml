@@ -158,12 +158,12 @@ let get_all =
   in
   fun next -> get_all_rec next SSet.empty
 
-let init ~tmp_dir libs =
+let init ~include_default_libs ~tmp_dir libs =
   match !lib_files with
   | Some libs -> ()
   | None -> (
     config_options := Some FlowConfig.((get_unsafe ()).options);
-    let libs = if Modes_js.modes.no_flowlib
+    let libs = if not include_default_libs
       then libs
       else
         let root = Path.make (Tmp.temp_dir tmp_dir "flowlib") in

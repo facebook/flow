@@ -15,7 +15,10 @@ val global_file_name: string
 val is_flow_file: string -> bool
 
 (* name of library directory defining builtins *)
-val init: tmp_dir:string -> Path.t list -> unit
+val init:
+  include_default_libs:bool ->
+  tmp_dir:string ->
+  Path.t list -> unit
 
 (* names of library files defining builtins *)
 val get_lib_files: unit -> Utils.SSet.t

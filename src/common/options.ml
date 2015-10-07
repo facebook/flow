@@ -34,6 +34,7 @@ type options = {
   opt_max_workers: int;
 }
 
+let all opts = opts.opt_all
 let error_flags opts = opts.opt_error_flags
 let is_check_mode opts = opts.opt_check_mode
 let log_file opts = opts.opt_log_file
@@ -43,3 +44,4 @@ let should_indent_verbose opts = opts.opt_verbose_indent
 let should_strip_root opts = opts.opt_strip_root
 let temp_dir opts = opts.opt_temp_dir
 let max_workers opts = opts.opt_max_workers
+let weak_by_default opts = opts.opt_weak

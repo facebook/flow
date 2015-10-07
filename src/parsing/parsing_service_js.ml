@@ -40,11 +40,8 @@ let is_lib_file = Loc.(function
 | Builtins -> true
 | SourceFile _ -> false)
 
-let match_flow content file =
-  is_lib_file file || is_flow content
-
 let in_flow content file =
-  Modes_js.(modes.all) || match_flow content file
+  is_lib_file file || is_flow content
 
 let (parser_hook: (filename -> Ast.program -> unit) list ref) = ref []
 let call_on_success f = parser_hook := f :: !parser_hook

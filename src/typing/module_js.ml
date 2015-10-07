@@ -636,14 +636,14 @@ let add_module_info cx =
    the module names of unparsed files, we're able to tell whether an
    unparsed file has been required/imported.
  *)
-let add_unparsed_info file =
+let add_unparsed_info ~force_check file =
   let filename = Loc.(match file with
   | LibFile filename | SourceFile filename -> filename
   | Builtins -> assert false
   ) in
   let content = cat filename in
   let _module = guess_exported_module file content in
-  let checked = Parsing_service_js.in_flow content file in
+  let checked = force_check || Parsing_service_js.in_flow content file in
   let info = { file; _module; checked; parsed = false;
     required = SSet.empty;
     require_loc = SMap.empty;
