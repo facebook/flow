@@ -1,3 +1,34 @@
+###v0.17.0
+
+New Features:
+
+- New default error message format shows the code inline (thanks [@frantic](https://github.com/frantic)!)
+- Autocomplete will keep trying even if the file fails to parse
+- You can configure which file extensions Flow looks for (thanks [@eyyub](https://github.com/eyyub)!)
+- Support for negative number literal types.
+
+Notable Bug Fixes:
+
+- Incremental `make` on OSX now works when `lib/` files change
+- Fixed some issues around const destructuring
+- Fixed some issues around destructuring in for-of and for-in loops
+- Some emacs plugin fixes
+- Object spreads are now handled in the correct order
+- Generator `return()` and `throw()` methods are now supported
+- Object types now allow keywords as the object keys (thanks [@samwgoldman](https://github.com/samwgoldman)!)
+- importing & exporting `default` using named specifiers is now supported
+- `Flow` now understands `this` in class static methods and `this.constructor` in class instance methods (thanks [@popham](https://github.com/popham)!)
+- Fixed bug with array spreads
+- Understand that all classes have a static `name` property
+
+Misc:
+
+- Improved `flow find-module`
+- More error location improvements
+- `Object` can now be called as a function to cast things to objects
+- We've tried to standardize the error codes with which Flow exits. Some exit codes have changed, but the ones you probably use should be the same. At the moment they're [only documented in the code](https://github.com/facebook/flow/blob/b352b4c41283c1cb109ee2e8f6ef604ad4ac381b/src/common/flowExitStatus.ml#L63-L86)
+- Flow understands the value of a negated number literal
+
 ###v0.16.0
 
 Likely to cause new Flow errors:
