@@ -67,13 +67,16 @@ let autoimport_classes = [
   "SleepWaitHandle";
   "ExternalThreadEventWaitHandle";
   "Shapes";
+  "TypeStructureKind";
 ]
 let autoimport_funcs = [
   "invariant";
-  "invariant_violation"
+  "invariant_violation";
+  "type_structure";
 ]
 let autoimport_types = [
-  "classname"
+  "classname";
+  "TypeStructure";
 ]
 
 let autoimport_set =
