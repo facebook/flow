@@ -49,13 +49,18 @@ let in_flow content file =
 let (parser_hook: (filename -> Ast.program -> unit) list ref) = ref []
 let call_on_success f = parser_hook := f :: !parser_hook
 
-let parse_options = Some {
+let parse_options = Some Parser_env.({
   (**
    * We always parse decorators. The user-facing config option to ignore/warn
    * on them happens during inference time so a clean error can be surfaced.
    *)
-  Parser_env.experimental_decorators = true;
-}
+  experimental_decorators = true;
+
+  (**
+   * We obviously want to parse Flow types.
+   *)
+  types = true;
+})
 
 let execute_hook file ast =
   let ast = match ast with

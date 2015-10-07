@@ -16,6 +16,12 @@ type t =
   | UnexpectedIdentifier
   | UnexpectedReserved
   | UnexpectedEOS
+  | UnexpectedTypeAlias
+  | UnexpectedTypeAnnotation
+  | UnexpectedTypeDeclaration
+  | UnexpectedTypeImport
+  | UnexpectedTypeExport
+  | UnexpectedTypeInterface
   | NewlineAfterThrow
   | InvalidRegExp
   | InvalidRegExpFlags of string
@@ -68,7 +74,7 @@ module PP =
   struct
     let error = function
       | UnexpectedToken token->  "Unexpected token "^token
-      | UnexpectedTokenWithSuggestion (token, suggestion) ->  
+      | UnexpectedTokenWithSuggestion (token, suggestion) ->
           Printf.sprintf "Unexpected token `%s`. Did you mean `%s`?"
             token
             suggestion
@@ -77,6 +83,12 @@ module PP =
       | UnexpectedIdentifier ->  "Unexpected identifier"
       | UnexpectedReserved ->  "Unexpected reserved word"
       | UnexpectedEOS ->  "Unexpected end of input"
+      | UnexpectedTypeAlias -> "Type aliases are not allowed in untyped mode"
+      | UnexpectedTypeAnnotation -> "Type annotations are not allowed in untyped mode"
+      | UnexpectedTypeDeclaration -> "Type declarations are not allowed in untyped mode"
+      | UnexpectedTypeImport -> "Type imports are not allowed in untyped mode"
+      | UnexpectedTypeExport -> "Type exports are not allowed in untyped mode"
+      | UnexpectedTypeInterface -> "Interfaces are not allowed in untyped mode"
       | NewlineAfterThrow ->  "Illegal newline after throw"
       | InvalidRegExp -> "Invalid regular expression"
       | InvalidRegExpFlags flags -> "Invalid flags supplied to RegExp constructor '"^flags^"'"

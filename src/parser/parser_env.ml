@@ -127,9 +127,11 @@ type token_sink_result = {
 
 type parse_options = {
   experimental_decorators: bool;
+  types: bool;
 }
 let default_parse_options = {
   experimental_decorators = false;
+  types = true;
 }
 
 type env = {
@@ -221,6 +223,7 @@ let no_let env = env.no_let
 let errors env = !(env.errors)
 let parse_options env = env.parse_options
 let source env = env.source
+let should_parse_types env = env.parse_options.types
 
 (* mutators: *)
 let error_at env (loc, e) =

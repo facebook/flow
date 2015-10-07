@@ -149,7 +149,7 @@ end = struct
       exit 1;
   )
 
-  let parse_parseopt _(*opts*) prop = Parser_env.(
+  let parse_parseopt opts prop = Parser_env.(
     let (opt_name, value) = extract_obj_property "%parse_options%" prop in
     let value = match value with
       | (_, Ast.Expression.Literal {
@@ -166,9 +166,8 @@ end = struct
           exit 1
     in
     match opt_name with
-    | "experimental_decorators" -> {
-        experimental_decorators = value;
-      }
+    | "experimental_decorators" -> {opts with experimental_decorators = value;}
+    | "types" -> {opts with types = value;}
     | _ ->
       let msg =
         Printf.sprintf "ERROR: Unexpected parse option: '%s'" opt_name

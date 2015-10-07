@@ -49,10 +49,21 @@ let throw e =
   |]) in
   Js.Unsafe.call fn fn [| e|]
 
-let parse_options jsopts = Parser_env.({
-  experimental_decorators =
-    Js.to_bool (Js.Unsafe.get jsopts "experimental_decorators");
-})
+let parse_options jsopts = Parser_env.(
+  let opts = default_parse_options in
+
+  let decorators = Js.Unsafe.get jsopts "experimental_decorators" in
+  let opts = if Js.Optdef.test decorators
+    then { opts with experimental_decorators = Js.to_bool decorators; }
+    else opts in
+
+  let types = Js.Unsafe.get jsopts "types" in
+  let opts = if Js.Optdef.test types
+    then { opts with types = Js.to_bool types; }
+    else opts in
+
+  opts
+)
 
 let parse content options =
   let content = Js.to_string content in

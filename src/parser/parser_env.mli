@@ -32,6 +32,7 @@ val mode_to_string : lex_mode -> string
 
 type parse_options = {
   experimental_decorators: bool;
+  types: bool;
 }
 val default_parse_options : parse_options
 
@@ -67,6 +68,7 @@ val no_let : env -> bool
 val errors : env -> (Loc.t * Parse_error.t) list
 val parse_options : env -> parse_options
 val source : env -> Loc.filename option
+val should_parse_types : env -> bool
 
 (* miscellaneous operations *)
 val last_opt : env -> (lex_result -> 'a) -> 'a option

@@ -226,6 +226,8 @@ end = struct
     let rec _type env = union env
 
     and annotation env =
+      if not (should_parse_types env)
+      then error env Error.UnexpectedTypeAnnotation;
       let start_loc = Peek.loc env in
       Expect.token env T_COLON;
       let typeAnnotation = _type env in
@@ -388,6 +390,8 @@ end = struct
         Loc.btwn start_loc end_loc, Type.Tuple tl
 
     and function_param_with_id env name =
+      if not (should_parse_types env)
+      then error env Error.UnexpectedTypeAnnotation;
       let optional = Expect.maybe env T_PLING in
       Expect.token env T_COLON;
       let typeAnnotation = _type env in
@@ -453,6 +457,8 @@ end = struct
             | T_PLING
             | T_COLON ->
                 (* Ok this is definitely a parameter *)
+                if not (should_parse_types env)
+                then error env Error.UnexpectedTypeAnnotation;
                 let optional = Expect.maybe env T_PLING in
                 Expect.token env T_COLON;
                 let typeAnnotation = _type env in
@@ -558,6 +564,8 @@ end = struct
         })
 
       in let property env start_loc static key =
+        if not (should_parse_types env)
+        then error env Error.UnexpectedTypeAnnotation;
         let optional = Expect.maybe env T_PLING in
         Expect.token env T_COLON;
         let value = _type env in
@@ -656,6 +664,8 @@ end = struct
           let start_loc = Peek.loc env in
           if Peek.token env = T_LESS_THAN
           then begin
+            if not (should_parse_types env)
+            then error env Error.UnexpectedTypeAnnotation;
             Expect.token env T_LESS_THAN;
             let params = params env [] in
             let loc = Loc.btwn start_loc (Peek.loc env) in
@@ -2179,6 +2189,8 @@ end = struct
       let implements =
         if Peek.token env = T_IMPLEMENTS
         then begin
+          if not (should_parse_types env)
+          then error env Error.UnexpectedTypeInterface;
           Expect.token env T_IMPLEMENTS;
           class_implements env []
         end else [] in
@@ -2854,6 +2866,8 @@ end = struct
       let start_loc = Peek.loc env in
       if Peek.identifier ~i:1 env
       then begin
+        if not (should_parse_types env)
+        then error env Error.UnexpectedTypeAlias;
         Expect.token env T_TYPE;
         Eat.push_lex_mode env TYPE_LEX;
         let id = Parse.identifier env in
@@ -2888,6 +2902,8 @@ end = struct
         let start_loc = Peek.loc env in
         if Peek.identifier ~i:1 env
         then begin
+          if not (should_parse_types env)
+          then error env Error.UnexpectedTypeInterface;
           Expect.token env T_INTERFACE;
           let id = Parse.identifier env in
           let typeParameters = Type.type_parameter_declaration env in
@@ -3012,6 +3028,8 @@ end = struct
           Statement.(DeclareModule DeclareModule.({ id; body; })) in
 
       fun ?(in_module=false) env ->
+        if not (should_parse_types env)
+        then error env Error.UnexpectedTypeDeclaration;
         let start_loc = Peek.loc env in
         (* eventually, just emit a wrapper AST node *)
         (match Peek.token ~i:1 env with
@@ -3123,6 +3141,8 @@ end = struct
               }
           | T_TYPE when (Peek.token env ~i:1) <> T_LCURLY ->
               (* export type ... *)
+              if not (should_parse_types env)
+              then error env Error.UnexpectedTypeExport;
               let type_alias = type_alias env in
               let end_loc = fst type_alias in
               Loc.btwn start_loc end_loc, Statement.ExportDeclaration {
@@ -3266,8 +3286,13 @@ end = struct
            * identifier, like import type from "module" *)
           let importKind, type_ident = Statement.ImportDeclaration.(
             match Peek.token env with
-            | T_TYPE -> ImportType, Some(Parse.identifier env)
+            | T_TYPE ->
+              if not (should_parse_types env)
+              then error env Error.UnexpectedTypeImport;
+              ImportType, Some(Parse.identifier env)
             | T_TYPEOF ->
+              if not (should_parse_types env)
+              then error env Error.UnexpectedTypeImport;
               Expect.token env T_TYPEOF;
               ImportTypeof, None
             | _ -> ImportValue, None
@@ -3857,6 +3882,8 @@ end = struct
     let loc, id =
       if Peek.token env = T_PLING
       then begin
+        if not (should_parse_types env)
+        then error env Error.UnexpectedTypeAnnotation;
         let loc = Loc.btwn loc (Peek.loc env) in
         Expect.token env T_PLING;
         loc, { id with Identifier.optional = true; }
