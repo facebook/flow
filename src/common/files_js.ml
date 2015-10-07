@@ -11,7 +11,6 @@
 (************** file filter utils ***************)
 
 open Utils
-open Modes_js
 
 let global_file_name = "(global)"
 
