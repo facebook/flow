@@ -161,7 +161,6 @@ module OptionParser(Config : CONFIG) = struct
       Options.opt_all = all;
       Options.opt_weak = weak;
       Options.opt_traces;
-      Options.opt_strict = true;
       Options.opt_json = json;
       Options.opt_quiet = quiet || json;
       Options.opt_module_name_mappers = FlowConfig.(

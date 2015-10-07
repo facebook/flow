@@ -19,7 +19,6 @@ type options = {
   opt_all : bool;
   opt_weak : bool;
   opt_traces : int;
-  opt_strict : bool;
   opt_json : bool;
   opt_quiet : bool;
   opt_profile : bool;

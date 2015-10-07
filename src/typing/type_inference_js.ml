@@ -21,7 +21,6 @@ open Utils_js
 
 module Ast = Spider_monkey_ast
 
-open Modes_js
 open Reason_js
 open Constraint_js
 open Type
@@ -6294,7 +6293,7 @@ let infer_ast ?module_name ~force_check ~weak_by_default ast file =
   );
 
   (* insist that whatever type flows into exports is fully annotated *)
-  (if modes.strict then force_annotations cx);
+  force_annotations cx;
 
   let ins = SSet.elements cx.required in
   let out = _module in

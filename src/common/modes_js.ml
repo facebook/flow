@@ -13,7 +13,6 @@ type modes = {
   mutable verbose: bool;
   mutable verbose_indent: bool;
   mutable traces: int;
-  mutable strict: bool;
   mutable json: bool;
   mutable strip_root: bool;
   mutable quiet : bool;
@@ -26,7 +25,6 @@ let modes = {
   verbose = false;
   verbose_indent = false;
   traces = 0;
-  strict = false;
   json = false;
   strip_root = false;
   quiet = true;

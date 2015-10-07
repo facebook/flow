@@ -91,7 +91,6 @@ let main all weak debug verbose verbose_indent json profile quiet module_
     Options.opt_debug = debug;
     Options.opt_verbose = verbose || verbose_indent;
     Options.opt_verbose_indent = verbose_indent;
-    Options.opt_strict = true;
     Options.opt_traces = 0;
     Options.opt_json = json;
     Options.opt_quiet = quiet || json;

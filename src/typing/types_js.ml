@@ -36,7 +36,6 @@ let init_modes opts = Options.(
   modes.verbose <- opts.opt_verbose;
   modes.verbose_indent <- should_indent_verbose opts;
   modes.traces <- opts.opt_traces;
-  modes.strict <- opts.opt_strict;
   modes.json <- opts.opt_json;
   modes.strip_root <- opts.opt_strip_root;
   modes.quiet <- opts.opt_quiet;
@@ -825,15 +824,12 @@ let typecheck workers files removed unparsed opts make_merge_input =
     let dependency_graph = calc_dependencies workers to_merge in
     let partition = Sort_js.topsort dependency_graph in
     if profile_and_not_quiet opts then Sort_js.log partition;
-    (if modes.strict then (
-      try
-        merge_strict workers dependency_graph partition opts;
-        if profile_and_not_quiet opts then Gc.print_stat stderr;
-      with exc ->
-        prerr_endline (Printexc.to_string exc)
-     ) else
-        failwith "Did you forget to pass the --strict flag?"
-    );
+    begin try
+      merge_strict workers dependency_graph partition opts;
+      if profile_and_not_quiet opts then Gc.print_stat stderr;
+    with exc ->
+      prerr_endline (Printexc.to_string exc)
+    end;
     (* collate errors by origin *)
     collate_errors to_merge;
     to_merge
@@ -946,8 +942,6 @@ let deps workers unmodified inferred_files removed_modules =
 *)
 let recheck genv env modified =
   let options = genv.ServerEnv.options in
-  if not options.Options.opt_strict
-  then failwith "Missing -- strict";
 
   (* filter modified files *)
   let root = Options.root options in
