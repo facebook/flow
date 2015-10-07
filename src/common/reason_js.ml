@@ -250,7 +250,6 @@ let strip_root_from_loc root loc = Loc.(
   | None -> None
   | Some Builtins -> Some Builtins
   | Some LibFile file ->
-      Utils.prerr_endlinef "%s" file;
     let root_str = spf "%s%s" (Path.to_string root) Filename.dir_sep in
     if Str.string_match (Str.regexp_string root_str) file 0
     then Some (LibFile (spf "[LIB] %s" (Files_js.relative_path root_str file)))

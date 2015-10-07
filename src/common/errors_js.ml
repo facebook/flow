@@ -214,10 +214,18 @@ let print_file_at_location ~root stdin_file main_file loc s = Loc.(
       (Some stdin_filename) = filename, Some (stdin_filename, content)
   | _ -> false, stdin_file in
 
+  let see_another_file filename =
+    if filename = main_file
+    then [(default_style "")]
+    else [
+      comment_style ". See: ";
+      comment_file_style (Printf.sprintf "%s:%d" (relative_path filename) l0)
+    ] in
+
   match using_stdin, filename with
   | _, None ->
     [
-      comment_style (Printf.sprintf "%s" s);
+      comment_style s;
       default_style "\n";
     ]
   | false, Some fn when not (Sys.file_exists fn) ->
@@ -225,14 +233,10 @@ let print_file_at_location ~root stdin_file main_file loc s = Loc.(
       | Some Loc.LibFile filename
       | Some Loc.SourceFile filename -> filename
       | Some Loc.Builtins
-      | None -> failwith "Should only have lib and source files at this point"
-      in
-    [
-      comment_style (Printf.sprintf "%s" s);
-      comment_style ". See: ";
-      comment_file_style (Printf.sprintf "%s:%d" (relative_path original_filename) l0);
-      default_style "\n";
-    ]
+      | None -> failwith "Should only have lib and source files at this point" in
+      [comment_style s] @
+      (see_another_file original_filename) @
+      [default_style "\n"];
   | _, Some filename ->
       let line_number_text = Printf.sprintf "%3d: " l0 in
       let code_line = read_line_in_file (l0 - 1) filename stdin_file in
@@ -247,16 +251,10 @@ let print_file_at_location ~root stdin_file main_file loc s = Loc.(
         else 1
       in
       let underline = String.make underline_size '^' in
-      let see_another_file = if filename == main_file then [(default_style "")] else
-        [
-          comment_style ". See: ";
-          comment_file_style (Printf.sprintf "%s:%d" (relative_path filename) l0)
-        ]
-      in
       line_number_style line_number_text ::
       highlighted_line @
       [comment_style (Printf.sprintf "\n%s%s %s" padding underline s)] @
-      see_another_file @
+      (see_another_file filename) @
       [default_style "\n"]
 )
 
