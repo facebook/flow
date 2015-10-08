@@ -178,7 +178,7 @@ struct
             let ty = Some (Constraint_js.string_of_t cx t) in
             let raw_type =
               if include_raw then
-                Some (Constraint_js.jstr_of_t ~depth:10 cx t)
+                Some (Debug.jstr_of_t ~depth:10 cx t)
               else
                 None
             in
@@ -205,7 +205,7 @@ struct
        possible depth to avoid that. *)
     let raw_printer c t =
       if include_raw
-        then Some (Constraint_js.jstr_of_t ~depth:max_int c t)
+        then Some (Debug.jstr_of_t ~depth:max_int c t)
         else None
       in
     let file = ServerProt.file_input_get_filename file_input in

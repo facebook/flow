@@ -138,6 +138,4 @@ val havoc_vars: changeset -> unit
 val havoc_heap_refinements: unit -> unit
 val havoc_heap_refinements_with_propname: string -> unit
 
-val json_of_env: ?depth:int -> context -> Scope.t list -> Hh_json.json
-
 val get_refinement: context -> Key.t -> reason -> Type.t option

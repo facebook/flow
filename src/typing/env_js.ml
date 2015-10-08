@@ -1031,9 +1031,6 @@ let clear_env reason =
     Scope.havoc scope ~make_specific:(fun _ -> UndefT reason)
   )
 
-let json_of_env ?(depth=1000) cx env =
-  Hh_json.JList (List.map (json_of_scope ~depth cx) env)
-
 (* The following functions are used to narrow the type of variables
    based on dynamic checks. *)
 
