@@ -96,7 +96,6 @@ val json_of_t: ?depth:int -> context -> Type.t -> Hh_json.json
 val jstr_of_t: ?depth:int -> context -> Type.t -> string
 val json_of_graph: ?depth:int -> context -> Hh_json.json
 val jstr_of_graph: ?depth:int -> context -> string
-val dump_t: context -> Type.t -> string
 
 val parameter_name: context -> string -> Type.t -> string
 val string_of_param_t: context -> Type.t -> string
@@ -104,8 +103,7 @@ val string_of_param_t: context -> Type.t -> string
 val is_printed_type_parsable: ?weak:bool -> context -> Type.t -> bool
 val is_printed_param_type_parsable: ?weak:bool -> context -> Type.t -> bool
 
-val string_of_entry: context -> Scope.Entry.t -> string
-val string_of_scope: context -> Scope.t -> string
+val json_of_scope: ?depth:int -> context -> Scope.t -> Hh_json.json
 
 class ['a] type_visitor: object
   (* Only exposing a few methods for now. *)

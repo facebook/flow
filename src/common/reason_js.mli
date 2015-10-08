@@ -26,6 +26,7 @@ val diff_range: Loc.t -> int * int
 val in_range: Loc.t -> Loc.t -> bool
 
 val string_of_loc: Loc.t -> string
+val json_of_loc: Loc.t -> Hh_json.json
 
 val reason_of_string: string -> reason
 

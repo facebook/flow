@@ -221,7 +221,7 @@ let parenthesize t_str enclosure triggers =
    but reasonably general. override gets a chance to print the incoming
    type first. if it passes, the bulk of printable types are formatted
    in a reasonable way. fallback is sent the rest. enclosure drives
-   delimiter choice. see e.g. dump_t and string_of_t for callers.
+   delimiter choice. see e.g. string_of_t for callers.
  *)
 let rec type_printer override fallback enclosure cx t =
   let pp = type_printer override fallback in
@@ -983,130 +983,6 @@ let jstr_of_graph ?(depth=1000) cx =
 
 (****************** end json ******************)
 
-(* debug printer *)
-let rec dump_t cx t =
-  dump_t_ ISet.empty cx t
-
-and dump_t_ =
-  (* we'll want to add more here *)
-  let override stack cx t = match t with
-    | OpenT (r, id) -> Some (dump_tvar stack cx r id)
-    | NumT (r, lit) -> Some (match lit with
-        | Literal (_, raw) -> spf "NumT(%s)" raw
-        | Truthy -> spf "NumT(truthy)"
-        | Falsy -> spf "NumT(0)"
-        | AnyLiteral -> "NumT")
-    | StrT (r, c) -> Some (match c with
-        | Literal s -> spf "StrT(%S)" s
-        | Truthy -> spf "StrT(truthy)"
-        | Falsy -> spf "StrT(falsy)"
-        | AnyLiteral -> "StrT")
-    | BoolT (r, c) -> Some (match c with
-        | Some b -> spf "BoolT(%B)" b
-        | None -> "BoolT")
-    | UndefT _
-    | MixedT _
-    | AnyT _
-    | NullT _ -> Some (string_of_ctor t)
-    | SetPropT (_, (_, n), t) ->
-        Some (spf "SetPropT(%s: %s)" n (dump_t_ stack cx t))
-    | GetPropT (_, (_, n), t) ->
-        Some (spf "GetPropT(%s: %s)" n (dump_t_ stack cx t))
-    | LookupT (_, _, ts, n, t) ->
-        Some (spf "LookupT(%s: %s)" n (dump_t_ stack cx t))
-    | PredicateT (p, t) -> Some (spf "PredicateT(%s | %s)"
-        (string_of_predicate p) (dump_t_ stack cx t))
-    | _ -> None
-  in
-  fun stack cx t ->
-    type_printer (override stack) string_of_ctor EnclosureNone cx t
-
-(* type variable dumper. abbreviates a few simple cases for readability.
-   note: if we turn the tvar record into a datatype, these will give a
-   sense of some of the obvious data constructors *)
-and dump_tvar stack cx r id =
-  let sbounds = if ISet.mem id stack then "(...)" else (
-    let stack = ISet.add id stack in
-    match IMap.find_unsafe id cx.graph with
-    | Goto id -> spf "Goto TYPE_%d" id
-    | Root { rank; constraints = Resolved t } ->
-        spf "Root (rank = %d, resolved = %s)"
-          rank (dump_t_ stack cx t)
-    | Root { rank; constraints = Unresolved bounds } ->
-        spf "Root (rank = %d, unresolved = %s)"
-          rank (dump_bounds stack cx id bounds)
-  ) in
-  (spf "TYPE_%d: " id) ^ sbounds
-
-and dump_bounds stack cx id bounds = match bounds with
-  | { lower; upper; lowertvars; uppertvars; }
-      when lower = TypeMap.empty && upper = TypeMap.empty
-      && IMap.cardinal lowertvars = 1 && IMap.cardinal uppertvars = 1 ->
-      (* no inflows or outflows *)
-      "(free)"
-  | { lower; upper; lowertvars; uppertvars; }
-      when upper = TypeMap.empty
-      && IMap.cardinal lowertvars = 1 && IMap.cardinal uppertvars = 1 ->
-      (* only concrete inflows *)
-      spf "L %s" (dump_tkeys stack cx lower)
-  | { lower; upper; lowertvars; uppertvars; }
-      when lower = TypeMap.empty && upper = TypeMap.empty
-      && IMap.cardinal uppertvars = 1 ->
-      (* only tvar inflows *)
-      spf "LV %s" (dump_tvarkeys cx id lowertvars)
-  | { lower; upper; lowertvars; uppertvars; }
-      when lower = TypeMap.empty
-      && IMap.cardinal lowertvars = 1 && IMap.cardinal uppertvars = 1 ->
-      (* only concrete outflows *)
-      spf "U %s" (dump_tkeys stack cx upper)
-  | { lower; upper; lowertvars; uppertvars; }
-      when lower = TypeMap.empty && upper = TypeMap.empty
-      && IMap.cardinal lowertvars = 1 ->
-      (* only tvar outflows *)
-      spf "UV %s" (dump_tvarkeys cx id uppertvars)
-  | { lower; upper; lowertvars; uppertvars; }
-      when IMap.cardinal lowertvars = 1 && IMap.cardinal uppertvars = 1 ->
-      (* only concrete inflows/outflows *)
-      let l = dump_tkeys stack cx lower in
-      let u = dump_tkeys stack cx upper in
-      if l = u then "= " ^ l
-      else "L " ^ l ^ " U " ^ u
-  | { lower; upper; lowertvars; uppertvars; } ->
-    let slower = if lower = TypeMap.empty then "" else
-      spf " lower = %s;" (dump_tkeys stack cx lower) in
-    let supper = if upper = TypeMap.empty then "" else
-      spf " upper = %s;" (dump_tkeys stack cx upper) in
-    let sltvars = if IMap.cardinal lowertvars <= 1 then "" else
-      spf " lowertvars = %s;" (dump_tvarkeys cx id lowertvars) in
-    let sutvars = if IMap.cardinal uppertvars <= 1 then "" else
-      spf " uppertvars = %s;" (dump_tvarkeys cx id uppertvars) in
-    "{" ^ slower ^ supper ^ sltvars ^ sutvars ^ " }"
-
-(* dump the keys of a type map as a list *)
-and dump_tkeys stack cx tmap =
-  "[" ^ (
-    String.concat "," (
-      List.rev (
-        TypeMap.fold (
-          fun t _ acc -> dump_t_ stack cx t :: acc
-        ) tmap []
-      )
-    )
-  ) ^ "]"
-
-(* dump the keys of a tvar map as a list *)
-and dump_tvarkeys cx self imap =
-  "[" ^ (
-    String.concat "," (
-      List.rev (
-        IMap.fold (
-          fun id _ acc ->
-            if id = self then acc else spf "TYPE_%d" id :: acc
-        ) imap []
-      )
-    )
-  ) ^ "]"
-
 let rec is_printed_type_parsable_impl weak cx enclosure = function
   (* Base cases *)
   | BoundT _
@@ -1232,57 +1108,67 @@ let is_printed_param_type_parsable ?(weak=false) cx t =
 
 (* scopes and types *)
 
-let string_of_entry = Scope.(
+let json_of_scope = Scope.(
+  let open Hh_json in
 
-  let string_of_value cx {
+  let json_of_value_impl json_cx {
     Entry.kind; value_state; value_loc; specific; general
   } =
-    Utils.spf "{ kind: %s; value_state: %s; value_loc: %s; \
-      specific: %s; general: %s }"
-      (Entry.string_of_value_kind kind)
-      (Entry.string_of_state value_state)
-      (string_of_loc value_loc)
-      (dump_t cx specific)
-      (dump_t cx general)
+    JAssoc [
+      "entry_type", JString "Value";
+      "kind", JString (Entry.string_of_value_kind kind);
+      "value_state", JString (Entry.string_of_state value_state);
+      "value_loc", json_of_loc value_loc;
+      "specific", _json_of_t json_cx specific;
+      "general", _json_of_t json_cx general;
+    ]
   in
+  let json_of_value json_cx = check_depth json_of_value_impl json_cx in
 
-  let string_of_type cx { Entry.type_state; type_loc; _type } =
-    Utils.spf "{ type_state: %s; type_loc: %s; _type: %s }"
-      (Entry.string_of_state type_state)
-      (string_of_loc type_loc)
-      (dump_t cx _type)
+  let json_of_type_impl json_cx { Entry.type_state; type_loc; _type } =
+    JAssoc [
+      "entry_type", JString "Type";
+      "type_state", JString (Entry.string_of_state type_state);
+      "type_loc", json_of_loc type_loc;
+      "_type", _json_of_t json_cx _type;
+    ]
   in
+  let json_of_type json_cx = check_depth json_of_type_impl json_cx in
 
-  fun cx -> Entry.(function
-  | Value r -> spf "Value %s" (string_of_value cx r)
-  | Type r -> spf "Type %s" (string_of_type cx r)
-  )
-)
+  let json_of_entry_impl json_cx = Entry.(function
+    | Value r -> json_of_value json_cx r
+    | Type r -> json_of_type json_cx r
+  ) in
+  let json_of_entry json_cx = check_depth json_of_entry_impl json_cx in
 
-let string_of_scope = Scope.(
-
-  let string_of_entries cx entries =
-    SMap.fold (fun name entry acc ->
-      (Utils.spf "%s: %s" name (string_of_entry cx entry))
-        :: acc
+  let json_of_entries_impl json_cx entries =
+    let props = SMap.fold (fun name entry acc ->
+      (name, json_of_entry json_cx entry) :: acc
     ) entries []
-    |> String.concat ";\n  "
+    |> List.rev
+    in
+    JAssoc props
   in
+  let json_of_entries json_cx = check_depth json_of_entries_impl json_cx in
 
-  let string_of_refi cx { refi_loc; refined; original } =
-    Utils.spf "{ refi_loc: %s; refined: %s; original: %s }"
-      (string_of_loc refi_loc)
-      (dump_t cx refined)
-      (dump_t cx original)
+  let json_of_refi_impl json_cx { refi_loc; refined; original } =
+    JAssoc [
+      "refi_loc", json_of_loc refi_loc;
+      "refined", _json_of_t json_cx refined;
+      "original", _json_of_t json_cx original;
+    ]
   in
+  let json_of_refi json_cx = check_depth json_of_refi_impl json_cx in
 
-  let string_of_refis cx refis =
-    KeyMap.fold (fun key refi acc ->
-      (Utils.spf "%s: %s" (Key.string_of_key key) (string_of_refi cx refi))
-        :: acc
+  let json_of_refis_impl json_cx refis =
+    let props = KeyMap.fold (fun key refi acc ->
+      (Key.string_of_key key, json_of_refi json_cx refi) :: acc
     ) refis []
-    |> String.concat ";\n  "
+    |> List.rev
+    in
+    JAssoc props
   in
+  let json_of_refis json_cx = check_depth json_of_refis_impl json_cx in
 
   let string_of_function_kind = function
   | Ordinary -> "Ordinary"
@@ -1295,11 +1181,13 @@ let string_of_scope = Scope.(
   | LexScope -> "LexScope"
   in
 
-  fun cx scope ->
-    Utils.spf "{ kind: %s;\nentries:\n%s\nrefis:\n%s\n}"
-      (string_of_scope_kind scope.kind)
-      (string_of_entries cx scope.entries)
-      (string_of_refis cx scope.refis)
+  fun ?(depth=1000) cx scope ->
+    let json_cx = { cx; depth; stack = ISet.empty; } in
+    JAssoc [
+      "kind", JString (string_of_scope_kind scope.kind);
+      "entries", json_of_entries json_cx scope.entries;
+      "refis", json_of_refis json_cx scope.refis;
+    ]
 )
 
 (********* type visitor *********)
