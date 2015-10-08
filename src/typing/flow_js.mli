@@ -16,8 +16,8 @@ open Constraint_js
 val new_warning: (reason * string) list -> Errors_js.error
 val new_error: (reason * string) list -> Errors_js.error
 
-val add_warning: context -> ?trace:trace -> (reason * string) list -> unit
-val add_error: context -> ?trace:trace -> (reason * string) list -> unit
+val add_warning: context -> ?trace:Trace.t -> (reason * string) list -> unit
+val add_error: context -> ?trace:Trace.t -> (reason * string) list -> unit
 
 val find_graph: context -> ident -> constraints
 
@@ -26,12 +26,12 @@ val flow: context -> (Type.t * Type.t) -> unit
 
 val unify: context -> Type.t -> Type.t -> unit
 
-val reposition: context -> ?trace:trace -> reason -> Type.t -> Type.t
+val reposition: context -> ?trace:Trace.t -> reason -> Type.t -> Type.t
 
 val master_cx: unit -> context
 
 (* constraint utils *)
-val filter_optional: context -> ?trace:trace -> reason -> Type.t -> Type.t
+val filter_optional: context -> ?trace:Trace.t -> reason -> Type.t -> Type.t
 
 module Cache: sig
   val clear: unit -> unit
@@ -117,7 +117,7 @@ val resolve_builtin_class: context -> Type.t -> Type.t
 val set_builtin: context -> string -> Type.t -> unit
 
 val mk_instance: context -> reason -> ?for_type:bool -> Type.t -> Type.t
-val mk_typeof_annotation: context -> ?trace:trace -> Type.t -> Type.t
+val mk_typeof_annotation: context -> ?trace:Trace.t -> Type.t -> Type.t
 
 (* strict *)
 val check_types: context -> ident -> (Type.t -> bool) -> bool

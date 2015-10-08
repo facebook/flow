@@ -313,7 +313,7 @@ let prmsg_flow_trace_reasons cx level trace_reasons msg (r1, r2) = Errors_js.(
    downstream for obscure reasons *)
 let make_trace_reasons trace =
   if modes.traces = 0 then [] else
-    reasons_of_trace ~level:modes.traces trace
+    Trace.reasons_of_trace ~level:modes.traces trace
     |> List.map Errors_js.message_of_reason
 
 (* format an error or warning and add it to flow's output.
@@ -334,7 +334,7 @@ let prmsg_flow cx level trace msg (r1, r2) =
 *)
 let prerr_flow_full_trace cx trace msg l u =
   let trace_reasons =
-    reasons_of_trace ~level:(trace_depth trace + 1) trace
+    Trace.reasons_of_trace ~level:(Trace.trace_depth trace + 1) trace
     |> List.map Errors_js.message_of_reason
   in
   prmsg_flow_trace_reasons cx
@@ -1282,17 +1282,17 @@ let expect_def t =
    limit, we throw a LimitExceeded exception.
  *)
 module RecursionCheck : sig
-  exception LimitExceeded of trace
-  val check: trace -> unit
+  exception LimitExceeded of Trace.t
+  val check: Trace.t -> unit
 
 end = struct
-  exception LimitExceeded of trace
+  exception LimitExceeded of Trace.t
   let limit = 1000000
 
   (* check trace depth as a proxy for recursion depth
      and throw when limit is exceeded *)
   let check trace =
-    if trace_depth trace >= limit
+    if Trace.trace_depth trace >= limit
     then raise (LimitExceeded trace)
 end
 
@@ -1308,7 +1308,7 @@ let not_expect_bound t = match t with
 let rec __flow cx (l, u) trace =
   (if modes.verbose then
     let indent = if modes.verbose_indent
-      then String.make ((trace_depth trace - 1) * 2) ' '
+      then String.make ((Trace.trace_depth trace - 1) * 2) ' '
       else "" in
     let pid = Unix.getpid () in
     prerr_endlinef
@@ -4566,7 +4566,7 @@ and iter_with_filter cx bindings skip_id each =
 and edges_to_t cx trace ?(opt=false) (id1, bounds1) t2 =
   if not opt then add_upper t2 trace bounds1;
   iter_with_filter cx bounds1.lowertvars id1 (fun (_, bounds) trace_l ->
-    add_upper t2 (concat_trace[trace_l;trace]) bounds
+    add_upper t2 (Trace.concat_trace[trace_l;trace]) bounds
   )
 
 (* for each id in id2 + bounds2.uppertvars:
@@ -4578,7 +4578,7 @@ and edges_to_t cx trace ?(opt=false) (id1, bounds1) t2 =
 and edges_from_t cx trace ?(opt=false) t1 (id2, bounds2) =
   if not opt then add_lower t1 trace bounds2;
   iter_with_filter cx bounds2.uppertvars id2 (fun (_, bounds) trace_u ->
-    add_lower t1 (concat_trace[trace;trace_u]) bounds
+    add_lower t1 (Trace.concat_trace[trace;trace_u]) bounds
   )
 
 (* for each id' in id + bounds.lowertvars:
@@ -4586,7 +4586,7 @@ and edges_from_t cx trace ?(opt=false) t1 (id2, bounds2) =
 *)
 and edges_to_ts cx trace ?(opt=false) (id, bounds) us =
   us |> TypeMap.iter (fun u trace_u ->
-    edges_to_t cx (concat_trace[trace;trace_u]) ~opt (id, bounds) u
+    edges_to_t cx (Trace.concat_trace[trace;trace_u]) ~opt (id, bounds) u
   )
 
 (* for each id' in id + bounds.uppertvars:
@@ -4594,7 +4594,7 @@ and edges_to_ts cx trace ?(opt=false) (id, bounds) us =
 *)
 and edges_from_ts cx trace ?(opt=false) ls (id, bounds) =
   ls |> TypeMap.iter (fun l trace_l ->
-    edges_from_t cx (concat_trace[trace_l;trace]) ~opt l (id, bounds)
+    edges_from_t cx (Trace.concat_trace[trace_l;trace]) ~opt l (id, bounds)
   )
 
 (* for each id in id1 + bounds1.lowertvars:
@@ -4638,7 +4638,7 @@ and add_lowertvar id trace bounds =
 and edges_to_tvar cx trace ?(opt=false) (id1, bounds1) id2 =
   if not opt then add_uppertvar id2 trace bounds1;
   iter_with_filter cx bounds1.lowertvars id1 (fun (_, bounds) trace_l ->
-    add_uppertvar id2 (concat_trace[trace_l;trace]) bounds
+    add_uppertvar id2 (Trace.concat_trace[trace_l;trace]) bounds
   )
 
 (* for each id in id2 + bounds2.uppertvars:
@@ -4650,7 +4650,7 @@ and edges_to_tvar cx trace ?(opt=false) (id1, bounds1) id2 =
 and edges_from_tvar cx trace ?(opt=false) id1 (id2, bounds2) =
   if not opt then add_lowertvar id1 trace bounds2;
   iter_with_filter cx bounds2.uppertvars id2 (fun (_, bounds) trace_u ->
-    add_lowertvar id1 (concat_trace[trace;trace_u]) bounds
+    add_lowertvar id1 (Trace.concat_trace[trace;trace_u]) bounds
   )
 
 (* for each id in id1 + bounds1.lowertvars:
@@ -4662,7 +4662,8 @@ and add_upper_edges cx trace ?(opt=false) (id1, bounds1) (id2, bounds2) =
   edges_to_ts cx trace ~opt (id1, bounds1) bounds2.upper;
   edges_to_tvar cx trace ~opt (id1, bounds1) id2;
   iter_with_filter cx bounds2.uppertvars id2 (fun (tvar, _) trace_u ->
-    edges_to_tvar cx (concat_trace[trace;trace_u]) ~opt (id1, bounds1) tvar
+    let trace = Trace.concat_trace [trace;trace_u] in
+    edges_to_tvar cx trace ~opt (id1, bounds1) tvar
   )
 
 (* for each id in id2 + bounds2.uppertvars:
@@ -4674,7 +4675,8 @@ and add_lower_edges cx trace ?(opt=false) (id1, bounds1) (id2, bounds2) =
   edges_from_ts cx trace ~opt bounds1.lower (id2, bounds2);
   edges_from_tvar cx trace ~opt id1 (id2, bounds2);
   iter_with_filter cx bounds1.lowertvars id1 (fun (tvar, _) trace_l ->
-    edges_from_tvar cx (concat_trace[trace_l;trace]) ~opt tvar (id2, bounds2)
+    let trace = Trace.concat_trace [trace_l;trace] in
+    edges_from_tvar cx trace ~opt tvar (id2, bounds2)
   )
 
 (***************)
@@ -5106,7 +5108,7 @@ and set_builtin cx x t =
    on other than concatenating subtraces to make longer traces to describe
    transitive data flows *)
 and join_flow cx ts (t1, t2) =
-  __flow cx (t1, t2) (concat_trace ts)
+  __flow cx (t1, t2) (Trace.concat_trace ts)
 
 (* Call __flow while embedding traces. Typically this is used in code that
    simplifies a constraint to generate subconstraints: the current trace is
@@ -5114,7 +5116,7 @@ and join_flow cx ts (t1, t2) =
    an error and walk back, we can know why the particular constraints that
    caused the immediate error were generated. *)
 and rec_flow cx trace (t1, t2) =
-  __flow cx (t1, t2) (rec_trace t1 t2 trace)
+  __flow cx (t1, t2) (Trace.rec_trace t1 t2 trace)
 
 (* Ideally this function would not be required: either we call `flow` from
    outside without a trace (see below), or we call one of the functions above
@@ -5123,8 +5125,8 @@ and rec_flow cx trace (t1, t2) =
    traces), so they call this function instead. *)
 and flow_opt cx ?trace (t1, t2) =
   let trace = match trace with
-    | None -> unit_trace t1 t2
-    | Some trace -> rec_trace t1 t2 trace in
+    | None -> Trace.unit_trace t1 t2
+    | Some trace -> Trace.rec_trace t1 t2 trace in
   __flow cx (t1, t2) trace
 
 (* Externally visible function for subtyping. *)
@@ -5143,7 +5145,7 @@ and flow cx (lower, upper) =
 
 (* Externally visible function for unification. *)
 let unify cx t1 t2 =
-  rec_unify cx (unit_trace t1 t2) t1 t2
+  rec_unify cx (Trace.unit_trace t1 t2) t1 t2
 
 (********* Garbage collection *********)
 

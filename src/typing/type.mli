@@ -213,6 +213,7 @@ val loc_of_t: t -> Loc.t
 val mod_reason_of_t: (reason -> reason) -> t -> t
 val open_tvar: t -> (reason * ident)
 val reason_of_t: t -> reason
+val reason_of_t_add_id: t -> reason
 val reasonless_compare: t -> t -> int
 val repos_t_from_reason: reason -> t -> t
 val string_of_ctor: t -> string

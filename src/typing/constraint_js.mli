@@ -10,20 +10,8 @@
 
 open Utils
 open Utils_js
-open Reason_js
 
 type ident = int
-
-(***************************************)
-
-type trace
-
-val trace_depth: trace -> int
-val unit_trace: Type.t -> Type.t -> trace
-val rec_trace: Type.t -> Type.t -> trace -> trace
-val concat_trace: trace list -> trace
-
-val reasons_of_trace: ?level:int -> trace -> reason list
 
 (***************************************)
 
@@ -41,10 +29,10 @@ and constraints =
 | Unresolved of bounds
 
 and bounds = {
-  mutable lower: trace Type.TypeMap.t;
-  mutable upper: trace Type.TypeMap.t;
-  mutable lowertvars: trace IMap.t;
-  mutable uppertvars: trace IMap.t;
+  mutable lower: Trace.t Type.TypeMap.t;
+  mutable upper: Trace.t Type.TypeMap.t;
+  mutable lowertvars: Trace.t IMap.t;
+  mutable uppertvars: Trace.t IMap.t;
 }
 
 val new_unresolved_root: unit -> node
