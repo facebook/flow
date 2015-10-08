@@ -149,6 +149,12 @@ module OptionParser(Config : CONFIG) = struct
     in
     let opt_max_workers = min opt_max_workers Sys_utils.nbr_procs in
 
+    let opt_verbose =
+      if verbose || verbose_indent
+      then Some (if verbose_indent then 2 else 0)
+      else None
+    in
+
     result := Some {
       Options.opt_check_mode = Config.(mode = Check);
       Options.opt_error_flags = error_flags;
@@ -156,8 +162,7 @@ module OptionParser(Config : CONFIG) = struct
       Options.opt_root = root;
       Options.opt_should_detach = Config.(mode = Detach);
       Options.opt_debug = debug;
-      Options.opt_verbose = verbose || verbose_indent;
-      Options.opt_verbose_indent = verbose_indent;
+      Options.opt_verbose;
       Options.opt_all = all;
       Options.opt_weak = weak;
       Options.opt_traces;

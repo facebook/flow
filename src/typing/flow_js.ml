@@ -174,7 +174,7 @@ let mk_tvar cx reason =
   let tvar = mk_id () in
   let graph = cx.graph in
   cx.graph <- graph |> IMap.add tvar (new_unresolved_root ());
-  (if modes.verbose then prerr_endlinef
+  (if cx.verbose <> None then prerr_endlinef
     "TVAR %d (%d): %s" tvar (IMap.cardinal graph)
     (string_of_reason reason));
   OpenT (reason, tvar)
@@ -250,14 +250,15 @@ let rec havoc_ctx cx i j =
   if (i = 0 || j = 0) then () else
     let stack2, _ = IMap.find_unsafe i cx.closures in
     let stack1, scopes = IMap.find_unsafe j cx.closures in
-    havoc_ctx_ (List.rev scopes, List.rev stack1, List.rev stack2)
+    havoc_ctx_ ~verbose:cx.verbose
+      (List.rev scopes, List.rev stack1, List.rev stack2)
 
-and havoc_ctx_ = function
+and havoc_ctx_ ~verbose = function
   | scope::scopes, frame1::stack1, frame2::stack2
     when frame1 = frame2 ->
-    (if modes.verbose then prerr_endlinef "HAVOC::%d" frame1);
+    (if verbose <> None then prerr_endlinef "HAVOC::%d" frame1);
     scope |> Scope.havoc ~make_specific:(fun general -> general);
-    havoc_ctx_ (scopes, stack1, stack2)
+    havoc_ctx_ ~verbose (scopes, stack1, stack2)
   | _ -> ()
 
 (***************)
@@ -1074,8 +1075,8 @@ let builtins cx =
   lookup_module cx Files_js.lib_module
 
 (* new contexts are prepared here, so we can install shared tvars *)
-let fresh_context ?(checked=false) ?(weak=false) ~file ~_module =
-  let cx = new_context ~file ~_module ~checked ~weak in
+let fresh_context ?(checked=false) ?(weak=false) ~verbose file _module =
+  let cx = new_context ~file ~_module ~checked ~weak ~verbose in
   (* add types for pervasive builtins *)
   mk_builtins cx;
   cx
@@ -1087,7 +1088,7 @@ let master_cx =
   let cx_ = ref None in
   fun () -> match !cx_ with
   | None ->
-    let cx = fresh_context Loc.Builtins Files_js.lib_module in
+    let cx = fresh_context ~verbose:None Loc.Builtins Files_js.lib_module in
     cx_ := Some cx;
     cx
   | Some cx -> cx
@@ -1306,17 +1307,18 @@ let not_expect_bound t = match t with
     functions `rec_flow`, `join_flow`, or `flow_opt` (described below) inside
     this module, and the function `flow` outside this module. **)
 let rec __flow cx (l, u) trace =
-  (if modes.verbose then
-    let indent = if modes.verbose_indent
-      then String.make ((Trace.trace_depth trace - 1) * 2) ' '
-      else "" in
+  begin match cx.verbose with
+  | Some num_indent ->
+    let indent = String.make ((Trace.trace_depth trace - 1) * num_indent) ' ' in
     let pid = Unix.getpid () in
     prerr_endlinef
       "\n%s[%d] %s (%s) ~>\n%s[%d] %s (%s)"
       indent pid
       (dump_reason (reason_of_t l)) (string_of_ctor l)
       indent pid
-      (dump_reason (reason_of_t u)) (string_of_ctor u));
+      (dump_reason (reason_of_t u)) (string_of_ctor u)
+  | None -> ()
+  end;
 
   if not (ground_subtype (l,u) || Cache.FlowConstraint.mem (l,u)) then (
     (* limit recursion depth *)
@@ -3493,7 +3495,7 @@ and generate_tests cx reason typeparams each =
 
 and mk_nominal cx =
   let nominal = mk_id () in
-  (if modes.verbose then prerr_endlinef
+  (if cx.verbose <> None then prerr_endlinef
       "NOM %d %s" nominal (string_of_filename cx.file));
   nominal
 

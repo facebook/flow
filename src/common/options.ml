@@ -14,8 +14,7 @@ type options = {
   opt_root : Path.t;
   opt_should_detach : bool;
   opt_debug : bool;
-  opt_verbose : bool;
-  opt_verbose_indent: bool;
+  opt_verbose : int option; (* num of spaces to indent; None for not verbose *)
   opt_all : bool;
   opt_weak : bool;
   opt_traces : int;
@@ -39,8 +38,8 @@ let is_check_mode opts = opts.opt_check_mode
 let log_file opts = opts.opt_log_file
 let root opts = opts.opt_root
 let should_detach opts = opts.opt_should_detach
-let should_indent_verbose opts = opts.opt_verbose_indent
 let should_strip_root opts = opts.opt_strip_root
 let temp_dir opts = opts.opt_temp_dir
+let verbose opts = opts.opt_verbose
 let max_workers opts = opts.opt_max_workers
 let weak_by_default opts = opts.opt_weak

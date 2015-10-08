@@ -10,8 +10,6 @@
 
 type modes = {
   mutable debug: bool;
-  mutable verbose: bool;
-  mutable verbose_indent: bool;
   mutable traces: int;
   mutable json: bool;
   mutable strip_root: bool;
@@ -22,8 +20,6 @@ type modes = {
 
 let modes = {
   debug = false;
-  verbose = false;
-  verbose_indent = false;
   traces = 0;
   json = false;
   strip_root = false;

@@ -103,8 +103,8 @@ val do_gc: context -> string list -> unit
 
 (* contexts *)
 val fresh_context:
-  ?checked:bool -> ?weak:bool ->
-  file:filename -> _module:string ->
+  ?checked:bool -> ?weak:bool -> verbose:int option ->
+  filename -> string ->
   context
 
 (* builtins *)

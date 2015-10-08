@@ -130,6 +130,7 @@ type context = {
   _module: string;
   checked: bool;
   weak: bool;
+  verbose: int option;
 
   (* required modules, and map to their locations *)
   mutable required: SSet.t;
@@ -164,11 +165,12 @@ and module_exports_type =
 (* create a new context structure.
    Flow_js.fresh_context prepares for actual use.
  *)
-let new_context ?(checked=false) ?(weak=false) ~file ~_module = {
+let new_context ?(checked=false) ?(weak=false) ~verbose ~file ~_module = {
   file;
   _module;
   checked;
   weak;
+  verbose;
 
   required = SSet.empty;
   require_loc = SMap.empty;

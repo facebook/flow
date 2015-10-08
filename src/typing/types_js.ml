@@ -33,8 +33,6 @@ type results = SSet.t * string list * Errors_js.error list list
 
 let init_modes opts = Options.(
   modes.debug <- opts.opt_debug;
-  modes.verbose <- opts.opt_verbose;
-  modes.verbose_indent <- should_indent_verbose opts;
   modes.traces <- opts.opt_traces;
   modes.json <- opts.opt_json;
   modes.strip_root <- opts.opt_strip_root;
@@ -267,6 +265,7 @@ let infer_job opts (inferred, errsets, errsuppressions) files =
   init_modes opts;
   let force_check = Options.all opts in
   let weak_by_default = Options.weak_by_default opts in
+  let verbose = Options.verbose opts in
   List.fold_left (fun (inferred, errsets, errsuppressions) file ->
     try checktime opts 1.0
       (fun t -> spf "perf: inferred %s in %f" (string_of_filename file) t)
@@ -274,7 +273,7 @@ let infer_job opts (inferred, errsets, errsuppressions) files =
         (*prerr_endlinef "[%d] INFER: %s" (Unix.getpid()) file;*)
 
         (* infer produces a context for this module *)
-        let cx = TI.infer_module ~force_check ~weak_by_default file in
+        let cx = TI.infer_module ~force_check ~weak_by_default ~verbose file in
         (* register module info *)
         Module.add_module_info cx;
         (* note: save and clear errors and error suppressions before storing
@@ -531,6 +530,7 @@ let typecheck_contents contents filename =
       let cx = TI.infer_ast
         ~force_check:true
         ~weak_by_default:false
+        ~verbose: None
         ast filename
       in
       let cache = new context_cache in
@@ -1054,6 +1054,7 @@ let recheck genv env modified =
 (* full typecheck *)
 let full_check workers parse_next opts =
   init_modes opts;
+  let verbose = Options.verbose opts in
 
   let parsed, error_files, errors =
     Parsing_service_js.parse workers parse_next
@@ -1067,6 +1068,7 @@ let full_check workers parse_next opts =
       (* after local inference and before merge, bring in libraries *)
       (* if any fail to parse, our return value will suppress merge *)
       let lib_files = Init_js.init
+        ~verbose
         (fun file errs -> save_errors parse_errors [file] [errs])
         (fun file errs -> save_errors infer_errors [file] [errs])
         (fun file sups ->

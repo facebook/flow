@@ -14,6 +14,7 @@
    to Types_js, where error management stuff lives.
  *)
 val init :
+  verbose: int option ->
   (Loc.filename -> Errors_js.ErrorSet.t -> unit) ->
   (Loc.filename -> Errors_js.ErrorSet.t -> unit) ->
   (Loc.filename -> Errors_js.ErrorSuppressions.t -> unit) ->

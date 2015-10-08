@@ -50,6 +50,7 @@ type context = {
   _module: string;
   checked: bool;
   weak: bool;
+  verbose: int option;
 
   (* required modules, and map to their locations *)
   mutable required: SSet.t;
@@ -82,7 +83,7 @@ and module_exports_type =
   | ESModule
 
 val new_context:
-  ?checked:bool -> ?weak:bool ->
+  ?checked:bool -> ?weak:bool -> verbose:int option ->
   file:filename -> _module:string ->
   context
 

@@ -46,12 +46,13 @@ let parse_lib save_parse_errors =
 (* parse all lib files, and do local inference on those successfully parsed.
    returns list of (filename, success) pairs
  *)
-let init_lib save_parse_errors save_infer_errors save_suppressions =
+let init_lib ~verbose save_parse_errors save_infer_errors save_suppressions =
   (parse_lib save_parse_errors) |> List.fold_left (
     fun acc (file, ast) ->
       match ast with
       | Some (_, statements, comments) ->
         Type_inference_js.init_lib_file
+          ~verbose
           file
           statements
           comments
@@ -66,8 +67,9 @@ let init_lib save_parse_errors save_infer_errors save_suppressions =
    parse and do local inference on library files, and set up master context.
    returns list of (lib file, success) pairs.
  *)
-let init save_parse_errors save_infer_errors save_suppressions =
-  let res = init_lib save_parse_errors save_infer_errors save_suppressions in
+let init ~verbose save_parse_errors save_infer_errors save_suppressions =
+  let res = init_lib
+    ~verbose save_parse_errors save_infer_errors save_suppressions in
   Flow_js.Cache.clear();
   let master_cx = Flow_js.master_cx () in
   let reason = Reason_js.builtin_reason "module" in

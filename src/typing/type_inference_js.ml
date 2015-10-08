@@ -6213,7 +6213,7 @@ let scan_for_suppressions =
       | _ -> ()) comments
 
 (* build module graph *)
-let infer_ast ?module_name ~force_check ~weak_by_default ast file =
+let infer_ast ?module_name ~force_check ~weak_by_default ~verbose ast file =
   Flow_js.Cache.clear();
 
   let loc, statements, comments = ast in
@@ -6229,7 +6229,7 @@ let infer_ast ?module_name ~force_check ~weak_by_default ast file =
   let _module = match module_name with
     | Some _module -> _module
     | None -> "-" (* some dummy string *) in
-  let cx = Flow_js.fresh_context ~file ~_module ~checked ~weak in
+  let cx = Flow_js.fresh_context ~checked ~weak ~verbose file _module in
 
   let reason_exports_module =
     reason_of_string (spf "exports of module `%s`" _module) in
@@ -6318,11 +6318,11 @@ let get_comment_header (_, stmts, comments) =
 (* Given a filename, retrieve the parsed AST, derive a module name,
    and invoke the local (infer) pass. This will build and return a
    fresh context object for the module. *)
-let infer_module ~force_check ~weak_by_default file =
+let infer_module ~force_check ~weak_by_default ~verbose file =
   let ast = Parsing_service_js.get_ast_unsafe file in
   let comments = get_comment_header ast in
   let module_name = Module_js.exported_module file comments in
-  infer_ast ~module_name ~force_check ~weak_by_default ast file
+  infer_ast ~module_name ~force_check ~weak_by_default ~verbose ast file
 
 (* Map.union: which is faster, union M N or union N M when M > N?
    union X Y = fold add X Y which means iterate over X, adding to Y
@@ -6464,10 +6464,11 @@ let restore cx dep_cxs master_cx =
   copy_context cx master_cx
 
 (* variation of infer + merge for lib definitions *)
-let init_lib_file file statements comments save_errors save_suppressions =
+let init_lib_file
+    ~verbose file statements comments save_errors save_suppressions =
   Flow_js.Cache.clear();
 
-  let cx = Flow_js.fresh_context file Files_js.lib_module in
+  let cx = Flow_js.fresh_context ~verbose file Files_js.lib_module in
 
   let module_scope = Scope.fresh () in
   Env_js.init_env cx module_scope;

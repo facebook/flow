@@ -80,6 +80,12 @@ let main all weak debug verbose verbose_indent json profile quiet module_
   | None -> FlowConfig.default_temp_dir (* TODO: add flowconfig option *)
   in
 
+  let opt_verbose =
+    if verbose || verbose_indent
+    then Some (if verbose_indent then 2 else 0)
+    else None
+  in
+
   let options = {
     Options.opt_error_flags = error_flags;
     Options.opt_root = Path.make root;
@@ -89,8 +95,7 @@ let main all weak debug verbose verbose_indent json profile quiet module_
     Options.opt_all = all;
     Options.opt_weak = weak;
     Options.opt_debug = debug;
-    Options.opt_verbose = verbose || verbose_indent;
-    Options.opt_verbose_indent = verbose_indent;
+    Options.opt_verbose;
     Options.opt_traces = 0;
     Options.opt_json = json;
     Options.opt_quiet = quiet || json;

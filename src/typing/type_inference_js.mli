@@ -16,6 +16,7 @@ val infer_ast:
   ?module_name: string ->
   force_check: bool ->
   weak_by_default: bool ->
+  verbose: int option ->
   Spider_monkey_ast.program ->
   filename ->
   context
@@ -23,6 +24,7 @@ val infer_ast:
 val infer_module:
   force_check:bool ->
   weak_by_default: bool ->
+  verbose: int option ->
   filename ->
   context
 
@@ -47,6 +49,7 @@ val dump_types:
 val fill_types: context -> (int * int * string) list
 
 val init_lib_file:
+  verbose: int option ->
   filename ->
   Spider_monkey_ast.Statement.t list ->
   Spider_monkey_ast.Comment.t list ->
