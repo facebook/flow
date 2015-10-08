@@ -473,6 +473,7 @@ let program_init genv env =
         let env = Program.init ~wait_for_deps genv env in
         env, "mini_load"
   in
+  HackEventLogger.init_end init_type;
   Hh_logger.log "Waiting for daemon(s) to be ready...";
   genv.wait_until_ready ();
   HackEventLogger.init_really_end init_type;
@@ -486,8 +487,7 @@ let save_complete env fn =
   (* We cannot save the shared memory to `chan` because the OCaml runtime
    * does not expose the underlying file descriptor to C code; so we use
    * a separate ".sharedmem" file. *)
-  SharedMem.save (fn^".sharedmem");
-  HackEventLogger.init_end "save"
+  SharedMem.save (fn^".sharedmem")
 
 let save_dep_table fn =
   let t = Unix.gettimeofday () in
