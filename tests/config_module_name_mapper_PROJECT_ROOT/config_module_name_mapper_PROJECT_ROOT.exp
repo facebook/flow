@@ -1,0 +1,6 @@
+
+main.js:6:17,20: number
+This type is incompatible with
+main.js:6:8,13: string
+
+Found 1 error

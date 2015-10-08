@@ -52,6 +52,13 @@ let get_config_options () =
   let config = FlowConfig.get root in
   FlowConfig.(config.options)
 
+let replace_name_mapper_template_tokens =
+  let project_root_token = Str.regexp_string "<PROJECT_ROOT>" in
+
+  fun opts template ->
+    let root_path = Path.to_string opts.Options.opt_root in
+    Str.global_replace project_root_token (Str.quote root_path) template
+
 (**
  * A set of module.name_mapper config entry allows users to specify regexp
  * matcher strings each with a template string in order to map the names of a
@@ -70,6 +77,7 @@ let module_name_candidates name =
     let flow_options = get_flow_options () in
     let mappers = flow_options.Options.opt_module_name_mappers in
     let map_name mapped_names (regexp, template) =
+      let template = replace_name_mapper_template_tokens flow_options template in
       let new_name = Str.global_replace regexp template name in
       if new_name = name then mapped_names else new_name::mapped_names
     in
