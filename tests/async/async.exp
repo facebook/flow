@@ -11,23 +11,23 @@ async.js:45:22,25: Promise
 This type is incompatible with
 async.js:45:22,25: undefined
 
-async2.js:6:3,12: async return
+async2.js:11:13,23: await
 Error:
-async2.js:6:10,11: number
+async2.js:13:21,21: number
 This type is incompatible with
-[LIB] core.js:402:32,45: union type
+async2.js:13:12,17: string
 
-async2.js:23:26,26: Promise
+async2.js:26:28,28: Promise
 This type is incompatible with
-async2.js:29:21,24: undefined
+async2.js:32:23,26: undefined
 
-async2.js:43:28,31: Promise
+async2.js:50:30,33: Promise
 This type is incompatible with
-async2.js:43:28,31: undefined
+async2.js:50:30,33: undefined
 
-async2.js:48:3,17: undefined
+async2.js:57:5,19: undefined
 This type is incompatible with
-async2.js:48:11,16: number
+async2.js:57:13,18: number
 
 async3.js:23:11,21: await
 Error:
