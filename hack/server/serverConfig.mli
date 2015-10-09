@@ -10,6 +10,7 @@
 
 type t
 
+val filename : Relative_path.t
 val load : Relative_path.t -> t
 
 val default_config : t

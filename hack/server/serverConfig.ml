@@ -22,6 +22,8 @@ type t = {
   tc_options       : TypecheckerOptions.t;
 }
 
+let filename = Relative_path.concat Relative_path.Root ".hhconfig"
+
 let make_gc_control config =
   let {Gc.minor_heap_size; space_overhead; _} = GlobalConfig.gc_control in
   let minor_heap_size =

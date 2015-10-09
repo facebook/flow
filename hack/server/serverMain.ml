@@ -99,12 +99,7 @@ module Program =
   struct
     let name = "hh_server"
 
-    let config_filename_ =
-      Relative_path.concat Relative_path.Root ".hhconfig"
-
-    let config_filename () = config_filename_
-
-    let load_config () = ServerConfig.load config_filename_
+    let load_config () = ServerConfig.(load filename)
 
     let validate_config genv =
       let new_config = load_config () in
@@ -171,9 +166,6 @@ module Program =
        * the .hhconfig directory *)
       let updates = SSet.filter (fun p -> str_starts_with p root) updates in
       Relative_path.(relativize_set Root updates)
-
-    let should_recheck update =
-      FindUtils.is_php (Relative_path.suffix update)
 
     let recheck genv old_env typecheck_updates =
       if Relative_path.Set.is_empty typecheck_updates then
@@ -251,8 +243,9 @@ let handle_connection genv env socket =
 
 let recheck genv old_env updates =
   let to_recheck =
-    Relative_path.Set.filter Program.should_recheck updates in
-  let config = Program.config_filename () in
+    Relative_path.Set.filter
+      (fun update -> FindUtils.is_php (Relative_path.suffix update)) updates in
+  let config = ServerConfig.filename in
   let config_in_updates = Relative_path.Set.mem config updates in
   if config_in_updates && not (Program.validate_config genv) then
     (Hh_logger.log
