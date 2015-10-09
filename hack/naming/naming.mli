@@ -87,6 +87,5 @@ val remove_decls: env -> decl_set -> env
 val get_classes: env -> string list
 
 val ndecl_file:
-  Relative_path.t -> FileInfo.t ->
-  Errors.t * Relative_path.Set.t * env ->
+  Relative_path.t -> FileInfo.t -> env ->
   Errors.t * Relative_path.Set.t * env

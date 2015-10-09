@@ -184,8 +184,12 @@ let update_file_info env fast_parsed =
 let declare_names env files_info fast_parsed =
   let env = remove_decls env fast_parsed in
   let errorl, failed_naming, nenv =
-    Relative_path.Map.fold
-      Naming.ndecl_file fast_parsed ([], Relative_path.Set.empty, env.nenv) in
+    Relative_path.Map.fold begin fun k v (errorl, failed, nenv)  ->
+      let errorl', failed', nenv = Naming.ndecl_file k v nenv in
+      let errorl = List.rev_append errorl' errorl in
+      let failed = Relative_path.Set.union failed' failed in
+      errorl, failed, nenv
+    end fast_parsed ([], Relative_path.Set.empty, env.nenv) in
   let fast = remove_failed fast_parsed failed_naming in
   let fast = FileInfo.simplify_fast fast in
   let env = { env with nenv = nenv } in

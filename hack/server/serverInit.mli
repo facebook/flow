@@ -12,4 +12,4 @@
  * and refresh the environment and update the many shared heaps
  *)
 val init: ?wait_for_deps:(unit -> float * float) ->
-  ServerEnv.genv -> ServerEnv.env -> ServerEnv.env
+  ServerEnv.genv -> ServerEnv.env

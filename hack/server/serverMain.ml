@@ -143,8 +143,8 @@ module Program =
       if length_greater_than 5 l1 || length_greater_than 5 l2 || l1 <> l2
       then touch_stamp ()
 
-    let init ?wait_for_deps genv env =
-      let env = ServerInit.init ?wait_for_deps genv env in
+    let init ?wait_for_deps genv =
+      let env = ServerInit.init ?wait_for_deps genv in
       touch_stamp ();
       env
 
@@ -354,7 +354,7 @@ let load genv filename to_recheck =
   let _t = Hh_logger.log_duration "Post-load rechecking" t in
   env
 
-let run_load_script genv env cmd =
+let run_load_script genv cmd =
   try
     let t = Unix.gettimeofday () in
     let cmd =
@@ -415,7 +415,7 @@ let run_load_script genv env cmd =
         "load_error"
     in
     let env = HackEventLogger.with_init_type init_type begin fun () ->
-      Program.init genv env
+      Program.init genv
     end in
     env, init_type
   end
@@ -440,16 +440,16 @@ let load_deps root cmd (_ic, oc) =
   let end_time = Unix.gettimeofday () in
   Daemon.to_channel oc (start_time, end_time)
 
-let program_init genv env =
+let program_init genv =
   let env, init_type =
     match genv.local_config.ServerLocalConfig.load_mini_script with
     | None -> begin
       match ServerConfig.load_script genv.config with
       | None ->
-          let env = Program.init genv env in
+          let env = Program.init genv in
           env, "fresh"
       | Some load_script ->
-          run_load_script genv env load_script
+          run_load_script genv load_script
     end
     | Some cmd ->
         (* Spawn this first so that it can run in the background while
@@ -463,7 +463,7 @@ let program_init genv env =
           assert (status = Unix.WEXITED 0);
           result
         in
-        let env = Program.init ~wait_for_deps genv env in
+        let env = Program.init ~wait_for_deps genv in
         env, "mini_load"
   in
   HackEventLogger.init_end init_type;
@@ -524,10 +524,9 @@ let daemon_main options =
   PidLog.init (ServerFiles.pids_file root);
   PidLog.log ~reason:"main" (Unix.getpid());
   let genv = ServerEnvBuild.make_genv options config local_config in
-  let env = ServerEnvBuild.make_env options config in
   let is_check_mode = ServerArgs.check_mode genv.options in
   if is_check_mode then
-    let env = program_init genv env in
+    let env = program_init genv in
     Option.iter (ServerArgs.save_filename genv.options) (save genv env);
     Program.run_once_and_exit genv env
   else
@@ -544,7 +543,7 @@ let daemon_main options =
      * socket and get blocked on it -- otherwise, trying to open a socket with
      * no server on the other end is an immediate error. *)
     let socket = Socket.init_unix_socket (ServerFiles.socket_file root) in
-    let env = MainInit.go options (fun () -> program_init genv env) in
+    let env = MainInit.go options (fun () -> program_init genv) in
     serve genv env socket
 
 let main_entry =

@@ -74,7 +74,7 @@ let make_genv options config local_config =
     wait_until_ready;
   }
 
-let make_env options config =
+let make_env config =
   let nenv = Naming.empty (ServerConfig.typechecker_options config) in
   { nenv;
     files_info     = Relative_path.Map.empty;

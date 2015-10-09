@@ -19,7 +19,7 @@ open Utils
 (* The set of files that failed *)
 type failed = Relative_path.Set.t
 
-(* The result excepted from the service *)
+(* The result expected from the service *)
 type result = Errors.t * failed
 
 (*****************************************************************************)
