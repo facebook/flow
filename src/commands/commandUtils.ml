@@ -209,8 +209,7 @@ let wait_on_server_restart ic =
   | End_of_file
   | Sys_error _ ->
      (* Server has exited and hung up on us *)
-     Printf.printf "Old server has exited\n%!";
-     ()
+     prerr_endline "Old server has exited"
 
 (* Function connecting to hh_server *)
 let connect ~tmp_dir root =
