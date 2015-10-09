@@ -8,7 +8,6 @@
  *
  *)
 
-open Context
 open Type
 open Utils
 
@@ -170,7 +169,9 @@ class ['a] t = object(self)
     acc
 
   method props cx acc id =
-    self#smap (self#type_ cx) acc (IMap.find_unsafe id cx.property_maps)
+    Context.property_maps cx
+    |> IMap.find_unsafe id
+    |> self#smap (self#type_ cx) acc
 
   method private type_param cx acc { bound; _ } =
     self#type_ cx acc bound

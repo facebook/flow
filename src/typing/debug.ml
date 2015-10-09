@@ -10,7 +10,6 @@
 
 module Json = Hh_json
 
-open Context
 open Reason_js
 open Type
 open Utils
@@ -191,13 +190,16 @@ and _json_of_t_impl json_cx t = Json.(
       "targetType", _json_of_t json_cx target
     ]
 
-  | ModuleT (_, {exports_tmap; cjs_export;}) -> [
-      "namedExports",
-      (let tmap = IMap.find_unsafe exports_tmap json_cx.cx.property_maps in
-       json_of_tmap json_cx tmap);
-
-      "cjsExport",
-      match cjs_export with Some(t) -> _json_of_t json_cx t | None -> JNull;
+  | ModuleT (_, {exports_tmap; cjs_export;}) ->
+    let property_maps = Context.property_maps json_cx.cx in
+    let tmap = IMap.find_unsafe exports_tmap property_maps in
+    let cjs_export = match cjs_export with
+    | Some(t) -> _json_of_t json_cx t
+    | None -> JNull
+    in
+    [
+      "namedExports", json_of_tmap json_cx tmap;
+      "cjsExport", cjs_export;
     ]
 
   | SummarizeT (_, t) -> [
@@ -385,15 +387,15 @@ and json_of_typeparam_impl json_cx tparam = Json.(
 
 and json_of_objtype json_cx = check_depth json_of_objtype_impl json_cx
 and json_of_objtype_impl json_cx objtype = Json.(
+  let property_maps = Context.property_maps json_cx.cx in
+  let tmap = IMap.find_unsafe objtype.props_tmap property_maps in
   JAssoc ([
     "flags", json_of_flags json_cx objtype.flags;
   ] @ (match objtype.dict_t with
     | None -> []
     | Some d -> ["dictType", json_of_dicttype json_cx d]
   ) @ [
-    "propTypes",
-      (let tmap = IMap.find_unsafe objtype.props_tmap json_cx.cx.property_maps in
-      json_of_tmap json_cx tmap);
+    "propTypes", json_of_tmap json_cx tmap;
     "prototype", _json_of_t json_cx objtype.proto_t
   ])
 )
@@ -437,16 +439,15 @@ and json_of_funtype_impl json_cx funtype = Json.(
 
 and json_of_insttype json_cx = check_depth json_of_insttype_impl json_cx
 and json_of_insttype_impl json_cx insttype = Json.(
+  let property_maps = Context.property_maps json_cx.cx in
+  let field_tmap = IMap.find_unsafe insttype.fields_tmap property_maps in
+  let method_tmap = IMap.find_unsafe insttype.methods_tmap property_maps in
   JAssoc [
     "classId", JInt insttype.class_id;
     "typeArgs", json_of_tmap json_cx insttype.type_args;
     "argPolarities", json_of_polarity_map json_cx insttype.arg_polarities;
-    "fieldTypes",
-      (let tmap = IMap.find_unsafe insttype.fields_tmap json_cx.cx.property_maps in
-       json_of_tmap json_cx tmap);
-    "methodTypes",
-      (let tmap = IMap.find_unsafe insttype.methods_tmap json_cx.cx.property_maps in
-       json_of_tmap json_cx tmap);
+    "fieldTypes", json_of_tmap json_cx field_tmap;
+    "methodTypes", json_of_tmap json_cx method_tmap;
     "mixins", JBool insttype.mixins;
     "structural", JBool insttype.structural;
   ]
@@ -516,7 +517,7 @@ and json_of_node json_cx = check_depth json_of_node_impl json_cx
 and json_of_node_impl json_cx id = Json.(
   JAssoc (
     let json_cx = { json_cx with stack = ISet.add id json_cx.stack } in
-    match IMap.find_unsafe id json_cx.cx.graph with
+    match IMap.find_unsafe id (Context.graph json_cx.cx) with
     | Constraint_js.Goto id ->
       ["kind", JString "Goto"]
       @ ["id", JInt id]
@@ -579,7 +580,7 @@ let json_of_graph ?(depth=1000) cx = Json.(
   let entries = IMap.fold (fun id _ entries ->
     let json_cx = { cx; depth; stack = ISet.empty; } in
     (spf "%d" id, json_of_node json_cx id) :: entries
-  ) cx.graph [] in
+  ) (Context.graph cx) [] in
   JAssoc (List.rev entries)
 )
 

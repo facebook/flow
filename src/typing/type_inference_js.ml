@@ -22,7 +22,6 @@ open Utils_js
 module Ast = Spider_monkey_ast
 
 open Reason_js
-open Context
 open Type
 
 open Env_js.LookupMode
@@ -130,20 +129,13 @@ let mk_module_t cx reason = ModuleT(
 (* given a module name, return associated tvar if already
  * present in module map, or create and add *)
 let get_module_t cx m reason =
-  match SMap.get m cx.modulemap with
+  match SMap.get m (Context.module_map cx) with
   | Some t -> t
   | None ->
-      Flow_js.mk_tvar_where cx reason (fun t ->
-        cx.modulemap <- cx.modulemap |> SMap.add m t;
-      )
-
-let mark_dependency cx module_ loc = (
-  cx.required <- SSet.add module_ cx.required;
-  cx.require_loc <- SMap.add module_ loc cx.require_loc;
-)
+      Flow_js.mk_tvar_where cx reason (fun t -> Context.add_module cx m t)
 
 let require cx m m_name loc =
-  mark_dependency cx m loc;
+  Context.add_require cx m loc;
   Type_inference_hooks_js.dispatch_require_hook cx m_name loc;
   let reason = mk_reason (spf "CommonJS exports of \"%s\"" m) loc in
   Flow_js.mk_tvar_where cx reason (fun t ->
@@ -154,8 +146,8 @@ let require cx m m_name loc =
   )
 
 let import_ns cx reason module_name loc =
-  let module_ = Module_js.imported_module cx.file module_name in
-  mark_dependency cx module_ loc;
+  let module_ = Module_js.imported_module (Context.file cx) module_name in
+  Context.add_require cx module_ loc;
   Flow_js.mk_tvar_where cx reason (fun t ->
     Flow_js.flow cx (
       get_module_t cx module_ (mk_reason module_name loc),
@@ -181,7 +173,7 @@ let merge_commonjs_export cx reason module_t export_t =
   )
 
 let exports cx m =
-  let loc = Loc.({ none with source = Some cx.file }) in
+  let loc = Loc.({ none with source = Some (Context.file cx) }) in
   get_module_t cx m (Reason_js.mk_reason "exports" loc)
 
 (**
@@ -206,8 +198,8 @@ let exports cx m =
  * `exports` value? Do we use the type that clobbered `module.exports`? Or do we
  * use neither because the module only has direct ES exports?).
  *)
-let mark_exports_type cx reason new_exports_type = (
-  (match (cx.module_exports_type, new_exports_type) with
+let mark_exports_type cx reason new_exports_type = Context.(
+  (match (Context.module_exports_type cx, new_exports_type) with
   | (ESModule, CommonJSModule(Some _))
   | (CommonJSModule(Some _), ESModule)
     ->
@@ -218,7 +210,7 @@ let mark_exports_type cx reason new_exports_type = (
       Flow_js.add_warning cx [(reason, msg)]
   | _ -> ()
   );
-  cx.module_exports_type <- new_exports_type
+  Context.set_module_exports_type cx new_exports_type
 )
 
 (**
@@ -453,13 +445,13 @@ end
    query_type/fill_types: in general those types may not be ground (the only
    non-ground parts should be strict_requires).
 
-   1. Look up InfoHeap(cx.file) to get strict_reqs.
+   1. Look up InfoHeap(Context.file cx) to get strict_reqs.
 
    2. Look up ContextHeap(NameHeap(strict_req)) to get strict_cxs that cx
    depends on, and so on.
 
    3. Next, look up their exported types via recursive calls to
-   lookup_type(lookup_module(strict_cx,strict_cx._module)).
+   lookup_type(lookup_module(strict_cx, Context.module_name strict_cx)).
 
    In fact, 2. and 3. could be optimized: we could store exported types
    (possibly not ground) in InfoHeap, so that they are cached. This means that
@@ -504,7 +496,7 @@ let query_type cx loc =
           else (range, None, possible_ts)
       )
     )
-  ) cx.type_table;
+  ) (Context.type_table cx);
   !result
 
 let dump_types printer raw_printer cx =
@@ -516,7 +508,7 @@ let dump_types printer raw_printer cx =
       |> List.map reason_of_t
     in
     (loc, printer cx ground_t, raw_printer cx ground_t, possible_reasons)::list
-  ) cx.type_table [] in
+  ) (Context.type_table cx) [] in
   lst |> List.sort (fun
     (a_loc, _, _, _) (b_loc, _, _, _) -> Loc.compare a_loc b_loc
   )
@@ -534,7 +526,7 @@ let fill_types cx =
     if Type_printer.is_printed_type_parsable cx t then
       (line, end_, spf ": %s" (Type_printer.string_of_t cx t))::list
     else list
-  ) cx.annot_table []
+  ) (Context.annot_table cx) []
 
 (* AST helpers *)
 
@@ -969,11 +961,11 @@ and mk_rest cx = function
 and mk_type cx type_params_map reason = function
   | None ->
       let t =
-        if cx.weak
+        if Context.is_weak cx
         then AnyT.why reason
         else Flow_js.mk_tvar cx reason
       in
-      Hashtbl.replace cx.annot_table (loc_of_reason reason) t;
+      Hashtbl.replace (Context.annot_table cx) (loc_of_reason reason) t;
       t
 
   | Some annot ->
@@ -1024,13 +1016,13 @@ and variable_decl cx type_params_map loc entry = Ast.Statement.(
     | (loc, Pattern.Identifier (_, { Identifier.name; typeAnnotation; _ })) ->
       let r = mk_reason (spf "%s `%s`" str_of_kind name) loc in
       let t = mk_type_annotation cx type_params_map r typeAnnotation in
-      Hashtbl.replace cx.type_table loc t;
+      Hashtbl.replace (Context.type_table cx) loc t;
       bind cx name t r
     | p ->
       let r = mk_reason (spf "%s _" str_of_kind) loc in
       let t = type_of_pattern p |> mk_type_annotation cx type_params_map r in
       p |> destructuring cx t (fun cx loc name t ->
-        Hashtbl.replace cx.type_table loc t;
+        Hashtbl.replace (Context.type_table cx) loc t;
         bind cx name t r
       )
   ) in
@@ -1174,14 +1166,14 @@ and statement_decl cx type_params_map = Ast.Statement.(
       let _, { Ast.Identifier.name; typeAnnotation; _; } = id in
       let r = mk_reason (spf "declare %s" name) loc in
       let t = mk_type_annotation cx type_params_map r typeAnnotation in
-      Hashtbl.replace cx.type_table loc t;
+      Hashtbl.replace (Context.type_table cx) loc t;
       Env_js.bind_declare_var cx name t r
 
   | (loc, DeclareFunction { DeclareFunction.id; }) ->
       let _, { Ast.Identifier.name; typeAnnotation; _; } = id in
       let r = mk_reason (spf "declare %s" name) loc in
       let t = mk_type_annotation cx type_params_map r typeAnnotation in
-      Hashtbl.replace cx.type_table loc t;
+      Hashtbl.replace (Context.type_table cx) loc t;
       Env_js.bind_declare_fun cx name t r
 
   | (loc, VariableDeclaration decl) ->
@@ -1219,7 +1211,7 @@ and statement_decl cx type_params_map = Ast.Statement.(
           assert false in
       let r = mk_reason (spf "module `%s`" name) loc in
       let t = Flow_js.mk_tvar cx r in
-      Hashtbl.replace cx.type_table loc t;
+      Hashtbl.replace (Context.type_table cx) loc t;
       Env_js.bind_declare_var cx (internal_module_name name) t r
 
   | (_, ExportDeclaration {
@@ -1467,7 +1459,7 @@ and statement cx type_params_map = Ast.Statement.(
     in
     let i = mk_interface cx reason typeparams map
       (sfmap, smmap, fmap, mmap) extends mixins structural in
-    Hashtbl.replace cx.type_table loc i;
+    Hashtbl.replace (Context.type_table cx) loc i;
     (* interface is a type alias, declare class is a var *)
     Env_js.(if structural then init_type else init_var ~has_anno:false)
       cx iname i reason
@@ -1648,7 +1640,7 @@ and statement cx type_params_map = Ast.Statement.(
         then TypeT (r, t)
         else PolyT(typeparams, TypeT (r, t))
       in
-      Hashtbl.replace cx.type_table loc type_;
+      Hashtbl.replace (Context.type_table cx) loc type_;
       Env_js.init_type cx name type_ r
 
   | (loc, Switch { Switch.discriminant; cases; lexical }) ->
@@ -2278,7 +2270,7 @@ and statement cx type_params_map = Ast.Statement.(
             };
           })
       in
-      Hashtbl.replace cx.type_table type_table_loc fn_type;
+      Hashtbl.replace (Context.type_table cx) type_table_loc fn_type;
       (match id with
       | Some(_, {Ast.Identifier.name; _ }) ->
         Env_js.init_fun cx name fn_type reason
@@ -2295,7 +2287,7 @@ and statement cx type_params_map = Ast.Statement.(
       let reason = mk_reason name name_loc in
       Env_js.declare_implicit_let Scope.Entry.ClassNameBinding cx name reason;
       let cls_type = mk_class cx type_params_map class_loc reason c in
-      Hashtbl.replace cx.type_table class_loc cls_type;
+      Hashtbl.replace (Context.type_table cx) class_loc cls_type;
       Env_js.init_implicit_let
         Scope.Entry.ClassNameBinding
         cx
@@ -2440,11 +2432,12 @@ and statement cx type_params_map = Ast.Statement.(
          *       module, but this should have minimal observable effect to the
          *       user given CommonJS<->ESModule interop.
          *)
-        (if lookup_mode != ForType then mark_exports_type cx reason ESModule);
+        (if lookup_mode != ForType then
+          mark_exports_type cx reason Context.ESModule);
 
         let local_name = if default then "default" else local_name in
         Flow_js.flow cx (
-          exports cx cx._module,
+          exports cx (Context.module_name cx),
           SetNamedExportsT(reason, SMap.singleton local_name local_tvar, AnyT.t)
         )
       ) in
@@ -2472,9 +2465,9 @@ and statement cx type_params_map = Ast.Statement.(
           let reason =
             mk_reason (spf "%s <<expression>>" export_reason_start) loc
           in
-          mark_exports_type cx reason ESModule;
+          mark_exports_type cx reason Context.ESModule;
           Flow_js.flow cx (
-            exports cx cx._module,
+            exports cx (Context.module_name cx),
             SetNamedExportsT(reason, SMap.singleton "default" expr_t, AnyT.t)
           )
 
@@ -2537,10 +2530,10 @@ and statement cx type_params_map = Ast.Statement.(
              *       effect to the user given CommonJS<->ESModule interop.
              *)
             (if lookup_mode != ForType
-            then mark_exports_type cx reason ESModule);
+            then mark_exports_type cx reason Context.ESModule);
 
             Flow_js.flow cx (
-              exports cx cx._module,
+              exports cx (Context.module_name cx),
               SetNamedExportsT(reason, SMap.singleton remote_name local_tvar, AnyT.t)
             )
           ) in
@@ -2583,7 +2576,7 @@ and statement cx type_params_map = Ast.Statement.(
            *
            * TODO: Also, add a test for this scenario once it's fixed
            *)
-          mark_exports_type cx reason (CommonJSModule(Some(loc)));
+          mark_exports_type cx reason (Context.CommonJSModule(Some(loc)));
           set_module_exports cx reason source_tvar
 
         (* Parser vomit (these should never happen) *)
@@ -2719,7 +2712,8 @@ and statement cx type_params_map = Ast.Statement.(
              *        to the new one. Once the transition is finished, we
              *        should make `import type * as` a hard error.
              *)
-            let module_ = Module_js.imported_module cx.file module_name in
+            let module_ =
+              Module_js.imported_module (Context.file cx) module_name in
             let module_type = require cx module_ module_name source_loc in
             set_imported_binding reason local_name module_type
           ) else (
@@ -2784,7 +2778,7 @@ and object_prop cx type_params_map map = Ast.Expression.Object.(function
         let ft = mk_function id cx type_params_map ~kind reason typeParameters
           (params, defaults, rest) returnType body this
         in
-        Hashtbl.replace cx.type_table vloc ft;
+        Hashtbl.replace (Context.type_table cx) vloc ft;
         SMap.add name ft map
       )
 
@@ -2998,7 +2992,7 @@ and spread cx type_params_map (loc, e) =
    `predicates_of_condition`: see comments on function `condition`. *)
 and expression ?(is_cond=false) cx type_params_map (loc, e) =
   let t = expression_ ~is_cond cx type_params_map loc e in
-  Hashtbl.replace cx.type_table loc t;
+  Hashtbl.replace (Context.type_table cx) loc t;
   t
 
 and this_ cx r = Ast.Expression.(
@@ -3074,7 +3068,7 @@ and expression_ ~is_cond cx type_params_map loc e = Ast.Expression.(match e with
         typeAnnotation } ->
       let r = mk_reason "typecast" loc in
       let t = mk_type_annotation cx type_params_map r (Some typeAnnotation) in
-      Hashtbl.replace cx.type_table loc t;
+      Hashtbl.replace (Context.type_table cx) loc t;
       let infer_t = expression cx type_params_map e in
       Flow_js.flow cx (infer_t, t);
       t
@@ -3203,7 +3197,7 @@ and expression_ ~is_cond cx type_params_map loc e = Ast.Expression.(match e with
       | [ Expression (_, Literal {
           Ast.Literal.value = Ast.Literal.String module_name; _;
         }) ] ->
-        let m = Module_js.imported_module cx.file module_name in
+        let m = Module_js.imported_module (Context.file cx) module_name in
         require cx m module_name loc
       | _ ->
         (*
@@ -3238,7 +3232,7 @@ and expression_ ~is_cond cx type_params_map loc e = Ast.Expression.(match e with
               Ast.Literal.value = Ast.Literal.String module_name;
               _;
             }))) ->
-              let m = Module_js.imported_module cx.file module_name in
+              let m = Module_js.imported_module (Context.file cx) module_name in
               let module_tvar = require cx m module_name loc in
               module_tvar::tvars
           | _ ->
@@ -3896,7 +3890,7 @@ and assignment cx type_params_map loc = Ast.Expression.(function
             _
           }) ->
             let reason = mk_reason "assignment of module.exports" lhs_loc in
-            mark_exports_type cx reason (CommonJSModule(Some(lhs_loc)));
+            mark_exports_type cx reason (Context.CommonJSModule(Some(lhs_loc)));
             set_module_exports cx reason t
 
         (* super.name = e *)
@@ -6169,14 +6163,15 @@ let cross_module_gc =
     )
 
 let force_annotations cx =
-  let tvar = Flow_js.lookup_module cx cx._module in
+  let tvar = Flow_js.lookup_module cx (Context.module_name cx) in
   let reason, id = open_tvar tvar in
-  let before = Errors_js.ErrorSet.cardinal cx.errors in
+  let before = Errors_js.ErrorSet.cardinal (Context.errors cx) in
   Flow_js.enforce_strict cx id;
-  let after = Errors_js.ErrorSet.cardinal cx.errors in
-  if (after > before)
-  then cx.graph <- cx.graph |>
-    IMap.add id Constraint_js.(Root { rank = 0; constraints = Resolved AnyT.t })
+  let after = Errors_js.ErrorSet.cardinal (Context.errors cx) in
+  if (after > before) then
+    Context.add_tvar cx id Constraint_js.(Root {
+      rank = 0; constraints = Resolved AnyT.t
+    })
 
 (* core inference, assuming setup and teardown happens elsewhere *)
 let infer_core cx type_params_map statements =
@@ -6187,12 +6182,12 @@ let infer_core cx type_params_map statements =
     | Abnormal.Exn _ ->
         let msg = "abnormal control flow" in
         Flow_js.add_warning cx [mk_reason "" Loc.({
-          none with source = Some cx.file
+          none with source = Some (Context.file cx)
         }), msg]
     | exc ->
         let msg = fmt_exc exc in
         Flow_js.add_warning cx [mk_reason "" Loc.({
-          none with source = Some cx.file
+          none with source = Some (Context.file cx)
         }), msg]
 
 (* There's a .flowconfig option to specify suppress_comments regexes. Any
@@ -6212,8 +6207,7 @@ let scan_for_suppressions =
     then List.iter (function
       | loc, Ast.Comment.Block comment
       | loc, Ast.Comment.Line comment when should_suppress comment ->
-          cx.error_suppressions <-
-            Errors_js.ErrorSuppressions.add loc cx.error_suppressions
+          Context.add_error_suppression cx loc
       | _ -> ()) comments
 
 (* build module graph *)
@@ -6259,7 +6253,9 @@ let infer_ast ?module_name ~force_check ~weak_by_default ~verbose ast file =
 
   Env_js.init_env cx module_scope;
 
-  let reason = mk_reason "exports" Loc.({ none with source = Some cx.file }) in
+  let reason = mk_reason "exports" Loc.({
+    none with source = Some (Context.file cx)
+  }) in
 
   if checked then (
     let init_exports = mk_object cx reason in
@@ -6276,8 +6272,8 @@ let infer_ast ?module_name ~force_check ~weak_by_default ~verbose ast file =
 
   if checked then (
     let module_t = mk_module_t cx reason_exports_module in
-    let module_t = (
-      match cx.module_exports_type with
+    let module_t = Context.(
+      match Context.module_exports_type cx with
       (* CommonJS with a clobbered module.exports *)
       | CommonJSModule(Some(loc)) ->
         let module_exports_t = get_module_exports cx reason in
@@ -6299,7 +6295,7 @@ let infer_ast ?module_name ~force_check ~weak_by_default ~verbose ast file =
   (* insist that whatever type flows into exports is fully annotated *)
   force_annotations cx;
 
-  let ins = SSet.elements cx.required in
+  let ins = SSet.elements (Context.required cx) in
   let out = _module in
   if module_name <> None then Flow_js.do_gc cx (out::ins);
 
@@ -6338,14 +6334,14 @@ let infer_module ~force_check ~weak_by_default ~verbose file =
 
 (* Copy context from cx_other to cx *)
 let copy_context cx cx_other =
-  cx.closures <-
-    IMap.union cx_other.closures cx.closures;
-  cx.property_maps <-
-    IMap.union cx_other.property_maps cx.property_maps;
-  cx.globals <-
-    SSet.union cx_other.globals cx.globals;
-  cx.graph <-
-    IMap.union cx_other.graph cx.graph
+  Context.set_closures cx
+    (IMap.union (Context.closures cx_other) (Context.closures cx));
+  Context.set_property_maps cx
+    (IMap.union (Context.property_maps cx_other) (Context.property_maps cx));
+  Context.set_globals cx
+    (SSet.union (Context.globals cx_other) (Context.globals cx));
+  Context.set_graph cx
+    (IMap.union (Context.graph cx_other) (Context.graph cx))
 
 type direction = Out | In
 
@@ -6381,13 +6377,13 @@ let explicit_impl_require_strict cx (cx_from, r, cx_to) =
     try Flow_js.lookup_module cx_from r
     with _ ->
       (* The module exported by cx_from may be imported by path in cx_to *)
-      Flow_js.lookup_module cx_from cx_from._module
+      Flow_js.lookup_module cx_from (Context.module_name cx_from)
   in
   let to_t =
     try Flow_js.lookup_module cx_to r
     with _ ->
       (* The module exported by cx_from may be imported by path in cx_to *)
-      Flow_js.lookup_module cx_to (string_of_filename cx_from.file)
+      Flow_js.lookup_module cx_to (string_of_filename (Context.file cx_from))
   in
   Flow_js.flow cx (from_t, to_t)
 
@@ -6490,7 +6486,7 @@ let init_lib_file
   copy_context master_cx cx;
   implicit_require_strict master_cx master_cx cx;
 
-  let errs = cx.errors in
-  cx.errors <- Errors_js.ErrorSet.empty;
+  let errs = Context.errors cx in
+  Context.remove_all_errors cx;
   save_errors errs;
-  save_suppressions cx.error_suppressions
+  save_suppressions (Context.error_suppressions cx)

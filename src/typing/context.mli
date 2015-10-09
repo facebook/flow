@@ -11,42 +11,10 @@
 open Utils
 
 type stack = int list
+type closure = stack * Scope.t list
 
-(* TODO this has a bunch of stuff in it that should be localized *)
-type t = {
-  file: Loc.filename;
-  _module: string;
-  checked: bool;
-  weak: bool;
-  verbose: int option;
-
-  (* required modules, and map to their locations *)
-  mutable required: SSet.t;
-  mutable require_loc: Loc.t SMap.t;
-  mutable module_exports_type: module_exports_type;
-
-  (* map from tvar ids to nodes (type info structures) *)
-  mutable graph: Constraint_js.node IMap.t;
-
-  (* obj types point to mutable property maps *)
-  mutable property_maps: Type.properties IMap.t;
-
-  (* map from closure ids to env snapshots *)
-  mutable closures: (stack * Scope.t list) IMap.t;
-
-  (* map from module names to their types *)
-  mutable modulemap: Type.t SMap.t;
-
-  mutable errors: Errors_js.ErrorSet.t;
-  mutable globals: SSet.t;
-
-  mutable error_suppressions: Errors_js.ErrorSuppressions.t;
-
-  type_table: (Loc.t, Type.t) Hashtbl.t;
-  annot_table: (Loc.t, Type.t) Hashtbl.t;
-}
-
-and module_exports_type =
+type t
+type module_exports_type =
   | CommonJSModule of Loc.t option
   | ESModule
 
@@ -54,3 +22,46 @@ val new_context:
   ?checked:bool -> ?weak:bool -> verbose:int option ->
   file:Loc.filename -> _module:string ->
   t
+
+(* accessors *)
+val annot_table: t -> (Loc.t, Type.t) Hashtbl.t
+val closures: t -> closure IMap.t
+val errors: t -> Errors_js.ErrorSet.t
+val error_suppressions: t -> Errors_js.ErrorSuppressions.t
+val file: t -> Loc.filename
+val find_props: t -> Constraint_js.ident -> Type.properties
+val find_module: t -> string -> Type.t
+val globals: t -> SSet.t
+val graph: t -> Constraint_js.node IMap.t
+val is_checked: t -> bool
+val is_verbose: t -> bool
+val is_weak: t -> bool
+val module_exports_type: t -> module_exports_type
+val module_map: t -> Type.t SMap.t
+val module_name: t -> string
+val property_maps: t -> Type.properties IMap.t
+val required: t -> SSet.t
+val require_loc: t -> Loc.t SMap.t
+val type_table: t -> (Loc.t, Type.t) Hashtbl.t
+val verbose: t -> int option
+
+val copy_of_context: t -> t
+
+(* mutators *)
+val add_closure: t -> int -> closure -> unit
+val add_error: t -> Errors_js.error -> unit
+val add_error_suppression: t -> Loc.t -> unit
+val add_global: t -> string -> unit
+val add_module: t -> string -> Type.t -> unit
+val add_property_map: t -> Constraint_js.ident -> Type.properties -> unit
+val add_require: t -> string -> Loc.t -> unit
+val add_tvar: t -> Constraint_js.ident -> Constraint_js.node -> unit
+val remove_all_errors: t -> unit
+val remove_all_error_suppressions: t -> unit
+val remove_tvar: t -> Constraint_js.ident -> unit
+val set_closures: t -> closure IMap.t -> unit
+val set_globals: t -> SSet.t -> unit
+val set_graph: t -> Constraint_js.node IMap.t -> unit
+val set_module_exports_type: t -> module_exports_type -> unit
+val set_property_maps: t -> Type.properties IMap.t -> unit
+val set_tvar: t -> Constraint_js.ident -> Constraint_js.node -> unit

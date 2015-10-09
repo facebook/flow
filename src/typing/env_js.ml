@@ -16,7 +16,6 @@
 open Utils
 open Utils_js
 open Reason_js
-open Context
 open Type
 open Scope
 
@@ -188,7 +187,7 @@ let push_env cx scope =
   frames := frame :: !frames;
   changesets := (SSet.empty, KeySet.empty) :: !changesets;
   (* add saved env snapshot under frame id *)
-  cx.closures <- IMap.add frame (!frames, !scopes) cx.closures
+  Context.add_closure cx frame (!frames, !scopes)
 
 (* pop a scope and frame from the environment *)
 let pop_env () =
@@ -224,8 +223,8 @@ let init_env cx module_scope =
  *)
 let update_env cx new_scopes =
   let current_frame = peek_frame () in
-  let stack, _ = IMap.find_unsafe current_frame cx.closures in
-  cx.closures <- IMap.add current_frame (stack, new_scopes) cx.closures;
+  let stack, _ = IMap.find_unsafe current_frame (Context.closures cx) in
+  Context.add_closure cx current_frame (stack, new_scopes);
   scopes := new_scopes
 
 (* end of basic env API *)
@@ -275,7 +274,7 @@ let cache_global cx name reason global_scope =
   let loc = loc_of_reason reason in
   let entry = Entry.new_var t ~loc ~state:Entry.Initialized in
   Scope.add_entry name entry global_scope;
-  cx.globals <- SSet.add name cx.globals;
+  Context.add_global cx name;
   global_scope, entry
 
 (* Look for scope that holds binding for a given name. If found,

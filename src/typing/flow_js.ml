@@ -26,7 +26,6 @@ open Utils_js
 open Modes_js
 open Reason_js
 open Constraint_js
-open Context
 open Type
 
 (* The following functions are used as constructors for function types and
@@ -143,7 +142,7 @@ let add_output cx error_kind ?(trace_reasons=[]) message_list =
   ) else (
     (if modes.debug then
       prerr_endlinef "\nadd_output cx.file = %S\n%s"
-        (string_of_filename cx.file)
+        (string_of_filename (Context.file cx))
         (message_list
         |> List.map (fun message ->
              let loc, s = Errors_js.to_pp message in
@@ -166,16 +165,16 @@ let add_output cx error_kind ?(trace_reasons=[]) message_list =
     if error_kind = Errors_js.ParseError ||
        error_kind = Errors_js.InferError ||
        not silent_warnings
-    then cx.errors <- Errors_js.ErrorSet.add error cx.errors
+    then Context.add_error cx error
   )
 
 (* tvars *)
 
 let mk_tvar cx reason =
   let tvar = mk_id () in
-  let graph = cx.graph in
-  cx.graph <- graph |> IMap.add tvar (new_unresolved_root ());
-  (if cx.verbose <> None then prerr_endlinef
+  let graph = Context.graph cx in
+  Context.add_tvar cx tvar (Constraint_js.new_unresolved_root ());
+  (if Context.is_verbose cx then prerr_endlinef
     "TVAR %d (%d): %s" tvar (IMap.cardinal graph)
     (string_of_reason reason));
   OpenT (reason, tvar)
@@ -211,7 +210,7 @@ and find_constraints cx id =
    variables, while short-circuiting all the type variables in the chain to the
    root during traversal to speed up future traversals. *)
 and find_root cx id =
-  match IMap.get id cx.graph with
+  match IMap.get id (Context.graph cx) with
   | Some (Goto next_id) ->
       let root_id, root = find_root cx next_id in
       if root_id != next_id then replace_node cx id (Goto root_id) else ();
@@ -222,13 +221,12 @@ and find_root cx id =
 
   | None ->
       let msg = spf "find_root: tvar %d not found in file %s" id
-        (string_of_filename cx.file)
+        (string_of_filename (Context.file cx))
       in
       failwith msg
 
 (* Replace the node associated with a type variable in the graph. *)
-and replace_node cx id node =
-  cx.graph <- cx.graph |> IMap.add id node
+and replace_node cx id node = Context.set_tvar cx id node
 
 (* Check that id1 is not linked to id2. *)
 let not_linked (id1, bounds1) (id2, bounds2) =
@@ -249,15 +247,15 @@ let not_linked (id1, bounds1) (id2, bounds2) =
 (* clear refinements of closed-over variables *)
 let rec havoc_ctx cx i j =
   if (i = 0 || j = 0) then () else
-    let stack2, _ = IMap.find_unsafe i cx.closures in
-    let stack1, scopes = IMap.find_unsafe j cx.closures in
-    havoc_ctx_ ~verbose:cx.verbose
+    let stack2, _ = IMap.find_unsafe i (Context.closures cx) in
+    let stack1, scopes = IMap.find_unsafe j (Context.closures cx) in
+    havoc_ctx_ ~verbose:(Context.is_verbose cx)
       (List.rev scopes, List.rev stack1, List.rev stack2)
 
 and havoc_ctx_ ~verbose = function
   | scope::scopes, frame1::stack1, frame2::stack2
     when frame1 = frame2 ->
-    (if verbose <> None then prerr_endlinef "HAVOC::%d" frame1);
+    (if verbose then prerr_endlinef "HAVOC::%d" frame1);
     scope |> Scope.havoc ~make_specific:(fun general -> general);
     havoc_ctx_ ~verbose (scopes, stack1, stack2)
   | _ -> ()
@@ -298,7 +296,7 @@ let prmsg_flow_trace_reasons cx level trace_reasons msg (r1, r2) = Errors_js.(
          the code that uses those endpoints inconsistently is useless, we point
          to the file containing that code instead. Ideally, improvements in
          error reporting would cause this case to never arise. *)
-      let loc = Loc.({ none with source = Some cx.file }) in
+      let loc = Loc.({ none with source = Some (Context.file cx) }) in
       [BlameM (loc, "inconsistent use of library definitions")]
     else []
   in
@@ -406,11 +404,10 @@ let add_error cx ?trace list =
 
 let mk_propmap cx pmap =
   let id = mk_id () in
-  cx.property_maps <- IMap.add id pmap cx.property_maps;
+  Context.add_property_map cx id pmap;
   id
 
-let find_props cx id =
-  IMap.find_unsafe id cx.property_maps
+let find_props cx id = Context.find_props cx id
 
 let has_prop cx id x =
   find_props cx id |> SMap.mem x
@@ -426,14 +423,14 @@ let read_and_delete_prop cx id x =
   find_props cx id |> (fun pmap ->
     let t = SMap.find_unsafe x pmap in
     let pmap = SMap.remove x pmap in
-    cx.property_maps <- IMap.add id pmap cx.property_maps;
+    Context.add_property_map cx id pmap;
     t
   )
 
 let write_prop cx id x t =
   let pmap = find_props cx id in
   let pmap = SMap.add x t pmap in
-  cx.property_maps <- IMap.add id pmap cx.property_maps
+  Context.add_property_map cx id pmap
 
 let iter_props cx id f =
   find_props cx id
@@ -1065,11 +1062,10 @@ and assume_ground_id cx ids id =
    required by it, the module it provides, and so on). *)
 let mk_builtins cx =
   let builtins = mk_tvar cx (builtin_reason "module") in
-  cx.modulemap <- cx.modulemap |> SMap.add Files_js.lib_module builtins
+  Context.add_module cx Files_js.lib_module builtins
 
 (* Local references to modules can be looked up. *)
-let lookup_module cx m =
-  SMap.find_unsafe m cx.modulemap
+let lookup_module cx m = Context.find_module cx m
 
 (* The builtins reference is accessed just like references to other modules. *)
 let builtins cx =
@@ -1077,7 +1073,7 @@ let builtins cx =
 
 (* new contexts are prepared here, so we can install shared tvars *)
 let fresh_context ?(checked=false) ?(weak=false) ~verbose file _module =
-  let cx = new_context ~file ~_module ~checked ~weak ~verbose in
+  let cx = Context.new_context ~file ~_module ~checked ~weak ~verbose in
   (* add types for pervasive builtins *)
   mk_builtins cx;
   cx
@@ -1308,7 +1304,7 @@ let not_expect_bound t = match t with
     functions `rec_flow`, `join_flow`, or `flow_opt` (described below) inside
     this module, and the function `flow` outside this module. **)
 let rec __flow cx (l, u) trace =
-  begin match cx.verbose with
+  begin match Context.verbose cx with
   | Some num_indent ->
     let indent = String.make ((Trace.trace_depth trace - 1) * num_indent) ' ' in
     let pid = Unix.getpid () in
@@ -3496,8 +3492,8 @@ and generate_tests cx reason typeparams each =
 
 and mk_nominal cx =
   let nominal = mk_id () in
-  (if cx.verbose <> None then prerr_endlinef
-      "NOM %d %s" nominal (string_of_filename cx.file));
+  (if Context.is_verbose cx then prerr_endlinef
+      "NOM %d %s" nominal (string_of_filename (Context.file cx)));
   nominal
 
 and unify_map cx trace tmap1 tmap2 =
@@ -5518,8 +5514,7 @@ let live cx state id =
     )
 
 (* Kill an unreachable type variable. *)
-let die cx id =
-  cx.graph <- cx.graph |> IMap.remove id
+let die cx id = Context.remove_tvar cx id
 
 (* flag controls in-module GC *)
 let cleanup_enabled = ref true
@@ -5527,7 +5522,7 @@ let cleanup_enabled = ref true
 (* Prune the graph given a GC state contained marked type variables. *)
 let cleanup cx state =
   if !cleanup_enabled then (
-    cx.graph |> IMap.iter (fun id _ ->
+    cx |> Context.graph |> IMap.iter (fun id _ ->
       if state#marked id
       then live cx state id
       else die cx id
@@ -5536,7 +5531,7 @@ let cleanup cx state =
 
 (* Main entry point for graph pruning. *)
 let do_gc cx ms =
-  if cx.checked then (
+  if Context.is_checked cx then (
     let state = new gc_state in
     List.iter (gc cx state) ((builtins cx)::(List.map (lookup_module cx) ms));
     cleanup cx state;
@@ -5801,7 +5796,7 @@ let enforce_strict cx id =
   SSet.iter (fun r ->
     let tvar = lookup_module cx r in
     assume_ground cx skip_ids tvar
-  ) cx.required;
+  ) (Context.required cx);
 
   (* With the computed skip_ids, call `assert_ground` to force annotations while
      walking the graph starting from id. Typically, id corresponds to
@@ -5846,7 +5841,7 @@ module ContextOptimizer = struct
   type quotient = {
     reduced_graph : node IMap.t;
     reduced_property_maps : Type.t SMap.t IMap.t;
-    reduced_closures : (stack * Scope.t list) IMap.t
+    reduced_closures : Context.closure IMap.t
   }
 
   let empty = {
@@ -5875,7 +5870,7 @@ module ContextOptimizer = struct
       let { reduced_property_maps; _ } = quotient in
       if (IMap.mem id reduced_property_maps) then quotient
       else
-        let pmap = IMap.find_unsafe id cx.property_maps in
+        let pmap = IMap.find_unsafe id (Context.property_maps cx) in
         let reduced_property_maps = IMap.add id pmap reduced_property_maps in
         super#props cx { quotient with reduced_property_maps } id
 
@@ -5884,7 +5879,7 @@ module ContextOptimizer = struct
       if id = 0 then super#fun_type cx quotient funtype
       else
         let { reduced_closures; _ } = quotient in
-        let closure = IMap.find_unsafe id cx.closures in
+        let closure = IMap.find_unsafe id (Context.closures cx) in
         let reduced_closures = IMap.add id closure reduced_closures in
         super#fun_type cx { quotient with reduced_closures } funtype
 
@@ -5896,18 +5891,18 @@ module ContextOptimizer = struct
     List.fold_left (reducer#type_ cx) empty exports
 
   let export cx =
-    lookup_module cx cx._module
+    lookup_module cx (Context.module_name cx)
 
   (* reduce a context to a "signature context" *)
   let sig_context component_cxs =
     let cx, other_cxs = List.hd component_cxs, List.tl component_cxs in
     let exports = List.map export component_cxs in
     let quotient = reduce_context cx exports in
-    cx.graph <- quotient.reduced_graph;
-    cx.property_maps <- quotient.reduced_property_maps;
-    cx.closures <- quotient.reduced_closures;
+    Context.set_graph cx quotient.reduced_graph;
+    Context.set_property_maps cx quotient.reduced_property_maps;
+    Context.set_closures cx quotient.reduced_closures;
     other_cxs |> List.iter (fun other_cx ->
-      cx.modulemap <- SMap.add other_cx._module (export other_cx) cx.modulemap
+      Context.add_module cx (Context.module_name other_cx) (export other_cx)
     )
 
 end

@@ -8,7 +8,6 @@
  *
  *)
 
-open Context
 open Reason_js
 open Type
 open Utils
@@ -79,12 +78,13 @@ let rec type_printer override fallback enclosure cx t =
 
     | ObjT (_, {props_tmap = flds; dict_t; _}) ->
         let props =
-          IMap.find_unsafe flds cx.property_maps
-           |> SMap.elements
-           |> List.filter (fun (x,_) -> not (Reason_js.is_internal_name x))
-           |> List.rev
-           |> List.map (fun (x,t) -> x ^ ": " ^ (pp EnclosureNone cx t) ^ ",")
-           |> String.concat " "
+          Context.property_maps cx
+          |> IMap.find_unsafe flds
+          |> SMap.elements
+          |> List.filter (fun (x,_) -> not (Reason_js.is_internal_name x))
+          |> List.rev
+          |> List.map (fun (x,t) -> x ^ ": " ^ (pp EnclosureNone cx t) ^ ",")
+          |> String.concat " "
         in
         let indexer =
           (match dict_t with
@@ -278,7 +278,7 @@ let rec is_printed_type_parsable_impl weak cx enclosure = function
             (is_printed_type_parsable_impl weak cx EnclosureNone value)
         | None -> true
       in
-      let prop_map = IMap.find_unsafe props_tmap cx.property_maps in
+      let prop_map = IMap.find_unsafe props_tmap (Context.property_maps cx) in
       SMap.fold (fun name t acc ->
           acc && (
             (* We don't print internal properties, thus we do not care whether

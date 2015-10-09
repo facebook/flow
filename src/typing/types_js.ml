@@ -18,7 +18,6 @@
 
 open Utils
 open Utils_js
-open Context
 open Modes_js
 
 module TI = Type_inference_js
@@ -277,13 +276,16 @@ let infer_job opts (inferred, errsets, errsuppressions) files =
         Module.add_module_info cx;
         (* note: save and clear errors and error suppressions before storing
          * cx to shared heap *)
-        let errs = cx.errors in
-        let suppressions = cx.error_suppressions in
-        cx.errors <- Errors_js.ErrorSet.empty;
-        cx.error_suppressions <- Errors_js.ErrorSuppressions.empty;
-        ContextHeap.add cx.file cx;
+        let errs = Context.errors cx in
+        let suppressions = Context.error_suppressions cx in
+        Context.remove_all_errors cx;
+        Context.remove_all_error_suppressions cx;
+
+        let cx_file = Context.file cx in
+        ContextHeap.add cx_file cx;
+
         (* add filename, errorset, suppressions *)
-        cx.file :: inferred, errs :: errsets, suppressions :: errsuppressions
+        cx_file :: inferred, errs :: errsets, suppressions :: errsuppressions
       )
     with exc ->
       prerr_endlinef "(%d) infer_job THROWS: %s"
@@ -336,7 +338,7 @@ let check_requires cx =
   SSet.iter (fun req ->
     if not (Module.module_exists req)
     then
-      let loc = SMap.find_unsafe req cx.require_loc in
+      let loc = SMap.find_unsafe req (Context.require_loc cx) in
       let req =
         if Filename.is_relative req
         then req
@@ -347,12 +349,7 @@ let check_requires cx =
       let tvar = Flow_js.mk_tvar cx reason in
       Flow_js.lookup_builtin cx (Reason_js.internal_module_name m_name)
         reason (Some (Reason_js.builtin_reason m_name)) tvar;
-  ) cx.required
-
-let mk_copy_of_context cx = { cx with
-  graph = IMap.map Constraint_js.copy_node cx.graph;
-  property_maps = cx.property_maps
-}
+  ) (Context.required cx)
 
 (* We already cache contexts in the shared memory for performance, but context
    graphs need to be copied because they have mutable bounds. We maintain an
@@ -370,7 +367,7 @@ class context_cache = object
 
   (* read a context from shared memory, copy its graph, and cache the context *)
   method read file =
-    let cx = mk_copy_of_context (ContextHeap.find_unsafe file) in
+    let cx = Context.copy_of_context (ContextHeap.find_unsafe file) in
     Hashtbl.add cached_infer_contexts file cx;
     cx
 end
@@ -389,7 +386,7 @@ class sig_context_cache = object
   (* read a context from shared memory, copy its graph, and cache the context *)
   method read file =
     let orig_cx = SigContextHeap.find_unsafe file in
-    let cx = mk_copy_of_context orig_cx in
+    let cx = Context.copy_of_context orig_cx in
     Hashtbl.add cached_merge_contexts file cx;
     orig_cx, cx
 end
@@ -433,7 +430,7 @@ end)
 let merge_strict_context cache component_cxs =
   List.iter check_requires component_cxs;
   let required = List.fold_left (fun required cx ->
-    SSet.fold (fun r -> add_decl (r, cx)) cx.required required
+    SSet.fold (fun r -> add_decl (r, cx)) (Context.required cx) required
   ) SMap.empty component_cxs in
   let cx = List.hd component_cxs in
 
@@ -505,8 +502,8 @@ let merge_strict_component (component: filename list) =
 
     Flow_js.ContextOptimizer.sig_context component_cxs;
     let cx = List.hd component_cxs in
-    let errors = cx.errors in
-    cx.errors <- Errors_js.ErrorSet.empty;
+    let errors = Context.errors cx in
+    Context.remove_all_errors cx;
     SigContextHeap.add file cx;
     file, errors
   )
@@ -534,7 +531,7 @@ let typecheck_contents contents filename =
       in
       let cache = new context_cache in
       merge_strict_context cache [cx];
-      Some cx, cx.errors
+      Some cx, Context.errors cx
 
   | Err errors ->
       None, errors
@@ -734,8 +731,8 @@ let merge_strict workers dependency_graph partition opts =
       let files = List.fold_right add_successful_filename statuses [] in
       (* collect master context errors *)
       let (files, errsets) = (
-        master_cx.file :: files,
-        master_cx.errors :: errsets
+        Context.file master_cx :: files,
+        Context.errors master_cx :: errsets
       ) in
       (* save *)
       save_errors merge_errors files errsets;
@@ -960,7 +957,7 @@ let recheck genv env modified =
 
   (* clear errors for modified files and master *)
   let master_cx = Flow_js.master_cx () in
-  clear_errors (master_cx.file :: FilenameSet.elements modified);
+  clear_errors (Context.file master_cx :: FilenameSet.elements modified);
 
   (* track deleted files, remove from modified set *)
   let deleted = FilenameSet.filter (fun f ->
@@ -1000,7 +997,7 @@ let recheck genv env modified =
   let removed_modules = Module.remove_files to_clear in
 
   (* TODO elsewhere or delete *)
-  master_cx.errors <- Errors_js.ErrorSet.empty;
+  Context.remove_all_errors master_cx;
 
   (* recheck *)
   let freshparsed_list = FilenameSet.elements freshparsed in

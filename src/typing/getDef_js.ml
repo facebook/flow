@@ -59,7 +59,7 @@ let getdef_get_result cx state =
       | None ->
           Loc.none)
   | Some Gdrequire name ->
-      let module_name = Module_js.imported_module cx.Context.file name in
+      let module_name = Module_js.imported_module (Context.file cx) name in
       let f = Module_js.get_module_file module_name in
       (match f with
       | Some file -> Loc.({ none with source = Some file })
