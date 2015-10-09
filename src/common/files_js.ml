@@ -202,7 +202,7 @@ let wanted config =
 let make_next_files root =
   let config = FlowConfig.get root in
   let filter = wanted config in
-  let others = config.FlowConfig.include_stems in
+  let others = FlowConfig.(config.includes.stems) in
   let sroot = Path.to_string root in
   let realpath_filter path = is_valid_path path && filter path in
   let path_filter path =
@@ -245,7 +245,7 @@ let package_json root =
     (str_starts_with path sroot || FlowConfig.is_included config path)
     && realpath_filter path
   in
-  let others = config.FlowConfig.include_stems in
+  let others = FlowConfig.(config.includes.stems) in
   let get_next = make_next_files_following_symlinks
     ~path_filter
     ~realpath_filter

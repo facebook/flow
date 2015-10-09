@@ -34,15 +34,19 @@ val default_options: Path.t -> options
 
 module PathMap : Utils.MapSig with type key = Path.t
 
+type path_matcher = {
+  paths: Path.t list;
+  stems: Path.t list;
+  stem_map: ((string * Str.regexp) list) PathMap.t;
+}
+
 type config = {
   (* file blacklist *)
   excludes: (string * Str.regexp) list;
   (* user-specified non-root include paths. may contain wildcards *)
-  includes: Path.t list;
-  (* stems extracted from includes *)
-  include_stems: Path.t list;
-  (* map from include_stems to list of (original path, regexified path) *)
-  include_map: ((string * Str.regexp) list) PathMap.t;
+  includes: path_matcher;
+  (* gradually typed files *)
+  gradual: path_matcher;
   (* library paths. no wildcards *)
   libs: Path.t list;
   (* config options *)
@@ -68,3 +72,6 @@ val is_included: config -> string -> bool
 
 (* true if a file path matches an exclude (ignore) entry in config *)
 val is_excluded: config -> string -> bool
+
+(* true if a file path matches a `gradual` regex in config *)
+val is_gradual: config -> string -> bool

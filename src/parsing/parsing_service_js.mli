@@ -52,3 +52,4 @@ val do_parse:
 
 (* true if file is in flow, i.e. is to be checked. CAUTION expensive *)
 val in_flow: string -> filename -> bool
+val is_noflow: string -> bool

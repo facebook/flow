@@ -24,7 +24,7 @@ type mode = ModuleMode_Checked | ModuleMode_Weak | ModuleMode_Unchecked
 
 val module_name_candidates: string -> string list
 
-val parse_flow: Spider_monkey_ast.Comment.t list -> mode
+val parse_flow: default_mode:mode -> Spider_monkey_ast.Comment.t list -> mode
 
 (* initialize to a module system, given the name of the module system *)
 val init: Options.options -> unit
