@@ -2650,7 +2650,15 @@ module.exports = {
   'Valid yield expressions': {
     'yield foo;': {},
     'yield* foo;': {},
-    'yield;': {}
+    'yield;': {
+      'body.0.expression.argument': null
+    },
+    'yield\nfoo': {
+      'body.0.expression.argument': null
+    },
+    '{ yield }': {
+      'body.0.body.0.expression.argument': null
+    }
   },
   'Invalid yield expressions': {
     'yield*;': {
