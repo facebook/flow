@@ -60,12 +60,16 @@ module ErrorString = struct
     | Tanon _    -> "a function"
     | Tfun _     -> "a function"
     | Tgeneric (x, _)    -> "a value of declared generic type "^x
-    | Tabstract (ak, _)
-        when AbstractKind.is_classname ak -> "a classname string"
+    | Tabstract (AKnewtype (x, _), _)
+        when x = SN.Classes.cClassname -> "a classname string"
+    | Tabstract (AKnewtype (x, _), _)
+        when x = SN.Classes.cTypename -> "a typename string"
     | Tabstract (ak, cstr) -> abstract ak cstr
     | Tclass ((_, x), _) -> "an object of type "^(strip_ns x)
     | Tapply ((_, x), _)
         when x = SN.Classes.cClassname -> "a classname string"
+    | Tapply ((_, x), _)
+        when x = SN.Classes.cTypename -> "a typename string"
     | Tapply ((_, x), _) -> "an object of type "^(strip_ns x)
     | Tobject            -> "an object"
     | Tshape _           -> "a shape"

@@ -80,6 +80,7 @@ class type ['a] nast_visitor_type = object
   method on_binop : 'a -> Ast.bop -> expr -> expr -> 'a
   method on_eif : 'a -> expr -> expr option -> expr -> 'a
   method on_nullCoalesce : 'a -> expr -> expr -> 'a
+  method on_typename : 'a -> sid -> 'a
   method on_instanceOf : 'a -> expr -> class_id -> 'a
   method on_class_id : 'a -> class_id -> 'a
   method on_new : 'a -> class_id -> expr list -> expr list -> 'a
@@ -239,6 +240,7 @@ class virtual ['a] nast_visitor: ['a] nast_visitor_type = object(this)
    | Eif         (e1, e2, e3)     -> this#on_eif acc e1 e2 e3
    | NullCoalesce (e1, e2)     -> this#on_nullCoalesce acc e1 e2
    | InstanceOf  (e1, e2)         -> this#on_instanceOf acc e1 e2
+   | Typename n -> this#on_typename acc n
    | New         (cid, el, uel)   -> this#on_new acc cid el uel
    | Efun        (f, idl)         -> this#on_efun acc f idl
    | Xml         (sid, attrl, el) -> this#on_xml acc sid attrl el
@@ -269,6 +271,7 @@ class virtual ['a] nast_visitor: ['a] nast_visitor_type = object(this)
   method on_method_id acc _ _ = acc
   method on_smethod_id acc _ _ = acc
   method on_method_caller acc _ _ = acc
+  method on_typename acc _ = acc
 
   method on_obj_get acc e1 e2 =
     let acc = this#on_expr acc e1 in

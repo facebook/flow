@@ -43,6 +43,7 @@ module Classes = struct
   let cXHPChild = "\\XHPChild"
   let cIMemoizeParam = "\\IMemoizeParam"
   let cClassname = "\\classname"
+  let cTypename = "\\typename"
 end
 
 module Collections = struct

@@ -1838,7 +1838,12 @@ and expr_ env = function
   | Class_get (x1, x2) ->
       N.Class_get (make_class_id env x1, x2)
   | Class_const (x1, x2) ->
-      N.Class_const (make_class_id env x1, x2)
+      let (genv, _) = env in
+      let (_, name) = Namespaces.elaborate_id genv.namespace x1 in
+      if SMap.mem name !(genv.typedefs) && (snd x2) = "class" then
+        N.Typename (Env.class_name env x1)
+      else
+        N.Class_const (make_class_id env x1, x2)
   | Call ((_, Id (p, pseudo_func)), el, uel)
       when pseudo_func = SN.SpecialFunctions.echo ->
       arg_unpack_unexpected uel ;

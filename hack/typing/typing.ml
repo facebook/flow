@@ -1268,6 +1268,27 @@ and expr_
       let c = (p, Binop (Ast.Diff2, e1, (p, Null))) in
       let eif = (p, Eif (c, Some e1, e2)) in
       expr env eif
+  | Typename sid ->
+      begin match Env.get_typedef env (snd sid) with
+        | Some (Typing_heap.Typedef.Ok (_, tparaml, _, _, _)) ->
+            let params = List.map ~f:begin fun (_, (p, x), cstr) ->
+              Reason.Rwitness p, Tgeneric (x, cstr)
+            end tparaml in
+            let tdef = Reason.Rwitness (fst sid), Tapply (sid, params) in
+            let typename =
+              Reason.Rwitness p, Tapply((p, SN.Classes.cTypename), [tdef]) in
+            let env, tparams = lfold begin fun env _ ->
+              TUtils.in_var env (Reason.Rnone, Tunresolved [])
+            end env tparaml in
+            let ety_env = { (Phase.env_with_self env) with
+                            substs = TSubst.make tparaml tparams } in
+            Phase.localize ~ety_env env typename
+        | _ ->
+            (* Should never hit this case since we only construct this AST node
+             * if in the expression Foo::class, Foo is a type def.
+             *)
+            env, (Reason.Rwitness p, Tany)
+      end
   | Class_const (cid, mid) -> class_const env p (cid, mid)
   | Class_get (x, (_, y))
       when Env.FakeMembers.get_static env x y <> None ->

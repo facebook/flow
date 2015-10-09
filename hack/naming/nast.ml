@@ -325,6 +325,7 @@ and expr_ =
   | Xml of sid * (pstring * expr) list * expr list
   | Assert of assert_expr
   | Clone of expr
+  | Typename of sid
 
 (* These are "very special" constructs that we look for in, among
  * other places, terminality checks. invariant does not appear here

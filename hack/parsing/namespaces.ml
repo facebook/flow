@@ -75,6 +75,7 @@ let autoimport_funcs = [
   "type_structure";
 ]
 let autoimport_types = [
+  "typename";
   "classname";
   "TypeStructure";
 ]

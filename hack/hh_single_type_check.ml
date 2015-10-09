@@ -134,7 +134,8 @@ let what_builtins mode = match mode with
   "  public static function keyExists(shape() $shape, arraykey $index): bool {}\n" ^
   "  public static function removeKey(shape() $shape, arraykey $index): void {}\n" ^
   "}\n" ^
-  "newtype classname<+T> = string;\n" ^
+  "newtype typename<+T> as string = string;\n"^
+  "newtype classname<+T> as typename<T> = typename<T>;\n" ^
   "function var_dump($x): void;\n" ^
   "function gena();\n" ^
   "function genva();\n" ^

@@ -345,6 +345,7 @@ and expr_ env acc p e =
   | Method_id _
   | Smethod_id _
   | Method_caller _
+  | Typename _
   | Id _ -> acc
   | Lvar _ | Lplaceholder _ -> acc
   | Obj_get ((_, This), (_, Id (_, vx as v)), _) ->

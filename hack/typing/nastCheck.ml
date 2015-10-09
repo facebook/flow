@@ -118,6 +118,7 @@ module CheckFunctionType = struct
     | _, Id _
     | _, Class_get _
     | _, Class_const _
+    | _, Typename _
     | _, Lvar _
     | _, Lplaceholder _ -> ()
     | _, Array afl ->
@@ -490,7 +491,7 @@ and check_class_property_initialization prop =
   Option.iter prop.cv_expr ~f:begin fun e ->
     let rec rec_assert_static_literal e =
       match (snd e) with
-      | Any | Shape _
+      | Any | Shape _ | Typename _
       | Id _ | Class_const _ | True | False | Int _ | Float _
       | Null | String _ ->
         ()
@@ -750,6 +751,7 @@ and expr_ env = function
   | This
   | Class_get _
   | Class_const _
+  | Typename _
   | Lvar _ | Lplaceholder _ -> ()
   (* Check that __CLASS__ and __TRAIT__ are used appropriately *)
   | Id (pos, const) ->

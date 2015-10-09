@@ -616,6 +616,10 @@ and emit_expr env (pos, expr_ as expr) =
     let env = emit_expr env e in
     emit_cast env h
 
+  (* Transform back into a Class_const *)
+  | Typename sid ->
+    emit_expr env (pos, Class_const (CI sid, (pos, "class")))
+
   (* handle ::class; just emit the name if we have it,
    * otherwise use NameA to get it *)
   | Class_const (cid, (_, "class")) ->
