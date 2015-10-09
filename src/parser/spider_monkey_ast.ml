@@ -683,7 +683,7 @@ and Expression : sig
   end
   module Yield : sig
     type t = {
-      argument: Expression.t;
+      argument: Expression.t option;
       delegate: bool;
     }
   end

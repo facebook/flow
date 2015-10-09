@@ -3633,7 +3633,9 @@ and expression_ ~is_cond cx type_params_map loc e = Ast.Expression.(match e with
   | Yield { Yield.argument; delegate = false } ->
       let reason = mk_reason "yield" loc in
       let yield = Env_js.get_var cx (internal_name "yield") reason in
-      let t = expression cx type_params_map argument in
+      let t = match argument with
+      | Some expr -> expression cx type_params_map expr
+      | None -> VoidT.at loc in
       Flow_js.flow cx (t, yield);
       let next = Env_js.get_var cx (internal_name "next") reason in
       OptionalT next
@@ -3646,7 +3648,9 @@ and expression_ ~is_cond cx type_params_map loc e = Ast.Expression.(match e with
       let yield = Env_js.get_var cx
         (internal_name "yield")
         (prefix_reason "yield of parent generator in " reason) in
-      let t = expression cx type_params_map argument in
+      let t = match argument with
+      | Some expr -> expression cx type_params_map expr
+      | None -> assert_false "delegate yield without argument" in
 
       let ret = Flow_js.mk_tvar cx
         (prefix_reason "return of child generator in " reason) in

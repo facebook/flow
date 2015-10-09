@@ -4,12 +4,12 @@ function *stmt_yield(): Generator<number, void, void> {
 }
 
 function *stmt_next(): Generator<void, void, number> {
-  var a = yield undefined;
+  var a = yield;
   if (a) {
     (a : number); // ok
   }
 
-  var b = yield undefined;
+  var b = yield;
   if (b) {
     (b : string); // error: number ~> string
   }
@@ -63,7 +63,7 @@ for (var x of widen_yield()) {
 
 function *delegate_next_generator() {
   function *inner() {
-    var x: ?number = yield undefined; // error: string ~> number
+    var x: ?number = yield; // error: string ~> number
   }
   yield *inner();
 }
