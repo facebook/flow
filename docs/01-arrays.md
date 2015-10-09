@@ -64,18 +64,16 @@ When an array is exported, its element type must be specified. This effectively 
 
 ## Tuples
 
-Flow provides first-class tuple support to JavaScript. Tuples are technically 
-arrays of length one (1) to eight (8).
+Given types `T0`, `T1`, ..., `Tn`, a tuple type `[T0, T1, ..., Tn]` is an
+array. That array has a general type `Array<T0 | T1 | ... | Tn>`, but Flow also
+understands that accessing the element at index `n` will evaluate to the
+specific type `Tn`.
 
-> NOTE
-> 
-> Arrays of length > 8 and empty arrays are typed as array, while arrays of 
-> length 1-8 are typed as tuple.
-
-In our very first example above where we type annotate an array, we are 
-actually type annotating a tuple. That said, while homogeneous arrays can be 
-tuples, the most common use case of a tuple is to store heterogeneous 
-elements.
+Note that a tuple type of length `n` doesn't guarantee inhabitant arrays never
+grow beyond length `n`. Thus, `var xs: [number, string] = [0, "", 0]` is a
+valid assignment. Flow will ensure that the values at indices < `n` are of the
+correct specific type, but values >= `n` can still exist as long as they are
+consistent with the general element type of the array.
 
 ### Syntax
 
