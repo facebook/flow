@@ -1161,11 +1161,14 @@ and expr_
       env, x
   | List el ->
       let env, tyl = lmap expr env el in
+      let env, tyl = lmap Typing_env.unbind env tyl in
       let ty = Reason.Rwitness p, Ttuple tyl in
       env, ty
   | Pair (e1, e2) ->
       let env, ty1 = expr env e1 in
+      let env, ty1 = Typing_env.unbind env ty1 in
       let env, ty2 = expr env e2 in
+      let env, ty2 = Typing_env.unbind env ty2 in
       let ty = Reason.Rwitness p, Tclass ((p, SN.Collections.cPair), [ty1; ty2]) in
       env, ty
   | Expr_list el ->
