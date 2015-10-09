@@ -9,7 +9,7 @@ overload.js:1:18,28: call of method `match`
 Error:
 overload.js:1:27,27: number
 This type is incompatible with
-[LIB] core.js:196:19,33: union type
+[LIB] core.js:199:19,33: union type
 
 overload.js:2:18,36: call of method `match`
 Error:
