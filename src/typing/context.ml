@@ -14,15 +14,16 @@ type stack = int list
 type closure = stack * Scope.t list
 
 type metadata = {
-  file: Loc.filename;
-  _module: string;
   checked: bool;
   weak: bool;
+  munge_underscores: bool;
   verbose: int option;
 }
 
 (* TODO this has a bunch of stuff in it that should be localized *)
 type t = {
+  file: Loc.filename;
+  module_name: string;
   metadata: metadata;
 
   (* required modules, and map to their locations *)
@@ -58,7 +59,9 @@ and module_exports_type =
 (* create a new context structure.
    Flow_js.fresh_context prepares for actual use.
  *)
-let make metadata = {
+let make metadata file module_name = {
+  file;
+  module_name;
   metadata;
 
   required = SSet.empty;
@@ -84,7 +87,7 @@ let annot_table cx = cx.annot_table
 let closures cx = cx.closures
 let errors cx = cx.errors
 let error_suppressions cx = cx.error_suppressions
-let file cx = cx.metadata.file
+let file cx = cx.file
 let find_props cx id = IMap.find_unsafe id cx.property_maps
 let find_module cx m = SMap.find_unsafe m cx.modulemap
 let globals cx = cx.globals
@@ -94,10 +97,11 @@ let is_verbose cx = cx.metadata.verbose <> None
 let is_weak cx = cx.metadata.weak
 let module_exports_type cx = cx.module_exports_type
 let module_map cx = cx.modulemap
-let module_name cx = cx.metadata._module
+let module_name cx = cx.module_name
 let property_maps cx = cx.property_maps
 let required cx = cx.required
 let require_loc cx = cx.require_loc
+let should_munge_underscores cx  = cx.metadata.munge_underscores
 let type_table cx = cx.type_table
 let verbose cx = cx.metadata.verbose
 

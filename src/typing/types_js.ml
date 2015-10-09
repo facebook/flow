@@ -36,7 +36,6 @@ let init_modes opts = Options.(
   modes.strip_root <- opts.opt_strip_root;
   modes.quiet <- opts.opt_quiet;
   modes.profile <- opts.opt_profile;
-  modes.munge_underscores <- opts.opt_munge_underscores;
   (* TODO: confirm that only master uses strip_root, otherwise set it! *)
   Module_js.init opts;
   Files_js.init
@@ -261,9 +260,12 @@ let logtime opts msg f =
    filenames, error sets *)
 let infer_job opts (inferred, errsets, errsuppressions) files =
   init_modes opts;
-  let force_check = Options.all opts in
-  let weak_by_default = Options.weak_by_default opts in
-  let verbose = Options.verbose opts in
+  let metadata = { Context.
+    checked = Options.all opts;
+    weak = Options.weak_by_default opts;
+    munge_underscores = Options.should_munge_underscores opts;
+    verbose = Options.verbose opts;
+  } in
   List.fold_left (fun (inferred, errsets, errsuppressions) file ->
     try checktime opts 1.0
       (fun t -> spf "perf: inferred %s in %f" (string_of_filename file) t)
@@ -271,7 +273,7 @@ let infer_job opts (inferred, errsets, errsuppressions) files =
         (*prerr_endlinef "[%d] INFER: %s" (Unix.getpid()) file;*)
 
         (* infer produces a context for this module *)
-        let cx = TI.infer_module ~force_check ~weak_by_default ~verbose file in
+        let cx = TI.infer_module ~metadata file in
         (* register module info *)
         Module.add_module_info cx;
         (* note: save and clear errors and error suppressions before storing
@@ -523,12 +525,14 @@ let merge_strict_file file =
 let typecheck_contents contents filename =
   Parsing_service_js.(match do_parse ~fail:false contents filename with
   | OK ast ->
+      let metadata = { Context.
+        checked = true;
+        weak = false;
+        munge_underscores = false; (* TODO: read from .flowconfig? *)
+        verbose = None;
+      } in
       let cx = TI.infer_ast
-        ~force_check:true
-        ~weak_by_default:false
-        ~verbose: None
-        ast filename
-      in
+        ~gc:false ~metadata ~filename ~module_name:"-" ast in
       let cache = new context_cache in
       merge_strict_context cache [cx];
       Some cx, Context.errors cx

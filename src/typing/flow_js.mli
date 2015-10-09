@@ -100,7 +100,7 @@ val lookup_module: Context.t -> string -> Type.t
 val do_gc: Context.t -> string list -> unit
 
 (* contexts *)
-val fresh_context: Context.metadata -> Context.t
+val fresh_context: Context.metadata -> Loc.filename -> string -> Context.t
 
 (* builtins *)
 

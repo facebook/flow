@@ -6211,29 +6211,24 @@ let scan_for_suppressions =
       | _ -> ()) comments
 
 (* build module graph *)
-let infer_ast ?module_name ~force_check ~weak_by_default ~verbose ast file =
+let infer_ast ?(gc=true) ~metadata ~filename ~module_name ast =
   Flow_js.Cache.clear();
 
   let loc, statements, comments = ast in
 
-  let checked, weak = Module_js.(match parse_flow comments with
-  | ModuleMode_Checked ->
-    true, weak_by_default
-  | ModuleMode_Weak ->
-    true, true
-  | ModuleMode_Unchecked ->
-    force_check, weak_by_default) in
+  (* TODO: Facebook uses a @preventMunge annotation to force `munge_underscores`
+   * off on a per-file basis. We should parse the comments like we do above. *)
+  let metadata = Context.(match Module_js.parse_flow comments with
+  | Module_js.ModuleMode_Checked -> { metadata with checked = true; }
+  | Module_js.ModuleMode_Weak -> { metadata with checked = true; weak = true }
+  | Module_js.ModuleMode_Unchecked -> metadata
+  ) in
 
-  let _module = match module_name with
-    | Some _module -> _module
-    | None -> "-" (* some dummy string *) in
-
-  let cx = Flow_js.fresh_context {
-    Context.checked; weak; verbose; file; _module;
-  } in
+  let cx = Flow_js.fresh_context metadata filename module_name in
+  let checked = Context.is_checked cx in
 
   let reason_exports_module =
-    reason_of_string (spf "exports of module `%s`" _module) in
+    reason_of_string (spf "exports of module `%s`" module_name) in
 
   let local_exports_var = Flow_js.mk_tvar cx reason_exports_module in
 
@@ -6257,7 +6252,7 @@ let infer_ast ?module_name ~force_check ~weak_by_default ~verbose ast file =
   Env_js.init_env cx module_scope;
 
   let reason = mk_reason "exports" Loc.({
-    none with source = Some (Context.file cx)
+    none with source = Some filename
   }) in
 
   if checked then (
@@ -6290,17 +6285,18 @@ let infer_ast ?module_name ~force_check ~weak_by_default ~verbose ast file =
       (* Uses standard ES module exports *)
       | ESModule -> module_t
     ) in
-    Flow_js.flow cx (module_t, exports cx _module);
+    Flow_js.flow cx (module_t, exports cx module_name);
   ) else (
-    Flow_js.unify cx (exports cx _module) AnyT.t;
+    Flow_js.unify cx (exports cx module_name) AnyT.t;
   );
 
   (* insist that whatever type flows into exports is fully annotated *)
   force_annotations cx;
 
-  let ins = SSet.elements (Context.required cx) in
-  let out = _module in
-  if module_name <> None then Flow_js.do_gc cx (out::ins);
+  (if gc then
+    let ins = SSet.elements (Context.required cx) in
+    let out = module_name in
+    Flow_js.do_gc cx (out::ins));
 
   cx
 
@@ -6321,11 +6317,11 @@ let get_comment_header (_, stmts, comments) =
 (* Given a filename, retrieve the parsed AST, derive a module name,
    and invoke the local (infer) pass. This will build and return a
    fresh context object for the module. *)
-let infer_module ~force_check ~weak_by_default ~verbose file =
-  let ast = Parsing_service_js.get_ast_unsafe file in
+let infer_module ~metadata filename =
+  let ast = Parsing_service_js.get_ast_unsafe filename in
   let comments = get_comment_header ast in
-  let module_name = Module_js.exported_module file comments in
-  infer_ast ~module_name ~force_check ~weak_by_default ~verbose ast file
+  let module_name = Module_js.exported_module filename comments in
+  infer_ast ~metadata ~filename ~module_name ast
 
 (* Map.union: which is faster, union M N or union N M when M > N?
    union X Y = fold add X Y which means iterate over X, adding to Y
@@ -6474,10 +6470,9 @@ let init_lib_file
   let cx = Flow_js.fresh_context { Context.
     checked = false;
     weak = false;
+    munge_underscores = false; (* no sense supporting private props in libs *)
     verbose;
-    file;
-    _module = Files_js.lib_module;
-  } in
+  } file Files_js.lib_module in
 
   let module_scope = Scope.fresh () in
   Env_js.init_env cx module_scope;

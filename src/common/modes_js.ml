@@ -14,7 +14,6 @@ type modes = {
   mutable strip_root: bool;
   mutable quiet : bool;
   mutable profile : bool;
-  mutable munge_underscores: bool;
 }
 
 let modes = {
@@ -23,7 +22,6 @@ let modes = {
   strip_root = false;
   quiet = true;
   profile = false;
-  munge_underscores = false;
 }
 
 let debug_string f = if modes.debug then prerr_endline (f ())

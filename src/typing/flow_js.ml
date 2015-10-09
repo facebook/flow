@@ -1072,8 +1072,8 @@ let builtins cx =
   lookup_module cx Files_js.lib_module
 
 (* new contexts are prepared here, so we can install shared tvars *)
-let fresh_context metadata =
-  let cx = Context.make metadata in
+let fresh_context metadata file module_name =
+  let cx = Context.make metadata file module_name in
   (* add types for pervasive builtins *)
   mk_builtins cx;
   cx
@@ -1088,10 +1088,9 @@ let master_cx =
     let cx = fresh_context { Context.
       checked = false;
       weak = false;
+      munge_underscores = false;
       verbose = None;
-      file = Loc.Builtins;
-      _module = Files_js.lib_module;
-    } in
+    } Loc.Builtins Files_js.lib_module in
     cx_ := Some cx;
     cx
   | Some cx -> cx
@@ -3882,8 +3881,8 @@ and concretize_parts cx trace l u done_list = function
  * Determines whether a property name should be considered "munged"/private when
  * the `munge_underscores` config option is set.
  *)
-and is_munged_prop_name name =
-  modes.munge_underscores
+and is_munged_prop_name cx name =
+  (Context.should_munge_underscores cx)
   && (String.length name >= 2)
   && name.[0] = '_'
   && name.[1] <> '_'
@@ -3941,7 +3940,7 @@ and ensure_prop_for_write cx trace strict mapr x proto reason_op reason_prop =
 and lookup_prop cx trace l reason strict x t =
   let l =
     (* munge names beginning with single _ *)
-    if is_munged_prop_name x
+    if is_munged_prop_name cx x
     then MixedT (reason_of_t l)
     else l
   in
@@ -5718,7 +5717,7 @@ let rec assert_ground ?(infer=false) cx skip ids = function
 
   | InstanceT (reason, static, super, instance) ->
       let process_element name t =
-        let infer = is_munged_prop_name name in
+        let infer = is_munged_prop_name cx name in
         assert_ground cx skip ids ~infer t
       in
       iter_props cx instance.fields_tmap process_element;

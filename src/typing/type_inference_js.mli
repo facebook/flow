@@ -12,20 +12,14 @@ open Reason_js
 open Utils_js
 
 val infer_ast:
-  ?module_name: string ->
-  force_check: bool ->
-  weak_by_default: bool ->
-  verbose: int option ->
+  ?gc: bool ->
+  metadata: Context.metadata ->
+  filename: Loc.filename ->
+  module_name: string ->
   Spider_monkey_ast.program ->
-  filename ->
   Context.t
 
-val infer_module:
-  force_check:bool ->
-  weak_by_default: bool ->
-  verbose: int option ->
-  filename ->
-  Context.t
+val infer_module: metadata: Context.metadata -> filename -> Context.t
 
 val merge_component_strict: Context.t list ->
   Context.t list -> (Context.t * string * Context.t) list ->

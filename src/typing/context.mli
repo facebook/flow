@@ -14,17 +14,16 @@ type t
 type stack = int list
 type closure = stack * Scope.t list
 type metadata = {
-  file: Loc.filename;
-  _module: string;
   checked: bool;
   weak: bool;
+  munge_underscores: bool;
   verbose: int option;
 }
 type module_exports_type =
   | CommonJSModule of Loc.t option
   | ESModule
 
-val make: metadata -> t
+val make: metadata -> Loc.filename -> string -> t
 
 (* accessors *)
 val annot_table: t -> (Loc.t, Type.t) Hashtbl.t
@@ -45,6 +44,7 @@ val module_name: t -> string
 val property_maps: t -> Type.properties IMap.t
 val required: t -> SSet.t
 val require_loc: t -> Loc.t SMap.t
+val should_munge_underscores: t -> bool
 val type_table: t -> (Loc.t, Type.t) Hashtbl.t
 val verbose: t -> int option
 

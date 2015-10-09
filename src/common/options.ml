@@ -38,6 +38,7 @@ let is_check_mode opts = opts.opt_check_mode
 let log_file opts = opts.opt_log_file
 let root opts = opts.opt_root
 let should_detach opts = opts.opt_should_detach
+let should_munge_underscores opts = opts.opt_munge_underscores
 let should_strip_root opts = opts.opt_strip_root
 let temp_dir opts = opts.opt_temp_dir
 let verbose opts = opts.opt_verbose
