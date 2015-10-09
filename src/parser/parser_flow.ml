@@ -1123,8 +1123,14 @@ end = struct
       if not (allow_yield env)
       then error env Error.IllegalYield;
       let delegate = Expect.maybe env T_MULT in
-      let argument = assignment env in
-      Loc.btwn start_loc (fst argument), Expression.(Yield Yield.({
+      let argument =
+        if delegate || not (Expect.maybe env T_SEMICOLON)
+        then Some (assignment env)
+        else None in
+      let end_loc = match argument with
+      | Some expr -> fst expr
+      | None -> start_loc in
+      Loc.btwn start_loc end_loc, Expression.(Yield Yield.({
         argument;
         delegate;
       }))

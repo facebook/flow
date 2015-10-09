@@ -486,7 +486,7 @@ end with type t = Impl.t) = struct
       )
     | loc, Yield yield -> Yield.(
         node "YieldExpression" loc [|
-          "argument", expression yield.argument;
+          "argument", option expression yield.argument;
           "delegate", bool yield.delegate;
         |]
       )

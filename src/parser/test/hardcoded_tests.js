@@ -2646,5 +2646,15 @@ module.exports = {
     'import { foo as default } from "foo"': {
       'errors.0.message': 'Unexpected token default'
     }
+  },
+  'Valid yield expressions': {
+    'yield foo;': {},
+    'yield* foo;': {},
+    'yield;': {}
+  },
+  'Invalid yield expressions': {
+    'yield*;': {
+      'errors.0.message': 'Unexpected token ;'
+    }
   }
 };
