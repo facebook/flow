@@ -1896,8 +1896,9 @@ and assign p env e1 ty2 =
        *)
       let env, shape_ty = expr env shape in
       let field = TUtils.shape_field_name env p1 e in
+      let env, field_type = TUtils.in_var env (Reason.Rnone, Tunresolved []) in
       let env, shape_ty =
-        Typing_shapes.grow_shape p e1 field (Env.fresh_type()) env shape_ty in
+        Typing_shapes.grow_shape p e1 field field_type env shape_ty in
       let env, _ty = set_valid_rvalue p env lvar shape_ty in
 
       (* We still need to call assign_simple in order to bind the freshly
