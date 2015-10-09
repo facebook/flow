@@ -6227,7 +6227,10 @@ let infer_ast ?module_name ~force_check ~weak_by_default ~verbose ast file =
   let _module = match module_name with
     | Some _module -> _module
     | None -> "-" (* some dummy string *) in
-  let cx = Flow_js.fresh_context ~checked ~weak ~verbose file _module in
+
+  let cx = Flow_js.fresh_context {
+    Context.checked; weak; verbose; file; _module;
+  } in
 
   let reason_exports_module =
     reason_of_string (spf "exports of module `%s`" _module) in
@@ -6468,7 +6471,13 @@ let init_lib_file
     ~verbose file statements comments save_errors save_suppressions =
   Flow_js.Cache.clear();
 
-  let cx = Flow_js.fresh_context ~verbose file Files_js.lib_module in
+  let cx = Flow_js.fresh_context { Context.
+    checked = false;
+    weak = false;
+    verbose;
+    file;
+    _module = Files_js.lib_module;
+  } in
 
   let module_scope = Scope.fresh () in
   Env_js.init_env cx module_scope;

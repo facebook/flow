@@ -1072,8 +1072,8 @@ let builtins cx =
   lookup_module cx Files_js.lib_module
 
 (* new contexts are prepared here, so we can install shared tvars *)
-let fresh_context ?(checked=false) ?(weak=false) ~verbose file _module =
-  let cx = Context.new_context ~file ~_module ~checked ~weak ~verbose in
+let fresh_context metadata =
+  let cx = Context.make metadata in
   (* add types for pervasive builtins *)
   mk_builtins cx;
   cx
@@ -1085,7 +1085,13 @@ let master_cx =
   let cx_ = ref None in
   fun () -> match !cx_ with
   | None ->
-    let cx = fresh_context ~verbose:None Loc.Builtins Files_js.lib_module in
+    let cx = fresh_context { Context.
+      checked = false;
+      weak = false;
+      verbose = None;
+      file = Loc.Builtins;
+      _module = Files_js.lib_module;
+    } in
     cx_ := Some cx;
     cx
   | Some cx -> cx

@@ -9,7 +9,6 @@
  *)
 
 open Utils
-open Utils_js
 open Reason_js
 
 val new_warning: (reason * string) list -> Errors_js.error
@@ -101,10 +100,7 @@ val lookup_module: Context.t -> string -> Type.t
 val do_gc: Context.t -> string list -> unit
 
 (* contexts *)
-val fresh_context:
-  ?checked:bool -> ?weak:bool -> verbose:int option ->
-  filename -> string ->
-  Context.t
+val fresh_context: Context.metadata -> Context.t
 
 (* builtins *)
 

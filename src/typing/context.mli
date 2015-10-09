@@ -10,18 +10,21 @@
 
 open Utils
 
+type t
 type stack = int list
 type closure = stack * Scope.t list
-
-type t
+type metadata = {
+  file: Loc.filename;
+  _module: string;
+  checked: bool;
+  weak: bool;
+  verbose: int option;
+}
 type module_exports_type =
   | CommonJSModule of Loc.t option
   | ESModule
 
-val new_context:
-  ?checked:bool -> ?weak:bool -> verbose:int option ->
-  file:Loc.filename -> _module:string ->
-  t
+val make: metadata -> t
 
 (* accessors *)
 val annot_table: t -> (Loc.t, Type.t) Hashtbl.t

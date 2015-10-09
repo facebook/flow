@@ -13,13 +13,17 @@ open Utils
 type stack = int list
 type closure = stack * Scope.t list
 
-(* TODO this has a bunch of stuff in it that should be localized *)
-type t = {
+type metadata = {
   file: Loc.filename;
   _module: string;
   checked: bool;
   weak: bool;
   verbose: int option;
+}
+
+(* TODO this has a bunch of stuff in it that should be localized *)
+type t = {
+  metadata: metadata;
 
   (* required modules, and map to their locations *)
   mutable required: SSet.t;
@@ -54,12 +58,8 @@ and module_exports_type =
 (* create a new context structure.
    Flow_js.fresh_context prepares for actual use.
  *)
-let new_context ?(checked=false) ?(weak=false) ~verbose ~file ~_module = {
-  file;
-  _module;
-  checked;
-  weak;
-  verbose;
+let make metadata = {
+  metadata;
 
   required = SSet.empty;
   require_loc = SMap.empty;
@@ -84,22 +84,22 @@ let annot_table cx = cx.annot_table
 let closures cx = cx.closures
 let errors cx = cx.errors
 let error_suppressions cx = cx.error_suppressions
-let file cx = cx.file
+let file cx = cx.metadata.file
 let find_props cx id = IMap.find_unsafe id cx.property_maps
 let find_module cx m = SMap.find_unsafe m cx.modulemap
 let globals cx = cx.globals
 let graph cx = cx.graph
-let is_checked cx = cx.checked
-let is_verbose cx = cx.verbose <> None
-let is_weak cx = cx.weak
+let is_checked cx = cx.metadata.checked
+let is_verbose cx = cx.metadata.verbose <> None
+let is_weak cx = cx.metadata.weak
 let module_exports_type cx = cx.module_exports_type
 let module_map cx = cx.modulemap
-let module_name cx = cx._module
+let module_name cx = cx.metadata._module
 let property_maps cx = cx.property_maps
 let required cx = cx.required
 let require_loc cx = cx.require_loc
 let type_table cx = cx.type_table
-let verbose cx = cx.verbose
+let verbose cx = cx.metadata.verbose
 
 let copy_of_context cx = { cx with
   graph = IMap.map Constraint_js.copy_node cx.graph;
