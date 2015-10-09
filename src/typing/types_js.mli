@@ -24,9 +24,9 @@ val single_main: string list -> Options.options -> unit
 
 val get_errors: unit -> Errors_js.error list
 
-val merge_strict_file: filename -> Constraint_js.context
+val merge_strict_file: filename -> Context.t
 
 val typecheck_contents:
   string ->               (* contents *)
   filename ->             (* fake file-/module name *)
-  Constraint_js.context option * Errors_js.ErrorSet.t
+  Context.t option * Errors_js.ErrorSet.t

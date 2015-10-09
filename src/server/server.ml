@@ -175,7 +175,7 @@ struct
       let ty, raw_type = match ground_t with
         | None -> None, None
         | Some t ->
-            let ty = Some (Constraint_js.string_of_t cx t) in
+            let ty = Some (Type_printer.string_of_t cx t) in
             let raw_type =
               if include_raw then
                 Some (Debug.jstr_of_t ~depth:10 cx t)
@@ -199,7 +199,7 @@ struct
 
   let dump_types file_input include_raw oc =
     (* Print type using Flow type syntax *)
-    let printer = Constraint_js.string_of_t in
+    let printer = Type_printer.string_of_t in
     (* Print raw representation of types as json; as it turns out, the
        json gets cut off at a specified depth, so pass the maximum
        possible depth to avoid that. *)

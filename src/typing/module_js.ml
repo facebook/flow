@@ -21,7 +21,6 @@ open Utils_js
 open Sys_utils
 
 module Ast = Spider_monkey_ast
-module Constraint = Constraint_js
 module Flow = Flow_js
 module Modes = Modes_js
 module Reason = Reason_js
@@ -622,11 +621,11 @@ let get_reverse_imports module_name =
 
 (* extract info from context *)
 let info_of cx = {
-  file = cx.Constraint.file;
-  _module = cx.Constraint._module;
-  required = cx.Constraint.required;
-  require_loc = cx.Constraint.require_loc;
-  checked = cx.Constraint.checked;
+  file = cx.Context.file;
+  _module = cx.Context._module;
+  required = cx.Context.required;
+  require_loc = cx.Context.require_loc;
+  checked = cx.Context.checked;
   parsed = true;
 }
 

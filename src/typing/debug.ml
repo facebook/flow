@@ -10,7 +10,7 @@
 
 module Json = Hh_json
 
-open Constraint_js
+open Context
 open Reason_js
 open Type
 open Utils
@@ -31,7 +31,7 @@ let string_of_binary_test_ctor = function
 type json_cx = {
   stack: ISet.t;
   depth: int;
-  cx: context;
+  cx: Context.t;
 }
 
 let check_depth continuation json_cx =
@@ -517,31 +517,31 @@ and json_of_node_impl json_cx id = Json.(
   JAssoc (
     let json_cx = { json_cx with stack = ISet.add id json_cx.stack } in
     match IMap.find_unsafe id json_cx.cx.graph with
-    | Goto id ->
+    | Constraint_js.Goto id ->
       ["kind", JString "Goto"]
       @ ["id", JInt id]
-    | Root root ->
+    | Constraint_js.Root root ->
       ["kind", JString "Root"]
       @ ["root", json_of_root json_cx root]
   )
 )
 
 and json_of_root json_cx = check_depth json_of_root_impl json_cx
-and json_of_root_impl json_cx root = Json.(
+and json_of_root_impl json_cx root = Json.(Constraint_js.(
   JAssoc ([
     "rank", JInt root.rank;
     "constraints", json_of_constraints json_cx root.constraints
   ])
-)
+))
 
 and json_of_constraints json_cx = check_depth json_of_constraints_impl json_cx
 and json_of_constraints_impl json_cx constraints = Json.(
   JAssoc (
     match constraints with
-    | Resolved t ->
+    | Constraint_js.Resolved t ->
       ["kind", JString "Resolved"]
       @ ["type", _json_of_t json_cx t]
-    | Unresolved bounds ->
+    | Constraint_js.Unresolved bounds ->
       ["kind", JString "Unresolved"]
       @ ["bounds", json_of_bounds json_cx bounds]
   )
@@ -550,7 +550,7 @@ and json_of_constraints_impl json_cx constraints = Json.(
 and json_of_bounds json_cx = check_depth json_of_bounds_impl json_cx
 and json_of_bounds_impl json_cx bounds = Json.(
   match bounds with
-  | { lower; upper; lowertvars; uppertvars; } -> JAssoc ([
+  | { Constraint_js.lower; upper; lowertvars; uppertvars; } -> JAssoc ([
       "lower", json_of_tkeys json_cx lower;
       "upper", json_of_tkeys json_cx upper;
       "lowertvars", json_of_tvarkeys json_cx lowertvars;

@@ -9,7 +9,7 @@
  *)
 
 open Autocomplete_js
-open Constraint_js
+open Type_printer
 open Utils
 
 module Json = Hh_json

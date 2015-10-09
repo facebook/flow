@@ -11,59 +11,58 @@
 open Utils
 open Utils_js
 open Reason_js
-open Constraint_js
 
 val new_warning: (reason * string) list -> Errors_js.error
 val new_error: (reason * string) list -> Errors_js.error
 
-val add_warning: context -> ?trace:Trace.t -> (reason * string) list -> unit
-val add_error: context -> ?trace:Trace.t -> (reason * string) list -> unit
+val add_warning: Context.t -> ?trace:Trace.t -> (reason * string) list -> unit
+val add_error: Context.t -> ?trace:Trace.t -> (reason * string) list -> unit
 
-val find_graph: context -> ident -> constraints
+val find_graph: Context.t -> Constraint_js.ident -> Constraint_js.constraints
 
 (* propagates sources to sinks following a subtype relation *)
-val flow: context -> (Type.t * Type.t) -> unit
+val flow: Context.t -> (Type.t * Type.t) -> unit
 
-val unify: context -> Type.t -> Type.t -> unit
+val unify: Context.t -> Type.t -> Type.t -> unit
 
-val reposition: context -> ?trace:Trace.t -> reason -> Type.t -> Type.t
+val reposition: Context.t -> ?trace:Trace.t -> reason -> Type.t -> Type.t
 
-val master_cx: unit -> context
+val master_cx: unit -> Context.t
 
 (* constraint utils *)
-val filter_optional: context -> ?trace:Trace.t -> reason -> Type.t -> Type.t
+val filter_optional: Context.t -> ?trace:Trace.t -> reason -> Type.t -> Type.t
 
 module Cache: sig
   val clear: unit -> unit
 end
 
-val mk_tvar: context -> reason -> Type.t
-val mk_tvar_where: context -> reason -> (Type.t -> unit) -> Type.t
-val mk_tvar_derivable_where: context -> reason -> (Type.t -> unit) -> Type.t
+val mk_tvar: Context.t -> reason -> Type.t
+val mk_tvar_where: Context.t -> reason -> (Type.t -> unit) -> Type.t
+val mk_tvar_derivable_where: Context.t -> reason -> (Type.t -> unit) -> Type.t
 
-val get_builtin_typeapp: context -> reason -> string -> Type.t list -> Type.t
+val get_builtin_typeapp: Context.t -> reason -> string -> Type.t list -> Type.t
 
 (* frames *)
 
-val havoc_ctx : context -> int -> int -> unit
+val havoc_ctx : Context.t -> int -> int -> unit
 
 (* polymorphism *)
 
-val subst: context -> ?force:bool -> (Type.t SMap.t) -> Type.t -> Type.t
-val generate_tests: context -> reason -> Type.typeparam list -> (Type.t SMap.t -> unit)
+val subst: Context.t -> ?force:bool -> (Type.t SMap.t) -> Type.t -> Type.t
+val generate_tests: Context.t -> reason -> Type.typeparam list -> (Type.t SMap.t -> unit)
   -> unit
 
 (* property maps *)
 
-val mk_propmap : context -> Type.t SMap.t -> int
+val mk_propmap : Context.t -> Type.t SMap.t -> int
 
-val has_prop : context -> int -> SMap.key -> bool
+val has_prop : Context.t -> int -> SMap.key -> bool
 
-val read_prop : context -> int -> SMap.key -> Type.t
+val read_prop : Context.t -> int -> SMap.key -> Type.t
 
-val write_prop : context -> int -> SMap.key -> Type.t -> unit
+val write_prop : Context.t -> int -> SMap.key -> Type.t -> unit
 
-val iter_props : context -> int -> (string -> Type.t -> unit) -> unit
+val iter_props : Context.t -> int -> (string -> Type.t -> unit) -> unit
 
 (* object/method types *)
 
@@ -86,54 +85,54 @@ val dummy_prototype : Type.t
 val mk_objecttype : ?flags:Type.flags ->
   Type.dicttype option -> int -> Type.t -> Type.objtype
 
-val mk_object_with_proto : context -> reason -> Type.t -> Type.t
-val mk_object_with_map_proto : context -> reason -> ?sealed:bool ->
+val mk_object_with_proto : Context.t -> reason -> Type.t -> Type.t
+val mk_object_with_map_proto : Context.t -> reason -> ?sealed:bool ->
   ?dict:Type.dicttype -> (Type.t SMap.t) -> Type.t -> Type.t
 
-val static_method_call: context -> string -> reason -> reason -> string
+val static_method_call: Context.t -> string -> reason -> reason -> string
   -> Type.t list -> Type.t
 
 (* ... *)
 
-val mk_nominal: context -> int
+val mk_nominal: Context.t -> int
 
 (* val graph: bounds IMap.t ref *)
-val lookup_module: context -> string -> Type.t
-val do_gc: context -> string list -> unit
+val lookup_module: Context.t -> string -> Type.t
+val do_gc: Context.t -> string list -> unit
 
 (* contexts *)
 val fresh_context:
   ?checked:bool -> ?weak:bool -> verbose:int option ->
   filename -> string ->
-  context
+  Context.t
 
 (* builtins *)
 
-val builtins: context -> Type.t
-val get_builtin: context -> string -> reason -> Type.t
-val lookup_builtin: context -> string -> reason -> reason option -> Type.t -> unit
-val get_builtin_type: context -> reason -> string -> Type.t
-val resolve_builtin_class: context -> Type.t -> Type.t
-val set_builtin: context -> string -> Type.t -> unit
+val builtins: Context.t -> Type.t
+val get_builtin: Context.t -> string -> reason -> Type.t
+val lookup_builtin: Context.t -> string -> reason -> reason option -> Type.t -> unit
+val get_builtin_type: Context.t -> reason -> string -> Type.t
+val resolve_builtin_class: Context.t -> Type.t -> Type.t
+val set_builtin: Context.t -> string -> Type.t -> unit
 
-val mk_instance: context -> reason -> ?for_type:bool -> Type.t -> Type.t
-val mk_typeof_annotation: context -> ?trace:Trace.t -> Type.t -> Type.t
+val mk_instance: Context.t -> reason -> ?for_type:bool -> Type.t -> Type.t
+val mk_typeof_annotation: Context.t -> ?trace:Trace.t -> Type.t -> Type.t
 
 (* strict *)
-val check_types: context -> ident -> (Type.t -> bool) -> bool
-val enforce_strict: context -> ident -> unit
+val check_types: Context.t -> Constraint_js.ident -> (Type.t -> bool) -> bool
+val enforce_strict: Context.t -> Constraint_js.ident -> unit
 val suggested_type_cache: Type.t IMap.t ref
-val merge_type: context -> (Type.t * Type.t) -> Type.t
-val resolve_type: context -> Type.t -> Type.t
-val possible_types: context -> ident -> Type.t list
-val possible_types_of_type: context -> Type.t -> Type.t list
+val merge_type: Context.t -> (Type.t * Type.t) -> Type.t
+val resolve_type: Context.t -> Type.t -> Type.t
+val possible_types: Context.t -> Constraint_js.ident -> Type.t list
+val possible_types_of_type: Context.t -> Type.t -> Type.t list
 
-val ground_type: context -> Type.t -> Type.t
-val normalize_type: context -> Type.t -> Type.t
+val ground_type: Context.t -> Type.t -> Type.t
+val normalize_type: Context.t -> Type.t -> Type.t
 (* this optimizes a normalized type for printability *)
-val printify_type: context -> Type.t -> Type.t
+val printify_type: Context.t -> Type.t -> Type.t
 (* returns a grounded(, normalized) and printified version of the type *)
-val printified_type: context -> Type.t -> Type.t
+val printified_type: Context.t -> Type.t -> Type.t
 
 module Autocomplete : sig
   type member_result =
@@ -143,9 +142,9 @@ module Autocomplete : sig
 
   val map_of_member_result: member_result -> Type.t SMap.t
 
-  val extract_members: context -> Type.t -> member_result
+  val extract_members: Context.t -> Type.t -> member_result
 end
 
 module ContextOptimizer: sig
-  val sig_context : context list -> unit
+  val sig_context : Context.t list -> unit
 end

@@ -16,8 +16,8 @@
 open Utils
 open Utils_js
 open Reason_js
-open Constraint_js
-open Type   (* from Constraint_js *)
+open Context
+open Type
 open Scope
 
 (* lookup modes:

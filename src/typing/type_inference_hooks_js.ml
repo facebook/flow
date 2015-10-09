@@ -18,12 +18,12 @@ let require_nop _ _ _ = ()
 
 type hook_state_t = {
   id_hook:
-     (Constraint_js.context ->
+     (Context.t ->
       string -> Loc.t ->
       bool);
 
   member_hook:
-     (Constraint_js.context ->
+     (Context.t ->
       string -> Loc.t -> Type.t ->
       bool);
 
@@ -31,12 +31,12 @@ type hook_state_t = {
          currently don't need a way to override call types, so it simplifies
          things a bit *)
   call_hook:
-     (Constraint_js.context ->
+     (Context.t ->
       string -> Loc.t -> Type.t ->
       unit);
 
   require_hook:
-     (Constraint_js.context ->
+     (Context.t ->
       string -> Loc.t ->
       unit);
 }

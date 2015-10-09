@@ -22,7 +22,7 @@ open Utils_js
 module Ast = Spider_monkey_ast
 
 open Reason_js
-open Constraint_js
+open Context
 open Type
 
 open Env_js.LookupMode
@@ -386,7 +386,7 @@ let destructuring_map cx t p =
 module Refinement : sig
 
   val key : Ast.Expression.t -> Scope.Key.t option
-  val get : context -> Ast.Expression.t -> reason -> Type.t option
+  val get : Context.t -> Ast.Expression.t -> reason -> Type.t option
 
 end = struct
 
@@ -499,7 +499,7 @@ let query_type cx loc =
         Flow_js.suggested_type_cache := IMap.empty;
         let ground_t = Flow_js.printified_type cx t in
         let possible_ts = Flow_js.possible_types_of_type cx t in
-        result := if is_printed_type_parsable cx ground_t
+        result := if Type_printer.is_printed_type_parsable cx ground_t
           then (range, Some ground_t, possible_ts)
           else (range, None, possible_ts)
       )
@@ -531,8 +531,8 @@ let fill_types cx =
     let line = loc._end.line in
     let end_ = loc._end.column in
     let t = Flow_js.printified_type cx t in
-    if is_printed_type_parsable cx t then
-      (line, end_, spf ": %s" (string_of_t cx t))::list
+    if Type_printer.is_printed_type_parsable cx t then
+      (line, end_, spf ": %s" (Type_printer.string_of_t cx t))::list
     else list
   ) cx.annot_table []
 
@@ -6172,7 +6172,7 @@ let force_annotations cx =
   let after = Errors_js.ErrorSet.cardinal cx.errors in
   if (after > before)
   then cx.graph <- cx.graph |>
-    IMap.add id (Root { rank = 0; constraints = Resolved AnyT.t })
+    IMap.add id Constraint_js.(Root { rank = 0; constraints = Resolved AnyT.t })
 
 (* core inference, assuming setup and teardown happens elsewhere *)
 let infer_core cx type_params_map statements =

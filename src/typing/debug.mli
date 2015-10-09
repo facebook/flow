@@ -8,9 +8,9 @@
  *
  *)
 
-val json_of_t: ?depth:int -> Constraint_js.context -> Type.t -> Hh_json.json
-val jstr_of_t: ?depth:int -> Constraint_js.context -> Type.t -> string
-val json_of_graph: ?depth:int -> Constraint_js.context -> Hh_json.json
-val jstr_of_graph: ?depth:int -> Constraint_js.context -> string
-val json_of_scope: ?depth:int -> Constraint_js.context -> Scope.t -> Hh_json.json
-val json_of_env: ?depth:int -> Constraint_js.context -> Scope.t list -> Hh_json.json
+val json_of_t: ?depth:int -> Context.t -> Type.t -> Hh_json.json
+val jstr_of_t: ?depth:int -> Context.t -> Type.t -> string
+val json_of_graph: ?depth:int -> Context.t -> Hh_json.json
+val jstr_of_graph: ?depth:int -> Context.t -> string
+val json_of_scope: ?depth:int -> Context.t -> Scope.t -> Hh_json.json
+val json_of_env: ?depth:int -> Context.t -> Scope.t list -> Hh_json.json

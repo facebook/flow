@@ -18,7 +18,7 @@
 
 open Utils
 open Utils_js
-open Constraint_js
+open Context
 open Modes_js
 
 module TI = Type_inference_js
@@ -60,12 +60,12 @@ let is_lib_file f = match f with
    context graphs is presumably a lot less than deserializing contexts, so the
    optimization makes sense. *)
 module ContextHeap = SharedMem.WithCache (Loc.FilenameKey) (struct
-  type t = context
+  type t = Context.t
   let prefix = Prefix.make()
 end)
 
 module SigContextHeap = SharedMem.WithCache (Loc.FilenameKey) (struct
-  type t = context
+  type t = Context.t
   let prefix = Prefix.make()
 end)
 
@@ -350,7 +350,7 @@ let check_requires cx =
   ) cx.required
 
 let mk_copy_of_context cx = { cx with
-  graph = IMap.map copy_node cx.graph;
+  graph = IMap.map Constraint_js.copy_node cx.graph;
   property_maps = cx.property_maps
 }
 

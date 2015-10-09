@@ -10,8 +10,7 @@
 
 open Utils
 open Reason_js
-open Constraint_js
-open Scope (* from Constraint_js *)
+open Scope
 
 val peek_scope: unit -> Scope.t
 
@@ -32,11 +31,11 @@ val clear_changeset: unit -> changeset
 
 val merge_changeset: changeset -> changeset
 
-val peek_frame: unit -> ident
+val peek_frame: unit -> int
 
 val clear_env: Reason_js.reason -> unit
 
-val push_env: context -> Scope.t -> unit
+val push_env: Context.t -> Scope.t -> unit
 
 val pop_env: unit -> unit
 
@@ -44,90 +43,90 @@ val push_lex: unit -> unit
 
 val pop_lex: unit -> unit
 
-val init_env: context -> Scope.t -> unit
+val init_env: Context.t -> Scope.t -> unit
 
-val update_env: context -> Scope.t list -> unit
+val update_env: Context.t -> Scope.t list -> unit
 
 (***)
 
-val bind_var: ?state:Entry.state -> context -> string -> Type.t -> reason -> unit
-val bind_let: ?state:Entry.state -> context -> string -> Type.t -> reason -> unit
+val bind_var: ?state:Entry.state -> Context.t -> string -> Type.t -> reason -> unit
+val bind_let: ?state:Entry.state -> Context.t -> string -> Type.t -> reason -> unit
 val bind_implicit_let:
   ?state:Entry.state
     -> Entry.implicit_let_kinds
-    -> context
+    -> Context.t
     -> string
     -> Type.t
     -> reason
     -> unit
-val bind_fun: ?state:Entry.state -> context -> string -> Type.t -> reason -> unit
-val bind_const: ?state:Entry.state -> context -> string -> Type.t -> reason -> unit
-val bind_type: context -> string -> Type.t -> reason -> unit
+val bind_fun: ?state:Entry.state -> Context.t -> string -> Type.t -> reason -> unit
+val bind_const: ?state:Entry.state -> Context.t -> string -> Type.t -> reason -> unit
+val bind_type: Context.t -> string -> Type.t -> reason -> unit
 
-val bind_declare_var: context -> string -> Type.t -> reason -> unit
-val bind_declare_fun: context -> string -> Type.t -> reason -> unit
+val bind_declare_var: Context.t -> string -> Type.t -> reason -> unit
+val bind_declare_fun: Context.t -> string -> Type.t -> reason -> unit
 
-val declare_const: context -> string -> reason -> unit
-val declare_let: context -> string -> reason -> unit
+val declare_const: Context.t -> string -> reason -> unit
+val declare_let: Context.t -> string -> reason -> unit
 val declare_implicit_let:
   Entry.implicit_let_kinds
-    -> context
+    -> Context.t
     -> string
     -> reason
     -> unit
 
-val init_var: context -> string -> has_anno:bool -> Type.t -> reason -> unit
-val init_let: context -> string -> has_anno:bool -> Type.t -> reason -> unit
+val init_var: Context.t -> string -> has_anno:bool -> Type.t -> reason -> unit
+val init_let: Context.t -> string -> has_anno:bool -> Type.t -> reason -> unit
 val init_implicit_let:
   Entry.implicit_let_kinds
-    -> context
+    -> Context.t
     -> string
     -> has_anno:bool
     -> Type.t
     -> reason
     -> unit
-val init_fun: context -> string -> Type.t -> reason -> unit
-val init_const: context -> string -> has_anno:bool -> Type.t -> reason -> unit
-val init_type: context -> string -> Type.t -> reason -> unit
+val init_fun: Context.t -> string -> Type.t -> reason -> unit
+val init_const: Context.t -> string -> has_anno:bool -> Type.t -> reason -> unit
+val init_type: Context.t -> string -> Type.t -> reason -> unit
 
-val pseudo_init_declared_type: context -> string -> reason -> unit
+val pseudo_init_declared_type: Context.t -> string -> reason -> unit
 
 module LookupMode: sig
   type t = ForValue | ForType | ForTypeof
 end
 
-val get_var: ?lookup_mode:LookupMode.t -> context -> string ->
+val get_var: ?lookup_mode:LookupMode.t -> Context.t -> string ->
   reason -> Type.t
 
-val get_var_declared_type: ?lookup_mode:LookupMode.t  -> context ->
+val get_var_declared_type: ?lookup_mode:LookupMode.t  -> Context.t ->
   string -> reason -> Type.t
 
-val var_ref: ?lookup_mode:LookupMode.t  -> context -> string ->
+val var_ref: ?lookup_mode:LookupMode.t  -> Context.t -> string ->
   reason -> Type.t
 
-val set_var: context -> string -> Type.t -> reason -> unit
+val set_var: Context.t -> string -> Type.t -> reason -> unit
 
-val add_heap_refinement: context -> Key.t -> reason ->
+val add_heap_refinement: Context.t -> Key.t -> reason ->
   Type.t -> Type.t -> unit
 
-val refine_with_preds: context -> reason ->
+val refine_with_preds: Context.t -> reason ->
   Type.predicate KeyMap.t ->
   Type.t KeyMap.t ->
   unit
 
-val refine_env: context -> reason ->
+val refine_env: Context.t -> reason ->
   Type.predicate KeyMap.t ->
   Type.t KeyMap.t ->
   (unit -> 'a) ->
   'a
 
-val merge_env: context -> reason ->
+val merge_env: Context.t -> reason ->
   Scope.t list * Scope.t list * Scope.t list ->
   changeset -> unit
 
-val widen_env: context -> reason -> unit
+val widen_env: Context.t -> reason -> unit
 
-val copy_env: context -> reason ->
+val copy_env: Context.t -> reason ->
   Scope.t list * Scope.t list ->
   changeset -> unit
 
@@ -138,4 +137,4 @@ val havoc_vars: changeset -> unit
 val havoc_heap_refinements: unit -> unit
 val havoc_heap_refinements_with_propname: string -> unit
 
-val get_refinement: context -> Key.t -> reason -> Type.t option
+val get_refinement: Context.t -> Key.t -> reason -> Type.t option

@@ -9,7 +9,6 @@
  *)
 
 open Reason_js
-open Constraint_js
 open Utils_js
 
 val infer_ast:
@@ -19,34 +18,34 @@ val infer_ast:
   verbose: int option ->
   Spider_monkey_ast.program ->
   filename ->
-  context
+  Context.t
 
 val infer_module:
   force_check:bool ->
   weak_by_default: bool ->
   verbose: int option ->
   filename ->
-  context
+  Context.t
 
-val merge_component_strict: context list ->
-  context list -> (context * string * context) list ->
-  context list Utils.SMap.t -> context ->
+val merge_component_strict: Context.t list ->
+  Context.t list -> (Context.t * string * Context.t) list ->
+  Context.t list Utils.SMap.t -> Context.t ->
   unit
 
-val restore: context ->
-  context list -> context -> unit
+val restore: Context.t ->
+  Context.t list -> Context.t -> unit
 
-val mk_object: context -> reason -> Type.t
+val mk_object: Context.t -> reason -> Type.t
 
-val query_type: context -> Loc.t -> Loc.t * Type.t option * Type.t list
+val query_type: Context.t -> Loc.t -> Loc.t * Type.t option * Type.t list
 
 val dump_types:
-  (Constraint_js.context -> Type.t -> string) ->
-  (Constraint_js.context -> Type.t -> string option) ->
-  context ->
+  (Context.t -> Type.t -> string) ->
+  (Context.t -> Type.t -> string option) ->
+  Context.t ->
   (Loc.t * string * string option * Reason_js.reason list) list
 
-val fill_types: context -> (int * int * string) list
+val fill_types: Context.t -> (int * int * string) list
 
 val init_lib_file:
   verbose: int option ->

@@ -26,6 +26,7 @@ open Utils_js
 open Modes_js
 open Reason_js
 open Constraint_js
+open Context
 open Type
 
 (* The following functions are used as constructors for function types and
@@ -1163,7 +1164,7 @@ end
 
 module TypeAppExpansion : sig
   type entry
-  val push_unless_loop : context -> (Type.t * Type.t list) -> bool
+  val push_unless_loop : Context.t -> (Type.t * Type.t list) -> bool
   val pop : unit -> unit
   val get : unit -> entry list
   val set : entry list -> unit
@@ -1173,7 +1174,7 @@ end = struct
 
   (* visitor to collect roots of type applications nested in a type *)
   class roots_collector = object
-    inherit [TypeSet.t] type_visitor as super
+    inherit [TypeSet.t] Type_visitor.t as super
 
     method! type_ cx acc t = match t with
     | TypeAppT (c, _) -> super#type_ cx (TypeSet.add c acc) t
@@ -5570,7 +5571,7 @@ module Autocomplete : sig
 
   val map_of_member_result: member_result -> Type.t SMap.t
 
-  val extract_members: context -> Type.t -> member_result
+  val extract_members: Context.t -> Type.t -> member_result
 
 end = struct
 
@@ -5855,7 +5856,7 @@ module ContextOptimizer = struct
   }
 
   class context_optimizer = object
-    inherit [quotient] type_visitor as super
+    inherit [quotient] Type_visitor.t as super
 
     method! id_ cx quotient id =
       let { reduced_graph; _ } = quotient in

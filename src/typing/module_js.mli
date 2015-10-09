@@ -59,7 +59,7 @@ val commit_modules:
   Errors_js.ErrorSet.t FilenameMap.t  (* filenames to error sets *)
 
 (* add file represented by context to module info store *)
-val add_module_info: Constraint_js.context -> unit
+val add_module_info: Context.t -> unit
 
 (* add info for unparsed file to module info store *)
 val add_unparsed_info: force_check:bool -> filename -> unit
