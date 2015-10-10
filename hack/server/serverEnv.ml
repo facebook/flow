@@ -54,10 +54,6 @@ let file_filter f =
   (FindUtils.is_php f && not (FilesToIgnore.should_ignore f))
   || FindUtils.is_js f
 
-(*****************************************************************************)
-(* Listing all the files present in the environment *)
-(*****************************************************************************)
-
 let list_files env oc =
   let acc = List.fold_right
     ~f:begin fun error acc ->
