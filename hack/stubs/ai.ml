@@ -42,3 +42,12 @@ module InfoService = struct
   let go _ _ _ _ _ = empty_result
 
 end
+
+module ServerFindRefs = struct
+  type action =
+    | Class of string
+    | Method of string * string
+    | Function of string
+
+  let go _  _ _ = []
+end

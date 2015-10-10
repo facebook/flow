@@ -8,7 +8,7 @@
  *
  *)
 
-type action =
+type action = Ai.ServerFindRefs.action =
   | Class of string
   | Method of string * string
   | Function of string
