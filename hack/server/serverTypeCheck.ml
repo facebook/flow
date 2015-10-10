@@ -9,8 +9,9 @@
  *)
 
 open Core
-open Utils
+open ServerCheckUtils
 open ServerEnv
+open Utils
 
 (*****************************************************************************)
 (* Debugging *)
@@ -76,33 +77,6 @@ let add_old_decls old_files_info fast =
       let info_names = FileInfo.merge_names old_info_names info_names in
       Relative_path.Map.add filename info_names acc
   end fast fast
-
-(*****************************************************************************)
-(* Reparsing helpers.
- * It's called reparse (as opposed to parse) because it retrieves the tree
- * from the datanodes where the Asts are stored in a serialized format.
- * Important: we never ever want to reparse a file that was already parsed.
- * If that was the case, an older version of the file would come and replace
- * a newer one (the one we just parsed). It would lead to very
- * subtle/terrible bugs.
- * This is why reparse takes a file->ast (fast). If we try to reparse a file
- * that we already parsed, the data is left unchanged.
- *)
-(*****************************************************************************)
-
-let reparse fast files_info additional_files =
-  Relative_path.Set.fold begin fun x acc ->
-    match Relative_path.Map.get x fast with
-    | None ->
-        (try
-           let info = Relative_path.Map.find_unsafe x files_info in
-           if info.FileInfo.consider_names_just_for_autoload then acc else
-           let info_names = FileInfo.simplify info in
-           Relative_path.Map.add x info_names acc
-         with Not_found ->
-           acc)
-    | Some _ -> acc
-  end additional_files fast
 
 let reparse_infos files_info fast =
   Relative_path.Map.fold begin fun x _y acc ->
@@ -238,7 +212,7 @@ let type_check genv env =
     declare_names env files_info fast_parsed in
 
   (* COMPUTES WHAT MUST BE REDECLARED  *)
-  let fast = reparse fast files_info env.failed_decl in
+  let fast = extend_fast fast files_info env.failed_decl in
   let fast = add_old_decls env.files_info fast in
   let errorl = List.rev_append errorl' errorl in
   HackEventLogger.naming_end t;
@@ -253,7 +227,7 @@ let type_check genv env =
   HackEventLogger.first_redecl_end t hs;
   let t = Hh_logger.log_duration "Determining changes" t in
 
-  let fast_redecl_phase2 = reparse fast files_info to_redecl_phase2 in
+  let fast_redecl_phase2 = extend_fast fast files_info to_redecl_phase2 in
 
   (* DECLARING TYPES: Phase2 *)
   let errorl', failed_decl, _to_redecl2, to_recheck2 =
@@ -275,7 +249,7 @@ let type_check genv env =
 
   (* TYPE CHECKING *)
   let to_recheck = Relative_path.Set.union to_recheck env.failed_check in
-  let fast = reparse fast files_info to_recheck in
+  let fast = extend_fast fast files_info to_recheck in
   ServerCheckpoint.process_updates fast;
   let errorl', failed_check =
     Typing_check_service.go genv.workers env.nenv fast in

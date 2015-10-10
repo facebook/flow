@@ -143,8 +143,8 @@ module Program =
       if length_greater_than 5 l1 || length_greater_than 5 l2 || l1 <> l2
       then touch_stamp ()
 
-    let init ?wait_for_deps genv =
-      let env = ServerInit.init ?wait_for_deps genv in
+    let init ?load_mini_script genv =
+      let env = ServerInit.init ?load_mini_script genv in
       touch_stamp ();
       env
 
@@ -345,10 +345,7 @@ let load genv filename to_recheck =
     else List.rev_append (BuildMain.get_all_targets ()) to_recheck in
   let paths_to_recheck =
     List.map to_recheck (Relative_path.concat Relative_path.Root) in
-  let updates =
-    List.fold_left paths_to_recheck
-      ~f:(fun acc update -> Relative_path.Set.add update acc)
-      ~init:Relative_path.Set.empty in
+  let updates = Relative_path.set_of_list paths_to_recheck in
   let env, rechecked, total_rechecked = recheck genv env updates in
   let rechecked_count = Relative_path.Set.cardinal rechecked in
   HackEventLogger.load_recheck_end t rechecked_count total_rechecked;
@@ -421,26 +418,6 @@ let run_load_script genv cmd =
     env, init_type
   end
 
-let load_deps root cmd (_ic, oc) =
-  let start_time = Unix.gettimeofday () in
-  begin try
-    let cmd =
-      sprintf
-        "%s %s %s"
-        (Filename.quote (Path.to_string cmd))
-        (Filename.quote (Path.to_string root))
-        (Filename.quote Build_id.build_id_ohai) in
-    Hh_logger.log "Running load_mini script: %s\n%!" cmd;
-    let filename = Sys_utils.exec_read cmd in
-    SharedMem.load_dep_table (filename^".deptable");
-  with e ->
-    Hh_logger.exc e;
-    (* This is fine; we will just have to compute the dependencies ourselves *)
-    ()
-  end;
-  let end_time = Unix.gettimeofday () in
-  Daemon.to_channel oc (start_time, end_time)
-
 let program_init genv =
   let env, init_type =
     if genv.local_config.ServerLocalConfig.use_mini_state then
@@ -448,19 +425,8 @@ let program_init genv =
       | None ->
           let env = Program.init genv in
           env, "fresh"
-      | Some cmd ->
-          (* Spawn this first so that it can run in the background while
-           * parsing is going on *)
-          let {Daemon.channels = (ic, _oc); pid} =
-            let root = ServerArgs.root genv.options in
-            Daemon.fork (load_deps root cmd) in
-          let wait_for_deps () =
-            let result = Daemon.from_channel ic in
-            let _, status = Unix.waitpid [] pid in
-            assert (status = Unix.WEXITED 0);
-            result
-          in
-          let env = Program.init ~wait_for_deps genv in
+      | Some load_mini_script ->
+          let env = Program.init ~load_mini_script genv in
           env, "mini_load"
     else
       match ServerConfig.load_script genv.config with
@@ -486,15 +452,10 @@ let save_complete env fn =
    * a separate ".sharedmem" file. *)
   SharedMem.save (fn^".sharedmem")
 
-let save_dep_table fn =
-  let t = Unix.gettimeofday () in
-  SharedMem.save_dep_table (fn^".deptable");
-  ignore @@ Hh_logger.log_duration "Saving" t
-
 let save _genv env (kind, fn) =
   match kind with
   | ServerArgs.Complete -> save_complete env fn
-  | ServerArgs.Mini -> save_dep_table fn
+  | ServerArgs.Mini -> ServerInit.save_state env fn
 
 (* The main entry point of the daemon
  * the only trick to understand here, is that env.modified is the set

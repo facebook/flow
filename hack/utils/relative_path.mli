@@ -38,3 +38,4 @@ module Set : module type of Set.Make (S)
 module Map : module type of MyMap (S)
 
 val relativize_set : prefix -> Utils.SSet.t -> Set.t
+val set_of_list : t list -> Set.t

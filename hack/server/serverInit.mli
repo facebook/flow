@@ -8,8 +8,10 @@
  *
  *)
 
+(* Saves the state that load_mini_script below reads in *)
+val save_state: ServerEnv.env -> string -> unit
+
 (* will parse, name, typecheck, the next set of files
  * and refresh the environment and update the many shared heaps
  *)
-val init: ?wait_for_deps:(unit -> float * float) ->
-  ServerEnv.genv -> ServerEnv.env
+val init: ?load_mini_script:Path.t -> ServerEnv.genv -> ServerEnv.env

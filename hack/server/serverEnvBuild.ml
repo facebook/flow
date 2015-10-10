@@ -62,7 +62,11 @@ let make_genv options config local_config =
           Exit_status.(exit Dfind_died)
         end
       in
-      let wait_until_ready () = DfindLib.wait_until_ready dfind in
+      let ready = ref false in
+      let wait_until_ready () =
+        if !ready then ()
+        else (DfindLib.wait_until_ready dfind; ready := true)
+      in
       indexer, notifier, wait_until_ready
   in
   { options;

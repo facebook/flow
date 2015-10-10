@@ -27,5 +27,5 @@ let log_duration name t =
   Printf.eprintf "%f\n%!" (t2 -. t);
   t2
 
-let exc e =
-  log_raw (Printexc.to_string e ^ "\n")
+let exc ?(prefix="") e =
+  log_raw (prefix ^ Printexc.to_string e ^ "\n")

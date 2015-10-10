@@ -8,6 +8,7 @@
  *
  *)
 
+open Core
 open Utils
 
 type prefix =
@@ -81,3 +82,8 @@ let concat prefix s = prefix, s
 
 let relativize_set prefix m =
   SSet.fold (fun k a -> Set.add (create prefix k) a) m Set.empty
+
+let set_of_list xs =
+  List.fold_left xs
+    ~f:(fun acc x -> Set.add x acc)
+    ~init:Set.empty
