@@ -172,6 +172,20 @@ let get_printable_tvar_id x =
        res
     | Some v -> v
 
+let debug_shape_map fdm f =
+  let o = print_string in
+  let cmp = (fun (k1, _) (k2, _) ->
+     compare (get_shape_field_name k1) (get_shape_field_name k2)) in
+  let fields = List.sort ~cmp (ShapeMap.elements fdm) in
+  let o_field = (fun (k, v) ->
+     o (get_shape_field_name k); o " => "; f v;)
+  in
+  (match fields with
+  | [] -> ()
+  | f::l ->
+     o_field f;
+     List.iter l (fun f -> o ", "; o_field f;))
+
 let rec debug stack env (r, ty) =
   let o = print_string in
   (match r with Reason.Rlost_info _ -> o "~lost" | _ -> ());
@@ -183,6 +197,11 @@ let rec debug stack env (r, ty) =
   | Tarraykind (AKvec x) -> o "array<"; debug stack env x; o ">"
   | Tarraykind (AKmap (x, y)) -> o "array<"; debug stack env x; o ", ";
       debug stack env y; o ">"
+  | Tarraykind (AKshape fdm) ->
+    o "array<";
+      debug_shape_map fdm (fun (_tk, tv) -> debug stack env tv);
+    o ">"
+
   | Tmixed -> o "mixed"
   | Tabstract (AKnewtype (x, argl), _)
   | Tclass ((_, x), argl) ->
@@ -245,17 +264,7 @@ let rec debug stack env (r, ty) =
           end
       end;
       o ">(";
-      let cmp = (fun (k1, _) (k2, _) ->
-         compare (get_shape_field_name k1) (get_shape_field_name k2)) in
-      let fields = List.sort ~cmp (ShapeMap.elements fdm) in
-      let o_field = (fun (k, v) ->
-         o (get_shape_field_name k); o " => "; debug stack env v;)
-      in
-      (match fields with
-      | [] -> ()
-      | f::l ->
-         o_field f;
-         List.iter l (fun f -> o ", "; o_field f;));
+        debug_shape_map fdm (fun v -> debug stack env v;);
       o ")"
 
 and debugl stack env x =

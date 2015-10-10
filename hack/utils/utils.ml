@@ -66,6 +66,7 @@ module type MapSig = sig
   val split: key -> 'a t -> 'a t * 'a option * 'a t
   val keys: 'a t -> key list
   val values: 'a t -> 'a list
+  val min_binding : 'a t -> key * 'a
 
   val map_env: ('c -> 'a -> 'c * 'b) -> 'c -> 'a t -> 'c * 'b t
   (* use only in testing code *)

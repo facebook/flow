@@ -408,6 +408,10 @@ and check_memoizable env param (pname, ty) =
   | _, Tarraykind (AKvec ty)
   | _, Tarraykind (AKmap(_, ty)) ->
       check_memoizable env param (pname, ty)
+  | _, Tarraykind (AKshape fdm) ->
+      ShapeMap.iter begin fun _ (_, tv) ->
+        check_memoizable env param (pname, tv)
+      end fdm
   | _, Tclass (_, _) ->
     let type_param = Env.fresh_type() in
     let container_type =
@@ -1176,11 +1180,13 @@ and expr_
       let ty = Reason.Rwitness p, Ttuple tyl in
       env, ty
   | Array_get (e, None) ->
-      let env, ty1 = promote_akempty_to_akvec p env e valkind in
+      let env, ty1 = update_array_type_to_akvec p env e valkind in
       let is_lvalue = (valkind == `lvalue) in
       array_append is_lvalue p env ty1
   | Array_get (e1, Some e2) ->
-      let env, ty1 = promote_akempty_to_akmap p env e1 valkind in
+      let env, ty1 = if TUtils.is_shape_field_name (snd e2)
+        then update_array_type_to_akshape p env e1 e2 valkind
+        else update_array_type_to_akmap p env e1 valkind in
       let env, ty1 = TUtils.fold_unresolved env ty1 in
       let env, ety1 = Env.expand_type env ty1 in
       let env, ty2 = expr env e2 in
@@ -1890,20 +1896,19 @@ and assign p env e1 ty2 =
           env, ty3
       | _ -> env, ty2
       )
-  | _, Array_get ((_, Lvar (_, lvar)) as shape, Some (p1, (String _ as e)))
-  | _, Array_get ((_, Lvar (_, lvar)) as shape,
-                  Some (p1, (Class_const (CI _, _) as e))) ->
-      (* In the case of an assignment of the form $x['new_field'] = ...;
-       * $x could be a shape where the field 'new_field' is not yet defined.
-       * When that is the case we want to add the field to its type.
-       *)
+  | _, Array_get ((_, Lvar (_, lvar)) as shape, Some (p1, e)) ->
       let env, shape_ty = expr env shape in
-      let field = TUtils.shape_field_name env p1 e in
-      let env, field_type = TUtils.in_var env (Reason.Rnone, Tunresolved []) in
-      let env, shape_ty =
-        Typing_shapes.grow_shape p e1 field field_type env shape_ty in
-      let env, _ty = set_valid_rvalue p env lvar shape_ty in
-
+      let env, shape_ty = if TUtils.is_shape_field_name e then
+        (* In the case of an assignment of the form $x['new_field'] = ...;
+         * $x could be a shape where the field 'new_field' is not yet defined.
+         * When that is the case we want to add the field to its type.
+         *)
+        let field = TUtils.shape_field_name env p1 e in
+        Typing_shapes.grow_shape p field env shape_ty
+      else
+        Typing_arrays.downcast_akshape_to_akmap env shape_ty
+      in
+      let env, _ = set_valid_rvalue p env lvar shape_ty in
       (* We still need to call assign_simple in order to bind the freshly
        * created variable in added shape field. Moreover, it's needed because
        * shape_ty could be more than just a shape. It could be an unresolved
@@ -2546,6 +2551,22 @@ and array_get is_lvalue p env ty1 ety1 e2 ty2 =
         | Tprim _ | Tvar _ | Tfun _ | Tclass (_, _) | Tabstract (_, _)
         | Ttuple _ | Tanon _ | Tobject | Tshape _) -> env, v
       )
+  | Tarraykind (AKshape fdm) ->
+      let field_type = if TUtils.is_shape_field_name (snd e2) then
+          let field_name = Typing_utils.shape_field_name env p (snd e2) in
+          Nast.ShapeMap.get field_name fdm
+      else None in
+      begin match field_type with
+        | Some (k, v) ->
+            let env, ty2 = TUtils.unresolved env ty2 in
+            let env, _ = Type.unify p Reason.URarray_get env k ty2 in
+            env, v
+        | None ->
+            let env, ty1 = Typing_arrays.downcast_akshape_to_akmap env ty1 in
+            (* downcast_akshape_to_akmap expands vars, so passing ty1 as
+               expanded ty1 *)
+            array_get is_lvalue p env ty1 ty1 e2 ty2
+      end
   | Tany | Tarraykind (AKany | AKempty)-> env, (Reason.Rnone, Tany)
   | Tprim Tstring ->
       let ty = Reason.Rwitness p, Tprim Tstring in
@@ -3460,6 +3481,12 @@ and binop in_cond p env bop p1 ty1 p2 ty2 =
           let env = Type.sub_type p1 Reason.URnone env res_ty ety1 in
           let env = Type.sub_type p2 Reason.URnone env res_ty ety2 in
           env, res_ty
+      | (_, Tarraykind _), (_, Tarraykind (AKshape _)) ->
+        let env, ty2 = Typing_arrays.downcast_akshape_to_akmap env ty2 in
+        binop in_cond p env bop p1 ty1 p2 ty2
+      | (_, Tarraykind (AKshape _)), (_, Tarraykind _) ->
+        let env, ty1 = Typing_arrays.downcast_akshape_to_akmap env ty1 in
+        binop in_cond p env bop p1 ty1 p2 ty2
       | (_, Tarraykind _), (_, Tarraykind _)
       | (_, Tany), (_, Tarraykind _)
       | (_, Tarraykind _), (_, Tany) ->
@@ -4176,47 +4203,34 @@ and overload_function p env class_id method_id el uel f =
    if has_error then env, res
    else f env fty res el
 
-and promote_akempty_to_akvec p env e valkind =
-  let get_akvec = (fun env ->
-    let env, value = TUtils.in_var env (Reason.Rnone, Tunresolved []) in
-    env, (Reason.Rappend p, Tarraykind (AKvec value))
-  ) in
-  promote_akempty p env e valkind get_akvec
+and update_array_type_to_akvec p env e valkind =
+  let type_mapper =
+    Typing_arrays.update_array_type_to_akvec p in
+  update_array_type p env e valkind type_mapper
 
-and promote_akempty_to_akmap p env e valkind =
-  let get_akmap = (fun env ->
-    let env, key = TUtils.in_var env (Reason.Rnone, Tunresolved []) in
-    let env, value = TUtils.in_var env (Reason.Rnone, Tunresolved []) in
-    env, (Reason.Rused_as_map p, Tarraykind (AKmap (key, value)))
-  ) in
-  promote_akempty p env e valkind get_akmap
+and update_array_type_to_akshape p env e1 e2 valkind =
+  let field_name = Typing_utils.shape_field_name env p (snd e2) in
+  let type_mapper =
+    Typing_arrays.update_array_type_to_akshape p field_name in
+  update_array_type p env e1 valkind type_mapper
 
-and promote_akempty p env e valkind get_promoted_type =
+and update_array_type_to_akmap p env e1 valkind =
+  let type_mapper =
+    Typing_arrays.update_array_type_to_akmap p in
+  update_array_type p env e1 valkind type_mapper
+
+and update_array_type p env e valkind type_mapper =
   match valkind with
     | `lvalue | `lvalue_subexpr ->
       let env, ty1 =
         raw_expr ~valkind:`lvalue_subexpr ~in_cond:false env e in
-      let env, ty1 = promote_akempty_ env ty1 get_promoted_type in
+      let env, ty1 = type_mapper#on_type env ty1 in
       begin match e with
         | (_, Lvar (_, x)) ->
-          (* promote_akempty_ has updated type AKempty in ty1 typevars, but we
+          (* update_array_type_ has updated the type in ty1 typevars, but we
              need to update the local variable type too *)
           set_valid_rvalue p env x ty1
         | _ -> env, ty1
       end
     | _ ->
       expr env e
-
-and promote_akempty_ env ty get_promoted_type =
-  match ty with
-    | (_, Tarraykind AKempty) -> get_promoted_type env
-    | (r, Tunresolved tyl) ->
-      let env, tyl =
-        lmap (fun env x -> promote_akempty_ env x get_promoted_type) env tyl in
-      env, (r, Tunresolved tyl)
-    | (_, Tvar n) ->
-      let env, ty = Env.get_type env n in
-      let env, ty = promote_akempty_ env ty get_promoted_type in
-      let env = Env.add env n ty in
-      env, ty
-    | _ -> env, ty

@@ -44,7 +44,12 @@ and fully_expand_ seen env = function
       | AKmap (tk, tv) ->
         let tk = fully_expand seen env tk in
         let tv = fully_expand seen env tv in
-        AKmap (tk, tv) in
+        AKmap (tk, tv)
+      | AKshape fdm ->
+        let fdm = Nast.ShapeMap.map (fun (tk, tv) ->
+          (fully_expand seen env tk, fully_expand seen env tv))
+        fdm in
+        AKshape fdm in
     Tarraykind akind
   | Ttuple tyl ->
       Ttuple (List.map tyl (fully_expand seen env))

@@ -38,6 +38,8 @@ end = struct
         | AKempty -> ()
         | AKvec tv -> ty tv
         | AKmap (tk, tv) -> ty tk; ty tv
+        | AKshape fdm ->
+            ShapeMap.iter (fun _ (tk, tv) -> ty tk; ty tv) fdm
       end
     | Tvar _ -> assert false (* Expansion got rid of Tvars ... *)
     | Toption x -> ty x

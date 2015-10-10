@@ -52,6 +52,8 @@ module ErrorString = struct
                          -> array (Some x, None)
     | Tarraykind (AKmap (x, y))
                          -> array (Some x, Some y)
+    | Tarraykind (AKshape _)
+                         -> "an array (used like a shape)"
     | Ttuple _           -> "a tuple"
     | Tmixed             -> "a mixed value"
     | Toption _          -> "a nullable type"
@@ -239,6 +241,7 @@ module Full = struct
     | Tarray (Some x, None) -> o "array<"; k x; o ">"
     | Tarray (Some x, Some y) -> o "array<"; k x; o ", "; k y; o ">"
     | Tarraykind (AKmap (x, y)) -> o "array<"; k x; o ", "; k y; o ">"
+    | Tarraykind (AKshape _) -> o "[shape-like array]"
     | Tarray (None, Some _) -> assert false
     | Tclass ((_, s), []) -> o s
     | Tapply ((_, s), []) -> o s

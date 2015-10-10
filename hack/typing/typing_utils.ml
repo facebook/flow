@@ -170,6 +170,11 @@ let apply_shape ~on_common_field ~on_missing_optional_field (env, acc)
         on_common_field (env, acc) name ty1 ty2
   end fdm1 (env, acc)
 
+and is_shape_field_name field =
+  let open Nast in match field with
+  | (String _) | Class_const (((CI _) | CIself), _) -> true
+  | _ -> false
+
 and shape_field_name env p field =
   let open Nast in match field with
     | String name -> SFlit name
@@ -351,6 +356,8 @@ end = struct
         | AKvec ty -> this#on_type acc ty
         | AKmap (tk, tv) ->
           (this#on_type acc tk) || (this#on_type acc tv)
+        | AKshape fdm -> ShapeMap.exists (fun _ (tk, tv) ->
+          (this#on_type acc tk) || (this#on_type acc tv)) fdm
     end
   let check ty = visitor#on_type false ty
 end
