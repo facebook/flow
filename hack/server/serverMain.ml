@@ -443,29 +443,32 @@ let load_deps root cmd (_ic, oc) =
 
 let program_init genv =
   let env, init_type =
-    match genv.local_config.ServerLocalConfig.load_mini_script with
-    | None -> begin
+    if genv.local_config.ServerLocalConfig.use_mini_state then
+      match ServerConfig.load_mini_script genv.config with
+      | None ->
+          let env = Program.init genv in
+          env, "fresh"
+      | Some cmd ->
+          (* Spawn this first so that it can run in the background while
+           * parsing is going on *)
+          let {Daemon.channels = (ic, _oc); pid} =
+            let root = ServerArgs.root genv.options in
+            Daemon.fork (load_deps root cmd) in
+          let wait_for_deps () =
+            let result = Daemon.from_channel ic in
+            let _, status = Unix.waitpid [] pid in
+            assert (status = Unix.WEXITED 0);
+            result
+          in
+          let env = Program.init ~wait_for_deps genv in
+          env, "mini_load"
+    else
       match ServerConfig.load_script genv.config with
       | None ->
           let env = Program.init genv in
           env, "fresh"
       | Some load_script ->
           run_load_script genv load_script
-    end
-    | Some cmd ->
-        (* Spawn this first so that it can run in the background while
-         * parsing is going on *)
-        let {Daemon.channels = (ic, _oc); pid} =
-          let root = ServerArgs.root genv.options in
-          Daemon.fork (load_deps root cmd) in
-        let wait_for_deps () =
-          let result = Daemon.from_channel ic in
-          let _, status = Unix.waitpid [] pid in
-          assert (status = Unix.WEXITED 0);
-          result
-        in
-        let env = Program.init ~wait_for_deps genv in
-        env, "mini_load"
   in
   HackEventLogger.init_end init_type;
   Hh_logger.log "Waiting for daemon(s) to be ready...";

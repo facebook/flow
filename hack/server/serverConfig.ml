@@ -15,6 +15,9 @@ open Utils
 type t = {
   load_script      : Path.t option;
   load_script_timeout : int; (* in seconds *)
+
+  load_mini_script : Path.t option;
+
   (* Configures only the workers. Workers can have more relaxed GC configs as
    * they are short-lived processes *)
   gc_control       : Gc.control;
@@ -48,20 +51,24 @@ let config_user_attributes config =
       let custom_attrs = Str.split config_list_regexp s in
       Some (List.fold_right custom_attrs ~f:SSet.add ~init:SSet.empty)
 
+let maybe_relative_path fn =
+  (* Note: this is not the same as calling realpath; the cwd is not
+   * necessarily the same as hh_server's root!!! *)
+  Path.make begin
+    if Filename.is_relative fn
+    then Relative_path.(to_absolute (concat Root fn))
+    else fn
+  end
+
 let load config_filename =
   let config = Config_file.parse (Relative_path.to_absolute config_filename) in
-  let load_script = Option.map (SMap.get "load_script" config) begin fun fn ->
-    (* Note: this is not the same as calling realpath; the cwd is not
-     * necessarily the same as hh_server's root!!! *)
-    Path.make begin
-      if Filename.is_relative fn
-      then Relative_path.(to_absolute (concat Root fn))
-      else fn
-    end
-  end in
+  let load_script =
+    Option.map (SMap.get "load_script" config) maybe_relative_path in
   (* Since we use the unix alarm() for our timeouts, a timeout value of 0 means
    * to wait indefinitely *)
   let load_script_timeout = int_ "load_script_timeout" ~default:0 config in
+  let load_mini_script =
+    Option.map (SMap.get "load_mini_script" config) maybe_relative_path in
   let tcopts = { TypecheckerOptions.
     tco_assume_php = bool_ "assume_php" ~default:true config;
     tco_unsafe_xhp = bool_ "unsafe_xhp" ~default:false config;
@@ -70,6 +77,7 @@ let load config_filename =
   {
     load_script = load_script;
     load_script_timeout = load_script_timeout;
+    load_mini_script = load_mini_script;
     gc_control = make_gc_control config;
     sharedmem_config = make_sharedmem_config config;
     tc_options = tcopts;
@@ -79,6 +87,7 @@ let load config_filename =
 let default_config = {
   load_script = None;
   load_script_timeout = 0;
+  load_mini_script = None;
   gc_control = GlobalConfig.gc_control;
   sharedmem_config = SharedMem.default_config;
   tc_options = TypecheckerOptions.default;
@@ -86,6 +95,7 @@ let default_config = {
 
 let load_script config = config.load_script
 let load_script_timeout config = config.load_script_timeout
+let load_mini_script config = config.load_mini_script
 let gc_control config = config.gc_control
 let sharedmem_config config = config.sharedmem_config
 let typechecker_options config = config.tc_options
