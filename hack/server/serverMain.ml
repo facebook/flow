@@ -164,7 +164,8 @@ module Program =
       let root = Path.to_string @@ ServerArgs.root genv.options in
       (* Because of symlinks, we can have updates from files that aren't in
        * the .hhconfig directory *)
-      let updates = SSet.filter (fun p -> str_starts_with p root) updates in
+      let updates = SSet.filter (fun p ->
+        str_starts_with p root && ServerEnv.file_filter p) updates in
       Relative_path.(relativize_set Root updates)
 
     let recheck genv old_env typecheck_updates =
