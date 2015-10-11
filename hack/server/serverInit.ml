@@ -76,7 +76,7 @@ let save_state env fn =
  * The remaining lines indicate the files that have changed since that file
  * was built
  *)
-let load_state_ root cmd (_ic, oc) =
+let load_state_ root cmd =
   let cmd =
     Printf.sprintf
       "%s %s %s"
@@ -95,8 +95,8 @@ let load_state_ root cmd (_ic, oc) =
   let end_time = Unix.gettimeofday () in
   state_fn, !to_recheck, end_time
 
-let load_state root cmd (ic, oc) =
-  let result = Result.try_with (fun () -> load_state_ root cmd (ic, oc)) in
+let load_state root cmd (_ic, oc) =
+  let result = Result.try_with (fun () -> load_state_ root cmd) in
   Daemon.to_channel oc result
 
 (* This runs the load script to download state and figure out which files have
@@ -273,6 +273,11 @@ let print_hash_stats () =
     used_slots slots load_factor;
   ()
 
+let get_build_targets () =
+  let targets =
+    List.map (BuildMain.get_all_targets ()) (Relative_path.(concat Root)) in
+  Relative_path.set_of_list targets
+
 (* entry point *)
 let init ?load_mini_script genv =
   let env = ServerEnvBuild.make_env genv.config in
@@ -298,6 +303,11 @@ let init ?load_mini_script genv =
     let updates = SSet.filter (fun p ->
       str_starts_with p root && ServerEnv.file_filter p) updates in
     let changed_while_parsing = Relative_path.(relativize_set Root updates) in
+    (* Build targets are untracked by version control, so we must always
+     * recheck them. While we could query hg / git for the untracked files,
+     * it's much slower. *)
+    let dirty_files =
+      Relative_path.Set.union dirty_files (get_build_targets ()) in
     Ok (dirty_files, changed_while_parsing, old_fast)
   in
   HackEventLogger.load_mini_state_end t;

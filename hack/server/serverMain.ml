@@ -341,8 +341,7 @@ let load genv filename to_recheck =
   let t = Hh_logger.log_duration "Loading saved state" t in
 
   let to_recheck =
-    if Sys_utils.is_test_mode () then to_recheck
-    else List.rev_append (BuildMain.get_all_targets ()) to_recheck in
+    List.rev_append (BuildMain.get_all_targets ()) to_recheck in
   let paths_to_recheck =
     List.map to_recheck (Relative_path.concat Relative_path.Root) in
   let updates = Relative_path.set_of_list paths_to_recheck in
