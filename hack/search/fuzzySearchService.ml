@@ -413,7 +413,7 @@ let query needle type_ =
   let terms = List.sort begin fun a b ->
     (snd a) - (snd b)
   end terms in
-  let res_terms = Utils.cut_after 50 terms in
+  let res_terms = List.take terms 50 in
   let res = get_terms_from_string_and_type res_terms in
   List.rev res
 

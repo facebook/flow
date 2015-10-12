@@ -224,7 +224,7 @@ module Make(S : SearchUtils.Searchable) = struct
       let res = List.sort begin fun a b ->
         (snd a) - (snd b)
       end !results in
-      Utils.cut_after 50 res
+      List.take res 50
 
   end
 end

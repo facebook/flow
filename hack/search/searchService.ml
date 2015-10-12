@@ -70,7 +70,7 @@ module Make(S : SearchUtils.Searchable) = struct
       let res = List.merge fuzzy_results trie_results ~cmp:begin fun a b ->
         (snd a) - (snd b)
       end in
-      let res = Utils.cut_after 50 res in
+      let res = List.take res 50 in
       List.map res fst
   end
 end

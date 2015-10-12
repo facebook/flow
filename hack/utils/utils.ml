@@ -285,11 +285,6 @@ let try_with_channel oc f1 f2 =
     close_out oc;
     f2 e
 
-let rec cut_after n = function
-  | [] -> []
-  | l when n <= 0 -> []
-  | x :: rl -> x :: cut_after (n-1) rl
-
 let iter_n_acc n f acc =
   let acc = ref acc in
   for i = 1 to n do
