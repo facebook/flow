@@ -3250,9 +3250,7 @@ and expression_ ~is_cond cx type_params_map loc e = Ast.Expression.(match e with
         let reason = mk_reason "requireLazy() callback" loc in
         let _ = func_call cx reason callback_expr_t module_tvars in
 
-        let null = null_ loc in
-        let reason = reason_of_t null in
-        UnionT(reason, [null; Flow_js.mk_tvar cx reason])
+        null_ loc
 
       | _ ->
         let msg =
@@ -3695,10 +3693,7 @@ and literal cx loc lit = Ast.Literal.(match lit.value with
       BoolT (mk_reason "boolean" loc, Some b)
 
   | Null ->
-      let null = null_ loc in
-      (* TODO: investigate returning just null instead of a union. *)
-      let reason = reason_of_t null in
-      UnionT (reason, [null; Flow_js.mk_tvar cx reason])
+      null_ loc
 
   | Number f ->
       NumT (mk_reason "number" loc, Literal (f, lit.raw))

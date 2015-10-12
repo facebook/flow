@@ -39,7 +39,7 @@ heap.js:40:24,26: undefined
 This type is incompatible with
 heap.js:40:15,20: string
 
-heap.js:47:13,16: null
+heap.js:48:24,26: null
 This type is incompatible with
 heap.js:48:15,20: string
 
