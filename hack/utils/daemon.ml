@@ -36,7 +36,16 @@ let descr_of_in_channel : 'a in_channel -> Unix.file_descr =
 let descr_of_out_channel : 'a out_channel -> Unix.file_descr =
   Unix.descr_of_out_channel
 
-(** *)
+(* We cannot fork() on Windows, so in order to emulate this in a
+ * cross-platform way, we use create_process() and set the HH_SERVER_DAEMON
+ * environment variable to indicate which function the child should
+ * execute. On Unix, create_process() does fork + exec, so global state is
+ * not copied; in particular, if you have set a mutable reference the
+ * daemon will not see it. All state must be explicitly passed via
+ * environment variables; see set/get_context() below.
+ *
+ * With some factoring we could make the daemons into separate binaries
+ * altogether and dispense with this emulation. *)
 
 module Entry : sig
 
@@ -89,16 +98,25 @@ end = struct
     let data_str = String.escaped (Marshal.to_string data []) in
     Unix.putenv "HH_SERVER_DAEMON" entry;
     Unix.putenv "HH_SERVER_DAEMON_PARAM" data_str
+
+  (* How this works on Unix: It may appear like we are passing file descriptors
+   * from one process to another here, but in_handle / out_handle are actually
+   * file descriptors that are already open in the current process -- they were
+   * created by the parent process before it did fork + exec. However, since
+   * exec causes the child to "forget" everything, we have to pass the numbers
+   * of these file descriptors as arguments.
+   *
+   * I'm not entirely sure what this does on Windows. *)
   let get_context () =
     let entry = Unix.getenv "HH_SERVER_DAEMON" in
-    let (ic, oc, param) =
+    let (in_handle, out_handle, param) =
       try
         let raw = Sys.getenv "HH_SERVER_DAEMON_PARAM" in
         Marshal.from_string (Scanf.unescaped raw) 0
       with _ -> failwith "Can't find daemon parameters." in
     (entry, param,
-     (Unix.in_channel_of_descr (Handle.wrap_handle ic),
-      Unix.out_channel_of_descr (Handle.wrap_handle oc)))
+     (Unix.in_channel_of_descr (Handle.wrap_handle in_handle),
+      Unix.out_channel_of_descr (Handle.wrap_handle out_handle)))
 
 end
 
@@ -125,6 +143,8 @@ let make_pipe () =
   let oc = Unix.out_channel_of_descr descr_out in
   ic, oc
 
+(* This only works on Unix, and should be avoided as far as possible. Use
+ * Daemon.spawn instead. *)
 let fork ?log_file (f : ('a, 'b) channel_pair -> unit) :
     ('b, 'a) handle =
   let parent_in, child_out = make_pipe () in
