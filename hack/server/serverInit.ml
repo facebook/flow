@@ -191,7 +191,7 @@ let type_decl genv env fast t =
   env, t
 
 let type_check genv env fast t =
-  if ServerArgs.ai_mode genv.options = None || is_check_mode genv.options
+  if ServerArgs.ai_mode genv.options = None || not (is_check_mode genv.options)
   then begin
     let errorl, failed = Typing_check_service.go genv.workers env.nenv fast in
     HackEventLogger.type_check_end t;
