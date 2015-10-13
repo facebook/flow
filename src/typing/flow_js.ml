@@ -3983,8 +3983,8 @@ and filter cx trace t l pred =
 
 and is_string = function StrT _ -> true | _ -> false
 and is_number = function NumT _ -> true | _ -> false
-and is_function = function FunT _ -> true | _ -> false
-and is_object = function (ObjT _ | ArrT _ | NullT _) -> true | _ -> false
+and is_function = function AnyFunT _ | FunT _ -> true | _ -> false
+and is_object = function (AnyObjT _ | ObjT _ | ArrT _ | NullT _) -> true | _ -> false
 and is_array = function ArrT _ -> true | _ -> false
 and is_bool = function BoolT _ -> true | _ -> false
 
