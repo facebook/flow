@@ -11,6 +11,8 @@ As of Flow 0.3.0 (which went out last week), it's now possible to import the typ
 Has this ever happened to you:
 
 ```JavaScript
+// @flow
+
 // Post-transformation lint error: Unused variable 'URI'
 var URI = require('URI');
 
@@ -30,6 +32,8 @@ Now you have an out! To solve this problem (and with an eye toward a near future
 So instead of the above code, you can now write this:
 
 ```JavaScript
+// @flow
+
 import type * as URI from 'URI';
 module.exports = function(x: URI): URI { 
   return x; 
@@ -39,6 +43,8 @@ module.exports = function(x: URI): URI {
 If you have a module that exports multiple classes (like, say, a Crayon and a Marker class), you can import the type for each of them together or separately like this:
 
 ```JavaScript
+// @flow
+
 import type {Crayon, Marker} from 'WritingUtensils';
 module.exports = function junkDrawer(x: Crayon, y: Marker): void {}
 ```
@@ -62,6 +68,8 @@ npm install react-tools@0.13.0-beta.2
 EDIT: Yes! As of Flow 0.10 you can use the `export type MyType = ... ;` syntax to compliment the `import type` syntax. Here's a trivial example:
 
 ```javascript
+// @flow
+
 // MyTypes.js
 export type UserID = number;
 export type User = {
@@ -72,6 +80,8 @@ export type User = {
 ```
 
 ```javascript
+// @flow
+
 // User.js
 import type {UserID, User} from "MyTypes";
 
