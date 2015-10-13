@@ -309,31 +309,30 @@ module Node = struct
     let opts = get_config_options () in
     if Files_js.is_flow_file path
     then path_if_exists path
-    else
-      seq
-  (fun () ->
-         seqf
-           (fun ext -> path_if_exists (path ^ ext))
-           opts.FlowConfig.Opts.module_file_exts
-  )
-  (fun () ->
-   seq
-     (fun () ->
-      let package = Filename.concat path "package.json" in
-      parse_main package)
-     (fun () ->
-      let path = Filename.concat path "index.js" in
-      path_if_exists path
-     )
-  )
+    else seq
+      (fun () -> seqf
+        (fun ext -> path_if_exists (path ^ ext))
+        opts.FlowConfig.Opts.module_file_exts
+      )
+      (fun () -> seq
+        (fun () -> parse_main (Filename.concat path "package.json"))
+        (fun () -> path_if_exists (Filename.concat path "index.js"))
+      )
 
-  let rec node_module dir r = seq
-    (fun () -> resolve_relative dir (spf "node_modules%s%s" Filename.dir_sep r))
-    (fun () ->
-      let parent_dir = Filename.dirname dir in
-      if dir = parent_dir then None
-      else node_module (Filename.dirname dir) r
-    )
+  let rec node_module dir r =
+    let opts = get_config_options () in
+    seq
+      (fun () -> seqf
+        (resolve_relative dir)
+        (opts.FlowConfig.Opts.node_resolver_dirnames |> List.map (fun dirname ->
+          spf "%s%s%s" dirname Filename.dir_sep r
+        ))
+      )
+      (fun () ->
+        let parent_dir = Filename.dirname dir in
+        if dir = parent_dir then None
+        else node_module (Filename.dirname dir) r
+      )
 
   let relative r =
     Str.string_match Files_js.dir_sep r 0

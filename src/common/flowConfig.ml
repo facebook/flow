@@ -43,6 +43,7 @@ module Opts = struct
     experimental_decorators: experimental_feature_mode;
     moduleSystem: moduleSystem;
     module_name_mappers: (Str.regexp * string) list;
+    node_resolver_dirnames: string list;
     munge_underscores: bool;
     module_file_exts: string list;
     suppress_comments: Str.regexp list;
@@ -100,6 +101,7 @@ module Opts = struct
     experimental_decorators = EXPERIMENTAL_WARN;
     moduleSystem = Node;
     module_name_mappers = [];
+    node_resolver_dirnames = ["node_modules"];
     munge_underscores = false;
     module_file_exts = [".js"; ".jsx";];
     suppress_comments = [];
@@ -528,6 +530,18 @@ let parse_options config lines = Opts.(
       setter = (fun opts v -> {
         opts with moduleSystem = v;
       });
+    })
+
+    |> Opts.define_opt "module.system.node.resolve_dirname" Opts.({
+      _initializer = INIT_FN (fun opts -> {
+        opts with node_resolver_dirnames = [];
+      });
+      flags = [ALLOW_DUPLICATE];
+      optparser = optparse_string;
+      setter = (fun opts v ->
+        let node_resolver_dirnames = v :: opts.node_resolver_dirnames in
+        {opts with node_resolver_dirnames;}
+      );
     })
 
     |> Opts.define_opt "munge_underscores" Opts.({

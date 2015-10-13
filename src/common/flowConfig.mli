@@ -18,6 +18,7 @@ module Opts : sig
     experimental_decorators: experimental_feature_mode;
     moduleSystem: moduleSystem;
     module_name_mappers: (Str.regexp * string) list;
+    node_resolver_dirnames: string list;
     munge_underscores: bool;
     module_file_exts: string list;
     suppress_comments: Str.regexp list;

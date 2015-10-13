@@ -1,0 +1,10 @@
+
+subdir/sublevel.js:5:2,5: string literal `subdir/custom_resolve_dir/testproj2`
+Expected string literal `node_modules/testproj2`, got `subdir/custom_resolve_dir/testproj2` instead
+subdir/sublevel.js:5:8,31: string literal `node_modules/testproj2`
+
+toplevel.js:6:2,5: string literal `node_modules/testproj`
+Expected string literal `custom_resolve_dir/testproj`, got `node_modules/testproj` instead
+toplevel.js:6:8,36: string literal `custom_resolve_dir/testproj`
+
+Found 2 errors
