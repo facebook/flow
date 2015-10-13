@@ -15,29 +15,206 @@ module Json = Hh_json
 
 let version = "0.17.0"
 
-type moduleSystem = Node | Haste
+let default_temp_dir = "/tmp/flow/"
 
-type experimental_feature_mode =
-  | EXPERIMENTAL_IGNORE
-  | EXPERIMENTAL_WARN
+let map_add map (key, value) = SMap.add key value map
 
-type options = {
-  enable_unsafe_getters_and_setters: bool;
-  experimental_decorators: experimental_feature_mode;
-  moduleSystem: moduleSystem;
-  module_name_mappers: (Str.regexp * string) list;
-  munge_underscores: bool;
-  module_file_exts: string list;
-  suppress_comments: Str.regexp list;
-  suppress_types: SSet.t;
-  traces: int;
-  strip_root: bool;
-  log_file: Path.t;
-  max_workers: int;
-}
+let multi_error (errs:(int * string) list) =
+  let msg =
+    errs
+    |> List.map (fun (ln, msg) -> spf ".flowconfig:%d %s" ln msg)
+    |> String.concat "\n"
+  in
+  FlowExitStatus.(exit ~msg Invalid_flowconfig)
 
-module PathMap : MapSig with type key = Path.t
-= MyMap(struct
+let error ln msg = multi_error [(ln, msg)]
+
+module Opts = struct
+  exception UserError of string
+
+  type moduleSystem = Node | Haste
+
+  type experimental_feature_mode =
+    | EXPERIMENTAL_IGNORE
+    | EXPERIMENTAL_WARN
+
+  type t = {
+    enable_unsafe_getters_and_setters: bool;
+    experimental_decorators: experimental_feature_mode;
+    moduleSystem: moduleSystem;
+    module_name_mappers: (Str.regexp * string) list;
+    munge_underscores: bool;
+    module_file_exts: string list;
+    suppress_comments: Str.regexp list;
+    suppress_types: Utils.SSet.t;
+    traces: int;
+    strip_root: bool;
+    log_file: Path.t option;
+    max_workers: int;
+    temp_dir: Path.t;
+  }
+
+  type _initializer =
+    | USE_DEFAULT
+    | INIT_FN of (t -> t)
+
+  type option_flag =
+    | ALLOW_DUPLICATE
+
+  type 'a option_definition = {
+    (**
+     * The _initializer gets set on the options object immediately before
+     * parsing the *first* occurrence of the user-specified config option. This
+     * is useful in cases where the user's value should blow away the default
+     * value (rather than being aggregated to it).
+     *
+     * For example: We want the default value of 'module.file_ext' to be
+     * ['.js'; '.jsx'], but if the user specifies any 'module.file_ext'
+     * settings, we want to start from a clean list.
+     *)
+    _initializer: _initializer;
+    flags: option_flag list;
+    setter: (t -> 'a -> t);
+    optparser: (string -> 'a);
+  }
+
+  let get_defined_opts (raw_opts, config) =
+    (* If the user specified any options that aren't defined, issue an error *)
+    if SMap.cardinal raw_opts > 0 then (
+      let errors =
+        SMap.elements raw_opts
+        |> List.map (fun (k, v) ->
+          let msg = spf "Unsupported option specified! (%s)" k in
+          List.map (fun (line_num, value) -> (line_num, msg)) v
+        )
+        |> List.flatten
+        |> List.rev
+      in
+      multi_error errors
+    );
+
+    config
+
+  let default_options = {
+    enable_unsafe_getters_and_setters = false;
+    experimental_decorators = EXPERIMENTAL_WARN;
+    moduleSystem = Node;
+    module_name_mappers = [];
+    munge_underscores = false;
+    module_file_exts = [".js"; ".jsx";];
+    suppress_comments = [];
+    suppress_types = SSet.empty;
+    traces = 0;
+    strip_root = false;
+    log_file = None;
+    max_workers = Sys_utils.nbr_procs;
+    temp_dir = Path.make default_temp_dir;
+  }
+
+  let parse =
+    let parse_line map (line_num, line) =
+      if Str.string_match (Str.regexp "^\\([a-zA-Z0-9._]+\\)=\\(.*\\)$") line 0
+      then
+        let key = Str.matched_group 1 line in
+        let value = Str.matched_group 2 line in
+        SMap.add key ((line_num, value)::(
+          match SMap.get key map with
+          | Some values -> values
+          | None -> []
+        )) map
+      else error line_num "Unable to parse line."
+    in
+
+    fun config lines ->
+      let lines = lines
+        |> List.map (fun (ln, line) -> ln, String.trim line)
+        |> List.filter (fun (ln, s) -> s <> "")
+      in
+      let raw_options = List.fold_left parse_line SMap.empty lines in
+      (raw_options, config)
+
+  let define_opt key definition (raw_opts, config) =
+    let new_raw_opts = SMap.remove key raw_opts in
+
+    match SMap.get key raw_opts with
+    | None -> (new_raw_opts, config)
+    | Some values ->
+        let config = (
+          match definition._initializer with
+          | USE_DEFAULT -> config
+          | INIT_FN f ->
+              try f config
+              with UserError msg ->
+                let line_num = fst (List.hd values) in
+                error line_num (
+                  spf "Error initializing config option \"%s\". %s" key msg
+                )
+        ) in
+
+        (* Error when duplicate options were incorrectly given *)
+        let allow_dupes = List.mem ALLOW_DUPLICATE definition.flags in
+        if (not allow_dupes) && (List.length values) > 1 then (
+          let line_num = fst (List.nth values 1) in
+          error line_num (spf "Duplicate option: \"%s\"" key)
+        );
+
+        let config = List.fold_left (fun config (line_num, value_str) ->
+          let value =
+            try definition.optparser value_str
+            with UserError msg -> error line_num (
+              spf "Error parsing value for \"%s\". %s" key msg
+            )
+          in
+          try definition.setter config value
+          with UserError msg -> error line_num (
+            spf "Error setting value for \"%s\". %s" key msg
+          )
+        ) config values in
+
+        (new_raw_opts, config)
+
+  let optparse_enum values str =
+    let values = List.fold_left map_add SMap.empty values in
+    match SMap.get str values with
+    | Some v -> v
+    | None -> raise (UserError (
+        spf "Unsupported value: \"%s\". Supported values are: %s"
+          str
+          (String.concat ", " (SMap.keys values))
+      ))
+
+  let optparse_boolean = optparse_enum [
+    ("true", true);
+    ("false", false);
+  ]
+
+  let optparse_uint str =
+    let v = int_of_string str in
+    if v < 0 then raise (UserError "Number cannot be negative!") else v
+
+  let optparse_string str =
+    try Scanf.unescaped str
+    with Scanf.Scan_failure reason -> raise (UserError (
+      spf "Invalid ocaml string: %s" reason
+    ))
+
+  let optparse_regexp str =
+    let unescaped = optparse_string str in
+    try Str.regexp unescaped
+    with Failure reason -> raise (UserError (
+      spf "Invalid regex \"%s\" (%s)" unescaped reason
+    ))
+
+  let optparse_experimental_feature_flag = optparse_enum [
+    ("ignore", EXPERIMENTAL_IGNORE);
+    ("warn", EXPERIMENTAL_WARN);
+  ]
+
+  let optparse_filepath str =
+    Path.make str
+end
+
+module PathMap : MapSig with type key = Path.t = MyMap(struct
   type t = Path.t
   let compare p1 p2 =
     String.compare (Path.to_string p1) (Path.to_string p2)
@@ -55,12 +232,10 @@ type config = {
   (* library paths. no wildcards *)
   libs: Path.t list;
   (* config options *)
-  options: options;
+  options: Opts.t;
   (* root path *)
   root: Path.t;
 }
-
-let default_temp_dir = "/tmp/flow/"
 
 let file_of_root ~tmp_dir root extension =
   let tmp_dir = if tmp_dir.[String.length tmp_dir - 1] <> '/'
@@ -75,27 +250,11 @@ let init_file ~tmp_dir root = file_of_root ~tmp_dir root "init"
 let lock_file ~tmp_dir root = file_of_root ~tmp_dir root "lock"
 let pids_file ~tmp_dir root = file_of_root ~tmp_dir root "pids"
 let socket_file ~tmp_dir root = file_of_root ~tmp_dir root "sock"
+let log_file ~tmp_dir root opts =
+  match opts.Opts.log_file with
+  | Some x -> x
+  | None -> Path.make (file_of_root ~tmp_dir root "log")
 
-let default_log_file root =
-  let root_part = Path.slash_escaped_string_of_path root in
-  Path.make (Printf.sprintf "%s%s.log" default_temp_dir root_part)
-
-let default_module_system = Node
-
-let default_options root = {
-  enable_unsafe_getters_and_setters = false;
-  experimental_decorators = EXPERIMENTAL_WARN;
-  moduleSystem = default_module_system;
-  module_name_mappers = [];
-  munge_underscores = false;
-  module_file_exts = [];
-  suppress_comments = [];
-  suppress_types = SSet.empty;
-  traces = 0;
-  strip_root = false;
-  log_file = default_log_file root;
-  max_workers = Sys_utils.nbr_procs;
-}
 
 module Pp : sig
   val config : out_channel -> config -> unit
@@ -118,14 +277,14 @@ end = struct
     let opt o name value = fprintf o "%s=%s\n" name value
 
     in let module_system = function
-      | Node -> "node"
-      | Haste -> "haste"
+      | Opts.Node -> "node"
+      | Opts.Haste -> "haste"
 
-    in fun o config ->
+    in fun o config -> Opts.(
       let options = config.options in
-      let default_opts = default_options config.root in
-      if options.moduleSystem <> default_opts.moduleSystem
+      if options.moduleSystem <> default_options.moduleSystem
       then opt o "module.system" (module_system options.moduleSystem)
+    )
 
   let config o config =
     section_header o "ignore";
@@ -147,13 +306,9 @@ let empty_config root = {
   include_stems = [];
   include_map = PathMap.empty;
   libs = [];
-  options = (default_options root);
+  options = Opts.default_options;
   root;
 }
-
-let error ln msg =
-  let msg = spf ".flowconfig:%d %s\n" ln msg in
-  FlowExitStatus.(exit ~msg Invalid_flowconfig)
 
 let group_into_sections lines =
   let is_section_header = Str.regexp "^\\[\\(.*\\)\\]$" in
@@ -304,249 +459,153 @@ let parse_excludes config lines =
   |> List.map (fun s -> (s, Str.regexp s)) in
   { config with excludes; }
 
-module OptionsParser = struct
-  type option_parser = (options -> string -> (int * string) -> options)
-  type t = option_parser SMap.t
-  type option_flag =
-    | ALLOW_DUPLICATE
-  type option_entry = {
-    flags: option_flag list;
-    _parser: option_parser;
-  }
-
-  let map_add map (key, value) = SMap.add key value map
-
-  let configure configuration =
-    List.fold_left map_add SMap.empty configuration
-
-  let unescape opt (ln, value) =
-    try Scanf.unescaped value
-    with Scanf.Scan_failure reason ->
-      let msg = spf "Invalid ocaml string for %s: %s" opt reason in
-      error ln msg
-
-  let raw_string option_setter =
-    fun options opt (ln, value) ->
-      (* Process escape characters as if the string were written in ocaml *)
-      let unescaped_value = unescape opt (ln, value) in
-      option_setter options (ln, unescaped_value)
-
-  let regexp option_setter =
-    fun options opt (ln, value) ->
-      try
-        (* Process escape characters as if the string were written in ocaml *)
-        let unescaped_value = unescape opt (ln, value) in
-        let r = Str.regexp unescaped_value in
-        option_setter options (ln, r)
-      with Failure reason ->
-        let msg = spf "Invalid regex for %s: %s" opt reason in
-        error ln msg
-
-  (* Generic option parser constructor. Makes an option parser given a string
-     description `supported` of the target datatype and a partial function
-     `converter` that parsers strings to that datatype. *)
-  let generic (supported, converter) option_setter =
-    fun options opt (ln, value) ->
-      match converter value with
-      | Some value -> option_setter options (ln, value)
-      | None ->
-          let msg = spf
-            "Unsupported value for %s: \"%s\"\nSupported values: %s"
-            opt value supported in
-          error ln msg
-
-  let boolean =
-    generic ("true, false", fun s -> try Some (bool_of_string s) with _ -> None)
-
-  (* Option parser constructor for finite sets. Reuses the generic option parser
-     constructor, passing the appropriate `supported` and `converter`. *)
-  let enum values option_setter =
-    let map = List.fold_left map_add SMap.empty values in
-    let converter = fun value -> SMap.get value map in
-    let supported = values
-          |> List.map fst
-          |> List.map (spf "\"%s\"")
-          |> String.concat ", " in
-    generic (supported, converter) option_setter
-
-  let str_to_str_mapper option_setter =
-    fun options opt (ln, value) ->
-      let value = String.trim value in
-
-      let regexp_str = "^'\\([^']*\\)'[ \t]*->[ \t]*'\\([^']*\\)'$" in
-      let regexp = Str.regexp regexp_str in
-      (if not (Str.string_match regexp value 0) then
-        error ln (
-          "Expected a mapping of form: " ^
-          "'single-quoted-string' -> 'single-quoted-string'"
-        )
-      );
-
-      let left = Str.matched_group 1 value in
-      let right = Str.matched_group 2 value in
-
-      option_setter options (ln, (left, right))
-
-  let experimental_feature_flag =
-    generic ("warn, ignore", fun value ->
-      match String.trim value with
-      | "ignore" -> Some EXPERIMENTAL_IGNORE
-      | "warn" -> Some EXPERIMENTAL_WARN
-      | _ -> None
-    )
-
-  let contains_flag flags flag =
-    List.fold_left (fun contains_flag maybe_flag ->
-      (maybe_flag = flag) || contains_flag
-    ) false flags
-
-  let parse_line p (options, seen) (ln, line) =
-    if Str.string_match (Str.regexp "^\\([a-zA-Z0-9._]+\\)=\\(.*\\)$") line 0
-    then
-      let opt = Str.matched_group 1 line in
-      if SMap.mem opt p
-      then
-        let opt_entry = SMap.find_unsafe opt p in
-        let allows_dupes = contains_flag opt_entry.flags ALLOW_DUPLICATE in
-        let seen = if SSet.mem opt seen && not allows_dupes
-          then error ln (spf "Duplicate option: \"%s\"" opt)
-          else SSet.add opt seen
-        in
-        let _parser = opt_entry._parser in
-        let options = _parser options opt (ln, (Str.matched_group 2 line)) in
-        (options, seen)
-      else error ln (spf "Unsupported option: \"%s\"" opt)
-    else error ln "Unable to parse line"
-
-  let parse config p lines =
-    let seen = SSet.empty in
-    let options, _ =
-      List.fold_left (parse_line p) (default_options config.root, seen) lines in
-    options
-end
-
 let file_extension = Str.regexp "^\\(\\.[^ \t]+\\)+$"
 
-let default_file_exts = [".js"; ".jsx"]
+let parse_options config lines = Opts.(
+  let options = Opts.parse config.options lines
+    |> Opts.define_opt "esproposal.decorators" Opts.({
+      _initializer = USE_DEFAULT;
+      flags = [];
+      optparser = optparse_experimental_feature_flag;
+      setter = (fun opts v -> {
+        opts with experimental_decorators = v;
+      });
+    })
 
-let options_parser = OptionsParser.configure [
-  ("esproposal.decorators", OptionsParser.({
-    flags = [];
-    _parser = experimental_feature_flag (fun opts (_, value) ->
-      { opts with experimental_decorators = value; }
-    );
-  }));
+    |> Opts.define_opt "log.file" Opts.({
+      _initializer = USE_DEFAULT;
+      flags = [];
+      optparser = optparse_filepath;
+      setter = (fun opts v -> {
+        opts with log_file = Some v;
+      });
+    })
 
-  ("suppress_comment", OptionsParser.({
-    flags = [ALLOW_DUPLICATE];
-    _parser = regexp (fun options (ln, suppress_comment) ->
-      let suppress_comments = suppress_comment::(options.suppress_comments) in
-      { options with suppress_comments; }
-    );
-  }));
+    |> Opts.define_opt "module.file_ext" Opts.({
+      _initializer = INIT_FN (fun opts -> {
+        opts with module_file_exts = [];
+      });
+      flags = [ALLOW_DUPLICATE];
+      optparser = optparse_string;
+      setter = (fun opts v ->
+        let module_file_exts = v :: opts.module_file_exts in
+        {opts with module_file_exts;}
+      );
+    })
 
-  ("suppress_type", OptionsParser.({
-    flags = [ALLOW_DUPLICATE];
-    _parser = raw_string (fun options (ln, suppress_type) ->
-      let suppress_types = options.suppress_types in
-      if SSet.mem suppress_type suppress_types
-      then error ln (spf "Duplicate suppress_type value %s" suppress_type);
-      let suppress_types = SSet.add suppress_type suppress_types in
-      { options with suppress_types; }
-    );
-  }));
+    |> Opts.define_opt "module.name_mapper" Opts.({
+      _initializer = USE_DEFAULT;
+      flags = [ALLOW_DUPLICATE];
+      optparser = (fun str ->
+        let regexp_str = "^'\\([^']*\\)'[ \t]*->[ \t]*'\\([^']*\\)'$" in
+        let regexp = Str.regexp regexp_str in
+        (if not (Str.string_match regexp str 0) then
+          raise (Opts.UserError (
+            "Expected a mapping of form: " ^
+            "'single-quoted-string' -> 'single-quoted-string'"
+          ))
+        );
 
-  ("log.file", OptionsParser.({
-    flags = [];
-    _parser = generic
-      ("string", fun s -> Some (Path.make s))
-      (fun opts (_, log_file) -> { opts with log_file });
-  }));
+        let pattern = Str.matched_group 1 str in
+        let template = Str.matched_group 2 str in
 
-  ("module.system", OptionsParser.({
-    flags = [];
-    _parser = enum ["node", Node; "haste", Haste] (fun opts (_, moduleSystem) ->
-      {opts with moduleSystem}
-    );
-  }));
+        ((Str.regexp pattern, template), str)
+      );
+      setter = (fun opts v ->
+        let (v, str) = v in
+        let module_name_mappers = v :: opts.module_name_mappers in
+        {opts with module_name_mappers;}
+      );
+    })
 
-  ("module.name_mapper", OptionsParser.({
-    flags = [ALLOW_DUPLICATE];
-    _parser = str_to_str_mapper (fun options (ln, (pattern, template)) ->
-      let rewriter = (Str.regexp pattern, template) in
-      let module_name_mappers = options.module_name_mappers @ [rewriter] in
-      {options with module_name_mappers }
-    );
-  }));
+    |> Opts.define_opt "module.system" Opts.({
+      _initializer = USE_DEFAULT;
+      flags = [];
+      optparser = optparse_enum [
+        ("node", Node);
+        ("haste", Haste);
+      ];
+      setter = (fun opts v -> {
+        opts with moduleSystem = v;
+      });
+    })
 
-  ("munge_underscores", OptionsParser.({
-    flags = [];
-    _parser = boolean
-      (fun opts (_, munge_underscores) ->
-        { opts with munge_underscores });
-  }));
+    |> Opts.define_opt "munge_underscores" Opts.({
+      _initializer = USE_DEFAULT;
+      flags = [];
+      optparser = optparse_boolean;
+      setter = (fun opts v ->
+        {opts with munge_underscores = v;}
+      );
+    })
 
-  ("unsafe.enable_getters_and_setters", OptionsParser.({
-    flags = [];
-    _parser = boolean
-      (fun opts (_, enable_unsafe_getters_and_setters) ->
-        { opts with enable_unsafe_getters_and_setters });
-  }));
+    |> Opts.define_opt "server.max_workers" Opts.({
+      _initializer = USE_DEFAULT;
+      flags = [];
+      optparser = optparse_uint;
+      setter = (fun opts v ->
+        {opts with traces = v;}
+      );
+    })
 
-  ("module.file_ext", OptionsParser.({
-    flags = [ALLOW_DUPLICATE];
-    _parser = raw_string (fun options (ln, file_ext) ->
-      if Str.string_match file_extension file_ext 0 then
-        let module_file_exts = file_ext :: options.module_file_exts in
-        { options with module_file_exts }
-      else
-        error ln (spf "'%s' is not a valid file extension." file_ext)
-    )
-  }));
+    |> Opts.define_opt "strip_root" Opts.({
+      _initializer = USE_DEFAULT;
+      flags = [];
+      optparser = optparse_boolean;
+      setter = (fun opts v ->
+        {opts with strip_root = v;}
+      );
+    })
 
-  ("traces", OptionsParser.({
-    flags = [];
-    _parser = generic
-      ("integer", fun s -> try Some (int_of_string s) with _ -> None)
-      (fun opts (_, traces) -> { opts with traces });
-  }));
+    |> Opts.define_opt "suppress_comment" Opts.({
+      _initializer = USE_DEFAULT;
+      flags = [ALLOW_DUPLICATE];
+      optparser = optparse_regexp;
+      setter = (fun opts v -> {
+        opts with suppress_comments = v::(opts.suppress_comments);
+      });
+    })
 
-  ("server.max_workers", OptionsParser.({
-    flags = [];
-    _parser = generic
-      ("non-negative integer", fun s ->
-        try
-          let x = int_of_string s in
-          if x < 0 then None else Some x
-        with _ -> None)
-      (fun opts (_, max_workers) -> { opts with max_workers });
-  }));
+    |> Opts.define_opt "suppress_type" Opts.({
+      _initializer = USE_DEFAULT;
+      flags = [ALLOW_DUPLICATE];
+      optparser = optparse_string;
+      setter = (fun opts v -> {
+        opts with suppress_types = SSet.add v opts.suppress_types;
+      });
+    })
 
-  ("strip_root", OptionsParser.({
-    flags = [];
-    _parser = boolean
-      (fun opts (_, strip_root) -> { opts with strip_root });
-  }));
-]
+    |> Opts.define_opt "temp_dir" Opts.({
+      _initializer = USE_DEFAULT;
+      flags = [];
+      optparser = optparse_filepath;
+      setter = (fun opts v -> {
+        opts with temp_dir = v;
+      });
+    })
 
-let parse_options config lines =
-  let lines = lines
-    |> List.map (fun (ln, line) -> ln, String.trim line)
-    |> List.filter (fun (ln, s) -> s <> "") in
-  let options = OptionsParser.parse config options_parser lines in
-  (**
-   * If, after parsing the options section, the user hasn't specified any file
-   * extensions -- we should set the options to use the default set of
-   * extensions.
-   *
-   * TODO(jeffmo): Add first-class support for default option values up in the option
-   *               declarations instead of ad-hoc like this.
-   *)
-  if options.module_file_exts = [] then
-    let options = { options with module_file_exts = default_file_exts } in
-    { config with options }
-  else
-  { config with options }
+    |> Opts.define_opt "traces" Opts.({
+      _initializer = USE_DEFAULT;
+      flags = [];
+      optparser = optparse_uint;
+      setter = (fun opts v ->
+        {opts with traces = v;}
+      );
+    })
+
+    |> Opts.define_opt "unsafe.enable_getters_and_setters" Opts.({
+      _initializer = USE_DEFAULT;
+      flags = [];
+      optparser = optparse_boolean;
+      setter = (fun opts v ->
+        {opts with enable_unsafe_getters_and_setters = v;}
+      );
+    })
+
+    |> get_defined_opts
+  in
+  {config with options}
+)
 
 let assert_version (ln, line) =
   try
@@ -593,26 +652,7 @@ let fullpath root =
 let read root =
   let filename = fullpath root in
   let lines = cat_no_fail filename |> split_lines in
-  let config =
-    (**
-     * If 'module.file_ext' is somewhere in the config file, default the file
-     * extensions list with an empty list (so that the user-specified extensions
-     * override the default list of extensions).
-     *
-     * Note that, although we also set this default in parse_options, we also
-     * need to do this here in case no [options] section is specified in the config.
-     *
-     * TODO(jeffmo): Add first-class support for default option values up in the option
-     *               declarations instead of ad-hoc like this.
-     *)
-    if List.exists ((=) "module.file_ext") lines then
-      empty_config root
-    else
-      let options =
-        { (default_options root) with module_file_exts = default_file_exts }
-      in
-      { (empty_config root) with options }
-  in
+  let config = empty_config root in
   let lines = List.mapi (fun i line -> (i+1, String.trim line)) lines in
   parse config lines
 

@@ -85,7 +85,7 @@ let main option_values json strip_root args () =
   let file = parse_args args in
   let root = guess_root (ServerProt.path_of_input file) in
   let flowconfig = FlowConfig.get root in
-  let strip_root = strip_root || FlowConfig.(flowconfig.options.strip_root) in
+  let strip_root = strip_root || FlowConfig.(flowconfig.options.Opts.strip_root) in
   let loc_preprocessor = if strip_root
     then Reason_js.strip_root_from_loc root
     else fun loc -> loc in

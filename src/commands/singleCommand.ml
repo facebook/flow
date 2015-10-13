@@ -73,11 +73,11 @@ let main all weak debug verbose verbose_indent json profile quiet module_
   let flowconfig = FlowConfig.get config_root in
 
   let munge_underscores = munge_underscore_members ||
-      FlowConfig.(flowconfig.options.munge_underscores) in
+      FlowConfig.(flowconfig.options.Opts.munge_underscores) in
 
   let opt_temp_dir = match temp_dir with
   | Some x -> x
-  | None -> FlowConfig.default_temp_dir (* TODO: add flowconfig option *)
+  | None -> Path.to_string (FlowConfig.(flowconfig.options.Opts.temp_dir))
   in
 
   let opt_verbose =
@@ -86,12 +86,16 @@ let main all weak debug verbose verbose_indent json profile quiet module_
     else None
   in
 
+  let root_path = Path.make root in
+
   let options = {
     Options.opt_error_flags = error_flags;
-    Options.opt_root = Path.make root;
+    Options.opt_root = root_path;
     Options.opt_should_detach = false;
     Options.opt_check_mode = false;
-    Options.opt_log_file = FlowConfig.(flowconfig.options.log_file);
+    Options.opt_log_file = FlowConfig.(
+      log_file ~tmp_dir:opt_temp_dir root_path flowconfig.options
+    );
     Options.opt_all = all;
     Options.opt_weak = weak;
     Options.opt_debug = debug;
@@ -103,7 +107,7 @@ let main all weak debug verbose verbose_indent json profile quiet module_
     Options.opt_strip_root = false;
     Options.opt_module = module_;
     Options.opt_module_name_mappers = FlowConfig.(
-      flowconfig.options.module_name_mappers
+      flowconfig.options.Opts.module_name_mappers
     );
     Options.opt_libs;
     Options.opt_no_flowlib = no_flowlib;

@@ -14,7 +14,7 @@ open Utils
 
 let global_file_name = "(global)"
 
-let config_options : FlowConfig.options option ref = ref None
+let config_options : FlowConfig.Opts.t option ref = ref None
 
 let is_directory path = try Sys.is_directory path with Sys_error _ -> false
 
@@ -23,7 +23,7 @@ let is_dot_file path =
   String.length filename > 0 && filename.[0] = '.'
 
 let is_valid_path path =
-  let file_exts = FlowConfig.((get_unsafe ()).options.module_file_exts) in
+  let file_exts = FlowConfig.((get_unsafe ()).options.Opts.module_file_exts) in
   not (is_dot_file path) &&
   List.exists (Filename.check_suffix path) file_exts
 

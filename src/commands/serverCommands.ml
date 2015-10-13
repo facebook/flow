@@ -113,9 +113,9 @@ module OptionParser(Config : CONFIG) = struct
     FlowEventLogger.set_from from;
     let root = CommandUtils.guess_root root in
     let flowconfig = FlowConfig.get root in
-    let opt_module = FlowConfig.(match flowconfig.options.moduleSystem with
-    | Node -> "node"
-    | Haste -> "haste") in
+    let opt_module = FlowConfig.(match flowconfig.options.Opts.moduleSystem with
+    | Opts.Node -> "node"
+    | Opts.Haste -> "haste") in
     let opt_libs = FlowConfig.(match lib with
     | None -> flowconfig.libs
     | Some libs ->
@@ -126,26 +126,27 @@ module OptionParser(Config : CONFIG) = struct
     ) in
     let opt_traces = match traces with
       | Some level -> level
-      | None -> FlowConfig.(flowconfig.options.traces) in
+      | None -> FlowConfig.(flowconfig.options.Opts.traces) in
     let opt_strip_root = strip_root ||
-      FlowConfig.(flowconfig.options.strip_root) in
+      FlowConfig.(flowconfig.options.Opts.strip_root) in
     let opt_munge_underscores = munge_underscore_members ||
-      FlowConfig.(flowconfig.options.munge_underscores) in
+      FlowConfig.(flowconfig.options.Opts.munge_underscores) in
+    let opt_temp_dir = match temp_dir with
+    | Some x -> x
+    | None -> Path.to_string (FlowConfig.(flowconfig.options.Opts.temp_dir))
+    in
     let opt_log_file = match log_file with
       | Some s ->
           let dirname = Path.make (Filename.dirname s) in
           let basename = Filename.basename s in
           Path.concat dirname basename
-      | None ->
-          FlowConfig.(flowconfig.options.log_file)
-    in
-    let opt_temp_dir = match temp_dir with
-    | Some x -> x
-    | None -> FlowConfig.default_temp_dir (* TODO: add flowconfig option *)
+      | None -> FlowConfig.(
+          log_file ~tmp_dir:opt_temp_dir root flowconfig.options
+        )
     in
     let opt_max_workers = match max_workers with
     | Some x -> x
-    | None -> FlowConfig.(flowconfig.options.max_workers)
+    | None -> FlowConfig.(flowconfig.options.Opts.max_workers)
     in
     let opt_max_workers = min opt_max_workers Sys_utils.nbr_procs in
 
@@ -169,7 +170,7 @@ module OptionParser(Config : CONFIG) = struct
       Options.opt_json = json;
       Options.opt_quiet = quiet || json;
       Options.opt_module_name_mappers = FlowConfig.(
-        flowconfig.options.module_name_mappers
+        flowconfig.options.Opts.module_name_mappers
       );
       Options.opt_profile = profile;
       Options.opt_strip_root;

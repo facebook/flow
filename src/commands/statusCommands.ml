@@ -168,7 +168,7 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
     if timeout_arg > 0 then CommandUtils.set_timeout timeout_arg;
 
     let flowconfig = FlowConfig.get root in
-    let strip_root = strip_root || FlowConfig.(flowconfig.options.strip_root) in
+    let strip_root = strip_root || FlowConfig.(flowconfig.options.Opts.strip_root) in
 
     let env = {
       root;

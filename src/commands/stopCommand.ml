@@ -88,10 +88,11 @@ let mean_kill ~tmp_dir root =
 
 let main temp_dir from root () =
   let root = CommandUtils.guess_root root in
+  let config = FlowConfig.get root in
   let root_s = Path.to_string root in
   let tmp_dir = match temp_dir with
   | Some x -> x
-  | None -> FlowConfig.default_temp_dir (* TODO: add flowconfig option *)
+  | None -> Path.to_string (FlowConfig.(config.options.Opts.temp_dir))
   in
   FlowEventLogger.set_from from;
   try

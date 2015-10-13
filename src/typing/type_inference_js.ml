@@ -550,22 +550,22 @@ let check_type_param_arity cx loc params n f =
     let msg = spf "Incorrect number of type parameters (expected %n)" n in
     error_type cx loc msg
 
-let is_suppress_type type_name = FlowConfig.(
+let is_suppress_type type_name = FlowConfig.(Opts.(
   let config = get_unsafe () in
   SSet.mem type_name config.options.suppress_types
-)
+))
 
-let are_getters_and_setters_enabled () = FlowConfig.(
+let are_getters_and_setters_enabled () = FlowConfig.(Opts.(
   let config = get_unsafe () in
   config.options.enable_unsafe_getters_and_setters
-)
+))
 
-let are_decorators_enabled () = FlowConfig.(
+let are_decorators_enabled () = FlowConfig.(Opts.(
   let config = get_unsafe () in
   config.options.experimental_decorators
-)
+))
 
-let warn_or_ignore_decorators cx decorators_list = FlowConfig.(
+let warn_or_ignore_decorators cx decorators_list = FlowConfig.(Opts.(
   if decorators_list = [] then () else
   match (get_unsafe ()).options.experimental_decorators with
   | EXPERIMENTAL_IGNORE -> ()
@@ -582,7 +582,7 @@ let warn_or_ignore_decorators cx decorators_list = FlowConfig.(
         "Additionally, Flow does not account for the type implications of " ^
         "decorators at this time."
       ]
-)
+))
 
 (**********************************)
 (* Transform annotations to types *)
@@ -6194,7 +6194,7 @@ let scan_for_suppressions =
 
   in fun cx comments ->
     let config = FlowConfig.get_unsafe () in
-    let suppress_comments = FlowConfig.(config.options.suppress_comments) in
+    let suppress_comments = FlowConfig.(config.options.Opts.suppress_comments) in
     let should_suppress = should_suppress suppress_comments in
 
     (* Bail immediately if we're not using error suppressing comments *)

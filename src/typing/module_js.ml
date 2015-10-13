@@ -297,7 +297,7 @@ module Node = struct
           (fun () ->
             seqf
               (fun ext -> path_if_exists (path ^ ext))
-              (FlowConfig.(opts.module_file_exts))
+              opts.FlowConfig.Opts.module_file_exts
           )
           (fun () ->
             let path = Filename.concat path "index.js" in
@@ -314,7 +314,7 @@ module Node = struct
   (fun () ->
          seqf
            (fun ext -> path_if_exists (path ^ ext))
-           (FlowConfig.(opts.module_file_exts))
+           opts.FlowConfig.Opts.module_file_exts
   )
   (fun () ->
    seq
