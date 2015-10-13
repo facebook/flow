@@ -2031,9 +2031,7 @@ let find_matches_expr_or_stmt
                   expr_transf_map = [] };
               patches = PatchSet.empty } in
        match res with
-       | Matches result -> let _ =
-         print_int (List.length result);
-         print_string " " in result
+       | Matches result -> result
        | NoMatch -> [] end
     | None -> []
 
