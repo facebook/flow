@@ -27,22 +27,25 @@ class update_array_type_mapper: type_mapper_type = object
   inherit! tvar_substituting_type_mapper
 end
 
+let downcast_akshape_to_akmap_ env r fdm =
+  let keys, values = List.unzip (ShapeMap.values fdm) in
+  let env, values = lmap Typing_env.unbind env values in
+  let env, value = TUtils.in_var env (Reason.Rnone, Tunresolved []) in
+  let env, value = fold_left_env TUtils.unify env value values in
+  let env, keys = lmap Typing_env.unbind env keys in
+  let env, key = TUtils.in_var env (Reason.Rnone, Tunresolved []) in
+  let env, key =  fold_left_env TUtils.unify env key keys in
+  env, (r, Tarraykind (AKmap (key, value)))
+
 (* Given a type that might be an AKshape (possibly inside Tunresolved or type
  * var) returns an AKmap which is a supertype of the input. Leaves other types
  * unchanged. *)
 let downcast_akshape_to_akmap env ty =
   let mapper = object
     inherit update_array_type_mapper
-
     method! on_tarraykind_akshape (env, seen) r fdm =
-      let keys, values = List.unzip (ShapeMap.values fdm) in
-      let env, values = lmap Typing_env.unbind env values in
-      let env, value = TUtils.in_var env (Reason.Rnone, Tunresolved []) in
-      let env, value = fold_left_env TUtils.unify env value values in
-      let env, keys = lmap Typing_env.unbind env keys in
-      let env, key = TUtils.in_var env (Reason.Rnone, Tunresolved []) in
-      let env, key =  fold_left_env TUtils.unify env key keys in
-      (env, seen), (r, Tarraykind (AKmap (key, value)))
+      let env, ty = downcast_akshape_to_akmap_ env r fdm in
+      (env, seen), ty
   end in
   let (env, _), ty = mapper#on_type (fresh_env env) ty in
   env, ty
@@ -118,3 +121,13 @@ let update_array_type_to_akshape p field_name env ty =
   end in
   let (env, _), ty = mapper#on_type (fresh_env env) ty in
   env, ty
+
+let fully_remove_akshapes_and_tvars env ty =
+  let mapper = object(this)
+    inherit deep_type_mapper
+    inherit! tvar_expanding_type_mapper
+    method! on_tarraykind_akshape (env, seen) r fdm =
+      let env, ty = downcast_akshape_to_akmap_ env r fdm in
+      this#on_type (env, seen) ty
+  end in
+  snd (mapper#on_type (fresh_env env) ty)

@@ -140,7 +140,9 @@ let resolve_types acc collated_values =
       with Timeout -> raise Timeout | _ ->
         env, any
     in
-    let type_ = Typing_expand.fully_expand env type_ in
+    (* We don't suggest shape type hints yet, so downgrading all
+     * shape-like arrays to plain arrays. *)
+    let type_ = Typing_arrays.fully_remove_akshapes_and_tvars env type_ in
     match Typing_suggest.normalize type_ with
     | None -> ()
     | Some ty ->
