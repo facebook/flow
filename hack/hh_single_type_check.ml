@@ -136,7 +136,7 @@ let what_builtins mode = match mode with
   "}\n" ^
   "newtype typename<+T> as string = string;\n"^
   "newtype classname<+T> as typename<T> = typename<T>;\n" ^
-  "function var_dump($x): void;\n" ^
+ "function var_dump($x): void;\n" ^
   "function gena();\n" ^
   "function genva();\n" ^
   "function gen_array_rec();\n"^
@@ -150,8 +150,19 @@ let what_builtins mode = match mode with
   "interface IMemoizeParam {\n"^
   "  public function getInstanceKey(): string;\n"^
   "}\n"^
-  "type TypeStructure<T> = shape(\n"^
-  "  'kind'=>int,\n"^
+  "newtype TypeStructure<T> as shape(\n"^
+  "  'kind'=> int,\n"^
+  "  'nullable'=>?bool,\n"^
+  "  'classname'=>?classname<T>,\n"^
+  "  'elem_types' => ?array,\n"^
+  "  'param_types' => ?array,\n"^
+  "  'return_type' => ?array,\n"^
+  "  'generic_types' => ?array,\n"^
+  "  'fields' => ?array,\n"^
+  "  'name' => ?string,\n"^
+  "  'alias' => ?string,\n"^
+  ") = shape(\n"^
+  "  'kind'=> int,\n"^
   "  'nullable'=>?bool,\n"^
   "  'classname'=>?classname<T>,\n"^
   "  'elem_types' => ?array,\n"^
@@ -172,7 +183,6 @@ let what_builtins mode = match mode with
   "const string __METHOD__ = '';\n"^
   "const string __NAMESPACE__ = '';\n"^
   "interface Indexish<+Tk, +Tv> extends KeyedContainer<Tk, Tv> {}\n"
-
 
 (*****************************************************************************)
 (* Helpers *)

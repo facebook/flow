@@ -2631,6 +2631,11 @@ and array_get is_lvalue p env ty1 ety1 e2 ty2 =
       if Env.is_strict env
       then error_array env p ety1
       else env, (Reason.Rnone, Tany)
+  | Tabstract (AKnewtype (ts, [ty]), Some (r, Tshape (fk, fields)))
+        when ts = SN.FB.cTypeStructure ->
+      let env, fields = TS.transform_shapemap env ty fields in
+      let ty = r, Tshape (fk, fields) in
+      array_get is_lvalue p env ty ty e2 ty2
   | Tabstract (_, Some ty) ->
       let env, ety = Env.expand_type env ty in
       Errors.try_

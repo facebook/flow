@@ -19,8 +19,6 @@ module TSubst = Typing_subst
 module TUtils = Typing_utils
 module TAccess = Typing_taccess
 module Phase  = Typing_phase
-module TS     = Typing_structure
-
 
 (*****************************************************************************)
 (* Expanding type definition *)
@@ -79,8 +77,6 @@ let expand_typedef_ ?force_expand:(force_expand=false) ety_env env r x argl =
          in
          if Naming_special_names.Classes.is_format_string x
          then env, (ety_env, (r, Tclass ((pos, x), argl)))
-         else if x = SN.FB.cTypeStructure
-         then env, (ety_env, TS.transform_classname_ty (r, snd expanded_ty))
          else env, (ety_env, (r, snd expanded_ty))
     end
 
