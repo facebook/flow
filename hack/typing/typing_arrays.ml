@@ -11,78 +11,30 @@
 open Core
 open Utils
 open Typing_defs
+open Type_mapper
 
 module Env = Typing_env
 module TUtils = Typing_utils
 module Reason = Typing_reason
 module ShapeMap = Nast.ShapeMap
 
-(* Signature of visitor class mapping from type to type  *)
-class type type_mapper_type = object
-  method on_tunresolved: Env.env -> Reason.t -> locl ty list
-    -> (Env.env * locl ty)
-  method on_tvar: Env.env -> Reason.t -> int -> (Env.env * locl ty)
-  method on_tarraykind_akempty: Env.env -> Reason.t -> (Env.env * locl ty)
-  method on_tarraykind_akshape:
-    Env.env -> Reason.t -> (locl ty * locl ty) ShapeMap.t
-      -> (Env.env * locl ty)
-
-  method on_type: Env.env -> locl ty -> (Env.env * locl ty)
-end
-
-(* Naive implementation of this visitor - passes everything unchanged *)
-class type_mapper: type_mapper_type = object(this)
-  method on_tunresolved env r tyl = env, (r, Tunresolved tyl)
-  method on_tvar env r n = env, (r, Tvar n)
-  method on_tarraykind_akempty env r = env, (r, Tarraykind AKempty)
-  method on_tarraykind_akshape env r fdm = env, (r, Tarraykind (AKshape fdm))
-
-  method on_type env (r, ty) = match ty with
-    | Tunresolved tyl -> this#on_tunresolved env r tyl
-    | Tvar n -> this#on_tvar env r n
-    | Tarraykind AKempty -> this#on_tarraykind_akempty env r
-    | Tarraykind AKshape fdm -> this#on_tarraykind_akshape env r fdm
-    | _ -> env, (r, ty)
-end
-
 (* Mapper used by update_array* functions. It traverses Tunresolved and
  * modifies the type "inside" the Tvars - so it has side effects on the input
  * type (the type variables inside env change)! *)
-class update_array_type_mapper: type_mapper_type = object(this)
-  inherit type_mapper
-
-  method! on_tunresolved env r tyl =
-    let env, tyl = lmap this#on_type env tyl in
-    env, (r, Tunresolved tyl)
-
-  method! on_tvar env _ n =
-    let env, ty = Env.get_type env n in
-    let env, ty = this#on_type env ty in
-    let env = Env.add env n ty in
-    env, ty
-end
-
-(* Mapper which traverses Tunresolved and goes inside the type vars, but
- * doesn't modify them - returns a new type with type variables expanded *)
-class type_expanding_mapper: type_mapper_type = object(this)
-  inherit type_mapper
-
-  method! on_tunresolved env r tyl =
-    let env, tyl = lmap this#on_type env tyl in
-    env, (r, Tunresolved tyl)
-
-  method! on_tvar env r n =
-    let _, ety = Env.expand_type env (r, Tvar n) in
-    this#on_type env ety
+class update_array_type_mapper: type_mapper_type = object
+  inherit shallow_type_mapper
+  inherit! tunresolved_type_mapper
+  inherit! tvar_substituting_type_mapper
 end
 
 (* Given a type that might be an AKshape (possibly inside Tunresolved or type
  * var) returns an AKmap which is a supertype of the input. Leaves other types
  * unchanged. *)
-let downcast_akshape_to_akmap = object
-  inherit type_expanding_mapper
+let downcast_akshape_to_akmap env ty =
+  let mapper = object
+    inherit update_array_type_mapper
 
-    method! on_tarraykind_akshape env r fdm =
+    method! on_tarraykind_akshape (env, seen) r fdm =
       let keys, values = List.unzip (ShapeMap.values fdm) in
       let env, values = lmap Typing_env.unbind env values in
       let env, value = TUtils.in_var env (Reason.Rnone, Tunresolved []) in
@@ -90,9 +42,10 @@ let downcast_akshape_to_akmap = object
       let env, keys = lmap Typing_env.unbind env keys in
       let env, key = TUtils.in_var env (Reason.Rnone, Tunresolved []) in
       let env, key =  fold_left_env TUtils.unify env key keys in
-      env, (r, Tarraykind (AKmap (key, value)))
-end
-let downcast_akshape_to_akmap = downcast_akshape_to_akmap#on_type
+      (env, seen), (r, Tarraykind (AKmap (key, value)))
+  end in
+  let (env, _), ty = mapper#on_type (fresh_env env) ty in
+  env, ty
 
 (* Is the field_name type consistent with ones already in field map?
  * Shape field names must all be constant strings or constants from
@@ -108,48 +61,60 @@ let akshape_keys_consistent field_name fdm =
 
 (* Update any AKempty found in the type (inside Tvars and Tunresolved too)
  * to an AKmap type *)
-let update_array_type_to_akmap p = object
-  inherit update_array_type_mapper
+let update_array_type_to_akmap p env ty =
+  let mapper = object
+    inherit update_array_type_mapper
 
-    method! on_tarraykind_akempty env _ =
+    method! on_tarraykind_akempty (env, seen) _ =
       let env, tk = TUtils.in_var env (Reason.Rnone, Tunresolved []) in
       let env, tv = TUtils.in_var env (Reason.Rnone, Tunresolved []) in
-      env, (Reason.Rused_as_map p, Tarraykind (AKmap (tk, tv)))
+      (env, seen), (Reason.Rused_as_map p, Tarraykind (AKmap (tk, tv)))
 
-    method! on_tarraykind_akshape env r fdm =
-      downcast_akshape_to_akmap env (r, Tarraykind (AKshape fdm))
-  end
+    method! on_tarraykind_akshape (env, seen) r fdm =
+      let env, ty =
+        downcast_akshape_to_akmap env (r, Tarraykind (AKshape fdm)) in
+      (env, seen), ty
+  end in
+  let (env, _), ty = mapper#on_type (fresh_env env) ty in
+  env, ty
 
 (* Update any AKempty found in the type (inside Tvars and Tunresolved too)
  * to an AKvec type *)
-let update_array_type_to_akvec p = object
-  inherit update_array_type_mapper
-
-    method! on_tarraykind_akempty env _ =
+let update_array_type_to_akvec p env ty =
+  let mapper = object
+    inherit update_array_type_mapper
+    method! on_tarraykind_akempty (env, seen) _ =
       let env, tv = TUtils.in_var env (Reason.Rnone, Tunresolved []) in
-      env, (Reason.Rappend p, Tarraykind (AKvec tv))
-  end
+      (env, seen), (Reason.Rappend p, Tarraykind (AKvec tv))
+  end in
+  let (env, _), ty = mapper#on_type (fresh_env env) ty in
+  env, ty
 
 (* Update any AKempty found in the type (inside Tvars and Tunresolved too)
  * to an AKshape type.
  * Update any AKshape to AKshape with additional field, or back to AKmap
  * if it's impossible *)
-let update_array_type_to_akshape p field_name =  object
-  inherit update_array_type_mapper
+let update_array_type_to_akshape p field_name env ty =
+  let mapper = object
+    inherit update_array_type_mapper
 
-    method! on_tarraykind_akempty env _ =
+    method! on_tarraykind_akempty (env, seen) _ =
       let env, tk = TUtils.in_var env (Reason.Rnone, Tunresolved []) in
       let env, tv = TUtils.in_var env (Reason.Rnone, Tunresolved []) in
       let fdm = ShapeMap.singleton field_name (tk, tv) in
-      env, (Reason.Rwitness p, Tarraykind (AKshape fdm))
+      (env, seen), (Reason.Rwitness p, Tarraykind (AKshape fdm))
 
-    method! on_tarraykind_akshape env r fdm =
+    method! on_tarraykind_akshape (env, seen) r fdm =
       let env, tk = TUtils.in_var env (Reason.Rnone, Tunresolved []) in
       let env, tv = TUtils.in_var env (Reason.Rnone, Tunresolved []) in
-      if akshape_keys_consistent field_name fdm then begin
+      let env, ty = if akshape_keys_consistent field_name fdm then begin
         let fdm = if ShapeMap.mem field_name fdm then fdm else
           ShapeMap.add field_name (tk, tv) fdm in
           env, (Reason.Rwitness p, Tarraykind (AKshape fdm))
       end else
         downcast_akshape_to_akmap env (r, Tarraykind (AKshape fdm))
-  end
+      in
+      (env, seen), ty
+  end in
+  let (env, _), ty = mapper#on_type (fresh_env env) ty in
+  env, ty

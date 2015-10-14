@@ -4224,7 +4224,7 @@ and update_array_type p env e valkind type_mapper =
     | `lvalue | `lvalue_subexpr ->
       let env, ty1 =
         raw_expr ~valkind:`lvalue_subexpr ~in_cond:false env e in
-      let env, ty1 = type_mapper#on_type env ty1 in
+      let env, ty1 = type_mapper env ty1 in
       begin match e with
         | (_, Lvar (_, x)) ->
           (* update_array_type_ has updated the type in ty1 typevars, but we
