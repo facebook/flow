@@ -596,12 +596,12 @@ and is_sub_type env ty_super ty_sub =
     (fun () -> ignore(sub_type env ty_super ty_sub); true)
     (fun _ -> false)
 
-and sub_string p env ty2 =
-  let env, ety2 = Env.expand_type env ty2 in
+and sub_string ?(seen = ISet.empty) p env ty2 =
+  let env, seen, ety2 = Env.expand_type_recorded env seen ty2 in
   match ety2 with
-  | (_, Toption ty2) -> sub_string p env ty2
+  | (_, Toption ty2) -> sub_string ~seen p env ty2
   | (_, Tunresolved tyl) ->
-      List.fold_left tyl ~f:(sub_string p) ~init:env
+      List.fold_left tyl ~f:(sub_string ~seen p) ~init:env
   | (_, Tprim _) ->
       env
   | (_, Tabstract (AKenum _, _)) ->
@@ -609,7 +609,7 @@ and sub_string p env ty2 =
        * stringish context *)
       env
   | (_, Tabstract (_, Some ty)) ->
-      sub_string p env ty
+      sub_string ~seen p env ty
   | (r2, Tclass (x, _)) ->
       let class_ = Env.get_class env (snd x) in
       (match class_ with
