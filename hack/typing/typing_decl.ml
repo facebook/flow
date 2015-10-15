@@ -31,31 +31,6 @@ module SN = Naming_special_names
 module Phase = Typing_phase
 
 (*****************************************************************************)
-(* Module used to track what classes are declared and which ones still need
- * to be processed. The declaration phase happens in parallel. Because of that
- * a worker needs to know if the type of a class is ready or if it needs to
- * be recomputed. When ClassStatus.mem *class-name* returns true, we know
- * the class has already been recomputed by a different worker.
- * TypedefHeap is a similar mechanism for typedefs.
- *)
-(*****************************************************************************)
-
-module ClassStatus = SharedMem.NoCache (String) (struct
-  type t = unit
-  let prefix = Prefix.make()
-end)
-
-let is_class_ready class_name =
-  ClassStatus.mem class_name
-
-let report_class_ready class_name =
-  ClassStatus.add class_name ()
-
-let remove_classes class_set =
-  ClassStatus.remove_batch class_set
-
-
-(*****************************************************************************)
 (* Checking that the kind of a class is compatible with its parent
  * For example, a class cannot extend an interface, an interface cannot
  * extend a trait etc ...
@@ -365,7 +340,7 @@ and class_naming_and_decl (class_env:class_env) cid c =
    * which is OK.
    *)
   Naming_heap.ClassHeap.add cid c;
-  report_class_ready cid
+  ()
 
 and class_parents_decl class_env c =
   let class_hint = class_hint_decl class_env in
@@ -380,7 +355,8 @@ and class_parents_decl class_env c =
 and class_hint_decl class_env hint =
   match hint with
     | _, Happly ((_, cid), _)
-      when SMap.mem cid class_env.all_classes && not (is_class_ready cid) ->
+    when SMap.mem cid class_env.all_classes &&
+    not (Naming_heap.ClassHeap.mem cid) ->
       (* We are supposed to redeclare the class *)
       let files = SMap.find_unsafe cid class_env.all_classes in
       Relative_path.Set.iter begin fun fn ->

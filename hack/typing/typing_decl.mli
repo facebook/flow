@@ -9,8 +9,6 @@
  *)
 open Utils
 
-val remove_classes: SSet.t -> unit
-
 (*
  * This function works by side effects. It is adding in the
  * Naming_heap the nast produced from the ast passed as a parameter

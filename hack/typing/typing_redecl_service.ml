@@ -237,7 +237,6 @@ let invalidate_heap { FileInfo.n_funs; n_classes; n_types; n_consts } =
   Typing_env.Typedefs.oldify_batch n_types;
   Typing_env.GConsts.oldify_batch n_consts;
   Naming_heap.FunHeap.remove_batch n_funs;
-  Typing_decl.remove_classes n_classes;
   Naming_heap.ClassHeap.remove_batch n_classes;
   Naming_heap.TypedefHeap.remove_batch n_types;
   Naming_heap.ConstHeap.remove_batch n_consts;
