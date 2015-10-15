@@ -463,14 +463,20 @@ let save _genv env (kind, fn) =
  * we look if env.modified changed.
  *)
 let daemon_main options =
+  let root = ServerArgs.root options in
   (* The OCaml default is 500, but we care about minimizing the memory
    * overhead *)
   let gc_control = Gc.get () in
   Gc.set {gc_control with Gc.max_overhead = 200};
-  Relative_path.set_path_prefix Relative_path.Root (ServerArgs.root options);
+  Relative_path.set_path_prefix Relative_path.Root root;
+  (* Make sure to lock the lockfile before doing *anything*, especially
+   * opening the socket. *)
+  if not (Lock.grab (ServerFiles.lock_file root)) then begin
+    Hh_logger.log "Error: another server is already running?\n";
+    Exit_status.(exit Server_already_exists);
+  end;
   let config = Program.load_config () in
   let local_config = ServerLocalConfig.load () in
-  let root = ServerArgs.root options in
   if Sys_utils.is_test_mode ()
   then EventLogger.init (Daemon.devnull ()) 0.0
   else HackEventLogger.init root (Unix.gettimeofday ());
@@ -494,12 +500,6 @@ let daemon_main options =
     Option.iter (ServerArgs.save_filename genv.options) (save genv env);
     Program.run_once_and_exit genv env
   else
-    (* Make sure to lock the lockfile before doing *anything*, especially
-     * opening the socket. *)
-    if not (Lock.grab (ServerFiles.lock_file root)) then begin
-      Hh_logger.log "Error: another server is already running?\n";
-      Exit_status.(exit Server_already_exists);
-    end;
     (* Open up a server on the socket before we go into MainInit -- the client
      * will try to connect to the socket as soon as we lock the init lock. We
      * need to have the socket open now (even if we won't actually accept
