@@ -971,7 +971,7 @@ end = struct
       in let rec helper env decls errs =
         let decl, errs_ = variable_declaration env in
         let decls = decl::decls in
-        let errs = errs @ errs_ in
+        let errs = errs_ @ errs in
         if Peek.token env = T_COMMA
         then begin
           Expect.token env T_COMMA;
@@ -984,7 +984,7 @@ end = struct
           let start_loc = match decls with
           | (loc, _)::_ -> loc
           | _ -> Loc.none in
-          Loc.btwn start_loc end_loc, declarations, errs
+          Loc.btwn start_loc end_loc, declarations, List.rev errs
 
       in fun env -> helper env [] []
 
@@ -1012,7 +1012,7 @@ end = struct
           | _ -> errs
         ) errs variable.declarations
       ) in
-      (loc, variable), errs
+      (loc, variable), List.rev errs
 
     let _let env =
       let env = env |> with_no_let true in

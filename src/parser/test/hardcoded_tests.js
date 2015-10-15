@@ -2603,12 +2603,12 @@ module.exports = {
     'for (const { foo };;) {}': {
       'errors': {
         '0': {
-          'message': 'Const must be initialized',
+          'message': 'Destructuring assignment must be initialized',
           'loc.start.column': 11,
           'loc.end.column': 18
         },
         '1': {
-          'message': 'Destructuring assignment must be initialized',
+          'message': 'Const must be initialized',
           'loc.start.column': 11,
           'loc.end.column': 18
         }

@@ -198,7 +198,15 @@ function runTest(test) {
     }
   }
 
-  if (flow_errors.length !== 0 && !test.spec.hasOwnProperty('errors')) {
+  var expected_to_error = test.spec.hasOwnProperty('errors') && test.spec.errors != [];
+  for (var prop in test.spec) {
+    if (test.spec.hasOwnProperty(prop) && prop.match(/^errors\./)) {
+      expected_to_error = true;
+      break;
+    }
+  }
+
+  if (flow_errors.length !== 0 && !expected_to_error) {
     result.passed = false;
     output("****Unexpected Errors****");
     for (var i = 0; i < flow_errors.length; i++) {

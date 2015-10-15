@@ -156,6 +156,7 @@ function handleSpecialObjectCompare(esprima, flow, env) {
       if (esprima.kind == "") {
         esprima.kind = "init";
       }
+      esprima.decorators = [];
       break;
     case 'ClassExpression':
       // Should use null for missing node
@@ -351,7 +352,7 @@ function runTest(test, esprima_opts) {
     result.output += "\n";
   }
   try {
-    var flow_ast = flow.parse(test.content);
+    var flow_ast = flow.parse(test.content, {});
   } catch (e) {
     output("Flow exploded:", util.inspect(e, {depth: null}));
     result.passed = false;
