@@ -8,6 +8,7 @@
  *
  *)
 
+open Core
 open Coverage_level
 open Utils
 open Sys_utils
@@ -244,7 +245,7 @@ let parse_options () =
 
 let suggest_and_print nenv fn { FileInfo.funs; classes; typedefs; consts; _ } =
   let make_set =
-    List.fold_left (fun acc (_, x) -> SSet.add x acc) SSet.empty in
+    List.fold_left ~f: (fun acc (_, x) -> SSet.add x acc) ~init: SSet.empty in
   let n_funs = make_set funs in
   let n_classes = make_set classes in
   let n_types = make_set typedefs in
@@ -257,8 +258,8 @@ let suggest_and_print nenv fn { FileInfo.funs; classes; typedefs; consts; _ } =
     | Some l -> begin
       (* Sort so that the unit tests come out in a consistent order, normally
        * doesn't matter. *)
-      let l = List.sort (fun (x, _, _) (y, _, _) -> x - y) l in
-      List.iter (ServerConvert.print_patch fn) l
+      let l = List.sort ~cmp: (fun (x, _, _) (y, _, _) -> x - y) l in
+      List.iter ~f: (ServerConvert.print_patch fn) l
     end
 
 (* This allows to fake having multiple files in one file. This
@@ -291,20 +292,20 @@ let file_to_files file =
   then
     let contentl = Str.full_split delim content in
     let files = make_files contentl in
-    List.fold_left begin fun acc (sub_fn, content) ->
+    List.fold_left ~f: begin fun acc (sub_fn, content) ->
       let file =
         Relative_path.create Relative_path.Dummy (abs_fn^"--"^sub_fn) in
       Relative_path.Map.add file content acc
-    end Relative_path.Map.empty files
+    end ~init: Relative_path.Map.empty files
   else if str_starts_with content "// @directory " then
     let contentl = Str.split (Str.regexp "\n") content in
-    let first_line = List.hd contentl in
+    let first_line = List.hd_exn contentl in
     let regexp = Str.regexp "^// @directory *\\([^ ]*\\)" in
     let has_match = Str.string_match regexp first_line 0 in
     assert has_match;
     let dir = Str.matched_group 1 first_line in
     let file = Relative_path.create Relative_path.Dummy (dir ^ abs_fn) in
-    let content = String.concat "\n" (List.tl contentl) in
+    let content = String.concat "\n" (List.tl_exn contentl) in
     Relative_path.Map.singleton file content
   else
     Relative_path.Map.singleton file content
@@ -322,7 +323,7 @@ let print_colored fn type_acc =
   let results = ColorFile.go content type_acc in
   if Unix.isatty Unix.stdout
   then Tty.print (ClientColorFile.replace_colors results)
-  else print_string (List.map replace_color results |> String.concat "")
+  else print_string (List.map ~f: replace_color results |> String.concat "")
 
 let print_coverage fn type_acc =
   let counts = ServerCoverageMetric.count_exprs fn type_acc in
@@ -334,7 +335,7 @@ let handle_mode mode filename nenv files_contents files_info errors ai_results =
   | Autocomplete ->
       let file = cat (Relative_path.to_absolute filename) in
       let result = ServerAutoComplete.auto_complete nenv file in
-      List.iter begin fun r ->
+      List.iter ~f: begin fun r ->
         let open AutocompleteService in
         Printf.printf "%s %s\n" r.res_name r.res_ty
       end result
@@ -374,10 +375,10 @@ let handle_mode mode filename nenv files_contents files_info errors ai_results =
         end files_contents [] in
       if lint_errors <> []
       then begin
-        let lint_errors = List.sort begin fun x y ->
+        let lint_errors = List.sort ~cmp: begin fun x y ->
           Pos.compare (Lint.get_pos x) (Lint.get_pos y)
         end lint_errors in
-        let lint_errors = List.map Lint.to_absolute lint_errors in
+        let lint_errors = List.map ~f: Lint.to_absolute lint_errors in
         ServerLint.output_text stdout lint_errors;
         exit 2
       end
@@ -391,7 +392,7 @@ let handle_mode mode filename nenv files_contents files_info errors ai_results =
       if mode = Suggest
       then Relative_path.Map.iter (suggest_and_print nenv) files_info;
       if errors <> []
-      then (error (List.hd errors); exit 2)
+      then (error (List.hd_exn errors); exit 2)
       else Printf.printf "No errors\n"
 
 (*****************************************************************************)
@@ -446,9 +447,9 @@ let main_hack { filename; mode; } =
 
         let all_classes =
           Relative_path.Map.fold begin fun fn {FileInfo.classes; _} acc ->
-            List.fold_left begin fun acc (_, cname) ->
+            List.fold_left ~f: begin fun acc (_, cname) ->
               SMap.add cname (Relative_path.Set.singleton fn) acc
-            end acc classes
+            end ~init: acc classes
           end files_info SMap.empty in
 
         Relative_path.Map.iter begin fun fn _ ->
