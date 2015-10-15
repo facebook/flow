@@ -30,3 +30,17 @@ function fn1() {
     BAZ.stuff(123); // error, refinement is gone
   }
 }
+
+function anyfun(x: number | Function): number {
+  if (typeof x === "function") {
+    return 0;
+  }
+  return x; // OK, x refined to `number`
+}
+
+function anyobj(x: number | Object): number {
+  if (typeof x === "object") {
+    return 0;
+  }
+  return x; // OK, x refined to `number`
+}
