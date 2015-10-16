@@ -910,6 +910,12 @@ and expr_
   match e with
   | Any -> env, (Reason.Rwitness p, Tany)
   | Array [] -> env, (Reason.Rwitness p, Tarraykind AKempty)
+  | Array l when Typing_arrays.is_shape_like_array env l ->
+      let env, fdm = fold_left_env begin fun env fdm x ->
+        let env, (key, value) = akshape_field env x in
+        env, Nast.ShapeMap.add key value fdm
+      end env ShapeMap.empty l in
+      env, (Reason.Rwitness p, Tarraykind (AKshape fdm))
   | Array (x :: rl as l) ->
       check_consistent_fields x rl;
       let env, value = TUtils.in_var env (Reason.Rnone, Tunresolved []) in
@@ -1184,9 +1190,11 @@ and expr_
       let is_lvalue = (valkind == `lvalue) in
       array_append is_lvalue p env ty1
   | Array_get (e1, Some e2) ->
-      let env, ty1 = if TUtils.is_shape_field_name (snd e2)
-        then update_array_type_to_akshape p env e1 e2 valkind
-        else update_array_type_to_akmap p env e1 valkind in
+      let env, ty1 = match TUtils.maybe_shape_field_name env (snd e2) with
+        | Some field_name ->
+          update_array_type_to_akshape p env e1 field_name valkind
+        | None ->
+          update_array_type_to_akmap p env e1 valkind in
       let env, ty1 = TUtils.fold_unresolved env ty1 in
       let env, ety1 = Env.expand_type env ty1 in
       let env, ty2 = expr env e2 in
@@ -1896,17 +1904,17 @@ and assign p env e1 ty2 =
           env, ty3
       | _ -> env, ty2
       )
-  | _, Array_get ((_, Lvar (_, lvar)) as shape, Some (p1, e)) ->
+  | _, Array_get ((_, Lvar (_, lvar)) as shape, Some (_, e)) ->
       let env, shape_ty = expr env shape in
-      let env, shape_ty = if TUtils.is_shape_field_name e then
+      let env, shape_ty = match TUtils.maybe_shape_field_name env e with
+        | Some field_name ->
         (* In the case of an assignment of the form $x['new_field'] = ...;
          * $x could be a shape where the field 'new_field' is not yet defined.
          * When that is the case we want to add the field to its type.
          *)
-        let field = TUtils.shape_field_name env p1 e in
-        Typing_shapes.grow_shape p field env shape_ty
-      else
-        Typing_arrays.downcast_akshape_to_akmap env shape_ty
+          Typing_shapes.grow_shape p field_name env shape_ty
+        | None ->
+          Typing_arrays.downcast_akshape_to_akmap env shape_ty
       in
       let env, _ = set_valid_rvalue p env lvar shape_ty in
       (* We still need to call assign_simple in order to bind the freshly
@@ -1960,6 +1968,18 @@ and yield_field_key env = function
   | Nast.AFkvalue (x, _) ->
       expr env x
 
+and akshape_field env = function
+  | Nast.AFkvalue (k, v) ->
+      let env, tk = expr env k in
+      let env, tk = Typing_env.unbind env tk in
+      let env, tk = TUtils.unresolved env tk in
+      let env, tv = expr env v in
+      let env, tv = Typing_env.unbind env tv in
+      let env, tv = TUtils.unresolved env tv in
+      let field_name = TUtils.shape_field_name env Pos.none (snd k) in
+      env, (field_name, (tk, tv))
+  | Nast.AFvalue _ -> assert false (* Typing_arrays.is_shape_like_array
+                                    * should have prevented this *)
 and check_parent_construct pos env el uel env_parent =
   let check_not_abstract = false in
   let env, env_parent = Phase.localize_with_self env env_parent in
@@ -2552,10 +2572,9 @@ and array_get is_lvalue p env ty1 ety1 e2 ty2 =
         | Ttuple _ | Tanon _ | Tobject | Tshape _) -> env, v
       )
   | Tarraykind (AKshape fdm) ->
-      let field_type = if TUtils.is_shape_field_name (snd e2) then
-          let field_name = Typing_utils.shape_field_name env p (snd e2) in
-          Nast.ShapeMap.get field_name fdm
-      else None in
+      let open Option.Monad_infix in
+      let field_type = TUtils.maybe_shape_field_name env (snd e2)
+        >>= fun field_name -> Nast.ShapeMap.get field_name fdm in
       begin match field_type with
         | Some (k, v) ->
             let env, ty2 = TUtils.unresolved env ty2 in
@@ -4213,8 +4232,7 @@ and update_array_type_to_akvec p env e valkind =
     Typing_arrays.update_array_type_to_akvec p in
   update_array_type p env e valkind type_mapper
 
-and update_array_type_to_akshape p env e1 e2 valkind =
-  let field_name = Typing_utils.shape_field_name env p (snd e2) in
+and update_array_type_to_akshape p env e1 field_name valkind =
   let type_mapper =
     Typing_arrays.update_array_type_to_akshape p field_name in
   update_array_type p env e1 valkind type_mapper

@@ -53,14 +53,32 @@ let downcast_akshape_to_akmap env ty =
 (* Is the field_name type consistent with ones already in field map?
  * Shape field names must all be constant strings or constants from
  * same class. *)
-let akshape_keys_consistent field_name fdm =
-  let open Nast in try
-    match field_name, (fst (ShapeMap.min_binding fdm)) with
+let akshape_keys_consistent field_name_x field_name_y =
+  let open Nast in
+    match field_name_x, field_name_y with
       | (SFlit _, SFlit _) -> true
       | (SFclass_const ((_, cls1), _)), (SFclass_const ((_, cls2), _))
           -> cls1 = cls2
       | _ -> false
+
+let akshape_key_consistent_with_map field_name fdm =
+  try
+    akshape_keys_consistent field_name (fst (ShapeMap.min_binding fdm))
   with Not_found -> true
+
+let is_shape_like_array env = function
+  | [] -> false
+  | x::rl ->
+    let field_name = function
+      | Nast.AFkvalue (ex, _) -> TUtils.maybe_shape_field_name env (snd ex)
+      | _ -> None in
+    let x_field_name = field_name x in
+    Option.is_some x_field_name && List.for_all rl begin fun y ->
+      match x_field_name, field_name y with
+        | Some x_field_name, Some y_field_name ->
+          akshape_keys_consistent x_field_name y_field_name
+        | _ -> false
+    end
 
 (* Update any AKempty found in the type (inside Tvars and Tunresolved too)
  * to an AKmap type *)
@@ -110,13 +128,14 @@ let update_array_type_to_akshape p field_name env ty =
     method! on_tarraykind_akshape (env, seen) r fdm =
       let env, tk = TUtils.in_var env (Reason.Rnone, Tunresolved []) in
       let env, tv = TUtils.in_var env (Reason.Rnone, Tunresolved []) in
-      let env, ty = if akshape_keys_consistent field_name fdm then begin
-        let fdm = if ShapeMap.mem field_name fdm then fdm else
-          ShapeMap.add field_name (tk, tv) fdm in
-          env, (Reason.Rwitness p, Tarraykind (AKshape fdm))
-      end else
-        downcast_akshape_to_akmap env (r, Tarraykind (AKshape fdm))
-      in
+      let env, ty =
+        if akshape_key_consistent_with_map field_name fdm then begin
+          let fdm = if ShapeMap.mem field_name fdm then fdm else
+            ShapeMap.add field_name (tk, tv) fdm in
+            env, (Reason.Rwitness p, Tarraykind (AKshape fdm))
+        end else
+          downcast_akshape_to_akmap env (r, Tarraykind (AKshape fdm))
+        in
       (env, seen), ty
   end in
   let (env, _), ty = mapper#on_type (fresh_env env) ty in
