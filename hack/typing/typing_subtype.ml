@@ -438,7 +438,7 @@ and sub_type_with_uenv env (uenv_super, ty_super) (uenv_sub, ty_sub) =
   | (_, Tmixed), _ -> env
   | (_, Tprim Nast.Tnum), (_, Tprim (Nast.Tint | Nast.Tfloat)) -> env
   | (_, Tprim Nast.Tarraykey), (_, Tprim (Nast.Tint | Nast.Tstring)) -> env
-  | (_, Tclass ((_, coll), [tv_super])), (_, Tarraykind akind)
+  | (_, Tclass ((_, coll), [tv_super])), (r, Tarraykind akind)
     when (coll = SN.Collections.cTraversable ||
         coll = SN.Collections.cContainer) ->
       (match akind with
@@ -448,9 +448,10 @@ and sub_type_with_uenv env (uenv_super, ty_super) (uenv_sub, ty_sub) =
           sub_type env tv_super tv
       | AKmap (_, tv) ->
           sub_type env tv_super tv
-      | AKshape _ ->
-        let env, ty_sub = Typing_arrays.downcast_akshape_to_akmap env ty_sub in
-        sub_type env ty_super ty_sub
+      | AKshape fdm ->
+          Typing_arrays.fold_akshape_as_akmap begin fun env ty_sub ->
+            sub_type env ty_super ty_sub
+          end env r fdm
       )
   | (_, Tclass ((_, coll), [tk_super; tv_super])), (r, Tarraykind akind)
     when (coll = SN.Collections.cKeyedTraversable
@@ -465,9 +466,10 @@ and sub_type_with_uenv env (uenv_super, ty_super) (uenv_sub, ty_sub) =
       | AKmap (tk, tv) ->
         let env = sub_type env tk_super tk in
         sub_type env tv_super tv
-      | AKshape _ ->
-        let env, ty_sub = Typing_arrays.downcast_akshape_to_akmap env ty_sub in
-        sub_type env ty_super ty_sub
+      | AKshape fdm ->
+        Typing_arrays.fold_akshape_as_akmap begin fun env ty_sub ->
+          sub_type env ty_super ty_sub
+        end env r fdm
       )
   | (_, Tclass ((_, stringish), _)), (_, Tprim Nast.Tstring)
     when stringish = SN.Classes.cStringish -> env
@@ -483,9 +485,10 @@ and sub_type_with_uenv env (uenv_super, ty_super) (uenv_sub, ty_sub) =
       let int_reason = Reason.Ridx (Reason.to_pos reason) in
       let int_type = int_reason, Tprim Nast.Tint in
       sub_type env ty_super (reason, Tarraykind (AKmap (int_type, elt_ty)))
-  | _, (_, Tarraykind AKshape _) ->
-      let env, ty_sub = Typing_arrays.downcast_akshape_to_akmap env ty_sub in
-      sub_type env ty_super ty_sub
+  | _, (r, Tarraykind AKshape fdm_sub) ->
+      Typing_arrays.fold_akshape_as_akmap begin fun env ty_sub ->
+        sub_type env ty_super ty_sub
+      end env r fdm_sub
   | _, (_, Tany) -> env
   | (_, Tany), _ -> fst (Unify.unify env ty_super ty_sub)
     (* recording seen_tvars for Toption variants to avoid infinte recursion

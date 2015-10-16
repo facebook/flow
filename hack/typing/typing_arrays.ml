@@ -65,6 +65,21 @@ let downcast_akshape_to_akmap env ty =
   let (env, _), ty = mapper#on_type (fresh_env env) ty in
   env, ty
 
+let fold_akshape_as_akmap_with_acc f env acc r fdm =
+  Nast.ShapeMap.fold begin fun _ (tk, tv) (env, acc) ->
+    (* AKshape field types are wrapped in vars so they can grow, but
+     * we don't want to permanently unify them with each other when
+     * temporarily treating it as AKmap, so unbinding before proceeding. *)
+    let env, tk = Typing_env.unbind env tk in
+    let env, tv = Typing_env.unbind env tv in
+    f env acc (r, Tarraykind (AKmap (tk, tv)))
+  end fdm (env, acc)
+
+let fold_akshape_as_akmap f env r fdm =
+  fst (fold_akshape_as_akmap_with_acc begin fun env acc ty ->
+    f env ty, acc
+  end env () r fdm)
+
 (* Is the field_name type consistent with ones already in field map?
  * Shape field names must all be constant strings or constants from
  * same class. *)

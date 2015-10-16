@@ -106,10 +106,10 @@ and unify_ env r1 ty1 r2 ty2 =
       env, Tarraykind (AKmap (ty1, ty2))
   | Tarraykind (AKvec _ | AKmap _), Tarraykind AKshape _ ->
     unify_ env r2 ty2 r1 ty1
-  | Tarraykind AKshape _, Tarraykind (AKvec _ | AKmap _) ->
-    let env, (r1, ty1) =
-      Typing_arrays.downcast_akshape_to_akmap env (r1, ty1) in
-    unify_ env r1 ty1 r2 ty2
+  | Tarraykind AKshape fdm1, Tarraykind (AKvec _ | AKmap _) ->
+    Typing_arrays.fold_akshape_as_akmap_with_acc begin fun env ty2 (r1, ty1) ->
+      unify_ env r1 ty1 r2 ty2
+    end env ty2 r1 fdm1
   | Tarraykind (AKshape fdm1), Tarraykind (AKshape fdm2) ->
     let env, fdm = Nast.ShapeMap.fold begin fun k (tk1, tv1) (env, fdm) ->
       match Nast.ShapeMap.get k fdm2 with
