@@ -7,7 +7,7 @@
 /*
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
- * 
+ *
  *  1. Redistributions of source code must retain the above copyright notice,
  *     this list of conditions and the following disclaimer.
  *  2. Redistributions in binary form must reproduce the above copyright
@@ -15,7 +15,7 @@
  *     documentation and/or other materials provided with the distribution.
  *  3. The name of the author may not be used to endorse or promote products
  *     derived from this software without specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
  * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
  * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
@@ -40,12 +40,12 @@
 void child_process(int sock)
 {
     int fd;
-    int fds[3], nfds;
+    int fds[2], nfds;
     char b[] = "This is on the received fd!\n";
 
     if(ancil_recv_fd(sock, &fd)) {
-	perror("ancil_recv_fd");
-	exit(1);
+  perror("ancil_recv_fd");
+  exit(1);
     } else {
 	printf("Received fd: %d\n", fd);
     }
@@ -53,13 +53,13 @@ void child_process(int sock)
     close(fd);
     sleep(2);
 
-    nfds = ancil_recv_fds(sock, fds, 3);
+    nfds = ancil_recv_fds(sock, fds, 2);
     if(nfds < 0) {
 	perror("ancil_recv_fds");
 	exit(1);
     } else {
-	printf("Received %d/3 fds : %d %d %d.\n", nfds,
-	    fds[0], fds[1], fds[2]);
+	printf("Received %d/2 fds : %d %d.\n", nfds,
+	    fds[0], fds[1]);
     }
 }
 
