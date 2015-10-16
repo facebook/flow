@@ -37,6 +37,7 @@ end = struct
     SuggestCommand.command;
     TypeAtPosCommand.command;
     DumpTypesCommand.command;
+    VersionCommand.command;
   ]
 
   (* status commands, which need a list of other commands *)
