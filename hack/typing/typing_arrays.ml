@@ -27,6 +27,19 @@ class update_array_type_mapper: type_mapper_type = object
   inherit! tvar_substituting_type_mapper
 end
 
+(* Abstract types declared "as array<...>" permit array operations, but if
+ * those operations modify the array it has to be downgraded from generic
+ * to just an array .*)
+class virtual downcast_tabstract_to_array_type_mapper = object(this)
+  method on_tabstract env r ak cstr =
+    match cstr with
+    | Some ty -> this#on_type env ty
+    | None -> env, (r, Tabstract (ak, cstr))
+
+  method virtual on_type : env -> locl ty -> result
+end
+
+
 let downcast_akshape_to_akmap_ env r fdm =
   let keys, values = List.unzip (ShapeMap.values fdm) in
   let env, values = lmap Typing_env.unbind env values in
@@ -43,6 +56,8 @@ let downcast_akshape_to_akmap_ env r fdm =
 let downcast_akshape_to_akmap env ty =
   let mapper = object
     inherit update_array_type_mapper
+    inherit! downcast_tabstract_to_array_type_mapper
+
     method! on_tarraykind_akshape (env, seen) r fdm =
       let env, ty = downcast_akshape_to_akmap_ env r fdm in
       (env, seen), ty
@@ -85,6 +100,7 @@ let is_shape_like_array env = function
 let update_array_type_to_akmap p env ty =
   let mapper = object
     inherit update_array_type_mapper
+    inherit! downcast_tabstract_to_array_type_mapper
 
     method! on_tarraykind_akempty (env, seen) _ =
       let env, tk = TUtils.in_var env (Reason.Rnone, Tunresolved []) in
@@ -104,6 +120,8 @@ let update_array_type_to_akmap p env ty =
 let update_array_type_to_akvec p env ty =
   let mapper = object
     inherit update_array_type_mapper
+    inherit! downcast_tabstract_to_array_type_mapper
+
     method! on_tarraykind_akempty (env, seen) _ =
       let env, tv = TUtils.in_var env (Reason.Rnone, Tunresolved []) in
       (env, seen), (Reason.Rappend p, Tarraykind (AKvec tv))
@@ -118,6 +136,7 @@ let update_array_type_to_akvec p env ty =
 let update_array_type_to_akshape p field_name env ty =
   let mapper = object
     inherit update_array_type_mapper
+    inherit! downcast_tabstract_to_array_type_mapper
 
     method! on_tarraykind_akempty (env, seen) _ =
       let env, tk = TUtils.in_var env (Reason.Rnone, Tunresolved []) in
