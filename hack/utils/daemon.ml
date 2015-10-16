@@ -164,7 +164,8 @@ let fork ?log_file (f : ('a, 'b) channel_pair -> unit) :
             Sys_utils.mkdir_no_fail (Filename.dirname fn);
             fn
           end in
-        let fd = Unix.openfile fn [Unix.O_WRONLY; Unix.O_CREAT] 0o666 in
+        let fd =
+          Unix.openfile fn [Unix.O_WRONLY; Unix.O_CREAT; Unix.O_TRUNC] 0o666 in
         Unix.dup2 fd Unix.stdout;
         Unix.dup2 fd Unix.stderr;
         Unix.close fd;

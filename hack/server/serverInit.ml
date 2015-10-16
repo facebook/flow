@@ -107,7 +107,7 @@ let mk_state_future timeout root cmd =
   let start_time = Unix.gettimeofday () in
   Result.try_with @@ fun () ->
   let {Daemon.channels = (ic, _oc); pid} =
-    Daemon.fork (load_state root cmd) in
+    Daemon.fork ~log_file:(ServerFiles.load_log root) (load_state root cmd) in
   fun () ->
     Result.join @@ Result.try_with @@ fun () ->
     Sys_utils.with_timeout timeout
@@ -115,6 +115,7 @@ let mk_state_future timeout root cmd =
       ~do_:begin fun () ->
         Daemon.from_channel ic
         >>| fun (fn, dirty_files, end_time) ->
+        HackEventLogger.load_mini_worker_end start_time end_time;
         let time_taken = end_time -. start_time in
         Hh_logger.log "Mini-state loading worker took %.2fs" time_taken;
         let _, status = Unix.waitpid [] pid in

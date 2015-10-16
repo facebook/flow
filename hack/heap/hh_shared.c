@@ -101,6 +101,7 @@
 #include <sys/resource.h>
 #include <sys/stat.h>
 #include <sys/syscall.h>
+#include <sys/time.h>
 #include <sys/types.h>
 #include <unistd.h>
 #endif
@@ -251,6 +252,16 @@ value hh_hash_used_slots() {
 value hh_hash_slots() {
   CAMLparam0();
   CAMLreturn(Val_long(HASHTBL_SIZE));
+}
+
+struct timeval log_duration(const char *prefix, struct timeval start_t) {
+  struct timeval end_t;
+  gettimeofday(&end_t, NULL);
+  time_t secs = end_t.tv_sec - start_t.tv_sec;
+  suseconds_t usecs = end_t.tv_usec - start_t.tv_usec;
+  double time_taken = secs + ((double)usecs / 1000000);
+  fprintf(stderr, "%s took %.2lfs\n", prefix, time_taken);
+  return end_t;
 }
 
 /*****************************************************************************/
@@ -1160,6 +1171,9 @@ void hh_save_dep_table(value out_filename) {
 
 void hh_load_dep_table(value in_filename) {
   CAMLparam1(in_filename);
+  struct timeval tv;
+  gettimeofday(&tv, NULL);
+
   FILE* fp = fopen(String_val(in_filename), "rb");
 
   if (fp == NULL) {
@@ -1180,6 +1194,7 @@ void hh_load_dep_table(value in_filename) {
       (char*)deptbl,
       DEP_SIZE_B);
   assert(compressed_size == actual_compressed_size);
+  tv = log_duration("Loading file", tv);
 
   uintptr_t slot = 0;
   unsigned long hash = 0;
@@ -1191,6 +1206,8 @@ void hh_load_dep_table(value in_filename) {
   }
 
   fclose(fp);
+
+  log_duration("Bindings", tv);
   CAMLreturn0;
 }
 

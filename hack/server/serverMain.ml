@@ -419,7 +419,10 @@ let run_load_script genv cmd =
 
 let program_init genv =
   let env, init_type =
-    if genv.local_config.ServerLocalConfig.use_mini_state then
+    (* If we are saving, always start from a fresh state -- just in case
+     * incremental mode introduces any errors. *)
+    if genv.local_config.ServerLocalConfig.use_mini_state &&
+      ServerArgs.save_filename genv.options = None then
       match ServerConfig.load_mini_script genv.config with
       | None ->
           let env = Program.init genv in
