@@ -164,8 +164,7 @@ module Program =
       let root = Path.to_string @@ ServerArgs.root genv.options in
       (* Because of symlinks, we can have updates from files that aren't in
        * the .hhconfig directory *)
-      let updates = SSet.filter (fun p ->
-        str_starts_with p root && ServerEnv.file_filter p) updates in
+      let updates = SSet.filter (fun p -> str_starts_with p root) updates in
       Relative_path.(relativize_set Root updates)
 
     let recheck genv old_env typecheck_updates =
@@ -244,8 +243,9 @@ let handle_connection genv env socket =
 
 let recheck genv old_env updates =
   let to_recheck =
-    Relative_path.Set.filter
-      (fun update -> FindUtils.is_php (Relative_path.suffix update)) updates in
+    Relative_path.Set.filter begin fun update ->
+      ServerEnv.file_filter (Relative_path.suffix update)
+    end updates in
   let config = ServerConfig.filename in
   let config_in_updates = Relative_path.Set.mem config updates in
   if config_in_updates && not (Program.validate_config genv) then
