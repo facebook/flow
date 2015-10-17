@@ -14,12 +14,14 @@ type t = {
   use_watchman: bool;
   use_mini_state: bool;
   load_mini_script_timeout: int; (* in seconds *)
+  type_decl_bucket_size: int;
 }
 
 let default = {
   use_watchman = false;
   use_mini_state = false;
   load_mini_script_timeout = 20;
+  type_decl_bucket_size = 1000;
 }
 
 let path =
@@ -32,10 +34,13 @@ let load_ fn =
   let use_mini_state = bool_ "use_mini_state" ~default:false config in
   let load_mini_script_timeout =
     int_ "load_mini_script_timeout" ~default:20 config in
+  let type_decl_bucket_size =
+    int_ "type_decl_bucket_size" ~default:1000 config in
   {
     use_watchman;
     use_mini_state;
     load_mini_script_timeout;
+    type_decl_bucket_size;
   }
 
 let load () =

@@ -18,6 +18,7 @@ open Result.Monad_infix
 
 module DepSet = Typing_deps.DepSet
 module Dep = Typing_deps.Dep
+module SLC = ServerLocalConfig
 
 exception No_loader
 exception Loader_timeout
@@ -177,8 +178,9 @@ let naming env t =
   env, (Hh_logger.log_duration "Naming" t)
 
 let type_decl genv env fast t =
+  let bucket_size = genv.local_config.SLC.type_decl_bucket_size in
   let errorl, failed_decl =
-    Typing_decl_service.go genv.workers env.nenv fast in
+    Typing_decl_service.go ~bucket_size genv.workers env.nenv fast in
   let hs = SharedMem.heap_size () in
   Hh_logger.log "Heap size: %d" hs;
   Stats.(stats.init_heap_size <- hs);
@@ -290,7 +292,7 @@ let init ?load_mini_script genv =
    * in the Result monad provides a convenient way to locate the error
    * handling code in one place. *)
   let load_mini_script = Result.of_option load_mini_script ~error:No_loader in
-  let timeout = genv.local_config.ServerLocalConfig.load_mini_script_timeout in
+  let timeout = genv.local_config.SLC.load_mini_script_timeout in
   let state_future = load_mini_script >>= (mk_state_future timeout root) in
 
   let get_next, t = indexing genv in

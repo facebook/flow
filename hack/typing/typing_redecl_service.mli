@@ -12,6 +12,7 @@ open Typing_deps
 
 val redo_type_decl :
   Worker.t list option ->
+  bucket_size:int ->
   Naming.env ->
   FileInfo.names Relative_path.Map.t ->
   Errors.error list * Relative_path.Set.t * DepSet.t * DepSet.t

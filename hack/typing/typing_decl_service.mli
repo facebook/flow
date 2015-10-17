@@ -28,5 +28,6 @@ val get_classes: FileInfo.fast -> Relative_path.Set.t SMap.t
 (*****************************************************************************)
 (* Starts the process *)
 (*****************************************************************************)
-val go: Worker.t list option -> Naming.env -> FileInfo.fast -> result
+val go: Worker.t list option -> bucket_size:int -> Naming.env ->
+  FileInfo.fast -> result
 val merge_decl: result -> result -> result

@@ -206,7 +206,7 @@ let merge_compute_deps (to_redecl1, to_recheck1) (to_redecl2, to_recheck2) =
 (* The parallel worker *)
 (*****************************************************************************)
 
-let parallel_otf_decl workers nenv all_classes fast fnl =
+let parallel_otf_decl workers bucket_size nenv all_classes fast fnl =
   OnTheFlyStore.store (nenv, all_classes, fast);
   let errors, failed =
     MultiWorker.call
@@ -214,7 +214,7 @@ let parallel_otf_decl workers nenv all_classes fast fnl =
       ~job:load_and_otf_decl_files
       ~neutral:otf_neutral
       ~merge:merge_on_the_fly
-      ~next:(Bucket.make fnl)
+      ~next:(Bucket.make ~max_size:bucket_size fnl)
   in
   let to_redecl, to_recheck =
     MultiWorker.call
@@ -222,7 +222,7 @@ let parallel_otf_decl workers nenv all_classes fast fnl =
       ~job:load_and_compute_deps
       ~neutral:compute_deps_neutral
       ~merge:merge_compute_deps
-      ~next:(Bucket.make fnl)
+      ~next:(Bucket.make ~max_size:bucket_size fnl)
   in
   OnTheFlyStore.clear();
   errors, failed, to_redecl, to_recheck
@@ -260,7 +260,7 @@ let get_defs fast =
 (* The main entry point *)
 (*****************************************************************************)
 
-let redo_type_decl workers nenv fast =
+let redo_type_decl workers ~bucket_size nenv fast =
   let fnl = Relative_path.Map.keys fast in
   let all_classes = Typing_decl_service.get_classes fast in
   let defs = get_defs fast in
@@ -272,7 +272,7 @@ let redo_type_decl workers nenv fast =
       let errors, failed = otf_decl_files nenv all_classes fnl in
       let to_redecl, to_recheck = compute_deps fast fnl in
       errors, failed, to_redecl, to_recheck
-    else parallel_otf_decl workers nenv all_classes fast fnl
+    else parallel_otf_decl workers bucket_size nenv all_classes fast fnl
   in
   remove_old_defs defs;
   result
