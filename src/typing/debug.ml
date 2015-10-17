@@ -57,16 +57,16 @@ and _json_of_t_impl json_cx t = Json.(
   | NumT (_, lit) ->
     begin match lit with
     | Literal (_, raw) -> ["literal", JString raw]
-    | Truthy
-    | Falsy
+    | Truthy -> ["refinement", JString "Truthy"]
+    | Falsy -> ["refinement", JString "Falsy"]
     | AnyLiteral -> []
     end
 
   | StrT (_, lit) ->
     begin match lit with
     | Literal s -> ["literal", JString s]
-    | Truthy
-    | Falsy
+    | Truthy -> ["refinement", JString "Truthy"]
+    | Falsy -> ["refinement", JString "Falsy"]
     | AnyLiteral -> []
     end
 
