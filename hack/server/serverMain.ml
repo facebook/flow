@@ -99,15 +99,6 @@ module Program =
   struct
     let name = "hh_server"
 
-    let load_config () = ServerConfig.(load filename)
-
-    let validate_config genv =
-      let new_config = load_config () in
-      (* This comparison can eventually be made more complex; we may not always
-       * need to restart hh_server, e.g. changing the path to the load script
-       * is immaterial*)
-      genv.config = new_config
-
     let handle_client (genv:ServerEnv.genv) (env:ServerEnv.env) client =
       ServerCommand.handle genv env client
 
@@ -246,14 +237,18 @@ let recheck genv old_env updates =
     Relative_path.Set.filter begin fun update ->
       ServerEnv.file_filter (Relative_path.suffix update)
     end updates in
-  let config = ServerConfig.filename in
-  let config_in_updates = Relative_path.Set.mem config updates in
-  if config_in_updates && not (Program.validate_config genv) then
-    (Hh_logger.log
-      "%s changed in an incompatible way; please restart %s.\n"
-      (Relative_path.suffix config)
-      Program.name;
-     exit 4);
+  let config_in_updates =
+    Relative_path.Set.mem ServerConfig.filename updates in
+  if config_in_updates then begin
+    let new_config = ServerConfig.(load filename) in
+    if not (ServerConfig.is_compatible genv.config new_config) then begin
+      Hh_logger.log
+        "%s changed in an incompatible way; please restart %s.\n"
+        (Relative_path.suffix ServerConfig.filename)
+        Program.name;
+       exit 4
+    end;
+  end;
   let env, total_rechecked = Program.recheck genv old_env to_recheck in
   Program.post_recheck_hook genv old_env env updates;
   env, to_recheck, total_rechecked
@@ -478,7 +473,7 @@ let daemon_main options =
     Hh_logger.log "Error: another server is already running?\n";
     Exit_status.(exit Server_already_exists);
   end;
-  let config = Program.load_config () in
+  let config = ServerConfig.(load filename) in
   let local_config = ServerLocalConfig.load () in
   if Sys_utils.is_test_mode ()
   then EventLogger.init (Daemon.devnull ()) 0.0

@@ -27,6 +27,12 @@ type t = {
 
 let filename = Relative_path.concat Relative_path.Root ".hhconfig"
 
+let is_compatible c1 c2 =
+  (* This comparison can eventually be made more complex; we may not always
+   * need to restart hh_server, e.g. changing the path to the load script
+   * is immaterial*)
+  c1 = c2
+
 let make_gc_control config =
   let {Gc.minor_heap_size; space_overhead; _} = GlobalConfig.gc_control in
   let minor_heap_size =
