@@ -111,34 +111,6 @@ module Program =
         ignore @@
         Sys.signal Sys.sigusr1 (Sys.Signal_handle Typing.debug_print_last_pos)
 
-    let stamp_file = Filename.concat GlobalConfig.tmp_dir "stamp"
-    let touch_stamp () =
-      Sys_utils.mkdir_no_fail (Filename.dirname stamp_file);
-      Sys_utils.with_umask
-        0o111
-        (fun () ->
-         (* Open and close the file to set its mtime. Don't use the Unix.utimes
-          * function since that will fail if the stamp file doesn't exist. *)
-         close_out (open_out stamp_file)
-        )
-    let touch_stamp_errors l1 l2 =
-      (* We don't want to needlessly touch the stamp file if the error list is
-       * the same and nothing has changed, but we also don't want to spend a ton
-       * of time comparing huge lists of errors over and over (i.e., grind to a
-       * halt in the cases when there are thousands of errors). So we cut off
-       * the comparison at an arbitrary point. *)
-      let rec length_greater_than n = function
-        | [] -> false
-        | _ when n = 0 -> true
-        | _::l -> length_greater_than (n-1) l in
-      if length_greater_than 5 l1 || length_greater_than 5 l2 || l1 <> l2
-      then touch_stamp ()
-
-    let init ?load_mini_script genv =
-      let env = ServerInit.init ?load_mini_script genv in
-      touch_stamp ();
-      env
-
     let run_once_and_exit genv env =
       ServerError.print_errorl
         (ServerArgs.json_mode genv.options)
@@ -166,7 +138,7 @@ module Program =
           Relative_path.Set.union typecheck_updates old_env.failed_parsing in
         let check_env = { old_env with failed_parsing = failed_parsing } in
         let new_env, total_rechecked = ServerTypeCheck.check genv check_env in
-        touch_stamp_errors old_env.errorl new_env.errorl;
+        ServerStamp.touch_stamp_errors old_env.errorl new_env.errorl;
         new_env, total_rechecked
       end
 
@@ -407,7 +379,7 @@ let run_load_script genv cmd =
         "load_error"
     in
     let env = HackEventLogger.with_init_type init_type begin fun () ->
-      Program.init genv
+      ServerInit.init genv
     end in
     env, init_type
   end
@@ -420,15 +392,15 @@ let program_init genv =
       ServerArgs.save_filename genv.options = None then
       match ServerConfig.load_mini_script genv.config with
       | None ->
-          let env = Program.init genv in
+          let env = ServerInit.init genv in
           env, "fresh"
       | Some load_mini_script ->
-          let env = Program.init ~load_mini_script genv in
+          let env = ServerInit.init ~load_mini_script genv in
           env, "mini_load"
     else
       match ServerConfig.load_script genv.config with
       | None ->
-          let env = Program.init genv in
+          let env = ServerInit.init genv in
           env, "fresh"
       | Some load_script ->
           run_load_script genv load_script
@@ -436,6 +408,7 @@ let program_init genv =
   HackEventLogger.init_end init_type;
   Hh_logger.log "Waiting for daemon(s) to be ready...";
   genv.wait_until_ready ();
+  ServerStamp.touch_stamp ();
   HackEventLogger.init_really_end init_type;
   env
 
