@@ -2403,7 +2403,7 @@ let ndecl_file fn
    * This way, when the user removes foo.php, A.php and B.php are recomputed
    * and the naming environment is in a sane state.
    *)
-  let failed = Relative_path.Set.empty in
+  let failed = Relative_path.Set.singleton fn in
   let failed = add_files_to_rename nenv failed funs (fst nenv.ifuns) in
   let failed = add_files_to_rename nenv failed classes (fst nenv.iclasses) in
   let failed = add_files_to_rename nenv failed typedefs nenv.itypedefs in
