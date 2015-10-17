@@ -117,7 +117,7 @@ and unify_ env r1 ty1 r2 ty2 =
           let env, tk = unify env tk1 tk2 in
           let env, tv = unify env tv1 tv2 in
           env, (Nast.ShapeMap.add k (tk, tv) fdm)
-        | None -> env, fdm
+        | None -> env, (Nast.ShapeMap.add k (tk1, tv1) fdm)
       end fdm1 (env, fdm2) in
     env, Tarraykind (AKshape fdm)
   | Tfun ft1, Tfun ft2 ->
