@@ -97,11 +97,6 @@ end
 
 module Program =
   struct
-    let name = "hh_server"
-
-    let handle_client (genv:ServerEnv.genv) (env:ServerEnv.env) client =
-      ServerCommand.handle genv env client
-
     let preinit () =
       HackSearchService.attach_hooks ();
       (* Force hhi files to be extracted and their location saved before workers
@@ -142,10 +137,6 @@ module Program =
         new_env, total_rechecked
       end
 
-    let post_recheck_hook = BuildMain.incremental_update
-
-    let parse_options = ServerArgs.parse_options
-
     (* This is a hack for us to save / restore the global state that is not
      * already captured by ServerEnv *)
     let marshal chan =
@@ -176,11 +167,11 @@ let handle_connection_ genv env socket =
       (msg_to_channel oc Build_id_mismatch;
        HackEventLogger.out_of_date ();
        Printf.eprintf "Status: Error\n";
-       Printf.eprintf "%s is out of date. Exiting.\n" Program.name;
+       Printf.eprintf "%s is out of date. Exiting.\n" GlobalConfig.program_name;
        Exit_status.exit Exit_status.Build_id_mismatch)
     else
       msg_to_channel oc Connection_ok;
-    Program.handle_client genv env (ic, oc)
+    ServerCommand.handle genv env (ic, oc)
   with
   | Sys_error("Broken pipe") ->
     shutdown_client (ic, oc)
@@ -217,12 +208,12 @@ let recheck genv old_env updates =
       Hh_logger.log
         "%s changed in an incompatible way; please restart %s.\n"
         (Relative_path.suffix ServerConfig.filename)
-        Program.name;
+        GlobalConfig.program_name;
        exit 4
     end;
   end;
   let env, total_rechecked = Program.recheck genv old_env to_recheck in
-  Program.post_recheck_hook genv old_env env updates;
+  BuildMain.incremental_update genv old_env env updates;
   env, to_recheck, total_rechecked
 
 (* When a rebase occurs, dfind takes a while to give us the full list of
@@ -496,7 +487,7 @@ let monitor_daemon options =
   (try Sys.rename log_link (log_link ^ ".old") with _ -> ());
   let log_file = ServerFiles.make_link_of_timestamped log_link in
   let {Daemon.pid; _} = Daemon.spawn monitor_entry (options, log_file) in
-  Printf.eprintf "Spawned %s (child pid=%d)\n" Program.name pid;
+  Printf.eprintf "Spawned %s (child pid=%d)\n" GlobalConfig.program_name pid;
   (* We are not using symlink on Windows (see Sys_utils.symlink),
      so we announce the `log_file` to the user. The `log_link`
      is only read by the client. *)
@@ -506,7 +497,7 @@ let monitor_daemon options =
 
 let start () =
   Daemon.check_entry_point (); (* this call might not return *)
-  let options = Program.parse_options () in
+  let options = ServerArgs.parse_options () in
   if ServerArgs.should_detach options
   then monitor_daemon options
   else daemon_main options

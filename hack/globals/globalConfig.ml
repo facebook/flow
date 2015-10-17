@@ -13,6 +13,8 @@
 (* Configuration file *)
 (*****************************************************************************)
 
+let program_name = "hh_server"
+
 let nbr_procs = Sys_utils.nbr_procs
 
 let freq_cache_capacity = 1000
