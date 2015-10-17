@@ -45,10 +45,14 @@ let rec transform_shapemap ?(nullable = false) env ty shape =
   match ety with
   | _, Toption ty ->
       transform_shapemap ~nullable:true env ty shape
-  (* If it is an unbound generic we do not specialize at all *)
-  | _, (Tabstract (AKgeneric _, None)) ->
-      env, shape
   | _ ->
+      (* If the abstract type is unbounded we do not specialize at all *)
+      let is_unbound = match ety |> TUtils.get_base_type |> snd with
+        (* An enum is considered a valid bound *)
+        | Tabstract (AKenum _, _) -> false
+        | Tabstract (_, None) -> true
+        | _ -> false in
+      if is_unbound then env, shape else
       let is_generic =
         match snd ety with Tabstract (AKgeneric _, _) -> true | _ -> false in
       ShapeMap.fold begin fun field field_ty (env, shape) ->
