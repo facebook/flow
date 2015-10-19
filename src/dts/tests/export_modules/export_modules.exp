@@ -1,8 +1,8 @@
 
-export_modules.js:3:19,30: property y
+export_modules.js:3:19,30: property `y`
 Error:
-export_modules.js:3:9,14: string
+export_modules.js:3:19,30: number
 This type is incompatible with
-[LIB] export_modules.js:18:18,23: number
+export_modules.js:3:9,14: string
 
 Found 1 error

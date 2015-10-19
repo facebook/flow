@@ -1,7 +1,6 @@
 
-classes.js: inconsistent use of library definitions
-[LIB] classes.js:1:1,3:1: C
+classes.js:2:9,9: C
 This type is incompatible with
-[LIB] classes.js:4:1,6:1: D
+classes.js:3:9,9: D
 
 Found 1 error

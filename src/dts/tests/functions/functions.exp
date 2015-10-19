@@ -3,12 +3,12 @@ functions.js:2:12,16: function call
 Error:
 functions.js:2:12,16: undefined (too few arguments, expected default/rest parameters)
 This type is incompatible with
-[LIB] functions.js:1:38,43: string
+[LIB] declarations/functions.js:1:38,43: string
 
 functions.js:3:17,28: function call
 Error:
-functions.js:3:8,13: string
+functions.js:3:17,28: C
 This type is incompatible with
-[LIB] functions.js:2:1,4:1: C
+functions.js:3:8,13: string
 
 Found 2 errors

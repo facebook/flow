@@ -1,6 +1,14 @@
 
-type_alias.js:3:9,14: number
+type_alias.js:3:18,20: string
 This type is incompatible with
-[LIB] type_alias.js:3:37,42: string
+type_alias.js:3:9,14: number
 
-Found 1 error
+type_alias.js:4:16,18: number
+This type is incompatible with
+type_alias.js:4:16,18: string
+
+type_alias.js:4:16,18: string
+This type is incompatible with
+type_alias.js:4:16,18: number
+
+Found 3 errors

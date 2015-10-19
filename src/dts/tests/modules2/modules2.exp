@@ -1,12 +1,8 @@
 
-modules2.js:5:16,18: number
-This type is incompatible with
-modules2.js:6:9,14: string
-
-modules2.js:5:22,24: property y
+modules2.js:5:22,24: property `y`
 Error:
-modules2.js:6:9,14: string
+modules2.js:6:18,18: number
 This type is incompatible with
-[LIB] modules2.js:3:18,23: number
+modules2.js:6:9,14: string
 
-Found 2 errors
+Found 1 error

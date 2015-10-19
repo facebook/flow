@@ -1,8 +1,8 @@
 
-enums.js:8:13,19: property R
+enums.js:8:13,19: property `R`
 Error:
-enums.js:4:8,13: string
+enums.js:8:13,19: number
 This type is incompatible with
-[LIB] enums.js:3:14,19: number
+enums.js:4:8,13: string
 
 Found 1 error

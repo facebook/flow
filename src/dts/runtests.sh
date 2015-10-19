@@ -27,7 +27,7 @@ do
         # with "flow check" and see if the errors reported are the expected errors.
 
         $FLOW convert  --r . >/dev/null 2>&1
-        $FLOW check --all --strip-root --show-all-errors 1> $out_file
+        $FLOW check --all --strip-root --show-all-errors --old-output-format 1> $out_file
         diff_file="${name}.diff"
         diff -u $exp_file $out_file > $diff_file
         cd declarations
