@@ -257,7 +257,6 @@ let log_file ~tmp_dir root opts =
   | Some x -> x
   | None -> Path.make (file_of_root ~tmp_dir root "log")
 
-
 module Pp : sig
   val config : out_channel -> config -> unit
 end = struct

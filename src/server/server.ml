@@ -44,10 +44,9 @@ struct
     Parsing_service_js.call_on_success SearchService_js.update
 
   let init genv env =
-    if not (Options.is_check_mode genv.ServerEnv.options) then (
-      (* write binary path and version to server log *)
-      Hh_logger.log "executable=%s" (Sys_utils.executable_path ());
-      Hh_logger.log "version=%s" FlowConfig.version);
+    (* write binary path and version to server log *)
+    Flow_logger.log "executable=%s" (Sys_utils.executable_path ());
+    Flow_logger.log "version=%s" FlowConfig.version;
     (* start the server *)
     let env = Types_js.server_init genv env in
     let files =

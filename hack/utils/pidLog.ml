@@ -12,6 +12,10 @@ open Core
 
 let log_oc = ref None
 
+let enabled = ref true
+
+let disable () = enabled := false
+
 let init pids_file =
   assert (!log_oc = None);
   Sys_utils.with_umask 0o111 begin fun () ->
@@ -21,12 +25,14 @@ let init pids_file =
   end
 
 let log ?reason pid =
-  let reason = match reason with
-    | None -> "unknown"
-    | Some s -> s in
-  match !log_oc with
-    | None -> failwith "Can't write pid to uninitialized pids log"
-    | Some oc -> Printf.fprintf oc "%d\t%s\n%!" pid reason
+  if !enabled
+  then
+    let reason = match reason with
+      | None -> "unknown"
+      | Some s -> s in
+    match !log_oc with
+      | None -> failwith "Can't write pid to uninitialized pids log"
+      | Some oc -> Printf.fprintf oc "%d\t%s\n%!" pid reason
 
 exception FailedToGetPids
 

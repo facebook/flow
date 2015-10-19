@@ -92,6 +92,7 @@ let main all weak debug verbose verbose_indent json profile quiet module_
     Options.opt_error_flags = error_flags;
     Options.opt_root = root_path;
     Options.opt_should_detach = false;
+    Options.opt_should_wait = false;
     Options.opt_check_mode = false;
     Options.opt_log_file = FlowConfig.(
       log_file ~tmp_dir:opt_temp_dir root_path flowconfig.options

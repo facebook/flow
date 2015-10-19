@@ -70,6 +70,7 @@ module OptionParser(Config : CONFIG) = struct
       |> flag "--quiet" no_arg
           ~doc:"Suppress info messages to stdout (included in --json)"
       |> dummy None  (* log-file *)
+      |> dummy false (* wait *)
       |> common_args
     )
   | Normal -> CommandSpec.ArgSpec.(
@@ -79,6 +80,7 @@ module OptionParser(Config : CONFIG) = struct
       |> dummy false (* profile *)
       |> dummy false (* quiet *)
       |> dummy None  (* log-file *)
+      |> dummy false (* wait *)
       |> common_args
     )
   | Detach -> CommandSpec.ArgSpec.(
@@ -89,6 +91,8 @@ module OptionParser(Config : CONFIG) = struct
       |> dummy false (* quiet *)
       |> flag "--log-file" string
           ~doc:"Path to log file (default: /tmp/flow/<escaped root path>.log)"
+      |> flag "--wait" no_arg
+          ~doc:"Wait for the server to finish initializing"
       |> common_args
     )
 
@@ -107,9 +111,10 @@ module OptionParser(Config : CONFIG) = struct
   }
 
   let result = ref None
-  let main error_flags json profile quiet log_file debug verbose verbose_indent
-           all weak traces lib no_flowlib munge_underscore_members max_workers
-           strip_root temp_dir from root () =
+  let main error_flags json profile quiet log_file wait debug verbose
+           verbose_indent all weak traces lib no_flowlib
+           munge_underscore_members max_workers strip_root temp_dir from
+           root () =
     FlowEventLogger.set_from from;
     let root = CommandUtils.guess_root root in
     let flowconfig = FlowConfig.get root in
@@ -162,6 +167,7 @@ module OptionParser(Config : CONFIG) = struct
       Options.opt_log_file = opt_log_file;
       Options.opt_root = root;
       Options.opt_should_detach = Config.(mode = Detach);
+      Options.opt_should_wait = wait;
       Options.opt_debug = debug;
       Options.opt_verbose;
       Options.opt_all = all;

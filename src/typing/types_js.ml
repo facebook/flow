@@ -810,6 +810,7 @@ let typecheck workers files removed unparsed opts make_merge_input =
   (* TODO remove after lookup overhaul *)
   Module.clear_filename_cache ();
   (* local inference populates context heap, module info heap *)
+  Flow_logger.log "Running local inference";
   let inferred = infer workers files opts in
   (* add tracking modules for unparsed files *)
   let force_check = Options.all opts in
@@ -825,6 +826,7 @@ let typecheck workers files removed unparsed opts make_merge_input =
     let partition = Sort_js.topsort dependency_graph in
     if profile_and_not_quiet opts then Sort_js.log partition;
     begin try
+      Flow_logger.log "Merging";
       merge_strict workers dependency_graph partition opts;
       if profile_and_not_quiet opts then Gc.print_stat stderr;
     with exc ->
@@ -1056,6 +1058,7 @@ let full_check workers parse_next opts =
   init_modes opts;
   let verbose = Options.verbose opts in
 
+  Flow_logger.log "Parsing";
   let parsed, error_files, errors =
     Parsing_service_js.parse workers parse_next
       (fun () -> init_modes opts)

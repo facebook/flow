@@ -173,133 +173,27 @@ let server_flags prev = CommandSpec.ArgSpec.(
   |> from_flag
 )
 
-let start_flow_server ?temp_dir root =
-  Printf.fprintf stderr "Flow server launched for %s\n%!"
-    (Path.to_string root);
-  let temp_dir_arg = match temp_dir with
-  | Some dir -> Printf.sprintf "--temp-dir=%s " (Filename.quote dir)
-  | None -> ""
-  in
-  let from_arg = match FlowEventLogger.((get_context ()).from) with
-  | Some from -> Printf.sprintf "--from='%s' " from
-  | None -> "" in
-  let flow_server = Printf.sprintf "%s start %s%s%s 1>&2"
-    (Filename.quote (Sys.argv.(0)))
-    temp_dir_arg
-    from_arg
-    (Filename.quote (Path.to_string root)) in
-  let status = Unix.system flow_server in
-  match status with
-    | Unix.WEXITED 0 -> ()
-    | _ ->
-        let msg = "Could not start Flow server!" in
-        FlowExitStatus.(exit ~msg (Server_start_failed status))
-
-
-let server_exists ~tmp_dir root =
-  not (Lock.check (FlowConfig.lock_file ~tmp_dir root))
-
-let wait_on_server_restart ic =
-  try
-    while true do
-      let _ = input_char ic in
-      ()
-    done
-  with
-  | End_of_file
-  | Sys_error _ ->
-     (* Server has exited and hung up on us *)
-     prerr_endline "Old server has exited"
-
-(* Function connecting to hh_server *)
-let connect ~tmp_dir root =
-  if not (server_exists ~tmp_dir root)
-  then raise CommandExceptions.Server_missing;
-  let ic, oc, cstate =
-    try
-      let sock_name = Socket.get_path (FlowConfig.socket_file ~tmp_dir root) in
-      let sockaddr = Unix.ADDR_UNIX sock_name in
-      let ic, oc = Unix.open_connection sockaddr in
-      try
-        Printf.fprintf oc "%s\n%!" Build_id.build_id_ohai;
-        let cstate : ServerUtils.connection_state = Marshal.from_channel ic in
-        ic, oc, cstate
-      with e ->
-        Unix.shutdown_connection ic;
-        close_in_noerr ic;
-        raise e
-    with _ ->
-      if not (Lock.check (FlowConfig.init_file ~tmp_dir root))
-      then raise CommandExceptions.Server_initializing
-      else raise CommandExceptions.Server_cant_connect
-  in
-  let () = match cstate with
-    | ServerUtils.Connection_ok -> ()
-    | ServerUtils.Build_id_mismatch ->
-        (* The server is out of date and is going to exit. Subsequent calls
-         * to connect on the Unix Domain Socket might succeed, connecting to
-         * the server that is about to die, and eventually we will be hung
-         * up on while trying to read from our end.
-         *
-         * To avoid that fate, when we know the server is about to exit, we
-         * wait for the connection to be closed, signaling that the server
-         * has exited and the OS has cleaned up after it, then we try again.
-         *)
-        wait_on_server_restart ic;
-        close_in_noerr ic;
-        raise CommandExceptions.Server_out_of_date in
-  ic, oc
-
-let rec connect_with_autostart server_flags root =
-  check_timeout ();
-  try
-    connect ~tmp_dir:server_flags.temp_dir root
-  with
-  | CommandExceptions.Server_initializing ->
-      let init_msg = "Flow server still initializing -- " ^
-                     "this can take some time." in
-      if server_flags.retry_if_init
-      then (
-        Printf.fprintf stderr "%s Retrying... %s\r%!" init_msg (Tty.spinner());
-        sleep 1;
-        connect_with_autostart server_flags root
-      ) else (
-        let msg = Utils.spf "%s Try again...\n%!" init_msg in
-        FlowExitStatus.(exit ~msg Server_initializing)
-      )
-  | CommandExceptions.Server_cant_connect ->
-      retry server_flags root
-        1 "Error: could not connect to Flow server, retrying..."
-  | CommandExceptions.Server_busy ->
-      retry server_flags root
-        1 "Error: Flow server is busy, retrying..."
-  | CommandExceptions.Server_out_of_date
-  | CommandExceptions.Server_missing ->
-    if not server_flags.no_auto_start
-    then (
-      start_flow_server ~temp_dir:server_flags.temp_dir root;
-      retry server_flags root
-        3 "The Flow server will be ready in a moment."
-    ) else (
-      let msg = Utils.spf
-          "Error: There is no Flow server running in '%s'."
-          (Path.to_string root) in
-      FlowExitStatus.(exit ~msg No_server_running)
-    )
-  | _ ->
-      FlowExitStatus.(exit ~msg:"Something went wrong :(" Unknown_error)
-
-and retry server_flags root delay message =
-  check_timeout ();
+let connect server_flags root =
+  let tmp_dir = server_flags.temp_dir in
+  let config_options = FlowConfig.((get root).options) in
+  let log_file =
+    Path.to_string (FlowConfig.log_file ~tmp_dir root config_options) in
   let retries = server_flags.retries in
-  if retries > 0
-  then (
-    prerr_endline message;
-    sleep delay;
-    let server_flags = { server_flags with retries = retries - 1 } in
-    connect_with_autostart server_flags root
-  ) else (
-    FlowExitStatus.(exit ~msg:"Out of retries, exiting!" Out_of_retries)
+  let retry_if_init = server_flags.retry_if_init in
+  let expiry = match server_flags.timeout with
+  | 0 -> None
+  | n -> Some (Unix.time () +. float n) in
+  CommandConnect.(
+    let env = {
+      root;
+      autostart = not server_flags.no_auto_start;
+      retries;
+      retry_if_init;
+      expiry;
+      tmp_dir;
+      log_file;
+    } in
+    connect env
   )
 
 let rec search_for_root config start recursion_limit : Path.t option =

@@ -71,7 +71,7 @@ let main option_values json strip_root path args () =
   let (file, line, column) = parse_args path args in
   let root = guess_root (ServerProt.path_of_input file) in
   (* connect to server *)
-  let ic, oc = connect_with_autostart option_values root in
+  let ic, oc = connect option_values root in
   (* dispatch command *)
   ServerProt.cmd_to_channel oc
     (ServerProt.GET_DEF (file, line, column));

@@ -39,7 +39,7 @@ let spec = {
 let main option_values json modules () =
   let root = guess_root (Some (Sys.getcwd ())) in
 
-  let ic, oc = connect_with_autostart option_values root in
+  let ic, oc = connect option_values root in
 
   ServerProt.cmd_to_channel oc (ServerProt.GET_IMPORTERS modules);
   let importers_map = Marshal.from_channel ic in

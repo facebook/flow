@@ -89,7 +89,7 @@ let main option_values json strip_root args () =
   let loc_preprocessor = if strip_root
     then Reason_js.strip_root_from_loc root
     else fun loc -> loc in
-  let ic, oc = connect_with_autostart option_values root in
+  let ic, oc = connect option_values root in
   ServerProt.cmd_to_channel oc (ServerProt.AUTOCOMPLETE file);
   let completions = Marshal.from_channel ic in
   if json

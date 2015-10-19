@@ -100,7 +100,7 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
   let rec check_status (args:env) server_flags =
     let name = "flow" in
 
-    let ic, oc = CommandUtils.connect_with_autostart server_flags args.root in
+    let ic, oc = CommandUtils.connect server_flags args.root in
     ServerProt.cmd_to_channel oc (ServerProt.STATUS args.root);
     let response = ServerProt.response_from_channel ic in
     match response with

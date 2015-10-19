@@ -44,26 +44,26 @@ let kill (ic, oc) =
   ServerProt.response_from_channel ic
 
 let nice_kill (ic, oc) ~tmp_dir root =
-  Printf.eprintf "Attempting to nicely kill server for %s\n%!"
+  Utils.prerr_endlinef "Attempting to nicely kill server for %s"
     (Path.to_string root);
   let response = kill (ic, oc) in
   if is_expected response then begin
     let i = ref 0 in
-    while CommandUtils.server_exists ~tmp_dir root do
+    while CommandConnectSimple.server_exists ~tmp_dir root do
       incr i;
       if !i < 5 then ignore @@ Unix.sleep 1
       else raise FailedToKill
     done;
-    Printf.eprintf "Successfully killed server for %s\n%!"
+    Utils.prerr_endlinef "Successfully killed server for %s"
       (Path.to_string root)
   end else begin
-    Printf.fprintf stderr "Unexpected response from the server: %s\n"
+    Utils.prerr_endlinef "Unexpected response from the server: %s\n"
       (ServerProt.response_to_string response);
     raise FailedToKill
   end
 
 let mean_kill ~tmp_dir root =
-  Printf.fprintf stderr "Attempting to meanly kill server for %s\n%!"
+  Utils.prerr_endlinef "Attempting to meanly kill server for %s"
     (Path.to_string root);
   let pids =
     try PidLog.get_pids (FlowConfig.pids_file ~tmp_dir root)
@@ -81,9 +81,9 @@ let mean_kill ~tmp_dir root =
       ()
   ) pids;
   ignore(Unix.sleep 1);
-  if CommandUtils.server_exists ~tmp_dir root
+  if CommandConnectSimple.server_exists ~tmp_dir root
   then raise FailedToKill
-  else Printf.fprintf stderr "Successfully killed server for %s\n%!"
+  else Utils.prerr_endlinef "Successfully killed server for %s\n%!"
     (Path.to_string root)
 
 let main temp_dir from root () =
@@ -95,28 +95,30 @@ let main temp_dir from root () =
   | None -> Path.to_string (FlowConfig.(config.options.Opts.temp_dir))
   in
   FlowEventLogger.set_from from;
-  try
-    let conn = CommandUtils.connect ~tmp_dir root in
-    begin
-      try nice_kill conn ~tmp_dir root
-      with FailedToKill ->
-        let msg = Utils.spf
-          "Failed to kill server nicely for %s\n%!"
-          root_s in
-        FlowExitStatus.(exit ~msg Kill_error)
-    end
-  with
-  | CommandExceptions.Server_missing ->
-      Printf.eprintf "Error: no server to kill for %s\n%!" root_s
-  | CommandExceptions.Server_out_of_date ->
-      Printf.eprintf "Successfully killed server for %s\n%!" root_s
-  | CommandExceptions.Server_busy
-  | CommandExceptions.Server_initializing ->
-      try mean_kill ~tmp_dir root
-      with FailedToKill ->
-        let msg = Utils.spf
-          "Failed to kill server meanly for %s"
-          root_s in
-        FlowExitStatus.(exit ~msg Kill_error)
+  Utils.prerr_endlinef
+    "Trying to connect to server for %s"
+    (Path.to_string root);
+  CommandConnectSimple.(
+    match connect_once ~tmp_dir root with
+    | Result.Ok conn ->
+        (try nice_kill conn ~tmp_dir root
+        with FailedToKill ->
+            let msg = Utils.spf
+              "Failed to kill server nicely for %s\n%!"
+            root_s in
+            FlowExitStatus.(exit ~msg Kill_error))
+    | Result.Error Server_missing ->
+        Utils.prerr_endlinef "Error: no server to kill for %s" root_s
+    | Result.Error Build_id_mismatch ->
+        Utils.prerr_endlinef "Successfully killed server for %s" root_s
+    | Result.Error Server_initializing
+    | Result.Error Server_busy ->
+        try mean_kill ~tmp_dir root
+        with FailedToKill ->
+          let msg = Utils.spf
+            "Failed to kill server meanly for %s"
+            root_s in
+          FlowExitStatus.(exit ~msg Kill_error)
+  )
 
 let command = CommandSpec.command spec main

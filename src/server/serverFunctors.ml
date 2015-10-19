@@ -33,6 +33,12 @@ module type SERVER_PROGRAM = sig
   val handle_client : genv -> env -> client -> unit
 end
 
+let grab_lock ~tmp_dir root =
+  if not (Lock.grab (FlowConfig.lock_file ~tmp_dir root))
+  then
+    let msg = "Error: another server is already running?\n" in
+    FlowExitStatus.(exit ~msg Lock_stolen)
+
 (*****************************************************************************)
 (* Main initialization *)
 (*****************************************************************************)
@@ -41,16 +47,9 @@ module MainInit : sig
   val go:
     Options.options ->
     (unit -> env) ->    (* init function to run while we have init lock *)
+    out_channel option ->
     env
 end = struct
-
-  let other_server_running() =
-    Hh_logger.log "Error: another server is already running?\n";
-    FlowExitStatus.(exit Lock_stolen)
-
-  let grab_lock ~tmp_dir root =
-    if not (Lock.grab (FlowConfig.lock_file ~tmp_dir root))
-    then other_server_running()
 
   let grab_init_lock ~tmp_dir root =
     ignore(Lock.grab (FlowConfig.init_file ~tmp_dir root))
@@ -58,21 +57,46 @@ end = struct
   let release_init_lock ~tmp_dir root =
     ignore(Lock.release (FlowConfig.init_file ~tmp_dir root))
 
+  let wakeup_client oc msg =
+    Option.iter oc begin fun oc ->
+      try
+        output_string oc (msg ^ "\n");
+        flush oc
+      with
+      (* The client went away *)
+      | Sys_error ("Broken pipe") -> ()
+      | e ->
+          prerr_endlinef "wakeup_client: %s" (Printexc.to_string e)
+    end
+
+  let close_waiting_channel oc =
+    Option.iter oc begin fun oc ->
+      try close_out oc
+      with
+      (* The client went away *)
+      | Sys_error ("Broken pipe") -> ()
+      | e ->
+          prerr_endlinef "close_waiting_channel: %s" (Printexc.to_string e)
+    end
+
   (* This code is only executed when the options --check is NOT present *)
-  let go options init_fun =
+  let go options init_fun waiting_channel =
     let root = Options.root options in
     let tmp_dir = Options.temp_dir options in
     let t = Unix.gettimeofday () in
     grab_lock ~tmp_dir root;
-    Hh_logger.log "Initializing Server (This might take some time)";
+    Flow_logger.log "Initializing Server (This might take some time)";
     grab_init_lock ~tmp_dir root;
+    wakeup_client waiting_channel "starting";
     (* note: we only run periodical tasks on the root, not extras *)
     ServerPeriodical.init root;
     let env = init_fun () in
     release_init_lock ~tmp_dir root;
-    Hh_logger.log "Server is READY";
+    wakeup_client waiting_channel "ready";
+    Flow_logger.log "Server is READY";
     let t' = Unix.gettimeofday () in
-    Hh_logger.log "Took %f seconds to initialize." (t' -. t);
+    Flow_logger.log "Took %f seconds to initialize." (t' -. t);
+    close_waiting_channel waiting_channel;
     env
 end
 
@@ -105,12 +129,15 @@ end = struct
       end else msg_to_channel oc Connection_ok;
       let client = { ic; oc; close } in
       Program.handle_client genv env client
-    with e ->
+    with
+    | Sys_error("Broken pipe") ->
+      shutdown_client (ic, oc)
+    | e ->
       let msg = Printexc.to_string e in
       EventLogger.master_exception msg;
       Printf.fprintf stderr "Error: %s\n%!" msg;
       Printexc.print_backtrace stderr;
-      close ()
+      shutdown_client (ic, oc)
 
   let handle_connection genv env socket =
     ServerPeriodical.stamp_connection ();
@@ -131,7 +158,7 @@ end = struct
     let config = Program.config_path (Options.root genv.ServerEnv.options) in
     if ServerEnv.PathSet.mem config updates &&
       not (Program.validate_config genv) then begin
-      Hh_logger.log
+      Flow_logger.log
         "%s changed in an incompatible way; please restart %s.\n"
         (Path.to_string config)
         Program.name;
@@ -166,11 +193,11 @@ end = struct
     while true do
       let lock_file = FlowConfig.lock_file ~tmp_dir root in
       if not (Lock.check lock_file) then begin
-        Hh_logger.log "Lost %s lock; reacquiring.\n" Program.name;
+        Flow_logger.log "Lost %s lock; reacquiring.\n" Program.name;
         FlowEventLogger.lock_lost lock_file;
         if not (Lock.grab lock_file)
         then
-          Hh_logger.log "Failed to reacquire lock; terminating.\n";
+          Flow_logger.log "Failed to reacquire lock; terminating.\n";
           FlowEventLogger.lock_stolen lock_file;
           die()
       end;
@@ -194,7 +221,7 @@ end = struct
   * type-checker succeeded. So to know if there is some work to be done,
   * we look if env.modified changed.
   *)
-  let main options =
+  let main options waiting_channel =
     let root = Options.root options in
     let tmp_dir = Options.temp_dir options in
     FlowEventLogger.init_server root;
@@ -204,29 +231,84 @@ end = struct
     * someone C-c the client.
     *)
     Sys.set_signal Sys.sigpipe Sys.Signal_ignore;
-    PidLog.init (FlowConfig.pids_file ~tmp_dir root);
-    PidLog.log ~reason:"main" (Unix.getpid());
+    let is_check_mode = Options.is_check_mode options in
+    (* You need to grab the lock before initializing the pid files *)
+    begin if not is_check_mode
+    then begin
+      grab_lock ~tmp_dir root;
+      PidLog.init (FlowConfig.pids_file ~tmp_dir root);
+      PidLog.log ~reason:"main" (Unix.getpid())
+    end else
+      PidLog.disable ()
+    end;
     let watch_paths = root :: Program.get_watch_paths options in
     let genv =
       ServerEnvBuild.make_genv ~multicore:true options watch_paths in
     let env = ServerEnvBuild.make_env options in
     let program_init = create_program_init genv env in
-    let is_check_mode = Options.is_check_mode options in
     if is_check_mode then
       let env = program_init () in
       Program.run_once_and_exit genv env
     else
-      let env = MainInit.go options program_init in
-      DfindLib.wait_until_ready (unsafe_opt genv.dfind);
+      (* Open up a server on the socket before we go into MainInit -- the client
+      * will try to connect to the socket as soon as we lock the init lock. We
+      * need to have the socket open now (even if we won't actually accept
+      * connections until init is done) so that the client can try to use the
+      * socket and get blocked on it -- otherwise, trying to open a socket with
+      * no server on the other end is an immediate error. *)
       let socket = Socket.init_unix_socket (FlowConfig.socket_file ~tmp_dir root) in
+      let env = MainInit.go options program_init waiting_channel in
+      DfindLib.wait_until_ready (unsafe_opt genv.dfind);
       serve genv env socket
 
+  (* The server can communicate with the process that forked it over a pipe.
+   * The current scheme has it write a message when it starts up and has the
+   * lock and then write another message when it has finished initializing.
+   * It's up to the forking process whether it cares to wait for the
+   * initialization to complete *)
+  let rec wait_loop child_pid options ic =
+    let msg = try
+      input_line ic
+    with End_of_file ->
+      (* The pipe broke before we got the alls-clear from the server. What kind
+       * of things could go wrong. Well we check the lock before forking the
+       * server, but maybe by the time the server started someone else had
+       * grabbed the lock, so it exited. I'm sure there's a million other
+       * things that could have gone wrong *)
+      let pid, status = Unix.(waitpid [ WNOHANG ] child_pid) in
+      let msg = if pid = 0
+      (* The server is still alive...not sure what happened *)
+      then "Error: Failed to start server for some unknown reason."
+      (* The server is dead. Shucks. *)
+      else "Error: Failed to start server. The started server died prematurely."
+      in FlowExitStatus.(exit ~msg (Server_start_failed status))
+    in
+    if Options.should_wait options && msg <> "ready"
+    then wait_loop child_pid options ic
+
   let daemonize options =
+    (* Let's make sure this isn't all for naught before we fork *)
+    let { Options.opt_root; opt_temp_dir; _ } = options in
+    let lock = FlowConfig.lock_file ~tmp_dir:opt_temp_dir opt_root in
+    if not (Lock.check lock)
+    then begin
+      let msg = spf
+        "Error: There is already a server running for %s"
+        (Path.to_string opt_root) in
+      FlowExitStatus.(exit ~msg Lock_stolen)
+    end;
+
+    (* Create a pipe for synchronization with the server: we will wait
+       until the server finishes its init phase. *)
+    let waiting_channel_in_fd, waiting_channel_out_fd = Unix.pipe () in
+    let waiting_channel_ic = Unix.in_channel_of_descr waiting_channel_in_fd in
+
     (* detach ourselves from the parent process *)
     let pid = Fork.fork() in
     if pid == 0
     then begin
       ignore(Unix.setsid());
+      Unix.close waiting_channel_in_fd;
       with_umask 0o111 begin fun () ->
         (* close stdin/stdout/stderr *)
         let fd = Unix.openfile "/dev/null" [Unix.O_RDONLY; Unix.O_CREAT] 0o777 in
@@ -237,14 +319,18 @@ end = struct
         let fd = Unix.openfile file [Unix.O_WRONLY; Unix.O_CREAT; Unix.O_APPEND] 0o666 in
         Unix.dup2 fd Unix.stdout;
         Unix.dup2 fd Unix.stderr;
-        Unix.close fd
+        Unix.close fd;
+        Unix.out_channel_of_descr waiting_channel_out_fd
       end
       (* child process is ready *)
     end else begin
+      Unix.close waiting_channel_out_fd;
       (* let original parent exit *)
       Printf.eprintf "Spawned %s (child pid=%d)\n" (Program.name) pid;
       Printf.eprintf
         "Logs will go to %s\n%!" (Path.to_string (Options.log_file options));
+
+      wait_loop pid options waiting_channel_ic;
       raise Exit
     end
 
@@ -252,9 +338,15 @@ end = struct
     let options = Program.parse_options () in
     Relative_path.set_path_prefix Relative_path.Root (Options.root options);
     try
-      if Options.should_detach options
-      then daemonize options;
-      main options
+      let waiting_channel =
+        if Options.should_detach options
+        then Some (daemonize options)
+        else None in
+
+      (* We don't want to spew for flow check *)
+      if Options.is_check_mode options
+      then Flow_logger.disable ();
+      main options waiting_channel
     with Exit ->
       ()
 end

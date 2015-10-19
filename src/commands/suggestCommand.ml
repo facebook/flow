@@ -45,7 +45,7 @@ let main option_values files () =
   | file::_ -> guess_root (Some file)
   | _ -> failwith "Expected at least one file" in
 
-  let ic, oc = connect_with_autostart option_values root in
+  let ic, oc = connect option_values root in
   let files = List.map expand_path files in
   let files = List.map2 (^) files regions in
   ServerProt.cmd_to_channel oc (ServerProt.SUGGEST files);

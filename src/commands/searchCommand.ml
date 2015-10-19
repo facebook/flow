@@ -34,7 +34,7 @@ module Json = Hh_json
 
 let main option_values use_json query () =
   let root = guess_root (Some (Sys.getcwd ())) in
-  let ic, oc = connect_with_autostart option_values root in
+  let ic, oc = connect option_values root in
   ServerProt.cmd_to_channel oc (ServerProt.SEARCH query);
   let results = Marshal.from_channel ic in
   if use_json

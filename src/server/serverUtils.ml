@@ -14,6 +14,14 @@ type client = {
   close : unit -> unit;
 }
 
+let shutdown_client (_ic, oc) =
+  let cli = Unix.descr_of_out_channel oc in
+  try
+    Unix.shutdown cli Unix.SHUTDOWN_ALL;
+    close_out oc
+  with _ -> ()
+
+
 type connection_state =
   | Connection_ok
   | Build_id_mismatch

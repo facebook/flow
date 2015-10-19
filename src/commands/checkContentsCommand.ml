@@ -44,7 +44,7 @@ let read_from_stdin file =
 let main option_values error_flags use_json file () =
   let file = read_from_stdin file in
   let root = guess_root (ServerProt.path_of_input file) in
-  let ic, oc = connect_with_autostart option_values root in
+  let ic, oc = connect option_values root in
   ServerProt.cmd_to_channel oc (ServerProt.CHECK_FILE file);
   let response = ServerProt.response_from_channel ic in
   match response with
