@@ -1150,14 +1150,3 @@ let server_init genv env =
   ) else (
     env
   )
-
-(* single command entry point: takes a list of paths,
- * parses and checks serially, prints errs to stdout.
- *)
-let single_main (paths : string list) options =
-  let get_next_raw = Files_js.make_next_files (Path.make (List.hd paths)) in
-  let get_next = fun () ->
-    get_next_raw () |> List.map (fun file -> Loc.SourceFile file)
-  in
-  let _ = full_check None get_next options in
-  print_errors options (get_errors ())

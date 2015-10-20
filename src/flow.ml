@@ -30,7 +30,6 @@ end = struct
     ConfigCommands.Init.command;
     PortCommand.command;
     ServerCommands.Server.command;
-    SingleCommand.command;
     SearchCommand.command;
     ServerCommands.Start.command;
     StopCommand.command;
