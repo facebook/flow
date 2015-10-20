@@ -18,17 +18,27 @@ type T2 = number;
 // while let is in TDZ.
 // - allow forward refs to lets from type positions.
 //
-// we're wrong in two ways, currently:
-// - from value positions, we currently enforce TDZ only in-scope.
-// this is unsound - a let.const may remain uninitialized when a
-// lambda runs. This requires an analysis pass we don't yet have.
-// TODO
+// currently we're too lenient about TDZ in closures -
+// from value positions, we currently enforce TDZ only in-scope.
+// this is unsound - a let or const may remain uninitialized when
+// a lambda runs. But a simple conservative approach would prohibit
+// forward references to let/consts from within lambdas entirely,
+// which would be annoying. TODO
 //
 
 function f0() {
   var v = x * c;  // errors, let + const referenced before decl
   let x = 0;
   const c = 0;
+}
+
+function f1(b) {
+  x = 10;         // error, attempt to write to let before decl
+  let x = 0;
+  if (b) {
+    y = 10;       // error, attempt to write to let before decl
+    let y = 0;
+  }
 }
 
 function f2() {
@@ -51,14 +61,14 @@ function f3() {
 }
 
 // out-of-scope TDZ not enforced. sometimes right...
-function f3() {
+function f4() {
   function g() { return x + c; }  // ok, g doesn't run in TDZ
   let x = 0;
   const c = 0;
 }
 
 // ...sometimes wrong
-function f4() {
+function f5() {
   function g() { return x; }
   g();          // should error, but doesn't currently
   let x = 0;

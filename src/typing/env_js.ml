@@ -583,40 +583,39 @@ let pseudo_init_declared_type cx name reason =
     assert_false (spf "pseudo_init_declared_type %s: Type entry" name)
   )
 
-(* get types from value entry - enforces state-based guards *)
-let value_entry_types ~lookup_mode cx name reason entry scope =
+(* helper for read/write tdz checks *)
+(* functions are block-scoped, but also hoisted. forward ref ok *)
+let allow_forward_ref = Scope.Entry.(function
+  | Var | Let (Some FunctionBinding) -> true
+  | _ -> false
+)
 
-  (* functions are block-scoped, but also hoisted. forward ref ok *)
-  let allow_forward_ref = Scope.Entry.(function
-    | Var | Let (Some FunctionBinding) -> true
-    | _ -> false
-  ) in
-
-  (* for now, we only enforce TDZ within the same activation.
-     return true if the given target scope is in the same
-     activation as the current scope.
-   *)
-  let same_activation target =
-    let rec loop target = function
-    | [] -> assert_false "target scope not found"
-    | scope :: scopes when scope = target ->
-      (* target is nearer than (or actually is) nearest VarScope *)
-      true
-    | scope :: scopes ->
-      match scope.kind with
-      | VarScope _ ->
-        (* found var scope before target *)
-        false
-      | LexScope ->
-        (* still in inner lex scopes, keep looking *)
-        loop target scopes
-    in
-    (* search outward for target scope *)
-    loop target (get_scopes ())
+(* helper for read/write tdz checks *)
+(* for now, we only enforce TDZ within the same activation.
+   return true if the given target scope is in the same
+   activation as the current scope.
+ *)
+let same_activation target =
+  let rec loop target = function
+  | [] -> assert_false "target scope not found"
+  | scope :: scopes when scope = target ->
+    (* target is nearer than (or actually is) nearest VarScope *)
+    true
+  | scope :: scopes ->
+    match scope.kind with
+    | VarScope _ ->
+      (* found var scope before target *)
+      false
+    | LexScope ->
+      (* still in inner lex scopes, keep looking *)
+      loop target scopes
   in
+  (* search outward for target scope *)
+  loop target (get_scopes ())
 
-  Entry.(match entry with
-
+(* get types from value entry - enforces state-based guards *)
+let value_entry_types ~lookup_mode cx name reason entry scope = Entry.(
+  match entry with
   | Value { kind; value_state = Undeclared; _ }
       when lookup_mode = ForValue
       && not (allow_forward_ref kind)
@@ -689,6 +688,15 @@ let get_refinement cx key reason =
 let set_var cx name specific reason =
   let scope, entry = find_entry cx name reason in
   Entry.(match entry with
+
+  | Value { kind = (Let _ as kind); value_state = Undeclared; _ }
+      when not (allow_forward_ref kind)
+      && same_activation scope (* enforce TDZ only on in-activation refs *)
+      ->
+    (* fwd ref to let from value pos: TDZ *)
+    let msg = spf "%s referenced before declaration"
+      (string_of_kind entry) in
+    binding_error msg cx name entry reason
 
   | Value ({ kind = Let _ | Var; _ } as v) ->
     ignore (add_change_var name);

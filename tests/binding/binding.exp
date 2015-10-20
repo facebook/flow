@@ -199,31 +199,39 @@ scope.js:60:31,36: string
 This type is incompatible with
 scope.js:61:10,15: number
 
-tdz.js:29:11,11: x
+tdz.js:30:11,11: x
 let referenced before declaration
-tdz.js:30:7,7: let x
+tdz.js:31:7,7: let x
 
-tdz.js:29:15,15: c
+tdz.js:30:15,15: c
 const referenced before declaration
-tdz.js:31:9,9: const c
+tdz.js:32:9,9: const c
 
-tdz.js:36:13,13: x
+tdz.js:36:3,3: x
 let referenced before declaration
-tdz.js:38:7,7: let x
+tdz.js:37:7,7: let x
 
-tdz.js:36:17,17: c
+tdz.js:39:5,5: y
+let referenced before declaration
+tdz.js:40:9,9: let y
+
+tdz.js:46:13,13: x
+let referenced before declaration
+tdz.js:48:7,7: let x
+
+tdz.js:46:17,17: c
 const referenced before declaration
-tdz.js:39:9,9: const c
+tdz.js:49:9,9: const c
 
-tdz.js:73:8,8: identifier `C`
+tdz.js:83:8,8: identifier `C`
 Could not resolve name
 
-tdz.js:75:13,13: C
+tdz.js:85:13,13: C
 class referenced before declaration
-tdz.js:77:7,7: class C
+tdz.js:87:7,7: class C
 
-tdz.js:89:5,13: undefined
+tdz.js:99:5,13: undefined
 This type is incompatible with
-tdz.js:89:8,13: number
+tdz.js:99:8,13: number
 
-Found 57 errors
+Found 59 errors
