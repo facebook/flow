@@ -14,7 +14,9 @@ open Sys_utils
 let version = "0.18.1"
 let flow_ext = ".flow"
 
-let default_temp_dir = "/tmp/flow/"
+let default_temp_dir =
+  Path.to_string @@
+  Path.concat Path.temp_dir_name "flow"
 
 let map_add map (key, value) = SMap.add key value map
 

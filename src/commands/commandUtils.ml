@@ -221,8 +221,7 @@ let connect server_flags root =
   )
 
 let rec search_for_root config start recursion_limit : Path.t option =
-  let fs_root = Path.make "/" in
-  if start = fs_root then None
+  if start = Path.parent start then None (* Reach fs root, nothing to do. *)
   else if Wwwroot.is_www_directory ~config start then Some start
   else if recursion_limit <= 0 then None
   else search_for_root config (Path.parent start) (recursion_limit - 1)
