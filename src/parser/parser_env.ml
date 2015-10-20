@@ -126,11 +126,11 @@ type token_sink_result = {
 }
 
 type parse_options = {
-  experimental_decorators: bool;
+  esproposal_decorators: bool;
   types: bool;
 }
 let default_parse_options = {
-  experimental_decorators = false;
+  esproposal_decorators = false;
   types = true;
 }
 

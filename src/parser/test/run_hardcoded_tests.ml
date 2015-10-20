@@ -166,7 +166,7 @@ end = struct
           exit 1
     in
     match opt_name with
-    | "experimental_decorators" -> {opts with experimental_decorators = value;}
+    | "esproposal_decorators" -> {opts with esproposal_decorators = value;}
     | "types" -> {opts with types = value;}
     | _ ->
       let msg =

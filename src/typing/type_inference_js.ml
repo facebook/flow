@@ -562,12 +562,12 @@ let are_getters_and_setters_enabled () = FlowConfig.(Opts.(
 
 let are_decorators_enabled () = FlowConfig.(Opts.(
   let config = get_unsafe () in
-  config.options.experimental_decorators
+  config.options.esproposal_decorators
 ))
 
 let warn_or_ignore_decorators cx decorators_list = FlowConfig.(Opts.(
   if decorators_list = [] then () else
-  match (get_unsafe ()).options.experimental_decorators with
+  match (get_unsafe ()).options.esproposal_decorators with
   | EXPERIMENTAL_IGNORE -> ()
   | EXPERIMENTAL_WARN ->
       let first_loc = fst (List.hd decorators_list) in

@@ -2471,7 +2471,7 @@ module.exports = {
   'Decorators (experimental/early)': {
     'class Foo { @myDecorator1 @myDecorator2 myMethod() {} }': {
       '%parse_options%': {
-        "experimental_decorators": true
+        "esproposal_decorators": true
       },
       'body.0.body.body': [{
         'type': 'MethodDefinition',
@@ -2483,7 +2483,7 @@ module.exports = {
     },
     'class Foo { @myDecorator1 @myDecorator2 *myMethod() {} }': {
       '%parse_options%': {
-        "experimental_decorators": true
+        "esproposal_decorators": true
       },
       'body.0.body.body': [{
         'type': 'MethodDefinition',
@@ -2495,7 +2495,7 @@ module.exports = {
     },
     'class Foo { @myDecorator1 @myDecorator2 static myMethod() {} }': {
       '%parse_options%': {
-        "experimental_decorators": true
+        "esproposal_decorators": true
       },
       'body.0.body.body': [{
         'type': 'MethodDefinition',
@@ -2507,7 +2507,7 @@ module.exports = {
     },
     'class Foo { @myDecorator1 @myDecorator2 async myMethod() {} }': {
       '%parse_options%': {
-        "experimental_decorators": true
+        "esproposal_decorators": true
       },
       'body.0.body.body': [{
         'type': 'MethodDefinition',
@@ -2519,7 +2519,7 @@ module.exports = {
     },
     'class Foo { @myDecorator1 @myDecorator2 get myProp() {} }': {
       '%parse_options%': {
-        "experimental_decorators": true
+        "esproposal_decorators": true
       },
       'body.0.body.body': [{
         'type': 'MethodDefinition',
@@ -2531,7 +2531,7 @@ module.exports = {
     },
     'class Foo { @myDecorator1 @myDecorator2 set myProp(v) {} }': {
       '%parse_options%': {
-        "experimental_decorators": true
+        "esproposal_decorators": true
       },
       'body.0.body.body': [{
         'type': 'MethodDefinition',
@@ -2543,7 +2543,7 @@ module.exports = {
     },
     'class Foo { @myDecorator("someParam") myMethod() {} }': {
       '%parse_options%': {
-        "experimental_decorators": true
+        "esproposal_decorators": true
       },
       'body.0.body.body': [{
         'type': 'MethodDefinition',

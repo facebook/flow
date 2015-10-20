@@ -2340,7 +2340,7 @@ end = struct
       in fun env -> Ast.Expression.Object.Property.(
         let start_loc = Peek.loc env in
         let decorators =
-          if (parse_options env).experimental_decorators then
+          if (parse_options env).esproposal_decorators then
             decorator_list env []
           else
             []

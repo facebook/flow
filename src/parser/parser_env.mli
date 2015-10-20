@@ -31,7 +31,7 @@ type token_sink_result = {
 val mode_to_string : lex_mode -> string
 
 type parse_options = {
-  experimental_decorators: bool;
+  esproposal_decorators: bool;
   types: bool;
 }
 val default_parse_options : parse_options

@@ -40,7 +40,7 @@ module Opts = struct
 
   type t = {
     enable_unsafe_getters_and_setters: bool;
-    experimental_decorators: experimental_feature_mode;
+    esproposal_decorators: experimental_feature_mode;
     moduleSystem: moduleSystem;
     module_name_mappers: (Str.regexp * string) list;
     node_resolver_dirnames: string list;
@@ -98,7 +98,7 @@ module Opts = struct
 
   let default_options = {
     enable_unsafe_getters_and_setters = false;
-    experimental_decorators = EXPERIMENTAL_WARN;
+    esproposal_decorators = EXPERIMENTAL_WARN;
     moduleSystem = Node;
     module_name_mappers = [];
     node_resolver_dirnames = ["node_modules"];
@@ -469,7 +469,7 @@ let parse_options config lines = Opts.(
       flags = [];
       optparser = optparse_experimental_feature_flag;
       setter = (fun opts v -> {
-        opts with experimental_decorators = v;
+        opts with esproposal_decorators = v;
       });
     })
 

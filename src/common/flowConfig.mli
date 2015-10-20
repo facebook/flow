@@ -15,7 +15,7 @@ module Opts : sig
   type moduleSystem = Node | Haste
   type t = {
     enable_unsafe_getters_and_setters: bool;
-    experimental_decorators: experimental_feature_mode;
+    esproposal_decorators: experimental_feature_mode;
     moduleSystem: moduleSystem;
     module_name_mappers: (Str.regexp * string) list;
     node_resolver_dirnames: string list;

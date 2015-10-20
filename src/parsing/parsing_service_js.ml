@@ -51,7 +51,7 @@ let parse_options = Some Parser_env.({
    * We always parse decorators. The user-facing config option to ignore/warn
    * on them happens during inference time so a clean error can be surfaced.
    *)
-  experimental_decorators = true;
+  esproposal_decorators = true;
 
   (**
    * We obviously want to parse Flow types.

@@ -52,9 +52,9 @@ let throw e =
 let parse_options jsopts = Parser_env.(
   let opts = default_parse_options in
 
-  let decorators = Js.Unsafe.get jsopts "experimental_decorators" in
+  let decorators = Js.Unsafe.get jsopts "esproposal_decorators" in
   let opts = if Js.Optdef.test decorators
-    then { opts with experimental_decorators = Js.to_bool decorators; }
+    then { opts with esproposal_decorators = Js.to_bool decorators; }
     else opts in
 
   let types = Js.Unsafe.get jsopts "types" in
