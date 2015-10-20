@@ -9,10 +9,6 @@ class.js:15:8,8: number
 This type is incompatible with
 class.js:15:12,17: string
 
-class.js:23:39,44: number
-This type is incompatible with
-class.js:24:12,13: string
-
 class.js:24:12,13: string
 This type is incompatible with
 class.js:23:39,44: number
@@ -21,39 +17,39 @@ class.js:68:21,34: string
 This type is incompatible with
 class.js:68:12,17: number
 
-class.js:87:41,41: number
+class.js:101:41,41: number
 This type is incompatible with
-class.js:87:45,50: string
+class.js:101:45,50: string
 
-class.js:89:23,51: call of method `next`
+class.js:103:23,51: call of method `next`
 Error:
-class.js:89:50,50: number
+class.js:103:50,50: number
 This type is incompatible with
 class.js:28:13,19: boolean
 
-class.js:89:23,51: call of method `next`
+class.js:103:23,51: call of method `next`
 Error:
-class.js:93:4,18: string
+class.js:107:4,18: string
 This type is incompatible with
-class.js:93:22,28: boolean
+class.js:107:22,28: boolean
 
-class.js:108:41,42: string
+class.js:122:41,42: string
 This type is incompatible with
 class.js:50:15,20: number
 
-class.js:111:4,4: string
+class.js:125:4,4: string
 This type is incompatible with
-class.js:111:8,13: number
+class.js:125:8,13: number
 
-class.js:114:1,44: call of method `next`
+class.js:128:1,44: call of method `next`
 Error:
-class.js:114:42,43: string
+class.js:128:42,43: string
 This type is incompatible with
 [LIB] core.js:334:37,40: undefined
 
-class.js:117:4,4: number
+class.js:131:4,4: number
 This type is incompatible with
-class.js:117:8,13: string
+class.js:131:8,13: string
 
 generators.js:3:9,10: string
 This type is incompatible with
@@ -62,10 +58,6 @@ generators.js:1:35,40: number
 generators.js:14:6,6: number
 This type is incompatible with
 generators.js:14:10,15: string
-
-generators.js:22:46,51: number
-This type is incompatible with
-generators.js:23:10,11: string
 
 generators.js:23:10,11: string
 This type is incompatible with
@@ -133,4 +125,4 @@ throw.js:24:4,21: number
 This type is incompatible with
 throw.js:24:24,29: string
 
-Found 29 errors
+Found 27 errors

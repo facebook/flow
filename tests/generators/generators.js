@@ -104,3 +104,17 @@ for (var x of delegate_yield_iterable([])) {
 function *delegate_return_iterable(xs: Array<number>) {
   var x: void = yield *xs // ok: Iterator has no yield value
 }
+
+function *generic_yield<Y>(y: Y): Generator<Y,void,void> {
+  yield y;
+}
+
+function *generic_return<R>(r: R): Generator<void,R,void> {
+  return r;
+}
+
+function *generic_next<N>(): Generator<void,N,N> {
+  var n = yield undefined;
+  invariant(n != null);
+  return n;
+}
