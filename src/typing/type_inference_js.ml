@@ -560,11 +560,6 @@ let are_getters_and_setters_enabled () = FlowConfig.(Opts.(
   config.options.enable_unsafe_getters_and_setters
 ))
 
-let are_decorators_enabled () = FlowConfig.(Opts.(
-  let config = get_unsafe () in
-  config.options.esproposal_decorators
-))
-
 let warn_or_ignore_decorators cx decorators_list = FlowConfig.(Opts.(
   if decorators_list = [] then () else
   match (get_unsafe ()).options.esproposal_decorators with
@@ -5263,11 +5258,33 @@ and mk_signature cx reason_c type_params_map superClass body = Ast.Class.(
         value;
         static;
       }) ->
-        if value <> None
-        then begin
-          let msg = "class property initializers are not yet supported (https://github.com/facebook/flow/issues/850)" in
-          Flow_js.add_error cx [mk_reason "" loc, msg]
-        end;
+        (match value with
+          | None -> ()
+          | Some value -> FlowConfig.(Opts.(
+            let opts = (get_unsafe ()).options in
+            let (config_setting, reason_subject) =
+              if static then
+                (opts.esproposal_class_static_fields, "class static field")
+              else
+                (opts.esproposal_class_instance_fields, "class instance field")
+            in
+            match config_setting with
+            | EXPERIMENTAL_IGNORE -> ()
+            | EXPERIMENTAL_WARN ->
+                let reason =
+                  mk_reason (spf "Experimental %s usage" reason_subject) loc
+                in
+                let msg = (spf
+                  ("%ss are an active early stage feature proposal that may " ^^
+                  "change. Additionally, Flow does not yet typecheck the " ^^
+                  "right-hand side of field initializers. Support for this " ^^
+                  "is being tracked in " ^^
+                  "https://github.com/facebook/flow/issues/850")
+                  (String.capitalize reason_subject)
+                ) in
+                Flow_js.add_warning cx [reason, msg]
+          ))
+        );
         let r = mk_reason (spf "class property `%s`" name) loc in
         let t = mk_type_annotation cx type_params_map r typeAnnotation in
         if static

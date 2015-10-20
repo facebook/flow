@@ -40,6 +40,8 @@ module Opts = struct
 
   type t = {
     enable_unsafe_getters_and_setters: bool;
+    esproposal_class_instance_fields: experimental_feature_mode;
+    esproposal_class_static_fields: experimental_feature_mode;
     esproposal_decorators: experimental_feature_mode;
     moduleSystem: moduleSystem;
     module_name_mappers: (Str.regexp * string) list;
@@ -98,6 +100,8 @@ module Opts = struct
 
   let default_options = {
     enable_unsafe_getters_and_setters = false;
+    esproposal_class_instance_fields = EXPERIMENTAL_WARN;
+    esproposal_class_static_fields = EXPERIMENTAL_WARN;
     esproposal_decorators = EXPERIMENTAL_WARN;
     moduleSystem = Node;
     module_name_mappers = [];
@@ -464,6 +468,24 @@ let file_extension = Str.regexp "^\\(\\.[^ \t]+\\)+$"
 
 let parse_options config lines = Opts.(
   let options = Opts.parse config.options lines
+    |> Opts.define_opt "esproposal.class_instance_fields" Opts.({
+      _initializer = USE_DEFAULT;
+      flags = [];
+      optparser = optparse_experimental_feature_flag;
+      setter = (fun opts v -> {
+        opts with esproposal_class_instance_fields = v;
+      });
+    })
+
+    |> Opts.define_opt "esproposal.class_static_fields" Opts.({
+      _initializer = USE_DEFAULT;
+      flags = [];
+      optparser = optparse_experimental_feature_flag;
+      setter = (fun opts v -> {
+        opts with esproposal_class_static_fields = v;
+      });
+    })
+
     |> Opts.define_opt "esproposal.decorators" Opts.({
       _initializer = USE_DEFAULT;
       flags = [];

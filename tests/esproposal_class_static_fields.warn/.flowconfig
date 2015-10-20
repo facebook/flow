@@ -1,0 +1,2 @@
+[options]
+esproposal.class_static_fields=warn

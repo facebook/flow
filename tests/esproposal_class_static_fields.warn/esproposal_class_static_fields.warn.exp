@@ -1,0 +1,8 @@
+
+test.js:5:3,27: Experimental class static field usage
+Class static fields are an active early stage feature proposal that may change. Additionally, Flow does not yet typecheck the right-hand side of field initializers. Support for this is being tracked in https://github.com/facebook/flow/issues/850
+
+test.js:6:3,45: Experimental class static field usage
+Class static fields are an active early stage feature proposal that may change. Additionally, Flow does not yet typecheck the right-hand side of field initializers. Support for this is being tracked in https://github.com/facebook/flow/issues/850
+
+Found 2 errors
