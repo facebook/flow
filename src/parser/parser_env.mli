@@ -31,6 +31,8 @@ type token_sink_result = {
 val mode_to_string : lex_mode -> string
 
 type parse_options = {
+  esproposal_class_instance_fields: bool;
+  esproposal_class_static_fields: bool;
   esproposal_decorators: bool;
   types: bool;
 }

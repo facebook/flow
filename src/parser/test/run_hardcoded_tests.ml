@@ -166,6 +166,10 @@ end = struct
           exit 1
     in
     match opt_name with
+    | "esproposal_class_instance_fields" ->
+        {opts with esproposal_class_instance_fields = value; }
+    | "esproposal_class_static_fields" ->
+        {opts with esproposal_class_static_fields = value; }
     | "esproposal_decorators" -> {opts with esproposal_decorators = value;}
     | "types" -> {opts with types = value;}
     | _ ->

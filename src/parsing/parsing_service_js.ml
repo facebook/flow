@@ -48,9 +48,12 @@ let call_on_success f = parser_hook := f :: !parser_hook
 
 let parse_options = Some Parser_env.({
   (**
-   * We always parse decorators. The user-facing config option to ignore/warn
-   * on them happens during inference time so a clean error can be surfaced.
+   * Always parse ES proposal syntax. The user-facing config option to
+   * ignore/warn/enable them is handled during inference so that a clean error
+   * can be surfaced (rather than a more cryptic parse error).
    *)
+  esproposal_class_instance_fields = true;
+  esproposal_class_static_fields = true;
   esproposal_decorators = true;
 
   (**

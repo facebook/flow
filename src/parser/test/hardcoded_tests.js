@@ -2360,6 +2360,9 @@ module.exports = {
       }]
     },
     'class Properties { x = "hello"; }': {
+      '%parse_options%': {
+        'esproposal_class_instance_fields': true,
+      },
       'body.0.body.body': [{
         'type': 'ClassProperty',
         'key.name': 'x',
@@ -2369,7 +2372,18 @@ module.exports = {
         'computed': false,
       }]
     },
+    'class Properties { x = "hello"; }': {
+      '%parse_options%': {
+        'esproposal_class_instance_fields': false,
+      },
+      'errors': {
+        '0.message': 'Unexpected string',
+      },
+    },
     'class Properties { x: string = "hello"; }': {
+      '%parse_options%': {
+        'esproposal_class_instance_fields': true,
+      },
       'body.0.body.body': [{
         'type': 'ClassProperty',
         'key.name': 'x',
@@ -2400,6 +2414,9 @@ module.exports = {
       }]
     },
     'class Properties { static x = "hello"; }': {
+      '%parse_options%': {
+        'esproposal_class_static_fields': true,
+      },
       'body.0.body.body': [{
         'type': 'ClassProperty',
         'key.name': 'x',
@@ -2409,7 +2426,18 @@ module.exports = {
         'computed': false,
       }]
     },
+    'class Properties { static x = "hello"; }': {
+      '%parse_options%': {
+        'esproposal_class_instance_fields': false,
+      },
+      'errors': {
+        '0.message': 'Unexpected string',
+      },
+    },
     'class Properties { static x: string = "hello"; }': {
+      '%parse_options%': {
+        'esproposal_class_static_fields': true,
+      },
       'body.0.body.body': [{
         'type': 'ClassProperty',
         'key.name': 'x',
@@ -2420,6 +2448,9 @@ module.exports = {
       }]
     },
     'class Properties { static [x]: string = "hello"; }': {
+      '%parse_options%': {
+        'esproposal_class_static_fields': true,
+      },
       'body.0.body.body': [{
         'type': 'ClassProperty',
         'typeAnnotation.typeAnnotation.type': 'StringTypeAnnotation',
@@ -2435,6 +2466,9 @@ module.exports = {
       'body.0.body.body.0.key.name': 'get',
     },
     'class Properties { get = 123; }': {
+      '%parse_options%': {
+        'esproposal_class_instance_fields': true,
+      },
       'body.0.body.body.0.key.name': 'get',
     },
     'class Properties { get<T>() {} }': {
@@ -2450,6 +2484,9 @@ module.exports = {
       'body.0.body.body.0.key.name': 'set',
     },
     'class Properties { set = 123; }': {
+      '%parse_options%': {
+        'esproposal_class_instance_fields': true,
+      },
       'body.0.body.body.0.key.name': 'set',
     },
     'class Properties { set<T>() {} }': {
