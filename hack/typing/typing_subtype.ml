@@ -311,6 +311,10 @@ and sub_type_with_uenv env (uenv_super, ty_super) (uenv_sub, ty_sub) =
 (****************************************************************************)
 (* ### End Tunresolved madness ### *)
 (****************************************************************************)
+  | _, (_, Tany) -> env
+  (* This case is for when Tany comes from expanding an empty Tvar - it will
+   * result in binding the type variable to the other type. *)
+  | (_, Tany), _ -> fst (Unify.unify env ty_super ty_sub)
   | (r1, Tabstract (AKdependent d1, Some ty_super)),
     (r2, Tabstract (AKdependent d2, Some ty_sub))
         when d1 = d2 ->
@@ -489,8 +493,6 @@ and sub_type_with_uenv env (uenv_super, ty_super) (uenv_sub, ty_sub) =
       Typing_arrays.fold_akshape_as_akmap begin fun env ty_sub ->
         sub_type env ty_super ty_sub
       end env r fdm_sub
-  | _, (_, Tany) -> env
-  | (_, Tany), _ -> fst (Unify.unify env ty_super ty_sub)
     (* recording seen_tvars for Toption variants to avoid infinte recursion
        in case of type variable X = ?X *)
   | (_, Toption ty_super), _ when uenv_super.TUEnv.non_null ->
