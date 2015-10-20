@@ -112,18 +112,18 @@ module Entry = struct
 
   (* Given a name, an entry, and a function for making a new
      specific type from a Var entry's current general type,
-     return a new non-internal Value entry with specific type replaced,
-     or the existing entry.
-     Note: we continue to need the is_internal trap here,
-     due to our modeling of this and super as flow-sensitive vars
-     in derived constructors.
+     return a new Value entry with specific type replaced for
+     non-internal, non-Const entries.
+     Consts and internal vars are read-only, so specific types
+     can be preserved.
    *)
   let havoc ?name make_specific name entry =
     match entry with
+    | Type _ -> entry
+    | Value { kind = Const; _ } -> entry
     | Value v ->
       if Reason_js.is_internal_name name then entry
       else Value { v with specific = make_specific v.general }
-    | Type _ -> entry
 
   let is_lex = function
     | Type _ -> false

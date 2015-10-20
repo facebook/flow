@@ -7,4 +7,36 @@ Closure.js:31:11,11: number
 This type is incompatible with
 Closure.js:4:22,27: string
 
-Found 2 errors
+const.js:20:38,42: null
+This type is incompatible with
+const.js:20:29,34: number
+
+const.js:20:38,42: undefined
+This type is incompatible with
+const.js:20:29,34: number
+
+const.js:38:38,42: boolean
+This type is incompatible with
+const.js:38:29,34: number
+
+const.js:38:38,42: string
+This type is incompatible with
+const.js:38:29,34: number
+
+const.js:40:38,42: boolean
+This type is incompatible with
+const.js:40:29,34: string
+
+const.js:40:38,42: number
+This type is incompatible with
+const.js:40:29,34: string
+
+const.js:42:39,43: number
+This type is incompatible with
+const.js:42:29,35: boolean
+
+const.js:42:39,43: string
+This type is incompatible with
+const.js:42:29,35: boolean
+
+Found 10 errors
