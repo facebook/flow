@@ -9,6 +9,8 @@
  *)
 
 open Utils
+open Utils_js (* assert_false *)
+open Reason_js (* mk_id *)
 
 (******************************************************************************)
 (* Scopes                                                                     *)
@@ -117,7 +119,7 @@ module Entry = struct
      Consts and internal vars are read-only, so specific types
      can be preserved.
    *)
-  let havoc ?name make_specific name entry =
+  let havoc make_specific name entry =
     match entry with
     | Type _ -> entry
     | Value { kind = Const; _ } -> entry
@@ -134,52 +136,33 @@ module Entry = struct
       | _ -> false
 end
 
-(* keys for refinements *)
-module Key = struct
-
-  type proj = Prop of string | Elem of t
-  and t = string * proj list
-
-  let rec string_of_key (base, projs) =
-    base ^ String.concat "" (
-      (List.rev projs) |> List.map (function
-        | Prop name -> spf ".%s" name
-        | Elem expr -> spf "[%s]" (string_of_key expr)
-      ))
-
-  (* true if the given key uses the given property name *)
-  let rec uses_propname propname (base, proj) =
-    proj_uses_propname propname proj
-
-  (* true if the given projection list uses the given property name *)
-  and proj_uses_propname propname = function
-  | Prop name :: tail ->
-    name = propname || proj_uses_propname propname tail
-  | Elem key :: tail ->
-    uses_propname propname key || proj_uses_propname propname tail
-  | [] ->
-    false
-
-  let compare = Pervasives.compare
-
-end
-
-module KeySet : Set.S with type elt = Key.t
-= Set.Make(Key)
-
 module KeyMap : MapSig with type key = Key.t
 = MyMap(Key)
 
-(* a var scope corresponds to a runtime activation,
-   e.g. a function. *)
-type function_kind = Ordinary | Async | Generator
+type var_scope_kind =
+  | Ordinary        (* function or module *)
+  | Async           (* async function *)
+  | Generator       (* generator function *)
+  | Module          (* module scope *)
+  | Global          (* global scope *)
+
+let string_of_var_scope_kind = function
+| Ordinary -> "Ordinary"
+| Async -> "Async"
+| Generator -> "Generator"
+| Module -> "Module"
+| Global -> "Global"
 
 (* var and lexical scopes differ in hoisting behavior
    and auxiliary properties *)
 (* TODO lexical scope support *)
 type kind =
-| VarScope of function_kind
+| VarScope of var_scope_kind
 | LexScope
+
+let string_of_kind = function
+| VarScope kind -> spf "VarScope %s" (string_of_var_scope_kind kind)
+| LexScope -> "LexScope"
 
 type refi_binding = {
   refi_loc: Loc.t;
@@ -188,28 +171,36 @@ type refi_binding = {
 }
 
 (* a scope is a mutable binding table, plus kind and attributes *)
+(* scopes are tagged by id, which are shared by clones. function
+   types hold the id of their activation scopes. *)
 (* TODO add in-scope type variable binding table *)
 type t = {
+  id: int;
   kind: kind;
   mutable entries: Entry.t SMap.t;
   mutable refis: refi_binding KeyMap.t
 }
 
+(* ctor helper *)
 let fresh_impl kind = {
+  id = mk_id ();
   kind;
   entries = SMap.empty;
-  refis = KeyMap.empty;
+  refis = KeyMap.empty
 }
 
 (* return a fresh scope of the most common kind (var) *)
-let fresh ?(kind=Ordinary) () =
-  fresh_impl (VarScope kind)
+let fresh ?(var_scope_kind=Ordinary) () =
+  fresh_impl (VarScope var_scope_kind)
 
 (* return a fresh lexical scope *)
 let fresh_lex () = fresh_impl LexScope
 
-(* clone a scope (snapshots mutable entries) *)
-let clone { kind; entries; refis } = { kind; entries; refis }
+(* clone a scope: snapshot mutable entries.
+   NOTE: tvars (OpenT) are essentially refs, and are shared by clones.
+ *)
+let clone { id; kind; entries; refis } =
+  { id; kind; entries; refis }
 
 (* use passed f to iterate over all scope entries *)
 let iter_entries f scope =
@@ -231,6 +222,17 @@ let remove_entry name scope =
 let get_entry name scope =
   SMap.get name scope.entries
 
+(* havoc entry *)
+let havoc_entry make_specific name scope =
+  match get_entry name scope with
+  | Some entry ->
+    let entry = Entry.havoc make_specific name entry in
+    scope.entries <- SMap.add name entry scope.entries
+  | None ->
+    assert_false (spf "entry %S not found in scope %d: { %s }"
+      name scope.id (String.concat ", "
+        (SMap.fold (fun n _ acc -> n :: acc) scope.entries [])))
+
 (* use passed f to update all scope refis *)
 let update_refis f scope =
   scope.refis <- KeyMap.mapi f scope.refis
@@ -247,27 +249,43 @@ let remove_refi key scope =
 let get_refi name scope =
   KeyMap.get name scope.refis
 
+(* havoc a refi *)
+let havoc_refi key scope =
+  scope.refis <- scope.refis |>
+    KeyMap.filter (fun k _ -> Key.compare key k != 0)
+
 (* helper: filter all refis whose expressions involve the given name *)
 let filter_refis_using_propname propname refis =
   refis |> KeyMap.filter (fun key _ ->
     not (Key.uses_propname propname key)
   )
 
-(* havoc a scope:
-   - if name is not passed, clear all refis. if passed, clear
-     any refis whose expressions involve name
-   - make_specific makes a new specific type from a general type.
-   if passed, havoc all non-internal var entries using it
+(* havoc a scope's refinements:
+   if name is passed, clear refis whose expressions involve it.
+   otherwise, clear them all
  *)
-let havoc ?name ?make_specific scope =
-  scope.refis <- (match name with
-  | Some name -> scope.refis |> (filter_refis_using_propname name)
-  | None -> KeyMap.empty);
-  match make_specific with
-  | Some f -> scope |> update_entries (Entry.havoc ~name f)
-  | None -> ()
+let havoc_refis ?name scope =
+  scope.refis <- match name with
+  | Some name ->
+    scope.refis |> (filter_refis_using_propname name)
+  | None ->
+    KeyMap.empty
+
+(* havoc a scope:
+   - clear all refinements
+   - clear all entries using the given make_specific function,
+   which makes a new specific type from a general type.
+ *)
+let havoc ~make_specific scope =
+  havoc_refis scope;
+  scope |> update_entries (Entry.havoc make_specific)
 
 let is_lex scope =
   match scope.kind with
   | LexScope -> true
+  | _ -> false
+
+let is_global scope =
+  match scope.kind with
+  | VarScope Global -> true
   | _ -> false

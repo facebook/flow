@@ -1,11 +1,31 @@
 
-Closure.js:10:11,11: number
+Closure.js:20:1,22: function call
+Error:
+Closure.js:20:14,21: number
 This type is incompatible with
-Closure.js:4:22,27: string
+Closure.js:6:25,30: string
 
-Closure.js:31:11,11: number
+Closure.js:38:3,23: function call
+Error:
+Closure.js:38:16,22: number
 This type is incompatible with
-Closure.js:4:22,27: string
+Closure.js:6:25,30: string
+
+Closure.js:57:1,22: function call
+Error:
+Closure.js:57:14,21: number
+This type is incompatible with
+Closure.js:6:25,30: string
+
+Closure.js:77:3,23: function call
+Error:
+Closure.js:77:16,22: number
+This type is incompatible with
+Closure.js:6:25,30: string
+
+cond_havoc.js:12:10,10: string
+This type is incompatible with
+cond_havoc.js:6:28,33: number
 
 const.js:20:38,42: null
 This type is incompatible with
@@ -39,4 +59,4 @@ const.js:42:39,43: string
 This type is incompatible with
 const.js:42:29,35: boolean
 
-Found 10 errors
+Found 13 errors

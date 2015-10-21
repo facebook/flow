@@ -17,3 +17,24 @@ val is_printed_type_parsable:
   ?weak:bool -> Context.t -> Type.t -> bool
 val is_printed_param_type_parsable:
   ?weak:bool -> Context.t -> Type.t -> bool
+
+(***
+ * internal printer harness, here for Debug access
+ *)
+
+type enclosure_t =
+    EnclosureNone
+  | EnclosureUnion
+  | EnclosureIntersect
+  | EnclosureParam
+  | EnclosureMaybe
+  | EnclosureAppT
+  | EnclosureRet
+
+val type_printer:
+  (Context.t -> Type.t -> string option) ->
+  (Type.t -> string) ->
+  enclosure_t ->
+  Context.t ->
+  Type.t ->
+  string

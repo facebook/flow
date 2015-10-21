@@ -14,38 +14,33 @@ open Scope
 
 val peek_scope: unit -> Scope.t
 
-val get_scopes: unit -> Scope.t list
+val peek_env: unit -> Scope.t list
 
-val clone_scopes: Scope.t list -> Scope.t list
+val clone_env: Scope.t list -> Scope.t list
+
+val string_of_env: Context.t -> Scope.t list -> string
 
 val in_async_scope: unit -> bool
 val in_generator_scope: unit -> bool
 
 val all_entries: unit -> Entry.t SMap.t
 
-type changeset = SSet.t * KeySet.t
-
-val peek_changeset: unit -> changeset
-
-val clear_changeset: unit -> changeset
-
-val merge_changeset: changeset -> changeset
-
 val peek_frame: unit -> int
 
-val clear_env: Reason_js.reason -> unit
+val push_var_scope: Context.t -> Scope.t -> unit
+val pop_var_scope: unit -> unit
 
-val push_env: Context.t -> Scope.t -> unit
+val retrieve_closure_changeset: unit -> Changeset.t
 
-val pop_env: unit -> unit
+val push_lex_scope: Context.t -> unit
+val pop_lex_scope: unit -> unit
 
-val push_lex: unit -> unit
-
-val pop_lex: unit -> unit
+val env_depth: unit -> int
+val trunc_env: int -> unit
 
 val init_env: Context.t -> Scope.t -> unit
 
-val update_env: Context.t -> Scope.t list -> unit
+val update_env: Context.t -> reason -> Scope.t list -> unit
 
 (***)
 
@@ -95,44 +90,67 @@ module LookupMode: sig
   type t = ForValue | ForType | ForTypeof
 end
 
-val get_var: ?lookup_mode:LookupMode.t -> Context.t -> string ->
-  reason -> Type.t
+val get_var:
+  ?lookup_mode:LookupMode.t ->
+  Context.t ->
+  string ->
+  reason ->
+  Type.t
 
-val get_var_declared_type: ?lookup_mode:LookupMode.t  -> Context.t ->
-  string -> reason -> Type.t
+val get_var_declared_type:
+  ?lookup_mode:LookupMode.t ->
+  Context.t ->
+  string ->
+  reason ->
+  Type.t
 
-val var_ref: ?lookup_mode:LookupMode.t  -> Context.t -> string ->
-  reason -> Type.t
+val var_ref:
+  ?lookup_mode:LookupMode.t ->
+  Context.t ->
+  string ->
+  reason ->
+  Type.t
 
 val set_var: Context.t -> string -> Type.t -> reason -> unit
 
-val add_heap_refinement: Context.t -> Key.t -> reason ->
-  Type.t -> Type.t -> unit
+val set_expr: Context.t -> Key.t -> reason -> Type.t -> Type.t -> unit
 
-val refine_with_preds: Context.t -> reason ->
+val refine_with_preds:
+  Context.t ->
+  reason ->
   Type.predicate KeyMap.t ->
   Type.t KeyMap.t ->
   unit
 
-val refine_env: Context.t -> reason ->
+val in_refined_env:
+  Context.t ->
+  reason ->
   Type.predicate KeyMap.t ->
   Type.t KeyMap.t ->
   (unit -> 'a) ->
   'a
 
-val merge_env: Context.t -> reason ->
+val merge_env:
+  Context.t ->
+  reason ->
   Scope.t list * Scope.t list * Scope.t list ->
-  changeset -> unit
+  Changeset.t ->
+  unit
 
 val widen_env: Context.t -> reason -> unit
 
-val copy_env: Context.t -> reason ->
+val copy_env:
+  Context.t ->
+  reason ->
   Scope.t list * Scope.t list ->
-  changeset -> unit
+  Changeset.t ->
+  unit
 
 val havoc_all: unit -> unit
 
-val havoc_vars: changeset -> unit
+val havoc_current_activation: reason -> unit
+
+val havoc_vars: Changeset.t -> unit
 
 val havoc_heap_refinements: unit -> unit
 val havoc_heap_refinements_with_propname: string -> unit

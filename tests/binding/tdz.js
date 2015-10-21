@@ -1,9 +1,5 @@
 /** @flow */
 
-/* TODO add tests for explicit let/const.
-   we use class as proxy for let for now
- */
-
 // -- types ---
 
 // type aliases are hoisted and always available
@@ -24,7 +20,6 @@ type T2 = number;
 // a lambda runs. But a simple conservative approach would prohibit
 // forward references to let/consts from within lambdas entirely,
 // which would be annoying. TODO
-//
 
 function f0() {
   var v = x * c;  // errors, let + const referenced before decl

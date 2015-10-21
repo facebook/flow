@@ -10,9 +10,9 @@
 
 open Utils
 
+type env = Scope.t list
+
 type t
-type stack = int list
-type closure = stack * Scope.t list
 type metadata = {
   checked: bool;
   weak: bool;
@@ -27,7 +27,7 @@ val make: metadata -> Loc.filename -> string -> t
 
 (* accessors *)
 val annot_table: t -> (Loc.t, Type.t) Hashtbl.t
-val closures: t -> closure IMap.t
+val envs: t -> env IMap.t
 val errors: t -> Errors_js.ErrorSet.t
 val error_suppressions: t -> Errors_js.ErrorSuppressions.t
 val file: t -> Loc.filename
@@ -51,7 +51,7 @@ val verbose: t -> int option
 val copy_of_context: t -> t
 
 (* mutators *)
-val add_closure: t -> int -> closure -> unit
+val add_env: t -> int -> env -> unit
 val add_error: t -> Errors_js.error -> unit
 val add_error_suppression: t -> Loc.t -> unit
 val add_global: t -> string -> unit
@@ -62,7 +62,7 @@ val add_tvar: t -> Constraint_js.ident -> Constraint_js.node -> unit
 val remove_all_errors: t -> unit
 val remove_all_error_suppressions: t -> unit
 val remove_tvar: t -> Constraint_js.ident -> unit
-val set_closures: t -> closure IMap.t -> unit
+val set_envs: t -> env IMap.t -> unit
 val set_globals: t -> SSet.t -> unit
 val set_graph: t -> Constraint_js.node IMap.t -> unit
 val set_module_exports_type: t -> module_exports_type -> unit

@@ -50,7 +50,8 @@ let mk_methodtype this tins ?params_names tout = {
   params_tlist = tins;
   params_names;
   return_t = tout;
-  closure_t = 0
+  closure_t = 0;
+  changeset = Changeset.empty
 }
 
 let mk_methodtype2 this tins ?params_names tout j = {
@@ -58,7 +59,8 @@ let mk_methodtype2 this tins ?params_names tout j = {
   params_tlist = tins;
   params_names;
   return_t = tout;
-  closure_t = j
+  closure_t = j;
+  changeset = Changeset.empty
 }
 
 let mk_functiontype tins ?params_names tout = {
@@ -66,7 +68,8 @@ let mk_functiontype tins ?params_names tout = {
   params_tlist = tins;
   params_names;
   return_t = tout;
-  closure_t = 0
+  closure_t = 0;
+  changeset = Changeset.empty
 }
 
 let mk_functiontype2 tins ?params_names tout j = {
@@ -74,7 +77,8 @@ let mk_functiontype2 tins ?params_names tout j = {
   params_tlist = tins;
   params_names;
   return_t = tout;
-  closure_t = j
+  closure_t = j;
+  changeset = Changeset.empty
 }
 
 (* An object type has two flags, sealed and exact. A sealed object type cannot
@@ -239,26 +243,92 @@ let not_linked (id1, bounds1) (id2, bounds2) =
 (* frames *)
 (**********)
 
-(* note: these are here instead of Env_js because of circular deps:
-  Env_js depends on Flow_js bookkeeping funcs such as mk_tvar,
-  and builtins. When Flow_js is split into algo / other stuff,
-  these can be pulled into Env *)
+(* note: this is here instead of Env_js because of circular deps:
+  Env_js is downstream of Flow_js due general utility funcs such as
+  Flow_js.mk_tvar and builtins services. If the flow algorithm can
+  be split away from these, then Env_js can be moved upstream and
+  this code can be merged into it. *)
 
-(* clear refinements of closed-over variables *)
-let rec havoc_ctx cx i j =
-  if (i = 0 || j = 0) then () else
-    let stack2, _ = IMap.find_unsafe i (Context.closures cx) in
-    let stack1, scopes = IMap.find_unsafe j (Context.closures cx) in
-    havoc_ctx_ ~verbose:(Context.is_verbose cx)
-      (List.rev scopes, List.rev stack1, List.rev stack2)
+(* background:
+   - each scope has an id. scope ids are unique, mod cloning
+   for path-dependent analysis.
+   - an environment is a scope list
+   - each context holds a map of environment snapshots, keyed
+   by their topmost scope ids
+   - every function type contains a frame id, which maps to
+   the environment in which it was defined; as well as a
+   changeset containing its reads/writes/refinements on
+   closed-over variables
 
-and havoc_ctx_ ~verbose = function
-  | scope::scopes, frame1::stack1, frame2::stack2
-    when frame1 = frame2 ->
-    (if verbose then prerr_endlinef "HAVOC::%d" frame1);
-    scope |> Scope.havoc ~make_specific:(fun general -> general);
-    havoc_ctx_ ~verbose (scopes, stack1, stack2)
-  | _ -> ()
+   Given frame ids for calling function and called function and
+   the changeset of the called function, here we retrieve the
+   environment snapshots for the two functions, find the prefix
+   of scopes they share, and havoc the variables in the called
+   function's write set which live in those scopes.
+ *)
+let havoc_call_env = Scope.(
+
+  let overlapped_call_scopes func_env call_env =
+    let rec loop = Scope.(function
+      | func_scope :: func_scopes, call_scope :: call_scopes
+          when func_scope.id = call_scope.id ->
+        call_scope :: loop (func_scopes, call_scopes)
+      | _ -> []
+    ) in
+    loop (List.rev func_env, List.rev call_env)
+  in
+
+  let havoc_entry cx scope ((_, name, _) as entry_ref) =
+    (if Context.is_verbose cx then
+      prerr_endlinef "%d havoc_entry %s %s" (Unix.getpid ())
+        (Changeset.string_of_entry_ref entry_ref)
+        (Debug.string_of_scope cx scope)
+      );
+    match get_entry name scope with
+    | Some _ ->
+      havoc_entry (fun gen -> gen) name scope;
+      Changeset.add_var_change entry_ref
+    | None ->
+      (* global scopes may lack entries, if function closes over
+         path-refined global vars (artifact of deferred lookup) *)
+      if is_global scope then ()
+      else assert_false (spf "missing entry %S in scope %d: { %s }"
+        name scope.id (String.concat ", "
+          (SMap.fold (fun n _ acc -> n :: acc) scope.entries [])))
+  in
+
+  let havoc_refi cx scope ((_, key, _) as refi_ref) =
+    (if Context.is_verbose cx then
+      prerr_endlinef "%d havoc_refi %s" (Unix.getpid ())
+        (Changeset.string_of_refi_ref refi_ref));
+    match get_refi key scope with
+    | Some _ ->
+      havoc_refi key scope;
+      Changeset.add_refi_change refi_ref
+    | None ->
+      (* global scopes may lack entries, if function closes over
+         path-refined global vars (artifact of deferred lookup) *)
+      if is_global scope then ()
+      else assert_false (spf "missing refi %S in scope %d: { %s }"
+        (Key.string_of_key key) scope.id
+        (String.concat ", " (KeyMap.fold (
+          fun k _ acc -> (Key.string_of_key k) :: acc) scope.refis [])))
+  in
+
+  fun cx func_frame call_frame changeset ->
+    if func_frame = 0 || call_frame = 0 || Changeset.is_empty changeset
+    then ()
+    else
+      let func_env = IMap.find_unsafe func_frame (Context.envs cx) in
+      let call_env = IMap.find_unsafe call_frame (Context.envs cx) in
+      overlapped_call_scopes func_env call_env |>
+        List.iter (fun ({ id; _ } as scope) ->
+          Changeset.include_scopes [id] changeset |>
+            Changeset.iter_writes
+              (havoc_entry cx scope)
+              (havoc_refi cx scope)
+      )
+)
 
 (***************)
 (* print utils *)
@@ -2197,27 +2267,37 @@ let rec __flow cx (l, u) trace =
     (***********************************************)
 
     | FunT (reason1, _, _,
-        {this_t = o1; params_tlist = tins1; return_t = t1; closure_t = i; _}),
+        { this_t = o1; params_tlist = tins1; return_t = t1;
+          closure_t = func_scope_id; _ }),
       FunT (reason2, _, _,
-        {this_t = o2; params_tlist = tins2; return_t = t2; closure_t = j; _})
+        { this_t = o2; params_tlist = tins2; return_t = t2;
+          closure_t = call_scope_id; _ })
       ->
-      rec_flow cx trace (o2,o1);
-      multiflow cx trace reason2 (tins2,tins1);
-      rec_flow cx trace (t1,t2);
-      havoc_ctx cx i j;
+      rec_flow cx trace (o2, o1);
+      multiflow cx trace reason2 (tins2, tins1);
+      rec_flow cx trace (t1, t2);
 
     | FunT (reason_fundef, _, _,
-        {this_t = o1; params_tlist = tins1; return_t = t1; closure_t = i; _}),
+        { this_t = o1; params_tlist = tins1; return_t = t1;
+          closure_t = func_scope_id; changeset; _ }),
       CallT (reason_callsite,
-        {this_t = o2; params_tlist = tins2; return_t = t2; closure_t = j; _})
+        { this_t = o2; params_tlist = tins2; return_t = t2;
+          closure_t = call_scope_id; _})
       ->
       Ops.push reason_callsite;
-      rec_flow cx trace (o2,o1);
-      multiflow cx trace reason_callsite (tins2,tins1);
+      rec_flow cx trace (o2, o1);
+      multiflow cx trace reason_callsite (tins2, tins1);
       (* relocate the function's return type at the call site TODO remove? *)
       let t1 = reposition ~trace cx reason_callsite t1 in
-      rec_flow cx trace (t1,t2);
-      havoc_ctx cx i j;
+      rec_flow cx trace (t1, t2);
+
+      (if Context.is_verbose cx then
+        prerr_endlinef "%d havoc_call_env fundef %s callsite %s"
+          (Unix.getpid ())
+          (string_of_reason reason_fundef)
+          (string_of_reason reason_callsite));
+      havoc_call_env cx func_scope_id call_scope_id changeset;
+
       Ops.pop ()
 
     (*********************************************)
@@ -3615,6 +3695,7 @@ and subst cx ?(force=true) (map: Type.t SMap.t) t =
     params_names = names;
     return_t = ret;
     closure_t = j;
+    changeset
   }) ->
     FunT (reason, subst cx ~force map static, subst cx ~force map proto, {
       this_t = subst cx ~force map this;
@@ -3622,6 +3703,7 @@ and subst cx ?(force=true) (map: Type.t SMap.t) t =
       params_names = names;
       return_t = subst cx ~force map ret;
       closure_t = j;
+      changeset
     })
 
   | PolyT (xs,t) ->
@@ -5833,26 +5915,26 @@ let enforce_strict cx id =
    exhibit this "interlinked" behavior).
 
    Unsurprisingly, since types also make references to some other maps in a
-   context (property maps, closures), these references need to be carried around
+   context (property maps, envs), these references need to be carried around
    as well for the descriptions to be complete.
 
    We can collect compact and complete descriptions of exports by using a custom
    type visitor that marks relevant things that need to be carried over as it
    walks the context from its exports. Once the walk is done, we can replace the
-   corresponding parts of the context (graph, property maps, closures) by their
+   corresponding parts of the context (graph, property maps, envs) by their
    reduced forms.
 *)
 module ContextOptimizer = struct
   type quotient = {
     reduced_graph : node IMap.t;
     reduced_property_maps : Type.t SMap.t IMap.t;
-    reduced_closures : Context.closure IMap.t
+    reduced_envs : Context.env IMap.t
   }
 
   let empty = {
     reduced_graph = IMap.empty;
     reduced_property_maps = IMap.empty;
-    reduced_closures = IMap.empty;
+    reduced_envs = IMap.empty;
   }
 
   class context_optimizer = object
@@ -5883,10 +5965,10 @@ module ContextOptimizer = struct
       let id = funtype.closure_t in
       if id = 0 then super#fun_type cx quotient funtype
       else
-        let { reduced_closures; _ } = quotient in
-        let closure = IMap.find_unsafe id (Context.closures cx) in
-        let reduced_closures = IMap.add id closure reduced_closures in
-        super#fun_type cx { quotient with reduced_closures } funtype
+        let { reduced_envs; _ } = quotient in
+        let closure = IMap.find_unsafe id (Context.envs cx) in
+        let reduced_envs = IMap.add id closure reduced_envs in
+        super#fun_type cx { quotient with reduced_envs } funtype
 
   end
 
@@ -5905,7 +5987,7 @@ module ContextOptimizer = struct
     let quotient = reduce_context cx exports in
     Context.set_graph cx quotient.reduced_graph;
     Context.set_property_maps cx quotient.reduced_property_maps;
-    Context.set_closures cx quotient.reduced_closures;
+    Context.set_envs cx quotient.reduced_envs;
     other_cxs |> List.iter (fun other_cx ->
       Context.add_module cx (Context.module_name other_cx) (export other_cx)
     )

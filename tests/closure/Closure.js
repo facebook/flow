@@ -1,34 +1,80 @@
+/***
+ * Test tracking of variable types across closure calls.
+ * @flow
+ */
 
-/* @providesModule Closure */
+function takes_string(_:string) { }
 
-function is_string(_:string) { }
+// global write from function
+//
 
-function f() { }
+var global_x = "hello";
 
-var x = "hello";
-f();
-is_string(x);
-x = 42;
+function global_f() { }
+function global_g() { global_x = 42; }
 
-function g() {
-  var y = "hello";
-  f();
-  is_string(y);
-  y = 42;
+global_f();
+takes_string(global_x); // ok
+
+global_g();
+takes_string(global_x); // error
+
+global_x = 42;  // shouldn't pollute linear refinement
+
+// local write from function
+//
+
+function local_func() {
+
+  var local_x = "hello";
+
+  function local_f() { }
+  function local_g() { local_x = 42; }
+
+  local_f();
+  takes_string(local_x); // ok
+
+  local_g();
+  takes_string(local_x); // error
+
+  local_x = 42;  // shouldn't pollute linear refinement
 }
 
-var o = { f: function() { } }
+// global write from method
+//
 
-function h() {
-  var z = "hello";
-  o.f();
-  is_string(z);
-  z = 42;
+var global_y = "hello";
+
+var global_o = {
+  f: function() { },
+  g: function() { global_y = 42; }
 }
 
-var w = "hello";
-o.f();
-is_string(w);
-w = 42;
+global_o.f();
+takes_string(global_y); // ok
 
-module.exports = true;
+global_o.g();
+takes_string(global_y); // error
+
+global_y = 42;  // shouldn't pollute linear refinement
+
+// local write from method
+//
+
+function local_meth() {
+
+  var local_y = "hello";
+
+  var local_o = {
+    f: function() { },
+    g: function() { local_y = 42; }
+  }
+
+  local_o.f();
+  takes_string(local_y); // ok
+
+  local_o.g();
+  takes_string(local_y); // error
+
+  local_y = 42;  // shouldn't pollute linear refinement
+}

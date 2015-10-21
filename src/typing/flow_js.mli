@@ -41,10 +41,6 @@ val mk_tvar_derivable_where: Context.t -> reason -> (Type.t -> unit) -> Type.t
 
 val get_builtin_typeapp: Context.t -> reason -> string -> Type.t list -> Type.t
 
-(* frames *)
-
-val havoc_ctx : Context.t -> int -> int -> unit
-
 (* polymorphism *)
 
 val subst: Context.t -> ?force:bool -> (Type.t SMap.t) -> Type.t -> Type.t

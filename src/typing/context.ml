@@ -10,8 +10,7 @@
 
 open Utils
 
-type stack = int list
-type closure = stack * Scope.t list
+type env = Scope.t list
 
 type metadata = {
   checked: bool;
@@ -37,8 +36,8 @@ type t = {
   (* obj types point to mutable property maps *)
   mutable property_maps: Type.properties IMap.t;
 
-  (* map from closure ids to env snapshots *)
-  mutable closures: closure IMap.t;
+  (* map from frame ids to env snapshots *)
+  mutable envs: env IMap.t;
 
   (* map from module names to their types *)
   mutable modulemap: Type.t SMap.t;
@@ -69,7 +68,7 @@ let make metadata file module_name = {
   module_exports_type = CommonJSModule(None);
 
   graph = IMap.empty;
-  closures = IMap.empty;
+  envs = IMap.empty;
   property_maps = IMap.empty;
   modulemap = SMap.empty;
 
@@ -84,7 +83,7 @@ let make metadata file module_name = {
 
 (* accessors *)
 let annot_table cx = cx.annot_table
-let closures cx = cx.closures
+let envs cx = cx.envs
 let errors cx = cx.errors
 let error_suppressions cx = cx.error_suppressions
 let file cx = cx.file
@@ -111,8 +110,8 @@ let copy_of_context cx = { cx with
 }
 
 (* mutators *)
-let add_closure cx frame closure =
-  cx.closures <- IMap.add frame closure cx.closures
+let add_env cx frame env =
+  cx.envs <- IMap.add frame env cx.envs
 let add_error cx error =
   cx.errors <- Errors_js.ErrorSet.add error cx.errors
 let add_error_suppression cx loc =
@@ -135,8 +134,8 @@ let remove_all_error_suppressions cx =
   cx.error_suppressions <- Errors_js.ErrorSuppressions.empty
 let remove_tvar cx id =
   cx.graph <- IMap.remove id cx.graph
-let set_closures cx closures =
-  cx.closures <- closures
+let set_envs cx envs =
+  cx.envs <- envs
 let set_globals cx globals =
   cx.globals <- globals
 let set_graph cx graph =

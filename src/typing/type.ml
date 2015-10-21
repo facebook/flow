@@ -338,7 +338,8 @@ and funtype = {
   params_tlist: t list;
   params_names: string list option;
   return_t: t;
-  closure_t: int
+  closure_t: int;
+  changeset: Changeset.t
 }
 
 and objtype = {

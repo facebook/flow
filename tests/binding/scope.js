@@ -16,9 +16,33 @@ function switch_scope(x: string) {
       var b = ""; // error: string ~> number
       break;
     case "bar":
-      let a = ""; // TODO error: a already bound in switch
+      let a = ""; // error: a already bound in switch
       break;
   }
+}
+
+// a switch is a single lexical scope, so lets and non-disjoint
+// cases can mix in odd ways. our support for edge cases is not
+// yet perfect.
+function switch_scope2(x: number) {
+  switch (x) {
+    case 0:
+     a = "";     // error: assign before declaration
+     break;
+    case 1:
+     var b = a;  // error: use before declaration
+     break;
+    case 2:
+      let a = "";
+      break;
+    case 3:
+      a = "";     // error: skipped initializer
+      break;
+    case 4:
+      var c:number = a;  // error: skipped initializer
+      break;
+  }
+  a = ""; // error: a no longer in scope
 }
 
 function try_scope() {

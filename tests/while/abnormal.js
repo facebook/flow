@@ -8,7 +8,7 @@ function foo(x: boolean) {
     }
     return;
   }
-  console.log('this is still reachable');
+  //console.log('this is still reachable');
 }
 
 function bar(x: boolean) {
@@ -16,5 +16,5 @@ function bar(x: boolean) {
   while (ii > 0) {
     return;
   }
-  console.log('this is still reachable');
+  //console.log('this is still reachable');
 }
