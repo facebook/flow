@@ -95,7 +95,7 @@ let msg_of_tail tail_env =
 
 let delta_t : float = 3.0
 
-let rec connect env retries start_time tail_env =
+let rec connect ?(first_attempt=false) env retries start_time tail_env =
   match retries with
   | Some n when n < 0 ->
       Printf.eprintf "\nError: Ran out of retries, giving up!\n";
@@ -127,7 +127,12 @@ let rec connect env retries start_time tail_env =
     Printf.eprintf "%s\n%!" ClientMessages.load_state_not_found_msg;
   match conn with
   | Result.Ok (ic, oc) -> (ic, oc)
-  | Result.Error CCS.Server_missing ->
+  | Result.Error e ->
+    if first_attempt then
+      Printf.eprintf
+        "For more detailed logs, try `tail -f $(hh_client --logname)`\n";
+    match e with
+    | CCS.Server_missing ->
       if env.autostart then begin
         ClientStart.start_server { ClientStart.
           root = env.root;
@@ -142,12 +147,12 @@ let rec connect env retries start_time tail_env =
         end;
         raise Exit_status.(Exit_with No_server_running)
       end
-  | Result.Error CCS.Server_busy ->
+    | CCS.Server_busy ->
       Printf.eprintf
         "hh_server is busy: %s %s%!"
         tail_msg (Tty.spinner());
       connect env (Option.map retries (fun x -> x - 1)) start_time tail_env
-  | Result.Error CCS.Build_id_mismatch ->
+    | CCS.Build_id_mismatch ->
       Printf.eprintf begin
         "hh_server's version doesn't match the client's, "^^
         "so it has exited.\n%!"
@@ -165,7 +170,7 @@ let rec connect env retries start_time tail_env =
           Tail.close_env tail_env;
           connect env retries start_time tail_env
         end else raise Exit_status.(Exit_with Build_id_mismatch)
-  | Result.Error CCS.Server_initializing ->
+    | CCS.Server_initializing ->
       Printf.eprintf
         "hh_server still initializing; this can take some time.%!";
       if env.retry_if_init then begin
@@ -187,6 +192,6 @@ let connect env =
       link_file in
   let start_time = Unix.time () in
   let tail_env = Tail.create_env log_file in
-  let res = connect env env.retries start_time tail_env in
+  let res = connect ~first_attempt:true env env.retries start_time tail_env in
   Tail.close_env tail_env;
   res
