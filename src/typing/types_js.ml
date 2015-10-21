@@ -524,13 +524,17 @@ let merge_strict_file file =
 (** TODO: handle case when file+contents don't agree with file system state **)
 let typecheck_contents contents filename =
   Parsing_service_js.(match do_parse ~fail:false contents filename with
-  | OK ast ->
+  | OK (ast, info) ->
+      (* defaults *)
       let metadata = { Context.
         checked = true;
         weak = false;
         munge_underscores = false; (* TODO: read from .flowconfig? *)
         verbose = None;
       } in
+      (* apply overrides from the docblock *)
+      let metadata = TI.apply_docblock_overrides metadata info in
+
       let cx = TI.infer_ast
         ~gc:false ~metadata ~filename ~module_name:"-" ast in
       let cache = new context_cache in

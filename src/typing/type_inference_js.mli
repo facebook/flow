@@ -11,6 +11,11 @@
 open Reason_js
 open Utils_js
 
+val apply_docblock_overrides:
+  Context.metadata ->
+  Docblock.t ->
+  Context.metadata
+
 val infer_ast:
   ?gc: bool ->
   metadata: Context.metadata ->

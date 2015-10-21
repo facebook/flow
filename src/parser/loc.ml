@@ -90,6 +90,11 @@ let compare loc1 loc2 =
 
 let source loc = loc.source
 
+let source_is_lib_file = function
+| LibFile _ -> true
+| Builtins -> true
+| SourceFile _ -> false
+
 (* implements OrderedType and SharedMem.UserKeyType *)
 module FilenameKey = struct
   type t = filename

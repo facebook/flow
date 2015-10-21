@@ -6228,14 +6228,6 @@ let infer_ast ?(gc=true) ~metadata ~filename ~module_name ast =
 
   let loc, statements, comments = ast in
 
-  (* TODO: Facebook uses a @preventMunge annotation to force `munge_underscores`
-   * off on a per-file basis. We should parse the comments like we do above. *)
-  let metadata = Context.(match Module_js.parse_flow comments with
-  | Module_js.ModuleMode_Checked -> { metadata with checked = true; }
-  | Module_js.ModuleMode_Weak -> { metadata with checked = true; weak = true }
-  | Module_js.ModuleMode_Unchecked -> metadata
-  ) in
-
   let cx = Flow_js.fresh_context metadata filename module_name in
   let checked = Context.is_checked cx in
 
@@ -6312,27 +6304,22 @@ let infer_ast ?(gc=true) ~metadata ~filename ~module_name ast =
 
   cx
 
-(* return all comments preceding the first executable statement *)
-let get_comment_header (_, stmts, comments) =
-  match stmts with
-  | [] -> comments
-  | stmt :: _ ->
-    let stmtloc = fst stmt in
-    let rec loop acc comments =
-      match comments with
-      | c :: cs when fst c < stmtloc ->
-        loop (c :: acc) cs
-      | _ -> acc
-    in
-    List.rev (loop [] comments)
+let apply_docblock_overrides metadata docblock_info =
+  (* TODO: Facebook uses a @preventMunge annotation to force `munge_underscores`
+   * off on a per-file basis. We should parse the comments like we do above. *)
+  Context.(match Docblock.flow docblock_info with
+  | Some Docblock.OptIn -> { metadata with checked = true; }
+  | Some Docblock.OptInWeak -> { metadata with checked = true; weak = true }
+  | None -> metadata
+  )
 
 (* Given a filename, retrieve the parsed AST, derive a module name,
    and invoke the local (infer) pass. This will build and return a
    fresh context object for the module. *)
 let infer_module ~metadata filename =
-  let ast = Parsing_service_js.get_ast_unsafe filename in
-  let comments = get_comment_header ast in
-  let module_name = Module_js.exported_module filename comments in
+  let ast, info = Parsing_service_js.get_ast_and_info_unsafe filename in
+  let module_name = Module_js.exported_module filename info in
+  let metadata = apply_docblock_overrides metadata info in
   infer_ast ~metadata ~filename ~module_name ast
 
 (* Map.union: which is faster, union M N or union N M when M > N?

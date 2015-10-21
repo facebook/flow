@@ -101,35 +101,6 @@ module InfoHeap = SharedMem.WithCache (Loc.FilenameKey) (struct
   let prefix = Prefix.make()
 end)
 
-(****************** header parse utils *********************)
-
-let words_rx = Str.regexp "[ \t\n\\*/]+"
-
-(* scan the first node in an AST comment list, using the given
-   word-list parser and default result. default is returned if
-   parser returns nothing, or comment list is empty.
-   Note: 'header' is a bit of a misnomer. we simply call this
-   on the comment list returned from the parser, which makes no
-   guarantees that the first comment appears before anything else *)
-let parse_header wordlist_parser default = Ast.Comment.(function
-| [] -> default
-| (loc, Block s) :: _
-| (loc, Line s) :: _ ->
-  match wordlist_parser (Str.split words_rx s) with
-  | Some x -> x
-  | None -> default
-)
-
-(****************** @flow parser *********************)
-
-let rec parse_attributes_flow = function
-  | "@flow" :: "weak" :: _ -> Some ModuleMode_Weak
-  | "@flow" :: _ -> Some ModuleMode_Checked
-  | _ :: xs -> parse_attributes_flow xs
-  | [] -> None
-
-let parse_flow = parse_header parse_attributes_flow ModuleMode_Unchecked
-
 (** module systems **)
 
 (* shared heap for package.json tokens by filename *)
@@ -168,11 +139,8 @@ let add_package package =
 (* Specification of a module system. Currently this signature is sufficient to
    model both Haste and Node, but should be further generalized. *)
 module type MODULE_SYSTEM = sig
-  (* Given a file and comments in it, make the name of the module it exports. *)
-  val exported_module: filename -> Ast.Comment.t list -> string
-
-  (* Given just a file name, guess the name of the module it exports. *)
-  val guess_exported_module: filename -> string -> string
+  (* Given a file and docblock info, make the name of the module it exports. *)
+  val exported_module: filename -> Docblock.t -> string
 
   (* Given a file and a reference in it to an imported module, make the name of
      the module it refers to. *)
@@ -261,8 +229,7 @@ let resolve_symlinks path =
 (*******************************)
 
 module Node = struct
-  let exported_module file comments = string_of_filename file
-  let guess_exported_module file _content = string_of_filename file
+  let exported_module file info = string_of_filename file
 
   let path_if_exists path =
     let path = resolve_symlinks path in
@@ -386,13 +353,6 @@ module Haste: MODULE_SYSTEM = struct
     | Loc.LibFile file | Loc.SourceFile file ->
         Filename.basename file |> Filename.chop_extension
 
-  let rec parse_attributes_module_name = function
-    | "@providesModule" :: m :: _ -> Some m
-    | _ :: xs -> parse_attributes_module_name xs
-    | [] -> None
-
-  let parse_module_name = parse_header parse_attributes_module_name
-
   let is_mock =
     let mock_path = Str.regexp ".*/__mocks__/.*" in
     function
@@ -400,29 +360,12 @@ module Haste: MODULE_SYSTEM = struct
     | Loc.LibFile file | Loc.SourceFile file ->
         Str.string_match mock_path file 0
 
-  let exported_module file comments =
+  let exported_module file info =
     if is_mock file
     then short_module_name_of file
-    else parse_module_name (string_of_filename file) comments
-
-  (* grep for "@providesModule foo" when we don't have an AST *)
-  (* TODO instead of this, try retaining ASTs in ParseHeap after errors
-     and parsing them in the usual way *)
-  let grep_provides =
-    let provides_rx = Str.regexp
-      "\\(.\\|\n\\)*@providesModule[ \t]+\\([_a-zA-Z][^ \t\n]*\\)" in
-    let module_name_group = 2 in
-    fun file content ->
-      let file = string_of_filename file in
-      let content = cat file in
-      if Str.string_match provides_rx content 0
-      then Str.matched_group module_name_group content
-      else file
-
-  let guess_exported_module file content =
-    if is_mock file
-    then short_module_name_of file
-    else grep_provides file content
+    else match Docblock.providesModule info with
+      | Some m -> m
+      | None -> string_of_filename file
 
   let expanded_name r =
     match Str.split_delim Files_js.dir_sep r with
@@ -510,13 +453,9 @@ let init opts =
   flow_options := Some(opts);
   module_system := Hashtbl.find module_system_table opts.Options.opt_module
 
-let exported_module file comments =
+let exported_module file info =
   let module M = (val !module_system) in
-  M.exported_module file comments
-
-let guess_exported_module file comments =
-  let module M = (val !module_system) in
-  M.guess_exported_module file comments
+  M.exported_module file info
 
 let imported_module file r =
   let module M = (val !module_system) in
@@ -648,8 +587,13 @@ let add_unparsed_info ~force_check file =
   | Builtins -> assert false
   ) in
   let content = cat filename in
-  let _module = guess_exported_module file content in
-  let checked = force_check || Parsing_service_js.in_flow content file in
+  let docblock = Docblock.extract content in
+  let _module = exported_module file docblock in
+  let checked =
+    force_check ||
+    Loc.source_is_lib_file file ||
+    Docblock.is_flow docblock
+  in
   let info = { file; _module; checked; parsed = false;
     required = SSet.empty;
     require_loc = SMap.empty;

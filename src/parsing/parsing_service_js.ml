@@ -24,24 +24,9 @@ type results =
 
 (* shared heap for parsed ASTs by filename *)
 module ParserHeap = SharedMem.WithCache (Loc.FilenameKey) (struct
-    type t = Spider_monkey_ast.program
+    type t = (Spider_monkey_ast.program * Docblock.t)
     let prefix = Prefix.make()
   end)
-
-(* . matches any character except the newline, so this is a little more
- * complicated than one might think *)
-let flow_check_regexp = (Str.regexp "\\(.\\|\n\\)*@flow")
-
-let is_flow content =
-  Str.string_match flow_check_regexp content 0
-
-let is_lib_file = Loc.(function
-| LibFile _ -> true
-| Builtins -> true
-| SourceFile _ -> false)
-
-let in_flow content file =
-  is_lib_file file || is_flow content
 
 let (parser_hook: (filename -> Ast.program -> unit) list ref) = ref []
 let call_on_success f = parser_hook := f :: !parser_hook
@@ -83,10 +68,11 @@ let delete_file fn =
 
 let do_parse ?(fail=true) content file =
   try (
+    let info = Docblock.extract content in
     let ast, parse_errors =
       Parser_flow.program_file ~fail ~parse_options content (Some file) in
     if fail then assert (parse_errors = []);
-    OK ast
+    OK (ast, info)
   )
   with
   | Parse_error.Error parse_errors ->
@@ -111,8 +97,8 @@ let reducer init_modes (ok, fails, errors) file =
   init_modes ();
   let content = cat (string_of_filename file) in
   match (do_parse content file) with
-  | OK ast ->
-      ParserHeap.add file ast;
+  | OK (ast, info) ->
+      ParserHeap.add file (ast, info);
       execute_hook file (Some ast);
       (FilenameSet.add file ok, fails, errors)
   | Err converted ->
@@ -149,6 +135,10 @@ let reparse workers files init_modes =
   parse workers next init_modes
 
 let get_ast_unsafe file =
+  let ast, _ = ParserHeap.find_unsafe file in
+  ast
+
+let get_ast_and_info_unsafe file =
   ParserHeap.find_unsafe file
 
 let remove_asts files =

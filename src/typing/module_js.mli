@@ -24,13 +24,11 @@ type mode = ModuleMode_Checked | ModuleMode_Weak | ModuleMode_Unchecked
 
 val module_name_candidates: string -> string list
 
-val parse_flow: Spider_monkey_ast.Comment.t list -> mode
-
 (* initialize to a module system, given the name of the module system *)
 val init: Options.options -> unit
 
 (* export and import functions for the module system *)
-val exported_module: filename -> Spider_monkey_ast.Comment.t list -> string
+val exported_module: filename -> Docblock.t -> string
 val imported_module: filename -> string -> string
 
 val module_exists: string -> bool

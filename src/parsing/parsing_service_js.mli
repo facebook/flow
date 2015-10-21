@@ -34,6 +34,8 @@ val reparse:
 
 (* after parsing, retrieves ast by filename (unsafe) *)
 val get_ast_unsafe: filename -> Spider_monkey_ast.program
+val get_ast_and_info_unsafe:
+  filename -> Spider_monkey_ast.program * Docblock.t
 
 (* remove asts for given file set. *)
 val remove_asts: FilenameSet.t -> unit
@@ -48,7 +50,4 @@ val do_parse:
   ?fail:bool ->
   string ->                 (* contents of the file *)
   filename ->               (* filename *)
-  (Spider_monkey_ast.program, Errors_js.ErrorSet.t) ok_or_err
-
-(* true if file is in flow, i.e. is to be checked. CAUTION expensive *)
-val in_flow: string -> filename -> bool
+  (Spider_monkey_ast.program * Docblock.t, Errors_js.ErrorSet.t) ok_or_err

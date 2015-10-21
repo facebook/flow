@@ -32,7 +32,7 @@ let parse_lib save_parse_errors =
       let lib_content = cat lib_filename in
       let lib_file = Loc.LibFile lib_filename in
       match do_parse lib_content lib_file with
-      | OK ast ->
+      | OK (ast, _) ->
         lib_file, Some ast
       | Err errors ->
         save_parse_errors lib_file errors;
