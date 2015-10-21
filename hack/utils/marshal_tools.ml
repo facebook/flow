@@ -40,7 +40,7 @@ let preamble_start_sentinel = '\142'
 let preamble_core_size = 4
 let expected_preamble_size = preamble_core_size + 1
 (** Payload size in bytes = 2^31 - 1. *)
-let maximum_payload_size = 2147483647
+let maximum_payload_size = (1 lsl (preamble_core_size * 8)) - 1
 
 let get_preamble_core (size : int) =
   (** We limit payload size to 2^31 - 1 bytes. *)
@@ -60,13 +60,12 @@ let make_preamble (size : int) =
   preamble
 
 let parse_preamble preamble =
-  if (String.length preamble) <> expected_preamble_size then
-    raise Malformed_Preamble_Exception;
-  if (String.get preamble 0) <> preamble_start_sentinel then
+  if (String.length preamble) <> expected_preamble_size
+    || (String.get preamble 0) <> preamble_start_sentinel then
     raise Malformed_Preamble_Exception;
   let rec loop i acc =
     if i >= 5 then acc
-    else loop (i + 1) ( (acc * 256) + (int_of_char (String.get preamble i))) in
+    else loop (i + 1) ((acc * 256) + (int_of_char (String.get preamble i))) in
   loop 1 0
 
 let to_fd_with_preamble fd obj =
