@@ -329,25 +329,10 @@ let infer_at_pos file line char =
     None, None
 
 let hh_find_lvar_refs file line char =
-  let file = Relative_path.create Relative_path.Root file in
   try
     let get_result = FindLocalsService.attach_hooks line char in
-    let ast = Parser_heap.ParserHeap.find_unsafe file in
-    let tcopt = TypecheckerOptions.permissive in
     Errors.ignore_ begin fun () ->
-      (* We only need to name to find references to locals *)
-      List.iter ast begin fun def ->
-        match def with
-        | Ast.Fun f ->
-            let nenv = Naming.empty tcopt in
-            let _ = Naming.fun_ nenv f in
-            ()
-        | Ast.Class c ->
-            let nenv = Naming.empty tcopt in
-            let _ = Naming.class_ nenv c in
-            ()
-        | _ -> ()
-      end;
+      ignore (hh_check file);
     end;
     FindLocalsService.detach_hooks ();
     let res_list =
