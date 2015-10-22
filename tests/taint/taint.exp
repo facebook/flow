@@ -43,9 +43,9 @@ globals.js:6:25,25: tainted Location
 This type is incompatible with
 [LIB] dom.js:299:15,22: Location
 
-taint2.js:10:5,37: call of method `assign`
+taint2.js:8:5,37: call of method `assign`
 Error:
-taint2.js:10:30,36: tainted string
+taint2.js:8:30,36: tainted string
 This type is incompatible with
 [LIB] bom.js:110:17,22: string
 
