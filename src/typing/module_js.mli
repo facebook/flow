@@ -52,6 +52,7 @@ val get_reverse_imports: string -> SSet.t option
 
 (* commit new and removed modules, after local inference *)
 val commit_modules:
+  ?debug: bool ->
   filename list ->                    (* inferred modules *)
   SSet.t ->                           (* removed files *)
   Errors_js.ErrorSet.t FilenameMap.t  (* filenames to error sets *)

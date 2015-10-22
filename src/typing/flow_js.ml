@@ -144,7 +144,7 @@ let add_output cx error_kind ?(trace_reasons=[]) message_list =
   then (
     raise (FlowError message_list)
   ) else (
-    (if modes.debug then
+    (if Context.is_verbose cx then
       prerr_endlinef "\nadd_output cx.file = %S\n%s"
         (string_of_filename (Context.file cx))
         (message_list

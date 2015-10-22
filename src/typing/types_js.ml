@@ -31,7 +31,6 @@ type file_errors = string * Errors_js.error list
 type results = SSet.t * string list * Errors_js.error list list
 
 let init_modes opts = Options.(
-  modes.debug <- opts.opt_debug;
   modes.traces <- opts.opt_traces;
   modes.strip_root <- opts.opt_strip_root;
   modes.quiet <- opts.opt_quiet;
@@ -95,11 +94,9 @@ let all_errors = ref FilenameMap.empty
 (* error state handling.
    note: once weve decoupled from hack binary, these will be stored
    in the recurrent env struct, not local state *)
-let clear_errors (files: filename list) =
+let clear_errors ?(debug=false) (files: filename list) =
   List.iter (fun file ->
-    debug_string (fun () ->
-      spf "clear errors %s" (string_of_filename file)
-    );
+    if debug then prerr_endlinef "clear errors %s" (string_of_filename file);
     parse_errors := FilenameMap.remove file !parse_errors;
     infer_errors := FilenameMap.remove file !infer_errors;
     module_errors := FilenameMap.remove file !module_errors;
@@ -773,8 +770,8 @@ let calc_dependencies workers files =
   )) deps
 
 (* commit newly inferred and removed modules, collect errors. *)
-let commit_modules inferred removed =
-  let errmap = Module.commit_modules inferred removed in
+let commit_modules ?(debug=false) inferred removed =
+  let errmap = Module.commit_modules ~debug inferred removed in
   save_errormap module_errors errmap
 
 (* Sanity checks on InfoHeap and NameHeap. Since this is performance-intensive
@@ -811,6 +808,7 @@ let heap_check files = Module.(
    return a list of files that have been checked.
  *)
 let typecheck workers files removed unparsed opts make_merge_input =
+  let debug = Options.is_debug_mode opts in
   (* TODO remove after lookup overhaul *)
   Module.clear_filename_cache ();
   (* local inference populates context heap, module info heap *)
@@ -820,12 +818,12 @@ let typecheck workers files removed unparsed opts make_merge_input =
   let force_check = Options.all opts in
   List.iter (Module.add_unparsed_info ~force_check) unparsed;
   (* create module dependency graph, warn on dupes etc. *)
-  commit_modules inferred removed;
+  commit_modules ~debug inferred removed;
   (* SHUTTLE *)
   (* call supplied function to calculate closure of modules to merge *)
   match make_merge_input inferred with
   | true, to_merge ->
-    if opts.Options.opt_debug then heap_check to_merge;
+    if debug then heap_check to_merge;
     let dependency_graph = calc_dependencies workers to_merge in
     let partition = Sort_js.topsort dependency_graph in
     if profile_and_not_quiet opts then Sort_js.log partition;
@@ -948,6 +946,7 @@ let deps workers unmodified inferred_files removed_modules =
 *)
 let recheck genv env modified =
   let options = genv.ServerEnv.options in
+  let debug = Options.is_debug_mode options in
 
   (* filter modified files *)
   let root = Options.root options in
@@ -967,7 +966,7 @@ let recheck genv env modified =
 
   (* clear errors for modified files and master *)
   let master_cx = Flow_js.master_cx () in
-  clear_errors (Context.file master_cx :: FilenameSet.elements modified);
+  clear_errors ~debug (Context.file master_cx :: FilenameSet.elements modified);
 
   (* track deleted files, remove from modified set *)
   let deleted = FilenameSet.filter (fun f ->
@@ -992,13 +991,13 @@ let recheck genv env modified =
   let undeleted_parsed = FilenameSet.diff old_parsed deleted in
   let unmodified_parsed = FilenameSet.diff undeleted_parsed modified in
 
-  Modes_js.debug_string (fun () -> spf
+  if debug then prerr_endlinef
     "recheck: old = %d, del = %d, undel = %d, fresh = %d, unmod = %d"
     (FilenameSet.cardinal old_parsed)
     (FilenameSet.cardinal deleted)
     (FilenameSet.cardinal undeleted_parsed)
     (FilenameSet.cardinal freshparsed)
-    (FilenameSet.cardinal unmodified_parsed));
+    (FilenameSet.cardinal unmodified_parsed);
 
   (* clear info for modified and deleted files *)
   (* remember deleted modules *)

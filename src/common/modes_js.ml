@@ -9,7 +9,6 @@
  *)
 
 type modes = {
-  mutable debug: bool;
   mutable traces: int;
   mutable strip_root: bool;
   mutable quiet : bool;
@@ -17,11 +16,8 @@ type modes = {
 }
 
 let modes = {
-  debug = false;
   traces = 0;
   strip_root = false;
   quiet = true;
   profile = false;
 }
-
-let debug_string f = if modes.debug then prerr_endline (f ())

@@ -36,6 +36,7 @@ type options = {
 let all opts = opts.opt_all
 let error_flags opts = opts.opt_error_flags
 let is_check_mode opts = opts.opt_check_mode
+let is_debug_mode opts = opts.opt_debug
 let log_file opts = opts.opt_log_file
 let root opts = opts.opt_root
 let should_detach opts = opts.opt_should_detach

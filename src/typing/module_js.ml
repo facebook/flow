@@ -675,10 +675,10 @@ let get_providers = Hashtbl.find all_providers
    4. remove the unregistered modules from NameHeap
    5. register the new providers in NameHeap
  *)
-let commit_modules inferred removed =
-  Modes.debug_string (fun () ->
-    spf "*** committing modules inferred %d removed %d ***"
-    (List.length inferred) (SSet.cardinal removed));
+let commit_modules ?(debug=false) inferred removed =
+  if debug then prerr_endlinef
+    "*** committing modules inferred %d removed %d ***"
+    (List.length inferred) (SSet.cardinal removed);
   (* all removed modules must be repicked *)
   (* all modules provided by newly inferred files must be repicked *)
   let repick = List.fold_left (fun acc f ->
@@ -691,8 +691,7 @@ let commit_modules inferred removed =
   let remove, replace, errmap = SSet.fold (fun m (rem, rep, errmap) ->
     match get_providers m with
     | ps when FilenameSet.cardinal ps = 0 ->
-        Modes.debug_string (fun () -> spf
-          "no remaining providers: %S" m);
+        if debug then prerr_endlinef "no remaining providers: %S" m;
         (SSet.add m rem), rep, errmap
     | ps ->
       (* incremental: clear error sets of provider candidates *)
@@ -702,19 +701,19 @@ let commit_modules inferred removed =
       let p, errmap = choose_provider m ps errmap in
       match NameHeap.get m with
       | Some f when f = p ->
-          Modes.debug_string (fun () -> spf
-            "unchanged provider: %S -> %s" m (string_of_filename p));
+          if debug then prerr_endlinef
+            "unchanged provider: %S -> %s" m (string_of_filename p);
           rem, rep, errmap
       | Some f ->
-          Modes.debug_string (fun () -> spf
+          if debug then prerr_endlinef
             "new provider: %S -> %s replaces %s"
             m
             (string_of_filename p)
-            (string_of_filename f));
+            (string_of_filename f);
           (SSet.add m rem), ((m, p) :: rep), errmap
       | None ->
-          Modes.debug_string (fun () -> spf
-            "initial provider %S -> %s" m (string_of_filename p));
+          if debug then prerr_endlinef
+            "initial provider %S -> %s" m (string_of_filename p);
           (SSet.add m rem), ((m, p) :: rep), errmap
   ) repick (SSet.empty, [], FilenameMap.empty) in
   (* update NameHeap *)
@@ -726,7 +725,7 @@ let commit_modules inferred removed =
   ) replace;
   (* now that providers are updated, update reverse dependency info *)
   add_reverse_imports inferred;
-  Modes.debug_string (fun () -> "*** done committing modules ***");
+  if debug then prerr_endlinef "*** done committing modules ***";
   errmap
 
 (* remove module mappings for given files, if they exist. Possibilities:
