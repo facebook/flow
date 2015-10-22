@@ -128,6 +128,24 @@ let strip_root_flag prev = CommandSpec.ArgSpec.(
       ~doc:"Print paths without the root"
 )
 
+let verbose_flags =
+  let collector main verbose indent =
+    let opt_verbose =
+      if verbose || indent
+      then Some (if indent then 2 else 0)
+      else None
+    in
+    main opt_verbose
+  in
+  fun prev -> CommandSpec.ArgSpec.(
+    prev
+    |> collect collector
+    |> flag "--verbose" no_arg
+        ~doc:"Print verbose info during typecheck"
+    |> flag "--verbose-indent" no_arg
+        ~doc:"Indent verbose info during typecheck (implies --verbose)"
+  )
+
 (* relativize a loc's source path to a given root whenever strip_root is set *)
 let relativize strip_root root loc =
   if not strip_root then loc

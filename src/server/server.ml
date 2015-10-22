@@ -141,13 +141,13 @@ struct
     Marshal.to_channel oc results [];
     flush oc
 
-  let check_file file_input oc =
+  let check_file file_input verbose oc =
     let file = ServerProt.file_input_get_filename file_input in
     let errors = match file_input with
     | ServerProt.FileName _ -> failwith "Not implemented"
     | ServerProt.FileContent (_, content) ->
         let file = Loc.SourceFile file in
-        (match Types_js.typecheck_contents content file with
+        (match Types_js.typecheck_contents ?verbose content file with
         | _, errors -> errors)
     in
     send_errorl (Errors_js.to_list errors) oc
@@ -406,8 +406,8 @@ struct
     match command with
     | ServerProt.AUTOCOMPLETE fn ->
         autocomplete client_logging_context fn oc
-    | ServerProt.CHECK_FILE fn ->
-        check_file fn oc
+    | ServerProt.CHECK_FILE (fn, verbose) ->
+        check_file fn verbose oc
     | ServerProt.DUMP_TYPES (fn, format) ->
         dump_types fn format oc
     | ServerProt.ERROR_OUT_OF_DATE ->

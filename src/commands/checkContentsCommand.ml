@@ -28,6 +28,7 @@ let spec = {
     |> server_flags
     |> error_flags
     |> json_flags
+    |> verbose_flags
     |> anon "filename" (optional string) ~doc:"Filename"
   )
 }
@@ -41,11 +42,15 @@ let read_from_stdin file =
         let contents = Sys_utils.read_stdin_to_string () in
         ServerProt.FileContent ((Some (get_path_of_file file)), contents)
 
-let main option_values error_flags use_json file () =
+let main option_values error_flags use_json verbose file () =
   let file = read_from_stdin file in
   let root = guess_root (ServerProt.path_of_input file) in
   let ic, oc = connect option_values root in
-  ServerProt.cmd_to_channel oc (ServerProt.CHECK_FILE file);
+
+  if not use_json && (verbose <> None)
+  then prerr_endline "NOTE: --verbose writes to the server log file";
+
+  ServerProt.cmd_to_channel oc (ServerProt.CHECK_FILE (file, verbose));
   let response = ServerProt.response_from_channel ic in
   match response with
   | ServerProt.ERRORS e ->

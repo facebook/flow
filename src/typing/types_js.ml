@@ -519,7 +519,7 @@ let merge_strict_file file =
 
 (* Another special case, similar assumptions as above. *)
 (** TODO: handle case when file+contents don't agree with file system state **)
-let typecheck_contents contents filename =
+let typecheck_contents ?verbose contents filename =
   Parsing_service_js.(match do_parse ~fail:false contents filename with
   | OK (ast, info) ->
       (* defaults *)
@@ -527,7 +527,7 @@ let typecheck_contents contents filename =
         checked = true;
         weak = false;
         munge_underscores = false; (* TODO: read from .flowconfig? *)
-        verbose = None;
+        verbose;
       } in
       (* apply overrides from the docblock *)
       let metadata = TI.apply_docblock_overrides metadata info in

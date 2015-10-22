@@ -35,10 +35,6 @@ module OptionParser(Config : CONFIG) = struct
     prev
     |> flag "--debug" no_arg
         ~doc:"Print debug info during typecheck"
-    |> flag "--verbose" no_arg
-        ~doc:"Print verbose info during typecheck"
-    |> flag "--verbose-indent" no_arg
-        ~doc:"Indent verbose info during typecheck (implies --verbose)"
     |> flag "--all" no_arg
         ~doc:"Typecheck all files, not just @flow"
     |> flag "--weak" no_arg
@@ -53,6 +49,7 @@ module OptionParser(Config : CONFIG) = struct
         ~doc:"Treat any class member name with a leading underscore as private"
     |> flag "--max-workers" (optional int)
         ~doc:"Maximum number of workers to create (capped by number of cores)"
+    |> verbose_flags
     |> strip_root_flag
     |> temp_dir_flag
     |> from_flag
@@ -111,9 +108,9 @@ module OptionParser(Config : CONFIG) = struct
   }
 
   let result = ref None
-  let main error_flags json profile quiet log_file wait debug verbose
-           verbose_indent all weak traces lib no_flowlib
-           munge_underscore_members max_workers strip_root temp_dir from
+  let main error_flags json profile quiet log_file wait debug
+           all weak traces lib no_flowlib munge_underscore_members max_workers
+           verbose strip_root temp_dir from
            root () =
     FlowEventLogger.set_from from;
     let root = CommandUtils.guess_root root in
@@ -155,12 +152,6 @@ module OptionParser(Config : CONFIG) = struct
     in
     let opt_max_workers = min opt_max_workers Sys_utils.nbr_procs in
 
-    let opt_verbose =
-      if verbose || verbose_indent
-      then Some (if verbose_indent then 2 else 0)
-      else None
-    in
-
     result := Some {
       Options.opt_check_mode = Config.(mode = Check);
       Options.opt_error_flags = error_flags;
@@ -169,7 +160,7 @@ module OptionParser(Config : CONFIG) = struct
       Options.opt_should_detach = Config.(mode = Detach);
       Options.opt_should_wait = wait;
       Options.opt_debug = debug;
-      Options.opt_verbose;
+      Options.opt_verbose = verbose;
       Options.opt_all = all;
       Options.opt_weak = weak;
       Options.opt_traces;

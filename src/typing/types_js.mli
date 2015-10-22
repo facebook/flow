@@ -24,6 +24,7 @@ val get_errors: unit -> Errors_js.error list
 val merge_strict_file: filename -> Context.t
 
 val typecheck_contents:
+  ?verbose: int ->
   string ->               (* contents *)
   filename ->             (* fake file-/module name *)
   Context.t option * Errors_js.ErrorSet.t
