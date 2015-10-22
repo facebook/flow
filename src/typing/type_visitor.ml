@@ -77,6 +77,9 @@ class ['a] t = object(self)
 
   | MaybeT t -> self#type_ cx acc t
 
+  | TaintedT (_,t) -> self#type_ cx acc t
+  | WrapTaintT (_,t) -> self#type_ cx acc t
+
   | IntersectionT (_, ts)
   | UnionT (_, ts) -> self#list (self#type_ cx) acc ts
 

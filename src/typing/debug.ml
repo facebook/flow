@@ -133,6 +133,13 @@ and _json_of_t_impl json_cx t = Json.(
       "type", _json_of_t json_cx t
     ]
 
+  | TaintedT (_,t) -> [
+      "type", _json_of_t json_cx t
+    ]
+  | WrapTaintT (_,t) -> [
+      "type", _json_of_t json_cx t
+    ]
+
   | IntersectionT (_, ts)
   | UnionT (_, ts) -> [
       "types", JList (List.map (_json_of_t json_cx) ts)

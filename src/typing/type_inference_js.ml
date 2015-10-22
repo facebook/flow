@@ -818,6 +818,13 @@ let rec convert cx type_params_map = Ast.Type.(function
           AnyObjT reason
         )
 
+      | "$Tainted" ->
+        check_type_param_arity cx loc typeParameters 1 (fun () ->
+          let t = convert cx type_params_map (List.hd typeParameters) in
+          TaintedT (mk_reason (Reason_js.desc_of_reason (reason_of_t t)) loc, t)
+        )
+
+
       (* You can specify in the .flowconfig the names of types that should be
        * treated like any<actualType>. So if you have
        * suppress_type=$FlowFixMe
