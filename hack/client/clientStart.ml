@@ -80,6 +80,7 @@ let should_start env =
       true
 
 let main env =
+  HackEventLogger.client_start ();
   if should_start env
   then begin
     start_server env;

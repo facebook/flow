@@ -411,3 +411,10 @@ let parse_args () =
     | CKStop -> parse_stop_args ()
     | CKRestart -> parse_restart_args ()
     | CKBuild -> parse_build_args ()
+
+let root = function
+  | CBuild { ClientBuild.root; _ }
+  | CCheck { ClientEnv.root; _ }
+  | CStart { ClientStart.root; _ }
+  | CRestart { ClientStart.root; _ }
+  | CStop { ClientStop.root; _ } -> root

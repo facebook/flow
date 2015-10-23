@@ -46,12 +46,9 @@ let () =
   Sys.set_signal Sys.sigpipe Sys.Signal_ignore;
   Sys.set_signal Sys.sigint (Sys.Signal_handle (fun _ ->
     raise Exit_status.(Exit_with Interrupted)));
-  let start_t = Unix.gettimeofday () in
   let command = ClientArgs.parse_args () in
-  let log_cmd = ClientLogCommandUtils.log_command_of_command command in
-  if Sys_utils.is_test_mode ()
-  then EventLogger.init (Daemon.devnull ()) 0.0
-  else HackEventLogger.client_startup log_cmd;
+  let root = ClientArgs.root command in
+  HackEventLogger.client_init root;
   let exit_status =
     try
       match command with
@@ -60,8 +57,8 @@ let () =
         | ClientCommand.CStop env -> ClientStop.main env
         | ClientCommand.CRestart env -> ClientRestart.main env
         | ClientCommand.CBuild env -> ClientBuild.main env
-    with Exit_status.Exit_with es -> es
+    with Exit_status.Exit_with es ->
+      HackEventLogger.client_bad_exit es;
+      es
   in
-  HackEventLogger.client_finish start_t log_cmd
-    (Exit_status.to_string exit_status);
   Exit_status.exit exit_status

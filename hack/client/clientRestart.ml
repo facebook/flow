@@ -9,6 +9,7 @@
  *)
 
 let main env =
+  HackEventLogger.client_restart ();
   if ClientConnectSimple.server_exists env.ClientStart.root
   then ClientStop.kill_server env.ClientStart.root
   else Printf.eprintf "Warning: no server to restart for %s\n%!"

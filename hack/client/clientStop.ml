@@ -87,6 +87,7 @@ let do_kill env =
         raise Exit_status.(Exit_with Kill_error)
 
 let main env =
+  HackEventLogger.client_stop ();
   do_kill env;
   Exit_status.Ok
 

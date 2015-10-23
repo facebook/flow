@@ -24,10 +24,9 @@ type env = {
 let handle_response env ic =
   let finished = ref false in
   let exit_code = ref Exit_status.Ok in
-  HackEventLogger.client_begin_work (ClientLogCommand.LCBuild
-    (env.root,
-    ServerBuild.build_type_of env.build_opts,
-    env.build_opts.ServerBuild.id));
+  HackEventLogger.client_build_begin_work
+    (ServerBuild.build_type_of env.build_opts)
+    env.build_opts.ServerBuild.id;
   try
     while true do
       let line:ServerBuild.build_progress = Marshal.from_channel ic in
@@ -57,6 +56,9 @@ let handle_response env ic =
     raise e
 
 let main env =
+  let build_type = ServerBuild.build_type_of env.build_opts in
+  let request_id = env.build_opts.ServerBuild.id in
+  HackEventLogger.client_build build_type request_id;
   let ic, oc = ClientConnect.connect { ClientConnect.
     root = env.root;
     autostart = true;
@@ -65,10 +67,12 @@ let main env =
     expiry = None;
     no_load = false;
   } in
-  with_context
+  let exit_status = with_context
     ~enter:(fun () -> ())
     ~exit:(fun () ->
-      Printf.eprintf "\nHack build id: %s\n%!" env.build_opts.ServerBuild.id)
+      Printf.eprintf "\nHack build id: %s\n%!" request_id)
     ~do_:(fun () ->
       ServerCommand.(stream_request oc (BUILD env.build_opts));
-      handle_response env ic)
+      handle_response env ic) in
+  HackEventLogger.client_build_finish build_type request_id exit_status;
+  exit_status
