@@ -20,6 +20,7 @@ val make_error : int -> (Pos.t * string) list -> error
 
 val error_code_to_string : int -> string
 
+val call_time_pass_by_reference : Pos.t -> unit
 val fixme_format : Pos.t -> unit
 val typeparam_alok : Pos.t * string -> unit
 val unexpected_eof : Pos.t -> unit

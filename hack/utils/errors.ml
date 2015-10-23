@@ -96,7 +96,7 @@ module Parsing = struct
   let unexpected_eof                        = 1003 (* DONT MODIFY!!!! *)
   let unterminated_comment                  = 1004 (* DONT MODIFY!!!! *)
   let unterminated_xhp_comment              = 1005 (* DONT MODIFY!!!! *)
-
+  let call_time_pass_by_reference           = 1006 (* DONT MODIFY!!!! *)
   (* EXTEND HERE WITH NEW VALUES IF NEEDED *)
 end
 
@@ -383,6 +383,9 @@ let unterminated_xhp_comment pos =
 let parsing_error (p, msg) =
   add Parsing.parsing_error p msg
 
+let call_time_pass_by_reference pos =
+  let msg = "Call-time pass-by-reference is not allowed" in
+  add Parsing.call_time_pass_by_reference pos msg
 (*****************************************************************************)
 (* Naming errors *)
 (*****************************************************************************)
