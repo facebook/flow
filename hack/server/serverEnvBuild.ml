@@ -38,8 +38,8 @@ let make_genv options config local_config =
   let indexer, notifier, wait_until_ready =
     match watchman with
     | Some watchman ->
-      let files = Watchman.get_all_files watchman in
       let indexer filter =
+        let files = Watchman.get_all_files watchman in
         Bucket.make ~max_size:1000 (List.filter filter files) in
       let notifier () = Watchman.get_changes watchman in
       HackEventLogger.set_use_watchman ();

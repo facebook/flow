@@ -22,6 +22,7 @@ open Utils
  *)
 
 exception Watchman_error of string
+exception Timeout
 
 let debug = false
 
@@ -121,13 +122,20 @@ let capability_check ?(optional=[]) required =
     ]
   end
 
-let exec json =
+let exec ?(timeout=120) json =
   let ic, oc = Unix.open_process "watchman --json-command --no-pretty" in
   let json_str = Json.(json_to_string json) in
   if debug then Printf.eprintf "Watchman query: %s\n%!" json_str;
   output_string oc json_str;
   close_out oc;
-  let output = Sys_utils.read_all ~buf_size:(1024 * 1024) ic in
+  let output =
+    Sys_utils.with_timeout timeout
+    ~do_:begin fun () ->
+      Sys_utils.read_all ~buf_size:(1024 * 1024) ic
+    end
+    ~on_timeout:(fun _ ->
+      EventLogger.watchman_timeout ();
+      raise Timeout) in
   assert (Unix.close_process (ic, oc) = Unix.WEXITED 0);
   if debug then Printf.eprintf "Watchman response: %s\n%!" output;
   let response =
