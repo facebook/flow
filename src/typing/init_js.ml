@@ -25,13 +25,15 @@ open Sys_utils
    returns list of (filename, Some ast | None) depending on success.
  *)
 let parse_lib save_parse_errors =
+  (* types are always allowed in lib files *)
+  let types_mode = Parsing_service_js.TypesAllowed in
   Files_js.get_lib_files ()
   |> SSet.elements
   |> List.map (fun lib_filename ->
     try Parsing_service_js.(
       let lib_content = cat lib_filename in
       let lib_file = Loc.LibFile lib_filename in
-      match do_parse lib_content lib_file with
+      match do_parse ~types_mode lib_content lib_file with
       | OK (ast, _) ->
         lib_file, Some ast
       | Err errors ->

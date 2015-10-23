@@ -31,26 +31,10 @@ module ParserHeap = SharedMem.WithCache (Loc.FilenameKey) (struct
 let (parser_hook: (filename -> Ast.program -> unit) list ref) = ref []
 let call_on_success f = parser_hook := f :: !parser_hook
 
-let parse_options = Some Parser_env.({
-  (**
-   * Always parse ES proposal syntax. The user-facing config option to
-   * ignore/warn/enable them is handled during inference so that a clean error
-   * can be surfaced (rather than a more cryptic parse error).
-   *)
-  esproposal_class_instance_fields = true;
-  esproposal_class_static_fields = true;
-  esproposal_decorators = true;
-
-  (**
-   * We obviously want to parse Flow types.
-   *)
-  types = true;
-})
-
 let execute_hook file ast =
   let ast = match ast with
   | None ->
-     let empty_ast, _ = Parser_flow.parse_program true ~parse_options (Some file) "" in
+     let empty_ast, _ = Parser_flow.parse_program true (Some file) "" in
      empty_ast
   | Some ast -> ast
   in
@@ -66,9 +50,38 @@ let execute_hook file ast =
 let delete_file fn =
   execute_hook fn None
 
-let do_parse ?(fail=true) content file =
+(* TODO: add TypesForbidden (disables types even on files with @flow) and
+   TypesAllowedByDefault (enables types even on files without @flow, but allows
+   something like @noflow to disable them) *)
+type types_mode =
+  | TypesAllowed
+  | TypesForbiddenByDefault
+
+let do_parse ?(fail=true) ~types_mode content file =
   try (
     let info = Docblock.extract content in
+    let parse_options = Some Parser_env.({
+      (**
+       * Always parse ES proposal syntax. The user-facing config option to
+       * ignore/warn/enable them is handled during inference so that a clean error
+       * can be surfaced (rather than a more cryptic parse error).
+       *)
+      esproposal_class_instance_fields = true;
+      esproposal_class_static_fields = true;
+      esproposal_decorators = true;
+
+      (* Allow types based on `types_mode`, using the @flow annotation in the
+         file header if possible. *)
+      types =
+        match types_mode with
+        | TypesAllowed -> true
+        | TypesForbiddenByDefault ->
+          begin match Docblock.flow info with
+          | Some Docblock.OptIn
+          | Some Docblock.OptInWeak -> true
+          | None -> false
+          end;
+    }) in
     let ast, parse_errors =
       Parser_flow.program_file ~fail ~parse_options content (Some file) in
     if fail then assert (parse_errors = []);
@@ -93,10 +106,10 @@ let do_parse ?(fail=true) content file =
 
 (* parse file, store AST to shared heap on success.
  * Add success/error info to passed accumulator. *)
-let reducer init_modes (ok, fails, errors) file =
+let reducer ~types_mode init_modes (ok, fails, errors) file =
   init_modes ();
   let content = cat (string_of_filename file) in
-  match (do_parse content file) with
+  match (do_parse ~types_mode content file) with
   | OK (ast, info) ->
       ParserHeap.add file (ast, info);
       execute_hook file (Some ast);
@@ -111,11 +124,11 @@ let merge (ok1, fail1, errors1) (ok2, fail2, errors2) =
 
 (***************************** public ********************************)
 
-let parse workers next init_modes =
+let parse ~types_mode workers next init_modes =
   let t = Unix.gettimeofday () in
   let ok, fail, errors = MultiWorker.call
     workers
-    ~job: (List.fold_left (reducer init_modes))
+    ~job: (List.fold_left (reducer ~types_mode init_modes ))
     ~neutral: (FilenameSet.empty, [], [])
     ~merge: merge
     ~next: next in
@@ -128,11 +141,11 @@ let parse workers next init_modes =
 
   (ok, fail, errors)
 
-let reparse workers files init_modes =
+let reparse ~types_mode workers files init_modes =
   ParserHeap.remove_batch files;
   SharedMem.collect `gentle;
   let next = Bucket.make (FilenameSet.elements files) in
-  parse workers next init_modes
+  parse ~types_mode workers next init_modes
 
 let get_ast_unsafe file =
   let ast, _ = ParserHeap.find_unsafe file in

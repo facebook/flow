@@ -3,7 +3,7 @@
  * Should see a parse error in this file, and module
  * not found in client.
  */
-function f(s:string):string { ### // illegal token
+function f(s) { ### // illegal token
   return s;
 }
 

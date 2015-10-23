@@ -4,7 +4,7 @@
  * not found in client.
  * @providesModule Foo
  */
-function f(s:string):string { ### // illegal token
+function f(s) { ### // illegal token
   return s;
 }
 

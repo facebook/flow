@@ -10,6 +10,10 @@
 
 open Utils_js
 
+type types_mode =
+  | TypesAllowed
+  | TypesForbiddenByDefault
+
 (* results of parse job, returned by parse and reparse *)
 (* NOTE: same as Types_js.results, should factor to common upstream *)
 type results =
@@ -20,6 +24,7 @@ type results =
 (* initial parsing pass: success/failure info is returned,
  * asts are made available via get_ast_unsafe. *)
 val parse:
+  types_mode: types_mode ->
   Worker.t list option ->       (* Some=parallel, None=serial *)
   (unit -> filename list) ->    (* delivers buckets of filenames *)
   (unit -> unit) ->
@@ -27,6 +32,7 @@ val parse:
 
 (* for non-initial passes: updates asts for passed file set. *)
 val reparse:
+  types_mode: types_mode ->
   Worker.t list option ->   (* Some=parallel, None=serial *)
   FilenameSet.t ->          (* filenames to reparse *)
   (unit -> unit) ->
@@ -48,6 +54,7 @@ val call_on_success: (filename -> Spider_monkey_ast.program -> unit) -> unit
 (* parse contents of a file *)
 val do_parse:
   ?fail:bool ->
+  types_mode: types_mode ->
   string ->                 (* contents of the file *)
   filename ->               (* filename *)
   (Spider_monkey_ast.program * Docblock.t, Errors_js.ErrorSet.t) ok_or_err

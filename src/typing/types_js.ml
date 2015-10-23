@@ -520,7 +520,12 @@ let merge_strict_file file =
 (* Another special case, similar assumptions as above. *)
 (** TODO: handle case when file+contents don't agree with file system state **)
 let typecheck_contents ?verbose contents filename =
-  Parsing_service_js.(match do_parse ~fail:false contents filename with
+  (* always enable types when checking an individual file *)
+  let types_mode = Parsing_service_js.TypesAllowed in
+  let result = Parsing_service_js.do_parse
+    ~fail:false ~types_mode
+    contents filename in
+  match result with
   | OK (ast, info) ->
       (* defaults *)
       let metadata = { Context.
@@ -540,7 +545,6 @@ let typecheck_contents ?verbose contents filename =
 
   | Err errors ->
       None, errors
-  )
 
 type merge_job_status =
 | MergeSuccess of filename
@@ -977,9 +981,15 @@ let recheck genv env modified =
   (* clear errors, asts for deleted files *)
   Parsing_service_js.remove_asts deleted;
 
+  (* force types when --all is set, but otherwise forbid them unless the file
+     has @flow in it. *)
+  let types_mode = Parsing_service_js.(
+    if Options.all options then TypesAllowed else TypesForbiddenByDefault
+  ) in
+
   (* reparse modified and added files *)
   let freshparsed, freshparse_fail, freshparse_errors =
-    Parsing_service_js.reparse genv.ServerEnv.workers modified
+    Parsing_service_js.reparse ~types_mode genv.ServerEnv.workers modified
       (fun () -> init_modes options)
   in
   save_errors parse_errors freshparse_fail freshparse_errors;
@@ -1062,8 +1072,15 @@ let full_check workers parse_next opts =
   let verbose = Options.verbose opts in
 
   Flow_logger.log "Parsing";
+
+  (* force types when --all is set, but otherwise forbid them unless the file
+     has @flow in it. *)
+  let types_mode = Parsing_service_js.(
+    if Options.all opts then TypesAllowed else TypesForbiddenByDefault
+  ) in
+
   let parsed, error_files, errors =
-    Parsing_service_js.parse workers parse_next
+    Parsing_service_js.parse ~types_mode workers parse_next
       (fun () -> init_modes opts)
   in
   save_errors parse_errors error_files errors;

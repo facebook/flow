@@ -5,8 +5,8 @@ Required module not found
 Client.js:9:9,31: NoProvides.js
 Required module not found
 
-NoProvides.js:6:31,31: Unexpected token ILLEGAL
+NoProvides.js:6:17,17: Unexpected token ILLEGAL
 
-Provides.js:7:31,31: Unexpected token ILLEGAL
+Provides.js:7:17,17: Unexpected token ILLEGAL
 
 Found 4 errors

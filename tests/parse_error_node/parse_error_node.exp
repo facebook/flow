@@ -2,6 +2,6 @@
 Client.js:8:9,29: Imported.js
 Required module not found
 
-Imported.js:6:31,31: Unexpected token ILLEGAL
+Imported.js:6:17,17: Unexpected token ILLEGAL
 
 Found 2 errors
