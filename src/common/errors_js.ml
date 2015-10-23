@@ -244,8 +244,10 @@ let print_file_at_location ~root stdin_file main_file loc s = Loc.(
         then highlight_error_in_line code_line c0 c1
         else [source_fragment_style code_line]
       in
-      let padding_size = (String.length line_number_text) + c0 in
-      let padding = String.make padding_size ' ' in
+      let padding = String.make
+        (String.length line_number_text) ' ' ^
+        Str.global_replace (Str.regexp "[^\t ]") " " (String.sub code_line 0 c0)
+      in
       let underline_size = if l1 == l0
         then max 1 (c1 - c0)
         else 1
