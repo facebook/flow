@@ -53,15 +53,21 @@ let extract =
     let rec get_first_comment_contents ?(i=0) env =
       if i < max_tokens then
         let env, lexer_result = Lexer_flow.token env in
-        match lexer_result.Lexer_flow.lex_token with
-          | Lexer_flow.T_EOF -> None
-          | _ -> begin
-            match lexer_result.Lexer_flow.lex_comments with
-              | [] -> get_first_comment_contents ~i:(i + 1) env
-              | (_, Ast.Comment.Block s) :: _
-              | (_, Ast.Comment.Line s) :: _ ->
-              Some s
-            end
+        match lexer_result.Lexer_flow.lex_comments with
+        | [] -> Lexer_flow.(
+            (**
+             * Stop looking for docblocks if we see any tokens other than a
+             * string or a semicolon (`"use babel";` or `"use strict";`).
+             *)
+            match lexer_result.lex_token with
+            | T_STRING _
+            | T_SEMICOLON
+              -> get_first_comment_contents ~i:(i + 1) env
+            | _ -> None
+          )
+        | (_, Ast.Comment.Block s) :: _
+        | (_, Ast.Comment.Line s) :: _
+          -> Some s
       else None in
     match get_first_comment_contents env with
       | Some s -> parse_attributes default_info (Str.split words_rx s)
