@@ -109,8 +109,16 @@ let main include_tokens pretty from filename () =
 
   let results =
     try
+      (* Turn on all the options for now. TODO: make these CLI flags? *)
+      let parse_options = Some Parser_env.({
+        esproposal_class_instance_fields = true;
+        esproposal_class_static_fields = true;
+        esproposal_decorators = true;
+        types = true;
+      }) in
+
       let (ocaml_ast, errors) =
-        Parser_flow.program ~fail:false ~token_sink content
+        Parser_flow.program ~fail:false ~parse_options ~token_sink content
       in
       match Translate.program ocaml_ast with
       | Hh_json.JAssoc params ->
