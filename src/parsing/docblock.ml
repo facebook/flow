@@ -24,6 +24,9 @@ let default_info = {
   providesModule = None;
 }
 
+(* Avoid lexing unbounded in perverse cases *)
+let max_tokens = 10
+
 let extract =
   let words_rx = Str.regexp "[ \t\n\\*/]+" in
 
@@ -40,15 +43,29 @@ let extract =
   in
 
   fun content ->
-    (* Consume the first token in the file. This also consumes any comments. *)
+    (* Consume tokens in the file until we get a comment. This is a hack to
+     * support Nuclide, which needs 'use babel' as the first token due to
+     * contstraints with Atom (see https://github.com/atom/atom/issues/8416 for
+     * more context). At some point this should change back to consuming only
+     * the first token. *)
     let lb = Lexing.from_string content in
     let env = Lexer_flow.new_lex_env None lb in
-    let env, lexer_result = Lexer_flow.token env in
-    match lexer_result.Lexer_flow.lex_comments with
-    | [] -> default_info
-    | (_, Ast.Comment.Block s) :: _
-    | (_, Ast.Comment.Line s) :: _ ->
-        parse_attributes default_info (Str.split words_rx s)
+    let rec get_first_comment_contents ?(i=0) env =
+      if i < max_tokens then
+        let env, lexer_result = Lexer_flow.token env in
+        match lexer_result.Lexer_flow.lex_token with
+          | Lexer_flow.T_EOF -> None
+          | _ -> begin
+            match lexer_result.Lexer_flow.lex_comments with
+              | [] -> get_first_comment_contents ~i:(i + 1) env
+              | (_, Ast.Comment.Block s) :: _
+              | (_, Ast.Comment.Line s) :: _ ->
+              Some s
+            end
+      else None in
+    match get_first_comment_contents env with
+      | Some s -> parse_attributes default_info (Str.split words_rx s)
+      | None -> default_info
 
 (* accessors *)
 let flow info = info.flow
