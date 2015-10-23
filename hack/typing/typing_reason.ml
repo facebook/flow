@@ -15,7 +15,9 @@ open Utils
 type t =
   | Rnone
   | Rwitness         of Pos.t
-  | Ridx             of Pos.t (* Used as an index *)
+  | Ridx             of Pos.t * t (* Used as an index into into a vector-like
+                                     array or string. Position of indexing,
+                                     reason for the indexed type *)
   | Ridx_vector      of Pos.t (* Used as an index, in the Vector case *)
   | Rappend          of Pos.t (* Used to append element to an array *)
   | Rfield           of Pos.t (* Array accessed with a static string index *)
@@ -81,7 +83,10 @@ let rec to_string prefix r =
   match r with
   | Rnone              -> [(p, prefix)]
   | Rwitness         _ -> [(p, prefix)]
-  | Ridx             _ -> [(p, prefix ^ " because this is used as an index")]
+  | Ridx (_, r2)       ->
+      [(p, prefix)] @
+      [(if r2 = Rnone then p else to_pos r2),
+        "This can only be indexed with integers"]
   | Ridx_vector      _ -> [(p, prefix ^ ". Only int can be used to index into a Vector.")]
   | Rappend          _ -> [(p, prefix ^ " because a value is appended to it")]
   | Rfield           _ -> [(p, prefix ^ " because one of its field is accessed")]
@@ -179,7 +184,7 @@ let rec to_string prefix r =
 and to_pos = function
   | Rnone     -> Pos.none
   | Rwitness   p -> p
-  | Ridx   p -> p
+  | Ridx (p, _) -> p
   | Ridx_vector p -> p
   | Rappend   p -> p
   | Rfield   p -> p

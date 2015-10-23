@@ -2487,7 +2487,7 @@ and array_get is_lvalue p env ty1 ety1 e2 ty2 =
       in
       env, (fst ety1, Tunresolved tyl)
   | Tarraykind (AKvec ty) ->
-      let ty1 = Reason.Ridx (fst e2), Tprim Tint in
+      let ty1 = Reason.Ridx (fst e2, fst ety1), Tprim Tint in
       let env = Type.sub_type p Reason.URarray_get env ty1 ty2 in
       env, ty
   | Tclass ((_, cn) as id, argl)
@@ -2546,7 +2546,7 @@ and array_get is_lvalue p env ty1 ety1 e2 ty2 =
       let ty = match argl with
         | [ty] -> ty
         | _ -> arity_error id; Reason.Rwitness p, Tany in
-      let ty1 = Reason.Ridx (fst e2), Tprim Tint in
+      let ty1 = Reason.Ridx (fst e2, fst ety1), Tprim Tint in
       let ur = (match cn with
         | x when x = SN.Collections.cConstVector -> Reason.URconst_vector_get
         | x when x = SN.Collections.cImmVector  -> Reason.URimm_vector_get
@@ -2590,7 +2590,7 @@ and array_get is_lvalue p env ty1 ety1 e2 ty2 =
   | Tprim Tstring ->
       let ty = Reason.Rwitness p, Tprim Tstring in
       let env, ty = Type.unify p Reason.URnone env ty1 ty in
-      let int = Reason.Ridx (fst e2), Tprim Tint in
+      let int = Reason.Ridx (fst e2, fst ety1), Tprim Tint in
       let env, _ = Type.unify p Reason.URarray_get env ty2 int in
       env, ty
   | Ttuple tyl ->

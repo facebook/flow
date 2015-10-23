@@ -276,7 +276,7 @@ module TraversePos(ImplementPos: sig val pos: Pos.t -> Pos.t end) = struct
   let rec reason = function
     | Rnone                  -> Rnone
     | Rwitness p             -> Rwitness (pos p)
-    | Ridx p                 -> Ridx (pos p)
+    | Ridx (p, r)            -> Ridx (pos p, reason r)
     | Ridx_vector p          -> Ridx_vector (pos p)
     | Rappend p              -> Rappend (pos p)
     | Rfield p               -> Rfield (pos p)

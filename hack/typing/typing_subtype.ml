@@ -486,7 +486,7 @@ and sub_type_with_uenv env (uenv_super, ty_super) (uenv_sub, ty_sub) =
       let env = sub_type env tk_super tk_sub in
       sub_type env tv_super tv_sub
   | (_, Tarraykind AKmap _), (reason, Tarraykind (AKvec elt_ty)) ->
-      let int_reason = Reason.Ridx (Reason.to_pos reason) in
+      let int_reason = Reason.Ridx (Reason.to_pos reason, Reason.Rnone) in
       let int_type = int_reason, Tprim Nast.Tint in
       sub_type env ty_super (reason, Tarraykind (AKmap (int_type, elt_ty)))
   | _, (r, Tarraykind AKshape fdm_sub) ->
