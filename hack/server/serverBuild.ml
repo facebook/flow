@@ -8,6 +8,8 @@
  *
  *)
 
+let svnrev_path = "scripts/build/artifacts/SVN_REVISION"
+
 type build_opts = {
   steps: string list option; (* steps for hack build to run.
                          None means 'all' *)

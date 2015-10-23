@@ -67,6 +67,9 @@ let main env =
     expiry = None;
     no_load = false;
   } in
+  let old_svnrev = Option.try_with begin fun () ->
+    Sys_utils.read_file ServerBuild.svnrev_path
+  end in
   let exit_status = with_context
     ~enter:(fun () -> ())
     ~exit:(fun () ->
@@ -74,5 +77,9 @@ let main env =
     ~do_:(fun () ->
       ServerCommand.(stream_request oc (BUILD env.build_opts));
       handle_response env ic) in
-  HackEventLogger.client_build_finish build_type request_id exit_status;
+  let svnrev = Option.try_with begin fun () ->
+    Sys_utils.read_file ServerBuild.svnrev_path
+  end in
+  HackEventLogger.client_build_finish
+    ~rev_changed:(svnrev <> old_svnrev) ~build_type ~request_id ~exit_status;
   exit_status
