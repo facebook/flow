@@ -1,4 +1,4 @@
-###v0.18.0
+###v0.18.1
 
 Likely to cause new Flow errors:
 

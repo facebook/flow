@@ -13,7 +13,7 @@ open Sys_utils
 
 module Json = Hh_json
 
-let version = "0.18.0"
+let version = "0.18.1"
 
 let default_temp_dir = "/tmp/flow/"
 
