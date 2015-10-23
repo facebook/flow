@@ -146,6 +146,12 @@ let verbose_flags =
         ~doc:"Indent verbose info during typecheck (implies --verbose)"
   )
 
+let root_flag prev = CommandSpec.ArgSpec.(
+  prev
+  |> flag "--root" string
+      ~doc:"Project root directory containing the .flowconfig"
+)
+
 (* relativize a loc's source path to a given root whenever strip_root is set *)
 let relativize strip_root root loc =
   if not strip_root then loc

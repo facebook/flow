@@ -30,6 +30,7 @@ let spec = {
   args = CommandSpec.ArgSpec.(
     empty
     |> server_flags
+    |> root_flag
     |> json_flags
     |> anon "modules" (required (list_of string))
         ~doc:"Module name(s) to find"
@@ -38,8 +39,8 @@ let spec = {
 
 let extract_location req req_locs = Utils.SMap.find_unsafe req req_locs
 
-let main option_values json modules () =
-  let root = guess_root (Some (Sys.getcwd ())) in
+let main option_values root json modules () =
+  let root = guess_root root in
 
   let ic, oc = connect option_values root in
 

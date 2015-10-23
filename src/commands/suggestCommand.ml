@@ -28,6 +28,7 @@ let spec = {
   args = CommandSpec.ArgSpec.(
     empty
     |> server_flags
+    |> root_flag
     |> anon "files" (required (list_of string)) ~doc:"Files"
   )
 }
@@ -39,12 +40,17 @@ let split_char c s =
     (Str.string_before s i, Str.string_after s i)
   with _ -> (s, "")
 
-let main option_values files () =
+let main option_values root files () =
   let (files, regions) = files |> List.map (split_char ':') |> List.split in
-  let root = match files with
-  | file::_ -> guess_root (Some file)
-  | _ -> failwith "Expected at least one file" in
-
+  let root = guess_root (
+    match root with
+    | Some root -> Some root
+    | None ->
+      begin match files with
+      | file::_ -> Some file
+      | _ -> failwith "Expected at least one file"
+      end
+  ) in
   let ic, oc = connect option_values root in
   let files = List.map expand_path files in
   let files = List.map2 (^) files regions in

@@ -30,6 +30,7 @@ let spec = {
   args = CommandSpec.ArgSpec.(
     empty
     |> server_flags
+    |> root_flag
     |> json_flags
     |> strip_root_flag
     |> anon "module" (required string)
@@ -39,8 +40,10 @@ let spec = {
   )
 }
 
-let main option_values json strip_root moduleref filename () =
-  let root = guess_root (Some filename) in
+let main option_values root json strip_root moduleref filename () =
+  let root = guess_root (
+    match root with Some root -> Some root | None -> Some filename
+  ) in
 
   let ic, oc = connect option_values root in
 

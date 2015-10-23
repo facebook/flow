@@ -25,6 +25,7 @@ let spec = {
   args = CommandSpec.ArgSpec.(
     empty
     |> server_flags
+    |> root_flag
     |> json_flags
     |> anon "query" (required string) ~doc:"Query"
   )
@@ -32,8 +33,12 @@ let spec = {
 
 module Json = Hh_json
 
-let main option_values use_json query () =
-  let root = guess_root (Some (Sys.getcwd ())) in
+let main option_values root use_json query () =
+  let root = guess_root (
+    match root with
+    | Some root -> Some root
+    | None -> Some (Sys.getcwd ())
+  ) in
   let ic, oc = connect option_values root in
   ServerProt.cmd_to_channel oc (ServerProt.SEARCH query);
   let results = Marshal.from_channel ic in

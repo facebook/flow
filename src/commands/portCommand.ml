@@ -28,13 +28,18 @@ let spec = {
   args = CommandSpec.ArgSpec.(
     empty
     |> server_flags
+    |> root_flag
     |> anon "files" (required (list_of string))
         ~doc:"File(s) to port"
   )
 }
 
-let main option_values files () =
-  let root = guess_root (Some (List.hd files)) in
+let main option_values root files () =
+  let root = guess_root (
+    match root with
+    | Some root -> Some root
+    | None -> Some (List.hd files)
+  ) in
   let ic, oc = connect option_values root in
   let files = List.map expand_path files in
   ServerProt.cmd_to_channel oc (ServerProt.PORT files);

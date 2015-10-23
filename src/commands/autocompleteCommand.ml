@@ -34,6 +34,7 @@ let spec = {
   args = CommandSpec.ArgSpec.(
     empty
     |> server_flags
+    |> root_flag
     |> json_flags
     |> strip_root_flag
     |> anon "args" (optional (list_of string)) ~doc:"[FILE] [LINE COL]"
@@ -81,9 +82,13 @@ let parse_args = function
 
 module Json = Hh_json
 
-let main option_values json strip_root args () =
+let main option_values root json strip_root args () =
   let file = parse_args args in
-  let root = guess_root (ServerProt.path_of_input file) in
+  let root = guess_root (
+    match root with
+    | Some root -> Some root
+    | None -> ServerProt.path_of_input file
+  ) in
   let flowconfig = FlowConfig.get root in
   let strip_root = strip_root || FlowConfig.(flowconfig.options.Opts.strip_root) in
   let loc_preprocessor = if strip_root

@@ -30,6 +30,7 @@ let spec = {
   args = CommandSpec.ArgSpec.(
     empty
     |> server_flags
+    |> root_flag
     |> json_flags
     |> strip_root_flag
     |> flag "--path" (optional string)
@@ -67,9 +68,13 @@ let parse_args path args =
    - path is a user-specified path to use as incoming content source path
    - args is mandatory command args; see parse_args above
  *)
-let main option_values json strip_root path args () =
+let main option_values root json strip_root path args () =
   let (file, line, column) = parse_args path args in
-  let root = guess_root (ServerProt.path_of_input file) in
+  let root = guess_root (
+    match root with
+    | Some root -> Some root
+    | None -> ServerProt.path_of_input file
+  ) in
   (* connect to server *)
   let ic, oc = connect option_values root in
   (* dispatch command *)

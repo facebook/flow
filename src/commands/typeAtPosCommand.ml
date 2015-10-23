@@ -30,6 +30,7 @@ let spec = {
   args = CommandSpec.ArgSpec.(
     empty
     |> server_flags
+    |> root_flag
     |> json_flags
     |> strip_root_flag
     |> flag "--path" (optional string)
@@ -123,10 +124,14 @@ let handle_error (loc, err) json strip =
   );
   flush stderr
 
-let main option_values json strip_root path include_raw args () =
+let main option_values root json strip_root path include_raw args () =
   let json = json || include_raw in
   let (file, line, column) = parse_args path args in
-  let root = guess_root (ServerProt.path_of_input file) in
+  let root = guess_root (
+    match root with
+    | Some root -> Some root
+    | None -> ServerProt.path_of_input file
+  ) in
   let ic, oc = connect option_values root in
   ServerProt.cmd_to_channel oc
     (ServerProt.INFER_TYPE (file, line, column, include_raw));

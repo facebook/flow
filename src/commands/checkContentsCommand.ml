@@ -26,6 +26,7 @@ let spec = {
   args = CommandSpec.ArgSpec.(
     empty
     |> server_flags
+    |> root_flag
     |> error_flags
     |> json_flags
     |> verbose_flags
@@ -42,9 +43,13 @@ let read_from_stdin file =
         let contents = Sys_utils.read_stdin_to_string () in
         ServerProt.FileContent ((Some (get_path_of_file file)), contents)
 
-let main option_values error_flags use_json verbose file () =
+let main option_values root error_flags use_json verbose file () =
   let file = read_from_stdin file in
-  let root = guess_root (ServerProt.path_of_input file) in
+  let root = guess_root (
+    match root with
+    | Some root -> Some root
+    | None -> ServerProt.path_of_input file
+  ) in
   let ic, oc = connect option_values root in
 
   if not use_json && (verbose <> None)
