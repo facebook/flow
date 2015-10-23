@@ -339,8 +339,10 @@ let init ?load_mini_script genv =
       type_check_dirty genv env old_fast fast dirty_files t
     | Error err ->
       (* Fall back to type-checking everything *)
-      Hh_logger.exc ~prefix:"Could not load mini state: " err;
-      if err <> No_loader then HackEventLogger.load_mini_exn err;
+      if err <> No_loader then begin
+        HackEventLogger.load_mini_exn err;
+        Hh_logger.exc ~prefix:"Could not load mini state: " err;
+      end;
       type_check genv env fast t
   in
 

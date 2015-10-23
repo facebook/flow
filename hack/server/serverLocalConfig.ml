@@ -29,7 +29,11 @@ let path =
   Filename.concat dir "hh.conf"
 
 let load_ fn =
-  let config = Config_file.parse fn in
+  (* Print out the contents in our logs so we know what settings this server
+   * was started with *)
+  let contents = Sys_utils.cat fn in
+  Printf.eprintf "%s:\n%s\n" fn contents;
+  let config = Config_file.parse_contents contents in
   let use_watchman = bool_ "use_watchman" ~default:false config in
   let use_mini_state = bool_ "use_mini_state" ~default:false config in
   let load_mini_script_timeout =
