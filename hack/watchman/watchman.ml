@@ -27,6 +27,7 @@ exception Timeout
 let debug = false
 
 type env = {
+  sockname: string;
   watch_root: string;
   relative_path: string;
   (* See https://facebook.github.io/watchman/docs/clockspec.html *)
@@ -122,21 +123,23 @@ let capability_check ?(optional=[]) required =
     ]
   end
 
-let exec ?(timeout=120) json =
-  let ic, oc = Unix.open_process "watchman --json-command --no-pretty" in
+let read_with_timeout timeout ic =
+  Sys_utils.with_timeout timeout
+    ~do_:(fun () -> input_line ic)
+    ~on_timeout:begin fun _ ->
+      EventLogger.watchman_timeout ();
+      raise Timeout
+    end
+
+let exec ?(timeout=120) sockname json =
+  let ic, oc = Unix.(open_connection (ADDR_UNIX sockname)) in
   let json_str = Json.(json_to_string json) in
   if debug then Printf.eprintf "Watchman query: %s\n%!" json_str;
   output_string oc json_str;
-  close_out oc;
-  let output =
-    Sys_utils.with_timeout timeout
-    ~do_:begin fun () ->
-      Sys_utils.read_all ~buf_size:(1024 * 1024) ic
-    end
-    ~on_timeout:(fun _ ->
-      EventLogger.watchman_timeout ();
-      raise Timeout) in
-  assert (Unix.close_process (ic, oc) = Unix.WEXITED 0);
+  output_string oc "\n";
+  flush oc;
+  let output = read_with_timeout timeout ic in
+  close_in ic;
   if debug then Printf.eprintf "Watchman response: %s\n%!" output;
   let response =
     try Json.json_of_string output
@@ -159,22 +162,33 @@ let extract_file_names env json =
   files
 
 let get_all_files env =
-  let response = exec (query env) in
+  let response = exec env.sockname (query env) in
   extract_file_names env response
 
 let get_changes env =
-  let response = exec (since env) in
+  let response = exec env.sockname (since env) in
   env.clockspec <- J.get_string_val "clock" response;
   set_of_list @@ extract_file_names env response
 
+let get_sockname () =
+  let ic = Unix.open_process_in "watchman get-sockname --no-pretty" in
+  (* Buck and hgwatchman use a 10 second timeout too *)
+  let output = read_with_timeout 10 ic in
+  assert (Unix.close_process_in ic = Unix.WEXITED 0);
+  let json = Json.json_of_string output in
+  J.get_string_val "sockname" json
+
 let init root =
   let root = Path.to_string root in
-  ignore @@ exec (capability_check ["relative_root"]);
-  let response = exec (watch_project root) in
+  let sockname = get_sockname () in
+  ignore @@ exec sockname (capability_check ["relative_root"]);
+  let response = exec sockname (watch_project root) in
   let watch_root = J.get_string_val "watch" response in
   let relative_path = J.get_string_val "relative_path" ~default:"" response in
-  let clockspec = exec (clock watch_root) |> J.get_string_val "clock" in
+  let clockspec = exec sockname (clock watch_root)
+    |> J.get_string_val "clock" in
   let env = {
+    sockname;
     watch_root;
     relative_path;
     clockspec;

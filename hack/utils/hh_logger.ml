@@ -28,4 +28,6 @@ let log_duration name t =
   t2
 
 let exc ?(prefix="") e =
-  log_raw (prefix ^ Printexc.to_string e ^ "\n")
+  log_raw (prefix ^ Printexc.to_string e ^ "\n");
+  Printexc.print_backtrace stderr;
+  ()

@@ -32,8 +32,10 @@ let make_genv options config local_config =
     then None
     else
       try
-        Some (Watchman.init root)
-      with e -> Hh_logger.exc e; None
+        let watchman = Watchman.init root in
+        Hh_logger.log "Using watchman";
+        Some watchman
+      with e -> Hh_logger.exc ~prefix:"Watchman init: " e; None
   in
   let indexer, notifier, wait_until_ready =
     match watchman with
