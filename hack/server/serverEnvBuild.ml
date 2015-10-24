@@ -30,6 +30,8 @@ let make_genv options config local_config =
   let watchman =
     if check_mode || not local_config.ServerLocalConfig.use_watchman
     then None
+    else if Sys.file_exists (Watchman.crash_marker_path root)
+    then (Hh_logger.log "Watchman failed recently, falling back to dfind"; None)
     else
       try
         let watchman = Watchman.init root in

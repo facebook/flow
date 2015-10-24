@@ -12,6 +12,8 @@ open Utils
 
 type env
 
+val crash_marker_path: Path.t -> string
+
 val init: Path.t -> env
 
 val get_all_files: env -> string list

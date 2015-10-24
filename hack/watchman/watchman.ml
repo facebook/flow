@@ -26,8 +26,13 @@ exception Timeout
 
 let debug = false
 
+let crash_marker_path root =
+  let root_name = Path.slash_escaped_string_of_path root in
+  Filename.concat GlobalConfig.tmp_dir (spf ".%s.watchman_failed" root_name)
+
 type env = {
   sockname: string;
+  root: Path.t;
   watch_root: string;
   relative_path: string;
   (* See https://facebook.github.io/watchman/docs/clockspec.html *)
@@ -66,6 +71,12 @@ module J = struct
     let open Json in
     JSON_Array (JSON_String name :: args)
 end
+
+let with_crash_record root f =
+  try f ()
+  with e ->
+    close_out @@ open_out @@ crash_marker_path root;
+    raise e
 
 let assert_no_error obj =
   try
@@ -162,10 +173,12 @@ let extract_file_names env json =
   files
 
 let get_all_files env =
+  with_crash_record env.root @@ fun () ->
   let response = exec env.sockname (query env) in
   extract_file_names env response
 
 let get_changes env =
+  with_crash_record env.root @@ fun () ->
   let response = exec env.sockname (since env) in
   env.clockspec <- J.get_string_val "clock" response;
   set_of_list @@ extract_file_names env response
@@ -179,16 +192,18 @@ let get_sockname () =
   J.get_string_val "sockname" json
 
 let init root =
-  let root = Path.to_string root in
+  with_crash_record root @@ fun () ->
+  let root_s = Path.to_string root in
   let sockname = get_sockname () in
   ignore @@ exec sockname (capability_check ["relative_root"]);
-  let response = exec sockname (watch_project root) in
+  let response = exec sockname (watch_project root_s) in
   let watch_root = J.get_string_val "watch" response in
   let relative_path = J.get_string_val "relative_path" ~default:"" response in
   let clockspec = exec sockname (clock watch_root)
     |> J.get_string_val "clock" in
   let env = {
     sockname;
+    root;
     watch_root;
     relative_path;
     clockspec;

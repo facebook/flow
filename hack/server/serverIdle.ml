@@ -9,6 +9,7 @@
  *)
 
 open Core
+open Utils
 
 (*****************************************************************************)
 (* Periodically called by the daemon *)
@@ -115,7 +116,9 @@ let init (root : Path.t) =
     Periodical.one_day  , (fun () ->
       Array.iter begin fun fn ->
         let fn = Filename.concat GlobalConfig.tmp_dir fn in
-        Sys_utils.try_touch ~follow_symlinks:false fn
+        (* We don't want to touch things like .watchman_failed *)
+        if Sys.is_directory fn || str_starts_with fn "." then ()
+        else Sys_utils.try_touch ~follow_symlinks:false fn
       end (Sys.readdir GlobalConfig.tmp_dir);
     );
   ] in
