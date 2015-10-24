@@ -30,3 +30,4 @@ new MyReadStream()
   .pipe(new MyDuplex())
   .pipe(new MyTransform())
   .pipe(new MyWriteStream());
+
