@@ -29,6 +29,7 @@ type t =
   | Missing_hhi
   | Dfind_died
   | Dfind_unresponsive
+  | EventLogger_Timeout
 
 exception Exit_with of t
 
@@ -54,6 +55,7 @@ let exit t =
     | Socket_error -> 98
     | Dfind_died -> 99
     | Dfind_unresponsive -> 100
+    | EventLogger_Timeout -> 101
   in
   Pervasives.exit ec
 
@@ -78,6 +80,7 @@ let to_string = function
   | Missing_hhi -> "Missing_hhi"
   | Dfind_died -> "Dfind_died"
   | Dfind_unresponsive -> "Dfind_unresponsive"
+  | EventLogger_Timeout -> "EventLogger_Timeout"
 
 let unpack = function
   | Unix.WEXITED n -> "exit", n
