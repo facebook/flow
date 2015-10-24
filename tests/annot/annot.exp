@@ -37,4 +37,8 @@ annot.js:37:26,72: property `path`
 Property not found in
 annot.js:46:14,50:7: object literal
 
-Found 9 errors
+annot.js:55:18,18: number
+This type is incompatible with
+annot.js:55:11,14: null
+
+Found 10 errors

@@ -365,6 +365,7 @@ end = struct
       | T_NUMBER_TYPE  -> Some Type.Number
       | T_STRING_TYPE  -> Some Type.String
       | T_VOID_TYPE    -> Some Type.Void
+      | T_NULL         -> Some Type.Null
       | _ -> None
 
     and tuple =
