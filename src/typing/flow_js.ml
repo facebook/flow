@@ -2059,12 +2059,17 @@ let rec __flow cx (l, u) trace =
           (reason_op, reason_o)
       )
 
-    | (ObjT (reason, { props_tmap = mapr; _ }), GetKeysT(_,key)) ->
-      (* flow each key of l to key *)
-      iter_props cx mapr (fun x tv ->
-        let t = StrT (reason, Literal x) in
-        rec_flow cx trace (t, key)
-      )
+    | (ObjT (reason, { flags; props_tmap = mapr; _ }), GetKeysT(_,key)) ->
+      (match flags.sealed with
+      | Sealed ->
+        (* flow each key of l to key *)
+        iter_props cx mapr (fun x tv ->
+          let t = StrT (reason, Literal x) in
+          rec_flow cx trace (t, key)
+        );
+      | _ ->
+        let t = StrT (prefix_reason "key of " reason, AnyLiteral) in
+        rec_flow cx trace (t, key))
 
     | (InstanceT (reason, _, _, instance), GetKeysT(_,key)) ->
       let fields_tmap = find_props cx instance.fields_tmap in
