@@ -73,6 +73,7 @@ let getdef_set_hooks pos =
   Type_inference_hooks_js.set_member_hook (getdef_member (state, pos));
   Type_inference_hooks_js.set_call_hook (getdef_call (state, pos));
   Type_inference_hooks_js.set_require_hook (getdef_require (state, pos));
+  Type_inference_hooks_js.set_import_hook (getdef_require (state, pos));
   state
 
 let getdef_unset_hooks () =

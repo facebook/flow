@@ -193,6 +193,7 @@ let require cx m m_name loc =
 
 let import_ns cx reason module_name loc =
   let module_ = Module_js.imported_module (Context.file cx) module_name in
+  Type_inference_hooks_js.dispatch_import_hook cx module_name loc;
   Context.add_require cx module_ loc;
   Flow_js.mk_tvar_where cx reason (fun t ->
     Flow_js.flow cx (
