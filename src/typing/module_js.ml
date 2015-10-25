@@ -251,7 +251,7 @@ module Node = struct
       let tokens = match PackageHeap.get package with
       | Some tokens -> tokens
       | None -> failwith (spf
-          "internal error: package %s not found" package)
+          "internal error: package %s not found in PackageHeap" package)
       in
       let dir = Filename.dirname package in
       match get_key "main" tokens with

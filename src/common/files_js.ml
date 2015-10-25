@@ -104,15 +104,19 @@ let make_next_files_and_symlinks ~path_filter ~realpath_filter paths =
               incr i;
             end
           | Dir path ->
-              if not (List.exists (str_starts_with path) paths) then
-                symlinks := SSet.add path !symlinks
+            let is_prefix p = Filename.(
+              let p = if str_ends_with p dir_sep then p else p ^ dir_sep in
+              str_starts_with path p
+            ) in
+            if not (List.exists is_prefix paths) then
+              symlinks := SSet.add path !symlinks
           | Other -> ()
         done;
         List.rev !result, !symlinks
       with End_of_file ->
         done_ := true;
         (try ignore (Unix.close_process_in ic) with _ -> ());
-        !result, !symlinks
+        List.rev !result, !symlinks
 
 (* Returns a closure that returns batches of files matching `path_filter` and/or
    `realpath_filter` (see `make_next_files_and_symlinks`), starting from `paths`
