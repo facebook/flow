@@ -6404,9 +6404,16 @@ let apply_docblock_overrides metadata docblock_info =
   (* TODO: Facebook uses a @preventMunge annotation to force `munge_underscores`
    * off on a per-file basis. We should parse the comments like we do above. *)
   Context.(match Docblock.flow docblock_info with
+  | None -> metadata
   | Some Docblock.OptIn -> { metadata with checked = true; }
   | Some Docblock.OptInWeak -> { metadata with checked = true; weak = true }
-  | None -> metadata
+
+  (* --all (which sets metadata.checked = true) overrides @noflow, so there are
+     currently no scenarios where we'd change checked = true to false. in the
+     future, there may be a case where checked defaults to true (but is not
+     forced to be true ala --all), but for now we do *not* want to force
+     checked = false here. *)
+  | Some Docblock.OptOut -> metadata
   )
 
 (* Given a filename, retrieve the parsed AST, derive a module name,

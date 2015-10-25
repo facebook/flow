@@ -7,6 +7,6 @@ Required module not found
 
 NoProvides.js:6:17,17: Unexpected token ILLEGAL
 
-Provides.js:7:17,17: Unexpected token ILLEGAL
+Provides.js:8:33,33: Unexpected token ILLEGAL
 
 Found 4 errors

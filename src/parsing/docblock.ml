@@ -10,7 +10,7 @@
 
 module Ast = Spider_monkey_ast
 
-type flow_mode = OptIn | OptInWeak
+type flow_mode = OptIn | OptInWeak | OptOut
 
 type t = {
   flow: flow_mode option;
@@ -35,6 +35,8 @@ let extract =
         parse_attributes { acc with flow = Some OptInWeak } xs
     | "@flow" :: xs ->
         parse_attributes { acc with flow = Some OptIn } xs
+    | "@noflow" :: xs ->
+        parse_attributes { acc with flow = Some OptOut } xs
     | "@providesModule" :: m :: xs ->
         parse_attributes { acc with providesModule = Some m } xs
     | _ :: xs ->
@@ -81,4 +83,5 @@ let providesModule info = info.providesModule
 let is_flow info = match info.flow with
   | Some OptIn
   | Some OptInWeak -> true
+  | Some OptOut
   | None -> false

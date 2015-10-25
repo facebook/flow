@@ -77,9 +77,11 @@ let do_parse ?(fail=true) ~types_mode content file =
         | TypesAllowed -> true
         | TypesForbiddenByDefault ->
           begin match Docblock.flow info with
+          | None -> false
           | Some Docblock.OptIn
           | Some Docblock.OptInWeak -> true
-          | None -> false
+          (* parse types even in @noflow mode; they just don't get checked *)
+          | Some Docblock.OptOut -> true
           end;
     }) in
     let ast, parse_errors =
