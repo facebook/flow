@@ -292,133 +292,6 @@ let nameify_default_export_decl decl = Ast.Statement.(
   | _ -> decl
 )
 
-(**
- * Given a LHS destructuring pattern, extract a list of (loc, identifier-name)
- * tuples from the pattern that represent new bindings. This is primarily useful
- * for exporting a destructuring variable declaration.
- *)
-let rec extract_destructured_bindings accum pattern = Ast.Pattern.(
-  match pattern with
-  | Identifier(loc, n) ->
-    let name = n.Ast.Identifier.name in
-    (loc, name)::accum
-
-  | Object(n) ->
-    let props = n.Object.properties in
-    List.fold_left extract_obj_prop_pattern_bindings accum props
-
-  | Array(n) ->
-    let elems = n.Array.elements in
-    List.fold_left extract_arr_elem_pattern_bindings accum elems
-
-  | Expression(_) ->
-    failwith "Parser Error: Expression patterns don't exist in JS."
-) and extract_obj_prop_pattern_bindings accum = Ast.Pattern.(function
-  | Object.Property(_, prop) ->
-    let (_, rhs_pattern) = prop.Object.Property.pattern in
-    extract_destructured_bindings accum rhs_pattern
-
-  | Object.SpreadProperty(_) ->
-    failwith "Unsupported: Destructuring object spread properties"
-) and extract_arr_elem_pattern_bindings accum = Ast.Pattern.(function
-  | Some(Array.Element(_, pattern)) ->
-    extract_destructured_bindings accum pattern
-
-  | Some(Array.Spread(_, {Array.SpreadElement.argument = (_, pattern)})) ->
-    extract_destructured_bindings accum pattern
-
-  | None -> accum
-)
-
-(* Destructuring visitor for tree-shaped patterns, parameteric over an action f
-   to perform at the leaves. A type for the pattern is passed, which is taken
-   apart as the visitor goes deeper. *)
-
-let rec destructuring cx t f = Ast.Pattern.(function
-  | loc, Array { Array.elements; _; } -> Array.(
-      elements |> List.iteri (fun i -> function
-        | Some (Element ((loc, _) as p)) ->
-            let key = NumT (
-              mk_reason "number" loc,
-              Literal (float i, string_of_int i)
-            ) in
-            let reason = mk_reason (spf "element %d" i) loc in
-            let tvar = Flow_js.mk_tvar cx reason in
-            Flow_js.flow cx (t, GetElemT(reason, key, tvar));
-            destructuring cx tvar f p
-        | Some (Spread (loc, { SpreadElement.argument })) ->
-            error_destructuring cx loc
-        | None ->
-            ()
-      )
-    )
-
-  | loc, Object { Object.properties; _; } -> Object.(
-      let xs = ref [] in
-      properties |> List.iter (function
-        | Property (loc, prop) -> Property.(
-            match prop with
-            | { key = Identifier (loc, id); pattern = p; } ->
-                let x = id.Ast.Identifier.name in
-                let reason = mk_reason (spf "property `%s`" x) loc in
-                xs := x :: !xs;
-                let tvar = Flow_js.mk_tvar cx reason in
-                (* use the same reason for the prop name and the lookup.
-                   given `var {foo} = ...`, `foo` is both. compare to `a.foo`
-                   where `foo` is the name and `a.foo` is the lookup. *)
-                Flow_js.flow cx (t, GetPropT(reason, (reason, x), tvar));
-                destructuring cx tvar f p
-            | _ ->
-              error_destructuring cx loc
-          )
-        | SpreadProperty (loc, { SpreadProperty.argument }) ->
-            let reason = mk_reason "object pattern spread property" loc in
-            let tvar = Flow_js.mk_tvar cx reason in
-            Flow_js.flow cx (t, ObjRestT(reason,!xs,tvar));
-            destructuring cx tvar f argument
-      )
-    )
-
-  | loc, Identifier (_, { Ast.Identifier.name; _ }) ->
-      let type_ =
-        if Type_inference_hooks_js.dispatch_id_hook cx name loc
-        then AnyT.at loc
-        else t in
-      f cx loc name type_
-
-  | loc, _ -> error_destructuring cx loc
-)
-
-and error_destructuring cx loc =
-  let msg = "unsupported destructuring" in
-  Flow_js.add_error cx [mk_reason "" loc, msg]
-
-and type_of_pattern = Ast.Pattern.(function
-  | loc, Array { Array.typeAnnotation; _; } -> typeAnnotation
-
-  | loc, Object { Object.typeAnnotation; _; } -> typeAnnotation
-
-  | loc, Identifier (_, { Ast.Identifier.typeAnnotation; _; }) -> typeAnnotation
-
-  | loc, _ -> None
-)
-
-(* instantiate pattern visitor for assignments *)
-let destructuring_assignment cx t =
-  destructuring cx t (fun cx loc name t ->
-    let reason = mk_reason (spf "assignment of identifier `%s`" name) loc in
-    Env_js.set_var cx name t reason
-  )
-
-(* instantiate pattern visitor for parameters *)
-let destructuring_map cx t p =
-  let tmap, lmap = ref SMap.empty, ref SMap.empty in
-  p |> destructuring cx t (fun _ loc name t ->
-    tmap := !tmap |> SMap.add name t;
-    lmap := !lmap |> SMap.add name loc
-  );
-  !tmap, !lmap
-
 (*
  * type refinements on expressions - wraps Env_js API
  *)
@@ -483,6 +356,166 @@ end = struct
     | None -> None
 
 end
+
+(**
+ * Given a LHS destructuring pattern, extract a list of (loc, identifier-name)
+ * tuples from the pattern that represent new bindings. This is primarily useful
+ * for exporting a destructuring variable declaration.
+ *)
+let rec extract_destructured_bindings accum pattern = Ast.Pattern.(
+  match pattern with
+  | Identifier(loc, n) ->
+    let name = n.Ast.Identifier.name in
+    (loc, name)::accum
+
+  | Object(n) ->
+    let props = n.Object.properties in
+    List.fold_left extract_obj_prop_pattern_bindings accum props
+
+  | Array(n) ->
+    let elems = n.Array.elements in
+    List.fold_left extract_arr_elem_pattern_bindings accum elems
+
+  | Expression(_) ->
+    failwith "Parser Error: Expression patterns don't exist in JS."
+) and extract_obj_prop_pattern_bindings accum = Ast.Pattern.(function
+  | Object.Property(_, prop) ->
+    let (_, rhs_pattern) = prop.Object.Property.pattern in
+    extract_destructured_bindings accum rhs_pattern
+
+  | Object.SpreadProperty(_) ->
+    failwith "Unsupported: Destructuring object spread properties"
+) and extract_arr_elem_pattern_bindings accum = Ast.Pattern.(function
+  | Some(Array.Element(_, pattern)) ->
+    extract_destructured_bindings accum pattern
+
+  | Some(Array.Spread(_, {Array.SpreadElement.argument = (_, pattern)})) ->
+    extract_destructured_bindings accum pattern
+
+  | None -> accum
+)
+
+(* Destructuring visitor for tree-shaped patterns, parameteric over an action f
+   to perform at the leaves. A type for the pattern is passed, which is taken
+   apart as the visitor goes deeper. *)
+
+let rec destructuring cx t expr f = Ast.Pattern.(function
+  | loc, Array { Array.elements; _; } -> Array.(
+      elements |> List.iteri (fun i -> function
+        | Some (Element ((loc, _) as p)) ->
+            let key = NumT (
+              mk_reason "number" loc,
+              Literal (float i, string_of_int i)
+            ) in
+            let reason = mk_reason (spf "element %d" i) loc in
+            let expr = Option.map expr (fun expr ->
+              loc, Ast.Expression.(Member Member.({
+                _object = expr;
+                property = PropertyExpression (loc, Literal Ast.Literal.({
+                  value = Number (float i);
+                  raw = string_of_int i;
+                }));
+                computed = true;
+              }))
+            ) in
+            let refinement = Option.bind expr (fun expr ->
+              Refinement.get cx expr reason
+            ) in
+            let tvar = (match refinement with
+            | Some t -> t
+            | None ->
+              Flow_js.mk_tvar_where cx reason (fun tvar ->
+                Flow_js.flow cx (t, GetElemT(reason, key, tvar))
+              )
+            ) in
+            destructuring cx tvar expr f p
+        | Some (Spread (loc, { SpreadElement.argument })) ->
+            error_destructuring cx loc
+        | None ->
+            ()
+      )
+    )
+
+  | loc, Object { Object.properties; _; } -> Object.(
+      let xs = ref [] in
+      properties |> List.iter (function
+        | Property (loc, prop) -> Property.(
+            match prop with
+            | { key = Identifier (loc, id); pattern = p; } ->
+                let x = id.Ast.Identifier.name in
+                let reason = mk_reason (spf "property `%s`" x) loc in
+                xs := x :: !xs;
+                let expr = Option.map expr (fun expr ->
+                  loc, Ast.Expression.(Member Member.({
+                    _object = expr;
+                    property = PropertyIdentifier (loc, id);
+                    computed = false;
+                  }))
+                ) in
+                let refinement = Option.bind expr (fun expr ->
+                  Refinement.get cx expr reason
+                ) in
+                let tvar = (match refinement with
+                | Some t -> t
+                | None ->
+                  (* use the same reason for the prop name and the lookup.
+                     given `var {foo} = ...`, `foo` is both. compare to `a.foo`
+                     where `foo` is the name and `a.foo` is the lookup. *)
+                  Flow_js.mk_tvar_where cx reason (fun tvar ->
+                    Flow_js.flow cx (t, GetPropT(reason, (reason, x), tvar))
+                  )
+                ) in
+                destructuring cx tvar expr f p
+            | _ ->
+              error_destructuring cx loc
+          )
+        | SpreadProperty (loc, { SpreadProperty.argument }) ->
+            let reason = mk_reason "object pattern spread property" loc in
+            let tvar = Flow_js.mk_tvar cx reason in
+            Flow_js.flow cx (t, ObjRestT(reason,!xs,tvar));
+            destructuring cx tvar expr f argument
+      )
+    )
+
+  | loc, Identifier (_, { Ast.Identifier.name; _ }) ->
+      let type_ =
+        if Type_inference_hooks_js.dispatch_id_hook cx name loc
+        then AnyT.at loc
+        else t in
+      f cx loc name type_
+
+  | loc, _ -> error_destructuring cx loc
+)
+
+and error_destructuring cx loc =
+  let msg = "unsupported destructuring" in
+  Flow_js.add_error cx [mk_reason "" loc, msg]
+
+and type_of_pattern = Ast.Pattern.(function
+  | loc, Array { Array.typeAnnotation; _; } -> typeAnnotation
+
+  | loc, Object { Object.typeAnnotation; _; } -> typeAnnotation
+
+  | loc, Identifier (_, { Ast.Identifier.typeAnnotation; _; }) -> typeAnnotation
+
+  | loc, _ -> None
+)
+
+(* instantiate pattern visitor for assignments *)
+let destructuring_assignment cx t expr =
+  destructuring cx t (Some expr) (fun cx loc name t ->
+    let reason = mk_reason (spf "assignment of identifier `%s`" name) loc in
+    Env_js.set_var cx name t reason
+  )
+
+(* instantiate pattern visitor for parameters *)
+let destructuring_map cx t p =
+  let tmap, lmap = ref SMap.empty, ref SMap.empty in
+  p |> destructuring cx t None (fun _ loc name t ->
+    tmap := !tmap |> SMap.add name t;
+    lmap := !lmap |> SMap.add name loc
+  );
+  !tmap, !lmap
 
 (**************)
 (* Query/Fill *)
@@ -1071,7 +1104,7 @@ and variable_decl cx type_params_map loc entry = Ast.Statement.(
     | p ->
       let r = mk_reason (spf "%s _" str_of_kind) loc in
       let t = type_of_pattern p |> mk_type_annotation cx type_params_map r in
-      p |> destructuring cx t (fun cx loc name t ->
+      p |> destructuring cx t None (fun cx loc name t ->
         Hashtbl.replace (Context.type_table cx) loc t;
         bind cx name t r
       )
@@ -3019,7 +3052,7 @@ and variable cx type_params_map kind
           | Some expr -> expression cx type_params_map expr
           | None -> uninitialized loc in
         Flow_js.flow cx (t, t_);
-        destructuring cx t (fun cx loc name t ->
+        destructuring cx t init (fun cx loc name t ->
           let reason = mk_reason (spf "%s %s" str_of_kind name) loc in
           init_var cx name ~has_anno t reason
         ) id
@@ -4032,7 +4065,7 @@ and assignment cx type_params_map loc = Ast.Expression.(function
 
         (* other r structures are handled as destructuring assignments *)
         | _ ->
-            destructuring_assignment cx t r
+            destructuring_assignment cx t e r
       );
       t
 
