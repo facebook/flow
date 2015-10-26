@@ -13,6 +13,18 @@ object_assign.js:7:19,40: property `bar`
 Property not found in
 object_assign.js:7:44,69: object literal
 
+object_keys.js:7:1,9:2: call of method `forEach`
+Error:
+object_keys.js:8:4,4: key of object literal
+This type is incompatible with
+object_keys.js:8:8,13: number
+
+object_keys.js:12:1,14:2: call of method `forEach`
+Error:
+object_keys.js:13:4,4: key of object type
+This type is incompatible with
+object_keys.js:13:8,13: number
+
 object_prototype.js:38:26,35: property `toString`
 Error:
 object_prototype.js:38:26,35: function type
@@ -103,4 +115,4 @@ object_prototype.js:155:32,47: function type
 This type is incompatible with
 object_prototype.js:155:23,28: number
 
-Found 21 errors
+Found 23 errors
