@@ -1,2 +1,3 @@
 {"type":"number","reasons":[{"desc":"number","path":"test.js","line":5,"endline":5,"start":1,"end":3}],"path":"test.js","line":5,"endline":5,"start":1,"end":3}
 {"raw_type":"{\n  \"reason\":{\n    \"pos\":{\"file\":\"\",\"start\":{\"line\":0,\"col\":0},\"end\":{\"line\":0,\"col\":0}},\n    \"desc\":\"number\"\n  },\n  \"kind\":\"NumT\"\n}","type":"number","reasons":[{"desc":"number","path":"test.js","line":5,"endline":5,"start":1,"end":3}],"path":"test.js","line":5,"endline":5,"start":1,"end":3}
+{"type":"[number, string]","reasons":[],"path":"test.js","line":8,"endline":8,"start":7,"end":13}

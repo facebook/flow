@@ -109,12 +109,14 @@ let rec type_printer override fallback enclosure cx t =
         spf "{%s%s}" props indexer
 
     | ArrT (_, t, ts) ->
-        (*(match ts with
-        | [] -> *)spf "Array<%s>" (pp EnclosureNone cx t)
-        (*| _ -> spf "[%s]"
-                  (ts
-                    |> List.map (pp cx EnclosureNone)
-                    |> String.concat ", "))*)
+        begin match ts with
+        | [] -> spf "Array<%s>" (pp EnclosureNone cx t)
+        | _ ->
+          ts
+          |> List.map (pp EnclosureNone cx)
+          |> String.concat ", "
+          |> spf "[%s]"
+        end
 
     | InstanceT (reason,static,super,instance) ->
         desc_of_reason reason (* nominal type *)
