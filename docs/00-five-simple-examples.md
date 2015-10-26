@@ -19,9 +19,13 @@ $> flow check
 You should see an error a little like this:
 
 ```bbcode
-01_HelloWorld/hello.js:7:5,17: string
-This type is incompatible with
-  01_HelloWorld/hello.js:4:10,13: number
+hello.js:7
+  7: foo("Hello, world!");
+     ^^^^^^^^^^^^^^^^^^^^ function call
+  4:   return x*10;
+              ^ string. This type is incompatible with
+  4:   return x*10;
+              ^^^^ number
 ```
 
 Looking at the `hello.js` example file, it's easy to see why:
@@ -78,9 +82,11 @@ foo('Hello', 42);
 Again, running `flow check` gives an error:
 
 ```bbcode
-02_TypeAnnotations/type_annotations.js:4:10,21: number
-This type is incompatible with
-  02_TypeAnnotations/type_annotations.js:3:37,42: string
+type_annotations.js:4
+  4:   return x.length * y;
+              ^^^^^^^^^^^^ number. This type is incompatible with
+  3: function foo(x: string, y: number): string {
+                                         ^^^^^^ string
 ```
 
 In this case it is the return type of `foo` that is wrong - we've declared it to be a `string` even though the function is actually returning a `number`. Flow flags that, and you can fix it by changing the return type:
@@ -113,9 +119,13 @@ var total = length('Hello') + length(null);
 This program would fail at runtime, with a `TypeError` when it tries to read the property `length` on `null`. Running `flow check` will detect that:
 
 ```bbcode
-03_Null/nulls.js:4:10,17: property length
-Property cannot be accessed on possibly null value
-  03_Null/nulls.js:7:38,41: null
+nulls.js:7
+  7: var total = length("Hello") + length(null);
+                                   ^^^^^^^^^^^^ function call
+  4:   return x.length;
+                ^^^^^^ property `length`. Property cannot be accessed on possibly null value
+  4:   return x.length;
+              ^ null
 ```
 
 The file in the `answer` directory fixes both the code and the type error:
@@ -157,9 +167,13 @@ total([1, 2, 3, 'Hello']);
 Flow will flag the call to `total` as an error, since that function needs an array of numbers, and one of the items of the array passed in is a string:
 
 ```bbcode
-04_Arrays/arrays.js:11:17,23: string
-This type is incompatible with
-  04_Arrays/arrays.js:3:31,36: number
+arrays.js:11
+ 11: total([1, 2, 3, "Hello"]);
+     ^^^^^^^^^^^^^^^^^^^^^^^^^ function call
+ 11: total([1, 2, 3, "Hello"]);
+                     ^^^^^^^ string. This type is incompatible with
+  3: function total(numbers: Array<number>) {
+                                   ^^^^^^ number
 ```
 
 This, however, will pass:
@@ -196,9 +210,13 @@ var res = foo('Hello') + foo(42);
 In this case, Flow detects that the second time the function is called (with a number), the `length` property will fail:
 
 ```bbcode
-05_DynamicCode/dynamic.js:4:10,17: property length
-Property not found in
-  /lib/core.js:50:1,62:1: Number
+dynamic.js:4
+  4:   return x.length;
+              ^^^^^^^^ property `length`
+  4:   return x.length;
+                ^^^^^^ property `length`. Property not found in
+  4:   return x.length;
+              ^ Number
 ```
 
 One fix is to simply detect what the type is within the function:
