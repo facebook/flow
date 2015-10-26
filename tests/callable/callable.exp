@@ -1,0 +1,6 @@
+
+primitives.js:6:1,6: function call
+Callable signature not found in
+primitives.js:6:1,4: object type
+
+Found 1 error
