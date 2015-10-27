@@ -524,6 +524,7 @@
       "number",  T_NUMBER_TYPE;
       "string",  T_STRING_TYPE;
       "void",    T_VOID_TYPE;
+      "null",    T_NULL;
     ]
 }
 

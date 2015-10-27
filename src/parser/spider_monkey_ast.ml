@@ -140,6 +140,7 @@ and Type : sig
   and t' =
     | Any
     | Void
+    | Null
     | Number
     | String
     | Boolean

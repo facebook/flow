@@ -637,6 +637,8 @@ let rec convert cx type_params_map = Ast.Type.(function
 
   | loc, Void -> void_ loc
 
+  | loc, Null -> NullT.at loc
+
   | loc, Number -> NumT.at loc
 
   | loc, String -> StrT.at loc
