@@ -3483,6 +3483,13 @@ and is_object_prototype_method = function
   | "valueOf" -> true
   | _ -> false
 
+(* neither object prototype methods nor callable signatures should be
+ * implied by an object indexer type *)
+and is_dictionary_exempt = function
+  | x when is_object_prototype_method x -> true
+  | "$call" -> true
+  | _ -> false
+
 (* only on use-types - guard calls with is_use t *)
 and err_operation = function
   | GetPropT _ -> "Property cannot be accessed on"
@@ -4030,8 +4037,7 @@ and ensure_prop_for_read cx strict mapr x proto dict_t reason_obj reason_op trac
   let t = match (read_prop_opt cx mapr x, dict_t) with
   | Some t, _ -> Some t
   | None, Some { key; value; _ } ->
-    (* Object.prototype methods are exempt from the dictionary rules *)
-    if is_object_prototype_method x
+    if is_dictionary_exempt x
     then None
     else (
       rec_flow cx trace (string_key x reason_op, key);
@@ -5091,8 +5097,7 @@ and dictionary cx trace keyt valuet = function
       rec_flow cx trace (keyt, key);
       begin match keyt with
       | StrT (_, Literal str) ->
-        (* Object.prototype methods are exempt from the dictionary rules *)
-        if not (is_object_prototype_method str)
+        if not (is_dictionary_exempt str)
         then rec_flow cx trace (valuet, value)
       | _ ->
         rec_flow cx trace (valuet, value)
