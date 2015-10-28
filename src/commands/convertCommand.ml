@@ -135,7 +135,7 @@ let main error_flags outpath recurse dir () =
   if ! Sys.interactive
   then ()
   else
-    SharedMem.(init default_config);
+    let _handle = SharedMem.(init default_config FlowConfig.default_shm_dir) in
     convert path recurse error_flags outpath
 
 let command = CommandSpec.command spec main

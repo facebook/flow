@@ -8,3 +8,4 @@ npm-debug.log
 *.diff
 *.err
 *.swp
+slave_*.log

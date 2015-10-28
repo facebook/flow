@@ -32,6 +32,7 @@ module Opts : sig
     log_file: Path.t option;
     max_workers: int;
     temp_dir: Path.t;
+    shm_dir: Path.t;
   }
 end
 
@@ -53,6 +54,7 @@ type config = {
 }
 
 val default_temp_dir: string
+val default_shm_dir: string
 
 val get: Path.t -> config
 val get_unsafe: unit -> config
@@ -75,3 +77,6 @@ val is_included: config -> string -> bool
 
 (* true if a file path matches an exclude (ignore) entry in config *)
 val is_excluded: config -> string -> bool
+
+(**/**)
+val restore: config -> unit

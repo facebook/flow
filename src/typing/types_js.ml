@@ -883,10 +883,11 @@ let typecheck workers files removed unparsed opts timing make_merge_input =
       ) in
       if profile_and_not_quiet opts then Gc.print_stat stderr;
       timing
-    with exc ->
-      prerr_endline (Printexc.to_string exc);
-      timing
-    in
+    with
+    | SharedMem.Out_of_shared_memory as exn -> raise exn
+    | exc ->
+        prerr_endline (Printexc.to_string exc);
+        timing in
     (* collate errors by origin *)
     collate_errors to_merge;
     timing, to_merge

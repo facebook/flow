@@ -52,6 +52,7 @@ module OptionParser(Config : CONFIG) = struct
     |> verbose_flags
     |> strip_root_flag
     |> temp_dir_flag
+    |> shm_dir_flag
     |> from_flag
     |> anon "root" (optional string) ~doc:"Root directory"
   )
@@ -110,7 +111,7 @@ module OptionParser(Config : CONFIG) = struct
   let result = ref None
   let main error_flags json profile quiet log_file wait debug
            all weak traces lib no_flowlib munge_underscore_members max_workers
-           verbose strip_root temp_dir from
+           verbose strip_root temp_dir shm_dir from
            root () =
     FlowEventLogger.set_from from;
     let root = CommandUtils.guess_root root in
@@ -136,6 +137,10 @@ module OptionParser(Config : CONFIG) = struct
     let opt_temp_dir = match temp_dir with
     | Some x -> x
     | None -> Path.to_string (FlowConfig.(flowconfig.options.Opts.temp_dir))
+    in
+    let opt_shm_dir = match shm_dir with
+    | Some x -> x
+    | None -> Path.to_string (FlowConfig.(flowconfig.options.Opts.shm_dir))
     in
     let opt_log_file = match log_file with
       | Some s ->
@@ -177,6 +182,7 @@ module OptionParser(Config : CONFIG) = struct
       Options.opt_no_flowlib = no_flowlib;
       Options.opt_munge_underscores = opt_munge_underscores;
       Options.opt_temp_dir;
+      Options.opt_shm_dir;
       Options.opt_max_workers;
     };
     ()

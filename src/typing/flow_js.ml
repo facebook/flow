@@ -1166,6 +1166,9 @@ let lookup_module cx m = Context.find_module cx m
 let builtins cx =
   lookup_module cx Files_js.lib_module
 
+let restore_builtins cx b =
+  Context.add_module cx Files_js.lib_module b
+
 (* new contexts are prepared here, so we can install shared tvars *)
 let fresh_context metadata file module_name =
   let cx = Context.make metadata file module_name in
@@ -1176,20 +1179,23 @@ let fresh_context metadata file module_name =
 (* created in the master process (see Server.preinit), populated and saved to
    ContextHeap. forked workers will have an empty replica from the master, but
    it's useless. should only be accessed through ContextHeap. *)
-let master_cx =
+let master_cx, restore_master_cx =
   let cx_ = ref None in
-  fun () -> match !cx_ with
-  | None ->
-    let cx = fresh_context { Context.
-      checked = false;
-      weak = false;
-      munge_underscores = false;
-      verbose = None;
-      is_declaration_file = false;
-    } Loc.Builtins (Modulename.String Files_js.lib_module) in
-    cx_ := Some cx;
-    cx
-  | Some cx -> cx
+  let master_cx () =
+    match !cx_ with
+    | None ->
+      let cx = fresh_context { Context.
+        checked = false;
+        weak = false;
+        munge_underscores = false;
+        verbose = None;
+        is_declaration_file = false;
+      } Loc.Builtins (Modulename.String Files_js.lib_module) in
+      cx_ := Some cx;
+      cx
+    | Some cx -> cx in
+  let restore_master_cx cx = cx_ := Some cx in
+  master_cx, restore_master_cx
 
 (********)
 

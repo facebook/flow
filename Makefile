@@ -5,7 +5,7 @@
 #                            Variables to override                             #
 ################################################################################
 
-EXTRA_INCLUDE_PATHS=
+EXTRA_INCLUDE_PATHS=hack/utils
 EXTRA_LIB_PATHS=
 
 ################################################################################
@@ -21,6 +21,7 @@ ifeq ($(OS), Linux)
   INOTIFY_STUBS=$(INOTIFY)/inotify_stubs.o
   FSNOTIFY=fsnotify_linux
   ELF=elf
+  RT=rt
   FRAMEWORKS=
   SECTCREATE=
 endif
@@ -29,6 +30,7 @@ ifeq ($(OS), Darwin)
   INOTIFY_STUBS=$(INOTIFY)/fsevents_stubs.o
   FSNOTIFY=fsnotify_darwin
   ELF=
+  RT=
   FRAMEWORKS=CoreServices CoreFoundation
   SECTCREATE=-cclib -sectcreate -cclib __text -cclib flowlib -cclib $(abspath $(FLOWLIB))
 endif
@@ -64,6 +66,9 @@ MODULES=\
   hack/$(INOTIFY)\
   hack/$(FSNOTIFY)
 
+HEADER_FILES=\
+  hack/utils/handle.h
+
 NATIVE_OBJECT_FILES=\
   hack/$(INOTIFY_STUBS)\
   hack/heap/hh_shared.o\
@@ -83,7 +88,8 @@ OCAML_LIBRARIES=\
   str
 
 NATIVE_LIBRARIES=\
-  $(ELF)
+  $(ELF)\
+  $(RT)
 
 FILES_TO_COPY=\
   $(wildcard lib/*.js)
@@ -126,7 +132,7 @@ build-flow-debug: build-flow-native-deps $(FLOWLIB)
 
 build-flow-native-deps: build-flow-stubs
 	ocamlbuild -ocamlc "ocamlopt $(EXTRA_INCLUDE_OPTS) $(CC_OPTS)"\
-		$(NATIVE_OBJECT_FILES)
+		$(HEADER_FILES) $(NATIVE_OBJECT_FILES)
 
 build-flow-stubs:
 	echo "const char* const BuildInfo_kRevision = \"$$(git rev-parse HEAD 2>/dev/null || hg identify -i)\";" > hack/utils/get_build_id.gen.c

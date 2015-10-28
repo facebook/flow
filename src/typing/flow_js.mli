@@ -143,3 +143,6 @@ end
 module ContextOptimizer: sig
   val sig_context : Context.t list -> unit
 end
+
+val restore_master_cx: Context.t -> unit
+val restore_builtins: Context.t -> Type.t -> unit

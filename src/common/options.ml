@@ -32,6 +32,7 @@ type options = {
   opt_traces : int;
   opt_verbose : int option; (* num of spaces to indent; None for not verbose *)
   opt_weak : bool;
+  opt_shm_dir: string;
 }
 
 let all opts = opts.opt_all
@@ -47,5 +48,6 @@ let should_munge_underscores opts = opts.opt_munge_underscores
 let should_strip_root opts = opts.opt_strip_root
 let should_wait opts = opts.opt_should_wait
 let temp_dir opts = opts.opt_temp_dir
+let shm_dir opts = opts.opt_shm_dir
 let verbose opts = opts.opt_verbose
 let weak_by_default opts = opts.opt_weak
