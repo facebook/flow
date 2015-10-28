@@ -1,10 +1,11 @@
 /* @flow */
 
+@decorator1
 class Foo {
-  @decorator1
+  @decorator2
   method1() {}
 
-  @decorator2
   @decorator3
+  @decorator4
   method2() {}
 }
