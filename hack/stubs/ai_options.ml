@@ -10,4 +10,4 @@
 
 type prepared = unit
 
-let prepare _ = ()
+let prepare ~server:_ _ = ()

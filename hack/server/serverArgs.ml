@@ -82,7 +82,7 @@ let parse_options () =
   let version       = ref false in
   let waiting_client= ref None in
   let cdir          = fun s -> convert_dir := Some s in
-  let set_ai        = fun s -> ai_mode := Some (Ai_options.prepare s) in
+  let set_ai   = fun s -> ai_mode := Some (Ai_options.prepare ~server:true s) in
   let set_save      = fun s -> save := Some (Complete, s) in
   let set_save_mini = fun s -> save := Some (Mini, s) in
   let set_wait      = fun fd -> waiting_client := Some fd in
