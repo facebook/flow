@@ -119,7 +119,6 @@ end = struct
     let (in_handle, out_handle, param) =
       try
         let file = Sys.getenv "HH_SERVER_DAEMON_PARAM" in
-        Printf.eprintf "PARAM: %s\n&!" file;
         let ic = Sys_utils.open_in_bin_no_fail file in
         let res = Marshal.from_channel ic in
         Sys_utils.close_in_no_fail "Daemon.get_context" ic;

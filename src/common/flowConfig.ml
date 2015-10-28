@@ -18,6 +18,10 @@ let default_temp_dir =
   Path.to_string @@
   Path.concat Path.temp_dir_name "flow"
 
+let default_shm_dir =
+  try Sys.getenv "FLOW_SHMDIR"
+  with _ -> "/dev/shm"
+
 let map_add map (key, value) = SMap.add key value map
 
 let multi_error (errs:(int * string) list) =
@@ -58,6 +62,7 @@ module Opts = struct
     log_file: Path.t option;
     max_workers: int;
     temp_dir: Path.t;
+    shm_dir: Path.t;
   }
 
   type _initializer =
@@ -123,6 +128,7 @@ module Opts = struct
     log_file = None;
     max_workers = Sys_utils.nbr_procs;
     temp_dir = Path.make default_temp_dir;
+    shm_dir = Path.make default_shm_dir;
   }
 
   let parse =
@@ -655,6 +661,15 @@ let parse_options config lines = Opts.(
       });
     })
 
+    |> Opts.define_opt "shm_dir" Opts.({
+      _initializer = USE_DEFAULT;
+      flags = [];
+      optparser = optparse_filepath;
+      setter = (fun opts v -> {
+        opts with shm_dir = v;
+      });
+    })
+
     |> Opts.define_opt "traces" Opts.({
       _initializer = USE_DEFAULT;
       flags = [];
@@ -757,3 +772,5 @@ let get_unsafe () =
   match !cache with
   | Some config -> config
   | None -> failwith "No config loaded"
+
+let restore config = cache := Some config

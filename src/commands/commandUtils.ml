@@ -116,6 +116,12 @@ let temp_dir_flag prev = CommandSpec.ArgSpec.(
       ~doc:"Directory in which to store temp files (default: /tmp/flow/)"
 )
 
+let shm_dir_flag prev = CommandSpec.ArgSpec.(
+  prev
+  |> flag "--shm-dir" string
+      ~doc:"Directory in which to store shared memory heap (default: /dev/shm/)"
+)
+
 let from_flag prev = CommandSpec.ArgSpec.(
   prev
   |> flag "--from" (optional string)
@@ -164,10 +170,11 @@ type command_params = {
   timeout : int;
   no_auto_start : bool;
   temp_dir : string;
+  shm_dir : string;
 }
 
 let collect_server_flags
-  main timeout retries retry_if_init no_auto_start temp_dir from =
+  main timeout retries retry_if_init no_auto_start temp_dir shm_dir from =
   let default def = function
   | Some x -> x
   | None -> def in
@@ -179,6 +186,7 @@ let collect_server_flags
     timeout = (default 0 timeout);
     no_auto_start = no_auto_start;
     temp_dir = (default FlowConfig.default_temp_dir temp_dir);
+    shm_dir = (default FlowConfig.default_shm_dir shm_dir);
   }
 
 
@@ -194,6 +202,7 @@ let server_flags prev = CommandSpec.ArgSpec.(
   |> flag "--no-auto-start" no_arg
       ~doc:"If the server is not running, do not start it; just exit"
   |> temp_dir_flag
+  |> shm_dir_flag
   |> from_flag
 )
 
