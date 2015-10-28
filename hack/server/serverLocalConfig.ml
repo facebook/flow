@@ -12,6 +12,7 @@ open Config_file.Getters
 
 type t = {
   use_watchman: bool;
+  watchman_init_timeout: int; (* in seconds *)
   use_mini_state: bool;
   load_mini_script_timeout: int; (* in seconds *)
   type_decl_bucket_size: int;
@@ -19,6 +20,7 @@ type t = {
 
 let default = {
   use_watchman = false;
+  watchman_init_timeout = 10;
   use_mini_state = false;
   load_mini_script_timeout = 20;
   type_decl_bucket_size = 1000;
@@ -40,8 +42,12 @@ let load_ fn =
     int_ "load_mini_script_timeout" ~default:20 config in
   let type_decl_bucket_size =
     int_ "type_decl_bucket_size" ~default:1000 config in
+  (* Buck and hgwatchman use a 10 second timeout too *)
+  let watchman_init_timeout =
+    int_ "watchman_init_timeout" ~default:10 config in
   {
     use_watchman;
+    watchman_init_timeout;
     use_mini_state;
     load_mini_script_timeout;
     type_decl_bucket_size;

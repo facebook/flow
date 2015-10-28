@@ -183,18 +183,17 @@ let get_changes env =
   env.clockspec <- J.get_string_val "clock" response;
   set_of_list @@ extract_file_names env response
 
-let get_sockname () =
+let get_sockname timeout =
   let ic = Unix.open_process_in "watchman get-sockname --no-pretty" in
-  (* Buck and hgwatchman use a 10 second timeout too *)
-  let output = read_with_timeout 10 ic in
+  let output = read_with_timeout timeout ic in
   assert (Unix.close_process_in ic = Unix.WEXITED 0);
   let json = Json.json_of_string output in
   J.get_string_val "sockname" json
 
-let init root =
+let init timeout root =
   with_crash_record root @@ fun () ->
   let root_s = Path.to_string root in
-  let sockname = get_sockname () in
+  let sockname = get_sockname timeout in
   ignore @@ exec sockname (capability_check ["relative_root"]);
   let response = exec sockname (watch_project root_s) in
   let watch_root = J.get_string_val "watch" response in

@@ -28,5 +28,8 @@ let scuba_table_name = "hh_server_events"
 
 (* Where to write temp files *)
 let tmp_dir =
-  Path.to_string @@
-  Path.concat Path.temp_dir_name "hh_server"
+  try
+    Sys.getenv "HH_TMPDIR"
+  with _ ->
+    Path.to_string @@
+    Path.concat Path.temp_dir_name "hh_server"
