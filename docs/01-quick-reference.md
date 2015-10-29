@@ -28,8 +28,8 @@ next: type-annotations.html
 
 ### Built-in Syntactic Types
 
-• [Object Signature: **`{prop1: number, prop2: string}`**](#object-signature-type) - Describes the type of objects that match a specified signature <br />
-• [Function Signature: **`(p1: number, p2: string) => boolean`**](#function-signature-type) - Describes the type of functions that match a specified signature 
+• [Object Signature: **`{prop1: number, prop2: string}`**](#the-object-signature-type) - Describes the type of objects that match a specified signature <br />
+• [Function Signature: **`(p1: number, p2: string) => boolean`**](#the-function-signature-type) - Describes the type of functions that match a specified signature 
 
 ### Other Built-In Types
 
