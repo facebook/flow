@@ -218,6 +218,10 @@ scope.js:84:31,36: string
 This type is incompatible with
 scope.js:85:10,15: number
 
+scope.js:93:6,11: number
+This type is incompatible with
+scope.js:92:14,19: string
+
 tdz.js:25:11,11: x
 let referenced before declaration, or after skipped initializer
 tdz.js:26:7,7: let x
@@ -253,4 +257,4 @@ tdz.js:94:5,13: undefined
 This type is incompatible with
 tdz.js:94:8,13: number
 
-Found 64 errors
+Found 65 errors

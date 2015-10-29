@@ -85,3 +85,12 @@ function for_of_scope_var(xs: string[]) {
   var a: number = 0;
   for (var a /* error: string ~> number */ of xs) {}
 }
+
+function default_param_1() {
+  // function binding in scope in default expr
+  function f(
+    x: () => string = f // error: number ~> string
+  ): number {
+    return 0;
+  }
+}
