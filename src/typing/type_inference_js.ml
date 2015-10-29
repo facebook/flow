@@ -6089,8 +6089,9 @@ and mk_body id cx type_params_map ~kind ?(derived_ctor=false)
       Flow_js.flow cx (te, t)
     ) params;
     (* add to scope *)
-    let entry = Entry.new_var t ~loc in
-    Scope.add_entry name entry function_scope);
+    let reason = mk_reason (spf "param %s" name) loc in
+    Env_js.bind_implicit_let ~state:Entry.Initialized
+      Entry.ParamBinding cx name t reason);
 
   (* early-add our own name binding for recursive calls *)
   (match id with
