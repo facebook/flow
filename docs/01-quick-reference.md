@@ -308,7 +308,7 @@ Example:
 
 ```javascript
 // Valid!
-function createStringProcessor(token: string): { (str: string): string, token: string} {
+function getStrProcessor(token: string): { (str: string): string, token: string} {
   var processor = function(str) {
     return str.replace(token, '<<PROCESSED>>');
   };
@@ -317,7 +317,7 @@ function createStringProcessor(token: string): { (str: string): string, token: s
 }
 
 // Type error! Note that the returned function is missing a `token` property
-function createStringProcessor(token: string): { (str: string): string, token: string} {
+function getStrProcessor(token: string): { (str: string): string, token: string} {
   return function(str) {
     return str.replace(token, '<<PROCESSED>>');
   };
