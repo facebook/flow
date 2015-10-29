@@ -25,7 +25,7 @@ let run_test file : unit =
           t_parser_return.Parser_hack.ast
           t_file
           t_content
-          p_parser_return.Parser_hack.ast)
+          p_parser_return)
        t_content);
   end
 

@@ -63,34 +63,36 @@ open Hh_match_utils
 (* find matches of a pattern over a text
    Args: text program, text filepath, text code, pattern program
    Return: list of matches *)
-val find_matches : program -> Relative_path.t ->
-                   string -> program -> (ast_node * Lexing.position) list
+val find_matches : program -> Relative_path.t -> string ->
+                   Parser_hack.parser_return ->
+                   (ast_node * Lexing.position) list
 
 (* does the same thing as find_matches except that it will also apply
    any patches passed in (provided that the patches come from the
    pattern AST that was passed in *)
-val match_and_patch: program -> Relative_path.t ->
-                     string -> program ->
-                     patch_maps ->
+val match_and_patch: program -> Relative_path.t -> string ->
+                     Parser_hack.parser_return -> patch_maps ->
                      use_hh_format:bool -> string option
 
 (* these do the same thing as the above two methods except they only work on
    patterns/targets that consist of a single statement that is an expression
    (to enable the -e option in the hh_matcher) or a single statement block
    (to enable the -s option in the hh_matcher) *)
-val find_matches_expr : program -> Relative_path.t ->
-                   string -> program -> (ast_node * Lexing.position) list
+val find_matches_expr : program -> Relative_path.t -> string ->
+                        Parser_hack.parser_return ->
+                        (ast_node * Lexing.position) list
 
 val patch_expr: program -> Relative_path.t ->
-                     string -> program ->
-                     patch_maps ->
-                     use_hh_format:bool -> string option
+                string -> Parser_hack.parser_return ->
+                patch_maps -> use_hh_format:bool -> string option
 
-val find_matches_stmt : program -> Relative_path.t -> string -> program ->
-  (ast_node * Lexing.position) list
+val find_matches_stmt : program -> Relative_path.t -> string ->
+                        Parser_hack.parser_return ->
+                        (ast_node * Lexing.position) list
 
-val patch_stmt : program -> Relative_path.t -> string -> program ->
-  patch_maps -> use_hh_format:bool -> string option
+val patch_stmt : program -> Relative_path.t -> string ->
+                 Parser_hack.parser_return -> patch_maps ->
+                 use_hh_format:bool -> string option
 
 (* gives nice formatted output of the list of matches as a string that
    has all the lines containing a match in order in the form:

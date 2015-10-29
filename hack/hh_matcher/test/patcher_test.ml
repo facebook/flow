@@ -27,7 +27,7 @@ let run_test (file : Relative_path.t) : unit =
       txt_parse_ret.Parser_hack.ast
       txt_file
       txt_content
-      pat_parse_ret.Parser_hack.ast
+      pat_parse_ret
       transformations
       ~use_hh_format:true in
   match new_source with
