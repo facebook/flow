@@ -111,10 +111,10 @@ let mk_state_future timeout root cmd =
     Daemon.fork ~log_file:(ServerFiles.load_log root) (load_state root cmd) in
   fun () ->
     Result.join @@ Result.try_with @@ fun () ->
-    Sys_utils.with_timeout timeout
+    Timeout.with_timeout ~timeout
       ~on_timeout:(fun _ -> raise Loader_timeout)
-      ~do_:begin fun () ->
-        Daemon.from_channel ic
+      ~do_:begin fun t ->
+        Daemon.from_channel ~timeout:t ic
         >>| fun (fn, dirty_files, end_time) ->
         HackEventLogger.load_mini_worker_end start_time end_time;
         let time_taken = end_time -. start_time in

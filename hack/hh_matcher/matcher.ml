@@ -30,7 +30,6 @@ type id_type =
   | Wildcard
   | WildcardName
   | DoNotCare
-  | RegExp
 
   | SkipAnyTok
   | KStar
@@ -66,8 +65,6 @@ type matcher_env = {
     file : Relative_path.t;
     source : string;
     (* things to accumulate as we match *)
-    uses_regexp : bool;
-    comments : (Pos.t * string) list;
     metavars : metavar_tgt MetavarMap.t;
     (* optional pieces related to patching *)
     transformations : patch_maps;
@@ -157,7 +154,7 @@ let remove_keyword str keyword keyword_start =
   (String.sub str 0 keyword_start) ^
     (String.sub str (keyword_start + keylen) (len - keyword_start - keylen))
 
-(* Returns a string corresponding to the metavariable name
+(* Returns a string corresponding to the metavraiable name
    if the identifier is a metavariable *)
 let check_mvar (id : string) : string option =
   let found_meta_key = find_substring id "META" in
@@ -189,10 +186,6 @@ let add_mvar_id
   match check_mvar id with
   | None -> env
   | Some mvar ->
-    if env.uses_regexp
-    then failwith
-      "Regular expressions and metavariables can't be used in the same pattern"
-    else
      (* Add binding if one does not exist,
         WILL NOT OVERWRITE EXISTING BINDING *)
      { env with
@@ -337,8 +330,6 @@ let process_identifier (id : string) : id_type =
   let not_action = function key -> Not (remove_keyword id not_keyword key) in
   let or_keyword = "__OR" in
   let or_action = function key -> Or (remove_keyword id or_keyword key) in
-  let regexp_keyword = "__REGEXP" in
-  let regexp_action = function _ -> RegExp in
   let wildcard_keyword = "__ANY" in
   let wildcard_action = function _ -> Wildcard in
   let wildcard_name_keyword = "__SOMENAME" in
@@ -351,7 +342,6 @@ let process_identifier (id : string) : id_type =
   let star_action = function _ -> KStar in
   let actions =
     [not_keyword, not_action; or_keyword, or_action;
-     regexp_keyword, regexp_action;
      wildcard_keyword, wildcard_action;
      wildcard_name_keyword, wildcard_name_action;
      do_not_care_keyword, do_not_care_action;
@@ -389,39 +379,11 @@ let match_string
     | Wildcard | WildcardName | KStar -> true
     | Or p_str | Normal p_str -> match_strings t_s p_str
     | Not p_str -> not (match_strings t_s p_str)
-    (* this should be handled by match_regexp *)
-    | RegExp -> failwith "Regular expressions should be handled in match_regexp"
-    (* haven't implemented these things *)
+    (* haven't implemeneted these things *)
     | _ -> false in
   if is_match
   then dummy_success_res, env'
   else NoMatch, env
-
-let match_regexp
-      (t_id : Pos.t * string)
-      (p_id : Pos.t * string)
-      (env : matcher_env) : (match_result * matcher_env) =
-    let env' = {env with uses_regexp = true} in
-    if not (MetavarMap.is_empty env.metavars)
-    then failwith
-      "Regular expressions and metavariables can't be used in the same pattern"
-    else
-      let p_line = Pos.line (fst p_id) in
-      let is_same_line_as_pattern comment = (Pos.line (fst comment) = p_line) in
-      let comment = List.find env.comments is_same_line_as_pattern in
-      let remove_leading_slash str =
-        let len = String.length str in
-        if len > 1 && str.[0] = '\\'
-        then String.sub str 1 (len - 1)
-        else str in
-      let text = remove_leading_slash (snd t_id) in
-      match comment with
-      | None -> NoMatch, env'
-      | Some (_, comment) ->
-        if Str.string_match (Str.regexp comment) text 0
-        then dummy_success_res, env'
-        else NoMatch, env'
-
 
 (* for use in matching lists and readibility in matching functions
    has a similar signature to other match methods *)
@@ -429,13 +391,10 @@ let match_id_res
       (t_id : Pos.t * string)
       (p_id : Pos.t * string)
       (env : matcher_env) : (match_result * matcher_env) =
-  let res, env' =
-    match process_identifier (snd p_id) with
-    | RegExp -> match_regexp t_id p_id env
-    | _ -> match_string (snd t_id) (snd p_id) env
-  in
+  let res, env' = match_string (snd t_id) (snd p_id) env in
   match res with
-  | Matches _ -> (Matches [(DummyNode, Pos.pos_start (fst t_id))], env')
+  | Matches _ ->
+     (Matches [(DummyNode, Pos.pos_start (fst t_id))], env')
   | NoMatch -> NoMatch, env
 
 (* acc is the match results from the child node *)
@@ -1735,8 +1694,7 @@ and handle_skipany
     (* given a chunk of text that was skipped over by a SkipAny
        find all the possible chunks that could match the SkipAny pattern
        (all child blocks + self) *)
-    let find_child_text visitor =
-      visitor#on_program [] text in
+    let find_child_text visitor = visitor#on_program [] text in
 
     (* given an output of find_child_text, find all the matches,
        update env if necessary *)
@@ -2028,16 +1986,13 @@ let find_matches
       (text : program)
       (text_file : Relative_path.t)
       (text_content : string)
-      (pattern_parsed : Parser_hack.parser_return)
-    : (ast_node * Lexing.position) list =
+      (pattern : program) : (ast_node * Lexing.position) list =
   let match_res =
     match_ast_nodes
       (Program text)
-      (Program pattern_parsed.Parser_hack.ast)
+      (Program pattern)
       { file = text_file;
         source = text_content;
-        uses_regexp = false;
-        comments = pattern_parsed.Parser_hack.comments;
         metavars = MetavarMap.empty;
         transformations =
           { stmt_delete_list = [];
@@ -2059,17 +2014,15 @@ let find_matches_expr_or_stmt
       (text : program)
       (text_file : Relative_path.t)
       (text_content : string)
-      (pattern_parsed : Parser_hack.parser_return)
+      (pattern : program)
       (skipany_fn)
       (skipany_handler_fn) : (ast_node * Lexing.position) list =
-  match skipany_fn pattern_parsed.Parser_hack.ast with
+  match skipany_fn pattern with
     | Some stmts -> begin
         let res, _ =
           skipany_handler_fn text stmts
             { file = text_file;
               source = text_content;
-              uses_regexp = false;
-              comments = pattern_parsed.Parser_hack.comments;
               metavars = MetavarMap.empty;
               transformations =
                 { stmt_delete_list = [];
@@ -2087,10 +2040,9 @@ let find_matches_stmt
       (text : program)
       (text_file : Relative_path.t)
       (text_content : string)
-      (pattern_parsed : Parser_hack.parser_return)
-    : (ast_node * Lexing.position) list =
-  find_matches_expr_or_stmt text text_file text_content pattern_parsed
-    get_skipany_stmt handle_stmt_skipany
+      (pattern : program) : (ast_node * Lexing.position) list =
+  find_matches_expr_or_stmt text text_file text_content pattern get_skipany_stmt
+    handle_stmt_skipany
 
 (* Gets the expression that is the pattern while verifying the pattern
    is of the correct form (returning None if the pattern is not) *)
@@ -2103,21 +2055,20 @@ let find_matches_expr
       (text : program)
       (text_file : Relative_path.t)
       (text_content : string)
-      (pattern_parsed : Parser_hack.parser_return)
-    : (ast_node * Lexing.position) list =
-  find_matches_expr_or_stmt text text_file text_content pattern_parsed
-    get_skipany_expr handle_expr_skipany
+      (pattern : program) : (ast_node * Lexing.position) list =
+  find_matches_expr_or_stmt text text_file text_content pattern get_skipany_expr
+    handle_expr_skipany
 
 (* general patching function for statements and expressions *)
 let patch_expr_or_stmt
       (text : program)
       (text_file : Relative_path.t)
       (text_content : string)
-      (pattern_parsed : Parser_hack.parser_return)
+      (pattern : program)
       (transformations : patch_maps)
       ~(use_hh_format : bool)
       (patch_fn) (skipany_fn): string option =
-  match skipany_fn pattern_parsed.Parser_hack.ast with
+  match skipany_fn pattern with
   | Some pat -> begin
      let res, env =
        patch_fn
@@ -2125,8 +2076,6 @@ let patch_expr_or_stmt
          pat
          { file = text_file;
            source = text_content;
-           uses_regexp = false;
-           comments = pattern_parsed.Parser_hack.comments;
            metavars = MetavarMap.empty;
            transformations;
            patches = PatchSet.empty } in
@@ -2147,10 +2096,10 @@ let patch_stmt
       (text : program)
       (text_file : Relative_path.t)
       (text_content : string)
-      (pattern_parsed : Parser_hack.parser_return)
+      (pattern : program)
       (transformations : patch_maps)
       ~(use_hh_format : bool) : string option =
-  patch_expr_or_stmt text text_file text_content pattern_parsed transformations
+  patch_expr_or_stmt text text_file text_content pattern transformations
     use_hh_format handle_stmt_skipany get_skipany_stmt
 
 (* function for patching expressions *)
@@ -2158,29 +2107,27 @@ let patch_expr
       (text : program)
       (text_file : Relative_path.t)
       (text_content : string)
-      (pattern_parsed : Parser_hack.parser_return)
+      (pattern : program)
       (transformations : patch_maps)
       ~(use_hh_format : bool) :
       string option =
-  patch_expr_or_stmt text text_file text_content pattern_parsed transformations
+  patch_expr_or_stmt text text_file text_content pattern transformations
     use_hh_format handle_expr_skipany get_skipany_expr
 
 let match_and_patch
       (text : program)
       (text_file : Relative_path.t)
       (text_content : string)
-      (pattern_parsed : Parser_hack.parser_return)
+      (pattern : program)
       (transformations : patch_maps)
       ~(use_hh_format : bool) :
       string option =
   let res, env =
     match_ast_nodes
       (Program text)
-      (Program pattern_parsed.Parser_hack.ast)
+      (Program pattern)
       { file = text_file;
         source = text_content;
-        uses_regexp = false;
-        comments = pattern_parsed.Parser_hack.comments;
         metavars = MetavarMap.empty;
         transformations = transformations;
         patches = PatchSet.empty } in

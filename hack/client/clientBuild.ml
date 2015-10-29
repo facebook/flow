@@ -29,7 +29,7 @@ let handle_response env ic =
     env.build_opts.ServerBuild.id;
   try
     while true do
-      let line:ServerBuild.build_progress = Marshal.from_channel ic in
+      let line:ServerBuild.build_progress = Timeout.input_value ic in
       match line with
       | ServerBuild.BUILD_PROGRESS s -> print_endline s
       | ServerBuild.BUILD_ERROR s ->
