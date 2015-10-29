@@ -29,7 +29,8 @@ next: type-annotations.html
 ### Built-in Syntactic Types
 
 • [Object Signature: **`{prop1: number, prop2: string}`**](#the-object-signature-type) - Describes the type of objects that match a specified signature <br />
-• [Function Signature: **`(p1: number, p2: string) => boolean`**](#the-function-signature-type) - Describes the type of functions that match a specified signature 
+• [Function Signature: **`(p1: number, p2: string) => boolean`**](#the-function-signature-type) - Describes the type of functions that match a specified signature <br />
+• [Callable-Object/Function-Object Signature: **`{ (p1: number, p2: string): boolean, prop2: number }`**](#the-callable-objectfunction-object-type) - Describes the type of functions that may have additional "static" properties on them <br />
 
 ### Other Built-In Types
 
@@ -297,5 +298,29 @@ var badTypeAnnotation: ((num1: number, num2: number) => number) =
   function(str1: string, str2: string) {
     return str1.length + str2.length;
   };
+```
+<sub><a href="#built-in-syntactic-types">Back To Top</a></sub>
+
+## • The callable-object/function-object type
+This type describes function values that might have additional static properties set on them.
+
+Example:
+
+```javascript
+// Valid!
+function createStringProcessor(token: string): { (str: string): string, token: string} {
+  var processor = function(str) {
+    return str.replace(token, '<<PROCESSED>>');
+  };
+  processor.token = token;
+  return processor;
+}
+
+// Type error! Note that the returned function is missing a `token` property
+function createStringProcessor(token: string): { (str: string): string, token: string} {
+  return function(str) {
+    return str.replace(token, '<<PROCESSED>>');
+  };
+}
 ```
 <sub><a href="#built-in-syntactic-types">Back To Top</a></sub>
