@@ -55,7 +55,7 @@ let main option_values root files () =
   let files = List.map expand_path files in
   let files = List.map2 (^) files regions in
   ServerProt.cmd_to_channel oc (ServerProt.SUGGEST files);
-  let suggestion_map = Marshal.from_channel ic in
+  let suggestion_map = Timeout.input_value ic in
   Utils.SMap.iter (fun file suggestions ->
     Printf.printf "%s\n%s" file suggestions
   ) suggestion_map;

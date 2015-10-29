@@ -93,8 +93,8 @@ let response_to_channel (oc:out_channel) (cmd:response): unit =
   Marshal.to_channel oc cmd [];
   flush oc
 
-let response_from_channel (ic:in_channel): response =
-  let s = input_line ic in
+let response_from_channel (ic:Timeout.in_channel): response =
+  let s = Timeout.input_line ic in
   if s <> Build_id.build_id_ohai
   then SERVER_OUT_OF_DATE
-  else Marshal.from_channel ic
+  else Timeout.input_value ic
