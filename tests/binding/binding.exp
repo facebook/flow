@@ -222,6 +222,13 @@ scope.js:93:6,11: number
 This type is incompatible with
 scope.js:92:14,19: string
 
+scope.js:103:12,14: string
+This type is incompatible with
+scope.js:101:29,34: number
+
+scope.js:105:19,19: identifier `b`
+Could not resolve name
+
 tdz.js:25:11,11: x
 let referenced before declaration, or after skipped initializer
 tdz.js:26:7,7: let x
@@ -257,4 +264,4 @@ tdz.js:94:5,13: undefined
 This type is incompatible with
 tdz.js:94:8,13: number
 
-Found 65 errors
+Found 67 errors

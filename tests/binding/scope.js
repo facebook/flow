@@ -94,3 +94,16 @@ function default_param_1() {
     return 0;
   }
 }
+
+function default_param_2() {
+  // fn body bindings not visible from param scope
+  let a = "";
+  function f0(x = () => a): number {
+    let a = 0;
+    return x(); // error: string ~> number
+  }
+  function f1(x = b /* error: cannot resolve b */): number {
+    let b = 0;
+    return x;
+  }
+}
