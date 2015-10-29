@@ -16,6 +16,15 @@ new Promise(function(resolve, reject) {
   var b: string = num; // Error: number ~> string
 });
 
+// Promise constructor with arrow function resolve(T) -> then(T)
+new Promise((resolve, reject) => resolve(0))
+  .then(function(num) {
+    var a: number = num;
+
+    // TODO: The error message that results from this is almost useless
+    var b: string = num; // Error: number ~> string
+  });
+
 // Promise constructor resolve(Promise<T>) -> then(T)
 new Promise(function(resolve, reject) {
   resolve(new Promise(function(resolve, reject) {
@@ -217,3 +226,15 @@ Promise.resolve(0)
     // TODO
     var b: string = num; // Error: string ~> number
   });
+
+///////////////////////////////////
+// == Promise.prototype.done == //
+///////////////////////////////////
+
+// done with arrow function
+function testDone(p: Promise<string>) {
+  p.done(
+    x => x*10, // Error string ~> number
+    err => err*10, // No error
+  );
+}
