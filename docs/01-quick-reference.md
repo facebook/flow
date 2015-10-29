@@ -30,7 +30,7 @@ next: type-annotations.html
 
 • [Object Signature: **`{prop1: number, prop2: string}`**](#the-object-signature-type) - Describes the type of objects that match a specified signature <br />
 • [Function Signature: **`(p1: number, p2: string) => boolean`**](#the-function-signature-type) - Describes the type of functions that match a specified signature <br />
-• [Callable-Object/Function-Object Signature: **`{ (p1: number, p2: string): boolean, prop2: number }`**](#the-callable-objectfunction-object-type) - Describes the type of functions that may have additional "static" properties on them <br />
+• [Callable-Object/Function-Object Signature: **`{ (p1: number, p2: string): boolean, prop2: number }`**](#the-callable-object-function-object-type) - Describes the type of functions that may have additional "static" properties on them <br />
 
 ### Other Built-In Types
 
