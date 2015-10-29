@@ -189,7 +189,7 @@ let main option_values root json color debug strip_root path filename () =
   let ic, oc = connect option_values root in
   ServerProt.cmd_to_channel oc (ServerProt.DUMP_TYPES (file, false));
 
-  match (Marshal.from_channel ic) with
+  match (Timeout.input_value ic) with
   | (Some err, None) -> handle_error ~json err (relativize strip_root root)
   | (None, Some resp) ->
       let content = ServerProt.file_input_get_content file in

@@ -72,7 +72,7 @@ let main option_values root json strip_root path args () =
   ServerProt.cmd_to_channel oc
     (ServerProt.GET_DEF (file, line, column));
   (* command result will be a position structure with full file path *)
-  let loc:Loc.t = Marshal.from_channel ic in
+  let loc:Loc.t = Timeout.input_value ic in
   (* if strip_root has been specified, relativize path to root *)
   let loc = relativize strip_root root loc in
   (* format output *)

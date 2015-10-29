@@ -42,7 +42,7 @@ let main option_values root json strip_root modules () =
   let ic, oc = connect option_values root in
 
   ServerProt.cmd_to_channel oc (ServerProt.GET_IMPORTERS modules);
-  let importers_map = Marshal.from_channel ic in
+  let importers_map = Timeout.input_value ic in
   let importers_map = Utils.SMap.fold (fun module_name importers map ->
     let importer_list = List.map (function
       | Modulename.String s -> s

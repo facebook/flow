@@ -46,7 +46,7 @@ let main option_values root json strip_root moduleref filename () =
   let ic, oc = connect option_values root in
 
   ServerProt.cmd_to_channel oc (ServerProt.FIND_MODULE (moduleref, filename));
-  let response: Loc.filename option = Marshal.from_channel ic in
+  let response: Loc.filename option = Timeout.input_value ic in
   let result = match response with
     | Some Loc.LibFile file
     | Some Loc.SourceFile file ->

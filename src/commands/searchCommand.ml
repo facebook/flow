@@ -39,7 +39,7 @@ let main option_values root use_json query () =
   ) in
   let ic, oc = connect option_values root in
   ServerProt.cmd_to_channel oc (ServerProt.SEARCH query);
-  let results = Marshal.from_channel ic in
+  let results = Timeout.input_value ic in
   if use_json
   then (
     let results =

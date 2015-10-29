@@ -94,7 +94,7 @@ let main option_values root json strip_root args () =
     else fun loc -> loc in
   let ic, oc = connect option_values root in
   ServerProt.cmd_to_channel oc (ServerProt.AUTOCOMPLETE file);
-  let completions = Marshal.from_channel ic in
+  let completions = Timeout.input_value ic in
   if json
   then (
     let results =
