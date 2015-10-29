@@ -26,6 +26,11 @@ next: type-annotations.html
 • [**`Object`**](#the-object-constructor) - Describes *any* object<br /> 
 • [**`String`**](#the-string-constructor) - Describes `String` objects (but not `string` literal values!)<br />
 
+### Built-in Syntactic Types
+
+• [Object Signature: **`{prop1: number, prop2: string}`**](#object-signature-type) - Describes the type of objects that match a specified signature 
+• [Function Signature: **`(p1: number, p2: string) => boolean`**](#function-signature-type) - Describes the type of functions that match a specified signature 
+
 ### Other Built-In Types
 
 Flow comes with a [large interface definition](https://github.com/facebook/flow/blob/master/lib/core.js) that describes all of the other language built-ins for JavaScript. It is included for you by default when you run Flow.
@@ -250,3 +255,47 @@ var a: void = undefined; // Valid!
 var b: void = 42; // Type error!
 ```
 <sub><a href="#built-in-primitive-types">Back To Top</a></sub>
+
+## • The object signature type
+This type describes any object values that match the specified interface.
+
+Example:
+
+```javascript
+// Valid!
+var a: {prop1: number, prop2: string} = {
+  prop1: 42,
+  prop2: 'asdf',
+};
+
+// Type error! Missing a `prop2` property
+var b: {prop1: number, prop2: string} = {
+  prop1: 42,
+};
+
+// Type error! `prop2 property types don't match!
+var c: {prop1: number, prop2: string} = {
+  prop1: 42,
+  prop2: 42, // Type error!
+};
+```
+<sub><a href="#built-in-syntactic-types">Back To Top</a></sub>
+
+## • The function signature type
+This type describes any function values that match the specified parameters/return signature.
+
+Example:
+
+```javascript
+// Valid!
+var add: ((num1: number, num2: number) => number) = function(num1, num2) {
+  return num1 + num2;
+};
+
+// Type error! Parameter types don't match!
+var badTypeAnnotation: ((num1: number, num2: number) => number) =
+  function(str1: string, str2: string) {
+    return str1.length + str2.length;
+  };
+```
+<sub><a href="#built-in-syntactic-types">Back To Top</a></sub>
