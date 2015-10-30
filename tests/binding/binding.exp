@@ -175,6 +175,14 @@ rebinding.js:186:12,12: x
 name is already bound
 rebinding.js:184:9,9: let x
 
+rebinding.js:193:34,34: x
+name is already bound
+rebinding.js:193:31,31: param x
+
+rebinding.js:195:7,7: x
+name is already bound
+rebinding.js:194:37,37: param x
+
 scope.js:6:13,14: string
 This type is incompatible with
 scope.js:3:10,15: number
@@ -218,6 +226,17 @@ scope.js:84:31,36: string
 This type is incompatible with
 scope.js:85:10,15: number
 
+scope.js:93:6,11: number
+This type is incompatible with
+scope.js:92:14,19: string
+
+scope.js:103:12,14: string
+This type is incompatible with
+scope.js:101:29,34: number
+
+scope.js:105:19,19: identifier `b`
+Could not resolve name
+
 tdz.js:25:11,11: x
 let referenced before declaration, or after skipped initializer
 tdz.js:26:7,7: let x
@@ -253,4 +272,4 @@ tdz.js:94:5,13: undefined
 This type is incompatible with
 tdz.js:94:8,13: number
 
-Found 64 errors
+Found 69 errors

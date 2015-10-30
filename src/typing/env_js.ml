@@ -410,6 +410,7 @@ let bind_entry cx name entry reason =
           let can_shadow = function
             | (Var | Let (Some FunctionBinding)),
               (Var | Let (Some FunctionBinding)) -> true
+            | Var, Let (Some ParamBinding) -> true
             | _ -> false
           in
           match entry, prev with

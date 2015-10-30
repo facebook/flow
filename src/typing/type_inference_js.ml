@@ -410,15 +410,6 @@ let destructuring_assignment cx t =
     Env_js.set_var cx name t reason
   )
 
-(* instantiate pattern visitor for parameters *)
-let destructuring_map cx t p =
-  let tmap, lmap = ref SMap.empty, ref SMap.empty in
-  p |> destructuring cx t (fun _ loc name t ->
-    tmap := !tmap |> SMap.add name t;
-    lmap := !lmap |> SMap.add name loc
-  );
-  !tmap, !lmap
-
 (*
  * type refinements on expressions - wraps Env_js API
  *)
@@ -1045,6 +1036,190 @@ and mk_singleton_boolean reason b =
   let reason = replace_reason (spf "boolean literal `%b`" b) reason in
   SingletonBoolT (reason, b)
 
+(* Given the type of expression C and type arguments T1...Tn, return the type of
+   values described by C<T1,...,Tn>, or C when there are no type arguments. *)
+(** See comment on Flow_js.mk_instance for what the for_type flag means. **)
+and mk_nominal_type ?(for_type=true) cx reason type_params_map (c, targs) =
+  match targs with
+  | Some ts ->
+      let tparams = List.map (convert cx type_params_map) ts in
+      TypeAppT (c, tparams)
+  | None ->
+      Flow_js.mk_instance cx reason ~for_type c
+
+and void_ loc =
+  VoidT.at loc
+
+and null_ loc =
+  NullT.at loc
+
+(* take a list of AST type param declarations,
+   do semantic checking and create types for them. *)
+(* note: polarities arg is temporary -
+   full support will put them in the typeParameter AST *)
+and mk_type_param_declarations cx type_params_map
+  ?(polarities=[]) typeParameters
+  =
+  let add_type_param (typeparams, smap) (loc, t) polarity =
+    let name = t.Ast.Identifier.name in
+    let reason = mk_reason name loc in
+    let bound = match t.Ast.Identifier.typeAnnotation with
+      | None -> MixedT reason
+      | Some (_, u) -> mk_type cx (SMap.union smap type_params_map) reason (Some u)
+    in
+    (* leaving in this deliberately cumbersome backdoor until
+       we have proper annotations, in case of emergency :) *)
+    let polarity =
+      if polarity != Neutral then polarity
+      else if str_starts_with name "$Covariant$" then Positive
+      else if str_starts_with name "$Contravariant$" then Negative
+      else Neutral
+    in
+    let typeparam = { reason; name; bound; polarity } in
+    (typeparam :: typeparams,
+     SMap.add name (BoundT typeparam) smap)
+  in
+  let (types:Ast.Identifier.t list) =
+    extract_type_param_declarations typeParameters
+  in
+  let polarities = if polarities != [] then polarities
+    else make_list (fun () -> Neutral) (List.length types)
+  in
+  let typeparams, smap =
+    List.fold_left2 add_type_param ([], SMap.empty) types polarities
+  in
+  List.rev typeparams, SMap.union smap type_params_map
+
+and identifier ?(lookup_mode=ForValue) cx name loc =
+  if Type_inference_hooks_js.dispatch_id_hook cx name loc
+  then AnyT.at loc
+  else (
+    if name = "undefined"
+    then void_ loc
+    else (
+      let reason = mk_reason (spf "identifier `%s`" name) loc in
+      let t = Env_js.var_ref ~lookup_mode cx name reason in
+      t
+    )
+  )
+
+and extract_type_param_declarations = function
+  | None -> []
+  | Some (_, typeParameters) -> typeParameters.Ast.Type.ParameterDeclaration.params
+
+and extract_type_param_instantiations = function
+  | None -> []
+  | Some (_, typeParameters) -> typeParameters.Ast.Type.ParameterInstantiation.params
+
+(* Function parameters get passed around and manipulated all over the
+   place. Instead of passing around the raw data in several pieces,
+   accumulate it into a single (abstract) type *)
+module Params : sig
+  type t
+
+  (* build up a params value *)
+  val empty: t
+  val add: Context.t -> (Type.t SMap.t) -> t -> Ast.Pattern.t -> Ast.Expression.t option -> t
+  val add_rest: Context.t -> (Type.t SMap.t) -> t -> Ast.Identifier.t -> t
+
+  (* name of each param, in order *)
+  (* destructured params will be "_" *)
+  val names: t -> string list
+
+  (* type of each param in the param list *)
+  val tlist: t -> Type.t list
+
+  (* iterates over all bindings, traversing through any destructued
+     bindings as well, in source order of declaration *)
+  val iter: (string * Type.t * Loc.t -> unit) -> t -> unit
+
+  (* if there is a default for this binding, run provided function *)
+  val with_default: string -> (Ast.Expression.t -> unit) -> t -> unit
+
+  val subst: Context.t -> (Type.t SMap.t) -> t -> t
+end = struct
+  type binding = string * Type.t * Loc.t
+  type param =
+    | Simple of Type.t * binding
+    | Complex of Type.t * binding list
+    | Rest of Type.t * binding
+  type t = {
+    list: param list;
+    defaults: Ast.Expression.t SMap.t;
+  }
+
+  let empty = {
+    list = [];
+    defaults = SMap.empty
+  }
+
+  let add cx type_params_map params pattern default =
+    Ast.Pattern.(match pattern with
+    | loc, Identifier (_, { Ast.Identifier.name; typeAnnotation; optional }) ->
+      let reason = mk_reason (spf "parameter `%s`" name) loc in
+      let t = mk_type_annotation cx type_params_map reason typeAnnotation in
+      (match default with
+      | None ->
+        let t =
+          if optional
+          then OptionalT t
+          else t
+        in
+        let binding = name, t, loc in
+        let list = Simple (t, binding) :: params.list in
+        { params with list }
+      | Some expr ->
+        (* TODO: assert (not optional) *)
+        let binding = name, t, loc in
+        { list = Simple (OptionalT t, binding) :: params.list;
+          defaults = SMap.add name expr params.defaults })
+    | loc, _ ->
+      let reason = mk_reason "destructuring" loc in
+      let t = type_of_pattern pattern
+        |> mk_type_annotation cx type_params_map reason in
+      let bindings = ref [] in
+      pattern |> destructuring cx t (fun _ loc name t ->
+        bindings := (name, t, loc) :: !bindings
+      );
+      { params with list = Complex (t, !bindings) :: params.list })
+
+  let add_rest cx type_params_map params =
+    function loc, { Ast.Identifier.name; typeAnnotation; _ } ->
+      let reason = mk_reason (spf "rest parameter `%s`" name) loc in
+      let t = mk_type_annotation cx type_params_map reason typeAnnotation in
+      { params with list = Rest (mk_rest cx t, (name, t, loc)) :: params.list }
+
+  let names params =
+    params.list |> List.rev |> List.map (function
+      | Simple (_, (name, _, _))
+      | Rest (_, (name, _, _)) -> name
+    | Complex _ -> "_")
+
+  let tlist params =
+    params.list |> List.rev |> List.map (function
+      | Simple (t, _)
+      | Complex (t, _)
+      | Rest (t, _) -> t)
+
+  let iter f params =
+    params.list |> List.rev |> List.iter (function
+      | Simple (_, b)
+      | Rest (_, b) -> f b
+      | Complex (t, bs) -> List.iter f bs)
+
+  let with_default name f params =
+    Option.iter (SMap.get name params.defaults) ~f
+
+  let subst_binding cx map (name, t, loc) = (name, Flow_js.subst cx map t, loc)
+
+  let subst cx map params =
+    let list = params.list |> List.map (function
+      | Simple (t, b) -> Simple (t, subst_binding cx map b)
+      | Complex (t, bs) -> Complex (t, List.map (subst_binding cx map) bs)
+      | Rest (t, b) -> Rest (t, subst_binding cx map b)) in
+    { params with list }
+end
+
 (************)
 (* Visitors *)
 (************)
@@ -1055,7 +1230,7 @@ and mk_singleton_boolean reason b =
  * in prep for main pass
  ********************************************************************)
 
-and variable_decl cx type_params_map loc entry = Ast.Statement.(
+let rec variable_decl cx type_params_map loc entry = Ast.Statement.(
   let value_kind, bind = match entry.VariableDeclaration.kind with
     | VariableDeclaration.Const -> Scope.Entry.Const, Env_js.bind_const
     | VariableDeclaration.Let -> Scope.Entry.Let None, Env_js.bind_let
@@ -3083,25 +3258,6 @@ and get_module_exports cx reason =
 
 and set_module_exports cx reason t =
   Env_js.set_var cx (internal_name "exports") t reason
-
-and void_ loc =
-  VoidT.at loc
-
-and null_ loc =
-  NullT.at loc
-
-and identifier ?(lookup_mode=ForValue) cx name loc =
-  if Type_inference_hooks_js.dispatch_id_hook cx name loc
-  then AnyT.at loc
-  else (
-    if name = "undefined"
-    then void_ loc
-    else (
-      let reason = mk_reason (spf "identifier `%s`" name) loc in
-      let t = Env_js.var_ref ~lookup_mode cx name reason in
-      t
-    )
-  )
 
 and expression_ ~is_cond cx type_params_map loc e = Ast.Expression.(match e with
 
@@ -5181,17 +5337,6 @@ and mk_extends cx type_params_map = function
       | Some (_, { Ast.Type.ParameterInstantiation.params; }) -> Some params in
       mk_nominal_type ~for_type:false cx (reason_of_t c) type_params_map (c, params)
 
-(* Given the type of expression C and type arguments T1...Tn, return the type of
-   values described by C<T1,...,Tn>, or C when there are no type arguments. *)
-(** See comment on Flow_js.mk_instance for what the for_type flag means. **)
-and mk_nominal_type ?(for_type=true) cx reason type_params_map (c, targs) =
-  match targs with
-  | Some ts ->
-      let tparams = List.map (convert cx type_params_map) ts in
-      TypeAppT (c, tparams)
-  | None ->
-      Flow_js.mk_instance cx reason ~for_type c
-
 and mk_interface_super cx structural reason_c map = function
   | (Some id, targs) ->
       let desc = if structural then "extends" else "mixins" in
@@ -5222,7 +5367,7 @@ and mk_signature cx reason_c type_params_map superClass body = Ast.Class.(
            indicated by the VoidT return type *)
         SMap.singleton "constructor"
           (replace_reason "default constructor" reason_c, [], SMap.empty,
-           ([], [], VoidT.t, SMap.empty, SMap.empty))
+           Params.empty, VoidT.t)
     | Some _ ->
         (* Subclass default constructors are technically of the form
            (...args) => { super(...args) }, but we can approximate that using
@@ -5277,7 +5422,7 @@ and mk_signature cx reason_c type_params_map superClass body = Ast.Class.(
       let typeparams, type_params_map =
         mk_type_param_declarations cx type_params_map typeParameters in
 
-      let params_ret = mk_params_ret cx type_params_map
+      let params, ret = mk_params_ret cx type_params_map
         (params, defaults, rest) (body, returnType) in
       let reason_desc = (match kind with
       | Method.Method -> spf "method `%s`" name
@@ -5285,7 +5430,7 @@ and mk_signature cx reason_c type_params_map superClass body = Ast.Class.(
       | Method.Get -> spf "getter for `%s`" name
       | Method.Set -> spf "setter for `%s`" name) in
       let reason_m = mk_reason reason_desc loc in
-      let method_sig = reason_m, typeparams, type_params_map, params_ret in
+      let method_sig = reason_m, typeparams, type_params_map, params, ret in
 
       (match kind, static with
       | (Method.Constructor | Method.Method), true ->
@@ -5464,8 +5609,7 @@ and mk_class_elements cx instance_info static_info body = Ast.Class.(
       | Method.Get -> getter_sigs
       | Method.Set -> setter_sigs in
 
-      let reason, typeparams, type_params_map,
-           (_, _, ret, param_types_map, param_loc_map) =
+      let reason, typeparams, type_params_map, params, ret =
         SMap.find_unsafe name sigs_to_use in
 
       let save_return_exn = Abnormal.(swap Return false) in
@@ -5473,8 +5617,7 @@ and mk_class_elements cx instance_info static_info body = Ast.Class.(
       Flow_js.generate_tests cx reason typeparams (fun map_ ->
         let type_params_map =
           type_params_map |> SMap.map (Flow_js.subst cx map_) in
-        let param_types_map =
-          param_types_map |> SMap.map (Flow_js.subst cx map_) in
+        let params = Params.subst cx map_ params in
         let ret = Flow_js.subst cx map_ ret in
         (* determine if we are in a derived constructor *)
         let derived_ctor = match super with
@@ -5491,7 +5634,7 @@ and mk_class_elements cx instance_info static_info body = Ast.Class.(
           MixedT (replace_reason "no next" reason)
         ) in
         mk_body None cx type_params_map ~kind:function_kind ~derived_ctor
-          param_types_map param_loc_map ret body this super yield next;
+          params ret body this super yield next;
       );
       ignore Abnormal.(swap Return save_return_exn);
       ignore Abnormal.(swap Throw save_throw_exn)
@@ -5500,10 +5643,12 @@ and mk_class_elements cx instance_info static_info body = Ast.Class.(
   ) elements
 )
 
-and mk_methodtype (reason_m, typeparams,_,(params,params_names,ret,_,_)) =
+and mk_methodtype (reason_m, typeparams,_,params,ret) =
+  let params_tlist = Params.tlist params in
+  let params_names = Some (Params.names params) in
   let ft = FunT (
     reason_m, Flow_js.dummy_static, Flow_js.dummy_prototype,
-    Flow_js.mk_functiontype params ?params_names ret
+    Flow_js.mk_functiontype params_tlist ?params_names ret
   ) in
   if (typeparams = [])
   then ft
@@ -5605,8 +5750,7 @@ and mk_class = Ast.Class.(
 
     (* methods: { m<Y: X>(x: Y): T } *)
     let subst_method_sig cx map_
-        (reason_m, typeparams,type_params_map,
-         (params,pnames,ret,param_types_map,param_loc_map)) =
+        (reason_m, typeparams,type_params_map, params, ret) =
 
       (* typeparams = <Y: X> *)
       let typeparams = List.map (fun typeparam ->
@@ -5615,13 +5759,10 @@ and mk_class = Ast.Class.(
       let type_params_map = SMap.map (Flow_js.subst cx map_) type_params_map in
 
       (* params = (x: Y), ret = T *)
-      let params = List.map (Flow_js.subst cx map_) params in
+      let params = Params.subst cx map_ params in
       let ret = Flow_js.subst cx map_ ret in
-      let param_types_map =
-        SMap.map (Flow_js.subst cx map_) param_types_map in
 
-      (reason_m, typeparams,type_params_map,
-       (params, Some pnames, ret, param_types_map, param_loc_map))
+      (reason_m, typeparams,type_params_map, params, ret)
     in
 
     let methods_ = methods_ |> SMap.map (subst_method_sig cx map_) in
@@ -5682,16 +5823,14 @@ and mk_class = Ast.Class.(
   );
 
   let enforce_void_return
-      (reason_m, typeparams, type_params_map,
-       (params,pnames,ret,params_map,params_loc)) =
+      (reason_m, typeparams, type_params_map, params, ret) =
     let ret =
       if (is_void cx ret)
       then (VoidT.at (loc_of_t ret))
       else ret
     in
     mk_methodtype
-      (reason_m, typeparams, type_params_map,
-       (params,Some pnames,ret,params_map,params_loc))
+      (reason_m, typeparams, type_params_map, params, ret)
   in
 
   let methods = methods_ |> SMap.map enforce_void_return in
@@ -5867,7 +6006,7 @@ and function_decl id cx type_params_map (reason:reason) ~kind
   let typeparams, type_params_map =
     mk_type_param_declarations cx type_params_map type_params in
 
-  let (params, pnames, ret, param_types_map, param_types_loc) =
+  let params, ret =
     mk_params_ret cx type_params_map params (body, ret) in
 
   let save_return_exn = Abnormal.(swap Return false) in
@@ -5875,8 +6014,7 @@ and function_decl id cx type_params_map (reason:reason) ~kind
   Flow_js.generate_tests cx reason typeparams (fun map_ ->
     let type_params_map =
       type_params_map |> SMap.map (Flow_js.subst cx map_) in
-    let param_types_map =
-      param_types_map |> SMap.map (Flow_js.subst cx map_) in
+    let params = Params.subst cx map_ params in
     let ret = Flow_js.subst cx map_ ret in
 
     let yield, next = if kind = Scope.Generator then (
@@ -5887,8 +6025,7 @@ and function_decl id cx type_params_map (reason:reason) ~kind
       MixedT (replace_reason "no next" reason)
     ) in
 
-    mk_body id cx type_params_map ~kind
-      param_types_map param_types_loc ret body this super yield next;
+    mk_body id cx type_params_map ~kind params ret body this super yield next;
   );
 
   ignore Abnormal.(swap Return save_return_exn);
@@ -5900,7 +6037,7 @@ and function_decl id cx type_params_map (reason:reason) ~kind
     else ret
   in
 
-  (typeparams,params,pnames,ret)
+  (typeparams,params,ret)
 
 and is_void cx = function
   | OpenT(_,id) ->
@@ -5944,7 +6081,7 @@ and define_internal cx reason x =
   Env_js.set_var cx ix (Flow_js.filter_optional cx reason opt) reason
 
 and mk_body id cx type_params_map ~kind ?(derived_ctor=false)
-    param_types_map param_locs_map ret body this super yield next =
+    params ret body this super yield next =
 
   let loc = Ast.Statement.FunctionDeclaration.(match body with
     | BodyBlock (loc, _)
@@ -5959,37 +6096,40 @@ and mk_body id cx type_params_map ~kind ?(derived_ctor=false)
   Env_js.havoc_all();
 
   (* create and prepopulate function scope *)
-  let function_scope =
-    let scope = Scope.fresh ~var_scope_kind:kind () in
-    (* add param bindings *)
-    param_types_map |> SMap.iter (fun name t ->
-      let loc = match SMap.get name param_locs_map with
-        | Some loc -> loc
-        | None -> loc_of_t t
-      in
-      let entry = Scope.Entry.new_var ~loc t in
-      Scope.add_entry name entry scope
-    );
-    (* early-add our own name binding for recursive calls *)
-    (match id with
-    | None -> ()
-    | Some (loc, { Ast.Identifier.name; _ }) ->
-      let entry = Scope.Entry.new_var ~loc (AnyT.at loc) in
-      Scope.add_entry name entry scope);
-    (* special bindings for this, super, and return value slot *)
-    initialize_this_super derived_ctor this super scope;
-    Scope.(
-      let new_entry t =
-        Entry.(new_const ~loc:(loc_of_t t) ~state:Initialized t)
-      in
-      add_entry (internal_name "yield") (new_entry yield) scope;
-      add_entry (internal_name "next") (new_entry next) scope;
-      add_entry (internal_name "return") (new_entry ret) scope
-    );
-    scope
-  in
+  let function_scope = Scope.fresh ~var_scope_kind:kind () in
 
+  (* push the scope early so default exprs can reference earlier params *)
   Env_js.push_var_scope cx function_scope;
+
+  (* add param bindings *)
+  params |> Params.iter Scope.(fun (name, t, loc) ->
+    (* add default value as lower bound, if provided *)
+    Params.with_default name (fun expr ->
+      let te = expression cx type_params_map expr in
+      Flow_js.flow cx (te, t)
+    ) params;
+    (* add to scope *)
+    let reason = mk_reason (spf "param %s" name) loc in
+    Env_js.bind_implicit_let ~state:Entry.Initialized
+      Entry.ParamBinding cx name t reason);
+
+  (* early-add our own name binding for recursive calls *)
+  (match id with
+  | None -> ()
+  | Some (loc, { Ast.Identifier.name; _ }) ->
+    let entry = Scope.Entry.new_var ~loc (AnyT.at loc) in
+    Scope.add_entry name entry function_scope);
+
+  (* special bindings for this, super, and return value slot *)
+  initialize_this_super derived_ctor this super function_scope;
+  Scope.(
+    let new_entry t =
+      Entry.(new_const ~loc:(loc_of_t t) ~state:Initialized t)
+    in
+    add_entry (internal_name "yield") (new_entry yield) function_scope;
+    add_entry (internal_name "next") (new_entry next) function_scope;
+    add_entry (internal_name "return") (new_entry ret) function_scope
+  );
 
   let stmts = Ast.Statement.(match body with
     | FunctionDeclaration.BodyBlock (_, { Block.body }) ->
@@ -6049,71 +6189,18 @@ and before_pos loc =
 
 and mk_params_ret cx type_params_map params (body, ret_type_opt) =
 
-  let (params, defaults, rest) = params in
+  let params, defaults, rest = params in
   let defaults = if defaults = [] && params <> []
     then List.map (fun _ -> None) params
     else defaults
   in
 
-  let rev_param_types_list,
-      rev_param_names,
-      param_types_map,
-      param_types_loc =
-    List.fold_left2 (fun (tlist, pnames, tmap, lmap) param default ->
-      Ast.Pattern.(match param with
-        | loc, Identifier (_, {
-            Ast.Identifier.name; typeAnnotation; optional
-          }) ->
-            let reason = mk_reason (spf "parameter `%s`" name) loc in
-            let t = mk_type_annotation cx type_params_map reason typeAnnotation in
-            (match default with
-              | None ->
-                  let t =
-                    if optional
-                    then OptionalT t
-                    else t
-                  in
-                  t :: tlist,
-                  name :: pnames,
-                  SMap.add name t tmap,
-                  SMap.add name loc lmap
-              | Some expr ->
-                  (* TODO: assert (not optional) *)
-                  let te = expression cx type_params_map expr in
-                  Flow_js.flow cx (te, t);
-                  (OptionalT t) :: tlist,
-                  name :: pnames,
-                  SMap.add name t tmap,
-                  SMap.add name loc lmap
-            )
-        | loc, _ ->
-            let reason = mk_reason "destructuring" loc in
-            let t = type_of_pattern param |> mk_type_annotation cx type_params_map reason in
-            let (des_tmap, des_lmap) = destructuring_map cx t param in
-            t :: tlist, "_" :: pnames,
-            SMap.union tmap des_tmap,
-            SMap.union lmap des_lmap
-        )
-    ) ([], [], SMap.empty, SMap.empty) params defaults
-  in
+  let params = List.fold_left2 (Params.add cx type_params_map)
+    Params.empty params defaults in
 
-  let rev_param_types_list,
-      rev_param_names,
-      param_types_map,
-      param_types_loc =
-    match rest with
-      | None -> rev_param_types_list,
-                rev_param_names,
-                param_types_map,
-                param_types_loc
-      | Some (loc, { Ast.Identifier.name; typeAnnotation; _ }) ->
-          let reason = mk_reason (spf "rest parameter `%s`" name) loc in
-          let t = mk_type_annotation cx type_params_map reason typeAnnotation in
-          ((mk_rest cx t) :: rev_param_types_list,
-            name :: rev_param_names,
-            SMap.add name t param_types_map,
-            SMap.add name loc param_types_loc)
-  in
+  let params = match rest with
+  | Some ident -> Params.add_rest cx type_params_map params ident
+  | None -> params in
 
   let phantom_return_loc = Ast.Statement.FunctionDeclaration.(match body with
     | BodyBlock (loc, _) -> before_pos loc
@@ -6123,56 +6210,7 @@ and mk_params_ret cx type_params_map params (body, ret_type_opt) =
   let return_type = mk_type_annotation cx type_params_map
     (mk_reason "return" phantom_return_loc) ret_type_opt in
 
-  (List.rev rev_param_types_list,
-   List.rev rev_param_names,
-   return_type,
-   param_types_map,
-   param_types_loc)
-
-(* take a list of AST type param declarations,
-   do semantic checking and create types for them. *)
-(* note: polarities arg is temporary -
-   full support will put them in the typeParameter AST *)
-and mk_type_param_declarations cx type_params_map
-  ?(polarities=[]) typeParameters
-  =
-  let add_type_param (typeparams, smap) (loc, t) polarity =
-    let name = t.Ast.Identifier.name in
-    let reason = mk_reason name loc in
-    let bound = match t.Ast.Identifier.typeAnnotation with
-      | None -> MixedT reason
-      | Some (_, u) -> mk_type cx (SMap.union smap type_params_map) reason (Some u)
-    in
-    (* leaving in this deliberately cumbersome backdoor until
-       we have proper annotations, in case of emergency :) *)
-    let polarity =
-      if polarity != Neutral then polarity
-      else if str_starts_with name "$Covariant$" then Positive
-      else if str_starts_with name "$Contravariant$" then Negative
-      else Neutral
-    in
-    let typeparam = { reason; name; bound; polarity } in
-    (typeparam :: typeparams,
-     SMap.add name (BoundT typeparam) smap)
-  in
-  let (types:Ast.Identifier.t list) =
-    extract_type_param_declarations typeParameters
-  in
-  let polarities = if polarities != [] then polarities
-    else make_list (fun () -> Neutral) (List.length types)
-  in
-  let typeparams, smap =
-    List.fold_left2 add_type_param ([], SMap.empty) types polarities
-  in
-  List.rev typeparams, SMap.union smap type_params_map
-
-and extract_type_param_declarations = function
-  | None -> []
-  | Some (_, typeParameters) -> typeParameters.Ast.Type.ParameterDeclaration.params
-
-and extract_type_param_instantiations = function
-  | None -> []
-  | Some (_, typeParameters) -> typeParameters.Ast.Type.ParameterInstantiation.params
+  params, return_type
 
 (* Process a function definition, returning a (polymorphic) function type. *)
 and mk_function id cx type_params_map reason ?(kind=Scope.Ordinary)
@@ -6198,7 +6236,7 @@ and mk_arrow id cx type_params_map reason ~kind type_params params ret body this
 (* Make a function type given the receiver type and the signature extracted from
    a function declaration. *)
 and mk_function_type cx reason this signature =
-  let typeparams, params, pnames, ret = signature in
+  let typeparams, params, ret = signature in
 
   (* prepare type *)
   let proto_reason = replace_reason "prototype" reason in
@@ -6207,8 +6245,8 @@ and mk_function_type cx reason this signature =
 
   let funtype = {
     this_t = this;
-    params_tlist = params;
-    params_names = Some pnames;
+    params_tlist = Params.tlist params;
+    params_names = Some (Params.names params);
     return_t = ret;
     closure_t = Env_js.peek_frame ();
     changeset = Env_js.retrieve_closure_changeset ()
@@ -6224,12 +6262,14 @@ and mk_function_type cx reason this signature =
    behaviors of non-ES6 React classes. It is otherwise deprecated. *)
 and mk_method cx type_params_map reason ?(kind=Scope.Ordinary)
   params ret body this super =
-  let (_,params,pnames,ret) =
+  let (_,params,ret) =
     function_decl None cx type_params_map ~kind reason None params ret body this super
   in
+  let params_tlist = Params.tlist params in
+  let params_names = Some (Params.names params) in
   FunT (reason, Flow_js.dummy_static, Flow_js.dummy_prototype,
         Flow_js.mk_functiontype2
-          params ~params_names:pnames ret (Env_js.peek_frame ()))
+          params_tlist ?params_names ret (Env_js.peek_frame ()))
 
 (* scrape top-level, unconditional field assignments from constructor code *)
 (** TODO: use a visitor **)

@@ -187,3 +187,11 @@ function type_shadow_nested_scope() {
     }
   }
 }
+
+// fn params name clash
+
+function fn_params_name_clash(x, x /* error: x already bound */) {}
+function fn_params_clash_fn_binding(x,y) {
+  let x = 0; // error: x already bound
+  var y = 0; // OK
+}
