@@ -1,21 +1,21 @@
 /* @flow */
 
 function foo(x:{y?:() => void}) {
-  x.y(); // could be undefined
+  x.y(); // error: could be undefined
   if (x.hasOwnProperty('y')) {
-    x.y(); // ok
+    x.y(); // error: still could be undefined
   }
   if (x.hasOwnProperty('z')) {
-    x.z(); // unreachable, so allowed
+    x.z(); // error: unreachable, but we don't help you here
   }
 }
 
 function bar(x:Object) {
-  x.y(); // unknown, so allowed
+  x.y(); // treated as `any`, so allowed
   if (x.hasOwnProperty('y')) {
-    x.y(); // ok
+    x.y(); // still treated as `any`, so allowed
   }
   if (x.hasOwnProperty('z')) {
-    x.z(); // ok
+    x.z(); // also treated as `any`, so allowed
   }
 }

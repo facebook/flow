@@ -49,6 +49,14 @@ hasOwnProperty.js:4:3,7: call of method `y`
 Function cannot be called on possibly undefined value
 hasOwnProperty.js:3:20,29: undefined
 
+hasOwnProperty.js:6:5,9: call of method `y`
+Function cannot be called on possibly undefined value
+hasOwnProperty.js:3:20,29: undefined
+
+hasOwnProperty.js:9:7,7: property `z`
+Property not found in
+hasOwnProperty.js:9:5,5: object type
+
 heap_defassign.js:10:21,25: string
 This type is incompatible with
 heap_defassign.js:10:12,17: number
@@ -410,4 +418,4 @@ void.js:85:7,12: undefined
 This type is incompatible with
 void.js:85:7,19: number
 
-Found 96 errors
+Found 98 errors

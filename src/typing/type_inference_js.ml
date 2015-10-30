@@ -4990,36 +4990,6 @@ and predicates_of_condition cx type_params_map e = Ast.(Expression.(
           empty_result BoolT.t
     )
 
-  (* obj.hasOwnProperty('x') *)
-  | loc, Call {
-      Call.callee = callee_loc, Member {
-        Member._object;
-        property = Member.PropertyIdentifier (_,
-          { Identifier.name = "hasOwnProperty"; _});
-        _ };
-      arguments = [Expression (arg_loc, Literal
-        { Ast.Literal.value = Ast.Literal.String x; _ }
-      )]
-    } -> (
-      (* obj.x *)
-      let fake_ast = callee_loc, Ast.Expression.Member {
-        Member._object;
-        property = Member.PropertyIdentifier (
-          arg_loc, {
-            Identifier.name = x;
-            typeAnnotation = None;
-            optional = false;
-          }
-        );
-        computed = false;
-      } in
-      match refinable_lvalue fake_ast with
-      | Some name, t ->
-          result (BoolT.at loc) name t VoidP false
-      | None, t ->
-          empty_result (BoolT.at loc)
-    )
-
   (* test1 && test2 *)
   | loc, Logical { Logical.operator = Logical.And; left; right } ->
       let reason = mk_reason "&&" loc in
