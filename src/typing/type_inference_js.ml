@@ -5968,6 +5968,7 @@ and mk_body id cx type_params_map ~kind ?(derived_ctor=false)
         | None -> loc_of_t t
       in
       let entry = Scope.Entry.new_var ~loc t in
+      Hashtbl.replace (Context.type_table cx) loc t;
       Scope.add_entry name entry scope
     );
     (* early-add our own name binding for recursive calls *)

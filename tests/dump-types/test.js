@@ -1,5 +1,5 @@
 // @flow
 var num = require('./import');
-function foo() { }
-foo();
+function foo(x) { }
+foo(0);
 var a:string = num;
