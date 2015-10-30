@@ -33,6 +33,7 @@ let symbol_type_to_json symbol_type_results =
     JAssoc [
       "pos",    Pos.json item.SymbolTypeService.pos;
       "type",   JString item.SymbolTypeService.type_;
+      "ident",  JInt item.SymbolTypeService.ident_;
     ]
   end
 

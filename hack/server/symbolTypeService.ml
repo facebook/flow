@@ -10,9 +10,12 @@
 
 open Core
 
+module IdentMap = Map.Make(Ident)
+
 type result = {
   pos: string Pos.pos;
   type_: string;
+  ident_: int;
 }
 
 (* Transform type_map from indexed by Pos into indexed by file:line *)
@@ -51,6 +54,16 @@ let find_match_pos_in_list match_pos types_list =
     | Some (pos, value) -> value
     | None -> ""
 
+(* Given all the idents for this file, make a rekeying map which *)
+(* makes a new identifier which is consistent *)
+let gen_ident_rekeying_map ident_list =
+  let _, map =  List.fold_right ident_list ~init:(0, IdentMap.empty)
+    ~f:begin fun ident (index, ident_map) ->
+      if IdentMap.mem ident ident_map then (index, ident_map)
+      else (index + 1, IdentMap.add ident index ident_map)
+      end in
+  map
+
 (* For each local variable in lvar_map find its type in type_map.
  * Since the pos in both maps may not be identical we used
  * the following algorithm:
@@ -59,9 +72,11 @@ let find_match_pos_in_list match_pos types_list =
  * 3. Sequentially search each type to find the best match one *)
 let generate_types lvar_map type_map =
   let line_map = transform_map type_map in
+  let lvar_rekey_map = gen_ident_rekeying_map (Pos.Map.values lvar_map) in
   let lvar_pos_list = Pos.Map.keys lvar_map in
   List.rev_map lvar_pos_list begin fun lvar_pos ->
     let key = SymbolUtils.get_key lvar_pos in
+    let ident = Pos.Map.find_unsafe lvar_pos lvar_map in
     let types_in_line = SymbolUtils.LineMap.get key line_map in
     let lvar_type = match types_in_line with
     | Some types_list ->
@@ -70,6 +85,7 @@ let generate_types lvar_map type_map =
     {
       pos = Pos.to_relative_string lvar_pos;
       type_ = lvar_type;
+      ident_ = IdentMap.find ident lvar_rekey_map;
     }
   end
 
@@ -79,7 +95,7 @@ let process_symbol_type result_map type_ pos env =
 
 let handle_lvar result_map ident id locals =
   let pos, name = id in
-  result_map := Pos.Map.add pos name !result_map
+  result_map := Pos.Map.add pos ident !result_map
 
 let attach_hooks type_map lvar_map =
   Typing_hooks.attach_infer_ty_hook (process_symbol_type type_map);
