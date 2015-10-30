@@ -315,11 +315,20 @@ and predicate =
   | LeftP of binary_test * t
   | RightP of binary_test * t
 
-  (* truthy *)
-  | ExistsP
+  | ExistsP (* truthy *)
+  | TrueP (* true *)
+  | FalseP (* false *)
+  | NullP (* null *)
+  | MaybeP (* null or undefined *)
 
-  (* typeof, null check, Array.isArray *)
-  | IsP of string
+  | BoolP (* boolean *)
+  | FunP (* function *)
+  | NumP (* number *)
+  | ObjP (* object *)
+  | StrP (* string *)
+  | VoidP (* undefined *)
+
+  | ArrP (* Array.isArray *)
 
 and binary_test =
   (* e1 instanceof e2 *)
@@ -735,7 +744,19 @@ let rec loc_of_predicate = function
     -> loc_of_t t
 
   | ExistsP
-  | IsP _
+  | TrueP
+  | FalseP
+  | NullP
+  | MaybeP
+
+  | BoolP
+  | FunP
+  | NumP
+  | ObjP
+  | StrP
+  | VoidP
+
+  | ArrP
     -> Loc.none (* TODO!!!!!!!!!!!! *)
 
 
@@ -979,4 +1000,18 @@ let rec string_of_predicate = function
       spf "right operand of %s with left operand = %s"
         (string_of_binary_test b) (desc_of_t t)
   | ExistsP -> "truthy"
-  | IsP s -> s
+  | TrueP -> "true"
+  | FalseP -> "false"
+  | NullP -> "null"
+  | MaybeP -> "null or undefined"
+
+  (* typeof *)
+  | VoidP -> "undefined"
+  | BoolP -> "boolean"
+  | StrP -> "string"
+  | NumP -> "number"
+  | FunP -> "function"
+  | ObjP -> "object"
+
+  (* Array.isArray *)
+  | ArrP -> "array"

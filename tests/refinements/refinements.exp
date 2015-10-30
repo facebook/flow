@@ -323,6 +323,9 @@ typeof.js:30:5,18: call of method `stuff`
 Function cannot be called on possibly undefined value
 [LIB] lib.js:3:27,45: undefined
 
+typeof.js:49:20,24: string literal `foo`
+This value is not a valid `typeof` return value
+
 undef.js:31:13,13: null
 This type is incompatible with
 undef.js:31:13,20: number
@@ -407,4 +410,4 @@ void.js:85:7,12: undefined
 This type is incompatible with
 void.js:85:7,19: number
 
-Found 95 errors
+Found 96 errors

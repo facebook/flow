@@ -44,3 +44,9 @@ function anyobj(x: number | Object): number {
   }
   return x; // OK, x refined to `number`
 }
+
+function testInvalidValue(x: mixed) {
+  if (typeof x === "foo") { // error
+    return 0;
+  }
+}

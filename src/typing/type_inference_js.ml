@@ -4714,9 +4714,9 @@ and predicates_of_condition cx type_params_map e = Ast.(Expression.(
     | Some name, t ->
         match op with
         | Binary.Equal | Binary.NotEqual ->
-            Some (name, t, IsP "null or undefined", op = Binary.Equal)
+            Some (name, t, MaybeP, op = Binary.Equal)
         | Binary.StrictEqual | Binary.StrictNotEqual ->
-            Some (name, t, IsP "null", op = Binary.StrictEqual)
+            Some (name, t, NullP, op = Binary.StrictEqual)
         | _ -> None
     in
     match refinement with
@@ -4731,9 +4731,9 @@ and predicates_of_condition cx type_params_map e = Ast.(Expression.(
     | Some name, t ->
         match op with
         | Binary.Equal | Binary.NotEqual ->
-            Some (name, t, IsP "null or undefined", op = Binary.Equal)
+            Some (name, t, MaybeP, op = Binary.Equal)
         | Binary.StrictEqual | Binary.StrictNotEqual ->
-            Some (name, t, IsP "undefined", op = Binary.StrictEqual)
+            Some (name, t, VoidP, op = Binary.StrictEqual)
         | _ -> None
     in
     match refinement with
@@ -4748,8 +4748,8 @@ and predicates_of_condition cx type_params_map e = Ast.(Expression.(
         match op with
         (* TODO support == *)
         | Binary.StrictEqual | Binary.StrictNotEqual ->
-            let pred = string_of_bool right in
-            Some (name, t, IsP pred, op = Binary.StrictEqual)
+            let pred = if right then TrueP else FalseP in
+            Some (name, t, pred, op = Binary.StrictEqual)
         | _ -> None
     in
     match refinement with
@@ -4774,10 +4774,27 @@ and predicates_of_condition cx type_params_map e = Ast.(Expression.(
   in
 
   (* inspect a typeof equality test *)
-  let typeof_test sense arg typename =
+  let typeof_test loc sense arg typename str_loc =
     match refinable_lvalue arg with
-    | Some name, t -> result BoolT.t name t (IsP typename) sense
-    | None, t -> empty_result BoolT.t
+    | Some name, t ->
+        let pred = match typename with
+        | "boolean" -> Some BoolP
+        | "function" -> Some FunP
+        | "number" -> Some NumP
+        | "object" -> Some ObjP
+        | "string" -> Some StrP
+        | "undefined" -> Some VoidP
+        | _ -> None
+        in
+        begin match pred with
+        | Some pred -> result BoolT.t name t pred sense
+        | None ->
+          let reason = mk_reason (spf "string literal `%s`" typename) str_loc in
+          let err = "This value is not a valid `typeof` return value" in
+          Flow_js.add_warning cx [reason, err];
+          empty_result (BoolT.at loc)
+        end
+    | None, t -> empty_result (BoolT.at loc)
   in
 
   let mk_and map1 map2 = Scope.KeyMap.merge
@@ -4905,32 +4922,32 @@ and predicates_of_condition cx type_params_map e = Ast.(Expression.(
       bool_test loc op right value
 
   (* typeof expr ==/=== string *)
-  | _, Binary { Binary.operator = Binary.Equal | Binary.StrictEqual;
+  | loc, Binary { Binary.operator = Binary.Equal | Binary.StrictEqual;
       left = _, Unary { Unary.operator = Unary.Typeof; argument; _ };
-      right = _, Literal { Literal.value = Literal.String s; _ }
+      right = str_loc, Literal { Literal.value = Literal.String s; _ }
     } ->
-      typeof_test true argument s
+      typeof_test loc true argument s str_loc
 
   (* typeof expr !=/!== string *)
-  | _, Binary { Binary.operator = Binary.NotEqual | Binary.StrictNotEqual;
+  | loc, Binary { Binary.operator = Binary.NotEqual | Binary.StrictNotEqual;
       left = _, Unary { Unary.operator = Unary.Typeof; argument; _ };
-      right = _, Literal { Literal.value = Literal.String s; _ }
+      right = str_loc, Literal { Literal.value = Literal.String s; _ }
     } ->
-      typeof_test false argument s
+      typeof_test loc false argument s str_loc
 
   (* string ==/=== typeof expr *)
-  | _, Binary { Binary.operator = Binary.Equal | Binary.StrictEqual;
-      left = _, Literal { Literal.value = Literal.String s; _ };
+  | loc, Binary { Binary.operator = Binary.Equal | Binary.StrictEqual;
+      left = str_loc, Literal { Literal.value = Literal.String s; _ };
       right = _, Unary { Unary.operator = Unary.Typeof; argument; _ }
     } ->
-      typeof_test true argument s
+      typeof_test loc true argument s str_loc
 
   (* string !=/!== typeof expr *)
-  | _, Binary { Binary.operator = Binary.NotEqual | Binary.StrictNotEqual;
-      left = _, Literal { Literal.value = Literal.String s; _ };
+  | loc, Binary { Binary.operator = Binary.NotEqual | Binary.StrictNotEqual;
+      left = str_loc, Literal { Literal.value = Literal.String s; _ };
       right = _, Unary { Unary.operator = Unary.Typeof; argument; _ }
     } ->
-      typeof_test false argument s
+      typeof_test loc false argument s str_loc
 
   (* expr.name ===/!== value *)
   | loc, Binary { Binary.
@@ -4968,7 +4985,7 @@ and predicates_of_condition cx type_params_map e = Ast.(Expression.(
     } -> (
       match refinable_lvalue arg with
       | Some name, t ->
-          result BoolT.t name t (IsP "array") true
+          result BoolT.t name t ArrP true
       | None, t ->
           empty_result BoolT.t
     )
@@ -4998,7 +5015,7 @@ and predicates_of_condition cx type_params_map e = Ast.(Expression.(
       } in
       match refinable_lvalue fake_ast with
       | Some name, t ->
-          result (BoolT.at loc) name t (IsP "undefined") false
+          result (BoolT.at loc) name t VoidP false
       | None, t ->
           empty_result (BoolT.at loc)
     )

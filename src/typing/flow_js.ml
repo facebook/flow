@@ -4322,131 +4322,131 @@ and predicate cx trace t (l,p) = match (l,p) with
   (* typeof _ ~ "boolean" *)
   (***********************)
 
-  | (MixedT r, IsP "boolean") ->
+  | (MixedT r, BoolP) ->
     rec_flow cx trace (BoolT.why r, t)
 
-  | (_, IsP "boolean") ->
+  | (_, BoolP) ->
     filter cx trace t l is_bool
 
-  | (_, NotP(IsP "boolean")) ->
+  | (_, NotP(BoolP)) ->
     filter cx trace t l (not_ is_bool)
 
   (***********************)
   (* typeof _ ~ "string" *)
   (***********************)
 
-  | (MixedT r, IsP "string") ->
+  | (MixedT r, StrP) ->
     rec_flow cx trace (StrT.why r, t)
 
-  | (_, IsP "string") ->
+  | (_, StrP) ->
     filter cx trace t l is_string
 
-  | (_, NotP(IsP "string")) ->
+  | (_, NotP(StrP)) ->
     filter cx trace t l (not_ is_string)
 
   (***********************)
   (* typeof _ ~ "number" *)
   (***********************)
 
-  | (MixedT r, IsP "number") ->
+  | (MixedT r, NumP) ->
     rec_flow cx trace (NumT.why r, t)
 
-  | (_, IsP "number") ->
+  | (_, NumP) ->
     filter cx trace t l is_number
 
-  | (_, NotP(IsP "number")) ->
+  | (_, NotP(NumP)) ->
     filter cx trace t l (not_ is_number)
 
   (***********************)
   (* typeof _ ~ "function" *)
   (***********************)
 
-  | (MixedT r, IsP "function") ->
+  | (MixedT r, FunP) ->
     rec_flow cx trace (AnyFunT (replace_reason "function" r), t)
 
-  | (_, IsP "function") ->
+  | (_, FunP) ->
     filter cx trace t l is_function
 
-  | (_, NotP(IsP "function")) ->
+  | (_, NotP(FunP)) ->
     filter cx trace t l (not_ is_function)
 
   (***********************)
   (* typeof _ ~ "object" *)
   (***********************)
 
-  | (MixedT r, IsP "object") ->
+  | (MixedT r, ObjP) ->
     let obj = AnyObjT (replace_reason "object" r) in
     let union = create_union [NullT.why r; obj] in
     rec_flow cx trace (union, t)
 
-  | (_, IsP "object") ->
+  | (_, ObjP) ->
     filter cx trace t l is_object
 
-  | (_, NotP(IsP "object")) ->
+  | (_, NotP(ObjP)) ->
     filter cx trace t l (not_ is_object)
 
   (*******************)
   (* Array.isArray _ *)
   (*******************)
 
-  | (MixedT r, IsP "array") ->
+  | (MixedT r, ArrP) ->
     let filtered_l = ArrT (replace_reason "array" r, AnyT.why r, []) in
     rec_flow cx trace (filtered_l, t)
 
-  | (_, IsP "array") ->
+  | (_, ArrP) ->
     filter cx trace t l is_array
 
-  | (_, NotP(IsP "array")) ->
+  | (_, NotP(ArrP)) ->
     filter cx trace t l (not_ is_array)
 
   (***********************)
   (* typeof _ ~ "undefined" *)
   (***********************)
 
-  | (_, IsP "undefined") ->
+  | (_, VoidP) ->
     rec_flow cx trace (filter_undefined l, t)
 
-  | (_, NotP(IsP "undefined")) ->
+  | (_, NotP(VoidP)) ->
     rec_flow cx trace (filter_not_undefined l, t)
 
   (********)
   (* null *)
   (********)
 
-  | (_, IsP "null") ->
+  | (_, NullP) ->
     rec_flow cx trace (filter_null l, t)
 
-  | (_, NotP(IsP "null")) ->
+  | (_, NotP(NullP)) ->
     rec_flow cx trace (filter_not_null l, t)
 
   (*********)
   (* maybe *)
   (*********)
 
-  | (_, IsP "null or undefined") ->
+  | (_, MaybeP) ->
     rec_flow cx trace (filter_maybe l, t)
 
-  | (_, NotP(IsP "null or undefined")) ->
+  | (_, NotP(MaybeP)) ->
     rec_flow cx trace (filter_not_maybe l, t)
 
   (********)
   (* true *)
   (********)
 
-  | (_, IsP "true") ->
+  | (_, TrueP) ->
     rec_flow cx trace (filter_true l, t)
 
-  | (_, NotP(IsP "true")) ->
+  | (_, NotP(TrueP)) ->
     rec_flow cx trace (filter_not_true l, t)
 
   (*********)
   (* false *)
   (*********)
 
-  | (_, IsP "false") ->
+  | (_, FalseP) ->
     rec_flow cx trace (filter_false l, t)
 
-  | (_, NotP(IsP "false")) ->
+  | (_, NotP(FalseP)) ->
     rec_flow cx trace (filter_not_false l, t)
 
   (************************)
@@ -4460,7 +4460,9 @@ and predicate cx trace t (l,p) = match (l,p) with
     rec_flow cx trace (filter_not_exists l, t)
 
   (* unreachable *)
-  | (_, (NotP _ | IsP _)) ->
+  | (_, NotP (NotP _))
+  | (_, NotP (AndP _))
+  | (_, NotP (OrP _)) ->
     assert_false (spf "Unexpected predicate %s" (string_of_predicate p))
 
 and binary_predicate cx trace sense test left right result =
@@ -5657,9 +5659,19 @@ and gc_pred cx state = function
   | NotP (p) ->
       gc_pred cx state p
 
-  | ExistsP -> ()
-
-  | IsP _ -> ()
+  | TrueP
+  | FalseP
+  | ExistsP
+  | NullP
+  | MaybeP
+  | BoolP
+  | FunP
+  | NumP
+  | ObjP
+  | StrP
+  | VoidP
+  | ArrP
+      -> ()
 
 (* Keep a reachable type variable around. *)
 let live cx state id =

@@ -21,7 +21,17 @@ let string_of_pred_ctor = function
   | LeftP _ -> "LeftP"
   | RightP _ -> "RightP"
   | ExistsP -> "ExistsP"
-  | IsP _ -> "IsP"
+  | TrueP -> "TrueP"
+  | FalseP -> "FalseP"
+  | VoidP -> "VoidP"
+  | NullP -> "NullP"
+  | MaybeP -> "MaybeP"
+  | BoolP -> "BoolP"
+  | StrP -> "StrP"
+  | NumP -> "NumP"
+  | FunP -> "FunP"
+  | ObjP -> "ObjP"
+  | ArrP -> "ArrP"
 
 let string_of_binary_test_ctor = function
   | Instanceof -> "Instanceof"
@@ -554,8 +564,19 @@ and json_of_pred_impl json_cx p = Json.(
       "binaryTest", json_of_binary_test json_cx b;
       "type", _json_of_t json_cx t
     ]
-  | ExistsP -> []
-  | IsP s -> ["typeName", JString s]
+  | TrueP
+  | FalseP
+  | ExistsP
+  | VoidP
+  | NullP
+  | MaybeP
+  | BoolP
+  | StrP
+  | NumP
+  | FunP
+  | ObjP
+  | ArrP
+      -> []
 ))
 
 and json_of_binary_test json_cx = check_depth json_of_binary_test_impl json_cx
