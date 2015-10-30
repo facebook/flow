@@ -125,7 +125,7 @@ let is_shape_like_array env = function
 (* Apply this function to a type after lvalue array access that should update
  * array type (e.g from AKempty to AKmap after using it as a map, or to add a
  * new field to AKshape after setting a statically known field name). *)
-let update_array_type p access_type env ty =
+let update_array_type p access_type ~lvar_assignment env ty =
   let mapper = object
     inherit update_array_type_mapper
     inherit! downcast_tabstract_to_array_type_mapper
@@ -152,9 +152,9 @@ let update_array_type p access_type env ty =
           let env, tv = TUtils.in_var env (Reason.Rnone, Tunresolved []) in
           let env, ty =
             if akshape_key_consistent_with_map field_name fdm then begin
-              let fdm = if ShapeMap.mem field_name fdm then fdm else
-                ShapeMap.add field_name (tk, tv) fdm in
-                env, (Reason.Rwitness p, Tarraykind (AKshape fdm))
+              let fdm = if ShapeMap.mem field_name fdm && (not lvar_assignment)
+              then fdm else ShapeMap.add field_name (tk, tv) fdm in
+              env, (Reason.Rwitness p, Tarraykind (AKshape fdm))
             end else
               downcast_akshape_to_akmap_ env r fdm
             in
@@ -162,9 +162,28 @@ let update_array_type p access_type env ty =
         | _ ->
           let env, ty = downcast_akshape_to_akmap_ env r fdm in
           (env, seen), ty
+
+    method! on_tshape (env, seen) r fields_known fdm =
+      match access_type with
+        | AKshape_key field_name when lvar_assignment ->
+          let env, tv = TUtils.in_var env (Reason.Rnone, Tunresolved []) in
+          let fdm = ShapeMap.add field_name tv fdm in
+          (env, seen), (Reason.Rwitness p, Tshape (fields_known, fdm))
+        | _ ->
+          (env, seen), (r, Tshape (fields_known, fdm))
+
   end in
   let (env, _), ty = mapper#on_type (fresh_env env) ty in
   env, ty
+
+(* When the type is updated because of "$a[...] = ..." statement, we can infer
+ * a bit more about the new type than when it happens in nested expression like
+ * $a[$i][...] = ... *)
+let update_array_type_on_lvar_assignment p access_type env ty =
+  update_array_type p access_type ~lvar_assignment:true env ty
+
+let update_array_type p access_type env ty =
+  update_array_type p access_type ~lvar_assignment:false env ty
 
 let fully_remove_akshapes_and_tvars env ty =
   let mapper = object(this)

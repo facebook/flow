@@ -1901,24 +1901,23 @@ and assign p env e1 ty2 =
       | _ -> env, ty2
       )
   | _, Array_get ((_, Lvar (_, lvar)) as shape, Some (_, e)) ->
-      let env, shape_ty = expr env shape in
-      let env, shape_ty = match TUtils.maybe_shape_field_name env e with
-        | Some field_name ->
-        (* In the case of an assignment of the form $x['new_field'] = ...;
-         * $x could be a shape where the field 'new_field' is not yet defined.
-         * When that is the case we want to add the field to its type.
-         *)
-          Typing_shapes.grow_shape p field_name env shape_ty
-        | None ->
-          Typing_arrays.downcast_akshape_to_akmap env shape_ty
-      in
-      let env, _ = set_valid_rvalue p env lvar shape_ty in
-      (* We still need to call assign_simple in order to bind the freshly
-       * created variable in added shape field. Moreover, it's needed because
-       * shape_ty could be more than just a shape. It could be an unresolved
-       * type where some elements are shapes and some others are not.
-       *)
-      assign_simple p env e1 ty2
+    let env, shape_ty = expr env shape in
+    let access_type = match TUtils.maybe_shape_field_name env e with
+      | Some field_name -> Typing_arrays.AKshape_key field_name
+      | None -> Typing_arrays.AKother in
+      (* In the case of an assignment of the form $x['new_field'] = ...;
+      * $x could be a shape where the field 'new_field' is not yet defined.
+      * When that is the case we want to add the field to its type.
+      *)
+    let env, shape_ty = Typing_arrays.update_array_type_on_lvar_assignment
+      p access_type env shape_ty in
+    let env, _ = set_valid_rvalue p env lvar shape_ty in
+    (* We still need to call assign_simple in order to bind the freshly
+    * created variable in added shape field. Moreover, it's needed because
+    * shape_ty could be more than just a shape. It could be an unresolved
+    * type where some elements are shapes and some others are not.
+    *)
+   assign_simple p env e1 ty2
   | _, This ->
      Errors.this_lvalue p;
      env, (Reason.Rwitness p, Tany)
