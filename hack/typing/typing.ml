@@ -1186,15 +1186,11 @@ and expr_
       let ty = Reason.Rwitness p, Ttuple tyl in
       env, ty
   | Array_get (e, None) ->
-      let env, ty1 = update_array_type_to_akvec p env e valkind in
+      let env, ty1 = update_array_type p env e None valkind in
       let is_lvalue = (valkind == `lvalue) in
       array_append is_lvalue p env ty1
   | Array_get (e1, Some e2) ->
-      let env, ty1 = match TUtils.maybe_shape_field_name env (snd e2) with
-        | Some field_name ->
-          update_array_type_to_akshape p env e1 field_name valkind
-        | None ->
-          update_array_type_to_akmap p env e1 valkind in
+      let env, ty1 = update_array_type p env e1 (Some e2) valkind in
       let env, ty1 = TUtils.fold_unresolved env ty1 in
       let env, ety1 = Env.expand_type env ty1 in
       let env, ty2 = expr env e2 in
@@ -4227,33 +4223,21 @@ and overload_function p env class_id method_id el uel f =
    if has_error then env, res
    else f env fty res el
 
-and update_array_type_to_akvec p env e valkind =
+and update_array_type p env e1 e2 valkind  =
+  let access_type = Typing_arrays.static_array_access env e2 in
   let type_mapper =
-    Typing_arrays.update_array_type_to_akvec p in
-  update_array_type p env e valkind type_mapper
-
-and update_array_type_to_akshape p env e1 field_name valkind =
-  let type_mapper =
-    Typing_arrays.update_array_type_to_akshape p field_name in
-  update_array_type p env e1 valkind type_mapper
-
-and update_array_type_to_akmap p env e1 valkind =
-  let type_mapper =
-    Typing_arrays.update_array_type_to_akmap p in
-  update_array_type p env e1 valkind type_mapper
-
-and update_array_type p env e valkind type_mapper =
+    Typing_arrays.update_array_type p access_type in
   match valkind with
     | `lvalue | `lvalue_subexpr ->
       let env, ty1 =
-        raw_expr ~valkind:`lvalue_subexpr ~in_cond:false env e in
+        raw_expr ~valkind:`lvalue_subexpr ~in_cond:false env e1 in
       let env, ty1 = type_mapper env ty1 in
-      begin match e with
+      begin match e1 with
         | (_, Lvar (_, x)) ->
-          (* update_array_type_ has updated the type in ty1 typevars, but we
+          (* type_mapper has updated the type in ty1 typevars, but we
              need to update the local variable type too *)
           set_valid_rvalue p env x ty1
         | _ -> env, ty1
       end
     | _ ->
-      expr env e
+      expr env e1
