@@ -1748,7 +1748,7 @@ and statement cx type_params_map = Ast.Statement.(
             let _, preds, not_preds, xtypes = match test with
             | None ->
                 default := true;
-                UndefT.t, Scope.KeyMap.empty, Scope.KeyMap.empty,
+                UndefT.at loc, Scope.KeyMap.empty, Scope.KeyMap.empty,
                   Scope.KeyMap.empty
             | Some expr ->
                 let fake_ast = loc, Ast.Expression.(Binary {
@@ -2167,7 +2167,7 @@ and statement cx type_params_map = Ast.Statement.(
 
       let _, preds, not_preds, xtypes = match test with
         | None ->
-            UndefT.t, Scope.KeyMap.empty, Scope.KeyMap.empty,
+            UndefT.at loc, Scope.KeyMap.empty, Scope.KeyMap.empty,
             Scope.KeyMap.empty (* TODO: prune the "not" case *)
         | Some expr ->
             predicates_of_condition cx type_params_map expr

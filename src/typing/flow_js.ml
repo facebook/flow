@@ -4206,7 +4206,9 @@ and filter_maybe = function
   | OptionalT t ->
     let reason = reason_of_t t in
     VoidT.why reason
-  | t -> UndefT.t
+  | t ->
+    let reason = reason_of_t t in
+    UndefT.why reason
 
 and filter_not_maybe = function
   | MaybeT t -> t
@@ -4219,7 +4221,9 @@ and filter_null = function
   | MaybeT t -> NullT.why (reason_of_t t)
   | NullT r -> NullT r
   | MixedT r -> NullT.why r
-  | t -> UndefT.t
+  | t ->
+    let reason = reason_of_t t in
+    UndefT.why reason
 
 and filter_not_null = function
   | MaybeT t ->
@@ -4237,7 +4241,9 @@ and filter_undefined = function
     let reason = reason_of_t t in
     VoidT.why reason
   | MixedT r -> VoidT.why r
-  | t -> UndefT.t
+  | t ->
+    let reason = reason_of_t t in
+    UndefT.why reason
 
 and filter_not_undefined = function
   | MaybeT t ->
