@@ -37,8 +37,8 @@ let go main_entry (options, log_file) (_ic, _oc) =
        let oc =
          open_out_gen [Open_creat; Open_append; Open_binary] 0o666 log_file in
        let exit_kind, exit_code = Exit_status.unpack proc_stat in
-       Printf.fprintf oc "hh_server %s with exit code %d\n"
-         exit_kind exit_code;
+       Printf.fprintf oc "%s hh_server %s with exit code %d\n"
+         (Hh_logger.timestamp_string ()) exit_kind exit_code;
        close_out oc;
        let is_oom = check_dmesg_for_oom pid in
        let time_taken = Unix.time () -. t in
