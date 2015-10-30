@@ -55,8 +55,14 @@ end
 let downcast_akshape_to_akmap_ env r fdm =
   let keys, values = List.unzip (ShapeMap.values fdm) in
   let env, values = lmap Typing_env.unbind env values in
-  let env, value = TUtils.in_var env (Reason.Rnone, Tunresolved []) in
-  let env, value = fold_left_env TUtils.unify env value values in
+  let unknown = List.find values (fun ty ->
+    snd (snd (TUtils.fold_unresolved env ty)) = Tany)
+  in
+  let env, value = match unknown with
+    | Some (r, _) -> env, (r, Tany)
+    | None ->
+      let env, value = TUtils.in_var env (Reason.Rnone, Tunresolved []) in
+      fold_left_env TUtils.unify env value values in
   let env, keys = lmap Typing_env.unbind env keys in
   let env, key = TUtils.in_var env (Reason.Rnone, Tunresolved []) in
   let env, key =  fold_left_env TUtils.unify env key keys in
