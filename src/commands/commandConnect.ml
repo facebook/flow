@@ -87,19 +87,36 @@ let start_flow_server ?tmp_dir root =
         let msg = "Could not start Flow server!" in
         FlowExitStatus.(exit ~msg (Server_start_failed status))
 
+type retry_info = {
+  retries_remaining: int;
+  original_retries: int;
+  last_connect_time: float;
+}
+
+let reset_retries_if_necessary retries = function
+  | Result.Error CCS.Server_busy -> retries
+  | Result.Ok _
+  | Result.Error CCS.Server_missing
+  | Result.Error CCS.Build_id_mismatch
+  | Result.Error CCS.Server_initializing ->
+      { retries with
+        retries_remaining = retries.original_retries;
+      }
+
 (* A featureful wrapper around CommandConnectSimple.connect_once. This
  * function handles retries, timeouts, displaying messages during
  * initialization, etc *)
 let rec connect env retries start_time tail_env =
-  if retries < 0
+  if retries.retries_remaining < 0
   then
-    FlowExitStatus.(exit ~msg:"Out of retries, exiting!" Out_of_retries);
+    FlowExitStatus.(exit ~msg:"\nOut of retries, exiting!" Out_of_retries);
   let has_timed_out = match env.expiry with
     | None -> false
     | Some t -> Unix.time() > t
   in
   if has_timed_out
-  then FlowExitStatus.(exit ~msg:"Timeout exceeded, exiting" Out_of_time);
+  then FlowExitStatus.(exit ~msg:"\nTimeout exceeded, exiting" Out_of_time);
+  let retries = { retries with last_connect_time = Unix.gettimeofday () } in
   let conn = CCS.connect_once ~tmp_dir:env.tmp_dir env.root in
   let curr_time = Unix.time () in
   if not (Tail.is_open_env tail_env) &&
@@ -111,6 +128,7 @@ let rec connect env retries start_time tail_env =
   Tail.set_lines tail_env [];
   let tail_msg = msg_of_tail tail_env in
   if Tty.spinner_used () then Tty.print_clear_line stderr;
+  let retries = reset_retries_if_necessary retries conn in
   match conn with
   | Result.Ok (ic, oc) -> (ic, oc)
   | Result.Error CCS.Server_missing ->
@@ -119,16 +137,25 @@ let rec connect env retries start_time tail_env =
         connect env retries start_time tail_env
       end else begin
         let msg = Utils.spf
-          "Error: There is no Flow server running in '%s'."
+          "\nError: There is no Flow server running in '%s'."
           (Path.to_string env.root) in
         FlowExitStatus.(exit ~msg No_server_running)
       end
   | Result.Error CCS.Server_busy ->
       Printf.eprintf
-        "flow is busy: %s %s%!"
+        "The flow server is not responding (%d %s remaining): %s %s%!"
+        retries.retries_remaining
+        (if retries.retries_remaining = 1 then "retry" else "retries")
         tail_msg
         (Tty.spinner());
-      connect env (retries - 1) start_time tail_env
+      let retries = { retries with
+        retries_remaining = retries.retries_remaining - 1;
+      } in
+      (* Make sure there is at least 1 second between retries *)
+      let sleep_time = int_of_float
+        (ceil (1.0 -. (Unix.gettimeofday() -. retries.last_connect_time))) in
+      if sleep_time > 0 then Unix.sleep sleep_time;
+      connect env retries start_time tail_env
   | Result.Error CCS.Build_id_mismatch ->
       let msg = "The flow server's version didn't match the client's, so it \
       exited." in
@@ -144,14 +171,17 @@ let rec connect env retries start_time tail_env =
            *)
           Tail.close_env tail_env;
           connect env retries start_time tail_env
-        end else FlowExitStatus.(exit ~msg Build_id_mismatch)
+        end
+      else
+        let msg = "\n"^msg in
+        FlowExitStatus.(exit ~msg Build_id_mismatch)
   | Result.Error CCS.Server_initializing ->
       let msg = "flow is still initializing; this can take some time." in
       if env.retry_if_init then begin
         Printf.eprintf "%s %s %s%!" msg tail_msg (Tty.spinner());
         connect env retries start_time tail_env
       end else begin
-        let msg = msg^" Not retrying since --retry-if-init is false." in
+        let msg = "\n"^msg^" Not retrying since --retry-if-init is false." in
         FlowExitStatus.(exit ~msg Server_initializing)
       end
 
@@ -164,6 +194,12 @@ let connect env =
       link_file in
   let start_time = Unix.time () in
   let tail_env = Tail.create_env log_file in
-  let res = connect env env.retries start_time tail_env in
+  let retries = {
+    retries_remaining = env.retries;
+    original_retries = env.retries;
+    last_connect_time = Unix.gettimeofday ();
+  } in
+
+  let res = connect env retries start_time tail_env in
   Tail.close_env tail_env;
   res
