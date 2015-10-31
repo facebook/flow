@@ -23,6 +23,7 @@ end = struct
     ServerCommands.Check.command;
     CheckContentsCommand.command;
     ConvertCommand.command;
+    CoverageCommand.command;
     FindModuleCommand.command;
     GetDefCommand.command;
     GetImportersCommand.command;

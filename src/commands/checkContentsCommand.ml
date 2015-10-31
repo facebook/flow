@@ -34,17 +34,8 @@ let spec = {
   )
 }
 
-let read_from_stdin file =
-  match file with
-    | None ->
-        let contents = Sys_utils.read_stdin_to_string () in
-        ServerProt.FileContent (None, contents)
-    | Some file ->
-        let contents = Sys_utils.read_stdin_to_string () in
-        ServerProt.FileContent ((Some (get_path_of_file file)), contents)
-
 let main option_values root error_flags use_json verbose file () =
-  let file = read_from_stdin file in
+  let file = get_file_from_filename_or_stdin file None in
   let root = guess_root (
     match root with
     | Some root -> Some root

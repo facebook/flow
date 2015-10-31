@@ -41,18 +41,6 @@ let spec = {
   )
 }
 
-let get_file path = function
-  | Some filename ->
-      ServerProt.FileName (expand_path filename)
-  | None ->
-      let contents = Sys_utils.read_stdin_to_string () in
-      let filename = (match path with
-        | Some ""
-        | None -> None
-        | Some str -> Some (get_path_of_file str)
-      ) in
-      ServerProt.FileContent (filename, contents)
-
 let handle_error (loc, err) json strip =
   let loc = strip loc in
   if json
@@ -69,7 +57,7 @@ let handle_error (loc, err) json strip =
 let handle_response types json strip =
   if json
   then (
-    let lst = types |> List.map (fun (loc, str, raw_t, reasons) ->
+    let lst = types |> List.map (fun (loc, ctor, str, raw_t, reasons) ->
       let loc = strip loc in
       let json_assoc = (
         ("type", Json.JString str) ::
@@ -91,7 +79,7 @@ let handle_response types json strip =
     output_string stdout (json^"\n")
   ) else (
     let out = types
-      |> List.map (fun (loc, str, _, reasons) ->
+      |> List.map (fun (loc, ctor, str, _, reasons) ->
         let loc = strip loc in
         (Utils.spf "%s: %s" (Reason_js.string_of_loc loc) str)
       )
@@ -103,7 +91,7 @@ let handle_response types json strip =
 
 let main option_values root json strip_root path include_raw filename () =
   let json = json || include_raw in
-  let file = get_file path filename in
+  let file = get_file_from_filename_or_stdin path filename in
   let root = guess_root (
     match root with
     | Some root -> Some root

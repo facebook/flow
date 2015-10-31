@@ -42,7 +42,7 @@ val dump_types:
   (Context.t -> Type.t -> string) ->
   (Context.t -> Type.t -> string option) ->
   Context.t ->
-  (Loc.t * string * string option * Reason_js.reason list) list
+  (Loc.t * string * string * string option * Reason_js.reason list) list
 
 val fill_types: Context.t -> (int * int * string) list
 

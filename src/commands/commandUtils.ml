@@ -275,6 +275,18 @@ let get_path_of_file file =
     let path = Path.make file in
     Path.to_string path
 
+let get_file_from_filename_or_stdin path = function
+  | Some filename ->
+      ServerProt.FileName (expand_path filename)
+  | None ->
+      let contents = Sys_utils.read_stdin_to_string () in
+      let filename = (match path with
+        | Some ""
+        | None -> None
+        | Some str -> Some (get_path_of_file str)
+      ) in
+      ServerProt.FileContent (filename, contents)
+
 let range_string_of_loc loc = Loc.(
   let file = match loc.source with
   | Some file -> string_of_filename file

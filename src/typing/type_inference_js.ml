@@ -554,10 +554,13 @@ let dump_types printer raw_printer cx =
     let possible_reasons = possible_ts
       |> List.map reason_of_t
     in
-    (loc, printer cx ground_t, raw_printer cx ground_t, possible_reasons)::list
+    let ctor = string_of_ctor ground_t in
+    let pretty = printer cx ground_t in
+    let raw = raw_printer cx ground_t in
+    (loc, ctor, pretty, raw, possible_reasons)::list
   ) (Context.type_table cx) [] in
   lst |> List.sort (fun
-    (a_loc, _, _, _) (b_loc, _, _, _) -> Loc.compare a_loc b_loc
+    (a_loc, _, _, _, _) (b_loc, _, _, _, _) -> Loc.compare a_loc b_loc
   )
 
 (********)
