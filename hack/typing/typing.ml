@@ -84,11 +84,13 @@ let compare_field_kinds x y =
   match x, y with
   | Nast.AFvalue (p1, _), Nast.AFkvalue ((p2, _), _)
   | Nast.AFkvalue ((p2, _), _), Nast.AFvalue (p1, _) ->
-      Errors.field_kinds p1 p2
-  | _ -> ()
+      Errors.field_kinds p1 p2;
+      false
+  | _ ->
+      true
 
 let check_consistent_fields x l =
-  List.iter l (compare_field_kinds x)
+  List.for_all l (compare_field_kinds x)
 
 let unbound_name env (pos, name)=
   (match Env.get_mode env with
@@ -412,6 +414,10 @@ and check_memoizable env param (pname, ty) =
       ShapeMap.iter begin fun _ (_, tv) ->
         check_memoizable env param (pname, tv)
       end fdm
+  | _, Tarraykind (AKtuple fields) ->
+      IMap.iter begin fun _ tv ->
+        check_memoizable env param (pname, tv)
+      end fields
   | _, Tclass (_, _) ->
     let type_param = Env.fresh_type() in
     let container_type =
@@ -917,7 +923,17 @@ and expr_
       end env ShapeMap.empty l in
       env, (Reason.Rwitness p, Tarraykind (AKshape fdm))
   | Array (x :: rl as l) ->
-      check_consistent_fields x rl;
+      let fields_consistent = check_consistent_fields x rl in
+      let is_vec = match x with
+        | Nast.AFvalue _ -> true
+        | Nast.AFkvalue _ -> false in
+      if fields_consistent && is_vec then
+        let env, fields = List.foldi l ~f:begin fun index (env, acc) e ->
+            let env, ty = aktuple_field env e in
+            env, IMap.add index ty acc
+          end ~init:(env, IMap.empty) in
+         env, (Reason.Rwitness p, Tarraykind (AKtuple fields))
+      else
       let env, value = TUtils.in_var env (Reason.Rnone, Tunresolved []) in
       let env, values =
         fold_left_env (apply_for_env_fold array_field_value) env [] l in
@@ -933,10 +949,9 @@ and expr_
         then env, (Reason.Rnone, Tany)
         else fold_left_env unify_value env value values
       in
-      (match x with
-      | Nast.AFvalue _ ->
+      if is_vec then
           env, (Reason.Rwitness p, Tarraykind (AKvec value))
-      | Nast.AFkvalue _ ->
+      else
           let env, key = TUtils.in_var env (Reason.Rnone, Tunresolved []) in
           let env, keys =
             fold_left_env (apply_for_env_fold array_field_key) env [] l in
@@ -945,7 +960,6 @@ and expr_
           let unify_key = Type.unify p Reason.URarray_key in
           let env, key = fold_left_env unify_key env key keys in
           env, (Reason.Rwitness p, Tarraykind (AKmap (key, value)))
-      )
   | ValCollection (name, el) ->
       let env, x = TUtils.in_var env (Reason.Rnone, Tunresolved []) in
       let env, tyl = lmap expr env el in
@@ -1689,23 +1703,6 @@ and exception_ty pos env ty =
   let exn_ty = Reason.Rthrow pos, Tclass ((pos, SN.Classes.cException), []) in
   Type.sub_type pos (Reason.URthrow) env exn_ty ty
 
-(* While converting code from PHP to Hack, some arrays are used
- * as tuples. Example: array('', 0). Since the elements have
- * incompatible types, it should be a tuple. However, while migrating
- * code, it is more flexible to allow it in partial.
- *
- * This probably isn't a good idea and should just use ty2 in all cases, but
- * FB www has about 50 errors if you just use ty2 -- not impossible to clean
- * up but more work right now than I want to do. Also it probably affects open
- * source code too, so this may be a nice small test case for our upcoming
- * migration/upgrade strategy.
- *)
-and convert_array_as_tuple env ty2 =
-  let r2 = fst ty2 in
-  if not (Env.is_strict env) && TUtils.is_array_as_tuple env ty2
-  then env, (r2, Tany)
-  else env, ty2
-
 and shape_field_pos = function
   | SFlit (p, _) -> p
   | SFclass_const ((cls_pos, _), (member_pos, _)) -> Pos.btw cls_pos member_pos
@@ -1791,7 +1788,7 @@ and set_valid_rvalue p env x ty =
   env, ty
 
 and assign p env e1 ty2 =
-  let env, ty2 = convert_array_as_tuple env ty2 in
+  let env, ty2 = TUtils.convert_array_as_tuple env ty2 in
   match e1 with
   | (_, Lvar (_, x)) ->
     set_valid_rvalue p env x ty2
@@ -1832,7 +1829,11 @@ and assign p env e1 ty2 =
               Errors.pair_arity p;
               env, (r, Tany)
           )
-      | r, Ttuple tyl ->
+      | r, (Ttuple _ | Tarraykind (AKtuple _) as tuple) ->
+          let tyl = match tuple with
+            | Ttuple tyl -> tyl
+            | Tarraykind (AKtuple fields) -> List.rev (IMap.values fields)
+            | _ -> assert false in
           let size1 = List.length el in
           let size2 = List.length tyl in
           let p1 = fst e1 in
@@ -1900,15 +1901,13 @@ and assign p env e1 ty2 =
           env, ty3
       | _ -> env, ty2
       )
-  | _, Array_get ((_, Lvar (_, lvar)) as shape, Some (_, e)) ->
-    let env, shape_ty = expr env shape in
-    let access_type = match TUtils.maybe_shape_field_name env e with
-      | Some field_name -> Typing_arrays.AKshape_key field_name
-      | None -> Typing_arrays.AKother in
+  | _, Array_get ((_, Lvar (_, lvar)) as shape, ((Some _) as e2)) ->
+    let access_type = Typing_arrays.static_array_access env e2 in
       (* In the case of an assignment of the form $x['new_field'] = ...;
       * $x could be a shape where the field 'new_field' is not yet defined.
       * When that is the case we want to add the field to its type.
       *)
+    let env, shape_ty = expr env shape in
     let env, shape_ty = Typing_arrays.update_array_type_on_lvar_assignment
       p access_type env shape_ty in
     let env, _ = set_valid_rvalue p env lvar shape_ty in
@@ -1975,6 +1974,13 @@ and akshape_field env = function
       env, (field_name, (tk, tv))
   | Nast.AFvalue _ -> assert false (* Typing_arrays.is_shape_like_array
                                     * should have prevented this *)
+and aktuple_field env = function
+  | Nast.AFvalue v ->
+      let env, tv = expr env v in
+      let env, tv = Typing_env.unbind env tv in
+      TUtils.unresolved env tv
+  | Nast.AFkvalue _ -> assert false (* check_consistent_fields
+                                     * should have prevented this *)
 and check_parent_construct pos env el uel env_parent =
   let check_not_abstract = false in
   let env, env_parent = Phase.localize_with_self env env_parent in
@@ -2096,6 +2102,9 @@ and dispatch_call p env call_type (fpos, fun_expr as e) el uel =
         (match ety with
         | (_, Tarraykind (AKany | AKempty)) as array_type ->
             env, array_type
+        | (_, Tarraykind (AKtuple _)) ->
+            let env, ty = Typing_arrays.downcast_aktypes env ty in
+            get_array_filter_return_type env ty
         | (r, Tarraykind (AKvec tv)) ->
             let env, tv = get_value_type env tv in
             env, (r, Tarraykind (AKvec tv))
@@ -2214,6 +2223,9 @@ and dispatch_call p env call_type (fpos, fun_expr as e) el uel =
             let env, x = Env.expand_type env x in (match x with
               | (_, Tarraykind (AKany | AKempty)) as array_type ->
                 env, (fun _ -> array_type)
+              | (_, Tarraykind (AKtuple _ )) ->
+                let env, x = Typing_arrays.downcast_aktypes env x in
+                build_output_container env x
               | (r, Tarraykind AKvec _) ->
                 env, (fun tr -> (r, Tarraykind (AKvec(tr))) )
               | ((_, Tany) as any) ->
@@ -2566,20 +2578,34 @@ and array_get is_lvalue p env ty1 ety1 e2 ty2 =
         | Tprim _ | Tvar _ | Tfun _ | Tclass (_, _) | Tabstract (_, _)
         | Ttuple _ | Tanon _ | Tobject | Tshape _) -> env, v
       )
-  | Tarraykind (AKshape fdm) ->
-      let open Option.Monad_infix in
-      let field_type = TUtils.maybe_shape_field_name env (snd e2)
-        >>= fun field_name -> Nast.ShapeMap.get field_name fdm in
-      begin match field_type with
-        | Some (k, v) ->
-            let env, ty2 = TUtils.unresolved env ty2 in
-            let env, _ = Type.unify p Reason.URarray_get env k ty2 in
-            env, v
+  | Tarraykind ((AKshape  _ |  AKtuple _) as akind) ->
+      let key = Typing_arrays.static_array_access env (Some e2) in
+      let env, result = match key, akind with
+        | Typing_arrays.AKtuple_index index, AKtuple fields ->
+            begin match IMap.get index fields with
+              | Some ty ->
+                  let ty1 = Reason.Ridx (fst e2, fst ety1), Tprim Tint in
+                  let env = Type.sub_type p Reason.URarray_get env ty1 ty2 in
+                  env, Some ty
+              | None -> env, None
+            end
+        | Typing_arrays.AKshape_key field_name, AKshape fdm ->
+            begin match Nast.ShapeMap.get field_name fdm with
+              | Some (k, v) ->
+                  let env, ty2 = TUtils.unresolved env ty2 in
+                  let env, _ = Type.unify p Reason.URarray_get env k ty2 in
+                  env, Some v
+              | None -> env, None
+            end
+        | _ -> env, None in
+      begin match result with
+        | Some ty -> env, ty
         | None ->
-            let env, ty1 = Typing_arrays.downcast_akshape_to_akmap env ty1 in
-            (* downcast_akshape_to_akmap expands vars, so passing ty1 as
-               expanded ty1 *)
-            array_get is_lvalue p env ty1 ty1 e2 ty2
+          (* Key is dynamic, or static and not in the array - treat it as
+            regular map or vec like array *)
+          let env, ty1 = Typing_arrays.downcast_aktypes env ty1 in
+          let env, ety1 = Env.expand_type env ty1 in
+          array_get is_lvalue p env ty1 ety1 e2 ty2
       end
   | Tany | Tarraykind (AKany | AKempty)-> env, (Reason.Rnone, Tany)
   | Tprim Tstring ->
@@ -3501,10 +3527,10 @@ and binop in_cond p env bop p1 ty1 p2 ty2 =
           let env = Type.sub_type p2 Reason.URnone env res_ty ety2 in
           env, res_ty
       | (_, Tarraykind _), (_, Tarraykind (AKshape _)) ->
-        let env, ty2 = Typing_arrays.downcast_akshape_to_akmap env ty2 in
+        let env, ty2 = Typing_arrays.downcast_aktypes env ty2 in
         binop in_cond p env bop p1 ty1 p2 ty2
       | (_, Tarraykind (AKshape _)), (_, Tarraykind _) ->
-        let env, ty1 = Typing_arrays.downcast_akshape_to_akmap env ty1 in
+        let env, ty1 = Typing_arrays.downcast_aktypes env ty1 in
         binop in_cond p env bop p1 ty1 p2 ty2
       | (_, Tarraykind _), (_, Tarraykind _)
       | (_, Tany), (_, Tarraykind _)

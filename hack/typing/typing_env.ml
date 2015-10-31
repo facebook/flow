@@ -201,7 +201,10 @@ let rec debug stack env (r, ty) =
     o "array<";
       debug_shape_map fdm (fun (_tk, tv) -> debug stack env tv);
     o ">"
-
+  | Tarraykind (AKtuple fields) ->
+    o "array[";
+      debugl stack env (List.rev (IMap.values fields));
+    o "]"
   | Tmixed -> o "mixed"
   | Tabstract (AKnewtype (x, argl), _)
   | Tclass ((_, x), argl) ->

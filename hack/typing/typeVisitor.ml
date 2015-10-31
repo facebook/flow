@@ -95,6 +95,9 @@ class virtual ['a] type_visitor : ['a] type_visitor_type = object(this)
         this#on_type acc tv
       end in
       Nast.ShapeMap.fold f fdm acc
+    | AKtuple fields ->
+      let f _ ty acc = this#on_type acc ty in
+      Utils.IMap.fold f fields acc
   method on_type: type a. _ -> a ty -> _ = fun acc x ->
     match x with
     | _, Tany -> this#on_tany acc

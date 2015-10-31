@@ -203,7 +203,8 @@ and normalize_ = function
         | AKempty -> AKempty
         | AKvec tk -> AKvec (normalize tk)
         | AKmap (tk, tv) -> AKmap (normalize tk, normalize tv)
-        | AKshape _ -> raise Exit
+        (* fully_expand_tvars_downcast_aktypes should have removed those *)
+        | AKshape _ | AKtuple _ -> raise Exit
       )
     with Exit -> Tarraykind AKany
   end

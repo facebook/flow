@@ -456,6 +456,10 @@ and sub_type_with_uenv env (uenv_super, ty_super) (uenv_sub, ty_sub) =
           Typing_arrays.fold_akshape_as_akmap begin fun env ty_sub ->
             sub_type env ty_super ty_sub
           end env r fdm
+      | AKtuple fields ->
+          Typing_arrays.fold_aktuple_as_akvec begin fun env ty_sub ->
+            sub_type env ty_super ty_sub
+          end env r fields
       )
   | (_, Tclass ((_, coll), [tk_super; tv_super])), (r, Tarraykind akind)
     when (coll = SN.Collections.cKeyedTraversable
@@ -474,6 +478,10 @@ and sub_type_with_uenv env (uenv_super, ty_super) (uenv_sub, ty_sub) =
         Typing_arrays.fold_akshape_as_akmap begin fun env ty_sub ->
           sub_type env ty_super ty_sub
         end env r fdm
+      | AKtuple fields ->
+          Typing_arrays.fold_aktuple_as_akvec begin fun env ty_sub ->
+            sub_type env ty_super ty_sub
+          end env r fields
       )
   | (_, Tclass ((_, stringish), _)), (_, Tprim Nast.Tstring)
     when stringish = SN.Classes.cStringish -> env
@@ -493,6 +501,10 @@ and sub_type_with_uenv env (uenv_super, ty_super) (uenv_sub, ty_sub) =
       Typing_arrays.fold_akshape_as_akmap begin fun env ty_sub ->
         sub_type env ty_super ty_sub
       end env r fdm_sub
+  | _, (r, Tarraykind AKtuple fields_sub) ->
+      Typing_arrays.fold_aktuple_as_akvec begin fun env ty_sub ->
+        sub_type env ty_super ty_sub
+      end env r fields_sub
     (* recording seen_tvars for Toption variants to avoid infinte recursion
        in case of type variable X = ?X *)
   | (_, Toption ty_super), _ when uenv_super.TUEnv.non_null ->

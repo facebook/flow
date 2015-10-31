@@ -40,6 +40,8 @@ end = struct
         | AKmap (tk, tv) -> ty tk; ty tv
         | AKshape fdm ->
             ShapeMap.iter (fun _ (tk, tv) -> ty tk; ty tv) fdm
+        | AKtuple fields ->
+            Utils.IMap.iter (fun _ tv -> ty tv) fields
       end
     | Tvar _ -> assert false (* Expansion got rid of Tvars ... *)
     | Toption x -> ty x

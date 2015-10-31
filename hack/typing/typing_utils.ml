@@ -318,6 +318,23 @@ let is_array_as_tuple env ty =
     | Tvar _ | Tabstract (_, _) | Tclass (_, _) | Ttuple _ | Tanon (_, _)
     | Tfun _ | Tunresolved _ | Tobject | Tshape _) -> false
 
+(* While converting code from PHP to Hack, some arrays are used
+ * as tuples. Example: array('', 0). Since the elements have
+ * incompatible types, it should be a tuple. However, while migrating
+ * code, it is more flexible to allow it in partial.
+ *
+ * This probably isn't a good idea and should just use ty2 in all cases, but
+ * FB www has about 50 errors if you just use ty2 -- not impossible to clean
+ * up but more work right now than I want to do. Also it probably affects open
+ * source code too, so this may be a nice small test case for our upcoming
+ * migration/upgrade strategy.
+ *)
+let convert_array_as_tuple env ty2 =
+  let r2 = fst ty2 in
+  if not (Env.is_strict env) && is_array_as_tuple env ty2
+  then env, (r2, Tany)
+  else env, ty2
+
 (*****************************************************************************)
 (* Keep the most restrictive visibility (private < protected < public).
  * This is useful when dealing with unresolved types.
@@ -366,6 +383,8 @@ end = struct
           (this#on_type acc tk) || (this#on_type acc tv)
         | AKshape fdm -> ShapeMap.exists (fun _ (tk, tv) ->
           (this#on_type acc tk) || (this#on_type acc tv)) fdm
+        | AKtuple fields ->
+          Utils.IMap.exists (fun _ ty -> this#on_type acc ty) fields
     end
   let check ty = visitor#on_type false ty
 end

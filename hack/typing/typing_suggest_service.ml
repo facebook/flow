@@ -142,7 +142,7 @@ let resolve_types acc collated_values =
     in
     (* We don't suggest shape type hints yet, so downgrading all
      * shape-like arrays to plain arrays. *)
-    let type_ = Typing_arrays.fully_remove_akshapes_and_tvars env type_ in
+    let type_ = Typing_arrays.fully_expand_tvars_downcast_aktypes env type_ in
     match Typing_suggest.normalize type_ with
     | None -> ()
     | Some ty ->

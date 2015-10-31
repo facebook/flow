@@ -20,13 +20,18 @@ module ShapeMap = Nast.ShapeMap
 
 type static_array_access_type =
   | AKshape_key of Nast.shape_field_name
+  | AKtuple_index of int
   | AKappend
   | AKother
 
 let static_array_access env = function
-  | Some (_, x) -> begin match TUtils.maybe_shape_field_name env x with
+  | Some (_, x) -> begin match x with
+    | Nast.Int (_, x) ->
+      (try AKtuple_index (int_of_string x) with Failure _ -> AKother)
+    | _ -> begin match TUtils.maybe_shape_field_name env x with
       | Some x -> AKshape_key x
       | None -> AKother
+      end
     end
   | None -> AKappend
 
@@ -51,34 +56,51 @@ class virtual downcast_tabstract_to_array_type_mapper = object(this)
   method virtual on_type : env -> locl ty -> result
 end
 
+let array_type_list_to_single_type env values =
+  let unknown = List.find values (fun ty ->
+    snd (snd (TUtils.fold_unresolved env ty)) = Tany)
+  in match unknown with
+    | Some (r, _) -> env, (r, Tany)
+    | None ->
+      let env, value = TUtils.in_var env (Reason.Rnone, Tunresolved []) in
+      fold_left_env TUtils.unify env value values
 
 let downcast_akshape_to_akmap_ env r fdm =
   let keys, values = List.unzip (ShapeMap.values fdm) in
   let env, values = lmap Typing_env.unbind env values in
-  let unknown = List.find values (fun ty ->
-    snd (snd (TUtils.fold_unresolved env ty)) = Tany)
-  in
-  let env, value = match unknown with
-    | Some (r, _) -> env, (r, Tany)
-    | None ->
-      let env, value = TUtils.in_var env (Reason.Rnone, Tunresolved []) in
-      fold_left_env TUtils.unify env value values in
+  let env, value = array_type_list_to_single_type env values in
   let env, keys = lmap Typing_env.unbind env keys in
   let env, key = TUtils.in_var env (Reason.Rnone, Tunresolved []) in
   let env, key =  fold_left_env TUtils.unify env key keys in
   env, (r, Tarraykind (AKmap (key, value)))
 
-(* Given a type that might be an AKshape (possibly inside Tunresolved or type
- * var) returns an AKmap which is a supertype of the input. Leaves other types
- * unchanged. *)
-let downcast_akshape_to_akmap env ty =
+let downcast_aktuple_to_akvec_ env r fields =
+  let tyl = List.rev (IMap.values fields) in
+  let env, tyl = lmap Typing_env.unbind env tyl in
+  let env, value = array_type_list_to_single_type env tyl in
+  let env, ty = env, (r, Tarraykind (AKvec (value))) in
+  TUtils.convert_array_as_tuple env ty
+
+class virtual downcast_aktypes_mapper = object(this)
+  method on_tarraykind_akshape (env, seen) r fdm =
+    let env, ty = downcast_akshape_to_akmap_ env r fdm in
+    this#on_type (env, seen) ty
+
+  method on_tarraykind_aktuple (env, seen) r fields =
+    let env, ty = downcast_aktuple_to_akvec_ env r fields in
+    this#on_type (env, seen) ty
+
+  method virtual on_type : env -> locl ty -> result
+end
+
+(* Given a type that might be an AKshape/AKtuple (possibly inside Tunresolved
+ * or type var) returns an AKmap/AKvec which is a supertype of the input. Leaves
+ * other types unchanged. *)
+let downcast_aktypes env ty =
   let mapper = object
     inherit update_array_type_mapper
     inherit! downcast_tabstract_to_array_type_mapper
-
-    method! on_tarraykind_akshape (env, seen) r fdm =
-      let env, ty = downcast_akshape_to_akmap_ env r fdm in
-      (env, seen), ty
+    inherit! downcast_aktypes_mapper
   end in
   let (env, _), ty = mapper#on_type (fresh_env env) ty in
   env, ty
@@ -97,6 +119,17 @@ let fold_akshape_as_akmap f env r fdm =
   fst (fold_akshape_as_akmap_with_acc begin fun env acc ty ->
     f env ty, acc
   end env () r fdm)
+
+let fold_aktuple_as_akvec_with_acc f env acc r fields =
+  IMap.fold begin fun _ tv (env, acc) ->
+    let env, tv = Typing_env.unbind env tv in
+    f env acc (r, Tarraykind (AKvec tv))
+  end fields (env, acc)
+
+let fold_aktuple_as_akvec f env r fields =
+  fst (fold_aktuple_as_akvec_with_acc begin fun env acc ty ->
+    f env ty, acc
+  end env () r fields)
 
 (* Is the field_name type consistent with ones already in field map?
  * Shape field names must all be constant strings or constants from
@@ -146,7 +179,7 @@ let update_array_type p access_type ~lvar_assignment env ty =
         | AKappend ->
           let env, tv = TUtils.in_var env (Reason.Rnone, Tunresolved []) in
           (env, seen), (Reason.Rappend p, Tarraykind (AKvec tv))
-        | AKother ->
+        | AKother | AKtuple_index _ ->
           let env, tk = TUtils.in_var env (Reason.Rnone, Tunresolved []) in
           let env, tv = TUtils.in_var env (Reason.Rnone, Tunresolved []) in
           (env, seen), (Reason.Rused_as_map p, Tarraykind (AKmap (tk, tv)))
@@ -178,6 +211,18 @@ let update_array_type p access_type ~lvar_assignment env ty =
         | _ ->
           (env, seen), (r, Tshape (fields_known, fdm))
 
+    method! on_tarraykind_aktuple (env, seen) r fields =
+      match access_type with
+        | AKtuple_index index when IMap.mem index fields ->
+           let env, fields = if lvar_assignment then
+             let env, ty = TUtils.in_var env (Reason.Rnone, Tunresolved []) in
+             env, IMap.add index ty fields
+           else env, fields in
+           (env, seen), (r, Tarraykind (AKtuple fields))
+        | _ ->
+           (* no growing of tuples for now *)
+          let env, ty = downcast_aktuple_to_akvec_ env r fields in
+          (env, seen), ty
   end in
   let (env, _), ty = mapper#on_type (fresh_env env) ty in
   env, ty
@@ -191,12 +236,11 @@ let update_array_type_on_lvar_assignment p access_type env ty =
 let update_array_type p access_type env ty =
   update_array_type p access_type ~lvar_assignment:false env ty
 
-let fully_remove_akshapes_and_tvars env ty =
-  let mapper = object(this)
+(* Expand tvars, replace all AKshapes and AKtuples with AKmaps and AKvecs *)
+let fully_expand_tvars_downcast_aktypes env ty =
+  let mapper = object
     inherit deep_type_mapper
     inherit! tvar_expanding_type_mapper
-    method! on_tarraykind_akshape (env, seen) r fdm =
-      let env, ty = downcast_akshape_to_akmap_ env r fdm in
-      this#on_type (env, seen) ty
+    inherit! downcast_aktypes_mapper
   end in
   snd (mapper#on_type (fresh_env env) ty)
