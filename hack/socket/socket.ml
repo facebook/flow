@@ -43,6 +43,9 @@ let max_addr_length = 103
 let min_name_length = 17
 
 let get_path path =
+  (* Path will resolve the realpath, in case two processes are referring to the
+   * same socket using different paths (like with symlinks *)
+  let path = path |> Path.make |> Path.to_string in
   let dir = (Filename.dirname path)^"/" in
   let filename = Filename.basename path in
   let root_part = Filename.chop_extension filename in
