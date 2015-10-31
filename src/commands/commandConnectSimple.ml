@@ -29,6 +29,28 @@ let wait_on_server_restart ic =
      (* Server has exited and hung up on us *)
      ()
 
+module SockMap = Utils.MyMap(struct
+  type t = Unix.sockaddr
+  let compare = Pervasives.compare
+end)
+
+(* We used to open a new connection every time we tried to connect to a socket
+ * and then shut it down if the connection failed or timed out. However on OSX
+ * the shutdown wouldn't really do anything and we were hitting the pending
+ * connection limit set by Unix.listen. So instead we can hang on to the
+ * connection, since there's nothing wrong with it.
+ *)
+let connections = ref SockMap.empty
+let open_connection sockaddr =
+  match SockMap.get sockaddr !connections with
+  | Some conn -> conn
+  | None ->
+      let conn = Unix.open_connection sockaddr in
+      connections := SockMap.add sockaddr conn !connections;
+      (* It's important that we only write this once per connection *)
+      Printf.fprintf (snd conn) "%s\n%!" Build_id.build_id_ohai;
+      conn
+
 let establish_connection ~tmp_dir root =
   let sock_name = Socket.get_path (FlowConfig.socket_file ~tmp_dir root) in
   let sockaddr =
@@ -39,17 +61,11 @@ let establish_connection ~tmp_dir root =
       Unix.(ADDR_INET (inet_addr_loopback, port))
     else
       Unix.ADDR_UNIX sock_name in
-  Result.Ok (Unix.open_connection sockaddr)
+  Result.Ok (open_connection sockaddr)
 
 let get_cstate (ic, oc) =
-  try
-    Printf.fprintf oc "%s\n%!" Build_id.build_id_ohai;
-    let cstate : ServerUtils.connection_state = Marshal.from_channel ic in
-    Result.Ok (ic, oc, cstate)
-  with e ->
-    Unix.shutdown_connection ic;
-    close_in_noerr ic;
-    raise e
+  let cstate : ServerUtils.connection_state = Marshal.from_channel ic in
+  Result.Ok (ic, oc, cstate)
 
 let verify_cstate ic = function
   | ServerUtils.Connection_ok -> Result.Ok ()
