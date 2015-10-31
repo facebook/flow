@@ -62,9 +62,9 @@ let make_genv options config local_config =
         DfindLib.init ~log_file (GlobalConfig.scuba_table_name, [root]) in
       let notifier () =
         begin try
-          Sys_utils.with_timeout 120
-            ~on_timeout:(fun _ -> Exit_status.(exit Dfind_unresponsive))
-            ~do_:(fun () -> DfindLib.get_changes dfind)
+          Timeout.with_timeout ~timeout:120
+            ~on_timeout:(fun () -> Exit_status.(exit Dfind_unresponsive))
+            ~do_:(fun t -> DfindLib.get_changes ~timeout:t dfind)
         with _ ->
           Exit_status.(exit Dfind_died)
         end

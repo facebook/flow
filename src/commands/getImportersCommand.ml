@@ -43,7 +43,7 @@ let main option_values root json modules () =
   let ic, oc = connect option_values root in
 
   ServerProt.cmd_to_channel oc (ServerProt.GET_IMPORTERS modules);
-  let importers_map = Marshal.from_channel ic in
+  let importers_map = Timeout.input_value ic in
   if json
   then (
     let json_list =

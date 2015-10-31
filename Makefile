@@ -74,6 +74,7 @@ NATIVE_OBJECT_FILES=\
   hack/utils/nproc.o\
   hack/utils/realpath.o\
   hack/utils/sysinfo.o\
+  hack/utils/win32_support.o\
   src/embedded/flowlib_elf.o
 
 OCAML_LIBRARIES=\

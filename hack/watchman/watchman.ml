@@ -135,22 +135,22 @@ let capability_check ?(optional=[]) required =
   end
 
 let read_with_timeout timeout ic =
-  Sys_utils.with_timeout timeout
-    ~do_:(fun () -> input_line ic)
+  Timeout.with_timeout ~timeout
+    ~do_:(fun t -> Timeout.input_line ~timeout:t ic)
     ~on_timeout:begin fun _ ->
       EventLogger.watchman_timeout ();
       raise Timeout
     end
 
 let exec ?(timeout=120) sockname json =
-  let ic, oc = Unix.(open_connection (ADDR_UNIX sockname)) in
+  let ic, oc = Timeout.open_connection (Unix.ADDR_UNIX sockname) in
   let json_str = Json.(json_to_string json) in
   if debug then Printf.eprintf "Watchman query: %s\n%!" json_str;
   output_string oc json_str;
   output_string oc "\n";
   flush oc;
   let output = read_with_timeout timeout ic in
-  close_in ic;
+  Timeout.close_in ic;
   if debug then Printf.eprintf "Watchman response: %s\n%!" output;
   let response =
     try Json.json_of_string output
@@ -184,9 +184,10 @@ let get_changes env =
   set_of_list @@ extract_file_names env response
 
 let get_sockname timeout =
-  let ic = Unix.open_process_in "watchman get-sockname --no-pretty" in
+  let ic =
+    Timeout.open_process_in "watchman" [|"watchman"; "get-sockname"; "--no-pretty" |] in
   let output = read_with_timeout timeout ic in
-  assert (Unix.close_process_in ic = Unix.WEXITED 0);
+  assert (Timeout.close_process_in ic = Unix.WEXITED 0);
   let json = Json.json_of_string output in
   J.get_string_val "sockname" json
 

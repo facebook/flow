@@ -17,7 +17,7 @@ type ('in_, 'out) channel_pair = 'in_ in_channel * 'out out_channel
 val to_channel :
   'a out_channel -> ?flags:Marshal.extern_flags list -> ?flush:bool ->
   'a -> unit
-val from_channel : 'a in_channel -> 'a
+val from_channel : ?timeout:Timeout.t -> 'a in_channel -> 'a
 val flush : 'a out_channel -> unit
 
 (* This breaks the type safety, but is necessary in order to allow select() *)

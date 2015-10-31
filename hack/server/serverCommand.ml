@@ -23,11 +23,11 @@ and streamed =
 (****************************************************************************)
 (* Called by the client *)
 (****************************************************************************)
-let rpc : type a. in_channel * out_channel -> a ServerRpc.t -> a
+let rpc : type a. Timeout.in_channel * out_channel -> a ServerRpc.t -> a
 = fun (ic, oc) cmd ->
   Marshal.to_channel oc (Rpc cmd) [];
   flush oc;
-  Marshal.from_channel ic
+  Timeout.input_value ic
 
 let stream_request oc cmd =
   Marshal.to_channel oc (Stream cmd) [];

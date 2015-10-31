@@ -75,6 +75,7 @@ NATIVE_OBJECT_FILES=\
   utils/nproc.o\
   utils/realpath.o\
   utils/sysinfo.o\
+  utils/win32_support.o\
   $(INOTIFY)/$(notdir $(INOTIFY))_stubs.o
 
 OCAML_LIBRARIES=\

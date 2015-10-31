@@ -102,9 +102,8 @@ module Program =
       (* Force hhi files to be extracted and their location saved before workers
        * fork, so everyone can know about the same hhi path. *)
       ignore (Hhi.get_hhi_root());
-      if not Sys.win32 then
-        ignore @@
-        Sys.signal Sys.sigusr1 (Sys.Signal_handle Typing.debug_print_last_pos)
+      Sys_utils.signal Sys.sigusr1
+        (Sys.Signal_handle Typing.debug_print_last_pos)
 
     let run_once_and_exit genv env =
       ServerError.print_errorl
@@ -320,10 +319,9 @@ let run_load_script genv cmd =
         (Filename.quote Build_id.build_id_ohai) in
     Hh_logger.log "Running load script: %s\n%!" cmd;
     let state_fn, to_recheck =
-      let do_fn () =
-        let ic = Unix.open_process_in cmd in
+      let reader timeout ic _oc =
         let state_fn =
-          try input_line ic
+          try Timeout.input_line ~timeout ic
           with End_of_file -> raise State_not_found
         in
         if state_fn = "DISABLED" then raise Load_state_disabled;
@@ -331,18 +329,19 @@ let run_load_script genv cmd =
         begin
           try
             while true do
-              to_recheck := input_line ic :: !to_recheck
+              to_recheck := Timeout.input_line ~timeout ic :: !to_recheck
             done
           with End_of_file -> ()
         end;
-        assert (Unix.close_process_in ic = Unix.WEXITED 0);
+        let rc = Timeout.close_process_in ic in
+        assert (rc = Unix.WEXITED 0);
         state_fn, !to_recheck
       in
-      with_timeout
-        (ServerConfig.load_script_timeout genv.config)
+      Timeout.read_process
+        ~timeout:(ServerConfig.load_script_timeout genv.config)
         ~on_timeout:(fun _ -> failwith "Load script timed out")
-        ~do_:do_fn
-    in
+        ~reader
+        cmd [| cmd |] in
     Hh_logger.log
       "Load state found at %s. %d files to recheck\n%!"
       state_fn (List.length to_recheck);
@@ -452,7 +451,7 @@ let daemon_main options =
   (* this is to transform SIGPIPE in an exception. A SIGPIPE can happen when
    * someone C-c the client.
    *)
-  if not Sys.win32 then Sys.set_signal Sys.sigpipe Sys.Signal_ignore;
+  Sys_utils.set_signal Sys.sigpipe Sys.Signal_ignore;
   PidLog.init (ServerFiles.pids_file root);
   PidLog.log ~reason:"main" (Unix.getpid());
   let genv = ServerEnvBuild.make_genv options config local_config in

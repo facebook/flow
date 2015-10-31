@@ -230,7 +230,7 @@ let preproc_patch pat_file tgt_file format_patches = begin
   Patcher.preprocess_patch_file
     (path_to_relative pat_file) pat_src pat_parse_ret
     (path_to_relative tgt_file) tgt_src tgt_parse_ret,
-  pat_parse_ret, format_patches end
+  pat_parse_ret.Parser_hack.ast, format_patches end
 
 (* job for the worker pool to patch a bucket of files *)
 let patch_job pat_info acc fnl =
@@ -242,7 +242,7 @@ let patch_job pat_info acc fnl =
 
 (* Does matching over a single file *)
 let match_file pat_info txt_file : match_ret =
-  let (pat_parse_ret, _pat_file), print_verbose, is_expr, is_stmt = pat_info in
+  let (pat_ast, _pat_file), print_verbose, is_expr, is_stmt = pat_info in
   let match_fun =
     if is_expr
     then Matcher.find_matches_expr
@@ -256,7 +256,7 @@ let match_file pat_info txt_file : match_ret =
          txt_parse_ret.Parser_hack.ast
          (path_to_relative txt_file)
          txt_src
-         pat_parse_ret in
+         pat_ast in
      match match_res with
      | [] -> NoMatch
      | _ -> begin
@@ -282,7 +282,7 @@ let preproc_match pat_file = begin
   (if pat_ret <> Success
   then failwith "Pattern is misformatted and doesn't parse");
     (* preprocess pattern and target *)
-  pat_parse_ret, pat_file end
+  pat_parse_ret.Parser_hack.ast, pat_file end
 
 (* job for the worker pool to patch a bucket of files *)
 let match_job pat_info acc fnl =

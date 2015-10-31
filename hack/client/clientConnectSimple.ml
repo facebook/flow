@@ -19,7 +19,7 @@ let server_exists root = not (Lock.check (ServerFiles.lock_file root))
 let wait_on_server_restart ic =
   try
     while true do
-      let _ = input_char ic in
+      let _ = Timeout.input_char ic in
       ()
     done
   with
@@ -28,7 +28,7 @@ let wait_on_server_restart ic =
      (* Server has exited and hung up on us *)
      ()
 
-let establish_connection root =
+let establish_connection timeout root =
   let sock_name = Socket.get_path (ServerFiles.socket_file root) in
   let sockaddr =
     if Sys.win32 then
@@ -38,16 +38,16 @@ let establish_connection root =
       Unix.(ADDR_INET (inet_addr_loopback, port))
     else
       Unix.ADDR_UNIX sock_name in
-  Result.Ok (Unix.open_connection sockaddr)
+  Result.Ok (Timeout.open_connection ~timeout sockaddr)
 
-let get_cstate (ic, oc) =
+let get_cstate timeout (ic, oc) =
   try
     Printf.fprintf oc "%s\n%!" Build_id.build_id_ohai;
-    let cstate : ServerUtils.connection_state = Marshal.from_channel ic in
+    (* let cstate : ServerUtils.connection_state = Marshal.from_channel ic in *)
+    let cstate : ServerUtils.connection_state = Timeout.input_value ic in
     Result.Ok (ic, oc, cstate)
   with e ->
-    Unix.shutdown_connection ic;
-    close_in_noerr ic;
+    Timeout.shutdown_connection ic;
     raise e
 
 let verify_cstate ic = function
@@ -63,20 +63,21 @@ let verify_cstate ic = function
        * has exited and the OS has cleaned up after it, then we try again.
        *)
       wait_on_server_restart ic;
-      close_in_noerr ic;
+      Timeout.close_in ic;
       Result.Error Build_id_mismatch
 
 let connect_once root =
   let open Result in
   try
-    Sys_utils.with_timeout 1
-      ~on_timeout:(fun _ -> raise Exit)
-      ~do_:begin fun () ->
-        establish_connection root >>= fun (ic, oc) ->
-        get_cstate (ic, oc)
-      end >>= fun (ic, oc, cstate) ->
-      verify_cstate ic cstate >>= fun () ->
-      Ok (ic, oc)
+    Timeout.with_timeout
+    ~timeout:1
+    ~on_timeout:(fun () -> raise Exit)
+    ~do_:begin fun timeout ->
+      establish_connection timeout root >>= fun (ic, oc) ->
+      get_cstate timeout (ic, oc)
+    end >>= fun (ic, oc, cstate) ->
+    verify_cstate ic cstate >>= fun () ->
+    Ok (ic, oc)
   with
   | Exit_status.Exit_with _  as e -> raise e
   | _ ->

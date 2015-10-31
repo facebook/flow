@@ -20,7 +20,7 @@ let server_exists ~tmp_dir root =
 let wait_on_server_restart ic =
   try
     while true do
-      let _ = input_char ic in
+      let _ = Timeout.input_char ic in
       ()
     done
   with
@@ -29,7 +29,7 @@ let wait_on_server_restart ic =
      (* Server has exited and hung up on us *)
      ()
 
-let establish_connection ~tmp_dir root =
+let establish_connection ~timeout ~tmp_dir root =
   let sock_name = Socket.get_path (FlowConfig.socket_file ~tmp_dir root) in
   let sockaddr =
     if Sys.win32 then
@@ -39,16 +39,17 @@ let establish_connection ~tmp_dir root =
       Unix.(ADDR_INET (inet_addr_loopback, port))
     else
       Unix.ADDR_UNIX sock_name in
-  Result.Ok (Unix.open_connection sockaddr)
+  Result.Ok (Timeout.open_connection ~timeout sockaddr)
 
-let get_cstate (ic, oc) =
+let get_cstate timeout (ic, oc) =
   try
     Printf.fprintf oc "%s\n%!" Build_id.build_id_ohai;
-    let cstate : ServerUtils.connection_state = Marshal.from_channel ic in
+    let cstate : ServerUtils.connection_state =
+      Timeout.input_value ~timeout ic in
     Result.Ok (ic, oc, cstate)
   with e ->
-    Unix.shutdown_connection ic;
-    close_in_noerr ic;
+    Timeout.shutdown_connection ic;
+    Timeout.close_in_noerr ic;
     raise e
 
 let verify_cstate ic = function
@@ -64,7 +65,7 @@ let verify_cstate ic = function
        * has exited and the OS has cleaned up after it, then we try again.
        *)
       wait_on_server_restart ic;
-      close_in_noerr ic;
+      Timeout.close_in_noerr ic;
       Result.Error Build_id_mismatch
 
 (* Connects to the server via a socket. As soon as the server starts up,
@@ -73,11 +74,11 @@ let verify_cstate ic = function
 let connect_once ~tmp_dir root =
   let open Result in
   try
-    Sys_utils.with_timeout 1
+    Timeout.with_timeout ~timeout:1
       ~on_timeout:(fun _ -> raise Exit)
-      ~do_:begin fun () ->
-        establish_connection ~tmp_dir root >>= fun (ic, oc) ->
-        get_cstate (ic, oc)
+      ~do_:begin fun t ->
+        establish_connection ~timeout:t ~tmp_dir root >>= fun (ic, oc) ->
+        get_cstate t (ic, oc)
       end >>= fun (ic, oc, cstate) ->
       verify_cstate ic cstate >>= fun () ->
       Ok (ic, oc)
