@@ -2299,7 +2299,7 @@ and statement cx type_params_map = Ast.Statement.(
             kind; declarations = [vdecl]
           } as decl)) ->
             let repos_tvar loc =
-              mod_reason_of_t (repos_reason loc) element_tvar
+              Flow_js.reposition cx (repos_reason loc reason) element_tvar
             in
             variable_decl cx type_params_map loc decl;
             variable cx type_params_map kind ~uninitialized:repos_tvar vdecl

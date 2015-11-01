@@ -1489,7 +1489,7 @@ let rec __flow cx (l, u) trace =
     (* Repositions a concrete upper bound using the reason stored in the lower
        bound. This can be used to store a reason as it flows through a tvar. *)
     | (ReposUpperT (reason, l), u) ->
-      rec_flow cx trace (l, repos_t_from_reason reason u)
+      rec_flow cx trace (l, reposition cx reason u)
 
     (***************)
     (* annotations *)
@@ -2185,7 +2185,7 @@ let rec __flow cx (l, u) trace =
        but has to appear here to preempt the (IntersectionT, _) in between so
        that we reposition the entire intersection. *)
     | (IntersectionT _, ReposLowerT (reason_op, u)) ->
-      rec_flow cx trace (repos_t_from_reason reason_op l, u)
+      rec_flow cx trace (reposition cx reason_op l, u)
 
     | (IntersectionT (r,ts), _) ->
       concretize_parts cx trace l u [] (parts_to_concretize cx u)
@@ -3277,7 +3277,7 @@ let rec __flow cx (l, u) trace =
        where that lower bound was used; the lower bound's location (which is
        being overwritten) is where it was defined. *)
     | (_, ReposLowerT (reason_op, t)) ->
-      rec_flow cx trace (repos_t_from_reason reason_op l, t)
+      rec_flow cx trace (reposition cx reason_op l, t)
 
     (***************)
     (* unsupported *)
@@ -5192,7 +5192,7 @@ and reposition cx ?trace reason t = match t with
       flow_opt cx ?trace (t, ReposLowerT (reason, tvar))
     )
   | _ ->
-    repos_t_from_reason reason t
+    mod_reason_of_t (repos_reason (loc_of_reason reason)) t
 
 (* given the type of a value v, return the type term
    representing the `typeof v` annotation expression *)

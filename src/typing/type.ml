@@ -884,18 +884,12 @@ let rec mod_reason_of_t f = function
   | SetCJSExportT (reason, t, t_out) -> SetCJSExportT (f reason, t, t_out)
 
 
-(* replace a type's pos with one taken from a reason *)
-let repos_t_from_reason r t =
-  mod_reason_of_t (repos_reason (loc_of_reason r)) t
-
-(* replace a type's reason in its entirety *)
-let swap_reason t r =
-  mod_reason_of_t (fun _ -> r) t
-
 (* type comparison mod reason *)
-let reasonless_compare t t' =
-  if t == t' then 0 else
-  compare t (swap_reason t' (reason_of_t t))
+let reasonless_compare =
+  let swap_reason t r = mod_reason_of_t (fun _ -> r) t in
+  fun t t' ->
+    if t == t' then 0 else
+    compare t (swap_reason t' (reason_of_t t))
 
 
 (* printing *)
