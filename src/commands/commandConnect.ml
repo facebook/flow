@@ -64,13 +64,12 @@ let msg_of_tail tail_env =
 let delta_t : float = 3.0
 
 (* Starts up a flow server by literally calling flow start *)
-let start_flow_server ?tmp_dir root =
+let start_flow_server ~tmp_dir root =
   Utils.prerr_endlinef
-    "Flow server launched for %s\n%!"
+    "Launching Flow server for %s"
     (Path.to_string root);
-  let temp_dir_arg = match tmp_dir with
-  | Some dir -> Printf.sprintf "--temp-dir=%s " (Filename.quote dir)
-  | None -> ""
+  let temp_dir_arg =
+    Printf.sprintf "--temp-dir=%s " (Filename.quote tmp_dir)
   in
   let from_arg = match FlowEventLogger.((get_context ()).from) with
   | Some from -> Printf.sprintf "--from='%s' " from
@@ -83,6 +82,22 @@ let start_flow_server ?tmp_dir root =
   let status = Unix.system flow_server in
   match status with
     | Unix.WEXITED 0 -> ()
+    | Unix.WEXITED code when code = FlowExitStatus.(error_code Lock_stolen) ->
+        (* Hmm, "flow start" seems to think there's a server already running.
+         * This could be due to a race condition, in which case we should act
+         * like we started a server. However if there's some bug where
+         * "flow start" always thinks there's a server running then we could
+         * get into an infinite loop. So let's double check by trying to
+         * connect. If this is a race condition, then sleeping for a second
+         * will help give the winner of the race time to grab whatever locks it
+         * needs *)
+        Unix.sleep 1;
+        (match CCS.connect_once ~tmp_dir root with
+        | Result.Error CCS.Server_missing ->
+            let msg = "Could not start Flow server!" in
+            FlowExitStatus.(exit ~msg (Server_start_failed status))
+        | Result.Error _
+        | Result.Ok _ -> ())
     | _ ->
         let msg = "Could not start Flow server!" in
         FlowExitStatus.(exit ~msg (Server_start_failed status))

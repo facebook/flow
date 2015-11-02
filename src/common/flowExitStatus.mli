@@ -25,3 +25,4 @@ type t =
 exception Exit_with of t
 
 val exit: ?msg:string -> t -> 'a
+val error_code: t -> int
