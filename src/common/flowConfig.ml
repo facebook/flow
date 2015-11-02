@@ -251,6 +251,8 @@ let file_of_root ~tmp_dir root extension =
   mkdir_no_fail tmp_dir;
   let root_part = Path.slash_escaped_string_of_path root in
   Printf.sprintf "%s%s.%s" tmp_dir root_part extension
+  |> Path.make
+  |> Path.to_string
 
 let init_file ~tmp_dir root = file_of_root ~tmp_dir root "init"
 let lock_file ~tmp_dir root = file_of_root ~tmp_dir root "lock"
