@@ -11,7 +11,7 @@ createclass-callsite.js:6:3,11: property `name`
 Property not found in
 createclass-callsite.js:20:9,22: type parameter `DefaultProps` of React element: `HelloLocal`
 
-es6class-proptypes-callsite.js:13:24,15:1: string literal `name`
+es6class-proptypes-callsite.js:11:24,13:1: string literal `name`
 Property not found in
 es6class-proptypes-callsite.js:22:9,22: type parameter `DefaultProps` of React element: `HelloLocal`
 

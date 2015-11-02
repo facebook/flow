@@ -2,8 +2,6 @@
 import React from 'react';
 
 class Hello extends React.Component {
-  static defaultProps: {};
-
   render(): React.Element {
     return <div>{this.props.name}</div>;
   }
@@ -12,5 +10,7 @@ class Hello extends React.Component {
 Hello.propTypes = {
   name: React.PropTypes.string.isRequired,
 };
+
+Hello.defaultProps = {};
 
 module.exports = Hello;
