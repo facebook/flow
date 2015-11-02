@@ -257,7 +257,7 @@ struct
         spf "diff -u --label old --label new %s %s > %s"
           file new_file patch_file in
     diff_cmd
-    |> Unix.system |> ignore;
+    |> Sys.command |> ignore;
     cat patch_file
 
   (* NOTE: currently, not only returns list of annotations, but also rewrites
