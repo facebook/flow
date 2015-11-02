@@ -41,7 +41,7 @@ There is a `make test` target that compiles and runs tests.
 
 To run a subset of the tests you can pass a second argument to the `runtests.sh` file.
 
-For example: `bash runtests.sh bin/flow class | grep -v 'Skipping directory'`
+For example: `bash runtests.sh bin/flow class | grep -v 'SKIP'`
 
 ## Installing Flow
 
