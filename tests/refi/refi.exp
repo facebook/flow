@@ -59,6 +59,38 @@ heap.js:62:24,26: undefined
 This type is incompatible with
 heap.js:62:15,20: string
 
+heap.js:105:13,15: number
+This type is incompatible with
+heap.js:103:18,23: string
+
+heap.js:107:6,8: number
+This type is incompatible with
+heap.js:107:11,16: string
+
+heap.js:125:6,8: boolean
+This type is incompatible with
+heap.js:125:12,17: string
+
+heap.js:135:6,8: string
+This type is incompatible with
+heap.js:135:12,18: boolean
+
+heap.js:146:6,8: null
+This type is incompatible with
+heap.js:146:12,17: string
+
+heap.js:159:6,8: boolean
+This type is incompatible with
+heap.js:159:12,17: string
+
+heap.js:172:6,8: boolean
+This type is incompatible with
+heap.js:172:12,17: string
+
+heap.js:172:6,8: number
+This type is incompatible with
+heap.js:172:12,17: string
+
 lex.js:1:34,39: number
 This type is incompatible with
 lex.js:6:8,13: string
@@ -107,4 +139,4 @@ null_tests.js:150:14,20: undefined
 This type is incompatible with
 null_tests.js:147:16,21: string
 
-Found 27 errors
+Found 35 errors

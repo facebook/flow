@@ -73,4 +73,12 @@ var paths =
       var z : string = x; // ok
     }
   },
+
+  function() {
+    var x : ?string = null;
+    if (!x) {
+      x = "xxx";
+    }
+    var y : string = x;
+  },
 ];

@@ -815,6 +815,13 @@ let merge_env =
     List.(nth lst 0, nth lst 1, nth lst 2)
   in
 
+  let create_union cx reason l1 l2 =
+    Flow_js.mk_tvar_where cx reason (fun tvar ->
+      Flow_js.flow cx (l1, tvar);
+      Flow_js.flow cx (l2, tvar);
+    )
+  in
+
   (* merge_entry helper - child specifics feed new specific tvar *)
   let merge_types cx reason name (specific0, general0) specific1 specific2 =
     (* no change *)
@@ -826,9 +833,7 @@ let merge_env =
     (* general case *)
     else
       let reason = replace_reason name reason in
-      let tvar = Flow_js.mk_tvar cx reason in
-      Flow_js.flow cx (specific1, tvar);
-      Flow_js.flow cx (specific2, tvar);
+      let tvar = create_union cx reason specific1 specific2 in
       Flow_js.flow cx (tvar, general0);
       tvar, general0
   in
@@ -894,6 +899,17 @@ let merge_env =
         (base.refined, base.original) child1.refined child2.refined in
       let refi = { base with refined; original } in
       add_refi key refi scope0
+
+    (* refi was introduced in both children *)
+    | None, Some child1, Some child2 ->
+      let name = Key.string_of_key key in
+      let reason = replace_reason name reason in
+      let refined = create_union cx reason child1.refined child2.refined in
+      let original = create_union cx reason child1.original child2.original in
+      let refi_loc = loc_of_reason reason in
+      let refi = { refi_loc; refined; original } in
+      add_refi key refi scope0
+
     (* refi was cleared in a child env. clear from original *)
     | Some _, _, _ ->
       remove_refi key scope0

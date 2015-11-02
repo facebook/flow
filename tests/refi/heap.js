@@ -81,4 +81,105 @@ var tests =
       var z : string = x.p; // ok
     }
   },
+
+  function() {
+    var x : {y: ?string} = {y: null};
+    if (!x.y) {
+      x.y = "foo";
+    }
+    (x.y: string);
+  },
+
+  function() {
+    var x : {y: ?string} = {y: null};
+    if (x.y) {
+    } else {
+      x.y = "foo";
+    }
+    (x.y: string);
+  },
+
+  function() {
+    var x : {y: ?string} = {y: null};
+    if (!x.y) {
+      x.y = 123; // error
+    }
+    (x.y: string); // error, this got widened to a number
+  },
+
+  function() {
+    var x : {y: ?string} = {y: null};
+    if (x.y) {
+      x.y = "foo";
+    } else {
+      x.y = "bar";
+    }
+    (x.y : string);
+  },
+
+  function() {
+    var x : {y: string | number | boolean} = {y: false};
+    if (typeof x.y == "number") {
+      x.y = "foo";
+    }
+    (x.y : string); // error, could also be boolean
+  },
+
+  function() {
+    var x : {y: string | number | boolean} = {y: false};
+    if (typeof x.y == "number") {
+      x.y = "foo";
+    } else if (typeof x.y == "boolean") {
+      x.y = "bar";
+    }
+    (x.y : boolean); // error, string
+  },
+
+  function() {
+    var x : {y: ?string} = {y: null};
+    if (!x.y) {
+      x.y = "foo";
+    }
+    if (x.y) {
+      x.y = null;
+    }
+    (x.y : string); // error
+  },
+
+  function() {
+    var x : {y: string | number | boolean} = {y: false};
+    if (typeof x.y == "number") {
+      x.y = "foo";
+    }
+    // now x.y can is string | boolean
+    if (typeof x.y == "string") {
+      x.y = false;
+    }
+    // now x.y is only boolean
+    (x.y : string); // error
+  },
+
+  function() {
+    var x : {y: string | number | boolean} = {y: false};
+    if (typeof x.y == "number") {
+      x.y = "foo";
+    }
+    // now x.y can is string | boolean
+    if (typeof x.y == "string") {
+      x.y = 123;
+    }
+    // now x.y is number | boolean
+    (x.y : string); // error
+  },
+
+  function() {
+    var x : {y: ?string} = {y: null};
+    var z : string = "foo";
+    if (x.y) {
+      x.y = z;
+    } else {
+      x.y = z;
+    }
+    (x.y : string);
+  },
 ];
