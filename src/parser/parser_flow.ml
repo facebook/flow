@@ -1133,10 +1133,12 @@ end = struct
         else None in
       let end_loc = match argument with
       | Some expr -> fst expr
-      | None -> (match Peek.semicolon_loc env with
-        | Some loc -> loc
-        | None -> start_loc) in
-      Eat.semicolon env;
+      | None ->
+          let end_loc = match Peek.semicolon_loc env with
+            | Some loc -> loc
+            | None -> start_loc in
+          Eat.semicolon env;
+          end_loc in
       Loc.btwn start_loc end_loc, Expression.(Yield Yield.({
         argument;
         delegate;

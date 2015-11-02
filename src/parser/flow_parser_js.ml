@@ -57,6 +57,16 @@ let parse_options jsopts = Parser_env.(
     then { opts with esproposal_decorators = Js.to_bool decorators; }
     else opts in
 
+  let class_instance_fields = Js.Unsafe.get jsopts "esproposal_class_instance_fields" in
+  let opts = if Js.Optdef.test class_instance_fields
+    then { opts with esproposal_class_instance_fields = Js.to_bool class_instance_fields; }
+    else opts in
+
+  let class_static_fields = Js.Unsafe.get jsopts "esproposal_class_static_fields" in
+  let opts = if Js.Optdef.test class_static_fields
+    then { opts with esproposal_class_static_fields = Js.to_bool class_static_fields; }
+    else opts in
+
   let types = Js.Unsafe.get jsopts "types" in
   let opts = if Js.Optdef.test types
     then { opts with types = Js.to_bool types; }
