@@ -1,6 +1,6 @@
 /* @flow */
 var React = require('react');
-var Hello = require('./createclass-callsite');
+var Hello = require('./createclass-module');
 
 var HelloLocal = React.createClass({
   propTypes: {

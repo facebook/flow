@@ -1,6 +1,6 @@
 /* @flow */
 import React from 'react';
-import Hello from './es6class-proptypes-callsite';
+import Hello from './es6class-types-module';
 
 type Props = {name: string};
 

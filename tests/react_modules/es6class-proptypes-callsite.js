@@ -1,6 +1,6 @@
 /* @flow */
 import React from 'react';
-import Hello from './es6class-proptypes-callsite';
+import Hello from './es6class-proptypes-module';
 
 class HelloLocal extends React.Component {
   static defaultProps: {};

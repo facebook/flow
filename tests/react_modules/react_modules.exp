@@ -1,4 +1,10 @@
 
+createclass-callsite.js:19:9,17: React element: `Hello`
+Error:
+createclass-module.js:5:3,11: property `name`
+Property not found in
+createclass-callsite.js:19:9,17: type parameter `DefaultProps` of React element: `Hello`
+
 createclass-callsite.js:20:9,22: React element: `HelloLocal`
 Error:
 createclass-callsite.js:6:3,11: property `name`
@@ -11,6 +17,12 @@ es6class-proptypes-callsite.js:22:9,22: type parameter `DefaultProps` of React e
 
 es6class-types-callsite.js:8:10,14: property `name`
 Property not found in
-es6class-types-callsite.js:22:9,22: type parameter `DefaultProps` of React element: `HelloLocal`
+es6class-types-callsite.js:21:9,22: type parameter `DefaultProps` of React element: `HelloLocal`
 
-Found 3 errors
+es6class-types-callsite.js:20:9,17: React element: `Hello`
+Error:
+es6class-types-module.js:7:10,14: property `name`
+Property not found in
+es6class-types-callsite.js:20:9,17: type parameter `DefaultProps` of React element: `Hello`
+
+Found 5 errors
