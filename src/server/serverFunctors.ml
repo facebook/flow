@@ -275,7 +275,15 @@ end = struct
        * server, but maybe by the time the server started someone else had
        * grabbed the lock, so it exited. I'm sure there's a million other
        * things that could have gone wrong *)
-      let pid, status = Unix.(waitpid [ WNOHANG ] child_pid) in
+      let pid, status = 
+        match Unix.(waitpid [ WNOHANG; WUNTRACED; ] child_pid) with
+        | 0, _ ->
+            (* Sometimes the End_of_file races the child process actually
+             * exiting. In case that's happening here, let's give the child 1
+             * second more to die *)
+            Unix.sleep 1;
+            Unix.(waitpid [ WNOHANG; WUNTRACED; ] child_pid) 
+        | pid, status -> pid, status in
       let exit_code =  FlowExitStatus.Server_start_failed status in
       let msg, exit_code = if pid = 0
       (* The server is still alive...not sure what happened *)

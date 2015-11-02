@@ -81,23 +81,9 @@ let start_flow_server ~tmp_dir root =
     (Filename.quote (Path.to_string root)) in
   let status = Unix.system flow_server in
   match status with
-    | Unix.WEXITED 0 -> ()
-    | Unix.WEXITED code when code = FlowExitStatus.(error_code Lock_stolen) ->
-        (* Hmm, "flow start" seems to think there's a server already running.
-         * This could be due to a race condition, in which case we should act
-         * like we started a server. However if there's some bug where
-         * "flow start" always thinks there's a server running then we could
-         * get into an infinite loop. So let's double check by trying to
-         * connect. If this is a race condition, then sleeping for a second
-         * will help give the winner of the race time to grab whatever locks it
-         * needs *)
-        Unix.sleep 1;
-        (match CCS.connect_once ~tmp_dir root with
-        | Result.Error CCS.Server_missing ->
-            let msg = "Could not start Flow server!" in
-            FlowExitStatus.(exit ~msg (Server_start_failed status))
-        | Result.Error _
-        | Result.Ok _ -> ())
+    | Unix.WEXITED 0 -> true
+    | Unix.WEXITED code when 
+      code = FlowExitStatus.(error_code Lock_stolen) -> false
     | _ ->
         let msg = "Could not start Flow server!" in
         FlowExitStatus.(exit ~msg (Server_start_failed status))
@@ -109,14 +95,23 @@ type retry_info = {
 }
 
 let reset_retries_if_necessary retries = function
+  | Result.Error CCS.Server_missing
   | Result.Error CCS.Server_busy -> retries
   | Result.Ok _
-  | Result.Error CCS.Server_missing
   | Result.Error CCS.Build_id_mismatch
   | Result.Error CCS.Server_initializing ->
       { retries with
         retries_remaining = retries.original_retries;
       }
+
+let consume_retry retries =
+  let retries_remaining = retries.retries_remaining - 1 in
+  (* Make sure there is at least 1 second between retries *)
+  let sleep_time = int_of_float
+    (ceil (1.0 -. (Unix.gettimeofday() -. retries.last_connect_time))) in
+  if retries_remaining >= 0 && sleep_time > 0 
+  then Unix.sleep sleep_time;
+  { retries with retries_remaining; }
 
 (* A featureful wrapper around CommandConnectSimple.connect_once. This
  * function handles retries, timeouts, displaying messages during
@@ -148,7 +143,22 @@ let rec connect env retries start_time tail_env =
   | Result.Ok (ic, oc) -> (ic, oc)
   | Result.Error CCS.Server_missing ->
       if env.autostart then begin
-        start_flow_server ~tmp_dir:env.tmp_dir env.root;
+        let retries = 
+          if start_flow_server ~tmp_dir:env.tmp_dir env.root
+          then begin
+            Printf.eprintf
+              "Started a new flow server: %s%!"
+              (Tty.spinner());
+            retries
+          end else begin
+            Printf.eprintf
+              "Failed to start a new flow server (%d %s remaining): %s %s%!"
+              retries.retries_remaining
+              (if retries.retries_remaining = 1 then "retry" else "retries")
+              tail_msg
+              (Tty.spinner());
+            consume_retry retries
+          end in
         connect env retries start_time tail_env
       end else begin
         let msg = Utils.spf
@@ -163,14 +173,7 @@ let rec connect env retries start_time tail_env =
         (if retries.retries_remaining = 1 then "retry" else "retries")
         tail_msg
         (Tty.spinner());
-      let retries = { retries with
-        retries_remaining = retries.retries_remaining - 1;
-      } in
-      (* Make sure there is at least 1 second between retries *)
-      let sleep_time = int_of_float
-        (ceil (1.0 -. (Unix.gettimeofday() -. retries.last_connect_time))) in
-      if sleep_time > 0 then Unix.sleep sleep_time;
-      connect env retries start_time tail_env
+      connect env (consume_retry retries) start_time tail_env
   | Result.Error CCS.Build_id_mismatch ->
       let msg = "The flow server's version didn't match the client's, so it \
       exited." in
