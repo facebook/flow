@@ -182,4 +182,38 @@ var tests =
     }
     (x.y : string);
   },
+
+  // --- nested conditionals ---
+  // after a branch, the current scope may have changed. this causes the
+  // subsequent assignment to refine the new scope. these tests make sure that
+  // the scope that gets merged after the if statement is the correct
+  // post-condition scope, not the one that was saved at the beginning of the
+  // if statement.
+
+  function() {
+    let x: { foo: ?string } = { foo: null };
+    if (!x.foo) {
+      if (false) {}
+      x.foo = "foo";
+    }
+    (x.foo: string);
+  },
+
+  function() {
+    let x: { foo: ?string } = { foo: null };
+    if (!x.foo) {
+      while(false) {}
+      x.foo = "foo";
+    }
+    (x.foo: string);
+  },
+
+  function() {
+    let x: { foo: ?string } = { foo: null };
+    if (!x.foo) {
+      for (var i = 0; i < 0; i++) {}
+      x.foo = "foo";
+    }
+    (x.foo: string);
+  },
 ];

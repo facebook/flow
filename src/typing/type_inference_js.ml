@@ -1591,17 +1591,24 @@ and statement cx type_params_map = Ast.Statement.(
         predicates_of_condition cx type_params_map test in
 
       let ctx =  Env_js.peek_env () in
-      let then_ctx = Env_js.clone_env ctx in
       let oldset = Changeset.clear () in
-      Env_js.update_env cx reason then_ctx;
-      Env_js.refine_with_preds cx reason preds xts;
+
+      Env_js.(
+        update_env cx reason (clone_env ctx);
+        refine_with_preds cx reason preds xts;
+      );
 
       let exception_then = Abnormal.catch_control_flow_exception
         (fun () -> statement cx type_params_map consequent) in
 
-      let else_ctx = Env_js.clone_env ctx in
-      Env_js.update_env cx reason else_ctx;
-      Env_js.refine_with_preds cx reason not_preds xts;
+      (* grab the context at the end of the then branch, before resetting the
+         context back to `ctx` for the else branch. *)
+      let then_ctx = Env_js.peek_env () in
+
+      Env_js.(
+        update_env cx reason (clone_env ctx);
+        refine_with_preds cx reason not_preds xts;
+      );
 
       let exception_else = match alternate with
         | None -> None
@@ -1609,6 +1616,9 @@ and statement cx type_params_map = Ast.Statement.(
           Abnormal.catch_control_flow_exception
             (fun () -> statement cx type_params_map st)
       in
+
+      (* grab the context at the end of the else branch *)
+      let else_ctx = Env_js.peek_env () in
 
       let newset = Changeset.merge oldset in
 
