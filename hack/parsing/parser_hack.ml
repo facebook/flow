@@ -2792,12 +2792,15 @@ and expr_binop env bop ast_bop e1 =
 and expr_arrow env e1 tok =
   reduce env e1 tok begin fun e1 env ->
     let e2 =
+      let saved = save_lexbuf_state env.lb in
       match L.varname env.lb with
       | Tword ->
           let name = Lexing.lexeme env.lb in
           let pos = Pos.make env.file env.lb in
           pos, Id (pos, name)
-      | _ -> L.back env.lb; expr env
+      | _ ->
+        restore_lexbuf_state env.lb saved;
+        expr env
     in
     btw e1 e2, (match tok with
       | Tarrow -> Obj_get (e1, e2, OG_nullthrows)
@@ -3374,6 +3377,7 @@ and encapsed_expr_reduce start env e1 =
   else e1
 
 and encapsed_expr_reduce_left start env e1 =
+  let saved = save_lexbuf_state env.lb in
   match L.string2 env.file env.lb with
   | Tlb ->
       let e2 =
@@ -3408,7 +3412,7 @@ and encapsed_expr_reduce_left start env e1 =
           e1, false
       )
   | _ ->
-      L.back env.lb;
+      restore_lexbuf_state env.lb saved;
       e1, false
 
 (*****************************************************************************)
