@@ -14,6 +14,14 @@ end
 
 requires = [ "hh-utils" ] (* everything depends on this *)
 
+begin library "hh-embedded"
+  files = [
+    "hack/hhi/hhi_win32res_stubs.c"
+    "hack/hhi/hhi_win32res.ml"
+  ]
+  requires = [ "bigarray" "hh-utils" "hh-globals" ]
+end
+
 (* This library is used to extract the archive embedded in the Elf binary.
   The archive contains the standard library for Flow and is extracted
  into /tmp. This way, Flow can be distributed as a simple binary, and
@@ -23,6 +31,32 @@ begin library "flow-embedded"
     "src/embedded/flowlib_elf.c"
     "src/embedded/flowlib.ml"
   ]
+  if (os_type = "Win32") then {
+    flow_source = ".\flowlib.rc"
+    flow_target = "%{flow-embedded_FULL_DST_DIR}%/flow_res.o"
+    cclib = [ flow_target ]
+    build_rules = [
+      flow_target (
+        sources = [ flow_source ]
+        commands = [
+          { "windres"
+            "--preprocessor=x86_64-w64-mingw32-gcc.exe"
+            "--preprocessor-arg=-E"
+            "--preprocessor-arg=-xc-header"
+            flow_source flow_target }
+          ]
+          build_target = true
+      )
+    ]
+  } else if (system = "macoxs" && os_type = "Unix") then {
+      cclib = [
+        "-sectcreate" "__text" "flowlib"
+        "%{ROOTPROJECT_FULL_SRC_DIR}%/bin/flowlib.tar.gz"
+        "-framework" "CoreServices"
+        "-framework" "CoreFoundation"
+      ]
+  }
+  requires = [ "hh-embedded" "flow-config" ] (* We reuse embedded part from hack. *)
 end
 
 (* Flow depends on these Hack libraries *)
@@ -44,12 +78,18 @@ begin library "flow-parser"
   ]
 end
 
-begin library "flow-common"
-  requires += [ "flow-parser" "flow-embedded" "flow-stubs" ]
+begin library "flow-config"
   files = [
-    "src/common/semver.ml"
     "src/common/flowExitStatus.ml"
+    "src/common/semver.ml"
     "src/common/flowConfig.ml"
+  ]
+  requires += [ "flow-stubs" ]
+end
+
+begin library "flow-common"
+  requires += [ "flow-parser" "flow-embedded" "flow-config"]
+  files = [
     "src/common/modes_js.ml"
     "src/common/files_js.ml"
     "src/common/reason_js.ml"

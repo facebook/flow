@@ -10,6 +10,9 @@
 
 #include <caml/memory.h>
 #include <caml/alloc.h>
+
+#ifndef _WIN32
+
 #include <fcntl.h>
 #include <string.h>
 #include <sys/stat.h>
@@ -23,6 +26,8 @@
 #include <libelf.h>
 #endif
 
+#endif // _WIN32
+
 #define NONE Val_int(0)
 
 static value SOME(value v) {
@@ -35,7 +40,52 @@ static value SOME(value v) {
   CAMLreturn(result);
 }
 
-#ifndef __APPLE__
+#ifdef __APPLE__
+
+/**
+ * Beware! The getsect* functions do NOT play well with ASLR, so we cannot just
+ * copy the data out of the memory address at sect->addr. We could link this
+ * with -Wl,-no_pie, but it is easier to just open the binary and read it from
+ * disk.
+ */
+value get_embedded_flowlib_data(value filename) {
+  CAMLparam1(filename);
+  CAMLlocal1(result);
+
+  const struct section_64 *sect = getsectbyname("__text", "flowlib");
+  if (sect == NULL) {
+    goto fail_early;
+  }
+
+  int fd = open(String_val(filename), O_RDONLY);
+  if (fd < 0) {
+    goto fail_early;
+  }
+
+  lseek(fd, sect->offset, SEEK_SET);
+
+  result = caml_alloc_string(sect->size);
+  if (read(fd, String_val(result), sect->size) != sect->size) {
+    goto fail_after_open;
+  }
+  close(fd);
+  CAMLreturn(SOME(result));
+
+fail_after_open:
+  close(fd);
+fail_early:
+  CAMLreturn(NONE);
+}
+
+#elif defined _WIN32
+
+value get_embedded_flowlib_data(value filename) {
+  CAMLparam1(filename);
+  CAMLreturn(NONE);
+}
+
+#else
+
 /**
  * Look for a magic "flowlib" elf section and read it out, if it exists. Most of
  * this code adapted from hphp/util/embedded-data.cpp.
@@ -105,43 +155,6 @@ value get_embedded_flowlib_data(value filename) {
 
 fail_after_elf_begin:
   elf_end(e);
-fail_after_open:
-  close(fd);
-fail_early:
-  CAMLreturn(NONE);
-}
-
-#else
-
-/**
- * Beware! The getsect* functions do NOT play well with ASLR, so we cannot just
- * copy the data out of the memory address at sect->addr. We could link this
- * with -Wl,-no_pie, but it is easier to just open the binary and read it from
- * disk.
- */
-value get_embedded_flowlib_data(value filename) {
-  CAMLparam1(filename);
-  CAMLlocal1(result);
-
-  const struct section_64 *sect = getsectbyname("__text", "flowlib");
-  if (sect == NULL) {
-    goto fail_early;
-  }
-
-  int fd = open(String_val(filename), O_RDONLY);
-  if (fd < 0) {
-    goto fail_early;
-  }
-
-  lseek(fd, sect->offset, SEEK_SET);
-
-  result = caml_alloc_string(sect->size);
-  if (read(fd, String_val(result), sect->size) != sect->size) {
-    goto fail_after_open;
-  }
-  close(fd);
-  CAMLreturn(SOME(result));
-
 fail_after_open:
   close(fd);
 fail_early:
