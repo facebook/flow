@@ -42,6 +42,7 @@ module Entry = struct
     | ClassNameBinding
     | CatchParamBinding
     | FunctionBinding
+    | ParamBinding
 
   let string_of_value_kind = function
   | Const -> "const"
@@ -49,6 +50,7 @@ module Entry = struct
   | Let (Some ClassNameBinding) -> "class"
   | Let (Some CatchParamBinding) -> "catch"
   | Let (Some FunctionBinding) -> "function"
+  | Let (Some ParamBinding) -> "param"
   | Var -> "var"
 
   type value_binding = {

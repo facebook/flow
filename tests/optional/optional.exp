@@ -1,4 +1,12 @@
 
+generic.js:1:22,22: number
+This type is incompatible with
+generic.js:1:1,26: some incompatible instantiation of T
+
+generic.js:4:15,15: number
+This type is incompatible with
+generic.js:4:3,19: some incompatible instantiation of T
+
 nullable.js:17:5,7: null
 This type is incompatible with
 nullable.js:17:5,9: number
@@ -83,4 +91,4 @@ undefined2.js:8:14,17: property `duck`
 Property cannot be accessed on possibly undefined value
 undefined2.js:8:12,12: undefined
 
-Found 19 errors
+Found 21 errors

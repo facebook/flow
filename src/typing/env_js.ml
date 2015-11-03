@@ -406,10 +406,12 @@ let bind_entry cx name entry reason =
 
         (* specifically a var scope allows some shadowing *)
         | VarScope _ -> Entry.(
-          (* funcs/vars can shadow other funcs/vars -- only in var scope *)
           let can_shadow = function
+            (* funcs/vars can shadow other funcs/vars -- only in var scope *)
             | (Var | Let (Some FunctionBinding)),
               (Var | Let (Some FunctionBinding)) -> true
+            (* vars can shadow function params *)
+            | Var, Let (Some ParamBinding) -> true
             | _ -> false
           in
           match entry, prev with
