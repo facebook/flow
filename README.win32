@@ -11,45 +11,43 @@ generate OCaml applications with it without installing Cygwin or
 Windows SDK.
 
 To download and install OCPWin, go to http://www.typerex.org/ocpwin.html,
-and choose the "full" version. OCPWin installer is known to have problems
+and choose the "full" version. OCPWin installer was known to have problems
 with PATHs exceeding 1024 characters. Be careful to save your PATH before
 the installation to be able to restore it in case of problem, until the
 problem is fixed.
 
 ### Configuration and Compilation
 
-In the Hack root directory, edit the file  `00_config.ocp`
+In the Flow root directory, edit the file  `00_config.ocp`
 and adjust the two following variables:
 
     has_lz4 = false (* true if lz4 is installed on your machine *)
     debug = false   (* true if you want to activate the debug mode *)
 
-NOTE: lz4 is not required to build Hack. If you want to use it, and lz4 is not
-      installed in the default path, you have to set the
-      `ccopt` variable correctly in the `00_config.ocp` file. For instance:
+NOTE: lz4 is not required to build Flow. If you want to use it, and
+      lz4 is not installed in the default path, you have to set the
+      `ccopt` variable correctly in the `00_config.ocp` file. For
+      instance:
 
     ccopt = [ "-I/PATH/TO/LZ4/DIRECTORY" ]
     cclib = [ "-L/PATH/TO/LZ4/DIRECTORY" ]
 
 Then, execute the `make.bat` script:
 
-    ./make
+    ./make.bat
 
 This will call `ocp-build` and copy the generated files into the bin/
 sub-directory.
 
 If you want to clean your project, you may use:
 
-    ./make clean
+    ./make.bat clean
 
-Optionally, to run the test-suite adjust the path to the `python.exe`
-in `make.bat`, and run:
+Optionally, to run the test-suite, install [Git for
+Windows](https://git-scm.com/downloads) start git bash tool and launch
+the testsuite:</p>
 
-    ./make test
-
-### Installing
-
-Coming soon
+    ./runtest.sh ./bin/flow.exe
 
 ### FAQ
 
