@@ -190,7 +190,7 @@ endif
 	cp ../_obuild/hh_single_type_check/hh_single_type_check.asm ../bin/hh_single_type_check
 	cp ../_obuild/hh_format/hh_format.asm ../bin/hh_format
 	cp ../_obuild/h2tp/h2tp.asm ../bin/h2tp
-	cp ../_obuild/hh_match.asm ../bin/hh_match
+	cp ../_obuild/hh_match/hh_match.asm ../bin/hh_match
 
 copy-match-test-files:
 	mkdir -p ../bin
@@ -207,22 +207,22 @@ copy-match-test-files:
 
 copy-match-test-files-ocp:
 	mkdir -p ../bin
-	cp _obuild/hh_matcher/test/code_extent_tests.asm \
+	cp ../_obuild/code_extent_tests/code_extent_tests.asm \
 		../bin/code_extent_test_driver
-	cp _obuild/hh_matcher/test/matcher_test.asm \
+	cp ../_obuild/matcher_test/matcher_test.asm \
 		../bin/hh_match_test_driver
-	cp _obuild/hh_matcher/test/patcher_module_test.asm \
+	cp ../_obuild/patcher_module_test/patcher_module_test.asm \
 		../bin/hh_patch_module_test_driver
-	cp _obuild/hh_matcher/test/patcher_api_test.asm \
+	cp ../_obuild/patcher_api_test/patcher_api_test.asm \
 		../bin/hh_patch_api_test_driver
-	cp _obuild/hh_matcher/test/patcher_test.asm \
+	cp ../_obuild/patcher_test/patcher_test.asm \
 		../bin/hh_patch_test_driver
 
 .PHONY: test test-ocp do-test
 test: build-hack copy-hack-files copy-match-test-files
 	${MAKE} do-test
 
-test-ocp: build-hack-with-ocp copy-hack-files-ocp copy match-test-files-ocp
+test-ocp: build-hack-with-ocp copy-hack-files-ocp copy-match-test-files-ocp
 	${MAKE} do-test
 
 do-test:
