@@ -14,10 +14,8 @@ let payload_message = "Hello world"
 
 (** Tail call; exits *)
 let send_fd_and_wait child_1_pid socket_fd fd_to_be_sent =
-  let socket_fd_int = fd_to_int socket_fd in
-  let fd_to_be_sent_int = fd_to_int fd_to_be_sent in
   let result = Libancillary.ancil_send_fd
-    socket_fd_int fd_to_be_sent_int in
+    socket_fd fd_to_be_sent in
   if (result = -1) then
     (Printf.eprintf "Parent: Failed to send fd. Exiting\n";
     let _ = Unix.wait () in
@@ -36,23 +34,22 @@ let send_fd_and_wait child_1_pid socket_fd fd_to_be_sent =
 (** Tail call; exits *)
 let child_1_process socket_fd =
   Unix.sleep 2;
-  let socket_fd_int = fd_to_int socket_fd in
   (** Receive the fd from parent process which will be used to get messages
    * from child 2. *)
-  let upward_fd_2_int =
-    Libancillary.ancil_recv_fd socket_fd_int in
-  (if (upward_fd_2_int = -1) then
-    (Printf.eprintf "Child 1: Failed to received fd. Exiting.\n";
-    exit 1)
+  let upward_fd_2 =
+    try Libancillary.ancil_recv_fd socket_fd
+    with
+    | Libancillary.Receiving_Fd_Exception ->
+      (Printf.eprintf "Child 1: Failed to received fd. Exiting.\n";
+      exit 1)
+    in
+  let ic = Unix.in_channel_of_descr upward_fd_2 in
+  let msg: string = Marshal.from_channel ic in
+  if (msg = payload_message) then
+    exit 0
   else
-    (let upward_fd_2 = int_to_fd upward_fd_2_int in
-    let ic = Unix.in_channel_of_descr upward_fd_2 in
-    let msg: string = Marshal.from_channel ic in
-    if (msg = payload_message) then
-      exit 0
-    else
-      Printf.eprintf "Child 1: Got message: %s\n" msg;
-      exit 1))
+    (Printf.eprintf "Child 1: Got message: %s\n" msg;
+    exit 1)
 
 (** Tail call; exits *)
 let child_2_process socket_fd =
