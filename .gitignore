@@ -1,5 +1,6 @@
 *TAGS
 _build
+_obuild
 .DS_STORE
 docs/_site/
 bin
