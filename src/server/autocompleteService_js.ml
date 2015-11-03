@@ -125,7 +125,7 @@ let autocomplete_member client_logging_context cx this = Flow_js.(
     | Success _ -> "SUCCESS", JAssoc []
     | FailureMaybeType -> "FAILURE_NULLABLE", JAssoc []
     | FailureUnhandledType t -> "FAILURE_UNHANDLED_TYPE", JAssoc [
-      "type", Debug.json_of_t ~depth:3 cx t;
+      "type", Debug_js.json_of_t ~depth:3 cx t;
     ])) in
   FlowEventLogger.autocomplete_member_result
     client_logging_context

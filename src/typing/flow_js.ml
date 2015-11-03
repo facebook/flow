@@ -283,7 +283,7 @@ let havoc_call_env = Scope.(
     (if Context.is_verbose cx then
       prerr_endlinef "%d havoc_entry %s %s" (Unix.getpid ())
         (Changeset.string_of_entry_ref entry_ref)
-        (Debug.string_of_scope cx scope)
+        (Debug_js.string_of_scope cx scope)
       );
     match get_entry name scope with
     | Some _ ->

@@ -79,7 +79,7 @@ let peek_env () =
 
 let string_of_env cx env =
   spf "[ %s ]" (String.concat ";\n"
-    (List.map (Debug.string_of_scope cx) env))
+    (List.map (Debug_js.string_of_scope cx) env))
 
 (* return the value of f applied to topmost var scope in a scope list *)
 let rec top_var_scope = function
@@ -867,9 +867,9 @@ let merge_env =
         (Unix.getpid ())
         (string_of_reason reason)
         (Changeset.string_of_entry_ref entry_ref)
-        (Debug.string_of_scope cx scope0)
-        (Debug.string_of_scope cx scope1)
-        (Debug.string_of_scope cx scope2))
+        (Debug_js.string_of_scope cx scope0)
+        (Debug_js.string_of_scope cx scope1)
+        (Debug_js.string_of_scope cx scope2))
     (* a newly created entry may exist in one lex child -
        this pattern is due to our current switch handling *)
     | None, Some (Value _  as entry), None when Scope.is_lex scope1 ->
