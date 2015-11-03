@@ -1219,9 +1219,9 @@ end = struct
 
   let subst cx map params =
     let list = params.list |> List.map (function
-      | Simple (t, b) -> Simple (t, subst_binding cx map b)
-      | Complex (t, bs) -> Complex (t, List.map (subst_binding cx map) bs)
-      | Rest (t, b) -> Rest (t, subst_binding cx map b)) in
+      | Simple (t, b) -> Simple (Flow_js.subst cx map t, subst_binding cx map b)
+      | Complex (t, bs) -> Complex (Flow_js.subst cx map t, List.map (subst_binding cx map) bs)
+      | Rest (t, b) -> Rest (Flow_js.subst cx map t, subst_binding cx map b)) in
     { params with list }
 end
 
