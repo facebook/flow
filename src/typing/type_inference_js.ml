@@ -133,8 +133,6 @@ end = struct
 
 end
 
-(**** types ****)
-
 (*************)
 (* Utilities *)
 (*************)
@@ -1226,6 +1224,21 @@ end = struct
       | Rest (t, b) -> Rest (t, subst_binding cx map b)) in
     { params with list }
 end
+
+type class_method_signature = {
+  meth_reason: reason;
+  meth_tparams: Type.typeparam list;
+  meth_tparams_map: Type.t SMap.t;
+  meth_params: FuncParams.t;
+  meth_return_type: Type.t;
+}
+
+type class_signature = {
+  sig_fields: Type.t SMap.t;
+  sig_methods: class_method_signature SMap.t;
+  sig_getters: class_method_signature SMap.t;
+  sig_setters: class_method_signature SMap.t;
+}
 
 (************)
 (* Visitors *)
@@ -5344,7 +5357,7 @@ and body_loc = Ast.Statement.FunctionDeclaration.(function
 )
 
 (* Makes signatures for fields and methods in a class. *)
-and mk_signature cx reason_c type_params_map superClass body = Ast.Class.(
+and mk_class_signature cx reason_c type_params_map superClass body = Ast.Class.(
   let _, { Body.body = elements } = body in
 
   (* In case there is no constructor, pick up a default one. *)
@@ -5352,9 +5365,13 @@ and mk_signature cx reason_c type_params_map superClass body = Ast.Class.(
     | None ->
         (* Parent class constructors simply return new instances, which is
            indicated by the VoidT return type *)
-        SMap.singleton "constructor"
-          (replace_reason "default constructor" reason_c, [], SMap.empty,
-           FuncParams.empty, VoidT.t)
+        SMap.singleton "constructor" {
+          meth_reason = replace_reason "default constructor" reason_c;
+          meth_tparams = [];
+          meth_tparams_map = SMap.empty;
+          meth_params = FuncParams.empty;
+          meth_return_type = VoidT.t;
+        }
     | Some _ ->
         (* Subclass default constructors are technically of the form
            (...args) => { super(...args) }, but we can approximate that using
@@ -5366,7 +5383,6 @@ and mk_signature cx reason_c type_params_map superClass body = Ast.Class.(
   let default_sfields =
     let reason = prefix_reason "`name` property of" reason_c in
     SMap.singleton "name" (StrT.why reason)
-
   in
 
   (* NOTE: We used to mine field declarations from field assignments in a
@@ -5376,17 +5392,21 @@ and mk_signature cx reason_c type_params_map superClass body = Ast.Class.(
      to be redeclared if they were assigned in the constructor. So we don't do
      it. In the future, we could do it again, but only for private fields. *)
 
-  List.fold_left (fun (
-    sfields,
-    smethods,
-    sgetters,
-    ssetters,
-    fields,
-    methods,
-    getters,
-    setters
-  ) -> function
+  let static_sig = {
+    sig_fields = default_sfields;
+    sig_methods = SMap.empty;
+    sig_getters = SMap.empty;
+    sig_setters = SMap.empty;
+  } in
 
+  let inst_sig = {
+    sig_fields = SMap.empty;
+    sig_methods = default_methods;
+    sig_getters = SMap.empty;
+    sig_setters = SMap.empty;
+  } in
+
+  List.fold_left (fun (static_sig, inst_sig) -> function
     (* instance and static methods *)
     | Body.Method (loc, {
         Method.key = Ast.Expression.Object.Property.Identifier (_,
@@ -5409,71 +5429,68 @@ and mk_signature cx reason_c type_params_map superClass body = Ast.Class.(
       let typeparams, type_params_map =
         mk_type_param_declarations cx type_params_map typeParameters in
 
-      let params, ret = mk_params_ret cx type_params_map
+      let meth_params, meth_return_type = mk_params_ret cx type_params_map
         (params, defaults, rest) (body, returnType) in
       let reason_desc = (match kind with
       | Method.Method -> spf "method `%s`" name
       | Method.Constructor -> "constructor"
       | Method.Get -> spf "getter for `%s`" name
       | Method.Set -> spf "setter for `%s`" name) in
-      let reason_m = mk_reason reason_desc loc in
-      let method_sig = reason_m, typeparams, type_params_map, params, ret in
+      let meth_reason = mk_reason reason_desc loc in
+      let method_sig = {
+        meth_reason;
+        meth_tparams = typeparams;
+        meth_tparams_map = type_params_map;
+        meth_params;
+        meth_return_type;
+      } in
 
       (match kind, static with
       | (Method.Constructor | Method.Method), true ->
-        sfields,
-        SMap.add name method_sig smethods,
-        SMap.remove name sgetters,
-        SMap.remove name ssetters,
-        fields,
-        methods,
-        getters,
-        setters
+        {
+          static_sig with
+          sig_methods = SMap.add name method_sig static_sig.sig_methods;
+          sig_getters = SMap.remove name static_sig.sig_getters;
+          sig_setters = SMap.remove name static_sig.sig_setters;
+        },
+        inst_sig
       | Method.Get, true ->
-        sfields,
-        SMap.remove name smethods,
-        SMap.add name method_sig sgetters,
-        ssetters,
-        fields,
-        methods,
-        getters,
-        setters
+        {
+          static_sig with
+          sig_methods = SMap.remove name static_sig.sig_methods;
+          sig_getters = SMap.add name method_sig static_sig.sig_getters;
+        },
+        inst_sig
       | Method.Set, true ->
-        sfields,
-        SMap.remove name smethods,
-        sgetters,
-        SMap.add name method_sig ssetters,
-        fields,
-        methods,
-        getters,
-        setters
+        {
+          static_sig with
+          sig_methods = SMap.remove name static_sig.sig_methods;
+          sig_setters = SMap.add name method_sig static_sig.sig_setters;
+        },
+        inst_sig
       | (Method.Constructor | Method.Method), false ->
-        sfields,
-        smethods,
-        sgetters,
-        ssetters,
-        fields,
-        SMap.add name method_sig methods,
-        SMap.remove name getters,
-        SMap.remove name setters
+        static_sig,
+        {
+          inst_sig with
+          sig_methods = SMap.add name method_sig inst_sig.sig_methods;
+          sig_getters = SMap.remove name inst_sig.sig_getters;
+          sig_setters = SMap.remove name inst_sig.sig_setters;
+        }
       | Method.Get, false ->
-        sfields,
-        smethods,
-        sgetters,
-        ssetters,
-        fields,
-        SMap.remove name methods,
-        SMap.add name method_sig getters,
-        setters
+        static_sig,
+        {
+          inst_sig with
+          sig_methods = SMap.remove name inst_sig.sig_methods;
+          sig_getters = SMap.add name method_sig inst_sig.sig_getters;
+        }
       | Method.Set, false ->
-        sfields,
-        smethods,
-        sgetters,
-        ssetters,
-        fields,
-        SMap.remove name methods,
-        getters,
-        SMap.add name method_sig setters)
+        static_sig,
+        {
+          inst_sig with
+          sig_methods = SMap.remove name inst_sig.sig_methods;
+          sig_setters = SMap.add name method_sig inst_sig.sig_setters;
+        }
+      )
 
     (* fields *)
     | Body.Property (loc, {
@@ -5512,25 +5529,27 @@ and mk_signature cx reason_c type_params_map superClass body = Ast.Class.(
         );
         let r = mk_reason (spf "class property `%s`" name) loc in
         let t = mk_type_annotation cx type_params_map r typeAnnotation in
-        if static
-        then
-          SMap.add name t sfields,
-          smethods,
-          SMap.remove name sgetters,
-          SMap.remove name ssetters,
-          fields,
-          methods,
-          getters,
-          setters
-        else
-          sfields,
-          smethods,
-          getters,
-          setters,
-          SMap.add name t fields,
-          methods,
-          SMap.remove name getters,
-          SMap.remove name setters
+        if static then (
+          {
+            static_sig with
+            sig_fields = SMap.add name t static_sig.sig_fields;
+            sig_getters = SMap.remove name static_sig.sig_getters;
+            sig_setters = SMap.remove name static_sig.sig_setters;
+          },
+          inst_sig
+        ) else (
+          {
+            static_sig with
+            sig_getters = inst_sig.sig_getters;
+            sig_setters = inst_sig.sig_setters;
+          },
+          {
+            inst_sig with
+            sig_fields = SMap.add name t inst_sig.sig_fields;
+            sig_getters = SMap.remove name inst_sig.sig_getters;
+            sig_setters = SMap.remove name inst_sig.sig_setters;
+          }
+        )
 
     (* literal LHS *)
     | Body.Method (loc, {
@@ -5543,7 +5562,7 @@ and mk_signature cx reason_c type_params_map superClass body = Ast.Class.(
       }) ->
         let msg = "literal properties not yet supported" in
         Flow_js.add_error cx [mk_reason "" loc, msg];
-        sfields, smethods, sgetters, ssetters, fields, methods, getters, setters
+        (static_sig, inst_sig)
 
     (* computed LHS *)
     | Body.Method (loc, {
@@ -5556,24 +5575,14 @@ and mk_signature cx reason_c type_params_map superClass body = Ast.Class.(
       }) ->
         let msg = "computed property keys not supported" in
         Flow_js.add_error cx [mk_reason "" loc, msg];
-        sfields, smethods, sgetters, ssetters, fields, methods, getters, setters
-  ) (
-    default_sfields, (* sfields *)
-    SMap.empty,      (* smethods *)
-    SMap.empty,      (* sgetters *)
-    SMap.empty,      (* ssetters *)
-    SMap.empty,      (* fields *)
-    default_methods, (* methods *)
-    SMap.empty,      (* getters *)
-    SMap.empty       (* setters *)
-  ) elements
+        (static_sig, inst_sig)
+  ) (static_sig, inst_sig) elements
 )
 
 (* Processes the bodies of instance and static methods. *)
 and mk_class_elements cx instance_info static_info body = Ast.Class.(
   let _, { Body.body = elements } = body in
   List.iter (function
-
     | Body.Method (loc, {
         Method.key = Ast.Expression.Object.Property.Identifier (_,
           { Ast.Identifier.name; _ });
@@ -5586,26 +5595,31 @@ and mk_class_elements cx instance_info static_info body = Ast.Class.(
 
       warn_or_ignore_decorators cx decorators;
 
-      let this, super, method_sigs, getter_sigs, setter_sigs =
+      let this, super, class_sig =
         if static then static_info else instance_info
       in
 
       let sigs_to_use = match kind with
       | Method.Constructor
-      | Method.Method -> method_sigs
-      | Method.Get -> getter_sigs
-      | Method.Set -> setter_sigs in
+      | Method.Method -> class_sig.sig_methods
+      | Method.Get -> class_sig.sig_getters
+      | Method.Set -> class_sig.sig_setters in
 
-      let reason, typeparams, type_params_map, params, ret =
-        SMap.find_unsafe name sigs_to_use in
+      let {
+        meth_reason;
+        meth_tparams;
+        meth_tparams_map;
+        meth_return_type;
+        meth_params;
+      } = SMap.find_unsafe name sigs_to_use in
 
       let save_return_exn = Abnormal.(swap Return false) in
       let save_throw_exn = Abnormal.(swap Throw false) in
-      Flow_js.generate_tests cx reason typeparams (fun map_ ->
-        let type_params_map =
-          type_params_map |> SMap.map (Flow_js.subst cx map_) in
-        let params = FuncParams.subst cx map_ params in
-        let ret = Flow_js.subst cx map_ ret in
+      Flow_js.generate_tests cx meth_reason meth_tparams (fun map_ ->
+        let tparams_map =
+          meth_tparams_map |> SMap.map (Flow_js.subst cx map_) in
+        let meth_params = FuncParams.subst cx map_ meth_params in
+        let return_type = Flow_js.subst cx map_ meth_return_type in
         (* determine if we are in a derived constructor *)
         let derived_ctor = match super with
           | ClassT (MixedT _) -> false
@@ -5614,14 +5628,14 @@ and mk_class_elements cx instance_info static_info body = Ast.Class.(
         in
         let function_kind = function_kind ~async ~generator in
         let yield, next = if generator then (
-          Flow_js.mk_tvar cx (prefix_reason "yield of " reason),
-          Flow_js.mk_tvar cx (prefix_reason "next of " reason)
+          Flow_js.mk_tvar cx (prefix_reason "yield of " meth_reason),
+          Flow_js.mk_tvar cx (prefix_reason "next of " meth_reason)
         ) else (
-          MixedT (replace_reason "no yield" reason),
-          MixedT (replace_reason "no next" reason)
+          MixedT (replace_reason "no yield" meth_reason),
+          MixedT (replace_reason "no next" meth_reason)
         ) in
-        mk_body None cx type_params_map ~kind:function_kind ~derived_ctor
-          params ret body this super yield next;
+        mk_body None cx tparams_map ~kind:function_kind ~derived_ctor
+          meth_params return_type body this super yield next;
       );
       ignore Abnormal.(swap Return save_return_exn);
       ignore Abnormal.(swap Throw save_throw_exn)
@@ -5630,16 +5644,19 @@ and mk_class_elements cx instance_info static_info body = Ast.Class.(
   ) elements
 )
 
-and mk_methodtype (reason_m, typeparams,_,params,ret) =
-  let params_tlist = FuncParams.tlist params in
-  let params_names = Some (FuncParams.names params) in
+and mk_methodtype method_sig =
   let ft = FunT (
-    reason_m, Flow_js.dummy_static, Flow_js.dummy_prototype,
-    Flow_js.mk_functiontype params_tlist ?params_names ret
+    method_sig.meth_reason,
+    Flow_js.dummy_static,
+    Flow_js.dummy_prototype,
+    Flow_js.mk_functiontype
+      (FuncParams.tlist method_sig.meth_params)
+      ?params_names:(Some (FuncParams.names method_sig.meth_params))
+      method_sig.meth_return_type
   ) in
-  if (typeparams = [])
+  if (method_sig.meth_tparams = [])
   then ft
-  else PolyT (typeparams, ft)
+  else PolyT (method_sig.meth_tparams, ft)
 
 and extract_setter_type = function
   | FunT (_, _, _, { params_tlist = [param_t]; _; }) -> param_t
@@ -5703,16 +5720,8 @@ and mk_class = Ast.Class.(
   ) SMap.empty typeparams in
 
   (* fields: { f: X }, methods_: { m<Y: X>(x: Y): X } *)
-  let
-    sfields,
-    smethods_,
-    sgetters_,
-    ssetters_,
-    fields,
-    methods_,
-    getters_,
-    setters_ =
-    mk_signature cx reason_c type_params_map superClass body
+  let (static_sig, inst_sig) =
+    mk_class_signature cx reason_c type_params_map superClass body
   in
 
   let id = Flow_js.mk_nominal cx in
@@ -5731,39 +5740,43 @@ and mk_class = Ast.Class.(
     let super = Flow_js.subst cx map_ super in
     let super_static = Flow_js.subst cx map_ super_static in
 
-    (* fields: { f: T } *)
-    let fields = fields |> SMap.map (Flow_js.subst cx map_) in
-    let sfields = sfields |> SMap.map (Flow_js.subst cx map_) in
-
-    (* methods: { m<Y: X>(x: Y): T } *)
-    let subst_method_sig cx map_
-        (reason_m, typeparams,type_params_map, params, ret) =
+    let subst_method_sig cx map_ method_sig = {
+      method_sig with
 
       (* typeparams = <Y: X> *)
-      let typeparams = List.map (fun typeparam ->
+      meth_tparams = List.map (fun typeparam ->
         { typeparam with bound = Flow_js.subst cx map_ typeparam.bound }
-      ) typeparams in
-      let type_params_map = SMap.map (Flow_js.subst cx map_) type_params_map in
+      ) method_sig.meth_tparams;
+
+      meth_tparams_map =
+        SMap.map (Flow_js.subst cx map_) method_sig.meth_tparams_map;
 
       (* params = (x: Y), ret = T *)
-      let params = FuncParams.subst cx map_ params in
-      let ret = Flow_js.subst cx map_ ret in
+      meth_params = FuncParams.subst cx map_ method_sig.meth_params;
+      meth_return_type = Flow_js.subst cx map_ method_sig.meth_return_type;
+    } in
 
-      (reason_m, typeparams,type_params_map, params, ret)
-    in
+    (* Substitue type vars on fields and methods *)
+    let inst_sig_substituted = {
+      sig_fields = SMap.map (Flow_js.subst cx map_) inst_sig.sig_fields;
+      sig_methods = SMap.map (subst_method_sig cx map_) inst_sig.sig_methods;
+      sig_getters = SMap.map (subst_method_sig cx map_) inst_sig.sig_getters;
+      sig_setters = SMap.map (subst_method_sig cx map_) inst_sig.sig_setters;
+    } in
+    let static_sig_substituted = {
+      sig_fields = SMap.map (Flow_js.subst cx map_) static_sig.sig_fields;
+      sig_methods = SMap.map (subst_method_sig cx map_) static_sig.sig_methods;
+      sig_getters = SMap.map (subst_method_sig cx map_) static_sig.sig_getters;
+      sig_setters = SMap.map (subst_method_sig cx map_) static_sig.sig_setters;
+    } in
 
-    let methods_ = methods_ |> SMap.map (subst_method_sig cx map_) in
-    let methods = methods_ |> SMap.map mk_methodtype in
-    let smethods_ = smethods_ |> SMap.map (subst_method_sig cx map_) in
-    let smethods = smethods_ |> SMap.map mk_methodtype in
-    let getters_ = getters_ |> SMap.map (subst_method_sig cx map_) in
-    let getters = getters_ |> SMap.map mk_methodtype in
-    let sgetters_ = sgetters_ |> SMap.map (subst_method_sig cx map_) in
-    let sgetters = sgetters_ |> SMap.map mk_methodtype in
-    let setters_ = setters_ |> SMap.map (subst_method_sig cx map_) in
-    let setters = setters_ |> SMap.map mk_methodtype in
-    let ssetters_ = ssetters_ |> SMap.map (subst_method_sig cx map_) in
-    let ssetters = ssetters_ |> SMap.map mk_methodtype in
+    (* Generate types for each element *)
+    let methods = SMap.map mk_methodtype inst_sig_substituted.sig_methods in
+    let getters = SMap.map mk_methodtype inst_sig_substituted.sig_getters in
+    let setters = SMap.map mk_methodtype inst_sig_substituted.sig_setters in
+    let smethods = SMap.map mk_methodtype static_sig_substituted.sig_methods in
+    let sgetters = SMap.map mk_methodtype static_sig_substituted.sig_getters in
+    let ssetters = SMap.map mk_methodtype static_sig_substituted.sig_setters in
 
     (* If there is a both a getter and a setter, then flow the setter type to
      * the getter. Otherwise just use the getter type or the setter type *)
@@ -5771,8 +5784,12 @@ and mk_class = Ast.Class.(
     let getters_and_setters = merge_getters_and_setters cx getters setters in
 
     (* Treat getters and setters as fields *)
-    let sfields = SMap.fold SMap.add sgetters_and_setters sfields in
-    let fields = SMap.fold SMap.add getters_and_setters fields in
+    let sfields =
+      SMap.fold SMap.add sgetters_and_setters static_sig_substituted.sig_fields
+    in
+    let fields =
+      SMap.fold SMap.add getters_and_setters inst_sig_substituted.sig_fields
+    in
 
     let static_instance = {
       class_id = 0;
@@ -5804,28 +5821,26 @@ and mk_class = Ast.Class.(
     let this = InstanceT (reason_c,static,super,instance) in
 
     mk_class_elements cx
-      (this, super, methods_, getters_, setters_)
-      (ClassT this, super_static, smethods_, sgetters_, ssetters_)
+      (this, super, inst_sig_substituted)
+      (ClassT this, super_static, static_sig_substituted)
       body;
   );
 
-  let enforce_void_return
-      (reason_m, typeparams, type_params_map, params, ret) =
-    let ret =
-      if (is_void cx ret)
-      then (VoidT.at (loc_of_t ret))
-      else ret
+  let enforce_void_return method_sig =
+    let meth_return_type =
+      if (is_void cx method_sig.meth_return_type)
+      then (VoidT.at (loc_of_t method_sig.meth_return_type))
+      else method_sig.meth_return_type
     in
-    mk_methodtype
-      (reason_m, typeparams, type_params_map, params, ret)
+    mk_methodtype {method_sig with meth_return_type;}
   in
 
-  let methods = methods_ |> SMap.map enforce_void_return in
-  let smethods = smethods_ |> SMap.map enforce_void_return in
-  let getters = getters_ |> SMap.map enforce_void_return in
-  let sgetters = sgetters_ |> SMap.map enforce_void_return in
-  let setters = setters_ |> SMap.map enforce_void_return in
-  let ssetters = ssetters_ |> SMap.map enforce_void_return in
+  let methods = SMap.map enforce_void_return inst_sig.sig_methods in
+  let getters = SMap.map enforce_void_return inst_sig.sig_getters in
+  let setters = SMap.map enforce_void_return inst_sig.sig_setters in
+  let smethods = SMap.map enforce_void_return static_sig.sig_methods in
+  let sgetters = SMap.map enforce_void_return static_sig.sig_getters in
+  let ssetters = SMap.map enforce_void_return static_sig.sig_setters in
 
   (* If there is a both a getter and a setter, then flow the setter type to
     * the getter. Otherwise just use the getter type or the setter type *)
@@ -5833,8 +5848,8 @@ and mk_class = Ast.Class.(
   let getters_and_setters = merge_getters_and_setters cx getters setters in
 
   (* Treat getters and setters as fields *)
-  let sfields = SMap.fold SMap.add sgetters_and_setters sfields in
-  let fields = SMap.fold SMap.add getters_and_setters fields in
+  let sfields = SMap.fold SMap.add sgetters_and_setters static_sig.sig_fields in
+  let fields = SMap.fold SMap.add getters_and_setters inst_sig.sig_fields in
 
   let static_instance = {
     class_id = 0;
@@ -6175,8 +6190,7 @@ and before_pos loc =
   )
 
 and mk_params_ret cx type_params_map params (body, ret_type_opt) =
-
-  let params, defaults, rest = params in
+  let (params, defaults, rest) = params in
   let defaults = if defaults = [] && params <> []
     then List.map (fun _ -> None) params
     else defaults
