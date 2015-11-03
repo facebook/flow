@@ -18,6 +18,7 @@ type error_kind =
 type error = {
   kind: error_kind;
   messages: message list;
+  op: message option;
   trace: message list;
 }
 

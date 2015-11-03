@@ -21,6 +21,7 @@ type error_kind =
 type error = {
   kind: error_kind;
   messages: message list;
+  op: message option;
   trace: message list;
 }
 
@@ -63,23 +64,32 @@ let prepend_kind_message messages kind =
       BlameM (loc, header) :: messages
   | _ -> messages
 
+let prepend_op_reason messages = function
+  | Some message -> message :: (message_of_string "Error:") :: messages
+  | None -> messages
+
 let append_trace_reasons message_list trace_reasons =
   match trace_reasons with
   | [] -> message_list
   | _ ->
     message_list @ ((message_of_string "Trace:")::trace_reasons)
 
+let strip_root_from_message root = function
+  | BlameM (loc, s) -> BlameM (Reason_js.strip_root_from_loc root loc, s)
+  | CommentM s -> CommentM s
+
 let strip_root_from_reason_list root messages =
-  List.map (function
-    | BlameM (loc, s) -> BlameM (Reason_js.strip_root_from_loc root loc, s)
-    | CommentM s -> CommentM s
-  ) messages
+  List.map (strip_root_from_message root) messages
 
 let strip_root_from_error root error =
-  let {messages; trace; _} = error in
+  let {messages; trace; op; _} = error in
   let messages = strip_root_from_reason_list root messages in
   let trace = strip_root_from_reason_list root trace in
-  {error with messages; trace;}
+  let op = match op with
+  | Some op -> Some (strip_root_from_message root op)
+  | None -> None
+  in
+  { error with messages; trace; op; }
 
 let strip_root_from_errors root errors =
   (* TODO verify this is still worth doing, otherwise just List.map it *)
@@ -136,8 +146,9 @@ let print_reason_color ~first ~one_line ~color (message: message) =
   C.print ~color_mode:color to_print
 
 let print_error_color_old ~one_line ~color (e : error) =
-  let {kind; messages; trace} = e in
+  let {kind; messages; op; trace} = e in
   let messages = prepend_kind_message messages kind in
+  let messages = prepend_op_reason messages op in
   let messages = append_trace_reasons messages trace in
   print_reason_color ~first:true ~one_line ~color (List.hd messages);
   List.iter (print_reason_color ~first:false ~one_line ~color) (List.tl messages)
@@ -265,7 +276,8 @@ let print_message_nice ~root stdin_file main_file message =
   print_file_at_location ~root stdin_file main_file loc s
 
 let loc_of_error (err: error) =
-  let {messages; _} = err in
+  let {messages; op; _} = err in
+  let messages = prepend_op_reason messages op in
   match messages with
   | message :: _ ->
       let loc, _ = to_pp message in
@@ -316,8 +328,9 @@ let remove_newlines (color, text) =
   (color, Str.global_replace (Str.regexp "\n") "\\n" text)
 
 let print_error_color_new ~stdin_file:stdin_file ~one_line ~color ~root (error : error) =
-  let {kind; messages; trace} = error in
+  let {kind; messages; op; trace} = error in
   let messages = prepend_kind_message messages kind in
+  let messages = prepend_op_reason messages op in
   let messages = append_trace_reasons messages trace in
   let messages = merge_comments_into_blames messages in
   let header = print_error_header ~root (List.hd messages) in
@@ -371,7 +384,9 @@ let compare =
           compare_message_lists (seq k (string_cmp m1 m2)) (rest1, rest2)
         ) ()
   in
-  fun {messages = ml1; _} {messages = ml2; _} ->
+  fun {messages = ml1; op = op1; _} {messages = ml2; op = op2; _} ->
+    let ml1 = match op1 with Some op -> op :: ml1 | None -> ml1 in
+    let ml2 = match op2 with Some op -> op :: ml2 | None -> ml2 in
     compare_message_lists (fun () -> 0) (ml1, ml2)
 
 module Error = struct
@@ -449,6 +464,7 @@ end
 let parse_error_to_flow_error (loc, err) = {
   kind = ParseError;
   messages = [BlameM (loc, Parse_error.PP.error err)];
+  op = None;
   trace = []
 }
 
@@ -458,7 +474,7 @@ let to_list errors = ErrorSet.elements errors
 
 (* adapted from Errors.to_json to output multi-line errors properly *)
 let json_of_error (error : error) = Json.(
-  let {kind; messages; trace} = error in
+  let {kind; messages; op; trace} = error in
   let kind_str, severity_str = match kind with
   | ParseError -> "parse", "error"
   | InferError -> "infer", "error"
@@ -472,10 +488,21 @@ let json_of_error (error : error) = Json.(
               (json_of_loc loc))
     ) messages
   in
-  JAssoc [
+  let props = [
     "message", JList elts;
     "kind", JString kind_str;
-  ]
+  ] in
+  let props =
+    match op with
+    | Some op ->
+      let op_loc, op_desc = to_pp op in
+      ("operation", JAssoc (
+        ("descr", Json.JString op_desc) ::
+        (json_of_loc op_loc)
+      )) :: props
+    | None -> props
+  in
+  JAssoc props
 )
 
 let json_of_errors errors = Json.JList (List.map json_of_error errors)

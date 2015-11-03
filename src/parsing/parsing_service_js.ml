@@ -102,6 +102,7 @@ let do_parse ?(fail=true) ~types_mode content file =
     let err = Errors_js.({
       kind = ParseError;
       messages = [BlameM (loc, msg)];
+      op = None;
       trace = []
     }) in
     Err (Errors_js.ErrorSet.singleton err)

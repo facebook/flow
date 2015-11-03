@@ -139,7 +139,7 @@ let silent_warnings = false
 
 exception FlowError of Errors_js.message list
 
-let add_output cx error_kind ?(trace_reasons=[]) message_list =
+let add_output cx error_kind ?op ?(trace_reasons=[]) message_list =
   if !throw_on_error
   then (
     raise (FlowError message_list)
@@ -156,6 +156,7 @@ let add_output cx error_kind ?(trace_reasons=[]) message_list =
     let error = Errors_js.({
       kind = error_kind;
       messages = message_list;
+      op;
       trace = trace_reasons
     }) in
 
@@ -354,11 +355,11 @@ let ordered_reasons l u =
 (* format an error or warning and add it to flow's output.
    here preformatted trace output is passed directly as an argument *)
 let prmsg_flow_trace_reasons cx level trace_reasons msg (r1, r2) = Errors_js.(
-  let info = match Ops.peek () with
+  let op, info = match Ops.peek () with
   | Some r when r != r1 && r != r2 ->
     (* NOTE: We include the operation's reason in the error message only if it
        is distinct from the reasons of the endpoints. *)
-    [message_of_reason r; message_of_string "Error:"]
+    Some (message_of_reason r), []
   | _ ->
     if lib_reason r1 && lib_reason r2
     then
@@ -367,8 +368,9 @@ let prmsg_flow_trace_reasons cx level trace_reasons msg (r1, r2) = Errors_js.(
          to the file containing that code instead. Ideally, improvements in
          error reporting would cause this case to never arise. *)
       let loc = Loc.({ none with source = Some (Context.file cx) }) in
-      [BlameM (loc, "inconsistent use of library definitions")]
-    else []
+      None, [BlameM (loc, "inconsistent use of library definitions")]
+    else
+      None, []
   in
   let message_list = [
     message_of_reason r1;
@@ -376,7 +378,7 @@ let prmsg_flow_trace_reasons cx level trace_reasons msg (r1, r2) = Errors_js.(
     message_of_reason r2
   ]
   in
-  add_output cx level ~trace_reasons (info @ message_list)
+  add_output cx level ?op ~trace_reasons (info @ message_list)
 )
 
 (* format a trace into list of (reason, desc) pairs used
@@ -448,6 +450,7 @@ let add_msg cx ?trace level list =
 let new_warning list = Errors_js.({
   kind = InferWarning;
   messages = tweak_output list;
+  op = None;
   trace = []
 })
 
@@ -457,6 +460,7 @@ let add_warning cx ?trace list =
 let new_error list = Errors_js.({
   kind = InferError;
   messages = tweak_output list;
+  op = None;
   trace = []
 })
 
