@@ -326,7 +326,7 @@ module TraversePos(ImplementPos: sig val pos: Pos.t -> Pos.t end) = struct
     | Rnullsafe_op p           -> Rnullsafe_op (pos p)
     | Rtconst_no_cstr (p, s)   -> Rtconst_no_cstr (pos p, s)
     | Rused_as_map p           -> Rused_as_map (pos p)
-
+    | Rused_as_shape p         -> Rused_as_shape (pos p)
   let string_id (p, x) = pos p, x
 
   let rec ty (p, x) =

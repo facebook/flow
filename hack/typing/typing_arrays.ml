@@ -175,7 +175,7 @@ let update_array_type p access_type ~lvar_assignment env ty =
           let env, tk = TUtils.in_var env (Reason.Rnone, Tunresolved []) in
           let env, tv = TUtils.in_var env (Reason.Rnone, Tunresolved []) in
           let fdm = ShapeMap.singleton field_name (tk, tv) in
-          (env, seen), (Reason.Rwitness p, Tarraykind (AKshape fdm))
+          (env, seen), (Reason.Rused_as_shape p, Tarraykind (AKshape fdm))
         | AKappend ->
           let env, tv = TUtils.in_var env (Reason.Rnone, Tunresolved []) in
           (env, seen), (Reason.Rappend p, Tarraykind (AKvec tv))
@@ -193,7 +193,7 @@ let update_array_type p access_type ~lvar_assignment env ty =
             if akshape_key_consistent_with_map field_name fdm then begin
               let fdm = if ShapeMap.mem field_name fdm && (not lvar_assignment)
               then fdm else ShapeMap.add field_name (tk, tv) fdm in
-              env, (Reason.Rwitness p, Tarraykind (AKshape fdm))
+              env, (Reason.Rused_as_shape p, Tarraykind (AKshape fdm))
             end else
               downcast_akshape_to_akmap_ env r fdm
             in
@@ -218,7 +218,7 @@ let update_array_type p access_type ~lvar_assignment env ty =
              let env, ty = TUtils.in_var env (Reason.Rnone, Tunresolved []) in
              env, IMap.add index ty fields
            else env, fields in
-           (env, seen), (r, Tarraykind (AKtuple fields))
+           (env, seen), (Reason.Rappend p, Tarraykind (AKtuple fields))
         | _ ->
            (* no growing of tuples for now *)
           let env, ty = downcast_aktuple_to_akvec_ env r fields in
