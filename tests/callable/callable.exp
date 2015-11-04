@@ -3,4 +3,10 @@ primitives.js:6:1,6: function call
 Callable signature not found in
 primitives.js:6:1,4: object type
 
-Found 1 error
+primitives.js:12:1,8: function call
+Error:
+primitives.js:12:7,7: number
+This type is incompatible with
+primitives.js:9:7,12: string
+
+Found 2 errors
