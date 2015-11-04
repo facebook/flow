@@ -31,8 +31,6 @@ let spec = {
   )
 }
 
-module Json = Hh_json
-
 let main option_values root use_json query () =
   let root = guess_root (
     match root with
@@ -47,7 +45,7 @@ let main option_values root use_json query () =
     let results =
       List.map SearchService_js.result_to_json results
     in
-    print_endline (Json.json_to_string (Json.JList results))
+    print_endline (Hh_json.json_to_string (Hh_json.JSON_Array results))
   ) else (
     List.iter begin fun term ->
       let term = SearchService_js.result_to_string term in

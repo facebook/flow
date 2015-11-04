@@ -47,7 +47,7 @@ let handle_error ~json (loc, err) strip =
   if json
   then (
     let loc = Errors_js.json_of_loc loc in
-    let json = Hh_json.JAssoc (("error", Hh_json.JString err) :: loc) in
+    let json = Hh_json.JSON_Object (("error", Hh_json.JSON_String err) :: loc) in
     output_string stderr ((Hh_json.json_to_string json)^"\n");
   ) else (
     let loc = Reason_js.string_of_loc loc in
@@ -167,10 +167,10 @@ let handle_response ~json ~color ~debug types content strip =
 
   if json then
     let open Hh_json in
-    JAssoc [
-      "expressions", JAssoc [
-        "covered_count", JInt covered;
-        "uncovered_count", JInt (total - covered);
+    JSON_Object [
+      "expressions", JSON_Object [
+        "covered_count", int_ covered;
+        "uncovered_count", int_ (total - covered);
       ];
     ]
     |> json_to_string

@@ -14,8 +14,6 @@
 
 open CommandUtils
 
-module Json = Hh_json
-
 let spec = {
   CommandSpec.
   name = "get-imports";
@@ -50,9 +48,9 @@ let main option_values root json modules () =
   then (
     let json_non_flow =
       Utils.SSet.fold (fun module_name json_list ->
-          (module_name, Json.JAssoc [
-                          "not_flow", Json.JBool true;
-                          "requirements", Json.JList []
+          (module_name, Hh_json.JSON_Object [
+                          "not_flow", Hh_json.JSON_Bool true;
+                          "requirements", Hh_json.JSON_Array []
                           ]) :: json_list
         ) non_flow [] in
     let json_imports =
@@ -60,18 +58,18 @@ let main option_values root json modules () =
           let requirements =
             Utils.SSet.fold (fun req json_list ->
                 let loc = extract_location req req_locs in
-                Json.JAssoc (
-                  ("import", Json.JString req) ::
+                Hh_json.JSON_Object (
+                  ("import", Hh_json.JSON_String req) ::
                   (Errors_js.json_of_loc loc)
                 ) :: json_list
               ) requires [] in
-          (module_name, Json.JAssoc [
-                          "not_flow", Json.JBool false;
-                          "requirements", Json.JList requirements
+          (module_name, Hh_json.JSON_Object [
+                          "not_flow", Hh_json.JSON_Bool false;
+                          "requirements", Hh_json.JSON_Array requirements
                           ]) :: json_list
         ) requirements_map [] in
-    let json_output = Json.JAssoc (List.append json_non_flow json_imports) in
-    output_string stdout (Json.json_to_string json_output);
+    let json_output = Hh_json.JSON_Object (List.append json_non_flow json_imports) in
+    output_string stdout (Hh_json.json_to_string json_output);
     flush stdout
   ) else (
     let print_imports module_name =

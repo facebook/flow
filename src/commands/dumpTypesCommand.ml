@@ -12,8 +12,6 @@
 (* flow dump-types command *)
 (***********************************************************************)
 
-module Json = Hh_json
-
 open CommandUtils
 
 let spec = {
@@ -46,8 +44,8 @@ let handle_error (loc, err) json strip =
   if json
   then (
     let loc = Errors_js.json_of_loc loc in
-    let json = Json.JAssoc (("error", Json.JString err) :: loc) in
-    output_string stderr ((Json.json_to_string json)^"\n");
+    let json = Hh_json.JSON_Object (("error", Hh_json.JSON_String err) :: loc) in
+    output_string stderr ((Hh_json.json_to_string json)^"\n");
   ) else (
     let loc = Reason_js.string_of_loc loc in
     output_string stderr (Utils.spf "%s:\n%s\n" loc err);
@@ -60,10 +58,10 @@ let handle_response types json strip =
     let lst = types |> List.map (fun (loc, ctor, str, raw_t, reasons) ->
       let loc = strip loc in
       let json_assoc = (
-        ("type", Json.JString str) ::
-        ("reasons", Json.JList (List.map (fun r ->
-          Json.JAssoc (
-            ("desc", Json.JString (Reason_js.desc_of_reason r)) ::
+        ("type", Hh_json.JSON_String str) ::
+        ("reasons", Hh_json.JSON_Array (List.map (fun r ->
+          Hh_json.JSON_Object (
+            ("desc", Hh_json.JSON_String (Reason_js.desc_of_reason r)) ::
             (Errors_js.json_of_loc (strip (Reason_js.loc_of_reason r)))
           )
         ) reasons)) ::
@@ -71,11 +69,11 @@ let handle_response types json strip =
       ) in
       let json_assoc = match raw_t with
         | None -> json_assoc
-        | Some raw_t -> ("raw_type", Json.JString raw_t) :: json_assoc
+        | Some raw_t -> ("raw_type", Hh_json.JSON_String raw_t) :: json_assoc
       in
-      Json.JAssoc json_assoc
+      Hh_json.JSON_Object json_assoc
     ) in
-    let json = Json.json_to_string (Json.JList lst) in
+    let json = Hh_json.json_to_string (Hh_json.JSON_Array lst) in
     output_string stdout (json^"\n")
   ) else (
     let out = types

@@ -12,8 +12,6 @@
 (* flow type-at-pos command *)
 (***********************************************************************)
 
-module Json = Hh_json
-
 open CommandUtils
 
 let spec = {
@@ -67,11 +65,11 @@ let handle_response (loc, t, raw_t, reasons) json strip =
   then (
     let loc = Errors_js.json_of_loc loc in
     let json_assoc = (
-        ("type", Json.JString ty) ::
-        ("reasons", Json.JList
+        ("type", Hh_json.JSON_String ty) ::
+        ("reasons", Hh_json.JSON_Array
           (List.map (fun r ->
-              Json.JAssoc (
-                  ("desc", Json.JString (Reason_js.desc_of_reason r)) ::
+              Hh_json.JSON_Object (
+                  ("desc", Hh_json.JSON_String (Reason_js.desc_of_reason r)) ::
                   (Errors_js.json_of_loc (strip (Reason_js.loc_of_reason r)))
                 )
             ) reasons)) ::
@@ -79,10 +77,10 @@ let handle_response (loc, t, raw_t, reasons) json strip =
       ) in
     let json_assoc = match raw_t with
       | None -> json_assoc
-      | Some raw_t -> ("raw_type", Json.JString raw_t) :: json_assoc
+      | Some raw_t -> ("raw_type", Hh_json.JSON_String raw_t) :: json_assoc
     in
-    let json = Json.JAssoc json_assoc in
-    let json = Json.json_to_string json in
+    let json = Hh_json.JSON_Object json_assoc in
+    let json = Hh_json.json_to_string json in
     output_string stdout (json^"\n")
   ) else (
     let range =
@@ -109,8 +107,8 @@ let handle_error (loc, err) json strip =
   if json
   then (
     let loc = Errors_js.json_of_loc loc in
-    let json = Json.JAssoc (("error", Json.JString err) :: loc) in
-    output_string stderr ((Json.json_to_string json)^"\n");
+    let json = Hh_json.JSON_Object (("error", Hh_json.JSON_String err) :: loc) in
+    output_string stderr ((Hh_json.json_to_string json)^"\n");
   ) else (
     let loc = Reason_js.string_of_loc loc in
     output_string stderr (Utils.spf "%s:\n%s\n" loc err);

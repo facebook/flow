@@ -12,7 +12,7 @@ open Autocomplete_js
 open Type_printer
 open Utils
 
-module Json = Hh_json
+module Hh_json = Hh_json
 
 (* Details about functions to be added in json output *)
 type func_param_result = {
@@ -35,25 +35,25 @@ type complete_autocomplete_result = {
 
 let autocomplete_result_to_json loc_preprocessor result =
   let func_param_to_json param =
-    Json.JAssoc [
-      "name", Json.JString param.param_name;
-      "type", Json.JString param.param_ty;
+    Hh_json.JSON_Object [
+      "name", Hh_json.JSON_String param.param_name;
+      "type", Hh_json.JSON_String param.param_ty;
     ]
   in
   let func_details_to_json details =
     match details with
-     | Some fd -> Json.JAssoc [
-             "return_type", Json.JString fd.return_ty;
-             "params", Json.JList (List.map func_param_to_json fd.params);
+     | Some fd -> Hh_json.JSON_Object [
+             "return_type", Hh_json.JSON_String fd.return_ty;
+             "params", Hh_json.JSON_Array (List.map func_param_to_json fd.params);
            ]
-     | None -> Json.JNull
+     | None -> Hh_json.JSON_Null
   in
   let loc = loc_preprocessor result.res_loc in
   let name = result.res_name in
   let ty = result.res_ty in
-  Json.JAssoc (
-    ("name", Json.JString name) ::
-    ("type", Json.JString ty) ::
+  Hh_json.JSON_Object (
+    ("name", Hh_json.JSON_String name) ::
+    ("type", Hh_json.JSON_String ty) ::
     ("func_details", func_details_to_json result.func_details) ::
     (Errors_js.json_of_loc loc)
   )
@@ -122,9 +122,9 @@ let autocomplete_member client_logging_context cx this = Flow_js.(
   let result = Autocomplete.extract_members cx this_t in
 
   let result_str, json_data = Autocomplete.(Hh_json.(match result with
-    | Success _ -> "SUCCESS", JAssoc []
-    | FailureMaybeType -> "FAILURE_NULLABLE", JAssoc []
-    | FailureUnhandledType t -> "FAILURE_UNHANDLED_TYPE", JAssoc [
+    | Success _ -> "SUCCESS", JSON_Object []
+    | FailureMaybeType -> "FAILURE_NULLABLE", JSON_Object []
+    | FailureUnhandledType t -> "FAILURE_UNHANDLED_TYPE", JSON_Object [
       "type", Debug_js.json_of_t ~depth:3 cx t;
     ])) in
   FlowEventLogger.autocomplete_member_result

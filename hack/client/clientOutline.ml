@@ -9,22 +9,22 @@
  *)
 
 open Core
-module Json = Hh_json
 
 let to_json input =
   let entries = List.map input begin fun (pos, name, type_) ->
     let line, start, end_ = Pos.info_pos pos in
-    Json.JAssoc [ "name",  Json.JString name;
-                  "type", Json.JString type_;
-                  "line",  Json.JInt line;
-                  "char_start", Json.JInt start;
-                  "char_end",Json.JInt end_;
-                ]
+    Hh_json.JSON_Object [
+        "name",  Hh_json.JSON_String name;
+        "type", Hh_json.JSON_String type_;
+        "line",  Hh_json.int_ line;
+        "char_start", Hh_json.int_ start;
+        "char_end", Hh_json.int_ end_;
+    ]
   end in
-  Json.JList entries
+  Hh_json.JSON_Array entries
 
 let print_json res =
-  print_endline (Json.json_to_string (to_json res));
+  print_endline (Hh_json.json_to_string (to_json res));
   ()
 
 let print_readable res =

@@ -38,10 +38,10 @@ let main json from root () =
   if json
   then begin
     let open Hh_json in
-    let json = JAssoc [
-      "semver",JString FlowConfig.version;
-      "binary", JString (Sys_utils.executable_path ());
-      "build_id", JString Build_id.build_id_ohai;
+    let json = JSON_Object [
+      "semver",JSON_String FlowConfig.version;
+      "binary", JSON_String (Sys_utils.executable_path ());
+      "build_id", JSON_String Build_id.build_id_ohai;
     ] in
     print_endline (json_to_string json)
   end else begin

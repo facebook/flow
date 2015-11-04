@@ -11,7 +11,6 @@
 open Core
 open ClientEnv
 open Utils
-module Json = Hh_json
 
 let compare_pos pos1 pos2 =
   let char_start1, char_end1 = Pos.info_raw pos1 in
@@ -98,22 +97,24 @@ let patch_to_json res =
   let pos = get_pos res in
   let char_start, char_end = Pos.info_raw pos in
   let line, start, end_ = Pos.info_pos pos in
-  Json.JAssoc [ "char_start",  Json.JInt char_start;
-                "char_end",    Json.JInt char_end;
-                "line",        Json.JInt line;
-                "col_start",   Json.JInt start;
-                "col_end",     Json.JInt end_;
-                "patch_type",  Json.JString type_;
-                "replacement", Json.JString replacement;
-              ]
+  Hh_json.JSON_Object [
+      "char_start",  Hh_json.int_ char_start;
+      "char_end",    Hh_json.int_ char_end;
+      "line",        Hh_json.int_ line;
+      "col_start",   Hh_json.int_ start;
+      "col_end",     Hh_json.int_ end_;
+      "patch_type",  Hh_json.JSON_String type_;
+      "replacement", Hh_json.JSON_String replacement;
+  ]
 
 let print_patches_json file_map =
   let entries = SMap.fold begin fun fn patch_list acc ->
-    Json.JAssoc [ "filename", Json.JString fn;
-                  "patches",  Json.JList (List.map patch_list patch_to_json);
-                ] :: acc
+    Hh_json.JSON_Object [
+        "filename", Hh_json.JSON_String fn;
+        "patches",  Hh_json.JSON_Array (List.map patch_list patch_to_json);
+    ] :: acc
   end file_map [] in
-  print_endline (Json.json_to_string (Json.JList entries))
+  print_endline (Hh_json.json_to_string (Hh_json.JSON_Array entries))
 
 let go conn args =
   try

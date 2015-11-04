@@ -14,8 +14,6 @@
 
 open CommandUtils
 
-module Json = Hh_json
-
 let spec = {
   CommandSpec.
   name = "get-importers";
@@ -49,12 +47,12 @@ let main option_values root json modules () =
     let json_list =
       Utils.SMap.fold (fun module_name importers json_list ->
         let importer_list = List.map (fun entry ->
-          Json.JString entry
+          Hh_json.JSON_String entry
         ) (Utils.SSet.elements importers) in
-        (module_name, Json.JList importer_list) :: json_list
+        (module_name, Hh_json.JSON_Array importer_list) :: json_list
       ) importers_map [] in
-    let json_output = Json.JAssoc json_list in
-    output_string stdout (Json.json_to_string json_output);
+    let json_output = Hh_json.JSON_Object json_list in
+    output_string stdout (Hh_json.json_to_string json_output);
     flush stdout
   ) else (
     List.iter (fun module_name ->

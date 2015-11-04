@@ -12,7 +12,6 @@ open Core
 open Coverage_level
 
 module C = Tty
-module Json = Hh_json
 
 (*****************************************************************************)
 (* Section defining the colors we are going to use *)
@@ -38,12 +37,12 @@ let to_json input =
     let color_string = match clr with
       | Some lvl -> string_of_level lvl
       | None -> "default"
-    in Json.JAssoc [
-      "color", Json.JString color_string;
-      "text",  Json.JString text;
+    in Hh_json.JSON_Object [
+      "color", Hh_json.JSON_String color_string;
+      "text",  Hh_json.JSON_String text;
     ]
   end in
-  Json.JList entries
+  Hh_json.JSON_Array entries
 
 (*****************************************************************************)
 (* The entry point. *)
@@ -56,7 +55,7 @@ let go file_input output_json pos_level_l =
   in
   let results = ColorFile.go str pos_level_l in
   if output_json then
-    print_endline (Json.json_to_string (to_json results))
+    print_endline (Hh_json.json_to_string (to_json results))
   else if Unix.isatty Unix.stdout
   then C.print (replace_colors results)
   else print_endline str

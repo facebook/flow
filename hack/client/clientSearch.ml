@@ -10,7 +10,6 @@
 
 open Core
 module SS = HackSearchService
-module Json = Hh_json
 module SUtils = SearchUtils
 
 let desc_string_from_type result_type =
@@ -54,18 +53,18 @@ let result_to_json res =
   let p = res.SUtils.pos in
   let fn = Pos.filename p in
   let line, start, end_ = Pos.info_pos p in
-  Json.JAssoc [ "name", Json.JString (Utils.strip_ns res.SUtils.name);
-                "filename",  Json.JString fn;
-                "desc",  Json.JString desc_string;
-                "line",  Json.JInt line;
-                "char_start", Json.JInt start;
-                "char_end", Json.JInt end_;
-                "scope", Json.JString scope_string;
+  Hh_json.JSON_Object [ "name", Hh_json.JSON_String (Utils.strip_ns res.SUtils.name);
+                "filename",  Hh_json.JSON_String fn;
+                "desc",  Hh_json.JSON_String desc_string;
+                "line",  Hh_json.int_ line;
+                "char_start", Hh_json.int_ start;
+                "char_end", Hh_json.int_ end_;
+                "scope", Hh_json.JSON_String scope_string;
               ]
 
 let print_results_json results =
-  let results = Json.JList (List.map results result_to_json) in
-  print_endline (Json.json_to_string results)
+  let results = Hh_json.JSON_Array (List.map results result_to_json) in
+  print_endline (Hh_json.json_to_string results)
 
 let go results output_json =
   if output_json

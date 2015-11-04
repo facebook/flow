@@ -10,7 +10,7 @@
 
 
 (**
- * Json parsing and pretty printing library.
+ * Hh_json parsing and pretty printing library.
  *)
 
 type json =

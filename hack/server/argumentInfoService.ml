@@ -44,13 +44,14 @@ let detach_hooks () =
 let to_json (pos, expected) =
   let expected = List.map expected begin fun (name, type_) ->
     let name = match name with
-      | Some str1 -> Hh_json.JString str1
-      | None -> Hh_json.JNull
+      | Some str1 -> Hh_json.JSON_String str1
+      | None -> Hh_json.JSON_Null
     in
-    Hh_json.JAssoc [ "name",  name;
-                     "type",  Hh_json.JString type_;
-                   ]
+    Hh_json.JSON_Object [
+        "name",  name;
+        "type",  Hh_json.JSON_String type_;
+    ]
   end in
-  [ "cursor_arg_index", Hh_json.JInt pos;
-    "args",             Hh_json.JList expected;
+  [ "cursor_arg_index", Hh_json.int_ pos;
+    "args",             Hh_json.JSON_Array expected;
   ]

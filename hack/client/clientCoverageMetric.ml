@@ -13,29 +13,29 @@ open Coverage_level
 open Hh_json
 open Utils
 
-let result_to_json r = JAssoc begin
+let result_to_json r = JSON_Object begin
   List.map (SMap.elements r) begin fun (kind, counts) ->
-    let counts = JAssoc (List.map (CLMap.elements counts)
-        (fun (k, v) -> string_of_level k, JInt v)) in
+    let counts = JSON_Object (List.map (CLMap.elements counts)
+        (fun (k, v) -> string_of_level k, int_ v)) in
     kind, counts
   end
 end
 
 let rec entry_to_json = function
-  | Leaf r -> JAssoc [
-      "type"   , JString "file";
+  | Leaf r -> JSON_Object [
+      "type"   , JSON_String "file";
       "result" , result_to_json r;
     ]
-  | Node (r, el) -> JAssoc [
-      "type"     , JString "directory";
+  | Node (r, el) -> JSON_Object [
+      "type"     , JSON_String "directory";
       "result"   , result_to_json r;
-      "children" , JAssoc (SMap.elements (SMap.map entry_to_json el));
+      "children" , JSON_Object (SMap.elements (SMap.map entry_to_json el));
     ]
 
 let print_json r_opt =
   let json = match r_opt with
   | Some e -> entry_to_json e
-  | None -> JAssoc [ "internal_error", JBool true ]
+  | None -> JSON_Object [ "internal_error", JSON_Bool true ]
   in print_string (json_to_string json)
 
 (* Calculate the percentage of code we have covered as a ratio of typed

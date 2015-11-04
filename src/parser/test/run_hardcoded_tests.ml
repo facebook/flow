@@ -59,9 +59,9 @@ end = struct
 
   let rec parse_spec_value = Ast.Expression.(function
     | (_, Object { Object.properties }) ->
-      JAssoc (List.map parse_spec properties)
+      JSON_Object (List.map parse_spec properties)
     | (_, Array { Array.elements }) ->
-      JAssoc (List.mapi (fun i elem ->
+      JSON_Object (List.mapi (fun i elem ->
         let child = match elem with
         | Some (Expression e) -> parse_spec_value e
         | Some (Spread _)
@@ -70,25 +70,25 @@ end = struct
         string_of_int i, child
       ) elements)
     | (_, Literal { Ast.Literal.value = Ast.Literal.String name; _ }) ->
-        JString name
+        JSON_String name
     | (_, Literal { Ast.Literal.value = Ast.Literal.Number num; _ }) ->
-        JFloat num
+        JSON_Number (string_of_float_trunc num)
     | (_, Literal { Ast.Literal.value = Ast.Literal.Boolean value; _ }) ->
-        JBool value
+        JSON_Bool value
     | (_, Literal { Ast.Literal.value = Ast.Literal.Null; _ }) ->
-        JNull
+        JSON_Null
     | (_, Unary { Unary.operator = Unary.Minus;
                   prefix = true;
                   argument = (_, Literal {
                     Ast.Literal.value = Ast.Literal.Number num; _
                   });
                 }) ->
-        JFloat (~-. num)
+        JSON_Number (string_of_float_trunc  (~-. num))
     | (_, Binary { Binary.operator = Binary.Plus; left; right; }) ->
         let left_json = parse_spec_value left in
         let right_json = parse_spec_value right in
         begin match (left_json, right_json) with
-        | JString l, JString r -> JString (l ^ r)
+        | JSON_String l, JSON_String r -> JSON_String (l ^ r)
         | _ -> prerr_endline
           "ERROR: unable to parse binary expressions that aren't just strings";
           exit 1
@@ -118,7 +118,7 @@ end = struct
         | [] -> (name, child)
         | name::rest ->
           let tree = List.fold_right (fun part acc ->
-            JAssoc [part, acc]
+            JSON_Object [part, acc]
           ) rest child in
           (name, tree)
         end
@@ -207,7 +207,7 @@ end = struct
               exit 1
           )
         ) in
-        (name, parse_opts, JAssoc (List.map parse_spec specs))
+        (name, parse_opts, JSON_Object (List.map parse_spec specs))
     | _ -> prerr_endline "ERROR: unexpected test format"; exit 1
 
   let parse_section = Ast.Expression.Object.(function

@@ -14,8 +14,6 @@
 
 open CommandUtils
 
-module Json = Hh_json
-
 let spec = {
   CommandSpec.
   name = "find-module";
@@ -58,8 +56,8 @@ let main option_values root json strip_root moduleref filename () =
     | None -> "(unknown)" in
   if json
   then (
-    let json = Json.json_to_string (
-      Json.JAssoc (["file", Json.JString result])
+    let json = Hh_json.json_to_string (
+      Hh_json.JSON_Object (["file", Hh_json.JSON_String result])
     ) in
     output_string stdout (json^"\n");
   ) else

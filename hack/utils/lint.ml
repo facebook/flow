@@ -59,17 +59,17 @@ let to_string lint =
   Printf.sprintf "%s\n%s (%s)" (Pos.string lint.pos) lint.message code
 
 let to_json {pos; code; severity; message; bypass_changed_lines} =
-  let open Hh_json in
   let line, scol, ecol = Pos.info_pos pos in
-  JAssoc [ "descr", JString message;
-           "severity", JString (string_of_severity severity);
-           "path",  JString (Pos.filename pos);
-           "line",  JInt line;
-           "start", JInt scol;
-           "end",   JInt ecol;
-           "code",  JInt code;
-           "bypass_changed_lines", JBool bypass_changed_lines;
-         ]
+  Hh_json.JSON_Object [
+      "descr", Hh_json.JSON_String message;
+      "severity", Hh_json.JSON_String (string_of_severity severity);
+      "path",  Hh_json.JSON_String (Pos.filename pos);
+      "line",  Hh_json.int_ line;
+      "start", Hh_json.int_ scol;
+      "end",   Hh_json.int_ ecol;
+      "code",  Hh_json.int_ code;
+      "bypass_changed_lines", Hh_json.JSON_Bool bypass_changed_lines;
+  ]
 
 module Codes = struct
   let lowercase_constant                    = 5001 (* DONT MODIFY!!!! *)

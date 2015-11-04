@@ -28,18 +28,36 @@ let parse_errors = Hashtbl.create 23
 (* helpers *)
 (*****************************************************************************)
 
+let rec to_js_object json =
+  match json with
+  | JSON_Array l ->
+      let l = List.map l to_js_object in
+      let l = Array.of_list l in
+      Js.Unsafe.inject (Js.array l)
+  | JSON_Object l ->
+      let l = List.map l begin fun (k, v) ->
+        k, to_js_object v
+      end in
+      let l = Array.of_list l in
+      Js.Unsafe.obj l
+  | JSON_Bool b -> Js.Unsafe.inject (Js.bool b)
+  | JSON_String s -> Js.Unsafe.inject (Js.string s)
+  | JSON_Null -> Js.Unsafe.inject Js.null
+  | JSON_Number i -> Js.Unsafe.inject (Js.number_of_float (float_of_string i))
+
+
 let error el =
   let res =
     if el = [] then
-      JAssoc [ "passed",         JBool true;
-               "errors",         JList [];
-               "internal_error", JBool false;
+      JSON_Object [ "passed",         JSON_Bool true;
+               "errors",         JSON_Array [];
+               "internal_error", JSON_Bool false;
              ]
     else
       let errors_json = List.map el (compose Errors.to_json Errors.to_absolute)
-      in JAssoc [ "passed",         JBool false;
-                  "errors",         JList errors_json;
-                  "internal_error", JBool false;
+      in JSON_Object [ "passed",         JSON_Bool false;
+                  "errors",         JSON_Array errors_json;
+                  "internal_error", JSON_Bool false;
                 ]
   in
   to_js_object res
@@ -233,13 +251,13 @@ let hh_auto_complete fn =
       List.map result AutocompleteService.autocomplete_result_to_json
     in
     AutocompleteService.detach_hooks();
-    to_js_object (JAssoc [ "completions",    JList result;
-                          "completion_type", JString completion_type_str;
-                          "internal_error",  JBool false;
+    to_js_object (JSON_Object [ "completions",    JSON_Array result;
+                          "completion_type", JSON_String completion_type_str;
+                          "internal_error",  JSON_Bool false;
                         ])
   with _ ->
     AutocompleteService.detach_hooks();
-    to_js_object (JAssoc [ "internal_error", JBool true;
+    to_js_object (JSON_Object [ "internal_error", JSON_Bool true;
                         ])
 
 let hh_get_method_at_position fn line char =
@@ -274,17 +292,17 @@ let hh_get_method_at_position fn line char =
             | IdentifySymbolService.Method -> "method"
             | IdentifySymbolService.Function -> "function"
             | IdentifySymbolService.LocalVar -> "local" in
-          JAssoc [ "name",           JString res.IdentifySymbolService.name;
-                   "result_type",    JString result_type;
+          JSON_Object [ "name",           JSON_String res.IdentifySymbolService.name;
+                   "result_type",    JSON_String result_type;
                    "pos",            Pos.json (Pos.to_absolute res.IdentifySymbolService.pos);
-                   "internal_error", JBool false;
+                   "internal_error", JSON_Bool false;
                  ]
-      | _ -> JAssoc [ "internal_error", JBool false;
+      | _ -> JSON_Object [ "internal_error", JSON_Bool false;
                     ] in
     to_js_object result
   with _ ->
     IdentifySymbolService.detach_hooks ();
-    to_js_object (JAssoc [ "internal_error", JBool true;
+    to_js_object (JSON_Object [ "internal_error", JSON_Bool true;
                         ])
 
 let hh_get_deps =
@@ -302,20 +320,20 @@ let hh_get_deps =
           (match dep with
           | Typing_deps.Dep.Class s
             when Typing_env.Classes.get s = None ->
-              (JAssoc [ "name", JString s;
-                        "type", JString "class";
+              (JSON_Object [ "name", JSON_String s;
+                        "type", JSON_String "class";
                       ]) :: !result
           | Typing_deps.Dep.Fun s
             when Typing_env.Funs.get s = None ->
-              (JAssoc [ "name", JString s;
-                        "type", JString "fun";
+              (JSON_Object [ "name", JSON_String s;
+                        "type", JSON_String "fun";
                       ]) :: !result
           | _ -> !result
           )
       end
     end deps;
-    to_js_object (JAssoc [ "deps",          JList !result;
-                          "internal_error", JBool false;
+    to_js_object (JSON_Object [ "deps",          JSON_Array !result;
+                          "internal_error", JSON_Bool false;
                         ])
 
 let infer_at_pos file line char =
@@ -337,21 +355,21 @@ let hh_find_lvar_refs file line char =
     FindLocalsService.detach_hooks ();
     let res_list =
       List.map (get_result ()) (compose Pos.json Pos.to_absolute) in
-    to_js_object (JAssoc [ "positions",      JList res_list;
-                           "internal_error", JBool false;
+    to_js_object (JSON_Object [ "positions",      JSON_Array res_list;
+                           "internal_error", JSON_Bool false;
                         ])
   with _ ->
     FindLocalsService.detach_hooks ();
-    to_js_object (JAssoc [ "internal_error", JBool true;
+    to_js_object (JSON_Object [ "internal_error", JSON_Bool true;
                         ])
 
 let hh_infer_type file line char =
   let _, ty = infer_at_pos file line char in
   let output = match ty with
-  | Some ty -> JAssoc [ "type",           JString ty;
-                        "internal_error", JBool false;
+  | Some ty -> JSON_Object [ "type",           JSON_String ty;
+                        "internal_error", JSON_Bool false;
                       ]
-  | None -> JAssoc [ "internal_error", JBool false;
+  | None -> JSON_Object [ "internal_error", JSON_Bool false;
                    ]
   in
   to_js_object output
@@ -359,10 +377,10 @@ let hh_infer_type file line char =
 let hh_infer_pos file line char =
   let pos, _ = infer_at_pos file line char in
   let output = match pos with
-  | Some pos -> JAssoc [ "pos",            Pos.json (Pos.to_absolute pos);
-                         "internal_error", JBool false;
+  | Some pos -> JSON_Object [ "pos",            Pos.json (Pos.to_absolute pos);
+                         "internal_error", JSON_Bool false;
                        ]
-  | None -> JAssoc [ "internal_error", JBool false;
+  | None -> JSON_Object [ "internal_error", JSON_Bool false;
                    ]
   in
   to_js_object output
@@ -373,16 +391,16 @@ let hh_file_summary fn =
     let ast = Parser_heap.ParserHeap.find_unsafe fn in
     let outline = FileOutline.outline_ast ast in
     let res_list = List.map outline begin fun (pos, name, type_) ->
-      JAssoc [ "name", JString name;
-               "type", JString type_;
+      JSON_Object [ "name", JSON_String name;
+               "type", JSON_String type_;
                "pos",  Pos.json pos;
              ]
       end in
-    to_js_object (JAssoc [ "summary",         JList res_list;
-                          "internal_error",   JBool false;
+    to_js_object (JSON_Object [ "summary",         JSON_Array res_list;
+                          "internal_error",   JSON_Bool false;
                         ])
   with _ ->
-    to_js_object (JAssoc [ "internal_error", JBool true;
+    to_js_object (JSON_Object [ "internal_error", JSON_Bool true;
                         ])
 
 let hh_hack_coloring fn =
@@ -401,12 +419,12 @@ let hh_hack_coloring fn =
     | (None, str) -> ("default", str)
   end in
   let result = List.map result begin fun (checked, text) ->
-    JAssoc [ "checked", JString checked;
-             "text",    JString text;
+    JSON_Object [ "checked", JSON_String checked;
+             "text",    JSON_String text;
            ]
   end in
-  to_js_object (JAssoc [ "coloring",      JList result;
-                         "internal_error", JBool false;
+  to_js_object (JSON_Object [ "coloring",      JSON_Array result;
+                         "internal_error", JSON_Bool false;
                       ])
 
 let hh_get_method_calls fn =
@@ -415,14 +433,14 @@ let hh_get_method_calls fn =
   ignore (hh_check fn);
   let results = !Typing_defs.accumulate_method_calls_result in
   let results = List.map results begin fun (p, name) ->
-    JAssoc [ "method_name", JString name;
+    JSON_Object [ "method_name", JSON_String name;
              "pos",         Pos.json (Pos.to_absolute p);
            ]
   end in
   Typing_defs.accumulate_method_calls := false;
   Typing_defs.accumulate_method_calls_result := [];
-  to_js_object (JAssoc [ "method_calls",  JList results;
-                        "internal_error", JBool false;
+  to_js_object (JSON_Object [ "method_calls",  JSON_Array results;
+                        "internal_error", JSON_Bool false;
                       ])
 
 let hh_arg_info fn line char =
@@ -450,9 +468,9 @@ let hh_arg_info fn line char =
   in
   ArgumentInfoService.detach_hooks();
   let json_res =
-    ("internal_error", JBool false) :: ArgumentInfoService.to_json result
+    ("internal_error", JSON_Bool false) :: ArgumentInfoService.to_json result
   in
-  to_js_object (JAssoc json_res)
+  to_js_object (JSON_Object json_res)
 
 let hh_format contents start end_ =
   let modes = [Some FileInfo.Mstrict; Some FileInfo.Mpartial] in
@@ -464,9 +482,9 @@ let hh_format contents start end_ =
     | Format_hack.Internal_error -> "", "", true
     | Format_hack.Success s -> "", s, false
   in
-  to_js_object (JAssoc [ "error_message", JString error;
-                        "result", JString result;
-                        "internal_error",   JBool internal_error;
+  to_js_object (JSON_Object [ "error_message", JSON_String error;
+                        "result", JSON_String result;
+                        "internal_error",   JSON_Bool internal_error;
                       ])
 
 (* Helpers to turn JavaScript strings into OCaml strings *)

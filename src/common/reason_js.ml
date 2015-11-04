@@ -21,7 +21,7 @@
 
 open Utils
 module Ast = Spider_monkey_ast
-module Json = Hh_json
+module Hh_json = Hh_json
 
 let mk_id () = Ident.make ""
 
@@ -131,18 +131,18 @@ let string_of_loc loc = Loc.(
       spf "%s:%d:%d-%d" file line start end_
 )
 
-let json_of_loc loc = Json.(Loc.(
-  JAssoc [
+let json_of_loc loc = Hh_json.(Loc.(
+  JSON_Object [
     "file", (match loc.source with
-      | Some x -> JString (string_of_filename x)
-      | None -> JString ""); (* TODO: return JNull *)
-    "start", JAssoc [
-      "line", JInt loc.start.line;
-      "col", JInt loc.start.column;
+      | Some x -> JSON_String (string_of_filename x)
+      | None -> JSON_String ""); (* TODO: return JSON_Null *)
+    "start", JSON_Object [
+      "line", int_ loc.start.line;
+      "col", int_ loc.start.column;
     ];
-    "end", JAssoc [
-      "line", JInt loc._end.line;
-      "col", JInt loc._end.column;
+    "end", JSON_Object [
+      "line", int_ loc._end.line;
+      "col", int_ loc._end.column;
     ];
   ]
 ))
@@ -177,10 +177,10 @@ let string_of_reason r =
     else spf "%s:\n%s" spos desc
   )
 
-let json_of_reason r = Json.(
-  JAssoc [
+let json_of_reason r = Hh_json.(
+  JSON_Object [
     "pos", json_of_loc (loc_of_reason r);
-    "desc", JString r.desc
+    "desc", JSON_String r.desc
   ]
 )
 

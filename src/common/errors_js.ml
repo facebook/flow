@@ -9,7 +9,7 @@
  *)
 
 module C = Tty
-module Json = Hh_json
+module Hh_json = Hh_json
 
 type message =
   | BlameM of Loc.t * string
@@ -345,14 +345,14 @@ let print_error_color_new ~stdin_file:stdin_file ~one_line ~color ~root (error :
 (* TODO: deprecate this in favor of Reason_js.json_of_loc *)
 let json_of_loc loc = Loc.(
   let file = match loc.source with
-  | Some x -> Json.JString (string_of_filename x)
-  | None -> Json.JString "" (* TODO: return Json.JNull *)
+  | Some x -> Hh_json.JSON_String (string_of_filename x)
+  | None -> Hh_json.JSON_String "" (* TODO: return Hh_json.JSON_Null *)
   in
   [ "path", file;
-    "line", Json.JInt loc.start.line;
-    "endline", Json.JInt loc._end.line;
-    "start", Json.JInt (loc.start.column + 1);
-    "end", Json.JInt loc._end.column ]
+    "line", Hh_json.int_ loc.start.line;
+    "endline", Hh_json.int_ loc._end.line;
+    "start", Hh_json.int_ (loc.start.column + 1);
+    "end", Hh_json.int_ loc._end.column ]
 )
 
 (* first reason's position, then second reason's position, etc.; if all
@@ -473,7 +473,7 @@ let to_list errors = ErrorSet.elements errors
 (******* Error output functionality working on Hack's error *******)
 
 (* adapted from Errors.to_json to output multi-line errors properly *)
-let json_of_error (error : error) = Json.(
+let json_of_error (error : error) = Hh_json.(
   let {kind; messages; op; trace} = error in
   let kind_str, severity_str = match kind with
   | ParseError -> "parse", "error"
@@ -483,44 +483,44 @@ let json_of_error (error : error) = Json.(
   let messages = append_trace_reasons messages trace in
   let elts = List.map (fun message ->
       let loc, w = to_pp message in
-      JAssoc (("descr", Json.JString w) ::
-              ("level", Json.JString severity_str) ::
+      JSON_Object (("descr", Hh_json.JSON_String w) ::
+              ("level", Hh_json.JSON_String severity_str) ::
               (json_of_loc loc))
     ) messages
   in
   let props = [
-    "message", JList elts;
-    "kind", JString kind_str;
+    "message", JSON_Array elts;
+    "kind", JSON_String kind_str;
   ] in
   let props =
     match op with
     | Some op ->
       let op_loc, op_desc = to_pp op in
-      ("operation", JAssoc (
-        ("descr", Json.JString op_desc) ::
+      ("operation", JSON_Object (
+        ("descr", Hh_json.JSON_String op_desc) ::
         (json_of_loc op_loc)
       )) :: props
     | None -> props
   in
-  JAssoc props
+  JSON_Object props
 )
 
-let json_of_errors errors = Json.JList (List.map json_of_error errors)
+let json_of_errors errors = Hh_json.JSON_Array (List.map json_of_error errors)
 
 let print_error_json oc el =
   let res =
     if el = [] then
-      Json.JAssoc [ "passed", Json.JBool true;
-                    "errors", Json.JList [];
-                    "version", Json.JString Build_id.build_id_ohai;
+      Hh_json.JSON_Object [ "passed", Hh_json.JSON_Bool true;
+                    "errors", Hh_json.JSON_Array [];
+                    "version", Hh_json.JSON_String Build_id.build_id_ohai;
                   ]
     else
-      Json.JAssoc [ "passed", Json.JBool false;
+      Hh_json.JSON_Object [ "passed", Hh_json.JSON_Bool false;
                     "errors", json_of_errors el;
-                    "version", Json.JString Build_id.build_id_ohai;
+                    "version", Hh_json.JSON_String Build_id.build_id_ohai;
                   ]
   in
-  output_string oc (Json.json_to_string res);
+  output_string oc (Hh_json.json_to_string res);
   flush oc
 
 (* for vim and emacs plugins *)

@@ -11,7 +11,6 @@
 open Utils_js
 
 module Ast = Spider_monkey_ast
-module Json = Hh_json
 
 type search_result_type =
   | Class
@@ -38,17 +37,17 @@ let pos_range p = Pos.(Lexing.(
 let pos_to_json pos =
   let file = Pos.filename pos in
   let l0, c0, l1, c1 = pos_range pos in
-  [ "path", Json.JString (Relative_path.to_absolute file);
-    "line", Json.JInt l0;
-    "endline", Json.JInt l1;
-    "start", Json.JInt c0;
-    "end", Json.JInt c1 ]
+  [ "path", Hh_json.JSON_String (Relative_path.to_absolute file);
+    "line", Hh_json.int_ l0;
+    "endline", Hh_json.int_ l1;
+    "start", Hh_json.int_ c0;
+    "end", Hh_json.int_ c1 ]
 
 let result_to_json term =
   SearchUtils.(
-  Json.JAssoc (
-    ("name", Json.JString term.name) ::
-    ("type", Json.JString (result_type_to_string term.result_type)) ::
+  Hh_json.JSON_Object (
+    ("name", Hh_json.JSON_String term.name) ::
+    ("type", Hh_json.JSON_String (result_type_to_string term.result_type)) ::
     (pos_to_json term.pos)
   ))
 

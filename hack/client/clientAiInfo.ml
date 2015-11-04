@@ -12,39 +12,38 @@ open Core
 open Hh_json
 
 let fun_call_to_json fun_call_results =
-  let open Ai.InfoService in
   (* List.rev_map is used here for performance purpose(tail recursive) *)
   List.rev_map fun_call_results (fun item ->
     let item_type =
-      match item.type_ with
-      | Function    -> "Function"
-      | Method      -> "Method"
-      | Constructor -> "Constructor" in
-    JAssoc [
-      "name",    JString item.name;
-      "type",    JString item_type;
-      "pos",     Pos.json item.pos;
-      "caller",  JString item.caller;
-      "callees", JList (List.map item.callees (fun n -> JString n));
+      match item.Ai.InfoService.type_ with
+      | Ai.InfoService.Function    -> "Function"
+      | Ai.InfoService.Method      -> "Method"
+      | Ai.InfoService.Constructor -> "Constructor" in
+    JSON_Object [
+      "name",    JSON_String item.Ai.InfoService.name;
+      "type",    JSON_String item_type;
+      "pos",     Pos.json item.Ai.InfoService.pos;
+      "caller",  JSON_String item.Ai.InfoService.caller;
+      "callees", JSON_Array (List.map item.Ai.InfoService.callees (fun n -> JSON_String n));
     ]
   )
 
 let throws_to_json throws_results =
   let open Ai.InfoService in
   List.rev_map throws_results (fun item ->
-    JAssoc [
-      "thrower", JString item.thrower;
-      "filename", JString item.filename;
-      "exceptions", JList (List.map item.exceptions (fun e -> JString e));
+    JSON_Object [
+      "thrower", JSON_String item.thrower;
+      "filename", JSON_String item.filename;
+      "exceptions", JSON_Array (List.map item.exceptions (fun e -> JSON_String e));
     ]
   )
 
 let to_json result =
   let fun_call_json = fun_call_to_json result.Ai.InfoService.fun_calls in
   let throws_json = throws_to_json result.Ai.InfoService.throws in
-  JAssoc [
-    "function_calls",   JList fun_call_json;
-    "throws", JList throws_json
+  JSON_Object [
+    "function_calls",   JSON_Array fun_call_json;
+    "throws", JSON_Array throws_json
   ]
 
 let go conn (files:string) expand_path =

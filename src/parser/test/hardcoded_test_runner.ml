@@ -13,7 +13,7 @@ open Hh_json
 
 let rec check_ast_walker ast path =
   match ast with
-  | JAssoc properties ->
+  | JSON_Object properties ->
     List.fold_left (fun errors (name, value) ->
       let child_errors = check_ast_walker value (name::path) in
       (*
@@ -63,11 +63,11 @@ let string_of_diff diff =
     expected_str
 
 let jstr_of_diff diff =
-  let json = JAssoc [
-    "path", JString (diff.path |> List.rev |> String.concat ".");
-    "type", JString diff.type_;
-    "expected", (match diff.expected with Some x -> JString x | _ -> JNull);
-    "actual", (match diff.actual with Some x -> JString x | _ -> JNull);
+  let json = JSON_Object [
+    "path", JSON_String (diff.path |> List.rev |> String.concat ".");
+    "type", JSON_String diff.type_;
+    "expected", (match diff.expected with Some x -> JSON_String x | _ -> JSON_Null);
+    "actual", (match diff.actual with Some x -> JSON_String x | _ -> JSON_Null);
   ] in
   json_to_multiline json
 
@@ -77,14 +77,14 @@ let mk_diff path msg expected actual =
 
 let rec check_spec_walker ast spec path =
   match spec, ast with
-  | JAssoc _, JList ast_elems ->
+  | JSON_Object _, JSON_Array ast_elems ->
     let props = List.mapi (fun i elem ->
       string_of_int i, elem
     ) ast_elems in
-    let ast = JAssoc (("length", JInt (List.length ast_elems))::props) in
+    let ast = JSON_Object (("length", int_ (List.length ast_elems))::props) in
     check_spec_walker ast spec path
 
-  | JAssoc spec_props, JAssoc ast_props ->
+  | JSON_Object spec_props, JSON_Object ast_props ->
     let ast_map = List.fold_left (fun acc (k, v) ->
       SMap.add k v acc
     ) SMap.empty ast_props in
@@ -99,13 +99,11 @@ let rec check_spec_walker ast spec path =
         (mk_diff path (spf "Missing property %S" prop) None None)::diffs
     ) [] spec_props
 
-  | JNull, JNull -> []
-  | JBool v1, JBool v2 when v1 = v2 -> []
-  | JString v1, JString v2 when v1 = v2 -> []
-  | JInt v1, JInt v2 when v1 = v2 -> []
-  | JFloat v1, JFloat v2 when v1 = v2 -> []
-  | JFloat v1, JInt v2 when v1 = (float_of_int v2) -> []
-  | JList _, _ -> [mk_diff path "Not an array" (Some spec) (Some ast)]
+  | JSON_Null, JSON_Null -> []
+  | JSON_Bool v1, JSON_Bool v2 when v1 = v2 -> []
+  | JSON_String v1, JSON_String v2 when v1 = v2 -> []
+  | JSON_Number v1, JSON_Number v2 when v1 = v2 -> []
+  | JSON_Array _, _ -> [mk_diff path "Not an array" (Some spec) (Some ast)]
   | _, _ -> [mk_diff path "Wrong value" (Some spec) (Some ast)]
 
 let check_spec (json_errors:bool) (ast:json) (spec:json) =
@@ -125,7 +123,7 @@ let check_spec (json_errors:bool) (ast:json) (spec:json) =
     true, ""
 
 let has_errors_prop x = match x with
-  | JAssoc props -> List.exists (fun (name, _) -> name = "errors") props
+  | JSON_Object props -> List.exists (fun (name, _) -> name = "errors") props
   | _ -> false
 
 let check_errors (errors: (Loc.t * Parse_error.t) list) (spec:json) =
@@ -148,21 +146,21 @@ let check_errors (errors: (Loc.t * Parse_error.t) list) (spec:json) =
   else
     true, ""
 
-module JsonTranslator : (
+module Hh_jsonTranslator : (
   Estree_translator.Translator with type t = Hh_json.json
 ) = struct
   type t = Hh_json.json
 
-  let string x = JString x
-  let bool x = JBool x
-  let obj props = JAssoc (Array.to_list props)
-  let array arr = JList (Array.to_list arr)
-  let number x = JFloat x
-  let null = JNull
-  let regexp _loc _pattern _flags = JNull
+  let string x = JSON_String x
+  let bool x = JSON_Bool x
+  let obj props = JSON_Object (Array.to_list props)
+  let array arr = JSON_Array (Array.to_list arr)
+  let number x = JSON_Number (string_of_float_trunc x)
+  let null = JSON_Null
+  let regexp _loc _pattern _flags = JSON_Null
 end
 
-module Translate = Estree_translator.Translate (JsonTranslator)
+module Translate = Estree_translator.Translate (Hh_jsonTranslator)
 
 let run (dump_ast:bool) (json_errors:bool) (parse_options:Parser_env.parse_options option) (content:string) (spec:json) =
   try
@@ -171,8 +169,8 @@ let run (dump_ast:bool) (json_errors:bool) (parse_options:Parser_env.parse_optio
 
     let (ast, errors) = Parser_flow.program ~fail:false ~parse_options content in
     let json = match Translate.program ast with
-    | JAssoc params ->
-        JAssoc (("errors", Translate.errors errors)::params)
+    | JSON_Object params ->
+        JSON_Object (("errors", Translate.errors errors)::params)
     | _ -> assert false
     in
 

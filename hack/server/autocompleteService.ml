@@ -65,29 +65,31 @@ let is_auto_complete x =
 
 let autocomplete_result_to_json res =
   let func_param_to_json param =
-    Hh_json.JAssoc [ "name", Hh_json.JString param.param_name;
-                     "type", Hh_json.JString param.param_ty;
-                     "variadic", Hh_json.JBool param.param_variadic;
+    Hh_json.JSON_Object [ "name", Hh_json.JSON_String param.param_name;
+                     "type", Hh_json.JSON_String param.param_ty;
+                     "variadic", Hh_json.JSON_Bool param.param_variadic;
                    ]
   in
   let func_details_to_json details =
     match details with
-     | Some fd -> Hh_json.JAssoc [ "min_arity", Hh_json.JInt fd.min_arity;
-             "return_type", Hh_json.JString fd.return_ty;
-             "params", Hh_json.JList (List.map fd.params func_param_to_json);
-           ]
-     | None -> Hh_json.JNull
+     | Some fd -> Hh_json.JSON_Object [
+           "min_arity", Hh_json.int_ fd.min_arity;
+           "return_type", Hh_json.JSON_String fd.return_ty;
+           "params", Hh_json.JSON_Array (List.map fd.params func_param_to_json);
+       ]
+     | None -> Hh_json.JSON_Null
   in
   let name = res.res_name in
   let pos = res.res_pos in
   let ty = res.res_ty in
   let expected_ty = res.expected_ty in
-  Hh_json.JAssoc [ "name", Hh_json.JString name;
-           "type", Hh_json.JString ty;
-           "pos", Pos.json pos;
-           "func_details", func_details_to_json res.func_details;
-           "expected_ty", Hh_json.JBool expected_ty;
-         ]
+  Hh_json.JSON_Object [
+      "name", Hh_json.JSON_String name;
+      "type", Hh_json.JSON_String ty;
+      "pos", Pos.json pos;
+      "func_details", func_details_to_json res.func_details;
+      "expected_ty", Hh_json.JSON_Bool expected_ty;
+  ]
 
 let add_result name ty =
   autocomplete_results :=

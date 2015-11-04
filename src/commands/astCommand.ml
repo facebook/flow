@@ -34,27 +34,27 @@ let spec = {
   )
 }
 
-module JsonTranslator : (
+module Hh_jsonTranslator : (
   Estree_translator.Translator with type t = Hh_json.json
 ) = struct
   type t = Hh_json.json
 
   open Hh_json
 
-  let string x = JString x
-  let bool x = JBool x
-  let obj props = JAssoc (Array.to_list props)
-  let array arr = JList (Array.to_list arr)
-  let number x = JFloat x
-  let null = JNull
-  let regexp _loc _pattern _flags = JNull
+  let string x = JSON_String x
+  let bool x = JSON_Bool x
+  let obj props = JSON_Object (Array.to_list props)
+  let array arr = JSON_Array (Array.to_list arr)
+  let number x = JSON_Number (Utils.string_of_float_trunc x)
+  let null = JSON_Null
+  let regexp _loc _pattern _flags = JSON_Null
 end
 
 let get_file = function
   | Some filename -> ServerProt.FileName (CommandUtils.expand_path filename)
   | None -> ServerProt.FileContent (None, Sys_utils.read_stdin_to_string ())
 
-module Translate = Estree_translator.Translate (JsonTranslator)
+module Translate = Estree_translator.Translate (Hh_jsonTranslator)
 
 let token_to_json token_result = Loc.(Hh_json.(Parser_env.(
   let {
@@ -64,30 +64,30 @@ let token_to_json token_result = Loc.(Hh_json.(Parser_env.(
     token_value;
   } = token_result in
 
-  JAssoc [
-    ("type", JString (Lexer_flow.token_to_string token));
-    ("context", JString (
+  JSON_Object [
+    ("type", JSON_String (Lexer_flow.token_to_string token));
+    ("context", JSON_String (
       match token_context with
       | NORMAL_LEX -> "normal"
       | TYPE_LEX -> "type"
       | JSX_TAG -> "jsxTag"
       | JSX_CHILD -> "jsxChild"
     ));
-    ("loc", JAssoc [
-      ("start", JAssoc [
-        ("line", JInt loc.start.line);
-        ("column", JInt loc.start.column);
+    ("loc", JSON_Object [
+      ("start", JSON_Object [
+        ("line", int_ loc.start.line);
+        ("column", int_ loc.start.column);
       ]);
-      ("end", JAssoc [
-        ("line", JInt loc._end.line);
-        ("column", JInt loc._end.column);
+      ("end", JSON_Object [
+        ("line", int_ loc._end.line);
+        ("column", int_ loc._end.column);
       ]);
     ]);
-    ("range", JList [
-      JInt loc.start.offset;
-      JInt loc._end.offset;
+    ("range", JSON_Array [
+      int_ loc.start.offset;
+      int_ loc._end.offset;
     ]);
-    ("value", JString token_value);
+    ("value", JSON_String token_value);
   ]
 )))
 
@@ -121,13 +121,13 @@ let main include_tokens pretty from filename () =
         Parser_flow.program ~fail:false ~parse_options ~token_sink content
       in
       match Translate.program ocaml_ast with
-      | Hh_json.JAssoc params ->
+      | Hh_json.JSON_Object params ->
           let errors_prop = ("errors", Translate.errors errors) in
-          let tokens_prop = ("tokens", Hh_json.JList (List.rev !tokens)) in
-          Hh_json.JAssoc (errors_prop::tokens_prop::params)
+          let tokens_prop = ("tokens", Hh_json.JSON_Array (List.rev !tokens)) in
+          Hh_json.JSON_Object (errors_prop::tokens_prop::params)
       | _ -> assert false
     with Parse_error.Error l ->
-      Hh_json.JAssoc ["errors", Translate.errors l]
+      Hh_json.JSON_Object ["errors", Translate.errors l]
   in
 
   let json = if pretty

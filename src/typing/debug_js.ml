@@ -8,8 +8,6 @@
  *
  *)
 
-module Json = Hh_json
-
 open Reason_js
 open Type
 open Utils
@@ -46,18 +44,18 @@ type json_cx = {
 let check_depth continuation json_cx =
   let depth = json_cx.depth - 1 in
   if depth < 0
-  then fun _ -> Json.JNull
+  then fun _ -> Hh_json.JSON_Null
   else continuation { json_cx with depth; }
 
 let rec _json_of_t json_cx = check_depth _json_of_t_impl json_cx
-and _json_of_t_impl json_cx t = Json.(
-  JAssoc ([
+and _json_of_t_impl json_cx t = Hh_json.(
+  JSON_Object ([
     "reason", json_of_reason (reason_of_t t);
-    "kind", JString (string_of_ctor t)
+    "kind", JSON_String (string_of_ctor t)
   ] @
   match t with
   | OpenT (_, id) -> [
-      "id", JInt id
+      "id", int_ id
     ] @
     if ISet.mem id json_cx.stack then []
     else [
@@ -66,23 +64,23 @@ and _json_of_t_impl json_cx t = Json.(
 
   | NumT (_, lit) ->
     begin match lit with
-    | Literal (_, raw) -> ["literal", JString raw]
-    | Truthy -> ["refinement", JString "Truthy"]
-    | Falsy -> ["refinement", JString "Falsy"]
+    | Literal (_, raw) -> ["literal", JSON_String raw]
+    | Truthy -> ["refinement", JSON_String "Truthy"]
+    | Falsy -> ["refinement", JSON_String "Falsy"]
     | AnyLiteral -> []
     end
 
   | StrT (_, lit) ->
     begin match lit with
-    | Literal s -> ["literal", JString s]
-    | Truthy -> ["refinement", JString "Truthy"]
-    | Falsy -> ["refinement", JString "Falsy"]
+    | Literal s -> ["literal", JSON_String s]
+    | Truthy -> ["refinement", JSON_String "Truthy"]
+    | Falsy -> ["refinement", JSON_String "Falsy"]
     | AnyLiteral -> []
     end
 
   | BoolT (_, b) ->
     (match b with
-      | Some b -> ["literal", JBool b]
+      | Some b -> ["literal", JSON_Bool b]
       | None -> [])
 
   | UndefT _
@@ -104,7 +102,7 @@ and _json_of_t_impl json_cx t = Json.(
 
   | ArrT (_, elemt, tuplet) -> [
       "elemType", _json_of_t json_cx elemt;
-      "tupleType", JList (List.map (_json_of_t json_cx) tuplet)
+      "tupleType", JSON_Array (List.map (_json_of_t json_cx) tuplet)
     ]
 
   | ClassT t -> [
@@ -123,12 +121,12 @@ and _json_of_t_impl json_cx t = Json.(
     ]
 
   | PolyT (tparams, t) -> [
-      "typeParams", JList (List.map (json_of_typeparam json_cx) tparams);
+      "typeParams", JSON_Array (List.map (json_of_typeparam json_cx) tparams);
       "type", _json_of_t json_cx t
     ]
 
   | TypeAppT (t, targs) -> [
-      "typeArgs", JList (List.map (_json_of_t json_cx) targs);
+      "typeArgs", JSON_Array (List.map (_json_of_t json_cx) targs);
       "type", _json_of_t json_cx t
     ]
 
@@ -152,7 +150,7 @@ and _json_of_t_impl json_cx t = Json.(
 
   | IntersectionT (_, ts)
   | UnionT (_, ts) -> [
-      "types", JList (List.map (_json_of_t json_cx) ts)
+      "types", JSON_Array (List.map (_json_of_t json_cx) ts)
     ]
 
   | UpperBoundT t
@@ -178,15 +176,15 @@ and _json_of_t_impl json_cx t = Json.(
     ]
 
   | SingletonStrT (_, s) -> [
-      "literal", JString s
+      "literal", JSON_String s
     ]
 
   | SingletonNumT (_, (_, raw)) -> [
-      "literal", JString raw
+      "literal", JSON_String raw
     ]
 
   | SingletonBoolT (_, b) -> [
-      "literal", JBool b
+      "literal", JSON_Bool b
     ]
 
   | TypeT (_, t) -> [
@@ -212,7 +210,7 @@ and _json_of_t_impl json_cx t = Json.(
     let tmap = IMap.find_unsafe exports_tmap property_maps in
     let cjs_export = match cjs_export with
     | Some(t) -> _json_of_t json_cx t
-    | None -> JNull
+    | None -> JSON_Null
     in
     [
       "namedExports", json_of_tmap json_cx tmap;
@@ -250,7 +248,7 @@ and _json_of_t_impl json_cx t = Json.(
     ]
 
   | ConstructorT (_, tparams, t) -> [
-      "typeParams", JList (List.map (_json_of_t json_cx) tparams);
+      "typeParams", JSON_Array (List.map (_json_of_t json_cx) tparams);
       "type", _json_of_t json_cx t
     ]
 
@@ -296,8 +294,8 @@ and _json_of_t_impl json_cx t = Json.(
     ]
 
   | SpecializeT (_, cache, targs, tvar) -> [
-      "cache", JBool cache;
-      "types", JList (List.map (_json_of_t json_cx) targs);
+      "cache", JSON_Bool cache;
+      "types", JSON_Array (List.map (_json_of_t json_cx) targs);
       "tvar", _json_of_t json_cx tvar
     ]
 
@@ -306,15 +304,15 @@ and _json_of_t_impl json_cx t = Json.(
       | None -> []
       | Some r -> ["strictReason", json_of_reason r]
     ) @ [
-      "name", JString name;
+      "name", JSON_String name;
       "type", _json_of_t json_cx t
     ]
 
   | ObjAssignT (_, assignee, tvar, prop_names, flag) -> [
       "assigneeType", _json_of_t json_cx assignee;
       "resultType", _json_of_t json_cx tvar;
-      "propNames", JList (List.map (fun s -> JString s) prop_names);
-      "flag", JBool flag
+      "propNames", JSON_Array (List.map (fun s -> JSON_String s) prop_names);
+      "flag", JSON_Bool flag
     ]
 
   | ObjFreezeT (_, t) -> [
@@ -322,7 +320,7 @@ and _json_of_t_impl json_cx t = Json.(
     ]
 
   | ObjRestT (_, excludes, tvar) -> [
-      "excludedProps", JList (List.map (fun s -> JString s) excludes);
+      "excludedProps", JSON_Array (List.map (fun s -> JSON_String s) excludes);
       "resultType", _json_of_t json_cx tvar;
     ]
 
@@ -342,8 +340,8 @@ and _json_of_t_impl json_cx t = Json.(
 
   | ConcretizeT (l, todo_list, done_list, u) -> [
       "inType", _json_of_t json_cx l;
-      "todoTypes", JList (List.map (_json_of_t json_cx) todo_list);
-      "doneTypes", JList (List.map (_json_of_t json_cx) done_list);
+      "todoTypes", JSON_Array (List.map (_json_of_t json_cx) todo_list);
+      "doneTypes", JSON_Array (List.map (_json_of_t json_cx) done_list);
       "absType", _json_of_t json_cx u
     ]
 
@@ -353,7 +351,7 @@ and _json_of_t_impl json_cx t = Json.(
     ]
 
   | HasKeyT (_, key) -> [
-      "key", JString key
+      "key", JSON_String key
     ]
 
   | ElemT (_, base, elem) -> [
@@ -386,27 +384,27 @@ and _json_of_t_impl json_cx t = Json.(
 
 and json_of_polarity json_cx = check_depth json_of_polarity_impl json_cx
 and json_of_polarity_impl json_cx polarity =
-  Json.JString (match polarity with
+  Hh_json.JSON_String (match polarity with
   | Negative -> "Negative"
   | Neutral -> "Neutral"
   | Positive -> "Positive"
 )
 
 and json_of_typeparam json_cx = check_depth json_of_typeparam_impl json_cx
-and json_of_typeparam_impl json_cx tparam = Json.(
-  JAssoc [
+and json_of_typeparam_impl json_cx tparam = Hh_json.(
+  JSON_Object [
     "reason", json_of_reason tparam.reason;
-    "name", JString tparam.name;
+    "name", JSON_String tparam.name;
     "bound", _json_of_t json_cx tparam.bound;
     "polarity", json_of_polarity json_cx tparam.polarity;
   ]
 )
 
 and json_of_objtype json_cx = check_depth json_of_objtype_impl json_cx
-and json_of_objtype_impl json_cx objtype = Json.(
+and json_of_objtype_impl json_cx objtype = Hh_json.(
   let property_maps = Context.property_maps json_cx.cx in
   let tmap = IMap.find_unsafe objtype.props_tmap property_maps in
-  JAssoc ([
+  JSON_Object ([
     "flags", json_of_flags json_cx objtype.flags;
   ] @ (match objtype.dict_t with
     | None -> []
@@ -418,11 +416,11 @@ and json_of_objtype_impl json_cx objtype = Json.(
 )
 
 and json_of_dicttype json_cx = check_depth json_of_dicttype_impl json_cx
-and json_of_dicttype_impl json_cx dicttype = Json.(
-  JAssoc (
+and json_of_dicttype_impl json_cx dicttype = Hh_json.(
+  JSON_Object (
     (match dicttype.dict_name with
     | None -> []
-    | Some name -> ["name", JString name]
+    | Some name -> ["name", JSON_String name]
   ) @ [
     "keyType", _json_of_t json_cx dicttype.key;
     "valueType", _json_of_t json_cx dicttype.value
@@ -430,51 +428,51 @@ and json_of_dicttype_impl json_cx dicttype = Json.(
 )
 
 and json_of_flags json_cx = check_depth json_of_flags_impl json_cx
-and json_of_flags_impl json_cx flags = Json.(
-  JAssoc [
-    "frozen", JBool flags.frozen;
-    "sealed", JBool (match flags.sealed with
+and json_of_flags_impl json_cx flags = Hh_json.(
+  JSON_Object [
+    "frozen", JSON_Bool flags.frozen;
+    "sealed", JSON_Bool (match flags.sealed with
       | Sealed -> true
       | UnsealedInFile _ -> false);
-    "exact", JBool flags.exact;
+    "exact", JSON_Bool flags.exact;
   ]
 )
 
 and json_of_changeset json_cx = check_depth json_of_changeset_impl json_cx
-and json_of_changeset_impl json_cx = Json.(
+and json_of_changeset_impl json_cx = Hh_json.(
 
   let json_of_entry_ref (scope_id, name, op) =
-    JAssoc [
-      "scope_id", JInt scope_id;
-      "name", JString name;
-      "op", JString (Changeset.string_of_op op)
+    JSON_Object [
+      "scope_id", int_ scope_id;
+      "name", JSON_String name;
+      "op", JSON_String (Changeset.string_of_op op)
     ]
   in
 
   let json_of_changed_vars changed_vars =
-    JList (List.rev (Changeset.EntryRefSet.fold
+    JSON_Array (List.rev (Changeset.EntryRefSet.fold
       (fun entry_ref acc -> json_of_entry_ref entry_ref :: acc)
       changed_vars []
     ))
   in
 
   let json_of_refi_ref (scope_id, key, op) =
-    JAssoc [
-      "scope_id", JInt scope_id;
-      "key", JString (Key.string_of_key key);
-      "op", JString (Changeset.string_of_op op)
+    JSON_Object [
+      "scope_id", int_ scope_id;
+      "key", JSON_String (Key.string_of_key key);
+      "op", JSON_String (Changeset.string_of_op op)
     ]
   in
 
   let json_of_changed_refis changed_refis =
-    JList (List.rev (Changeset.RefiRefSet.fold
+    JSON_Array (List.rev (Changeset.RefiRefSet.fold
       (fun refi_ref acc -> json_of_refi_ref refi_ref :: acc)
       changed_refis []
     ))
   in
 
   fun (changed_vars, changed_refis) ->
-    JAssoc [
+    JSON_Object [
       "vars", json_of_changed_vars changed_vars;
       "refis", json_of_changed_refis changed_refis
     ]
@@ -488,69 +486,69 @@ and json_of_funtype_impl json_cx {
   return_t;
   closure_t;
   changeset
-} = Json.(
-  JAssoc ([
+} = Hh_json.(
+  JSON_Object ([
     "thisType", _json_of_t json_cx this_t;
-    "paramTypes", JList (List.map (_json_of_t json_cx) params_tlist)
+    "paramTypes", JSON_Array (List.map (_json_of_t json_cx) params_tlist)
   ] @ (match params_names with
     | None -> []
-    | Some names -> ["paramNames", JList (List.map (fun s -> JString s) names)]
+    | Some names -> ["paramNames", JSON_Array (List.map (fun s -> JSON_String s) names)]
   ) @ [
     "returnType", _json_of_t json_cx return_t;
-    "closureIndex", JInt closure_t;
+    "closureIndex", int_ closure_t;
     "changeset", json_of_changeset json_cx changeset
   ])
 )
 
 and json_of_insttype json_cx = check_depth json_of_insttype_impl json_cx
-and json_of_insttype_impl json_cx insttype = Json.(
+and json_of_insttype_impl json_cx insttype = Hh_json.(
   let property_maps = Context.property_maps json_cx.cx in
   let field_tmap = IMap.find_unsafe insttype.fields_tmap property_maps in
   let method_tmap = IMap.find_unsafe insttype.methods_tmap property_maps in
-  JAssoc [
-    "classId", JInt insttype.class_id;
+  JSON_Object [
+    "classId", int_ insttype.class_id;
     "typeArgs", json_of_tmap json_cx insttype.type_args;
     "argPolarities", json_of_polarity_map json_cx insttype.arg_polarities;
     "fieldTypes", json_of_tmap json_cx field_tmap;
     "methodTypes", json_of_tmap json_cx method_tmap;
-    "mixins", JBool insttype.mixins;
-    "structural", JBool insttype.structural;
+    "mixins", JSON_Bool insttype.mixins;
+    "structural", JSON_Bool insttype.structural;
   ]
 )
 
 and json_of_polarity_map json_cx = check_depth json_of_polarity_map_impl json_cx
-and json_of_polarity_map_impl json_cx pmap = Json.(
+and json_of_polarity_map_impl json_cx pmap = Hh_json.(
   let lst = SMap.fold (fun name pol acc ->
-    JAssoc ["name", JString name; "polarity", json_of_polarity json_cx pol] :: acc
+    JSON_Object ["name", JSON_String name; "polarity", json_of_polarity json_cx pol] :: acc
   ) pmap [] in
-  JList (List.rev lst)
+  JSON_Array (List.rev lst)
 )
 
 and json_of_propname json_cx = check_depth json_of_propname_impl json_cx
-and json_of_propname_impl json_cx (reason, literal) = Json.(
-  JAssoc [
+and json_of_propname_impl json_cx (reason, literal) = Hh_json.(
+  JSON_Object [
     "reason", json_of_reason reason;
-    "literal", JString literal;
+    "literal", JSON_String literal;
   ]
 )
 
 and json_of_tmap json_cx = check_depth json_of_tmap_impl json_cx
-and json_of_tmap_impl json_cx bindings = Json.(
+and json_of_tmap_impl json_cx bindings = Hh_json.(
   let lst = SMap.fold (fun name t acc ->
     json_of_type_binding json_cx (name, t) :: acc
   ) bindings [] in
-  JList (List.rev lst)
+  JSON_Array (List.rev lst)
 )
 
 and json_of_type_binding json_cx = check_depth json_of_type_binding_impl json_cx
-and json_of_type_binding_impl json_cx (name, t) = Json.(
-  JAssoc ["name", JString name; "type", _json_of_t json_cx t]
+and json_of_type_binding_impl json_cx (name, t) = Hh_json.(
+  JSON_Object ["name", JSON_String name; "type", _json_of_t json_cx t]
 )
 
 and json_of_pred json_cx = check_depth json_of_pred_impl json_cx
-and json_of_pred_impl json_cx p = Json.(
-  JAssoc ([
-    "kind", JString (string_of_pred_ctor p)
+and json_of_pred_impl json_cx p = Hh_json.(
+  JSON_Object ([
+    "kind", JSON_String (string_of_pred_ctor p)
   ] @
   match p with
   | AndP (l, r)
@@ -580,54 +578,54 @@ and json_of_pred_impl json_cx p = Json.(
 ))
 
 and json_of_binary_test json_cx = check_depth json_of_binary_test_impl json_cx
-and json_of_binary_test_impl json_cx b = Json.(
-  JAssoc ([
-    "kind", JString (string_of_binary_test_ctor b)
+and json_of_binary_test_impl json_cx b = Hh_json.(
+  JSON_Object ([
+    "kind", JSON_String (string_of_binary_test_ctor b)
   ] @
   match b with
   | Instanceof -> []
-  | SentinelProp s -> ["key", JString s]
+  | SentinelProp s -> ["key", JSON_String s]
 ))
 
 and json_of_node json_cx = check_depth json_of_node_impl json_cx
-and json_of_node_impl json_cx id = Json.(
-  JAssoc (
+and json_of_node_impl json_cx id = Hh_json.(
+  JSON_Object (
     let json_cx = { json_cx with stack = ISet.add id json_cx.stack } in
     match IMap.find_unsafe id (Context.graph json_cx.cx) with
     | Constraint_js.Goto id ->
-      ["kind", JString "Goto"]
-      @ ["id", JInt id]
+      ["kind", JSON_String "Goto"]
+      @ ["id", int_ id]
     | Constraint_js.Root root ->
-      ["kind", JString "Root"]
+      ["kind", JSON_String "Root"]
       @ ["root", json_of_root json_cx root]
   )
 )
 
 and json_of_root json_cx = check_depth json_of_root_impl json_cx
-and json_of_root_impl json_cx root = Json.(Constraint_js.(
-  JAssoc ([
-    "rank", JInt root.rank;
+and json_of_root_impl json_cx root = Hh_json.(Constraint_js.(
+  JSON_Object ([
+    "rank", int_ root.rank;
     "constraints", json_of_constraints json_cx root.constraints
   ])
 ))
 
 and json_of_constraints json_cx = check_depth json_of_constraints_impl json_cx
-and json_of_constraints_impl json_cx constraints = Json.(
-  JAssoc (
+and json_of_constraints_impl json_cx constraints = Hh_json.(
+  JSON_Object (
     match constraints with
     | Constraint_js.Resolved t ->
-      ["kind", JString "Resolved"]
+      ["kind", JSON_String "Resolved"]
       @ ["type", _json_of_t json_cx t]
     | Constraint_js.Unresolved bounds ->
-      ["kind", JString "Unresolved"]
+      ["kind", JSON_String "Unresolved"]
       @ ["bounds", json_of_bounds json_cx bounds]
   )
 )
 
 and json_of_bounds json_cx = check_depth json_of_bounds_impl json_cx
-and json_of_bounds_impl json_cx bounds = Json.(
+and json_of_bounds_impl json_cx bounds = Hh_json.(
   match bounds with
-  | { Constraint_js.lower; upper; lowertvars; uppertvars; } -> JAssoc ([
+  | { Constraint_js.lower; upper; lowertvars; uppertvars; } -> JSON_Object ([
       "lower", json_of_tkeys json_cx lower;
       "upper", json_of_tkeys json_cx upper;
       "lowertvars", json_of_tvarkeys json_cx lowertvars;
@@ -636,13 +634,13 @@ and json_of_bounds_impl json_cx bounds = Json.(
 )
 
 and json_of_tkeys json_cx = check_depth json_of_tkeys_impl json_cx
-and json_of_tkeys_impl json_cx tmap = Json.(
-  JList (TypeMap.fold (fun t _ acc -> _json_of_t json_cx t :: acc) tmap [])
+and json_of_tkeys_impl json_cx tmap = Hh_json.(
+  JSON_Array (TypeMap.fold (fun t _ acc -> _json_of_t json_cx t :: acc) tmap [])
 )
 
 and json_of_tvarkeys json_cx = check_depth json_of_tvarkeys_impl json_cx
-and json_of_tvarkeys_impl json_cx imap = Json.(
-  JList (IMap.fold (fun i _ acc -> JInt i :: acc) imap [])
+and json_of_tvarkeys_impl json_cx imap = Hh_json.(
+  JSON_Array (IMap.fold (fun i _ acc -> ((int_ i) :: acc)) imap [])
 )
 
 let json_of_t ?(depth=1000) cx t =
@@ -650,18 +648,18 @@ let json_of_t ?(depth=1000) cx t =
   _json_of_t json_cx t
 
 let jstr_of_t ?(depth=1000) cx t =
-  Json.json_to_multiline (json_of_t ~depth cx t)
+  Hh_json.json_to_multiline (json_of_t ~depth cx t)
 
-let json_of_graph ?(depth=1000) cx = Json.(
+let json_of_graph ?(depth=1000) cx = Hh_json.(
   let entries = IMap.fold (fun id _ entries ->
     let json_cx = { cx; depth; stack = ISet.empty; } in
     (spf "%d" id, json_of_node json_cx id) :: entries
   ) (Context.graph cx) [] in
-  JAssoc (List.rev entries)
+  JSON_Object (List.rev entries)
 )
 
 let jstr_of_graph ?(depth=1000) cx =
-  Json.json_to_multiline (json_of_graph ~depth cx)
+  Hh_json.json_to_multiline (json_of_graph ~depth cx)
 
 
 (* scopes *)
@@ -672,10 +670,10 @@ let json_of_scope = Scope.(
   let json_of_value_impl json_cx {
     Entry.kind; value_state; value_loc; specific; general
   } =
-    JAssoc [
-      "entry_type", JString "Value";
-      "kind", JString (Entry.string_of_value_kind kind);
-      "value_state", JString (Entry.string_of_state value_state);
+    JSON_Object [
+      "entry_type", JSON_String "Value";
+      "kind", JSON_String (Entry.string_of_value_kind kind);
+      "value_state", JSON_String (Entry.string_of_state value_state);
       "value_loc", json_of_loc value_loc;
       "specific", _json_of_t json_cx specific;
       "general", _json_of_t json_cx general;
@@ -684,9 +682,9 @@ let json_of_scope = Scope.(
   let json_of_value json_cx = check_depth json_of_value_impl json_cx in
 
   let json_of_type_impl json_cx { Entry.type_state; type_loc; _type } =
-    JAssoc [
-      "entry_type", JString "Type";
-      "type_state", JString (Entry.string_of_state type_state);
+    JSON_Object [
+      "entry_type", JSON_String "Type";
+      "type_state", JSON_String (Entry.string_of_state type_state);
       "type_loc", json_of_loc type_loc;
       "_type", _json_of_t json_cx _type;
     ]
@@ -705,12 +703,12 @@ let json_of_scope = Scope.(
     ) entries []
     |> List.rev
     in
-    JAssoc props
+    JSON_Object props
   in
   let json_of_entries json_cx = check_depth json_of_entries_impl json_cx in
 
   let json_of_refi_impl json_cx { refi_loc; refined; original } =
-    JAssoc [
+    JSON_Object [
       "refi_loc", json_of_loc refi_loc;
       "refined", _json_of_t json_cx refined;
       "original", _json_of_t json_cx original;
@@ -724,21 +722,21 @@ let json_of_scope = Scope.(
     ) refis []
     |> List.rev
     in
-    JAssoc props
+    JSON_Object props
   in
   let json_of_refis json_cx = check_depth json_of_refis_impl json_cx in
 
   fun ?(depth=1000) cx scope ->
     let json_cx = { cx; depth; stack = ISet.empty; } in
-    JAssoc [
-      "kind", JString (string_of_kind scope.kind);
+    JSON_Object [
+      "kind", JSON_String (string_of_kind scope.kind);
       "entries", json_of_entries json_cx scope.entries;
       "refis", json_of_refis json_cx scope.refis;
     ]
 )
 
 let json_of_env ?(depth=1000) cx env =
-  Json.JList (List.map (json_of_scope ~depth cx) env)
+  Hh_json.JSON_Array (List.map (json_of_scope ~depth cx) env)
 
 (*****************************************************************)
 

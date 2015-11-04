@@ -80,8 +80,6 @@ let parse_args = function
       CommandSpec.usage spec;
       FlowExitStatus.(exit Commandline_usage_error)
 
-module Json = Hh_json
-
 let main option_values root json strip_root args () =
   let file = parse_args args in
   let root = guess_root (
@@ -104,7 +102,7 @@ let main option_values root json strip_root args () =
         (AutocompleteService_js.autocomplete_result_to_json loc_preprocessor)
         completions
     in
-    print_endline (Json.json_to_string (Json.JList results))
+    print_endline (Hh_json.json_to_string (Hh_json.JSON_Array results))
   ) else (
     List.iter (fun res ->
       let name = res.AutocompleteService_js.res_name in

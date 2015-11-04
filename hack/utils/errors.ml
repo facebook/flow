@@ -1840,19 +1840,19 @@ let to_absolute (code, msg_l) =
 (* Printing *)
 (*****************************************************************************)
 
-let to_json ((error_code, msgl) : Pos.absolute error_) = Hh_json.(
+let to_json ((error_code, msgl) : Pos.absolute error_) =
   let elts = List.map msgl begin fun (p, w) ->
     let line, scol, ecol = Pos.info_pos p in
-    JAssoc [ "descr", JString w;
-             "path",  JString (Pos.filename p);
-             "line",  JInt line;
-             "start", JInt scol;
-             "end",   JInt ecol;
-             "code",  JInt error_code
-           ]
+    Hh_json.JSON_Object [
+        "descr", Hh_json.JSON_String w;
+        "path",  Hh_json.JSON_String (Pos.filename p);
+        "line",  Hh_json.int_ line;
+        "start", Hh_json.int_ scol;
+        "end",   Hh_json.int_ ecol;
+        "code",  Hh_json.int_ error_code
+    ]
   end in
-  JAssoc [ "message", JList elts ]
-)
+  Hh_json.JSON_Object [ "message", Hh_json.JSON_Array elts ]
 
 let to_string ((error_code, msgl) : Pos.absolute error_) : string =
   let buf = Buffer.create 50 in

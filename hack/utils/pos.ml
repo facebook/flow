@@ -53,11 +53,11 @@ let string t =
 let json pos =
   let line, start, end_ = info_pos pos in
   let fn = filename pos in
-  Hh_json.JAssoc [
-    "filename",   Hh_json.JString fn;
-    "line",       Hh_json.JInt line;
-    "char_start", Hh_json.JInt start;
-    "char_end",   Hh_json.JInt end_;
+  Hh_json.JSON_Object [
+    "filename",   Hh_json.JSON_String fn;
+    "line",       Hh_json.int_ line;
+    "char_start", Hh_json.int_ start;
+    "char_end",   Hh_json.int_ end_;
   ]
 
 let inside p line char_pos =

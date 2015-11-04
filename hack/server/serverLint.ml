@@ -12,7 +12,6 @@ open Core
 open ServerEnv
 open Utils
 
-module Json = Hh_json
 module RP = Relative_path
 
 type result = string Lint.t list
@@ -20,10 +19,11 @@ type result = string Lint.t list
 let output_json oc el =
   let errors_json = List.map el Lint.to_json in
   let res =
-    Json.JAssoc [ "errors", Json.JList errors_json;
-                  "version", Json.JString Build_id.build_id_ohai;
-                ] in
-  output_string oc (Json.json_to_string res);
+    Hh_json.JSON_Object [
+        "errors", Hh_json.JSON_Array errors_json;
+        "version", Hh_json.JSON_String Build_id.build_id_ohai;
+    ] in
+  output_string oc (Hh_json.json_to_string res);
   flush stderr
 
 let output_text oc el =

@@ -42,33 +42,33 @@ type env = {
 (* Some JSON processing helpers *)
 module J = struct
   let try_get_val key json =
-    let obj = Json.get_object_exn json in
+    let obj = Hh_json.get_object_exn json in
     List.Assoc.find obj key
 
   let get_string_val key ?default json =
     let v = try_get_val key json in
     match v, default with
-    | Some v, _ -> Json.get_string_exn v
+    | Some v, _ -> Hh_json.get_string_exn v
     | None, Some def -> def
     | None, None -> raise Not_found
 
   let get_array_val key ?default json =
     let v = try_get_val key json in
     match v, default with
-    | Some v, _ -> Json.get_array_exn v
+    | Some v, _ -> Hh_json.get_array_exn v
     | None, Some def -> def
     | None, None -> raise Not_found
 
   let strlist args =
-    Json.JSON_Array begin
-      List.map args (fun arg -> Json.JSON_String arg)
+    Hh_json.JSON_Array begin
+      List.map args (fun arg -> Hh_json.JSON_String arg)
     end
 
   (* Prepend a string to a JSON array of strings. pred stands for predicate,
    * because that's how they are typically represented in watchman. See e.g.
    * https://facebook.github.io/watchman/docs/expr/allof.html *)
   let pred name args =
-    let open Json in
+    let open Hh_json in
     JSON_Array (JSON_String name :: args)
 end
 
@@ -94,11 +94,11 @@ let clock root = J.strlist ["clock"; root]
 
 let base_query
     ?(extra_kv=[]) ?(extra_expressions=[]) ?(sync_timeout=300_000) env =
-  let open Json in
+  let open Hh_json in
   JSON_Array begin
     [JSON_String "query"; JSON_String env.watch_root] @ [
       JSON_Object (extra_kv @ [
-        "sync_timeout", Json.int_ sync_timeout;
+        "sync_timeout", Hh_json.int_ sync_timeout;
         "fields", J.strlist ["name"];
         "relative_root", JSON_String env.relative_path;
         "expression", J.pred "allof" @@ (extra_expressions @ [
@@ -115,16 +115,16 @@ let base_query
     ]
   end
 
-let query env = base_query ~extra_expressions:([Json.JSON_String "exists"]) env
+let query env = base_query ~extra_expressions:([Hh_json.JSON_String "exists"]) env
 
 let since env =
-  base_query ~extra_kv:["since", Json.JSON_String env.clockspec] env
+  base_query ~extra_kv:["since", Hh_json.JSON_String env.clockspec] env
 
 let watch_project root = J.strlist ["watch-project"; root]
 
 (* See https://facebook.github.io/watchman/docs/cmd/version.html *)
 let capability_check ?(optional=[]) required =
-  let open Json in
+  let open Hh_json in
   JSON_Array begin
     [JSON_String "version"] @ [
       JSON_Object [
@@ -144,7 +144,7 @@ let read_with_timeout timeout ic =
 
 let exec ?(timeout=120) sockname json =
   let ic, oc = Unix.(open_connection (ADDR_UNIX sockname)) in
-  let json_str = Json.(json_to_string json) in
+  let json_str = Hh_json.(json_to_string json) in
   if debug then Printf.eprintf "Watchman query: %s\n%!" json_str;
   output_string oc json_str;
   output_string oc "\n";
@@ -153,7 +153,7 @@ let exec ?(timeout=120) sockname json =
   close_in ic;
   if debug then Printf.eprintf "Watchman response: %s\n%!" output;
   let response =
-    try Json.json_of_string output
+    try Hh_json.json_of_string output
     with e ->
       Printf.eprintf "Failed to parse string as JSON: %s\n%!" output;
       raise e
@@ -164,7 +164,7 @@ let exec ?(timeout=120) sockname json =
 let extract_file_names env json =
   let files = J.get_array_val "files" json in
   let files = List.map files begin fun json ->
-    let s = Json.get_string_exn json in
+    let s = Hh_json.get_string_exn json in
     let abs =
       Filename.concat env.watch_root @@
       Filename.concat env.relative_path s in
@@ -187,7 +187,7 @@ let get_sockname timeout =
   let ic = Unix.open_process_in "watchman get-sockname --no-pretty" in
   let output = read_with_timeout timeout ic in
   assert (Unix.close_process_in ic = Unix.WEXITED 0);
-  let json = Json.json_of_string output in
+  let json = Hh_json.json_of_string output in
   J.get_string_val "sockname" json
 
 let init timeout root =
