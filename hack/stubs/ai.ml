@@ -29,6 +29,7 @@ module InfoService = struct
 
   type throws = {
     thrower: string; (* the name of a function or method that throws/leaks *)
+    filename: string; (* location of the function or method *)
     exceptions: string list; (* names of types of thrown exceptions *)
   }
 

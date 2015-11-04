@@ -34,6 +34,7 @@ let throws_to_json throws_results =
   List.rev_map throws_results (fun item ->
     JAssoc [
       "thrower", JString item.thrower;
+      "filename", JString item.filename;
       "exceptions", JList (List.map item.exceptions (fun e -> JString e));
     ]
   )
