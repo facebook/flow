@@ -170,6 +170,27 @@ let mk_module_t cx reason = ModuleT(
   }
 )
 
+(**
+ * When CommonJS modules set their export type, we do two things:
+ *
+ * (1) Set the type in the cjs_export slot of the ModuleT container
+ *
+ * (2) If the type is an object, mark it's properties as named exports, via
+ *     CJSExtractNamedExportsT. (this is for convenience as part of our
+ *     ES <-> CJS module interop semantics)
+ *)
+let mk_commonjs_module_t cx reason_exports_module reason export_t =
+  let module_t = ModuleT (reason_exports_module, {
+    exports_tmap = Flow_js.mk_propmap cx SMap.empty;
+    cjs_export = Some export_t;
+  }) in
+  Flow_js.mk_tvar_where cx reason (fun t ->
+    Flow_js.flow cx (
+      export_t,
+      CJSExtractNamedExportsT(reason, module_t, t)
+    )
+  )
+
 (* given a module name, return associated tvar if already
  * present in module map, or create and add *)
 let get_module_t cx m reason =
@@ -198,23 +219,6 @@ let import_ns cx reason module_name loc =
       get_module_t cx module_ (mk_reason module_name loc),
       ImportModuleNsT(reason, t)
     )
-  )
-
-(**
- * When CommonJS modules set their export type, we do two things:
- *
- * (1) If the type is an object, mark it's properties as named exports.
- *     (this is for convenience as part of our ES <-> CJS module interop
- *      semantics)
- *
- * (2) Set the type in the cjs_export slot of the ModuleT container
- *)
-let merge_commonjs_export cx reason module_t export_t =
-  let module_t = Flow_js.mk_tvar_where cx reason (fun t ->
-    Flow_js.flow cx (export_t, CJSExtractNamedExportsT(reason, module_t, t))
-  ) in
-  Flow_js.mk_tvar_where cx reason (fun t ->
-    Flow_js.flow cx (module_t, SetCJSExportT(reason, export_t, t))
   )
 
 let exports cx m =
@@ -2654,8 +2658,7 @@ and statement cx type_params_map = Ast.Statement.(
         for_types,
         Flow_js.mk_object_with_map_proto cx reason map (MixedT reason)
       )) in
-    let module_t = mk_module_t cx reason in
-    let module_t = merge_commonjs_export cx reason module_t exports_ in
+    let module_t = mk_commonjs_module_t cx reason reason exports_ in
     Flow_js.unify cx module_t t;
     Flow_js.flow cx (
       module_t,
@@ -6429,21 +6432,20 @@ let infer_ast ?(gc=true) ~metadata ~filename ~module_name ast =
   );
 
   if checked then (
-    let module_t = mk_module_t cx reason_exports_module in
     let module_t = Context.(
       match Context.module_exports_type cx with
       (* CommonJS with a clobbered module.exports *)
       | CommonJSModule(Some(loc)) ->
         let module_exports_t = get_module_exports cx reason in
         let reason = mk_reason "exports" loc in
-        merge_commonjs_export cx reason module_t module_exports_t
+        mk_commonjs_module_t cx reason_exports_module reason module_exports_t
 
       (* CommonJS with a mutated 'exports' object *)
       | CommonJSModule(None) ->
-        merge_commonjs_export cx reason module_t local_exports_var
+        mk_commonjs_module_t cx reason_exports_module reason local_exports_var
 
       (* Uses standard ES module exports *)
-      | ESModule -> module_t
+      | ESModule -> mk_module_t cx reason_exports_module
     ) in
     Flow_js.flow cx (module_t, exports cx module_name);
   ) else (

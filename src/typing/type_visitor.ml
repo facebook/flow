@@ -158,7 +158,6 @@ class ['a] t = object(self)
   | ImportTypeT (_, _)
   | ImportTypeofT (_, _)
   | CJSExtractNamedExportsT (_, _, _)
-  | SetCJSExportT (_, _, _)
   | SetNamedExportsT (_, _, _)
     -> self#__TODO__ cx acc
 

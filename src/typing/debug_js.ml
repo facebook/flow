@@ -376,10 +376,6 @@ and _json_of_t_impl json_cx t = Hh_json.(
       "tmap", json_of_tmap json_cx tmap;
       "t_out", _json_of_t json_cx t_out;
     ]
-  | SetCJSExportT (_, t, t_out) -> [
-      "cjsExportType", _json_of_t json_cx t;
-      "t_out", _json_of_t json_cx t_out;
-    ]
 ))
 
 and json_of_polarity json_cx = check_depth json_of_polarity_impl json_cx

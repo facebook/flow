@@ -1649,18 +1649,6 @@ let rec __flow cx (l, u) trace =
       SMap.iter (write_prop cx exports.exports_tmap) tmap;
       rec_flow cx trace (l, t_out)
 
-    (* CommonJS export *)
-    | (ModuleT(_, exports), SetCJSExportT(reason, t, t_out)) ->
-      (match exports.cjs_export with
-       | Some _ ->
-          assert_false "Internal Error: SetCJSExportT was applied twice!"
-       | None ->
-          rec_flow cx trace (
-            ModuleT(reason, {exports with cjs_export = Some(t)}),
-            t_out
-          )
-      )
-
     (**
      * ObjT CommonJS export values have their properties turned into named
      * exports
@@ -1674,14 +1662,11 @@ let rec __flow cx (l, u) trace =
       ) in
 
       (* Copy own props *)
-      let module_t = mk_tvar_where cx reason (fun t ->
-        rec_flow cx trace (module_t, SetNamedExportsT(
-          reason,
-          find_props cx props_tmap,
-          t
-        ))
-      ) in
-      rec_flow cx trace (module_t, t_out)
+      rec_flow cx trace (module_t, SetNamedExportsT(
+        reason,
+        find_props cx props_tmap,
+        t_out
+      ))
 
     (**
      * InstanceT CommonJS export values have their properties turned into named
@@ -1700,14 +1685,11 @@ let rec __flow cx (l, u) trace =
       ) in
 
       (* Copy methods *)
-      let module_t = mk_tvar_where cx reason (fun t ->
-        rec_flow cx trace (module_t, SetNamedExportsT(
-          reason,
-          find_props cx methods_tmap,
-          t
-        ))
-      ) in
-      rec_flow cx trace (module_t, t_out)
+      rec_flow cx trace (module_t, SetNamedExportsT(
+        reason,
+        find_props cx methods_tmap,
+        t_out
+      ))
 
     (**
      * All other CommonJS export value types do not get merged into the named
@@ -5623,10 +5605,6 @@ let rec gc cx state = function
       gc cx state t
 
   | CJSExtractNamedExportsT (_, t, t_out) ->
-      gc cx state t;
-      gc cx state t_out
-
-  | SetCJSExportT (_, t, t_out) ->
       gc cx state t;
       gc cx state t_out
 
