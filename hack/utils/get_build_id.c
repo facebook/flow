@@ -7,6 +7,8 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  */
+#define _XOPEN_SOURCE
+
 #define CAML_NAME_SPACE
 #include <caml/memory.h>
 #include <caml/alloc.h>
@@ -14,7 +16,6 @@
 #include <assert.h>
 #include <string.h>
 
-#define __USE_XOPEN
 #include <time.h>
 
 extern const char* const BuildInfo_kRevision;
