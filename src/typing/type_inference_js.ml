@@ -606,8 +606,9 @@ let are_getters_and_setters_enabled () = FlowConfig.(Opts.(
 let warn_or_ignore_decorators cx decorators_list = FlowConfig.(Opts.(
   if decorators_list = [] then () else
   match (get_unsafe ()).options.esproposal_decorators with
-  | EXPERIMENTAL_IGNORE -> ()
-  | EXPERIMENTAL_WARN ->
+  | ESPROPOSAL_ENABLE -> failwith "Decorators cannot be enabled!"
+  | ESPROPOSAL_IGNORE -> ()
+  | ESPROPOSAL_WARN ->
       let first_loc = fst (List.hd decorators_list) in
       let last_loc =
         fst (List.nth decorators_list ((List.length decorators_list) - 1))
@@ -5505,7 +5506,7 @@ and mk_class_signature cx reason_c type_params_map superClass body = Ast.Class.(
         (match value with
           | None -> ()
           | Some value -> FlowConfig.(Opts.(
-            let opts = (get_unsafe ()).options in
+            let opts = (FlowConfig.get_unsafe ()).options in
             let (config_setting, reason_subject) =
               if static then
                 (opts.esproposal_class_static_fields, "class static field")
@@ -5513,8 +5514,9 @@ and mk_class_signature cx reason_c type_params_map superClass body = Ast.Class.(
                 (opts.esproposal_class_instance_fields, "class instance field")
             in
             match config_setting with
-            | EXPERIMENTAL_IGNORE -> ()
-            | EXPERIMENTAL_WARN ->
+            | ESPROPOSAL_ENABLE
+            | ESPROPOSAL_IGNORE -> ()
+            | ESPROPOSAL_WARN ->
                 let reason =
                   mk_reason (spf "Experimental %s usage" reason_subject) loc
                 in
@@ -5581,9 +5583,13 @@ and mk_class_signature cx reason_c type_params_map superClass body = Ast.Class.(
   ) (static_sig, inst_sig) elements
 )
 
-(* Processes the bodies of instance and static methods. *)
-and mk_class_elements cx instance_info static_info body = Ast.Class.(
+(* Processes the bodies of instance and static class members (methods/fields). *)
+and mk_class_elements cx instance_info static_info tparams body = Ast.Class.(
   let _, { Body.body = elements } = body in
+  let (opt_static_fields, opt_inst_fields) = FlowConfig.(Opts.(
+    let opts = (FlowConfig.get_unsafe ()).options in
+    (opts.esproposal_class_static_fields, opts.esproposal_class_instance_fields)
+  )) in
   List.iter (function
     | Body.Method (loc, {
         Method.key = Ast.Expression.Object.Property.Identifier (_,
@@ -5605,7 +5611,8 @@ and mk_class_elements cx instance_info static_info body = Ast.Class.(
       | Method.Constructor
       | Method.Method -> class_sig.sig_methods
       | Method.Get -> class_sig.sig_getters
-      | Method.Set -> class_sig.sig_setters in
+      | Method.Set -> class_sig.sig_setters
+      in
 
       let {
         meth_reason;
@@ -5641,6 +5648,52 @@ and mk_class_elements cx instance_info static_info body = Ast.Class.(
       );
       ignore Abnormal.(swap Return save_return_exn);
       ignore Abnormal.(swap Throw save_throw_exn)
+
+    | Body.Property (loc, {
+        Property.key = Ast.Expression.Object.Property.Identifier (_,
+          { Ast.Identifier.name; _ });
+        value;
+        static;
+        _;
+      }) -> (
+        match value with
+        | None -> ()
+        | Some value ->
+          let this, super, class_sig =
+            if static then static_info else instance_info
+          in
+
+          let config_opt =
+            if static then opt_static_fields else opt_inst_fields
+          in
+
+          if config_opt <> FlowConfig.Opts.ESPROPOSAL_IGNORE then (
+            (* determine if we are in a derived class *)
+            let derived_ctor = match super with
+              | ClassT (MixedT _) -> false
+              | MixedT _ -> false
+              | _ -> name = "constructor"
+            in
+
+            (* Infer the initializer in a function-like scope *)
+            let orig_ctx = Env_js.peek_env () in
+            let new_ctx = Env_js.clone_env orig_ctx in
+            let reason = mk_reason (spf "field initializer for `%s`" name) loc in
+            Env_js.update_env cx reason new_ctx;
+            Env_js.havoc_all ();
+
+            let initializer_scope = Scope.fresh () in
+            initialize_this_super derived_ctor this super initializer_scope;
+            Env_js.push_var_scope cx initializer_scope;
+
+            let init_t = expression cx tparams value in
+            let field_t = SMap.find_unsafe name class_sig.sig_fields in
+            Flow_js.flow cx (init_t, field_t);
+
+            Env_js.pop_var_scope ();
+            Env_js.update_env cx reason orig_ctx
+          );
+      )
 
     | _ -> ()
   ) elements
@@ -5825,6 +5878,7 @@ and mk_class = Ast.Class.(
     mk_class_elements cx
       (this, super, inst_sig_substituted)
       (ClassT this, super_static, static_sig_substituted)
+      map_
       body;
   );
 

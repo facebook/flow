@@ -1,0 +1,218 @@
+
+base_class.js:9:46,51: string
+This type is incompatible with
+base_class.js:9:37,42: number
+
+base_class.js:16:53,58: string
+This type is incompatible with
+base_class.js:16:44,49: number
+
+base_class.js:33:2,17: number
+This type is incompatible with
+base_class.js:33:20,25: string
+
+base_class.js:35:2,20: number
+This type is incompatible with
+base_class.js:35:23,28: string
+
+base_class.js:41:2,19: number
+This type is incompatible with
+base_class.js:41:22,27: string
+
+base_class.js:43:2,22: string
+This type is incompatible with
+base_class.js:43:25,30: number
+
+base_class.js:49:2,27: number
+This type is incompatible with
+base_class.js:49:30,35: string
+
+base_class.js:51:2,30: string
+This type is incompatible with
+base_class.js:51:33,38: number
+
+base_class.js:59:2,33: null
+This type is incompatible with
+base_class.js:59:36,41: number
+
+base_class.js:59:2,33: undefined
+This type is incompatible with
+base_class.js:59:36,41: number
+
+base_class.js:61:2,36: null
+This type is incompatible with
+base_class.js:61:39,44: number
+
+base_class.js:61:2,36: undefined
+This type is incompatible with
+base_class.js:61:39,44: number
+
+base_class.js:70:2,35: number
+This type is incompatible with
+base_class.js:70:38,43: string
+
+base_class.js:72:2,38: number
+This type is incompatible with
+base_class.js:72:41,46: string
+
+derived_class.js:5:24,29: number
+This type is incompatible with
+derived_class.js:61:25,30: string
+
+derived_class.js:6:27,28: number
+This type is incompatible with
+derived_class.js:74:27,32: string
+
+derived_class.js:7:35,60: number
+This type is incompatible with
+derived_class.js:87:35,40: string
+
+derived_class.js:8:41,46: null
+This type is incompatible with
+derived_class.js:102:41,46: number
+
+derived_class.js:8:41,46: undefined
+This type is incompatible with
+derived_class.js:102:41,46: number
+
+derived_class.js:9:42,47: number
+This type is incompatible with
+derived_class.js:118:43,48: string
+
+derived_class.js:9:51,56: string
+This type is incompatible with
+derived_class.js:9:42,47: number
+
+derived_class.js:12:31,36: number
+This type is incompatible with
+derived_class.js:63:29,34: string
+
+derived_class.js:13:34,39: string
+This type is incompatible with
+derived_class.js:76:31,36: number
+
+derived_class.js:14:42,67: string
+This type is incompatible with
+derived_class.js:89:39,44: number
+
+derived_class.js:15:48,53: null
+This type is incompatible with
+derived_class.js:104:45,50: number
+
+derived_class.js:15:48,53: undefined
+This type is incompatible with
+derived_class.js:104:45,50: number
+
+derived_class.js:16:49,54: number
+This type is incompatible with
+derived_class.js:120:47,52: string
+
+derived_class.js:16:58,63: string
+This type is incompatible with
+derived_class.js:16:49,54: number
+
+derived_class.js:28:52,57: string
+This type is incompatible with
+derived_class.js:28:43,48: number
+
+derived_class.js:35:59,64: string
+This type is incompatible with
+derived_class.js:35:50,55: number
+
+derived_class.js:66:2,23: number
+This type is incompatible with
+derived_class.js:66:26,31: string
+
+derived_class.js:68:2,27: number
+This type is incompatible with
+derived_class.js:68:30,35: string
+
+derived_class.js:79:2,25: number
+This type is incompatible with
+derived_class.js:79:28,33: string
+
+derived_class.js:81:2,29: string
+This type is incompatible with
+derived_class.js:81:32,37: number
+
+derived_class.js:92:2,33: number
+This type is incompatible with
+derived_class.js:92:36,41: string
+
+derived_class.js:94:2,37: string
+This type is incompatible with
+derived_class.js:94:40,45: number
+
+derived_class.js:107:2,39: null
+This type is incompatible with
+derived_class.js:107:42,47: number
+
+derived_class.js:107:2,39: undefined
+This type is incompatible with
+derived_class.js:107:42,47: number
+
+derived_class.js:109:2,43: null
+This type is incompatible with
+derived_class.js:109:46,51: number
+
+derived_class.js:109:2,43: undefined
+This type is incompatible with
+derived_class.js:109:46,51: number
+
+derived_class.js:123:2,41: number
+This type is incompatible with
+derived_class.js:123:44,49: string
+
+derived_class.js:125:2,45: number
+This type is incompatible with
+derived_class.js:125:48,53: string
+
+derived_class.js:132:2,24: number
+This type is incompatible with
+derived_class.js:132:27,32: string
+
+derived_class.js:134:2,28: number
+This type is incompatible with
+derived_class.js:134:31,36: string
+
+generic_class.js:15:2,5: number
+This type is incompatible with
+generic_class.js:15:8,13: string
+
+generic_class.js:18:2,17: number
+This type is incompatible with
+generic_class.js:18:20,25: string
+
+generic_class.js:26:16,17: number
+This type is incompatible with
+generic_class.js:25:7,29: some incompatible instantiation of T
+
+generic_class.js:29:23,24: number
+This type is incompatible with
+generic_class.js:25:7,29: some incompatible instantiation of T
+
+scoping.js:24:2,16: number
+This type is incompatible with
+scoping.js:24:19,24: string
+
+scoping.js:26:2,10: number
+This type is incompatible with
+scoping.js:26:13,18: string
+
+scoping.js:33:2,20: Foo
+This type is incompatible with
+scoping.js:33:23,28: number
+
+scoping.js:35:2,14: Foo
+This type is incompatible with
+scoping.js:35:17,22: number
+
+scoping.js:38:2,24: Foo
+This type is incompatible with
+scoping.js:38:27,32: number
+
+scoping.js:40:2,18: Foo
+This type is incompatible with
+scoping.js:40:21,26: number
+
+Found 54 errors

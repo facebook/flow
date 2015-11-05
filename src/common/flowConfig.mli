@@ -9,15 +9,16 @@
  *)
 module PathMap : Utils.MapSig with type key = Path.t
 module Opts : sig
-  type experimental_feature_mode =
-    | EXPERIMENTAL_IGNORE
-    | EXPERIMENTAL_WARN
+  type esproposal_feature_mode =
+    | ESPROPOSAL_ENABLE
+    | ESPROPOSAL_IGNORE
+    | ESPROPOSAL_WARN
   type moduleSystem = Node | Haste
   type t = {
     enable_unsafe_getters_and_setters: bool;
-    esproposal_class_instance_fields: experimental_feature_mode;
-    esproposal_class_static_fields: experimental_feature_mode;
-    esproposal_decorators: experimental_feature_mode;
+    esproposal_class_instance_fields: esproposal_feature_mode;
+    esproposal_class_static_fields: esproposal_feature_mode;
+    esproposal_decorators: esproposal_feature_mode;
     ignore_non_literal_requires: bool;
     moduleSystem: moduleSystem;
     module_name_mappers: (Str.regexp * string) list;

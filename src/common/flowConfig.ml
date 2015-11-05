@@ -32,15 +32,16 @@ module Opts = struct
 
   type moduleSystem = Node | Haste
 
-  type experimental_feature_mode =
-    | EXPERIMENTAL_IGNORE
-    | EXPERIMENTAL_WARN
+  type esproposal_feature_mode =
+    | ESPROPOSAL_ENABLE
+    | ESPROPOSAL_IGNORE
+    | ESPROPOSAL_WARN
 
   type t = {
     enable_unsafe_getters_and_setters: bool;
-    esproposal_class_instance_fields: experimental_feature_mode;
-    esproposal_class_static_fields: experimental_feature_mode;
-    esproposal_decorators: experimental_feature_mode;
+    esproposal_class_instance_fields: esproposal_feature_mode;
+    esproposal_class_static_fields: esproposal_feature_mode;
+    esproposal_decorators: esproposal_feature_mode;
     ignore_non_literal_requires: bool;
     moduleSystem: moduleSystem;
     module_name_mappers: (Str.regexp * string) list;
@@ -99,9 +100,9 @@ module Opts = struct
 
   let default_options = {
     enable_unsafe_getters_and_setters = false;
-    esproposal_class_instance_fields = EXPERIMENTAL_WARN;
-    esproposal_class_static_fields = EXPERIMENTAL_WARN;
-    esproposal_decorators = EXPERIMENTAL_WARN;
+    esproposal_class_instance_fields = ESPROPOSAL_WARN;
+    esproposal_class_static_fields = ESPROPOSAL_WARN;
+    esproposal_decorators = ESPROPOSAL_WARN;
     ignore_non_literal_requires = false;
     moduleSystem = Node;
     module_name_mappers = [];
@@ -211,10 +212,17 @@ module Opts = struct
       spf "Invalid regex \"%s\" (%s)" unescaped reason
     ))
 
-  let optparse_experimental_feature_flag = optparse_enum [
-    ("ignore", EXPERIMENTAL_IGNORE);
-    ("warn", EXPERIMENTAL_WARN);
-  ]
+  let optparse_esproposal_feature_flag ?(allow_enable=false) =
+    let values = [
+      ("ignore", ESPROPOSAL_IGNORE);
+      ("warn", ESPROPOSAL_WARN);
+    ] in
+    let values =
+      if allow_enable
+      then ("enable", ESPROPOSAL_ENABLE)::values
+      else values
+    in
+    optparse_enum values
 
   let optparse_filepath str =
     Path.make str
@@ -473,7 +481,7 @@ let parse_options config lines = Opts.(
     |> Opts.define_opt "esproposal.class_instance_fields" Opts.({
       _initializer = USE_DEFAULT;
       flags = [];
-      optparser = optparse_experimental_feature_flag;
+      optparser = optparse_esproposal_feature_flag ~allow_enable:true;
       setter = (fun opts v -> {
         opts with esproposal_class_instance_fields = v;
       });
@@ -482,7 +490,7 @@ let parse_options config lines = Opts.(
     |> Opts.define_opt "esproposal.class_static_fields" Opts.({
       _initializer = USE_DEFAULT;
       flags = [];
-      optparser = optparse_experimental_feature_flag;
+      optparser = optparse_esproposal_feature_flag ~allow_enable:true;
       setter = (fun opts v -> {
         opts with esproposal_class_static_fields = v;
       });
@@ -491,7 +499,7 @@ let parse_options config lines = Opts.(
     |> Opts.define_opt "esproposal.decorators" Opts.({
       _initializer = USE_DEFAULT;
       flags = [];
-      optparser = optparse_experimental_feature_flag;
+      optparser = optparse_esproposal_feature_flag;
       setter = (fun opts v -> {
         opts with esproposal_decorators = v;
       });
