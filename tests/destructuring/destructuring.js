@@ -46,4 +46,7 @@ function test() {
   (rest.baz: string); // no error, rest is unsealed
 }
 
+function shab({a, b} = {a : 2, c : 'foo'}) { }
+function toz({a, b} : {a : number, b : number} = {a : 'str', b : 0}) { }
+
 module.exports = corge;

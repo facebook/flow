@@ -81,8 +81,16 @@ destructuring.js:45:6,8: property `baz`
 Property not found in
 destructuring.js:45:4,4: object literal
 
+destructuring.js:49:19,19: property `b`
+Property not found in
+destructuring.js:49:24,41: object literal
+
+destructuring.js:50:55,59: string
+This type is incompatible with
+destructuring.js:50:28,33: number
+
 destructuring_init.js:1:5,9: Destructuring assignment must be initialized
 
 destructuring_param.js:5:17,17: Strict mode function may not have duplicate parameter names
 
-Found 21 errors
+Found 23 errors
