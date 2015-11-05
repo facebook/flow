@@ -377,7 +377,7 @@ end = struct
       method! on_tarraykind acc akind =
         match akind with
         | AKany -> true
-        | AKempty -> true
+        | AKempty -> false
         | AKvec ty -> this#on_type acc ty
         | AKmap (tk, tv) ->
           (this#on_type acc tk) || (this#on_type acc tv)
