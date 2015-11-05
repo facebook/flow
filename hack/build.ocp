@@ -16,8 +16,8 @@ if debug then {
   link += [ "-g" ]
 }
 
-if os_type = "linux" then {
-  cclib = [ "-lelf" ]
+if os_type = "Unix" then {
+  cclib += [ "-lrt" ]
 }
 
 if have_lz4 then {
@@ -98,6 +98,7 @@ end
 
 begin library "hh-utils-common"
   requires += [ "hh-third-party" "hh-utils-core" "hh-fsnotify" ]
+  ccopt += "-DOSS_SMALL_HH_TABLE_POWS"
   files = [
     "heap/hh_shared.c"
 
@@ -221,6 +222,7 @@ begin library "hh-parsing"
     "parsing/parsing_hooks.ml"
     "parsing/ast_utils.ml"
     "parsing/parsing_service.ml"
+    "parsing/astVisitor.ml"
   ]
 end
 
@@ -277,6 +279,7 @@ begin library "hh-typing"
     "typing/typing_print.ml"
     "typing/typeVisitor.ml"
     "typing/typing_dependent_type.ml"
+    "typing/type_mapper.ml"
     "typing/typing_expand.ml"
     "typing/typing_generic.ml"
     "typing/typing_utils.ml"
@@ -286,6 +289,7 @@ begin library "hh-typing"
     "typing/typing_taccess.ml"
     "typing/typing_structure.ml"
     "typing/typing_tdef.ml"
+    "typing/typing_arrays.ml"
     "typing/typing_unification_env.ml"
     "typing/typing_unify.ml"
     "typing/typing_subtype.ml"
@@ -343,183 +347,5 @@ begin library "hh-socket"
   requires += [ "hh-utils" ]
   files = [
     "socket/socket.ml"
-  ]
-end
-
-begin library "hh-hhi"
-  requires += [ "hh-globals" "hh-utils" "bigarray" ]
-  files = [
-    "hhi/hhi_elf.c"
-    "hhi/hhi_win32res_stubs.c"
-    "hhi/hhi_win32res.ml"
-    "hhi/hhi.ml"
-  ]
-  if (os_type = "Win32") then {
-    (* Embed resources *)
-    hhi_source = "../hhi.rc"
-    hhi_target = "%{hh-hhi_FULL_DST_DIR}%/hhi_res.o"
-    cclib = [ hhi_target ]
-    build_rules = [
-      hhi_target (
-        sources = [ hhi_source ]
-        commands = [
-          { "windres"
-            "--preprocessor=x86_64-w64-mingw32-gcc.exe"
-            "--preprocessor-arg=-E"
-            "--preprocessor-arg=-xc-header"
-            hhi_source hhi_target }
-        ]
-        build_target = true
-      )
-    ]
-  } else if (system = "macosx" && os_type = "Unix") then {
-    cclib = [
-      "-sectcreate" "-__text" "hhi"
-      "%{ROOTPROJECT_FULL_SRC_DIR}%/bin/hhi.tar.gz"
-      "-framework" "CoreServices"
-      "-framework" "CoreFoundation"
-    ]
-  }
-
-end
-
-begin library "hh-server-base"
-  requires += [ "hh-third-party" "hh-utils" "hh-find" "hh-typing"  "hh-search"
-                "hh-stubs" "hh-stubs-ai"  "hh-socket" "hh-dfind" "hh-hhi" ]
-  files = [
-    "server/serverFiles.ml"
-    "server/serverConfig.ml"
-    "server/serverArgs.ml"
-    "server/serverEnv.ml"
-    "server/serverUtils.ml"
-    "server/argumentInfoService.ml"
-    "server/autocompleteService.ml"
-    "server/fileOutline.ml"
-    "server/serverIdeUtils.ml"
-    "server/findRefsService.ml"
-    "server/identifySymbolService.ml"
-    "server/inferAtPosService.ml"
-    "server/methodJumps.ml"
-    "server/serverArgumentInfo.ml"
-    "server/serverAutoComplete.ml"
-    "server/serverBuild.ml"
-    "server/serverCheckpoint.ml"
-    "server/serverColorFile.ml"
-    "server/serverCoverageMetric.ml"
-    "server/serverError.ml"
-    "server/serverFindRefs.ml"
-    "server/serverIdentifyFunction.ml"
-    "server/serverInferType.ml"
-    "server/serverLint.ml"
-    "server/serverLocalConfig.ml"
-    "server/serverMonitor.ml"
-    "server/serverRefactor.ml"
-    "server/serverSearch.ml"
-    "server/symbolUtils.ml"
-    "server/symbolFunCallService.ml"
-    "server/symbolTypeService.ml"
-    "server/symbolInfoService.ml"
-    "server/serverIdle.ml"
-    "server/serverRpc.ml"
-    "server/serverTypeCheck.ml"
-    "server/serverCommand.ml"
-    "server/serverConvert.ml"
-  ]
-end
-
-begin library "hh-server"
-  requires += [
-    "hh-third-party" "hh-utils" "hh-typing"
-    "hh-search"  "hh-stubs"  "hh-stubs-ai"
-    "hh-socket"  "hh-dfind" "hh-watchman" "hh-server-base"
-  ]
-  files = [
-    "server/serverEnvBuild.ml"
-    "server/serverInit.ml"
-    "server/serverMain.ml"
-  ]
-end
-
-begin library "hh-client"
-  requires += [
-    "hh-deps"  "hh-heap"  "hh-parsing"
-    "hh-globals"  "hh-search"  "hh-stubs"
-    "hh-socket"  "hh-server-base"
-  ]
-  files = [
-    "client/clientConnectSimple.ml"
-    "client/clientStop.ml"
-    "client/clientStart.ml"
-    "client/clientConnect.ml"
-    "client/clientLogCommand.ml"
-    "client/clientBuild.ml"
-    "client/clientEnv.ml"
-    "client/clientCommand.ml"
-    "client/clientArgs.ml"
-    "client/clientArgumentInfo.ml"
-    "client/clientAutocomplete.ml"
-    "client/clientCheckStatus.ml"
-    "client/colorFile.ml"
-    "client/clientColorFile.ml"
-    "client/clientCoverageMetric.ml"
-    "client/clientFindRefs.ml"
-    "client/clientLint.ml"
-    "client/clientMethodJumps.ml"
-    "client/clientOutline.ml"
-    "client/clientRefactor.ml"
-    "client/clientSearch.ml"
-    "client/clientAiInfo.ml"
-    "client/clientSymbolInfo.ml"
-    "client/clientTypeAtPos.ml"
-    "client/clientCheck.ml"
-    "client/clientLogCommandUtils.ml"
-    "client/clientRestart.ml"
-  ]
-end
-
-begin program "hh_client"
-  requires += [ "hh-client" ]
-  files = [ "hh_client.ml" ]
-end
-
-begin program "hh_server"
-  requires += [ "hh-server" ]
-  files = [ "hh_server.ml" ]
-end
-
-begin library "hh-emitter"
-  requires += [ "hh-naming" "hh-typing" ]
-
-  files = [
-    "emitter/emitter_core.ml"
-    "emitter/emitter_consts.ml"
-    "emitter/emitter_xhp.ml"
-    "emitter/emitter_expr.ml"
-    "emitter/emitter_lit.ml"
-    "emitter/emitter_stmt.ml"
-    "emitter/emitter_types.ml"
-    "emitter/emitter.ml"
-  ]
-end
-
-begin library "hh-format"
-  requires += [ "hh-typing-base" ]
-  files = [
-    "stubs/formatEventLogger.ml"
-    "format/format_hack.ml"
-    "format/format_diff.ml"
-    "format/format_mode.ml"
-  ]
-end
-
-begin program "hh_format"
-  requires += [ "hh-format" "hh-client" ]
-  files = [ "hh_format.ml" ]
-end
-
-begin program "hh_single_type_check"
-  requires += [ "hh-client"  "hh-emitter" ]
-  files = [
-    "hh_single_type_check.ml"
   ]
 end
