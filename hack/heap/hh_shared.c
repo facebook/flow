@@ -763,7 +763,7 @@ void hh_collect(value aggressive_val) {
 
 static char* hh_alloc(size_t size) {
   size_t slot_size  = ALIGNED(size + sizeof(size_t));
-  char* chunk       = __sync_fetch_and_add(heap, slot_size);
+  char* chunk       = __sync_fetch_and_add(heap, (char*)slot_size);
 #ifdef _WIN32
   if (!VirtualAlloc(chunk, slot_size, MEM_COMMIT, PAGE_READWRITE)) {
     win32_maperr(GetLastError());
@@ -805,7 +805,7 @@ static unsigned long get_hash(value key) {
 static void write_at(unsigned int slot, value data) {
   // Try to write in a value to indicate that the data is being written.
   if(hashtbl[slot].addr == NULL &&
-     __sync_bool_compare_and_swap(&(hashtbl[slot].addr), NULL, 1)) {
+     __sync_bool_compare_and_swap(&(hashtbl[slot].addr), NULL, (char*)1)) {
     hashtbl[slot].addr = hh_store_ocaml(data);
   }
 }
