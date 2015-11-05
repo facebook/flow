@@ -1739,7 +1739,8 @@ let rec __flow cx (l, u) trace =
         | None ->
           let proto = MixedT(reason) in
           let props_smap = find_props cx exports.exports_tmap in
-          mk_object_with_map_proto cx reason ~sealed:true props_smap proto
+          mk_object_with_map_proto cx reason
+            ~sealed:true ~frozen:true props_smap proto
       ) in
       rec_flow cx trace (cjs_exports, t)
 
@@ -1752,8 +1753,8 @@ let rec __flow cx (l, u) trace =
         | None -> exports_tmap
       ) in
       let proto = MixedT(reason) in
-      let ns_obj =
-        mk_object_with_map_proto cx reason ~sealed:true ns_obj_tmap proto
+      let ns_obj = mk_object_with_map_proto cx reason
+        ~sealed:true ~frozen:true ns_obj_tmap proto
       in
       rec_flow cx trace (ns_obj, t)
 
@@ -3917,12 +3918,16 @@ and instantiate_poly ?(weak=false) cx trace reason_op (xs,t) =
 and mk_object_with_proto cx reason proto =
   mk_object_with_map_proto cx reason SMap.empty proto
 
-and mk_object_with_map_proto cx reason ?(sealed=false) ?dict map proto =
+and mk_object_with_map_proto cx reason ?(sealed=false) ?frozen ?dict map proto =
   let sealed =
     if sealed then Sealed
     else UnsealedInFile (Loc.source (loc_of_reason reason))
   in
   let flags = { default_flags with sealed } in
+  let flags = match frozen with
+  | Some frozen -> { flags with frozen }
+  | None -> flags
+  in
   let pmap = mk_propmap cx map in
   ObjT (reason, mk_objecttype ~flags dict pmap proto)
 

@@ -81,7 +81,9 @@ val mk_objecttype : ?flags:Type.flags ->
   Type.dicttype option -> int -> Type.t -> Type.objtype
 
 val mk_object_with_proto : Context.t -> reason -> Type.t -> Type.t
-val mk_object_with_map_proto : Context.t -> reason -> ?sealed:bool ->
+val mk_object_with_map_proto : Context.t -> reason ->
+  ?sealed:bool ->
+  ?frozen:bool ->
   ?dict:Type.dicttype -> (Type.t SMap.t) -> Type.t -> Type.t
 
 val static_method_call: Context.t -> string -> reason -> reason -> string

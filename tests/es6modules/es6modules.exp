@@ -305,4 +305,36 @@ es6modules.js:265:19,26: string
 This type is incompatible with
 es6modules.js:265:10,15: number
 
-Found 69 errors
+test_imports_are_frozen.js:9:1,21: assignment of property `numberValue1`
+Mutation not allowed on
+test_imports_are_frozen.js:9:1,8: exports of "A"
+
+test_imports_are_frozen.js:13:1,25: assignment of property `varDeclNumber1`
+Mutation not allowed on
+test_imports_are_frozen.js:13:1,10: exports of "ES6_Named1"
+
+test_imports_are_frozen.js:17:1,26: assignment of property `numberValue1`
+Mutation not allowed on
+test_imports_are_frozen.js:17:1,13: exports of "CommonJS_Clobbering_Lit"
+
+test_imports_are_frozen.js:25:1,33: assignment of property `numberValue1`
+Mutation not allowed on
+test_imports_are_frozen.js:25:1,20: exports of "CommonJS_Clobbering_Frozen"
+
+test_imports_are_frozen.js:26:1,41: assignment of property `numberValue1`
+Mutation not allowed on
+test_imports_are_frozen.js:26:1,28: frozen object literal
+
+test_imports_are_frozen.js:29:1,39: assignment of property `numberValue1`
+Mutation not allowed on
+test_imports_are_frozen.js:29:1,26: frozen object literal
+
+test_imports_are_frozen.js:43:3,24: assignment of property `numberValue`
+Mutation not allowed on
+test_imports_are_frozen.js:43:3,12: CommonJS exports of "ES6_Named1"
+
+test_imports_are_frozen.js:51:3,35: assignment of property `numberValue1`
+Mutation not allowed on
+test_imports_are_frozen.js:51:3,22: frozen object literal
+
+Found 77 errors
