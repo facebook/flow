@@ -26,7 +26,7 @@ f('');
 
 > NOTE
 > 
-> Parenthesis are important. Flow will not type-check correctly if you leave 
+> Parentheses are important. Flow will not type-check correctly if you leave 
 > out the outer parenthesis on each of the function declarations on `f`.
 
 
