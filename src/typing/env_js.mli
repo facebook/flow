@@ -90,6 +90,8 @@ module LookupMode: sig
   type t = ForValue | ForType | ForTypeof
 end
 
+val local_scope_entry_exists: Context.t -> string -> bool
+
 val get_var:
   ?lookup_mode:LookupMode.t ->
   Context.t ->

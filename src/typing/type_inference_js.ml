@@ -3440,7 +3440,7 @@ and expression_ ~is_cond cx type_params_map loc e = Ast.Expression.(match e with
         _
       });
       arguments
-    } -> (
+    } when not (Env_js.local_scope_entry_exists cx "require") -> (
       match arguments with
       | [ Expression (_, Literal {
           Ast.Literal.value = Ast.Literal.String module_name; _;
@@ -3448,10 +3448,15 @@ and expression_ ~is_cond cx type_params_map loc e = Ast.Expression.(match e with
         let m = Module_js.imported_module (Context.file cx) module_name in
         require cx m module_name loc
       | _ ->
-        (*
-        let msg = "require(...) supported only on strings" in
-        Flow_js.add_error cx [mk_reason "" loc, msg];
-        *)
+        let ignore_non_literals =
+          FlowConfig.(Opts.((get_unsafe ()).options.ignore_non_literal_requires))
+        in
+        if not ignore_non_literals then (
+          let msg =
+            "The parameter passed to require() must be a literal string."
+          in
+          Flow_js.add_error cx [mk_reason "" loc, msg];
+        );
         AnyT.at loc
     )
 

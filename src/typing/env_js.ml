@@ -309,6 +309,19 @@ let cache_global cx name reason global_scope =
   Context.add_global cx name;
   global_scope, entry
 
+let local_scope_entry_exists cx name =
+  let rec loop = function
+    | [] -> assert_false "empty scope list"
+    | scope::scopes ->
+        match Scope.get_entry name scope with
+        | Some entry -> true
+        | None ->
+            match scopes with
+            | [] -> false
+            | _ -> loop scopes
+  in
+  loop !scopes
+
 (* Look for scope that holds binding for a given name. If found,
    return scope and entry. Note that anything we don't resolve
    otherwise, we add to the global scope after generating a

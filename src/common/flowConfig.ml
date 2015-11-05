@@ -41,6 +41,7 @@ module Opts = struct
     esproposal_class_instance_fields: experimental_feature_mode;
     esproposal_class_static_fields: experimental_feature_mode;
     esproposal_decorators: experimental_feature_mode;
+    ignore_non_literal_requires: bool;
     moduleSystem: moduleSystem;
     module_name_mappers: (Str.regexp * string) list;
     node_resolver_dirnames: string list;
@@ -101,6 +102,7 @@ module Opts = struct
     esproposal_class_instance_fields = EXPERIMENTAL_WARN;
     esproposal_class_static_fields = EXPERIMENTAL_WARN;
     esproposal_decorators = EXPERIMENTAL_WARN;
+    ignore_non_literal_requires = false;
     moduleSystem = Node;
     module_name_mappers = [];
     node_resolver_dirnames = ["node_modules"];
@@ -502,6 +504,15 @@ let parse_options config lines = Opts.(
       setter = (fun opts v -> {
         opts with log_file = Some v;
       });
+    })
+
+    |> Opts.define_opt "module.ignore_non_literal_requires" Opts.({
+      _initializer = USE_DEFAULT;
+      flags = [];
+      optparser = optparse_boolean;
+      setter = (fun opts v ->
+        {opts with ignore_non_literal_requires = v;}
+      );
     })
 
     |> Opts.define_opt "module.file_ext" Opts.({

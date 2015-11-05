@@ -18,6 +18,7 @@ module Opts : sig
     esproposal_class_instance_fields: experimental_feature_mode;
     esproposal_class_static_fields: experimental_feature_mode;
     esproposal_decorators: experimental_feature_mode;
+    ignore_non_literal_requires: bool;
     moduleSystem: moduleSystem;
     module_name_mappers: (Str.regexp * string) list;
     node_resolver_dirnames: string list;
