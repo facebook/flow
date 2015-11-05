@@ -1,3 +1,5 @@
 num number
 str string
 [{"name":"num","type":"number","func_details":null,"path":"foo.js","line":6,"endline":6,"start":8,"end":10},{"name":"str","type":"string","func_details":null,"path":"foo.js","line":7,"endline":7,"start":8,"end":14}]
+[]
+[{"name":"x","type":"number","func_details":null,"path":"qux.js","line":3,"endline":3,"start":14,"end":19}]

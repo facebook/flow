@@ -9,7 +9,6 @@
  *)
 
 module C = Tty
-module Hh_json = Hh_json
 
 type message =
   | BlameM of Loc.t * string

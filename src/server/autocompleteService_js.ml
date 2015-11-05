@@ -12,8 +12,6 @@ open Autocomplete_js
 open Type_printer
 open Utils
 
-module Hh_json = Hh_json
-
 (* Details about functions to be added in json output *)
 type func_param_result = {
     param_name     : string;
@@ -124,6 +122,7 @@ let autocomplete_member client_logging_context cx this = Flow_js.(
   let result_str, json_data = Autocomplete.(Hh_json.(match result with
     | Success _ -> "SUCCESS", JSON_Object []
     | FailureMaybeType -> "FAILURE_NULLABLE", JSON_Object []
+    | FailureAnyType -> "FAILURE_NO_COVERAGE", JSON_Object []
     | FailureUnhandledType t -> "FAILURE_UNHANDLED_TYPE", JSON_Object [
       "type", Debug_js.json_of_t ~depth:3 cx t;
     ])) in

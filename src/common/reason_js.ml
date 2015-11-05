@@ -21,7 +21,6 @@
 
 open Utils
 module Ast = Spider_monkey_ast
-module Hh_json = Hh_json
 
 let mk_id () = Ident.make ""
 

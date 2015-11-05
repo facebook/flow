@@ -807,9 +807,20 @@ and lookup_type cx ids id =
 and resolve_type cx = function
   | OpenT (_, id) ->
       let ts = possible_types cx id in
+      (* The list of types returned by possible_types is often empty, and the
+         most common reason is that we don't have enough type coverage to
+         resolve id. Thus, we take the unit of merging to be `any`. (Something
+         similar happens when summarizing exports in ContextOptimizer below.)
+
+         In the future, we might report errors in some cases where
+         possible_types returns an empty list: e.g., when we detect unreachable
+         code, or even we don't have enough type coverage. Irrespective of these
+         changes, the above decision would continue to make sense: as errors
+         become stricter, type resolution should become even more lenient to
+         improve failure tolerance.  *)
       List.fold_left (fun u t ->
         merge_type cx (t, u)
-      ) UndefT.t ts
+      ) AnyT.t ts
   | t -> t
 
 let rec normalize_type cx t =
@@ -5716,6 +5727,7 @@ module Autocomplete : sig
   type member_result =
     | Success of Type.t SMap.t
     | FailureMaybeType
+    | FailureAnyType
     | FailureUnhandledType of Type.t
 
   val map_of_member_result: member_result -> Type.t SMap.t
@@ -5727,20 +5739,26 @@ end = struct
   type member_result =
     | Success of Type.t SMap.t
     | FailureMaybeType
+    | FailureAnyType
     | FailureUnhandledType of Type.t
 
   let map_of_member_result = function
     | Success map -> map
     | FailureMaybeType
+    | FailureAnyType
     | FailureUnhandledType _ ->
         SMap.empty
 
   (* TODO: Think of a better place to put this *)
   let rec extract_members cx this_t =
     match this_t with
-    | MaybeT t ->
-        (* TODO: do we want to autocomplete when the var could be null? *)
+    | MaybeT _ | NullT _ | VoidT _ ->
         FailureMaybeType
+    | AnyT _ | AnyObjT _ | AnyFunT _ ->
+        FailureAnyType
+    | AnnotT (source, _) ->
+        let source_t = resolve_type cx source in
+        extract_members cx source_t
     | InstanceT (reason, _, super,
                 {fields_tmap = fields;
                 methods_tmap = methods;
@@ -5767,9 +5785,9 @@ end = struct
     | ClassT (InstanceT (_, static, _, _)) ->
         let static_t = resolve_type cx static in
         extract_members cx static_t
-    | ClassT t ->
-        (* TODO: Can this happen? *)
-        extract_members cx t
+    | FunT (_, static, _, _) ->
+        let static_t = resolve_type cx static in
+        extract_members cx static_t
     | IntersectionT (r, ts) ->
         (* Intersection type should autocomplete for every property of every type
         * in the intersection *)

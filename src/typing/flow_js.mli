@@ -130,6 +130,7 @@ module Autocomplete : sig
   type member_result =
     | Success of Type.t SMap.t
     | FailureMaybeType
+    | FailureAnyType
     | FailureUnhandledType of Type.t
 
   val map_of_member_result: member_result -> Type.t SMap.t
