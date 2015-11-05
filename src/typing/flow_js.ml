@@ -2447,8 +2447,8 @@ let rec __flow cx (l, u) trace =
         assignable to o.
 
         TODO: The type constructors ShapeT, DiffT, ObjAssignT, ObjRestT express
-        related meta-operations on objects. Considate these meta-operations and
-        ensure consistency of their semantics. **)
+        related meta-operations on objects. Consolidate these meta-operations
+        and ensure consistency of their semantics. **)
 
     | (ShapeT (o), _) ->
         rec_flow cx trace (o, u)
@@ -2797,6 +2797,31 @@ let rec __flow cx (l, u) trace =
       let map = List.fold_left (fun map x -> SMap.remove x map) map xs in
       let o = mk_object_with_map_proto cx reason map (MixedT reason) in
       rec_flow cx trace (o, t)
+
+    | (InstanceT (_, _, super, insttype), ObjRestT (reason, xs, t)) ->
+      (* Spread fields from super into an object *)
+      let obj_super = mk_tvar_where cx reason (fun tvar ->
+        rec_flow cx trace (super, ObjRestT (reason, xs, tvar))
+      ) in
+
+      (* Spread fields from the instance into another object *)
+      let map = find_props cx insttype.fields_tmap in
+      let map = List.fold_left (fun map x -> SMap.remove x map) map xs in
+      let obj_inst = mk_object_with_map_proto cx reason map (MixedT reason) in
+
+      (* ObjAssign the inst-generated obj into the super-generated obj *)
+      let o = mk_tvar_where cx reason (fun tvar ->
+        rec_flow cx trace (
+          obj_inst,
+          ObjAssignT(reason, obj_super, tvar, [], false)
+        )
+      ) in
+
+      rec_flow cx trace (o, t)
+
+    | (MixedT _, ObjRestT (reason, _, t)) ->
+      let obj = mk_object_with_proto cx reason l in
+      rec_flow cx trace (obj, t)
 
     (*************************************)
     (* objects can be copied-then-sealed *)

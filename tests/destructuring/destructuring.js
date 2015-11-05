@@ -47,3 +47,25 @@ function test() {
 }
 
 module.exports = corge;
+
+class Base {
+  baseprop1: number;
+  baseprop2: number;
+}
+
+class Child extends Base {
+  childprop1: number;
+  childprop2: number;
+}
+
+var {baseprop1, childprop1, ...others} = new Child();
+
+var bp1: number = baseprop1;
+var bp1_err: string = baseprop1; // Error: number ~> string
+var bp2: number = others.baseprop2;
+var bp2_err: string = others.baseprop2; // Error: number ~> string
+
+var cp1: number = childprop1;
+var cp1_err: string = childprop1; // Error: number ~> string
+var cp2: number = others.childprop1;
+var cp2_err: string = others.childprop2; // Error: number ~> string
