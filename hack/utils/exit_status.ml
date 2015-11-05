@@ -30,6 +30,7 @@ type t =
   | Dfind_died
   | Dfind_unresponsive
   | EventLogger_Timeout
+  | CantRunAI
 
 exception Exit_with of t
 
@@ -56,6 +57,7 @@ let exit t =
     | Dfind_died -> 99
     | Dfind_unresponsive -> 100
     | EventLogger_Timeout -> 101
+    | CantRunAI -> 102
   in
   Pervasives.exit ec
 
@@ -81,6 +83,7 @@ let to_string = function
   | Dfind_died -> "Dfind_died"
   | Dfind_unresponsive -> "Dfind_unresponsive"
   | EventLogger_Timeout -> "EventLogger_Timeout"
+  | CantRunAI -> "CantRunAI"
 
 let unpack = function
   | Unix.WEXITED n -> "exit", n

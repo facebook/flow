@@ -249,12 +249,15 @@ let type_check_dirty genv env old_fast fast dirty_files t =
   type_check genv env fast t
 
 let ai_check genv files_info env t =
-  let all_passed = List.for_all
-    [env.failed_parsing; env.failed_decl; env.failed_check]
-    (fun m -> Relative_path.Set.is_empty m) in
-  if not all_passed then env, t else
   match ServerArgs.ai_mode genv.options with
   | Some ai_opt ->
+    let all_passed = List.for_all
+      [env.failed_parsing; env.failed_decl]
+      (fun m -> Relative_path.Set.is_empty m) in
+    if not all_passed then begin
+      Hh_logger.log "Cannot run AI because of errors in source";
+      Exit_status.exit Exit_status.CantRunAI
+    end;
     let errorl, failed = Ai.go
       Typing_check_utils.check_defs genv.workers files_info env.nenv ai_opt in
     let env = { env with
