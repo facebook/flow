@@ -1,7 +1,7 @@
 
 bad_shadowing.js:13:5,13: A
 name is already bound
-bad_shadowing.js:5:18,18: type A
+bad_shadowing.js:5:1,28: type A
 
 bad_shadowing.js:14:5,15: Foo
 name is already bound
@@ -17,7 +17,7 @@ bad_shadowing.js:8:6,9: type duck
 
 good_shadowing.js:8:5,5: A
 name is already bound
-good_shadowing.js:5:18,18: type A
+good_shadowing.js:5:1,28: type A
 
 good_shadowing.js:9:5,7: Foo
 name is already bound
@@ -25,7 +25,7 @@ good_shadowing.js:6:14,16: type Foo
 
 good_shadowing.js:9:11,11: A
 type referenced from value position
-good_shadowing.js:5:18,18: type A
+good_shadowing.js:5:1,28: type A
 
 good_shadowing.js:10:5,7: Baz
 name is already bound
@@ -33,11 +33,11 @@ good_shadowing.js:6:19,28: type Baz
 
 good_shadowing.js:10:11,11: A
 type referenced from value position
-good_shadowing.js:5:18,18: type A
+good_shadowing.js:5:1,28: type A
 
 good_shadowing.js:13:9,9: A
 type referenced from value position
-good_shadowing.js:5:18,18: type A
+good_shadowing.js:5:1,28: type A
 
 good_shadowing.js:14:9,11: Foo
 type referenced from value position
@@ -53,15 +53,15 @@ good_shadowing.js:6:14,16: type Foo
 
 good_shadowing.js:19:18,18: A
 type referenced from value position
-good_shadowing.js:5:18,18: type A
+good_shadowing.js:5:1,28: type A
 
 good_shadowing.js:20:6,6: A
 type referenced from value position
-good_shadowing.js:5:18,18: type A
+good_shadowing.js:5:1,28: type A
 
 import_type.js:11:9,9: A
 type referenced from value position
-import_type.js:5:18,18: type A
+import_type.js:5:1,28: type A
 
 import_type.js:12:9,11: Foo
 type referenced from value position

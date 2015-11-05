@@ -2895,7 +2895,7 @@ and statement cx type_params_map = Ast.Statement.(
           )
       )
     )
-  | (loc, ImportDeclaration({
+  | (import_loc, ImportDeclaration({
       ImportDeclaration.default;
       ImportDeclaration.importKind;
       ImportDeclaration.source;
@@ -2962,7 +2962,7 @@ and statement cx type_params_map = Ast.Statement.(
 
           let reason = mk_reason
             (spf "%s %s from \"%s\"" import_str local_name module_name)
-            loc
+            import_loc
           in
           set_imported_binding reason local_name imported_t
         | None -> ()
@@ -3009,18 +3009,12 @@ and statement cx type_params_map = Ast.Statement.(
             ident_loc
           in
           if isType then (
-            (**
-             * TODO: `import type * as` really doesn't make much sense with
-             *        our current CommonJS interop table. Here we support
-             *        this in the same way we treat import-default as a
-             *        temporary means of transitioning our old interop table
-             *        to the new one. Once the transition is finished, we
-             *        should make `import type * as` a hard error.
-             *)
-            let module_ =
-              Module_js.imported_module (Context.file cx) module_name in
-            let module_type = require cx module_ module_name source_loc in
-            set_imported_binding reason local_name module_type
+            let msg = spf (
+              "This is invalid syntax. Maybe you meant: " ^^
+              "`import type %s from \"%s\"`?"
+            ) local_name module_name in
+            let reason = repos_reason import_loc reason in
+            Flow_js.add_error cx [(reason, msg)]
           ) else (
             set_imported_binding reason local_name module_ns_tvar
           )

@@ -2,7 +2,7 @@
  * @flow
  */
 
-import type * as A from "./A.js";
+import type A from "./A.js";
 import type {Foo, Bar as Baz} from "./A.js";
 
 var actualA = require('./A.js');

@@ -1,6 +1,6 @@
 // @flow
 var A = require ('./A');
-import type * as C from './C';
+import type C from './C';
 
 
 export type B = string;
