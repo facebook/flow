@@ -6554,8 +6554,25 @@ let explicit_impl_require_strict cx (cx_from, r, cx_to) =
 let explicit_decl_require_strict cx m cxs_to =
   let reason = reason_of_string m in
   let from_t = Flow_js.mk_tvar cx reason in
+
+  (* lookup module declaration from builtin context *)
   (* TODO: cache in modulemap *)
-  Flow_js.lookup_builtin cx (internal_module_name m) reason None from_t;
+  (* m may be a path. unfortunately, a non-path name may also contain
+     dots. we conservatively extract a base name and use it to resolve
+     to library modules, but retain the original to look up the module
+     in importing contexts.
+     TODO our imprecision here may occasionally cause a library module
+     to fail to be looked up, which because the following lookup_builtin
+     is nonstrict, will have the effect of typing it as Any.
+     Should preserve path/name distinction in module names *)
+  let m_base = Filename.(
+    let base = basename m in
+    if base = m then m else try chop_extension base with _ -> base
+  ) in
+
+  Flow_js.lookup_builtin cx (internal_module_name m_base) reason None from_t;
+
+  (* flow the declared module type to importing contexts *)
   cxs_to |> List.iter (fun cx_to ->
     let to_t = Flow_js.lookup_module cx_to m in
     Flow_js.flow cx (from_t, to_t)

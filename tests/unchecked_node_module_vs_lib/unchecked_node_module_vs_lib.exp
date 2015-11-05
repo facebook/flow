@@ -1,0 +1,14 @@
+
+test.js:13:17,40: number
+This type is incompatible with
+test.js:13:8,13: string
+
+test.js:18:18,42: number
+This type is incompatible with
+test.js:18:9,14: string
+
+test.js:22:18,42: number
+This type is incompatible with
+test.js:22:9,14: string
+
+Found 3 errors

@@ -1,0 +1,6 @@
+
+test.js:13:17,40: number
+This type is incompatible with
+test.js:13:8,13: string
+
+Found 1 error
