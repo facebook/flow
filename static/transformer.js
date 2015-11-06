@@ -22,7 +22,7 @@ var CompilerPlayground = React.createClass({displayName: 'CompilerPlayground',
     );
   },
 });
-React.render(
+ReactDOM.render(
   React.createElement(CompilerPlayground, null),
   document.getElementById('jsxCompiler')
 );

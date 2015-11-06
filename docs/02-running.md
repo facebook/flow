@@ -61,6 +61,7 @@ You can try out the live Flow transpiler below. Just edit the Flow script in the
 <script type="text/javascript" src="http://facebook.github.io/react/js/codemirror.js"></script>
 <script type="text/javascript" src="http://facebook.github.io/react/js/javascript.js"></script>
 <script type="text/javascript" src="http://facebook.github.io/react/js/react.js"></script>
+<script type="text/javascript" src="http://facebook.github.io/react/js/react-dom.js"></script>
 <!-- Right now JSXTransformer on the React website is too old. So I built
 it from master on the React repo and copy/pasted it here. Whenever we ship
 the next version of React we can just use it and remove the local one -->
