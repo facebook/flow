@@ -103,6 +103,7 @@ LINKER_FLAGS=$(NATIVE_OBJECT_FILES) $(NATIVE_LIB_OPTS) $(EXTRA_LIB_OPTS) $(FRAME
 
 
 all: $(FLOWLIB) build-flow copy-flow-files
+all-ocp: build-flow-with-ocp copy-flow-files-ocp
 
 clean:
 	ocamlbuild -clean
@@ -111,6 +112,10 @@ clean:
 
 build-flow: build-flow-native-deps $(FLOWLIB)
 	ocamlbuild  -no-links  $(INCLUDE_OPTS) $(LIB_OPTS) -lflags "$(LINKER_FLAGS)" src/flow.native
+
+build-flow-with-ocp: build-flow-stubs-with-ocp
+	[ -d _obuild ] || ocp-build init
+	ocp-build build
 
 build-flow-debug: build-flow-native-deps $(FLOWLIB)
 	ocamlbuild -lflags -custom -no-links $(INCLUDE_OPTS) $(LIB_OPTS) -lflags "$(LINKER_FLAGS)" src/flow.d.byte
@@ -123,6 +128,9 @@ build-flow-native-deps: build-flow-stubs
 
 build-flow-stubs:
 	echo "const char* const BuildInfo_kRevision = \"$$(git rev-parse HEAD 2>/dev/null || hg identify -i)\";" > hack/utils/get_build_id.gen.c
+
+build-flow-stubs-with-ocp:
+	ocaml unix.cma scripts/gen_build_id.ml hack/utils/get_build_id.gen.c
 
 # We only rebuild the flowlib archive if any of the libs have changed. If the
 # archive has changed, then the incremental build needs to re-embed it into the
@@ -144,5 +152,19 @@ else
 	cp _build/src/flow.native bin/flow
 endif
 
-test: build-flow copy-flow-files
+copy-flow-files-ocp: build-flow-with-ocp $(FLOWLIB) $(FILES_TO_COPY)
+	mkdir -p bin
+ifeq ($(OS), Linux)
+	objcopy --add-section flowlib=$(FLOWLIB) _obuild/flow/flow.asm bin/flow
+else
+	cp _obuild/flow/flow.asm bin/flow
+endif
+
+do-test:
 	./runtests.sh bin/flow
+
+test: build-flow copy-flow-files
+	${MAKE} do-test
+
+test-ocp: build-flow-with-ocp copy-flow-files-ocp
+	${MAKE} do-test
