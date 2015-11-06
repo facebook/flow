@@ -681,7 +681,11 @@ let hint_no_typedef env = function
 let convert_shape_name env = function
   | SFlit (pos, s) -> (pos, N.SFlit (pos, s))
   | SFclass_const (x, (pos, y)) ->
-    let class_name = Env.class_name env x in
+    let class_name =
+      if (snd x) = SN.Classes.cSelf then match (fst env).current_cls with
+        | Some (cid, _) -> cid
+        | None -> Errors.self_outside_class pos; (pos, SN.Classes.cUnknown)
+      else Env.class_name env x in
     (pos, N.SFclass_const (class_name, (pos, y)))
 
 let arg_unpack_unexpected = function
