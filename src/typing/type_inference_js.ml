@@ -4677,7 +4677,7 @@ and react_create_class cx type_params_map loc class_props = Ast.Expression.(
   let default_reason = prefix_reason "default props of " reason_component in
   let default = ref (mk_object cx default_reason) in
   let reason_state = prefix_reason "state of " reason_component in
-  let state = mk_object cx reason_state in
+  let state = ref (mk_object cx reason_state) in
 
   let props_reason = prefix_reason "props of " reason_component in
   let props = ref (mk_object cx props_reason) in
@@ -4758,15 +4758,16 @@ and react_create_class cx type_params_map loc class_props = Ast.Expression.(
           (* since the call to getInitialState happens internally, we need to
              fake a location to pretend the call happened. using the position
              of the return type makes it act like an IIFE. *)
-          let ret_reason = match t with
-          | FunT (_, _, _, { return_t; _ }) ->
-            repos_reason (loc_of_t return_t) reason
-          | _ ->
-            reason
-          in
-          let override_state =
-            ObjAssignT(reason_state, state, AnyT.t, [], false)
-          in
+          let ret_loc = match returnType with
+            | Some (_, (loc, _)) -> loc
+            | None -> Ast.Statement.FunctionDeclaration.(match body with
+              | BodyBlock (loc, _) -> loc
+              | BodyExpression (loc, _) -> loc
+            ) in
+          let ret_reason = repos_reason ret_loc reason in
+          let state_tvar = Flow_js.mk_tvar cx (derivable_reason ret_reason) in
+          let override_state = BecomeT (ret_reason, state_tvar) in
+          state := state_tvar;
           Flow_js.flow cx (t,
             CallT (ret_reason,
               Flow_js.mk_functiontype [] override_state));
@@ -4810,7 +4811,7 @@ and react_create_class cx type_params_map loc class_props = Ast.Expression.(
 
     ) (SMap.empty, SMap.empty) class_props in
 
-  let type_args = [!default; !props; state] in
+  let type_args = [!default; !props; !state] in
   let super_reason = prefix_reason "super of " reason_component in
   let super =
     Flow_js.get_builtin_typeapp cx super_reason

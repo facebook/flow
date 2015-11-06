@@ -43,7 +43,7 @@ classes.js:58:12,17: string
 
 classes.js:65:15,28: property `y_`
 Property not found in
-classes.js:44:17,77:2: state of React component
+classes.js:61:22,34: object type
 
 classes.js:80:22,27: number
 This type is incompatible with
@@ -61,13 +61,7 @@ classes.js:80:22,27: number
 This type is incompatible with
 [LIB] fakelib/type_aliases.js:4:28,48: ReactComponent
 
-new_react.js:15:22,22: initial state of React component
-Error:
-new_react.js:3:9,27:2: state of React component
-Expected object instead of
-new_react.js:15:22,22: number
-
-new_react.js:17:27,36: state of React component
+new_react.js:17:27,36: number
 This type is incompatible with
 new_react.js:17:18,23: string
 
@@ -201,12 +195,24 @@ state.js:19:33,35: property `qux`
 Property cannot be accessed on possibly undefined value
 state.js:19:18,31: undefined
 
-state3.js:11:25,36: boolean
-This type is incompatible with
-state3.js:11:16,21: number
-
 state3.js:11:25,36: string
 This type is incompatible with
 state3.js:11:16,21: number
 
-Found 45 errors
+state3.js:13:9,15:10: call of method `setState`
+Error:
+state3.js:14:16,20: boolean
+This type is incompatible with
+state3.js:4:39,44: string
+
+state4.js:9:5,27: call of method `setState`
+Error:
+state4.js:9:19,26: property `y` of object literal
+Property not found in
+state4.js:4:31,6:3: object literal
+
+state4.js:10:29,29: property `z`
+Property not found in
+state4.js:4:31,6:3: object literal
+
+Found 46 errors

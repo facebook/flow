@@ -1397,7 +1397,7 @@ module RecursionCheck : sig
 
 end = struct
   exception LimitExceeded of Trace.t
-  let limit = 1000000
+  let limit = 10000
 
   (* check trace depth as a proxy for recursion depth
      and throw when limit is exceeded *)
@@ -2454,10 +2454,9 @@ let rec __flow cx (l, u) trace =
     | (ShapeT (o), _) ->
         rec_flow cx trace (o, u)
 
-    | (ObjT (_, { props_tmap = mapr; _ }), ShapeT (proto)) ->
-        let reason = reason_of_t proto in
+    | (ObjT (reason, { props_tmap = mapr; _ }), ShapeT (proto)) ->
         iter_props cx mapr (fun x t ->
-          let reason = prefix_reason (spf "prop `%s` of " x) reason in
+          let reason = prefix_reason (spf "property `%s` of " x) reason in
           let t = filter_optional cx ~trace reason t in
           rec_flow cx trace (proto, SetPropT (reason, (reason, x), t));
         )
@@ -2760,7 +2759,7 @@ let rec __flow cx (l, u) trace =
           (* move the reason to the call site instead of the definition, so that
              it is in the same scope as the Object.assign, so that strictness
              rules apply. *)
-          let r = prefix_reason (spf "prop `%s` of " x) reason_ in
+          let r = prefix_reason (spf "property `%s` of " x) reason_ in
           let r = repos_reason (loc_of_reason reason) r in
           rec_flow cx trace (proto, SetPropT (r, (r, x), t));
         );
