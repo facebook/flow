@@ -20,8 +20,11 @@ val init:
   tmp_dir:string ->
   Path.t list -> unit
 
-(* names of library files defining builtins *)
-val get_lib_files: unit -> Utils.SSet.t
+(* names of library files defining builtins: *)
+(* in override order *)
+val get_lib_files: unit -> string list
+(* as set *)
+val get_lib_fileset: unit -> Utils.SSet.t
 
 val lib_module: string
 

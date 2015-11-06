@@ -1,20 +1,12 @@
 /**
- * We also trap the class name PromisePolyfill and set its
- * type parameter to be covariant (see tests/type_param_variance
- * for the Promise case).
+ * Here the definition of Promise<T> is routed to the class Promise
+ * in the user-specified library libs/Promise.js
  *
- * Here the definition of Promise<T> is routed to PromisePolyfill
- * in libs/Promise.js, via
- * * the inclusion of libs/ in the [libs] section of .flowconfig
- * * the require('Promise') below.
- *
- * Note that in such situations we must also desugar async/await
- * to the shadowed definition.
+ * In such situations we must desugar async/await primitives
+ * to the shadowed library definition.
  *
  * @flow
  */
-
-var Promise = require('Promise');
 
 async function foo(x: boolean): Promise<?{bar: string}> {
   if (x) {

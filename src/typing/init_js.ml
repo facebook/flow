@@ -20,62 +20,91 @@ open Utils
 open Utils_js
 open Sys_utils
 
-(* parse all library files, as supplied by Files_js.get_lib_files.
-   use passed function to report errors.
-   returns list of (filename, Some ast | None) depending on success.
- *)
-let parse_lib save_parse_errors =
+module Files = Files_js
+module Parsing = Parsing_service_js
+module Infer = Type_inference_js
+
+let parse_lib_file save_parse_errors file =
   (* types are always allowed in lib files *)
-  let types_mode = Parsing_service_js.TypesAllowed in
-  Files_js.get_lib_files ()
-  |> SSet.elements
-  |> List.map (fun lib_filename ->
-    try Parsing_service_js.(
-      let lib_content = cat lib_filename in
-      let lib_file = Loc.LibFile lib_filename in
-      match do_parse ~types_mode lib_content lib_file with
-      | OK (ast, _) ->
-        lib_file, Some ast
-      | Err errors ->
-        save_parse_errors lib_file errors;
-        lib_file, None
-    )
-    with _ -> failwith (
-      spf "Can't read library definitions file %s, exiting." lib_filename
-    )
+  let types_mode = Parsing.TypesAllowed in
+  try Parsing.(
+    let lib_content = cat file in
+    let lib_file = Loc.LibFile file in
+    lib_file, match do_parse ~types_mode lib_content lib_file with
+    | OK (ast, _) ->
+      Some ast
+    | Err errors ->
+      save_parse_errors lib_file errors;
+      None
+  )
+  with _ -> failwith (
+    spf "Can't read library definitions file %s, exiting." file
   )
 
-(* parse all lib files, and do local inference on those successfully parsed.
+(* process all lib files: parse, infer, and add the symbols they define
+   to the builtins object.
+
+   Note: we support overrides of definitions found earlier in the list of
+   files by those of the same name found in later ones, so caller must
+   preserve lib path declaration order in the (flattened) list of files
+   passed.
+
    returns list of (filename, success) pairs
  *)
-let init_lib ~verbose save_parse_errors save_infer_errors save_suppressions =
-  (parse_lib save_parse_errors) |> List.fold_left (
-    fun acc (file, ast) ->
-      match ast with
-      | Some (_, statements, comments) ->
-        Type_inference_js.init_lib_file
+let load_lib_files files ~verbose
+  save_parse_errors save_infer_errors save_suppressions =
+
+  (* iterate in reverse override order *)
+  let _, result = List.rev files |> List.fold_left (
+
+    fun (exclude_syms, result) file ->
+
+      match parse_lib_file save_parse_errors file with
+      | lib_file, Some (_, statements, comments) ->
+
+        let syms = Infer.load_lib_file
           ~verbose
-          file
+          ~exclude_syms
+          lib_file
           statements
           comments
-          (save_infer_errors file)
-          (save_suppressions file);
-        (file, true) :: acc
-      | None ->
-        (file, false) :: acc
-    ) []
+          save_infer_errors
+          save_suppressions
+        in
+
+        (if verbose != None then
+          prerr_endlinef "load_lib %s: added symbols { %s }"
+            (Loc.string_of_filename lib_file)
+            (String.concat ", " syms));
+
+        (* symbols loaded from this file are suppressed
+           if found in later ones *)
+        let exclude_syms = SSet.union exclude_syms (set_of_list syms) in
+        let result = (lib_file, true) :: result in
+        exclude_syms, result
+
+      | lib_file, None ->
+        exclude_syms, ((lib_file, false) :: result)
+
+    ) (SSet.empty, [])
+
+  in result
 
 (* initialize builtins:
    parse and do local inference on library files, and set up master context.
    returns list of (lib file, success) pairs.
  *)
 let init ~verbose save_parse_errors save_infer_errors save_suppressions =
-  let res = init_lib
-    ~verbose save_parse_errors save_infer_errors save_suppressions in
+
+  let lib_files = Files.get_lib_files () in
+  let result = load_lib_files lib_files ~verbose
+    save_parse_errors save_infer_errors save_suppressions in
+
   Flow_js.Cache.clear();
   let master_cx = Flow_js.master_cx () in
   let reason = Reason_js.builtin_reason "module" in
-  let builtin_module = Type_inference_js.mk_object master_cx reason in
+  let builtin_module = Infer.mk_object master_cx reason in
   Flow_js.flow master_cx (builtin_module, Flow_js.builtins master_cx);
   Flow_js.ContextOptimizer.sig_context [master_cx];
-  res
+
+  result

@@ -34,8 +34,12 @@ let is_flow_file path = is_valid_path path && not (is_directory path)
 let lib_files = ref None
 
 let get_lib_files () = match !lib_files with
+| None -> []
+| Some (files, fileset) -> files
+
+let get_lib_fileset () = match !lib_files with
 | None -> SSet.empty
-| Some files -> files
+| Some (files, fileset) -> fileset
 
 let realpath path = match Sys_utils.realpath path with
 | Some path -> path
@@ -163,7 +167,7 @@ let get_all =
 
 let init ~include_default_libs ~tmp_dir libs =
   match !lib_files with
-  | Some libs -> ()
+  | Some (files, fileset) -> ()
   | None -> (
     config_options := Some FlowConfig.((get_unsafe ()).options);
     let libs = if not include_default_libs
@@ -177,21 +181,25 @@ let init ~include_default_libs ~tmp_dir libs =
           FlowExitStatus.(exit ~msg Could_not_find_flowconfig)
         end
     in
+    (* preserve enumeration order *)
     let libs = if libs = []
-      then SSet.empty
+      then []
       else
         let get_next = make_next_files_following_symlinks
           ~path_filter:is_valid_path
           ~realpath_filter:is_valid_path
-          libs
         in
-        get_all get_next
+        let exp_list = libs |> List.map (fun lib ->
+          let expanded = SSet.elements (get_all (get_next [lib])) in
+          expanded
+        ) in
+        List.flatten exp_list
     in
-    lib_files := Some libs
+    lib_files := Some (libs, set_of_list libs)
   )
 
 let is_lib_file p =
-  SSet.mem p (get_lib_files ())
+  SSet.mem p (get_lib_fileset ())
 
 let lib_module = ""
 

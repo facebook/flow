@@ -473,7 +473,7 @@ struct
     then env
     else begin
       SearchService_js.clear updates;
-      let all_libs = Files_js.get_lib_files () in
+      let all_libs = Files_js.get_lib_fileset () in
       let libs, files = ServerEnv.PathSet.fold (fun x (libs, files) ->
         let file = Path.to_string x in
         if SSet.mem file all_libs then SSet.add file libs, files

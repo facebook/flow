@@ -2055,7 +2055,7 @@ and statement cx type_params_map = Ast.Statement.(
            * expression type is itself a Promise<T>, ensure we still return
            * a Promise<T> via Promise.resolve. *)
           let reason = mk_reason "async return" loc in
-          let promise = Env_js.get_var cx "Promise" reason in
+          let promise = Flow_js.get_builtin cx "Promise" reason in
           Flow_js.mk_tvar_where cx reason (fun tvar ->
             let call = Flow_js.mk_methodtype promise [t] tvar in
             Flow_js.flow cx
@@ -6218,7 +6218,7 @@ and mk_body id cx type_params_map ~kind ?(derived_ctor=false)
       VoidT (mk_reason "return undefined" loc)
     | Async ->
       let reason = mk_reason "return Promise<Unit>" loc in
-      let promise = Env_js.var_ref ~lookup_mode:ForType cx "Promise" reason in
+      let promise = Flow_js.get_builtin cx "Promise" reason in
       TypeAppT (promise, [VoidT.at loc])
     | Generator ->
       let reason = mk_reason "return Generator<Yield,void,Next>" loc in
@@ -6697,9 +6697,14 @@ let restore cx dep_cxs master_cx =
   dep_cxs |> List.iter (copy_context cx);
   copy_context cx master_cx
 
-(* variation of infer + merge for lib definitions *)
-let init_lib_file
-    ~verbose file statements comments save_errors save_suppressions =
+(* load a parsed library file.
+   processing is similar to an ordinary module, except that
+   a) symbols from prior library loads are suppressed if found,
+   b) bindings are added as properties to the builtin object
+ *)
+let load_lib_file ~verbose ~exclude_syms file statements comments
+  save_errors save_suppressions =
+
   Flow_js.Cache.clear();
 
   let cx = Flow_js.fresh_context { Context.
@@ -6710,7 +6715,7 @@ let init_lib_file
   } file Files_js.lib_module in
 
   let module_scope = Scope.fresh () in
-  Env_js.init_env cx module_scope;
+  Env_js.init_env ~exclude_syms cx module_scope;
 
   let type_params_map = SMap.empty in
 
@@ -6727,5 +6732,7 @@ let init_lib_file
 
   let errs = Context.errors cx in
   Context.remove_all_errors cx;
-  save_errors errs;
-  save_suppressions (Context.error_suppressions cx)
+  save_errors file errs;
+  save_suppressions file (Context.error_suppressions cx);
+
+  SMap.keys Scope.(module_scope.entries)

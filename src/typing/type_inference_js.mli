@@ -46,11 +46,12 @@ val dump_types:
 
 val fill_types: Context.t -> (int * int * string) list
 
-val init_lib_file:
+val load_lib_file:
   verbose: int option ->
+  exclude_syms:Utils.SSet.t ->
   filename ->
   Spider_monkey_ast.Statement.t list ->
   Spider_monkey_ast.Comment.t list ->
-  (Errors_js.ErrorSet.t -> unit) ->
-  (Errors_js.ErrorSuppressions.t -> unit) ->
-  unit
+  (filename -> Errors_js.ErrorSet.t -> unit) ->
+  (filename -> Errors_js.ErrorSuppressions.t -> unit) ->
+  string list

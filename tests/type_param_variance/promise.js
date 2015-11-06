@@ -10,7 +10,6 @@
  *
  * @flow
  */
-/* @flow */
 
 async function foo(x: boolean): Promise<?{bar: string}> {
   if (x) {

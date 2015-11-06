@@ -67,6 +67,21 @@ open LookupMode
 type 'a stack = 'a list ref
 let scopes: Scope.t stack = ref []
 
+(* symbols whose bindings are forcibly prevented from being created,
+   initialized, etc. This set is initialized in init_env, and is normally
+   empty. It's used to implement library overrides: suppressing a local
+   binding to definition D means that any local reference to D will
+   register it as a deferred global lookup, which will then be linked
+   to the override. See Init_js.load_lib_files.
+ *)
+let exclude_symbols: SSet.t ref = ref SSet.empty
+
+let set_exclude_symbols cx syms =
+  exclude_symbols := syms
+
+let is_excluded name =
+  SSet.mem name !exclude_symbols
+
 (* scopes *)
 
 (* return the current scope *)
@@ -238,7 +253,8 @@ let trunc_env =
     scopes := trunc (List.length cur - depth, cur)
 
 (* initialize a new environment (once per module) *)
-let init_env cx module_scope =
+let init_env ?(exclude_syms=SSet.empty) cx module_scope =
+  set_exclude_symbols cx exclude_syms;
   havoc_current_activation ();
   let global_scope = Scope.fresh ~var_scope_kind:Global () in
   push_var_scope cx global_scope;
@@ -438,7 +454,7 @@ let bind_entry cx name entry reason =
         (* shadowing in a lex scope is always an error *)
         | LexScope -> already_bound_error cx name prev reason)
   in
-  loop !scopes
+  if not (is_excluded name) then loop !scopes
 
 (* bind var entry *)
 let bind_var ?(state=Entry.Declared) cx name t r =
@@ -483,29 +499,32 @@ let bind_declare_fun =
   in
 
   fun cx name t reason ->
-    let scope = peek_scope () in
-    match Scope.get_entry name scope with
-    | None ->
-      let entry =
-        Entry.new_var t ~loc:(loc_of_reason reason) ~state:Entry.Initialized
-      in
-      Scope.add_entry name entry scope
-
-    | Some prev ->
-      Entry.(match prev with
-
-      | Value v when v.kind = Var ->
-        let entry = Value { v with
-          value_state = Initialized;
-          specific = update_type v.specific t;
-          general = update_type v.general t
-        } in
+    if not (is_excluded name)
+    then (
+      let scope = peek_scope () in
+      match Scope.get_entry name scope with
+      | None ->
+        let entry =
+          Entry.new_var t ~loc:(loc_of_reason reason) ~state:Entry.Initialized
+        in
         Scope.add_entry name entry scope
 
-      | _ ->
-        (* declare function shadows some other kind of binding *)
-        already_bound_error cx name prev reason
-      )
+      | Some prev ->
+        Entry.(match prev with
+
+        | Value v when v.kind = Var ->
+          let entry = Value { v with
+            value_state = Initialized;
+            specific = update_type v.specific t;
+            general = update_type v.general t
+          } in
+          Scope.add_entry name entry scope
+
+        | _ ->
+          (* declare function shadows some other kind of binding *)
+          already_bound_error cx name prev reason
+        )
+    )
 
 (* helper: move a Let/Const's entry's state from Undeclared to Declared.
    Only needed for let and const to push things into scope for potentially
@@ -513,13 +532,15 @@ let bind_declare_fun =
    immediately on binding.
  *)
 let declare_value_entry kind cx name reason =
-  let scope, entry = find_entry cx name reason in
-  Entry.(match entry with
-  | Value v when v.kind = kind && v.value_state = Undeclared ->
-    let new_entry = Value { v with value_state = Declared } in
-    Scope.add_entry name new_entry scope
-  | _ ->
-    already_bound_error cx name entry reason
+  if not (is_excluded name)
+  then Entry.(
+    let scope, entry = find_entry cx name reason in
+    match entry with
+    | Value v when v.kind = kind && v.value_state = Undeclared ->
+      let new_entry = Value { v with value_state = Declared } in
+      Scope.add_entry name new_entry scope
+    | _ ->
+      already_bound_error cx name entry reason
   )
 
 let declare_let = declare_value_entry (Entry.Let None)
@@ -573,27 +594,28 @@ let force_general_type cx ({ Entry.general; _ } as value_binding) = Entry.(
 (* helper - update var entry to reflect assignment/initialization *)
 (* note: here is where we understand that a name can be multiply var-bound *)
 let init_value_entry kind cx name ~has_anno specific reason =
-  let scope, entry = find_entry cx name reason in
-  Entry.(match kind, entry with
-
-  | Var, Value ({ kind = Var; _ } as v)
-  | Let _, Value ({ kind = Let _; value_state = Undeclared | Declared; _ } as v)
-  | Const, Value ({ kind = Const; value_state = Undeclared | Declared; _ } as v) ->
-    Changeset.(add_var_change (scope.id, name, Write));
-    Flow_js.flow cx (specific, v.general);
-    let value_binding = { v with value_state = Initialized; specific } in
-    (* if binding is annotated, flow annotated type like initializer *)
-    let new_entry = Value (
-      if has_anno
-      then force_general_type cx value_binding
-      else value_binding
-    ) in
-    Scope.add_entry name new_entry scope;
-  | _ ->
-    (* Incompatible or non-redeclarable new and previous entries.
-       We will have already issued an error in `bind_value_entry`,
-       so we can prune this case here. *)
-    ()
+  if not (is_excluded name)
+  then Entry.(
+    let scope, entry = find_entry cx name reason in
+    match kind, entry with
+    | Var, Value ({ kind = Var; _ } as v)
+    | Let _, Value ({ kind = Let _; value_state = Undeclared | Declared; _ } as v)
+    | Const, Value ({ kind = Const; value_state = Undeclared | Declared; _ } as v) ->
+      Changeset.(add_var_change (scope.id, name, Write));
+      Flow_js.flow cx (specific, v.general);
+      let value_binding = { v with value_state = Initialized; specific } in
+      (* if binding is annotated, flow annotated type like initializer *)
+      let new_entry = Value (
+        if has_anno
+        then force_general_type cx value_binding
+        else value_binding
+      ) in
+      Scope.add_entry name new_entry scope;
+    | _ ->
+      (* Incompatible or non-redeclarable new and previous entries.
+         We will have already issued an error in `bind_value_entry`,
+         so we can prune this case here. *)
+      ()
   )
 
 let init_var = init_value_entry Entry.Var
@@ -604,28 +626,32 @@ let init_const = init_value_entry Entry.Const
 
 (* update type alias to reflect initialization in code *)
 let init_type cx name _type reason =
-  let scope, entry = find_entry cx name reason in
-  Entry.(match entry with
-  | Type ({ type_state = Declared; _ } as t)->
-    Flow_js.flow cx (_type, t._type);
-    let new_entry = Type { t with type_state = Initialized; _type } in
-    Scope.add_entry name new_entry scope
-  | _ ->
-    (* Incompatible or non-redeclarable new and previous entries.
-       We will have already issued an error in `bind_value_entry`,
-       so we can prune this case here. *)
-    ()
+  if not (is_excluded name)
+  then Entry.(
+    let scope, entry = find_entry cx name reason in
+    match entry with
+    | Type ({ type_state = Declared; _ } as t)->
+      Flow_js.flow cx (_type, t._type);
+      let new_entry = Type { t with type_state = Initialized; _type } in
+      Scope.add_entry name new_entry scope
+    | _ ->
+      (* Incompatible or non-redeclarable new and previous entries.
+         We will have already issued an error in `bind_value_entry`,
+         so we can prune this case here. *)
+      ()
   )
 
 (* used to enforce annotations: see commentary in force_general_type *)
 let pseudo_init_declared_type cx name reason =
-  let scope, entry = find_entry cx name reason in
-  Entry.(match entry with
-  | Value value_binding ->
-    let entry = Value (force_general_type cx value_binding) in
-    Scope.add_entry name entry scope
-  | Type _ ->
-    assert_false (spf "pseudo_init_declared_type %s: Type entry" name)
+  if not (is_excluded name)
+  then Entry.(
+    let scope, entry = find_entry cx name reason in
+    match entry with
+    | Value value_binding ->
+      let entry = Value (force_general_type cx value_binding) in
+      Scope.add_entry name entry scope
+    | Type _ ->
+      assert_false (spf "pseudo_init_declared_type %s: Type entry" name)
   )
 
 (* get types from value entry, does uninitialized -> undefined behavior *)
@@ -726,7 +752,7 @@ let get_var_declared_type ?(lookup_mode=ForValue) =
 
 (* get var type, with location of given reason used in type's reason *)
 (* TODO remove once positions in __flow are fully worked out *)
-let var_ref ?(lookup_mode=ForValue ) cx name reason =
+let var_ref ?(lookup_mode=ForValue) cx name reason =
   get_var ~lookup_mode cx name reason
   |> Flow_js.reposition cx reason
 
@@ -1060,8 +1086,7 @@ let havoc_all () =
   iter_scopes (Scope.havoc ~make_specific:(fun general -> general))
 
 (* set specific type of every non-internal var in top activation to undefined,
-   and clear heap refinements.
-   TODO rename *)
+   and clear heap refinements *)
 let havoc_current_activation reason =
   iter_local_scopes (Scope.havoc ~make_specific:(fun _ -> UndefT reason))
 

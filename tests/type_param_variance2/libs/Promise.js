@@ -3,49 +3,45 @@
 // These annotations are copy/pasted from the built-in Flow definitions for
 // Native Promises (https://phabricator.fb.com/P19792689),
 // with www-specific additions added in.
-declare module "Promise" {
-  // Use the name "PromisePolyfill" so that we don't get confusing error
-  // messages about "Using Promise instead of Promise".
-  declare class PromisePolyfill<R> {
-    constructor(callback: (
-      resolve: (result?: PromisePolyfill<R> | R) => void,
-      reject: (error?: any) => void
-    ) => void): void;
 
-    then<U>(
-      onFulfill?: ?(value: R) => PromisePolyfill<U> | ?U,
-      onReject?: ?(error: any) => PromisePolyfill<U> | ?U
-    ): PromisePolyfill<U>;
+// Any definitions here will override similarly-named ones in
+// library files declared earlier, including default flow libs.
 
-    done<U>(
-      onFulfill?: ?(value: R) => void,
-      onReject?: ?(error: any) => void
-    ): void;
+declare class Promise<R> {
+  constructor(callback: (
+    resolve: (result?: Promise<R> | R) => void,
+    reject: (error?: any) => void
+  ) => void): void;
 
-    catch<U>(
-      onReject?: (error: any) => ?PromisePolyfill<U> | U
-    ): PromisePolyfill<U>;
+  then<U>(
+    onFulfill?: ?(value: R) => Promise<U> | ?U,
+    onReject?: ?(error: any) => Promise<U> | ?U
+  ): Promise<U>;
 
-    static resolve<T>(object?: PromisePolyfill<T> | T): PromisePolyfill<T>;
-    static reject<T>(error?: any): PromisePolyfill<T>;
+  done<U>(
+    onFulfill?: ?(value: R) => void,
+    onReject?: ?(error: any) => void
+  ): void;
 
-    // Non-standard APIs
-    finally<U>(
-      onSettled?: ?(value: any) => PromisePolyfill<U> | U
-    ): PromisePolyfill<U>;
+  catch<U>(
+    onReject?: (error: any) => ?Promise<U> | U
+  ): Promise<U>;
 
-    static cast<T>(object?: T): PromisePolyfill<T>;
-    static all<T>(
-      promises: Array<?PromisePolyfill<T> | T>,
-    ): PromisePolyfill<Array<T>>;
-    static race<T>(promises: Array<PromisePolyfill<T>>): PromisePolyfill<T>;
+  static resolve<T>(object?: Promise<T> | T): Promise<T>;
+  static reject<T>(error?: any): Promise<T>;
 
-    static allObject<T: Object>(
-      promisesByKey: T
-    ): PromisePolyfill<{[key: $Keys<T>]: any}>;
-  }
+  // Non-standard APIs
+  finally<U>(
+    onSettled?: ?(value: any) => Promise<U> | U
+  ): Promise<U>;
 
-  // Don't "declare class exports" directly, otherwise in error messages our
-  // show up as "exports" instead of "Promise" or "PromisePolyfill".
-  declare var exports: typeof PromisePolyfill;
+  static cast<T>(object?: T): Promise<T>;
+  static all<T>(
+    promises: Array<?Promise<T> | T>,
+  ): Promise<Array<T>>;
+  static race<T>(promises: Array<Promise<T>>): Promise<T>;
+
+  static allObject<T: Object>(
+    promisesByKey: T
+  ): Promise<{[key: $Keys<T>]: any}>;
 }

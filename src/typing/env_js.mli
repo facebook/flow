@@ -38,7 +38,11 @@ val pop_lex_scope: unit -> unit
 val env_depth: unit -> int
 val trunc_env: int -> unit
 
-val init_env: Context.t -> Scope.t -> unit
+val init_env:
+  ?exclude_syms:Utils.SSet.t ->
+  Context.t ->
+  Scope.t ->
+  unit
 
 val update_env: Context.t -> reason -> Scope.t list -> unit
 
