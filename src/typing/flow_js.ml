@@ -2761,6 +2761,7 @@ let rec __flow cx (l, u) trace =
              rules apply. *)
           let r = prefix_reason (spf "property `%s` of " x) reason_ in
           let r = repos_reason (loc_of_reason reason) r in
+          let t = filter_optional cx ~trace r t in
           rec_flow cx trace (proto, SetPropT (r, (r, x), t));
         );
       );
