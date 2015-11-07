@@ -37,6 +37,8 @@ $> babel --watch=./src --out-dir=./build
 
 This will run in the background, pick up any changes to files in `src/`, and create their pure JavaScript version in `build/`.
 
+For more detailed documentation on the `babel` CLI utility, check out it's own [docs](https://babeljs.io/docs/usage/cli/).
+
 ## Using the in-browser transform
 
 This is **not** recommended for production because it is not as performant as the offline transform tool. However, it is a convenient way to get started with quick prototyping.
