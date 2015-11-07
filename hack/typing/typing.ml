@@ -2568,17 +2568,7 @@ and array_get is_lvalue p env ty1 ety1 e2 ty2 =
   | Tarraykind (AKmap (k, v)) ->
       let env, ty2 = TUtils.unresolved env ty2 in
       let env, _ = Type.unify p Reason.URarray_get env k ty2 in
-      (* The values in the array are not consistent
-       * we just give up. Use Maps!
-       *)
-      let env, ev = TUtils.fold_unresolved env v in
-      let env, ev = Env.expand_type env ev in
-      (match ev with
-      | _, Tunresolved _ -> env, (Reason.Rwitness p, Tany)
-      | _, (Tany | Tmixed | Tarraykind _ | Toption _
-        | Tprim _ | Tvar _ | Tfun _ | Tclass (_, _) | Tabstract (_, _)
-        | Ttuple _ | Tanon _ | Tobject | Tshape _) -> env, v
-      )
+      env, v
   | Tarraykind ((AKshape  _ |  AKtuple _) as akind) ->
       let key = Typing_arrays.static_array_access env (Some e2) in
       let env, result = match key, akind with
