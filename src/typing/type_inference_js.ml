@@ -3136,8 +3136,6 @@ and object_prop cx type_params_map map = Ast.Expression.Object.(function
 
   (* computed LHS *)
   | Property (loc, { Property.key = Property.Computed _; _ }) ->
-    let msg = "computed property keys not supported" in
-    Flow_js.add_error cx [mk_reason "" loc, msg];
     map
 
   (* spread prop *)
@@ -3148,42 +3146,65 @@ and object_prop cx type_params_map map = Ast.Expression.Object.(function
 and prop_map_of_object cx type_params_map props =
   List.fold_left (object_prop cx type_params_map) SMap.empty props
 
-and object_ cx type_params_map reason ?(allow_sealed=true) props = Ast.Expression.Object.(
+and object_ cx type_params_map reason ?(allow_sealed=true) props =
+  Ast.Expression.Object.(
+  (* Return an object with specified sealing. *)
   let mk_object ?(sealed=false) map =
     Flow_js.mk_object_with_map_proto cx reason ~sealed map (MixedT reason)
   in
+  (* Copy properties from from_obj to to_obj. We should ensure that to_obj is
+     not sealed. *)
   let mk_spread from_obj to_obj =
     Flow_js.mk_tvar_where cx reason (fun t ->
       Flow_js.flow cx (to_obj, ObjAssignT(reason, from_obj, t, [], true));
     )
   in
-  let map, result = List.fold_left (fun (map, result) t -> match t with
+  (* When there's no result, return a new object with specified sealing. When
+     there's result, copy a new object into it, sealing the result when
+     necessary.
+
+     When building an object incrementally, only the final call to this function
+     may be with sealed=true, so we will always have an unsealed object to copy
+     properties to. *)
+  let eval_object ?(sealed=false) (map, result) =
+    match result with
+    | None -> mk_object ~sealed map
+    | Some result ->
+      let result =
+        if not (SMap.is_empty map)
+        then mk_spread (mk_object map) result
+        else result
+      in
+      if not sealed then result else
+        Flow_js.mk_tvar_where cx reason (fun t ->
+          Flow_js.flow cx (result, ObjSealT (reason, t))
+        )
+  in
+
+  let sealed, map, result = List.fold_left (fun (sealed, map, result) t ->
+    match t with
     | SpreadProperty (loc, { SpreadProperty.argument }) ->
         let spread = expression cx type_params_map argument in
-        let result = match result with
-        | None ->
-          let obj = mk_object map in
-          mk_spread spread obj
-        | Some result ->
-          let obj = if not (SMap.is_empty map)
-            then mk_spread (mk_object map) result
-            else result in
-          mk_spread spread obj
-        in
-        SMap.empty, Some result
+        let obj = eval_object (map, result) in
+        let result = mk_spread spread obj in
+        false, SMap.empty, Some result
+    | Property (loc, { Property.key = Property.Computed k; value = v; _ }) ->
+        let k = expression cx type_params_map k in
+        let v = expression cx type_params_map v in
+        let obj = eval_object (map, result) in
+        Flow_js.flow cx (obj, SetElemT (reason, k, v));
+        (* TODO: vulnerable to race conditions? *)
+        let result = obj in
+        sealed, SMap.empty, Some result
     | t ->
-        object_prop cx type_params_map map t, result
-  ) (SMap.empty, None) props in
-  match result with
-  (* no spreads *)
-  | None ->
-      let sealed = allow_sealed && not (SMap.is_empty map) in
-      mk_object ~sealed map
-  (* some spreads *)
-  | Some result ->
-      if SMap.is_empty map
-      then result
-      else mk_spread (mk_object map) result
+        sealed, object_prop cx type_params_map map t, result
+  ) (allow_sealed, SMap.empty, None) props in
+
+  let sealed = match result with
+    | Some result -> sealed
+    | None -> sealed && not (SMap.is_empty map)
+  in
+  eval_object ~sealed (map, result)
 )
 
 and variable cx type_params_map kind

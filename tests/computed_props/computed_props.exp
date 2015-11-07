@@ -1,0 +1,22 @@
+
+test.js:19:2,29: string
+Expected string literal `ffffff`, got `ff0000` instead
+test.js:19:32,39: string literal `ffffff`
+
+test.js:21:17,19: property `XXX`
+Property not found in
+test.js:21:1,15: object literal
+
+test2.js:8:2,31: string
+Expected string literal `ffffff`, got `00ff00` instead
+test2.js:8:34,41: string literal `ffffff`
+
+test3.js:4:2,30: string
+Expected string literal `ffffff`, got `0000ff` instead
+test3.js:4:33,40: string literal `ffffff`
+
+test6.js:2:2,8: string
+Expected string literal `nothing`, got `world` instead
+test6.js:2:11,19: string literal `nothing`
+
+Found 5 errors
