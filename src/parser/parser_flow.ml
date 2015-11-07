@@ -2426,7 +2426,32 @@ end = struct
     let key = key ~allow_computed_key:false
   end
 
-  module Statement = struct
+  module Statement: sig
+    val _for: env -> Ast.Statement.t
+    val _if: env -> Ast.Statement.t
+    val _let: env -> Ast.Statement.t
+    val _try: env -> Ast.Statement.t
+    val _while: env -> Ast.Statement.t
+    val _with: env -> Ast.Statement.t
+    val block: env -> Ast.Statement.t
+    val break: env -> Ast.Statement.t
+    val continue: env -> Ast.Statement.t
+    val debugger: env -> Ast.Statement.t
+    val declare: ?in_module:bool -> env -> Ast.Statement.t
+    val declare_export_declaration: env -> Ast.Statement.t
+    val do_while: env -> Ast.Statement.t
+    val empty: env -> Ast.Statement.t
+    val export_declaration: env -> Ast.Statement.t
+    val expression: env -> Ast.Statement.t
+    val import_declaration: env -> Ast.Statement.t
+    val interface: env -> Ast.Statement.t
+    val maybe_labeled: env -> Ast.Statement.t
+    val return: env -> Ast.Statement.t
+    val switch: env -> Ast.Statement.t
+    val throw: env -> Ast.Statement.t
+    val type_alias: env -> Ast.Statement.t
+    val var_or_const: env -> Ast.Statement.t
+  end = struct
     let rec empty env =
       let loc = Peek.loc env in
       Expect.token env T_SEMICOLON;
@@ -2881,31 +2906,34 @@ end = struct
         expression;
       }))
 
-    and type_alias env =
+    and type_alias_helper env =
       let start_loc = Peek.loc env in
+      if not (should_parse_types env)
+      then error env Error.UnexpectedTypeAlias;
+      Expect.token env T_TYPE;
+      Eat.push_lex_mode env TYPE_LEX;
+      let id = Parse.identifier env in
+      let typeParameters = Type.type_parameter_declaration env in
+      Expect.token env T_ASSIGN;
+      let right = Type._type env in
+      let end_loc = match Peek.semicolon_loc env with
+      | None -> fst right
+      | Some end_loc -> end_loc in
+      Eat.semicolon env;
+      Eat.pop_lex_mode env;
+      Loc.btwn start_loc end_loc, Statement.TypeAlias.({
+        id;
+        typeParameters;
+        right;
+      })
+
+    and type_alias env =
       if Peek.identifier ~i:1 env
-      then begin
-        if not (should_parse_types env)
-        then error env Error.UnexpectedTypeAlias;
-        Expect.token env T_TYPE;
-        Eat.push_lex_mode env TYPE_LEX;
-        let id = Parse.identifier env in
-        let typeParameters = Type.type_parameter_declaration env in
-        Expect.token env T_ASSIGN;
-        let right = Type._type env in
-        let end_loc = match Peek.semicolon_loc env with
-        | None -> fst right
-        | Some end_loc -> end_loc in
-        Eat.semicolon env;
-        Eat.pop_lex_mode env;
-        Loc.btwn start_loc end_loc, Statement.(TypeAlias TypeAlias.({
-          id;
-          typeParameters;
-          right;
-        }))
-      end else begin
+      then
+        let loc, type_alias = type_alias_helper env in
+        loc, Statement.TypeAlias type_alias
+      else
         Parse.statement env
-      end
 
     and interface =
       let rec supers env acc =
@@ -2944,299 +2972,423 @@ end = struct
           expression env
         end
 
-    and declare =
+    and declare_class =
+      let rec supers env acc =
+        let super = Type.generic env in
+        let acc = super::acc in
+        match Peek.token env with
+        | T_COMMA ->
+          Expect.token env T_COMMA;
+          supers env acc
+        | _ -> List.rev acc
+
       (* This is identical to `interface`, except that mixins are allowed *)
-      let declare_class =
-        let rec supers env acc =
-          let super = Type.generic env in
-          let acc = super::acc in
-          match Peek.token env with
-          | T_COMMA ->
-            Expect.token env T_COMMA;
-            supers env acc
-          | _ -> List.rev acc
-
-        in fun env start_loc ->
-          let env = env |> with_strict true in
-          Expect.token env T_CLASS;
-          let id = Parse.identifier env in
-          let typeParameters = Type.type_parameter_declaration env in
-          let extends = if Peek.token env = T_EXTENDS
-            then begin
-              Expect.token env T_EXTENDS;
-              supers env []
-            end else [] in
-          let mixins = if Peek.value env = "mixins"
-            then begin
-              Expect.contextual env "mixins";
-              supers env []
-            end else [] in
-          let body = Type._object ~allow_static:true env in
-          let loc = Loc.btwn start_loc (fst body) in
-          loc, Statement.(DeclareClass Interface.({
-            id;
-            typeParameters;
-            body;
-            extends;
-            mixins;
-          })) in
-
-      let declare_function env start_loc =
-        Expect.token env T_FUNCTION;
+      in fun env start_loc ->
+        let env = env |> with_strict true in
+        Expect.token env T_CLASS;
         let id = Parse.identifier env in
-        let start_sig_loc = Peek.loc env in
         let typeParameters = Type.type_parameter_declaration env in
-        let rest, params = Type.function_param_list env in
-        Expect.token env T_COLON;
-        let returnType = Type._type env in
-        let end_loc = fst returnType in
-        let loc = Loc.btwn start_sig_loc end_loc in
-        let value = loc, Ast.Type.(Function {Function.
-          params;
-          returnType;
-          rest;
+        let extends = if Peek.token env = T_EXTENDS
+          then begin
+            Expect.token env T_EXTENDS;
+            supers env []
+          end else [] in
+        let mixins = if Peek.value env = "mixins"
+          then begin
+            Expect.contextual env "mixins";
+            supers env []
+          end else [] in
+        let body = Type._object ~allow_static:true env in
+        let loc = Loc.btwn start_loc (fst body) in
+        loc, Statement.Interface.({
+          id;
           typeParameters;
-        }) in
-        let typeAnnotation = Some ((fst value), value) in
-        let id =
-          Loc.btwn (fst id) end_loc,
-          Ast.Identifier.({(snd id) with typeAnnotation; })
-        in
-        let end_loc = match Peek.semicolon_loc env with
-        | None -> end_loc
-        | Some end_loc -> end_loc in
-        Eat.semicolon env;
-        let loc = Loc.btwn start_loc end_loc in
-        loc, Statement.(DeclareFunction DeclareFunction.({ id; })) in
+          body;
+          extends;
+          mixins;
+        })
 
-      let declare_var env start_loc =
-        Expect.token env T_VAR;
-        let id = Parse.identifier_with_type env Error.StrictVarName in
-        let end_loc = match Peek.semicolon_loc env with
-        | None -> fst id
-        | Some loc -> loc in
-        let loc = Loc.btwn start_loc end_loc in
-        Eat.semicolon env;
-        loc, Statement.(DeclareVariable DeclareVariable.({ id; })) in
+    and declare_class_statement env start_loc =
+      let loc, fn = declare_class env start_loc in
+      loc, Statement.DeclareClass fn
 
-      let declare_module =
-        let rec module_items env acc =
-          match Peek.token env with
-          | T_EOF
-          | T_RCURLY -> List.rev acc
-          | _ -> module_items env (declare ~in_module:true env::acc)
+    and declare_function env start_loc =
+      Expect.token env T_FUNCTION;
+      let id = Parse.identifier env in
+      let start_sig_loc = Peek.loc env in
+      let typeParameters = Type.type_parameter_declaration env in
+      let rest, params = Type.function_param_list env in
+      Expect.token env T_COLON;
+      let returnType = Type._type env in
+      let end_loc = fst returnType in
+      let loc = Loc.btwn start_sig_loc end_loc in
+      let value = loc, Ast.Type.(Function {Function.
+        params;
+        returnType;
+        rest;
+        typeParameters;
+      }) in
+      let typeAnnotation = Some ((fst value), value) in
+      let id =
+        Loc.btwn (fst id) end_loc,
+        Ast.Identifier.({(snd id) with typeAnnotation; })
+      in
+      let end_loc = match Peek.semicolon_loc env with
+      | None -> end_loc
+      | Some end_loc -> end_loc in
+      Eat.semicolon env;
+      let loc = Loc.btwn start_loc end_loc in
+      loc, Statement.DeclareFunction.({ id; })
 
-        in fun env start_loc ->
-          Expect.contextual env "module";
-          let id = match Peek.token env with
-          | T_STRING (loc, value, raw, octal) ->
-              if octal then strict_error env Error.StrictOctalLiteral;
-              Expect.token env (T_STRING (loc, value, raw, octal));
-              let value = Literal.String value in
-              Statement.DeclareModule.Literal (loc, { Literal.value; raw; })
-          | _ ->
-              Statement.DeclareModule.Identifier (Parse.identifier env) in
-          let body_start_loc = Peek.loc env in
-          Expect.token env T_LCURLY;
-          let body = module_items env [] in
-          Expect.token env T_RCURLY;
-          let body_end_loc = Peek.loc env in
-          let body_loc = Loc.btwn body_start_loc body_end_loc in
-          let body = body_loc, { Statement.Block.body; } in
-          Loc.btwn start_loc (fst body),
-          Statement.(DeclareModule DeclareModule.({ id; body; })) in
+    and declare_function_statement env start_loc =
+      let loc, fn = declare_function env start_loc in
+      loc, Statement.DeclareFunction fn
 
-      fun ?(in_module=false) env ->
+    and declare_var env start_loc =
+      Expect.token env T_VAR;
+      let id = Parse.identifier_with_type env Error.StrictVarName in
+      let end_loc = match Peek.semicolon_loc env with
+      | None -> fst id
+      | Some loc -> loc in
+      let loc = Loc.btwn start_loc end_loc in
+      Eat.semicolon env;
+      loc, Statement.DeclareVariable.({ id; })
+
+    and declare_var_statement env start_loc =
+      let loc, var = declare_var env start_loc in
+      loc, Statement.DeclareVariable var
+
+    and declare_module =
+      let rec module_items env acc =
+        match Peek.token env with
+        | T_EOF
+        | T_RCURLY -> List.rev acc
+        | _ -> module_items env (declare ~in_module:true env::acc)
+
+      in fun env start_loc ->
+        Expect.contextual env "module";
+        let id = match Peek.token env with
+        | T_STRING (loc, value, raw, octal) ->
+            if octal then strict_error env Error.StrictOctalLiteral;
+            Expect.token env (T_STRING (loc, value, raw, octal));
+            let value = Literal.String value in
+            Statement.DeclareModule.Literal (loc, { Literal.value; raw; })
+        | _ ->
+            Statement.DeclareModule.Identifier (Parse.identifier env) in
+        let body_start_loc = Peek.loc env in
+        Expect.token env T_LCURLY;
+        let body = module_items env [] in
+        Expect.token env T_RCURLY;
+        let body_end_loc = Peek.loc env in
+        let body_loc = Loc.btwn body_start_loc body_end_loc in
+        let body = body_loc, { Statement.Block.body; } in
+        Loc.btwn start_loc (fst body),
+        Statement.(DeclareModule DeclareModule.({ id; body; }))
+
+
+    and declare ?(in_module=false) env =
+      if not (should_parse_types env)
+      then error env Error.UnexpectedTypeDeclaration;
+      let start_loc = Peek.loc env in
+      (* eventually, just emit a wrapper AST node *)
+      (match Peek.token ~i:1 env with
+      | T_CLASS ->
+          Expect.token env T_DECLARE;
+          declare_class_statement env start_loc
+      | T_INTERFACE ->
+          Expect.token env T_DECLARE;
+          interface env
+      | T_TYPE ->
+          Expect.token env T_DECLARE;
+          type_alias env;
+      | T_FUNCTION ->
+          Expect.token env T_DECLARE;
+          declare_function_statement env start_loc
+      | T_VAR ->
+          Expect.token env T_DECLARE;
+          declare_var_statement env start_loc
+      | T_ASYNC ->
+          Expect.token env T_DECLARE;
+          error env Error.DeclareAsync;
+          Expect.token env T_ASYNC;
+          declare_function_statement env start_loc
+      | T_IDENTIFIER when not in_module && Peek.value ~i:1 env = "module" ->
+          Expect.token env T_DECLARE;
+          declare_module env start_loc
+      | _ when in_module ->
+          (* Oh boy, found some bad stuff in a declare module. Let's just
+            * pretend it's a declare var (arbitrary choice) *)
+          Expect.token env T_DECLARE;
+          declare_var_statement env start_loc
+      | _ ->
+          Parse.statement env)
+
+      let export_source env =
+        Expect.contextual env "from";
+        match Peek.token env with
+        | T_STRING (loc, value, raw, octal) ->
+            if octal then strict_error env Error.StrictOctalLiteral;
+            Expect.token env (T_STRING (loc, value, raw, octal));
+            let value = Literal.String value in
+            loc, { Literal.value; raw; }
+        | _ ->
+            (* Just make up a string for the error case *)
+            let raw = Peek.value env in
+            let value = Literal.String raw in
+            let ret = Peek.loc env, Literal.({ value; raw; }) in
+            error_unexpected env;
+            ret
+
+      let rec export_specifiers_and_errs env specifiers errs =
+        match Peek.token env with
+        | T_EOF
+        | T_RCURLY ->
+            List.rev specifiers, List.rev errs
+        | _ ->
+            let id, err = Parse.identifier_or_reserved_keyword env in
+            let name, err, end_loc = if Peek.value env = "as"
+            then begin
+              Expect.contextual env "as";
+              let name, err = Parse.identifier_or_reserved_keyword env in
+              Some name, err, fst name
+            end else None, err, fst id in
+            let loc = Loc.btwn (fst id) end_loc in
+            let specifier = loc, {
+              Statement.ExportDeclaration.Specifier.id;
+              name;
+            } in
+            if Peek.token env = T_COMMA
+            then Expect.token env T_COMMA;
+            let errs = match err with
+            | Some err -> err::errs
+            | None -> errs in
+            export_specifiers_and_errs env (specifier::specifiers) errs
+
+      let export_declaration env =
+        let env = env |> with_strict true |> with_in_export true in
+        let start_loc = Peek.loc env in
+        Expect.token env T_EXPORT;
+        Statement.ExportDeclaration.(match Peek.token env with
+        | T_DEFAULT ->
+            (* export default ... *)
+            Expect.token env T_DEFAULT;
+            let end_loc, declaration = match Peek.token env with
+            | T_FUNCTION ->
+                (* export default function foo (...) { ... } *)
+                let fn = Declaration._function env in
+                fst fn, Some (Declaration fn)
+            | T_CLASS ->
+                (* export default class foo { ... } *)
+                let _class = Object.class_declaration env in
+                fst _class, Some (Declaration _class)
+            | _ ->
+                (* export default [assignment expression]; *)
+                let expr = Parse.assignment env in
+                let end_loc = match Peek.semicolon_loc env with
+                | Some loc -> loc
+                | None -> fst expr in
+                Eat.semicolon env;
+                end_loc, Some (Expression expr)
+              in
+            Loc.btwn start_loc end_loc, Statement.ExportDeclaration {
+              default = true;
+              declaration;
+              specifiers = None;
+              source = None;
+              exportKind = ExportValue;
+            }
+        | T_TYPE when (Peek.token env ~i:1) <> T_LCURLY ->
+            (* export type ... *)
+            if not (should_parse_types env)
+            then error env Error.UnexpectedTypeExport;
+            let type_alias = type_alias env in
+            let end_loc = fst type_alias in
+            Loc.btwn start_loc end_loc, Statement.ExportDeclaration {
+              default = false;
+              declaration = Some (Declaration type_alias);
+              specifiers = None;
+              source = None;
+              exportKind = ExportType;
+            }
+        | T_LET
+        | T_CONST
+        | T_VAR
+        | T_CLASS
+        (* not using Peek._function here because it would guard all of the
+          * cases *)
+        | T_ASYNC
+        | T_FUNCTION ->
+            let stmt = Parse.statement_list_item env in
+            let declaration = Some (Declaration stmt) in
+            Loc.btwn start_loc (fst stmt), Statement.ExportDeclaration {
+              default = false;
+              declaration;
+              specifiers = None;
+              source = None;
+              exportKind = ExportValue;
+            }
+        | T_MULT ->
+            let loc = Peek.loc env in
+            let specifiers = Some (ExportBatchSpecifier loc) in
+            Expect.token env T_MULT;
+            let source = export_source env in
+            let end_loc = match Peek.semicolon_loc env with
+            | Some loc -> loc
+            | None -> fst source in
+            let source = Some source in
+            Eat.semicolon env;
+            Loc.btwn start_loc end_loc, Statement.ExportDeclaration {
+              default = false;
+              declaration = None;
+              specifiers;
+              source;
+              exportKind = ExportValue;
+            }
+        | _ ->
+            let exportKind = (
+              match Peek.token env with
+              | T_TYPE -> Eat.token env; ExportType
+              | _ -> ExportValue
+            ) in
+            Expect.token env T_LCURLY;
+            let specifiers, errs = export_specifiers_and_errs env [] [] in
+            let specifiers = Some (ExportSpecifiers specifiers) in
+            let end_loc = Peek.loc env in
+            Expect.token env T_RCURLY;
+            let source = if Peek.value env = "from"
+            then Some (export_source env)
+            else begin
+              errs |> List.iter (error_at env);
+              None
+            end in
+            let end_loc = match Peek.semicolon_loc env with
+            | Some loc -> loc
+            | None ->
+                (match source with
+                | Some source -> fst source
+                | None -> end_loc) in
+            Eat.semicolon env;
+            Loc.btwn start_loc end_loc, Statement.ExportDeclaration {
+              default = false;
+              declaration = None;
+              specifiers;
+              source;
+              exportKind;
+            }
+        )
+
+      and declare_export_declaration env =
         if not (should_parse_types env)
         then error env Error.UnexpectedTypeDeclaration;
         let start_loc = Peek.loc env in
-        (* eventually, just emit a wrapper AST node *)
-        (match Peek.token ~i:1 env with
-        | T_CLASS ->
-            Expect.token env T_DECLARE;
-            declare_class env start_loc
-        | T_INTERFACE ->
-            Expect.token env T_DECLARE;
-            interface env
-        | T_TYPE ->
-            Expect.token env T_DECLARE;
-            type_alias env;
+        Expect.token env T_DECLARE;
+
+        let env = env |> with_strict true |> with_in_export true in
+        Expect.token env T_EXPORT;
+        Statement.DeclareExportDeclaration.(match Peek.token env with
+        | T_DEFAULT ->
+            (* declare export default ... *)
+            Expect.token env T_DEFAULT;
+            let end_loc, declaration = match Peek.token env with
+            | T_FUNCTION ->
+                (* declare export default function foo (...): ...  *)
+                let fn = declare_function env start_loc in
+                fst fn, Some (Function fn)
+            | T_CLASS ->
+                (* declare export default class foo { ... } *)
+                let _class = declare_class env start_loc in
+                fst _class, Some (Class _class)
+            | _ ->
+                (* declare export default [type]; *)
+                let _type = Type._type env in
+                let end_loc = match Peek.semicolon_loc env with
+                | Some loc -> loc
+                | None -> fst _type in
+                Eat.semicolon env;
+                end_loc, Some (DefaultType _type)
+              in
+            Loc.btwn start_loc end_loc, Statement.DeclareExportDeclaration {
+              default = true;
+              declaration;
+              specifiers = None;
+              source = None;
+            }
+        | T_LET
+        | T_CONST
+        | T_VAR
+        | T_CLASS
         | T_FUNCTION ->
-            Expect.token env T_DECLARE;
-            declare_function env start_loc
-        | T_VAR ->
-            Expect.token env T_DECLARE;
-            declare_var env start_loc
-        | T_ASYNC ->
-            Expect.token env T_DECLARE;
-            error env Error.DeclareAsync;
-            Expect.token env T_ASYNC;
-            declare_function env start_loc
-        | T_IDENTIFIER when not in_module && Peek.value ~i:1 env = "module" ->
-            Expect.token env T_DECLARE;
-            declare_module env start_loc
-        | _ when in_module ->
-            (* Oh boy, found some bad stuff in a declare module. Let's just
-             * pretend it's a declare var (arbitrary choice) *)
-            Expect.token env T_DECLARE;
-            declare_var env start_loc
+            let end_loc, declaration = match Peek.token env with
+            | T_FUNCTION ->
+                (* declare export function foo (...): ...  *)
+                let fn = declare_function env start_loc in
+                fst fn, Some (Function fn)
+            | T_CLASS ->
+                (* declare export class foo { ... } *)
+                let _class = declare_class env start_loc in
+                fst _class, Some (Class _class)
+            | T_LET
+            | T_CONST
+            | T_VAR as token ->
+                (match token with
+                | T_LET -> error env Error.DeclareExportLet
+                | T_CONST -> error env Error.DeclareExportConst
+                | _ -> ());
+                (* declare export var foo: ... *)
+                let var = declare_var env start_loc in
+                fst var, Some (Variable var)
+            | _ -> assert false in
+            Loc.btwn start_loc end_loc, Statement.DeclareExportDeclaration {
+              default = false;
+              declaration;
+              specifiers = None;
+              source = None;
+            }
+        | T_MULT ->
+            (* declare export * from 'foo' *)
+            let loc = Peek.loc env in
+            let specifiers = Some (Statement.ExportDeclaration.ExportBatchSpecifier loc) in
+            Expect.token env T_MULT;
+            let source = export_source env in
+            let end_loc = match Peek.semicolon_loc env with
+            | Some loc -> loc
+            | None -> fst source in
+            let source = Some source in
+            Eat.semicolon env;
+            Loc.btwn start_loc end_loc, Statement.DeclareExportDeclaration {
+              default = false;
+              declaration = None;
+              specifiers;
+              source;
+            }
         | _ ->
-            Parse.statement env)
-
-      let export_declaration =
-        let source env =
-          Expect.contextual env "from";
-          match Peek.token env with
-          | T_STRING (loc, value, raw, octal) ->
-              if octal then strict_error env Error.StrictOctalLiteral;
-              Expect.token env (T_STRING (loc, value, raw, octal));
-              let value = Literal.String value in
-              loc, { Literal.value; raw; }
-          | _ ->
-              (* Just make up a string for the error case *)
-              let raw = Peek.value env in
-              let value = Literal.String raw in
-              let ret = Peek.loc env, Literal.({ value; raw; }) in
-              error_unexpected env;
-              ret
-
-        in let rec specifiers_and_errs env specifiers errs =
-          match Peek.token env with
-          | T_EOF
-          | T_RCURLY ->
-              List.rev specifiers, List.rev errs
-          | _ ->
-              let id, err = Parse.identifier_or_reserved_keyword env in
-              let name, err, end_loc = if Peek.value env = "as"
-              then begin
-                Expect.contextual env "as";
-                let name, err = Parse.identifier_or_reserved_keyword env in
-                Some name, err, fst name
-              end else None, err, fst id in
-              let loc = Loc.btwn (fst id) end_loc in
-              let specifier = loc, {
-                Statement.ExportDeclaration.Specifier.id;
-                name;
-              } in
-              if Peek.token env = T_COMMA
-              then Expect.token env T_COMMA;
-              let errs = match err with
-              | Some err -> err::errs
-              | None -> errs in
-              specifiers_and_errs env (specifier::specifiers) errs
-
-        in fun env ->
-          let env = env |> with_strict true |> with_in_export true in
-          let start_loc = Peek.loc env in
-          Expect.token env T_EXPORT;
-          Statement.ExportDeclaration.(match Peek.token env with
-          | T_DEFAULT ->
-              (* export default ... *)
-              Expect.token env T_DEFAULT;
-              let end_loc, declaration = match Peek.token env with
-              | T_FUNCTION ->
-                  (* export default function foo (...) { ... } *)
-                  let fn = Declaration._function env in
-                  fst fn, Some (Declaration fn)
-              | T_CLASS ->
-                  (* export default class foo { ... } *)
-                  let _class = Object.class_declaration env in
-                  fst _class, Some (Declaration _class)
-              | _ ->
-                  (* export default [assignment expression]; *)
-                  let expr = Parse.assignment env in
-                  let end_loc = match Peek.semicolon_loc env with
-                  | Some loc -> loc
-                  | None -> fst expr in
-                  Eat.semicolon env;
-                  end_loc, Some (Expression expr)
-               in
-              Loc.btwn start_loc end_loc, Statement.ExportDeclaration {
-                default = true;
-                declaration;
-                specifiers = None;
-                source = None;
-                exportKind = ExportValue;
-              }
-          | T_TYPE when (Peek.token env ~i:1) <> T_LCURLY ->
-              (* export type ... *)
-              if not (should_parse_types env)
-              then error env Error.UnexpectedTypeExport;
-              let type_alias = type_alias env in
-              let end_loc = fst type_alias in
-              Loc.btwn start_loc end_loc, Statement.ExportDeclaration {
-                default = false;
-                declaration = Some (Declaration type_alias);
-                specifiers = None;
-                source = None;
-                exportKind = ExportType;
-              }
-          | T_LET
-          | T_CONST
-          | T_VAR
-          | T_CLASS
-          (* not using Peek._function here because it would guard all of the
-           * cases *)
-          | T_ASYNC
-          | T_FUNCTION ->
-              let stmt = Parse.statement_list_item env in
-              let declaration = Some (Declaration stmt) in
-              Loc.btwn start_loc (fst stmt), Statement.ExportDeclaration {
-                default = false;
-                declaration;
-                specifiers = None;
-                source = None;
-                exportKind = ExportValue;
-              }
-          | T_MULT ->
-              let loc = Peek.loc env in
-              let specifiers = Some (ExportBatchSpecifier loc) in
-              Expect.token env T_MULT;
-              let source = source env in
-              let end_loc = match Peek.semicolon_loc env with
-              | Some loc -> loc
-              | None -> fst source in
-              let source = Some source in
-              Eat.semicolon env;
-              Loc.btwn start_loc end_loc, Statement.ExportDeclaration {
-                default = false;
-                declaration = None;
-                specifiers;
-                source;
-                exportKind = ExportValue;
-              }
-          | _ ->
-              let exportKind = (
-                match Peek.token env with
-                | T_TYPE -> Eat.token env; ExportType
-                | _ -> ExportValue
-              ) in
-              Expect.token env T_LCURLY;
-              let specifiers, errs = specifiers_and_errs env [] [] in
-              let specifiers = Some (ExportSpecifiers specifiers) in
-              let end_loc = Peek.loc env in
-              Expect.token env T_RCURLY;
-              let source = if Peek.value env = "from"
-              then Some (source env)
-              else begin
-                errs |> List.iter (error_at env);
-                None
-              end in
-              let end_loc = match Peek.semicolon_loc env with
-              | Some loc -> loc
-              | None ->
-                  (match source with
-                  | Some source -> fst source
-                  | None -> end_loc) in
-              Eat.semicolon env;
-              Loc.btwn start_loc end_loc, Statement.ExportDeclaration {
-                default = false;
-                declaration = None;
-                specifiers;
-                source;
-                exportKind;
-              }
-          )
+            if Peek.token env = T_TYPE
+            then error env Error.DeclareExportType;
+            Expect.token env T_LCURLY;
+            let specifiers, errs = export_specifiers_and_errs env [] [] in
+            let specifiers = Some (Statement.ExportDeclaration.ExportSpecifiers specifiers) in
+            let end_loc = Peek.loc env in
+            Expect.token env T_RCURLY;
+            let source = if Peek.value env = "from"
+            then Some (export_source env)
+            else begin
+              errs |> List.iter (error_at env);
+              None
+            end in
+            let end_loc = match Peek.semicolon_loc env with
+            | Some loc -> loc
+            | None ->
+                (match source with
+                | Some source -> fst source
+                | None -> end_loc) in
+            Eat.semicolon env;
+            Loc.btwn start_loc end_loc, Statement.DeclareExportDeclaration {
+              default = false;
+              declaration = None;
+              specifiers;
+              source;
+            }
+        )
 
       and import_declaration =
         let source env =
@@ -3746,6 +3898,8 @@ end = struct
     match Peek.token env with
     | T_EXPORT -> Statement.export_declaration env
     | T_IMPORT -> Statement.import_declaration env
+    | T_DECLARE when Peek.token ~i:1 env = T_EXPORT ->
+        Statement.declare_export_declaration env
     | _ -> statement_list_item env
 
   and module_body_with_directives env term_fn =

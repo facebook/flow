@@ -1264,6 +1264,272 @@ module.exports = {
       }
     },
   },
+  'Declare Export': {
+    // Batch export
+    'declare export * from "foo";': {
+      'body': [
+        {
+          'type': 'DeclareExportDeclaration',
+          'specifiers': [
+            {
+              'type': 'ExportBatchSpecifier',
+            }
+          ],
+          'source.value': "foo",
+          'declaration': null,
+          'default': false,
+        },
+      ],
+    },
+    'declare export * from "foo"': {
+      'body': [
+        {
+          'type': 'DeclareExportDeclaration',
+          'specifiers': [
+            {
+              'type': 'ExportBatchSpecifier',
+            }
+          ],
+          'source.value': "foo",
+          'declaration': null,
+          'default': false,
+        },
+      ],
+    },
+
+    // Named value exports
+    'declare export {} from "foo";': {
+      'body.0.specifiers': [],
+      'body.0.default': false,
+      'body.0.source.value': "foo",
+    },
+    'declare export { bar } from "foo";': {
+      'body.0.specifiers': [
+        {
+          'type': 'ExportSpecifier',
+          'id.name': 'bar',
+        },
+      ],
+    },
+    'declare export { bar } from "foo"': {},
+    'declare export { bar, baz } from "foo";': {
+      'body.0.specifiers': [
+        {
+          'id.name': 'bar',
+        },
+        {
+          'id.name': 'baz',
+        },
+      ],
+    },
+    'declare export { bar };': {},
+    'declare export { bar, }': {},
+    'declare export { bar, baz };': {},
+
+    // Variable export
+    'declare export var x': {
+      'body.0.declaration': {
+        'type': 'DeclareVariable',
+        'id.name': 'x',
+        'id.typeAnnotation': null,
+      },
+    },
+    'declare export var x;': {},
+    'declare export var x: number;': {
+      'body.0.declaration': {
+        'type': 'DeclareVariable',
+        'id.name': 'x',
+        'id.typeAnnotation.typeAnnotation.type': 'NumberTypeAnnotation',
+      },
+    },
+
+    // Function export
+    'declare export function foo(): void': {
+      'body.0.declaration': {
+        'type': 'DeclareFunction',
+        'id.name': 'foo',
+        'id.typeAnnotation.typeAnnotation': {
+          'type': 'FunctionTypeAnnotation',
+          'params': [],
+          'returnType.type': 'VoidTypeAnnotation',
+        },
+      },
+    },
+    'declare export function foo(): void;': {},
+    'declare export function foo<T>(): void;': {},
+    'declare export function foo(x: number, y: string): void;': {},
+
+    // Class export
+    'declare export class A {}': {
+      'body.0.declaration': {
+        'type': 'DeclareClass',
+        'id.name': 'A',
+        'typeParameters': null,
+        'body': {
+          'type': 'ObjectTypeAnnotation',
+          'properties': []
+        },
+      },
+    },
+    'declare export class A<T> extends B<T> { x: number }': {
+      'body.0.declaration': {
+        'type': 'DeclareClass',
+        'id.name': 'A',
+        'typeParameters.params': [
+          {
+            'name': 'T',
+          },
+        ],
+        'body': {
+          'type': 'ObjectTypeAnnotation',
+          'properties': [
+            {
+              'key.name': 'x',
+            },
+          ]
+        },
+      },
+    },
+    'declare export class A { static foo(): number; static x : string }': {},
+    'declare export class A { static [ indexer: number]: string }': {},
+    'declare export class A { static () : number }': {},
+
+    // Default export. This corresponds to something like export default 1+1
+    'declare export default number;': {
+      'body.0.declaration.type': 'NumberTypeAnnotation',
+      'body.0.default': true,
+    },
+    'declare export default number': {
+    },
+
+    // Default function export
+    'declare export default function foo(): void': {
+      'body.0.declaration': {
+        'type': 'DeclareFunction',
+        'id.name': 'foo',
+        'id.typeAnnotation.typeAnnotation': {
+          'type': 'FunctionTypeAnnotation',
+          'params': [],
+          'returnType.type': 'VoidTypeAnnotation',
+        },
+      },
+      'body.0.default': true,
+    },
+    'declare export default function foo(): void;': {
+    },
+    'declare export default function foo<T>(): void;': {
+    },
+    'declare export default function foo(x: number, y: string): void;': {
+    },
+
+    // Default class export
+    'declare export default class A {}': {
+      'body.0.declaration': {
+        'type': 'DeclareClass',
+        'id.name': 'A',
+        'typeParameters': null,
+        'body': {
+          'type': 'ObjectTypeAnnotation',
+          'properties': []
+        },
+      },
+      'body.0.default': true,
+    },
+    'declare export default class A<T> extends B<T> { x: number }': {
+    },
+    'declare export default class A { static foo(): number; static x : string }': {
+    },
+    'declare export default class A { static [ indexer: number]: string }': {
+    },
+    'declare export default class A { static () : number }': {
+    },
+  },
+  'Invalid Declare Export': {
+    // declare export type is not supported since export type is identical
+    'declare export type foo = number;': {
+      'errors.0.message': '`declare export type` is not supported. Use `export type` instead.',
+    },
+    'declare export type { x, y }': {
+      'errors.0.message': '`declare export type` is not supported. Use `export type` instead.',
+    },
+    'declare export type * from "foo";': {
+      'errors.0.message': '`declare export type` is not supported. Use `export type` instead.',
+    },
+    'declare export type var x: number;': {
+      'errors.0.message': '`declare export type` is not supported. Use `export type` instead.',
+    },
+    'declare export type function foo(): void': {
+      'errors.0.message': '`declare export type` is not supported. Use `export type` instead.',
+    },
+    'declare export type class A {}': {
+      'errors.0.message': '`declare export type` is not supported. Use `export type` instead.',
+    },
+    'declare export type default number;': {
+      'errors.0.message': '`declare export type` is not supported. Use `export type` instead.',
+    },
+    'declare export type default function foo(): void': {
+      'errors.0.message': '`declare export type` is not supported. Use `export type` instead.',
+    },
+    'declare export type default class A {}': {
+      'errors.0.message': '`declare export type` is not supported. Use `export type` instead.',
+    },
+    // declare export let and declare export const are not supported
+    'declare export let foo: number': {
+      'errors.0.message': '`declare export let` is not supported. Use `declare export var` instead.',
+    },
+    'declare export const foo: number': {
+      'errors.0.message': '`declare export const` is not supported. Use `declare export var` instead.',
+    },
+    // You may only export a type directly for declare export default
+    'declare export number;': {
+      'errors.0.message': 'Unexpected identifier',
+      'errors.0.loc.start.column': 15,
+    },
+    // You must provide a return type
+    'declare export function foo();': {
+      'errors': {
+        '0': {
+          'message': 'Unexpected token ;',
+          'loc.start.column': 29,
+        },
+      }
+    },
+    // You must provide types for each function parameter
+    'declare export function foo(x): void': {
+      'errors': {
+        '0': {
+          'message': 'Unexpected token )',
+          'loc.start.column': 29,
+        },
+      },
+    },
+    'declare export class A { static : number }': {
+      'body.0.declaration.body.properties.0.static': false,
+      'errors': [
+        {
+          'message': 'Use of future reserved word in strict mode',
+        }
+      ]
+    },
+    'declare export class A { static implements: number; implements: number }': {
+      'body.0.declaration': {
+        'type': 'DeclareClass',
+        'id.name': 'A',
+        'body.properties': [
+          {
+            'key.name': 'implements',
+            'value.type': 'NumberTypeAnnotation',
+            'static': true,
+          },
+          {
+            'key.name': 'implements',
+            'value.type': 'NumberTypeAnnotation',
+            'static': false,
+          },
+        ],
+      },
+    },
+  },
   'Invalid Declaration Statements': {
     // You must provide a return type
     'declare function foo();': {

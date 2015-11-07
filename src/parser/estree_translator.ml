@@ -122,13 +122,7 @@ end with type t = Impl.t) = struct
         "body", statement _with.body;
       |]
     )
-  | loc, TypeAlias alias -> TypeAlias.(
-      node "TypeAlias" loc [|
-        "id", identifier alias.id;
-        "typeParameters", option type_parameter_declaration alias.typeParameters;
-        "right", _type alias.right;
-      |]
-    )
+  | loc, TypeAlias alias -> type_alias (loc, alias)
   | loc, Switch switch -> Switch.(
       node "SwitchStatement" loc [|
         "discriminant", expression switch.discriminant;
@@ -233,24 +227,9 @@ end with type t = Impl.t) = struct
         "typeParameters", option type_parameter_declaration fn.typeParameters;
       |]
     )
-    | loc, DeclareVariable d -> DeclareVariable.(
-        node "DeclareVariable" loc [|
-          "id", identifier d.id;
-        |]
-    )
-    | loc, DeclareFunction d -> DeclareFunction.(
-        node "DeclareFunction" loc [|
-          "id", identifier d.id;
-        |]
-    )
-    | loc, DeclareClass d -> Statement.Interface.(
-        node "DeclareClass" loc [|
-          "id", identifier d.id;
-          "typeParameters", option type_parameter_declaration d.typeParameters;
-          "body", object_type d.body;
-          "extends", array_of_list interface_extends d.extends;
-        |]
-      )
+    | loc, DeclareVariable d -> declare_variable (loc, d)
+    | loc, DeclareFunction d -> declare_function (loc, d)
+    | loc, DeclareClass d -> declare_class (loc, d)
     | loc, DeclareModule m -> DeclareModule.(
         let id = match m.id with
         | Literal lit -> literal lit
@@ -261,31 +240,33 @@ end with type t = Impl.t) = struct
           "body", block m.body;
         |]
       )
+    | loc, DeclareExportDeclaration export -> DeclareExportDeclaration.(
+        let declaration = match export.declaration with
+        | Some (Variable v) -> declare_variable v
+        | Some (Function f) -> declare_function f
+        | Some (Class c) -> declare_class c
+        | Some (DefaultType t) -> _type t
+        | None -> null
+        in
+        node "DeclareExportDeclaration" loc [|
+          "default", bool export.default;
+          "declaration", declaration;
+          "specifiers", export_specifiers export.specifiers;
+          "source", option literal export.source;
+        |]
+      )
     | loc, ExportDeclaration export -> ExportDeclaration.(
         let declaration = match export.declaration with
         | Some (Declaration stmt) -> statement stmt
         | Some (ExportDeclaration.Expression expr) -> expression expr
         | None -> null
         in
-        let specifiers = match export.specifiers with
-        | Some (ExportSpecifiers specifiers) ->
-            array_of_list export_specifier specifiers
-        | Some (ExportBatchSpecifier loc) ->
-            array [| node "ExportBatchSpecifier" loc [||] |]
-        | None ->
-            array [||]
-        in
-        let exportKind = (
-          match export.exportKind with
-          | ExportType -> "type"
-          | ExportValue -> "value"
-        ) in
         node "ExportDeclaration" loc [|
           "default", bool export.default;
           "declaration", declaration;
-          "specifiers", specifiers;
+          "specifiers", export_specifiers export.specifiers;
           "source", option literal export.source;
-          "exportKind", string exportKind;
+          "exportKind", string (export_kind export.exportKind);
         |]
       )
     | loc, ImportDeclaration import -> ImportDeclaration.(
@@ -566,6 +547,49 @@ end with type t = Impl.t) = struct
     obj [|
       "id", pattern assignment.id;
       "init", option expression assignment.init;
+    |]
+  )
+
+  and declare_variable (loc, d) = Statement.DeclareVariable.(
+    node "DeclareVariable" loc [|
+      "id", identifier d.id;
+    |]
+  )
+
+  and declare_function (loc, d) = Statement.DeclareFunction.(
+    node "DeclareFunction" loc [|
+      "id", identifier d.id;
+    |]
+  )
+
+  and declare_class (loc, d) = Statement.Interface.(
+    node "DeclareClass" loc [|
+      "id", identifier d.id;
+      "typeParameters", option type_parameter_declaration d.typeParameters;
+      "body", object_type d.body;
+      "extends", array_of_list interface_extends d.extends;
+    |]
+  )
+
+  and export_kind = Statement.ExportDeclaration.(function
+    | ExportType -> "type"
+    | ExportValue -> "value"
+  )
+
+  and export_specifiers = Statement.ExportDeclaration.(function
+    | Some (ExportSpecifiers specifiers) ->
+        array_of_list export_specifier specifiers
+    | Some (ExportBatchSpecifier loc) ->
+        array [| node "ExportBatchSpecifier" loc [||] |]
+    | None ->
+        array [||]
+  )
+
+  and type_alias (loc, alias) =  Statement.TypeAlias.(
+    node "TypeAlias" loc [|
+      "id", identifier alias.id;
+      "typeParameters", option type_parameter_declaration alias.typeParameters;
+      "right", _type alias.right;
     |]
   )
 

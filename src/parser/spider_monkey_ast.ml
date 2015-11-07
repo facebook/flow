@@ -398,6 +398,26 @@ and Statement : sig
       exportKind: exportKind;
     }
   end
+  module DeclareExportDeclaration : sig
+    type declaration =
+      (* declare export var *)
+      | Variable of (Loc.t * DeclareVariable.t)
+      (* declare export function *)
+      | Function of (Loc.t * DeclareFunction.t)
+      (* declare export class *)
+      | Class of (Loc.t * Interface.t)
+      (* declare export default [type]
+       * this corresponds to things like
+       * export default 1+1; *)
+      | DefaultType of Type.t
+
+    type t = {
+      default: bool;
+      declaration: declaration option;
+      specifiers: ExportDeclaration.specifier option;
+      source: (Loc.t * Literal.t) option; (* This will always be a string *)
+    }
+  end
   module ImportDeclaration : sig
     module NamedSpecifier : sig
       type t = Loc.t * t'
@@ -456,6 +476,7 @@ and Statement : sig
     | DeclareFunction of DeclareFunction.t
     | DeclareClass of Interface.t
     | DeclareModule of DeclareModule.t
+    | DeclareExportDeclaration of DeclareExportDeclaration.t
     | ExportDeclaration of ExportDeclaration.t
     | ImportDeclaration of ImportDeclaration.t
 end = Statement

@@ -1456,6 +1456,10 @@ and statement_decl cx type_params_map = Ast.Statement.(
       Env_js.(if is_interface then bind_type else bind_declare_var)
         cx name tvar r
 
+  | (loc, DeclareExportDeclaration _) ->
+      (* TODO *)
+      ()
+
   | (loc, DeclareModule { DeclareModule.id; _ }) ->
       let name = match id with
       | DeclareModule.Identifier (_, id) -> id.Ast.Identifier.name
@@ -2611,6 +2615,12 @@ and statement cx type_params_map = Ast.Statement.(
 
   | (loc, InterfaceDeclaration decl) ->
     interface cx loc true decl
+
+  | (loc, DeclareExportDeclaration _) ->
+      (* TODO *)
+      let msg = "declare export declarations are not yet supported" in
+      Flow_js.add_error cx [Reason_js.mk_reason "" loc, msg];
+      ()
 
   | (loc, DeclareModule { DeclareModule.id; body; }) ->
     let name = match id with
