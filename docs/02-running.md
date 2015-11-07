@@ -9,40 +9,56 @@ next: troubleshooting.html
 
 Since types are not part of the JavaScript specification, we need to strip them out before sending the file to the user. There are a few ways to do so:
 
-* You can use the [JSX transform tool](https://www.npmjs.com/package/jstransform), or a [third party transform tool](https://github.com/facebook/flow/wiki/3rd-party-tools#transformers), to strip away any type annotations from your files.
-* For quick prototyping, you can [run the transforms directly in the browser](#using-the-in-browser-transform)
+* Normally we recommend that you use [Babel](http://babeljs.io/) to strip away any type annotations from your files during development and deployment.
+* For quick prototyping, you can also [run the transforms directly in the browser](#using-the-in-browser-transform)
+
+For integration with various other tools and build systems, check out this [really thorough set of docs](http://babeljs.io/docs/setup/) detailing how to set up Babel to work with various popular tools like Browserify, Broccoli, Webpack, Node.js, etc.
 
 ## Using the offline transform tool
 
-This is the recommended workflow for production. First, you need to install the React tools:
+The offline transform tool is the recommended workflow for production. First, install the Babel CLI:
 
 ```bash
-$> npm install -g jstransform
+$> npm install -g babel-cli
 ```
 
-You can then simply run the transpiler in the background using the `jsx` command:
+Next, install the babel flow transform and add a `.babelrc` file to the root your project to tell Babel to strip Flow annotations:
 
 ```bash
-$> jstransform --strip-types --harmony --watch src/ build/
+$> cd /path/to/my/project
+$> mkdir -p node_modules && npm install babel-plugin-transform-flow-strip-types
+$> echo '{"plugins": ["transform-flow-strip-types"]}' > .babelrc
+```
+You can now simply run the transpiler in the background using the `babel` command:
+
+```bash
+$> babel --watch=./src --out-dir=./build
 ```
 
 This will run in the background, pick up any changes to files in `src/`, and create their pure JavaScript version in `build/`.
 
 ## Using the in-browser transform
 
-This is **not** recommended for production, because it is not as performant as the offline transform tool. However it is a good way to get started with quick prototyping.
+This is **not** recommended for production because it is not as performant as the offline transform tool. However, it is a convenient way to get started with quick prototyping.
 
-All you have to do is include the JSX transformer in your document (version 0.13.2 or later), and use a special MIME type for your Flow scripts:
+All you have to do is install the `babel-browser` npm package, include the browser transformer in your document, and just use a special MIME type for your Flow scripts:
+
+```bash
+$> mkdir -p node_modules && npm install babel-browser
+```
 
 ```html
 <head>
-  <script src="https://fb.me/JSXTransformer-0.13.2.js"></script>
+  <script src="node_modules/babel-core/browser.js"></script>
 </head>
 <body>
-  <script type="text/jsx;stripTypes=true;harmony=true">
+  <script type="text/babel">
   /* @flow */
-  // ...
+  // ... Here you can put inline JS with Flow type syntax! ...
   </script>
+  
+  <!-- Additionally you can just include files indirectly -->
+  <script type="text/babel" src="main.js"></script>
 </body>
 ```
 
