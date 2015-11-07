@@ -119,6 +119,14 @@ props.js:4:5,13: property `z`
 Property not found in
 props.js:25:5,13: propTypes
 
+props.js:9:33,11:5: property `x`
+Property not found in
+props.js:24:16,26:2: default props of React component
+
+props.js:9:33,11:5: property `y`
+Property not found in
+props.js:24:16,26:2: default props of React component
+
 props.js:14:25,36: string
 This type is incompatible with
 props.js:14:16,21: number
@@ -134,12 +142,6 @@ props.js:16:16,21: string
 props.js:16:25,36: undefined
 This type is incompatible with
 props.js:16:16,21: string
-
-props.js:20:15,57: React element: `TestProps`
-Error:
-props.js:20:29,33: boolean
-This type is incompatible with
-props.js:5:12,33: string
 
 props.js:20:15,57: type parameter `DefaultProps` of React element: `TestProps`
 Error:
@@ -215,4 +217,4 @@ state4.js:10:29,29: property `z`
 Property not found in
 state4.js:4:31,6:3: object literal
 
-Found 46 errors
+Found 47 errors

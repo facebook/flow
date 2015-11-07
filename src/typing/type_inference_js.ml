@@ -4755,10 +4755,19 @@ and react_create_class cx type_params_map loc class_props = Ast.Expression.(
           let t = mk_method cx type_params_map reason (params, defaults, rest)
             returnType body this (MixedT reason)
           in
-          (match t with
-          | FunT (_, _, _, { params_tlist = []; return_t; _ }) ->
-              default := return_t
-          | _ -> ());
+          let ret_loc = match returnType with
+            | Some (_, (loc, _)) -> loc
+            | None -> Ast.Statement.FunctionDeclaration.(match body with
+              | BodyBlock (loc, _) -> loc
+              | BodyExpression (loc, _) -> loc
+            ) in
+          let ret_reason = repos_reason ret_loc reason in
+          let default_tvar = Flow_js.mk_tvar cx (derivable_reason ret_reason) in
+          let override_default = BecomeT(ret_reason, default_tvar) in
+          default := default_tvar;
+          Flow_js.flow cx (t,
+            CallT (reason,
+              Flow_js.mk_functiontype [] override_default));
           fmap, mmap
         )
 
