@@ -64,6 +64,7 @@ let idx env fty shape_ty field default =
        * Shapes::idx definition as reason*)
       env, (fst fty, Toption res)
     | Some (default_pos, default_ty) ->
+      let env, default_ty = Typing_utils.unresolved env default_ty in
       Type.sub_type default_pos Reason.URparam env default_ty res, res
 
 let remove_key p env shape_ty field  =
