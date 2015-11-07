@@ -7,7 +7,7 @@ object_freeze.js:4:1,3: frozen object literal
 
 object_freeze.js:6:1,34: Object.assign
 Error:
-object_freeze.js:6:1,34: prop `bar` of object literal
+object_freeze.js:6:1,34: property `bar` of object literal
 Mutation not allowed on
 object_freeze.js:6:15,17: frozen object literal
 
