@@ -438,7 +438,8 @@ let daemon_main options =
     Exit_status.(exit Server_already_exists);
   end;
   let config = ServerConfig.(load filename) in
-  let local_config = ServerLocalConfig.load () in
+  let {ServerLocalConfig.cpu_priority; io_priority; _} as local_config =
+    ServerLocalConfig.load () in
   if Sys_utils.is_test_mode ()
   then EventLogger.init (Daemon.devnull ()) 0.0
   else HackEventLogger.init root (Unix.gettimeofday ());
@@ -448,6 +449,7 @@ let daemon_main options =
         let fd = Handle.wrap_handle handle in
         Unix.set_close_on_exec fd);
   Program.preinit ();
+  Sys_utils.set_priorities ~cpu_priority ~io_priority;
   SharedMem.init (ServerConfig.sharedmem_config config);
   (* this is to transform SIGPIPE in an exception. A SIGPIPE can happen when
    * someone C-c the client.

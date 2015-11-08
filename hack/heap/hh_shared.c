@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2014, Facebook, Inc.
+ * Copyright (c) 2015, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -331,49 +331,6 @@ static void init_shared_globals(char* mem) {
 }
 
 /*****************************************************************************/
-/* Sets CPU and IO priorities. */
-/*****************************************************************************/
-
-// glibc refused to add ioprio_set, sigh.
-// https://sourceware.org/bugzilla/show_bug.cgi?id=4464
-#define IOPRIO_CLASS_SHIFT 13
-#define IOPRIO_PRIO_VALUE(cl, dat) (((cl) << IOPRIO_CLASS_SHIFT) | (dat))
-#define IOPRIO_WHO_PROCESS 1
-#define IOPRIO_CLASS_IDLE 3
-
-static void set_priorities() {
-  // Downgrade to lowest IO priority. We fork a process for each CPU, which
-  // during parsing can slam the disk so hard that the system becomes
-  // unresponsive. While it's unclear why the Linux IO scheduler can't deal with
-  // this better, increasing our startup time in return for a usable system
-  // while we start up is the right tradeoff. (Especially in Facebook's
-  // configuration, where hh_server is often started up in the background well
-  // before the user needs hh_client, so our startup time often doesn't matter
-  // at all!)
-  //
-  // No need to check the return value, if we failed then whatever.
-  #ifdef __linux__
-  syscall(
-    SYS_ioprio_set,
-    IOPRIO_WHO_PROCESS,
-    my_pid,
-    IOPRIO_PRIO_VALUE(IOPRIO_CLASS_IDLE, 7)
-  );
-  #endif
-
-  // Don't slam the CPU either, though this has much less tendency to make the
-  // system totally unresponsive so we don't need to lower all the way.
-  #ifdef _WIN32
-  SetPriorityClass(GetCurrentProcess(), BELOW_NORMAL_PRIORITY_CLASS);
-  // One might also try: PROCESS_MODE_BACKGROUND_BEGIN
-  #else
-  int dummy = nice(10);
-  (void)dummy; // https://gcc.gnu.org/bugzilla/show_bug.cgi?id=25509
-  #endif
-
-}
-
-/*****************************************************************************/
 /* Must be called by the master BEFORE forking the workers! */
 /*****************************************************************************/
 
@@ -489,8 +446,6 @@ value hh_shared_init(
   sigact.sa_flags = 0;
   sigaction(SIGSEGV, &sigact, NULL);
 #endif
-
-  set_priorities();
 
   CAMLreturn(Val_unit);
 }
@@ -615,7 +570,7 @@ static int htable_add(uint64_t* table, unsigned long hash, uint64_t value) {
 }
 
 void hh_add_dep(value ocaml_dep) {
-  uint64_t dep  = Long_val(ocaml_dep);
+  uint64_t dep = Long_val(ocaml_dep);
   unsigned long hash = (dep >> 31) * (dep & ((1ul << 31) - 1));
 
   if(!htable_add(deptbl_bindings, hash, hash)) {

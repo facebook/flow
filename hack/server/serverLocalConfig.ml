@@ -16,6 +16,8 @@ type t = {
   use_mini_state: bool;
   load_mini_script_timeout: int; (* in seconds *)
   type_decl_bucket_size: int;
+  io_priority: int;
+  cpu_priority: int;
 }
 
 let default = {
@@ -24,6 +26,8 @@ let default = {
   use_mini_state = false;
   load_mini_script_timeout = 20;
   type_decl_bucket_size = 1000;
+  io_priority = 7;
+  cpu_priority = 10;
 }
 
 let path =
@@ -45,12 +49,16 @@ let load_ fn =
   (* Buck and hgwatchman use a 10 second timeout too *)
   let watchman_init_timeout =
     int_ "watchman_init_timeout" ~default:10 config in
+  let io_priority = int_ "io_priority" ~default:7 config in
+  let cpu_priority = int_ "cpu_priority" ~default:10 config in
   {
     use_watchman;
     watchman_init_timeout;
     use_mini_state;
     load_mini_script_timeout;
     type_decl_bucket_size;
+    io_priority;
+    cpu_priority;
   }
 
 let load () =
