@@ -1,6 +1,5 @@
-test.js:1
-  1: declare export default number;
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ declare export declarations are not yet supported
 
+test.js:1:1,30: 
+declare export declarations are not yet supported
 
 Found 1 error
