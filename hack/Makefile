@@ -73,6 +73,7 @@ NATIVE_OBJECT_FILES=\
   utils/get_build_id.o\
   utils/handle_stubs.o\
   utils/nproc.o\
+  utils/priorities.o\
   utils/realpath.o\
   utils/sysinfo.o\
   $(INOTIFY)/$(notdir $(INOTIFY))_stubs.o
