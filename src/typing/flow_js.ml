@@ -1197,6 +1197,7 @@ let master_cx =
       weak = false;
       munge_underscores = false;
       verbose = None;
+      is_declaration_file = false;
     } Loc.Builtins Files_js.lib_module in
     cx_ := Some cx;
     cx

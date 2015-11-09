@@ -1,0 +1,349 @@
+======Start off with the .js files but without the .flow file======
+
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/foo/bar/nested_test.js:7:2,15: call of method `fun`
+Error:
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/foo/bar/nested_test.js:7:2,15: Implementation
+This type is incompatible with
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/foo/bar/nested_test.js:7:18,24: boolean
+
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/foo/bar/nested_test.js:8:2,10: call of method `fun`
+Error:
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/foo/bar/nested_test.js:8:2,10: Implementation
+This type is incompatible with
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/foo/bar/nested_test.js:8:13,19: boolean
+
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/foo/bar/nested_test.js:9:2,12: call of method `fun`
+Error:
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/foo/bar/nested_test.js:9:2,12: Implementation
+This type is incompatible with
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/foo/bar/nested_test.js:9:15,21: boolean
+
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/test.js:4:2,15: call of method `fun`
+Error:
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/test.js:4:2,15: Implementation
+This type is incompatible with
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/test.js:4:18,24: boolean
+
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/test.js:7:2,23: call of method `fun`
+Error:
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/test.js:7:2,23: Implementation
+This type is incompatible with
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/test.js:7:26,32: boolean
+
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/test.js:10:2,28: call of method `fun`
+Error:
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/test.js:10:2,28: Implementation
+This type is incompatible with
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/test.js:10:31,37: boolean
+
+Found 6 errors
+
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/foo/bar/nested_test.js:7:2,15: call of method `fun`
+Error:
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/foo/bar/nested_test.js:7:2,15: Declaration
+This type is incompatible with
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/foo/bar/nested_test.js:7:18,24: boolean
+
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/foo/bar/nested_test.js:8:2,10: call of method `fun`
+Error:
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/foo/bar/nested_test.js:8:2,10: Declaration
+This type is incompatible with
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/foo/bar/nested_test.js:8:13,19: boolean
+
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/foo/bar/nested_test.js:9:2,12: call of method `fun`
+Error:
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/foo/bar/nested_test.js:9:2,12: Declaration
+This type is incompatible with
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/foo/bar/nested_test.js:9:15,21: boolean
+
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/test.js:4:2,15: call of method `fun`
+Error:
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/test.js:4:2,15: Declaration
+This type is incompatible with
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/test.js:4:18,24: boolean
+
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/test.js:7:2,23: call of method `fun`
+Error:
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/test.js:7:2,23: Declaration
+This type is incompatible with
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/test.js:7:26,32: boolean
+
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/test.js:10:2,28: call of method `fun`
+Error:
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/test.js:10:2,28: Declaration
+This type is incompatible with
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/test.js:10:31,37: boolean
+
+Found 6 errors
+
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/foo/bar/nested_test.js:7:2,15: call of method `fun`
+Error:
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/foo/bar/nested_test.js:7:2,15: Implementation
+This type is incompatible with
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/foo/bar/nested_test.js:7:18,24: boolean
+
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/foo/bar/nested_test.js:8:2,10: call of method `fun`
+Error:
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/foo/bar/nested_test.js:8:2,10: Implementation
+This type is incompatible with
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/foo/bar/nested_test.js:8:13,19: boolean
+
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/foo/bar/nested_test.js:9:2,12: call of method `fun`
+Error:
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/foo/bar/nested_test.js:9:2,12: Implementation
+This type is incompatible with
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/foo/bar/nested_test.js:9:15,21: boolean
+
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/test.js:4:2,15: call of method `fun`
+Error:
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/test.js:4:2,15: Implementation
+This type is incompatible with
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/test.js:4:18,24: boolean
+
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/test.js:7:2,23: call of method `fun`
+Error:
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/test.js:7:2,23: Implementation
+This type is incompatible with
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/test.js:7:26,32: boolean
+
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/test.js:10:2,28: call of method `fun`
+Error:
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/test.js:10:2,28: Implementation
+This type is incompatible with
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/test.js:10:31,37: boolean
+
+Found 6 errors
+
+
+======Start off with the .js files and the .flow file======
+
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/foo/bar/nested_test.js:7:2,15: call of method `fun`
+Error:
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/foo/bar/nested_test.js:7:2,15: Declaration
+This type is incompatible with
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/foo/bar/nested_test.js:7:18,24: boolean
+
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/foo/bar/nested_test.js:8:2,10: call of method `fun`
+Error:
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/foo/bar/nested_test.js:8:2,10: Declaration
+This type is incompatible with
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/foo/bar/nested_test.js:8:13,19: boolean
+
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/foo/bar/nested_test.js:9:2,12: call of method `fun`
+Error:
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/foo/bar/nested_test.js:9:2,12: Declaration
+This type is incompatible with
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/foo/bar/nested_test.js:9:15,21: boolean
+
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/test.js:4:2,15: call of method `fun`
+Error:
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/test.js:4:2,15: Declaration
+This type is incompatible with
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/test.js:4:18,24: boolean
+
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/test.js:7:2,23: call of method `fun`
+Error:
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/test.js:7:2,23: Declaration
+This type is incompatible with
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/test.js:7:26,32: boolean
+
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/test.js:10:2,28: call of method `fun`
+Error:
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/test.js:10:2,28: Declaration
+This type is incompatible with
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/test.js:10:31,37: boolean
+
+Found 6 errors
+
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/foo/bar/nested_test.js:7:2,15: call of method `fun`
+Error:
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/foo/bar/nested_test.js:7:2,15: Implementation
+This type is incompatible with
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/foo/bar/nested_test.js:7:18,24: boolean
+
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/foo/bar/nested_test.js:8:2,10: call of method `fun`
+Error:
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/foo/bar/nested_test.js:8:2,10: Implementation
+This type is incompatible with
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/foo/bar/nested_test.js:8:13,19: boolean
+
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/foo/bar/nested_test.js:9:2,12: call of method `fun`
+Error:
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/foo/bar/nested_test.js:9:2,12: Implementation
+This type is incompatible with
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/foo/bar/nested_test.js:9:15,21: boolean
+
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/test.js:4:2,15: call of method `fun`
+Error:
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/test.js:4:2,15: Implementation
+This type is incompatible with
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/test.js:4:18,24: boolean
+
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/test.js:7:2,23: call of method `fun`
+Error:
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/test.js:7:2,23: Implementation
+This type is incompatible with
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/test.js:7:26,32: boolean
+
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/test.js:10:2,28: call of method `fun`
+Error:
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/test.js:10:2,28: Implementation
+This type is incompatible with
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/test.js:10:31,37: boolean
+
+Found 6 errors
+
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/foo/bar/nested_test.js:7:2,15: call of method `fun`
+Error:
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/foo/bar/nested_test.js:7:2,15: Declaration
+This type is incompatible with
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/foo/bar/nested_test.js:7:18,24: boolean
+
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/foo/bar/nested_test.js:8:2,10: call of method `fun`
+Error:
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/foo/bar/nested_test.js:8:2,10: Declaration
+This type is incompatible with
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/foo/bar/nested_test.js:8:13,19: boolean
+
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/foo/bar/nested_test.js:9:2,12: call of method `fun`
+Error:
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/foo/bar/nested_test.js:9:2,12: Declaration
+This type is incompatible with
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/foo/bar/nested_test.js:9:15,21: boolean
+
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/test.js:4:2,15: call of method `fun`
+Error:
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/test.js:4:2,15: Declaration
+This type is incompatible with
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/test.js:4:18,24: boolean
+
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/test.js:7:2,23: call of method `fun`
+Error:
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/test.js:7:2,23: Declaration
+This type is incompatible with
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/test.js:7:26,32: boolean
+
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/test.js:10:2,28: call of method `fun`
+Error:
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/test.js:10:2,28: Declaration
+This type is incompatible with
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/test.js:10:31,37: boolean
+
+Found 6 errors
+
+
+======Start off without the .js files and with the .flow file======
+
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/foo/bar/nested_test.js:7:2,15: call of method `fun`
+Error:
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/foo/bar/nested_test.js:7:2,15: Declaration
+This type is incompatible with
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/foo/bar/nested_test.js:7:18,24: boolean
+
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/foo/bar/nested_test.js:8:2,10: call of method `fun`
+Error:
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/foo/bar/nested_test.js:8:2,10: Declaration
+This type is incompatible with
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/foo/bar/nested_test.js:8:13,19: boolean
+
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/foo/bar/nested_test.js:9:2,12: call of method `fun`
+Error:
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/foo/bar/nested_test.js:9:2,12: Declaration
+This type is incompatible with
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/foo/bar/nested_test.js:9:15,21: boolean
+
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/test.js:4:2,15: call of method `fun`
+Error:
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/test.js:4:2,15: Declaration
+This type is incompatible with
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/test.js:4:18,24: boolean
+
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/test.js:7:2,23: call of method `fun`
+Error:
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/test.js:7:2,23: Declaration
+This type is incompatible with
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/test.js:7:26,32: boolean
+
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/test.js:10:2,28: call of method `fun`
+Error:
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/test.js:10:2,28: Declaration
+This type is incompatible with
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/test.js:10:31,37: boolean
+
+Found 6 errors
+
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/foo/bar/nested_test.js:7:2,15: call of method `fun`
+Error:
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/foo/bar/nested_test.js:7:2,15: Declaration
+This type is incompatible with
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/foo/bar/nested_test.js:7:18,24: boolean
+
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/foo/bar/nested_test.js:8:2,10: call of method `fun`
+Error:
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/foo/bar/nested_test.js:8:2,10: Declaration
+This type is incompatible with
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/foo/bar/nested_test.js:8:13,19: boolean
+
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/foo/bar/nested_test.js:9:2,12: call of method `fun`
+Error:
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/foo/bar/nested_test.js:9:2,12: Declaration
+This type is incompatible with
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/foo/bar/nested_test.js:9:15,21: boolean
+
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/test.js:4:2,15: call of method `fun`
+Error:
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/test.js:4:2,15: Declaration
+This type is incompatible with
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/test.js:4:18,24: boolean
+
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/test.js:7:2,23: call of method `fun`
+Error:
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/test.js:7:2,23: Declaration
+This type is incompatible with
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/test.js:7:26,32: boolean
+
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/test.js:10:2,28: call of method `fun`
+Error:
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/test.js:10:2,28: Declaration
+This type is incompatible with
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/test.js:10:31,37: boolean
+
+Found 6 errors
+
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/foo/bar/nested_test.js:7:2,15: call of method `fun`
+Error:
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/foo/bar/nested_test.js:7:2,15: Declaration
+This type is incompatible with
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/foo/bar/nested_test.js:7:18,24: boolean
+
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/foo/bar/nested_test.js:8:2,10: call of method `fun`
+Error:
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/foo/bar/nested_test.js:8:2,10: Declaration
+This type is incompatible with
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/foo/bar/nested_test.js:8:13,19: boolean
+
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/foo/bar/nested_test.js:9:2,12: call of method `fun`
+Error:
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/foo/bar/nested_test.js:9:2,12: Declaration
+This type is incompatible with
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/foo/bar/nested_test.js:9:15,21: boolean
+
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/test.js:4:2,15: call of method `fun`
+Error:
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/test.js:4:2,15: Declaration
+This type is incompatible with
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/test.js:4:18,24: boolean
+
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/test.js:7:2,23: call of method `fun`
+Error:
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/test.js:7:2,23: Declaration
+This type is incompatible with
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/test.js:7:26,32: boolean
+
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/test.js:10:2,28: call of method `fun`
+Error:
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/test.js:10:2,28: Declaration
+This type is incompatible with
+/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_haste/test.js:10:31,37: boolean
+
+Found 6 errors

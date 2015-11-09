@@ -18,6 +18,7 @@ type metadata = {
   weak: bool;
   munge_underscores: bool;
   verbose: int option;
+  is_declaration_file: bool;
 }
 type module_exports_type =
   | CommonJSModule of Loc.t option
@@ -38,6 +39,7 @@ val graph: t -> Constraint_js.node IMap.t
 val is_checked: t -> bool
 val is_verbose: t -> bool
 val is_weak: t -> bool
+val is_declaration_file: t -> bool
 val module_exports_type: t -> module_exports_type
 val module_map: t -> Type.t SMap.t
 val module_name: t -> string

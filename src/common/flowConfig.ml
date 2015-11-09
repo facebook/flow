@@ -12,6 +12,7 @@ open Utils
 open Sys_utils
 
 let version = "0.18.1"
+let flow_ext = ".flow"
 
 let default_temp_dir = "/tmp/flow/"
 
@@ -47,9 +48,9 @@ module Opts = struct
     module_name_mappers: (Str.regexp * string) list;
     node_resolver_dirnames: string list;
     munge_underscores: bool;
-    module_file_exts: string list;
+    module_file_exts: SSet.t;
     suppress_comments: Str.regexp list;
-    suppress_types: Utils.SSet.t;
+    suppress_types: SSet.t;
     traces: int;
     strip_root: bool;
     log_file: Path.t option;
@@ -108,7 +109,7 @@ module Opts = struct
     module_name_mappers = [];
     node_resolver_dirnames = ["node_modules"];
     munge_underscores = false;
-    module_file_exts = [".js"; ".jsx";];
+    module_file_exts = SSet.of_list [ ".js"; ".jsx"; ];
     suppress_comments = [];
     suppress_types = SSet.empty;
     traces = 0;
@@ -251,7 +252,7 @@ type config = {
   root: Path.t;
 }
 
-let file_of_root ~tmp_dir root extension =
+let file_of_root extension ~tmp_dir root =
   let tmp_dir = if tmp_dir.[String.length tmp_dir - 1] <> '/'
     then tmp_dir ^ "/"
     else tmp_dir in
@@ -262,14 +263,14 @@ let file_of_root ~tmp_dir root extension =
   |> Path.make
   |> Path.to_string
 
-let init_file ~tmp_dir root = file_of_root ~tmp_dir root "init"
-let lock_file ~tmp_dir root = file_of_root ~tmp_dir root "lock"
-let pids_file ~tmp_dir root = file_of_root ~tmp_dir root "pids"
-let socket_file ~tmp_dir root = file_of_root ~tmp_dir root "sock"
+let init_file   = file_of_root "init"
+let lock_file   = file_of_root "lock"
+let pids_file   = file_of_root "pids"
+let socket_file = file_of_root "sock"
 let log_file ~tmp_dir root opts =
   match opts.Opts.log_file with
   | Some x -> x
-  | None -> Path.make (file_of_root ~tmp_dir root "log")
+  | None -> Path.make (file_of_root "log" ~tmp_dir root)
 
 module Pp : sig
   val config : out_channel -> config -> unit
@@ -525,12 +526,20 @@ let parse_options config lines = Opts.(
 
     |> Opts.define_opt "module.file_ext" Opts.({
       _initializer = INIT_FN (fun opts -> {
-        opts with module_file_exts = [];
+        opts with module_file_exts = SSet.empty;
       });
       flags = [ALLOW_DUPLICATE];
       optparser = optparse_string;
       setter = (fun opts v ->
-        let module_file_exts = v :: opts.module_file_exts in
+        if str_ends_with v flow_ext
+        then raise (Opts.UserError (
+          "Cannot use file extension '" ^
+          v ^
+          "' since it ends with the reserved extension '"^
+          flow_ext^
+          "'"
+        ));
+        let module_file_exts = SSet.add v opts.module_file_exts in
         {opts with module_file_exts;}
       );
     })

@@ -24,7 +24,7 @@ module Opts : sig
     module_name_mappers: (Str.regexp * string) list;
     node_resolver_dirnames: string list;
     munge_underscores: bool;
-    module_file_exts: string list;
+    module_file_exts: Utils.SSet.t;
     suppress_comments: Str.regexp list;
     suppress_types: Utils.SSet.t;
     traces: int;
@@ -67,6 +67,7 @@ val log_file: tmp_dir:string -> Path.t -> Opts.t -> Path.t
 val init: Path.t -> string list -> unit
 
 val version: string
+val flow_ext: string
 
 (* true if a file path matches an include path in config *)
 val is_included: config -> string -> bool

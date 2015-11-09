@@ -95,6 +95,25 @@ let source_is_lib_file = function
 | Builtins -> true
 | SourceFile _ -> false
 
+let filename_map f = function
+  | LibFile filename -> LibFile (f filename)
+  | SourceFile filename -> SourceFile (f filename)
+  | Builtins -> Builtins
+
+let filename_exists f = function
+  | LibFile filename
+  | SourceFile filename -> f filename
+  | Builtins -> false
+
+let check_suffix filename suffix =
+  filename_exists (fun fn -> Filename.check_suffix fn suffix) filename
+
+let chop_suffix filename suffix =
+  filename_map (fun fn -> Filename.chop_suffix fn suffix) filename
+
+let with_suffix filename suffix =
+  filename_map (fun fn -> fn ^ suffix) filename
+
 (* implements OrderedType and SharedMem.UserKeyType *)
 module FilenameKey = struct
   type t = filename

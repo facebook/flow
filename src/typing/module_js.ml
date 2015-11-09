@@ -58,6 +58,40 @@ let replace_name_mapper_template_tokens =
     let root_path = Path.to_string opts.Options.opt_root in
     Str.global_replace project_root_token (Str.quote root_path) template
 
+
+let choose_provider_and_warn_about_duplicates =
+  let is_flow_ext file = Loc.check_suffix file FlowConfig.flow_ext in
+
+  let warn_duplicate_providers m current modules errmap =
+    List.fold_left (fun acc f ->
+      let w = Flow.new_warning [
+        Reason.mk_reason m Loc.({ none with source = Some f }),
+          "Duplicate module provider";
+        Reason.mk_reason "current provider"
+          Loc.({ none with source = Some current }),
+          ""] in
+      FilenameMap.add f (ErrorSet.singleton w) acc
+    ) errmap modules in
+
+    fun m errmap providers fallback ->
+      let definitions, implementations =
+        List.partition is_flow_ext providers in
+      match implementations, definitions with
+      (* If there are no definitions or implementations, use the fallback *)
+      | [], [] -> fallback (), errmap
+      (* Else if there are no definitions, use the first implementation *)
+      | impl::dup_impls, [] ->
+          impl, warn_duplicate_providers m impl dup_impls errmap
+      (* Else use the first definition *)
+      | [], defn::dup_defns ->
+          defn, warn_duplicate_providers m defn dup_defns errmap
+      (* Don't complain about the first implementation being a duplicate *)
+      | impl::dup_impls, defn::dup_defns ->
+          let errmap = errmap
+            |> warn_duplicate_providers m impl dup_impls
+            |> warn_duplicate_providers m defn dup_defns in
+          defn, errmap
+
 (**
  * A set of module.name_mapper config entry allows users to specify regexp
  * matcher strings each with a template string in order to map the names of a
@@ -146,16 +180,16 @@ module type MODULE_SYSTEM = sig
      the module it refers to. *)
   val imported_module: filename -> string -> string
 
-(* for a given module name, choose a provider from among a set of
-   files with that exported name. also check for duplicates and
-   generate warnings, as dictated by module system rules. *)
-val choose_provider:
-  string ->   (* module name *)
-  FilenameSet.t ->   (* set of candidate provider files *)
-  (* map from files to error sets (accumulator) *)
-  Errors_js.ErrorSet.t FilenameMap.t ->
-  (* file, error map (accumulator) *)
-  (filename * Errors_js.ErrorSet.t FilenameMap.t)
+  (* for a given module name, choose a provider from among a set of
+    files with that exported name. also check for duplicates and
+    generate warnings, as dictated by module system rules. *)
+  val choose_provider:
+    string ->   (* module name *)
+    FilenameSet.t ->   (* set of candidate provider files *)
+    (* map from files to error sets (accumulator) *)
+    Errors_js.ErrorSet.t FilenameMap.t ->
+    (* file, error map (accumulator) *)
+    (filename * Errors_js.ErrorSet.t FilenameMap.t)
 
 end
 
@@ -229,18 +263,24 @@ let resolve_symlinks path =
 (*******************************)
 
 module Node = struct
-  let exported_module file info = string_of_filename file
+  let exported_module file info =
+    if Loc.check_suffix file FlowConfig.flow_ext
+    then string_of_filename (Loc.chop_suffix file FlowConfig.flow_ext)
+    else string_of_filename file
 
-  let path_if_exists path =
-    let path = resolve_symlinks path in
-    if not (file_exists path) ||
-      FlowConfig.(is_excluded (get_unsafe ()) path)
-    then None
-    else Some path
+  let path_if_exists =
+    let path_exists no_dir path =
+      (file_exists path) &&
+        not FlowConfig.(is_excluded (get_unsafe ()) path) &&
+        not (no_dir && dir_exists path)
 
-  let path_is_file path =
-    let path = resolve_symlinks path in
-    file_exists path && not (Sys.is_directory path)
+    in fun ?(no_dir=true) path ->
+      let path = resolve_symlinks path in
+      let declaration_path = path ^ FlowConfig.flow_ext in
+      if path_exists no_dir declaration_path ||
+        path_exists no_dir path
+      then Some path
+      else None
 
   let parse_main package =
     let package = resolve_symlinks package in
@@ -259,16 +299,18 @@ module Node = struct
       | Some file ->
         let opts = get_config_options () in
         let path = Files_js.normalize_path dir file in
-        if path_is_file path then Some path else
-          seq
-          (fun () ->
-            seqf
-              (fun ext -> path_if_exists (path ^ ext))
-              opts.FlowConfig.Opts.module_file_exts
-          )
-          (fun () ->
-            let path = Filename.concat path "index.js" in
-            path_if_exists path
+        seq
+          (fun () -> path_if_exists ~no_dir:true path)
+          (fun () -> seq
+            (fun () ->
+              seqf
+                (fun ext -> path_if_exists (path ^ ext))
+                (SSet.elements opts.FlowConfig.Opts.module_file_exts)
+            )
+            (fun () ->
+              let path = Filename.concat path "index.js" in
+              path_if_exists path
+            )
           )
 
   let resolve_relative root_path rel_path =
@@ -279,7 +321,7 @@ module Node = struct
     else seq
       (fun () -> seqf
         (fun ext -> path_if_exists (path ^ ext))
-        opts.FlowConfig.Opts.module_file_exts
+        (SSet.elements opts.FlowConfig.Opts.module_file_exts)
       )
       (fun () -> seq
         (fun () -> parse_main (Filename.concat path "package.json"))
@@ -329,13 +371,10 @@ module Node = struct
      our implementation of exported_name, so anything but a
      singleton provider set is craziness. *)
   let choose_provider m files errmap =
-    match FilenameSet.elements files with
-    | [] ->
-        failwith (spf "internal error: empty provider set for module %S" m)
-    | [f] ->
-        f, errmap
-    | files ->
-        failwith (spf "internal error: multiple providers for module %S" m)
+    let files = FilenameSet.elements files in
+    let fallback () =
+      failwith (spf "internal error: empty provider set for module %S" m) in
+    choose_provider_and_warn_about_duplicates m errmap files fallback
 
 end
 
@@ -360,12 +399,26 @@ module Haste: MODULE_SYSTEM = struct
     | Loc.LibFile file | Loc.SourceFile file ->
         Str.string_match mock_path file 0
 
-  let exported_module file info =
+  let rec exported_module file info =
     if is_mock file
     then short_module_name_of file
     else match Docblock.providesModule info with
       | Some m -> m
-      | None -> string_of_filename file
+      | None ->
+          (* If foo.js.flow doesn't have a @providesModule, then look at foo.js
+           * and use its @providesModule instead *)
+          if Loc.check_suffix file FlowConfig.flow_ext
+          then
+            let file_without_flow_ext = Loc.chop_suffix file FlowConfig.flow_ext in
+            if Parsing_service_js.has_ast file_without_flow_ext
+            then
+              let _, info =
+                Parsing_service_js.get_ast_and_info_unsafe file_without_flow_ext in
+              exported_module file_without_flow_ext info
+            else
+              string_of_filename file_without_flow_ext
+          else
+            string_of_filename file
 
   let expanded_name r =
     match Str.split_delim Files_js.dir_sep r with
@@ -419,20 +472,8 @@ module Haste: MODULE_SYSTEM = struct
         f, errmap
     | files ->
         let mocks, non_mocks = List.partition is_mock files in
-        match non_mocks with
-        | [] -> List.hd mocks, errmap
-        | [f] -> f, errmap
-        | h :: t ->
-            let errmap = List.fold_left (fun acc f ->
-              let w = Flow.new_warning [
-                Reason.mk_reason m Loc.({ none with source = Some f }),
-                  "Duplicate module provider";
-                Reason.mk_reason "current provider"
-                  Loc.({ none with source = Some h }),
-                  ""] in
-              FilenameMap.add f (ErrorSet.singleton w) acc
-            ) errmap t in
-            h, errmap
+        let fallback () = List.hd mocks in
+        choose_provider_and_warn_about_duplicates m errmap non_mocks fallback
 
 end
 
@@ -587,12 +628,13 @@ let add_unparsed_info ~force_check file =
   | Builtins -> assert false
   ) in
   let content = cat filename in
-  let docblock = Docblock.extract content in
+  let docblock = Docblock.extract filename content in
   let _module = exported_module file docblock in
   let checked =
     force_check ||
     Loc.source_is_lib_file file ||
-    Docblock.is_flow docblock
+    Docblock.is_flow docblock ||
+    Docblock.isDeclarationFile docblock
   in
   let info = { file; _module; checked; parsed = false;
     required = SSet.empty;

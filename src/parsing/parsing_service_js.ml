@@ -59,7 +59,8 @@ type types_mode =
 
 let do_parse ?(fail=true) ~types_mode content file =
   try (
-    let info = Docblock.extract content in
+    let filename = string_of_filename file in
+    let info = Docblock.extract filename content in
     let parse_options = Some Parser_env.({
       (**
        * Always parse ES proposal syntax. The user-facing config option to
@@ -76,13 +77,14 @@ let do_parse ?(fail=true) ~types_mode content file =
         match types_mode with
         | TypesAllowed -> true
         | TypesForbiddenByDefault ->
-          begin match Docblock.flow info with
-          | None -> false
-          | Some Docblock.OptIn
-          | Some Docblock.OptInWeak -> true
-          (* parse types even in @noflow mode; they just don't get checked *)
-          | Some Docblock.OptOut -> true
-          end;
+            Docblock.isDeclarationFile info ||
+              begin match Docblock.flow info with
+              | None -> false
+              | Some Docblock.OptIn
+              | Some Docblock.OptInWeak -> true
+              (* parse types even in @noflow mode; they just don't get checked *)
+              | Some Docblock.OptOut -> true
+              end;
     }) in
     let ast, parse_errors =
       Parser_flow.program_file ~fail ~parse_options content (Some file) in
@@ -149,6 +151,9 @@ let reparse ~types_mode workers files init_modes =
   SharedMem.collect `gentle;
   let next = Bucket.make (FilenameSet.elements files) in
   parse ~types_mode workers next init_modes
+
+let has_ast file =
+  ParserHeap.mem file
 
 let get_ast_unsafe file =
   let ast, _ = ParserHeap.find_unsafe file in

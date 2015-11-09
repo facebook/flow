@@ -262,6 +262,7 @@ let infer_job opts (inferred, errsets, errsuppressions) files =
     weak = Options.weak_by_default opts;
     munge_underscores = Options.should_munge_underscores opts;
     verbose = Options.verbose opts;
+    is_declaration_file = false;
   } in
   List.fold_left (fun (inferred, errsets, errsuppressions) file ->
     try checktime opts 1.0
@@ -302,6 +303,7 @@ let rev_append_triple (x1, y1, z1) (x2, y2, z2) =
    Returns a set of sucessfully inferred files.
    Creates contexts for inferred files, with errors in cx.errors *)
 let infer workers files opts =
+  let files = FilenameSet.elements files in
   logtime opts
     (fun t -> spf "inferred %d files in %f" (List.length files) t)
     (fun () ->
@@ -508,15 +510,6 @@ let merge_strict_component (component: filename list) =
   )
   else file, Errors_js.ErrorSet.empty
 
-(* Special case of merging a single file. We assume that the file system is in a
-   stable state when this function is called, so that we don't need to worry
-   about cycles, and can simply read the signatures of dependencies. *)
-let merge_strict_file file =
-  let cache = new context_cache in
-  let cx = cache#read file in
-  merge_strict_context cache [cx];
-  cx
-
 (* Another special case, similar assumptions as above. *)
 (** TODO: handle case when file+contents don't agree with file system state **)
 let typecheck_contents ?verbose contents filename =
@@ -533,6 +526,7 @@ let typecheck_contents ?verbose contents filename =
         weak = false;
         munge_underscores = false; (* TODO: read from .flowconfig? *)
         verbose;
+        is_declaration_file = false;
       } in
       (* apply overrides from the docblock *)
       let metadata = TI.apply_docblock_overrides metadata info in
@@ -784,7 +778,9 @@ let heap_check files = Module.(
   let ih = Hashtbl.create 0 in
   let nh = Hashtbl.create 0 in
   files |> List.iter (fun file ->
-    assert (get_file (string_of_filename file) = file);
+    let m_file = get_file (string_of_filename file) in
+    if not (Loc.check_suffix m_file FlowConfig.flow_ext)
+    then assert (m_file = file);
     let info = get_module_info file in
     Hashtbl.add ih file info;
     let m = info.Module._module in
@@ -1019,10 +1015,9 @@ let recheck genv env modified =
   Context.remove_all_errors master_cx;
 
   (* recheck *)
-  let freshparsed_list = FilenameSet.elements freshparsed in
   typecheck
     genv.ServerEnv.workers
-    freshparsed_list
+    freshparsed
     removed_modules
     freshparse_fail
     options
@@ -1085,8 +1080,7 @@ let full_check workers parse_next opts =
   in
   save_errors parse_errors error_files errors;
 
-  let files = FilenameSet.elements parsed in
-  let checked = typecheck workers files SSet.empty error_files opts (
+  let checked = typecheck workers parsed SSet.empty error_files opts (
     fun inferred ->
       (* after local inference and before merge, bring in libraries *)
       (* if any fail to parse, our return value will suppress merge *)

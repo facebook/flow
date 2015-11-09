@@ -22,10 +22,17 @@ let is_dot_file path =
   let filename = Filename.basename path in
   String.length filename > 0 && filename.[0] = '.'
 
-let is_valid_path path =
-  let file_exts = FlowConfig.((get_unsafe ()).options.Opts.module_file_exts) in
-  not (is_dot_file path) &&
-  List.exists (Filename.check_suffix path) file_exts
+let is_valid_path =
+  let is_valid_path_helper path =
+    let file_exts = FlowConfig.((get_unsafe ()).options.Opts.module_file_exts) in
+    not (is_dot_file path) &&
+    SSet.exists (Filename.check_suffix path) file_exts
+
+  in fun path ->
+    if Filename.check_suffix path FlowConfig.flow_ext
+    (* foo.js.flow is valid if foo.js is valid *)
+    then is_valid_path_helper (Filename.chop_suffix path FlowConfig.flow_ext)
+    else is_valid_path_helper path
 
 let is_flow_file path = is_valid_path path && not (is_directory path)
 

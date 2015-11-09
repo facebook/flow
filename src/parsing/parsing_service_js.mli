@@ -38,6 +38,8 @@ val reparse:
   (unit -> unit) ->
   results                   (* job results, not asts *)
 
+val has_ast: filename -> bool
+
 (* after parsing, retrieves ast by filename (unsafe) *)
 val get_ast_unsafe: filename -> Spider_monkey_ast.program
 val get_ast_and_info_unsafe:

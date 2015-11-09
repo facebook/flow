@@ -6801,6 +6801,7 @@ let load_lib_file ~verbose ~exclude_syms file statements comments
     weak = false;
     munge_underscores = false; (* no sense supporting private props in libs *)
     verbose;
+    is_declaration_file = false;
   } file Files_js.lib_module in
 
   let module_scope = Scope.fresh () in

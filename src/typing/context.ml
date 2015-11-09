@@ -17,6 +17,7 @@ type metadata = {
   weak: bool;
   munge_underscores: bool;
   verbose: int option;
+  is_declaration_file: bool;
 }
 
 (* TODO this has a bunch of stuff in it that should be localized *)
@@ -94,6 +95,7 @@ let graph cx = cx.graph
 let is_checked cx = cx.metadata.checked
 let is_verbose cx = cx.metadata.verbose <> None
 let is_weak cx = cx.metadata.weak
+let is_declaration_file cx = cx.metadata.is_declaration_file
 let module_exports_type cx = cx.module_exports_type
 let module_map cx = cx.modulemap
 let module_name cx = cx.module_name

@@ -139,7 +139,7 @@ do
             trap "kill_server -TERM" SIGTERM
 
             # start server and wait
-            $FLOW status . 1> /dev/null 2>&1
+            $FLOW start . $all --wait > /dev/null 2>&1
             if [ "$shell" != "" ]
             then
                 # run test script

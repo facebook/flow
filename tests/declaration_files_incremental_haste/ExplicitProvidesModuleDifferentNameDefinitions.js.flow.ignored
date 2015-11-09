@@ -1,0 +1,6 @@
+/*
+ * @providesModule ExplicitProvidesModuleDifferentName
+ */
+
+declare class Declaration {}
+declare export function fun(): Declaration;

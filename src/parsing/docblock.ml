@@ -16,12 +16,14 @@ type t = {
   flow: flow_mode option;
   preventMunge: bool option;
   providesModule: string option;
+  isDeclarationFile: bool;
 }
 
 let default_info = {
   flow = None;
   preventMunge = None;
   providesModule = None;
+  isDeclarationFile = false;
 }
 
 (* Avoid lexing unbounded in perverse cases *)
@@ -44,7 +46,7 @@ let extract =
     | [] -> acc
   in
 
-  fun content ->
+  fun filename content ->
     (* Consume tokens in the file until we get a comment. This is a hack to
      * support Nuclide, which needs 'use babel' as the first token due to
      * contstraints with Atom (see https://github.com/atom/atom/issues/8416 for
@@ -71,14 +73,19 @@ let extract =
         | (_, Ast.Comment.Line s) :: _
           -> Some s
       else None in
+    let info =
+      if Filename.check_suffix filename FlowConfig.flow_ext
+      then { default_info with isDeclarationFile = true; }
+      else default_info in
     match get_first_comment_contents env with
-      | Some s -> parse_attributes default_info (Str.split words_rx s)
-      | None -> default_info
+      | Some s -> parse_attributes info (Str.split words_rx s)
+      | None -> info
 
 (* accessors *)
 let flow info = info.flow
 let preventMunge info = info.preventMunge
 let providesModule info = info.providesModule
+let isDeclarationFile info = info.isDeclarationFile
 
 let is_flow info = match info.flow with
   | Some OptIn

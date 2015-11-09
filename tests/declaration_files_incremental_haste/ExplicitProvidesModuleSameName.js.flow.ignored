@@ -1,0 +1,7 @@
+/*
+ * @providesModule ExplicitProvidesModuleSameName
+ * @flow
+ */
+
+declare class Declaration {}
+declare export var fun: () => Declaration;

@@ -1,0 +1,6 @@
+/*
+ * @providesModule ExplicitProvidesModuleSameName
+ * @flow
+ */
+
+declare export var fun: () => number;
