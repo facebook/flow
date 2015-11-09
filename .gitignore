@@ -7,3 +7,4 @@ bin
 npm-debug.log
 *.diff
 *.err
+*.swp
