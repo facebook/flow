@@ -338,7 +338,7 @@ function compare(esprima, flow, env) {
   }
 }
 
-function runTest(test, esprima_opts) {
+function runTest(test, esprima_options, test_options) {
   var env = new_env();
   var comparing_errors = false;
   var result = {
@@ -360,13 +360,13 @@ function runTest(test, esprima_opts) {
   }
   try {
     var options = { loc: true, comment: true, range: true };
-    for (opt in esprima_opts) {
-      options[opt] = esprima_opts[opt];
+    for (opt in esprima_options) {
+      options[opt] = esprima_options[opt];
     }
     var esprima_ast = esprima.parse(test.content, options);
   } catch (e) {
     comparing_errors = true;
-    if (test.dumpAst) {
+    if (test_options.dumpAst) {
       console.log("Esprima AST: ", util.inspect(e, {depth: null, colors: true}));
       console.log("Flow AST: ", util.inspect(flow_ast, {depth: null, colors: true}));
       output("Esprima AST: ", util.inspect(e, {depth: null, colors: true}));
@@ -402,7 +402,7 @@ function runTest(test, esprima_opts) {
 
   // Some checks that we only run when comparing asts
   if (!comparing_errors) {
-    if (test.dumpAst) {
+    if (test_options.dumpAst) {
       console.log("Esprima AST: ", util.inspect(esprima_ast, {depth: null, colors: true}));
       console.log("Flow AST: ", util.inspect(flow_ast, {depth: null, colors: true}));
       output("Esprima AST: ", util.inspect(esprima_ast, {depth: null, colors: true}));
@@ -442,7 +442,7 @@ function runTest(test, esprima_opts) {
     }
   }
 
-  if (test.showDifferences) {
+  if (test_options.showDifferences) {
     test.expected_differences = {};
     output(test.explanation || "No explanation provided");
   }
@@ -476,7 +476,7 @@ function runTest(test, esprima_opts) {
     }
   }
 
-  if (test.jsonErrors) {
+  if (test_options.jsonErrors) {
     diff_to_string = function (e) { return util.inspect(e, { depth: null }); };
   }
   if (missing_diffs.length > 0) {
