@@ -27,7 +27,7 @@
       "node": ">=0.4.0"
   },
   "scripts": {
-    "test": "bash test/run_all.sh",
+    "test": "node test/run_tests.js",
     "prepublish": "make js"
   }
 }
