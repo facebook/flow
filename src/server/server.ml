@@ -113,7 +113,7 @@ struct
     Flow_logger.log "Status: Error";
     Flow_logger.log "Sent KILL command by client. Dying.";
     (match genv.ServerEnv.dfind with
-    | Some handle -> Unix.kill (DfindLib.pid handle) Sys.sigterm;
+    | Some handle -> Sys_utils.terminate_process (DfindLib.pid handle);
     | None -> ()
     );
     die ()
