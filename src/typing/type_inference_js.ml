@@ -1456,10 +1456,6 @@ and statement_decl cx type_params_map = Ast.Statement.(
       Env_js.(if is_interface then bind_type else bind_declare_var)
         cx name tvar r
 
-  | (loc, DeclareExportDeclaration _) ->
-      (* TODO *)
-      ()
-
   | (loc, DeclareModule { DeclareModule.id; _ }) ->
       let name = match id with
       | DeclareModule.Identifier (_, id) -> id.Ast.Identifier.name
@@ -1472,6 +1468,29 @@ and statement_decl cx type_params_map = Ast.Statement.(
       let t = Flow_js.mk_tvar cx r in
       Hashtbl.replace (Context.type_table cx) loc t;
       Env_js.bind_declare_var cx (internal_module_name name) t r
+
+  | (loc, DeclareExportDeclaration {
+      DeclareExportDeclaration.default;
+      DeclareExportDeclaration.declaration;
+      DeclareExportDeclaration.specifiers;
+      DeclareExportDeclaration.source;
+      }) ->
+        DeclareExportDeclaration.(match declaration with
+        | Some (Variable (loc, v)) ->
+            statement_decl cx type_params_map (loc, DeclareVariable v)
+        | Some (Function (loc, f)) ->
+            statement_decl cx type_params_map (loc, DeclareFunction f)
+        | Some (Class (loc, c)) ->
+            statement_decl cx type_params_map (loc, DeclareClass c)
+        | Some (DefaultType t) -> ()
+        | None ->
+            if not default
+            then ()
+            else failwith (
+              "Parser Error: declare export default must always have an " ^
+              "associated declaration or type!"
+            )
+        )
 
   | (_, ExportDeclaration {
       ExportDeclaration.default;
@@ -2616,12 +2635,6 @@ and statement cx type_params_map = Ast.Statement.(
   | (loc, InterfaceDeclaration decl) ->
     interface cx loc true decl
 
-  | (loc, DeclareExportDeclaration _) ->
-      (* TODO *)
-      let msg = "declare export declarations are not yet supported" in
-      Flow_js.add_error cx [Reason_js.mk_reason "" loc, msg];
-      ()
-
   | (loc, DeclareModule { DeclareModule.id; body; }) ->
     let name = match id with
     | DeclareModule.Identifier (_, id) -> id.Ast.Identifier.name
@@ -2683,232 +2696,97 @@ and statement cx type_params_map = Ast.Statement.(
         AnyT.t
       )
     );
+
+  | (loc, DeclareExportDeclaration {
+      DeclareExportDeclaration.default;
+      DeclareExportDeclaration.declaration;
+      DeclareExportDeclaration.specifiers;
+      DeclareExportDeclaration.source;
+    }) ->
+      let open DeclareExportDeclaration in
+      let open Ast.Identifier in
+      let export_info = match declaration with
+      | Some (Variable (loc, v)) ->
+          let { DeclareVariable.id = (_, { name; _; }) } = v in
+          statement cx type_params_map (loc, DeclareVariable v);
+          [(spf "var %s" name, loc, name, None)]
+      | Some (Function (loc, f)) ->
+          let { DeclareFunction.id = (_, { name; _; }) } = f in
+          statement cx type_params_map (loc, DeclareFunction f);
+          [(spf "function %s() {}" name, loc, name, None)]
+      | Some (Class (loc, c)) ->
+          let { Interface.id = (name_loc, { name; _; }); _; } = c in
+          statement cx type_params_map (loc, DeclareClass c);
+          [(spf "class %s {}" name, name_loc, name, None)]
+      | Some (DefaultType (loc, t)) ->
+          let _type = convert cx type_params_map (loc, t) in
+          [( "<<type>>", loc, "default", Some _type)]
+      | None ->
+          [] in
+
+      export_statement cx type_params_map loc
+        default export_info specifiers source
+        Ast.Statement.ExportDeclaration.ExportValue
+
   | (loc, ExportDeclaration {
       ExportDeclaration.default;
       ExportDeclaration.declaration;
       ExportDeclaration.specifiers;
       ExportDeclaration.source;
       ExportDeclaration.exportKind;
-    }) -> ExportDeclaration.(
-      let (lookup_mode, export_kind_start) = (
-        match exportKind with
-        | ExportValue -> (ForValue, "export")
-        | ExportType -> (ForType, "export type")
-      ) in
-
-      let export_reason_start = spf "%s%s" export_kind_start (
-        if default then " default" else ""
-      ) in
-
-      let extract_export_info_from_decl = (function
-        | loc, FunctionDeclaration({FunctionDeclaration.id=None; _;}) ->
-          if default then
-            [("function() {}", loc, internal_name "*default*")]
-          else failwith (
-            "Parser Error: Immediate exports of nameless functions can " ^
-            "only exist for default exports!"
-          )
-        | loc, FunctionDeclaration({FunctionDeclaration.id=Some(_, id); _;}) ->
-          let name = id.Ast.Identifier.name in
-          [(spf "function %s() {}" name, loc, name)]
-        | loc, ClassDeclaration({Ast.Class.id=None; _;}) ->
-          if default then
-            [("class {}", loc, internal_name "*default*")]
-          else failwith (
-            "Parser Error: Immediate exports of nameless classes can " ^
-            "only exist for default exports"
-          )
-        | loc, ClassDeclaration({Ast.Class.id=Some(name_loc, id); _;}) ->
-          let name = id.Ast.Identifier.name in
-          [(spf "class %s {}" name, name_loc, name)]
-        | _, VariableDeclaration({VariableDeclaration.declarations; _; }) ->
-          let decl_to_bindings accum (loc, decl) =
-            let id = snd decl.VariableDeclaration.Declarator.id in
-            List.rev (extract_destructured_bindings accum id)
-          in
-          let bound_names = List.fold_left decl_to_bindings [] declarations in
-          bound_names |> List.map (fun (loc, name) ->
-            (spf "var %s" name, loc, name)
-          )
-        | _, TypeAlias({TypeAlias.id=(_, id); _;}) ->
-          let name = id.Ast.Identifier.name in
-          [(spf "type %s = ..." name, loc, name)]
-        | _ -> failwith "Parser Error: Invalid export-declaration type!"
-      ) in
-
-      let export_from_local (export_reason, loc, local_name) = (
-        let reason =
-          mk_reason (spf "%s %s" export_reason_start export_reason) loc
-        in
-        let local_tvar = Env_js.var_ref ~lookup_mode cx local_name reason in
-
-        (**
-         * NOTE: We do not use type-only exports as an indicator of an
-         *       ES module in order to allow CommonJS modules to export types.
-         *
-         *       Note that this means that modules that consist only of
-         *       type-only exports will be internally considered a CommonJS
-         *       module, but this should have minimal observable effect to the
-         *       user given CommonJS<->ESModule interop.
-         *)
-        (if lookup_mode != ForType then
-          mark_exports_type cx reason Context.ESModule);
-
-        let local_name = if default then "default" else local_name in
-        Flow_js.flow cx (
-          exports cx (Context.module_name cx),
-          SetNamedExportsT(reason, SMap.singleton local_name local_tvar, AnyT.t)
-        )
-      ) in
-
-      (match (declaration, specifiers) with
-        (* export [type] [default] <<declaration>>; *)
-        | (Some(Declaration(decl)), None) ->
+    }) ->
+      let open ExportDeclaration in
+      let export_info = match declaration with
+      | Some (Declaration decl) ->
           let decl = if default then nameify_default_export_decl decl else decl in
           statement cx type_params_map decl;
+          (match decl with
+          | loc, FunctionDeclaration({FunctionDeclaration.id=None; _;}) ->
+            if default then
+              [("function() {}", loc, internal_name "*default*", None)]
+            else failwith (
+              "Parser Error: Immediate exports of nameless functions can " ^
+              "only exist for default exports!"
+            )
+          | loc, FunctionDeclaration({FunctionDeclaration.id=Some(_, id); _;}) ->
+            let name = id.Ast.Identifier.name in
+            [(spf "function %s() {}" name, loc, name, None)]
+          | loc, ClassDeclaration({Ast.Class.id=None; _;}) ->
+            if default then
+              [("class {}", loc, internal_name "*default*", None)]
+            else failwith (
+              "Parser Error: Immediate exports of nameless classes can " ^
+              "only exist for default exports"
+            )
+          | loc, ClassDeclaration({Ast.Class.id=Some(name_loc, id); _;}) ->
+            let name = id.Ast.Identifier.name in
+            [(spf "class %s {}" name, name_loc, name, None)]
+          | _, VariableDeclaration({VariableDeclaration.declarations; _; }) ->
+            let decl_to_bindings accum (loc, decl) =
+              let id = snd decl.VariableDeclaration.Declarator.id in
+              List.rev (extract_destructured_bindings accum id)
+            in
+            let bound_names = List.fold_left decl_to_bindings [] declarations in
+            bound_names |> List.map (fun (loc, name) ->
+              (spf "var %s" name, loc, name, None)
+            )
+          | _, TypeAlias({TypeAlias.id=(_, id); _;}) ->
+            let name = id.Ast.Identifier.name in
+            [(spf "type %s = ..." name, loc, name, None)]
+          | _ -> failwith "Parser Error: Invalid export-declaration type!")
 
-          (**
-           * Export each declared binding. Some declarations export multiple
-           * bindings, like a multi-declarator variable declaration.
-           *)
-          List.iter export_from_local (extract_export_info_from_decl decl)
-
-        (* export [type] <<expression>>; *)
-        | (Some(Expression(expr)), None) ->
+      | Some (Expression expr) ->
           if not default then failwith (
             "Parser Error: Exporting an expression is only possible for " ^
             "`export default`!"
           );
 
           let expr_t = expression cx type_params_map expr in
-          let reason =
-            mk_reason (spf "%s <<expression>>" export_reason_start) loc
-          in
-          mark_exports_type cx reason Context.ESModule;
-          Flow_js.flow cx (
-            exports cx (Context.module_name cx),
-            SetNamedExportsT(reason, SMap.singleton "default" expr_t, AnyT.t)
-          )
+          [( "<<expression>>", fst expr, "default", Some expr_t)]
+      | None -> [] in
 
-        (* export [type] {foo, bar} [from ...]; *)
-        | (None, Some(ExportSpecifiers(specifiers))) ->
-          let export_specifier specifier = Specifier.(
-            let (reason, local_name, remote_name) = (
-              match specifier with
-              | loc, {id = (_, {Ast.Identifier.name=id; _;}); name=None;} ->
-                let reason = mk_reason (spf "export {%s}" id) loc in
-                (reason, id, id)
-              | loc, {id=(_, {Ast.Identifier.name=id; _;});
-                      name=Some(_, {Ast.Identifier.name; _;})} ->
-                let reason =
-                  mk_reason (spf "export {%s as %s}" id name) loc
-                in
-                (reason, id, name)
-            ) in
-
-            (**
-             * Determine if we're dealing with the `export {} from` form
-             * (and if so, retrieve the ModuleNamespaceObject tvar for the
-             *  source module)
-             *)
-            let source_module_tvar = (
-              match source with
-              | Some(src_loc, {
-                  Ast.Literal.value = Ast.Literal.String(module_name);
-                  _;
-                }) ->
-                  let reason =
-                    mk_reason "ModuleNamespace for export {} from" src_loc
-                  in
-                  Some(import_ns cx reason module_name src_loc)
-              | Some(_) -> failwith (
-                  "Parser Error: `export ... from` must specify a string " ^
-                  "literal for the source module name!"
-                )
-              | None -> None
-            ) in
-
-            let local_tvar = (
-              match source_module_tvar with
-              | Some(tvar) ->
-                Flow_js.mk_tvar_where cx reason (fun t ->
-                  Flow_js.flow cx (tvar, GetPropT(reason, (reason, local_name), t))
-                )
-              | None ->
-                Env_js.var_ref ~lookup_mode cx local_name reason
-            ) in
-
-            (**
-             * NOTE: We do not use type-only exports as an indicator of an
-             *       ES module in order to allow CommonJS modules to export
-             *       types.
-             *
-             *       Note that this means that modules that consist only of
-             *       type-only exports will be internally considered a
-             *       CommonJS module, but this should have minimal observable
-             *       effect to the user given CommonJS<->ESModule interop.
-             *)
-            (if lookup_mode != ForType
-            then mark_exports_type cx reason Context.ESModule);
-
-            Flow_js.flow cx (
-              exports cx (Context.module_name cx),
-              SetNamedExportsT(reason, SMap.singleton remote_name local_tvar, AnyT.t)
-            )
-          ) in
-          List.iter export_specifier specifiers
-
-        (* export [type] * from "source"; *)
-        | (None, Some(ExportBatchSpecifier(_))) ->
-          let source_tvar = (
-            match source with
-            | Some(src_loc, {
-                Ast.Literal.value = Ast.Literal.String(module_name);
-                _;
-              }) ->
-                let reason_str =
-                  spf "ModuleNamespaceObject for export * from \"%s\""
-                    module_name
-                in
-                let reason = mk_reason reason_str src_loc in
-                import_ns cx reason module_name src_loc
-            | Some(_)
-            | None
-              -> failwith (
-                "Parser Error: `export * from` must specify a string " ^
-                "literal for the source module name!"
-              )
-          ) in
-
-          let reason = mk_reason "export * from \"%s\"" loc in
-
-          (**
-           * TODO: Should probably make a specialized use type for this.
-           *
-           * Doing this as it is done now means that only the last
-           * `export * from` statement in a module counts. So a scenario
-           * like the following will not behave properly:
-           *
-           *   // ModuleA
-           *   export * from "SourceModule1"; // These exports get dropped
-           *   export * from "SourceModule2";
-           *
-           * TODO: Also, add a test for this scenario once it's fixed
-           *)
-          mark_exports_type cx reason (Context.CommonJSModule(Some(loc)));
-          set_module_exports cx reason source_tvar
-
-        (* Parser vomit (these should never happen) *)
-        | (Some _, Some _) -> failwith (
-            "Parser Error: Export statement with a declaration/expression " ^
-            "cannot also include a list of specifiers!"
-          )
-        | (None, None) -> failwith (
-            "Parser Error: Export statement missing one of: Declaration, " ^
-            "Expression, or Specifier list!"
-          )
-      )
-    )
+      export_statement cx type_params_map loc
+        default export_info specifiers source exportKind
   | (import_loc, ImportDeclaration({
       ImportDeclaration.default;
       ImportDeclaration.importKind;
@@ -3035,6 +2913,176 @@ and statement cx type_params_map = Ast.Statement.(
         | None -> ()
       )
 )
+
+
+and export_statement cx type_params_map loc
+  default declaration_export_info specifiers source exportKind =
+
+  let open Ast.Statement in
+  let open ExportDeclaration in
+  let (lookup_mode, export_kind_start) = (
+    match exportKind with
+    | ExportValue -> (ForValue, "export")
+    | ExportType -> (ForType, "export type")
+  ) in
+
+  let export_reason_start = spf "%s%s" export_kind_start (
+    if default then " default" else ""
+  ) in
+
+  let export_from_local (export_reason, loc, local_name, local_tvar) = (
+    let reason =
+      mk_reason (spf "%s %s" export_reason_start export_reason) loc
+    in
+    let local_tvar = match local_tvar with
+    | None -> Env_js.var_ref ~lookup_mode cx local_name reason
+    | Some t -> t in
+
+    (**
+      * NOTE: We do not use type-only exports as an indicator of an
+      *       ES module in order to allow CommonJS modules to export types.
+      *
+      *       Note that this means that modules that consist only of
+      *       type-only exports will be internally considered a CommonJS
+      *       module, but this should have minimal observable effect to the
+      *       user given CommonJS<->ESModule interop.
+      *)
+    (if lookup_mode != ForType then
+      mark_exports_type cx reason Context.ESModule);
+
+    let local_name = if default then "default" else local_name in
+    Flow_js.flow cx (
+      exports cx (Context.module_name cx),
+      SetNamedExportsT(reason, SMap.singleton local_name local_tvar, AnyT.t)
+    )
+  ) in
+
+  (match (declaration_export_info, specifiers) with
+    (* [declare] export [type] {foo, bar} [from ...]; *)
+    | ([], Some(ExportSpecifiers(specifiers))) ->
+      let export_specifier specifier = Specifier.(
+        let (reason, local_name, remote_name) = (
+          match specifier with
+          | loc, {id = (_, {Ast.Identifier.name=id; _;}); name=None;} ->
+            let reason = mk_reason (spf "export {%s}" id) loc in
+            (reason, id, id)
+          | loc, {id=(_, {Ast.Identifier.name=id; _;});
+                  name=Some(_, {Ast.Identifier.name; _;})} ->
+            let reason =
+              mk_reason (spf "export {%s as %s}" id name) loc
+            in
+            (reason, id, name)
+        ) in
+
+        (**
+          * Determine if we're dealing with the `export {} from` form
+          * (and if so, retrieve the ModuleNamespaceObject tvar for the
+          *  source module)
+          *)
+        let source_module_tvar = (
+          match source with
+          | Some(src_loc, {
+              Ast.Literal.value = Ast.Literal.String(module_name);
+              _;
+            }) ->
+              let reason =
+                mk_reason "ModuleNamespace for export {} from" src_loc
+              in
+              Some(import_ns cx reason module_name src_loc)
+          | Some(_) -> failwith (
+              "Parser Error: `export ... from` must specify a string " ^
+              "literal for the source module name!"
+            )
+          | None -> None
+        ) in
+
+        let local_tvar = (
+          match source_module_tvar with
+          | Some(tvar) ->
+            Flow_js.mk_tvar_where cx reason (fun t ->
+              Flow_js.flow cx (tvar, GetPropT(reason, (reason, local_name), t))
+            )
+          | None ->
+            Env_js.var_ref ~lookup_mode cx local_name reason
+        ) in
+
+        (**
+          * NOTE: We do not use type-only exports as an indicator of an
+          *       ES module in order to allow CommonJS modules to export
+          *       types.
+          *
+          *       Note that this means that modules that consist only of
+          *       type-only exports will be internally considered a
+          *       CommonJS module, but this should have minimal observable
+          *       effect to the user given CommonJS<->ESModule interop.
+          *)
+        (if lookup_mode != ForType
+        then mark_exports_type cx reason Context.ESModule);
+
+        Flow_js.flow cx (
+          exports cx (Context.module_name cx),
+          SetNamedExportsT(reason, SMap.singleton remote_name local_tvar, AnyT.t)
+        )
+      ) in
+      List.iter export_specifier specifiers
+
+    (* [declare] export [type] * from "source"; *)
+    | ([], Some(ExportBatchSpecifier(_))) ->
+      let source_tvar = (
+        match source with
+        | Some(src_loc, {
+            Ast.Literal.value = Ast.Literal.String(module_name);
+            _;
+          }) ->
+            let reason_str =
+              spf "ModuleNamespaceObject for export * from \"%s\""
+                module_name
+            in
+            let reason = mk_reason reason_str src_loc in
+            import_ns cx reason module_name src_loc
+        | Some(_)
+        | None
+          -> failwith (
+            "Parser Error: `export * from` must specify a string " ^
+            "literal for the source module name!"
+          )
+      ) in
+
+      let reason = mk_reason "export * from \"%s\"" loc in
+
+      (**
+        * TODO: Should probably make a specialized use type for this.
+        *
+        * Doing this as it is done now means that only the last
+        * `export * from` statement in a module counts. So a scenario
+        * like the following will not behave properly:
+        *
+        *   // ModuleA
+        *   export * from "SourceModule1"; // These exports get dropped
+        *   export * from "SourceModule2";
+        *
+        * TODO: Also, add a test for this scenario once it's fixed
+        *)
+      mark_exports_type cx reason (Context.CommonJSModule(Some(loc)));
+      set_module_exports cx reason source_tvar
+
+    | ([], None) -> failwith (
+        "Parser Error: Export statement missing one of: Declaration, " ^
+        "Expression, or Specifier list!"
+      )
+    | (_, Some _) -> failwith (
+        "Parser Error: Export statement with a declaration/expression " ^
+        "cannot also include a list of specifiers!"
+      )
+
+    (* [declare] export [type] [default] <<declaration>>; *)
+    | (export_info, None) ->
+      (**
+        * Export each declared binding. Some declarations export multiple
+        * bindings, like a multi-declarator variable declaration.
+        *)
+      List.iter export_from_local export_info
+  )
 
 and object_prop cx type_params_map map = Ast.Expression.Object.(function
   (* name = function expr *)

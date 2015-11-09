@@ -5,3 +5,4 @@
 [libs]
 
 [options]
+module.system=haste

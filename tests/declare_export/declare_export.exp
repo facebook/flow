@@ -1,5 +1,280 @@
 
-test.js:1:1,30: 
-declare export declarations are not yet supported
+es6modules.js:10:18,38: number
+This type is incompatible with
+es6modules.js:10:9,14: string
 
-Found 1 error
+es6modules.js:15:18,37: number
+This type is incompatible with
+es6modules.js:15:9,14: string
+
+es6modules.js:18:22,24: C
+Required module not found
+
+es6modules.js:21:22,26: ./D
+Required module not found
+
+es6modules.js:27:9,19: "doesntExist" export of "CommonJS_Clobbering_Lit"
+Property not found in
+es6modules.js:27:27,51: exports of "CommonJS_Clobbering_Lit"
+
+es6modules.js:31:18,29: number
+This type is incompatible with
+es6modules.js:31:9,14: string
+
+es6modules.js:35:18,24: number
+This type is incompatible with
+es6modules.js:35:9,14: string
+
+es6modules.js:39:18,43: number
+This type is incompatible with
+es6modules.js:39:9,14: string
+
+es6modules.js:40:15,25: property `doesntExist`
+Property not found in
+es6modules.js:40:1,13: object literal
+
+es6modules.js:45:26,32: property `default`
+Property not found in
+es6modules.js:45:1,24: object literal
+
+es6modules.js:46:18,46: number
+This type is incompatible with
+es6modules.js:46:9,14: string
+
+es6modules.js:47:18,54: number
+This type is incompatible with
+es6modules.js:47:9,14: string
+
+es6modules.js:53:9,19: "doesntExist" export of "CommonJS_Clobbering_Class"
+Property not found in
+es6modules.js:53:27,53: exports of "CommonJS_Clobbering_Class"
+
+es6modules.js:59:9,21: "staticNumber1" export of "CommonJS_Clobbering_Class"
+Property not found in
+es6modules.js:59:50,76: exports of "CommonJS_Clobbering_Class"
+
+es6modules.js:59:24,31: "baseProp" export of "CommonJS_Clobbering_Class"
+Property not found in
+es6modules.js:59:50,76: exports of "CommonJS_Clobbering_Class"
+
+es6modules.js:59:34,42: "childProp" export of "CommonJS_Clobbering_Class"
+Property not found in
+es6modules.js:59:50,76: exports of "CommonJS_Clobbering_Class"
+
+es6modules.js:63:1,33: property `doesntExist`
+Error:
+es6modules.js:63:23,33: property `doesntExist`
+Property not found in
+es6modules.js:63:5,19: Test
+
+es6modules.js:65:18,48: call of method `staticNumber2`
+Error:
+es6modules.js:65:18,48: number
+This type is incompatible with
+es6modules.js:65:9,14: string
+
+es6modules.js:67:18,52: call of method `instNumber1`
+Error:
+es6modules.js:67:18,52: number
+This type is incompatible with
+es6modules.js:67:9,14: string
+
+es6modules.js:70:1,24: constructor call
+Constructor cannot be called on
+es6modules.js:70:5,22: exports of "CommonJS_Clobbering_Class"
+
+es6modules.js:71:37,49: property `staticNumber3`
+Property not found in
+es6modules.js:71:18,35: exports of "CommonJS_Clobbering_Class"
+
+es6modules.js:73:18,63: call of method `instNumber2`
+Error:
+es6modules.js:73:18,63: number
+This type is incompatible with
+es6modules.js:73:9,14: string
+
+es6modules.js:79:9,19: "doesntExist" export of "CommonJS_Named"
+Property not found in
+es6modules.js:79:27,42: exports of "CommonJS_Named"
+
+es6modules.js:83:18,29: number
+This type is incompatible with
+es6modules.js:83:9,14: string
+
+es6modules.js:87:18,24: number
+This type is incompatible with
+es6modules.js:87:9,14: string
+
+es6modules.js:91:18,39: number
+This type is incompatible with
+es6modules.js:91:9,14: string
+
+es6modules.js:92:11,21: property `doesntExist`
+Property not found in
+es6modules.js:92:1,9: exports of "CommonJS_Named"
+
+es6modules.js:96:18,50: number
+This type is incompatible with
+es6modules.js:96:9,14: string
+
+es6modules.js:97:18,42: number
+This type is incompatible with
+es6modules.js:97:9,14: string
+
+es6modules.js:103:9,19: "doesntExist" export of "ES6_Default_AnonFunction1"
+Property not found in
+es6modules.js:103:27,53: exports of "ES6_Default_AnonFunction1"
+
+es6modules.js:107:18,36: function call
+Error:
+es6modules.js:107:18,36: number
+This type is incompatible with
+es6modules.js:107:9,14: string
+
+es6modules.js:111:18,37: function call
+Error:
+es6modules.js:111:18,37: number
+This type is incompatible with
+es6modules.js:111:9,14: string
+
+es6modules.js:119:18,54: call of method `givesANum`
+Error:
+es6modules.js:119:18,54: number
+This type is incompatible with
+es6modules.js:119:9,14: string
+
+es6modules.js:125:8,18: "default" export of "ES6_Named1"
+Property not found in
+es6modules.js:125:25,36: exports of "ES6_Named1"
+
+es6modules.js:129:18,33: number
+This type is incompatible with
+es6modules.js:129:9,14: string
+
+es6modules.js:133:18,40: number
+This type is incompatible with
+es6modules.js:133:9,14: string
+
+es6modules.js:137:18,40: number
+This type is incompatible with
+es6modules.js:137:9,14: string
+
+es6modules.js:142:18,40: number
+This type is incompatible with
+es6modules.js:142:9,14: string
+
+es6modules.js:143:18,40: number
+This type is incompatible with
+es6modules.js:143:9,14: string
+
+es6modules.js:147:18,31: function call
+Error:
+es6modules.js:147:18,31: number
+This type is incompatible with
+es6modules.js:147:9,14: string
+
+es6modules.js:151:18,53: call of method `givesANumber`
+Error:
+es6modules.js:151:18,53: number
+This type is incompatible with
+es6modules.js:151:9,14: string
+
+es6modules.js:156:18,31: number
+This type is incompatible with
+es6modules.js:156:9,14: string
+
+es6modules.js:157:18,31: number
+This type is incompatible with
+es6modules.js:157:9,14: string
+
+es6modules.js:169:19,30: number
+This type is incompatible with
+es6modules.js:169:10,15: string
+
+es6modules.js:173:19,38: number
+This type is incompatible with
+es6modules.js:173:10,15: string
+
+es6modules.js:177:19,30: number
+This type is incompatible with
+es6modules.js:177:10,15: string
+
+es6modules.js:183:38,48: property `doesntExist`
+Property not found in
+es6modules.js:183:1,36: CommonJS exports of "ES6_Default_AnonFunction2"
+
+es6modules.js:187:19,37: function call
+Error:
+es6modules.js:187:19,37: number
+This type is incompatible with
+es6modules.js:187:10,15: string
+
+es6modules.js:191:19,38: function call
+Error:
+es6modules.js:191:19,38: number
+This type is incompatible with
+es6modules.js:191:10,15: string
+
+es6modules.js:199:19,55: call of method `givesANum`
+Error:
+es6modules.js:199:19,55: number
+This type is incompatible with
+es6modules.js:199:10,15: string
+
+es6modules.js:207:19,34: number
+This type is incompatible with
+es6modules.js:207:10,15: string
+
+es6modules.js:211:19,41: number
+This type is incompatible with
+es6modules.js:211:10,15: string
+
+es6modules.js:217:19,41: number
+This type is incompatible with
+es6modules.js:217:10,15: string
+
+es6modules.js:218:19,41: number
+This type is incompatible with
+es6modules.js:218:10,15: string
+
+es6modules.js:222:19,33: function call
+Error:
+es6modules.js:222:19,33: number
+This type is incompatible with
+es6modules.js:222:10,15: string
+
+es6modules.js:226:19,55: call of method `givesANumber`
+Error:
+es6modules.js:226:19,55: number
+This type is incompatible with
+es6modules.js:226:10,15: string
+
+es6modules.js:232:19,32: number
+This type is incompatible with
+es6modules.js:232:10,15: string
+
+es6modules.js:233:19,32: number
+This type is incompatible with
+es6modules.js:233:10,15: string
+
+es6modules.js:245:19,30: number
+This type is incompatible with
+es6modules.js:245:10,15: string
+
+es6modules.js:249:19,39: number
+This type is incompatible with
+es6modules.js:249:10,15: string
+
+es6modules.js:253:19,30: number
+This type is incompatible with
+es6modules.js:253:10,15: string
+
+es6modules.js:262:19,28: number
+This type is incompatible with
+es6modules.js:262:10,15: string
+
+es6modules.js:265:19,26: string
+This type is incompatible with
+es6modules.js:265:10,15: number
+
+Found 63 errors
