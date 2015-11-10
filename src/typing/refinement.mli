@@ -8,7 +8,9 @@
  *
  *)
 
-module Ast = Spider_monkey_ast
-
-val key : Ast.Expression.t -> Key.t option
-val get : Context.t -> Ast.Expression.t -> Reason_js.reason -> Type.t option
+val key: Spider_monkey_ast.Expression.t -> Key.t option
+val get:
+  Context.t ->
+  Spider_monkey_ast.Expression.t ->
+  Reason_js.reason ->
+  Type.t option
