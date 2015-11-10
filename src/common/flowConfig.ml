@@ -262,10 +262,9 @@ let file_of_root extension ~tmp_dir root =
     else tmp_dir in
   (* TODO: move this to places that write this file *)
   mkdir_no_fail tmp_dir;
+  let tmp_dir = tmp_dir |> Path.make |> Path.to_string in
   let root_part = Path.slash_escaped_string_of_path root in
   Printf.sprintf "%s%s.%s" tmp_dir root_part extension
-  |> Path.make
-  |> Path.to_string
 
 let init_file   = file_of_root "init"
 let lock_file   = file_of_root "lock"
