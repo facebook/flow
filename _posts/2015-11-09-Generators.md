@@ -4,7 +4,7 @@ author: samwgoldman
 
 ### Typing Generators with Flow
 
-Flow 0.14.0 included support for generator functions. Generator functions provide a unique ability to JavaScript programs, the abilty to suspend and resume execution. This kind of control paves the way for async/await, an [upcoming feature](https://github.com/tc39/ecmascript-asyncawait), already supported by Flow.
+Flow 0.14.0 included support for generator functions. Generator functions provide a unique ability to JavaScript programs: the abilty to suspend and resume execution. This kind of control paves the way for async/await, an [upcoming feature](https://github.com/tc39/ecmascript-asyncawait) already supported by Flow.
 
 <!--truncate-->
 
@@ -38,7 +38,7 @@ console.log(gen.next()); // { done: false, value: 1 }
 console.log(gen.next()); // { done: false, value: 2 }
 ```
 
-When `done` is false, `value` will be the of the generator's `Yield` type. When `done` is true, `value` will be of the generator's `Return` type or `void` if the consumer iterates past the completion value.
+When `done` is false, `value` will have the generator's `Yield` type. When `done` is true, `value` will have the generator's `Return` type or `void` if the consumer iterates past the completion value.
 
 ```javascript
 function *test() {
@@ -94,7 +94,7 @@ for (let i = 0; i < 10; i++) {
 }
 ```
 
-There is an [open issue](https://github.com/facebook/flow/issues/577) which would make the dynamic type test above unnecessary, by using the `done` value as a sentinel to refine a tagged union. That is, when `done` is `true`, Flow would know that `value` is always of type `Yield`, and otherwise of type `Return | void`.
+There is an [open issue](https://github.com/facebook/flow/issues/577) which would make the dynamic type test above unnecessary, by using the `done` value as a sentinel to refine a tagged union. That is, when `done` is `true`, Flow would know that `value` is always of type `Yield` and otherwise of type `Return | void`.
 
 Even without the dynamic type test, this code is quite verbose and it's hard to see the intent. Because generators are also iterable, we can also use `for...of` loops:
 
@@ -127,7 +127,7 @@ for (let n of take(10, nats())) {
 
 Note that we explicitly annotated the parameters and return type of the `take` generator. This is necessary to ensure Flow understands the fully generic type.
 
-Another important feature of generators is the ability to pass values into the generator from the consumer. Let's consider a generator `scan`, which reduces values passed into the generator using a provided function. Our `scan` is similar to `Array.reduce`, but it returns each intermediate value and the values are provided imperatively via `next`.
+Another important feature of generators is the ability to pass values into the generator from the consumer. Let's consider a generator `scan`, which reduces values passed into the generator using a provided function. Our `scan` is similar to `Array.prototype.reduce`, but it returns each intermediate value and the values are provided imperatively via `next`.
 
 As a first pass, we might write this:
 
@@ -201,9 +201,8 @@ function *foo() {
 }
 
 const gen = foo();
-gen.next(); // start the generator
-const a: number = gen.next().value;
-const b: string = gen.next().value;
+const a: number = gen.next().value; // error
+const b: string = gen.next().value; // error
 ```
 
 This is perfectly legal JavaScript and the values `a` and `b` do have the correct types at runtime. However, Flow rejects this program. Our generator's `Yield` type parameter has a concrete type of `number | string`. The `value` property of the iterator result object has the type `number | string | void`.
@@ -220,7 +219,7 @@ function *bar() {
 const gen = bar();
 gen.next(); // start the generator
 gen.next(0);
-const ret: { a: number, b: string } = gen.next("").value;
+const ret: { a: number, b: string } = gen.next("").value; // error
 ```
 
 The value `ret` has the annotated type at runtime, but Flow also rejects this program. Our generator's `Next` type parameter has a concrete type of `number | string`. The `value` property of the iterator result object thus has the type `void | { a: void | number | string, b: void | number | string }`.
@@ -237,7 +236,7 @@ function *bar(): Generator {
 const gen = bar();
 gen.next(); // start the generator
 gen.next(0);
-const ret: void | { a: number, b: string } = gen.next("").value;
+const ret: void | { a: number, b: string } = gen.next("").value; // OK
 ```
 
 (Note that the annotation `Generator` is equivalent to `Generator<any,any,any>`.)
