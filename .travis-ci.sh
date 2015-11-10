@@ -1,8 +1,7 @@
 OPAM_DEPENDS=
          
 setup_linux () {
-  printf "travis_fold:start:opam_installer\n"
-  printf "Installing ocaml %s and opam %s\n" $OCAML_VERSION $OPAM_VERSION
+  printf "travis_fold:start:opam_installer\nInstalling ocaml %s and opam %s\n" $OCAML_VERSION $OPAM_VERSION
   export PREFIX="./usr"
   export BINDIR="$PREFIX/bin"
   export PATH="$BINDIR:$PATH"
@@ -52,12 +51,10 @@ esac
 
 printf "Using ocaml %s and opam %s\n" $(ocaml -vnum) $(opam --version)
 
-printf "travis_fold:start:make\n"
-printf "Building flow\n"
+printf "travis_fold:start:make\nBuilding flow\n"
 make
 printf "travis_fold:end:make\n"
 
-printf "travis_fold:start:runtests\n"
-printf "Running flow tests\n"
+printf "travis_fold:start:runtests\nRunning flow tests\n"
 ./runtests.sh bin/flow
 printf "travis_fold:end:runtests\n"
