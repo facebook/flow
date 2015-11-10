@@ -41,5 +41,7 @@ case $TRAVIS_OS_NAME in
 linux) setup_linux ;;
 esac
 
+ocaml -vnum
+
 make
 make test
