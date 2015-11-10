@@ -2,7 +2,7 @@ OPAM_DEPENDS=
          
 setup_linux () {
   printf "travis_fold:start:opam_installer\n"
-  printf "Installing ocaml %s and opam %s" $OCAML_VERSION $OPAM_VERSION
+  printf "Installing ocaml %s and opam %s\n" $OCAML_VERSION $OPAM_VERSION
   export PREFIX="./usr"
   export BINDIR="$PREFIX/bin"
   export PATH="$BINDIR:$PATH"
