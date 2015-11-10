@@ -99,6 +99,10 @@ module Opts = struct
 
     config
 
+  let module_file_exts = SSet.empty
+        |> SSet.add ".js"
+        |> SSet.add ".jsx"
+
   let default_options = {
     enable_unsafe_getters_and_setters = false;
     esproposal_class_instance_fields = ESPROPOSAL_WARN;
@@ -109,7 +113,7 @@ module Opts = struct
     module_name_mappers = [];
     node_resolver_dirnames = ["node_modules"];
     munge_underscores = false;
-    module_file_exts = SSet.of_list [ ".js"; ".jsx"; ];
+    module_file_exts;
     suppress_comments = [];
     suppress_types = SSet.empty;
     traces = 0;
