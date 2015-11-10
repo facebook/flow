@@ -36,16 +36,6 @@ val restore: Context.t ->
 
 val mk_object: Context.t -> reason -> Type.t
 
-val query_type: Context.t -> Loc.t -> Loc.t * Type.t option * Type.t list
-
-val dump_types:
-  (Context.t -> Type.t -> string) ->
-  (Context.t -> Type.t -> string option) ->
-  Context.t ->
-  (Loc.t * string * string * string option * Reason_js.reason list) list
-
-val fill_types: Context.t -> (int * int * string) list
-
 val load_lib_file:
   verbose: int option ->
   exclude_syms:Utils.SSet.t ->

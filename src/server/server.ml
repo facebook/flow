@@ -170,7 +170,7 @@ struct
       | Some cx, _ -> cx
       | _, errors  -> failwith "Couldn't parse file" in
       let loc = mk_loc file line col in
-      let (loc, ground_t, possible_ts) = TI.query_type cx loc in
+      let (loc, ground_t, possible_ts) = Query_types.query_type cx loc in
       let ty, raw_type = match ground_t with
         | None -> None, None
         | Some t ->
@@ -215,7 +215,7 @@ struct
        let cx = match Types_js.typecheck_contents content file with
        | Some cx, _ -> cx
        | _, errors  -> failwith "Couldn't parse file" in
-      (None, Some (TI.dump_types printer raw_printer cx))
+      (None, Some (Query_types.dump_types printer raw_printer cx))
     with exn ->
       let loc = mk_loc file 0 0 in
       let err = (loc, Printexc.to_string exn) in
@@ -263,7 +263,7 @@ struct
            | _, errors  -> failwith "Couldn't parse file" in
          let lines = Str.split_delim (Str.regexp "\n") content in
          let insertions =
-           TI.fill_types cx
+           Query_types.fill_types cx
            |> List.sort Pervasives.compare
            |> match region with
               | [] -> fun insertions -> insertions

@@ -45,6 +45,7 @@ MODULES=\
   src/parser\
   src/parsing\
   src/server\
+  src/services/inference\
   src/stubs\
   src/typing\
   hack/deps\
