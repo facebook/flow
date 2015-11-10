@@ -1,6 +1,8 @@
 OPAM_DEPENDS=
          
 setup_linux () {
+  printf "travis_fold:start:opam_installer"
+  printf "Installing ocaml %s and opam %s" $OCAML_VERSION $OPAM_VERSION
   export PREFIX="./usr"
   export BINDIR="$PREFIX/bin"
   export PATH="$BINDIR:$PATH"
@@ -9,6 +11,7 @@ setup_linux () {
   if [ -n "${OPAM_VERSION:-}" ]; then
     sed -i "s/^VERSION=.*$/VERSION='$OPAM_VERSION'/" opam_installer.sh
   fi
+
   echo y | sh opam_installer.sh $BINDIR $OCAML_VERSION
 
   export OPAMYES=1
@@ -17,6 +20,7 @@ setup_linux () {
   # TODO: Install js_of_ocaml and test the parser
   # opam install ${OPAM_DEPENDS}
   eval `opam config env`
+  printf "travis_fold:end:opam_installer"
 
   # For some reason the Linux containers start killing the tests if too many
   # tests are run in parallel. Luckily we can easily configure that here
@@ -49,4 +53,7 @@ esac
 printf "Using ocaml %s and opam %s\n" $(ocaml -vnum) $(opam --version)
 
 make
-make test
+
+printf "travis_fold:start:runtests"
+./runtests.sh bin/flow
+printf "travis_fold:end:runtests"
