@@ -46,5 +46,7 @@ case $TRAVIS_OS_NAME in
 linux) setup_linux ;;
 esac
 
+printf "Using ocaml %s and opam %s\n" $(ocaml -vnum) $(opam --version)
+
 make
 make test
