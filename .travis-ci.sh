@@ -16,6 +16,8 @@ setup_linux () {
   # TODO: Install js_of_ocaml and test the parser
   # opam install ${OPAM_DEPENDS}
   eval `opam config env`
+
+  export FLOW_RUNTESTS_PARALLELISM=4
 }
 
 setup_osx () {
