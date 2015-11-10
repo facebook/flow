@@ -504,22 +504,6 @@ end
    necessary.
 *)
 
-(*
-let rec ground_export exports r =
-  if not (Hashtbl.mem exports r) then (
-    let file = Module_js.get_file(r) in
-    let _, _, strict_reqs, exported_type =
-      Module_js.get_module_info(file) in
-    let ground_exported_type =
-      ground_exports strict_reqs exports exported_type in
-    Hashtbl.add exports r ground_exported_type
-  )
-
-and ground_exports rs exports t =
-  SSet.iter (ground_export exports) rs;
-  ground_exported_type exports t
-*)
-
 let query_type cx loc =
   let result = ref (Loc.none, None, []) in
   let diff = ref (max_int, max_int) in
@@ -6416,44 +6400,6 @@ and mk_method cx type_params_map reason ?(kind=Scope.Ordinary)
         Flow_js.mk_functiontype2
           params_tlist ?params_names ret (Env_js.peek_frame ()))
 
-(* scrape top-level, unconditional field assignments from constructor code *)
-(** TODO: use a visitor **)
-(** NOTE: dead code **)
-and mine_fields cx type_params_map body fields =
-
-  let scrape_field_assign_expr map = Ast.Expression.(function
-    | _, Assignment {
-        Assignment.left = _, Ast.Pattern.Expression (_, Member {
-          Member._object = _, This;
-          property = Member.PropertyIdentifier (
-            loc, { Ast.Identifier.name = name; _ }
-          );
-          _
-        });
-        _
-      } ->
-        if (SMap.mem name map)
-        then map
-        else
-          let desc = (spf "field `%s` constructor init" name) in
-          let t = mk_type cx type_params_map (mk_reason desc loc) None in
-          SMap.add name t map
-    | _ ->
-        map
-  ) in
-
-  Ast.Statement.FunctionDeclaration.(match body with
-    | BodyExpression expr ->
-        scrape_field_assign_expr fields expr
-
-    | BodyBlock (_, { Ast.Statement.Block.body }) ->
-        List.fold_left Ast.Statement.(fun acc -> function
-          | _, Expression { Expression.expression } ->
-              scrape_field_assign_expr acc expression
-          | _ -> acc
-        ) fields body
-  )
-
 
 (**********)
 (* Driver *)
@@ -6647,26 +6593,6 @@ let copy_context cx cx_other =
     (SSet.union (Context.globals cx_other) (Context.globals cx));
   Context.set_graph cx
     (IMap.union (Context.graph cx_other) (Context.graph cx))
-
-type direction = Out | In
-
-(* make sure a module typed in the given context also has a type
- * in the master context, and create a flow between the two types
- * in the direction specified *)
-let link_module_types dir cx m =
-  let master_cx = Flow_js.master_cx () in
-  let glo = exports master_cx m in
-  let loc = Flow_js.lookup_module cx m in
-  let edge = match dir with Out -> (glo, loc) | In -> (loc, glo) in
-  Flow_js.flow master_cx edge
-
-(* map an exported module type from context to master *)
-let export_to_master cx m =
-  link_module_types In cx m
-
-(* map a required module type from master to context *)
-let require_from_master cx m =
-  link_module_types Out cx m
 
 (* Connect the builtins object in master_cx to the builtins reference in some
    arbitrary cx. *)
