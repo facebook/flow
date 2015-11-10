@@ -1,21 +1,29 @@
 OPAM_DEPENDS=
          
 setup_linux () {
-  case "$OCAML_VERSION,$OPAM_VERSION" in
-  4.02.1,1.2.0) ppa=avsm/ocaml42+opam12 ;;
-  4.02.1,1.1.0) ppa=avsm/ocaml42+opam11 ;;
-  4.01.0,1.2.0) ppa=avsm/ocaml41+opam12 ;;
-  4.01.0,1.1.0) ppa=avsm/ocaml41+opam11 ;;
-  *) echo Unknown $OCAML_VERSION,$OPAM_VERSION; exit 1 ;;
-  esac
+  printf "travis_fold:start:opam_installer\nInstalling ocaml %s and opam %s\n" $OCAML_VERSION $OPAM_VERSION
+  export PREFIX="./usr"
+  export BINDIR="$PREFIX/bin"
+  export PATH="$BINDIR:$PATH"
+
+  wget -q -O opam_installer.sh "https://raw.github.com/ocaml/opam/master/shell/opam_installer.sh"
+  if [ -n "${OPAM_VERSION:-}" ]; then
+    sed -i "s/^VERSION=.*$/VERSION='$OPAM_VERSION'/" opam_installer.sh
+  fi
+
+  echo y | sh opam_installer.sh $BINDIR $OCAML_VERSION
 
   export OPAMYES=1
-  # We could in theory tell opam to init with a particular version of ocaml,
-  # but this is much slower than using the ppa & apt
+  export OPAMVERBOSE=1
   opam init -a -y
   # TODO: Install js_of_ocaml and test the parser
   # opam install ${OPAM_DEPENDS}
   eval `opam config env`
+  printf "travis_fold:end:opam_installer\n"
+
+  # For some reason the Linux containers start killing the tests if too many
+  # tests are run in parallel. Luckily we can easily configure that here
+  export FLOW_RUNTESTS_PARALLELISM=4
 }
 
 setup_osx () {
@@ -41,5 +49,12 @@ case $TRAVIS_OS_NAME in
 linux) setup_linux ;;
 esac
 
+printf "Using ocaml %s and opam %s\n" $(ocaml -vnum) $(opam --version)
+
+printf "travis_fold:start:make\nBuilding flow\n"
 make
-make test
+printf "travis_fold:end:make\n"
+
+printf "travis_fold:start:runtests\nRunning flow tests\n"
+./runtests.sh bin/flow
+printf "travis_fold:end:runtests\n"

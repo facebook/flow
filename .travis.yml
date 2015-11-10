@@ -8,26 +8,20 @@ os:
 
 env:
   - OCAML_VERSION=4.02.1 OPAM_VERSION=1.2.0
-  - OCAML_VERSION=4.02.1 OPAM_VERSION=1.1.0
+  - OCAML_VERSION=4.02.1 OPAM_VERSION=1.1.1
   - OCAML_VERSION=4.01.0 OPAM_VERSION=1.2.0
-  - OCAML_VERSION=4.01.0 OPAM_VERSION=1.1.0
+  - OCAML_VERSION=4.01.0 OPAM_VERSION=1.1.1
 
 matrix:
   exclude:
     - os: osx
-      env: OCAML_VERSION=4.02.1 OPAM_VERSION=1.1.0
+      env: OCAML_VERSION=4.02.1 OPAM_VERSION=1.1.1
     - os: osx
-      env: OCAML_VERSION=4.01.0 OPAM_VERSION=1.1.0
+      env: OCAML_VERSION=4.01.0 OPAM_VERSION=1.1.1
 
 addons:
   apt:
-    sources:
-    - avsm
     packages:
-    - ocaml
-    - ocaml-native-compilers
-    - camlp4-extra
-    - opam
     - libelf-dev
 
 notifications:
