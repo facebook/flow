@@ -1,727 +1,727 @@
 ======Start off with the .js files but without the .flow file======
 
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:5:2,9: call of method `fun`
+test_absolute.js:5:2,9: call of method `fun`
 Error:
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:5:2,9: Implementation
+test_absolute.js:5:2,9: Implementation
 This type is incompatible with
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:5:12,18: boolean
+test_absolute.js:5:12,18: boolean
 
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:9:2,9: call of method `fun`
+test_absolute.js:9:2,9: call of method `fun`
 Error:
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:9:2,9: Implementation
+test_absolute.js:9:2,9: Implementation
 This type is incompatible with
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:9:12,18: boolean
+test_absolute.js:9:12,18: boolean
 
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:12:2,8: call of method `fun`
+test_absolute.js:12:2,8: call of method `fun`
 Error:
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:12:2,8: Implementation
+test_absolute.js:12:2,8: Implementation
 This type is incompatible with
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:12:11,17: boolean
+test_absolute.js:12:11,17: boolean
 
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:15:2,8: call of method `fun`
+test_absolute.js:15:2,8: call of method `fun`
 Error:
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:15:2,8: Implementation
+test_absolute.js:15:2,8: Implementation
 This type is incompatible with
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:15:11,17: boolean
+test_absolute.js:15:11,17: boolean
 
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:18:2,8: call of method `fun`
+test_absolute.js:18:2,8: call of method `fun`
 Error:
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:18:2,8: Implementation
+test_absolute.js:18:2,8: Implementation
 This type is incompatible with
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:18:11,17: boolean
+test_absolute.js:18:11,17: boolean
 
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:21:2,8: call of method `fun`
+test_absolute.js:21:2,8: call of method `fun`
 Error:
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:21:2,8: Implementation
+test_absolute.js:21:2,8: Implementation
 This type is incompatible with
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:21:11,17: boolean
+test_absolute.js:21:11,17: boolean
 
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:25:2,9: call of method `fun`
+test_absolute.js:25:2,9: call of method `fun`
 Error:
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:25:2,9: Implementation
+test_absolute.js:25:2,9: Implementation
 This type is incompatible with
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:25:12,18: boolean
+test_absolute.js:25:12,18: boolean
 
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:29:2,9: call of method `fun`
+test_absolute.js:29:2,9: call of method `fun`
 Error:
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:29:2,9: Implementation
+test_absolute.js:29:2,9: Implementation
 This type is incompatible with
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:29:12,18: boolean
+test_absolute.js:29:12,18: boolean
 
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:32:2,8: call of method `fun`
+test_absolute.js:32:2,8: call of method `fun`
 Error:
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:32:2,8: Implementation
+test_absolute.js:32:2,8: Implementation
 This type is incompatible with
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:32:11,17: boolean
+test_absolute.js:32:11,17: boolean
 
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:35:2,8: call of method `fun`
+test_absolute.js:35:2,8: call of method `fun`
 Error:
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:35:2,8: Implementation
+test_absolute.js:35:2,8: Implementation
 This type is incompatible with
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:35:11,17: boolean
+test_absolute.js:35:11,17: boolean
 
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:38:2,8: call of method `fun`
+test_absolute.js:38:2,8: call of method `fun`
 Error:
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:38:2,8: Implementation
+test_absolute.js:38:2,8: Implementation
 This type is incompatible with
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:38:11,17: boolean
+test_absolute.js:38:11,17: boolean
 
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:41:2,8: call of method `fun`
+test_absolute.js:41:2,8: call of method `fun`
 Error:
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:41:2,8: Implementation
+test_absolute.js:41:2,8: Implementation
 This type is incompatible with
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:41:11,17: boolean
+test_absolute.js:41:11,17: boolean
 
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_relative.js:3:2,6: function call
+test_relative.js:3:2,6: function call
 Error:
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_relative.js:3:2,6: Implementation
+test_relative.js:3:2,6: Implementation
 This type is incompatible with
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_relative.js:3:9,15: boolean
+test_relative.js:3:9,15: boolean
 
 Found 13 errors
 
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:5:2,9: call of method `fun`
+test_absolute.js:5:2,9: call of method `fun`
 Error:
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:5:2,9: Definition
+test_absolute.js:5:2,9: Definition
 This type is incompatible with
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:5:12,18: boolean
+test_absolute.js:5:12,18: boolean
 
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:9:2,9: call of method `fun`
+test_absolute.js:9:2,9: call of method `fun`
 Error:
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:9:2,9: Definition
+test_absolute.js:9:2,9: Definition
 This type is incompatible with
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:9:12,18: boolean
+test_absolute.js:9:12,18: boolean
 
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:12:2,8: call of method `fun`
+test_absolute.js:12:2,8: call of method `fun`
 Error:
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:12:2,8: Definition
+test_absolute.js:12:2,8: Definition
 This type is incompatible with
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:12:11,17: boolean
+test_absolute.js:12:11,17: boolean
 
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:15:2,8: call of method `fun`
+test_absolute.js:15:2,8: call of method `fun`
 Error:
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:15:2,8: Definition
+test_absolute.js:15:2,8: Definition
 This type is incompatible with
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:15:11,17: boolean
+test_absolute.js:15:11,17: boolean
 
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:18:2,8: call of method `fun`
+test_absolute.js:18:2,8: call of method `fun`
 Error:
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:18:2,8: Definition
+test_absolute.js:18:2,8: Definition
 This type is incompatible with
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:18:11,17: boolean
+test_absolute.js:18:11,17: boolean
 
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:21:2,8: call of method `fun`
+test_absolute.js:21:2,8: call of method `fun`
 Error:
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:21:2,8: Definition
+test_absolute.js:21:2,8: Definition
 This type is incompatible with
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:21:11,17: boolean
+test_absolute.js:21:11,17: boolean
 
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:25:2,9: call of method `fun`
+test_absolute.js:25:2,9: call of method `fun`
 Error:
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:25:2,9: Definition
+test_absolute.js:25:2,9: Definition
 This type is incompatible with
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:25:12,18: boolean
+test_absolute.js:25:12,18: boolean
 
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:29:2,9: call of method `fun`
+test_absolute.js:29:2,9: call of method `fun`
 Error:
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:29:2,9: Definition
+test_absolute.js:29:2,9: Definition
 This type is incompatible with
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:29:12,18: boolean
+test_absolute.js:29:12,18: boolean
 
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:32:2,8: call of method `fun`
+test_absolute.js:32:2,8: call of method `fun`
 Error:
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:32:2,8: Definition
+test_absolute.js:32:2,8: Definition
 This type is incompatible with
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:32:11,17: boolean
+test_absolute.js:32:11,17: boolean
 
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:35:2,8: call of method `fun`
+test_absolute.js:35:2,8: call of method `fun`
 Error:
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:35:2,8: Definition
+test_absolute.js:35:2,8: Definition
 This type is incompatible with
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:35:11,17: boolean
+test_absolute.js:35:11,17: boolean
 
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:38:2,8: call of method `fun`
+test_absolute.js:38:2,8: call of method `fun`
 Error:
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:38:2,8: Definition
+test_absolute.js:38:2,8: Definition
 This type is incompatible with
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:38:11,17: boolean
+test_absolute.js:38:11,17: boolean
 
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:41:2,8: call of method `fun`
+test_absolute.js:41:2,8: call of method `fun`
 Error:
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:41:2,8: Definition
+test_absolute.js:41:2,8: Definition
 This type is incompatible with
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:41:11,17: boolean
+test_absolute.js:41:11,17: boolean
 
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_relative.js:3:2,6: function call
+test_relative.js:3:2,6: function call
 Error:
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_relative.js:3:2,6: Definition
+test_relative.js:3:2,6: Definition
 This type is incompatible with
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_relative.js:3:9,15: boolean
+test_relative.js:3:9,15: boolean
 
 Found 13 errors
 
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:5:2,9: call of method `fun`
+test_absolute.js:5:2,9: call of method `fun`
 Error:
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:5:2,9: Implementation
+test_absolute.js:5:2,9: Implementation
 This type is incompatible with
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:5:12,18: boolean
+test_absolute.js:5:12,18: boolean
 
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:9:2,9: call of method `fun`
+test_absolute.js:9:2,9: call of method `fun`
 Error:
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:9:2,9: Implementation
+test_absolute.js:9:2,9: Implementation
 This type is incompatible with
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:9:12,18: boolean
+test_absolute.js:9:12,18: boolean
 
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:12:2,8: call of method `fun`
+test_absolute.js:12:2,8: call of method `fun`
 Error:
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:12:2,8: Implementation
+test_absolute.js:12:2,8: Implementation
 This type is incompatible with
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:12:11,17: boolean
+test_absolute.js:12:11,17: boolean
 
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:15:2,8: call of method `fun`
+test_absolute.js:15:2,8: call of method `fun`
 Error:
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:15:2,8: Implementation
+test_absolute.js:15:2,8: Implementation
 This type is incompatible with
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:15:11,17: boolean
+test_absolute.js:15:11,17: boolean
 
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:18:2,8: call of method `fun`
+test_absolute.js:18:2,8: call of method `fun`
 Error:
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:18:2,8: Implementation
+test_absolute.js:18:2,8: Implementation
 This type is incompatible with
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:18:11,17: boolean
+test_absolute.js:18:11,17: boolean
 
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:21:2,8: call of method `fun`
+test_absolute.js:21:2,8: call of method `fun`
 Error:
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:21:2,8: Implementation
+test_absolute.js:21:2,8: Implementation
 This type is incompatible with
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:21:11,17: boolean
+test_absolute.js:21:11,17: boolean
 
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:25:2,9: call of method `fun`
+test_absolute.js:25:2,9: call of method `fun`
 Error:
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:25:2,9: Implementation
+test_absolute.js:25:2,9: Implementation
 This type is incompatible with
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:25:12,18: boolean
+test_absolute.js:25:12,18: boolean
 
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:29:2,9: call of method `fun`
+test_absolute.js:29:2,9: call of method `fun`
 Error:
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:29:2,9: Implementation
+test_absolute.js:29:2,9: Implementation
 This type is incompatible with
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:29:12,18: boolean
+test_absolute.js:29:12,18: boolean
 
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:32:2,8: call of method `fun`
+test_absolute.js:32:2,8: call of method `fun`
 Error:
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:32:2,8: Implementation
+test_absolute.js:32:2,8: Implementation
 This type is incompatible with
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:32:11,17: boolean
+test_absolute.js:32:11,17: boolean
 
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:35:2,8: call of method `fun`
+test_absolute.js:35:2,8: call of method `fun`
 Error:
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:35:2,8: Implementation
+test_absolute.js:35:2,8: Implementation
 This type is incompatible with
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:35:11,17: boolean
+test_absolute.js:35:11,17: boolean
 
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:38:2,8: call of method `fun`
+test_absolute.js:38:2,8: call of method `fun`
 Error:
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:38:2,8: Implementation
+test_absolute.js:38:2,8: Implementation
 This type is incompatible with
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:38:11,17: boolean
+test_absolute.js:38:11,17: boolean
 
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:41:2,8: call of method `fun`
+test_absolute.js:41:2,8: call of method `fun`
 Error:
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:41:2,8: Implementation
+test_absolute.js:41:2,8: Implementation
 This type is incompatible with
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:41:11,17: boolean
+test_absolute.js:41:11,17: boolean
 
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_relative.js:3:2,6: function call
+test_relative.js:3:2,6: function call
 Error:
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_relative.js:3:2,6: Implementation
+test_relative.js:3:2,6: Implementation
 This type is incompatible with
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_relative.js:3:9,15: boolean
+test_relative.js:3:9,15: boolean
 
 Found 13 errors
 
 
 ======Start off with the .js files and the .flow file======
 
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:5:2,9: call of method `fun`
+test_absolute.js:5:2,9: call of method `fun`
 Error:
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:5:2,9: Definition
+test_absolute.js:5:2,9: Definition
 This type is incompatible with
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:5:12,18: boolean
+test_absolute.js:5:12,18: boolean
 
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:9:2,9: call of method `fun`
+test_absolute.js:9:2,9: call of method `fun`
 Error:
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:9:2,9: Definition
+test_absolute.js:9:2,9: Definition
 This type is incompatible with
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:9:12,18: boolean
+test_absolute.js:9:12,18: boolean
 
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:12:2,8: call of method `fun`
+test_absolute.js:12:2,8: call of method `fun`
 Error:
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:12:2,8: Definition
+test_absolute.js:12:2,8: Definition
 This type is incompatible with
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:12:11,17: boolean
+test_absolute.js:12:11,17: boolean
 
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:15:2,8: call of method `fun`
+test_absolute.js:15:2,8: call of method `fun`
 Error:
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:15:2,8: Definition
+test_absolute.js:15:2,8: Definition
 This type is incompatible with
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:15:11,17: boolean
+test_absolute.js:15:11,17: boolean
 
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:18:2,8: call of method `fun`
+test_absolute.js:18:2,8: call of method `fun`
 Error:
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:18:2,8: Definition
+test_absolute.js:18:2,8: Definition
 This type is incompatible with
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:18:11,17: boolean
+test_absolute.js:18:11,17: boolean
 
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:21:2,8: call of method `fun`
+test_absolute.js:21:2,8: call of method `fun`
 Error:
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:21:2,8: Definition
+test_absolute.js:21:2,8: Definition
 This type is incompatible with
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:21:11,17: boolean
+test_absolute.js:21:11,17: boolean
 
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:25:2,9: call of method `fun`
+test_absolute.js:25:2,9: call of method `fun`
 Error:
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:25:2,9: Definition
+test_absolute.js:25:2,9: Definition
 This type is incompatible with
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:25:12,18: boolean
+test_absolute.js:25:12,18: boolean
 
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:29:2,9: call of method `fun`
+test_absolute.js:29:2,9: call of method `fun`
 Error:
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:29:2,9: Definition
+test_absolute.js:29:2,9: Definition
 This type is incompatible with
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:29:12,18: boolean
+test_absolute.js:29:12,18: boolean
 
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:32:2,8: call of method `fun`
+test_absolute.js:32:2,8: call of method `fun`
 Error:
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:32:2,8: Definition
+test_absolute.js:32:2,8: Definition
 This type is incompatible with
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:32:11,17: boolean
+test_absolute.js:32:11,17: boolean
 
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:35:2,8: call of method `fun`
+test_absolute.js:35:2,8: call of method `fun`
 Error:
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:35:2,8: Definition
+test_absolute.js:35:2,8: Definition
 This type is incompatible with
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:35:11,17: boolean
+test_absolute.js:35:11,17: boolean
 
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:38:2,8: call of method `fun`
+test_absolute.js:38:2,8: call of method `fun`
 Error:
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:38:2,8: Definition
+test_absolute.js:38:2,8: Definition
 This type is incompatible with
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:38:11,17: boolean
+test_absolute.js:38:11,17: boolean
 
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:41:2,8: call of method `fun`
+test_absolute.js:41:2,8: call of method `fun`
 Error:
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:41:2,8: Definition
+test_absolute.js:41:2,8: Definition
 This type is incompatible with
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:41:11,17: boolean
+test_absolute.js:41:11,17: boolean
 
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_relative.js:3:2,6: function call
+test_relative.js:3:2,6: function call
 Error:
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_relative.js:3:2,6: Definition
+test_relative.js:3:2,6: Definition
 This type is incompatible with
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_relative.js:3:9,15: boolean
+test_relative.js:3:9,15: boolean
 
 Found 13 errors
 
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:5:2,9: call of method `fun`
+test_absolute.js:5:2,9: call of method `fun`
 Error:
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:5:2,9: Implementation
+test_absolute.js:5:2,9: Implementation
 This type is incompatible with
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:5:12,18: boolean
+test_absolute.js:5:12,18: boolean
 
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:9:2,9: call of method `fun`
+test_absolute.js:9:2,9: call of method `fun`
 Error:
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:9:2,9: Implementation
+test_absolute.js:9:2,9: Implementation
 This type is incompatible with
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:9:12,18: boolean
+test_absolute.js:9:12,18: boolean
 
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:12:2,8: call of method `fun`
+test_absolute.js:12:2,8: call of method `fun`
 Error:
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:12:2,8: Implementation
+test_absolute.js:12:2,8: Implementation
 This type is incompatible with
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:12:11,17: boolean
+test_absolute.js:12:11,17: boolean
 
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:15:2,8: call of method `fun`
+test_absolute.js:15:2,8: call of method `fun`
 Error:
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:15:2,8: Implementation
+test_absolute.js:15:2,8: Implementation
 This type is incompatible with
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:15:11,17: boolean
+test_absolute.js:15:11,17: boolean
 
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:18:2,8: call of method `fun`
+test_absolute.js:18:2,8: call of method `fun`
 Error:
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:18:2,8: Implementation
+test_absolute.js:18:2,8: Implementation
 This type is incompatible with
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:18:11,17: boolean
+test_absolute.js:18:11,17: boolean
 
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:21:2,8: call of method `fun`
+test_absolute.js:21:2,8: call of method `fun`
 Error:
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:21:2,8: Implementation
+test_absolute.js:21:2,8: Implementation
 This type is incompatible with
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:21:11,17: boolean
+test_absolute.js:21:11,17: boolean
 
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:25:2,9: call of method `fun`
+test_absolute.js:25:2,9: call of method `fun`
 Error:
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:25:2,9: Implementation
+test_absolute.js:25:2,9: Implementation
 This type is incompatible with
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:25:12,18: boolean
+test_absolute.js:25:12,18: boolean
 
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:29:2,9: call of method `fun`
+test_absolute.js:29:2,9: call of method `fun`
 Error:
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:29:2,9: Implementation
+test_absolute.js:29:2,9: Implementation
 This type is incompatible with
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:29:12,18: boolean
+test_absolute.js:29:12,18: boolean
 
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:32:2,8: call of method `fun`
+test_absolute.js:32:2,8: call of method `fun`
 Error:
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:32:2,8: Implementation
+test_absolute.js:32:2,8: Implementation
 This type is incompatible with
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:32:11,17: boolean
+test_absolute.js:32:11,17: boolean
 
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:35:2,8: call of method `fun`
+test_absolute.js:35:2,8: call of method `fun`
 Error:
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:35:2,8: Implementation
+test_absolute.js:35:2,8: Implementation
 This type is incompatible with
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:35:11,17: boolean
+test_absolute.js:35:11,17: boolean
 
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:38:2,8: call of method `fun`
+test_absolute.js:38:2,8: call of method `fun`
 Error:
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:38:2,8: Implementation
+test_absolute.js:38:2,8: Implementation
 This type is incompatible with
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:38:11,17: boolean
+test_absolute.js:38:11,17: boolean
 
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:41:2,8: call of method `fun`
+test_absolute.js:41:2,8: call of method `fun`
 Error:
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:41:2,8: Implementation
+test_absolute.js:41:2,8: Implementation
 This type is incompatible with
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:41:11,17: boolean
+test_absolute.js:41:11,17: boolean
 
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_relative.js:3:2,6: function call
+test_relative.js:3:2,6: function call
 Error:
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_relative.js:3:2,6: Implementation
+test_relative.js:3:2,6: Implementation
 This type is incompatible with
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_relative.js:3:9,15: boolean
+test_relative.js:3:9,15: boolean
 
 Found 13 errors
 
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:5:2,9: call of method `fun`
+test_absolute.js:5:2,9: call of method `fun`
 Error:
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:5:2,9: Definition
+test_absolute.js:5:2,9: Definition
 This type is incompatible with
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:5:12,18: boolean
+test_absolute.js:5:12,18: boolean
 
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:9:2,9: call of method `fun`
+test_absolute.js:9:2,9: call of method `fun`
 Error:
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:9:2,9: Definition
+test_absolute.js:9:2,9: Definition
 This type is incompatible with
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:9:12,18: boolean
+test_absolute.js:9:12,18: boolean
 
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:12:2,8: call of method `fun`
+test_absolute.js:12:2,8: call of method `fun`
 Error:
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:12:2,8: Definition
+test_absolute.js:12:2,8: Definition
 This type is incompatible with
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:12:11,17: boolean
+test_absolute.js:12:11,17: boolean
 
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:15:2,8: call of method `fun`
+test_absolute.js:15:2,8: call of method `fun`
 Error:
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:15:2,8: Definition
+test_absolute.js:15:2,8: Definition
 This type is incompatible with
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:15:11,17: boolean
+test_absolute.js:15:11,17: boolean
 
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:18:2,8: call of method `fun`
+test_absolute.js:18:2,8: call of method `fun`
 Error:
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:18:2,8: Definition
+test_absolute.js:18:2,8: Definition
 This type is incompatible with
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:18:11,17: boolean
+test_absolute.js:18:11,17: boolean
 
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:21:2,8: call of method `fun`
+test_absolute.js:21:2,8: call of method `fun`
 Error:
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:21:2,8: Definition
+test_absolute.js:21:2,8: Definition
 This type is incompatible with
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:21:11,17: boolean
+test_absolute.js:21:11,17: boolean
 
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:25:2,9: call of method `fun`
+test_absolute.js:25:2,9: call of method `fun`
 Error:
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:25:2,9: Definition
+test_absolute.js:25:2,9: Definition
 This type is incompatible with
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:25:12,18: boolean
+test_absolute.js:25:12,18: boolean
 
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:29:2,9: call of method `fun`
+test_absolute.js:29:2,9: call of method `fun`
 Error:
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:29:2,9: Definition
+test_absolute.js:29:2,9: Definition
 This type is incompatible with
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:29:12,18: boolean
+test_absolute.js:29:12,18: boolean
 
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:32:2,8: call of method `fun`
+test_absolute.js:32:2,8: call of method `fun`
 Error:
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:32:2,8: Definition
+test_absolute.js:32:2,8: Definition
 This type is incompatible with
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:32:11,17: boolean
+test_absolute.js:32:11,17: boolean
 
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:35:2,8: call of method `fun`
+test_absolute.js:35:2,8: call of method `fun`
 Error:
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:35:2,8: Definition
+test_absolute.js:35:2,8: Definition
 This type is incompatible with
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:35:11,17: boolean
+test_absolute.js:35:11,17: boolean
 
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:38:2,8: call of method `fun`
+test_absolute.js:38:2,8: call of method `fun`
 Error:
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:38:2,8: Definition
+test_absolute.js:38:2,8: Definition
 This type is incompatible with
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:38:11,17: boolean
+test_absolute.js:38:11,17: boolean
 
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:41:2,8: call of method `fun`
+test_absolute.js:41:2,8: call of method `fun`
 Error:
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:41:2,8: Definition
+test_absolute.js:41:2,8: Definition
 This type is incompatible with
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:41:11,17: boolean
+test_absolute.js:41:11,17: boolean
 
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_relative.js:3:2,6: function call
+test_relative.js:3:2,6: function call
 Error:
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_relative.js:3:2,6: Definition
+test_relative.js:3:2,6: Definition
 This type is incompatible with
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_relative.js:3:9,15: boolean
+test_relative.js:3:9,15: boolean
 
 Found 13 errors
 
 
 ======Start off without the .js files and with the .flow file======
 
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:5:2,9: call of method `fun`
+test_absolute.js:5:2,9: call of method `fun`
 Error:
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:5:2,9: Definition
+test_absolute.js:5:2,9: Definition
 This type is incompatible with
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:5:12,18: boolean
+test_absolute.js:5:12,18: boolean
 
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:9:2,9: call of method `fun`
+test_absolute.js:9:2,9: call of method `fun`
 Error:
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:9:2,9: Definition
+test_absolute.js:9:2,9: Definition
 This type is incompatible with
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:9:12,18: boolean
+test_absolute.js:9:12,18: boolean
 
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:12:2,8: call of method `fun`
+test_absolute.js:12:2,8: call of method `fun`
 Error:
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:12:2,8: Definition
+test_absolute.js:12:2,8: Definition
 This type is incompatible with
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:12:11,17: boolean
+test_absolute.js:12:11,17: boolean
 
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:15:2,8: call of method `fun`
+test_absolute.js:15:2,8: call of method `fun`
 Error:
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:15:2,8: Definition
+test_absolute.js:15:2,8: Definition
 This type is incompatible with
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:15:11,17: boolean
+test_absolute.js:15:11,17: boolean
 
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:18:2,8: call of method `fun`
+test_absolute.js:18:2,8: call of method `fun`
 Error:
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:18:2,8: Definition
+test_absolute.js:18:2,8: Definition
 This type is incompatible with
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:18:11,17: boolean
+test_absolute.js:18:11,17: boolean
 
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:21:2,8: call of method `fun`
+test_absolute.js:21:2,8: call of method `fun`
 Error:
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:21:2,8: Definition
+test_absolute.js:21:2,8: Definition
 This type is incompatible with
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:21:11,17: boolean
+test_absolute.js:21:11,17: boolean
 
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:25:2,9: call of method `fun`
+test_absolute.js:25:2,9: call of method `fun`
 Error:
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:25:2,9: Definition
+test_absolute.js:25:2,9: Definition
 This type is incompatible with
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:25:12,18: boolean
+test_absolute.js:25:12,18: boolean
 
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:29:2,9: call of method `fun`
+test_absolute.js:29:2,9: call of method `fun`
 Error:
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:29:2,9: Definition
+test_absolute.js:29:2,9: Definition
 This type is incompatible with
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:29:12,18: boolean
+test_absolute.js:29:12,18: boolean
 
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:32:2,8: call of method `fun`
+test_absolute.js:32:2,8: call of method `fun`
 Error:
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:32:2,8: Definition
+test_absolute.js:32:2,8: Definition
 This type is incompatible with
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:32:11,17: boolean
+test_absolute.js:32:11,17: boolean
 
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:35:2,8: call of method `fun`
+test_absolute.js:35:2,8: call of method `fun`
 Error:
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:35:2,8: Definition
+test_absolute.js:35:2,8: Definition
 This type is incompatible with
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:35:11,17: boolean
+test_absolute.js:35:11,17: boolean
 
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:38:2,8: call of method `fun`
+test_absolute.js:38:2,8: call of method `fun`
 Error:
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:38:2,8: Definition
+test_absolute.js:38:2,8: Definition
 This type is incompatible with
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:38:11,17: boolean
+test_absolute.js:38:11,17: boolean
 
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:41:2,8: call of method `fun`
+test_absolute.js:41:2,8: call of method `fun`
 Error:
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:41:2,8: Definition
+test_absolute.js:41:2,8: Definition
 This type is incompatible with
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:41:11,17: boolean
+test_absolute.js:41:11,17: boolean
 
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_relative.js:3:2,6: function call
+test_relative.js:3:2,6: function call
 Error:
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_relative.js:3:2,6: Definition
+test_relative.js:3:2,6: Definition
 This type is incompatible with
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_relative.js:3:9,15: boolean
+test_relative.js:3:9,15: boolean
 
 Found 13 errors
 
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:5:2,9: call of method `fun`
+test_absolute.js:5:2,9: call of method `fun`
 Error:
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:5:2,9: Definition
+test_absolute.js:5:2,9: Definition
 This type is incompatible with
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:5:12,18: boolean
+test_absolute.js:5:12,18: boolean
 
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:9:2,9: call of method `fun`
+test_absolute.js:9:2,9: call of method `fun`
 Error:
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:9:2,9: Definition
+test_absolute.js:9:2,9: Definition
 This type is incompatible with
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:9:12,18: boolean
+test_absolute.js:9:12,18: boolean
 
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:12:2,8: call of method `fun`
+test_absolute.js:12:2,8: call of method `fun`
 Error:
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:12:2,8: Definition
+test_absolute.js:12:2,8: Definition
 This type is incompatible with
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:12:11,17: boolean
+test_absolute.js:12:11,17: boolean
 
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:15:2,8: call of method `fun`
+test_absolute.js:15:2,8: call of method `fun`
 Error:
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:15:2,8: Definition
+test_absolute.js:15:2,8: Definition
 This type is incompatible with
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:15:11,17: boolean
+test_absolute.js:15:11,17: boolean
 
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:18:2,8: call of method `fun`
+test_absolute.js:18:2,8: call of method `fun`
 Error:
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:18:2,8: Definition
+test_absolute.js:18:2,8: Definition
 This type is incompatible with
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:18:11,17: boolean
+test_absolute.js:18:11,17: boolean
 
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:21:2,8: call of method `fun`
+test_absolute.js:21:2,8: call of method `fun`
 Error:
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:21:2,8: Definition
+test_absolute.js:21:2,8: Definition
 This type is incompatible with
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:21:11,17: boolean
+test_absolute.js:21:11,17: boolean
 
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:25:2,9: call of method `fun`
+test_absolute.js:25:2,9: call of method `fun`
 Error:
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:25:2,9: Definition
+test_absolute.js:25:2,9: Definition
 This type is incompatible with
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:25:12,18: boolean
+test_absolute.js:25:12,18: boolean
 
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:29:2,9: call of method `fun`
+test_absolute.js:29:2,9: call of method `fun`
 Error:
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:29:2,9: Definition
+test_absolute.js:29:2,9: Definition
 This type is incompatible with
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:29:12,18: boolean
+test_absolute.js:29:12,18: boolean
 
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:32:2,8: call of method `fun`
+test_absolute.js:32:2,8: call of method `fun`
 Error:
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:32:2,8: Definition
+test_absolute.js:32:2,8: Definition
 This type is incompatible with
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:32:11,17: boolean
+test_absolute.js:32:11,17: boolean
 
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:35:2,8: call of method `fun`
+test_absolute.js:35:2,8: call of method `fun`
 Error:
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:35:2,8: Definition
+test_absolute.js:35:2,8: Definition
 This type is incompatible with
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:35:11,17: boolean
+test_absolute.js:35:11,17: boolean
 
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:38:2,8: call of method `fun`
+test_absolute.js:38:2,8: call of method `fun`
 Error:
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:38:2,8: Definition
+test_absolute.js:38:2,8: Definition
 This type is incompatible with
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:38:11,17: boolean
+test_absolute.js:38:11,17: boolean
 
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:41:2,8: call of method `fun`
+test_absolute.js:41:2,8: call of method `fun`
 Error:
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:41:2,8: Definition
+test_absolute.js:41:2,8: Definition
 This type is incompatible with
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:41:11,17: boolean
+test_absolute.js:41:11,17: boolean
 
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_relative.js:3:2,6: function call
+test_relative.js:3:2,6: function call
 Error:
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_relative.js:3:2,6: Definition
+test_relative.js:3:2,6: Definition
 This type is incompatible with
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_relative.js:3:9,15: boolean
+test_relative.js:3:9,15: boolean
 
 Found 13 errors
 
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:5:2,9: call of method `fun`
+test_absolute.js:5:2,9: call of method `fun`
 Error:
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:5:2,9: Definition
+test_absolute.js:5:2,9: Definition
 This type is incompatible with
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:5:12,18: boolean
+test_absolute.js:5:12,18: boolean
 
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:9:2,9: call of method `fun`
+test_absolute.js:9:2,9: call of method `fun`
 Error:
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:9:2,9: Definition
+test_absolute.js:9:2,9: Definition
 This type is incompatible with
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:9:12,18: boolean
+test_absolute.js:9:12,18: boolean
 
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:12:2,8: call of method `fun`
+test_absolute.js:12:2,8: call of method `fun`
 Error:
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:12:2,8: Definition
+test_absolute.js:12:2,8: Definition
 This type is incompatible with
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:12:11,17: boolean
+test_absolute.js:12:11,17: boolean
 
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:15:2,8: call of method `fun`
+test_absolute.js:15:2,8: call of method `fun`
 Error:
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:15:2,8: Definition
+test_absolute.js:15:2,8: Definition
 This type is incompatible with
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:15:11,17: boolean
+test_absolute.js:15:11,17: boolean
 
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:18:2,8: call of method `fun`
+test_absolute.js:18:2,8: call of method `fun`
 Error:
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:18:2,8: Definition
+test_absolute.js:18:2,8: Definition
 This type is incompatible with
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:18:11,17: boolean
+test_absolute.js:18:11,17: boolean
 
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:21:2,8: call of method `fun`
+test_absolute.js:21:2,8: call of method `fun`
 Error:
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:21:2,8: Definition
+test_absolute.js:21:2,8: Definition
 This type is incompatible with
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:21:11,17: boolean
+test_absolute.js:21:11,17: boolean
 
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:25:2,9: call of method `fun`
+test_absolute.js:25:2,9: call of method `fun`
 Error:
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:25:2,9: Definition
+test_absolute.js:25:2,9: Definition
 This type is incompatible with
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:25:12,18: boolean
+test_absolute.js:25:12,18: boolean
 
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:29:2,9: call of method `fun`
+test_absolute.js:29:2,9: call of method `fun`
 Error:
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:29:2,9: Definition
+test_absolute.js:29:2,9: Definition
 This type is incompatible with
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:29:12,18: boolean
+test_absolute.js:29:12,18: boolean
 
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:32:2,8: call of method `fun`
+test_absolute.js:32:2,8: call of method `fun`
 Error:
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:32:2,8: Definition
+test_absolute.js:32:2,8: Definition
 This type is incompatible with
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:32:11,17: boolean
+test_absolute.js:32:11,17: boolean
 
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:35:2,8: call of method `fun`
+test_absolute.js:35:2,8: call of method `fun`
 Error:
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:35:2,8: Definition
+test_absolute.js:35:2,8: Definition
 This type is incompatible with
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:35:11,17: boolean
+test_absolute.js:35:11,17: boolean
 
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:38:2,8: call of method `fun`
+test_absolute.js:38:2,8: call of method `fun`
 Error:
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:38:2,8: Definition
+test_absolute.js:38:2,8: Definition
 This type is incompatible with
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:38:11,17: boolean
+test_absolute.js:38:11,17: boolean
 
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:41:2,8: call of method `fun`
+test_absolute.js:41:2,8: call of method `fun`
 Error:
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:41:2,8: Definition
+test_absolute.js:41:2,8: Definition
 This type is incompatible with
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_absolute.js:41:11,17: boolean
+test_absolute.js:41:11,17: boolean
 
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_relative.js:3:2,6: function call
+test_relative.js:3:2,6: function call
 Error:
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_relative.js:3:2,6: Definition
+test_relative.js:3:2,6: Definition
 This type is incompatible with
-/data/users/glevi/fbsource/fbcode/flow/tests/declaration_files_incremental_node/test_relative.js:3:9,15: boolean
+test_relative.js:3:9,15: boolean
 
 Found 13 errors
