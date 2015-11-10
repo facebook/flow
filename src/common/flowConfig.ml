@@ -99,6 +99,10 @@ module Opts = struct
 
     config
 
+  let module_file_exts = SSet.empty
+        |> SSet.add ".js"
+        |> SSet.add ".jsx"
+
   let default_options = {
     enable_unsafe_getters_and_setters = false;
     esproposal_class_instance_fields = ESPROPOSAL_WARN;
@@ -109,7 +113,7 @@ module Opts = struct
     module_name_mappers = [];
     node_resolver_dirnames = ["node_modules"];
     munge_underscores = false;
-    module_file_exts = SSet.of_list [ ".js"; ".jsx"; ];
+    module_file_exts;
     suppress_comments = [];
     suppress_types = SSet.empty;
     traces = 0;
@@ -258,10 +262,9 @@ let file_of_root extension ~tmp_dir root =
     else tmp_dir in
   (* TODO: move this to places that write this file *)
   mkdir_no_fail tmp_dir;
+  let tmp_dir = tmp_dir |> Path.make |> Path.to_string in
   let root_part = Path.slash_escaped_string_of_path root in
   Printf.sprintf "%s%s.%s" tmp_dir root_part extension
-  |> Path.make
-  |> Path.to_string
 
 let init_file   = file_of_root "init"
 let lock_file   = file_of_root "lock"

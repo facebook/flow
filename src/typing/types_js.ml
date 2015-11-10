@@ -948,9 +948,20 @@ let recheck genv env modified =
   let options = genv.ServerEnv.options in
   let debug = Options.is_debug_mode options in
 
-  (* filter modified files *)
   let root = Options.root options in
   let config = FlowConfig.get root in
+
+  (* If foo.js is modified and foo.js.flow exists, then mark foo.js.flow as
+   * modified too. This is because sometimes we decide what foo.js.flow
+   * provides based on the existence of foo.js *)
+  let modified = FilenameSet.fold (fun file modified ->
+    if not (Loc.check_suffix file FlowConfig.flow_ext) &&
+      Parsing_service_js.has_ast (Loc.with_suffix file FlowConfig.flow_ext)
+    then FilenameSet.add (Loc.with_suffix file FlowConfig.flow_ext) modified
+    else modified
+  ) modified modified in
+
+  (* filter modified files *)
   let modified = FilenameSet.filter (fun file ->
     Files_js.wanted config (string_of_filename file)
   ) modified in
