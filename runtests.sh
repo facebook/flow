@@ -2,7 +2,7 @@
 if [[ "$OSTYPE" == "darwin"* ]]; then
   FLOW=$(pwd -P)/$1
 else
-  FLOW=$(readlink -f $1)
+  FLOW=$(readlink -f "$1")
 fi
 if [ -t 1 ]; then
   COLOR_RESET="\x1b[0m"
@@ -23,18 +23,18 @@ else
 fi
 print_failure() {
     printf "%b[✗] FAIL:%b %s%b\n" \
-      $COLOR_RED_BOLD $COLOR_DEFAULT $1 $COLOR_RESET
+      $COLOR_RED_BOLD $COLOR_DEFAULT "$1" $COLOR_RESET
 }
 print_skip() {
     printf "%b[-] SKIP:%b %s%b\n" \
-      $COLOR_YELLOW_BOLD $COLOR_DEFAULT $1 $COLOR_RESET
+      $COLOR_YELLOW_BOLD $COLOR_DEFAULT "$1" $COLOR_RESET
 }
 kill_server() {
   trap - SIGINT SIGTERM
   $FLOW stop . 1> /dev/null 2>&1
-  kill $1 $$
+  kill "$1" $$
 }
-cd "$(dirname "${BASH_SOURCE[0]}")"
+cd "$(dirname "${BASH_SOURCE[0]}")" || exit 1
 passed=0
 failed=0
 skipped=0
@@ -42,32 +42,32 @@ filter="$2"
 for dir in tests/*/
 do
     dir=${dir%*/}
-    cd $dir
+    cd "$dir" || exit 1
     name=${dir##*/}
     exp_file="${name}.exp"
     if [[ -z $filter || $name =~ $filter ]]
     then
-        if ([ ! -e $exp_file ] || [ ! -e ".flowconfig" ])
+        if ([ ! -e "$exp_file" ] || [ ! -e ".flowconfig" ])
         then
-            cd ../..
-            if [ $name = "auxiliary" ] ||
-               [ $name = "callable" ] ||
-               [ $name = "suggest" ]
+            cd ../.. || exit 1
+            if [ "$name" = "auxiliary" ] ||
+               [ "$name" = "callable" ] ||
+               [ "$name" = "suggest" ]
             then
                 (( skipped++ ))
-                print_skip $name
+                print_skip "$name"
                 continue;
             else
                 (( failed++ ))
-                print_failure $name
-                printf "Missing $name.exp file or .flowconfig file\n"
+                print_failure "$name"
+                printf "Missing %s.exp file or .flowconfig file\n" "$name"
                 continue;
             fi
         fi
 
         # check this dir
         printf "%b[ ] RUN:%b  %s%b\r" \
-          $COLOR_DEFAULT_BOLD $COLOR_DEFAULT $name $COLOR_RESET
+          $COLOR_DEFAULT_BOLD $COLOR_DEFAULT "$name" $COLOR_RESET
         out_file="${name}.out"
         err_file="${name}.err"
 
@@ -131,7 +131,7 @@ do
         if [ "$cmd" == "check" ]
         then
             # default command is check with configurable --all
-            $FLOW check . $all --strip-root --show-all-errors --old-output-format 1> $out_file 2> $stderr_dest
+            $FLOW check . $all --strip-root --show-all-errors --old-output-format 1> "$out_file" 2> "$stderr_dest"
         else
             # otherwise, run specified flow command, then kill the server
 
@@ -143,15 +143,18 @@ do
             if [ "$shell" != "" ]
             then
                 # run test script
-                sh $shell $FLOW 1> $out_file 2> $stderr_dest
+                sh "$shell" "$FLOW" 1> "$out_file" 2> "$stderr_dest"
             else
             # If there's stdin, then direct that in
+            # cmd should NOT be double quoted...it may contain many commands
+            # and we do want word splitting
                 if [ "$stdin" != "" ]
                 then
-                    $FLOW $cmd < $stdin 1> $out_file 2> $stderr_dest
+                    cmd="$FLOW $cmd < $stdin 1> $out_file 2> $stderr_dest"
                 else
-                    $FLOW $cmd 1> $out_file 2> $stderr_dest
+                    cmd="$FLOW $cmd 1> $out_file 2> $stderr_dest"
                 fi
+                eval "$cmd"
             fi
             # stop server
             $FLOW stop . 1> /dev/null 2>&1
@@ -159,32 +162,33 @@ do
             trap - SIGINT SIGTERM
         fi
         diff_file="${name}.diff"
-        diff -u $exp_file $out_file > $diff_file
-        if [ -s $diff_file ]
+        diff -u "$exp_file" "$out_file" > "$diff_file"
+        if [ -s "$diff_file" ]
         then
             (( failed++ ))
-            print_failure $name
-            cat $err_file
+            print_failure "$name"
+            cat "$err_file"
             if [ -t 1 ] ; then
                 esc=$(echo -e "\x1b")
-                cat $diff_file | sed \
-                    "s/^-/${esc}[31m-/;s/^+/${esc}[32m+/;s/^@/${esc}[35m@/;s/$/${esc}[0m/"
+                sed \
+                    "s/^-/${esc}[31m-/;s/^+/${esc}[32m+/;s/^@/${esc}[35m@/;s/$/${esc}[0m/" \
+                    < "$diff_file"
             else
-                cat $diff_file
+                cat "$diff_file"
             fi
         else
             (( passed++ ))
             printf "%b[✓] PASS:%b %s%b\n" \
-              $COLOR_GREEN_BOLD $COLOR_DEFAULT $name $COLOR_RESET
-            rm -f $out_file
-            rm -f $err_file
-            rm -f $diff_file
+              $COLOR_GREEN_BOLD $COLOR_DEFAULT "$name" $COLOR_RESET
+            rm -f "$out_file"
+            rm -f "$err_file"
+            rm -f "$diff_file"
         fi
     else
         (( skipped++ ))
-        print_skip $name
+        print_skip "$name"
     fi
-    cd ../..
+    cd ../.. || exit 1
 done
 echo
 if [ $failed -eq 0 ]; then
