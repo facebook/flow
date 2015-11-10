@@ -216,4 +216,12 @@ var tests =
     }
     (x.foo: string);
   },
+
+  function() {
+    var x : {p:?string} = {p:"xxx"};
+    if (x.p != null) {
+      var {p} = x; // TODO: annot checked against type of x
+      (p : string); // ok
+    }
+  },
 ];
