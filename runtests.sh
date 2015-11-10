@@ -218,9 +218,9 @@ runtest() {
 num_to_run_in_parallel=${FLOW_RUNTESTS_PARALLELISM-16}
 printf "Running up to %d test(s) in parallel\n" $num_to_run_in_parallel
 
+# Index N of pids should correspond to the test at index N of dirs
 dirs=(tests/*/)
 pids=()
-running_tests=""
 
 # Starts running a test in the background. If there are no more tests then it
 # does nothing
@@ -228,7 +228,6 @@ next_test_index=0
 start_test() {
     if (( next_test_index < ${#dirs[@]} )); then
         test_dir="${dirs[next_test_index]}"
-        running_tests+=" $test_dir"
         runtest "$test_dir" &
         pids[$next_test_index]=$!
     fi

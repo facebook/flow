@@ -17,6 +17,8 @@ setup_linux () {
   # opam install ${OPAM_DEPENDS}
   eval `opam config env`
 
+  # For some reason the Linux containers start killing the tests if too many
+  # tests are run in parallel. Luckily we can easily configure that here
   export FLOW_RUNTESTS_PARALLELISM=4
 }
 
