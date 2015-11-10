@@ -217,18 +217,18 @@ runtest() {
 
 num_to_run_in_parallel=16
 dirs=(tests/*/)
-declare -A pids
+pids=()
 running_tests=""
 
 # Starts running a test in the background. If there are no more tests then it
 # does nothing
-next_test_indx=0
+next_test_index=0
 start_test() {
     if (( next_test_index < ${#dirs[@]} )); then
         test_dir="${dirs[next_test_index]}"
         running_tests+=" $test_dir"
         runtest "$test_dir" &
-        pids["$test_dir"]=$!
+        pids[$next_test_index]=$!
     fi
     ((next_test_index++))
 }
@@ -238,14 +238,13 @@ for ignore_me in $(seq $num_to_run_in_parallel); do
   start_test
 done
 
-while [ -n "$running_tests" ]; do
-  tests_to_reap=$running_tests
-  running_tests=""
-
-  # We reap the tests in order, so that we can output them in a pretty way.
-  for testname in $tests_to_reap; do
+next_test_to_reap=0
+while (( next_test_to_reap < ${#dirs[@]} )); do
+    # We reap the tests in order, so that we can output them in a pretty way.
+    testname="${dirs[next_test_to_reap]}"
     print_run "$testname"
-    wait "${pids[$testname]}"
+    wait "${pids[$next_test_to_reap]}"
+
     case $? in
       $RUNTEST_SUCCESS )
         (( passed++ ))
@@ -262,9 +261,10 @@ while [ -n "$running_tests" ]; do
         printf "Missing %s.exp file or .flowconfig file\n" "$testname" ;;
     esac
 
+    ((next_test_to_reap++))
+
     # Start up the next test
     start_test
-  done
 done
 
 echo
