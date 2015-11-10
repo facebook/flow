@@ -199,13 +199,14 @@ let get_module_t cx m reason =
   | None ->
       Flow_js.mk_tvar_where cx reason (fun t -> Context.add_module cx m t)
 
-let require cx m m_name loc =
-  Context.add_require cx m loc;
-  Type_inference_hooks_js.dispatch_require_hook cx m_name loc;
-  let reason = mk_reason (spf "CommonJS exports of \"%s\"" m) loc in
+let require cx module_name loc =
+  let module_ = Module_js.imported_module (Context.file cx) module_name in
+  Type_inference_hooks_js.dispatch_require_hook cx module_name loc;
+  Context.add_require cx module_ loc;
+  let reason = mk_reason (spf "CommonJS exports of \"%s\"" module_) loc in
   Flow_js.mk_tvar_where cx reason (fun t ->
     Flow_js.flow cx (
-      get_module_t cx m (mk_reason m_name loc),
+      get_module_t cx module_ (mk_reason module_name loc),
       CJSRequireT(reason, t)
     )
   )
@@ -3522,8 +3523,7 @@ and expression_ ~is_cond cx type_params_map loc e = Ast.Expression.(match e with
       | [ Expression (_, Literal {
           Ast.Literal.value = Ast.Literal.String module_name; _;
         }) ] ->
-        let m = Module_js.imported_module (Context.file cx) module_name in
-        require cx m module_name loc
+        require cx module_name loc
       | _ ->
         let ignore_non_literals =
           FlowConfig.(Opts.((get_unsafe ()).options.ignore_non_literal_requires))
@@ -3562,8 +3562,7 @@ and expression_ ~is_cond cx type_params_map loc e = Ast.Expression.(match e with
               Ast.Literal.value = Ast.Literal.String module_name;
               _;
             }))) ->
-              let m = Module_js.imported_module (Context.file cx) module_name in
-              let module_tvar = require cx m module_name loc in
+              let module_tvar = require cx module_name loc in
               module_tvar::tvars
           | _ ->
               let msg =
@@ -4443,7 +4442,7 @@ and jsx_title cx type_params_map openingElement children = Ast.JSX.(
             clone_object_with_excludes cx reason_prop o ex_t react_ignored_attributes
       in
       (* TODO: children *)
-      let react = require cx "react" "react" eloc in
+      let react = require cx "react" eloc in
       Flow_js.mk_tvar_where cx reason (fun tvar ->
         let reason_createElement = mk_reason "property `createElement`" eloc in
         Flow_js.flow cx (react, MethodT(
