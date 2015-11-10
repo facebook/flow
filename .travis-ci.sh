@@ -52,8 +52,12 @@ esac
 
 printf "Using ocaml %s and opam %s\n" $(ocaml -vnum) $(opam --version)
 
+printf "travis_fold:start:make"
+printf "Building flow"
 make
+printf "travis_fold:end:make"
 
 printf "travis_fold:start:runtests"
+printf "Running flow tests"
 ./runtests.sh bin/flow
 printf "travis_fold:end:runtests"
