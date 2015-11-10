@@ -215,7 +215,9 @@ runtest() {
 }
 
 
-num_to_run_in_parallel=16
+num_to_run_in_parallel=${FLOW_RUNTESTS_PARALLELISM-16}
+printf "Running up to %d test(s) in parallel\n" $num_to_run_in_parallel
+
 dirs=(tests/*/)
 pids=()
 running_tests=""
