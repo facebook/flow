@@ -22,12 +22,45 @@ else
   COLOR_WHITE_ON_RED_BOLD=""
 fi
 print_failure() {
+    dir=$1
+    name=${dir%*/}
+    name=${name##*/}
+
     printf "%b[✗] FAIL:%b %s%b\n" \
       $COLOR_RED_BOLD $COLOR_DEFAULT "$1" $COLOR_RESET
+
+    diff_file="${dir}${name}.diff"
+    err_file="${dir}${name}.err"
+    cat "$err_file"
+    if [ -t 1 ] ; then
+        esc=$(echo -e "\x1b")
+        sed \
+            "s/^-/${esc}[31m-/;s/^+/${esc}[32m+/;s/^@/${esc}[35m@/;s/$/${esc}[0m/" \
+            < "$diff_file"
+    else
+        cat "$diff_file"
+    fi
 }
 print_skip() {
+    name=$1
+    name=${name%*/}
+    name=${name##*/}
     printf "%b[-] SKIP:%b %s%b\n" \
-      $COLOR_YELLOW_BOLD $COLOR_DEFAULT "$1" $COLOR_RESET
+      $COLOR_YELLOW_BOLD $COLOR_DEFAULT "$name" $COLOR_RESET
+}
+print_success() {
+    name=$1
+    name=${name%*/}
+    name=${name##*/}
+    printf "%b[✓] PASS:%b %s%b\n" \
+      $COLOR_GREEN_BOLD $COLOR_DEFAULT "$name" $COLOR_RESET
+}
+print_run() {
+    name=$1
+    name=${name%*/}
+    name=${name##*/}
+    printf "%b[ ] RUN:%b  %s%b\r" \
+      $COLOR_DEFAULT_BOLD $COLOR_DEFAULT "$name" $COLOR_RESET
 }
 kill_server() {
   trap - SIGINT SIGTERM
@@ -39,8 +72,17 @@ passed=0
 failed=0
 skipped=0
 filter="$2"
-for dir in tests/*/
-do
+
+RUNTEST_SUCCESS=0
+RUNTEST_FAILURE=1
+RUNTEST_SKIP=2
+RUNTEST_MISSING_FILES=3
+
+# This function runs in the background so it shouldn't output anything to
+# stdout or stderr. It should only communicate through its return value
+runtest() {
+    return_status=$RUNTEST_SKIP
+    dir=$1
     dir=${dir%*/}
     cd "$dir" || exit 1
     name=${dir##*/}
@@ -54,20 +96,13 @@ do
                [ "$name" = "callable" ] ||
                [ "$name" = "suggest" ]
             then
-                (( skipped++ ))
-                print_skip "$name"
-                continue;
+                return $RUNTEST_SKIP;
             else
-                (( failed++ ))
-                print_failure "$name"
-                printf "Missing %s.exp file or .flowconfig file\n" "$name"
-                continue;
+                return $RUNTEST_MISSING_FILES;
             fi
         fi
 
         # check this dir
-        printf "%b[ ] RUN:%b  %s%b\r" \
-          $COLOR_DEFAULT_BOLD $COLOR_DEFAULT "$name" $COLOR_RESET
         out_file="${name}.out"
         err_file="${name}.err"
 
@@ -165,31 +200,73 @@ do
         diff -u "$exp_file" "$out_file" > "$diff_file"
         if [ -s "$diff_file" ]
         then
-            (( failed++ ))
-            print_failure "$name"
-            cat "$err_file"
-            if [ -t 1 ] ; then
-                esc=$(echo -e "\x1b")
-                sed \
-                    "s/^-/${esc}[31m-/;s/^+/${esc}[32m+/;s/^@/${esc}[35m@/;s/$/${esc}[0m/" \
-                    < "$diff_file"
-            else
-                cat "$diff_file"
-            fi
+            return_status=$RUNTEST_FAILURE
         else
-            (( passed++ ))
-            printf "%b[✓] PASS:%b %s%b\n" \
-              $COLOR_GREEN_BOLD $COLOR_DEFAULT "$name" $COLOR_RESET
             rm -f "$out_file"
             rm -f "$err_file"
             rm -f "$diff_file"
+            return_status=$RUNTEST_SUCCESS
         fi
     else
-        (( skipped++ ))
-        print_skip "$name"
+        return_status=$RUNTEST_SKIP
     fi
     cd ../.. || exit 1
+    return $return_status
+}
+
+
+num_to_run_in_parallel=16
+dirs=(tests/*/)
+declare -A pids
+running_tests=""
+
+# Starts running a test in the background. If there are no more tests then it
+# does nothing
+next_test_indx=0
+start_test() {
+    if (( next_test_index < ${#dirs[@]} )); then
+        test_dir="${dirs[next_test_index]}"
+        running_tests+=" $test_dir"
+        runtest "$test_dir" &
+        pids["$test_dir"]=$!
+    fi
+    ((next_test_index++))
+}
+
+# Kick off a bunch of test runs
+for ignore_me in $(seq $num_to_run_in_parallel); do
+  start_test
 done
+
+while [ -n "$running_tests" ]; do
+  tests_to_reap=$running_tests
+  running_tests=""
+
+  # We reap the tests in order, so that we can output them in a pretty way.
+  for testname in $tests_to_reap; do
+    print_run "$testname"
+    wait "${pids[$testname]}"
+    case $? in
+      $RUNTEST_SUCCESS )
+        (( passed++ ))
+        print_success "$testname" ;;
+      $RUNTEST_FAILURE )
+        (( failed++ ))
+        print_failure "$testname" ;;
+      $RUNTEST_SKIP )
+        (( skipped++ ))
+        print_skip "$testname" ;;
+      $RUNTEST_MISSING_FILES )
+        (( failed++ ))
+        print_failure "$testname"
+        printf "Missing %s.exp file or .flowconfig file\n" "$testname" ;;
+    esac
+
+    # Start up the next test
+    start_test
+  done
+done
+
 echo
 if [ $failed -eq 0 ]; then
   printf "%bPassed: %d, Failed: %d, Skipped: %d%b\n" \
