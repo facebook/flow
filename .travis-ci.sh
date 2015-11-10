@@ -1,17 +1,18 @@
 OPAM_DEPENDS=
          
 setup_linux () {
-  case "$OCAML_VERSION,$OPAM_VERSION" in
-  4.02.1,1.2.0) ppa=avsm/ocaml42+opam12 ;;
-  4.02.1,1.1.0) ppa=avsm/ocaml42+opam11 ;;
-  4.01.0,1.2.0) ppa=avsm/ocaml41+opam12 ;;
-  4.01.0,1.1.0) ppa=avsm/ocaml41+opam11 ;;
-  *) echo Unknown $OCAML_VERSION,$OPAM_VERSION; exit 1 ;;
-  esac
+  export PREFIX="./usr"
+  export BINDIR="$PREFIX/bin"
+  export PATH="$BINDIR:$PATH"
+
+  wget -q -O opam_installer.sh "https://raw.github.com/ocaml/opam/master/shell/opam_installer.sh"
+  if [ -n "${OPAM_VERSION:-}" ]; then
+    sed -i "s/^VERSION=.*$/VERSION='$OPAM_VERSION'/" opam_installer.sh
+  fi
+  echo y | sh opam_installer.sh $BINDIR $OCAML_VERSION
 
   export OPAMYES=1
-  # We could in theory tell opam to init with a particular version of ocaml,
-  # but this is much slower than using the ppa & apt
+  export OPAMVERBOSE=1
   opam init -a -y
   # TODO: Install js_of_ocaml and test the parser
   # opam install ${OPAM_DEPENDS}
