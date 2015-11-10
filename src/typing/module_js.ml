@@ -238,18 +238,19 @@ let rec dir_exists dir =
 and file_exists path =
   (* case doesn't matter for "/", ".", "..." and these serve as a base-case for
    * case-insensitive filesystems *)
+  let dir = Filename.dirname path in
   if (
     case_sensitive
-    || path = Filename.dir_sep
     || path = Filename.current_dir_name
     || path = Filename.parent_dir_name
+    || path = dir
   ) then Sys.file_exists path
   else (
-    let dir = Filename.dirname path in
     let files = match SMap.get dir !files_in_dir with
     | Some files -> files
     | None ->
-        let files = if dir_exists dir
+        let files =
+          if dir_exists dir
           then set_of_list (Array.to_list (Sys.readdir dir))
           else SSet.empty in
         files_in_dir := SMap.add dir files !files_in_dir;
