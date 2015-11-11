@@ -35,8 +35,6 @@ Traces.js:9:11,11: NumT [number]
 Traces.js:8:16,16: ~> OpenT [parameter `y`] (from [not shown])
 Traces.js:8:27,27: ~> ReposLowerT [identifier `y`]
 
-Traces.js:14:1,32: function call
-Error:
 Traces.js:14:25,25: string
 This type is incompatible with
 Traces.js:14:25,29: number
@@ -53,8 +51,6 @@ Traces.js:14:25,25: ~> ReposLowerT [identifier `x`]
 Traces.js:12:22,27: StrT [string]
 Traces.js:12:22,27: ~> ReposLowerT [string] (from [not shown])
 
-Traces.js:14:1,32: function call
-Error:
 Traces.js:14:29,29: string
 This type is incompatible with
 Traces.js:14:25,29: number

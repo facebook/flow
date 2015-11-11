@@ -66,6 +66,12 @@ let btwn loc1 loc2 = {
   _end = loc2._end;
 }
 
+(* Returns true if loc1 entirely overlaps loc2 *)
+let contains loc1 loc2 =
+  loc1.source = loc2.source &&
+  loc1.start.offset <= loc2.start.offset &&
+  loc1._end.offset >= loc2._end.offset
+
 let string_of_filename = function
   | LibFile x | SourceFile x -> x
   | Builtins -> "(global)"

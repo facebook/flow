@@ -61,8 +61,6 @@ es6modules.js:59:34,42: "childProp" export of "CommonJS_Clobbering_Class"
 Property not found in
 es6modules.js:59:50,76: exports of "CommonJS_Clobbering_Class"
 
-es6modules.js:63:1,33: property `doesntExist`
-Error:
 es6modules.js:63:23,33: property `doesntExist`
 Property not found in
 es6modules.js:63:5,19: Test

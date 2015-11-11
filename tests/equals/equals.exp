@@ -1,12 +1,8 @@
 
-equals.js:7:2,8: non-strict equality comparison
-Error:
 equals.js:7:2,2: number
 Cannot be compared to
 equals.js:7:7,8: string
 
-equals.js:8:2,8: non-strict equality comparison
-Error:
 equals.js:8:2,3: string
 Cannot be compared to
 equals.js:8:8,8: number

@@ -352,13 +352,15 @@ let ordered_reasons l u =
   then ru, rl
   else rl, ru
 
+let reasons_overlap r1 r2 = Loc.contains (loc_of_reason r1) (loc_of_reason r2)
+
 (* format an error or warning and add it to flow's output.
    here preformatted trace output is passed directly as an argument *)
 let prmsg_flow_trace_reasons cx level trace_reasons msg (r1, r2) = Errors_js.(
   let op, info = match Ops.peek () with
-  | Some r when r != r1 && r != r2 ->
-    (* NOTE: We include the operation's reason in the error message only if it
-       is distinct from the reasons of the endpoints. *)
+  | Some r when not (reasons_overlap r r1 && reasons_overlap r r2) ->
+    (* NOTE: We include the operation's reason in the error message, unless it
+       overlaps *both* endpoints. *)
     Some (message_of_reason r), []
   | _ ->
     if lib_reason r1 && lib_reason r2

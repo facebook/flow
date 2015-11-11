@@ -83,8 +83,6 @@ promise.js:214:65,70: string
 This type is incompatible with
 [LIB] core.js:408:32,45: union type
 
-promise.js:236:3,239:3: call of method `done`
-Error:
 promise.js:237:10,10: string
 This type is incompatible with
 promise.js:237:10,13: number

@@ -67,8 +67,6 @@ F.js:6:41,44: string
 This type is incompatible with
 F.js:6:23,28: number
 
-F.js:9:41,51: call of method `toFixed`
-Error:
 F.js:9:43,49: property `toFixed`
 Property not found in
 F.js:9:41,41: String

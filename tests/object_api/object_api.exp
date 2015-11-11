@@ -13,14 +13,10 @@ object_assign.js:7:19,40: property `bar`
 Property not found in
 object_assign.js:7:44,69: object literal
 
-object_keys.js:7:1,9:2: call of method `forEach`
-Error:
 object_keys.js:8:4,4: key of object literal
 This type is incompatible with
 object_keys.js:8:8,13: number
 
-object_keys.js:12:1,14:2: call of method `forEach`
-Error:
 object_keys.js:13:4,4: key of object type
 This type is incompatible with
 object_keys.js:13:8,13: number
