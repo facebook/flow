@@ -3,6 +3,18 @@ A.js:2:9,14: number
 This type is incompatible with
 C.js:4:9,14: string
 
+B.js:6:2,6: property `foo`
+Error:
+B.js:6:2,6: method `foo`
+This type is incompatible with
+B.js:6:9,14: number
+
+C.js:8:2,6: property `foo`
+Error:
+C.js:8:2,6: method `foo`
+This type is incompatible with
+C.js:8:9,14: number
+
 D.js:3:1,9: property `x`
 Error:
 D.js:3:9,9: property `x`
@@ -67,4 +79,4 @@ loc.js:5:7,9: Foo
 name is already bound
 loc.js:3:6,8: type Foo
 
-Found 16 errors
+Found 18 errors

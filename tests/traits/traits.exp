@@ -1,15 +1,15 @@
 
-test.js:1:31,36: string
-This type is incompatible with
-test.js:20:15,20: number
-
-test.js:1:50,55: number
+test.js:18:3,12: number
 This type is incompatible with
 test.js:18:15,20: string
 
-test.js:1:50,55: number
+test.js:19:3,12: number
 This type is incompatible with
 test.js:19:15,20: string
+
+test.js:20:3,12: string
+This type is incompatible with
+test.js:20:15,20: number
 
 test2.js:2:24,24: I
 type referenced from value position

@@ -11,13 +11,13 @@ test.js:2:19,24: number
 This type is incompatible with
 test.js:6:17,18: string
 
-test.js:2:19,24: number
-This type is incompatible with
-test.js:7:7,12: string
-
 test.js:6:17,18: string
 This type is incompatible with
 test.js:2:19,24: number
+
+test.js:7:2,4: number
+This type is incompatible with
+test.js:7:7,12: string
 
 test.js:11:25,25: 
 A class cannot extend multiple classes!
@@ -30,14 +30,6 @@ test.js:19:10,15: number
 This type is incompatible with
 test.js:19:39,40: string
 
-test.js:19:10,15: number
-This type is incompatible with
-test.js:20:7,12: string
-
-test.js:19:10,15: number
-This type is incompatible with
-test.js:22:7,12: string
-
 test.js:19:25,26: string
 This type is incompatible with
 test.js:19:10,15: number
@@ -45,6 +37,14 @@ test.js:19:10,15: number
 test.js:19:39,40: string
 This type is incompatible with
 test.js:19:10,15: number
+
+test.js:20:2,4: number
+This type is incompatible with
+test.js:20:7,12: string
+
+test.js:22:2,4: number
+This type is incompatible with
+test.js:22:7,12: string
 
 test2.js:5:34,34: property `z`
 Property not found in
@@ -54,10 +54,6 @@ test3.js:1:18,23: number
 This type is incompatible with
 test3.js:3:31,36: string
 
-test3.js:1:30,35: string
-This type is incompatible with
-test3.js:6:9,14: number
-
 test3.js:3:31,36: string
 This type is incompatible with
 test3.js:1:18,23: number
@@ -65,5 +61,9 @@ test3.js:1:18,23: number
 test3.js:5:4,6: string
 This type is incompatible with
 test3.js:5:9,14: number
+
+test3.js:6:4,6: string
+This type is incompatible with
+test3.js:6:9,14: number
 
 Found 17 errors

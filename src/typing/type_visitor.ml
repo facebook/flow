@@ -110,6 +110,7 @@ class ['a] t = object(self)
     acc
 
   | BecomeT (_, t) -> self#type_ cx acc t
+  | ReposLowerT (_, t) -> self#type_ cx acc t
 
   | SpeculativeMatchFailureT (_, t1, t2) ->
     let acc = self#type_ cx acc t1 in
@@ -123,7 +124,6 @@ class ['a] t = object(self)
   | SummarizeT (_, _)
   | CallT (_, _)
   | MethodT (_, _, _)
-  | ReposLowerT (_, _)
   | ReposUpperT (_, _)
   | SetPropT (_, _, _)
   | GetPropT (_, _, _)

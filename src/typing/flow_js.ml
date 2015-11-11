@@ -4121,9 +4121,10 @@ and lookup_prop cx trace l reason strict x t =
   rec_flow cx trace (l, LookupT (reason, strict, [], x, t))
 
 and get_prop cx trace reason_prop reason_op strict super x map tout =
+  let tout = ReposLowerT (reason_op, tout) in
   if SMap.mem x map
   then
-    rec_flow cx trace (SMap.find_unsafe x map, ReposLowerT (reason_op, tout))
+    rec_flow cx trace (SMap.find_unsafe x map, tout)
   else
     lookup_prop cx trace super reason_prop strict x (LowerBoundT tout)
 

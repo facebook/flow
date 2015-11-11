@@ -215,6 +215,6 @@ state4.js:4:31,6:3: object literal
 
 state4.js:10:29,29: property `z`
 Property not found in
-state4.js:4:31,6:3: object literal
+state4.js:10:18,27: object literal
 
 Found 47 errors
