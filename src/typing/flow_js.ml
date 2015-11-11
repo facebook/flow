@@ -5835,6 +5835,15 @@ end = struct
         let ts = List.map (resolve_type cx) ts in
         let members = List.map (extract_members_as_map cx) ts in
         Success (intersect_members cx members)
+    | SingletonStrT (reason, _)
+    | StrT (reason, _) ->
+        extract_members cx (get_builtin_type cx reason "String")
+    | SingletonNumT (reason, _)
+    | NumT (reason, _) ->
+        extract_members cx (get_builtin_type cx reason "Number")
+    | SingletonBoolT (reason, _)
+    | BoolT (reason, _) ->
+        extract_members cx (get_builtin_type cx reason "Boolean")
     | _ ->
         (* TODO: What types could come up here which we need to handle? *)
         FailureUnhandledType this_t
