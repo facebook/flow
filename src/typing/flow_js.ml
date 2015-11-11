@@ -5784,13 +5784,23 @@ end = struct
     | FailureUnhandledType _ ->
         SMap.empty
 
+  let find_props cx fields =
+    SMap.filter (fun key _ ->
+      (* Filter out keys that start with "$" *)
+      not (Str.string_match (Str.regexp "\\$") key 0)
+    ) (find_props cx fields)
+
   (* TODO: Think of a better place to put this *)
   let rec extract_members cx this_t =
     match this_t with
     | MaybeT _ | NullT _ | VoidT _ ->
         FailureMaybeType
-    | AnyT _ | AnyObjT _ | AnyFunT _ ->
+    | AnyT _ ->
         FailureAnyType
+    | AnyObjT reason ->
+        extract_members cx (get_builtin_type cx reason "Object")
+    | AnyFunT reason ->
+        extract_members cx (get_builtin_type cx reason "Function")
     | AnnotT (source, _) ->
         let source_t = resolve_type cx source in
         extract_members cx source_t
@@ -5805,7 +5815,11 @@ end = struct
         let super_flds = extract_members_as_map cx super_t in
         Success (SMap.union super_flds members)
     | ObjT (_, {props_tmap = flds; proto_t = proto; _}) ->
-        let proto_t = resolve_type cx proto in
+        let proto_reason = reason_of_t proto in
+        let proto_t = resolve_type cx (IntersectionT (proto_reason, [
+          proto;
+          get_builtin_type cx proto_reason "Object";
+        ])) in
         let prot_members = extract_members_as_map cx proto_t in
         let members = find_props cx flds in
         Success (SMap.union prot_members members)
@@ -5820,9 +5834,16 @@ end = struct
     | ClassT (InstanceT (_, static, _, _)) ->
         let static_t = resolve_type cx static in
         extract_members cx static_t
-    | FunT (_, static, _, _) ->
+    | FunT (_, static, proto, _) ->
         let static_t = resolve_type cx static in
-        extract_members cx static_t
+        let proto_reason = reason_of_t proto in
+        let proto_t = resolve_type cx (IntersectionT (proto_reason, [
+          proto;
+          get_builtin_type cx proto_reason "Function";
+        ])) in
+        let members = extract_members_as_map cx static_t in
+        let prot_members = extract_members_as_map cx proto_t in
+        Success (SMap.union prot_members members)
     | IntersectionT (r, ts) ->
         (* Intersection type should autocomplete for every property of every type
         * in the intersection *)
@@ -5833,8 +5854,12 @@ end = struct
         (* Union type should autocomplete for only the properties that are in
         * every type in the intersection *)
         let ts = List.map (resolve_type cx) ts in
-        let members = List.map (extract_members_as_map cx) ts in
-        Success (intersect_members cx members)
+        let members = ts
+          (* Although we'll ignore the any-ish members of the union *)
+          |> List.filter (function AnyT _ | AnyObjT _ | AnyFunT _ -> false | _ -> true)
+          |> List.map (extract_members_as_map cx)
+          |> intersect_members cx in
+        Success members
     | SingletonStrT (reason, _)
     | StrT (reason, _) ->
         extract_members cx (get_builtin_type cx reason "String")
