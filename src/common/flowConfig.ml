@@ -256,13 +256,16 @@ type config = {
   root: Path.t;
 }
 
+let add_dir_sep dir =
+  let open Filename in
+  if check_suffix dir dir_sep
+  then dir
+  else dir ^ dir_sep
+
 let file_of_root extension ~tmp_dir root =
-  let tmp_dir = if tmp_dir.[String.length tmp_dir - 1] <> '/'
-    then tmp_dir ^ "/"
-    else tmp_dir in
   (* TODO: move this to places that write this file *)
   mkdir_no_fail tmp_dir;
-  let tmp_dir = tmp_dir |> Path.make |> Path.to_string in
+  let tmp_dir = tmp_dir |> Path.make |> Path.to_string |> add_dir_sep in
   let root_part = Path.slash_escaped_string_of_path root in
   Printf.sprintf "%s%s.%s" tmp_dir root_part extension
 
