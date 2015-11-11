@@ -226,10 +226,42 @@ end = struct
   )
 
   let parse_sections = Ast.Expression.(function
-    | (_, Object { Object.properties }) -> List.map parse_section properties
-    | _ -> prerr_endline "ERROR: expected module.exports = {...}"; exit 1
+    | (_, Object { Object.properties }) ->
+        (try
+          let open Object in
+          let open Property in
+          let sections = List.find (function
+            | Property (_, {
+                kind = Init;
+                key =
+                  Property.Literal (_, {
+                    Ast.Literal.value = Ast.Literal.String "sections";
+                    _;
+                  });
+                value = (_, Object _);
+                  _;
+              }) -> true
+            | _ -> false) properties in
+          (match sections with
+          | Property (_, { value = (_, Object { properties }); _; }) ->
+              List.map parse_section properties
+          | _ -> assert false)
+        with Not_found ->
+          prerr_endline
+            "ERROR: expected module.exports = { sections: { ... } }";
+          exit 1)
+    | _ ->
+        prerr_endline
+          "ERROR: expected module.exports = { sections: { ... } }";
+        exit 1
   )
 
+  (* The ast looks like
+   * module.exports = {
+   *   todo: { ... }
+   *   sections: { ... }
+   * }
+   *)
   let parse_ast content =
     let (ast, _) = Parser_flow.program ~fail:true content in
     let expr = Ast.Statement.(match ast with
