@@ -9,8 +9,15 @@
  *)
 
 type env = {
-  ns_uses: string Utils.SMap.t;
+  ns_class_uses: string Utils.SMap.t;
+  ns_fun_uses: string Utils.SMap.t;
+  ns_const_uses: string Utils.SMap.t;
   ns_name: string option;
 }
 
-let empty = { ns_uses = Utils.SMap.empty; ns_name = None }
+let empty = {
+  ns_class_uses = Utils.SMap.empty;
+  ns_fun_uses = Utils.SMap.empty;
+  ns_const_uses = Utils.SMap.empty;
+  ns_name = None
+}

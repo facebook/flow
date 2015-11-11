@@ -2201,7 +2201,7 @@ and namespace env =
   end
 
 and namespace_use env =
-  seq env [space; name;];
+  seq env [space; opt_word "const"; opt_word "function"; space; name;];
   let rem = match (next_token_str env) with
     | "as" -> [space; expect "as"; space; name; semi_colon;]
     | _ -> [semi_colon] in

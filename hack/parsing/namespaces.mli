@@ -8,5 +8,5 @@
  *
  *)
 
-val elaborate_id : Namespace_env.env -> Ast.id -> Ast.id
+val elaborate_id : Namespace_env.env -> Ast.ns_kind -> Ast.id -> Ast.id
 val elaborate_defs : Ast.program -> Ast.program

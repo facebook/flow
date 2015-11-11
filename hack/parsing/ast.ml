@@ -30,6 +30,11 @@ type variance =
   | Contravariant
   | Invariant
 
+type ns_kind =
+  | NSClass
+  | NSFun
+  | NSConst
+
 type program = def list
 
 and def =
@@ -39,7 +44,7 @@ and def =
   | Typedef of typedef
   | Constant of gconst
   | Namespace of id * program
-  | NamespaceUse of (id * id) list
+  | NamespaceUse of (ns_kind * id * id) list
 
 and typedef = {
   t_id: id;

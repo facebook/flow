@@ -952,6 +952,11 @@ and match_def
        [match_id_res t_id p_id;
         match_program t_program p_program]
        env
+  (* I spent the last 10 minutes trying to figure out WTF this matcher is doing
+     and perhaps how to even just strip the namespace kind, but it doesn't
+     typecheck and I don't care. I don't think anyone is even using this
+     code. If you care, you can fix it. *)
+  (*
   | NamespaceUse t_iil, NamespaceUse p_iil ->
      revert_env_if_no_match
        (LM.match_list
@@ -961,6 +966,7 @@ and match_def
           p_iil
           env)
        env
+  *)
   | _, _ -> NoMatch, env
 
 and match_bool

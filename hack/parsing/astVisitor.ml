@@ -109,7 +109,7 @@ class type ['a] ast_visitor_type = object
   method on_gconst: 'a -> gconst -> 'a
   method on_method_: 'a -> method_ -> 'a
   method on_namespace: 'a -> id -> program -> 'a
-  method on_namespaceUse: 'a -> (id * id) list -> 'a
+  method on_namespaceUse: 'a -> (Ast.ns_kind * id * id) list -> 'a
   method on_program: 'a -> program -> 'a
   method on_tparam: 'a -> tparam -> 'a
   method on_typeConst: 'a -> typeconst -> 'a
@@ -489,7 +489,7 @@ class virtual ['a] ast_visitor: ['a] ast_visitor_type = object(this)
     acc
 
   method on_namespaceUse acc il =
-    List.fold_left begin fun acc (i1, i2) ->
+    List.fold_left begin fun acc (_, i1, i2) ->
       let acc = this#on_id acc i1 in
       let acc = this#on_id acc i2 in
       acc end acc il

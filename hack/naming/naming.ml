@@ -416,7 +416,7 @@ module Env = struct
 
   (* For dealing with namespace fallback on constants *)
   let elaborate_and_get_name_with_fallback mk_dep genv genv_sect x =
-    let fq_x = Namespaces.elaborate_id genv.namespace x in
+    let fq_x = Namespaces.elaborate_id genv.namespace NSConst x in
     let need_fallback =
       genv.namespace.Namespace_env.ns_name <> None &&
       not (String.contains (snd x) '\\') in
@@ -447,7 +447,7 @@ module Env = struct
 
   (* For dealing with namespace fallback on functions *)
   let elaborate_and_get_name_with_canonicalized_fallback mk_dep genv genv_sect x =
-    let fq_x = Namespaces.elaborate_id genv.namespace x in
+    let fq_x = Namespaces.elaborate_id genv.namespace NSFun x in
     let need_fallback =
       genv.namespace.Namespace_env.ns_name <> None &&
       not (String.contains (snd x) '\\') in
@@ -491,7 +491,7 @@ module Env = struct
   let class_name (genv, _) x =
     (* Generic names are not allowed to shadow class names *)
     check_no_runtime_generic genv x;
-    let x = Namespaces.elaborate_id genv.namespace x in
+    let x = Namespaces.elaborate_id genv.namespace NSClass x in
     let pos, name = canonicalize genv genv.classes x `cls in
     (* Don't let people use strictly internal classes
      * (except when they are being declared in .hhi files) *)
@@ -668,7 +668,7 @@ let check_repetition s param =
 
 (* Check that a name is not a typedef *)
 let no_typedef (genv, _) cid =
-  let (pos, name) = Namespaces.elaborate_id genv.namespace cid in
+  let (pos, name) = Namespaces.elaborate_id genv.namespace NSClass cid in
   if SMap.mem name !(genv.typedefs)
   then
     let def_pos, _ = SMap.find_unsafe name !(genv.typedefs) in
@@ -1782,7 +1782,7 @@ and expr env (p, e) = p, expr_ env e
 and expr_ env = function
   | Array l -> N.Array (List.map l (afield env))
   | Collection (id, l) -> begin
-    let p, cn = Namespaces.elaborate_id ((fst env).namespace) id in
+    let p, cn = Namespaces.elaborate_id ((fst env).namespace) NSClass id in
     match cn with
       | x when
           x = SN.Collections.cVector
@@ -1843,7 +1843,7 @@ and expr_ env = function
       N.Class_get (make_class_id env x1, x2)
   | Class_const (x1, x2) ->
       let (genv, _) = env in
-      let (_, name) = Namespaces.elaborate_id genv.namespace x1 in
+      let (_, name) = Namespaces.elaborate_id genv.namespace NSClass x1 in
       if SMap.mem name !(genv.typedefs) && (snd x2) = "class" then
         N.Typename (Env.class_name env x1)
       else

@@ -29,11 +29,11 @@ and terminal_ nsenv ~in_try = function
                  | Call ((_, Id (_, "invariant")), (_, False) :: _ :: _, [])))
   | Return _ -> raise Exit
   | Expr (_, Call ((_, Id fun_id), _, _)) ->
-    let _, fun_name = Namespaces.elaborate_id nsenv fun_id in
+    let _, fun_name = Namespaces.elaborate_id nsenv NSFun fun_id in
     FuncTerm.raise_exit_if_terminal (FuncTerm.get_fun fun_name)
   | Expr (_, Call ((_, Class_const (cls_id, (_, meth_name))), _, _))
     when (snd cls_id).[0] <> '$' ->
-    let _, cls_name = Namespaces.elaborate_id nsenv cls_id in
+    let _, cls_name = Namespaces.elaborate_id nsenv NSClass cls_id in
     FuncTerm.raise_exit_if_terminal (FuncTerm.get_static_meth cls_name meth_name)
   | If (_, b1, b2) ->
       (try terminal nsenv ~in_try b1; () with Exit ->

@@ -3851,6 +3851,14 @@ and namespace env =
       id, []
 
 and namespace_use_list env acc =
+  let kind = match L.token env.file env.lb with
+    | Tword -> begin
+      match Lexing.lexeme env.lb with
+        | "function" -> NSFun
+        | "const" -> NSConst
+        | _ -> (L.back env.lb; NSClass)
+    end
+    | _ -> (L.back env.lb; NSClass) in
   let p1, s1 = identifier env in
   let id1 = p1, if s1.[0] = '\\' then s1 else "\\" ^ s1 in
   let id2 =
@@ -3864,7 +3872,7 @@ and namespace_use_list env acc =
         let len = (String.length str) - start in
         fst id1, String.sub str start len
   in
-  let acc = (id1, id2) :: acc in
+  let acc = (kind, id1, id2) :: acc in
   match L.token env.file env.lb with
     | Tsc -> acc
     | Tcomma -> namespace_use_list env acc
