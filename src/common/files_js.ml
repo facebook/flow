@@ -61,7 +61,7 @@ type file_kind =
    like a pipe, socket or device. If `path` is a symbolic link, then it returns
    the type of the target of the symlink, and the target's real path. *)
 let kind_of_path path = Unix.(
-  try match (lstat path).st_kind with
+  try match (Sys_utils.lstat path).st_kind with
   | S_REG -> Reg path
   | S_LNK ->
     (* TODO: can stat return a symlink? if yes, match S_LNK and recurse? *)
