@@ -125,7 +125,15 @@ for (let n of take(10, nats())) {
 }
 ```
 
-Note that we explicitly annotated the parameters and return type of the `take` generator. This is necessary to ensure Flow understands the fully generic type.
+Note that we explicitly annotated the parameters and return type of the `take` generator. This is necessary to ensure Flow understands the fully generic type. This is because Flow does not currently infer a fully generic type, but instead accumulates lower bounds, resulting in a union type.
+
+```javascript
+function identity(x) { return x }
+var a: string = identity(""); // error
+var b: number = identity(0);  // error
+```
+
+The above code produces errors because Flow adds `string` and `number` as lower bounds to the type variable describing the type of the value bound by `x`. That is, Flow believes the type of `identity` is `(x: string | number) => string | number` because those are the types which actually passed through the function.
 
 Another important feature of generators is the ability to pass values into the generator from the consumer. Let's consider a generator `scan`, which reduces values passed into the generator using a provided function. Our `scan` is similar to `Array.prototype.reduce`, but it returns each intermediate value and the values are provided imperatively via `next`.
 
@@ -163,13 +171,11 @@ test.js:7
      ^ some incompatible instantiation of T
 ```
 
-Flow is complaining that our value, `next`, may be `void` instead of the expected `T`, which is `number` in the `sum` example. This is unfortunate, but necessary for type safety.
-
-In order to "start" the generator, our consumer must first call `next` without an argument. To accomodate this, Flow understands the argument to `next` to be optional. This means Flow will allow the following code:
+Flow is complaining that our value, `next`, may be `void` instead of the expected `T`, which is `number` in the `sum` example. This behavior is necessary to ensure type safety. In order to prime the generator, our consumer must first call `next` without an argument. To accomodate this, Flow understands the argument to `next` to be optional. This means Flow will allow the following code:
 
 ```javascript
 let sum = scan(0, (a,b) => a + b);
-console.log(sum.next());  // first call "starts" the generator
+console.log(sum.next());  // first call primes the generator
 console.log(sum.next());  // we should pass a value, but don't need to
 ```
 
@@ -217,7 +223,7 @@ function *bar() {
 }
 
 const gen = bar();
-gen.next(); // start the generator
+gen.next(); // prime the generator
 gen.next(0);
 const ret: { a: number, b: string } = gen.next("").value; // error
 ```
@@ -234,7 +240,7 @@ function *bar(): Generator {
 }
 
 const gen = bar();
-gen.next(); // start the generator
+gen.next(); // prime the generator
 gen.next(0);
 const ret: void | { a: number, b: string } = gen.next("").value; // OK
 ```
