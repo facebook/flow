@@ -18,7 +18,7 @@ open Utils
  * keep this synced eventually *)
 let header_kinds = [
   "Packed"; "Struct"; "Mixed"; "Empty"; "Apc"; "Globals"; "Proxy"; "String";
-  "Resource"; "Ref"; "Object"; "ResumableObj"; "AwaitAllWH";
+  "Resource"; "Ref"; "Object"; "WaitHandle"; "ResumableObj"; "AwaitAllWH";
   "Vector"; "Map"; "Set"; "Pair"; "ImmVector"; "ImmMap"; "ImmSet";
   "ResumableFrame"; "NativeData";
   "SmallMalloc"; "BigMalloc"; "BigObj"; "Free"; "Hole"
