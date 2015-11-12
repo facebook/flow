@@ -49,8 +49,6 @@ val make_from : 'a -> 'a pos
 
 val btw : 'a pos -> 'a pos -> 'a pos
 
-val set_line : 'a pos -> int -> 'a pos
-
 val to_absolute : t -> absolute
 
 val to_relative_string : t -> string pos
