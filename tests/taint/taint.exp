@@ -19,21 +19,15 @@ adder.js:30:20,24: tainted number
 This type is incompatible with
 adder.js:30:11,16: string
 
-comparator.js:4:28,32: relational comparison
-Error:
-comparator.js:3:47,52: number
+comparator.js:4:32,32: number
 Cannot be compared to
-comparator.js:3:25,30: string
+comparator.js:4:28,28: string
 
-comparator.js:8:28,32: relational comparison
-Error:
-comparator.js:7:38,43: number
+comparator.js:8:32,32: number
 Cannot be compared to
 comparator.js:8:28,28: string
 
-comparator.js:12:28,32: relational comparison
-Error:
-comparator.js:11:26,31: string
+comparator.js:12:28,28: string
 Cannot be compared to
 comparator.js:12:32,32: number
 

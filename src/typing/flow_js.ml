@@ -3171,8 +3171,9 @@ let rec __flow cx (l, u) trace =
     (* relational comparisons *)
     (**************************)
 
-    | (TaintedT (_, l), ComparatorT _) ->
-      rec_flow cx trace (l, u)
+    | (TaintedT (reason_t, l), ComparatorT _) ->
+      rec_flow cx trace (l, ReposLowerT (reason_t, u))
+
     | (l, ComparatorT(reason, r)) ->
       Ops.push reason;
       flow_comparator cx trace reason l r;
