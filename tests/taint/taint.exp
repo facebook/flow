@@ -47,7 +47,7 @@ taint2.js:8:5,37: call of method `assign`
 Error:
 taint2.js:8:30,36: tainted string
 This type is incompatible with
-[LIB] bom.js:110:17,22: string
+[LIB] bom.js:142:17,22: string
 
 taint3.js:10:24,27: tainted string
 This type is incompatible with
