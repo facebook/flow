@@ -230,7 +230,7 @@ end = struct
     (* this is to transform SIGPIPE in an exception. A SIGPIPE can happen when
     * someone C-c the client.
     *)
-    Sys.set_signal Sys.sigpipe Sys.Signal_ignore;
+    Sys_utils.set_signal Sys.sigpipe Sys.Signal_ignore;
     let is_check_mode = Options.is_check_mode options in
     (* You need to grab the lock before initializing the pid files *)
     begin if not is_check_mode

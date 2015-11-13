@@ -59,7 +59,7 @@ end = struct
   let main () =
     Daemon.check_entry_point (); (* this call might not return *)
 
-    Sys.set_signal Sys.sigpipe Sys.Signal_ignore;
+    Sys_utils.set_signal Sys.sigpipe Sys.Signal_ignore;
     let default_command = DefaultCommand.command in
     let argv = Array.to_list Sys.argv in
     let default = CommandSpec.name default_command in
