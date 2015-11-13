@@ -342,3 +342,22 @@ let nbr_procs = nproc ()
 
 external set_priorities : cpu_priority:int -> io_priority:int -> unit =
   "hh_set_priorities"
+
+external win_terminate_process: int -> bool = "win_terminate_process"
+
+let terminate_process pid =
+  try Unix.kill pid Sys.sigkill
+  with exn when Sys.win32 ->
+    (* Can be removed once support for ocaml-4.01 is dropped *)
+    if not (win_terminate_process pid) then
+      raise Unix.(Unix_error(ESRCH, "kill", ""))
+
+let lstat path =
+  (* WTF, on Windows `lstat` fails if a directory path ends with an
+     '/' (or a '\', whatever) *)
+  Unix.lstat @@
+  if Sys.win32 then
+    if Utils.str_ends_with path Filename.dir_sep then
+      String.sub path 0 (String.length path - 1)
+    else path
+  else path
