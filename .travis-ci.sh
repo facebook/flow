@@ -24,6 +24,7 @@ setup_linux () {
   # For some reason the Linux containers start killing the tests if too many
   # tests are run in parallel. Luckily we can easily configure that here
   export FLOW_RUNTESTS_PARALLELISM=4
+  export FLOW_SHMDIR=/tmp
 }
 
 setup_osx () {
