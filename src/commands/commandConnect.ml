@@ -68,25 +68,28 @@ let start_flow_server ~tmp_dir root =
   Utils.prerr_endlinef
     "Launching Flow server for %s"
     (Path.to_string root);
-  let temp_dir_arg =
-    Printf.sprintf "--temp-dir=%s " (Filename.quote tmp_dir)
-  in
   let from_arg = match FlowEventLogger.((get_context ()).from) with
-  | Some from -> Printf.sprintf "--from='%s' " from
-  | None -> "" in
-  let flow_server = Printf.sprintf "%s start %s%s%s 1>&2"
-    (Filename.quote (Sys.argv.(0)))
-    temp_dir_arg
-    from_arg
-    (Filename.quote (Path.to_string root)) in
-  let status = Unix.system flow_server in
-  match status with
-    | Unix.WEXITED 0 -> true
-    | Unix.WEXITED code when 
-      code = FlowExitStatus.(error_code Lock_stolen) -> false
-    | _ ->
+    | Some from -> from
+    | None -> "" in
+  let exe = Sys.argv.(0) in
+  try
+    let server_pid =
+      Unix.(create_process exe
+              [| exe; "start";
+                 "--temp-dir"; tmp_dir;
+                 "--from"; from_arg;
+                 Path.to_string root |]
+              stdin stdout stderr) in
+    match Unix.waitpid [] server_pid with
+      | _, Unix.WEXITED 0 -> true
+      | _, Unix.WEXITED code when
+          code = FlowExitStatus.(error_code Lock_stolen) -> false
+      | _, status ->
         let msg = "Could not start Flow server!" in
         FlowExitStatus.(exit ~msg (Server_start_failed status))
+  with _ ->
+    let msg = "Could not start Flow server!" in
+    FlowExitStatus.(exit ~msg Unknown_error)
 
 type retry_info = {
   retries_remaining: int;
@@ -109,7 +112,7 @@ let consume_retry retries =
   (* Make sure there is at least 1 second between retries *)
   let sleep_time = int_of_float
     (ceil (1.0 -. (Unix.gettimeofday() -. retries.last_connect_time))) in
-  if retries_remaining >= 0 && sleep_time > 0 
+  if retries_remaining >= 0 && sleep_time > 0
   then Unix.sleep sleep_time;
   { retries with retries_remaining; }
 
@@ -143,7 +146,7 @@ let rec connect env retries start_time tail_env =
   | Result.Ok (ic, oc) -> (ic, oc)
   | Result.Error CCS.Server_missing ->
       if env.autostart then begin
-        let retries = 
+        let retries =
           if start_flow_server ~tmp_dir:env.tmp_dir env.root
           then begin
             Printf.eprintf

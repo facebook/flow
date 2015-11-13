@@ -246,7 +246,7 @@ struct
     let patch_file = Filename.temp_file "" "" in
     spf "diff -u --label old --label new %s %s > %s"
       file new_file patch_file
-    |> Unix.system |> ignore;
+    |> Sys.command |> ignore;
     cat patch_file
 
   (* NOTE: currently, not only returns list of annotations, but also rewrites
