@@ -390,11 +390,11 @@ let program_init genv =
           env, "mini_load"
     else
       match ServerConfig.load_script genv.config with
-      | None ->
+      | Some load_script when not (ServerArgs.no_load genv.options) ->
+          run_load_script genv load_script
+      | _ ->
           let env = ServerInit.init genv in
           env, "fresh"
-      | Some load_script ->
-          run_load_script genv load_script
   in
   HackEventLogger.init_end init_type;
   Hh_logger.log "Waiting for daemon(s) to be ready...";
