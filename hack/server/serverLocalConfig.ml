@@ -18,6 +18,7 @@ type t = {
   type_decl_bucket_size: int;
   io_priority: int;
   cpu_priority: int;
+  shm_dir: string;
 }
 
 let default = {
@@ -28,6 +29,7 @@ let default = {
   type_decl_bucket_size = 1000;
   io_priority = 7;
   cpu_priority = 10;
+  shm_dir = GlobalConfig.shm_dir;
 }
 
 let path =
@@ -51,6 +53,7 @@ let load_ fn =
     int_ "watchman_init_timeout" ~default:10 config in
   let io_priority = int_ "io_priority" ~default:7 config in
   let cpu_priority = int_ "cpu_priority" ~default:10 config in
+  let shm_dir = string_ "shm_dir" ~default:default.shm_dir config in
   {
     use_watchman;
     watchman_init_timeout;
@@ -59,6 +62,7 @@ let load_ fn =
     type_decl_bucket_size;
     io_priority;
     cpu_priority;
+    shm_dir;
   }
 
 let load () =

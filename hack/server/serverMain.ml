@@ -75,7 +75,7 @@ end = struct
     let waiting_channel =
       Option.map
         (ServerArgs.waiting_client options)
-        ~f:Handle.to_out_channel in
+        ~f:Unix.out_channel_of_descr in
     let root = ServerArgs.root options in
     let t = Unix.gettimeofday () in
     Hh_logger.log "Initializing Server (This might take some time)";
@@ -98,6 +98,9 @@ end
 module Program =
   struct
     let preinit () =
+      (* Warning: Global references inited in this function, should
+         be 'restored' in the workers, because they are not 'forked'
+         anymore. See `ServerWorker.{save/restore}_state`. *)
       HackSearchService.attach_hooks ();
       (* Force hhi files to be extracted and their location saved before workers
        * fork, so everyone can know about the same hhi path. *)
@@ -112,9 +115,11 @@ module Program =
         (List.map env.errorl Errors.to_absolute) stdout;
       match ServerArgs.convert genv.options with
       | None ->
+         Worker.killall ();
          exit (if env.errorl = [] then 0 else 1)
       | Some dirname ->
          ServerConvert.go genv env dirname;
+         Worker.killall ();
          exit 0
 
     (* filter and relativize updated file paths *)
@@ -203,7 +208,7 @@ let recheck genv old_env updates =
   let config_in_updates =
     Relative_path.Set.mem ServerConfig.filename updates in
   if config_in_updates then begin
-    let new_config = ServerConfig.(load filename genv.options) in
+    let new_config = ServerConfig.(load filename) in
     if not (ServerConfig.is_compatible genv.config new_config) then begin
       Hh_logger.log
         "%s changed in an incompatible way; please restart %s.\n"
@@ -312,16 +317,16 @@ let load genv filename to_recheck =
 let run_load_script genv cmd =
   try
     let t = Unix.gettimeofday () in
-    let cmd =
+    let str_cmd =
       sprintf
         "%s %s %s"
         (Filename.quote (Path.to_string cmd))
         (Filename.quote (Path.to_string (ServerArgs.root genv.options)))
         (Filename.quote Build_id.build_id_ohai) in
-    Hh_logger.log "Running load script: %s\n%!" cmd;
+    Hh_logger.log "Running load script: %s\n%!" str_cmd;
     let state_fn, to_recheck =
       let do_fn () =
-        let ic = Unix.open_process_in cmd in
+        let ic = Unix.open_process_in str_cmd in
         let state_fn =
           try input_line ic
           with End_of_file -> raise State_not_found
@@ -390,11 +395,11 @@ let program_init genv =
           env, "mini_load"
     else
       match ServerConfig.load_script genv.config with
-      | Some load_script when not (ServerArgs.no_load genv.options) ->
-          run_load_script genv load_script
-      | _ ->
+      | None ->
           let env = ServerInit.init genv in
           env, "fresh"
+      | Some load_script ->
+          run_load_script genv load_script
   in
   HackEventLogger.init_end init_type;
   Hh_logger.log "Waiting for daemon(s) to be ready...";
@@ -404,7 +409,7 @@ let program_init genv =
   env
 
 let save_complete env fn =
-  let chan = open_out_no_fail fn in
+  let chan = open_out_bin_no_fail fn in
   Marshal.to_channel chan env [];
   Program.marshal chan;
   close_out_no_fail fn chan;
@@ -437,7 +442,7 @@ let daemon_main options =
     Hh_logger.log "Error: another server is already running?\n";
     Exit_status.(exit Server_already_exists);
   end;
-  let config = ServerConfig.(load filename options) in
+  let config = ServerConfig.(load filename) in
   let {ServerLocalConfig.cpu_priority; io_priority; _} as local_config =
     ServerLocalConfig.load () in
   if Sys_utils.is_test_mode ()
@@ -445,19 +450,20 @@ let daemon_main options =
   else HackEventLogger.init root (Unix.gettimeofday ());
   Option.iter
     (ServerArgs.waiting_client options)
-    ~f:(fun handle ->
-        let fd = Handle.wrap_handle handle in
-        Unix.set_close_on_exec fd);
+    ~f:Unix.set_close_on_exec;
   Program.preinit ();
   Sys_utils.set_priorities ~cpu_priority ~io_priority;
-  SharedMem.init (ServerConfig.sharedmem_config config);
+  let handle =
+    SharedMem.init
+      (ServerConfig.sharedmem_config config)
+      local_config.ServerLocalConfig.shm_dir in
   (* this is to transform SIGPIPE in an exception. A SIGPIPE can happen when
    * someone C-c the client.
    *)
   if not Sys.win32 then Sys.set_signal Sys.sigpipe Sys.Signal_ignore;
   PidLog.init (ServerFiles.pids_file root);
   PidLog.log ~reason:"main" (Unix.getpid());
-  let genv = ServerEnvBuild.make_genv options config local_config in
+  let genv = ServerEnvBuild.make_genv options config local_config handle in
   let is_check_mode = ServerArgs.check_mode genv.options in
   if is_check_mode then
     let env = program_init genv in

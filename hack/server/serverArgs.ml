@@ -21,7 +21,7 @@ type options = {
   convert          : Path.t option;
   no_load          : bool;
   save_filename    : (state_kind * string) option;
-  waiting_client   : Handle.handle option;
+  waiting_client   : Unix.file_descr option;
 }
 
 and state_kind =
@@ -85,7 +85,7 @@ let parse_options () =
   let set_ai   = fun s -> ai_mode := Some (Ai_options.prepare ~server:true s) in
   let set_save      = fun s -> save := Some (Complete, s) in
   let set_save_mini = fun s -> save := Some (Mini, s) in
-  let set_wait      = fun fd -> waiting_client := Some fd in
+  let set_wait      = fun fd -> waiting_client := Some (Handle.wrap_handle fd) in
   let options =
     ["--debug"         , Arg.Set debug         , Messages.debug;
      "--ai"            , Arg.String set_ai     , Messages.ai;
