@@ -84,12 +84,12 @@ let start_flow_server ~tmp_dir root =
       | _, Unix.WEXITED 0 -> true
       | _, Unix.WEXITED code when
           code = FlowExitStatus.(error_code Lock_stolen) -> false
-      | _ ->
-        Printf.fprintf stderr "Could not start Flow server!\n";
-        exit 77
+      | _, status ->
+        let msg = "Could not start Flow server!" in
+        FlowExitStatus.(exit ~msg (Server_start_failed status))
   with _ ->
-    Printf.fprintf stderr "Could not start Flow server!\n";
-    exit 77
+    let msg = "Could not start Flow server!" in
+    FlowExitStatus.(exit ~msg Unknown_error)
 
 type retry_info = {
   retries_remaining: int;
