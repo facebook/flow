@@ -39,7 +39,7 @@
  *)
 
 let () =
-  (* Ignore SIGPIPE since we might get a serer hangup and don't care (can
+  (* Ignore SIGPIPE since we might get a server hangup and don't care (can
    * detect and handle better than a signal). Ignore SIGUSR1 since we sometimes
    * use that for the server to tell us when it's done initializing, but if we
    * aren't explicitly listening we don't care. *)
