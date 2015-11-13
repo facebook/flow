@@ -190,14 +190,13 @@ let maybe_shape_field_name env field =
 
 let shape_field_name env p field =
   match shape_field_name_ env field with
-    | Result.Ok x -> x
+    | Result.Ok x -> Some x
     | Result.Error `Expected_class ->
         Errors.expected_class p;
-        (* Should never get here. But we have to return something anyway *)
-        Nast.SFlit (p, "self")
+        None
     | Result.Error `Invalid_shape_field_name ->
         Errors.invalid_shape_field_name p;
-        Nast.SFlit (p, "")
+        None
 
 (*****************************************************************************)
 (* Try to unify all the types in a intersection *)

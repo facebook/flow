@@ -1971,7 +1971,10 @@ and akshape_field env = function
       let env, tv = expr env v in
       let env, tv = Typing_env.unbind env tv in
       let env, tv = TUtils.unresolved env tv in
-      let field_name = TUtils.shape_field_name env Pos.none (snd k) in
+      let field_name = match TUtils.shape_field_name env Pos.none (snd k) with
+        | Some field_name -> field_name
+        | None -> assert false in  (* Typing_arrays.is_shape_like_array
+                                    * should have prevented this *)
       env, (field_name, (tk, tv))
   | Nast.AFvalue _ -> assert false (* Typing_arrays.is_shape_like_array
                                     * should have prevented this *)
@@ -2644,12 +2647,17 @@ and array_get is_lvalue p env ty1 ety1 e2 ty2 =
       )
   | Tshape (_, fdm) ->
     let p, e2' = e2 in
-    let field = TUtils.shape_field_name env p e2' in
-    (match ShapeMap.get field fdm with
+    (match TUtils.shape_field_name env p e2' with
       | None ->
-        Errors.undefined_field p (TUtils.get_printable_shape_field_name field);
-        env, (Reason.Rwitness p, Tany)
-      | Some ty -> env, ty
+          (* there was already an error in shape_field name,
+             don't report another one for a missing field *)
+          env, (Reason.Rwitness p, Tany)
+      | Some field -> (match ShapeMap.get field fdm with
+        | None ->
+          Errors.undefined_field
+            p (TUtils.get_printable_shape_field_name field);
+          env, (Reason.Rwitness p, Tany)
+        | Some ty -> env, ty)
     )
   | Toption _ ->
       Errors.null_container p
