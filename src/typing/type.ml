@@ -273,6 +273,9 @@ type t =
   (** test that something is object-like, returning a default type otherwise **)
   | ObjTestT of reason * t * t
 
+  (* assignment rest element in array pattern *)
+  | ArrRestT of reason * int * t
+
   (* Guarded unification (bidirectional).
      Remodel as unidirectional GuardT(l,u)? *)
   | UnifyT of t * t
@@ -673,6 +676,9 @@ let rec reason_of_t = function
     ->
       reason
 
+  | ArrRestT (reason, _, _) ->
+      reason
+
   | UpperBoundT (t)
   | LowerBoundT (t)
       -> reason_of_t t
@@ -841,6 +847,8 @@ let rec mod_reason_of_t f = function
   | ObjSealT (reason, t) -> ObjSealT (f reason, t)
   | ObjTestT (reason, t1, t2) -> ObjTestT (f reason, t1, t2)
 
+  | ArrRestT (reason, i, t) -> ArrRestT (f reason, i, t)
+
   | UpperBoundT t -> UpperBoundT (mod_reason_of_t f t)
   | LowerBoundT t -> LowerBoundT (mod_reason_of_t f t)
 
@@ -945,6 +953,7 @@ let string_of_ctor = function
   | ObjRestT _ -> "ObjRestT"
   | ObjSealT _ -> "ObjSealT"
   | ObjTestT _ -> "ObjTestT"
+  | ArrRestT _ -> "ArrRestT"
   | UnaryMinusT _ -> "UnaryMinusT"
   | UpperBoundT _ -> "UpperBoundT"
   | LowerBoundT _ -> "LowerBoundT"

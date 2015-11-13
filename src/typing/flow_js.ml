@@ -3023,6 +3023,14 @@ let rec __flow cx (l, u) trace =
     | (ArrT _, MethodT(_, (_, "constructor"), _)) ->
       ()
 
+    (**************************************************)
+    (* array pattern can consume the rest of an array *)
+    (**************************************************)
+
+    | (ArrT (_, t, ts), ArrRestT (reason, i, tout)) ->
+      let a = ArrT (reason, t, Core_list.drop ts i) in
+      rec_flow cx trace (a, tout)
+
     (***********************************************)
     (* functions may have their prototypes written *)
     (***********************************************)
@@ -5610,6 +5618,9 @@ let rec gc cx state = function
   | ObjTestT (_, t1, t2) ->
       gc cx state t1;
       gc cx state t2
+
+  | ArrRestT (_, _, t) ->
+      gc cx state t
 
   | UnaryMinusT (_, t) ->
       gc cx state t

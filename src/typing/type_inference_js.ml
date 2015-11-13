@@ -261,7 +261,10 @@ let rec destructuring cx t expr f = Ast.Pattern.(function
             ) in
             destructuring cx tvar expr f p
         | Some (Spread (loc, { SpreadElement.argument })) ->
-            error_destructuring cx loc
+            let reason = mk_reason "rest of array pattern" loc in
+            let tvar = Flow_js.mk_tvar cx reason in
+            Flow_js.flow cx (t, ArrRestT(reason, i, tvar));
+            destructuring cx tvar expr f argument
         | None ->
             ()
       )

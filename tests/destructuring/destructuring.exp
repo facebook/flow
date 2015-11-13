@@ -1,4 +1,28 @@
 
+array_rest.js:7:2,2: number
+This type is incompatible with
+array_rest.js:7:5,8: undefined
+
+array_rest.js:8:2,2: string
+This type is incompatible with
+array_rest.js:8:5,8: undefined
+
+array_rest.js:9:2,2: boolean
+This type is incompatible with
+array_rest.js:9:5,8: undefined
+
+array_rest.js:10:2,2: boolean
+This type is incompatible with
+array_rest.js:10:5,8: undefined
+
+array_rest.js:10:2,2: number
+This type is incompatible with
+array_rest.js:10:5,8: undefined
+
+array_rest.js:10:2,2: string
+This type is incompatible with
+array_rest.js:10:5,8: undefined
+
 destructuring.js:4:3,4: number
 This type is incompatible with
 destructuring.js:1:15,20: string
@@ -32,8 +56,9 @@ destructuring.js:16:9,9: number
 This type is incompatible with
 destructuring.js:3:15,20: string
 
-destructuring.js:20:7,10: 
-unsupported destructuring
+destructuring.js:20:7,10: rest of array pattern
+This type is incompatible with
+destructuring.js:3:15,20: string
 
 destructuring.js:20:16,16: number
 This type is incompatible with
@@ -101,4 +126,4 @@ destructuring_init.js:1:5,9: Destructuring assignment must be initialized
 
 destructuring_param.js:5:17,17: Strict mode function may not have duplicate parameter names
 
-Found 25 errors
+Found 31 errors
