@@ -93,12 +93,11 @@ let assert_no_error obj =
 let clock root = J.strlist ["clock"; root]
 
 let base_query
-    ?(extra_kv=[]) ?(extra_expressions=[]) ?(sync_timeout=300_000) env =
+    ?(extra_kv=[]) ?(extra_expressions=[]) env =
   let open Hh_json in
   JSON_Array begin
     [JSON_String "query"; JSON_String env.watch_root] @ [
       JSON_Object (extra_kv @ [
-        "sync_timeout", Hh_json.int_ sync_timeout;
         "fields", J.strlist ["name"];
         "relative_root", JSON_String env.relative_path;
         "expression", J.pred "allof" @@ (extra_expressions @ [
