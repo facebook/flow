@@ -62,6 +62,8 @@ val compare : 'a pos -> 'a pos -> int
 val pos_start : 'a pos -> Lexing.position
 val pos_end : 'a pos -> Lexing.position
 
+val destruct_range : 'a pos -> (int * int * int * int)
+
 (* XXX deprecated: should only be used by Flow *)
 val make_from_lexing_pos :
   pos_file:Relative_path.t -> pos_start:Lexing.position ->

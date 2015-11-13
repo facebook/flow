@@ -119,6 +119,12 @@ let compare x y =
 let pos_start p = p.pos_start
 let pos_end p = p.pos_end
 
+let destruct_range (p : 'a pos) : (int * int * int * int) =
+  line p,
+  p.pos_start.pos_cnum - p.pos_start.pos_bol + 1,
+  end_line p,
+  p.pos_end.pos_cnum - p.pos_end.pos_bol + 1
+
 let make_from_lexing_pos ~pos_file ~pos_start ~pos_end =
   { pos_file; pos_start; pos_end }
 
