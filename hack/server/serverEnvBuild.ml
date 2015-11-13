@@ -34,14 +34,9 @@ let make_genv options config local_config =
     then None
     else if Sys.file_exists (Watchman.crash_marker_path root)
     then (Hh_logger.log "Watchman failed recently, falling back to dfind"; None)
-    else
-      try
-        let watchman =
-          Watchman.init local_config.SLC.watchman_init_timeout root in
-        Hh_logger.log "Using watchman";
-        Some watchman
-      with e -> Hh_logger.exc ~prefix:"Watchman init: " e; None
+    else Watchman.init local_config.SLC.watchman_init_timeout root
   in
+  if Option.is_some watchman then Hh_logger.log "Using watchman";
   let indexer, notifier, wait_until_ready =
     match watchman with
     | Some watchman ->
