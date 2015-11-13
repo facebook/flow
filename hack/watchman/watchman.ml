@@ -82,7 +82,7 @@ let with_crash_record_exn root source f =
 let with_crash_record root source f =
   try
     with_crash_record_exn root source f
-  with e ->
+  with _ ->
     Exit_status.(exit Watchman_failed)
 
 let with_crash_record_opt root source f =
