@@ -244,8 +244,14 @@ struct
     let new_file = Filename.temp_file "" "" in
     write_file new_file new_content;
     let patch_file = Filename.temp_file "" "" in
-    spf "diff -u --label old --label new %s %s > %s"
-      file new_file patch_file
+    let diff_cmd =
+      if Sys.win32 then
+        spf "fc %s %s > %s"
+          file new_file patch_file
+      else
+        spf "diff -u --label old --label new %s %s > %s"
+          file new_file patch_file in
+    diff_cmd
     |> Unix.system |> ignore;
     cat patch_file
 

@@ -68,66 +68,62 @@ let kind_of_path path = Unix.(
     begin match (stat path).st_kind with
     | S_REG -> Reg (realpath path)
     | S_DIR -> Dir (realpath path)
-    | _ -> Other
+    | _ -> assert false
     end
+  | S_DIR -> Dir path
   | _ -> Other
-  with Unix_error _ -> Other
+  with Unix_error (e, _, _) ->
+    Printf.eprintf "%s %s\n%!" path (Unix.error_message e);
+    Other
 )
 
 let escape_spaces = Str.global_replace (Str.regexp " ") "\\ "
 
+type stack =
+  | S_Nil
+  | S_Dir of string list * string * stack
+
+let max_files = 1000
 (* Calls out to `find <paths>` and immediately returns a closure. Running that
    closure will return a List of up to 1000 files whose paths match
    `path_filter`, and if the path is a symlink then whose real path matches
    `realpath_filter`; it also returns an SSet of all of the symlinks that
     point to _directories_ outside of `paths`. *)
-let make_next_files_and_symlinks ~path_filter ~realpath_filter paths =
-  let escaped_paths = List.map escape_spaces paths in
-  let paths_str = String.concat " " escaped_paths in
-  let ic = Unix.open_process_in ("find "^paths_str) in
-  let done_ = ref false in
-  (* This is subtle, but to optimize latency, we open the process and
-   * then return a closure immediately. That way 'find' gets started
-   * in parallel and will be ready when we need to get the list of
-   * files (although it will be stopped very soon as the pipe buffer
-   * will get full very quickly).
-   *)
-  fun () ->
-    if !done_
-    then [], SSet.empty
+let make_next_files_and_symlinks
+    ~path_filter ~realpath_filter paths =
+  let rec process sz (acc, symlinks) files dir stack =
+    if sz >= max_files then
+      ((acc, symlinks), S_Dir (files, dir, stack))
     else
-      let result = ref [] in
-
-      (* accumulates all of the symlinks that point to directories outside of
-         `paths`; symlinks that point to directories already covered by `paths`
-         will be found on their own, so they are skipped. *)
-      let symlinks = ref SSet.empty in
-
-      let i = ref 0 in
-      try
-        while !i < 1000 do
-          let path = input_line ic in
-          match kind_of_path path with
-          | Reg real ->
-            if path_filter path && (path = real || realpath_filter real)
-            then begin
-              result := real :: !result;
-              incr i;
-            end
-          | Dir path ->
-            let is_prefix p = Filename.(
-              let p = if str_ends_with p dir_sep then p else p ^ dir_sep in
-              str_starts_with path p
-            ) in
-            if not (List.exists is_prefix paths) then
-              symlinks := SSet.add path !symlinks
-          | Other -> ()
-        done;
-        List.rev !result, !symlinks
-      with End_of_file ->
-        done_ := true;
-        (try ignore (Unix.close_process_in ic) with _ -> ());
-        List.rev !result, !symlinks
+      match files with
+      | [] -> process_stack sz (acc, symlinks) stack
+      | file :: files ->
+        let file = if dir = "" then file else Filename.concat dir file in
+        match kind_of_path file with
+        | Reg real ->
+          if path_filter file && (file = real || realpath_filter real)
+          then process (sz+1) (real :: acc, symlinks) files dir stack
+          else process sz (acc, symlinks) files dir stack
+        | Dir path ->
+          let is_prefix p = Filename.(
+            let p = if str_ends_with p dir_sep then p else p ^ dir_sep in
+            str_starts_with path p
+          ) in
+          let dirfiles = Array.to_list @@ Sys.readdir path in
+          let symlinks =
+            if not (List.exists is_prefix paths) then SSet.add path symlinks
+            else symlinks in
+          process sz (acc, symlinks) dirfiles file (S_Dir (files, dir, stack))
+        | _ ->
+          process sz (acc, symlinks) files dir stack
+  and process_stack sz accs = function
+    | S_Nil -> (accs, S_Nil)
+    | S_Dir (files, dir, stack) -> process sz accs files dir stack in
+  let state = ref (S_Dir (paths, "", S_Nil)) in
+  fun () ->
+    let (res, symlinks), st = process_stack 0 ([], SSet.empty) !state in
+    state := st;
+    res, symlinks
 
 (* Returns a closure that returns batches of files matching `path_filter` and/or
    `realpath_filter` (see `make_next_files_and_symlinks`), starting from `paths`
