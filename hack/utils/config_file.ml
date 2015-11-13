@@ -32,7 +32,10 @@ let parse_contents contents =
   end ~init:SMap.empty
 
 let parse fn =
-  let contents = cat fn in
+  let contents = try cat fn
+    with e ->
+      Hh_logger.exc ~prefix:".hhconfig deleted: " e;
+      Exit_status.(exit Hhconfig_deleted) in
   parse_contents contents
 
 module Getters = struct
