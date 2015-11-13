@@ -339,7 +339,8 @@ end = struct
       Unix.close waiting_channel_in_fd;
       with_umask 0o111 begin fun () ->
         (* close stdin/stdout/stderr *)
-        let fd = Unix.openfile "/dev/null" [Unix.O_RDONLY; Unix.O_CREAT] 0o777 in
+        let null_path = Path.to_string Path.null_path in
+        let fd = Unix.openfile null_path [Unix.O_RDONLY; Unix.O_CREAT] 0o777 in
         Unix.dup2 fd Unix.stdin;
         Unix.close fd;
         let file = Path.to_string (Options.log_file options) in
