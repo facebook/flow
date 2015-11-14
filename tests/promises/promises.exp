@@ -87,11 +87,9 @@ promise.js:237:10,10: string
 This type is incompatible with
 promise.js:237:10,13: number
 
-resolve_global.js:35:10,27: call of method `resolve`
-Error:
 resolve_global.js:35:18,24: property `resolve`
 Property not found in
-resolve_global.js:9:7,13: statics of Promise
+resolve_global.js:35:10,16: statics of Promise
 
 resolve_global.js:40:3,11: async return
 Error:

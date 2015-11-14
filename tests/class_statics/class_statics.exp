@@ -11,11 +11,9 @@ test.js:4:17,22: number
 This type is incompatible with
 test.js:11:17,22: string
 
-test.js:7:1,5: assignment of property `qux`
-Error:
 test.js:7:3,5: property `qux`
 Property not found in
-test.js:1:7,7: statics of A
+test.js:7:1,1: statics of A
 
 test.js:9:7,7: B
 This type is incompatible with
@@ -49,17 +47,13 @@ test.js:18:11,11: number
 This type is incompatible with
 test.js:5:17,22: string
 
-test.js:19:5,12: call of method `qux`
-Error:
 test.js:19:7,9: property `qux`
 Property not found in
-test.js:9:7,7: statics of B
+test.js:19:5,5: statics of B
 
-test.js:40:5,12: call of method `foo`
-Error:
 test.js:40:7,9: property `foo`
 Property not found in
-test.js:38:7,7: statics of D
+test.js:40:5,5: statics of D
 
 test.js:42:5,12: call of method `bar`
 Error:

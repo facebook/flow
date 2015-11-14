@@ -3256,7 +3256,7 @@ let rec __flow cx (l, u) trace =
       let reason = prefix_reason "statics of " (reason_of_t instance) in
       let tvar = mk_tvar cx reason in
       rec_flow cx trace (instance, GetPropT(reason, (reason, "statics"), tvar));
-      rec_flow cx trace (tvar,u)
+      rec_flow cx trace (tvar, ReposLowerT (reason, u))
 
     (***************************************************************************)
     (* classes can behave like functions, functions can be declared as classes *)

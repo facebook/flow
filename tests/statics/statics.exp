@@ -1,9 +1,7 @@
 
-class_statics.js:6:1,3: assignment of property `g`
-Error:
 class_statics.js:6:3,3: property `g`
 Property not found in
-class_statics.js:1:7,7: statics of C
+class_statics.js:6:1,1: statics of C
 
 class_statics.js:6:28,33: call of method `f`
 Error:
