@@ -1,0 +1,10 @@
+
+weakset.js:19:11,32: constructor call
+Function cannot be called on
+weakset.js:19:11,32: WeakSet
+
+weakset.js:36:11,32: constructor call
+Function cannot be called on
+weakset.js:36:11,32: WeakSet
+
+Found 2 errors
