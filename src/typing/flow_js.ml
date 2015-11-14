@@ -3542,6 +3542,7 @@ and err_operation = function
   | ObjAssignT _ -> "Expected object instead of"
   | ObjRestT _ -> "Expected object instead of"
   | ObjSealT _ -> "Expected object instead of"
+  | ArrRestT _ -> "Expected array instead of"
   | SuperT _ -> "Cannot inherit"
   | SpecializeT _ -> "Expected polymorphic type instead of"
   | LookupT _ -> "Property not found in"

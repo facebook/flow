@@ -8,3 +8,5 @@ let d = zs[1]; // run off the end
 (b: void); // error: string ~> void
 (c: void); // error: boolean ~> void
 (d: void); // error: number|string|boolean ~> void
+
+let [...e] = 0;

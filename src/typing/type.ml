@@ -541,6 +541,7 @@ let is_use = function
   | ObjRestT _
   | ObjSealT _
   | ObjTestT _
+  | ArrRestT _
   | UnaryMinusT _
   | UnifyT _
   | GetKeysT _

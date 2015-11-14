@@ -23,6 +23,10 @@ array_rest.js:10:2,2: string
 This type is incompatible with
 array_rest.js:10:5,8: undefined
 
+array_rest.js:12:6,9: rest of array pattern
+Expected array instead of
+array_rest.js:12:14,14: number
+
 destructuring.js:4:3,4: number
 This type is incompatible with
 destructuring.js:1:15,20: string
@@ -126,4 +130,4 @@ destructuring_init.js:1:5,9: Destructuring assignment must be initialized
 
 destructuring_param.js:5:17,17: Strict mode function may not have duplicate parameter names
 
-Found 31 errors
+Found 32 errors
