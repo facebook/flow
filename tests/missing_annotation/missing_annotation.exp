@@ -1,23 +1,17 @@
 
-infer.js:5:15,17: parameter `arg`
+infer.js:4:15,17: parameter `arg`
 Missing annotation
 
-infer.js:5:19,19: return
+infer.js:4:19,19: return
 Missing annotation
 
-infer.js:12:15,17: parameter `arg`
+infer.js:8:15,17: parameter `arg`
 Missing annotation
 
-infer.js:12:19,19: return
+infer.js:8:19,19: return
 Missing annotation
 
-infer.js:21:15,17: parameter `arg`
+infer.js:14:27,27: return
 Missing annotation
 
-infer.js:21:19,19: return
-Missing annotation
-
-infer.js:28:27,27: return
-Missing annotation
-
-Found 7 errors
+Found 5 errors

@@ -268,8 +268,10 @@ tdz.js:80:13,13: C
 class referenced before declaration, or after skipped initializer
 tdz.js:82:7,7: class C
 
-tdz.js:94:5,13: undefined
+tdz.js:96:1,4: function call
+Error:
+tdz.js:96:3,3: uninitialized variable
 This type is incompatible with
-tdz.js:94:8,13: number
+tdz.js:94:15,20: number
 
 Found 69 errors

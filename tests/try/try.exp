@@ -1,19 +1,51 @@
 
+init.js:34:20,20: possibly uninitialized variable
+This type is incompatible with
+init.js:34:11,16: number
+
+init.js:44:20,20: possibly uninitialized variable
+This type is incompatible with
+init.js:44:11,16: number
+
+init.js:54:20,20: possibly uninitialized variable
+This type is incompatible with
+init.js:54:11,16: number
+
+init.js:66:20,20: possibly uninitialized variable
+This type is incompatible with
+init.js:66:11,16: number
+
+init.js:118:18,18: uninitialized variable
+This type is incompatible with
+init.js:118:9,14: number
+
+init.js:131:18,18: possibly uninitialized variable
+This type is incompatible with
+init.js:131:9,14: number
+
+init.js:140:18,18: possibly uninitialized variable
+This type is incompatible with
+init.js:140:9,14: number
+
+init.js:153:18,18: possibly uninitialized variable
+This type is incompatible with
+init.js:153:9,14: number
+
 return.js:28:3,15: 
 unreachable code
 
 return.js:64:3,8: 
 unreachable code
 
-test.js:12:5,7: function call
+test.js:18:5,7: function call
 Function cannot be called on
-test.js:12:5,5: string
+test.js:18:5,5: string
 
-test.js:13:5,7: function call
+test.js:19:5,7: function call
 Callable signature not found in
-test.js:13:5,5: object literal
+test.js:19:5,5: object literal
 
-test.js:34:5,8: 
+test.js:41:5,8: 
 unreachable code
 
-Found 5 errors
+Found 13 errors

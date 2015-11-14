@@ -1,3 +1,8 @@
+/***
+ * test env state tracking thru try/catch/finally
+ * @flow
+ */
+
 function foo() {
     var x = 0;
     var y;
@@ -9,8 +14,9 @@ function foo() {
     } finally {
         y = {};
     }
-    x(); // x is neither a number nor a boolean
-    y(); // y is not undefined
+    // here via [try; finally] only.
+    x(); // string ~/> function call (no num or bool error)
+    y(); // object ~/> function call (no uninitialized error)
 }
 
 function bar(response) {
@@ -20,7 +26,8 @@ function bar(response) {
     } catch (e) {
         throw new Error('...');
     }
-    if (payload.error) {
+    // here via [try] only.
+    if (payload.error) {    // ok
         // ...
     }
 }

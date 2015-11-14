@@ -3,11 +3,11 @@ break.js:6:24,24: boolean
 This type is incompatible with
 break.js:6:15,20: number
 
-break.js:8:20,20: string
+break.js:8:20,20: possibly uninitialized variable
 This type is incompatible with
 break.js:8:11,16: number
 
-break.js:8:20,20: undefined
+break.js:8:20,20: string
 This type is incompatible with
 break.js:8:11,16: number
 

@@ -1,4 +1,4 @@
-var a: any;
+var a: any = null;
 
 var obj1 : { x: number } & { y: string} = a;
 // TODO: the following shouldn't be an error

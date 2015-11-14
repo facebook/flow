@@ -32,8 +32,7 @@ val pop_var_scope: unit -> unit
 
 val retrieve_closure_changeset: unit -> Changeset.t
 
-val push_lex_scope: Context.t -> unit
-val pop_lex_scope: unit -> unit
+val in_lex_scope: Context.t -> (unit -> 'a) -> 'a
 
 val env_depth: unit -> int
 val trunc_env: int -> unit
@@ -48,31 +47,32 @@ val update_env: Context.t -> reason -> Scope.t list -> unit
 
 (***)
 
-val bind_var: ?state:Entry.state -> Context.t -> string -> Type.t -> reason -> unit
-val bind_let: ?state:Entry.state -> Context.t -> string -> Type.t -> reason -> unit
-val bind_implicit_let:
-  ?state:Entry.state
-    -> Entry.implicit_let_kinds
-    -> Context.t
-    -> string
-    -> Type.t
-    -> reason
-    -> unit
-val bind_fun: ?state:Entry.state -> Context.t -> string -> Type.t -> reason -> unit
-val bind_const: ?state:Entry.state -> Context.t -> string -> Type.t -> reason -> unit
-val bind_type: Context.t -> string -> Type.t -> reason -> unit
+val bind_var: ?state:State.t -> Context.t -> string -> Type.t ->
+  reason -> unit
+
+val bind_let: ?state:State.t -> Context.t -> string -> Type.t ->
+  reason -> unit
+
+val bind_implicit_let: ?state:State.t -> Entry.implicit_let_kinds ->
+  Context.t -> string -> Type.t -> reason -> unit
+
+val bind_fun: ?state:State.t -> Context.t -> string -> Type.t ->
+  reason -> unit
+
+val bind_const: ?state:State.t -> Context.t -> string -> Type.t ->
+  reason -> unit
+
+val bind_type: ?state:State.t -> Context.t -> string -> Type.t ->
+  reason -> unit
 
 val bind_declare_var: Context.t -> string -> Type.t -> reason -> unit
 val bind_declare_fun: Context.t -> string -> Type.t -> reason -> unit
 
 val declare_const: Context.t -> string -> reason -> unit
 val declare_let: Context.t -> string -> reason -> unit
-val declare_implicit_let:
-  Entry.implicit_let_kinds
-    -> Context.t
-    -> string
-    -> reason
-    -> unit
+
+val declare_implicit_let: Entry.implicit_let_kinds -> Context.t -> string ->
+  reason -> unit
 
 val init_var: Context.t -> string -> has_anno:bool -> Type.t -> reason -> unit
 val init_let: Context.t -> string -> has_anno:bool -> Type.t -> reason -> unit

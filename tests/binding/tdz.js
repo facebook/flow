@@ -85,17 +85,15 @@ var z: C = new C(); // ok
 
 // --- vars ---
 
-// it should be possible to annotate a var with a non-maybe
-// type but leave it uninitialized until later.
+// it's possible to annotate a var with a non-maybe type,
+// but leave it uninitialized until later (as long as it's
+// initialized before use)
 
-// the same flow analysis that will enable full TDZ for let/const
-// should be usable in a variation to track var lifecycles.
-
-var a: number;  // error now, but shouldn't be
+var a: number;  // not an error per se - only if used before init
 
 function f(n: number) { return n; }
 
-f(a); // ok now (given above error and annotation) but shouldn't be
+f(a); // error: undefined ~/> number
 
 a = 10;
 

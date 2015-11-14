@@ -455,6 +455,7 @@ module Primitive (P: PrimitiveType) = struct
   let at tok = P.make (mk_reason desc tok)
   let why reason = P.make (replace_reason desc reason)
   let tag s = P.make (reason_of_string (desc ^ " (" ^ s ^ ")"))
+  let make = P.make
 end
 
 module NumT = Primitive (struct

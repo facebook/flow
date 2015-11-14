@@ -305,7 +305,7 @@ tagged_union.js:72:19,19: object type
 
 tagged_union.js:82:17,27: property `nationality`
 Property not found in
-tagged_union.js:80:25,31: object type
+tagged_union.js:82:15,15: object type
 
 typeof.js:5:5,8: access of computed property/element
 Computed property/element cannot be accessed on

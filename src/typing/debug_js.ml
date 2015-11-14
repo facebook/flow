@@ -669,7 +669,7 @@ let json_of_scope = Scope.(
     JSON_Object [
       "entry_type", JSON_String "Value";
       "kind", JSON_String (Entry.string_of_value_kind kind);
-      "value_state", JSON_String (Entry.string_of_state value_state);
+      "value_state", JSON_String (State.to_string value_state);
       "value_loc", json_of_loc value_loc;
       "specific", _json_of_t json_cx specific;
       "general", _json_of_t json_cx general;
@@ -680,7 +680,7 @@ let json_of_scope = Scope.(
   let json_of_type_impl json_cx { Entry.type_state; type_loc; _type } =
     JSON_Object [
       "entry_type", JSON_String "Type";
-      "type_state", JSON_String (Entry.string_of_state type_state);
+      "type_state", JSON_String (State.to_string type_state);
       "type_loc", json_of_loc type_loc;
       "_type", _json_of_t json_cx _type;
     ]
@@ -876,7 +876,7 @@ let string_of_scope_entry = Scope.(
     spf "{ kind: %s; value_state: %s; value_loc: %S; \
       specific: %s; general: %s }"
       (Entry.string_of_value_kind kind)
-      (Entry.string_of_state value_state)
+      (State.to_string value_state)
       (string_of_loc value_loc)
       (dump_t cx specific)
       (dump_t cx general)
@@ -884,7 +884,7 @@ let string_of_scope_entry = Scope.(
 
   let string_of_type_binding cx { Entry.type_state; type_loc; _type } =
     spf "{ type_state: %s; type_loc: %S; _type: %s }"
-      (Entry.string_of_state type_state)
+      (State.to_string type_state)
       (string_of_loc type_loc)
       (dump_t cx _type)
   in

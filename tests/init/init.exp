@@ -1,2 +1,86 @@
 
-Found 0 errors
+hoisted.js:10:3,5: function call
+Function cannot be called on possibly undefined value
+hoisted.js:10:3,3: possibly uninitialized variable
+
+hoisted.js:17:3,5: function call
+Function cannot be called on possibly undefined value
+hoisted.js:17:3,3: possibly uninitialized variable
+
+hoisted.js:31:3,5: function call
+Function cannot be called on possibly undefined value
+hoisted.js:31:3,3: uninitialized variable
+
+hoisted.js:38:3,5: function call
+Function cannot be called on possibly undefined value
+hoisted.js:38:3,3: possibly uninitialized variable
+
+hoisted.js:45:3,5: function call
+Function cannot be called on possibly undefined value
+hoisted.js:45:3,3: possibly uninitialized variable
+
+hoisted2.js:17:18,18: uninitialized variable
+This type is incompatible with
+hoisted2.js:17:9,14: number
+
+hoisted2.js:33:20,20: uninitialized variable
+This type is incompatible with
+hoisted2.js:33:11,16: number
+
+hoisted2.js:39:18,18: uninitialized variable
+This type is incompatible with
+hoisted2.js:39:9,14: number
+
+hoisted2.js:50:18,18: possibly uninitialized variable
+This type is incompatible with
+hoisted2.js:50:9,14: number
+
+hoisted2.js:74:18,18: uninitialized variable
+This type is incompatible with
+hoisted2.js:74:9,14: number
+
+hoisted2.js:87:18,18: possibly uninitialized variable
+This type is incompatible with
+hoisted2.js:87:9,14: number
+
+hoisted2.js:96:22,22: possibly uninitialized variable
+This type is incompatible with
+hoisted2.js:96:13,18: number
+
+hoisted2.js:110:18,18: uninitialized variable
+This type is incompatible with
+hoisted2.js:110:9,14: number
+
+hoisted2.js:121:18,18: possibly uninitialized variable
+This type is incompatible with
+hoisted2.js:121:9,14: number
+
+hoisted2.js:134:18,18: uninitialized variable
+This type is incompatible with
+hoisted2.js:134:9,14: number
+
+hoisted2.js:158:18,18: uninitialized variable
+This type is incompatible with
+hoisted2.js:158:9,14: number
+
+hoisted2.js:169:18,18: uninitialized variable
+This type is incompatible with
+hoisted2.js:169:9,14: number
+
+hoisted2.js:182:18,18: uninitialized variable
+This type is incompatible with
+hoisted2.js:182:9,14: number
+
+hoisted2.js:193:18,18: possibly uninitialized variable
+This type is incompatible with
+hoisted2.js:193:9,14: number
+
+hoisted2.js:206:18,18: uninitialized variable
+This type is incompatible with
+hoisted2.js:206:9,14: number
+
+hoisted2.js:217:18,18: possibly uninitialized variable
+This type is incompatible with
+hoisted2.js:217:9,14: number
+
+Found 21 errors

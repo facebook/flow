@@ -130,7 +130,7 @@ let iter_local_scopes f =
   in
   loop !scopes
 
-(* clone the current scope stack (snapshots entry maps) *)
+(* clone the given scope stack (snapshots entry maps) *)
 let clone_env scopes =
   List.map Scope.clone scopes
 
@@ -235,6 +235,12 @@ let pop_lex_scope () =
   | [] -> assert_false "empty scope list"
   | _ -> assert_false "top scope is non-lex"
 
+let in_lex_scope cx f =
+  push_lex_scope cx;
+  let result = f () in
+  pop_lex_scope ();
+  result
+
 (* depth of current env *)
 let env_depth () =
   List.length !scopes
@@ -320,7 +326,7 @@ let cache_global cx name reason global_scope =
     else Flow_js.get_builtin cx name reason)
   in
   let loc = loc_of_reason reason in
-  let entry = Entry.new_var t ~loc ~state:Entry.Initialized in
+  let entry = Entry.new_var t ~loc ~state:State.Initialized in
   Scope.add_entry name entry global_scope;
   Context.add_global cx name;
   global_scope, entry
@@ -457,35 +463,35 @@ let bind_entry cx name entry reason =
   if not (is_excluded name) then loop !scopes
 
 (* bind var entry *)
-let bind_var ?(state=Entry.Declared) cx name t r =
+let bind_var ?(state=State.Declared) cx name t r =
   let loc = loc_of_reason r in
   bind_entry cx name (Entry.new_var t ~loc ~state) r
 
 (* bind let entry *)
-let bind_let ?(state=Entry.Undeclared) cx name t r =
+let bind_let ?(state=State.Undeclared) cx name t r =
   let loc = loc_of_reason r in
   bind_entry cx name (Entry.new_let t ~loc ~state) r
 
 (* bind implicit let entry *)
-let bind_implicit_let ?(state=Entry.Undeclared) implicit cx name t r =
+let bind_implicit_let ?(state=State.Undeclared) implicit cx name t r =
   let loc = loc_of_reason r in
   bind_entry cx name (Entry.new_let t ~implicit ~loc ~state) r
 
-let bind_fun ?(state=Entry.Declared) =
+let bind_fun ?(state=State.Declared) =
   bind_implicit_let ~state Entry.FunctionBinding
 
 (* bind const entry *)
-let bind_const ?(state=Entry.Undeclared) cx name t r =
+let bind_const ?(state=State.Undeclared) cx name t r =
   let loc = loc_of_reason r in
   bind_entry cx name (Entry.new_const t ~loc ~state) r
 
 (* bind type entry *)
-let bind_type cx name t r =
+let bind_type ?(state=State.Declared) cx name t r =
   let loc = loc_of_reason r in
-  bind_entry cx name (Entry.new_type t ~loc ~state:Entry.Declared) r
+  bind_entry cx name (Entry.new_type t ~loc ~state) r
 
 (* vars coming from 'declare' statements are preinitialized *)
-let bind_declare_var = bind_var ~state:Entry.Initialized
+let bind_declare_var = bind_var ~state:State.Initialized
 
 (* bind entry for declare function *)
 let bind_declare_fun =
@@ -505,7 +511,7 @@ let bind_declare_fun =
       match Scope.get_entry name scope with
       | None ->
         let entry =
-          Entry.new_var t ~loc:(loc_of_reason reason) ~state:Entry.Initialized
+          Entry.new_var t ~loc:(loc_of_reason reason) ~state:State.Initialized
         in
         Scope.add_entry name entry scope
 
@@ -514,7 +520,7 @@ let bind_declare_fun =
 
         | Value v when v.kind = Var ->
           let entry = Value { v with
-            value_state = Initialized;
+            value_state = State.Initialized;
             specific = update_type v.specific t;
             general = update_type v.general t
           } in
@@ -536,8 +542,8 @@ let declare_value_entry kind cx name reason =
   then Entry.(
     let scope, entry = find_entry cx name reason in
     match entry with
-    | Value v when v.kind = kind && v.value_state = Undeclared ->
-      let new_entry = Value { v with value_state = Declared } in
+    | Value v when v.kind = kind && v.value_state = State.Undeclared ->
+      let new_entry = Value { v with value_state = State.Declared } in
       Scope.add_entry name new_entry scope
     | _ ->
       already_bound_error cx name entry reason
@@ -578,10 +584,6 @@ let declare_const = declare_value_entry Entry.Const
    This seems to be a nice solution, because (e.g.) it would ban
    code such as:
 
-   var y:string; // initialize with a string!
-
-   as well as:
-
    function foo(x:B) { }
    var x:A = new B();
    foo(x);
@@ -599,11 +601,13 @@ let init_value_entry kind cx name ~has_anno specific reason =
     let scope, entry = find_entry cx name reason in
     match kind, entry with
     | Var, Value ({ kind = Var; _ } as v)
-    | Let _, Value ({ kind = Let _; value_state = Undeclared | Declared; _ } as v)
-    | Const, Value ({ kind = Const; value_state = Undeclared | Declared; _ } as v) ->
+    | Let _, Value ({ kind = Let _;
+        value_state = State.Undeclared | State.Declared; _ } as v)
+    | Const, Value ({ kind = Const;
+        value_state = State.Undeclared | State.Declared; _ } as v) ->
       Changeset.(add_var_change (scope.id, name, Write));
       Flow_js.flow cx (specific, v.general);
-      let value_binding = { v with value_state = Initialized; specific } in
+      let value_binding = { v with value_state = State.Initialized; specific } in
       (* if binding is annotated, flow annotated type like initializer *)
       let new_entry = Value (
         if has_anno
@@ -616,7 +620,7 @@ let init_value_entry kind cx name ~has_anno specific reason =
          We will have already issued an error in `bind_value_entry`,
          so we can prune this case here. *)
       ()
-  )
+    )
 
 let init_var = init_value_entry Entry.Var
 let init_let = init_value_entry (Entry.Let None)
@@ -630,16 +634,16 @@ let init_type cx name _type reason =
   then Entry.(
     let scope, entry = find_entry cx name reason in
     match entry with
-    | Type ({ type_state = Declared; _ } as t)->
+    | Type ({ type_state = State.Declared; _ } as t)->
       Flow_js.flow cx (_type, t._type);
-      let new_entry = Type { t with type_state = Initialized; _type } in
+      let new_entry = Type { t with type_state = State.Initialized; _type } in
       Scope.add_entry name new_entry scope
     | _ ->
       (* Incompatible or non-redeclarable new and previous entries.
          We will have already issued an error in `bind_value_entry`,
          so we can prune this case here. *)
       ()
-  )
+    )
 
 (* used to enforce annotations: see commentary in force_general_type *)
 let pseudo_init_declared_type cx name reason =
@@ -654,24 +658,6 @@ let pseudo_init_declared_type cx name reason =
       assert_false (spf "pseudo_init_declared_type %s: Type entry" name)
   )
 
-(* get types from value entry, does uninitialized -> undefined behavior *)
-let value_entry_types = Entry.(function
-(* TODO
-| { kind = Var; value_state = Declared; general; _ }
-    when not for_type ->
-  (* ref to var from value pos before initialization: undefined *)
-  VoidT.at (entry_loc_unopt entry), general *)
-| { specific; general; _ } ->
-  specific, general
-)
-
-(* helper for read/write tdz checks *)
-(* functions are block-scoped, but also hoisted. forward ref ok *)
-let allow_forward_ref = Scope.Entry.(function
-  | Var | Let (Some FunctionBinding) -> true
-  | _ -> false
-)
-
 (* helper for read/write tdz checks *)
 (* for now, we only enforce TDZ within the same activation.
    return true if the given target scope is in the same
@@ -680,7 +666,7 @@ let allow_forward_ref = Scope.Entry.(function
 let same_activation target =
   let rec loop target = function
   | [] -> assert_false "target scope not found"
-  | scope :: scopes when scope = target ->
+  | scope :: scopes when scope.id = target.id ->
     (* target is nearer than (or actually is) nearest VarScope *)
     true
   | scope :: scopes ->
@@ -695,6 +681,29 @@ let same_activation target =
   (* search outward for target scope *)
   loop target (peek_env ())
 
+(* get types from value entry, does uninitialized -> undefined behavior *)
+let value_entry_types ?(lookup_mode=ForValue) scope = Entry.(function
+  (* from value positions, a same-activation ref to var before
+     initialization yields undefined (except for any-typed vars). *)
+| { kind = Var;
+    value_state = State.Declared | State.MaybeInitialized as state;
+    value_loc; specific; general; _ }
+    when lookup_mode = ForValue && same_activation scope
+    ->
+    let uninit desc = VoidT.make (mk_reason desc value_loc) in
+    let specific = if state = State.Declared
+      then uninit "uninitialized variable"
+      else (* State.MaybeInitialized *)
+        let desc = "possibly uninitialized variable" in
+        let ts = [uninit desc; specific] in
+        UnionT (mk_reason desc value_loc, ts)
+    in
+    specific, general
+
+| { specific; general; _ } ->
+  specific, general
+)
+
 (* emit tdz error for value entry *)
 let tdz_error cx name reason v = Entry.(
   (* second clause of error message is due to switch scopes *)
@@ -704,22 +713,12 @@ let tdz_error cx name reason v = Entry.(
   binding_error msg cx name (Value v) reason
 )
 
-(* read value entry - enforces TDZ and records read in changeset *)
-let read_value ~lookup_mode cx name reason v scope = Entry.(
-  match v with
-  | { kind; value_state = Undeclared; value_loc; _ }
-      when lookup_mode = ForValue
-      && not (allow_forward_ref kind)
-      && same_activation scope (* enforce TDZ only on in-activation refs *)
-      ->
-    (* fwd ref to let/const from value pos: TDZ *)
-    tdz_error cx name reason v;
-    let t = AnyT.at value_loc in t, t
-
-  | _ ->
-    Changeset.(add_var_change (scope.id, name, Read));
-    value_entry_types v
-  )
+(* helper for read/write tdz checks *)
+(* functions are block-scoped, but also hoisted. forward ref ok *)
+let allow_forward_ref = Scope.Entry.(function
+  | Var | Let (Some FunctionBinding) -> true
+  | _ -> false
+)
 
 (* helper - does semantic checking and returns entry type *)
 let read_entry ~lookup_mode ~specific cx name reason =
@@ -735,8 +734,16 @@ let read_entry ~lookup_mode ~specific cx name reason =
     t._type
 
   | Value v ->
-    let s, g = read_value ~lookup_mode cx name reason v scope in
-    if specific then s else g
+    match v with
+    | { kind; value_state = State.Undeclared; value_loc; _ }
+      when lookup_mode = ForValue && not (allow_forward_ref kind)
+      && same_activation scope ->
+      tdz_error cx name reason v;
+      AnyT.at value_loc
+    | _ ->
+      Changeset.(add_var_change (scope.id, name, Read));
+      let s, g = value_entry_types ~lookup_mode scope v in
+      if specific then s else g
   )
 
 (* get var's specific type *)
@@ -751,10 +758,16 @@ let get_var_declared_type ?(lookup_mode=ForValue) =
   read_entry ~lookup_mode ~specific:false
 
 (* get var type, with location of given reason used in type's reason *)
-(* TODO remove once positions in __flow are fully worked out *)
+(* Note that we reach into UnionT here, specifically to handle unions
+   returned from value_entry_types for MaybeInitialized entries. Should
+   probably be the standard action of ReposLowerT, at which point this
+   can be removed. TODO
+ *)
 let var_ref ?(lookup_mode=ForValue) cx name reason =
-  get_var ~lookup_mode cx name reason
-  |> Flow_js.reposition cx reason
+  let repos = Flow_js.reposition cx reason in
+  match get_var ~lookup_mode cx name reason with
+  | UnionT (r, ts) -> repos (UnionT (r, List.map repos ts))
+  | t -> repos t
 
 (* get refinement entry *)
 let get_refinement cx key reason =
@@ -767,10 +780,8 @@ let update_var op cx name specific reason =
   let scope, entry = find_entry cx name reason in
   Entry.(match entry with
 
-  | Value ({ kind = (Let _ as kind); value_state = Undeclared; _ } as v)
-    when not (allow_forward_ref kind)
-    && same_activation scope (* enforce TDZ only on in-activation refs *)
-    ->
+  | Value ({ kind = (Let _ as kind); value_state = State.Undeclared; _ } as v)
+    when not (allow_forward_ref kind) && same_activation scope ->
     tdz_error cx name reason v
 
   | Value ({ kind = Let _ | Var; _ } as v) ->
@@ -778,7 +789,9 @@ let update_var op cx name specific reason =
 
     Flow_js.flow cx (specific, v.general);
     (* add updated entry *)
-    let update = Entry.Value { v with value_state = Initialized; specific } in
+    let update = Entry.Value {
+      v with value_state = State.Initialized; specific
+    } in
 
     Scope.add_entry name update scope
 
@@ -805,7 +818,9 @@ let refine_const cx name specific reason =
   | Value v when v.kind = Const ->
     Changeset.(add_var_change (scope.id, name, Refine));
     Flow_js.flow cx (specific, v.general);
-    let update = Entry.Value { v with value_state = Initialized; specific } in
+    let update = Entry.Value {
+      v with value_state = State.Initialized; specific
+    } in
     Scope.add_entry name update scope
 
   | _ ->
@@ -879,25 +894,41 @@ let merge_env =
       tvar, general0
   in
 
+  (* propagate var state updates from child entries *)
+  let merge_states orig child1 child2 = Entry.(
+    match orig.Entry.kind with
+    | Var
+      when child1.value_state = State.Initialized
+      && child2.value_state = State.Initialized ->
+      (* if both branches have initialized, we can set parent state *)
+      State.Initialized
+    | Var
+      when child1.value_state >= State.MaybeInitialized
+      || child2.value_state >= State.MaybeInitialized ->
+      (* if either branch has initialized, we can set parent state *)
+      State.MaybeInitialized
+    | _ -> orig.value_state
+  ) in
+
   let merge_entry cx reason envs ((scope_id, name, _) as entry_ref) =
     let scope0, scope1, scope2 = find_scope_triple cx reason envs scope_id in
     let get = get_entry name in
     Entry.(match get scope0, get scope1, get scope2 with
     (* merge child var and let types back to original *)
     | Some Value orig, Some Value child1, Some Value child2 ->
-      let s0, g0 = value_entry_types orig in
-      let s1, _ = value_entry_types child1 in
-      let s2, _ = value_entry_types child2 in
+      let { specific = s0; general = g0; _ } = orig in
+      let { specific = s1; _ } = child1 in
+      let { specific = s2; _ } = child2 in
       let specific, general = merge_types cx reason name (s0, g0) s1 s2 in
-      let entry = Entry.(Value { orig with specific; general }) in
-      add_entry name entry scope0
+      let value_state = merge_states orig child1 child2 in
+      let e = Entry.(Value { orig with specific; general; value_state }) in
+      add_entry name e scope0
     (* type aliases can't be refined or reassigned, shouldn't be here *)
     | Some Type _, Some Type _, Some Type _ ->
       assert_false (spf "merge_env %s: type alias %s found in changelist"
         (string_of_reason reason) name)
-    (* global lookups may leave new entries in one or both child envs *)
-    (* ...which we can forget *)
-    | None, _, _ when is_global scope0 ->
+    (* global lookups may leave uneven new entries, which we can forget *)
+    | _, _, _ when is_global scope0 ->
       ()
     (* missing completely from non-global scope *)
     | None, None, None ->
@@ -980,27 +1011,40 @@ let copy_env =
 
   (* look for and copy entry, starting in topmost scope *)
   let copy_entry cx reason envs (scope_id, name, _) =
+
     let scope1, scope2 = find_scope_pair cx reason envs scope_id in
     let get = get_entry name in
     Entry.(match get scope1, get scope2 with
     (* for values, flow env2's specific type into env1's specific type *)
     | Some Value v1, Some Value v2 ->
-      let s1, _ = value_entry_types v1 in
-      let s2, _ = value_entry_types v2 in
-      Flow_js.flow cx (s2, s1)
+      (* flow child2's specific type to child1 in place *)
+      Flow_js.flow cx (v2.specific, v1.specific);
+      (* udpate state *)
+      if v1.value_state < State.Initialized
+        && v2.value_state >= State.MaybeInitialized
+      then (
+        let new_entry = Value {
+          v1 with value_state = State.MaybeInitialized
+        } in
+        add_entry name new_entry scope1
+      )
+
     (* type aliases shouldn't be here *)
     | Some Type _, Some Type _ ->
       assert_false (spf "copy_env %s: type alias %s found in changelist"
         (string_of_reason reason) name)
+
     (* global lookups may leave new entries in env2, or orphan changes *)
     (* ...which we can forget *)
     | None, _ when is_global scope1 ->
       ()
+
     (* changeset entry exists only in lex scope *)
     | Some Value _, None when Scope.is_lex scope1 ->
       ()
     | None, Some (Value _ as entry) when Scope.is_lex scope2 ->
       add_entry name entry scope1
+
     (* uneven distributions *)
     | entry1, entry2 ->
       let print_entry_kind_opt = function
@@ -1057,13 +1101,13 @@ let widen_env =
   let widen_var cx reason name ({ Entry.specific; general; _ } as var) =
     match widened cx reason name specific general with
     | None -> var
-    | Some tvar -> { var with Entry.specific = tvar }
+    | Some specific -> { var with Entry.specific }
   in
 
   let widen_refi cx reason name ({ refined; original; _ } as refi) =
     match widened cx reason name refined original with
     | None -> refi
-    | Some tvar -> { refi with refined = tvar }
+    | Some refined -> { refi with refined }
   in
 
   fun cx reason ->

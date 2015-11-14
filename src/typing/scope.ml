@@ -20,15 +20,27 @@ open Reason_js (* mk_id *)
    to break circularity between Env_js and Flow_js
  *)
 
-(* entries for vars/lets, consts and types *)
-module Entry = struct
+(* entry state *)
+module State = struct
+  type t = Undeclared | Declared | MaybeInitialized | Initialized
 
-  type state = Undeclared | Declared | Initialized
+  let to_int = function
+  | Undeclared -> 0
+  | Declared -> 1
+  | MaybeInitialized -> 2
+  | Initialized -> 3
 
-  let string_of_state = function
+  let to_string = function
   | Undeclared -> "Undeclared"
   | Declared -> "Declared"
+  | MaybeInitialized -> "MaybeInitialized"
   | Initialized -> "Initialized"
+
+  let compare x y = Pervasives.compare (to_int x) (to_int y)
+end
+
+(* entries for vars/lets, consts and types *)
+module Entry = struct
 
   type value_kind =
     | Const
@@ -55,14 +67,14 @@ module Entry = struct
 
   type value_binding = {
     kind: value_kind;
-    value_state: state;
+    value_state: State.t;
     value_loc: Loc.t;
     specific: Type.t;
     general: Type.t;
   }
 
   type type_binding = {
-    type_state: state;
+    type_state: State.t;
     type_loc: Loc.t;
     _type: Type.t;
   }
@@ -81,16 +93,17 @@ module Entry = struct
       general
     }
 
-  let new_const ~loc ?(state=Undeclared) t = new_value Const state t t loc
+  let new_const ~loc ?(state=State.Undeclared) t =
+    new_value Const state t t loc
 
-  let new_let ~loc ?(state=Undeclared) ?implicit t =
+  let new_let ~loc ?(state=State.Undeclared) ?implicit t =
     new_value (Let implicit) state t t loc
 
-  let new_var ~loc ?(state=Undeclared) ?specific general =
+  let new_var ~loc ?(state=State.Undeclared) ?specific general =
     let specific = match specific with Some t -> t | None -> general in
     new_value Var state specific general loc
 
-  let new_type ~loc ?(state=Undeclared) _type =
+  let new_type ~loc ?(state=State.Undeclared) _type =
     Type {
       type_state = state;
       type_loc = loc;
@@ -120,13 +133,19 @@ module Entry = struct
      non-internal, non-Const entries.
      Consts and internal vars are read-only, so specific types
      can be preserved.
+     TODO: in a standard havoc, value_state should go from
+     Declared to MaybeInitialized. But make_specific obscures
+     what kind of havoc this is. Need to remove make_specific
+     and make separate havoc funcs, then dael with value_state
+     per specific semantics of each.
    *)
   let havoc make_specific name entry =
     match entry with
     | Type _ -> entry
     | Value { kind = Const; _ } -> entry
     | Value v ->
-      if Reason_js.is_internal_name name then entry
+      if Reason_js.is_internal_name name
+      then entry
       else Value { v with specific = make_specific v.general }
 
   let is_lex = function
