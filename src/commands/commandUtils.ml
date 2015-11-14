@@ -192,7 +192,7 @@ let server_flags prev = CommandSpec.ArgSpec.(
   |> flag "--retry-if-init" (optional bool)
       ~doc:"retry if the server is initializing (default: true)"
   |> flag "--no-auto-start" no_arg
-      ~doc:"If the server if it is not running, do not start it; just exit"
+      ~doc:"If the server is not running, do not start it; just exit"
   |> temp_dir_flag
   |> from_flag
 )
