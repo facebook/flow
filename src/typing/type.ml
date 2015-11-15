@@ -212,6 +212,7 @@ type t =
 
   (* operations on runtime values, such as functions, objects, and arrays *)
   | CallT of reason * funtype
+  | ApplyT of reason * t * funtype
   | MethodT of reason * propname * funtype
   | SetPropT of reason * propname * t
   | GetPropT of reason * propname * t
@@ -517,6 +518,7 @@ end)
 (* def types vs. use types *)
 let is_use = function
   | CallT _
+  | ApplyT _
   | MethodT _
   | ReposLowerT _
   | SetPropT _
@@ -598,6 +600,7 @@ let rec reason_of_t = function
   | SuperT (reason,_)
 
   | CallT (reason, _)
+  | ApplyT (reason, _, _)
 
   | MethodT (reason,_,_)
   | SetPropT (reason,_,_)
@@ -785,6 +788,7 @@ let rec mod_reason_of_t f = function
   | ExtendsT (ts, t, tc) -> ExtendsT (ts, t, mod_reason_of_t f tc)
 
   | CallT (reason, ft) -> CallT (f reason, ft)
+  | ApplyT (reason, l, ft) -> ApplyT (f reason, l, ft)
 
   | MethodT (reason, name, ft) -> MethodT(f reason, name, ft)
   | ReposLowerT (reason, t) -> ReposLowerT (f reason, t)
@@ -912,6 +916,7 @@ let string_of_ctor = function
   | SuperT _ -> "SuperT"
   | ExtendsT _ -> "ExtendsT"
   | CallT _ -> "CallT"
+  | ApplyT _ -> "ApplyT"
   | MethodT _ -> "MethodT"
   | ReposLowerT _ -> "ReposLowerT"
   | ReposUpperT _ -> "ReposUpperT"

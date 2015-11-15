@@ -225,6 +225,11 @@ and _json_of_t_impl json_cx t = Hh_json.(
       "funType", json_of_funtype json_cx funtype
     ]
 
+  | ApplyT (_, l, funtype) -> [
+      "lower", _json_of_t json_cx t;
+      "funType", json_of_funtype json_cx funtype
+    ]
+
   | MethodT (_, name, funtype) -> [
       "name", json_of_propname json_cx name;
       "funType", json_of_funtype json_cx funtype

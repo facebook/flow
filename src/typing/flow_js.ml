@@ -3066,20 +3066,14 @@ let rec __flow cx (l, u) trace =
     (*******************************************)
 
     | (FunT _,
-       MethodT(
-         reason_op,
-         (_, "apply"),
-         ({params_tlist=[o2;tinsArr2]; _} as funtype)
-       ))
-      -> (* TODO: closure *)
+       MethodT(r, (_, "apply"), ({params_tlist=[_;ts]; _} as funtype))) ->
+      (* TODO: closure *)
+      rec_flow cx trace (ts, ApplyT (r, l, funtype))
 
-      let reason = replace_reason "element of arguments" reason_op in
-      let elem = mk_tvar cx reason in
-
-      rec_flow cx trace (tinsArr2, ArrT(reason,elem,[]));
-
-      let funtype = { funtype with this_t = o2; params_tlist = [RestT elem] } in
-      rec_flow cx trace (l, CallT(prefix_reason "apply " reason_op, funtype))
+    | (ArrT (_, t, ts),
+       ApplyT (r, l, ({params_tlist=this_t::_; _} as funtype))) ->
+      let funtype = { funtype with this_t; params_tlist = ts @ [RestT t] } in
+      rec_flow cx trace (l, CallT (r, funtype))
 
     (************************************************************************)
     (* functions may be bound by passing a receiver and (partial) arguments *)
@@ -3524,6 +3518,7 @@ and err_operation = function
   | SetPropT _ -> "Property cannot be assigned on"
   | MethodT _ -> "Method cannot be called on"
   | CallT _ -> "Function cannot be called on"
+  | ApplyT _ -> "Expected array of arguments instead of"
   | ConstructorT _ -> "Constructor cannot be called on"
   | GetElemT _ -> "Computed property/element cannot be accessed on"
   | SetElemT _ -> "Computed property/element cannot be assigned on"
@@ -5521,6 +5516,12 @@ let rec gc cx state = function
       gc cx state t
 
   | CallT(_, funtype) ->
+      gc cx state funtype.this_t;
+      funtype.params_tlist |> List.iter (gc cx state);
+      gc cx state funtype.return_t
+
+  | ApplyT(_, l, funtype) ->
+      gc cx state l;
       gc cx state funtype.this_t;
       funtype.params_tlist |> List.iter (gc cx state);
       gc cx state funtype.return_t
