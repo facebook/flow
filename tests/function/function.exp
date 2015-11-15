@@ -1,4 +1,44 @@
 
+apply.js:2:10,20: property `length`
+Error:
+apply.js:2:15,20: property `length`
+Property not found in
+apply.js:9:12,12: Number
+
+apply.js:12:1,20: call of method `apply`
+Error:
+apply.js:12:17,18: string
+This type is incompatible with
+apply.js:1:29,34: number
+
+apply.js:15:1,24: call of method `apply`
+Error:
+apply.js:15:21,22: string
+This type is incompatible with
+apply.js:1:29,34: number
+
+apply.js:16:1,22: call of method `apply`
+Error:
+apply.js:16:17,17: number
+This type is incompatible with
+apply.js:1:18,23: string
+
+apply.js:19:20,39: call of method `apply`
+Error:
+apply.js:21:8,9: string
+This type is incompatible with
+apply.js:1:29,34: number
+
+apply.js:19:20,39: call of method `apply`
+Error:
+apply.js:22:4,4: number
+This type is incompatible with
+apply.js:1:18,23: string
+
+apply.js:25:1,27: call of method `apply`
+Expected array of arguments instead of
+apply.js:25:16,26: string
+
 function.js:29:19,19: function type
 This type is incompatible with
 function.js:29:10,15: number
@@ -14,4 +54,4 @@ function.js:31:10,17: function type
 rest.js:8:31,33: tuple type
 rest parameters should be an array type, got a tuple type instead
 
-Found 4 errors
+Found 11 errors
