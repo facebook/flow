@@ -87,8 +87,9 @@ and _json_of_t_impl json_cx t = Hh_json.(
   | MixedT _
   | AnyT _
   | NullT _
-  | VoidT _ ->
-    []
+  | VoidT _
+  | TaintT _
+    -> []
 
   | FunT (_, static, proto, funtype) -> [
       "static", _json_of_t json_cx static;
@@ -138,13 +139,6 @@ and _json_of_t_impl json_cx t = Hh_json.(
     []
 
   | MaybeT t -> [
-      "type", _json_of_t json_cx t
-    ]
-
-  | TaintedT (_,t) -> [
-      "type", _json_of_t json_cx t
-    ]
-  | WrapTaintT (_,t) -> [
       "type", _json_of_t json_cx t
     ]
 

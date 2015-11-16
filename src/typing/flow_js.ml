@@ -575,6 +575,7 @@ let rec merge_type cx = function
   | (BoolT _, (BoolT _ as t))
   | (NullT _, (NullT _ as t))
   | (VoidT _, (VoidT _ as t))
+  | (TaintT _, ((TaintT _) as t))
       -> t
 
   | (AnyT _, t) | (t, AnyT _) -> t
@@ -646,13 +647,6 @@ let rec merge_type cx = function
   | (t1, MaybeT t2) ->
       MaybeT (merge_type cx (t1, t2))
 
-  | ((TaintedT (_,t1)) as lt, ((TaintedT (_,t2)) as rt)) ->
-      let (r,_) = ordered_reasons lt rt in
-      TaintedT (r, merge_type cx (t1, t2))
-
-  | ((TaintedT (r,t1)), t2) | (t2, (TaintedT (r,t1))) ->
-      TaintedT (r,merge_type cx (t1,t2))
-
   | (UnionT (_, ts1), UnionT (_, ts2)) ->
       create_union (List.rev_append ts1 ts2)
 
@@ -682,6 +676,8 @@ and ground_type_impl cx ids t = match t with
   | VoidT _ -> VoidT.t
   | MixedT _ -> MixedT.t
   | AnyT _ -> AnyT.t
+
+  | TaintT _ -> TaintT (reason_of_string "taint")
 
   | SingletonStrT (_, s) ->
     SingletonStrT (reason_of_string "string singleton", s)
@@ -727,9 +723,6 @@ and ground_type_impl cx ids t = match t with
 
   | MaybeT t ->
       MaybeT (ground_type_impl cx ids t)
-
-  | TaintedT (r,t) ->
-      TaintedT (r,ground_type_impl cx ids t)
 
   | PolyT (xs, t) ->
       PolyT (xs, ground_type_impl cx ids t)
@@ -868,12 +861,6 @@ let rec normalize_type cx t =
       (match t with
       | MaybeT _ -> t
       | _ -> MaybeT t)
-
-  | TaintedT (r,t) ->
-      let t = normalize_type cx t in
-      (match t with
-      | TaintedT _ -> t
-      | _ -> TaintedT (r,t))
 
   | OptionalT t ->
       OptionalT (normalize_type cx t)
@@ -1043,12 +1030,6 @@ let rec printify_type cx t =
       (match t with
       | MaybeT _ -> t
       | _ -> MaybeT t)
-
-  | TaintedT (r,t) ->
-      let t = printify_type cx t in
-      (match t with
-      | TaintedT _ -> t
-      | _ -> TaintedT (r,t))
 
   | OptionalT t ->
       OptionalT (printify_type cx t)
@@ -1501,6 +1482,19 @@ let rec __flow cx (l, u) trace =
       | Resolved t2 ->
           rec_flow cx trace (t1, t2)
       );
+
+    (************)
+    (* tainting *)
+    (************)
+
+    | (TaintT _, TaintT _) ->
+      ()
+
+    | (TaintT _, u) when taint_op u ->
+      begin match result_of_taint_op u with
+      | Some u -> rec_flow cx trace (l, u)
+      | None -> ()
+      end
 
     (*************************)
     (* repositioning, part 1 *)
@@ -3153,17 +3147,6 @@ let rec __flow cx (l, u) trace =
     (* addition                                                *)
     (***********************************************************)
 
-    (* Avoid duplication of TaintedT constructors *)
-    | (TaintedT _ as t1, WrapTaintT (r, t2)) ->
-        rec_flow cx trace (t1, t2)
-    | (t1, WrapTaintT (r, t2)) ->
-        rec_flow cx trace (TaintedT (r, t1), t2)
-
-    | (TaintedT (reason_t, l), AdderT (reason_add, r, u)) ->
-      let tvar = mk_tvar cx reason_add in
-      rec_flow cx trace (l, AdderT (reason_add, r, tvar));
-      rec_flow cx trace (tvar, WrapTaintT (reason_t, u))
-
     | (l, AdderT (reason, r, u)) ->
       Ops.push reason;
       flow_addition cx trace reason l r u;
@@ -3172,9 +3155,6 @@ let rec __flow cx (l, u) trace =
     (**************************)
     (* relational comparisons *)
     (**************************)
-
-    | (TaintedT (reason_t, l), ComparatorT _) ->
-      rec_flow cx trace (l, ReposLowerT (reason_t, u))
 
     | (l, ComparatorT(reason, r)) ->
       Ops.push reason;
@@ -3400,15 +3380,6 @@ let rec __flow cx (l, u) trace =
         msg
         (reason_of_t t, reason_of_t tc)
 
-    | (TaintedT (_, t1), GetPropT(reason, x, t2)) ->
-        let tvar = mk_tvar cx reason in
-        rec_flow cx trace (t1, GetPropT(reason, x, tvar));
-        rec_flow cx trace (TaintedT(reason, tvar), t2)
-    | (TaintedT (_, t1), GetElemT(reason, x, t2)) ->
-        let tvar = mk_tvar cx reason in
-        rec_flow cx trace (t1, GetElemT(reason, x, tvar));
-        rec_flow cx trace (TaintedT(reason, tvar), t2)
-
     (* when unexpected types flow into a GetPropT/SetPropT (e.g. void or other
        non-object-ish things), then use `reason_prop`, which represents the
        reason for the prop itself, not the lookup action. *)
@@ -3420,19 +3391,13 @@ let rec __flow cx (l, u) trace =
         (err_msg l u)
         (reason_prop, reason_of_t l)
 
-    | (TaintedT (_,t1), TaintedT (_,t2)) ->
-      rec_flow cx trace (t1,t2)
-
-    | (t1, TaintedT(_, t2)) ->
-      rec_flow cx trace (t1,t2)
-
     | _ ->
       prerr_flow cx trace (err_msg l u) l u
   )
 
 (* some types need to be resolved before proceeding further *)
 and needs_resolution = function
-  | OpenT _ | UnionT _ | OptionalT _ | MaybeT _ | AnnotT _ | TaintedT _ -> true
+  | OpenT _ | UnionT _ | OptionalT _ | MaybeT _ | AnnotT _ -> true
   | _ -> false
 
 (**
@@ -3569,7 +3534,7 @@ and ground_subtype = function
   (* tvars are not considered ground, so they're not part of this relation *)
   | (OpenT _, _) | (_, OpenT _) -> false
   (* Prevents Tainted<any> -> any *)
-  | (TaintedT _, _) -> false
+  | (UnionT _, _) | (TaintT _, _) -> false
 
   | (NumT _,NumT _)
   | (StrT _,StrT _)
@@ -3642,6 +3607,15 @@ and equatable cx trace = function
     -> false
 
   | _ -> true
+
+and taint_op = function
+  | AdderT _ | GetPropT _ | GetElemT _ | ComparatorT _ -> true
+  | _ -> false
+
+and result_of_taint_op = function
+  | AdderT (_, _, u) | GetPropT (_, _, u) | GetElemT (_, _, u) -> Some u
+  | ComparatorT _ -> None
+  | _ -> assert false
 
 (* generics *)
 
@@ -5413,6 +5387,7 @@ let rec gc cx state = function
   | AnyT _
   | NullT _
   | VoidT _
+  | TaintT _
       -> ()
 
   | FunT(_, static, prototype, funtype) ->
@@ -5467,11 +5442,6 @@ let rec gc cx state = function
   | ExistsT _ -> ()
 
   | MaybeT t ->
-      gc cx state t
-
-  | TaintedT (_,t) ->
-      gc cx state t
-  | WrapTaintT (_,t) ->
       gc cx state t
 
   | IntersectionT (_, ts) ->
@@ -5946,6 +5916,7 @@ let rec assert_ground ?(infer=false) cx skip ids = function
   | AnyT _
   | NullT _
   | VoidT _
+  | TaintT _
     ->
       ()
 
@@ -5991,8 +5962,6 @@ let rec assert_ground ?(infer=false) cx skip ids = function
       List.iter (assert_ground cx skip ids) ts
 
   | MaybeT(t) -> assert_ground cx skip ids t
-
-  | TaintedT(_,t) -> assert_ground cx skip ids t
 
   | IntersectionT(reason,ts) ->
       List.iter (assert_ground cx skip ids) ts

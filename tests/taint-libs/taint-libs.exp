@@ -1,9 +1,8 @@
-D2172778-tainted.js:8
-  8:       document.location = download_uri;
-           ^^^^^^^^^^^^^^^^^ assignment of property `location`
-  8:       document.location = download_uri;
-                               ^^^^^^^^^^^^ tainted Location. This type is incompatible with
-Location. See: [LIB] dom.js:299
 
+D2172778-tainted.js:8:7,23: assignment of property `location`
+Error:
+D2172778-tainted.js:8:27,38: taint
+This type is incompatible with
+[LIB] dom.js:299:15,22: Location
 
 Found 1 error

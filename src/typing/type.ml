@@ -101,8 +101,7 @@ type t =
   (* ? types *)
   | MaybeT of t
 
-  | TaintedT of reason * t
-  | WrapTaintT of reason * t
+  | TaintT of reason
 
   (* & types *)
   | IntersectionT of reason * t list
@@ -656,10 +655,8 @@ let rec reason_of_t = function
   | MaybeT t ->
       prefix_reason "?" (reason_of_t t)
 
-  | TaintedT (r,_) ->
-      prefix_reason "tainted " r
-  | WrapTaintT (r,_) ->
-      prefix_reason "tainted " r
+  | TaintT (r) ->
+      r
 
   | IntersectionT (reason, _) ->
       reason
@@ -835,8 +832,7 @@ let rec mod_reason_of_t f = function
 
   | MaybeT t -> MaybeT (mod_reason_of_t f t)
 
-  | TaintedT (r,t) -> TaintedT (f r, t)
-  | WrapTaintT (r,t) -> WrapTaintT (f r, t)
+  | TaintT (r) -> TaintT (f r)
 
   | IntersectionT (reason, ts) -> IntersectionT (f reason, ts)
 
@@ -949,8 +945,7 @@ let string_of_ctor = function
   | SpecializeT _ -> "SpecializeT"
   | TypeAppT _ -> "TypeAppT"
   | MaybeT _ -> "MaybeT"
-  | TaintedT _ -> "TaintedT"
-  | WrapTaintT _ -> "WrapTaintT"
+  | TaintT _ -> "TaintT"
   | IntersectionT _ -> "IntersectionT"
   | UnionT _ -> "UnionT"
   | LookupT _ -> "LookupT"

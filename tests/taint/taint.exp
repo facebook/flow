@@ -1,21 +1,25 @@
 
-adder.js:14:20,24: tainted number
+adder.js:14:20,24: taint
 This type is incompatible with
 adder.js:14:11,16: number
 
-adder.js:18:20,24: tainted number
+adder.js:18:20,24: taint
 This type is incompatible with
 adder.js:18:11,16: number
 
-adder.js:22:20,24: tainted number
+adder.js:22:20,24: number
 This type is incompatible with
 adder.js:22:11,16: string
 
-adder.js:26:20,24: tainted number
+adder.js:22:20,24: taint
+This type is incompatible with
+adder.js:22:11,16: string
+
+adder.js:26:20,24: taint
 This type is incompatible with
 adder.js:26:11,16: string
 
-adder.js:30:20,24: tainted number
+adder.js:30:20,24: taint
 This type is incompatible with
 adder.js:30:11,16: string
 
@@ -33,44 +37,48 @@ comparator.js:12:32,32: number
 
 globals.js:6:5,21: assignment of property `location`
 Error:
-globals.js:6:25,25: tainted Location
+globals.js:6:25,25: taint
 This type is incompatible with
 [LIB] dom.js:299:15,22: Location
 
 taint2.js:8:5,37: call of method `assign`
 Error:
-taint2.js:8:30,36: tainted string
+taint2.js:8:30,36: taint
 This type is incompatible with
 [LIB] bom.js:142:17,22: string
 
-taint3.js:10:24,27: tainted string
+taint3.js:10:24,27: taint
 This type is incompatible with
 taint3.js:10:15,20: string
 
-taint4.js:12:17,17: tainted any
+taint4.js:12:17,17: taint
 This type is incompatible with
 taint4.js:12:11,13: any
 
-use-types.js:7:30,30: tainted number
+use-types.js:7:30,30: taint
 This type is incompatible with
 use-types.js:7:30,35: number
 
-use-types.js:11:21,23: tainted property `f`
+use-types.js:11:21,23: taint
 This type is incompatible with
 use-types.js:11:12,17: number
 
 use-types.js:15:10,15: call of method `f`
 Error:
-use-types.js:15:14,14: tainted number
+use-types.js:15:14,14: taint
 This type is incompatible with
 use-types.js:14:26,31: number
 
-use-types.js:23:26,29: tainted access of computed property/element
+use-types.js:23:26,29: taint
 This type is incompatible with
 use-types.js:23:17,22: string
 
-use-types.js:27:33,36: tainted access of computed property/element
+use-types.js:27:33,36: string
 This type is incompatible with
 use-types.js:27:24,29: number
 
-Found 17 errors
+use-types.js:27:33,36: taint
+This type is incompatible with
+use-types.js:27:24,29: number
+
+Found 19 errors

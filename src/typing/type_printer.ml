@@ -179,7 +179,7 @@ let rec type_printer override fallback enclosure cx t =
     | AnnotT (_, t) -> pp EnclosureNone cx t
     | KeysT (_, t) -> spf "$Keys<%s>" (pp EnclosureNone cx t)
     | ShapeT t -> spf "$Shape<%s>" (pp EnclosureNone cx t)
-    | TaintedT (_,t) -> spf "$Tainted<%s>" (pp EnclosureNone cx t)
+    | TaintT (_) -> spf "$Tainted<any>"
 
     (* The following types are not syntax-supported *)
     | ClassT t ->
@@ -253,9 +253,9 @@ let rec is_printed_type_parsable_impl weak cx enclosure = function
   | MaybeT t
     ->
       is_printed_type_parsable_impl weak cx EnclosureMaybe t
-  | TaintedT (_, t)
+  | TaintT (_)
     ->
-      is_printed_type_parsable_impl weak cx EnclosureNone t
+      true
 
   | ArrT (_, t, ts)
     ->

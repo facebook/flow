@@ -30,7 +30,9 @@ class ['a] t = object(self)
   | MixedT _
   | AnyT _
   | NullT _
-  | VoidT _ -> acc
+  | VoidT _
+  | TaintT _
+    -> acc
 
   | FunT (_, static, prototype, funtype) ->
     let acc = self#type_ cx acc static in
@@ -76,9 +78,6 @@ class ['a] t = object(self)
   | ExistsT _ -> acc
 
   | MaybeT t -> self#type_ cx acc t
-
-  | TaintedT (_,t) -> self#type_ cx acc t
-  | WrapTaintT (_,t) -> self#type_ cx acc t
 
   | IntersectionT (_, ts)
   | UnionT (_, ts) -> self#list (self#type_ cx) acc ts
