@@ -6,4 +6,16 @@ import_declare_type.js:11:9,11: number
 import_declare_type.js:12:9,11: identifier `toz`
 Could not resolve name
 
-Found 2 errors
+import_declare_type.js:26:2,8: object literal
+This type is incompatible with
+import_declare_type.js:26:12,14: string
+
+import_declare_type.js:28:2,2: number
+This type is incompatible with
+import_declare_type.js:28:6,8: A
+
+import_declare_type.js:30:2,6: string
+This type is incompatible with
+import_declare_type.js:30:10,19: number
+
+Found 5 errors

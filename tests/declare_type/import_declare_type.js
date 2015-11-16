@@ -13,3 +13,18 @@ var k3: toz = foo(k1); // Error: unknown identifier toz
 
 import type {toz} from "ModuleAliasFoo";
 var k4: toz = foo(k1); // works
+
+//////////////////////////////////////////////////////////
+// == Declared Module with exports prop (issue 880) == //
+////////////////////////////////////////////////////////
+
+import blah from 'foo';
+import type { Foo, Bar, Id } from 'foo';
+
+blah(0, 0);
+
+({toz:3} : Foo); // error : {toz : number} ~> string
+
+(3 : Bar); // error : number ~> A
+
+("lol" : Id<number>); // error : string ~> number
