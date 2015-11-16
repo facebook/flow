@@ -1,6 +1,4 @@
 
-enums.js:8:13,19: property `R`
-Error:
 enums.js:8:13,19: number
 This type is incompatible with
 enums.js:4:8,13: string

@@ -3,8 +3,6 @@ nested_modules.js:6:18,20: number
 This type is incompatible with
 nested_modules.js:6:9,14: string
 
-nested_modules.js:8:18,21: property `y`
-Error:
 nested_modules.js:8:18,21: number
 This type is incompatible with
 nested_modules.js:8:9,14: string

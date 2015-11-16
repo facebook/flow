@@ -1,6 +1,4 @@
 
-modules.js:5:22,24: property `y`
-Error:
 modules.js:6:18,18: number
 This type is incompatible with
 modules.js:6:9,14: string
