@@ -45,8 +45,6 @@ super.js:12:13,13: number
 This type is incompatible with
 super.js:4:7,12: string
 
-super.js:13:12,18: property `g`
-Error:
 super.js:13:18,18: property `g`
 Property not found in
 super.js:7:17,17: A

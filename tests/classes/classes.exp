@@ -3,14 +3,10 @@ A.js:2:9,14: number
 This type is incompatible with
 C.js:4:9,14: string
 
-B.js:6:2,6: property `foo`
-Error:
 B.js:6:2,6: method `foo`
 This type is incompatible with
 B.js:6:9,14: number
 
-C.js:8:2,6: property `foo`
-Error:
 C.js:8:2,6: method `foo`
 This type is incompatible with
 C.js:8:9,14: number

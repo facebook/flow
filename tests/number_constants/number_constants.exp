@@ -1,36 +1,24 @@
 
-number_constants.js:2:17,39: property `MAX_SAFE_INTEGER`
-Error:
 number_constants.js:2:17,39: number
 This type is incompatible with
 number_constants.js:2:8,13: string
 
-number_constants.js:4:17,39: property `MIN_SAFE_INTEGER`
-Error:
 number_constants.js:4:17,39: number
 This type is incompatible with
 number_constants.js:4:8,13: string
 
-number_constants.js:6:17,32: property `MAX_VALUE`
-Error:
 number_constants.js:6:17,32: number
 This type is incompatible with
 number_constants.js:6:8,13: string
 
-number_constants.js:8:17,32: property `MIN_VALUE`
-Error:
 number_constants.js:8:17,32: number
 This type is incompatible with
 number_constants.js:8:8,13: string
 
-number_constants.js:10:17,26: property `NaN`
-Error:
 number_constants.js:10:17,26: number
 This type is incompatible with
 number_constants.js:10:8,13: string
 
-number_constants.js:12:17,30: property `EPSILON`
-Error:
 number_constants.js:12:17,30: number
 This type is incompatible with
 number_constants.js:12:8,13: string

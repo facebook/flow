@@ -1,6 +1,4 @@
 
-apply.js:2:10,20: property `length`
-Error:
 apply.js:2:15,20: property `length`
 Property not found in
 apply.js:9:12,12: Number

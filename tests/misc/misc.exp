@@ -43,8 +43,6 @@ F.js:1:26,33: string
 This type is incompatible with
 F.js:1:26,37: number
 
-F.js:5:10,17: property `length`
-Error:
 F.js:5:10,17: number
 This type is incompatible with
 F.js:4:33,38: string

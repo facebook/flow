@@ -23,14 +23,10 @@ test.js:4:17,29: number
 This type is incompatible with
 test.js:4:8,13: string
 
-test.js:7:18,29: property `x`
-Error:
 test.js:7:18,29: boolean
 This type is incompatible with
 test.js:7:9,14: string
 
-test.js:8:18,23: property `y`
-Error:
 test.js:8:18,23: boolean
 This type is incompatible with
 test.js:8:9,14: string

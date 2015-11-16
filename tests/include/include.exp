@@ -3,14 +3,10 @@
 This type is incompatible with
 ../lib/libtest.js:1:7,12: string
 
-../lib/libtest.js:2:16,31: property `MAX_VALUE`
-Error:
 ../lib/libtest.js:2:16,31: number
 This type is incompatible with
 ../lib/libtest.js:2:7,12: string
 
-../lib/libtest.js:3:16,35: property `name`
-Error:
 ../lib/libtest.js:3:16,35: string
 This type is incompatible with
 ../lib/libtest.js:3:7,12: number

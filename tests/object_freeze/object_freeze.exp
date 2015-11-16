@@ -23,12 +23,6 @@ object_freeze.js:11:1,6: frozen object literal
 
 object_freeze.js:9:14,50: Object.freeze
 Error:
-object_freeze.js:12:8,12: property `corge`
-Property not found in
-object_freeze.js:12:1,6: frozen object literal
-
-object_freeze.js:9:14,50: Object.freeze
-Error:
 object_freeze.js:13:1,18: assignment of property `constructor`
 Mutation not allowed on
 object_freeze.js:13:1,6: frozen object literal
@@ -38,6 +32,10 @@ Error:
 object_freeze.js:14:1,15: assignment of property `toString`
 Mutation not allowed on
 object_freeze.js:14:1,6: frozen object literal
+
+object_freeze.js:12:8,12: property `corge`
+Property not found in
+object_freeze.js:12:1,6: frozen object literal
 
 object_freeze.js:20:26,54: Object.freeze
 Error:

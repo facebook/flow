@@ -121,6 +121,7 @@ let throw_on_error = ref false
    residence.
  *)
 module Ops : sig
+  val clear : unit -> reason list
   val push : reason -> unit
   val pop : unit -> unit
   val peek : unit -> reason option
@@ -128,6 +129,7 @@ module Ops : sig
   val set : reason list -> unit
 end = struct
   let ops = ref []
+  let clear () = let orig = !ops in ops := []; orig
   let push r = ops := r :: !ops
   let pop () = ops := List.tl !ops
   let peek () = match !ops with r :: rs -> Some r | [] -> None
@@ -2659,13 +2661,11 @@ let rec __flow cx (l, u) trace =
 
     | InstanceT (reason_c, static, super, instance),
       GetPropT (reason_op, (reason_prop, x), tout) ->
-      Ops.push reason_op;
       let fields_tmap = find_props cx instance.fields_tmap in
       let methods_tmap = find_props cx instance.methods_tmap in
       let fields = SMap.union fields_tmap methods_tmap in
       let strict = if instance.mixins then None else Some reason_c in
       get_prop cx trace reason_prop reason_op strict super x fields tout;
-      Ops.pop ();
 
     (********************************)
     (* ... and their methods called *)
@@ -4061,6 +4061,7 @@ and is_munged_prop_name cx name =
   && name.[1] <> '_'
 
 and ensure_prop_for_read cx strict mapr x proto dict_t reason_obj reason_op trace =
+  let ops = Ops.clear () in
   let t = match (read_prop_opt cx mapr x, dict_t) with
   | Some t, _ -> Some t
   | None, Some { key; value; _ } ->
@@ -4072,7 +4073,7 @@ and ensure_prop_for_read cx strict mapr x proto dict_t reason_obj reason_op trac
     )
   | None, None -> None
   in
-  match t with
+  let tout = match t with
   (* map contains property x at type t *)
   | Some t -> t
   (* otherwise, check for/maybe add shadow property *)
@@ -4083,6 +4084,9 @@ and ensure_prop_for_read cx strict mapr x proto dict_t reason_obj reason_op trac
       | None -> intro_prop cx reason_obj x mapr
     in
     t |> recurse_proto cx strict proto reason_op x trace
+  in
+  Ops.set ops;
+  tout
 
 and ensure_prop_for_write cx trace strict mapr x proto reason_op reason_prop =
   match read_prop_opt cx mapr x with
@@ -4119,12 +4123,15 @@ and lookup_prop cx trace l reason strict x t =
   rec_flow cx trace (l, LookupT (reason, strict, [], x, t))
 
 and get_prop cx trace reason_prop reason_op strict super x map tout =
+  let ops = Ops.clear () in
   let tout = ReposLowerT (reason_op, tout) in
-  if SMap.mem x map
+  begin if SMap.mem x map
   then
     rec_flow cx trace (SMap.find_unsafe x map, tout)
   else
     lookup_prop cx trace super reason_prop strict x (LowerBoundT tout)
+  end;
+  Ops.set ops
 
 and set_prop cx trace reason_op reason_c super x map tin =
   let map = find_props cx map in

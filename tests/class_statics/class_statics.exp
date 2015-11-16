@@ -65,8 +65,6 @@ test.js:47:6,6: A
 This type is incompatible with
 test.js:1:7,7: class type: A
 
-test.js:53:5,14: call of method `bar`
-Error:
 test.js:53:10,12: property `bar`
 Property not found in
 test.js:50:7,7: statics of E
