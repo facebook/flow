@@ -6,7 +6,7 @@
  * LICENSE file in the "hack" directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  *
- *)
+ **)
 
 open Core
 open Utils
@@ -89,16 +89,16 @@ let with_crash_record_opt root source f =
   Option.try_with (fun () -> with_crash_record_exn root source f)
 
 let assert_no_error obj =
-  try
-    let warning = J.get_string_val "warning" obj in
-    EventLogger.watchman_warning warning;
-    Hh_logger.log "Watchman warning: %s\n" warning
-  with Not_found -> ();
-  try
-    let error = J.get_string_val "error" obj in
-    EventLogger.watchman_error error;
-    raise @@ Watchman_error error
-  with Not_found -> ()
+  (try
+     let warning = J.get_string_val "warning" obj in
+     EventLogger.watchman_warning warning;
+     Hh_logger.log "Watchman warning: %s\n" warning
+   with Not_found -> ());
+  (try
+     let error = J.get_string_val "error" obj in
+     EventLogger.watchman_error error;
+     raise @@ Watchman_error error
+   with Not_found -> ())
 
 let clock root = J.strlist ["clock"; root]
 
@@ -207,8 +207,8 @@ let init timeout root =
   let response = exec sockname (watch_project root_s) in
   let watch_root = J.get_string_val "watch" response in
   let relative_path = J.get_string_val "relative_path" ~default:"" response in
-  let clockspec = exec sockname (clock watch_root)
-    |> J.get_string_val "clock" in
+  let clockspec =
+    exec sockname (clock watch_root) |> J.get_string_val "clock" in
   let env = {
     sockname;
     root;
