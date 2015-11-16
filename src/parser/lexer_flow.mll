@@ -325,7 +325,7 @@
         loc, raw
     | T_JSX_TEXT (loc, _, raw) -> loc, raw
     | T_TEMPLATE_PART ((loc, _), raw_text) ->
-        loc, raw_text 
+        loc, raw_text
     | T_REGEXP (loc, pattern, flags) -> loc, "/" ^ pattern ^ "/" ^ flags
     | _ -> lb_to_loc env.lex_source env.lex_lb, Lexing.lexeme env.lex_lb in
     env, {
@@ -431,7 +431,7 @@
     | OCTAL ->
       float (int_of_string num)
     | NORMAL ->
-      float_of_string num
+      Sys_utils.float_of_string num
     in
     let value = if neg = "" then value else ~-.value in
     T_NUMBER_SINGLETON_TYPE (number_type, value)
@@ -1407,9 +1407,9 @@ and jsx_text env mode buf raw = parse
 and template_part env cooked uncooked raw = parse
   | eof               { illegal env (lb_to_loc env.lex_source lexbuf);
                         lb_to_loc env.lex_source lexbuf, true }
-  | '`'               { Buffer.add_char raw '`'; 
+  | '`'               { Buffer.add_char raw '`';
                         lb_to_loc env.lex_source lexbuf, true }
-  | "${"              { Buffer.add_string raw "${"; 
+  | "${"              { Buffer.add_string raw "${";
                         lb_to_loc env.lex_source lexbuf, false }
   | '\\'              { Buffer.add_char uncooked '\\';
                         Buffer.add_char raw '\\';

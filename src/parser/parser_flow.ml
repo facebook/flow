@@ -1591,7 +1591,7 @@ end = struct
       | OCTAL ->
         float (int_of_string value)
       | NORMAL ->
-        float_of_string value
+        Sys_utils.float_of_string value
       in
       Expect.token env (T_NUMBER number_type);
       value
