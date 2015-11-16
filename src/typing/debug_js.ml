@@ -338,6 +338,11 @@ and _json_of_t_impl json_cx t = Hh_json.(
       "resultType", _json_of_t json_cx res
     ]
 
+  | ArrRestT (_, i, t) -> [
+      "index", JSON_Number (string_of_int i);
+      "resultType", _json_of_t json_cx t
+    ]
+
   | UnifyT (t1, t2) -> [
       "type1", _json_of_t json_cx t1;
       "type2", _json_of_t json_cx t2
