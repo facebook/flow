@@ -1777,7 +1777,13 @@ let rec __flow cx (l, u) trace =
     | (_, NumT _) when numeric l -> ()
 
     | (_, AnyObjT _) when object_like l -> ()
-    | (AnyObjT _, _) when object_like u || object_like_op u -> ()
+    | (AnyObjT _, _) when object_like u -> ()
+    | (AnyObjT _, _) when object_like_op u ->
+      (* AnyObjT flows into any object operation, creating a potential
+       * source of false negatives for TaintT, since the arguments are not
+       * checked. *)
+      parameters_of_taint_op u
+      |> List.iter (fun t -> rec_flow cx trace (t, AnyT.t))
 
     | (_, AnyFunT _) when function_like l -> ()
     | (AnyFunT _, _) when function_like u || function_like_op u -> ()
@@ -3400,6 +3406,13 @@ and needs_resolution = function
   | OpenT _ | UnionT _ | OptionalT _ | MaybeT _ | AnnotT _ -> true
   | _ -> false
 
+and parameters_of_taint_op = function
+  | MethodT (_, _, funtype) -> funtype.params_tlist
+  | SetPropT (_, _, t) -> [t]
+  (* TODO(rcastano): This is a source of false negatives for the Tainted type.
+   * We should add more rules in the future.*)
+  | _ -> []
+
 (**
  * Addition
  *
@@ -3755,6 +3768,7 @@ and subst cx ?(force=true) (map: Type.t SMap.t) t =
   | NullT _
   | VoidT _
   | MixedT _
+  | TaintT _
   | AnyT _
     ->
     t
