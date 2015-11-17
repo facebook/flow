@@ -208,6 +208,7 @@ let server_flags prev = CommandSpec.ArgSpec.(
 
 let connect server_flags root =
   let tmp_dir = server_flags.temp_dir in
+  let shm_dir = server_flags.shm_dir in
   let config_options = FlowConfig.((get root).options) in
   let log_file =
     Path.to_string (FlowConfig.log_file ~tmp_dir root config_options) in
@@ -224,6 +225,7 @@ let connect server_flags root =
       retry_if_init;
       expiry;
       tmp_dir;
+      shm_dir;
       log_file;
     } in
     connect env

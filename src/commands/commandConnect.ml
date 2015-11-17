@@ -17,6 +17,7 @@ type env = {
   retry_if_init : bool;
   expiry : float option;
   tmp_dir : string;
+  shm_dir : string;
   log_file : string;
 }
 
@@ -64,7 +65,7 @@ let msg_of_tail tail_env =
 let delta_t : float = 3.0
 
 (* Starts up a flow server by literally calling flow start *)
-let start_flow_server ~tmp_dir root =
+let start_flow_server ~tmp_dir ~shm_dir root =
   Utils.prerr_endlinef
     "Launching Flow server for %s"
     (Path.to_string root);
@@ -77,6 +78,7 @@ let start_flow_server ~tmp_dir root =
       Unix.(create_process exe
               [| exe; "start";
                  "--temp-dir"; tmp_dir;
+                 "--shm-dir"; shm_dir;
                  "--from"; from_arg;
                  Path.to_string root |]
               stdin stdout stderr) in
@@ -147,7 +149,8 @@ let rec connect env retries start_time tail_env =
   | Result.Error CCS.Server_missing ->
       if env.autostart then begin
         let retries =
-          if start_flow_server ~tmp_dir:env.tmp_dir env.root
+          if start_flow_server
+               ~tmp_dir:env.tmp_dir ~shm_dir:env.shm_dir env.root
           then begin
             Printf.eprintf
               "Started a new flow server: %s%!"
