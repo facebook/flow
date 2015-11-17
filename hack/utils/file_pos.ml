@@ -34,7 +34,7 @@ let of_line_column_offset ~line ~column ~offset = {
   pos_cnum = offset;
 }
 
-let of_lexing_pos lp = lp
+let of_lexing_pos lp = { lp with pos_fname = "" }
 
 (* accessors *)
 
