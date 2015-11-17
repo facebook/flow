@@ -10,6 +10,8 @@
 
 module CCS = ClientConnectSimple
 
+exception Server_hung_up
+
 type env = {
   root : Path.t;
   autostart : bool;
@@ -95,6 +97,72 @@ let msg_of_tail tail_env =
 
 let delta_t : float = 3.0
 
+let open_and_get_tail_msg start_time tail_env =
+  let curr_time = Unix.time () in
+  if not (Tail.is_open_env tail_env) &&
+       curr_time -. start_time > delta_t then begin
+      Tail.open_env tail_env;
+      Tail.update_env is_valid_line tail_env;
+    end else if Tail.is_open_env tail_env then
+    Tail.update_env is_valid_line tail_env;
+  let load_state_not_found =
+    is_load_state_not_found (Tail.get_lines tail_env) in
+  Tail.set_lines tail_env [];
+  let tail_msg = msg_of_tail tail_env in
+  load_state_not_found, tail_msg
+
+let print_wait_msg_and_sleep start_time tail_env =
+  let load_state_not_found, tail_msg =
+    open_and_get_tail_msg start_time tail_env in
+  if load_state_not_found then
+    Printf.eprintf "%s\n%!" ClientMessages.load_state_not_found_msg;
+  Printf.eprintf
+    "hh_server is busy: %s %s%!"
+    tail_msg (Tty.spinner());
+  Unix.sleep 1;
+  if Tty.spinner_used () then Tty.print_clear_line stderr
+
+(** Sleeps until the server says hello. While waiting, prints out spinner and
+ * useful messages by tailing the server logs. *)
+let rec wait_for_server_hello ic env retries start_time tail_env first_call =
+  let readable, _, _  = Unix.select
+    [Unix.descr_of_in_channel ic] [] [Unix.descr_of_in_channel ic]
+    (** Select with timeout so that the client gets "hello" message ASAP
+     * and doesn't unnecessarily display the busy spinner for 1 second.
+     *
+     * Subsequent calls select here with no timeout. Sleeping happens
+     * inside print_wait_msg_and_sleep so that the "busy" spinner doesn't
+     * blink.
+     * *)
+    (if first_call then 1.0 else 0.0) in
+  if readable = [] then (
+    print_wait_msg_and_sleep start_time tail_env;
+    wait_for_server_hello ic env (Option.map retries (fun x -> x - 1))
+      start_time tail_env false
+  ) else
+    try
+      (match input_line ic with
+      | "Hello" ->
+        ()
+      | _ ->
+        print_wait_msg_and_sleep start_time tail_env;
+        wait_for_server_hello ic env (Option.map retries (fun x -> x - 1))
+          start_time tail_env false
+      )
+    with
+    | End_of_file
+    | Sys_error _ ->
+      raise Server_hung_up
+
+let consume_prehandoff_messages ic =
+  let msg: ServerUtils.prehandoff_msg = Marshal.from_channel ic in
+  match msg with
+  | ServerUtils.Prehandoff_sentinel -> ()
+  | ServerUtils.Prehandoff_aborting str ->
+    Printf.eprintf "%s" str;
+    raise Exit_status.(Exit_with Server_shutting_down)
+
+
 let rec connect ?(first_attempt=false) env retries start_time tail_env =
   match retries with
   | Some n when n < 0 ->
@@ -110,23 +178,20 @@ let rec connect ?(first_attempt=false) env retries start_time tail_env =
     Printf.eprintf "\nError: hh_client hit timeout, giving up!\n%!";
     raise Exit_status.(Exit_with Out_of_time)
   end;
+  let connect_once_start_t = Unix.time () in
   let conn = CCS.connect_once env.root in
-  let curr_time = Unix.time () in
-  if not (Tail.is_open_env tail_env) &&
-       curr_time -. start_time > delta_t then begin
-      Tail.open_env tail_env;
-      Tail.update_env is_valid_line tail_env;
-    end else if Tail.is_open_env tail_env then
-    Tail.update_env is_valid_line tail_env;
-  let load_state_not_found =
-    is_load_state_not_found (Tail.get_lines tail_env) in
-  Tail.set_lines tail_env [];
-  let tail_msg = msg_of_tail tail_env in
-  if Tty.spinner_used () then Tty.print_clear_line stderr;
-  if load_state_not_found then
-    Printf.eprintf "%s\n%!" ClientMessages.load_state_not_found_msg;
+  HackEventLogger.client_connect_once connect_once_start_t;
+  let _, tail_msg = open_and_get_tail_msg start_time tail_env in
   match conn with
-  | Result.Ok (ic, oc) -> (ic, oc)
+  | Result.Ok (ic, oc) ->
+      consume_prehandoff_messages ic;
+      (try wait_for_server_hello ic env retries start_time tail_env true with
+      | Server_hung_up ->
+        (Printf.eprintf "hh_server died unexpectedly. Maybe you recently \
+        launched a different version of hh_server. Now exiting hh_client.";
+        Exit_status.exit Exit_status.No_server_running)
+      );
+      (ic, oc)
   | Result.Error e ->
     if first_attempt then
       Printf.eprintf
@@ -148,14 +213,20 @@ let rec connect ?(first_attempt=false) env retries start_time tail_env =
         raise Exit_status.(Exit_with No_server_running)
       end
     | CCS.Server_busy ->
+    (** In the monitor-typechecker split role world, this should never happen
+     * because if a monitor already exists, it readily accepts connections even
+     * when the typechecker hasn't finished initializing and if one doesn't
+     * exist then the client starts one and waits until the typechecker is
+     * finished before attempting a connection.*)
       Printf.eprintf
-        "hh_server is busy: %s %s%!"
+        "hh_server is busy: %s %s\n%!"
         tail_msg (Tty.spinner());
+      HackEventLogger.client_connect_once_busy start_time;
       connect env (Option.map retries (fun x -> x - 1)) start_time tail_env
     | CCS.Build_id_mismatch ->
       Printf.eprintf begin
         "hh_server's version doesn't match the client's, "^^
-        "so it has exited.\n%!"
+        "so it will exit.\n%!"
       end;
       if env.autostart
       then
@@ -192,6 +263,12 @@ let connect env =
       link_file in
   let start_time = Unix.time () in
   let tail_env = Tail.create_env log_file in
-  let res = connect ~first_attempt:true env env.retries start_time tail_env in
-  Tail.close_env tail_env;
-  res
+  try
+    let res = connect ~first_attempt:true env env.retries start_time tail_env in
+    Tail.close_env tail_env;
+    HackEventLogger.client_established_connection start_time;
+    res
+  with
+  | e ->
+    HackEventLogger.client_establish_connection_exception e;
+    raise e

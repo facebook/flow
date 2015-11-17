@@ -67,7 +67,7 @@ val devnull : unit -> ('a, 'b) handle
 (* Spawn a new instance of the current process, and execute the
    alternate entry point. *)
 val spawn :
-  ?reason:string -> ?log_file:string ->
+  ?reason:string -> ?log_file:string -> ?channel_mode:[ `pipe | `socket ] ->
   ('param, 'input, 'output) entry -> 'param -> ('output, 'input) handle
 
 (* Close the typed channels associated to a 'spawned' child. *)

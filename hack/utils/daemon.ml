@@ -177,16 +177,27 @@ let fork ?log_file (f : ('a, 'b) channel_pair -> unit) :
       close_out child_out;
       { channels = parent_in, parent_out; pid }
 
+let setup_channels channel_mode =
+  match channel_mode with
+  | `pipe ->
+    let parent_in, child_out = Unix.pipe () in
+    let child_in, parent_out = Unix.pipe () in
+    (* Close descriptors on exec so they are not leaked. *)
+    Unix.set_close_on_exec parent_in;
+    Unix.set_close_on_exec parent_out;
+    (parent_in, child_out), (child_in, parent_out)
+  | `socket ->
+    let parent_fd, child_fd = Unix.socketpair Unix.PF_UNIX Unix.SOCK_STREAM 0 in
+    (** FD's on sockets are bi-directional. *)
+    (parent_fd, child_fd), (child_fd, parent_fd)
+
 let spawn
     (type param) (type input) (type output)
-    ?reason ?log_file
+    ?reason ?log_file ?(channel_mode = `pipe)
     (entry: (param, input, output) entry)
     (param: param) : (output, input) handle =
-  let parent_in, child_out = Unix.pipe () in
-  let child_in, parent_out = Unix.pipe () in
-  (* Close descriptors on exec so they are not leaked. *)
-  Unix.set_close_on_exec parent_in;
-  Unix.set_close_on_exec parent_out;
+  let (parent_in, child_out), (child_in, parent_out) =
+    setup_channels channel_mode in
   Entry.set_context entry param (child_in, child_out);
   let null_fd =
     Unix.openfile null_path [Unix.O_RDONLY; Unix.O_CREAT] 0o777 in
@@ -201,8 +212,13 @@ let spawn
   let exe = Sys_utils.executable_path () in
   let pid = Unix.create_process exe [|exe|] null_fd out_fd out_fd in
   Option.iter reason ~f:(fun reason -> PidLog.log ~reason pid);
-  Unix.close child_in;
-  Unix.close child_out;
+  (match channel_mode with
+  | `pipe ->
+    Unix.close child_in;
+    Unix.close child_out;
+  | `socket ->
+    (** the in and out FD's are the same. Close only once. *)
+    Unix.close child_in);
   Unix.close out_fd;
   Unix.close null_fd;
   { channels = Unix.in_channel_of_descr parent_in,

@@ -35,10 +35,22 @@ let make_link_of_timestamped linkname =
   Sys_utils.symlink filename linkname;
   filename
 
-let init_file root = path_of_root root "init"
+(**
+ * Lock on this file will be held after the server has finished initializing.
+ * *)
+let init_complete_file root = path_of_root root "init_complete"
 let lock_file root = path_of_root root "lock"
 let log_link root = path_of_root root "log"
 let pids_file root = path_of_root root "pids"
 let socket_file root = path_of_root root "sock"
 let dfind_log root = path_of_root root "dfind"
 let load_log root = path_of_root root "load"
+
+(** Lock file for server monitor. Locked if monitor is alive.
+ * Ensures only 1 server monitor alive per working directory.
+ *
+ * TODO: Move to a single-lock model, so the monitor and typechecker
+ * don't each have one. *)
+let server_monitor_liveness_lock root =
+  path_of_root root "monitor_liveness_lock"
+let server_monitor_log_link root = path_of_root root "monitor_log"

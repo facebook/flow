@@ -32,7 +32,7 @@ let nice_kill (ic, oc) env =
   let root_s = Path.to_string env.root in
   Printf.eprintf "Attempting to nicely kill server for %s\n%!" root_s;
   let _response = ServerCommand.rpc (ic, oc) ServerRpc.KILL in
-  let success = wait_for_death env.root 3 in
+  let success = wait_for_death env.root 5 in
   if not success then begin
     Printf.eprintf "Failed to kill server nicely for %s\n%!" root_s;
     raise FailedToKill;

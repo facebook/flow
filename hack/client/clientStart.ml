@@ -26,7 +26,6 @@ type env = {
 }
 
 let start_server env =
-
   (* Create a pipe for synchronization with the server: we will wait
      until the server finishes its initialisation phase. *)
   let in_fd, out_fd = Unix.pipe () in
@@ -38,6 +37,12 @@ let start_server env =
     Array.concat [
       [|hh_server; "-d"; Path.to_string env.root|];
       if env.no_load then [| "--no-load" |] else [||];
+      (** If the client starts up a server monitor process, the output of that
+       * bootup is passed to this FD - so this FD needs to be threaded
+       * through the server monitor process then to the typechecker process.
+       *
+       * Note: Yes, the FD is available in the monitor process as well, but
+       * it doesn't, and shouldn't, use it. *)
       [| "--waiting-client"; string_of_int (Handle.get_handle out_fd) |]
     ] in
   Printf.eprintf "Server launched with the following command:\n\t%s\n%!"
@@ -57,6 +62,10 @@ let start_server env =
     | _, Unix.WEXITED 0 ->
         wait_loop ();
         close_in ic
+    | _, Unix.WEXITED i ->
+        Printf.fprintf stderr
+          "Starting hh_server failed. Exited with status code: %d!\n" i;
+        exit 77
     | _ ->
         Printf.fprintf stderr "Could not start hh_server!\n";
         exit 77

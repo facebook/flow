@@ -19,6 +19,10 @@ type connection_state =
   | Connection_ok
   | Build_id_mismatch
 
+type prehandoff_msg =
+  | Prehandoff_sentinel
+  | Prehandoff_aborting of string
+
 let msg_to_channel oc msg =
   Marshal.to_channel oc msg [];
   flush oc
@@ -29,8 +33,9 @@ type file_input =
 
 let die_nicely () =
   HackEventLogger.killed ();
-  Printf.printf "Status: Error\n";
-  Printf.printf "Sent KILL command by client. Dying.\n";
+  (** Monitor will exit on its next check loop when it sees that
+   * the typechecker process has exited. *)
+  Hh_logger.log "Sent KILL command by client. Dying.";
   (* XXX when we exit, the dfind process will attempt to read from the broken
    * pipe and then exit with SIGPIPE, so it is unnecessary to kill it
    * explicitly *)

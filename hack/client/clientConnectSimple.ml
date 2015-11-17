@@ -14,7 +14,8 @@ type error =
   | Server_busy
   | Build_id_mismatch
 
-let server_exists root = not (Lock.check (ServerFiles.lock_file root))
+let server_exists root = not (Lock.check
+  (ServerFiles.server_monitor_liveness_lock root))
 
 let wait_on_server_restart ic =
   try
@@ -27,6 +28,14 @@ let wait_on_server_restart ic =
   | Sys_error _ ->
      (* Server has exited and hung up on us *)
      ()
+
+let send_build_id_ohai oc =
+  Marshal_tools.to_fd_with_preamble (Unix.descr_of_out_channel oc)
+    Build_id.build_id_ohai;
+  (** For backwards-compatibility, newline has always followed build id ohai *)
+  let _ = Unix.write (Unix.descr_of_out_channel oc) "\n" 0 1 in
+  ()
+
 
 let establish_connection root =
   let sock_name = Socket.get_path (ServerFiles.socket_file root) in
@@ -42,7 +51,7 @@ let establish_connection root =
 
 let get_cstate (ic, oc) =
   try
-    Printf.fprintf oc "%s\n%!" Build_id.build_id_ohai;
+    send_build_id_ohai oc;
     let cstate : ServerUtils.connection_state = Marshal.from_channel ic in
     Result.Ok (ic, oc, cstate)
   with e ->
@@ -61,6 +70,8 @@ let verify_cstate ic = function
        * To avoid that fate, when we know the server is about to exit, we
        * wait for the connection to be closed, signaling that the server
        * has exited and the OS has cleaned up after it, then we try again.
+       *
+       * See also: ServerMonitor.client_out_of_date
        *)
       wait_on_server_restart ic;
       close_in_noerr ic;
@@ -75,12 +86,11 @@ let connect_once root =
         establish_connection root >>= fun (ic, oc) ->
         get_cstate (ic, oc)
       end >>= fun (ic, oc, cstate) ->
-      verify_cstate ic cstate >>= fun () ->
-      Ok (ic, oc)
+      verify_cstate ic cstate >>= fun () -> Ok (ic, oc)
   with
   | Exit_status.Exit_with _  as e -> raise e
   | _ ->
     if not (server_exists root) then Result.Error Server_missing
-    else if not (Lock.check (ServerFiles.init_file root))
-    then Result.Error Server_initializing
-    else Result.Error Server_busy
+    else if not (Lock.check (ServerFiles.init_complete_file root))
+    then Result.Error Server_busy
+    else Result.Error Server_initializing

@@ -24,6 +24,7 @@ type t =
   | Build_id_mismatch
   | Unused_server
   | Lock_stolen
+  | Lost_parent_monitor
   | Interrupted
   | Socket_error
   | Missing_hhi
@@ -33,6 +34,7 @@ type t =
   | CantRunAI
   | Watchman_failed
   | Hhconfig_deleted
+  | Server_shutting_down
 
 exception Exit_with of t
 
@@ -49,10 +51,12 @@ let exit t =
     | Out_of_retries -> 7
     | Server_already_exists -> 77
     | Server_initializing -> 1
+    | Server_shutting_down -> 1
     | Type_error -> 2
     | Build_id_mismatch -> 9
     | Unused_server -> 5
     | Lock_stolen -> 11
+    | Lost_parent_monitor -> 12
     | Interrupted -> -6
     | Missing_hhi -> 97
     | Socket_error -> 98
@@ -77,10 +81,12 @@ let to_string = function
   | Out_of_retries -> "Out_of_retries"
   | Server_already_exists -> "Server_already_exists"
   | Server_initializing -> "Server_initializing"
+  | Server_shutting_down -> "Server_shutting_down"
   | Type_error -> "Type_error"
   | Build_id_mismatch -> "Build_id_mismatch"
   | Unused_server -> "Unused_server"
   | Lock_stolen -> "Lock_stolen"
+  | Lost_parent_monitor -> "Lost_parent_monitor"
   | Interrupted -> "Interrupted"
   | Socket_error -> "Socket_error"
   | Missing_hhi -> "Missing_hhi"
