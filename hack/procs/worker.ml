@@ -135,6 +135,8 @@ let slave_main ic oc =
   with
   | End_of_file ->
       exit 1
+  | SharedMem.Out_of_shared_memory ->
+      Exit_status.(exit Out_of_shared_memory)
   | e ->
       let e_str = Printexc.to_string e in
       Printf.printf "Exception: %s\n" e_str;
@@ -172,6 +174,7 @@ let unix_worker_main restore state (ic, oc) =
           | Unix.WEXITED 0 -> ()
           | Unix.WEXITED 1 ->
               raise End_of_file
+          | Unix.WEXITED 15 -> exit 15
           | Unix.WEXITED x ->
               Printf.printf "Worker exited (code: %d)\n" x;
               flush stdout;
@@ -263,6 +266,8 @@ let call w (type a) (type b) (f : a -> b) (x : a) : b handle =
         let res : b = input_value (Daemon.cast_in inc) in
         if w.prespawned = None then Daemon.close h;
         res
+    | _, Unix.WEXITED i when i = Exit_status.(to_int Out_of_shared_memory) ->
+        raise SharedMem.Out_of_shared_memory
     | _, Unix.WEXITED i ->
         Printf.ksprintf failwith "Subprocess(%d): fail %d" slave_pid i
     | _, Unix.WSTOPPED i ->

@@ -31,6 +31,8 @@ type handle = private {
   h_heap_size: int;
 }
 
+exception Out_of_shared_memory
+
 (*****************************************************************************)
 (* Initializes the shared memory. Must be called before forking! *)
 (*****************************************************************************)

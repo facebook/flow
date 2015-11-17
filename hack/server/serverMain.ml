@@ -429,7 +429,7 @@ let save _genv env (kind, fn) =
  * type-checker succeeded. So to know if there is some work to be done,
  * we look if env.modified changed.
  *)
-let daemon_main options =
+let daemon_main_exn options =
   let root = ServerArgs.root options in
   (* The OCaml default is 500, but we care about minimizing the memory
    * overhead *)
@@ -479,6 +479,12 @@ let daemon_main options =
     let socket = Socket.init_unix_socket (ServerFiles.socket_file root) in
     let env = MainInit.go options (fun () -> program_init genv) in
     serve genv env socket
+
+let daemon_main options =
+  try daemon_main_exn options
+  with SharedMem.Out_of_shared_memory ->
+    Printf.eprintf "Error: failed to allocate in the shared heap.\n%!";
+    Exit_status.(exit Out_of_shared_memory)
 
 let main_entry =
   Daemon.register_entry_point

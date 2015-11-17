@@ -80,6 +80,7 @@
  * 'caml_' */
 #define CAML_NAME_SPACE
 #include <caml/mlvalues.h>
+#include <caml/callback.h>
 #include <caml/memory.h>
 #include <caml/alloc.h>
 #include <caml/fail.h>
@@ -459,12 +460,20 @@ static char *memfd_map(size_t shared_mem_size) {
  * `SIGBUS`.
  ****************************************************************************/
 
+
+static void raise_out_of_shared_memory()
+{
+  static value *exn = NULL;
+  if (!exn) exn = caml_named_value("out_of_shared_memory");
+  caml_raise_constant(*exn);
+}
+
 #ifdef _WIN32
 
 static void memfd_reserve(char * mem, size_t sz) {
   if (!VirtualAlloc(mem, sz, MEM_COMMIT, PAGE_READWRITE)) {
     win32_maperr(GetLastError());
-    uerror("VirtualAlloc", Nothing);
+    raise_out_of_shared_memory();
   }
 }
 
@@ -488,7 +497,7 @@ static void memfd_reserve(char * mem, size_t sz) {
 
 static void memfd_reserve(char *mem, size_t sz) {
   if(posix_fallocate(memfd, (uint64_t)(mem - SHARED_MEM_INIT), sz)) {
-      uerror("fallocate", Nothing);
+    raise_out_of_shared_memory();
   }
 }
 
