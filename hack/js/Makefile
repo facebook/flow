@@ -8,6 +8,7 @@ SRC = \
   hh_json.ml\
   ide.ml\
   pos.ml\
+  file_pos.ml\
   ident.ml\
   errors.ml\
   utils.ml\
@@ -105,6 +106,9 @@ parser_hack.ml: $(TOP)/parsing/parser_hack.ml
 	cp $< .
 
 pos.ml: $(TOP)/utils/pos.ml
+	cp $< .
+
+file_pos.ml: $(TOP)/utils/file_pos.ml
 	cp $< .
 
 ide.ml: $(TOP)/globals/ide.ml
@@ -279,6 +283,7 @@ clean::
 clean::
 	rm -f ide.ml
 	rm -f pos.ml
+	rm -f file_pos.ml
 	rm -f prefix.ml
 	rm -f value.ml
 	rm -f namespace_env.ml
