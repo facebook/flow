@@ -20,6 +20,7 @@ type t =
   | Socket_error
   | Dfind_died
   | Dfind_unresponsive
+  | Out_of_shared_memory
   | Unknown_error
 
 exception Exit_with of t

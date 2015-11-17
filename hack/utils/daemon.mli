@@ -23,6 +23,8 @@ val flush : 'a out_channel -> unit
 (* This breaks the type safety, but is necessary in order to allow select() *)
 val descr_of_in_channel : 'a in_channel -> Unix.file_descr
 val descr_of_out_channel : 'a out_channel -> Unix.file_descr
+val cast_in : 'a in_channel -> Pervasives.in_channel
+val cast_out : 'a out_channel -> Pervasives.out_channel
 
 (** Spawning new process *)
 

@@ -33,36 +33,40 @@ type t =
   | CantRunAI
   | Watchman_failed
   | Hhconfig_deleted
+  | Out_of_shared_memory
 
 exception Exit_with of t
 
+let to_int = function
+  | Ok -> 0
+  | Build_error -> 2
+  | Build_terminated -> 1
+  | Checkpoint_error -> 8
+  | Input_error -> 10
+  | Kill_error -> 1
+  | No_server_running -> 6
+  | Out_of_time -> 7
+  | Out_of_retries -> 7
+  | Server_already_exists -> 77
+  | Server_initializing -> 1
+  | Type_error -> 2
+  | Build_id_mismatch -> 9
+  | Unused_server -> 5
+  | Lock_stolen -> 11
+  | Out_of_shared_memory -> 15
+  | Interrupted -> -6
+  | Missing_hhi -> 97
+  | Socket_error -> 98
+  | Dfind_died -> 99
+  | Dfind_unresponsive -> 100
+  | EventLogger_Timeout -> 101
+  | CantRunAI -> 102
+  | Watchman_failed -> 103
+  | Hhconfig_deleted -> 104
+
+
 let exit t =
-  let ec = match t with
-    | Ok -> 0
-    | Build_error -> 2
-    | Build_terminated -> 1
-    | Checkpoint_error -> 8
-    | Input_error -> 10
-    | Kill_error -> 1
-    | No_server_running -> 6
-    | Out_of_time -> 7
-    | Out_of_retries -> 7
-    | Server_already_exists -> 77
-    | Server_initializing -> 1
-    | Type_error -> 2
-    | Build_id_mismatch -> 9
-    | Unused_server -> 5
-    | Lock_stolen -> 11
-    | Interrupted -> -6
-    | Missing_hhi -> 97
-    | Socket_error -> 98
-    | Dfind_died -> 99
-    | Dfind_unresponsive -> 100
-    | EventLogger_Timeout -> 101
-    | CantRunAI -> 102
-    | Watchman_failed -> 103
-    | Hhconfig_deleted -> 104
-  in
+  let ec = to_int t in
   Pervasives.exit ec
 
 let to_string = function
@@ -90,6 +94,7 @@ let to_string = function
   | CantRunAI -> "CantRunAI"
   | Watchman_failed -> "Watchman_failed"
   | Hhconfig_deleted -> "Hhconfig_deleted"
+  | Out_of_shared_memory -> "Out_of_shared_memory"
 
 let unpack = function
   | Unix.WEXITED n -> "exit", n

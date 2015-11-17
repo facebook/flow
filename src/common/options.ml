@@ -30,6 +30,7 @@ type options = {
   opt_module_name_mappers: (Str.regexp * string) list;
   opt_munge_underscores: bool;
   opt_temp_dir: string;
+  opt_shm_dir: string;
   opt_max_workers: int;
 }
 
@@ -44,6 +45,7 @@ let should_munge_underscores opts = opts.opt_munge_underscores
 let should_wait opts = opts.opt_should_wait
 let should_strip_root opts = opts.opt_strip_root
 let temp_dir opts = opts.opt_temp_dir
+let shm_dir opts = opts.opt_shm_dir
 let verbose opts = opts.opt_verbose
 let max_workers opts = opts.opt_max_workers
 let weak_by_default opts = opts.opt_weak

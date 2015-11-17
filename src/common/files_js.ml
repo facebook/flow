@@ -48,6 +48,10 @@ let get_lib_fileset () = match !lib_files with
 | None -> SSet.empty
 | Some (files, fileset) -> fileset
 
+let restore_lib_files s =
+  assert (!lib_files = None);
+  lib_files := Some s
+
 let realpath path = match Sys_utils.realpath path with
 | Some path -> path
 | None -> path (* perhaps this should error? *)

@@ -46,6 +46,9 @@ type t =
   (* The hack code might throw this *)
   | Dfind_unresponsive
 
+  (* When the shared memory is missing space (e.g. full /dev/shm) *)
+  | Out_of_shared_memory
+
   (* A generic something-else-went-wrong *)
   | Unknown_error
 
@@ -75,6 +78,7 @@ let error_code = function
   | Could_not_find_flowconfig -> 12
   | Server_out_of_date -> 13
   | Server_client_directory_mismatch -> 14
+  | Out_of_shared_memory -> 15
   (* EX_USAGE -- command line usage error -- from glibc's sysexits.h *)
   | Commandline_usage_error -> 64
   | Server_start_failed _ -> 78
@@ -113,6 +117,7 @@ let to_string = function
   | Missing_flowlib -> "Missing_flowlib"
   | Dfind_died -> "Dfind_died"
   | Dfind_unresponsive -> "Dfind_unresponsive"
+  | Out_of_shared_memory -> "Out_of_shared_memory"
   | Unknown_error -> "Unknown_error"
   | Commandline_usage_error -> "Commandline_usage_error"
 

@@ -98,7 +98,7 @@ let emit_file { filename; read_stdin; is_test } () =
 
 let main_hack options =
   EventLogger.init (Daemon.devnull ()) 0.0;
-  SharedMem.(init default_config);
+  let _handle = SharedMem.init_default () in
 
   (* The emitter needs to track the names of identifiers in order to
    * preserve the names in the output bytecode. *)

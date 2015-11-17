@@ -11,7 +11,7 @@
 type t
 
 val filename : Relative_path.t
-val load : Relative_path.t -> ServerArgs.options -> t
+val load : Relative_path.t -> t
 val is_compatible : t -> t -> bool
 
 val default_config : t

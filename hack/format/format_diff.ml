@@ -96,7 +96,7 @@ end = struct
     let filename = String.sub line 4 (String.length line - 4) in
     (* Getting rid of the prefix b/ *)
     let filename =
-      if filename = "/dev/null"
+      if filename = Path.(to_string null_path)
       then None
       else if String.length filename >= 2 && String.sub filename 0 2 = "b/"
       then Some (String.sub filename 2 (String.length filename - 2))

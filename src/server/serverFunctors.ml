@@ -224,13 +224,7 @@ end = struct
   let main options waiting_channel =
     let root = Options.root options in
     let tmp_dir = Options.temp_dir options in
-    FlowEventLogger.init_server root;
-    Program.preinit ();
-    SharedMem.(init default_config);
-    (* this is to transform SIGPIPE in an exception. A SIGPIPE can happen when
-    * someone C-c the client.
-    *)
-    Sys_utils.set_signal Sys.sigpipe Sys.Signal_ignore;
+    let shm_dir = Options.shm_dir options in
     let is_check_mode = Options.is_check_mode options in
     (* You need to grab the lock before initializing the pid files *)
     begin if not is_check_mode
@@ -241,9 +235,16 @@ end = struct
     end else
       PidLog.disable ()
     end;
+    FlowEventLogger.init_server root;
+    Program.preinit ();
+    let handle = SharedMem.(init default_config shm_dir) in
+    (* this is to transform SIGPIPE in an exception. A SIGPIPE can happen when
+    * someone C-c the client.
+    *)
+    Sys_utils.set_signal Sys.sigpipe Sys.Signal_ignore;
     let watch_paths = root :: Program.get_watch_paths options in
     let genv =
-      ServerEnvBuild.make_genv ~multicore:true options watch_paths in
+      ServerEnvBuild.make_genv ~multicore:true options watch_paths handle in
     let env = ServerEnvBuild.make_env options in
     let program_init = create_program_init genv env in
     if is_check_mode then
@@ -300,6 +301,10 @@ end = struct
                * forward that error code *)
               "There is already a server running.",
               FlowExitStatus.Lock_stolen
+            else if code = FlowExitStatus.(error_code Out_of_shared_memory)
+            then
+              "The server is failed to allocate shared memory.",
+              FlowExitStatus.Out_of_shared_memory
             else
               spf "exited prematurely with code %d." code, exit_code
         | Unix.WSIGNALED signal ->
