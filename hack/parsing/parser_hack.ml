@@ -623,7 +623,7 @@ and toplevel_word ~attr env = function
       let id, body = namespace env in
       [Namespace (id, body)]
   | "use" ->
-      let usel = namespace_use_list env [] in
+      let usel = namespace_use env in
       [NamespaceUse usel]
   | "const" ->
       let consts = class_const_def env in
@@ -3850,15 +3850,34 @@ and namespace env =
       error_expect env "{ or ;";
       id, []
 
-and namespace_use_list env acc =
-  let kind = match L.token env.file env.lb with
+and namespace_kind env =
+  match L.token env.file env.lb with
     | Tword -> begin
       match Lexing.lexeme env.lb with
         | "function" -> NSFun
         | "const" -> NSConst
         | _ -> (L.back env.lb; NSClass)
     end
-    | _ -> (L.back env.lb; NSClass) in
+    | _ -> (L.back env.lb; NSClass)
+
+and namespace_use env =
+  let kind = namespace_kind env in
+  let maybe_group_use_prefix = try_parse env begin fun env ->
+    match L.token env.file env.lb with
+      | Tword -> begin
+        let prefix = Lexing.lexeme env.lb in
+        match L.token env.file env.lb with
+          | Tlcb -> Some prefix
+          | _ -> None
+      end
+      | _ -> None
+  end in
+  match maybe_group_use_prefix with
+    | Some prefix -> namespace_group_use env kind prefix
+    | None -> namespace_use_list env false Tsc kind []
+
+and namespace_use_list env allow_change_kind end_token kind acc =
+  let kind = if allow_change_kind then namespace_kind env else kind in
   let p1, s1 = identifier env in
   let id1 = p1, if s1.[0] = '\\' then s1 else "\\" ^ s1 in
   let id2 =
@@ -3874,11 +3893,33 @@ and namespace_use_list env acc =
   in
   let acc = (kind, id1, id2) :: acc in
   match L.token env.file env.lb with
-    | Tsc -> acc
-    | Tcomma -> namespace_use_list env acc
+    | x when x = end_token -> acc
+    | Tcomma -> namespace_use_list env allow_change_kind end_token kind acc
     | _ ->
-      error_expect env "Namespace use list";
+      error_expect env "namespace use list";
       acc
+
+and namespace_group_use env kind prefix =
+  (* This should be an assert, but those tend to just crash the server in an
+   * impossible to debug way. *)
+  let prefix =
+    if String.length prefix > 0 then prefix
+    else (error env "Internal error: prefix length is 0"; "parse_error") in
+  let prefix = if prefix.[0] = '\\' then prefix else "\\" ^ prefix in
+
+  (* The prefix must end with a namespace separator in the syntax, but when we
+   * smash it up with the suffixes, we don't want to double-up on the
+   * separators, so check to make sure it's there and then strip it off. *)
+  let prefix_len = String.length prefix in
+  let prefix = if prefix.[prefix_len - 1] = '\\'
+    then String.sub prefix 0 (prefix_len - 1)
+    else (error_expect env "group use prefix to end with '\\'"; prefix) in
+
+  let allow_change_kind = (kind = NSClass) in
+  let unprefixed = namespace_use_list env allow_change_kind Trcb kind [] in
+  List.map unprefixed begin fun (kind, (p1, s1), id2) ->
+    (kind, (p1, prefix ^ s1), id2)
+  end
 
 (*****************************************************************************)
 (* Helper *)

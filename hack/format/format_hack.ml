@@ -2135,7 +2135,7 @@ and stmt_toplevel_word env = function
       namespace env
   | "use" ->
       last_token env;
-      namespace_use env;
+      namespace_use_list env;
   | _ ->
       back env
 
@@ -2200,12 +2200,29 @@ and namespace env =
         expect ";" env
   end
 
-and namespace_use env =
-  seq env [space; opt_word "const"; opt_word "function"; space; name;];
-  let rem = match (next_token_str env) with
-    | "as" -> [space; expect "as"; space; name; semi_colon;]
-    | _ -> [semi_colon] in
+and namespace_use_list env =
+  seq env [space; opt_word "const"; opt_word "function"; space;];
+  let is_group_use = attempt env begin fun env ->
+    name env;
+    match next_token_str env with
+      | "{" -> true
+      | _ -> false
+  end in
+  if is_group_use then seq env [name; expect "{"];
+  right env (list_comma_nl ~trailing:false namespace_use);
+  let rem =
+    if is_group_use then [expect "}"; semi_colon;]
+    else [semi_colon] in
   seq env rem
+
+and namespace_use env =
+  let next = match next_token_str env with
+    | "const"
+    | "function" as x -> [opt_word x; space; name;]
+    | _ -> [name] in
+  seq env next;
+  if next_token_str env = "as" then seq env [space; expect "as"; space; name;];
+  ()
 
 (*****************************************************************************)
 (* Foreach loop *)
