@@ -3948,9 +3948,22 @@ and binary cx type_params_map loc = Ast.Expression.Binary.(function
       Flow_js.flow cx (t1, EqT (reason,t2));
       BoolT.at loc
 
+  | { operator = In; left = (loc1, _) as left; right = (loc2, _) as right } ->
+      let t1 = expression cx type_params_map left in
+      let t2 = expression cx type_params_map right in
+      let reason1 = mk_reason "LHS of `in` operator" loc1 in
+      let reason2 = mk_reason "RHS of `in` operator" loc2 in
+      let lhs = UnionT (reason1, [StrT.why reason1; NumT.why reason1]) in
+      let rhs =
+        let elemt = Flow_js.mk_tvar cx reason2 in
+        UnionT (reason2, [AnyObjT reason2; ArrT (reason2, elemt, [])])
+      in
+      Flow_js.flow cx (t1, lhs);
+      Flow_js.flow cx (t2, rhs);
+      BoolT.at loc
+
   | { operator = StrictEqual; left; right }
   | { operator = StrictNotEqual; left; right }
-  | { operator = In; left; right }
   | { operator = Instanceof; left; right } ->
       ignore (expression cx type_params_map left);
       ignore (expression cx type_params_map right);
