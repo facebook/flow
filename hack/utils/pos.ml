@@ -128,12 +128,6 @@ let destruct_range (p : 'a pos) : (int * int * int * int) =
   line_start, col_start_minus1 + 1,
   line_end,   col_end_minus1 + 1
 
-let make_from_lexing_pos ~pos_file ~pos_start ~pos_end =
-  { pos_file;
-    pos_start = File_pos.of_lexing_pos pos_start;
-    pos_end = File_pos.of_lexing_pos pos_end;
-  }
-
 let make_from_file_pos ~pos_file ~pos_start ~pos_end =
   { pos_file; pos_start; pos_end }
 

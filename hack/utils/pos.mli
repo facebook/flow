@@ -69,8 +69,4 @@ val make_from_file_pos :
   pos_file:Relative_path.t -> pos_start:File_pos.t ->
     pos_end:File_pos.t -> t
 
-val make_from_lexing_pos :
-  pos_file:Relative_path.t -> pos_start:Lexing.position ->
-    pos_end:Lexing.position -> t
-
 module Map : MapSig with type key = t
