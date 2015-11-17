@@ -111,17 +111,20 @@ let elaborate_into_current_ns nsenv id =
  *)
 let elaborate_id_impl ~autoimport nsenv kind (p, id) =
   (* Go ahead and fully-qualify the name first. *)
-  let uses = match kind with
-    | NSClass -> nsenv.ns_class_uses
-    | NSFun -> nsenv.ns_fun_uses
-    | NSConst -> nsenv.ns_const_uses in
   let fully_qualified =
     if id <> "" && id.[0] = '\\' then id
     else if autoimport && is_autoimport_name id then "\\" ^ id
     else begin
       (* Expand "use" imports. *)
-      let bslash_loc =
-        try String.index id '\\' with Not_found -> String.length id in
+      let (bslash_loc, has_bslash) =
+        try String.index id '\\', true
+        with Not_found -> String.length id, false in
+      (* "use function" and "use const" only apply if the id is completely
+       * unqualified, otherwise the normal "use" imports apply. *)
+      let uses = if has_bslash then nsenv.ns_uses else match kind with
+        | NSClass -> nsenv.ns_uses
+        | NSFun -> nsenv.ns_fun_uses
+        | NSConst -> nsenv.ns_const_uses in
       let prefix = String.sub id 0 bslash_loc in
       if prefix = "namespace" && id <> "namespace" then begin
         (* Strip off the 'namespace\' (including the slash) from id, then
@@ -188,8 +191,8 @@ module ElaborateDefs = struct
           List.fold_left l ~init:nsenv ~f:begin fun nsenv (kind, id1, id2) ->
             match kind with
               | NSClass -> begin
-                let m = SMap.add (snd id2) (snd id1) nsenv.ns_class_uses in
-                {nsenv with ns_class_uses = m}
+                let m = SMap.add (snd id2) (snd id1) nsenv.ns_uses in
+                {nsenv with ns_uses = m}
               end
               | NSFun -> begin
                 let m = SMap.add (snd id2) (snd id1) nsenv.ns_fun_uses in
