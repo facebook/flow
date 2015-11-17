@@ -61,12 +61,11 @@ module SS = SearchService.Make(struct
     (type_num a) - (type_num b)
 end)
 
-let lex_pos_of_loc filename p =
-  { Lexing.pos_fname = filename;
-    pos_lnum = p.Loc.line;
-    pos_bol = p.Loc.column;
-    pos_cnum = p.Loc.offset;
-  }
+let file_pos_of_loc loc =
+  File_pos.of_line_column_offset
+    ~line:loc.Loc.line
+    ~column:loc.Loc.column
+    ~offset:loc.Loc.offset
 
 let pos_of_loc loc =
   let fn =
@@ -74,10 +73,10 @@ let pos_of_loc loc =
     | None -> assert false
     | Some x -> string_of_filename x
   in
-  Pos.make_from_lexing_pos
+  Pos.make_from_file_pos
     ~pos_file:(Relative_path.(create Dummy fn))
-    ~pos_start:(lex_pos_of_loc fn loc.Loc.start)
-    ~pos_end:(lex_pos_of_loc fn loc.Loc._end)
+    ~pos_start:(file_pos_of_loc loc.Loc.start)
+    ~pos_end:(file_pos_of_loc loc.Loc._end)
 
 let add_fuzzy_term id type_ acc =
   let loc, id = id in
