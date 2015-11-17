@@ -64,6 +64,16 @@ let gen_ident_rekeying_map ident_list =
       end in
   map
 
+let lvar_list_map lvar_map =
+  Pos.Map.fold begin fun pos ident map ->
+    let file = Pos.filename pos in
+    let ident_list = match Relative_path.Map.get file map with
+      | Some ident_list -> ident_list
+      | None -> []
+    in
+    Relative_path.Map.add file (ident :: ident_list) map
+  end lvar_map Relative_path.Map.empty
+
 (* For each local variable in lvar_map find its type in type_map.
  * Since the pos in both maps may not be identical we used
  * the following algorithm:
@@ -72,12 +82,16 @@ let gen_ident_rekeying_map ident_list =
  * 3. Sequentially search each type to find the best match one *)
 let generate_types lvar_map type_map =
   let line_map = transform_map type_map in
-  let lvar_rekey_map = gen_ident_rekeying_map (Pos.Map.values lvar_map) in
+  let file_to_lvarlist_map = lvar_list_map lvar_map in
+  let file_lvar_rekeying_map = Relative_path.Map.map
+    begin fun v -> gen_ident_rekeying_map v end file_to_lvarlist_map in
   let lvar_pos_list = Pos.Map.keys lvar_map in
   List.rev_map lvar_pos_list begin fun lvar_pos ->
     let key = SymbolUtils.get_key lvar_pos in
     let ident = Pos.Map.find_unsafe lvar_pos lvar_map in
     let types_in_line = SymbolUtils.LineMap.get key line_map in
+    let lvar_rekey_map = Relative_path.Map.find_unsafe
+      (Pos.filename lvar_pos) file_lvar_rekeying_map in
     let lvar_type = match types_in_line with
     | Some types_list ->
         find_match_pos_in_list lvar_pos types_list
