@@ -831,7 +831,9 @@ let typecheck workers files removed unparsed opts make_merge_input =
       Flow_logger.log "Merging";
       merge_strict workers dependency_graph partition opts;
       if profile_and_not_quiet opts then Gc.print_stat stderr;
-    with exc ->
+    with
+    | SharedMem.Out_of_shared_memory as exn -> raise exn
+    | exc ->
       prerr_endline (Printexc.to_string exc)
     end;
     (* collate errors by origin *)

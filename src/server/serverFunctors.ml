@@ -301,6 +301,10 @@ end = struct
                * forward that error code *)
               "There is already a server running.",
               FlowExitStatus.Lock_stolen
+            else if code = FlowExitStatus.(error_code Out_of_shared_memory)
+            then
+              "The server is failed to allocate shared memory.",
+              FlowExitStatus.Out_of_shared_memory
             else
               spf "exited prematurely with code %d." code, exit_code
         | Unix.WSIGNALED signal ->
