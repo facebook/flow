@@ -65,7 +65,7 @@ open Hh_match_utils
    Return: list of matches *)
 val find_matches : program -> Relative_path.t -> string ->
                    Parser_hack.parser_return ->
-                   (ast_node * Lexing.position) list
+                   (ast_node * File_pos.t) list
 
 (* does the same thing as find_matches except that it will also apply
    any patches passed in (provided that the patches come from the
@@ -80,7 +80,7 @@ val match_and_patch: program -> Relative_path.t -> string ->
    (to enable the -s option in the hh_matcher) *)
 val find_matches_expr : program -> Relative_path.t -> string ->
                         Parser_hack.parser_return ->
-                        (ast_node * Lexing.position) list
+                        (ast_node * File_pos.t) list
 
 val patch_expr: program -> Relative_path.t ->
                 string -> Parser_hack.parser_return ->
@@ -88,7 +88,7 @@ val patch_expr: program -> Relative_path.t ->
 
 val find_matches_stmt : program -> Relative_path.t -> string ->
                         Parser_hack.parser_return ->
-                        (ast_node * Lexing.position) list
+                        (ast_node * File_pos.t) list
 
 val patch_stmt : program -> Relative_path.t -> string ->
                  Parser_hack.parser_return -> patch_maps ->
@@ -98,4 +98,4 @@ val patch_stmt : program -> Relative_path.t -> string ->
    has all the lines containing a match in order in the form:
    line num: line
    given a list of matches and the source file of the text *)
-val format_matches : (ast_node * Lexing.position) list -> string -> string
+val format_matches : (ast_node * File_pos.t) list -> string -> string

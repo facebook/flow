@@ -179,7 +179,7 @@ object
     begin
       let start_p, end_p =
         Ast_code_extent.source_extent_stmt file source stmt in
-      let self_res = stmt, (start_p.Lexing.pos_lnum, end_p.Lexing.pos_lnum) in
+      let self_res = stmt, (File_pos.line start_p, File_pos.line end_p) in
       let acc = { acc with s_line_map = self_res :: acc.s_line_map } in
       let child_acc = super#on_stmt default_pat_acc stmt in
       let covered_nodes = List.map fst child_acc.s_line_map in
@@ -196,7 +196,7 @@ object
     begin
       let start_p, end_p =
         Ast_code_extent.source_extent_expr file source expr in
-      let self_res = expr, (start_p.Lexing.pos_lnum, end_p.Lexing.pos_lnum) in
+      let self_res = expr, (File_pos.line start_p, File_pos.line end_p) in
       let acc = { acc with e_line_map = self_res :: acc.e_line_map } in
       let child_acc = super#on_expr default_pat_acc expr in
       let covered_nodes = List.map fst child_acc.e_line_map in
@@ -347,15 +347,15 @@ let to_string_patch_maps
   let to_string_transf
         (type a)
         (src_ext_fn :
-           Relative_path.t -> string -> a -> Lexing.position * Lexing.position)
+           Relative_path.t -> string -> a -> File_pos.t * File_pos.t)
         (transformation : a) =
       let src_ext_before =
         src_ext_fn p_file p_content transformation in
       let strn_from_ext ext content =
-        (Ast_code_extent.format_lexing_pos (fst ext)) ^
+        (Ast_code_extent.format_file_pos (fst ext)) ^
           " " ^
-            (Ast_code_extent.format_lexing_pos (snd ext)) ^ ":\n" ^
-              if fst ext == Lexing.dummy_pos || snd ext == Lexing.dummy_pos
+            (Ast_code_extent.format_file_pos (snd ext)) ^ ":\n" ^
+              if File_pos.is_dummy (fst ext) || File_pos.is_dummy (snd ext)
               then "No source extent available"
               else Ast_code_extent.lexing_slice_to_string ext content in
       let pattern_strn = strn_from_ext src_ext_before p_content in
@@ -376,14 +376,14 @@ let to_string_patch_maps
 
 (* For creating patches from node types that are not stmt, expr *)
 let create_any_patch
-      ~(extent : Lexing.position * Lexing.position)
+      ~(extent : File_pos.t * File_pos.t)
       ~(target_string : string) : patch option =
-  if fst extent = Lexing.dummy_pos ||
-     snd extent = Lexing.dummy_pos
+  if File_pos.is_dummy (fst extent) ||
+     File_pos.is_dummy (snd extent)
   then None
   else
-  let start_loc = (fst extent).Lexing.pos_cnum in
-  let end_loc = (snd extent).Lexing.pos_cnum in
+  let start_loc = File_pos.offset (fst extent) in
+  let end_loc = File_pos.offset (snd extent) in
   Some { start_loc; end_loc; result_str = target_string;
          range_adjustment_fn = dummy_adjuster }
 
@@ -405,16 +405,16 @@ let create_patch
        adjust_range_stmt
     | _ -> failwith "not implemented" in
   let raw_tgt_string = Unparsed.to_string tgt_unparsed in
-  if fst src_pos = Lexing.dummy_pos ||
-     snd src_pos = Lexing.dummy_pos
+  if File_pos.is_dummy (fst src_pos) ||
+     File_pos.is_dummy (snd src_pos)
   then None
   else
     let range_adjustment_fn =
       if adjust_ranges
       then range_adjustment_fn
       else dummy_adjuster in
-    let start_loc = (fst src_pos).Lexing.pos_cnum in
-    let end_loc = (snd src_pos).Lexing.pos_cnum in
+    let start_loc = File_pos.offset (fst src_pos) in
+    let end_loc = File_pos.offset (snd src_pos) in
     Some { start_loc; end_loc;
            result_str = raw_tgt_string;
            range_adjustment_fn }

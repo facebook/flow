@@ -79,10 +79,10 @@ type matcher_env = {
    distinct matches starting at the same position with nontrivial operations
    to check for equality. *)
 type match_result =
-  | Matches of (ast_node * Lexing.position) list
+  | Matches of (ast_node * File_pos.t) list
   | NoMatch
 
-let dummy_success_res = Matches [(DummyNode, Lexing.dummy_pos)]
+let dummy_success_res = Matches [(DummyNode, File_pos.dummy)]
 
 (* for SkipAny matching *)
 let star_stmt =
@@ -442,7 +442,7 @@ let match_id_res
 let update_res_with
       (res : match_result)
       (node : ast_node)
-      (node_pos : Lexing.position) : match_result =
+      (node_pos : File_pos.t) : match_result =
   match res with
   | Matches so_far -> Matches ((node, node_pos) :: so_far)
   | NoMatch -> Matches [node, node_pos]
@@ -764,14 +764,14 @@ module LM =
           (* assoc list from pattern -> target *)
           (transf_list : (a * a list) list)
           (node_to_txt_fn : matcher_env -> a list -> string)
-          (extent_find_fn : a -> Lexing.position * Lexing.position)
+          (extent_find_fn : a -> File_pos.t * File_pos.t)
           (ret : match_result * matcher_env) : (match_result * matcher_env) =
       let res, env = ret in
       let create_patch result_str =
         let elem_ext = extent_find_fn text_elem in
         let newpatch =
-          { start_loc = (fst elem_ext).Lexing.pos_cnum;
-            end_loc = (snd elem_ext).Lexing.pos_cnum;
+          { start_loc = File_pos.offset (fst elem_ext);
+            end_loc = File_pos.offset (snd elem_ext);
             result_str;
             range_adjustment_fn = adjust_fn } in
         res, { env with patches = PatchSet.add newpatch env.patches } in
@@ -2021,10 +2021,10 @@ let sort_and_remove_duplicates compare l =
   let sl = List.sort compare l in
   let rec go l acc = match l with
     | [] -> List.rev acc
-    | (x::xs) when x = (DummyNode, Lexing.dummy_pos) -> go xs acc
+    | (x::xs) when x = (DummyNode, File_pos.dummy) -> go xs acc
     | [x] -> List.rev (x::acc)
     | (x1::x2::xs) ->
-      if (snd x1).Lexing.pos_lnum = (snd x2).Lexing.pos_lnum
+      if File_pos.line (snd x1) = File_pos.line (snd x2)
       then go (x2::xs) acc
       else go (x2::xs) (x1::acc)
   in go sl []
@@ -2035,7 +2035,7 @@ let find_matches
       (text_file : Relative_path.t)
       (text_content : string)
       (pattern_parsed : Parser_hack.parser_return)
-    : (ast_node * Lexing.position) list =
+    : (ast_node * File_pos.t) list =
   let match_res =
     match_ast_nodes
       (Program text)
@@ -2067,7 +2067,7 @@ let find_matches_expr_or_stmt
       (text_content : string)
       (pattern_parsed : Parser_hack.parser_return)
       (skipany_fn)
-      (skipany_handler_fn) : (ast_node * Lexing.position) list =
+      (skipany_handler_fn) : (ast_node * File_pos.t) list =
   match skipany_fn pattern_parsed.Parser_hack.ast with
     | Some stmts -> begin
         let res, _ =
@@ -2094,7 +2094,7 @@ let find_matches_stmt
       (text_file : Relative_path.t)
       (text_content : string)
       (pattern_parsed : Parser_hack.parser_return)
-    : (ast_node * Lexing.position) list =
+    : (ast_node * File_pos.t) list =
   find_matches_expr_or_stmt text text_file text_content pattern_parsed
     get_skipany_stmt handle_stmt_skipany
 
@@ -2110,7 +2110,7 @@ let find_matches_expr
       (text_file : Relative_path.t)
       (text_content : string)
       (pattern_parsed : Parser_hack.parser_return)
-    : (ast_node * Lexing.position) list =
+    : (ast_node * File_pos.t) list =
   find_matches_expr_or_stmt text text_file text_content pattern_parsed
     get_skipany_expr handle_expr_skipany
 
@@ -2202,20 +2202,19 @@ let match_and_patch
                ~format_result:use_hh_format)
 
 let format_matches
-      (matches : (ast_node * Lexing.position) list)
+      (matches : (ast_node * File_pos.t) list)
       (text_code : string) : string =
   let match_list =
     sort_and_remove_duplicates
-      (fun (m1:(ast_node * Lexing.position))
-           (m2:(ast_node * Lexing.position)) ->
-       (snd m1).Lexing.pos_lnum - (snd m2).Lexing.pos_lnum)
+      (fun (m1:(ast_node * File_pos.t))
+           (m2:(ast_node * File_pos.t)) ->
+       File_pos.line (snd m1) - File_pos.line (snd m2))
       matches in
   (* format a single match as "line num: line" *)
-  let format_single_match (single_match : ast_node * Lexing.position) : string =
+  let format_single_match (single_match : ast_node * File_pos.t) : string =
     let pos = snd single_match in
-    if pos = Lexing.dummy_pos then "" else
-    let line_num = pos.Lexing.pos_lnum in
-    let bol_pos = pos.Lexing.pos_bol in
+    if File_pos.is_dummy pos then "" else
+    let line_num, bol_pos = File_pos.line_beg pos in
     let eol_pos = String.index_from text_code bol_pos '\n' in
     Printf.sprintf
       "%d: %s"

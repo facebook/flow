@@ -10,23 +10,23 @@
 open Utils
 open Sys_utils
 
-let format_lexing_pos (pos : Lexing.position) : string =
+let format_file_pos (pos : File_pos.t) : string =
+  let line, bol, offset = File_pos.line_beg_offset pos in
+  let file = "" in
   Printf.sprintf "%s: line num:%d beginning of line:%d char offset in file:%d"
-    pos.Lexing.pos_fname pos.Lexing.pos_lnum
-    pos.Lexing.pos_bol
-    pos.Lexing.pos_cnum
+    file line bol offset
 
 let lexing_slice_to_string
-      (range : Lexing.position * Lexing.position)
+      ((start, end_) : File_pos.t * File_pos.t)
       (code : string) : string =
-  if fst range = snd range ||
-     fst range = Lexing.dummy_pos ||
-     snd range = Lexing.dummy_pos
+  if start = end_ ||
+     File_pos.is_dummy start ||
+     File_pos.is_dummy end_
   then "Unable to print range."
   else
     (String.sub
-       code (fst range).Lexing.pos_cnum
-       ((snd range).Lexing.pos_cnum - (fst range).Lexing.pos_cnum))
+       code (File_pos.offset start)
+       (File_pos.offset end_ - File_pos.offset start))
 
 let parse_file file =
   let abs_fn = Relative_path.to_absolute file in
@@ -267,30 +267,24 @@ let token_from_lb
 
 (* ================== End Lexing Helpers ============================ *)
 
-(* comparison that accommodate dummy_pos *)
-let position_less_than
-      (pos1 : Lexing.position)
-      (pos2 : Lexing.position) : bool =
-  (pos1.Lexing.pos_lnum < pos2.Lexing.pos_lnum) ||
-    ((pos1.Lexing.pos_lnum = pos2.Lexing.pos_lnum) &&
-       (pos1.Lexing.pos_cnum < pos2.Lexing.pos_cnum))
+(* comparison that accommodate File_pos.dummy *)
 let position_min
-      (pos1 : Lexing.position)
-      (pos2 : Lexing.position) : Lexing.position =
-  if pos2 = Lexing.dummy_pos ||
-       (position_less_than pos1 pos2 && pos1 <> Lexing.dummy_pos)
+      (pos1 : File_pos.t)
+      (pos2 : File_pos.t) : File_pos.t =
+  if File_pos.is_dummy pos2 ||
+       (File_pos.compare pos1 pos2 < 0 && not (File_pos.is_dummy pos1))
   then pos1
   else pos2
 let position_max
-      (pos1 : Lexing.position)
-      (pos2 : Lexing.position) : Lexing.position =
-  if pos1 = Lexing.dummy_pos ||
-       position_less_than pos1 pos2 then pos2 else pos1
+      (pos1 : File_pos.t)
+      (pos2 : File_pos.t) : File_pos.t =
+  (* dummy is smaller than valid positions *)
+  if File_pos.compare pos1 pos2 < 0 then pos2 else pos1
 
 type range_accum = {
     (* source positions of leftmost, rightmost leaf *)
-    left : Lexing.position;
-    right : Lexing.position;
+    left : File_pos.t;
+    right : File_pos.t;
     (* So we can do matching of open curly braces and parentheses
        starting from the first identifier.
        Using the list of positions is necessary so that we can match
@@ -304,8 +298,8 @@ type range_accum = {
        in this case if we get code extent of the try block, we must
        match both opening delimiters which happen before the first identifier *)
     seen_first_id : bool;
-    unmatched_lcb : Lexing.position list;
-    unmatched_lp : Lexing.position list;
+    unmatched_lcb : File_pos.t list;
+    unmatched_lp : File_pos.t list;
     (* this is so that we can correctly ignore keywords in situations where we
        don't want to be stopping on the last keyword before our target *)
     ignore_keywords : bool;
@@ -316,8 +310,8 @@ type range_accum = {
     a block that we want to match curly braces for (e.g. closures, try block) *)
 
 let default_range_accum =
-  { left = Lexing.dummy_pos;
-    right = Lexing.dummy_pos;
+  { left = File_pos.dummy;
+    right = File_pos.dummy;
     seen_first_id = false;
     unmatched_lcb = [];
     unmatched_lp = [];
@@ -340,26 +334,26 @@ let advance_lexbuf_to_pos
       ~(file : Relative_path.t)
       ~(lexbuf : Lexing.lexbuf)
       ~(goal_test : Pos.t -> bool)
-      ~(unmatched_lcb : Lexing.position list)
-      ~(unmatched_lp : Lexing.position list)
+      ~(unmatched_lcb : File_pos.t list)
+      ~(unmatched_lp : File_pos.t list)
       ~(ignore_keywords : bool)
       ~(lex_env : lex_env) :
-      (Lexing.position *
-         (Lexing.position list * Lexing.position list) *
+      (File_pos.t *
+         (File_pos.t list * File_pos.t list) *
            lex_env) =
   (* make sure not to consume tokens if already at/past goal *)
   let curpos = Pos.make file lexbuf in
   if goal_test curpos
-  then (Lexing.dummy_pos, (unmatched_lcb, unmatched_lp), lex_env)
+  then (File_pos.dummy, (unmatched_lcb, unmatched_lp), lex_env)
   else
   let rec advance_until
-            (leftmost_modifier : Lexing.position)
+            (leftmost_modifier : File_pos.t)
             (seen_keyword : bool)
-            (unmatched_lcb : Lexing.position list)
-            (unmatched_lp : Lexing.position list)
+            (unmatched_lcb : File_pos.t list)
+            (unmatched_lp : File_pos.t list)
             (lex_env : lex_env) :
-            (Lexing.position *
-               (Lexing.position list * Lexing.position list) *
+            (File_pos.t *
+               (File_pos.t list * File_pos.t list) *
                  lex_env) =
     let (token,pos), lex_env = token_from_lb file lexbuf lex_env in
     (* update the delimiters we've seen *)
@@ -385,7 +379,7 @@ let advance_lexbuf_to_pos
     else
     if goal_test pos
     then
-      if leftmost_modifier <> Lexing.dummy_pos
+      if not (File_pos.is_dummy leftmost_modifier)
       then (leftmost_modifier, (unmatched_lcb, unmatched_lp), lex_env)
       else (Pos.pos_start pos, (unmatched_lcb, unmatched_lp), lex_env)
     else
@@ -422,7 +416,7 @@ let advance_lexbuf_to_pos
           if cur_is_modifier
           then
             advance_until
-              (if leftmost_modifier = Lexing.dummy_pos
+              (if File_pos.is_dummy leftmost_modifier
                then (Pos.pos_start pos)
                else leftmost_modifier)
               false
@@ -431,25 +425,25 @@ let advance_lexbuf_to_pos
               lex_env
           else
             advance_until
-              Lexing.dummy_pos false unmatched_lcb unmatched_lp lex_env in
-  advance_until Lexing.dummy_pos false unmatched_lcb unmatched_lp lex_env
+              File_pos.dummy false unmatched_lcb unmatched_lp lex_env in
+  advance_until File_pos.dummy false unmatched_lcb unmatched_lp lex_env
 
 (* skips to necessary number of right curly braces
    and any semicolons after that *)
 let skip_trailing_delims
       (lexbuf : Lexing.lexbuf)
-      (lcb_stack : Lexing.position list)
-      (lp_stack : Lexing.position list)
+      (lcb_stack : File_pos.t list)
+      (lp_stack : File_pos.t list)
       (file : Relative_path.t)
       (lex_env : lex_env) :
-      Lexing.position =
+      File_pos.t =
   begin
   let rec go_until
             (lex_env : lex_env)
-            (lcb_stack : Lexing.position list)
-            (lp_stack : Lexing.position list) =
+            (lcb_stack : File_pos.t list)
+            (lp_stack : File_pos.t list) =
     match lcb_stack, lp_stack with
-    | [], [] -> Lexing.lexeme_end_p lexbuf
+    | [], [] -> File_pos.of_lexing_pos (Lexing.lexeme_end_p lexbuf)
     | _, _ ->
       let (token,pos), lex_env = token_from_lb file lexbuf lex_env in
       if token = Lexer_hack.Teof then Pos.pos_end pos else
@@ -477,8 +471,9 @@ let skip_trailing_delims
 let hint_skip_trailing
       (lexbuf : Lexing.lexbuf)
       (file : Relative_path.t)
-      (lex_env : lex_env) : Lexing.position =
-  let cur_end = Lexing.lexeme_end_p lexbuf in
+      (lex_env : lex_env) : File_pos.t =
+  let cur_end = File_pos.of_lexing_pos (Lexing.lexeme_end_p lexbuf) in
+  (* cur_end computed here because of side effects in token_from_lb *)
   let (next_tok,_), lex_env = token_from_lb file lexbuf lex_env in
   if next_tok <> Lexer_hack.Tlt
   then cur_end
@@ -503,7 +498,7 @@ let hint_skip_trailing
 
 let update_to_enclosing
       (accum : range_accum)
-      (pos : Lexing.position) : range_accum =
+      (pos : File_pos.t) : range_accum =
   { accum with left = (position_min pos accum.left);
                right = (position_max pos accum.right); }
 
@@ -538,8 +533,8 @@ object (this)
         position_min (position_min start (Pos.pos_start pos)) acc.left in
       let acc =
         if acc.unmatched_lp = [] && acc.unmatched_lcb = [] &&
-             Pos.start_cnum pos - minpos.Lexing.pos_cnum = 1 &&
-               old_left = Lexing.dummy_pos
+             Pos.start_cnum pos - File_pos.offset minpos = 1 &&
+               File_pos.is_dummy old_left
         then { acc with left = Pos.pos_start pos }
         else update_to_enclosing acc (minpos) in
       let new_left = acc.left in
@@ -548,11 +543,11 @@ object (this)
         (* if we change the leftmost end of our code extent,
            forget any opening delimiters outside of that range *)
         let rec find_first_relevant_delim
-                  (delim_stack : Lexing.position list) =
+                  (delim_stack : File_pos.t list) =
           match delim_stack with
           | [] -> []
           | hd :: tl ->
-             if position_less_than new_left hd
+             if File_pos.compare new_left hd < 0
              then List.rev (hd :: tl)
              else find_first_relevant_delim tl in
         let unmatched_lcb =
@@ -836,7 +831,7 @@ let source_extent_def
       (file:Relative_path.t)
       (source:string)
       (def:Ast.def) :
-      (Lexing.position * Lexing.position) =
+      (File_pos.t * File_pos.t) =
   let visitor = new range_find_visitor file source in
   let accum = visitor#on_def default_range_accum def in
   let right = skip_trailing_delims

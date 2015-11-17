@@ -12,7 +12,7 @@
 (* Print a code extent (lexing position pair) from the specified source
    along with a divider *)
 val pretty_print_test_output :
-      string -> Lexing.position * Lexing.position -> unit
+      string -> File_pos.t * File_pos.t -> unit
 
 (* Parse the specified unit test file into a list of files (allows us
    to fake multiple files in one file for when we need text, pattern and

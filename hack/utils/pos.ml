@@ -119,8 +119,8 @@ let compare x y =
     if r <> 0 then r
     else File_pos.compare x.pos_end y.pos_end
 
-let pos_start p = File_pos.to_lexing_pos "" p.pos_start
-let pos_end p = File_pos.to_lexing_pos "" p.pos_end
+let pos_start p = p.pos_start
+let pos_end p = p.pos_end
 
 let destruct_range (p : 'a pos) : (int * int * int * int) =
   let line_start, col_start_minus1 = File_pos.line_column p.pos_start in

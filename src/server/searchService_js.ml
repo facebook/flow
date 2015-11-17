@@ -28,10 +28,9 @@ let result_to_string (term: (Pos.t, search_result_type) SearchUtils.term) =
     (result_type_to_string term.result_type)
 )
 
-let pos_range p = Pos.(Lexing.(
-  line p, start_cnum p + 1,
-    (pos_end p).pos_lnum, (pos_end p).pos_cnum
-))
+let pos_range p =
+  File_pos.line (Pos.pos_start p), File_pos.offset (Pos.pos_start p) + 1,
+  File_pos.line (Pos.pos_end   p), File_pos.offset (Pos.pos_end   p)
 
 (* TODO: deprecate this in favor of Reason_js.json_of_loc *)
 let pos_to_json pos =

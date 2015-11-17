@@ -59,6 +59,8 @@ let line_column_beg t = t.pos_lnum, t.pos_cnum - t.pos_bol, t.pos_bol
 
 let line_column_offset t = t.pos_lnum, t.pos_cnum - t.pos_bol, t.pos_cnum
 
+let line_beg_offset t = t.pos_lnum, t.pos_bol, t.pos_cnum
+
 let to_lexing_pos pos_fname t = {
   Lexing.pos_fname;
   Lexing.pos_lnum = t.pos_lnum;

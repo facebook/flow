@@ -59,8 +59,8 @@ val compare : 'a pos -> 'a pos -> int
 
 (* XXX deprecated: do not use! Talk to @jezng if you are not hack_sgrep and
  * you feel a need to use this. *)
-val pos_start : 'a pos -> Lexing.position
-val pos_end : 'a pos -> Lexing.position
+val pos_start : 'a pos -> File_pos.t
+val pos_end : 'a pos -> File_pos.t
 
 val destruct_range : 'a pos -> (int * int * int * int)
 

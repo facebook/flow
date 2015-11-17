@@ -13,7 +13,8 @@ type t
 (* compatible with Pervasives.compare *)
 val compare : t -> t -> int
 
-(* compatible with Lexing.dummy_pos *)
+(* compatible with Lexing.dummy_pos
+   and is always smaller than any valid position *)
 val dummy : t
 
 val is_dummy : t -> bool
@@ -40,5 +41,7 @@ val line_column : t -> int * int
 val line_column_beg : t -> int * int * int
 
 val line_column_offset : t -> int * int * int
+
+val line_beg_offset : t -> int * int * int
 
 val to_lexing_pos : string -> t -> Lexing.position

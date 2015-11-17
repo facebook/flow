@@ -46,7 +46,7 @@ val to_string_patch_maps :
    Returns None if passed an invalid extent
    (one that includes Lexing.dummy_pos) *)
 val create_any_patch :
-  extent : Lexing.position * Lexing.position ->
+  extent : File_pos.t * File_pos.t ->
   target_string : string -> patch option
 
 (* Given a source file, a node in that source file's AST and a target node,
