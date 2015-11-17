@@ -8,18 +8,23 @@
  *
  *)
 
-open Lexing
-
-type t = position
+type t = {
+  pos_lnum : int;
+  pos_bol : int;
+  pos_cnum : int;
+}
 
 let compare = Pervasives.compare
 
-let dummy = dummy_pos
+let dummy = {
+  pos_lnum = 0;
+  pos_bol = 0;
+  pos_cnum = -1;
+}
 
 let is_dummy t = (t = dummy)
 
 let beg_of_file = {
-  pos_fname = "";
   pos_lnum = 1;
   pos_bol = 0;
   pos_cnum = 0;
@@ -28,13 +33,16 @@ let beg_of_file = {
 (* constructors *)
 
 let of_line_column_offset ~line ~column ~offset = {
-  pos_fname = "";
   pos_lnum = line;
   pos_bol = offset - column;
   pos_cnum = offset;
 }
 
-let of_lexing_pos lp = { lp with pos_fname = "" }
+let of_lexing_pos lp = {
+  pos_lnum = lp.Lexing.pos_lnum;
+  pos_bol = lp.Lexing.pos_bol;
+  pos_cnum = lp.Lexing.pos_cnum;
+}
 
 (* accessors *)
 
@@ -51,5 +59,9 @@ let line_column_beg t = t.pos_lnum, t.pos_cnum - t.pos_bol, t.pos_bol
 
 let line_column_offset t = t.pos_lnum, t.pos_cnum - t.pos_bol, t.pos_cnum
 
-let to_lexing_pos pos_fname t =
-  { t with pos_fname }
+let to_lexing_pos pos_fname t = {
+  Lexing.pos_fname;
+  Lexing.pos_lnum = t.pos_lnum;
+  Lexing.pos_bol = t.pos_bol;
+  Lexing.pos_cnum = t.pos_cnum;
+}
