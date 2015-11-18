@@ -7,13 +7,13 @@ issue-598.js:7:31,36: string
 This type is incompatible with
 issue-598.js:7:19,24: number
 
+test.js:3:27,30: P
+This type is incompatible with
+test.js:9:9,14: number
+
 test.js:6:2,4: number
 This type is incompatible with
 test.js:6:7,12: string
-
-test.js:9:2,6: P
-This type is incompatible with
-test.js:9:9,14: number
 
 test.js:13:2,8: number
 This type is incompatible with

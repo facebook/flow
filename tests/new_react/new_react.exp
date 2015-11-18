@@ -205,17 +205,17 @@ props3.js:50:39,48: property `inRequired`
 Property not found in
 props3.js:50:16,37: object type
 
-props4.js:13:1,16: React element: `JDiv`
+props4.js:13:1,16: React element `JDiv`
 Error:
 props4.js:13:11,12: number
 This type is incompatible with
 props4.js:8:9,14: string
 
-props4.js:24:3,23: React element: `Example`
+props4.js:24:3,23: React element `Example`
 Error:
 props4.js:16:10,24: property `bar`
 Property not found in
-props4.js:24:3,23: type parameter `DefaultProps` of React element: `Example`
+props4.js:24:3,23: type parameter `Props` of React element `Example`
 
 state.js:19:33,35: property `qux`
 Property cannot be accessed on possibly null value

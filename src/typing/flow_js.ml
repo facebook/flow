@@ -5246,17 +5246,22 @@ and become cx ?trace r t = match t with
     (* optimization: if t is already concrete, become t immediately :) *)
     t
 
-and reposition cx ?trace reason t = match t with
-  | OpenT (r, _) ->
-    let mk_tvar_where = if is_derivable_reason r
-      then mk_tvar_derivable_where
-      else mk_tvar_where
-    in
-    mk_tvar_where cx reason (fun tvar ->
-      flow_opt cx ?trace (t, ReposLowerT (reason, tvar))
-    )
-  | _ ->
-    mod_reason_of_t (repos_reason (loc_of_reason reason)) t
+and reposition cx ?trace reason t =
+  match t with
+  | OpenT (r, id) ->
+    let constraints = find_graph cx id in
+    begin match constraints with
+    | Resolved t -> mod_reason_of_t (repos_reason (loc_of_reason reason)) t
+    | _ ->
+      let mk_tvar_where = if is_derivable_reason r
+        then mk_tvar_derivable_where
+        else mk_tvar_where
+      in
+      mk_tvar_where cx reason (fun tvar ->
+        flow_opt cx ?trace (t, ReposLowerT (reason, tvar))
+      )
+    end
+  | _ -> mod_reason_of_t (repos_reason (loc_of_reason reason)) t
 
 (* given the type of a value v, return the type term
    representing the `typeof v` annotation expression *)
