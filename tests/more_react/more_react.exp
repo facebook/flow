@@ -14,10 +14,10 @@ App.react.js:36:14,14: number
 This type is incompatible with
 App.react.js:10:16,21: string
 
-propTypes.js:15:1,18:2: React element: `D`
+propTypes.js:15:1,18:2: React element `D`
 Error:
 propTypes.js:9:3,11: property `name`
 Property not found in
-propTypes.js:15:1,18:2: type parameter `DefaultProps` of React element: `D`
+propTypes.js:15:1,18:2: type parameter `Props` of React element `D`
 
 Found 5 errors

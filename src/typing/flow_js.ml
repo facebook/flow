@@ -2472,7 +2472,7 @@ let rec __flow cx (l, u) trace =
         rec_flow cx trace (l, ObjAssignT(reason, o, AnyT.t, [], false))
 
     | (_, DiffT (o1, o2)) ->
-        let reason = reason_of_t o2 in
+        let reason = reason_of_t u in
         let t2 = mk_tvar cx reason in
         rec_flow cx trace (o2, ObjRestT (reason, [], t2));
         rec_flow cx trace (l, ObjAssignT(reason, t2, o1, [], false))

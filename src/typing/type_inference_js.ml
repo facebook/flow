@@ -4244,7 +4244,7 @@ and jsx_title cx type_params_map openingElement children = Ast.JSX.(
   match name with
 
   | Identifier (_, { Identifier.name }) when name = String.capitalize name ->
-      let reason = mk_reason (spf "React element: `%s`" name) eloc in
+      let reason = mk_reason (spf "React element `%s`" name) eloc in
       let c = Env_js.get_var cx name reason in
       let map = ref SMap.empty in
       let spread = ref None in
