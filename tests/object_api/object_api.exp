@@ -87,7 +87,7 @@ object_prototype.js:150:23,28: number
 
 object_prototype.js:151:30,35: number
 This type is incompatible with
-[LIB] core.js:247:23,28: string
+[LIB] core.js:252:23,28: string
 
 object_prototype.js:155:32,47: function type
 This type is incompatible with

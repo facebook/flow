@@ -25,7 +25,7 @@ iterator_result.js:20:13,40: union type
 
 map.js:13:55,60: string
 This type is incompatible with
-[LIB] core.js:355:28,33: tuple type
+[LIB] core.js:360:28,33: tuple type
 
 set.js:13:28,33: string
 This type is incompatible with

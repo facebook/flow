@@ -1,4 +1,16 @@
 
+regexp.js:26:5,22: function call
+Error:
+regexp.js:26:19,21: string
+This type is incompatible with
+[LIB] core.js:230:47,58: union type
+
+regexp.js:27:5,26: constructor call
+Error:
+regexp.js:27:23,25: string
+This type is incompatible with
+[LIB] core.js:231:51,62: union type
+
 weakset.js:19:11,32: constructor call
 Function cannot be called on
 weakset.js:19:11,32: WeakSet
@@ -7,4 +19,4 @@ weakset.js:36:11,32: constructor call
 Function cannot be called on
 weakset.js:36:11,32: WeakSet
 
-Found 2 errors
+Found 4 errors
