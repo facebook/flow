@@ -213,7 +213,7 @@ let string_of_t_ =
     | NumT _
     | StrT _
     | BoolT _
-    | UndefT _
+    | EmptyT _
     | MixedT _
     | AnyT _
     | NullT _ -> Some (desc_of_reason (reason_of_t t))

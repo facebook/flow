@@ -1132,7 +1132,7 @@ let havoc_all () =
 (* set specific type of every non-internal var in top activation to undefined,
    and clear heap refinements *)
 let havoc_current_activation reason =
-  iter_local_scopes (Scope.havoc ~make_specific:(fun _ -> UndefT reason))
+  iter_local_scopes (Scope.havoc ~make_specific:(fun _ -> EmptyT reason))
 
 (* clear refinement info for (topmost bindings of) given names in env *)
 let havoc_vars = Scope.(

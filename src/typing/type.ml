@@ -56,7 +56,7 @@ type t =
   | NumT of reason * number_literal literal
   | StrT of reason * string literal
   | BoolT of reason * bool option
-  | UndefT of reason
+  | EmptyT of reason
   | MixedT of reason
   | AnyT of reason
   | NullT of reason
@@ -484,9 +484,9 @@ module MixedT = Primitive (struct
   let make r = MixedT r
 end)
 
-module UndefT = Primitive (struct
+module EmptyT = Primitive (struct
   let desc = ""
-  let make r = UndefT r
+  let make r = EmptyT r
 end)
 
 module AnyT = Primitive (struct
@@ -579,7 +579,7 @@ let rec reason_of_t = function
   | NumT (reason, _)
   | StrT (reason, _)
   | BoolT (reason, _)
-  | UndefT reason
+  | EmptyT reason
   | MixedT reason
   | AnyT reason
   | NullT reason
@@ -779,7 +779,7 @@ let rec mod_reason_of_t f = function
   | NumT (reason, t) -> NumT (f reason, t)
   | StrT (reason, t) -> StrT (f reason, t)
   | BoolT (reason, t) -> BoolT (f reason, t)
-  | UndefT reason -> UndefT (f reason)
+  | EmptyT reason -> EmptyT (f reason)
   | MixedT reason -> MixedT (f reason)
   | AnyT reason -> AnyT (f reason)
   | NullT reason -> NullT (f reason)
@@ -914,7 +914,7 @@ let string_of_ctor = function
   | NumT _ -> "NumT"
   | StrT _ -> "StrT"
   | BoolT _ -> "BoolT"
-  | UndefT _ -> "UndefT"
+  | EmptyT _ -> "EmptyT"
   | MixedT _ -> "MixedT"
   | AnyT _ -> "AnyT"
   | NullT _ -> "NullT"

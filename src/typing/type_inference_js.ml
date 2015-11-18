@@ -1767,7 +1767,7 @@ and statement cx type_params_map = Ast.Statement.(
               let _, preds, not_preds, xtypes = match test with
               | None ->
                   default := true;
-                  UndefT.at loc, Scope.KeyMap.empty, Scope.KeyMap.empty,
+                  EmptyT.at loc, Scope.KeyMap.empty, Scope.KeyMap.empty,
                     Scope.KeyMap.empty
               | Some expr ->
                   let fake_ast = loc, Ast.Expression.(Binary {
@@ -2221,7 +2221,7 @@ and statement cx type_params_map = Ast.Statement.(
 
         let _, preds, not_preds, xtypes = match test with
           | None ->
-              UndefT.at loc, Scope.KeyMap.empty, Scope.KeyMap.empty,
+              EmptyT.at loc, Scope.KeyMap.empty, Scope.KeyMap.empty,
               Scope.KeyMap.empty (* TODO: prune the "not" case *)
           | Some expr ->
               predicates_of_condition cx type_params_map expr
@@ -3147,7 +3147,7 @@ and array_element cx type_params_map undef_loc el = Ast.Expression.(
   | Some (Expression e) -> expression cx type_params_map e
   | Some (Spread (_, { SpreadElement.argument })) ->
       array_element_spread cx type_params_map argument
-  | None -> UndefT.at undef_loc
+  | None -> EmptyT.at undef_loc
 )
 
 and expression_or_spread cx type_params_map = Ast.Expression.(function
@@ -3452,7 +3452,7 @@ and expression_ ~is_cond cx type_params_map loc e = Ast.Expression.(match e with
       | _ ->
         let msg = "Use array literal instead of new Array(..)" in
         Flow_js.add_error cx [mk_reason "" loc, msg];
-        UndefT.at loc
+        EmptyT.at loc
       )
     )
 
@@ -3831,7 +3831,7 @@ and expression_ ~is_cond cx type_params_map loc e = Ast.Expression.(match e with
   | Generator _
   | Let _ ->
     Flow_js.add_error cx [mk_reason "" loc, "not (sup)ported"];
-    UndefT.at loc
+    EmptyT.at loc
 )
 
 (* We assume that constructor functions return void
@@ -4262,7 +4262,7 @@ and jsx_title cx type_params_map openingElement children = Ast.JSX.(
                   expression cx type_params_map (loc, e)
               | _ ->
                   (* empty or nonexistent attribute values *)
-                  UndefT.at aloc
+                  EmptyT.at aloc
             ) in
 
             if not (react_ignore_attribute aname)
@@ -4312,7 +4312,7 @@ and jsx_title cx type_params_map openingElement children = Ast.JSX.(
                   expression cx type_params_map (loc, e)
               | _ ->
                   (* empty or nonexistent attribute values *)
-                  UndefT.at aloc
+                  EmptyT.at aloc
             )
 
         | Opening.Attribute _ ->
@@ -4335,7 +4335,7 @@ and jsx_body cx type_params_map = Ast.JSX.(function
       let { ExpressionContainer.expression = ex } = ec in
       match ex with
         | Some (loc, e) -> expression cx type_params_map (loc, e)
-        | None -> UndefT (mk_reason "empty jsx body" loc)
+        | None -> EmptyT (mk_reason "empty jsx body" loc)
     )
   | loc, Text s -> StrT.at loc
 )
@@ -6355,7 +6355,7 @@ let infer_ast ?(gc=true) ~metadata ~filename ~module_name ast =
     add_entry (internal_name "exports")
       (Entry.new_var
         ~loc:(loc_of_reason reason_exports_module)
-        ~specific:(UndefT (replace_reason "undefined exports" reason_exports_module))
+        ~specific:(EmptyT (replace_reason "undefined exports" reason_exports_module))
         (AnyT reason_exports_module))
       scope;
 

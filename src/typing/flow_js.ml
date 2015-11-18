@@ -580,7 +580,7 @@ let rec merge_type cx = function
 
   | (AnyT _, t) | (t, AnyT _) -> t
 
-  | (UndefT _, t) | (t, UndefT _) -> t
+  | (EmptyT _, t) | (t, EmptyT _) -> t
   | (_, (MixedT _ as t)) | ((MixedT _ as t), _) -> t
 
   | (NullT _, (MaybeT _ as t)) | ((MaybeT _ as t), NullT _)
@@ -671,7 +671,7 @@ and ground_type_impl cx ids t = match t with
   | NumT _ -> NumT.t
   | StrT _ -> StrT.t
   | BoolT _ -> BoolT.t
-  | UndefT _ -> UndefT.t
+  | EmptyT _ -> EmptyT.t
   | NullT _ -> NullT.t
   | VoidT _ -> VoidT.t
   | MixedT _ -> MixedT.t
@@ -789,7 +789,7 @@ and lookup_type_ cx ids id =
     try
       List.fold_left
         (fun u t -> merge_type cx (ground_type_impl cx ids t, u))
-        UndefT.t types
+        EmptyT.t types
     with _ ->
       AnyT.t
 
@@ -910,11 +910,11 @@ and normalize_union cx r ts =
       | MaybeT t -> (TypeSet.add t ts, true, true)
       | VoidT _ -> (ts, true, has_null)
       | NullT _ -> (ts, has_void, true)
-      (* TODO: We should only get UndefT here when a completely open type
+      (* TODO: We should only get EmptyT here when a completely open type
          variable has been in the union before grounding it. This happens when
          "null" is passed to a function parameter. We throw this out because
-         it gives no information at all. merge_type also ignores UndefT. *)
-      | UndefT _ -> (ts, has_void, has_null)
+         it gives no information at all. merge_type also ignores EmptyT. *)
+      | EmptyT _ -> (ts, has_void, has_null)
       | _ -> (TypeSet.add t ts, has_void, has_null)
     ) ts (TypeSet.empty, false, false) in
   let ts =
@@ -923,9 +923,9 @@ and normalize_union cx r ts =
     | (false, true) -> TypeSet.add NullT.t ts
     | _ ->
         (* We should never get an empty set at this point but better safe than
-           sorry. Stripping out UndefT above might be unsafe. *)
+           sorry. Stripping out EmptyT above might be unsafe. *)
         if TypeSet.is_empty ts
-        then TypeSet.singleton UndefT.t
+        then TypeSet.singleton EmptyT.t
         else ts
   in
   let ts = TypeSet.elements ts in
@@ -1834,16 +1834,16 @@ let rec __flow cx (l, u) trace =
          a && b ~> a falsy | b *)
       let truthy_left = filter_exists left in
       (match truthy_left with
-      | UndefT _ ->
+      | EmptyT _ ->
         (* falsy *)
         rec_flow cx trace (left, PredicateT (NotP ExistsP, u))
       | _ ->
         (match filter_not_exists left with
-        | UndefT _ -> (* truthy *) rec_flow cx trace (right, u)
+        | EmptyT _ -> (* truthy *) rec_flow cx trace (right, u)
         | _ ->
           rec_flow cx trace (left, PredicateT (NotP ExistsP, u));
           (match truthy_left with
-          | UndefT _ -> ()
+          | EmptyT _ -> ()
           | _ -> rec_flow cx trace (right, u))
         )
       )
@@ -1854,16 +1854,16 @@ let rec __flow cx (l, u) trace =
          a || b ~> a truthy | b *)
       let falsy_left = filter_not_exists left in
       (match falsy_left with
-      | UndefT _ ->
+      | EmptyT _ ->
         (* truthy *)
         rec_flow cx trace (left, PredicateT (ExistsP, u))
       | _ ->
         (match filter_exists left with
-        | UndefT _ -> (* falsy *) rec_flow cx trace (right, u)
+        | EmptyT _ -> (* falsy *) rec_flow cx trace (right, u)
         | _ ->
           rec_flow cx trace (left, PredicateT (ExistsP, u));
           (match falsy_left with
-          | UndefT _ -> ()
+          | EmptyT _ -> ()
           | _ -> rec_flow cx trace (right, u))
         )
       )
@@ -1881,7 +1881,7 @@ let rec __flow cx (l, u) trace =
         subtyping constraints without introducing unwanted effects: they can
         appear on both sides of a type, but only have effects in one of those
         sides. In some sense, they are liked bounded AnyT: indeed, AnyT has the
-        same behavior as UpperBoundT(UndefT) and LowerBoundT(MixedT). Thus,
+        same behavior as UpperBoundT(EmptyT) and LowerBoundT(MixedT). Thus,
         these types can be used instead of AnyT when some precise typechecking
         is required without overconstraining the system. A completely static
         alternative would be achieved with bounded type variables, which Flow
@@ -3579,7 +3579,7 @@ and ground_subtype = function
   | (BoolT _, BoolT _)
   | (NullT _, NullT _)
   | (VoidT _, VoidT _)
-  | (UndefT _,_)
+  | (EmptyT _,_)
   | (_,MixedT _)
   | (_,FunProtoT _) (* MixedT is used for object protos, this is for funcs *)
   | (AnyT _,_)
@@ -3630,7 +3630,7 @@ and equatable cx trace = function
 
   | (BoolT _, BoolT _)
 
-  | (UndefT _,_) | (_, UndefT _)
+  | (EmptyT _,_) | (_, EmptyT _)
 
   | (_,MixedT _) | (MixedT _,_)
 
@@ -3669,7 +3669,7 @@ and generate_tests cx reason typeparams each =
   (* generate 2^|typeparams| maps *)
   let maps = List.fold_left (fun list {name; bound; _ } ->
     let xreason = replace_reason name reason in
-    let bot = UndefT (
+    let bot = EmptyT (
       prefix_reason "some incompatible instantiation of " xreason
     ) in
     List.rev_append
@@ -3793,7 +3793,7 @@ and subst cx ?(force=true) (map: Type.t SMap.t) t =
   | NumT _
   | StrT _
   | BoolT _
-  | UndefT _
+  | EmptyT _
   | NullT _
   | VoidT _
   | MixedT _
@@ -4009,7 +4009,7 @@ and speculative_flow_error cx trace l u =
 (* try each branch of a union in turn *)
 and try_union cx trace l reason = function
   | [] -> (* fail: bottom is the unit of unions *)
-    rec_flow cx trace (l, UndefT reason)
+    rec_flow cx trace (l, EmptyT reason)
   | t::ts ->
     rec_flow cx trace
       (SpeculativeMatchFailureT(reason, l, UnionT(reason, ts)),
@@ -4202,11 +4202,11 @@ and not_ pred x = not(pred x)
 and recurse_into_union filter_fn (r, ts) =
   let new_ts = ts |> List.filter (fun t ->
     match filter_fn t with
-    | UndefT _ -> false
+    | EmptyT _ -> false
     | _ -> true
   ) in
   match new_ts with
-  | [] -> UndefT r
+  | [] -> EmptyT r
   | [t] -> t
   | _ -> UnionT (r, new_ts)
 
@@ -4216,7 +4216,7 @@ and filter_exists = function
   | VoidT r
   | BoolT (r, Some false)
   | StrT (r, (Literal "" | Falsy))
-  | NumT (r, (Literal (0., _) | Falsy)) -> UndefT r
+  | NumT (r, (Literal (0., _) | Falsy)) -> EmptyT r
 
   (* unknown things become truthy *)
   | MaybeT t -> t
@@ -4245,9 +4245,9 @@ and filter_not_exists t = match t with
   | AnyObjT r
   | FunT (r, _, _, _)
   | AnyFunT r
-  | NumT (r, (Literal _ | Truthy)) -> UndefT r
+  | NumT (r, (Literal _ | Truthy)) -> EmptyT r
 
-  | ClassT t -> UndefT (reason_of_t t)
+  | ClassT t -> EmptyT (reason_of_t t)
 
   (* unknown boolies become falsy *)
   | MaybeT t ->
@@ -4272,12 +4272,12 @@ and filter_maybe = function
     VoidT.why reason
   | t ->
     let reason = reason_of_t t in
-    UndefT.why reason
+    EmptyT.why reason
 
 and filter_not_maybe = function
   | MaybeT t -> t
   | OptionalT t -> filter_not_maybe t
-  | NullT r | VoidT r -> UndefT r
+  | NullT r | VoidT r -> EmptyT r
   | t -> t
 
 and filter_null = function
@@ -4287,7 +4287,7 @@ and filter_null = function
   | MixedT r -> NullT.why r
   | t ->
     let reason = reason_of_t t in
-    UndefT.why reason
+    EmptyT.why reason
 
 and filter_not_null = function
   | MaybeT t ->
@@ -4295,7 +4295,7 @@ and filter_not_null = function
     UnionT (reason, [VoidT.why reason; t])
   | OptionalT t -> OptionalT (filter_not_null t)
   | UnionT (r, ts) -> recurse_into_union filter_not_null (r, ts)
-  | NullT r -> UndefT r
+  | NullT r -> EmptyT r
   | t -> t
 
 and filter_undefined = function
@@ -4307,7 +4307,7 @@ and filter_undefined = function
   | MixedT r -> VoidT.why r
   | t ->
     let reason = reason_of_t t in
-    UndefT.why reason
+    EmptyT.why reason
 
 and filter_not_undefined = function
   | MaybeT t ->
@@ -4315,17 +4315,17 @@ and filter_not_undefined = function
     UnionT (reason, [NullT.why reason; t])
   | OptionalT t -> filter_not_undefined t
   | UnionT (r, ts) -> recurse_into_union filter_not_undefined (r, ts)
-  | VoidT r -> UndefT r
+  | VoidT r -> EmptyT r
   | t -> t
 
 and filter_true = function
   | BoolT (r, Some true)
   | BoolT (r, None) -> BoolT (r, Some true)
   | MixedT r -> BoolT (replace_reason "boolean" r, Some true)
-  | t -> UndefT (reason_of_t t)
+  | t -> EmptyT (reason_of_t t)
 
 and filter_not_true = function
-  | BoolT (r, Some true) -> UndefT r
+  | BoolT (r, Some true) -> EmptyT r
   | BoolT (r, None) -> BoolT (r, Some false)
   | t -> t
 
@@ -4333,10 +4333,10 @@ and filter_false = function
   | BoolT (r, Some false)
   | BoolT (r, None) -> BoolT (r, Some false)
   | MixedT r -> BoolT (replace_reason "boolean" r, Some false)
-  | t -> UndefT (reason_of_t t)
+  | t -> EmptyT (reason_of_t t)
 
 and filter_not_false = function
-  | BoolT (r, Some false) -> UndefT r
+  | BoolT (r, Some false) -> EmptyT r
   | BoolT (r, None) -> BoolT (r, Some true)
   | t -> t
 
@@ -5433,7 +5433,7 @@ let rec gc cx state = function
   | NumT _
   | StrT _
   | BoolT _
-  | UndefT _
+  | EmptyT _
   | MixedT _
   | AnyT _
   | NullT _
@@ -5799,7 +5799,7 @@ let intersect_members cx members =
         ) map (List.tl members) in
       SMap.map (List.fold_left (fun acc x ->
           merge_type cx (acc, x)
-        ) UndefT.t) map
+        ) EmptyT.t) map
 
 (* It's kind of lame that Autocomplete is in this module, but it uses a bunch
  * of internal APIs so for now it's easier to keep it here than to expose those
@@ -5966,7 +5966,7 @@ let rec assert_ground ?(infer=false) cx skip ids = function
   | NumT _
   | StrT _
   | BoolT _
-  | UndefT _
+  | EmptyT _
   | MixedT _
   | AnyT _
   | NullT _

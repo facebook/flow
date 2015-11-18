@@ -83,7 +83,7 @@ and _json_of_t_impl json_cx t = Hh_json.(
       | Some b -> ["literal", JSON_Bool b]
       | None -> [])
 
-  | UndefT _
+  | EmptyT _
   | MixedT _
   | AnyT _
   | NullT _
@@ -765,7 +765,7 @@ and dump_t_ =
     | BoolT (r, c) -> Some (match c with
         | Some b -> spf "BoolT(%B)" b
         | None -> "BoolT")
-    | UndefT _
+    | EmptyT _
     | MixedT _
     | AnyT _
     | NullT _ -> Some (string_of_ctor t)

@@ -26,7 +26,7 @@ class ['a] t = object(self)
   | NumT _
   | StrT _
   | BoolT _
-  | UndefT _
+  | EmptyT _
   | MixedT _
   | AnyT _
   | NullT _
