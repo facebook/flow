@@ -134,7 +134,7 @@ let stop_if_typechecker_dead typechecker =
 
 let read_build_id_ohai fd =
   let client_build_id: string = Marshal_tools.from_fd_with_preamble fd in
-  let newline_byte = Bytes.create 1 in
+  let newline_byte = String.create 1 in
   let _ = Unix.read fd newline_byte 0 1 in
   if newline_byte <> "\n" then
     (Hh_logger.log "Did not find newline character after build_id ohai";

@@ -70,7 +70,7 @@ let parse_preamble preamble =
 
 let to_fd_with_preamble fd obj =
   let flag_list = [] in
-  let payload = Marshal.to_bytes obj flag_list in
+  let payload = Marshal.to_string obj flag_list in
   let size = String.length payload in
   let preamble = make_preamble size in
   let preamble_bytes_written =
@@ -93,4 +93,4 @@ let from_fd_with_preamble fd =
   let payload_size_read = Unix.read fd payload 0 payload_size in
   if (payload_size_read <> payload_size) then
     raise Reading_Payload_Exception;
-  Marshal.from_bytes payload 0
+  Marshal.from_string payload 0

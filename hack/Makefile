@@ -49,6 +49,7 @@ MODULES=\
   hh_matcher\
   hh_matcher/test\
   hhi\
+  libancillary\
   naming\
   parsing\
   procs\
@@ -68,6 +69,9 @@ NATIVE_OBJECT_FILES=\
   heap/hh_shared.o\
   hhi/hhi_elf.o\
   hhi/hhi_win32res_stubs.o\
+  libancillary/libancillary-stubs.o\
+  third-party/libancillary/fd_recv.o\
+  third-party/libancillary/fd_send.o\
   utils/files.o\
   utils/get_build_id.gen.o\
   utils/get_build_id.o\
