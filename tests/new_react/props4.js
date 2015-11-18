@@ -1,9 +1,26 @@
-var React = require('React');
+// @flow
 
-var C = React.createClass({
-  getDefaultProps: function() {
-    return { x: 0 };
+import React from "React";
+
+class JDiv extends React.Component {
+  // static defaultProps: { };
+  props: {
+    id: string
+  };
+}
+
+// Should be a type error ('id' takes a string, not a number..)
+<JDiv id={42} />;
+
+class Example extends React.Component {
+  props: { bar: string };
+
+  render() {
+    return <div>{this.props.bar}</div>
   }
-});
+}
 
-module.exports = C;
+React.render(
+  <Example foo="foo" />,
+  document.body
+);

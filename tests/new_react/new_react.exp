@@ -1,4 +1,20 @@
 
+bad_default_props.js:7:34,35: object type
+This type is incompatible with
+bad_default_props.js:7:34,35: undefined. Did you forget to declare T1?
+
+bad_default_props.js:7:34,35: undefined. Did you forget to declare T1?
+This type is incompatible with
+bad_default_props.js:7:34,35: object type
+
+bad_default_props.js:24:34,35: object type
+This type is incompatible with
+bad_default_props.js:24:34,35: undefined. Did you forget to declare T2?
+
+bad_default_props.js:24:34,35: undefined. Did you forget to declare T2?
+This type is incompatible with
+bad_default_props.js:24:34,35: object type
+
 classes.js:5:19,24: number
 This type is incompatible with
 classes.js:20:27,32: string
@@ -189,6 +205,18 @@ props3.js:50:39,48: property `inRequired`
 Property not found in
 props3.js:50:16,37: object type
 
+props4.js:13:1,16: React element: `JDiv`
+Error:
+props4.js:13:11,12: number
+This type is incompatible with
+props4.js:8:9,14: string
+
+props4.js:24:3,23: React element: `Example`
+Error:
+props4.js:16:10,24: property `bar`
+Property not found in
+props4.js:24:3,23: type parameter `DefaultProps` of React element: `Example`
+
 state.js:19:33,35: property `qux`
 Property cannot be accessed on possibly null value
 state.js:19:18,31: null
@@ -217,4 +245,4 @@ state4.js:10:29,29: property `z`
 Property not found in
 state4.js:10:18,27: object literal
 
-Found 47 errors
+Found 53 errors

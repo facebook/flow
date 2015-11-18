@@ -571,6 +571,11 @@ let rec convert cx type_params_map = Ast.Type.(function
           | _ -> assert false
         )
 
+      | "$Abstract" ->
+        check_type_param_arity cx loc typeParameters 1 (fun () ->
+          AbstractT(convert cx type_params_map (List.hd typeParameters))
+        )
+
       (* Class<T> is the type of the class whose instances are of type T *)
       | "Class" ->
         check_type_param_arity cx loc typeParameters 1 (fun () ->

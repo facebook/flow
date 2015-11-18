@@ -64,6 +64,8 @@ class ['a] t = object(self)
 
   | RestT t -> self#type_ cx acc t
 
+  | AbstractT t -> self#type_ cx acc t
+
   | PolyT (typeparams, t) ->
     let acc = self#list (self#type_param cx) acc typeparams in
     let acc = self#type_ cx acc t in

@@ -2635,7 +2635,7 @@ let rec __flow cx (l, u) trace =
       (match SMap.get x pmap with
       | None ->
         rec_flow cx trace (super, u)
-      | Some tx ->
+      | Some (AbstractT tx) | Some tx ->
         rec_unify cx trace t tx
       );
 
@@ -2828,6 +2828,11 @@ let rec __flow cx (l, u) trace =
     | (MixedT _, ObjRestT (reason, _, t)) ->
       let obj = mk_object_with_proto cx reason l in
       rec_flow cx trace (obj, t)
+
+    | ((NullT _ | VoidT _), ObjRestT (reason, _, t)) ->
+      (* mirroring Object.assign semantics, treat null/void as empty objects *)
+      let o = mk_object_with_proto cx reason (MixedT reason) in
+      rec_flow cx trace (o, t)
 
     (*************************************)
     (* objects can be copied-then-sealed *)
@@ -3130,6 +3135,16 @@ let rec __flow cx (l, u) trace =
     | (InstanceT (_,_,_,instance_super),
        SuperT (reason,instance))
       ->
+        iter_props cx instance_super.fields_tmap (fun x -> function
+          | AbstractT t when not (has_prop cx instance.fields_tmap x) ->
+            (* when abstract fields are not implemented, make them void *)
+            let reason = reason_of_t t in
+            let desc_void = spf "undefined. Did you forget to declare %s?"
+              (desc_of_reason reason) in
+            let reason_void = replace_reason desc_void reason in
+            rec_unify cx trace (VoidT reason_void) t
+          | _ -> ()
+        );
         iter_props cx instance.fields_tmap (fun x t ->
           lookup_prop cx trace l reason None x t
         );
@@ -3856,9 +3871,11 @@ and subst cx ?(force=true) (map: Type.t SMap.t) t =
       }
     )
 
+  | OptionalT (t) -> OptionalT (subst cx ~force map t)
+
   | RestT (t) -> RestT (subst cx ~force map t)
 
-  | OptionalT (t) -> OptionalT (subst cx ~force map t)
+  | AbstractT (t) -> AbstractT (subst cx ~force map t)
 
   | TypeAppT(c, ts) ->
       let c = subst cx ~force map c in
@@ -5456,6 +5473,9 @@ let rec gc cx state = function
       gc cx state t
 
   | RestT t ->
+      gc cx state t
+
+  | AbstractT t ->
       gc cx state t
 
   | PolyT (typeparams, t) ->

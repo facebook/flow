@@ -118,7 +118,8 @@ and _json_of_t_impl json_cx t = Hh_json.(
     ]
 
   | OptionalT t
-  | RestT t -> [
+  | RestT t
+  | AbstractT t -> [
       "type", _json_of_t json_cx t
     ]
 

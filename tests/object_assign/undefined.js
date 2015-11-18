@@ -10,9 +10,9 @@ type Props = {
   foo: number,
 }
 
-type State = {}
-
-class MyReactThing extends React.Component<DefaultProps, Props, State> {
+class MyReactThing extends React.Component {
+  props: Props;
+  static defaultProps: DefaultProps;
   getFoo(): number { return this.props.foo; }
 }
 

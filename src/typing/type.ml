@@ -77,6 +77,7 @@ type t =
   | OptionalT of t
   (* type of a rest parameter *)
   | RestT of t
+  | AbstractT of t
 
   (** A polymorphic type is like a type-level "function" that, when applied to
       lists of type arguments, generates types. Just like a function, a
@@ -644,6 +645,9 @@ let rec reason_of_t = function
   | RestT t ->
       prefix_reason "rest array of " (reason_of_t t)
 
+  | AbstractT t ->
+      prefix_reason "abstract " (reason_of_t t)
+
   | PredicateT (pred,t) -> reason_of_t t
 
   | EqT (reason, t) ->
@@ -822,6 +826,8 @@ let rec mod_reason_of_t f = function
 
   | RestT t -> RestT (mod_reason_of_t f t)
 
+  | AbstractT t -> AbstractT (mod_reason_of_t f t)
+
   | PredicateT (pred, t) -> PredicateT (pred, mod_reason_of_t f t)
 
   | EqT (reason, t) -> EqT (f reason, t)
@@ -942,6 +948,7 @@ let string_of_ctor = function
   | BecomeT _ -> "BecomeT"
   | OptionalT _ -> "OptionalT"
   | RestT _ -> "RestT"
+  | AbstractT _ -> "AbstractT"
   | PredicateT _ -> "PredicateT"
   | EqT _ -> "EqT"
   | AndT _ -> "AndT"
