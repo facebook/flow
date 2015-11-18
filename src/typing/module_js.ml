@@ -54,9 +54,14 @@ let get_config_options () =
 let replace_name_mapper_template_tokens =
   let project_root_token = Str.regexp_string "<PROJECT_ROOT>" in
 
+  (* Escape things like \1 and \2 which are interpreted as special references
+   * in a template. So \1 will become \\1 *)
+  let escape_template =
+    Str.global_replace (Str.regexp "\\\\[0-9]+") "\\\\\\0" in
+
   fun opts template ->
-    let root_path = Path.to_string opts.Options.opt_root in
-    Str.global_replace project_root_token (Str.quote root_path) template
+    let root_path = escape_template (Path.to_string opts.Options.opt_root) in
+    Str.global_replace project_root_token root_path template
 
 
 let choose_provider_and_warn_about_duplicates =
