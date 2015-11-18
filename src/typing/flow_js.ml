@@ -2419,14 +2419,15 @@ let rec __flow cx (l, u) trace =
     (* TODO Try and remove this. We're not sure why this case should exist but
      * it does seem to be triggered in www. *)
     | (ObjT _,
-       InstanceT (_, _, super, {
+       InstanceT (reason_inst, _, super, {
          fields_tmap;
          methods_tmap;
          structural = false;
          _;
        }))
       ->
-      structural_subtype cx trace l (super, fields_tmap, methods_tmap)
+      structural_subtype cx trace l reason_inst
+        (super, fields_tmap, methods_tmap)
 
     (****************************************)
     (* You can cast an object to a function *)
@@ -2506,14 +2507,15 @@ let rec __flow cx (l, u) trace =
     (***************************************************************)
 
     | (_,
-       InstanceT (_, _, super, {
+       InstanceT (reason_inst, _, super, {
          fields_tmap;
          methods_tmap;
          structural = true;
          _;
        }))
       ->
-      structural_subtype cx trace l (super, fields_tmap, methods_tmap)
+      structural_subtype cx trace l reason_inst
+        (super, fields_tmap, methods_tmap)
 
     (********************************************************)
     (* runtime types derive static types through annotation *)
@@ -3376,14 +3378,15 @@ let rec __flow cx (l, u) trace =
       rec_flow cx trace
         (next, ExtendsT (try_ts_on_failure, l, u))
 
-    | (MixedT _, ExtendsT ([], l, InstanceT (_, _, super, {
+    | (MixedT _, ExtendsT ([], l, InstanceT (reason_inst, _, super, {
          fields_tmap;
          methods_tmap;
          structural = true;
          _;
        })))
       ->
-      structural_subtype cx trace l (super, fields_tmap, methods_tmap)
+      structural_subtype cx trace l reason_inst
+        (super, fields_tmap, methods_tmap)
 
     | (MixedT _, ExtendsT ([], t, tc)) ->
       let msg = "This type is incompatible with" in
@@ -3716,7 +3719,10 @@ and mk_strict_lookup_reason sealed is_dict reason_o reason_op =
   else
     None
 
-and structural_subtype cx trace lower (super, fields_tmap, methods_tmap) =
+(* dispatch checks to verify that lower satisfies the structural
+   requirements given in the tuple. *)
+and structural_subtype cx trace lower reason_struct
+  (super, fields_tmap, methods_tmap) =
   let lower_reason = reason_of_t lower in
   let fields_tmap = find_props cx fields_tmap in
   let methods_tmap = find_props cx methods_tmap in
@@ -3724,13 +3730,13 @@ and structural_subtype cx trace lower (super, fields_tmap, methods_tmap) =
     match t2 with
     | OptionalT t2 ->
       let lookup_reason =
-        replace_reason (spf "optional property `%s`" s) (reason_of_t t2) in
+        prefix_reason (spf "optional property `%s` of " s) reason_struct in
       rec_flow cx trace
         (lower,
          LookupT (lookup_reason, None, [], s, t2))
     | _ ->
       let lookup_reason =
-        replace_reason (spf "property `%s`" s) (reason_of_t t2) in
+        prefix_reason (spf "property `%s` of " s) reason_struct in
       rec_flow cx trace
         (lower,
          LookupT (lookup_reason, Some lower_reason, [], s, t2))
@@ -3738,7 +3744,7 @@ and structural_subtype cx trace lower (super, fields_tmap, methods_tmap) =
   methods_tmap |> SMap.iter (fun s t2 ->
     if inherited_method s then
       let lookup_reason =
-        replace_reason (spf "property `%s`" s) (reason_of_t t2) in
+        prefix_reason (spf "property `%s` of " s) reason_struct in
       rec_flow cx trace
         (lower,
          LookupT (lookup_reason, Some lower_reason, [], s, LowerBoundT (t2)))
