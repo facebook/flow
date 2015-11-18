@@ -3229,6 +3229,13 @@ let rec __flow cx (l, u) trace =
     | (BoolT (reason, _), (GetPropT _ | MethodT _ | LookupT _)) ->
       rec_flow cx trace (get_builtin_type cx reason "Boolean",u)
 
+    (*************************)
+    (* Function library call *)
+    (*************************)
+
+    | (FunProtoT reason, (GetPropT _ | MethodT _ | LookupT _)) ->
+      rec_flow cx trace (get_builtin_type cx reason "Function",u)
+
     (*********************)
     (* functions statics *)
     (*********************)
@@ -3556,6 +3563,7 @@ and ground_subtype = function
   | (VoidT _, VoidT _)
   | (UndefT _,_)
   | (_,MixedT _)
+  | (_,FunProtoT _) (* MixedT is used for object protos, this is for funcs *)
   | (AnyT _,_)
   | (_,AnyT _)
     -> true
@@ -3770,6 +3778,7 @@ and subst cx ?(force=true) (map: Type.t SMap.t) t =
   | MixedT _
   | TaintT _
   | AnyT _
+  | FunProtoT _
     ->
     t
 
@@ -5402,6 +5411,7 @@ let rec gc cx state = function
   | NullT _
   | VoidT _
   | TaintT _
+  | FunProtoT _
       -> ()
 
   | FunT(_, static, prototype, funtype) ->

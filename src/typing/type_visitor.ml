@@ -32,6 +32,7 @@ class ['a] t = object(self)
   | NullT _
   | VoidT _
   | TaintT _
+  | FunProtoT _
     -> acc
 
   | FunT (_, static, prototype, funtype) ->

@@ -49,7 +49,15 @@ function.js:31:21,21: object type
 This type is incompatible with
 function.js:31:10,17: function type
 
+function.js:35:2,9: number
+This type is incompatible with
+function.js:35:12,15: undefined
+
+function.js:36:2,7: string
+This type is incompatible with
+function.js:36:10,13: undefined
+
 rest.js:8:31,33: tuple type
 rest parameters should be an array type, got a tuple type instead
 
-Found 11 errors
+Found 13 errors

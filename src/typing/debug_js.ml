@@ -89,6 +89,7 @@ and _json_of_t_impl json_cx t = Hh_json.(
   | NullT _
   | VoidT _
   | TaintT _
+  | FunProtoT _
     -> []
 
   | FunT (_, static, proto, funtype) -> [

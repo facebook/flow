@@ -6226,7 +6226,8 @@ and mk_function_type cx reason this signature =
   (* prepare type *)
   let proto_reason = replace_reason "prototype" reason in
   let prototype = mk_object cx proto_reason in
-  let static = mk_object cx (prefix_reason "statics of " reason) in
+  let static_reason = prefix_reason "statics of " reason in
+  let static = Flow_js.mk_object_with_proto cx static_reason (FunProtoT static_reason) in
 
   let funtype = {
     this_t = this;

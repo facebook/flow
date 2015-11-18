@@ -63,6 +63,8 @@ type t =
   | VoidT of reason
 
   | FunT of reason * static * prototype * funtype
+  | FunProtoT of reason
+
   | ObjT of reason * objtype
   | ArrT of reason * t * t list
 
@@ -583,6 +585,7 @@ let rec reason_of_t = function
   | VoidT reason
 
   | FunT (reason,_,_,_)
+  | FunProtoT reason
       -> reason
 
   | PolyT (_,t) ->
@@ -779,6 +782,7 @@ let rec mod_reason_of_t f = function
   | VoidT reason -> VoidT (f reason)
 
   | FunT (reason, s, p, ft) -> FunT (f reason, s, p, ft)
+  | FunProtoT (reason) -> FunProtoT (f reason)
   | PolyT (plist, t) -> PolyT (plist, mod_reason_of_t f t)
   | BoundT { reason; name; bound; polarity } ->
     BoundT { reason = f reason; name; bound; polarity }
@@ -910,6 +914,7 @@ let string_of_ctor = function
   | NullT _ -> "NullT"
   | VoidT _ -> "VoidT"
   | FunT _ -> "FunT"
+  | FunProtoT _ -> "FunProtoT"
   | PolyT _ -> "PolyT"
   | BoundT _ -> "BoundT"
   | ExistsT _ -> "ExistsT"

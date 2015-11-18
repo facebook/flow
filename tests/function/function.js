@@ -30,3 +30,12 @@ function bad(x: Function, y: Object): void {
   var b: string = x; // Error
   var c: Function = y; // Object is not a Function
 }
+
+function d() {}
+(d.length: void); // error, it's a number
+(d.name: void); // error, it's a string
+
+function e(x: Function) {
+  (x.length: void); // ok, Function is unchecked
+  (x.name: void); // ok, Function is unchecked
+}
