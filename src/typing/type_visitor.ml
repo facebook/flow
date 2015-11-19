@@ -155,7 +155,7 @@ class ['a] t = object(self)
   | ConcretizeT (_, _, _, _)
   | ConcreteT _
   | GetKeysT (_, _)
-  | HasKeyT (_, _)
+  | HasOwnPropT (_, _)
   | ElemT (_, _, _)
   | CJSRequireT (_, _)
   | ImportModuleNsT (_, _)

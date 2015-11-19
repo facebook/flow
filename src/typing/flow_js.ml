@@ -2031,7 +2031,7 @@ let rec __flow cx (l, u) trace =
     | (StrT (reason_s, Literal x), KeysT (reason_op, o)) ->
       let reason_op = replace_reason (spf "string literal `%s`" x) reason_s in
       (* check that o has key x *)
-      rec_flow cx trace (o, HasKeyT(reason_op,x))
+      rec_flow cx trace (o, HasOwnPropT(reason_op,x))
 
     | (StrT (_, (Truthy | Falsy | AnyLiteral)), KeysT _) ->
       prerr_flow cx trace "Expected string literal" l u
@@ -2042,11 +2042,11 @@ let rec __flow cx (l, u) trace =
 
     (* helpers *)
 
-    | (ObjT (reason_o, { props_tmap = mapr; _ }), HasKeyT (reason_op, x)) ->
+    | (ObjT (reason_o, { props_tmap = mapr; _ }), HasOwnPropT (reason_op, x)) ->
       if has_prop cx mapr x then ()
       else prmsg_flow_prop_not_found cx trace (reason_op, reason_o)
 
-    | (InstanceT (reason_o, _, _, instance), HasKeyT(reason_op, x)) ->
+    | (InstanceT (reason_o, _, _, instance), HasOwnPropT(reason_op, x)) ->
       let fields_tmap = find_props cx instance.fields_tmap in
       let methods_tmap = find_props cx instance.methods_tmap in
       let fields = SMap.union fields_tmap methods_tmap in
@@ -3538,7 +3538,7 @@ and err_operation = function
   | SpecializeT _ -> "Expected polymorphic type instead of"
   | LookupT _ -> "Property not found in"
   | GetKeysT _ -> "Expected object instead of"
-  | HasKeyT _ -> "Property not found in"
+  | HasOwnPropT _ -> "Property not found in"
   | UnaryMinusT _ -> "Expected number instead of"
   (* unreachable or unclassified use-types. until we have a mechanical way
      to verify that all legit use types are listed above, we can't afford
@@ -3598,7 +3598,7 @@ and object_like = function
 and object_like_op = function
   | SetPropT _ | GetPropT _ | MethodT _ | LookupT _
   | SuperT _
-  | GetKeysT _ | HasKeyT _
+  | GetKeysT _ | HasOwnPropT _
   | ObjAssignT _ | ObjRestT _
   | SetElemT _ | GetElemT _
   | AnyObjT _ -> true
@@ -5667,7 +5667,7 @@ let rec gc cx state = function
   | GetKeysT (_, t) ->
       gc cx state t
 
-  | HasKeyT _ -> ()
+  | HasOwnPropT _ -> ()
 
   | ElemT (_, t1, t2) ->
       gc cx state t1;

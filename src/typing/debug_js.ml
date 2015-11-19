@@ -356,7 +356,7 @@ and _json_of_t_impl json_cx t = Hh_json.(
       "type", _json_of_t json_cx t
     ]
 
-  | HasKeyT (_, key) -> [
+  | HasOwnPropT (_, key) -> [
       "key", JSON_String key
     ]
 

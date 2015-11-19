@@ -293,7 +293,7 @@ type t =
 
   (* Keys *)
   | GetKeysT of reason * t
-  | HasKeyT of reason * string
+  | HasOwnPropT of reason * string
 
   (* Element access *)
   | ElemT of reason * t * t
@@ -550,7 +550,7 @@ let is_use = function
   | UnaryMinusT _
   | UnifyT _
   | GetKeysT _
-  | HasKeyT _
+  | HasOwnPropT _
   | ElemT _
   | ConcreteT _
   | ConcretizeT _
@@ -708,7 +708,7 @@ let rec reason_of_t = function
   | SingletonBoolT (reason, _) -> reason
 
   | GetKeysT (reason, _) -> reason
-  | HasKeyT (reason, _) -> reason
+  | HasOwnPropT (reason, _) -> reason
 
   | ElemT (reason, _, _) -> reason
 
@@ -876,7 +876,7 @@ let rec mod_reason_of_t f = function
   | SingletonBoolT (reason, t) -> SingletonBoolT (f reason, t)
 
   | GetKeysT (reason, t) -> GetKeysT (f reason, t)
-  | HasKeyT (reason, t) -> HasKeyT (f reason, t)
+  | HasOwnPropT (reason, t) -> HasOwnPropT (f reason, t)
 
   | ElemT (reason, t, t2) -> ElemT (f reason, t, t2)
 
@@ -980,7 +980,7 @@ let string_of_ctor = function
   | SingletonNumT _ -> "SingletonNumT"
   | SingletonBoolT _ -> "SingletonBoolT"
   | GetKeysT _ -> "GetKeysT"
-  | HasKeyT _ -> "HasKeyT"
+  | HasOwnPropT _ -> "HasOwnPropT"
   | ElemT _ -> "ElemT"
   | ConcretizeT _ -> "ConcretizeT"
   | ConcreteT _ -> "ConcreteT"
