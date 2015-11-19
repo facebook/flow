@@ -14,6 +14,8 @@ type error =
   | Server_busy
   | Build_id_mismatch
 
+exception ConnectTimeout
+
 let server_exists ~tmp_dir root =
   not (Lock.check (FlowConfig.lock_file ~tmp_dir root))
 
@@ -51,6 +53,14 @@ let open_connection sockaddr =
       Printf.fprintf (snd conn) "%s\n%!" Build_id.build_id_ohai;
       conn
 
+let close_connection sockaddr =
+  match SockMap.get sockaddr !connections with
+  | None -> ()
+  | Some (ic, _) ->
+      connections := SockMap.remove sockaddr !connections;
+      Unix.shutdown_connection ic;
+      close_in_noerr ic
+
 let establish_connection ~tmp_dir root =
   let sock_name = Socket.get_path (FlowConfig.socket_file ~tmp_dir root) in
   let sockaddr =
@@ -61,11 +71,20 @@ let establish_connection ~tmp_dir root =
       Unix.(ADDR_INET (inet_addr_loopback, port))
     else
       Unix.ADDR_UNIX sock_name in
-  Result.Ok (open_connection sockaddr)
+  Result.Ok (sockaddr, open_connection sockaddr)
 
-let get_cstate (ic, oc) =
-  let cstate : ServerUtils.connection_state = Marshal.from_channel ic in
-  Result.Ok (ic, oc, cstate)
+let get_cstate sockaddr ic oc =
+  try
+    let cstate : ServerUtils.connection_state = Marshal.from_channel ic in
+    Result.Ok (ic, oc, cstate)
+  with
+  | ConnectTimeout as e ->
+      (* Timeouts are expected *)
+      raise e
+  | e ->
+      (* Other exceptions may indicate a bad connection, so let's close it *)
+      close_connection sockaddr;
+      raise e
 
 let verify_cstate ic = function
   | ServerUtils.Connection_ok -> Result.Ok ()
@@ -90,10 +109,10 @@ let connect_once ~tmp_dir root =
   let open Result in
   try
     Sys_utils.with_timeout 1
-      ~on_timeout:(fun _ -> raise Exit)
+      ~on_timeout:(fun _ -> raise ConnectTimeout)
       ~do_:begin fun () ->
-        establish_connection ~tmp_dir root >>= fun (ic, oc) ->
-        get_cstate (ic, oc)
+        establish_connection ~tmp_dir root >>= fun (sockaddr, (ic, oc)) ->
+        get_cstate sockaddr ic oc
       end >>= fun (ic, oc, cstate) ->
       verify_cstate ic cstate >>= fun () ->
       Ok (ic, oc)
