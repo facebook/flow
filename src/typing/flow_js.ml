@@ -398,6 +398,9 @@ let prmsg_flow cx level trace msg (r1, r2) =
   let trace_reasons = make_trace_reasons trace in
   prmsg_flow_trace_reasons cx level trace_reasons msg (r1, r2)
 
+let prmsg_flow_prop_not_found cx trace (r1, r2) =
+  prmsg_flow cx Errors_js.InferError trace "Property not found in" (r1, r2)
+
 (* format an error and add it to flow's output.
    here we print the full trace, ignoring global settings.
    Notes
@@ -2041,12 +2044,7 @@ let rec __flow cx (l, u) trace =
 
     | (ObjT (reason_o, { props_tmap = mapr; _ }), HasKeyT (reason_op, x)) ->
       if has_prop cx mapr x then ()
-      else
-        prmsg_flow cx
-          Errors_js.InferError
-          trace
-          "Property not found in"
-          (reason_op, reason_o)
+      else prmsg_flow_prop_not_found cx trace (reason_op, reason_o)
 
     | (InstanceT (reason_o, _, _, instance), HasKeyT(reason_op, x)) ->
       let fields_tmap = find_props cx instance.fields_tmap in
@@ -2054,12 +2052,7 @@ let rec __flow cx (l, u) trace =
       let fields = SMap.union fields_tmap methods_tmap in
       (match SMap.get x fields with
       | Some tx -> ()
-      | None ->
-        prmsg_flow cx
-          Errors_js.InferError
-          trace
-          "Property not found in"
-          (reason_op, reason_o)
+      | None -> prmsg_flow_prop_not_found cx trace (reason_op, reason_o)
       )
 
     | (ObjT (reason, { flags; props_tmap = mapr; _ }), GetKeysT(_,key)) ->
@@ -4125,11 +4118,7 @@ and ensure_prop_for_write cx trace strict mapr x proto reason_op reason_prop =
   | None -> (
     match strict with
     | Some reason_o ->
-      prmsg_flow cx
-        Errors_js.InferError
-        trace
-        "Property not found in"
-        (reason_prop, reason_o);
+      prmsg_flow_prop_not_found cx trace (reason_prop, reason_o);
       AnyT.t
     | None ->
       let t =
