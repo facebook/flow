@@ -37,9 +37,9 @@ $> brew install flow
 
 Brew adds flow to your path as part of the install.
 
-### NPM Wrapper
+### npm wrapper
 
-You can also install flow by using https://github.com/gabelevi/flow-bin. Similarly, only OS X and Linux (64-bit) binaries are provided.
+You can also install flow by using [flow-bin](https://github.com/flowtype/flow-bin). Similarly, only OS X and Linux (64-bit) binaries are provided.
 
 ```bash
 $> npm install flow-bin --global
