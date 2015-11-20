@@ -1789,7 +1789,6 @@ and set_valid_rvalue p env x ty =
   env, ty
 
 and assign p env e1 ty2 =
-  let env, ty2 = TUtils.convert_array_as_tuple env ty2 in
   match e1 with
   | (_, Lvar (_, x)) ->
     set_valid_rvalue p env x ty2

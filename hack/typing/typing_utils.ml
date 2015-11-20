@@ -299,42 +299,6 @@ let unwrap_class_or_interface_hint = function
       Pos.none, "", []
 
 (*****************************************************************************)
-(* Function checking if an array is used as a tuple *)
-(*****************************************************************************)
-
-let is_array_as_tuple env ty =
-  let env, ety = Env.expand_type env ty in
-  let env, ety = fold_unresolved env ety in
-  match ety with
-  | _, Tarraykind AKvec elt_type ->
-      let env, normalized_elt_ty = Env.expand_type env elt_type in
-      let _env, normalized_elt_ty = fold_unresolved env normalized_elt_ty in
-      (match normalized_elt_ty with
-      | _, Tunresolved _ -> true
-      | _ -> false
-      )
-  | _, (Tany | Tmixed | Tarraykind _ |  Tprim _ | Toption _
-    | Tvar _ | Tabstract (_, _) | Tclass (_, _) | Ttuple _ | Tanon (_, _)
-    | Tfun _ | Tunresolved _ | Tobject | Tshape _) -> false
-
-(* While converting code from PHP to Hack, some arrays are used
- * as tuples. Example: array('', 0). Since the elements have
- * incompatible types, it should be a tuple. However, while migrating
- * code, it is more flexible to allow it in partial.
- *
- * This probably isn't a good idea and should just use ty2 in all cases, but
- * FB www has about 50 errors if you just use ty2 -- not impossible to clean
- * up but more work right now than I want to do. Also it probably affects open
- * source code too, so this may be a nice small test case for our upcoming
- * migration/upgrade strategy.
- *)
-let convert_array_as_tuple env ty2 =
-  let r2 = fst ty2 in
-  if not (Env.is_strict env) && is_array_as_tuple env ty2
-  then env, (r2, Tany)
-  else env, ty2
-
-(*****************************************************************************)
 (* Keep the most restrictive visibility (private < protected < public).
  * This is useful when dealing with unresolved types.
  * When there are several candidates for a given visibility we need to be

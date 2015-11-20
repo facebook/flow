@@ -89,7 +89,8 @@ let connect_once root =
       verify_cstate ic cstate >>= fun () -> Ok (ic, oc)
   with
   | Exit_status.Exit_with _  as e -> raise e
-  | _ ->
+  | e ->
+    Hh_logger.exc e;
     if not (server_exists root) then Result.Error Server_missing
     else if not (Lock.check (ServerFiles.init_complete_file root))
     then Result.Error Server_busy

@@ -78,8 +78,7 @@ let downcast_aktuple_to_akvec_ env r fields =
   let tyl = List.rev (IMap.values fields) in
   let env, tyl = lmap Typing_env.unbind env tyl in
   let env, value = array_type_list_to_single_type env tyl in
-  let env, ty = env, (r, Tarraykind (AKvec (value))) in
-  TUtils.convert_array_as_tuple env ty
+  env, (r, Tarraykind (AKvec (value)))
 
 class virtual downcast_aktypes_mapper = object(this)
   method on_tarraykind_akshape (env, seen) r fdm =
