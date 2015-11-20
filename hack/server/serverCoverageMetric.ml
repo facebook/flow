@@ -26,7 +26,7 @@ let count_exprs fn type_acc =
     let counter = match SMap.get kind acc with
       | Some counter -> counter
       | None -> empty_counter in
-    SMap.add kind (incr_counter lvl (r, counter)) acc
+    SMap.add kind (incr_counter lvl (r, p, counter)) acc
   ) type_acc SMap.empty
 
 let accumulate_types defs =

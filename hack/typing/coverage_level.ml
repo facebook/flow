@@ -8,6 +8,7 @@
  *
  *)
 
+open Core
 open Typing_defs
 open Utils
 
@@ -17,6 +18,7 @@ module Reason = Typing_reason
 (* This should be configurable by client command args... eventually*)
 let sample_rate = 0
 let display_limit = 10
+let samples_limit = 5
 
 type level =
   | Unchecked (* Completely unchecked code, i.e. Tanys *)
@@ -37,7 +39,9 @@ end)
 type pos_stats_entry = {
   (* How many times this reason position has occured. *)
   pos_count : int;
-  (* This is a struct because I plan to add one more field to it *)
+  (* Random sample of expressions where this reason position has occured, for
+   * debugging purposes *)
+  samples : Pos.t list;
 }
 
 type level_stats_entry = {
@@ -49,6 +53,7 @@ type level_stats_entry = {
 
 let empty_pos_stats_entry = {
   pos_count = 0;
+  samples = [];
 }
 
 let empty_level_stats_entry = {
@@ -62,7 +67,22 @@ let empty_counter =
   let m = CLMap.add Partial empty_level_stats_entry m in
   CLMap.add Unchecked empty_level_stats_entry m
 
-let incr_reason_stats r reason_stats =
+(* This is highly unscientific and not really uniform sampling, but for
+ * debugging purposes should be enough. *)
+let merge_pos_stats_samples l1 l2 =
+  let rec pick_n acc n m l =
+    if n == 0 then acc
+    else if m <= n then l @ acc else match l with
+      | [] -> acc
+      | h::tl ->
+        if Random.int m < n then pick_n (h::acc) (n-1) (m-1) tl
+        else pick_n acc n (m-1) tl in
+  pick_n [] samples_limit ((List.length l1) + (List.length l2)) (l1 @ l2)
+
+let add_sample_pos p samples =
+  merge_pos_stats_samples samples [p]
+
+let incr_reason_stats r p reason_stats =
   if sample_rate = 0 || Random.int sample_rate <> 0 then reason_stats else
   let reason_pos = Reason.to_pos r in
   let string_key =
@@ -127,22 +147,24 @@ let incr_reason_stats r reason_stats =
     | Some x -> x
     | None -> empty_pos_stats_entry in
   let pos_stats = {
-    pos_count = pos_stats.pos_count + sample_rate
+    pos_count = pos_stats.pos_count + sample_rate;
+    samples = add_sample_pos p pos_stats.samples
   } in
   SMap.add
     string_key
     (Pos.Map.add reason_pos pos_stats pos_stats_map)
     reason_stats
 
-let incr_counter k (r, c) =
+let incr_counter k (r, p, c) =
   let v = CLMap.find_unsafe k c in
   CLMap.add k {
     count = v.count + 1;
-    reason_stats = incr_reason_stats r v.reason_stats;
+    reason_stats = incr_reason_stats r p v.reason_stats;
   } c
 
 let merge_pos_stats p1 p2 = {
   pos_count = p1.pos_count + p2.pos_count;
+  samples = merge_pos_stats_samples p1.samples p2.samples;
 }
 
 let merge_reason_stats s1 s2 =

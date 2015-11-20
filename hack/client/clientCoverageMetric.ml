@@ -75,6 +75,10 @@ let print_reasons reasons_stats =
     List.iter pos_list (fun (p, pos_stats) ->
       Printf.printf "    %s %d\n"
         (Pos.string (Pos.to_relative_string p)) pos_stats.pos_count;
+        Printf.printf "      Reason samples:\n";
+          List.iter pos_stats.samples (fun p ->
+          Printf.printf "      %s\n" (Pos.string (Pos.to_relative_string p))
+      )
     )
   )
 
