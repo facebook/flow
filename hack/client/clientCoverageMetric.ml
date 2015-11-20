@@ -16,7 +16,7 @@ open Utils
 let result_to_json r = JSON_Object begin
   List.map (SMap.elements r) begin fun (kind, counts) ->
     let counts = JSON_Object (List.map (CLMap.elements counts)
-        (fun (k, v) -> string_of_level k, int_ v)) in
+        (fun (k, v) -> string_of_level k, int_ v.count)) in
     kind, counts
   end
 end
@@ -42,22 +42,47 @@ let print_json r_opt =
  * expressions : total expressions. partial_weight is a number between
  * 0 and 1. *)
 let calc_percentage partial_weight ctr =
-  let total = CLMap.fold (fun k v acc -> v + acc) ctr 0 in
+  let total = CLMap.fold (fun k v acc -> v.count + acc) ctr 0 in
   let mult = function
     | Unchecked -> 0.0
     | Partial -> partial_weight
     | Checked -> 1.0
   in
   let score = CLMap.fold
-    (fun k v acc -> mult k *. float_of_int v +. acc) ctr 0.0 in
+    (fun k v acc -> mult k *. float_of_int v.count +. acc) ctr 0.0 in
   if total = 0
   then 1.0
   else score /. float_of_int total
 
+let print_reasons reasons_stats =
+  if Coverage_level.sample_rate = 0 then () else
+  let reasons_list = List.map
+    (SMap.elements reasons_stats)
+    (fun (reason, pos_map) ->
+      (reason,
+       pos_map,
+       Pos.Map.fold (fun _ x acc -> acc + x.pos_count) pos_map 0)
+    ) in
+  let sorted_reasons = List.sort
+    (fun (_ , _, x) (_, _, y) -> y - x) reasons_list in
+  List.iter sorted_reasons (fun (r, pos_map, count) ->
+    Printf.printf "  Reason %s: %d\n" r count;
+    Printf.printf "    Reason position:\n";
+    let pos_list = List.sort
+      (fun (_, p1) (_, p2) -> p2.pos_count - p1.pos_count)
+      (Pos.Map.elements pos_map) in
+    let pos_list = List.take pos_list Coverage_level.display_limit in
+    List.iter pos_list (fun (p, pos_stats) ->
+      Printf.printf "    %s %d\n"
+        (Pos.string (Pos.to_relative_string p)) pos_stats.pos_count;
+    )
+  )
+
 let print_counts counts =
   CLMap.iter (fun k v ->
     let level_name = String.capitalize (string_of_level k) in
-    Printf.printf "%s: %d\n" level_name v) counts;
+    Printf.printf "%s: %d\n" level_name v.count;
+    print_reasons v.reason_stats) counts;
   Printf.printf "Checked / Total: %f\n" (calc_percentage 0.0 counts);
   Printf.printf "(Checked + Partial * 0.5) / Total: %f\n"
     (calc_percentage 0.5 counts)

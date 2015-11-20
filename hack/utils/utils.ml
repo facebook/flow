@@ -69,7 +69,6 @@ module type MapSig = sig
   val min_binding : 'a t -> key * 'a
 
   val map_env: ('c -> 'a -> 'c * 'b) -> 'c -> 'a t -> 'c * 'b t
-  (* use only in testing code *)
   val elements: 'a t -> (key * 'a) list
 end
 

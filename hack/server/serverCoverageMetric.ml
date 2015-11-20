@@ -16,17 +16,17 @@ module FileInfoStore = GlobalStorage.Make(struct
   type t = FileInfo.t Relative_path.Map.t
 end)
 
-type result = level_counts SMap.t trie option
+type result = level_stats SMap.t trie option
 
 (* Count the number of expressions of each kind of Coverage_level. *)
 let count_exprs fn type_acc =
   let level_of_type = level_of_type_mapper fn in
   Hashtbl.fold (fun (p, kind) ty acc ->
-    let lvl = level_of_type (p, ty) in
+    let r, lvl = level_of_type (p, ty) in
     let counter = match SMap.get kind acc with
       | Some counter -> counter
       | None -> empty_counter in
-    SMap.add kind (incr_counter lvl counter) acc
+    SMap.add kind (incr_counter lvl (r, counter)) acc
   ) type_acc SMap.empty
 
 let accumulate_types defs =

@@ -409,7 +409,7 @@ let hh_hack_coloring fn =
     (fun (p, _) ty -> Hashtbl.replace type_acc p ty)
     (fun () -> ignore (hh_check fn));
   let fn = Relative_path.create Relative_path.Root fn in
-  let level_of_type = Coverage_level.level_of_type_mapper fn in
+  let level_of_type x = snd (Coverage_level.level_of_type_mapper fn x) in
   let result = Hashtbl.fold (fun p ty xs ->
     (Pos.info_raw p, level_of_type (p, ty)) :: xs) type_acc [] in
   let result = ColorFile.go (Hashtbl.find files fn) result in
