@@ -3149,8 +3149,8 @@ end = struct
             let name, err, end_loc = if Peek.value env = "as"
             then begin
               Expect.contextual env "as";
-              let name, err = Parse.identifier_or_reserved_keyword env in
-              Some name, err, fst name
+              let name, _ = Parse.identifier_or_reserved_keyword env in
+              Some name, None, fst name
             end else None, err, fst id in
             let loc = Loc.btwn (fst id) end_loc in
             let specifier = loc, {

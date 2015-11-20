@@ -9,7 +9,8 @@ NATIVE_OBJECT_FILES=\
 	hack/utils/files.o\
 	hack/utils/nproc.o\
 	hack/utils/realpath.o\
-	hack/utils/sysinfo.o
+	hack/utils/sysinfo.o\
+	hack/utils/priorities.o
 
 all: build-parser
 
