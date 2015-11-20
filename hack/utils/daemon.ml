@@ -152,6 +152,7 @@ let fork ?log_file (f : ('a, 'b) channel_pair -> unit) :
   match Fork.fork () with
   | -1 -> failwith "Go get yourself a real computer"
   | 0 -> (* child *)
+    (try
       close_in parent_in;
       close_out parent_out;
       Sys_utils.with_umask 0o111 begin fun () ->
@@ -165,17 +166,20 @@ let fork ?log_file (f : ('a, 'b) channel_pair -> unit) :
             fn
           end in
         let fd =
-          Unix.openfile fn [Unix.O_WRONLY; Unix.O_CREAT; Unix.O_TRUNC] 0o666 in
+          Unix.openfile fn
+            [Unix.O_WRONLY; Unix.O_CREAT; Unix.O_TRUNC] 0o666 in
         Unix.dup2 fd Unix.stdout;
         Unix.dup2 fd Unix.stderr;
         Unix.close fd;
       end;
       f (child_in, child_out);
       exit 0
+    with _ ->
+      exit 1)
   | pid -> (* parent *)
-      close_in child_in;
-      close_out child_out;
-      { channels = parent_in, parent_out; pid }
+    close_in child_in;
+    close_out child_out;
+    { channels = parent_in, parent_out; pid }
 
 let setup_channels channel_mode =
   match channel_mode with

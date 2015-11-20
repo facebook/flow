@@ -107,12 +107,17 @@ let load_state root cmd (_ic, oc) =
 let mk_state_future timeout root cmd =
   let start_time = Unix.gettimeofday () in
   Result.try_with @@ fun () ->
-  let {Daemon.channels = (ic, _oc); pid} =
+  let {Daemon.channels = (ic, _oc); pid} as daemon =
     Daemon.fork ~log_file:(ServerFiles.load_log root) (load_state root cmd) in
   fun () ->
     Result.join @@ Result.try_with @@ fun () ->
     Sys_utils.with_timeout timeout
-      ~on_timeout:(fun _ -> raise Loader_timeout)
+      ~on_timeout:(fun _ ->
+        (* Do a best-effort attempt to kill the daemon, since we no longer
+         * need its result. The call may fail if e.g. the daemon exited just
+         * after the timeout but before the kill signal goes through *)
+        (try Daemon.kill daemon with e -> Hh_logger.exc e);
+        raise Loader_timeout)
       ~do_:begin fun () ->
         Daemon.from_channel ic
         >>| fun (fn, dirty_files, end_time) ->
