@@ -5206,13 +5206,15 @@ and static_method_call_Object cx type_params_map loc prop_loc m args_ = Ast.Expr
     )
 
   | (("getOwnPropertyNames" | "keys"), [ Expression e ]) ->
+    let arr_reason = mk_reason "array type" loc in
     let o = expression cx type_params_map e in
-    ArrT (reason,
-      Flow_js.mk_tvar_where cx reason (fun tvar ->
-        let reason = prefix_reason "element of " reason in
-        Flow_js.flow cx (o, GetKeysT(reason, tvar));
+    ArrT (arr_reason,
+      Flow_js.mk_tvar_where cx arr_reason (fun tvar ->
+        let keys_reason = prefix_reason "element of " reason in
+        Flow_js.flow cx (o, GetKeysT(keys_reason, tvar));
       ),
-          [])
+      []
+    )
 
   | ("defineProperty", [ Expression e;
                          Expression (ploc, Literal
