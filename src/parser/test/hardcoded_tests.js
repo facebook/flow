@@ -2940,6 +2940,7 @@ module.exports = {
       'export { default } from "foo"': {},
       'export { default as foo } from "foo"': {},
       'export { foo as default } from "foo"': {},
+      'export { foo as default }': {},
       'import { default as foo } from "foo"': {}
     },
     'Invalid export/import reserved words': {
