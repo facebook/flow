@@ -4881,12 +4881,13 @@ and predicates_of_condition cx type_params_map e = Ast.(Expression.(
 
   (* inspect a sentinel property test *)
   let sentinel_prop_test loc op e key value =
+    let val_t = expression cx type_params_map value in
     let refinement = match refinable_lvalue e with
     | None, t -> None
     | Some name, t ->
         match op with
         | Binary.StrictEqual | Binary.StrictNotEqual ->
-            let pred = LeftP (SentinelProp key, expression cx type_params_map value) in
+            let pred = LeftP (SentinelProp key, val_t) in
             Some (name, t, pred, op = Binary.StrictEqual)
         | _ -> None
     in

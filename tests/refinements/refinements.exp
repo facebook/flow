@@ -307,6 +307,14 @@ tagged_union.js:82:17,27: property `nationality`
 Property not found in
 tagged_union.js:82:15,15: object type
 
+tagged_union.js:88:21,36: call of method `toString`
+Method cannot be called on possibly null value
+tagged_union.js:88:21,24: null
+
+tagged_union.js:89:29,44: call of method `toString`
+Method cannot be called on possibly null value
+tagged_union.js:89:29,32: null
+
 typeof.js:5:5,8: access of computed property/element
 Computed property/element cannot be accessed on
 typeof.js:5:5,5: boolean
@@ -418,4 +426,4 @@ void.js:85:7,12: undefined
 This type is incompatible with
 void.js:85:7,19: number
 
-Found 98 errors
+Found 100 errors

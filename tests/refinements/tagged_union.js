@@ -81,3 +81,11 @@ function nationality(x: Citizen | NonCitizen) {
   if (x.citizen) return "Shire"
   else return x.nationality; // TODO: currently error, but should be OK
 }
+
+let tests = [
+  // invalid RHS
+  function(x: A) {
+    if (x.kind === (null).toString()) {} // error, method on null
+    if ({kind: 1}.kind === (null).toString()) {} // error, method on null
+  },
+];
