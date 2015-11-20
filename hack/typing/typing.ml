@@ -2368,6 +2368,15 @@ and dispatch_call p env call_type (fpos, fun_expr as e) el uel =
           end
         | _  -> env, res
       end
+  | Class_const (CI(_, shapes) as class_id, ((_, to_array) as method_id))
+    when shapes = SN.Shapes.cShapes && to_array = SN.Shapes.toArray ->
+    overload_function p env class_id method_id el uel
+    begin fun env _ res el -> match el with
+      | [shape] ->
+         let env, shape_ty = expr env shape in
+         Typing_shapes.to_array env shape_ty res
+      | _  -> env, res
+    end
   | Class_const (CIparent, (_, construct))
     when construct = SN.Members.__construct ->
       Typing_hooks.dispatch_parent_construct_hook env p;

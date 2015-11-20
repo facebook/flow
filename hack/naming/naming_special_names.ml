@@ -242,6 +242,7 @@ module Shapes = struct
   let idx                    = "idx"
   let keyExists              = "keyExists"
   let removeKey              = "removeKey"
+  let toArray                = "toArray"
 end
 
 module Superglobals = struct

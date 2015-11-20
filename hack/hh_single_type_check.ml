@@ -134,6 +134,7 @@ let what_builtins mode = match mode with
   "  public static function idx(shape() $shape, arraykey $index, $default = null) {}\n" ^
   "  public static function keyExists(shape() $shape, arraykey $index): bool {}\n" ^
   "  public static function removeKey(shape() $shape, arraykey $index): void {}\n" ^
+  "  public static function toArray(shape() $shape): array<arraykey, mixed> {}\n" ^
   "}\n" ^
   "newtype typename<+T> as string = string;\n"^
   "newtype classname<+T> as typename<T> = typename<T>;\n" ^

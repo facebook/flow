@@ -74,3 +74,44 @@ let remove_key p env shape_ty field  =
   match TUtils.shape_field_name env (fst field) (snd field) with
    | None -> env, (Reason.Rwitness (fst field), Tany)
    | Some field_name -> shrink_shape p field_name env shape_ty
+
+let to_array env shape_ty res =
+  let mapper = object
+    inherit Type_mapper.shallow_type_mapper as super
+    inherit! Type_mapper.tunresolved_type_mapper
+    inherit! Type_mapper.tvar_expanding_type_mapper
+
+    method! on_tshape (env, seen) r fields_known fdm =
+      match fields_known with
+      | FieldsFullyKnown ->
+        let env, values =
+          lmap (Typing_utils.unresolved) env (ShapeMap.values fdm) in
+        let env, keys = lmap begin fun env key ->
+          let env, ty = match key with
+          | SFlit (p, _) -> env, (Reason.Rwitness p, Tprim Tstring)
+          | SFclass_const ((_, cid), (_, mid)) ->
+            begin match Env.get_class env cid with
+              | Some class_ -> begin match Env.get_const env class_ mid with
+                  | Some const ->
+                      Typing_phase.localize_with_self env const.ce_type
+                  | None -> env, (Reason.Rnone, Tany)
+                end
+              | None -> env, (Reason.Rnone, Tany)
+            end in
+          Typing_utils.unresolved env ty
+        end env (ShapeMap.keys fdm) in
+        let env, key =
+          Typing_arrays.array_type_list_to_single_type env keys in
+        let env, value =
+          Typing_arrays.array_type_list_to_single_type env values in
+        (env, seen), (r, Tarraykind (AKmap (key, value)))
+      | FieldsPartiallyKnown _ ->
+        (env, seen), res
+
+    method! on_type env (r, ty) = match ty with
+      | Tvar _ | Tunresolved _ | Tshape _ ->  super#on_type env (r, ty)
+      | _ -> env, res
+
+  end in
+  let (env, _), ty = mapper#on_type (Type_mapper.fresh_env env) shape_ty in
+  env, ty
