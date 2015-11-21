@@ -16,6 +16,10 @@ let path_of_root root extension =
   let root_part = Path.slash_escaped_string_of_path root in
   Filename.concat GlobalConfig.tmp_dir (spf "%s.%s" root_part extension)
 
+let is_of_root root fn =
+  let root_part = Path.slash_escaped_string_of_path root in
+  str_starts_with fn (Filename.concat GlobalConfig.tmp_dir root_part)
+
 (* Creates a symlink at <dir>/<linkname.ext> to
  * <dir>/<pluralized ext>/<linkname>-<timestamp>.<ext> *)
 let make_link_of_timestamped linkname =
