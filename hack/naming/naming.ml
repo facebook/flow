@@ -753,7 +753,7 @@ and hint_ ~forbid_this ~allow_retonly is_static_var p env x =
           )
       | x when x = SN.Classes.cStatic || x = SN.Classes.cParent ->
           Errors.invalid_type_access_root root; N.Hany
-        | _ ->
+      | _ ->
           (match hint_id ~forbid_this ~allow_retonly env is_static_var root [] with
           | N.Hthis | N.Happly _ as h -> h
           | _ -> Errors.invalid_type_access_root root; N.Hany
