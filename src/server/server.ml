@@ -462,6 +462,20 @@ struct
       fun f -> Files_js.is_flow_file f || f = config_path
     in
     let sroot = Path.to_string root in
+    let want = Files_js.wanted config in
+    let modified_packages = SSet.filter (fun f ->
+      (str_starts_with f sroot || FlowConfig.is_included config f)
+      && (Filename.basename f) = "package.json" && want f
+    ) updates in
+    if not (SSet.is_empty modified_packages)
+    then begin
+      Printf.printf "Status: Error\n%!";
+      SSet.iter (Printf.printf "Modified package: %s\n%!") modified_packages;
+      Printf.printf
+        "%s is out of date. Exiting.\n%!"
+        name;
+      exit 4
+    end;
     SSet.fold (fun f acc ->
       if is_flow_file f &&
         (* note: is_included may be expensive. check in-root match first. *)
