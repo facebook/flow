@@ -351,11 +351,17 @@ struct
     GetDef_js.getdef_unset_hooks ();
     flush oc
 
+  let module_name_of_string module_name_str =
+    let path = Path.to_string (Path.make module_name_str) in
+    if Files_js.is_flow_file path then Modulename.Filename (Loc.SourceFile path)
+    else Modulename.String module_name_str
+
   let get_importers module_names oc =
-    let add_to_results map module_name =
+    let add_to_results map module_name_str =
+      let module_name = module_name_of_string module_name_str in
       match Module_js.get_reverse_imports module_name with
       | Some references ->
-          SMap.add module_name references map
+          SMap.add module_name_str references map
       | None -> map
     in
     let results = List.fold_left add_to_results
@@ -364,8 +370,9 @@ struct
     flush oc
 
   let get_imports module_names oc =
-    let add_to_results (map, non_flow) module_name =
-      match (Module_js.get_module_file module_name) with
+    let add_to_results (map, non_flow) module_name_str =
+      let module_name = module_name_of_string module_name_str in
+      match Module_js.get_module_file module_name with
       | Some file ->
         (* We do not process all modules which are stored in our module
          * database. In case we do not process a module its requirements
@@ -376,9 +383,9 @@ struct
               checked; _ } = Module_js.get_module_info file in
         if checked
         then
-          (SMap.add module_name (requirements, req_locs) map, non_flow)
+          (SMap.add module_name_str (requirements, req_locs) map, non_flow)
         else
-          (map, SSet.add module_name non_flow)
+          (map, SSet.add module_name_str non_flow)
       | None ->
         (* We simply ignore non existent modules *)
         (map, non_flow)

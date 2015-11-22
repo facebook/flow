@@ -1,8 +1,8 @@
 
-A.js:12:10,32: Exists3
+A.js:12:10,32: 2DoesntExist
 Required module not found
 
-A.js:13:22,35: Exists4
+A.js:13:22,35: 3DoesntExist
 Required module not found
 
 Found 2 errors

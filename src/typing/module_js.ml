@@ -26,13 +26,23 @@ module Modes = Modes_js
 module Reason = Reason_js
 module ErrorSet = Errors_js.ErrorSet
 
+module NameSet = Set.Make(Modulename)
+
+(* Subset of a file's context, with the important distinction that module
+   references in the file have been resolved to module names. *)
 type info = {
-  file: filename;           (* file name *)
-  _module: string;          (* module name *)
-  required: SSet.t;         (* required module names *)
-  require_loc: Loc.t SMap.t;  (* statement locations *)
-  checked: bool;            (* in flow? *)
-  parsed: bool;             (* if false, it's a tracking record only *)
+  file: filename; (* file name *)
+  _module: Modulename.t; (* module name *)
+  required: NameSet.t; (* required module names *)
+  require_loc: Loc.t SMap.t; (* statement locations *)
+  resolved_modules: Modulename.t SMap.t; (* map from module references in file
+                                            to module names they resolve to *)
+  phantom_dependents: SSet.t; (* set of paths that were looked up but not found
+                                 when resolving module references in the file:
+                                 when the paths come into existence, the module
+                                 references need to be re-resolved. *)
+  checked: bool; (* in flow? *)
+  parsed: bool; (* if false, it's a tracking record only *)
 }
 
 type mode = ModuleMode_Checked | ModuleMode_Weak | ModuleMode_Unchecked
@@ -127,18 +137,28 @@ let module_name_candidates name =
 (****************** shared dependency map *********************)
 
 (* map from module name to filename *)
-module NameHeap = SharedMem.WithCache (String) (struct
+module NameHeap = SharedMem.WithCache (Modulename) (struct
   type t = filename
   let prefix = Prefix.make()
 end)
 
-(* map from file name to module info *)
+(* map from filename to module info *)
 (* note: currently we may have many files for one module name.
    this is an issue. *)
 module InfoHeap = SharedMem.WithCache (Loc.FilenameKey) (struct
   type t = info
   let prefix = Prefix.make()
 end)
+
+(* Given a set of newly added files, decide whether the resolution of module
+   references in f "depended" (see above) on any of those files, and if so, add
+   f to acc. *)
+let resolution_path_dependency files acc f =
+  match InfoHeap.get f with
+  | Some { phantom_dependents = fs; _ } when fs |> SSet.exists (fun f ->
+      FilenameSet.mem (Loc.SourceFile f) files
+    ) -> FilenameSet.add f acc
+  | _ -> acc
 
 (** module systems **)
 
@@ -179,11 +199,12 @@ let add_package package =
    model both Haste and Node, but should be further generalized. *)
 module type MODULE_SYSTEM = sig
   (* Given a file and docblock info, make the name of the module it exports. *)
-  val exported_module: filename -> Docblock.t -> string
+  val exported_module: filename -> Docblock.t -> Modulename.t
 
   (* Given a file and a reference in it to an imported module, make the name of
-     the module it refers to. *)
-  val imported_module: filename -> string -> string
+     the module it refers to. If given an optional reference to an accumulator,
+     record paths that were looked up but not found during resolution. *)
+  val imported_module: ?path_acc:SSet.t ref -> filename -> string -> Modulename.t
 
   (* for a given module name, choose a provider from among a set of
     files with that exported name. also check for duplicates and
@@ -271,24 +292,27 @@ let resolve_symlinks path =
 module Node = struct
   let exported_module file info =
     if Loc.check_suffix file FlowConfig.flow_ext
-    then string_of_filename (Loc.chop_suffix file FlowConfig.flow_ext)
-    else string_of_filename file
+    then Modulename.Filename (Loc.chop_suffix file FlowConfig.flow_ext)
+    else Modulename.Filename file
 
-  let path_if_exists =
+  let record_path path = function
+    | None -> ()
+    | Some paths -> paths := SSet.add path !paths
+
+  let path_if_exists path_acc =
     let path_exists no_dir path =
       (file_exists path) &&
         not FlowConfig.(is_excluded (get_unsafe ()) path) &&
         not (no_dir && dir_exists path)
-
     in fun ?(no_dir=true) path ->
       let path = resolve_symlinks path in
       let declaration_path = path ^ FlowConfig.flow_ext in
       if path_exists no_dir declaration_path ||
         path_exists no_dir path
       then Some path
-      else None
+      else (record_path path path_acc; None)
 
-  let parse_main package =
+  let parse_main path_acc package =
     let package = resolve_symlinks package in
     if not (file_exists package) ||
       FlowConfig.(is_excluded (get_unsafe ()) package)
@@ -306,39 +330,39 @@ module Node = struct
         let opts = get_config_options () in
         let path = Files_js.normalize_path dir file in
         seq
-          (fun () -> path_if_exists ~no_dir:true path)
+          (fun () -> path_if_exists path_acc ~no_dir:true path)
           (fun () -> seq
             (fun () ->
               seqf
-                (fun ext -> path_if_exists (path ^ ext))
+                (fun ext -> path_if_exists path_acc (path ^ ext))
                 (SSet.elements opts.FlowConfig.Opts.module_file_exts)
             )
             (fun () ->
               let path = Filename.concat path "index.js" in
-              path_if_exists path
+              path_if_exists path_acc path
             )
           )
 
-  let resolve_relative root_path rel_path =
+  let resolve_relative ?path_acc root_path rel_path =
     let path = Files_js.normalize_path root_path rel_path in
     let opts = get_config_options () in
     if Files_js.is_flow_file path
-    then path_if_exists path
+    then path_if_exists path_acc path
     else seq
       (fun () -> seqf
-        (fun ext -> path_if_exists (path ^ ext))
+        (fun ext -> path_if_exists path_acc (path ^ ext))
         (SSet.elements opts.FlowConfig.Opts.module_file_exts)
       )
       (fun () -> seq
-        (fun () -> parse_main (Filename.concat path "package.json"))
-        (fun () -> path_if_exists (Filename.concat path "index.js"))
+        (fun () -> parse_main path_acc (Filename.concat path "package.json"))
+        (fun () -> path_if_exists path_acc (Filename.concat path "index.js"))
       )
 
-  let rec node_module dir r =
+  let rec node_module path_acc dir r =
     let opts = get_config_options () in
     seq
       (fun () -> seqf
-        (resolve_relative dir)
+        (resolve_relative ?path_acc dir)
         (opts.FlowConfig.Opts.node_resolver_dirnames |> List.map (fun dirname ->
           spf "%s%s%s" dirname Filename.dir_sep r
         ))
@@ -346,7 +370,7 @@ module Node = struct
       (fun () ->
         let parent_dir = Filename.dirname dir in
         if dir = parent_dir then None
-        else node_module (Filename.dirname dir) r
+        else node_module path_acc (Filename.dirname dir) r
       )
 
   let relative r =
@@ -354,24 +378,26 @@ module Node = struct
     || Str.string_match Files_js.current_dir_name r 0
     || Str.string_match Files_js.parent_dir_name r 0
 
-  let resolve_import file import_str =
+  let resolve_import ?path_acc file import_str =
     let dir = Filename.dirname file in
     if relative import_str
-    then resolve_relative dir import_str
-    else node_module dir import_str
+    then resolve_relative ?path_acc dir import_str
+    else node_module path_acc dir import_str
 
-  let imported_module file import_str =
+  let imported_module ?path_acc file import_str =
     let file = string_of_filename file in
     let candidates = module_name_candidates import_str in
 
-    let choose_candidate chosen candidate =
-      match chosen with
-      | Some(c) -> chosen
-      | None -> resolve_import file candidate
+    let rec choose_candidate = function
+      | [] -> None
+      | candidate :: candidates ->
+        match resolve_import ?path_acc file candidate with
+        | None -> choose_candidate candidates
+        | Some _ as result -> result
     in
-    match List.fold_left choose_candidate None candidates with
-    | Some(str) -> str
-    | None -> import_str
+    match choose_candidate candidates with
+    | Some(str) -> Modulename.Filename (Loc.SourceFile str)
+    | None -> Modulename.String import_str
 
   (* in node, file names are module names, as guaranteed by
      our implementation of exported_name, so anything but a
@@ -407,9 +433,9 @@ module Haste: MODULE_SYSTEM = struct
 
   let rec exported_module file info =
     if is_mock file
-    then short_module_name_of file
+    then Modulename.String (short_module_name_of file)
     else match Docblock.providesModule info with
-      | Some m -> m
+      | Some m -> Modulename.String m
       | None ->
           (* If foo.js.flow doesn't have a @providesModule, then look at foo.js
            * and use its @providesModule instead *)
@@ -422,9 +448,9 @@ module Haste: MODULE_SYSTEM = struct
                 Parsing_service_js.get_ast_and_info_unsafe file_without_flow_ext in
               exported_module file_without_flow_ext info
             else
-              string_of_filename file_without_flow_ext
+              Modulename.Filename (file_without_flow_ext)
           else
-            string_of_filename file
+            Modulename.Filename file
 
   let expanded_name r =
     match Str.split_delim Files_js.dir_sep r with
@@ -435,17 +461,17 @@ module Haste: MODULE_SYSTEM = struct
         )
 
   (* similar to Node resolution, with possible special cases *)
-  let resolve_import file r =
+  let resolve_import ?path_acc file r =
     let file = string_of_filename file in
     seq
-      (fun () -> Node.resolve_import file r)
+      (fun () -> Node.resolve_import ?path_acc file r)
       (fun () ->
         match expanded_name r with
-        | Some r -> Node.resolve_relative (Filename.dirname file) r
+        | Some r -> Node.resolve_relative ?path_acc (Filename.dirname file) r
         | None -> None
       )
 
-  let imported_module file imported_name =
+  let imported_module ?path_acc file imported_name =
     let candidates = module_name_candidates imported_name in
 
     (**
@@ -460,9 +486,9 @@ module Haste: MODULE_SYSTEM = struct
      *)
     let chosen_candidate = List.hd candidates in
 
-    match resolve_import file chosen_candidate with
-    | Some(name) -> name
-    | None -> chosen_candidate
+    match resolve_import ?path_acc file chosen_candidate with
+    | Some(name) -> Modulename.Filename (Loc.SourceFile name)
+    | None -> Modulename.String chosen_candidate
 
   (* in haste, many files may provide the same module. here we're also
      supporting the notion of mock modules - allowed duplicates used as
@@ -504,9 +530,27 @@ let exported_module file info =
   let module M = (val !module_system) in
   M.exported_module file info
 
-let imported_module file r =
+let imported_module ?path_acc file r =
   let module M = (val !module_system) in
-  M.imported_module file r
+  M.imported_module ?path_acc file r
+
+let imported_modules file reqs =
+  (* Resolve all reqs relative to file. Accumulate dependent paths in
+     path_acc. Return the map of reqs to their resolved names, and the set
+     containing the resolved names. *)
+  let path_acc = ref SSet.empty in
+  let set, map = SSet.fold (fun r (set, map) ->
+    let resolved_r = imported_module ~path_acc file r in
+    NameSet.add resolved_r set, SMap.add r resolved_r map
+  ) reqs (NameSet.empty, SMap.empty) in
+  set, map, !path_acc
+
+(* Optimized module resolution function that goes through cache. *)
+let find_resolved_module file r =
+  let map = (InfoHeap.find_unsafe file).resolved_modules in
+  match SMap.get r map with
+  | Some resolved_r -> resolved_r
+  | None -> imported_module file r
 
 let choose_provider m files errmap =
   let module M = (val !module_system) in
@@ -532,19 +576,21 @@ let reverse_imports_track importer_name requires =
     | Some reverse_imports ->
         reverse_imports
     | None ->
-        SSet.empty
+        NameSet.empty
     in
-    let new_reverse_imports = SSet.add importer_name reverse_imports in
+    let new_reverse_imports =
+      NameSet.add importer_name reverse_imports in
     Hashtbl.replace reverse_imports_map module_name new_reverse_imports
   in
-  SSet.iter add_requires requires
+  NameSet.iter add_requires requires
 
 let reverse_imports_untrack importer_name requires =
   let remove_requires module_name =
     match reverse_imports_get module_name with
     | Some reverse_imports ->
-        let new_reverse_imports = SSet.remove importer_name reverse_imports in
-        if not (SSet.is_empty new_reverse_imports)
+        let new_reverse_imports =
+          NameSet.remove importer_name reverse_imports in
+        if not (NameSet.is_empty new_reverse_imports)
         then Hashtbl.replace reverse_imports_map module_name new_reverse_imports
         else begin
           (* in case the reverse import map is empty we might have hit a case
@@ -554,12 +600,12 @@ let reverse_imports_untrack importer_name requires =
              the information returned by get-imported-by is never confusing
              for exisitng, but not imported modules *)
           if NameHeap.mem module_name
-          then Hashtbl.replace reverse_imports_map module_name SSet.empty
+          then Hashtbl.replace reverse_imports_map module_name NameSet.empty
           else reverse_imports_clear module_name
         end
     | None ->
         ()
-  in SSet.iter remove_requires requires
+  in NameSet.iter remove_requires requires
 
 (******************)
 (***** public *****)
@@ -571,7 +617,7 @@ let get_file m =
   match NameHeap.get m with
   | Some file -> file
   | None -> failwith
-      (spf "file name not found for module %s" m)
+      (spf "file name not found for module %s" (Modulename.to_string m))
 
 (* Gets the filename for a module without failing when it does not exist *)
 let get_module_file m =
@@ -596,23 +642,39 @@ let add_reverse_imports filenames =
         (* we need to make sure we are in the reverse import heap to avoid
            confusing behavior when querying it *)
         (if not (Hashtbl.mem reverse_imports_map name)
-        then Hashtbl.add reverse_imports_map name SSet.empty);
+        then Hashtbl.add reverse_imports_map name NameSet.empty);
         reverse_imports_track name req
     | _ -> ()
   ) filenames
 
 let get_reverse_imports module_name =
-  reverse_imports_get module_name
+  match module_name, reverse_imports_get module_name with
+  | Modulename.Filename filename, None ->
+      let { _module = name; _ } = get_module_info filename in
+      reverse_imports_get name
+  | _, result -> result
 
-(* extract info from context *)
-let info_of cx = {
-  file = Context.file cx;
-  _module = Context.module_name cx;
-  required = Context.required cx;
-  require_loc = Context.require_loc cx;
-  checked = Context.is_checked cx;
-  parsed = true;
-}
+(* Extract and process information from context. In particular, resolve
+   references to required modules in a file, and record the results.  *)
+let info_of cx =
+  let file = Context.file cx in
+  let required, resolved_modules, phantom_dependents =
+    imported_modules file (Context.required cx) in
+  let require_loc = SMap.fold
+    (fun r loc require_loc ->
+      let resolved_r = SMap.find_unsafe r resolved_modules in
+      SMap.add (Modulename.to_string resolved_r) loc require_loc)
+    (Context.require_loc cx) SMap.empty in
+  {
+    file;
+    _module = Context.module_name cx;
+    required;
+    require_loc;
+    resolved_modules;
+    phantom_dependents;
+    checked = Context.is_checked cx;
+    parsed = true;
+  }
 
 (* during inference, we add per-file module info to the shared heap
    from worker processes.
@@ -643,8 +705,10 @@ let add_unparsed_info ~force_check file =
     Docblock.isDeclarationFile docblock
   in
   let info = { file; _module; checked; parsed = false;
-    required = SSet.empty;
+    required = NameSet.empty;
     require_loc = SMap.empty;
+    resolved_modules = SMap.empty;
+    phantom_dependents = SSet.empty;
   } in
   InfoHeap.add file info
 
@@ -684,7 +748,7 @@ let remove_provider f m =
   let provs = try FilenameSet.remove f (Hashtbl.find all_providers m)
     with Not_found -> failwith (spf
       "can't remove provider %s of %S, not found in all_providers"
-      (string_of_filename f) m)
+      (string_of_filename f) (Modulename.to_string m))
   in
   Hashtbl.replace all_providers m provs
 
@@ -726,55 +790,64 @@ let get_providers = Hashtbl.find all_providers
 let commit_modules ?(debug=false) inferred removed =
   if debug then prerr_endlinef
     "*** committing modules inferred %d removed %d ***"
-    (List.length inferred) (SSet.cardinal removed);
+    (List.length inferred) (NameSet.cardinal removed);
   (* all removed modules must be repicked *)
   (* all modules provided by newly inferred files must be repicked *)
   let repick = List.fold_left (fun acc f ->
     let { _module = m; _ } = get_module_info f in
-    let f_str = string_of_filename f in
-    add_provider f m; add_provider f f_str;
-    acc |> SSet.add m |> SSet.add f_str
+    let f_module = Modulename.Filename f in
+    add_provider f m; add_provider f f_module;
+    acc |> NameSet.add m |> NameSet.add f_module
   ) removed inferred in
   (* prep for registering new mappings in NameHeap *)
-  let remove, replace, errmap = SSet.fold (fun m (rem, rep, errmap) ->
+  let remove, replace, errmap = NameSet.fold (fun m (rem, rep, errmap) ->
     match get_providers m with
     | ps when FilenameSet.cardinal ps = 0 ->
-        if debug then prerr_endlinef "no remaining providers: %S" m;
-        (SSet.add m rem), rep, errmap
+        if debug then prerr_endlinef
+          "no remaining providers: %S"
+          (Modulename.to_string m);
+        (NameSet.add m rem), rep, errmap
     | ps ->
       (* incremental: clear error sets of provider candidates *)
       let errmap = FilenameSet.fold (fun f acc ->
         FilenameMap.add f ErrorSet.empty acc) ps errmap in
       (* now choose provider for m *)
-      let p, errmap = choose_provider m ps errmap in
+      let p, errmap = choose_provider (Modulename.to_string m) ps errmap in
       match NameHeap.get m with
       | Some f when f = p ->
           if debug then prerr_endlinef
-            "unchanged provider: %S -> %s" m (string_of_filename p);
+            "unchanged provider: %S -> %s"
+            (Modulename.to_string m)
+            (string_of_filename p);
           rem, rep, errmap
       | Some f ->
           if debug then prerr_endlinef
             "new provider: %S -> %s replaces %s"
-            m
+            (Modulename.to_string m)
             (string_of_filename p)
             (string_of_filename f);
-          (SSet.add m rem), ((m, p) :: rep), errmap
+          (NameSet.add m rem), ((m, p) :: rep), errmap
       | None ->
           if debug then prerr_endlinef
-            "initial provider %S -> %s" m (string_of_filename p);
-          (SSet.add m rem), ((m, p) :: rep), errmap
-  ) repick (SSet.empty, [], FilenameMap.empty) in
+            "initial provider %S -> %s"
+            (Modulename.to_string m)
+            (string_of_filename p);
+          (NameSet.add m rem), ((m, p) :: rep), errmap
+  ) repick (NameSet.empty, [], FilenameMap.empty) in
   (* update NameHeap *)
   NameHeap.remove_batch remove;
   SharedMem.collect `gentle;
   List.iter (fun (m, p) ->
     NameHeap.add m p;
-    NameHeap.add (string_of_filename p) p
+    NameHeap.add (Modulename.Filename p) p
   ) replace;
   (* now that providers are updated, update reverse dependency info *)
   add_reverse_imports inferred;
   if debug then prerr_endlinef "*** done committing modules ***";
   errmap
+
+let clear_infos files =
+  InfoHeap.remove_batch files
 
 (* remove module mappings for given files, if they exist. Possibilities:
    1. file is current registered module provider for a given module name
@@ -807,23 +880,23 @@ let remove_files files =
               *)
               match reverse_imports_get _module with
               | Some reverse_imports ->
-                  if SSet.is_empty reverse_imports
+                  if NameSet.is_empty reverse_imports
                   then reverse_imports_clear _module
               | None -> ()
               );
               names
-              |> SSet.add _module
-              |> SSet.add (string_of_filename file)
+              |> NameSet.add _module
+              |> NameSet.add (Modulename.Filename file)
           | _ ->
               names
         )
       | None ->
           names
-  ) files SSet.empty in
+  ) files NameSet.empty in
   (* clear any registrations that point to infos we're about to clear *)
   (* for infos, remove_batch will ignore missing entries, no need to filter *)
   NameHeap.remove_batch names;
-  InfoHeap.remove_batch files;
+  clear_infos files;
   SharedMem.collect `gentle;
   (* note: only return names of modules actually removed *)
   names

@@ -30,6 +30,7 @@ let spec = {
     |> server_flags
     |> root_flag
     |> json_flags
+    |> strip_root_flag
     |> anon "modules" (required (list_of string))
         ~doc:"Module name(s) to find"
   )
@@ -37,13 +38,30 @@ let spec = {
 
 let extract_location req req_locs = Utils.SMap.find_unsafe req req_locs
 
-let main option_values root json modules () =
+let main option_values root json strip_root modules () =
   let root = guess_root root in
 
   let ic, oc = connect option_values root in
 
   ServerProt.cmd_to_channel oc (ServerProt.GET_IMPORTS modules);
   let requirements_map, non_flow = Marshal.from_channel ic in
+  let requirements_map = Utils.SMap.fold
+    begin fun module_name (requires, req_locs) map ->
+      let requirements = Module_js.NameSet.fold (fun req assoc ->
+        let loc = extract_location (Modulename.to_string req) req_locs in
+        let req = match req with
+          | Modulename.String s -> s
+          | Modulename.Filename f ->
+            let f = Loc.string_of_filename f in
+            if strip_root then Files_js.relative_path (Path.to_string root) f
+            else f
+        in
+        let loc = relativize strip_root root loc in
+        (req, loc)::assoc
+      ) requires [] in
+      Utils.SMap.add module_name requirements map
+    end
+    requirements_map Utils.SMap.empty in
   if json
   then (
     let json_non_flow =
@@ -54,32 +72,29 @@ let main option_values root json modules () =
                           ]) :: json_list
         ) non_flow [] in
     let json_imports =
-      Utils.SMap.fold (fun module_name (requires, req_locs) json_list ->
+      Utils.SMap.fold (fun module_name assoc json_list ->
           let requirements =
-            Utils.SSet.fold (fun req json_list ->
-                let loc = extract_location req req_locs in
-                Hh_json.JSON_Object (
-                  ("import", Hh_json.JSON_String req) ::
+            List.map (fun (req, loc) ->
+              Hh_json.JSON_Object (
+                ("import", Hh_json.JSON_String req) ::
                   (Errors_js.json_of_loc loc)
-                ) :: json_list
-              ) requires [] in
+              )
+            ) assoc in
           (module_name, Hh_json.JSON_Object [
                           "not_flow", Hh_json.JSON_Bool false;
                           "requirements", Hh_json.JSON_Array requirements
                           ]) :: json_list
         ) requirements_map [] in
     let json_output = Hh_json.JSON_Object (List.append json_non_flow json_imports) in
-    output_string stdout (Hh_json.json_to_string json_output);
+    output_string stdout ((Hh_json.json_to_string json_output)^"\n");
     flush stdout
   ) else (
     let print_imports module_name =
       if (Utils.SMap.mem module_name requirements_map)
       then begin
-        let (requirements, req_locs) =
-          Utils.SMap.find_unsafe module_name requirements_map in
+        let requirements = Utils.SMap.find_unsafe module_name requirements_map in
         Printf.printf "Imports for module '%s':\n" module_name;
-        Utils.SSet.iter (fun req ->
-          let loc = extract_location req req_locs in
+        List.iter (fun (req, loc) ->
           Printf.printf "\t%s@%s\n" req (range_string_of_loc loc)
         ) requirements
       end else if (Utils.SSet.mem module_name non_flow)

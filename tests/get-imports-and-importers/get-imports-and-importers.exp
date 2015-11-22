@@ -1,0 +1,8 @@
+{"a.js":{"not_flow":false,"requirements":[]}}
+{"b":{"not_flow":false,"requirements":[{"import":"a.js","path":"b.js","line":5,"endline":5,"start":1,"end":14}]}}
+{"b.js":{"not_flow":false,"requirements":[{"import":"a.js","path":"b.js","line":5,"endline":5,"start":1,"end":14}]}}
+{"c.js":{"not_flow":false,"requirements":[{"import":"a.js","path":"c.js","line":2,"endline":2,"start":1,"end":17},{"import":"b","path":"c.js","line":3,"endline":3,"start":1,"end":12}]}}
+{"a.js":["b","c.js"]}
+{"b":["c.js"]}
+{"b.js":["c.js"]}
+{"c.js":[]}

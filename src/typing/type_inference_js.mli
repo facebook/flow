@@ -20,15 +20,15 @@ val infer_ast:
   ?gc: bool ->
   metadata: Context.metadata ->
   filename: Loc.filename ->
-  module_name: string ->
+  module_name: Modulename.t ->
   Spider_monkey_ast.program ->
   Context.t
 
 val infer_module: metadata: Context.metadata -> filename -> Context.t
 
 val merge_component_strict: Context.t list ->
-  Context.t list -> (Context.t * string * Context.t) list ->
-  Context.t list Utils.SMap.t -> Context.t ->
+  Context.t list -> (Context.t * string * Modulename.t * Context.t) list ->
+  (string * Modulename.t * Context.t) list -> Context.t ->
   unit
 
 val restore: Context.t ->

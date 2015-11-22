@@ -24,7 +24,7 @@ type module_exports_type =
   | CommonJSModule of Loc.t option
   | ESModule
 
-val make: metadata -> Loc.filename -> string -> t
+val make: metadata -> Loc.filename -> Modulename.t -> t
 
 (* accessors *)
 val annot_table: t -> (Loc.t, Type.t) Hashtbl.t
@@ -42,7 +42,7 @@ val is_weak: t -> bool
 val is_declaration_file: t -> bool
 val module_exports_type: t -> module_exports_type
 val module_map: t -> Type.t SMap.t
-val module_name: t -> string
+val module_name: t -> Modulename.t
 val property_maps: t -> Type.properties IMap.t
 val required: t -> SSet.t
 val require_loc: t -> Loc.t SMap.t

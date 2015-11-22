@@ -1,5 +1,5 @@
 
-Client.js:8:9,29: Imported.js
+Client.js:8:9,29: ./Imported
 Required module not found
 
 Imported.js:6:17,17: Unexpected token ILLEGAL

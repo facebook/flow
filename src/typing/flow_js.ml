@@ -1186,7 +1186,7 @@ let master_cx =
       munge_underscores = false;
       verbose = None;
       is_declaration_file = false;
-    } Loc.Builtins Files_js.lib_module in
+    } Loc.Builtins (Modulename.String Files_js.lib_module) in
     cx_ := Some cx;
     cx
   | Some cx -> cx
@@ -6168,7 +6168,8 @@ module ContextOptimizer = struct
     List.fold_left (reducer#type_ cx) empty exports
 
   let export cx =
-    lookup_module cx (Context.module_name cx)
+    let m = Modulename.to_string (Context.module_name cx) in
+    lookup_module cx m
 
   (* reduce a context to a "signature context" *)
   let sig_context component_cxs =
@@ -6179,7 +6180,8 @@ module ContextOptimizer = struct
     Context.set_property_maps cx quotient.reduced_property_maps;
     Context.set_envs cx quotient.reduced_envs;
     other_cxs |> List.iter (fun other_cx ->
-      Context.add_module cx (Context.module_name other_cx) (export other_cx)
+      let m = Modulename.to_string (Context.module_name other_cx) in
+      Context.add_module cx m (export other_cx)
     )
 
 end

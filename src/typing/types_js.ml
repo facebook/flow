@@ -21,7 +21,6 @@ open Utils_js
 open Modes_js
 
 module TI = Type_inference_js
-module Module = Module_js
 
 (* per-file error info is a filename and an error list *)
 type file_errors = string * Errors_js.error list
@@ -218,17 +217,18 @@ let get_errors () =
    a checked module, or an unchecked file that's used as a
    module by a checked file
  *)
-let filter_unchecked_unused errmap =
-  let is_imported m = match Module.get_reverse_imports m with
-  | Some set -> SSet.cardinal set > 0
+let filter_unchecked_unused errmap = Module_js.(
+  let is_imported m = match get_reverse_imports m with
+  | Some set -> NameSet.cardinal set > 0
   | None -> false
   in
-  FilenameMap.filter Module.(fun file _ ->
+  FilenameMap.filter (fun file _ ->
     is_lib_file file || (
       let info = get_module_info file in
       info.checked || is_imported info._module
     )
   ) errmap
+)
 
 (* relocate errors to their reported positions,
    combine in single error map *)
@@ -273,7 +273,7 @@ let infer_job opts (inferred, errsets, errsuppressions) files =
         (* infer produces a context for this module *)
         let cx = TI.infer_module ~metadata file in
         (* register module info *)
-        Module.add_module_info cx;
+        Module_js.add_module_info cx;
         (* note: save and clear errors and error suppressions before storing
          * cx to shared heap *)
         let errs = Context.errors cx in
@@ -318,8 +318,8 @@ let infer workers files opts =
       files
     )
 
-let checked m = Module.(
-  let info = m |> get_module_file |> unsafe_opt |> get_module_info in
+let checked m = Module_js.(
+  let info = m |> get_file |> get_module_info in
   info.checked
 )
 
@@ -327,30 +327,26 @@ let checked m = Module.(
    registered to provide r and the file is checked. Such a file must be merged
    before any file that requires module r, so this notion naturally gives rise
    to a dependency ordering among files for merging. *)
-let implementation_file r =
-  if Module.module_exists r && checked r
-  then Some (Module.get_file r)
+let implementation_file r = Module_js.(
+  if module_exists r && checked r
+  then Some (get_file r)
   else None
+)
 
-(* warns on missing required modules
+(* Warn on a missing required module resolved_r referenced as r in context cx.
+
    TODO maybe make this suppressable
- *)
-let check_requires cx =
-  SSet.iter (fun req ->
-    if not (Module.module_exists req)
-    then
-      let loc = SMap.find_unsafe req (Context.require_loc cx) in
-      let req =
-        if Filename.is_relative req
-        then req
-        else Filename.basename req
-      in
-      let m_name = req in
-      let reason = Reason_js.mk_reason m_name loc in
-      let tvar = Flow_js.mk_tvar cx reason in
-      Flow_js.lookup_builtin cx (Reason_js.internal_module_name m_name)
-        reason (Some (Reason_js.builtin_reason m_name)) tvar;
-  ) (Context.required cx)
+*)
+let check_require (r, resolved_r, cx) =
+  if not (Module_js.module_exists resolved_r)
+  then
+    let loc = SMap.find_unsafe r (Context.require_loc cx) in
+    let reason = Reason_js.mk_reason r loc in
+
+    let m_name = Modulename.to_string resolved_r in
+    let tvar = Flow_js.mk_tvar cx reason in
+    Flow_js.lookup_builtin cx (Reason_js.internal_module_name m_name)
+      reason (Some (Reason_js.builtin_reason m_name)) tvar
 
 (* We already cache contexts in the shared memory for performance, but context
    graphs need to be copied because they have mutable bounds. We maintain an
@@ -392,10 +388,8 @@ class sig_context_cache = object
     orig_cx, cx
 end
 
-let add_decl (r, cx) declarations =
-  match SMap.get r declarations with
-  | None -> SMap.add r [cx] declarations
-  | Some cxs -> SMap.add r (cx::cxs) declarations
+let add_decl (r, resolved_r, cx) declarations =
+  (r, resolved_r, cx) :: declarations
 
 (**********************************)
 (* entry point for merging a file *)
@@ -429,43 +423,51 @@ end)
    argument (a) is passed to `restore`.
 *)
 let merge_strict_context cache component_cxs =
-  List.iter check_requires component_cxs;
   let required = List.fold_left (fun required cx ->
-    SSet.fold (fun r -> add_decl (r, cx)) (Context.required cx) required
-  ) SMap.empty component_cxs in
+    SSet.fold (fun r ->
+      let resolved_r = Module_js.find_resolved_module (Context.file cx) r in
+      check_require (r, resolved_r, cx);
+      add_decl (r, resolved_r, cx)
+    ) (Context.required cx) required
+  ) [] component_cxs in
   let cx = List.hd component_cxs in
 
   let sig_cache = new sig_context_cache in
 
   let orig_sig_cxs, sig_cxs, impls, decls =
-    SMap.fold (fun r cxs_to
-      (orig_sig_cxs, sig_cxs, impls, decls) ->
-        match implementation_file r with
-        | Some file ->
-            let impl sig_cx = List.map (fun cx_to -> sig_cx, r, cx_to) cxs_to in
+    List.fold_left (fun (orig_sig_cxs, sig_cxs, impls, decls) req ->
+      let r, resolved_r, cx_to = req in
+      Module_js.(match get_module_file resolved_r with
+      | Some file ->
+          let info = get_module_info file in
+          if info.checked then
+            (* checked implementation exists *)
+            let impl sig_cx = sig_cx, r, info._module, cx_to in
             begin match cache#find file with
             | Some sig_cx ->
                 orig_sig_cxs, sig_cxs,
-                List.rev_append (impl sig_cx) impls, decls
+                (impl sig_cx) :: impls, decls
             | None ->
                 let file = LeaderHeap.find_unsafe file in
                 begin match sig_cache#find file with
                 | Some sig_cx ->
                     orig_sig_cxs, sig_cxs,
-                    List.rev_append (impl sig_cx) impls, decls
+                    (impl sig_cx) :: impls, decls
                 | None ->
                     let orig_sig_cx, sig_cx = sig_cache#read file in
                     orig_sig_cx::orig_sig_cxs, sig_cx::sig_cxs,
-                    List.rev_append (impl sig_cx) impls,
+                    (impl sig_cx) :: impls,
                     decls
                 end
             end
-        | None ->
-            (* NOTE: currently we typecheck against libraries only when
-               corresponding implementations are not found or not checked. This
-               will change in the future. *)
-            orig_sig_cxs, sig_cxs, impls, SMap.add r cxs_to decls
-    ) required ([], [], [], SMap.empty)
+          else
+            (* unchecked implementation exists *)
+            orig_sig_cxs, sig_cxs, impls, (r, info._module, cx_to) :: decls
+      | None ->
+          (* implementation doesn't exist *)
+          orig_sig_cxs, sig_cxs, impls, (r, resolved_r, cx_to) :: decls
+      )
+    ) ([], [], [], []) required
   in
 
   let orig_master_cx, master_cx = sig_cache#read Loc.Builtins in
@@ -532,7 +534,7 @@ let typecheck_contents ?verbose contents filename =
       let metadata = TI.apply_docblock_overrides metadata info in
 
       let cx = TI.infer_ast
-        ~gc:false ~metadata ~filename ~module_name:"-" ast in
+        ~gc:false ~metadata ~filename ~module_name:(Modulename.String "-") ast in
       let cache = new context_cache in
       merge_strict_context cache [cx];
       Some cx, Context.errors cx
@@ -747,8 +749,8 @@ let merge_strict workers dependency_graph partition opts =
 
 let calc_dependencies_job =
   List.fold_left (fun deps file ->
-    let { Module.required; _ } = Module.get_module_info file in
-    let files = SSet.fold (fun r files ->
+    let { Module_js.required; _ } = Module_js.get_module_info file in
+    let files = Module_js.NameSet.fold (fun r files ->
       match implementation_file r with
       | Some f -> FilenameSet.add f files
       | None -> files
@@ -769,21 +771,21 @@ let calc_dependencies workers files =
 
 (* commit newly inferred and removed modules, collect errors. *)
 let commit_modules ?(debug=false) inferred removed =
-  let errmap = Module.commit_modules ~debug inferred removed in
+  let errmap = Module_js.commit_modules ~debug inferred removed in
   save_errormap module_errors errmap
 
 (* Sanity checks on InfoHeap and NameHeap. Since this is performance-intensive
    (although it probably doesn't need to be), it is only done under --debug. *)
-let heap_check files = Module.(
+let heap_check files = Module_js.(
   let ih = Hashtbl.create 0 in
   let nh = Hashtbl.create 0 in
   files |> List.iter (fun file ->
-    let m_file = get_file (string_of_filename file) in
+    let m_file = get_file (Modulename.Filename file) in
     if not (Loc.check_suffix m_file FlowConfig.flow_ext)
     then assert (m_file = file);
     let info = get_module_info file in
     Hashtbl.add ih file info;
-    let m = info.Module._module in
+    let m = info.Module_js._module in
     let f = get_file m in
     Hashtbl.add nh m f;
   );
@@ -791,11 +793,11 @@ let heap_check files = Module.(
     assert (get_module_name f = m);
   );
   ih |> Hashtbl.iter (fun file info ->
-    let parsed = info.Module.parsed in
-    let checked = info.Module.checked in
-    let required = info.Module.required in
+    let parsed = info.Module_js.parsed in
+    let checked = info.Module_js.checked in
+    let required = info.Module_js.required in
     assert (parsed);
-    assert (checked || (SSet.is_empty required));
+    assert (checked || (NameSet.is_empty required));
   );
   (* *)
 )
@@ -810,19 +812,24 @@ let heap_check files = Module.(
 let typecheck workers files removed unparsed opts make_merge_input =
   let debug = Options.is_debug_mode opts in
   (* TODO remove after lookup overhaul *)
-  Module.clear_filename_cache ();
+  Module_js.clear_filename_cache ();
   (* local inference populates context heap, module info heap *)
   Flow_logger.log "Running local inference";
   let inferred = infer workers files opts in
   (* add tracking modules for unparsed files *)
   let force_check = Options.all opts in
-  List.iter (Module.add_unparsed_info ~force_check) unparsed;
+  List.iter (Module_js.add_unparsed_info ~force_check) unparsed;
   (* create module dependency graph, warn on dupes etc. *)
   commit_modules ~debug inferred removed;
   (* SHUTTLE *)
   (* call supplied function to calculate closure of modules to merge *)
   match make_merge_input inferred with
-  | true, to_merge ->
+  | true, to_merge, diff ->
+    Module_js.clear_infos diff;
+    FilenameSet.iter (fun f ->
+      let cx = ContextHeap.find_unsafe f in
+      Module_js.add_module_info cx
+    ) diff;
     if debug then heap_check to_merge;
     let dependency_graph = calc_dependencies workers to_merge in
     let partition = Sort_js.topsort dependency_graph in
@@ -837,7 +844,7 @@ let typecheck workers files removed unparsed opts make_merge_input =
     (* collate errors by origin *)
     collate_errors to_merge;
     to_merge
-  | false, to_collate ->
+  | false, to_collate, _ ->
     (* collate errors by origin *)
     collate_errors to_collate;
     []
@@ -886,31 +893,32 @@ let typecheck workers files removed unparsed opts make_merge_input =
    intermediate results when true (but not false), but we leave that trick for
    later in the interests of simplicity.
 *)
-let file_depends_on =
+let file_depends_on = Module_js.(
   let rec sig_depends_on seen modules memo m =
-    SSet.mem m modules || (
-      Module.module_exists m && (
-        let f = Module.get_file m in
+    NameSet.mem m modules || (
+      module_exists m && (
+        let f = get_file m in
         match FilenameMap.get f !memo with
         | Some result -> result
         | None ->
           not (FilenameSet.mem f !seen) && (
             seen := FilenameSet.add f !seen;
-            let { Module.required; _ } = Module.get_module_info f in
-            SSet.exists (sig_depends_on seen modules memo) required
+            let { required; _ } = get_module_info f in
+            NameSet.exists (sig_depends_on seen modules memo) required
           )
-        )
       )
+    )
   in
 
   fun modules memo f ->
-    let { Module._module; required; _ } = Module.get_module_info f in
-    let result = SSet.mem _module modules || (
+    let { _module; required; _ } = get_module_info f in
+    let result = NameSet.mem _module modules || (
       let seen = ref FilenameSet.empty in
-      SSet.exists (sig_depends_on seen modules memo) required
+      NameSet.exists (sig_depends_on seen modules memo) required
     ) in
     memo := FilenameMap.add f result !memo;
     result
+)
 
 (* Files that must be rechecked include those that immediately or recursively
    depend on modules that were added, deleted, or modified as a consequence of
@@ -924,18 +932,29 @@ let deps_job touched_modules files unmodified =
     (List.filter (file_depends_on touched_modules memo) unmodified)
 
 let deps workers unmodified inferred_files removed_modules =
+  let resolution_path_files = MultiWorker.call
+    workers
+    ~job: (List.fold_left (Module_js.resolution_path_dependency inferred_files))
+    ~neutral: FilenameSet.empty
+    ~merge: FilenameSet.union
+    ~next: (Bucket.make (FilenameSet.elements unmodified)) in
+
+  (* add files with import resolution dependencies to inferred_files *)
+  let inferred_files = FilenameSet.union resolution_path_files inferred_files in
+
   (* touched modules are all that were inferred, re-inferred or removed *)
   let touched_modules = FilenameSet.fold (fun file mods ->
-    SSet.add (Module.get_module_name file) mods
+    Module_js.(NameSet.add (get_module_name file) mods)
   ) inferred_files removed_modules in
+
   (* return untouched files that depend on these *)
   let result_list = MultiWorker.call
     workers
     ~job: (deps_job touched_modules)
     ~neutral: []
     ~merge: List.rev_append
-    ~next: (Bucket.make (FilenameSet.elements unmodified))
-  in
+    ~next: (Bucket.make (FilenameSet.elements unmodified)) in
+
   List.fold_left (fun acc file ->
     FilenameSet.add file acc
   ) FilenameSet.empty result_list
@@ -1020,7 +1039,7 @@ let recheck genv env modified =
   (* remember deleted modules *)
   let to_clear = FilenameSet.union modified deleted in
   ContextHeap.remove_batch to_clear;
-  let removed_modules = Module.remove_files to_clear in
+  let removed_modules = Module_js.remove_files to_clear in
 
   (* TODO elsewhere or delete *)
   Context.remove_all_errors master_cx;
@@ -1059,7 +1078,7 @@ let recheck genv env modified =
       SigContextHeap.remove_batch to_merge;
       SharedMem.collect `gentle;
 
-      true, FilenameSet.elements to_merge
+      true, FilenameSet.elements to_merge, unmod_deps
     ) |> ignore;
 
   (* for now we populate file_infos with empty def lists *)
@@ -1091,7 +1110,7 @@ let full_check workers parse_next opts =
   in
   save_errors parse_errors error_files errors;
 
-  let checked = typecheck workers parsed SSet.empty error_files opts (
+  let checked = typecheck workers parsed Module_js.NameSet.empty error_files opts (
     fun inferred ->
       (* after local inference and before merge, bring in libraries *)
       (* if any fail to parse, our return value will suppress merge *)
@@ -1109,8 +1128,8 @@ let full_check workers parse_next opts =
         fun acc (file, ok) -> if ok then acc else file :: acc
       ) [] lib_files in
       if err_libs != []
-      then false, err_libs
-      else true, inferred
+      then false, err_libs, FilenameSet.empty
+      else true, inferred, FilenameSet.empty
   ) in
 
   (parsed, checked)

@@ -30,40 +30,51 @@ let spec = {
     |> server_flags
     |> root_flag
     |> json_flags
+    |> strip_root_flag
     |> anon "modules" (required (list_of string))
         ~doc:"Module name(s) to find"
   )
 }
 
-let main option_values root json modules () =
+let main option_values root json strip_root modules () =
   let root = guess_root root in
 
   let ic, oc = connect option_values root in
 
   ServerProt.cmd_to_channel oc (ServerProt.GET_IMPORTERS modules);
   let importers_map = Marshal.from_channel ic in
+  let importers_map = Utils.SMap.fold (fun module_name importers map ->
+    let importer_list = List.map (function
+      | Modulename.String s -> s
+      | Modulename.Filename f ->
+        let f = Loc.string_of_filename f in
+        if strip_root then Files_js.relative_path (Path.to_string root) f
+        else f
+    ) (Module_js.NameSet.elements importers) in
+    Utils.SMap.add module_name importer_list map
+  ) importers_map Utils.SMap.empty in
   if json
   then (
     let json_list =
-      Utils.SMap.fold (fun module_name importers json_list ->
+      Utils.SMap.fold (fun module_name importer_list json_list ->
         let importer_list = List.map (fun entry ->
           Hh_json.JSON_String entry
-        ) (Utils.SSet.elements importers) in
+        ) importer_list in
         (module_name, Hh_json.JSON_Array importer_list) :: json_list
       ) importers_map [] in
     let json_output = Hh_json.JSON_Object json_list in
-    output_string stdout (Hh_json.json_to_string json_output);
+    output_string stdout ((Hh_json.json_to_string json_output)^"\n");
     flush stdout
   ) else (
     List.iter (fun module_name ->
       if (Utils.SMap.mem module_name importers_map)
       then begin
-        let import_files =
+        let importer_list =
           Utils.SMap.find_unsafe module_name importers_map in
         Printf.printf "Modules importing module '%s':\n" module_name;
-        Utils.SSet.iter (fun file ->
-          Printf.printf "\t%s\n" file
-        ) import_files
+        List.iter (fun entry ->
+          Printf.printf "\t%s\n" entry
+        ) importer_list
       end else
         Printf.printf "Module '%s' could not be found!\n" module_name
     ) modules;

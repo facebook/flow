@@ -23,7 +23,7 @@ type metadata = {
 (* TODO this has a bunch of stuff in it that should be localized *)
 type t = {
   file: Loc.filename;
-  module_name: string;
+  module_name: Modulename.t;
   metadata: metadata;
 
   (* required modules, and map to their locations *)

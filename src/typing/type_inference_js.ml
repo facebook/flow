@@ -92,30 +92,29 @@ let get_module_t cx m reason =
   | None ->
       Flow_js.mk_tvar_where cx reason (fun t -> Context.add_module cx m t)
 
-let require cx module_name loc =
-  let module_ = Module_js.imported_module (Context.file cx) module_name in
-  Type_inference_hooks_js.dispatch_require_hook cx module_name loc;
-  Context.add_require cx module_ loc;
-  let reason = mk_reason (spf "CommonJS exports of \"%s\"" module_) loc in
+let require cx m_name loc =
+  Context.add_require cx m_name loc;
+  Type_inference_hooks_js.dispatch_require_hook cx m_name loc;
+  let reason = mk_reason (spf "CommonJS exports of \"%s\"" m_name) loc in
   Flow_js.mk_tvar_where cx reason (fun t ->
     Flow_js.flow cx (
-      get_module_t cx module_ (mk_reason module_name loc),
+      get_module_t cx m_name (mk_reason m_name loc),
       CJSRequireT(reason, t)
     )
   )
 
 let import_ns cx reason module_name loc =
-  let module_ = Module_js.imported_module (Context.file cx) module_name in
+  Context.add_require cx module_name loc;
   Type_inference_hooks_js.dispatch_import_hook cx module_name loc;
-  Context.add_require cx module_ loc;
   Flow_js.mk_tvar_where cx reason (fun t ->
     Flow_js.flow cx (
-      get_module_t cx module_ (mk_reason module_name loc),
+      get_module_t cx module_name (mk_reason module_name loc),
       ImportModuleNsT(reason, t)
     )
   )
 
-let exports cx m =
+let exports cx =
+  let m = Modulename.to_string (Context.module_name cx) in
   let loc = Loc.({ none with source = Some (Context.file cx) }) in
   get_module_t cx m (Reason_js.mk_reason "exports" loc)
 
@@ -2770,7 +2769,7 @@ and export_statement cx type_params_map loc
 
     let local_name = if default then "default" else local_name in
     Flow_js.flow cx (
-      exports cx (Context.module_name cx),
+      exports cx,
       SetNamedExportsT(reason, SMap.singleton local_name local_tvar, AnyT.t)
     )
   ) in
@@ -2838,7 +2837,7 @@ and export_statement cx type_params_map loc
         then mark_exports_type cx reason Context.ESModule);
 
         Flow_js.flow cx (
-          exports cx (Context.module_name cx),
+          exports cx,
           SetNamedExportsT(reason, SMap.singleton remote_name local_tvar, AnyT.t)
         )
       ) in
@@ -6287,7 +6286,8 @@ let cross_module_gc =
     )
 
 let force_annotations cx =
-  let tvar = Flow_js.lookup_module cx (Context.module_name cx) in
+  let m = Modulename.to_string (Context.module_name cx) in
+  let tvar = Flow_js.lookup_module cx m in
   let reason, id = open_tvar tvar in
   let before = Errors_js.ErrorSet.cardinal (Context.errors cx) in
   Flow_js.enforce_strict cx id;
@@ -6343,8 +6343,9 @@ let infer_ast ?(gc=true) ~metadata ~filename ~module_name ast =
   let cx = Flow_js.fresh_context metadata filename module_name in
   let checked = Context.is_checked cx in
 
+  let exported_module_name = Modulename.to_string module_name in
   let reason_exports_module =
-    reason_of_string (spf "exports of module `%s`" module_name) in
+    reason_of_string (spf "exports of module `%s`" exported_module_name) in
 
   let local_exports_var = Flow_js.mk_tvar cx reason_exports_module in
 
@@ -6400,9 +6401,9 @@ let infer_ast ?(gc=true) ~metadata ~filename ~module_name ast =
       (* Uses standard ES module exports *)
       | ESModule -> mk_module_t cx reason_exports_module
     ) in
-    Flow_js.flow cx (module_t, exports cx module_name);
+    Flow_js.flow cx (module_t, exports cx);
   ) else (
-    Flow_js.unify cx (exports cx module_name) AnyT.t;
+    Flow_js.unify cx (exports cx) AnyT.t;
   );
 
   (* insist that whatever type flows into exports is fully annotated *)
@@ -6410,7 +6411,7 @@ let infer_ast ?(gc=true) ~metadata ~filename ~module_name ast =
 
   (if gc then
     let ins = SSet.elements (Context.required cx) in
-    let out = module_name in
+    let out = exported_module_name in
     Flow_js.do_gc cx (out::ins));
 
   cx
@@ -6468,49 +6469,28 @@ let implicit_require_strict cx master_cx cx_to =
 
 (* Connect the export of cx_from to its import in cx_to. This happens in some
    arbitrary cx, so cx_from and cx_to should have already been copied to cx. *)
-let explicit_impl_require_strict cx (cx_from, r, cx_to) =
-  let from_t =
-    try Flow_js.lookup_module cx_from r
-    with _ ->
-      (* The module exported by cx_from may be imported by path in cx_to *)
-      Flow_js.lookup_module cx_from (Context.module_name cx_from)
-  in
-  let to_t =
-    try Flow_js.lookup_module cx_to r
-    with _ ->
-      (* The module exported by cx_from may be imported by path in cx_to *)
-      Flow_js.lookup_module cx_to (string_of_filename (Context.file cx_from))
-  in
+let explicit_impl_require_strict cx (cx_from, r, resolved_r, cx_to) =
+  let resolved_r = Modulename.to_string resolved_r in
+  let from_t = Flow_js.lookup_module cx_from resolved_r in
+  let to_t = Flow_js.lookup_module cx_to r in
   Flow_js.flow cx (from_t, to_t)
 
-(* Connect a export of a declared module to its imports in cxs_to. This happens
-   in some arbitrary cx, so all cxs_to should have already been copied to cx. *)
-let explicit_decl_require_strict cx m cxs_to =
-  let reason = reason_of_string m in
-  let from_t = Flow_js.mk_tvar cx reason in
+(* Connect a export of a declared module to its import in cxs_to. This happens
+   in some arbitrary cx, so cx_to should have already been copied to cx. *)
+let explicit_decl_require_strict cx (m, resolved_m, cx_to) =
+  let loc = SMap.find_unsafe m (Context.require_loc cx_to) in
+  let reason = Reason_js.mk_reason m loc in
 
   (* lookup module declaration from builtin context *)
   (* TODO: cache in modulemap *)
-  (* m may be a path. unfortunately, a non-path name may also contain
-     dots. we conservatively extract a base name and use it to resolve
-     to library modules, but retain the original to look up the module
-     in importing contexts.
-     TODO our imprecision here may occasionally cause a library module
-     to fail to be looked up, which because the following lookup_builtin
-     is nonstrict, will have the effect of typing it as Any.
-     Should preserve path/name distinction in module names *)
-  let m_base = Filename.(
-    let base = basename m in
-    if base = m then m else try chop_extension base with _ -> base
-  ) in
 
-  Flow_js.lookup_builtin cx (internal_module_name m_base) reason None from_t;
+  let m_name = Modulename.to_string resolved_m in
+  let from_t = Flow_js.mk_tvar cx reason in
+  Flow_js.lookup_builtin cx (internal_module_name m_name) reason None from_t;
 
-  (* flow the declared module type to importing contexts *)
-  cxs_to |> List.iter (fun cx_to ->
-    let to_t = Flow_js.lookup_module cx_to m in
-    Flow_js.flow cx (from_t, to_t)
-  )
+  (* flow the declared module type to importing context *)
+  let to_t = Flow_js.lookup_module cx_to m in
+  Flow_js.flow cx (from_t, to_t)
 
 (* Merge a component with its "implicit requires" and "explicit requires." The
    implicit requires are those defined in libraries. For the explicit
@@ -6552,7 +6532,7 @@ let merge_component_strict component_cxs dep_cxs
 
   implementations |> List.iter (explicit_impl_require_strict cx);
 
-  declarations |> SMap.iter (explicit_decl_require_strict cx);
+  declarations |> List.iter (explicit_decl_require_strict cx);
 
   other_cxs |> List.iter (implicit_require_strict cx master_cx);
   implicit_require_strict cx master_cx cx;
@@ -6592,7 +6572,7 @@ let load_lib_file ~verbose ~exclude_syms file statements comments
     munge_underscores = false; (* no sense supporting private props in libs *)
     verbose;
     is_declaration_file = false;
-  } file Files_js.lib_module in
+  } file (Modulename.String Files_js.lib_module) in
 
   let module_scope = Scope.fresh () in
   Env_js.init_env ~exclude_syms cx module_scope;

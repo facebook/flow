@@ -11,14 +11,21 @@
 open Utils
 open Utils_js
 
+module NameSet: Set.S with type elt = Modulename.t
+
 type info = {
   file: filename;           (* file name *)
-  _module: string;          (* module name *)
-  required: SSet.t;         (* required module names *)
+  _module: Modulename.t;    (* module name *)
+  required: NameSet.t;      (* required module names *)
   require_loc: Loc.t SMap.t;  (* statement locations *)
+  resolved_modules: Modulename.t SMap.t;
+  phantom_dependents: SSet.t;
   checked: bool;            (* in flow? *)
   parsed: bool;             (* if false, it's a tracking record only *)
 }
+
+val resolution_path_dependency: FilenameSet.t -> FilenameSet.t -> filename ->
+  FilenameSet.t
 
 type mode = ModuleMode_Checked | ModuleMode_Weak | ModuleMode_Unchecked
 
@@ -28,33 +35,35 @@ val module_name_candidates: string -> string list
 val init: Options.options -> unit
 
 (* export and import functions for the module system *)
-val exported_module: filename -> Docblock.t -> string
-val imported_module: filename -> string -> string
+val exported_module: filename -> Docblock.t -> Modulename.t
+val imported_module: ?path_acc: SSet.t ref -> filename -> string -> Modulename.t
 
-val module_exists: string -> bool
+val find_resolved_module: filename -> string -> Modulename.t
 
-val get_file: string -> filename
+val module_exists: Modulename.t -> bool
+
+val get_file: Modulename.t -> filename
 
 (* given a module name, returns either (Some filename) or None *)
-val get_module_file: string -> filename option
+val get_module_file: Modulename.t -> filename option
 
 (* given a filename, returns module info. unsafe *)
 val get_module_info: filename -> info
 
 (* given a filename, returns module name *)
-val get_module_name: filename -> string
+val get_module_name: filename -> Modulename.t
 
 (* for a list of files add all imports for reverse import tracking *)
 val add_reverse_imports: filename list -> unit
 
 (* given a module name, returns Some set of modules importing it or None *)
-val get_reverse_imports: string -> SSet.t option
+val get_reverse_imports: Modulename.t -> NameSet.t option
 
 (* commit new and removed modules, after local inference *)
 val commit_modules:
   ?debug: bool ->
   filename list ->                    (* inferred modules *)
-  SSet.t ->                           (* removed files *)
+  NameSet.t ->                           (* removed files *)
   Errors_js.ErrorSet.t FilenameMap.t  (* filenames to error sets *)
 
 (* add file represented by context to module info store *)
@@ -66,7 +75,8 @@ val add_unparsed_info: force_check:bool -> filename -> unit
 (* remove module info being tracked for given file set;
    returns the set of modules removed
 *)
-val remove_files: FilenameSet.t -> SSet.t
+val remove_files: FilenameSet.t -> NameSet.t
+val clear_infos: FilenameSet.t -> unit
 
 val add_package: string -> Errors_js.ErrorSet.t option
 
