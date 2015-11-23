@@ -545,10 +545,15 @@ let imported_modules file reqs =
   ) reqs (NameSet.empty, SMap.empty) in
   set, map, !path_acc
 
+(* Look up cached resolved module. *)
+let cached_resolved_module file r =
+  match InfoHeap.get file with
+  | Some { resolved_modules; _ } -> SMap.get r resolved_modules
+  | None -> None
+
 (* Optimized module resolution function that goes through cache. *)
 let find_resolved_module file r =
-  let map = (InfoHeap.find_unsafe file).resolved_modules in
-  match SMap.get r map with
+  match cached_resolved_module file r with
   | Some resolved_r -> resolved_r
   | None -> imported_module file r
 

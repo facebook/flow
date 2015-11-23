@@ -1,0 +1,4 @@
+{"path":"ignore/test.js","line":2,"endline":2,"start":5,"end":7}
+{"type":"number","reasons":[],"path":"ignore/test.js","line":3,"endline":3,"start":1,"end":3}
+{"path":"no_flow/test.js","line":2,"endline":2,"start":5,"end":7}
+{"type":"number","reasons":[],"path":"no_flow/test.js","line":3,"endline":3,"start":1,"end":3}
