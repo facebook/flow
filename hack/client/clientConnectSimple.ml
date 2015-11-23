@@ -15,9 +15,6 @@ type error =
   | Build_id_mismatch
 
 let server_exists root = not (Lock.check
-  (ServerFiles.server_monitor_liveness_lock root))
-
-let typechecker_exists root = not (Lock.check
   (ServerFiles.lock_file root))
 
 let wait_on_server_restart ic =
@@ -93,14 +90,7 @@ let connect_once root =
   with
   | Exit_status.Exit_with _  as e -> raise e
   | _ ->
-    if not (server_exists root) then (
-      if (typechecker_exists root) then
-        (Hh_logger.log "Your system got into a bad state. \
-        If this happens again, try `pkill hh_server`.";
-        HackEventLogger.monitor_dead_but_typechecker_alive ();
-        Exit_status.exit Exit_status.Server_already_exists)
-      else Result.Error Server_missing
-    )
+    if not (server_exists root) then Result.Error Server_missing
     else if not (Lock.check (ServerFiles.init_complete_file root))
     then Result.Error Server_busy
     else Result.Error Server_initializing

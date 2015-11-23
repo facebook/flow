@@ -78,6 +78,7 @@ let start_hh_server options typechecker_entry =
     Daemon.spawn ~channel_mode:`socket ~log_file typechecker_entry options in
   let ic, oc = channels in
   setup_autokill_typechecker_on_exit ();
+  Hh_logger.log "Just started typechecker server with pid: %d." pid;
   {
     pid = pid;
     in_fd = Daemon.descr_of_in_channel ic;
@@ -85,34 +86,6 @@ let start_hh_server options typechecker_entry =
     log_file = log_file;
     start_t = start_t;
   }
-
-(**
- * Starts a typechecker server. If one is already running, exits with an error.
-*)
-let maybe_start_hh_server options typechecker_entry =
-  let lock_file = ServerFiles.lock_file (ServerArgs.root options) in
-  (** TODO: Log sucba stats for this. *)
-  if (Lock.check lock_file)
-  then
-    (Hh_logger.log "Typechecker server not running yet. Going to start one.";
-     let typechecker = start_hh_server options typechecker_entry in
-     Hh_logger.log "Just started typechecker server with pid: %d."
-       typechecker.pid;
-     typechecker)
-  else
-    (** Normally, we should never get here because the typechecker's lifetime
-     * is a strict subset of the monitor's lifetime - the monitor is started
-     * before the typechecker, and exits after it detects the typechecker
-     * has exited. The only exception to this is when the user kills the
-     * monitor manually, then the typechecker will live slightly longer
-     * (it will eventually kill itself after f() inishing its work and checks
-     * for liveness of its parent process.) *)
-    (Hh_logger.log "
-      Cannot start typechecker because one is already running. Wait until
-      typechecker exits before starting a new one. Monitor now exiting.
-      ";
-     HackEventLogger.typechecker_already_running ();
-     Exit_status.exit Exit_status.No_server_running)
 
 let sleep_and_check socket =
   let ready_socket_l, _, _ = Unix.select [socket] [] [] (1.0) in
@@ -274,14 +247,16 @@ let monitor_daemon_main (options: ServerArgs.options) typechecker_entry =
   if not Sys.win32 then Sys.set_signal Sys.sigpipe Sys.Signal_ignore;
   let www_root = (ServerArgs.root options) in
   ignore @@ Sys_utils.setsid ();
-  let lock_file = ServerFiles.server_monitor_liveness_lock www_root in
+  (** Make sure to lock the lockfile before doing *anything*, especially
+   * opening the socket. *)
+  let lock_file = ServerFiles.lock_file www_root in
   if (Lock.grab lock_file) then
     Hh_logger.log "Starting monitor run loop"
   else
     (Hh_logger.log "Monitor daemon already running. Killing";
      Exit_status.exit Exit_status.Ok);
   let socket = Socket.init_unix_socket (ServerFiles.socket_file www_root) in
-  let typechecker = maybe_start_hh_server options typechecker_entry in
+  let typechecker = start_hh_server options typechecker_entry in
   while true do
     try check_and_run_loop
         options typechecker lock_file socket typechecker_entry

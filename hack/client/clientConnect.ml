@@ -213,11 +213,15 @@ let rec connect ?(first_attempt=false) env retries start_time tail_env =
         raise Exit_status.(Exit_with No_server_running)
       end
     | CCS.Server_busy ->
-    (** In the monitor-typechecker split role world, this should never happen
-     * because if a monitor already exists, it readily accepts connections even
-     * when the typechecker hasn't finished initializing and if one doesn't
-     * exist then the client starts one and waits until the typechecker is
-     * finished before attempting a connection.*)
+      (** This should only happen during the transition from old-world to
+      * new-world.
+      *
+      * In the monitor-typechecker split role world, this should never happen
+      * because if a monitor already exists, it readily accepts connections even
+      * when the typechecker hasn't finished initializing and if one doesn't
+      * exist then the client starts one and waits until the typechecker is
+      * finished before attempting a connection. *)
+      if Tty.spinner_used () then Tty.print_clear_line stderr;
       Printf.eprintf
         "hh_server is busy: %s %s\n%!"
         tail_msg (Tty.spinner());
@@ -242,6 +246,7 @@ let rec connect ?(first_attempt=false) env retries start_time tail_env =
           connect env retries start_time tail_env
         end else raise Exit_status.(Exit_with Build_id_mismatch)
     | CCS.Server_initializing ->
+      if Tty.spinner_used () then Tty.print_clear_line stderr;
       Printf.eprintf
         "hh_server still initializing; this can take some time.%!";
       if env.retry_if_init then begin

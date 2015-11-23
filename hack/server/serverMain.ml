@@ -248,16 +248,10 @@ let parent_is_dead () =
   Unix.getppid() = 1
 
 let serve genv env in_fd _ =
-  let root = ServerArgs.root genv.options in
   let env = ref env in
   let last_stats = ref empty_recheck_loop_stats in
   let recheck_id = ref (Random_id.short_string ()) in
   while true do
-    let lock_file = ServerFiles.lock_file root in
-    if not (Lock.grab lock_file) then
-      (Hh_logger.log "Lost lock; terminating.\n%!";
-       HackEventLogger.lock_stolen lock_file;
-       Exit_status.(exit Lock_stolen));
     if parent_is_dead () then
       (Hh_logger.log "Typechecker's parent has died; exiting.\n";
        Exit_status.exit Exit_status.Lost_parent_monitor);
@@ -461,12 +455,6 @@ let daemon_main options in_fd out_fd =
   let gc_control = Gc.get () in
   Gc.set {gc_control with Gc.max_overhead = 200};
   Relative_path.set_path_prefix Relative_path.Root root;
-  (* Make sure to lock the lockfile before doing *anything*, especially
-   * opening the socket. *)
-  if not (Lock.grab (ServerFiles.lock_file root)) then begin
-    Hh_logger.log "Error: another server is already running?\n";
-    Exit_status.(exit Server_already_exists);
-  end;
   let config = ServerConfig.(load filename options) in
   let {ServerLocalConfig.cpu_priority; io_priority; _} as local_config =
     ServerLocalConfig.load () in
