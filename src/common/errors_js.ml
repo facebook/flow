@@ -450,7 +450,11 @@ module ErrorSuppressions = struct
 
   (* Checks if an error should be suppressed. *)
   let check (err: error) suppressions =
-    let {messages; _} = err in
+    let {messages; op; _} = err in
+    (* We also check the op message *)
+    let messages = match op with
+    | None -> messages
+    | Some op -> op::messages in
     check_error_messages (false, suppressions) messages
 
   (* Get's the locations of the suppression comments that are yet unused *)
