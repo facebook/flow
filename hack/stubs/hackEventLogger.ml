@@ -34,6 +34,7 @@ let client_build_finish
   ~rev_changed:_ ~build_type:_ ~request_id:_ ~exit_status:_ = ()
 let client_check_finish _ _ _ = ()
 let client_bad_exit _ = ()
+let monitor_dead_but_typechecker_alive () = ()
 let client_established_connection _ = ()
 let client_establish_connection_exception _ = ()
 let client_connect_once _ = ()
