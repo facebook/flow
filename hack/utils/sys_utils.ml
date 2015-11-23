@@ -335,6 +335,7 @@ let setsid =
 let set_signal = if not Sys.win32 then Sys.set_signal else (fun _ _ -> ())
 
 external get_total_ram : unit -> int = "hh_sysinfo_totalram"
+external uptime : unit -> int = "hh_sysinfo_uptime"
 external nproc: unit -> int = "nproc"
 
 let total_ram = get_total_ram ()
