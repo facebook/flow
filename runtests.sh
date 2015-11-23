@@ -1,6 +1,12 @@
 #!/bin/bash
 if [[ "$OSTYPE" == "darwin"* ]]; then
-  FLOW=$(pwd -P)/$1
+  _canonicalize_file_path() {
+    local dir file
+    dir=$(dirname -- "$1")
+    file=$(basename -- "$1")
+    (cd "$dir" 2>/dev/null && printf '%s/%s\n' "$(pwd -P)" "$file")
+  }
+  FLOW=$(_canonicalize_file_path "$1")
 else
   FLOW=$(readlink -f "$1")
 fi
@@ -64,7 +70,7 @@ print_run() {
 }
 kill_server() {
   trap - SIGINT SIGTERM
-  $FLOW stop . 1> /dev/null 2>&1
+  "$FLOW" stop . 1> /dev/null 2>&1
   kill "$1" $$
 }
 cd "$(dirname "${BASH_SOURCE[0]}")" || exit 1
@@ -166,7 +172,7 @@ runtest() {
         if [ "$cmd" == "check" ]
         then
             # default command is check with configurable --all
-            $FLOW check . $all --strip-root --show-all-errors --old-output-format 1> "$out_file" 2> "$stderr_dest"
+            "$FLOW" check . $all --strip-root --show-all-errors --old-output-format 1> "$out_file" 2> "$stderr_dest"
         else
             # otherwise, run specified flow command, then kill the server
 
@@ -174,7 +180,7 @@ runtest() {
             trap "kill_server -TERM" SIGTERM
 
             # start server and wait
-            $FLOW start . $all --wait > /dev/null 2>&1
+            "$FLOW" start . $all --wait > /dev/null 2>&1
             if [ "$shell" != "" ]
             then
                 # run test script
@@ -192,7 +198,7 @@ runtest() {
                 eval "$cmd"
             fi
             # stop server
-            $FLOW stop . 1> /dev/null 2>&1
+            "$FLOW" stop . 1> /dev/null 2>&1
 
             trap - SIGINT SIGTERM
         fi
