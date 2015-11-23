@@ -13,3 +13,6 @@ var dict: { [k: number]: string } = {};
 Object.keys(dict).forEach(k => {
   (k : number) // error: number ~> string
 });
+
+var any: Object = {};
+(Object.keys(any): Array<number>); // error, Array<string>
