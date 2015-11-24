@@ -68,6 +68,10 @@ val devnull : unit -> ('a, 'b) handle
    alternate entry point. *)
 val spawn :
   ?reason:string -> ?log_file:string -> ?channel_mode:[ `pipe | `socket ] ->
+  (** in `log_file mode, both stdout and stderr go to the
+   * log file (or null). In `parent_streams mode, they go to
+   * the same stdout and stderr as the parent process. *)
+  ?log_mode:[ `log_file | `parent_streams ] ->
   ('param, 'input, 'output) entry -> 'param -> ('output, 'input) handle
 
 (* Close the typed channels associated to a 'spawned' child. *)
