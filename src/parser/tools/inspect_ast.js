@@ -2,7 +2,14 @@
 var flow = require("../flow_parser.js");
 var util = require("util");
 var fs = require("fs");
-var argv = require("minimist")(process.argv.slice(2));
+var argv = require("minimist")(
+  process.argv.slice(2),
+  {
+    boolean: [
+      "strip-comments"
+    ],
+  }
+);
 
 var description =
 "This script parses a given string or file and then dumps the ast.\n\
@@ -17,5 +24,9 @@ if (argv._.length != 1 || argv.help) {
   if (fs.existsSync(content)) {
     content = fs.readFileSync(content).toString();
   }
-  console.log(JSON.stringify(flow.parse(content, {}), null, 2));
+  var ast = flow.parse(content, {});
+  if (argv['strip-comments']) {
+    delete ast.comments;
+  }
+  console.log(JSON.stringify(ast, null, 2));
 }
