@@ -20,6 +20,7 @@ type typechecker_process =
     (** Send client's File Descriptors to the typechecker over this. *)
     out_fd : Unix.file_descr;
     log_file: string;
+    log_mode : Daemon.log_mode;
   }
 
 
@@ -42,13 +43,16 @@ let check_exit_status proc_stat typechecker =
   match proc_stat with
   | Unix.WEXITED 0 -> ()
   | _ ->
-    let oc =
-      open_out_gen [Open_creat; Open_append; Open_binary] 0o666
-        typechecker.log_file in
     let exit_kind, exit_code = Exit_status.unpack proc_stat in
-    Printf.fprintf oc "hh_server %s with exit code %d\n"
-      exit_kind exit_code;
-    close_out oc;
+    match typechecker.log_mode with
+    | Daemon.Log_file ->
+      let oc = open_out_gen [Open_creat; Open_append; Open_binary] 0o666
+        typechecker.log_file in
+      Printf.fprintf oc "hh_server %s with exit code %d\n"
+        exit_kind exit_code;
+      close_out oc
+    | Daemon.Parent_streams ->
+      ();
     let is_oom = check_dmesg_for_oom typechecker.pid in
     let time_taken = Unix.time () -. typechecker.start_t in
     HackEventLogger.bad_exit time_taken proc_stat ~is_oom

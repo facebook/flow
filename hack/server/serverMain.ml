@@ -480,7 +480,7 @@ let daemon_main options in_fd out_fd =
   if is_check_mode then
     let env = program_init genv in
     Option.iter (ServerArgs.save_filename genv.options) (save genv env);
-    Printf.eprintf "Running in check mode\n";
+    Hh_logger.log "Running in check mode";
     Program.run_once_and_exit genv env
   else
     let env = MainInit.go options waiting_channel

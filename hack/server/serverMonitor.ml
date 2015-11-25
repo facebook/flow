@@ -73,11 +73,19 @@ let setup_autokill_typechecker_on_exit typechecker =
     Hh_logger.log "Failed to set signal handler"
 
 let start_hh_server options typechecker_entry log_mode =
-  let log_link = ServerFiles.log_link (ServerArgs.root options) in
-  (try Sys.rename log_link (log_link ^ ".old") with _ -> ());
-  let log_file = ServerFiles.make_link_of_timestamped log_link in
-  Hh_logger.log "About to spawn typechecker daemon. Logs will go to %s\n%!"
-    (if Sys.win32 then log_file else log_link);
+  let log_file =
+    match log_mode with
+    | Daemon.Log_file ->
+      let log_link = ServerFiles.log_link (ServerArgs.root options) in
+      (try Sys.rename log_link (log_link ^ ".old") with _ -> ());
+      let log_file = ServerFiles.make_link_of_timestamped log_link in
+      Hh_logger.log "About to spawn typechecker daemon. Logs will go to %s\n%!"
+        (if Sys.win32 then log_file else log_link);
+      log_file
+    | Daemon.Parent_streams ->
+      Hh_logger.log "About to spawn typechecker daemon. Logs will go here.";
+      ""
+  in
   let start_t = Unix.time () in
   let {Daemon.pid; Daemon.channels} =
     Daemon.spawn ~channel_mode:`socket ~log_file ~log_mode typechecker_entry
@@ -90,6 +98,7 @@ let start_hh_server options typechecker_entry log_mode =
       in_fd = Daemon.descr_of_in_channel ic;
       out_fd = Daemon.descr_of_out_channel oc;
       log_file = log_file;
+      log_mode = log_mode;
       start_t = start_t;
     } in
   setup_autokill_typechecker_on_exit typechecker;
@@ -107,8 +116,6 @@ let stop_if_typechecker_dead typechecker =
     Unix.waitpid [Unix.WNOHANG; Unix.WUNTRACED] typechecker.pid in
   (if pid <> 0 then
      (check_exit_status proc_stat typechecker;
-      Hh_logger.log
-        "Typechecker process is stopped. Stopping server monitor too.";
       Exit_status.(exit Ok))
    else
      ())
@@ -306,7 +313,7 @@ let daemon_entry =
     (fun (
        (options: ServerArgs.options), typechecker_entry)
        ((_ic: char Daemon.in_channel), (_oc: char Daemon.out_channel)) ->
-       monitor_daemon_main options typechecker_entry `log_file)
+       monitor_daemon_main options typechecker_entry Daemon.Log_file)
 
 (** Either starts a monitor daemon (which will spawn a typechecker daemon),
  * or just runs the typechecker if detachment not enabled. *)
@@ -317,4 +324,4 @@ let start () =
   then
     Exit_status.exit (daemon_starter options daemon_entry typechecker_entry)
   else
-    monitor_daemon_main options typechecker_entry `parent_streams
+    monitor_daemon_main options typechecker_entry Daemon.Parent_streams
