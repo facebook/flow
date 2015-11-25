@@ -1,4 +1,26 @@
 
+map.js:23:13,33: constructor call
+Function cannot be called on
+map.js:23:13,33: Map
+
+map.js:29:6,17: call of method `get`
+Error:
+map.js:28:27,32: number
+This type is incompatible with
+map.js:29:20,26: boolean
+
+map.js:29:6,17: call of method `get`
+Error:
+map.js:29:20,26: boolean
+This type is incompatible with
+[LIB] core.js:369:22,25: undefined
+
+map.js:30:5,14: call of method `get`
+Error:
+map.js:30:11,13: number
+This type is incompatible with
+map.js:28:19,24: string
+
 regexp.js:26:5,22: function call
 Error:
 regexp.js:26:19,21: string
@@ -19,4 +41,4 @@ weakset.js:36:11,32: constructor call
 Function cannot be called on
 weakset.js:36:11,32: WeakSet
 
-Found 4 errors
+Found 8 errors
