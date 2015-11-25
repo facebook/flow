@@ -1746,7 +1746,7 @@ let rec __flow cx (l, u) trace =
       ) in
       rec_flow cx trace (cjs_exports, t)
 
-    (* import [...] from 'SomeModule'; *)
+    (* import * as X from 'SomeModule'; *)
     | (ModuleT(_, exports), ImportModuleNsT(reason, t)) ->
       let exports_tmap = find_props cx exports.exports_tmap in
       let ns_obj_tmap = (
@@ -1759,6 +1759,67 @@ let rec __flow cx (l, u) trace =
         ~sealed:true ~frozen:true ns_obj_tmap proto
       in
       rec_flow cx trace (ns_obj, t)
+
+    (* import [type] X from 'SomeModule'; *)
+    | (ModuleT(_, exports), ImportDefaultT(reason, (local_name, module_name), t)) ->
+      let export_t = match exports.cjs_export with
+        | Some t -> t
+        | None ->
+            let exports_tmap = find_props cx exports.exports_tmap in
+            match SMap.get "default" exports_tmap with
+              | Some t -> t
+              | None ->
+                let msg = "This module has no default export." in
+                (**
+                 * A common error while using `import` syntax is to forget or
+                 * misunderstand the difference between `import foo from ...` 
+                 * and `import {foo} from ...`. The former means to import the
+                 * default export to a local var called "foo", and the latter 
+                 * means to import a named export called "foo" to a local var
+                 * called "foo".
+                 *
+                 * To help guide users here, if we notice that the module being
+                 * imported from has no default export (but it does have a named
+                 * export that fuzzy-matches the local name specified), we offer
+                 * that up as a possible "did you mean?" suggestion.
+                 *)
+                let known_exports = SMap.keys exports_tmap in
+                let suggestions = typo_suggestions known_exports local_name in
+                let msg = if List.length suggestions = 0 then msg else msg ^ (
+                  spf " Did you mean `import {%s} from \"%s\"`?"
+                    (List.hd suggestions)
+                    module_name
+                ) in
+                add_error cx [(reason, msg)];
+                AnyT.t
+      in
+      rec_flow cx trace (export_t, t)
+
+    (* import {X} from 'SomeModule'; *)
+    | (ModuleT(_, exports), ImportNamedT(reason, export_name, t)) ->
+        let exports_tmap = find_props cx exports.exports_tmap in
+        let exports_tmap = (
+          match exports.cjs_export with
+          | Some t -> SMap.add "default" t exports_tmap
+          | None -> exports_tmap
+        ) in
+        let export_t = (
+          match SMap.get export_name exports_tmap with
+          | Some t -> t
+          | None ->
+              let msg = 
+                spf "This module has no named export called `%s`." export_name 
+              in
+
+              let known_exports = SMap.keys exports_tmap in
+              let suggestions = typo_suggestions known_exports export_name in
+              let msg = if List.length suggestions = 0 then msg else msg ^ (
+                spf " Did you mean `%s`?" (List.hd suggestions)
+              ) in
+              add_error cx [(reason, msg)];
+              AnyT.t
+        ) in
+        rec_flow cx trace (export_t, t)
 
     (********************************************)
     (* summary types forget literal information *)
@@ -5673,12 +5734,10 @@ let rec gc cx state = function
       gc cx state t1;
       gc cx state t2
 
-  | ImportModuleNsT (_, t) ->
-      gc cx state t
-
-  | ImportTypeT (_, t) ->
-      gc cx state t
-
+  | ImportModuleNsT (_, t)
+  | ImportDefaultT (_, _, t)
+  | ImportNamedT (_, _, t)
+  | ImportTypeT (_, t)
   | ImportTypeofT (_, t) ->
       gc cx state t
 

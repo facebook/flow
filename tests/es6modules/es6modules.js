@@ -269,3 +269,9 @@ var as4: number = namedStr; // Error: string ~> number
 ////////////////////////////////////////
 
 import "./SideEffects";
+
+//////////////////////////////////////////////
+// == Suggest export name on likely typo == //
+//////////////////////////////////////////////
+import specifierNumber1 from "ES6_Named1"; // Error: Did you mean `import {specifierNumber1} from ...`?
+import {specifierNumber} from "ES6_Named1"; // Error: Did you mean `specifierNumber1`?
