@@ -118,6 +118,9 @@ let string_of_changeset =
 type 'a stack = 'a list ref
 let changesets: t stack = ref []
 
+let is_active () =
+  List.length !changesets > 0
+
 let init () =
   changesets := []
 

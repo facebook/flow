@@ -290,7 +290,7 @@ let havoc_call_env = Scope.(
     match get_entry name scope with
     | Some _ ->
       havoc_entry (fun gen -> gen) name scope;
-      Changeset.add_var_change entry_ref
+      Changeset.(if is_active () then add_var_change entry_ref)
     | None ->
       (* global scopes may lack entries, if function closes over
          path-refined global vars (artifact of deferred lookup) *)
@@ -307,7 +307,7 @@ let havoc_call_env = Scope.(
     match get_refi key scope with
     | Some _ ->
       havoc_refi key scope;
-      Changeset.add_refi_change refi_ref
+      Changeset.(if is_active () then add_refi_change refi_ref)
     | None ->
       (* global scopes may lack entries, if function closes over
          path-refined global vars (artifact of deferred lookup) *)
