@@ -196,12 +196,18 @@ type 'a trie =
   | Leaf of 'a
   | Node of 'a * 'a trie SMap.t
 
+let rec is_tany ty = match ty with
+  | _, Tany -> true
+  | _, Tunresolved [] -> false
+  | _, Tunresolved tyl -> List.for_all tyl is_tany
+  | _ -> false
+
 let level_of_type fixme_map (p, ty) =
   (* TODO: extract more exact reason for partial type from HasTany visitor *)
   let r = fst ty in
   let lvl = match ty with
-    | _, Tany -> Unchecked
     | _, Tobject -> Partial
+    | ty when is_tany ty -> Unchecked
     | ty when TUtils.HasTany.check ty -> Partial
     | _ -> Checked in
   let line = Pos.line p in
