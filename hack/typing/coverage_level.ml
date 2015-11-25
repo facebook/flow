@@ -197,19 +197,23 @@ type 'a trie =
   | Node of 'a * 'a trie SMap.t
 
 let rec is_tany ty = match ty with
-  | _, Tany -> true
-  | _, Tunresolved [] -> false
-  | _, Tunresolved tyl -> List.for_all tyl is_tany
-  | _ -> false
+  | r, Tany -> Some r
+  | _, Tunresolved [] -> None
+  | _, Tunresolved (h::tl) -> begin match is_tany h with
+    | Some r when
+      List.for_all tl (compose (Option.is_some) (is_tany)) -> Some r
+    | _ -> None
+    end
+  | _ -> None
 
 let level_of_type fixme_map (p, ty) =
-  (* TODO: extract more exact reason for partial type from HasTany visitor *)
-  let r = fst ty in
-  let lvl = match ty with
-    | _, Tobject -> Partial
-    | ty when is_tany ty -> Unchecked
-    | ty when TUtils.HasTany.check ty -> Partial
-    | _ -> Checked in
+  let r, lvl = match ty with
+    | r, Tobject -> r, Partial
+    | r, _ -> match is_tany ty with
+      | Some r -> r, Unchecked
+      | None -> match TUtils.HasTany.check_why ty with
+        | Some r -> r, Partial
+        | _ -> r, Checked in
   let line = Pos.line p in
   (* If the line has a HH_FIXME, then mark it as (at most) partially checked *)
   match lvl with

@@ -325,29 +325,39 @@ let min_vis_opt vis_opt1 vis_opt2 =
 
 module HasTany : sig
   val check: locl ty -> bool
+  val check_why: locl ty -> Reason.t option
 end = struct
+
+  let merge x y = Option.merge x y (fun x _ -> x)
+
   let visitor =
     object(this)
-      inherit [bool] TypeVisitor.type_visitor
-      method! on_tany _ = true
-      method! on_tarray acc ty1_opt ty2_opt =
+      inherit [Reason.t option] TypeVisitor.type_visitor
+      method! on_tany _ r = Some r
+      method! on_tarray acc r ty1_opt ty2_opt =
         (* Check for array without its type parameters specified *)
         match ty1_opt, ty2_opt with
-        | None, None -> true
-        | _ ->
-          (Option.fold ~f:this#on_type ~init:acc ty1_opt) ||
-          (Option.fold ~f:this#on_type ~init:acc ty2_opt)
-      method! on_tarraykind acc akind =
+        | None, None -> Some r
+        | _ -> merge
+            (Option.fold ~f:this#on_type ~init:acc ty1_opt)
+            (Option.fold ~f:this#on_type ~init:acc ty2_opt)
+      method! on_tarraykind acc r akind =
         match akind with
-        | AKany -> true
+        | AKany -> Some r
         | AKempty -> acc
         | AKvec ty -> this#on_type acc ty
-        | AKmap (tk, tv) ->
-          (this#on_type acc tk) || (this#on_type acc tv)
-        | AKshape fdm -> ShapeMap.exists (fun _ (tk, tv) ->
-          (this#on_type acc tk) || (this#on_type acc tv)) fdm
+        | AKmap (tk, tv) -> merge
+            (this#on_type acc tk)
+            (this#on_type acc tv)
+        | AKshape fdm -> ShapeMap.fold (fun _ (tk, tv) acc ->
+            merge
+              (this#on_type acc tk)
+              (this#on_type acc tv)
+          ) fdm acc
         | AKtuple fields ->
-          Utils.IMap.exists (fun _ ty -> this#on_type acc ty) fields
+          Utils.IMap.fold (fun _ ty acc -> this#on_type acc ty) fields acc
     end
-  let check ty = visitor#on_type false ty
+  let check_why ty = visitor#on_type None ty
+
+  let check ty = Option.is_some (check_why ty)
 end
