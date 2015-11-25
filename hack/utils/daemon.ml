@@ -157,6 +157,7 @@ let fork ?log_file (f : ('a, 'b) channel_pair -> unit) :
   | -1 -> failwith "Go get yourself a real computer"
   | 0 -> (* child *)
     (try
+      ignore(Unix.setsid());
       close_in parent_in;
       close_out parent_out;
       Sys_utils.with_umask 0o111 begin fun () ->
