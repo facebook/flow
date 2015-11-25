@@ -201,8 +201,8 @@ class virtual tvar_expanding_type_mapper = object(this)
   method on_infinite_tvar (env : env) (r : Reason.t) (_ : int) : result =
     env, (r, Tany)
 
-  method on_tvar (env, seen) (_ : Reason.t) n =
-    let env, ty = Env.get_type env n in
+  method on_tvar (env, seen) (r : Reason.t) n =
+    let env, ty = Env.get_type env r n in
     this#on_type (env, seen) ty
 
   method virtual on_type : env -> locl ty -> result
@@ -211,8 +211,8 @@ end
 (* Mixin that maps across the type inside the typevar, and then changes
  * it's value to the result. *)
 class virtual tvar_substituting_type_mapper = object(this)
-  method on_tvar ((env, seen) : env) (_ : Reason.t) n =
-    let env, ty = Env.get_type env n in
+  method on_tvar ((env, seen) : env) (r : Reason.t) n =
+    let env, ty = Env.get_type env r n in
     let (env, seen), ty = this#on_type (env, seen) ty in
     let env = Env.add env n ty in
     (env, seen), ty

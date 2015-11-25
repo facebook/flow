@@ -43,7 +43,7 @@ val add_subst : env -> int -> int -> env
 val get_var : env -> int -> env * int
 val rename : env -> int -> int -> env
 val add : env -> int -> locl ty -> env
-val get_type : env -> int -> env * locl ty
+val get_type : env -> Reason.t -> int -> env * locl ty
 val get_type_unsafe : env -> int -> env * locl ty
 val expand_type : env -> locl ty -> env * locl ty
 val expand_type_recorded : env -> ISet.t -> locl ty -> env * ISet.t * locl ty

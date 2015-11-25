@@ -28,7 +28,7 @@ and unify_with_uenv env (uenv1, ty1) (uenv2, ty2) =
   | (r1, Tvar n1), (r2, Tvar n2) -> unify_var env (r1, uenv1, n1) (r2, uenv2, n2)
   | (r, Tvar n), ty2
   | ty2, (r, Tvar n) ->
-      let env, ty1 = Env.get_type env n in
+      let env, ty1 = Env.get_type env r n in
       let n' = Env.fresh() in
       let env = Env.rename env n n' in
       let env, ty = unify_with_uenv env (uenv1, ty1) (uenv2, ty2) in
@@ -82,7 +82,7 @@ and unify_var env (r1, uenv1, n1) (r2, uenv2, n2) =
   (* I ALWAYS FORGET THIS! ALWAYS!!! *)
   (* The type of n' could have changed because of recursive types *)
   (* We need one more round *)
-  let env, ty' = Env.get_type env n' in
+  let env, ty' = Env.get_type env r n' in
   let env, ty = unify env ty ty' in
   let env = Env.add env n' ty in
   env, (r, Tvar n')

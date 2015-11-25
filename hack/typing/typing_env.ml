@@ -110,11 +110,11 @@ let add env x ty =
   let env, x = get_var env x in
   { env with tenv = IMap.add x ty env.tenv }
 
-let get_type env x =
+let get_type env x_reason x =
   let env, x = get_var env x in
   let ty = IMap.get x env.tenv in
   match ty with
-  | None -> env, (Reason.none, Tany)
+  | None -> env, (x_reason, Tany)
   | Some ty -> env, ty
 
 let get_type_unsafe env x =
@@ -126,7 +126,7 @@ let get_type_unsafe env x =
 
 let expand_type env x =
   match x with
-  | _, Tvar x -> get_type env x
+  | r, Tvar x -> get_type env r x
   | x -> env, x
 
 let expand_type_recorded env set ty =
@@ -250,7 +250,7 @@ let rec debug stack env (r, ty) =
         let stack = ISet.add x stack in
         let _, y = get_var env x in
         o "["; o (string_of_int (get_printable_tvar_id y)); o "]";
-        (match get_type env x with
+        (match get_type env r x with
         | _, (_, Tany) -> o (Ident.debug ~normalize:get_printable_tvar_id x)
         | _, ty -> debug stack env ty)
   | Tobject -> o "object"
