@@ -19,6 +19,12 @@ let enabled = ref true
 
 let disable () = enabled := false
 
+let oc_list = ref [ stderr ]
+
+let also_log_to_fd fd =
+  let oc = Unix.out_channel_of_descr fd in
+  oc_list := oc::!oc_list
+
 let log_raw s =
   if !enabled
   then
@@ -27,7 +33,7 @@ let log_raw s =
     let year = tm.tm_year + 1900 in
     let time_str = spf "[%d-%02d-%02d %02d:%02d:%02d]"
       year (tm.tm_mon + 1) tm.tm_mday tm.tm_hour tm.tm_min tm.tm_sec in
-    Printf.eprintf "%s %s%!" time_str s
+    List.iter (fun oc -> Printf.fprintf oc "%s %s%!" time_str s) !oc_list
 
 (* wraps log_raw in order to take a format string & add a newline *)
 let log fmt = Printf.ksprintf log_raw (fmt^^"\n")

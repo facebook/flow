@@ -14,7 +14,7 @@
 
 open CommandUtils
 
-type mode = Check | Normal | Detach
+type mode = Check | Server | Detach
 
 module type CONFIG = sig
   val mode : mode
@@ -23,12 +23,12 @@ end
 module OptionParser(Config : CONFIG) = struct
   let cmdname = match Config.mode with
   | Check -> "check"
-  | Normal -> "server"
+  | Server -> "server"
   | Detach -> "start"
 
   let cmddoc = match Config.mode with
   | Check -> "Does a full Flow check and prints the results"
-  | Normal -> "Runs a Flow server in the foreground"
+  | Server -> "Runs a Flow server in the foreground"
   | Detach -> "Starts a Flow server"
 
   let common_args prev = CommandSpec.ArgSpec.(
@@ -70,7 +70,7 @@ module OptionParser(Config : CONFIG) = struct
       |> dummy false (* wait *)
       |> common_args
     )
-  | Normal -> CommandSpec.ArgSpec.(
+  | Server -> CommandSpec.ArgSpec.(
       empty
       |> dummy Errors_js.default_flags (* error_flags *)
       |> dummy false (* json *)
@@ -154,6 +154,7 @@ module OptionParser(Config : CONFIG) = struct
 
     result := Some {
       Options.opt_check_mode = Config.(mode = Check);
+      Options.opt_server_mode = Config.(mode = Server);
       Options.opt_error_flags = error_flags;
       Options.opt_log_file = opt_log_file;
       Options.opt_root = root;
@@ -200,7 +201,7 @@ module Check = struct
 end
 
 module Server = struct
-  module OptionParser = OptionParser (struct let mode = Normal end)
+  module OptionParser = OptionParser (struct let mode = Server end)
   module Main = Main (OptionParser)
   let spec = OptionParser.spec
   let command = CommandSpec.raw_command spec (fun argv -> Main.start ())

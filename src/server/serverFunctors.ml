@@ -314,6 +314,11 @@ end = struct
     if Options.should_wait options && msg <> "ready"
     then wait_loop child_pid options ic
 
+  let open_log_file options =
+    let file = Path.to_string (Options.log_file options) in
+    (try Sys.rename file (file ^ ".old") with _ -> ());
+    Unix.openfile file [Unix.O_WRONLY; Unix.O_CREAT; Unix.O_APPEND] 0o666
+
   let daemonize options =
     (* Let's make sure this isn't all for naught before we fork *)
     let { Options.opt_root; opt_temp_dir; _ } = options in
@@ -343,9 +348,8 @@ end = struct
         let fd = Unix.openfile null_path [Unix.O_RDONLY; Unix.O_CREAT] 0o777 in
         Unix.dup2 fd Unix.stdin;
         Unix.close fd;
-        let file = Path.to_string (Options.log_file options) in
-        (try Sys.rename file (file ^ ".old") with _ -> ());
-        let fd = Unix.openfile file [Unix.O_WRONLY; Unix.O_CREAT; Unix.O_APPEND] 0o666 in
+
+        let fd = open_log_file options in
         Unix.dup2 fd Unix.stdout;
         Unix.dup2 fd Unix.stderr;
         Unix.close fd;
@@ -375,6 +379,8 @@ end = struct
       (* We don't want to spew for flow check *)
       if Options.is_check_mode options
       then Flow_logger.disable ();
+      if Options.is_server_mode options
+      then Flow_logger.also_log_to_fd (open_log_file options);
       main options waiting_channel
     with Exit ->
       ()
