@@ -2845,7 +2845,7 @@ and export_statement cx type_params_map loc
 
     (* [declare] export [type] * from "source"; *)
     | ([], Some(ExportBatchSpecifier(_))) ->
-      let source_tvar = (
+      let source_module_name, source_tvar = (
         match source with
         | Some(src_loc, {
             Ast.Literal.value = Ast.Literal.String(module_name);
@@ -2856,16 +2856,15 @@ and export_statement cx type_params_map loc
                 module_name
             in
             let reason = mk_reason reason_str src_loc in
-            import_ns cx reason module_name src_loc
-        | Some(_)
-        | None
+            (module_name, import_ns cx reason module_name src_loc)
+        | _
           -> failwith (
             "Parser Error: `export * from` must specify a string " ^
             "literal for the source module name!"
           )
       ) in
 
-      let reason = mk_reason "export * from \"%s\"" loc in
+      let reason = mk_reason (spf "export * from \"%s\"" source_module_name) loc in
 
       (**
         * TODO: Should probably make a specialized use type for this.
