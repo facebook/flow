@@ -1,0 +1,6 @@
+
+path2d.js:9:6,40: call of method `arcTo`
+Function cannot be called on
+path2d.js:9:6,40: Path2D
+
+Found 1 error

@@ -3,12 +3,12 @@ canvastest.js:8:3,22: call of method `moveTo`
 Error:
 canvastest.js:8:14,16: string
 This type is incompatible with
-[LIB] dom.js:660:15,20: number
+[LIB] dom.js:673:15,20: number
 
 canvastest.js:8:3,22: call of method `moveTo`
 Error:
 canvastest.js:8:19,21: string
 This type is incompatible with
-[LIB] dom.js:660:26,31: number
+[LIB] dom.js:673:26,31: number
 
 Found 2 errors
