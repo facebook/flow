@@ -101,16 +101,12 @@ static value parse_events(struct events *events)
     wpath = caml_copy_string(events->wpath);
     for (;;) {
       // Forcefully null terminate the filename.
-      wchar_t oldMem = fileInfo->FileName[fileInfo->FileNameLength];
-      fileInfo->FileName[fileInfo->FileNameLength] = L'\0';
       char* modifiedFilename =
-        (char*)malloc(sizeof(wchar_t) * fileInfo->FileNameLength);
-      size_t filenameLen =
-        wcstombs_s(NULL, modifiedFilename,
-                   sizeof(wchar_t) * fileInfo->FileNameLength,
-                   fileInfo->FileName,
-                   (sizeof(wchar_t) * fileInfo->FileNameLength) - 1);
-      fileInfo->FileName[fileInfo->FileNameLength] = oldMem;
+        (char*)malloc(fileInfo->FileNameLength);
+      wcstombs_s(NULL, modifiedFilename,
+                 fileInfo->FileNameLength,
+                 fileInfo->FileName,
+                 fileInfo->FileNameLength / sizeof (wchar_t));
       // Allocate 'Fsnotify.events'
       ev = caml_alloc_tuple(2);
       Store_field(ev, 0, caml_copy_string(modifiedFilename));
