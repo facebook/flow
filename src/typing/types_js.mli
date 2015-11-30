@@ -17,7 +17,7 @@ val recheck: ServerEnv.genv -> ServerEnv.env -> FilenameSet.t -> ServerEnv.env
 
 (* hh_server initial (full) check *)
 val server_init:
-  ServerEnv.genv -> ServerEnv.env -> ServerEnv.env
+  ServerEnv.genv -> ServerEnv.env -> FlowEventLogger.Timing.t * ServerEnv.env
 
 val get_errors: unit -> Errors_js.error list
 

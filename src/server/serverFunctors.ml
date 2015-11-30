@@ -18,7 +18,7 @@ exception State_not_found
 
 module type SERVER_PROGRAM = sig
   val preinit : unit -> unit
-  val init : genv -> env -> env
+  val init : genv -> env -> (FlowEventLogger.Timing.t * env)
   val run_once_and_exit : genv -> env -> unit
   val should_recheck : Path.t -> bool
   (* filter and relativize updated file paths *)
@@ -215,8 +215,8 @@ end = struct
     done
 
   let create_program_init genv env = fun () ->
-    let env = Program.init genv env in
-    FlowEventLogger.init_done ();
+    let timing, env = Program.init genv env in
+    FlowEventLogger.init_done ~timing;
     env
 
   (* The main entry point of the daemon

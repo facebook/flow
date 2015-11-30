@@ -48,13 +48,13 @@ struct
     Flow_logger.log "executable=%s" (Sys_utils.executable_path ());
     Flow_logger.log "version=%s" FlowConfig.version;
     (* start the server *)
-    let env = Types_js.server_init genv env in
+    let timing, env = Types_js.server_init genv env in
     let files =
       ServerEnv.PathMap.fold (fun fn _ acc ->
         ServerEnv.PathSet.add fn acc
       ) env.ServerEnv.files_info ServerEnv.PathSet.empty in
     SearchService_js.update_from_master files;
-    env
+    timing, env
 
   let run_once_and_exit genv env =
     match env.ServerEnv.errorl with

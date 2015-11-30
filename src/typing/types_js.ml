@@ -802,6 +802,24 @@ let heap_check files = Module_js.(
   (* *)
 )
 
+let with_timer options timer timing f =
+  let timing = FlowEventLogger.Timing.start_timer ~timer timing in
+  let ret = f () in
+  let timing = FlowEventLogger.Timing.stop_timer ~timer timing in
+
+  (* If we're profiling then output timing information to stderr *)
+  if profile_and_not_quiet options
+  then (match FlowEventLogger.Timing.get_finished_timer ~timer timing with
+    | Some (start_wall_age, wall_duration) ->
+        prerr_endlinef
+          "TimingEvent `%s`: start_wall_age: %f; wall_duration: %f"
+          timer
+          start_wall_age
+          wall_duration
+    | _ -> ());
+
+  (timing, ret)
+
 (* helper *)
 (* make_merge_input takes list of files produced by infer, and
    returns (true, list of files to merge (typically an expansion)),
@@ -809,21 +827,30 @@ let heap_check files = Module_js.(
    not performed.
    return a list of files that have been checked.
  *)
-let typecheck workers files removed unparsed opts make_merge_input =
+let typecheck workers files removed unparsed opts timing make_merge_input =
   let debug = Options.is_debug_mode opts in
   (* TODO remove after lookup overhaul *)
   Module_js.clear_filename_cache ();
   (* local inference populates context heap, module info heap *)
   Flow_logger.log "Running local inference";
-  let inferred = infer workers files opts in
+  let timing, inferred =
+    with_timer opts "Infer" timing (fun () -> infer workers files opts) in
+
   (* add tracking modules for unparsed files *)
   let force_check = Options.all opts in
   List.iter (Module_js.add_unparsed_info ~force_check) unparsed;
+
   (* create module dependency graph, warn on dupes etc. *)
-  commit_modules ~debug inferred removed;
+  let (timing, ()) = with_timer opts "CommitModules" timing (fun () ->
+    commit_modules ~debug inferred removed
+  ) in
+
   (* SHUTTLE *)
   (* call supplied function to calculate closure of modules to merge *)
-  match make_merge_input inferred with
+  let (timing, merge_input) = with_timer opts "MakeMergeInput" timing (fun () ->
+    make_merge_input inferred
+  ) in
+  match merge_input with
   | true, to_merge, diff ->
     Module_js.clear_infos diff;
     FilenameSet.iter (fun f ->
@@ -831,23 +858,31 @@ let typecheck workers files removed unparsed opts make_merge_input =
       Module_js.add_module_info cx
     ) diff;
     if debug then heap_check to_merge;
-    let dependency_graph = calc_dependencies workers to_merge in
+    Flow_logger.log "Calculating dependencies";
+    let timing, dependency_graph =
+      with_timer opts "CalcDeps" timing (fun () ->
+        calc_dependencies workers to_merge
+      ) in
     let partition = Sort_js.topsort dependency_graph in
     if profile_and_not_quiet opts then Sort_js.log partition;
-    begin try
+    let timing = try
       Flow_logger.log "Merging";
-      merge_strict workers dependency_graph partition opts;
+      let timing, () = with_timer opts "Merge" timing (fun () ->
+        merge_strict workers dependency_graph partition opts
+      ) in
       if profile_and_not_quiet opts then Gc.print_stat stderr;
+      timing
     with exc ->
-      prerr_endline (Printexc.to_string exc)
-    end;
+      prerr_endline (Printexc.to_string exc);
+      timing
+    in
     (* collate errors by origin *)
     collate_errors to_merge;
-    to_merge
+    timing, to_merge
   | false, to_collate, _ ->
     (* collate errors by origin *)
     collate_errors to_collate;
-    []
+    timing, []
 
 (* sketch of baseline incremental alg:
 
@@ -959,6 +994,7 @@ let deps workers unmodified inferred_files removed_modules =
     FilenameSet.add file acc
   ) FilenameSet.empty result_list
 
+
 (* We maintain the following invariant across rechecks: The keyset of
    `files_info` contains files that parsed successfully in the previous
    phase (which could be the init phase or a previous recheck phase)
@@ -979,6 +1015,8 @@ let recheck genv env modified =
     then FilenameSet.add (Loc.with_suffix file FlowConfig.flow_ext) modified
     else modified
   ) modified modified in
+
+  let timing = FlowEventLogger.Timing.create () in
 
   (* filter modified files *)
   let modified = FilenameSet.filter (fun file ->
@@ -1004,6 +1042,9 @@ let recheck genv env modified =
   ) modified in
   let modified = FilenameSet.diff modified deleted in
 
+  let modified_count = FilenameSet.cardinal modified in
+  let deleted_count = FilenameSet.cardinal deleted in
+
   (* clear errors, asts for deleted files *)
   Parsing_service_js.remove_asts deleted;
 
@@ -1014,12 +1055,12 @@ let recheck genv env modified =
   ) in
 
   Flow_logger.log "Parsing";
-
   (* reparse modified and added files *)
-  let freshparsed, freshparse_fail, freshparse_errors =
-    Parsing_service_js.reparse ~types_mode genv.ServerEnv.workers modified
-      (fun () -> init_modes options)
-  in
+  let timing, (freshparsed, freshparse_fail, freshparse_errors) =
+    with_timer options "Parsing" timing (fun () ->
+      Parsing_service_js.reparse ~types_mode genv.ServerEnv.workers modified
+        (fun () -> init_modes options)
+    ) in
   save_errors parse_errors freshparse_fail freshparse_errors;
 
   (* get old (unmodified, undeleted) files that were parsed successfully *)
@@ -1046,13 +1087,16 @@ let recheck genv env modified =
   (* TODO elsewhere or delete *)
   Context.remove_all_errors master_cx;
 
+  let dependent_file_count = ref 0 in
+
   (* recheck *)
-  typecheck
+  let (timing, _) = typecheck
     genv.ServerEnv.workers
     freshparsed
     removed_modules
     freshparse_fail
     options
+    timing
     (fun inferred ->
       (* need to merge the closure of inferred files and their deps *)
       let inferred_set = List.fold_left (fun acc file ->
@@ -1064,6 +1108,7 @@ let recheck genv env modified =
       let n = FilenameSet.cardinal unmod_deps in
       if n > 0
       then Flow_logger.log "remerge %d dependent files:" n;
+      dependent_file_count := n;
 
       let _ = FilenameSet.fold (fun f i ->
         Flow_logger.log "%d/%d: %s" i n (string_of_filename f);
@@ -1082,7 +1127,13 @@ let recheck genv env modified =
       SharedMem.collect `gentle;
 
       true, FilenameSet.elements to_merge, unmod_deps
-    ) |> ignore;
+    ) in
+
+  FlowEventLogger.recheck
+    ~modified_count
+    ~deleted_count
+    ~dependent_file_count:!dependent_file_count
+    ~timing;
 
   (* for now we populate file_infos with empty def lists *)
   let parsed = FilenameSet.union freshparsed unmodified_parsed in
@@ -1099,7 +1150,7 @@ let full_check workers parse_next opts =
   init_modes opts;
   let verbose = Options.verbose opts in
 
-  Flow_logger.log "Parsing";
+  let timing = FlowEventLogger.Timing.create () in
 
   (* force types when --all is set, but otherwise forbid them unless the file
      has @flow in it. *)
@@ -1107,14 +1158,22 @@ let full_check workers parse_next opts =
     if Options.all opts then TypesAllowed else TypesForbiddenByDefault
   ) in
 
-  let parsed, error_files, errors =
-    Parsing_service_js.parse ~types_mode workers parse_next
-      (fun () -> init_modes opts)
-  in
+  Flow_logger.log "Parsing";
+  let timing, (parsed, error_files, errors) =
+    with_timer opts "Parsing" timing (fun () ->
+      Parsing_service_js.parse ~types_mode workers parse_next
+        (fun () -> init_modes opts)
+    ) in
   save_errors parse_errors error_files errors;
 
-  let checked = typecheck workers parsed Module_js.NameSet.empty error_files opts (
-    fun inferred ->
+  let timing, checked = typecheck
+    workers
+    parsed
+    Module_js.NameSet.empty
+    error_files
+    opts
+    timing
+    (fun inferred ->
       (* after local inference and before merge, bring in libraries *)
       (* if any fail to parse, our return value will suppress merge *)
       let lib_files = Init_js.init
@@ -1135,7 +1194,7 @@ let full_check workers parse_next opts =
       else true, inferred, FilenameSet.empty
   ) in
 
-  (parsed, checked)
+  (timing, parsed, checked)
 
 (* helper - print errors. used in check-and-die runs *)
 let print_errors options errors =
@@ -1173,7 +1232,7 @@ let server_init genv env =
   let get_next = fun () ->
     get_next_raw () |> List.map (fun file -> Loc.SourceFile file)
   in
-  let (parsed, checked) =
+  let (timing, parsed, checked) =
     full_check genv.ServerEnv.workers get_next options in
 
   (* for now we populate file_infos with empty def lists *)
@@ -1193,7 +1252,7 @@ let server_init genv env =
   then (
     let errors = get_errors () in
     print_errors options errors;
-    { env with ServerEnv.errorl = errors }
+    timing, { env with ServerEnv.errorl = errors }
   ) else (
-    env
+    timing, env
   )

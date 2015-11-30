@@ -27,9 +27,18 @@ let set_command _ = ()
 let set_from _ = ()
 let set_root _ = ()
 
+module Timing = struct
+  type t = unit
+
+  let create _ = ()
+  let start_timer ~timer:_ _ = ()
+  let stop_timer ~timer:_ _ = ()
+  let get_finished_timer ~timer:_ _ = None
+end
+
 let status_response _ = ()
 let init_server _ = ()
-let init_done _ = ()
+let init_done ~timing:_ = ()
 let init_flow_command ~version:_ = ()
 let killed _ = ()
 let lock_lost _ = ()
@@ -37,3 +46,8 @@ let lock_stolen _ = ()
 let out_of_date _ = ()
 let autocomplete_member_result _ _ _ = ()
 let exit _ _ = ()
+let recheck
+    ~modified_count:_
+    ~deleted_count:_
+    ~dependent_file_count:_
+    ~timing:_ = ()

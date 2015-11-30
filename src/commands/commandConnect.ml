@@ -28,6 +28,8 @@ let parsing_re = Str.regexp_string "Parsing"
 
 let infer_re = Str.regexp_string "Running local inference"
 
+let calc_deps_re = Str.regexp_string "Calculating dependencies"
+
 let merging_re = Str.regexp_string "Merging"
 
 let server_ready_re = Str.regexp_string "Server is READY"
@@ -54,6 +56,8 @@ let msg_of_tail tail_env =
     "[parsing]"
   else if matches_re infer_re line then
     "[local inference]"
+  else if matches_re calc_deps_re line then
+    "[calculating dependencies]"
   else if matches_re merging_re line then
     "[merging inference]"
   else if matches_re server_ready_re line then
