@@ -12,6 +12,12 @@ type autocomplete_type =
 | Acid of (Scope.Entry.t Utils.SMap.t)
 | Acmem of (Type.t)
 
+type autocomplete_state = {
+  ac_name: string;
+  ac_loc: Loc.t;
+  ac_type: autocomplete_type;
+}
+
 let autocomplete_suffix = "AUTO332"
 let suffix_len = String.length autocomplete_suffix
 let is_autocomplete x =
@@ -19,18 +25,26 @@ let is_autocomplete x =
   let suffix = String.sub x (String.length x - suffix_len) suffix_len in
   suffix = autocomplete_suffix
 
-let autocomplete_id state cx name loc =
-  if is_autocomplete name
+let autocomplete_id state cx ac_name ac_loc =
+  if is_autocomplete ac_name
   then (
-    state := Some (Acid (Env_js.all_entries ()));
+    state := Some ({
+      ac_name;
+      ac_loc;
+      ac_type = Acid (Env_js.all_entries ());
+    });
     true
   ) else
     false
 
-let autocomplete_member state cx name loc this_t =
-  if is_autocomplete name
+let autocomplete_member state cx ac_name ac_loc this_t =
+  if is_autocomplete ac_name
   then (
-    state := Some (Acmem (this_t));
+    state := Some ({
+      ac_name;
+      ac_loc;
+      ac_type = Acmem (this_t);
+    });
     true
   ) else
     false

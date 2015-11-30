@@ -112,24 +112,47 @@ let autocomplete_filter_members members =
     not (Reason_js.is_internal_name key)
   ) members
 
-let autocomplete_member client_logging_context cx this = Flow_js.(
+let autocomplete_member
+  timing
+  client_logging_context
+  cx
+  this
+  ac_name
+  ac_loc
+  parse_result = Flow_js.(
+
   let this_t = resolve_type cx this in
   (* Resolve primitive types to their internal class type. We do this to allow
      autocompletion on these too. *)
   let this_t = resolve_builtin_class cx this_t in
   let result = Autocomplete.extract_members cx this_t in
 
-  let result_str, json_data = Autocomplete.(Hh_json.(match result with
-    | Success _ -> "SUCCESS", JSON_Object []
-    | FailureMaybeType -> "FAILURE_NULLABLE", JSON_Object []
-    | FailureAnyType -> "FAILURE_NO_COVERAGE", JSON_Object []
-    | FailureUnhandledType t -> "FAILURE_UNHANDLED_TYPE", JSON_Object [
-      "type", Debug_js.json_of_t ~depth:3 cx t;
-    ])) in
+  let open Hh_json in
+
+  let docblock = match parse_result with
+  | Utils_js.OK (_, info) -> Docblock.json_of_docblock info
+  | Utils_js.Err _ -> JSON_Null in
+
+  let json_data_list = [
+    "ac_name", JSON_String ac_name;
+    "ac_loc", JSON_Object (Errors_js.json_of_loc ac_loc);
+    "docblock", docblock;
+  ] in
+
+  let result_str, t = Autocomplete.(match result with
+    | Success _ -> "SUCCESS", this
+    | FailureMaybeType -> "FAILURE_NULLABLE", this
+    | FailureAnyType -> "FAILURE_NO_COVERAGE", this
+    | FailureUnhandledType t -> "FAILURE_UNHANDLED_TYPE", t) in
+
+  let json_data = JSON_Object (
+    ("type", Debug_js.json_of_t ~depth:3 cx t)::json_data_list
+  ) in
   FlowEventLogger.autocomplete_member_result
-    client_logging_context
-    result_str
-    json_data;
+    ~client_context:client_logging_context
+    ~result_str
+    ~json_data
+    ~timing;
 
   let result_map = Autocomplete.map_of_member_result result in
 
@@ -169,12 +192,12 @@ let autocomplete_id cx env =
     )
   ) env []
 
-let autocomplete_get_results client_logging_context cx state =
+let autocomplete_get_results timing client_logging_context cx state parse_result =
   (* FIXME: See #5375467 *)
   Flow_js.suggested_type_cache := IMap.empty;
   match !state with
-  | Some Acid (env) ->
+  | Some { ac_type = Acid (env); _; } ->
       autocomplete_id cx env
-  | Some Acmem (this) ->
-      autocomplete_member client_logging_context cx this
+  | Some { ac_name; ac_loc; ac_type = Acmem (this); } ->
+      autocomplete_member timing client_logging_context cx this ac_name ac_loc parse_result
   | _ -> []

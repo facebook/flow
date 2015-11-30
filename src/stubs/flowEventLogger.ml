@@ -44,7 +44,11 @@ let killed _ = ()
 let lock_lost _ = ()
 let lock_stolen _ = ()
 let out_of_date _ = ()
-let autocomplete_member_result _ _ _ = ()
+let autocomplete_member_result
+    ~client_context:_
+    ~result_str:_
+    ~json_data:_
+    ~timing:_ = ()
 let exit _ _ = ()
 let recheck
     ~modified_count:_

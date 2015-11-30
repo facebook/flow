@@ -128,11 +128,16 @@ struct
     let results =
       try
         let path = Loc.SourceFile path in
-        let cx = (match Types_js.typecheck_contents content path with
-          | Some cx, _ -> cx
-          | _, errors  -> failwith "Couldn't parse file")
+        let timing, cx, parse_result = (match Types_js.typecheck_contents content path with
+          | timing, Some cx, _, parse_result -> timing, cx, parse_result
+          | _  -> failwith "Couldn't parse file")
         in
-        AutocompleteService_js.autocomplete_get_results command_context cx state
+        AutocompleteService_js.autocomplete_get_results
+          timing
+          command_context
+          cx
+          state
+          parse_result
       with exn ->
         Flow_logger.log "Couldn't autocomplete%s" (Printexc.to_string exn);
         []
@@ -148,7 +153,7 @@ struct
     | ServerProt.FileContent (_, content) ->
         let file = Loc.SourceFile file in
         (match Types_js.typecheck_contents ?verbose content file with
-        | _, errors -> errors)
+        | _, _, errors, _ -> errors)
     in
     send_errorl (Errors_js.to_list errors) oc
 
@@ -167,8 +172,8 @@ struct
     (try
       let content = ServerProt.file_input_get_content file_input in
       let cx = match Types_js.typecheck_contents content file with
-      | Some cx, _ -> cx
-      | _, errors  -> failwith "Couldn't parse file" in
+      | _, Some cx, _, _ -> cx
+      | _  -> failwith "Couldn't parse file" in
       let loc = mk_loc file line col in
       let (loc, ground_t, possible_ts) = Query_types.query_type cx loc in
       let ty, raw_type = match ground_t with
@@ -213,8 +218,8 @@ struct
     (try
        let content = ServerProt.file_input_get_content file_input in
        let cx = match Types_js.typecheck_contents content file with
-       | Some cx, _ -> cx
-       | _, errors  -> failwith "Couldn't parse file" in
+       | _, Some cx, _, _ -> cx
+       | _  -> failwith "Couldn't parse file" in
       (None, Some (Query_types.dump_types printer raw_printer cx))
     with exn ->
       let loc = mk_loc file 0 0 in
@@ -259,8 +264,8 @@ struct
          let content = cat file in
          let file_loc = Loc.SourceFile file in
          let cx = match Types_js.typecheck_contents content file_loc with
-           | Some cx, _ -> cx
-           | _, errors  -> failwith "Couldn't parse file" in
+           | _, Some cx, _, _ -> cx
+           | _  -> failwith "Couldn't parse file" in
          let lines = Str.split_delim (Str.regexp "\n") content in
          let insertions =
            Query_types.fill_types cx
@@ -337,8 +342,8 @@ struct
     (try
       let content = ServerProt.file_input_get_content file_input in
       let cx = match Types_js.typecheck_contents content file with
-        | Some cx, _ -> cx
-        | _, errors  -> failwith "Couldn't parse file"
+        | _, Some cx, _, _ -> cx
+        | _  -> failwith "Couldn't parse file"
       in
       let result = GetDef_js.getdef_get_result cx state in
       Marshal.to_channel oc result []

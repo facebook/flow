@@ -512,15 +512,39 @@ let merge_strict_component (component: filename list) =
   )
   else file, Errors_js.ErrorSet.empty
 
+let with_timer ?opts timer timing f =
+  let timing = FlowEventLogger.Timing.start_timer ~timer timing in
+  let ret = f () in
+  let timing = FlowEventLogger.Timing.stop_timer ~timer timing in
+
+  (* If we're profiling then output timing information to stderr *)
+  (match opts with
+  | Some options when profile_and_not_quiet options ->
+      (match FlowEventLogger.Timing.get_finished_timer ~timer timing with
+      | Some (start_wall_age, wall_duration) ->
+          prerr_endlinef
+            "TimingEvent `%s`: start_wall_age: %f; wall_duration: %f"
+            timer
+            start_wall_age
+            wall_duration
+      | _ -> ());
+  | _ -> ());
+
+  (timing, ret)
+
 (* Another special case, similar assumptions as above. *)
 (** TODO: handle case when file+contents don't agree with file system state **)
 let typecheck_contents ?verbose contents filename =
+  let timing = FlowEventLogger.Timing.create () in
+
   (* always enable types when checking an individual file *)
   let types_mode = Parsing_service_js.TypesAllowed in
-  let result = Parsing_service_js.do_parse
-    ~fail:false ~types_mode
-    contents filename in
-  match result with
+  let timing, parse_result = with_timer "Parsing" timing (fun () ->
+    Parsing_service_js.do_parse
+      ~fail:false ~types_mode
+      contents filename
+  ) in
+  match parse_result with
   | OK (ast, info) ->
       (* defaults *)
       let metadata = { Context.
@@ -533,14 +557,19 @@ let typecheck_contents ?verbose contents filename =
       (* apply overrides from the docblock *)
       let metadata = TI.apply_docblock_overrides metadata info in
 
-      let cx = TI.infer_ast
-        ~gc:false ~metadata ~filename ~module_name:(Modulename.String "-") ast in
+      let timing, cx = with_timer "Infer" timing (fun () ->
+        TI.infer_ast
+          ~gc:false ~metadata ~filename ~module_name:(Modulename.String "-") ast
+      ) in
+
       let cache = new context_cache in
-      merge_strict_context cache [cx];
-      Some cx, Context.errors cx
+      let timing, () = with_timer "Merge" timing (fun () ->
+        merge_strict_context cache [cx]
+      ) in
+      timing, Some cx, Context.errors cx, parse_result
 
   | Err errors ->
-      None, errors
+      timing, None, errors, parse_result
 
 type merge_job_status =
 | MergeSuccess of filename
@@ -802,24 +831,6 @@ let heap_check files = Module_js.(
   (* *)
 )
 
-let with_timer options timer timing f =
-  let timing = FlowEventLogger.Timing.start_timer ~timer timing in
-  let ret = f () in
-  let timing = FlowEventLogger.Timing.stop_timer ~timer timing in
-
-  (* If we're profiling then output timing information to stderr *)
-  if profile_and_not_quiet options
-  then (match FlowEventLogger.Timing.get_finished_timer ~timer timing with
-    | Some (start_wall_age, wall_duration) ->
-        prerr_endlinef
-          "TimingEvent `%s`: start_wall_age: %f; wall_duration: %f"
-          timer
-          start_wall_age
-          wall_duration
-    | _ -> ());
-
-  (timing, ret)
-
 (* helper *)
 (* make_merge_input takes list of files produced by infer, and
    returns (true, list of files to merge (typically an expansion)),
@@ -834,20 +845,20 @@ let typecheck workers files removed unparsed opts timing make_merge_input =
   (* local inference populates context heap, module info heap *)
   Flow_logger.log "Running local inference";
   let timing, inferred =
-    with_timer opts "Infer" timing (fun () -> infer workers files opts) in
+    with_timer ~opts "Infer" timing (fun () -> infer workers files opts) in
 
   (* add tracking modules for unparsed files *)
   let force_check = Options.all opts in
   List.iter (Module_js.add_unparsed_info ~force_check) unparsed;
 
   (* create module dependency graph, warn on dupes etc. *)
-  let (timing, ()) = with_timer opts "CommitModules" timing (fun () ->
+  let (timing, ()) = with_timer ~opts "CommitModules" timing (fun () ->
     commit_modules ~debug inferred removed
   ) in
 
   (* SHUTTLE *)
   (* call supplied function to calculate closure of modules to merge *)
-  let (timing, merge_input) = with_timer opts "MakeMergeInput" timing (fun () ->
+  let (timing, merge_input) = with_timer ~opts "MakeMergeInput" timing (fun () ->
     make_merge_input inferred
   ) in
   match merge_input with
@@ -860,14 +871,14 @@ let typecheck workers files removed unparsed opts timing make_merge_input =
     if debug then heap_check to_merge;
     Flow_logger.log "Calculating dependencies";
     let timing, dependency_graph =
-      with_timer opts "CalcDeps" timing (fun () ->
+      with_timer ~opts "CalcDeps" timing (fun () ->
         calc_dependencies workers to_merge
       ) in
     let partition = Sort_js.topsort dependency_graph in
     if profile_and_not_quiet opts then Sort_js.log partition;
     let timing = try
       Flow_logger.log "Merging";
-      let timing, () = with_timer opts "Merge" timing (fun () ->
+      let timing, () = with_timer ~opts "Merge" timing (fun () ->
         merge_strict workers dependency_graph partition opts
       ) in
       if profile_and_not_quiet opts then Gc.print_stat stderr;
@@ -1057,7 +1068,7 @@ let recheck genv env modified =
   Flow_logger.log "Parsing";
   (* reparse modified and added files *)
   let timing, (freshparsed, freshparse_fail, freshparse_errors) =
-    with_timer options "Parsing" timing (fun () ->
+    with_timer ~opts:options "Parsing" timing (fun () ->
       Parsing_service_js.reparse ~types_mode genv.ServerEnv.workers modified
         (fun () -> init_modes options)
     ) in
@@ -1160,7 +1171,7 @@ let full_check workers parse_next opts =
 
   Flow_logger.log "Parsing";
   let timing, (parsed, error_files, errors) =
-    with_timer opts "Parsing" timing (fun () ->
+    with_timer ~opts "Parsing" timing (fun () ->
       Parsing_service_js.parse ~types_mode workers parse_next
         (fun () -> init_modes opts)
     ) in

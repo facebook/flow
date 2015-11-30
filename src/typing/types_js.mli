@@ -25,4 +25,7 @@ val typecheck_contents:
   ?verbose: int ->
   string ->               (* contents *)
   filename ->             (* fake file-/module name *)
-  Context.t option * Errors_js.ErrorSet.t
+  FlowEventLogger.Timing.t *
+    Context.t option *
+    Errors_js.ErrorSet.t *
+    (Spider_monkey_ast.program * Docblock.t, Errors_js.ErrorSet.t) ok_or_err
