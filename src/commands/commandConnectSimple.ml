@@ -11,6 +11,7 @@
 type error =
   | Server_missing
   | Server_initializing
+  | Server_rechecking
   | Server_busy
   | Build_id_mismatch
 
@@ -121,4 +122,6 @@ let connect_once ~tmp_dir root =
     if not (server_exists ~tmp_dir root) then Result.Error Server_missing
     else if not (Lock.check (FlowConfig.init_file ~tmp_dir root))
     then Result.Error Server_initializing
+    else if not (Lock.check (FlowConfig.recheck_file ~tmp_dir root))
+    then Result.Error Server_rechecking
     else Result.Error Server_busy

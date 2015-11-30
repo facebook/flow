@@ -112,6 +112,7 @@ let main temp_dir from root () =
     | Result.Error Build_id_mismatch ->
         Utils.prerr_endlinef "Successfully killed server for %s" root_s
     | Result.Error Server_initializing
+    | Result.Error Server_rechecking
     | Result.Error Server_busy ->
         try mean_kill ~tmp_dir root
         with FailedToKill ->

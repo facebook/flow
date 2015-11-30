@@ -1013,6 +1013,8 @@ let recheck genv env modified =
     if Options.all options then TypesAllowed else TypesForbiddenByDefault
   ) in
 
+  Flow_logger.log "Parsing";
+
   (* reparse modified and added files *)
   let freshparsed, freshparse_fail, freshparse_errors =
     Parsing_service_js.reparse ~types_mode genv.ServerEnv.workers modified
@@ -1060,13 +1062,14 @@ let recheck genv env modified =
         unmodified_parsed inferred_set removed_modules in
 
       let n = FilenameSet.cardinal unmod_deps in
-        if n > 0
-        then prerr_endlinef "remerge %d dependent files:" n;
+      if n > 0
+      then Flow_logger.log "remerge %d dependent files:" n;
 
       let _ = FilenameSet.fold (fun f i ->
-        prerr_endlinef "%d/%d: %s" i n (string_of_filename f);
+        Flow_logger.log "%d/%d: %s" i n (string_of_filename f);
         i + 1
       ) unmod_deps 1 in
+      Flow_logger.log "Merging";
 
       (* clear merge errors for unmodified dependents *)
       FilenameSet.iter (fun file ->

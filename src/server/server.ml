@@ -64,14 +64,14 @@ struct
   let incorrect_hash oc =
     ServerProt.response_to_channel oc ServerProt.SERVER_OUT_OF_DATE;
     FlowEventLogger.out_of_date ();
-    Printf.printf     "Status: Error\n";
-    Printf.printf     "%s is out of date. Exiting.\n" name;
+    Flow_logger.log     "Status: Error";
+    Flow_logger.log     "%s is out of date. Exiting." name;
     FlowExitStatus.(exit Server_out_of_date)
 
   let status_log env =
     if List.length (Types_js.get_errors ()) = 0
-    then Printf.printf "Status: OK\n"
-    else Printf.printf "Status: Error\n";
+    then Flow_logger.log "Status: OK"
+    else Flow_logger.log "Status: Error";
     flush stdout
 
   let send_errorl el oc =
@@ -92,11 +92,11 @@ struct
         ServerProt.client=client_root
       } in
       ServerProt.response_to_channel oc msg;
-      Printf.printf "Status: Error\n";
-      Printf.printf "server_dir=%s, client_dir=%s\n"
+      Flow_logger.log "Status: Error";
+      Flow_logger.log "server_dir=%s, client_dir=%s"
         (Path.to_string server_root)
         (Path.to_string client_root);
-      Printf.printf "%s is not listening to the same directory. Exiting.\n"
+      Flow_logger.log "%s is not listening to the same directory. Exiting."
         name;
       FlowExitStatus.(exit Server_client_directory_mismatch)
     end;
@@ -110,8 +110,8 @@ struct
   let die_nicely genv oc =
     ServerProt.response_to_channel oc ServerProt.SERVER_DYING;
     FlowEventLogger.killed ();
-    Printf.printf "Status: Error\n";
-    Printf.printf "Sent KILL command by client. Dying.\n";
+    Flow_logger.log "Status: Error";
+    Flow_logger.log "Sent KILL command by client. Dying.";
     (match genv.ServerEnv.dfind with
     | Some handle -> Unix.kill (DfindLib.pid handle) Sys.sigterm;
     | None -> ()
@@ -134,7 +134,7 @@ struct
         in
         AutocompleteService_js.autocomplete_get_results command_context cx state
       with exn ->
-        prerr_endlinef "Couldn't autocomplete\n%s" (Printexc.to_string exn);
+        Flow_logger.log "Couldn't autocomplete%s" (Printexc.to_string exn);
         []
     in
     Autocomplete_js.autocomplete_unset_hooks ();
@@ -283,7 +283,7 @@ struct
          let patch_content = patch file new_content in
          SMap.add file patch_content result_map
        with exn ->
-         prerr_endlinef
+         Flow_logger.log
            "Could not fill types for %s\n%s"
            file
            (Printexc.to_string exn);
@@ -310,7 +310,7 @@ struct
         let patch_content = patch file new_content in
         SMap.add file patch_content result_map
       with exn ->
-        prerr_endlinef
+        Flow_logger.log
           "Could not port docblock-style annotations for %s\n%s"
           file
           ((Printexc.to_string exn) ^ "\n" ^ (Printexc.get_backtrace ()));
@@ -343,7 +343,7 @@ struct
       let result = GetDef_js.getdef_get_result cx state in
       Marshal.to_channel oc result []
     with exn ->
-      prerr_endlinef
+      Flow_logger.log
         "Could not get definition for %s:%d:%d\n%s"
         filename line col
         (Printexc.to_string exn)
@@ -469,9 +469,9 @@ struct
     ) updates in
     if not (SSet.is_empty modified_packages)
     then begin
-      Printf.printf "Status: Error\n%!";
-      SSet.iter (Printf.printf "Modified package: %s\n%!") modified_packages;
-      Printf.printf
+      Flow_logger.log "Status: Error";
+      SSet.iter (Flow_logger.log "Modified package: %s") modified_packages;
+      Flow_logger.log
         "%s is out of date. Exiting.\n%!"
         name;
       exit 4
@@ -503,9 +503,9 @@ struct
       (* TEMP: if library files change, stop the server *)
       if not (SSet.is_empty libs)
       then begin
-        Printf.printf "Status: Error\n%!";
-        SSet.iter (Printf.printf "Modified lib file: %s\n%!") libs;
-        Printf.printf
+        Flow_logger.log "Status: Error";
+        SSet.iter (Flow_logger.log "Modified lib file: %s") libs;
+        Flow_logger.log
           "%s is out of date. Exiting.\n%!"
           name;
         FlowExitStatus.(exit Server_out_of_date)
@@ -514,7 +514,4 @@ struct
       SearchService_js.update_from_master updates;
       server_env
     end
-
-  let post_recheck_hook _genv _old_env _new_env _updates = ()
-
 end

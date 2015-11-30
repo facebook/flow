@@ -24,7 +24,6 @@ module type SERVER_PROGRAM = sig
   (* filter and relativize updated file paths *)
   val process_updates : genv -> env -> SSet.t -> ServerEnv.PathSet.t
   val recheck: genv -> env -> ServerEnv.PathSet.t -> env
-  val post_recheck_hook: genv -> env -> env -> ServerEnv.PathSet.t -> unit
   val parse_options: unit -> Options.options
   val get_watch_paths: Options.options -> Path.t list
   val name: string
@@ -164,8 +163,13 @@ end = struct
         Program.name;
       FlowExitStatus.(exit Server_out_of_date)
     end;
+
+    let root = Options.root genv.ServerEnv.options in
+    let tmp_dir = Options.temp_dir genv.ServerEnv.options in
+
+    ignore(Lock.grab (FlowConfig.recheck_file ~tmp_dir root));
     let env = Program.recheck genv old_env to_recheck in
-    Program.post_recheck_hook genv old_env env updates;
+    ignore(Lock.release (FlowConfig.recheck_file ~tmp_dir root));
     env, to_recheck
 
   (* When a rebase occurs, dfind takes a while to give us the full list of

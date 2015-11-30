@@ -61,8 +61,6 @@ let msg_of_tail tail_env =
   else
     "[processing]"
 
-let delta_t : float = 3.0
-
 (* Starts up a flow server by literally calling flow start *)
 let start_flow_server ~tmp_dir root =
   Utils.prerr_endlinef
@@ -102,6 +100,7 @@ let reset_retries_if_necessary retries = function
   | Result.Error CCS.Server_busy -> retries
   | Result.Ok _
   | Result.Error CCS.Build_id_mismatch
+  | Result.Error CCS.Server_rechecking
   | Result.Error CCS.Server_initializing ->
       { retries with
         retries_remaining = retries.original_retries;
@@ -131,15 +130,16 @@ let rec connect env retries start_time tail_env =
   then FlowExitStatus.(exit ~msg:"\nTimeout exceeded, exiting" Out_of_time);
   let retries = { retries with last_connect_time = Unix.gettimeofday () } in
   let conn = CCS.connect_once ~tmp_dir:env.tmp_dir env.root in
-  let curr_time = Unix.time () in
-  if not (Tail.is_open_env tail_env) &&
-       curr_time -. start_time > delta_t then begin
-      Tail.open_env tail_env;
-      Tail.update_env is_valid_line tail_env;
-    end else if Tail.is_open_env tail_env then
-    Tail.update_env is_valid_line tail_env;
+
+  if not (Tail.is_tailing_current_file tail_env)
+  then begin
+    Tail.close_env tail_env;
+    Tail.open_env tail_env
+  end;
+  Tail.update_env is_valid_line tail_env;
   Tail.set_lines tail_env [];
   let tail_msg = msg_of_tail tail_env in
+
   if Tty.spinner_used () then Tty.print_clear_line stderr;
   let retries = reset_retries_if_necessary retries conn in
   match conn with
@@ -155,13 +155,13 @@ let rec connect env retries start_time tail_env =
             retries
           end else begin
             Printf.eprintf
-              "Failed to start a new flow server (%d %s remaining): %s %s%!"
+              "Failed to start a new flow server (%d %s remaining): %s%!"
               retries.retries_remaining
               (if retries.retries_remaining = 1 then "retry" else "retries")
-              tail_msg
               (Tty.spinner());
             consume_retry retries
           end in
+        Tail.close_env tail_env;
         connect env retries start_time tail_env
       end else begin
         let msg = Utils.spf
@@ -205,6 +205,10 @@ let rec connect env retries start_time tail_env =
         let msg = "\n"^msg^" Not retrying since --retry-if-init is false." in
         FlowExitStatus.(exit ~msg Server_initializing)
       end
+  | Result.Error CCS.Server_rechecking ->
+      let msg = "flow is rechecking; this should not take long" in
+      Printf.eprintf "%s %s %s%!" msg tail_msg (Tty.spinner());
+      connect env retries start_time tail_env
 
 let connect env =
   let link_file = env.log_file in

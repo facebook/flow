@@ -11,6 +11,7 @@
 type error =
   | Server_missing
   | Server_initializing
+  | Server_rechecking
   | Server_busy
   | Build_id_mismatch
 
