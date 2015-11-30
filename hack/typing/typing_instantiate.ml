@@ -37,18 +37,6 @@ let rec instantiate subst env (r, ty: decl ty) =
   | Tgeneric (x, cstr_opt) ->
       (match SMap.get x subst with
       | Some x_ty ->
-          let env =
-            (* Once the typing environment is "fully" solved, we
-               check the constraints on generics *)
-            match cstr_opt with
-            | Some (ck, ty) ->
-                let env, ty = instantiate subst env ty in
-                let ety_env = Phase.env_with_self env in
-                let env, ty = Phase.localize ~ety_env env ty in
-                let env, x_ty = Phase.localize ~ety_env env x_ty in
-                TSubst.add_check_constraint_todo env r x ck ty x_ty
-            | None -> env
-          in
           env, (Reason.Rinstantiate (fst x_ty, x, r), snd x_ty)
       | None -> begin
           match cstr_opt with
