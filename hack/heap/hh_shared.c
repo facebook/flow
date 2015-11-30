@@ -1047,7 +1047,7 @@ void hh_load(value in_filename) {
   FILE* fp = fopen(String_val(in_filename), "rb");
 
   if (fp == NULL) {
-    caml_failwith("Failed to open file");
+    unix_error(errno, "fopen", in_filename);
   }
 
   fread_header(fp);
@@ -1132,7 +1132,7 @@ void hh_load_dep_table(value in_filename) {
   FILE* fp = fopen(String_val(in_filename), "rb");
 
   if (fp == NULL) {
-    caml_failwith("Failed to open file");
+    unix_error(errno, "fopen", in_filename);
   }
 
   fread_header(fp);
