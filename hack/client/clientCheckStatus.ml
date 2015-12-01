@@ -44,7 +44,7 @@ let print_reason_color ~(first:bool) ~(code:int) ((p, s): Pos.absolute * string)
       (file_clr, lstrip (Pos.filename p) cwd);
       (C.Normal C.Default, ":");
     ] in
-    C.print (file_path @ to_print)
+    C.cprint (file_path @ to_print)
   else
     let strings = List.map to_print (fun (_,x) -> x) in
     Printf.printf "%s:" (Pos.filename p);

@@ -57,5 +57,5 @@ let go file_input output_json pos_level_l =
   if output_json then
     print_endline (Hh_json.json_to_string (to_json results))
   else if Unix.isatty Unix.stdout
-  then C.print (replace_colors results)
+  then C.cprint (replace_colors results)
   else print_endline str

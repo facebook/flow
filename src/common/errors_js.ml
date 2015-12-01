@@ -142,7 +142,7 @@ let format_reason_color
 let print_reason_color ~first ~one_line ~color (message: message) =
   let to_print = format_reason_color ~first ~one_line message in
   (if first then Printf.printf "\n");
-  C.print ~color_mode:color to_print
+  C.cprint ~color_mode:color to_print
 
 let print_error_color_old ~one_line ~color (e : error) =
   let {kind; messages; op; trace} = e in
@@ -339,7 +339,7 @@ let print_error_color_new ~stdin_file:stdin_file ~one_line ~color ~root (error :
   let formatted_messages = List.map (print_message_nice ~root stdin_file main_file) messages in
   let to_print = header @ (List.concat formatted_messages) in
   let to_print = if one_line then List.map remove_newlines to_print else to_print in
-  C.print ~color_mode:color (to_print @ [default_style "\n"])
+  C.cprint ~color_mode:color (to_print @ [default_style "\n"])
 
 (* TODO: deprecate this in favor of Reason_js.json_of_loc *)
 let json_of_loc loc = Loc.(

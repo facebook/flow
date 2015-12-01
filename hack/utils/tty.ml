@@ -88,10 +88,10 @@ let print_one ?(color_mode=Color_Auto) c s =
   then Printf.printf "\x1b[%sm%s\x1b[0m" (style_num c) (s)
   else Printf.printf "%s" s
 
-let print ?(color_mode=Color_Auto) strs =
+let cprint ?(color_mode=Color_Auto) strs =
   List.iter strs (fun (c, s) -> print_one ~color_mode c s)
 
-let printf ?(color_mode=Color_Auto) c =
+let cprintf ?(color_mode=Color_Auto) c =
   Printf.ksprintf (print_one ~color_mode c)
 
 let (spinner, spinner_used) =
@@ -110,7 +110,7 @@ let clear_line_seq = "\r\x1b[0K"
 let print_clear_line chan =
   if Unix.isatty (Unix.descr_of_out_channel chan)
   then Printf.fprintf chan "%s%!" clear_line_seq
-  else Printf.fprintf chan "\n%!"
+  else ()
 
 (* Read a single char and return immediately, without waiting for a newline.
  * `man termios` to see how termio works. *)
@@ -139,3 +139,8 @@ let read_choice message choices =
     print_newline ();
     if List.mem choices choice then choice else loop ()
   in loop ()
+
+let eprintf fmt =
+  if Unix.(isatty stderr)
+  then Printf.eprintf fmt
+  else Printf.ifprintf stderr fmt

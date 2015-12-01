@@ -158,7 +158,7 @@ let handle_response ~json ~color ~debug types content strip =
   begin if color then
     let types = split_overlapping_ranges [] types |> List.rev in
     let colors, _ = colorize_file content 0 [] types in
-    Tty.print (List.rev colors);
+    Tty.cprint (List.rev colors);
     print_endline ""
   end;
 

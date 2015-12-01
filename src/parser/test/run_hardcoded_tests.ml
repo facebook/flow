@@ -23,7 +23,7 @@ end = struct
   let print to_print =
     if should_color
     then
-      C.print to_print
+      C.cprint to_print
     else
       let strings = List.map snd to_print in
       List.iter (Printf.printf "%s") strings

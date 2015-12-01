@@ -323,7 +323,7 @@ let print_colored fn type_acc =
   let content = cat (Relative_path.to_absolute fn) in
   let results = ColorFile.go content type_acc in
   if Unix.isatty Unix.stdout
-  then Tty.print (ClientColorFile.replace_colors results)
+  then Tty.cprint (ClientColorFile.replace_colors results)
   else print_string (List.map ~f: replace_color results |> String.concat "")
 
 let print_coverage fn type_acc =

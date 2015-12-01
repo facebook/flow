@@ -300,16 +300,16 @@ let mk_time_string {Unix.tm_sec; tm_min; tm_hour; tm_mday; tm_mon; tm_year; _} =
 let print_file_header filename =
   let mtime = Unix.gmtime ((Unix.stat filename).Unix.st_mtime) in
   let now = Unix.gmtime (Unix.time ()) in
-  Tty.printf Tty.(Bold Default) "--- %s\t%s\n" filename (mk_time_string mtime);
-  Tty.printf Tty.(Bold Default) "+++ %s\t%s\n" filename (mk_time_string now)
+  Tty.(cprintf (Bold Default)) "--- %s\t%s\n" filename (mk_time_string mtime);
+  Tty.(cprintf (Bold Default)) "+++ %s\t%s\n" filename (mk_time_string now)
 
 let print_hunk (old_start_line, new_start_line, old_lines, new_lines) =
   let old_range = List.length old_lines in
   let new_range = List.length new_lines in
-  Tty.printf Tty.(Normal Cyan) "@@ -%d,%d +%d,%d @@\n"
+  Tty.cprintf Tty.(Normal Cyan) "@@ -%d,%d +%d,%d @@\n"
     old_start_line old_range new_start_line new_range;
-  List.iter old_lines (Tty.printf Tty.(Normal Red) "-%s\n");
-  List.iter new_lines (Tty.printf Tty.(Normal Green) "+%s\n")
+  List.iter old_lines (Tty.cprintf Tty.(Normal Red) "-%s\n");
+  List.iter new_lines (Tty.cprintf Tty.(Normal Green) "+%s\n")
 
 (*****************************************************************************)
 (* Applies the changes to a list of lines:
