@@ -8,4 +8,6 @@ $FLOW start --wait --temp-dir tmp/flow
 [ -f tmp/flow/*.init ]    && echo "init file exists"
 [ -f tmp/flow/*.lock ]    && echo "lock file exists"
 [ -f tmp/flow/*.log ]     && echo "log file exists"
-rm -rf tmp/flow
+# Stop the server before removing the tmp dir
+$FLOW stop 2> /dev/null > /dev/null
+rm -rf tmp
