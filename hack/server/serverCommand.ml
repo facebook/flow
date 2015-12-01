@@ -20,6 +20,9 @@ and streamed =
   | LIST_MODES
   | BUILD of ServerBuild.build_opts
 
+(** Timeout on reading the command from the client - client probably frozen. *)
+exception Read_command_timeout
+
 (****************************************************************************)
 (* Called by the client *)
 (****************************************************************************)
@@ -150,7 +153,11 @@ let stream_response (genv:ServerEnv.genv) env (ic, oc) ~cmd =
 let from_channel : type a. in_channel -> a command = Marshal.from_channel
 
 let handle genv env (ic, oc) =
-  let msg = from_channel ic in
+  let msg =
+    Sys_utils.with_timeout 1
+      ~on_timeout: (fun _ -> raise Read_command_timeout)
+      ~do_: (fun () -> from_channel ic)
+  in
   match msg with
   | Rpc cmd ->
       let response = ServerRpc.handle genv env cmd in
