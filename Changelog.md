@@ -1,3 +1,45 @@
+###v0.19.0
+
+Likely to cause new Flow errors:
+- Flow syntax is now disallowed in non-`@flow` files. Use `@noflow` to work around this
+- `import type * as Foo` is now disallowed in favor of `import type Foo`
+- `require()` can only take a string literal
+- ES6 react classes without defaultProps should now `extends React.Component<void, Props, State>` (previously it was `extends React.Component<{}, Props, State>)`
+- ES6 react classes with defaultProps should declare `static defaultProps: DefaultProps;`
+- Flow notices errors it missed before in `React.createClass()` react components
+- Flow is now stricter about using uninitialized variables
+- Stricter checking of `in` keyword
+
+New Features:
+- `flow coverage` command
+- `null` type annotation
+- Support for class field initializers, gated by `.flowconfig` options
+- You can now override flowlib definitions with local lib files
+- Basic support for computed properties
+- Declaration files (.flow files). Long story short, if `foo.js` and `foo.js.flow` exist, Flow will prefer the latter and ignore the former.
+- `declare export` - a way to declare the exported types in a non-lib file
+- Array rest destructuring assignment support
+
+Notable Bug Fixes:
+- Fix "package not found" error in some symlink situations
+- Object indexer should not imply callable signature
+- Default param values can reference earlier params
+- Fixed a case where we weren't substituting type parameters properly
+- Fixed a situation where Flow would prefer an unchecked module over a library definition
+
+Misc:
+- Add `--root` arg to most client commands
+- More repositioning of error locations
+- `flow get-def`: Jump to module named in import statement
+- Lots of fixes to make flow commands smarter about connecting to the server
+- Smarter refinement in a bunch of situations
+- freeze imports on all modules, and require() on ES6 modules
+- You can now spread classes, like `var {x} = new Foo()`
+- Interfaces now can be callable
+- If you've refined an object property, that refinement survives access through a destructured refinement
+- Better autocomplete results for primitives, objects, functions and unions
+- `flow server` will write to log file in addition to stdout/stderr
+
 ###v0.18.1
 
 Likely to cause new Flow errors:
