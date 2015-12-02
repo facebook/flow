@@ -19,3 +19,6 @@ class C<X> {
 class D extends C<{foo: number, bar: string}> {
   x: { foo: number, qux: boolean }; // error: qux not found
 }
+
+type AnyKey = $Keys<Object>;
+var o3: {[key: AnyKey]: number} = { foo: 0 };

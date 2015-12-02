@@ -25,6 +25,10 @@ object_keys.js:14:4,4: key of object type
 This type is incompatible with
 object_keys.js:14:8,13: number
 
+object_keys.js:18:14,16: key of object type
+This type is incompatible with
+object_keys.js:18:26,31: number
+
 object_prototype.js:38:26,35: function type
 This type is incompatible with
 object_prototype.js:38:17,22: number
@@ -97,4 +101,4 @@ object_prototype.js:155:32,47: function type
 This type is incompatible with
 object_prototype.js:155:23,28: number
 
-Found 24 errors
+Found 25 errors

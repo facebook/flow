@@ -1781,12 +1781,7 @@ let rec __flow cx (l, u) trace =
 
     | (_, AnyObjT _) when object_like l -> ()
     | (AnyObjT _, _) when object_like u -> ()
-    | (AnyObjT _, _) when object_like_op u ->
-      (* AnyObjT flows into any object operation, creating a potential
-       * source of false negatives for TaintT, since the arguments are not
-       * checked. *)
-      parameters_of_taint_op u
-      |> List.iter (fun t -> rec_flow cx trace (t, AnyT.t))
+    | (AnyObjT _, AnyObjT _) -> ()
 
     | (_, AnyFunT _) when function_like l -> ()
     | (AnyFunT _, _) when function_like u || function_like_op u -> ()
@@ -2055,6 +2050,9 @@ let rec __flow cx (l, u) trace =
       | None -> prmsg_flow_prop_not_found cx trace (reason_op, reason_o)
       )
 
+    (* AnyObjT has every prop *)
+    | (AnyObjT _, HasOwnPropT _) -> ()
+
     | (ObjT (reason, { flags; props_tmap = mapr; _ }), GetKeysT(_,key)) ->
       (match flags.sealed with
       | Sealed ->
@@ -2075,6 +2073,10 @@ let rec __flow cx (l, u) trace =
         let t = StrT (reason, Literal x) in
         rec_flow cx trace (t, key)
       )
+
+    | (AnyObjT reason, GetKeysT (_, key)) ->
+      let t = StrT (prefix_reason "key of " reason, AnyLiteral) in
+      rec_flow cx trace (t, key)
 
     (** In general, typechecking is monotonic in the sense that more constraints
         produce more errors. However, sometimes we may want to speculatively try
@@ -2778,6 +2780,13 @@ let rec __flow cx (l, u) trace =
       );
       rec_flow cx trace (proto, t)
 
+    (* AnyObjT has every prop, each one typed as `any`, so spreading it into an
+       existing object destroys all of the keys, turning the result into an
+       AnyObjT as well. TODO: wait for `proto` to be resolved, and then call
+       `SetPropT (_, _, AnyT)` on all of its props. *)
+    | AnyObjT _, ObjAssignT (reason, proto, t, props_to_skip, false) ->
+      rec_flow cx trace (AnyObjT reason, t)
+
     | (MixedT _, ObjAssignT (_, proto, t, _, false)) ->
       rec_flow cx trace (proto, t)
 
@@ -2817,6 +2826,10 @@ let rec __flow cx (l, u) trace =
       ) in
 
       rec_flow cx trace (o, t)
+
+    (* ...AnyObjT yields AnyObjT *)
+    | AnyObjT _, ObjRestT (reason, _, t) ->
+      rec_flow cx trace (AnyObjT reason, t)
 
     | (MixedT _, ObjRestT (reason, _, t)) ->
       let obj = mk_object_with_proto cx reason l in
@@ -2862,6 +2875,9 @@ let rec __flow cx (l, u) trace =
         reason_obj reason_op trace in
       rec_flow cx trace (t, UnifyT(t, t_other))
 
+    | AnyObjT _, LookupT (reason_op, _, _, _, t_other) ->
+      rec_unify cx trace (AnyT.why reason_op) t_other
+
     (*****************************************)
     (* ... and their fields written *)
     (*****************************************)
@@ -2889,6 +2905,10 @@ let rec __flow cx (l, u) trace =
         dictionary cx trace (string_key x reason_op) t dict_t;
         rec_flow cx trace (tin,t)
 
+    (* Since we don't know the type of the prop, use AnyT. *)
+    | (AnyObjT _, SetPropT (reason_op, _, t)) ->
+      rec_flow cx trace (t, AnyT.why reason_op)
+
     (*****************************)
     (* ... and their fields read *)
     (*****************************)
@@ -2907,6 +2927,9 @@ let rec __flow cx (l, u) trace =
         reason_o reason_prop trace in
       (* move property type to read site *)
       rec_flow cx trace (t, ReposLowerT (reason_op, tout))
+
+    | AnyObjT _, GetPropT (reason_op, _, tout) ->
+      rec_flow cx trace (AnyT.why reason_op, tout)
 
     (********************************)
     (* ... and their methods called *)
@@ -2928,6 +2951,12 @@ let rec __flow cx (l, u) trace =
         reason_o reason_prop trace in
       let callt = CallT (reason_op, funtype) in
       rec_flow cx trace (t, callt)
+
+    (* Since we don't know the signature of a method on AnyObjT, assume every
+       parameter is an AnyT. *)
+    | (AnyObjT _, MethodT (reason_op, _, {params_tlist; _})) ->
+      let any = AnyT.why reason_op in
+      List.iter (fun t -> rec_flow cx trace (t, any)) params_tlist
 
     (******************************************)
     (* strings may have their characters read *)
@@ -2954,6 +2983,14 @@ let rec __flow cx (l, u) trace =
     | (ObjT _, GetElemT(reason_op,key,tout))
       ->
       rec_flow cx trace (key, ElemT(reason_op, l, LowerBoundT tout))
+
+    (* Since we don't know the type of the element, flow it to `AnyT`. This
+       could go through `ElemT` like `ObjT` does, but this is a shortcut. *)
+    | (AnyObjT _, SetElemT (reason_op, _, t)) ->
+      rec_flow cx trace (t, AnyT.why reason_op)
+
+    | (AnyObjT _, GetElemT (reason_op, _, tout)) ->
+      rec_flow cx trace (AnyT.why reason_op, tout)
 
     | (ArrT (_, _, []), SetElemT(reason_op, key,tin))
       ->
@@ -3148,8 +3185,8 @@ let rec __flow cx (l, u) trace =
             lookup_prop cx trace l reason None x (UpperBoundT t)
         )
 
-    | (ObjT _,
-       SuperT (reason,instance))
+    | ObjT _, SuperT (reason, instance)
+    | AnyObjT _, SuperT (reason, instance)
       ->
         iter_props cx instance.fields_tmap (fun x t ->
           rec_flow cx trace (l, LookupT(reason,None,[],x,t))
@@ -3423,13 +3460,6 @@ let rec __flow cx (l, u) trace =
 and needs_resolution = function
   | OpenT _ | UnionT _ | OptionalT _ | MaybeT _ | AnnotT _ -> true
   | _ -> false
-
-and parameters_of_taint_op = function
-  | MethodT (_, _, funtype) -> funtype.params_tlist
-  | SetPropT (_, _, t) -> [t]
-  (* TODO(rcastano): This is a source of false negatives for the Tainted type.
-   * We should add more rules in the future.*)
-  | _ -> []
 
 (**
  * Addition

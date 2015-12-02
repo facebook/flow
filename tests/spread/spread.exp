@@ -19,4 +19,8 @@ test6.js:10:5,30: property `abc`
 Property not found in
 test6.js:10:2,2: object literal
 
-Found 5 errors
+test7.js:6:6,11: object literal
+This type is incompatible with
+test7.js:6:14,17: undefined
+
+Found 6 errors

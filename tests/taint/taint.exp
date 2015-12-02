@@ -23,13 +23,25 @@ adder.js:30:20,24: taint
 This type is incompatible with
 adder.js:30:11,16: string
 
+any_object.js:7:15,15: taint
+This type is incompatible with
+any_object.js:7:5,11: any
+
+any_object.js:8:14,14: taint
+This type is incompatible with
+any_object.js:8:5,10: any
+
+any_object.js:20:13,13: taint
+This type is incompatible with
+any_object.js:20:5,14: any
+
 call-object-property.js:5:7,7: taint
 This type is incompatible with
-any
+call-object-property.js:5:3,8: any
 
 call-object-property.js:11:8,11: taint
 This type is incompatible with
-any
+call-object-property.js:11:3,12: any
 
 comparator.js:4:32,32: number
 Cannot be compared to
@@ -89,4 +101,4 @@ use-types.js:27:33,36: taint
 This type is incompatible with
 use-types.js:27:24,29: number
 
-Found 21 errors
+Found 24 errors
