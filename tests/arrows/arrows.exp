@@ -9,7 +9,7 @@ advanced_arrows.js:11:15,20: number
 
 arrows.js:7:14,60: call of method `sort`
 Error:
-arrows.js:7:37,59: string
+arrows.js:7:36,59: string
 This type is incompatible with
 [LIB] core.js:155:38,43: number
 

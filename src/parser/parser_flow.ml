@@ -86,6 +86,15 @@ module Peek = struct
     (token ~i env = T_ASYNC && token ~i:(i+1) env = T_FUNCTION)
 end
 
+let with_loc fn env =
+  let start_loc = Peek.loc env in
+  let result = fn env in
+  let end_loc = match last_loc env with
+  | Some loc -> loc
+  | None -> fst result
+  in
+  Loc.btwn start_loc end_loc, result
+
 (*****************************************************************************)
 (* Errors *)
 (*****************************************************************************)
@@ -1220,6 +1229,7 @@ end = struct
       op
 
     and conditional env =
+      let start_loc = Peek.loc env in
       let expr = logical env in
       if Peek.token env = T_PLING
       then begin
@@ -1228,44 +1238,41 @@ end = struct
         let env' = env |> with_no_in false in
         let consequent = assignment env' in
         Expect.token env T_COLON;
-        let alternate = assignment env in
-        let test = expr in
-        let loc = Loc.btwn (fst test) (fst alternate) in
+        let end_loc, alternate = with_loc assignment env in
+        let loc = Loc.btwn start_loc end_loc in
         loc, Expression.(Conditional Conditional.({
-          test;
+          test = expr;
           consequent;
           alternate;
         }))
       end else expr
 
     and logical =
-      let rec logical_and env left =
+      let open Expression in
+      let make_logical left right operator loc =
+        loc, Logical Logical.({operator; left; right;})
+      in let rec logical_and env left lloc =
         match Peek.token env with
         | T_AND ->
             Expect.token env T_AND;
-            let right = binary env in
-            let loc = Loc.btwn (fst left) (fst right) in
-            logical_and env (loc, Expression.(Logical Logical.({
-              operator = And;
-              left;
-              right;
-            })))
-        | _  -> left
-      and logical_or env left =
+            let rloc, right = with_loc binary env in
+            let loc = Loc.btwn lloc rloc in
+            logical_and env (make_logical left right Logical.And loc) loc
+        | _  -> lloc, left
+      and logical_or env left lloc =
         match Peek.token env with
         | T_OR ->
             Expect.token env T_OR;
-            let right = logical_and env (binary env) in
-            let loc = Loc.btwn (fst left) (fst right) in
-            logical_or env (loc, Expression.(Logical Logical.({
-              operator = Or;
-              left;
-              right;
-            })))
-        | _ -> left
+            let rloc, right = with_loc binary env in
+            let rloc, right = logical_and env right rloc in
+            let loc = Loc.btwn lloc rloc in
+            logical_or env (make_logical left right Logical.Or loc) loc
+        | _ -> lloc, left
       in fun env ->
-        let left = binary env in
-        logical_or env (logical_and env left)
+        let loc, left = with_loc binary env in
+        let loc, left = logical_and env left loc in
+        let _, type_ = logical_or env left loc in
+        type_
 
     and binary =
       (* All BinaryExpression operators are left associative *)
@@ -1299,25 +1306,34 @@ end = struct
         in if ret <> None then Eat.token env;
         ret
 
-      in let make_binary left right operator =
-        Loc.btwn (fst left) (fst right), Expression.(Binary Binary.({
+      in let make_binary left right operator loc =
+        loc, Expression.(Binary Binary.({
           operator;
           left;
           right;
         }))
 
-      in let rec add_to_stack right (rop, rpri) = function
-        | (left, (lop, lpri))::rest when lpri >= rpri->
-            add_to_stack (make_binary left right lop) (rop, rpri) rest
-        | stack -> (right, (rop, rpri))::stack
+      in let rec add_to_stack right (rop, rpri) rloc = function
+        | (left, (lop, lpri), lloc)::rest when lpri >= rpri->
+            let loc = Loc.btwn lloc rloc in
+            let right = make_binary left right lop loc in
+            add_to_stack right (rop, rpri) loc rest
+        | stack -> (right, (rop, rpri), rloc)::stack
 
-      in let rec collapse_stack right = function
+      in let rec collapse_stack right rloc = function
         | [] -> right
-        | (left, (lop, _))::rest ->
-            collapse_stack (make_binary left right lop) rest
+        | (left, (lop, _), lloc)::rest ->
+            let loc = Loc.btwn lloc rloc in
+            collapse_stack (make_binary left right lop loc) loc rest
 
       in let rec helper env stack =
+        let start_loc = Peek.loc env in
         let right = unary (env |> with_no_in false) in
+        let end_loc = match last_loc env with
+        | Some loc -> loc
+        | None -> fst right
+        in
+        let right_loc = Loc.btwn start_loc end_loc in
         if Peek.token env = T_LESS_THAN
         then begin
           match right with
@@ -1326,11 +1342,10 @@ end = struct
           | _ -> ()
         end;
         match binary_op env with
-        | None -> (match stack with
-          | [] -> right
-          | _ -> collapse_stack right stack)
+        | None ->
+          collapse_stack right right_loc stack
         | Some (rop, rpri) ->
-            helper env (add_to_stack right (rop, rpri) stack)
+          helper env (add_to_stack right (rop, rpri) right_loc stack)
 
       in fun env -> helper env []
 

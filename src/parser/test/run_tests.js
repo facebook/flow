@@ -231,7 +231,7 @@ function run_test_suite(test) {
       }
     }
   }
-  report_percentage_passed(results);
+  report_results(results);
 
   return results;
 }

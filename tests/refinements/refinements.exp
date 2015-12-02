@@ -420,7 +420,7 @@ void.js:75:36,45: number
 
 void.js:82:13,18: undefined
 This type is incompatible with
-void.js:82:7,18: number
+void.js:82:7,19: number
 
 void.js:85:7,12: undefined
 This type is incompatible with
