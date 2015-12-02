@@ -3,16 +3,24 @@ CanvasRenderingContext2D.js:11:5,24: call of method `moveTo`
 Error:
 CanvasRenderingContext2D.js:11:16,18: string
 This type is incompatible with
-[LIB] dom.js:673:15,20: number
+[LIB] dom.js:675:15,20: number
 
 CanvasRenderingContext2D.js:11:5,24: call of method `moveTo`
 Error:
 CanvasRenderingContext2D.js:11:21,23: string
 This type is incompatible with
-[LIB] dom.js:673:26,31: number
+[LIB] dom.js:675:26,31: number
+
+eventtarget.js:9:6,40: call of method `attachEvent`
+Function cannot be called on possibly undefined value
+eventtarget.js:9:6,40: undefined
+
+eventtarget.js:16:6,40: call of method `detachEvent`
+Function cannot be called on possibly undefined value
+eventtarget.js:16:6,40: undefined
 
 path2d.js:9:6,40: call of method `arcTo`
 Function cannot be called on
 path2d.js:9:6,40: Path2D
 
-Found 3 errors
+Found 5 errors
