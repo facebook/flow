@@ -646,7 +646,7 @@ and emit_expr env (pos, expr_ as expr) =
     let env = emit_Dup env in
     let env = emit_IsTypeC env "Null" in
     let env = emit_cjmp env true skip_label in
-    let env = emit_Await env env.next_iterator in
+    let env = emit_Await env in
     emit_label env skip_label
 
   | Yield af ->
