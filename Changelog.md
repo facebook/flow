@@ -1,3 +1,8 @@
+###v0.19.1
+
+Bug fix:
+- Fixed error when encountering empty package.json
+
 ###v0.19.0
 
 Likely to cause new Flow errors:
