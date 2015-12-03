@@ -2476,8 +2476,14 @@ and statement cx type_params_map = Ast.Statement.(
     let for_types, exports_ = Scope.(Entry.(
       match get_entry "exports" module_scope with
       | Some (Value { specific = exports; _ }) ->
-        (* TODO: what happens when other things are also declared? *)
-        SMap.empty(* ???? *), exports
+        (* TODO: what happens when value bindings other than `exports` are also declared? *)
+        let for_types = SMap.filter (fun _ ->
+          function
+          | Value _ -> false
+          | Type _ -> true
+        ) module_scope.entries in
+
+        for_types, exports
 
       | Some _ ->
         assert_false (
