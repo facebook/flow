@@ -19,6 +19,14 @@ importer.js:24:18,23: string
 This type is incompatible with
 importer.js:24:8,14: number
 
+importer.js:29:22,27: string
+This type is incompatible with
+types_only.js:15:31,36: number
+
+importer.js:32:23,24: number
+This type is incompatible with
+types_only2.js:5:32,37: string
+
 types_only.js:5:23,28: string
 This type is incompatible with
 types_only.js:5:8,19: number
@@ -27,4 +35,12 @@ types_only.js:11:9,23: standaloneType2
 type referenced from value position
 types_only.js:10:6,20: type standaloneType2
 
-Found 7 errors
+types_only.js:15:31,36: number
+This type is incompatible with
+importer.js:29:22,27: string
+
+types_only2.js:5:32,37: string
+This type is incompatible with
+importer.js:32:23,24: number
+
+Found 11 errors

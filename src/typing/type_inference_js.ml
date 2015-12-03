@@ -2590,6 +2590,9 @@ and statement cx type_params_map = Ast.Statement.(
           | _, TypeAlias({TypeAlias.id=(_, id); _;}) ->
             let name = id.Ast.Identifier.name in
             [(spf "type %s = ..." name, loc, name, None)]
+          | _, InterfaceDeclaration({Interface.id=(_, id); _;}) ->
+            let name = id.Ast.Identifier.name in
+            [(spf "interface %s = ..." name, loc, name, None)]
           | _ -> failwith "Parser Error: Invalid export-declaration type!")
 
       | Some (Expression expr) ->
