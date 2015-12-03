@@ -338,8 +338,10 @@ module Node = struct
                 (SSet.elements opts.FlowConfig.Opts.module_file_exts)
             )
             (fun () ->
-              let path = Filename.concat path "index.js" in
-              path_if_exists path_acc path
+              let path = Filename.concat path "index" in
+              seqf
+                (fun ext -> path_if_exists path_acc (path ^ ext))
+                (SSet.elements opts.FlowConfig.Opts.module_file_exts)
             )
           )
 
@@ -355,7 +357,12 @@ module Node = struct
       )
       (fun () -> seq
         (fun () -> parse_main path_acc (Filename.concat path "package.json"))
-        (fun () -> path_if_exists path_acc (Filename.concat path "index.js"))
+        (fun () -> 
+          let path = Filename.concat path "index" in
+          seqf 
+            (fun ext -> path_if_exists path_acc (path ^ ext))
+            (SSet.elements opts.FlowConfig.Opts.module_file_exts)
+        )
       )
 
   let rec node_module path_acc dir r =
