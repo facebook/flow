@@ -86,15 +86,6 @@ module Peek = struct
     (token ~i env = T_ASYNC && token ~i:(i+1) env = T_FUNCTION)
 end
 
-let with_loc fn env =
-  let start_loc = Peek.loc env in
-  let result = fn env in
-  let end_loc = match last_loc env with
-  | Some loc -> loc
-  | None -> fst result
-  in
-  Loc.btwn start_loc end_loc, result
-
 (*****************************************************************************)
 (* Errors *)
 (*****************************************************************************)
@@ -192,6 +183,17 @@ module Expect = struct
     then error_unexpected env;
     Eat.token env
 end
+
+let with_loc fn env =
+  let start_loc = Peek.loc env in
+  let result = fn env in
+  let end_loc = match last_loc env with
+  | Some loc -> loc
+  | None ->
+      error env (Error.Assertion "did not consume any tokens");
+      Peek.loc env
+  in
+  Loc.btwn start_loc end_loc, result
 
 module rec Parse : sig
   val program : env -> Ast.program
@@ -1838,15 +1840,17 @@ end = struct
         (* Now we know for sure this is an arrow function *)
         let env = without_error_callback env in
 
-        let body, strict =
-          Declaration.concise_function_body env ~async ~generator:false in
+        let end_loc, (body, strict) = with_loc
+          (Declaration.concise_function_body ~async ~generator:false)
+          env
+        in
         let simple =
           Declaration.is_simple_function_params params defaults rest in
         Declaration.strict_post_check env ~strict ~simple None params;
-        let end_loc, expression = Ast.Statement.FunctionDeclaration.(
+        let expression = Ast.Statement.FunctionDeclaration.(
           match body with
-          | BodyBlock (loc, _) -> loc, false
-          | BodyExpression (loc, _) -> loc, true) in
+          | BodyBlock _ -> false
+          | BodyExpression _ -> true) in
         let loc = Loc.btwn start_loc end_loc in
         loc, Expression.(ArrowFunction ArrowFunction.({
           id = None;

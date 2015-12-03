@@ -9,6 +9,7 @@
  *)
 
 type t =
+  | Assertion of string
   | UnexpectedToken of string
   | UnexpectedTokenWithSuggestion of string * string
   | UnexpectedNumber
@@ -76,6 +77,7 @@ let error loc e =
 module PP =
   struct
     let error = function
+      | Assertion str -> "Unexpected parser state: "^str
       | UnexpectedToken token->  "Unexpected token "^token
       | UnexpectedTokenWithSuggestion (token, suggestion) ->
           Printf.sprintf "Unexpected token `%s`. Did you mean `%s`?"

@@ -1068,42 +1068,7 @@ module.exports = {
         '(e) => "test"',
         '(a, b) => "test"',
         'e => { 42; }',
-        {
-          content: 'e => ({ property: 42 })',
-          explanation: "Esprima includes the parens in its loc, Flow doesn't",
-          expected_differences: {
-            'root.loc.end.column': {
-              type: 'Wrong number',
-              expected: 23,
-              actual: 22
-            },
-            'root.body.0.loc.end.column': {
-              type: 'Wrong number',
-              expected: 23,
-              actual: 22
-            },
-            'root.body.0.expression.loc.end.column': {
-              type: 'Wrong number',
-              expected: 23,
-              actual: 22
-            },
-            'root.range.1': {
-              type: 'Wrong number',
-              expected: 23,
-              actual: 22
-            },
-            'root.body.0.range.1': {
-              type: 'Wrong number',
-              expected: 23,
-              actual: 22
-            },
-            'root.body.0.expression.range.1': {
-              type: 'Wrong number',
-              expected: 23,
-              actual: 22
-            },
-          }
-        },
+        'e => ({ property: 42 })',
         // Not an object!
         {
           content: 'e => { label: 42 }',
@@ -1193,53 +1158,7 @@ module.exports = {
           }
         },
         'x => y => 42',
-        {
-          content: '(x) => ((y, z) => (x, y, z))',
-          explanation: "Esprima counts the parens in its loc. Flow doesn't",
-          expected_differences: {
-            'root.loc.end.column': {
-              type: 'Wrong number',
-              expected: 28,
-              actual: 26
-            },
-            'root.body.0.loc.end.column': {
-              type: 'Wrong number',
-              expected: 28,
-              actual: 26
-            },
-            'root.body.0.expression.loc.end.column': {
-              type: 'Wrong number',
-              expected: 28,
-              actual: 26
-            },
-            'root.body.0.expression.body.loc.end.column': {
-              type: 'Wrong number',
-              expected: 27,
-              actual: 26
-            },
-
-            'root.range.1': {
-              type: 'Wrong number',
-              expected: 28,
-              actual: 26
-            },
-            'root.body.0.range.1': {
-              type: 'Wrong number',
-              expected: 28,
-              actual: 26
-            },
-            'root.body.0.expression.range.1': {
-              type: 'Wrong number',
-              expected: 28,
-              actual: 26
-            },
-            'root.body.0.expression.body.range.1': {
-              type: 'Wrong number',
-              expected: 27,
-              actual: 26
-            },
-          }
-        },
+        '(x) => ((y, z) => (x, y, z))',
         'foo(() => {})',
         'foo((x, y) => {})',
         '(sun) => earth',
@@ -3447,42 +3366,7 @@ module.exports = {
         '(e) => "test"',
         '(a, b) => "test"',
         'e => { 42; }',
-        {
-          content: 'e => ({ property: 42 })',
-          explanation: "Esprima counts the parens in its loc, Flow doesn't",
-          expected_differences: {
-            'root.body.0.expression.loc.end.column': {
-              type: 'Wrong number',
-              expected: 23,
-              actual: 22
-            },
-            'root.body.0.loc.end.column': {
-              type: 'Wrong number',
-              expected: 23,
-              actual: 22
-            },
-            'root.loc.end.column': {
-              type: 'Wrong number',
-              expected: 23,
-              actual: 22
-            },
-            'root.body.0.expression.range.1': {
-              type: 'Wrong number',
-              expected: 23,
-              actual: 22
-            },
-            'root.body.0.range.1': {
-              type: 'Wrong number',
-              expected: 23,
-              actual: 22
-            },
-            'root.range.1': {
-              type: 'Wrong number',
-              expected: 23,
-              actual: 22
-            },
-          }
-        },
+        'e => ({ property: 42 })',
         // Not an object!
         {
           content: 'e => { label: 42 }',
@@ -3585,52 +3469,7 @@ module.exports = {
           }
         },
         'x => y => 42',
-        {
-          content: '(x) => ((y, z) => (x, y, z))',
-          explanation: "TODO",
-          expected_differences: {
-            'root.body.0.expression.body.loc.end.column': {
-              type: 'Wrong number',
-              expected: 27,
-              actual: 26
-            },
-            'root.body.0.expression.loc.end.column': {
-              type: 'Wrong number',
-              expected: 28,
-              actual: 26
-            },
-            'root.body.0.loc.end.column': {
-              type: 'Wrong number',
-              expected: 28,
-              actual: 26
-            },
-            'root.loc.end.column': {
-              type: 'Wrong number',
-              expected: 28,
-              actual: 26
-            },
-            'root.body.0.expression.body.range.1': {
-              type: 'Wrong number',
-              expected: 27,
-              actual: 26
-            },
-            'root.body.0.expression.range.1': {
-              type: 'Wrong number',
-              expected: 28,
-              actual: 26
-            },
-            'root.body.0.range.1': {
-              type: 'Wrong number',
-              expected: 28,
-              actual: 26
-            },
-            'root.range.1': {
-              type: 'Wrong number',
-              expected: 28,
-              actual: 26
-            },
-          }
-        },
+        '(x) => ((y, z) => (x, y, z))',
         'foo(() => {})',
         'foo((x, y) => {})'
     ],
