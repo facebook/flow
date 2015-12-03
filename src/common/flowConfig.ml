@@ -616,7 +616,7 @@ let parse_options config lines = Opts.(
       flags = [];
       optparser = optparse_uint;
       setter = (fun opts v ->
-        {opts with traces = v;}
+        {opts with max_workers = v;}
       );
     })
 
