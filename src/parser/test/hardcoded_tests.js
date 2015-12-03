@@ -1132,6 +1132,11 @@ module.exports = {
           'type': 'TypeAlias',
         }
       },
+      'export interface foo {p: number}': {
+        'body.0.declaration': {
+	        'type': 'InterfaceDeclaration',
+   	    }
+      }
     },
     'Declare Statements': {
       'declare var foo': {

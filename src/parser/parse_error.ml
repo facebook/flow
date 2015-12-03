@@ -68,6 +68,7 @@ type t =
   | DeclareExportLet
   | DeclareExportConst
   | DeclareExportType
+  | DeclareExportInterface
 
 exception Error of (Loc.t * t) list
 
@@ -145,4 +146,6 @@ module PP =
           `declare export var` instead."
       | DeclareExportType -> "`declare export type` is not supported. Use \
           `export type` instead."
+      | DeclareExportInterface -> "`declare export interface` is not supported. Use \
+          `export interface` instead."
   end

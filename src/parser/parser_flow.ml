@@ -3229,6 +3229,19 @@ end = struct
               source = None;
               exportKind = ExportType;
             }
+        | T_INTERFACE ->
+            (* export interface I { ... } *)
+            if not (should_parse_types env)
+            then error env Error.UnexpectedTypeExport;
+            let interface = interface env in
+            let end_loc = fst interface in
+            Loc.btwn start_loc end_loc, Statement.ExportDeclaration {
+              default = false;
+              declaration = Some (Declaration interface);
+              specifiers = None;
+              source = None;
+              exportKind = ExportType;
+            }
         | T_LET
         | T_CONST
         | T_VAR
@@ -3381,8 +3394,11 @@ end = struct
               source;
             }
         | _ ->
-            if Peek.token env = T_TYPE
-            then error env Error.DeclareExportType;
+            (match Peek.token env with
+              | T_TYPE -> error env Error.DeclareExportType
+              | T_INTERFACE -> error env Error.DeclareExportInterface
+              | _ -> ()
+            );
             Expect.token env T_LCURLY;
             let specifiers, errs = export_specifiers_and_errs env [] [] in
             let specifiers = Some (Statement.ExportDeclaration.ExportSpecifiers specifiers) in
