@@ -4116,7 +4116,7 @@ end
 (*****************************************************************************)
 (* Entry points *)
 (*****************************************************************************)
-let parse_program fail ?(token_sink=None) ?(parse_options=None) filename content =
+let do_parse parser fail ?(token_sink=None) ?(parse_options=None) filename content =
   let lb = Lexing.from_string content in
   (match filename with
     | None | Some Loc.Builtins -> ()
@@ -4125,13 +4125,18 @@ let parse_program fail ?(token_sink=None) ?(parse_options=None) filename content
         lb.Lexing.lex_curr_p with Lexing.pos_fname = fn
       });
   let env = init_env ~token_sink ~parse_options filename lb in
-  let ast = Parse.program env in
+  let ast = parser env in
   if fail && (errors env) <> []
   then raise (Error.Error (filter_duplicate_errors [] (errors env)));
   ast, List.rev (errors env)
+
+let parse_program = do_parse Parse.program
 
 let program ?(fail=true) ?(token_sink=None) ?(parse_options=None) content =
   parse_program fail ~token_sink ~parse_options None content
 
 let program_file ?(fail=true) ?(token_sink=None) ?(parse_options=None) content filename =
   parse_program fail ~token_sink ~parse_options filename content
+
+let json_file ?(fail=true) ?(token_sink=None) ?(parse_options=None) content filename =
+  do_parse Parse.object_initializer fail ~token_sink ~parse_options filename content
