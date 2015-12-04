@@ -20,6 +20,6 @@ let tests = [
     obj.foo(x); // error, taint ~> any
 
     let foo = obj.foo;
-    foo(x); // TODO: error, taint ~> any
+    foo(x); // error, taint ~> any
   },
 ];

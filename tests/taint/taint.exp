@@ -35,6 +35,10 @@ any_object.js:20:13,13: taint
 This type is incompatible with
 any_object.js:20:5,14: any
 
+any_object.js:23:9,9: taint
+This type is incompatible with
+any_object.js:23:5,7: any
+
 call-object-property.js:5:7,7: taint
 This type is incompatible with
 call-object-property.js:5:3,8: any
@@ -54,6 +58,14 @@ comparator.js:8:28,28: string
 comparator.js:12:28,28: string
 Cannot be compared to
 comparator.js:12:32,32: number
+
+function.js:6:7,7: taint
+This type is incompatible with
+function.js:6:5,5: any
+
+function.js:12:7,7: taint
+This type is incompatible with
+function.js:12:5,5: any
 
 globals.js:6:5,21: assignment of property `location`
 Error:
@@ -101,4 +113,4 @@ use-types.js:27:33,36: taint
 This type is incompatible with
 use-types.js:27:24,29: number
 
-Found 24 errors
+Found 27 errors

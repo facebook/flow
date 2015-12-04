@@ -2386,6 +2386,12 @@ let rec __flow cx (l, u) trace =
 
       Ops.pop ()
 
+    | AnyT reason_fundef,
+      CallT (reason_op, { this_t; params_tlist; return_t; _}) ->
+      rec_flow cx trace (l, this_t);
+      multiflow cx trace reason_op (params_tlist, [RestT l]);
+      rec_flow cx trace (AnyT.why reason_op, return_t);
+
     (*********************************************)
     (* object types deconstruct into their parts *)
     (*********************************************)
@@ -3655,8 +3661,15 @@ and err_msg l u =
 and ground_subtype = function
   (* tvars are not considered ground, so they're not part of this relation *)
   | (OpenT _, _) | (_, OpenT _) -> false
+
+  (* Allow any lower bound to be repositioned *)
+  | (_, ReposLowerT _) -> false
+
   (* Prevents Tainted<any> -> any *)
   | (UnionT _, _) | (TaintT _, _) -> false
+
+  (* Allows call args to propagate  *)
+  | (AnyT _, CallT _) -> false
 
   | (NumT _,NumT _)
   | (StrT _,StrT _)
