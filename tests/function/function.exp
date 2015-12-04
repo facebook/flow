@@ -37,6 +37,40 @@ apply.js:25:1,27: call of method `apply`
 Expected array of arguments instead of
 apply.js:25:16,26: string
 
+call.js:4:15,20: property `length`
+Property not found in
+call.js:11:11,11: Number
+
+call.js:14:1,17: call of method `call`
+Error:
+call.js:14:1,17: undefined (too few arguments, expected default/rest parameters)
+This type is incompatible with
+call.js:3:29,34: number
+
+call.js:17:1,21: call of method `call`
+Error:
+call.js:17:19,20: string
+This type is incompatible with
+call.js:3:29,34: number
+
+call.js:18:1,19: call of method `call`
+Error:
+call.js:18:15,15: number
+This type is incompatible with
+call.js:3:18,23: string
+
+call.js:23:1,11: function call
+Error:
+call.js:21:43,49: string
+This type is incompatible with
+call.js:3:29,34: number
+
+call.js:24:1,9: function call
+Error:
+call.js:21:34,40: number
+This type is incompatible with
+call.js:3:18,23: string
+
 function.js:29:19,19: function type
 This type is incompatible with
 function.js:29:10,15: number
@@ -60,4 +94,4 @@ function.js:36:10,13: undefined
 rest.js:8:31,33: tuple type
 rest parameters should be an array type, got a tuple type instead
 
-Found 13 errors
+Found 19 errors

@@ -3104,7 +3104,7 @@ let rec __flow cx (l, u) trace =
       -> (* TODO: closure *)
 
       let funtype = { funtype with this_t = o2; params_tlist = tins2 } in
-      rec_flow cx trace (l, CallT (prefix_reason "call " reason_op, funtype))
+      rec_flow cx trace (l, CallT (reason_op, funtype))
 
     (*******************************************)
     (* ... or a receiver and an argument array *)
