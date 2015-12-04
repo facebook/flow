@@ -171,7 +171,7 @@ end) : Key with type userkey = UserKeyType.t = struct
 
   let to_old x = old_prefix^x
 
-  let to_new x = 
+  let to_new x =
     let module S = String in
     S.sub x (S.length old_prefix) (S.length x - S.length old_prefix)
 
@@ -212,7 +212,7 @@ module Raw (Key: Key) (Value: sig type t end) = struct
   external hh_get         : Key.md5 -> Value.t         = "hh_get"
   external hh_remove      : Key.md5 -> unit            = "hh_remove"
   external hh_move        : Key.md5 -> Key.md5 -> unit = "hh_move"
-      
+
 end
 
 (*****************************************************************************)
@@ -228,7 +228,7 @@ end
 (*****************************************************************************)
 
 module New : functor (Key : Key) -> functor(Value: Value.Type) -> sig
-  
+
   (* Adds a binding to the table, the table is left unchanged if the
    * key was already bound.
    *)
@@ -260,15 +260,15 @@ end = functor (Key : Key) -> functor (Value : Value.Type) -> struct
     then Some (Data.get (Raw.hh_get key))
     else None
 
-  let find_unsafe key = 
-    match get key with 
+  let find_unsafe key =
+    match get key with
     | None -> raise Not_found
     | Some x -> x
 
   let remove key =
     let key = Key.md5 key in
     if Raw.hh_mem key
-    then begin 
+    then begin
       Raw.hh_remove key;
       assert (not (Raw.hh_mem key));
     end
@@ -357,7 +357,7 @@ end
 
 (*****************************************************************************)
 (* A functor returning an implementation of the S module without caching. *)
-(*****************************************************************************)        
+(*****************************************************************************)
 
 module NoCache (UserKeyType : UserKeyType) (Value : Value.Type) = struct
 
@@ -414,7 +414,7 @@ module NoCache (UserKeyType : UserKeyType) (Value : Value.Type) = struct
         New.remove key
     end xs
 
-  let get_batch xs = 
+  let get_batch xs =
     KeySet.fold begin fun str_key acc ->
       let key = Key.make Value.prefix str_key in
       match New.get key with
@@ -439,7 +439,7 @@ end
 module type ConfigType = sig
 
 (* The type of object we want to keep in cache *)
-  type value         
+  type value
 
 (* The capacity of the cache *)
   val capacity : int
@@ -450,7 +450,7 @@ end
 (* All the caches are functors returning a module of the following signature
  *)
 (*****************************************************************************)
-      
+
 module type CacheType = sig
   type key
   type value
@@ -464,7 +464,7 @@ end
 (*****************************************************************************)
 (* Cache keeping the objects the most frequently used. *)
 (*****************************************************************************)
-      
+
 module FreqCache (Key : Key) (Config:ConfigType) :
   CacheType with type key := Key.t and type value := Config.value = struct
 
@@ -475,10 +475,10 @@ module FreqCache (Key : Key) (Config:ConfigType) :
       = Hashtbl.create (2 * Config.capacity)
   let size = ref 0
 
-  let clear() = 
+  let clear() =
     Hashtbl.clear cache;
     size := 0
- 
+
 (* The collection function is called when we reach twice original capacity
  * in size. When the collection is triggered, we only keep the most recent
  * object.
@@ -507,7 +507,7 @@ module FreqCache (Key : Key) (Config:ConfigType) :
 
   let add x y =
     collect();
-    try 
+    try
       let freq, y' = Hashtbl.find cache x in
       incr freq;
       if y' == y
@@ -551,7 +551,7 @@ module OrderedCache (Key : Key) (Config:ConfigType):
     size := 0;
     Queue.clear queue;
     ()
-      
+
   let add x y =
     if !size < Config.capacity
     then begin
@@ -570,7 +570,7 @@ module OrderedCache (Key : Key) (Config:ConfigType):
   let get x = try Some (find x) with Not_found -> None
 
   let remove x =
-    try 
+    try
       if Hashtbl.mem cache x
       then decr size;
       Hashtbl.remove cache x;
@@ -593,7 +593,7 @@ let invalidate_caches () =
  * We need to avoid constantly deserializing types, because it costs us too
  * much time. The caches keep a deserialized version of the types.
  *)
-(*****************************************************************************)        
+(*****************************************************************************)
 module WithCache (UserKeyType : UserKeyType) (Value:Value.Type) = struct
 
   type key = UserKeyType.t
@@ -601,7 +601,7 @@ module WithCache (UserKeyType : UserKeyType) (Value:Value.Type) = struct
 
   module ConfValue = struct
     type value = Value.t
-    let capacity = 1000
+    let capacity = 10000
   end
 
   module Key = KeyFunctor (UserKeyType)
@@ -618,13 +618,13 @@ module WithCache (UserKeyType : UserKeyType) (Value:Value.Type) = struct
 
   module Direct = NoCache (UserKeyType) (Value)
 
-  let add x y = 
+  let add x y =
     let x = Key.make Value.prefix x in
     L1.add x y;
     L2.add x y;
     New.add x y
 
-  let get x = 
+  let get x =
     let x = Key.make Value.prefix x in
     match L1.get x with
     | None ->
@@ -655,12 +655,12 @@ module WithCache (UserKeyType : UserKeyType) (Value:Value.Type) = struct
     | None -> raise Not_found
     | Some x -> x
 
-  let mem x = 
+  let mem x =
     match get x with
     | None -> false
     | Some _ -> true
-    
-  let remove x = 
+
+  let remove x =
     let x = Key.make Value.prefix x in
     L1.remove x;
     L2.remove x;

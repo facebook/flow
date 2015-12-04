@@ -124,13 +124,20 @@ let load_and_check_files acc fnl =
 
 let parallel_check workers nenv fast fnl =
   TypeCheckStore.store (fast, nenv);
+  (* If there are many workers (> 16) it is more memory efficent to use fewer
+   * workers with larger buckets.
+   *)
+  let workers, max_size = match workers with
+    | Some w when List.length w > 16 ->
+      Some (List.take w @@ List.length w / 2), 2000
+    | _ -> workers, 500 in
   let result =
     MultiWorker.call
       workers
       ~job:load_and_check_files
       ~neutral
       ~merge:Typing_decl_service.merge_decl
-      ~next:(Bucket.make fnl)
+      ~next:(Bucket.make ~max_size fnl)
   in
   TypeCheckStore.clear();
   result
