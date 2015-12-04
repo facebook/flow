@@ -370,6 +370,8 @@ and _json_of_t_impl json_cx t = Hh_json.(
       _json_of_t json_cx export
     ]
   | ImportModuleNsT (_, t)
+  | ImportDefaultT (_, _, t)
+  | ImportNamedT (_, _, t)
   | ImportTypeT (_, t)
   | ImportTypeofT (_, t)
     -> ["type", _json_of_t json_cx t]

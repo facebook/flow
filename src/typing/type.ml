@@ -301,6 +301,8 @@ type t =
   (* Module import handling *)
   | CJSRequireT of reason * t
   | ImportModuleNsT of reason * t
+  | ImportDefaultT of reason * (string * string) * t
+  | ImportNamedT of reason * string * t
   | ImportTypeT of reason * t
   | ImportTypeofT of reason * t
 
@@ -557,6 +559,8 @@ let is_use = function
   | BecomeT _
   | CJSRequireT _
   | ImportModuleNsT _
+  | ImportDefaultT _
+  | ImportNamedT _
   | ImportTypeT _
   | ImportTypeofT _
   | CJSExtractNamedExportsT _
@@ -723,6 +727,8 @@ let rec reason_of_t = function
 
   | CJSRequireT (reason, _) -> reason
   | ImportModuleNsT (reason, _) -> reason
+  | ImportDefaultT (reason, _, _) -> reason
+  | ImportNamedT (reason, _, _) -> reason
   | ImportTypeT (reason, _) -> reason
   | ImportTypeofT (reason, _) -> reason
   | CJSExtractNamedExportsT (reason, _, _) -> reason
@@ -893,6 +899,8 @@ let rec mod_reason_of_t f = function
 
   | CJSRequireT (reason, t) -> CJSRequireT (f reason, t)
   | ImportModuleNsT (reason, t) -> ImportModuleNsT (f reason, t)
+  | ImportDefaultT (reason, name, t) -> ImportDefaultT (f reason, name, t)
+  | ImportNamedT (reason, name, t) -> ImportNamedT (f reason, name, t)
   | ImportTypeT (reason, t) -> ImportTypeT (f reason, t)
   | ImportTypeofT (reason, t) -> ImportTypeofT (f reason, t)
 
@@ -986,6 +994,8 @@ let string_of_ctor = function
   | ConcreteT _ -> "ConcreteT"
   | SpeculativeMatchFailureT _ -> "SpeculativeMatchFailureT"
   | ImportModuleNsT _ -> "ImportModuleNsT"
+  | ImportDefaultT _ -> "ImportDefaultT"
+  | ImportNamedT _ -> "ImportNamedT"
   | ImportTypeT _ -> "ImportTypeT"
   | ImportTypeofT _ -> "ImportTypeofT"
   | ModuleT _ -> "ModuleT"

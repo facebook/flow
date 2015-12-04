@@ -13,9 +13,8 @@ Required module not found
 es6modules.js:21:22,26: ./D
 Required module not found
 
-es6modules.js:27:9,19: "doesntExist" export of "CommonJS_Clobbering_Lit"
-Property not found in
-es6modules.js:27:27,51: exports of "CommonJS_Clobbering_Lit"
+es6modules.js:27:9,19: Named import from module `CommonJS_Clobbering_Lit`
+This module has no named export called `doesntExist`.
 
 es6modules.js:31:18,29: number
 This type is incompatible with
@@ -45,21 +44,17 @@ es6modules.js:47:18,54: number
 This type is incompatible with
 es6modules.js:47:9,14: string
 
-es6modules.js:53:9,19: "doesntExist" export of "CommonJS_Clobbering_Class"
-Property not found in
-es6modules.js:53:27,53: exports of "CommonJS_Clobbering_Class"
+es6modules.js:53:9,19: Named import from module `CommonJS_Clobbering_Class`
+This module has no named export called `doesntExist`.
 
-es6modules.js:59:9,21: "staticNumber1" export of "CommonJS_Clobbering_Class"
-Property not found in
-es6modules.js:59:50,76: exports of "CommonJS_Clobbering_Class"
+es6modules.js:59:9,21: Named import from module `CommonJS_Clobbering_Class`
+This module has no named export called `staticNumber1`.
 
-es6modules.js:59:24,31: "baseProp" export of "CommonJS_Clobbering_Class"
-Property not found in
-es6modules.js:59:50,76: exports of "CommonJS_Clobbering_Class"
+es6modules.js:59:24,31: Named import from module `CommonJS_Clobbering_Class`
+This module has no named export called `baseProp`.
 
-es6modules.js:59:34,42: "childProp" export of "CommonJS_Clobbering_Class"
-Property not found in
-es6modules.js:59:50,76: exports of "CommonJS_Clobbering_Class"
+es6modules.js:59:34,42: Named import from module `CommonJS_Clobbering_Class`
+This module has no named export called `childProp`.
 
 es6modules.js:63:23,33: property `doesntExist`
 Property not found in
@@ -91,9 +86,8 @@ es6modules.js:73:18,63: number
 This type is incompatible with
 es6modules.js:73:9,14: string
 
-es6modules.js:79:9,19: "doesntExist" export of "CommonJS_Named"
-Property not found in
-es6modules.js:79:27,42: exports of "CommonJS_Named"
+es6modules.js:79:9,19: Named import from module `CommonJS_Named`
+This module has no named export called `doesntExist`.
 
 es6modules.js:83:18,29: number
 This type is incompatible with
@@ -119,9 +113,8 @@ es6modules.js:97:18,42: number
 This type is incompatible with
 es6modules.js:97:9,14: string
 
-es6modules.js:103:9,19: "doesntExist" export of "ES6_Default_AnonFunction1"
-Property not found in
-es6modules.js:103:27,53: exports of "ES6_Default_AnonFunction1"
+es6modules.js:103:9,19: Named import from module `ES6_Default_AnonFunction1`
+This module has no named export called `doesntExist`.
 
 es6modules.js:107:18,36: function call
 Error:
@@ -141,9 +134,8 @@ es6modules.js:119:18,54: number
 This type is incompatible with
 es6modules.js:119:9,14: string
 
-es6modules.js:125:8,18: "default" export of "ES6_Named1"
-Property not found in
-es6modules.js:125:25,36: exports of "ES6_Named1"
+es6modules.js:125:8,18: Default import from `ES6_Named1`
+This module has no default export.
 
 es6modules.js:129:18,33: number
 This type is incompatible with
