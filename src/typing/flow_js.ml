@@ -5162,15 +5162,16 @@ and multiflow_partial cx trace ?strict = function
           "undefined (too few arguments, expected default/rest parameters)"
           reason_op
         in
-        rec_flow cx trace (VoidT reason, tout)
-    | None -> ()
+        rec_flow cx trace (VoidT reason, tout);
+        multiflow_partial cx trace ?strict ([], touts)
+    | None ->
+        tout::touts
     );
-    multiflow_partial cx trace ?strict ([], touts)
 
   | (tin::tins,tout::touts) ->
-    (* flow `tin` (param) to `tout` (argument). normally, `tin` is passed
+    (* flow `tin` (argument) to `tout` (param). normally, `tin` is passed
        through a `ReposLowerT` to make sure that the concrete type points at
-       the param's location. however, if `tin` is an implicit type argument
+       the arg's location. however, if `tin` is an implicit type argument
        (e.g. the `x` in `function foo<T>(x: T)`), then don't reposition it
        because implicit type args have no explicit location to point at.
        instead, let it flow through transparently, so that we point at the
