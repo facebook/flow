@@ -80,6 +80,9 @@ let create prefix s =
 
 let concat prefix s = prefix, s
 
+let join prefix xs =
+  concat prefix @@ List.fold_left xs ~init:"" ~f:Filename.concat
+
 let relativize_set prefix m =
   SSet.fold (fun k a -> Set.add (create prefix k) a) m Set.empty
 

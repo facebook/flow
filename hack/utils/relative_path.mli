@@ -30,6 +30,7 @@ val default : t
 val create : prefix -> string -> t
 (* Prepends prefix to string *)
 val concat : prefix -> string -> t
+val join : prefix -> string list -> t
 val prefix : t -> prefix
 val suffix : t -> string
 val to_absolute : t -> string
