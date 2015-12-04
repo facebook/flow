@@ -80,3 +80,75 @@ let rec uniq = function
   | [x] -> [x]
   | x :: (y :: _ as l) when x = y -> uniq l
   | x :: rl -> x :: uniq rl
+
+(**
+ * Useful for various places where a user might have typoed a string and the
+ * set of possible intended strings is known (i.e. variable names).
+ *)
+let typo_suggestions =
+  (**
+   * Calculates the Levenshtein distance between the two strings, but with a
+   * limit. See here for documentation on this algorithm:
+   *
+   * https://en.wikipedia.org/wiki/Levenshtein_distance
+   *)
+  let distance a b limit =
+    let alen = String.length a in
+    let blen = String.length b in
+    let limit = min (max alen blen) limit in
+    if abs (alen - blen) > limit then None else (
+      let matrix = Array.make_matrix (alen + 1) (blen + 1) (limit + 1) in
+      matrix.(0).(0) <- 0;
+      for i = 1 to (max alen blen) do
+        if i <= alen then matrix.(i).(0) <- i;
+        if i <= blen then matrix.(0).(i) <- i;
+      done;
+      for ai = 1 to alen do
+        for bi = max 1 (ai - limit - 1) to min blen (ai + limit + 1) do
+          let prev_ai = a.[ai - 1] in
+          let prev_bi = b.[bi - 1] in
+          let cost = if prev_ai = prev_bi then 0 else 1 in
+          let closest = 
+            min 
+              (min
+                (matrix.(ai - 1).(bi) + 1) (* deletion *)
+                (matrix.(ai).(bi - 1) + 1)) (* insertion *)
+              (matrix.(ai - 1).(bi - 1) + cost) (* substitution *)
+          in
+          let closest = 
+            if ai > 1 && bi > 1 && prev_ai = b.[bi-2] && a.[ai-2] = prev_bi
+            then 
+              (* transposition *)
+              min (matrix.(ai).(bi)) (matrix.(ai - 2).(bi - 2) + cost)
+            else closest
+          in
+          matrix.(ai).(bi) <- closest
+        done;
+      done;
+      let result = matrix.(alen).(blen) in
+      if result > limit then None else Some result
+    )
+  in
+
+  let fold_results limit name results poss_name =
+    match distance name poss_name limit with
+    | None -> results
+    | Some distance ->
+        let (curr_choice, curr_dist) = results in
+        if distance < curr_dist 
+        then ([poss_name], curr_dist)
+        else 
+          if distance = curr_dist 
+          then (poss_name::curr_choice, curr_dist)
+          else results
+  in
+
+  fun possible_names name ->
+    let limit = 
+      match String.length name with
+      | 1 | 2 -> 0
+      | 3 | 4 -> 1
+      | 5 | 6 -> 2
+      | _ -> 3
+    in
+    fst (List.fold_left (fold_results limit name) ([], max_int) possible_names)

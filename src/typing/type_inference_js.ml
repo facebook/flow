@@ -103,6 +103,11 @@ let require cx m_name loc =
     )
   )
 
+let import cx m_name loc =
+  Context.add_require cx m_name loc;
+  Type_inference_hooks_js.dispatch_import_hook cx m_name loc;
+  get_module_t cx m_name (mk_reason m_name loc)
+
 let import_ns cx reason module_name loc =
   Context.add_require cx module_name loc;
   Type_inference_hooks_js.dispatch_import_hook cx module_name loc;
@@ -2639,24 +2644,27 @@ and statement cx type_params_map = Ast.Statement.(
         source_loc
       in
 
-      let module_ns_tvar = import_ns cx import_reason module_name source_loc in
+      let module_t = import cx module_name source_loc in
 
-      let get_imported_t get_reason set_reason remote_export_name =
-        let remote_t = Flow_js.mk_tvar_where cx get_reason (fun t ->
-          Flow_js.flow cx (
-            module_ns_tvar,
-            GetPropT(get_reason, (get_reason, remote_export_name), t)
-          )
-        ) in
-
-        Flow_js.mk_tvar_where cx get_reason (fun t ->
-          let import_use =
-            match importKind with
-            | ImportDeclaration.ImportType -> ImportTypeT(set_reason, t)
-            | ImportDeclaration.ImportTypeof -> ImportTypeofT(set_reason, t)
-            | ImportDeclaration.ImportValue -> t
+      let get_imported_t get_reason set_reason remote_export_name local_name =
+        let imported_t = Flow_js.mk_tvar_where cx get_reason (fun t ->
+          let import_type = 
+            if remote_export_name = "default"
+            then ImportDefaultT(get_reason, (local_name, module_name), t)
+            else ImportNamedT(get_reason, remote_export_name, t)
           in
-          Flow_js.flow cx (remote_t, import_use)
+          Flow_js.flow cx (module_t, import_type)
+        ) in
+        (match importKind with
+          | ImportDeclaration.ImportType -> 
+              Flow_js.mk_tvar_where cx set_reason (fun t ->
+                Flow_js.flow cx (imported_t, ImportTypeT(set_reason, t))
+              )
+          | ImportDeclaration.ImportTypeof ->
+              Flow_js.mk_tvar_where cx set_reason (fun t ->
+                Flow_js.flow cx (imported_t, ImportTypeofT(set_reason, t))
+              )
+          | ImportDeclaration.ImportValue -> imported_t
         )
       in
 
@@ -2673,10 +2681,10 @@ and statement cx type_params_map = Ast.Statement.(
           let local_name = local_ident.Ast.Identifier.name in
 
           let reason = mk_reason
-            (spf "\"default\" export of \"%s\"" module_name)
+            (spf "Default import from `%s`" module_name)
             local_ident_loc
           in
-          let imported_t = get_imported_t reason reason "default" in
+          let imported_t = get_imported_t reason reason "default" local_name in
 
           let reason = mk_reason
             (spf "%s %s from \"%s\"" import_str local_name module_name)
@@ -2695,7 +2703,7 @@ and statement cx type_params_map = Ast.Statement.(
             let remote_name = remote_ident.Ast.Identifier.name in
 
             let get_reason_str =
-              spf "\"%s\" export of \"%s\"" remote_name module_name
+              spf "Named import from module `%s`" module_name
             in
 
             let (local_name, get_reason, set_reason) = (
@@ -2715,7 +2723,7 @@ and statement cx type_params_map = Ast.Statement.(
                 in
                 (remote_name, get_reason, set_reason)
             ) in
-            let imported_t = get_imported_t get_reason set_reason remote_name in
+            let imported_t = get_imported_t get_reason set_reason remote_name local_name in
 
             set_imported_binding get_reason local_name imported_t
           ) in
@@ -2734,6 +2742,7 @@ and statement cx type_params_map = Ast.Statement.(
             let reason = repos_reason import_loc reason in
             Flow_js.add_error cx [(reason, msg)]
           ) else (
+            let module_ns_tvar = import_ns cx import_reason module_name source_loc in
             set_imported_binding reason local_name module_ns_tvar
           )
         | None -> ()
