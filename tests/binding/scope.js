@@ -39,7 +39,7 @@ function switch_scope2(x: number) {
       a = "";     // error: skipped initializer
       break;
     case 4:
-      var c:number = a;  // error: skipped initializer
+      var c:string = a;  // error: skipped initializer
       break;
   }
   a = ""; // error: a no longer in scope

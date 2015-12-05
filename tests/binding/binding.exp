@@ -196,19 +196,19 @@ name is already bound
 scope.js:15:11,11: let a
 
 scope.js:30:6,6: a
-let referenced before declaration, or after skipped initializer
+let referenced before declaration, or after skipped declaration
 scope.js:36:11,11: let a
 
 scope.js:33:14,14: a
-let referenced before declaration, or after skipped initializer
+let referenced before declaration, or after skipped declaration
 scope.js:36:11,11: let a
 
 scope.js:39:7,7: a
-let referenced before declaration, or after skipped initializer
+let referenced before declaration, or after skipped declaration
 scope.js:36:11,11: let a
 
 scope.js:42:22,22: a
-let referenced before declaration, or after skipped initializer
+let referenced before declaration, or after skipped declaration
 scope.js:36:11,11: let a
 
 scope.js:45:3,3: assignment of identifier `a`
@@ -238,34 +238,34 @@ scope.js:105:19,19: identifier `b`
 Could not resolve name
 
 tdz.js:25:11,11: x
-let referenced before declaration, or after skipped initializer
+let referenced before declaration, or after skipped declaration
 tdz.js:26:7,7: let x
 
 tdz.js:25:15,15: c
-const referenced before declaration, or after skipped initializer
+const referenced before declaration, or after skipped declaration
 tdz.js:27:9,9: const c
 
 tdz.js:31:3,3: x
-let referenced before declaration, or after skipped initializer
+let referenced before declaration, or after skipped declaration
 tdz.js:32:7,7: let x
 
 tdz.js:34:5,5: y
-let referenced before declaration, or after skipped initializer
+let referenced before declaration, or after skipped declaration
 tdz.js:35:9,9: let y
 
 tdz.js:41:13,13: x
-let referenced before declaration, or after skipped initializer
+let referenced before declaration, or after skipped declaration
 tdz.js:43:7,7: let x
 
 tdz.js:41:17,17: c
-const referenced before declaration, or after skipped initializer
+const referenced before declaration, or after skipped declaration
 tdz.js:44:9,9: const c
 
 tdz.js:78:8,8: identifier `C`
 Could not resolve name
 
 tdz.js:80:13,13: C
-class referenced before declaration, or after skipped initializer
+class referenced before declaration, or after skipped declaration
 tdz.js:82:7,7: class C
 
 tdz.js:96:1,4: function call

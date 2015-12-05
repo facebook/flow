@@ -3103,11 +3103,11 @@ and variable cx type_params_map kind
   ?if_uninitialized (loc, vdecl) = Ast.Statement.(
   let value_kind, init_var, declare_var = match kind with
     | VariableDeclaration.Const ->
-      Scope.Entry.Const, Env_js.init_const, Some Env_js.declare_const
+      Scope.Entry.Const, Env_js.init_const, Env_js.declare_const
     | VariableDeclaration.Let ->
-      Scope.Entry.Let None, Env_js.init_let, Some Env_js.declare_let
+      Scope.Entry.Let None, Env_js.init_let, Env_js.declare_let
     | VariableDeclaration.Var ->
-      Scope.Entry.Var, Env_js.init_var, None
+      Scope.Entry.Var, Env_js.init_var, (fun _ _ _ -> ())
   in
   let str_of_kind = Scope.Entry.string_of_value_kind value_kind in
   let { VariableDeclaration.Declarator.id; init } = vdecl in
@@ -3120,6 +3120,7 @@ and variable cx type_params_map kind
         let has_anno = not (typeAnnotation = None) in
         (match init with
           | Some ((rhs_loc, _) as expr) ->
+            declare_var cx name reason; (* prepare for self-refs *)
             let rhs_reason = mk_reason (spf "assignment of var `%s`" name) rhs_loc in
             let rhs = expression cx type_params_map expr in
             let rhs = Flow_js.reposition cx rhs_reason rhs in
@@ -3132,9 +3133,7 @@ and variable cx type_params_map kind
             | None ->
               if has_anno
               then Env_js.pseudo_init_declared_type cx name reason
-              else match declare_var with
-              | None -> ()
-              | Some decl -> decl cx name reason
+              else declare_var cx name reason;
         )
     | loc, _ ->
         (* compound lvalue *)

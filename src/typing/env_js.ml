@@ -652,6 +652,8 @@ let pseudo_init_declared_type cx name reason =
     let scope, entry = find_entry cx name reason in
     match entry with
     | Value value_binding ->
+      let value_binding =
+        { value_binding with value_state = State.Declared } in
       let entry = Value (force_general_type cx value_binding) in
       Scope.add_entry name entry scope
     | Type _ ->
@@ -683,9 +685,9 @@ let same_activation target =
 
 (* get types from value entry, does uninitialized -> undefined behavior *)
 let value_entry_types ?(lookup_mode=ForValue) scope = Entry.(function
-  (* from value positions, a same-activation ref to var before
-     initialization yields undefined (except for any-typed vars). *)
-| { kind = Var;
+  (* from value positions, a same-activation ref to var or an explicit let
+     before initialization yields undefined. *)
+| { kind = Var | Let None;
     value_state = State.Declared | State.MaybeInitialized as state;
     value_loc; specific; general; _ }
     when lookup_mode = ForValue && same_activation scope
@@ -708,7 +710,7 @@ let value_entry_types ?(lookup_mode=ForValue) scope = Entry.(function
 let tdz_error cx name reason v = Entry.(
   (* second clause of error message is due to switch scopes *)
   let msg = spf "%s referenced before declaration, \
-                  or after skipped initializer"
+                  or after skipped declaration"
     (string_of_value_kind v.Entry.kind) in
   binding_error msg cx name (Value v) reason
 )
@@ -897,14 +899,18 @@ let merge_env =
   (* propagate var state updates from child entries *)
   let merge_states orig child1 child2 = Entry.(
     match orig.Entry.kind with
-    | Var
-      when child1.value_state = State.Initialized
-      && child2.value_state = State.Initialized ->
+    | Var | Let _
+      when
+        child1.value_state = State.Initialized &&
+        child2.value_state = State.Initialized ->
       (* if both branches have initialized, we can set parent state *)
       State.Initialized
-    | Var
-      when child1.value_state >= State.MaybeInitialized
-      || child2.value_state >= State.MaybeInitialized ->
+    | Var | Let _
+      when
+        child1.value_state >= State.Declared &&
+        child2.value_state >= State.Declared &&
+        (child1.value_state >= State.MaybeInitialized ||
+         child2.value_state >= State.MaybeInitialized) ->
       (* if either branch has initialized, we can set parent state *)
       State.MaybeInitialized
     | _ -> orig.value_state

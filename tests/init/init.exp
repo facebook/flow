@@ -83,4 +83,32 @@ hoisted2.js:217:18,18: possibly uninitialized variable
 This type is incompatible with
 hoisted2.js:217:9,14: number
 
-Found 21 errors
+let.js:17:18,18: uninitialized variable
+This type is incompatible with
+let.js:17:9,14: number
+
+let.js:25:18,18: uninitialized variable
+This type is incompatible with
+let.js:25:9,14: number
+
+let.js:34:18,18: possibly uninitialized variable
+This type is incompatible with
+let.js:34:9,14: number
+
+let.js:54:22,22: x
+let referenced before declaration, or after skipped declaration
+let.js:52:11,18: let x
+
+let.js:64:18,18: possibly uninitialized variable
+This type is incompatible with
+let.js:64:9,14: number
+
+let.js:82:18,18: possibly uninitialized variable
+This type is incompatible with
+let.js:82:9,14: number
+
+let.js:91:18,18: possibly uninitialized variable
+This type is incompatible with
+let.js:91:9,14: number
+
+Found 28 errors

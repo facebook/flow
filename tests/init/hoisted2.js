@@ -1,5 +1,5 @@
 /**
- * test initialization tracking for hoisted stuff in control structs
+ * test initialization tracking for vars
  * note: for try/catch/finally, see tests/try/init.js
  * @flow
  */
