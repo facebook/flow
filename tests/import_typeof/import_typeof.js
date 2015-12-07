@@ -93,3 +93,11 @@ import typeof {num as num_cjs_named} from "./ExportCJSNamed_Number";
 
 var i1: num_cjs_named = 42;
 var i2: num_cjs_named = 'asdf'; // Error: string ~> number
+
+///////////////////////////////////////////////
+// == Import Typeof ModuleNamespaceObject == //
+///////////////////////////////////////////////
+
+import typeof * as ModuleNSObjT from "./ExportNamed_Multi";
+var j1: ModuleNSObjT = {num: 42, str: 'asdf'};
+var j2: ModuleNSObjT = {num: 42, str: 42}; // Error: number ~> string

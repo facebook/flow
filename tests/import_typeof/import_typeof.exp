@@ -50,4 +50,8 @@ import_typeof.js:95:25,30: string
 This type is incompatible with
 import_typeof.js:95:9,21: number
 
-Found 11 errors
+import_typeof.js:103:39,40: number
+This type is incompatible with
+ExportNamed_Multi.js:4:12,14: string
+
+Found 12 errors

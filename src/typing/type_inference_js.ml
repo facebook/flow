@@ -2734,16 +2734,29 @@ and statement cx type_params_map = Ast.Statement.(
             (spf "%s * as %s" import_str local_name)
             ident_loc
           in
-          if isType then (
-            let msg = spf (
-              "This is invalid syntax. Maybe you meant: " ^^
-              "`import type %s from \"%s\"`?"
-            ) local_name module_name in
-            let reason = repos_reason import_loc reason in
-            Flow_js.add_error cx [(reason, msg)]
-          ) else (
-            let module_ns_tvar = import_ns cx import_reason module_name source_loc in
-            set_imported_binding reason local_name module_ns_tvar
+          (match importKind with
+            | ImportDeclaration.ImportType ->
+              let msg = spf (
+                "This is invalid syntax. Maybe you meant: " ^^
+                "`import type %s from \"%s\"`?"
+              ) local_name module_name in
+              let reason = repos_reason import_loc reason in
+              Flow_js.add_error cx [(reason, msg)]
+            | ImportDeclaration.ImportTypeof ->
+              let set_reason = repos_reason import_loc reason in
+              let module_ns_tvar = import_ns cx import_reason module_name source_loc in
+              let module_ns_typeof = Flow_js.mk_tvar_where cx set_reason (fun t ->
+                Flow_js.flow cx (module_ns_tvar, ImportTypeofT(reason, t))
+              ) in
+              let get_reason =
+                mk_reason
+                  (spf "import typeof * as %s from %S" local_name module_name)
+                  import_loc
+              in
+              set_imported_binding get_reason local_name module_ns_typeof
+            | ImportDeclaration.ImportValue ->
+              let module_ns_tvar = import_ns cx import_reason module_name source_loc in
+              set_imported_binding reason local_name module_ns_tvar
           )
         | None -> ()
       )
