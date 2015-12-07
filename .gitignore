@@ -10,3 +10,5 @@ npm-debug.log
 *.diff
 *.err
 *.swp
+flow.odocl
+flow.docdir

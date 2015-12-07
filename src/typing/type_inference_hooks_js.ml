@@ -35,7 +35,7 @@ type rhs_def =
    *)
   | RHSLoc of Loc.t
 
-  (**
+  (*
    * Given a destructuring pattern for an assignment/initialization such as:
    *
    *  var {
