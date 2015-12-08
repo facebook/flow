@@ -672,13 +672,14 @@ let json_of_scope = Scope.(
   let open Hh_json in
 
   let json_of_value_impl json_cx {
-    Entry.kind; value_state; value_loc; specific; general
+    Entry.kind; value_state; value_declare_loc; value_assign_loc; specific; general
   } =
     JSON_Object [
       "entry_type", JSON_String "Value";
       "kind", JSON_String (Entry.string_of_value_kind kind);
       "value_state", JSON_String (State.to_string value_state);
-      "value_loc", json_of_loc value_loc;
+      "value_declare_loc", json_of_loc value_declare_loc;
+      "value_assign_loc", json_of_loc value_assign_loc;
       "specific", _json_of_t json_cx specific;
       "general", _json_of_t json_cx general;
     ]
@@ -879,13 +880,14 @@ and dump_tvarkeys cx self imap =
 let string_of_scope_entry = Scope.(
 
   let string_of_value_binding cx {
-    Entry.kind; value_state; value_loc; specific; general
+    Entry.kind; value_state; value_declare_loc; value_assign_loc; specific; general
   } =
-    spf "{ kind: %s; value_state: %s; value_loc: %S; \
-      specific: %s; general: %s }"
+    spf "{ kind: %s; value_state: %s; value_declare_loc: %S; \
+      value_assign_loc: %s; specific: %s; general: %s }"
       (Entry.string_of_value_kind kind)
       (State.to_string value_state)
-      (string_of_loc value_loc)
+      (string_of_loc value_declare_loc)
+      (string_of_loc value_assign_loc)
       (dump_t cx specific)
       (dump_t cx general)
   in

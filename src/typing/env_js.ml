@@ -689,16 +689,16 @@ let value_entry_types ?(lookup_mode=ForValue) scope = Entry.(function
      before initialization yields undefined. *)
 | { kind = Var | Let None;
     value_state = State.Declared | State.MaybeInitialized as state;
-    value_loc; specific; general; _ }
+    value_declare_loc; specific; general; _ }
     when lookup_mode = ForValue && same_activation scope
     ->
-    let uninit desc = VoidT.make (mk_reason desc value_loc) in
+    let uninit desc = VoidT.make (mk_reason desc value_declare_loc) in
     let specific = if state = State.Declared
       then uninit "uninitialized variable"
       else (* State.MaybeInitialized *)
         let desc = "possibly uninitialized variable" in
         let ts = [uninit desc; specific] in
-        UnionT (mk_reason desc value_loc, ts)
+        UnionT (mk_reason desc value_declare_loc, ts)
     in
     specific, general
 
@@ -737,11 +737,11 @@ let read_entry ~lookup_mode ~specific cx name reason =
 
   | Value v ->
     match v with
-    | { kind; value_state = State.Undeclared; value_loc; _ }
+    | { kind; value_state = State.Undeclared; value_declare_loc; _ }
       when lookup_mode = ForValue && not (allow_forward_ref kind)
       && same_activation scope ->
       tdz_error cx name reason v;
-      AnyT.at value_loc
+      AnyT.at value_declare_loc
     | _ ->
       Changeset.(add_var_change (scope.id, name, Read));
       let s, g = value_entry_types ~lookup_mode scope v in
@@ -780,6 +780,7 @@ let get_refinement cx key reason =
 (* helper: update let or var entry *)
 let update_var op cx name specific reason =
   let scope, entry = find_entry cx name reason in
+  let value_assign_loc = loc_of_reason reason in
   Entry.(match entry with
 
   | Value ({ kind = (Let _ as kind); value_state = State.Undeclared; _ } as v)
@@ -792,7 +793,10 @@ let update_var op cx name specific reason =
     Flow_js.flow cx (specific, v.general);
     (* add updated entry *)
     let update = Entry.Value {
-      v with value_state = State.Initialized; specific
+      v with
+      value_state = State.Initialized;
+      specific;
+      value_assign_loc;
     } in
 
     Scope.add_entry name update scope

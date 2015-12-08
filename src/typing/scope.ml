@@ -68,7 +68,13 @@ module Entry = struct
   type value_binding = {
     kind: value_kind;
     value_state: State.t;
-    value_loc: Loc.t;
+
+    (* The location where the binding was declared/created *)
+    value_declare_loc: Loc.t;
+
+    (* The last location (in this scope) where the entry value was assigned *)
+    value_assign_loc: Loc.t;
+
     specific: Type.t;
     general: Type.t;
   }
@@ -84,11 +90,12 @@ module Entry = struct
   | Type of type_binding
 
   (* constructors *)
-  let new_value kind state specific general value_loc =
+  let new_value kind state specific general value_declare_loc =
     Value {
       kind;
       value_state = state;
-      value_loc;
+      value_declare_loc;
+      value_assign_loc = value_declare_loc;
       specific;
       general
     }
@@ -112,7 +119,11 @@ module Entry = struct
 
   (* accessors *)
   let loc = function
-  | Value v -> v.value_loc
+  | Value v -> v.value_declare_loc
+  | Type t -> t.type_loc
+
+  let assign_loc = function
+  | Value v -> v.value_assign_loc
   | Type t -> t.type_loc
 
   let declared_type = function

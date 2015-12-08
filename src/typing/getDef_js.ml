@@ -21,10 +21,22 @@ let getdef_id (state, loc1) cx name loc2 =
     let env = Env_js.all_entries () in
     match SMap.get name env with
     | Some entry ->
-        state := Some (Gdloc (Scope.Entry.loc entry))
+        state := Some (Gdloc (Scope.Entry.assign_loc entry))
     | None ->
       ());
   false
+
+let getdef_lval (state, loc1) cx name loc2 rhs =
+  if Reason_js.in_range loc1 loc2
+  then (match rhs with
+    | Type_inference_hooks_js.RHSLoc loc ->
+      state := Some (Gdloc loc);
+    | Type_inference_hooks_js.RHSType t ->
+      state := Some (Gdmem (name, t));
+    | Type_inference_hooks_js.NoRHS ->
+      let _ = getdef_id (state, loc1) cx name loc2 in
+      ()
+  )
 
 let getdef_member (state, loc1) cx name loc2 this_t =
   if (Reason_js.in_range loc1 loc2)
@@ -70,6 +82,7 @@ let getdef_get_result cx state =
 let getdef_set_hooks pos =
   let state = ref None in
   Type_inference_hooks_js.set_id_hook (getdef_id (state, pos));
+  Type_inference_hooks_js.set_lval_hook (getdef_lval (state, pos));
   Type_inference_hooks_js.set_member_hook (getdef_member (state, pos));
   Type_inference_hooks_js.set_call_hook (getdef_call (state, pos));
   Type_inference_hooks_js.set_require_hook (getdef_require (state, pos));

@@ -234,7 +234,7 @@ let rec extract_destructured_bindings accum pattern = Ast.Pattern.(
    to perform at the leaves. A type for the pattern is passed, which is taken
    apart as the visitor goes deeper. *)
 
-let rec destructuring cx t expr f = Ast.Pattern.(function
+let rec destructuring ?(parent_pattern_t=None) cx curr_t expr f = Ast.Pattern.(function
   | loc, Array { Array.elements; _; } -> Array.(
       elements |> List.iteri (fun i -> function
         | Some (Element ((loc, _) as p)) ->
@@ -256,19 +256,19 @@ let rec destructuring cx t expr f = Ast.Pattern.(function
             let refinement = Option.bind expr (fun expr ->
               Refinement.get cx expr reason
             ) in
-            let tvar = (match refinement with
-            | Some t -> t
+            let (parent_pattern_t, tvar) = (match refinement with
+            | Some refined_t -> (refined_t, refined_t)
             | None ->
-              Flow_js.mk_tvar_where cx reason (fun tvar ->
-                Flow_js.flow cx (t, GetElemT(reason, key, tvar))
-              )
+              (curr_t, Flow_js.mk_tvar_where cx reason (fun tvar ->
+                Flow_js.flow cx (curr_t, GetElemT(reason, key, tvar))
+              ))
             ) in
-            destructuring cx tvar expr f p
+            destructuring ~parent_pattern_t:(Some parent_pattern_t) cx tvar expr f p
         | Some (Spread (loc, { SpreadElement.argument })) ->
             let reason = mk_reason "rest of array pattern" loc in
             let tvar = Flow_js.mk_tvar cx reason in
-            Flow_js.flow cx (t, ArrRestT(reason, i, tvar));
-            destructuring cx tvar expr f argument
+            Flow_js.flow cx (curr_t, ArrRestT(reason, i, tvar));
+            destructuring ~parent_pattern_t:(Some curr_t) cx tvar expr f argument
         | None ->
             ()
       )
@@ -293,34 +293,55 @@ let rec destructuring cx t expr f = Ast.Pattern.(function
                 let refinement = Option.bind expr (fun expr ->
                   Refinement.get cx expr reason
                 ) in
-                let tvar = (match refinement with
-                | Some t -> t
+                let (parent_pattern_t, tvar) = (match refinement with
+                | Some refined_t -> (refined_t, refined_t)
                 | None ->
                   (* use the same reason for the prop name and the lookup.
                      given `var {foo} = ...`, `foo` is both. compare to `a.foo`
                      where `foo` is the name and `a.foo` is the lookup. *)
-                  Flow_js.mk_tvar_where cx reason (fun tvar ->
-                    Flow_js.flow cx (t, GetPropT(reason, (reason, x), tvar))
-                  )
+                  (curr_t, Flow_js.mk_tvar_where cx reason (fun tvar ->
+                    Flow_js.flow cx (curr_t, GetPropT(reason, (reason, x), tvar))
+                  ))
                 ) in
-                destructuring cx tvar expr f p
+                destructuring ~parent_pattern_t:(Some parent_pattern_t) cx tvar expr f p
             | _ ->
               error_destructuring cx loc
           )
         | SpreadProperty (loc, { SpreadProperty.argument }) ->
             let reason = mk_reason "object pattern spread property" loc in
             let tvar = Flow_js.mk_tvar cx reason in
-            Flow_js.flow cx (t, ObjRestT(reason,!xs,tvar));
-            destructuring cx tvar expr f argument
+            Flow_js.flow cx (curr_t, ObjRestT(reason,!xs,tvar));
+            destructuring ~parent_pattern_t:(Some curr_t) cx tvar expr f argument
       )
     )
 
   | loc, Identifier (_, { Ast.Identifier.name; _ }) ->
-      let type_ =
-        if Type_inference_hooks_js.dispatch_id_hook cx name loc
-        then AnyT.at loc
-        else t in
-      f cx loc name type_
+      Type_inference_hooks_js.dispatch_lval_hook cx name loc (
+        match (parent_pattern_t, expr) with
+        (**
+         * If there was a parent_pattern, we must be within a destructuring
+         * pattern and a `get-def` on this identifier should point at the "def"
+         * of the original property. To accompish this, we emit the type of the
+         * parent pattern so that get-def can dive in to that type and extract
+         * the location of the "def" of this property.
+         *)
+        | (Some rhs_t, _) -> Type_inference_hooks_js.RHSType rhs_t
+
+        (**
+         * If there was no parent_pattern, we must not be within a destructuring
+         * pattern and a `get-def` on this identifier should point at the
+         * location of the RHS of the assignment.
+         *)
+        | (None, Some (loc, _)) -> Type_inference_hooks_js.RHSLoc loc
+
+        (**
+         * If there was no parent_pattern and no RHS expression (i.e. `var a;`,
+         * function parameters, etc), there's nothing useful we can do for a
+         * `get-def` on this identifier.
+         *)
+        | (None, None) -> Type_inference_hooks_js.NoRHS
+      );
+      f cx loc name curr_t
 
   | loc, _ -> error_destructuring cx loc
 )
@@ -340,8 +361,8 @@ and type_of_pattern = Ast.Pattern.(function
 )
 
 (* instantiate pattern visitor for assignments *)
-let destructuring_assignment cx t expr =
-  destructuring cx t (Some expr) (fun cx loc name t ->
+let destructuring_assignment cx rhs_t expr =
+  destructuring cx rhs_t (Some expr) (fun cx loc name t ->
     let reason = mk_reason (spf "assignment of identifier `%s`" name) loc in
     Env_js.set_var cx name t reason
   )
@@ -1061,7 +1082,7 @@ let rec variable_decl cx type_params_map loc entry = Ast.Statement.(
   ) in
 
   VariableDeclaration.(entry.declarations |> List.iter (function
-    | (loc, { Declarator.id; _ }) -> declarator loc id
+    | (loc, { Declarator.id; _; }) -> declarator loc id
   ));
 )
 
