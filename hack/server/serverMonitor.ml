@@ -72,25 +72,24 @@ let setup_autokill_typechecker_on_exit typechecker =
   | _ ->
     Hh_logger.log "Failed to set signal handler"
 
-let start_hh_server options typechecker_entry log_mode =
-  let log_file =
-    match log_mode with
-    | Daemon.Log_file ->
+let start_hh_server options =
+  let log_file, log_mode =
+    if ServerArgs.should_detach options then
       let log_link = ServerFiles.log_link (ServerArgs.root options) in
       (try Sys.rename log_link (log_link ^ ".old") with _ -> ());
       let log_file = ServerFiles.make_link_of_timestamped log_link in
       Hh_logger.log "About to spawn typechecker daemon. Logs will go to %s\n%!"
         (if Sys.win32 then log_file else log_link);
-      log_file
-    | Daemon.Parent_streams ->
+      log_file, Daemon.Log_file
+    else begin
       Hh_logger.log "About to spawn typechecker daemon. Logs will go here.";
-      ""
+      "", Daemon.Parent_streams
+    end
   in
   let start_t = Unix.time () in
-  let {Daemon.pid; Daemon.channels} =
-    Daemon.spawn ~channel_mode:`socket ~log_file ~log_mode typechecker_entry
+  let {Daemon.pid; Daemon.channels = (ic, oc)} =
+    Daemon.spawn ~channel_mode:`socket ~log_file ~log_mode ServerMain.entry
       options in
-  let ic, oc = channels in
   Hh_logger.log "Just started typechecker server with pid: %d." pid;
   let typechecker =
     {
@@ -224,7 +223,7 @@ let ack_and_handoff_client typechecker fd =
     raise e
 
 let check_and_run_loop (_: ServerArgs.options) typechecker
-    (lock_file: string) (socket: Unix.file_descr) _ =
+    (lock_file: string) (socket: Unix.file_descr) =
   if not (Lock.grab lock_file) then
     (Hh_logger.log "Lost lock; terminating.\n%!";
      HackEventLogger.lock_stolen lock_file;
@@ -254,8 +253,7 @@ let check_and_run_loop (_: ServerArgs.options) typechecker
 (** Main method of the server monitor daemon. The daemon is responsible for
  * listening to socket requests from hh_client, checking Build ID, and relaying
  * requests to the typechecker process. *)
-let monitor_daemon_main (options: ServerArgs.options) typechecker_entry
-    typechecker_log_mode =
+let monitor_daemon_main (options: ServerArgs.options) =
   if Sys_utils.is_test_mode ()
   then EventLogger.init (Daemon.devnull ()) 0.0
   else HackEventLogger.init_monitor (ServerArgs.root options)
@@ -270,50 +268,34 @@ let monitor_daemon_main (options: ServerArgs.options) typechecker_entry
     (Hh_logger.log "Monitor daemon already running. Killing";
      Exit_status.exit Exit_status.Ok);
   let socket = Socket.init_unix_socket (ServerFiles.socket_file www_root) in
-  let typechecker = start_hh_server options typechecker_entry
-      typechecker_log_mode in
+  let typechecker = start_hh_server options in
   while true do
-    try check_and_run_loop
-      options typechecker lock_file socket typechecker_entry
-    with
-    | _ -> ()
+    try check_and_run_loop options typechecker lock_file socket
+    with _ -> ()
   done
+
+let daemon_entry =
+  Daemon.register_entry_point
+    "monitor_daemon_main"
+    (fun (options: ServerArgs.options) (_ic, _oc) ->
+       monitor_daemon_main options)
 
 (* Starts a monitor daemon if one doesn't already exist. Otherwise,
  * immediately exits with non-zero exit code. This is because the monitor
  * should never actually be attempted to be started if one is already running
  * (i.e. hh_client should play nice and only start a server monitor if one
  * isn't running by first checking the liveness lock file.) *)
-let daemon_starter options daemon_entry typechecker_entry =
-  let www_root = (ServerArgs.root options) in
-  let log_link = ServerFiles.server_monitor_log_link www_root in
+let daemon_starter options =
+  let root = ServerArgs.root options in
+  let log_link = ServerFiles.server_monitor_log_link root in
   (try Sys.rename log_link (log_link ^ ".old") with _ -> ());
   let log_file_path = ServerFiles.make_link_of_timestamped log_link in
-  let {Daemon.pid; _} = Daemon.spawn ~log_file:log_file_path
-      daemon_entry (options, typechecker_entry) in
+  let {Daemon.pid; _} =
+    Daemon.spawn ~log_file:log_file_path daemon_entry options in
   Printf.eprintf "Spawned %s (child pid=%d)\n" Program.name pid;
   Printf.eprintf "Logs will go to %s\n%!"
     (if Sys.win32 then log_file_path else log_link);
   Exit_status.Ok
-
-let typechecker_entry =
-  Daemon.register_entry_point
-    "main"
-    (fun options
-      (** Must explicitly provide provide phantom types since they will
-       * never be inferred because they're immediately stripped away. *)
-      ((ic: char Daemon.in_channel), (oc: char Daemon.out_channel)) ->
-      let in_fd = Daemon.descr_of_in_channel ic in
-      let out_fd = Daemon.descr_of_out_channel oc in
-      ServerMain.daemon_main options in_fd out_fd)
-
-let daemon_entry =
-  Daemon.register_entry_point
-    "monitor_daemon_main"
-    (fun (
-       (options: ServerArgs.options), typechecker_entry)
-       ((_ic: char Daemon.in_channel), (_oc: char Daemon.out_channel)) ->
-       monitor_daemon_main options typechecker_entry Daemon.Log_file)
 
 (** Either starts a monitor daemon (which will spawn a typechecker daemon),
  * or just runs the typechecker if detachment not enabled. *)
@@ -321,7 +303,5 @@ let start () =
   Daemon.check_entry_point (); (* this call might not return *)
   let options = ServerArgs.parse_options () in
   if ServerArgs.should_detach options
-  then
-    Exit_status.exit (daemon_starter options daemon_entry typechecker_entry)
-  else
-    monitor_daemon_main options typechecker_entry Daemon.Parent_streams
+  then Exit_status.exit (daemon_starter options)
+  else monitor_daemon_main options

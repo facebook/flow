@@ -8,5 +8,8 @@
  *
  *)
 
-val daemon_main: ServerArgs.options ->
-  Unix.file_descr -> Unix.file_descr -> unit
+(* The in/out channels don't actually take type unit -- we write directly
+ * to the underlying file descriptor -- but we have to declare some type for
+ * these phantom types because OCaml doesn't allow polymorphic values that
+ * are not functions. *)
+val entry: (ServerArgs.options, unit, unit) Daemon.entry

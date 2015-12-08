@@ -15,8 +15,8 @@ type 'a out_channel
 type ('in_, 'out) channel_pair = 'in_ in_channel * 'out out_channel
 
 type log_mode =
-| Log_file
-| Parent_streams
+  | Log_file
+  | Parent_streams
 
 val to_channel :
   'a out_channel -> ?flags:Marshal.extern_flags list -> ?flush:bool ->

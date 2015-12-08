@@ -19,8 +19,8 @@ type ('in_, 'out) handle = {
 }
 
 type log_mode =
-| Log_file
-| Parent_streams
+  | Log_file
+  | Parent_streams
 
 let to_channel :
   'a out_channel -> ?flags:Marshal.extern_flags list -> ?flush:bool ->
