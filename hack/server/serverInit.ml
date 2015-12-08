@@ -86,15 +86,20 @@ let load_state_ root cmd =
       (Filename.quote Build_id.build_id_ohai) in
   Hh_logger.log "Running load_mini script: %s\n%!" cmd;
   let ic = Unix.open_process_in cmd in
-  let state_fn = input_line ic in
-  let to_recheck = ref [] in
-  (try
-    while true do to_recheck := input_line ic :: !to_recheck done;
-  with End_of_file -> ());
+  let json = Hh_json.json_of_string @@ Sys_utils.read_all ic in
   assert (Unix.close_process_in ic = Unix.WEXITED 0);
-  SharedMem.load_dep_table (state_fn^".deptable");
+  let kv = Hh_json.get_object_exn json in
+  (match List.Assoc.find kv "error" with
+   | Some (Hh_json.JSON_String s) -> failwith s
+   | _ -> ());
+  let state_fn = Hh_json.get_string_exn @@ List.Assoc.find_exn kv "state" in
+  let deptable_fn =
+    Hh_json.get_string_exn @@ List.Assoc.find_exn kv "deptable" in
+  let to_recheck = Hh_json.get_array_exn @@ List.Assoc.find_exn kv "changes" in
+  let to_recheck = List.map to_recheck Hh_json.get_string_exn in
+  SharedMem.load_dep_table deptable_fn;
   let end_time = Unix.gettimeofday () in
-  state_fn, !to_recheck, end_time
+  state_fn, to_recheck, end_time
 
 let load_state root cmd (_ic, oc) =
   let result = Result.try_with (fun () -> load_state_ root cmd) in
