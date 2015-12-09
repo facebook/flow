@@ -93,25 +93,35 @@ function.js:37:6,13: number
 This type is incompatible with
 function.js:37:16,19: undefined
 
-function.js:38:6,11: string
+function.js:38:6,13: number
 This type is incompatible with
-function.js:38:14,17: undefined
+function.js:38:16,19: undefined
 
-function.js:42:16,20: string
+function.js:39:6,13: number
+This type is incompatible with
+function.js:39:16,19: undefined
+
+function.js:41:6,11: string
+This type is incompatible with
+function.js:41:14,17: undefined
+
+function.js:42:6,11: string
+This type is incompatible with
+function.js:42:14,17: undefined
+
+function.js:43:6,11: string
+This type is incompatible with
+function.js:43:14,17: undefined
+
+function.js:48:16,20: string
 This type is incompatible with
 [LIB] core.js:68:13,18: number
 
-function.js:43:14,16: number
+function.js:49:5,12: assignment of property `length`
+Error:
+function.js:49:16,20: string
 This type is incompatible with
-[LIB] core.js:69:11,16: string
-
-function.js:46:6,13: number
-This type is incompatible with
-function.js:46:16,19: undefined
-
-function.js:47:6,11: string
-This type is incompatible with
-function.js:47:14,17: undefined
+[LIB] core.js:68:13,18: number
 
 function.js:50:5,12: assignment of property `length`
 Error:
@@ -119,13 +129,23 @@ function.js:50:16,20: string
 This type is incompatible with
 [LIB] core.js:68:13,18: number
 
-function.js:51:5,10: assignment of property `name`
+function.js:52:14,16: number
+This type is incompatible with
+[LIB] core.js:69:11,16: string
+
+function.js:53:5,10: assignment of property `name`
 Error:
-function.js:51:14,16: number
+function.js:53:14,16: number
+This type is incompatible with
+[LIB] core.js:69:11,16: string
+
+function.js:54:5,10: assignment of property `name`
+Error:
+function.js:54:14,16: number
 This type is incompatible with
 [LIB] core.js:69:11,16: string
 
 rest.js:8:31,33: tuple type
 rest parameters should be an array type, got a tuple type instead
 
-Found 26 errors
+Found 30 errors
