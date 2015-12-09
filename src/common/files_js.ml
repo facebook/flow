@@ -22,6 +22,12 @@ let is_dot_file path =
   let filename = Filename.basename path in
   String.length filename > 0 && filename.[0] = '.'
 
+let is_prefix prefix =
+  let prefix = if str_ends_with prefix Filename.dir_sep
+    then prefix
+    else prefix ^ Filename.dir_sep
+  in fun path -> str_starts_with path prefix
+
 let is_valid_path =
   let is_valid_path_helper path =
     let file_exts = FlowConfig.((get_unsafe ()).options.Opts.module_file_exts) in
@@ -83,6 +89,7 @@ let escape_spaces = Str.global_replace (Str.regexp " ") "\\ "
     point to _directories_ outside of `paths`. *)
 let make_next_files_and_symlinks ~path_filter ~realpath_filter paths =
   let escaped_paths = List.map escape_spaces paths in
+  let prefix_checkers = List.map is_prefix paths in
   let paths_str = String.concat " " escaped_paths in
   let ic = Unix.open_process_in ("find "^paths_str) in
   let done_ = ref false in
@@ -115,11 +122,7 @@ let make_next_files_and_symlinks ~path_filter ~realpath_filter paths =
               incr i;
             end
           | Dir path ->
-            let is_prefix p = Filename.(
-              let p = if str_ends_with p dir_sep then p else p ^ dir_sep in
-              str_starts_with path p
-            ) in
-            if not (List.exists is_prefix paths) then
+            if not (List.exists (fun check -> check path) prefix_checkers) then
               symlinks := SSet.add path !symlinks
           | Other -> ()
         done;
@@ -177,12 +180,14 @@ let init ~include_default_libs ~tmp_dir libs =
   | Some (files, fileset) -> ()
   | None -> (
     config_options := Some FlowConfig.((get_unsafe ()).options);
-    let libs = if not include_default_libs
-      then libs
+    let libs, filter = if not include_default_libs
+      then libs, is_valid_path
       else
         let root = Path.make (Tmp.temp_dir tmp_dir "flowlib") in
+        let is_in_flowlib = is_prefix (Path.to_string root) in
+        let filter path = is_in_flowlib path || is_valid_path path in
         if Flowlib.extract_flowlib root
-        then root::libs
+        then root::libs, filter
         else begin
           let msg = "Could not locate flowlib files" in
           FlowExitStatus.(exit ~msg Could_not_find_flowconfig)
@@ -193,8 +198,8 @@ let init ~include_default_libs ~tmp_dir libs =
       then []
       else
         let get_next = make_next_files_following_symlinks
-          ~path_filter:is_valid_path
-          ~realpath_filter:is_valid_path
+          ~path_filter:filter
+          ~realpath_filter:filter
         in
         let exp_list = libs |> List.map (fun lib ->
           let expanded = SSet.elements (get_all (get_next [lib])) in

@@ -7,3 +7,6 @@ function foo(x) {
 }
 
 foo('Hello, world!');
+
+// should find Object.prototype.toString from flowlib
+(Object.prototype.toString: Function);
