@@ -221,20 +221,6 @@ end
 
 (****************** Node module system *********************)
 
-let seq f g =
-  match f () with
-  | Some x -> Some x
-  | None -> g ()
-
-let rec seqf f = function
-  | x :: xs ->
-    (match f x with
-    | Some v -> Some v
-    | None -> seqf f xs)
-  | [] -> None
-
-(*********************************)
-
 (* TODO this exists only until we start resolving files using
    NameHeap. unfortunately that will require more refactoring
    than it should, since imported_module is currently called
@@ -287,6 +273,17 @@ and file_exists path =
 let resolve_symlinks path =
   Path.to_string (Path.make path)
 
+(**
+ * Given a list of lazy "option" expressions, evaluate each in the list
+ * sequentially until one produces a `Some` (and do not evaluate any remaining).
+ *)
+let lazy_seq: 'a option Lazy.t list -> 'a option =
+  List.fold_left (fun acc lazy_expr ->
+    match acc with
+    | None -> Lazy.force lazy_expr
+    | Some _ -> acc
+  ) None
+
 (*******************************)
 
 module Node = struct
@@ -299,18 +296,23 @@ module Node = struct
     | None -> ()
     | Some paths -> paths := SSet.add path !paths
 
-  let path_if_exists path_acc =
-    let path_exists no_dir path =
+  let path_if_exists =
+    let path_exists path =
       (file_exists path) &&
         not FlowConfig.(is_excluded (get_unsafe ()) path) &&
-        not (no_dir && dir_exists path)
-    in fun ?(no_dir=true) path ->
+        not (dir_exists path)
+    in fun path_acc path ->
       let path = resolve_symlinks path in
       let declaration_path = path ^ FlowConfig.flow_ext in
-      if path_exists no_dir declaration_path ||
-        path_exists no_dir path
+      if path_exists declaration_path ||
+        path_exists path
       then Some path
       else (record_path path path_acc; None)
+
+  let path_if_exists_with_file_exts path_acc path (file_exts: string list) =
+    lazy_seq (file_exts |> List.map (fun ext ->
+      lazy (path_if_exists path_acc (path ^ ext))
+    ))
 
   let parse_main path_acc package =
     let package = resolve_symlinks package in
@@ -329,49 +331,46 @@ module Node = struct
       | Some file ->
         let opts = get_config_options () in
         let path = Files_js.normalize_path dir file in
-        seq
-          (fun () -> path_if_exists path_acc ~no_dir:true path)
-          (fun () -> seq
-            (fun () ->
-              seqf
-                (fun ext -> path_if_exists path_acc (path ^ ext))
-                (SSet.elements opts.FlowConfig.Opts.module_file_exts)
-            )
-            (fun () ->
-              let path = Filename.concat path "index.js" in
-              path_if_exists path_acc path
-            )
-          )
+        let path_w_index = Filename.concat path "index" in
+        let file_exts = SSet.elements opts.FlowConfig.Opts.module_file_exts in
+
+        lazy_seq [
+          lazy (path_if_exists path_acc path);
+          lazy (path_if_exists_with_file_exts path_acc path file_exts);
+          lazy (path_if_exists_with_file_exts path_acc path_w_index file_exts);
+        ]
 
   let resolve_relative ?path_acc root_path rel_path =
     let path = Files_js.normalize_path root_path rel_path in
     let opts = get_config_options () in
     if Files_js.is_flow_file path
     then path_if_exists path_acc path
-    else seq
-      (fun () -> seqf
-        (fun ext -> path_if_exists path_acc (path ^ ext))
-        (SSet.elements opts.FlowConfig.Opts.module_file_exts)
-      )
-      (fun () -> seq
-        (fun () -> parse_main path_acc (Filename.concat path "package.json"))
-        (fun () -> path_if_exists path_acc (Filename.concat path "index.js"))
-      )
+    else (
+      let path_w_index = Filename.concat path "index" in
+      let file_exts = SSet.elements opts.FlowConfig.Opts.module_file_exts in
+
+      lazy_seq ([
+        lazy (path_if_exists_with_file_exts path_acc path file_exts);
+        lazy (parse_main path_acc (Filename.concat path "package.json"));
+        lazy (path_if_exists_with_file_exts path_acc path_w_index file_exts);
+      ])
+    )
 
   let rec node_module path_acc dir r =
     let opts = get_config_options () in
-    seq
-      (fun () -> seqf
-        (resolve_relative ?path_acc dir)
-        (opts.FlowConfig.Opts.node_resolver_dirnames |> List.map (fun dirname ->
-          spf "%s%s%s" dirname Filename.dir_sep r
+    lazy_seq [
+      lazy (
+        lazy_seq (opts.FlowConfig.Opts.node_resolver_dirnames |> List.map (fun dirname ->
+          lazy (resolve_relative ?path_acc dir (spf "%s%s%s" dirname Filename.dir_sep r))
         ))
-      )
-      (fun () ->
+      );
+
+      lazy (
         let parent_dir = Filename.dirname dir in
         if dir = parent_dir then None
         else node_module path_acc (Filename.dirname dir) r
-      )
+      );
+    ]
 
   let relative r =
     Str.string_match Files_js.dir_sep r 0
@@ -463,13 +462,13 @@ module Haste: MODULE_SYSTEM = struct
   (* similar to Node resolution, with possible special cases *)
   let resolve_import ?path_acc file r =
     let file = string_of_filename file in
-    seq
-      (fun () -> Node.resolve_import ?path_acc file r)
-      (fun () ->
-        match expanded_name r with
+    lazy_seq [
+      lazy (Node.resolve_import ?path_acc file r);
+      lazy (match expanded_name r with
         | Some r -> Node.resolve_relative ?path_acc (Filename.dirname file) r
         | None -> None
-      )
+      );
+    ]
 
   let imported_module ?path_acc file imported_name =
     let candidates = module_name_candidates imported_name in

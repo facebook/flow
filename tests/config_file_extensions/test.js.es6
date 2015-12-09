@@ -8,5 +8,7 @@ function foo(x) {
 
 foo('Hello, world!');
 
+require('./test');
+
 // should find Object.prototype.toString from flowlib
 (Object.prototype.toString: Function);
