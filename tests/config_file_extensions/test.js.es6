@@ -7,3 +7,5 @@ function foo(x) {
 }
 
 foo('Hello, world!');
+
+require('./test');
