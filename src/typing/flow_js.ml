@@ -5938,7 +5938,10 @@ end = struct
     | AnyObjT reason ->
         extract_members cx (get_builtin_type cx reason "Object")
     | AnyFunT reason ->
-        extract_members cx (get_builtin_type cx reason "Function")
+        extract_members cx (IntersectionT (reason, [
+          get_builtin_type cx reason "Function";
+          get_builtin_type cx reason "Object";
+        ]))
     | AnnotT (source, _) ->
         let source_t = resolve_type cx source in
         extract_members cx source_t
