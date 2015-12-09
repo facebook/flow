@@ -16,8 +16,6 @@ open Utils
  * https://facebook.github.io/watchman/
  *
  * TODO:
- *   * Connect directly to the Watchman server socket instead of spawning
- *     a client process each time
  *   * Use the BSER protocol for enhanced performance
  *)
 
@@ -30,13 +28,27 @@ let crash_marker_path root =
   let root_name = Path.slash_escaped_string_of_path root in
   Filename.concat GlobalConfig.tmp_dir (spf ".%s.watchman_failed" root_name)
 
-type env = {
+type client = {
   socket: in_channel * out_channel;
+  logs: Hh_json.json list;
+  subscriptions: (string, Hh_json.json) Hashtbl.t;
+}
+
+type env = {
+  client: client;
+  (* The path of the directory we are interested in getting updates for *)
   root: Path.t;
+  (* The root that watchman is actually watching *)
   watch_root: string;
+  (* The path of root relative to watch_root. See
+   * https://facebook.github.io/watchman/docs/cmd/watch-project.html *)
   relative_path: string;
-  (* See https://facebook.github.io/watchman/docs/clockspec.html *)
-  mutable clockspec: string;
+}
+
+let make_client socket = {
+  socket;
+  logs = [];
+  subscriptions = Hashtbl.create 0;
 }
 
 (* Some JSON processing helpers *)
@@ -100,36 +112,45 @@ let assert_no_error obj =
      raise @@ Watchman_error error
    with Not_found -> ())
 
-let clock root = J.strlist ["clock"; root]
+let expression_filter = [
+  J.strlist ["type"; "f"];
+  J.pred "not" @@ [
+    J.pred "anyof" @@ [
+      J.strlist ["dirname"; ".hg"];
+      J.strlist ["dirname"; ".git"];
+      J.strlist ["dirname"; ".svn"];
+    ]
+  ]
+]
 
-let base_query
-    ?(extra_kv=[]) ?(extra_expressions=[]) env =
+let subscribe root watch_root relative_path =
+  let root = Path.to_string root in
   let open Hh_json in
   JSON_Array begin
-    [JSON_String "query"; JSON_String env.watch_root] @ [
-      JSON_Object (extra_kv @ [
+    [JSON_String "subscribe"; JSON_String watch_root; JSON_String root] @ [
+      JSON_Object [
         "fields", J.strlist ["name"];
-        "relative_root", JSON_String env.relative_path;
-        "expression", J.pred "allof" @@ (extra_expressions @ [
-          J.strlist ["type"; "f"];
-          J.pred "not" @@ [
-            J.pred "anyof" @@ [
-              J.strlist ["dirname"; ".hg"];
-              J.strlist ["dirname"; ".git"];
-              J.strlist ["dirname"; ".svn"];
-            ]
-          ]
-        ])
-      ])
+        "expression", J.pred "allof" expression_filter;
+        "relative_root", JSON_String relative_path;
+      ]
     ]
   end
 
-let query env = base_query ~extra_expressions:([Hh_json.JSON_String "exists"]) env
+let read_with_timeout timeout ic =
+  Sys_utils.with_timeout timeout
+    ~do_:(fun () -> input_line ic)
+    ~on_timeout:begin fun _ ->
+      EventLogger.watchman_timeout ();
+      raise Timeout
+    end
 
-let since env =
-  base_query ~extra_kv:["since", Hh_json.JSON_String env.clockspec] env
+let watch_project root = J.strlist ["watch-project"; Path.to_string @@ root]
 
-let watch_project root = J.strlist ["watch-project"; root]
+let has_update env =
+  let ic, _oc = env.client.socket in
+  let in_fd = Unix.descr_of_in_channel ic in
+  let ready_fd_l, _, _ = Unix.select [in_fd] [] [] 0.0 in
+  ready_fd_l <> []
 
 (* See https://facebook.github.io/watchman/docs/cmd/version.html *)
 let capability_check ?(optional=[]) required =
@@ -143,20 +164,8 @@ let capability_check ?(optional=[]) required =
     ]
   end
 
-let read_with_timeout timeout ic =
-  Sys_utils.with_timeout timeout
-    ~do_:(fun () -> input_line ic)
-    ~on_timeout:begin fun _ ->
-      EventLogger.watchman_timeout ();
-      raise Timeout
-    end
-
-let exec ?(timeout=120) (ic, oc) json =
-  let json_str = Hh_json.(json_to_string json) in
-  if debug then Printf.eprintf "Watchman query: %s\n%!" json_str;
-  output_string oc json_str;
-  output_string oc "\n";
-  flush oc;
+let receive ?(timeout=120) client =
+  let ic, _oc = client.socket in
   let output = read_with_timeout timeout ic in
   if debug then Printf.eprintf "Watchman response: %s\n%!" output;
   let response =
@@ -166,29 +175,61 @@ let exec ?(timeout=120) (ic, oc) json =
       raise e
   in
   assert_no_error response;
-  response
+  let subscription =
+    Option.try_with @@ fun () -> J.get_string_val "subscription" response in
+  match subscription with
+  | Some sub ->
+    Hashtbl.add client.subscriptions sub response;
+    None
+  | None -> Some response
 
 let extract_file_names env json =
   let files = J.get_array_val "files" json in
   let files = List.map files begin fun json ->
     let s = Hh_json.get_string_exn json in
-    let abs =
-      Filename.concat env.watch_root @@
-      Filename.concat env.relative_path s in
-    abs
+    Filename.(concat env.watch_root @@ concat env.relative_path s)
   end in
   files
 
-let get_all_files env =
-  with_crash_record env.root "get_all_files" @@ fun () ->
-  let response = exec env.socket (query env) in
-  extract_file_names env response
+let process_subscriptions env ~init ~f =
+  let root = Path.to_string env.root in
+  let subs =
+    Hashtbl.find_all env.client.subscriptions root in
+  while Hashtbl.mem env.client.subscriptions root do
+    Hashtbl.remove env.client.subscriptions root
+  done;
+  List.fold_left subs ~init ~f
 
+(* The first time this is called, it will return all the files in the repo.
+ * Subsequent times will just return the files that have changed in the
+ * interim. *)
 let get_changes env =
   with_crash_record env.root "get_changes" @@ fun () ->
-  let response = exec env.socket (since env) in
-  env.clockspec <- J.get_string_val "clock" response;
-  set_of_list @@ extract_file_names env response
+  assert (receive env.client = None);
+  process_subscriptions env
+    ~init:SSet.empty
+    ~f:begin fun acc response ->
+      let set = set_of_list @@ extract_file_names env response in
+      SSet.union set acc
+    end
+
+let poll_changes env =
+  if has_update env
+  then get_changes env
+  else SSet.empty
+
+let exec ?(timeout=120) client json =
+  let _ic, oc = client.socket in
+  let json_str = Hh_json.(json_to_string json) in
+  if debug then Printf.eprintf "Watchman query: %s\n%!" json_str;
+  output_string oc json_str;
+  output_string oc "\n";
+  flush oc;
+  let response = ref @@ receive ~timeout client in
+  while Option.is_none !response do
+    response := receive ~timeout client
+  done;
+  unsafe_opt !response
 
 let get_sockname timeout =
   let ic = Unix.open_process_in "watchman get-sockname --no-pretty" in
@@ -199,20 +240,19 @@ let get_sockname timeout =
 
 let init timeout root =
   with_crash_record_opt root "init" @@ fun () ->
-  let root_s = Path.to_string root in
   let sockname = get_sockname timeout in
   let socket = Unix.(open_connection (ADDR_UNIX sockname)) in
-  ignore @@ exec socket (capability_check ["relative_root"]);
-  let response = exec socket (watch_project root_s) in
+  let client = make_client socket in
+  ignore @@ exec client (
+    capability_check ["cmd-watch-project"; "cmd-subscribe"; "relative_root"]);
+  let response = exec client (watch_project root) in
   let watch_root = J.get_string_val "watch" response in
   let relative_path = J.get_string_val "relative_path" ~default:"" response in
-  let clockspec =
-    exec socket (clock watch_root) |> J.get_string_val "clock" in
+  ignore @@ exec client (subscribe root watch_root relative_path);
   let env = {
-    socket;
+    client;
     root;
     watch_root;
     relative_path;
-    clockspec;
   } in
   env
