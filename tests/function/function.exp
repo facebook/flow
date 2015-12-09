@@ -89,15 +89,43 @@ function.js:31:21,21: object type
 This type is incompatible with
 function.js:31:10,17: function type
 
-function.js:35:2,9: number
+function.js:37:6,13: number
 This type is incompatible with
-function.js:35:12,15: undefined
+function.js:37:16,19: undefined
 
-function.js:36:2,7: string
+function.js:38:6,11: string
 This type is incompatible with
-function.js:36:10,13: undefined
+function.js:38:14,17: undefined
+
+function.js:42:16,20: string
+This type is incompatible with
+[LIB] core.js:68:13,18: number
+
+function.js:43:14,16: number
+This type is incompatible with
+[LIB] core.js:69:11,16: string
+
+function.js:46:6,13: number
+This type is incompatible with
+function.js:46:16,19: undefined
+
+function.js:47:6,11: string
+This type is incompatible with
+function.js:47:14,17: undefined
+
+function.js:50:5,12: assignment of property `length`
+Error:
+function.js:50:16,20: string
+This type is incompatible with
+[LIB] core.js:68:13,18: number
+
+function.js:51:5,10: assignment of property `name`
+Error:
+function.js:51:14,16: number
+This type is incompatible with
+[LIB] core.js:69:11,16: string
 
 rest.js:8:31,33: tuple type
 rest parameters should be an array type, got a tuple type instead
 
-Found 20 errors
+Found 26 errors

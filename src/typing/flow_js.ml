@@ -1849,6 +1849,12 @@ let rec __flow cx (l, u) trace =
     | (AnyObjT _, AnyObjT _) -> ()
 
     | (_, AnyFunT _) when function_like l -> ()
+
+    | AnyFunT reason, GetPropT (_, (_, x), _)
+    | AnyFunT reason, SetPropT (_, (_, x), _)
+    | AnyFunT reason, LookupT (_, _, _, x, _)
+    | AnyFunT reason, MethodT (_, (_, x), _) when is_function_prototype x ->
+      rec_flow cx trace (FunProtoT reason, u)
     | (AnyFunT _, _) when function_like u || function_like_op u -> ()
 
     (***************)
@@ -3360,7 +3366,7 @@ let rec __flow cx (l, u) trace =
     (* Function library call *)
     (*************************)
 
-    | (FunProtoT reason, (GetPropT _ | MethodT _ | LookupT _)) ->
+    | (FunProtoT reason, (GetPropT _ | SetPropT _ | MethodT _ | LookupT _)) ->
       rec_flow cx trace (get_builtin_type cx reason "Function",u)
 
     (*********************)
@@ -3617,6 +3623,23 @@ and is_object_prototype_method = function
   | "toLocaleString"
   | "toString"
   | "valueOf" -> true
+  | _ -> false
+
+(* This must list all of the properties on Function.prototype. AnyFunT is a
+   function that lets you get/set any property you want on it in an untracked
+   way (like AnyObjT, but callable), except for these properties.
+
+   Ideally we'd be able to look these up from the Function lib declaration, but
+   we don't have a good way to do that while still allowing AnyFunT to act like
+   a dictionary. *)
+and is_function_prototype = function
+  | "apply"
+  | "bind"
+  | "call"
+  | "arguments"
+  | "caller"
+  | "length"
+  | "name" -> true
   | _ -> false
 
 (* neither object prototype methods nor callable signatures should be
@@ -5990,11 +6013,7 @@ end = struct
         extract_members cx static_t
     | FunT (_, static, proto, _) ->
         let static_t = resolve_type cx static in
-        let proto_reason = reason_of_t proto in
-        let proto_t = resolve_type cx (IntersectionT (proto_reason, [
-          proto;
-          get_builtin_type cx proto_reason "Function";
-        ])) in
+        let proto_t = resolve_type cx proto in
         let members = extract_members_as_map cx static_t in
         let prot_members = extract_members_as_map cx proto_t in
         Success (SMap.union prot_members members)

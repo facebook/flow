@@ -31,11 +31,23 @@ function bad(x: Function, y: Object): void {
   var c: Function = y; // Object is not a Function
 }
 
-function d() {}
-(d.length: void); // error, it's a number
-(d.name: void); // error, it's a string
-
-function e(x: Function) {
-  (x.length: void); // ok, Function is unchecked
-  (x.name: void); // ok, Function is unchecked
-}
+let tests = [
+  function() {
+    function x() {}
+    (x.length: void); // error, it's a number
+    (x.name: void); // error, it's a string
+  },
+  function() {
+    function x() {}
+    x.length = 'foo'; // error, it's a number
+    x.name = 123; // error, it's a string
+  },
+  function(x: Function) {
+    (x.length: void); // error, it's a number
+    (x.name: void); // error, it's a string
+  },
+  function(x: Function) {
+    x.length = 'foo'; // error, not writable
+    x.name = 123; // error, not writable
+  },
+];
