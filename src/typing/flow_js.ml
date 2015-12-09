@@ -703,6 +703,48 @@ and ground_type_impl cx ids t = match t with
         mk_functiontype tins ?params_names tout
       )
 
+  (* Fake the signature of Function.prototype.apply: *)
+  (* (thisArg: any, argArray?: any): any *)
+  | FunProtoApplyT _ ->
+      let any = AnyT (reason_of_string "any") in
+      let tins = [any; OptionalT any] in
+      let params_names = Some ["thisArg"; "argArray"] in
+      let reason = reason_of_string "function" in
+      FunT (
+        reason,
+        dummy_static reason,
+        dummy_prototype,
+        mk_functiontype tins ?params_names any
+      )
+
+  (* Fake the signature of Function.prototype.bind: *)
+  (* (thisArg: any, ...argArray: Array<any>): any *)
+  | FunProtoBindT _ ->
+      let any = AnyT (reason_of_string "any") in
+      let tins = [any; RestT any] in
+      let params_names = Some ["thisArg"; "argArray"] in
+      let reason = reason_of_string "function" in
+      FunT (
+        reason,
+        dummy_static reason,
+        dummy_prototype,
+        mk_functiontype tins ?params_names any
+      )
+
+  (* Fake the signature of Function.prototype.call: *)
+  (* (thisArg: any, ...argArray: Array<any>): any *)
+  | FunProtoCallT _ ->
+      let any = AnyT (reason_of_string "any") in
+      let tins = [any; RestT any] in
+      let params_names = Some ["thisArg"; "argArray"] in
+      let reason = reason_of_string "function" in
+      FunT (
+        reason,
+        dummy_static reason,
+        dummy_prototype,
+        mk_functiontype tins ?params_names any
+      )
+
   | ObjT (_, ot) ->
       let dict = match ot.dict_t with
         | None -> None
@@ -3172,39 +3214,79 @@ let rec __flow cx (l, u) trace =
     (* functions may be called by passing a receiver and arguments *)
     (***************************************************************)
 
-    | (FunT _,
-       MethodT(
-         reason_op,
-         (_, "call"),
-         ({params_tlist=o2::tins2; _} as funtype)
-       ))
-      -> (* TODO: closure *)
+    | FunProtoCallT _,
+      CallT (reason_op, ({this_t = func; params_tlist; _} as funtype)) ->
+      begin match params_tlist with
+      (* func.call() *)
+      | [] ->
+        let funtype = { funtype with
+          this_t = VoidT.why reason_op;
+          params_tlist = [];
+        } in
+        rec_flow cx trace (func, CallT (reason_op, funtype))
 
-      let funtype = { funtype with this_t = o2; params_tlist = tins2 } in
-      rec_flow cx trace (l, CallT (reason_op, funtype))
+      (* func.call(this_t, ...params_tlist) *)
+      | this_t::params_tlist ->
+        let funtype = { funtype with this_t; params_tlist } in
+        rec_flow cx trace (func, CallT (reason_op, funtype))
+      end
 
     (*******************************************)
     (* ... or a receiver and an argument array *)
     (*******************************************)
 
-    | (FunT _,
-       MethodT(r, (_, "apply"), ({params_tlist=[_;ts]; _} as funtype))) ->
-      (* TODO: closure *)
-      rec_flow cx trace (ts, ApplyT (r, l, funtype))
+    (* resolves the arguments... *)
+    | FunProtoApplyT _,
+      CallT (reason_op, ({this_t = func; params_tlist; _} as funtype)) ->
+      begin match params_tlist with
+      (* func.apply() *)
+      | [] ->
+          let funtype = { funtype with
+            this_t = VoidT.why reason_op;
+            params_tlist = [];
+          } in
+          rec_flow cx trace (func, CallT (reason_op, funtype))
 
+      (* func.apply(this_arg) *)
+      | this_arg::[] ->
+          let funtype = { funtype with this_t = this_arg; params_tlist = [] } in
+          rec_flow cx trace (func, CallT (reason_op, funtype))
+
+      (* func.apply(this_arg, ts) *)
+      | _::ts::_ ->
+          (* the first param will be extracted later by ApplyT; extra args are
+             allowed but ignored, as with all function calls in Flow. *)
+          rec_flow cx trace (ts, ApplyT (reason_op, func, funtype))
+      end
+
+    (* ... then calls the function *)
     | (ArrT (_, t, ts),
-       ApplyT (r, l, ({params_tlist=this_t::_; _} as funtype))) ->
+       ApplyT (r, func, ({params_tlist=this_t::_; _} as funtype))) ->
       let funtype = { funtype with this_t; params_tlist = ts @ [RestT t] } in
-      rec_flow cx trace (l, CallT (r, funtype))
+      rec_flow cx trace (func, CallT (r, funtype))
+
+    | (NullT _ | VoidT _),
+      ApplyT (r, func, ({params_tlist=this_t::_; _} as funtype)) ->
+      let funtype = { funtype with this_t; params_tlist = [] } in
+      rec_flow cx trace (func, CallT (r, funtype))
 
     (************************************************************************)
     (* functions may be bound by passing a receiver and (partial) arguments *)
     (************************************************************************)
 
+    | FunProtoBindT _,
+      CallT (reason_op, ({
+        this_t = func;
+        params_tlist = this_t::params_tlist;
+        _
+      } as funtype)) ->
+      let funtype = { funtype with this_t; params_tlist } in
+      rec_flow cx trace (func, BindT (reason_op, funtype))
+
     | (FunT (reason,_,_,
              {this_t = o1; params_tlist = tins1; return_t = tout1; _}),
-       MethodT(
-         reason_op, (_, "bind"), ({params_tlist=o2::tins2; _} as funtype)))
+       BindT (reason_op,
+             {this_t = o2; params_tlist = tins2; return_t = tout2; _}))
       -> (* TODO: closure *)
 
         rec_flow cx trace (o2,o1);
@@ -3223,7 +3305,7 @@ let rec __flow cx (l, u) trace =
             dummy_prototype,
             mk_functiontype tins1 tout1
           ),
-          funtype.return_t)
+          tout2);
 
     (***********************************************)
     (* You can use a function as a callable object *)
@@ -3527,6 +3609,12 @@ let rec __flow cx (l, u) trace =
         msg
         (reason_of_t t, reason_of_t tc)
 
+    (* Special cases of FunT *)
+    | FunProtoApplyT reason, _
+    | FunProtoBindT reason, _
+    | FunProtoCallT reason, _ ->
+      rec_flow cx trace (FunProtoT reason, u)
+
     (* when unexpected types flow into a GetPropT/SetPropT (e.g. void or other
        non-object-ish things), then use `reason_prop`, which represents the
        reason for the prop itself, not the lookup action. *)
@@ -3746,6 +3834,9 @@ and object_like_op = function
 
 and function_like = function
   | ClassT _
+  | FunProtoApplyT _
+  | FunProtoBindT _
+  | FunProtoCallT _
   | FunT _ -> true
   | _ -> false
 
@@ -3904,8 +3995,6 @@ and structural_subtype cx trace lower reason_struct
 (* substitutions *)
 (*****************)
 
-(* need to consider only "def" types *)
-
 (** Substitute bound type variables with associated types in a type. Do not
     force substitution under polymorphic types. This ensures that existential
     type variables under a polymorphic type remain unevaluated until the
@@ -3933,6 +4022,9 @@ and subst cx ?(force=true) (map: Type.t SMap.t) t =
   | TaintT _
   | AnyT _
   | FunProtoT _
+  | FunProtoApplyT _
+  | FunProtoBindT _
+  | FunProtoCallT _
     ->
     t
 
@@ -4046,11 +4138,64 @@ and subst cx ?(force=true) (map: Type.t SMap.t) t =
   | SingletonBoolT _
   | SingletonStrT _ -> t
 
+  | SpeculativeMatchFailureT _
+  | ModuleT _
+  | SummarizeT _
+  | ReposUpperT _
+  | NotT _
+    ->
+      failwith (spf "Unhandled type ctor: %s" (string_of_ctor t)) (* TODO *)
+
+  (* error on use types, they should never appear in a "def" type position. *)
+  | AdderT _
+  | AndT _
+  | ApplyT _
+  | ArrRestT _
+  | BecomeT _
+  | BindT _
+  | CallT _
+  | CJSExtractNamedExportsT _
+  | CJSRequireT _
+  | ComparatorT _
+  | ConcreteT _
+  | ConcretizeT _
+  | ConstructorT _
+  | ElemT _
+  | EqT _
+  | ExtendsT _
+  | GetElemT _
+  | GetKeysT _
+  | GetPropT _
+  | HasOwnPropT _
+  | ImportDefaultT _
+  | ImportModuleNsT _
+  | ImportNamedT _
+  | ImportTypeofT _
+  | ImportTypeT _
+  | LookupT _
+  | MethodT _
+  (* | ObjAssignT _: see below *)
+  | ObjFreezeT _
+  | ObjRestT _
+  | ObjSealT _
+  | ObjTestT _
+  | OrT _
+  | PredicateT _
+  | ReposLowerT _
+  | SetElemT _
+  | SetNamedExportsT _
+  | SetPropT _
+  | SpecializeT _
+  | SuperT _
+  | UnaryMinusT _
+  | UnifyT _
+    ->
+      failwith (spf "Unexpected use type in subst: %s" (string_of_ctor t))
+
+  (* TODO: this is a use type so in theory should not be here. what happens if
+     we remove it? *)
   | ObjAssignT(reason, t1, t2, xs, resolve) ->
     ObjAssignT(reason, subst cx ~force map t1, subst cx ~force map t2, xs, resolve)
-
-  | _ ->
-      failwith (spf "Unhandled type ctor: %s" (string_of_ctor t)) (* TODO *)
 
 and subst_propmap cx force map id =
   let pmap = find_props cx id in
@@ -5570,6 +5715,9 @@ let rec gc cx state = function
   | VoidT _
   | TaintT _
   | FunProtoT _
+  | FunProtoApplyT _
+  | FunProtoBindT _
+  | FunProtoCallT _
       -> ()
 
   | FunT(_, static, prototype, funtype) ->
@@ -5686,6 +5834,7 @@ let rec gc cx state = function
   | SummarizeT (_, t) ->
       gc cx state t
 
+  | BindT(_, funtype)
   | CallT(_, funtype) ->
       gc cx state funtype.this_t;
       funtype.params_tlist |> List.iter (gc cx state);

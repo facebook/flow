@@ -3,6 +3,8 @@ This.js:29:10,15: string
 This type is incompatible with
 This.js:28:17,22: number
 
+This.js:33:21,37: function call
+Error:
 This.js:33:21,37: number
 This type is incompatible with
 This.js:33:12,17: string
@@ -21,6 +23,8 @@ This.js:49:12,15: string
 This type is incompatible with
 This.js:47:17,22: number
 
+This.js:53:21,37: function call
+Error:
 This.js:53:21,37: number
 This type is incompatible with
 This.js:53:12,17: string

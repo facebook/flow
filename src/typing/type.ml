@@ -63,7 +63,10 @@ type t =
   | VoidT of reason
 
   | FunT of reason * static * prototype * funtype
-  | FunProtoT of reason
+  | FunProtoT of reason       (* Function.prototype *)
+  | FunProtoApplyT of reason  (* Function.prototype.apply *)
+  | FunProtoBindT of reason   (* Function.prototype.bind *)
+  | FunProtoCallT of reason   (* Function.prototype.call *)
 
   | ObjT of reason * objtype
   | ArrT of reason * t * t list
@@ -213,8 +216,9 @@ type t =
   | SummarizeT of reason * t
 
   (* operations on runtime values, such as functions, objects, and arrays *)
-  | CallT of reason * funtype
   | ApplyT of reason * t * funtype
+  | BindT of reason * funtype
+  | CallT of reason * funtype
   | MethodT of reason * propname * funtype
   | SetPropT of reason * propname * t
   | GetPropT of reason * propname * t
@@ -524,8 +528,9 @@ end)
 
 (* def types vs. use types *)
 let is_use = function
-  | CallT _
   | ApplyT _
+  | BindT _
+  | CallT _
   | MethodT _
   | ReposLowerT _
   | SetPropT _
@@ -591,6 +596,9 @@ let rec reason_of_t = function
 
   | FunT (reason,_,_,_)
   | FunProtoT reason
+  | FunProtoApplyT reason
+  | FunProtoBindT reason
+  | FunProtoCallT reason
       -> reason
 
   | PolyT (_,t) ->
@@ -610,8 +618,9 @@ let rec reason_of_t = function
   | InstanceT (reason,_,_,_)
   | SuperT (reason,_)
 
-  | CallT (reason, _)
+  | BindT (reason, _)
   | ApplyT (reason, _, _)
+  | CallT (reason, _)
 
   | MethodT (reason,_,_)
   | SetPropT (reason,_,_)
@@ -793,6 +802,9 @@ let rec mod_reason_of_t f = function
 
   | FunT (reason, s, p, ft) -> FunT (f reason, s, p, ft)
   | FunProtoT (reason) -> FunProtoT (f reason)
+  | FunProtoApplyT (reason) -> FunProtoApplyT (f reason)
+  | FunProtoBindT (reason) -> FunProtoBindT (f reason)
+  | FunProtoCallT (reason) -> FunProtoCallT (f reason)
   | PolyT (plist, t) -> PolyT (plist, mod_reason_of_t f t)
   | BoundT { reason; name; bound; polarity } ->
     BoundT { reason = f reason; name; bound; polarity }
@@ -805,8 +817,9 @@ let rec mod_reason_of_t f = function
   | SuperT (reason, inst) -> SuperT (f reason, inst)
   | ExtendsT (ts, t, tc) -> ExtendsT (ts, t, mod_reason_of_t f tc)
 
-  | CallT (reason, ft) -> CallT (f reason, ft)
   | ApplyT (reason, l, ft) -> ApplyT (f reason, l, ft)
+  | BindT (reason, ft) -> BindT (f reason, ft)
+  | CallT (reason, ft) -> CallT (f reason, ft)
 
   | MethodT (reason, name, ft) -> MethodT(f reason, name, ft)
   | ReposLowerT (reason, t) -> ReposLowerT (f reason, t)
@@ -929,6 +942,9 @@ let string_of_ctor = function
   | VoidT _ -> "VoidT"
   | FunT _ -> "FunT"
   | FunProtoT _ -> "FunProtoT"
+  | FunProtoApplyT _ -> "FunProtoApplyT"
+  | FunProtoBindT _ -> "FunProtoBindT"
+  | FunProtoCallT _ -> "FunProtoCallT"
   | PolyT _ -> "PolyT"
   | BoundT _ -> "BoundT"
   | ExistsT _ -> "ExistsT"
@@ -939,8 +955,9 @@ let string_of_ctor = function
   | SummarizeT _ -> "SummarizeT"
   | SuperT _ -> "SuperT"
   | ExtendsT _ -> "ExtendsT"
-  | CallT _ -> "CallT"
   | ApplyT _ -> "ApplyT"
+  | BindT _ -> "BindT"
+  | CallT _ -> "CallT"
   | MethodT _ -> "MethodT"
   | ReposLowerT _ -> "ReposLowerT"
   | ReposUpperT _ -> "ReposUpperT"

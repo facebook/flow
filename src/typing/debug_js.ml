@@ -90,6 +90,9 @@ and _json_of_t_impl json_cx t = Hh_json.(
   | VoidT _
   | TaintT _
   | FunProtoT _
+  | FunProtoApplyT _
+  | FunProtoBindT _
+  | FunProtoCallT _
     -> []
 
   | FunT (_, static, proto, funtype) -> [
@@ -217,6 +220,7 @@ and _json_of_t_impl json_cx t = Hh_json.(
       "type", _json_of_t json_cx t
     ]
 
+  | BindT (_, funtype)
   | CallT (_, funtype) -> [
       "funType", json_of_funtype json_cx funtype
     ]

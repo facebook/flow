@@ -3,6 +3,14 @@ apply.js:2:15,20: property `length`
 Property not found in
 apply.js:9:12,12: Number
 
+apply.js:2:15,20: property `length`
+Property not found in
+apply.js:32:25,25: Number
+
+apply.js:2:15,20: property `length`
+Property not found in
+apply.js:37:25,25: Number
+
 apply.js:12:1,20: call of method `apply`
 Error:
 apply.js:12:17,18: string
@@ -37,6 +45,30 @@ apply.js:25:1,27: call of method `apply`
 Expected array of arguments instead of
 apply.js:25:16,26: string
 
+apply.js:32:2,39: call of method `apply`
+Error:
+apply.js:32:2,39: number
+This type is incompatible with
+apply.js:32:42,45: undefined
+
+apply.js:32:2,39: call of method `apply`
+Error:
+apply.js:32:28,30: number
+This type is incompatible with
+apply.js:1:18,23: string
+
+apply.js:32:2,39: call of method `apply`
+Error:
+apply.js:32:33,37: string
+This type is incompatible with
+apply.js:1:29,34: number
+
+apply.js:37:2,32: call of method `apply`
+Error:
+apply.js:37:28,30: number
+This type is incompatible with
+apply.js:1:18,23: string
+
 bind.js:7:5,10: function call
 Error:
 bind.js:7:7,9: number
@@ -46,6 +78,10 @@ bind.js:4:30,35: string
 call.js:4:15,20: property `length`
 Property not found in
 call.js:11:11,11: Number
+
+call.js:4:15,20: property `length`
+Property not found in
+call.js:30:24,24: Number
 
 call.js:14:1,17: call of method `call`
 Error:
@@ -65,17 +101,29 @@ call.js:18:15,15: number
 This type is incompatible with
 call.js:3:18,23: string
 
-call.js:23:1,11: function call
+call.js:21:20,50: call of method `call`
+Error:
+call.js:21:34,40: number
+This type is incompatible with
+call.js:3:18,23: string
+
+call.js:21:20,50: call of method `call`
 Error:
 call.js:21:43,49: string
 This type is incompatible with
 call.js:3:29,34: number
 
-call.js:24:1,9: function call
+call.js:30:2,37: call of method `call`
 Error:
-call.js:21:34,40: number
+call.js:30:28,28: number
 This type is incompatible with
 call.js:3:18,23: string
+
+call.js:30:2,37: call of method `call`
+Error:
+call.js:30:31,35: string
+This type is incompatible with
+call.js:3:29,34: number
 
 function.js:29:19,19: function type
 This type is incompatible with
@@ -148,4 +196,4 @@ This type is incompatible with
 rest.js:8:31,33: tuple type
 rest parameters should be an array type, got a tuple type instead
 
-Found 30 errors
+Found 39 errors

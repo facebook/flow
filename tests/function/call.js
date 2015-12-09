@@ -22,3 +22,14 @@ function f(args) { test.call("", args[0], args[1]) }
 f(["", 0]); // OK
 f(["", ""]); // error: string ~> number (2nd arg)
 f([0, 0]); // error: number ~> string (1st arg)
+
+// expect 3 errors:
+// - lookup length on Number (0 used as `this`)
+// - number !~> string (param a)
+// - string !~> number (param b)
+(test.apply.call(test, 0, [0, 'foo']): number);
+
+// args are optional
+function test2(): number { return 0; }
+(test2.call(): number);
+(test2.call(""): number);

@@ -33,6 +33,9 @@ class ['a] t = object(self)
   | VoidT _
   | TaintT _
   | FunProtoT _
+  | FunProtoApplyT _
+  | FunProtoBindT _
+  | FunProtoCallT _
     -> acc
 
   | FunT (_, static, prototype, funtype) ->
@@ -124,8 +127,9 @@ class ['a] t = object(self)
 
   (* Currently not walking use types. This will change in an upcoming diff. *)
   | SummarizeT (_, _)
-  | CallT (_, _)
   | ApplyT (_, _, _)
+  | BindT (_, _)
+  | CallT (_, _)
   | MethodT (_, _, _)
   | ReposUpperT (_, _)
   | SetPropT (_, _, _)

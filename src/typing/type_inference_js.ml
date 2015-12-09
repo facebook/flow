@@ -619,6 +619,24 @@ let rec convert cx type_params_map = Ast.Type.(function
           AnyObjT reason
         )
 
+      | "Function$Prototype$Apply" ->
+        check_type_param_arity cx loc typeParameters 0 (fun () ->
+          let reason = mk_reason "function type" loc in
+          FunProtoApplyT reason
+        )
+
+      | "Function$Prototype$Bind" ->
+        check_type_param_arity cx loc typeParameters 0 (fun () ->
+          let reason = mk_reason "function type" loc in
+          FunProtoBindT reason
+        )
+
+      | "Function$Prototype$Call" ->
+        check_type_param_arity cx loc typeParameters 0 (fun () ->
+          let reason = mk_reason "function type" loc in
+          FunProtoCallT reason
+        )
+
       | "$Tainted" ->
         check_type_param_arity cx loc typeParameters 1 (fun () ->
           let t = convert cx type_params_map (List.hd typeParameters) in
