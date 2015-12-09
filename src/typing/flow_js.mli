@@ -74,7 +74,7 @@ val mk_functiontype2 : Type.t list -> ?params_names:string list -> Type.t ->
   int -> Type.funtype
 
 val dummy_this : Type.t
-val dummy_static : Type.t
+val dummy_static : reason -> Type.t
 val dummy_prototype : Type.t
 
 val mk_objecttype : ?flags:Type.flags ->

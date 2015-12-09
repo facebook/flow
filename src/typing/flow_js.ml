@@ -36,8 +36,8 @@ open Type
 (* Methods may use a dummy statics object type to carry properties. We do not
    want to encourage this pattern, but we also don't want to block uses of this
    pattern. Thus, we compromise by not tracking the property types. *)
-let dummy_static =
-  AnyObjT (reason_of_string "object type for statics")
+let dummy_static reason =
+  AnyFunT (prefix_reason "statics of " reason)
 
 let dummy_prototype =
   MixedT (reason_of_string "empty prototype object")
@@ -600,9 +600,11 @@ let rec merge_type cx = function
       in
       let tout = merge_type cx (ft1.return_t, ft2.return_t) in
       (* TODO: How to merge parameter names? *)
+      let reason = reason_of_string "function" in
       FunT (
-        reason_of_string "function",
-        dummy_static, dummy_prototype,
+        reason,
+        dummy_static reason,
+        dummy_prototype,
         mk_functiontype tins tout
       )
 
@@ -693,9 +695,11 @@ and ground_type_impl cx ids t = match t with
       let tins = List.map (ground_type_impl cx ids) ft.params_tlist in
       let params_names = ft.params_names in
       let tout = ground_type_impl cx ids ft.return_t in
+      let reason = reason_of_string "function" in
       FunT (
-        reason_of_string "function",
-        dummy_static, dummy_prototype,
+        reason,
+        dummy_static reason,
+        dummy_prototype,
         mk_functiontype tins ?params_names tout
       )
 
@@ -3201,9 +3205,18 @@ let rec __flow cx (l, u) trace =
 
         let tins1 = multiflow_partial cx trace (tins2,tins1) in
 
+        (* e.g. "bound function type", positioned at reason_op *)
+        let bound_reason = replace_reason
+          (spf "bound %s" (desc_of_reason reason))
+          reason_op in
+
         rec_flow cx trace (
-          FunT(reason_op, dummy_static, dummy_prototype,
-               mk_functiontype tins1 tout1),
+          FunT(
+            reason_op,
+            dummy_static bound_reason,
+            dummy_prototype,
+            mk_functiontype tins1 tout1
+          ),
           funtype.return_t)
 
     (***********************************************)

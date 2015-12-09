@@ -688,10 +688,11 @@ let rec convert cx type_params_map = Ast.Type.(function
             ((snd name).Ast.Identifier.name) :: rev_pnames
         | None -> rev_tlist, rev_pnames
       ) in
+    let reason = mk_reason "function type" loc in
     let ft =
       FunT (
-        mk_reason "function type" loc,
-        Flow_js.dummy_static,
+        reason,
+        Flow_js.dummy_static reason,
         Flow_js.mk_tvar cx (mk_reason "prototype" loc),
         {
           this_t = Flow_js.mk_tvar cx (mk_reason "this" loc);
@@ -1540,9 +1541,13 @@ and statement cx type_params_map = Ast.Statement.(
       | None ->
         let constructor_funtype =
           Flow_js.mk_functiontype [] ~params_names:[] VoidT.t in
-        let funt = (FunT (Reason_js.mk_reason "constructor" loc,
-          Flow_js.dummy_static, Flow_js.dummy_prototype, constructor_funtype))
-        in
+        let reason = Reason_js.mk_reason "constructor" loc in
+        let funt = FunT (
+          reason,
+          Flow_js.dummy_static reason,
+          Flow_js.dummy_prototype,
+          constructor_funtype
+        ) in
         SMap.add "constructor" funt mmap
       | Some _ ->
         mmap
@@ -3481,8 +3486,12 @@ and expression_ ~is_cond cx type_params_map loc e = Ast.Expression.(match e with
         Flow_js.flow cx (t, StrT.at loc)
       ) argts;
       let reason = mk_reason "new Function(..)" loc in
-      FunT (reason, Flow_js.dummy_static, Flow_js.dummy_prototype,
-        Flow_js.mk_functiontype [] ~params_names:[] (MixedT reason))
+      FunT (
+        reason,
+        Flow_js.dummy_static reason,
+        Flow_js.dummy_prototype,
+        Flow_js.mk_functiontype [] ~params_names:[] (MixedT reason)
+      )
     )
 
   | New {
@@ -5687,7 +5696,7 @@ and mk_class_elements cx instance_info static_info tparams body = Ast.Class.(
 and mk_methodtype method_sig =
   let ft = FunT (
     method_sig.meth_reason,
-    Flow_js.dummy_static,
+    Flow_js.dummy_static method_sig.meth_reason,
     Flow_js.dummy_prototype,
     Flow_js.mk_functiontype
       (FuncParams.tlist method_sig.meth_params)
@@ -6310,9 +6319,13 @@ and mk_method cx type_params_map reason ?(kind=Scope.Ordinary)
   in
   let params_tlist = FuncParams.tlist params in
   let params_names = Some (FuncParams.names params) in
-  FunT (reason, Flow_js.dummy_static, Flow_js.dummy_prototype,
-        Flow_js.mk_functiontype2
-          params_tlist ?params_names ret (Env_js.peek_frame ()))
+  let frame = Env_js.peek_frame () in
+  FunT (
+    reason,
+    Flow_js.dummy_static reason,
+    Flow_js.dummy_prototype,
+    Flow_js.mk_functiontype2 params_tlist ?params_names ret frame
+  )
 
 
 (**********)
