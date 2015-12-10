@@ -909,6 +909,36 @@ and lvalue env e =
   let valkind = `lvalue in
   expr_ ~in_cond:false ~valkind env e
 
+(* $x ?? 0 is handled similarly to $x ?: 0, except that the latter will also
+ * look for sketchy null checks in the condition. *)
+and eif env ~coalesce ~in_cond p c e1 e2 =
+  let env, tyc = raw_expr in_cond env c in
+  Async.enforce_not_awaitable env (fst c) tyc;
+  let _, parent_locals as lenv = env.Env.lenv in
+  let c = if coalesce then (p, Binop (Ast.Diff2, c, (p, Null))) else c in
+  let env = condition env true c in
+  let env, ty1 = match e1 with
+    | None ->
+        non_null env tyc
+    | Some e1 ->
+        expr env e1
+    in
+  let fake1, _locals1 = env.Env.lenv in
+  let env = { env with Env.lenv = lenv } in
+  let env = condition env false c in
+  let env, ty2 = expr env e2 in
+  let fake2, _locals2 = env.Env.lenv in
+  let fake_members = LEnv.intersect_fake fake1 fake2 in
+  (* we restore the locals to their parent state so as not to leak the
+   * effects of the `condition` calls above *)
+  let env = { env with Env.lenv = fake_members, parent_locals } in
+  (* This is a shortened form of what we do in Typing_lenv.intersect. The
+   * latter takes local environments as arguments, but our types here
+   * aren't assigned to local variables in an environment *)
+  let env, ty1 = TUtils.unresolved env ty1 in
+  let env, ty2 = TUtils.unresolved env ty2 in
+  Unify.unify env ty1 ty2
+
 and expr_
   ~in_cond
   ~(valkind: [> `lvalue | `lvalue_subexpr | `other ])
@@ -1265,37 +1295,8 @@ and expr_
   | Unop (uop, e) ->
       let env, ty = raw_expr in_cond env e in
       unop p env uop ty
-  | Eif (c, e1, e2) ->
-      let env, tyc = raw_expr in_cond env c in
-      Async.enforce_not_awaitable env (fst c) tyc;
-      let _, parent_locals as lenv = env.Env.lenv in
-      let env = condition env true c in
-      let env, ty1 = match e1 with
-      | None ->
-          non_null env tyc
-      | Some e1 ->
-          expr env e1
-      in
-      let fake1, _locals1 = env.Env.lenv in
-      let env = { env with Env.lenv = lenv } in
-      let env = condition env false c in
-      let env, ty2 = expr env e2 in
-      let fake2, _locals2 = env.Env.lenv in
-      let fake_members = LEnv.intersect_fake fake1 fake2 in
-      (* we restore the locals to their parent state so as not to leak the
-       * effects of the `condition` calls above *)
-      let env = { env with Env.lenv = fake_members, parent_locals } in
-      (* This is a shortened form of what we do in Typing_lenv.intersect. The
-       * latter takes local environments as arguments, but our types here
-       * aren't assigned to local variables in an environment *)
-      let env, ty1 = TUtils.unresolved env ty1 in
-      let env, ty2 = TUtils.unresolved env ty2 in
-      Unify.unify env ty1 ty2
-  | NullCoalesce (e1, e2) ->
-      (* Desugar `$a ?? $b` into `$a !== null ? $a : $b` *)
-      let c = (p, Binop (Ast.Diff2, e1, (p, Null))) in
-      let eif = (p, Eif (c, Some e1, e2)) in
-      expr env eif
+  | Eif (c, e1, e2) -> eif env ~coalesce:false ~in_cond p c e1 e2
+  | NullCoalesce (e1, e2) -> eif env ~coalesce:true ~in_cond p e1 None e2
   | Typename sid ->
       begin match Env.get_typedef env (snd sid) with
         | Some (Typing_heap.Typedef.Ok (_, tparaml, _, _, _)) ->
