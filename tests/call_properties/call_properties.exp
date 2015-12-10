@@ -51,6 +51,10 @@ C.js:22:20,31: function type
 Callable signature not found in
 C.js:23:10,10: object type
 
+C.js:32:20,27: function type
+Callable signature not found in
+C.js:33:10,10: object type
+
 D.js:11:10,19: undefined (too few arguments, expected default/rest parameters)
 This type is incompatible with
 D.js:12:16,21: number
@@ -71,4 +75,4 @@ F.js:9:43,49: property `toFixed`
 Property not found in
 F.js:9:41,41: String
 
-Found 17 errors
+Found 18 errors

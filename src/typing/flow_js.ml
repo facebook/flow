@@ -2546,8 +2546,8 @@ let rec __flow cx (l, u) trace =
     (****************************************)
     (* You can cast an object to a function *)
     (****************************************)
-    | ((ObjT (reason, _) | InstanceT (reason, _, _, _)),
-       (FunT (reason_op, _, _, _) | CallT (reason_op, _))) ->
+    | (ObjT (reason, _) | InstanceT (reason, _, _, _)),
+      (FunT (reason_op, _, _, _) | AnyFunT reason_op | CallT (reason_op, _)) ->
       let tvar = mk_tvar cx (suffix_reason " used as a function" reason) in
       lookup_prop cx trace l reason_op (Some reason) "$call" tvar;
       rec_flow cx trace (tvar, u)

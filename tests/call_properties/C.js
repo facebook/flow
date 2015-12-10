@@ -22,3 +22,13 @@ function d(x: { (z: number): string }): () => string {
 function e(x: {}): () => string {
   return x;
 }
+
+// AnyFunT should also be allowed
+function f(x: { (z: number): string }): Function {
+  return x;
+}
+
+// ... but only if the object is callable
+function g(x: {}): Function {
+  return x; // error
+}
