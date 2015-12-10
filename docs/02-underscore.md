@@ -177,7 +177,7 @@ Method cannot be called on possibly null value
   underscore.js:853:30,33: null
 ```
 
-This is a simple case of needing to ensure that a function is can be called, by turning:
+This is a simple case of needing to ensure that a function is callable, by turning:
 
 ```javascript
 if (--times > 0) {
