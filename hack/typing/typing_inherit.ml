@@ -205,11 +205,11 @@ let make_substitution pos class_name class_type class_parameters =
   check_arity pos class_name class_type class_parameters;
   Inst.make_subst class_type.tc_tparams class_parameters
 
-let constructor env subst (cstr, consistent) = match cstr with
-  | None -> env, (None, consistent)
+let constructor subst (cstr, consistent) = match cstr with
+  | None -> None, consistent
   | Some ce ->
-    let env, ty = Inst.instantiate subst env ce.ce_type in
-    env, (Some {ce with ce_type = ty}, consistent)
+    let ty = Inst.instantiate subst ce.ce_type in
+    Some {ce with ce_type = ty}, consistent
 
 let map_inherited f inh =
   {
@@ -258,7 +258,7 @@ let chown_privates owner = apply_fn_to_class_elts (chown_private owner)
 
 let inherit_hack_class c env p class_name class_type argl =
   let subst = make_substitution p class_name class_type argl in
-  let instantiate = SMap.map_env (Inst.instantiate_ce subst) in
+  let instantiate = SMap.map (Inst.instantiate_ce subst) in
   let class_type =
     match class_type.tc_kind with
     | Ast.Ctrait ->
@@ -268,15 +268,15 @@ let inherit_hack_class c env p class_name class_type argl =
         filter_privates class_type
     | Ast.Cenum -> class_type
   in
-  let env, typeconsts = SMap.map_env (Inst.instantiate_typeconst subst)
-    env class_type.tc_typeconsts in
-  let env, consts   = instantiate env class_type.tc_consts in
-  let env, props    = instantiate env class_type.tc_props in
-  let env, sprops   = instantiate env class_type.tc_sprops in
-  let env, methods  = instantiate env class_type.tc_methods in
-  let env, smethods = instantiate env class_type.tc_smethods in
-  let cstr          = Env.get_construct env class_type in
-  let env, cstr     = constructor env subst cstr in
+  let typeconsts = SMap.map (Inst.instantiate_typeconst subst)
+    class_type.tc_typeconsts in
+  let consts   = instantiate class_type.tc_consts in
+  let props    = instantiate class_type.tc_props in
+  let sprops   = instantiate class_type.tc_sprops in
+  let methods  = instantiate class_type.tc_methods in
+  let smethods = instantiate class_type.tc_smethods in
+  let cstr     = Env.get_construct env class_type in
+  let cstr     = constructor subst cstr in
   let result = {
     ih_cstr     = cstr;
     ih_consts   = consts;
@@ -291,10 +291,10 @@ let inherit_hack_class c env p class_name class_type argl =
 (* mostly copy paste of inherit_hack_class *)
 let inherit_hack_class_constants_only env p class_name class_type argl =
   let subst = make_substitution p class_name class_type argl in
-  let instantiate = SMap.map_env (Inst.instantiate_ce subst) in
-  let env, consts  = instantiate env class_type.tc_consts in
-  let env, typeconsts = SMap.map_env (Inst.instantiate_typeconst subst)
-    env class_type.tc_typeconsts in
+  let instantiate = SMap.map (Inst.instantiate_ce subst) in
+  let consts  = instantiate class_type.tc_consts in
+  let typeconsts = SMap.map (Inst.instantiate_typeconst subst)
+    class_type.tc_typeconsts in
   let result = { empty with
     ih_consts   = consts;
     ih_typeconsts = typeconsts;
@@ -310,7 +310,7 @@ let inherit_hack_xhp_attrs_only env p class_name class_type argl =
     SMap.fold begin fun name class_elt acc ->
       if class_elt.ce_is_xhp_attr then SMap.add name class_elt acc else acc
     end class_type.tc_props SMap.empty in
-  let env, props = SMap.map_env (Inst.instantiate_ce subst) env props in
+  let props = SMap.map (Inst.instantiate_ce subst) props in
   let result = { empty with ih_props = props; } in
   env, result
 

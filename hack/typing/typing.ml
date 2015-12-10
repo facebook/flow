@@ -3944,10 +3944,10 @@ and check_implements_tparaml (env: Env.env) ht =
         match cstr_opt with
         | None -> ()
         | Some (Ast.Constraint_as, cstr) ->
-            let cstr = snd (Inst.instantiate subst env cstr) in
+            let cstr = Inst.instantiate subst cstr in
             ignore (Type.sub_type_decl p Reason.URnone env cstr ty);
         | Some (Ast.Constraint_super, cstr) ->
-            let cstr = snd (Inst.instantiate subst env cstr) in
+            let cstr = Inst.instantiate subst cstr in
             ignore (Type.sub_type_decl p Reason.URnone env ty cstr);
       end class_.tc_tparams paraml
 

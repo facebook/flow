@@ -14,7 +14,6 @@ open Typing_defs
 (* Types *)
 (*****************************************************************************)
 
-type env = Typing_env.env
 type subst
 
 (*****************************************************************************)
@@ -38,7 +37,7 @@ val make_subst: tparam list -> decl ty list -> subst
  *)
 (*****************************************************************************)
 
-val instantiate     : subst -> env -> decl ty -> env * decl ty
-val instantiate_ce  : subst -> env -> class_elt -> env * class_elt
+val instantiate     : subst -> decl ty -> decl ty
+val instantiate_ce  : subst -> class_elt -> class_elt
 val instantiate_typeconst :
-  subst -> env -> typeconst_type -> env * typeconst_type
+  subst -> typeconst_type -> typeconst_type

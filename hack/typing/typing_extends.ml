@@ -183,8 +183,8 @@ let check_members check_private env parent_class class_ parent_members members =
 (*****************************************************************************)
 
 (* Instantiation basically applies the substitution *)
-let instantiate_members subst env members =
-  SMap.map_env (Inst.instantiate_ce subst) env members
+let instantiate_members subst members =
+  SMap.map (Inst.instantiate_ce subst) members
 
 let make_all_members class_ = [
   class_.tc_props;
@@ -231,13 +231,13 @@ let check_constructors env parent_class class_ psubst subst =
       | _, Some cstr when cstr.ce_override -> (* <<__UNSAFE_Construct>> *)
         ()
       | Some parent_cstr, Some cstr ->
-        let env, parent_cstr = Inst.instantiate_ce psubst env parent_cstr in
-        let env, cstr = Inst.instantiate_ce subst env cstr in
+        let parent_cstr = Inst.instantiate_ce psubst parent_cstr in
+        let cstr = Inst.instantiate_ce subst cstr in
         check_override env ~ignore_fun_return:true parent_class class_ parent_cstr cstr
       | None, Some cstr when explicit_consistency ->
         let parent_cstr = default_constructor_ce parent_class in
-        let env, parent_cstr = Inst.instantiate_ce psubst env parent_cstr in
-        let env, cstr = Inst.instantiate_ce subst env cstr in
+        let parent_cstr = Inst.instantiate_ce psubst parent_cstr in
+        let cstr = Inst.instantiate_ce subst cstr in
         check_override env ~ignore_fun_return:true parent_class class_ parent_cstr cstr
       | None, _ -> ()
   ) else ()
@@ -314,8 +314,8 @@ let check_typeconsts env parent_class class_ =
 
 let check_consts env parent_class class_ psubst subst =
   let pconsts, consts = parent_class.tc_consts, class_.tc_consts in
-  let env, pconsts = instantiate_members psubst env pconsts in
-  let env, consts = instantiate_members subst env consts in
+  let pconsts = instantiate_members psubst pconsts in
+  let consts = instantiate_members subst consts in
   let check_const_override = check_override env ~check_for_const:true parent_class class_ in
   SMap.iter begin fun const_name parent_const ->
     if const_name <> SN.Members.mClass then
@@ -343,8 +343,8 @@ let check_class_implements env parent_class class_ =
   let pmemberl = make_all_members parent_class in
   let memberl = make_all_members class_ in
   check_constructors env parent_class class_ psubst subst;
-  let env, pmemberl = lfold (instantiate_members psubst) env pmemberl in
-  let env, memberl = lfold (instantiate_members subst) env memberl in
+  let pmemberl = List.map pmemberl (instantiate_members psubst) in
+  let memberl = List.map memberl (instantiate_members subst) in
   let check_privates:bool = (parent_class.tc_kind = Ast.Ctrait) in
   if not fully_known then () else
     List.iter2_exn pmemberl memberl

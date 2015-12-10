@@ -128,7 +128,7 @@ let merge_single_req env subst inc_req_ty existing_req_opt
   match existing_req_opt with
     | Some ex_req_ty ->
       (* If multiple uses/impls require the *exact same* ancestor, ... *)
-      let env, inc_req_ty = Inst.instantiate subst env inc_req_ty in
+      let inc_req_ty = Inst.instantiate subst inc_req_ty in
       (* ... ensure that they're compatible and select
        * the one that's more restrictive (subtype of the other) *)
       let env, result_ty = Errors.try_
@@ -144,7 +144,7 @@ let merge_single_req env subst inc_req_ty existing_req_opt
       in
       (env : Env.env), (result_ty: decl ty)
     | None ->
-      let env, inc_req_ty = Inst.instantiate subst env inc_req_ty in
+      let inc_req_ty = Inst.instantiate subst inc_req_ty in
       (env : Env.env), (inc_req_ty: decl ty)
 
 (* for non-traits, check that requirements inherited from
@@ -175,7 +175,7 @@ let merge_parent_class_reqs class_nast impls
                 Errors.unsatisfied_req parent_pos req_name req_pos;
                 env
               | Some impl_ty ->
-                let env, req_ty = Inst.instantiate subst env req_ty in
+                let req_ty = Inst.instantiate subst req_ty in
                 Typing_ops.sub_type_decl parent_pos Reason.URclass_req env req_ty impl_ty
           end parent_type.tc_req_ancestors env
           in
@@ -514,7 +514,7 @@ and get_implements (env: Env.env) ht =
       let subst = Inst.make_subst class_.tc_tparams paraml in
       let sub_implements =
         SMap.map
-          (fun ty -> snd (Inst.instantiate subst env ty))
+          (fun ty -> Inst.instantiate subst ty)
           class_.tc_ancestors
       in
       env, SMap.add c ht sub_implements

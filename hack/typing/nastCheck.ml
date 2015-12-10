@@ -344,7 +344,7 @@ and check_happly unchecked_tparams env h =
       unchecked_tparams
       (fun (_, (p, _), _) -> Reason.Rwitness p, Tany) in
   let subst = Inst.make_subst unchecked_tparams tyl in
-  let env, decl_ty = Inst.instantiate subst env decl_ty in
+  let decl_ty = Inst.instantiate subst decl_ty in
   match decl_ty with
   | _, Tapply (_, tyl) when tyl <> [] ->
       let env, locl_ty = Phase.localize_with_self env decl_ty in
