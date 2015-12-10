@@ -6363,7 +6363,7 @@ let cross_module_gc =
       ms |> SSet.iter (fun m -> require_set := SSet.remove m !require_set);
 
       let ins = SSet.elements !require_set in
-      Flow_js.do_gc cx ins
+      Gc_js.do_gc cx ins
     )
 
 let force_annotations cx =
@@ -6493,7 +6493,7 @@ let infer_ast ?(gc=true) ~metadata ~filename ~module_name ast =
   (if gc then
     let ins = SSet.elements (Context.required cx) in
     let out = exported_module_name in
-    Flow_js.do_gc cx (out::ins));
+    Gc_js.do_gc cx (out::ins));
 
   cx
 

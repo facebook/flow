@@ -17,6 +17,10 @@ val new_error: (reason * string) list -> Errors_js.error
 val add_warning: Context.t -> ?trace:Trace.t -> (reason * string) list -> unit
 val add_error: Context.t -> ?trace:Trace.t -> (reason * string) list -> unit
 
+val find_constraints:
+  Context.t ->
+  Constraint_js.ident ->
+  Constraint_js.ident * Constraint_js.constraints
 val find_graph: Context.t -> Constraint_js.ident -> Constraint_js.constraints
 
 (* propagates sources to sinks following a subtype relation *)
@@ -95,7 +99,6 @@ val mk_nominal: Context.t -> int
 
 (* val graph: bounds IMap.t ref *)
 val lookup_module: Context.t -> string -> Type.t
-val do_gc: Context.t -> string list -> unit
 
 (* contexts *)
 val fresh_context: Context.metadata -> Loc.filename -> Modulename.t -> Context.t
