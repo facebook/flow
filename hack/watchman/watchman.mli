@@ -16,7 +16,6 @@ val crash_marker_path: Path.t -> string
 
 val init: int -> Path.t -> env option
 
-(* Blocking *)
-val get_changes: env -> SSet.t
+val get_all_files: env -> string list
 
-val poll_changes: env -> SSet.t
+val get_changes: env -> SSet.t
