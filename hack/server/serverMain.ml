@@ -200,7 +200,7 @@ let recheck genv old_env updates =
         (Relative_path.suffix ServerConfig.filename)
         GlobalConfig.program_name;
        (** TODO: Notify the server monitor directly about this. *)
-       exit 4
+       Exit_status.(exit Hhconfig_changed)
     end;
   end;
   let env, total_rechecked = Program.recheck genv old_env to_recheck in

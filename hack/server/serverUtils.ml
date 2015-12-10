@@ -19,10 +19,6 @@ type connection_state =
   | Connection_ok
   | Build_id_mismatch
 
-type prehandoff_msg =
-  | Prehandoff_sentinel
-  | Prehandoff_aborting of string
-
 let msg_to_channel oc msg =
   Marshal.to_channel oc msg [];
   flush oc

@@ -152,15 +152,6 @@ let rec wait_for_server_hello ic env retries start_time tail_env first_call =
     | Sys_error _ ->
       raise Server_hung_up
 
-let consume_prehandoff_messages ic =
-  let msg: ServerUtils.prehandoff_msg = Marshal.from_channel ic in
-  match msg with
-  | ServerUtils.Prehandoff_sentinel -> ()
-  | ServerUtils.Prehandoff_aborting str ->
-    Printf.eprintf "%s" str;
-    raise Exit_status.(Exit_with Server_shutting_down)
-
-
 let rec connect ?(first_attempt=false) env retries start_time tail_env =
   match retries with
   | Some n when n < 0 ->
@@ -182,7 +173,6 @@ let rec connect ?(first_attempt=false) env retries start_time tail_env =
   let _, tail_msg = open_and_get_tail_msg start_time tail_env in
   match conn with
   | Result.Ok (ic, oc) ->
-      consume_prehandoff_messages ic;
       (try wait_for_server_hello ic env retries start_time tail_env true with
       | Server_hung_up ->
         (Printf.eprintf "hh_server died unexpectedly. Maybe you recently \

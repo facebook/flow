@@ -18,6 +18,8 @@
    *    client's build ID doesn't match.
    * 3) A client UI can readily get feedback even if the typechecker
    *    process is busy.
+   * 4) A failed (OOM'd or crashed) typechecker is noted and its
+   *    fate echoed to the next client that connects.
 *)
 
 open ServerUtils
@@ -35,26 +37,23 @@ module Program = struct
 end
 
 let kill_typechecker typechecker =
-  if (typechecker.pid) <> 0 then
-    try Unix.kill typechecker.pid Sys.sigusr2 with
-    | _ ->
-      Hh_logger.log
-        "Failed to send Sig_build_id_mismatch signal to typechecker. Trying \
-         violently";
-      Unix.kill typechecker.pid Sys.sigkill;
-  else ()
+  try Unix.kill typechecker.pid Sys.sigusr2 with
+  | _ ->
+    Hh_logger.log
+      "Failed to send Sig_build_id_mismatch signal to typechecker. Trying \
+       violently";
+    Unix.kill typechecker.pid Sys.sigkill
 
 let rec wait_for_typechecker_exit typechecker start_t =
-  if (typechecker.pid) <> 0 then
-    match Unix.waitpid [Unix.WNOHANG; Unix.WUNTRACED]
-        typechecker.pid with
-    | 0, _ ->
-      Unix.sleep 1;
-      wait_for_typechecker_exit typechecker start_t
-    | _ ->
-      ignore (
-        Hh_logger.log_duration
-          "Typechecker has exited. Time since sigterm: " start_t)
+  match Unix.waitpid [Unix.WNOHANG; Unix.WUNTRACED]
+    typechecker.pid with
+  | 0, _ ->
+    Unix.sleep 1;
+    wait_for_typechecker_exit typechecker start_t
+  | _ ->
+    ignore (
+      Hh_logger.log_duration
+        "Typechecker has exited. Time since sigterm: " start_t)
 
 let setup_handler_for_signals handler signals =
   List.iter begin fun signal ->
@@ -110,14 +109,29 @@ let sleep_and_check socket =
 (** Kill command from client is handled by typechecker server, so the monitor
  * needs to check liveness of the typechecker process to know whether
  * to stop itself. *)
-let stop_if_typechecker_dead typechecker =
-  let pid, proc_stat =
-    Unix.waitpid [Unix.WNOHANG; Unix.WUNTRACED] typechecker.pid in
-  (if pid <> 0 then
-     (check_exit_status proc_stat typechecker;
-      Exit_status.(exit Ok))
-   else
-     ())
+let update_status (typechecker: ServerProcessTools.typechecker_process)
+~has_client =
+  match typechecker with
+  | Alive process ->
+    let pid, proc_stat =
+      Unix.waitpid [Unix.WNOHANG; Unix.WUNTRACED] process.pid in
+    (match pid, proc_stat with
+      | 0, _ ->
+        typechecker
+      | _, Unix.WEXITED 0 ->
+        (** This is rare - typechecker stopped by RPC kill command and another
+         * client connected within the same 1-second check loop. This monitor
+         * will exit, but has to notify the client that's already connected. *)
+        if has_client then Killed_intentionally
+        else Exit_status.(exit Ok)
+      | _, Unix.WEXITED c
+      when c = (Exit_status.ec Exit_status.Hhconfig_changed) ->
+        if has_client then Killed_intentionally
+        else Exit_status.(exit Ok)
+      | _, _ ->
+        check_exit_status proc_stat process;
+        Died_unexpectedly (proc_stat, (check_dmesg_for_oom pid)))
+  | _ -> typechecker
 
 let read_build_id_ohai fd =
   let client_build_id: string = Marshal_tools.from_fd_with_preamble fd in
@@ -173,24 +187,44 @@ let client_out_of_date_ client_channel =
  * and typechecker have exited.
 *)
 let client_out_of_date typechecker client_channel =
-  kill_typechecker typechecker;
+  (match typechecker with
+  | Alive typechecker ->
+    kill_typechecker typechecker
+  | _ -> ());
   let kill_signal_time = Unix.gettimeofday () in
   (** If we detect out of date client, should always kill typechecker and exit
    * monitor, even if messaging to channel or event logger fails. *)
   (try client_out_of_date_ client_channel with
    | e -> Hh_logger.log
        "Handling client_out_of_date threw with: %s" (Printexc.to_string e));
-  wait_for_typechecker_exit typechecker kill_signal_time;
+  (match typechecker with
+  | Alive typechecker ->
+    wait_for_typechecker_exit typechecker kill_signal_time
+  | _ -> ());
   Exit_status.exit Exit_status.Build_id_mismatch
 
 (** Send (possibly empty) sequences of messages before handing off to
  * typechecker. *)
 let client_prehandoff typechecker fd =
-  msg_to_channel (Unix.out_channel_of_descr fd)
-    Prehandoff_sentinel;
-  hand_off_client_connection_with_retries typechecker 8 fd;
-  HackEventLogger.client_connection_sent ();
-  Program.last_request_handoff_timestamp := Unix.time ()
+  let oc = Unix.out_channel_of_descr fd in
+  let open Prehandoff in
+  match typechecker with
+  | Killed_intentionally ->
+    msg_to_channel oc Shutting_down;
+    Exit_status.exit Exit_status.Ok
+  | Alive typechecker ->
+    msg_to_channel (Unix.out_channel_of_descr fd)
+      Sentinel;
+    hand_off_client_connection_with_retries typechecker 8 fd;
+    HackEventLogger.client_connection_sent ();
+    Program.last_request_handoff_timestamp := Unix.time ();
+    Alive typechecker
+  | Died_unexpectedly (status, was_oom) ->
+    (** Typechecker has died; notify the client *)
+    msg_to_channel (Unix.out_channel_of_descr fd)
+      (Typechecker_died {status; was_oom});
+    (** Next client to connect starts a new typechecker. *)
+    Exit_status.exit Exit_status.Ok
 
 let ack_and_handoff_client typechecker fd =
   (** Output back to the client can be safely done with Ocaml channels, but
@@ -222,16 +256,27 @@ let ack_and_handoff_client typechecker fd =
     Hh_logger.log "Malformed Build ID";
     raise e
 
-let check_and_run_loop (_: ServerArgs.options) typechecker
+let rec check_and_run_loop typechecker
     (lock_file: string) (socket: Unix.file_descr) =
+  let typechecker = try check_and_run_loop_ typechecker lock_file socket with
+  | e ->
+    Hh_logger.log "check_and_run_loop_ threw with exception: %s"
+      (Printexc.to_string e);
+    typechecker
+  in
+    check_and_run_loop typechecker lock_file socket
+
+and check_and_run_loop_ typechecker
+    (lock_file: string) (socket: Unix.file_descr) =
+  let typechecker = update_status typechecker ~has_client:false in
   if not (Lock.grab lock_file) then
     (Hh_logger.log "Lost lock; terminating.\n%!";
      HackEventLogger.lock_stolen lock_file;
      Exit_status.(exit Lock_stolen));
-  stop_if_typechecker_dead typechecker;
   let has_client = sleep_and_check socket in
+  let typechecker = update_status typechecker ~has_client in
   if (not has_client) then
-    ()
+    typechecker
   else
   try
     let fd, _ = Unix.accept socket in
@@ -243,12 +288,14 @@ let check_and_run_loop (_: ServerArgs.options) typechecker
       (HackEventLogger.ack_and_handoff_exception e;
        Hh_logger.log
          "Handling client connection failed. Ignoring connection attempt.";
-       Unix.close fd)
+       Unix.close fd;
+       typechecker)
   with
   | e ->
     (HackEventLogger.accepting_on_socket_exception e;
      Hh_logger.log
-       "Accepting on socket failed. Ignoring client connection attempt.")
+       "Accepting on socket failed. Ignoring client connection attempt.";
+       typechecker)
 
 (** Main method of the server monitor daemon. The daemon is responsible for
  * listening to socket requests from hh_client, checking Build ID, and relaying
@@ -268,11 +315,8 @@ let monitor_daemon_main (options: ServerArgs.options) =
     (Hh_logger.log "Monitor daemon already running. Killing";
      Exit_status.exit Exit_status.Ok);
   let socket = Socket.init_unix_socket (ServerFiles.socket_file www_root) in
-  let typechecker = start_hh_server options in
-  while true do
-    try check_and_run_loop options typechecker lock_file socket
-    with _ -> ()
-  done
+  let typechecker = Alive (start_hh_server options) in
+  check_and_run_loop typechecker lock_file socket
 
 let daemon_entry =
   Daemon.register_entry_point

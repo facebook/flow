@@ -34,40 +34,43 @@ type t =
   | CantRunAI
   | Watchman_failed
   | Hhconfig_deleted
+  | Hhconfig_changed
   | Server_shutting_down
 
 exception Exit_with of t
 
+let ec t = match t with
+  | Ok -> 0
+  | Build_error -> 2
+  | Build_terminated -> 1
+  | Checkpoint_error -> 8
+  | Input_error -> 10
+  | Kill_error -> 1
+  | No_server_running -> 6
+  | Out_of_time -> 7
+  | Out_of_retries -> 7
+  | Server_already_exists -> 77
+  | Server_initializing -> 1
+  | Server_shutting_down -> 1
+  | Type_error -> 2
+  | Build_id_mismatch -> 9
+  | Unused_server -> 5
+  | Lock_stolen -> 11
+  | Lost_parent_monitor -> 12
+  | Interrupted -> -6
+  | Missing_hhi -> 97
+  | Socket_error -> 98
+  | Dfind_died -> 99
+  | Dfind_unresponsive -> 100
+  | EventLogger_Timeout -> 101
+  | CantRunAI -> 102
+  | Watchman_failed -> 103
+  | Hhconfig_deleted -> 104
+  | Hhconfig_changed -> 4
+
 let exit t =
-  let ec = match t with
-    | Ok -> 0
-    | Build_error -> 2
-    | Build_terminated -> 1
-    | Checkpoint_error -> 8
-    | Input_error -> 10
-    | Kill_error -> 1
-    | No_server_running -> 6
-    | Out_of_time -> 7
-    | Out_of_retries -> 7
-    | Server_already_exists -> 77
-    | Server_initializing -> 1
-    | Server_shutting_down -> 1
-    | Type_error -> 2
-    | Build_id_mismatch -> 9
-    | Unused_server -> 5
-    | Lock_stolen -> 11
-    | Lost_parent_monitor -> 12
-    | Interrupted -> -6
-    | Missing_hhi -> 97
-    | Socket_error -> 98
-    | Dfind_died -> 99
-    | Dfind_unresponsive -> 100
-    | EventLogger_Timeout -> 101
-    | CantRunAI -> 102
-    | Watchman_failed -> 103
-    | Hhconfig_deleted -> 104
-  in
-  Pervasives.exit ec
+  let code = ec t in
+  Pervasives.exit code
 
 let to_string = function
   | Ok -> "Ok"
@@ -96,6 +99,7 @@ let to_string = function
   | CantRunAI -> "CantRunAI"
   | Watchman_failed -> "Watchman_failed"
   | Hhconfig_deleted -> "Hhconfig_deleted"
+  | Hhconfig_changed -> "Hhconfig_changed"
 
 let unpack = function
   | Unix.WEXITED n -> "exit", n

@@ -10,7 +10,7 @@
 
 open Core
 
-type typechecker_process =
+type process_data =
   {
     (** Process ID. *)
     pid : int;
@@ -23,6 +23,11 @@ type typechecker_process =
     log_mode : Daemon.log_mode;
   }
 
+type typechecker_process =
+  | Alive of process_data
+  (** Typechecker exited because of an RPC kill command. *)
+  | Killed_intentionally
+  | Died_unexpectedly of Unix.process_status * bool
 
 let find_oom_in_dmesg_output pid lines =
   let re = Str.regexp
