@@ -149,11 +149,14 @@ module Entry = struct
      what kind of havoc this is. Need to remove make_specific
      and make separate havoc funcs, then dael with value_state
      per specific semantics of each.
+     ...consts flag is another log in the above fire. consts true
+     and nonstandard make_specific fun go together.
    *)
-  let havoc make_specific name entry =
+  let havoc ?(consts=false) make_specific name entry =
     match entry with
     | Type _ -> entry
-    | Value { kind = Const; _ } -> entry
+    | Value { kind = Const; _ } when not consts ->
+      entry
     | Value v ->
       if Reason_js.is_internal_name name
       then entry
@@ -307,10 +310,12 @@ let havoc_refis ?name scope =
    - clear all refinements
    - clear all entries using the given make_specific function,
    which makes a new specific type from a general type.
+   If consts is true, const entries are havoc'd also. This is
+   bad and should go away - see Env_js.havoc_current_activation
  *)
-let havoc ~make_specific scope =
+let havoc ?(consts=false) ~make_specific scope =
   havoc_refis scope;
-  scope |> update_entries (Entry.havoc make_specific)
+  scope |> update_entries (Entry.havoc ~consts make_specific)
 
 let is_lex scope =
   match scope.kind with

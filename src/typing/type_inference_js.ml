@@ -1754,7 +1754,7 @@ and statement cx type_params_map = Ast.Statement.(
         | None -> None
         | Some (_, { Ast.Identifier.name; _ }) -> Some name
       in
-      Env_js.havoc_current_activation (mk_reason "break" loc);
+      Env_js.reset_current_activation (mk_reason "break" loc);
       Abnormal.(set (Break label_opt))
 
   | (loc, Continue { Continue.label }) ->
@@ -1762,7 +1762,7 @@ and statement cx type_params_map = Ast.Statement.(
         | None -> None
         | Some (_, { Ast.Identifier.name; _ }) -> Some name
       in
-      Env_js.havoc_current_activation (mk_reason "continue" loc);
+      Env_js.reset_current_activation (mk_reason "continue" loc);
       Abnormal.(set (Continue label_opt))
 
   | (loc, With _) ->
@@ -1930,13 +1930,13 @@ and statement cx type_params_map = Ast.Statement.(
         else t
       in
       Flow_js.flow cx (t, ret);
-      Env_js.havoc_current_activation reason;
+      Env_js.reset_current_activation reason;
       Abnormal.(set Return)
 
   | (loc, Throw { Throw.argument }) ->
       let reason = mk_reason "throw" loc in
       ignore (expression cx type_params_map argument);
-      Env_js.havoc_current_activation reason;
+      Env_js.reset_current_activation reason;
       Abnormal.(set Throw)
 
   (***************************************************************************)
@@ -3654,7 +3654,7 @@ and expression_ ~is_cond cx type_params_map loc e = Ast.Expression.(match e with
         }))::arguments ->
         (* invariant(false, ...) is treated like a throw *)
         ignore (List.map (expression_or_spread cx type_params_map) arguments);
-        Env_js.havoc_current_activation reason;
+        Env_js.reset_current_activation reason;
         Abnormal.(set Throw)
       | (Expression cond)::arguments ->
         ignore (List.map (expression_or_spread cx type_params_map) arguments);

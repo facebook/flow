@@ -32,3 +32,20 @@ function qux(b) {
     }
     var w:number = z; // error: string !~> number
 }
+
+// same basic test as foo(), but with const. probes the
+// logic that still uses havoc to do env resets.
+function test_const() {
+  let st: string = 'abc';
+
+  for (let i = 1; i < 100; i++) {
+    const fooRes: ?string = "HEY";
+    if (!fooRes) {
+      break;
+    }
+
+    st = fooRes; // no error
+  }
+
+  return st;
+}
