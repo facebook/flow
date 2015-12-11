@@ -123,6 +123,10 @@ let exports cx =
   let loc = Loc.({ none with source = Some (Context.file cx) }) in
   get_module_t cx m (Reason_js.mk_reason "exports" loc)
 
+let set_module_t cx reason f =
+  let module_name = Modulename.to_string (Context.module_name cx) in
+  Context.add_module cx module_name (Flow_js.mk_tvar_where cx reason f)
+
 (**
  * Before running inference, we assume that we're dealing with a CommonJS
  * module that has a built-in, initialized `exports` object (i.e. it is not an
@@ -2555,19 +2559,21 @@ and statement cx type_params_map = Ast.Statement.(
         Flow_js.mk_object_with_map_proto cx reason map (MixedT reason)
       )) in
     let module_t = mk_commonjs_module_t cx reason reason exports_ in
-    Flow_js.unify cx module_t t;
-    Flow_js.flow cx (
-      module_t,
-      SetNamedExportsT(
-        reason,
-        SMap.map Scope.Entry.(
-          function
-          | Type { _type; _ } -> _type
-          | _ -> assert_false "non-type entry in for_types"
-        ) for_types,
-        AnyT.t
+    let module_t = Flow_js.mk_tvar_where cx reason (fun t ->
+      Flow_js.flow cx (
+        module_t,
+        SetNamedExportsT(
+          reason,
+          SMap.map Scope.Entry.(
+            function
+            | Type { _type; _ } -> _type
+            | _ -> assert_false "non-type entry in for_types"
+          ) for_types,
+          t
+        )
       )
-    );
+    ) in
+    Flow_js.unify cx module_t t;
 
   | (loc, DeclareExportDeclaration {
       DeclareExportDeclaration.default;
@@ -2843,9 +2849,11 @@ and export_statement cx type_params_map loc
       mark_exports_type cx reason Context.ESModule);
 
     let local_name = if default then "default" else local_name in
-    Flow_js.flow cx (
-      exports cx,
-      SetNamedExportsT(reason, SMap.singleton local_name local_tvar, AnyT.t)
+    set_module_t cx reason (fun t ->
+      Flow_js.flow cx (
+        exports cx,
+        SetNamedExportsT(reason, SMap.singleton local_name local_tvar, t)
+      )
     )
   ) in
 
@@ -2911,9 +2919,11 @@ and export_statement cx type_params_map loc
         (if lookup_mode != ForType
         then mark_exports_type cx reason Context.ESModule);
 
-        Flow_js.flow cx (
-          exports cx,
-          SetNamedExportsT(reason, SMap.singleton remote_name local_tvar, AnyT.t)
+        set_module_t cx reason (fun t ->
+          Flow_js.flow cx (
+            exports cx,
+            SetNamedExportsT(reason, SMap.singleton remote_name local_tvar, t)
+          )
         )
       ) in
       List.iter export_specifier specifiers
@@ -6459,14 +6469,14 @@ let infer_ast ?(gc=true) ~metadata ~filename ~module_name ast =
 
     let type_params_map = SMap.empty in
 
+    let initial_module_t = exports cx in
+
     (* infer *)
     Flow_js.flow cx (init_exports, local_exports_var);
     infer_core cx type_params_map statements;
 
     scan_for_suppressions cx comments;
-  );
 
-  if checked then (
     let module_t = Context.(
       match Context.module_exports_type cx with
       (* CommonJS with a clobbered module.exports *)
@@ -6482,9 +6492,9 @@ let infer_ast ?(gc=true) ~metadata ~filename ~module_name ast =
       (* Uses standard ES module exports *)
       | ESModule -> mk_module_t cx reason_exports_module
     ) in
-    Flow_js.flow cx (module_t, exports cx);
+    Flow_js.flow cx (module_t, initial_module_t)
   ) else (
-    Flow_js.unify cx (exports cx) AnyT.t;
+    Flow_js.unify cx (exports cx) AnyT.t
   );
 
   (* insist that whatever type flows into exports is fully annotated *)
