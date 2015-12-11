@@ -1708,6 +1708,14 @@ let rec __flow cx (l, u) trace =
       SMap.iter (write_prop cx exports.exports_tmap) tmap;
       rec_flow cx trace (l, t_out)
 
+    (* export * from *)
+    | (ModuleT(_, source_exports), SetStarExportsT(reason, target_module_t, t_out)) ->
+      let source_tmap = find_props cx source_exports.exports_tmap in
+      rec_flow cx trace (
+        target_module_t,
+        SetNamedExportsT(reason, source_tmap, t_out)
+      )
+
     (**
      * ObjT CommonJS export values have their properties turned into named
      * exports
@@ -4217,6 +4225,7 @@ and subst cx ?(force=true) (map: Type.t SMap.t) t =
   | ReposLowerT _
   | SetElemT _
   | SetNamedExportsT _
+  | SetStarExportsT _
   | SetPropT _
   | SpecializeT _
   | SuperT _

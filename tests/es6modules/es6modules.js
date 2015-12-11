@@ -248,7 +248,7 @@ var numberValue2_renamed2 = require("ES6_ExportFrom_Intermediary2").numberValue2
 var aq1: number = numberValue2_renamed2;
 var aq2: string = numberValue2_renamed2; // Error: number ~> string
 
-var numberValue7 = require("ES6_ExportAllFrom_Intermediary2").numberValue1;
+var numberValue7 = require("ES6_ExportAllFrom_Intermediary2").numberValue2;
 var ar1: number = numberValue7;
 var ar2: string = numberValue7; // Error: number ~> string
 
@@ -275,3 +275,17 @@ import "./SideEffects";
 //////////////////////////////////////////////
 import specifierNumber1 from "ES6_Named1"; // Error: Did you mean `import {specifierNumber1} from ...`?
 import {specifierNumber} from "ES6_Named1"; // Error: Did you mean `specifierNumber1`?
+
+///////////////////////////////////////////////////
+// == Multi `export *` should combine exports == //
+///////////////////////////////////////////////////
+import {
+  numberValue1 as numberValue8,
+  numberValue2 as numberValue9
+} from "./ES6_ExportAllFromMulti";
+
+var at1: number = numberValue8;
+var at2: string = numberValue8; // Error: number ~> string
+
+var at3: number = numberValue9;
+var at4: string = numberValue9; // Error: number ~> string

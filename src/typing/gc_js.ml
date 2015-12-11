@@ -343,6 +343,10 @@ let rec gc cx state = function
       List.iter (gc cx state) (SMap.values t_smap);
       gc cx state t_out
 
+  | SetStarExportsT (_, target_module, t_out) ->
+      gc cx state target_module;
+      gc cx state t_out;
+
 and gc_id cx state id =
   let root_id, constraints = Flow_js.find_constraints cx id in (
     if state#mark id then (

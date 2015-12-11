@@ -388,6 +388,10 @@ and _json_of_t_impl json_cx t = Hh_json.(
       "tmap", json_of_tmap json_cx tmap;
       "t_out", _json_of_t json_cx t_out;
     ]
+  | SetStarExportsT (_, target_module_t, t_out) -> [
+    "target_module_t", _json_of_t json_cx target_module_t;
+    "t_out", _json_of_t json_cx t_out;
+  ]
 ))
 
 and json_of_polarity json_cx = check_depth json_of_polarity_impl json_cx

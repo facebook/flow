@@ -2930,18 +2930,15 @@ and export_statement cx type_params_map loc
 
     (* [declare] export [type] * from "source"; *)
     | ([], Some(ExportBatchSpecifier(_))) ->
-      let source_module_name, source_tvar = (
+      let source_module_name = (
         match source with
         | Some(src_loc, {
             Ast.Literal.value = Ast.Literal.String(module_name);
             _;
           }) ->
-            let reason_str =
-              spf "ModuleNamespaceObject for export * from \"%s\""
-                module_name
-            in
-            let reason = mk_reason reason_str src_loc in
-            (module_name, import_ns cx reason module_name src_loc)
+            Context.add_require cx module_name loc;
+            Type_inference_hooks_js.dispatch_import_hook cx module_name loc;
+            module_name
         | _
           -> failwith (
             "Parser Error: `export * from` must specify a string " ^
@@ -2949,23 +2946,15 @@ and export_statement cx type_params_map loc
           )
       ) in
 
-      let reason = mk_reason (spf "export * from \"%s\"" source_module_name) loc in
 
-      (**
-        * TODO: Should probably make a specialized use type for this.
-        *
-        * Doing this as it is done now means that only the last
-        * `export * from` statement in a module counts. So a scenario
-        * like the following will not behave properly:
-        *
-        *   // ModuleA
-        *   export * from "SourceModule1"; // These exports get dropped
-        *   export * from "SourceModule2";
-        *
-        * TODO: Also, add a test for this scenario once it's fixed
-        *)
-      mark_exports_type cx reason (Context.CommonJSModule(Some(loc)));
-      set_module_exports cx reason source_tvar
+      let reason = mk_reason (spf "export * from \"%s\"" source_module_name) loc in
+      mark_exports_type cx reason Context.ESModule;
+      set_module_t cx reason (fun t ->
+        Flow_js.flow cx (
+          get_module_t cx source_module_name reason,
+          SetStarExportsT(reason, exports cx, t)
+        )
+      )
 
     | ([], None) -> failwith (
         "Parser Error: Export statement missing one of: Declaration, " ^
