@@ -306,6 +306,12 @@ let mkdir_no_fail dir =
 let unlink_no_fail fn =
   try Unix.unlink fn with Unix.Unix_error (Unix.ENOENT, _, _) -> ()
 
+let readlink_no_fail fn =
+  if Sys.win32 && Sys.file_exists fn then
+    cat fn
+  else
+    try Unix.readlink fn with _ -> fn
+
 let splitext filename =
   let root = Filename.chop_extension filename in
   let root_length = String.length root in

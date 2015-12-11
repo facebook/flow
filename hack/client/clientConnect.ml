@@ -246,11 +246,7 @@ let rec connect ?(first_attempt=false) env retries start_time tail_env =
 
 let connect env =
   let link_file = ServerFiles.log_link env.root in
-  let log_file =
-    if Sys.win32 && Sys.file_exists link_file then
-      Sys_utils.cat link_file
-    else
-      link_file in
+  let log_file = Sys_utils.readlink_no_fail link_file in
   let start_time = Unix.time () in
   let tail_env = Tail.create_env log_file in
   try
