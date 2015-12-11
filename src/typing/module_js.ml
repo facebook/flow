@@ -373,14 +373,16 @@ module Node = struct
         else node_module path_acc (Filename.dirname dir) r
       )
 
-  let relative r =
-    Str.string_match Files_js.dir_sep r 0
-    || Str.string_match Files_js.current_dir_name r 0
+  let absolute r =
+    Str.string_match Files_js.absolute_path r 0
+
+  let explicitly_relative r =
+    Str.string_match Files_js.current_dir_name r 0
     || Str.string_match Files_js.parent_dir_name r 0
 
   let resolve_import ?path_acc file import_str =
     let dir = Filename.dirname file in
-    if relative import_str
+    if explicitly_relative import_str || absolute import_str
     then resolve_relative ?path_acc dir import_str
     else node_module path_acc dir import_str
 
@@ -453,7 +455,7 @@ module Haste: MODULE_SYSTEM = struct
             Modulename.Filename file
 
   let expanded_name r =
-    match Str.split_delim Files_js.dir_sep r with
+    match Str.split_delim (Str.regexp_string "/") r with
     | [] -> None
     | package_name::rest ->
         ReversePackageHeap.get package_name |> opt_map (fun package ->

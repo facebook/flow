@@ -481,7 +481,10 @@ let parse_excludes config lines =
   let excludes = lines
   |> List.map (fun (ln, line) -> String.trim line)
   |> List.filter (fun s -> s <> "")
-  |> List.map (fun s -> (s, Str.regexp s)) in
+  |> List.map (fun s ->
+    (* On Windows, we have to take care about '\'. *)
+    let reg = Str.regexp (Str.global_replace (Str.regexp "/") "[/\\]" s) in
+    (s, reg)) in
   { config with excludes; }
 
 let file_extension = Str.regexp "^\\(\\.[^ \t]+\\)+$"

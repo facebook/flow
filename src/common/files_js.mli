@@ -32,6 +32,7 @@ val lib_module: string
 val dir_sep: Str.regexp
 val current_dir_name: Str.regexp
 val parent_dir_name: Str.regexp
+val absolute_path: Str.regexp
 
 (* given a root, make a filter for file names *)
 val wanted: FlowConfig.config -> string -> bool
