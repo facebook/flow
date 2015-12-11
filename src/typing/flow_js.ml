@@ -3228,8 +3228,11 @@ let rec __flow cx (l, u) trace =
     (* ... and their fields/elements read *)
     (**************************************)
 
-    | (AnyFunT _, GetPropT(reason_op, _, tout))
-    | (AnyFunT _, GetElemT(reason_op, _, tout)) ->
+    | (AnyFunT _, (
+        GetPropT(reason_op, _, tout)
+        | GetElemT(reason_op, _, tout)
+        | LookupT(reason_op, _, _, _, tout)
+      )) ->
       rec_flow cx trace (AnyT.why reason_op, tout)
 
     (*****************************************)

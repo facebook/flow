@@ -52,5 +52,9 @@ let tests = [
     x.name = 123; // error, it's a string
     y.name = 123; // error, it's a string
     z.name = 123; // error, it's a string
+
+    // Non-(Function.prototype) properties on a `Function` type should be `any`
+    (z.foo: number);
+    (z.foo: string);
   },
 ];
