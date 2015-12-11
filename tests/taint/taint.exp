@@ -47,6 +47,18 @@ call-object-property.js:11:8,11: taint
 This type is incompatible with
 call-object-property.js:11:3,12: any
 
+call-object-property.js:18:5,5: taint
+This type is incompatible with
+call-object-property.js:18:3,3: any
+
+call-object-property.js:21:6,8: taint
+This type is incompatible with
+call-object-property.js:21:3,4: any
+
+call-object-property.js:24:12,15: taint
+This type is incompatible with
+call-object-property.js:24:4,9: any
+
 comparator.js:4:32,32: number
 Cannot be compared to
 comparator.js:4:28,28: string
@@ -113,4 +125,4 @@ use-types.js:27:33,36: taint
 This type is incompatible with
 use-types.js:27:24,29: number
 
-Found 27 errors
+Found 30 errors

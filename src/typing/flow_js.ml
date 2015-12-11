@@ -1897,7 +1897,9 @@ let rec __flow cx (l, u) trace =
     | AnyFunT reason, LookupT (_, _, _, x, _)
     | AnyFunT reason, MethodT (_, (_, x), _) when is_function_prototype x ->
       rec_flow cx trace (FunProtoT reason, u)
-    | (AnyFunT _, _) when function_like u || function_like_op u -> ()
+    | (AnyFunT _, _) when function_like u -> ()
+    | (AnyFunT _, _) when object_like u -> ()
+    | AnyFunT _, (TypeT _ | AnyFunT _ | AnyObjT _) -> ()
 
     (***************)
     (* maybe types *)
@@ -2187,7 +2189,7 @@ let rec __flow cx (l, u) trace =
         rec_flow cx trace (t, key)
       )
 
-    | (AnyObjT reason, GetKeysT (_, key)) ->
+    | ((AnyObjT reason | AnyFunT reason), GetKeysT (_, key)) ->
       let t = StrT (prefix_reason "key of " reason, AnyLiteral) in
       rec_flow cx trace (t, key)
 
@@ -2438,10 +2440,11 @@ let rec __flow cx (l, u) trace =
 
       Ops.pop ()
 
-    | AnyT reason_fundef,
+    | (AnyFunT reason_fundef | AnyT reason_fundef),
       CallT (reason_op, { this_t; params_tlist; return_t; _}) ->
-      rec_flow cx trace (l, this_t);
-      multiflow cx trace reason_op (params_tlist, [RestT l]);
+      let any = AnyT.why reason_fundef in
+      rec_flow cx trace (any, this_t);
+      multiflow cx trace reason_op (params_tlist, [RestT any]);
       rec_flow cx trace (AnyT.why reason_op, return_t);
 
     (*********************************************)
@@ -2705,6 +2708,17 @@ let rec __flow cx (l, u) trace =
       let reason_o = replace_reason "constructor return" reason in
       rec_flow cx trace (ret, ObjTestT(reason_o, new_obj, t))
 
+    | AnyFunT reason_fundef, ConstructorT (reason_op, args, t) ->
+      let reason_o = replace_reason "constructor return" reason_fundef in
+      multiflow cx trace reason_op (args, [RestT (AnyT.t)]);
+      rec_flow cx trace (AnyObjT reason_o, t);
+
+    (* Since we don't know the signature of a method on AnyFunT, assume every
+       parameter is an AnyT. *)
+    | (AnyFunT _, MethodT (reason_op, _, {params_tlist; _})) ->
+      let any = AnyT.why reason_op in
+      List.iter (fun t -> rec_flow cx trace (t, any)) params_tlist
+
     (*************************)
     (* "statics" can be read *)
     (*************************)
@@ -2946,8 +2960,8 @@ let rec __flow cx (l, u) trace =
 
       rec_flow cx trace (o, t)
 
-    (* ...AnyObjT yields AnyObjT *)
-    | AnyObjT _, ObjRestT (reason, _, t) ->
+    (* ...AnyObjT and AnyFunT yield AnyObjT *)
+    | (AnyFunT _ | AnyObjT _), ObjRestT (reason, _, t) ->
       rec_flow cx trace (AnyObjT reason, t)
 
     | (MixedT _, ObjRestT (reason, _, t)) ->
@@ -3209,6 +3223,22 @@ let rec __flow cx (l, u) trace =
        GetPropT(reason_op, (_, "prototype"), tout))
       ->
       rec_flow cx trace (instance, tout)
+
+    (**************************************)
+    (* ... and their fields/elements read *)
+    (**************************************)
+
+    | (AnyFunT _, GetPropT(reason_op, _, tout))
+    | (AnyFunT _, GetElemT(reason_op, _, tout)) ->
+      rec_flow cx trace (AnyT.why reason_op, tout)
+
+    (*****************************************)
+    (* ... and their fields/elements written *)
+    (*****************************************)
+
+    | (AnyFunT _, SetPropT(reason_op, _, t))
+    | (AnyFunT _, SetElemT(reason_op, _, t)) ->
+      rec_flow cx trace (t, AnyT.why reason_op)
 
     (***************************************************************)
     (* functions may be called by passing a receiver and arguments *)
