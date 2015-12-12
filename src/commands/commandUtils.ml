@@ -297,3 +297,13 @@ let range_string_of_loc loc = Loc.(
 )
 
 let exe_name = Filename.basename Sys.executable_name
+
+(* Take json for a command result, wrap it in a result field, and add an
+   optional error field. *)
+let wrap_command_result_json error json =
+  Hh_json.JSON_Object (
+    begin match error with
+    | None -> []
+    | Some s -> ["error", Hh_json.JSON_String s]
+    end @ ["result", json]
+  )

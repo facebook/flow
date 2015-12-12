@@ -5717,7 +5717,8 @@ module Autocomplete : sig
     | FailureAnyType
     | FailureUnhandledType of Type.t
 
-  val map_of_member_result: member_result -> Type.t SMap.t
+  val command_result_of_member_result: member_result ->
+    (Type.t SMap.t) command_result
 
   val extract_members: Context.t -> Type.t -> member_result
 
@@ -5729,12 +5730,20 @@ end = struct
     | FailureAnyType
     | FailureUnhandledType of Type.t
 
-  let map_of_member_result = function
-    | Success map -> map
-    | FailureMaybeType
-    | FailureAnyType
+  let command_result_of_member_result = function
+    | Success map -> command_result_success map
+    | FailureMaybeType ->
+        command_result_failure
+          "autocomplete on possibly null or undefined value"
+          SMap.empty
+    | FailureAnyType ->
+        command_result_failure
+          "not enough type information to autocomplete"
+          SMap.empty
     | FailureUnhandledType _ ->
-        SMap.empty
+        command_result_failure
+          "autocomplete on unexpected type of value (please file a task!)"
+          SMap.empty
 
   let find_props cx fields =
     SMap.filter (fun key _ ->
@@ -5826,7 +5835,8 @@ end = struct
 
   and extract_members_as_map cx this_t =
     let member_result = extract_members cx this_t in
-    map_of_member_result member_result
+    let _, result_map = command_result_of_member_result member_result in
+    result_map
 
 end
 
