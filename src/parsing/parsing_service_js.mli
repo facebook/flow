@@ -36,7 +36,7 @@ val reparse:
   Worker.t list option ->   (* Some=parallel, None=serial *)
   FilenameSet.t ->          (* filenames to reparse *)
   (unit -> unit) ->
-  results                   (* job results, not asts *)
+  FilenameSet.t * results   (* modified files and job results *)
 
 val has_ast: filename -> bool
 

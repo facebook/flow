@@ -1074,18 +1074,12 @@ let recheck genv env modified =
     i + 1
   ) modified 1 in
 
-  (* clear errors for modified files and master *)
-  let master_cx = Flow_js.master_cx () in
-  clear_errors ~debug (Context.file master_cx :: FilenameSet.elements modified);
-
   (* track deleted files, remove from modified set *)
   let deleted = FilenameSet.filter (fun f ->
     not (Sys.file_exists (string_of_filename f))
   ) modified in
-  let modified = FilenameSet.diff modified deleted in
-
-  let modified_count = FilenameSet.cardinal modified in
   let deleted_count = FilenameSet.cardinal deleted in
+  let modified = FilenameSet.diff modified deleted in
 
   (* clear errors, asts for deleted files *)
   Parsing_service_js.remove_asts deleted;
@@ -1097,12 +1091,20 @@ let recheck genv env modified =
   ) in
 
   Flow_logger.log "Parsing";
-  (* reparse modified and added files *)
-  let timing, (freshparsed, freshparse_fail, freshparse_errors) =
+  (* reparse modified and added files, updating modified to reflect removal of
+     unchanged files *)
+  let timing, (modified, (freshparsed, freshparse_fail, freshparse_errors)) =
     with_timer ~opts:options "Parsing" timing (fun () ->
       Parsing_service_js.reparse ~types_mode genv.ServerEnv.workers modified
         (fun () -> init_modes options)
     ) in
+  let modified_count = FilenameSet.cardinal modified in
+
+  (* clear errors for modified files and master *)
+  let master_cx = Flow_js.master_cx () in
+  clear_errors ~debug (Context.file master_cx :: FilenameSet.elements modified);
+
+  (* record reparse errors *)
   save_errors parse_errors freshparse_fail freshparse_errors;
 
   (* get old (unmodified, undeleted) files that were parsed successfully *)

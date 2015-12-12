@@ -116,9 +116,19 @@ let reducer ~types_mode init_modes (ok, fails, errors) file =
   let content = cat (string_of_filename file) in
   match (do_parse ~types_mode content file) with
   | OK (ast, info) ->
-      ParserHeap.add file (ast, info);
-      execute_hook file (Some ast);
-      (FilenameSet.add file ok, fails, errors)
+      (* Consider the file unchanged if its reparsing info is the same as its
+         old parsing info. A complication is that we don't want to drop a .flow
+         file, even if it is unchanged, since it might have been added to the
+         modified set simply because a corresponding implementation file was
+         also added. *)
+      if not (Loc.check_suffix file FlowConfig.flow_ext)
+        && ParserHeap.get_old file = Some (ast, info)
+      then (ok, fails, errors)
+      else begin
+        ParserHeap.add file (ast, info);
+        execute_hook file (Some ast);
+        (FilenameSet.add file ok, fails, errors)
+      end
   | Err converted ->
       execute_hook file None;
       (ok, file :: fails, converted :: errors)
@@ -147,10 +157,19 @@ let parse ~types_mode workers next init_modes =
   (ok, fail, errors)
 
 let reparse ~types_mode workers files init_modes =
-  ParserHeap.remove_batch files;
-  SharedMem.collect `gentle;
+  (* save old parsing info for files *)
+  ParserHeap.oldify_batch files;
   let next = Bucket.make (FilenameSet.elements files) in
-  parse ~types_mode workers next init_modes
+  let ok, fails, errors = parse ~types_mode workers next init_modes in
+  let modified =
+    List.fold_left (fun acc fail -> FilenameSet.add fail acc) ok fails in
+  (* discard old parsing info for modified files *)
+  ParserHeap.remove_old_batch modified;
+  let unchanged = FilenameSet.diff files modified in
+  (* restore old parsing info for unchanged files *)
+  ParserHeap.revive_batch unchanged;
+  SharedMem.collect `gentle;
+  modified, (ok, fails, errors)
 
 let has_ast file =
   ParserHeap.mem file
