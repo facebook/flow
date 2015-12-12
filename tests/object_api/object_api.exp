@@ -49,13 +49,13 @@ object_prototype.js:51:2,21: call of method `toString`
 Error:
 object_prototype.js:51:16,20: string
 This type is incompatible with
-[LIB] core.js:81:22,27: number
+[LIB] core.js:83:22,27: number
 
 object_prototype.js:52:2,20: call of method `toString`
 Error:
 object_prototype.js:52:16,19: null
 This type is incompatible with
-[LIB] core.js:81:22,27: number
+[LIB] core.js:83:22,27: number
 
 object_prototype.js:71:32,47: function type
 This type is incompatible with
@@ -95,7 +95,7 @@ object_prototype.js:150:23,28: number
 
 object_prototype.js:151:30,35: number
 This type is incompatible with
-[LIB] core.js:252:23,28: string
+[LIB] core.js:260:23,28: string
 
 object_prototype.js:155:32,47: function type
 This type is incompatible with
