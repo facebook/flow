@@ -4830,6 +4830,7 @@ and react_create_class cx type_params_map loc class_props = Ast.Expression.(
     | Some t -> SMap.remove name from_map, SMap.add name t to_map
     | None -> from_map, to_map
   in
+  let fmap = SMap.add "state" !state fmap in
   let fmap, smap =
     List.fold_left extract_map (fmap, SMap.empty)
       ["contextTypes";"childContextTypes";"displayName"]
