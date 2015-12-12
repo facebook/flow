@@ -3348,6 +3348,18 @@ let rec __flow cx (l, u) trace =
           ),
           tout2);
 
+    | (AnyFunT _, BindT (reason, {
+        this_t;
+        params_tlist;
+        return_t;
+        _;
+      })) ->
+      rec_flow cx trace (AnyT.why reason, this_t);
+      params_tlist |> List.iter (fun param_t ->
+        rec_flow cx trace (AnyT.why reason, param_t)
+      );
+      rec_flow cx trace (l, return_t)
+
     (***********************************************)
     (* You can use a function as a callable object *)
     (***********************************************)
