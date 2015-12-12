@@ -27,6 +27,7 @@ module Reason = Reason_js
 module ErrorSet = Errors_js.ErrorSet
 
 module NameSet = Set.Make(Modulename)
+module NameMap = Utils.MyMap(Modulename)
 
 (* Subset of a file's context, with the important distinction that module
    references in the file have been resolved to module names. *)

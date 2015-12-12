@@ -252,6 +252,9 @@ let checktime opts limit msg f =
 let logtime opts msg f =
   wraptime opts (fun _ -> true) msg f
 
+let showtime msg f =
+  time (fun _ -> true) (fun t -> spf "%s: %f" msg t) f
+
 (* local inference job:
    takes list of filenames, accumulates into parallel lists of
    filenames, error sets *)
@@ -794,9 +797,8 @@ let calc_dependencies workers files =
     ~neutral: FilenameMap.empty
     ~merge: FilenameMap.union
     ~next: (Bucket.make files) in
-  FilenameMap.map (FilenameSet.filter (fun f ->
-    FilenameMap.mem f deps
-  )) deps
+  deps |> FilenameMap.map (
+    FilenameSet.filter (fun f -> FilenameMap.mem f deps))
 
 (* commit newly inferred and removed modules, collect errors. *)
 let commit_modules ?(debug=false) inferred removed =
@@ -828,16 +830,9 @@ let heap_check files = Module_js.(
     assert (parsed);
     assert (checked || (NameSet.is_empty required));
   );
-  (* *)
 )
 
 (* helper *)
-(* make_merge_input takes list of files produced by infer, and
-   returns (true, list of files to merge (typically an expansion)),
-   or (false, list of files with errors). If the latter, merge is
-   not performed.
-   return a list of files that have been checked.
- *)
 let typecheck workers files removed unparsed opts timing make_merge_input =
   let debug = Options.is_debug_mode opts in
   (* TODO remove after lookup overhaul *)
@@ -852,23 +847,43 @@ let typecheck workers files removed unparsed opts timing make_merge_input =
   List.iter (Module_js.add_unparsed_info ~force_check) unparsed;
 
   (* create module dependency graph, warn on dupes etc. *)
-  let (timing, ()) = with_timer ~opts "CommitModules" timing (fun () ->
+  let timing, () = with_timer ~opts "CommitModules" timing (fun () ->
     commit_modules ~debug inferred removed
   ) in
 
-  (* SHUTTLE *)
   (* call supplied function to calculate closure of modules to merge *)
-  let (timing, merge_input) = with_timer ~opts "MakeMergeInput" timing (fun () ->
+  let timing, merge_input = with_timer ~opts "MakeMergeInput" timing (fun () ->
     make_merge_input inferred
   ) in
+
   match merge_input with
-  | true, to_merge, diff ->
-    Module_js.clear_infos diff;
-    FilenameSet.iter (fun f ->
-      let cx = ContextHeap.find_unsafe f in
-      Module_js.add_module_info cx
-    ) diff;
-    if debug then heap_check to_merge;
+  | true, to_merge, direct_deps ->
+    (* to_merge is the union of inferred (newly inferred files) and the
+       transitive closure of all dependents. direct_deps is the subset of
+       to_merge which depend on inferred files directly, or whose import
+       resolution paths overlap with them. imports within these files must
+       be re-resolved before merging.
+       Notes:
+       - since the dependencies created by module import statements are only
+       one level deep, only imports in direct deps need to be re-resolved
+       before merging. in contrast, dependencies on imported types themselves
+       are transitive along chains of imports, hence the need to re-merge the
+       transitive closure contained in to_merge.
+       - residue of module import resolution is held in Module_js.InfoHeap.
+       residue of type merging is held in SigContextHeap.
+       - since to_merge is the transitive closure of dependencies of inferred,
+       and direct_deps are dependencies of inferred, all dependencies of
+       direct_deps are included in to_merge
+      *)
+    Flow_logger.log "Re-resolving directly dependent files";
+    let timing, _ = with_timer ~opts "ResolveDirectDeps" timing (fun () ->
+      Module_js.clear_infos direct_deps;
+      FilenameSet.iter (fun f ->
+        let cx = ContextHeap.find_unsafe f in
+        Module_js.add_module_info cx
+      ) direct_deps;
+      if debug then heap_check to_merge;
+    ) in
     Flow_logger.log "Calculating dependencies";
     let timing, dependency_graph =
       with_timer ~opts "CalcDeps" timing (fun () ->
@@ -882,6 +897,7 @@ let typecheck workers files removed unparsed opts timing make_merge_input =
         merge_strict workers dependency_graph partition opts
       ) in
       if profile_and_not_quiet opts then Gc.print_stat stderr;
+      Flow_logger.log "Done";
       timing
     with exc ->
       prerr_endline (Printexc.to_string exc);
@@ -890,6 +906,7 @@ let typecheck workers files removed unparsed opts timing make_merge_input =
     (* collate errors by origin *)
     collate_errors to_merge;
     timing, to_merge
+
   | false, to_collate, _ ->
     (* collate errors by origin *)
     collate_errors to_collate;
@@ -918,52 +935,53 @@ let typecheck workers files removed unparsed opts timing make_merge_input =
         perform substitution of r.export into m.g, producing m.g'
 *)
 
-(* Given a module M,
-   - required(M) is the set of all modules required by M
+(* produce a reverse dependency map for the given fileset.
+   keys are modules provided by the files in fileset.
+   value for each key is the set of files which require that
+   module directly.
+ *)
+let calc_reverse_deps workers fileset = Module_js.(
+  (* distribute requires from a list of files into reverse-dep map *)
+  let job = List.fold_left (fun rdmap f ->
+    let reqs = (get_module_info f).required in
+    NameSet.fold (fun r rdmap ->
+      NameMap.add r FilenameSet.(
+        match NameMap.get r rdmap with
+        | None -> singleton f
+        | Some files -> add f files
+      ) rdmap
+    ) reqs rdmap
+  ) in
+  (* merge two reverse-dependency maps *)
+  let merge = NameMap.merge (fun _ x y ->
+    match x, y with
+    | Some v, None
+    | None, Some v -> Some v
+    | Some v, Some w -> Some (FilenameSet.union v w)
+    | None, None -> None
+  ) in
+  MultiWorker.call workers ~job ~merge
+    ~neutral: Module_js.NameMap.empty
+    ~next: (Bucket.make (FilenameSet.elements fileset))
+)
 
-   Given a module M and a set of modules S,
-   - M depends on S if M is in S, or any module in required(M) depends on S.
-
-   This computation can be readily parallelized, since basically it does the
-   same check on a large number of files.
-
-   Furthermore, since the set of modules S is fixed in this computation,
-   memoizing which modules M are already known to depend on S can speed up this
-   computation. But memoization is tricky. As the computation is set up, results
-   can go from false to true: we're searching for the existence of paths between
-   nodes in a graph via DFS, and at some point a path shows up, even though
-   previous recursive calls that explored a part of the graph may not have
-   discovered a path. Currently, we choose a simple memoization strategy that
-   effectively starts a new DFS per module M that memoizes its result only at
-   the end of the DFS. A more aggressive strategy that also works is memoizing
-   intermediate results when true (but not false), but we leave that trick for
-   later in the interests of simplicity.
-*)
-let file_depends_on = Module_js.(
-  let rec sig_depends_on seen modules memo m =
-    NameSet.mem m modules || (
-      module_exists m && (
-        let f = get_file m in
-        match FilenameMap.get f !memo with
-        | Some result -> result
-        | None ->
-          not (FilenameSet.mem f !seen) && (
-            seen := FilenameSet.add f !seen;
-            let { required; _ } = get_module_info f in
-            NameSet.exists (sig_depends_on seen modules memo) required
-          )
+(* given a reverse dependency map (from modules to the files which
+   require them), generate the closure of the dependencies of a
+   given fileset, using get_module_info to map files to modules
+ *)
+let dep_closure rdmap fileset = FilenameSet.(
+  let rec expand rdmap fileset seen =
+    fold (fun f acc ->
+      if mem f !seen then acc else (
+        seen := add f !seen;
+        let m = Module_js.((get_module_info f)._module) in
+        add f (match Module_js.NameMap.get m rdmap with
+          | None -> acc
+          | Some deps -> union acc (expand rdmap deps seen)
+        )
       )
-    )
-  in
-
-  fun modules memo f ->
-    let { _module; required; _ } = get_module_info f in
-    let result = NameSet.mem _module modules || (
-      let seen = ref FilenameSet.empty in
-      NameSet.exists (sig_depends_on seen modules memo) required
-    ) in
-    memo := FilenameMap.add f result !memo;
-    result
+    ) fileset empty
+  in expand rdmap fileset (ref empty)
 )
 
 (* Files that must be rechecked include those that immediately or recursively
@@ -971,40 +989,53 @@ let file_depends_on = Module_js.(
    the files that were directly added, deleted, or modified. In general, the map
    from files to modules may not be preserved: deleting files may delete
    modules, adding files may add modules, and modifying files may do both.
-*)
-let deps_job touched_modules files unmodified =
-  let memo = ref FilenameMap.empty in
-  List.rev_append files
-    (List.filter (file_depends_on touched_modules memo) unmodified)
 
-let deps workers unmodified inferred_files removed_modules =
-  let resolution_path_files = MultiWorker.call
-    workers
-    ~job: (List.fold_left (Module_js.resolution_path_dependency inferred_files))
+   Identify the direct and transitive dependents of re-inferred files and
+   removed modules.
+
+   - unmodified_files is all unmodified files in the current state
+   - inferred_files is all files that have just been through local inference
+   - touched_modules is all modules whose infos have just been cleared
+
+   Note that while touched_modules and (the modules provided by) inferred_files
+   usually overlap, inferred_files will include providers of new modules, and
+   touched_modules will include modules provided by deleted files.
+
+   Return the subset of unmodified_files transitively dependent on changes,
+   and the subset directly dependent on them.
+*)
+let dependent_files workers unmodified_files inferred_files touched_modules =
+
+  (* get reverse dependency map for unmodified files.
+     TODO should generate this once on startup, keep required_by
+     in module infos and update incrementally on recheck *)
+  let reverse_deps = calc_reverse_deps workers unmodified_files in
+
+  (* expand touched_modules to include those provided by new files *)
+  let touched_modules = FilenameSet.fold Module_js.(fun file mods ->
+    NameSet.add (get_module_name file) mods
+  ) inferred_files touched_modules in
+
+  (* files whose resolution paths may encounter newly inferred modules *)
+  let resolution_path_files = MultiWorker.call workers
+    ~job: (List.fold_left
+      (Module_js.resolution_path_dependency inferred_files))
     ~neutral: FilenameSet.empty
     ~merge: FilenameSet.union
-    ~next: (Bucket.make (FilenameSet.elements unmodified)) in
+    ~next: (Bucket.make (FilenameSet.elements unmodified_files)) in
 
-  (* add files with import resolution dependencies to inferred_files *)
-  let inferred_files = FilenameSet.union resolution_path_files inferred_files in
+  (* files that require touched modules directly, or may resolve to
+     modules provided by newly inferred files *)
+  let direct_deps = Module_js.(NameSet.fold (fun m s ->
+    match NameMap.get m reverse_deps with
+    | Some files -> FilenameSet.union s files
+    | None -> s
+    ) touched_modules FilenameSet.empty
+  ) |> FilenameSet.union resolution_path_files in
 
-  (* touched modules are all that were inferred, re-inferred or removed *)
-  let touched_modules = FilenameSet.fold (fun file mods ->
-    Module_js.(NameSet.add (get_module_name file) mods)
-  ) inferred_files removed_modules in
-
-  (* return untouched files that depend on these *)
-  let result_list = MultiWorker.call
-    workers
-    ~job: (deps_job touched_modules)
-    ~neutral: []
-    ~merge: List.rev_append
-    ~next: (Bucket.make (FilenameSet.elements unmodified)) in
-
-  List.fold_left (fun acc file ->
-    FilenameSet.add file acc
-  ) FilenameSet.empty result_list
-
+  (* (transitive dependents are re-merged, directs are also re-resolved) *)
+  dep_closure reverse_deps direct_deps,
+  direct_deps
 
 (* We maintain the following invariant across rechecks: The keyset of
    `files_info` contains files that parsed successfully in the previous
@@ -1089,7 +1120,7 @@ let recheck genv env modified =
     (FilenameSet.cardinal freshparsed)
     (FilenameSet.cardinal unmodified_parsed);
 
-  (* clear info for modified and deleted files *)
+  (* clear contexts and module registrations for modified and deleted files *)
   (* remember deleted modules *)
   let to_clear = FilenameSet.union modified deleted in
   ContextHeap.remove_batch to_clear;
@@ -1101,7 +1132,7 @@ let recheck genv env modified =
   let dependent_file_count = ref 0 in
 
   (* recheck *)
-  let (timing, _) = typecheck
+  let timing, _ = typecheck
     genv.ServerEnv.workers
     freshparsed
     removed_modules
@@ -1110,13 +1141,19 @@ let recheck genv env modified =
     timing
     (fun inferred ->
       (* need to merge the closure of inferred files and their deps *)
-      let inferred_set = List.fold_left (fun acc file ->
-        FilenameSet.add file acc
-      ) FilenameSet.empty inferred in
-      let unmod_deps = deps genv.ServerEnv.workers
-        unmodified_parsed inferred_set removed_modules in
+      let inferred_set = FilenameSet.of_list inferred in
 
-      let n = FilenameSet.cardinal unmod_deps in
+      (* direct_deps are unmodified files which directly depend on
+         inferred files or removed modules. all_deps are direct_deps
+         plus their dependents (transitive closure) *)
+      let all_deps, direct_deps = dependent_files
+        genv.ServerEnv.workers
+        unmodified_parsed
+        inferred_set
+        removed_modules
+      in
+
+      let n = FilenameSet.cardinal all_deps in
       if n > 0
       then Flow_logger.log "remerge %d dependent files:" n;
       dependent_file_count := n;
@@ -1124,20 +1161,23 @@ let recheck genv env modified =
       let _ = FilenameSet.fold (fun f i ->
         Flow_logger.log "%d/%d: %s" i n (string_of_filename f);
         i + 1
-      ) unmod_deps 1 in
-      Flow_logger.log "Merging";
+      ) all_deps 1 in
+      Flow_logger.log "Merge prep";
 
       (* clear merge errors for unmodified dependents *)
       FilenameSet.iter (fun file ->
         merge_errors := FilenameMap.remove file !merge_errors;
-      ) unmod_deps;
+      ) all_deps;
 
-      let to_merge = FilenameSet.union unmod_deps inferred_set in
+      (* to_merge is inferred files plus all dependents. prep for re-merge *)
+      let to_merge = FilenameSet.union all_deps inferred_set in
       LeaderHeap.remove_batch to_merge;
       SigContextHeap.remove_batch to_merge;
       SharedMem.collect `gentle;
 
-      true, FilenameSet.elements to_merge, unmod_deps
+      true,
+      FilenameSet.elements to_merge,
+      direct_deps
     ) in
 
   FlowEventLogger.recheck
