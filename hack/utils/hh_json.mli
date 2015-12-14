@@ -29,5 +29,6 @@ val json_of_file : ?strict:bool -> string -> json
 val get_object_exn : json -> (string * json) list
 val get_array_exn : json -> json list
 val get_string_exn : json -> string
+val get_bool_exn : json -> bool
 
 val int_ : int -> json

@@ -343,6 +343,7 @@ let lib_reason r =
   | Some LibFile _ -> true
   | Some Builtins -> true
   | Some SourceFile _ -> false
+  | Some JsonFile _ -> false
   | None -> false)
 
 let ordered_reasons l u =
@@ -1708,6 +1709,14 @@ let rec __flow cx (l, u) trace =
       SMap.iter (write_prop cx exports.exports_tmap) tmap;
       rec_flow cx trace (l, t_out)
 
+    (* export * from *)
+    | (ModuleT(_, source_exports), SetStarExportsT(reason, target_module_t, t_out)) ->
+      let source_tmap = find_props cx source_exports.exports_tmap in
+      rec_flow cx trace (
+        target_module_t,
+        SetNamedExportsT(reason, source_tmap, t_out)
+      )
+
     (**
      * ObjT CommonJS export values have their properties turned into named
      * exports
@@ -2203,12 +2212,38 @@ let rec __flow cx (l, u) trace =
         intersection of other def types be processed before we process unions
         and intersections: otherwise we may get spurious errors. **)
 
-    (***************)
-    (* union types *)
-    (***************)
+    (********************************)
+    (* union and intersection types *)
+    (********************************)
+
+    (* cases where there is no loss of precision *)
 
     | (UnionT(_,ts), _) ->
       ts |> List.iter (fun t -> rec_flow cx trace (t,u))
+
+    | (_, IntersectionT(_,ts)) ->
+      ts |> List.iter (fun t -> rec_flow cx trace (l,t))
+
+    (* When a subtyping question involves a union appearing on the right or an
+       intersection appearing on the left, the simplification rules are
+       imprecise: we split the union / intersection into cases and try to prove
+       that the subtyping question holds for one of the cases, but each of those
+       cases may be unprovable, which might lead to spurious errors. In
+       particular, obvious assertions such as (A | B) & C is a subtype of A | B
+       cannot be proved if we choose to split the union first (discharging
+       unprovable subgoals of (A | B) & C being a subtype of either A or B);
+       dually, obvious assertions such as A & B is a subtype of (A & B) | C
+       cannot be proved if we choose to simplify the intersection first
+       (discharging unprovable subgoals of either A or B being a subtype of (A &
+       B) | C). So instead, we try inclusion rules to handle such cases.
+
+       An orthogonal benefit is that for large unions or intersections, checking
+       inclusion is significantly faster that splitting for proving simple
+       inequalities (O(n) instead of O(n^2) for n cases).  *)
+
+    | _, UnionT(_,ts) when List.mem l ts -> ()
+
+    | IntersectionT(_,ts), _ when List.mem u ts -> ()
 
     (** To check that the concrete type l may flow to UnionT(_, ts), we try each
         type in ts in turn. The types in ts may be type variables, but by
@@ -2227,18 +2262,13 @@ let rec __flow cx (l, u) trace =
     | (_, UnionT(r,ts)) ->
       try_union cx trace l r ts
 
+    (* maybe and optional types are just special union types *)
+
     | (t1, MaybeT(t2)) ->
       rec_flow cx trace (t1,t2)
 
     | (t1, OptionalT(t2)) ->
       rec_flow cx trace (t1, t2)
-
-    (**********************)
-    (* intersection types *)
-    (**********************)
-
-    | (_, IntersectionT(_,ts)) ->
-      ts |> List.iter (fun t -> rec_flow cx trace (l,t))
 
     (** To check that IntersectionT(_, ts) may flow to the concrete type u, we
         try each type in ts in turn. The types in ts may be type variables, but
@@ -3228,8 +3258,11 @@ let rec __flow cx (l, u) trace =
     (* ... and their fields/elements read *)
     (**************************************)
 
-    | (AnyFunT _, GetPropT(reason_op, _, tout))
-    | (AnyFunT _, GetElemT(reason_op, _, tout)) ->
+    | (AnyFunT _, (
+        GetPropT(reason_op, _, tout)
+        | GetElemT(reason_op, _, tout)
+        | LookupT(reason_op, _, _, _, tout)
+      )) ->
       rec_flow cx trace (AnyT.why reason_op, tout)
 
     (*****************************************)
@@ -3336,6 +3369,18 @@ let rec __flow cx (l, u) trace =
             mk_functiontype tins1 tout1
           ),
           tout2);
+
+    | (AnyFunT _, BindT (reason, {
+        this_t;
+        params_tlist;
+        return_t;
+        _;
+      })) ->
+      rec_flow cx trace (AnyT.why reason, this_t);
+      params_tlist |> List.iter (fun param_t ->
+        rec_flow cx trace (AnyT.why reason, param_t)
+      );
+      rec_flow cx trace (l, return_t)
 
     (***********************************************)
     (* You can use a function as a callable object *)
@@ -4214,6 +4259,7 @@ and subst cx ?(force=true) (map: Type.t SMap.t) t =
   | ReposLowerT _
   | SetElemT _
   | SetNamedExportsT _
+  | SetStarExportsT _
   | SetPropT _
   | SpecializeT _
   | SuperT _
@@ -5705,7 +5751,8 @@ module Autocomplete : sig
     | FailureAnyType
     | FailureUnhandledType of Type.t
 
-  val map_of_member_result: member_result -> Type.t SMap.t
+  val command_result_of_member_result: member_result ->
+    (Type.t SMap.t) command_result
 
   val extract_members: Context.t -> Type.t -> member_result
 
@@ -5717,12 +5764,20 @@ end = struct
     | FailureAnyType
     | FailureUnhandledType of Type.t
 
-  let map_of_member_result = function
-    | Success map -> map
-    | FailureMaybeType
-    | FailureAnyType
+  let command_result_of_member_result = function
+    | Success map -> command_result_success map
+    | FailureMaybeType ->
+        command_result_failure
+          "autocomplete on possibly null or undefined value"
+          SMap.empty
+    | FailureAnyType ->
+        command_result_failure
+          "not enough type information to autocomplete"
+          SMap.empty
     | FailureUnhandledType _ ->
-        SMap.empty
+        command_result_failure
+          "autocomplete on unexpected type of value (please file a task!)"
+          SMap.empty
 
   let find_props cx fields =
     SMap.filter (fun key _ ->
@@ -5814,7 +5869,8 @@ end = struct
 
   and extract_members_as_map cx this_t =
     let member_result = extract_members cx this_t in
-    map_of_member_result member_result
+    let _, result_map = command_result_of_member_result member_result in
+    result_map
 
 end
 
@@ -5953,6 +6009,9 @@ let rec assert_ground ?(infer=false) cx skip ids = function
           that represented annotations so that they could be ignored. Since we
           can now ignore annotations directly, consider renaming or getting rid
           of derivable entirely. **)
+      ()
+
+  | ExistsT _ ->
       ()
 
   | t -> failwith (string_of_reason (reason_of_t t)) (** TODO **)

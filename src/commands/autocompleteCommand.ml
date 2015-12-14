@@ -94,7 +94,7 @@ let main option_values root json strip_root args () =
     else fun loc -> loc in
   let ic, oc = connect option_values root in
   ServerProt.cmd_to_channel oc (ServerProt.AUTOCOMPLETE file);
-  let completions = Marshal.from_channel ic in
+  let error, completions = Marshal.from_channel ic in
   if json
   then (
     let results =
@@ -102,7 +102,8 @@ let main option_values root json strip_root args () =
         (AutocompleteService_js.autocomplete_result_to_json loc_preprocessor)
         completions
     in
-    print_endline (Hh_json.json_to_string (Hh_json.JSON_Array results))
+    let json = wrap_command_result_json error (Hh_json.JSON_Array results) in
+    print_endline (Hh_json.json_to_string json)
   ) else (
     List.iter (fun res ->
       let name = res.AutocompleteService_js.res_name in

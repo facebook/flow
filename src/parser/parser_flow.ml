@@ -4135,8 +4135,11 @@ end
 let do_parse parser fail ?(token_sink=None) ?(parse_options=None) filename content =
   let lb = Lexing.from_string content in
   (match filename with
-    | None | Some Loc.Builtins -> ()
-    | Some Loc.LibFile fn | Some Loc.SourceFile fn ->
+    | None
+    | Some Loc.Builtins -> ()
+    | Some Loc.LibFile fn
+    | Some Loc.SourceFile fn
+    | Some Loc.JsonFile fn ->
       lb.Lexing.lex_curr_p <- {
         lb.Lexing.lex_curr_p with Lexing.pos_fname = fn
       });

@@ -316,6 +316,7 @@ type t =
       * (* local ModuleT *) t
       * (* 't_out' to receive the resolved ModuleT *) t_out
   | SetNamedExportsT of reason * t SMap.t * t_out
+  | SetStarExportsT of reason * t * t_out
 
 and predicate =
   | AndP of predicate * predicate
@@ -570,6 +571,7 @@ let is_use = function
   | ImportTypeofT _
   | CJSExtractNamedExportsT _
   | SetNamedExportsT _
+  | SetStarExportsT _
     -> true
 
   | _ -> false
@@ -742,6 +744,7 @@ let rec reason_of_t = function
   | ImportTypeofT (reason, _) -> reason
   | CJSExtractNamedExportsT (reason, _, _) -> reason
   | SetNamedExportsT (reason, _, _) -> reason
+  | SetStarExportsT (reason, _, _) -> reason
 
 
 (* helper: we want the tvar id as well *)
@@ -919,6 +922,7 @@ let rec mod_reason_of_t f = function
 
   | CJSExtractNamedExportsT (reason, t1, t2) -> CJSExtractNamedExportsT (f reason, t1, t2)
   | SetNamedExportsT (reason, tmap, t_out) -> SetNamedExportsT(f reason, tmap, t_out)
+  | SetStarExportsT (reason, target_module_t, t_out) -> SetStarExportsT(f reason, target_module_t, t_out)
 
 
 (* type comparison mod reason *)
@@ -1019,6 +1023,7 @@ let string_of_ctor = function
   | CJSRequireT _ -> "CJSRequireT"
   | CJSExtractNamedExportsT _ -> "CJSExtractNamedExportsT"
   | SetNamedExportsT _ -> "SetNamedExportsT"
+  | SetStarExportsT _ -> "SetStarExportsT"
 
 
 let string_of_binary_test = function

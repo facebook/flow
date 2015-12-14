@@ -169,6 +169,7 @@ class ['a] t = object(self)
   | ImportTypeofT (_, _)
   | CJSExtractNamedExportsT (_, _, _)
   | SetNamedExportsT (_, _, _)
+  | SetStarExportsT (_, _, _)
     -> self#__TODO__ cx acc
 
   (* The default behavior here could be fleshed out a bit, to look up the graph,

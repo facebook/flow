@@ -63,8 +63,8 @@ let getdef_get_result cx state =
   | Some Gdmem (name, this) ->
       let this_t = Flow_js.resolve_type cx this in
       let member_result = Flow_js.Autocomplete.extract_members cx this_t in
-      let result_map =
-        Flow_js.Autocomplete.map_of_member_result member_result in
+      let _, result_map =
+        Flow_js.Autocomplete.command_result_of_member_result member_result in
       (match SMap.get name result_map with
       | Some t ->
           Type.loc_of_t t

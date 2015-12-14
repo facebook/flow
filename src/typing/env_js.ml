@@ -1139,10 +1139,17 @@ let widen_env =
 let havoc_all () =
   iter_scopes (Scope.havoc ~make_specific:(fun general -> general))
 
-(* set specific type of every non-internal var in top activation to undefined,
-   and clear heap refinements *)
-let havoc_current_activation reason =
-  iter_local_scopes (Scope.havoc ~make_specific:(fun _ -> EmptyT reason))
+(* set specific type of every non-internal var *and const*
+   in top activation to undefined, and clear heap refinements.
+   Note: this operation is needed by our control flow handling, which is
+   left over from the earlier, looser model. To properly simulate early exits,
+   all entries including consts must have their specific entries set to EmptyT.
+   TODO rework the early-exit stuff to not break invariants. Until then it'll
+   remain a source of bugs.
+ *)
+let reset_current_activation reason =
+  iter_local_scopes (
+    Scope.havoc ~consts:true ~make_specific:(fun _ -> EmptyT reason))
 
 (* clear refinement info for (topmost bindings of) given names in env *)
 let havoc_vars = Scope.(

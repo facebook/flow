@@ -123,6 +123,10 @@ let exports cx =
   let loc = Loc.({ none with source = Some (Context.file cx) }) in
   get_module_t cx m (Reason_js.mk_reason "exports" loc)
 
+let set_module_t cx reason f =
+  let module_name = Modulename.to_string (Context.module_name cx) in
+  Context.add_module cx module_name (Flow_js.mk_tvar_where cx reason f)
+
 (**
  * Before running inference, we assume that we're dealing with a CommonJS
  * module that has a built-in, initialized `exports` object (i.e. it is not an
@@ -1754,7 +1758,7 @@ and statement cx type_params_map = Ast.Statement.(
         | None -> None
         | Some (_, { Ast.Identifier.name; _ }) -> Some name
       in
-      Env_js.havoc_current_activation (mk_reason "break" loc);
+      Env_js.reset_current_activation (mk_reason "break" loc);
       Abnormal.(set (Break label_opt))
 
   | (loc, Continue { Continue.label }) ->
@@ -1762,7 +1766,7 @@ and statement cx type_params_map = Ast.Statement.(
         | None -> None
         | Some (_, { Ast.Identifier.name; _ }) -> Some name
       in
-      Env_js.havoc_current_activation (mk_reason "continue" loc);
+      Env_js.reset_current_activation (mk_reason "continue" loc);
       Abnormal.(set (Continue label_opt))
 
   | (loc, With _) ->
@@ -1930,13 +1934,13 @@ and statement cx type_params_map = Ast.Statement.(
         else t
       in
       Flow_js.flow cx (t, ret);
-      Env_js.havoc_current_activation reason;
+      Env_js.reset_current_activation reason;
       Abnormal.(set Return)
 
   | (loc, Throw { Throw.argument }) ->
       let reason = mk_reason "throw" loc in
       ignore (expression cx type_params_map argument);
-      Env_js.havoc_current_activation reason;
+      Env_js.reset_current_activation reason;
       Abnormal.(set Throw)
 
   (***************************************************************************)
@@ -2555,19 +2559,21 @@ and statement cx type_params_map = Ast.Statement.(
         Flow_js.mk_object_with_map_proto cx reason map (MixedT reason)
       )) in
     let module_t = mk_commonjs_module_t cx reason reason exports_ in
-    Flow_js.unify cx module_t t;
-    Flow_js.flow cx (
-      module_t,
-      SetNamedExportsT(
-        reason,
-        SMap.map Scope.Entry.(
-          function
-          | Type { _type; _ } -> _type
-          | _ -> assert_false "non-type entry in for_types"
-        ) for_types,
-        AnyT.t
+    let module_t = Flow_js.mk_tvar_where cx reason (fun t ->
+      Flow_js.flow cx (
+        module_t,
+        SetNamedExportsT(
+          reason,
+          SMap.map Scope.Entry.(
+            function
+            | Type { _type; _ } -> _type
+            | _ -> assert_false "non-type entry in for_types"
+          ) for_types,
+          t
+        )
       )
-    );
+    ) in
+    Flow_js.unify cx module_t t;
 
   | (loc, DeclareExportDeclaration {
       DeclareExportDeclaration.default;
@@ -2843,9 +2849,11 @@ and export_statement cx type_params_map loc
       mark_exports_type cx reason Context.ESModule);
 
     let local_name = if default then "default" else local_name in
-    Flow_js.flow cx (
-      exports cx,
-      SetNamedExportsT(reason, SMap.singleton local_name local_tvar, AnyT.t)
+    set_module_t cx reason (fun t ->
+      Flow_js.flow cx (
+        exports cx,
+        SetNamedExportsT(reason, SMap.singleton local_name local_tvar, t)
+      )
     )
   ) in
 
@@ -2911,27 +2919,26 @@ and export_statement cx type_params_map loc
         (if lookup_mode != ForType
         then mark_exports_type cx reason Context.ESModule);
 
-        Flow_js.flow cx (
-          exports cx,
-          SetNamedExportsT(reason, SMap.singleton remote_name local_tvar, AnyT.t)
+        set_module_t cx reason (fun t ->
+          Flow_js.flow cx (
+            exports cx,
+            SetNamedExportsT(reason, SMap.singleton remote_name local_tvar, t)
+          )
         )
       ) in
       List.iter export_specifier specifiers
 
     (* [declare] export [type] * from "source"; *)
     | ([], Some(ExportBatchSpecifier(_))) ->
-      let source_module_name, source_tvar = (
+      let source_module_name = (
         match source with
         | Some(src_loc, {
             Ast.Literal.value = Ast.Literal.String(module_name);
             _;
           }) ->
-            let reason_str =
-              spf "ModuleNamespaceObject for export * from \"%s\""
-                module_name
-            in
-            let reason = mk_reason reason_str src_loc in
-            (module_name, import_ns cx reason module_name src_loc)
+            Context.add_require cx module_name loc;
+            Type_inference_hooks_js.dispatch_import_hook cx module_name loc;
+            module_name
         | _
           -> failwith (
             "Parser Error: `export * from` must specify a string " ^
@@ -2939,23 +2946,15 @@ and export_statement cx type_params_map loc
           )
       ) in
 
-      let reason = mk_reason (spf "export * from \"%s\"" source_module_name) loc in
 
-      (**
-        * TODO: Should probably make a specialized use type for this.
-        *
-        * Doing this as it is done now means that only the last
-        * `export * from` statement in a module counts. So a scenario
-        * like the following will not behave properly:
-        *
-        *   // ModuleA
-        *   export * from "SourceModule1"; // These exports get dropped
-        *   export * from "SourceModule2";
-        *
-        * TODO: Also, add a test for this scenario once it's fixed
-        *)
-      mark_exports_type cx reason (Context.CommonJSModule(Some(loc)));
-      set_module_exports cx reason source_tvar
+      let reason = mk_reason (spf "export * from \"%s\"" source_module_name) loc in
+      mark_exports_type cx reason Context.ESModule;
+      set_module_t cx reason (fun t ->
+        Flow_js.flow cx (
+          get_module_t cx source_module_name reason,
+          SetStarExportsT(reason, exports cx, t)
+        )
+      )
 
     | ([], None) -> failwith (
         "Parser Error: Export statement missing one of: Declaration, " ^
@@ -3654,7 +3653,7 @@ and expression_ ~is_cond cx type_params_map loc e = Ast.Expression.(match e with
         }))::arguments ->
         (* invariant(false, ...) is treated like a throw *)
         ignore (List.map (expression_or_spread cx type_params_map) arguments);
-        Env_js.havoc_current_activation reason;
+        Env_js.reset_current_activation reason;
         Abnormal.(set Throw)
       | (Expression cond)::arguments ->
         ignore (List.map (expression_or_spread cx type_params_map) arguments);
@@ -4831,6 +4830,7 @@ and react_create_class cx type_params_map loc class_props = Ast.Expression.(
     | Some t -> SMap.remove name from_map, SMap.add name t to_map
     | None -> from_map, to_map
   in
+  let fmap = SMap.add "state" !state fmap in
   let fmap, smap =
     List.fold_left extract_map (fmap, SMap.empty)
       ["contextTypes";"childContextTypes";"displayName"]
@@ -6459,14 +6459,14 @@ let infer_ast ?(gc=true) ~metadata ~filename ~module_name ast =
 
     let type_params_map = SMap.empty in
 
+    let initial_module_t = exports cx in
+
     (* infer *)
     Flow_js.flow cx (init_exports, local_exports_var);
     infer_core cx type_params_map statements;
 
     scan_for_suppressions cx comments;
-  );
 
-  if checked then (
     let module_t = Context.(
       match Context.module_exports_type cx with
       (* CommonJS with a clobbered module.exports *)
@@ -6482,9 +6482,9 @@ let infer_ast ?(gc=true) ~metadata ~filename ~module_name ast =
       (* Uses standard ES module exports *)
       | ESModule -> mk_module_t cx reason_exports_module
     ) in
-    Flow_js.flow cx (module_t, exports cx);
+    Flow_js.flow cx (module_t, initial_module_t)
   ) else (
-    Flow_js.unify cx (exports cx) AnyT.t;
+    Flow_js.unify cx (exports cx) AnyT.t
   );
 
   (* insist that whatever type flows into exports is fully annotated *)

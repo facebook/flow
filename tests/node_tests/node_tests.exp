@@ -1,4 +1,32 @@
 
+json_file/test.js:4:2,9: object literal
+This type is incompatible with
+json_file/test.js:4:12,15: undefined
+
+json_file/test.js:5:2,13: boolean
+This type is incompatible with
+json_file/test.js:5:16,19: undefined
+
+json_file/test.js:6:2,9: null
+This type is incompatible with
+json_file/test.js:6:12,18: boolean
+
+json_file/test.js:6:2,9: string
+This type is incompatible with
+json_file/test.js:6:12,18: boolean
+
+json_file/test.js:6:2,9: undefined
+This type is incompatible with
+json_file/test.js:6:12,18: boolean
+
+json_file/test.js:9:2,10: string
+This type is incompatible with
+json_file/test.js:9:13,16: undefined
+
+json_file/test.js:12:2,10: number
+This type is incompatible with
+json_file/test.js:12:13,16: undefined
+
 invalid_package_file/package.json: Unexpected end of input
 
-Found 1 error
+Found 8 errors

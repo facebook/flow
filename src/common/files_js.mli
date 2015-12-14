@@ -12,6 +12,7 @@
 
 val global_file_name: string
 
+val is_json_file: string -> bool
 val is_flow_file: string -> bool
 
 (* name of library directory defining builtins *)

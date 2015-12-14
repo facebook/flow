@@ -104,6 +104,7 @@ module Opts = struct
   let module_file_exts = SSet.empty
         |> SSet.add ".js"
         |> SSet.add ".jsx"
+        |> SSet.add ".json"
 
   let default_options = {
     enable_unsafe_getters_and_setters = false;

@@ -267,4 +267,18 @@ es6modules.js:265:19,26: string
 This type is incompatible with
 es6modules.js:265:10,15: number
 
-Found 63 errors
+es6modules.js:276:8,23: Default import from `ES6_Named1`
+This module has no default export. Did you mean `import {specifierNumber1} from "ES6_Named1"`?
+
+es6modules.js:277:9,23: Named import from module `ES6_Named1`
+This module has no named export called `specifierNumber`. Did you mean `specifierNumber1`?
+
+es6modules.js:288:19,30: number
+This type is incompatible with
+es6modules.js:288:10,15: string
+
+es6modules.js:291:19,30: number
+This type is incompatible with
+es6modules.js:291:10,15: string
+
+Found 67 errors

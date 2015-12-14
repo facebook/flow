@@ -28,7 +28,12 @@ open Utils
    instead of `open Loc`, which pollutes too much. *)
 type filename = Loc.filename
 let string_of_filename = Loc.string_of_filename
-module FilenameSet = Set.Make(Loc.FilenameKey)
+
+module FilenameSet = struct
+  include Set.Make(Loc.FilenameKey)
+  let of_list = List.fold_left (fun s f -> add f s) empty
+end
+
 module FilenameMap = Utils.MyMap(Loc.FilenameKey)
 
 (* ok-or-error type *)
@@ -152,3 +157,12 @@ let typo_suggestions =
       | _ -> 3
     in
     fst (List.fold_left (fold_results limit name) ([], max_int) possible_names)
+
+(* Wrapper for command results that carry an optional failure message. Ideally,
+   this data format would be used to wrap results of all commands, but currently
+   we use it only for autocomplete. *)
+(** TODO: This definition is here instead of somewhere closer to server/ or
+    commands/ because Flow_js.Autocomplete uses it. **)
+type 'a command_result = string option * 'a
+let command_result_success r = None, r
+let command_result_failure s r = Some s, r

@@ -28,6 +28,8 @@ let is_prefix prefix =
     else prefix ^ Filename.dir_sep
   in fun path -> str_starts_with path prefix
 
+let is_json_file path = Filename.check_suffix path ".json"
+
 let is_valid_path =
   let is_valid_path_helper path =
     let file_exts = FlowConfig.((get_unsafe ()).options.Opts.module_file_exts) in

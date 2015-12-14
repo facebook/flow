@@ -140,7 +140,7 @@ struct
           parse_result
       with exn ->
         Flow_logger.log "Couldn't autocomplete%s" (Printexc.to_string exn);
-        []
+        command_result_success []
     in
     Autocomplete_js.autocomplete_unset_hooks ();
     Marshal.to_channel oc results [];

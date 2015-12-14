@@ -154,7 +154,7 @@ val copy_env:
 
 val havoc_all: unit -> unit
 
-val havoc_current_activation: reason -> unit
+val reset_current_activation: reason -> unit
 
 val havoc_vars: Changeset.t -> unit
 

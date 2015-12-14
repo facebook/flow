@@ -114,7 +114,9 @@ let format_reason_color
   let s = if one_line then Str.global_replace (Str.regexp "\n") "\\n" s else s in
 
   let source = match loc.source with
-  | Some LibFile filename | Some SourceFile filename -> [file_clr, filename]
+  | Some LibFile filename
+  | Some SourceFile filename
+  | Some JsonFile filename -> [file_clr, filename]
   | None | Some Builtins -> []
   in
   let loc_format =
@@ -207,7 +209,8 @@ let file_of_source ~root source =
           then String.sub filename 6 (filename_length - 6)
           else filename in
         Some (normalize_filename ~root filename)
-    | Some Loc.SourceFile filename ->
+    | Some Loc.SourceFile filename
+    | Some Loc.JsonFile filename ->
         Some (normalize_filename ~root filename)
     | Some Loc.Builtins -> None
     | None -> None
@@ -241,7 +244,8 @@ let print_file_at_location ~root stdin_file main_file loc s = Loc.(
   | false, Some fn when not (Sys.file_exists fn) ->
       let original_filename = match loc.source with
       | Some Loc.LibFile filename
-      | Some Loc.SourceFile filename -> filename
+      | Some Loc.SourceFile filename
+      | Some Loc.JsonFile filename -> filename
       | Some Loc.Builtins
       | None -> failwith "Should only have lib and source files at this point" in
       [comment_style s] @
@@ -535,8 +539,11 @@ let print_error_json oc el =
 (* for vim and emacs plugins *)
 let string_of_loc_deprecated loc = Loc.(
   match loc.source with
-    | None | Some Builtins -> ""
-    | Some LibFile file | Some SourceFile file ->
+    | None
+    | Some Builtins -> ""
+    | Some LibFile file
+    | Some SourceFile file
+    | Some JsonFile file ->
       let line = loc.start.line in
       let start = loc.start.column + 1 in
       let end_ = loc._end.column in

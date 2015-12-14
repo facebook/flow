@@ -3,4 +3,4 @@
  * @flow
  */
 
-export var numberValue1 = 1;
+export var numberValue2 = 1;

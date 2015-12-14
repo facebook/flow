@@ -138,7 +138,8 @@ module Autocomplete : sig
     | FailureAnyType
     | FailureUnhandledType of Type.t
 
-  val map_of_member_result: member_result -> Type.t SMap.t
+  val command_result_of_member_result: member_result ->
+    (Type.t SMap.t) Utils_js.command_result
 
   val extract_members: Context.t -> Type.t -> member_result
 end

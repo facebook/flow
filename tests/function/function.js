@@ -52,5 +52,15 @@ let tests = [
     x.name = 123; // error, it's a string
     y.name = 123; // error, it's a string
     z.name = 123; // error, it's a string
+
+    // Non-(Function.prototype) properties on a `Function` type should be `any`
+    (z.foo: number);
+    (z.foo: string);
   },
 ];
+
+// `Function` types can be bound (resulting in a `Function` type)
+var d: Function = () => 1;
+var e = (d.bind(1): Function)();
+(e: number);
+(e: string);

@@ -154,7 +154,7 @@ let autocomplete_member
     ~json_data
     ~timing;
 
-  let result_map = Autocomplete.map_of_member_result result in
+  let error, result_map = Autocomplete.command_result_of_member_result result in
 
   let result_map = autocomplete_filter_members result_map in
   let result_map = SMap.mapi (fun name t ->
@@ -162,7 +162,7 @@ let autocomplete_member
       let gt = printified_type cx t in
       autocomplete_create_result cx name gt loc
     ) result_map in
-  List.rev (SMap.values result_map)
+  error, List.rev (SMap.values result_map)
 )
 
 (* env is all visible bound names at cursor *)
@@ -191,6 +191,7 @@ let autocomplete_id cx env =
       result :: acc
     )
   ) env []
+  |> Utils_js.command_result_success
 
 let autocomplete_get_results timing client_logging_context cx state parse_result =
   (* FIXME: See #5375467 *)
@@ -200,4 +201,4 @@ let autocomplete_get_results timing client_logging_context cx state parse_result
       autocomplete_id cx env
   | Some { ac_name; ac_loc; ac_type = Acmem (this); } ->
       autocomplete_member timing client_logging_context cx this ac_name ac_loc parse_result
-  | _ -> []
+  | _ -> Utils_js.command_result_success []

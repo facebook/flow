@@ -1,0 +1,7 @@
+{
+  "foo": {
+    "bar": true
+  },
+  "baz": "hello world",
+  "abc": (null: ?string)
+}
