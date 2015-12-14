@@ -386,3 +386,7 @@ let get_array_exn = function
 let get_string_exn = function
   | JSON_String s -> s
   | _ -> assert false
+
+let get_bool_exn = function
+  | JSON_Bool b -> b
+  | _ -> assert false

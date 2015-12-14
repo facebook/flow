@@ -268,12 +268,11 @@ let type_check genv env =
       (Relative_path.Set.union af failed_check)
   in
   let errorl = List.rev (List.rev_append errorl' errorl) in
-  HackEventLogger.type_check_end t;
+  let total_rechecked_count = Relative_path.Map.cardinal fast in
+  HackEventLogger.type_check_end total_rechecked_count t;
   let t = Hh_logger.log_duration "Type-check" t in
 
   Hh_logger.log "Total: %f\n%!" (t -. start_t);
-  let total_rechecked_count = Relative_path.Set.cardinal to_recheck in
-  HackEventLogger.recheck_once_end start_t reparse_count total_rechecked_count;
 
   (* Done, that's the new environment *)
   let new_env = {

@@ -383,7 +383,7 @@ let run_load_script genv cmd =
         HackEventLogger.load_failed msg;
         "load_error"
     in
-    let env = HackEventLogger.with_init_type init_type begin fun () ->
+    let env, _ = HackEventLogger.with_init_type init_type begin fun () ->
       ServerInit.init genv
     end in
     env, init_type
@@ -397,17 +397,17 @@ let program_init genv =
       ServerArgs.save_filename genv.options = None then
       match ServerConfig.load_mini_script genv.config with
       | None ->
-          let env = ServerInit.init genv in
+          let env, _ = ServerInit.init genv in
           env, "fresh"
       | Some load_mini_script ->
-          let env = ServerInit.init ~load_mini_script genv in
-          env, "mini_load"
+          let env, did_load = ServerInit.init ~load_mini_script genv in
+          env, if did_load then "mini_load" else "mini_load_fail"
     else
       match ServerConfig.load_script genv.config with
       | Some load_script when not (ServerArgs.no_load genv.options) ->
           run_load_script genv load_script
       | _ ->
-          let env = ServerInit.init genv in
+          let env, _ = ServerInit.init genv in
           env, "fresh"
   in
   HackEventLogger.init_end init_type;

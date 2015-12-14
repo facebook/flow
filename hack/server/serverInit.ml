@@ -93,13 +93,14 @@ let load_state_ root cmd =
    | Some (Hh_json.JSON_String s) -> failwith s
    | _ -> ());
   let state_fn = Hh_json.get_string_exn @@ List.Assoc.find_exn kv "state" in
+  let is_cached = Hh_json.get_bool_exn @@ List.Assoc.find_exn kv "is_cached" in
   let deptable_fn =
     Hh_json.get_string_exn @@ List.Assoc.find_exn kv "deptable" in
   let to_recheck = Hh_json.get_array_exn @@ List.Assoc.find_exn kv "changes" in
   let to_recheck = List.map to_recheck Hh_json.get_string_exn in
   SharedMem.load_dep_table deptable_fn;
   let end_time = Unix.gettimeofday () in
-  state_fn, to_recheck, end_time
+  state_fn, to_recheck, is_cached, end_time
 
 let load_state root cmd (_ic, oc) =
   let result = Result.try_with (fun () -> load_state_ root cmd) in
@@ -127,8 +128,8 @@ let mk_state_future timeout root cmd =
         raise Loader_timeout)
       ~do_:begin fun () ->
         Daemon.from_channel ic
-        >>| fun (fn, dirty_files, end_time) ->
-        HackEventLogger.load_mini_worker_end start_time end_time;
+        >>| fun (fn, dirty_files, is_cached, end_time) ->
+        HackEventLogger.load_mini_worker_end ~is_cached start_time end_time;
         let time_taken = end_time -. start_time in
         Hh_logger.log "Mini-state loading worker took %.2fs" time_taken;
         let _, status = Unix.waitpid [] pid in
@@ -208,8 +209,9 @@ let type_decl genv env fast t =
 let type_check genv env fast t =
   if ServerArgs.ai_mode genv.options = None || not (is_check_mode genv.options)
   then begin
+    let count = Relative_path.Map.cardinal fast in
     let errorl, failed = Typing_check_service.go genv.workers env.nenv fast in
-    HackEventLogger.type_check_end t;
+    HackEventLogger.type_check_end count t;
     let env = { env with
       errorl = List.rev_append errorl env.errorl;
       failed_check = failed;
@@ -365,4 +367,4 @@ let init ?load_mini_script genv =
 
   SharedMem.init_done ();
   print_hash_stats ();
-  env
+  env, Result.is_ok state
