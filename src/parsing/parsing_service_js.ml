@@ -57,39 +57,90 @@ type types_mode =
   | TypesAllowed
   | TypesForbiddenByDefault
 
+let parse_source_file ~fail ~types_mode content file =
+  let filename = string_of_filename file in
+  let info = Docblock.extract filename content in
+  let parse_options = Some Parser_env.({
+    (**
+     * Always parse ES proposal syntax. The user-facing config option to
+     * ignore/warn/enable them is handled during inference so that a clean error
+     * can be surfaced (rather than a more cryptic parse error).
+     *)
+    esproposal_class_instance_fields = true;
+    esproposal_class_static_fields = true;
+    esproposal_decorators = true;
+
+    (* Allow types based on `types_mode`, using the @flow annotation in the
+       file header if possible. *)
+    types =
+      match types_mode with
+      | TypesAllowed -> true
+      | TypesForbiddenByDefault ->
+          Docblock.isDeclarationFile info ||
+            begin match Docblock.flow info with
+            | None -> false
+            | Some Docblock.OptIn
+            | Some Docblock.OptInWeak -> true
+            (* parse types even in @noflow mode; they just don't get checked *)
+            | Some Docblock.OptOut -> true
+            end;
+  }) in
+  let ast, parse_errors =
+    Parser_flow.program_file ~fail ~parse_options content (Some file) in
+  if fail then assert (parse_errors = []);
+  ast, info
+
+let parse_json_file ~fail content file =
+  let parse_options = Some Parser_env.({
+    esproposal_class_instance_fields = false;
+    esproposal_class_static_fields = false;
+    esproposal_decorators = false;
+    types = true;
+  }) in
+  let info = Docblock.default_info in
+
+  (* parse the file as JSON, then munge the AST to convert from an object
+     into a `module.exports = {...}` statement *)
+  let ast, parse_errors =
+    Parser_flow.json_file ~fail ~parse_options content (Some file) in
+  if fail then assert (parse_errors = []);
+
+  let open Parser_flow.Ast in
+  let loc_none = Loc.none in
+  let loc = fst ast in
+  let expr = loc, (Expression.Object (snd ast)) in
+  let module_exports = loc_none, Expression.(Member { Member.
+    _object = loc_none, Identifier (loc_none, { Identifier.
+      name = "module";
+      typeAnnotation = None;
+      optional = false;
+    });
+    property = Member.PropertyIdentifier (loc_none, { Identifier.
+      name = "exports";
+      typeAnnotation = None;
+      optional = false;
+    });
+    computed = false;
+  }) in
+  let statement =
+    loc, Statement.Expression { Statement.Expression.
+      expression = loc, Expression.Assignment { Expression.Assignment.
+        operator = Expression.Assignment.Assign;
+        left = loc_none, Pattern.Expression module_exports;
+        right = expr;
+      }
+    }
+  in
+  let comments = ([]: Comment.t list) in
+  (loc, [statement], comments), info
+
 let do_parse ?(fail=true) ~types_mode content file =
   try (
-    let filename = string_of_filename file in
-    let info = Docblock.extract filename content in
-    let parse_options = Some Parser_env.({
-      (**
-       * Always parse ES proposal syntax. The user-facing config option to
-       * ignore/warn/enable them is handled during inference so that a clean error
-       * can be surfaced (rather than a more cryptic parse error).
-       *)
-      esproposal_class_instance_fields = true;
-      esproposal_class_static_fields = true;
-      esproposal_decorators = true;
-
-      (* Allow types based on `types_mode`, using the @flow annotation in the
-         file header if possible. *)
-      types =
-        match types_mode with
-        | TypesAllowed -> true
-        | TypesForbiddenByDefault ->
-            Docblock.isDeclarationFile info ||
-              begin match Docblock.flow info with
-              | None -> false
-              | Some Docblock.OptIn
-              | Some Docblock.OptInWeak -> true
-              (* parse types even in @noflow mode; they just don't get checked *)
-              | Some Docblock.OptOut -> true
-              end;
-    }) in
-    let ast, parse_errors =
-      Parser_flow.program_file ~fail ~parse_options content (Some file) in
-    if fail then assert (parse_errors = []);
-    OK (ast, info)
+    match file with
+    | Loc.JsonFile _ ->
+      OK (parse_json_file ~fail content file)
+    | _ ->
+      OK (parse_source_file ~fail ~types_mode content file)
   )
   with
   | Parse_error.Error parse_errors ->

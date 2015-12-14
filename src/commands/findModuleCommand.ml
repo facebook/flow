@@ -49,7 +49,8 @@ let main option_values root json strip_root moduleref filename () =
   let response: Loc.filename option = Marshal.from_channel ic in
   let result = match response with
     | Some Loc.LibFile file
-    | Some Loc.SourceFile file ->
+    | Some Loc.SourceFile file
+    | Some Loc.JsonFile file ->
         if strip_root then Files_js.relative_path (Path.to_string root) file
         else file
     | Some Loc.Builtins -> "(global)"

@@ -1277,13 +1277,16 @@ let server_init genv env =
     match errors with
     | None -> ()
     | Some error ->
-      (* TODO: add PackageFile type? *)
-      save_errors infer_errors [Loc.SourceFile package] [error]
+      save_errors infer_errors [Loc.JsonFile package] [error]
   );
 
   let get_next_raw = Files_js.make_next_files root in
   let get_next = fun () ->
-    get_next_raw () |> List.map (fun file -> Loc.SourceFile file)
+    get_next_raw () |> List.map (fun file ->
+      if Files_js.is_json_file file
+      then Loc.JsonFile file
+      else Loc.SourceFile file
+    )
   in
   let (timing, parsed, checked) =
     full_check genv.ServerEnv.workers get_next options in

@@ -115,8 +115,11 @@ let do_patch lines insertions =
 
 let string_of_loc loc = Loc.(
   match loc.source with
-  | None | Some Builtins -> ""
-  | Some LibFile file | Some SourceFile file ->
+  | None
+  | Some Builtins -> ""
+  | Some LibFile file
+  | Some SourceFile file
+  | Some JsonFile file ->
     let line = loc.start.line in
     let start = loc.start.column + 1 in
     let end_ = loc._end.column in
@@ -257,6 +260,10 @@ let strip_root_from_loc root loc = Loc.(
   | Some SourceFile file ->
     let root_str = spf "%s%s" (Path.to_string root) Filename.dir_sep in
     Some (SourceFile (Files_js.relative_path root_str file))
+
+  | Some JsonFile file ->
+    let root_str = spf "%s%s" (Path.to_string root) Filename.dir_sep in
+    Some (JsonFile (Files_js.relative_path root_str file))
   in
   { loc with source }
 )

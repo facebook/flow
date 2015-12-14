@@ -184,7 +184,7 @@ let get_key key tokens = Ast.(
 
 let add_package package =
   let json = cat package in
-  let tokens, errors = FlowJSON.parse_object json (Loc.SourceFile package) in
+  let tokens, errors = FlowJSON.parse_object json (Loc.JsonFile package) in
   PackageHeap.add package tokens;
   (match get_key "name" tokens with
   | Some name ->
@@ -421,14 +421,14 @@ module Haste: MODULE_SYSTEM = struct
 
   let short_module_name_of = function
     | Loc.Builtins -> assert false
-    | Loc.LibFile file | Loc.SourceFile file ->
+    | Loc.LibFile file | Loc.SourceFile file | Loc.JsonFile file ->
         Filename.basename file |> Filename.chop_extension
 
   let is_mock =
     let mock_path = Str.regexp ".*/__mocks__/.*" in
     function
     | Loc.Builtins -> false
-    | Loc.LibFile file | Loc.SourceFile file ->
+    | Loc.LibFile file | Loc.SourceFile file | Loc.JsonFile file ->
         Str.string_match mock_path file 0
 
   let rec exported_module file info =
@@ -697,7 +697,7 @@ let add_module_info cx =
  *)
 let add_unparsed_info ~force_check file =
   let filename = Loc.(match file with
-  | LibFile filename | SourceFile filename -> filename
+  | LibFile filename | SourceFile filename | JsonFile filename -> filename
   | Builtins -> assert false
   ) in
   let content = cat filename in

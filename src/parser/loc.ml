@@ -17,6 +17,7 @@ type position = {
 type filename =
   | LibFile of string
   | SourceFile of string
+  | JsonFile of string
   | Builtins
 
 type t = {
@@ -73,7 +74,7 @@ let contains loc1 loc2 =
   loc1._end.offset >= loc2._end.offset
 
 let string_of_filename = function
-  | LibFile x | SourceFile x -> x
+  | LibFile x | SourceFile x | JsonFile x -> x
   | Builtins -> "(global)"
 
 let string loc =
@@ -107,15 +108,18 @@ let source_is_lib_file = function
 | LibFile _ -> true
 | Builtins -> true
 | SourceFile _ -> false
+| JsonFile _ -> false
 
 let filename_map f = function
   | LibFile filename -> LibFile (f filename)
   | SourceFile filename -> SourceFile (f filename)
+  | JsonFile filename -> JsonFile (f filename)
   | Builtins -> Builtins
 
 let filename_exists f = function
   | LibFile filename
-  | SourceFile filename -> f filename
+  | SourceFile filename
+  | JsonFile filename -> f filename
   | Builtins -> false
 
 let check_suffix filename suffix =

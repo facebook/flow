@@ -343,6 +343,7 @@ let lib_reason r =
   | Some LibFile _ -> true
   | Some Builtins -> true
   | Some SourceFile _ -> false
+  | Some JsonFile _ -> false
   | None -> false)
 
 let ordered_reasons l u =
