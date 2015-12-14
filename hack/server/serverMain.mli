@@ -13,3 +13,5 @@
  * these phantom types because OCaml doesn't allow polymorphic values that
  * are not functions. *)
 val entry: (ServerArgs.options, unit, unit) Daemon.entry
+
+val run_once: ServerArgs.options -> 'a

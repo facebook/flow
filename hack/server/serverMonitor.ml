@@ -311,12 +311,15 @@ let monitor_daemon_main (options: ServerArgs.options) =
   (** Make sure to lock the lockfile before doing *anything*, especially
    * opening the socket. *)
   let lock_file = ServerFiles.lock_file www_root in
-  if not (Lock.grab lock_file) then
-    (Hh_logger.log "Monitor daemon already running. Killing";
-     Exit_status.exit Exit_status.Ok);
-  let socket = Socket.init_unix_socket (ServerFiles.socket_file www_root) in
-  let typechecker = Alive (start_hh_server options) in
-  check_and_run_loop typechecker lock_file socket
+  if ServerArgs.check_mode options then
+    ServerMain.run_once options
+  else
+    if not (Lock.grab lock_file) then
+      (Hh_logger.log "Monitor daemon already running. Killing";
+       Exit_status.exit Exit_status.Ok);
+    let socket = Socket.init_unix_socket (ServerFiles.socket_file www_root) in
+    let typechecker = Alive (start_hh_server options) in
+    check_and_run_loop typechecker lock_file socket
 
 let daemon_entry =
   Daemon.register_entry_point

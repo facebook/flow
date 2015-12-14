@@ -432,25 +432,7 @@ let save _genv env (kind, fn) =
   | ServerArgs.Complete -> save_complete env fn
   | ServerArgs.Mini -> ServerInit.save_state env fn
 
-(* The main entry point of the daemon
- * the only trick to understand here, is that env.modified is the set
- * of files that changed, it is only set back to SSet.empty when the
- * type-checker succeeded. So to know if there is some work to be done,
- * we look if env.modified changed.
- *
- * The server monitor will pass client connections to this process
- * via in_fd.
- *)
-let daemon_main options (ic, oc) =
-  let in_fd = Daemon.descr_of_in_channel ic in
-  let out_fd = Daemon.descr_of_out_channel oc in
-  (** If the client started the server, it opened an FD before forking,
-   * so it can be notified when the server is ready. The FD number was
-   * passed in program args. *)
-  let waiting_channel =
-    Option.map
-      (ServerArgs.waiting_client options)
-      ~f:Handle.to_out_channel in
+let setup_server options =
   let root = ServerArgs.root options in
   (* The OCaml default is 500, but we care about minimizing the memory
    * overhead *)
@@ -477,17 +459,39 @@ let daemon_main options (ic, oc) =
   if not Sys.win32 then Sys.set_signal Sys.sigpipe Sys.Signal_ignore;
   PidLog.init (ServerFiles.pids_file root);
   PidLog.log ~reason:"main" (Unix.getpid());
-  let genv = ServerEnvBuild.make_genv options config local_config in
-  let is_check_mode = ServerArgs.check_mode genv.options in
-  if is_check_mode then
-    let env = program_init genv in
-    Option.iter (ServerArgs.save_filename genv.options) (save genv env);
-    Hh_logger.log "Running in check mode";
-    Program.run_once_and_exit genv env
-  else
-    let env = MainInit.go options waiting_channel
-      (fun () -> program_init genv) in
-    serve genv env in_fd out_fd
+  ServerEnvBuild.make_genv options config local_config
+
+let run_once options =
+  let genv = setup_server options in
+  if not (ServerArgs.check_mode genv.options) then
+    (Hh_logger.log "ServerMain run_once only supported in check mode.";
+    Exit_status.(exit Input_error));
+  let env = program_init genv in
+  Option.iter (ServerArgs.save_filename genv.options) (save genv env);
+  Hh_logger.log "Running in check mode";
+  Program.run_once_and_exit genv env
+
+(*
+ * The server monitor will pass client connections to this process
+ * via ic.
+ *)
+let daemon_main options (ic, oc) =
+  let genv = setup_server options in
+  if ServerArgs.check_mode genv.options then
+    (Hh_logger.log "Invalid program args - can't run daemon in check mode.";
+    Exit_status.(exit Input_error));
+  let in_fd = Daemon.descr_of_in_channel ic in
+  let out_fd = Daemon.descr_of_out_channel oc in
+  (** If the client started the server, it opened an FD before forking,
+   * so it can be notified when the server is ready. The FD number was
+   * passed in program args. *)
+  let waiting_channel =
+    Option.map
+      (ServerArgs.waiting_client options)
+      ~f:Handle.to_out_channel in
+  let env = MainInit.go options waiting_channel
+    (fun () -> program_init genv) in
+  serve genv env in_fd out_fd
 
 let entry =
   Daemon.register_entry_point "ServerMain.daemon_main" daemon_main
