@@ -2211,12 +2211,38 @@ let rec __flow cx (l, u) trace =
         intersection of other def types be processed before we process unions
         and intersections: otherwise we may get spurious errors. **)
 
-    (***************)
-    (* union types *)
-    (***************)
+    (********************************)
+    (* union and intersection types *)
+    (********************************)
+
+    (* cases where there is no loss of precision *)
 
     | (UnionT(_,ts), _) ->
       ts |> List.iter (fun t -> rec_flow cx trace (t,u))
+
+    | (_, IntersectionT(_,ts)) ->
+      ts |> List.iter (fun t -> rec_flow cx trace (l,t))
+
+    (* When a subtyping question involves a union appearing on the right or an
+       intersection appearing on the left, the simplification rules are
+       imprecise: we split the union / intersection into cases and try to prove
+       that the subtyping question holds for one of the cases, but each of those
+       cases may be unprovable, which might lead to spurious errors. In
+       particular, obvious assertions such as (A | B) & C is a subtype of A | B
+       cannot be proved if we choose to split the union first (discharging
+       unprovable subgoals of (A | B) & C being a subtype of either A or B);
+       dually, obvious assertions such as A & B is a subtype of (A & B) | C
+       cannot be proved if we choose to simplify the intersection first
+       (discharging unprovable subgoals of either A or B being a subtype of (A &
+       B) | C). So instead, we try inclusion rules to handle such cases.
+
+       An orthogonal benefit is that for large unions or intersections, checking
+       inclusion is significantly faster that splitting for proving simple
+       inequalities (O(n) instead of O(n^2) for n cases).  *)
+
+    | _, UnionT(_,ts) when List.mem l ts -> ()
+
+    | IntersectionT(_,ts), _ when List.mem u ts -> ()
 
     (** To check that the concrete type l may flow to UnionT(_, ts), we try each
         type in ts in turn. The types in ts may be type variables, but by
@@ -2235,18 +2261,13 @@ let rec __flow cx (l, u) trace =
     | (_, UnionT(r,ts)) ->
       try_union cx trace l r ts
 
+    (* maybe and optional types are just special union types *)
+
     | (t1, MaybeT(t2)) ->
       rec_flow cx trace (t1,t2)
 
     | (t1, OptionalT(t2)) ->
       rec_flow cx trace (t1, t2)
-
-    (**********************)
-    (* intersection types *)
-    (**********************)
-
-    | (_, IntersectionT(_,ts)) ->
-      ts |> List.iter (fun t -> rec_flow cx trace (l,t))
 
     (** To check that IntersectionT(_, ts) may flow to the concrete type u, we
         try each type in ts in turn. The types in ts may be type variables, but
