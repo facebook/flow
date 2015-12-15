@@ -1697,7 +1697,7 @@ let invalid_memoized_param pos ty_reason_msg =
     ty_reason_msg @ [pos,
       "Parameters to memoized function must be null, bool, int, float, string, \
       an object deriving IMemoizeParam, or a Container thereof. See also \
-      http://docs.hhvm.com/manual/en/hack.attributes.memoize.php"])
+      http://docs.hhvm.com/hack/attributes/special#__memoize"])
 
 let nullsafe_not_needed p nonnull_witness =
   add_list Typing.nullsafe_not_needed (
