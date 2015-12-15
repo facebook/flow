@@ -123,6 +123,12 @@ let print_wait_msg_and_sleep start_time tail_env =
 (** Sleeps until the server says hello. While waiting, prints out spinner and
  * useful messages by tailing the server logs. *)
 let rec wait_for_server_hello ic env retries start_time tail_env first_call =
+  match retries with
+  | Some n when n < 0 ->
+      Printf.eprintf "\nError: Ran out of retries, giving up!\n";
+      raise Exit_status.(Exit_with Out_of_retries)
+  | Some _
+  | None -> ();
   let readable, _, _  = Unix.select
     [Unix.descr_of_in_channel ic] [] [Unix.descr_of_in_channel ic]
     (** Select with timeout so that the client gets "hello" message ASAP
