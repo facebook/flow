@@ -9,7 +9,7 @@ date.js:18:1,12: constructor call
 Error:
 date.js:18:10,11: object literal
 This type is incompatible with
-[LIB] core.js:249:25,39: union type
+[LIB] core.js:249:25,39: union: number | string
 
 date.js:19:1,19: constructor call
 Error:

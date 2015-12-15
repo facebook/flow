@@ -57,6 +57,6 @@ proptype_oneOfType.js:23:17,39: React element `Example`
 Error:
 proptype_oneOfType.js:23:32,35: boolean
 This type is incompatible with
-proptype_oneOfType.js:6:11,9:6: oneOfType
+proptype_oneOfType.js:6:11,9:6: union: number | string
 
 Found 10 errors

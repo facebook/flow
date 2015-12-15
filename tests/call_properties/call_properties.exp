@@ -59,7 +59,7 @@ D.js:11:10,19: undefined (too few arguments, expected default/rest parameters)
 This type is incompatible with
 D.js:12:16,21: number
 
-D.js:20:15,49: callable object type
+D.js:20:15,49: intersection: function type(s)
 This type is incompatible with
 D.js:20:53,64: function type
 

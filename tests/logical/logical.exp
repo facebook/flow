@@ -41,11 +41,11 @@ logical.js:279:23,28: string
 
 logical.js:291:22,26: boolean
 This type is incompatible with
-logical.js:290:4,18: union type
+logical.js:290:4,18: union: number | string
 
 logical.js:315:22,26: boolean
 This type is incompatible with
-logical.js:314:4,18: union type
+logical.js:314:4,18: union: number | string
 
 logical.js:322:12,16: boolean
 This type is incompatible with

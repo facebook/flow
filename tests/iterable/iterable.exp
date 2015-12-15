@@ -17,11 +17,11 @@ caching_bug.js:21:62,67: string
 
 iterator_result.js:23:16,48: object literal
 This type is incompatible with
-iterator_result.js:20:13,40: union type
+iterator_result.js:20:13,40: union: object type(s)
 
 iterator_result.js:25:16,23: object literal
 This type is incompatible with
-iterator_result.js:20:13,40: union type
+iterator_result.js:20:13,40: union: object type(s)
 
 map.js:13:55,60: string
 This type is incompatible with

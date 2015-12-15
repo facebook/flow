@@ -3,15 +3,15 @@ issue-198.js:1:9,10:6: call of method `then`
 Error:
 issue-198.js:5:16,28: string
 This type is incompatible with
-[LIB] core.js:422:33,46: union type
+[LIB] core.js:422:33,46: union: type application of identifier `Promise` | type parameter `U` of call of method `then`
 
 issue-324.js:8:10,15: Bar
 This type is incompatible with
-issue-324.js:5:13,24: union type
+issue-324.js:5:13,24: union: Foo | string
 
 union.js:2:5,5: number
 This type is incompatible with
-union.js:1:17,33: union type
+union.js:1:17,33: union: Document | string
 
 union.js:8:13,19: D
 This type is incompatible with

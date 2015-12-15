@@ -203,7 +203,7 @@ type t =
   | AnnotT of t * t
 
   (* failure case for speculative matching *)
-  | SpeculativeMatchFailureT of reason * t * t
+  | SpeculativeMatchT of reason * t * t
 
   (* Stores exports (and potentially other metadata) for a module *)
   | ModuleT of reason * exporttypes
@@ -730,7 +730,7 @@ let rec reason_of_t = function
   | ConcretizeT (t, _, _, _) -> reason_of_t t
   | ConcreteT (t) -> reason_of_t t
 
-  | SpeculativeMatchFailureT (reason, _, _) -> reason
+  | SpeculativeMatchT (reason, _, _) -> reason
 
   | SummarizeT (reason, t) -> reason
 
@@ -906,8 +906,8 @@ let rec mod_reason_of_t f = function
       ConcretizeT (mod_reason_of_t f t1, ts1, ts2, t2)
   | ConcreteT t -> ConcreteT (mod_reason_of_t f t)
 
-  | SpeculativeMatchFailureT (reason, t1, t2) ->
-      SpeculativeMatchFailureT (f reason, t1, t2)
+  | SpeculativeMatchT (reason, t1, t2) ->
+      SpeculativeMatchT (f reason, t1, t2)
 
   | SummarizeT (reason, t) -> SummarizeT (f reason, t)
 
@@ -1013,7 +1013,7 @@ let string_of_ctor = function
   | ElemT _ -> "ElemT"
   | ConcretizeT _ -> "ConcretizeT"
   | ConcreteT _ -> "ConcreteT"
-  | SpeculativeMatchFailureT _ -> "SpeculativeMatchFailureT"
+  | SpeculativeMatchT _ -> "SpeculativeMatchT"
   | ImportModuleNsT _ -> "ImportModuleNsT"
   | ImportDefaultT _ -> "ImportDefaultT"
   | ImportNamedT _ -> "ImportNamedT"

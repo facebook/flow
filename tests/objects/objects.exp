@@ -1,11 +1,11 @@
 
 conversion.js:10:2,18: function call
 Function cannot be called on
-conversion.js:10:2,18: Object
+conversion.js:10:2,18: intersection: function type(s) & polymorphic type: function type
 
 conversion.js:18:9,19: function call
 Function cannot be called on
-conversion.js:18:9,19: Object
+conversion.js:18:9,19: intersection: function type(s) & polymorphic type: function type
 
 objects.js:4:4,6: property `foo`
 Property not found in

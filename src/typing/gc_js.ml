@@ -177,7 +177,7 @@ let rec gc cx state = function
       gc cx state t1;
       gc cx state t2
 
-  | SpeculativeMatchFailureT (_, t1, t2) ->
+  | SpeculativeMatchT (_, t1, t2) ->
       gc cx state t1;
       gc cx state t2
 

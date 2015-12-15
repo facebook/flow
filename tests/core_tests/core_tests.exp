@@ -1,7 +1,7 @@
 
 map.js:23:13,33: constructor call
 Function cannot be called on
-map.js:23:13,33: Map
+map.js:23:13,33: intersection: polymorphic type: function type(s)
 
 map.js:29:6,17: call of method `get`
 Error:
@@ -25,20 +25,20 @@ regexp.js:26:5,22: function call
 Error:
 regexp.js:26:19,21: string
 This type is incompatible with
-[LIB] core.js:230:47,58: union type
+[LIB] core.js:230:47,58: union: string literal `i` | string literal `g` | string literal `m` | string literal `ig` | string literal `im` | string literal `gi` | string literal `gm` | string literal `mi` | string literal `mg` | string literal `igm` | string literal `img` | string literal `gim` | ...
 
 regexp.js:27:5,26: constructor call
 Error:
 regexp.js:27:23,25: string
 This type is incompatible with
-[LIB] core.js:231:51,62: union type
+[LIB] core.js:231:51,62: union: string literal `i` | string literal `g` | string literal `m` | string literal `ig` | string literal `im` | string literal `gi` | string literal `gm` | string literal `mi` | string literal `mg` | string literal `igm` | string literal `img` | string literal `gim` | ...
 
 weakset.js:19:11,32: constructor call
 Function cannot be called on
-weakset.js:19:11,32: WeakSet
+weakset.js:19:11,32: intersection: polymorphic type: function type(s)
 
 weakset.js:36:11,32: constructor call
 Function cannot be called on
-weakset.js:36:11,32: WeakSet
+weakset.js:36:11,32: intersection: polymorphic type: function type(s)
 
 Found 8 errors

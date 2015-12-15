@@ -1,9 +1,9 @@
 
-test.js:5:39,42: intersection type
+test.js:5:39,42: intersection: object type(s)
 This type is incompatible with
 test.js:5:12,35: object type
 
-test.js:9:43,46: intersection type
+test.js:9:43,46: intersection: object type(s)
 This type is incompatible with
 test.js:9:12,39: function type
 

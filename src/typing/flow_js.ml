@@ -2247,16 +2247,16 @@ let rec __flow cx (l, u) trace =
 
     (** To check that the concrete type l may flow to UnionT(_, ts), we try each
         type in ts in turn. The types in ts may be type variables, but by
-        routing them through SpeculativeMatchFailureT, we ensure that they are
+        routing them through SpeculativeMatchT, we ensure that they are
         tried only when their concrete uses are available. The different
         branches of unions are assumed to be disjoint at the top level, so that
         it is always sound to pick the first type in ts that matches the type
         l. *)
 
-    | (SpeculativeMatchFailureT(r,t1,t), t2) ->
+    | (SpeculativeMatchT(r,t1,t), t2) ->
       (* Reached when trying to match t1 with t2|t. We speculatively match t1
          with t2, and on failure, (recursively) try to match t1 with t. *)
-      if speculative_flow_error cx trace t1 t2
+      if not (speculative_match cx trace t1 t2)
       then rec_flow cx trace (t1, t)
 
     | (_, UnionT(r,ts)) ->
@@ -2272,7 +2272,7 @@ let rec __flow cx (l, u) trace =
 
     (** To check that IntersectionT(_, ts) may flow to the concrete type u, we
         try each type in ts in turn. The types in ts may be type variables, but
-        by routing them through SpeculativeMatchFailureT, we ensure that they
+        by routing them through SpeculativeMatchT, we ensure that they
         are tried only when their concrete definitionss are available. Note that
         unlike unions, the different branches of intersections are usually not
         distinct at the top level (e.g., they may all be function types, or
@@ -2280,10 +2280,10 @@ let rec __flow cx (l, u) trace =
         so we must suffiently concretize parts of u to make the disjointness
         evident when the different branches are tried; see below. *)
 
-    | (t1, SpeculativeMatchFailureT(r,t,t2)) ->
+    | (t1, SpeculativeMatchT(r,t,t2)) ->
       (* Reached when trying to match t1&t with t2. We speculatively match t1
          with t2, and on failure, (recursively) try to match t with t2. *)
-      if speculative_flow_error cx trace t1 t2
+      if not (speculative_match cx trace t1 t2)
       then rec_flow cx trace (t, t2)
 
     | (IntersectionT (r,ts), ConcreteT u) ->
@@ -4213,7 +4213,7 @@ and subst cx ?(force=true) (map: Type.t SMap.t) t =
   | SingletonBoolT _
   | SingletonStrT _ -> t
 
-  | SpeculativeMatchFailureT _
+  | SpeculativeMatchT _
   | ModuleT _
   | SummarizeT _
   | ReposUpperT _
@@ -4339,24 +4339,25 @@ and mk_object_with_map_proto cx reason ?(sealed=false) ?frozen ?dict map proto =
   let pmap = mk_propmap cx map in
   ObjT (reason, mk_objecttype ~flags dict pmap proto)
 
-(* Speculatively match types, returning Some(error messages) when the match
-   fails, and None otherwise. *)
-and speculative_flow_error cx trace l u =
-  (* save the ops stack, since throws from within __flow will screw it up *)
+(* Speculatively match types, returning success. *)
+and speculative_match cx trace l u =
+  (* save state *)
   let ops = Ops.get () in
   let typeapp_stack = TypeAppExpansion.get () in
+  let prev_throw_on_error = !throw_on_error in
+  (* speculate *)
   throw_on_error := true;
   let result =
-    try rec_flow cx trace (l, u); false
+    try rec_flow cx trace (l, u); true
     with
-    | FlowError msgs -> true
+    | FlowError msgs -> false
     | exn ->
-        throw_on_error := false;
+        throw_on_error := prev_throw_on_error;
         raise exn
   in
-  throw_on_error := false;
+  (* restore state *)
+  throw_on_error := prev_throw_on_error;
   TypeAppExpansion.set typeapp_stack;
-  (* restore ops stack *)
   Ops.set ops;
   result
 
@@ -4365,8 +4366,25 @@ and try_union cx trace l reason = function
   | [] -> (* fail: bottom is the unit of unions *)
     rec_flow cx trace (l, EmptyT reason)
   | t::ts ->
+    (* embed reasons of consituent types into outer reason *)
+    let rdesc = desc_of_reason reason in
+    let tdesc = desc_of_reason (reason_of_t t) in
+    let udesc = if not (str_starts_with rdesc "union:")
+      then spf "union: %s" tdesc
+      else if str_ends_with rdesc "..."
+      then rdesc
+      else if str_ends_with rdesc (tdesc ^ "(s)")
+      then rdesc
+      else if String.length rdesc >= 256
+      then spf "%s | ..." rdesc
+      else if str_ends_with rdesc tdesc
+      then spf "%s(s)" rdesc
+      else spf "%s | %s" rdesc tdesc
+      in
+    let r = replace_reason udesc reason in
+    (* try first type, falling back to union of the rest *)
     rec_flow cx trace
-      (SpeculativeMatchFailureT(reason, l, UnionT(reason, ts)),
+      (SpeculativeMatchT(r, l, UnionT(r, ts)),
        t)
 
 (* try each branch of an intersection in turn *)
@@ -4374,9 +4392,26 @@ and try_intersection cx trace u reason = function
   | [] -> (* fail: top is the unit of intersections *)
     rec_flow cx trace (MixedT reason, u)
   | t::ts ->
+    (* embed reasons of consituent types into outer reason *)
+    let rdesc = desc_of_reason reason in
+    let tdesc = desc_of_reason (reason_of_t t) in
+    let idesc = if not (str_starts_with rdesc "intersection:")
+      then spf "intersection: %s" tdesc
+      else if str_ends_with rdesc "..."
+      then rdesc
+      else if str_ends_with rdesc (tdesc ^ "(s)")
+      then rdesc
+      else if String.length rdesc >= 256
+      then spf "%s & ..." rdesc
+      else if str_ends_with rdesc tdesc
+      then spf "%s(s)" rdesc
+      else spf "%s & %s" rdesc tdesc
+      in
+    let r = replace_reason idesc reason in
+    (* try first type, falling back to intersection of the rest *)
     rec_flow cx trace
       (t,
-       SpeculativeMatchFailureT(reason, IntersectionT(reason, ts), u))
+       SpeculativeMatchT(r, IntersectionT(r, ts), u))
 
 (* Some types need their parts to be concretized (i.e., type variables may need
    to be replaced by concrete types) so that speculation has a chance to fail

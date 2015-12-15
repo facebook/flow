@@ -199,7 +199,7 @@ and _json_of_t_impl json_cx t = Hh_json.(
       "result", _json_of_t json_cx t
     ]
 
-  | SpeculativeMatchFailureT (_, attempt, target) -> [
+  | SpeculativeMatchT (_, attempt, target) -> [
       "attemptType", _json_of_t json_cx attempt;
       "targetType", _json_of_t json_cx target
     ]

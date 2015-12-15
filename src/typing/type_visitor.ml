@@ -117,7 +117,7 @@ class ['a] t = object(self)
   | BecomeT (_, t) -> self#type_ cx acc t
   | ReposLowerT (_, t) -> self#type_ cx acc t
 
-  | SpeculativeMatchFailureT (_, t1, t2) ->
+  | SpeculativeMatchT (_, t1, t2) ->
     let acc = self#type_ cx acc t1 in
     let acc = self#type_ cx acc t2 in
     acc

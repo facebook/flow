@@ -43,7 +43,7 @@ cond_prop.js:11:10,37: function call
 Error:
 cond_prop.js:11:25,36: object type
 This type is incompatible with
-cond_prop.js:9:34,37: union type
+cond_prop.js:9:34,37: union: Name | ListType | NonNullType
 
 hasOwnProperty.js:4:3,7: call of method `y`
 Function cannot be called on possibly undefined value
@@ -293,7 +293,7 @@ tagged_union.js:35:16,19: string literal `No`
 
 tagged_union.js:40:6,10: string literal `Maybe`
 This type is incompatible with
-tagged_union.js:40:13,24: union type
+tagged_union.js:40:13,24: union: string literal `Yes` | string literal `No`
 
 tagged_union.js:40:8,10: property `raw`
 Property not found in
